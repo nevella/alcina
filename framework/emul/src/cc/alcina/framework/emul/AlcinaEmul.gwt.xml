@@ -2,4 +2,5 @@
 	<super-source path="jre" />
 	<super-source path="alcina" />
 	<super-source path="gwt" />
+	<super-source path="json" />
 </module>

@@ -6,12 +6,13 @@ import java.util.Set;
 import java.util.LinkedHashSet;
 import java.util.Iterator;
 import java.util.function.ToIntFunction;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collector;
 import java.util.stream.Collectors.CollectorImpl;
 
 public class Collectors {
-	private static class ToListCollector<T> implements
-			java.util.stream.Collector<T, T, List<T>> {
+	private static class ToListCollector<T>
+			implements java.util.stream.Collector<T, T, List<T>> {
 		public List<T> collect(Stream<T> stream) {
 			List<T> result = new ArrayList<T>();
 			for (Iterator<T> itr = stream.iterator(); itr.hasNext();) {
@@ -20,8 +21,9 @@ public class Collectors {
 			return result;
 		}
 	}
-	private static class ToSetCollector<T> implements
-	java.util.stream.Collector<T, T, Set<T>> {
+
+	private static class ToSetCollector<T>
+			implements java.util.stream.Collector<T, T, Set<T>> {
 		public Set<T> collect(Stream<T> stream) {
 			Set<T> result = new LinkedHashSet<T>();
 			for (Iterator<T> itr = stream.iterator(); itr.hasNext();) {
@@ -31,8 +33,8 @@ public class Collectors {
 		}
 	}
 
-	private static class JoiningCollector<T> implements
-			java.util.stream.Collector<T, T, String> {
+	private static class JoiningCollector<T>
+			implements java.util.stream.Collector<T, T, String> {
 		private CharSequence separator;
 
 		public JoiningCollector(CharSequence separator) {
@@ -54,8 +56,8 @@ public class Collectors {
 		}
 	}
 
-	private static class ToIntCollector<T> implements
-			java.util.stream.Collector<T, T, Integer> {
+	private static class ToIntCollector<T>
+			implements java.util.stream.Collector<T, T, Integer> {
 		ToIntFunction<? super T> mapper;
 
 		ToIntCollector(ToIntFunction<? super T> mapper) {
@@ -71,9 +73,27 @@ public class Collectors {
 		}
 	}
 
+	private static class ToDoubleCollector<T>
+			implements java.util.stream.Collector<T, T, Double> {
+		ToDoubleFunction<? super T> mapper;
+
+		ToDoubleCollector(ToDoubleFunction<? super T> mapper) {
+			this.mapper = mapper;
+		}
+
+		public Double collect(Stream<T> stream) {
+			double result = 0;
+			for (Iterator<T> itr = stream.iterator(); itr.hasNext();) {
+				result += mapper.applyAsDouble(itr.next());
+			}
+			return result;
+		}
+	}
+
 	public static <T> Collector<T, ?, List<T>> toList() {
 		return new ToListCollector<T>();
 	}
+
 	public static <T> Collector<T, ?, Set<T>> toSet() {
 		return new ToSetCollector<T>();
 	}
@@ -82,9 +102,14 @@ public class Collectors {
 		return new JoiningCollector<T>("");
 	}
 
-	public static <T> Collector<T, ?, Integer> summingInt(
-			ToIntFunction<? super T> mapper) {
+	public static <T> Collector<T, ?, Integer>
+			summingInt(ToIntFunction<? super T> mapper) {
 		return new ToIntCollector(mapper);
+	}
+
+	public static <T> Collector<T, ?, Double>
+			summingDouble(ToDoubleFunction<? super T> mapper) {
+		return new ToDoubleCollector(mapper);
 	}
 
 	public static <T> Collector<T, T, String> joining(CharSequence separator) {

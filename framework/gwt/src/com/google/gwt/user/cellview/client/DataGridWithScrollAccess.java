@@ -81,8 +81,12 @@ public class DataGridWithScrollAccess<T> extends DataGrid<T> {
 	public ScrollPanel getBodyScrollPanel() {
 		return (ScrollPanel) tableData.getParent();
 	}
+
 	@Override
 	public void onLoadingStateChanged(LoadingState state) {
+		if (state == LoadingState.LOADING && getRowCount() > 0) {
+			return;
+		}
 		super.onLoadingStateChanged(state);
 	}
 }

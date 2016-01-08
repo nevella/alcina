@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.util;
+package cc.alcina.framework.common.client.util;
 
 import java.lang.reflect.Field;
 import java.util.Date;
@@ -8,11 +8,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.gwt.core.shared.GwtIncompatible;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 public interface HasJsonRepresentation {
-	JSONObject asJson() throws JSONException;
+			JSONObject asJson() throws JSONException;
 
 	default JSONObject simpleMapping(Object... params) {
 		try {
@@ -31,7 +33,7 @@ public interface HasJsonRepresentation {
 	static Object encode(Object value) {
 		if (value instanceof Date) {
 			return String.format("__JsDate(%s)", ((Date) value).getTime());
-		}else{
+		} else {
 			return value;
 		}
 	}

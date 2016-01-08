@@ -1,5 +1,8 @@
 package cc.alcina.framework.gwt.client.place;
 
+import com.google.gwt.place.shared.Place;
+import com.google.gwt.place.shared.PlaceTokenizer;
+
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -8,9 +11,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
-
-import com.google.gwt.place.shared.Place;
-import com.google.gwt.place.shared.PlaceTokenizer;
 
 @ClientInstantiable
 @RegistryLocation(registryPoint = BasePlaceTokenizer.class)
@@ -100,7 +100,10 @@ public abstract class BasePlaceTokenizer<P extends Place> implements
 	}
 
 	protected <E extends Enum> E enumValue(Class<E> clazz, String value) {
-		return CommonUtils.getEnumValueOrNull(clazz, value, true, null);
+		return enumValue(clazz, value, null);
+	}
+	protected <E extends Enum> E enumValue(Class<E> clazz, String value, E defaultValue) {
+		return CommonUtils.getEnumValueOrNull(clazz, value, true, defaultValue);
 	}
 
 	protected abstract P getPlace0(String token);
