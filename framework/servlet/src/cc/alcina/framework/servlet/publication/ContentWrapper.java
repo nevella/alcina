@@ -146,8 +146,8 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 
 	protected void transform(String xslPath, boolean formatRequiresXml)
 			throws Exception {
-		InputStream trans = getClass().getResourceAsStream(xslPath);
-		String marker = getClass().getName() + "/" + xslPath + "-"
+		InputStream trans = getWrapperTransformClass().getResourceAsStream(xslPath);
+		String marker = getWrapperTransformClass().getName() + "/" + xslPath + "-"
 				+ formatRequiresXml;
 		if (!ResourceUtilities.getBoolean(ContentWrapper.class,
 				"cacheTransforms")) {
@@ -155,6 +155,10 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		}
 		wrappedContent = transform(trans, wrappingDoc, marker,
 				formatRequiresXml);
+	}
+
+	protected Class getWrapperTransformClass() {
+		return getClass();
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)

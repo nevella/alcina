@@ -482,4 +482,8 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 			sc.addPropertyChangeListener(listener);
 		}
 	}
+
+	public void maxResultsPerPage() {
+		setResultsPerPage(Integer.MAX_VALUE);
+	}
 }
