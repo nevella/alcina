@@ -444,9 +444,6 @@ public class JobRegistry implements RegistrableService {
 		return null;
 	}
 
-	public void log(String message) {
-	}
-
 	public void log(String message, Object... params) {
 		Logger logger = getContextLogger();
 		message = String.format(message, params);
