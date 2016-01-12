@@ -67,14 +67,14 @@ public class XmlUtils {
 
 	public static final int A4_MAX_PIXEL_HEIGHT_PRINT = 850;
 
-	public static String cleanXmlHeaders(String htmlContent) {
-		htmlContent = htmlContent.replaceAll("<\\?xml.+?\\?>", "");
+	public static String cleanXmlHeaders(String xml) {
+		xml = xml.replaceAll("<\\?xml.+?\\?>", "");
 		String regex = "<!DOCTYPE .+?>";
 		Pattern p = Pattern.compile(regex, Pattern.MULTILINE | Pattern.DOTALL
 				| Pattern.CASE_INSENSITIVE);
-		Matcher m = p.matcher(htmlContent);
-		htmlContent = m.replaceAll("");
-		return htmlContent;
+		Matcher m = p.matcher(xml);
+		xml = m.replaceAll("");
+		return xml;
 	}
 
 	public static void clearChildren(Node n) {
