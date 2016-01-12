@@ -142,6 +142,10 @@ public class CommonUtils {
 		return b == null || b == false ? false : true;
 	}
 
+	public static double dv(Double d) {
+		return d == null ? 0.0 : d.doubleValue();
+	}
+
 	public static String capitaliseFirst(String s) {
 		if (isNullOrEmpty(s)) {
 			return s;
