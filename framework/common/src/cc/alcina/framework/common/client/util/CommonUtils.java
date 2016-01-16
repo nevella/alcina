@@ -61,8 +61,8 @@ public class CommonUtils {
 		}
 	}
 
-	public static int hash(Object... values) {
-		return Arrays.hashCode(values);
+	public static String shortMonthName(int month) {
+		return MONTH_NAMES[month].substring(0, 3);
 	}
 
 	public static boolean equalsWithForgivingStrings(Object... objects) {
