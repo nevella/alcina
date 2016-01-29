@@ -78,8 +78,22 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		}
 	}
 
+	private volatile boolean pauseCheck;
+
+	//use only for single-server clusters
+	public boolean isPauseCheck() {
+		return this.pauseCheck;
+	}
+
+	public void setPauseCheck(boolean pauseCheck) {
+		this.pauseCheck = pauseCheck;
+	}
+
 	@SuppressWarnings("unchecked")
 	public synchronized void checkPersistedTransforms(boolean forceDbCheck) {
+		if(isPauseCheck()){
+			return;
+		}
 		boolean dbCheck = forceDbCheck;
 		synchronized (requestQueue) {
 			dbCheck |= getFirstUnpublished().isPresent();
@@ -189,7 +203,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		 * it's possible that the event persistent ids are out of order (e.g.
 		 * xxx1, xxx3) - could occur when multiple requests are bundled by a web
 		 * client, and persistence is interleaved.
-		 * 
+		 *
 		 * as long as the first id is lowest, commit 'em all (they'll be
 		 * coherent in the db)
 		 */

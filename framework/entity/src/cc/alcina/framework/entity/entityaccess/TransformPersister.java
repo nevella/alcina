@@ -252,6 +252,7 @@ public class TransformPersister {
 			int transformCount = 0;
 			boolean replaying = LooseContext
 					.getBoolean(CONTEXT_REPLAYING_FOR_LOGS);
+			int requestCount = 0;
 			loop_dtrs: for (DomainTransformRequest dtr : dtrs) {
 				if (dtr.checkForDuplicateEvents()) {
 					System.out.println("*** duplicate create events in rqId: "
@@ -370,7 +371,10 @@ public class TransformPersister {
 				}// dtes
 				dtr.updateTransformCommitType(CommitType.ALL_COMMITTED, false);
 				if (token.getPass() == Pass.TRY_COMMIT) {
-					entityManager.flush();// any exceptions...here we are
+					if (ResourceUtilities.is(TransformPersister.class,
+							"flushWithEveryRequest")) {
+						entityManager.flush();// any exceptions...here we are
+					}
 					CollectionFilter<DomainTransformEvent> filterByPolicy = new CollectionFilter<DomainTransformEvent>() {
 						@Override
 						public boolean allow(DomainTransformEvent event) {
@@ -426,6 +430,11 @@ public class TransformPersister {
 							dtep.setDomainTransformRequestPersistent(dtrp);
 							dtrp.getEvents().add(dtep);
 							dtreps.add(dtep);
+						}
+						if (++requestCount % 100 == 0) {
+							System.out.format(
+									"Large rq count transform - %s/%s\n",
+									requestCount, dtrs.size());
 						}
 					}
 				}// dtes
