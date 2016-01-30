@@ -38,9 +38,11 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -51,6 +53,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -62,6 +65,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.StringMap;
 
 /**
  * @author nick@alcina.cc
@@ -126,6 +130,46 @@ public class ResourceUtilities {
 		return input;
 	}
 
+	public static String readUrlAsStringWithPost(String strUrl, String postBody,
+			StringMap headers) throws Exception {
+		InputStream in = null;
+		HttpURLConnection connection = null;
+		try {
+			URL url = new URL(strUrl);
+			connection = (HttpURLConnection) (url.openConnection());
+			connection.setDoOutput(true);
+			connection.setDoInput(true);
+			connection.setUseCaches(false);
+			connection.setRequestMethod("POST");
+			for (Entry<String, String> e : headers.entrySet()) {
+				connection.setRequestProperty(e.getKey(), e.getValue());
+			}
+			OutputStream out = connection.getOutputStream();
+			Writer wout = new OutputStreamWriter(out, "UTF-8");
+			wout.write(postBody);
+			wout.flush();
+			wout.close();
+			in = connection.getInputStream();
+			String input = readStreamToString(in);
+			return input;
+		} catch (IOException ioe) {
+			if (connection != null) {
+				InputStream err = connection.getErrorStream();
+				String input = readStreamToString(err);
+				throw new IOException(input, ioe);
+			} else {
+				throw ioe;
+			}
+		} finally {
+			if (in != null) {
+				in.close();
+			}
+			if (connection != null) {
+				connection.disconnect();
+			}
+		}
+	}
+
 	public static int getInteger(Class clazz, String propertyName,
 			int defaultValue) {
 		try {
@@ -138,8 +182,8 @@ public class ResourceUtilities {
 
 	public static synchronized String getBundledString(Class clazz,
 			String propertyName) {
-		String namespacedKey = (clazz == null) ? propertyName : clazz
-				.getSimpleName() + "." + propertyName;
+		String namespacedKey = (clazz == null) ? propertyName
+				: clazz.getSimpleName() + "." + propertyName;
 		if (customProperties.containsKey(namespacedKey)) {
 			return customProperties.get(namespacedKey);
 		}
@@ -238,8 +282,8 @@ public class ResourceUtilities {
 		return beanInfo;
 	}
 
-	public static OutputStream scaleImage(InputStream in, int width,
-			int height, OutputStream out) throws IOException {
+	public static OutputStream scaleImage(InputStream in, int width, int height,
+			OutputStream out) throws IOException {
 		byte[] b = readStreamToByteArray(in);
 		ImageIcon icon = new ImageIcon(b);
 		Image image = icon.getImage();
@@ -390,8 +434,8 @@ public class ResourceUtilities {
 			throws IOException {
 		try {
 			charsetName = charsetName == null ? "UTF-8" : charsetName;
-			BufferedReader in = new BufferedReader(new InputStreamReader(is,
-					charsetName));
+			BufferedReader in = new BufferedReader(
+					new InputStreamReader(is, charsetName));
 			String s = readerToString(in);
 			return s;
 		} finally {
@@ -413,7 +457,9 @@ public class ResourceUtilities {
 	public static void writeStringToFile(String s, File f) throws IOException {
 		writeStringToOutputStream(s, new FileOutputStream(f));
 	}
-	public static void writeStringToFile(String s, String filename) throws IOException {
+
+	public static void writeStringToFile(String s, String filename)
+			throws IOException {
 		writeStringToOutputStream(s, new FileOutputStream(filename));
 	}
 
@@ -425,9 +471,10 @@ public class ResourceUtilities {
 		bw.close();
 	}
 
-	public static void writeStringToFileGz(String s, File f) throws IOException {
-		OutputStreamWriter fw = new OutputStreamWriter(new GZIPOutputStream(
-				new FileOutputStream(f)), "UTF-8");
+	public static void writeStringToFileGz(String s, File f)
+			throws IOException {
+		OutputStreamWriter fw = new OutputStreamWriter(
+				new GZIPOutputStream(new FileOutputStream(f)), "UTF-8");
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(s);
 		bw.close();
@@ -499,7 +546,8 @@ public class ResourceUtilities {
 		return getBundledString(clazz, propertyName);
 	}
 
-	public static String readClassPathResourceAsString(Class clazz, String path) {
+	public static String readClassPathResourceAsString(Class clazz,
+			String path) {
 		try {
 			return readStreamToString(clazz.getResourceAsStream(path));
 		} catch (Exception e) {

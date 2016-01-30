@@ -39,10 +39,15 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.xerces.parsers.DOMParser;
+import org.w3c.dom.DOMConfiguration;
+import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.ls.DOMImplementationLS;
+import org.w3c.dom.ls.LSOutput;
+import org.w3c.dom.ls.LSSerializer;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -70,8 +75,8 @@ public class XmlUtils {
 	public static String cleanXmlHeaders(String xml) {
 		xml = xml.replaceAll("<\\?xml.+?\\?>", "");
 		String regex = "<!DOCTYPE .+?>";
-		Pattern p = Pattern.compile(regex, Pattern.MULTILINE | Pattern.DOTALL
-				| Pattern.CASE_INSENSITIVE);
+		Pattern p = Pattern.compile(regex,
+				Pattern.MULTILINE | Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 		Matcher m = p.matcher(xml);
 		xml = m.replaceAll("");
 		return xml;
@@ -167,8 +172,8 @@ public class XmlUtils {
 
 	public static Element getElementExt(Element root, String tagName,
 			String attrName, String attrValue) {
-		List<Element> elementList = nodeListToElementList(root
-				.getElementsByTagName(tagName));
+		List<Element> elementList = nodeListToElementList(
+				root.getElementsByTagName(tagName));
 		for (Element element : elementList) {
 			if (element.getAttribute(attrName).equals(attrValue)) {
 				return element;
@@ -433,8 +438,8 @@ public class XmlUtils {
 		transformDoc(xmlSource, xsltSource, sr, null, null);
 	}
 
-	public static String transformDocToString(Source dataSource, Source trSource)
-			throws Exception {
+	public static String transformDocToString(Source dataSource,
+			Source trSource) throws Exception {
 		return transformDocToString(dataSource, trSource, null, null);
 	}
 
@@ -458,8 +463,8 @@ public class XmlUtils {
 
 	private static void _streamXML(Node n, Writer w, OutputStream s)
 			throws Exception {
-		transformDoc(new DOMSource(n), null, w == null ? new StreamResult(s)
-				: new StreamResult(w));
+		transformDoc(new DOMSource(n), null,
+				w == null ? new StreamResult(s) : new StreamResult(w));
 	}
 
 	private static void transformDoc(Source xmlSource, Source xsltSource,
@@ -472,8 +477,8 @@ public class XmlUtils {
 			if (configurator != null) {
 				configurator.configure(transFact);
 			}
-			trans = xsltSource == null ? transFact.newTransformer() : transFact
-					.newTransformer(xsltSource);
+			trans = xsltSource == null ? transFact.newTransformer()
+					: transFact.newTransformer(xsltSource);
 			if (cacheMarker != null) {
 				transformerMap.put(cacheMarker, trans);
 			}
@@ -512,7 +517,8 @@ public class XmlUtils {
 		/**
 		 * @see org.xml.sax.ErrorHandler#fatalError(org.xml.sax.SAXParseException)
 		 */
-		public void fatalError(SAXParseException exception) throws SAXException {
+		public void fatalError(SAXParseException exception)
+				throws SAXException {
 			exception.printStackTrace();
 		}
 
@@ -524,4 +530,36 @@ public class XmlUtils {
 		}
 	}
 
+	public static String prettyPrintWithDOM3LS(Document document) {
+		// Pretty-prints a DOM document to XML using DOM Load and Save's
+		// LSSerializer.
+		// Note that the "format-pretty-print" DOM configuration parameter can
+		// only be set in JDK 1.6+.
+		DOMImplementation domImplementation = document.getImplementation();
+		if (domImplementation.hasFeature("LS", "3.0")
+				&& domImplementation.hasFeature("Core", "2.0")) {
+			DOMImplementationLS domImplementationLS = (DOMImplementationLS) domImplementation
+					.getFeature("LS", "3.0");
+			LSSerializer lsSerializer = domImplementationLS
+					.createLSSerializer();
+			DOMConfiguration domConfiguration = lsSerializer.getDomConfig();
+			if (domConfiguration.canSetParameter("format-pretty-print",
+					Boolean.TRUE)) {
+				lsSerializer.getDomConfig().setParameter("format-pretty-print",
+						Boolean.TRUE);
+				LSOutput lsOutput = domImplementationLS.createLSOutput();
+				lsOutput.setEncoding("UTF-8");
+				StringWriter stringWriter = new StringWriter();
+				lsOutput.setCharacterStream(stringWriter);
+				lsSerializer.write(document, lsOutput);
+				return stringWriter.toString();
+			} else {
+				throw new RuntimeException(
+						"DOMConfiguration 'format-pretty-print' parameter isn't settable.");
+			}
+		} else {
+			throw new RuntimeException(
+					"DOM 3.0 LS and/or DOM 2.0 Core not supported.");
+		}
+	}
 }
