@@ -7,10 +7,12 @@ import java.util.Map;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceHistoryMapper;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
+@ClientInstantiable
 @RegistryLocation(registryPoint = RegistryHistoryMapper.class, implementationType = ImplementationType.SINGLETON)
 public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	Map<String, BasePlaceTokenizer> tokenizersByPrefix = new LinkedHashMap<>();
@@ -39,6 +41,9 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	@Override
 	public String getToken(Place place) {
+		if (place == null) {
+			return "";
+		}
 		return tokenizersByPlace.get(place.getClass()).getToken(place);
 	}
 

@@ -17,6 +17,7 @@ package cc.alcina.framework.gwt.client.cell;
 
 import com.google.gwt.event.dom.client.ScrollEvent;
 import com.google.gwt.event.dom.client.ScrollHandler;
+import com.google.gwt.user.cellview.client.AbstractCellTable;
 import com.google.gwt.user.cellview.client.AbstractPager;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.view.client.HasRows;
@@ -62,15 +63,22 @@ public class ShowMorePager extends AbstractPager {
 				int scrollPanelContentsHeight = scrollable.getWidget()
 						.getOffsetHeight();
 				int scrollPanelHeight = scrollable.getOffsetHeight();
-				int maxScrollTop = scrollPanelContentsHeight
-						- scrollPanelHeight-20;
+				int maxScrollTop = scrollPanelContentsHeight - scrollPanelHeight
+						- 20;
 				System.out.println(lastScrollPos);
 				System.out.println(maxScrollTop);
+				if (Math.abs(lastScrollPos - oldScrollPos) > 200) {
+					//handle autoscroll to end
+					return;
+				}
 				if (lastScrollPos >= maxScrollTop) {
 					// We are near the end, so increase the page size.
-					int newPageSize = Math.min(display.getVisibleRange()
-							.getLength() + incrementSize, display.getRowCount());
-					display.setVisibleRange(0, newPageSize);
+					int newPageSize = Math
+							.min(display.getVisibleRange().getLength()
+									+ incrementSize, display.getRowCount());
+					if (newPageSize != 0) {
+						display.setVisibleRange(0, newPageSize);
+					}
 				}
 			}
 		});
