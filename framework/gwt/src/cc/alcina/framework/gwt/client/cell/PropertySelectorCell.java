@@ -45,7 +45,7 @@ public class PropertySelectorCell<T extends HasIdAndLocalId>
 		extends AbstractEditableCell<Set<T>, Set<T>> {
 	private static final int ESCAPE = 27;
 
-	private int offsetX = 0;
+	private int offsetX = -6;
 
 	private int offsetY = -4;
 
@@ -68,6 +68,8 @@ public class PropertySelectorCell<T extends HasIdAndLocalId>
 	private FlatSearchSelector selector;
 
 	private Function<Set<T>, String> toStringMapper;
+
+	private String lastFilterText;
 
 	public PropertySelectorCell(Class<T> selectionObjectClass,
 			Function<Set<T>, String> toStringMapper,
@@ -120,6 +122,7 @@ public class PropertySelectorCell<T extends HasIdAndLocalId>
 			if (valueUpdater != null) {
 				valueUpdater.update(value);
 			}
+			lastFilterText = selector.getLastFilterText();
 		});
 	}
 
@@ -153,6 +156,9 @@ public class PropertySelectorCell<T extends HasIdAndLocalId>
 			s = toStringMapper.apply(value);
 		}
 		if (s != null) {
+			if (s.isEmpty()) {
+				s = "\u00A0";
+			}
 			sb.append(renderer.render(s));
 		}
 	}
@@ -174,6 +180,7 @@ public class PropertySelectorCell<T extends HasIdAndLocalId>
 						lastParent.getAbsoluteTop() + offsetY);
 				selector.clearFilter();
 				selector.showOptions();
+				selector.setFilterText(lastFilterText);
 			}
 		});
 	}

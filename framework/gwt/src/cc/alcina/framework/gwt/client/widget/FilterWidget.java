@@ -47,8 +47,8 @@ import com.google.gwt.user.client.ui.TextBox;
  * @author nick@alcina.cc
  * 
  */
-public class FilterWidget extends Composite implements KeyUpHandler,
-		KeyDownHandler, BlurHandler, ClickHandler {
+public class FilterWidget extends Composite
+		implements KeyUpHandler, KeyDownHandler, BlurHandler, ClickHandler {
 	private static final String ALCINA_FILTER_HINT = "alcina-FilterHint";
 
 	private static boolean isArrowDown(int code) {
@@ -378,8 +378,8 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		}
 	}
 
-	class MaintainCursorPosHandler implements KeyDownHandler, FocusHandler,
-			BlurHandler, ClickHandler {
+	class MaintainCursorPosHandler
+			implements KeyDownHandler, FocusHandler, BlurHandler, ClickHandler {
 		private int initialCursorPos;
 
 		boolean registered = true;
@@ -441,5 +441,15 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		clearHint();
 		onFocus(null);
 		textBox.setFocus(true);
+	}
+
+	private String lastText="";
+
+	public String getLastText() {
+		return this.lastText;
+	}
+
+	public void saveLastText() {
+		lastText = getTextBox().getText();
 	}
 }

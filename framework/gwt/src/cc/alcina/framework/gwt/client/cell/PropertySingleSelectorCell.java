@@ -119,8 +119,13 @@ public class PropertySingleSelectorCell<T> extends AbstractEditableCell<T, T> {
 			if (valueUpdater != null) {
 				valueUpdater.update(value);
 			}
+			lastFilterText = selector.getLastFilterText();
 		});
 	}
+
+	String lastFilter = "";
+
+	private String lastFilterText;
 
 	@Override
 	public boolean isEditing(Context context, Element parent, T value) {
@@ -175,6 +180,7 @@ public class PropertySingleSelectorCell<T> extends AbstractEditableCell<T, T> {
 						lastParent.getAbsoluteTop() + offsetY);
 				selector.clearFilter();
 				selector.showOptions();
+				selector.setFilterText(lastFilterText);
 			}
 		});
 	}

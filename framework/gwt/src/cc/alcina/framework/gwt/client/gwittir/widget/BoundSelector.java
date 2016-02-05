@@ -63,6 +63,8 @@ public class BoundSelector extends AbstractBoundWidget
 
 	private Supplier<? extends Collection> supplier;
 
+	private String noResultsMessage;
+
 	/*
 	 * Allows for subclasses which need a model before rendering
 	 */
@@ -87,17 +89,19 @@ public class BoundSelector extends AbstractBoundWidget
 			int maxSelectedItems, Function renderer, boolean useCellList) {
 		this(selectionObjectClass, filter, maxSelectedItems, renderer,
 				useCellList, () -> TransformManager.get()
-						.getCollection(selectionObjectClass));
+						.getCollection(selectionObjectClass),
+				null);
 	}
 
 	public BoundSelector(Class selectionObjectClass, Predicate filter,
 			int maxSelectedItems, Function renderer, boolean useCellList,
-			Supplier<Collection> supplier) {
+			Supplier<Collection> supplier, String noResultsMessage) {
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;
 		this.maxSelectedItems = maxSelectedItems;
 		this.useCellList = useCellList;
 		this.supplier = supplier;
+		this.noResultsMessage = noResultsMessage;
 		if (renderer != null) {
 			this.renderer = renderer;
 		}
@@ -183,6 +187,7 @@ public class BoundSelector extends AbstractBoundWidget
 		}
 		results.getScroller().setStyleName("scroller");
 		results.getScroller().setHeight("");
+		results.setEmptyItemsText(noResultsMessage);
 		customiseRightWidget();
 		searchWidget.setStyleName("alcina-Selector available");
 		resultsWidget.setStyleName("alcina-Selector selected");
@@ -272,6 +277,7 @@ public class BoundSelector extends AbstractBoundWidget
 		if (search.getSelectedItems().add(item)) {
 			((List) results.getItemMap().get("")).add(item);
 			results.setItemMap(results.getItemMap());
+			search.getFilter().saveLastText();
 			search.getFilter().clear();
 		}
 	}

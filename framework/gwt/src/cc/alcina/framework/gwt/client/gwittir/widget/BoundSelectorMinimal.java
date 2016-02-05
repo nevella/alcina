@@ -35,6 +35,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 
 	private Label unselectedLabel;
 
+
 	public BoundSelectorMinimal() {
 		super();
 	}
@@ -60,9 +61,9 @@ public class BoundSelectorMinimal extends BoundSelector {
 
 	public BoundSelectorMinimal(Class selectionObjectClass, Predicate filter,
 			int maxSelectedItems, Function renderer, boolean useCellList,
-			Supplier<Collection> supplier) {
+			Supplier<Collection> supplier, String noResultsMessage) {
 		super(selectionObjectClass, filter, maxSelectedItems, renderer,
-				useCellList, supplier);
+				useCellList, supplier,noResultsMessage);
 	}
 
 	@Override
@@ -81,8 +82,8 @@ public class BoundSelectorMinimal extends BoundSelector {
 			maybeFocusResultsHandler = new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					Element elt = Element.as(event.getNativeEvent()
-							.getEventTarget());
+					Element elt = Element
+							.as(event.getNativeEvent().getEventTarget());
 					Element stop = cfp.getElement();
 					Element resultsTop = resultsWidget.getElement();
 					while (true) {
@@ -159,11 +160,9 @@ public class BoundSelectorMinimal extends BoundSelector {
 		if (showUnselectedOnPopupClose) {
 			String searchText = search.provideFilterBoxText();
 			if (!show && searchText.length() > 0) {
-				unselectedLabel = new Label(
-						CommonUtils
-								.formatJ(
-										"Nothing selected for '%s' -  please choose a match from the list",
-										searchText));
+				unselectedLabel = new Label(CommonUtils.formatJ(
+						"Nothing selected for '%s' -  please choose a match from the list",
+						searchText));
 				unselectedLabel.setStyleName("unselected-text");
 				cfp.add(unselectedLabel);
 			} else {
@@ -188,13 +187,11 @@ public class BoundSelectorMinimal extends BoundSelector {
 	protected void createResults() {
 		results = new SelectWithSearch() {
 			public HasClickHandlers createItem(Object item, boolean asHTML,
-					int charWidth, boolean itemsHaveLinefeeds,
-					Label ownerLabel, String sep) {
+					int charWidth, boolean itemsHaveLinefeeds, Label ownerLabel,
+					String sep) {
 				return new SelectWithSearchItemX(item, asHTML, charWidth,
 						itemsHaveLinefeeds, ownerLabel, sep);
 			};
-
-			
 		};
 	}
 

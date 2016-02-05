@@ -234,13 +234,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	// use when showing filter in popup (ie totally hidden)
 	private Supplier<Widget> showFilterRelativeTo;
 
-	public Supplier<Widget> getShowFilterRelativeTo() {
-		return this.showFilterRelativeTo;
-	}
+	private boolean closeOnPopdownFilterEmpty = true;
 
-	public void setShowFilterRelativeTo(Supplier<Widget> showFilterRelativeTo) {
-		this.showFilterRelativeTo = showFilterRelativeTo;
-	}
+	private int shiftX;
 
 	public SelectWithSearch() {
 	}
@@ -382,7 +378,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 						checkShowPopup();
 					}
 					if (CommonUtils.isNullOrEmpty(filter.getTextBox().getText())
-							&& popdown) {
+							&& popdown && isCloseOnPopdownFilterEmpty()) {
 						maybeClosePopdown(null);
 					}
 				}
@@ -518,6 +514,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return separatorText;
 	}
 
+	public Supplier<Widget> getShowFilterRelativeTo() {
+		return this.showFilterRelativeTo;
+	}
+
 	public ShowHintStrategy getShowHintStrategy() {
 		return showHintStrategy;
 	}
@@ -534,6 +534,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	public boolean isAutoselectFirst() {
 		return autoselectFirst;
+	}
+
+	public boolean isCloseOnPopdownFilterEmpty() {
+		return this.closeOnPopdownFilterEmpty;
 	}
 
 	public boolean isFlowLayout() {
@@ -578,7 +582,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			RelativePopupPositioning.showPopup(filter, null, RootPanel.get(),
 					new RelativePopupAxis[] {
 							RelativePopupPositioning.BOTTOM_LTR },
-					RootPanel.get(), panelForPopup, shiftX(), shiftY());
+					RootPanel.get(), panelForPopup, getShiftX(), shiftY());
 		}
 	}
 
@@ -606,6 +610,11 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	public void setAutoselectFirst(boolean autoselectFirst) {
 		this.autoselectFirst = autoselectFirst;
+	}
+
+	public void
+			setCloseOnPopdownFilterEmpty(boolean closeOnPopdownFilterEmpty) {
+		this.closeOnPopdownFilterEmpty = closeOnPopdownFilterEmpty;
 	}
 
 	public void setEnterHandler(ClickHandler enterHandler) {
@@ -734,6 +743,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		this.showFilterInPopup = showFilterInPopup;
 	}
 
+	public void setShowFilterRelativeTo(Supplier<Widget> showFilterRelativeTo) {
+		this.showFilterRelativeTo = showFilterRelativeTo;
+	}
+
 	public void setShowHintStrategy(ShowHintStrategy showHintStrategy) {
 		this.showHintStrategy = showHintStrategy;
 	}
@@ -777,7 +790,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				isShowFilterInPopup() ? showFilterRelativeTo.get() : filter,
 				null, RootPanel.get(),
 				new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
-				RootPanel.get(), panelForPopup, shiftX(), shiftY());
+				RootPanel.get(), panelForPopup, getShiftX(), shiftY());
 		if (isShowFilterInPopup()) {
 			filter.setValue("");
 			filter.getTextBox().setFocus(true);
@@ -961,12 +974,26 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				holderHeight);
 	}
 
-	protected int shiftX() {
-		return -2;
+	public int getShiftX() {
+		return shiftX;
+	}
+
+	public void setShiftX(int shiftX) {
+		this.shiftX = shiftX;
 	}
 
 	protected int shiftY() {
 		return 0;
+	}
+
+	private String emptyItemsText;
+
+	public String getEmptyItemsText() {
+		return this.emptyItemsText;
+	}
+
+	public void setEmptyItemsText(String emptyItemsText) {
+		this.emptyItemsText = emptyItemsText;
 	}
 
 	protected void updateItems() {
@@ -1010,6 +1037,11 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 					addDefaultSeparator(itemHolder);
 				}
 			}
+		}
+		if (!itemHolder.iterator().hasNext() && emptyItemsText != null) {
+			Label empty = new Label(emptyItemsText);
+			empty.setStyleName("empty-items");
+			itemHolder.add(empty);
 		}
 		afterUpdateItems(emptyItems);
 	}

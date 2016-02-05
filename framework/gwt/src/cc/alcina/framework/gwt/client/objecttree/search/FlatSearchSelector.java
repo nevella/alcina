@@ -16,11 +16,13 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 	@Override
 	protected void customiseLeftWidget() {
 		super.customiseLeftWidget();
+		search.setShiftX(-12);
 		search.setSortGroups(false);
 		search.setSortGroupContents(false);
 		search.setShowFilterInPopup(true);
 		search.setShowSelectedItemsInSearch(true);
 		search.setShowFilterRelativeTo(() -> resultsWidget);
+		search.setCloseOnPopdownFilterEmpty(false);
 	}
 
 	public FlatSearchSelector() {
@@ -33,8 +35,14 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 
 	public FlatSearchSelector(Class selectionObjectClass, int maxSelectedItems,
 			Function renderer, Supplier<Collection> supplier) {
+		this(selectionObjectClass, maxSelectedItems, renderer, supplier, null);
+	}
+
+	public FlatSearchSelector(Class selectionObjectClass, int maxSelectedItems,
+			Function renderer, Supplier<Collection> supplier,
+			String noResultsMessage) {
 		super(selectionObjectClass, null, maxSelectedItems, renderer, false,
-				supplier);
+				supplier,noResultsMessage);
 		if (maxSelectedItems == 1) {
 			addStyleName("single-item");
 		}
@@ -88,5 +96,17 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 
 	public void clearFilter() {
 		search.getFilter().clear();
+	}
+
+	public String getFilterText() {
+		return search.getFilter().getTextBox().getText();
+	}
+
+	public void setFilterText(String lastFilterText) {
+		search.getFilter().getTextBox().setValue(lastFilterText);
+	}
+
+	public String getLastFilterText() {
+		return search.getFilter().getLastText();
 	}
 }
