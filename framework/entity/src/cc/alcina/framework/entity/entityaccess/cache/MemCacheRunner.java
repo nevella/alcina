@@ -18,13 +18,27 @@ public abstract class MemCacheRunner extends MemCacheReader<Void, Void> {
 	}
 
 	protected abstract void run() throws Exception;
-	
-	public static void run(Runnable runnable){
+
+	public static void run(Runnable runnable) {
 		new MemCacheRunner() {
 			@Override
 			protected void run() throws Exception {
 				runnable.run();
 			}
 		};
+	}
+
+	public static void runThrowing(ThrowingRunnable runnable) {
+		new MemCacheRunner() {
+			@Override
+			protected void run() throws Exception {
+				runnable.run();
+			}
+		};
+	}
+
+	@FunctionalInterface
+	public static interface ThrowingRunnable {
+		public void run() throws Exception;
 	}
 }

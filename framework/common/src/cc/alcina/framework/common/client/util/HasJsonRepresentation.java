@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.util;
 import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,7 +15,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 public interface HasJsonRepresentation {
-			JSONObject asJson() throws JSONException;
+	JSONObject asJson() throws JSONException;
 
 	default JSONObject simpleMapping(Object... params) {
 		try {
@@ -54,10 +55,14 @@ public interface HasJsonRepresentation {
 		try {
 			Field[] fields = new GraphProjection().getFieldsForClass(this);
 			JSONObject jso = new JSONObject();
+			Object templateInstance = getClass().newInstance();
 			for (Field field : fields) {
 				String key = field.getName();
 				Object value = field.get(this);
-				jso.put(key, encode(value));
+				if (Objects.equals(value, field.get(templateInstance))) {
+				} else {
+					jso.put(key, encode(value));
+				}
 			}
 			return jso;
 		} catch (Exception e) {
