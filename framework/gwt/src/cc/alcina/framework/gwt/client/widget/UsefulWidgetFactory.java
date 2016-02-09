@@ -19,6 +19,8 @@ import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 /**
  * 
  * @author Nick Reddel
@@ -71,5 +73,10 @@ public class UsefulWidgetFactory {
 	}
 	public static Widget createNarrowBulletSeparator() {
 		return new InlineHTML(NARROW_BULLET_SEPARATOR_HTML);
+	}
+
+	public static Label formatLabel(String template,
+			Object...params ) {
+		return new Label(CommonUtils.formatJ(template, params));
 	}
 }
