@@ -59,6 +59,10 @@ public abstract class SearchCriterion extends BaseBindable implements
 
 	public SearchCriterion() {
 	}
+	
+	public boolean emptyCriterion(){
+		return false;
+	}
 
 	public SearchCriterion(String displayName) {
 		this.displayName = displayName;

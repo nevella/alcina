@@ -24,8 +24,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * 
  * @author Nick Reddel
  */
-public class AbstractDateCriterion extends SearchCriterion implements
-		HasValue<Date> {
+public class AbstractDateCriterion extends SearchCriterion
+		implements HasValue<Date> {
 	static final transient long serialVersionUID = -1L;
 
 	private Date date;
@@ -38,11 +38,8 @@ public class AbstractDateCriterion extends SearchCriterion implements
 		setDate(date);
 	}
 
-	@Override
-	protected <SC extends SearchCriterion> SC copyPropertiesFrom(SC copyFromCriterion) {
-		Date copyFromDate = ((AbstractDateCriterion) copyFromCriterion).date;
-		date = copyFromDate == null ? null : new Date(copyFromDate.getTime());
-		return super.copyPropertiesFrom(copyFromCriterion);
+	public AbstractDateCriterion(String displayName) {
+		super(displayName);
 	}
 
 	public AbstractDateCriterion(String displayName, Date date) {
@@ -50,8 +47,9 @@ public class AbstractDateCriterion extends SearchCriterion implements
 		setDate(date);
 	}
 
-	public AbstractDateCriterion(String displayName) {
-		super(displayName);
+	@Override
+	public boolean emptyCriterion() {
+		return date == null;
 	}
 
 	public boolean equivalentTo(SearchCriterion other) {
@@ -59,26 +57,19 @@ public class AbstractDateCriterion extends SearchCriterion implements
 			return false;
 		}
 		AbstractDateCriterion otherImpl = (AbstractDateCriterion) other;
-		return otherImpl.getDirection() == getDirection()
-				&& CommonUtils.equalsWithNullEquality(getDate(),
-						otherImpl.getDate());
-	}
-
-	public void setDate(Date date) {
-		Date old_date = this.date;
-		this.date = date;
-		propertyChangeSupport().firePropertyChange("date", old_date, date);
+		return otherImpl.getDirection() == getDirection() && CommonUtils
+				.equalsWithNullEquality(getDate(), otherImpl.getDate());
 	}
 
 	@SuppressWarnings("deprecation")
 	public Date getDate() {
-		if(date!=null){
+		if (date != null) {
 			int year = date.getYear();
-			if(year<-10000){
-				date=new Date(date.getTime());
+			if (year < -10000) {
+				date = new Date(date.getTime());
 				date.setYear(-10000);
-			}else if (year>10000){
-				date=new Date(date.getTime());
+			} else if (year > 10000) {
+				date = new Date(date.getTime());
 				date.setYear(10000);
 			}
 		}
@@ -90,10 +81,24 @@ public class AbstractDateCriterion extends SearchCriterion implements
 		return getDate();
 	}
 
+	public void setDate(Date date) {
+		Date old_date = this.date;
+		this.date = date;
+		propertyChangeSupport().firePropertyChange("date", old_date, date);
+	}
+
 	/**
 	 * add property change firing to the subclass implementation, if you care
 	 */
 	public void setValue(Date value) {
 		setDate(value);
+	}
+
+	@Override
+	protected <SC extends SearchCriterion> SC
+			copyPropertiesFrom(SC copyFromCriterion) {
+		Date copyFromDate = ((AbstractDateCriterion) copyFromCriterion).date;
+		date = copyFromDate == null ? null : new Date(copyFromDate.getTime());
+		return super.copyPropertiesFrom(copyFromCriterion);
 	}
 }

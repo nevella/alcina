@@ -40,8 +40,8 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
  *
  * @author Nick Reddel
  */
-public abstract class CriteriaGroup<SC extends SearchCriterion> extends
-		BaseBindable implements TreeRenderable, Permissible,
+public abstract class CriteriaGroup<SC extends SearchCriterion>
+		extends BaseBindable implements TreeRenderable, Permissible,
 		HasPermissionsValidation, HasEquivalence<CriteriaGroup> {
 	static final transient long serialVersionUID = -1L;
 
@@ -75,7 +75,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		if (other == null || other.getClass() != getClass()
 				|| other.getEntityClass() != getEntityClass()
 				|| other.getCombinator() != getCombinator()
-				|| other.getCriteria().size() != getCriteria().size()) {
+				|| other.criteriaSizeIgnoreEmpty() != criteriaSizeIgnoreEmpty()) {
 			return false;
 		}
 		List<SC> otherCriteria = new ArrayList<SC>(other.getCriteria());
@@ -93,6 +93,19 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 			}
 		}
 		return true;
+	}
+
+	private int criteriaSizeIgnoreEmpty() {
+		if (getCriteria().size() == 0) {
+			return 0;
+		}
+		int counter = 0;
+		for (SC sc : getCriteria()) {
+			if (sc != null && !sc.emptyCriterion()) {
+				counter++;
+			}
+		}
+		return counter;
 	}
 
 	public boolean provideIsEmpty() {
@@ -230,11 +243,10 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 	}
 
 	protected String provideDisplayNamePrefix(boolean withGroupName) {
-		return CommonUtils.isNullOrEmpty(getDisplayName()) || !withGroupName ? ""
-				: CommonUtils
-						.pluralise(
-								CommonUtils.capitaliseFirst(getDisplayName()),
-								criteria)
+		return CommonUtils.isNullOrEmpty(getDisplayName()) || !withGroupName
+				? ""
+				: CommonUtils.pluralise(
+						CommonUtils.capitaliseFirst(getDisplayName()), criteria)
 						+ ": ";
 	}
 
