@@ -1138,6 +1138,9 @@ public class CommonUtils {
 	public static String joinWithNewlines(Collection c) {
 		return join(c, "\n");
 	}
+	public static String joinWithComma(Collection c) {
+		return join(c, ",");
+	}
 
 	public static String joinWithNewlineTab(Collection c) {
 		return join(c, "\n\t");
