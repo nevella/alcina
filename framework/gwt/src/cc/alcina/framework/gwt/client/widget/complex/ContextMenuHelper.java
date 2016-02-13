@@ -10,11 +10,15 @@ import com.google.gwt.user.client.ui.Widget;
 public class ContextMenuHelper {
 	public FlexTable addRow(FlowPanel fp, Widget image, Widget contentWidget,
 			final ClickHandler clickHandler, boolean separatorAbove) {
+		return addRow(fp, image, contentWidget, clickHandler, separatorAbove, false);
+	}
+	public FlexTable addRow(FlowPanel fp, Widget image, Widget contentWidget,
+			final ClickHandler clickHandler, boolean separatorAbove, boolean hasAction) {
 		FlexTable ft = new FlexTable();
 		ft.setCellPadding(0);
 		ft.setCellSpacing(0);
 		ft.setStyleName("tools-table");
-		if (image != null) {
+		if (image != null||hasAction) {
 			// i.e. has action
 			ft.addStyleName("action");
 		}

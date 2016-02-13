@@ -1,16 +1,24 @@
 package cc.alcina.framework.gwt.client.objecttree.search;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.event.dom.client.HasClickHandlers;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Label;
 
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
+import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyData;
+import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyDataProvider;
 
 public class FlatSearchSelector extends BoundSelectorMinimal {
 	@Override
@@ -42,9 +50,32 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 			Function renderer, Supplier<Collection> supplier,
 			String noResultsMessage) {
 		super(selectionObjectClass, null, maxSelectedItems, renderer, false,
-				supplier,noResultsMessage);
+				supplier, noResultsMessage);
 		if (maxSelectedItems == 1) {
 			addStyleName("single-item");
+		}
+		search.setLazyProvider(new LazyDataExclusive());
+	}
+
+	private class LazyDataExclusive implements LazyDataProvider {
+		private LazyData dataRequired() {
+			LazyData lazyData = new LazyData();
+			Map map = createObjectMap();
+			if (maxSelectedItems != 1) {
+				List resultValuesList = (List) results.getItemMap().values()
+						.iterator().next();
+				Set resultValues = new LinkedHashSet(resultValuesList);
+				List searchList = (List) map.values().iterator().next();
+				searchList.removeIf(v -> resultValues.contains(v));
+			}
+			lazyData.keys = new ArrayList(map.keySet());
+			lazyData.data = map;
+			return lazyData;
+		}
+
+		@Override
+		public void getData(AsyncCallback callback) {
+			callback.onSuccess(dataRequired());
 		}
 	}
 

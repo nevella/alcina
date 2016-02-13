@@ -5,6 +5,9 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 import java.util.Set;
 
 public class SearchOrders<T> implements Comparator<T>, Serializable {
@@ -13,8 +16,17 @@ public class SearchOrders<T> implements Comparator<T>, Serializable {
 	public SearchOrders() {
 	}
 
+	private transient Entry<SearchOrder<T>, Boolean> soleOrder = null;
+
 	@Override
 	public int compare(T o1, T o2) {
+		if (soleOrder == null && cmps.size() == 1) {
+			soleOrder = CommonUtils.first(cmps.entrySet());
+		}
+		if (soleOrder != null) {
+			return soleOrder.getKey().compare(o1, o2)
+					* (soleOrder.getValue() ? 1 : -1);
+		}
 		for (Entry<SearchOrder<T>, Boolean> entry : cmps.entrySet()) {
 			SearchOrder<T> cmp = entry.getKey();
 			int i = cmp.compare(o1, o2);
