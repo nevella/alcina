@@ -129,7 +129,7 @@ public class ObjectTreeRenderer {
 		case AS_TITLE:
 		case AS_WIDGET:
 			String displayName = renderable.getDisplayName();
-			if (displayName != null) {
+			if (CommonUtils.isNotNullOrEmpty(displayName)) {
 				Label label = TextProvider.get().getInlineLabel(
 						TextProvider.get().getUiObjectText(
 								node.getClass(),
