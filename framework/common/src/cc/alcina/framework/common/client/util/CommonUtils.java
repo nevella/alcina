@@ -668,6 +668,9 @@ public class CommonUtils {
 		if (s.endsWith("s")) {
 			return s;
 		}
+		if (s.endsWith(" by")) {
+			return s;
+		}
 		if (s.endsWith("y")) {
 			return s.substring(0, s.length() - 1) + "ies";
 		}
@@ -1138,6 +1141,7 @@ public class CommonUtils {
 	public static String joinWithNewlines(Collection c) {
 		return join(c, "\n");
 	}
+
 	public static String joinWithComma(Collection c) {
 		return join(c, ",");
 	}
