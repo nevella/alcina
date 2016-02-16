@@ -93,6 +93,9 @@ public abstract class BasePlaceTokenizer<P extends Place> implements
 	}
 
 	protected void addTokenPart(String part) {
+		if(part==null){
+			return;
+		}
 		if (tokenBuilder.length() > 0) {
 			tokenBuilder.append("/");
 		}
