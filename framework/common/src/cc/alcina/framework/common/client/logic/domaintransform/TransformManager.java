@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -149,7 +150,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		theInstance = tm;
 	}
 
-	protected Collection provisionalObjects = new LinkedHashSet();
+	protected IdentityHashMap<Object, Boolean> provisionalObjects = new IdentityHashMap<>();
 
 	private boolean ignorePropertyChanges;
 
@@ -390,8 +391,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 					break;
 				}
 			}
-			long creationLocalId = isZeroCreatedObjectLocalId(event.getObjectClass()) ? 0
-					: event.getObjectLocalId();
+			long creationLocalId = isZeroCreatedObjectLocalId(
+					event.getObjectClass()) ? 0 : event.getObjectLocalId();
 			HasIdAndLocalId hili = (HasIdAndLocalId) classLookup().newInstance(
 					event.getObjectClass(), event.getObjectId(),
 					event.getObjectLocalId());
@@ -586,7 +587,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public void deregisterProvisionalObjects(Collection c) {
-		provisionalObjects.removeAll(c);
+		provisionalObjects.keySet().removeAll(c);
 		for (Object b : c) {
 			if (b instanceof SourcesPropertyChangeEvents) {
 				SourcesPropertyChangeEvents sb = (SourcesPropertyChangeEvents) b;
@@ -713,8 +714,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 				hili.getLocalId());
 	}
 
-	public Collection getProvisionalObjects() {
-		return provisionalObjects;
+	protected Collection getProvisionalObjects() {
+		return provisionalObjects.keySet();
 	}
 
 	public TransformManager getT() {
@@ -1115,7 +1116,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		Object hili = evt.getSource();
 		if (this.getDomainObjects() != null) {
-			if (!provisionalObjects.contains(hili)) {
+			if (!provisionalObjects.containsKey(hili)) {
 				maybeFireCollectionModificationEvent(hili.getClass(), true);
 			}
 		}
@@ -1207,7 +1208,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public void registerProvisionalObject(Object o) {
 		Collection c = CommonUtils.wrapInCollection(o);
-		provisionalObjects.addAll(c);
+		for (Object b : c) {
+			provisionalObjects.put(b, true);
+		}
 		for (Object b : c) {
 			if (b instanceof SourcesPropertyChangeEvents) {
 				SourcesPropertyChangeEvents sb = (SourcesPropertyChangeEvents) b;

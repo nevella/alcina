@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
@@ -109,7 +110,15 @@ public abstract class CriteriaGroup<SC extends SearchCriterion>
 	}
 
 	public boolean provideIsEmpty() {
-		return getCriteria().isEmpty();
+		for (SearchCriterion criterion : getCriteria()) {
+			if (criterion instanceof HasValue
+					&& ((HasValue) criterion).getValue() == null) {
+				continue;
+			} else {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public void addCriterion(SC criterion) {
