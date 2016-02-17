@@ -1122,6 +1122,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
+	public boolean isRegistered(HasIdAndLocalId hili) {
+		HasIdAndLocalId registered = getObject(hili);
+		return registered == hili;
+	}
+
 	public <T extends HasIdAndLocalId> T registerDomainObject(T hili) {
 		if (getDomainObjects() != null) {
 			if (hili.getId() == 0) {
