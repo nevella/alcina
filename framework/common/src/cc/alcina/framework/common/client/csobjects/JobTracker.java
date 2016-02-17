@@ -101,4 +101,5 @@ public interface JobTracker {
 	public abstract void setSubProgressMessage(String subProgressMessage);
 
 	public abstract String getSubProgressMessage();
+
 }

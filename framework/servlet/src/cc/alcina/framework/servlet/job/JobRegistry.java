@@ -362,6 +362,7 @@ public class JobRegistry implements RegistrableService {
 		tracker.setComplete(true);
 		tracker.setProgressMessage(message);
 		tracker.setEndTime(new Date());
+		tracker.setJobResultType(resultType);
 		AlcinaTopics.jobComplete(tracker);
 		logComplete(tracker, message);
 		removeTracker(tracker);
