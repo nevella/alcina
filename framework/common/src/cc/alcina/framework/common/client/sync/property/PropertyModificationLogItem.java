@@ -13,6 +13,31 @@ public class PropertyModificationLogItem {
 
 	private String objectClassName;
 
+	private long transformId;
+
+	public long getTransformId() {
+		return this.transformId;
+	}
+
+	public PropertyModificationLogItem() {
+	}
+
+	public PropertyModificationLogItem(String propertyName, String value,
+			long modificationTime, String source, String objectId,
+			String objectClassName, long transformId) {
+		this.propertyName = propertyName;
+		this.value = value;
+		this.modificationTime = modificationTime;
+		this.source = source;
+		this.objectId = objectId;
+		this.objectClassName = objectClassName;
+		this.transformId = transformId;
+	}
+
+	public void setTransformId(long transformId) {
+		this.transformId = transformId;
+	}
+
 	public long getModificationTime() {
 		return this.modificationTime;
 	}

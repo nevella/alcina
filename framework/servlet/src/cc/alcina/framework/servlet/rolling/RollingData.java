@@ -30,6 +30,12 @@ public abstract class RollingData<K extends Comparable, V> {
 	public abstract Function<String, K> keyDeserializer();
 
 	public SortedMap<K, V> getValues(K earliestKey, String typeKey) {
+		synchronized (getClass()) {
+			return getValues0(earliestKey, typeKey);
+		}
+	}
+
+	private SortedMap<K, V> getValues0(K earliestKey, String typeKey) {
 		this.typeKey = typeKey;
 		Class<? extends RollingDataItem> rdImplClass = Registry
 				.impl(CommonPersistenceProvider.class)
@@ -59,8 +65,8 @@ public abstract class RollingData<K extends Comparable, V> {
 			}
 			ServletLayerUtils.pushTransformsAsRoot();
 		}
-		list = new AlcinaMemCacheQuery().filter("typeKey", typeKey).list(
-				rdImplClass);
+		list = new AlcinaMemCacheQuery().filter("typeKey", typeKey)
+				.list(rdImplClass);
 		TreeMap<K, V> map = new TreeMap<K, V>();
 		Function<String, List<V>> deserializer = deserializer();
 		for (RollingDataItem item : list) {
