@@ -13,4 +13,5 @@ public class PropertyModificationLog {
 	public void setItems(List<PropertyModificationLogItem> items) {
 		this.items = items;
 	}
+	
 }
