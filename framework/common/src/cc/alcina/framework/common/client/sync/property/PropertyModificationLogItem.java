@@ -7,7 +7,7 @@ public class PropertyModificationLogItem {
 
 	private long modificationTime;
 
-	private PropertyModificationLogSupportSource source;
+	private String source;
 
 	public long getModificationTime() {
 		return this.modificationTime;
@@ -17,7 +17,7 @@ public class PropertyModificationLogItem {
 		return this.propertyName;
 	}
 
-	public PropertyModificationLogSupportSource getSource() {
+	public String getSource() {
 		return this.source;
 	}
 
@@ -33,7 +33,7 @@ public class PropertyModificationLogItem {
 		this.propertyName = propertyName;
 	}
 
-	public void setSource(PropertyModificationLogSupportSource source) {
+	public void setSource(String source) {
 		this.source = source;
 	}
 

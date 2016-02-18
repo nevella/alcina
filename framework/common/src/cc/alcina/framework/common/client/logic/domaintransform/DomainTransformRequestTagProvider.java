@@ -1,23 +1,28 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.LooseContext;
+
+@RegistryLocation(registryPoint = DomainTransformRequestTagProvider.class)
 public class DomainTransformRequestTagProvider {
+	public static final transient String CONTEXT_COMMIT_REQUEST_TAG = DomainTransformRequestTagProvider.class
+			.getName() + ".CONTEXT_COMMIT_REQUEST_TAG";
+
 	protected DomainTransformRequestTagProvider() {
 	}
 
 	private String tag;
 
-	private static DomainTransformRequestTagProvider domainTransformRequestTagProvider;
-
-	public static void registerDomainTransformRequestTagProvider(
-			DomainTransformRequestTagProvider domainTransformRequestTagProvider) {
-		DomainTransformRequestTagProvider.domainTransformRequestTagProvider = domainTransformRequestTagProvider;
-	}
-
 	public static DomainTransformRequestTagProvider get() {
-		if (domainTransformRequestTagProvider == null) {
-			domainTransformRequestTagProvider = new DomainTransformRequestTagProvider();
+		DomainTransformRequestTagProvider singleton = Registry
+				.checkSingleton(DomainTransformRequestTagProvider.class);
+		if (singleton == null) {
+			singleton = new DomainTransformRequestTagProvider();
+			Registry.registerSingleton(DomainTransformRequestTagProvider.class,
+					singleton);
 		}
-		return domainTransformRequestTagProvider;
+		return singleton;
 	}
 
 	public void setTag(String tag) {
@@ -25,10 +30,10 @@ public class DomainTransformRequestTagProvider {
 	}
 
 	public String getTag() {
-		return tag;
-	}
-
-	public void clearPerInstanceState() {
-		setTag(null);
+		if (LooseContext.containsKey(CONTEXT_COMMIT_REQUEST_TAG)) {
+			return LooseContext.get(CONTEXT_COMMIT_REQUEST_TAG);
+		} else {
+			return tag;
+		}
 	}
 }

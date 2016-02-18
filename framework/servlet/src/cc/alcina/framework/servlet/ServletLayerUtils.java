@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationR
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestTagProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
@@ -41,6 +42,8 @@ public class ServletLayerUtils {
 	public static final transient String CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK = ServletLayerUtils.class
 			.getName() + ".CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK";
 
+	
+
 	public static int pushTransformsAsRoot() {
 		return pushTransforms(true);
 	}
@@ -62,8 +65,13 @@ public class ServletLayerUtils {
 		return pendingTransformCount;
 	}
 
+	public static String defaultTag;
+
 	public static DomainTransformLayerWrapper pushTransforms(String tag,
 			boolean asRoot, boolean returnResponse) {
+		if (tag == null) {
+			tag=DomainTransformRequestTagProvider.get().getTag();
+		}
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
 		if (pendingTransformCount == 0) {
@@ -123,8 +131,8 @@ public class ServletLayerUtils {
 		}
 	}
 
-	private static void commitLocalTransformsInChunks(
-			final int maxTransformChunkSize) {
+	private static void
+			commitLocalTransformsInChunks(final int maxTransformChunkSize) {
 		try {
 			Callable looper = new Callable() {
 				@Override
@@ -132,15 +140,12 @@ public class ServletLayerUtils {
 					final ClientInstance commitInstance = Registry
 							.impl(CommonPersistenceProvider.class)
 							.getCommonPersistence()
-							.createClientInstance(
-									"servlet-bulk: "
-											+ EntityLayerUtils
-													.getLocalHostName());
+							.createClientInstance("servlet-bulk: "
+									+ EntityLayerUtils.getLocalHostName());
 					List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>(
 							TransformManager.get().getTransformsByCommitType(
 									CommitType.TO_LOCAL_BEAN));
-					TransformManager
-							.get()
+					TransformManager.get()
 							.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
 							.clear();
 					ThreadlocalTransformManager.cast().resetTltm(null);
@@ -150,8 +155,7 @@ public class ServletLayerUtils {
 					rq.setRequestId(1);
 					rq.setClientInstance(commitInstance);
 					rq.setEvents(transforms);
-					DeltaApplicationRecord dar = new DeltaApplicationRecord(
-							rq,
+					DeltaApplicationRecord dar = new DeltaApplicationRecord(rq,
 							DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
 							false);
 					new DtrSimpleAdminPersistenceHandler().commit(dar,
@@ -159,8 +163,8 @@ public class ServletLayerUtils {
 					return null;
 				}
 			};
-			ThreadedPermissionsManager.cast().callWithPushedSystemUserIfNeeded(
-					looper);
+			ThreadedPermissionsManager.cast()
+					.callWithPushedSystemUserIfNeeded(looper);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		} finally {
@@ -169,17 +173,17 @@ public class ServletLayerUtils {
 	}
 
 	public static long pushTransformsAndGetFirstCreationId(boolean asRoot) {
-		DomainTransformResponse transformResponse = pushTransforms(null,
-				asRoot, true).response;
-		DomainTransformEvent first = CommonUtils.first(transformResponse
-				.getEventsToUseForClientUpdate());
+		DomainTransformResponse transformResponse = pushTransforms(null, asRoot,
+				true).response;
+		DomainTransformEvent first = CommonUtils
+				.first(transformResponse.getEventsToUseForClientUpdate());
 		return first == null ? 0 : first.getGeneratedServerId();
 	}
 
 	public static long pushTransformsAndReturnId(boolean asRoot,
 			HasIdAndLocalId returnIdFor) {
-		DomainTransformResponse transformResponse = pushTransforms(null,
-				asRoot, true).response;
+		DomainTransformResponse transformResponse = pushTransforms(null, asRoot,
+				true).response;
 		for (DomainTransformEvent dte : transformResponse
 				.getEventsToUseForClientUpdate()) {
 			if (dte.getObjectLocalId() == returnIdFor.getLocalId()
@@ -188,8 +192,8 @@ public class ServletLayerUtils {
 				return dte.getGeneratedServerId();
 			}
 		}
-		throw new RuntimeException("Generated object not found - "
-				+ returnIdFor);
+		throw new RuntimeException(
+				"Generated object not found - " + returnIdFor);
 	}
 
 	public static void logRequest(HttpServletRequest req, String remoteAddr) {
