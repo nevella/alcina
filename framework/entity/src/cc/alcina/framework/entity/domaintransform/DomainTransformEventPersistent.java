@@ -19,23 +19,25 @@ import java.util.Date;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import com.totsp.gwittir.client.beans.Converter;
+
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.ResourceUtilities;
-
-import com.totsp.gwittir.client.beans.Converter;
+import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 
 @MappedSuperclass
 /**
  *
  * @author Nick Reddel
  */
-public abstract class DomainTransformEventPersistent extends
-		DomainTransformEvent implements HasId {
+public abstract class DomainTransformEventPersistent
+		extends DomainTransformEvent implements HasId {
 	private long id;
 
 	private DomainTransformRequestPersistent domainTransformRequestPersistent;
@@ -44,7 +46,8 @@ public abstract class DomainTransformEventPersistent extends
 
 	// persistence in app subclass
 	@Transient
-	public DomainTransformRequestPersistent getDomainTransformRequestPersistent() {
+	public DomainTransformRequestPersistent
+			getDomainTransformRequestPersistent() {
 		return domainTransformRequestPersistent;
 	}
 
@@ -98,7 +101,10 @@ public abstract class DomainTransformEventPersistent extends
 	}
 
 	public void clearForSimplePersistence() {
-		setDomainTransformRequestPersistent(null);
+		setDomainTransformRequestPersistent(
+				Registry.impl(JPAImplementation.class).getInstantiatedObject(
+						getDomainTransformRequestPersistent()));
+		getDomainTransformRequestPersistent().clearForSimplePersistence();
 		setUser(null);
 		setSource(null);
 		getObjectClass();
@@ -135,20 +141,20 @@ public abstract class DomainTransformEventPersistent extends
 		setObjectVersionNumber(rs.getInt("objectversionnumber"));
 		setValueVersionNumber(rs.getInt("valueversionnumber"));
 		int i = rs.getInt("transformtype");
-		TransformType tt = rs.wasNull() ? null : TransformType.class
-				.getEnumConstants()[i];
+		TransformType tt = rs.wasNull() ? null
+				: TransformType.class.getEnumConstants()[i];
 		setTransformType(tt);
 		i = rs.getInt("committype");
-		CommitType ct = rs.wasNull() ? null : CommitType.class
-				.getEnumConstants()[i];
+		CommitType ct = rs.wasNull() ? null
+				: CommitType.class.getEnumConstants()[i];
 		setCommitType(ct);
 	}
 
 	public static class DomainTransformFromPersistentConverter implements
 			Converter<DomainTransformEventPersistent, DomainTransformEvent> {
 		@Override
-		public DomainTransformEvent convert(
-				DomainTransformEventPersistent original) {
+		public DomainTransformEvent
+				convert(DomainTransformEventPersistent original) {
 			return original.toNonPersistentEvent(true);
 		}
 	}

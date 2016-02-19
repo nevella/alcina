@@ -39,4 +39,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 	public long getId() {
 		return id;
 	}
+	public void clearForSimplePersistence() {
+		setClientInstance(null);
+		setEvents(null);
+	}
 }
