@@ -57,8 +57,8 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 		protected Map<Object, ValidationException> exceptions = new LinkedHashMap<Object, ValidationException>();
 
 		private String caption = "Please correct the following";
-		
-		public static boolean forceHtmlValidationMessages=false;
+
+		public static boolean forceHtmlValidationMessages = false;
 
 		public void clear() {
 			exceptions.clear();
@@ -80,9 +80,11 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 				Widget child = null;
 				if (e instanceof ValidationExceptionWithHtmlMessage) {
 					ValidationExceptionWithHtmlMessage withHtml = (ValidationExceptionWithHtmlMessage) e;
-					child = new InlineHTML(withHtml.getSafeHtml());
+					child = new HTML(withHtml.getSafeHtml());
 				} else {
-					child = forceHtmlValidationMessages?new InlineHTML(e.getMessage()):new InlineLabel(e.getMessage());
+					child = forceHtmlValidationMessages
+							? new HTML(e.getMessage())
+							: new InlineLabel(e.getMessage());
 				}
 				ulPanel.add(new LiPanel(child));
 			}
@@ -100,7 +102,8 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 		void addException(Object source, ValidationException exception) {
 			exceptions.put(source, exception);
 		}
-		public Collection<ValidationException> getExceptions(){
+
+		public Collection<ValidationException> getExceptions() {
 			return exceptions.values();
 		}
 
@@ -109,8 +112,8 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 		}
 	}
 
-	public static class ValidationExceptionWithHtmlMessage extends
-			ValidationException {
+	public static class ValidationExceptionWithHtmlMessage
+			extends ValidationException {
 		private ValidationException source;
 
 		public ValidationExceptionWithHtmlMessage(ValidationException source) {
