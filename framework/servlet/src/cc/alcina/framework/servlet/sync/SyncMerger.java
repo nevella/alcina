@@ -8,7 +8,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
@@ -16,9 +18,13 @@ import org.apache.log4j.Logger;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
+import cc.alcina.framework.common.client.sync.property.PropertyModificationLog;
+import cc.alcina.framework.common.client.sync.property.PropertyModificationLogItem;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
@@ -35,117 +41,64 @@ import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
  *         equivalentTo checks the new field
  */
 public class SyncMerger<T> {
-	private StringKeyProvider<T> keyProvider;
-
-	private Class<T> mergedClass;
-
-	public SyncMerger(Class<T> mergedClass, StringKeyProvider<T> keyProvider) {
-		this.mergedClass = mergedClass;
-		this.keyProvider = keyProvider;
-		propertyAccessor = new JvmPropertyAccessor();
-	}
-
-	private PropertyAccessor propertyAccessor;
-
-	private List<SyncMapping> syncMappings = new ArrayList<SyncMapping>();
-
-	protected void defineRightExcluding(String... ignores) {
-		List<String> list = new ArrayList<>(Arrays.asList(ignores));
-		list.addAll(Arrays.asList("id", "localId", "propertyChangeListeners",
-				"class"));
-		List<PropertyDescriptor> sortedPropertyDescriptors = SEUtilities
-				.getSortedPropertyDescriptors(mergedClass);
-		Stream<PropertyDescriptor> stream = sortedPropertyDescriptors.stream()
-				.filter(pd -> !list.contains(pd.getName()))
-				.filter(pd -> pd.getReadMethod()
-						.getAnnotation(AlcinaTransient.class) == null);
-		stream.forEach(pd -> defineRight(pd.getName()));
-	}
-
-	public static interface MergeFilter {
-		public boolean allowLeftToRight(Object left, Object right,
-				Object leftProp, Object rightProp);
-
-		public boolean allowRightToLeft(Object left, Object right,
-				Object leftProp, Object rightProp);
-	}
-
 	public static MergeFilter RIGHT_IS_DEFINITIVE = new MergeFilter() {
-		@Override
-		public boolean allowRightToLeft(Object left, Object right,
-				Object leftProp, Object rightProp) {
-			return true;
-		}
-
 		@Override
 		public boolean allowLeftToRight(Object left, Object right,
 				Object leftProp, Object rightProp) {
 			return false;
+		}
+
+		@Override
+		public boolean allowRightToLeft(Object left, Object right,
+				Object leftProp, Object rightProp) {
+			return true;
 		}
 	};
 
 	public static MergeFilter LEFT_IS_DEFINITIVE = new MergeFilter() {
 		@Override
-		public boolean allowRightToLeft(Object left, Object right,
-				Object leftProp, Object rightProp) {
-			return false;
-		}
-
-		@Override
 		public boolean allowLeftToRight(Object left, Object right,
 				Object leftProp, Object rightProp) {
 			return true;
 		}
-	};
 
-	protected MergeFilter defaultFilter = NO_OVERWRITE_FILTER;
-
-	public static final MergeFilter NO_OVERWRITE_FILTER = new MergeFilter() {
 		@Override
 		public boolean allowRightToLeft(Object left, Object right,
 				Object leftProp, Object rightProp) {
-			return leftProp == null;
+			return false;
 		}
+	};
 
+	public static final MergeFilter NO_OVERWRITE_FILTER = new MergeFilter() {
 		@Override
 		public boolean allowLeftToRight(Object left, Object right,
 				Object leftProp, Object rightProp) {
 			return rightProp == null;
 		}
+
+		@Override
+		public boolean allowRightToLeft(Object left, Object right,
+				Object leftProp, Object rightProp) {
+			return leftProp == null;
+		}
 	};
 
-	public class SyncMapping {
-		private String propertyName;
+	private StringKeyProvider<T> keyProvider;
 
-		public SyncMapping(String propertyName) {
-			this.propertyName = propertyName;
-		}
+	private Class<T> mergedClass;
 
-		private MergeFilter mergeFilter;
+	private PropertyAccessor propertyAccessor;
 
-		public void merge(Object left, Object right) {
-			MergeFilter filter = mergeFilter != null ? mergeFilter
-					: defaultFilter;
-			Object leftProp = propertyAccessor.getPropertyValue(left,
-					propertyName);
-			Object rightProp = propertyAccessor.getPropertyValue(right,
-					propertyName);
-			if (filter.allowLeftToRight(left, right, leftProp, rightProp)) {
-				propertyAccessor.setPropertyValue(right, propertyName,
-						leftProp);
-				rightProp = propertyAccessor.getPropertyValue(right,
-						propertyName);
-			}
-			if (filter.allowRightToLeft(left, right, leftProp, rightProp)) {
-				propertyAccessor.setPropertyValue(left, propertyName,
-						rightProp);
-			}
-		}
+	private List<SyncMapping> syncMappings = new ArrayList<SyncMapping>();
 
-		public SyncMapping mergeFilter(MergeFilter mergeFilter) {
-			this.mergeFilter = mergeFilter;
-			return this;
-		}
+	protected MergeFilter defaultFilter = NO_OVERWRITE_FILTER;
+
+	private SyncDeltaModel deltaModel;
+
+	public SyncMerger(Class<T> mergedClass, StringKeyProvider<T> keyProvider) {
+		this.mergedClass = mergedClass;
+		this.keyProvider = keyProvider;
+		propertyAccessor = new JvmPropertyAccessor();
 	}
 
 	public SyncMapping define(String propertyName) {
@@ -154,87 +107,13 @@ public class SyncMerger<T> {
 		return mapping;
 	}
 
-	protected SyncPairAction getSyncType(SyncPair<T> pair) {
-		if (pair.getLeft() == null) {
-			return SyncPairAction.DELETE_RIGHT;
-		} else if (pair.getRight() == null) {
-			return SyncPairAction.CREATE_RIGHT;
-		} else {
-			return SyncPairAction.MERGE;
-		}
-	}
-
-	protected boolean mergePair(SyncPair<T> pair) {
-		SyncPairAction syncType = getSyncType(pair);
-		if (syncType == null || syncType == SyncPairAction.IGNORE) {
-			return false;
-		}
-		pair.setAction(syncType);
-		switch (syncType) {
-		case DELETE_LEFT:
-		case DELETE_RIGHT:
-			return true;
-		case CREATE_LEFT:
-		case CREATE_RIGHT:
-			KeyedObject newKo = new KeyedObject<T>();
-			try {
-				newKo.setKeyProvider(keyProvider);
-				if (syncType == SyncPairAction.CREATE_LEFT) {
-					newKo.setObject(pair.getRight().getObject().getClass()
-							.newInstance());
-					pair.setLeft(newKo);
-				} else {
-					newKo.setObject(pair.getLeft().getObject().getClass()
-							.newInstance());
-					pair.setRight(newKo);
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-			break;
-		}
-		for (SyncMapping mapping : syncMappings) {
-			mapping.merge(pair.getLeft().getObject(),
-					pair.getRight().getObject());
-		}
-		return true;
-	}
-
-	class FirstAndAllLookup {
-		public FirstAndAllLookup(Collection<T> leftItems) {
-			for (T t : leftItems) {
-				firstKeyLookup.add(keyProvider.firstKey(t), t);
-				for (String key : keyProvider.allKeys(t)) {
-					allKeyLookup.add(key, t);
-				}
-			}
-		}
-
-		Multimap<String, List<T>> firstKeyLookup = new Multimap<String, List<T>>();
-
-		Multimap<String, List<T>> allKeyLookup = new Multimap<String, List<T>>();
-
-		public boolean isMultipleFirst(String key) {
-			return firstKeyLookup.getAndEnsure(key).size() > 1;
-		}
-
-		public boolean isMultipleAll(List<String> allKeys) {
-			return allKeyLookup.getForKeys(allKeys).size() > 1;
-		}
-
-		public String allLocators(List<String> allKeys) {
-			Collection forKeys = allKeyLookup.getForKeys(allKeys);
-			if (forKeys.size() > 5) {
-				int size = forKeys.size();
-				forKeys = new ArrayList(forKeys).subList(0, 5);
-				forKeys.add(String.format("...and %s more", size));
-			}
-			return CommonUtils.join(forKeys, "\n");
-		}
+	public Class<T> getMergedClass() {
+		return this.mergedClass;
 	}
 
 	public void merge(Collection<T> leftItems, Collection<T> rightItems,
 			SyncDeltaModel deltaModel, Logger logger) {
+		this.deltaModel = deltaModel;
 		FirstAndAllLookup leftLookup = new FirstAndAllLookup(leftItems);
 		FirstAndAllLookup rightLookup = new FirstAndAllLookup(rightItems);
 		// simplistic - only allow first key matching -
@@ -335,33 +214,103 @@ public class SyncMerger<T> {
 	protected void debugLeft(T left) {
 	}
 
-	protected CollectionFilter<T> getIgnoreAmbiguityForReportingFilter() {
-		return CollectionFilters.PASSTHROUGH_FILTER;
-	}
-
-	public Class<T> getMergedClass() {
-		return this.mergedClass;
+	protected SyncMapping defineLeft(String propertyName) {
+		return this.define(propertyName).mergeFilter(LEFT_IS_DEFINITIVE);
 	}
 
 	protected SyncMapping defineRight(String propertyName) {
 		return this.define(propertyName).mergeFilter(RIGHT_IS_DEFINITIVE);
 	}
 
-	protected SyncMapping defineLeft(String propertyName) {
-		return this.define(propertyName).mergeFilter(LEFT_IS_DEFINITIVE);
+	protected void defineRightExcluding(String... ignores) {
+		List<String> list = new ArrayList<>(Arrays.asList(ignores));
+		list.addAll(Arrays.asList("id", "localId", "propertyChangeListeners",
+				"class"));
+		List<PropertyDescriptor> sortedPropertyDescriptors = SEUtilities
+				.getSortedPropertyDescriptors(mergedClass);
+		Stream<PropertyDescriptor> stream = sortedPropertyDescriptors.stream()
+				.filter(pd -> !list.contains(pd.getName()))
+				.filter(pd -> pd.getReadMethod()
+						.getAnnotation(AlcinaTransient.class) == null);
+		stream.forEach(pd -> defineRight(pd.getName()));
 	}
 
-	public static class SyncMappingWithLog {
-		private String propertyName;
+	protected SyncMappingWithLog defineWithLog(String propertyName,
+			Function<T, Object[]> propertyKeyProvider) {
+		SyncMappingWithLog mapping = new SyncMappingWithLog(propertyName,
+				propertyKeyProvider);
+		syncMappings.add(mapping);
+		return mapping;
+	}
 
-		public SyncMappingWithLog(String propertyName) {
+	protected CollectionFilter<T> getIgnoreAmbiguityForReportingFilter() {
+		return CollectionFilters.PASSTHROUGH_FILTER;
+	}
+
+	protected SyncPairAction getSyncType(SyncPair<T> pair) {
+		if (pair.getLeft() == null) {
+			return SyncPairAction.DELETE_RIGHT;
+		} else if (pair.getRight() == null) {
+			return SyncPairAction.CREATE_RIGHT;
+		} else {
+			return SyncPairAction.MERGE;
+		}
+	}
+
+	protected boolean mergePair(SyncPair<T> pair) {
+		SyncPairAction syncType = getSyncType(pair);
+		if (syncType == null || syncType == SyncPairAction.IGNORE) {
+			return false;
+		}
+		pair.setAction(syncType);
+		switch (syncType) {
+		case DELETE_LEFT:
+		case DELETE_RIGHT:
+			return true;
+		case CREATE_LEFT:
+		case CREATE_RIGHT:
+			KeyedObject newKo = new KeyedObject<T>();
+			try {
+				newKo.setKeyProvider(keyProvider);
+				if (syncType == SyncPairAction.CREATE_LEFT) {
+					newKo.setObject(pair.getRight().getObject().getClass()
+							.newInstance());
+					pair.setLeft(newKo);
+				} else {
+					newKo.setObject(pair.getLeft().getObject().getClass()
+							.newInstance());
+					pair.setRight(newKo);
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			break;
+		}
+		for (SyncMapping mapping : syncMappings) {
+			mapping.merge(pair.getLeft().getObject(),
+					pair.getRight().getObject());
+		}
+		return true;
+	}
+
+	public static interface MergeFilter {
+		public boolean allowLeftToRight(Object left, Object right,
+				Object leftProp, Object rightProp);
+
+		public boolean allowRightToLeft(Object left, Object right,
+				Object leftProp, Object rightProp);
+	}
+
+	public class SyncMapping {
+		protected String propertyName;
+
+		protected MergeFilter filter = defaultFilter;
+
+		public SyncMapping(String propertyName) {
 			this.propertyName = propertyName;
 		}
 
-		JvmPropertyAccessor propertyAccessor = new JvmPropertyAccessor();
-
 		public void merge(Object left, Object right) {
-			MergeFilter filter = NO_OVERWRITE_FILTER;
 			Object leftProp = propertyAccessor.getPropertyValue(left,
 					propertyName);
 			Object rightProp = propertyAccessor.getPropertyValue(right,
@@ -376,6 +325,118 @@ public class SyncMerger<T> {
 				propertyAccessor.setPropertyValue(left, propertyName,
 						rightProp);
 			}
+		}
+
+		public SyncMapping mergeFilter(MergeFilter mergeFilter) {
+			this.filter = mergeFilter;
+			return this;
+		}
+	}
+
+	public class SyncMappingWithLog extends SyncMapping {
+		private Function<T, Object[]> propertyKeyProvider;
+
+		public SyncMappingWithLog(String propertyName,
+				Function<T, Object[]> propertyKeyProvider) {
+			super(propertyName);
+			this.propertyKeyProvider = propertyKeyProvider;
+			MergeFilter filter = NO_OVERWRITE_FILTER;
+		}
+
+		public void merge(Object left, Object right) {
+			PropertyModificationLog propertyModificationLog = deltaModel
+					.getPropertyModificationLog();
+			assert left != null && right != null;
+			Object[] keys = propertyKeyProvider.apply((T) left);
+			List<PropertyModificationLogItem> items = propertyModificationLog
+					.itemsFor(new Object[] { keys[0], keys[1], propertyName });
+			if (items.isEmpty()) {
+				mergeWithoutLog(left, right);
+			} else {
+				// assume String prop at the moment
+				Object leftValue = propertyAccessor.getPropertyValue(left,
+						propertyName);
+				Object rightValue = propertyAccessor.getPropertyValue(right,
+						propertyName);
+				if (!Objects.equals(leftValue, rightValue)) {
+					String newStringValue = CommonUtils.last(items).getValue();
+					Object value = null;
+					boolean write = true;
+					if (newStringValue != null) {
+						// hijack TM
+						DomainTransformEvent event = new DomainTransformEvent();
+						event.setNewStringValue(newStringValue);
+						event.setValueClass(propertyAccessor.getPropertyType(
+								getMergedClass(), propertyName));
+						try {
+							value = TransformManager.get()
+									.getTargetObject(event, false);
+						} catch (Exception e) {
+							write = false;
+							e.printStackTrace();
+						}
+					}
+					if (write) {
+						System.out.format(
+								"Property merge (left,right) %s %s -> %s\n",
+								leftValue, rightValue, value);
+						propertyAccessor.setPropertyValue(left, propertyName,
+								value);
+						propertyAccessor.setPropertyValue(right, propertyName,
+								value);
+					}
+				}
+			}
+		}
+
+		public void mergeWithoutLog(Object left, Object right) {
+			Object leftProp = propertyAccessor.getPropertyValue(left,
+					propertyName);
+			Object rightProp = propertyAccessor.getPropertyValue(right,
+					propertyName);
+			if (filter.allowLeftToRight(left, right, leftProp, rightProp)) {
+				propertyAccessor.setPropertyValue(right, propertyName,
+						leftProp);
+				rightProp = propertyAccessor.getPropertyValue(right,
+						propertyName);
+			}
+			if (filter.allowRightToLeft(left, right, leftProp, rightProp)) {
+				propertyAccessor.setPropertyValue(left, propertyName,
+						rightProp);
+			}
+		}
+	}
+
+	class FirstAndAllLookup {
+		Multimap<String, List<T>> firstKeyLookup = new Multimap<String, List<T>>();
+
+		Multimap<String, List<T>> allKeyLookup = new Multimap<String, List<T>>();
+
+		public FirstAndAllLookup(Collection<T> leftItems) {
+			for (T t : leftItems) {
+				firstKeyLookup.add(keyProvider.firstKey(t), t);
+				for (String key : keyProvider.allKeys(t)) {
+					allKeyLookup.add(key, t);
+				}
+			}
+		}
+
+		public String allLocators(List<String> allKeys) {
+			Collection forKeys = allKeyLookup.getForKeys(allKeys);
+			if (forKeys.size() > 5) {
+				int size = forKeys.size();
+				forKeys = new ArrayList(forKeys).subList(0, 5);
+				forKeys.add(String.format("...and %s more", size));
+			}
+			return CommonUtils.join(forKeys, "\n");
+		}
+
+		public boolean isMultipleAll(List<String> allKeys) {
+			return allKeyLookup.getForKeys(allKeys).size() > 1;
+		}
+
+		public boolean isMultipleFirst(String key) {
+			return firstKeyLookup.getAndEnsure(key).size() > 1;
 		}
 	}
 }
