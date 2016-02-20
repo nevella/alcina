@@ -35,8 +35,8 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 			FlatDeltaPersisterResult perClassResult = new FlatDeltaPersisterResult();
 			DeltaItemPersister persister = persisters.get(clazz);
 			for (SyncPair pair : delta.getDeltas().getAndEnsure(clazz)) {
-				SyncAction syncAction = pair.getAction().getDirectedAction(
-						applyLeft);
+				SyncAction syncAction = pair.getAction()
+						.getDirectedAction(applyLeft);
 				if (syncAction == null) {
 					perClassResult.noModificationCount++;
 					result.noModificationCount++;

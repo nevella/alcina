@@ -16,27 +16,31 @@ import cc.alcina.framework.entity.entityaccess.RollingDataItem;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCacheQuery;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 
+//TODO - lowpri - formal support for "go back a bit" in transform sequence - probably using transform utc date
 public abstract class RollingData<K extends Comparable, V> {
 	protected String typeKey;
 
-	public abstract Function<String, List<V>> deserializer();
+	public RollingData(String typeKey) {
+		this.typeKey = typeKey;
+	}
 
-	public abstract Function<List<V>, String> serializer();
+	protected abstract Function<String, List<V>> deserializer();
 
-	public abstract List<V> getData(K from);
+	protected abstract Function<List<V>, String> serializer();
 
-	public abstract Function<V, K> keyMaker();
+	protected abstract List<V> getData(K from);
 
-	public abstract Function<String, K> keyDeserializer();
+	protected abstract Function<V, K> keyMaker();
 
-	public SortedMap<K, V> getValues(K earliestKey, String typeKey) {
+	protected abstract Function<String, K> keyDeserializer();
+
+	public SortedMap<K, V> getValues(K earliestKey) {
 		synchronized (getClass()) {
-			return getValues0(earliestKey, typeKey);
+			return getValues0(earliestKey);
 		}
 	}
 
-	private SortedMap<K, V> getValues0(K earliestKey, String typeKey) {
-		this.typeKey = typeKey;
+	private SortedMap<K, V> getValues0(K earliestKey) {
 		Class<? extends RollingDataItem> rdImplClass = Registry
 				.impl(CommonPersistenceProvider.class)
 				.getCommonPersistenceExTransaction()

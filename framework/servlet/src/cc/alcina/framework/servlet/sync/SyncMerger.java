@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
@@ -350,7 +351,7 @@ public class SyncMerger<T> {
 			Object[] keys = propertyKeyProvider.apply((T) left);
 			List<PropertyModificationLogItem> items = propertyModificationLog
 					.itemsFor(new Object[] { keys[0], keys[1], propertyName });
-			if (items.isEmpty()) {
+			if (items.isEmpty() || keys[1] == null || keys[0] == null) {
 				mergeWithoutLog(left, right);
 			} else {
 				// assume String prop at the moment
@@ -380,6 +381,10 @@ public class SyncMerger<T> {
 						System.out.format(
 								"Property merge (left,right) %s %s -> %s\n",
 								leftValue, rightValue, value);
+						TransformManager.get()
+								.registerDomainObject((HasIdAndLocalId) left);
+						TransformManager.get()
+								.registerDomainObject((HasIdAndLocalId) right);
 						propertyAccessor.setPropertyValue(left, propertyName,
 								value);
 						propertyAccessor.setPropertyValue(right, propertyName,

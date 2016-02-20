@@ -35,6 +35,11 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 					.getMergedClass()), rightInterchangeModel
 					.getCollectionFor(merger.getMergedClass()), deltaModel,logger);
 		}
+		beforePersistence();
 		this.persisterResult = localDeltaPersister.apply(deltaModel);
+	}
+
+	protected void beforePersistence() {
+		
 	}
 }
