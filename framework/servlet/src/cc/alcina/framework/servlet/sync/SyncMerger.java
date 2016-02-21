@@ -346,6 +346,7 @@ public class SyncMerger<T> {
 
 		public List<MergeHistory> history = new ArrayList<>();
 
+		@SuppressWarnings("unused")
 		public class MergeHistory {
 			private Object left;
 
@@ -396,9 +397,6 @@ public class SyncMerger<T> {
 			Object[] keys = propertyKeyProvider.apply((T) left);
 			List<PropertyModificationLogItem> items = propertyModificationLog
 					.itemsFor(new Object[] { keys[0], keys[1], propertyName });
-			if ("JCT-499519".equals(keys[1])) {
-				int debug = 3;
-			}
 			if (items.isEmpty() || keys[1] == null || keys[0] == null) {
 				mergeWithoutLog(left, right);
 			} else {
