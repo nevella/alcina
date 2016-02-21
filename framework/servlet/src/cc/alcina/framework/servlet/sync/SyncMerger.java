@@ -344,6 +344,51 @@ public class SyncMerger<T> {
 			MergeFilter filter = NO_OVERWRITE_FILTER;
 		}
 
+		public List<MergeHistory> history = new ArrayList<>();
+
+		public class MergeHistory {
+			private Object left;
+
+			private Object right;
+
+			private Object leftValue;
+
+			private Object rightValue;
+
+			private Object value;
+
+			private List<PropertyModificationLogItem> items;
+
+			public MergeHistory(Object left, Object right, Object leftValue,
+					Object rightValue, Object value,
+					List<PropertyModificationLogItem> items) {
+				this.left = left;
+				this.right = right;
+				this.leftValue = leftValue;
+				this.rightValue = rightValue;
+				this.value = value;
+				this.items = items;
+			}
+
+			public void log() {
+				String message = getMessage();
+				System.out.println(message);
+			}
+
+			private String getMessage() {
+				String message = CommonUtils.formatJ(
+						"Property merge (left,right) %s %s -> %s", leftValue,
+						rightValue, value);
+				return message;
+			}
+
+			@Override
+			public String toString() {
+				return String.format("%s\n%s", getMessage(),
+						CommonUtils.joinWithNewlineTab(items));
+			}
+		}
+
 		public void merge(Object left, Object right) {
 			PropertyModificationLog propertyModificationLog = deltaModel
 					.getPropertyModificationLog();
@@ -351,6 +396,9 @@ public class SyncMerger<T> {
 			Object[] keys = propertyKeyProvider.apply((T) left);
 			List<PropertyModificationLogItem> items = propertyModificationLog
 					.itemsFor(new Object[] { keys[0], keys[1], propertyName });
+			if ("JCT-499519".equals(keys[1])) {
+				int debug = 3;
+			}
 			if (items.isEmpty() || keys[1] == null || keys[0] == null) {
 				mergeWithoutLog(left, right);
 			} else {
@@ -378,9 +426,17 @@ public class SyncMerger<T> {
 						}
 					}
 					if (write) {
-						System.out.format(
-								"Property merge (left,right) %s %s -> %s\n",
-								leftValue, rightValue, value);
+						MergeHistory mergeHistory = new MergeHistory(left,
+								right, leftValue, rightValue, value, items);
+						mergeHistory.log();
+						if (value == null) {
+							int debug = 3;
+						}
+						if (Objects.equals(value, rightValue)
+								&& propertyName.equals("email")) {
+							int debug = 3;
+						}
+						history.add(mergeHistory);
 						TransformManager.get()
 								.registerDomainObject((HasIdAndLocalId) left);
 						TransformManager.get()

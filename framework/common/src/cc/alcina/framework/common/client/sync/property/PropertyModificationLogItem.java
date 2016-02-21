@@ -1,5 +1,10 @@
 package cc.alcina.framework.common.client.sync.property;
 
+import java.util.Date;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+
 public class PropertyModificationLogItem {
 	private String propertyName;
 
@@ -15,10 +20,6 @@ public class PropertyModificationLogItem {
 
 	private long transformId;
 
-	public long getTransformId() {
-		return this.transformId;
-	}
-
 	public PropertyModificationLogItem() {
 	}
 
@@ -31,10 +32,6 @@ public class PropertyModificationLogItem {
 		this.source = source;
 		this.objectId = objectId;
 		this.objectClassName = objectClassName;
-		this.transformId = transformId;
-	}
-
-	public void setTransformId(long transformId) {
 		this.transformId = transformId;
 	}
 
@@ -56,6 +53,10 @@ public class PropertyModificationLogItem {
 
 	public String getSource() {
 		return this.source;
+	}
+
+	public long getTransformId() {
+		return this.transformId;
 	}
 
 	public String getValue() {
@@ -82,7 +83,19 @@ public class PropertyModificationLogItem {
 		this.source = source;
 	}
 
+	public void setTransformId(long transformId) {
+		this.transformId = transformId;
+	}
+
 	public void setValue(String value) {
 		this.value = value;
 	}
+
+	public String toString() {
+		return CommonUtils.formatJ("%s\t%s\t%s",
+				CommonUtils.padStringRight(source, 20, ' '),
+				CommonUtils.formatDate(new Date(modificationTime),
+						DateStyle.AU_DATE_TIME_HUMAN),
+				value);
+	};
 }

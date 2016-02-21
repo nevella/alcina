@@ -390,22 +390,33 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			RelativePopupValidationFeedback vf = new RelativePopupValidationFeedback(
 					position);
 			vf.setCss(multiple ? null : "gwittir-ValidationPopup-right");
-			if (bwp == null) {
+			if (bwp != null && !editableWidgets) {
 				Class domainType = p.getType();
 				boolean isEnum = domainType.isEnum();
-				if (editableWidgets) {
-					if (domainType == Date.class) {
-						bwp = AU_DATE_PROVIDER;
-					} else if (isEnum) {
-						bwp = editableWidgets
-								? new ListBoxEnumProvider(domainType, true)
-								: NOWRAP_LABEL_PROVIDER;
-					} else if (domainType == boolean.class
-							|| domainType == Boolean.class) {
-						bwp = YES_NO_LABEL_PROVIDER;
-					} else {
-						bwp = NOWRAP_LABEL_PROVIDER;
-					}
+				if (domainType == Date.class) {
+					bwp = AU_DATE_PROVIDER;
+				} else if (isEnum) {
+					bwp = FRIENDLY_ENUM_LABEL_PROVIDER_INSTANCE;
+				} else if (domainType == boolean.class
+						|| domainType == Boolean.class) {
+					bwp = YES_NO_LABEL_PROVIDER;
+				} else {
+					bwp = NOWRAP_LABEL_PROVIDER;
+				}
+			} else if (bwp == null) {
+				Class domainType = p.getType();
+				boolean isEnum = domainType.isEnum();
+				if (domainType == Date.class) {
+					bwp = AU_DATE_PROVIDER;
+				} else if (isEnum) {
+					bwp = editableWidgets
+							? new ListBoxEnumProvider(domainType, true)
+							: NOWRAP_LABEL_PROVIDER;
+				} else if (domainType == boolean.class
+						|| domainType == Boolean.class) {
+					bwp = YES_NO_LABEL_PROVIDER;
+				} else {
+					bwp = NOWRAP_LABEL_PROVIDER;
 				}
 			}
 			return new Field(pr.getPropertyName(),
