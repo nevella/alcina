@@ -60,10 +60,6 @@ import cc.alcina.framework.entity.util.AnnotationUtils;
 public class ClassrefScanner extends CachingScanner {
 	private LinkedHashSet<Class> persistableClasses;
 
-	public ClassrefScanner() {
-		persistent=!AppPersistenceBase.isInstanceReadOnly();
-	}
-
 	public void scan(ClassDataCache cache) throws Exception {
 		String cachePath = getHomeDir().getPath() + File.separator
 				+ getClass().getSimpleName() + "-cache.ser";
@@ -228,7 +224,12 @@ public class ClassrefScanner extends CachingScanner {
 					delta = true;
 					ref = crimpl.newInstance();
 					ref.setRefClass(clazz);
-					long id = cp.merge(ref);
+					long id = 0;
+					if (AppPersistenceBase.isInstanceReadOnly()) {
+						id = --roIdCounter;
+					} else {
+						id = cp.merge(ref);
+					}
 					ref.setId(id);
 					ClassRef.add(CommonUtils.wrapInCollection(ref));
 					System.out.format("adding classref - %s %s\n", ref.getId(),
@@ -237,15 +238,20 @@ public class ClassrefScanner extends CachingScanner {
 					deleteClassrefs.remove(ref);
 				}
 			}
-			for (ClassRef ref : deleteClassrefs) {
-				delta = true;
-				System.out.format("removing classref - %s %s\n", ref.getId(),
-						ref.getRefClassName());
-				cp.remove(ref);
-				ClassRef.remove(ref);
+			if (AppPersistenceBase.isInstanceReadOnly()) {
+			} else {
+				for (ClassRef ref : deleteClassrefs) {
+					delta = true;
+					System.out.format("removing classref - %s %s\n",
+							ref.getId(), ref.getRefClassName());
+					cp.remove(ref);
+					ClassRef.remove(ref);
+				}
 			}
 		}
 	}
+
+	private long roIdCounter = 0;
 
 	@Override
 	protected void process(Class c, String className, ClassDataItem foundItem,
