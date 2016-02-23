@@ -119,13 +119,15 @@ public class ExcelExporter {
 		}
 
 		public int order() {
-			return xfa != null ? xfa.order() : dia != null ? dia.orderingHint()
-					: ExcelFormatAnnotation.DEFAULT_ORDER_POS;
+			return xfa != null ? xfa.order()
+					: dia != null ? dia.orderingHint()
+							: ExcelFormatAnnotation.DEFAULT_ORDER_POS;
 		}
 
 		public String name() {
-			return xfa != null && !xfa.displayName().isEmpty() ? xfa
-					.displayName() : dia != null ? dia.name() : pd.getName();
+			return xfa != null && !xfa.displayName().isEmpty()
+					? xfa.displayName()
+					: dia != null ? dia.name() : pd.getName();
 		}
 
 		@Override
@@ -202,37 +204,39 @@ public class ExcelExporter {
 			row = book.createElement("Row");
 			dataRow = new ArrayList<>();
 			int colIndex = 1;
-			for (PdMultiplexer pdm : pds) {
-				cell = book.createElement("Cell");
-				data = book.createElement("Data");
-				cell.appendChild(data);
-				String type = "String";
-				Object value = pdm.pd.getReadMethod().invoke(o,
-						CommonUtils.EMPTY_OBJECT_ARRAY);
-				cell.setAttributeNS(SS_NS, "ss:Index",
-						String.valueOf(colIndex++));
-				if (value == null
-						|| (value instanceof String && value.toString()
-								.isEmpty())) {
-					dataRow.add(null);
-					continue;
-				}
-				if (pdm.pd.getPropertyType() == Date.class) {
-					type = "DateTime";
-					value = df.format(value);
-				} else if (Number.class.isAssignableFrom(pdm.pd
-						.getPropertyType())) {
-					type = "Number";
-				}
-				data.setAttributeNS(SS_NS, "ss:Type", type);
-				txt = book.createTextNode((value == null) ? "" : value
-						.toString());
-				data.appendChild(txt);
-				dataRow.add(txt.getTextContent());
-				row.appendChild(cell);
-			}
 			table.appendChild(row);
 			cellList.add(dataRow);
+			// null denotes blank row
+			if (o != null) {
+				for (PdMultiplexer pdm : pds) {
+					cell = book.createElement("Cell");
+					data = book.createElement("Data");
+					cell.appendChild(data);
+					String type = "String";
+					Object value = pdm.pd.getReadMethod().invoke(o,
+							CommonUtils.EMPTY_OBJECT_ARRAY);
+					cell.setAttributeNS(SS_NS, "ss:Index",
+							String.valueOf(colIndex++));
+					if (value == null || (value instanceof String
+							&& value.toString().isEmpty())) {
+						dataRow.add(null);
+						continue;
+					}
+					if (pdm.pd.getPropertyType() == Date.class) {
+						type = "DateTime";
+						value = df.format(value);
+					} else if (Number.class
+							.isAssignableFrom(pdm.pd.getPropertyType())) {
+						type = "Number";
+					}
+					data.setAttributeNS(SS_NS, "ss:Type", type);
+					txt = book.createTextNode(
+							(value == null) ? "" : value.toString());
+					data.appendChild(txt);
+					dataRow.add(txt.getTextContent());
+					row.appendChild(cell);
+				}
+			}
 		}
 	}
 
@@ -240,12 +244,12 @@ public class ExcelExporter {
 		if (pd.getReadMethod() == null) {
 			return true;
 		}
-		ExcelFormatAnnotation ann = pd.getReadMethod().getAnnotation(
-				ExcelFormatAnnotation.class);
+		ExcelFormatAnnotation ann = pd.getReadMethod()
+				.getAnnotation(ExcelFormatAnnotation.class);
 		return (pd.getName().equals("class")
 				|| pd.getName().equals("propertyChangeListeners")
-				|| pd.getName().equals("localId") || pd.getName().equals(
-				"versionNumber"))
+				|| pd.getName().equals("localId")
+				|| pd.getName().equals("versionNumber"))
 				|| (ann != null && ann.omit());
 	}
 
@@ -332,8 +336,8 @@ public class ExcelExporter {
 	}
 
 	public Document getTemplate() throws Exception {
-		InputStream stream = this.getClass().getResourceAsStream(
-				DOC_TEMPLATE_XML);
+		InputStream stream = this.getClass()
+				.getResourceAsStream(DOC_TEMPLATE_XML);
 		Document document = XmlUtils.loadDocument(stream);
 		sheetTemplate = (Element) document.getDocumentElement()
 				.getElementsByTagName("Worksheet").item(0);
