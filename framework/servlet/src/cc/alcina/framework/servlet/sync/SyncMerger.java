@@ -373,7 +373,7 @@ public class SyncMerger<T> {
 
 			public void log() {
 				String message = getMessage();
-				System.out.println(message);
+				// System.out.println(message);
 			}
 
 			private String getMessage() {
@@ -397,7 +397,14 @@ public class SyncMerger<T> {
 			Object[] keys = propertyKeyProvider.apply((T) left);
 			List<PropertyModificationLogItem> items = propertyModificationLog
 					.itemsFor(new Object[] { keys[0], keys[1], propertyName });
-			if (items.isEmpty() || keys[1] == null || keys[0] == null) {
+			if (Objects.equals(keys[1], "JCT-243017")) {
+				int debug = 3;
+			}
+			boolean withoutLog = items.isEmpty() || keys[1] == null
+					|| keys[0] == null;
+			withoutLog |= ((HasIdAndLocalId) left).getId() == 0
+					|| ((HasIdAndLocalId) right).getId() == 0;
+			if (withoutLog) {
 				mergeWithoutLog(left, right);
 			} else {
 				// assume String prop at the moment
@@ -435,10 +442,8 @@ public class SyncMerger<T> {
 							int debug = 3;
 						}
 						history.add(mergeHistory);
-						TransformManager.get()
-								.registerDomainObject((HasIdAndLocalId) left);
-						TransformManager.get()
-								.registerDomainObject((HasIdAndLocalId) right);
+						maybeRegister(left,right);
+						
 						propertyAccessor.setPropertyValue(left, propertyName,
 								value);
 						propertyAccessor.setPropertyValue(right, propertyName,
@@ -497,5 +502,9 @@ public class SyncMerger<T> {
 		public boolean isMultipleFirst(String key) {
 			return firstKeyLookup.getAndEnsure(key).size() > 1;
 		}
+	}
+
+	public void maybeRegister(Object left, Object right) {
+		//if you'd like to TM-record object modifications
 	}
 }
