@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 public class CsvUtils {
 	public static List<List<String>> parseCsv(String txt) {
 		txt = txt.replaceAll("[\\r\\n]+[\\r\\n]*", "\n");
+		txt=txt.replaceAll("\t", ",");
 		List<List<String>> results = new ArrayList<List<String>>();
 		List<String> row = null;
 		int i = 0;

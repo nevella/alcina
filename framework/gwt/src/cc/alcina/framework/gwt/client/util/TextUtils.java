@@ -39,6 +39,10 @@ public class TextUtils {
 		return normaliseAndTrim(CommonUtils.nullToEmpty(key).toLowerCase());
 	}
 
+	public static String trim(String key) {
+		return trim(CommonUtils.nullToEmpty(key));
+	}
+
 	public static native void setElementStyle(Element e, String css) /*-{
         if (e.style && typeof (e.style.cssText) == "string") {
             e.style.cssText = css;
