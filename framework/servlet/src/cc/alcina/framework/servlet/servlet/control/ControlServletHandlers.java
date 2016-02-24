@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
-import cc.alcina.framework.gwt.client.gwittir.renderer.ToLowerCaseConverter;
+import cc.alcina.framework.gwt.client.gwittir.renderer.ToLowerCaseTrimmedConverter;
 
 public class ControlServletHandlers {
 	public enum ModeEnum {
@@ -66,8 +66,8 @@ public class ControlServletHandlers {
 				String message = String.format(
 						"Writer mode delta [%s]: %s -> %s",
 						getModesPropertyName(),
-						new ToLowerCaseConverter().convert(currentValue),
-						new ToLowerCaseConverter().convert(targetValue));
+						new ToLowerCaseTrimmedConverter().convert(currentValue),
+						new ToLowerCaseTrimmedConverter().convert(targetValue));
 				appLifecycleManager.log(message);
 				handleDelta0(fromState, toState);
 				SEUtilities.setPropertyValue(appLifecycleManager.getState()

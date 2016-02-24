@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import cc.alcina.framework.common.client.cache.PrivateObjectCache;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -32,7 +33,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  *
  * @author Nick Reddel
  */
-public class DetachedEntityCache implements Serializable {
+public class DetachedEntityCache implements Serializable,PrivateObjectCache {
 	// have it distributed
 	protected Map<Class, Map<Long, HasIdAndLocalId>> detached = new HashMap<Class, Map<Long, HasIdAndLocalId>>(
 			128);
@@ -194,4 +195,6 @@ public class DetachedEntityCache implements Serializable {
 		}
 		return CommonUtils.join(lines, "\n");
 	}
+
+	
 }

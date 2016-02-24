@@ -1,24 +1,26 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
-import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
-import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
-
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import cc.alcina.framework.common.client.cache.CacheLookup;
 import cc.alcina.framework.common.client.cache.CacheCreators.CacheIdMapCreator;
 import cc.alcina.framework.common.client.cache.CacheCreators.CacheLongSetCreator;
 import cc.alcina.framework.common.client.cache.CacheCreators.CacheMultisetCreator;
+import cc.alcina.framework.common.client.cache.CacheCreators.CachePrivateObjectCacheCreator;
+import cc.alcina.framework.common.client.cache.CacheLookup;
+import cc.alcina.framework.common.client.cache.PrivateObjectCache;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.SortedMultiset;
+import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class CacheCreatorsFastUtil {
-	@RegistryLocation(registryPoint = CacheLongSetCreator.class,implementationType=ImplementationType.SINGLETON)
+	@RegistryLocation(registryPoint = CacheLongSetCreator.class, implementationType = ImplementationType.SINGLETON)
 	public static class CacheLongSetCreatorFastutil
 			implements CacheLongSetCreator {
 		@Override
@@ -27,7 +29,7 @@ public class CacheCreatorsFastUtil {
 		}
 	}
 
-	@RegistryLocation(registryPoint = CacheMultisetCreator.class)
+	@RegistryLocation(registryPoint = CacheMultisetCreator.class, implementationType = ImplementationType.SINGLETON)
 	public static class CacheMultisetCreatorFastUtil<T>
 			implements CacheMultisetCreator<T> {
 		CacheLongSetCreator longSetCreator = Registry
@@ -54,11 +56,20 @@ public class CacheCreatorsFastUtil {
 		}
 	}
 
-	@RegistryLocation(registryPoint = CacheIdMapCreator.class)
+	@RegistryLocation(registryPoint = CacheIdMapCreator.class, implementationType = ImplementationType.SINGLETON)
 	public static class CacheIdMapCreatorJ2SE implements CacheIdMapCreator {
 		@Override
 		public Map<Long, HasIdAndLocalId> get() {
 			return new ConcurrentSkipListMap<Long, HasIdAndLocalId>();
+		}
+	}
+
+	@RegistryLocation(registryPoint = CachePrivateObjectCacheCreator.class, implementationType = ImplementationType.SINGLETON)
+	public static class CachePrivateObjectCacheCreatorJ2SE
+			implements CachePrivateObjectCacheCreator {
+		@Override
+		public PrivateObjectCache get() {
+			return new DetachedEntityCache();
 		}
 	}
 }

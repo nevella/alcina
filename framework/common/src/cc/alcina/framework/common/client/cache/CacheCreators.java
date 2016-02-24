@@ -12,7 +12,6 @@ public interface CacheCreators {
 	}
 
 	public static interface CacheMultisetCreator<T> {
-
 		public SortedMultiset<T, Set<Long>> get(CacheLookup cacheLookup,
 				boolean concurrent);
 	}
@@ -20,5 +19,10 @@ public interface CacheCreators {
 	public static interface CacheIdMapCreator
 			extends Supplier<Map<Long, HasIdAndLocalId>> {
 		public Map<Long, HasIdAndLocalId> get();
+	}
+
+	public static interface CachePrivateObjectCacheCreator
+			extends Supplier<PrivateObjectCache> {
+		public PrivateObjectCache get();
 	}
 }

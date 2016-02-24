@@ -3,15 +3,14 @@ package cc.alcina.framework.common.client.cache;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.Converter;
 
-import cc.alcina.framework.common.client.cache.CacheCreators.CacheIdMapCreator;
 import cc.alcina.framework.common.client.cache.CacheCreators.CacheLongSetCreator;
 import cc.alcina.framework.common.client.cache.CacheCreators.CacheMultisetCreator;
+import cc.alcina.framework.common.client.cache.CacheCreators.CachePrivateObjectCacheCreator;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
@@ -28,7 +27,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId>
 
 	private PropertyPathAccessor propertyPathAccesor;
 
-	protected Map<Long, T> privateCache;
+	protected PrivateObjectCache privateCache;
 
 	private boolean enabled = true;
 
@@ -58,14 +57,16 @@ public class CacheLookup<T, H extends HasIdAndLocalId>
 	}
 
 	public void createPrivateCache() {
-		privateCache = (Map) Registry.impl(CacheIdMapCreator.class).get();
+		privateCache = Registry.impl(CachePrivateObjectCacheCreator.class)
+				.get();
 	}
 
 	public Set<Long> get(T k1) {
+		k1 = normalise(k1);
 		if (k1 == null) {
 			return null;
 		}
-		return wrapWithModificationChecker(store.get(normalise(k1)));
+		return wrapWithModificationChecker(store.get(k1));
 	}
 
 	@Override
@@ -77,14 +78,14 @@ public class CacheLookup<T, H extends HasIdAndLocalId>
 		if (value instanceof Collection) {
 			Set<Long> result = createLongSet();
 			for (T t : (Collection<T>) value) {
-				Set<Long> ids = get(t);
+				Set<Long> ids = get(normalise(t));
 				if (ids != null) {
 					result.addAll(ids);
 				}
 			}
 			return result;
 		} else {
-			return get((T) value);
+			return get(normalise((T) value));
 		}
 	}
 
@@ -121,13 +122,17 @@ public class CacheLookup<T, H extends HasIdAndLocalId>
 		if (v1 instanceof Collection) {
 			Set deduped = new LinkedHashSet((Collection) v1);
 			for (Object v2 : deduped) {
-				add((T) v2, hili.getId());
+				add(normalise((T) v2), hili.getId());
 			}
 		} else {
-			add((T) v1, hili.getId());
+			add(normalise((T) v1), hili.getId());
 		}
 		if (privateCache != null) {
-			privateCache.put(hili.getId(), (T) hili);
+			if (descriptor.clazz != hili.getClass()) {
+				privateCache.putForSuperClass(descriptor.clazz, hili);
+			} else {
+				privateCache.put(hili);
+			}
 		}
 	}
 
@@ -151,7 +156,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId>
 	@Override
 	public void remove(H hili) {
 		Object v1 = getChainedProperty(hili);
-		remove((T) v1, hili.getId());
+		remove(normalise((T) v1), hili.getId());
 	}
 
 	public void remove(T k1, Long value) {
@@ -163,14 +168,14 @@ public class CacheLookup<T, H extends HasIdAndLocalId>
 	}
 
 	public void removeExisting(H hili) {
-		H existing = (H) privateCache.get(hili.getId());
+		H existing = (H) privateCache.getExisting(hili);
 		if (existing != null) {
 			remove(existing);
 		}
 	}
 
 	public void removeExisting(HiliLocator locator) {
-		H existing = (H) privateCache.get(locator.id);
+		H existing = (H) privateCache.get(locator.clazz, locator.id);
 		if (existing != null) {
 			remove(existing);
 		}
@@ -205,7 +210,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId>
 	}
 
 	private T normalise(T k1) {
-		return normaliser == null ? k1 : normaliser.convert(k1);
+		return normaliser == null || k1 == null ? k1 : normaliser.convert(k1);
 	}
 
 	private <V> Set<V> wrapWithModificationChecker(Set<V> set) {
@@ -236,13 +241,14 @@ public class CacheLookup<T, H extends HasIdAndLocalId>
 
 	// write thread only!!
 	protected Set<Long> getAndEnsure(T k1) {
+		k1 = normalise(k1);
 		if (concurrent && k1 == null) {
 			return new LinkedHashSet<>();
 		}
 		Set<Long> result = get(k1);
 		if (result == null) {
 			result = createLongSet();
-			store.put(normalise(k1), result);
+			store.put(k1, result);
 		}
 		return wrapWithModificationChecker(result);
 	}
@@ -253,7 +259,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId>
 
 	protected H getForResolvedId(long id) {
 		if (privateCache != null) {
-			return (H) privateCache.get(id);
+			return (H) privateCache.get(descriptor.clazz, id);
 		}
 		return (H) Domain.transactionalFind(descriptor.clazz, id);
 	}
