@@ -31,10 +31,13 @@ import java.util.Set;
  */
 @SuppressWarnings("unchecked")
 public class Multiset<K, V extends Set> implements Serializable {
-	private Map<K, V> map = createTopMap();
+	protected Map<K, V> map ;
 
-	protected Map<K, V> createTopMap() {
-		return new LinkedHashMap<K, V>();
+	protected void createTopMap() {
+		map=new LinkedHashMap<K, V>();
+	}
+	public Multiset() {
+		createTopMap();
 	}
 
 	public boolean add(K key, Object item) {

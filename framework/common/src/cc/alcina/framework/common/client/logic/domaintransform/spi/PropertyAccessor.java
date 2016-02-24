@@ -20,7 +20,8 @@ import java.lang.annotation.Annotation;
  * @author Nick Reddel
  */
 public interface PropertyAccessor {
-	public void setPropertyValue(Object bean, String propertyName, Object value);
+	public void setPropertyValue(Object bean, String propertyName,
+			Object value);
 
 	public Object getPropertyValue(Object bean, String propertyName);
 
@@ -36,5 +37,7 @@ public interface PropertyAccessor {
 		public Object getPropertyValue(Object value);
 
 		public void setPropertyValue(Object bean, Object value);
+
+		Class getPropertyType(Object bean);
 	}
 }

@@ -25,10 +25,9 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 	public List<String> propertyPathAlia = new ArrayList<String>();
 
 	public boolean handles(Class clazz2, String propertyPath) {
-		return clazz2 == clazz
-				&& propertyPath != null
-				&& (propertyPath.equals(this.propertyPath) || propertyPathAlia
-						.contains(propertyPath));
+		return clazz2 == clazz && propertyPath != null
+				&& (propertyPath.equals(this.propertyPath)
+						|| propertyPathAlia.contains(propertyPath));
 	}
 
 	private CollectionFilter<T> relevanceFilter;
@@ -53,15 +52,7 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 	public void ensureLookupWithPrivateCache() {
 		if (lookup == null) {
 			createLookup();
-			lookup.privateCache = new DetachedEntityCache() {
-				private CacheIdMapCreator idMapCreator = Registry
-						.impl(CacheIdMapCreator.class);
-
-				@Override
-				public Map<Long, HasIdAndLocalId> createMap() {
-					return idMapCreator.get();
-				}
-			};
+			lookup.createPrivateCache();
 		}
 	}
 
@@ -78,6 +69,7 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 	public void createLookup() {
 		if (lookup == null) {
 			this.lookup = new CacheLookup(this);
+			
 		}
 	}
 

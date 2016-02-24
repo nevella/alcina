@@ -40,6 +40,8 @@ public abstract class AbstractLocalDomainLocatable<T extends LocalDomainLocatabl
 	public T updateLocalEquivalent() {
 		try {
 			LooseContext.pushWithKey(CONTEXT_HINT_ALLOW_CACHED_FIND, true);
+			Registry.impl(LocalDomainPersistence.class, getClass())
+					.adjustUpdateContext();
 			T local = findLocalEquivalent();
 			if (local != null && local.equivalentTo(this)) {
 				if (local == this) {
@@ -50,7 +52,14 @@ public abstract class AbstractLocalDomainLocatable<T extends LocalDomainLocatabl
 		} finally {
 			LooseContext.pop();
 		}
-		return ensureLocalEquivalent();
+		try {
+			LooseContext.push();
+			Registry.impl(LocalDomainPersistence.class, getClass())
+					.adjustUpdateContext();
+			return ensureLocalEquivalent();
+		} finally {
+			LooseContext.pop();
+		}
 	}
 
 	public void deleteLocalEquivalent() {

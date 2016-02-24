@@ -3,31 +3,32 @@ package cc.alcina.framework.common.client.cache;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
+import com.google.gwt.core.client.GWT;
+import com.totsp.gwittir.client.beans.Converter;
+
+import cc.alcina.framework.common.client.cache.CacheCreators.CacheIdMapCreator;
 import cc.alcina.framework.common.client.cache.CacheCreators.CacheLongSetCreator;
 import cc.alcina.framework.common.client.cache.CacheCreators.CacheMultisetCreator;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.common.client.util.SortedMultiset;
 
-import com.google.gwt.core.client.GWT;
-import com.totsp.gwittir.client.beans.Converter;
-
-public class CacheLookup<T, H extends HasIdAndLocalId> implements
-		CacheListener<H> {
+public class CacheLookup<T, H extends HasIdAndLocalId>
+		implements CacheListener<H> {
 	private SortedMultiset<T, Set<Long>> store;
 
 	protected CacheLookupDescriptor descriptor;
 
 	private PropertyPathAccessor propertyPathAccesor;
 
-	protected DetachedEntityCache privateCache;
+	protected Map<Long, T> privateCache;
 
 	private boolean enabled = true;
 
@@ -39,6 +40,8 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 
 	private ModificationChecker modificationChecker;
 
+	private CacheLongSetCreator setCreator;
+
 	public CacheLookup(CacheLookupDescriptor descriptor) {
 		this(descriptor, false);
 	}
@@ -46,10 +49,16 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	public CacheLookup(CacheLookupDescriptor descriptor, boolean concurrent) {
 		this.descriptor = descriptor;
 		this.concurrent = concurrent;
-		this.store = Registry.impl(CacheMultisetCreator.class).get(concurrent);
 		this.propertyPathAccesor = new PropertyPathAccessor(
 				descriptor.propertyPath);
+		this.store = Registry.impl(CacheMultisetCreator.class).get(this,
+				concurrent);
 		this.relevanceFilter = descriptor.getRelevanceFilter();
+		setCreator = Registry.impl(CacheLongSetCreator.class);
+	}
+
+	public void createPrivateCache() {
+		privateCache = (Map) Registry.impl(CacheIdMapCreator.class).get();
 	}
 
 	public Set<Long> get(T k1) {
@@ -79,6 +88,10 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		}
 	}
 
+	public ModificationChecker getModificationChecker() {
+		return modificationChecker;
+	}
+
 	public Converter<T, T> getNormaliser() {
 		return this.normaliser;
 	}
@@ -92,6 +105,10 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 			}
 		}
 		return result;
+	}
+
+	public PropertyPathAccessor getPropertyPathAccesor() {
+		return this.propertyPathAccesor;
 	}
 
 	@Override
@@ -110,11 +127,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 			add((T) v1, hili.getId());
 		}
 		if (privateCache != null) {
-			if (descriptor.clazz != hili.getClass()) {
-				privateCache.putForSuperClass(descriptor.clazz, hili);
-			} else {
-				privateCache.put(hili);
-			}
+			privateCache.put(hili.getId(), (T) hili);
 		}
 	}
 
@@ -150,14 +163,14 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	}
 
 	public void removeExisting(H hili) {
-		H existing = privateCache.getExisting(hili);
+		H existing = (H) privateCache.get(hili.getId());
 		if (existing != null) {
 			remove(existing);
 		}
 	}
 
 	public void removeExisting(HiliLocator locator) {
-		H existing = (H) privateCache.get(locator.clazz, locator.id);
+		H existing = (H) privateCache.get(locator.id);
 		if (existing != null) {
 			remove(existing);
 		}
@@ -165,6 +178,11 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public void
+			setModificationChecker(ModificationChecker modificationChecker) {
+		this.modificationChecker = modificationChecker;
 	}
 
 	public void setNormaliser(Converter<T, T> normaliser) {
@@ -182,8 +200,8 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("Lookup: %s [%s]", getListenedClass()
-				.getSimpleName(), descriptor.propertyPath);
+		return CommonUtils.formatJ("Lookup: %s [%s]",
+				getListenedClass().getSimpleName(), descriptor.propertyPath);
 	}
 
 	private T normalise(T k1) {
@@ -193,14 +211,14 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	private <V> Set<V> wrapWithModificationChecker(Set<V> set) {
 		return set == null ? null
 				: set instanceof CacheLookup.ModificationCheckedSet
-						|| GWT.isClient() ? set : new ModificationCheckedSet(
-						set);
+						|| GWT.isClient() ? set
+								: new ModificationCheckedSet(set);
 	}
 
 	protected void add(T k1, Long value) {
 		if (value == null) {
-			System.err.println("Invalid value (null) for cache lookup put - "
-					+ k1);
+			System.err.println(
+					"Invalid value (null) for cache lookup put - " + k1);
 			return;
 		}
 		getAndEnsure(k1).add(value);
@@ -213,7 +231,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	}
 
 	protected Set createLongSet() {
-		return Registry.impl(CacheLongSetCreator.class).get();
+		return setCreator.get();
 	}
 
 	// write thread only!!
@@ -235,21 +253,20 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 
 	protected H getForResolvedId(long id) {
 		if (privateCache != null) {
-			return (H) privateCache.get(descriptor.clazz, id);
+			return (H) privateCache.get(id);
 		}
 		return (H) Domain.transactionalFind(descriptor.clazz, id);
 	}
 
-	public ModificationChecker getModificationChecker() {
-		return modificationChecker;
-	}
-
-	public void setModificationChecker(ModificationChecker modificationChecker) {
-		this.modificationChecker = modificationChecker;
-	}
-
 	class ModificationCheckedIterator implements Iterator {
 		private Iterator iterator;
+
+		ModificationCheckedIterator(Iterator iterator) {
+			if (iterator == null) {
+				throw new RuntimeException("null");
+			}
+			this.iterator = iterator;
+		}
 
 		public boolean hasNext() {
 			return this.iterator.hasNext();
@@ -262,13 +279,6 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		public void remove() {
 			checkModification("itr-remove");
 			this.iterator.remove();
-		}
-
-		ModificationCheckedIterator(Iterator iterator) {
-			if (iterator == null) {
-				throw new RuntimeException("null");
-			}
-			this.iterator = iterator;
 		}
 	}
 

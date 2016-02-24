@@ -754,6 +754,15 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					throw new WrappedRuntimeException(e);
 				}
 			}
+
+			@Override
+			public Class getPropertyType(Object bean) {
+				try {
+					return property.getType();
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
 		};
 	}
 }

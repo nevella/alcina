@@ -16,11 +16,23 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 public class BaseProjectionLookupBuilder {
 	private boolean sorted = false;
 
-	private int depth;
-
 	private MapCreator[] creators;
 
 	private boolean navigable;
+
+	private BaseProjection projection;
+
+	public BaseProjection getProjection() {
+		return this.projection;
+	}
+
+	public void setProjection(BaseProjection projection) {
+		this.projection = projection;
+	}
+
+	public BaseProjectionLookupBuilder(BaseProjection projection) {
+		this.projection = projection;
+	}
 
 	public BaseProjectionLookupBuilder sorted() {
 		sorted = true;
@@ -32,26 +44,23 @@ public class BaseProjectionLookupBuilder {
 		return this;
 	}
 
-	public BaseProjectionLookupBuilder depth(int depth) {
-		this.depth = depth;
-		return this;
-	}
-
 	public <T> MultikeyMap<T> createMultikeyMap() {
 		MultikeyMap<T> map = null;
 		BplDelegateMapCreator mapCreator = Registry
 				.impl(BplDelegateMapCreator.class);
 		mapCreator.setBuilder(this);
 		if (isSorted()) {
-			map = new SortedMultikeyMap<T>(depth, 0, mapCreator);
+			map = new SortedMultikeyMap<T>(projection.getDepth(), 0,
+					mapCreator);
 		} else {
-			map = new UnsortedMultikeyMap<T>(depth, 0, mapCreator);
+			map = new UnsortedMultikeyMap<T>(projection.getDepth(), 0,
+					mapCreator);
 		}
 		return map;
 	}
 
 	public BaseProjectionLookupBuilder mapCreators(MapCreator... creators) {
-		if (creators.length != depth) {
+		if (creators.length != projection.getDepth()) {
 			throw new RuntimeException(
 					"Mismatched creator array length and depth");
 		}
@@ -62,8 +71,8 @@ public class BaseProjectionLookupBuilder {
 	public interface MapCreator extends Supplier<Map> {
 	}
 
-	public static abstract class BplDelegateMapCreator extends
-			DelegateMapCreator {
+	public static abstract class BplDelegateMapCreator
+			extends DelegateMapCreator {
 		private BaseProjectionLookupBuilder builder;
 
 		public BaseProjectionLookupBuilder getBuilder() {
@@ -75,8 +84,8 @@ public class BaseProjectionLookupBuilder {
 		}
 	}
 
-	public static class BplDelegateMapCreatorStd extends
-			BaseProjectionLookupBuilder.BplDelegateMapCreator {
+	public static class BplDelegateMapCreatorStd
+			extends BaseProjectionLookupBuilder.BplDelegateMapCreator {
 		@Override
 		public Map createDelegateMap(int depthFromRoot) {
 			if (getBuilder().getCreators() != null) {

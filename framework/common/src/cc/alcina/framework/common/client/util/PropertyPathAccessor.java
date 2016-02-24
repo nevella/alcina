@@ -24,12 +24,18 @@ public class PropertyPathAccessor {
 	}
 
 	public Object getChainedProperty(Object obj) {
+		return get(obj, false);
+	}
+
+	private Object get(Object obj, boolean type) {
 		if (obj == null) {
 			return null;
 		}
 		if (paths.length == 1) {
 			ensureAccessors(obj, 0);
-			return accessors[0].getPropertyValue(obj);
+			IndividualPropertyAccessor accessor = accessors[0];
+			return type ? accessor.getPropertyType(obj)
+					: accessor.getPropertyValue(obj);
 		}
 		int idx = 0;
 		for (String path : paths) {
@@ -60,13 +66,19 @@ public class PropertyPathAccessor {
 		return obj;
 	}
 
+	public Class getChainedPropertyType(Object obj) {
+		return (Class) get(obj, true);
+	}
+
 	private void ensureAccessors(Object obj, int idx) {
 		if (accessors.length > idx || obj == null) {
 			return;
 		}
 		String path = paths[idx];
-		IndividualPropertyAccessor[] accessors = new IndividualPropertyAccessor[idx + 1];
-		System.arraycopy(this.accessors, 0, accessors, 0, this.accessors.length);
+		IndividualPropertyAccessor[] accessors = new IndividualPropertyAccessor[idx
+				+ 1];
+		System.arraycopy(this.accessors, 0, accessors, 0,
+				this.accessors.length);
 		this.accessors = accessors;
 		this.accessors[idx] = Reflections.propertyAccessor()
 				.cachedAccessor(obj.getClass(), path);

@@ -6,4 +6,6 @@ public interface LocalDomainPersistence<T> {
 	public T ensureLocalEquivalent(T object);
 
 	public void deleteLocalEquivalent(T object);
+
+	default void adjustUpdateContext(){}
 }

@@ -55,4 +55,14 @@ public class MethodIndividualPropertyAccessor implements
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
+	@Override
+	public Class getPropertyType(Object bean) {
+		try {
+			ensureMethods(bean);
+			return readMethod.getReturnType();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 }

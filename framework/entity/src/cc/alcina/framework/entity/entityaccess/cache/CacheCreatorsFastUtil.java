@@ -7,18 +7,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import cc.alcina.framework.common.client.cache.CacheLookup;
 import cc.alcina.framework.common.client.cache.CacheCreators.CacheIdMapCreator;
 import cc.alcina.framework.common.client.cache.CacheCreators.CacheLongSetCreator;
 import cc.alcina.framework.common.client.cache.CacheCreators.CacheMultisetCreator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.SortedMultiset;
 
 public class CacheCreatorsFastUtil {
-	@RegistryLocation(registryPoint = CacheLongSetCreator.class)
-	public static class CacheLongSetCreatorFastutil implements
-			CacheLongSetCreator {
+	@RegistryLocation(registryPoint = CacheLongSetCreator.class,implementationType=ImplementationType.SINGLETON)
+	public static class CacheLongSetCreatorFastutil
+			implements CacheLongSetCreator {
 		@Override
 		public Set<Long> get() {
 			return new LongAVLTreeSet();
@@ -26,17 +28,17 @@ public class CacheCreatorsFastUtil {
 	}
 
 	@RegistryLocation(registryPoint = CacheMultisetCreator.class)
-	public static class CacheMultisetCreatorFastUtil<T> implements
-			CacheMultisetCreator<T> {
+	public static class CacheMultisetCreatorFastUtil<T>
+			implements CacheMultisetCreator<T> {
 		CacheLongSetCreator longSetCreator = Registry
 				.impl(CacheLongSetCreator.class);
 
 		@Override
-		public SortedMultiset<T, Set<Long>> get(boolean concurrent) {
+		public SortedMultiset<T, Set<Long>> get(CacheLookup cacheLookup,
+				boolean concurrent) {
 			if (concurrent) {
 				return new ConcurrentSortedMultiset<>();
 			} else {
-				
 				return new SortedMultiset<T, Set<Long>>() {
 					@Override
 					protected Set<Long> createSet() {
@@ -44,8 +46,8 @@ public class CacheCreatorsFastUtil {
 					}
 
 					@Override
-					protected Map<T, Set<Long>> createTopMap() {
-						return new Object2ObjectLinkedOpenHashMap<T, Set<Long>>();
+					protected void createTopMap() {
+						map = new Object2ObjectLinkedOpenHashMap<T, Set<Long>>();
 					}
 				};
 			}

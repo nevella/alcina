@@ -7,15 +7,15 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 import cc.alcina.framework.common.client.util.SortedMultiset;
 
-public class ConcurrentSortedMultiset<K, V extends Set> extends
-		SortedMultiset<K, V> {
+public class ConcurrentSortedMultiset<K, V extends Set>
+		extends SortedMultiset<K, V> {
 	@Override
 	protected Set createSet() {
 		return new ConcurrentSkipListSet();
 	}
 
 	@Override
-	protected Map<K, V> createTopMap() {
-		return new ConcurrentHashMap<>();
+	protected void createTopMap() {
+		map = new ConcurrentHashMap<>();
 	}
 }

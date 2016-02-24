@@ -30,9 +30,19 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
  *
  * @param <T>
  */
-public abstract class BaseProjection<T extends HasIdAndLocalId> implements
-		CacheProjection<T> {
+public abstract class BaseProjection<T extends HasIdAndLocalId>
+		implements CacheProjection<T> {
 	protected MultikeyMap<T> lookup = createLookup();
+	
+	private List<Class> types=null;
+
+	public List<Class> getTypes() {
+		return this.types;
+	}
+
+	public void setTypes(List<Class> types) {
+		this.types = types;
+	}
 
 	private boolean enabled = true;
 
@@ -69,8 +79,8 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 					}
 				} else {
 					if (isUnique()) {
-						Object[] keys = Arrays
-								.copyOf(values, values.length - 1);
+						Object[] keys = Arrays.copyOf(values,
+								values.length - 1);
 						if (!lookup.checkKeys(keys)) {
 							return;
 						}
@@ -105,7 +115,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 				.log(CommonUtils.formatJ(
 						"Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
 						this, Arrays.asList(values), existing), Domain.class,
-						TaggedLogger.WARN);
+				TaggedLogger.WARN);
 	}
 
 	public boolean isEnabled() {
@@ -192,10 +202,10 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 
 	protected MultikeyMap<T> createLookup() {
 		if (this instanceof OrderableProjection) {
-			return new BaseProjectionLookupBuilder().navigable()
-					.depth(getDepth()).createMultikeyMap();
+			return new BaseProjectionLookupBuilder(this).navigable()
+					.createMultikeyMap();
 		} else {
-			return new BaseProjectionLookupBuilder().sorted().depth(getDepth())
+			return new BaseProjectionLookupBuilder(this).sorted()
 					.createMultikeyMap();
 		}
 	}
@@ -218,8 +228,8 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 
 		private Object[] keys;
 
-		public PossibleSubIterator(Collection source,
-				boolean targetsOfFinalKey, Object[] objects) {
+		public PossibleSubIterator(Collection source, boolean targetsOfFinalKey,
+				Object[] objects) {
 			this.targetsOfFinalKey = targetsOfFinalKey;
 			this.objects = objects;
 			itemIterator = source.iterator();
@@ -236,8 +246,8 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 		}
 
 		public T next() {
-			return (T) (targetsOfFinalKey ? subIterator.next() : itemIterator
-					.next());
+			return (T) (targetsOfFinalKey ? subIterator.next()
+					: itemIterator.next());
 		}
 
 		private void ensureSubIterator() {
@@ -261,7 +271,8 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 		return modificationChecker;
 	}
 
-	public void setModificationChecker(ModificationChecker modificationChecker) {
+	public void
+			setModificationChecker(ModificationChecker modificationChecker) {
 		this.modificationChecker = modificationChecker;
 	}
 }
