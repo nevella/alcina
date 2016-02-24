@@ -81,7 +81,6 @@ public final class JavascriptKeyableLookup extends JavaScriptObject {
 
 	public native JavascriptJavaObjectArray keys()/*-{
         var v = [];
-        debugger;
         for ( var k in this.values) {
             if (this.values.hasOwnProperty(k)) {
                 if (this.intLookup && typeof (k) != "Number") {

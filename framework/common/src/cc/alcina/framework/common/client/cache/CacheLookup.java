@@ -243,7 +243,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId>
 	protected Set<Long> getAndEnsure(T k1) {
 		k1 = normalise(k1);
 		if (concurrent && k1 == null) {
-			return new LinkedHashSet<>();
+			return createLongSet();
 		}
 		Set<Long> result = get(k1);
 		if (result == null) {

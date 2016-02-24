@@ -52,20 +52,25 @@ public class HiliHelper {
 		if (o1.getId() != 0 && o1.getId() == hili.getId()) {
 			return true;
 		}
-		return (hili.getId() == o1.getId() && hili.getLocalId() == o1
-				.getLocalId());
+		return (hili.getId() == o1.getId()
+				&& hili.getLocalId() == o1.getLocalId());
 	}
 
-	public static Set<Long> toIdSet(Collection<? extends HasIdAndLocalId> hilis) {
-		Set<Long> result = new LinkedHashSet<Long>();
+	public static Set<Long>
+			toIdSet(Collection<? extends HasIdAndLocalId> hilis) {
+		return toIdSet(hilis, new LinkedHashSet<Long>());
+	}
+
+	public static Set<Long> toIdSet(Collection<? extends HasIdAndLocalId> hilis,
+			Set<Long> set) {
 		for (HasIdAndLocalId hili : hilis) {
-			result.add(hili.getId());
+			set.add(hili.getId());
 		}
-		return result;
+		return set;
 	}
 
-	public static Map<Long, HasIdAndLocalId> toIdMap(
-			Collection<? extends HasIdAndLocalId> hilis) {
+	public static Map<Long, HasIdAndLocalId>
+			toIdMap(Collection<? extends HasIdAndLocalId> hilis) {
 		return CollectionFilters.map((Collection<HasIdAndLocalId>) hilis,
 				new HiliToIdMapper());
 	}
@@ -101,8 +106,8 @@ public class HiliHelper {
 		return null;
 	}
 
-	public static <T extends HasIdAndLocalId> SortedSet<T> combineAndOrderById(
-			boolean reverse, Collection<T>... collections) {
+	public static <T extends HasIdAndLocalId> SortedSet<T>
+			combineAndOrderById(boolean reverse, Collection<T>... collections) {
 		TreeSet<T> join = new TreeSet<T>();
 		for (Collection<T> collection : collections) {
 			join.addAll(collection);
