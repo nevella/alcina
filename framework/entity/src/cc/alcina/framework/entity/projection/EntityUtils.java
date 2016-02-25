@@ -84,16 +84,7 @@ public class EntityUtils {
 		return sb.toString();
 	}
 
-	public static String unbracketedIdClause(Collection<Long> longs) {
-		StringBuffer sb = new StringBuffer();
-		for (Long long1 : longs) {
-			if (sb.length() != 0) {
-				sb.append(", ");
-			}
-			sb.append(long1);
-		}
-		return sb.toString();
-	}
+	
 
 	public static String stringListToClause(Collection<String> strs) {
 		StringBuffer sb = new StringBuffer();

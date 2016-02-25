@@ -756,6 +756,31 @@ public class CommonUtils {
 		return sb.toString();
 	}
 
+	public static String titleCaseKeepAcronyms(String s) {
+		if (isNullOrEmpty(s)) {
+			return s;
+		}
+		String[] strings = s.split(" ");
+		StringBuffer sb = new StringBuffer();
+		for (String string : strings) {
+			if (sb.length() != 0) {
+				sb.append(" ");
+			}
+			if (!isLetterOnly(string)) {
+				sb.append(string);
+			} else if (string.toUpperCase().equals(string)) {
+				sb.append(string);
+			} else {
+				sb.append(upperCaseFirstLetterOnly(string));
+			}
+		}
+		return sb.toString();
+	}
+
+	public static boolean isLetterOnly(String string) {
+		return string.matches("[a-zA-Z]+");
+	}
+
 	public static String trimToWsChars(String s, int maxChars) {
 		return trimToWsChars(s, maxChars, "");
 	}

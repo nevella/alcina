@@ -27,6 +27,17 @@ public class HiliHelper {
 		return CommonUtils.compareInts(o1.hashCode(), o2.hashCode());
 	}
 
+	public static String toIdString(Collection<? extends HasIdAndLocalId> hilis) {
+		StringBuffer sb = new StringBuffer();
+		for (HasIdAndLocalId hili : hilis) {
+			if (sb.length() != 0) {
+				sb.append(",");
+			}
+			sb.append(hili.getId());
+		}
+		return sb.toString();
+	}
+
 	public static int compareNoLocals(HasIdAndLocalId o1, HasIdAndLocalId o2) {
 		int i = o1.getClass().getName().compareTo(o2.getClass().getName());
 		if (i != 0) {

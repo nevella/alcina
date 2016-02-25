@@ -1,7 +1,10 @@
 package cc.alcina.framework.gwt.client.cell;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.Cell.Context;
@@ -26,8 +29,19 @@ public class ColumnsBuilder<T> {
 		table.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.DISABLED);
 	}
 
+	private List<String> columnsFilter = null;
+
+	public ColumnsBuilder columnsFilter(Collection validColumns) {
+		columnsFilter = (List<String>) validColumns.stream()
+				.map(Object::toString).collect(Collectors.toList());
+		return this;
+	}
+
 	public ColumnBuilder col(String name) {
 		return new ColumnBuilder(name);
+	}
+	public ColumnBuilder col(Enum enumValue) {
+		return new ColumnBuilder(CommonUtils.friendlyConstant(enumValue));
 	}
 
 	private Header<String> footer;
@@ -84,16 +98,19 @@ public class ColumnsBuilder<T> {
 			}
 			SortableColumn<T> col = new SortableColumn<T>(function,
 					sortFunction, nativeComparator, styleFunction, editInfo);
-			if (footer == null) {
-				table.addColumn(col, name);
-			} else {
-				Header<String> header = new Header<String>(new TextCell()) {
-					@Override
-					public String getValue() {
-						return name;
-					}
-				};
-				table.addColumn(col, header, footer);
+			//don't add if filtered
+			if (columnsFilter == null || columnsFilter.contains(name)) {
+				if (footer == null) {
+					table.addColumn(col, name);
+				} else {
+					Header<String> header = new Header<String>(new TextCell()) {
+						@Override
+						public String getValue() {
+							return name;
+						}
+					};
+					table.addColumn(col, header, footer);
+				}
 			}
 			if (width != 0) {
 				table.setColumnWidth(col, width, unit);

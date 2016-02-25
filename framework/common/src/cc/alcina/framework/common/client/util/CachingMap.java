@@ -7,6 +7,12 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 public class CachingMap<I, O> {
+	public static class CachingLcMap extends CachingMap<String, String> {
+		public CachingLcMap() {
+			super(s -> s == null ? null : s.toLowerCase());
+		}
+	}
+
 	private final ThrowingFunction<I, O> function;
 
 	private Map<I, O> map;
