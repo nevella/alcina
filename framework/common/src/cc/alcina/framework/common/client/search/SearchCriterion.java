@@ -13,9 +13,11 @@
  */
 package cc.alcina.framework.common.client.search;
 
+import java.util.Collection;
+
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -59,8 +61,16 @@ public abstract class SearchCriterion extends BaseBindable implements
 
 	public SearchCriterion() {
 	}
-	
-	public boolean emptyCriterion(){
+
+	public boolean emptyCriterion() {
+		if ((this instanceof HasValue)) {
+			Object value = ((HasValue) this).getValue();
+			if (value instanceof Collection) {
+				return ((Collection) value).isEmpty();
+			} else {
+				return value == null;
+			}
+		}
 		return false;
 	}
 

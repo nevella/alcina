@@ -103,7 +103,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (CommonUtils.isNullOrEmpty(str)) {
 			return result;
 		}
-		if(!str.matches("[0-9, \r\n\t()\\[\\]]+")){
+		if (!str.matches("[0-9, \r\n\t()\\[\\]]+")) {
 			return result;
 		}
 		String[] strs = str.replace("(", "").replace(")", "").replace("[", "")
@@ -860,6 +860,19 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		propertyAccessor().setPropertyValue(objectWithCollection,
 				collectionPropertyName, c);
+	}
+
+	public static <H> Set<H> getDeltaSet(
+			Collection<H> old, Object delta,
+			CollectionModificationType modificationType) {
+		Collection deltaC = CommonUtils.wrapInCollection(delta);
+		Set c = new LinkedHashSet(old);
+		if (modificationType == CollectionModificationType.ADD) {
+			c.addAll(deltaC);
+		} else {
+			c.removeAll(deltaC);
+		}
+		return c;
 	}
 
 	public synchronized long nextEventIdCounter() {

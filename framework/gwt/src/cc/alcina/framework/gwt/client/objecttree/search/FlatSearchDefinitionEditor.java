@@ -162,7 +162,7 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 	}
 
 	void removeRow(FlatSearchRow row, boolean hadValue) {
-		def.removeCriterion(row.getValue(), hadValue);
+		def.removeCriterion(row.getValue(), !hadValue);
 		rows.remove(row.getValue());
 		fp.remove(row);
 		checkDisableFirstRowRemove();

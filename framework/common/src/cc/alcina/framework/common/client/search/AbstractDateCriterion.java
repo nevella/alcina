@@ -47,10 +47,6 @@ public class AbstractDateCriterion extends SearchCriterion
 		setDate(date);
 	}
 
-	@Override
-	public boolean emptyCriterion() {
-		return date == null;
-	}
 
 	public boolean equivalentTo(SearchCriterion other) {
 		if (other == null || other.getClass() != getClass()) {

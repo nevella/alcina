@@ -47,8 +47,8 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  *
  * @author Nick Reddel
  */
-public abstract class SearchDefinition extends WrapperPersistable implements
-		Serializable, TreeRenderable, ContentDefinition,
+public abstract class SearchDefinition extends WrapperPersistable
+		implements Serializable, TreeRenderable, ContentDefinition,
 		HasPermissionsValidation, HasEquivalence<SearchDefinition> {
 	static final transient long serialVersionUID = -1L;
 
@@ -216,8 +216,8 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 			LooseContext.getContext().set(CONTEXT_CURRENT_SEARCH_DEFINITION,
 					this);
 			for (CriteriaGroup criteriaGroup : criteriaGroups) {
-				String s = html ? criteriaGroup.toHtml() : criteriaGroup
-						.toString();
+				String s = html ? criteriaGroup.toHtml()
+						: criteriaGroup.toString();
 				if (!CommonUtils.isNullOrEmpty(s)) {
 					if (result.length() != 0) {
 						result.append("; ");
@@ -228,8 +228,8 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		} finally {
 			LooseContext.getContext().remove(CONTEXT_CURRENT_SEARCH_DEFINITION);
 		}
-		return (result.length() == 0) ? defaultFilterDescription : result
-				.toString();
+		return (result.length() == 0) ? defaultFilterDescription
+				: result.toString();
 	}
 
 	public <V extends SearchCriterion> V firstCriterion(Class<V> clazz) {
@@ -303,8 +303,8 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 						CriterionPropertyNameMappings.class);
 		if (crMappings != null) {
 			for (CriterionPropertyNameMapping mapping : crMappings.value()) {
-				criteriaGroup(mapping.criteriaGroupClass()).map(
-						mapping.criterionClass(), mapping.propertyName());
+				criteriaGroup(mapping.criteriaGroupClass())
+						.map(mapping.criterionClass(), mapping.propertyName());
 			}
 		}
 	}
@@ -405,9 +405,9 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 
 	public String toHtml() {
 		return CommonUtils.formatJ("%s%s - %s",
-				CommonUtils.isNullOrEmpty(getName()) ? "" : "<b>" + getName()
-						+ "</b> - ", filterDescription(true),
-				orderDescription(true));
+				CommonUtils.isNullOrEmpty(getName()) ? ""
+						: "<b>" + getName() + "</b> - ",
+				filterDescription(true), orderDescription(true));
 	}
 
 	@Override
@@ -460,26 +460,31 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		}
 	}
 
-	public void removeCriterion(SearchCriterion criterion,
+	public void removeCriterion(SearchCriterion sc,
 			boolean doNotFireBecauseCriterionEmpty) {
 		for (CriteriaGroup cg : getCriteriaGroups()) {
-			cg.removeCriterion(criterion);
-		}
-		if (doNotFireBecauseCriterionEmpty) {
-			return;
+			cg.removeCriterion(sc);
 		}
 		PropertyChangeEvent event = new PropertyChangeEvent(this, null, null,
 				null);
 		for (PropertyChangeListener listener : globalListeners) {
-			listener.propertyChange(event);
+			if (!sc.emptyCriterion() && !doNotFireBecauseCriterionEmpty) {
+				listener.propertyChange(event);
+			}
+			sc.removePropertyChangeListener(listener);
 		}
 	}
 
 	public void addCriterionToSoleCriteriaGroup(SearchCriterion sc) {
 		assert criteriaGroups.size() == 1;
 		criteriaGroups.iterator().next().addCriterion(sc);
+		PropertyChangeEvent event = new PropertyChangeEvent(this, null, null,
+				null);
 		for (PropertyChangeListener listener : globalListeners) {
 			sc.addPropertyChangeListener(listener);
+			if (!sc.emptyCriterion()) {
+				listener.propertyChange(event);
+			}
 		}
 	}
 
