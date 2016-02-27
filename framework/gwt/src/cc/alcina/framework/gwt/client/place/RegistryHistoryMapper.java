@@ -19,6 +19,8 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	Map<Class, BasePlaceTokenizer> tokenizersByPlace = new LinkedHashMap<>();
 
+	private Place lastPlace;
+
 	public RegistryHistoryMapper() {
 		ensurePlaceLookup();
 	}
@@ -36,7 +38,13 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	public Place getPlace(String token) {
 		String top = token.split("/")[0];
 		BasePlaceTokenizer tokenizer = tokenizersByPrefix.get(top);
-		return tokenizer == null ? null : tokenizer.getPlace(token);
+		Place place = tokenizer == null ? null : tokenizer.getPlace(token);
+		if (place == null) {
+			//handle doc internal hrefs
+			place = lastPlace;
+		}
+		lastPlace = place;
+		return place;
 	}
 
 	@Override

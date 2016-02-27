@@ -47,6 +47,9 @@ public class SelectorCustomiser implements Customiser {
 	public static final String RENDERER_CLASS = "rendererClass";
 
 	public static final String USE_CELL_LIST = "useCellList";
+	
+	public static final String USE_MINIMAL_SELECTOR = "useMinimalSelector";
+	public static final String USE_FLAT_SELECTOR = "useFlatSelector";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
 			boolean multiple, Custom info) {
@@ -68,8 +71,12 @@ public class SelectorCustomiser implements Customiser {
 			}
 			boolean useCellList = NamedParameter.Support.booleanValue(
 					info.parameters(), USE_CELL_LIST);
+			boolean useMinimalSelector= NamedParameter.Support.booleanValue(
+					info.parameters(), USE_MINIMAL_SELECTOR);
+			boolean useFlatSelector= NamedParameter.Support.booleanValue(
+					info.parameters(), USE_FLAT_SELECTOR);
 			return new SelectorProvider(clazz, filter, maxSelectedItems,
-					renderer, useCellList);
+					renderer, useCellList,useMinimalSelector,useFlatSelector);
 		} else {
 			if (multiple) {
 				NamedParameter p = NamedParameter.Support.getParameter(

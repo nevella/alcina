@@ -59,7 +59,7 @@ public abstract class IdMultipleCriterion<E extends HasIdAndLocalId>
 			return false;
 		}
 		IdMultipleCriterion otherImpl = (IdMultipleCriterion) other;
-		return otherImpl.getDirection() == getDirection()
+		return getOperator()==other.getOperator()
 				&& otherImpl.getValue().equals(getValue());
 	}
 

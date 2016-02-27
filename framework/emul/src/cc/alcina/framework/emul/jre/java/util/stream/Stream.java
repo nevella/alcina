@@ -41,6 +41,24 @@ public interface Stream<T> {
 		}
 		return (Stream<T>) new CollectionStream<T>(result);
 	}
+	
+	static class LimitPredicate<T> implements Predicate<T>{
+		long limit;
+		public LimitPredicate(long limit){
+			this.limit=limit;
+		}
+		public boolean test(T t){
+			if(limit>0){
+				limit--;
+				return true;
+			}else{
+				return false;
+			}
+		}
+	}
+	default Stream<T> limit(long limit) {
+		return filter(new LimitPredicate(limit));
+	}
 
 	default Stream<T> distinct() {
 		Set<T> distinct = new LinkedHashSet<T>();

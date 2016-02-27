@@ -63,6 +63,7 @@ import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
 import cc.alcina.framework.gwt.client.widget.Link;
+import cc.alcina.framework.gwt.client.widget.StyledAWidget;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
 import cc.alcina.framework.gwt.client.widget.complex.FastROBoundTable;
 import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
@@ -75,6 +76,7 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.AttachEvent.Handler;
 import com.google.gwt.user.client.Element;
@@ -86,6 +88,7 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FocusPanel;
+import com.google.gwt.user.client.ui.Focusable;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
@@ -128,9 +131,15 @@ public class ContentViewFactory {
 
 	private boolean noCaption;
 
+	private boolean inFormButtons;
+
+	private boolean toolbarButtonStyle;
+
 	private Comparator<Field> fieldOrder;
 
 	private Predicate<Field> fieldFilter;
+
+	private String okButtonName = "Save";
 
 	public ActionTableHolder createActionTable(Collection beans,
 			Class beanClass, Converter converter,
@@ -260,11 +269,17 @@ public class ContentViewFactory {
 				cp.setBeanValidator(beanValidator);
 				ArrayList list = new ArrayList();
 				list.add(bean);
-				OkCancelPanel sp = new OkCancelPanel("Save", cp,
-						isCancelButton());
-				cp.add(sp);
+				OkCancelPanel sp = new OkCancelPanel(okButtonName, cp,
+						isCancelButton(), toolbarButtonStyle);
+				if (inFormButtons) {
+					f.addButtonWidget(sp);
+				} else {
+					cp.add(sp);
+				}
 				cp.setOkButton(sp.okButton);
-				f.setFocusOnDetachIfEditorFocussed(sp.okButton);
+				if (sp.okButton instanceof Focusable) {
+					f.setFocusOnDetachIfEditorFocussed((Focusable) sp.okButton);
+				}
 				cp.setBean(bean);
 				boolean provisional = cloned;
 				if (bean instanceof HasIdAndLocalId) {
@@ -423,6 +438,10 @@ public class ContentViewFactory {
 		return cancelButton;
 	}
 
+	public boolean isInFormButtons() {
+		return this.inFormButtons;
+	}
+
 	public boolean isNoButtons() {
 		return this.noButtons;
 	}
@@ -431,8 +450,17 @@ public class ContentViewFactory {
 		return noCaption;
 	}
 
+	public boolean isToolbarButtonStyle() {
+		return this.toolbarButtonStyle;
+	}
+
 	public ContentViewFactory noCaption() {
 		noCaption = true;
+		return this;
+	}
+
+	public ContentViewFactory okButtonName(String okButtonName) {
+		this.okButtonName = okButtonName;
 		return this;
 	}
 
@@ -462,6 +490,10 @@ public class ContentViewFactory {
 		this.cancelButton = cancelButton;
 	}
 
+	public void setInFormButtons(boolean inFormButtons) {
+		this.inFormButtons = inFormButtons;
+	}
+
 	public void setNoButtons(boolean noButtons) {
 		this.noButtons = noButtons;
 	}
@@ -473,6 +505,10 @@ public class ContentViewFactory {
 	public void setNoCaptionsOrButtons(boolean noCaptionsOrButtons) {
 		this.noCaption = noCaptionsOrButtons;
 		this.noButtons = noCaptionsOrButtons;
+	}
+
+	public void setToolbarButtonStyle(boolean toolbarButtonStyle) {
+		this.toolbarButtonStyle = toolbarButtonStyle;
 	}
 
 	private Widget createCaption(Object bean, PaneWrapperWithObjects cp) {
@@ -622,30 +658,49 @@ public class ContentViewFactory {
 	}
 
 	public static class OkCancelPanel extends FlowPanel {
-		private Button okButton;
+		private Widget okButton;
 
-		private Button cancelButton;
+		private Widget cancelButton;
+
+		private boolean toolbarButtonStyle;
 
 		public OkCancelPanel(String okButtonName, ClickHandler clickHandler,
 				boolean hasCancel) {
+			this(okButtonName, clickHandler, hasCancel, false);
+		}
+
+		public OkCancelPanel(String okButtonName, ClickHandler clickHandler,
+				boolean hasCancel, boolean toolbarButtonStyle) {
+			this.toolbarButtonStyle = toolbarButtonStyle;
 			FlowPanel fp = this;
 			fp.setStyleName("alcina-SavePanel");
-			this.okButton = new Button(okButtonName);
-			okButton.addClickHandler(clickHandler);
+			this.okButton = createButton(okButtonName);
+			((HasClickHandlers) okButton).addClickHandler(clickHandler);
 			fp.add(okButton);
 			if (hasCancel) {
 				fp.add(UsefulWidgetFactory.createSpacer(2));
-				this.cancelButton = new Button("Cancel");
-				cancelButton.addClickHandler(clickHandler);
+				this.cancelButton = createButton("Cancel");
+				((HasClickHandlers) cancelButton).addClickHandler(clickHandler);
 				fp.add(cancelButton);
 			}
 		}
 
-		public Button getCancelButton() {
+		protected Widget createButton(String buttonName) {
+			if (toolbarButtonStyle) {
+				StyledAWidget aWidget = new StyledAWidget(buttonName, true);
+				aWidget.setStyleName("button-grey");
+				aWidget.setWordWrap(false);
+				return aWidget;
+			} else {
+				return new Button(buttonName);
+			}
+		}
+
+		public Widget getCancelButton() {
 			return this.cancelButton;
 		}
 
-		public Button getOkButton() {
+		public Widget getOkButton() {
 			return this.okButton;
 		}
 	}
@@ -672,7 +727,7 @@ public class ContentViewFactory {
 
 		PermissibleActionEvent.PermissibleActionSupport support = new PermissibleActionEvent.PermissibleActionSupport();
 
-		private Button okButton;
+		private Widget okButton;
 
 		private FocusPanel preDetachFocus = new FocusPanel();
 
@@ -736,7 +791,7 @@ public class ContentViewFactory {
 			return this.objects;
 		}
 
-		public Button getOkButton() {
+		public Widget getOkButton() {
 			return this.okButton;
 		}
 
@@ -810,16 +865,12 @@ public class ContentViewFactory {
 			}
 		}
 
-		public void setOkButton(Button okButton) {
+		public void setOkButton(Widget okButton) {
 			this.okButton = okButton;
 		}
 
 		public void setProvisionalObjects(boolean promote) {
 			this.provisionalObjects = promote;
-		}
-
-		public boolean validateFields() {
-			return getBoundWidget().getBinding().validate();
 		}
 
 		public boolean validateAndCommit(final Widget sender,
@@ -909,6 +960,10 @@ public class ContentViewFactory {
 						.showWarning(e.getMessage());
 				return false;
 			}
+		}
+
+		public boolean validateFields() {
+			return getBoundWidget().getBinding().validate();
 		}
 
 		private void commitChanges(boolean fireViewEvent) {

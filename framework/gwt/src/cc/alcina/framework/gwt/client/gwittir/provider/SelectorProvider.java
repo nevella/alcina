@@ -11,39 +11,67 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.provider;
 
-
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelector;
+import java.util.Collection;
+import java.util.function.Supplier;
 
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelector;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
+import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
 
 /**
  *
  * @author Nick Reddel
  */
-
- public class SelectorProvider implements BoundWidgetProvider {
+public class SelectorProvider implements BoundWidgetProvider {
 	private final Class selectionObjectClass;
+
 	private final CollectionFilter filter;
+
 	private final int maxSelectedItems;
+
 	private final Renderer renderer;
+
 	private boolean useCellList;
 
-	public SelectorProvider(Class selectionObjectClass,
-			CollectionFilter filter, int maxSelectedItems, Renderer renderer,
-			boolean useCellList) {
+	private boolean useMinimalSelector;
+
+	private boolean useFlatSelector;
+
+	public SelectorProvider(Class selectionObjectClass, CollectionFilter filter,
+			int maxSelectedItems, Renderer renderer, boolean useCellList,
+			boolean useMinimalSelector, boolean useFlatSelector) {
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;
 		this.maxSelectedItems = maxSelectedItems;
 		this.renderer = renderer;
 		this.useCellList = useCellList;
+		this.useMinimalSelector = useMinimalSelector;
+		this.useFlatSelector = useFlatSelector;
 	}
 
 	public BoundSelector get() {
-		return new BoundSelector(selectionObjectClass, filter,maxSelectedItems,renderer,useCellList);
+		if (useFlatSelector) {
+			return new FlatSearchSelector(selectionObjectClass,
+					maxSelectedItems, renderer, new Supplier<Collection>() {
+						@Override
+						public Collection get() {
+							return TransformManager.get()
+									.getCollection(selectionObjectClass);
+						}
+					});
+		} else if (useMinimalSelector) {
+			return new BoundSelectorMinimal(selectionObjectClass, filter,
+					maxSelectedItems, renderer);
+		} else {
+			return new BoundSelector(selectionObjectClass, filter,
+					maxSelectedItems, renderer, useCellList);
+		}
 	}
 }

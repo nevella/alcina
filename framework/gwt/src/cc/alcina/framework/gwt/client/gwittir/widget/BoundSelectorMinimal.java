@@ -35,7 +35,6 @@ public class BoundSelectorMinimal extends BoundSelector {
 
 	private Label unselectedLabel;
 
-
 	public BoundSelectorMinimal() {
 		super();
 	}
@@ -63,7 +62,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 			int maxSelectedItems, Function renderer, boolean useCellList,
 			Supplier<Collection> supplier, String noResultsMessage) {
 		super(selectionObjectClass, filter, maxSelectedItems, renderer,
-				useCellList, supplier,noResultsMessage);
+				useCellList, supplier, noResultsMessage);
 	}
 
 	@Override

@@ -47,8 +47,8 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  *
  * @author Nick Reddel
  */
-public class ActionProgress extends Composite implements
-		SourcesPropertyChangeEvents {
+public class ActionProgress extends Composite
+		implements SourcesPropertyChangeEvents {
 	private static final String CANCELLED = " - Cancelled";
 
 	protected transient MutablePropertyChangeSupport propertyChangeSupport = new MutablePropertyChangeSupport(
@@ -70,7 +70,7 @@ public class ActionProgress extends Composite implements
 
 	private FlowPanel bar;
 
-	public static final int REFRESH_DELAY_MS = 3500;
+	public static int REFRESH_DELAY_MS = 3500;
 
 	private Link cancelLink;
 
@@ -308,13 +308,12 @@ public class ActionProgress extends Composite implements
 
 	private void updateProgress() {
 		jobName.setText(info.getJobName());
-		String time = info.getStartTime() == null ? "" : "Start: "
-				+ CommonUtils.formatDate(info.getStartTime(),
+		String time = info.getStartTime() == null ? ""
+				: "Start: " + CommonUtils.formatDate(info.getStartTime(),
 						DateStyle.AU_DATE_TIME_MS);
 		if (info.getEndTime() != null) {
-			time += "<br>End: "
-					+ CommonUtils.formatDate(info.getEndTime(),
-							DateStyle.AU_DATE_TIME_MS);
+			time += "<br>End: " + CommonUtils.formatDate(info.getEndTime(),
+					DateStyle.AU_DATE_TIME_MS);
 		}
 		times.setHTML(time);
 		String msg = info.getProgressMessage();

@@ -201,4 +201,6 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 		}
 		return false;
 	}
+
+	
 }

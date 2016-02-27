@@ -58,23 +58,20 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
  *         Changes to gwittir.GridForm:
  *         </p>
  *         <ul>
- *         <li>
- *         Render labels as HTML, not Label (basically to support in-app
+ *         <li>Render labels as HTML, not Label (basically to support in-app
  *         localisation buttons)</li>
- *         <li>
- *         Add the "directSetModelDisabled" code, which is necessary for the
+ *         <li>Add the "directSetModelDisabled" code, which is necessary for the
  *         ChildBean customiser (essentially nested grid forms)</li>
- *         <li>
- *         Implement HasBinding (necessary for PaneWrapperWithObjects factory
- *         binding)</li>
+ *         <li>Implement HasBinding (necessary for PaneWrapperWithObjects
+ *         factory binding)</li>
  *         <li>Add debugIds and multline rendering prettiness to the render
  *         method</li>
  *         </ul>
  * 
  */
 @SuppressWarnings("deprecation")
-public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
-		HasBinding {
+public class GridForm extends AbstractTableWidget
+		implements HasDefaultBinding, HasBinding {
 	private static final String STYLE_NAME = "gwittir-GridForm";
 
 	private static final BindingAction DEFAULT_ACTION = new BindingAction() {
@@ -134,7 +131,8 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 		this.setAction(GridForm.DEFAULT_ACTION);
 	}
 
-	public GridForm(Field[] fields, int columns, BoundWidgetTypeFactory factory) {
+	public GridForm(Field[] fields, int columns,
+			BoundWidgetTypeFactory factory) {
 		this.fields = fields;
 		this.columns = columns;
 		this.factory = factory;
@@ -238,7 +236,8 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 		}
 		int row = 0;
 		for (int i = 0; i < this.fields.length;) {
-			for (int col = 0; (col < this.columns) && (i < fields.length); col++) {
+			for (int col = 0; (col < this.columns)
+					&& (i < fields.length); col++) {
 				final Field field = this.fields[i];
 				if (field == null) {
 					i++;
@@ -261,10 +260,10 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 						+ field.getPropertyName());
 				HTML label = new HTML(field.getLabel());
 				this.base.setWidget(row, col * 2, label);
-				this.base.getCellFormatter()
-						.setStyleName(row, col * 2, "label");
-				boolean multiline = ((widget instanceof MultilineWidget) && ((MultilineWidget) widget)
-						.isMultiline());
+				this.base.getCellFormatter().setStyleName(row, col * 2,
+						"label");
+				boolean multiline = ((widget instanceof MultilineWidget)
+						&& ((MultilineWidget) widget).isMultiline());
 				if (multiline) {
 					this.base.getCellFormatter().addStyleName(row, col * 2,
 							"multiline-field");
@@ -279,8 +278,7 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 							final PopupPanel p = new PopupPanel(true);
 							p.setStyleName("gwittir-GridForm-Help");
 							p.setWidget(new HTML(field.getHelpText()));
-							p.setPopupPosition(
-									sender.getAbsoluteLeft(),
+							p.setPopupPosition(sender.getAbsoluteLeft(),
 									sender.getAbsoluteTop()
 											+ sender.getOffsetHeight());
 							p.show();
@@ -308,9 +306,8 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 	@Override
 	protected void onLoad() {
 		super.onLoad();
-		if (autofocusWidget instanceof Focusable
-				&& !RenderContext.get().getBoolean(
-						RenderContext.CONTEXT_IGNORE_AUTOFOCUS)) {
+		if (autofocusWidget instanceof Focusable && !RenderContext.get()
+				.getBoolean(RenderContext.CONTEXT_IGNORE_AUTOFOCUS)) {
 			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 				@Override
 				public void execute() {
@@ -345,5 +342,9 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 
 	public void setCaptionColumnWidth(int pixelWidth) {
 		base.getFlexCellFormatter().setWidth(0, 0, pixelWidth + "px");
+	}
+
+	public void addButtonWidget(Widget widget) {
+		base.setWidget(base.getRowCount(), 1, widget);
 	}
 }

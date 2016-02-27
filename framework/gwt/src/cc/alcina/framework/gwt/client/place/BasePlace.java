@@ -26,4 +26,8 @@ public abstract class BasePlace extends Place {
 	public int hashCode() {
 		return tokenFor(this).hashCode();
 	}
+
+	public String toTokenString() {
+		return "#" + tokenFor(this);
+	}
 }

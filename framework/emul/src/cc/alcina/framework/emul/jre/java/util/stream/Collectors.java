@@ -1,14 +1,21 @@
 package java.util.stream;
 
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.LinkedHashSet;
 import java.util.Iterator;
 import java.util.function.ToIntFunction;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collector;
-import java.util.stream.Collectors.CollectorImpl;
 
 public class Collectors {
 	private static class ToListCollector<T>
@@ -90,12 +97,40 @@ public class Collectors {
 		}
 	}
 
+	private static class ToMapCollector<T, K, U>
+			implements java.util.stream.Collector<T, T, Map<K, U>> {
+		private Function<? super T, ? extends K> keyMapper;
+
+		private Function<? super T, ? extends U> valueMapper;
+
+		public ToMapCollector(Function<? super T, ? extends K> keyMapper,
+				Function<? super T, ? extends U> valueMapper) {
+			this.keyMapper = keyMapper;
+			this.valueMapper = valueMapper;
+		}
+
+		public Map<K, U> collect(Stream<T> stream) {
+			Map<K, U> result = new LinkedHashMap<>();
+			for (Iterator<T> itr = stream.iterator(); itr.hasNext();) {
+				T t = itr.next();
+				result.put(keyMapper.apply(t), valueMapper.apply(t));
+			}
+			return result;
+		}
+	}
+
 	public static <T> Collector<T, ?, List<T>> toList() {
 		return new ToListCollector<T>();
 	}
 
 	public static <T> Collector<T, ?, Set<T>> toSet() {
 		return new ToSetCollector<T>();
+	}
+
+	public static <T, K, U> Collector<T, ?, Map<K, U>> toMap(
+			Function<? super T, ? extends K> keyMapper,
+			Function<? super T, ? extends U> valueMapper) {
+		return new ToMapCollector(keyMapper, valueMapper);
 	}
 
 	public static <T> Collector<T, T, String> joining() {

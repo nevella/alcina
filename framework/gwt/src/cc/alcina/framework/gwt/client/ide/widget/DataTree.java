@@ -31,8 +31,8 @@ import com.google.gwt.user.client.ui.TreeItem;
  * 
  * @author Nick Reddel
  */
-public class DataTree extends FilterableTree implements ExtraTreeEventSource,
-		VisualFilterableWithFirst {
+public class DataTree extends FilterableTree
+		implements ExtraTreeEventSource, VisualFilterableWithFirst {
 	public static final String DEBUG_ID = "DataTree";
 
 	private ExtraTreeEventSupport extraTreeEventSupport;
@@ -93,7 +93,9 @@ public class DataTree extends FilterableTree implements ExtraTreeEventSource,
 
 	private TreeItem result;
 
-	public TreeItem selectNodeForObject(final Object obj) {
+	protected boolean initialised;
+
+	public TreeItem selectNodeForObject(Object obj) {
 		getNodeForObject(obj);
 		if (result != null) {
 			setSelectedItem(null);
@@ -110,8 +112,8 @@ public class DataTree extends FilterableTree implements ExtraTreeEventSource,
 			public void apply(TreeItem target) {
 				Object userObject = target.getUserObject();
 				if (userObject != null) {
-					if ((classNameTest && userObject.getClass().getName()
-							.equals(obj))
+					if ((classNameTest
+							&& userObject.getClass().getName().equals(obj))
 							|| obj.equals(userObject)) {
 						result = target;
 					}

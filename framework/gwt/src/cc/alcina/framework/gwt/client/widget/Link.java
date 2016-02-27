@@ -13,10 +13,6 @@
  */
 package cc.alcina.framework.gwt.client.widget;
 
-import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
-import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
-
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
@@ -25,16 +21,21 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.HasHTML;
+import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.HasEnabled;
+
+import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
 
 /**
  * 
  * @author Nick Reddel
  */
 public class Link<T> extends Widget implements HasHTML, HasEnabled,
-		HasClickHandlers, HasItem<T> {
+		HasClickHandlers, HasItem<T>,HasText {
 	protected Element anchorElem;
 
 	private T userObject;

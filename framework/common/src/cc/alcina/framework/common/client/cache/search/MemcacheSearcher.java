@@ -3,7 +3,9 @@ package cc.alcina.framework.common.client.cache.search;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.cache.CacheFilter;
@@ -11,6 +13,8 @@ import cc.alcina.framework.common.client.cache.CacheQuery;
 import cc.alcina.framework.common.client.cache.CompositeCacheFilter;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
@@ -18,9 +22,12 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class MemcacheSearcher {
 	private static UnsortedMultikeyMap<MemcacheCriterionHandler> handlers = new UnsortedMultikeyMap<MemcacheCriterionHandler>(
 			2);
+
+	private static Map<Class, MemcacheDefinitionHandler> definitionHandlers = new LinkedHashMap<>();
 
 	private static void setupHandlers() {
 		if (handlers.isEmpty()) {
@@ -29,6 +36,12 @@ public class MemcacheSearcher {
 			for (MemcacheCriterionHandler handler : impls) {
 				handlers.put(handler.handlesSearchDefinition(),
 						handler.handlesSearchCriterion(), handler);
+			}
+			List<MemcacheDefinitionHandler> defImpls = Registry
+					.impls(MemcacheDefinitionHandler.class);
+			for (MemcacheDefinitionHandler handler : defImpls) {
+				definitionHandlers.put(handler.handlesSearchDefinition(),
+						handler);
 			}
 		}
 	}
@@ -63,17 +76,26 @@ public class MemcacheSearcher {
 			Class<T> clazz, Comparator<T> order) {
 		this.def = def;
 		setupHandlers();
-		processHandlers(def);
+		processDefinitionHandler();
+		processHandlers();
 		List<T> list = query.list(clazz);
 		list.sort(order);
 		return list;
+	}
+
+	private void processDefinitionHandler() {
+		MemcacheDefinitionHandler handler = definitionHandlers
+				.get(def.getClass());
+		if (handler != null) {
+			query.filter(handler.getFilter(def));
+		}
 	}
 
 	private MemcacheCriterionHandler getCriterionHandler(SearchCriterion sc) {
 		return handlers.get(def.getClass(), sc.getClass());
 	}
 
-	protected void processHandlers(SearchDefinition def) {
+	protected void processHandlers() {
 		Set<CriteriaGroup> criteriaGroups = def.getCriteriaGroups();
 		for (CriteriaGroup cg : criteriaGroups) {
 			if (!cg.provideIsEmpty()) {

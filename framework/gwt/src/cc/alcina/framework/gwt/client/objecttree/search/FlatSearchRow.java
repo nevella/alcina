@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.objecttree.search;
 
 import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
@@ -18,6 +19,9 @@ import com.totsp.gwittir.client.ui.BoundWidget;
 
 public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 		implements ClickHandler {
+	public static final String CONTEXT_CHANGING_SEARCHABLE = FlatSearchRow.class
+			.getName() + ".CONTEXT_CHANGING_SEARCHABLE";
+
 	private FlowPanel fp;
 
 	private FlatSearchDefinitionEditor controller;
@@ -92,8 +96,13 @@ public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 		changes.firePropertyChange("searchable", old_searchable, searchable);
 		if (value != null) {
 			rowAction.unbind(this);
-			controller.setupForNewCriterion(this,
-					old_searchable.hasValue(value));
+			LooseContext.runWithBoolean(
+					FlatSearchRow.CONTEXT_CHANGING_SEARCHABLE, () -> {
+						controller.setupForNewCriterion(this,
+								old_searchable.hasValue(value));
+						return null;
+					});
+			renderAndBind();
 		} else {
 			operator = null;
 			renderAndBind();
@@ -110,7 +119,21 @@ public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 	private void renderAndBind() {
 		if (searchable != null && value != null) {
 			if (operator == null) {
-				setOperator(searchable.getOperator(value));
+				// manually set from criterion (if null in criterion, use
+				// searchable default)
+				if (value.getOperator() == null || !searchable.listOperators()
+						.contains(value.getOperator())) {
+					SearchOperator newOperator = searchable.getOperator(value);
+					LooseContext.runWithBoolean(
+							FlatSearchRow.CONTEXT_CHANGING_SEARCHABLE, () -> {
+								value.setOperator(
+										(StandardSearchOperator) newOperator);
+								return null;
+							});
+					setOperator(newOperator);
+				} else {
+					setOperator(value.getOperator());
+				}
 			} else {
 				renderAndBind0();
 			}

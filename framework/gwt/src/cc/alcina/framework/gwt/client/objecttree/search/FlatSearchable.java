@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.objecttree.search;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,12 +12,21 @@ import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public abstract class FlatSearchable<SC extends SearchCriterion> {
+public abstract class FlatSearchable<SC extends SearchCriterion>
+		implements Comparable<FlatSearchable> {
 	private Class<SC> clazz;
 
 	private String category;
 
+	public String getCategory() {
+		return this.category;
+	}
+
 	private String name;
+
+	public String getName() {
+		return this.name;
+	}
 
 	@SuppressWarnings("unused")
 	private SearchDefinition def;
@@ -37,6 +47,18 @@ public abstract class FlatSearchable<SC extends SearchCriterion> {
 		return Reflections.classLookup().newInstance(clazz);
 	}
 
+	private static transient Comparator<FlatSearchable> comparator;
+
+	static {
+		comparator = Comparator.comparing(FlatSearchable::getCategory);
+		comparator = comparator.thenComparing(FlatSearchable::getName);
+	}
+
+	@Override
+	public int compareTo(FlatSearchable o) {
+		return comparator.compare(this, o);
+	}
+
 	public abstract AbstractBoundWidget createEditor();
 
 	public SC getCriterion() {
@@ -49,12 +71,12 @@ public abstract class FlatSearchable<SC extends SearchCriterion> {
 
 	public abstract String getCriterionPropertyName();
 
-	public Optional<String> getOperatorPropertyName() {
-		return Optional.empty();
-	}
-
 	public SearchOperator getOperator(SC value) {
 		return listOperators().get(0);
+	}
+
+	public Optional<String> getOperatorPropertyName() {
+		return Optional.of("operator");
 	}
 
 	public abstract boolean hasValue(SC sc);
@@ -85,5 +107,4 @@ public abstract class FlatSearchable<SC extends SearchCriterion> {
 	public String toString() {
 		return CommonUtils.formatJ("%s : %s", category, name);
 	}
-
 }
