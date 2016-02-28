@@ -40,7 +40,7 @@ public class TextUtils {
 	}
 
 	public static String trim(String key) {
-		return trim(CommonUtils.nullToEmpty(key));
+		return CommonUtils.nullToEmpty(key).trim();
 	}
 
 	public static native void setElementStyle(Element e, String css) /*-{
