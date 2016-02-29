@@ -51,73 +51,73 @@ public class LogStoreInterceptors {
 	}
 
 	native void installStats0()/*-{
-		function format(out) {
-			var idx = 0;
-			var j = 1;
+        function format(out) {
+            var idx = 0;
+            var j = 1;
 
-			while (true) {
-				idx = out.indexOf("%s", idx);
-				if (idx == -1) {
-					break;
-				}
-				var ins = arguments[j++];
-				if (ins === null) {
-					ins = "null";
-				} else if (ins === undefined) {
-					ins = "undefined";
-				} else {
-					ins = ins.toString();
-				}
-				out = out.substring(0, idx) + ins + out.substring(idx + 2);
-				idx += ins.length;
-			}
-			return out;
-		}
-		function pad0(s, len) {
-			return pad(s, "0", len);
-		}
-		function pad(s, sup, len) {
-			s = "" + s;
-			while (s.length < len) {
-				s = sup + s;
-			}
-			return s;
-		}
-		var lsi = this;
-		var running = [];
-		function eventToString(event) {
-			// return some string representation of this event
-			var d = new Date(event.millis);
-			var timeStr = format("%s:%s:%s,%s", pad0(d.getHours(), 2), pad0(d
-					.getMinutes(), 2), pad0(d.getSeconds(), 2), pad0(d.getMilliseconds(),
-					3));
-			return event.evtGroup + " | " + event.moduleName + " | " + event.subSystem
-					+ " | " + event.method + " | " + pad(event.type, " ", 25) + " | "
-					+ timeStr;
-		}
-		window.$stats = function(evt) {
-			var muted = lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::areStatsMuted()();
-			if (!muted) {
-				var e2s = eventToString(evt);
-				lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(e2s);
-			}
-			return true;
-		};
-		//if there were stats collected prior to this install, flush 'em
-		if (window["stats_pre"]) {
-			for ( var k in window.stats_pre) {
-				var pre = window.stats_pre[k];
-				lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
-			}
-			window.$stats_pre = [];
-		}
-		if ($wnd["stats_pre"]) {
-			for ( var k in $wnd.stats_pre) {
-				var pre = $wnd.stats_pre[k];
-				lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
-			}
-			$wnd.$stats_pre = [];
-		}
+            while (true) {
+                idx = out.indexOf("%s", idx);
+                if (idx == -1) {
+                    break;
+                }
+                var ins = arguments[j++];
+                if (ins === null) {
+                    ins = "null";
+                } else if (ins === undefined) {
+                    ins = "undefined";
+                } else {
+                    ins = ins.toString();
+                }
+                out = out.substring(0, idx) + ins + out.substring(idx + 2);
+                idx += ins.length;
+            }
+            return out;
+        }
+        function pad0(s, len) {
+            return pad(s, "0", len);
+        }
+        function pad(s, sup, len) {
+            s = "" + s;
+            while (s.length < len) {
+                s = sup + s;
+            }
+            return s;
+        }
+        var lsi = this;
+        var running = [];
+        function eventToString(event) {
+            // return some string representation of this event
+            var d = new Date(event.millis);
+            var timeStr = format("%s:%s:%s,%s", pad0(d.getHours(), 2), pad0(d
+                    .getMinutes(), 2), pad0(d.getSeconds(), 2), pad0(d
+                    .getMilliseconds(), 3));
+            return event.evtGroup + " | " + event.moduleName + " | "
+                    + event.subSystem + " | " + event.method + " | "
+                    + pad(event.type, " ", 25) + " | " + timeStr;
+        }
+        window.$stats = function(evt) {
+            var muted = lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::areStatsMuted()();
+            if (!muted) {
+                var e2s = eventToString(evt);
+                lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(e2s);
+            }
+            return true;
+        };
+        //if there were stats collected prior to this install, flush 'em
+        if (window["stats_pre"]) {
+            for ( var k in window.stats_pre) {
+                var pre = window.stats_pre[k];
+                lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
+            }
+            window.$stats_pre = [];
+        }
+        if ($wnd["stats_pre"]) {
+            for ( var k in $wnd.stats_pre) {
+                var pre = $wnd.stats_pre[k];
+                lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
+            }
+            $wnd.$stats_pre = [];
+        }
 
 	}-*/;
 
@@ -130,13 +130,13 @@ public class LogStoreInterceptors {
 	private HandlerRegistration nativePreviewHandlerRegistration;
 
 	public void interceptClientLog() {
-		AlcinaTopics.logCategorisedMessageListenerDelta(LogStore.get()
-				.getStringPairListener(), true);
+		AlcinaTopics.logCategorisedMessageListenerDelta(
+				LogStore.get().getStringPairListener(), true);
 	}
 
 	public void logStat(String stat) {
-		AlcinaTopics.logCategorisedMessage(new StringPair(
-				AlcinaTopics.LOG_CATEGORY_STAT, stat));
+		AlcinaTopics.logCategorisedMessage(
+				new StringPair(AlcinaTopics.LOG_CATEGORY_STAT, stat));
 	}
 
 	public void logHistoryEvents() {
@@ -187,8 +187,8 @@ public class LogStoreInterceptors {
 						&& e.getAttribute("type").equals("button")) {
 					return;
 				}
-				if (!(tag.equals("input") || tag.equals("select") || tag
-						.equals("textarea"))) {
+				if (!(tag.equals("input") || tag.equals("select")
+						|| tag.equals("textarea"))) {
 					return;
 				}
 			}
@@ -211,13 +211,13 @@ public class LogStoreInterceptors {
 					for (int idn = 0; idn < kids.getLength(); idn++) {
 						Node node = kids.getItem(idn);
 						if (node == e) {
-							parts.add(CommonUtils.formatJ("[%s]",
-									sameTagCount));
+							parts.add(
+									CommonUtils.formatJ("[%s]", sameTagCount));
 							break;
 						}
 						if (node.getNodeType() == Node.ELEMENT_NODE
-								&& ((Element) node).getTagName().equals(
-										e.getTagName())) {
+								&& ((Element) node).getTagName()
+										.equals(e.getTagName())) {
 							sameTagCount++;
 						}
 					}
@@ -242,8 +242,7 @@ public class LogStoreInterceptors {
 			String path = CommonUtils.join(tags, "/");
 			String valueMessage = "";
 			if (blur || focus) {
-				String value = Element.as(eTarget).getPropertyString(
-						"value");
+				String value = Element.as(eTarget).getPropertyString("value");
 				String ih = Element.as(eTarget).getInnerHTML();
 				valueMessage = CommonUtils.formatJ("%s%s",
 						ClientLogRecord.VALUE_SEPARATOR, value);
@@ -266,28 +265,28 @@ public class LogStoreInterceptors {
 	}
 
 	final native String getClassName(Element elt) /*-{
-		var cn = elt.className;
-		//note - someone says IE DOM objects don't support - hence try/catch
-		try {
-			if (cn.hasOwnProperty("baseVal")) {
-				cn = cn.baseVal;
-			}
-			if ((typeof cn).toLowerCase() != "string") {
-				if (cn && cn.toString().toLowerCase().indexOf("svg") != -1) {
-					cn = 'svg-string';
-				} else {
-					debugger;
-				}
-			}
-		} catch (e) {
-			return "";
-		}
-		return cn;
+        var cn = elt.className;
+        //note - someone says IE DOM objects don't support - hence try/catch
+        try {
+            if (cn.hasOwnProperty("baseVal")) {
+                cn = cn.baseVal;
+            }
+            if ((typeof cn).toLowerCase() != "string") {
+                if (cn && cn.toString().toLowerCase().indexOf("svg") != -1) {
+                    cn = 'svg-string';
+                } else {
+                    debugger;
+                }
+            }
+        } catch (e) {
+            return "";
+        }
+        return cn;
 	}-*/;
 
 	public void unload() {
-		AlcinaTopics.logCategorisedMessageListenerDelta(LogStore.get()
-				.getStringPairListener(), false);
+		AlcinaTopics.logCategorisedMessageListenerDelta(
+				LogStore.get().getStringPairListener(), false);
 		AlcinaTopics.muteStatisticsLoggingListenerDelta(muteListener, false);
 		if (historyHandlerRegistration != null) {
 			historyHandlerRegistration.removeHandler();
