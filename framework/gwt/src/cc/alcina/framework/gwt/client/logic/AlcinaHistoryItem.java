@@ -35,6 +35,14 @@ public class AlcinaHistoryItem {
 
 	protected Map<String, String> params = new HashMap<String, String>();
 
+	public <T extends AlcinaHistoryItem> T copy(){
+		AlcinaHistoryItem item = AlcinaHistory.get().createHistoryInfo();
+		item.params.putAll(params);
+		item.notAHistoryToken=notAHistoryToken;
+		item.type=type;
+		return (T) item;
+	}
+
 	public String getActionName() {
 		return getStringParameter(ACTION_KEY);
 	}
@@ -145,6 +153,14 @@ public class AlcinaHistoryItem {
 		setParameter(LOCATION_KEY, location);
 	}
 
+	public void setLocationParts(String... parts){
+		for (int i = 0; i < parts.length; i++) {
+			String part = parts[i];
+			setLocationPart(i, part);
+		}
+		
+	}
+
 	public void setNoHistory(boolean noHistory) {
 		setParameter(NO_HISTORY_KEY, noHistory);
 	}
@@ -193,6 +209,19 @@ public class AlcinaHistoryItem {
 		setParameter(Y_KEY, y);
 	}
 
+	public String toBase64TokenString() {
+		try {
+			return AlcinaHistory.BASE64_PREFIX
+					+ Base64Utils.toBase64(toTokenString().getBytes("UTF-8"));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public String toHref() {
+		return "#" + toTokenString();
+	}
+
 	public List<AlcinaHistory.SimpleHistoryEventInfo> toSimpleEvents() {
 		List<AlcinaHistory.SimpleHistoryEventInfo> result = new ArrayList<AlcinaHistory.SimpleHistoryEventInfo>();
 		String s = getSubTabName();
@@ -219,10 +248,6 @@ public class AlcinaHistoryItem {
 		return result;
 	}
 
-	public String toHref() {
-		return "#" + toTokenString();
-	}
-
 	public String toTokenString() {
 		return AlcinaHistory.toHash(params);
 	}
@@ -231,7 +256,6 @@ public class AlcinaHistoryItem {
 		String[] locs = CommonUtils.nullToEmpty(getLocation()).split("\\*");
 		return new ArrayList<String>(Arrays.asList(locs));
 	}
-
 	protected void addToToken(Map<String, Object> params) {
 	}
 
@@ -239,14 +263,7 @@ public class AlcinaHistoryItem {
 		List<String> parts = getLocationParts();
 		return idx < parts.size() ? parts.get(idx) : null;
 	}
-
-	public void setLocationParts(String... parts){
-		for (int i = 0; i < parts.length; i++) {
-			String part = parts[i];
-			setLocationPart(i, part);
-		}
-		
-	}
+	
 	protected void setLocationPart(int idx, String name) {
 		List<String> parts = getLocationParts();
 		for (int i = 0; i <= idx; i++) {
@@ -262,14 +279,4 @@ public class AlcinaHistoryItem {
 		}
 		setLocation(CommonUtils.join(parts, "*"));
 	}
-
-	public String toBase64TokenString() {
-		try {
-			return AlcinaHistory.BASE64_PREFIX
-					+ Base64Utils.toBase64(toTokenString().getBytes("UTF-8"));
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 }

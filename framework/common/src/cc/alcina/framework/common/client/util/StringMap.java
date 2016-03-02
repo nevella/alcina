@@ -12,7 +12,7 @@ public class StringMap extends LinkedHashMap<String, String> {
 	public StringMap() {
 	}
 
-	public StringMap(StringMap otherMap) {
+	public StringMap(Map<String, String> otherMap) {
 		super(otherMap);
 	}
 

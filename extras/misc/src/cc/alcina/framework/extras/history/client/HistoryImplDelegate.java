@@ -35,32 +35,46 @@ import com.google.gwt.user.client.Window;
  * 
  */
 public class HistoryImplDelegate extends HistoryImpl {
-	HistoryImpl impl;
-
 	public static native boolean isHtml5() /*-{
         return (typeof (window.history.pushState) == "function");
 	}-*/;
 
+	HistoryImpl impl;
+
 	public HistoryImplDelegate() {
-		if (isHtml5()) {
-			impl = new HistoryImplPushState();
-		} else {
-			impl = new HistoryImpl();
-		}
+		ensureImpl();
 	}
+
 	@Override
 	public void attachListener() {
+		ensureImpl();
 		impl.attachListener();
 	}
 
 	@Override
-	public void newToken(String historyToken) {
-		impl.newToken(historyToken);
+	public String decodeFragment(String token) {
+		return impl.decodeFragment(token);
 	}
 
 	@Override
-	public void replaceToken(String historyToken) {
-		impl.replaceToken(historyToken);
+	public String encodeFragment(String token) {
+		return impl.encodeFragment(token);
+	}
+
+	@Override
+	public String encodeHistoryTokenWithHash(String targetHistoryToken) {
+		// no hash
+		return History.encodeHistoryToken(targetHistoryToken);
+	}
+
+	@Override
+	public void fireHistoryChangedImpl(String token) {
+		impl.fireHistoryChangedImpl(token);
+	}
+
+	@Override
+	public String getToken() {
+		return impl.getToken();
 	}
 
 	@Override
@@ -74,8 +88,13 @@ public class HistoryImplDelegate extends HistoryImpl {
 	}
 
 	@Override
-	public String decodeFragment(String token) {
-		return impl.decodeFragment(token);
+	public void newToken(String historyToken) {
+		impl.newToken(historyToken);
+	}
+
+	@Override
+	public void replaceToken(String historyToken) {
+		impl.replaceToken(historyToken);
 	}
 
 	@Override
@@ -83,23 +102,13 @@ public class HistoryImplDelegate extends HistoryImpl {
 		impl.setToken(token);
 	}
 
-	@Override
-	public String getToken() {
-		return impl.getToken();
-	}
-
-	@Override
-	public String encodeFragment(String token) {
-		return impl.encodeFragment(token);
-	}
-
-	@Override
-	public void fireHistoryChangedImpl(String token) {
-		impl.fireHistoryChangedImpl(token);
-	}
-	@Override
-	public String encodeHistoryTokenWithHash(String targetHistoryToken) {
-		//no hash
-		return History.encodeHistoryToken(targetHistoryToken);
+	private void ensureImpl() {
+		if (impl == null) {
+			if (isHtml5()) {
+				impl = new HistoryImplPushState();
+			} else {
+				impl = new HistoryImpl();
+			}
+		}
 	}
 }

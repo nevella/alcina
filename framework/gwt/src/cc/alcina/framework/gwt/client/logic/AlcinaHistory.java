@@ -33,8 +33,6 @@ import com.google.gwt.user.client.History;
  * @author Nick Reddel
  */
 public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
-	private static final String SLASH_MARKER = "**__**__SLASH__**__**";
-
 	// for testing - FF dev mode does some weird double-unencoding
 	public static final String BASE64_PREFIX = "__b64__";
 
@@ -93,11 +91,15 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	}
 
 	public I getCurrentEvent() {
-		return this.currentEvent;
+		return copyCurrent();
+	}
+
+	private I copyCurrent() {
+		return this.currentEvent == null ? null : (I) this.currentEvent.copy();
 	}
 
 	public I getCurrentEventOrEmpty() {
-		return this.currentEvent != null ? this.currentEvent
+		return this.currentEvent != null ? copyCurrent()
 				: parseToken(History.getToken());
 	}
 
