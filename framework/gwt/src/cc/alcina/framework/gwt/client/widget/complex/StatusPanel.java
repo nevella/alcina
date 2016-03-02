@@ -22,7 +22,7 @@ import com.google.gwt.user.client.ui.RootLayoutPanel;
 public class StatusPanel extends Composite {
 	public static final String RUNNING_TEMPLATE = "<div>%s...<br><br></div><div class='loading2'></div>";
 
-	public static final String WAIT_LINE_TEMPLATE = "<div><img src='img/wait.gif'>&#160;%s ...</div>";
+	public static final String WAIT_LINE_TEMPLATE = "<div><img src='/img/wait.gif'>&#160;%s ...</div>";
 
 	private HTML content;
 

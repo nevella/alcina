@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -31,8 +30,7 @@ import com.google.gwt.user.client.ui.Widget;
  *
  * @author Nick Reddel
  */
-
- public class APanel<O> extends ComplexPanel implements HasClickHandlers {
+public class APanel<O> extends ComplexPanel implements HasClickHandlers {
 	/**
 	 * Creates an empty A panel. Note: adding invalid (block) elements/widgets
 	 * may cause funkeh IE errors
@@ -173,13 +171,13 @@ import com.google.gwt.user.client.ui.Widget;
 		public AAnchor(String text, String token) {
 			super();
 			setLabel(new InlineLabel(text));
-			setHref("#" + token);
+			setHref(token);
 		}
 
 		public AAnchor(String text, boolean html, String token) {
 			super();
 			setLabel(html ? new InlineHTML(text) : new InlineLabel(text));
-			setHref("#" + token);
+			setHref(token);
 		}
 	}
 
@@ -198,11 +196,11 @@ import com.google.gwt.user.client.ui.Widget;
 		 * @param elem
 		 */
 		public native void blur(Element elem) /*-{
-			// Attempts to blur elements from within an event callback will generally
-			// be unsuccessful, so we invoke blur() from outside of the callback.
-			$wnd.setTimeout(function() {
-			elem.blur();
-			}, 0);
+            // Attempts to blur elements from within an event callback will generally
+            // be unsuccessful, so we invoke blur() from outside of the callback.
+            $wnd.setTimeout(function() {
+                elem.blur();
+            }, 0);
 		}-*/;
 
 		@Override

@@ -240,6 +240,13 @@ public class AlcinaHistoryItem {
 		return idx < parts.size() ? parts.get(idx) : null;
 	}
 
+	public void setLocationParts(String... parts){
+		for (int i = 0; i < parts.length; i++) {
+			String part = parts[i];
+			setLocationPart(i, part);
+		}
+		
+	}
 	protected void setLocationPart(int idx, String name) {
 		List<String> parts = getLocationParts();
 		for (int i = 0; i <= idx; i++) {
@@ -264,4 +271,5 @@ public class AlcinaHistoryItem {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
 }

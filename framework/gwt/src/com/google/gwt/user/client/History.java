@@ -67,7 +67,7 @@ import com.google.gwt.event.shared.HandlerRegistration;
  *
  */
 public class History {
-	private static class HistoryEventSource
+	static class HistoryEventSource
 			implements HasValueChangeHandlers<String> {
 		private HandlerManager handlers = new HandlerManager(null);
 
@@ -124,92 +124,11 @@ public class History {
 	}
 
 	/**
-	 * History implementation using hash tokens.
-	 * <p>
-	 * This is the default implementation for all browsers except IE8.
-	 */
-	public static class HistoryImpl {
-		public HistoryImpl() {
-			attachListener();
-		}
-
-		public native void attachListener() /*-{
-            // We explicitly use the third parameter for capture, since Firefox before version 6
-            // throws an exception if the parameter is missing.
-            // See: https://developer.mozilla.org/es/docs/DOM/elemento.addEventListener#Gecko_notes
-            var handler = $entry(@com.google.gwt.user.client.History::onHashChanged());
-            $wnd.addEventListener('hashchange', handler, false);
-		}-*/;
-
-		public native void newToken(String historyToken) /*-{
-            $wnd.location.hash = historyToken;
-		}-*/;
-
-		public void replaceToken(String historyToken) {
-			Window.Location.replace("#" + historyToken);
-		}
-
-		public boolean init() {
-			return false;
-		}
-
-		public void nativeUpdate(final String historyToken) {
-		}
-
-		public String decodeFragment(String token) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		public void setToken(String token) {
-			// TODO Auto-generated method stub
-		}
-
-		public String getToken() {
-			return null;
-		}
-
-		public String encodeFragment(String token) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		public void fireHistoryChangedImpl(String token) {
-			// TODO Auto-generated method stub
-		}
-	}
-
-	/**
 	 * History implementation for IE8 using onhashchange.
 	 */
 	@SuppressWarnings("unused")
 	private static class HistoryImplIE8 extends HistoryImpl {
-		@Override
-		public native void attachListener() /*-{
-            var handler = $entry(@com.google.gwt.user.client.History::onHashChanged());
-            var oldHandler = $wnd.onhashchange;
-            $wnd.onhashchange = function() {
-                var ex;
-
-                try {
-                    handler();
-                } catch (e) {
-                    ex = e;
-                }
-
-                if (oldHandler != null) {
-                    try {
-                        oldHandler();
-                    } catch (e) {
-                        ex = ex || e;
-                    }
-                }
-
-                if (ex != null) {
-                    throw ex;
-                }
-            };
-		}-*/;
+		
 	}
 
 	@SuppressWarnings("deprecation")
@@ -237,14 +156,17 @@ public class History {
 	}
 
 	private static HistoryImpl impl = GWT.create(HistoryImpl.class);
+	
 
-	private static HistoryEventSource historyEventSource = new HistoryEventSource();
+	static HistoryEventSource historyEventSource = new HistoryEventSource();
 
 	private static HistoryTokenEncoder tokenEncoder = GWT
 			.create(HistoryTokenEncoder.class);
 
-	private static String token = getDecodedHash();
-
+	static String token = getDecodedHash();
+	static{
+		impl.init();
+	}
 	/**
 	 * Adds a listener to be informed of changes to the browser's history stack.
 	 *
@@ -461,5 +383,9 @@ public class History {
 			token = hashToken;
 			historyEventSource.fireValueChangedEvent(hashToken);
 		}
+	}
+
+	public static String encodeHistoryTokenWithHash(String targetHistoryToken) {
+		return impl.encodeHistoryTokenWithHash(targetHistoryToken);
 	}
 }

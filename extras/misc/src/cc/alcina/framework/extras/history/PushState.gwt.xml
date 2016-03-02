@@ -24,7 +24,7 @@
 
   
   <replace-with class="cc.alcina.framework.extras.history.client.HistoryImplPushState">
-    <when-type-is class="com.google.gwt.user.client.impl.HistoryImpl" />
+    <when-type-is class="com.google.gwt.user.client.HistoryImpl" />
   </replace-with>
  
 

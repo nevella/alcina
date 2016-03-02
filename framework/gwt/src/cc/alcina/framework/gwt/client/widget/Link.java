@@ -34,11 +34,33 @@ import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
  * 
  * @author Nick Reddel
  */
-public class Link<T> extends Widget implements HasHTML, HasEnabled,
-		HasClickHandlers, HasItem<T>,HasText {
+public class Link<T> extends Widget
+		implements HasHTML, HasEnabled, HasClickHandlers, HasItem<T>, HasText {
+	public static Link createHrefNoUnderline(String text,
+			AlcinaHistoryItem epoch) {
+		return createHrefNoUnderline(text, epoch.toHref());
+	}
+
+	public static Link createHrefNoUnderline(String text, String href) {
+		Link link = new Link(text);
+		link.setHref(href);
+		link.noUnderline();
+		return link;
+	}
+
+	public static Link createNoUnderline(String text, ClickHandler handler) {
+		Link link = new Link(text, handler);
+		link.noUnderline();
+		return link;
+	}
+
 	protected Element anchorElem;
 
 	private T userObject;
+
+	private boolean preventDefault = true;
+
+	private boolean enabled = true;
 
 	/**
 	 * Creates an empty hyperlink.
@@ -48,14 +70,6 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 		createElement();
 		setStyleName("gwt-Hyperlink alcina-NoHistory");
 		setHref("#");
-	}
-
-	protected void createElement() {
-		setElement(anchorElem);
-	}
-
-	public HandlerRegistration addClickHandler(ClickHandler handler) {
-		return addDomHandler(handler, ClickEvent.getType());
 	}
 
 	/**
@@ -72,7 +86,7 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 
 	public Link(String text, AlcinaHistoryItem historyItem) {
 		this(text, false);
-		setHref("#" + historyItem.toTokenString());
+		setHref(historyItem.toHref());
 	}
 
 	public Link(String text, boolean asHTML) {
@@ -84,32 +98,17 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 		}
 	}
 
-	public static Link createHrefNoUnderline(String text, String href) {
-		Link link = new Link(text);
-		link.setHref(href);
-		link.noUnderline();
-		return link;
-	}
-
-	public Link noUnderline() {
-		setStyleName("link-no-underline");
-		return this;
-	}
-
-
-	public static Link createNoUnderline(String text, ClickHandler handler) {
-		Link link = new Link(text, handler);
-		link.noUnderline();
-		return link;
+	public Link(String string, boolean asHTML, ClickHandler handler) {
+		this(string, asHTML);
+		addDomHandler(handler, ClickEvent.getType());
 	}
 
 	public Link(String string, ClickHandler handler) {
 		this(string, false, handler);
 	}
 
-	public Link(String string, boolean asHTML, ClickHandler handler) {
-		this(string, asHTML);
-		addDomHandler(handler, ClickEvent.getType());
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addDomHandler(handler, ClickEvent.getType());
 	}
 
 	public String getHref() {
@@ -120,15 +119,35 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 		return DOM.getInnerHTML(anchorElem);
 	}
 
-	public void setHref(String href) {
-		DOM.setElementProperty(anchorElem, "href", href);
+	@Override
+	public T getItem() {
+		return userObject;
+	}
+
+	public String getTarget() {
+		return DOM.getElementProperty(anchorElem, "target");
 	}
 
 	public String getText() {
 		return DOM.getInnerText(anchorElem);
 	}
 
-	private boolean preventDefault = true;
+	public T getUserObject() {
+		return userObject;
+	}
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public boolean isPreventDefault() {
+		return this.preventDefault;
+	}
+
+	public Link noUnderline() {
+		setStyleName("link-no-underline");
+		return this;
+	}
 
 	@Override
 	public void onBrowserEvent(Event event) {
@@ -142,12 +161,58 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 		}
 	}
 
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+		if (enabled) {
+			removeStyleName("disabled");
+		} else {
+			addStyleName("disabled");
+		}
+	}
+
+	public void setEpoch(AlcinaHistoryItem epoch) {
+		setHref(epoch.toHref());
+	}
+
+	public void setHref(String href) {
+		DOM.setElementProperty(anchorElem, "href", href);
+	}
+
 	public void setHTML(String html) {
 		DOM.setInnerHTML(anchorElem, html);
 	}
 
+	public void setPreventDefault(boolean preventDefault) {
+		this.preventDefault = preventDefault;
+	}
+
+	public void setTarget(String target) {
+		DOM.setElementProperty(anchorElem, "target", target);
+	}
+
 	public void setText(String text) {
 		DOM.setInnerText(anchorElem, text);
+	}
+
+	public void setTitle(String title) {
+		if (title == null || title.length() == 0) {
+			DOM.removeElementAttribute(anchorElem, "title");
+		} else {
+			DOM.setElementAttribute(anchorElem, "title", title);
+		}
+	}
+
+	public void setUserObject(T userObject) {
+		this.userObject = userObject;
+	}
+
+	public void setWordWrap(boolean wrap) {
+		getElement().getStyle().setProperty("whiteSpace",
+				wrap ? "normal" : "nowrap");
+	}
+
+	protected void createElement() {
+		setElement(anchorElem);
 	}
 
 	/**
@@ -161,62 +226,5 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 	@Override
 	protected void onEnsureDebugId(String baseID) {
 		ensureDebugId(anchorElem, "", baseID);
-	}
-
-	public void setWordWrap(boolean wrap) {
-		getElement().getStyle().setProperty("whiteSpace",
-				wrap ? "normal" : "nowrap");
-	}
-
-	public void setUserObject(T userObject) {
-		this.userObject = userObject;
-	}
-
-	public T getUserObject() {
-		return userObject;
-	}
-
-	private boolean enabled = true;
-
-	public boolean isEnabled() {
-		return enabled;
-	}
-
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-		if (enabled) {
-			removeStyleName("disabled");
-		} else {
-			addStyleName("disabled");
-		}
-	}
-
-	public void setTitle(String title) {
-		if (title == null || title.length() == 0) {
-			DOM.removeElementAttribute(anchorElem, "title");
-		} else {
-			DOM.setElementAttribute(anchorElem, "title", title);
-		}
-	}
-
-	public String getTarget() {
-		return DOM.getElementProperty(anchorElem, "target");
-	}
-
-	public void setTarget(String target) {
-		DOM.setElementProperty(anchorElem, "target", target);
-	}
-
-	@Override
-	public T getItem() {
-		return userObject;
-	}
-
-	public boolean isPreventDefault() {
-		return this.preventDefault;
-	}
-
-	public void setPreventDefault(boolean preventDefault) {
-		this.preventDefault = preventDefault;
 	}
 }

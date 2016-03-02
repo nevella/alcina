@@ -33,6 +33,8 @@ import com.google.gwt.user.client.History;
  * @author Nick Reddel
  */
 public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
+	private static final String SLASH_MARKER = "**__**__SLASH__**__**";
+
 	// for testing - FF dev mode does some weird double-unencoding
 	public static final String BASE64_PREFIX = "__b64__";
 
@@ -170,6 +172,9 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 		if (historyToken.startsWith("!")) {
 			historyToken = historyToken.substring(1);
 		}
+		if (historyToken.startsWith("/")) {
+			historyToken = historyToken.substring(1);
+		}
 		I item = createHistoryInfo();
 		Map<String, String> params = item.parseParameters(historyToken);
 		if (params.size() == 0) {
@@ -192,6 +197,8 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 		this.noHistoryDisabled = noHistoryDisabled;
 	}
 
+	static UrlComponentEncoder encoder;
+
 	/**
 	 * '&' in values is encoded as &&, to allow for hotmail escaping '&' in the
 	 * hash as a whole - see fromHash
@@ -199,7 +206,6 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	public static String toHash(Map<String, String> params) {
 		StringBuffer sb = new StringBuffer();
 		ArrayList<String> keys = new ArrayList<String>(params.keySet());
-		UrlComponentEncoder encoder = Registry.impl(UrlComponentEncoder.class);
 		Collections.sort(keys);
 		for (String k : keys) {
 			if (params.get(k) == null) {
@@ -210,17 +216,25 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 			}
 			sb.append(k);
 			sb.append("=");
-			sb.append(encoder.encode(params.get(k).toString()
-					.replace("&", "&&")));
+			sb.append(encode(params.get(k).toString()));
 		}
 		return sb.toString();
+	}
+
+	public static String encode(String string) {
+		if (encoder == null) {
+			encoder = Registry.impl(UrlComponentEncoder.class);
+		}
+		string = string.replace("&", "&&");
+		String encoded = encoder.encode(string);
+		return encoded;
 	}
 
 	public static String maybeUnencode(String s) {
 		if (s.startsWith(BASE64_PREFIX)) {
 			try {
-				s = new String(Base64Utils.fromBase64(s.substring(BASE64_PREFIX
-						.length())), "UTF-8");
+				s = new String(Base64Utils.fromBase64(
+						s.substring(BASE64_PREFIX.length())), "UTF-8");
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
@@ -259,8 +273,8 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 						idx0 = s.length();
 						break;//
 					} else {
-						idx0 = idx1 == -1 ? idx2 : idx2 == -1 ? idx1 : Math
-								.min(idx1, idx2);
+						idx0 = idx1 == -1 ? idx2
+								: idx2 == -1 ? idx1 : Math.min(idx1, idx2);
 						if (idx0 < idx3 || idx3 == -1) {
 							break;// found terminator
 						}
@@ -286,8 +300,9 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	public String tokenForSearch(SearchDefinition def, int pageNumber,
 			String searchDefinitionSerialized) {
 		AlcinaHistoryItem hib = createHistoryInfo();
-		hib.setSearchHistoryInfo(new SearchHistoryInfo(def
-				.getClientSearchIndex(), pageNumber, searchDefinitionSerialized));
+		hib.setSearchHistoryInfo(
+				new SearchHistoryInfo(def.getClientSearchIndex(), pageNumber,
+						searchDefinitionSerialized));
 		return hib.toTokenString();
 	}
 
@@ -297,8 +312,8 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	public static void initialiseDebugIds() {
 		String token = History.getToken();
 		if (token != null) {
-			AlcinaHistoryItem currentEvent = AlcinaHistory.get().parseToken(
-					token);
+			AlcinaHistoryItem currentEvent = AlcinaHistory.get()
+					.parseToken(token);
 			if (currentEvent != null) {
 				for (String dbgId : AlcinaDebugIds.DEBUG_IDS) {
 					if (currentEvent.hasParameter(dbgId)) {

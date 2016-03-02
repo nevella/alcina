@@ -16,7 +16,7 @@ package cc.alcina.framework.extras.history.client;
 import java.util.logging.Logger;
 
 import com.google.gwt.user.client.History;
-import com.google.gwt.user.client.History.HistoryImpl;
+import com.google.gwt.user.client.HistoryImpl;
 import com.google.gwt.user.client.Window;
 
 /**
@@ -38,8 +38,10 @@ public class HistoryImplPushState extends HistoryImpl {
 	@Override
 	public boolean init() {
 		// initialize HistoryImpl with the current path
-		updateHistoryToken(
-				Window.Location.getPath() + Window.Location.getQueryString());
+		String withHash = Window.Location.getHash().isEmpty() ? ""
+				: "&" + Window.Location.getHash().substring(1);
+		updateHistoryToken(Window.Location.getPath()
+				+ Window.Location.getQueryString() + withHash);
 		// initialize the empty state with the current history token
 		nativeUpdate(getToken());
 		// initialize the popState handler
@@ -98,8 +100,6 @@ public class HistoryImplPushState extends HistoryImpl {
 		fireHistoryChangedImpl(getToken());
 	}
 
-	
-
 	/**
 	 * Add the given token to the history using pushState.
 	 */
@@ -109,4 +109,6 @@ public class HistoryImplPushState extends HistoryImpl {
         };
         $wnd.history.pushState(state, $doc.title, token);
 	}-*/;
+
+	
 }

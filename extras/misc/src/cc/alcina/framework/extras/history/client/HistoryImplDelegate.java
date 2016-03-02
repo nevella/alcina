@@ -16,7 +16,7 @@ package cc.alcina.framework.extras.history.client;
 import java.util.logging.Logger;
 
 import com.google.gwt.user.client.History;
-import com.google.gwt.user.client.History.HistoryImpl;
+import com.google.gwt.user.client.HistoryImpl;
 import com.google.gwt.user.client.Window;
 
 /**
@@ -37,17 +37,17 @@ import com.google.gwt.user.client.Window;
 public class HistoryImplDelegate extends HistoryImpl {
 	HistoryImpl impl;
 
-	public native boolean isHtml5() /*-{
-    return (typeof(window.history.pushState) == "function");
-}-*/;
+	public static native boolean isHtml5() /*-{
+        return (typeof (window.history.pushState) == "function");
+	}-*/;
+
 	public HistoryImplDelegate() {
-		if(isHtml5()){
-			impl=new HistoryImplPushState();
-		}else{
-			impl=new HistoryImpl();
+		if (isHtml5()) {
+			impl = new HistoryImplPushState();
+		} else {
+			impl = new HistoryImpl();
 		}
 	}
-
 	@Override
 	public void attachListener() {
 		impl.attachListener();
@@ -96,5 +96,10 @@ public class HistoryImplDelegate extends HistoryImpl {
 	@Override
 	public void fireHistoryChangedImpl(String token) {
 		impl.fireHistoryChangedImpl(token);
+	}
+	@Override
+	public String encodeHistoryTokenWithHash(String targetHistoryToken) {
+		//no hash
+		return History.encodeHistoryToken(targetHistoryToken);
 	}
 }

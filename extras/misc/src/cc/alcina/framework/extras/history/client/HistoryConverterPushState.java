@@ -58,5 +58,4 @@ public class HistoryConverterPushState implements HistoryConverter {
     }
     History.newItem(hash, false);
   }
-
 }
