@@ -36,8 +36,7 @@ import com.google.gwt.user.client.Window;
  */
 public class HistoryImplDelegate extends HistoryImpl {
 	public static native boolean isHtml5() /*-{
-        return !!(window['history'] && window['history']['pushState']
-                && (typeof (window.history.pushState) == "function"));
+        return !!(window['history'] && window['history']['pushState'] && (typeof (window.history.pushState) == "function"));
 	}-*/;
 
 	HistoryImpl impl;
