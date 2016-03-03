@@ -91,8 +91,12 @@ public class BrowserMod {
 
 	public static boolean isIE8() {
 		return BrowserMod.isInternetExplorer()
-				&& getUserAgent().indexOf(
-						Constants.INTERNET_EXPLORER_8_USER_AGENT) != -1;
+				&& (getUserAgent().indexOf(
+						Constants.INTERNET_EXPLORER_8_USER_AGENT) != -1
+						
+||getUserAgent().indexOf(
+		Constants.INTERNET_EXPLORER_8_USER_AGENT_ALT) != -1
+				);
 	}
 
 	private static Boolean isIe9 = null;

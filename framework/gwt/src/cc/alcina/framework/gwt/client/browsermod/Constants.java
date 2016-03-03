@@ -53,5 +53,7 @@ public class Constants {
 			+ "\". "
 			+ "This is especially important as InternetExplorer in quirks mode has a broken box model (http://css.maxdesign.com.au/listamatic/about-boxmodel.htm).";
 
+	public static final String INTERNET_EXPLORER_8_USER_AGENT_ALT = "MSIE 8.";
+
 	public static String CHROME_IOS_USER_AGENT = "CriOS/";
 }

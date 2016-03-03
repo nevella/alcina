@@ -77,7 +77,8 @@
 			</classpath>
 			<src path="${extras.misc.src.dir}" />
 			<include name="cc/alcina/extras/misc/ie/client/**" />
-			<exclude name="cc/alcina/extras/misc/ie/override/**" />
+			<include name="cc/alcina/extras/misc/ie/client/**" />
+			<include name="cc/alcina/framework/extras/history/**" />
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${extras.cluster.tasks.build.dir}" />

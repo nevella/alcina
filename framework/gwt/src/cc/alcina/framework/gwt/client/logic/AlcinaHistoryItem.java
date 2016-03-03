@@ -35,11 +35,11 @@ public class AlcinaHistoryItem {
 
 	protected Map<String, String> params = new HashMap<String, String>();
 
-	public <T extends AlcinaHistoryItem> T copy(){
+	public <T extends AlcinaHistoryItem> T copy() {
 		AlcinaHistoryItem item = AlcinaHistory.get().createHistoryInfo();
 		item.params.putAll(params);
-		item.notAHistoryToken=notAHistoryToken;
-		item.type=type;
+		item.notAHistoryToken = notAHistoryToken;
+		item.type = type;
 		return (T) item;
 	}
 
@@ -49,8 +49,8 @@ public class AlcinaHistoryItem {
 
 	public boolean getBooleanParameter(String key) {
 		String value = params.get(key);
-		return value == null ? false : value.equals("t")
-				|| Boolean.parseBoolean(value);
+		return value == null ? false
+				: value.equals("t") || Boolean.parseBoolean(value);
 	}
 
 	public String getClassName() {
@@ -80,7 +80,8 @@ public class AlcinaHistoryItem {
 
 	public long getLongParameter(String key) {
 		String value = params.get(key);
-		return value == null ? 0 : CommonUtils.friendlyParseLong(value);
+		return value == null || value.isEmpty() ? 0
+				: CommonUtils.friendlyParseLong(value);
 	}
 
 	public String getPreHistory() {
@@ -153,12 +154,11 @@ public class AlcinaHistoryItem {
 		setParameter(LOCATION_KEY, location);
 	}
 
-	public void setLocationParts(String... parts){
+	public void setLocationParts(String... parts) {
 		for (int i = 0; i < parts.length; i++) {
 			String part = parts[i];
 			setLocationPart(i, part);
 		}
-		
 	}
 
 	public void setNoHistory(boolean noHistory) {
@@ -228,18 +228,19 @@ public class AlcinaHistoryItem {
 		setSubTabName(null);
 		{
 			AlcinaHistory.SimpleHistoryEventInfo info = new SimpleHistoryEventInfo();
-			info.displayName = AlcinaHistory.get().getTokenDisplayName(
-					getTabName());
-			info.displayName = info.displayName == null ? CommonUtils
-					.upperCaseFirstLetterOnly(getTabName()) : info.displayName;
+			info.displayName = AlcinaHistory.get()
+					.getTokenDisplayName(getTabName());
+			info.displayName = info.displayName == null
+					? CommonUtils.upperCaseFirstLetterOnly(getTabName())
+					: info.displayName;
 			info.historyToken = toTokenString();
 			result.add(info);
 		}
 		setSubTabName(s);
 		if (getSubTabName() != null) {
 			AlcinaHistory.SimpleHistoryEventInfo info = new SimpleHistoryEventInfo();
-			info.displayName = AlcinaHistory.get().getTokenDisplayName(
-					getSubTabName());
+			info.displayName = AlcinaHistory.get()
+					.getTokenDisplayName(getSubTabName());
 			info.displayName = info.displayName == null ? getSubTabName()
 					: info.displayName;
 			info.historyToken = toTokenString();
@@ -256,6 +257,7 @@ public class AlcinaHistoryItem {
 		String[] locs = CommonUtils.nullToEmpty(getLocation()).split("\\*");
 		return new ArrayList<String>(Arrays.asList(locs));
 	}
+
 	protected void addToToken(Map<String, Object> params) {
 	}
 
@@ -263,7 +265,7 @@ public class AlcinaHistoryItem {
 		List<String> parts = getLocationParts();
 		return idx < parts.size() ? parts.get(idx) : null;
 	}
-	
+
 	protected void setLocationPart(int idx, String name) {
 		List<String> parts = getLocationParts();
 		for (int i = 0; i <= idx; i++) {
