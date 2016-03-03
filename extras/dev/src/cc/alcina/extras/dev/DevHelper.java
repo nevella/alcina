@@ -171,6 +171,7 @@ public abstract class DevHelper {
 			transform.setCommitType(CommitType.TO_STORAGE);
 		}
 		System.out.println(transforms);
+		
 		TransformManager.get().clearTransforms();
 		return transforms;
 	}
