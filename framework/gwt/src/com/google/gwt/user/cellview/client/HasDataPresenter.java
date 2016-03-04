@@ -1155,6 +1155,7 @@ class HasDataPresenter<T> implements HasData<T>, HasKeyProvider<T>, HasKeyboardP
      * bind to selection after the user has interacted with the widget at least
      * once. This prevents values from being selected by default.
      */
+    //NR - simply don't like this - may be a misunderstanding of "bound to selection"
     try {
       if (KeyboardSelectionPolicy.BOUND_TO_SELECTION == keyboardSelectionPolicy
           && selectionModel != null && newState.viewTouched) {
