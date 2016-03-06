@@ -38,12 +38,23 @@ public class HistoryImplPushState extends HistoryImpl {
 	@Override
 	public boolean init() {
 		// initialize HistoryImpl with the current path
-		String withHash = Window.Location.getHash().isEmpty() ? ""
-				: "&" + Window.Location.getHash().substring(1);
-		updateHistoryToken(Window.Location.getPath()
-				+ Window.Location.getQueryString() + withHash);
+		String initialToken = Window.Location.getPath()
+				+ Window.Location.getQueryString();
+		if (!Window.Location.getHash().isEmpty()) {
+			String hash = Window.Location.getHash();
+			if (hash.startsWith("#")) {
+				hash = hash.substring(1);
+			}
+			if (hash.startsWith("!")) {
+				hash = hash.substring(1);
+			}
+			if (hash.startsWith("/")) {
+				initialToken = hash;
+			}
+		}
+		updateHistoryToken(initialToken);
 		// initialize the empty state with the current history token
-		nativeUpdate(encodeFragment(getToken()));
+		nativeUpdate(getToken());
 		// initialize the popState handler
 		initPopStateHandler();
 		return true;
@@ -75,6 +86,10 @@ public class HistoryImplPushState extends HistoryImpl {
 		}
 		setToken(token);
 	}
+
+	public native String decodeFragment(String encodedFragment) /*-{
+        return decodeURI(encodedFragment.replace("%23", "#"));
+	}-*/;
 
 	/**
 	 * Initialize an event handler that gets executed when the token changes.

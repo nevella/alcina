@@ -74,8 +74,10 @@ public class HistoryImpl {
 	}-*/;
 
 	public native String decodeFragment(String encodedFragment) /*-{
+		//alcina escapes fragment before we get here
+        return encodedFragment;
         // decodeURI() does *not* decode the '#' character.
-        return decodeURI(encodedFragment.replace("%23", "#"));
+//        return decodeURI(encodedFragment.replace("%23", "#"));
 	}-*/;
 
 	public void setToken(String token) {
@@ -87,8 +89,10 @@ public class HistoryImpl {
 	}
 
 	public native String encodeFragment(String fragment) /*-{
+		//alcina unescapes fragment in history
+		return fragment;
         // encodeURI() does *not* encode the '#' character.
-        return encodeURI(fragment).replace("#", "%23");
+//        return encodeURI(fragment).replace("#", "%23");
 	}-*/;
 
 	public void fireHistoryChangedImpl(String token) {
