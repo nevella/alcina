@@ -43,7 +43,7 @@ public class HistoryImplPushState extends HistoryImpl {
 		updateHistoryToken(Window.Location.getPath()
 				+ Window.Location.getQueryString() + withHash);
 		// initialize the empty state with the current history token
-		nativeUpdate(getToken());
+		nativeUpdate(encodeFragment(getToken()));
 		// initialize the popState handler
 		initPopStateHandler();
 		return true;
@@ -52,7 +52,7 @@ public class HistoryImplPushState extends HistoryImpl {
 	@Override
 	public void nativeUpdate(final String historyToken) {
 		String newPushStateToken = CodeServerParameterHelper
-				.append(encodeFragment(historyToken));
+				.append(historyToken);
 		if (!newPushStateToken.startsWith("/")) {
 			newPushStateToken = "/" + newPushStateToken;
 		}
@@ -109,6 +109,4 @@ public class HistoryImplPushState extends HistoryImpl {
         };
         $wnd.history.pushState(state, $doc.title, token);
 	}-*/;
-
-	
 }

@@ -58,8 +58,6 @@ import com.google.gwt.event.shared.HandlerRegistration;
  * <li>;,/?:@&=+$-_.!~*()
  * </ul>
  * </p>
- */
-/**
  * Nick - because this class is now not really history/impl, just history, I
  * customised for pushState() directly
  * 

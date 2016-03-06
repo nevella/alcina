@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.common.client.util.UrlComponentEncoder;
+import cc.alcina.framework.common.client.util.UrlEncoder;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 
 import com.google.gwt.user.client.History;
@@ -199,7 +199,7 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 		this.noHistoryDisabled = noHistoryDisabled;
 	}
 
-	static UrlComponentEncoder encoder;
+	static UrlEncoder encoder;
 
 	/**
 	 * '&' in values is encoded as &&, to allow for hotmail escaping '&' in the
@@ -225,7 +225,7 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 
 	public static String encode(String string) {
 		if (encoder == null) {
-			encoder = Registry.impl(UrlComponentEncoder.class);
+			encoder = Registry.impl(UrlEncoder.class);
 		}
 		string = string.replace("&", "&&");
 		String encoded = encoder.encode(string);
@@ -284,7 +284,7 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 					}
 				}
 				map.put(key,
-						Registry.impl(UrlComponentEncoder.class)
+						Registry.impl(UrlEncoder.class)
 								.decode(s.substring(idxStart, idx0))
 								.replace("&&", "&"));
 				forKey = true;

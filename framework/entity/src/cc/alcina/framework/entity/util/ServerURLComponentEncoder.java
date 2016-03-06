@@ -16,17 +16,17 @@ package cc.alcina.framework.entity.util;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.util.UrlComponentEncoder;
+import cc.alcina.framework.common.client.util.UrlEncoder;
 import cc.alcina.framework.entity.SEUtilities;
 
 /**
  *
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = UrlComponentEncoder.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+@RegistryLocation(registryPoint = UrlEncoder.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 //only used in hosted mode
 @ClientInstantiable
-public class ServerURLComponentEncoder implements UrlComponentEncoder {
+public class ServerURLComponentEncoder implements UrlEncoder {
 	public String encode(String text) {
 		return SEUtilities.encUtf8(text);
 	}
