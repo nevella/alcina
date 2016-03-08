@@ -269,6 +269,9 @@ public class BrowserMod {
 				&& !isSafari()
 				&& !isChrome();
 	}
+	public static boolean isWebKit() {
+		return getUserAgent().toLowerCase().matches(".*(webkit|blink).*");
+	}
 
 	public static String getAnimationPrefix() {
 		if(getUserAgent().contains("WebKit")){
