@@ -112,6 +112,8 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 		public byte[] bytes;
 
 		public boolean persist;
+
+		public boolean htmlContentDescriptionUnescaped;
 	}
 
 	@XmlRootElement
