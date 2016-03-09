@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
+import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
@@ -34,13 +35,21 @@ public class RenderedLabelCustomiser implements Customiser {
 
 	public static final String WIDGET_CSS_CLASS = "WIDGET_CSS_CLASS";
 
+	public static final String TEXT_BOX_IF_EDITABLE = "TEXT_BOX_IF_EDITABLE";
+
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
-		Class rendererClass = NamedParameter.Support.classValue(
-				info.parameters(), RENDERER_CLASS, null);
-		String widgetCssClass = NamedParameter.Support.stringValue(
-				info.parameters(), WIDGET_CSS_CLASS, null);
-		return new RenderedLabelProvider(rendererClass, widgetCssClass);
+		Class rendererClass = NamedParameter.Support
+				.classValue(info.parameters(), RENDERER_CLASS, null);
+		String widgetCssClass = NamedParameter.Support
+				.stringValue(info.parameters(), WIDGET_CSS_CLASS, null);
+		boolean textBoxIfEditable = NamedParameter.Support
+				.booleanValue(info.parameters(), TEXT_BOX_IF_EDITABLE);
+		if (editable && textBoxIfEditable) {
+			return GwittirBridge.TEXTBOX_PROVIDER;
+		} else {
+			return new RenderedLabelProvider(rendererClass, widgetCssClass);
+		}
 	}
 
 	public static class RenderedLabelProvider implements BoundWidgetProvider {
@@ -48,7 +57,8 @@ public class RenderedLabelCustomiser implements Customiser {
 
 		private Renderer renderer;
 
-		public RenderedLabelProvider(Class rendererClass, String widgetCssClass) {
+		public RenderedLabelProvider(Class rendererClass,
+				String widgetCssClass) {
 			this.widgetCssClass = widgetCssClass;
 			renderer = rendererClass == null ? ToStringRenderer.INSTANCE
 					: (Renderer) Reflections.classLookup()

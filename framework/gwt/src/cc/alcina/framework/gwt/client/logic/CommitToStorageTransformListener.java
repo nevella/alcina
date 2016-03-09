@@ -41,6 +41,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.On
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.gwt.client.ClientBase;
@@ -55,9 +56,22 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * 
  * @author Nick Reddel
  */
-public class CommitToStorageTransformListener extends StateListenable implements
-		DomainTransformListener {
+public class CommitToStorageTransformListener extends StateListenable
+		implements DomainTransformListener {
 	public static final int DELAY_MS = 100;
+
+	public static final String COMMITTING = "COMMITTING";
+
+	public static final String COMMITTED = "COMMITTED";
+
+	public static final String ERROR = "ERROR";
+
+	public static final String OFFLINE = "OFFLINE";
+
+	public static final String RELOAD = "RELOAD";
+
+	public static final transient String CONTEXT_REPLAYING_SYNTHESISED_EVENTS = CommitToStorageTransformListener.class
+			.getName() + ".CONTEXT_REPLAYING_SYNTHESISED_EVENTS";
 
 	private List<DomainTransformEvent> transformQueue;
 
@@ -87,46 +101,15 @@ public class CommitToStorageTransformListener extends StateListenable implements
 
 	private boolean localStorageOnly;
 
-	/*
-	 * vaguely hacky, if we're connected but need to do some fancy footwork
-	 * before uploading offline transforms
-	 */
-	public boolean isLocalStorageOnly() {
-		return this.localStorageOnly;
-	}
-
-	public void setLocalStorageOnly(boolean localStorageOnly) {
-		this.localStorageOnly = localStorageOnly;
-	}
-
-	public static final String COMMITTING = "COMMITTING";
-
-	public static final String COMMITTED = "COMMITTED";
-
-	public static final String ERROR = "ERROR";
-
-	public static final String OFFLINE = "OFFLINE";
-
-	public static final String RELOAD = "RELOAD";
-
 	public CommitToStorageTransformListener() {
 		resetQueue();
-	}
-
-	public int getTransformQueueSize() {
-		return transformQueue.size();
-	}
-
-	protected void clearPriorRequestsWithoutResponse() {
-		priorRequestsWithoutResponse.clear();
 	}
 
 	public synchronized void domainTransform(DomainTransformEvent evt) {
 		if (evt.getCommitType() == CommitType.TO_STORAGE) {
 			String pn = evt.getPropertyName();
-			if (pn != null
-					&& (pn.equals(TransformManager.ID_FIELD_NAME) || pn
-							.equals(TransformManager.LOCAL_ID_FIELD_NAME))) {
+			if (pn != null && (pn.equals(TransformManager.ID_FIELD_NAME)
+					|| pn.equals(TransformManager.LOCAL_ID_FIELD_NAME))) {
 				return;
 			}
 			TransformManager tm = TransformManager.get();
@@ -136,29 +119,12 @@ public class CommitToStorageTransformListener extends StateListenable implements
 			transformQueue.add(evt);
 			lastQueueAddMillis = System.currentTimeMillis();
 			if (queueingFinishedTimer == null) {
-				queueingFinishedTimer = Registry.impl(
-						TimerWrapperProvider.class).getTimer(
-						getCommitLoopRunnable());
+				queueingFinishedTimer = Registry
+						.impl(TimerWrapperProvider.class)
+						.getTimer(getCommitLoopRunnable());
 				queueingFinishedTimer.scheduleRepeating(DELAY_MS);
 			}
 			return;
-		}
-	}
-
-	protected Runnable getCommitLoopRunnable() {
-		return new CommitLoopRunnable();
-	}
-
-	class CommitLoopRunnable implements Runnable {
-		long checkMillis = lastQueueAddMillis;
-
-		@Override
-		public void run() {
-			if (checkMillis == lastQueueAddMillis
-					|| transformQueue.size() > getMaxTransformsPerRequest()) {
-				commit();
-			}
-			checkMillis = lastQueueAddMillis;
 		}
 	}
 
@@ -169,14 +135,28 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		commit();
 	}
 
-	protected int getMaxTransformsPerRequest() {
-		return Integer.MAX_VALUE;
+	public void flushWithOneoffCallback(AsyncCallback callback) {
+		flushWithOneoffCallback(callback, true);
 	}
 
-	private ClientInstance getClientInstance() {
-		ClientInstance clientInstance = ClientBase.getClientInstance().clone();
-		clientInstance.setUser(null);
-		return clientInstance;
+	public void flushWithOneoffCallback(AsyncCallback callback,
+			boolean commitIfEmptyTransformQueue) {
+		if (((priorRequestsWithoutResponse.size() == 0
+				|| !commitIfEmptyTransformQueue) && transformQueue.size() == 0)
+				|| isPaused()) {
+			callback.onSuccess(null);
+			return;
+		}
+		addStateChangeListener(new OneoffListenerWrapper(callback));
+		flush();
+	}
+
+	public DomainTransformRequest getCommittingRequest() {
+		return this.committingRequest;
+	}
+
+	public String getCurrentState() {
+		return this.currentState;
 	}
 
 	public int getLocalRequestId() {
@@ -191,6 +171,18 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		return this.synthesisedEvents;
 	}
 
+	public int getTransformQueueSize() {
+		return transformQueue.size();
+	}
+
+	/*
+	 * vaguely hacky, if we're connected but need to do some fancy footwork
+	 * before uploading offline transforms
+	 */
+	public boolean isLocalStorageOnly() {
+		return this.localStorageOnly;
+	}
+
 	public boolean isPaused() {
 		return paused;
 	}
@@ -203,8 +195,19 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		return localToServerIds.get(localId);
 	}
 
+	/**
+	 * Indicates that no further transforms should be processed
+	 */
+	public void putReloadRequired() {
+		currentState = RELOAD;
+	}
+
 	public void setLocalRequestId(int localRequestId) {
 		this.localRequestId = localRequestId;
+	}
+
+	public void setLocalStorageOnly(boolean localStorageOnly) {
+		this.localStorageOnly = localStorageOnly;
 	}
 
 	public void setPaused(boolean paused) {
@@ -215,21 +218,28 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		this.suppressErrors = suppressErrors;
 	}
 
+	private ClientInstance getClientInstance() {
+		ClientInstance clientInstance = ClientBase.getClientInstance().clone();
+		clientInstance.setUser(null);
+		return clientInstance;
+	}
+
 	private synchronized void resetQueue() {
 		transformQueue = new ArrayList<DomainTransformEvent>();
 		// eventIdsToIgnore = new HashSet<Long>();
 	}
 
-	/**
-	 * Indicates that no further transforms should be processed
-	 */
-	public void putReloadRequired() {
-		currentState = RELOAD;
+	protected boolean canTransitionToOnline() {
+		return true;
+	}
+
+	protected void clearPriorRequestsWithoutResponse() {
+		priorRequestsWithoutResponse.clear();
 	}
 
 	protected synchronized void commit() {
-		if ((priorRequestsWithoutResponse.size() == 0 && transformQueue.size() == 0)
-				|| isPaused()) {
+		if ((priorRequestsWithoutResponse.size() == 0
+				&& transformQueue.size() == 0) || isPaused()) {
 			return;
 		}
 		if (queueingFinishedTimer != null) {
@@ -253,7 +263,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 						Callback<ClientTransformExceptionResolutionToken> callback = new Callback<ClientTransformExceptionResolutionToken>() {
 							public void apply(
 									ClientTransformExceptionResolutionToken resolutionToken) {
-								if (resolutionToken.getResolverAction() == ClientTransformExceptionResolverAction.RESUBMIT) {
+								if (resolutionToken
+										.getResolverAction() == ClientTransformExceptionResolverAction.RESUBMIT) {
 									eventIdsToIgnore = resolutionToken
 											.getEventIdsToIgnore();
 									reloadRequired = resolutionToken
@@ -280,6 +291,15 @@ public class CommitToStorageTransformListener extends StateListenable implements
 			}
 
 			public void onSuccess(DomainTransformResponse response) {
+				LooseContext.runWithBoolean(
+						CommitToStorageTransformListener.CONTEXT_REPLAYING_SYNTHESISED_EVENTS,
+						() -> {
+					onSuccess0(response);
+					return false;
+				});
+			}
+
+			private void onSuccess0(DomainTransformResponse response) {
 				PermissionsManager.get().setOnlineState(OnlineState.ONLINE);
 				TransformManager tm = TransformManager.get();
 				tm.setReplayingRemoteEvent(true);
@@ -295,24 +315,29 @@ public class CommitToStorageTransformListener extends StateListenable implements
 					 */
 					for (DomainTransformEvent dte : response
 							.getEventsToUseForClientUpdate()) {
-						long id = dte.getGeneratedServerId() != 0 ? dte
-								.getGeneratedServerId() : dte.getObjectId();
+						long id = dte.getGeneratedServerId() != 0
+								? dte.getGeneratedServerId()
+								: dte.getObjectId();
 						if (dte.getGeneratedServerId() != 0) {
 							DomainTransformEvent idEvt = new DomainTransformEvent();
 							idEvt.setObjectClass(dte.getObjectClass());
 							idEvt.setObjectLocalId(dte.getObjectLocalId());
-							idEvt.setPropertyName(TransformManager.ID_FIELD_NAME);
+							idEvt.setPropertyName(
+									TransformManager.ID_FIELD_NAME);
 							idEvt.setValueClass(Long.class);
-							idEvt.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
+							idEvt.setTransformType(
+									TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 							idEvt.setNewStringValue(String.valueOf(id));
 							synthesisedEvents.add(idEvt);
 							idEvt = new DomainTransformEvent();
 							idEvt.setObjectClass(dte.getObjectClass());
 							idEvt.setObjectId(id);
-							idEvt.setPropertyName(TransformManager.LOCAL_ID_FIELD_NAME);
+							idEvt.setPropertyName(
+									TransformManager.LOCAL_ID_FIELD_NAME);
 							idEvt.setNewStringValue("0");
 							idEvt.setValueClass(Long.class);
-							idEvt.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
+							idEvt.setTransformType(
+									TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 							synthesisedEvents.add(idEvt);
 							localToServerIds.put(dte.getObjectLocalId(), id);
 							tm.registerHiliMappingPriorToLocalIdDeletion(
@@ -328,11 +353,13 @@ public class CommitToStorageTransformListener extends StateListenable implements
 							DomainTransformEvent idEvt = new DomainTransformEvent();
 							idEvt.setObjectClass(dte.getObjectClass());
 							idEvt.setObjectId(id);
-							idEvt.setPropertyName(TransformManager.VERSION_FIELD_NAME);
-							idEvt.setNewStringValue(String.valueOf(dte
-									.getObjectVersionNumber()));
+							idEvt.setPropertyName(
+									TransformManager.VERSION_FIELD_NAME);
+							idEvt.setNewStringValue(String
+									.valueOf(dte.getObjectVersionNumber()));
 							idEvt.setValueClass(Integer.class);
-							idEvt.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
+							idEvt.setTransformType(
+									TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 							synthesisedEvents.add(idEvt);
 						}
 					}
@@ -362,15 +389,16 @@ public class CommitToStorageTransformListener extends StateListenable implements
 						TransformManager.get().setTransformCommitType(evt,
 								CommitType.ALL_COMMITTED);
 					}
-					for (int i = priorRequestsWithoutResponse.size() - 1; i >= 0; i--) {
-						if (priorRequestsWithoutResponse.get(i).getRequestId() <= dtr
-								.getRequestId()) {
+					for (int i = priorRequestsWithoutResponse.size()
+							- 1; i >= 0; i--) {
+						if (priorRequestsWithoutResponse.get(i)
+								.getRequestId() <= dtr.getRequestId()) {
 							priorRequestsWithoutResponse.remove(i);
 						}
 					}
 					if (response.getMessage() != null) {
-						Registry.impl(ClientNotifications.class).showMessage(
-								response.getMessage());
+						Registry.impl(ClientNotifications.class)
+								.showMessage(response.getMessage());
 					}
 				} finally {
 					tm.setReplayingRemoteEvent(false);
@@ -392,7 +420,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		// dtr.setPriorRequestsWithoutResponse(priorRequestsWithoutResponseCopy)
 		List<DomainTransformRequest> priorRequestsWithoutResponseForCommit = new ArrayList<DomainTransformRequest>(
 				priorRequestsWithoutResponse);
-		dtr.setPriorRequestsWithoutResponse(priorRequestsWithoutResponseForCommit);
+		dtr.setPriorRequestsWithoutResponse(
+				priorRequestsWithoutResponseForCommit);
 		committingRequest = dtr;
 		fireStateChanged(COMMITTING);
 		priorRequestsWithoutResponse.add(dtr);
@@ -401,8 +430,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 			return;
 		}
 		if (PermissionsManager.get().getOnlineState() == OnlineState.OFFLINE) {
-			ClientBase.getCommonRemoteServiceAsyncInstance().ping(
-					new AsyncCallback<Void>() {
+			ClientBase.getCommonRemoteServiceAsyncInstance()
+					.ping(new AsyncCallback<Void>() {
 						@Override
 						public void onFailure(Throwable caught) {
 							// ignore - expected(ish) behaviour - if it's a
@@ -423,24 +452,55 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		}
 	}
 
-	protected boolean canTransitionToOnline() {
-		return true;
+	protected void
+			commitRemote(AsyncCallback<DomainTransformResponse> callback) {
+		ClientBase.getCommonRemoteServiceAsyncInstance()
+				.transform(committingRequest, callback);
+		committingRequest = null;
+	}
+
+	@Override
+	protected void fireStateChanged(String newState) {
+		currentState = newState;
+		super.fireStateChanged(newState);
+	}
+
+	protected Runnable getCommitLoopRunnable() {
+		return new CommitLoopRunnable();
+	}
+
+	protected int getMaxTransformsPerRequest() {
+		return Integer.MAX_VALUE;
 	}
 
 	protected ClientTransformExceptionResolver getTransformExceptionResolver() {
 		return Registry.impl(ClientTransformExceptionResolver.class);
 	}
 
-	protected void commitRemote(AsyncCallback<DomainTransformResponse> callback) {
-		ClientBase.getCommonRemoteServiceAsyncInstance().transform(
-				committingRequest, callback);
-		committingRequest = null;
+	/*
+	 * Unimplemented for the moment. This may or may not be necessary to
+	 * accelerate change conflict checking
+	 */
+	void updateTransformQueueVersions() {
 	}
 
-	public static class UnknownTransformFailedException extends
-			WrappedRuntimeException {
+	public static class UnknownTransformFailedException
+			extends WrappedRuntimeException {
 		public UnknownTransformFailedException(Throwable cause) {
 			super(cause);
+		}
+	}
+
+	class CommitLoopRunnable implements Runnable {
+		long checkMillis = lastQueueAddMillis;
+
+		@Override
+		public void run() {
+			if (checkMillis == lastQueueAddMillis
+					|| transformQueue.size() > getMaxTransformsPerRequest()) {
+				commit();
+			}
+			checkMillis = lastQueueAddMillis;
 		}
 	}
 
@@ -466,41 +526,5 @@ public class CommitToStorageTransformListener extends StateListenable implements
 				}
 			}
 		}
-	}
-
-	public void flushWithOneoffCallback(AsyncCallback callback) {
-		flushWithOneoffCallback(callback, true);
-	}
-
-	public void flushWithOneoffCallback(AsyncCallback callback,
-			boolean commitIfEmptyTransformQueue) {
-		if (((priorRequestsWithoutResponse.size() == 0 || !commitIfEmptyTransformQueue) && transformQueue
-				.size() == 0) || isPaused()) {
-			callback.onSuccess(null);
-			return;
-		}
-		addStateChangeListener(new OneoffListenerWrapper(callback));
-		flush();
-	}
-
-	@Override
-	protected void fireStateChanged(String newState) {
-		currentState = newState;
-		super.fireStateChanged(newState);
-	}
-
-	/*
-	 * Unimplemented for the moment. This may or may not be necessary to
-	 * accelerate change conflict checking
-	 */
-	void updateTransformQueueVersions() {
-	}
-
-	public String getCurrentState() {
-		return this.currentState;
-	}
-
-	public DomainTransformRequest getCommittingRequest() {
-		return this.committingRequest;
 	}
 }

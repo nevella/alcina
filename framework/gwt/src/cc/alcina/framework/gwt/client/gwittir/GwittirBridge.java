@@ -25,6 +25,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.totsp.gwittir.client.beans.BeanDescriptor;
+import com.totsp.gwittir.client.beans.Binding;
+import com.totsp.gwittir.client.beans.Converter;
+import com.totsp.gwittir.client.beans.Introspector;
+import com.totsp.gwittir.client.beans.Property;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import com.totsp.gwittir.client.ui.BoundWidget;
+import com.totsp.gwittir.client.ui.Renderer;
+import com.totsp.gwittir.client.ui.table.Field;
+import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
+import com.totsp.gwittir.client.validator.DoubleValidator;
+import com.totsp.gwittir.client.validator.IntegerValidator;
+import com.totsp.gwittir.client.validator.Validator;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
@@ -70,20 +85,6 @@ import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
-import com.totsp.gwittir.client.beans.BeanDescriptor;
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.Converter;
-import com.totsp.gwittir.client.beans.Introspector;
-import com.totsp.gwittir.client.beans.Property;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
-import com.totsp.gwittir.client.validator.IntegerValidator;
-import com.totsp.gwittir.client.validator.Validator;
-
 @SuppressWarnings("unchecked")
 /**
  *
@@ -97,6 +98,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		validatorMap.put(int.class, IntegerValidator.INSTANCE);
 		validatorMap.put(Long.class, LongValidator.INSTANCE);
 		validatorMap.put(long.class, LongValidator.INSTANCE);
+		
+		validatorMap.put(Double.class, DoubleValidator.INSTANCE);
+		validatorMap.put(double.class, DoubleValidator.INSTANCE);
 		validatorMap.put(Date.class, ShortDateValidator.INSTANCE);
 	}
 
@@ -317,7 +321,6 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			boolean fieldEditable = editableWidgets && PermissionsManager.get()
 					.checkEffectivePropertyPermission(op, pp, obj, false)
 					&& ((displayInfo.displayMask() & Display.DISPLAY_RO) == 0);
-			;
 			Class domainType = p.getType();
 			domainType = (association == null || !propertyIsCollection
 					|| association.implementationClass() == void.class)

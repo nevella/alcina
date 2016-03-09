@@ -2,8 +2,8 @@ package cc.alcina.framework.gwt.client.ide;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -14,6 +14,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.table.Field;
 
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 
@@ -28,11 +29,15 @@ public class ContentViewSections {
 			if (event.isAttached()) {
 				int maxLeft = 0;
 				for (PaneWrapperWithObjects beanView : beanViews) {
-					maxLeft = Math.max(maxLeft, ((GridForm) beanView.getBoundWidget()).getCaptionColumnWidth());
+					maxLeft = Math.max(maxLeft,
+							((GridForm) beanView.getBoundWidget())
+									.getCaptionColumnWidth());
 				}
 				for (PaneWrapperWithObjects beanView : beanViews) {
-					((GridForm) beanView.getBoundWidget()).setCaptionColumnWidth(maxLeft);
-					((GridForm) beanView.getBoundWidget()).addStyleName("section-table");
+					((GridForm) beanView.getBoundWidget())
+							.setCaptionColumnWidth(maxLeft);
+					((GridForm) beanView.getBoundWidget())
+							.addStyleName("section-table");
 				}
 			}
 		}
@@ -42,16 +47,36 @@ public class ContentViewSections {
 
 	private boolean autoSave = true;
 
+	private PermissibleActionListener createListener;
+
+	public boolean isAutoSave() {
+		return this.autoSave;
+	}
+
+	public void setAutoSave(boolean autoSave) {
+		this.autoSave = autoSave;
+	}
+
 	public Widget buildWidget(Object bean) {
 		FlowPanel fp = new FlowPanel();
 		fp.setStyleName("content-view-sections");
 		fp.addAttachHandler(captionColEqualiser);
-		for (ContentViewSection section : sections) {
+		for (int idx = 0; idx < sections.size(); idx++) {
+			ContentViewSection section = sections.get(idx);
 			Label sectionLabel = new Label(section.name);
 			sectionLabel.setStyleName("section-label");
 			fp.add(sectionLabel);
-			PaneWrapperWithObjects beanView = new ContentViewFactory().fieldFilter(section).fieldOrder(section)
-					.noCaption().createBeanView(bean, editable, null, autoSave, true, null, false);
+			ContentViewFactory contentViewFactory = new ContentViewFactory();
+			if (idx < sections.size() - 1) {
+				contentViewFactory.setNoButtons(true);
+			}
+			if (!autoSave) {
+				contentViewFactory.okButtonName("Create");
+			}
+			PaneWrapperWithObjects beanView = contentViewFactory
+					.fieldFilter(section).fieldOrder(section).noCaption()
+					.createBeanView(bean, editable, createListener, autoSave,
+							true, null, false);
 			beanViews.add(beanView);
 			fp.add(beanView);
 		}
@@ -69,7 +94,8 @@ public class ContentViewSections {
 		return section;
 	}
 
-	public class ContentViewSection implements Comparator<Field>, Predicate<Field> {
+	public class ContentViewSection
+			implements Comparator<Field>, Predicate<Field> {
 		public List<String> fieldNames;
 
 		public String name;
@@ -80,7 +106,8 @@ public class ContentViewSections {
 
 		@Override
 		public int compare(Field o1, Field o2) {
-			return fieldNames.indexOf(o1.getPropertyName()) - fieldNames.indexOf(o2.getPropertyName());
+			return fieldNames.indexOf(o1.getPropertyName())
+					- fieldNames.indexOf(o2.getPropertyName());
 		}
 
 		public ContentViewSection fields(String... fieldNames) {
@@ -97,5 +124,9 @@ public class ContentViewSections {
 		public boolean test(Field t) {
 			return fieldNames.contains(t.getPropertyName());
 		}
+	}
+
+	public void addCreateListener(PermissibleActionListener createListener) {
+		this.createListener = createListener;
 	}
 }

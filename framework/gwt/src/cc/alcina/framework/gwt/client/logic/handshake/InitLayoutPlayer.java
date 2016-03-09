@@ -31,7 +31,7 @@ public class InitLayoutPlayer extends RunnablePlayer {
 		Registry.impl(LayoutManagerBase.class).redrawLayout();
 		if (!CommonUtils.isNullOrEmpty(History.getToken())) {
 			AlcinaHistory.get().setNoHistoryDisabled(true);
-			History.fireCurrentHistoryState();
+			fireCurrentHistoryState();
 			AlcinaHistory.get().setNoHistoryDisabled(false);
 		}
 		ClientNotifications notifications = Registry.impl(ClientNotifications.class);
@@ -46,5 +46,9 @@ public class InitLayoutPlayer extends RunnablePlayer {
 		}
 		LayoutEvents.get().fireRequiresGlobalRelayout();
 		LayoutEvents.get().fireDeferredGlobalRelayout();
+	}
+
+	protected void fireCurrentHistoryState() {
+		History.fireCurrentHistoryState();
 	}
 }
