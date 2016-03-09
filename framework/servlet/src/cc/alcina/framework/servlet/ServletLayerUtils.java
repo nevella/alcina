@@ -141,7 +141,7 @@ public class ServletLayerUtils {
 							.impl(CommonPersistenceProvider.class)
 							.getCommonPersistence()
 							.createClientInstance("servlet-bulk: "
-									+ EntityLayerUtils.getLocalHostName());
+									+ EntityLayerUtils.getLocalHostName(),null);
 					List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>(
 							TransformManager.get().getTransformsByCommitType(
 									CommitType.TO_LOCAL_BEAN));

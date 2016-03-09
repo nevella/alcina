@@ -8,7 +8,7 @@ public interface HandshakeObjectProvider<CI extends ClientInstance, IID extends 
 
 	public void setCommonPersistence(CommonPersistenceBase commonPersistence);
 
-	CI createClientInstance(String userAgent);
+	CI createClientInstance(String userAgent, String iid);
 
 	public ClientInstance getClientInstance(long clientInstanceId);
 }

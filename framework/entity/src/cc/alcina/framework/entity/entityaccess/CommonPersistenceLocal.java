@@ -47,7 +47,7 @@ public interface CommonPersistenceLocal {
 	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
 			throws Exception;
 
-	public abstract ClientInstance createClientInstance(String userAgent);
+	public abstract ClientInstance createClientInstance(String userAgent, String iid);
 
 	public <T> T ensureObject(T t, String key, String value) throws Exception;
 

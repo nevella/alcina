@@ -40,7 +40,7 @@ public class CookieHelper {
 	public static final String IID = "IID";
 
 	@SuppressWarnings("unchecked")
-	List<Cookie> getAddedCookies(HttpServletRequest req) {
+	public List<Cookie> getAddedCookies(HttpServletRequest req) {
 		List<Cookie> addedCookies = (List<Cookie>) req
 				.getAttribute(ADDED_COOKIES_ATTR);
 		if (addedCookies == null) {

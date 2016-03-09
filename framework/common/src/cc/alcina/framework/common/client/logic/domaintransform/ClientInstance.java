@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
+import com.google.gwt.user.client.rpc.GwtTransient;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 @MappedSuperclass
@@ -33,13 +34,14 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
  */
 @Introspectable
 /**
- * Important note - the subclass IUser field should be @GwtTransient - 
- * to prevent accidental access of possibly different IUser objects
+ * Important note - the subclass IUser field should be @GwtTransient - to
+ * prevent accidental access of possibly different IUser objects
+ * 
  * @author nick@alcina.cc
  *
  */
-public abstract class ClientInstance implements HasIUser, HasIdAndLocalId,
-		Serializable, Cloneable {
+public abstract class ClientInstance
+		implements HasIUser, HasIdAndLocalId, Serializable, Cloneable {
 	private long id;
 
 	private long localId;
@@ -49,6 +51,21 @@ public abstract class ClientInstance implements HasIUser, HasIdAndLocalId,
 	private Integer auth;
 
 	private String userAgent;
+
+	@GwtTransient
+	private String iid;
+
+	public abstract ClientInstance clone();
+
+	public ClientInstance copyPropertiesTo(ClientInstance other) {
+		other.id = id;
+		other.localId = localId;
+		other.helloDate = helloDate;
+		other.auth = auth;
+		other.userAgent = userAgent;
+		other.iid = iid;
+		return other;
+	}
 
 	public Integer getAuth() {
 		return auth;
@@ -63,20 +80,17 @@ public abstract class ClientInstance implements HasIUser, HasIdAndLocalId,
 		return id;
 	}
 
-	public abstract ClientInstance clone();
-
-	public ClientInstance copyPropertiesTo(ClientInstance other) {
-		other.id = id;
-		other.localId = localId;
-		other.helloDate = helloDate;
-		other.auth = auth;
-		other.userAgent = userAgent;
-		return other;
+	public String getIid() {
+		return this.iid;
 	}
 
 	@Transient
 	public long getLocalId() {
 		return this.localId;
+	}
+
+	public String getUserAgent() {
+		return this.userAgent;
 	}
 
 	public void setAuth(Integer auth) {
@@ -91,12 +105,12 @@ public abstract class ClientInstance implements HasIUser, HasIdAndLocalId,
 		this.id = id;
 	}
 
-	public void setLocalId(long localId) {
-		this.localId = localId;
+	public void setIid(String iid) {
+		this.iid = iid;
 	}
 
-	public String getUserAgent() {
-		return this.userAgent;
+	public void setLocalId(long localId) {
+		this.localId = localId;
 	}
 
 	public void setUserAgent(String userAgent) {

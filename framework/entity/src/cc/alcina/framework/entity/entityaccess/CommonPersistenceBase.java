@@ -119,13 +119,13 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	 */
 	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl) {
 		AppPersistenceBase.checkNotReadOnly();
-		if (!tryImpl
-				|| !Registry.impl(JPAImplementation.class).bulkDelete(
-						getEntityManager(), clazz, ids)) {
-			List<Object> resultList = getEntityManager().createQuery(
-					String.format("from %s where id in %s ",
+		if (!tryImpl || !Registry.impl(JPAImplementation.class)
+				.bulkDelete(getEntityManager(), clazz, ids)) {
+			List<Object> resultList = getEntityManager()
+					.createQuery(String.format("from %s where id in %s ",
 							clazz.getSimpleName(),
-							EntityUtils.longsToIdClause(ids))).getResultList();
+							EntityUtils.longsToIdClause(ids)))
+					.getResultList();
 			for (Object object : resultList) {
 				getEntityManager().remove(object);
 			}
@@ -141,9 +141,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		tm.setEntityManager(getEntityManager());
 		List<ObjectDeltaResult> delta = tm.getObjectDelta(specs);
 		delta = new EntityUtils().detachedClone(delta);
-		EntityLayerObjects
-				.get()
-				.getMetricLogger()
+		EntityLayerObjects.get().getMetricLogger()
 				.debug("object delta get - total (ms):"
 						+ (System.currentTimeMillis() - t1));
 		return delta;
@@ -161,7 +159,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			return;
 		}
 		String userName = PermissionsManager.get().getUserName();
-		if (PermissionsManager.get().getLoginState() == LoginState.NOT_LOGGED_IN) {
+		if (PermissionsManager.get()
+				.getLoginState() == LoginState.NOT_LOGGED_IN) {
 			userName = getAnonymousUserName();
 		}
 		PermissionsManager.get().setUser(getUserByName(userName));
@@ -175,9 +174,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	 * layer we (should) always want it lightweight
 	 */
 	@Override
-	public CI createClientInstance(String userAgent) {
-		return (CI) getHandshakeObjectProvider()
-				.createClientInstance(userAgent);
+	public CI createClientInstance(String userAgent, String iid) {
+		return (CI) getHandshakeObjectProvider().createClientInstance(userAgent,
+				iid);
 	}
 
 	public <T> T ensureObject(T t, String key, String value) throws Exception {
@@ -216,8 +215,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public <A> Set<A> getAll(Class<A> clazz) {
-		Query query = getEntityManager().createQuery(
-				String.format("from %s ", clazz.getSimpleName()));
+		Query query = getEntityManager()
+				.createQuery(String.format("from %s ", clazz.getSimpleName()));
 		List results = query.getResultList();
 		return new LinkedHashSet<A>(results);
 	}
@@ -259,8 +258,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public IID getIidByKey(String iid) {
 		List<IID> l = getEntityManager()
 				.createQuery(
-						"from "
-								+ getImplementationSimpleClassName(Iid.class)
+						"from " + getImplementationSimpleClassName(Iid.class)
 								+ " i left join fetch i.rememberMeUser where i.instanceId = ?")
 				.setParameter(1, iid).getResultList();
 		return (IID) ((l.size() == 0) ? getNewImplementationInstance(Iid.class)
@@ -309,8 +307,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
-			boolean createIfNonexistent, Long ignoreId,
-			boolean caseInsensitive, boolean livePermissionsManager) {
+			boolean createIfNonexistent, Long ignoreId, boolean caseInsensitive,
+			boolean livePermissionsManager) {
 		try {
 			if (livePermissionsManager) {
 				connectPermissionsManagerToLiveObjects();
@@ -318,8 +316,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			String eql = String.format(
 					value == null ? "from %s where %s is null"
 							: caseInsensitive ? "from %s where lower(%s) = ?1"
-									: "from %s where %s = ?1", clazz
-							.getSimpleName(), key);
+									: "from %s where %s = ?1",
+					clazz.getSimpleName(), key);
 			if (ignoreId != null) {
 				eql += " AND id != " + ignoreId;
 			}
@@ -328,8 +326,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			}
 			Query q = getEntityManager().createQuery(eql);
 			if (value != null) {
-				q.setParameter(1, caseInsensitive ? value.toString()
-						.toLowerCase() : value);
+				q.setParameter(1, caseInsensitive
+						? value.toString().toLowerCase() : value);
 			}
 			List l = q.getResultList();
 			if (l.size() == 0 && createIfNonexistent) {
@@ -363,14 +361,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		String eql = String.format("from %s where  id in %s order by id",
 				clazz.getSimpleName(), EntityUtils.longsToIdClause(ids));
 		List results = getEntityManager().createQuery(eql).getResultList();
-		return new EntityUtils()
-				.detachedClone(results, instantiateImplCallback);
+		return new EntityUtils().detachedClone(results,
+				instantiateImplCallback);
 	}
 
 	public long getLastTransformId() {
-		String eql = String
-				.format("select max(dtep.id) from %s dtep ",
-						getImplementationSimpleClassName(DomainTransformEventPersistent.class));
+		String eql = String.format("select max(dtep.id) from %s dtep ",
+				getImplementationSimpleClassName(
+						DomainTransformEventPersistent.class));
 		Long l = (Long) getEntityManager().createQuery(eql).getSingleResult();
 		return CommonUtils.lv(l);
 	}
@@ -383,13 +381,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
-	public <T extends WrapperPersistable> WrappedObject<T> getObjectWrapperForUser(
-			Class<T> c, long id) throws Exception {
+	public <T extends WrapperPersistable> WrappedObject<T>
+			getObjectWrapperForUser(Class<T> c, long id) throws Exception {
 		return getObjectWrapperForUser(null, c, id);
 	}
 
-	public <T extends WrapperPersistable> WrappedObject<T> getObjectWrapperForUser(
-			HasId wrapperOwner, Class<T> c, long id) throws Exception {
+	public <T extends WrapperPersistable> WrappedObject<T>
+			getObjectWrapperForUser(HasId wrapperOwner, Class<T> c, long id)
+					throws Exception {
 		connectPermissionsManagerToLiveObjects();
 		WrappedObject<T> wrapper = Registry.impl(WrappedObjectProvider.class)
 				.getObjectWrapperForUser(c, id, getEntityManager());
@@ -405,15 +404,17 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				clazz.getSimpleName());
 		Object[] result = (Object[]) getEntityManager().createQuery(eql)
 				.getSingleResult();
-		return result[0] == null ? new LongPair() : new LongPair(
-				(Long) result[0], (Long) result[1]);
+		return result[0] == null ? new LongPair()
+				: new LongPair((Long) result[0], (Long) result[1]);
 	}
 
 	@Override
-	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
-			long fromId, long toId, Collection<Long> specificIds, boolean mostRecentOnly,
-			boolean populateTransformSourceObjects) {
-		boolean logTransformReadMetrics = ResourceUtilities.is(CommonPersistenceBase.class,"logTransformReadMetrics");
+	public List<DomainTransformRequestPersistent>
+			getPersistentTransformRequests(long fromId, long toId,
+					Collection<Long> specificIds, boolean mostRecentOnly,
+					boolean populateTransformSourceObjects) {
+		boolean logTransformReadMetrics = ResourceUtilities
+				.is(CommonPersistenceBase.class, "logTransformReadMetrics");
 		Query query = null;
 		List<DomainTransformRequestPersistent> dtrps = null;
 		if (mostRecentOnly) {
@@ -422,33 +423,38 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					"select dte.domainTransformRequestPersistent.id  "
 							+ "from %s dte " + "order by dte.id desc",
 					getImplementation(DomainTransformEventPersistent.class)
-							.getSimpleName(), fromId);
+							.getSimpleName(),
+					fromId);
 			query = getEntityManager().createQuery(eql);
 			query.setMaxResults(1);
 			List<Long> ids = query.getResultList();
 			long id = ids.isEmpty() ? 0L : ids.get(0);
 			dtrps = new ArrayList<DomainTransformRequestPersistent>();
-			DomainTransformRequestPersistent instance = getNewImplementationInstance(DomainTransformRequestPersistent.class);
+			DomainTransformRequestPersistent instance = getNewImplementationInstance(
+					DomainTransformRequestPersistent.class);
 			instance.setId(id);
 			dtrps.add(instance);
-			if(logTransformReadMetrics){
+			if (logTransformReadMetrics) {
 				dc.end("dtrp-get-most-recent - %s ms");
 			}
 		} else {
 			DurationCounter dc = new DurationCounter();
-			String idFilter = specificIds == null ? String.format(
-					"dtrp.id>=%s and dtrp.id<=%s", fromId, toId) : String
-					.format("dtrp.id in %s", EntityUtils.longsToIdClause(specificIds));
-			String eql = String.format("select distinct dtrp "
-					+ "from %s dtrp " + "inner join fetch dtrp.events "
-					+ "inner join fetch dtrp.clientInstance " + " where %s "
-					+ "order by dtrp.id",
+			String idFilter = specificIds == null
+					? String.format("dtrp.id>=%s and dtrp.id<=%s", fromId, toId)
+					: String.format("dtrp.id in %s",
+							EntityUtils.longsToIdClause(specificIds));
+			String eql = String.format(
+					"select distinct dtrp " + "from %s dtrp "
+							+ "inner join fetch dtrp.events "
+							+ "inner join fetch dtrp.clientInstance "
+							+ " where %s " + "order by dtrp.id",
 					getImplementation(DomainTransformRequestPersistent.class)
-							.getSimpleName(), idFilter);
+							.getSimpleName(),
+					idFilter);
 			query = getEntityManager().createQuery(eql);
 			dtrps = new ArrayList<DomainTransformRequestPersistent>(
 					query.getResultList());
-			if(logTransformReadMetrics){
+			if (logTransformReadMetrics) {
 				dc.end("dtrp-get-dtrps - %s ms");
 			}
 		}
@@ -458,17 +464,17 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					.allEvents(dtrps);
 			DetachedEntityCache cache = cacheEntities(events, false, false);
 			for (DomainTransformEvent event : events) {
-				event.setSource((HasIdAndLocalId) cache.get(
-						event.getObjectClass(), event.getObjectId()));
+				event.setSource((HasIdAndLocalId) cache
+						.get(event.getObjectClass(), event.getObjectId()));
 			}
-			if(logTransformReadMetrics){
+			if (logTransformReadMetrics) {
 				dc.end("populate transform source events - %s ms");
 			}
 		}
 		DetachedEntityCache cache = new DetachedEntityCache();
-		GraphProjectionDataFilter filter = Registry.impl(
-				JPAImplementation.class).getResolvingFilter(
-				Registry.impl(JPAImplementation.class)
+		GraphProjectionDataFilter filter = Registry
+				.impl(JPAImplementation.class)
+				.getResolvingFilter(Registry.impl(JPAImplementation.class)
 						.getClassrefInstantiator(), cache, false);
 		GraphProjectionFieldFilter allowSourceFilter = new GraphProjectionFieldFilter() {
 			@Override
@@ -489,8 +495,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			}
 		};
 		try {
-			return new GraphProjection(allowSourceFilter, filter).project(
-					dtrps, null);
+			return new GraphProjection(allowSourceFilter, filter).project(dtrps,
+					null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -513,12 +519,16 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public U getUserByName(String userName) {
 		List<U> l = getEntityManager()
 				.createQuery(
-						String.format("select distinct u from "
-								+ getImplementationSimpleClassName(IUser.class)
-								+ " u " + "left join fetch u.primaryGroup "
-								+ "left join fetch u.secondaryGroups g "
-								+ "left join fetch g.memberOfGroups sg "
-								+ "where u.%s = ?1", getUserNamePropertyName()))
+						String.format(
+								"select distinct u from "
+										+ getImplementationSimpleClassName(
+												IUser.class)
+										+ " u "
+										+ "left join fetch u.primaryGroup "
+										+ "left join fetch u.secondaryGroups g "
+										+ "left join fetch g.memberOfGroups sg "
+										+ "where u.%s = ?1",
+								getUserNamePropertyName()))
 				.setParameter(1, userName).getResultList();
 		return (l.size() == 0) ? null : l.get(0);
 	}
@@ -542,13 +552,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	@Override
 	public G getGroupByName(String groupName) {
 		List<G> l = getEntityManager()
-				.createQuery(
-						"select distinct g from "
-								+ getImplementationSimpleClassName(IGroup.class)
-								+ " g "
-								+ "left join fetch g.memberOfGroups sg "
-								+ "left join fetch g.memberUsers su "
-								+ "where g.groupName = ?")
+				.createQuery("select distinct g from "
+						+ getImplementationSimpleClassName(IGroup.class) + " g "
+						+ "left join fetch g.memberOfGroups sg "
+						+ "left join fetch g.memberUsers su "
+						+ "where g.groupName = ?")
 				.setParameter(1, groupName).getResultList();
 		return (l.size() == 0) ? null : l.get(0);
 	}
@@ -565,13 +573,13 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return cleaned;
 	}
 
-	public List<ActionLogItem> listLogItemsForClass(String className, int count) {
+	public List<ActionLogItem> listLogItemsForClass(String className,
+			int count) {
 		List list = getEntityManager()
-				.createQuery(
-						"from "
-								+ getImplementationSimpleClassName(ActionLogItem.class)
-								+ " a where a.actionClassName=?1 order"
-								+ " by a.actionDate DESC")
+				.createQuery("from "
+						+ getImplementationSimpleClassName(ActionLogItem.class)
+						+ " a where a.actionClassName=?1 order"
+						+ " by a.actionDate DESC")
 				.setParameter(1, className).setMaxResults(count)
 				.getResultList();
 		return new EntityUtils().detachedClone(list);
@@ -645,16 +653,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		result.setHasId(wrapper);
 		try {
 			PermissionsManager.get().pushCurrentUser();
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(
-					wrapper.getClass()).getPropertyDescriptors();
+			PropertyDescriptor[] pds = Introspector
+					.getBeanInfo(wrapper.getClass()).getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				if (pd.getReadMethod() != null) {
-					Wrapper info = pd.getReadMethod().getAnnotation(
-							Wrapper.class);
+					Wrapper info = pd.getReadMethod()
+							.getAnnotation(Wrapper.class);
 					if (info != null) {
 						PropertyDescriptor idpd = SEUtilities
-								.getPropertyDescriptorByName(
-										wrapper.getClass(),
+								.getPropertyDescriptorByName(wrapper.getClass(),
 										info.idPropertyName());
 						Long wrapperId = (Long) idpd.getReadMethod().invoke(
 								wrapper, CommonUtils.EMPTY_OBJECT_ARRAY);
@@ -666,9 +673,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 							}
 							WrappedObject wrappedObject = (WrappedObject) getObjectWrapperForUser(
 									wrapper, pType, wrapperId);
-							result.getItems().add(
-									new UnwrapInfoItem(pd.getName(),
-											wrappedObject));
+							result.getItems().add(new UnwrapInfoItem(
+									pd.getName(), wrappedObject));
 						}
 					}
 				}
@@ -685,8 +691,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public void remove(Object o) {
 		AppPersistenceBase.checkNotReadOnly();
 		if (o instanceof HasIdAndLocalId) {
-			HasIdAndLocalId hili = (HasIdAndLocalId) getEntityManager().find(
-					o.getClass(), ((HasIdAndLocalId) o).getId());
+			HasIdAndLocalId hili = (HasIdAndLocalId) getEntityManager()
+					.find(o.getClass(), ((HasIdAndLocalId) o).getId());
 			getEntityManager().remove(hili);
 		} else {
 			throw new RuntimeException("Cannot remove detached non-hili " + o);
@@ -700,14 +706,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			connectPermissionsManagerToLiveObjects();
 			String message = def.validatePermissions();
 			if (message != null) {
-				throw new WrappedRuntimeException(new PermissionsException(
-						message));
+				throw new WrappedRuntimeException(
+						new PermissionsException(message));
 			}
-			Searcher searcher = (Searcher) Registry.get().instantiateSingle(
-					Searcher.class, def.getClass());
+			Searcher searcher = (Searcher) Registry.get()
+					.instantiateSingle(Searcher.class, def.getClass());
 			SearchResultsBase result = searcher.search(def, pageNumber,
 					getEntityManager());
-			if (LooseContext.getBoolean(Searcher.CONTEXT_RESULTS_ARE_DETACHED)) {
+			if (LooseContext
+					.getBoolean(Searcher.CONTEXT_RESULTS_ARE_DETACHED)) {
 				return result;
 			} else {
 				return projectSearchResults(result);
@@ -735,10 +742,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public void transformInPersistenceContext(TransformPersister persister,
-			TransformPersistenceToken token, DomainTransformLayerWrapper wrapper) {
+			TransformPersistenceToken token,
+			DomainTransformLayerWrapper wrapper) {
 		AppPersistenceBase.checkNotReadOnly();
-		persister.transformInPersistenceContext(token, this,
-				getEntityManager(), wrapper);
+		persister.transformInPersistenceContext(token, this, getEntityManager(),
+				wrapper);
 	}
 
 	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers) {
@@ -812,8 +820,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 								ctr);
 					}
 				} else {
-					Class c = Registry.get().lookupSingle(
-							ServerValidator.class, serverValidator.getClass());
+					Class c = Registry.get().lookupSingle(ServerValidator.class,
+							serverValidator.getClass());
 					if (c != null) {
 						ServerValidatorHandler handler = (ServerValidatorHandler) Registry
 								.get().instantiateSingle(ServerValidator.class,
@@ -834,12 +842,12 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				auth)) {
 			return true;
 		}
-		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(ClientInstance.class);
+		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(
+				ClientInstance.class);
 		List<CI> clientInstances = getEntityManager()
-				.createQuery(
-						String.format(
-								"select ci from %s ci inner join fetch ci.user where ci.id=%s",
-								clientInstanceImpl.getSimpleName(), id))
+				.createQuery(String.format(
+						"select ci from %s ci inner join fetch ci.user where ci.id=%s",
+						clientInstanceImpl.getSimpleName(), id))
 				.getResultList();
 		CI ci = CommonUtils.first(clientInstances);
 		boolean authorised = ci != null && ci.getAuth() == auth;
@@ -858,13 +866,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public TransformCache warmupTransformCache() {
 		TransformCache result = new TransformCache();
 		List<DomainTransformEventPersistent> recentTransforms = getRecentTransforms(
-				getSharedTransformClasses(), getSharedTransformWarmupSize(), 0L);
+				getSharedTransformClasses(), getSharedTransformWarmupSize(),
+				0L);
 		result.sharedTransformClasses = getSharedTransformClasses();
 		result.perUserTransformClasses = getPerUserTransformClasses();
 		if (!recentTransforms.isEmpty()) {
 			result.putSharedTransforms(recentTransforms);
-			recentTransforms = getRecentTransforms(
-					getPerUserTransformClasses(), 0, result.cacheValidFrom);
+			recentTransforms = getRecentTransforms(getPerUserTransformClasses(),
+					0, result.cacheValidFrom);
 			result.putPerUserTransforms(recentTransforms);
 		} else {
 			result.invalid = true;
@@ -879,8 +888,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				if (pd.getReadMethod() != null) {
-					Wrapper info = pd.getReadMethod().getAnnotation(
-							Wrapper.class);
+					Wrapper info = pd.getReadMethod()
+							.getAnnotation(Wrapper.class);
 					if (info != null) {
 						Object obj = pd.getReadMethod().invoke(hi,
 								CommonUtils.EMPTY_OBJECT_ARRAY);
@@ -913,17 +922,19 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
-	private <T extends HasId> void preloadWrappedObjects(Collection<T> wrappers) {
+	private <T extends HasId> void
+			preloadWrappedObjects(Collection<T> wrappers) {
 		try {
 			List<Long> wrapperIds = new WrappedObjectPersistence()
 					.getWrapperIds(wrappers);
 			for (int i = 0; i < wrapperIds.size(); i += PRECACHE_RQ_SIZE) {
 				List<Long> subList = wrapperIds.subList(i,
 						Math.min(wrapperIds.size(), i + PRECACHE_RQ_SIZE));
-				Query query = getEntityManager().createQuery(
-						"from "
+				Query query = getEntityManager()
+						.createQuery("from "
 								+ getImplementation(WrappedObject.class)
-										.getSimpleName() + " where id in "
+										.getSimpleName()
+								+ " where id in "
 								+ EntityUtils.longsToIdClause(subList));
 				query.getResultList();
 			}
@@ -938,11 +949,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			return;
 		}
 		try {
-			HasIdAndLocalId object = TransformManager.get().getObject(
-					transformException.getEvent(), true);
+			HasIdAndLocalId object = TransformManager.get()
+					.getObject(transformException.getEvent(), true);
 			if (object != null) {
-				transformException.setSourceObjectName(Reflections
-						.classLookup().displayNameForObject(object));
+				transformException.setSourceObjectName(
+						Reflections.classLookup().displayNameForObject(object));
 			}
 		} catch (Exception e) {
 			System.out.println("Unable to add source object name - reason: "
@@ -972,12 +983,13 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			ClassRef classRef = ClassRef.forClass(clazz);
 			classRefIds.add(classRef.getId());
 		}
-		String eql = String
-				.format("select dtep from %s dtep "
+		String eql = String.format(
+				"select dtep from %s dtep "
 						+ "where  dtep.id>?1 and dtep.objectClassRef.id in %s "
 						+ "order by dtep.id desc",
-						getImplementationSimpleClassName(DomainTransformEventPersistent.class),
-						EntityUtils.longsToIdClause(classRefIds));
+				getImplementationSimpleClassName(
+						DomainTransformEventPersistent.class),
+				EntityUtils.longsToIdClause(classRefIds));
 		Query query = getEntityManager().createQuery(eql).setParameter(1,
 				sinceId);
 		if (sinceId == 0) {
@@ -1001,12 +1013,12 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public ClientInstance getClientInstance(String clientInstanceId) {
-		return getHandshakeObjectProvider().getClientInstance(
-				Long.parseLong(clientInstanceId));
+		return getHandshakeObjectProvider()
+				.getClientInstance(Long.parseLong(clientInstanceId));
 	}
 
-	static class CheckReadOnlyHandshakeObjectProvider implements
-			HandshakeObjectProvider {
+	static class CheckReadOnlyHandshakeObjectProvider
+			implements HandshakeObjectProvider {
 		ReadonlyHandshakeObjectProvider readOnlyProvider = new ReadonlyHandshakeObjectProvider();
 
 		WriterHandshakeObjectProvider writerHandshakeObjectProvider = new WriterHandshakeObjectProvider();
@@ -1017,20 +1029,23 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 
 		@Override
-		public void updateIid(String iidKey, String userName, boolean rememberMe) {
+		public void updateIid(String iidKey, String userName,
+				boolean rememberMe) {
 			delegate().updateIid(iidKey, userName, rememberMe);
 		}
 
 		@Override
-		public void setCommonPersistence(CommonPersistenceBase commonPersistence) {
+		public void
+				setCommonPersistence(CommonPersistenceBase commonPersistence) {
 			readOnlyProvider.setCommonPersistence(commonPersistence);
 			writerHandshakeObjectProvider
 					.setCommonPersistence(commonPersistence);
 		}
 
 		@Override
-		public ClientInstance createClientInstance(String userAgent) {
-			return delegate().createClientInstance(userAgent);
+		public ClientInstance createClientInstance(String userAgent,
+				String iid) {
+			return delegate().createClientInstance(userAgent, iid);
 		}
 
 		@Override
@@ -1039,12 +1054,13 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
-	static class WriterHandshakeObjectProvider implements
-			HandshakeObjectProvider {
+	static class WriterHandshakeObjectProvider
+			implements HandshakeObjectProvider {
 		private CommonPersistenceBase cp;
 
 		@Override
-		public ClientInstance createClientInstance(String userAgent) {
+		public ClientInstance createClientInstance(String userAgent,
+				String iid) {
 			AppPersistenceBase.checkNotReadOnly();
 			Class<? extends ClientInstance> clientInstanceImpl = cp
 					.getImplementation(ClientInstance.class);
@@ -1055,15 +1071,17 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				impl.setUser((IUser) cp.getEntityManager().find(
 						cp.getImplementation(IUser.class),
 						PermissionsManager.get().getUserId()));
+				impl.setIid(iid);
 				impl.setAuth(Math.abs(new Random().nextInt()));
 				impl.setUserAgent(userAgent);
 				cp.getEntityManager().flush();
 				cp.getEntityManager().clear();
 				IUser clonedUser = (IUser) cp
 						.getNewImplementationInstance(IUser.class);
-				ResourceUtilities.copyBeanProperties(PermissionsManager.get()
-						.getUser(), clonedUser, null, false, Arrays
-						.asList(new String[] { "primaryGroup",
+				ResourceUtilities.copyBeanProperties(
+						PermissionsManager.get().getUser(), clonedUser, null,
+						false,
+						Arrays.asList(new String[] { "primaryGroup",
 								"secondaryGroups", "creationUser",
 								"lastModificationUser" }));
 				impl.setUser(null);
@@ -1080,7 +1098,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 
 		@Override
-		public void updateIid(String iidKey, String userName, boolean rememberMe) {
+		public void updateIid(String iidKey, String userName,
+				boolean rememberMe) {
 			Iid iid = cp.getIidByKey(iidKey);
 			iid.setInstanceId(iidKey);
 			if (rememberMe) {
@@ -1095,7 +1114,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 
 		@Override
-		public void setCommonPersistence(CommonPersistenceBase commonPersistence) {
+		public void
+				setCommonPersistence(CommonPersistenceBase commonPersistence) {
 			this.cp = commonPersistence;
 		}
 
@@ -1109,23 +1129,22 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
-	public static class ReadonlyHandshakeObjectProvider implements
-			HandshakeObjectProvider {
+	public static class ReadonlyHandshakeObjectProvider
+			implements HandshakeObjectProvider {
 		static long clientInstanceIdCounter = 0;
 
 		private CommonPersistenceBase cp;
 
 		@Override
-		public ClientInstance createClientInstance(String userAgent) {
+		public ClientInstance createClientInstance(String userAgent,
+				String iid) {
 			long newId = 0;
 			synchronized (ReadonlyHandshakeObjectProvider.class) {
 				if (clientInstanceIdCounter == 0) {
-					clientInstanceIdCounter = (Long) cp
-							.getEntityManager()
-							.createQuery(
-									String.format(
-											"select max(id) from %s",
-											cp.getImplementationSimpleClassName(ClientInstance.class)))
+					clientInstanceIdCounter = (Long) cp.getEntityManager()
+							.createQuery(String.format("select max(id) from %s",
+									cp.getImplementationSimpleClassName(
+											ClientInstance.class)))
 							.getSingleResult();
 				}
 				newId = ++clientInstanceIdCounter;
@@ -1141,16 +1160,16 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				impl.setUserAgent(userAgent);
 				IUser clonedUser = (IUser) cp
 						.getNewImplementationInstance(IUser.class);
-				ResourceUtilities.copyBeanProperties(PermissionsManager.get()
-						.getUser(), clonedUser, null, false, Arrays
-						.asList(new String[] { "primaryGroup",
+				ResourceUtilities.copyBeanProperties(
+						PermissionsManager.get().getUser(), clonedUser, null,
+						false, Arrays.asList(new String[] { "primaryGroup",
 								"secondaryGroups" }));
 				ClientInstance instance = new EntityUtils().detachedClone(impl,
 						false);
 				Registry.impl(ClientInstanceAuthenticationCache.class)
 						.cacheAuthentication(instance);
-				instance.setUser(new EntityUtils().detachedClone(clonedUser,
-						false));
+				instance.setUser(
+						new EntityUtils().detachedClone(clonedUser, false));
 				return instance;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
@@ -1158,7 +1177,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 
 		@Override
-		public void updateIid(String iidKey, String userName, boolean rememberMe) {
+		public void updateIid(String iidKey, String userName,
+				boolean rememberMe) {
 			if (!rememberMe) {
 				try {
 					Iid impl = (Iid) cp.getImplementation(Iid.class)
@@ -1175,7 +1195,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 
 		@Override
-		public void setCommonPersistence(CommonPersistenceBase commonPersistence) {
+		public void
+				setCommonPersistence(CommonPersistenceBase commonPersistence) {
 			this.cp = commonPersistence;
 		}
 
@@ -1185,7 +1206,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
-	public static Class<? extends HandshakeObjectProvider> getHandshakeObjectProviderClass() {
+	public static Class<? extends HandshakeObjectProvider>
+			getHandshakeObjectProviderClass() {
 		return handshakeObjectProviderClass;
 	}
 
@@ -1212,19 +1234,21 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			records.addAll(r.getLogRecords());
 		}
 		for (ClientLogRecord clr : records) {
-			ClientLogRecordPersistent clrp = getNewImplementationInstance(ClientLogRecordPersistent.class);
+			ClientLogRecordPersistent clrp = getNewImplementationInstance(
+					ClientLogRecordPersistent.class);
 			getEntityManager().persist(clrp);
 			clrp.wrap(clr);
 		}
 	}
 
 	@Override
-	public String getUserNameForClientInstanceId(long validatedClientInstanceId) {
-		String userName = Registry
-				.impl(ClientInstanceAuthenticationCache.class).getUserNameFor(
-						validatedClientInstanceId);
+	public String
+			getUserNameForClientInstanceId(long validatedClientInstanceId) {
+		String userName = Registry.impl(ClientInstanceAuthenticationCache.class)
+				.getUserNameFor(validatedClientInstanceId);
 		if (userName == null) {
-			Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(ClientInstance.class);
+			Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(
+					ClientInstance.class);
 			CI ci = getItemById(clientInstanceImpl, validatedClientInstanceId);
 			if (ci != null) {
 				userName = ci.getUser().getUserName();
@@ -1235,8 +1259,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public String getRememberMeUserName(String iidKey) {
-		String userName = Registry
-				.impl(ClientInstanceAuthenticationCache.class)
+		String userName = Registry.impl(ClientInstanceAuthenticationCache.class)
 				.iidUserNameByKey(iidKey);
 		if (userName == null
 				&& !Registry.impl(ClientInstanceAuthenticationCache.class)
@@ -1245,8 +1268,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			if (iid != null) {
 				Registry.impl(ClientInstanceAuthenticationCache.class)
 						.cacheIid(iid);
-				userName = iid.getRememberMeUser() == null ? null : iid
-						.getRememberMeUser().getUserName();
+				userName = iid.getRememberMeUser() == null ? null
+						: iid.getRememberMeUser().getUserName();
 			} else {
 				// this iid is not in the db, but ... do we care? possibly RO
 				// db. persist it
@@ -1266,10 +1289,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		if (!Registry.impl(ClientInstanceAuthenticationCache.class)
 				.containsIIdKey(iidKey)) {
 			List list = getEntityManager()
-					.createQuery(
-							"from "
-									+ getImplementationSimpleClassName(Iid.class)
-									+ " i  where i.instanceId = ?1")
+					.createQuery("from "
+							+ getImplementationSimpleClassName(Iid.class)
+							+ " i  where i.instanceId = ?1")
 					.setParameter(1, iidKey).getResultList();
 			if (list.isEmpty()) {
 				return false;
@@ -1332,11 +1354,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					List<Long> idsSlice = ids.subList(i,
 							Math.min(ids.size(), i + PRECACHE_RQ_SIZE));
 					List<HasIdAndLocalId> resultList = getEntityManager()
-							.createQuery(
-									String.format("from %s where id in %s",
-											storageClass.getSimpleName(),
-											EntityUtils
-													.longsToIdClause(idsSlice)))
+							.createQuery(String.format("from %s where id in %s",
+									storageClass.getSimpleName(),
+									EntityUtils.longsToIdClause(idsSlice)))
 							.getResultList();
 					for (HasIdAndLocalId hili : resultList) {
 						cache.put(hili);
@@ -1348,11 +1368,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				if (fixWithPrecreate && storageClass == clazz) {
 					entry.getValue().removeAll(creates.getAndEnsure(clazz));
 					for (Long lv : entry.getValue()) {
-						System.out.println(String.format(
-								"tp: create object: %10s %s", lv,
-								clazz.getSimpleName()));
-						ThreadlocalTransformManager.get().newInstance(clazz,
-								lv, 0);
+						System.out.println(
+								String.format("tp: create object: %10s %s", lv,
+										clazz.getSimpleName()));
+						ThreadlocalTransformManager.get().newInstance(clazz, lv,
+								0);
 					}
 				}
 			}

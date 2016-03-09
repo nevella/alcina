@@ -59,9 +59,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			ClientInstance serverAsClientInstance = Registry
 					.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence()
-					.createClientInstance(
-							"servlet: " + EntityLayerUtils.getLocalHostName());
+					.getCommonPersistence().createClientInstance(
+							"servlet: " + EntityLayerUtils.getLocalHostName(),
+							null);
 			Registry.impl(CommonRemoteServiceServletSupport.class)
 					.setServerAsClientInstance(serverAsClientInstance);
 		} finally {
@@ -77,8 +77,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected void loadCustomProperties() {
 		try {
-			File propertiesFile = new File(AlcinaServerConfig.get()
-					.getCustomPropertiesFilePath());
+			File propertiesFile = new File(
+					AlcinaServerConfig.get().getCustomPropertiesFilePath());
 			if (propertiesFile.exists()) {
 				FileInputStream fis = new FileInputStream(propertiesFile);
 				ResourceUtilities.registerCustomProperties(fis);
@@ -87,8 +87,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 						propertiesFile.getParentFile(),
 						"alcina-properties-files.txt");
 				if (propertiesListFile.exists()) {
-					String[] paths = ResourceUtilities.readFileToString(
-							propertiesListFile).split("\n");
+					String[] paths = ResourceUtilities
+							.readFileToString(propertiesListFile).split("\n");
 					for (String path : paths) {
 						FileInputStream fis = new FileInputStream(path);
 						ResourceUtilities.registerCustomProperties(fis);
@@ -103,8 +103,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void initLoggers() {
-		Logger logger = Logger.getLogger(AlcinaServerConfig.get()
-				.getMainLoggerName());
+		Logger logger = Logger
+				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
 		Layout l = new PatternLayout("%-5p [%c{1}] %m%n");
 		Appender a = new ConsoleAppender(l);
 		String mainLoggerAppenderName = AlcinaServerConfig.MAIN_LOGGER_APPENDER;
@@ -125,8 +125,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		if (metricLoggerName != null) {
 			Logger metricLogger = Logger.getLogger(metricLoggerName);
 			metricLogger.removeAllAppenders();
-			metricLogger.addAppender(new ConsoleAppender(
-					MetricLogging.METRIC_LAYOUT));
+			metricLogger.addAppender(
+					new ConsoleAppender(MetricLogging.METRIC_LAYOUT));
 			metricLogger.setLevel(Level.DEBUG);
 			metricLogger.setAdditivity(false);
 			// MetricLogging.muteLowPriority=false;
@@ -148,8 +148,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void initServices() {
-		Logger logger = Logger.getLogger(AlcinaServerConfig.get()
-				.getMainLoggerName());
+		Logger logger = Logger
+				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
 		String key = "server layer init";
 		MetricLogging.get().start(key);
 		initCommonServices();
@@ -193,8 +193,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void initBootstrapRegistry() {
 		AlcinaServerConfig config = new AlcinaServerConfig();
 		config.setStartDate(new Date());
-		Registry.registerSingleton(AlcinaServerConfig.class,
-				config);
+		Registry.registerSingleton(AlcinaServerConfig.class, config);
 	}
 
 	protected abstract void initCustom();
@@ -218,8 +217,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void initRegistry() {
-		Logger logger = Logger.getLogger(AlcinaServerConfig.get()
-				.getMainLoggerName());
+		Logger logger = Logger
+				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
 		try {
 			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
 			ClassDataCache classes = new ServletClasspathScanner("*", true,
@@ -227,8 +226,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					Arrays.asList(new String[] {})).getClasses();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					Registry.get(), "servlet-layer");
-			Registry.get().registerBootstrapServices(
-					ObjectPersistenceHelper.get());
+			Registry.get()
+					.registerBootstrapServices(ObjectPersistenceHelper.get());
 		} catch (Exception e) {
 			logger.warn("", e);
 		} finally {
