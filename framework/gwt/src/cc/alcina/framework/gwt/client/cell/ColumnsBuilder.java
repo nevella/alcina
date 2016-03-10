@@ -33,13 +33,15 @@ public class ColumnsBuilder<T> {
 
 	public ColumnsBuilder columnsFilter(Collection validColumns) {
 		columnsFilter = (List<String>) validColumns.stream()
-				.map(Object::toString).collect(Collectors.toList());
+				.map(o -> o.toString().replace("_", " ").toLowerCase())
+				.collect(Collectors.toList());
 		return this;
 	}
 
 	public ColumnBuilder col(String name) {
 		return new ColumnBuilder(name);
 	}
+
 	public ColumnBuilder col(Enum enumValue) {
 		return new ColumnBuilder(CommonUtils.friendlyConstant(enumValue));
 	}
@@ -98,8 +100,8 @@ public class ColumnsBuilder<T> {
 			}
 			SortableColumn<T> col = new SortableColumn<T>(function,
 					sortFunction, nativeComparator, styleFunction, editInfo);
-			//don't add if filtered
-			if (columnsFilter == null || columnsFilter.contains(name)) {
+			// don't add if filtered
+			if (columnsFilter == null || columnsFilter.contains(name.toLowerCase())) {
 				if (footer == null) {
 					table.addColumn(col, name);
 				} else {
