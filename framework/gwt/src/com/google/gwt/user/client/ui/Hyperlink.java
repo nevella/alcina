@@ -349,6 +349,12 @@ public class Hyperlink extends Widget implements HasHTML, SourcesClickEvents,
     String hash = History.encodeHistoryTokenWithHash(targetHistoryToken);
     anchorElem.setPropertyString("href",  hash);
   }
+  /**
+   * For compatibility - if old code uses Hyperlink, but the refs are really full links
+   */
+  public void setHref(String href){
+	  anchorElem.setPropertyString("href",  href);  
+  }
 
   public void setText(String text) {
     directionalTextHelper.setTextOrHtml(text, false);

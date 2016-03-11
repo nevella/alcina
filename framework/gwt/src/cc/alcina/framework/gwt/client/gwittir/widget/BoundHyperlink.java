@@ -148,6 +148,10 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 		this.base.setTargetHistoryToken(targetHistoryToken);
 	}
 
+	public void setHref(String href) {
+		this.base.setHref(href);
+	}
+
 	public void setText(String text) {
 		this.base.setText(text);
 	}
