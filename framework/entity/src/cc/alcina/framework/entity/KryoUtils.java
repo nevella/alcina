@@ -25,6 +25,11 @@ public class KryoUtils {
 		Kryo kryo = newKryo();
 		return kryo.copy(t);
 	}
+	
+	public static <T> T serialClone(T t) {
+		Class clazz=t.getClass();
+		return (T) deserializeFromByteArray(serializeToByteArray(t), clazz);
+	}
 
 	public static <T> T deserializeFromBase64(String string, Class<T> clazz) {
 		return deserializeFromByteArray(
