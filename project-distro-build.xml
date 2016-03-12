@@ -52,11 +52,11 @@
 			<zipfileset prefix="${j2ee-lib.dir}" refid="alcina.ear.dependencies" />
 		</ear>
 	</target>
-	<target name="deploy" description="Deploy the ear to the j2ee server" depends="make-ear">
-		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${project.dist.dir}/${distributable.name}.ear">
-		</copy>
+	<target name="deploy" description="Deploy the ear to the j2ee server" depends="make-ear,deploy-ear">
 	</target>
-	<target name="deploy-only" description="Deploy the ear to the j2ee server">
+	<target name="deploy-only" description="Deploy the ear to the j2ee server" depends="deploy-ear">
+	</target>
+	<target name="deploy-ear">
 		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${project.dist.dir}/${distributable.name}.ear">
 		</copy>
 	</target>
@@ -94,7 +94,9 @@
 			<arg value="${project.gwt.module.name}" />
 		</java>
 	</target>
-	<target name="hot-deploy" description="Dev :: copy changed server files, no WAR restart" depends="build-dependencies,compile">
+	<target name="hot-deploy" description="Dev :: copy changed server files, no WAR restart" depends="hot-deploy-main">
+	</target>
+	<target name="hot-deploy-main"  depends="build-dependencies,compile">
 		<!--the ear -->
 		<mkdir dir="${j2ee-server.unear.target}" />
 		<mkdir dir="${j2ee-server.unear.target}${j2ee-lib.dir}" />
