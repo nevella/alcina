@@ -16,6 +16,7 @@ package cc.alcina.framework.entity.entityaccess;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -32,6 +33,7 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.util.JaxbUtils;
 
@@ -40,6 +42,9 @@ import cc.alcina.framework.entity.util.JaxbUtils;
  * @author Nick Reddel
  */
 public interface WrappedObject<T extends WrapperPersistable> extends HasId {
+	public static final String CONTEXT_CLASSES = WrappedObject.class.getName()
+			+ ".CONTEXT_CLASSES";
+
 	@Transient
 	public T getObject();
 
@@ -59,21 +64,32 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 
 	public static class WrappedObjectHelper {
 		public static String xmlSerialize(Object object) throws JAXBException {
-			List<Class> classes = ensureJaxbSubclasses(object.getClass());
+			List<Class> classes = getContextClasses(object.getClass());
 			return xmlSerialize(object, classes);
 		}
 
 		@SuppressWarnings("unchecked")
 		public static <T> T xmlDeserialize(Class<T> clazz, String xmlStr)
 				throws JAXBException {
+			System.out.println("deser - " + clazz);
 			if (xmlStr == null) {
 				return null;
 			}
-			List<Class> classes = ensureJaxbSubclasses(clazz);
+			List<Class> classes = getContextClasses(clazz);
 			JAXBContext jc = JaxbUtils.getContext(classes);
 			Unmarshaller um = jc.createUnmarshaller();
 			StringReader sr = new StringReader(xmlStr);
 			return (T) um.unmarshal(sr);
+		}
+
+		protected static <T> List<Class> getContextClasses(Class<T> clazz) {
+			List<Class> classes = null;
+			if (!LooseContext.containsKey(CONTEXT_CLASSES)) {
+				classes = ensureJaxbSubclasses(clazz);
+			} else {
+				classes = new ArrayList<>(LooseContext.get(CONTEXT_CLASSES));
+			}
+			return classes;
 		}
 
 		static List<Class> jaxbSubclasses = null;
@@ -84,8 +100,8 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 						.getJaxbSubclasses();
 			}
 			if (addClass == null) {
-				AlcinaTopics.notifyDevWarning(new Exception(
-						"xml ser/deser of null class"));
+				AlcinaTopics.notifyDevWarning(
+						new Exception("xml ser/deser of null class"));
 				return new ArrayList<Class>(jaxbSubclasses);
 			}
 			ArrayList<Class> classes = new ArrayList<Class>(jaxbSubclasses);

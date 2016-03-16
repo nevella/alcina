@@ -27,6 +27,7 @@ import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +70,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 
 public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>
@@ -76,6 +78,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	private static BiPrintStream out;
 
 	private static BiPrintStream err;
+
 	// has to happen early, otherwise can never redirect
 	static {
 		err = new BiPrintStream(new ByteArrayOutputStream());
@@ -108,9 +111,11 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	private JPanel panelLeft = new JPanel(new BorderLayout());
 
 	private JPanel panelRight = new JPanel(new BorderLayout());
+
 	{
 		panelLeft.add(consoleLeft, BorderLayout.CENTER);
 	}
+
 	{
 		panelRight.add(consoleRight, BorderLayout.CENTER);
 	}
@@ -118,6 +123,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	private JScrollPane scrollLeft = new JScrollPane(panelLeft);
 
 	private JScrollPane scrollRight = new JScrollPane(panelRight);
+
 	{
 		scrollLeft.getVerticalScrollBar().setUnitIncrement(16);
 		scrollRight.getVerticalScrollBar().setUnitIncrement(16);
@@ -185,7 +191,21 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		System.setProperty("swing.aatext", "true");
 		// need to be before ui init, cos window height is a preference
 		initFiles();
-		loadConfig();
+		LooseContext.runWithKeyValue(WrappedObject.CONTEXT_CLASSES,
+				getInitClasses(), () -> {
+					loadConfig();
+					return null;
+				});
+		new Thread() {
+			public void run() {
+				try {
+					WrappedObjectHelper
+							.xmlSerialize(new DevConsoleProperties());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			};
+		}.start();
 		initState();
 		consoleLeft.initAttrs(props.fontName);
 		consoleRight.initAttrs(props.fontName);
@@ -208,6 +228,11 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		} else {
 			consoleLeft.ok("Enter 'h' for help\n\n");
 		}
+	}
+
+	protected List<Class> getInitClasses() {
+		return new ArrayList<>(Arrays.asList(DevConsoleProperties.class,
+				DevConsoleStrings.class, DevConsoleHistory.class));
 	}
 
 	class SwingPrompter implements StringPrompter {
@@ -239,19 +264,22 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	public void loadConfig() throws JAXBException, IOException {
 		// eclipse may be caching - read directly
 		if (consolePropertiesFile.exists()) {
-			props = (P) WrappedObjectHelper.xmlDeserialize(DevConsoleProperties.class,
+			props = (P) WrappedObjectHelper.xmlDeserialize(
+					DevConsoleProperties.class,
 					ResourceUtilities.readFileToString(consolePropertiesFile));
 		} else {
 			props = newConsoleProperties();
 		}
 		if (consoleHistoryFile.exists()) {
-			history = WrappedObjectHelper.xmlDeserialize(DevConsoleHistory.class,
+			history = WrappedObjectHelper.xmlDeserialize(
+					DevConsoleHistory.class,
 					ResourceUtilities.readFileToString(consoleHistoryFile));
 		} else {
 			history = new DevConsoleHistory();
 		}
 		if (consoleStringsFile.exists()) {
-			strings = WrappedObjectHelper.xmlDeserialize(DevConsoleStrings.class,
+			strings = WrappedObjectHelper.xmlDeserialize(
+					DevConsoleStrings.class,
 					ResourceUtilities.readFileToString(consoleStringsFile));
 		} else {
 			strings = new DevConsoleStrings();
@@ -269,7 +297,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			command = this.lastCommand;
 		}
 		this.lastCommand = command;
-		StreamTokenizer tokenizer = new StreamTokenizer(new StringReader(command));
+		StreamTokenizer tokenizer = new StreamTokenizer(
+				new StringReader(command));
 		tokenizer.ordinaryChars('0', '9');
 		tokenizer.wordChars('0', '9');
 		tokenizer.ordinaryChars('.', '.');
@@ -318,8 +347,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			prepareCommand(c);
 			for (DevConsoleCommand c2 : runningJobs) {
 				if (c2.getClass() == c.getClass()) {
-					System.err.format("Command '%s' already running\n", c2.getClass()
-							.getSimpleName());
+					System.err.format("Command '%s' already running\n",
+							c2.getClass().getSimpleName());
 					return;
 				}
 			}
@@ -334,7 +363,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
-	protected void performCommandInThread(List<String> args, DevConsoleCommand c, boolean topLevel) {
+	protected void performCommandInThread(List<String> args,
+			DevConsoleCommand c, boolean topLevel) {
 		try {
 			LooseContext.push();
 			runningJobs.add(c);
@@ -347,14 +377,17 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			if (c.clsBeforeRun()) {
 				clear();
 			}
-			String msg = c.run((String[]) args.toArray(new String[args.size()]));
+			String msg = c
+					.run((String[]) args.toArray(new String[args.size()]));
 			c.cleanup();
 			long l2 = System.currentTimeMillis();
 			if (msg != null) {
-				consoleLeft.ok(String.format("  %s - ok - %s ms\n", msg, l2 - l1));
+				consoleLeft
+						.ok(String.format("  %s - ok - %s ms\n", msg, l2 - l1));
 			}
 			if (topLevel) {
-				props.lastCommand = c.rerunIfMostRecentOnRestart() ? lastCommand : "";
+				props.lastCommand = c.rerunIfMostRecentOnRestart() ? lastCommand
+						: "";
 				try {
 					saveConfig();
 				} catch (Exception e) {
@@ -377,12 +410,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	public Logger logger;
 
 	public void saveConfig() throws IOException, JAXBException {
-		ResourceUtilities.writeStringToFile(WrappedObjectHelper.xmlSerialize(props),
-				consolePropertiesFile);
-		ResourceUtilities.writeStringToFile(WrappedObjectHelper.xmlSerialize(history),
-				consoleHistoryFile);
-		ResourceUtilities.writeStringToFile(WrappedObjectHelper.xmlSerialize(strings),
-				consoleStringsFile);
+		ResourceUtilities.writeStringToFile(
+				WrappedObjectHelper.xmlSerialize(props), consolePropertiesFile);
+		ResourceUtilities.writeStringToFile(
+				WrappedObjectHelper.xmlSerialize(history), consoleHistoryFile);
+		ResourceUtilities.writeStringToFile(
+				WrappedObjectHelper.xmlSerialize(strings), consoleStringsFile);
 	}
 
 	private class JCommandLine extends JTextField {
@@ -428,7 +461,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 		@Override
 		public void setCaretPosition(int position) {
-			super.setCaretPosition(position == 0 ? getText().length() == 0 ? 0 : 1 : position);
+			super.setCaretPosition(
+					position == 0 ? getText().length() == 0 ? 0 : 1 : position);
 		}
 
 		private void reset() {
@@ -455,12 +489,13 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			setEditable(false);
 			TabStop[] tabs = new TabStop[8];
 			for (int i = 0; i < 8; i++) {
-				tabs[i] = new TabStop((i + 1) * 40, TabStop.ALIGN_LEFT, TabStop.LEAD_NONE);
+				tabs[i] = new TabStop((i + 1) * 40, TabStop.ALIGN_LEFT,
+						TabStop.LEAD_NONE);
 			}
 			TabSet tabset = new TabSet(tabs);
 			StyleContext sc = StyleContext.getDefaultStyleContext();
-			AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet,
-					tabset);
+			AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY,
+					StyleConstants.TabSet, tabset);
 			setParagraphAttributes(aset, false);
 		}
 
@@ -478,7 +513,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			StyleConstants.setForeground(attrs[2], RED);
 			highlightRange = new SimpleAttributeSet();
 			normalRange = new SimpleAttributeSet();
-			StyleConstants.setBackground(highlightRange, new Color(190, 210, 250));
+			StyleConstants.setBackground(highlightRange,
+					new Color(190, 210, 250));
 			// StyleConstants.setForeground(highlightRange, Color.PINK);
 			StyleConstants.setBackground(normalRange, Color.WHITE);
 		}
@@ -526,7 +562,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				@Override
 				public void run() {
 					JViewport pane = (JViewport) getParent().getParent();
-					pane.scrollRectToVisible(new Rectangle(0, getHeight() - 12, 12, 12));
+					pane.scrollRectToVisible(
+							new Rectangle(0, getHeight() - 12, 12, 12));
 				}
 			});
 		}
@@ -534,6 +571,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		List<Runnable> runnableBuffer = new ArrayList();
 
 		private Timer commitThread = new Timer();
+
 		{
 			commitThread.scheduleAtFixedRate(new TimerTask() {
 				@Override
@@ -615,16 +653,19 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			}
 			StyledDocument doc = getStyledDocument();
 			try {
-				int idx = doc.getText(0, doc.getLength()).indexOf(text, docIndex);
+				int idx = doc.getText(0, doc.getLength()).indexOf(text,
+						docIndex);
 				if (idx == -1) {
 					System.out.println("not found");
 				} else {
 					if (lastHighlight != null) {
-						doc.setCharacterAttributes(idx, text.length(), normalRange, false);
+						doc.setCharacterAttributes(idx, text.length(),
+								normalRange, false);
 					}
 					Rectangle rect = modelToView(idx);
 					lastHighlight = doc.getCharacterElement(idx);
-					doc.setCharacterAttributes(idx, text.length(), highlightRange, false);
+					doc.setCharacterAttributes(idx, text.length(),
+							highlightRange, false);
 					scrollRectToVisible(rect);
 					docIndex = idx + 1;
 				}
@@ -653,10 +694,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			commandLine.addActionListener(clListener);
 			jp.setMinimumSize(new Dimension(300, 300));
 			jp.setPreferredSize(new Dimension(1250, props.preferredHeight));
-			out.s2 = new PrintStream(new WriterOutputStream(new ColouredWriter(ConsoleStyle.NORMAL,
-					consoleLeft)));
-			err.s2 = new PrintStream(new WriterOutputStream(new ColouredWriter(ConsoleStyle.ERR,
-					consoleLeft)));
+			out.s2 = new PrintStream(new WriterOutputStream(
+					new ColouredWriter(ConsoleStyle.NORMAL, consoleLeft)));
+			err.s2 = new PrintStream(new WriterOutputStream(
+					new ColouredWriter(ConsoleStyle.ERR, consoleLeft)));
 			// JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
 			// scrollLeft, scrollRight);
 			// split.setDividerLocation(490);
@@ -749,7 +790,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				&& contents.isDataFlavorSupported(DataFlavor.stringFlavor);
 		if (hasTransferableText) {
 			try {
-				result = (String) contents.getTransferData(DataFlavor.stringFlavor);
+				result = (String) contents
+						.getTransferData(DataFlavor.stringFlavor);
 			} catch (UnsupportedFlavorException ex) {
 				// highly unlikely since we are using a standard DataFlavor
 				System.out.println(ex);
@@ -789,8 +831,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		});
 		textArea.setText(getClipboardContents().replace("\r", "\n"));
 		JScrollPane jsp = new JScrollPane(textArea);
-		int result = JOptionPane.showConfirmDialog(null, jsp, prompt, JOptionPane.OK_CANCEL_OPTION,
-				JOptionPane.PLAIN_MESSAGE);
+		int result = JOptionPane.showConfirmDialog(null, jsp, prompt,
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 		if (result == JOptionPane.OK_OPTION) {
 			return textArea.getText();
 		} else {
@@ -834,7 +876,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
-	public String breakAndPad(int tabCount, int width, String text, int padLeftCharCount) {
+	public String breakAndPad(int tabCount, int width, String text,
+			int padLeftCharCount) {
 		StringBuilder sb = new StringBuilder();
 		int idx0 = 0;
 		for (int idx1 = width; idx1 < text.length(); idx1 += width) {
@@ -880,7 +923,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			ByteArrayOutputStream nullOut = new ByteArrayOutputStream();
 			out.s1 = new PrintStream(nullOut);
 		} else {
-			BiPrintStream s2repl = new BiPrintStream(new ByteArrayOutputStream());
+			BiPrintStream s2repl = new BiPrintStream(
+					new ByteArrayOutputStream());
 			s2repl.s1 = s2;
 			s2repl.s2 = outStream;
 			out.s2 = s2repl;
@@ -901,7 +945,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		setClipboardContents(transforms.toString());
 		File dumpFile = getDevFile("dumpTransforms.txt");
 		try {
-			ResourceUtilities.writeStringToFile(transforms.toString(), dumpFile);
+			ResourceUtilities.writeStringToFile(transforms.toString(),
+					dumpFile);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

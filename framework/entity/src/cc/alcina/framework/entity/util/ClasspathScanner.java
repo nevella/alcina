@@ -26,6 +26,10 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -53,12 +57,13 @@ public class ClasspathScanner {
 			this.scanner = scanner;
 		}
 
-		protected void add(String fileName, long modificationDate, URL url,
-				InputStream inputStream) {
+		protected synchronized void add(String fileName, long modificationDate,
+				URL url, InputStream inputStream) {
 			if ((fileName.startsWith(scanner.getPkg()))
 					&& (fileName.endsWith(".class"))) {
-				boolean add = scanner.isRecur() ? true : fileName.substring(
-						scanner.getPkg().length() + 1).indexOf("/") < 0;
+				boolean add = scanner.isRecur() ? true
+						: fileName.substring(scanner.getPkg().length() + 1)
+								.indexOf("/") < 0;
 				if (add) {
 					String cName = fileName.substring(0, fileName.length() - 6)
 							.replace('/', '.');
@@ -100,8 +105,12 @@ public class ClasspathScanner {
 	}
 
 	public static class DirectoryVisitor extends ClasspathVisitor {
+		private ThreadPoolExecutor executor;
+
 		public DirectoryVisitor(ClasspathScanner scanner) {
 			super(scanner);
+			executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(
+					Runtime.getRuntime().availableProcessors());
 		}
 
 		@Override
@@ -113,10 +122,15 @@ public class ClasspathScanner {
 		@Override
 		public void enumerateClasses(URL url) throws Exception {
 			String file = sanitizeFileURL(url);
-			getClassesFromDirectory(file, file);
+			submitted.incrementAndGet();
+			executor.execute(() -> getClassesFromDirectory(file, file));
+			executor.awaitTermination(100, TimeUnit.SECONDS);
 		}
 
+		AtomicInteger submitted = new AtomicInteger(0);
+
 		private void getClassesFromDirectory(String path, String root) {
+			
 			File directory = new File(path);
 			if (directory.exists()) {
 				for (String file : directory.list()) {
@@ -125,14 +139,21 @@ public class ClasspathScanner {
 						if (f.getPath().endsWith(".class"))
 							try {
 								add(path.substring(root.length() + 1) + "/"
-										+ file, f.lastModified(), f.toURI()
-										.toURL(), null);
+										+ file, f.lastModified(),
+										f.toURI().toURL(), null);
 							} catch (Exception e) {
 								e.printStackTrace();
 							}
-					} else if (scanner.isRecur())
-						getClassesFromDirectory(path + "/" + file, root);
+					} else if (scanner.isRecur()) {
+						submitted.incrementAndGet();
+						executor.execute(() -> getClassesFromDirectory(
+								path + "/" + file, root));
+					}
 				}
+			}
+			int count = submitted.decrementAndGet();
+			if (count == 0) {
+				executor.shutdown();
 			}
 		}
 	}
@@ -166,12 +187,14 @@ public class ClasspathScanner {
 	};
 
 	protected static List<Class<? extends ClasspathVisitor>> visitors = new ArrayList<Class<? extends ClasspathVisitor>>();
+
 	static {
 		visitors.add(DirectoryVisitor.class);
 		visitors.add(JarVisitor.class);
 	}
 
-	public static void installVisitor(Class<? extends ClasspathVisitor> visitor) {
+	public static void
+			installVisitor(Class<? extends ClasspathVisitor> visitor) {
 		visitors.add(visitor);
 	}
 
@@ -196,7 +219,8 @@ public class ClasspathScanner {
 		return getPkg();
 	}
 
-	public ClasspathScanner(String pkg, boolean subpackages, boolean ignoreJars) {
+	public ClasspathScanner(String pkg, boolean subpackages,
+			boolean ignoreJars) {
 		recur = subpackages;
 		this.ignoreJars = ignoreJars;
 		sanitizePackage(pkg);
@@ -238,8 +262,9 @@ public class ClasspathScanner {
 	protected void invokeHandler(URL url) {
 		try {
 			for (Class<? extends ClasspathVisitor> visitorClass : visitors) {
-				ClasspathVisitor visitor = visitorClass.getConstructor(
-						ClasspathScanner.class).newInstance(this);
+				ClasspathVisitor visitor = visitorClass
+						.getConstructor(ClasspathScanner.class)
+						.newInstance(this);
 				if (visitor.handles(url)) {
 					visitor.enumerateClasses(url);
 					break;
@@ -253,8 +278,9 @@ public class ClasspathScanner {
 	protected URL invokeResolver(URL url) {
 		try {
 			for (Class<? extends ClasspathVisitor> visitorClass : visitors) {
-				ClasspathVisitor visitor = visitorClass.getConstructor(
-						ClasspathScanner.class).newInstance(this);
+				ClasspathVisitor visitor = visitorClass
+						.getConstructor(ClasspathScanner.class)
+						.newInstance(this);
 				URL resolved = visitor.resolve(url);
 				if (resolved != null) {
 					return resolved;
@@ -318,7 +344,7 @@ public class ClasspathScanner {
 		// lifted from seam 1.21
 		private void scanForRegProps(String resourceName,
 				ClassLoader classLoader, List<URL> visitedUrls)
-				throws Exception {
+						throws Exception {
 			List<URL> urls = new ArrayList<URL>();
 			if (resourceName == null) {
 				for (URL url : ((URLClassLoader) classLoader).getURLs()) {
