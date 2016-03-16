@@ -99,4 +99,8 @@ public interface TreeRenderer<T extends TreeRenderable> {
 
 	default void parentBinding(Binding binding) {
 	}
+
+	public default boolean isNoTitle() {
+		return false;
+	}
 }

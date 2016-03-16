@@ -71,7 +71,8 @@ public class ObjectTreeRenderer {
 		}
 	}
 
-	public ComplexPanel render(TreeRenderable root, RenderContext renderContext) {
+	public ComplexPanel render(TreeRenderable root,
+			RenderContext renderContext) {
 		this.op = new FlowPanelWithBinding();
 		op.setRenderContext(renderContext);
 		renderToPanel(root, op, 0, true, renderContext, null);
@@ -92,8 +93,8 @@ public class ObjectTreeRenderer {
 				return;
 			}
 		}
-		TreeRenderer node = TreeRenderingInfoProvider.get().getForRenderable(
-				renderable, renderContext);
+		TreeRenderer node = TreeRenderingInfoProvider.get()
+				.getForRenderable(renderable, renderContext);
 		if (parent != null) {
 			parent.childRenderers().add(node);
 		} else {
@@ -129,14 +130,15 @@ public class ObjectTreeRenderer {
 		case AS_TITLE:
 		case AS_WIDGET:
 			String displayName = renderable.getDisplayName();
-			if (CommonUtils.isNotNullOrEmpty(displayName)) {
-				Label label = TextProvider.get().getInlineLabel(
-						TextProvider.get().getUiObjectText(
-								node.getClass(),
-								TextProvider.DISPLAY_NAME + "-" + displayName,
-								CommonUtils
-										.upperCaseFirstLetterOnly(displayName)
-										+ ": "));
+			if (CommonUtils.isNotNullOrEmpty(displayName)
+					&& !node.isNoTitle()) {
+				Label label = TextProvider.get()
+						.getInlineLabel(TextProvider.get()
+								.getUiObjectText(node.getClass(),
+										TextProvider.DISPLAY_NAME + "-"
+												+ displayName,
+										CommonUtils.upperCaseFirstLetterOnly(
+												displayName) + ": "));
 				label.setStyleName("level-"
 						+ ((soleChild) ? Math.max(1, depth - 1) : depth));
 				cp.add(label);
@@ -155,8 +157,8 @@ public class ObjectTreeRenderer {
 			if (node.renderCss() != null) {
 				customiserWidget.addStyleName(node.renderCss());
 			}
-			String customiserStyleName = node.isSingleLineCustomiser() ? "single-line-customiser"
-					: "customiser";
+			String customiserStyleName = node.isSingleLineCustomiser()
+					? "single-line-customiser" : "customiser";
 			String title = node.title();
 			if (title != null) {
 				customiserWidget.setTitle(title);
@@ -205,8 +207,9 @@ public class ObjectTreeRenderer {
 					node.renderableChildren());
 			maybeSortChildRenderables(childRenderables, renderContext);
 			for (TreeRenderable child : childRenderables) {
-				renderToPanel(child, childPanel, depth + 1, node
-						.renderableChildren().size() == 1, renderContext, node);
+				renderToPanel(child, childPanel, depth + 1,
+						node.renderableChildren().size() == 1, renderContext,
+						node);
 			}
 		}
 		return;
@@ -225,8 +228,8 @@ public class ObjectTreeRenderer {
 						private int getIndex(TreeRenderable r) {
 							if (!lkp.containsKey(r)) {
 								TreeRenderer node1 = TreeRenderingInfoProvider
-										.get().getForRenderable(r,
-												renderContext);
+										.get()
+										.getForRenderable(r, renderContext);
 								String s1 = node1.section();
 								lkp.put(r, sectionOrder.indexOf(s1));
 							}
@@ -234,7 +237,8 @@ public class ObjectTreeRenderer {
 						}
 
 						@Override
-						public int compare(TreeRenderable o1, TreeRenderable o2) {
+						public int compare(TreeRenderable o1,
+								TreeRenderable o2) {
 							return CommonUtils.compareInts(getIndex(o1),
 									getIndex(o2));
 						}
@@ -290,9 +294,9 @@ public class ObjectTreeRenderer {
 			if (node.renderCss() != null) {
 				bw.setStyleName(node.renderCss());
 			}
-			bw.addStyleName("level-"
-					+ ((soleChild) ? Math.max(1, depth - 1) : depth)
-					+ "-widget");
+			bw.addStyleName(
+					"level-" + ((soleChild) ? Math.max(1, depth - 1) : depth)
+							+ "-widget");
 			return bw;
 		}
 	}
@@ -301,8 +305,8 @@ public class ObjectTreeRenderer {
 		public void setRenderContext(RenderContext renderContext);
 	}
 
-	public static class FlowPanelWithBinding extends FlowPanel implements
-			SupportsAttachDetachCallbacks {
+	public static class FlowPanelWithBinding extends FlowPanel
+			implements SupportsAttachDetachCallbacks {
 		@Override
 		protected void onDetach() {
 			super.onDetach();
