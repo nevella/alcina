@@ -71,7 +71,6 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 		@SuppressWarnings("unchecked")
 		public static <T> T xmlDeserialize(Class<T> clazz, String xmlStr)
 				throws JAXBException {
-			System.out.println("deser - " + clazz);
 			if (xmlStr == null) {
 				return null;
 			}
