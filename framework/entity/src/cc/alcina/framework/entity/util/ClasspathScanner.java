@@ -22,10 +22,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -123,6 +121,7 @@ public class ClasspathScanner {
 
 		@Override
 		public void enumerateClasses(URL url) throws Exception {
+			System.out.println("enumerate - "+url);
 			String file = sanitizeFileURL(url);
 			submitted.incrementAndGet();
 			executor.execute(() -> getClassesFromDirectory(file, file));
@@ -132,6 +131,7 @@ public class ClasspathScanner {
 		AtomicInteger submitted = new AtomicInteger(0);
 
 		private void getClassesFromDirectory(String path, String root) {
+			
 			File directory = new File(path);
 			if (directory.exists()) {
 				for (String file : directory.list()) {
@@ -332,41 +332,57 @@ public class ClasspathScanner {
 
 		@Override
 		public ClassDataCache getClasses() throws Exception {
+			List<URL> visitedUrls = new ArrayList<URL>();
 			List<ClassLoader> classLoaders = getScannerClassLoadersToTry();
 			for (ClassLoader classLoader : classLoaders) {
-				scanForRegProps(
-						Arrays.asList(resourceName, "META-INF/" + resourceName),
-						classLoader);
+				scanForRegProps(resourceName, classLoader, visitedUrls);
+				scanForRegProps("META-INF/" + resourceName, classLoader,
+						visitedUrls);
 			}
 			return classDataCache;
 		}
 
 		// lifted from seam 1.21
-		private void scanForRegProps(List<String> resourceNames,
-				ClassLoader classLoader) throws Exception {
-			Set<URL> urls = new LinkedHashSet<URL>();
-			try {
-				Set<URL> distinctUrls = new LinkedHashSet<>();
-				for (String resourceName : resourceNames) {
+		private void scanForRegProps(String resourceName,
+				ClassLoader classLoader, List<URL> visitedUrls)
+						throws Exception {
+			List<URL> urls = new ArrayList<URL>();
+			if (resourceName == null) {
+				for (URL url : ((URLClassLoader) classLoader).getURLs()) {
+					if (visitedUrls.contains(url)) {
+						continue;
+					}
+					visitedUrls.add(url);
+					String urlPath = url.getFile();
+					if (urlPath.endsWith("/")) {
+						urlPath = urlPath.substring(0, urlPath.length() - 1);
+					}
+					urls.add(new URL(url.getProtocol(), null, urlPath));
+				}
+			} else {
+				try {
 					Enumeration<URL> urlEnum = classLoader
 							.getResources(resourceName);
 					while (urlEnum.hasMoreElements()) {
-						distinctUrls.add(urlEnum.nextElement());
+						URL url = urlEnum.nextElement();
+						if (visitedUrls.contains(url)) {
+							continue;
+						}
+						visitedUrls.add(url);
+						url = invokeResolver(url);
+						URL newUrl = cleanUrl(resourceName, url);
+						urls.add(newUrl);
 					}
+				} catch (IOException ioe) {
+					warn("could not read: " + resourceName, ioe);
+					return;
 				}
-				Enumeration<URL> urlEnum = classLoader
-						.getResources(resourceName);
-				while (urlEnum.hasMoreElements()) {
-					URL url = urlEnum.nextElement();
-					url = invokeResolver(url);
-					URL newUrl = cleanUrl(resourceName, url);
-					urls.add(newUrl);
-				}
-			} catch (IOException ioe) {
-				warn("could not read: " + resourceName, ioe);
-				return;
 			}
 			for (URL url : urls) {
+				if (visitedUrls.contains(url)) {
+					continue;
+				}
+				visitedUrls.add(url);
 				String urlPath = url.getFile();
 				boolean ignore = false;
 				for (String s : ignorePathSegments) {
