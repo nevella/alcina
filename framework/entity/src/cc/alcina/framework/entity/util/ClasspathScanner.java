@@ -121,7 +121,6 @@ public class ClasspathScanner {
 
 		@Override
 		public void enumerateClasses(URL url) throws Exception {
-			System.out.println("enumerate - "+url);
 			String file = sanitizeFileURL(url);
 			submitted.incrementAndGet();
 			executor.execute(() -> getClassesFromDirectory(file, file));
