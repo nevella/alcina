@@ -86,7 +86,7 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 			if (!LooseContext.containsKey(CONTEXT_CLASSES)) {
 				classes = ensureJaxbSubclasses(clazz);
 			} else {
-				classes = new ArrayList<>(LooseContext.get(CONTEXT_CLASSES));
+				classes = new ArrayList<>((List)LooseContext.get(CONTEXT_CLASSES));
 			}
 			return classes;
 		}
