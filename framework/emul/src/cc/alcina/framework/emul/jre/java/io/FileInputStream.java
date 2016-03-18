@@ -9,5 +9,8 @@ public class FileInputStream
 	public FileInputStream(File file)  {
 		throw new UnsupportedOperationException();
 	}
-	
+	@Override
+    public int read() throws IOException {
+        throw new UnsupportedOperationException();
+    }
 }

@@ -30,6 +30,9 @@ public class LongWrapperHash {
 
 	@UnsafeNativeLong
 	public static native int lowBitsValue(long value)/*-{
+        if (value.h === undefined) {
+            return value;
+        }
         if (value.h != 0) {
             @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::logAndThrowTooLarge(Ljava/lang/Object;)(value);
         }

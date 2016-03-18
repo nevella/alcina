@@ -51,6 +51,7 @@ import com.google.gwt.lang.LongLib;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.server.Base64Utils;
 
 /**
  * For internal use only. Used for server call serialization.
@@ -409,8 +410,8 @@ public final class ClientSerializationStreamReader extends
 
 	@Override
 	public long readLong() {
-		return LongLib.longFromBase64(((JsStringLiteral) decoder.getValues()
-				.get(--index)).getValue());
+		return Base64Utils.longFromBase64(
+		        ((JsStringLiteral) decoder.getValues().get(--index)).getValue());
 	}
 
 	@Override

@@ -9,5 +9,9 @@ public class BufferedInputStream
 	public BufferedInputStream(InputStream in)  {
 		throw new UnsupportedOperationException();
 	}
+	@Override
+    public int read() throws IOException {
+        throw new UnsupportedOperationException();
+    }
 	
 }
