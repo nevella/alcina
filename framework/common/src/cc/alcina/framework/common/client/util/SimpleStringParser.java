@@ -79,8 +79,8 @@ public class SimpleStringParser {
 	}
 
 	public static String toString(long value) {
-		String serLong = GWT.isScript() ? fastMinSerialisedLong(value) : String
-				.valueOf(value);
+		String serLong = GWT.isScript() ? fastMinSerialisedLong(value)
+				: String.valueOf(value);
 		return serLong + "/" + toBase64(value);
 	}
 
@@ -123,11 +123,14 @@ public class SimpleStringParser {
 
 	@UnsafeNativeLong
 	private static native String fastMinSerialisedLong(long value)/*-{
-		if (!value.m && !value.h) {
-			return value.l.toString();
-		} else {
-			return value.l.toString() + "(lsbits)";
-		}
+        if (value.l === undefined) {
+            return value + "";
+        }
+        if (!value.m && !value.h) {
+            return value.l.toString();
+        } else {
+            return value.l.toString() + "(lsbits)";
+        }
 	}-*/;
 
 	public static long toLong(String str) {
@@ -163,12 +166,13 @@ public class SimpleStringParser {
 			return null;
 		}
 		int y1 = s.indexOf(start, offset);
-		offset = end.length() == 0 ? s.length() : s.indexOf(end,
-				y1 + start.length());
-		String r = includeStartTokenInText ? s.substring(y1,
-				offset == -1 ? s.length() : offset + end.length()) : s
-				.substring(y1 + start.length(), offset == -1 ? s.length()
-						: offset);
+		offset = end.length() == 0 ? s.length()
+				: s.indexOf(end, y1 + start.length());
+		String r = includeStartTokenInText
+				? s.substring(y1,
+						offset == -1 ? s.length() : offset + end.length())
+				: s.substring(y1 + start.length(),
+						offset == -1 ? s.length() : offset);
 		if (advanceEndToken) {
 			offset += end.length();
 		}
