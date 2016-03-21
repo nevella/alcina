@@ -233,6 +233,11 @@ public class WidgetUtils {
 			int availableHeight = containerHeight;
 			int availableWidth = containerWidth;
 			if (widget instanceof HasLayoutInfo) {
+				String name = widget.getClass().getName();
+				System.out.println(name);
+				if (name.contains("DTLicenseEvents")) {
+					int debug = 3;
+				}
 				if (debug) {
 					GWT.log(CommonUtils.formatJ("%s: ",
 							CommonUtils.simpleClassName(widget.getClass())),
@@ -270,7 +275,9 @@ public class WidgetUtils {
 					if (childIterator != null) {
 						while (childIterator.hasNext()) {
 							Widget cw = childIterator.next();
-							if (cw != widget && cw.isVisible()) {
+							if (cw != widget
+									&& WidgetUtils.isVisibleWithOffsetParent(cw
+											.getElement())) {
 								if (!ignoreChildrenForHeight) {
 									usedHeight += getBestOffsetHeight(cw
 											.getElement());
@@ -318,6 +325,14 @@ public class WidgetUtils {
 			}
 		}// while
 	}
+
+	public static boolean isVisibleWithOffsetParent(Widget w) {
+		return isVisibleWithOffsetParent(w.getElement());
+	}
+
+	private native static boolean isVisibleWithOffsetParent(Element elem)/*-{
+        return (elem.style.display != 'none' && elem.offsetParent != null);
+	}-*/;
 
 	private static boolean isDirectionalLayoutPanel(Widget panel,
 			boolean horizontal) {
