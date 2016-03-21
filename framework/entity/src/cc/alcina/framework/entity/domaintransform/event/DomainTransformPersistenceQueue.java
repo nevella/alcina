@@ -81,8 +81,22 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		}
 	}
 
+	private volatile boolean pauseCheck;
+
+	// use only for single-server clusters
+	public boolean isPauseCheck() {
+		return this.pauseCheck;
+	}
+
+	public void setPauseCheck(boolean pauseCheck) {
+		this.pauseCheck = pauseCheck;
+	}
+
 	@SuppressWarnings("unchecked")
 	public synchronized void checkPersistedTransforms(boolean forceDbCheck) {
+		if (isPauseCheck()) {
+			return;
+		}
 		boolean dbCheck = forceDbCheck;
 		synchronized (requestQueue) {
 			dbCheck |= (getFirstUnpublished().isPresent()
@@ -198,7 +212,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		 * it's possible that the event persistent ids are out of order (e.g.
 		 * xxx1, xxx3) - could occur when multiple requests are bundled by a web
 		 * client, and persistence is interleaved.
-		 * 
+		 *
 		 * as long as the first id is lowest, commit 'em all (they'll be
 		 * coherent in the db)
 		 */
@@ -209,9 +223,14 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			ensureEventRequestsQueued(persistenceEvent);
 			DtrpQueued queuedEvent = ensureQueued(min);
 			DtrpQueued unpublished = getFirstUnpublished().orElse(null);
-			//could be that unpublished is null, if queuedEvent timedout
-			if (queuedEvent != unpublished && unpublished != null) {
-				firstGap = new LongPair(unpublished.id, queuedEvent.id - 1);
+			// if requests time out, the request is regarded as "published" - so
+			// we may hit
+			// queuedEvent.id is < unpublished.id
+			if (queuedEvent != unpublished) {
+				if (queuedEvent != null && unpublished != null
+						&& queuedEvent.id > unpublished.id) {
+					firstGap = new LongPair(unpublished.id, queuedEvent.id - 1);
+				}
 			}
 			if (firstGap != null) {
 				logger.format("found gap (waiting) - rqid %s - gap %s",

@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadR
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DeltaApplicationRecordSerializerImpl;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceQueue;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.servlet.ServletLayerObjects;
@@ -34,7 +35,8 @@ public class PartialDtrUploadHandler {
 			File dir = new File(dataFolder.getPath() + File.separator
 					+ "offlineTransforms-partial");
 			dir.mkdirs();
-			CommonPersistenceLocal cp = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
+			CommonPersistenceLocal cp = Registry.impl(
+					CommonPersistenceProvider.class).getCommonPersistence();
 			Class<? extends ClientInstance> clientInstanceClass = cp
 					.getImplementation(ClientInstance.class);
 			DeltaApplicationRecord firstWrapper = request.wrappers.get(0);
@@ -109,29 +111,37 @@ public class PartialDtrUploadHandler {
 					.size();
 			if (request.commitOnReceipt) {
 				try {
+					Registry.impl(DomainTransformPersistenceQueue.class)
+							.setPauseCheck(true);
 					commonRemoteServiceServlet
 							.persistOfflineTransforms(new ArrayList<DeltaApplicationRecord>(
 									fullWrappers.values()));
 				} catch (Exception e) {
-					CommonPersistenceLocal cpl = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
-					String errMsg=String.format(
-							"Client instance id:%s - Partial dtr upload - %s \nAll request ids: %s",
-							clientInstanceId, response,fullWrappers.keySet());
+					CommonPersistenceLocal cpl = Registry.impl(
+							CommonPersistenceProvider.class)
+							.getCommonPersistence();
+					String errMsg = String
+							.format("Client instance id:%s - Partial dtr upload - %s \nAll request ids: %s",
+									clientInstanceId, response,
+									fullWrappers.keySet());
 					cpl.log(errMsg,
-							LogMessageType.OFFLINE_TRANSFORM_MERGE_EXCEPTION.toString());
-					
+							LogMessageType.OFFLINE_TRANSFORM_MERGE_EXCEPTION
+									.toString());
 					throw e;
+				} finally {
+					Registry.impl(DomainTransformPersistenceQueue.class)
+							.setPauseCheck(false);
 				}
 				response.committed = true;
 			}
-			ServletLayerObjects.get()
+			ServletLayerObjects
+					.get()
 					.getMetricLogger()
 					.info(String.format(
 							"Client instance id:%s - Partial dtr upload - %s",
 							clientInstanceId, response));
 			return response;
 		} catch (Exception e) {
-			
 			e.printStackTrace();
 			throw new WebException(e);
 		}
