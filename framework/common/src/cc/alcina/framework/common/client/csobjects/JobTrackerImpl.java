@@ -27,8 +27,8 @@ import com.google.gwt.user.client.rpc.GwtTransient;
  *
  * @author Nick Reddel
  */
-public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents implements
-		Serializable, Cloneable, JobTracker {
+public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents
+		implements Serializable, Cloneable, JobTracker {
 	static final transient long serialVersionUID = -3L;
 
 	private Date startTime;
@@ -88,8 +88,6 @@ public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents implements
 			parent.childComplete(tracker);
 		}
 	}
-
-
 
 	public JobTracker exportableForm() {
 		return this;
@@ -367,15 +365,6 @@ public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents implements
 		this.subProgressMessage = subProgressMessage;
 	}
 
-	public void startup(Class jobClass, String jobName, String message) {
-		setComplete(false);
-		setJobName(jobName == null ? CommonUtils.simpleClassName(jobClass)
-				: jobName);
-		setPercentComplete(0);
-		setProgressMessage(message != null ? message : "Starting job...");
-		setStartTime(new Date());
-	}
-
 	@Override
 	public String toString() {
 		return CommonUtils.formatJ("JobTracker: %s %s %s", getJobName(),
@@ -386,10 +375,5 @@ public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents implements
 	public void updateJob(int completedDelta) {
 		itemsCompleted += completedDelta;
 		updatePercent();
-	}
-
-	protected void updatePercent() {
-		setPercentComplete((getItemCount() == 0 ? 0.0
-				: ((double) getItemsCompleted()) / ((double) getItemCount())));
 	}
 }

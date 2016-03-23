@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.csobjects;
 import java.util.Date;
 import java.util.List;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
 
 public interface JobTracker {
@@ -102,4 +103,20 @@ public interface JobTracker {
 
 	public abstract String getSubProgressMessage();
 
+
+	default void updatePercent() {
+		setPercentComplete((getItemCount() == 0 ? 0.0
+				: ((double) getItemsCompleted()) / ((double) getItemCount())));
+	}
+
+	default void startup(Class jobClass, String jobName, String message) {
+		setComplete(false);
+		setJobName(jobName == null ? CommonUtils.simpleClassName(jobClass)
+				: jobName);
+		setPercentComplete(0);
+		setProgressMessage(message != null ? message : "Starting job...");
+		setStartTime(new Date());
+	}
+
+	
 }

@@ -154,7 +154,11 @@ public class JobRegistry implements RegistrableService {
 		}
 	};
 
-	private JobRegistry() {
+	protected JobRegistry() {
+		startJobReaper();
+	}
+
+	protected void startJobReaper() {
 		jobReaperTimer = new Timer();
 		jobReaperTimer.scheduleAtFixedRate(jobReaperTask, 0,
 				15 * TimeConstants.ONE_MINUTE_MS);
@@ -314,8 +318,8 @@ public class JobRegistry implements RegistrableService {
 		if (trackerMap.containsKey(jobId.toString())) {
 			tracker = trackerMap.get(jobId.toString());
 		} else {
-			tracker = new JobTrackerImpl(jobId.toString());
-			((JobTrackerImpl) tracker).startup(jobClass, jobName, message);
+			tracker = createJobTracker(jobId);
+			tracker.startup(jobClass, jobName, message);
 			putTracker(tracker);
 		}
 		if (tracker.getLogger() == null) {
@@ -327,6 +331,10 @@ public class JobRegistry implements RegistrableService {
 		pushContextTracker(tracker);
 		LooseContext.getContext().publishTopic(TOPIC_JOB_STARTED, tracker);
 		return tracker;
+	}
+
+	protected JobTracker createJobTracker(JobId jobId) {
+		return new JobTrackerImpl(jobId.toString());
 	}
 
 	public void updateJob(String message) {
