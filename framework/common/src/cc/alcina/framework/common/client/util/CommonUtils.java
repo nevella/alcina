@@ -463,7 +463,7 @@ public class CommonUtils {
 		}
 		int i = 0;
 		char c = toParse.charAt(0);
-		if (c == '+' || c == '-') {
+		if ((c == '+' || c == '-') && toParse.length() > 1) {
 			i++;
 		}
 		for (; i < toParse.length(); i++) {
