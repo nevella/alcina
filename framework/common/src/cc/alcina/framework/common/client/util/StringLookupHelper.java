@@ -10,8 +10,11 @@ import cc.alcina.framework.common.client.collections.KeyValueMapper.FromObjectCo
 import com.totsp.gwittir.client.beans.Converter;
 
 public class StringLookupHelper {
+	private static final String NULL = "<--null-->";
+
 	public static <T> String collectionEquivalence(
-			Collection<? extends T> collection, Converter<T, String> converter) {
+			Collection<? extends T> collection,
+			Converter<T, String> converter) {
 		if (collection == null) {
 			collection = new ArrayList<T>();
 		}
@@ -19,14 +22,15 @@ public class StringLookupHelper {
 				"\n");
 	}
 
-	public static String nullSafeEqString(
-			HasEquivalenceString hasEquivalenceString) {
-		return hasEquivalenceString == null ? "<null>" : hasEquivalenceString
-				.equivalenceString();
+	public static String
+			nullSafeEqString(HasEquivalenceString hasEquivalenceString) {
+		return hasEquivalenceString == null ? NULL
+				: hasEquivalenceString.equivalenceString();
 	}
 
 	public static <T> Multimap<String, List<T>> generateLookup(
-			Collection<? extends T> collection, Converter<T, String> converter) {
+			Collection<? extends T> collection,
+			Converter<T, String> converter) {
 		return CollectionFilters.multimap(collection,
 				new FromObjectConverterMapper(converter));
 	}
@@ -45,5 +49,14 @@ public class StringLookupHelper {
 		Multimap<String, List<T>> l2 = generateLookup(o2, converter);
 		l1.keySet().removeAll(l2.keySet());
 		return l1.allItems();
+	}
+
+	public static String equivalenceString(Object... args) {
+		StringBuilder sb = new StringBuilder();
+		for (Object object : args) {
+			sb.append(object == null ? NULL : object.toString());
+			sb.append("\n");
+		}
+		return sb.toString();
 	}
 }

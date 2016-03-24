@@ -5,6 +5,10 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.UnsafeNativeLong;
+import com.google.gwt.user.client.rpc.GwtTransient;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -17,10 +21,6 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
-
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.UnsafeNativeLong;
-import com.google.gwt.user.client.rpc.GwtTransient;
 
 @MappedSuperclass
 public abstract class AbstractDomainBase extends BaseBindable implements

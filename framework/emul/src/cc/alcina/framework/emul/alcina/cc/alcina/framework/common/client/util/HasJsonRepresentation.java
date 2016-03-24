@@ -14,6 +14,9 @@ public interface HasJsonRepresentation {
 	default JSONObject fieldMapping() {
 		return new JSONObject();
 	}
+	default JSONObject fieldMapping(List<String> ignoreFields) {
+		return new JSONObject();
+	}
 	default JSONArray toJsArray(List<? extends HasJsonRepresentation> objects) {
 		return new JSONArray();
 	}

@@ -10,9 +10,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.google.gwt.core.shared.GwtIncompatible;
+import com.google.gwt.i18n.rebind.AnnotationUtil;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.util.AnnotationUtils;
 
 public interface HasJsonRepresentation {
 	JSONObject asJson() throws JSONException;
@@ -50,14 +52,19 @@ public interface HasJsonRepresentation {
 			throw new WrappedRuntimeException(e);
 		}
 	}
-
 	default JSONObject fieldMapping() {
+		return fieldMapping(null);
+	}
+	default JSONObject fieldMapping(List<String> ignoreFields) {
 		try {
 			Field[] fields = new GraphProjection().getFieldsForClass(this);
 			JSONObject jso = new JSONObject();
 			Object templateInstance = getClass().newInstance();
 			for (Field field : fields) {
 				String key = field.getName();
+				if(ignoreFields!=null&&ignoreFields.contains(key)){
+					continue;
+				}
 				Object value = field.get(this);
 				if (Objects.equals(value, field.get(templateInstance))) {
 				} else {
