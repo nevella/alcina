@@ -129,7 +129,8 @@ public class WorkspaceView extends Composite implements HasName,
 		return this.widget;
 	}
 
-	public void removeVetoableActionListener(PermissibleActionListener listener) {
+	public void
+			removeVetoableActionListener(PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
 	}
 
@@ -141,9 +142,9 @@ public class WorkspaceView extends Composite implements HasName,
 		ensureDebugId(getElement(), DEBUG_ID_PREFIX + (id == null ? name : id));
 	}
 
-	public static abstract class DataTreeView extends WorkspaceView implements
-			ExtraTreeEventListener, PermissibleActionListener, HasLayoutInfo,
-			SelectionHandler<TreeItem>, HasFirstFocusable {
+	public static abstract class DataTreeView extends WorkspaceView
+			implements ExtraTreeEventListener, PermissibleActionListener,
+			HasLayoutInfo, SelectionHandler<TreeItem>, HasFirstFocusable {
 		public static final String CONTEXT_IGNORE_TREE_SELECTION = DataTreeView.class
 				.getName() + ".CONTEXT_IGNORE_TREE_SELECTION";
 
@@ -188,10 +189,8 @@ public class WorkspaceView extends Composite implements HasName,
 			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 				@Override
 				public void execute() {
-					if (isVisible()
-							&& WidgetUtils
-									.isVisibleAncestorChain(DataTreeView.this)
-							&& !treeInitialised) {
+					if (isVisible() && WidgetUtils.isVisibleAncestorChain(
+							DataTreeView.this) && !treeInitialised) {
 						treeInitialised = true;
 						resetTree();
 					}
@@ -232,11 +231,13 @@ public class WorkspaceView extends Composite implements HasName,
 			if (w != null) {
 				fp.add(w);
 			}
-			this.scroller = new ScrollPanel100pcHeight(dataTree){@Override
-			public void setHeight(String height) {
-				// TODO Auto-generated method stub
-				super.setHeight(height);
-			}};
+			this.scroller = new ScrollPanel100pcHeight(dataTree) {
+				@Override
+				public void setHeight(String height) {
+					// TODO Auto-generated method stub
+					super.setHeight(height);
+				}
+			};
 			fp.add(scroller);
 			fp.setWidth("100%");
 			dataTree.addSelectionHandler(this);
@@ -296,15 +297,15 @@ public class WorkspaceView extends Composite implements HasName,
 		}
 
 		public void onExtraTreeEvent(ExtraTreeEventEvent evt) {
-			List<Class<? extends PermissibleAction>> actions = getAvailableActions(evt
-					.getSource());
+			List<Class<? extends PermissibleAction>> actions = getAvailableActions(
+					evt.getSource());
 			boolean canEdit = actions.contains(EditAction.class);
 			if (actions.contains(ViewAction.class)
 					&& evt.getType() == ExtraTreeEventType.DBL_CLICK) {
 				Class<? extends PermissibleAction> actionClass = canEdit
 						&& (allowEditCollections || evt.getSource()
-								.getUserObject() instanceof HasIdAndLocalId) ? EditAction.class
-						: ViewAction.class;
+								.getUserObject() instanceof HasIdAndLocalId)
+										? EditAction.class : ViewAction.class;
 				vetoableAction(new PermissibleActionEvent(evt.getSource(),
 						ClientReflector.get().newInstance(actionClass)));
 			}
@@ -328,12 +329,15 @@ public class WorkspaceView extends Composite implements HasName,
 					return;
 				}
 			}
-			List<Class<? extends PermissibleAction>> actions = getAvailableActions(item);
+			List<Class<? extends PermissibleAction>> actions = getAvailableActions(
+					item);
 			toolbar.processAvailableActions(actions);
 			if (actions.contains(ViewAction.class)
-					&& (item instanceof DomainNode || item instanceof ActionDisplayNode)) {
+					&& (item instanceof DomainNode
+							|| item instanceof ActionDisplayNode)) {
 				RenderContext.get().pushWithKey(
-						RenderContext.CONTEXT_IGNORE_AUTOFOCUS, true);
+						RenderContext.CONTEXT_IGNORE_AUTOFOCUS,
+						!(item.getUserObject() instanceof ForceAutofocus));
 				fireVetoableActionEvent(new PermissibleActionEvent(item,
 						ClientReflector.get().newInstance(ViewAction.class)));
 				RenderContext.get().pop();
@@ -387,12 +391,12 @@ public class WorkspaceView extends Composite implements HasName,
 			if (evt.getAction().getClass() == DeleteAction.class) {
 				onTreeItemSelected(item);
 			}
-			fireVetoableActionEvent(new PermissibleActionEvent(item,
-					evt.getAction()));
+			fireVetoableActionEvent(
+					new PermissibleActionEvent(item, evt.getAction()));
 		}
 
-		protected List<Class<? extends PermissibleAction>> getAvailableActions(
-				TreeItem item) {
+		protected List<Class<? extends PermissibleAction>>
+				getAvailableActions(TreeItem item) {
 			List<Class<? extends PermissibleAction>> actions = new ArrayList<Class<? extends PermissibleAction>>();
 			Class domainClass = null;
 			Object obj = null;
@@ -441,8 +445,9 @@ public class WorkspaceView extends Composite implements HasName,
 				ObjectPermissions op = Reflections.classLookup()
 						.getAnnotationForClass(domainClass,
 								ObjectPermissions.class);
-				op = op == null ? PermissionsManager.get()
-						.getDefaultObjectPermissions() : op;
+				op = op == null
+						? PermissionsManager.get().getDefaultObjectPermissions()
+						: op;
 				for (Iterator<Class<? extends PermissibleAction>> itr = actions
 						.iterator(); itr.hasNext();) {
 					Class<? extends PermissibleAction> actionClass = itr.next();
@@ -480,8 +485,8 @@ public class WorkspaceView extends Composite implements HasName,
 		protected <C> ContainerNode getBasicCollectionNode(String name,
 				Class<C> clazz, ImageResource imageResource,
 				NodeFactory nodeFactory) {
-			Collection domainCollection = TransformManager.get().getCollection(
-					clazz);
+			Collection domainCollection = TransformManager.get()
+					.getCollection(clazz);
 			SimpleCollectionProvider<C> provider = new SimpleCollectionProvider<C>(
 					domainCollection, clazz);
 			CollectionProviderNode node = new CollectionProviderNode(provider,
@@ -493,7 +498,8 @@ public class WorkspaceView extends Composite implements HasName,
 
 		@SuppressWarnings("unchecked")
 		protected <C> ContainerNode getFilteredCollectionNode(String name,
-				Class<C> clazz, ImageResource imageResource, CollectionFilter cf) {
+				Class<C> clazz, ImageResource imageResource,
+				CollectionFilter cf) {
 			return getFilteredCollectionNode(name, clazz, imageResource, cf,
 					null);
 		}
@@ -511,15 +517,15 @@ public class WorkspaceView extends Composite implements HasName,
 				Class<C> clazz, ImageResource imageResource,
 				CollectionFilter cf, NodeFactory nodeFactory,
 				Comparator<C> comparator) {
-			Collection domainCollection = TransformManager.get().getCollection(
-					clazz);
+			Collection domainCollection = TransformManager.get()
+					.getCollection(clazz);
 			SimpleCollectionProvider<C> provider = new SimpleCollectionProvider<C>(
 					domainCollection, clazz);
 			provider.setComparator(comparator);
 			// will fire change event
 			provider.setFilter(cf);
 			CollectionProviderNode node = new CollectionProviderNode(provider,
-					name, imageResource, comparator!=null, nodeFactory);
+					name, imageResource, comparator != null, nodeFactory);
 			TransformManager.get().addCollectionModificationListener(provider,
 					clazz, true);
 			return node;
@@ -530,11 +536,11 @@ public class WorkspaceView extends Composite implements HasName,
 				Class<C> clazz, ImageResource imageResource,
 				UmbrellaProvider umbrellaProvider,
 				CollectionFilter collectionFilter, NodeFactory nodeFactory) {
-			Collection domainCollection = TransformManager.get().getCollection(
-					clazz);
+			Collection domainCollection = TransformManager.get()
+					.getCollection(clazz);
 			UmbrellaCollectionProviderMultiplexer<C> collectionProvider = new UmbrellaCollectionProviderMultiplexer<C>(
-					domainCollection, clazz, umbrellaProvider,
-					collectionFilter, 3);
+					domainCollection, clazz, umbrellaProvider, collectionFilter,
+					3);
 			UmbrellaProviderNode node = new UmbrellaProviderNode(
 					collectionProvider.getRootSubprovider(), name,
 					imageResource, nodeFactory);

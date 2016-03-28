@@ -39,6 +39,10 @@ import cc.alcina.framework.entity.SEUtilities;
 public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 	private ClassLoader cl;
 
+	private boolean pretty;
+
+	IdentityHashMap seen = new IdentityHashMap();
+
 	public AlcinaBeanSerializerS() {
 		propertyFieldName = PROPERTIES;
 	}
@@ -54,51 +58,19 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		}
 	}
 
-	protected Class getClassMaybeAbbreviated(String cns) {
+	public AlcinaBeanSerializerS pretty() {
+		this.pretty = true;
+		return this;
+	}
+
+	@Override
+	public String serialize(Object bean) {
 		try {
-			Class clazz;
-			if (abbrevLookup.containsKey(cns)) {
-				clazz = abbrevLookup.get(cns);
-			} else {
-				clazz = cl.loadClass(cns);
-			}
-			return clazz;
+			JSONObject jsonObject = serializeObject(bean);
+			return pretty ? jsonObject.toString(3) : jsonObject.toString();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	private Object deserializeObject(JSONObject jsonObj) throws Exception {
-		if (jsonObj == null) {
-			return null;
-		}
-		String cn = (String) jsonObj.get(CLASS_NAME);
-		Class clazz = getClassMaybeAbbreviated(cn);
-		if (CommonUtils.isStandardJavaClassOrEnum(clazz)
-				|| clazz == Class.class) {
-			return deserializeField(jsonObj.get(LITERAL), clazz);
-		}
-		JSONObject props = (JSONObject) jsonObj.get(propertyFieldName);
-		Object obj = Reflections.classLookup().newInstance(clazz);
-		String[] names = JSONObject.getNames(props);
-		if (names != null) {
-			for (String propertyName : names) {
-				Object jsonValue = props.get(propertyName);
-				PropertyDescriptor pd = SEUtilities
-						.getPropertyDescriptorByName(clazz, propertyName);
-				if (pd == null) {
-					// ignore (we are graceful...)
-				} else {
-					Object value2 = deserializeField(jsonValue,
-							pd.getPropertyType());
-					try {
-						SEUtilities.setPropertyValue(obj, propertyName, value2);
-					} catch (NoSuchPropertyException e) {
-					}
-				}
-			}
-		}
-		return obj;
 	}
 
 	private Object deserializeField(Object o, Class type) throws Exception {
@@ -167,51 +139,37 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		return deserializeObject((JSONObject) o);
 	}
 
-	protected Object deserializeMap(Object o, Map m)
-			throws JSONException, Exception {
-		JSONArray array = (JSONArray) o;
-		int size = array.length();
-		for (int i = 0; i < size; i += 2) {
-			JSONObject jv = (JSONObject) array.get(i);
-			JSONObject jv2 = (JSONObject) array.get(i + 1);
-			m.put(deserializeObject(jv), deserializeObject(jv2));
+	private Object deserializeObject(JSONObject jsonObj) throws Exception {
+		if (jsonObj == null) {
+			return null;
 		}
-		return m;
-	}
-
-	protected Object deserializeMultimap(Object o, Multimap m)
-			throws JSONException, Exception {
-		JSONArray array = (JSONArray) o;
-		int size = array.length();
-		for (int i = 0; i < size; i += 2) {
-			JSONObject jv = (JSONObject) array.get(i);
-			Object o2 = array.get(i + 1);
-			ArrayList c = new ArrayList();
-			deserializeCollection(o2, c);
-			m.put(deserializeObject(jv), c);
+		String cn = (String) jsonObj.get(CLASS_NAME);
+		Class clazz = getClassMaybeAbbreviated(cn);
+		if (CommonUtils.isStandardJavaClassOrEnum(clazz)
+				|| clazz == Class.class) {
+			return deserializeField(jsonObj.get(LITERAL), clazz);
 		}
-		return m;
-	}
-
-	protected void deserializeCollection(Object o, Collection c)
-			throws JSONException, Exception {
-		if (o instanceof JSONArray) {
-			JSONArray array = (JSONArray) o;
-			int size = array.length();
-			for (int i = 0; i < size; i++) {
-				Object jv = array.get(i);
-				c.add(deserializeObject((JSONObject) jv));
+		JSONObject props = (JSONObject) jsonObj.get(propertyFieldName);
+		Object obj = Reflections.classLookup().newInstance(clazz);
+		String[] names = JSONObject.getNames(props);
+		if (names != null) {
+			for (String propertyName : names) {
+				Object jsonValue = props.get(propertyName);
+				PropertyDescriptor pd = SEUtilities
+						.getPropertyDescriptorByName(clazz, propertyName);
+				if (pd == null) {
+					// ignore (we are graceful...)
+				} else {
+					Object value2 = deserializeField(jsonValue,
+							pd.getPropertyType());
+					try {
+						SEUtilities.setPropertyValue(obj, propertyName, value2);
+					} catch (NoSuchPropertyException e) {
+					}
+				}
 			}
 		}
-	}
-
-	@Override
-	public String serialize(Object bean) {
-		try {
-			return serializeObject(bean).toString();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		return obj;
 	}
 
 	/**
@@ -261,41 +219,6 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		}
 		return serializeObject(value);
 	}
-
-	protected Object serializeCollection(Collection c)
-			throws JSONException, Exception {
-		JSONArray arr = new JSONArray();
-		int i = 0;
-		for (Object o : c) {
-			arr.put(i++, serializeObject(o));
-		}
-		return arr;
-	}
-
-	protected Object serializeMap(Map m) throws JSONException, Exception {
-		JSONArray arr = new JSONArray();
-		int i = 0;
-		for (Object o : m.entrySet()) {
-			Entry e = (Entry) o;
-			arr.put(i++, serializeObject(e.getKey()));
-			arr.put(i++, serializeObject(e.getValue()));
-		}
-		return arr;
-	}
-
-	protected Object serializeMultimap(Multimap m)
-			throws JSONException, Exception {
-		JSONArray arr = new JSONArray();
-		int i = 0;
-		for (Object o : m.entrySet()) {
-			Entry e = (Entry) o;
-			arr.put(i++, serializeObject(e.getKey()));
-			arr.put(i++, serializeCollection((Collection) e.getValue()));
-		}
-		return arr;
-	}
-
-	IdentityHashMap seen = new IdentityHashMap();
 
 	private JSONObject serializeObject(Object object) throws Exception {
 		if (object == null) {
@@ -355,5 +278,90 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		}
 		seen.remove(object);
 		return jo;
+	}
+
+	protected void deserializeCollection(Object o, Collection c)
+			throws JSONException, Exception {
+		if (o instanceof JSONArray) {
+			JSONArray array = (JSONArray) o;
+			int size = array.length();
+			for (int i = 0; i < size; i++) {
+				Object jv = array.get(i);
+				c.add(deserializeObject((JSONObject) jv));
+			}
+		}
+	}
+
+	protected Object deserializeMap(Object o, Map m)
+			throws JSONException, Exception {
+		JSONArray array = (JSONArray) o;
+		int size = array.length();
+		for (int i = 0; i < size; i += 2) {
+			JSONObject jv = (JSONObject) array.get(i);
+			JSONObject jv2 = (JSONObject) array.get(i + 1);
+			m.put(deserializeObject(jv), deserializeObject(jv2));
+		}
+		return m;
+	}
+
+	protected Object deserializeMultimap(Object o, Multimap m)
+			throws JSONException, Exception {
+		JSONArray array = (JSONArray) o;
+		int size = array.length();
+		for (int i = 0; i < size; i += 2) {
+			JSONObject jv = (JSONObject) array.get(i);
+			Object o2 = array.get(i + 1);
+			ArrayList c = new ArrayList();
+			deserializeCollection(o2, c);
+			m.put(deserializeObject(jv), c);
+		}
+		return m;
+	}
+
+	protected Class getClassMaybeAbbreviated(String cns) {
+		try {
+			Class clazz;
+			if (abbrevLookup.containsKey(cns)) {
+				clazz = abbrevLookup.get(cns);
+			} else {
+				clazz = cl.loadClass(cns);
+			}
+			return clazz;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	protected Object serializeCollection(Collection c)
+			throws JSONException, Exception {
+		JSONArray arr = new JSONArray();
+		int i = 0;
+		for (Object o : c) {
+			arr.put(i++, serializeObject(o));
+		}
+		return arr;
+	}
+
+	protected Object serializeMap(Map m) throws JSONException, Exception {
+		JSONArray arr = new JSONArray();
+		int i = 0;
+		for (Object o : m.entrySet()) {
+			Entry e = (Entry) o;
+			arr.put(i++, serializeObject(e.getKey()));
+			arr.put(i++, serializeObject(e.getValue()));
+		}
+		return arr;
+	}
+
+	protected Object serializeMultimap(Multimap m)
+			throws JSONException, Exception {
+		JSONArray arr = new JSONArray();
+		int i = 0;
+		for (Object o : m.entrySet()) {
+			Entry e = (Entry) o;
+			arr.put(i++, serializeObject(e.getKey()));
+			arr.put(i++, serializeCollection((Collection) e.getValue()));
+		}
+		return arr;
 	}
 }

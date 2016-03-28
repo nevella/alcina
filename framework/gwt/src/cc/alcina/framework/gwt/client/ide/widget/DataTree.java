@@ -112,8 +112,8 @@ public class DataTree extends FilterableTree
 			public void apply(TreeItem target) {
 				Object userObject = target.getUserObject();
 				if (userObject != null) {
-					if ((classNameTest
-							&& userObject.getClass().getName().equals(obj))
+					if ((classNameTest && userObject.getClass().getName()
+							.replace("$", ".").equals(obj))
 							|| obj.equals(userObject)) {
 						result = target;
 					}

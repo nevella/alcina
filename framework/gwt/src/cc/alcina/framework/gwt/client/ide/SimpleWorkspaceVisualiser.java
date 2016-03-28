@@ -40,8 +40,8 @@ import com.google.gwt.user.client.ui.Widget;
  * 
  * @author Nick Reddel
  */
-public class SimpleWorkspaceVisualiser extends Composite implements
-		HasLayoutInfo {
+public class SimpleWorkspaceVisualiser extends Composite
+		implements HasLayoutInfo {
 	private final WSVisualModel model;
 
 	protected SplitLayoutPanel hsp;
@@ -60,7 +60,7 @@ public class SimpleWorkspaceVisualiser extends Composite implements
 
 	public static double defaultSplitterPosition = 280;
 
-	public static int defaultSplitterSize=8;
+	public static int defaultSplitterSize = 8;
 
 	/**
 	 * Uses horizontal panels because they're tables - i.e. 100% height works
@@ -76,12 +76,13 @@ public class SimpleWorkspaceVisualiser extends Composite implements
 		this.viewHolder = new StackPanel100pcHeight();
 		// viewHolder.setHeight("100%");
 		viewHolder.setWidth("100%");
-		viewHolder.setStyleName("workspaceViews "
-				+ model.getViewAreaClassName());
+		viewHolder
+				.setStyleName("workspaceViews " + model.getViewAreaClassName());
 		List<WorkspaceView> views = model.getViews();
 		for (WorkspaceView view : views) {
-			viewHolder.add(view, CommonUtils.formatJ(
-					"<a href='#' onfocus='blur()'>%s</a>", view.getName()),
+			viewHolder.add(view,
+					CommonUtils.formatJ("<a href='#' onfocus='blur()'>%s</a>",
+							view.getName()),
 					true);
 			view.ensureDebugId("");
 			view.addVetoableActionListener(actionListener);
@@ -129,9 +130,11 @@ public class SimpleWorkspaceVisualiser extends Composite implements
 	void resetHsbPos() {
 		hsp.setWidgetSize(viewHolder, defaultSplitterPosition);
 	}
-	public Widget getContentWidget(){
-		return ((SimplePanel) contentContainer).getWidget(); 
+
+	public Widget getContentWidget() {
+		return ((SimplePanel) contentContainer).getWidget();
 	}
+
 	public void setContentWidget(Widget w) {
 		((SimplePanel) contentContainer).setWidget(w);
 	}
@@ -177,6 +180,11 @@ public class SimpleWorkspaceVisualiser extends Composite implements
 			Widget w = getViewHolder().getWidget(i);
 			if (w instanceof DataTreeView) {
 				DataTreeView dtv = (DataTreeView) w;
+				if (CommonUtils.isNotNullOrEmpty(
+						dtv.getFilter().getTextBox().getText())) {
+					dtv.getFilter().clear();
+					dtv.getDataTree().filter("");
+				}
 				TreeItem item = dtv.selectNodeForObject(obj);
 				if (item != null) {
 					getViewHolder().showStack(i);

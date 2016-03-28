@@ -46,6 +46,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -59,6 +60,7 @@ import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
+import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
@@ -207,6 +209,8 @@ public abstract class DevHelper {
 		XmlUtils.noTransformCaching = true;
 		EntityLayerObjects.get().setPersistentLogger(getTestLogger());
 		AlcinaTopics.notifyDevWarningListenerDelta(devWarningListener, true);
+		Registry.registerSingleton(TimerWrapperProvider.class,
+				new TimerWrapperProviderJvm());
 		try {
 			Method m = GWT.class
 					.getDeclaredMethod("setBridge", GWTBridge.class);

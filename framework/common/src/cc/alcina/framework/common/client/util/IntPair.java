@@ -128,6 +128,10 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 	public boolean containsExBoundaries(IntPair other) {
 		return contains(other) && i1 < other.i1 && i2 > other.i2;
 	}
+	
+	public boolean containsExEnd(IntPair other) {
+		return  i2 > other.i2;
+	}
 
 	/**
 	 * say, to provide a model of string regions not matched by

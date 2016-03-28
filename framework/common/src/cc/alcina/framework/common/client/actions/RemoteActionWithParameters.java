@@ -11,24 +11,28 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions;
 
 import java.io.Serializable;
 
 /**
  * Marker subclass, to be run on the server
+ * 
  * @author nick@alcina.cc
  *
  */
-public class RemoteActionWithParameters<T extends RemoteParameters> extends RemoteAction implements Serializable{
+public class RemoteActionWithParameters<T extends RemoteParameters>
+		extends RemoteAction implements Serializable {
 	public RemoteActionWithParameters() {
 	}
+
 	public void setParameters(T parameters) {
 		this.parameters = parameters;
 	}
+
 	public T getParameters() {
 		return parameters;
 	}
+
 	private T parameters;
 }
