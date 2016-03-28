@@ -831,7 +831,7 @@ public class DevConsoleCommandTransforms {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			String sql = "select  u.id, u.username  " + "from users u  "
+			String sql = "select  u.id, u.username, u.firstName, u.lastName  " + "from users u  "
 					+ "where u.id != -1 %s order by u.id desc";
 			String arg0 = argv[0];
 			String filter = "";
