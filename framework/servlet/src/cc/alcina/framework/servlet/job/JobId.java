@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -74,5 +75,9 @@ public class JobId implements Serializable, Comparable<JobId> {
 					Integer.parseInt(m2.group(2)));
 		}
 		return id.compareTo(o.id);
+	}
+
+	public boolean isChildOf(JobId other) {
+		return Objects.equals(getParent(), other);
 	}
 }
