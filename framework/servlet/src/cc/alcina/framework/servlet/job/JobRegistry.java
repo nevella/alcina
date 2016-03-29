@@ -134,7 +134,7 @@ public class JobRegistry implements RegistrableService {
 
 	boolean refuseJobs = false;
 
-	protected JobRegistry() {
+	public JobRegistry() {
 	}
 
 	@Override
