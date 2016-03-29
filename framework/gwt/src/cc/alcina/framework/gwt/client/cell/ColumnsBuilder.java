@@ -80,12 +80,19 @@ public class ColumnsBuilder<T> {
 
 		private Cell editableCell;
 
+		private Cell cell;
+
 		public ColumnBuilder(String name) {
 			this.name = name;
 		}
 
 		public ColumnBuilder editableCell(Cell editableCell) {
 			this.editableCell = editableCell;
+			return this;
+		}
+
+		public ColumnBuilder cell(Cell cell) {
+			this.cell = cell;
 			return this;
 		}
 
@@ -99,9 +106,11 @@ public class ColumnsBuilder<T> {
 						editablePropertyName);
 			}
 			SortableColumn<T> col = new SortableColumn<T>(function,
-					sortFunction, nativeComparator, styleFunction, editInfo);
+					sortFunction, nativeComparator, styleFunction, editInfo,
+					cell);
 			// don't add if filtered
-			if (columnsFilter == null || columnsFilter.contains(name.toLowerCase())) {
+			if (columnsFilter == null
+					|| columnsFilter.contains(name.toLowerCase())) {
 				if (footer == null) {
 					table.addColumn(col, name);
 				} else {
@@ -197,6 +206,8 @@ public class ColumnsBuilder<T> {
 
 		private EditInfo editInfo;
 
+		private Cell cell;
+
 		public DirectedComparator getNativeComparator() {
 			return this.nativeComparator;
 		}
@@ -204,13 +215,15 @@ public class ColumnsBuilder<T> {
 		public SortableColumn(Function<T, Object> function,
 				Function<T, Comparable> sortFunction,
 				DirectedComparator nativeComparator,
-				Function<T, String> styleFunction, EditInfo editInfo) {
-			super(editInfo.cell);
+				Function<T, String> styleFunction, EditInfo editInfo,
+				Cell cell) {
+			super(cell != null ? cell : editInfo.cell);
 			this.function = function;
 			this.sortFunction = sortFunction;
 			this.nativeComparator = nativeComparator;
 			this.styleFunction = styleFunction;
 			this.editInfo = editInfo;
+			this.cell = cell;
 			if (editInfo.fieldUpdater != null) {
 				setFieldUpdater(editInfo.fieldUpdater);
 			}
@@ -219,7 +232,7 @@ public class ColumnsBuilder<T> {
 		@Override
 		public Object getValue(T t) {
 			Object value = function.apply(t);
-			if (editInfo.cell.getClass() == TextCell.class) {
+			if (cell == null && editInfo.cell.getClass() == TextCell.class) {
 				value = value == null ? null : value.toString();
 			}
 			return value;
