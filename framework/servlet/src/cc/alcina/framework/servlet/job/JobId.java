@@ -80,4 +80,12 @@ public class JobId implements Serializable, Comparable<JobId> {
 	public boolean isChildOf(JobId other) {
 		return Objects.equals(getParent(), other);
 	}
+
+	public int getLastSegmentAsInt() {
+		Matcher m = subJobPattern.matcher(id);
+		if (m.matches()) {
+			return Integer.parseInt(m.group(2));
+		}
+		return -1;
+	}
 }

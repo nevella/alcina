@@ -1157,6 +1157,11 @@ public class CommonUtils {
 		long t2 = d2 == null ? 0 : d2.getTime();
 		return t1 < t2 ? -1 : t1 == t2 ? 0 : 1;
 	}
+	public static int compareDatesNullHigh(Date d1, Date d2) {
+		long t1 = d1 == null ? Long.MAX_VALUE : d1.getTime();
+		long t2 = d2 == null ? Long.MAX_VALUE : d2.getTime();
+		return t1 < t2 ? -1 : t1 == t2 ? 0 : 1;
+	}
 
 	public static boolean isEnumSubclass(Class c) {
 		return c.getSuperclass() != null && c.getSuperclass().isEnum();

@@ -144,7 +144,6 @@ public class JobRegistry implements RegistrableService {
 	public void cancel(String id) {
 		JobTracker tracker = trackerMap.get(id);
 		if (tracker != null && !tracker.isCancelled()) {
-			tracker.setCancelled(true);
 			jobError(tracker, new RuntimeException("Job cancelled"), false);
 		}
 	}
@@ -356,10 +355,10 @@ public class JobRegistry implements RegistrableService {
 
 	private void jobComplete(JobTracker tracker, JobResultType resultType,
 			String message) {
-		tracker.setComplete(true);
 		tracker.setProgressMessage(message);
 		tracker.setEndTime(new Date());
 		tracker.setJobResultType(resultType);
+		tracker.setComplete(true);
 		AlcinaTopics.jobComplete(tracker);
 		logComplete(tracker, message);
 		removeTracker(tracker);
@@ -369,7 +368,7 @@ public class JobRegistry implements RegistrableService {
 		popContextTracker(tracker);
 	}
 
-	private void jobError(JobTracker tracker, Exception ex,
+	protected void jobError(JobTracker tracker, Exception ex,
 			boolean logException) {
 		if (logException) {
 			warn(ex);
@@ -407,6 +406,9 @@ public class JobRegistry implements RegistrableService {
 
 	private void popContextTracker(JobTracker tracker) {
 		JobTracker current = getContextTracker();
+		if (current == null) {
+			return;
+		}
 		if (current != tracker) {
 			System.out.format(
 					"warn -- popping wrong tracker %s, thread-current %s\n",
