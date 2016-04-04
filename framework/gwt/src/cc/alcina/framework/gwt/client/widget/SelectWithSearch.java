@@ -958,6 +958,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		lastClosingClickMillis = System.currentTimeMillis();
 		closingOnClick = false;
 	}
+	
+	public boolean isShowingPopdown(){
+		return relativePopupPanel!=null&&WidgetUtils.isVisibleAncestorChain(relativePopupPanel);
+	}
 
 	protected boolean maybeShowDepdendentOnFilter() {
 		return true;
