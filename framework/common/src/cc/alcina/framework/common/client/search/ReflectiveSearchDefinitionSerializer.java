@@ -139,6 +139,9 @@ public class ReflectiveSearchDefinitionSerializer
 			case ',':
 				sb.append(".8");
 				break;
+			case '&':
+				sb.append(".9");
+				break;
 			default:
 				sb.append(c);
 			}
@@ -148,7 +151,7 @@ public class ReflectiveSearchDefinitionSerializer
 
 	private String unescapeJsonForUrl(String serializedDef) {
 		StringBuilder sb = new StringBuilder();
-		String unescapeMap = ".{}[]: \",";
+		String unescapeMap = ".{}[]: \",&";
 		for (int idx = 0; idx < serializedDef.length(); idx++) {
 			char c = serializedDef.charAt(idx);
 			if (c == '.') {
