@@ -84,7 +84,7 @@ public class LongWrapperHash {
 	}
 
 	@UnsafeNativeLong
-	private native int fastHash(long value)/*-{
+	public static native int fastHash(long value)/*-{
         if (value.l === undefined) {
             return value;
         }
