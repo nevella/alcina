@@ -22,12 +22,15 @@ import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.TextBoxBase;
 
+import cc.alcina.framework.common.client.util.LooseContext;
+
 /**
  *
  * @author Nick Reddel
  */
 public class EnterAsClickKeyboardListener implements KeyPressHandler,
 		KeyDownHandler {
+	public static final String CONTEXT_ENTER_EVENT_ACTIVE = EnterAsClickKeyboardListener.class.getName()+".CONTEXT_ENTER_EVENT_ACTIVE";
 	private Button button;
 
 	private InputButton inputButton;
@@ -56,11 +59,16 @@ public class EnterAsClickKeyboardListener implements KeyPressHandler,
 		int keyCode = event.getNativeEvent().getKeyCode();
 		if ((charCode == KeyCodes.KEY_ENTER || keyCode == KeyCodes.KEY_ENTER)
 				&& checkCanClick()) {
-			if (button != null) {
-				button.click();
-			}
-			if (inputButton != null) {
-				inputButton.click();
+			try {
+				LooseContext.pushWithBoolean(CONTEXT_ENTER_EVENT_ACTIVE);
+				if (button != null) {
+					button.click();
+				}
+				if (inputButton != null) {
+					inputButton.click();
+				} 
+			} finally {
+				LooseContext.pop();
 			}
 		}
 	}
