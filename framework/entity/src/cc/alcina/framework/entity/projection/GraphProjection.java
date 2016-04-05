@@ -56,6 +56,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.NullWrappingMap;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
 
@@ -67,6 +68,55 @@ import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class GraphProjection {
 	private static final int LOOKUP_SIZE = 1000;
+
+	public static boolean replaceTimestampsWithDates = true;
+
+	static Map<Field, Type> genericTypeLookup = new NullWrappingMap<Field, Type>(
+			new ConcurrentHashMap(LOOKUP_SIZE));
+
+	static Map<Field, Boolean> genericHiliTypeLookup = new NullWrappingMap<Field, Boolean>(
+			new ConcurrentHashMap(LOOKUP_SIZE));
+
+	static Map<Class, List<Field>> perClassDeclaredFields = new NullWrappingMap<Class, List<Field>>(
+			new ConcurrentHashMap(LOOKUP_SIZE));
+
+	static Map<Field, PropertyPermissions> propertyPermissionLookup = new NullWrappingMap<Field, PropertyPermissions>(
+			new ConcurrentHashMap(LOOKUP_SIZE));
+
+	static Map<Class, ConstructorMethod> constructorMethodsLookup = new LinkedHashMap<Class, GraphProjection.ConstructorMethod>(
+			LOOKUP_SIZE);
+
+	static Map<Class, Constructor> constructorLookup = new ConcurrentHashMap<Class, Constructor>(
+			LOOKUP_SIZE);
+
+	public static final String CONTEXT_REPLACE_MAP = GraphProjection.class
+			+ ".CONTEXT_REPLACE_MAP";
+
+	public static final String CONTEXT_DUMP_PROJECTION_STATS = GraphProjection.class
+			+ ".CONTEXT_DUMP_PROJECTION_STATS";
+
+	public static final String CONTEXT_DISABLE_PER_OBJECT_PERMISSIONS = GraphProjection.class
+			+ ".CONTEXT_DISABLE_PER_OBJECT_PERMISSIONS";
+
+	public static final String CONTEXT_PROJECTION_CONTEXT = GraphProjection.class
+			.getName() + ".CONTEXT_PROJECTION_CONTEXT";
+	
+	public static final String TOPIC_PROJECTION_COUNT_DELTA = GraphProjection.class
+			.getName() + ".TOPIC_PROJECTION_COUNT_DELTA";
+
+	public static <T> T getContextObject(String key, Supplier<T> supplier) {
+		Map ctx = LooseContext.get(CONTEXT_PROJECTION_CONTEXT);
+		if (ctx == null) {
+			return null;
+		} else {
+			T result = (T) ctx.get(key);
+			if (result == null) {
+				result = supplier.get();
+				ctx.put(key, result);
+			}
+			return result;
+		}
+	}
 
 	public static Type getGenericType(Field field) {
 		if (!genericTypeLookup.containsKey(field)) {
@@ -112,6 +162,12 @@ public class GraphProjection {
 		}
 	}
 
+	public static <T> T shallowProjection(T original, int depth) {
+		GraphProjections projections = GraphProjections.defaultProjections()
+				.maxDepth(depth);
+		return projections.project(original);
+	}
+
 	static PropertyPermissions getPropertyPermission(Field field) {
 		if (!propertyPermissionLookup.containsKey(field)) {
 			try {
@@ -132,8 +188,6 @@ public class GraphProjection {
 
 	private GraphProjectionFieldFilter fieldFilter;
 
-	public static boolean replaceTimestampsWithDates = true;
-
 	protected IdentityHashMap reached = new IdentityHashMap(LOOKUP_SIZE);
 
 	Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>(
@@ -150,33 +204,6 @@ public class GraphProjection {
 
 	Map<Class, Boolean> perObjectPermissionClasses = new HashMap<Class, Boolean>(
 			LOOKUP_SIZE);
-
-	static Map<Field, Type> genericTypeLookup = new NullWrappingMap<Field, Type>(
-			new ConcurrentHashMap(LOOKUP_SIZE));
-
-	static Map<Field, Boolean> genericHiliTypeLookup = new NullWrappingMap<Field, Boolean>(
-			new ConcurrentHashMap(LOOKUP_SIZE));
-
-	static Map<Class, List<Field>> perClassDeclaredFields = new NullWrappingMap<Class, List<Field>>(
-			new ConcurrentHashMap(LOOKUP_SIZE));
-
-	static Map<Field, PropertyPermissions> propertyPermissionLookup = new NullWrappingMap<Field, PropertyPermissions>(
-			new ConcurrentHashMap(LOOKUP_SIZE));
-
-	static Map<Class, ConstructorMethod> constructorMethodsLookup = new LinkedHashMap<Class, GraphProjection.ConstructorMethod>(
-			LOOKUP_SIZE);
-
-	static Map<Class, Constructor> constructorLookup = new ConcurrentHashMap<Class, Constructor>(
-			LOOKUP_SIZE);
-
-	public static final String CONTEXT_REPLACE_MAP = GraphProjection.class
-			+ ".CONTEXT_REPLACE_MAP";
-
-	public static final String CONTEXT_DUMP_PROJECTION_STATS = GraphProjection.class
-			+ ".CONTEXT_DUMP_PROJECTION_STATS";
-
-	public static final String CONTEXT_DISABLE_PER_OBJECT_PERMISSIONS = GraphProjection.class
-			+ ".CONTEXT_DISABLE_PER_OBJECT_PERMISSIONS";
 
 	private int maxDepth = Integer.MAX_VALUE;
 
@@ -202,11 +229,6 @@ public class GraphProjection {
 			GraphProjectionDataFilter dataFilter) {
 		this();
 		setFilters(fieldFilter, dataFilter);
-	}
-
-	public Field[] getFieldsForClass(Object projected) throws Exception {
-		Class<? extends Object> clazz = projected.getClass();
-		return getFieldsForClass(clazz);
 	}
 
 	public Field[] getFieldsForClass(Class clazz) throws Exception {
@@ -248,21 +270,9 @@ public class GraphProjection {
 		return result;
 	}
 
-	private List<Field> ensureDeclaredNonStaticFields(Class c) {
-		if (!perClassDeclaredFields.containsKey(c)) {
-			Field[] fields = c.getDeclaredFields();
-			List<Field> nonStatic = new ArrayList<Field>();
-			for (Field field : fields) {
-				if (Modifier.isStatic(field.getModifiers())) {
-					continue;
-				} else {
-					field.setAccessible(true);
-					nonStatic.add(field);
-				}
-			}
-			perClassDeclaredFields.put(c, nonStatic);
-		}
-		return perClassDeclaredFields.get(c);
+	public Field[] getFieldsForClass(Object projected) throws Exception {
+		Class<? extends Object> clazz = projected.getClass();
+		return getFieldsForClass(clazz);
 	}
 
 	/**
@@ -284,9 +294,6 @@ public class GraphProjection {
 		return this.replaceMap;
 	}
 
-	public static final String CONTEXT_PROJECTION_CONTEXT = GraphProjection.class
-			.getName() + ".CONTEXT_PROJECTION_CONTEXT";
-
 	public <T> T project(T source, GraphProjectionContext context)
 			throws Exception {
 		if (context != null) {
@@ -295,8 +302,10 @@ public class GraphProjection {
 			try {
 				LooseContext.pushWithKey(CONTEXT_PROJECTION_CONTEXT,
 						new LinkedHashMap<>());
+				GlobalTopicPublisher.get().publishTopic(TOPIC_PROJECTION_COUNT_DELTA, 1);
 				return project(source, null, context, false);
 			} finally {
+				GlobalTopicPublisher.get().publishTopic(TOPIC_PROJECTION_COUNT_DELTA, -1);
 				LooseContext.pop();
 				if (dumpProjectionStats && context == null) {
 					System.out.format("Projection stats:\n===========\n%s\n",
@@ -486,6 +495,23 @@ public class GraphProjection {
 		this.replaceMap = replaceMap;
 	}
 
+	private List<Field> ensureDeclaredNonStaticFields(Class c) {
+		if (!perClassDeclaredFields.containsKey(c)) {
+			Field[] fields = c.getDeclaredFields();
+			List<Field> nonStatic = new ArrayList<Field>();
+			for (Field field : fields) {
+				if (Modifier.isStatic(field.getModifiers())) {
+					continue;
+				} else {
+					field.setAccessible(true);
+					nonStatic.add(field);
+				}
+			}
+			perClassDeclaredFields.put(c, nonStatic);
+		}
+		return perClassDeclaredFields.get(c);
+	}
+
 	private Permission
 			ensurePerClassReadPermission(Class<? extends Object> sourceClass) {
 		if (!perClassReadPermission.containsKey(sourceClass)) {
@@ -553,6 +579,8 @@ public class GraphProjection {
 	}
 
 	public static class GraphProjectionContext {
+		static int debugDepth = 200;
+
 		public GraphProjectionContext parent;
 
 		public Object projectedOwner;
@@ -562,8 +590,6 @@ public class GraphProjection {
 		public Class clazz;
 
 		public Field field;
-
-		static int debugDepth = 200;
 
 		public Object sourceOwner;
 
@@ -605,17 +631,17 @@ public class GraphProjection {
 			return clazz.hashCode() ^ fieldName.hashCode();
 		}
 
-		@Override
-		public String toString() {
-			return (parent == null ? "" : parent.toString() + "::")
-					+ clazz.getSimpleName() + "." + fieldName;
-		}
-
 		public String toPoint() {
 			String point = field == null ? clazz.getSimpleName()
 					: field.getType().getSimpleName() + ": "
 							+ clazz.getSimpleName() + "." + fieldName;
 			return point;
+		}
+
+		@Override
+		public String toString() {
+			return (parent == null ? "" : parent.toString() + "::")
+					+ clazz.getSimpleName() + "." + fieldName;
 		}
 	}
 
@@ -662,25 +688,5 @@ public class GraphProjection {
 
 		Object instantiateShellObject(T initializer,
 				GraphProjectionContext context);
-	}
-
-	public static <T> T getContextObject(String key, Supplier<T> supplier) {
-		Map ctx = LooseContext.get(CONTEXT_PROJECTION_CONTEXT);
-		if (ctx == null) {
-			return null;
-		} else {
-			T result = (T) ctx.get(key);
-			if (result == null) {
-				result = supplier.get();
-				ctx.put(key, result);
-			}
-			return result;
-		}
-	}
-
-	public static <T> T shallowProjection(T original, int depth) {
-		GraphProjections projections = GraphProjections.defaultProjections()
-				.maxDepth(depth);
-		return projections.project(original);
 	}
 }

@@ -5,8 +5,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 
-public abstract class TruncatedObjectCriterion<E extends HasId> extends
-		SearchCriterion implements HasId {
+public abstract class TruncatedObjectCriterion<E extends HasId>
+		extends SearchCriterion implements HasId {
 	static final transient long serialVersionUID = 1;
 
 	private long id;
@@ -17,8 +17,9 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 
 	protected E forClientTrimmed;
 
-	public String getDisplayText() {
-		return this.displayText;
+	public void depopulateValue() {
+		forClientTrimmed = null;
+		value = null;
 	}
 
 	@Override
@@ -27,9 +28,17 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 				&& equivalentTo((SearchCriterion) obj);
 	}
 
-	@Override
-	public int hashCode() {
-		return getClass().hashCode() ^ (int) getId();
+	public boolean equivalentTo(SearchCriterion other) {
+		if (other == null || other.getClass() != getClass()) {
+			return false;
+		}
+		TruncatedObjectCriterion otherImpl = (TruncatedObjectCriterion) other;
+		return otherImpl.getDirection() == getDirection()
+				&& getId() == otherImpl.getId();
+	}
+
+	public String getDisplayText() {
+		return this.displayText;
 	}
 
 	public long getId() {
@@ -42,16 +51,12 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 		return value;
 	}
 
-	public void populateValue() {
+	@Override
+	public int hashCode() {
+		return getClass().hashCode() ^ (int) getId();
 	}
 
-	public boolean equivalentTo(SearchCriterion other) {
-		if (other == null || other.getClass() != getClass()) {
-			return false;
-		}
-		TruncatedObjectCriterion otherImpl = (TruncatedObjectCriterion) other;
-		return otherImpl.getDirection() == getDirection()
-				&& getId() == otherImpl.getId();
+	public void populateValue() {
 	}
 
 	public void setDisplayText(String displayText) {
@@ -72,23 +77,23 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 		}
 	}
 
-	protected String getDisplayTextFor(E value) {
-		return value == null ? null : value.toString();
-	}
-
 	@Override
 	public String toString() {
 		return getDisplayText();
 	}
 
 	@Override
-	protected TruncatedObjectCriterion copyPropertiesFrom(
-			SearchCriterion searchCriterion) {
+	protected TruncatedObjectCriterion
+			copyPropertiesFrom(SearchCriterion searchCriterion) {
 		TruncatedObjectCriterion<E> copyFromCriterion = (TruncatedObjectCriterion) searchCriterion;
 		displayText = copyFromCriterion.displayText;
 		id = copyFromCriterion.id;
 		value = copyFromCriterion.value;
 		forClientTrimmed = copyFromCriterion.forClientTrimmed;
 		return super.copyPropertiesFrom(copyFromCriterion);
+	}
+
+	protected String getDisplayTextFor(E value) {
+		return value == null ? null : value.toString();
 	}
 }
