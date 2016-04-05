@@ -18,7 +18,7 @@ package cc.alcina.framework.common.client.util;
  *
  * @author Nick Reddel
  */
-
+@FunctionalInterface
  public interface Callback<V> {
 	public void apply(V value);
 }

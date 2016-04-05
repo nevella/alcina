@@ -24,6 +24,8 @@ public class ShellWrapper {
 
 	protected boolean timedOut;
 
+	public boolean logToStdOut = true;
+
 	public void runBashScript(String script) throws Exception {
 		File tmp = File.createTempFile("shell", ".sh");
 		tmp.deleteOnExit();
@@ -39,16 +41,23 @@ public class ShellWrapper {
 
 	public ShellOutputTuple runProcessCatchOutputAndWaitPrompt(String prompt,
 			String... cmdAndArgs) throws Exception {
-		return runProcessCatchOutputAndWait(cmdAndArgs,
-				new TabbedSysoutCallback(prompt + OUTPUT_MARKER),
-				new TabbedSysoutCallback(prompt + ERROR_MARKER));
+		if (logToStdOut) {
+			return runProcessCatchOutputAndWait(cmdAndArgs,
+					new TabbedSysoutCallback(prompt + OUTPUT_MARKER),
+					new TabbedSysoutCallback(prompt + ERROR_MARKER));
+		} else {
+			return runProcessCatchOutputAndWait(cmdAndArgs, s -> s.length(),
+					s -> s.length());
+		}
 	}
 
 	public ShellOutputTuple runProcessCatchOutputAndWait(String[] cmdAndArgs,
 			Callback<String> outputCallback, Callback<String> errorCallback)
-			throws Exception {
-		System.out.format("launching process: %s\n",
-				CommonUtils.join(cmdAndArgs, " "));
+					throws Exception {
+		if (logToStdOut) {
+			System.out.format("launching process: %s\n",
+					CommonUtils.join(cmdAndArgs, " "));
+		}
 		ProcessBuilder pb = new ProcessBuilder(cmdAndArgs);
 		proc = pb.start();
 		StreamBuffer errorGobbler = new StreamBuffer(proc.getErrorStream(),
