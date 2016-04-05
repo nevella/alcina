@@ -23,8 +23,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
 @MappedSuperclass
-public abstract class AbstractDomainBase extends BaseBindable implements
-		HasIdAndLocalId, HasVersionNumber {
+public abstract class AbstractDomainBase extends BaseBindable
+		implements HasIdAndLocalId, HasVersionNumber {
 	static final transient long serialVersionUID = 1L;
 
 	protected transient int hash = 0;
@@ -49,13 +49,13 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 				.fireNullPropertyChange(name);
 	}
 
-	@Display(name = "Id", orderingHint = 900, visible = @Permission(access = AccessLevel.ADMIN))
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
+	@Display(name = "Id", orderingHint = 900, visible = @Permission(access = AccessLevel.ADMIN) )
+	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE) , write = @Permission(access = AccessLevel.ROOT) )
 	@Transient
 	public abstract long getId();
 
 	@Display(name = "Local id")
-	@PropertyPermissions(read = @Permission(access = AccessLevel.ROOT), write = @Permission(access = AccessLevel.ROOT))
+	@PropertyPermissions(read = @Permission(access = AccessLevel.ROOT) , write = @Permission(access = AccessLevel.ROOT) )
 	@Transient
 	public long getLocalId() {
 		return this.localId;
@@ -63,7 +63,7 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 
 	@Version
 	@Column(name = "OPTLOCK")
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
+	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE) , write = @Permission(access = AccessLevel.ROOT) )
 	public int getVersionNumber() {
 		return versionNumber;
 	}
@@ -72,8 +72,8 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	public int hashCode() {
 		if (hash == 0) {
 			if (GWT.isScript()) {
-				hash = fastHash(getId(), getLocalId(), getClass().getName()
-						.hashCode());
+				hash = fastHash(getId(), getLocalId(),
+						getClass().getName().hashCode());
 			} else {
 				hash = Long.valueOf(getId()).hashCode()
 						^ Long.valueOf(getLocalId()).hashCode()
@@ -88,7 +88,7 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 
 	@UnsafeNativeLong
 	private native int fastHash(long id, long localId, int classHashCode)/*-{
-        return id.l ^ id.m ^ id.h ^ localId.l ^ localId.m ^ localId.h
+        return LongWrapperHash.fastHash(id) ^ LongWrapperHash.fastHash(localId)
                 ^ classHashCode;
 	}-*/;
 
