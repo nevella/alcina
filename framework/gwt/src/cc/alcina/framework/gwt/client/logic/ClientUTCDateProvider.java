@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 
-@RegistryLocation(registryPoint = CurrentUtcDateProvider.class,implementationType=ImplementationType.SINGLETON)
+@RegistryLocation(registryPoint = CurrentUtcDateProvider.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 @ReflectionModule(ReflectionModule.INITIAL)
 @ClientInstantiable
 public class ClientUTCDateProvider implements CurrentUtcDateProvider {
