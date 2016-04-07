@@ -27,8 +27,8 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  * 
  * @author Nick Reddel
  */
-public class BaseSourcesPropertyChangeEvents implements
-		SourcesPropertyChangeEvents {
+public class BaseSourcesPropertyChangeEvents
+		implements SourcesPropertyChangeEvents {
 	private transient MutablePropertyChangeSupport propertyChangeSupport;
 
 	public void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -91,5 +91,12 @@ public class BaseSourcesPropertyChangeEvents implements
 		}
 		return propertyChangeSupport;
 	}
-	
+
+	/**
+	 * Useful for collection listeners - a "check the kids" thing
+	 */
+	public void fireNullPropertyChange(String name) {
+		((MutablePropertyChangeSupport) this.propertyChangeSupport())
+				.fireNullPropertyChange(name);
+	}
 }

@@ -42,14 +42,6 @@ public abstract class AbstractDomainBase extends BaseBindable
 		return HiliHelper.equals(this, obj);
 	}
 
-	/**
-	 * Useful for collection listeners - a "check the kids" thing
-	 */
-	public void fireNullPropertyChange(String name) {
-		((MutablePropertyChangeSupport) this.propertyChangeSupport())
-				.fireNullPropertyChange(name);
-	}
-
 	@Display(name = "Id", orderingHint = 900, visible = @Permission(access = AccessLevel.ADMIN) )
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE) , write = @Permission(access = AccessLevel.ROOT) )
 	@Transient

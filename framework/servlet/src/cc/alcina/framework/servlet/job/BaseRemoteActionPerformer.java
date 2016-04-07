@@ -51,8 +51,11 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 			throw new RuntimeException("Already started");
 		}
 		started = true;
-		jobTracker = JobRegistry.get().startJob(getClass(),
-				SEUtilities.friendlyClassName(getClass()), null);
+		jobTracker = JobRegistry.get().startJob(getClass(), jobName(), null);
 		logger = JobRegistry.get().getContextLogger();
+	}
+
+	protected String jobName() {
+		return SEUtilities.friendlyClassName(getClass());
 	}
 }
