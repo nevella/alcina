@@ -78,6 +78,9 @@ public class JobRegistry implements RegistrableService {
 	public static final String CONTEXT_PERFORMING_CLUSTERED_JOB = JobRegistry.class
 			.getName() + ".CONTEXT_PERFORMING_CLUSTERED_JOB";
 
+	public static final String CONTEXT_REUSE_CURRENT_TRACKER = JobRegistry.class
+			.getName() + ".CONTEXT_REUSE_CURRENT_TRACKER";
+
 	public static final String NO_LOG = "no-log";
 
 	public static JobTracker exportableForm(JobTracker in) {
@@ -290,7 +293,13 @@ public class JobRegistry implements RegistrableService {
 			throw new RuntimeException("refusing jobs");
 		}
 		JobId jobId = null;
-		JobId contextId = LooseContext.get(CONTEXT_NEXT_JOB_ID);
+		JobId contextId = null;
+		if (LooseContext.is(CONTEXT_REUSE_CURRENT_TRACKER)) {
+			contextId = new JobId(getContextTracker().getId());
+		}
+		if (contextId == null) {
+			contextId = LooseContext.get(CONTEXT_NEXT_JOB_ID);
+		}
 		if (contextId == null) {
 			jobId = getNextJobId(jobClass);
 		} else {
@@ -356,14 +365,18 @@ public class JobRegistry implements RegistrableService {
 	private void jobComplete(JobTracker tracker, JobResultType resultType,
 			String message) {
 		tracker.setProgressMessage(message);
-		tracker.setEndTime(new Date());
-		tracker.setJobResultType(resultType);
-		tracker.setComplete(true);
+		if (!LooseContext.is(CONTEXT_REUSE_CURRENT_TRACKER)) {
+			tracker.setEndTime(new Date());
+			tracker.setJobResultType(resultType);
+			tracker.setComplete(true);
+		}
 		AlcinaTopics.jobComplete(tracker);
 		logComplete(tracker, message);
-		removeTracker(tracker);
-		if (tracker.getParent() != null) {
-			tracker.getParent().childComplete(tracker);
+		if (!LooseContext.is(CONTEXT_REUSE_CURRENT_TRACKER)) {
+			removeTracker(tracker);
+			if (tracker.getParent() != null) {
+				tracker.getParent().childComplete(tracker);
+			}
 		}
 		popContextTracker(tracker);
 	}
