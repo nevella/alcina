@@ -809,6 +809,23 @@ public class CommonUtils {
 				+ ellipsis;
 	}
 
+	public static String trimToWsCharsMiddle(String s, int maxChars) {
+		if (s == null || s.length() <= maxChars) {
+			return s;
+		}
+		String left = s.substring(0, maxChars / 2);
+		int idx0 = left.lastIndexOf(" ");
+		if (idx0 != -1) {
+			left = left.substring(0, idx0);
+		}
+		String right = s.substring(s.length() - maxChars / 2);
+		idx0 = right.indexOf(" ");
+		if (idx0 != -1) {
+			right = right.substring(idx0);
+		}
+		return left + " ... " + right;
+	}
+
 	public static String trimToWsReverse(String s, int maxChars) {
 		if (s.length() <= maxChars) {
 			return s;
@@ -1157,6 +1174,7 @@ public class CommonUtils {
 		long t2 = d2 == null ? 0 : d2.getTime();
 		return t1 < t2 ? -1 : t1 == t2 ? 0 : 1;
 	}
+
 	public static int compareDatesNullHigh(Date d1, Date d2) {
 		long t1 = d1 == null ? Long.MAX_VALUE : d1.getTime();
 		long t2 = d2 == null ? Long.MAX_VALUE : d2.getTime();
