@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 
 public abstract class CacheDescriptor {
@@ -40,7 +41,7 @@ public abstract class CacheDescriptor {
 		addItemDescriptor(itemDescriptor);
 	}
 
-	public boolean cachePostTransform(Class clazz) {
+	public boolean cachePostTransform(Class clazz, DomainTransformEvent o) {
 		return perClass.containsKey(clazz);
 	}
 

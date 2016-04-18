@@ -464,6 +464,10 @@ public class AlcinaMemCache implements RegistrableService {
 	public <T extends HasIdAndLocalId> T findRaw(Class<T> clazz, long id) {
 		return new AlcinaMemCacheQuery().id(id).raw().find(clazz);
 	}
+	
+	public <T extends HasIdAndLocalId>  boolean isCached(Class<T> clazz, long id) {
+		return cache.contains(clazz,id);
+	}
 
 	public <T extends HasIdAndLocalId> T findRaw(T t) {
 		return (T) findRaw(t.getClass(), t.getId());
@@ -2434,14 +2438,14 @@ public class AlcinaMemCache implements RegistrableService {
 	class InSubgraphFilter implements CollectionFilter<DomainTransformEvent> {
 		@Override
 		public boolean allow(DomainTransformEvent o) {
-			if (!cacheDescriptor.cachePostTransform(o.getObjectClass())) {
+			if (!cacheDescriptor.cachePostTransform(o.getObjectClass(),o)) {
 				return false;
 			}
 			switch (o.getTransformType()) {
 			case ADD_REF_TO_COLLECTION:
 			case REMOVE_REF_FROM_COLLECTION:
 			case CHANGE_PROPERTY_REF:
-				return cacheDescriptor.cachePostTransform(o.getValueClass());
+				return cacheDescriptor.cachePostTransform(o.getValueClass(),o);
 			}
 			return true;
 		}

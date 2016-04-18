@@ -33,37 +33,12 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  *
  * @author Nick Reddel
  */
-public class DetachedEntityCache implements Serializable,PrivateObjectCache {
+public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 	// have it distributed
 	protected Map<Class, Map<Long, HasIdAndLocalId>> detached = new HashMap<Class, Map<Long, HasIdAndLocalId>>(
 			128);
 
 	public DetachedEntityCache() {
-	}
-
-	public <T> T get(Class<T> clazz, Long id) {
-		ensureMaps(clazz);
-		if (id == null) {
-			return null;
-		}
-		T t = (T) detached.get(clazz).get(id);
-		return t;
-	}
-
-	public <T extends HasIdAndLocalId> T getExisting(T hili) {
-		return (T) get(hili.getClass(), hili.getId());
-	}
-
-	public <T> Set<T> values(Class<T> clazz) {
-		ensureMaps(clazz);
-		return new LinkedHashSet<T>((Collection<? extends T>) detached.get(
-				clazz).values());
-	}
-
-	public <T> Collection<T> immutableRawValues(Class<T> clazz) {
-		ensureMaps(clazz);
-		return (Collection<T>) Collections.unmodifiableCollection(detached.get(
-				clazz).values());
 	}
 
 	public Set<HasIdAndLocalId> allValues() {
@@ -72,57 +47,6 @@ public class DetachedEntityCache implements Serializable,PrivateObjectCache {
 			result.addAll(detached.get(clazz).values());
 		}
 		return result;
-	}
-
-	public Set<Long> keys(Class clazz) {
-		ensureMaps(clazz);
-		return detached.get(clazz).keySet();
-	}
-
-	public void put(HasIdAndLocalId hili) {
-		Class<? extends HasIdAndLocalId> clazz = hili.getClass();
-		ensureMaps(clazz);
-		long id = hili.getId();
-		detached.get(clazz).put(id, hili);
-	}
-
-	public void putForSuperClass(Class clazz, HasIdAndLocalId hili) {
-		ensureMaps(clazz);
-		long id = hili.getId();
-		detached.get(clazz).put(id, hili);
-	}
-
-	public void putAll(Class clazz, Collection<? extends HasIdAndLocalId> values) {
-		ensureMaps(clazz);
-		Map<Long, HasIdAndLocalId> m = detached.get(clazz);
-		for (HasIdAndLocalId hili : values) {
-			long id = hili.getId();
-			m.put(hili.getId(), hili);
-		}
-	}
-
-	protected void ensureMaps(Class clazz) {
-		if (!detached.containsKey(clazz)) {
-			synchronized (this) {
-				if (!detached.containsKey(clazz)) {
-					detached.put(clazz, createMap());
-				}
-			}
-		}
-	}
-
-	public Map<Long, HasIdAndLocalId> createMap() {
-		return new TreeMap<Long, HasIdAndLocalId>();
-	}
-
-	public boolean isEmpty(Class clazz) {
-		ensureMaps(clazz);
-		return values(clazz).isEmpty();
-	}
-
-	public void invalidate(Class clazz) {
-		ensureMaps(clazz);
-		detached.put(clazz, createMap());
 	}
 
 	public void clear() {
@@ -136,31 +60,10 @@ public class DetachedEntityCache implements Serializable,PrivateObjectCache {
 		return c;
 	}
 
-	public void invalidate(Class[] classes) {
-		for (Class c : classes) {
-			invalidate(c);
-		}
-	}
-
-	public Map<Class, Map<Long, HasIdAndLocalId>> getDetached() {
-		return this.detached;
-	}
-
-	public Map<Long, HasIdAndLocalId> getMap(Class clazz) {
+	public <T extends HasIdAndLocalId> boolean contains(Class<T> clazz,
+			long id) {
 		ensureMaps(clazz);
-		return this.detached.get(clazz);
-	}
-
-	public int size(Class clazz) {
-		ensureMaps(clazz);
-		return detached.get(clazz).size();
-	}
-
-	public void remove(HasIdAndLocalId hili) {
-		Class<? extends HasIdAndLocalId> clazz = hili.getClass();
-		ensureMaps(clazz);
-		long id = hili.getId();
-		detached.get(clazz).remove(id);
+		return detached.get(clazz).containsKey(id);
 	}
 
 	public boolean contains(HasIdAndLocalId hili) {
@@ -170,9 +73,57 @@ public class DetachedEntityCache implements Serializable,PrivateObjectCache {
 		return detached.get(clazz).containsKey(id);
 	}
 
-	@Override
-	public String toString() {
-		return "Cache: " + detached;
+	public Map<Long, HasIdAndLocalId> createMap() {
+		return new TreeMap<Long, HasIdAndLocalId>();
+	}
+
+	public <T> T get(Class<T> clazz, Long id) {
+		ensureMaps(clazz);
+		if (id == null) {
+			return null;
+		}
+		T t = (T) detached.get(clazz).get(id);
+		return t;
+	}
+
+	public Map<Class, Map<Long, HasIdAndLocalId>> getDetached() {
+		return this.detached;
+	}
+
+	public <T extends HasIdAndLocalId> T getExisting(T hili) {
+		return (T) get(hili.getClass(), hili.getId());
+	}
+
+	public Map<Long, HasIdAndLocalId> getMap(Class clazz) {
+		ensureMaps(clazz);
+		return this.detached.get(clazz);
+	}
+
+	public <T> Collection<T> immutableRawValues(Class<T> clazz) {
+		ensureMaps(clazz);
+		return (Collection<T>) Collections
+				.unmodifiableCollection(detached.get(clazz).values());
+	}
+
+	public void invalidate(Class clazz) {
+		ensureMaps(clazz);
+		detached.put(clazz, createMap());
+	}
+
+	public void invalidate(Class[] classes) {
+		for (Class c : classes) {
+			invalidate(c);
+		}
+	}
+
+	public boolean isEmpty(Class clazz) {
+		ensureMaps(clazz);
+		return values(clazz).isEmpty();
+	}
+
+	public Set<Long> keys(Class clazz) {
+		ensureMaps(clazz);
+		return detached.get(clazz).keySet();
 	}
 
 	public List<Long> notContained(Collection<Long> ids, Class clazz) {
@@ -188,6 +139,41 @@ public class DetachedEntityCache implements Serializable,PrivateObjectCache {
 		return result;
 	}
 
+	public void put(HasIdAndLocalId hili) {
+		Class<? extends HasIdAndLocalId> clazz = hili.getClass();
+		ensureMaps(clazz);
+		long id = hili.getId();
+		detached.get(clazz).put(id, hili);
+	}
+
+	public void putAll(Class clazz,
+			Collection<? extends HasIdAndLocalId> values) {
+		ensureMaps(clazz);
+		Map<Long, HasIdAndLocalId> m = detached.get(clazz);
+		for (HasIdAndLocalId hili : values) {
+			long id = hili.getId();
+			m.put(hili.getId(), hili);
+		}
+	}
+
+	public void putForSuperClass(Class clazz, HasIdAndLocalId hili) {
+		ensureMaps(clazz);
+		long id = hili.getId();
+		detached.get(clazz).put(id, hili);
+	}
+
+	public void remove(HasIdAndLocalId hili) {
+		Class<? extends HasIdAndLocalId> clazz = hili.getClass();
+		ensureMaps(clazz);
+		long id = hili.getId();
+		detached.get(clazz).remove(id);
+	}
+
+	public int size(Class clazz) {
+		ensureMaps(clazz);
+		return detached.get(clazz).size();
+	}
+
 	public String sizes() {
 		List<String> lines = new ArrayList<String>();
 		for (Class clazz : detached.keySet()) {
@@ -196,5 +182,24 @@ public class DetachedEntityCache implements Serializable,PrivateObjectCache {
 		return CommonUtils.join(lines, "\n");
 	}
 
-	
+	@Override
+	public String toString() {
+		return "Cache: " + detached;
+	}
+
+	public <T> Set<T> values(Class<T> clazz) {
+		ensureMaps(clazz);
+		return new LinkedHashSet<T>(
+				(Collection<? extends T>) detached.get(clazz).values());
+	}
+
+	protected void ensureMaps(Class clazz) {
+		if (!detached.containsKey(clazz)) {
+			synchronized (this) {
+				if (!detached.containsKey(clazz)) {
+					detached.put(clazz, createMap());
+				}
+			}
+		}
+	}
 }
