@@ -243,14 +243,15 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		return newInstance;
 	}
 
-	@Override
 	/**
-	 * Probably don't call this - rather call  deleteObject(hili,true) - this will always be a noop on the server
+	 * Because TLTM never registers objects, delete(x,false) is always a noop. A
+	 * bit wonky, the whole thing - but this gets the job done.
 	 *
+	 * See registerDomainObject for explanation
 	 */
-	@Deprecated
+	@Override
 	public DomainTransformEvent deleteObject(HasIdAndLocalId hili) {
-		return super.deleteObject(hili);
+		return deleteObject(hili, true);
 	}
 
 	@Override
@@ -642,15 +643,18 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			userSessionHiliMap.putToLookups(new HiliLocator(null, -1, 0));
 			for (Object[] obj : idTuples) {
 				ClassRef classRef = ClassRef.forId((long) obj[2]);
-				userSessionHiliMap.putToLookups(new HiliLocator(classRef.getRefClass(),
-						(Long) obj[0], (Long) obj[1]));
+				userSessionHiliMap.putToLookups(new HiliLocator(classRef
+						.getRefClass(), (Long) obj[0], (Long) obj[1]));
 			}
 			MetricLogging.get().end(message);
 		}
 	}
 
 	@Override
-	// NOTE - doesn't register children (unlike client)
+	/** NOTE - doesn't register children (unlike client)
+	 *
+	 * This is because of the two graph issue - db objects and current Thread-memory objects.
+	 */
 	public <T extends HasIdAndLocalId> T registerDomainObject(T hili) {
 		if (hili instanceof SourcesPropertyChangeEvents) {
 			listenTo((SourcesPropertyChangeEvents) hili);
