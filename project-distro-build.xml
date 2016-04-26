@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="project-distro-build" basedir="." default="">
 	<import file="project-build.xml" />
-	<property name="distributable.name" value="${ant.project.name}"/>
+	<property name="distributable.name" value="${ant.project.name}" />
 	<target name="make-war" description="Create the project WAR" depends="compile">
 		<mkdir dir="${project.dist.dir}" />
 		<delete file="${project.dist.dir}/${distributable.name}.war" />
@@ -17,6 +17,12 @@
 			</zipfileset>
 
 			<zipfileset dir="${project.src.dir}" prefix="WEB-INF/classes">
+				<patternset refid="project.war.resource.exports" />
+			</zipfileset>
+			<zipfileset dir="${project.src.dir.2}" prefix="WEB-INF/classes">
+				<patternset refid="project.war.resource.exports" />
+			</zipfileset>
+			<zipfileset dir="${project.src.dir.3}" prefix="WEB-INF/classes">
 				<patternset refid="project.war.resource.exports" />
 			</zipfileset>
 			<zipfileset dir="${project.client.src.dir}" prefix="WEB-INF/classes">
@@ -96,7 +102,7 @@
 	</target>
 	<target name="hot-deploy" description="Dev :: copy changed server files, no WAR restart" depends="hot-deploy-main">
 	</target>
-	<target name="hot-deploy-main"  depends="build-dependencies,compile">
+	<target name="hot-deploy-main" depends="build-dependencies,compile">
 		<!--the ear -->
 		<mkdir dir="${j2ee-server.unear.target}" />
 		<mkdir dir="${j2ee-server.unear.target}${j2ee-lib.dir}" />
@@ -130,6 +136,12 @@
 		</copy>
 		<copy todir="${j2ee-server.unwar.target}/WEB-INF/classes" preservelastmodified="true">
 			<fileset dir="${project.src.dir}">
+				<patternset refid="project.war.resource.exports" />
+			</fileset>
+			<fileset dir="${project.src.dir.2}">
+				<patternset refid="project.war.resource.exports" />
+			</fileset>
+			<fileset dir="${project.src.dir.3}">
 				<patternset refid="project.war.resource.exports" />
 			</fileset>
 			<fileset dir="${project.client.src.dir}">

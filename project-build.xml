@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="project-build" basedir="." default="make-jars">
+	<property name="project.src.dir.2" location="${project.src.dir}" />
+	<property name="project.src.dir.3" location="${project.src.dir}" />
 	<!-- should never be called directly, used by projects based on alcina-->
 	<fail unless="gwt.codestyle">
 			...
@@ -40,7 +42,18 @@
 				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
+			<fileset dir="${project.src.dir.2}">
+				<include name="**/*.*" />
+				<exclude name="**/*.java" />
+				<exclude name="**/*.class" />
+			</fileset>
+			<fileset dir="${project.src.dir.3}">
+				<include name="**/*.*" />
+				<exclude name="**/*.java" />
+				<exclude name="**/*.class" />
+			</fileset>
 		</copy>
+
 		<jar destfile="${project.dist.dir}/${ant.project.name}.jar" manifest="${project.meta-inf.dir}/MANIFEST.MF">
 			<metainf dir="${project.meta-inf.dir}" />
 			<fileset dir="${project.build.dir}">

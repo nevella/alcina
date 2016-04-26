@@ -73,11 +73,19 @@ public abstract class RollingData<K extends Comparable, V> {
 				.list(rdImplClass);
 		TreeMap<K, V> map = new TreeMap<K, V>();
 		Function<String, List<V>> deserializer = deserializer();
-		for (RollingDataItem item : list) {
-			List<V> values = deserializer.apply(item.getData());
-			for (V v : values) {
-				map.put(keyMaker.apply(v), v);
+		try {
+			for (RollingDataItem item : list) {
+				List<V> values = deserializer.apply(item.getData());
+				for (V v : values) {
+					map.put(keyMaker.apply(v), v);
+				}
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Exception with list deserialization - deleting");
+			TransformManager.get().deleteMultiple(list);
+			ServletLayerUtils.pushTransformsAsRoot();
+			return getValues0(earliestKey);
 		}
 		return map;
 	}
