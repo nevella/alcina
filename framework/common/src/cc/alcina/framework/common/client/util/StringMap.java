@@ -3,7 +3,9 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class StringMap extends LinkedHashMap<String, String> {
@@ -94,6 +96,11 @@ public class StringMap extends LinkedHashMap<String, String> {
 			return map;
 		}
 		String[] lines = list.split("\n");
+		if (lines.length % 2 == 1) {
+			List<String> trunc = Arrays.asList(lines).subList(0,
+					lines.length / 2 * 2);
+			lines = (String[]) trunc.toArray(new String[trunc.size()]);
+		}
 		for (int i = 0; i < lines.length; i += 2) {
 			map.put(lines[i].trim(), lines[i + 1].trim());
 		}
