@@ -48,6 +48,8 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	public ClientReflectorJvm() {
 		try {
+			
+			
 			ClassDataCache classes = new ServletClasspathScanner("*", true,
 					false, null, Registry.MARKER_RESOURCE,
 					Arrays.asList(new String[] {})).getClasses();
@@ -71,6 +73,9 @@ public class ClientReflectorJvm extends ClientReflector {
 				@Override
 				public boolean allow(String o) {
 					if (o.contains("AlcinaBeanSerializerJvm")) {
+						return false;
+					}
+					if(o.contains("FastUtil")){
 						return false;
 					}
 					return true;
