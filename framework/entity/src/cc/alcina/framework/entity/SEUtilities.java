@@ -1216,15 +1216,4 @@ public class SEUtilities {
 	public static boolean hasFractional(double d) {
 		return Math.abs(Math.round(d) - d) > 0.0001;
 	}
-	public static String escapeRegex(String s){
-		if(s.contains("\\")){
-			throw new RuntimeException("can't escape escaped strings");
-		}
-		s=s.replace("(", "\\(");
-		s=s.replace(")", "\\)");
-		s=s.replace("]", "\\]");
-		s=s.replace("[", "\\[");
-		s=s.replace("$", "\\$");
-		return s;
-	}
 }

@@ -490,6 +490,21 @@ public class CommonUtils {
 	 */
 	public static final int SAFE_VARCHAR_MAX_CHARS = 230;
 
+	public static String escapeRegex(String s){
+		if(s.contains("\\")){
+			throw new RuntimeException("can't escape escaped strings");
+		}
+		s=s.replace("(", "\\(");
+		s=s.replace(")", "\\)");
+		s=s.replace("]", "\\]");
+		s=s.replace("[", "\\[");
+		s=s.replace("$", "\\$");
+		s=s.replace("+", "\\+");
+		s=s.replace("?", "\\?");
+		s=s.replace(".", "\\.");
+		return s;
+	}
+
 	public static class ThreeWaySetResult<T> {
 		public Set<T> firstOnly;
 
