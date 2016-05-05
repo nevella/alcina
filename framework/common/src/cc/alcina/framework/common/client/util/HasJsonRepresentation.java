@@ -3,18 +3,16 @@ package cc.alcina.framework.common.client.util;
 import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.google.gwt.core.shared.GwtIncompatible;
-import com.google.gwt.i18n.rebind.AnnotationUtil;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.projection.GraphProjection;
-import cc.alcina.framework.entity.util.AnnotationUtils;
 
 public interface HasJsonRepresentation {
 	JSONObject asJson() throws JSONException;
@@ -41,6 +39,18 @@ public interface HasJsonRepresentation {
 		}
 	}
 
+	static JSONObject toJsMap(Map<String, String> stringMap) {
+		try {
+			JSONObject result = new JSONObject();
+			for (Entry<String, String> entry : stringMap.entrySet()) {
+				result.put(entry.getKey(), entry.getValue());
+			}
+			return result;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	default JSONArray toJsArray(List<? extends HasJsonRepresentation> objects) {
 		try {
 			JSONArray array = new JSONArray();
@@ -52,9 +62,11 @@ public interface HasJsonRepresentation {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
 	default JSONObject fieldMapping() {
 		return fieldMapping(null);
 	}
+
 	default JSONObject fieldMapping(List<String> ignoreFields) {
 		try {
 			Field[] fields = new GraphProjection().getFieldsForClass(this);
@@ -62,7 +74,7 @@ public interface HasJsonRepresentation {
 			Object templateInstance = getClass().newInstance();
 			for (Field field : fields) {
 				String key = field.getName();
-				if(ignoreFields!=null&&ignoreFields.contains(key)){
+				if (ignoreFields != null && ignoreFields.contains(key)) {
 					continue;
 				}
 				Object value = field.get(this);
