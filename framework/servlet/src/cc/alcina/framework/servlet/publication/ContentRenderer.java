@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.publication;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.HashSet;
@@ -22,14 +23,15 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.PublicationContent;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.XmlUtils.TransformerFactoryConfigurator;
 import cc.alcina.framework.entity.util.JaxbUtils;
 
 /**
  * Base class for the content rendering stage of the publication pipeline.
- * Default implementation runs an xsl transform on incoming (xml-serializable) object
- * graph.
+ * Default implementation runs an xsl transform on incoming (xml-serializable)
+ * object graph.
  * 
  * @author nreddel@barnet.com.au
  * 
@@ -38,6 +40,9 @@ import cc.alcina.framework.entity.util.JaxbUtils;
  * @param <V>
  */
 public abstract class ContentRenderer<D extends ContentDefinition, M extends PublicationContent, V extends DeliveryModel> {
+	public static final String CONTEXT_TRANSFORM_FILENAME = ContentRenderer.class
+			.getName() + ".CONTEXT_TRANSFORM_FILENAME";
+
 	protected D contentDefinition;
 
 	protected M publicationContent;
@@ -55,8 +60,8 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 	protected RenderTransformWrapper wrapper;
 
 	protected void marshallToDoc() throws Exception {
-		Set<Class> jaxbClasses = new HashSet<Class>(Registry.get()
-				.lookup(JaxbContextRegistration.class));
+		Set<Class> jaxbClasses = new HashSet<Class>(
+				Registry.get().lookup(JaxbContextRegistration.class));
 		// just in case - should be there from annotations
 		jaxbClasses.add(publicationContent.getClass());
 		jaxbClasses.add(contentDefinition.getClass());
@@ -81,7 +86,13 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 	}
 
 	protected void transform(String xslPath) throws Exception {
-		InputStream trans = getClass().getResourceAsStream(xslPath);
+		InputStream trans = null;
+		if (LooseContext.containsKey(CONTEXT_TRANSFORM_FILENAME)) {
+			trans = new FileInputStream(
+					LooseContext.getString(CONTEXT_TRANSFORM_FILENAME));
+		} else {
+			trans = getClass().getResourceAsStream(xslPath);
+		}
 		String marker = getClass().getName() + "/" + xslPath;
 		Source trSource = new StreamSource(trans);
 		Source dataSource = new DOMSource(doc);
@@ -95,7 +106,8 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 		}
 	}
 
-	protected TransformerFactoryConfigurator getTransformerFactoryConfigurator() {
+	protected TransformerFactoryConfigurator
+			getTransformerFactoryConfigurator() {
 		return new TransformerConfigurator();
 	}
 
