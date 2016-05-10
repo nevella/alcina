@@ -124,7 +124,7 @@ public abstract class DevHelper {
 		String path = null;
 		while (true) {
 			try {
-				path = prefs.get(JBOSS_CONFIG_PATH, "");
+				path = getAppConfigPath(prefs);
 				ResourceUtilities.registerCustomProperties(new FileInputStream(
 						path));
 				break;
@@ -134,6 +134,10 @@ public abstract class DevHelper {
 				prefs.put(JBOSS_CONFIG_PATH, path);
 			}
 		}
+	}
+
+	protected String getAppConfigPath(Preferences prefs) {
+		return prefs.get(JBOSS_CONFIG_PATH, "");
 	}
 
 	protected abstract String getJbossConfigPrompt(String path);
