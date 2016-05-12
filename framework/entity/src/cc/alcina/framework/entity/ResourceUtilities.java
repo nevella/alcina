@@ -29,6 +29,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -585,6 +586,26 @@ public class ResourceUtilities {
 			return readStreamToByteArray(clazz.getResourceAsStream(path));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static void writeBytesToFile(byte[] bytes, File dataFile)
+			throws IOException {
+		writeStreamToStream(new ByteArrayInputStream(bytes),
+				new FileOutputStream(dataFile));
+	}
+
+	public static String readClassPathResourceAsStringPreferFile(Class clazz,
+			String path, String filePath) {
+		File file = new File(filePath);
+		if (file.exists()) {
+			try {
+				return ResourceUtilities.readFileToString(file);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		} else {
+			return readClassPathResourceAsString(clazz, path);
 		}
 	}
 }

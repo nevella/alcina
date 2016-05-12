@@ -42,6 +42,7 @@ import org.apache.xerces.parsers.DOMParser;
 import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
+import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -52,6 +53,8 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 /**
  *
@@ -529,7 +532,22 @@ public class XmlUtils {
 			exception.printStackTrace();
 		}
 	}
-
+	public static String prettyPrintWithDOM3LS(DocumentFragment documentFragment) {
+		try {
+			Document doc = loadDocument("<doc-wrapper-ppls/>");
+			Node adopted = doc.adoptNode(documentFragment.cloneNode(true));
+			doc.getDocumentElement().appendChild(adopted);
+			String str = prettyPrintWithDOM3LS(doc);
+			Pattern p = Pattern.compile(".*<doc-wrapper-ppls>(.+)</doc-wrapper-ppls>.*",Pattern.DOTALL);
+			Matcher m = p.matcher(str);
+			m.matches();
+			return m.group(1);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		
+		
+	}
 	public static String prettyPrintWithDOM3LS(Document document) {
 		// Pretty-prints a DOM document to XML using DOM Load and Save's
 		// LSSerializer.

@@ -9,10 +9,12 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 public class CsvUtils {
 	public static List<List<String>> parseCsv(String txt) {
 		txt = txt.replaceAll("[\\r\\n]+[\\r\\n]*", "\n");
-		txt=txt.replaceAll("\t", ",");
+		txt = txt.replaceAll("\t", ",");
 		List<List<String>> results = new ArrayList<List<String>>();
 		List<String> row = null;
 		int i = 0;
@@ -80,8 +82,8 @@ public class CsvUtils {
 			if (i++ > 0) {
 				sb.append(",");
 			}
-			sb.append(wrapInQuotesPattern.matcher(value).find() ? "\"" + value
-					+ "\"" : value);
+			sb.append(wrapInQuotesPattern.matcher(value).find()
+					? "\"" + value + "\"" : value);
 		}
 		return sb.toString();
 	}
@@ -120,10 +122,23 @@ public class CsvUtils {
 		public String get(String key) {
 			return csvCols.grid.get(rowIdx).get(csvCols.colLookup.get(key));
 		}
+
+		public boolean has(String key) {
+			return get(key).length() > 0;
+		}
 	}
 
 	public static class CsvCols implements Iterable<CsvRow>, Iterator<CsvRow> {
 		Map<String, Integer> colLookup = new LinkedHashMap<>();
+
+		public Map<String, CsvRow> rowLookup(String columnHeader) {
+			Map<String, CsvRow> result = new LinkedHashMap<>();
+			while (hasNext()) {
+				CsvRow row = next();
+				result.put(row.get(columnHeader), row);
+			}
+			return result;
+		}
 
 		int idx = 0;
 
@@ -132,7 +147,8 @@ public class CsvUtils {
 		public List<String> headers() {
 			return colLookup.keySet().stream().collect(Collectors.toList());
 		}
-		public CsvCols(String csv){
+
+		public CsvCols(String csv) {
 			this(parseCsv(csv));
 		}
 
