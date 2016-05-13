@@ -599,7 +599,7 @@ public class ResourceUtilities {
 	public static String readClassPathResourceAsStringPreferFile(Class clazz,
 			String path, String filePath) {
 		File file = new File(filePath);
-		if (file.exists()&&AppPersistenceBase.isTest()) {
+		if (is(ResourceUtilities.class, "useDevResources") && file.exists()) {
 			try {
 				return ResourceUtilities.readFileToString(file);
 			} catch (Exception e) {
