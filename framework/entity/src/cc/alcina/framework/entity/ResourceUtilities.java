@@ -67,6 +67,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 
 /**
  * @author nick@alcina.cc
@@ -598,7 +599,7 @@ public class ResourceUtilities {
 	public static String readClassPathResourceAsStringPreferFile(Class clazz,
 			String path, String filePath) {
 		File file = new File(filePath);
-		if (file.exists()) {
+		if (file.exists()&&AppPersistenceBase.isTest()) {
 			try {
 				return ResourceUtilities.readFileToString(file);
 			} catch (Exception e) {
