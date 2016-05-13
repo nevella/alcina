@@ -55,6 +55,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 /**
  *
@@ -509,12 +510,20 @@ public class XmlUtils {
 		public void configure(TransformerFactory transformerFactory);
 	}
 
+	public static final String CONTEXT_MUTE_XML_SAX_EXCEPTIONS =XmlUtils.class.getName()+".CONTEXT_MUTE_XML_SAX_EXCEPTIONS";
 	static class XmlErrHandler implements ErrorHandler {
 		/**
 		 * @see org.xml.sax.ErrorHandler#error(org.xml.sax.SAXParseException)
 		 */
 		public void error(SAXParseException exception) throws SAXException {
-			exception.printStackTrace();
+			log(exception);
+			
+		}
+
+		private void log(SAXParseException exception) {
+			if(!LooseContext.is(CONTEXT_MUTE_XML_SAX_EXCEPTIONS)){
+			exception.printStackTrace();			
+			}
 		}
 
 		/**
@@ -522,14 +531,14 @@ public class XmlUtils {
 		 */
 		public void fatalError(SAXParseException exception)
 				throws SAXException {
-			exception.printStackTrace();
+			log(exception);
 		}
 
 		/**
 		 * @see org.xml.sax.ErrorHandler#warning(org.xml.sax.SAXParseException)
 		 */
 		public void warning(SAXParseException exception) throws SAXException {
-			exception.printStackTrace();
+			log(exception);
 		}
 	}
 	public static String prettyPrintWithDOM3LS(DocumentFragment documentFragment) {
