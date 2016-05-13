@@ -299,6 +299,10 @@ public class CommonUtils {
 			return formatJ("%s %s %s", padTwo(date.getDate()),
 					MONTH_NAMES[date.getMonth() + 1],
 					padTwo(date.getYear() + 1900));
+		case AU_DATE_MONTH_NO_PAD_DAY:
+			return formatJ("%s %s %s", date.getDate(),
+					MONTH_NAMES[date.getMonth() + 1],
+					padTwo(date.getYear() + 1900));
 		case AU_DATE_MONTH_DAY:
 			return formatJ("%s %s, %s", MONTH_NAMES[date.getMonth() + 1],
 					padTwo(date.getDate()), padTwo(date.getYear() + 1900));
@@ -898,7 +902,7 @@ public class CommonUtils {
 		AU_DATE_TIME_HUMAN, AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT,
 		AU_LONG_DAY, AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
 		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH,
-		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, US_DATE_SLASH, TIMESTAMP_NO_DAY
+		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, US_DATE_SLASH, TIMESTAMP_NO_DAY, AU_DATE_MONTH_NO_PAD_DAY
 	}
 
 	public static String tabify(String value, int charsPerLine, int tabCount) {
