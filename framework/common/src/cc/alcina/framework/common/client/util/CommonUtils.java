@@ -51,7 +51,6 @@ public class CommonUtils {
 			"Wednesday", "Thursday", "Friday", "Saturday" };
 
 	private static final Map<String, Class> stdClassMap = new HashMap<String, Class>();
-
 	static {
 		Class[] stds = { Long.class, Double.class, Float.class, Short.class,
 				Byte.class, Integer.class, Boolean.class, Character.class,
@@ -119,7 +118,6 @@ public class CommonUtils {
 	}
 
 	private static final Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
-
 	static {
 		Class[] prims = { long.class, int.class, short.class, char.class,
 				byte.class, boolean.class, double.class, float.class };
@@ -129,7 +127,6 @@ public class CommonUtils {
 	}
 
 	public static final Map<String, Class> stdAndPrimitivesMap = new HashMap<String, Class>();
-
 	static {
 		stdAndPrimitivesMap.putAll(stdClassMap);
 		stdAndPrimitivesMap.putAll(primitiveClassMap);
@@ -431,7 +428,7 @@ public class CommonUtils {
 			c1 = c2;
 			c2 = tmp;
 		}
-		if (c2.size() > 10) {
+		if (c2.size() > 10 && !(c2 instanceof Set)) {
 			Set tmp = setSupplier.get();
 			tmp.addAll(c2);
 			c2 = tmp;
@@ -494,18 +491,18 @@ public class CommonUtils {
 	 */
 	public static final int SAFE_VARCHAR_MAX_CHARS = 230;
 
-	public static String escapeRegex(String s){
-		if(s.contains("\\")){
+	public static String escapeRegex(String s) {
+		if (s.contains("\\")) {
 			throw new RuntimeException("can't escape escaped strings");
 		}
-		s=s.replace("(", "\\(");
-		s=s.replace(")", "\\)");
-		s=s.replace("]", "\\]");
-		s=s.replace("[", "\\[");
-		s=s.replace("$", "\\$");
-		s=s.replace("+", "\\+");
-		s=s.replace("?", "\\?");
-		s=s.replace(".", "\\.");
+		s = s.replace("(", "\\(");
+		s = s.replace(")", "\\)");
+		s = s.replace("]", "\\]");
+		s = s.replace("[", "\\[");
+		s = s.replace("$", "\\$");
+		s = s.replace("+", "\\+");
+		s = s.replace("?", "\\?");
+		s = s.replace(".", "\\.");
 		return s;
 	}
 
@@ -902,7 +899,8 @@ public class CommonUtils {
 		AU_DATE_TIME_HUMAN, AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT,
 		AU_LONG_DAY, AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
 		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH,
-		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, US_DATE_SLASH, TIMESTAMP_NO_DAY, AU_DATE_MONTH_NO_PAD_DAY
+		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, US_DATE_SLASH, TIMESTAMP_NO_DAY,
+		AU_DATE_MONTH_NO_PAD_DAY
 	}
 
 	public static String tabify(String value, int charsPerLine, int tabCount) {

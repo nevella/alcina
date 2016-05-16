@@ -55,10 +55,17 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.NullWrappingMap;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
+import cc.alcina.framework.entity.projection.GraphProjection.ConstructorMethod;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
 @SuppressWarnings("unchecked")
 /**
@@ -100,7 +107,7 @@ public class GraphProjection {
 
 	public static final String CONTEXT_PROJECTION_CONTEXT = GraphProjection.class
 			.getName() + ".CONTEXT_PROJECTION_CONTEXT";
-	
+
 	public static final String TOPIC_PROJECTION_COUNT_DELTA = GraphProjection.class
 			.getName() + ".TOPIC_PROJECTION_COUNT_DELTA";
 
@@ -188,7 +195,10 @@ public class GraphProjection {
 
 	private GraphProjectionFieldFilter fieldFilter;
 
-	protected IdentityHashMap reached = new IdentityHashMap(LOOKUP_SIZE);
+	public static Supplier<Map> reachedSupplier = () -> new IdentityHashMap(
+			10 * LOOKUP_SIZE);
+
+	protected Map reached = reachedSupplier.get();
 
 	Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>(
 			LOOKUP_SIZE);
@@ -282,7 +292,7 @@ public class GraphProjection {
 	 * @return the current portion of the source graph that has already been
 	 *         reached in the traversal
 	 */
-	public IdentityHashMap getReached() {
+	public Map getReached() {
 		return reached;
 	}
 
@@ -302,10 +312,12 @@ public class GraphProjection {
 			try {
 				LooseContext.pushWithKey(CONTEXT_PROJECTION_CONTEXT,
 						new LinkedHashMap<>());
-				GlobalTopicPublisher.get().publishTopic(TOPIC_PROJECTION_COUNT_DELTA, 1);
+				GlobalTopicPublisher.get()
+						.publishTopic(TOPIC_PROJECTION_COUNT_DELTA, 1);
 				return project(source, null, context, false);
 			} finally {
-				GlobalTopicPublisher.get().publishTopic(TOPIC_PROJECTION_COUNT_DELTA, -1);
+				GlobalTopicPublisher.get()
+						.publishTopic(TOPIC_PROJECTION_COUNT_DELTA, -1);
 				LooseContext.pop();
 				if (dumpProjectionStats && context == null) {
 					System.out.format("Projection stats:\n===========\n%s\n",
@@ -319,9 +331,21 @@ public class GraphProjection {
 		}
 	}
 
+	protected static final Object NULL_MARKER = new Object();
+
+	boolean reachableBySinglePath(Class clazz) {
+		if (clazz == Set.class || clazz == List.class
+				|| clazz == ArrayList.class || clazz == Multimap.class
+				|| clazz == UnsortedMultikeyMap.class) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	public <T> T project(T source, Object alsoMapTo,
 			GraphProjectionContext context, boolean easysChecked)
-					throws Exception {
+			throws Exception {
 		if (source == null) {
 			return null;
 		}
@@ -341,9 +365,17 @@ public class GraphProjection {
 					&& replaceMap.containsKey(source)) {
 				source = (T) replaceMap.get(source);
 			}
-			if (reached.containsKey(source)) {
-				return (T) reached.get(source);
+			// check here unlikely to matter
+			// if (!reachableBySinglePath) {
+			Object projected = reached.get(source);
+			if (projected != null) {
+				if (projected == NULL_MARKER) {
+					return null;
+				} else {
+					return (T) projected;
+				}
 			}
+			// }
 		}
 		if (!checkObjectPermissions(source)) {
 			return null;
@@ -357,25 +389,30 @@ public class GraphProjection {
 				: (T) ((source instanceof MemCacheProxy)
 						? ((MemCacheProxy) source).nonProxy()
 						: newInstance(sourceClass));
-		reached.put(source, projected);
-		if (sourceClass.getName().contains("ShopProfessionalUsageTracking")) {
-			int debug = 3;
-		}
-		if (alsoMapTo != null) {
-			reached.put(alsoMapTo, projected);
+		if (context == null || !context.fieldReachableBySinglePath) {
+			reached.put(source, projected == null ? NULL_MARKER : projected);
+			if (alsoMapTo != null) {
+				reached.put(alsoMapTo,
+						projected == null ? NULL_MARKER : projected);
+			}
 		}
 		if (dataFilter != null) {
 			if (context == null) {
 				context = new GraphProjectionContext();
-				context.adopt(sourceClass, null, null, projected, source);
+				context.adopt(sourceClass, null, null, projected, source,
+						false);
 				contexts.add(context);
 			}
 			T replaceProjected = dataFilter.filterData(source, projected,
 					context, this);
 			if (replaceProjected != projected) {
-				reached.put(source, replaceProjected);
-				if (alsoMapTo != null) {
-					reached.put(alsoMapTo, replaceProjected);
+				if (!context.fieldReachableBySinglePath) {
+					reached.put(source, replaceProjected == null ? NULL_MARKER
+							: replaceProjected);
+					if (alsoMapTo != null) {
+						reached.put(alsoMapTo, replaceProjected == null
+								? NULL_MARKER : replaceProjected);
+					}
 				}
 				return replaceProjected;
 			}
@@ -421,9 +458,19 @@ public class GraphProjection {
 						&& replaceMap.containsKey(value)) {
 					value = (T) replaceMap.get(value);
 				}
-				if (reached.containsKey(value)) {
-					field.set(projected, reached.get(value));
-					continue;
+				boolean fieldReachableBySinglePath = reachableBySinglePath(
+						field.getType());
+				if (!fieldReachableBySinglePath) {
+					long nanoTime = System.nanoTime();
+					Object projectedFieldValue = reached.get(value);
+					if (projectedFieldValue != null) {
+						if (projectedFieldValue == NULL_MARKER) {
+							field.set(projected, null);
+						} else {
+							field.set(projected, projectedFieldValue);
+						}
+						continue;
+					}
 				}
 				GraphProjectionContext childContext = null;
 				if (context == null || context.depth() + 1 == contexts.size()) {
@@ -433,7 +480,7 @@ public class GraphProjection {
 					childContext = contexts.get(context.depth() + 1);
 				}
 				childContext.adopt(sourceClass, field, context, projected,
-						source);
+						source, fieldReachableBySinglePath);
 				Object cv = project(value, null, childContext, true);
 				field.set(projected, cv);
 			}
@@ -445,8 +492,10 @@ public class GraphProjection {
 	public Collection projectCollection(Collection coll,
 			GraphProjectionContext context) throws Exception {
 		Collection c = null;
-		if (coll instanceof ArrayList || coll instanceof LinkedList) {
-			c = coll.getClass().newInstance();
+		if (coll instanceof ArrayList) {
+			c = new ArrayList();
+		} else if (coll instanceof LinkedList) {
+			c = new LinkedList();
 			// no "persistentLists", at least
 			// um...persistentBag??
 		} else if (coll instanceof List) {
@@ -460,7 +509,8 @@ public class GraphProjection {
 		} else if (coll instanceof ConcurrentLinkedQueue) {
 			c = new ConcurrentLinkedQueue();
 		}
-		reached.put(coll, c);
+		// collections are assumed reachable by single path only
+		// reached.put(coll, c == null ? NULL_MARKER : c);
 		Iterator itr = coll.iterator();
 		Object value;
 		for (; itr.hasNext();) {
@@ -541,6 +591,9 @@ public class GraphProjection {
 			ctor.setAccessible(true);
 			constructorLookup.put(sourceClass, ctor);
 		}
+		if (dumpProjectionStats) {
+			System.out.println("missing constructor - " + sourceClass);
+		}
 		return (T) constructorLookup.get(sourceClass)
 				.newInstance(new Object[] {});
 	}
@@ -595,15 +648,18 @@ public class GraphProjection {
 
 		private int depth;
 
+		public boolean fieldReachableBySinglePath;
+
 		public GraphProjectionContext() {
 		}
 
 		public void adopt(Class clazz, Field field,
 				GraphProjectionContext parent, Object projectedOwner,
-				Object sourceOwner) {
+				Object sourceOwner, boolean fieldReachableBySinglePath) {
 			this.clazz = clazz;
 			this.field = field;
 			this.sourceOwner = sourceOwner;
+			this.fieldReachableBySinglePath = fieldReachableBySinglePath;
 			this.fieldName = field == null ? "" : field.getName();
 			this.parent = parent;
 			this.projectedOwner = projectedOwner;
@@ -653,7 +709,7 @@ public class GraphProjection {
 		 */
 		<T> T filterData(T original, T projected,
 				GraphProjectionContext context, GraphProjection graphProjection)
-						throws Exception;
+				throws Exception;
 
 		default boolean ignoreObjectHasReadPermissionCheck() {
 			return false;

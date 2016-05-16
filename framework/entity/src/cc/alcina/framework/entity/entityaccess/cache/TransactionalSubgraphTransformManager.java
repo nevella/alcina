@@ -118,7 +118,7 @@ public class TransactionalSubgraphTransformManager extends
 		}
 		if (event.getSource() != null) {
 			HasIdAndLocalId source = event.getSource();
-			if (source != null && AlcinaMemCache.get().isRawValue(source)) {
+			if (source != null && AlcinaMemCache.isRawValue(source)) {
 				throw new RuntimeException(
 						"Source of transform"
 								+ " should be immutable except to post-persistence code");

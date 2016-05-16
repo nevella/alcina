@@ -462,11 +462,12 @@ public class AlcinaMemCache implements RegistrableService {
 	}
 
 	public <T extends HasIdAndLocalId> T findRaw(Class<T> clazz, long id) {
-		return new AlcinaMemCacheQuery().id(id).raw().find(clazz);
+		return cache.get(clazz, id);
 	}
-	
-	public <T extends HasIdAndLocalId>  boolean isCached(Class<T> clazz, long id) {
-		return cache.contains(clazz,id);
+
+	public <T extends HasIdAndLocalId> boolean isCached(Class<T> clazz,
+			long id) {
+		return cache.contains(clazz, id);
 	}
 
 	public <T extends HasIdAndLocalId> T findRaw(T t) {
@@ -547,8 +548,8 @@ public class AlcinaMemCache implements RegistrableService {
 		return initialised;
 	}
 
-	public <V extends HasIdAndLocalId> boolean isRawValue(V v) {
-		V existing = (V) cache.get(v.getClass(), v.getId());
+	public static <V extends HasIdAndLocalId> boolean isRawValue(V v) {
+		V existing = (V) get().cache.get(v.getClass(), v.getId());
 		return existing == v;
 	}
 
@@ -799,7 +800,7 @@ public class AlcinaMemCache implements RegistrableService {
 			Collection<Object> values = operatorsByClass.values(clazz);
 			return new PdOperator(pd, clazz,
 					values == null ? 0 : values.size());
-		} , clazz, pd);
+		}, clazz, pd);
 	}
 
 	private ComplexFilter getComplexFilterFor(Class clazz,
@@ -850,11 +851,15 @@ public class AlcinaMemCache implements RegistrableService {
 			Set<Long> ids = complexFilter.evaluate(existing, cacheFilter,
 					nextFilter);
 			ctr.idx += complexFilter.topLevelFiltersConsumed() - 1;
-			ctr.lastFilterString = String.format("Complex - %s - %s %s",
-					complexFilter, cacheFilter, nextFilter);
+			if (isDebug()) {
+				ctr.lastFilterString = String.format("Complex - %s - %s %s",
+						complexFilter, cacheFilter, nextFilter);
+			}
 			return ids;
 		}
-		ctr.lastFilterString = cacheFilter.toString();
+		if (isDebug()) {
+			ctr.lastFilterString = cacheFilter.toString();
+		}
 		CacheLookup lookup = getLookupFor(clazz, cacheFilter.propertyPath);
 		if (lookup != null) {
 			switch (cacheFilter.filterOperator) {
@@ -1031,7 +1036,7 @@ public class AlcinaMemCache implements RegistrableService {
 
 	private void loadPropertyStore(Class clazz,
 			PropertyStoreItemDescriptor propertyStoreItemDescriptor)
-					throws SQLException {
+			throws SQLException {
 		Connection conn = getConn();
 		try {
 			ConnResults connResults = new ConnResults(conn, clazz,
@@ -1176,16 +1181,15 @@ public class AlcinaMemCache implements RegistrableService {
 			fullLockDump.line("Current locked thread dump:\n***************\n");
 			mainLock.getQueuedThreads()
 					.forEach(t2 -> fullLockDump.line("id:%s %s\n%s", t2.getId(),
-							t2,
-							getStacktraceSlice(t2, LONG_LOCK_TRACE_LENGTH)));
+							t2, getStacktraceSlice(t2,
+									LONG_LOCK_TRACE_LENGTH)));
 			fullLockDump.line("\n\nThread pause times:\n***************\n");
 			threadQueueTimes.forEach((id, t2) -> fullLockDump
 					.format("id: %s - time: %s\n", id, time - t2));
 			synchronized (activeThreads) {
 				fullLockDump.line("\n\nActive threads:\n***************\n");
-				activeThreads.keySet()
-						.forEach(t2 -> fullLockDump.line("id:%s %s\n%s", t2
-								.getId(), t2,
+				activeThreads.keySet().forEach(t2 -> fullLockDump.line(
+						"id:%s %s\n%s", t2.getId(), t2,
 						getStacktraceSlice(t2, LONG_LOCK_TRACE_LENGTH)));
 			}
 			fullLockDump
@@ -2438,14 +2442,14 @@ public class AlcinaMemCache implements RegistrableService {
 	class InSubgraphFilter implements CollectionFilter<DomainTransformEvent> {
 		@Override
 		public boolean allow(DomainTransformEvent o) {
-			if (!cacheDescriptor.cachePostTransform(o.getObjectClass(),o)) {
+			if (!cacheDescriptor.cachePostTransform(o.getObjectClass(), o)) {
 				return false;
 			}
 			switch (o.getTransformType()) {
 			case ADD_REF_TO_COLLECTION:
 			case REMOVE_REF_FROM_COLLECTION:
 			case CHANGE_PROPERTY_REF:
-				return cacheDescriptor.cachePostTransform(o.getValueClass(),o);
+				return cacheDescriptor.cachePostTransform(o.getValueClass(), o);
 			}
 			return true;
 		}
@@ -2566,5 +2570,9 @@ public class AlcinaMemCache implements RegistrableService {
 		void startCommit() {
 			((PsAwareMultiplexingObjectCache) store.getCache()).startCommit();
 		}
+	}
+
+	public static <T extends HasIdAndLocalId> T ensureNonRaw(T t) {
+		return isRawValue(t) ? get().find(t) : t;
 	}
 }

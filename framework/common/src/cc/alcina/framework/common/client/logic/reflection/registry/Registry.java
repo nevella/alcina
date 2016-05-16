@@ -33,8 +33,10 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.common.client.util.MultikeyMapBase.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCreator;
 
 /**
  *
@@ -44,8 +46,8 @@ public class Registry {
 	public static final String MARKER_RESOURCE = "registry.properties";
 
 	public static void checkSingleton(RegistrySingleton singleton) {
-		if (Registry.get().singletons.get(singleton.getClass(),
-				void.class) != null) {
+		if (Registry.get().voidPointSingletons
+				.containsKey(singleton.getClass().getName())) {
 			throw new MultipleSingletonException(singleton.getClass());
 		}
 	}
@@ -169,7 +171,8 @@ public class Registry {
 		singletons.put(registryPoint, targetClass, object);
 		if (voidTarget) {
 			// use className so we don't have to get class objects from
-			// different parts of memory
+			// different parts of memory - this did seem to help a jvm
+			// optimisation
 			voidPointSingletons.put(registryPoint.getName(), object);
 		}
 	}
@@ -216,13 +219,21 @@ public class Registry {
 
 	protected Map<String, Object> voidPointSingletons;
 
+	private static DelegateMapCreator delegateCreator = new UnsortedMapCreator();
+
+	public static void setDelegateCreator(DelegateMapCreator delegateCreator) {
+		Registry.delegateCreator = delegateCreator;
+	}
+
 	public Registry() {
-		registry = new UnsortedMultikeyMap<Class>(3);
-		targetPriority = new UnsortedMultikeyMap<Integer>(2);
-		singletons = new UnsortedMultikeyMap<Object>(2);
-		voidPointSingletons = new LinkedHashMap<String, Object>();
-		exactMap = new UnsortedMultikeyMap<Class>(2);
-		implementationTypeMap = new UnsortedMultikeyMap<ImplementationType>(2);
+		registry = new UnsortedMultikeyMap<Class>(3, 0, delegateCreator);
+		targetPriority = new UnsortedMultikeyMap<Integer>(2, 0,
+				delegateCreator);
+		singletons = new UnsortedMultikeyMap<Object>(2, 0, delegateCreator);
+		voidPointSingletons = new LinkedHashMap<String, Object>(1000);
+		exactMap = new UnsortedMultikeyMap<Class>(2, 0, delegateCreator);
+		implementationTypeMap = new UnsortedMultikeyMap<ImplementationType>(2,
+				0, delegateCreator);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -492,7 +503,7 @@ public class Registry {
 		if (clazz == null) {
 			return null;
 		}
-		T impl = (T) singletons.get(clazz, void.class);
+		T impl = (T) voidPointSingletons.get(clazz.getName());
 		if (impl == null && !returnNullIfNotRegistered) {
 			impl = classLookup.newInstance(clazz);
 			registerSingleton(clazz, impl);
@@ -513,7 +524,7 @@ public class Registry {
 
 	@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 	public static class BasicRegistryProvider implements RegistryProvider {
-		private static Registry instance = new Registry();
+		private volatile Registry instance;
 
 		@Override
 		public void appShutdown() {
@@ -523,6 +534,11 @@ public class Registry {
 
 		@Override
 		public Registry getRegistry() {
+			if (instance == null) {
+				synchronized (this) {
+					instance = new Registry();
+				}
+			}
 			return instance;
 		}
 	}

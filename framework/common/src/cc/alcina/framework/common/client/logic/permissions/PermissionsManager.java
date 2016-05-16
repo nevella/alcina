@@ -62,8 +62,6 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 public class PermissionsManager implements Vetoer, DomainTransformListener {
 	public static final String PROP_LOGIN_STATE = "loginState";
 
-	public static final String CONTEXT_OVERRIDE_AS_OWNED_OBJECT = PermissionsManager.class
-			.getName() + ".CONTEXT_OVERRIDE_AS_OWNED_OBJECT";
 
 	private static String administratorGroupName = "Administrators";
 
@@ -100,6 +98,8 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 	private static final String TOPIC_ONLINE_STATE = PermissionsManager.class
 			.getName() + ".TOPIC_ONLINE_STATE";
+
+	public static StackDebug stackDebug = new StackDebug("PermissionsManager");
 
 	public static PermissionsManager get() {
 		if (theInstance == null) {
@@ -239,6 +239,8 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 	private boolean root;
 
+	private boolean overrideAsOwnedObject;
+
 	protected PermissionsManager() {
 		super();
 		this.userListener = new PropertyChangeListener() {
@@ -292,40 +294,6 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 				pp,
 				bean == null ? classLookup.getTemplateInstance(clazz) : bean,
 				true);
-	}
-
-	public static class PermissionsManagerState {
-		public IUser user;
-
-		public HashMap<String, IGroup> groupMap;
-
-		public LoginState loginState;
-
-		public long userId;
-
-		public OnlineState onlineState;
-
-		public boolean root;
-
-		public void copyTo(PermissionsManager pm) {
-			pm.user = user;
-			pm.groupMap = groupMap;
-			pm.loginState = loginState;
-			pm.userId = userId;
-			pm.onlineState = onlineState;
-			pm.root = root;
-		}
-	}
-
-	public synchronized PermissionsManagerState snapshotState() {
-		PermissionsManagerState state = new PermissionsManagerState();
-		state.user = user;
-		state.groupMap = groupMap == null ? null : new HashMap<>(groupMap);
-		state.loginState = loginState;
-		state.userId = userId;
-		state.onlineState = onlineState;
-		state.root = root;
-		return state;
 	}
 
 	public void domainTransform(DomainTransformEvent evt)
@@ -476,6 +444,10 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		return false;
 	}
 
+	public boolean isOverrideAsOwnedObject() {
+		return this.overrideAsOwnedObject;
+	}
+
 	public boolean isPermissible(Object o, Permissible p) {
 		return isPermissible(o, p, false);
 	}
@@ -538,11 +510,8 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	public boolean isRoot() {
 		return root;
 	}
-
 	public boolean permitDueToOwnership(HasOwner hasOwner) {
-		boolean override = LooseContext
-				.getBoolean(CONTEXT_OVERRIDE_AS_OWNED_OBJECT);
-		if (override) {
+		if (overrideAsOwnedObject) {
 			return true;
 		}
 		if (hasOwner == null) {
@@ -599,8 +568,6 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		pushUser(user, loginState, false);
 	}
 
-	public static StackDebug stackDebug = new StackDebug("PermissionsManager");
-
 	public void pushUser(IUser user, LoginState loginState, boolean asRoot) {
 		stackDebug.maybeDebugStack(userStack, true);
 		if (getUser() != null) {
@@ -648,6 +615,10 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		}
 	}
 
+	public void setOverrideAsOwnedObject(boolean overrideAsOwnedObject) {
+		this.overrideAsOwnedObject = overrideAsOwnedObject;
+	}
+
 	public void setRoot(boolean root) {
 		this.root = root;
 	}
@@ -681,6 +652,17 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 	public void setUserId(long userId) {
 		this.userId = userId;
+	}
+
+	public synchronized PermissionsManagerState snapshotState() {
+		PermissionsManagerState state = new PermissionsManagerState();
+		state.user = user;
+		state.groupMap = groupMap == null ? null : new HashMap<>(groupMap);
+		state.loginState = loginState;
+		state.userId = userId;
+		state.onlineState = onlineState;
+		state.root = root;
+		return state;
 	}
 
 	public boolean veto(Object object) {
@@ -758,6 +740,29 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	public static abstract class PermissionsExtensionForRule implements
 			PermissionsExtension {
 		public abstract String getRuleName();
+	}
+
+	public static class PermissionsManagerState {
+		public IUser user;
+
+		public HashMap<String, IGroup> groupMap;
+
+		public LoginState loginState;
+
+		public long userId;
+
+		public OnlineState onlineState;
+
+		public boolean root;
+
+		public void copyTo(PermissionsManager pm) {
+			pm.user = user;
+			pm.groupMap = groupMap;
+			pm.loginState = loginState;
+			pm.userId = userId;
+			pm.onlineState = onlineState;
+			pm.root = root;
+		}
 	}
 
 	/**

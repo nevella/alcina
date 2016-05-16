@@ -271,14 +271,12 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			GwittirBridge.get().setIgnoreProperties(ignoreProperties);
 			Field[] fields = null;
 			try {
-				LooseContext.getContext().pushWithKey(
-						PermissionsManager.CONTEXT_OVERRIDE_AS_OWNED_OBJECT,
-						true);
+				PermissionsManager.get().setOverrideAsOwnedObject(true);
 				fields = GwittirBridge.get()
 						.fieldsForReflectedObjectAndSetupWidgetFactory(bean,
 								factory, isEditableWidgets(), true);
 			} finally {
-				LooseContext.getContext().pop();
+				PermissionsManager.get().setOverrideAsOwnedObject(false);
 			}
 			GwittirBridge.get().setIgnoreProperties(null);
 			int mask = BoundTableExt.HEADER_MASK;

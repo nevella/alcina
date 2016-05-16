@@ -64,7 +64,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 	@Override
 	public <T> T filterData(T original, T projected,
 			GraphProjectionContext context, GraphProjection graphProjection)
-					throws Exception {
+			throws Exception {
 		T filtered = super.filterData(original, projected, context,
 				graphProjection);
 		if (bypass(context.field)) {
@@ -134,7 +134,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 			} else if (coll instanceof ConcurrentLinkedQueue) {
 				c = new ConcurrentLinkedQueue();
 			}
-			reached.put(coll, c);
+			reached.put(coll, c == null ? NULL_MARKER : c);
 			Iterator itr = coll.iterator();
 			Object value;
 			for (; itr.hasNext();) {

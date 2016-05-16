@@ -4,7 +4,10 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 
 public class TopicPublisher {
 	private MutablePropertyChangeSupport support = new MutablePropertyChangeSupport(
@@ -37,8 +40,8 @@ public class TopicPublisher {
 		lookup.remove(listener, key);
 	}
 
-	private static class TopicListenerAdapter<T> implements
-			PropertyChangeListener {
+	private static class TopicListenerAdapter<T>
+			implements PropertyChangeListener {
 		private final TopicListener listener;
 
 		@Override
@@ -70,18 +73,21 @@ public class TopicPublisher {
 		}
 	}
 
+	@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 	public static class GlobalTopicPublisher extends TopicPublisher {
+		private static volatile GlobalTopicPublisher singleton;
+
 		private GlobalTopicPublisher() {
 			super();
 		}
 
-		public static TopicPublisher.GlobalTopicPublisher get() {
-			TopicPublisher.GlobalTopicPublisher singleton = Registry
-					.checkSingleton(TopicPublisher.GlobalTopicPublisher.class);
+		public static GlobalTopicPublisher get() {
 			if (singleton == null) {
-				singleton = new TopicPublisher.GlobalTopicPublisher();
-				Registry.registerSingleton(
-						TopicPublisher.GlobalTopicPublisher.class, singleton);
+				synchronized (GlobalTopicPublisher.class) {
+					singleton = new GlobalTopicPublisher();
+					Registry.registerSingleton(GlobalTopicPublisher.class,
+							singleton);
+				}
 			}
 			return singleton;
 		}
