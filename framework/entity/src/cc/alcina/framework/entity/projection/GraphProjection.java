@@ -389,7 +389,8 @@ public class GraphProjection {
 				: (T) ((source instanceof MemCacheProxy)
 						? ((MemCacheProxy) source).nonProxy()
 						: newInstance(sourceClass));
-		if (context == null || !context.fieldReachableBySinglePath) {
+		boolean reachableBySinglePath = reachableBySinglePath(sourceClass);
+		if (context == null || !reachableBySinglePath) {
 			reached.put(source, projected == null ? NULL_MARKER : projected);
 			if (alsoMapTo != null) {
 				reached.put(alsoMapTo,
@@ -399,14 +400,13 @@ public class GraphProjection {
 		if (dataFilter != null) {
 			if (context == null) {
 				context = new GraphProjectionContext();
-				context.adopt(sourceClass, null, null, projected, source,
-						false);
+				context.adopt(sourceClass, null, null, projected, source);
 				contexts.add(context);
 			}
 			T replaceProjected = dataFilter.filterData(source, projected,
 					context, this);
 			if (replaceProjected != projected) {
-				if (!context.fieldReachableBySinglePath) {
+				if (!reachableBySinglePath) {
 					reached.put(source, replaceProjected == null ? NULL_MARKER
 							: replaceProjected);
 					if (alsoMapTo != null) {
@@ -480,7 +480,7 @@ public class GraphProjection {
 					childContext = contexts.get(context.depth() + 1);
 				}
 				childContext.adopt(sourceClass, field, context, projected,
-						source, fieldReachableBySinglePath);
+						source);
 				Object cv = project(value, null, childContext, true);
 				field.set(projected, cv);
 			}
@@ -648,18 +648,15 @@ public class GraphProjection {
 
 		private int depth;
 
-		public boolean fieldReachableBySinglePath;
-
 		public GraphProjectionContext() {
 		}
 
 		public void adopt(Class clazz, Field field,
 				GraphProjectionContext parent, Object projectedOwner,
-				Object sourceOwner, boolean fieldReachableBySinglePath) {
+				Object sourceOwner) {
 			this.clazz = clazz;
 			this.field = field;
 			this.sourceOwner = sourceOwner;
-			this.fieldReachableBySinglePath = fieldReachableBySinglePath;
 			this.fieldName = field == null ? "" : field.getName();
 			this.parent = parent;
 			this.projectedOwner = projectedOwner;

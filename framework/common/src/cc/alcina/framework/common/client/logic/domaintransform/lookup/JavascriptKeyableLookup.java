@@ -16,6 +16,7 @@ public final class JavascriptKeyableLookup extends JavaScriptObject {
             this.length = 0;
             this.modCount = 0;
             this.values = {};
+            this.keys = {};
             this.intLookup = intLookup;
 
         }
@@ -31,6 +32,7 @@ public final class JavascriptKeyableLookup extends JavaScriptObject {
                 old = this.values[key];
             }
             this.values[key] = value;
+            this.keys[key] = key;
             return old;
         }
         AlcJsKeyableMap.prototype.remove = function(key) {
@@ -39,6 +41,7 @@ public final class JavascriptKeyableLookup extends JavaScriptObject {
             } else {
                 var old = this.values[key];
                 delete this.values[key];
+                delete this.keys[key];
                 this.modCount++;
                 this.length--;
                 return old;
@@ -53,6 +56,7 @@ public final class JavascriptKeyableLookup extends JavaScriptObject {
         }
         AlcJsKeyableMap.prototype.clear = function(key) {
             this.values = {};
+            this.keys = {};
             this.length = 0;
             this.modCount++;
         }
@@ -81,12 +85,13 @@ public final class JavascriptKeyableLookup extends JavaScriptObject {
 
 	public native JavascriptJavaObjectArray keys()/*-{
         var v = [];
-        for ( var k in this.values) {
-            if (this.values.hasOwnProperty(k)) {
-                if (this.intLookup && typeof (k) != "Number") {
-                    v.push(parseInt(k));
+        for ( var k in this.keys) {
+            if (this.keys.hasOwnProperty(k)) {
+                var key = this.keys[k];
+                if (this.intLookup && typeof (key) != "Number") {
+                    v.push(parseInt(key));
                 } else {
-                    v.push(k);
+                    v.push(key);
                 }
             }
         }
