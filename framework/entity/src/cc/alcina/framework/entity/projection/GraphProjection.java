@@ -40,6 +40,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.GArrayList;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
@@ -492,22 +493,32 @@ public class GraphProjection {
 	public Collection projectCollection(Collection coll,
 			GraphProjectionContext context) throws Exception {
 		Collection c = null;
-		if (coll instanceof ArrayList) {
+		if (coll.getClass() == ArrayList.class) {
 			c = new ArrayList();
-		} else if (coll instanceof LinkedList) {
+		} else if (coll.getClass() == LinkedList.class) {
 			c = new LinkedList();
+			// no "persistentLists", at least
+			// um...persistentBag??
+		} else if (coll.getClass() == GArrayList.class) {
+			c = new GArrayList();
 			// no "persistentLists", at least
 			// um...persistentBag??
 		} else if (coll instanceof List) {
 			c = new ArrayList();
-		} else if (coll instanceof LiSet) {
+		} else if (coll.getClass() == LiSet.class) {
 			c = new LiSet();
-		} else if (coll instanceof LightSet) {
+		} else if (coll.getClass() == LightSet.class) {
 			c = new LightSet();
+		} else if (coll.getClass() == ConcurrentLinkedQueue.class) {
+			c = new ConcurrentLinkedQueue();
+		} else if (coll.getClass() == LinkedHashSet.class) {
+			c = new LinkedHashSet();
 		} else if (coll instanceof Set) {
 			c = new LinkedHashSet();
-		} else if (coll instanceof ConcurrentLinkedQueue) {
-			c = new ConcurrentLinkedQueue();
+		} else {
+			throw new Exception(
+					"Collection type not handled in projection path: "
+							+ coll.getClass().getName());
 		}
 		// collections are assumed reachable by single path only
 		// reached.put(coll, c == null ? NULL_MARKER : c);
