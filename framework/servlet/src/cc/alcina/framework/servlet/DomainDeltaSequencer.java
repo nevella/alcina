@@ -4,7 +4,15 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+
+import com.google.gwt.user.client.rpc.impl.AbstractSerializationStream;
+import com.google.gwt.user.server.rpc.RPC;
+import com.google.gwt.user.server.rpc.RPCRequest;
+import com.google.gwt.user.server.rpc.SerializationPolicy;
+import com.google.gwt.user.server.rpc.impl.StandardSerializationPolicy;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -24,18 +32,15 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDualFilter;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
-import com.google.gwt.user.client.rpc.impl.AbstractSerializationStream;
-import com.google.gwt.user.server.rpc.RPC;
-import com.google.gwt.user.server.rpc.RPCRequest;
-import com.google.gwt.user.server.rpc.SerializationPolicy;
-import com.google.gwt.user.server.rpc.impl.StandardSerializationPolicy;
-
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class DomainDeltaSequencer {
 	private List<String> incomingSignatures;
 
@@ -47,14 +52,37 @@ public class DomainDeltaSequencer {
 
 	private boolean asGwtStreams;
 
+	private static Map<Class, Method> rpcReflectiveMethods = new LinkedHashMap<>();
+
+	public static LoadObjectsResponse _loadMethod() {
+		return null;
+	}
+
+	public static DomainTranche _trancheMethod() {
+		return null;
+	}
+
+	static {
+		try {
+			rpcReflectiveMethods.put(LoadObjectsResponse.class,
+					DomainDeltaSequencer.class.getMethod("_loadMethod",
+							new Class[0]));
+			rpcReflectiveMethods.put(DomainTranche.class,
+					DomainDeltaSequencer.class.getMethod("_trancheMethod",
+							new Class[0]));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public DomainDeltaSequencer(List<String> clientDeltaSignatures,
 			RPCRequest threadRpcRequest, LoadObjectsRequest request,
 			boolean asGwtStreams) {
 		this.rpcRequest = threadRpcRequest;
 		this.asGwtStreams = threadRpcRequest != null && asGwtStreams;
 		response.setRequest(request);
-		this.incomingSignatures = clientDeltaSignatures == null ? new ArrayList<String>()
-				: clientDeltaSignatures;
+		this.incomingSignatures = clientDeltaSignatures == null
+				? new ArrayList<String>() : clientDeltaSignatures;
 		for (String sig : this.incomingSignatures) {
 			lookup.addSignature(sig);
 		}
@@ -93,8 +121,8 @@ public class DomainDeltaSequencer {
 	}
 
 	public void addTranche(DomainTranche tranche, Class<?> clazz, long id,
-			boolean hashAndPreserve, boolean inLoadSequence, Long maxTransformId)
-			throws Exception {
+			boolean hashAndPreserve, boolean inLoadSequence,
+			Long maxTransformId) throws Exception {
 		DomainModelDeltaSignature signature = new DomainModelDeltaSignature()
 				.clazz(clazz).id(id)
 				.rpcSignature(rpcSignature(tranche.getClass()));
@@ -154,13 +182,21 @@ public class DomainDeltaSequencer {
 	}
 
 	public String gwtSerialize(Object object) throws Exception {
-		Method method = RPC.class.getDeclaredMethod("encodeResponse",
-				Class.class, Object.class, boolean.class, int.class,
-				SerializationPolicy.class);
-		method.setAccessible(true);
-		return (String) method.invoke(null, object.getClass(), object, false,
-				AbstractSerializationStream.DEFAULT_FLAGS,
-				rpcRequest.getSerializationPolicy());
+		if (object != null
+				&& rpcReflectiveMethods.containsKey(object.getClass())) {
+			return RPC.encodeResponseForSuccess(
+					rpcReflectiveMethods.get(object.getClass()), object,
+					rpcRequest.getSerializationPolicy(),
+					AbstractSerializationStream.DEFAULT_FLAGS);
+		} else {
+			Method method = RPC.class.getDeclaredMethod("encodeResponse",
+					Class.class, Object.class, boolean.class, int.class,
+					SerializationPolicy.class);
+			method.setAccessible(true);
+			return (String) method.invoke(null, object.getClass(), object,
+					false, AbstractSerializationStream.DEFAULT_FLAGS,
+					rpcRequest.getSerializationPolicy());
+		}
 	}
 
 	private DomainModelDeltaMetadata createMetadata(DomainTranche tranche,
@@ -168,11 +204,12 @@ public class DomainDeltaSequencer {
 		DomainModelDeltaMetadata metadata = new DomainModelDeltaMetadata();
 		metadata.setGenerationDate(new Date());
 		metadata.setMaxPersistedTransformIdWhenGenerated(maxId);
-		metadata.setContentObjectRpcTypeSignature(rpcSignature(tranche
-				.getClass()));
+		metadata.setContentObjectRpcTypeSignature(
+				rpcSignature(tranche.getClass()));
 		metadata.setContentObjectClassName(tranche.getClass().getName());
 		metadata.setUserId(PermissionsManager.get().getUserId());
-		metadata.setDomainObjectsFieldSet(tranche.getDomainModelHolder() != null);
+		metadata.setDomainObjectsFieldSet(
+				tranche.getDomainModelHolder() != null);
 		return metadata;
 	}
 
@@ -198,16 +235,18 @@ public class DomainDeltaSequencer {
 	}
 
 	public long getReuseId(DomainModelDeltaMetadata metadata) {
-		return metadata == null ? 0 : CommonUtils.lv(metadata
-				.getMaxPersistedTransformIdWhenGenerated());
+		return metadata == null ? 0
+				: CommonUtils
+						.lv(metadata.getMaxPersistedTransformIdWhenGenerated());
 	}
 
-	public static <T extends DomainModelObject> DomainTranche<T> modelObjectToTranche(
-			T modelObject, Class signatureClass) throws Exception {
+	public static <T extends DomainModelObject> DomainTranche<T>
+			modelObjectToTranche(T modelObject, Class signatureClass)
+					throws Exception {
 		DomainTranche tranche = new DomainTranche();
 		tranche.setDomainModelObject(modelObject);
-		tranche.setSignature(new DomainModelDeltaSignature().clazz(
-				signatureClass).requiresHash());
+		tranche.setSignature(new DomainModelDeltaSignature()
+				.clazz(signatureClass).requiresHash());
 		return tranche;
 	}
 
@@ -217,8 +256,8 @@ public class DomainDeltaSequencer {
 			Class signatureClass, GraphProjectionDualFilter flattenFilter)
 			throws Exception {
 		hilis = new ArrayList<HasIdAndLocalId>(hilis);
-		List<DomainTransformEvent> dtes = TransformManager.get().objectsToDtes(
-				hilis, clazz, false);
+		List<DomainTransformEvent> dtes = TransformManager.get()
+				.objectsToDtes(hilis, clazz, false);
 		// flatten
 		CollectionFilter<DomainTransformEvent> changePropertyRefAndNonDvUserFilter = new ReachableAndTrimmedFilter(
 				reachableCache);
@@ -226,15 +265,16 @@ public class DomainDeltaSequencer {
 				changePropertyRefAndNonDvUserFilter);
 		DomainTranche tranche = new DomainTranche();
 		tranche.setReplayEvents(dtes);
-		tranche.setUnlinkedObjects(new GraphProjection(flattenFilter,
-				flattenFilter).project(hilis, null));
+		tranche.setUnlinkedObjects(
+				new GraphProjection(flattenFilter, flattenFilter).project(hilis,
+						null));
 		tranche.setSignature(new DomainModelDeltaSignature()
 				.clazz(signatureClass).requiresHash().id(id));
 		return tranche;
 	}
 
-	public static class ReachableAndTrimmedFilter implements
-			CollectionFilter<DomainTransformEvent> {
+	public static class ReachableAndTrimmedFilter
+			implements CollectionFilter<DomainTransformEvent> {
 		private final DetachedEntityCache reachableCache;
 
 		ReachableAndTrimmedFilter(DetachedEntityCache reachableCache) {
@@ -243,14 +283,13 @@ public class DomainDeltaSequencer {
 
 		@Override
 		public boolean allow(DomainTransformEvent o) {
-			if (o.getTransformType() == TransformType.CHANGE_PROPERTY_REF
-					|| o.getTransformType() == TransformType.ADD_REF_TO_COLLECTION) {
+			if (o.getTransformType() == TransformType.CHANGE_PROPERTY_REF || o
+					.getTransformType() == TransformType.ADD_REF_TO_COLLECTION) {
 				if (!checkPropertyName(o)) {
 					return false;
 				}
-				if (o.getValueClass() == null
-						|| this.reachableCache.get(o.getValueClass(),
-								o.getValueId()) == null) {
+				if (o.getValueClass() == null || this.reachableCache
+						.get(o.getValueClass(), o.getValueId()) == null) {
 					return false;
 				}
 				return true;

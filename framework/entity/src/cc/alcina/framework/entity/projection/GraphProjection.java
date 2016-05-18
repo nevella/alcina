@@ -60,6 +60,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.NullWrappingMap;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
 import cc.alcina.framework.entity.projection.GraphProjection.ConstructorMethod;
@@ -315,18 +316,30 @@ public class GraphProjection {
 						new LinkedHashMap<>());
 				GlobalTopicPublisher.get()
 						.publishTopic(TOPIC_PROJECTION_COUNT_DELTA, 1);
+				start = System.nanoTime();
 				return project(source, null, context, false);
 			} finally {
 				GlobalTopicPublisher.get()
 						.publishTopic(TOPIC_PROJECTION_COUNT_DELTA, -1);
 				LooseContext.pop();
-				if (dumpProjectionStats && context == null) {
-					System.out.format("Projection stats:\n===========\n%s\n",
-							contextStats.reverseMap(true).entrySet().stream()
-									.map(e -> e.getKey() + ":"
-											+ CommonUtils.join(e.getValue(),
-													"\n\t: "))
-									.collect(Collectors.joining("\t\n")));
+				if (context == null) {
+					if (dumpProjectionStats) {
+						System.out.format(
+								"Projection stats:\n===========\n%s\n",
+								contextStats.reverseMap(true).entrySet()
+										.stream()
+										.map(e -> e.getKey() + ":"
+												+ CommonUtils.join(e.getValue(),
+														"\n\t: "))
+										.collect(Collectors.joining("\t\n")));
+					}
+					if (ResourceUtilities.is(GraphProjection.class,
+							"projectionMetrics")) {
+						System.out.format(
+								"Graph projection - %.3f ms - %s traversals %s creations\n",
+								((double)(System.nanoTime() - start))/1000000, traversalCount,
+								creationCount);
+					}
 				}
 			}
 		}
@@ -344,9 +357,16 @@ public class GraphProjection {
 		}
 	}
 
+	private int traversalCount = 0;
+
+	private int creationCount = 0;
+
+	private long start = 0;
+
 	public <T> T project(T source, Object alsoMapTo,
 			GraphProjectionContext context, boolean easysChecked)
 			throws Exception {
+		traversalCount++;
 		if (source == null) {
 			return null;
 		}
@@ -381,6 +401,7 @@ public class GraphProjection {
 		if (!checkObjectPermissions(source)) {
 			return null;
 		}
+		creationCount++;
 		if (dumpProjectionStats && context != null) {
 			contextStats.add(context.toPoint());
 		}
