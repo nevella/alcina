@@ -389,6 +389,21 @@ public class SEUtilities {
 		}
 		return true;
 	}
+	public static List<Field> allFields(Class clazz) {
+		List<Field> result = new ArrayList<>();
+		try {
+			while (clazz != Object.class) {
+				for (Field f : clazz.getDeclaredFields()) {
+					f.setAccessible(true);
+					result.add(f);
+				}
+				clazz = clazz.getSuperclass();
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		return result;
+	}
 
 	public static void expandAll(JTree tree, boolean expand) {
 		TreeNode root = (TreeNode) tree.getModel().getRoot();
