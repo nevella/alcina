@@ -3,14 +3,14 @@ package cc.alcina.framework.gwt.client.ide;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.AttachEvent.Handler;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.InlineLabel;
+import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.table.Field;
 
@@ -63,9 +63,10 @@ public class ContentViewSections {
 		fp.addAttachHandler(captionColEqualiser);
 		for (int idx = 0; idx < sections.size(); idx++) {
 			ContentViewSection section = sections.get(idx);
-			Label sectionLabel = new Label(section.name);
-			sectionLabel.setStyleName("section-label");
-			fp.add(sectionLabel);
+			InlineLabel sectionLabel = new InlineLabel(section.name);
+			SimplePanel holder = new SimplePanel(sectionLabel);
+			holder.setStyleName("section-label");
+			fp.add(holder);
 			ContentViewFactory contentViewFactory = new ContentViewFactory();
 			if (idx < sections.size() - 1) {
 				contentViewFactory.setNoButtons(true);
