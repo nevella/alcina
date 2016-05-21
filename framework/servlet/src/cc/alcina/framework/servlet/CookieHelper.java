@@ -34,8 +34,8 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 public class CookieHelper {
 	public static final String REMEMBER_ME = "rememberme";
 
-	public static final String ADDED_COOKIES_ATTR = CookieHelper.class
-			.getName() + "_addedcookies";
+	public static final String ADDED_COOKIES_ATTR = CookieHelper.class.getName()
+			+ "_addedcookies";
 
 	public static final String IID = "IID";
 
@@ -48,24 +48,6 @@ public class CookieHelper {
 			req.setAttribute(ADDED_COOKIES_ATTR, addedCookies);
 		}
 		return addedCookies;
-	}
-
-	String getCookieValueByName(HttpServletRequest req,
-			HttpServletResponse response, String n) {
-		Cookie[] cookies = req.getCookies();
-		if (cookies != null) {
-			for (Cookie cookie : cookies) {
-				if (cookie.getName().equals(n)) {
-					return cookie.getValue();
-				}
-			}
-		}
-		for (Cookie cookie : getAddedCookies(req)) {
-			if (cookie.getName().equals(n)) {
-				return cookie.getValue();
-			}
-		}
-		return null;
 	}
 
 	public String getCookieValueByName(HttpServletRequest req, String n) {
@@ -83,10 +65,11 @@ public class CookieHelper {
 
 	public String getIid(HttpServletRequest request,
 			HttpServletResponse response) {
-		String iid = getCookieValueByName(request, response, IID);
+		String iid = getCookieValueByName(request, IID);
 		if (CommonUtils.isNotNullOrEmpty(iid)) {
-			CommonPersistenceLocal up = Registry.impl(
-					CommonPersistenceProvider.class).getCommonPersistence();
+			CommonPersistenceLocal up = Registry
+					.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence();
 			if (!up.isValidIid(iid)) {
 				iid = null;
 			}
@@ -97,15 +80,16 @@ public class CookieHelper {
 			cookie.setPath("/");
 			cookie.setMaxAge(86400 * 365 * 10);
 			addToRqAndRsp(request, response, cookie);
-			CommonPersistenceLocal up = Registry.impl(
-					CommonPersistenceProvider.class).getCommonPersistence();
+			CommonPersistenceLocal up = Registry
+					.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence();
 			up.updateIid(iid, null, false);
 		}
 		return iid;
 	}
 
-	void addToRqAndRsp(HttpServletRequest request,
-			HttpServletResponse response, Cookie cookie) {
+	void addToRqAndRsp(HttpServletRequest request, HttpServletResponse response,
+			Cookie cookie) {
 		getAddedCookies(request).add(cookie);
 		response.addCookie(cookie);
 	}
@@ -113,10 +97,11 @@ public class CookieHelper {
 	public void setRememberMeCookie(HttpServletRequest request,
 			HttpServletResponse response, boolean rememberMe) {
 		if (rememberMe) {
-			CommonPersistenceLocal up = Registry.impl(
-					CommonPersistenceProvider.class).getCommonPersistence();
-			up.updateIid(getIid(request, response), PermissionsManager.get()
-					.getUserName(), rememberMe);
+			CommonPersistenceLocal up = Registry
+					.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence();
+			up.updateIid(getIid(request, response),
+					PermissionsManager.get().getUserName(), rememberMe);
 		}
 		Cookie cookie = new Cookie(REMEMBER_ME, String.valueOf(rememberMe));
 		cookie.setPath("/");
@@ -126,11 +111,12 @@ public class CookieHelper {
 
 	public String getRememberedUserName(HttpServletRequest request,
 			HttpServletResponse response) {
-		String rem = getCookieValueByName(request, response, REMEMBER_ME);
+		String rem = getCookieValueByName(request, REMEMBER_ME);
 		boolean b = Boolean.valueOf(rem);
 		if (b) {
-			CommonPersistenceLocal up = Registry.impl(
-					CommonPersistenceProvider.class).getCommonPersistence();
+			CommonPersistenceLocal up = Registry
+					.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence();
 			return up.getRememberMeUserName(getIid(request, response));
 		}
 		return null;
@@ -138,9 +124,9 @@ public class CookieHelper {
 
 	public void clearRemembermeCookie(HttpServletRequest request,
 			HttpServletResponse response) {
-		CommonPersistenceLocal up = Registry.impl(
-				CommonPersistenceProvider.class).getCommonPersistence();
-		up.updateIid(getIid(request, response), PermissionsManager.get()
-				.getUserName(), false);
+		CommonPersistenceLocal up = Registry
+				.impl(CommonPersistenceProvider.class).getCommonPersistence();
+		up.updateIid(getIid(request, response),
+				PermissionsManager.get().getUserName(), false);
 	}
 }

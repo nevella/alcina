@@ -157,7 +157,7 @@ public class ResourceUtilities {
 		} catch (IOException ioe) {
 			if (connection != null) {
 				InputStream err = connection.getErrorStream();
-				String input = readStreamToString(err);
+				String input = err == null ? null : readStreamToString(err);
 				throw new IOException(input, ioe);
 			} else {
 				throw ioe;

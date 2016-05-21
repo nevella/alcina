@@ -67,7 +67,7 @@ public class RenderingLabel<T> extends AbstractBoundWidget<T> {
 	}
 
 	public void setWordWrap(boolean wrap) {
-		this.base.setWordWrap(wrap);
+		this.base.setStyleName("nowrap", !wrap);
 	}
 
 	@Override

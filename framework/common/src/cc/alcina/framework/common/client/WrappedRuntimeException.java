@@ -28,7 +28,7 @@ public class WrappedRuntimeException extends RuntimeException {
 		NO_NOTIFICATION_AND_CONTINUE, RELOAD
 	}
 
-	private static final long serialVersionUID = 89976002L;
+	private static final transient long serialVersionUID = 89976002L;
 
 	public WrappedRuntimeException(Throwable cause) {
 		this(cause, SuggestedAction.NOTIFY_WARNING);

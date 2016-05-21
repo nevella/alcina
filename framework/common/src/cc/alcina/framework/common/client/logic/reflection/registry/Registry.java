@@ -592,8 +592,20 @@ public class Registry {
 	public <T> Map<Enum, T> enumLookup(Class<T> registryPoint,
 			String propertyName) {
 		List<T> handlers = Registry.impls(registryPoint);
-		Map<Enum, T> byKey = CollectionFilters.map(handlers,
-				new PropertyKeyValueMapper(propertyName));
+		Map<Enum, T> byKey = new LinkedHashMap<>();
+		PropertyKeyValueMapper mapper = new PropertyKeyValueMapper(
+				propertyName);
+		for (T handler : handlers) {
+			Enum key = (Enum) mapper.getKey(handler);
+			if (byKey.containsKey(key)) {
+				throw new RuntimeException(CommonUtils.formatJ(
+						"Duplicate key for enum lookup - %s %s %s",
+						registryPoint.getClass().getSimpleName(), key,
+						handler.getClass().getSimpleName()));
+			} else {
+				byKey.put(key, handler);
+			}
+		}
 		return byKey;
 	}
 }
