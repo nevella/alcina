@@ -28,12 +28,14 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.IgnoreIntrospectionChecks;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 
+import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 import com.totsp.gwittir.client.beans.internal.JVMIntrospector.MethodWrapper;
@@ -44,12 +46,13 @@ import com.totsp.gwittir.client.beans.internal.JVMIntrospector.MethodWrapper;
 public class ClientReflectorJvm extends ClientReflector {
 	Map<Class, ClientBeanReflector> reflectors = new HashMap<Class, ClientBeanReflector>();
 
+	public static final String CONTEXT_MODULE_NAME = ClientReflectorJvm.class
+			+ ".CONTEXT_MODULE_NAME";
+
 	public static final String PROP_FILTER_CLASSNAME = "ClientReflectorJvm.filterClassName";
 
 	public ClientReflectorJvm() {
 		try {
-			
-			
 			ClassDataCache classes = new ServletClasspathScanner("*", true,
 					false, null, Registry.MARKER_RESOURCE,
 					Arrays.asList(new String[] {})).getClasses();
@@ -64,10 +67,11 @@ public class ClientReflectorJvm extends ClientReflector {
 			 * outweigh the (possible) crud IMO
 			 */
 			if (filterClassName != null) {
-				CollectionFilters.filterInPlace(
-						classes.classData.keySet(),
-						(CollectionFilter<String>) Class.forName(
-								filterClassName).newInstance());
+				CollectionFilters
+						.filterInPlace(classes.classData.keySet(),
+								(CollectionFilter<String>) Class
+										.forName(filterClassName)
+										.newInstance());
 			}
 			CollectionFilter<String> defaultExcludes = new CollectionFilter<String>() {
 				@Override
@@ -75,7 +79,7 @@ public class ClientReflectorJvm extends ClientReflector {
 					if (o.contains("AlcinaBeanSerializerJvm")) {
 						return false;
 					}
-					if(o.contains("FastUtil")){
+					if (o.contains("FastUtil")) {
 						return false;
 					}
 					return true;
@@ -86,17 +90,22 @@ public class ClientReflectorJvm extends ClientReflector {
 			new RegistryScanner() {
 				protected File getHomeDir() {
 					String testStr = "";
-					String homeDir = (System.getenv("USERPROFILE") != null) ? System
-							.getenv("USERPROFILE") : System
-							.getProperty("user.home");
-					File file = new File(homeDir + File.separator + ".alcina"
-							+ testStr + File.separator + "/gwt-client");
+					String homeDir = (System.getenv("USERPROFILE") != null)
+							? System.getenv("USERPROFILE")
+							: System.getProperty("user.home");
+					String moduleName = GWT.isClient() ? GWT.getModuleName()
+							: LooseContext.containsKey(CONTEXT_MODULE_NAME)
+									? LooseContext.get(CONTEXT_MODULE_NAME)
+									: "server";
+					File file = new File(String.format(
+							"%s/.alcina/gwt-client/%s", homeDir, moduleName));
 					file.mkdirs();
 					return file;
 				};
 
 				protected Class maybeNormaliseClass(Class c) {
-					if (c.getClassLoader() != this.getClass().getClassLoader()) {
+					if (c.getClassLoader() != this.getClass()
+							.getClassLoader()) {
 						try {
 							c = this.getClass().getClassLoader()
 									.loadClass(c.getName());
@@ -152,22 +161,23 @@ public class ClientReflectorJvm extends ClientReflector {
 					if (a.annotationType().getName() == Omit.class.getName()) {
 						ignore = true;
 					}
-					if (getAnnotation(a.annotationType(), ClientVisible.class) == null
-							|| a.annotationType().getName() == RegistryLocation.class
-									.getName()) {
+					if (getAnnotation(a.annotationType(),
+							ClientVisible.class) == null
+							|| a.annotationType()
+									.getName() == RegistryLocation.class
+											.getName()) {
 						continue;
 					}
 					retained.add(a);
 				}
-				propertyReflectors.put(
-						pd.getName(),
-						new ClientPropertyReflector(pd.getName(), pd
-								.getPropertyType(), (Annotation[]) retained
-								.toArray(new Annotation[retained.size()])));
+				propertyReflectors.put(pd.getName(),
+						new ClientPropertyReflector(pd.getName(),
+								pd.getPropertyType(),
+								(Annotation[]) retained.toArray(
+										new Annotation[retained.size()])));
 			}
-			reflectors.put(clazz,
-					new ClientBeanReflector(clazz, clazz.getAnnotations(),
-							propertyReflectors));
+			reflectors.put(clazz, new ClientBeanReflector(clazz,
+					clazz.getAnnotations(), propertyReflectors));
 		}
 		return reflectors.get(clazz);
 	}
@@ -175,10 +185,8 @@ public class ClientReflectorJvm extends ClientReflector {
 	private boolean hasBeanInfo(Class clazz) {
 		return (clazz.getModifiers() & Modifier.ABSTRACT) == 0
 				&& (clazz.getModifiers() & Modifier.PUBLIC) > 0
-				&& !clazz.isInterface()
-				&& !clazz.isEnum()
-				&& getAnnotation(
-						clazz,
+				&& !clazz.isInterface() && !clazz.isEnum()
+				&& getAnnotation(clazz,
 						cc.alcina.framework.common.client.logic.reflection.Bean.class) != null;
 	}
 
@@ -255,10 +263,10 @@ public class ClientReflectorJvm extends ClientReflector {
 			return;
 		}
 		checkClassAnnotations(clazz);
-		if (!AnnotationUtils
-				.hasAnnotationNamed(clazz, ClientInstantiable.class)
+		if (!AnnotationUtils.hasAnnotationNamed(clazz, ClientInstantiable.class)
 				&& clazz.getAnnotation(IgnoreIntrospectionChecks.class) == null
-				&& clazz.getAnnotation(cc.alcina.framework.common.client.logic.reflection.Bean.class) == null) {
+				&& clazz.getAnnotation(
+						cc.alcina.framework.common.client.logic.reflection.Bean.class) == null) {
 			throw new IntrospectionException(
 					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation");
 		}
@@ -277,13 +285,14 @@ public class ClientReflectorJvm extends ClientReflector {
 		}
 		boolean introspectable = AnnotationUtils.hasAnnotationNamed(clazz,
 				ClientInstantiable.class)
-				|| clazz.getAnnotation(cc.alcina.framework.common.client.logic.reflection.Bean.class) != null
+				|| clazz.getAnnotation(
+						cc.alcina.framework.common.client.logic.reflection.Bean.class) != null
 				|| clazz.getAnnotation(Introspectable.class) != null;
 		for (Class iface : getAllImplementedInterfaces(clazz)) {
 			introspectable |= iface.getAnnotation(Introspectable.class) != null;
 		}
-		if (!introspectable
-				&& clazz.getAnnotation(IgnoreIntrospectionChecks.class) == null) {
+		if (!introspectable && clazz
+				.getAnnotation(IgnoreIntrospectionChecks.class) == null) {
 			throw new IntrospectionException(
 					"not reflectable class - no clientinstantiable/beandescriptor/introspectable annotation");
 		}

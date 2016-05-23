@@ -1329,4 +1329,8 @@ public class CommonUtils {
 	public static <T> Set<T> setOf(T... values) {
 		return new LinkedHashSet<T>(Arrays.asList(values));
 	}
+
+	public static int sizeOrZero(Collection collection) {
+		return collection == null ? 0 : collection.size();
+	}
 }

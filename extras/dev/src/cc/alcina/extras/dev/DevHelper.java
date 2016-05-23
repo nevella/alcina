@@ -125,8 +125,8 @@ public abstract class DevHelper {
 		while (true) {
 			try {
 				path = getAppConfigPath(prefs);
-				ResourceUtilities.registerCustomProperties(new FileInputStream(
-						path));
+				ResourceUtilities
+						.registerCustomProperties(new FileInputStream(path));
 				break;
 			} catch (Exception e) {
 				String prompt = getJbossConfigPrompt(path);
@@ -163,10 +163,10 @@ public abstract class DevHelper {
 		}
 	};
 
-	private TopicListener<Exception> devWarningListener=new TopicListener<Exception>() {
+	private TopicListener<Exception> devWarningListener = new TopicListener<Exception>() {
 		@Override
 		public void topicPublished(String key, Exception ex) {
-//			System.err.println(ex.getMessage());
+			// System.err.println(ex.getMessage());
 		}
 	};
 
@@ -177,7 +177,6 @@ public abstract class DevHelper {
 			transform.setCommitType(CommitType.TO_STORAGE);
 		}
 		System.out.println(transforms);
-		
 		TransformManager.get().clearTransforms();
 		return transforms;
 	}
@@ -216,8 +215,8 @@ public abstract class DevHelper {
 		Registry.registerSingleton(TimerWrapperProvider.class,
 				new TimerWrapperProviderJvm());
 		try {
-			Method m = GWT.class
-					.getDeclaredMethod("setBridge", GWTBridge.class);
+			Method m = GWT.class.getDeclaredMethod("setBridge",
+					GWTBridge.class);
 			m.setAccessible(true);
 			m.invoke(null, new GWTBridgeDummy());
 		} catch (Exception e) {
@@ -231,6 +230,9 @@ public abstract class DevHelper {
 
 	protected void initClientReflector() {
 		try {
+			LooseContext.pushWithKey(
+					"cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm.CONTEXT_MODULE_NAME",
+					getClass().getSimpleName());
 			Object clientReflectorJvm = Class
 					.forName(
 							"cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm")
@@ -251,9 +253,9 @@ public abstract class DevHelper {
 		try {
 			Logger logger = getTestLogger();
 			long t1 = System.currentTimeMillis();
-			ClassDataCache classes = new ServletClasspathScanner("*", true, true,
-					null, Registry.MARKER_RESOURCE, Arrays.asList(new String[] {}))
-					.getClasses();
+			ClassDataCache classes = new ServletClasspathScanner("*", true,
+					true, null, Registry.MARKER_RESOURCE,
+					Arrays.asList(new String[] {})).getClasses();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					Registry.get(), "dev-helper");
 			long t2 = System.currentTimeMillis();
@@ -329,7 +331,8 @@ public abstract class DevHelper {
 
 		@Override
 		public void showDialog(String captionHTML, Widget captionWidget,
-				String msg, MessageType messageType, List<Button> extraButtons) {
+				String msg, MessageType messageType,
+				List<Button> extraButtons) {
 			// TODO Auto-generated method stub
 		}
 
@@ -442,8 +445,8 @@ public abstract class DevHelper {
 	}
 
 	public <V> V readObject(V template, String lkpName) {
-		File cacheFile = new File(getTestFolder().getPath() + File.separator
-				+ lkpName + ".ser");
+		File cacheFile = new File(
+				getTestFolder().getPath() + File.separator + lkpName + ".ser");
 		try {
 			ObjectInputStream ois = new ObjectInputStream(
 					new BufferedInputStream(new FileInputStream(cacheFile)));
@@ -561,8 +564,7 @@ public abstract class DevHelper {
 	}
 
 	public Set<Long> getIds(String fileName) throws Exception {
-		String idStr = ResourceUtilities
-				.readFileToString(fileName);
+		String idStr = ResourceUtilities.readFileToString(fileName);
 		Pattern p = Pattern.compile("\\d+");
 		Set<Long> ids = new LinkedHashSet<Long>();
 		Matcher m = p.matcher(idStr);

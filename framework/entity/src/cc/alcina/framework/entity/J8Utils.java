@@ -78,7 +78,7 @@ public class J8Utils {
 		}
 	}
 
-	private static class ToMultimapCollector<T, K, U>
+	public static class ToMultimapCollector<T, K, U>
 			implements
 			java.util.stream.Collector<T, Multimap<K, List<U>>, Multimap<K, List<U>>> {
 		private Function<? super T, ? extends K> keyMapper;

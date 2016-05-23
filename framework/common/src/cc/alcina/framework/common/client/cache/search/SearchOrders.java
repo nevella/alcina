@@ -6,9 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.util.CommonUtils;
-
-import java.util.Set;
 
 public class SearchOrders<T> implements Comparator<T>, Serializable {
 	Map<SearchOrder<T>, Boolean> cmps = new LinkedHashMap<>();
@@ -39,5 +38,11 @@ public class SearchOrders<T> implements Comparator<T>, Serializable {
 
 	public void addOrder(SearchOrder sortFunction, boolean ascending) {
 		cmps.put(sortFunction, ascending);
+	}
+	public static class IdOrder<H extends HasId> implements SearchOrder<H> {
+		@Override
+		public Comparable apply(H t) {
+			return t.getId();
+		}
 	}
 }
