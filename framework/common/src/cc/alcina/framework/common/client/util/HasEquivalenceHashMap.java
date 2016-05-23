@@ -12,11 +12,4 @@ public class HasEquivalenceHashMap<T extends HasEquivalence>
 	public void add(HasEquivalenceHash heh) {
 		add(heh.equivalenceHash(), heh);
 	}
-
-	public static <T extends HasEquivalence, K, U>
-			Collector<T, ?, HasEquivalenceHashMap<T>>
-			toKeyMultimap(Function<? super T, ? extends K> keyMapper) {
-		return new ToMultimapCollector(keyMapper, t -> t,
-				HasEquivalenceHashMap::new);
-	}
 }
