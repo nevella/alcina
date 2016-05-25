@@ -655,4 +655,19 @@ public class XmlUtils {
 					"DOM 3.0 LS and/or DOM 2.0 Core not supported.");
 		}
 	}
+
+	public static void wrapContentIn(Element elt, Element newElt) {
+		moveKids(elt, newElt);
+		elt.appendChild(newElt);
+	}
+
+	public static void moveKids(Node old, Node newNode) {
+		NodeList nl = old.getChildNodes();
+		Node lastChild = null;
+		for (int i = nl.getLength() - 1; i >= 0; i--) {
+			Node child = nl.item(i);
+			newNode.insertBefore(child, lastChild);
+			lastChild = child;
+		}
+	}
 }
