@@ -227,19 +227,21 @@ public class SEUtilities {
 	}
 
 	public static void disableSslValidation() throws Exception {
-		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
-			public void checkClientTrusted(X509Certificate[] certs,
-					String authType) {
-			}
+		TrustManager[] trustAllCerts = new TrustManager[] {
+				new X509TrustManager() {
+					public void checkClientTrusted(X509Certificate[] certs,
+							String authType) {
+					}
 
-			public void checkServerTrusted(X509Certificate[] certs,
-					String authType) {
-			}
+					public void checkServerTrusted(X509Certificate[] certs,
+							String authType) {
+					}
 
-			public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-				return null;
-			}
-		} };
+					public java.security.cert.X509Certificate[]
+							getAcceptedIssuers() {
+						return null;
+					}
+				} };
 		// Install the all-trusting trust manager
 		SSLContext sc = SSLContext.getInstance("SSL");
 		sc.init(null, trustAllCerts, new java.security.SecureRandom());
@@ -280,8 +282,8 @@ public class SEUtilities {
 				if (b < 0) {
 					b += 256;
 				}
-				bd.append(in ? CommonUtils.padStringLeft(
-						Integer.toHexString(b), 2, '0') : "  ");
+				bd.append(in ? CommonUtils.padStringLeft(Integer.toHexString(b),
+						2, '0') : "  ");
 				bd.append("  ");
 			}
 			for (int j = 0; j < width; j++) {
@@ -313,7 +315,8 @@ public class SEUtilities {
 	public static String dumpProperties(Properties p) {
 		StringWriter sw = new StringWriter();
 		sw.write("--listing properties--\n");
-		for (Enumeration<?> names = p.propertyNames(); names.hasMoreElements();) {
+		for (Enumeration<?> names = p.propertyNames(); names
+				.hasMoreElements();) {
 			String name = (String) names.nextElement();
 			sw.write(name + "=" + p.getProperty(name) + "\n");
 		}
@@ -389,6 +392,7 @@ public class SEUtilities {
 		}
 		return true;
 	}
+
 	public static List<Field> allFields(Class clazz) {
 		List<Field> result = new ArrayList<>();
 		try {
@@ -542,7 +546,8 @@ public class SEUtilities {
 	}
 
 	public static File getChildFile(File folder, String childFileName) {
-		return new File(String.format("%s/%s", folder.getPath(), childFileName));
+		return new File(
+				String.format("%s/%s", folder.getPath(), childFileName));
 	}
 
 	public static File getDesktopFolder() {
@@ -552,8 +557,8 @@ public class SEUtilities {
 		case Unix:
 			File file = new File(System.getProperty("user.home")
 					+ File.separator + "Desktop");
-			return (file.exists()) ? file : new File(
-					System.getProperty("user.home"));
+			return (file.exists()) ? file
+					: new File(System.getProperty("user.home"));
 		default:
 			return null;
 		}
@@ -567,8 +572,9 @@ public class SEUtilities {
 	}
 
 	public static String getHomeDir() {
-		return (System.getenv("USERPROFILE") != null) ? System
-				.getenv("USERPROFILE") : System.getProperty("user.home");
+		return (System.getenv("USERPROFILE") != null)
+				? System.getenv("USERPROFILE")
+				: System.getProperty("user.home");
 	}
 
 	public static int getLeadingWsCount(String input) {
@@ -599,9 +605,8 @@ public class SEUtilities {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T getOrCreate(Collection<T> existing,
-			String propertyName, String propertyValue, Class itemClass)
-			throws Exception {
+	public static <T> T getOrCreate(Collection<T> existing, String propertyName,
+			String propertyValue, Class itemClass) throws Exception {
 		PropertyDescriptor descriptor = getPropertyDescriptorByName(itemClass,
 				propertyName);
 		for (Iterator<T> itr = existing.iterator(); itr.hasNext();) {
@@ -670,8 +675,8 @@ public class SEUtilities {
 		return t;
 	}
 
-	public static List<PropertyDescriptor> getSortedPropertyDescriptors(
-			Class clazz) {
+	public static List<PropertyDescriptor>
+			getSortedPropertyDescriptors(Class clazz) {
 		ensureDescriptorLookup(clazz);
 		List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
 				pdLookup.asMap(clazz).allValues());
@@ -687,15 +692,16 @@ public class SEUtilities {
 
 	public static int getUniqueInt(List<Integer> ints) {
 		while (true) {
-			int i = (int) Math.max(
-					Math.round(Math.random() * Integer.MAX_VALUE) - 1, 0);
+			int i = (int) Math
+					.max(Math.round(Math.random() * Integer.MAX_VALUE) - 1, 0);
 			if (!ints.contains(i)) {
 				return i;
 			}
 		}
 	}
 
-	public static String getUniqueNumberedString(String str, List<String> sibs) {
+	public static String getUniqueNumberedString(String str,
+			List<String> sibs) {
 		return getUniqueNumberedString(str, sibs, '(', ')');
 	}
 
@@ -718,7 +724,8 @@ public class SEUtilities {
 		while (character != CharacterIterator.DONE) {
 			if (character == '&') {
 				final StringBuilder entityBuilder = new StringBuilder();
-				while (character != CharacterIterator.DONE && character != ';') {
+				while (character != CharacterIterator.DONE
+						&& character != ';') {
 					entityBuilder.append(character);
 					character = iterator.next();
 				}
@@ -729,7 +736,8 @@ public class SEUtilities {
 					result.append(" ");
 				}
 			} else if (character == '<') {
-				while (character != CharacterIterator.DONE && character != '>') {
+				while (character != CharacterIterator.DONE
+						&& character != '>') {
 					character = iterator.next();
 				}
 			} else {
@@ -772,14 +780,14 @@ public class SEUtilities {
 			Object object, Class<A> annotationClass,
 			HasAnnotationCallback<A> hasAnnotationCallback) {
 		try {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(
-					object.getClass()).getPropertyDescriptors();
+			PropertyDescriptor[] pds = Introspector
+					.getBeanInfo(object.getClass()).getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				JvmPropertyReflector reflector = new JvmPropertyReflector(pd);
 				if (reflector.getAnnotation(annotationClass) != null) {
-					hasAnnotationCallback
-							.apply(reflector.getAnnotation(annotationClass),
-									reflector);
+					hasAnnotationCallback.apply(
+							reflector.getAnnotation(annotationClass),
+							reflector);
 				}
 			}
 		} catch (Exception e) {
@@ -823,12 +831,11 @@ public class SEUtilities {
 		folders.add(new File(initialPath));
 		while (!folders.isEmpty()) {
 			File folder = folders.pop();
-			File[] files = filter == null ? folder.listFiles() : folder
-					.listFiles(filter);
+			File[] files = filter == null ? folder.listFiles()
+					: folder.listFiles(filter);
 			for (File file : files) {
-				if (doNotCheckFolderPattern == null
-						|| !doNotCheckFolderPattern.matcher(file.getName())
-								.matches()) {
+				if (doNotCheckFolderPattern == null || !doNotCheckFolderPattern
+						.matcher(file.getName()).matches()) {
 					if (file.isDirectory()) {
 						folders.push(file);
 					}
@@ -839,9 +846,8 @@ public class SEUtilities {
 		if (removeFolders) {
 			for (Iterator<File> itr = results.iterator(); itr.hasNext();) {
 				File file = itr.next();
-				if (doNotCheckFolderPattern == null
-						|| !doNotCheckFolderPattern.matcher(file.getName())
-								.matches()) {
+				if (doNotCheckFolderPattern == null || !doNotCheckFolderPattern
+						.matcher(file.getName()).matches()) {
 					if (file.isDirectory()) {
 						itr.remove();
 					}
@@ -915,8 +921,8 @@ public class SEUtilities {
 			if (c == c2) {
 				System.out.print(c + "\t");
 			} else {
-				System.out.print(c + ": " + ((short) c) + " " + ((short) c2)
-						+ "\t");
+				System.out.print(
+						c + ": " + ((short) c) + " " + ((short) c2) + "\t");
 			}
 			if (i % 4 == 0) {
 				System.out.println();
@@ -995,8 +1001,8 @@ public class SEUtilities {
 		out.mkdirs();
 		File[] files = in.listFiles();
 		for (File subIn : files) {
-			File subOut = new File(out.getPath() + File.separator
-					+ subIn.getName());
+			File subOut = new File(
+					out.getPath() + File.separator + subIn.getName());
 			fc += copyFile(subIn, subOut);
 		}
 		return fc;
@@ -1171,8 +1177,8 @@ public class SEUtilities {
 	public static Class getRemoteActionClass(Class clazz) {
 		RegistryLocation registryLocation = (RegistryLocation) clazz
 				.getAnnotation(RegistryLocation.class);
-		if (registryLocation != null
-				&& registryLocation.registryPoint() == RemoteActionPerformer.class) {
+		if (registryLocation != null && registryLocation
+				.registryPoint() == RemoteActionPerformer.class) {
 			return registryLocation.targetClass();
 		}
 		return null;
@@ -1230,5 +1236,18 @@ public class SEUtilities {
 
 	public static boolean hasFractional(double d) {
 		return Math.abs(Math.round(d) - d) > 0.0001;
+	}
+
+	public static <T> void copyProperties(T from, T to,
+			String... propertyNames) {
+		try {
+			for (String propertyName : propertyNames) {
+				PropertyDescriptor pd = getPropertyDescriptorByName(
+						from.getClass(), propertyName);
+				pd.getWriteMethod().invoke(to, pd.getReadMethod().invoke(from));
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }
