@@ -80,6 +80,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 		public String rule() {
 			return null;
+			
 		}
 	};
 
