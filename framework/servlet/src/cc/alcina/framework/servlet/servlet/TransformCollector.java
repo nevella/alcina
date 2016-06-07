@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceQueue;
@@ -20,7 +21,9 @@ public class TransformCollector {
 		long maxDbId = 0;
 		DomainTransformPersistenceQueue queue = Registry
 				.impl(DomainTransformPersistenceQueue.class);
-		while (true) {
+		long maxTime = System.currentTimeMillis()
+				+ 61 * TimeConstants.ONE_SECOND_MS;
+		while (System.currentTimeMillis() < maxTime) {
 			maxDbId = MemCacheRunner.get(() -> {
 				return queue.getMaxDbPersistedRequestId();
 			});
@@ -29,25 +32,21 @@ public class TransformCollector {
 			}
 			synchronized (queue) {
 				try {
-					queue.wait();
+					queue.wait(30 * TimeConstants.ONE_SECOND_MS);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
 			}
 		}
 		List<DomainTransformRequestPersistent> requests = Registry
-				.impl(CommonPersistenceProvider.class)
-				.getCommonPersistence()
+				.impl(CommonPersistenceProvider.class).getCommonPersistence()
 				.getPersistentTransformRequests(lastTransformRequestId + 1,
 						maxDbId, null, false, false);
-		List<DomainTransformRequest> nonPersistentRequests = requests
-				.stream()
+		List<DomainTransformRequest> nonPersistentRequests = requests.stream()
 				.map(rq -> {
 					DomainTransformRequest res = new DomainTransformRequest();
 					res.setClientInstance(rq.getClientInstance());
-					res.setEvents(rq
-							.getEvents()
-							.stream()
+					res.setEvents(rq.getEvents().stream()
 							.map(evt -> ((DomainTransformEventPersistent) evt)
 									.toNonPersistentEvent(true))
 							.collect(Collectors.toList()));
