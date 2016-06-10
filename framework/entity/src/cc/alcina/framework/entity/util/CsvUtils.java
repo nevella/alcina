@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.StringMap;
 
 public class CsvUtils {
 	public static List<List<String>> parseCsv(String txt) {
@@ -125,6 +125,14 @@ public class CsvUtils {
 
 		public boolean has(String key) {
 			return get(key).length() > 0;
+		}
+
+		public Map<String, String> map() {
+			StringMap map = new StringMap();
+			for (String header : csvCols.headers()) {
+				map.put(header, get(header));
+			}
+			return map;
 		}
 	}
 

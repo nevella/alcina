@@ -547,6 +547,11 @@ public class XmlUtils {
 										.length() > 0);
 	}
 
+	public static boolean hasOnlyTextChildren(Node node) {
+		return !nodeListToList(node.getChildNodes()).stream()
+				.anyMatch(n -> n.getNodeType() != Node.TEXT_NODE);
+	}
+
 	public static Element getAncestorWithTagName(Node n, String tagName,
 			boolean includeNode) {
 		boolean wildcard = tagName.equals("*");
