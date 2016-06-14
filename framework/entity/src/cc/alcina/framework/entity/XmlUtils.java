@@ -26,6 +26,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -674,5 +675,27 @@ public class XmlUtils {
 			newNode.insertBefore(child, lastChild);
 			lastChild = child;
 		}
+	}
+
+	public static Node lastDirectChild(Element element) {
+		NodeList childNodes = element.getChildNodes();
+		Node node = childNodes.item(childNodes.getLength() - 1);
+		return node;
+	}
+
+	public static List<Node> allChildren(Node node) {
+		Stack<Node> nodes = new Stack<Node>();
+		nodes.push(node);
+		List<Node> result = new ArrayList<>();
+		while (!nodes.isEmpty()) {
+			node = nodes.pop();
+			result.add(node);
+			NodeList nl = node.getChildNodes();
+			Node lastChild = null;
+			for (int i = 0; i < nl.getLength(); i++) {
+				nodes.push(nl.item(i));
+			}
+		}
+		return result;
 	}
 }

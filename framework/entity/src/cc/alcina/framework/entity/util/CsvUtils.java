@@ -31,7 +31,7 @@ public class CsvUtils {
 				end = i + 1;
 				while (true) {
 					end = txt.indexOf('"', end);
-					if (end < txt.length() && txt.charAt(end + 1) == '"') {
+					if (end < txt.length() - 1 && txt.charAt(end + 1) == '"') {
 						end += 2;
 					} else {
 						break;
@@ -133,6 +133,10 @@ public class CsvUtils {
 				map.put(header, get(header));
 			}
 			return map;
+		}
+
+		public boolean containsKey(String key) {
+			return csvCols.colLookup.containsKey(key);
 		}
 	}
 
