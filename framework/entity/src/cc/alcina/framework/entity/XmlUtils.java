@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -52,6 +53,8 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSOutput;
 import org.w3c.dom.ls.LSSerializer;
+import org.w3c.dom.ranges.DocumentRange;
+import org.w3c.dom.ranges.Range;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -468,7 +471,7 @@ public class XmlUtils {
 			Matcher m = p.matcher(str);
 			m.matches();
 			String group = m.group(1);
-			group = group.replace("\n   ","\n");
+			group = group.replace("\n   ", "\n");
 			return group;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -695,6 +698,17 @@ public class XmlUtils {
 		}
 	}
 
+	public static boolean isEarlierThan(Node n1, Node n2) {
+		Range r1 = ((DocumentRange) n1.getOwnerDocument()).createRange();
+		Range r2 = ((DocumentRange) n2.getOwnerDocument()).createRange();
+		r1.setStartBefore(n1);
+		r2.setStartBefore(n2);
+		short result = r1.compareBoundaryPoints(Range.START_TO_START, r2);
+		r1.detach();
+		r2.detach();
+		return result < 0;
+	}
+
 	public static interface TransformerFactoryConfigurator {
 		public void configure(TransformerFactory transformerFactory);
 	}
@@ -743,5 +757,20 @@ public class XmlUtils {
 			}
 		}
 		return true;
+	}
+
+	public static class NodeComparator implements Comparator<Node> {
+		@Override
+		public int compare(Node o1, Node o2) {
+			if (o1 == o2) {
+				return 0;
+			}
+			return isEarlierThan(o1, o2) ? -1 : 1;
+		}
+	}
+
+	public static boolean isWhitespaceText(Node node) {
+		return node.getNodeType() == Node.TEXT_NODE
+				&& SEUtilities.isWhitespaceOrEmpty(node.getTextContent());
 	}
 }
