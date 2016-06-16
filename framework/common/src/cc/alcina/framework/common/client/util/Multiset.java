@@ -31,11 +31,13 @@ import java.util.Set;
  */
 @SuppressWarnings("unchecked")
 public class Multiset<K, V extends Set> implements Serializable {
-	protected Map<K, V> map ;
+	static final transient long serialVersionUID = -1L;
+	protected Map<K, V> map;
 
 	protected void createTopMap() {
-		map=new LinkedHashMap<K, V>();
+		map = new LinkedHashMap<K, V>();
 	}
+
 	public Multiset() {
 		createTopMap();
 	}
@@ -134,5 +136,12 @@ public class Multiset<K, V extends Set> implements Serializable {
 	@Override
 	public String toString() {
 		return isEmpty() ? "{}" : CommonUtils.join(entrySet(), "\n");
+	}
+
+	public boolean contains(K key, Object value) {
+		if (map.containsKey(key)) {
+			return map.get(key).contains(value);
+		}
+		return false;
 	}
 }

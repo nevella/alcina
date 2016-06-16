@@ -35,7 +35,8 @@ public class XpathHelper {
 		return getElementByXpathDoc(primaryDoc, xpathStr, node);
 	}
 
-	public Element getElementByXpathDoc(Document doc, String xpathStr, Node node) {
+	public Element getElementByXpathDoc(Document doc, String xpathStr,
+			Node node) {
 		if (ownerDoc(node) != doc) {
 			throw new RuntimeException("reusing xpath for different documen");
 		}
@@ -141,10 +142,13 @@ public class XpathHelper {
 		return primaryDoc == ownerDocument;
 	}
 
-	public String getTextContentOrEmpty(String xpath, Node from)
-			throws Exception {
-		Node node = getNodeByXpath(xpath, from);
-		return node == null ? "" : node.getTextContent();
+	public String getTextContentOrEmpty(String xpath, Node from) {
+		try {
+			Node node = getNodeByXpath(xpath, from);
+			return node == null ? "" : node.getTextContent();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public void removeMatches(String xpath) throws Exception {

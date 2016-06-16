@@ -35,11 +35,12 @@ public class OptimizingXpathEvaluator {
 	public OptimizingXpathEvaluator(XPath xpath) {
 		this.xpath = xpath;
 	}
-	public String getTextContentOrEmpty(String xpath, Node from)
-			throws Exception {
+
+	public String getTextContentOrEmpty(String xpath, Node from) {
 		Node node = getNodeByXpath(xpath, from);
 		return node == null ? "" : node.getTextContent();
 	}
+
 	public Element getElementByXpath(String xpathStr, Node node) {
 		return (Element) evaluate(xpathStr, node, XPathConstants.NODE, n -> {
 			return (Element) n;

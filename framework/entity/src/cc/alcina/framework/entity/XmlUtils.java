@@ -40,11 +40,13 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.xerces.parsers.DOMParser;
+import org.w3c.dom.Attr;
 import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.ls.DOMImplementationLS;
@@ -57,6 +59,7 @@ import org.xml.sax.SAXParseException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.StringMap;
 
 /**
  *
@@ -76,6 +79,25 @@ public class XmlUtils {
 	public static final int A4_MAX_PIXEL_HEIGHT = 950;
 
 	public static final int A4_MAX_PIXEL_HEIGHT_PRINT = 850;
+
+	public static final String CONTEXT_MUTE_XML_SAX_EXCEPTIONS = XmlUtils.class
+			.getName() + ".CONTEXT_MUTE_XML_SAX_EXCEPTIONS";
+
+	public static List<Node> allChildren(Node node) {
+		Stack<Node> nodes = new Stack<Node>();
+		nodes.push(node);
+		List<Node> result = new ArrayList<>();
+		while (!nodes.isEmpty()) {
+			node = nodes.pop();
+			result.add(node);
+			NodeList nl = node.getChildNodes();
+			Node lastChild = null;
+			for (int i = 0; i < nl.getLength(); i++) {
+				nodes.push(nl.item(i));
+			}
+		}
+		return result;
+	}
 
 	public static String cleanXmlHeaders(String xml) {
 		xml = xml.replaceAll("<\\?xml.+?\\?>", "");
@@ -101,6 +123,13 @@ public class XmlUtils {
 			db = dbf.newDocumentBuilder();
 		}
 		return db.newDocument();
+	}
+
+	public static Element createSimpleTextElement(Document doc, String tag,
+			String textContent) {
+		Element element = doc.createElement(tag);
+		element.setTextContent(textContent);
+		return element;
 	}
 
 	public static String elementNamesToLowerCase(String s) {
@@ -175,6 +204,37 @@ public class XmlUtils {
 		return s2.toString();
 	}
 
+	public static Element getAncestorWithTagName(Node n, String tagName) {
+		return getAncestorWithTagName(n, tagName, false);
+	}
+
+	public static Element getAncestorWithTagName(Node n, String tagName,
+			boolean includeNode) {
+		boolean wildcard = tagName.equals("*");
+		while (n.getParentNode() != null) {
+			Node test = includeNode ? n : n.getParentNode();
+			if (test.getNodeType() == Node.ELEMENT_NODE) {
+				Element el = (Element) test;
+				if (wildcard || el.getTagName().equalsIgnoreCase(tagName)) {
+					return el;
+				}
+			}
+			n = includeNode ? n : n.getParentNode();
+			includeNode = false;
+		}
+		return null;
+	}
+
+	public static StringMap getAttributeMap(Element node) {
+		StringMap result = new StringMap();
+		NamedNodeMap nnm = node.getAttributes();
+		for (int idx = 0; idx < nnm.getLength(); idx++) {
+			Attr attr = (Attr) nnm.item(idx);
+			result.put(attr.getName(), attr.getValue());
+		}
+		return result;
+	}
+
 	public static Element getElementExt(Element root, String tagName,
 			String attrName, String attrValue) {
 		List<Element> elementList = nodeListToElementList(
@@ -185,6 +245,21 @@ public class XmlUtils {
 			}
 		}
 		return null;
+	}
+
+	public static boolean hasOnlyTextChildren(Node node) {
+		return !nodeListToList(node.getChildNodes()).stream()
+				.anyMatch(n -> n.getNodeType() != Node.TEXT_NODE);
+	}
+
+	public static boolean hasOnlyWhitespaceChildren(Element elt) {
+		return !nodeListToList(elt.getChildNodes()).stream()
+				.anyMatch(
+						n -> n.getNodeType() != Node.TEXT_NODE
+								|| SEUtilities
+										.normalizeWhitespaceAndTrim(
+												n.getTextContent())
+										.length() > 0);
 	}
 
 	public static void insertAfter(Element el, Node newNode, Node insertAfter) {
@@ -213,6 +288,22 @@ public class XmlUtils {
 		return false;
 	}
 
+	public static boolean isFirstNonWhitespaceChild(Node node) {
+		List<Node> kids = nodeListToList(node.getParentNode().getChildNodes());
+		for (Node kid : kids) {
+			if (node == kid) {
+				return true;
+			}
+			if (kid.getNodeType() != Node.TEXT_NODE) {
+				return false;
+			}
+			if (!SEUtilities.isWhitespace(kid.getTextContent())) {
+				return false;
+			}
+		}
+		return false;
+	}
+
 	public static boolean isUseJAXP() {
 		return useJAXP;
 	}
@@ -226,6 +317,12 @@ public class XmlUtils {
 			}
 		}
 		return element;
+	}
+
+	public static Node lastDirectChild(Element element) {
+		NodeList childNodes = element.getChildNodes();
+		Node node = childNodes.item(childNodes.getLength() - 1);
+		return node;
 	}
 
 	public static Document loadDocument(File f) throws Exception {
@@ -270,6 +367,24 @@ public class XmlUtils {
 		return loadDocument(url.openStream());
 	}
 
+	public static void merge(Element to, Element from) {
+		List<Node> nodes = nodeListToList(from.getChildNodes());
+		for (Node node : nodes) {
+			to.appendChild(node);
+		}
+		from.getParentNode().removeChild(from);
+	}
+
+	public static void moveKids(Node old, Node newNode) {
+		NodeList nl = old.getChildNodes();
+		Node lastChild = null;
+		for (int i = nl.getLength() - 1; i >= 0; i--) {
+			Node child = nl.item(i);
+			newNode.insertBefore(child, lastChild);
+			lastChild = child;
+		}
+	}
+
 	public static List<Element> nodeListToElementList(NodeList nl) {
 		List<Element> rVal = new ArrayList<Element>();
 		for (int i = 0; i < nl.getLength(); i++) {
@@ -300,6 +415,64 @@ public class XmlUtils {
 			rVal.add(nl.item(i));
 		}
 		return rVal;
+	}
+
+	public static Document ownerDocumentOrSelf(Node item) {
+		return (Document) (item.getNodeType() == Node.DOCUMENT_NODE ? item
+				: item.getOwnerDocument());
+	}
+
+	public static String prettyPrintWithDOM3LS(Document document) {
+		// Pretty-prints a DOM document to XML using DOM Load and Save's
+		// LSSerializer.
+		// Note that the "format-pretty-print" DOM configuration parameter can
+		// only be set in JDK 1.6+.
+		DOMImplementation domImplementation = document.getImplementation();
+		if (domImplementation.hasFeature("LS", "3.0")
+				&& domImplementation.hasFeature("Core", "2.0")) {
+			DOMImplementationLS domImplementationLS = (DOMImplementationLS) domImplementation
+					.getFeature("LS", "3.0");
+			LSSerializer lsSerializer = domImplementationLS
+					.createLSSerializer();
+			DOMConfiguration domConfiguration = lsSerializer.getDomConfig();
+			if (domConfiguration.canSetParameter("format-pretty-print",
+					Boolean.TRUE)) {
+				lsSerializer.getDomConfig().setParameter("format-pretty-print",
+						Boolean.TRUE);
+				LSOutput lsOutput = domImplementationLS.createLSOutput();
+				lsOutput.setEncoding("UTF-8");
+				StringWriter stringWriter = new StringWriter();
+				lsOutput.setCharacterStream(stringWriter);
+				lsSerializer.write(document, lsOutput);
+				return stringWriter.toString();
+			} else {
+				throw new RuntimeException(
+						"DOMConfiguration 'format-pretty-print' parameter isn't settable.");
+			}
+		} else {
+			throw new RuntimeException(
+					"DOM 3.0 LS and/or DOM 2.0 Core not supported.");
+		}
+	}
+
+	public static String
+			prettyPrintWithDOM3LS(DocumentFragment documentFragment) {
+		try {
+			Document doc = loadDocument("<doc-wrapper-ppls/>");
+			Node adopted = doc.adoptNode(documentFragment.cloneNode(true));
+			doc.getDocumentElement().appendChild(adopted);
+			String str = prettyPrintWithDOM3LS(doc);
+			Pattern p = Pattern.compile(
+					".*<doc-wrapper-ppls>[ \n\t]*(.+?)[ \n\t]*</doc-wrapper-ppls>.*",
+					Pattern.DOTALL);
+			Matcher m = p.matcher(str);
+			m.matches();
+			String group = m.group(1);
+			group = group.replace("\n   ","\n");
+			return group;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public static void rebaseImages(Document doc, String baseHref) {
@@ -356,6 +529,12 @@ public class XmlUtils {
 			sb.append(c);
 		}
 		return sb.toString();
+	}
+
+	public static void removeNode(Node node) {
+		if (node != null) {
+			node.getParentNode().removeChild(node);
+		}
 	}
 
 	public static String removeXmlDeclaration(String xml) {
@@ -420,6 +599,21 @@ public class XmlUtils {
 		}
 	}
 
+	public static void stripNode(Node oldNode) {
+		Document doc = oldNode.getOwnerDocument();
+		DocumentFragment newNode = doc.createDocumentFragment();
+		NodeList nl = oldNode.getChildNodes();
+		Node refChild = null;
+		for (int i = nl.getLength() - 1; i >= 0; i--) {
+			Node child = nl.item(i);
+			oldNode.removeChild(child);
+			newNode.insertBefore(child, refChild);
+			refChild = child;
+		}
+		oldNode.getParentNode().insertBefore(newNode, oldNode);
+		oldNode.getParentNode().removeChild(oldNode);
+	}
+
 	// http://cse-mjmcl.cse.bris.ac.uk/blog/2007/02/14/1171465494443.html
 	public static String stripNonValidXMLCharacters(String in) {
 		StringBuffer out = new StringBuffer(); // Used to hold the output.
@@ -436,6 +630,10 @@ public class XmlUtils {
 				out.append(current);
 		}
 		return out.toString();
+	}
+
+	public static void sysXml(Node node) {
+		System.out.println(streamXML(node));
 	}
 
 	public static void transformDoc(Source xmlSource, Source xsltSource,
@@ -462,8 +660,9 @@ public class XmlUtils {
 		return wr.toString();
 	}
 
-	public static void sysXml(Node node) {
-		System.out.println(streamXML(node));
+	public static void wrapContentIn(Element elt, Element newElt) {
+		moveKids(elt, newElt);
+		elt.appendChild(newElt);
 	}
 
 	private static void _streamXML(Node n, Writer w, OutputStream s)
@@ -496,90 +695,9 @@ public class XmlUtils {
 		}
 	}
 
-	public static Document ownerDocumentOrSelf(Node item) {
-		return (Document) (item.getNodeType() == Node.DOCUMENT_NODE ? item
-				: item.getOwnerDocument());
-	}
-
-	public static void removeNode(Node node) {
-		if (node != null) {
-			node.getParentNode().removeChild(node);
-		}
-	}
-
-	public static void stripNode(Node oldNode) {
-		Document doc = oldNode.getOwnerDocument();
-		DocumentFragment newNode = doc.createDocumentFragment();
-		NodeList nl = oldNode.getChildNodes();
-		Node refChild = null;
-		for (int i = nl.getLength() - 1; i >= 0; i--) {
-			Node child = nl.item(i);
-			oldNode.removeChild(child);
-			newNode.insertBefore(child, refChild);
-			refChild = child;
-		}
-		oldNode.getParentNode().insertBefore(newNode, oldNode);
-		oldNode.getParentNode().removeChild(oldNode);
-	}
-
-	public static boolean isFirstNonWhitespaceChild(Node node) {
-		List<Node> kids = nodeListToList(node.getParentNode().getChildNodes());
-		for (Node kid : kids) {
-			if (node == kid) {
-				return true;
-			}
-			if (kid.getNodeType() != Node.TEXT_NODE) {
-				return false;
-			}
-			if (!SEUtilities.isWhitespace(kid.getTextContent())) {
-				return false;
-			}
-		}
-		return false;
-	}
-
-	public static boolean hasOnlyWhitespaceChildren(Element elt) {
-		return !nodeListToList(elt.getChildNodes()).stream()
-				.anyMatch(
-						n -> n.getNodeType() != Node.TEXT_NODE
-								|| SEUtilities
-										.normalizeWhitespaceAndTrim(
-												n.getTextContent())
-										.length() > 0);
-	}
-
-	public static boolean hasOnlyTextChildren(Node node) {
-		return !nodeListToList(node.getChildNodes()).stream()
-				.anyMatch(n -> n.getNodeType() != Node.TEXT_NODE);
-	}
-
-	public static Element getAncestorWithTagName(Node n, String tagName,
-			boolean includeNode) {
-		boolean wildcard = tagName.equals("*");
-		while (n.getParentNode() != null) {
-			Node test = includeNode ? n : n.getParentNode();
-			if (test.getNodeType() == Node.ELEMENT_NODE) {
-				Element el = (Element) test;
-				if (wildcard || el.getTagName().equalsIgnoreCase(tagName)) {
-					return el;
-				}
-			}
-			n = includeNode ? n : n.getParentNode();
-			includeNode = false;
-		}
-		return null;
-	}
-
-	public static Element getAncestorWithTagName(Node n, String tagName) {
-		return getAncestorWithTagName(n, tagName, false);
-	}
-
 	public static interface TransformerFactoryConfigurator {
 		public void configure(TransformerFactory transformerFactory);
 	}
-
-	public static final String CONTEXT_MUTE_XML_SAX_EXCEPTIONS = XmlUtils.class
-			.getName() + ".CONTEXT_MUTE_XML_SAX_EXCEPTIONS";
 
 	static class XmlErrHandler implements ErrorHandler {
 		/**
@@ -587,12 +705,6 @@ public class XmlUtils {
 		 */
 		public void error(SAXParseException exception) throws SAXException {
 			log(exception);
-		}
-
-		private void log(SAXParseException exception) {
-			if (!LooseContext.is(CONTEXT_MUTE_XML_SAX_EXCEPTIONS)) {
-				exception.printStackTrace();
-			}
 		}
 
 		/**
@@ -609,93 +721,27 @@ public class XmlUtils {
 		public void warning(SAXParseException exception) throws SAXException {
 			log(exception);
 		}
-	}
 
-	public static String
-			prettyPrintWithDOM3LS(DocumentFragment documentFragment) {
-		try {
-			Document doc = loadDocument("<doc-wrapper-ppls/>");
-			Node adopted = doc.adoptNode(documentFragment.cloneNode(true));
-			doc.getDocumentElement().appendChild(adopted);
-			String str = prettyPrintWithDOM3LS(doc);
-			Pattern p = Pattern.compile(
-					".*<doc-wrapper-ppls>(.+)</doc-wrapper-ppls>.*",
-					Pattern.DOTALL);
-			Matcher m = p.matcher(str);
-			m.matches();
-			return m.group(1);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static String prettyPrintWithDOM3LS(Document document) {
-		// Pretty-prints a DOM document to XML using DOM Load and Save's
-		// LSSerializer.
-		// Note that the "format-pretty-print" DOM configuration parameter can
-		// only be set in JDK 1.6+.
-		DOMImplementation domImplementation = document.getImplementation();
-		if (domImplementation.hasFeature("LS", "3.0")
-				&& domImplementation.hasFeature("Core", "2.0")) {
-			DOMImplementationLS domImplementationLS = (DOMImplementationLS) domImplementation
-					.getFeature("LS", "3.0");
-			LSSerializer lsSerializer = domImplementationLS
-					.createLSSerializer();
-			DOMConfiguration domConfiguration = lsSerializer.getDomConfig();
-			if (domConfiguration.canSetParameter("format-pretty-print",
-					Boolean.TRUE)) {
-				lsSerializer.getDomConfig().setParameter("format-pretty-print",
-						Boolean.TRUE);
-				LSOutput lsOutput = domImplementationLS.createLSOutput();
-				lsOutput.setEncoding("UTF-8");
-				StringWriter stringWriter = new StringWriter();
-				lsOutput.setCharacterStream(stringWriter);
-				lsSerializer.write(document, lsOutput);
-				return stringWriter.toString();
-			} else {
-				throw new RuntimeException(
-						"DOMConfiguration 'format-pretty-print' parameter isn't settable.");
-			}
-		} else {
-			throw new RuntimeException(
-					"DOM 3.0 LS and/or DOM 2.0 Core not supported.");
-		}
-	}
-
-	public static void wrapContentIn(Element elt, Element newElt) {
-		moveKids(elt, newElt);
-		elt.appendChild(newElt);
-	}
-
-	public static void moveKids(Node old, Node newNode) {
-		NodeList nl = old.getChildNodes();
-		Node lastChild = null;
-		for (int i = nl.getLength() - 1; i >= 0; i--) {
-			Node child = nl.item(i);
-			newNode.insertBefore(child, lastChild);
-			lastChild = child;
-		}
-	}
-
-	public static Node lastDirectChild(Element element) {
-		NodeList childNodes = element.getChildNodes();
-		Node node = childNodes.item(childNodes.getLength() - 1);
-		return node;
-	}
-
-	public static List<Node> allChildren(Node node) {
-		Stack<Node> nodes = new Stack<Node>();
-		nodes.push(node);
-		List<Node> result = new ArrayList<>();
-		while (!nodes.isEmpty()) {
-			node = nodes.pop();
-			result.add(node);
-			NodeList nl = node.getChildNodes();
-			Node lastChild = null;
-			for (int i = 0; i < nl.getLength(); i++) {
-				nodes.push(nl.item(i));
+		private void log(SAXParseException exception) {
+			if (!LooseContext.is(CONTEXT_MUTE_XML_SAX_EXCEPTIONS)) {
+				exception.printStackTrace();
 			}
 		}
-		return result;
+	}
+
+	public static boolean isSoleNonWhitespaceChild(Element node) {
+		List<Node> kids = nodeListToList(node.getParentNode().getChildNodes());
+		for (Node kid : kids) {
+			if (node == kid) {
+				continue;
+			}
+			if (kid.getNodeType() != Node.TEXT_NODE) {
+				return false;
+			}
+			if (!SEUtilities.isWhitespace(kid.getTextContent())) {
+				return false;
+			}
+		}
+		return true;
 	}
 }
