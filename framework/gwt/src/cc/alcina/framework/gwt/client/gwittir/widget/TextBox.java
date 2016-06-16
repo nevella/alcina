@@ -77,12 +77,12 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 
 				private void refresh() {
 					if (!scheduled) {
-						Scheduler.get().scheduleDeferred(
-								new ScheduledCommand() {
+						Scheduler.get()
+								.scheduleDeferred(new ScheduledCommand() {
 									@Override
 									public void execute() {
-										changes.firePropertyChange("value",
-												old, getValue());
+										changes.firePropertyChange("value", old,
+												getValue());
 										old = (String) getValue();
 										scheduled = false;
 									}
@@ -91,16 +91,19 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 					}
 				}
 
-				public void onKeyDown(Widget sender, char keyCode, int modifiers) {
+				public void onKeyDown(Widget sender, char keyCode,
+						int modifiers) {
 				}
 
-				public void onKeyUp(Widget sender, char keyCode, int modifiers) {
+				public void onKeyUp(Widget sender, char keyCode,
+						int modifiers) {
 					refresh();
 				}
 			});
 		} else {
 			this.addKeyboardListener(new KeyboardListener() {
-				public void onKeyUp(Widget sender, char keyCode, int modifiers) {
+				public void onKeyUp(Widget sender, char keyCode,
+						int modifiers) {
 				}
 
 				public void onKeyPress(Widget sender, char keyCode,
@@ -111,7 +114,8 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 					}
 				}
 
-				public void onKeyDown(Widget sender, char keyCode, int modifiers) {
+				public void onKeyDown(Widget sender, char keyCode,
+						int modifiers) {
 				}
 			});
 		}
@@ -133,7 +137,12 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 		this.base.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				changes.firePropertyChange("value", old, getValue());
+				if (old == null && getValue() == null) {
+					// don't want a non-change change fired here (invalid
+					// validation)
+				} else {
+					changes.firePropertyChange("value", old, getValue());
+				}
 				old = (String) getValue();
 				changeListeners.fireChange(instance);
 			}
@@ -227,8 +236,8 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 
 	public String getValue() {
 		try {
-			return this.base.getText().length() == 0 ? null : this.base
-					.getText();
+			return this.base.getText().length() == 0 ? null
+					: this.base.getText();
 		} catch (RuntimeException re) {
 			GWT.log("" + this.base, re);
 			return null;
@@ -336,9 +345,8 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 		// if( this.getValue() != old && this.getValue() != null &&
 		// !this.getValue().equals( old ) ){
 		// the above doesn't fire a change on the case new==null, old!=null
-		if (this.getValue() != old
-				&& (this.getValue() == null || (this.getValue() != null && !this
-						.getValue().equals(old)))) {
+		if (this.getValue() != old && (this.getValue() == null
+				|| (this.getValue() != null && !this.getValue().equals(old)))) {
 			this.changes.firePropertyChange("value", old, this.getValue());
 		}
 		old = this.getValue();
