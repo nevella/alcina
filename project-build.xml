@@ -2,6 +2,7 @@
 <project name="project-build" basedir="." default="make-jars">
 	<property name="project.src.dir.2" location="${project.src.dir}" />
 	<property name="project.src.dir.3" location="${project.src.dir}" />
+	<property name="project.src.dir.4" location="${project.src.dir}" />
 	<!-- should never be called directly, used by projects based on alcina-->
 	<fail unless="gwt.codestyle">
 			...
@@ -48,6 +49,11 @@
 				<exclude name="**/*.class" />
 			</fileset>
 			<fileset dir="${project.src.dir.3}">
+				<include name="**/*.*" />
+				<exclude name="**/*.java" />
+				<exclude name="**/*.class" />
+			</fileset>
+			<fileset dir="${project.src.dir.4}">
 				<include name="**/*.*" />
 				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
