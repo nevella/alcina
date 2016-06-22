@@ -35,4 +35,6 @@ public @interface Validator {
 	Class<? extends com.totsp.gwittir.client.validator.Validator> validator();
 
 	NamedParameter[] parameters() default {};
+	
+	boolean validateBeanOnly() default false;
 }

@@ -529,6 +529,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					vf.addMessage(validatorAnnotation.validator(),
 							msg.stringValue());
 				}
+				if(validatorAnnotation.validateBeanOnly()){
+					v = new BeanValidationOnlyValidator(v);
+				}
 				cv.add(v);
 			}
 			return cv;

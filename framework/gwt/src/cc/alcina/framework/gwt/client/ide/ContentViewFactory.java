@@ -116,7 +116,8 @@ public class ContentViewFactory {
 
 	public static final String CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS = ContentViewFactory.class
 			+ ".CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS";
-
+	public static final String CONTEXT_VALIDATING_BEAN =  ContentViewFactory.class
+			+ ".CONTEXT_VALIDATING_BEAN";
 	public static void registerAdditionalProvisionalObjects(Object o) {
 		if (o == null) {
 			return;
@@ -707,6 +708,8 @@ public class ContentViewFactory {
 
 	public static class PaneWrapperWithObjects extends FlowPanel implements
 			ClickHandler, PermissibleActionEvent.PermissibleActionSource {
+		
+
 		Validator propertyChangeBeanValidator;
 
 		public boolean editable;
@@ -875,74 +878,81 @@ public class ContentViewFactory {
 
 		public boolean validateAndCommit(final Widget sender,
 				final AsyncCallback<Void> serverValidationCallback) {
-			if (!validateBean()) {
-				return false;
-			}
-			ServerValidator.performingBeanValidation = true;
-			boolean bindingValid = false;
 			try {
-				bindingValid = getBoundWidget().getBinding().validate();
-			} finally {
-				ServerValidator.performingBeanValidation = false;
-			}
-			List<Validator> validators = GwittirUtils
-					.getAllValidators(getBoundWidget().getBinding(), null);
-			if (!bindingValid) {
-				for (Validator v : validators) {
-					if (v instanceof ServerValidator) {
-						ServerValidator sv = (ServerValidator) v;
-						if (sv.isValidating()) {
-							final CancellableRemoteDialog crd = new NonCancellableRemoteDialog(
-									"Checking values", null);
-							new Timer() {
-								@Override
-								public void run() {
-									crd.hide();
-									if (serverValidationCallback == null) {
-										DomEvent.fireNativeEvent(
-												WidgetUtils.createZeroClick(),
-												sender);
-									} else {
-										validateAndCommit(sender,
-												serverValidationCallback);
+				LooseContext.pushWithBoolean(CONTEXT_VALIDATING_BEAN);
+				if (!validateBean()) {
+					return false;
+				}
+				ServerValidator.performingBeanValidation = true;
+				boolean bindingValid = false;
+				try {
+					bindingValid = getBoundWidget().getBinding().validate();
+				} finally {
+					ServerValidator.performingBeanValidation = false;
+				}
+				List<Validator> validators = GwittirUtils
+						.getAllValidators(getBoundWidget().getBinding(), null);
+				if (!bindingValid) {
+					for (Validator v : validators) {
+						if (v instanceof ServerValidator) {
+							ServerValidator sv = (ServerValidator) v;
+							if (sv.isValidating()) {
+								final CancellableRemoteDialog crd = new NonCancellableRemoteDialog(
+										"Checking values", null);
+								new Timer() {
+									@Override
+									public void run() {
+										crd.hide();
+										if (serverValidationCallback == null) {
+											DomEvent.fireNativeEvent(
+													WidgetUtils
+															.createZeroClick(),
+													sender);
+										} else {
+											validateAndCommit(sender,
+													serverValidationCallback);
+										}
 									}
-								}
-							}.schedule(500);
+								}.schedule(500);
+								return false;
+							}
+						}
+					}
+					if (PermissionsManager.get()
+							.isMemberOfGroup(PermissionsManager
+									.getAdministratorGroupName())
+							&& sender != null) {
+						if (ClientBase.getGeneralProperties()
+								.isAllowAdminInvalidObjectWrite()
+								&& !alwaysDisallowOkIfInvalid) {
+							Registry.impl(ClientNotifications.class).confirm(
+									"Administrative option: save the changed items "
+											+ "on this form (even though some are invalid)?",
+									new OkCallback() {
+										public void ok() {
+											commitChanges(true);
+										}
+									});
 							return false;
 						}
 					}
-				}
-				if (PermissionsManager.get().isMemberOfGroup(
-						PermissionsManager.getAdministratorGroupName())
-						&& sender != null) {
-					if (ClientBase.getGeneralProperties()
-							.isAllowAdminInvalidObjectWrite()
-							&& !alwaysDisallowOkIfInvalid) {
-						Registry.impl(ClientNotifications.class).confirm(
-								"Administrative option: save the changed items "
-										+ "on this form (even though some are invalid)?",
-								new OkCallback() {
-									public void ok() {
-										commitChanges(true);
-									}
-								});
-						return false;
+					if (sender != null) {
+						Registry.impl(ClientNotifications.class).showWarning(
+								"Please correct the problems in the form");
+					} else {
+					}
+					return false;
+				} // not valid
+				if (serverValidationCallback != null) {
+					for (Validator v : validators) {
+						if (v instanceof ServerValidator) {
+							serverValidationCallback.onSuccess(null);
+							return true;
+						}
 					}
 				}
-				if (sender != null) {
-					Registry.impl(ClientNotifications.class).showWarning(
-							"Please correct the problems in the form");
-				} else {
-				}
-				return false;
-			} // not valid
-			if (serverValidationCallback != null) {
-				for (Validator v : validators) {
-					if (v instanceof ServerValidator) {
-						serverValidationCallback.onSuccess(null);
-						return true;
-					}
-				}
+			} finally {
+				LooseContext.pop();
 			}
 			commitChanges(sender != null);
 			return true;
