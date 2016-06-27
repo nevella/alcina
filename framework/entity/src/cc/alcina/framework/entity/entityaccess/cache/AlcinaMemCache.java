@@ -248,6 +248,10 @@ public class AlcinaMemCache implements RegistrableService {
 
 	DetachedEntityCache cache;
 
+	public DetachedEntityCache getCache() {
+		return this.cache;
+	}
+
 	private MemCachePersistenceListener persistenceListener;
 
 	private boolean initialised = false;
