@@ -1333,4 +1333,11 @@ public class CommonUtils {
 	public static int sizeOrZero(Collection collection) {
 		return collection == null ? 0 : collection.size();
 	}
+
+	public static boolean closeDates(Date d1, Date d2, long ms) {
+		if (d1 == null || d2 == null) {
+			return d1 == d2;
+		}
+		return Math.abs(d1.getTime() - d2.getTime()) < ms;
+	}
 }
