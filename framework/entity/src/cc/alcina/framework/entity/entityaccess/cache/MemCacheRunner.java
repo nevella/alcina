@@ -11,7 +11,7 @@ public abstract class MemCacheRunner extends MemCacheReader<Void, Void> {
 
 	public MemCacheRunner() {
 		try {
-			read0(null);
+			read(null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
