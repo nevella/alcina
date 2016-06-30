@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.cache;
 
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -21,6 +22,7 @@ public class BaseProjectionLookupBuilder {
 	private boolean navigable;
 
 	private BaseProjection projection;
+
 
 	public BaseProjection getProjection() {
 		return this.projection;
