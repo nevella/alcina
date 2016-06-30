@@ -56,4 +56,7 @@ public interface Comparator<T> {
 	default Comparator<T> reversed() {
         return Collections.reverseOrder(this);
     }
+	public static <T extends Comparable<? super T>> Comparator<T> reverseOrder() {
+        return Collections.reverseOrder();
+    }
 }
