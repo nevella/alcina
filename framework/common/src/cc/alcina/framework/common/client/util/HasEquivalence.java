@@ -191,6 +191,29 @@ public interface HasEquivalence<T> {
 			return duplicates;
 		}
 
+		public static <T extends HasEquivalence> Multimap<T, List<T>>
+				mapDuplicates(Collection<T> o1) {
+			List<T> passed = new ArrayList<T>();
+			List<T> duplicates = new ArrayList<T>();
+			Multimap<T, List<T>> result = new Multimap<>();
+			for (T t : o1) {
+				boolean duplicate = false;
+				for (T pass : passed) {
+					if (pass.equivalentTo(t)) {
+						duplicates.add(t);
+						result.add(pass, t);
+						duplicate = true;
+						break;
+					}
+				}
+				if (!duplicate) {
+					passed.add(t);
+					result.add(t, t);
+				}
+			}
+			return result;
+		}
+
 		public static <T extends HasEquivalenceHash> List<T>
 				listDuplicatesHashed(Collection<T> o1) {
 			HasEquivalenceHashMap<T> passed = new HasEquivalenceHashMap<T>();
