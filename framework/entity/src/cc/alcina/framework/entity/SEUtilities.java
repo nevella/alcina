@@ -96,6 +96,22 @@ public class SEUtilities {
 	private static UnsortedMultikeyMap<PropertyDescriptor> pdLookup = new UnsortedMultikeyMap<PropertyDescriptor>(
 			2);
 
+	public static List<Field> allFields(Class clazz) {
+		List<Field> result = new ArrayList<>();
+		try {
+			while (clazz != Object.class) {
+				for (Field f : clazz.getDeclaredFields()) {
+					f.setAccessible(true);
+					result.add(f);
+				}
+				clazz = clazz.getSuperclass();
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		return result;
+	}
+
 	public static void appShutdown() {
 		pdLookup = null;
 	}
@@ -161,6 +177,16 @@ public class SEUtilities {
 		return constant.toString().replace('_', '-').toLowerCase();
 	}
 
+	public static boolean containsDodgyAscii(String text) {
+		for (int idx = 0; idx < text.length(); idx++) {
+			int codePoint = (int) text.charAt(idx);
+			if (codePoint >= 0x80 && codePoint <= 0x9f) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static int copyFile(File in, File out) throws IOException {
 		if (in.isDirectory()) {
 			return copyDirectory(in, out);
@@ -179,6 +205,19 @@ public class SEUtilities {
 		out.setLastModified(in.lastModified());
 		ins.close();
 		return 1;
+	}
+
+	public static <T> void copyProperties(T from, T to,
+			String... propertyNames) {
+		try {
+			for (String propertyName : propertyNames) {
+				PropertyDescriptor pd = getPropertyDescriptorByName(
+						from.getClass(), propertyName);
+				pd.getWriteMethod().invoke(to, pd.getReadMethod().invoke(from));
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public static String decUtf8(String s) {
@@ -393,22 +432,6 @@ public class SEUtilities {
 		return true;
 	}
 
-	public static List<Field> allFields(Class clazz) {
-		List<Field> result = new ArrayList<>();
-		try {
-			while (clazz != Object.class) {
-				for (Field f : clazz.getDeclaredFields()) {
-					f.setAccessible(true);
-					result.add(f);
-				}
-				clazz = clazz.getSuperclass();
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-		return result;
-	}
-
 	public static void expandAll(JTree tree, boolean expand) {
 		TreeNode root = (TreeNode) tree.getModel().getRoot();
 		// Traverse tree from root
@@ -545,6 +568,15 @@ public class SEUtilities {
 				+ CommonUtils.capitaliseFirst(field.getName());
 	}
 
+	public static Calendar getCalendarRoundedToDay() {
+		Calendar cal = Calendar.getInstance();
+		cal.clear(Calendar.MILLISECOND);
+		cal.clear(Calendar.SECOND);
+		cal.clear(Calendar.MINUTE);
+		cal.clear(Calendar.HOUR);
+		return cal;
+	}
+
 	public static File getChildFile(File folder, String childFileName) {
 		return new File(
 				String.format("%s/%s", folder.getPath(), childFileName));
@@ -632,6 +664,13 @@ public class SEUtilities {
 		}
 	}
 
+	public static String getParentPath(String path) {
+		if (path.contains("/")) {
+			return path.substring(0, path.lastIndexOf("/"));
+		}
+		return "";
+	}
+
 	public static Map<String, Object> getPropertiesAsMap(Object obj,
 			List<String> ignore) {
 		try {
@@ -665,6 +704,16 @@ public class SEUtilities {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public static Class getRemoteActionClass(Class clazz) {
+		RegistryLocation registryLocation = (RegistryLocation) clazz
+				.getAnnotation(RegistryLocation.class);
+		if (registryLocation != null && registryLocation
+				.registryPoint() == RemoteActionPerformer.class) {
+			return registryLocation.targetClass();
+		}
+		return null;
 	}
 
 	public static Throwable getRootCause(Throwable t) {
@@ -714,6 +763,10 @@ public class SEUtilities {
 				return str;
 			}
 		}
+	}
+
+	public static boolean hasFractional(double d) {
+		return Math.abs(Math.round(d) - d) > 0.0001;
 	}
 
 	public static String htmlToText(String aText) {
@@ -887,12 +940,35 @@ public class SEUtilities {
 		return normalizeWhitespace(input).trim();
 	}
 
+	public static boolean notJustWhitespace(String text) {
+		return SEUtilities.normalizeWhitespaceAndTrim(text).length() > 0;
+	}
+
+	public static Date oldDate(int year, int month, int dayOfMonth) {
+		return toOldDate(LocalDate.of(year, month, dayOfMonth));
+	}
+
 	public static String padString(String input, int length, char padChar) {
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < length - input.length(); i++) {
 			sb.append(padChar);
 		}
 		sb.append(input);
+		return sb.toString();
+	}
+
+	public static String removeDodgyAscii(String text) {
+		if (!containsDodgyAscii(text)) {
+			return text;
+		}
+		StringBuilder sb = new StringBuilder();
+		for (int idx = 0; idx < text.length(); idx++) {
+			int codePoint = (int) text.charAt(idx);
+			if (codePoint >= 0x80 && codePoint <= 0x9f) {
+			} else {
+				sb.append((char) codePoint);
+			}
+		}
 		return sb.toString();
 	}
 
@@ -912,6 +988,19 @@ public class SEUtilities {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public static Map<String, String> splitQuery(URL url)
+			throws UnsupportedEncodingException {
+		Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+		String query = url.getQuery();
+		String[] pairs = query.split("&");
+		for (String pair : pairs) {
+			int idx = pair.indexOf("=");
+			query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"),
+					URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
+		}
+		return query_pairs;
 	}
 
 	public static void stringDiff(String s1, String s2) {
@@ -960,6 +1049,21 @@ public class SEUtilities {
 				throw new Exception(cause);
 			}
 		}
+	}
+
+	public static Date toOldDate(LocalDate ld) {
+		return Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
+	}
+
+	public static Date toOldDate(LocalDateTime ldt) {
+		return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
+	}
+
+	public static void toStartOfDay(Calendar calendar) {
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
 	}
 
 	public static String usToAuDate(String s) {
@@ -1090,15 +1194,6 @@ public class SEUtilities {
 		}
 	}
 
-	public static Calendar getCalendarRoundedToDay() {
-		Calendar cal = Calendar.getInstance();
-		cal.clear(Calendar.MILLISECOND);
-		cal.clear(Calendar.SECOND);
-		cal.clear(Calendar.MINUTE);
-		cal.clear(Calendar.HOUR);
-		return cal;
-	}
-
 	public static class Bytes {
 		public static int indexOf(byte[] src, byte[] toFind) {
 			return indexOf(src, toFind, 0);
@@ -1158,96 +1253,5 @@ public class SEUtilities {
 
 	public static enum OsType {
 		Windows, MacOS, Unix
-	}
-
-	public static void toStartOfDay(Calendar calendar) {
-		calendar.set(Calendar.HOUR_OF_DAY, 0);
-		calendar.set(Calendar.MINUTE, 0);
-		calendar.set(Calendar.SECOND, 0);
-		calendar.set(Calendar.MILLISECOND, 0);
-	}
-
-	public static String getParentPath(String path) {
-		if (path.contains("/")) {
-			return path.substring(0, path.lastIndexOf("/"));
-		}
-		return "";
-	}
-
-	public static Class getRemoteActionClass(Class clazz) {
-		RegistryLocation registryLocation = (RegistryLocation) clazz
-				.getAnnotation(RegistryLocation.class);
-		if (registryLocation != null && registryLocation
-				.registryPoint() == RemoteActionPerformer.class) {
-			return registryLocation.targetClass();
-		}
-		return null;
-	}
-
-	public static boolean notJustWhitespace(String text) {
-		return SEUtilities.normalizeWhitespaceAndTrim(text).length() > 0;
-	}
-
-	public static Map<String, String> splitQuery(URL url)
-			throws UnsupportedEncodingException {
-		Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-		String query = url.getQuery();
-		String[] pairs = query.split("&");
-		for (String pair : pairs) {
-			int idx = pair.indexOf("=");
-			query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"),
-					URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
-		}
-		return query_pairs;
-	}
-
-	public static boolean containsDodgyAscii(String text) {
-		for (int idx = 0; idx < text.length(); idx++) {
-			int codePoint = (int) text.charAt(idx);
-			if (codePoint >= 0x80 && codePoint <= 0x9f) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public static String removeDodgyAscii(String text) {
-		if (!containsDodgyAscii(text)) {
-			return text;
-		}
-		StringBuilder sb = new StringBuilder();
-		for (int idx = 0; idx < text.length(); idx++) {
-			int codePoint = (int) text.charAt(idx);
-			if (codePoint >= 0x80 && codePoint <= 0x9f) {
-			} else {
-				sb.append((char) codePoint);
-			}
-		}
-		return sb.toString();
-	}
-
-	public static Date toOldDate(LocalDate ld) {
-		return Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
-	}
-
-	public static Date toOldDate(LocalDateTime ldt) {
-		return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
-	}
-
-	public static boolean hasFractional(double d) {
-		return Math.abs(Math.round(d) - d) > 0.0001;
-	}
-
-	public static <T> void copyProperties(T from, T to,
-			String... propertyNames) {
-		try {
-			for (String propertyName : propertyNames) {
-				PropertyDescriptor pd = getPropertyDescriptorByName(
-						from.getClass(), propertyName);
-				pd.getWriteMethod().invoke(to, pd.getReadMethod().invoke(from));
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 }
