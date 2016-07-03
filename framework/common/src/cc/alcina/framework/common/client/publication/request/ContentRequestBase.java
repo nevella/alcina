@@ -97,6 +97,16 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	private Map<String, String> properties = new LinkedHashMap<String, String>();
 
+	private String opaqueRequestXml;
+	private String opaqueRequestClassname;
+	public String getOpaqueRequestClassname() {
+		return this.opaqueRequestClassname;
+	}
+
+	public void setOpaqueRequestClassname(String opaqueRequestClassname) {
+		this.opaqueRequestClassname = opaqueRequestClassname;
+	}
+
 	public String getAttachmentMessage() {
 		return attachmentMessage;
 	}
@@ -148,6 +158,13 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	public String getNote() {
 		return note;
+	}
+
+	/**
+	 * For when we don't want the client to have to know the request class
+	 */
+	public String getOpaqueRequestXml() {
+		return this.opaqueRequestXml;
 	}
 
 	@Display(name = "outputFormat")
@@ -345,6 +362,10 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		String old_note = this.note;
 		this.note = note;
 		propertyChangeSupport().firePropertyChange("note", old_note, note);
+	}
+
+	public void setOpaqueRequestXml(String opaqueRequestXml) {
+		this.opaqueRequestXml = opaqueRequestXml;
 	}
 
 	public void setOutputFormat(String outputFormat) {

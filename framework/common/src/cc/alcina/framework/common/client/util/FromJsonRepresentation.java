@@ -22,6 +22,29 @@ public interface FromJsonRepresentation {
 	static public final DateFormat CONVERSION_DATE_FORMAT = new SimpleDateFormat(
 			"yyyy/MM/dd HH:mm:ss +0000");
 
+	public static class JsoToFromJsonRep implements Function<Object, Object> {
+		private Class<? extends FromJsonRepresentation> clazz;
+
+		public JsoToFromJsonRep(Class<? extends FromJsonRepresentation> clazz) {
+			this.clazz = clazz;
+		}
+
+		@Override
+		public Object apply(Object value) {
+			try {
+				if (value != null) {
+					FromJsonRepresentation rep = clazz.newInstance();
+					rep.fromJson((JSONObject) value);
+					return rep;
+				} else {
+					return null;
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
 	default void fieldMapping(JSONObject jso) {
 		try {
 			Field[] fields = new GraphProjection().getFieldsForClass(this);
@@ -33,10 +56,26 @@ public interface FromJsonRepresentation {
 						value = jsArrayToList((JSONArray) value,
 								Function.identity());
 					}
+					if (value instanceof JSONObject) {
+						continue;//handle elsewhere
+					}
 					if (field.getType() == Date.class && value != null) {
 						value = CONVERSION_DATE_FORMAT.parse(value.toString());
 					}
-					field.set(this, value);
+					if (value instanceof Double) {
+						Double d = (Double) value;
+						if (field.getType() == long.class
+								|| field.getType() == Long.class) {
+							field.set(this, ((Double) value).longValue());
+						} else if (field.getType() == Integer.class
+								|| field.getType() == int.class) {
+							field.set(this, ((Double) value).intValue());
+						} else {
+							field.set(this, value);
+						}
+					} else {
+						field.set(this, value);
+					}
 				}
 			}
 		} catch (Exception e) {

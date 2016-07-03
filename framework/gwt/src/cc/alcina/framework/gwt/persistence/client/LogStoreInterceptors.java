@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.util.ClientNodeIterator;
 import cc.alcina.framework.gwt.client.util.TextUtils;
 
@@ -45,136 +46,17 @@ public class LogStoreInterceptors {
 		}
 	};
 
-	public void installStats() {
-		AlcinaTopics.muteStatisticsLoggingListenerDelta(muteListener, true);
-		installStats0();
-	}
-
-	native void installStats0()/*-{
-        function format(out) {
-            var idx = 0;
-            var j = 1;
-
-            while (true) {
-                idx = out.indexOf("%s", idx);
-                if (idx == -1) {
-                    break;
-                }
-                var ins = arguments[j++];
-                if (ins === null) {
-                    ins = "null";
-                } else if (ins === undefined) {
-                    ins = "undefined";
-                } else {
-                    ins = ins.toString();
-                }
-                out = out.substring(0, idx) + ins + out.substring(idx + 2);
-                idx += ins.length;
-            }
-            return out;
-        }
-        function pad0(s, len) {
-            return pad(s, "0", len);
-        }
-        function pad(s, sup, len) {
-            s = "" + s;
-            while (s.length < len) {
-                s = sup + s;
-            }
-            return s;
-        }
-        var lsi = this;
-        var running = [];
-        function eventToString(event) {
-            // return some string representation of this event
-            var d = new Date(event.millis);
-            var timeStr = format("%s:%s:%s,%s", pad0(d.getHours(), 2), pad0(d
-                    .getMinutes(), 2), pad0(d.getSeconds(), 2), pad0(d
-                    .getMilliseconds(), 3));
-            return event.evtGroup + " | " + event.moduleName + " | "
-                    + event.subSystem + " | " + event.method + " | "
-                    + pad(event.type, " ", 25) + " | " + timeStr;
-        }
-        window.$stats = function(evt) {
-            var muted = lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::areStatsMuted()();
-            if (!muted) {
-                var e2s = eventToString(evt);
-                lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(e2s);
-            }
-            return true;
-        };
-        //if there were stats collected prior to this install, flush 'em
-        if (window["stats_pre"]) {
-            for ( var k in window.stats_pre) {
-                var pre = window.stats_pre[k];
-                lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
-            }
-            window.$stats_pre = [];
-        }
-        if ($wnd["stats_pre"]) {
-            for ( var k in $wnd.stats_pre) {
-                var pre = $wnd.stats_pre[k];
-                lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
-            }
-            $wnd.$stats_pre = [];
-        }
-
-	}-*/;
-
-	boolean areStatsMuted() {
-		return statsMuteCounter > 0;
-	}
-
 	private HandlerRegistration historyHandlerRegistration;
 
 	private HandlerRegistration nativePreviewHandlerRegistration;
 
-	public void interceptClientLog() {
-		AlcinaTopics.logCategorisedMessageListenerDelta(
-				LogStore.get().getStringPairListener(), true);
-	}
+	List<String> stats = new ArrayList<>();
 
-	public void logStat(String stat) {
-		AlcinaTopics.logCategorisedMessage(
-				new StringPair(AlcinaTopics.LOG_CATEGORY_STAT, stat));
-	}
-
-	public void logHistoryEvents() {
-		this.historyHandlerRegistration = History
-				.addValueChangeHandler(historyListener);
-	}
-
-	public void logClicksAndChanges() {
-		nativePreviewHandlerRegistration = Event
-				.addNativePreviewHandler(new NativePreviewHandler() {
-					public void onPreviewNativeEvent(NativePreviewEvent event) {
-						previewNativeEvent(event);
-					}
-				});
-	}
+	private boolean logStatPaused = false;
 
 	private String lastFocussedValueMessage;
 
 	private boolean numberedElements;
-
-	protected void previewNativeEvent(NativePreviewEvent event) {
-		Event nativeEvent = Event.as(event.getNativeEvent());
-		String type = null;
-		try {
-			type = nativeEvent.getType();
-		} catch (Exception e1) {
-			// FF22 throwing some permissions exceptions, gawd knows why
-			return;
-		}
-		boolean click = BrowserEvents.CLICK.equals(type);
-		boolean blur = BrowserEvents.BLUR.equals(type)
-				|| BrowserEvents.FOCUSOUT.equals(type);
-		boolean focus = BrowserEvents.FOCUS.equals(type)
-				|| BrowserEvents.FOCUSIN.equals(type);
-		if (click || blur || focus) {
-			handleNativeEvent(nativeEvent, click, blur, focus);
-		}
-	}
 
 	public void handleNativeEvent(Event nativeEvent, boolean click,
 			boolean blur, boolean focus) {
@@ -264,6 +146,96 @@ public class LogStoreInterceptors {
 		}
 	}
 
+	public void installStats() {
+		AlcinaTopics.muteStatisticsLoggingListenerDelta(muteListener, true);
+		installStats0();
+	}
+
+	public void interceptClientLog() {
+		AlcinaTopics.logCategorisedMessageListenerDelta(
+				LogStore.get().getStringPairListener(), true);
+	}
+
+	public boolean isLogStatPaused() {
+		return this.logStatPaused;
+	}
+
+	public boolean isNumberedElements() {
+		return this.numberedElements;
+	}
+
+	public void logClicksAndChanges() {
+		nativePreviewHandlerRegistration = Event
+				.addNativePreviewHandler(new NativePreviewHandler() {
+					public void onPreviewNativeEvent(NativePreviewEvent event) {
+						previewNativeEvent(event);
+					}
+				});
+	}
+
+	public void logHistoryEvents() {
+		this.historyHandlerRegistration = History
+				.addValueChangeHandler(historyListener);
+	}
+
+	public void logStat(String stat) {
+		if (logStatPaused) {
+			stats.add(stat);
+			return;
+		}
+		ClientNotifications.get().log(stat);
+		AlcinaTopics.logCategorisedMessage(
+				new StringPair(AlcinaTopics.LOG_CATEGORY_STAT, stat));
+	}
+
+	public void setLogStatPaused(boolean logStatPaused) {
+		this.logStatPaused = logStatPaused;
+		if (!logStatPaused) {
+			stats.forEach(s -> logStat(s));
+			stats.clear();
+			;
+		}
+	}
+
+	public void setNumberedElements(boolean numberedElements) {
+		this.numberedElements = numberedElements;
+	}
+
+	public void unload() {
+		AlcinaTopics.logCategorisedMessageListenerDelta(
+				LogStore.get().getStringPairListener(), false);
+		AlcinaTopics.muteStatisticsLoggingListenerDelta(muteListener, false);
+		if (historyHandlerRegistration != null) {
+			historyHandlerRegistration.removeHandler();
+		}
+		if (nativePreviewHandlerRegistration != null) {
+			nativePreviewHandlerRegistration.removeHandler();
+		}
+	}
+
+	protected void previewNativeEvent(NativePreviewEvent event) {
+		Event nativeEvent = Event.as(event.getNativeEvent());
+		String type = null;
+		try {
+			type = nativeEvent.getType();
+		} catch (Exception e1) {
+			// FF22 throwing some permissions exceptions, gawd knows why
+			return;
+		}
+		boolean click = BrowserEvents.CLICK.equals(type);
+		boolean blur = BrowserEvents.BLUR.equals(type)
+				|| BrowserEvents.FOCUSOUT.equals(type);
+		boolean focus = BrowserEvents.FOCUS.equals(type)
+				|| BrowserEvents.FOCUSIN.equals(type);
+		if (click || blur || focus) {
+			handleNativeEvent(nativeEvent, click, blur, focus);
+		}
+	}
+
+	boolean areStatsMuted() {
+		return statsMuteCounter > 0;
+	}
+
 	final native String getClassName(Element elt) /*-{
         var cn = elt.className;
         //note - someone says IE DOM objects don't support - hence try/catch
@@ -284,23 +256,74 @@ public class LogStoreInterceptors {
         return cn;
 	}-*/;
 
-	public void unload() {
-		AlcinaTopics.logCategorisedMessageListenerDelta(
-				LogStore.get().getStringPairListener(), false);
-		AlcinaTopics.muteStatisticsLoggingListenerDelta(muteListener, false);
-		if (historyHandlerRegistration != null) {
-			historyHandlerRegistration.removeHandler();
-		}
-		if (nativePreviewHandlerRegistration != null) {
-			nativePreviewHandlerRegistration.removeHandler();
-		}
-	}
+	native void installStats0()/*-{
+        function format(out) {
+            var idx = 0;
+            var j = 1;
 
-	public boolean isNumberedElements() {
-		return this.numberedElements;
-	}
+            while (true) {
+                idx = out.indexOf("%s", idx);
+                if (idx == -1) {
+                    break;
+                }
+                var ins = arguments[j++];
+                if (ins === null) {
+                    ins = "null";
+                } else if (ins === undefined) {
+                    ins = "undefined";
+                } else {
+                    ins = ins.toString();
+                }
+                out = out.substring(0, idx) + ins + out.substring(idx + 2);
+                idx += ins.length;
+            }
+            return out;
+        }
+        function pad0(s, len) {
+            return pad(s, "0", len);
+        }
+        function pad(s, sup, len) {
+            s = "" + s;
+            while (s.length < len) {
+                s = sup + s;
+            }
+            return s;
+        }
+        var lsi = this;
+        var running = [];
+        function eventToString(event) {
+            // return some string representation of this event
+            var d = new Date(event.millis);
+            var timeStr = format("%s:%s:%s,%s", pad0(d.getHours(), 2), pad0(d
+                    .getMinutes(), 2), pad0(d.getSeconds(), 2), pad0(d
+                    .getMilliseconds(), 3));
+            return event.evtGroup + " | " + event.moduleName + " | "
+                    + event.subSystem + " | " + event.method + " | "
+                    + pad(event.type, " ", 25) + " | " + timeStr;
+        }
+        window.$stats = function(evt) {
+            var muted = lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::areStatsMuted()();
+            if (!muted) {
+                var e2s = eventToString(evt);
+                lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(e2s);
+            }
+            return true;
+        };
+        //if there were stats collected prior to this install, flush 'em
+        if (window["stats_pre"]) {
+            for ( var k in window.stats_pre) {
+                var pre = window.stats_pre[k];
+                lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
+            }
+            window.$stats_pre = [];
+        }
+        if ($wnd["stats_pre"]) {
+            for ( var k in $wnd.stats_pre) {
+                var pre = $wnd.stats_pre[k];
+                lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
+            }
+            $wnd.$stats_pre = [];
+        }
 
-	public void setNumberedElements(boolean numberedElements) {
-		this.numberedElements = numberedElements;
-	}
+	}-*/;
 }
