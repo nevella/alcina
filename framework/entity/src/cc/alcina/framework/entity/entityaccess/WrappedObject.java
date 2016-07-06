@@ -63,22 +63,32 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 	public abstract IUser getUser();
 
 	public static class WrappedObjectHelper {
-		public static String xmlSerialize(Object object) throws JAXBException {
+		public static String xmlSerialize(Object object)  {
 			List<Class> classes = getContextClasses(object.getClass());
-			return xmlSerialize(object, classes);
+			try {
+				return xmlSerialize(object, classes);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			
 		}
 
 		@SuppressWarnings("unchecked")
 		public static <T> T xmlDeserialize(Class<T> clazz, String xmlStr)
-				throws JAXBException {
+				 {
 			if (xmlStr == null) {
 				return null;
 			}
-			List<Class> classes = getContextClasses(clazz);
-			JAXBContext jc = JaxbUtils.getContext(classes);
-			Unmarshaller um = jc.createUnmarshaller();
-			StringReader sr = new StringReader(xmlStr);
-			return (T) um.unmarshal(sr);
+			try {
+				List<Class> classes = getContextClasses(clazz);
+				JAXBContext jc = JaxbUtils.getContext(classes);
+				Unmarshaller um = jc.createUnmarshaller();
+				StringReader sr = new StringReader(xmlStr);
+				return (T) um.unmarshal(sr);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			
 		}
 
 		protected static <T> List<Class> getContextClasses(Class<T> clazz) {
