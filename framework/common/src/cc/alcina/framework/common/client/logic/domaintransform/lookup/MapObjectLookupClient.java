@@ -84,7 +84,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 		});
 	}
 
-	void addObjectOrCollectionToEndOfQueue(Object o) {
+	synchronized void addObjectOrCollectionToEndOfQueue(Object o) {
 		if (o == null) {
 			return;
 		}
@@ -97,7 +97,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 		}
 	}
 
-	boolean iterateRegistration() {
+	synchronized boolean iterateRegistration() {
 		registerCounter = 0;
 		while (!toRegister.isEmpty()
 				&& (postRegisterCommand == null || registerCounter++ < 500)) {
