@@ -40,8 +40,9 @@ import com.totsp.gwittir.client.validator.Validator;
 
 /**
  * This class represents a DataBinding between two objects. It also supports
- * Child bindings. For more information, see <a
- * href="http://code.google.com/p/gwittir/wiki/Binding">Binding</a> in the Wiki.
+ * Child bindings. For more information, see
+ * <a href="http://code.google.com/p/gwittir/wiki/Binding">Binding</a> in the
+ * Wiki.
  * 
  * @see com.totsp.gwittir.client.beans.BindingBuilder
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
@@ -388,7 +389,8 @@ public class Binding {
 				try {
 					left.feedback.resolve(left.object);
 				} catch (Exception e) {
-					LOGGER.log(Level.INFO, "Exception cleaning up feedback ", e);
+					LOGGER.log(Level.INFO, "Exception cleaning up feedback ",
+							e);
 				}
 			}
 			if (left.nestedListener != null) {
@@ -400,7 +402,8 @@ public class Binding {
 				try {
 					right.feedback.resolve(right.object);
 				} catch (Exception e) {
-					LOGGER.log(Level.INFO, "Exception cleaning up feedback ", e);
+					LOGGER.log(Level.INFO, "Exception cleaning up feedback ",
+							e);
 				}
 			}
 			if (right.nestedListener != null) {
@@ -467,8 +470,8 @@ public class Binding {
 
 	protected boolean leftObjectIsHiddenWidget() {
 		if (left.object instanceof Widget) {
-			if (!DomUtils.isVisibleAncestorChain(((Widget) left.object)
-					.getElement())) {
+			if (!DomUtils.isVisibleAncestorChain(
+					((Widget) left.object).getElement())) {
 				return true;
 			}
 		}
@@ -511,8 +514,9 @@ public class Binding {
 							.getAccessorMethod().invoke(object, null);
 				}
 			} catch (ClassCastException cce) {
-				throw new RuntimeException("Nonbindable sub property: "
-						+ object + " . " + pname, cce);
+				throw new RuntimeException(
+						"Nonbindable sub property: " + object + " . " + pname,
+						cce);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -526,24 +530,25 @@ public class Binding {
 		}
 		instance.object = object;
 		try {
-			instance.property = INTROSPECTOR.getDescriptor(object).getProperty(
-					propertyName);
+			instance.property = INTROSPECTOR.getDescriptor(object)
+					.getProperty(propertyName);
 			if (instance.property == null) {
 				throw new NullPointerException("Property Not Found.");
 			}
 		} catch (NullPointerException e) {
-			throw new RuntimeException("Exception getting property "
-					+ propertyName, e);
+			throw new RuntimeException(
+					"Exception getting property " + propertyName, e);
 		}
 		instance.nestedListener = rtpcl;
 		return instance;
 	}
 
-	private SourcesPropertyChangeEvents getBindableAtCollectionIndex(
-			Collection collection, int index) {
+	private SourcesPropertyChangeEvents
+			getBindableAtCollectionIndex(Collection collection, int index) {
 		int i = 0;
 		SourcesPropertyChangeEvents result = null;
-		for (Iterator it = collection.iterator(); it.hasNext() && (i <= index); i++) {
+		for (Iterator it = collection.iterator(); it.hasNext()
+				&& (i <= index); i++) {
 			result = (SourcesPropertyChangeEvents) it.next();
 		}
 		if (i != index) {
@@ -553,7 +558,8 @@ public class Binding {
 		return result;
 	}
 
-	private SourcesPropertyChangeEvents getBindableAtMapKey(Map map, String key) {
+	private SourcesPropertyChangeEvents getBindableAtMapKey(Map map,
+			String key) {
 		SourcesPropertyChangeEvents result = null;
 		for (Iterator it = map.entrySet().iterator(); it.hasNext();) {
 			Entry e = (Entry) it.next();
@@ -582,8 +588,8 @@ public class Binding {
 				throw new RuntimeException(e);
 			}
 		}
-		throw new RuntimeException("No Object matching " + propertyName + "="
-				+ stringValue);
+		throw new RuntimeException(
+				"No Object matching " + propertyName + "=" + stringValue);
 	}
 
 	private SourcesPropertyChangeEvents getBindableFromCollectionWithProperty(
@@ -604,8 +610,8 @@ public class Binding {
 				throw new RuntimeException(e);
 			}
 		}
-		throw new RuntimeException("No Object matching " + propertyName + "="
-				+ stringValue);
+		throw new RuntimeException(
+				"No Object matching " + propertyName + "=" + stringValue);
 	}
 
 	private SourcesPropertyChangeEvents getDiscriminatedObject(
@@ -684,8 +690,8 @@ public class Binding {
 		}
 	}
 
-	static class DefaultPropertyChangeListener implements
-			PropertyChangeListener {
+	static class DefaultPropertyChangeListener
+			implements PropertyChangeListener {
 		private BindingInstance instance;
 
 		private BindingInstance target;
@@ -706,8 +712,8 @@ public class Binding {
 				} catch (ValidationException ve) {
 					if (instance.feedback != null) {
 						if (this.lastException != null) {
-							instance.feedback.resolve(propertyChangeEvent
-									.getSource());
+							instance.feedback
+									.resolve(propertyChangeEvent.getSource());
 						}
 						instance.feedback.handleException(
 								propertyChangeEvent.getSource(), ve);
@@ -730,7 +736,7 @@ public class Binding {
 					&& (instance.property.getType() != String.class)) {
 				instance.converter = Converter.TO_STRING_CONVERTER;
 			}
-			if (instance.converter != null) {
+			if (instance.converter != null && instance.validator == null) {
 				value = instance.converter.convert(value);
 			}
 			Object[] args = new Object[1];
@@ -753,8 +759,8 @@ public class Binding {
 		}
 	}
 
-	private class NestedPropertyChangeListener implements
-			PropertyChangeListener {
+	private class NestedPropertyChangeListener
+			implements PropertyChangeListener {
 		SourcesPropertyChangeEvents sourceObject;
 
 		BindingInstance target;
@@ -825,7 +831,8 @@ public class Binding {
 	public void resolveAllFeedbacks() {
 		List<Binding> bindings = provideAllBindings(null);
 		for (Binding binding : bindings) {
-			if (binding.getLeft() != null && binding.getLeft().feedback != null) {
+			if (binding.getLeft() != null
+					&& binding.getLeft().feedback != null) {
 				binding.getLeft().feedback.resolve(binding.getLeft().object);
 			}
 			if (binding.getRight() != null
