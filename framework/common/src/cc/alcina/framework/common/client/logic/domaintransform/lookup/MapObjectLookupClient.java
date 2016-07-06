@@ -52,7 +52,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 		registerChildren.clear();
 	}
 
-	public void registerAsync(Collection registerableDomainObjects,
+	public synchronized void registerAsync(Collection registerableDomainObjects,
 			final ScheduledCommand postRegisterCommand) {
 		mappedObjects = new PerClassLookup();
 		for (Object o : registerableDomainObjects) {
@@ -84,7 +84,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 		});
 	}
 
-	void addObjectOrCollectionToEndOfQueue(Object o) {
+	synchronized void addObjectOrCollectionToEndOfQueue(Object o) {
 		if (o == null) {
 			return;
 		}
@@ -97,7 +97,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 		}
 	}
 
-	boolean iterateRegistration() {
+	synchronized boolean iterateRegistration() {
 		registerCounter = 0;
 		while (!toRegister.isEmpty()
 				&& (postRegisterCommand == null || registerCounter++ < 500)) {
@@ -106,7 +106,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 		return !toRegister.isEmpty();
 	}
 
-	private void mapObjectFromFrontOfQueue() {
+	private synchronized void mapObjectFromFrontOfQueue() {
 		HasIdAndLocalId obj = toRegister.removeFirst();
 		if ((obj.getId() == 0 && obj.getLocalId() == 0)
 				|| mappedObjects.contains(obj)) {
@@ -149,7 +149,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 	}
 
 	@Override
-	public void registerObjects(Collection objects) {
+	public synchronized void registerObjects(Collection objects) {
 		mappedObjects = new PerClassLookup();
 		for (Object o : objects) {
 			addObjectOrCollectionToEndOfQueue(o);
@@ -158,7 +158,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 	}
 
 	@Override
-	public void mapObject(HasIdAndLocalId obj) {
+	public synchronized void mapObject(HasIdAndLocalId obj) {
 		mappedObjects = new PerClassLookup();
 		addObjectOrCollectionToEndOfQueue(obj);
 		iterateRegistration();
