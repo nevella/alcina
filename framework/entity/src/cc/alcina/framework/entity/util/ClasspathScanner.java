@@ -21,6 +21,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLDecoder;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -37,6 +43,7 @@ import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.ClassDataCache.ClassDataItem;
 
@@ -130,7 +137,6 @@ public class ClasspathScanner {
 		AtomicInteger submitted = new AtomicInteger(0);
 
 		private void getClassesFromDirectory(String path, String root) {
-			
 			File directory = new File(path);
 			if (directory.exists()) {
 				for (String file : directory.list()) {
@@ -154,6 +160,53 @@ public class ClasspathScanner {
 			int count = submitted.decrementAndGet();
 			if (count == 0) {
 				executor.shutdown();
+			}
+		}
+	}
+
+	public static class DirectoryVisitorNio extends ClasspathVisitor {
+		public DirectoryVisitorNio(ClasspathScanner scanner) {
+			super(scanner);
+		}
+
+		@Override
+		public boolean handles(URL url) {
+			return url.getProtocol().equals(PROTOCOL_FILE)
+					&& new File(url.getFile()).isDirectory();
+		}
+
+		@Override
+		public void enumerateClasses(URL url) throws Exception {
+			String fileUrl = sanitizeFileURL(url);
+			Path startingDir = Paths.get(fileUrl);
+			ScanFiles scanFiles = new ScanFiles(fileUrl);
+			Files.walkFileTree(startingDir, scanFiles);
+		}
+
+		public class ScanFiles extends SimpleFileVisitor<Path> {
+			private String root;
+
+			public ScanFiles(String root) {
+				this.root = root;
+			}
+
+			// Print information about
+			// each type of file.
+			@Override
+			public FileVisitResult visitFile(Path path,
+					BasicFileAttributes attr) {
+				try {
+					if (attr.isRegularFile()
+							&& path.toString().endsWith(".class")) {
+						String classPath = path.toString()
+								.substring(root.length() + 1);
+						add(classPath, attr.lastModifiedTime().toMillis(),
+								path.toUri().toURL(), null);
+					}
+					return FileVisitResult.CONTINUE;
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
 			}
 		}
 	}
@@ -187,9 +240,8 @@ public class ClasspathScanner {
 	};
 
 	protected static List<Class<? extends ClasspathVisitor>> visitors = new ArrayList<Class<? extends ClasspathVisitor>>();
-
 	static {
-		visitors.add(DirectoryVisitor.class);
+		visitors.add(DirectoryVisitorNio.class);
 		visitors.add(JarVisitor.class);
 	}
 
@@ -344,7 +396,7 @@ public class ClasspathScanner {
 		// lifted from seam 1.21
 		private void scanForRegProps(String resourceName,
 				ClassLoader classLoader, List<URL> visitedUrls)
-						throws Exception {
+				throws Exception {
 			List<URL> urls = new ArrayList<URL>();
 			if (resourceName == null) {
 				for (URL url : ((URLClassLoader) classLoader).getURLs()) {
