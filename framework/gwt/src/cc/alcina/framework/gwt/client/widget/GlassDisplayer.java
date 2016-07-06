@@ -54,7 +54,7 @@ public class GlassDisplayer {
 			Style style = fp.getElement().getStyle();
 			style.setBackgroundColor("#000");
 			updateOpacity();
-			glass.setStyleName("");
+			glass.setStyleName("alcina-GlassPopup");
 			glass.add(fp);
 			glass.setAnimationEnabled(false);
 		}
