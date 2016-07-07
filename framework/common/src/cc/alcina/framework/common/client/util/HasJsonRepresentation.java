@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.util;
 
 import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,18 @@ public interface HasJsonRepresentation {
 			JSONArray array = new JSONArray();
 			for (HasJsonRepresentation object : objects) {
 				array.put(object.asJson());
+			}
+			return array;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	static JSONArray stringListToJsArray(List<String> objects) {
+		try {
+			JSONArray array = new JSONArray();
+			for (String string : objects) {
+				array.put(string);
 			}
 			return array;
 		} catch (Exception e) {
