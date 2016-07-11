@@ -594,7 +594,7 @@ public class Registry {
 		T t = byKey.get(value);
 		if (t != null && newInstance) {
 			try {
-				t = (T) t.getClass().newInstance();
+				t = (T) classLookup.newInstance(t.getClass());
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
