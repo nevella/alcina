@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.PropertyKeyValueMapper;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
@@ -585,8 +585,21 @@ public class Registry {
 
 	public <T> T lookupImplementation(Class<T> registryPoint, Enum value,
 			String propertyName) {
+		return lookupImplementation(registryPoint, value, propertyName, false);
+	}
+
+	public <T> T lookupImplementation(Class<T> registryPoint, Enum value,
+			String propertyName, boolean newInstance) {
 		Map<Enum, T> byKey = enumLookup(registryPoint, propertyName);
-		return byKey.get(value);
+		T t = byKey.get(value);
+		if (t != null && newInstance) {
+			try {
+				t = (T) t.getClass().newInstance();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+		return t;
 	}
 
 	public <T> Map<Enum, T> enumLookup(Class<T> registryPoint,
