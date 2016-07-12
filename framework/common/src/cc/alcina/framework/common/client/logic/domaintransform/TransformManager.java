@@ -570,6 +570,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 			if (hili.equals(source)) {
 				toRemove.add(dte);
 			}
+			if (dte.getValueId() != 0 || dte.getValueLocalId() != 0) {
+				HasIdAndLocalId object = getObjectLookup().getObject(
+						dte.getValueClass(), dte.getValueId(),
+						dte.getValueLocalId());
+				if (hili.equals(object)) {
+					toRemove.add(dte);
+				}
+			}
 		}
 		trs.removeAll(toRemove);
 		transforms.removeAll(toRemove);
@@ -862,8 +870,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				collectionPropertyName, c);
 	}
 
-	public static <H> Set<H> getDeltaSet(
-			Collection<H> old, Object delta,
+	public static <H> Set<H> getDeltaSet(Collection<H> old, Object delta,
 			CollectionModificationType modificationType) {
 		Collection deltaC = CommonUtils.wrapInCollection(delta);
 		Set c = new LinkedHashSet(old);
