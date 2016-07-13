@@ -61,6 +61,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 
@@ -772,5 +773,9 @@ public class XmlUtils {
 	public static boolean isWhitespaceText(Node node) {
 		return node.getNodeType() == Node.TEXT_NODE
 				&& SEUtilities.isWhitespaceOrEmpty(node.getTextContent());
+	}
+
+	public static Element firstElementChild(Node node) {
+		return CommonUtils.first(nodeListToElementList(node.getChildNodes()));
 	}
 }
