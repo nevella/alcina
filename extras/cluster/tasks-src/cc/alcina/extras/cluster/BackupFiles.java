@@ -108,7 +108,6 @@ public class BackupFiles extends Task {
 						.compareTo(o2.getName()) : 1;
 			}
 		});
-		Collections.reverse(backups);
 		for (int i = backups.size() - 1; i >= 0; i--) {
 			File f = backups.get(i);
 			if (i >= maxBackups - 1) {
