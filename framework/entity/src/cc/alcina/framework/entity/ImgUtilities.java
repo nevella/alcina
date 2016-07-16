@@ -104,10 +104,10 @@ public class ImgUtilities {
 		ImageWriteParam iwp = writer.getDefaultWriteParam();
 		iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
 		compressionQuality = compressionQuality != null ? compressionQuality
-				: LooseContext.getContext().getFloat(
-						ImgUtilities.CONTEXT_JPEG_COMPRESSION_RATIO);
-		iwp.setCompressionQuality(compressionQuality == null ? 0.8f
-				: compressionQuality);
+				: LooseContext.getContext()
+						.getFloat(ImgUtilities.CONTEXT_JPEG_COMPRESSION_RATIO);
+		iwp.setCompressionQuality(
+				compressionQuality == null ? 0.8f : compressionQuality);
 		ImageOutputStream ios = new MemoryCacheImageOutputStream(os);
 		writer.setOutput(ios);
 		IIOImage image = new IIOImage(img, null, null);
@@ -122,14 +122,14 @@ public class ImgUtilities {
 		img = resizeToMaxWidth(img, maxWidth);
 		writeJpeg(img, new FileOutputStream(tgt), 0.8f);
 	}
-	
-	public static void toJpegThumbnail(InputStream src, OutputStream tgt, int maxWidth)
-			throws Exception {
+
+	public static void toJpegThumbnail(InputStream src, OutputStream tgt,
+			int maxWidth) throws Exception {
 		BufferedImage img = ImageIO.read(src);
 		img = resizeToMaxWidth(img, maxWidth);
 		writeJpeg(img, tgt, 0.8f);
 	}
-	
+
 	public static void toPngThumbnail(File src, File tgt, int maxWidth)
 			throws Exception {
 		BufferedImage img = ImageIO.read(src);
@@ -137,11 +137,12 @@ public class ImgUtilities {
 		writePng(img, new FileOutputStream(tgt));
 	}
 
-	public static BufferedImage resizeToMaxWidth(BufferedImage src, int maxWidth) {
+	public static BufferedImage resizeToMaxWidth(BufferedImage src,
+			int maxWidth) {
 		if (src.getWidth() > maxWidth) {
 			int scaledWidth = maxWidth;
-			int scaledHeight = (int) (scaledWidth * ((double) src.getHeight() / (double) src
-					.getWidth()));
+			int scaledHeight = (int) (scaledWidth
+					* ((double) src.getHeight() / (double) src.getWidth()));
 			ColorModel colorModel = src.getColorModel();
 			BufferedImage scaled = new BufferedImage(scaledWidth, scaledHeight,
 					BufferedImage.TYPE_INT_RGB);
@@ -192,11 +193,12 @@ public class ImgUtilities {
 	}
 
 	private static IndexColorModel getBlackAndWhiteColorModel() {
-		return new IndexColorModel(1, 2, new byte[] { 0, -1 }, new byte[] { 0,
-				-1 }, new byte[] { 0, -1 }, 1);
+		return new IndexColorModel(1, 2, new byte[] { 0, -1 },
+				new byte[] { 0, -1 }, new byte[] { 0, -1 }, 1);
 	}
 
-	public static void writePng(BufferedImage img, OutputStream os) throws IOException {
+	public static void writePng(BufferedImage img, OutputStream os)
+			throws IOException {
 		ImageIO.write(img, "png", os);
 		os.close();
 	}
@@ -223,9 +225,14 @@ public class ImgUtilities {
 	}
 
 	public static OutputStream convertToJpeg(File inputFile, OutputStream out)
-			throws InterruptedException, IOException {
-		Image image = Toolkit.getDefaultToolkit().getImage(
-				inputFile.getAbsolutePath());
+			throws Exception {
+		return convertToJpeg(inputFile, out, 0.8f);
+	}
+
+	public static OutputStream convertToJpeg(File inputFile, OutputStream out,
+			float compressionQuality) throws Exception {
+		Image image = Toolkit.getDefaultToolkit()
+				.getImage(inputFile.getAbsolutePath());
 		MediaTracker mediaTracker = new MediaTracker(new Container());
 		mediaTracker.addImage(image, 0);
 		mediaTracker.waitForID(0);
@@ -240,15 +247,14 @@ public class ImgUtilities {
 		graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
 				RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		graphics2D.drawImage(image, 0, 0, thumbWidth, thumbHeight, null);
-		ImageIO.write(thumbImage, "jpg", out);
+		writeJpeg(thumbImage, out, compressionQuality);
 		return out;
 	}
 
-	public static OutputStream scaleImage(File inputFile, int width,
-			int height, OutputStream out) throws InterruptedException,
-			IOException {
-		Image image = Toolkit.getDefaultToolkit().getImage(
-				inputFile.getAbsolutePath());
+	public static OutputStream scaleImage(File inputFile, int width, int height,
+			OutputStream out) throws InterruptedException, IOException {
+		Image image = Toolkit.getDefaultToolkit()
+				.getImage(inputFile.getAbsolutePath());
 		MediaTracker mediaTracker = new MediaTracker(new Container());
 		mediaTracker.addImage(image, 0);
 		mediaTracker.waitForID(0);
