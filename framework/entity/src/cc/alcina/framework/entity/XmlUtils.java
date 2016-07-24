@@ -811,8 +811,8 @@ public class XmlUtils {
 		}
 	}
 
-	public static List<Element> childElements(Element element) {
-		return nodeListToElementList(element.getChildNodes());
+	public static List<Element> childElements(Node node) {
+		return nodeListToElementList(node.getChildNodes());
 	}
 
 	public static Element getPreviousElement(Node node) {
