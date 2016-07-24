@@ -102,8 +102,12 @@ public class StringMap extends LinkedHashMap<String, String> {
 			lines = (String[]) trunc.toArray(new String[trunc.size()]);
 		}
 		for (int i = 0; i < lines.length; i += 2) {
-			map.put(lines[i].trim(), lines[i + 1].trim());
+			map.put(unescape(lines[i].trim()), unescape(lines[i + 1].trim()));
 		}
 		return map;
+	}
+
+	private static String unescape(String string) {
+		return string.replace("\\n", "\n").replace("\\r", "\r");
 	}
 }

@@ -25,6 +25,7 @@ import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -55,6 +56,7 @@ import org.w3c.dom.ls.LSOutput;
 import org.w3c.dom.ls.LSSerializer;
 import org.w3c.dom.ranges.DocumentRange;
 import org.w3c.dom.ranges.Range;
+import org.w3c.dom.traversal.DocumentTraversal;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -101,6 +103,26 @@ public class XmlUtils {
 			}
 		}
 		return result;
+	}
+
+	public static boolean areSeparatedOnlyByWhitespace(Element e1, Element e2) {
+		List<Node> list = nodeListToList(e1.getParentNode().getChildNodes());
+		int idx1 = list.indexOf(e1);
+		int idx2 = list.indexOf(e2);
+		if (idx1 == -1 || idx2 == -1) {
+			return false;
+		}
+		if (idx1 > idx2) {
+			int tmp = idx2;
+			idx2 = idx1;
+			idx1 = tmp;
+		}
+		for (int idx = idx1 + 1; idx < idx2; idx++) {
+			if (!isWhitespaceText(list.get(idx))) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public static String cleanXmlHeaders(String xml) {
@@ -208,6 +230,10 @@ public class XmlUtils {
 		return s2.toString();
 	}
 
+	public static Element firstElementChild(Node node) {
+		return CommonUtils.first(nodeListToElementList(node.getChildNodes()));
+	}
+
 	public static Element getAncestorWithTagName(Node n, String tagName) {
 		return getAncestorWithTagName(n, tagName, false);
 	}
@@ -266,7 +292,8 @@ public class XmlUtils {
 										.length() > 0);
 	}
 
-	public static void insertAfter(Element el, Node newNode, Node insertAfter) {
+	public static void insertAfter(Node newNode, Node insertAfter) {
+		Element el = (Element) insertAfter.getParentNode();
 		NodeList nl = el.getChildNodes();
 		boolean foundAfter = false;
 		for (int i = 0; i < nl.getLength(); i++) {
@@ -292,6 +319,17 @@ public class XmlUtils {
 		return false;
 	}
 
+	public static boolean isEarlierThan(Node n1, Node n2) {
+		Range r1 = ((DocumentRange) n1.getOwnerDocument()).createRange();
+		Range r2 = ((DocumentRange) n2.getOwnerDocument()).createRange();
+		r1.setStartBefore(n1);
+		r2.setStartBefore(n2);
+		short result = r1.compareBoundaryPoints(Range.START_TO_START, r2);
+		r1.detach();
+		r2.detach();
+		return result < 0;
+	}
+
 	public static boolean isFirstNonWhitespaceChild(Node node) {
 		List<Node> kids = nodeListToList(node.getParentNode().getChildNodes());
 		for (Node kid : kids) {
@@ -308,16 +346,37 @@ public class XmlUtils {
 		return false;
 	}
 
+	public static boolean isSoleNonWhitespaceChild(Element node) {
+		List<Node> kids = nodeListToList(node.getParentNode().getChildNodes());
+		for (Node kid : kids) {
+			if (node == kid) {
+				continue;
+			}
+			if (kid.getNodeType() != Node.TEXT_NODE) {
+				return false;
+			}
+			if (!SEUtilities.isWhitespace(kid.getTextContent())) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public static boolean isUseJAXP() {
 		return useJAXP;
 	}
 
-	public static Element lastChild(Element element) {
+	public static boolean isWhitespaceText(Node node) {
+		return node.getNodeType() == Node.TEXT_NODE
+				&& SEUtilities.isWhitespaceOrEmpty(node.getTextContent());
+	}
+
+	public static Element lastElementChild(Element element) {
 		NodeList childNodes = element.getChildNodes();
 		for (int i = childNodes.getLength() - 1; i >= 0; i--) {
 			Node node = childNodes.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
-				return lastChild((Element) node);
+				return lastElementChild((Element) node);
 			}
 		}
 		return element;
@@ -327,6 +386,15 @@ public class XmlUtils {
 		NodeList childNodes = element.getChildNodes();
 		Node node = childNodes.item(childNodes.getLength() - 1);
 		return node;
+	}
+
+	public static Element lastDirectElementChild(Element element) {
+		NodeList childNodes = element.getChildNodes();
+		Node node = childNodes.item(childNodes.getLength() - 1);
+		if (node.getNodeType() == Node.ELEMENT_NODE) {
+			return (Element) node;
+		}
+		return getPreviousElement(node);
 	}
 
 	public static Document loadDocument(File f) throws Exception {
@@ -699,15 +767,14 @@ public class XmlUtils {
 		}
 	}
 
-	public static boolean isEarlierThan(Node n1, Node n2) {
-		Range r1 = ((DocumentRange) n1.getOwnerDocument()).createRange();
-		Range r2 = ((DocumentRange) n2.getOwnerDocument()).createRange();
-		r1.setStartBefore(n1);
-		r2.setStartBefore(n2);
-		short result = r1.compareBoundaryPoints(Range.START_TO_START, r2);
-		r1.detach();
-		r2.detach();
-		return result < 0;
+	public static class NodeComparator implements Comparator<Node> {
+		@Override
+		public int compare(Node o1, Node o2) {
+			if (o1 == o2) {
+				return 0;
+			}
+			return isEarlierThan(o1, o2) ? -1 : 1;
+		}
 	}
 
 	public static interface TransformerFactoryConfigurator {
@@ -744,38 +811,35 @@ public class XmlUtils {
 		}
 	}
 
-	public static boolean isSoleNonWhitespaceChild(Element node) {
+	public static List<Element> childElements(Element element) {
+		return nodeListToElementList(element.getChildNodes());
+	}
+
+	public static Element getPreviousElement(Node node) {
 		List<Node> kids = nodeListToList(node.getParentNode().getChildNodes());
-		for (Node kid : kids) {
-			if (node == kid) {
-				continue;
-			}
-			if (kid.getNodeType() != Node.TEXT_NODE) {
-				return false;
-			}
-			if (!SEUtilities.isWhitespace(kid.getTextContent())) {
-				return false;
+		for (int idx = kids.indexOf(node) - 1; idx >= 0; idx--) {
+			Node kid = kids.get(idx);
+			if (kid.getNodeType() == Node.ELEMENT_NODE) {
+				return (Element) kid;
 			}
 		}
-		return true;
+		return null;
 	}
 
-	public static class NodeComparator implements Comparator<Node> {
-		@Override
-		public int compare(Node o1, Node o2) {
-			if (o1 == o2) {
-				return 0;
-			}
-			return isEarlierThan(o1, o2) ? -1 : 1;
+	public static Element splitNode(Element toSplit, Node splitAt) {
+		Element split = toSplit.getOwnerDocument()
+				.createElement(toSplit.getTagName());
+		insertAfter(split, toSplit);
+		List<Element> kids = nodeListToElementList(toSplit.getChildNodes());
+		for (int idx = kids.indexOf(splitAt); idx < kids.size(); idx++) {
+			split.appendChild(kids.get(idx));
 		}
+		return split;
 	}
 
-	public static boolean isWhitespaceText(Node node) {
-		return node.getNodeType() == Node.TEXT_NODE
-				&& SEUtilities.isWhitespaceOrEmpty(node.getTextContent());
-	}
-
-	public static Element firstElementChild(Node node) {
-		return CommonUtils.first(nodeListToElementList(node.getChildNodes()));
+	public static void replaceNode(Element from, Element to) {
+		insertAfter(to, from);
+		moveKids(from, to);
+		removeNode(from);
 	}
 }
