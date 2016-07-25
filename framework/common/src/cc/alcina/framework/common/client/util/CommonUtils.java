@@ -1340,4 +1340,25 @@ public class CommonUtils {
 		}
 		return Math.abs(d1.getTime() - d2.getTime()) < ms;
 	}
+
+	public static int compareNonNull(Object o1, Object o2) {
+		int i = 0;
+		if (o1 != null) {
+			i++;
+		}
+		if (o2 != null) {
+			i--;
+		}
+		return i;
+	}
+	public static int compareBoolean(Boolean o1, Boolean o2) {
+		int i = 0;
+		if (bv(o1)) {
+			i++;
+		}
+		if (bv(o2)) {
+			i--;
+		}
+		return i;
+	}
 }
