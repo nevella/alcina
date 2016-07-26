@@ -1,5 +1,5 @@
 package cc.alcina.framework.entity.entityaccess;
 
 public interface TransformPersisterViaServletLayerPersistence {
-	public void persistTransforms();
+	public void persistTransforms(boolean currentUser);
 }

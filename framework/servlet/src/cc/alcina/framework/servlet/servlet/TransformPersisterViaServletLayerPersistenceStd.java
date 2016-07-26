@@ -6,7 +6,11 @@ import cc.alcina.framework.servlet.ServletLayerUtils;
 public class TransformPersisterViaServletLayerPersistenceStd
 		implements TransformPersisterViaServletLayerPersistence {
 	@Override
-	public void persistTransforms() {
+	public void persistTransforms(boolean currentUser) {
+		if(currentUser){
+			ServletLayerUtils.pushTransformsAsCurrentUser();
+		}else{
 		ServletLayerUtils.pushTransformsAsRoot();
+		}
 	}
 }
