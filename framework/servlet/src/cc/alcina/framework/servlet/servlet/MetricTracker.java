@@ -34,7 +34,7 @@ public class MetricTracker<T> extends TimerTask {
 			return;
 		}
 		trackers.put(markerObject, new MetricTrackerStruct<>(markerObject,
-				logger, System.currentTimeMillis()));
+				logger, System.currentTimeMillis(), Thread.currentThread()));
 	}
 
 	public void stop() {
@@ -49,8 +49,7 @@ public class MetricTracker<T> extends TimerTask {
 		trackers.values().forEach(t -> {
 			long elapsed = time - t.startTime;
 			if (elapsed > periodMs) {
-				Thread currentThread = Thread.currentThread();
-				String trace = Arrays.stream(currentThread.getStackTrace())
+				String trace = Arrays.stream(t.thread.getStackTrace())
 						.map(Object::toString)
 						.collect(Collectors.joining("\n"));
 				try {
@@ -59,7 +58,7 @@ public class MetricTracker<T> extends TimerTask {
 					String message = String.format(
 							"Long-running call:\n\ttid: %s\n\tstart: %s\n\t"
 									+ "elapsed: %s\n\tcall: %s\nStack: %s\n\n",
-							currentThread.getId(), t.startTime, elapsed,
+							t.thread.getId(), t.startTime, elapsed,
 							t.logger.apply(t.markerObject), trace);
 					fw.write(message);
 					System.out.println(message);
@@ -91,11 +90,14 @@ public class MetricTracker<T> extends TimerTask {
 
 		long startTime;
 
+		private Thread thread;
+
 		public MetricTrackerStruct(T markerObject, Function<T, String> logger,
-				long startTime) {
+				long startTime, Thread thread) {
 			this.markerObject = markerObject;
 			this.logger = logger;
 			this.startTime = startTime;
+			this.thread = thread;
 		}
 	}
 }
