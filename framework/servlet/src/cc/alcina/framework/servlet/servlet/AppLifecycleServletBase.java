@@ -247,6 +247,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			SEUtilities.appShutdown();
 			ResourceUtilities.appShutdown();
 			Registry.appShutdown();
+			Registry.impl(CommonRemoteServiceServletSupport.class)
+			.appShutdown();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

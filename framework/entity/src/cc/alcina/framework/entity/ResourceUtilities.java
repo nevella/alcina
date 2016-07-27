@@ -172,6 +172,10 @@ public class ResourceUtilities {
 		}
 	}
 
+	public static int getInteger(Class clazz, String propertyName) {
+		return Integer.valueOf(getBundledString(clazz, propertyName));
+	}
+
 	public static int getInteger(Class clazz, String propertyName,
 			int defaultValue) {
 		try {

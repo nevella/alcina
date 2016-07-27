@@ -357,31 +357,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			ex.printStackTrace(pw);
 			String msg = "RPC exception:\n";
 			if (rpcRequest != null) {
-				msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
-				msg += "Parameters: \n";
-				Object[] parameters = rpcRequest.getParameters();
-				int i = 0;
-				ByteArrayOutputStream os = new ByteArrayOutputStream();
-				XMLEncoder enc = new XMLEncoder(os);
-				for (Object object : parameters) {
-					String xml = "";
-					if (object != null
-							&& CommonUtils.isStandardJavaClass(object
-									.getClass())) {
-						try {
-							enc.writeObject(object);
-							enc.flush();
-							xml = new String(os.toByteArray());
-							os.reset();
-						} catch (Exception e) {
-							xml = "Unable to write object - "
-									+ object.getClass().getName();
-						}
-					}
-					msg += CommonUtils.formatJ("\t [%s] - %s\n\t   - %s\n",
-							i++, object, xml);
-				}
-				enc.close();
+				msg = describeRpcRequest(rpcRequest, msg);
 			}
 			msg += "Stacktrace:\t " + sw.toString();
 			System.out.println(msg);
@@ -391,6 +367,35 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} finally {
 			LooseContext.pop();
 		}
+	}
+
+	String describeRpcRequest(RPCRequest rpcRequest, String msg) {
+		msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
+		msg += "Parameters: \n";
+		Object[] parameters = rpcRequest.getParameters();
+		int i = 0;
+		ByteArrayOutputStream os = new ByteArrayOutputStream();
+		XMLEncoder enc = new XMLEncoder(os);
+		for (Object object : parameters) {
+			String xml = "";
+			if (object != null
+					&& CommonUtils.isStandardJavaClass(object
+							.getClass())) {
+				try {
+					enc.writeObject(object);
+					enc.flush();
+					xml = new String(os.toByteArray());
+					os.reset();
+				} catch (Exception e) {
+					xml = "Unable to write object - "
+							+ object.getClass().getName();
+				}
+			}
+			msg += CommonUtils.formatJ("\t [%s] - %s\n\t   - %s\n",
+					i++, object, xml);
+		}
+		enc.close();
+		return msg;
 	}
 
 	public String performAction(final RemoteAction action) {
@@ -617,9 +622,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
+	
 	@Override
 	public String processCall(String payload) throws SerializationException {
 		RPCRequest rpcRequest = null;
+		MetricTracker<RPCRequest> metricTracker = Registry.impl(CommonRemoteServiceServletSupport.class).getMetricTracker();
 		try {
 			LooseContext.push();
 			initUserStateWithCookie(getThreadLocalRequest(),
@@ -633,6 +640,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					payload);
 			String name = rpcRequest.getMethod().getName();
 			onAfterAlcinaAuthentication(name);
+			metricTracker.start(rpcRequest,r->describeRpcRequest(r, ""),ResourceUtilities.getInteger(CommonRemoteServiceServlet.class, "metricTrackerMs"));
 			Method method;
 			try {
 				method = this.getClass().getMethod(name,
@@ -673,6 +681,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			logRpcException(rex);
 			throw rex;
 		} finally {
+			metricTracker.end(rpcRequest);
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			LooseContext.pop();
 		}

@@ -3,6 +3,8 @@ package cc.alcina.framework.servlet.servlet;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.gwt.user.server.rpc.RPCRequest;
+
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
@@ -34,7 +36,8 @@ public class CommonRemoteServiceServletSupport {
 		return this.serverAsClientInstance;
 	}
 
-	public void setServerAsClientInstance(ClientInstance serverAsClientInstance) {
+	public void
+			setServerAsClientInstance(ClientInstance serverAsClientInstance) {
 		this.serverAsClientInstance = serverAsClientInstance;
 	}
 
@@ -42,7 +45,14 @@ public class CommonRemoteServiceServletSupport {
 		return this.clientInstanceLocatorMap;
 	}
 
-	public HiliLocatorMap getLocatorMapForClient(DomainTransformRequest request) {
+	private MetricTracker<RPCRequest> metricTracker = new MetricTracker<>();
+
+	public MetricTracker<RPCRequest> getMetricTracker() {
+		return this.metricTracker;
+	}
+
+	public HiliLocatorMap
+			getLocatorMapForClient(DomainTransformRequest request) {
 		Long clientInstanceId = request.getClientInstance().getId();
 		Map<Long, HiliLocatorMap> clientInstanceLocatorMap = getClientInstanceLocatorMap();
 		synchronized (clientInstanceLocatorMap) {
@@ -58,5 +68,9 @@ public class CommonRemoteServiceServletSupport {
 
 	int getTransformRequestCounter() {
 		return this.transformRequestCounter;
+	}
+
+	public void appShutdown() {
+		metricTracker.stop();
 	}
 }
