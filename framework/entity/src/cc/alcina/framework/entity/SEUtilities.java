@@ -996,6 +996,9 @@ public class SEUtilities {
 		String query = url.getQuery();
 		String[] pairs = query.split("&");
 		for (String pair : pairs) {
+			if(pair.isEmpty()){
+				continue;
+			}
 			int idx = pair.indexOf("=");
 			query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"),
 					URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
