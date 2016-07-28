@@ -25,7 +25,6 @@ import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -51,12 +50,12 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
 import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSOutput;
 import org.w3c.dom.ls.LSSerializer;
 import org.w3c.dom.ranges.DocumentRange;
 import org.w3c.dom.ranges.Range;
-import org.w3c.dom.traversal.DocumentTraversal;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -380,6 +379,24 @@ public class XmlUtils {
 			}
 		}
 		return element;
+	}
+
+	public static Text lastNonWsTextChild(Element element) {
+		NodeList childNodes = element.getChildNodes();
+		for (int i = childNodes.getLength() - 1; i >= 0; i--) {
+			Node node = childNodes.item(i);
+			if (node.getNodeType() == Node.TEXT_NODE && !SEUtilities
+					.isWhitespaceOrEmpty(node.getTextContent())) {
+				return (Text) node;
+			}
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				Text last = lastNonWsTextChild((Element) node);
+				if (last != null) {
+					return last;
+				}
+			}
+		}
+		return null;
 	}
 
 	public static Node lastDirectChild(Element element) {
