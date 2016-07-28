@@ -171,6 +171,10 @@ public class AlcinaMemCache implements RegistrableService {
 		return get().transactional.ensureTransaction();
 	}
 
+	public static <T extends HasIdAndLocalId> T ensureNonRaw(T t) {
+		return isRawValue(t) ? get().find(t) : t;
+	}
+
 	public static void ensureReferredPropertyIsTransactional(
 			HasIdAndLocalId hili, String propertyName) {
 		// target, even if new object, will still be equals() to old, so no
@@ -196,6 +200,11 @@ public class AlcinaMemCache implements RegistrableService {
 			Registry.registerSingleton(AlcinaMemCache.class, singleton);
 		}
 		return singleton;
+	}
+
+	public static <V extends HasIdAndLocalId> boolean isRawValue(V v) {
+		V existing = (V) get().cache.get(v.getClass(), v.getId());
+		return existing == v;
 	}
 
 	private Map<PropertyDescriptor, JoinTable> joinTables;
@@ -247,10 +256,6 @@ public class AlcinaMemCache implements RegistrableService {
 	};
 
 	DetachedEntityCache cache;
-
-	public DetachedEntityCache getCache() {
-		return this.cache;
-	}
 
 	private MemCachePersistenceListener persistenceListener;
 
@@ -326,6 +331,20 @@ public class AlcinaMemCache implements RegistrableService {
 
 	private Timer timer;
 
+	long lastQueueDumpTime = 0;
+
+	Map<Long, Long> threadQueueTimes = new ConcurrentHashMap<>();
+
+	CountingMap<Thread> activeThreads = new CountingMap<>();
+
+	long timzoneOffset = -1;
+
+	Calendar startupCal = Calendar.getInstance();
+
+	TimeZone startupTz = (TimeZone) startupCal.getTimeZone().clone();
+
+	boolean expectLongRunning = false;
+
 	public AlcinaMemCache() {
 		ThreadlocalTransformManager.threadTransformManagerWasResetListenerDelta(
 				resetListener, true);
@@ -335,20 +354,6 @@ public class AlcinaMemCache implements RegistrableService {
 		maxLockQueueLength = ResourceUtilities.getInteger(AlcinaMemCache.class,
 				"maxLockQueueLength", 120);
 		Domain.registerHandler(new AlcinaMemCacheDomainHandler());
-	}
-
-	class AlcinaMemCacheDomainHandler implements DomainHandler {
-		@Override
-		public <V extends HasIdAndLocalId> V resolveTransactional(
-				CacheListener listener, V value, Object[] path) {
-			return transactional.resolveTransactional(listener, value, path);
-		}
-
-		@Override
-		public <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
-				long id) {
-			return (V) transactional.find(clazz, id);
-		}
 	}
 
 	public void addValues(CacheListener listener) {
@@ -395,26 +400,6 @@ public class AlcinaMemCache implements RegistrableService {
 		return dtes.stream().filter(new InSubgraphFilter())
 				.map(dte -> filterForMemcacheTransient(dte))
 				.filter(Objects::nonNull).collect(Collectors.toList());
-	}
-
-	private DomainTransformEvent
-			filterForMemcacheTransient(DomainTransformEvent dte) {
-		switch (dte.getTransformType()) {
-		case CREATE_OBJECT:
-		case DELETE_OBJECT:
-		case ADD_REF_TO_COLLECTION:
-		case REMOVE_REF_FROM_COLLECTION:
-			return dte;
-		}
-		AlcinaMemCacheTransient ann = memcacheTransientProperties
-				.get(dte.getObjectClass(), dte.getPropertyName());
-		if (ann == null) {
-			return dte;
-		}
-		if (!ann.translatePropertyStoreWrites()) {
-			return null;
-		}
-		return dte;
 	}
 
 	public <T extends HasIdAndLocalId> T find(Class<T> clazz, long id) {
@@ -469,13 +454,12 @@ public class AlcinaMemCache implements RegistrableService {
 		return cache.get(clazz, id);
 	}
 
-	public <T extends HasIdAndLocalId> boolean isCached(Class<T> clazz,
-			long id) {
-		return cache.contains(clazz, id);
-	}
-
 	public <T extends HasIdAndLocalId> T findRaw(T t) {
 		return (T) findRaw(t.getClass(), t.getId());
+	}
+
+	public DetachedEntityCache getCache() {
+		return this.cache;
 	}
 
 	public Iterable<Object[]> getData(Connection conn, Class clazz,
@@ -496,6 +480,41 @@ public class AlcinaMemCache implements RegistrableService {
 		} finally {
 			unlock(false);
 		}
+	}
+
+	public String getLockDumpString(String lockDumpCause, boolean full) {
+		FormatBuilder fullLockDump = new FormatBuilder();
+		Thread writerThread = postProcessWriterThread;
+		if (writerThread != null) {
+			fullLockDump.format(
+					"Memcache log debugging----------\n"
+							+ "Writer thread trace:----------\n" + "%s\n",
+					getStacktraceSlice(postProcessWriterThread, 200));
+		}
+		fullLockDump.line(lockDumpCause);
+		long time = System.currentTimeMillis();
+		if (full) {
+			fullLockDump.line("Current locked thread dump:\n***************\n");
+			mainLock.getQueuedThreads()
+					.forEach(t2 -> fullLockDump.line("id:%s %s\n%s", t2.getId(),
+							t2, getStacktraceSlice(t2,
+									LONG_LOCK_TRACE_LENGTH)));
+			fullLockDump.line("\n\nThread pause times:\n***************\n");
+			threadQueueTimes.forEach((id, t2) -> fullLockDump
+					.format("id: %s - time: %s\n", id, time - t2));
+			synchronized (activeThreads) {
+				fullLockDump.line("\n\nActive threads:\n***************\n");
+				activeThreads.keySet().forEach(t2 -> fullLockDump.line(
+						"id:%s %s\n%s", t2.getId(), t2,
+						getStacktraceSlice(t2, LONG_LOCK_TRACE_LENGTH)));
+			}
+			fullLockDump
+					.line("\n\nRecent lock acquisitions:\n***************\n");
+			fullLockDump.line(CommonUtils.join(recentLockAcquisitions, "\n"));
+			fullLockDump.line("\n===========\n\n");
+			lastQueueDumpTime = time;
+		}
+		return fullLockDump.toString();
 	}
 
 	public <CL extends CacheLookup> CL
@@ -535,6 +554,11 @@ public class AlcinaMemCache implements RegistrableService {
 		return cacheDescriptor.perClass.containsKey(clazz);
 	}
 
+	public <T extends HasIdAndLocalId> boolean isCached(Class<T> clazz,
+			long id) {
+		return cache.contains(clazz, id);
+	}
+
 	public boolean isCachedTransactional(Class clazz) {
 		return isCached(clazz)
 				&& cacheDescriptor.perClass.get(clazz).isTransactional();
@@ -550,11 +574,6 @@ public class AlcinaMemCache implements RegistrableService {
 
 	public boolean isInitialised() {
 		return initialised;
-	}
-
-	public static <V extends HasIdAndLocalId> boolean isRawValue(V v) {
-		V existing = (V) get().cache.get(v.getClass(), v.getId());
-		return existing == v;
 	}
 
 	public boolean isWillProjectLater() {
@@ -646,12 +665,17 @@ public class AlcinaMemCache implements RegistrableService {
 		maybeLogLock(LockAction.MAIN_LOCK_ACQUIRED, write);
 	}
 
-	enum LockAction {
-		PRE_LOCK, MAIN_LOCK_ACQUIRED, SUB_LOCK_ACQUIRED, UNLOCK
-	}
-
 	public List<Long> notInStore(Collection<Long> ids, Class clazz) {
 		return cache.notContained(ids, clazz);
+	}
+
+	public void readLockExpectLongRunning(boolean lock) {
+		expectLongRunning = lock;
+		if (lock) {
+			lock(false);
+		} else {
+			unlock(false);
+		}
 	}
 
 	public void registerForTesting(HasIdAndLocalId hili) {
@@ -805,6 +829,26 @@ public class AlcinaMemCache implements RegistrableService {
 			return new PdOperator(pd, clazz,
 					values == null ? 0 : values.size());
 		}, clazz, pd);
+	}
+
+	private DomainTransformEvent
+			filterForMemcacheTransient(DomainTransformEvent dte) {
+		switch (dte.getTransformType()) {
+		case CREATE_OBJECT:
+		case DELETE_OBJECT:
+		case ADD_REF_TO_COLLECTION:
+		case REMOVE_REF_FROM_COLLECTION:
+			return dte;
+		}
+		AlcinaMemCacheTransient ann = memcacheTransientProperties
+				.get(dte.getObjectClass(), dte.getPropertyName());
+		if (ann == null) {
+			return dte;
+		}
+		if (!ann.translatePropertyStoreWrites()) {
+			return null;
+		}
+		return dte;
 	}
 
 	private ComplexFilter getComplexFilterFor(Class clazz,
@@ -1120,12 +1164,6 @@ public class AlcinaMemCache implements RegistrableService {
 		return loaded;
 	}
 
-	long lastQueueDumpTime = 0;
-
-	Map<Long, Long> threadQueueTimes = new ConcurrentHashMap<>();
-
-	CountingMap<Thread> activeThreads = new CountingMap<>();
-
 	private void maybeLogLock(LockAction action, boolean write) {
 		long time = System.currentTimeMillis();
 		Thread currentThread = Thread.currentThread();
@@ -1168,52 +1206,6 @@ public class AlcinaMemCache implements RegistrableService {
 				}
 			}
 		}
-	}
-
-	public String getLockDumpString(String lockDumpCause, boolean full) {
-		FormatBuilder fullLockDump = new FormatBuilder();
-		Thread writerThread = postProcessWriterThread;
-		if (writerThread != null) {
-			fullLockDump.format(
-					"Memcache log debugging----------\n"
-							+ "Writer thread trace:----------\n" + "%s\n",
-					getStacktraceSlice(postProcessWriterThread, 200));
-		}
-		fullLockDump.line(lockDumpCause);
-		long time = System.currentTimeMillis();
-		if (full) {
-			fullLockDump.line("Current locked thread dump:\n***************\n");
-			mainLock.getQueuedThreads()
-					.forEach(t2 -> fullLockDump.line("id:%s %s\n%s", t2.getId(),
-							t2, getStacktraceSlice(t2,
-									LONG_LOCK_TRACE_LENGTH)));
-			fullLockDump.line("\n\nThread pause times:\n***************\n");
-			threadQueueTimes.forEach((id, t2) -> fullLockDump
-					.format("id: %s - time: %s\n", id, time - t2));
-			synchronized (activeThreads) {
-				fullLockDump.line("\n\nActive threads:\n***************\n");
-				activeThreads.keySet().forEach(t2 -> fullLockDump.line(
-						"id:%s %s\n%s", t2.getId(), t2,
-						getStacktraceSlice(t2, LONG_LOCK_TRACE_LENGTH)));
-			}
-			fullLockDump
-					.line("\n\nRecent lock acquisitions:\n***************\n");
-			fullLockDump.line(CommonUtils.join(recentLockAcquisitions, "\n"));
-			fullLockDump.line("\n===========\n\n");
-			lastQueueDumpTime = time;
-		}
-		return fullLockDump.toString();
-	}
-
-	String getLockStats() {
-		Thread t = Thread.currentThread();
-		String log = CommonUtils.formatJ(
-				"\tid:%s\n\ttime: %s\n\treadHoldCount:"
-						+ " %s\n\twriteHoldcount: %s\n\tsublock: %s\n\n ",
-				t.getId(), new Date(), mainLock.getQueuedReaderThreads().size(),
-				mainLock.getQueuedWriterThreads().size(), subgraphLock);
-		log += getStacktraceSlice(t);
-		return log;
 	}
 
 	private void prepareTable(CacheItemDescriptor descriptor) throws Exception {
@@ -1545,6 +1537,9 @@ public class AlcinaMemCache implements RegistrableService {
 	}
 
 	protected void maybeDebugLongLockHolders() {
+		if (expectLongRunning) {
+			return;
+		}
 		long time = System.currentTimeMillis();
 		for (Entry<Thread, Long> e : lockStartTime.entrySet()) {
 			long duration = time - e.getValue();
@@ -1574,6 +1569,17 @@ public class AlcinaMemCache implements RegistrableService {
 	String getCanonicalPropertyPath(Class clazz, String propertyPath) {
 		return cacheDescriptor.perClass.get(clazz)
 				.getCanonicalPropertyPath(propertyPath);
+	}
+
+	String getLockStats() {
+		Thread t = Thread.currentThread();
+		String log = CommonUtils.formatJ(
+				"\tid:%s\n\ttime: %s\n\treadHoldCount:"
+						+ " %s\n\twriteHoldcount: %s\n\tsublock: %s\n\n ",
+				t.getId(), new Date(), mainLock.getQueuedReaderThreads().size(),
+				mainLock.getQueuedWriterThreads().size(), subgraphLock);
+		log += getStacktraceSlice(t);
+		return log;
 	}
 
 	<T extends HasIdAndLocalId> List<T> list(Class<T> clazz,
@@ -1798,6 +1804,12 @@ public class AlcinaMemCache implements RegistrableService {
 
 		private AtomicInteger memcacheExceptionCount = new AtomicInteger();
 
+		public long getMaxQueuedTime() {
+			return threadQueueTimes.values().stream()
+					.min(Comparator.naturalOrder())
+					.map(t -> System.currentTimeMillis() - t).orElse(0L);
+		}
+
 		public AtomicInteger getMemcacheExceptionCount() {
 			return this.memcacheExceptionCount;
 		}
@@ -1813,12 +1825,6 @@ public class AlcinaMemCache implements RegistrableService {
 
 		public boolean isLockingDisabled() {
 			return lockingDisabled;
-		}
-
-		public long getMaxQueuedTime() {
-			return threadQueueTimes.values().stream()
-					.min(Comparator.naturalOrder())
-					.map(t -> System.currentTimeMillis() - t).orElse(0L);
 		}
 	}
 
@@ -2171,6 +2177,20 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 	}
 
+	class AlcinaMemCacheDomainHandler implements DomainHandler {
+		@Override
+		public <V extends HasIdAndLocalId> V resolveTransactional(
+				CacheListener listener, V value, Object[] path) {
+			return transactional.resolveTransactional(listener, value, path);
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
+				long id) {
+			return (V) transactional.find(clazz, id);
+		}
+	}
+
 	class BackupLazyLoader implements LazyObjectLoader {
 		@Override
 		public <T extends HasIdAndLocalId> void loadObject(Class<? extends T> c,
@@ -2322,12 +2342,6 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 	}
 
-	long timzoneOffset = -1;
-
-	Calendar startupCal = Calendar.getInstance();
-
-	TimeZone startupTz = (TimeZone) startupCal.getTimeZone().clone();
-
 	class ConnResults implements Iterable<Object[]> {
 		ConnResultsIterator itr = new ConnResultsIterator();
 
@@ -2459,6 +2473,10 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 	}
 
+	enum LockAction {
+		PRE_LOCK, MAIN_LOCK_ACQUIRED, SUB_LOCK_ACQUIRED, UNLOCK
+	}
+
 	class MemCachePersistenceListener
 			implements DomainTransformPersistenceListener {
 		@Override
@@ -2492,6 +2510,25 @@ public class AlcinaMemCache implements RegistrableService {
 		public synchronized void addPropertyChangeListener(String propertyName,
 				PropertyChangeListener listener) {
 			check("add");
+		}
+
+		public void check(String key) {
+			// add-remove - well, there's a bunch of automated adds (e.g.
+			// cc.alcina.framework.entity.domaintransform.ServerTransformManagerSupport
+			// .removeParentAssociations(HasIdAndLocalId)
+			// that add em by default. fix them first
+			// TODO - memcache
+			if (!checkModificationWriteLock) {
+				return;
+			}
+			if (!lockingDisabled && key.equals("fire")
+					&& !mainLock.isWriteLockedByCurrentThread()
+					&& (subgraphLock == null
+							|| !subgraphLock.isWriteLockedByCurrentThread())) {
+				throw new MemcacheException(
+						"Modification of graph object outside writer thread - "
+								+ key);
+			}
 		}
 
 		@Override
@@ -2529,25 +2566,6 @@ public class AlcinaMemCache implements RegistrableService {
 				PropertyChangeListener listener) {
 			check("remove");
 		}
-
-		public void check(String key) {
-			// add-remove - well, there's a bunch of automated adds (e.g.
-			// cc.alcina.framework.entity.domaintransform.ServerTransformManagerSupport
-			// .removeParentAssociations(HasIdAndLocalId)
-			// that add em by default. fix them first
-			// TODO - memcache
-			if (!checkModificationWriteLock) {
-				return;
-			}
-			if (!lockingDisabled && key.equals("fire")
-					&& !mainLock.isWriteLockedByCurrentThread()
-					&& (subgraphLock == null
-							|| !subgraphLock.isWriteLockedByCurrentThread())) {
-				throw new MemcacheException(
-						"Modification of graph object outside writer thread - "
-								+ key);
-			}
-		}
 	}
 
 	class SubgraphTransformManagerRemoteOnly extends SubgraphTransformManager {
@@ -2574,9 +2592,5 @@ public class AlcinaMemCache implements RegistrableService {
 		void startCommit() {
 			((PsAwareMultiplexingObjectCache) store.getCache()).startCommit();
 		}
-	}
-
-	public static <T extends HasIdAndLocalId> T ensureNonRaw(T t) {
-		return isRawValue(t) ? get().find(t) : t;
 	}
 }
