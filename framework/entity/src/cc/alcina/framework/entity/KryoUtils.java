@@ -14,6 +14,7 @@ import java.util.Base64;
 import org.objenesis.strategy.SerializingInstantiatorStrategy;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Kryo.DefaultInstantiatorStrategy;
@@ -25,9 +26,9 @@ public class KryoUtils {
 		Kryo kryo = newKryo();
 		return kryo.copy(t);
 	}
-	
+
 	public static <T> T serialClone(T t) {
-		Class clazz=t.getClass();
+		Class clazz = t.getClass();
 		return (T) deserializeFromByteArray(serializeToByteArray(t), clazz);
 	}
 
@@ -69,7 +70,8 @@ public class KryoUtils {
 		}
 	}
 
-	public static <T> T deserializeFromStream(InputStream stream, Class<T> clazz) {
+	public static <T> T deserializeFromStream(InputStream stream,
+			Class<T> clazz) {
 		try {
 			Kryo kryo = newKryo();
 			Input input = new Input(stream);
@@ -129,9 +131,16 @@ public class KryoUtils {
 		return object;
 	}
 
+	public static final String CONTEXT_OVERRIDE_CLASSLOADER = KryoUtils.class
+			.getName() + ".CONTEXT_OVERRIDE_CLASSLOADER";
+
 	protected static Kryo newKryo() {
 		Kryo kryo = new Kryo();
-		kryo.setClassLoader(Thread.currentThread().getContextClassLoader());
+		if (LooseContext.containsKey(CONTEXT_OVERRIDE_CLASSLOADER)) {
+			kryo.setClassLoader(LooseContext.get(CONTEXT_OVERRIDE_CLASSLOADER));
+		} else {
+			kryo.setClassLoader(Thread.currentThread().getContextClassLoader());
+		}
 		kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(
 				new SerializingInstantiatorStrategy()));
 		return kryo;

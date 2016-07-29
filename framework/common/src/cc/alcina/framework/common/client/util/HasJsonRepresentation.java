@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.util;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,9 +36,25 @@ public interface HasJsonRepresentation {
 	static Object encode(Object value) {
 		if (value instanceof Date) {
 			return String.format("__JsDate(%s)", ((Date) value).getTime());
-		} else {
-			return value;
+		} else if (value instanceof HasJsonRepresentation) {
+			try {
+				return ((HasJsonRepresentation) value).asJson();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		} else if (value instanceof List) {
+			List list = (List) value;
+			Iterator itr = list.iterator();
+			if (itr.hasNext()) {
+				Object next = itr.next();
+				if (next instanceof String) {
+					return stringListToJsArray(list);
+				} else if (next instanceof HasJsonRepresentation) {
+					return toJsArrayStatic(list);
+				}
+			}
 		}
+		return value;
 	}
 
 	static JSONObject toJsMap(Map<String, String> stringMap) {
@@ -53,6 +70,11 @@ public interface HasJsonRepresentation {
 	}
 
 	default JSONArray toJsArray(List<? extends HasJsonRepresentation> objects) {
+		return toJsArrayStatic(objects);
+	}
+
+	static JSONArray
+			toJsArrayStatic(List<? extends HasJsonRepresentation> objects) {
 		try {
 			JSONArray array = new JSONArray();
 			for (HasJsonRepresentation object : objects) {
