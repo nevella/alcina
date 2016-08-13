@@ -94,6 +94,12 @@
 				<include name="**/*" />
 			</fileset>
 		</copy>
+		<property name="project.gwt.client.imgs.3" value="${project.gwt.client.imgs.2}" />
+		<copy todir="${project.gwt.client.imgs.2.tgt}">
+			<fileset dir="${project.gwt.client.imgs.3}">
+				<include name="**/*" />
+			</fileset>
+		</copy>
 	</target>
 	<target name="prepare-war" depends="prepare-war-base">
 	</target>
