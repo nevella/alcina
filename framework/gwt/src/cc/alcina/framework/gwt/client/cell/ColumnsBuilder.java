@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.Cell.Context;
+import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.cellview.client.AbstractCellTable;
@@ -23,13 +24,25 @@ public class ColumnsBuilder<T> {
 	@SuppressWarnings("unused")
 	private Class<T> clazz;
 
+	private List<String> columnsFilter = null;
+
+	private Header<String> footer;
+
+	private boolean edit;
+
 	public ColumnsBuilder(AbstractCellTable<T> table, Class<T> clazz) {
 		this.table = table;
 		this.clazz = clazz;
 		table.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.DISABLED);
 	}
 
-	private List<String> columnsFilter = null;
+	public ColumnBuilder col(Enum enumValue) {
+		return new ColumnBuilder(CommonUtils.friendlyConstant(enumValue));
+	}
+
+	public ColumnBuilder col(String name) {
+		return new ColumnBuilder(name);
+	}
 
 	public ColumnsBuilder columnsFilter(Collection validColumns) {
 		columnsFilter = (List<String>) validColumns.stream()
@@ -38,17 +51,10 @@ public class ColumnsBuilder<T> {
 		return this;
 	}
 
-	public ColumnBuilder col(String name) {
-		return new ColumnBuilder(name);
+	public ColumnsBuilder editable(boolean edit) {
+		this.edit = edit;
+		return this;
 	}
-
-	public ColumnBuilder col(Enum enumValue) {
-		return new ColumnBuilder(CommonUtils.friendlyConstant(enumValue));
-	}
-
-	private Header<String> footer;
-
-	private boolean edit;
 
 	public ColumnsBuilder footer(Header<String> footer) {
 		this.footer = footer;
@@ -78,6 +84,8 @@ public class ColumnsBuilder<T> {
 
 		private String editablePropertyName;
 
+		private FieldUpdater fieldUpdater;
+
 		private Cell editableCell;
 
 		private Cell cell;
@@ -86,24 +94,14 @@ public class ColumnsBuilder<T> {
 			this.name = name;
 		}
 
-		public ColumnBuilder editableCell(Cell editableCell) {
-			this.editableCell = editableCell;
-			return this;
-		}
-
-		public ColumnBuilder cell(Cell cell) {
-			this.cell = cell;
-			return this;
-		}
-
 		public SortableColumn<T> build() {
 			EditInfo editInfo = new EditInfo();
 			editInfo.propertyName = editablePropertyName;
 			if (edit && editablePropertyName != null) {
 				editInfo.cell = Optional.ofNullable(editableCell)
 						.orElse(new PropertyTextCell());
-				editInfo.fieldUpdater = new PropertyFieldUpdater(
-						editablePropertyName);
+				editInfo.fieldUpdater = fieldUpdater != null ? fieldUpdater
+						: new PropertyFieldUpdater(editablePropertyName);
 			}
 			SortableColumn<T> col = new SortableColumn<T>(function,
 					sortFunction, nativeComparator, styleFunction, editInfo,
@@ -134,8 +132,34 @@ public class ColumnsBuilder<T> {
 			return col;
 		}
 
+		public ColumnBuilder cell(Cell cell) {
+			this.cell = cell;
+			return this;
+		}
+
+		public ColumnBuilder editableCell(Cell editableCell) {
+			this.editableCell = editableCell;
+			return this;
+		}
+
+		public ColumnBuilder editableProperty(String editablePropertyName) {
+			this.editablePropertyName = editablePropertyName;
+			return this;
+		}
+
+		public ColumnBuilder fieldUpdater(FieldUpdater fieldUpdater) {
+			this.fieldUpdater = fieldUpdater;
+			return this;
+		}
+
 		public ColumnBuilder function(Function<T, Object> function) {
 			this.function = function;
+			return this;
+		}
+
+		public ColumnBuilder
+				nativeComparator(DirectedComparator nativeComparator) {
+			this.nativeComparator = nativeComparator;
 			return this;
 		}
 
@@ -155,14 +179,13 @@ public class ColumnsBuilder<T> {
 			return sortable();
 		}
 
-		public ColumnBuilder styleFunction(Function<T, String> styleFunction) {
-			this.styleFunction = styleFunction;
+		public ColumnBuilder style(String style) {
+			this.style = style;
 			return this;
 		}
 
-		public ColumnBuilder
-				nativeComparator(DirectedComparator nativeComparator) {
-			this.nativeComparator = nativeComparator;
+		public ColumnBuilder styleFunction(Function<T, String> styleFunction) {
+			this.styleFunction = styleFunction;
 			return this;
 		}
 
@@ -170,28 +193,6 @@ public class ColumnsBuilder<T> {
 			this.width = width;
 			this.unit = unit;
 			return this;
-		}
-
-		public ColumnBuilder style(String style) {
-			this.style = style;
-			return this;
-		}
-
-		public ColumnBuilder editableProperty(String editablePropertyName) {
-			this.editablePropertyName = editablePropertyName;
-			return this;
-		}
-	}
-
-	static class EditInfo {
-		public PropertyFieldUpdater fieldUpdater;
-
-		public String propertyName;
-
-		public Cell cell = new TextCell();
-
-		public boolean isEditable() {
-			return propertyName != null;
 		}
 	}
 
@@ -207,10 +208,6 @@ public class ColumnsBuilder<T> {
 		private EditInfo editInfo;
 
 		private Cell cell;
-
-		public DirectedComparator getNativeComparator() {
-			return this.nativeComparator;
-		}
 
 		public SortableColumn(Function<T, Object> function,
 				Function<T, Comparable> sortFunction,
@@ -230,19 +227,6 @@ public class ColumnsBuilder<T> {
 		}
 
 		@Override
-		public Object getValue(T t) {
-			Object value = function.apply(t);
-			if (cell == null && editInfo.cell.getClass() == TextCell.class) {
-				value = value == null ? null : value.toString();
-			}
-			return value;
-		}
-
-		public Function<T, Comparable> sortFunction() {
-			return sortFunction != null ? sortFunction : (Function) function;
-		}
-
-		@Override
 		public String getCellStyleNames(Context context, T object) {
 			String editable = editInfo.isEditable() ? " editable" : "";
 			if (styleFunction != null) {
@@ -259,10 +243,34 @@ public class ColumnsBuilder<T> {
 			}
 			return super.getCellStyleNames(context, object) + editable;
 		}
+
+		public DirectedComparator getNativeComparator() {
+			return this.nativeComparator;
+		}
+
+		@Override
+		public Object getValue(T t) {
+			Object value = function.apply(t);
+			if (cell == null && editInfo.cell.getClass() == TextCell.class) {
+				value = value == null ? null : value.toString();
+			}
+			return value;
+		}
+
+		public Function<T, Comparable> sortFunction() {
+			return sortFunction != null ? sortFunction : (Function) function;
+		}
 	}
 
-	public ColumnsBuilder editable(boolean edit) {
-		this.edit = edit;
-		return this;
+	static class EditInfo {
+		public FieldUpdater fieldUpdater;
+
+		public String propertyName;
+
+		public Cell cell = new TextCell();
+
+		public boolean isEditable() {
+			return propertyName != null;
+		}
 	}
 }
