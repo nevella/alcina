@@ -12,6 +12,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.ProcessingInstruction;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
@@ -50,6 +51,14 @@ public class XpathHelper {
 
 	public List<Element> getElementsByXpath(String xpathStr, Node node) {
 		return getElementsByXpathDoc(primaryDoc, xpathStr, node);
+	}
+
+	public List<Element> elements(String xpathStr) {
+		return getElementsByXpathDoc(primaryDoc, xpathStr, primaryDoc);
+	}
+
+	public Element element(String xpathStr) {
+		return getElementByXpathDoc(primaryDoc, xpathStr, primaryDoc);
 	}
 
 	public List<Element> getElementsByXpathDoc(Document doc, String xpathStr,
@@ -156,5 +165,14 @@ public class XpathHelper {
 		for (Node node : nodes) {
 			XmlUtils.removeNode(node);
 		}
+	}
+
+	public <T extends Node> List<T> nodes(String xpathStr) {
+		try {
+			return (List<T>) (List) getNodesByXpath(xpathStr, primaryDoc);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		
 	}
 }

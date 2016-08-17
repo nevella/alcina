@@ -859,4 +859,32 @@ public class XmlUtils {
 		moveKids(from, to);
 		removeNode(from);
 	}
+
+	public static Element createElementAttr(Document doc, String tagName,
+			String attr, String value) {
+		Element e = doc.createElement(tagName);
+		e.setAttribute(attr, value);
+		return e;
+	}
+
+	public static String prettyPrintWithDOM3LS(Element e) throws Exception {
+		String xml = streamXML(e);
+		return prettyPrintWithDOM3LS(loadDocument(xml));
+	}
+
+	public static Element earliest(Element... elements) {
+		Element earliest = null;
+		for (Element element : elements) {
+			if (element != null) {
+				if (earliest == null) {
+					earliest = element;
+				} else {
+					if (isEarlierThan(element, earliest)) {
+						earliest = element;
+					}
+				}
+			}
+		}
+		return earliest;
+	}
 }
