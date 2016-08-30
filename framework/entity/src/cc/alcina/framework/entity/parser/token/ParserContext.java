@@ -305,14 +305,20 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 			}
 			substring = tr.textContent.substring(offset);
 		}
-		int idx = substring.indexOf(ParserContext.LONG_BLANK_STRING);
-		// slightly hacky but works;
-		// (long spaces plays havoc with some regexes)
-		if (idx != -1 && substring.length() > 200) {
-			substring = substring.replace(ParserContext.LONG_BLANK_STRING,
-					ParserContext.LONG_BLANK_STRING_REPLACE);
+		if (checkLongBlankString()) {
+			int idx = substring.indexOf(ParserContext.LONG_BLANK_STRING);
+			// slightly hacky but works;
+			// (long spaces plays havoc with some regexes)
+			if (idx != -1 && substring.length() > 200) {
+				substring = substring.replace(ParserContext.LONG_BLANK_STRING,
+						ParserContext.LONG_BLANK_STRING_REPLACE);
+			}
 		}
 		return substring;
+	}
+
+	protected boolean checkLongBlankString() {
+		return true;
 	}
 
 	public boolean lastTextWasEmphasis() {
@@ -466,12 +472,24 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 
 		public String textContent = "";
 
-		int offset;
+		public int offset;
 
 		@Override
 		public String toString() {
 			return String.format("(%s) (%s) %s", offset,
 					(emphasised ? "emph" : "not-emph"), textContent);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof ParserContext.TextRange) {
+				return texts.equals(((TextRange) obj).texts);
+			}
+			return false;
+		}
+		@Override
+		public int hashCode() {
+			return texts.hashCode();
 		}
 	}
 
@@ -519,7 +537,8 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 			if (tokenCategory != null && tokens == null && !matchedCategory) {
 				return false;
 			}
-			if (tokens != null && (!matchedCategory||isStrictCategoryChecking())) {
+			if (tokens != null
+					&& (!matchedCategory || isStrictCategoryChecking())) {
 				boolean matched = false;
 				for (T token : tokens) {
 					if (lastToken == token) {

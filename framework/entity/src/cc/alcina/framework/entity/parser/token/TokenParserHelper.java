@@ -10,6 +10,7 @@ import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.parser.token.ParserContext.TextRange;
 
 public class TokenParserHelper<T extends ParserToken, C extends ParserContext, S extends AbstractParserSlice<T>> {
+	private static final int MAX_CHARS_PATTERN_HELPER = 2000;
 	protected T token;
 
 	public TokenParserHelper(T token) {
@@ -45,7 +46,7 @@ public class TokenParserHelper<T extends ParserToken, C extends ParserContext, S
 		if (pattern == null) {
 			return null;
 		}
-		if (visibleSubstring.contains(". . ")) {
+		if (visibleSubstring.length()<MAX_CHARS_PATTERN_HELPER&&visibleSubstring.contains(". . ")) {
 			// help the patterns
 			visibleSubstring = visibleSubstring.replace(". . ", "xxx ");
 		}

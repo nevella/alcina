@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.parser.token;
 
+import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import org.w3c.dom.html.HTMLDocument;
@@ -24,7 +25,8 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 	public void flushRunContext(boolean end) throws TokenParserException {
 		ParserContext context = peer.getContext();
 		context.textsToRanges();
-		context.content = TokenParserUtils.quickNormalisePunctuation(context.content);
+		context.content = TokenParserUtils
+				.quickNormalisePunctuation(context.content);
 		String content = context.content;
 		if (content.contains(debugMarker)) {
 			int j = 3;
@@ -79,7 +81,8 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 					bestMatch = match;
 					minOffset = startOffsetInRun;
 					context.startOffset = offset;
-					if (startOffsetInRun == 0 && t.isGreedy(context, bestMatch)) {
+					if (startOffsetInRun == 0
+							&& t.isGreedy(context, bestMatch)) {
 						if (!context.matched.isEmpty()
 								&& t.shouldStartNewSequence(context)) {
 							return null;
@@ -95,9 +98,8 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 			System.out.format("validSequence - offset %s\n",
 					context.startOffset);
 		}
-		if (bestMatch != null
-				&& (context.getCurrentTextRangeEnd() <= context.startOffset
-						+ minOffset)) {
+		if (bestMatch != null && (context
+				.getCurrentTextRangeEnd() <= context.startOffset + minOffset)) {
 			bestMatch = null;
 		}
 		if (bestMatch != null) {
@@ -133,10 +135,10 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 		return bestMatch;
 	}
 
-	public void parse(HTMLDocument doc) {
+	public void parse(Document doc) {
 		TreeWalker walker = ((DocumentTraversal) doc).createTreeWalker(
-				doc.getDocumentElement(), NodeFilter.SHOW_ELEMENT
-						| NodeFilter.SHOW_TEXT, null, true);
+				doc.getDocumentElement(),
+				NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, null, true);
 		// use walker not iterator - so we can pull/push (for xpath
 		// optimisation) w/o exceptions
 		Node n = null;
@@ -144,8 +146,11 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 		SurroundingBlockTuple lastSurroundingTuple = null;
 		while ((n = walker.nextNode()) != null) {
 			ParserContext<T, S> context = peer.getContext();
-			SurroundingBlockTuple surroundingTuple = XmlUtils
-					.getSurroundingBlockTuple(n);
+			SurroundingBlockTuple surroundingTuple = null;
+			surroundingTuple = peer.getSurroundingBlockTuple(n);
+			if (surroundingTuple == null) {
+				surroundingTuple = XmlUtils.getSurroundingBlockTuple(n);
+			}
 			if (peer.ignoreNode(n)) {
 				continue;
 			}
@@ -153,8 +158,10 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 				if (!surroundingTuple.equals(lastSurroundingTuple)) {
 					if (lastSurroundingTuple != null) {
 						short posCompared = lastSurroundingTuple.firstNode
-								.compareDocumentPosition(surroundingTuple.firstNode);
-						if ((posCompared & Node.DOCUMENT_POSITION_PRECEDING) > 0) {
+								.compareDocumentPosition(
+										surroundingTuple.firstNode);
+						if ((posCompared
+								& Node.DOCUMENT_POSITION_PRECEDING) > 0) {
 							throw new RuntimeException(
 									"Surround tuple before lastSurroundingTuple");
 						}
@@ -177,7 +184,9 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 					}
 				}
 				if (lastSurroundingTuple != null) {
-					lastSurroundingTuple.range.detach();
+					if (lastSurroundingTuple.range != null) {
+						lastSurroundingTuple.range.detach();
+					}
 				}
 				lastSurroundingTuple = surroundingTuple;
 			}
@@ -196,7 +205,9 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 			}
 		}
 		if (lastSurroundingTuple != null) {
-			lastSurroundingTuple.range.detach();
+			if (lastSurroundingTuple.range != null) {
+				lastSurroundingTuple.range.detach();
+			}
 		}
 		peer.flushRunContextAndCatch(true);
 	}
