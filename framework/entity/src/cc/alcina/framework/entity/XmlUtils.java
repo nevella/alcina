@@ -1328,6 +1328,16 @@ public class XmlUtils {
 		}
 		return null;
 	}
+	public static Element getNextElement(Node node) {
+		List<Node> kids = nodeListToList(node.getParentNode().getChildNodes());
+		for (int idx = kids.indexOf(node) + 1; idx <kids.size(); idx++) {
+			Node kid = kids.get(idx);
+			if (kid.getNodeType() == Node.ELEMENT_NODE) {
+				return (Element) kid;
+			}
+		}
+		return null;
+	}
 
 	public static Element splitNode(Element toSplit, Node splitAt) {
 		Element split = toSplit.getOwnerDocument()
