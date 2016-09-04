@@ -91,4 +91,10 @@ public class UsefulWidgetFactory {
 		panel.setStyleName(cssClassName);
 		return panel;
 	}
+
+	public static Label styledLabel(String text, String cssClassName) {
+		Label label = new Label(text);
+		label.setStyleName(cssClassName);
+		return label;
+	}
 }
