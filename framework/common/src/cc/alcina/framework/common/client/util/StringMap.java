@@ -82,6 +82,11 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return map;
 	}
 
+	@Override
+	public StringMap clone() {
+		return new StringMap(this);
+	}
+
 	public void setBooleanOrRemove(String key, boolean value) {
 		if (value) {
 			put(key, String.valueOf(true));
