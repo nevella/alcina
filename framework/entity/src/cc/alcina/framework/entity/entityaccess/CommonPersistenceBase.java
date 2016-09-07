@@ -1215,17 +1215,23 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public static Boolean isBotUserAgent(String userAgent) {
+		if(botUa ==null){
+			botUa = Pattern.compile(
+					String.format(
+					"(AdsBot-Google|AhrefsBot|bingbot|googlebot"
+							+ "|ArchiveTeam|curl|facebookexternalhit|HggH"
+							+ "|LoadImpactPageAnalyzer|LoadImpactRload|servlet"
+							+ "|WebCache|WebQL|WeCrawlForThePeace|Wget"
+							+ "|python-requests|FlipboardProxy|"
+							+ "BingPreview|Baiduspider|YandexBot|Java/%s)"
+							,ResourceUtilities.get(CommonPersistenceBase.class, "botUserAgentExtra")),
+					Pattern.CASE_INSENSITIVE);
+		}
 		return CommonUtils.isNullOrEmpty(userAgent)
 				|| botUa.matcher(userAgent).find();
 	}
 
-	public static Pattern botUa = Pattern.compile(
-			"(AdsBot-Google|AhrefsBot|bingbot|googlebot"
-					+ "|ArchiveTeam|curl|facebookexternalhit|HggH"
-					+ "|LoadImpactPageAnalyzer|LoadImpactRload|servlet"
-					+ "|WebCache|WebQL|WeCrawlForThePeace|Wget"
-					+ "|python-requests|FlipboardProxy|BingPreview|Baiduspider|YandexBot|Java/)",
-			Pattern.CASE_INSENSITIVE);
+	private static Pattern botUa;
 
 	public void iidUpdated(Iid iid, boolean create) {
 	}
