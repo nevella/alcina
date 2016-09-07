@@ -591,6 +591,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		// not required...useful but
 		return 0;
 	}
+	public long log(String message, String componentKey, String data) {
+		// not required...useful but
+		return 0;
+	}
 
 	public void logActionItem(ActionLogItem result) {
 		AppPersistenceBase.checkNotReadOnly();

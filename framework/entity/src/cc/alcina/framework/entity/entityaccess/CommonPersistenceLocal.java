@@ -44,20 +44,39 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
  * @author Nick Reddel
  */
 public interface CommonPersistenceLocal {
-	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
-			throws Exception;
+	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl);
+
+	public abstract void connectPermissionsManagerToLiveObjects();
 
 	public abstract ClientInstance createClientInstance(String userAgent, String iid);
 
 	public <T> T ensureObject(T t, String key, String value) throws Exception;
 
+	public <T extends HasId> T ensurePersistent(T obj);
+
+	public void expandExceptionInfo(DomainTransformLayerWrapper wrapper);
+
+	public <T> T findImplInstance(Class<? extends T> clazz, long id);
+
 	public <A> Set<A> getAll(Class<A> clazz);
 
 	public IUser getAnonymousUser();
 
+	public abstract String getAnonymousUserName();
+
+	public <US extends IUser> US getCleanedUserById(long userId);
+
+	public ClientInstance getClientInstance(String clientInstanceId);
+
+	public abstract IGroup getGroupByName(String groupName);
+
+	public abstract IGroup getGroupByName(String groupName, boolean clean);
+
 	public abstract Iid getIidByKey(String iid);
 
 	public abstract <A> Class<? extends A> getImplementation(Class<A> clazz);
+
+	public String getImplementationSimpleClassName(Class<?> clazz);
 
 	public <T> T getItemById(Class<T> clazz, Long id);
 
@@ -67,11 +86,34 @@ public interface CommonPersistenceLocal {
 	public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
 			boolean createIfNonexistent);
 
+	public abstract <T> T getItemByKeyValue(Class<T> clazz, String key,
+			Object value, boolean createIfNonexistent, Long ignoreId,
+			boolean caseInsensitive, boolean livePermissionsManager);
+
 	public <T> T getItemByKeyValueKeyValue(Class<T> clazz, String key1,
 			Object value1, String key2, Object value2);
 
+	public <T> List<T> getItemsByIdsAndClean(Class<T> clazz,
+			Collection<Long> ids,
+			InstantiateImplCallback instantiateImplCallback);
+
+	public long getLastTransformId();
+
+	public abstract LongPair getMinMaxIdRange(Class clazz);
+
+	public <A> A getNewImplementationInstance(Class<A> clazz);
+
+	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
+			throws Exception;
+
 	public <T extends WrapperPersistable> WrappedObject<T> getObjectWrapperForUser(
 			Class<T> c, long id) throws Exception;
+
+	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
+			long fromId, long toId, Collection<Long> specificIds,
+			boolean mostRecentOnly, boolean populateTransformSourceObjects);
+
+	public String getRememberMeUserName(String iid);
 
 	public abstract IUser getSystemUser();
 
@@ -81,9 +123,18 @@ public interface CommonPersistenceLocal {
 
 	public abstract IUser getUserByName(String userName, boolean clean);
 
+	public String getUserNameForClientInstanceId(long validatedClientInstanceId);
+
+	public <T extends WrapperPersistable> T getWrappedObjectForUser(
+			Class<? extends T> c, long wrappedObjectId) throws Exception;
+
+	public abstract boolean isValidIid(String iidKey);
+
 	public List<ActionLogItem> listLogItemsForClass(String className, int count);
 
 	public long log(String message, String componentKey);
+
+	public long log(String message, String componentKey, String data);
 
 	public abstract void logActionItem(ActionLogItem result);
 
@@ -93,12 +144,22 @@ public interface CommonPersistenceLocal {
 
 	public <G extends WrapperPersistable> Long persist(G gwpo) throws Exception;
 
+	public void persistClientLogRecords(List<ClientLogRecords> records);
+
+	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
+			Long id, GraphProjectionFieldFilter fieldFilter,
+			GraphProjectionDataFilter dataFilter);
+
 	public void remove(Object o);
 
 	public SearchResultsBase search(SearchDefinition def, int pageNumber);
 
 	public void setField(Class clazz, Long id, String key, Object value)
 			throws Exception;
+
+	public void transformInPersistenceContext(TransformPersister persister,
+			TransformPersistenceToken persistenceToken,
+			DomainTransformLayerWrapper wrapper);
 
 	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers);
 
@@ -109,70 +170,11 @@ public interface CommonPersistenceLocal {
 
 	public <T extends ServerValidator> List<T> validate(List<T> validators);
 
-	public abstract void connectPermissionsManagerToLiveObjects();
-
-	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
-			Long id, GraphProjectionFieldFilter fieldFilter,
-			GraphProjectionDataFilter dataFilter);
-
-	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl);
-
-	public <T extends HasId> T ensurePersistent(T obj);
-
-	public void transformInPersistenceContext(TransformPersister persister,
-			TransformPersistenceToken persistenceToken,
-			DomainTransformLayerWrapper wrapper);
-
-	public void expandExceptionInfo(DomainTransformLayerWrapper wrapper);
-
-	public String getImplementationSimpleClassName(Class<?> clazz);
-
-	public <A> A getNewImplementationInstance(Class<A> clazz);
-
 	public boolean validateClientInstance(long id, int auth);
-
-	public long getLastTransformId();
 
 	/**
 	 * Used for supporting mixed rpc/transform domain loads
 	 * 
 	 */
 	public TransformCache warmupTransformCache();
-
-	public <T> List<T> getItemsByIdsAndClean(Class<T> clazz,
-			Collection<Long> ids,
-			InstantiateImplCallback instantiateImplCallback);
-
-	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
-			long fromId, long toId, Collection<Long> specificIds,
-			boolean mostRecentOnly, boolean populateTransformSourceObjects);
-
-	public <US extends IUser> US getCleanedUserById(long userId);
-
-	public <T> T findImplInstance(Class<? extends T> clazz, long id);
-
-	public abstract <T> T getItemByKeyValue(Class<T> clazz, String key,
-			Object value, boolean createIfNonexistent, Long ignoreId,
-			boolean caseInsensitive, boolean livePermissionsManager);
-
-	public <T extends WrapperPersistable> T getWrappedObjectForUser(
-			Class<? extends T> c, long wrappedObjectId) throws Exception;
-
-	public void persistClientLogRecords(List<ClientLogRecords> records);
-
-	public abstract LongPair getMinMaxIdRange(Class clazz);
-
-	public abstract IGroup getGroupByName(String groupName, boolean clean);
-
-	public abstract IGroup getGroupByName(String groupName);
-
-	public ClientInstance getClientInstance(String clientInstanceId);
-
-	public String getUserNameForClientInstanceId(long validatedClientInstanceId);
-
-	public abstract String getAnonymousUserName();
-
-	public String getRememberMeUserName(String iid);
-
-	public abstract boolean isValidIid(String iidKey);
 }
