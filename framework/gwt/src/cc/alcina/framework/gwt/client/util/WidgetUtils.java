@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Rect;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
@@ -79,6 +80,9 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Nick Reddel
  */
 public class WidgetUtils {
+	public static final String CONTEXT_REALLY_ABSOLUTE_TOP = WidgetUtils.class
+			.getName() + ".CONTEXT_REALLY_ABSOLUTE_TOP";
+
 	public static void populateListFromEnum(ListBox box, Object[] objs) {
 		for (Object obj : objs) {
 			String k = obj.toString();
@@ -155,13 +159,13 @@ public class WidgetUtils {
 
 	public static native String getComputedStyle(Element elt,
 			String attributeName)/*-{
-        if (elt.currentStyle) {
-            return elt.currentStyle[attributeName];
-        }
-        if ($wnd.getComputedStyle) {
-            return $wnd.getComputedStyle(elt, null)[attributeName];
-        }
-	}-*/;
+									if (elt.currentStyle) {
+									return elt.currentStyle[attributeName];
+									}
+									if ($wnd.getComputedStyle) {
+									return $wnd.getComputedStyle(elt, null)[attributeName];
+									}
+									}-*/;
 
 	public static void clearChildren(TabPanel tp) {
 		for (int i = tp.getWidgetCount() - 1; i >= 0; i--) {
@@ -338,8 +342,8 @@ public class WidgetUtils {
 	}
 
 	private native static boolean isVisibleWithOffsetParent(Element elem)/*-{
-        return (elem.style.display != 'none' && elem.offsetParent != null);
-	}-*/;
+																			return (elem.style.display != 'none' && elem.offsetParent != null);
+																			}-*/;
 
 	private static boolean isDirectionalLayoutPanel(Widget panel,
 			boolean horizontal) {
@@ -532,7 +536,7 @@ public class WidgetUtils {
 				if (!isZeroOffsetDims(node.getParentElement())
 						// we don't want the combined ancestor of everyone...
 						&& (!node.getParentElement().isOrHasChild(from) ||
-								// but we do want <p><a><b>*some-text*</b></p>
+						// but we do want <p><a><b>*some-text*</b></p>
 								DomUtils.getContainingBlock(
 										node) == fromContainingBlock)) {
 					return node.getParentElement();
@@ -543,22 +547,22 @@ public class WidgetUtils {
 	}
 
 	public static native Element getFocussedDocumentElement()/*-{
-        if ($doc.activeElement) {
-            var tagName = $doc.activeElement.tagName.toLowerCase();
-            return tagName != "body" && tagName != "html" ? $doc.activeElement
-                    : null;
-        }
-        return null;
-	}-*/;
+																if ($doc.activeElement) {
+																var tagName = $doc.activeElement.tagName.toLowerCase();
+																return tagName != "body" && tagName != "html" ? $doc.activeElement
+																: null;
+																}
+																return null;
+																}-*/;
 
 	public static native void clearFocussedDocumentElement()/*-{
-        if ($doc.activeElement) {
-            var tagName = $doc.activeElement.tagName.toLowerCase();
-            if (tagName != "body" && tagName != "html") {
-                $doc.activeElement.blur();
-            }
-        }
-	}-*/;
+															if ($doc.activeElement) {
+															var tagName = $doc.activeElement.tagName.toLowerCase();
+															if (tagName != "body" && tagName != "html") {
+															$doc.activeElement.blur();
+															}
+															}
+															}-*/;
 
 	public static void scrollIntoViewWhileKeepingRect(Rect bounds,
 			Widget widget, int pad) {
@@ -800,8 +804,8 @@ public class WidgetUtils {
 	}
 
 	private static native void copy() /*-{
-        $doc.execCommand("Copy");
-	}-*/;
+										$doc.execCommand("Copy");
+										}-*/;
 
 	public static NativeEvent createZeroClick() {
 		return Document.get().createClickEvent(0, 0, 0, 0, 0, false, false,
@@ -824,13 +828,13 @@ public class WidgetUtils {
 	}
 
 	public native static int getRelativeTopTo(Element elem, Element end) /*-{
-        var top = 0;
-        while (elem != end) {
-            top += elem.offsetTop;
-            elem = elem.offsetParent;
-        }
-        return top;
-	}-*/;
+																			var top = 0;
+																			while (elem != end) {
+																			top += elem.offsetTop;
+																			elem = elem.offsetParent;
+																			}
+																			return top;
+																			}-*/;
 
 	public static void scrollIntoView(Element e, int fromTop) {
 		scrollIntoView(e, fromTop, false);
@@ -855,6 +859,11 @@ public class WidgetUtils {
 			tempPositioningText = tptCopy;
 		}
 		if (!forceFromTop && (absoluteTop >= y1 && absoluteTop < y2)) {
+			return;
+		}
+		if (forceFromTop && LooseContext.is(CONTEXT_REALLY_ABSOLUTE_TOP)) {
+			int to = absoluteTop - fromTop;
+			scrollBodyTo(to);
 			return;
 		}
 		DOM.scrollIntoView((com.google.gwt.user.client.Element) e);
@@ -941,69 +950,69 @@ public class WidgetUtils {
 	}
 
 	public static native int getScrollLeft(Element elem) /*-{
-        var left = 0;
-        var curr = elem;
-        // This intentionally excludes body which has a null offsetParent.
-        while (curr.offsetParent) {
-            left -= curr.scrollLeft;
-            curr = curr.parentNode;
-        }
-
-        return left;
-	}-*/;
+															var left = 0;
+															var curr = elem;
+															// This intentionally excludes body which has a null offsetParent.
+															while (curr.offsetParent) {
+															left -= curr.scrollLeft;
+															curr = curr.parentNode;
+															}
+															
+															return left;
+															}-*/;
 
 	public static native int getScrollTop(Element elem) /*-{
-        var top = 0;
-        var curr = elem;
-        // This intentionally excludes body which has a null offsetParent.
-        while (curr.offsetParent) {
-            top -= curr.scrollTop;
-            curr = curr.parentNode;
-        }
-        return top;
-	}-*/;
+														var top = 0;
+														var curr = elem;
+														// This intentionally excludes body which has a null offsetParent.
+														while (curr.offsetParent) {
+														top -= curr.scrollTop;
+														curr = curr.parentNode;
+														}
+														return top;
+														}-*/;
 
 	public static native Element getElementByNameOrId(Document doc,
 			String name) /*-{
-
-        var e = doc.getElementById(name);
-        if (!e) {
-            e = doc.getElementsByName(name)
-                    && doc.getElementsByName(name).length == 1 ? doc
-                    .getElementsByName(name)[0] : null;
-        }
-        return e;
-	}-*/;
+							
+							var e = doc.getElementById(name);
+							if (!e) {
+							e = doc.getElementsByName(name)
+							&& doc.getElementsByName(name).length == 1 ? doc
+							.getElementsByName(name)[0] : null;
+							}
+							return e;
+							}-*/;
 
 	public static native String getComputedStyleProperty(Element elem,
 			String strCssRule) /*-{
-        if ($doc.defaultView && $doc.defaultView.getComputedStyle) {
-            strValue = $doc.defaultView.getComputedStyle(elem, "")
-                    .getPropertyValue(strCssRule);
-        } else if (oElm.currentStyle) {
-            strCssRule = strCssRule.replace(/\-(\w)/g, function(strMatch, p1) {
-                return p1.toUpperCase();
-            });
-            strValue = oElm.currentStyle[strCssRule];
-        }
-        return strValue;
-	}-*/;
+								if ($doc.defaultView && $doc.defaultView.getComputedStyle) {
+								strValue = $doc.defaultView.getComputedStyle(elem, "")
+								.getPropertyValue(strCssRule);
+								} else if (oElm.currentStyle) {
+								strCssRule = strCssRule.replace(/\-(\w)/g, function(strMatch, p1) {
+								return p1.toUpperCase();
+								});
+								strValue = oElm.currentStyle[strCssRule];
+								}
+								return strValue;
+								}-*/;
 
 	public static native int getOffsetHeightWithMargins(Element elem) /*-{
-        if (elem.style.display == 'none') {
-            return 0;
-        }
-        var h = elem.offsetHeight;
-        var marginTop = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
-        var marginBottom = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
-        if (marginTop.indexOf("px") != -1) {
-            h += parseInt(marginTop.substring(0, marginTop.length - 2));
-        }
-        if (marginBottom.indexOf("px") != -1) {
-            h += parseInt(marginBottom.substring(0, marginBottom.length - 2));
-        }
-        return h;
-	}-*/;
+																		if (elem.style.display == 'none') {
+																		return 0;
+																		}
+																		var h = elem.offsetHeight;
+																		var marginTop = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
+																		var marginBottom = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
+																		if (marginTop.indexOf("px") != -1) {
+																		h += parseInt(marginTop.substring(0, marginTop.length - 2));
+																		}
+																		if (marginBottom.indexOf("px") != -1) {
+																		h += parseInt(marginBottom.substring(0, marginBottom.length - 2));
+																		}
+																		return h;
+																		}-*/;
 
 	public static Element clickGetAnchorAncestor(ClickEvent clickEvent) {
 		Event event = Event.as(clickEvent.getNativeEvent());
@@ -1019,56 +1028,56 @@ public class WidgetUtils {
 
 	public static native NodeList getElementsForSelector(Element elt,
 			String selector) /*-{
-        if (!($doc.querySelector)) {
-            return null;
-        }
-        var from = (elt) ? elt : $doc;
-        return from.querySelectorAll(selector);
-	}-*/;
+								if (!($doc.querySelector)) {
+								return null;
+								}
+								var from = (elt) ? elt : $doc;
+								return from.querySelectorAll(selector);
+								}-*/;
 
 	public static native Element getElementForSelector(Element elt,
 			String selector) /*-{
-        if (!($doc.querySelector)) {
-            return null;
-        }
-        var from = (elt) ? elt : $doc;
-        var splits = selector.split("::");
-        for (var idx = 0; idx < splits.length; idx += 2) {
-            var selectorPart = splits[idx];
-            var textRegex = idx == splits.length - 1 ? null : splits[idx + 1];
-            if (textRegex == null) {
-                return from.querySelector(selectorPart);
-            }
-            var nl = from.querySelectorAll(splits[idx]);
-            var found = false;
-            for (var i = 0; i < nl.length; i++) {
-                var item = nl[i];
-                if (item.innerHTML.indexOf(textRegex) != -1
-                        || item.innerHTML.match(new RegExp(textRegex))) {
-                    from = item;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                return null;
-            }
-        }
-        return from;
-	}-*/;
+								if (!($doc.querySelector)) {
+								return null;
+								}
+								var from = (elt) ? elt : $doc;
+								var splits = selector.split("::");
+								for (var idx = 0; idx < splits.length; idx += 2) {
+								var selectorPart = splits[idx];
+								var textRegex = idx == splits.length - 1 ? null : splits[idx + 1];
+								if (textRegex == null) {
+								return from.querySelector(selectorPart);
+								}
+								var nl = from.querySelectorAll(splits[idx]);
+								var found = false;
+								for (var i = 0; i < nl.length; i++) {
+								var item = nl[i];
+								if (item.innerHTML.indexOf(textRegex) != -1
+								|| item.innerHTML.match(new RegExp(textRegex))) {
+								from = item;
+								found = true;
+								break;
+								}
+								}
+								if (!found) {
+								return null;
+								}
+								}
+								return from;
+								}-*/;
 
 	public static native void focus(Element elem) /*-{
-        elem.focus();
-	}-*/;
+													elem.focus();
+													}-*/;
 
 	public static final native void click(Element elt) /*-{
-        elt.click();
-        try {
-            elt.focus();
-        } catch (e) {
-
-        }
-	}-*/;
+														elt.click();
+														try {
+														elt.focus();
+														} catch (e) {
+														
+														}
+														}-*/;
 
 	public static void hardCancelEvent(NativePreviewEvent event) {
 		event.cancel();
@@ -1076,12 +1085,12 @@ public class WidgetUtils {
 	}
 
 	private static native void cancelPossibleIEShortcut() /*-{
-        try {
-            $wnd.event.keyCode = 0; // this is a hack to capture ctrl+f ctrl+p etc
-        } catch (e) {
-
-        }
-	}-*/;
+															try {
+															$wnd.event.keyCode = 0; // this is a hack to capture ctrl+f ctrl+p etc
+															} catch (e) {
+															
+															}
+															}-*/;
 
 	public static int propertyPx(String propertyString) {
 		if (propertyString.indexOf("px") == -1) {
@@ -1144,29 +1153,29 @@ public class WidgetUtils {
 
 	private static native boolean isLessThanXpixelsFrom0(Element e,
 			int hDistance, int vDistance, int x, int y) /*-{
-        try {
-            var rects = e.getClientRects();
-            for (var idx = 0; idx < rects.length; idx++) {
-                var rect = rects[idx];
-                var hOk = rect.left - x < hDistance
-                        && x - rect.right < hDistance;
-                var vOk = rect.top - y < vDistance
-                        && y - rect.bottom < vDistance;
-                if (hOk && vOk) {
-                    return true;
-                }
-            }
-            return false;
-        } catch (e2) {
-            return false;
-        }
-	}-*/;
+														try {
+														var rects = e.getClientRects();
+														for (var idx = 0; idx < rects.length; idx++) {
+														var rect = rects[idx];
+														var hOk = rect.left - x < hDistance
+														&& x - rect.right < hDistance;
+														var vOk = rect.top - y < vDistance
+														&& y - rect.bottom < vDistance;
+														if (hOk && vOk) {
+														return true;
+														}
+														}
+														return false;
+														} catch (e2) {
+														return false;
+														}
+														}-*/;
 
 	public static native boolean docIsVisible() /*-{
-        if (typeof $wnd.document.hidden !== "undefined") {
-            return !$wnd.document.hidden;
-        } else {
-            return true;
-        }
-	}-*/;
+												if (typeof $wnd.document.hidden !== "undefined") {
+												return !$wnd.document.hidden;
+												} else {
+												return true;
+												}
+												}-*/;
 }
