@@ -51,6 +51,8 @@ public abstract class ClientInstance
 	private Integer auth;
 
 	private String userAgent;
+	@GwtTransient
+	private Boolean botUserAgent;
 
 	@GwtTransient
 	private String iid;
@@ -69,6 +71,10 @@ public abstract class ClientInstance
 
 	public Integer getAuth() {
 		return auth;
+	}
+
+	public Boolean getBotUserAgent() {
+		return this.botUserAgent;
 	}
 
 	public Date getHelloDate() {
@@ -95,6 +101,10 @@ public abstract class ClientInstance
 
 	public void setAuth(Integer auth) {
 		this.auth = auth;
+	}
+
+	public void setBotUserAgent(Boolean botUserAgent) {
+		this.botUserAgent = botUserAgent;
 	}
 
 	public void setHelloDate(Date helloDate) {

@@ -24,12 +24,14 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 import java.util.Random;
 import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.servlet.http.HttpServletRequest;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -1074,6 +1076,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				impl.setIid(iid);
 				impl.setAuth(Math.abs(new Random().nextInt()));
 				impl.setUserAgent(userAgent);
+				impl.setBotUserAgent(isBotUserAgent(userAgent));
 				cp.getEntityManager().flush();
 				cp.getEntityManager().clear();
 				IUser clonedUser = (IUser) cp
@@ -1210,6 +1213,19 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			getHandshakeObjectProviderClass() {
 		return handshakeObjectProviderClass;
 	}
+
+	public static Boolean isBotUserAgent(String userAgent) {
+		return CommonUtils.isNullOrEmpty(userAgent)
+				|| botUa.matcher(userAgent).find();
+	}
+
+	public static Pattern botUa = Pattern.compile(
+			"(AdsBot-Google|AhrefsBot|bingbot|googlebot"
+					+ "|ArchiveTeam|curl|facebookexternalhit|HggH"
+					+ "|LoadImpactPageAnalyzer|LoadImpactRload|servlet"
+					+ "|WebCache|WebQL|WeCrawlForThePeace|Wget"
+					+ "|python-requests|FlipboardProxy|BingPreview|Baiduspider|YandexBot|Java/)",
+			Pattern.CASE_INSENSITIVE);
 
 	public void iidUpdated(Iid iid, boolean create) {
 	}
