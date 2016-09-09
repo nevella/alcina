@@ -1383,4 +1383,8 @@ public class XmlUtils {
 		}
 		return earliest;
 	}
+
+	public static Element getParentElement(Element element) {
+		return (Element) element.getParentNode();
+	}
 }
