@@ -12,4 +12,8 @@ public enum BooleanEnum {
 	public static Boolean toBoolean(BooleanEnum b) {
 		return b == null ? null : b == FALSE ? Boolean.FALSE : Boolean.TRUE;
 	}
+
+	public boolean toBoolean() {
+		return toBoolean(this);
+	}
 }
