@@ -116,24 +116,27 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public static Boolean isBotExtraUserAgent(String userAgent) {
-		return botExtraUa!=null&&botExtraUa.matcher(userAgent).find();
+		return botExtraUa != null && botExtraUa.matcher(userAgent).find();
 	}
 
 	public static Boolean isBotUserAgent(String userAgent) {
 		if (botUa == null) {
 			botUa = Pattern.compile(
-					String.format("(AdsBot-Google|AhrefsBot|bingbot|googlebot"
+					"(AdsBot-Google|AhrefsBot|bingbot|googlebot"
 							+ "|ArchiveTeam|curl|facebookexternalhit|HggH"
 							+ "|LoadImpactPageAnalyzer|LoadImpactRload|servlet"
 							+ "|WebCache|WebQL|WeCrawlForThePeace|Wget"
 							+ "|python-requests|FlipboardProxy|"
-							+ "BingPreview|Baiduspider|YandexBot|Java/%s)"),
+							+ "BingPreview|Baiduspider|YandexBot|Java)",
 					Pattern.CASE_INSENSITIVE);
-			String botExtraRegex = ResourceUtilities.get(CommonPersistenceBase.class, "botUserAgentExtra");
-			botExtraUa = botExtraRegex.isEmpty()?null:Pattern.compile(botExtraRegex);
+			String botExtraRegex = ResourceUtilities
+					.get(CommonPersistenceBase.class, "botUserAgentExtra");
+			botExtraUa = botExtraRegex.isEmpty() ? null
+					: Pattern.compile(botExtraRegex);
 		}
 		return CommonUtils.isNullOrEmpty(userAgent)
-				|| botUa.matcher(userAgent).find()||isBotExtraUserAgent(userAgent);
+				|| botUa.matcher(userAgent).find()
+				|| isBotExtraUserAgent(userAgent);
 	}
 
 	public static void setHandshakeObjectProviderClass(
