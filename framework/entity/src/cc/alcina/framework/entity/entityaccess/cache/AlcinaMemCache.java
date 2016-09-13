@@ -996,7 +996,12 @@ public class AlcinaMemCache implements RegistrableService {
 		if (obj instanceof MemCacheProxy) {
 			clazz = (Class<? extends HasIdAndLocalId>) clazz.getSuperclass();
 		}
-		cacheDescriptor.perClass.get(clazz).index(obj, add);
+		CacheItemDescriptor itemDescriptor = cacheDescriptor.perClass.get(clazz);
+		itemDescriptor.index(obj, add);
+		for(HasIdAndLocalId dependentObject: itemDescriptor.getDependentObjectsWithDerivedProjections(obj)){
+			index(dependentObject,add);
+		}
+		
 	}
 
 	private void loadJoinTable(Entry<PropertyDescriptor, JoinTable> entry,

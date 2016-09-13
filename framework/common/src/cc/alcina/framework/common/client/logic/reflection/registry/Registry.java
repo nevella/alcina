@@ -289,7 +289,9 @@ public class Registry {
 			List<Class> lookup = lookup(true, registryPoint, targetObject,
 					false);
 			cached = lookup.size() > 0 ? lookup.get(0) : Void.class;
-			exactMap.put(registryPoint, targetObject, cached);
+			synchronized (exactMap) {
+				exactMap.put(registryPoint, targetObject, cached);
+			}
 		}
 		if (cached == Void.class && errorOnNull) {
 			throw new NoImplementationException(CommonUtils.formatJ(

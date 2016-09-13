@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.cache;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -55,8 +56,8 @@ public class CacheItemDescriptor {
 	public Set<Long> evaluateFilter(DetachedEntityCache cache,
 			Set<Long> existing, CollectionFilter filter) {
 		if (existing == null) {
-			List filtered = CollectionFilters.filter(
-					cache.immutableRawValues(clazz), filter);
+			List filtered = CollectionFilters
+					.filter(cache.immutableRawValues(clazz), filter);
 			return HiliHelper.toIdSet(filtered);
 		} else {
 			CollectionFilter withIdFilter = new CollectionFilter<Long>() {
@@ -119,5 +120,10 @@ public class CacheItemDescriptor {
 				projection.remove(obj);
 			}
 		}
+	}
+
+	public Collection<HasIdAndLocalId>
+			getDependentObjectsWithDerivedProjections(HasIdAndLocalId obj) {
+		return new ArrayList<>();
 	}
 }
