@@ -202,4 +202,8 @@ public class XmlNode {
 			return out;
 		}
 	}
+
+	public boolean isAncestorOf(XmlNode xmlNode) {
+		return XmlUtils.isAncestorOf(node, xmlNode.node);
+	}
 }

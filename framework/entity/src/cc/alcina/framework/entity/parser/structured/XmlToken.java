@@ -36,4 +36,5 @@ public abstract class XmlToken<C extends StructuredTokenParserContext> {
 	public String textContent(XmlNode sourceNode){
 		return null;
 	}
+
 }
