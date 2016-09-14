@@ -57,8 +57,8 @@ public class ReplayInstruction {
 		if (idx1 == -1) {
 			return replayInstruction;
 		}
-		replayInstruction.type = ReplayInstructionType.valueOf(s.substring(idx,
-				idx1));
+		replayInstruction.type = ReplayInstructionType
+				.valueOf(s.substring(idx, idx1));
 		idx = idx1;
 		idx1 = s.indexOf("\t", idx1 + 1);
 		if (idx1 == -1) {
@@ -71,10 +71,10 @@ public class ReplayInstruction {
 	}
 
 	public static String escape(String str) {
-		return str == null
-				|| (str.indexOf("\n") == -1 && str.indexOf("\t") == -1 && str
-						.indexOf("\\") == -1) ? str : str.replace("\\", "\\\\")
-				.replace("\n", "\\n").replace("\t", "\\t");
+		return str == null || (str.indexOf("\n") == -1
+				&& str.indexOf("\t") == -1 && str.indexOf("\\") == -1) ? str
+						: str.replace("\\", "\\\\").replace("\n", "\\n")
+								.replace("\t", "\\t");
 	}
 
 	public static String unescape(String str) {
@@ -103,12 +103,13 @@ public class ReplayInstruction {
 		return sb.toString();
 	}
 
-	public static ReplayInstruction fromClientLogRecord(ClientLogRecord record) {
+	public static ReplayInstruction
+			fromClientLogRecord(ClientLogRecord record) {
 		ReplayInstructionType type = CommonUtils.getEnumValueOrNull(
 				ReplayInstructionType.class, record.getTopic());
 		if (type != null) {
-			StringPair pair = ClientLogRecord.parseLocationValue(record
-					.getMessage());
+			StringPair pair = ClientLogRecord
+					.parseLocationValue(record.getMessage());
 			return new ReplayInstruction(type, pair.s1, pair.s2);
 		} else {
 			return null;
@@ -137,17 +138,33 @@ public class ReplayInstruction {
 		public String text;
 
 		public String cssSelector;
+
+		public boolean isWildcardText() {
+			return text.equals(REPLAY_TEXT_WILDCARD);
+		}
+
+		public void fixReplayWildcard() {
+			if (text != null && text.endsWith("::*")) {
+				text = text.substring(0, text.length() - 3)
+						+ REPLAY_TEXT_WILDCARD;
+			}
+		}
 	}
 
-	private static final String CSS_SEL = "css-sel:";
-
 	public static ReplayLocator parseReplayBody(String param) {
-		// pattern is always $XPATH :: [$TEXT]
+		// pattern is always HTML$XPATH :: [$TEXT]
 		// or css-sel:[css-sel]
 		ReplayLocator result = new ReplayLocator();
-		if (param.startsWith(CSS_SEL)) {
-			result.cssSelector = param.substring(CSS_SEL.length());
-			result.text=REPLAY_TEXT_WILDCARD;
+		if (!param.startsWith("HTML")) {
+			int idx = param.indexOf("::");
+			if (idx == -1) {
+				result.cssSelector = param;
+				result.text = REPLAY_TEXT_WILDCARD;
+			} else {
+				result.cssSelector = param.substring(0, idx);
+				result.text = param.substring(idx + 2);
+				result.fixReplayWildcard();
+			}
 			return result;
 		}
 		RegExp regex = RegExp.compile("(.+)(?:\\[idx:([0-9]+)\\])$");
@@ -164,6 +181,7 @@ public class ReplayInstruction {
 		result.path = locationish.substring(0, idx1);
 		result.text = locationish.substring(idx1 + SEP.length(),
 				locationish.length() - 1);
+		result.fixReplayWildcard();
 		return result;
 	}
 }
