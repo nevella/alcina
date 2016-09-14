@@ -14,6 +14,7 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 		XmlDoc outDoc = new XmlDoc("<root/>");
 		XmlTokenOutput out = new XmlTokenOutput(outDoc);
 		context.out = out;
+		out.context=context;
 		context.stream = stream;
 		while (stream.hasNext()) {
 			XmlNode node = stream.next();

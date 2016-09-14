@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.parser.structured;
 
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -7,15 +8,17 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class XmlTokenOutputContext implements Cloneable {
-	public static XmlTokenOutputContext EMPTY = new XmlTokenOutputContext();
+	public static XmlTokenOutputContext EMPTY = new XmlTokenOutputContext()
+			.empty();
 
 	protected StringMap properties = new StringMap();
 
 	protected Set<String> seenKeys = new LinkedHashSet<>();
 
-	public Set<String> getSeenKeys() {
-		return this.seenKeys;
-	}
+	@SuppressWarnings("unused")
+	private boolean empty;
+
+	private HierarchicalContextProvider contextProvider;
 
 	private String tag;
 
@@ -31,8 +34,18 @@ public class XmlTokenOutputContext implements Cloneable {
 		}
 	}
 
+	public XmlTokenOutputContext
+			contextProvider(HierarchicalContextProvider contextProvider) {
+		this.contextProvider = contextProvider;
+		return this;
+	}
+
 	public StringMap getProperties() {
 		return this.properties;
+	}
+
+	public Set<String> getSeenKeys() {
+		return this.seenKeys;
 	}
 
 	public String getTag() {
@@ -61,5 +74,29 @@ public class XmlTokenOutputContext implements Cloneable {
 	public XmlTokenOutputContext putTrue(String name) {
 		properties.put(name, "true");
 		return this;
+	}
+
+	public String resolve(String key) {
+		Iterator<XmlTokenOutputContext> itr = contextProvider.contexts();
+		while (itr.hasNext()) {
+			XmlTokenOutputContext context = itr.next();
+			if (context.properties.containsKey(key)) {
+				return context.properties.get(key);
+			}
+		}
+		return null;
+	}
+
+	public boolean resolveTrue(String key) {
+		return Boolean.valueOf(resolve(key));
+	}
+
+	protected XmlTokenOutputContext empty() {
+		this.empty = true;
+		return this;
+	}
+
+	public interface HierarchicalContextProvider {
+		public Iterator<XmlTokenOutputContext> contexts();
 	}
 }

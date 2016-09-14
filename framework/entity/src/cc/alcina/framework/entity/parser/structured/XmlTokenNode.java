@@ -1,9 +1,11 @@
 package cc.alcina.framework.entity.parser.structured;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.parser.structured.XmlTokenOutputContext.HierarchicalContextProvider;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 
 public class XmlTokenNode {
@@ -19,7 +21,7 @@ public class XmlTokenNode {
 	public XmlNode targetNode;
 
 	public XmlToken token;
-
+	
 	@Override
 	public String toString() {
 		return String.format("%s:\n%s\n%s", token, sourceNode,

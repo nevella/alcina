@@ -9,6 +9,7 @@ import java.util.Map;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.parser.structured.XmlTokenOutputContext.HierarchicalContextProvider;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 import cc.alcina.framework.entity.parser.structured.node.XmlTokenStream;
 
@@ -17,28 +18,11 @@ public class StructuredTokenParserContext {
 
 	public XmlTokenStream stream;
 
-	public boolean had(XmlToken token) {
-		return matched.containsKey(token);
-	}
-
 	public Multimap<XmlToken, List<XmlNode>> matched = new Multimap<>();
 
 	private Map<XmlNode, XmlTokenNode> nodeToken = new LinkedHashMap<>();
 
-	public void wasMatched(XmlTokenNode outNode) {
-		matched.add(outNode.token, outNode.sourceNode);
-		nodeToken.put(outNode.sourceNode, outNode);
-	}
-
 	StringMap properties = new StringMap();
-
-	public void propertyDelta(String key, boolean add) {
-		properties.setBooleanOrRemove(key, add);
-	}
-
-	public void skipChildren() {
-		stream.skipChildren();
-	}
 
 	int lastDepthOut = 0;
 
@@ -48,12 +32,17 @@ public class StructuredTokenParserContext {
 
 	int initialDepthIn = -1;
 
-	protected LinkedList<XmlTokenNode> openNodes = new LinkedList<>();;
+	protected LinkedList<XmlTokenNode> openNodes = new LinkedList<>();
 
 	public void end() {
 	}
 
+	public boolean had(XmlToken token) {
+		return matched.containsKey(token);
+	}
+
 	public boolean has(XmlNode node, XmlToken token) {
+		node = node.parent();
 		while (node != null) {
 			XmlTokenNode mappedTo = nodeToken.get(node);
 			if (mappedTo == null) {
@@ -99,11 +88,30 @@ public class StructuredTokenParserContext {
 				depthOutSpacer + outStr, match);
 	}
 
-	protected void maybeOpenOutputWrapper(XmlTokenNode node) {
-		if (node.token.outputContext().hasTag()) {
-			out.open(node, node.token.outputContext().getTag());
-			openNodes.push(node);
-		}
+	public HierarchicalContextProvider outputContext() {
+		return new HierarchicalContextProvider() {
+			@Override
+			public Iterator<XmlTokenOutputContext> contexts() {
+				return new NodeContextStream(out.getOutCursor(), true);
+			}
+		};
+	}
+
+	public void propertyDelta(String key, boolean add) {
+		properties.setBooleanOrRemove(key, add);
+	}
+
+	public void skipChildren() {
+		stream.skipChildren();
+	}
+
+	public void targetNodeMapped(XmlTokenNode outNode) {
+		nodeToken.put(outNode.targetNode, outNode);
+	}
+
+	public void wasMatched(XmlTokenNode outNode) {
+		matched.add(outNode.token, outNode.sourceNode);
+		nodeToken.put(outNode.sourceNode, outNode);
 	}
 
 	protected void closeOpenOutputWrappers(XmlTokenNode node) {
@@ -111,9 +119,40 @@ public class StructuredTokenParserContext {
 				.hasNext();) {
 			XmlTokenNode openNode = itr.next();
 			if (!openNode.sourceNode.isAncestorOf(node.sourceNode)) {
-				out.close(openNode, node.token.outputContext().getTag());
+				out.close(openNode, openNode.token.outputContext().getTag());
 				itr.remove();
 			}
+		}
+	}
+
+	protected void maybeOpenOutputWrapper(XmlTokenNode node) {
+		if (node.token.outputContext().hasTag()) {
+			out.open(node, node.token.outputContext().getTag());
+			openNodes.push(node);
+		}
+	}
+
+	public class NodeContextStream implements Iterator<XmlTokenOutputContext> {
+		XmlNode cursor;
+
+		private XmlTokenNode tokenNode;
+
+		public NodeContextStream(XmlTokenNode tokenNode, boolean output) {
+			this.tokenNode = tokenNode;
+			cursor = output ? tokenNode.targetNode : tokenNode.sourceNode;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return cursor != null && tokenNode != null;
+		}
+
+		@Override
+		public XmlTokenOutputContext next() {
+			XmlTokenNode result = tokenNode;
+			cursor = cursor.parent();
+			tokenNode = nodeToken.get(cursor);
+			return result.token.outputContext();
 		}
 	}
 }

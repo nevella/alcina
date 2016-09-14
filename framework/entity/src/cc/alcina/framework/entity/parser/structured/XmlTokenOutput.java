@@ -1,7 +1,10 @@
 package cc.alcina.framework.entity.parser.structured;
 
+import java.util.Iterator;
+
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.XmlUtils;
+import cc.alcina.framework.entity.parser.structured.XmlTokenOutputContext.HierarchicalContextProvider;
 import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 
@@ -10,10 +13,14 @@ public class XmlTokenOutput {
 
 	private XmlNode writeCursor;
 
+	public StructuredTokenParserContext context;
+
 	public XmlTokenOutput(XmlDoc outDoc) {
 		this.outDoc = outDoc;
 		writeCursor = outDoc.root();
 	}
+
+	
 
 	public void close(XmlTokenNode outNode, String tag) {
 		if (!writeCursor.tagIs(tag)) {
@@ -34,8 +41,12 @@ public class XmlTokenOutput {
 		writeCursor = writeCursor.add().tag(tag).attrs(attrs).append();
 		writeCursor.open = outNode;
 		outNode.targetNode = writeCursor;
+		context.targetNodeMapped(outNode);
 	}
-
+	
+	XmlTokenNode getOutCursor(){
+		return writeCursor.open;
+	}
 	public void tag(XmlTokenNode node, String tag) {
 		open(node, tag);
 		close(node, tag);
