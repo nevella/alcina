@@ -177,6 +177,10 @@ public class XmlNode {
 		public XmlNode firstElement() {
 			return elements().get(0);
 		}
+
+		public boolean contains(String tag) {
+			return elements().stream().anyMatch(xn -> xn.tagIs(tag));
+		}
 	}
 
 	public class XmlNodeDebug {

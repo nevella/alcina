@@ -33,8 +33,12 @@ public abstract class XmlToken<C extends StructuredTokenParserContext> {
 	public boolean ignoreable() {
 		return false;
 	}
-	public String textContent(XmlNode sourceNode){
+
+	public String textContent(XmlNode sourceNode) {
 		return null;
 	}
 
+	public XmlTokenOutputContext outputContext() {
+		return XmlTokenOutputContext.EMPTY;
+	}
 }

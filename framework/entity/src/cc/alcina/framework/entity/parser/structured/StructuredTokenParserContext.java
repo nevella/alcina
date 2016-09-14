@@ -1,6 +1,10 @@
 package cc.alcina.framework.entity.parser.structured;
 
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -19,8 +23,11 @@ public class StructuredTokenParserContext {
 
 	public Multimap<XmlToken, List<XmlNode>> matched = new Multimap<>();
 
+	private Map<XmlNode, XmlTokenNode> nodeToken = new LinkedHashMap<>();
+
 	public void wasMatched(XmlTokenNode outNode) {
 		matched.add(outNode.token, outNode.sourceNode);
+		nodeToken.put(outNode.sourceNode, outNode);
 	}
 
 	StringMap properties = new StringMap();
@@ -41,7 +48,23 @@ public class StructuredTokenParserContext {
 
 	int initialDepthIn = -1;
 
+	protected LinkedList<XmlTokenNode> openNodes = new LinkedList<>();;
+
 	public void end() {
+	}
+
+	public boolean has(XmlNode node, XmlToken token) {
+		while (node != null) {
+			XmlTokenNode mappedTo = nodeToken.get(node);
+			if (mappedTo == null) {
+				break;
+			}
+			if (mappedTo.token == token) {
+				return true;
+			}
+			node = node.parent();
+		}
+		return false;
 	}
 
 	public void log(XmlTokenNode outNode) {
@@ -74,5 +97,23 @@ public class StructuredTokenParserContext {
 		String match = outNode.token.name;
 		System.out.format("%-30s%-30s%s\n", depthInSpacer + inStr,
 				depthOutSpacer + outStr, match);
+	}
+
+	protected void maybeOpenOutputWrapper(XmlTokenNode node) {
+		if (node.token.outputContext().hasTag()) {
+			out.open(node, node.token.outputContext().getTag());
+			openNodes.push(node);
+		}
+	}
+
+	protected void closeOpenOutputWrappers(XmlTokenNode node) {
+		for (Iterator<XmlTokenNode> itr = openNodes.iterator(); itr
+				.hasNext();) {
+			XmlTokenNode openNode = itr.next();
+			if (!openNode.sourceNode.isAncestorOf(node.sourceNode)) {
+				out.close(openNode, node.token.outputContext().getTag());
+				itr.remove();
+			}
+		}
 	}
 }
