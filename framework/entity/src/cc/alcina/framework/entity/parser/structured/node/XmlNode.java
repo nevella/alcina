@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.parser.structured.node;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.w3c.dom.Attr;
@@ -12,8 +13,10 @@ import org.w3c.dom.Node;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.OptimizingXpathEvaluator;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
+import cc.alcina.framework.entity.XpathHelper;
 import cc.alcina.framework.entity.parser.structured.XmlTokenNode;
 
 public class XmlNode {
@@ -209,5 +212,43 @@ public class XmlNode {
 
 	public boolean isAncestorOf(XmlNode xmlNode) {
 		return XmlUtils.isAncestorOf(node, xmlNode.node);
+	}
+
+	private XmlNodeXpath xpath;
+
+	public XmlNodeXpath xpath() {
+		if (xpath == null) {
+			xpath = new XmlNodeXpath();
+		}
+		return xpath;
+	}
+
+	public class XmlNodeXpath {
+		private OptimizingXpathEvaluator eval;
+
+		public XmlNodeXpath() {
+			XpathHelper xh = new XpathHelper(node);
+			eval = xh.createOptimisedEvaluator(node);
+		}
+
+		public List<XmlNode> nodes(String xpath) {
+			List<Element> elements = eval.getElementsByXpath(xpath, node);
+			return elements.stream().map(doc::nodeFor)
+					.collect(Collectors.toList());
+		}
+
+		public XmlNode node(String xpath) {
+			Element element = eval.getElementByXpath(xpath, node);
+			return doc.nodeFor(element);
+		}
+
+		public String textOrEmpty(String xpath) {
+			return Optional.ofNullable(node(xpath)).map(XmlNode::textContent)
+					.orElse("");
+		}
+	}
+
+	public String dumpXml() {
+		return XmlUtils.streamXML(node);
 	}
 }
