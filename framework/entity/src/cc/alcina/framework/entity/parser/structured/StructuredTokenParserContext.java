@@ -34,6 +34,8 @@ public class StructuredTokenParserContext {
 
 	protected LinkedList<XmlTokenNode> openNodes = new LinkedList<>();
 
+	protected XmlTokenNode lastMatched;
+
 	public void end() {
 	}
 
@@ -112,6 +114,7 @@ public class StructuredTokenParserContext {
 	public void wasMatched(XmlTokenNode outNode) {
 		matched.add(outNode.token, outNode.sourceNode);
 		nodeToken.put(outNode.sourceNode, outNode);
+		lastMatched = outNode;
 	}
 
 	protected void closeOpenOutputWrappers(XmlTokenNode node) {
@@ -154,5 +157,10 @@ public class StructuredTokenParserContext {
 			tokenNode = nodeToken.get(cursor);
 			return result.token.outputContext();
 		}
+	}
+
+	public boolean isSubCategory(Class clazz) {
+		return lastMatched != null
+				&& lastMatched.token.getSubCategory() == clazz;
 	}
 }

@@ -60,4 +60,11 @@ public class XmlTokenOutput {
 		return XmlUtils.streamXML(
 				outDoc.domDoc().getDocumentElement().getFirstChild());
 	}
+
+
+
+	public void ensureOpen(XmlTokenNode outNode, String string) {
+		// TODO Auto-generated method stub
+		
+	}
 }
