@@ -996,12 +996,13 @@ public class AlcinaMemCache implements RegistrableService {
 		if (obj instanceof MemCacheProxy) {
 			clazz = (Class<? extends HasIdAndLocalId>) clazz.getSuperclass();
 		}
-		CacheItemDescriptor itemDescriptor = cacheDescriptor.perClass.get(clazz);
+		CacheItemDescriptor itemDescriptor = cacheDescriptor.perClass
+				.get(clazz);
 		itemDescriptor.index(obj, add);
-		for(HasIdAndLocalId dependentObject: itemDescriptor.getDependentObjectsWithDerivedProjections(obj)){
-			index(dependentObject,add);
+		for (HasIdAndLocalId dependentObject : itemDescriptor
+				.getDependentObjectsWithDerivedProjections(obj)) {
+			index(dependentObject, add);
 		}
-		
 	}
 
 	private void loadJoinTable(Entry<PropertyDescriptor, JoinTable> entry,
@@ -2347,6 +2348,8 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 	}
 
+	private AtomicInteger connectionsReopened = new AtomicInteger();
+
 	class ConnResults implements Iterable<Object[]> {
 		ConnResultsIterator itr = new ConnResultsIterator();
 
@@ -2369,6 +2372,10 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 
 		public ResultSet ensureRs() {
+			return ensureRs(0);
+		}
+
+		private ResultSet ensureRs(int pass) {
 			try {
 				if (rs == null) {
 					conn.setAutoCommit(false);
@@ -2390,6 +2397,18 @@ public class AlcinaMemCache implements RegistrableService {
 				}
 				return rs;
 			} catch (Exception e) {
+				if (pass < 2 && !initialising
+						&& connectionsReopened.get() < 20) {
+					try {
+						// don't close the last one, invalid
+						conn = dataSource.getConnection();
+					} catch (Exception e2) {
+						throw new WrappedRuntimeException(e2);
+					}
+					System.out.println("memcache-db-warning");
+					e.printStackTrace();
+					return ensureRs(pass + 1);
+				}
 				throw new WrappedRuntimeException(e);
 			}
 		}
