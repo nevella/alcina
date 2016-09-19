@@ -20,8 +20,6 @@ public class XmlTokenOutput {
 		writeCursor = outDoc.root();
 	}
 
-	
-
 	public void close(XmlTokenNode outNode, String tag) {
 		if (!writeCursor.tagIs(tag)) {
 			throw new RuntimeException(
@@ -34,6 +32,9 @@ public class XmlTokenOutput {
 	}
 
 	public void open(XmlTokenNode outNode, String tag) {
+		if(tag.equals("catchwords")){
+			int debug=3;
+		}
 		open(outNode, tag, new StringMap());
 	}
 
@@ -43,10 +44,11 @@ public class XmlTokenOutput {
 		outNode.targetNode = writeCursor;
 		context.targetNodeMapped(outNode);
 	}
-	
-	XmlTokenNode getOutCursor(){
+
+	XmlTokenNode getOutCursor() {
 		return writeCursor.open;
 	}
+
 	public void tag(XmlTokenNode node, String tag) {
 		open(node, tag);
 		close(node, tag);
@@ -61,10 +63,9 @@ public class XmlTokenOutput {
 				outDoc.domDoc().getDocumentElement().getFirstChild());
 	}
 
-
-
-	public void ensureOpen(XmlTokenNode outNode, String string) {
-		// TODO Auto-generated method stub
-		
+	public void ensureOpen(XmlTokenNode outNode, String tag) {
+		if (!writeCursor.ancestor().orSelf().has(tag)) {
+			open(outNode, tag);
+		}
 	}
 }

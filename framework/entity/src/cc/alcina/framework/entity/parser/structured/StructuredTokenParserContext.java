@@ -114,14 +114,18 @@ public class StructuredTokenParserContext {
 	public void wasMatched(XmlTokenNode outNode) {
 		matched.add(outNode.token, outNode.sourceNode);
 		nodeToken.put(outNode.sourceNode, outNode);
-		lastMatched = outNode;
+		if (!outNode.token.ignoreable()) {
+			lastMatched = outNode;
+		}
 	}
 
 	protected void closeOpenOutputWrappers(XmlTokenNode node) {
 		for (Iterator<XmlTokenNode> itr = openNodes.iterator(); itr
 				.hasNext();) {
 			XmlTokenNode openNode = itr.next();
-			if (!openNode.sourceNode.isAncestorOf(node.sourceNode)) {
+			if (!openNode.sourceNode.isAncestorOf(node.sourceNode)
+					&& openNode.targetNode != null && openNode.targetNode
+							.tagIs(openNode.token.outputContext().getTag())) {
 				out.close(openNode, openNode.token.outputContext().getTag());
 				itr.remove();
 			}

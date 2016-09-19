@@ -164,12 +164,12 @@ public class XmlNode {
 			return elts.size() == 1 && elts.get(0).tagIs(tag);
 		}
 
-		private List<XmlNode> elements() {
+		public List<XmlNode> elements() {
 			return nodes().stream().filter(XmlNode::isElement)
 					.collect(Collectors.toList());
 		}
 
-		private List<XmlNode> nodes() {
+		public List<XmlNode> nodes() {
 			if (nodes == null) {
 				nodes = XmlUtils.nodeListToList(node.getChildNodes()).stream()
 						.map(doc::nodeFor).collect(Collectors.toList());
@@ -248,7 +248,37 @@ public class XmlNode {
 		}
 	}
 
+	public class XmlNodeAncestor {
+		private boolean orSelf = false;
+
+		public XmlNodeAncestor orSelf() {
+			orSelf = true;
+			return this;
+		}
+
+		public boolean has(String tag) {
+			return get(tag) != null;
+		}
+
+		public XmlNode get(String tag) {
+			if (orSelf && tagIs(tag)) {
+				return XmlNode.this;
+			}
+			Element ancestor = XmlUtils.getAncestorWithTagName(node, tag);
+			return ancestor == null ? null : doc.nodeFor(ancestor);
+		}
+	}
+
 	public String dumpXml() {
 		return XmlUtils.streamXML(node);
+	}
+
+	private XmlNodeAncestor ancestor;
+
+	public XmlNodeAncestor ancestor() {
+		if (ancestor == null) {
+			ancestor = new XmlNodeAncestor();
+		}
+		return ancestor;
 	}
 }
