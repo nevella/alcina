@@ -11,39 +11,21 @@ import java.util.Map;
 public class StringMap extends LinkedHashMap<String, String> {
 	public static final StringMap EMPTY_PROPS = new StringMap();
 
-	public StringMap() {
-	}
-
-	public StringMap(Map<String, String> otherMap) {
-		super(otherMap);
-	}
-
-	public static StringMap property(String key, String value) {
+	public static StringMap fromKvStringList(String list) {
 		StringMap map = new StringMap();
-		map.put(key, value);
-		return map;
-	}
-
-	public static StringMap properties(String... kvs) {
-		StringMap map = new StringMap();
-		for (int i = 0; i < kvs.length; i += 2) {
-			map.put(kvs[i], kvs[i + 1]);
+		if (list == null) {
+			return map;
+		}
+		String[] lines = list.split("\n");
+		if (lines.length % 2 == 1) {
+			List<String> trunc = Arrays.asList(lines).subList(0,
+					lines.length / 2 * 2);
+			lines = (String[]) trunc.toArray(new String[trunc.size()]);
+		}
+		for (int i = 0; i < lines.length; i += 2) {
+			map.put(unescape(lines[i].trim()), unescape(lines[i + 1].trim()));
 		}
 		return map;
-	}
-
-	public String toPropertyString() {
-		StringBuilder sb = new StringBuilder();
-		for (Map.Entry<String, String> entry : entrySet()) {
-			if (sb.length() != 0) {
-				sb.append("\n");
-			}
-			sb.append(entry.getKey());
-			sb.append('=');
-			sb.append(entry.getValue().replace("\\", "\\\\").replace("=", "\\=")
-					.replace("\n", "\\n"));
-		}
-		return sb.toString();
 	}
 
 	public static StringMap fromPropertyString(String props) {
@@ -82,9 +64,38 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return map;
 	}
 
+	public static StringMap properties(String... kvs) {
+		StringMap map = new StringMap();
+		for (int i = 0; i < kvs.length; i += 2) {
+			map.put(kvs[i], kvs[i + 1]);
+		}
+		return map;
+	}
+
+	public static StringMap property(String key, String value) {
+		StringMap map = new StringMap();
+		map.put(key, value);
+		return map;
+	}
+
+	private static String unescape(String string) {
+		return string.replace("\\n", "\n").replace("\\r", "\r");
+	}
+
+	public StringMap() {
+	}
+
+	public StringMap(Map<String, String> otherMap) {
+		super(otherMap);
+	}
+
 	@Override
 	public StringMap clone() {
 		return new StringMap(this);
+	}
+
+	public boolean is(String key){
+		return Boolean.valueOf(get(key));
 	}
 
 	public void setBooleanOrRemove(String key, boolean value) {
@@ -94,25 +105,17 @@ public class StringMap extends LinkedHashMap<String, String> {
 			remove(key);
 		}
 	}
-
-	public static StringMap fromKvStringList(String list) {
-		StringMap map = new StringMap();
-		if (list == null) {
-			return map;
+	public String toPropertyString() {
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<String, String> entry : entrySet()) {
+			if (sb.length() != 0) {
+				sb.append("\n");
+			}
+			sb.append(entry.getKey());
+			sb.append('=');
+			sb.append(entry.getValue().replace("\\", "\\\\").replace("=", "\\=")
+					.replace("\n", "\\n"));
 		}
-		String[] lines = list.split("\n");
-		if (lines.length % 2 == 1) {
-			List<String> trunc = Arrays.asList(lines).subList(0,
-					lines.length / 2 * 2);
-			lines = (String[]) trunc.toArray(new String[trunc.size()]);
-		}
-		for (int i = 0; i < lines.length; i += 2) {
-			map.put(unescape(lines[i].trim()), unescape(lines[i + 1].trim()));
-		}
-		return map;
-	}
-
-	private static String unescape(String string) {
-		return string.replace("\\n", "\n").replace("\\r", "\r");
+		return sb.toString();
 	}
 }

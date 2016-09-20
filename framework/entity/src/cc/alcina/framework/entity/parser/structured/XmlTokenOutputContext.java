@@ -70,6 +70,9 @@ public class XmlTokenOutputContext implements Cloneable {
 		properties.put(key, value);
 		return this;
 	}
+	public boolean is(String key){
+		return properties.is(key);
+	}
 
 	public XmlTokenOutputContext putTrue(String name) {
 		properties.put(name, "true");

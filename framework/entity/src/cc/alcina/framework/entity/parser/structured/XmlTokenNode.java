@@ -1,11 +1,10 @@
 package cc.alcina.framework.entity.parser.structured;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.function.Supplier;
 
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.parser.structured.XmlTokenOutputContext.HierarchicalContextProvider;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 
 public class XmlTokenNode {
@@ -21,6 +20,15 @@ public class XmlTokenNode {
 	public XmlNode targetNode;
 
 	public XmlToken token;
+	
+	private XmlTokenOutputContext nodeContext;
+	
+	public <T extends XmlTokenOutputContext> T nodeContext(Supplier<T> supplier){
+		if(nodeContext==null){
+			nodeContext=supplier.get();
+		}
+		return (T) nodeContext;
+	}
 	
 	@Override
 	public String toString() {
@@ -49,5 +57,9 @@ public class XmlTokenNode {
 
 	public String normalisedAndTrimmed() {
 		return SEUtilities.normalizeWhitespaceAndTrim(sourceTextContent());
+	}
+
+	public XmlTokenNode copy() {
+		return new XmlTokenNode(sourceNode, token);
 	}
 }

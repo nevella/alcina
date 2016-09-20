@@ -1,9 +1,12 @@
 package cc.alcina.framework.entity.parser.structured.node;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -183,6 +186,15 @@ public class XmlNode {
 
 		public boolean contains(String tag) {
 			return elements().stream().anyMatch(xn -> xn.tagIs(tag));
+		}
+
+		public Stream<XmlNode> flatten(String... tags) {
+			List<String> tagArray = Arrays.asList(tags);
+			Iterable<XmlNode> iterable = () -> new XmlTokenStream(XmlNode.this);
+			Stream<XmlNode> targetStream = StreamSupport
+					.stream(iterable.spliterator(), false);
+			return targetStream
+					.filter(t -> t.isText() || t.tagIsOneOf(tagArray));
 		}
 	}
 
