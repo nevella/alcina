@@ -68,4 +68,9 @@ public class XmlTokenOutput {
 			open(outNode, tag);
 		}
 	}
+	public void ensureClosed(XmlTokenNode outNode, String tag) {
+		if (writeCursor.tagIs(tag)) {
+			close(outNode, tag);
+		}
+	}
 }

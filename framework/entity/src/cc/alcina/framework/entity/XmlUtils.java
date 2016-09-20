@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -804,6 +805,11 @@ public class XmlUtils {
 	private static XPointerConverter xPointerConverter;
 
 	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node) {
+		return getSurroundingBlockTuple(node, n -> false);
+	}
+
+	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node,
+			Predicate<Node> blockResolver) {
 		Node prev = node;
 		Node next = node;
 		SurroundingBlockTuple tuple = new SurroundingBlockTuple(node);
@@ -817,7 +823,7 @@ public class XmlUtils {
 				tuple.prevBlock = null;
 				break;
 			}
-			if (isOrContainsBlock(sib)) {
+			if (isOrContainsBlock(sib)||blockResolver.test(sib)) {
 				tuple.prevBlock = (Element) sib;
 				break;
 			} else {
@@ -833,7 +839,7 @@ public class XmlUtils {
 				tuple.nextBlock = null;
 				break;
 			}
-			if (isOrContainsBlock(sib)) {
+			if (isOrContainsBlock(sib)||blockResolver.test(sib)) {
 				tuple.nextBlock = (Element) sib;
 				break;
 			} else {
@@ -992,8 +998,7 @@ public class XmlUtils {
 		return false;
 	}
 
-	public static DOMLocation locationOfTextIndex(Node container,
-			int index) {
+	public static DOMLocation locationOfTextIndex(Node container, int index) {
 		DOMLocation result = new DOMLocation();
 		TreeWalker walker = ((DocumentTraversal) container.getOwnerDocument())
 				.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, true);
@@ -1125,8 +1130,7 @@ public class XmlUtils {
 		return false;
 	}
 
-	public static DOMLocation locationOfTextIndex(List<Text> texts,
-			int index) {
+	public static DOMLocation locationOfTextIndex(List<Text> texts, int index) {
 		DOMLocation result = new DOMLocation();
 		Text save = null;
 		for (Text t : texts) {
@@ -1269,21 +1273,21 @@ public class XmlUtils {
 
 	public static class SurroundingBlockTuple {
 		public Range range;
-	
+
 		public Node firstNode;
-	
+
 		public Element prevBlock;
-	
+
 		public Element nextBlock;
-	
+
 		private TreeWalker walker;
-	
+
 		public Node forNode;
-	
+
 		public SurroundingBlockTuple(Node forNode) {
 			this.forNode = forNode;
 		}
-	
+
 		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof SurroundingBlockTuple) {
@@ -1292,14 +1296,14 @@ public class XmlUtils {
 			}
 			return false;
 		}
-	
+
 		public void resetWalker() {
 			Document doc = firstNode.getOwnerDocument();
 			walker = ((DocumentTraversal) doc).createTreeWalker(doc,
 					NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, null, true);
 			walker.setCurrentNode(firstNode);
 		}
-	
+
 		public Text getNextTextChild() {
 			Node n = null;
 			while ((n = walker.nextNode()) != null) {
@@ -1328,9 +1332,10 @@ public class XmlUtils {
 		}
 		return null;
 	}
+
 	public static Element getNextElement(Node node) {
 		List<Node> kids = nodeListToList(node.getParentNode().getChildNodes());
-		for (int idx = kids.indexOf(node) + 1; idx <kids.size(); idx++) {
+		for (int idx = kids.indexOf(node) + 1; idx < kids.size(); idx++) {
 			Node kid = kids.get(idx);
 			if (kid.getNodeType() == Node.ELEMENT_NODE) {
 				return (Element) kid;
