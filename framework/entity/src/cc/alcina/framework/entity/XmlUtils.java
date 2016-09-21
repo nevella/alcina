@@ -76,6 +76,14 @@ import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.XmlUtils.DOMLocation;
+import cc.alcina.framework.entity.XmlUtils.IsIgnorePredicate;
+import cc.alcina.framework.entity.XmlUtils.IsInlinePredicate;
+import cc.alcina.framework.entity.XmlUtils.SurroundingBlockTuple;
+import cc.alcina.framework.entity.XmlUtils.TransformerFactoryConfigurator;
+import cc.alcina.framework.entity.XmlUtils.XPointerConverter;
+import cc.alcina.framework.entity.XmlUtils.XmlErrHandler;
+import cc.alcina.framework.entity.XmlUtils.XmlInsertionCursor;
 
 /**
  *
@@ -823,7 +831,7 @@ public class XmlUtils {
 				tuple.prevBlock = null;
 				break;
 			}
-			if (isOrContainsBlock(sib)||blockResolver.test(sib)) {
+			if (isOrContainsBlock(sib) || blockResolver.test(sib)) {
 				tuple.prevBlock = (Element) sib;
 				break;
 			} else {
@@ -839,7 +847,7 @@ public class XmlUtils {
 				tuple.nextBlock = null;
 				break;
 			}
-			if (isOrContainsBlock(sib)||blockResolver.test(sib)) {
+			if (isOrContainsBlock(sib) || blockResolver.test(sib)) {
 				tuple.nextBlock = (Element) sib;
 				break;
 			} else {
@@ -1042,6 +1050,19 @@ public class XmlUtils {
 		while (n != null) {
 			if (n.getNodeType() == Node.ELEMENT_NODE
 					&& isBlockHTMLElement((Element) n)) {
+				return (Element) n;
+			}
+			n = n.getParentNode();
+		}
+		return null;
+	}
+
+	public static Element getContainingBlock(Node n,
+			Predicate<Element> blockTest) {
+		while (n != null) {
+			if (n.getNodeType() == Node.ELEMENT_NODE
+					&& (isBlockHTMLElement((Element) n)
+							|| blockTest.test((Element) n))) {
 				return (Element) n;
 			}
 			n = n.getParentNode();
@@ -1391,5 +1412,64 @@ public class XmlUtils {
 
 	public static Element getParentElement(Element element) {
 		return (Element) element.getParentNode();
+	}
+
+	public static class XmlInsertionCursor {
+		public Node node;
+
+		int textOffset;
+
+		public XmlInsertionCursor(Node node, int textOffset) {
+			this.node = node;
+			this.textOffset = textOffset;
+		}
+
+		public void toHighestContainingInline(IsInlinePredicate isInline,
+				IsIgnorePredicate isIgnore, boolean start) {
+			while (true) {
+				Node parent = node.getParentNode();
+				boolean continueAscent = isIgnore.isIgnore(node);
+				if (parent.getNodeType() == Node.ELEMENT_NODE
+						&& isInline.isInline((Element) parent)) {
+					if (start && node.getPreviousSibling() == null) {
+						continueAscent = true;
+					}
+					if (!start && node.getNextSibling() == null) {
+						continueAscent = true;
+					}
+				}
+				if (continueAscent) {
+					node = parent;
+				} else {
+					break;
+				}
+			}
+		}
+
+		@Override
+		public String toString() {
+			return String.format("Node: %s\ntextOffset: %s\n;Xml: %s", node,
+					textOffset, streamXML(node));
+		}
+
+		public XmlInsertionCursor splitText() {
+			String textContent = node.getTextContent();
+			if (textOffset != 0 && textOffset != textContent.length()) {
+				Text t1 = (Text) node;
+				Text t2 = node.getOwnerDocument()
+						.createTextNode(textContent.substring(textOffset));
+				t1.setTextContent(textContent.substring(0, textOffset));
+				XmlUtils.insertAfter(t2, t1);
+			}
+			return this;
+		}
+	}
+
+	public interface IsInlinePredicate {
+		boolean isInline(Element e);
+	}
+
+	public interface IsIgnorePredicate {
+		boolean isIgnore(Node n);
 	}
 }

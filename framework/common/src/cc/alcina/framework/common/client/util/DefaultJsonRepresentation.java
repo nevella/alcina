@@ -1,17 +1,22 @@
 package cc.alcina.framework.common.client.util;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
-public interface DefaultJsonRepresentation extends HasJsonRepresentation,FromJsonRepresentation{
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+
+public interface DefaultJsonRepresentation
+		extends HasJsonRepresentation, FromJsonRepresentation {
 	@Override
-	default JSONObject asJson() throws JSONException {
-		return fieldMapping();
+	default JSONObject asJson() {
+		try {
+			return fieldMapping();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	@Override
 	default void fromJson(JSONObject jso) {
 		fieldMapping(jso);
 	}
-
 }
