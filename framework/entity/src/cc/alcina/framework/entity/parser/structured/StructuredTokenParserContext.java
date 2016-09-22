@@ -37,6 +37,10 @@ public class StructuredTokenParserContext {
 	public void end() {
 	}
 
+	public boolean isOpen(XmlToken token) {
+		return openNodes.stream().anyMatch(xtn -> xtn.token == token);
+	}
+
 	public boolean had(XmlToken token) {
 		return matched.containsKey(token);
 	}

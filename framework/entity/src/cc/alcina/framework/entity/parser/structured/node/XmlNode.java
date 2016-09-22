@@ -37,6 +37,10 @@ public class XmlNode {
 
 	private StringMap attributes;
 
+	private XmlNodeXpath xpath;
+
+	private XmlNodeAncestor ancestor;
+
 	public XmlNode(Node node, XmlDoc xmlDoc) {
 		this.node = node;
 		this.doc = xmlDoc;
@@ -49,6 +53,13 @@ public class XmlNode {
 
 	public XmlNodeBuilder add() {
 		return new XmlNodeBuilder(this);
+	}
+
+	public XmlNodeAncestor ancestor() {
+		if (ancestor == null) {
+			ancestor = new XmlNodeAncestor();
+		}
+		return ancestor;
 	}
 
 	public String attr(String name) {
@@ -84,6 +95,10 @@ public class XmlNode {
 		return depth;
 	}
 
+	public String dumpXml() {
+		return XmlUtils.streamXML(node);
+	}
+
 	public boolean has(String name) {
 		if (!isElement()) {
 			return false;
@@ -94,6 +109,10 @@ public class XmlNode {
 	public void invalidate() {
 		children.nodes = null;
 		normalisedTextContent = null;
+	}
+
+	public boolean isAncestorOf(XmlNode xmlNode) {
+		return XmlUtils.isAncestorOf(node, xmlNode.node);
 	}
 
 	public boolean isElement() {
@@ -120,6 +139,11 @@ public class XmlNode {
 		return doc.nodeFor(node.getParentNode());
 	}
 
+	public XmlNode setAttr(String key, String value) {
+		((Element) node).setAttribute(key, value);
+		return this;
+	}
+
 	public boolean tagIs(String tagName) {
 		return isElement() && getElement().getTagName().equals(tagName);
 	}
@@ -142,6 +166,13 @@ public class XmlNode {
 				XmlUtils.streamXML(node).replace(CommonUtils.XML_PI, ""), 100);
 	}
 
+	public XmlNodeXpath xpath() {
+		if (xpath == null) {
+			xpath = new XmlNodeXpath();
+		}
+		return xpath;
+	}
+
 	private Element getElement() {
 		return (Element) node;
 	}
@@ -151,25 +182,54 @@ public class XmlNode {
 				: node.getOwnerDocument();
 	}
 
+	public class XmlNodeAncestor {
+		private boolean orSelf = false;
+
+		public XmlNode get(String tag) {
+			if (orSelf && tagIs(tag)) {
+				return XmlNode.this;
+			}
+			Element ancestor = XmlUtils.getAncestorWithTagName(node, tag);
+			return ancestor == null ? null : doc.nodeFor(ancestor);
+		}
+
+		public boolean has(String tag) {
+			return get(tag) != null;
+		}
+
+		public XmlNodeAncestor orSelf() {
+			orSelf = true;
+			return this;
+		}
+	}
+
 	public class XmlNodeChildren {
 		private List<XmlNode> nodes;
 
-		public void invalidate() {
-			XmlNode.this.invalidate();
-		}
-
-		public boolean noElements() {
-			return elements().size() == 0;
-		}
-
-		public boolean soleElement(String tag) {
-			List<XmlNode> elts = elements();
-			return elts.size() == 1 && elts.get(0).tagIs(tag);
+		public boolean contains(String tag) {
+			return elements().stream().anyMatch(xn -> xn.tagIs(tag));
 		}
 
 		public List<XmlNode> elements() {
 			return nodes().stream().filter(XmlNode::isElement)
 					.collect(Collectors.toList());
+		}
+
+		public XmlNode firstElement() {
+			return elements().get(0);
+		}
+
+		public Stream<XmlNode> flatten(String... tags) {
+			List<String> tagArray = Arrays.asList(tags);
+			Iterable<XmlNode> iterable = () -> new XmlTokenStream(XmlNode.this);
+			Stream<XmlNode> targetStream = StreamSupport
+					.stream(iterable.spliterator(), false);
+			return targetStream
+					.filter(t -> t.isText() || t.tagIsOneOf(tagArray));
+		}
+
+		public void invalidate() {
+			XmlNode.this.invalidate();
 		}
 
 		public List<XmlNode> nodes() {
@@ -180,21 +240,18 @@ public class XmlNode {
 			return nodes;
 		}
 
-		public XmlNode firstElement() {
-			return elements().get(0);
+		public boolean noElements() {
+			return elements().size() == 0;
 		}
 
-		public boolean contains(String tag) {
-			return elements().stream().anyMatch(xn -> xn.tagIs(tag));
+		public XmlNode soleElement() {
+			List<XmlNode> elts = elements();
+			return elts.size() == 1 && nodes().size() == 1 ? elts.get(0) : null;
 		}
 
-		public Stream<XmlNode> flatten(String... tags) {
-			List<String> tagArray = Arrays.asList(tags);
-			Iterable<XmlNode> iterable = () -> new XmlTokenStream(XmlNode.this);
-			Stream<XmlNode> targetStream = StreamSupport
-					.stream(iterable.spliterator(), false);
-			return targetStream
-					.filter(t -> t.isText() || t.tagIsOneOf(tagArray));
+		public boolean soleElement(String tag) {
+			List<XmlNode> elts = elements();
+			return elts.size() == 1 && elts.get(0).tagIs(tag);
 		}
 	}
 
@@ -222,19 +279,6 @@ public class XmlNode {
 		}
 	}
 
-	public boolean isAncestorOf(XmlNode xmlNode) {
-		return XmlUtils.isAncestorOf(node, xmlNode.node);
-	}
-
-	private XmlNodeXpath xpath;
-
-	public XmlNodeXpath xpath() {
-		if (xpath == null) {
-			xpath = new XmlNodeXpath();
-		}
-		return xpath;
-	}
-
 	public class XmlNodeXpath {
 		private OptimizingXpathEvaluator eval;
 
@@ -243,54 +287,20 @@ public class XmlNode {
 			eval = xh.createOptimisedEvaluator(node);
 		}
 
+		public XmlNode node(String xpath) {
+			Element element = eval.getElementByXpath(xpath, node);
+			return doc.nodeFor(element);
+		}
+
 		public List<XmlNode> nodes(String xpath) {
 			List<Element> elements = eval.getElementsByXpath(xpath, node);
 			return elements.stream().map(doc::nodeFor)
 					.collect(Collectors.toList());
 		}
 
-		public XmlNode node(String xpath) {
-			Element element = eval.getElementByXpath(xpath, node);
-			return doc.nodeFor(element);
-		}
-
 		public String textOrEmpty(String xpath) {
 			return Optional.ofNullable(node(xpath)).map(XmlNode::textContent)
 					.orElse("");
 		}
-	}
-
-	public class XmlNodeAncestor {
-		private boolean orSelf = false;
-
-		public XmlNodeAncestor orSelf() {
-			orSelf = true;
-			return this;
-		}
-
-		public boolean has(String tag) {
-			return get(tag) != null;
-		}
-
-		public XmlNode get(String tag) {
-			if (orSelf && tagIs(tag)) {
-				return XmlNode.this;
-			}
-			Element ancestor = XmlUtils.getAncestorWithTagName(node, tag);
-			return ancestor == null ? null : doc.nodeFor(ancestor);
-		}
-	}
-
-	public String dumpXml() {
-		return XmlUtils.streamXML(node);
-	}
-
-	private XmlNodeAncestor ancestor;
-
-	public XmlNodeAncestor ancestor() {
-		if (ancestor == null) {
-			ancestor = new XmlNodeAncestor();
-		}
-		return ancestor;
 	}
 }
