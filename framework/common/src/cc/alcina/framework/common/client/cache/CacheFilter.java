@@ -43,8 +43,8 @@ public class CacheFilter {
 	@Override
 	public String toString() {
 		if (predicate != null) {
-			return CommonUtils.formatJ("CacheFilter: %s - %s", predicate
-					.getClass().getSimpleName(), predicate);
+			return CommonUtils.formatJ("CacheFilter: %s - %s",
+					predicate.getClass().getSimpleName(), predicate);
 		}
 		return CommonUtils.formatJ("CacheFilter: %s %s %s", propertyPath,
 				filterOperator.operationText(), propertyValue);
@@ -60,5 +60,12 @@ public class CacheFilter {
 
 	public boolean canFlatten() {
 		return predicate == null;
+	}
+
+	public CacheFilter invertIf(boolean invert) {
+		if (invert) {
+			predicate = predicate.negate();
+		}
+		return this;
 	}
 }
