@@ -133,7 +133,8 @@ public class StructuredTokenParserContext {
 
 	protected void maybeOpenOutputWrapper(XmlTokenNode node) {
 		if (node.token.outputContext().hasTag()) {
-			out.open(node, node.token.outputContext().getTag());
+			out.open(node, node.token.outputContext().getTag(),
+					node.token.outputContext().getEmitAttributes());
 			openNodes.push(node);
 		}
 	}

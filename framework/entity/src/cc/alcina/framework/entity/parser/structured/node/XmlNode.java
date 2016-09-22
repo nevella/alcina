@@ -282,8 +282,10 @@ public class XmlNode {
 	public class XmlNodeXpath {
 		private OptimizingXpathEvaluator eval;
 
+		private XpathHelper xh;
+
 		public XmlNodeXpath() {
-			XpathHelper xh = new XpathHelper(node);
+			xh = new XpathHelper(node);
 			eval = xh.createOptimisedEvaluator(node);
 		}
 
@@ -301,6 +303,15 @@ public class XmlNode {
 		public String textOrEmpty(String xpath) {
 			return Optional.ofNullable(node(xpath)).map(XmlNode::textContent)
 					.orElse("");
+		}
+
+		public boolean contains(String xpath) {
+			return node(xpath) != null;
+		}
+
+		public boolean selfIs(String xpath) {
+			return XmlNode.this.parent().xpath().nodes(xpath)
+					.contains(doc.nodeFor(node));
 		}
 	}
 }

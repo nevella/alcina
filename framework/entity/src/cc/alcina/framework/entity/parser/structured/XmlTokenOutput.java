@@ -32,9 +32,6 @@ public class XmlTokenOutput {
 	}
 
 	public void open(XmlTokenNode outNode, String tag) {
-		if (tag.equals("catchwords")) {
-			int debug = 3;
-		}
 		open(outNode, tag, new StringMap());
 	}
 
@@ -77,5 +74,9 @@ public class XmlTokenOutput {
 		if (writeCursor.tagIs(tag)) {
 			close(outNode, tag);
 		}
+	}
+
+	public void pi(String name, String data) {
+		writeCursor.add().processingInstruction().tag(name).text(data).append();
 	}
 }

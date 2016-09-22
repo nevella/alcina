@@ -12,6 +12,13 @@ public class XmlTokenOutputContext implements Cloneable {
 			.empty();
 
 	protected StringMap properties = new StringMap();
+	
+	protected StringMap emitAttributes = new StringMap();
+
+	public StringMap getEmitAttributes() {
+		return this.emitAttributes;
+	}
+
 
 	protected Set<String> seenKeys = new LinkedHashSet<>();
 
@@ -27,6 +34,7 @@ public class XmlTokenOutputContext implements Cloneable {
 		try {
 			XmlTokenOutputContext attrs = getClass().newInstance();
 			attrs.properties = properties.clone();
+			attrs.emitAttributes=emitAttributes.clone();
 			attrs.seenKeys = new LinkedHashSet<>(seenKeys);
 			return attrs;
 		} catch (Exception e) {
@@ -68,6 +76,10 @@ public class XmlTokenOutputContext implements Cloneable {
 
 	public XmlTokenOutputContext put(String key, String value) {
 		properties.put(key, value);
+		return this;
+	}
+	public XmlTokenOutputContext emit(String key, String value) {
+		emitAttributes.put(key, value);
 		return this;
 	}
 	public boolean is(String key){
