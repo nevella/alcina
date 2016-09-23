@@ -44,7 +44,7 @@ public class XmlTokenNode {
 		return sb.toString();
 	}
 
-	private String selfSourceTextContent() {
+	public String selfSourceTextContent() {
 		if (sourceNode == null) {
 			return null;
 		}
