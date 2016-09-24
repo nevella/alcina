@@ -38,7 +38,7 @@ public abstract class XmlToken<C extends StructuredTokenParserContext> {
 		return null;
 	}
 
-	public XmlTokenOutputContext outputContext() {
+	public XmlTokenOutputContext outputContext(XmlTokenNode node) {
 		return XmlTokenOutputContext.EMPTY;
 	}
 }

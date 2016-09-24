@@ -1,16 +1,15 @@
 package cc.alcina.framework.entity.parser.structured.node;
 
 import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.traversal.DocumentTraversal;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.TreeWalker;
-
-import cc.alcina.framework.common.client.util.CachingMap;
-import cc.alcina.framework.entity.parser.structured.XmlToken;
 
 public class XmlTokenStream implements Iterator<XmlNode> {
 	private TreeWalker tw;
@@ -33,9 +32,15 @@ public class XmlTokenStream implements Iterator<XmlNode> {
 
 	@Override
 	public XmlNode next() {
-		Node current = next;
-		next = tw.nextNode();
-		return doc.nodeFor(current);
+		while (true) {
+			Node current = next;
+			next = tw.nextNode();
+			XmlNode xmlNode = doc.nodeFor(current);
+			if (skip.contains(xmlNode)) {
+			} else {
+				return xmlNode;
+			}
+		}
 	}
 
 	public void skipChildren() {
@@ -54,5 +59,12 @@ public class XmlTokenStream implements Iterator<XmlNode> {
 				break;
 			}
 		}
+	}
+
+	private Set<XmlNode> skip = new LinkedHashSet<>();
+
+	public void skip(XmlNode node) {
+		skip.add(node);
+		skip.addAll(node.children.flatten().collect(Collectors.toList()));
 	}
 }

@@ -218,14 +218,13 @@ public class XmlNode {
 		public XmlNode firstElement() {
 			return elements().get(0);
 		}
-
 		public Stream<XmlNode> flatten(String... tags) {
 			List<String> tagArray = Arrays.asList(tags);
 			Iterable<XmlNode> iterable = () -> new XmlTokenStream(XmlNode.this);
 			Stream<XmlNode> targetStream = StreamSupport
 					.stream(iterable.spliterator(), false);
 			return targetStream
-					.filter(t -> t.isText() || t.tagIsOneOf(tagArray));
+					.filter(t -> t.isText() || tagArray.isEmpty()||t.tagIsOneOf(tagArray));
 		}
 
 		public void invalidate() {

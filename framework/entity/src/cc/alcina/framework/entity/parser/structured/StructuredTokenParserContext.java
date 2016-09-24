@@ -37,10 +37,6 @@ public class StructuredTokenParserContext {
 	public void end() {
 	}
 
-	public boolean isOpen(XmlToken token) {
-		return openNodes.stream().anyMatch(xtn -> xtn.token == token);
-	}
-
 	public boolean had(XmlToken token) {
 		return matched.containsKey(token);
 	}
@@ -56,6 +52,21 @@ public class StructuredTokenParserContext {
 				return true;
 			}
 			node = node.parent();
+		}
+		return false;
+	}
+
+	public boolean isOpen(XmlToken token) {
+		return openNodes.stream().anyMatch(xtn -> xtn.token == token);
+	}
+
+	public boolean isSubCategory(Class clazz) {
+		XmlNode cursor = out.getOutCursor().sourceNode;
+		while (cursor != null) {
+			if (nodeToken.get(cursor).token.getSubCategory() == clazz) {
+				return true;
+			}
+			cursor = cursor.parent();
 		}
 		return false;
 	}
@@ -105,6 +116,10 @@ public class StructuredTokenParserContext {
 		properties.setBooleanOrRemove(key, add);
 	}
 
+	public void skip(XmlNode node) {
+		stream.skip(node);
+	}
+
 	public void skipChildren() {
 		stream.skipChildren();
 	}
@@ -123,18 +138,19 @@ public class StructuredTokenParserContext {
 				.hasNext();) {
 			XmlTokenNode openNode = itr.next();
 			if (!openNode.sourceNode.isAncestorOf(node.sourceNode)
-					&& openNode.targetNode != null && openNode.targetNode
-							.tagIs(openNode.token.outputContext().getTag())) {
-				out.close(openNode, openNode.token.outputContext().getTag());
+					&& openNode.targetNode != null && openNode.targetNode.tagIs(
+							openNode.token.outputContext(openNode).getTag())) {
+				out.close(openNode,
+						openNode.token.outputContext(openNode).getTag());
 				itr.remove();
 			}
 		}
 	}
 
 	protected void maybeOpenOutputWrapper(XmlTokenNode node) {
-		if (node.token.outputContext().hasTag()) {
-			out.open(node, node.token.outputContext().getTag(),
-					node.token.outputContext().getEmitAttributes());
+		if (node.token.outputContext(node).hasTag()) {
+			out.open(node, node.token.outputContext(node).getTag(),
+					node.token.outputContext(node).getEmitAttributes());
 			openNodes.push(node);
 		}
 	}
@@ -159,18 +175,7 @@ public class StructuredTokenParserContext {
 			XmlTokenNode result = tokenNode;
 			cursor = cursor.parent();
 			tokenNode = nodeToken.get(cursor);
-			return result.token.outputContext();
+			return result.token.outputContext(result);
 		}
-	}
-
-	public boolean isSubCategory(Class clazz) {
-		XmlNode cursor = out.getOutCursor().sourceNode;
-		while (cursor != null) {
-			if (nodeToken.get(cursor).token.getSubCategory() == clazz) {
-				return true;
-			}
-			cursor = cursor.parent();
-		}
-		return false;
 	}
 }
