@@ -12,13 +12,8 @@ public class XmlTokenOutputContext implements Cloneable {
 			.empty();
 
 	protected StringMap properties = new StringMap();
-	
+
 	protected StringMap emitAttributes = new StringMap();
-
-	public StringMap getEmitAttributes() {
-		return this.emitAttributes;
-	}
-
 
 	protected Set<String> seenKeys = new LinkedHashSet<>();
 
@@ -32,11 +27,9 @@ public class XmlTokenOutputContext implements Cloneable {
 	@Override
 	public XmlTokenOutputContext clone() {
 		try {
-			XmlTokenOutputContext attrs = getClass().newInstance();
-			attrs.properties = properties.clone();
-			attrs.emitAttributes=emitAttributes.clone();
-			attrs.seenKeys = new LinkedHashSet<>(seenKeys);
-			return attrs;
+			XmlTokenOutputContext newInstance = getClass().newInstance();
+			copyProperties(newInstance);
+			return newInstance;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -46,6 +39,21 @@ public class XmlTokenOutputContext implements Cloneable {
 			contextProvider(HierarchicalContextProvider contextProvider) {
 		this.contextProvider = contextProvider;
 		return this;
+	}
+
+	public void copyProperties(XmlTokenOutputContext newInstance) {
+		newInstance.properties = properties.clone();
+		newInstance.emitAttributes = emitAttributes.clone();
+		newInstance.seenKeys = new LinkedHashSet<>(seenKeys);
+	}
+
+	public XmlTokenOutputContext emit(String key, String value) {
+		emitAttributes.put(key, value);
+		return this;
+	}
+
+	public StringMap getEmitAttributes() {
+		return this.emitAttributes;
 	}
 
 	public StringMap getProperties() {
@@ -64,6 +72,10 @@ public class XmlTokenOutputContext implements Cloneable {
 		return this.tag != null;
 	}
 
+	public boolean is(String key) {
+		return properties.is(key);
+	}
+
 	public XmlTokenOutputContext outputTag(String tag) {
 		this.tag = tag;
 		return this;
@@ -77,13 +89,6 @@ public class XmlTokenOutputContext implements Cloneable {
 	public XmlTokenOutputContext put(String key, String value) {
 		properties.put(key, value);
 		return this;
-	}
-	public XmlTokenOutputContext emit(String key, String value) {
-		emitAttributes.put(key, value);
-		return this;
-	}
-	public boolean is(String key){
-		return properties.is(key);
 	}
 
 	public XmlTokenOutputContext putTrue(String name) {
@@ -113,5 +118,11 @@ public class XmlTokenOutputContext implements Cloneable {
 
 	public interface HierarchicalContextProvider {
 		public Iterator<XmlTokenOutputContext> contexts();
+	}
+
+	@Override
+	public String toString() {
+		return String.format("Ctx:\nemit: %s\nattr: %s", properties,
+				emitAttributes);
 	}
 }

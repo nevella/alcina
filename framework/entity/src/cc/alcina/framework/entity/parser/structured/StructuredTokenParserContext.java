@@ -103,7 +103,7 @@ public class StructuredTokenParserContext {
 				depthOutSpacer + outStr, match);
 	}
 
-	public HierarchicalContextProvider outputContext() {
+	public HierarchicalContextProvider xmlOutputContext() {
 		return new HierarchicalContextProvider() {
 			@Override
 			public Iterator<XmlTokenOutputContext> contexts() {
@@ -111,6 +111,7 @@ public class StructuredTokenParserContext {
 			}
 		};
 	}
+	
 
 	public void propertyDelta(String key, boolean add) {
 		properties.setBooleanOrRemove(key, add);
@@ -139,18 +140,18 @@ public class StructuredTokenParserContext {
 			XmlTokenNode openNode = itr.next();
 			if (!openNode.sourceNode.isAncestorOf(node.sourceNode)
 					&& openNode.targetNode != null && openNode.targetNode.tagIs(
-							openNode.token.outputContext(openNode).getTag())) {
+							openNode.token.getOutputContext(openNode).getTag())) {
 				out.close(openNode,
-						openNode.token.outputContext(openNode).getTag());
+						openNode.token.getOutputContext(openNode).getTag());
 				itr.remove();
 			}
 		}
 	}
 
 	protected void maybeOpenOutputWrapper(XmlTokenNode node) {
-		if (node.token.outputContext(node).hasTag()) {
-			out.open(node, node.token.outputContext(node).getTag(),
-					node.token.outputContext(node).getEmitAttributes());
+		if (node.token.getOutputContext(node).hasTag()) {
+			out.open(node, node.token.getOutputContext(node).getTag(),
+					node.token.getOutputContext(node).getEmitAttributes());
 			openNodes.push(node);
 		}
 	}
@@ -175,7 +176,7 @@ public class StructuredTokenParserContext {
 			XmlTokenNode result = tokenNode;
 			cursor = cursor.parent();
 			tokenNode = nodeToken.get(cursor);
-			return result.token.outputContext(result);
+			return result.token.getOutputContext(result);
 		}
 	}
 }

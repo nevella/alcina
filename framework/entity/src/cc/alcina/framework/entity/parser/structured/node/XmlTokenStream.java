@@ -38,6 +38,9 @@ public class XmlTokenStream implements Iterator<XmlNode> {
 			XmlNode xmlNode = doc.nodeFor(current);
 			if (skip.contains(xmlNode)) {
 			} else {
+				if(current!=null&&current.getNodeType()==Node.PROCESSING_INSTRUCTION_NODE){
+					int debug = 3;
+				}
 				return xmlNode;
 			}
 		}

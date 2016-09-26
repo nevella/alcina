@@ -32,7 +32,7 @@ public class XmlTokenNode {
 	
 	@Override
 	public String toString() {
-		return String.format("%s:\n%s\n%s", token, sourceNode,
+		return String.format("%s:\ni:%s\no:%s", token, sourceNode,
 				targetNode == null ? "" : targetNode);
 	}
 

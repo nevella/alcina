@@ -13,6 +13,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.ProcessingInstruction;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -46,11 +47,9 @@ public class XmlNode {
 		this.doc = xmlDoc;
 		this.children = new XmlNodeChildren();
 	}
-
 	public XmlNode(XmlNode from) {
 		this(from.node, from.doc);
 	}
-
 	public XmlNodeBuilder add() {
 		return new XmlNodeBuilder(this);
 	}
@@ -81,6 +80,10 @@ public class XmlNode {
 		return attributes;
 	}
 
+	public boolean attrIs(String key, String value) {
+		return attributes().get(key).equals(value);
+	}
+
 	public XmlNodeDebug debug() {
 		return new XmlNodeDebug();
 	}
@@ -97,6 +100,10 @@ public class XmlNode {
 
 	public String dumpXml() {
 		return XmlUtils.streamXML(node);
+	}
+
+	public String fullToString() {
+		return XmlUtils.streamXML(node).replace(CommonUtils.XML_PI, "");
 	}
 
 	public boolean has(String name) {
@@ -119,6 +126,10 @@ public class XmlNode {
 		return node.getNodeType() == Node.ELEMENT_NODE;
 	}
 
+	public boolean isProcessingInstruction() {
+		return node.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE;
+	}
+
 	public boolean isText() {
 		return node.getNodeType() == Node.TEXT_NODE;
 	}
@@ -130,7 +141,7 @@ public class XmlNode {
 	public String ntc() {
 		if (normalisedTextContent == null) {
 			normalisedTextContent = SEUtilities
-					.normalizeWhitespaceAndTrim(node.getTextContent());
+					.normalizeWhitespaceAndTrim(textContent());
 		}
 		return normalisedTextContent;
 	}
@@ -145,7 +156,9 @@ public class XmlNode {
 	}
 
 	public boolean tagIs(String tagName) {
-		return isElement() && getElement().getTagName().equals(tagName);
+		return isElement() && getElement().getTagName().equals(tagName)
+				|| isProcessingInstruction() && getProcessingInstruction()
+						.getNodeName().equals(tagName);
 	}
 
 	public boolean tagIsOneOf(Collection<String> tags) {
@@ -153,7 +166,8 @@ public class XmlNode {
 	}
 
 	public String textContent() {
-		return node.getTextContent();
+		return isProcessingInstruction() ? getProcessingInstruction().getData()
+				: node.getTextContent();
 	}
 
 	public boolean textIs(String string) {
@@ -175,6 +189,10 @@ public class XmlNode {
 
 	private Element getElement() {
 		return (Element) node;
+	}
+
+	private ProcessingInstruction getProcessingInstruction() {
+		return (ProcessingInstruction) node;
 	}
 
 	protected Document domDoc() {
@@ -218,13 +236,14 @@ public class XmlNode {
 		public XmlNode firstElement() {
 			return elements().get(0);
 		}
+
 		public Stream<XmlNode> flatten(String... tags) {
 			List<String> tagArray = Arrays.asList(tags);
 			Iterable<XmlNode> iterable = () -> new XmlTokenStream(XmlNode.this);
 			Stream<XmlNode> targetStream = StreamSupport
 					.stream(iterable.spliterator(), false);
-			return targetStream
-					.filter(t -> t.isText() || tagArray.isEmpty()||t.tagIsOneOf(tagArray));
+			return targetStream.filter(t -> t.isText() || tagArray.isEmpty()
+					|| t.tagIsOneOf(tagArray));
 		}
 
 		public void invalidate() {
@@ -288,6 +307,10 @@ public class XmlNode {
 			eval = xh.createOptimisedEvaluator(node);
 		}
 
+		public boolean contains(String xpath) {
+			return node(xpath) != null;
+		}
+
 		public XmlNode node(String xpath) {
 			Element element = eval.getElementByXpath(xpath, node);
 			return doc.nodeFor(element);
@@ -299,18 +322,14 @@ public class XmlNode {
 					.collect(Collectors.toList());
 		}
 
-		public String textOrEmpty(String xpath) {
-			return Optional.ofNullable(node(xpath)).map(XmlNode::textContent)
-					.orElse("");
-		}
-
-		public boolean contains(String xpath) {
-			return node(xpath) != null;
-		}
-
 		public boolean selfIs(String xpath) {
 			return XmlNode.this.parent().xpath().nodes(xpath)
 					.contains(doc.nodeFor(node));
+		}
+
+		public String textOrEmpty(String xpath) {
+			return Optional.ofNullable(node(xpath)).map(XmlNode::textContent)
+					.orElse("");
 		}
 	}
 }
