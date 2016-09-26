@@ -6,6 +6,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.parser.structured.StructuredTokenParserContext.NodeAncestorsContextProvider;
 
 public class XmlTokenOutputContext implements Cloneable {
 	public static XmlTokenOutputContext EMPTY = new XmlTokenOutputContext()
@@ -20,7 +21,7 @@ public class XmlTokenOutputContext implements Cloneable {
 	@SuppressWarnings("unused")
 	private boolean empty;
 
-	private HierarchicalContextProvider contextProvider;
+	private NodeAncestorsContextProvider contextProvider;
 
 	private String tag;
 
@@ -36,7 +37,7 @@ public class XmlTokenOutputContext implements Cloneable {
 	}
 
 	public XmlTokenOutputContext
-			contextProvider(HierarchicalContextProvider contextProvider) {
+			contextProvider(NodeAncestorsContextProvider contextProvider) {
 		this.contextProvider = contextProvider;
 		return this;
 	}
@@ -116,9 +117,7 @@ public class XmlTokenOutputContext implements Cloneable {
 		return this;
 	}
 
-	public interface HierarchicalContextProvider {
-		public Iterator<XmlTokenOutputContext> contexts();
-	}
+	
 
 	@Override
 	public String toString() {

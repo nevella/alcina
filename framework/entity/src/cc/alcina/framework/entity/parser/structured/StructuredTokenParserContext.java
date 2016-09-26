@@ -1,15 +1,17 @@
 package cc.alcina.framework.entity.parser.structured;
 
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.parser.structured.XmlTokenOutputContext.HierarchicalContextProvider;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 import cc.alcina.framework.entity.parser.structured.node.XmlTokenStream;
 
@@ -103,15 +105,9 @@ public class StructuredTokenParserContext {
 				depthOutSpacer + outStr, match);
 	}
 
-	public HierarchicalContextProvider xmlOutputContext() {
-		return new HierarchicalContextProvider() {
-			@Override
-			public Iterator<XmlTokenOutputContext> contexts() {
-				return new NodeContextStream(out.getOutCursor(), true);
-			}
-		};
+	public boolean outputOpen(XmlToken token) {
+		return outAncestors().nodeStream().anyMatch(xtn -> xtn.token == token);
 	}
-	
 
 	public void propertyDelta(String key, boolean add) {
 		properties.setBooleanOrRemove(key, add);
@@ -134,13 +130,22 @@ public class StructuredTokenParserContext {
 		nodeToken.put(outNode.sourceNode, outNode);
 	}
 
+	public NodeAncestorsContextProvider xmlOutputContext() {
+		return outAncestors();
+	}
+
+	private NodeAncestors outAncestors() {
+		return new NodeAncestors(out.getOutCursor(), NodeAncestorsTypes.TARGET);
+	}
+
 	protected void closeOpenOutputWrappers(XmlTokenNode node) {
 		for (Iterator<XmlTokenNode> itr = openNodes.iterator(); itr
 				.hasNext();) {
 			XmlTokenNode openNode = itr.next();
 			if (!openNode.sourceNode.isAncestorOf(node.sourceNode)
-					&& openNode.targetNode != null && openNode.targetNode.tagIs(
-							openNode.token.getOutputContext(openNode).getTag())) {
+					&& openNode.targetNode != null
+					&& openNode.targetNode.tagIs(openNode.token
+							.getOutputContext(openNode).getTag())) {
 				out.close(openNode,
 						openNode.token.getOutputContext(openNode).getTag());
 				itr.remove();
@@ -156,12 +161,12 @@ public class StructuredTokenParserContext {
 		}
 	}
 
-	public class NodeContextStream implements Iterator<XmlTokenOutputContext> {
+	public class NodeAncestorIterator implements Iterator<XmlTokenNode> {
 		XmlNode cursor;
 
 		private XmlTokenNode tokenNode;
 
-		public NodeContextStream(XmlTokenNode tokenNode, boolean output) {
+		public NodeAncestorIterator(XmlTokenNode tokenNode, boolean output) {
 			this.tokenNode = tokenNode;
 			cursor = output ? tokenNode.targetNode : tokenNode.sourceNode;
 		}
@@ -172,11 +177,74 @@ public class StructuredTokenParserContext {
 		}
 
 		@Override
-		public XmlTokenOutputContext next() {
+		public XmlTokenNode next() {
 			XmlTokenNode result = tokenNode;
 			cursor = cursor.parent();
 			tokenNode = nodeToken.get(cursor);
-			return result.token.getOutputContext(result);
+			return result;
 		}
+	}
+
+	interface NodeAncestorsContextProvider {
+		public NodeAncestorsContext contexts();
+	}
+
+	public class NodeAncestors implements NodeAncestorsContextProvider {
+		private EnumSet<NodeAncestorsTypes> types;
+
+		private XmlTokenNode node;
+
+		public NodeAncestors(XmlTokenNode node, NodeAncestorsTypes... types) {
+			this.node = node;
+			this.types = EnumSet.of(types[0]);
+			for (int idx = 1; idx < types.length; idx++) {
+				this.types.add(types[idx]);
+			}
+		}
+
+		public NodeAncestorsContext contexts() {
+			return new NodeAncestorsContext(this);
+		}
+
+		public Iterable<XmlTokenNode> nodeIterable() {
+			return () -> nodeIterator();
+		}
+
+		public Iterator<XmlTokenNode> nodeIterator() {
+			return new NodeAncestorIterator(node,
+					types.contains(NodeAncestorsTypes.TARGET));
+		}
+
+		public Stream<XmlTokenNode> nodeStream() {
+			return StreamSupport.stream(nodeIterable().spliterator(), false);
+		}
+	}
+
+	public class NodeAncestorsContext
+			implements Iterator<XmlTokenOutputContext> {
+		@SuppressWarnings("unused")
+		private NodeAncestors nodeAncestors;
+
+		private Iterator<XmlTokenNode> itr;
+
+		public NodeAncestorsContext(NodeAncestors nodeAncestors) {
+			this.nodeAncestors = nodeAncestors;
+			itr = nodeAncestors.nodeIterator();
+		}
+
+		@Override
+		public boolean hasNext() {
+			return itr.hasNext();
+		}
+
+		@Override
+		public XmlTokenOutputContext next() {
+			XmlTokenNode node = itr.next();
+			return node.token.getOutputContext(node);
+		}
+	}
+
+	public enum NodeAncestorsTypes {
+		SOURCE, TARGET, NODE
 	}
 }

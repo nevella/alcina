@@ -19,4 +19,12 @@ public interface DefaultJsonRepresentation
 	default void fromJson(JSONObject jso) {
 		fieldMapping(jso);
 	}
+	default void fromJson(String json) {
+		try {
+			fieldMapping(new JSONObject(json));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		
+	}
 }
