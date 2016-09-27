@@ -38,7 +38,8 @@ public class XmlTokenStream implements Iterator<XmlNode> {
 			XmlNode xmlNode = doc.nodeFor(current);
 			if (skip.contains(xmlNode)) {
 			} else {
-				if(current!=null&&current.getNodeType()==Node.PROCESSING_INSTRUCTION_NODE){
+				if (current != null && current
+						.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE) {
 					int debug = 3;
 				}
 				return xmlNode;
@@ -51,17 +52,8 @@ public class XmlTokenStream implements Iterator<XmlNode> {
 			return;
 		}
 		tw.previousNode();
-		boolean found = false;
-		while (true) {
-			next = tw.nextSibling();
-			if (next != null) {
-				break;
-			}
-			Node parentNode = tw.parentNode();
-			if (parentNode == null) {
-				break;
-			}
-		}
+		skip(doc.nodeFor(tw.getCurrentNode()));
+		tw.nextNode();
 	}
 
 	private Set<XmlNode> skip = new LinkedHashSet<>();

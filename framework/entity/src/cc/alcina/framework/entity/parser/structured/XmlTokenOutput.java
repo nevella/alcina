@@ -19,6 +19,7 @@ public class XmlTokenOutput {
 
 	public void close(XmlTokenNode outNode, String tag) {
 		if (!writeCursor.tagIs(tag)) {
+			System.out.println(outDoc.fullToString());
 			throw new RuntimeException(
 					String.format("closing unmatched tag : %s -> %s",
 							writeCursor.name(), tag));
