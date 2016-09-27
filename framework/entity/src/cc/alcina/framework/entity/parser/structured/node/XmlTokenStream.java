@@ -33,30 +33,26 @@ public class XmlTokenStream implements Iterator<XmlNode> {
 	@Override
 	public XmlNode next() {
 		while (true) {
-			Node current = next;
+			current = next;
 			next = tw.nextNode();
 			XmlNode xmlNode = doc.nodeFor(current);
 			if (skip.contains(xmlNode)) {
 			} else {
-				if (current != null && current
-						.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE) {
-					int debug = 3;
-				}
 				return xmlNode;
 			}
 		}
 	}
 
 	public void skipChildren() {
-		if (next == null) {
+		if (current == null) {
 			return;
 		}
-		tw.previousNode();
-		skip(doc.nodeFor(tw.getCurrentNode()));
-		tw.nextNode();
+		skip(doc.nodeFor(current));
 	}
 
 	private Set<XmlNode> skip = new LinkedHashSet<>();
+
+	private Node current;
 
 	public void skip(XmlNode node) {
 		skip.add(node);
