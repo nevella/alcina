@@ -21,7 +21,7 @@ public interface DefaultJsonRepresentation
 	}
 	default void fromJson(String json) {
 		try {
-			fieldMapping(new JSONObject(json));
+			fromJson(new JSONObject(json));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
