@@ -23,6 +23,8 @@ public class StructuredTokenParserContext {
 	public Multimap<XmlToken, List<XmlNode>> matched = new Multimap<>();
 
 	private Map<XmlNode, XmlTokenNode> nodeToken = new LinkedHashMap<>();
+	
+	StructuredTokenParser parser;
 
 	StringMap properties = new StringMap();
 
@@ -246,5 +248,9 @@ public class StructuredTokenParserContext {
 
 	public enum NodeAncestorsTypes {
 		SOURCE, TARGET, NODE
+	}
+	public void handleOutOfOrderNode(XmlNode node) {
+		parser.handleNode(node, this);
+		stream.skip(node);
 	}
 }

@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.parser.structured.node;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -47,9 +48,11 @@ public class XmlNode {
 		this.doc = xmlDoc;
 		this.children = new XmlNodeChildren();
 	}
+
 	public XmlNode(XmlNode from) {
 		this(from.node, from.doc);
 	}
+
 	public XmlNodeBuilder add() {
 		return new XmlNodeBuilder(this);
 	}
@@ -270,6 +273,17 @@ public class XmlNode {
 		public boolean soleElement(String tag) {
 			List<XmlNode> elts = elements();
 			return elts.size() == 1 && elts.get(0).tagIs(tag);
+		}
+
+		public XmlNode firstNonElementChild() {
+			return flatten().filter(n -> !n.isElement()).findFirst()
+					.orElse(null);
+		}
+
+		public XmlNode lastNonElementChild() {
+			return CommonUtils.reverse(flatten().collect(Collectors.toList()))
+					.stream().filter(n -> !n.isElement()).findFirst()
+					.orElse(null);
 		}
 	}
 

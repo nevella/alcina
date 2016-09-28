@@ -60,8 +60,238 @@ public class CommonUtils {
 		}
 	}
 
-	public static String shortMonthName(int month) {
-		return MONTH_NAMES[month].substring(0, 3);
+	private static final Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
+
+	static {
+		Class[] prims = { long.class, int.class, short.class, char.class,
+				byte.class, boolean.class, double.class, float.class };
+		for (Class prim : prims) {
+			primitiveClassMap.put(prim.getName(), prim);
+		}
+	}
+
+	public static final Map<String, Class> stdAndPrimitivesMap = new HashMap<String, Class>();
+
+	static {
+		stdAndPrimitivesMap.putAll(stdClassMap);
+		stdAndPrimitivesMap.putAll(primitiveClassMap);
+	}
+	public static final Set<Class> stdAndPrimitives = new HashSet<Class>(
+			stdAndPrimitivesMap.values());
+
+	public static Supplier<Set> setSupplier = () -> new LinkedHashSet();
+	/**
+	 * For trimming a utf8 string for insertion into a 255-char varchar db
+	 * field. Oh, the pain
+	 */
+	public static final int SAFE_VARCHAR_MAX_CHARS = 230;
+
+	private static UnsortedMultikeyMap<Enum> enumValueLookup = new UnsortedMultikeyMap<Enum>(
+			2);
+
+	public static void addIfNotNull(List l, Object o) {
+		if (o != null) {
+			l.add(o);
+		}
+	}
+
+	public static boolean bv(Boolean b) {
+		return b == null || b == false ? false : true;
+	}
+
+	public static String capitaliseFirst(String s) {
+		if (isNullOrEmpty(s)) {
+			return s;
+		}
+		return s.substring(0, 1).toUpperCase() + s.substring(1);
+	}
+
+	public static String classSimpleName(Class c) {
+		return c.getName().substring(c.getName().lastIndexOf('.') + 1);
+	}
+
+	public static boolean closeDates(Date d1, Date d2, long ms) {
+		if (d1 == null || d2 == null) {
+			return d1 == d2;
+		}
+		return Math.abs(d1.getTime() - d2.getTime()) < ms;
+	}
+
+	public static int compareBoolean(Boolean o1, Boolean o2) {
+		int i = 0;
+		if (bv(o1)) {
+			i++;
+		}
+		if (bv(o2)) {
+			i--;
+		}
+		return i;
+	}
+
+	public static int compareDates(Date d1, Date d2) {
+		long t1 = d1 == null ? 0 : d1.getTime();
+		long t2 = d2 == null ? 0 : d2.getTime();
+		return t1 < t2 ? -1 : t1 == t2 ? 0 : 1;
+	}
+
+	public static int compareDatesNullHigh(Date d1, Date d2) {
+		long t1 = d1 == null ? Long.MAX_VALUE : d1.getTime();
+		long t2 = d2 == null ? Long.MAX_VALUE : d2.getTime();
+		return t1 < t2 ? -1 : t1 == t2 ? 0 : 1;
+	}
+
+	public static int compareDoubles(double d1, double d2) {
+		return (d1 < d2 ? -1 : (d1 == d2 ? 0 : 1));
+	}
+
+	public static int compareFloats(float f1, float f2) {
+		return (f1 < f2 ? -1 : (f1 == f2 ? 0 : 1));
+	}
+
+	public static int compareIgnoreCaseWithNullMinusOne(String o1, String o2) {
+		if (o1 == null) {
+			return o2 == null ? 0 : -1;
+		}
+		return o2 == null ? 1 : o1.compareToIgnoreCase(o2);
+	}
+
+	public static int compareInts(int i1, int i2) {
+		return (i1 < i2 ? -1 : (i1 == i2 ? 0 : 1));
+	}
+
+	public static int compareLongs(long l1, long l2) {
+		return (l1 < l2 ? -1 : (l1 == l2 ? 0 : 1));
+	}
+
+	public static int compareNonNull(Object o1, Object o2) {
+		int i = 0;
+		if (o1 != null) {
+			i++;
+		}
+		if (o2 != null) {
+			i--;
+		}
+		return i;
+	}
+
+	public static int compareWithNullMinusOne(Comparable o1, Comparable o2) {
+		if (o1 == null) {
+			return o2 == null ? 0 : -1;
+		}
+		return o2 == null ? 1 : o1.compareTo(o2);
+	}
+
+	public static boolean containsAny(Collection container,
+			Collection containees) {
+		for (Iterator itr = containees.iterator(); itr.hasNext();) {
+			if (container.contains(itr.next())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean containsWithNull(Object obj, String lcText) {
+		if (obj == null || lcText == null) {
+			return false;
+		}
+		String string = obj.toString();
+		return string != null && string.toLowerCase().contains(lcText);
+	}
+
+	public static int countOccurrences(String content, String occurrence) {
+		int result = 0;
+		int idx = 0;
+		while (true) {
+			idx = content.indexOf(occurrence, idx);
+			if (idx == -1) {
+				break;
+			}
+			result++;
+			idx += occurrence.length();
+		}
+		return result;
+	}
+
+	@SuppressWarnings("deprecation")
+	public static String dateStampMillis() {
+		Date d = new Date();
+		return formatJ("%s%s%s%s%s%s", padFour(d.getYear() + 1900),
+				padTwo(d.getMonth() + 1), padTwo(d.getDate()),
+				padTwo(d.getHours()), padTwo(d.getMinutes()),
+				padTwo(d.getSeconds()), padThree((int) (d.getTime() % 1000)));
+	}
+
+	public static List dedupe(List objects) {
+		return new ArrayList(new LinkedHashSet(objects));
+	}
+
+	public static String deInfix(String s) {
+		if (isNullOrEmpty(s)) {
+			return s;
+		}
+		StringBuilder buf = new StringBuilder();
+		for (int i = 0; i < s.length(); i++) {
+			String c = s.substring(i, i + 1);
+			buf.append(c.toUpperCase().equals(c) ? " " : "");
+			buf.append(i == 0 ? c.toUpperCase() : c.toLowerCase());
+		}
+		return buf.toString();
+	}
+
+	public static double dv(Double d) {
+		return d == null ? 0.0 : d.doubleValue();
+	}
+
+	public static String ellipsisText(String sourceText, int charWidth) {
+		if (sourceText.length() < charWidth) {
+			return sourceText;
+		}
+		String result = trimToWsChars(sourceText, (charWidth * 2) / 3, true);
+		int from = sourceText.length() - result.length();
+		int spIdx = sourceText.substring(0, from).lastIndexOf(" ");
+		if (spIdx != -1) {
+			result += sourceText.substring(spIdx);
+		}
+		return result;
+	}
+
+	public static String enumStringRep(Enum e) {
+		if (e == null) {
+			return null;
+		}
+		return e.getDeclaringClass().getName() + "." + e.toString();
+	}
+
+	public static boolean equals(Object... objects) {
+		if (objects.length % 2 != 0) {
+			throw new RuntimeException("Array length must be divisible by two");
+		}
+		for (int i = 0; i < objects.length; i += 2) {
+			Object o1 = objects[i];
+			Object o2 = objects[i + 1];
+			if (o1 == null && o2 == null) {
+			} else {
+				if (o1 == null || o2 == null) {
+					return false;
+				} else {
+					if (!o1.equals(o2)) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	public static boolean equalsIgnoreCase(String s1, String s2) {
+		if (s1 == s2) {
+			return true;
+		}
+		if (s1 == null || s2 == null) {
+			return false;
+		}
+		return s1.toLowerCase().equals(s2.toLowerCase());
 	}
 
 	public static boolean equalsWithForgivingStrings(Object... objects) {
@@ -96,116 +326,6 @@ public class CommonUtils {
 		return true;
 	}
 
-	public static boolean equals(Object... objects) {
-		if (objects.length % 2 != 0) {
-			throw new RuntimeException("Array length must be divisible by two");
-		}
-		for (int i = 0; i < objects.length; i += 2) {
-			Object o1 = objects[i];
-			Object o2 = objects[i + 1];
-			if (o1 == null && o2 == null) {
-			} else {
-				if (o1 == null || o2 == null) {
-					return false;
-				} else {
-					if (!o1.equals(o2)) {
-						return false;
-					}
-				}
-			}
-		}
-		return true;
-	}
-
-	private static final Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
-	static {
-		Class[] prims = { long.class, int.class, short.class, char.class,
-				byte.class, boolean.class, double.class, float.class };
-		for (Class prim : prims) {
-			primitiveClassMap.put(prim.getName(), prim);
-		}
-	}
-
-	public static final Map<String, Class> stdAndPrimitivesMap = new HashMap<String, Class>();
-	static {
-		stdAndPrimitivesMap.putAll(stdClassMap);
-		stdAndPrimitivesMap.putAll(primitiveClassMap);
-	}
-
-	public static final Set<Class> stdAndPrimitives = new HashSet<Class>(
-			stdAndPrimitivesMap.values());
-
-	public static boolean bv(Boolean b) {
-		return b == null || b == false ? false : true;
-	}
-
-	public static double dv(Double d) {
-		return d == null ? 0.0 : d.doubleValue();
-	}
-
-	public static String capitaliseFirst(String s) {
-		if (isNullOrEmpty(s)) {
-			return s;
-		}
-		return s.substring(0, 1).toUpperCase() + s.substring(1);
-	}
-
-	public static int parseIntOrZero(String s) {
-		try {
-			return Integer.parseInt(s);
-		} catch (NumberFormatException e) {
-			return 0;
-		}
-	}
-
-	public static String lcFirst(String s) {
-		if (isNullOrEmpty(s)) {
-			return s;
-		}
-		return s.substring(0, 1).toLowerCase() + s.substring(1);
-	}
-
-	public static String classSimpleName(Class c) {
-		return c.getName().substring(c.getName().lastIndexOf('.') + 1);
-	}
-
-	public static int compareIgnoreCaseWithNullMinusOne(String o1, String o2) {
-		if (o1 == null) {
-			return o2 == null ? 0 : -1;
-		}
-		return o2 == null ? 1 : o1.compareToIgnoreCase(o2);
-	}
-
-	public static int compareInts(int i1, int i2) {
-		return (i1 < i2 ? -1 : (i1 == i2 ? 0 : 1));
-	}
-
-	public static int compareLongs(long l1, long l2) {
-		return (l1 < l2 ? -1 : (l1 == l2 ? 0 : 1));
-	}
-
-	public static int compareWithNullMinusOne(Comparable o1, Comparable o2) {
-		if (o1 == null) {
-			return o2 == null ? 0 : -1;
-		}
-		return o2 == null ? 1 : o1.compareTo(o2);
-	}
-
-	public static boolean containsWithNull(Object obj, String lcText) {
-		if (obj == null || lcText == null) {
-			return false;
-		}
-		String string = obj.toString();
-		return string != null && string.toLowerCase().contains(lcText);
-	}
-
-	public static boolean equalsWithNullEquality(Object o1, Object o2) {
-		if (o1 == null) {
-			return o2 == null;
-		}
-		return o1.equals(o2);
-	}
-
 	public static boolean equalsWithNullEmptyEquality(Object o1, Object o2) {
 		if (o1 instanceof String && o1.toString().isEmpty()) {
 			o1 = null;
@@ -225,29 +345,56 @@ public class CommonUtils {
 		return o1.equals(o2);
 	}
 
-	public static String formatNumbered(String source, Object... args) {
-		String[] strs = source.split("%");
-		String s;
-		for (int i = 0; i < strs.length; i++) {
-			s = strs[i];
-			if (i != 0) {
-				strs[i] = args[Integer.parseInt(s.substring(0, 1)) - 1]
-						+ s.substring(1);
-			}
+	public static boolean equalsWithNullEquality(Object o1, Object o2) {
+		if (o1 == null) {
+			return o2 == null;
 		}
-		return join(strs, "");
+		return o1.equals(o2);
 	}
 
-	public static String formatJ(String source, Object... args) {
-		boolean modSource = source.endsWith("%s");
-		String s2 = modSource ? source + "." : source;
-		String[] strs = s2.split("%s");
-		String s;
-		for (int i = 1; i < strs.length; i++) {
-			strs[i] = args[i - 1]
-					+ ((modSource && i == strs.length - 1) ? "" : strs[i]);
+	public static String escapeRegex(String s) {
+		if (s.contains("\\")) {
+			throw new RuntimeException("can't escape escaped strings");
 		}
-		return join(strs, "");
+		s = s.replace("(", "\\(");
+		s = s.replace(")", "\\)");
+		s = s.replace("]", "\\]");
+		s = s.replace("[", "\\[");
+		s = s.replace("$", "\\$");
+		s = s.replace("+", "\\+");
+		s = s.replace("?", "\\?");
+		s = s.replace(".", "\\.");
+		return s;
+	}
+
+	public static <T extends Throwable> T
+			extractCauseOfClass(Throwable throwable, Class<T> throwableClass) {
+		while (true) {
+			if (isDerivedFrom(throwable, throwableClass)) {
+				return (T) throwable;
+			}
+			if (throwable.getCause() == throwable
+					|| throwable.getCause() == null) {
+				return null;
+			}
+			throwable = throwable.getCause();
+		}
+	}
+
+	public static <T> T first(Collection<T> coll) {
+		if (coll != null && coll.iterator().hasNext()) {
+			return coll.iterator().next();
+		}
+		return null;
+	}
+
+	public static List flattenMap(Map m) {
+		List result = new ArrayList();
+		for (Entry e : (Collection<Map.Entry>) m.entrySet()) {
+			result.add(e.getKey());
+			result.add(e.getValue());
+		}
+		return result;
 	}
 
 	@SuppressWarnings("deprecation")
@@ -342,6 +489,35 @@ public class CommonUtils {
 		return date.toString();
 	}
 
+	public static String formatJ(String source, Object... args) {
+		boolean modSource = source.endsWith("%s");
+		String s2 = modSource ? source + "." : source;
+		String[] strs = s2.split("%s");
+		String s;
+		for (int i = 1; i < strs.length; i++) {
+			strs[i] = args[i - 1]
+					+ ((modSource && i == strs.length - 1) ? "" : strs[i]);
+		}
+		return join(strs, "");
+	}
+
+	public static String formatNumbered(String source, Object... args) {
+		String[] strs = source.split("%");
+		String s;
+		for (int i = 0; i < strs.length; i++) {
+			s = strs[i];
+			if (i != 0) {
+				strs[i] = args[Integer.parseInt(s.substring(0, 1)) - 1]
+						+ s.substring(1);
+			}
+		}
+		return join(strs, "");
+	}
+
+	public static void formatOut(String string, Object... objects) {
+		System.out.println(formatJ(string, objects));
+	}
+
 	public static String friendlyConstant(Object o) {
 		return friendlyConstant(o, " ");
 	}
@@ -366,6 +542,50 @@ public class CommonUtils {
 		return s.replace("_", sep).trim();
 	}
 
+	public static Integer friendlyParseInt(String toParse) {
+		String sub = getNumericSubstring(toParse);
+		return sub == null ? null : Integer.parseInt(sub);
+	}
+
+	public static Long friendlyParseLong(String toParse) {
+		String sub = getNumericSubstring(toParse);
+		return sub == null ? null : Long.parseLong(sub);
+	}
+
+	public static <T> T get(Iterator<T> iterator, int index) {
+		T last = null;
+		while (iterator.hasNext()) {
+			last = iterator.next();
+			if (index-- == 0) {
+				return last;
+			}
+		}
+		return null;
+	}
+
+	public static <E extends Enum> E getEnumValueOrNull(Class<E> enumClass,
+			String value) {
+		return getEnumValueOrNull(enumClass, value, false, null);
+	}
+
+	public static <E extends Enum> E getEnumValueOrNull(Class<E> enumClass,
+			String value, boolean withFriendlyNames, E defaultValue) {
+		if (!enumValueLookup.containsKey(enumClass)) {
+			for (E ev : enumClass.getEnumConstants()) {
+				enumValueLookup.put(enumClass, ev.toString(), ev);
+				enumValueLookup.put(enumClass, ev.toString().toLowerCase(), ev);
+				if (withFriendlyNames) {
+					enumValueLookup.put(enumClass,
+							friendlyConstant(ev, "-").toLowerCase(), ev);
+					enumValueLookup.put(enumClass, friendlyConstant(ev, "-"),
+							ev);
+				}
+			}
+		}
+		E result = (E) enumValueLookup.get(enumClass, value);
+		return result == null ? defaultValue : result;
+	}
+
 	public static String getSimpleTimeBefore(Date d) {
 		return getSimpleTimeBefore(d, new Date());
 	}
@@ -380,6 +600,20 @@ public class CommonUtils {
 			return Math.round(timeDiff / 60) + " hours ago";
 		}
 		return Math.round(timeDiff / (60 * 24)) + " days ago";
+	}
+
+	public static String getUniqueNumberedString(String base,
+			String postfixTemplate, Collection<String> existingValues) {
+		if (!existingValues.contains(base)) {
+			return base;
+		}
+		int i = 1;
+		while (true) {
+			String value = base + CommonUtils.formatJ(postfixTemplate, i++);
+			if (!existingValues.contains(value)) {
+				return value;
+			}
+		}
 	}
 
 	public static Class getWrapperType(Class clazz) {
@@ -413,13 +647,60 @@ public class CommonUtils {
 		return null;
 	}
 
+	@SuppressWarnings("deprecation")
+	public static int getYear(Date d) {
+		return d.getYear() + 1900;
+	}
+
+	public static String hangingIndent(String text, boolean noTabsFirstLine,
+			int tabs) {
+		StringBuilder result = new StringBuilder();
+		String[] lines = text.split("\n");
+		for (int i = 0; i < lines.length; i++) {
+			if (noTabsFirstLine && i == 0) {
+			} else {
+				for (int j = 0; j < tabs; j++) {
+					result.append("\t");
+				}
+			}
+			result.append(lines[i]);
+			if (i < lines.length - 1) {
+				result.append("\n");
+			}
+		}
+		return result.toString();
+	}
+
+	public static boolean hasCauseOfClass(Throwable throwable,
+			CollectionFilter<Throwable> causeFilter) {
+		while (true) {
+			if (causeFilter.allow(throwable)) {
+				return true;
+			}
+			if (throwable.getCause() == throwable
+					|| throwable.getCause() == null) {
+				return false;
+			}
+			throwable = throwable.getCause();
+		}
+	}
+
+	public static int indexOf(Iterator iterator, Object obj) {
+		int i = 0;
+		while (iterator.hasNext()) {
+			if (obj == iterator.next()) {
+				return i;
+			}
+			i++;
+		}
+		return -1;
+	}
+
 	public static String infix(String s) {
 		return isNullOrEmpty(s) ? null
 				: s.substring(0, 1).toLowerCase()
 						+ (s.length() == 1 ? "" : s.substring(1));
 	}
-
-	public static Supplier<Set> setSupplier = () -> new LinkedHashSet();
 
 	public static Set intersection(Collection c1, Collection c2) {
 		Set result = setSupplier.get();
@@ -441,101 +722,26 @@ public class CommonUtils {
 		return result;
 	}
 
-	public static <T> ThreeWaySetResult<T> threeWaySplit(Collection<T> c1,
-			Collection<T> c2) {
-		ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
-		Set intersection = intersection(c1, c2);
-		result.intersection = intersection;
-		result.firstOnly = new LinkedHashSet<T>(c1);
-		result.secondOnly = new LinkedHashSet<T>(c2);
-		result.firstOnly.removeAll(intersection);
-		result.secondOnly.removeAll(intersection);
-		return result;
-	}
-
-	public static Integer friendlyParseInt(String toParse) {
-		String sub = getNumericSubstring(toParse);
-		return sub == null ? null : Integer.parseInt(sub);
-	}
-
-	private static String getNumericSubstring(String toParse) {
-		if (toParse == null) {
-			return null;
+	public static boolean isDerivedFrom(Object o, Class c) {
+		if (o == null) {
+			return false;
 		}
-		toParse = toParse.trim();
-		if (toParse.isEmpty()) {
-			return null;
-		}
-		int i = 0;
-		char c = toParse.charAt(0);
-		if ((c == '+' || c == '-') && toParse.length() > 1) {
-			i++;
-		}
-		for (; i < toParse.length(); i++) {
-			c = toParse.charAt(i);
-			if (c > '9' || c < '0') {
-				break;
+		Class c2 = o.getClass();
+		while (c2 != Object.class) {
+			if (c2 == c) {
+				return true;
 			}
+			c2 = c2.getSuperclass();
 		}
-		return i == 0 ? null : toParse.substring(0, i);
+		return false;
 	}
 
-	public static Long friendlyParseLong(String toParse) {
-		String sub = getNumericSubstring(toParse);
-		return sub == null ? null : Long.parseLong(sub);
+	public static boolean isEnumSubclass(Class c) {
+		return c.getSuperclass() != null && c.getSuperclass().isEnum();
 	}
 
-	/**
-	 * For trimming a utf8 string for insertion into a 255-char varchar db
-	 * field. Oh, the pain
-	 */
-	public static final int SAFE_VARCHAR_MAX_CHARS = 230;
-
-	public static String escapeRegex(String s) {
-		if (s.contains("\\")) {
-			throw new RuntimeException("can't escape escaped strings");
-		}
-		s = s.replace("(", "\\(");
-		s = s.replace(")", "\\)");
-		s = s.replace("]", "\\]");
-		s = s.replace("[", "\\[");
-		s = s.replace("$", "\\$");
-		s = s.replace("+", "\\+");
-		s = s.replace("?", "\\?");
-		s = s.replace(".", "\\.");
-		return s;
-	}
-
-	public static class ThreeWaySetResult<T> {
-		public Set<T> firstOnly;
-
-		public Set<T> secondOnly;
-
-		public Set<T> intersection;
-
-		@Override
-		public String toString() {
-			return CommonUtils.formatJ("First: %s\nBoth: %s\nSecond: %s",
-					firstOnly, intersection, secondOnly);
-		}
-
-		public String toSizes() {
-			return CommonUtils.formatJ("First: %s\tBoth: %s\tSecond: %s",
-					firstOnly.size(), intersection.size(), secondOnly.size());
-		}
-
-		public boolean isEmpty() {
-			return firstOnly.isEmpty() && secondOnly.isEmpty()
-					&& intersection.isEmpty();
-		}
-	}
-
-	public static boolean isNullOrEmpty(String string) {
-		return string == null || string.length() == 0;
-	}
-
-	public static boolean isNullOrEmpty(Collection c) {
-		return c == null || c.isEmpty();
+	public static boolean isLetterOnly(String string) {
+		return string.matches("[a-zA-Z]+");
 	}
 
 	public static boolean isNotNullOrEmpty(Collection c) {
@@ -544,6 +750,32 @@ public class CommonUtils {
 
 	public static boolean isNotNullOrEmpty(String string) {
 		return string != null && string.length() != 0;
+	}
+
+	public static boolean isNullOrEmpty(Collection c) {
+		return c == null || c.isEmpty();
+	}
+
+	public static boolean isNullOrEmpty(String string) {
+		return string == null || string.length() == 0;
+	}
+
+	public static boolean isOneOf(Class clazz, Class[] possibleClasses) {
+		for (Class c : possibleClasses) {
+			if (clazz == c) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean isStandardJavaClass(Class clazz) {
+		return stdAndPrimitivesMap.containsValue(clazz);
+	}
+
+	public static boolean isStandardJavaClassOrEnum(Class clazz) {
+		return isStandardJavaClass(clazz) || clazz.isEnum()
+				|| isEnumSubclass(clazz);
 	}
 
 	public static int iv(Integer i) {
@@ -595,8 +827,51 @@ public class CommonUtils {
 		return result.toString();
 	}
 
+	public static String joinWithComma(Collection c) {
+		return join(c, ",");
+	}
+
+	public static String joinWithNewlines(Collection c) {
+		return join(c, "\n");
+	}
+
+	public static String joinWithNewlineTab(Collection c) {
+		return join(c, "\n\t");
+	}
+
+	public static <T> T last(Iterator<T> iterator) {
+		T last = null;
+		while (iterator.hasNext()) {
+			last = iterator.next();
+		}
+		return last;
+	}
+
+	public static <T> T last(List<T> list) {
+		if (list.isEmpty()) {
+			return null;
+		}
+		return list.get(list.size() - 1);
+	}
+
+	public static String lcFirst(String s) {
+		if (isNullOrEmpty(s)) {
+			return s;
+		}
+		return s.substring(0, 1).toLowerCase() + s.substring(1);
+	}
+
 	public static long lv(Long l) {
 		return l == null ? 0 : l;
+	}
+
+	@SuppressWarnings("deprecation")
+	public static Date monthsFromNow(int months) {
+		Date d = roundDate(new Date(), false);
+		int m = d.getMonth() + months;
+		d.setMonth(m % 12);
+		d.setYear(d.getYear() + m / 12);
+		return d;
 	}
 
 	public static String namedFormat(String source,
@@ -608,6 +883,48 @@ public class CommonUtils {
 			source = source.replace("%" + s + "%", args.get(s).toString());
 		}
 		return source;
+	}
+
+	public static String nullSafeToString(Object o) {
+		return o == null ? null : o.toString();
+	}
+
+	public static String nullToEmpty(String s) {
+		return s == null ? "" : s;
+	}
+
+	public static <T extends Comparable> List<T>
+			order(Collection<T> comparableCollection) {
+		List<T> items = new ArrayList<T>(comparableCollection);
+		Collections.sort(items);
+		return items;
+	}
+
+	public static String padFive(int number) {
+		if (number < 10000) {
+			String s = String.valueOf(number);
+			return "00000".substring(s.length()) + s;
+		} else {
+			return String.valueOf(number);
+		}
+	}
+
+	public static String padFour(int number) {
+		if (number < 1000) {
+			return "0" + padThree(number);
+		} else {
+			return String.valueOf(number);
+		}
+	}
+
+	public static String padLinesLeft(String block, String prefix) {
+		StringBuilder sb = new StringBuilder();
+		for (String line : block.split("\n")) {
+			sb.append(prefix);
+			sb.append(line);
+			sb.append("\n");
+		}
+		return sb.toString();
 	}
 
 	public static String padStringLeft(String input, int length, char padChar) {
@@ -643,23 +960,6 @@ public class CommonUtils {
 		}
 	}
 
-	public static String padFour(int number) {
-		if (number < 1000) {
-			return "0" + padThree(number);
-		} else {
-			return String.valueOf(number);
-		}
-	}
-
-	public static String padFive(int number) {
-		if (number < 10000) {
-			String s = String.valueOf(number);
-			return "00000".substring(s.length()) + s;
-		} else {
-			return String.valueOf(number);
-		}
-	}
-
 	public static String padTwo(int number) {
 		if (number < 10) {
 			return "0" + number;
@@ -668,12 +968,16 @@ public class CommonUtils {
 		}
 	}
 
-	public static String pluralise(String s, Collection c) {
-		return pluralise(s, c == null ? 0 : c.size(), false);
+	public static int parseIntOrZero(String s) {
+		try {
+			return Integer.parseInt(s);
+		} catch (NumberFormatException e) {
+			return 0;
+		}
 	}
 
-	public static String pluraliseWithCount(String s, Collection c) {
-		return pluralise(s, c == null ? 0 : c.size(), true);
+	public static String pluralise(String s, Collection c) {
+		return pluralise(s, c == null ? 0 : c.size(), false);
 	}
 
 	public static String pluralise(String s, int size, boolean withCount) {
@@ -700,6 +1004,40 @@ public class CommonUtils {
 		return s + "s";
 	}
 
+	public static String pluraliseWithCount(String s, Collection c) {
+		return pluralise(s, c == null ? 0 : c.size(), true);
+	}
+
+	public static void putIfKeyNotNull(Map m, Object k, Object v) {
+		if (k != null) {
+			m.put(k, v);
+		}
+	}
+
+	public static List<String> removeNullsAndEmpties(List<String> parts) {
+		List<String> dedupe = (List<String>) CommonUtils.dedupe(parts);
+		dedupe.remove(null);
+		dedupe.remove("");
+		return dedupe;
+	}
+
+	public static <T> Collection<T> reverse(Collection<T> collection) {
+		List list = new ArrayList<>(collection);
+		Collections.reverse(list);
+		return list;
+	}
+
+	public static String round(float f, int places) {
+		int multiplier = 1;
+		for (int i = 0; i < places; i++) {
+			multiplier *= 10;
+		}
+		String s = String.valueOf((int) (f * multiplier));
+		s = padStringLeft(s, places + 1, '0');
+		int len = s.length();
+		return s.substring(0, len - places) + "." + s.substring(len - places);
+	}
+
 	// to 00.00:00 or 23:59.59
 	@SuppressWarnings("deprecation")
 	public static Date roundDate(Date d, boolean up) {
@@ -709,9 +1047,16 @@ public class CommonUtils {
 		return d;
 	}
 
-	@SuppressWarnings("deprecation")
-	public static int getYear(Date d) {
-		return d.getYear() + 1900;
+	public static String safeToString(Object obj) {
+		try {
+			return obj.toString();
+		} catch (Exception e) {
+			return "Exception in toString() - " + e.getMessage();
+		}
+	}
+
+	public static <T> Set<T> setOf(T... values) {
+		return new LinkedHashSet<T>(Arrays.asList(values));
 	}
 
 	public static <T extends Collection> T shallowCollectionClone(T coll) {
@@ -732,9 +1077,17 @@ public class CommonUtils {
 		}
 	}
 
+	public static String shortMonthName(int month) {
+		return MONTH_NAMES[month].substring(0, 3);
+	}
+
 	public static String simpleClassName(Class c) {
 		String s = c.getName();
 		return s.substring(s.lastIndexOf('.') + 1);
+	}
+
+	public static int sizeOrZero(Collection collection) {
+		return collection == null ? 0 : collection.size();
 	}
 
 	// use when tostring is relatively expensive
@@ -758,6 +1111,62 @@ public class CommonUtils {
 		for (String key : keys) {
 			result.addAll(m.get(key));
 		}
+		return result;
+	}
+
+	public static List<String> split(String content, String split) {
+		List<String> result = new ArrayList<String>();
+		int idx0 = 0;
+		int idx1 = 0;
+		while (true) {
+			idx1 = content.indexOf(split, idx0);
+			if (idx1 == -1) {
+				result.add(content.substring(idx0));
+				break;
+			}
+			result.add(content.substring(idx0, idx1));
+			idx0 = idx1 + split.length();
+		}
+		return result;
+	}
+
+	public static String tabify(String value, int charsPerLine, int tabCount) {
+		int fuzz = 15;
+		StringBuilder sb = new StringBuilder();
+		String ss = null;
+		for (int idx = 0; idx < value.length();) {
+			int idy = Math.min(idx + charsPerLine, value.length());
+			ss = value.substring(idx, idy);
+			int idn = ss.indexOf("\n");
+			if (idn != -1) {
+				ss = value.substring(idx, idx + idn);
+				idx = idx + idn + 1;
+			} else {
+				int ls = ss.lastIndexOf(" ");
+				if (ls != -1 && charsPerLine - ls < fuzz) {
+					idy = idx + ls + 1;
+					ss = value.substring(idx, idy);
+				}
+				idx = idy;
+			}
+			for (int j = 0; j < tabCount; j++) {
+				sb.append("\t");
+			}
+			sb.append(ss);
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
+
+	public static <T> ThreeWaySetResult<T> threeWaySplit(Collection<T> c1,
+			Collection<T> c2) {
+		ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
+		Set intersection = intersection(c1, c2);
+		result.intersection = intersection;
+		result.firstOnly = new LinkedHashSet<T>(c1);
+		result.secondOnly = new LinkedHashSet<T>(c2);
+		result.firstOnly.removeAll(intersection);
+		result.secondOnly.removeAll(intersection);
 		return result;
 	}
 
@@ -795,10 +1204,6 @@ public class CommonUtils {
 			}
 		}
 		return sb.toString();
-	}
-
-	public static boolean isLetterOnly(String string) {
-		return string.matches("[a-zA-Z]+");
 	}
 
 	public static String trimToWsChars(String s, int maxChars) {
@@ -864,19 +1269,6 @@ public class CommonUtils {
 		return s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
 	}
 
-	public static String deInfix(String s) {
-		if (isNullOrEmpty(s)) {
-			return s;
-		}
-		StringBuilder buf = new StringBuilder();
-		for (int i = 0; i < s.length(); i++) {
-			String c = s.substring(i, i + 1);
-			buf.append(c.toUpperCase().equals(c) ? " " : "");
-			buf.append(i == 0 ? c.toUpperCase() : c.toLowerCase());
-		}
-		return buf.toString();
-	}
-
 	public static Collection wrapInCollection(Object o) {
 		if (o == null) {
 			return null;
@@ -888,229 +1280,6 @@ public class CommonUtils {
 			arr.add(o);
 			return arr;
 		}
-	}
-
-	public static boolean isStandardJavaClass(Class clazz) {
-		return stdAndPrimitivesMap.containsValue(clazz);
-	}
-
-	public enum DateStyle {
-		AU_DATE_SLASH, AU_DATE_MONTH, AU_DATE_MONTH_DAY, AU_DATE_TIME,
-		AU_DATE_TIME_HUMAN, AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT,
-		AU_LONG_DAY, AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
-		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH,
-		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, US_DATE_SLASH, TIMESTAMP_NO_DAY,
-		AU_DATE_MONTH_NO_PAD_DAY
-	}
-
-	public static String tabify(String value, int charsPerLine, int tabCount) {
-		int fuzz = 15;
-		StringBuilder sb = new StringBuilder();
-		String ss = null;
-		for (int idx = 0; idx < value.length();) {
-			int idy = Math.min(idx + charsPerLine, value.length());
-			ss = value.substring(idx, idy);
-			int idn = ss.indexOf("\n");
-			if (idn != -1) {
-				ss = value.substring(idx, idx + idn);
-				idx = idx + idn + 1;
-			} else {
-				int ls = ss.lastIndexOf(" ");
-				if (ls != -1 && charsPerLine - ls < fuzz) {
-					idy = idx + ls + 1;
-					ss = value.substring(idx, idy);
-				}
-				idx = idy;
-			}
-			for (int j = 0; j < tabCount; j++) {
-				sb.append("\t");
-			}
-			sb.append(ss);
-			sb.append("\n");
-		}
-		return sb.toString();
-	}
-
-	public static <T> T last(List<T> list) {
-		if (list.isEmpty()) {
-			return null;
-		}
-		return list.get(list.size() - 1);
-	}
-
-	public static <T> T last(Iterator<T> iterator) {
-		T last = null;
-		while (iterator.hasNext()) {
-			last = iterator.next();
-		}
-		return last;
-	}
-
-	public static <T> T get(Iterator<T> iterator, int index) {
-		T last = null;
-		while (iterator.hasNext()) {
-			last = iterator.next();
-			if (index-- == 0) {
-				return last;
-			}
-		}
-		return null;
-	}
-
-	public static int indexOf(Iterator iterator, Object obj) {
-		int i = 0;
-		while (iterator.hasNext()) {
-			if (obj == iterator.next()) {
-				return i;
-			}
-			i++;
-		}
-		return -1;
-	}
-
-	public static void addIfNotNull(List l, Object o) {
-		if (o != null) {
-			l.add(o);
-		}
-	}
-
-	public static void putIfKeyNotNull(Map m, Object k, Object v) {
-		if (k != null) {
-			m.put(k, v);
-		}
-	}
-
-	public static boolean containsAny(Collection container,
-			Collection containees) {
-		for (Iterator itr = containees.iterator(); itr.hasNext();) {
-			if (container.contains(itr.next())) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public static String nullToEmpty(String s) {
-		return s == null ? "" : s;
-	}
-
-	public static String hangingIndent(String text, boolean noTabsFirstLine,
-			int tabs) {
-		StringBuilder result = new StringBuilder();
-		String[] lines = text.split("\n");
-		for (int i = 0; i < lines.length; i++) {
-			if (noTabsFirstLine && i == 0) {
-			} else {
-				for (int j = 0; j < tabs; j++) {
-					result.append("\t");
-				}
-			}
-			result.append(lines[i]);
-			if (i < lines.length - 1) {
-				result.append("\n");
-			}
-		}
-		return result.toString();
-	}
-
-	public static boolean isOneOf(Class clazz, Class[] possibleClasses) {
-		for (Class c : possibleClasses) {
-			if (clazz == c) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public static String getUniqueNumberedString(String base,
-			String postfixTemplate, Collection<String> existingValues) {
-		if (!existingValues.contains(base)) {
-			return base;
-		}
-		int i = 1;
-		while (true) {
-			String value = base + CommonUtils.formatJ(postfixTemplate, i++);
-			if (!existingValues.contains(value)) {
-				return value;
-			}
-		}
-	}
-
-	public static boolean hasCauseOfClass(Throwable throwable,
-			CollectionFilter<Throwable> causeFilter) {
-		while (true) {
-			if (causeFilter.allow(throwable)) {
-				return true;
-			}
-			if (throwable.getCause() == throwable
-					|| throwable.getCause() == null) {
-				return false;
-			}
-			throwable = throwable.getCause();
-		}
-	}
-
-	public static boolean isDerivedFrom(Object o, Class c) {
-		if (o == null) {
-			return false;
-		}
-		Class c2 = o.getClass();
-		while (c2 != Object.class) {
-			if (c2 == c) {
-				return true;
-			}
-			c2 = c2.getSuperclass();
-		}
-		return false;
-	}
-
-	public static <T extends Throwable> T
-			extractCauseOfClass(Throwable throwable, Class<T> throwableClass) {
-		while (true) {
-			if (isDerivedFrom(throwable, throwableClass)) {
-				return (T) throwable;
-			}
-			if (throwable.getCause() == throwable
-					|| throwable.getCause() == null) {
-				return null;
-			}
-			throwable = throwable.getCause();
-		}
-	}
-
-	public static int compareFloats(float f1, float f2) {
-		return (f1 < f2 ? -1 : (f1 == f2 ? 0 : 1));
-	}
-
-	public static int compareDoubles(double d1, double d2) {
-		return (d1 < d2 ? -1 : (d1 == d2 ? 0 : 1));
-	}
-
-	@SuppressWarnings("deprecation")
-	public static Date yearAsDate(Integer year) {
-		if (year == null) {
-			year = 0;
-		}
-		Date d = new Date(0);
-		d.setYear(year - 1900);
-		d.setMonth(0);
-		d.setDate(1);
-		return d;
-	}
-
-	public static String round(float f, int places) {
-		int multiplier = 1;
-		for (int i = 0; i < places; i++) {
-			multiplier *= 10;
-		}
-		String s = String.valueOf((int) (f * multiplier));
-		s = padStringLeft(s, places + 1, '0');
-		int len = s.length();
-		return s.substring(0, len - places) + "." + s.substring(len - places);
-	}
-
-	public static String nullSafeToString(Object o) {
-		return o == null ? null : o.toString();
 	}
 
 	public static List<Integer> wrapIntArray(int[] ints) {
@@ -1129,236 +1298,73 @@ public class CommonUtils {
 		return result;
 	}
 
-	public static <T extends Comparable> List<T>
-			order(Collection<T> comparableCollection) {
-		List<T> items = new ArrayList<T>(comparableCollection);
-		Collections.sort(items);
-		return items;
-	}
-
-	public static List dedupe(List objects) {
-		return new ArrayList(new LinkedHashSet(objects));
-	}
-
-	public static <T> T first(Collection<T> coll) {
-		if (coll != null && coll.iterator().hasNext()) {
-			return coll.iterator().next();
-		}
-		return null;
-	}
-
-	@SuppressWarnings("deprecation")
-	public static Date monthsFromNow(int months) {
-		Date d = roundDate(new Date(), false);
-		int m = d.getMonth() + months;
-		d.setMonth(m % 12);
-		d.setYear(d.getYear() + m / 12);
-		return d;
-	}
-
-	private static UnsortedMultikeyMap<Enum> enumValueLookup = new UnsortedMultikeyMap<Enum>(
-			2);
-
-	public static <E extends Enum> E getEnumValueOrNull(Class<E> enumClass,
-			String value) {
-		return getEnumValueOrNull(enumClass, value, false, null);
-	}
-
-	public static <E extends Enum> E getEnumValueOrNull(Class<E> enumClass,
-			String value, boolean withFriendlyNames, E defaultValue) {
-		if (!enumValueLookup.containsKey(enumClass)) {
-			for (E ev : enumClass.getEnumConstants()) {
-				enumValueLookup.put(enumClass, ev.toString(), ev);
-				enumValueLookup.put(enumClass, ev.toString().toLowerCase(), ev);
-				if (withFriendlyNames) {
-					enumValueLookup.put(enumClass,
-							friendlyConstant(ev, "-").toLowerCase(), ev);
-					enumValueLookup.put(enumClass, friendlyConstant(ev, "-"),
-							ev);
-				}
-			}
-		}
-		E result = (E) enumValueLookup.get(enumClass, value);
-		return result == null ? defaultValue : result;
-	}
-
-	public static void formatOut(String string, Object... objects) {
-		System.out.println(formatJ(string, objects));
-	}
-
-	public static int compareDates(Date d1, Date d2) {
-		long t1 = d1 == null ? 0 : d1.getTime();
-		long t2 = d2 == null ? 0 : d2.getTime();
-		return t1 < t2 ? -1 : t1 == t2 ? 0 : 1;
-	}
-
-	public static int compareDatesNullHigh(Date d1, Date d2) {
-		long t1 = d1 == null ? Long.MAX_VALUE : d1.getTime();
-		long t2 = d2 == null ? Long.MAX_VALUE : d2.getTime();
-		return t1 < t2 ? -1 : t1 == t2 ? 0 : 1;
-	}
-
-	public static boolean isEnumSubclass(Class c) {
-		return c.getSuperclass() != null && c.getSuperclass().isEnum();
-	}
-
-	public static boolean isStandardJavaClassOrEnum(Class clazz) {
-		return isStandardJavaClass(clazz) || clazz.isEnum()
-				|| isEnumSubclass(clazz);
-	}
-
-	public static String joinWithNewlines(Collection c) {
-		return join(c, "\n");
-	}
-
-	public static String joinWithComma(Collection c) {
-		return join(c, ",");
-	}
-
-	public static String joinWithNewlineTab(Collection c) {
-		return join(c, "\n\t");
-	}
-
-	public static List flattenMap(Map m) {
-		List result = new ArrayList();
-		for (Entry e : (Collection<Map.Entry>) m.entrySet()) {
-			result.add(e.getKey());
-			result.add(e.getValue());
-		}
-		return result;
-	}
-
-	public static String padLinesLeft(String block, String prefix) {
-		StringBuilder sb = new StringBuilder();
-		for (String line : block.split("\n")) {
-			sb.append(prefix);
-			sb.append(line);
-			sb.append("\n");
-		}
-		return sb.toString();
-	}
-
-	public static int countOccurrences(String content, String occurrence) {
-		int result = 0;
-		int idx = 0;
-		while (true) {
-			idx = content.indexOf(occurrence, idx);
-			if (idx == -1) {
-				break;
-			}
-			result++;
-			idx += occurrence.length();
-		}
-		return result;
-	}
-
-	public static List<String> split(String content, String split) {
-		List<String> result = new ArrayList<String>();
-		int idx0 = 0;
-		int idx1 = 0;
-		while (true) {
-			idx1 = content.indexOf(split, idx0);
-			if (idx1 == -1) {
-				result.add(content.substring(idx0));
-				break;
-			}
-			result.add(content.substring(idx0, idx1));
-			idx0 = idx1 + split.length();
-		}
-		return result;
-	}
-
 	public static Exception wrapThrowable(Throwable e) {
 		return (Exception) (e instanceof Exception ? e : new Exception(e));
 	}
 
 	@SuppressWarnings("deprecation")
-	public static String dateStampMillis() {
-		Date d = new Date();
-		return formatJ("%s%s%s%s%s%s", padFour(d.getYear() + 1900),
-				padTwo(d.getMonth() + 1), padTwo(d.getDate()),
-				padTwo(d.getHours()), padTwo(d.getMinutes()),
-				padTwo(d.getSeconds()), padThree((int) (d.getTime() % 1000)));
+	public static Date yearAsDate(Integer year) {
+		if (year == null) {
+			year = 0;
+		}
+		Date d = new Date(0);
+		d.setYear(year - 1900);
+		d.setMonth(0);
+		d.setDate(1);
+		return d;
 	}
 
-	public static String enumStringRep(Enum e) {
-		if (e == null) {
+	private static String getNumericSubstring(String toParse) {
+		if (toParse == null) {
 			return null;
 		}
-		return e.getDeclaringClass().getName() + "." + e.toString();
-	}
-
-	public static List<String> removeNullsAndEmpties(List<String> parts) {
-		List<String> dedupe = (List<String>) CommonUtils.dedupe(parts);
-		dedupe.remove(null);
-		dedupe.remove("");
-		return dedupe;
-	}
-
-	public static String safeToString(Object obj) {
-		try {
-			return obj.toString();
-		} catch (Exception e) {
-			return "Exception in toString() - " + e.getMessage();
+		toParse = toParse.trim();
+		if (toParse.isEmpty()) {
+			return null;
 		}
-	}
-
-	public static String ellipsisText(String sourceText, int charWidth) {
-		if (sourceText.length() < charWidth) {
-			return sourceText;
-		}
-		String result = trimToWsChars(sourceText, (charWidth * 2) / 3, true);
-		int from = sourceText.length() - result.length();
-		int spIdx = sourceText.substring(0, from).lastIndexOf(" ");
-		if (spIdx != -1) {
-			result += sourceText.substring(spIdx);
-		}
-		return result;
-	}
-
-	public static boolean equalsIgnoreCase(String s1, String s2) {
-		if (s1 == s2) {
-			return true;
-		}
-		if (s1 == null || s2 == null) {
-			return false;
-		}
-		return s1.toLowerCase().equals(s2.toLowerCase());
-	}
-
-	public static <T> Set<T> setOf(T... values) {
-		return new LinkedHashSet<T>(Arrays.asList(values));
-	}
-
-	public static int sizeOrZero(Collection collection) {
-		return collection == null ? 0 : collection.size();
-	}
-
-	public static boolean closeDates(Date d1, Date d2, long ms) {
-		if (d1 == null || d2 == null) {
-			return d1 == d2;
-		}
-		return Math.abs(d1.getTime() - d2.getTime()) < ms;
-	}
-
-	public static int compareNonNull(Object o1, Object o2) {
 		int i = 0;
-		if (o1 != null) {
+		char c = toParse.charAt(0);
+		if ((c == '+' || c == '-') && toParse.length() > 1) {
 			i++;
 		}
-		if (o2 != null) {
-			i--;
+		for (; i < toParse.length(); i++) {
+			c = toParse.charAt(i);
+			if (c > '9' || c < '0') {
+				break;
+			}
 		}
-		return i;
+		return i == 0 ? null : toParse.substring(0, i);
 	}
-	public static int compareBoolean(Boolean o1, Boolean o2) {
-		int i = 0;
-		if (bv(o1)) {
-			i++;
+	public enum DateStyle {
+		AU_DATE_SLASH, AU_DATE_MONTH, AU_DATE_MONTH_DAY, AU_DATE_TIME,
+		AU_DATE_TIME_HUMAN, AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT,
+		AU_LONG_DAY, AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
+		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH,
+		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, US_DATE_SLASH, TIMESTAMP_NO_DAY,
+		AU_DATE_MONTH_NO_PAD_DAY
+	}
+
+	public static class ThreeWaySetResult<T> {
+		public Set<T> firstOnly;
+
+		public Set<T> secondOnly;
+
+		public Set<T> intersection;
+
+		public boolean isEmpty() {
+			return firstOnly.isEmpty() && secondOnly.isEmpty()
+					&& intersection.isEmpty();
 		}
-		if (bv(o2)) {
-			i--;
+
+		public String toSizes() {
+			return CommonUtils.formatJ("First: %s\tBoth: %s\tSecond: %s",
+					firstOnly.size(), intersection.size(), secondOnly.size());
 		}
-		return i;
+
+		@Override
+		public String toString() {
+			return CommonUtils.formatJ("First: %s\nBoth: %s\nSecond: %s",
+					firstOnly, intersection, secondOnly);
+		}
 	}
 }
