@@ -118,4 +118,8 @@ public class StringMap extends LinkedHashMap<String, String> {
 		}
 		return sb.toString();
 	}
+
+	public String firstKey() {
+		return size()==0?null:keySet().iterator().next();
+	}
 }
