@@ -9,6 +9,8 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.parser.structured.StructuredTokenParserContext.NodeAncestorsContextProvider;
 
 public class XmlTokenContext implements Cloneable {
+	public	static final String P_contextResolutionRoot = "P_contextResolutionRoot";
+ 
 	public static XmlTokenContext EMPTY = new XmlTokenContext()
 			.empty();
 
@@ -100,7 +102,6 @@ public class XmlTokenContext implements Cloneable {
 		properties.put(name, "true");
 		return this;
 	}
-
 	public String resolve(String key) {
 		Iterator<XmlTokenContext> itr = contextProvider.contexts();
 		while (itr.hasNext()) {
@@ -125,5 +126,14 @@ public class XmlTokenContext implements Cloneable {
 	public String toString() {
 		return String.format("Ctx:\nproperties: %s\nemit-attr: %s", properties,
 				emitAttributes);
+	}
+
+	public XmlTokenContext contextResolutionRoot() {
+		putTrue(P_contextResolutionRoot);
+		return this;
+	}
+
+	public boolean isContextResolutionRoot() {
+		return is(P_contextResolutionRoot);
 	}
 }
