@@ -34,7 +34,7 @@ public class XmlTokenOutput {
 	}
 
 	public void open(XmlTokenNode outNode, String tag, StringMap attrs) {
-		writeCursor = writeCursor.add().tag(tag).attrs(attrs).append();
+		writeCursor = writeCursor.builder().tag(tag).attrs(attrs).append();
 		writeCursor.open = outNode;
 		outNode.targetNode = writeCursor;
 		context.targetNodeMapped(outNode);
@@ -54,7 +54,7 @@ public class XmlTokenOutput {
 	}
 
 	public void text(String text) {
-		writeCursor.add().text(text).append();
+		writeCursor.builder().text(text).append();
 	}
 
 	public String toXml() {
@@ -63,7 +63,7 @@ public class XmlTokenOutput {
 	}
 
 	public void ensureOpen(XmlTokenNode outNode, String tag) {
-		if (!writeCursor.ancestor().orSelf().has(tag)) {
+		if (!writeCursor.ancestors().orSelf().has(tag)) {
 			open(outNode, tag);
 		}
 	}
@@ -75,7 +75,7 @@ public class XmlTokenOutput {
 	}
 
 	public void pi(String name, String data) {
-		writeCursor.add().processingInstruction().tag(name).text(data).append();
+		writeCursor.builder().processingInstruction().tag(name).text(data).append();
 	}
 
 }

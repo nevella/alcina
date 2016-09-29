@@ -23,7 +23,7 @@ public class StructuredTokenParserContext {
 	public Multimap<XmlToken, List<XmlNode>> matched = new Multimap<>();
 
 	private Map<XmlNode, XmlTokenNode> nodeToken = new LinkedHashMap<>();
-	
+
 	StructuredTokenParser parser;
 
 	StringMap properties = new StringMap();
@@ -136,8 +136,16 @@ public class StructuredTokenParserContext {
 		return outAncestors();
 	}
 
+	public NodeAncestorsContextProvider xmlInputContext(XmlTokenNode outNode) {
+		return new NodeAncestors(outNode, NodeAncestorsTypes.SOURCE);
+	}
+
 	private NodeAncestors outAncestors() {
 		return new NodeAncestors(out.getOutCursor(), NodeAncestorsTypes.TARGET);
+	}
+
+	public XmlTokenNode getNodeToken(XmlNode node) {
+		return nodeToken.get(node);
 	}
 
 	protected void closeOpenOutputWrappers(XmlTokenNode node) {
@@ -205,7 +213,7 @@ public class StructuredTokenParserContext {
 		}
 
 		public NodeAncestorsContext contexts() {
-			return new NodeAncestorsContext(this);
+			return new NodeAncestorsContext(this,isTarget());
 		}
 
 		public Iterable<XmlTokenNode> nodeIterable() {
@@ -214,7 +222,11 @@ public class StructuredTokenParserContext {
 
 		public Iterator<XmlTokenNode> nodeIterator() {
 			return new NodeAncestorIterator(node,
-					types.contains(NodeAncestorsTypes.TARGET));
+					isTarget());
+		}
+
+		private boolean isTarget() {
+			return types.contains(NodeAncestorsTypes.TARGET);
 		}
 
 		public Stream<XmlTokenNode> nodeStream() {
@@ -223,14 +235,17 @@ public class StructuredTokenParserContext {
 	}
 
 	public class NodeAncestorsContext
-			implements Iterator<XmlTokenOutputContext> {
+			implements Iterator<XmlTokenContext> {
 		@SuppressWarnings("unused")
 		private NodeAncestors nodeAncestors;
 
 		private Iterator<XmlTokenNode> itr;
 
-		public NodeAncestorsContext(NodeAncestors nodeAncestors) {
+		private boolean target;
+
+		public NodeAncestorsContext(NodeAncestors nodeAncestors, boolean target) {
 			this.nodeAncestors = nodeAncestors;
+			this.target = target;
 			itr = nodeAncestors.nodeIterator();
 		}
 
@@ -240,15 +255,16 @@ public class StructuredTokenParserContext {
 		}
 
 		@Override
-		public XmlTokenOutputContext next() {
+		public XmlTokenContext next() {
 			XmlTokenNode node = itr.next();
-			return node.token.getOutputContext(node);
+			return target?node.token.getOutputContext(node):node.token.getInputContext(node);
 		}
 	}
 
 	public enum NodeAncestorsTypes {
 		SOURCE, TARGET, NODE
 	}
+
 	public void handleOutOfOrderNode(XmlNode node) {
 		parser.handleNode(node, this);
 		stream.skip(node);

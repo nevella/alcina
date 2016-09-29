@@ -8,8 +8,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.parser.structured.StructuredTokenParserContext.NodeAncestorsContextProvider;
 
-public class XmlTokenOutputContext implements Cloneable {
-	public static XmlTokenOutputContext EMPTY = new XmlTokenOutputContext()
+public class XmlTokenContext implements Cloneable {
+	public static XmlTokenContext EMPTY = new XmlTokenContext()
 			.empty();
 
 	protected StringMap properties = new StringMap();
@@ -26,9 +26,9 @@ public class XmlTokenOutputContext implements Cloneable {
 	private String tag;
 
 	@Override
-	public XmlTokenOutputContext clone() {
+	public XmlTokenContext clone() {
 		try {
-			XmlTokenOutputContext newInstance = getClass().newInstance();
+			XmlTokenContext newInstance = getClass().newInstance();
 			copyProperties(newInstance);
 			return newInstance;
 		} catch (Exception e) {
@@ -36,19 +36,19 @@ public class XmlTokenOutputContext implements Cloneable {
 		}
 	}
 
-	public XmlTokenOutputContext
+	public XmlTokenContext
 			contextProvider(NodeAncestorsContextProvider contextProvider) {
 		this.contextProvider = contextProvider;
 		return this;
 	}
 
-	public void copyProperties(XmlTokenOutputContext newInstance) {
+	public void copyProperties(XmlTokenContext newInstance) {
 		newInstance.properties = properties.clone();
 		newInstance.emitAttributes = emitAttributes.clone();
 		newInstance.seenKeys = new LinkedHashSet<>(seenKeys);
 	}
 
-	public XmlTokenOutputContext emit(String key, String value) {
+	public XmlTokenContext emit(String key, String value) {
 		emitAttributes.put(key, value);
 		return this;
 	}
@@ -77,30 +77,34 @@ public class XmlTokenOutputContext implements Cloneable {
 		return properties.is(key);
 	}
 
-	public XmlTokenOutputContext outputTag(String tag) {
+	public XmlTokenContext outputTag(String tag) {
 		this.tag = tag;
 		return this;
 	}
 
 	public void propertyDelta(String key, boolean add) {
-		properties.setBooleanOrRemove(key, add);
+		if (add) {
+			properties.put(key, key);
+		} else {
+			properties.remove(key);
+		}
 		seenKeys.add(key);
 	}
 
-	public XmlTokenOutputContext put(String key, String value) {
+	public XmlTokenContext put(String key, String value) {
 		properties.put(key, value);
 		return this;
 	}
 
-	public XmlTokenOutputContext putTrue(String name) {
+	public XmlTokenContext putTrue(String name) {
 		properties.put(name, "true");
 		return this;
 	}
 
 	public String resolve(String key) {
-		Iterator<XmlTokenOutputContext> itr = contextProvider.contexts();
+		Iterator<XmlTokenContext> itr = contextProvider.contexts();
 		while (itr.hasNext()) {
-			XmlTokenOutputContext context = itr.next();
+			XmlTokenContext context = itr.next();
 			if (context.properties.containsKey(key)) {
 				return context.properties.get(key);
 			}
@@ -112,16 +116,14 @@ public class XmlTokenOutputContext implements Cloneable {
 		return Boolean.valueOf(resolve(key));
 	}
 
-	protected XmlTokenOutputContext empty() {
+	protected XmlTokenContext empty() {
 		this.empty = true;
 		return this;
 	}
 
-	
-
 	@Override
 	public String toString() {
-		return String.format("Ctx:\nemit: %s\nattr: %s", properties,
+		return String.format("Ctx:\nproperties: %s\nemit-attr: %s", properties,
 				emitAttributes);
 	}
 }

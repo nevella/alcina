@@ -89,12 +89,13 @@ public class StringMap extends LinkedHashMap<String, String> {
 		super(otherMap);
 	}
 
+
 	@Override
 	public StringMap clone() {
 		return new StringMap(this);
 	}
 
-	public boolean is(String key){
+	public boolean is(String key) {
 		return Boolean.valueOf(get(key));
 	}
 
@@ -105,6 +106,7 @@ public class StringMap extends LinkedHashMap<String, String> {
 			remove(key);
 		}
 	}
+
 	public String toPropertyString() {
 		StringBuilder sb = new StringBuilder();
 		for (Map.Entry<String, String> entry : entrySet()) {
@@ -120,6 +122,6 @@ public class StringMap extends LinkedHashMap<String, String> {
 	}
 
 	public String firstKey() {
-		return size()==0?null:keySet().iterator().next();
+		return size() == 0 ? null : keySet().iterator().next();
 	}
 }

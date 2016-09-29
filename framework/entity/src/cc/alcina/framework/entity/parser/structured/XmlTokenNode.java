@@ -21,9 +21,9 @@ public class XmlTokenNode {
 
 	public XmlToken token;
 	
-	private XmlTokenOutputContext nodeContext;
+	private XmlTokenContext nodeContext;
 	
-	public <T extends XmlTokenOutputContext> T nodeContext(Supplier<T> supplier){
+	public <T extends XmlTokenContext> T nodeContext(Supplier<T> supplier){
 		if(nodeContext==null){
 			nodeContext=supplier.get();
 		}

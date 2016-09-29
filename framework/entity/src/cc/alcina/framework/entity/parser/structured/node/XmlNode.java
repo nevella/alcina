@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.parser.structured.node;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -53,11 +54,11 @@ public class XmlNode {
 		this(from.node, from.doc);
 	}
 
-	public XmlNodeBuilder add() {
+	public XmlNodeBuilder builder() {
 		return new XmlNodeBuilder(this);
 	}
 
-	public XmlNodeAncestor ancestor() {
+	public XmlNodeAncestor ancestors() {
 		if (ancestor == null) {
 			ancestor = new XmlNodeAncestor();
 		}
@@ -74,10 +75,12 @@ public class XmlNode {
 	public StringMap attributes() {
 		if (attributes == null) {
 			attributes = new StringMap();
-			NamedNodeMap nnm = node.getAttributes();
-			for (int idx = 0; idx < nnm.getLength(); idx++) {
-				Attr attr = (Attr) nnm.item(idx);
-				attributes.put(attr.getName(), attr.getValue());
+			if (isElement()) {
+				NamedNodeMap nnm = node.getAttributes();
+				for (int idx = 0; idx < nnm.getLength(); idx++) {
+					Attr attr = (Attr) nnm.item(idx);
+					attributes.put(attr.getName(), attr.getValue());
+				}
 			}
 		}
 		return attributes;
@@ -222,6 +225,16 @@ public class XmlNode {
 			orSelf = true;
 			return this;
 		}
+
+		public List<XmlNode> list() {
+			List<XmlNode> result = new ArrayList<>();
+			XmlNode cursor = XmlNode.this;
+			while (cursor != null && cursor.isElement()) {
+				result.add(cursor);
+				cursor = cursor.parent();
+			}
+			return result;
+		}
 	}
 
 	public class XmlNodeChildren {
@@ -284,6 +297,10 @@ public class XmlNode {
 			return CommonUtils.reverse(flatten().collect(Collectors.toList()))
 					.stream().filter(n -> !n.isElement()).findFirst()
 					.orElse(null);
+		}
+
+		public void append(XmlNode xmlNode) {
+			XmlNode.this.node.appendChild(xmlNode.node);
 		}
 	}
 

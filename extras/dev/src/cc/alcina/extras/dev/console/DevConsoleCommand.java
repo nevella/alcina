@@ -183,7 +183,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		return argv.length <= argIndex ? defaultValue : argv[argIndex];
 	}
 
-	protected String runSubcommand(DevConsoleCommand sub, String[] argv)
+	public String runSubcommand(DevConsoleCommand sub, String[] argv)
 			throws Exception {
 		console.prepareCommand(sub);
 		return sub.run(argv == null ? new String[0] : argv);

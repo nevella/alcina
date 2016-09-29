@@ -6,7 +6,7 @@ import org.w3c.dom.Node;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class XmlNodeBuilder {
-	private XmlNode addTo;
+	private XmlNode relativeTo;
 
 	private String tag;
 
@@ -14,13 +14,13 @@ public class XmlNodeBuilder {
 
 	private boolean processingInstruction;
 
-	private StringMap attrs;
+	private StringMap attrs=new StringMap();
 
 	public XmlNodeBuilder() {
 	}
 
-	public XmlNodeBuilder(XmlNode addTo) {
-		this.addTo = addTo;
+	public XmlNodeBuilder(XmlNode relativeTo) {
+		this.relativeTo = relativeTo;
 	}
 
 	public XmlNodeBuilder tag(String tag) {
@@ -40,13 +40,19 @@ public class XmlNodeBuilder {
 
 	public XmlNode append() {
 		XmlNode node = generate();
-		addTo.node.appendChild(node.node);
-		addTo.children.invalidate();
+		relativeTo.node.appendChild(node.node);
+		relativeTo.children.invalidate();
+		return node;
+	}
+	public XmlNode before() {
+		XmlNode node = generate();
+		relativeTo.node.getParentNode().insertBefore(node.node, relativeTo.node);
+		relativeTo.parent().invalidate();
 		return node;
 	}
 
 	private XmlDoc doc() {
-		return addTo.doc;
+		return relativeTo.doc;
 	}
 
 	private XmlNode generate() {
