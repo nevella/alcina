@@ -343,13 +343,13 @@ public class XmlNode {
 		}
 
 		public XmlNode node(String xpath) {
-			Element element = eval.getElementByXpath(xpath, node);
-			return doc.nodeFor(element);
+			Node domNode = eval.getNodeByXpath(xpath, node);
+			return doc.nodeFor(domNode);
 		}
 
 		public List<XmlNode> nodes(String xpath) {
-			List<Element> elements = eval.getElementsByXpath(xpath, node);
-			return elements.stream().map(doc::nodeFor)
+			List<Node> domNodes = eval.getNodesByXpath(xpath, node);
+			return domNodes.stream().map(doc::nodeFor)
 					.collect(Collectors.toList());
 		}
 

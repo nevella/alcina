@@ -9,6 +9,13 @@ import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.parser.structured.XmlTokenNode;
 
 public class XmlDoc extends XmlNode {
+	public XmlDoc(Document domDocument) {
+		super(null, null);
+		this.node = domDocument;
+		nodes.put(this.node, this);
+		this.doc = this;
+	}
+
 	public XmlDoc(String xml) {
 		super(null, null);
 		try {
@@ -34,7 +41,6 @@ public class XmlDoc extends XmlNode {
 	protected XmlNode nodeFor(Node domNode) {
 		return nodes.get(domNode);
 	}
-
 
 	void register(XmlNode xmlNode) {
 	}
