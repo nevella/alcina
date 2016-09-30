@@ -156,10 +156,8 @@ public class StructuredTokenParserContext {
 				.hasNext();) {
 			XmlTokenNode openNode = itr.next();
 			if (!openNode.sourceNode.isAncestorOf(node.sourceNode)
-					&& openNode.targetNode != null
-					) {
-				out.close(openNode,
-						openNode.targetNode.name());
+					&& openNode.targetNode != null) {
+				out.close(openNode, openNode.targetNode.name());
 				itr.remove();
 			}
 		}
@@ -309,7 +307,7 @@ public class StructuredTokenParserContext {
 
 	protected <T extends OutputContextRoot> T
 			outputContextRoot(XmlTokenNode node, Supplier<T> supplier) {
-		if(node==null){
+		if (node == null) {
 			return (T) outputContextRoots.entrySet().iterator().next()
 					.getValue();
 		}
@@ -329,6 +327,7 @@ public class StructuredTokenParserContext {
 				} else {
 					root = supplier.get();
 					root.node = rootNode;
+					outputContextRoots.put(rootNode, root);
 				}
 			}
 			outputContextRoots.put(node, root);
