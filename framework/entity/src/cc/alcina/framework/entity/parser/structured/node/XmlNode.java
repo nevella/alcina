@@ -142,6 +142,9 @@ public class XmlNode {
 	public boolean isEmptyTextContent() {
 		return textContent().isEmpty();
 	}
+	public boolean isNonWhitespaceTextContent() {
+		return ntc().length()>0;
+	}
 
 	public String name() {
 		return node.getNodeName();
