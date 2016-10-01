@@ -3,7 +3,6 @@ package cc.alcina.framework.entity.parser.structured.node;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -16,6 +15,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.ProcessingInstruction;
+import org.w3c.dom.Text;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -54,10 +54,6 @@ public class XmlNode {
 		this(from.node, from.doc);
 	}
 
-	public XmlNodeBuilder builder() {
-		return new XmlNodeBuilder(this);
-	}
-
 	public XmlNodeAncestor ancestors() {
 		if (ancestor == null) {
 			ancestor = new XmlNodeAncestor();
@@ -87,7 +83,11 @@ public class XmlNode {
 	}
 
 	public boolean attrIs(String key, String value) {
-		return attributes().get(key).equals(value);
+		return attributes().getOrDefault(key, "").equals(value);
+	}
+
+	public XmlNodeBuilder builder() {
+		return new XmlNodeBuilder(this);
 	}
 
 	public XmlNodeDebug debug() {
@@ -139,6 +139,9 @@ public class XmlNode {
 	public boolean isText() {
 		return node.getNodeType() == Node.TEXT_NODE;
 	}
+	public boolean isEmptyTextContent() {
+		return textContent().isEmpty();
+	}
 
 	public String name() {
 		return node.getNodeName();
@@ -156,9 +159,19 @@ public class XmlNode {
 		return doc.nodeFor(node.getParentNode());
 	}
 
+	public void removeFromParent() {
+		parent().invalidate();
+		node.getParentNode().removeChild(node);
+	}
+
 	public XmlNode setAttr(String key, String value) {
 		((Element) node).setAttribute(key, value);
 		return this;
+	}
+
+	public void setText(String text) {
+		((Text) node).setData(text);
+		invalidate();
 	}
 
 	public boolean tagIs(String tagName) {
@@ -169,6 +182,10 @@ public class XmlNode {
 
 	public boolean tagIsOneOf(Collection<String> tags) {
 		return isElement() && tags.contains(name());
+	}
+
+	public boolean textContains(String string) {
+		return textContent().toLowerCase().contains(string.toLowerCase());
 	}
 
 	public String textContent() {
@@ -183,7 +200,8 @@ public class XmlNode {
 	@Override
 	public String toString() {
 		return CommonUtils.trimToWsChars(
-				XmlUtils.streamXML(node).replace(CommonUtils.XML_PI, ""), 100);
+				XmlUtils.streamXML(node).replace(CommonUtils.XML_PI, ""), 255,
+				true);
 	}
 
 	public XmlNodeXpath xpath() {
@@ -221,11 +239,6 @@ public class XmlNode {
 			return get(tag) != null;
 		}
 
-		public XmlNodeAncestor orSelf() {
-			orSelf = true;
-			return this;
-		}
-
 		public List<XmlNode> list() {
 			List<XmlNode> result = new ArrayList<>();
 			XmlNode cursor = XmlNode.this;
@@ -235,10 +248,27 @@ public class XmlNode {
 			}
 			return result;
 		}
+
+		public XmlNodeAncestor orSelf() {
+			orSelf = true;
+			return this;
+		}
+
+		public boolean isFirstChild() {
+			return parent().children.isFirstChild(XmlNode.this);
+		}
 	}
 
 	public class XmlNodeChildren {
 		private List<XmlNode> nodes;
+
+		public void append(XmlNode xmlNode) {
+			XmlNode.this.node.appendChild(xmlNode.node);
+		}
+
+		public boolean isFirstChild(XmlNode xmlNode) {
+			return firstNode() == xmlNode;
+		}
 
 		public boolean contains(String tag) {
 			return elements().stream().anyMatch(xn -> xn.tagIs(tag));
@@ -250,7 +280,20 @@ public class XmlNode {
 		}
 
 		public XmlNode firstElement() {
-			return elements().get(0);
+			return CommonUtils.first(elements());
+		}
+
+		public XmlNode firstNode() {
+			return CommonUtils.first(nodes());
+		}
+
+		public XmlNode firstNonElementChild() {
+			return flatten().filter(n -> !n.isElement()).findFirst()
+					.orElse(null);
+		}
+
+		public Stream<XmlNode> flat() {
+			return flatten();
 		}
 
 		public Stream<XmlNode> flatten(String... tags) {
@@ -264,6 +307,12 @@ public class XmlNode {
 
 		public void invalidate() {
 			XmlNode.this.invalidate();
+		}
+
+		public XmlNode lastNonElementChild() {
+			return CommonUtils.reverse(flatten().collect(Collectors.toList()))
+					.stream().filter(n -> !n.isElement()).findFirst()
+					.orElse(null);
 		}
 
 		public List<XmlNode> nodes() {
@@ -286,21 +335,6 @@ public class XmlNode {
 		public boolean soleElement(String tag) {
 			List<XmlNode> elts = elements();
 			return elts.size() == 1 && elts.get(0).tagIs(tag);
-		}
-
-		public XmlNode firstNonElementChild() {
-			return flatten().filter(n -> !n.isElement()).findFirst()
-					.orElse(null);
-		}
-
-		public XmlNode lastNonElementChild() {
-			return CommonUtils.reverse(flatten().collect(Collectors.toList()))
-					.stream().filter(n -> !n.isElement()).findFirst()
-					.orElse(null);
-		}
-
-		public void append(XmlNode xmlNode) {
-			XmlNode.this.node.appendChild(xmlNode.node);
 		}
 	}
 
@@ -362,5 +396,20 @@ public class XmlNode {
 			return Optional.ofNullable(node(xpath)).map(XmlNode::textContent)
 					.orElse("");
 		}
+	}
+
+	public class XmlNodeRelative {
+		public boolean hasPreviousSibling() {
+			return node.getPreviousSibling() != null;
+		}
+
+		public void insertBefore(XmlNode node) {
+			parent().invalidate();
+			parent().node.insertBefore(node.node, XmlNode.this.node);
+		}
+	}
+
+	public XmlNodeRelative relative() {
+		return new XmlNodeRelative();
 	}
 }
