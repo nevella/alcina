@@ -19,7 +19,7 @@ public class XmlTokenOutput {
 
 	public void close(XmlTokenNode outNode, String tag) {
 		if (!writeCursor.tagIs(tag)) {
-			System.out.println(outDoc.fullToString());
+			System.out.println(XmlUtils.prettyPrintWithDOM3LS(outDoc.domDoc()));
 			throw new RuntimeException(
 					String.format("closing unmatched tag : %s -> %s",
 							writeCursor.name(), tag));
@@ -75,7 +75,7 @@ public class XmlTokenOutput {
 	}
 
 	public void pi(String name, String data) {
-		writeCursor.builder().processingInstruction().tag(name).text(data).append();
+		writeCursor.builder().processingInstruction().tag(name).text(data)
+				.append();
 	}
-
 }
