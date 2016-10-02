@@ -68,6 +68,9 @@ public class StructuredTokenParserContext {
 	}
 
 	public boolean isSubCategory(Class clazz) {
+		if (out.getOutCursor() == null) {
+			return false;
+		}
 		XmlNode cursor = out.getOutCursor().sourceNode;
 		while (cursor != null) {
 			if (nodeToken.get(cursor).token.getSubCategory() == clazz) {
@@ -179,6 +182,9 @@ public class StructuredTokenParserContext {
 		private boolean root;
 
 		public NodeAncestorIterator(XmlTokenNode tokenNode, boolean output) {
+			if (tokenNode == null) {
+				return;
+			}
 			this.tokenNode = tokenNode;
 			cursor = output ? tokenNode.targetNode : tokenNode.sourceNode;
 		}
@@ -214,7 +220,7 @@ public class StructuredTokenParserContext {
 		}
 	}
 
-	interface NodeAncestorsContextProvider {
+	public interface NodeAncestorsContextProvider {
 		public NodeAncestorsContext contexts();
 	}
 
@@ -258,7 +264,8 @@ public class StructuredTokenParserContext {
 
 		public XmlTokenNode root() {
 			// last
-			return nodeStream().reduce((first, second) -> second).get();
+			return node == null ? null
+					: nodeStream().reduce((first, second) -> second).get();
 		}
 	}
 
