@@ -996,7 +996,7 @@ public class SEUtilities {
 		String query = url.getQuery();
 		String[] pairs = query.split("&");
 		for (String pair : pairs) {
-			if(pair.isEmpty()){
+			if (pair.isEmpty()) {
 				continue;
 			}
 			int idx = pair.indexOf("=");
@@ -1256,5 +1256,37 @@ public class SEUtilities {
 
 	public static enum OsType {
 		Windows, MacOS, Unix
+	}
+
+	private static Pattern sq_1 = Pattern.compile("(?<=\\s|^)\"");
+	private static Pattern sq_2 = Pattern.compile("(?<=\\S)\"");
+	private static Pattern sq_3 = Pattern.compile("(?<=\\s|^)[`'´]");
+	private static Pattern sq_4 = Pattern.compile("(?<=\\S|^)[`'´]");
+	private static Pattern sq_5 = Pattern.compile("[`'´]+");
+	private static Pattern sq_6 = Pattern.compile("[`'´]{2,}");
+
+	public static String smartQuotes(String text, boolean priorNonWhitespace) {
+		if(sq_5.matcher(text).find()){
+			if(priorNonWhitespace){
+				text="z"+text;
+			}
+			Matcher m =sq_6.matcher(text);
+			text=m.replaceAll("\"");
+			m =sq_1.matcher(text);
+			text=m.replaceAll("“");
+			m =sq_2.matcher(text);
+			text=m.replaceAll("”");
+			m =sq_3.matcher(text);
+			text=m.replaceAll("‘");
+			m =sq_4.matcher(text);
+			text=m.replaceAll("’");
+			if(priorNonWhitespace){
+				text=text.substring(1);
+			}
+			if(text.equals("‘. ")){
+				int debug=3;
+			}
+		}
+		return text;
 	}
 }

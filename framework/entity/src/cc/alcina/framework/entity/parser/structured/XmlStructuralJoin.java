@@ -7,13 +7,13 @@ import java.util.function.Supplier;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 
-public class XmlTokenNode {
-	public XmlTokenNode(XmlNode node, XmlToken token) {
+public class XmlStructuralJoin {
+	public XmlStructuralJoin(XmlNode node, XmlToken token) {
 		this.sourceNode = node;
 		this.token = token;
 	}
 
-	public List<XmlTokenNode> additionalSources = new ArrayList<>();
+	public List<XmlStructuralJoin> additionalSources = new ArrayList<>();
 
 	public XmlNode sourceNode;
 
@@ -59,7 +59,7 @@ public class XmlTokenNode {
 		return SEUtilities.normalizeWhitespaceAndTrim(sourceTextContent());
 	}
 
-	public XmlTokenNode copy() {
-		return new XmlTokenNode(sourceNode, token);
+	public XmlStructuralJoin copy() {
+		return new XmlStructuralJoin(sourceNode, token);
 	}
 }

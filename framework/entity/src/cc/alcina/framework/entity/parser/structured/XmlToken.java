@@ -18,12 +18,12 @@ public abstract class XmlToken<C extends StructuredTokenParserContext> {
 
 	public abstract boolean matches(C context, XmlNode node);
 
-	public void onMatch(C context, XmlTokenNode outNode) {
+	public void onMatch(C context, XmlStructuralJoin outNode) {
 		context.wasMatched(outNode);
 		onMatch0(context, outNode);
 	}
 
-	protected abstract void onMatch0(C context, XmlTokenNode outNode);
+	protected abstract void onMatch0(C context, XmlStructuralJoin outNode);
 
 	@Override
 	public String toString() {
@@ -38,11 +38,11 @@ public abstract class XmlToken<C extends StructuredTokenParserContext> {
 		return null;
 	}
 
-	public XmlTokenContext getOutputContext(XmlTokenNode node) {
+	public XmlTokenContext getOutputContext(XmlStructuralJoin node) {
 		return XmlTokenContext.EMPTY;
 	}
 
-	public XmlTokenContext getInputContext(XmlTokenNode node) {
+	public XmlTokenContext getInputContext(XmlStructuralJoin node) {
 		XmlTokenContext tokenContext = new XmlTokenContext();
 		tokenContext.properties = node.sourceNode.attributes();
 		return tokenContext;

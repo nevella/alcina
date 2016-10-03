@@ -12,12 +12,19 @@ public class XmlTokenOutput {
 
 	public StructuredTokenParserContext context;
 
+
+	private XmlNode lastTextNode;
+
+	public XmlNode getLastTextNode() {
+		return this.lastTextNode;
+	}
+
 	public XmlTokenOutput(XmlDoc outDoc) {
 		this.outDoc = outDoc;
 		writeCursor = outDoc.root();
 	}
 
-	public void close(XmlTokenNode outNode, String tag) {
+	public void close(XmlStructuralJoin outNode, String tag) {
 		if (!writeCursor.tagIs(tag)) {
 			System.out.println(XmlUtils.prettyPrintWithDOM3LS(outDoc.domDoc()));
 			throw new RuntimeException(
@@ -29,18 +36,18 @@ public class XmlTokenOutput {
 		writeCursor = writeCursor.parent();
 	}
 
-	public void open(XmlTokenNode outNode, String tag) {
+	public void open(XmlStructuralJoin outNode, String tag) {
 		open(outNode, tag, new StringMap());
 	}
 
-	public void open(XmlTokenNode outNode, String tag, StringMap attrs) {
+	public void open(XmlStructuralJoin outNode, String tag, StringMap attrs) {
 		writeCursor = writeCursor.builder().tag(tag).attrs(attrs).append();
 		writeCursor.open = outNode;
 		outNode.targetNode = writeCursor;
 		context.targetNodeMapped(outNode);
 	}
 
-	XmlTokenNode getOutCursor() {
+	XmlStructuralJoin getOutCursor() {
 		return writeCursor.open;
 	}
 
@@ -48,13 +55,16 @@ public class XmlTokenOutput {
 		return writeCursor;
 	}
 
-	public void tag(XmlTokenNode node, String tag) {
+	public void tag(XmlStructuralJoin node, String tag) {
 		open(node, tag);
 		close(node, tag);
 	}
 
 	public void text(String text) {
-		writeCursor.builder().text(text).append();
+		if(text.isEmpty()){
+			return;
+		}
+		this.lastTextNode = writeCursor.builder().text(text).append();
 	}
 
 	public String toXml() {
@@ -62,13 +72,13 @@ public class XmlTokenOutput {
 				outDoc.domDoc().getDocumentElement().getFirstChild());
 	}
 
-	public void ensureOpen(XmlTokenNode outNode, String tag) {
+	public void ensureOpen(XmlStructuralJoin outNode, String tag) {
 		if (!writeCursor.ancestors().orSelf().has(tag)) {
 			open(outNode, tag);
 		}
 	}
 
-	public void ensureClosed(XmlTokenNode outNode, String tag) {
+	public void ensureClosed(XmlStructuralJoin outNode, String tag) {
 		if (writeCursor.tagIs(tag)) {
 			close(outNode, tag);
 		}
@@ -78,4 +88,5 @@ public class XmlTokenOutput {
 		writeCursor.builder().processingInstruction().tag(name).text(data)
 				.append();
 	}
+
 }

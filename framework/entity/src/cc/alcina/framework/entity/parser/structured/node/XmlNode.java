@@ -23,7 +23,7 @@ import cc.alcina.framework.entity.OptimizingXpathEvaluator;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.XpathHelper;
-import cc.alcina.framework.entity.parser.structured.XmlTokenNode;
+import cc.alcina.framework.entity.parser.structured.XmlStructuralJoin;
 
 public class XmlNode {
 	protected Node node;
@@ -32,9 +32,9 @@ public class XmlNode {
 
 	public XmlNodeChildren children;
 
-	public XmlTokenNode open;
+	public XmlStructuralJoin open;
 
-	public XmlTokenNode close;
+	public XmlStructuralJoin close;
 
 	private String normalisedTextContent;
 
@@ -139,11 +139,13 @@ public class XmlNode {
 	public boolean isText() {
 		return node.getNodeType() == Node.TEXT_NODE;
 	}
+
 	public boolean isEmptyTextContent() {
 		return textContent().isEmpty();
 	}
+
 	public boolean isNonWhitespaceTextContent() {
-		return ntc().length()>0;
+		return ntc().length() > 0;
 	}
 
 	public String name() {
@@ -260,6 +262,17 @@ public class XmlNode {
 		public boolean isFirstChild() {
 			return parent().children.isFirstChild(XmlNode.this);
 		}
+
+		public boolean has(XmlNode test) {
+			XmlNode node = XmlNode.this;
+			while (node != null) {
+				if (node == test) {
+					return true;
+				}
+				node = node.parent();
+			}
+			return false;
+		}
 	}
 
 	public class XmlNodeChildren {
@@ -312,10 +325,8 @@ public class XmlNode {
 			XmlNode.this.invalidate();
 		}
 
-		public XmlNode lastNonElementChild() {
-			return CommonUtils.reverse(flatten().collect(Collectors.toList()))
-					.stream().filter(n -> !n.isElement()).findFirst()
-					.orElse(null);
+		public XmlNode lastNode() {
+			return CommonUtils.last(nodes());
 		}
 
 		public List<XmlNode> nodes() {
@@ -338,6 +349,29 @@ public class XmlNode {
 		public boolean soleElement(String tag) {
 			List<XmlNode> elts = elements();
 			return elts.size() == 1 && elts.get(0).tagIs(tag);
+		}
+
+		public XmlNode lastElementNode() {
+			List<XmlNode> nodes = nodes();
+			for (int idx = nodes.size() - 1; idx >= 0; idx--) {
+				XmlNode kid = nodes.get(idx);
+				if (kid.isElement()) {
+					return kid;
+				}
+			}
+			return null;
+		}
+
+		public XmlNode lastNonEmptyTextNode() {
+			List<XmlNode> nodes = nodes();
+			for (int idx = nodes.size() - 1; idx >= 0; idx--) {
+				XmlNode kid = nodes.get(idx);
+				if (kid.isElement()
+						|| kid.isText() && !kid.isEmptyTextContent()) {
+					return kid;
+				}
+			}
+			return null;
 		}
 	}
 
