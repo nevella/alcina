@@ -238,7 +238,7 @@ public class XmlNode {
 				return XmlNode.this;
 			}
 			XmlNode cursor = XmlNode.this;
-			while (cursor != null && cursor.isElement()) {
+			while (cursor != null) {
 				if (cursor.tagIsOneOf(tagList)) {
 					return cursor;
 				}
@@ -254,7 +254,7 @@ public class XmlNode {
 		public List<XmlNode> list() {
 			List<XmlNode> result = new ArrayList<>();
 			XmlNode cursor = XmlNode.this;
-			while (cursor != null && cursor.isElement()) {
+			while (cursor != null) {
 				result.add(cursor);
 				cursor = cursor.parent();
 			}
