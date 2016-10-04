@@ -232,16 +232,23 @@ public class XmlNode {
 	public class XmlNodeAncestor {
 		private boolean orSelf = false;
 
-		public XmlNode get(String tag) {
-			if (orSelf && tagIs(tag)) {
+		public XmlNode get(String... tags) {
+			List<String> tagList = Arrays.asList(tags);
+			if (orSelf && tagIsOneOf(tagList)) {
 				return XmlNode.this;
 			}
-			Element ancestor = XmlUtils.getAncestorWithTagName(node, tag);
-			return ancestor == null ? null : doc.nodeFor(ancestor);
+			XmlNode cursor = XmlNode.this;
+			while (cursor != null && cursor.isElement()) {
+				if (cursor.tagIsOneOf(tagList)) {
+					return cursor;
+				}
+				cursor = cursor.parent();
+			}
+			return null;
 		}
 
-		public boolean has(String tag) {
-			return get(tag) != null;
+		public boolean has(String... tags) {
+			return get(tags) != null;
 		}
 
 		public List<XmlNode> list() {
