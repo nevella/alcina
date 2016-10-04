@@ -311,20 +311,8 @@ public class XmlUtils {
 	}
 
 	public static void insertAfter(Node newNode, Node insertAfter) {
-		Element el = (Element) insertAfter.getParentNode();
-		NodeList nl = el.getChildNodes();
-		boolean foundAfter = false;
-		for (int i = 0; i < nl.getLength(); i++) {
-			Node n = nl.item(i);
-			if (foundAfter) {
-				el.insertBefore(newNode, n);
-				return;
-			}
-			if (n == insertAfter) {
-				foundAfter = true;
-			}
-		}
-		el.appendChild(newNode);
+		insertAfter.getParentNode().insertBefore(newNode,
+				insertAfter.getNextSibling());
 	}
 
 	public static boolean isAncestorOf(Node possParent, Node node) {
@@ -391,7 +379,8 @@ public class XmlUtils {
 
 	public static Element lastElementChild(Element element) {
 		NodeList childNodes = element.getChildNodes();
-		for (int i = childNodes.getLength() - 1; i >= 0; i--) {
+		int length = childNodes.getLength();
+		for (int i = length - 1; i >= 0; i--) {
 			Node node = childNodes.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
 				return lastElementChild((Element) node);
@@ -402,7 +391,8 @@ public class XmlUtils {
 
 	public static Text lastNonWsTextChild(Element element) {
 		NodeList childNodes = element.getChildNodes();
-		for (int i = childNodes.getLength() - 1; i >= 0; i--) {
+		int length = childNodes.getLength();
+		for (int i = length - 1; i >= 0; i--) {
 			Node node = childNodes.item(i);
 			if (node.getNodeType() == Node.TEXT_NODE && !SEUtilities
 					.isWhitespaceOrEmpty(node.getTextContent())) {
@@ -486,7 +476,8 @@ public class XmlUtils {
 	public static void moveKids(Node old, Node newNode) {
 		NodeList nl = old.getChildNodes();
 		Node lastChild = null;
-		for (int i = nl.getLength() - 1; i >= 0; i--) {
+		int length = nl.getLength();
+		for (int i = length - 1; i >= 0; i--) {
 			Node child = nl.item(i);
 			newNode.insertBefore(child, lastChild);
 			lastChild = child;
@@ -495,9 +486,11 @@ public class XmlUtils {
 
 	public static List<Element> nodeListToElementList(NodeList nl) {
 		List<Element> rVal = new ArrayList<Element>();
-		for (int i = 0; i < nl.getLength(); i++) {
-			if (nl.item(i).getNodeType() == Node.ELEMENT_NODE) {
-				rVal.add((Element) nl.item(i));
+		int length = nl.getLength();
+		for (int i = 0; i < length; i++) {
+			Node item = nl.item(i);
+			if (item.getNodeType() == Node.ELEMENT_NODE) {
+				rVal.add((Element) item);
 			}
 		}
 		return rVal;
@@ -506,9 +499,11 @@ public class XmlUtils {
 	public static List<Element> nodeListToElementList(NodeList nl,
 			String tagname) {
 		List<Element> rVal = new ArrayList<Element>();
-		for (int i = 0; i < nl.getLength(); i++) {
-			if (nl.item(i).getNodeType() == Node.ELEMENT_NODE) {
-				Element elt = (Element) nl.item(i);
+		int length = nl.getLength();
+		for (int i = 0; i < length; i++) {
+			Node item = nl.item(i);
+			if (item.getNodeType() == Node.ELEMENT_NODE) {
+				Element elt = (Element) item;
 				if (elt.getTagName().equalsIgnoreCase(tagname)) {
 					rVal.add(elt);
 				}
@@ -519,7 +514,8 @@ public class XmlUtils {
 
 	public static List<Node> nodeListToList(NodeList nl) {
 		List<Node> rVal = new ArrayList<Node>();
-		for (int i = 0; i < nl.getLength(); i++) {
+		int length = nl.getLength();
+		for (int i = 0; i < length; i++) {
 			rVal.add(nl.item(i));
 		}
 		return rVal;
@@ -712,7 +708,8 @@ public class XmlUtils {
 		DocumentFragment newNode = doc.createDocumentFragment();
 		NodeList nl = oldNode.getChildNodes();
 		Node refChild = null;
-		for (int i = nl.getLength() - 1; i >= 0; i--) {
+		int length = nl.getLength();
+		for (int i = length - 1; i >= 0; i--) {
 			Node child = nl.item(i);
 			oldNode.removeChild(child);
 			newNode.insertBefore(child, refChild);
@@ -1090,7 +1087,8 @@ public class XmlUtils {
 		NodeList siblings = n.getParentNode().getChildNodes();
 		int index = 0;
 		short nodeType = n.getNodeType();
-		for (int i = 0; i < siblings.getLength(); i++) {
+		int length = siblings.getLength();
+		for (int i = 0; i < length; i++) {
 			Node test = siblings.item(i);
 			if (test.getNodeType() == nodeType) {
 				if (nodeType == Node.ELEMENT_NODE) {
@@ -1120,7 +1118,8 @@ public class XmlUtils {
 
 	public static Text getFirstTextChild(Node node) {
 		NodeList nl = node.getChildNodes();
-		for (int i = 0; i < nl.getLength(); i++) {
+		int length = nl.getLength();
+		for (int i = 0; i < length; i++) {
 			node = nl.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
 				Text t = getFirstTextChild(node);
