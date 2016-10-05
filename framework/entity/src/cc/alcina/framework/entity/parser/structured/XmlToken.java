@@ -6,6 +6,10 @@ public abstract class XmlToken<C extends StructuredTokenParserContext> {
 	protected String name;
 
 	protected abstract Class getCategory();
+	
+	public XmlToken matchOrderBefore(){
+		return null;
+	}
 
 	protected Class getSubCategory() {
 		return getCategory();

@@ -90,6 +90,10 @@ public class XmlNode {
 		return new XmlNodeBuilder(this);
 	}
 
+	public XmlNode cloneNode(boolean deep) {
+		return doc.nodeFor(node.cloneNode(deep));
+	}
+
 	public XmlNodeDebug debug() {
 		return new XmlNodeDebug();
 	}
@@ -132,20 +136,20 @@ public class XmlNode {
 		return node.getNodeType() == Node.ELEMENT_NODE;
 	}
 
-	public boolean isProcessingInstruction() {
-		return node.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE;
-	}
-
-	public boolean isText() {
-		return node.getNodeType() == Node.TEXT_NODE;
-	}
-
 	public boolean isEmptyTextContent() {
 		return textContent().isEmpty();
 	}
 
 	public boolean isNonWhitespaceTextContent() {
 		return ntc().length() > 0;
+	}
+
+	public boolean isProcessingInstruction() {
+		return node.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE;
+	}
+
+	public boolean isText() {
+		return node.getNodeType() == Node.TEXT_NODE;
 	}
 
 	public String name() {
@@ -164,9 +168,18 @@ public class XmlNode {
 		return doc.nodeFor(node.getParentNode());
 	}
 
+	public XmlNodeRelative relative() {
+		return new XmlNodeRelative();
+	}
+
 	public void removeFromParent() {
 		parent().invalidate();
 		node.getParentNode().removeChild(node);
+	}
+
+	public void replaceWith(XmlNode other) {
+		relative().insertBefore(other);
+		removeFromParent();
 	}
 
 	public XmlNode setAttr(String key, String value) {
@@ -189,6 +202,17 @@ public class XmlNode {
 		return isElement() && tags.contains(name());
 	}
 
+	public boolean tagIsOneOf(String... tags) {
+		if (isElement()) {
+			for (int idx = 0; idx < tags.length; idx++) {
+				if (name().equals(tags[idx])) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	public boolean textContains(String string) {
 		return textContent().toLowerCase().contains(string.toLowerCase());
 	}
@@ -200,6 +224,10 @@ public class XmlNode {
 
 	public boolean textIs(String string) {
 		return ntc().equals(string);
+	}
+
+	public boolean textMatches(String regex) {
+		return textContent().matches(regex);
 	}
 
 	@Override
@@ -251,6 +279,22 @@ public class XmlNode {
 			return get(tags) != null;
 		}
 
+		public boolean has(XmlNode test) {
+			test=test.unwrap();
+			XmlNode node = XmlNode.this.unwrap();
+			while (node != null) {
+				if (node == test) {
+					return true;
+				}
+				node = node.parent();
+			}
+			return false;
+		}
+
+		public boolean isFirstChild() {
+			return parent().children.isFirstChild(XmlNode.this);
+		}
+
 		public List<XmlNode> list() {
 			List<XmlNode> result = new ArrayList<>();
 			XmlNode cursor = XmlNode.this;
@@ -265,21 +309,6 @@ public class XmlNode {
 			orSelf = true;
 			return this;
 		}
-
-		public boolean isFirstChild() {
-			return parent().children.isFirstChild(XmlNode.this);
-		}
-
-		public boolean has(XmlNode test) {
-			XmlNode node = XmlNode.this;
-			while (node != null) {
-				if (node == test) {
-					return true;
-				}
-				node = node.parent();
-			}
-			return false;
-		}
 	}
 
 	public class XmlNodeChildren {
@@ -287,10 +316,7 @@ public class XmlNode {
 
 		public void append(XmlNode xmlNode) {
 			XmlNode.this.node.appendChild(xmlNode.node);
-		}
-
-		public boolean isFirstChild(XmlNode xmlNode) {
-			return firstNode() == xmlNode;
+			invalidate();
 		}
 
 		public boolean contains(String tag) {
@@ -328,12 +354,44 @@ public class XmlNode {
 					|| t.tagIsOneOf(tagArray));
 		}
 
+		public void insertAsFirstChild(XmlNode newChild) {
+			invalidate();
+			node.insertBefore(newChild.node, node.getFirstChild());
+		}
+
 		public void invalidate() {
 			XmlNode.this.invalidate();
 		}
 
+		public boolean isFirstChild(XmlNode xmlNode) {
+			return xmlNode!=null&&firstNode() == xmlNode.unwrap();
+		}
+
+		public XmlNode lastElementNode() {
+			List<XmlNode> nodes = nodes();
+			for (int idx = nodes.size() - 1; idx >= 0; idx--) {
+				XmlNode kid = nodes.get(idx);
+				if (kid.isElement()) {
+					return kid;
+				}
+			}
+			return null;
+		}
+
 		public XmlNode lastNode() {
 			return CommonUtils.last(nodes());
+		}
+
+		public XmlNode lastNonEmptyTextNode() {
+			List<XmlNode> nodes = nodes();
+			for (int idx = nodes.size() - 1; idx >= 0; idx--) {
+				XmlNode kid = nodes.get(idx);
+				if (kid.isElement()
+						|| kid.isText() && !kid.isEmptyTextContent()) {
+					return kid;
+				}
+			}
+			return null;
 		}
 
 		public List<XmlNode> nodes() {
@@ -358,27 +416,12 @@ public class XmlNode {
 			return elts.size() == 1 && elts.get(0).tagIs(tag);
 		}
 
-		public XmlNode lastElementNode() {
-			List<XmlNode> nodes = nodes();
-			for (int idx = nodes.size() - 1; idx >= 0; idx--) {
-				XmlNode kid = nodes.get(idx);
-				if (kid.isElement()) {
-					return kid;
-				}
-			}
-			return null;
+		public boolean isLastChild(XmlNode node) {
+			return node!=null&&lastNode() == node.unwrap();
 		}
 
-		public XmlNode lastNonEmptyTextNode() {
-			List<XmlNode> nodes = nodes();
-			for (int idx = nodes.size() - 1; idx >= 0; idx--) {
-				XmlNode kid = nodes.get(idx);
-				if (kid.isElement()
-						|| kid.isText() && !kid.isEmptyTextContent()) {
-					return kid;
-				}
-			}
-			return null;
+		public boolean isLastElementNode(XmlNode node) {
+			return node!=null&&lastElementNode() == node.unwrap();
 		}
 	}
 
@@ -403,6 +446,23 @@ public class XmlNode {
 				out += ntc;
 			}
 			return out;
+		}
+	}
+
+	public class XmlNodeRelative {
+		public boolean hasPreviousSibling() {
+			return node.getPreviousSibling() != null;
+		}
+
+		public void insertAfter(XmlNode node) {
+			parent().invalidate();
+			parent().node.insertBefore(node.node,
+					XmlNode.this.node.getNextSibling());
+		}
+
+		public void insertBefore(XmlNode node) {
+			parent().invalidate();
+			parent().node.insertBefore(node.node, XmlNode.this.node);
 		}
 	}
 
@@ -442,33 +502,7 @@ public class XmlNode {
 		}
 	}
 
-	public class XmlNodeRelative {
-		public boolean hasPreviousSibling() {
-			return node.getPreviousSibling() != null;
-		}
-
-		public void insertBefore(XmlNode node) {
-			parent().invalidate();
-			parent().node.insertBefore(node.node, XmlNode.this.node);
-		}
-
-		public void insertAfter(XmlNode node) {
-			parent().invalidate();
-			parent().node.insertBefore(node.node,
-					XmlNode.this.node.getNextSibling());
-		}
-	}
-
-	public XmlNodeRelative relative() {
-		return new XmlNodeRelative();
-	}
-
-	public void replaceWith(XmlNode other) {
-		relative().insertBefore(other);
-		removeFromParent();
-	}
-
-	public XmlNode cloneNode(boolean deep) {
-		return doc.nodeFor(node.cloneNode(deep));
+	public XmlNode unwrap() {
+		return this.getClass()==XmlNode.class?this:doc.nodeFor(node);
 	}
 }

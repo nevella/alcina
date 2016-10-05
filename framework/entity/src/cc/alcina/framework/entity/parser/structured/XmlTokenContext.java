@@ -44,6 +44,11 @@ public class XmlTokenContext implements Cloneable {
 		return this;
 	}
 
+	public XmlTokenContext contextResolutionRoot() {
+		putTrue(P_contextResolutionRoot);
+		return this;
+	}
+
 	public void copyProperties(XmlTokenContext newInstance) {
 		newInstance.properties = properties.clone();
 		newInstance.emitAttributes = emitAttributes.clone();
@@ -53,6 +58,10 @@ public class XmlTokenContext implements Cloneable {
 	public XmlTokenContext emit(String key, String value) {
 		emitAttributes.put(key, value);
 		return this;
+	}
+
+	public String get(String key) {
+		return properties.get(key);
 	}
 
 	public StringMap getEmitAttributes() {
@@ -70,13 +79,16 @@ public class XmlTokenContext implements Cloneable {
 	public String getTag() {
 		return this.tag;
 	}
-
 	public boolean hasTag() {
 		return this.tag != null;
 	}
 
 	public boolean is(String key) {
 		return properties.is(key);
+	}
+
+	public boolean isContextResolutionRoot() {
+		return is(P_contextResolutionRoot);
 	}
 
 	public XmlTokenContext outputTag(String tag) {
@@ -92,7 +104,6 @@ public class XmlTokenContext implements Cloneable {
 		}
 		seenKeys.add(key);
 	}
-
 	public XmlTokenContext put(String key, String value) {
 		properties.put(key, value);
 		return this;
@@ -102,6 +113,7 @@ public class XmlTokenContext implements Cloneable {
 		properties.put(name, "true");
 		return this;
 	}
+
 	public String resolve(String key) {
 		Iterator<XmlTokenContext> itr = contextProvider.contexts();
 		while (itr.hasNext()) {
@@ -117,23 +129,14 @@ public class XmlTokenContext implements Cloneable {
 		return Boolean.valueOf(resolve(key));
 	}
 
-	protected XmlTokenContext empty() {
-		this.empty = true;
-		return this;
-	}
-
 	@Override
 	public String toString() {
 		return String.format("Ctx:\nproperties: %s\nemit-attr: %s", properties,
 				emitAttributes);
 	}
 
-	public XmlTokenContext contextResolutionRoot() {
-		putTrue(P_contextResolutionRoot);
+	protected XmlTokenContext empty() {
+		this.empty = true;
 		return this;
-	}
-
-	public boolean isContextResolutionRoot() {
-		return is(P_contextResolutionRoot);
 	}
 }
