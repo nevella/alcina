@@ -451,9 +451,24 @@ public class XmlNode {
 			parent().invalidate();
 			parent().node.insertBefore(node.node, XmlNode.this.node);
 		}
+
+		public void insertAfter(XmlNode node) {
+			parent().invalidate();
+			parent().node.insertBefore(node.node,
+					XmlNode.this.node.getNextSibling());
+		}
 	}
 
 	public XmlNodeRelative relative() {
 		return new XmlNodeRelative();
+	}
+
+	public void replaceWith(XmlNode other) {
+		relative().insertBefore(other);
+		removeFromParent();
+	}
+
+	public XmlNode cloneNode(boolean deep) {
+		return doc.nodeFor(node.cloneNode(deep));
 	}
 }
