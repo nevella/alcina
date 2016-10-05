@@ -29,7 +29,7 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 				.quickNormalisePunctuation(context.content);
 		String content = context.content;
 		if (content.contains(debugMarker)) {
-			int j = 3;
+			int debug = 3;
 		}
 		boolean multiLine = peer.isMultiLine();
 		if (peer.ignoreCitationsInBlock(content)) {
