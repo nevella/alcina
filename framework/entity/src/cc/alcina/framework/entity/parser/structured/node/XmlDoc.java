@@ -38,7 +38,7 @@ public class XmlDoc extends XmlNode {
 	private CachingMap<Node, XmlNode> nodes = new CachingMap<Node, XmlNode>(
 			n -> n == null ? null : new XmlNode(n, this));
 
-	protected XmlNode nodeFor(Node domNode) {
+	public XmlNode nodeFor(Node domNode) {
 		return nodes.get(domNode);
 	}
 
