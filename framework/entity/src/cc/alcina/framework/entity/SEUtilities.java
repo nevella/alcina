@@ -940,6 +940,14 @@ public class SEUtilities {
 		return normalizeWhitespace(input).trim();
 	}
 
+	public static String normalizeWhitespaceBreaking(String input) {
+		//\uE000 is 'unused (private) unicode'
+		input = input.replace("\u00A0", "\uE000");
+		input = normalizeWhitespace(input);
+		input = input.replace("\uE000", "\u00A0");
+		return input;
+	}
+
 	public static boolean notJustWhitespace(String text) {
 		return SEUtilities.normalizeWhitespaceAndTrim(text).length() > 0;
 	}
@@ -1259,32 +1267,37 @@ public class SEUtilities {
 	}
 
 	private static Pattern sq_1 = Pattern.compile("(?<=\\s|^)\"");
+
 	private static Pattern sq_2 = Pattern.compile("(?<=\\S)\"");
+
 	private static Pattern sq_3 = Pattern.compile("(?<=\\s|^)[`'´]");
+
 	private static Pattern sq_4 = Pattern.compile("(?<=\\S|^)[`'´]");
+
 	private static Pattern sq_5 = Pattern.compile("[`'´]+");
+
 	private static Pattern sq_6 = Pattern.compile("[`'´]{2,}");
 
 	public static String smartQuotes(String text, boolean priorNonWhitespace) {
-		if(sq_5.matcher(text).find()){
-			if(priorNonWhitespace){
-				text="z"+text;
+		if (sq_5.matcher(text).find()) {
+			if (priorNonWhitespace) {
+				text = "z" + text;
 			}
-			Matcher m =sq_6.matcher(text);
-			text=m.replaceAll("\"");
-			m =sq_1.matcher(text);
-			text=m.replaceAll("“");
-			m =sq_2.matcher(text);
-			text=m.replaceAll("”");
-			m =sq_3.matcher(text);
-			text=m.replaceAll("‘");
-			m =sq_4.matcher(text);
-			text=m.replaceAll("’");
-			if(priorNonWhitespace){
-				text=text.substring(1);
+			Matcher m = sq_6.matcher(text);
+			text = m.replaceAll("\"");
+			m = sq_1.matcher(text);
+			text = m.replaceAll("“");
+			m = sq_2.matcher(text);
+			text = m.replaceAll("”");
+			m = sq_3.matcher(text);
+			text = m.replaceAll("‘");
+			m = sq_4.matcher(text);
+			text = m.replaceAll("’");
+			if (priorNonWhitespace) {
+				text = text.substring(1);
 			}
-			if(text.equals("‘. ")){
-				int debug=3;
+			if (text.equals("‘. ")) {
+				int debug = 3;
 			}
 		}
 		return text;

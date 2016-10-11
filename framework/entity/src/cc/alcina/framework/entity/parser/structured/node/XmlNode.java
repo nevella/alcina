@@ -280,7 +280,7 @@ public class XmlNode {
 		}
 
 		public boolean has(XmlNode test) {
-			test=test.unwrap();
+			test = test.unwrap();
 			XmlNode node = XmlNode.this.unwrap();
 			while (node != null) {
 				if (node == test) {
@@ -364,7 +364,7 @@ public class XmlNode {
 		}
 
 		public boolean isFirstChild(XmlNode xmlNode) {
-			return xmlNode!=null&&firstNode() == xmlNode.unwrap();
+			return xmlNode != null && firstNode() == xmlNode.unwrap();
 		}
 
 		public XmlNode lastElementNode() {
@@ -417,11 +417,11 @@ public class XmlNode {
 		}
 
 		public boolean isLastChild(XmlNode node) {
-			return node!=null&&lastNode() == node.unwrap();
+			return node != null && lastNode() == node.unwrap();
 		}
 
 		public boolean isLastElementNode(XmlNode node) {
-			return node!=null&&lastElementNode() == node.unwrap();
+			return node != null && lastElementNode() == node.unwrap();
 		}
 	}
 
@@ -464,6 +464,17 @@ public class XmlNode {
 			parent().invalidate();
 			parent().node.insertBefore(node.node, XmlNode.this.node);
 		}
+
+		public boolean hasNextSibling() {
+			return node.getNextSibling() != null;
+		}
+
+		public XmlNode wrap(String tag) {
+			XmlNode wrapper = doc.nodeFor(doc.domDoc().createElement(tag));
+			replaceWith(wrapper);
+			wrapper.children.append(XmlNode.this);
+			return wrapper;
+		}
 	}
 
 	public class XmlNodeXpath {
@@ -503,6 +514,6 @@ public class XmlNode {
 	}
 
 	public XmlNode unwrap() {
-		return this.getClass()==XmlNode.class?this:doc.nodeFor(node);
+		return this.getClass() == XmlNode.class ? this : doc.nodeFor(node);
 	}
 }
