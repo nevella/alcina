@@ -48,6 +48,7 @@ import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.ServletLayerObjects;
+import cc.alcina.framework.servlet.ServletLayerUtils;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void createServletTransformClientInstance() {
@@ -182,6 +183,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initEntityLayer();
 			createServletTransformClientInstance();
 			initCustom();
+			ServletLayerUtils.setAppServletInitialised(true);
 		} catch (Throwable e) {
 			throw new ServletException(e);
 		} finally {

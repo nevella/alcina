@@ -65,6 +65,15 @@ public class ServletLayerUtils {
 		return pendingTransformCount;
 	}
 
+	private static boolean appServletInitialised;
+	public static boolean isAppServletInitialised() {
+		return appServletInitialised;
+	}
+
+	public static void setAppServletInitialised(boolean appServletInitialised) {
+		ServletLayerUtils.appServletInitialised = appServletInitialised;
+	}
+
 	public static String defaultTag;
 
 	public static DomainTransformLayerWrapper pushTransforms(String tag,
