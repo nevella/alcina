@@ -4,6 +4,7 @@
 	<inherits name='com.googlecode.gwtx.Java' />
 	<inherits name='com.google.gwt.activity.Activity' />
 	<inherits name='com.totsp.gwittir.GwittirNoDeps' />
+	<inherits name='com.totsp.gwittir.LoggingWarn' />
 	<inherits name='cc.alcina.framework.emul.AlcinaEmul' />
 	<replace-with class="cc.alcina.framework.common.client.util.StackFrameHelperIE">
 		<when-type-is class="cc.alcina.framework.common.client.util.StackFrameHelper" />
