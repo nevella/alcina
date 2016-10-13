@@ -941,7 +941,7 @@ public class SEUtilities {
 	}
 
 	public static String normalizeWhitespaceBreaking(String input) {
-		//\uE000 is 'unused (private) unicode'
+		// \uE000 is 'unused (private) unicode'
 		input = input.replace("\u00A0", "\uE000");
 		input = normalizeWhitespace(input);
 		input = input.replace("\uE000", "\u00A0");
@@ -1301,5 +1301,13 @@ public class SEUtilities {
 			}
 		}
 		return text;
+	}
+
+	public static String trimTrailingSlash(String string) {
+		if (string.endsWith("/")) {
+			return string.substring(0, string.length() - 1);
+		} else {
+			return string;
+		}
 	}
 }
