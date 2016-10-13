@@ -35,6 +35,9 @@
   <Style ss:ID="sDate">
      <NumberFormat ss:Format="Short Date"/>
   </Style>
+  <Style ss:ID="sDateTimeP">
+   <NumberFormat ss:Format="m/d/yy\ hh:mm"/>
+  </Style>
   <Style ss:ID="sPercent">
      <NumberFormat ss:Format="0.00%"/>
   </Style>

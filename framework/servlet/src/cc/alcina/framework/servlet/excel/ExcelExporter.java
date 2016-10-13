@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilters.Converter
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.publication.excel.ExcelFormatAnnotation;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 
@@ -47,6 +48,9 @@ import cc.alcina.framework.entity.XmlUtils;
  */
 public class ExcelExporter {
 	private static final String SS_NS = "urn:schemas-microsoft-com:office:spreadsheet";
+
+	public static final String CONTEXT_DATES_AS_DATE_TIME = ExcelExporter.class
+			.getName() + ".CONTEXT_DATES_AS_DATE_TIME";
 
 	private static final String DOC_TEMPLATE_XML = "docTemplate.xml";
 
@@ -177,7 +181,11 @@ public class ExcelExporter {
 			col.setAttributeNS(SS_NS, "ss:Width", "120");
 			String styleId = null;
 			if (pdm.pd.getPropertyType() == Date.class) {
-				styleId = "sDate";
+				if (LooseContext.is(CONTEXT_DATES_AS_DATE_TIME)) {
+					styleId = "sDateTimeP";
+				} else {
+					styleId = "sDate";
+				}
 			}
 			if (!pdm.styleId().isEmpty()) {
 				styleId = pdm.styleId();

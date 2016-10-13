@@ -15,6 +15,7 @@
 package cc.alcina.framework.common.client.publication;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Marker interface for second stage of the publication process
@@ -23,4 +24,7 @@ import java.io.Serializable;
  *Note - these will want to be xmlroot elt, jaxb registered, because they will be jaxb-serialised for transform
  */
 public interface PublicationContent extends Serializable{
+	default List getGridRows(){
+		return null;
+	}
 }
