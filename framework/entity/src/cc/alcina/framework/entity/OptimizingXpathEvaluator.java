@@ -96,7 +96,8 @@ public class OptimizingXpathEvaluator {
 		this.xpathStr = xpathStr;
 		if (isOptimiseXpathEvaluationSpeed()
 				&& !nonOptimise.matcher(xpathStr).find()
-				&& node.getNodeType() == Node.ELEMENT_NODE) {
+				&& node.getNodeType() == Node.ELEMENT_NODE
+				&& node.getParentNode() != null) {
 			if (xpathStr.contains("sibling")) {
 				node = node.getParentNode();
 			}
