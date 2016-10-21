@@ -348,6 +348,9 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 					+ item.getShortDescription());
 			link.addClickHandler(this);
 			String actionLog = item.getActionLog();
+			if(actionLog==null){
+				actionLog="{no log}";
+			}
 			boolean customHtml = actionLog.contains("div");
 			this.html = new HTML(customHtml ? actionLog : "<pre>" + actionLog
 					+ "</pre>", true);

@@ -2,11 +2,11 @@ package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.SliceProcessor;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.ThrowingSupplier;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.projection.GraphProjections;
 
@@ -37,7 +37,7 @@ public abstract class MemCacheReader<I, O> {
 
 	protected abstract O read0(I input) throws Exception;
 
-	public static <T> T get(Supplier<T> supplier) {
+	public static <T> T get(ThrowingSupplier<T> supplier) {
 		return new MemCacheReader<Void, T>() {
 			@Override
 			protected T read0(Void input) throws Exception {
