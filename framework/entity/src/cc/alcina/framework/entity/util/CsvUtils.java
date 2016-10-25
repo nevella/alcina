@@ -120,7 +120,19 @@ public class CsvUtils {
 		}
 
 		public String get(String key) {
-			return csvCols.grid.get(rowIdx).get(csvCols.colLookup.get(key));
+			return csvCols.grid.get(rowIdx).get(getColumnIndex(key));
+		}
+
+		private int getColumnIndex(String key) {
+			Integer index = csvCols.colLookup.get(key);
+			if (index != null) {
+				return index;
+			}
+			index = csvCols.colLcLookup.get(key.toLowerCase());
+			if (index != null) {
+				return index;
+			}
+			return -1;
 		}
 
 		public boolean has(String key) {
@@ -136,12 +148,14 @@ public class CsvUtils {
 		}
 
 		public boolean containsKey(String key) {
-			return csvCols.colLookup.containsKey(key);
+			return getColumnIndex(key) != -1;
 		}
 	}
 
 	public static class CsvCols implements Iterable<CsvRow>, Iterator<CsvRow> {
 		Map<String, Integer> colLookup = new LinkedHashMap<>();
+
+		Map<String, Integer> colLcLookup = new LinkedHashMap<>();
 
 		public Map<String, CsvRow> rowLookup(String columnHeader) {
 			Map<String, CsvRow> result = new LinkedHashMap<>();
@@ -166,7 +180,11 @@ public class CsvUtils {
 
 		public CsvCols(List<List<String>> grid) {
 			this.grid = grid;
-			grid.get(0).forEach(s -> colLookup.put(s.trim(), idx++));
+			grid.get(0)
+					.forEach(s -> colLookup.put(
+							s.trim().replace("\"", "").replace("\ufeff", ""),
+							idx++));
+			colLookup.forEach((k, v) -> colLcLookup.put(k.toLowerCase(), v));
 			idx = 1;
 		}
 
