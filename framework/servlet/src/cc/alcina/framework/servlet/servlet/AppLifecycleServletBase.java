@@ -96,9 +96,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					}
 				}
 			}
-		} catch (FileNotFoundException fnfe) {
-			// no custom properties
-		} catch (Exception e) {
+		}  catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
