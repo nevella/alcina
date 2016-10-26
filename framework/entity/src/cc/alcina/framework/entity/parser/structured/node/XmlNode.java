@@ -188,7 +188,15 @@ public class XmlNode {
 	}
 
 	public void setText(String text) {
-		((Text) node).setData(text);
+		if (isText()) {
+			((Text) node).setData(text);
+		} else {
+			if (children.noElements()) {
+				node.setTextContent(text);
+			} else {
+				throw new RuntimeException("node has child elements");
+			}
+		}
 		invalidate();
 	}
 
@@ -422,6 +430,10 @@ public class XmlNode {
 
 		public boolean isLastElementNode(XmlNode node) {
 			return node != null && lastElementNode() == node.unwrap();
+		}
+
+		public void adoptFrom(XmlNode n) {
+			n.children.nodes().forEach(this::append);
 		}
 	}
 
