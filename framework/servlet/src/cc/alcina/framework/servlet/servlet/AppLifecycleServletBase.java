@@ -97,6 +97,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				}
 			}
 		}  catch (Exception e) {
+			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
 		}
 	}
