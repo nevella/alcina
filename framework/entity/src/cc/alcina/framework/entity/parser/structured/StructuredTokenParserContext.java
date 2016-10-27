@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -14,7 +15,6 @@ import java.util.stream.StreamSupport;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.parser.structured.StructuredTokenParserContext.OutputContextRoot;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 import cc.alcina.framework.entity.parser.structured.node.XmlTokenStream;
 
@@ -114,10 +114,12 @@ public class StructuredTokenParserContext {
 	}
 
 	public boolean outputOpen(XmlToken token) {
-		return outAncestors().nodeStream().anyMatch(xtn -> xtn.token == token);
+		return outAncestors(null).nodeStream()
+				.anyMatch(xtn -> xtn.token == token);
 	}
 
-	public void propertyDelta(XmlStructuralJoin outNode, String key, boolean add) {
+	public void propertyDelta(XmlStructuralJoin outNode, String key,
+			boolean add) {
 		properties.setBooleanOrRemove(key, add);
 	}
 
@@ -139,15 +141,27 @@ public class StructuredTokenParserContext {
 	}
 
 	public NodeAncestorsContextProvider xmlOutputContext() {
-		return outAncestors();
+		return xmlOutputContext(null);
 	}
 
-	public NodeAncestorsContextProvider xmlInputContext(XmlStructuralJoin outNode) {
-		return new NodeAncestors(outNode, NodeAncestorsTypes.SOURCE);
+	protected NodeAncestorsContextProvider
+			xmlOutputContext(Predicate<XmlStructuralJoin> stopNodes) {
+		return outAncestors(stopNodes);
+	}
+
+	public NodeAncestorsContextProvider
+			xmlInputContext(XmlStructuralJoin outNode,Predicate<XmlStructuralJoin> stopNodes) {
+		return new NodeAncestors(outNode, stopNodes, NodeAncestorsTypes.SOURCE);
 	}
 
 	protected NodeAncestors outAncestors() {
-		return new NodeAncestors(out.getOutCursor(), NodeAncestorsTypes.TARGET);
+		return outAncestors(null);
+	}
+
+	protected NodeAncestors
+			outAncestors(Predicate<XmlStructuralJoin> stopNodes) {
+		return new NodeAncestors(out.getOutCursor(), stopNodes,
+				NodeAncestorsTypes.TARGET);
 	}
 
 	public XmlStructuralJoin getNodeToken(XmlNode node) {
@@ -181,7 +195,11 @@ public class StructuredTokenParserContext {
 
 		private boolean root;
 
-		public NodeAncestorIterator(XmlStructuralJoin tokenNode, boolean output) {
+		private Predicate<XmlStructuralJoin> stopNodes;
+
+		public NodeAncestorIterator(XmlStructuralJoin tokenNode,
+				Predicate<XmlStructuralJoin> stopNodes, boolean output) {
+			this.stopNodes = stopNodes;
 			if (tokenNode == null) {
 				return;
 			}
@@ -191,7 +209,7 @@ public class StructuredTokenParserContext {
 
 		@Override
 		public boolean hasNext() {
-			return cursor != null && tokenNode != null;
+			return cursor != null && tokenNode != null &&(stopNodes==null||stopNodes.test(tokenNode));
 		}
 
 		@Override
@@ -229,8 +247,13 @@ public class StructuredTokenParserContext {
 
 		private XmlStructuralJoin node;
 
-		public NodeAncestors(XmlStructuralJoin node, NodeAncestorsTypes... types) {
+		private Predicate<XmlStructuralJoin> stopNodes;
+
+		public NodeAncestors(XmlStructuralJoin node,
+				Predicate<XmlStructuralJoin> stopNodes,
+				NodeAncestorsTypes... types) {
 			this.node = node;
+			this.stopNodes = stopNodes;
 			this.types = EnumSet.of(types[0]);
 			for (int idx = 1; idx < types.length; idx++) {
 				this.types.add(types[idx]);
@@ -246,7 +269,7 @@ public class StructuredTokenParserContext {
 		}
 
 		public Iterator<XmlStructuralJoin> nodeIterator() {
-			return new NodeAncestorIterator(node, isTarget());
+			return new NodeAncestorIterator(node, stopNodes,isTarget());
 		}
 
 		private boolean isTarget() {
