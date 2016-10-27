@@ -57,7 +57,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 	private String persistentCss = "";
 
 	private boolean allowAdminInvalidObjectWrite = true;
-
+	
 	public GeneralProperties() {
 	}
 
