@@ -487,6 +487,14 @@ public class XmlNode {
 			wrapper.children.append(XmlNode.this);
 			return wrapper;
 		}
+
+		public XmlNode previousSibling() {
+			return doc.nodeFor(node.getPreviousSibling());
+		}
+
+		public XmlNode nextSibling() {
+			return doc.nodeFor(node.getNextSibling());
+		}
 	}
 
 	public class XmlNodeXpath {
