@@ -4,6 +4,7 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,6 +90,11 @@ public class StringMap extends LinkedHashMap<String, String> {
 		super(otherMap);
 	}
 
+	public StringMap(List<String> list) {
+		for (Iterator<String> itr = list.iterator(); itr.hasNext();) {
+			put(itr.next(), itr.next());
+		}
+	}
 
 	@Override
 	public StringMap clone() {

@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.parser.structured.node;
 
+import java.util.Arrays;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -14,13 +16,43 @@ public class XmlNodeBuilder {
 
 	private boolean processingInstruction;
 
-	private StringMap attrs=new StringMap();
+	private StringMap attrs = new StringMap();
 
 	public XmlNodeBuilder() {
 	}
 
 	public XmlNodeBuilder(XmlNode relativeTo) {
 		this.relativeTo = relativeTo;
+	}
+
+	public XmlNode append() {
+		XmlNode node = generate();
+		relativeTo.node.appendChild(node.node);
+		relativeTo.children.invalidate();
+		return node;
+	}
+
+	public XmlNodeBuilder attrs(String... strings) {
+		this.attrs = new StringMap(Arrays.asList(strings));
+		return this;
+	}
+
+	public XmlNodeBuilder attrs(StringMap attrs) {
+		this.attrs = attrs;
+		return this;
+	}
+
+	public XmlNode before() {
+		XmlNode node = generate();
+		relativeTo.node.getParentNode().insertBefore(node.node,
+				relativeTo.node);
+		relativeTo.parent().invalidate();
+		return node;
+	}
+
+	public XmlNodeBuilder processingInstruction() {
+		this.processingInstruction = true;
+		return this;
 	}
 
 	public XmlNodeBuilder tag(String tag) {
@@ -33,20 +65,11 @@ public class XmlNodeBuilder {
 		return this;
 	}
 
-	public XmlNodeBuilder processingInstruction() {
-		this.processingInstruction = true;
-		return this;
-	}
-
-	public XmlNode append() {
+	public XmlNode wrap() {
 		XmlNode node = generate();
-		relativeTo.node.appendChild(node.node);
-		relativeTo.children.invalidate();
-		return node;
-	}
-	public XmlNode before() {
-		XmlNode node = generate();
-		relativeTo.node.getParentNode().insertBefore(node.node, relativeTo.node);
+		relativeTo.node.getParentNode().insertBefore(node.node,
+				relativeTo.node);
+		node.node.appendChild(relativeTo.node);
 		relativeTo.parent().invalidate();
 		return node;
 	}
@@ -70,10 +93,5 @@ public class XmlNodeBuilder {
 			node = doc().domDoc().createTextNode(text);
 		}
 		return doc().nodeFor(node);
-	}
-
-	public XmlNodeBuilder attrs(StringMap attrs) {
-		this.attrs = attrs;
-		return this;
 	}
 }

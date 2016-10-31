@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.parser.structured.node;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -434,6 +435,12 @@ public class XmlNode {
 
 		public void adoptFrom(XmlNode n) {
 			n.children.nodes().forEach(this::append);
+		}
+
+		public List<XmlNode> byTag(String tag) {
+			List<XmlNode> elements = elements();
+			elements.removeIf(n->!n.tagIs(tag));
+			return elements;
 		}
 	}
 

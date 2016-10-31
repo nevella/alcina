@@ -21,7 +21,7 @@ public interface ParserToken<C extends ParserContext, S extends AbstractParserSl
 
 	S currentRangeAsSliceAndIncrementOffset(C context, int trimFromEnd);
 
-	public S createSlice(XmlUtils.DOMLocation start, XmlUtils.DOMLocation end,
+	public S createSlice(C context, XmlUtils.DOMLocation start, XmlUtils.DOMLocation end,
 			int startOffsetInRun);
 
 	public S createSlice(Node node);

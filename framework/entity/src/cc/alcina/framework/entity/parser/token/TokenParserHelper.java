@@ -22,7 +22,7 @@ public class TokenParserHelper<T extends ParserToken, C extends ParserContext, S
 		TextRange currentTextRange = context.getCurrentTextRange();
 		Text last = (Text) CommonUtils.last(currentTextRange.texts);
 		Text text = (Text) currentTextRange.texts.get(0);
-		S slice = (S) token.createSlice(new XmlUtils.DOMLocation(text, 0, 0),
+		S slice = (S) token.createSlice(context,new XmlUtils.DOMLocation(text, 0, 0),
 				new XmlUtils.DOMLocation(last,
 						Math.max(1,
 								last.getTextContent().length() - trimFromEnd),
@@ -68,7 +68,7 @@ public class TokenParserHelper<T extends ParserToken, C extends ParserContext, S
 		XmlUtils.DOMLocation end = XmlUtils.locationOfTextIndex(
 				context.allTexts, m.end() + context.startOffset);
 		context.startOffset += m.end();
-		return (S) token.createSlice(start, end, m.start());
+		return (S) token.createSlice(context,start, end, m.start());
 	}
 
 	public S matchWithFollowCheck(C context) {
