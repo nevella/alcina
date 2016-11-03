@@ -17,6 +17,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -1470,5 +1471,8 @@ public class XmlUtils {
 
 	public interface IsIgnorePredicate {
 		boolean isIgnore(Node n);
+	}
+	public static void logToFile(Node n) throws Exception{
+		ResourceUtilities.writeStringToFile(streamXML(n), "/tmp/tmp.xml");
 	}
 }
