@@ -1474,5 +1474,6 @@ public class XmlUtils {
 	}
 	public static void logToFile(Node n) throws Exception{
 		ResourceUtilities.writeStringToFile(streamXML(n), "/tmp/tmp.xml");
+		ResourceUtilities.writeStringToFile(streamXML(n), "/tmp/tmp.html");
 	}
 }
