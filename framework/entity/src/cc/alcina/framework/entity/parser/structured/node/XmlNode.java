@@ -253,7 +253,7 @@ public class XmlNode {
 		return xpath;
 	}
 
-	private Element getElement() {
+	public Element getElement() {
 		return (Element) node;
 	}
 

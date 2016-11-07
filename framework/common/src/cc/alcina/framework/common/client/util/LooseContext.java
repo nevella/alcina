@@ -51,6 +51,9 @@ public abstract class LooseContext {
 	public static boolean containsKey(String key) {
 		return getContext().containsKey(key);
 	}
+	public static boolean has(String key) {
+		return containsKey(key);
+	}
 
 	public static LooseContextInstance getContext() {
 		return getInstance().getContext0();
