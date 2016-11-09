@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.util;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -49,6 +50,9 @@ public interface FromJsonRepresentation {
 		try {
 			Field[] fields = new GraphProjection().getFieldsForClass(this);
 			for (Field field : fields) {
+				if(Modifier.isTransient(field.getModifiers())){
+					continue;
+				}
 				String key = field.getName();
 				if (jso.has(key)) {
 					Object value = jso.get(key);
