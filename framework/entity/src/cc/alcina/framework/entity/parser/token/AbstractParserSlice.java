@@ -29,14 +29,12 @@ public class AbstractParserSlice<T extends ParserToken> {
 
 	public HTMLAnchorElement anchor;
 
-	
-
 	private String cachedContents = null;
 
 	private String overrideText;
 
-	public AbstractParserSlice(XmlUtils.DOMLocation start, XmlUtils.DOMLocation end, T token,
-			int startOffsetInRun) {
+	public AbstractParserSlice(XmlUtils.DOMLocation start,
+			XmlUtils.DOMLocation end, T token, int startOffsetInRun) {
 		assert start != null : "start is null";
 		this.start = start;
 		this.end = end;
@@ -96,6 +94,10 @@ public class AbstractParserSlice<T extends ParserToken> {
 		}
 	}
 
+	public void extend(Text text, String content) {
+		this.end = new XmlUtils.DOMLocation(text, content.length(), 0);
+	}
+
 	public String extractTextForCitable() {
 		String text = contents().trim();
 		if (text.endsWith(".")) {
@@ -133,8 +135,8 @@ public class AbstractParserSlice<T extends ParserToken> {
 	}
 
 	public String normalisedContents() {
-		return TokenParserUtils.quickNormalisePunctuation(SEUtilities
-				.normalizeWhitespaceAndTrim(contents()));
+		return TokenParserUtils.quickNormalisePunctuation(
+				SEUtilities.normalizeWhitespaceAndTrim(contents()));
 	}
 
 	public void setOverrideText(String overrideText) {
