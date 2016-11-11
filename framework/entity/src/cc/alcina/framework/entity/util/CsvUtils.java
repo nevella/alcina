@@ -150,6 +150,12 @@ public class CsvUtils {
 		public boolean containsKey(String key) {
 			return getColumnIndex(key) != -1;
 		}
+
+		@Override
+		public String toString() {
+			return map().entrySet().stream().map(Object::toString)
+					.collect(Collectors.joining("\n"));
+		}
 	}
 
 	public static class CsvCols implements Iterable<CsvRow>, Iterator<CsvRow> {
