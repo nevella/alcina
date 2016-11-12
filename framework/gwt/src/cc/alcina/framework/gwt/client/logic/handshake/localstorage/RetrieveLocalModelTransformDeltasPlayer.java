@@ -16,8 +16,7 @@ import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence.Delt
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class RetrieveLocalModelTransformDeltasPlayer extends
-		RunnableAsyncCallbackPlayer<Object, LoadObjectDataState> {
+public class RetrieveLocalModelTransformDeltasPlayer extends RunnableAsyncCallbackPlayer<Object, LoadObjectDataState> {
 	private RetrieveModelConsort retrieveModelConsort;
 
 	public RetrieveLocalModelTransformDeltasPlayer() {
@@ -28,14 +27,12 @@ public class RetrieveLocalModelTransformDeltasPlayer extends
 
 	@Override
 	public void onSuccess(Object result) {
-		HandshakeConsortModel.get().setFromPersistenceDeltas(
-				retrieveModelConsort.fromPersistenceDeltas());
+		HandshakeConsortModel.get().setFromPersistenceDeltas(retrieveModelConsort.fromPersistenceDeltas());
 		super.onSuccess(result);
 	}
 
 	enum Phase {
-		GET_CLIENT_INSTANCE_ID_OF_DOMAIN_OBJECT_DELTA,
-		GET_DELTAS_FOR_CLIENT_INSTANCE
+		GET_CLIENT_INSTANCE_ID_OF_DOMAIN_OBJECT_DELTA, GET_DELTAS_FOR_CLIENT_INSTANCE
 	}
 
 	class RetrieveModelConsort extends AllStatesConsort<Phase> {
@@ -51,19 +48,17 @@ public class RetrieveLocalModelTransformDeltasPlayer extends
 		public void runPlayer(AllStatesPlayer player, Phase next) {
 			switch (next) {
 			case GET_CLIENT_INSTANCE_ID_OF_DOMAIN_OBJECT_DELTA:
-				LocalTransformPersistence.get()
-						.getClientInstanceIdOfDomainObjectDelta(player);
+				LocalTransformPersistence.get().getClientInstanceIdOfDomainObjectDelta(player);
 				break;
 			case GET_DELTAS_FOR_CLIENT_INSTANCE:
 				DeltaApplicationRecord record = CommonUtils
-						.first((List<DeltaApplicationRecord>) lastCallbackResult);
+						.first((Iterator<DeltaApplicationRecord>) lastCallbackResult);
 				DeltaApplicationFilters filters = new DeltaApplicationFilters();
 				filters.clientInstanceId = -1L;
 				if (record != null) {
 					filters.clientInstanceId = record.getClientInstanceId();
 				}
-				LocalTransformPersistence.get().getDomainModelDeltaIterator(
-						filters, player);
+				LocalTransformPersistence.get().getDomainModelDeltaIterator(filters, player);
 				break;
 			}
 		}

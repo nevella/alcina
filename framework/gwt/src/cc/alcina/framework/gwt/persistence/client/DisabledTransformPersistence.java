@@ -23,7 +23,7 @@ public class DisabledTransformPersistence extends LocalTransformPersistence {
 
 	@Override
 	protected void getTransforms(DeltaApplicationRecordType[] types,
-			AsyncCallback<List<DeltaApplicationRecord>> callback) {
+			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
 	}
 
 	@Override
@@ -69,7 +69,7 @@ public class DisabledTransformPersistence extends LocalTransformPersistence {
 
 	@Override
 	protected void getTransforms(DeltaApplicationFilters filters,
-			AsyncCallback<List<DeltaApplicationRecord>> callback) {
+			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
 		
 	}
 }

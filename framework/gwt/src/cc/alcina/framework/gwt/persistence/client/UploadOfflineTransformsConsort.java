@@ -2,7 +2,10 @@ package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
@@ -10,6 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientBase;
@@ -18,8 +22,6 @@ import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.persistence.client.UploadOfflineTransformsConsort.State;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class UploadOfflineTransformsConsort extends Consort<State> {
 	public static final String TOPIC_PERSIST_TRANSFORMS_FAILURE = UploadOfflineTransformsConsort.class
@@ -67,7 +69,7 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 
 	class Player_GET_TRANSFORMS
 			extends
-			EnumRunnableAsyncCallbackPlayer<List<DeltaApplicationRecord>, State> {
+			EnumRunnableAsyncCallbackPlayer<Iterator<DeltaApplicationRecord>, State> {
 		public Player_GET_TRANSFORMS() {
 			super(State.GET_TRANSFORMS);
 		}
@@ -79,9 +81,9 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 		}
 
 		@Override
-		public void onSuccess(List<DeltaApplicationRecord> result) {
-			transformsToPersistOnServer = result;
-			if (result.isEmpty()) {
+		public void onSuccess(Iterator<DeltaApplicationRecord> result) {
+			transformsToPersistOnServer = CommonUtils.iteratorToList(result);
+			if (transformsToPersistOnServer.isEmpty()) {
 				wasPlayed(State.FINISHED);
 			} else {
 				super.onSuccess(result);

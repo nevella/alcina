@@ -30,6 +30,7 @@ import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 
 @SuppressWarnings("unchecked")
@@ -43,18 +44,16 @@ public class CommonUtils {
 	// for GWT reflection gets, this gets used...a lot
 	public static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
 
-	public static final String[] MONTH_NAMES = { "invalid", "January",
-			"February", "March", "April", "May", "June", "July", "August",
-			"September", "October", "November", "December" };
+	public static final String[] MONTH_NAMES = { "invalid", "January", "February", "March", "April", "May", "June",
+			"July", "August", "September", "October", "November", "December" };
 
-	public static final String[] DAY_NAMES = { "Sunday", "Monday", "Tuesday",
-			"Wednesday", "Thursday", "Friday", "Saturday" };
+	public static final String[] DAY_NAMES = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
+			"Saturday" };
 
 	private static final Map<String, Class> stdClassMap = new HashMap<String, Class>();
 	static {
-		Class[] stds = { Long.class, Double.class, Float.class, Short.class,
-				Byte.class, Integer.class, Boolean.class, Character.class,
-				Date.class, String.class };
+		Class[] stds = { Long.class, Double.class, Float.class, Short.class, Byte.class, Integer.class, Boolean.class,
+				Character.class, Date.class, String.class };
 		for (Class std : stds) {
 			stdClassMap.put(std.getName(), std);
 		}
@@ -75,21 +74,15 @@ public class CommonUtils {
 			} else {
 				if (o1 == null || o2 == null) {
 					Object nonNull = o1 == null ? o2 : 01;
-					if (nonNull instanceof String
-							&& nonNull.toString().trim().length() == 0) {
+					if (nonNull instanceof String && nonNull.toString().trim().length() == 0) {
 						// keep going
 					} else {
 						return false;
 					}
 				} else {
 					if (!o1.equals(o2)) {
-						if (o1 instanceof String
-								&& o2 instanceof String
-								&& o1.toString()
-										.trim()
-										.toLowerCase()
-										.equals(o2.toString().trim()
-												.toLowerCase())) {
+						if (o1 instanceof String && o2 instanceof String
+								&& o1.toString().trim().toLowerCase().equals(o2.toString().trim().toLowerCase())) {
 						} else {
 							return false;
 						}
@@ -123,8 +116,8 @@ public class CommonUtils {
 
 	private static final Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
 	static {
-		Class[] prims = { long.class, int.class, short.class, char.class,
-				byte.class, boolean.class, double.class, float.class };
+		Class[] prims = { long.class, int.class, short.class, char.class, byte.class, boolean.class, double.class,
+				float.class };
 		for (Class prim : prims) {
 			primitiveClassMap.put(prim.getName(), prim);
 		}
@@ -136,8 +129,7 @@ public class CommonUtils {
 		stdAndPrimitivesMap.putAll(primitiveClassMap);
 	}
 
-	public static final Set<Class> stdAndPrimitives = new HashSet<Class>(
-			stdAndPrimitivesMap.values());
+	public static final Set<Class> stdAndPrimitives = new HashSet<Class>(stdAndPrimitivesMap.values());
 
 	public static boolean bv(Boolean b) {
 		return b == null || b == false ? false : true;
@@ -225,8 +217,7 @@ public class CommonUtils {
 		for (int i = 0; i < strs.length; i++) {
 			s = strs[i];
 			if (i != 0) {
-				strs[i] = args[Integer.parseInt(s.substring(0, 1)) - 1]
-						+ s.substring(1);
+				strs[i] = args[Integer.parseInt(s.substring(0, 1)) - 1] + s.substring(1);
 			}
 		}
 		return join(strs, "");
@@ -238,8 +229,7 @@ public class CommonUtils {
 		String[] strs = s2.split("%s");
 		String s;
 		for (int i = 1; i < strs.length; i++) {
-			strs[i] = args[i - 1]
-					+ ((modSource && i == strs.length - 1) ? "" : strs[i]);
+			strs[i] = args[i - 1] + ((modSource && i == strs.length - 1) ? "" : strs[i]);
 		}
 		return join(strs, "");
 	}
@@ -251,81 +241,63 @@ public class CommonUtils {
 		}
 		switch (style) {
 		case AU_DATE_SLASH:
-			return formatJ("%s/%s/%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
-		case US_DATE_SLASH:
-			return formatJ("%s/%s/%s", padTwo(date.getMonth() + 1),
-					padTwo(date.getDate()), padTwo(date.getYear() + 1900));
-		case AU_DATE_SLASH_MONTH:
-			return formatJ("%s/%s", padTwo(date.getMonth() + 1),
+			return formatJ("%s/%s/%s", padTwo(date.getDate()), padTwo(date.getMonth() + 1),
 					padTwo(date.getYear() + 1900));
+		case US_DATE_SLASH:
+			return formatJ("%s/%s/%s", padTwo(date.getMonth() + 1), padTwo(date.getDate()),
+					padTwo(date.getYear() + 1900));
+		case AU_DATE_SLASH_MONTH:
+			return formatJ("%s/%s", padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
 		case AU_DATE_DOT:
-			return formatJ("%s.%s.%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
+			return formatJ("%s.%s.%s", padTwo(date.getDate()), padTwo(date.getMonth() + 1),
+					padTwo(date.getYear() + 1900));
 		case AU_DATE_TIME:
-			return formatJ("%s/%s/%s - %s:%s:%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
-					padTwo(date.getHours()), padTwo(date.getMinutes()),
+			return formatJ("%s/%s/%s - %s:%s:%s", padTwo(date.getDate()), padTwo(date.getMonth() + 1),
+					padTwo(date.getYear() + 1900), padTwo(date.getHours()), padTwo(date.getMinutes()),
 					padTwo(date.getSeconds()));
 		case AU_DATE_TIME_HUMAN:
 			return formatDate(date, DateStyle.AU_LONG_DAY)
-					+ formatJ(" at %s:%s %s",
-							padTwo((date.getHours() - 1) % 12 + 1),
-							padTwo(date.getMinutes()),
+					+ formatJ(" at %s:%s %s", padTwo((date.getHours() - 1) % 12 + 1), padTwo(date.getMinutes()),
 							date.getHours() < 12 ? "AM" : "PM");
 		case NAMED_MONTH_DATE_TIME_HUMAN:
 			return formatDate(date, DateStyle.NAMED_MONTH_DAY)
-					+ formatJ(" at %s:%s %s",
-							padTwo((date.getHours() - 1) % 12 + 1),
-							padTwo(date.getMinutes()),
+					+ formatJ(" at %s:%s %s", padTwo((date.getHours() - 1) % 12 + 1), padTwo(date.getMinutes()),
 							date.getHours() < 12 ? "AM" : "PM");
 		case NAMED_MONTH_DAY:
-			return formatJ("%s, %s %s %s", DAY_NAMES[date.getDay()],
-					MONTH_NAMES[date.getMonth() + 1], padTwo(date.getDate()),
-					padTwo(date.getYear() + 1900));
+			return formatJ("%s, %s %s %s", DAY_NAMES[date.getDay()], MONTH_NAMES[date.getMonth() + 1],
+					padTwo(date.getDate()), padTwo(date.getYear() + 1900));
 		case AU_DATE_TIME_MS:
-			return formatJ("%s/%s/%s - %s:%s:%s:%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
-					padTwo(date.getHours()), padTwo(date.getMinutes()),
+			return formatJ("%s/%s/%s - %s:%s:%s:%s", padTwo(date.getDate()), padTwo(date.getMonth() + 1),
+					padTwo(date.getYear() + 1900), padTwo(date.getHours()), padTwo(date.getMinutes()),
 					padTwo(date.getSeconds()), date.getTime() % 1000);
 		case AU_DATE_MONTH:
-			return formatJ("%s %s %s", padTwo(date.getDate()),
-					MONTH_NAMES[date.getMonth() + 1],
+			return formatJ("%s %s %s", padTwo(date.getDate()), MONTH_NAMES[date.getMonth() + 1],
 					padTwo(date.getYear() + 1900));
 		case AU_DATE_MONTH_DAY:
-			return formatJ("%s %s, %s", MONTH_NAMES[date.getMonth() + 1],
-					padTwo(date.getDate()), padTwo(date.getYear() + 1900));
+			return formatJ("%s %s, %s", MONTH_NAMES[date.getMonth() + 1], padTwo(date.getDate()),
+					padTwo(date.getYear() + 1900));
 		case AU_SHORT_MONTH:
-			return formatJ("%s %s %s", padTwo(date.getDate()),
-					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
+			return formatJ("%s %s %s", padTwo(date.getDate()), MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
 					padTwo(date.getYear() + 1900));
 		case AU_SHORT_MONTH_SLASH:
-			return formatJ("%s/%s/%s", padTwo(date.getDate()),
-					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
+			return formatJ("%s/%s/%s", padTwo(date.getDate()), MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
 					padTwo(date.getYear() + 1900));
 		case AU_SHORT_DAY:
-			return formatJ("%s - %s.%s.%s",
-					DAY_NAMES[date.getDay()].substring(0, 3),
-					padTwo(date.getDate()), padTwo(date.getMonth() + 1),
-					padTwo(date.getYear() + 1900));
+			return formatJ("%s - %s.%s.%s", DAY_NAMES[date.getDay()].substring(0, 3), padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
 		case AU_LONG_DAY:
-			return formatJ("%s, %s.%s.%s", DAY_NAMES[date.getDay()],
-					padTwo(date.getDate()), padTwo(date.getMonth() + 1),
-					padTwo(date.getYear() + 1900));
+			return formatJ("%s, %s.%s.%s", DAY_NAMES[date.getDay()], padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
 		case TIMESTAMP:
-			return formatJ("%s%s%s_%s%s%s_%s", padTwo(date.getYear() + 1900),
-					padTwo(date.getMonth() + 1), padTwo(date.getDate()),
-					padTwo(date.getHours()), padTwo(date.getMinutes()),
+			return formatJ("%s%s%s_%s%s%s_%s", padTwo(date.getYear() + 1900), padTwo(date.getMonth() + 1),
+					padTwo(date.getDate()), padTwo(date.getHours()), padTwo(date.getMinutes()),
 					padTwo(date.getSeconds()), date.getTime() % 1000);
 		case TIMESTAMP_HUMAN:
-			return formatJ("%s.%s.%s %s:%s:%s", padTwo(date.getYear() + 1900),
-					padTwo(date.getMonth() + 1), padTwo(date.getDate()),
-					padTwo(date.getHours()), padTwo(date.getMinutes()),
+			return formatJ("%s.%s.%s %s:%s:%s", padTwo(date.getYear() + 1900), padTwo(date.getMonth() + 1),
+					padTwo(date.getDate()), padTwo(date.getHours()), padTwo(date.getMinutes()),
 					padTwo(date.getSeconds()));
 		case AU_SHORT_MONTH_NO_DAY:
-			return formatJ("%s %s",
-					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
-					padTwo(date.getYear() + 1900));
+			return formatJ("%s %s", MONTH_NAMES[date.getMonth() + 1].substring(0, 3), padTwo(date.getYear() + 1900));
 		}
 		return date.toString();
 	}
@@ -343,8 +315,7 @@ public class CommonUtils {
 		while (true) {
 			y = s.indexOf("__");
 			if (y != -1) {
-				s = s.substring(0, x) + ((x == 0) ? "" : sep)
-						+ s.substring(x, y).toUpperCase() + sep
+				s = s.substring(0, x) + ((x == 0) ? "" : sep) + s.substring(x, y).toUpperCase() + sep
 						+ s.substring(y + 2);
 				x = y + 2;
 			} else {
@@ -359,8 +330,7 @@ public class CommonUtils {
 	}
 
 	public static String getSimpleTimeBefore(Date d, Date currentDate) {
-		long timeDiff = (long) Math.ceil((double) (currentDate.getTime() - d
-				.getTime()) / (60 * 1000));
+		long timeDiff = (long) Math.ceil((double) (currentDate.getTime() - d.getTime()) / (60 * 1000));
 		if (timeDiff < 60) {
 			return timeDiff + " minutes ago";
 		}
@@ -402,8 +372,7 @@ public class CommonUtils {
 	}
 
 	public static String infix(String s) {
-		return isNullOrEmpty(s) ? null : s.substring(0, 1).toLowerCase()
-				+ (s.length() == 1 ? "" : s.substring(1));
+		return isNullOrEmpty(s) ? null : s.substring(0, 1).toLowerCase() + (s.length() == 1 ? "" : s.substring(1));
 	}
 
 	public static Supplier<Set> setSupplier = () -> new LinkedHashSet();
@@ -428,8 +397,7 @@ public class CommonUtils {
 		return result;
 	}
 
-	public static <T> ThreeWaySetResult<T> threeWaySplit(Collection<T> c1,
-			Collection<T> c2) {
+	public static <T> ThreeWaySetResult<T> threeWaySplit(Collection<T> c1, Collection<T> c2) {
 		ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
 		Set intersection = intersection(c1, c2);
 		result.intersection = intersection;
@@ -487,18 +455,16 @@ public class CommonUtils {
 
 		@Override
 		public String toString() {
-			return CommonUtils.formatJ("First: %s\nBoth: %s\nSecond: %s",
-					firstOnly, intersection, secondOnly);
+			return CommonUtils.formatJ("First: %s\nBoth: %s\nSecond: %s", firstOnly, intersection, secondOnly);
 		}
 
 		public String toSizes() {
-			return CommonUtils.formatJ("First: %s\tBoth: %s\tSecond: %s",
-					firstOnly.size(), intersection.size(), secondOnly.size());
+			return CommonUtils.formatJ("First: %s\tBoth: %s\tSecond: %s", firstOnly.size(), intersection.size(),
+					secondOnly.size());
 		}
 
 		public boolean isEmpty() {
-			return firstOnly.isEmpty() && secondOnly.isEmpty()
-					&& intersection.isEmpty();
+			return firstOnly.isEmpty() && secondOnly.isEmpty() && intersection.isEmpty();
 		}
 	}
 
@@ -539,13 +505,11 @@ public class CommonUtils {
 		return join(objects, separator, false);
 	}
 
-	public static String join(Object[] objects, String separator,
-			boolean ignoreEmpties) {
+	public static String join(Object[] objects, String separator, boolean ignoreEmpties) {
 		StringBuilder sb = new StringBuilder();
 		for (Object obj : objects) {
 			String app = obj == null ? "null" : obj.toString();
-			if (sb.length() > 0 && (app.length() != 0 || !ignoreEmpties)
-					&& separator != null) {
+			if (sb.length() > 0 && (app.length() != 0 || !ignoreEmpties) && separator != null) {
 				sb.append(separator);
 			}
 			sb.append(app);
@@ -553,16 +517,14 @@ public class CommonUtils {
 		return sb.toString();
 	}
 
-	public static String joinAsEnglishList(List<String> phrases,
-			String phraseTemplate) {
+	public static String joinAsEnglishList(List<String> phrases, String phraseTemplate) {
 		StringBuffer result = new StringBuffer();
 		for (int i = 0; i < phrases.size(); i++) {
 			String phrase = phrases.get(i);
 			if (i > 0) {
 				result.append((i == phrases.size() - 1) ? " and " : ", ");
 			}
-			result.append(phraseTemplate == null ? phrase : CommonUtils
-					.formatJ(phraseTemplate, phrase));
+			result.append(phraseTemplate == null ? phrase : CommonUtils.formatJ(phraseTemplate, phrase));
 		}
 		return result.toString();
 	}
@@ -571,8 +533,7 @@ public class CommonUtils {
 		return l == null ? 0 : l;
 	}
 
-	public static String namedFormat(String source,
-			Map<String, ? extends Object> args) {
+	public static String namedFormat(String source, Map<String, ? extends Object> args) {
 		if (source == null) {
 			return null;
 		}
@@ -735,8 +696,7 @@ public class CommonUtils {
 		return trimToWsChars(s, maxChars, "");
 	}
 
-	public static String trimToWsChars(String s, int maxChars,
-			boolean withDotDot) {
+	public static String trimToWsChars(String s, int maxChars, boolean withDotDot) {
 		return trimToWsChars(s, maxChars, "...");
 	}
 
@@ -750,8 +710,7 @@ public class CommonUtils {
 		if (s.substring(maxChars / 2, maxChars).indexOf(" ") == -1) {
 			return s.substring(0, maxChars) + ellipsis;
 		}
-		return s.substring(0, s.substring(0, maxChars).lastIndexOf(' '))
-				+ ellipsis;
+		return s.substring(0, s.substring(0, maxChars).lastIndexOf(' ')) + ellipsis;
 	}
 
 	public static String trimToWsReverse(String s, int maxChars) {
@@ -807,11 +766,10 @@ public class CommonUtils {
 	}
 
 	public enum DateStyle {
-		AU_DATE_SLASH, AU_DATE_MONTH, AU_DATE_MONTH_DAY, AU_DATE_TIME,
-		AU_DATE_TIME_HUMAN, AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT,
-		AU_LONG_DAY, AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
-		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH,
-		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, US_DATE_SLASH
+		AU_DATE_SLASH, AU_DATE_MONTH, AU_DATE_MONTH_DAY, AU_DATE_TIME, AU_DATE_TIME_HUMAN, AU_DATE_TIME_MS,
+		AU_SHORT_DAY, AU_DATE_DOT, AU_LONG_DAY, AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
+		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH, AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN,
+		US_DATE_SLASH
 	}
 
 	public static String tabify(String value, int charsPerLine, int tabCount) {
@@ -891,8 +849,7 @@ public class CommonUtils {
 		}
 	}
 
-	public static boolean containsAny(Collection container,
-			Collection containees) {
+	public static boolean containsAny(Collection container, Collection containees) {
 		for (Iterator itr = containees.iterator(); itr.hasNext();) {
 			if (container.contains(itr.next())) {
 				return true;
@@ -905,8 +862,7 @@ public class CommonUtils {
 		return s == null ? "" : s;
 	}
 
-	public static String hangingIndent(String text, boolean noTabsFirstLine,
-			int tabs) {
+	public static String hangingIndent(String text, boolean noTabsFirstLine, int tabs) {
 		StringBuilder result = new StringBuilder();
 		String[] lines = text.split("\n");
 		for (int i = 0; i < lines.length; i++) {
@@ -933,8 +889,8 @@ public class CommonUtils {
 		return false;
 	}
 
-	public static String getUniqueNumberedString(String base,
-			String postfixTemplate, Collection<String> existingValues) {
+	public static String getUniqueNumberedString(String base, String postfixTemplate,
+			Collection<String> existingValues) {
 		if (!existingValues.contains(base)) {
 			return base;
 		}
@@ -947,14 +903,12 @@ public class CommonUtils {
 		}
 	}
 
-	public static boolean hasCauseOfClass(Throwable throwable,
-			CollectionFilter<Throwable> causeFilter) {
+	public static boolean hasCauseOfClass(Throwable throwable, CollectionFilter<Throwable> causeFilter) {
 		while (true) {
 			if (causeFilter.allow(throwable)) {
 				return true;
 			}
-			if (throwable.getCause() == throwable
-					|| throwable.getCause() == null) {
+			if (throwable.getCause() == throwable || throwable.getCause() == null) {
 				return false;
 			}
 			throwable = throwable.getCause();
@@ -975,14 +929,12 @@ public class CommonUtils {
 		return false;
 	}
 
-	public static <T extends Throwable> T extractCauseOfClass(
-			Throwable throwable, Class<T> throwableClass) {
+	public static <T extends Throwable> T extractCauseOfClass(Throwable throwable, Class<T> throwableClass) {
 		while (true) {
 			if (isDerivedFrom(throwable, throwableClass)) {
 				return (T) throwable;
 			}
-			if (throwable.getCause() == throwable
-					|| throwable.getCause() == null) {
+			if (throwable.getCause() == throwable || throwable.getCause() == null) {
 				return null;
 			}
 			throwable = throwable.getCause();
@@ -1040,8 +992,7 @@ public class CommonUtils {
 		return result;
 	}
 
-	public static <T extends Comparable> List<T> order(
-			Collection<T> comparableCollection) {
+	public static <T extends Comparable> List<T> order(Collection<T> comparableCollection) {
 		List<T> items = new ArrayList<T>(comparableCollection);
 		Collections.sort(items);
 		return items;
@@ -1067,25 +1018,21 @@ public class CommonUtils {
 		return d;
 	}
 
-	private static UnsortedMultikeyMap<Enum> enumValueLookup = new UnsortedMultikeyMap<Enum>(
-			2);
+	private static UnsortedMultikeyMap<Enum> enumValueLookup = new UnsortedMultikeyMap<Enum>(2);
 
-	public static <E extends Enum> E getEnumValueOrNull(Class<E> enumClass,
-			String value) {
+	public static <E extends Enum> E getEnumValueOrNull(Class<E> enumClass, String value) {
 		return getEnumValueOrNull(enumClass, value, false, null);
 	}
 
-	public static <E extends Enum> E getEnumValueOrNull(Class<E> enumClass,
-			String value, boolean withFriendlyNames, E defaultValue) {
+	public static <E extends Enum> E getEnumValueOrNull(Class<E> enumClass, String value, boolean withFriendlyNames,
+			E defaultValue) {
 		if (!enumValueLookup.containsKey(enumClass)) {
 			for (E ev : enumClass.getEnumConstants()) {
 				enumValueLookup.put(enumClass, ev.toString(), ev);
 				enumValueLookup.put(enumClass, ev.toString().toLowerCase(), ev);
 				if (withFriendlyNames) {
-					enumValueLookup.put(enumClass, friendlyConstant(ev, "-")
-							.toLowerCase(), ev);
-					enumValueLookup.put(enumClass, friendlyConstant(ev, "-"),
-							ev);
+					enumValueLookup.put(enumClass, friendlyConstant(ev, "-").toLowerCase(), ev);
+					enumValueLookup.put(enumClass, friendlyConstant(ev, "-"), ev);
 				}
 			}
 		}
@@ -1108,8 +1055,7 @@ public class CommonUtils {
 	}
 
 	public static boolean isStandardJavaClassOrEnum(Class clazz) {
-		return isStandardJavaClass(clazz) || clazz.isEnum()
-				|| isEnumSubclass(clazz);
+		return isStandardJavaClass(clazz) || clazz.isEnum() || isEnumSubclass(clazz);
 	}
 
 	public static String joinWithNewlines(Collection c) {
@@ -1176,10 +1122,9 @@ public class CommonUtils {
 	@SuppressWarnings("deprecation")
 	public static String dateStampMillis() {
 		Date d = new Date();
-		return formatJ("%s%s%s%s%s%s", padFour(d.getYear() + 1900),
-				padTwo(d.getMonth() + 1), padTwo(d.getDate()),
-				padTwo(d.getHours()), padTwo(d.getMinutes()),
-				padTwo(d.getSeconds()), padThree((int) (d.getTime() % 1000)));
+		return formatJ("%s%s%s%s%s%s", padFour(d.getYear() + 1900), padTwo(d.getMonth() + 1), padTwo(d.getDate()),
+				padTwo(d.getHours()), padTwo(d.getMinutes()), padTwo(d.getSeconds()),
+				padThree((int) (d.getTime() % 1000)));
 	}
 
 	public static String enumStringRep(Enum e) {
@@ -1215,5 +1160,17 @@ public class CommonUtils {
 			result += sourceText.substring(spIdx);
 		}
 		return result;
+	}
+
+	public static <T> List<T> iteratorToList(Iterator<T> itr) {
+		List<T> result = new ArrayList<>();
+		while (itr.hasNext()) {
+			result.add(itr.next());
+		}
+		return result;
+	}
+
+	public static <T> T first(Iterator<T> itr) {
+		return itr.hasNext() ? itr.next() : null;
 	}
 }
