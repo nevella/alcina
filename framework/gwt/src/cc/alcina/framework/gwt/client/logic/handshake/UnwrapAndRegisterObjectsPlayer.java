@@ -35,7 +35,7 @@ public class UnwrapAndRegisterObjectsPlayer extends RunnableAsyncCallbackPlayer<
 	public static final String TOPIC_DELTA_PROGRESS = UnwrapAndRegisterObjectsPlayer.class.getName()
 			+ ".TOPIC_DELTA_PROGRESS";
 
-	void deltaProgress(IntPair intPair) {
+	public static void deltaProgress(IntPair intPair) {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_DELTA_PROGRESS, intPair);
 	}
 
@@ -47,7 +47,6 @@ public class UnwrapAndRegisterObjectsPlayer extends RunnableAsyncCallbackPlayer<
 
 	private Phase phase;
 
-	@SuppressWarnings("unused")
 	private int deltaOrdinal = 0;
 
 	protected RepeatingCommandWithPostCompletionCallback replayer;
