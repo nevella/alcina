@@ -657,6 +657,7 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
             new BrowserListener(getTopLogger(), options, new OophmSessionHandler(getTopLogger(),
                 browserHost));
       }
+      listener.setIgnoreRemoteDeath(true);
       listener.start();
     }
   }
