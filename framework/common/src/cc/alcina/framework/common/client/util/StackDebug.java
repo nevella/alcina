@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
@@ -56,20 +57,27 @@ public class StackDebug {
 						}
 					}
 					if (debug == true) {
-						System.err
-								.println(CommonUtils
-										.formatJ(
-												"***unbalanced stack***"
-														+ "\nThread - %s\npush:\n%s\n\n\npop:\n%s\n\n",
-												thread, CommonUtils.join(
-														lastTraces, "\n"),
-												CommonUtils.join(traces, "\n")));
+						System.err.println(CommonUtils.formatJ(
+								"***unbalanced stack***"
+										+ "\nThread - %s\npush:\n%s\n\n\npop:\n%s\n\n",
+								thread, CommonUtils.join(lastTraces, "\n"),
+								CommonUtils.join(traces, "\n")));
 					}
 				}
 				String template = "**stack-debug: %s-%s-%s-%s - %s -: \n\t%s\n\n***end-stack-debug\n\n";
 				System.err.println(CommonUtils.formatJ(template, tId,
-						hashCode(), push, stack == null ? 0 : stack.size(),
-						traces.length, CommonUtils.join(lines, "\n\t")));
+						hashCode(), (push ? "PUSH" : "POP"),
+						stack == null ? 0 : stack.size(), traces.length,
+						CommonUtils.join(lines, "\n\t")));
+				Stack<StackTraceElement[]> traceStack = perThreadTraces
+						.get(tId);
+				List<StackTraceElement[]> traceList = new ArrayList<>(
+						traceStack);
+				for (int idx = 0; idx < traceList.size(); idx++) {
+					System.out.format("\tDebug stack - #%s\n", idx);
+					System.out.format("\t\t%s\n\t\t%s\n\n", traceList.get(idx)[0],
+							traceList.get(idx)[1]);
+				}
 			}
 		}
 	}
