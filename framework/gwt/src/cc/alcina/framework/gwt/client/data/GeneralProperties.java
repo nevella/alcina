@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.data;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -40,8 +39,8 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
  *
  * @author Nick Reddel
  */
-
- public class GeneralProperties extends WrapperPersistable  implements FromClientWrapperPersistable{
+public class GeneralProperties extends WrapperPersistable
+		implements FromClientWrapperPersistable {
 	public static final transient int DEFAULT_FILTER_DELAY = 500;
 
 	public static final transient String PROPERTY_TRANSIENT_CSS = "transientCss";
@@ -57,7 +56,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 	private String persistentCss = "";
 
 	private boolean allowAdminInvalidObjectWrite = true;
-	
+
 	public GeneralProperties() {
 	}
 
@@ -74,8 +73,8 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 		return this.persistentCss;
 	}
 
-	@Display(helpText = "CSS which will be applied in this session, but not saved on the server", name = "designer.transientCss",focus=true)
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
+	@Display(helpText = "CSS which will be applied in this session, but not saved on the server", name = "designer.transientCss", focus = true)
+	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
 	@Custom(customiserClass = TextAreaCustomiser.class)
 	@XmlTransient
 	public String getTransientCss() {

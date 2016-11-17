@@ -114,6 +114,23 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		}
 	}
 
+	public <T> T callWithPushedSystemUserIfNeededNoThrow(Callable<T> callable) {
+		try {
+			if (isRoot()) {
+				return callable.call();
+			} else {
+				try {
+					pushSystemUser();
+					return callable.call();
+				} finally {
+					popSystemUser();
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public void runWithPushedSystemUserIfNeeded(Runnable runnable) {
 		try {
 			if (isRoot()) {

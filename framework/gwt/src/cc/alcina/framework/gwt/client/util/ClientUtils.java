@@ -16,20 +16,7 @@ package cc.alcina.framework.gwt.client.util;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionListener;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaTopics;
-import cc.alcina.framework.gwt.client.ClientNotifications;
-import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
-import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
-import cc.alcina.framework.gwt.client.ide.ContentViewFactory.OkCancelPanel;
-import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
-import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
-import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
-import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
+import java.util.function.Predicate;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
@@ -48,6 +35,20 @@ import com.google.gwt.user.client.ui.Hidden;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.totsp.gwittir.client.beans.Binding;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.gwt.client.ClientNotifications;
+import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory.OkCancelPanel;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
+import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
+import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
+import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 
 /**
  * 
@@ -222,31 +223,40 @@ public class ClientUtils {
 	public static EditContentViewWidgets makeContentView(final Object model,
 			boolean editable) {
 		return makeContentView(model, null, null, null, false, editable, false,
-				true);
+				true, null,null);
 	}
-
 	public static EditContentViewWidgets makeContentViewWithButtons(
-			final Object model, boolean editable,
-			PermissibleActionListener pal) {
+			final Object model, boolean editable, PermissibleActionListener pal) {
 		return makeContentView(model, pal, null, null, false, editable, false,
-				false);
+				false, null,null);
+	}
+	public static EditContentViewWidgets makeContentViewWithButtons(
+			final Object model, boolean editable, PermissibleActionListener pal,
+			Predicate<String> fieldFilter,String okButtonName) {
+		return makeContentView(model, pal, null, null, false, editable, false,
+				false, fieldFilter,okButtonName);
 	}
 
 	public static EditContentViewWidgets popupContentView(final Object model,
 			final PermissibleActionListener pal, String caption,
 			String messageHtml, final boolean hideOnClick, boolean editable) {
 		return makeContentView(model, pal, caption, messageHtml, hideOnClick,
-				editable, true, false);
+				editable, true, false, null,null);
 	}
 
 	private static EditContentViewWidgets makeContentView(final Object model,
 			final PermissibleActionListener pal, String caption,
 			String messageHtml, final boolean hideOnClick, boolean editable,
-			boolean inDialog, boolean noButtons) {
+			boolean inDialog, boolean noButtons,
+			Predicate<String> fieldFilter, String okButtonName) {
 		ContentViewFactory cvf = new ContentViewFactory();
 		cvf.setNoCaption(true);
 		cvf.setNoButtons(noButtons);
 		cvf.setCancelButton(true);
+		cvf.okButtonName(okButtonName);
+		if (fieldFilter != null) {
+			cvf.fieldFilter(f -> fieldFilter.test(f.getPropertyName()));
+		}
 		FlowPanel fp = new FlowPanel();
 		final GlassDialogBox gdb = new GlassDialogBox();
 		PermissibleActionListener closeWrapper = new PermissibleActionListener() {

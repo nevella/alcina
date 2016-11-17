@@ -92,13 +92,11 @@ import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
  */
 public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	private Map<Class, Validator> validatorMap = new HashMap<Class, Validator>();
-
 	{
 		validatorMap.put(Integer.class, IntegerValidator.INSTANCE);
 		validatorMap.put(int.class, IntegerValidator.INSTANCE);
 		validatorMap.put(Long.class, LongValidator.INSTANCE);
 		validatorMap.put(long.class, LongValidator.INSTANCE);
-		
 		validatorMap.put(Double.class, DoubleValidator.INSTANCE);
 		validatorMap.put(double.class, DoubleValidator.INSTANCE);
 		validatorMap.put(Date.class, ShortDateValidator.INSTANCE);
@@ -522,6 +520,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					RequiresSourceValidator rsv = (RequiresSourceValidator) v;
 					rsv.setSourceObject((HasIdAndLocalId) obj);
 				}
+				if (v instanceof RequiresContextBindable) {
+					((RequiresContextBindable) v).setBindable((SourcesPropertyChangeEvents) obj);
+				}
 				NamedParameter msg = NamedParameter.Support.getParameter(
 						validatorAnnotation.parameters(),
 						cc.alcina.framework.common.client.logic.reflection.Validator.FEEDBACK_MESSAGE);
@@ -529,7 +530,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					vf.addMessage(validatorAnnotation.validator(),
 							msg.stringValue());
 				}
-				if(validatorAnnotation.validateBeanOnly()){
+				if (validatorAnnotation.validateBeanOnly()) {
 					v = new BeanValidationOnlyValidator(v);
 				}
 				cv.add(v);

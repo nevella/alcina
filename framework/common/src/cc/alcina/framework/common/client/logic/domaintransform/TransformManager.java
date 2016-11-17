@@ -1162,7 +1162,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return hili;
 	}
 
-	public void registerDomainObjects(Collection<HasIdAndLocalId> hilis) {
+	public void registerDomainObjects(Collection<? extends HasIdAndLocalId> hilis) {
 		for (HasIdAndLocalId hili : hilis) {
 			registerDomainObject(hili);
 		}

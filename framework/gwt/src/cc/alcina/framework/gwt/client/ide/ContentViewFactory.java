@@ -116,8 +116,10 @@ public class ContentViewFactory {
 
 	public static final String CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS = ContentViewFactory.class
 			+ ".CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS";
-	public static final String CONTEXT_VALIDATING_BEAN =  ContentViewFactory.class
+
+	public static final String CONTEXT_VALIDATING_BEAN = ContentViewFactory.class
 			+ ".CONTEXT_VALIDATING_BEAN";
+
 	public static void registerAdditionalProvisionalObjects(Object o) {
 		if (o == null) {
 			return;
@@ -461,7 +463,9 @@ public class ContentViewFactory {
 	}
 
 	public ContentViewFactory okButtonName(String okButtonName) {
-		this.okButtonName = okButtonName;
+		if (okButtonName != null) {
+			this.okButtonName = okButtonName;
+		}
 		return this;
 	}
 
@@ -708,8 +712,6 @@ public class ContentViewFactory {
 
 	public static class PaneWrapperWithObjects extends FlowPanel implements
 			ClickHandler, PermissibleActionEvent.PermissibleActionSource {
-		
-
 		Validator propertyChangeBeanValidator;
 
 		public boolean editable;
