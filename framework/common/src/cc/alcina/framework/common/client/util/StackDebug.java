@@ -74,9 +74,10 @@ public class StackDebug {
 				List<StackTraceElement[]> traceList = new ArrayList<>(
 						traceStack);
 				for (int idx = 0; idx < traceList.size(); idx++) {
-					System.out.format("\tDebug stack - #%s\n", idx);
-					System.out.format("\t\t%s\n\t\t%s\n\n", traceList.get(idx)[0],
-							traceList.get(idx)[1]);
+					System.out.println(
+							CommonUtils.formatJ("\tDebug stack - #%s\n", idx));
+					System.out.println(CommonUtils.formatJ("\t\t%s\n\t\t%s\n\n",
+							traceList.get(idx)[0], traceList.get(idx)[1]));
 				}
 			}
 		}

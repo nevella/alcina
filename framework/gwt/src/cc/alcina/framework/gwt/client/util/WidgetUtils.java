@@ -1183,6 +1183,13 @@ public class WidgetUtils {
             return true;
         }
 	}-*/;
+	public static native boolean docHasFocus() /*-{
+    if (typeof $wnd.document.hasFocus !== "undefined") {
+        return $wnd.document.hasFocus();
+    } else {
+        return true;
+    }
+}-*/;
 
 	public static void scrollTo(int x, int y) {
 		debugScroll("" + x + ":" + y);

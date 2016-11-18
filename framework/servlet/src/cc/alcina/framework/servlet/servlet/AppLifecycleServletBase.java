@@ -96,7 +96,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					}
 				}
 			}
-		}  catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
 		}
@@ -225,10 +225,13 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			ClassDataCache classes = new ServletClasspathScanner("*", true,
 					false, logger, Registry.MARKER_RESOURCE,
 					Arrays.asList(new String[] {})).getClasses();
+			Registry servletLayerRegistry = Registry.get();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
-					Registry.get(), "servlet-layer");
-			Registry.get()
+					servletLayerRegistry, "servlet-layer");
+			servletLayerRegistry
 					.registerBootstrapServices(ObjectPersistenceHelper.get());
+			EntityLayerObjects.get()
+					.setServletLayerRegistry(servletLayerRegistry);
 		} catch (Exception e) {
 			logger.warn("", e);
 		} finally {
@@ -249,7 +252,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			ResourceUtilities.appShutdown();
 			Registry.appShutdown();
 			Registry.impl(CommonRemoteServiceServletSupport.class)
-			.appShutdown();
+					.appShutdown();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

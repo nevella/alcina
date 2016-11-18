@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.Timer;
@@ -53,6 +54,8 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.sql.DataSource;
+
+import com.google.gwt.event.shared.UmbrellaException;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -118,8 +121,6 @@ import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
 import cc.alcina.framework.entity.projection.GraphProjection;
-
-import com.google.gwt.event.shared.UmbrellaException;
 
 /**
  * <h3>Locking notes:</h3>
@@ -417,6 +418,13 @@ public class AlcinaMemCache implements RegistrableService {
 
 	public <T extends HasIdAndLocalId> T find(T t) {
 		return find(new HiliLocator(t));
+	}
+
+	public <T extends HasIdAndLocalId> Optional<T> find(Optional<T> t) {
+		if (!t.isPresent()) {
+			return t;
+		}
+		return Optional.of(find(new HiliLocator(t.get())));
 	}
 
 	public <T extends HasIdAndLocalId> T findOrCreate(Class<T> clazz,

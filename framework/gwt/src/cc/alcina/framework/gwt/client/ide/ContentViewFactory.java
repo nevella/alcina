@@ -881,6 +881,10 @@ public class ContentViewFactory {
 		public boolean validateAndCommit(final Widget sender,
 				final AsyncCallback<Void> serverValidationCallback) {
 			try {
+				if (!WidgetUtils.docHasFocus()) {
+					GwittirUtils
+							.refreshAllTextBoxes(getBoundWidget().getBinding());
+				}
 				LooseContext.pushWithBoolean(CONTEXT_VALIDATING_BEAN);
 				if (!validateBean()) {
 					return false;

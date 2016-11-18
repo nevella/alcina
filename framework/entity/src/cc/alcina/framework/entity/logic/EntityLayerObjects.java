@@ -70,4 +70,13 @@ public class EntityLayerObjects {
 	public File getDataFolder() {
 		return dataFolder;
 	}
+	private Registry servletLayerRegistry;
+
+	public Registry getServletLayerRegistry() {
+		return this.servletLayerRegistry;
+	}
+
+	public void setServletLayerRegistry(Registry servletLayerRegistry) {
+		this.servletLayerRegistry = servletLayerRegistry;
+	}
 }

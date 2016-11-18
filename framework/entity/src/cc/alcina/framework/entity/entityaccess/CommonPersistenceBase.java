@@ -85,6 +85,7 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
@@ -950,11 +951,13 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 								ctr);
 					}
 				} else {
-					Class c = Registry.get().lookupSingle(ServerValidator.class,
-							serverValidator.getClass());
+					Class c = EntityLayerObjects.get().getServletLayerRegistry()
+							.lookupSingle(ServerValidator.class,
+									serverValidator.getClass());
 					if (c != null) {
-						ServerValidatorHandler handler = (ServerValidatorHandler) Registry
-								.get().instantiateSingle(ServerValidator.class,
+						ServerValidatorHandler handler = (ServerValidatorHandler) EntityLayerObjects
+								.get().getServletLayerRegistry()
+								.instantiateSingle(ServerValidator.class,
 										serverValidator.getClass());
 						handler.handle(serverValidator, getEntityManager());
 					}

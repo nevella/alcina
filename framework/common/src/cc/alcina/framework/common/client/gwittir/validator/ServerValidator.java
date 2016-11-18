@@ -18,7 +18,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientBase;
@@ -37,7 +39,8 @@ public class ServerValidator implements
 		ParameterisedValidator, Serializable {
 	public static final transient String TOPIC_SERVER_VALIDATION_RESULT = ServerValidator.class
 			.getName() + ".TOPIC_SERVER_VALIDATION_RESULT";
-
+	public static final String TOPIC_SERVER_VALIDATION_BEFORE_SEND = ServerValidator.class
+			.getName() + ".TOPIC_SERVER_VALIDATION_BEFORE_SEND";
 	public static boolean performingBeanValidation = false;
 
 	public static boolean listIsValid(List<ServerValidator> svs) {
@@ -206,10 +209,20 @@ public class ServerValidator implements
 					}
 				}
 			};
+			beforeServerValidation(this);
 			validateWithCallback(callback);
 			throw psve;
 		}
 		return value;
+	}
+	public static void beforeServerValidation(ServerValidator validator) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_SERVER_VALIDATION_BEFORE_SEND, validator);
+	}
+
+	public static void beforeServerValidationListenerDelta(
+			TopicListener<ServerValidator> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(
+				TOPIC_SERVER_VALIDATION_BEFORE_SEND, listener, add);
 	}
 
 	protected ValidationException provideTypedException(String sMessage) {

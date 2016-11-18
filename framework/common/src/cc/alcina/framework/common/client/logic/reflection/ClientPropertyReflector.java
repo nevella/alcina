@@ -16,17 +16,22 @@ package cc.alcina.framework.common.client.logic.reflection;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 /**
  * 
  * @author Nick Reddel
  */
-public class ClientPropertyReflector implements
-		Comparable<ClientPropertyReflector>, PropertyReflector {
+public class ClientPropertyReflector
+		implements Comparable<ClientPropertyReflector>, PropertyReflector {
+	public static final String CONTEXT_NAME_TRANSLATOR = ClientPropertyReflector.class
+			.getName() + ".CONTEXT_NAME_TRANSLATOR";
+
 	private final Map<Class, Object> annotations;
 
 	private final String propertyName;
@@ -71,13 +76,18 @@ public class ClientPropertyReflector implements
 	}
 
 	public String getDisplayName() {
-		return getDisplayInfo() == null ? getPropertyName() : getDisplayInfo()
-				.name();
+		String rawName = getDisplayInfo() == null ? getPropertyName()
+				: getDisplayInfo().name();
+		if (LooseContext.has(CONTEXT_NAME_TRANSLATOR)) {
+			rawName = ((Function<String, String>) LooseContext
+					.get(CONTEXT_NAME_TRANSLATOR)).apply(getPropertyName());
+		}
+		return rawName;
 	}
 
 	public int getOrderingHint() {
-		return (getDisplayInfo() == null) ? 1000 : getDisplayInfo()
-				.orderingHint();
+		return (getDisplayInfo() == null) ? 1000
+				: getDisplayInfo().orderingHint();
 	}
 
 	@Override
@@ -102,7 +112,7 @@ public class ClientPropertyReflector implements
 
 	@Override
 	public void setPropertyValue(Object bean, Object newValue) {
-		Reflections.propertyAccessor().setPropertyValue(bean,
-				getPropertyName(), newValue);
+		Reflections.propertyAccessor().setPropertyValue(bean, getPropertyName(),
+				newValue);
 	}
 }
