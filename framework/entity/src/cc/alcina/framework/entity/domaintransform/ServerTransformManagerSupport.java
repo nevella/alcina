@@ -27,25 +27,33 @@ public class ServerTransformManagerSupport {
 			return;
 		}
 		try {
-			PropertyDescriptor[] pds = Introspector
-					.getBeanInfo(hili.getClass()).getPropertyDescriptors();
+			PropertyDescriptor[] pds = Introspector.getBeanInfo(hili.getClass())
+					.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				if (Set.class.isAssignableFrom(pd.getPropertyType())) {
-					Association info = pd.getReadMethod().getAnnotation(
-							Association.class);
+					Association info = pd.getReadMethod()
+							.getAnnotation(Association.class);
 					Set set = (Set) pd.getReadMethod().invoke(hili,
 							CommonUtils.EMPTY_OBJECT_ARRAY);
 					if (info != null && set != null) {
 						for (Object o2 : set) {
-							String accessorName = "get"
-									+ CommonUtils.capitaliseFirst(info
-											.propertyName());
+							String accessorName = "get" + CommonUtils
+									.capitaliseFirst(info.propertyName());
 							Object o3 = o2.getClass()
 									.getMethod(accessorName, new Class[0])
 									.invoke(o2, CommonUtils.EMPTY_OBJECT_ARRAY);
 							if (o3 instanceof Set) {
 								Set assocSet = (Set) o3;
 								assocSet.remove(hili);
+							}
+							if (info.dereferenceOnDelete()) {
+								if (!ThreadlocalTransformManager.isInEntityManagerTransaction()) {
+									TransformManager.get().registerDomainObject(
+											(HasIdAndLocalId) o2);
+									Reflections.propertyAccessor()
+											.setPropertyValue(o2,
+													info.propertyName(), null);
+								}
 							}
 							/*
 							 * direct references (parent/one-one) are not
@@ -75,15 +83,14 @@ public class ServerTransformManagerSupport {
 
 	public void removeParentAssociations(HasIdAndLocalId hili) {
 		try {
-			PropertyDescriptor[] pds = Introspector
-					.getBeanInfo(hili.getClass()).getPropertyDescriptors();
+			PropertyDescriptor[] pds = Introspector.getBeanInfo(hili.getClass())
+					.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
-				if (HasIdAndLocalId.class
-						.isAssignableFrom(pd.getPropertyType())
+				if (HasIdAndLocalId.class.isAssignableFrom(pd.getPropertyType())
 						&& pd.getWriteMethod() != null) {
 					HasIdAndLocalId hiliTarget = (HasIdAndLocalId) pd
-							.getReadMethod().invoke(hili,
-									CommonUtils.EMPTY_OBJECT_ARRAY);
+							.getReadMethod()
+							.invoke(hili, CommonUtils.EMPTY_OBJECT_ARRAY);
 					if (hiliTarget != null && !(hiliTarget instanceof IUser)
 							&& !(hiliTarget instanceof IGroup)) {
 						TransformManager.get().registerDomainObject(hiliTarget);

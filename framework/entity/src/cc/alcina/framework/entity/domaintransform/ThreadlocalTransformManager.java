@@ -1100,4 +1100,9 @@ public class ThreadlocalTransformManager extends TransformManager
 	public void persist(Object object) {
 		entityManager.persist(object);
 	}
+
+	public static boolean isInEntityManagerTransaction() {
+		return get() instanceof ThreadlocalTransformManager
+				&& cast().getEntityManager() != null;
+	}
 }

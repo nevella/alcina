@@ -157,4 +157,12 @@ public abstract class LooseContext {
 		}
 		return t;
 	}
+
+	public static void setIfMissing(String key,
+			Object object) {
+		if(!has(key)){
+			set(key,object);
+		}
+	}
+
 }

@@ -195,6 +195,9 @@ public class GwittirUtils {
 	public static void refreshAllTextBoxes(Binding binding) {
 		refreshTextBoxes(binding, null, true, false, false);
 	}
+	public static void commitAllTextBoxes(Binding binding) {
+		refreshTextBoxes(binding, null, true, false, true);
+	}
 
 	public static List<Validator> getAllValidators(Binding b,
 			List<Validator> vList) {

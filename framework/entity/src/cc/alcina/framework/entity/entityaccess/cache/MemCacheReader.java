@@ -35,6 +35,28 @@ public abstract class MemCacheReader<I, O> {
 		}
 	}
 
+	public O readThrowing(I input) throws Exception {
+		int initialDepth = LooseContext.depth();
+		boolean noLocksWasSet = LooseContext
+				.is(AlcinaMemCache.CONTEXT_NO_LOCKS);
+		try {
+			AlcinaMemCache.get().lock(false);
+			if (initialDepth == 0) {
+				LooseContext.push();
+			}
+			LooseContext.setBoolean(AlcinaMemCache.CONTEXT_NO_LOCKS);
+			return read0(input);
+		} finally {
+			if (!noLocksWasSet) {
+				LooseContext.remove(AlcinaMemCache.CONTEXT_NO_LOCKS);
+			}
+			if (initialDepth == 0) {
+				LooseContext.pop();
+			}
+			AlcinaMemCache.get().unlock(false);
+		}
+	}
+
 	protected abstract O read0(I input) throws Exception;
 
 	public static <T> T get(ThrowingSupplier<T> supplier) {
@@ -44,6 +66,14 @@ public abstract class MemCacheReader<I, O> {
 				return supplier.get();
 			}
 		}.read(null);
+	}
+	public static <T> T getThrowing(ThrowingSupplier<T> supplier) throws Exception{
+		return new MemCacheReader<Void, T>() {
+			@Override
+			protected T read0(Void input) throws Exception {
+				return supplier.get();
+			}
+		}.readThrowing(null);
 	}
 
 	public static <T> List<T> projectCollectionWithSliceLock(
@@ -59,8 +89,8 @@ public abstract class MemCacheReader<I, O> {
 		 */
 		new SliceProcessor<T>().process(data, sliceSize, (sublist, idx) -> {
 			MetricLogging.get().start("slice-projection");
-			result.addAll(get(() -> projections.project(new ArrayList<T>(
-					sublist))));
+			result.addAll(
+					get(() -> projections.project(new ArrayList<T>(sublist))));
 			MetricLogging.get().end("slice-projection");
 		});
 		return result;

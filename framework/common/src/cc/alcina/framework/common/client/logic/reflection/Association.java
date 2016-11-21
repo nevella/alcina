@@ -58,4 +58,7 @@ public @interface Association {
 
 
 	boolean cascadeDeletes() default false;
+
+
+	boolean dereferenceOnDelete() default false;
 }

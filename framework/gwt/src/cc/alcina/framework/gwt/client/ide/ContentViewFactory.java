@@ -883,7 +883,7 @@ public class ContentViewFactory {
 			try {
 				if (!WidgetUtils.docHasFocus()) {
 					GwittirUtils
-							.refreshAllTextBoxes(getBoundWidget().getBinding());
+							.commitAllTextBoxes(getBoundWidget().getBinding());
 				}
 				LooseContext.pushWithBoolean(CONTEXT_VALIDATING_BEAN);
 				if (!validateBean()) {

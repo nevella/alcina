@@ -18,8 +18,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.MappedSuperclass;
@@ -49,6 +51,9 @@ public class DomainTransformRequest implements Serializable {
 	private String protocolVersion;
 
 	private String tag;
+	
+	@Transient
+	public Map<String,String> properties;
 
 	public List<DomainTransformEvent> allTransforms() {
 		List<DomainTransformEvent> all = new ArrayList<DomainTransformEvent>();

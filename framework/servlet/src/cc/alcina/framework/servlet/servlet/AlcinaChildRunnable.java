@@ -1,5 +1,8 @@
 package cc.alcina.framework.servlet.servlet;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.PermissionsManagerState;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -81,6 +84,13 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		return this;
 	}
 
+	Map<String, Object> copyContext = new LinkedHashMap<>();
+
+	public AlcinaChildRunnable copyContext(String key) {
+		copyContext.put(key, LooseContext.get(key));
+		return this;
+	}
+
 	protected abstract void run0() throws Exception;
 
 	@Override
@@ -94,6 +104,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			getRunContext().tLooseContextDepth = LooseContext.depth();
 			this.permissionsManagerState.copyTo(PermissionsManager.get());
 			Thread.currentThread().setContextClassLoader(contextClassLoader);
+			copyContext.forEach((k, v) -> LooseContext.set(k, v));
 			run0();
 		} catch (OutOfMemoryError e) {
 			SEUtilities.threadDump();
