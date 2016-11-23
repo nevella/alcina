@@ -7,7 +7,14 @@ import java.util.function.Function;
 public class StringMapper implements Function<String, String> {
 	private List<String> list;
 
+	private boolean passthroughUnmapped;
+
 	public StringMapper(String... strings) {
+		this(false, strings);
+	}
+
+	public StringMapper(boolean passthroughUnmapped, String... strings) {
+		this.passthroughUnmapped = passthroughUnmapped;
 		this.list = Arrays.asList(strings);
 	}
 
@@ -15,7 +22,11 @@ public class StringMapper implements Function<String, String> {
 	public String apply(String t) {
 		int idx = list.indexOf(t);
 		if (idx == -1 || idx % 2 == 1) {
-			throw new IllegalArgumentException(t);
+			if (passthroughUnmapped) {
+				return t;
+			} else {
+				throw new IllegalArgumentException(t);
+			}
 		}
 		return list.get(idx + 1);
 	}

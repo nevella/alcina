@@ -55,6 +55,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
@@ -1426,5 +1427,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					.cacheIid(iid);
 			cp.getEntityManager().merge(iid);
 		}
+	}
+	@Override
+	public HiliLocatorMap reconstituteHiliMap(long clientInstanceId) {
+		ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
+		tm.resetTltm(new HiliLocatorMap());
+		tm.setEntityManager(getEntityManager());
+		tm.setClientInstance(getHandshakeObjectProvider().getClientInstance(clientInstanceId));
+		HiliLocatorMap result = tm.reconstituteHiliMap();
+		tm.resetTltm(null);
+		return result;
 	}
 }

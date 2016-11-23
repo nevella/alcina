@@ -2,15 +2,21 @@ package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedCacheObjectStore;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.ServerTransformManagerSupport;
 
@@ -73,7 +79,8 @@ public class SubgraphTransformManager extends TransformManager {
 	protected void updateAssociation(DomainTransformEvent evt,
 			HasIdAndLocalId obj, Object tgt, boolean remove,
 			boolean collectionPropertyChange) {
-		super.updateAssociation(evt, obj, tgt, remove, collectionPropertyChange);
+		super.updateAssociation(evt, obj, tgt, remove,
+				collectionPropertyChange);
 	}
 
 	static class SubgraphClassLookup implements ClassLookup {
@@ -84,15 +91,15 @@ public class SubgraphTransformManager extends TransformManager {
 
 		@Override
 		public List<String> getAnnotatedPropertyNames(Class clazz) {
-			return ObjectPersistenceHelper.get().getAnnotatedPropertyNames(
-					clazz);
+			return ObjectPersistenceHelper.get()
+					.getAnnotatedPropertyNames(clazz);
 		}
 
 		@Override
-		public <A extends Annotation> A getAnnotationForClass(
-				Class targetClass, Class<A> annotationClass) {
-			return ObjectPersistenceHelper.get().getAnnotationForClass(
-					targetClass, annotationClass);
+		public <A extends Annotation> A getAnnotationForClass(Class targetClass,
+				Class<A> annotationClass) {
+			return ObjectPersistenceHelper.get()
+					.getAnnotationForClass(targetClass, annotationClass);
 		}
 
 		public Class getClassForName(String fqn) {
@@ -141,7 +148,68 @@ public class SubgraphTransformManager extends TransformManager {
 
 	protected HasIdAndLocalId getObjectForCreate(DomainTransformEvent event) {
 		return null;
-	
 	}
 
+	static class SubgraphTransformManagerRecord extends SubgraphTransformManager
+			implements LazyObjectLoader {
+		private HasIdAndLocalId firstCreated = null;
+
+		@Override
+		protected void createObjectLookup() {
+			store = new DetachedCacheObjectStore(new DetachedEntityCache());
+			store.setLazyObjectLoader(this);
+			setDomainObjects(store);
+		}
+
+		@Override
+		public void consume(DomainTransformEvent event)
+				throws DomainTransformException {
+			super.consume(event);
+			if (event.getTransformType() == TransformType.CREATE_OBJECT
+					&& firstCreated == null) {
+				firstCreated = getDetachedEntityCache().allValues().iterator()
+						.next();
+			}
+		}
+
+		@Override
+		public <T extends HasIdAndLocalId> void
+				loadObject(Class<? extends T> clazz, long id, long localId) {
+			store.getCache().put(AlcinaMemCache.get().find(clazz, id));
+		}
+	}
+
+	public static <T extends HasIdAndLocalId> T
+			createSynthetic(Stream<DomainTransformEvent> stream) {
+		try {
+			SubgraphTransformManagerRecord tm = new SubgraphTransformManagerRecord();
+			List<DomainTransformEvent> dtes = stream.map(dte -> {
+				try {
+					// cheap hack to let local transforms work with
+					// DetachedEntityCache
+					DomainTransformEvent copy = ResourceUtilities
+							.fieldwiseClone(dte, true);
+					if (copy.getObjectLocalId() != 0) {
+						copy.setObjectId(-copy.getObjectLocalId());
+						copy.setObjectLocalId(0L);
+					}
+					return copy;
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}).collect(Collectors.toList());
+			for (DomainTransformEvent dte : dtes) {
+				tm.consume(dte);
+			}
+			HasIdAndLocalId firstCreated = tm.firstCreated;
+			long id = firstCreated.getId();
+			if(id<0){
+			firstCreated.setLocalId(-id);
+			firstCreated.setId(0);
+			}
+			return (T) firstCreated;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 }

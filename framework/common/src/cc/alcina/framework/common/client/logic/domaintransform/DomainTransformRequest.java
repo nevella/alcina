@@ -38,6 +38,29 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public class DomainTransformRequest implements Serializable {
+	public static List<DomainTransformEvent>
+			allEvents(Collection<? extends DomainTransformRequest> requests) {
+		List<DomainTransformEvent> result = new ArrayList<DomainTransformEvent>();
+		for (DomainTransformRequest request : requests) {
+			result.addAll(request.getEvents());
+		}
+		return result;
+	}
+
+	public static boolean checkSequential(List<DomainTransformEvent> events) {
+		long lastLocalId = -1;
+		for (DomainTransformEvent dte : events) {
+			if (dte.getTransformType() == TransformType.CREATE_OBJECT) {
+				if (lastLocalId != -1
+						&& dte.getObjectLocalId() - lastLocalId != 1) {
+					return false;
+				}
+				lastLocalId = dte.getObjectLocalId();
+			}
+		}
+		return true;
+	}
+
 	private List<DomainTransformEvent> events = new ArrayList<DomainTransformEvent>();
 
 	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
@@ -51,9 +74,9 @@ public class DomainTransformRequest implements Serializable {
 	private String protocolVersion;
 
 	private String tag;
-	
+
 	@Transient
-	public Map<String,String> properties;
+	public Map<String, String> properties;
 
 	public List<DomainTransformEvent> allTransforms() {
 		List<DomainTransformEvent> all = new ArrayList<DomainTransformEvent>();
@@ -64,24 +87,20 @@ public class DomainTransformRequest implements Serializable {
 		return all;
 	}
 
-	private List<DomainTransformRequest> allRequests() {
-		List<DomainTransformRequest> dtrs = new ArrayList<DomainTransformRequest>();
-		dtrs.addAll(getPriorRequestsWithoutResponse());
-		dtrs.add(this);
-		return dtrs;
-	}
-
-	public void removeTransformsForObject(HasIdAndLocalId object) {
-		for (DomainTransformRequest rq : allRequests()) {
-			for (Iterator<DomainTransformEvent> itr = rq.getEvents().iterator(); itr
-					.hasNext();) {
-				DomainTransformEvent dte = itr.next();
-				Object source = dte.provideSourceOrMarker();
-				if (object.equals(source)) {
+	public boolean checkForDuplicateEvents() {
+		Set<Long> createIds = new LinkedHashSet<Long>();
+		boolean duplicates = false;
+		for (Iterator<DomainTransformEvent> itr = events.iterator(); itr
+				.hasNext();) {
+			DomainTransformEvent event = itr.next();
+			if (event.getTransformType() == TransformType.CREATE_OBJECT) {
+				if (!createIds.add(event.getObjectLocalId())) {
 					itr.remove();
+					duplicates = true;
 				}
 			}
 		}
+		return duplicates;
 	}
 
 	public void fromString(String eventsStr) {
@@ -112,11 +131,6 @@ public class DomainTransformRequest implements Serializable {
 		return this.priorRequestsWithoutResponse;
 	}
 
-	public void setPriorRequestsWithoutResponse(
-			List<DomainTransformRequest> priorRequestsWithoutResponse) {
-		this.priorRequestsWithoutResponse = priorRequestsWithoutResponse;
-	}
-
 	@Transient
 	public String getProtocolVersion() {
 		return protocolVersion;
@@ -128,6 +142,25 @@ public class DomainTransformRequest implements Serializable {
 
 	public String getTag() {
 		return tag;
+	}
+
+	public void removeTransform(DomainTransformEvent dte) {
+		for (DomainTransformRequest rq : allRequests()) {
+			rq.getEvents().removeIf(e -> e == dte);
+		}
+	}
+
+	public void removeTransformsForObject(HasIdAndLocalId object) {
+		for (DomainTransformRequest rq : allRequests()) {
+			for (Iterator<DomainTransformEvent> itr = rq.getEvents()
+					.iterator(); itr.hasNext();) {
+				DomainTransformEvent dte = itr.next();
+				Object source = dte.provideSourceOrMarker();
+				if (object.equals(source)) {
+					itr.remove();
+				}
+			}
+		}
 	}
 
 	public void setClientInstance(ClientInstance clientInstance) {
@@ -142,6 +175,11 @@ public class DomainTransformRequest implements Serializable {
 		this.events = items;
 	}
 
+	public void setPriorRequestsWithoutResponse(
+			List<DomainTransformRequest> priorRequestsWithoutResponse) {
+		this.priorRequestsWithoutResponse = priorRequestsWithoutResponse;
+	}
+
 	public void setProtocolVersion(String protocolVersion) {
 		this.protocolVersion = protocolVersion;
 	}
@@ -154,9 +192,14 @@ public class DomainTransformRequest implements Serializable {
 		this.tag = tag;
 	}
 
+	public String shortId() {
+		return CommonUtils.formatJ("Dtr: cli-id: %s - rq-id: %s",
+				HiliHelper.getIdOrNull(clientInstance), requestId);
+	}
+
 	public String toString() {
-		return new DTRProtocolSerializer()
-				.serialize(this, getProtocolVersion());
+		return new DTRProtocolSerializer().serialize(this,
+				getProtocolVersion());
 	}
 
 	public String toStringForError() {
@@ -180,47 +223,10 @@ public class DomainTransformRequest implements Serializable {
 		}
 	}
 
-	public String shortId() {
-		return CommonUtils.formatJ("Dtr: cli-id: %s - rq-id: %s",
-				HiliHelper.getIdOrNull(clientInstance), requestId);
-	}
-
-	public static List<DomainTransformEvent> allEvents(
-			Collection<? extends DomainTransformRequest> requests) {
-		List<DomainTransformEvent> result = new ArrayList<DomainTransformEvent>();
-		for (DomainTransformRequest request : requests) {
-			result.addAll(request.getEvents());
-		}
-		return result;
-	}
-
-	public boolean checkForDuplicateEvents() {
-		Set<Long> createIds = new LinkedHashSet<Long>();
-		boolean duplicates=false;
-		for (Iterator<DomainTransformEvent> itr = events.iterator(); itr
-				.hasNext();) {
-			DomainTransformEvent event = itr.next();
-			if (event.getTransformType() == TransformType.CREATE_OBJECT) {
-				if (!createIds.add(event.getObjectLocalId())) {
-					itr.remove();
-					duplicates=true;
-				}
-			}
-		}
-		return duplicates;
-	}
-
-	public static boolean checkSequential(
-			List<DomainTransformEvent> events) {
-		long lastLocalId=-1;
-		for(DomainTransformEvent dte:events){
-			if(dte.getTransformType()==TransformType.CREATE_OBJECT){
-				if(lastLocalId!=-1&&dte.getObjectLocalId()-lastLocalId!=1){
-					return false;
-				}
-				lastLocalId=dte.getObjectLocalId();
-			}
-		}
-		return true;
+	private List<DomainTransformRequest> allRequests() {
+		List<DomainTransformRequest> dtrs = new ArrayList<DomainTransformRequest>();
+		dtrs.addAll(getPriorRequestsWithoutResponse());
+		dtrs.add(this);
+		return dtrs;
 	}
 }

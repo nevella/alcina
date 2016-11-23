@@ -7,16 +7,22 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 /*
  */
-public class HiliLocator implements Serializable{
+public class HiliLocator implements Serializable {
 	static final transient long serialVersionUID = 1L;
+
 	public static HiliLocator objectLocator(DomainTransformEvent dte) {
 		return new HiliLocator(dte.getObjectClass(), dte.getObjectId(),
 				dte.getObjectLocalId());
 	}
 
+	public static HiliLocator objectLocalLocator(DomainTransformEvent dte) {
+		return new HiliLocator(dte.getObjectClass(), 0, dte.getObjectLocalId());
+	}
+
 	public static HiliLocator valueLocator(DomainTransformEvent dte) {
-		return dte.getValueClass() != null && (dte.getValueId() != 0) ? new HiliLocator(
-				dte.getValueClass(), dte.getValueId(), dte.getValueLocalId())
+		return dte.getValueClass() != null && (dte.getValueId() != 0)
+				? new HiliLocator(dte.getValueClass(), dte.getValueId(),
+						dte.getValueLocalId())
 				: null;
 	}
 
@@ -48,6 +54,9 @@ public class HiliLocator implements Serializable{
 	public boolean equals(Object obj) {
 		if (obj instanceof HiliLocator) {
 			HiliLocator o = (HiliLocator) obj;
+			if (localId != 0 && o.localId != 0) {
+				return localId == o.localId && clazz == o.clazz;
+			}
 			return id == o.id && clazz == o.clazz;
 		}
 		return super.equals(obj);
@@ -64,7 +73,8 @@ public class HiliLocator implements Serializable{
 	@Override
 	public int hashCode() {
 		if (hash == 0) {
-			hash = Long.valueOf(id).hashCode()
+			hash = (id == 0 ? Long.valueOf(id).hashCode()
+					: Long.valueOf(localId).hashCode())
 					^ (clazz == null ? 0 : clazz.hashCode());
 			if (hash == 0) {
 				hash = -1;
@@ -83,7 +93,16 @@ public class HiliLocator implements Serializable{
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("%s - %s", clazz == null ? "??"
-				: CommonUtils.simpleClassName(clazz), id);
+		return CommonUtils.formatJ("%s - %s",
+				clazz == null ? "??" : CommonUtils.simpleClassName(clazz), id);
+	}
+
+	public String toRecoverableString(long clientInstanceId) {
+		if (id != 0) {
+			return toString();
+		}
+		return CommonUtils.formatJ("%s - %s/%s",
+				clazz == null ? "??" : CommonUtils.simpleClassName(clazz),
+				localId, clientInstanceId);
 	}
 }

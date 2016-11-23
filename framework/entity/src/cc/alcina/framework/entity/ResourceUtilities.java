@@ -560,8 +560,10 @@ public class ResourceUtilities {
 			throw new WrappedRuntimeException(e);
 		}
 	}
-
 	public static <T> T fieldwiseClone(T t) throws Exception {
+		return fieldwiseClone(t, false);
+	}
+	public static <T> T fieldwiseClone(T t, boolean withTransients) throws Exception {
 		List<Field> allFields = new ArrayList<Field>();
 		Class c = t.getClass();
 		while (c != Object.class) {
@@ -570,7 +572,7 @@ public class ResourceUtilities {
 				if (Modifier.isStatic(field.getModifiers())) {
 					continue;
 				}
-				if (Modifier.isTransient(field.getModifiers())) {
+				if (Modifier.isTransient(field.getModifiers())&&!withTransients) {
 					continue;
 				}
 				field.setAccessible(true);

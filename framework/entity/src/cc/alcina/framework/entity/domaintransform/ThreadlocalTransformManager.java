@@ -613,7 +613,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		super.propertyChange(evt);
 	}
 
-	public void reconstituteHiliMap() {
+	public HiliLocatorMap reconstituteHiliMap() {
 		if (clientInstance != null) {
 			CommonPersistenceLocal cp = Registry
 					.impl(CommonPersistenceProvider.class)
@@ -652,6 +652,7 @@ public class ThreadlocalTransformManager extends TransformManager
 			}
 			MetricLogging.get().end(message);
 		}
+		return userSessionHiliMap;
 	}
 
 	@Override

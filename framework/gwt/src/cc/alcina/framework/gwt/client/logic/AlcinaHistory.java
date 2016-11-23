@@ -156,10 +156,16 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	public boolean isNoHistoryDisabled() {
 		return this.noHistoryDisabled;
 	}
+	private int eventIndex=0;
+
+	public int getEventIndex() {
+		return this.eventIndex;
+	}
 
 	public void onHistoryChanged(String historyToken) {
 		lastEvent = currentEvent;
 		currentEvent = parseToken(historyToken);
+		eventIndex++;
 	}
 
 	public I ensureEventFromCurrentToken() {
