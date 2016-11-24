@@ -73,7 +73,7 @@ public class HiliLocator implements Serializable {
 	@Override
 	public int hashCode() {
 		if (hash == 0) {
-			hash = (id == 0 ? Long.valueOf(id).hashCode()
+			hash = (id != 0 ? Long.valueOf(id).hashCode()
 					: Long.valueOf(localId).hashCode())
 					^ (clazz == null ? 0 : clazz.hashCode());
 			if (hash == 0) {

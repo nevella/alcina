@@ -100,6 +100,22 @@ public class ThreadlocalTransformManager extends TransformManager
 	public static final String CONTEXT_IGNORE_DOUBLE_DELETION = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_IGNORE_DOUBLE_DELETION";
 
+	private static final String TOPIC_RESET_THREAD_TRANSFORM_MANAGER = ThreadlocalTransformManager.class
+			.getName() + ".TOPIC_RESET_THREAD_TRANSFORM_MANAGER";
+
+	private static ThreadLocal threadLocalTLTMInstance = new ThreadLocal() {
+		protected synchronized Object initialValue() {
+			ThreadlocalTransformManager tm = ThreadlocalTransformManager
+					.ttmInstance();
+			tm.resetTltm(null);
+			return tm;
+		}
+	};
+
+	private static List<DomainTransformListener> threadLocalListeners = new ArrayList<DomainTransformListener>();;
+
+	private static ThreadLocalSequentialIdGenerator tlIdGenerator = new ThreadLocalSequentialIdGenerator();
+
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
 		threadLocalListeners.add(listener);
@@ -114,7 +130,12 @@ public class ThreadlocalTransformManager extends TransformManager
 	 */
 	public static ThreadlocalTransformManager get() {
 		return ThreadlocalTransformManager.cast();
-	};
+	}
+
+	public static boolean isInEntityManagerTransaction() {
+		return get() instanceof ThreadlocalTransformManager
+				&& cast().getEntityManager() != null;
+	}
 
 	public static void threadTransformManagerWasReset() {
 		GlobalTopicPublisher.get().publishTopic(
@@ -131,20 +152,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		ThreadlocalTransformManager tltm = new ThreadlocalTransformManager();
 		return tltm;
 	}
-
-	private static final String TOPIC_RESET_THREAD_TRANSFORM_MANAGER = ThreadlocalTransformManager.class
-			.getName() + ".TOPIC_RESET_THREAD_TRANSFORM_MANAGER";
-
-	private static ThreadLocal threadLocalTLTMInstance = new ThreadLocal() {
-		protected synchronized Object initialValue() {
-			ThreadlocalTransformManager tm = ThreadlocalTransformManager
-					.ttmInstance();
-			tm.resetTltm(null);
-			return tm;
-		}
-	};
-
-	private static List<DomainTransformListener> threadLocalListeners = new ArrayList<DomainTransformListener>();
 
 	private PersistenceLayerTransformExceptionPolicy exceptionPolicy;
 
@@ -176,11 +183,21 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private boolean initialised = false;
 
-	protected Set<HiliLocator> createdObjectLocators = new LinkedHashSet<HiliLocator>();
+	protected Set<HiliLocator> createdObjectLocators = new LinkedHashSet<>();
 
-	private static ThreadLocalSequentialIdGenerator tlIdGenerator = new ThreadLocalSequentialIdGenerator();
+	private boolean transformsExplicitlyPermitted;
+
+	private Set<DomainTransformEvent> explicitlyPermittedTransforms = new LinkedHashSet<>();
 
 	private boolean useTlIdGenerator = false;
+
+	@Override
+	public void addTransform(DomainTransformEvent evt) {
+		if (transformsExplicitlyPermitted) {
+			explicitlyPermittedTransforms.add(evt);
+		}
+		super.addTransform(evt);
+	}
 
 	@Override
 	public IndividualPropertyAccessor cachedAccessor(Class clazz,
@@ -338,6 +355,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		return super.find(clazz, key, value);
 	}
 
+	public void flush() {
+		entityManager.flush();
+	}
+
 	public List<String> getAnnotatedPropertyNames(Class clazz) {
 		return ObjectPersistenceHelper.get().getAnnotatedPropertyNames(clazz);
 	}
@@ -382,6 +403,16 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public EntityManager getEntityManager() {
 		return entityManager;
+	}
+
+	@Override
+	public <H extends HasIdAndLocalId> long
+			getLocalIdForClientInstance(H hili) {
+		if (userSessionHiliMap != null) {
+			return userSessionHiliMap.getLocalIdForClientInstance(hili);
+		} else {
+			return super.getLocalIdForClientInstance(hili);
+		}
 	}
 
 	public List<DomainTransformEvent> getModificationEvents() {
@@ -521,6 +552,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		return listenToFoundObjects;
 	}
 
+	public boolean isTransformsExplicitlyPermitted() {
+		return this.transformsExplicitlyPermitted;
+	}
+
 	/**
 	 * for complete database replay
 	 */
@@ -592,6 +627,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		HasIdAndLocalId object = getObject(hili);
 		removeAssociations(hili);
 		entityManager.remove(object);
+	}
+
+	public void persist(Object object) {
+		entityManager.persist(object);
 	}
 
 	@Override
@@ -675,11 +714,12 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public void resetTltm(HiliLocatorMap locatorMap) {
-		resetTltm(locatorMap, null);
+		resetTltm(locatorMap, null, false);
 	}
 
 	public void resetTltm(HiliLocatorMap locatorMap,
-			PersistenceLayerTransformExceptionPolicy exceptionPolicy) {
+			PersistenceLayerTransformExceptionPolicy exceptionPolicy,
+			boolean keepExplicitlyPermittedTransforms) {
 		setEntityManager(null);
 		setDetachedEntityCache(null);
 		this.exceptionPolicy = exceptionPolicy;
@@ -690,6 +730,9 @@ public class ThreadlocalTransformManager extends TransformManager
 		transformListenerSupport.clear();
 		deleted = new LinkedHashSet<HasIdAndLocalId>();
 		createdObjectLocators.clear();
+		if (!keepExplicitlyPermittedTransforms) {
+			explicitlyPermittedTransforms.clear();
+		}
 		this.lastEvent = null;
 		for (SourcesPropertyChangeEvents spce : listeningTo) {
 			spce.removePropertyChangeListener(this);
@@ -772,11 +815,9 @@ public class ThreadlocalTransformManager extends TransformManager
 				SuggestedAction.NOTIFY_WARNING);
 	}
 
-	protected boolean
-			checkHasSufficientInfoForPropertyPersist(HasIdAndLocalId hili) {
-		return hili.getId() != 0
-				|| (localIdToEntityMap.get(hili.getLocalId()) != null
-						&& getEntityManager() == null);
+	public void setTransformsExplicitlyPermitted(
+			boolean transformsExplicitlyPermitted) {
+		this.transformsExplicitlyPermitted = transformsExplicitlyPermitted;
 	}
 
 	public void setUseObjectCreationId(boolean useObjectCreationId) {
@@ -862,20 +903,21 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 	}
 
+	private boolean explicitlyPermitted(DomainTransformEvent evt) {
+		return explicitlyPermittedTransforms.contains(evt);
+	}
+
 	private void listenTo(SourcesPropertyChangeEvents spce) {
 		listeningTo.add(spce);
 		spce.removePropertyChangeListener(this);
 		spce.addPropertyChangeListener(this);
 	}
 
-	protected void maybeEnsureSource(DomainTransformEvent evt) {
-		if (WrapperPersistable.class.isAssignableFrom(evt.getObjectClass())) {
-			return;
-		}
-		if (evt.getSource() == null
-				|| !getEntityManager().contains(evt.getSource())) {
-			getObject(evt);
-		}
+	protected boolean
+			checkHasSufficientInfoForPropertyPersist(HasIdAndLocalId hili) {
+		return hili.getId() != 0
+				|| (localIdToEntityMap.get(hili.getLocalId()) != null
+						&& getEntityManager() == null);
 	}
 
 	@Override
@@ -883,6 +925,9 @@ public class ThreadlocalTransformManager extends TransformManager
 			DomainTransformEvent evt, String propertyName, Object change) {
 		if (ResourceUtilities.getBoolean(ThreadlocalTransformManager.class,
 				"ignoreTransformPermissions")) {
+			return true;
+		}
+		if (explicitlyPermitted(evt)) {
 			return true;
 		}
 		try {
@@ -1015,6 +1060,16 @@ public class ThreadlocalTransformManager extends TransformManager
 		return entityManager != null;
 	}
 
+	protected void maybeEnsureSource(DomainTransformEvent evt) {
+		if (WrapperPersistable.class.isAssignableFrom(evt.getObjectClass())) {
+			return;
+		}
+		if (evt.getSource() == null
+				|| !getEntityManager().contains(evt.getSource())) {
+			getObject(evt);
+		}
+	}
+
 	@Override
 	protected void objectModified(HasIdAndLocalId hili,
 			DomainTransformEvent evt, boolean targetObject) {
@@ -1082,28 +1137,5 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public static class UncomittedTransformsException extends Exception {
-	}
-
-	@Override
-	public <H extends HasIdAndLocalId> long
-			getLocalIdForClientInstance(H hili) {
-		if (userSessionHiliMap != null) {
-			return userSessionHiliMap.getLocalIdForClientInstance(hili);
-		} else {
-			return super.getLocalIdForClientInstance(hili);
-		}
-	}
-
-	public void flush() {
-		entityManager.flush();
-	}
-
-	public void persist(Object object) {
-		entityManager.persist(object);
-	}
-
-	public static boolean isInEntityManagerTransaction() {
-		return get() instanceof ThreadlocalTransformManager
-				&& cast().getEntityManager() != null;
 	}
 }

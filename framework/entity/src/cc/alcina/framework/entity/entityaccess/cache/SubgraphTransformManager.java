@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.lang.annotation.Annotation;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -9,6 +10,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedCacheObjectStore;
@@ -16,6 +18,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.ServerTransformManagerSupport;
@@ -152,7 +155,7 @@ public class SubgraphTransformManager extends TransformManager {
 
 	static class SubgraphTransformManagerRecord extends SubgraphTransformManager
 			implements LazyObjectLoader {
-		private HasIdAndLocalId firstCreated = null;
+		private HasIdAndLocalId firstReferenced = null;
 
 		@Override
 		protected void createObjectLookup() {
@@ -165,10 +168,10 @@ public class SubgraphTransformManager extends TransformManager {
 		public void consume(DomainTransformEvent event)
 				throws DomainTransformException {
 			super.consume(event);
-			if (event.getTransformType() == TransformType.CREATE_OBJECT
-					&& firstCreated == null) {
-				firstCreated = getDetachedEntityCache().allValues().iterator()
-						.next();
+			if (firstReferenced == null) {
+				Iterator<HasIdAndLocalId> iterator = getDetachedEntityCache()
+						.allValues().iterator();
+				firstReferenced = iterator.hasNext() ? iterator.next() : null;
 			}
 		}
 
@@ -179,8 +182,8 @@ public class SubgraphTransformManager extends TransformManager {
 		}
 	}
 
-	public static <T extends HasIdAndLocalId> T
-			createSynthetic(Stream<DomainTransformEvent> stream) {
+	public static <T extends HasIdAndLocalId> T generateSynthetic(
+			HiliLocatorMap locatorMap, Stream<DomainTransformEvent> stream) {
 		try {
 			SubgraphTransformManagerRecord tm = new SubgraphTransformManagerRecord();
 			List<DomainTransformEvent> dtes = stream.map(dte -> {
@@ -189,9 +192,15 @@ public class SubgraphTransformManager extends TransformManager {
 					// DetachedEntityCache
 					DomainTransformEvent copy = ResourceUtilities
 							.fieldwiseClone(dte, true);
-					if (copy.getObjectLocalId() != 0) {
-						copy.setObjectId(-copy.getObjectLocalId());
-						copy.setObjectLocalId(0L);
+					long objectLocalId = copy.getObjectLocalId();
+					if (objectLocalId != 0) {
+						if (locatorMap.containsKey(objectLocalId)) {
+							copy.setObjectId(locatorMap.get(objectLocalId).id);
+							copy.setObjectLocalId(0);
+						} else {
+							copy.setObjectId(-objectLocalId);
+							copy.setObjectLocalId(0L);
+						}
 					}
 					return copy;
 				} catch (Exception e) {
@@ -201,13 +210,13 @@ public class SubgraphTransformManager extends TransformManager {
 			for (DomainTransformEvent dte : dtes) {
 				tm.consume(dte);
 			}
-			HasIdAndLocalId firstCreated = tm.firstCreated;
-			long id = firstCreated.getId();
-			if(id<0){
-			firstCreated.setLocalId(-id);
-			firstCreated.setId(0);
+			HasIdAndLocalId firstReferenced = tm.firstReferenced;
+			long id = firstReferenced.getId();
+			if (id < 0) {
+				firstReferenced.setLocalId(-id);
+				firstReferenced.setId(0);
 			}
-			return (T) firstCreated;
+			return (T) firstReferenced;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

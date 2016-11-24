@@ -1430,7 +1430,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 	@Override
 	public HiliLocatorMap reconstituteHiliMap(long clientInstanceId) {
-		ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
+		ThreadlocalTransformManager tm = new ThreadlocalTransformManager();
 		tm.resetTltm(new HiliLocatorMap());
 		tm.setEntityManager(getEntityManager());
 		tm.setClientInstance(getHandshakeObjectProvider().getClientInstance(clientInstanceId));
