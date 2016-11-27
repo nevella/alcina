@@ -85,6 +85,9 @@ public interface HasEquivalence<T> {
 
 		public static <T extends HasEquivalence> boolean
 				equivalent(Collection<T> o1, Collection<T> o2) {
+			if (o1 == null || o2 == null) {
+				return o1 == o2;
+			}
 			return o1.size() == o2.size()
 					&& intersection(o1, o2).size() == o1.size();
 		}
