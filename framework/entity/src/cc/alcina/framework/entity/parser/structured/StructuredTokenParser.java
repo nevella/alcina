@@ -27,6 +27,9 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 	}
 
 	void handleNode(XmlNode node, C context) {
+		if (node.textContains("The offender pleaded guilty t")) {
+			int debug = 3;
+		}
 		for (XmlToken token : tokens) {
 			if (token.matches(context, node)) {
 				XmlStructuralJoin outNode = new XmlStructuralJoin(node, token);

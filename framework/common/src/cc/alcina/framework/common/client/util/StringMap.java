@@ -130,4 +130,11 @@ public class StringMap extends LinkedHashMap<String, String> {
 	public String firstKey() {
 		return size() == 0 ? null : keySet().iterator().next();
 	}
+
+	public String replaceString(String string) {
+		for (Map.Entry<String, String> entry : entrySet()) {
+			string = string.replace(entry.getKey(), entry.getValue());
+		}
+		return string;
+	}
 }
