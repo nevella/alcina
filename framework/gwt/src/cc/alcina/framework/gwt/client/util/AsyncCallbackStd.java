@@ -1,9 +1,11 @@
 package cc.alcina.framework.gwt.client.util;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
+import java.util.function.Consumer;
 
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 public abstract class AsyncCallbackStd<T> implements AsyncCallback<T> {
 	@Override
@@ -23,6 +25,16 @@ public abstract class AsyncCallbackStd<T> implements AsyncCallback<T> {
 		public void onSuccess(T result) {
 			value=result;
 		}
+	}
+	public static <T> AsyncCallbackStd<T> consumerForm(Consumer<T> consumer){
+		return new AsyncCallbackStd<T>(){
+
+			@Override
+			public void onSuccess(T result) {
+				consumer.accept(result);
+			}
+			
+		};
 	}
 	
 }
