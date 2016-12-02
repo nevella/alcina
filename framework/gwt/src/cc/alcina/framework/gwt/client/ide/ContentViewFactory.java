@@ -280,6 +280,7 @@ public class ContentViewFactory {
 					cp.add(sp);
 				}
 				cp.setOkButton(sp.okButton);
+				cp.setCancelButton(sp.cancelButton);
 				if (sp.okButton instanceof Focusable) {
 					f.setFocusOnDetachIfEditorFocussed((Focusable) sp.okButton);
 				}
@@ -868,6 +869,15 @@ public class ContentViewFactory {
 			if (this.initialObjects == null) {
 				initialObjects = new ArrayList(objects);
 			}
+		}
+
+		private Widget cancelButton;
+		public Widget getCancelButton() {
+			return this.cancelButton;
+		}
+
+		public void setCancelButton(Widget cancelButton) {
+			this.cancelButton = cancelButton;
 		}
 
 		public void setOkButton(Widget okButton) {

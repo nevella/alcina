@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.sync;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersisterResult.FlatDeltaPersisterResultType;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
 
@@ -55,7 +56,7 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 				result.update(resultType);
 				perClassResult.update(resultType);
 			}
-			System.out.format("Flat delta persister/apply: %s - %s\n",
+			JobRegistry.get().log("Flat delta persister/apply: %s - %s",
 					clazz.getSimpleName(), perClassResult);
 		}
 		return result;

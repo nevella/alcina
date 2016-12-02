@@ -227,4 +227,9 @@ public class Link<T> extends Widget
 	protected void onEnsureDebugId(String baseID) {
 		ensureDebugId(anchorElem, "", baseID);
 	}
+
+	public static Link createHashHref(String text,
+			String token) {
+		return createHrefNoUnderline(text, "#"+token);
+	}
 }
