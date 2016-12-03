@@ -2,13 +2,11 @@ package cc.alcina.framework.common.client.cache;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
-import cc.alcina.framework.common.client.cache.CacheCreators.CacheIdMapCreator;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
@@ -34,15 +32,25 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 
 	protected boolean concurrent;
 
+	 Function<T,?> valueFunction;
+
 	public CacheLookupDescriptor(Class clazz, String propertyPath) {
-		this(clazz, propertyPath, false);
+		this(clazz, propertyPath, false, null);
 	}
 
+	public CacheLookupDescriptor(Class clazz, Function<T,?> valueFunction,boolean concurrent) {
+		this(clazz, "no-path", concurrent, valueFunction);
+	}
 	public CacheLookupDescriptor(Class clazz, String propertyPath,
-			boolean concurrent) {
+			boolean concurrent){
+		this(clazz, propertyPath, concurrent, null);
+	}
+	public CacheLookupDescriptor(Class clazz, String propertyPath,
+			boolean concurrent, Function<T,?> valueFunction) {
 		this.clazz = clazz;
 		this.propertyPath = propertyPath;
 		this.concurrent = concurrent;
+		this.valueFunction = valueFunction;
 	}
 
 	public void addAlias(String propertyPath) {
@@ -69,7 +77,6 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 	public void createLookup() {
 		if (lookup == null) {
 			this.lookup = new CacheLookup(this);
-			
 		}
 	}
 
@@ -83,7 +90,7 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 
 		public IdCacheLookupDescriptor(Class clazz, String propertyPath,
 				boolean concurrent) {
-			super(clazz, propertyPath, concurrent);
+			super(clazz, propertyPath, concurrent,null);
 		}
 
 		@Override

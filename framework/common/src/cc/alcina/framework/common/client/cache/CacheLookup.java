@@ -254,6 +254,9 @@ public class CacheLookup<T, H extends HasIdAndLocalId>
 	}
 
 	protected Object getChainedProperty(H hili) {
+		if (descriptor.valueFunction != null) {
+			return descriptor.valueFunction.apply(hili);
+		}
 		return propertyPathAccesor.getChainedProperty(hili);
 	}
 
