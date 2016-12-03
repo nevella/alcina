@@ -38,8 +38,7 @@ public abstract class CachingScanner {
 			File cacheFile = new File(cachePath);
 			cacheFile.getParentFile().mkdirs();
 			cacheFile.createNewFile();
-			ObjectOutputStream oos = new ObjectOutputStream(
-					new BufferedOutputStream(new FileOutputStream(cacheFile)));
+			ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(cacheFile)));
 			oos.writeObject(dataCache);
 			oos.close();
 		} catch (Exception e) {
@@ -50,8 +49,7 @@ public abstract class CachingScanner {
 	@SuppressWarnings("unchecked")
 	protected ClassDataCache getIgnoreMap(String cachePath) {
 		try {
-			ObjectInputStream ois = new ObjectInputStream(
-					new BufferedInputStream(new FileInputStream(cachePath)));
+			ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(cachePath)));
 			ClassDataCache value = (ClassDataCache) ois.readObject();
 			ois.close();
 			return value;
@@ -65,45 +63,50 @@ public abstract class CachingScanner {
 	}
 
 	public void scan(ClassDataCache found, String cachePath) throws Exception {
-		List<ClassLoader> classLoaders = ClasspathScanner
-				.getScannerClassLoadersToTry();
+		List<ClassLoader> classLoaders = ClasspathScanner.getScannerClassLoadersToTry();
 		int cc = 0;
-		long loadClassnanos = 0;
-		boolean debug = false;
+		long loadClassNanos = 0;
+		long loadClassErrNanos = 0;
+		boolean debug = true;
+		int ignoreCount = 0;
 		ClassDataCache ignoreCache = getIgnoreMap(cachePath);
 		ClassDataCache outgoing = new ClassDataCache();
+		long start = System.currentTimeMillis();
 		for (ClassDataItem foundItem : found.classData.values()) {
 			String className = foundItem.className;
 			Class c = null;
-			ClassDataItem ignore = ignoreCache.classData
-					.get(foundItem.className);
+			ClassDataItem ignore = ignoreCache.classData.get(foundItem.className);
 			if (ignore != null) {
 				if (ignore.date.getTime() >= foundItem.date.getTime()) {
 					outgoing.add(ignore);
+					ignoreCount++;
 					continue;
 				}
-				if (ignore.md5 != null
-						&& ignore.md5.equals(foundItem.ensureMd5())) {
+				if (ignore.md5 != null && ignore.md5.equals(foundItem.ensureMd5())) {
 					outgoing.add(foundItem);
+					ignoreCount++;
 					continue;
 				}
 			}
 			try {
 				cc++;
-				long nt = System.nanoTime();
 				int idx = 0;
 				for (int i = 0; i < classLoaders.size(); i++) {
+					long nt = System.nanoTime();
 					ClassLoader classLoader = classLoaders.get(i);
 					try {
 						c = classLoader.loadClass(className);
+						loadClassNanos += (System.nanoTime() - nt);
 						break;
 					} catch (ClassNotFoundException e) {
+						loadClassErrNanos += (System.nanoTime() - nt);
 						if (i < classLoaders.size() - 1) {
 							continue;
 						} else {
 							throw e;
 						}
 					} catch (Error eiie) {
+						loadClassErrNanos += (System.nanoTime() - nt);
 						if (i < classLoaders.size() - 1) {
 							continue;
 						} else {
@@ -111,7 +114,6 @@ public abstract class CachingScanner {
 						}
 					}
 				}
-				loadClassnanos += (System.nanoTime() - nt);
 				process(c, className, foundItem, outgoing);
 			} catch (RegistryException rre) {
 				throw rre;
@@ -125,16 +127,20 @@ public abstract class CachingScanner {
 				throw e;
 			}
 		}
+		long time = System.currentTimeMillis() - start;
 		if (debug) {
-			System.out.format("Classes: %s -- checked: %s, loadClass: %s\n",
-					found.classData.size(), cc, loadClassnanos / 1000 / 1000);
+			System.out.format(
+					"Classes: %s -- checked: %s, loadClass: %sms, loadClassErr: %sms, ignoreCount: %s, total: %sms\n",
+					found.classData.size(), cc, loadClassNanos / 1000 / 1000, loadClassErrNanos / 1000 / 1000,
+					ignoreCount, time);
 		}
 		for (ClassDataItem item : outgoing.classData.values()) {
 			item.ensureMd5();
 		}
-		putIgnoreMap(outgoing, cachePath);
+		if (found.classData.values().size() > 0) {
+			putIgnoreMap(outgoing, cachePath);
+		}
 	}
 
-	protected abstract void process(Class c, String className,
-			ClassDataItem foundItem, ClassDataCache outgoing);
+	protected abstract void process(Class c, String className, ClassDataItem foundItem, ClassDataCache outgoing);
 }

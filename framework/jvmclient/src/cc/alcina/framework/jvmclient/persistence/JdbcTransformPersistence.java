@@ -80,7 +80,7 @@ public abstract class JdbcTransformPersistence extends LocalTransformPersistence
 		}
 	}
 
-	Object[] transformParams = { "id", Integer.class, "timestamp", Long.class, "user_id", Long.class,
+	private Object[] transformParams = { "id", Integer.class, "timestamp", Long.class, "user_id", Long.class,
 			"clientInstance_id", Long.class, "request_id", Integer.class, "clientInstance_auth", Integer.class,
 			"transform_request_type", DeltaApplicationRecordType.class, "transform_event_protocol", String.class, "tag",
 			String.class };
@@ -247,7 +247,7 @@ public abstract class JdbcTransformPersistence extends LocalTransformPersistence
 		callback.onSuccess(null);
 	}
 
-	private Map<String, Object> getFieldsAs(ResultSet rs, Object[] params) throws Exception {
+	public static Map<String, Object> getFieldsAs(ResultSet rs, Object[] params) throws Exception {
 		Map<String, Object> result = new HashMap<String, Object>();
 		for (int i = 0; i < params.length; i += 2) {
 			String paramName = (String) params[i];

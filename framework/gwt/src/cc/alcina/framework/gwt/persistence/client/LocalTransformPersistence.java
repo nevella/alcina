@@ -142,11 +142,10 @@ public abstract class LocalTransformPersistence
 			@Override
 			public void onSuccess(Iterator<DeltaApplicationRecord> result) {
 				StringBuilder sb = new StringBuilder();
-				CommonUtils.iteratorToList(result)
-						.forEach(wrapper -> {
-							sb.append(new DeltaApplicationRecordSerializerImpl().write(wrapper));
-							sb.append("\n");
-						});
+				CommonUtils.iteratorToList(result).forEach(wrapper -> {
+					sb.append(new DeltaApplicationRecordSerializerImpl().write(wrapper));
+					sb.append("\n");
+				});
 				callback.apply(sb.toString());
 			}
 		};
@@ -567,11 +566,11 @@ public abstract class LocalTransformPersistence
 			throw new RuntimeException("need some type of filter");
 		}
 		String sql = CommonUtils.formatJ("select %s from TransformRequests" + " where %s  order by id asc",
-				getTransformWrapperSqlFields(),
-				CommonUtils.join(clauses, " and "));
+				getTransformWrapperSqlFields(), CommonUtils.join(clauses, " and "));
 		return sql;
 	}
-protected String getTransformWrapperSqlFields() {
+
+	protected String getTransformWrapperSqlFields() {
 		return "*";
 	}
 

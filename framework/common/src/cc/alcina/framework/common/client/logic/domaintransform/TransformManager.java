@@ -1738,8 +1738,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return result;
 	}
 
-	public void deleteMultiple(Collection<? extends HasIdAndLocalId> secondOnly) {
-		secondOnly.forEach(hili -> deleteObject(hili, true));
+	public <H extends HasIdAndLocalId> void deleteMultiple(Collection<H> collection) {
+		new ArrayList<H>(collection).forEach(hili -> deleteObject(hili, true));
 	}
 
 	/**
