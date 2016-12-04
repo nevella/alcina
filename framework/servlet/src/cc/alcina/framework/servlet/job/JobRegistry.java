@@ -256,7 +256,9 @@ public class JobRegistry implements RegistrableService {
 
 	public void log(String message, Object... params) {
 		Logger logger = getContextLogger();
-		message = String.format(message, params);
+		if (params.length > 0) {
+			message = String.format(message, params);
+		}
 		if (logger == null) {
 			System.out.println(message);
 		} else {
@@ -460,5 +462,4 @@ public class JobRegistry implements RegistrableService {
 		}
 		return null;
 	}
-
 }

@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.Reflections;
 	String name();
 
 	String stringValue() default "";
+	
 	public static class Support{
 		public static NamedParameter getParameter(NamedParameter[] parameters, String name) {
 			for (NamedParameter np : parameters) {

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
@@ -21,6 +20,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import cc.alcina.framework.common.client.logic.reflection.NamedParameter.Support;
 
 /**
  * To be applied at the class or field level
@@ -37,4 +37,6 @@ public @interface Custom {
 	Class customiserClass();
 
 	NamedParameter[] parameters() default {};
+	
+	
 }

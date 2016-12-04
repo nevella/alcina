@@ -9,12 +9,14 @@ import cc.alcina.framework.common.client.cache.CacheCreators.CacheLongSetCreator
 import cc.alcina.framework.common.client.cache.CacheCreators.CacheMultisetCreator;
 import cc.alcina.framework.common.client.cache.CacheCreators.CachePrivateObjectCacheCreator;
 import cc.alcina.framework.common.client.cache.CacheLookup;
+import cc.alcina.framework.common.client.cache.CacheSizeProvider;
 import cc.alcina.framework.common.client.cache.PrivateObjectCache;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.SortedMultiset;
 import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
@@ -49,7 +51,13 @@ public class CacheCreatorsFastUtil {
 
 					@Override
 					protected void createTopMap() {
+						CacheSizeProvider cacheSizeProvider = Registry
+								.impl(CacheSizeProvider.class);
+						int size = cacheSizeProvider
+								.size(cacheLookup.toString());
 						map = new Object2ObjectLinkedOpenHashMap<T, Set<Long>>();
+						cacheSizeProvider.registerMap(cacheLookup.toString(),
+								map);
 					}
 				};
 			}
@@ -69,7 +77,10 @@ public class CacheCreatorsFastUtil {
 			implements CachePrivateObjectCacheCreator {
 		@Override
 		public PrivateObjectCache get() {
-			return new DetachedEntityCache();
+			return new DetachedEntityCache(
+					() -> new Object2ObjectLinkedOpenHashMap(128),
+					// not sorted - does it matter?
+					() -> new Object2ObjectLinkedOpenHashMap(10000));
 		}
 	}
 }

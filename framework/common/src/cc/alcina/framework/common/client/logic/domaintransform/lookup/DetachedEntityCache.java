@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.cache.PrivateObjectCache;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -35,10 +36,20 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  */
 public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 	// have it distributed
-	protected Map<Class, Map<Long, HasIdAndLocalId>> detached = new HashMap<Class, Map<Long, HasIdAndLocalId>>(
-			128);
+	protected Map<Class, Map<Long, HasIdAndLocalId>> detached;
+
+
+	private Supplier<Map> classMapSupplier;
 
 	public DetachedEntityCache() {
+		this(() -> new HashMap<Class, Map<Long, HasIdAndLocalId>>(128),
+				() -> new TreeMap());
+	}
+
+	public DetachedEntityCache(Supplier<Map> topMapSupplier,
+			Supplier<Map> classMapSupplier) {
+		this.classMapSupplier = classMapSupplier;
+		this.detached=topMapSupplier.get();
 	}
 
 	public Set<HasIdAndLocalId> allValues() {
@@ -51,13 +62,6 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 
 	public void clear() {
 		detached.clear();
-	}
-
-	public DetachedEntityCache clone() {
-		DetachedEntityCache c = new DetachedEntityCache();
-		c.detached = (Map) ((HashMap<Class, Map<Long, HasIdAndLocalId>>) detached)
-				.clone();
-		return c;
 	}
 
 	public <T extends HasIdAndLocalId> boolean contains(Class<T> clazz,
@@ -74,7 +78,7 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 	}
 
 	public Map<Long, HasIdAndLocalId> createMap() {
-		return new TreeMap<Long, HasIdAndLocalId>();
+		return classMapSupplier.get();
 	}
 
 	public <T> T get(Class<T> clazz, Long id) {

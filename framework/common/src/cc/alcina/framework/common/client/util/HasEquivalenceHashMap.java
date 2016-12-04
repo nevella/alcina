@@ -1,11 +1,8 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collector;
 
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
-import cc.alcina.framework.entity.J8Utils.ToMultimapCollector;
 
 public class HasEquivalenceHashMap<T extends HasEquivalence>
 		extends Multimap<Integer, List<T>> {
