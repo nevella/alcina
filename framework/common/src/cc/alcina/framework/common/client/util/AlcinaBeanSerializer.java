@@ -19,6 +19,17 @@ public abstract class AlcinaBeanSerializer {
 	protected Map<Class, String> reverseAbbrevLookup = new LinkedHashMap<>();
 
 	protected String propertyFieldName;
+	
+	private boolean  throwOnUnrecognisedProperty;
+	
+	public boolean isThrowOnUnrecognisedProperty() {
+		return this.throwOnUnrecognisedProperty;
+	}
+
+	public AlcinaBeanSerializer throwOnUnrecognisedProperty(){
+		throwOnUnrecognisedProperty=true;
+		return this;
+	}
 
 	public AlcinaBeanSerializer registerLookups(Map<String, Class> abbrevLookup,
 			Map<Class, String> reverseAbbrevLookup) {

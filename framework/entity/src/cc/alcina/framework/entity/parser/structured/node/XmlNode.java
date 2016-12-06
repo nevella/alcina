@@ -3,7 +3,6 @@ package cc.alcina.framework.entity.parser.structured.node;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,6 +17,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.OptimizingXpathEvaluator;
@@ -546,5 +546,14 @@ public class XmlNode {
 
 	public XmlNode unwrap() {
 		return this.getClass() == XmlNode.class ? this : doc.nodeFor(node);
+	}
+	
+	public void logToFile(){
+		try {
+			XmlUtils.logToFile(node);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		
 	}
 }

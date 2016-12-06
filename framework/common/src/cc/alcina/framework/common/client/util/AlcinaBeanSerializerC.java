@@ -78,12 +78,15 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 				Object value = deserializeField(jsonValue, type);
 				gb.setPropertyValue(obj, propertyName, value);
 			} catch (NoSuchPropertyException e) {
+				if (isThrowOnUnrecognisedProperty()) {
+					throw new RuntimeException(
+							CommonUtils.formatJ("property not found - %s.%s",
+									clazz.getSimpleName(), propertyName));
+				}
 			}
 		}
 		return obj;
 	}
-
-	
 
 	private Object deserializeField(JSONValue jsonValue, Class type) {
 		if (jsonValue == null || jsonValue.isNull() != null) {
@@ -258,6 +261,4 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		}
 		return jo;
 	}
-
-	
 }

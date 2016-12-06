@@ -23,25 +23,28 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  *
  * @author Nick Reddel
  */
-
- public class ExpandableStringLabelProvider implements
-		BoundWidgetProvider, HasMaxWidth {
+public class ExpandableStringLabelProvider
+		implements BoundWidgetProvider, HasMaxWidth {
 	private final int maxWidth;
 
 	private final boolean forceColumnWidth;
 
 	private final boolean showNewlinesAsBreaks;
 
-	public ExpandableStringLabelProvider(int maxWidth,
-			boolean forceColumnWidth, boolean showNewlinesAsBreaks) {
+	private boolean showAsPopup;
+
+	public ExpandableStringLabelProvider(int maxWidth, boolean forceColumnWidth,
+			boolean showNewlinesAsBreaks, boolean showAsPopup) {
 		this.maxWidth = maxWidth;
 		this.forceColumnWidth = forceColumnWidth;
 		this.showNewlinesAsBreaks = showNewlinesAsBreaks;
+		this.showAsPopup = showAsPopup;
 	}
 
 	public BoundWidget get() {
 		ExpandableLabel label = new ExpandableLabel(maxWidth);
 		label.setShowNewlinesAsBreaks(showNewlinesAsBreaks);
+		label.setShowAsPopup(showAsPopup);
 		return label;
 	}
 

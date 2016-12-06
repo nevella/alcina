@@ -1845,3 +1845,14 @@ div.gwt-PopupPanel.bubble .bubble-up {
 input.alcina-Filter {
 	width: calc(100% - 15px);
 }
+.alcina-expandable-label-popup{
+	width:80vw;
+	height:40vw;
+	font-family: 'Courier New';
+	white-space: pre;
+	color:#000;
+	border: solid 1px #eee;
+	margin:1em;
+	padding:1em;
+	font-size:1.1em;	
+}

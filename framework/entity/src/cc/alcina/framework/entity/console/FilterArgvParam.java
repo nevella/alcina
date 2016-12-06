@@ -27,13 +27,19 @@ public class FilterArgvParam {
 	}
 
 	public String next() {
+		moveNext();
+		return this.value;
+	}
+
+	public boolean moveNext() {
+		if (argv.length == 0) {
+			return false;
+		}
 		List<String> strs = new ArrayList<String>(Arrays.asList(argv));
 		this.value = CommonUtils.first(strs);
-		if (value != null) {
-			strs.remove(0);
-		}
+		strs.remove(0);
 		this.argv = (String[]) strs.toArray(new String[strs.size()]);
-		return this.value;
+		return true;
 	}
 
 	public String valueOrDefault(String defaultValue) {

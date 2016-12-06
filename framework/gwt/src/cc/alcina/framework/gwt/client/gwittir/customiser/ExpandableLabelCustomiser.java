@@ -34,6 +34,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 	public static final String FORCE_COLUMN_WIDTH = "forceColumnWidth";
 	public static final String SHOW_NEWLINES_AS_HTML_BREAKS = "showNewlinesAsBreaks";
+	public static final String SHOW_AS_POPUP = "SHOW_AS_POPUP";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
@@ -47,6 +48,9 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 		p = NamedParameter.Support.getParameter(info.parameters(),
 				SHOW_NEWLINES_AS_HTML_BREAKS);
 		boolean showNewlinesAsBreaks = p == null ? true : p.booleanValue();
-		return new ExpandableStringLabelProvider(maxLength, forceColumnWidth,showNewlinesAsBreaks);
+		p = NamedParameter.Support.getParameter(info.parameters(),
+				SHOW_AS_POPUP);
+		boolean showAsPopup = p == null ? true : p.booleanValue();
+		return new ExpandableStringLabelProvider(maxLength, forceColumnWidth,showNewlinesAsBreaks,showAsPopup);
 	}
 }

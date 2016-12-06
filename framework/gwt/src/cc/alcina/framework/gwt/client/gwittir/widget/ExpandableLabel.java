@@ -18,57 +18,42 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.widget.Link;
-
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
+
+import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.ClientNotifications;
+import cc.alcina.framework.gwt.client.widget.Link;
 
 /**
  *
  * @author Nick Reddel
  */
-
- public class ExpandableLabel extends AbstractBoundWidget {
+public class ExpandableLabel extends AbstractBoundWidget {
 	private FlowPanel fp;
 
 	private boolean showNewlinesAsBreaks;
 
-	public boolean isShowNewlinesAsBreaks() {
-		return this.showNewlinesAsBreaks;
-	}
-
-	public void setShowNewlinesAsBreaks(boolean showNewlinesAsBreaks) {
-		this.showNewlinesAsBreaks = showNewlinesAsBreaks;
-	}
+	private boolean showAsPopup;
 
 	private boolean showHideAtEnd;
 
 	private Link hideLink;
 
 	private boolean hiding;
-	
+
 	private Renderer renderer;
 
 	private final int maxLength;
-
-	public ExpandableLabel(int maxLength) {
-		this.maxLength = maxLength;
-		this.fp = new FlowPanel();
-		initWidget(fp);
-		fp.setStyleName("alcina-expandableLabel");
-	}
-
-	public Object getValue() {
-		return null;
-	}
 
 	List<Widget> hiddenWidgets = new ArrayList<Widget>();
 
@@ -78,8 +63,78 @@ import com.totsp.gwittir.client.ui.Renderer;
 
 	private Link showLink;
 
-	private int getMaxLength() {
-		return maxLength;
+	ClickHandler showHideListener = new ClickHandler() {
+		public void onClick(ClickEvent event) {
+			Widget sender = (Widget) event.getSource();
+			hiding = !hiding;
+			if (showAsPopup) {
+				if (!hiding) {
+					ScrollPanel sp = new ScrollPanel();
+					Label label = new InlineHTML(fullTextNoBrs);
+					sp.add(label);
+					sp.setStyleName("alcina-expandable-label-popup");
+					ClientNotifications.get().setDialogAnimationEnabled(false);
+					ClientNotifications.get().showMessage(sp);
+					ClientNotifications.get().setDialogAnimationEnabled(true);
+				}
+				hiding = true;
+			} else {
+				for (Widget w : hiddenWidgets) {
+					w.setVisible(!hiding);
+				}
+				hideLink.setVisible(!hiding);
+				space.setVisible(!hiding);
+				showLink.setVisible(hiding);
+				dots.setVisible(hiding);
+			}
+		}
+	};
+
+	private String fullText;
+
+	private String fullTextNoBrs;
+
+	public ExpandableLabel(int maxLength) {
+		this.maxLength = maxLength;
+		this.fp = new FlowPanel();
+		initWidget(fp);
+		fp.setStyleName("alcina-expandableLabel");
+	}
+
+	public Renderer getRenderer() {
+		return this.renderer;
+	}
+
+	public Object getValue() {
+		return null;
+	}
+
+	public boolean isShowAsPopup() {
+		return this.showAsPopup;
+	}
+
+	public boolean isShowHideAtEnd() {
+		return showHideAtEnd;
+	}
+
+	public boolean isShowNewlinesAsBreaks() {
+		return this.showNewlinesAsBreaks;
+	}
+
+	public void setRenderer(Renderer renderer) {
+		this.renderer = renderer;
+	}
+
+	public void setShowAsPopup(boolean showAsPopup) {
+		this.showAsPopup = showAsPopup;
+	}
+
+	public void setShowHideAtEnd(boolean showHideAtEnd) {
+		this.showHideAtEnd = showHideAtEnd;
+	}
+
+	public void setShowNewlinesAsBreaks(boolean showNewlinesAsBreaks) {
+		this.showNewlinesAsBreaks = showNewlinesAsBreaks;
 	}
 
 	public void setValue(Object o) {
@@ -90,7 +145,7 @@ import com.totsp.gwittir.client.ui.Renderer;
 		}
 		if (o instanceof Collection) {
 			ArrayList l = new ArrayList((Collection) o);
-			if(l.size()>0&&l.get(0) instanceof Comparable){
+			if (l.size() > 0 && l.get(0) instanceof Comparable) {
 				Collections.sort(l);
 			}
 			int strlen = 0;
@@ -100,8 +155,8 @@ import com.totsp.gwittir.client.ui.Renderer;
 					fp.add(comma);
 					strlen += 2;
 				}
-				String name = ClientReflector.get().displayNameForObject(
-						object);
+				String name = ClientReflector.get()
+						.displayNameForObject(object);
 				InlineLabel label = new InlineLabel(name);
 				if (strlen > getMaxLength()) {
 					comma.setVisible(false);
@@ -113,27 +168,29 @@ import com.totsp.gwittir.client.ui.Renderer;
 				fp.add(label);
 			}
 		} else {
-			String s = renderer==null?o.toString():renderer.render(o).toString();
+			fullText = renderer == null ? o.toString()
+					: renderer.render(o).toString();
+			fullTextNoBrs = fullText;
 			if (isShowNewlinesAsBreaks()) {
-				s = s.replace("\n", "<br>\n");
+				fullText = fullText.replace("\n", "<br>\n");
 			}
 			int maxC = getMaxLength();
-			int y1 = s.indexOf(">", maxC);
-			int y2 = s.indexOf("<", maxC);
+			int y1 = fullText.indexOf(">", maxC);
+			int y2 = fullText.indexOf("<", maxC);
 			if (y1 < y2 && y1 != -1) {
 				maxC = y1 + 1;
 			}
-			String vis = CommonUtils.trimToWsChars(s, maxC);
+			String vis = CommonUtils.trimToWsChars(fullText, maxC);
 			com.google.gwt.user.client.ui.Label label;
-			if (s.length() == vis.length()) {
-				label = isShowNewlinesAsBreaks() ? new InlineHTML(s)
-						: new InlineLabel(s);
+			if (fullText.length() == vis.length()) {
+				label = isShowNewlinesAsBreaks() ? new InlineHTML(fullText)
+						: new InlineLabel(fullText);
 				fp.add(label);
 			} else {
 				label = isShowNewlinesAsBreaks() ? new InlineHTML(vis)
 						: new InlineLabel(vis);
 				fp.add(label);
-				String notVis = s.substring(vis.length());
+				String notVis = fullText.substring(vis.length());
 				label = isShowNewlinesAsBreaks() ? new InlineHTML(notVis)
 						: new InlineLabel(notVis);
 				label.setVisible(false);
@@ -163,33 +220,7 @@ import com.totsp.gwittir.client.ui.Renderer;
 		}
 	}
 
-	public void setShowHideAtEnd(boolean showHideAtEnd) {
-		this.showHideAtEnd = showHideAtEnd;
-	}
-
-	public boolean isShowHideAtEnd() {
-		return showHideAtEnd;
-	}
-
-	ClickHandler showHideListener = new ClickHandler() {
-		public void onClick(ClickEvent event) {
-			Widget sender = (Widget) event.getSource();
-			hiding = !hiding;
-			for (Widget w : hiddenWidgets) {
-				w.setVisible(!hiding);
-			}
-			hideLink.setVisible(!hiding);
-			space.setVisible(!hiding);
-			showLink.setVisible(hiding);
-			dots.setVisible(hiding);
-		}
-	};
-
-	public Renderer getRenderer() {
-		return this.renderer;
-	}
-
-	public void setRenderer(Renderer renderer) {
-		this.renderer = renderer;
+	private int getMaxLength() {
+		return maxLength;
 	}
 }

@@ -158,6 +158,11 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 				PropertyDescriptor pd = SEUtilities
 						.getPropertyDescriptorByName(clazz, propertyName);
 				if (pd == null) {
+					if (isThrowOnUnrecognisedProperty()) {
+						throw new Exception(CommonUtils.formatJ(
+								"property not found - %s.%s",
+								clazz.getSimpleName(), propertyName));
+					}
 					// ignore (we are graceful...)
 				} else {
 					Object value2 = deserializeField(jsonValue,

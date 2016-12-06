@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.provider;
 
-
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Label;
 
@@ -21,12 +20,9 @@ import com.totsp.gwittir.client.ui.Label;
  *
  * @author Nick Reddel
  */
-
- public class FixedWidthLabelProvider extends
-		ExpandableStringLabelProvider {
-	public FixedWidthLabelProvider(int maxWidth,
-			boolean showNewlinesAsBreaks) {
-		super(maxWidth, true, showNewlinesAsBreaks);
+public class FixedWidthLabelProvider extends ExpandableStringLabelProvider {
+	public FixedWidthLabelProvider(int maxWidth, boolean showNewlinesAsBreaks) {
+		super(maxWidth, true, showNewlinesAsBreaks, false);
 	}
 
 	@Override

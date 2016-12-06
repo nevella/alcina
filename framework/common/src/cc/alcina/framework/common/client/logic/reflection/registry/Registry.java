@@ -623,4 +623,10 @@ public class Registry {
 		}
 		return byKey;
 	}
+
+	public <T> void ensureSingletonRegistered(Class<? super T> clazz, T t) {
+		if (impl0(clazz, void.class, true) == null) {
+			registerSingleton(clazz, void.class, t);
+		}
+	}
 }

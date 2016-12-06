@@ -38,9 +38,9 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 				System.out.println("Created registry for classloader "
 						+ contextClassLoader);
 			} else {
-				throw new RuntimeException(String.format(
-						"Too many registies: \n%s\n%s\n", contextClassLoader,
-						perClassLoader.keySet()));
+				throw new RuntimeException(
+						String.format("Too many registies: \n%s\n%s\n",
+								contextClassLoader, perClassLoader.keySet()));
 			}
 		}
 		lastClassLoader = contextClassLoader;
@@ -111,5 +111,11 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 
 	public Map<ClassLoader, Registry> getPerClassLoader() {
 		return this.perClassLoader;
+	}
+
+	public <T> void ensureSingletonRegistered(Class<? super T> clazz, T t) {
+		for (Registry registryInstance : getPerClassLoader().values()) {
+			registryInstance.ensureSingletonRegistered(clazz, t);
+		}
 	}
 }
