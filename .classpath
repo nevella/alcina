@@ -17,7 +17,7 @@
 	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" output="framework/clientreflectorjvm/build" path="framework/clientreflectorjvm/src"/>
 	<classpathentry excluding="cc/alcina/extras/misc/ie/override/" kind="src" path="extras/misc/src"/>
 	<classpathentry kind="src" path="extras/ios6/src"/>
-	<classpathentry kind="lib" path="lib/extras/cluster/ant.jar"/>
+	<classpathentry kind="lib" path="lib/extras/cluster/ant.jar" sourcepath="/Users/ouiji/Documents/programmin/java/apache-ant-1.9.5/src/"/>
 	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/common/jaxb-api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/jsr173_api.jar"/>
