@@ -63,6 +63,9 @@ public class PropertyMapper {
 				return;
 			}
 			try {
+				if(!required && !mapper.leftAccessor.hasPropertyKey(left,leftName)){
+					return;
+				}
 				Object value = mapper.leftAccessor.getPropertyValue(left,
 						leftName);
 				if (leftToRightConverter != null) {

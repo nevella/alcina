@@ -34,6 +34,11 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 		this(true);
 	}
 
+	@Override
+	public boolean hasPropertyKey(Object bean, String propertyName) {
+		return getPropertyValue0(bean, propertyName, true) != nullKeyMarker;
+	}
+
 	public JsonPropertyAccessor(boolean ignoreNullWrites) {
 		this.ignoreNullWrites = ignoreNullWrites;
 	}
@@ -62,18 +67,27 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 	}
 
 	public Object getPropertyValue(Object bean, String propertyName) {
+		return getPropertyValue0(bean, propertyName, false);
+	}
+
+	private static transient Object nullKeyMarker = new Object();
+
+	private Object getPropertyValue0(Object bean, String propertyName,
+			boolean returnNullKeyMarker) {
 		try {
 			ResolvedJson resolved = new ResolvedJson(bean, propertyName, false);
 			if (resolved.invalid) {
-				return maybeThrow(propertyName);
+				return returnNullKeyMarker ? nullKeyMarker
+						: maybeThrow(propertyName);
 			}
 			JSONObject jsonObject = resolved.leaf;
 			propertyName = resolved.resolvedPropertyName;
 			if (!jsonObject.has(propertyName)) {
-				return maybeThrow(propertyName);
+				return returnNullKeyMarker ? nullKeyMarker
+						: maybeThrow(propertyName);
 			}
 			Object value = jsonObject.get(propertyName);
-			if (value instanceof JSONArray &&! returnJsonArray) {
+			if (value instanceof JSONArray && !returnJsonArray) {
 				if (((JSONArray) value).length() == 1) {
 					return ((JSONArray) value).get(0);
 				} else if (((JSONArray) value).length() == 0) {
@@ -126,6 +140,7 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 		this.returnNullIfNotFound = true;
 		return this;
 	}
+
 	public JsonPropertyAccessor returnJsonArray() {
 		this.returnJsonArray = true;
 		return this;

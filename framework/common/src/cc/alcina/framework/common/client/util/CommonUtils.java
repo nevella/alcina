@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -1371,5 +1372,13 @@ public class CommonUtils {
 			return CommonUtils.formatJ("First: %s\nBoth: %s\nSecond: %s",
 					firstOnly, intersection, secondOnly);
 		}
+	}
+
+	public static <T> int indexOf(Iterator<T> itr, Predicate<T> test) {
+		int count = 0;
+		while (itr.hasNext() && test.test(itr.next())) {
+			count++;
+		}
+		return count;
 	}
 }

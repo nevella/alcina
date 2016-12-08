@@ -40,4 +40,8 @@ public interface PropertyAccessor {
 
 		Class getPropertyType(Object bean);
 	}
+
+	default boolean hasPropertyKey(Object left, String leftName){
+		return true;
+	}
 }
