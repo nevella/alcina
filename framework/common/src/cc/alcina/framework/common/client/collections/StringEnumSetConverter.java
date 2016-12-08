@@ -17,7 +17,8 @@ public class StringEnumSetConverter<E extends Enum>
 		if (a == null) {
 			return null;
 		}
-		return (Set<E>)Arrays.stream(a.split(",")).map(e -> (E) Enum.valueOf(clazz, e))
+		return (Set<E>) Arrays.asList(a.split(",")).stream()
+				.map(e -> (E) Enum.valueOf(clazz, e))
 				.collect(Collectors.toSet());
 	}
 
