@@ -61,7 +61,6 @@ public class CommonUtils {
 	}
 
 	private static final Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
-
 	static {
 		Class[] prims = { long.class, int.class, short.class, char.class,
 				byte.class, boolean.class, double.class, float.class };
@@ -71,15 +70,16 @@ public class CommonUtils {
 	}
 
 	public static final Map<String, Class> stdAndPrimitivesMap = new HashMap<String, Class>();
-
 	static {
 		stdAndPrimitivesMap.putAll(stdClassMap);
 		stdAndPrimitivesMap.putAll(primitiveClassMap);
 	}
+
 	public static final Set<Class> stdAndPrimitives = new HashSet<Class>(
 			stdAndPrimitivesMap.values());
 
 	public static Supplier<Set> setSupplier = () -> new LinkedHashSet();
+
 	/**
 	 * For trimming a utf8 string for insertion into a 255-char varchar db
 	 * field. Oh, the pain
@@ -778,6 +778,10 @@ public class CommonUtils {
 				|| isEnumSubclass(clazz);
 	}
 
+	public static boolean isWholeNumber(double d) {
+		return d % 1 == 0.0;
+	}
+
 	public static int iv(Integer i) {
 		return i == null ? 0 : i;
 	}
@@ -1335,6 +1339,7 @@ public class CommonUtils {
 		}
 		return i == 0 ? null : toParse.substring(0, i);
 	}
+
 	public enum DateStyle {
 		AU_DATE_SLASH, AU_DATE_MONTH, AU_DATE_MONTH_DAY, AU_DATE_TIME,
 		AU_DATE_TIME_HUMAN, AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT,
