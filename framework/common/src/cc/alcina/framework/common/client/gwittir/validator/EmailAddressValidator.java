@@ -21,9 +21,12 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.TextUtils;
 
+import com.google.gwt.core.shared.GWT;
+import com.google.gwt.user.client.Window;
 import com.totsp.gwittir.client.validator.ValidationException;
 
 @ClientInstantiable
@@ -42,8 +45,8 @@ public class EmailAddressValidator implements ParameterisedValidator {
 
 	public static final String PARAM_IGNORE_EMPTIES = "ignore-empties";
 
-	public static List<String> provideAddressesForDefaultSeparator(
-			String addresses) {
+	public static List<String>
+			provideAddressesForDefaultSeparator(String addresses) {
 		addresses = TextUtils.normaliseAndTrim(addresses);
 		return Arrays.asList(addresses.split(STANDARD_MULTIPLE_SEPARATOR))
 				.stream().map(s -> TextUtils.normaliseAndTrim(s))
@@ -53,6 +56,7 @@ public class EmailAddressValidator implements ParameterisedValidator {
 	private boolean ignoreEmpties = true;
 
 	private String multipleSeparator = null;
+
 	public String getMultipleSeparator() {
 		return multipleSeparator;
 	}
@@ -100,18 +104,23 @@ public class EmailAddressValidator implements ParameterisedValidator {
 			strings = new String[] { sz };
 		}
 		for (String s : strings) {
-			if (!s.replaceAll(EMAIL_REGEX, EMAIL_REGEX_REPLACE).equals(
-					EMAIL_REGEX_REPLACE)) {
-				throw new ValidationException(CommonUtils.formatJ(
-						"'%s' is not a valid email address", s),
+			String replaceAll = s.replaceAll(EMAIL_REGEX, EMAIL_REGEX_REPLACE);
+			if (GWT.isClient()
+					&& Window.Navigator.getUserAgent().indexOf("Edge/") != -1) {
+				Window.alert(
+						s + "\n" + replaceAll + "\n" + EMAIL_REGEX_REPLACE);
+			}
+			if (!replaceAll.equals(EMAIL_REGEX_REPLACE)) {
+				throw new ValidationException(CommonUtils
+						.formatJ("'%s' is not a valid email address", s),
 						EmailAddressValidator.class);
 			}
 		}
 		return value;
 	}
 
-	public EmailAddressValidator withIgnoreEmpties(boolean ignoreEmpties){
-		this.ignoreEmpties=ignoreEmpties;
+	public EmailAddressValidator withIgnoreEmpties(boolean ignoreEmpties) {
+		this.ignoreEmpties = ignoreEmpties;
 		return this;
 	}
 }
