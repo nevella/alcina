@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class SearchOrders<T> implements Comparator<T>, Serializable {
@@ -15,6 +16,10 @@ public class SearchOrders<T> implements Comparator<T>, Serializable {
 	public SearchOrders() {
 	}
 
+	public SearchOrders<T> addHiliOrder(){
+		addOrder(h -> ((HasIdAndLocalId) h).getId(), true);
+		return this;
+	}
 	private transient Entry<SearchOrder<T>, Boolean> soleOrder = null;
 
 	@Override

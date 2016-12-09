@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -1376,9 +1378,20 @@ public class CommonUtils {
 
 	public static <T> int indexOf(Iterator<T> itr, Predicate<T> test) {
 		int count = 0;
-		while (itr.hasNext() && test.test(itr.next())) {
+		while (itr.hasNext() && !test.test(itr.next())) {
 			count++;
 		}
 		return count;
+	}
+
+	public static <U, V> Comparator<U> mappingComparator(Function<U, V> mapping,
+			Comparator<V> vComparator) {
+		return new Comparator<U>() {
+			@Override
+			public int compare(U o1, U o2) {
+				return vComparator.compare(mapping.apply(o1),
+						mapping.apply(o2));
+			}
+		};
 	}
 }

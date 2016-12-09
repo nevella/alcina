@@ -18,8 +18,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
@@ -70,7 +73,7 @@ public class ExpandableLabel extends AbstractBoundWidget {
 			if (showAsPopup) {
 				if (!hiding) {
 					ScrollPanel sp = new ScrollPanel();
-					Label label = new InlineHTML(fullTextNoBrs);
+					Label label = new InlineHTML(SafeHtmlUtils.htmlEscape(fullTextNoBrs));
 					sp.add(label);
 					sp.setStyleName("alcina-expandable-label-popup");
 					ClientNotifications.get().setDialogAnimationEnabled(false);

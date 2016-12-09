@@ -152,8 +152,8 @@ public class ColumnsBuilder<T> {
 			return this;
 		}
 
-		public ColumnBuilder function(Function<T, Object> function) {
-			this.function = function;
+		public ColumnBuilder function(Function<T, ?> function) {
+			this.function = (Function<T, Object>) function;
 			return this;
 		}
 
@@ -174,8 +174,8 @@ public class ColumnsBuilder<T> {
 		}
 
 		public ColumnBuilder
-				sortFunction(Function<T, Comparable> sortFunction) {
-			this.sortFunction = sortFunction;
+				sortFunction(Function<T, ? extends Comparable> sortFunction) {
+			this.sortFunction = (Function<T, Comparable>) sortFunction;
 			return sortable();
 		}
 

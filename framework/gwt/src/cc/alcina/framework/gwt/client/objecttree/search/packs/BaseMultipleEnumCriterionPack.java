@@ -1,11 +1,13 @@
 package cc.alcina.framework.gwt.client.objecttree.search.packs;
 
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.cache.CacheFilter;
 import cc.alcina.framework.common.client.search.EnumMultipleCriterion;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
@@ -14,6 +16,32 @@ import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class BaseMultipleEnumCriterionPack {
+	public static abstract class BaseEnumMultipleCriterion<E extends Enum>
+			extends EnumMultipleCriterion<E> {
+		private Set<E> value = new LinkedHashSet<>();
+
+		public Set<E> getValue() {
+			return this.value;
+		}
+
+		public void setValue(Set<E> value) {
+			Set<E> old_value = this.value;
+			this.value = value;
+			propertyChangeSupport().firePropertyChange("value", old_value,
+					value);
+		}
+
+		@Override
+		public BaseEnumMultipleCriterion clone()
+				throws CloneNotSupportedException {
+			BaseEnumMultipleCriterion copy = Reflections.classLookup()
+					.newInstance(getClass());
+			copy.copyPropertiesFrom(this);
+			copy.value = new LinkedHashSet<>(value);
+			return copy;
+		}
+	}
+
 	public static abstract class BaseEnumMultipleCriterionSearchable<E extends Enum, C extends EnumMultipleCriterion<E>>
 			extends FlatSearchable<C> {
 		private Class<E> enumClass;
