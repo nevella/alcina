@@ -29,6 +29,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -60,10 +65,6 @@ import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
-
-import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  * TODO - abstract parts out to ClientTransformManager
@@ -1162,7 +1163,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return hili;
 	}
 
-	public void registerDomainObjects(Collection<? extends HasIdAndLocalId> hilis) {
+	public void
+			registerDomainObjects(Collection<? extends HasIdAndLocalId> hilis) {
 		for (HasIdAndLocalId hili : hilis) {
 			registerDomainObject(hili);
 		}
@@ -1456,6 +1458,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	protected void promoteToDomain(Collection objects, boolean deregister) {
 		try {
+			objects = (Collection) objects.stream().map(o -> {
+				if (o instanceof HasTransformPersistable) {
+					return ((HasTransformPersistable) o).resolvePersistable();
+				} else {
+					return o;
+				}
+			}).collect(Collectors.toList());
 			CollectionModificationSupport.queue(true);
 			for (Object o : objects) {
 				if (o instanceof HasIdAndLocalId && getObjectLookup()

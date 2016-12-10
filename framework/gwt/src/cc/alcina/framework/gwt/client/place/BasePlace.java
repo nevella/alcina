@@ -28,6 +28,6 @@ public abstract class BasePlace extends Place {
 	}
 
 	public String toTokenString() {
-		return "#" + tokenFor(this);
+		return tokenFor(this);
 	}
 }

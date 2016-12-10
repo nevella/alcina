@@ -162,6 +162,9 @@ public class ColumnsBuilder<T> {
 			this.nativeComparator = nativeComparator;
 			return this;
 		}
+		public ColumnBuilder numeric(){
+			return this.style("numeric");
+		}
 
 		public ColumnBuilder reversed() {
 			this.reversed = true;

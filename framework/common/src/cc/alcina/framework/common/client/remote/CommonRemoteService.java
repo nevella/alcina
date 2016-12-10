@@ -15,6 +15,10 @@ package cc.alcina.framework.common.client.remote;
 
 import java.util.List;
 
+import com.google.gwt.user.client.rpc.RemoteService;
+import com.google.gwt.user.client.ui.SuggestOracle.Request;
+import com.google.gwt.user.client.ui.SuggestOracle.Response;
+
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
@@ -32,8 +36,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadR
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
-
-import com.google.gwt.user.client.rpc.RemoteService;
 
 /**
  * 
@@ -73,8 +75,8 @@ public interface CommonRemoteService extends RemoteService {
 	@WebMethod
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformException, DomainTransformRequestException;
-	
-	@WebMethod 
+
+	@WebMethod
 	public DomainUpdate waitForTransforms(long lastTransformRequestId)
 			throws PermissionsException;
 
@@ -87,4 +89,6 @@ public interface CommonRemoteService extends RemoteService {
 
 	@WebMethod
 	public String loadData(String key);
+
+	Response suggest(String name, Request request, String hint);
 }

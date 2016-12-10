@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -36,6 +37,17 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.log4j.Logger;
+
+import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
+import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.client.ui.SuggestOracle.Request;
+import com.google.gwt.user.client.ui.SuggestOracle.Response;
+import com.google.gwt.user.server.rpc.RPC;
+import com.google.gwt.user.server.rpc.RPCRequest;
+import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import com.google.gwt.user.server.rpc.UnexpectedException;
+import com.google.gwt.user.server.rpc.impl.LegacySerializationPolicy;
+import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
@@ -110,7 +122,10 @@ import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleSuggestion;
 import cc.alcina.framework.servlet.CookieHelper;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
@@ -118,15 +133,6 @@ import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.SessionProvider;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
 import cc.alcina.framework.servlet.job.JobRegistry;
-
-import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
-import com.google.gwt.user.client.rpc.SerializationException;
-import com.google.gwt.user.server.rpc.RPC;
-import com.google.gwt.user.server.rpc.RPCRequest;
-import com.google.gwt.user.server.rpc.RemoteServiceServlet;
-import com.google.gwt.user.server.rpc.UnexpectedException;
-import com.google.gwt.user.server.rpc.impl.LegacySerializationPolicy;
-import com.totsp.gwittir.client.beans.Converter;
 
 /**
  *
@@ -1180,5 +1186,31 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		public boolean allow(DomainTransformEvent o) {
 			return o.getObjectClass() == clazz;
 		}
+	}
+
+	@Override
+	public Response suggest(String className, Request request, String hint) {
+		try {
+			Class<? extends BoundSuggestOracleResponseType> clazz = (Class<? extends BoundSuggestOracleResponseType>) Class
+					.forName(className);
+			return Registry.impl(BoundSuggestOracleRequestHandler.class, clazz)
+					.handleRequest(clazz, request, hint);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static abstract class BoundSuggestOracleRequestHandler<T extends BoundSuggestOracleResponseType> {
+		public Response handleRequest(Class<T> clazz, Request request,
+				String hint) {
+			Response response = new Response();
+			List<T> responses = getResponses(request.getQuery());
+			response.setSuggestions(
+					responses.stream().map(BoundSuggestOracleSuggestion::new)
+							.collect(Collectors.toList()));
+			return GraphProjections.defaultProjections().project(response);
+		}
+
+		protected abstract List<T> getResponses(String query);
 	}
 }

@@ -1,0 +1,118 @@
+/* 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package cc.alcina.framework.gwt.client.gwittir.widget;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.SuggestBox;
+import com.google.gwt.user.client.ui.SuggestOracle;
+import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.Renderer;
+import com.totsp.gwittir.client.ui.ToStringRenderer;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleSuggestion;
+
+/**
+ * 
+ * @author Nick Reddel
+ */
+public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
+	protected SuggestBox base;
+
+	private T value;
+
+	@SuppressWarnings("unchecked")
+	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
+
+	@SuppressWarnings("unused")
+	private SuggestOracle suggestOracle;
+
+	/** Creates a new instance of Label */
+	public BoundSuggestBox() {
+	}
+
+	/**
+	 * Get the value of renderer
+	 * 
+	 * @return the value of renderer
+	 */
+	public Renderer<T, String> getRenderer() {
+		return this.renderer;
+	}
+
+	public T getValue() {
+		return value;
+	}
+
+	public void setRenderer(Renderer<T, String> newrenderer) {
+		this.renderer = newrenderer;
+	}
+
+	public void suggestOracle(SuggestOracle suggestOracle) {
+		this.suggestOracle = suggestOracle;
+		base = new SuggestBox(suggestOracle);
+		base.addSelectionHandler(evt -> {
+			if (evt.getSelectedItem() != null) {
+				setValue((T) ((BoundSuggestOracleSuggestion) evt
+						.getSelectedItem()).typedValue);
+			}
+		});
+		super.initWidget(base);
+	}
+
+	@SuppressWarnings("unchecked")
+	public void setValue(T value) {
+		T old = this.getValue();
+		this.value = value;
+		this.base.setText(renderer.apply(value));
+		if (this.getValue() != old && (this.getValue() == null
+				|| (this.getValue() != null && !this.getValue().equals(old)))) {
+			this.changes.firePropertyChange("value", old, this.getValue());
+		}
+	}
+
+	public static class BoundSuggestOracle extends SuggestOracle {
+		private Class clazz;
+
+		private String hint;
+
+		public BoundSuggestOracle clazz(Class clazz) {
+			this.clazz = clazz;
+			return this;
+		}
+
+		public BoundSuggestOracle hint(String hint) {
+			this.hint = hint;
+			return this;
+		}
+
+		@Override
+		public void requestSuggestions(Request request, Callback callback) {
+			ClientBase.getCommonRemoteServiceAsyncInstance().suggest(
+					clazz.getName(), request, hint,
+					new AsyncCallback<Response>() {
+						@Override
+						public void onFailure(Throwable caught) {
+							throw new WrappedRuntimeException(caught);
+						}
+
+						@Override
+						public void onSuccess(Response response) {
+							callback.onSuggestionsReady(request, response);
+						}
+					});
+		}
+	}
+}

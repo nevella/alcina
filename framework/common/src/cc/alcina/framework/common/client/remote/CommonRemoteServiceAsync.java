@@ -15,6 +15,10 @@ package cc.alcina.framework.common.client.remote;
 
 import java.util.List;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.SuggestOracle.Request;
+import com.google.gwt.user.client.ui.SuggestOracle.Response;
+
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
@@ -26,8 +30,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * 
@@ -77,4 +79,7 @@ public interface CommonRemoteServiceAsync {
 
 	void waitForTransforms(long lastTransformRequestId,
 			AsyncCallback<DomainUpdate> callback);
+
+	public void suggest(String name, Request request,
+			String hint, AsyncCallback<Response> asyncCallback);
 }
