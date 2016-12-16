@@ -82,6 +82,7 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 	public void setValue(Set<H> value) {
 		this.value = value;
 		renderTable();
+		setStyleName("empty", value.isEmpty());
 	}
 
 	private void renderTable() {

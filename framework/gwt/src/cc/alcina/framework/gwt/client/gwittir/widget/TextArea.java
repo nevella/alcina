@@ -361,6 +361,7 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 	}
 
 	public void setValue(String value) {
+		setStyleName("empty",CommonUtils.isNullOrEmpty(value));
 		if (provideIsHinted()) {
 			if (CommonUtils.isNullOrEmpty(value)) {
 				return;
