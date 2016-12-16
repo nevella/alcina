@@ -177,7 +177,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	protected Set<HasIdAndLocalId> deleted;
 
-	private HasIdAndLocalId ignorePropertyChangesTo;
+	protected HasIdAndLocalId ignorePropertyChangesTo;
 
 	DomainTransformEvent lastEvent = null;
 
@@ -635,7 +635,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	@Override
 	public synchronized void propertyChange(PropertyChangeEvent evt) {
-		if (evt.getSource() == ignorePropertyChangesTo) {
+		if (isIgnorePropertyChangesForEvent(evt)) {
 			return;
 		}
 		if (isIgnorePropertyChanges()
@@ -1053,6 +1053,10 @@ public class ThreadlocalTransformManager extends TransformManager
 					.getInstantiatedObject(hili);
 		}
 		return hili;
+	}
+
+	protected boolean isIgnorePropertyChangesForEvent(PropertyChangeEvent evt) {
+		return evt.getSource() == ignorePropertyChangesTo;
 	}
 
 	@Override

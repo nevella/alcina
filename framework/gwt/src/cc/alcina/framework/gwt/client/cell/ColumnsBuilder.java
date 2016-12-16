@@ -103,6 +103,9 @@ public class ColumnsBuilder<T> {
 				editInfo.fieldUpdater = fieldUpdater != null ? fieldUpdater
 						: new PropertyFieldUpdater(editablePropertyName);
 			}
+			if (function == null) {
+				function = (Function) sortFunction;
+			}
 			SortableColumn<T> col = new SortableColumn<T>(function,
 					sortFunction, nativeComparator, styleFunction, editInfo,
 					cell);
@@ -162,7 +165,8 @@ public class ColumnsBuilder<T> {
 			this.nativeComparator = nativeComparator;
 			return this;
 		}
-		public ColumnBuilder numeric(){
+
+		public ColumnBuilder numeric() {
 			return this.style("numeric");
 		}
 
@@ -171,15 +175,11 @@ public class ColumnsBuilder<T> {
 			return this;
 		}
 
-		public ColumnBuilder sortable() {
-			this.sortable = true;
-			return this;
-		}
-
 		public ColumnBuilder
 				sortFunction(Function<T, ? extends Comparable> sortFunction) {
 			this.sortFunction = (Function<T, Comparable>) sortFunction;
-			return sortable();
+			sortable = true;
+			return this;
 		}
 
 		public ColumnBuilder style(String style) {
@@ -195,6 +195,11 @@ public class ColumnsBuilder<T> {
 		public ColumnBuilder width(double width, Unit unit) {
 			this.width = width;
 			this.unit = unit;
+			return this;
+		}
+
+		public ColumnBuilder noWrap() {
+			style("nowrap");
 			return this;
 		}
 	}

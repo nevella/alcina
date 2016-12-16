@@ -66,6 +66,16 @@ public class ExpandableLabel extends AbstractBoundWidget {
 
 	private Link showLink;
 
+	private boolean escapeHtml;
+
+	public boolean isEscapeHtml() {
+		return this.escapeHtml;
+	}
+
+	public void setEscapeHtml(boolean escapeHtml) {
+		this.escapeHtml = escapeHtml;
+	}
+
 	ClickHandler showHideListener = new ClickHandler() {
 		public void onClick(ClickEvent event) {
 			Widget sender = (Widget) event.getSource();
@@ -73,7 +83,10 @@ public class ExpandableLabel extends AbstractBoundWidget {
 			if (showAsPopup) {
 				if (!hiding) {
 					ScrollPanel sp = new ScrollPanel();
-					Label label = new InlineHTML(SafeHtmlUtils.htmlEscape(fullTextNoBrs));
+					String popupText = escapeHtml
+							? SafeHtmlUtils.htmlEscape(fullTextNoBrs)
+							: fullTextNoBrs;
+					Label label = new InlineHTML(popupText);
 					sp.add(label);
 					sp.setStyleName("alcina-expandable-label-popup");
 					ClientNotifications.get().setDialogAnimationEnabled(false);

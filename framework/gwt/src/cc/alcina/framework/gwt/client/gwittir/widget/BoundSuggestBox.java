@@ -13,9 +13,13 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
+import java.util.Objects;
+
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.FocusListener;
 import com.google.gwt.user.client.ui.SuggestBox;
 import com.google.gwt.user.client.ui.SuggestOracle;
+import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
@@ -28,6 +32,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseT
  * 
  * @author Nick Reddel
  */
+@SuppressWarnings("deprecation")
 public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 	protected SuggestBox base;
 
@@ -67,6 +72,18 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 			if (evt.getSelectedItem() != null) {
 				setValue((T) ((BoundSuggestOracleSuggestion) evt
 						.getSelectedItem()).typedValue);
+			}
+		});
+		base.addFocusListener(new FocusListener() {
+			@Override
+			public void onLostFocus(Widget sender) {
+				if (!Objects.equals(base.getText(), renderer.apply(value))) {
+					setValue(null);
+				}
+			}
+
+			@Override
+			public void onFocus(Widget sender) {
 			}
 		});
 		super.initWidget(base);

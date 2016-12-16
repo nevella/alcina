@@ -31,16 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import cc.alcina.framework.common.client.logic.RepeatingSequentialCommand;
-import cc.alcina.framework.common.client.util.AlcinaTopics;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContextInstance;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
-import cc.alcina.framework.gwt.client.gwittir.HasBinding;
-import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
-import cc.alcina.framework.gwt.client.logic.RenderContext;
-import cc.alcina.framework.gwt.client.objecttree.HasRenderContext;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -81,6 +71,7 @@ import com.totsp.gwittir.client.keyboard.Task;
 import com.totsp.gwittir.client.log.Level;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Button;
+import com.totsp.gwittir.client.ui.Checkbox;
 import com.totsp.gwittir.client.ui.Label;
 import com.totsp.gwittir.client.ui.table.AbstractTableWidget;
 import com.totsp.gwittir.client.ui.table.DataProvider;
@@ -89,6 +80,16 @@ import com.totsp.gwittir.client.ui.table.HasChunks;
 import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 import com.totsp.gwittir.client.util.ListSorter;
+
+import cc.alcina.framework.common.client.logic.RepeatingSequentialCommand;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.HasBinding;
+import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
+import cc.alcina.framework.gwt.client.objecttree.HasRenderContext;
 
 /**
  * This is an option-rich table for use with objects implementing the
@@ -102,17 +103,13 @@ import com.totsp.gwittir.client.util.ListSorter;
  *         <b>Changes from gwittir.BoundTable</b>
  *         </p>
  *         <ul>
- *         <li>
- *         changed to protected: allRowsHandle, columns, masks, rowHandles,
+ *         <li>changed to protected: allRowsHandle, columns, masks, rowHandles,
  *         shiftDown, table, widgetCache , addRow(),
- *         <li>
- *         add: HANDLES_AS_CHECKBOXES, searchingMessage, noContentMessage,
+ *         <li>add: HANDLES_AS_CHECKBOXES, searchingMessage, noContentMessage,
  *         sortedColumn
- *         <li>
- *         method changes:
+ *         <li>method changes:
  *         <ul>
- *         <li>
- *         ordering in init() {works better with the logic, i think}
+ *         <li>ordering in init() {works better with the logic, i think}
  *         <li>init(int) - support for handlesAsCheckboxes
  *         <li>renderAll() - support for searchingmessage, nocontentmessage,
  *         labels as HTML (see GridForm). <br>
@@ -126,8 +123,8 @@ import com.totsp.gwittir.client.util.ListSorter;
  *         </ul>
  */
 @SuppressWarnings({ "unchecked", "deprecation" })
-public class BoundTableExt extends AbstractTableWidget implements HasChunks,
-		HasBinding, HasRenderContext {
+public class BoundTableExt extends AbstractTableWidget
+		implements HasChunks, HasBinding, HasRenderContext {
 	private static BoundTableExt activeTable = null;
 
 	/**
@@ -506,25 +503,31 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	protected void addRow(final SourcesPropertyChangeEvents o) {
 		int row = table.getRowCount();
-		if (((((masks & BoundTableExt.HEADER_MASK) > 0) && (row >= 2)) || (((masks & BoundTableExt.HEADER_MASK) == 0) && (row >= 1)))
+		if (((((masks & BoundTableExt.HEADER_MASK) > 0) && (row >= 2))
+				|| (((masks & BoundTableExt.HEADER_MASK) == 0) && (row >= 1)))
 				&& ((masks & BoundTableExt.SPACER_ROW_MASK) > 0)) {
 			table.setWidget(row, 0, new Label(""));
-			table.getFlexCellFormatter()
-					.setColSpan(row, 0, this.columns.length);
+			table.getFlexCellFormatter().setColSpan(row, 0,
+					this.columns.length);
 			table.getRowFormatter().setStyleName(row, "spacer");
 			row++;
 		}
 		Binding bindingRow = new Binding();
 		topBinding.getChildren().add(bindingRow);
 		int count = topBinding.getChildren().size();
-		final Button handle;
+		final Widget handle;
 		int startColumn = 0;
 		if ((this.masks & BoundTableExt.ROW_HANDLE_MASK) > 0) {
-			handle = new Button(
-					(this.getActive() && (rowHandles.size() < 9)) ? Integer
-							.toString(this.rowHandles.size() + 1) : " ");
+			if ((this.masks & BoundTableExt.HANDLES_AS_CHECKBOXES) > 0) {
+				handle = new Checkbox();
+			} else {
+				handle = new Button(
+						(this.getActive() && (rowHandles.size() < 9))
+								? Integer.toString(this.rowHandles.size() + 1)
+								: " ");
+			}
 			handle.setStyleName("rowHandle");
-			handle.addFocusListener(new FocusListener() {
+			((HasFocus) handle).addFocusListener(new FocusListener() {
 				public void onFocus(Widget sender) {
 					if (shiftDown) {
 						return;
@@ -548,7 +551,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				public void onLostFocus(Widget sender) {
 				}
 			});
-			handle.addClickListener(new ClickListener() {
+			((SourcesClickEvents) handle).addClickListener(new ClickListener() {
 				public void onClick(Widget sender) {
 					setActive(true);
 					List newSelected = null;
@@ -564,10 +567,10 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 						newSelected.add(o);
 					}
 					if (handle != null) {
-						handle.setFocus(true);
+						((HasFocus) handle).setFocus(true);
 					}
 					if (handle != null) {
-						handle.setFocus(true);
+						((HasFocus) handle).setFocus(true);
 					}
 					setSelected(newSelected);
 				}
@@ -579,8 +582,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			handle = null;
 		}
 		if (count < 10) {
-			SuggestedKeyBinding kb = new SuggestedKeyBinding(Integer.toString(
-					count).charAt(0), false, true, false);
+			SuggestedKeyBinding kb = new SuggestedKeyBinding(
+					Integer.toString(count).charAt(0), false, true, false);
 			Task task = new Task() {
 				public void run() {
 					List newSelected = new ArrayList(getSelected());
@@ -591,7 +594,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					}
 					setSelected(newSelected);
 					if (handle != null) {
-						handle.setFocus(true);
+						((HasFocus) handle).setFocus(true);
 					}
 				}
 			};
@@ -600,8 +603,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				try {
 					KeyboardController.INSTANCE.register(kb, task);
 				} catch (KeyBindingException kbe) {
-					BoundTableExt.LOG.log(Level.DEBUG, "Unable to register"
-							+ kb, kbe);
+					BoundTableExt.LOG.log(Level.DEBUG,
+							"Unable to register" + kb, kbe);
 				}
 			}
 		}
@@ -610,18 +613,19 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			try {
 				table.setWidget(row, col + startColumn, widget);
 				if (widget instanceof HasFocus) {
-					addSelectedFocusListener((HasFocus) widget, topBinding
-							.getChildren().size() - 1, col + startColumn);
+					addSelectedFocusListener((HasFocus) widget,
+							topBinding.getChildren().size() - 1,
+							col + startColumn);
 				}
 				if (widget instanceof SourcesClickEvents) {
 					addSelectedClickListener((SourcesClickEvents) widget,
-							topBinding.getChildren().size() - 1, col
-									+ startColumn);
+							topBinding.getChildren().size() - 1,
+							col + startColumn);
 				}
 				if (this.columns[col].getStyleName() != null) {
-					table.getCellFormatter()
-							.setStyleName(row, col + startColumn,
-									this.columns[col].getStyleName());
+					table.getCellFormatter().setStyleName(row,
+							col + startColumn,
+							this.columns[col].getStyleName());
 				}
 			} catch (RuntimeException e) {
 				BoundTableExt.LOG.log(Level.ERROR, widget + "", e);
@@ -803,8 +807,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			}
 			for (int i = removeRows.size() - 1; i >= 0; i--) {
 				// GWT.log("Removing nested: " + removeRows.get(i), null);
-				this.removeNestedWidget(((Integer) removeRows.get(i))
-						.intValue());
+				this.removeNestedWidget(
+						((Integer) removeRows.get(i)).intValue());
 			}
 		}
 		if ((this.masks & BoundTableExt.MULTIROWSELECT_MASK) > 0) {
@@ -817,8 +821,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			this.selectedRowStyles.clear();
 		} else if ((this.masks & BoundTableExt.SELECT_ROW_MASK) != 0) {
 			if (this.selectedRowLastIndex != -1) {
-				this.table.getRowFormatter().removeStyleName(
-						this.selectedRowLastIndex, "selected");
+				this.table.getRowFormatter()
+						.removeStyleName(this.selectedRowLastIndex, "selected");
 				this.selectedRowLastStyle = BoundTableExt.DEFAULT_STYLE;
 			}
 		}
@@ -847,8 +851,9 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			} else {
 				final Property p = GwittirBridge.get().getProperty(target,
 						col.getPropertyName());
-				widget = (BoundWidget) this.factory.getWidgetProvider(
-						col.getPropertyName(), p.getType()).get();
+				widget = (BoundWidget) this.factory
+						.getWidgetProvider(col.getPropertyName(), p.getType())
+						.get();
 				// TODO Figure out some way to make this read only.
 			}
 			rowWidgets[colIndex] = widget;
@@ -1036,8 +1041,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 						.add(calculateRowToObjectOffset((Integer) it.next()));
 			}
 		} else if (this.selectedRowLastIndex != -1) {
-			realIndexes.add(calculateRowToObjectOffset(new Integer(
-					this.selectedRowLastIndex)));
+			realIndexes.add(calculateRowToObjectOffset(
+					new Integer(this.selectedRowLastIndex)));
 		}
 		int i = 0;
 		for (Iterator it = this.value.iterator(); it.hasNext(); i++) {
@@ -1074,9 +1079,11 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		// GWT.log( " ON "+row+", "+col, new RuntimeException() );
 		if ((this.masks & BoundTableExt.INSERT_WIDGET_MASK) > 0) {
 			if (((this.selectedRowStyles == null)
-					&& (this.selectedRowLastIndex != -1) && (this.selectedRowLastIndex == (row - 1)))
-					|| ((this.selectedRowStyles != null) && this.selectedRowStyles
-							.containsKey(new Integer(row - 1)))) {
+					&& (this.selectedRowLastIndex != -1)
+					&& (this.selectedRowLastIndex == (row - 1)))
+					|| ((this.selectedRowStyles != null)
+							&& this.selectedRowStyles
+									.containsKey(new Integer(row - 1)))) {
 				return;
 			}
 			calcRow = row - this.selectedRowsBeforeRow(row);
@@ -1084,12 +1091,19 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		if (calcRow < 0) {
 			throw new RuntimeException("Row base is negative!");
 		}
-		if ((((masks & BoundTableExt.SPACER_ROW_MASK) == 0) && ((((masks & BoundTableExt.HEADER_MASK) > 0) && (calcRow > 0)) || ((masks & BoundTableExt.HEADER_MASK) == 0)))
-				|| (((masks & BoundTableExt.HEADER_MASK) > 0) & ((calcRow % 2) != 0))
-				|| (((masks & BoundTableExt.HEADER_MASK) == 0) && ((calcRow % 2) != 1))) {
+		if ((((masks & BoundTableExt.SPACER_ROW_MASK) == 0)
+				&& ((((masks & BoundTableExt.HEADER_MASK) > 0) && (calcRow > 0))
+						|| ((masks & BoundTableExt.HEADER_MASK) == 0)))
+				|| (((masks & BoundTableExt.HEADER_MASK) > 0)
+						& ((calcRow % 2) != 0))
+				|| (((masks & BoundTableExt.HEADER_MASK) == 0)
+						&& ((calcRow % 2) != 1))) {
 			// GWT.log( "Inside" , null);
-			if ((toggleRow && (((masks & BoundTableExt.MULTIROWSELECT_MASK) == 0) && (row != this.selectedCellRowLastIndex)))
-					|| (((masks & BoundTableExt.MULTIROWSELECT_MASK) > 0) && toggleRow)) {
+			if ((toggleRow
+					&& (((masks & BoundTableExt.MULTIROWSELECT_MASK) == 0)
+							&& (row != this.selectedCellRowLastIndex)))
+					|| (((masks & BoundTableExt.MULTIROWSELECT_MASK) > 0)
+							&& toggleRow)) {
 				// if( toggleRow || (masks & BoundTable.MULTIROWSELECT_MASK) ==
 				// 0){
 				row = setSelectedRow(row);
@@ -1148,7 +1162,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				&& ((this.masks & BoundTableExt.MULTIROWSELECT_MASK) > 0)) {
 			this.allRowsHandle = new Button("  ", new ClickListener() {
 				public void onClick(Widget sender) {
-					if ((getSelected() != null) && (getSelected().size() == 0)) {
+					if ((getSelected() != null)
+							&& (getSelected().size() == 0)) {
 						setSelected(new ArrayList((Collection) getValue()));
 					} else {
 						setSelected(new ArrayList());
@@ -1181,10 +1196,9 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				public void onScroll(Widget widget, int scrollLeft,
 						int scrollTop) {
 					// GWT.log("HasProvider: " + (provider != null), null);
-					if ((provider != null)
-							&& (inChunk == false)
-							&& (scrollTop >= (table.getOffsetHeight() - scroll
-									.getOffsetHeight()))) {
+					if ((provider != null) && (inChunk == false)
+							&& (scrollTop >= (table.getOffsetHeight()
+									- scroll.getOffsetHeight()))) {
 						// GWT.log("Scroll Event fired. ", null);
 						lastScrollPosition = scrollTop - 1;
 						next();
@@ -1199,16 +1213,15 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			public void onCellClicked(SourcesTableEvents sender, int row,
 					int cell) {
 				setActive(true);
-				int startColumn = ((masks & BoundTableExt.ROW_HANDLE_MASK) > 0) ? 1
-						: 0;
+				int startColumn = ((masks & BoundTableExt.ROW_HANDLE_MASK) > 0)
+						? 1 : 0;
 				if (startColumn == 0) {
 					handleSelect(true, row, cell);
 				}
 				if (((masks & BoundTableExt.SORT_MASK) > 0)
 						&& ((masks & BoundTableExt.HEADER_MASK) > 0)
-						&& (row == 0)
-						&& !(BoundTableExt.this.value == null || BoundTableExt.this.value
-								.isEmpty())) {
+						&& (row == 0) && !(BoundTableExt.this.value == null
+								|| BoundTableExt.this.value.isEmpty())) {
 					sortColumn(cell - startColumn);
 				}
 			}
@@ -1235,15 +1248,16 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					}
 				});
 		this.addPropertyChangeListener("active", new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
+			public void
+					propertyChange(PropertyChangeEvent propertyChangeEvent) {
 				boolean newActive = ((Boolean) propertyChangeEvent
 						.getNewValue()).booleanValue();
 				if ((masks & BoundTableExt.ROW_HANDLE_MASK) > 0
 						&& (masks & BoundTableExt.HANDLES_AS_CHECKBOXES) == 0) {
 					for (int i = 0; i < rowHandles.size(); i++) {
 						((Button) rowHandles.get(i))
-								.setText((newActive && (i <= 8)) ? Integer
-										.toString(i + 1) : " ");
+								.setText((newActive && (i <= 8))
+										? Integer.toString(i + 1) : " ");
 					}
 				}
 				for (Iterator it = keyBindings.entrySet().iterator(); it
@@ -1262,8 +1276,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				KeyBinding kb = (KeyBinding) entry.getKey();
 				Object execute = entry.getValue();
 				if (newActive) {
-					BoundTableExt.LOG
-							.log(Level.SPAM, "Registering " + kb, null);
+					BoundTableExt.LOG.log(Level.SPAM, "Registering " + kb,
+							null);
 					try {
 						if (execute instanceof Task) {
 							KeyboardController.INSTANCE.register(kb,
@@ -1276,13 +1290,13 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 									(BoundWidget) execute);
 						}
 					} catch (KeyBindingException kbe) {
-						BoundTableExt.LOG.log(Level.DEBUG, "Unable to register"
-								+ kb, kbe);
+						BoundTableExt.LOG.log(Level.DEBUG,
+								"Unable to register" + kb, kbe);
 					}
 				} else {
 					boolean result = KeyboardController.INSTANCE.unregister(kb);
-					BoundTableExt.LOG.log(Level.SPAM, "Unregistering " + kb
-							+ " " + result, null);
+					BoundTableExt.LOG.log(Level.SPAM,
+							"Unregistering " + kb + " " + result, null);
 				}
 			}
 		});
@@ -1312,7 +1326,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	}
 
 	protected native Element getRow(Element elem, int row)/*-{
-		return elem.rows[row];
+        return elem.rows[row];
 	}-*/;
 
 	private void insertNestedWidget(int row) {
@@ -1331,8 +1345,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				it.next();
 			}
 		}
-		BoundWidget widget = (BoundWidget) this.factory.getWidgetProvider(
-				Introspector.INSTANCE.resolveClass(o)).get();
+		BoundWidget widget = (BoundWidget) this.factory
+				.getWidgetProvider(Introspector.INSTANCE.resolveClass(o)).get();
 		widget.setModel(o);
 		this.table.insertRow(row + 1);
 		this.table.setWidget(row + 1, 0, (Widget) widget);
@@ -1372,8 +1386,9 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			Entry entry = (Entry) it.next();
 			Integer entryRow = (Integer) entry.getKey();
 			if (entryRow.intValue() > fromRow) {
-				newSelectedRowStyles.put(new Integer(entryRow.intValue()
-						+ modifier), entry.getValue());
+				newSelectedRowStyles.put(
+						new Integer(entryRow.intValue() + modifier),
+						entry.getValue());
 			} else {
 				newSelectedRowStyles.put(entryRow, entry.getValue());
 			}
@@ -1520,9 +1535,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			if (this.value == null || this.value.isEmpty()) {
 				this.clear();
 				HTML l = new HTML(
-						inChunk
-								&& !(this.provider instanceof CollectionDataProvider) ? searchingMessage
-								: noContentMessage);
+						inChunk && !(this.provider instanceof CollectionDataProvider)
+								? searchingMessage : noContentMessage);
 				l.setStyleName("no-content");
 				this.table.setWidget(0, 0, l);
 				return false;
@@ -1560,8 +1574,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		}
 		if ((this.masks & BoundTableExt.HEADER_MASK) > 0) {
 			for (int i = 0; i < this.columns.length; i++) {
-				this.table.setWidget(0, i + startColumn, new HTML(
-						this.columns[i].getLabel()));
+				this.table.setWidget(0, i + startColumn,
+						new HTML(this.columns[i].getLabel()));
 			}
 			if (this.provider instanceof SortableDataProvider
 					&& (this.masks & BoundTableExt.SORT_MASK) > 0) {
@@ -1569,8 +1583,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				String[] sortableProperties = sdp.getSortableProperties();
 				for (int i = 0; (i < sortableProperties.length); i++) {
 					for (int index = 0; index < this.columns.length; index++) {
-						if (sortableProperties[i].equals(this.columns[index]
-								.getPropertyName())) {
+						if (sortableProperties[i].equals(
+								this.columns[index].getPropertyName())) {
 							this.table.getCellFormatter().addStyleName(0,
 									index + startColumn, "sortable");
 						}
@@ -1581,11 +1595,9 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		}
 		if (sortedColumn != -1) {
 			if ((this.masks & BoundTableExt.HEADER_MASK) > 0) {
-				table.getCellFormatter().addStyleName(
-						0,
-						sortedColumn + startColumn,
-						this.ascending[sortedColumn] ? "ascending"
-								: "descending");
+				table.getCellFormatter().addStyleName(0,
+						sortedColumn + startColumn, this.ascending[sortedColumn]
+								? "ascending" : "descending");
 			}
 		}
 		rowIterator = this.value == null ? null : this.value.iterator();
@@ -1595,8 +1607,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		// GWT.log( "=======Selected rows before "+row, null);
 		// GWT.log( "=======lastRow "+this.selectedRowLastIndex, null );
 		if (this.selectedRowStyles == null) {
-			return ((this.selectedRowLastIndex == -1) || (this.selectedRowLastIndex >= row)) ? 0
-					: 1;
+			return ((this.selectedRowLastIndex == -1)
+					|| (this.selectedRowLastIndex >= row)) ? 0 : 1;
 		}
 		int count = 0;
 		for (Iterator it = this.selectedRowStyles.keySet().iterator(); it
@@ -1653,8 +1665,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		} else {
 			this.setValue(c);
 		}
-		if (((masks & BoundTableExt.SCROLL_MASK) > 0)
-				&& (this.scroll.getVerticalScrollPosition() >= this.lastScrollPosition)) {
+		if (((masks & BoundTableExt.SCROLL_MASK) > 0) && (this.scroll
+				.getVerticalScrollPosition() >= this.lastScrollPosition)) {
 			this.scroll.setVerticalScrollPosition(this.lastScrollPosition);
 		}
 		this.inChunk = false;
@@ -1711,9 +1723,11 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					.getChildren().get(0)).getRight().object;
 			if (selected.contains(b)) {
 				this.setSelectedRow(calculateObjectToRowOffset(i));
-				if (this.table.getWidget(calculateObjectToRowOffset(i), 0) instanceof HasFocus) {
-					((HasFocus) this.table.getWidget(
-							calculateObjectToRowOffset(i), 0)).setFocus(true);
+				if (this.table.getWidget(calculateObjectToRowOffset(i),
+						0) instanceof HasFocus) {
+					((HasFocus) this.table
+							.getWidget(calculateObjectToRowOffset(i), 0))
+									.setFocus(true);
 				}
 			}
 		}
@@ -1758,22 +1772,23 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		}
 		List old = this.getSelected();
 		if ((this.masks & BoundTableExt.MULTIROWSELECT_MASK) > 0) {
-			if ((((masks & BoundTableExt.MULTI_REQUIRES_SHIFT) > 0) == shiftDown)) {
+			if ((((masks
+					& BoundTableExt.MULTI_REQUIRES_SHIFT) > 0) == shiftDown)) {
 				// TOGGLE ROW.
 				if (this.selectedRowStyles.containsKey(new Integer(row))) {
 					// Handle Widget remove on Multirow
-					this.getRowFormatter().setStyleName(
-							row,
-							(String) this.selectedRowStyles.remove(new Integer(
-									row)));
+					this.getRowFormatter().setStyleName(row,
+							(String) this.selectedRowStyles
+									.remove(new Integer(row)));
 					if ((this.masks & BoundTableExt.INSERT_WIDGET_MASK) > 0) {
 						this.removeNestedWidget(row);
 					}
 				} else {
 					String lastStyle = table.getRowFormatter()
 							.getStyleName(row);
-					lastStyle = ((lastStyle == null) || (lastStyle.length() == 0)) ? BoundTableExt.DEFAULT_STYLE
-							: lastStyle;
+					lastStyle = ((lastStyle == null)
+							|| (lastStyle.length() == 0))
+									? BoundTableExt.DEFAULT_STYLE : lastStyle;
 					this.selectedRowStyles.put(new Integer(row), lastStyle);
 					this.getRowFormatter().addStyleName(row, "selected");
 					if ((this.masks & BoundTableExt.INSERT_WIDGET_MASK) > 0) {
@@ -1784,9 +1799,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				// Set selected and toggle all others
 				GWT.log("clearing all rows", null);
 				for (Integer i : (Integer[]) this.selectedRowStyles.keySet()
-						.toArray(
-								new Integer[this.selectedRowStyles.keySet()
-										.size()])) {
+						.toArray(new Integer[this.selectedRowStyles.keySet()
+								.size()])) {
 					if (i == row) {
 						continue;
 					}
@@ -1800,8 +1814,9 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				if (!this.selectedRowStyles.containsKey(row)) {
 					String lastStyle = table.getRowFormatter()
 							.getStyleName(row);
-					lastStyle = ((lastStyle == null) || (lastStyle.length() == 0)) ? BoundTableExt.DEFAULT_STYLE
-							: lastStyle;
+					lastStyle = ((lastStyle == null)
+							|| (lastStyle.length() == 0))
+									? BoundTableExt.DEFAULT_STYLE : lastStyle;
 					this.selectedRowStyles.put(row, lastStyle);
 					this.getRowFormatter().addStyleName(row, "selected");
 					if ((this.masks & BoundTableExt.INSERT_WIDGET_MASK) > 0) {
@@ -1822,7 +1837,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					}
 				}
 				String currentStyle = table.getRowFormatter().getStyleName(row);
-				if ((currentStyle == null) || !currentStyle.equals("selected")) {
+				if ((currentStyle == null)
+						|| !currentStyle.equals("selected")) {
 					this.selectedRowLastStyle = currentStyle;
 				}
 				if ((this.selectedRowLastStyle == null)
@@ -1899,15 +1915,16 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			boolean canSort = false;
 			String[] sortableProperties = sdp.getSortableProperties();
 			for (int i = 0; (i < sortableProperties.length) && !canSort; i++) {
-				if (sortableProperties[i].equals(this.columns[index]
-						.getPropertyName())) {
+				if (sortableProperties[i]
+						.equals(this.columns[index].getPropertyName())) {
 					canSort = true;
 				}
 			}
 			if (!canSort) {
-				AlcinaTopics.notifyDevWarning(new RuntimeException(CommonUtils
-						.formatJ("Field %s is not a"
-								+ " sortable field from data provider %s.",
+				AlcinaTopics.notifyDevWarning(
+						new RuntimeException(CommonUtils.formatJ(
+								"Field %s is not a"
+										+ " sortable field from data provider %s.",
 								this.columns[index].getPropertyName(),
 								this.provider.getClass().getName())));
 				return;
@@ -1985,5 +2002,12 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	@Override
 	public LooseContextInstance getRenderContext() {
 		return this.renderContext;
+	}
+
+	@Override
+	public void setModel(Object model) {
+		System.out.println(CommonUtils.formatJ("set model - %s %s\n",
+				model.hashCode(), model));
+		super.setModel(model);
 	}
 }

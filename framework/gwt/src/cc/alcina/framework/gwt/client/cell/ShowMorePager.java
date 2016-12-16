@@ -17,10 +17,10 @@ package cc.alcina.framework.gwt.client.cell;
 
 import com.google.gwt.event.dom.client.ScrollEvent;
 import com.google.gwt.event.dom.client.ScrollHandler;
-import com.google.gwt.user.cellview.client.AbstractCellTable;
 import com.google.gwt.user.cellview.client.AbstractPager;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.view.client.HasRows;
+import com.google.gwt.view.client.Range;
 
 public class ShowMorePager extends AbstractPager {
 	/**
@@ -68,7 +68,7 @@ public class ShowMorePager extends AbstractPager {
 				System.out.println(lastScrollPos);
 				System.out.println(maxScrollTop);
 				if (Math.abs(lastScrollPos - oldScrollPos) > 200) {
-					//handle autoscroll to end
+					// handle autoscroll to end
 					return;
 				}
 				if (lastScrollPos >= maxScrollTop) {
@@ -77,6 +77,15 @@ public class ShowMorePager extends AbstractPager {
 							.min(display.getVisibleRange().getLength()
 									+ incrementSize, display.getRowCount());
 					if (newPageSize != 0) {
+						Range newRange = new Range(0, newPageSize);
+						if (display.getVisibleRange().getStart() == newRange
+								.getStart()
+								&& display.getVisibleRange()
+										.getLength() >= newRange.getLength()) {
+							// don't show a smaller visible range (which would
+							// force a search)
+							return;
+						}
 						display.setVisibleRange(0, newPageSize);
 					}
 				}

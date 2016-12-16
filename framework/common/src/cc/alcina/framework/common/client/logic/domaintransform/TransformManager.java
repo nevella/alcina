@@ -1743,7 +1743,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	protected <T extends HasIdAndLocalId> boolean
+	public <T extends HasIdAndLocalId> boolean
 			isProvisionalObject(final T object) {
 		if (getProvisionalObjects().contains(object)) {
 			for (Object o : getProvisionalObjects()) {

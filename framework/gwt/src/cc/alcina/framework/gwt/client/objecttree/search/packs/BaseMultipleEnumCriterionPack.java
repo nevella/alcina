@@ -44,9 +44,9 @@ public class BaseMultipleEnumCriterionPack {
 
 	public static abstract class BaseEnumMultipleCriterionSearchable<E extends Enum, C extends EnumMultipleCriterion<E>>
 			extends FlatSearchable<C> {
-		private Class<E> enumClass;
+		protected Class<E> enumClass;
 
-		private int maxSelectedItems = 999;
+		protected int maxSelectedItems = 999;
 
 		public BaseEnumMultipleCriterionSearchable(Class<C> clazz,
 				Class<E> enumClass, String objectName, String criteriaName) {

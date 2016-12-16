@@ -55,13 +55,16 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 @SuppressWarnings("unchecked")
 /**
- *<h2>Notes</h2>
- *<p>Permissions type ADMIN_OR_OWNER pretty much mandates that the object implement HasOwner</p>
+ * <h2>Notes</h2>
+ * <p>
+ * Permissions type ADMIN_OR_OWNER pretty much mandates that the object
+ * implement HasOwner
+ * </p>
+ * 
  * @author Nick Reddel
  */
 public class PermissionsManager implements Vetoer, DomainTransformListener {
 	public static final String PROP_LOGIN_STATE = "loginState";
-
 
 	private static String administratorGroupName = "Administrators";
 
@@ -80,7 +83,6 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 		public String rule() {
 			return null;
-			
 		}
 	};
 
@@ -161,7 +163,8 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		theInstance = pm;
 	}
 
-	public static void setAdministratorGroupName(String administratorGroupName) {
+	public static void
+			setAdministratorGroupName(String administratorGroupName) {
 		PermissionsManager.administratorGroupName = administratorGroupName;
 	}
 
@@ -173,8 +176,8 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		PermissionsManager.developerGroupName = developerGroupName;
 	}
 
-	public static void setPermissionsExtension(
-			PermissionsExtension permissionsExtension) {
+	public static void
+			setPermissionsExtension(PermissionsExtension permissionsExtension) {
 		PermissionsManager.permissionsExtension = permissionsExtension;
 	}
 
@@ -258,8 +261,8 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	public boolean checkEffectivePropertyPermission(Object bean,
 			String propertyName, boolean read) {
 		Class<? extends Object> clazz = bean.getClass();
-		ObjectPermissions op = Reflections.classLookup().getAnnotationForClass(
-				clazz, ObjectPermissions.class);
+		ObjectPermissions op = Reflections.classLookup()
+				.getAnnotationForClass(clazz, ObjectPermissions.class);
 		PropertyPermissions pp = Reflections.propertyAccessor()
 				.getAnnotationForProperty(clazz, PropertyPermissions.class,
 						propertyName);
@@ -268,11 +271,10 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 	public boolean checkEffectivePropertyPermission(ObjectPermissions op,
 			PropertyPermissions pp, Object bean, boolean read) {
-		op = op == null ? PermissionsManager.get()
-				.getDefaultObjectPermissions() : op;
-		if (pp == null
-				&& !PermissionsManager.get().isPermissible(bean,
-						read ? op.read() : op.write())) {
+		op = op == null ? PermissionsManager.get().getDefaultObjectPermissions()
+				: op;
+		if (pp == null && !PermissionsManager.get().isPermissible(bean,
+				read ? op.read() : op.write())) {
 			return false;
 		}
 		if (op != null && pp == null) {// assume defined object permissions
@@ -284,15 +286,15 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		return isPermissible(bean, read ? pp.read() : pp.write());
 	}
 
-	public boolean checkReadable(Class clazz, String propertyName, Object bean) {
+	public boolean checkReadable(Class clazz, String propertyName,
+			Object bean) {
 		ClassLookup classLookup = Reflections.classLookup();
 		PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
 		ObjectPermissions op = classLookup.getAnnotationForClass(clazz,
 				ObjectPermissions.class);
 		PropertyPermissions pp = propertyAccessor.getAnnotationForProperty(
 				clazz, PropertyPermissions.class, propertyName);
-		return PermissionsManager.get().checkEffectivePropertyPermission(op,
-				pp,
+		return PermissionsManager.get().checkEffectivePropertyPermission(op, pp,
 				bean == null ? classLookup.getTemplateInstance(clazz) : bean,
 				true);
 	}
@@ -368,7 +370,8 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 					groups.add(user.getPrimaryGroup());
 				}
 				groups.addAll(user.getSecondaryGroups());
-				recursivePopulateGroupMemberships(groups, new HashSet<IGroup>());
+				recursivePopulateGroupMemberships(groups,
+						new HashSet<IGroup>());
 			}
 			groupMap = new HashMap<String, IGroup>();
 			for (Iterator<IGroup> itr = groups.iterator(); itr.hasNext();) {
@@ -511,6 +514,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	public boolean isRoot() {
 		return root;
 	}
+
 	public boolean permitDueToOwnership(HasOwner hasOwner) {
 		if (overrideAsOwnedObject) {
 			return true;
@@ -731,15 +735,15 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 	@RegistryLocation(registryPoint = PermissionsExtensionForClass.class)
 	@ClientInstantiable
-	public static abstract class PermissionsExtensionForClass<C> implements
-			PermissionsExtension {
+	public static abstract class PermissionsExtensionForClass<C>
+			implements PermissionsExtension {
 		public abstract Class<C> getGenericClass();
 	}
 
 	@RegistryLocation(registryPoint = PermissionsExtensionForRule.class)
 	@ClientInstantiable
-	public static abstract class PermissionsExtensionForRule implements
-			PermissionsExtension {
+	public static abstract class PermissionsExtensionForRule
+			implements PermissionsExtension {
 		public abstract String getRuleName();
 	}
 
@@ -779,8 +783,8 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	 * @author nick@alcina.cc
 	 * 
 	 */
-	public static class RegistryPermissionsExtension implements
-			PermissionsExtension {
+	public static class RegistryPermissionsExtension
+			implements PermissionsExtension {
 		Map<Class, PermissionsExtensionForClass> extensionMapForClass = new HashMap<Class, PermissionsExtensionForClass>();
 
 		Map<String, PermissionsExtensionForRule> extensionMapForRule = new HashMap<String, PermissionsExtensionForRule>();
@@ -799,11 +803,15 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 				for (Class clazz : lookup) {
 					PermissionsExtensionForRule ext = (PermissionsExtensionForRule) Reflections
 							.classLookup().newInstance(clazz);
-					extensionMapForRule.put(ext.getRuleName(), ext);
+					register(ext);
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
+		}
+
+		public void register(PermissionsExtensionForRule ext) {
+			extensionMapForRule.put(ext.getRuleName(), ext);
 		}
 
 		public Boolean isPermitted(Object o, Permissible p) {

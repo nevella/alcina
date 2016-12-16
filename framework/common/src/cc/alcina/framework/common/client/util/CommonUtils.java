@@ -98,6 +98,19 @@ public class CommonUtils {
 		}
 	}
 
+	public static String buildSpaceSeparatedStrings(String... strings) {
+		StringBuilder sb = new StringBuilder();
+		for (String string : strings) {
+			if (CommonUtils.isNotNullOrEmpty(string)) {
+				if (sb.length() > 0) {
+					sb.append(" ");
+				}
+				sb.append(string.trim());
+			}
+		}
+		return sb.toString();
+	}
+
 	public static boolean bv(Boolean b) {
 		return b == null || b == false ? false : true;
 	}
@@ -699,6 +712,14 @@ public class CommonUtils {
 		return -1;
 	}
 
+	public static <T> int indexOf(Iterator<T> itr, Predicate<T> test) {
+		int count = 0;
+		while (itr.hasNext() && !test.test(itr.next())) {
+			count++;
+		}
+		return count;
+	}
+
 	public static String infix(String s) {
 		return isNullOrEmpty(s) ? null
 				: s.substring(0, 1).toLowerCase()
@@ -870,6 +891,17 @@ public class CommonUtils {
 
 	public static long lv(Long l) {
 		return l == null ? 0 : l;
+	}
+
+	public static <U, V> Comparator<U> mappingComparator(Function<U, V> mapping,
+			Comparator<V> vComparator) {
+		return new Comparator<U>() {
+			@Override
+			public int compare(U o1, U o2) {
+				return vComparator.compare(mapping.apply(o1),
+						mapping.apply(o2));
+			}
+		};
 	}
 
 	@SuppressWarnings("deprecation")
@@ -1206,11 +1238,29 @@ public class CommonUtils {
 				sb.append(string);
 			} else if (string.toUpperCase().equals(string)) {
 				sb.append(string);
+			} else if (isCamelCaseIsh(string)) {
+				sb.append(string);
 			} else {
 				sb.append(upperCaseFirstLetterOnly(string));
 			}
 		}
 		return sb.toString();
+	}
+
+	private static boolean isCamelCaseIsh(String string) {
+		boolean seenLower = false;
+		for (int idx = 0; idx < string.length(); idx++) {
+			char c = string.charAt(idx);
+			boolean upper = c >= 'A' && c <= 'Z';
+			boolean lower = c >= 'a' && c <= 'z';
+			if (seenLower && upper) {
+				return true;
+			}
+			if (lower) {
+				seenLower = true;
+			}
+		}
+		return false;
 	}
 
 	public static String trimToWsChars(String s, int maxChars) {
@@ -1374,24 +1424,5 @@ public class CommonUtils {
 			return CommonUtils.formatJ("First: %s\nBoth: %s\nSecond: %s",
 					firstOnly, intersection, secondOnly);
 		}
-	}
-
-	public static <T> int indexOf(Iterator<T> itr, Predicate<T> test) {
-		int count = 0;
-		while (itr.hasNext() && !test.test(itr.next())) {
-			count++;
-		}
-		return count;
-	}
-
-	public static <U, V> Comparator<U> mappingComparator(Function<U, V> mapping,
-			Comparator<V> vComparator) {
-		return new Comparator<U>() {
-			@Override
-			public int compare(U o1, U o2) {
-				return vComparator.compare(mapping.apply(o1),
-						mapping.apply(o2));
-			}
-		};
 	}
 }

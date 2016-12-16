@@ -32,21 +32,24 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 
 	protected boolean concurrent;
 
-	 Function<T,?> valueFunction;
+	Function<T, ?> valueFunction;
 
 	public CacheLookupDescriptor(Class clazz, String propertyPath) {
 		this(clazz, propertyPath, false, null);
 	}
 
-	public CacheLookupDescriptor(Class clazz, Function<T,?> valueFunction,boolean concurrent) {
+	public CacheLookupDescriptor(Class clazz, Function<T, ?> valueFunction,
+			boolean concurrent) {
 		this(clazz, "no-path", concurrent, valueFunction);
 	}
+
 	public CacheLookupDescriptor(Class clazz, String propertyPath,
-			boolean concurrent){
+			boolean concurrent) {
 		this(clazz, propertyPath, concurrent, null);
 	}
+
 	public CacheLookupDescriptor(Class clazz, String propertyPath,
-			boolean concurrent, Function<T,?> valueFunction) {
+			boolean concurrent, Function<T, ?> valueFunction) {
 		this.clazz = clazz;
 		this.propertyPath = propertyPath;
 		this.concurrent = concurrent;
@@ -90,7 +93,12 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 
 		public IdCacheLookupDescriptor(Class clazz, String propertyPath,
 				boolean concurrent) {
-			super(clazz, propertyPath, concurrent,null);
+			super(clazz, propertyPath, concurrent, null);
+		}
+
+		public IdCacheLookupDescriptor(Class clazz,
+				Function<T, ?> valueFunction, boolean concurrent) {
+			super(clazz, "no-path", concurrent, valueFunction);
 		}
 
 		@Override

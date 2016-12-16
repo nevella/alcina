@@ -1,5 +1,9 @@
 package cc.alcina.framework.common.client.sync;
 
+import com.google.gwt.core.shared.GWT;
+
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 
@@ -29,11 +33,29 @@ public abstract class AbstractLocalDomainLocatable<T extends LocalDomainLocatabl
 	}
 
 	public T createOrReturnLocal() {
-		T local = findLocalEquivalent();
-		if (local != null) {
-			return local;
+		return createOrReturnLocal(false);
+	}
+
+	public T createOrReturnLocal(boolean allowCached) {
+		if (allowCached) {
+			try {
+				LooseContext.pushWithKey(CONTEXT_HINT_ALLOW_CACHED_FIND, true);
+				T local = findLocalEquivalent();
+				if (local != null) {
+					return local;
+				} else {
+					return ensureLocalEquivalent();
+				}
+			} finally {
+				LooseContext.pop();
+			}
 		} else {
-			return ensureLocalEquivalent();
+			T local = findLocalEquivalent();
+			if (local != null) {
+				return local;
+			} else {
+				return ensureLocalEquivalent();
+			}
 		}
 	}
 
@@ -63,7 +85,11 @@ public abstract class AbstractLocalDomainLocatable<T extends LocalDomainLocatabl
 	}
 
 	public void deleteLocalEquivalent() {
-		Registry.impl(LocalDomainPersistence.class, getClass())
-				.deleteLocalEquivalent(this);
+		if (GWT.isClient() && this instanceof HasIdAndLocalId) {
+			TransformManager.get().deleteObject((HasIdAndLocalId) this, true);
+		} else {
+			Registry.impl(LocalDomainPersistence.class, getClass())
+					.deleteLocalEquivalent(this);
+		}
 	}
 }

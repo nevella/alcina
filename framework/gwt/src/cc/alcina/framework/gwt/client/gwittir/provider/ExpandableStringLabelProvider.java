@@ -33,18 +33,22 @@ public class ExpandableStringLabelProvider
 
 	private boolean showAsPopup;
 
+	private boolean escapeHtml;
+
 	public ExpandableStringLabelProvider(int maxWidth, boolean forceColumnWidth,
-			boolean showNewlinesAsBreaks, boolean showAsPopup) {
+			boolean showNewlinesAsBreaks, boolean showAsPopup, boolean escapeHtml) {
 		this.maxWidth = maxWidth;
 		this.forceColumnWidth = forceColumnWidth;
 		this.showNewlinesAsBreaks = showNewlinesAsBreaks;
 		this.showAsPopup = showAsPopup;
+		this.escapeHtml = escapeHtml;
 	}
 
 	public BoundWidget get() {
 		ExpandableLabel label = new ExpandableLabel(maxWidth);
 		label.setShowNewlinesAsBreaks(showNewlinesAsBreaks);
 		label.setShowAsPopup(showAsPopup);
+		label.setEscapeHtml(escapeHtml);
 		return label;
 	}
 

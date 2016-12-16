@@ -97,7 +97,6 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 	// return getClass().hashCode() ^ (value == null ? 0 : value.hashCode());
 	// }
 	@XmlTransient
-	@AlcinaTransient
 	public abstract E getValue();
 
 	/**

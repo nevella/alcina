@@ -28,15 +28,15 @@ public class UrlCustomiser implements Customiser {
 		}
 
 		public BoundWidget get() {
-			return new BoundBookmarkLink(target);
+			return new BoundValueLink(target);
 		}
 	}
 
-	public static class BoundBookmarkLink extends BoundLink<String> {
-		public BoundBookmarkLink() {
+	public static class BoundValueLink extends BoundLink<String> {
+		public BoundValueLink() {
 		}
 
-		public BoundBookmarkLink(String target) {
+		public BoundValueLink(String target) {
 			super.setTarget(target);
 		}
 

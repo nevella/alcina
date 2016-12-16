@@ -76,7 +76,6 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 	}
 
 	@XmlTransient
-	@AlcinaTransient
 	public abstract Set<E> getValue();
 
 	/**

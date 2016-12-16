@@ -419,10 +419,12 @@ public class ContentViewFactory {
 				: new NiceWidthBoundTable(mask, factory, fields, cdp);
 		return table;
 	}
-
 	public Toolbar createToolbar(List<PermissibleAction> actions) {
+		return createToolbar(actions,true);
+	}
+	public Toolbar createToolbar(List<PermissibleAction> actions, boolean asButton) {
 		Toolbar tb = new Toolbar();
-		tb.setAsButton(true);
+		tb.setAsButton(asButton);
 		tb.setActions(actions);
 		tb.setStyleName("table-toolbar alcina-ToolbarSmall clearfix");
 		return tb;
