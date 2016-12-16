@@ -16,10 +16,11 @@ public class SearchOrders<T> implements Comparator<T>, Serializable {
 	public SearchOrders() {
 	}
 
-	public SearchOrders<T> addHiliOrder(){
-		addOrder(h -> ((HasIdAndLocalId) h).getId(), true);
+	public SearchOrders<T> addHiliOrder() {
+		addOrder(new IdOrder(), true);
 		return this;
 	}
+
 	private transient Entry<SearchOrder<T>, Boolean> soleOrder = null;
 
 	@Override
@@ -44,6 +45,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable {
 	public void addOrder(SearchOrder sortFunction, boolean ascending) {
 		cmps.put(sortFunction, ascending);
 	}
+
 	public static class IdOrder<H extends HasId> implements SearchOrder<H> {
 		@Override
 		public Comparable apply(H t) {
