@@ -1,10 +1,12 @@
 <module>
 	<!-- Inherit the core Web Toolkit stuff.                        -->
 	<inherits name='com.google.gwt.user.User' />
+	<inherits name='com.google.common.GoogleCommonBase' />
 	<inherits name='com.googlecode.gwtx.Java' />
 	<inherits name='com.google.gwt.activity.Activity' />
 	<inherits name='com.totsp.gwittir.GwittirNoDeps' />
 	<inherits name='com.totsp.gwittir.LoggingWarn' />
+	
 	<inherits name='cc.alcina.framework.emul.AlcinaEmul' />
 	<replace-with class="cc.alcina.framework.common.client.util.StackFrameHelperIE">
 		<when-type-is class="cc.alcina.framework.common.client.util.StackFrameHelper" />

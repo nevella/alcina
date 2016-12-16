@@ -1043,6 +1043,7 @@ public class CommonUtils {
 		return s + "s";
 	}
 
+
 	public static String pluraliseWithCount(String s, Collection c) {
 		return pluralise(s, c == null ? 0 : c.size(), true);
 	}
@@ -1247,22 +1248,6 @@ public class CommonUtils {
 		return sb.toString();
 	}
 
-	private static boolean isCamelCaseIsh(String string) {
-		boolean seenLower = false;
-		for (int idx = 0; idx < string.length(); idx++) {
-			char c = string.charAt(idx);
-			boolean upper = c >= 'A' && c <= 'Z';
-			boolean lower = c >= 'a' && c <= 'z';
-			if (seenLower && upper) {
-				return true;
-			}
-			if (lower) {
-				seenLower = true;
-			}
-		}
-		return false;
-	}
-
 	public static String trimToWsChars(String s, int maxChars) {
 		return trimToWsChars(s, maxChars, "");
 	}
@@ -1391,6 +1376,22 @@ public class CommonUtils {
 			}
 		}
 		return i == 0 ? null : toParse.substring(0, i);
+	}
+
+	private static boolean isCamelCaseIsh(String string) {
+		boolean seenLower = false;
+		for (int idx = 0; idx < string.length(); idx++) {
+			char c = string.charAt(idx);
+			boolean upper = c >= 'A' && c <= 'Z';
+			boolean lower = c >= 'a' && c <= 'z';
+			if (seenLower && upper) {
+				return true;
+			}
+			if (lower) {
+				seenLower = true;
+			}
+		}
+		return false;
 	}
 
 	public enum DateStyle {

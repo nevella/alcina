@@ -14,6 +14,7 @@
 package cc.alcina.framework.gwt.client.logic;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 
 /**
@@ -29,24 +30,16 @@ public class MessageManager {
 
 	public static final String TOPIC_CENTER_MESSAGE_PUBLISHED = MessageManager.class
 			.getName() + ".TOPIC_CENTER_MESSAGE_PUBLISHED";
-	
+
 	public static final String TOPIC_EXCEPTION_MESSAGE_PUBLISHED = MessageManager.class
 			.getName() + ".TOPIC_EXCEPTION_MESSAGE_PUBLISHED";
 
 	public static final String TOPIC_APP_MESSAGE_PUBLISHED = MessageManager.class
 			.getName() + ".TOPIC_APP_MESSAGE_PUBLISHED";;
 
-	public void showMessage(String message) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_MESSAGE_PUBLISHED,
-				message);
-	}
-
-	private MessageManager() {
-		super();
-	}
-
 	public static MessageManager get() {
-		MessageManager singleton = Registry.checkSingleton(MessageManager.class);
+		MessageManager singleton = Registry
+				.checkSingleton(MessageManager.class);
 		if (singleton == null) {
 			singleton = new MessageManager();
 			Registry.registerSingleton(MessageManager.class, singleton);
@@ -54,17 +47,31 @@ public class MessageManager {
 		return singleton;
 	}
 
-	public void icyMessage(String message) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_ICY_MESSAGE_PUBLISHED,
-				message);
+	private MessageManager() {
+		super();
 	}
 
 	public void centerMessage(String message) {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_CENTER_MESSAGE_PUBLISHED,
 				message);
 	}
+
 	public void exceptionMessage(String messageHtml) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_EXCEPTION_MESSAGE_PUBLISHED,
-				messageHtml);
+		GlobalTopicPublisher.get()
+				.publishTopic(TOPIC_EXCEPTION_MESSAGE_PUBLISHED, messageHtml);
+	}
+
+	public void icyMessage(String message) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_ICY_MESSAGE_PUBLISHED,
+				message);
+	}
+
+	public void showMessage(String message) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_MESSAGE_PUBLISHED,
+				message);
+	}
+
+	public void showMessage(String string, Object... args) {
+		showMessage(CommonUtils.formatJ(string, args));
 	}
 }

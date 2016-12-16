@@ -18,21 +18,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.Callback;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.Rect;
-import cc.alcina.framework.gwt.client.ClientNotifications;
-import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
-import cc.alcina.framework.gwt.client.widget.HasComplexPanel;
-import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
-import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
-import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlers;
-import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
-import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo.LayoutInfo;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.Scheduler;
@@ -65,6 +50,7 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLTable;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -74,6 +60,21 @@ import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.Rect;
+import cc.alcina.framework.gwt.client.ClientNotifications;
+import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
+import cc.alcina.framework.gwt.client.widget.HasComplexPanel;
+import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
+import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
+import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlers;
+import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
+import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo.LayoutInfo;
 
 /**
  *
@@ -378,11 +379,22 @@ public class WidgetUtils {
 	}
 
 	public static void replace(Widget current, Widget newWidget) {
-		if (current.getParent() instanceof SimplePanel) {
-			((SimplePanel) current.getParent()).setWidget(newWidget);
+		replace(current, newWidget, null);
+	}
+
+	public static void replace(Widget current, Widget newWidget, Panel parent) {
+		if (parent == null) {
+			parent = (Panel) current.getParent();
+		}
+		if (current == null||current.getParent()!=parent) {
+			parent.add(newWidget);
 			return;
 		}
-		ComplexPanel cp = (ComplexPanel) current.getParent();
+		if (parent instanceof SimplePanel) {
+			((SimplePanel) parent).setWidget(newWidget);
+			return;
+		}
+		ComplexPanel cp = (ComplexPanel) parent;
 		int index = cp.getWidgetIndex(current);
 		cp.remove(index);
 		if (cp instanceof FlowPanel) {
@@ -1183,13 +1195,14 @@ public class WidgetUtils {
             return true;
         }
 	}-*/;
+
 	public static native boolean docHasFocus() /*-{
-    if (typeof $wnd.document.hasFocus !== "undefined") {
-        return $wnd.document.hasFocus();
-    } else {
-        return true;
-    }
-}-*/;
+        if (typeof $wnd.document.hasFocus !== "undefined") {
+            return $wnd.document.hasFocus();
+        } else {
+            return true;
+        }
+	}-*/;
 
 	public static void scrollTo(int x, int y) {
 		debugScroll("" + x + ":" + y);

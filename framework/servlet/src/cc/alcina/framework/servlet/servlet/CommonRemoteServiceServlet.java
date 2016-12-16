@@ -687,7 +687,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throw rex;
 		} finally {
 			metricTracker.end(rpcRequest);
-			ThreadlocalTransformManager.cast().resetTltm(null);
+			if (TransformManager.hasInstance()) {
+				ThreadlocalTransformManager.cast().resetTltm(null);
+			}
 			LooseContext.pop();
 		}
 	}

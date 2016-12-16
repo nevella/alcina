@@ -6,8 +6,16 @@ import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
 public class BaseMultilineRowEditor<T extends HasIdAndLocalId>
-		extends MultilineRowEditor<T> {
-	BaseMultilineRowEditorCustomiser<T> customiser;
+		extends MultilineRowEditor<T> implements BaseMultilineEditor<T> {
+	private BaseMultilineEditorCustomiser<T> customiser;
+
+	public BaseMultilineEditorCustomiser<T> getCustomiser() {
+		return this.customiser;
+	}
+
+	public void setCustomiser(BaseMultilineEditorCustomiser<T> customiser) {
+		this.customiser = customiser;
+	}
 
 	@Override
 	protected Class<T> getItemClass() {
@@ -15,9 +23,11 @@ public class BaseMultilineRowEditor<T extends HasIdAndLocalId>
 	}
 
 	@Override
-	protected boolean handleCustomAction(MultilineRowEditor editor,PermissibleAction action) {
-		return customiser.handleCustomAction(editor,action);
+	protected boolean handleCustomAction(MultilineRowEditor editor,
+			PermissibleAction action) {
+		return customiser.handleCustomAction(this, action);
 	}
+
 	@Override
 	protected void customiseActions(List<PermissibleAction> actions) {
 		customiser.customiseActions(actions);
@@ -30,7 +40,7 @@ public class BaseMultilineRowEditor<T extends HasIdAndLocalId>
 
 	@Override
 	protected void doDeleteRows() {
-		customiser.doDeleteRows(table, this);
+		customiser.doDeleteRows(table.getSelected(), this);
 	}
 
 	public List<T> provideSelected() {

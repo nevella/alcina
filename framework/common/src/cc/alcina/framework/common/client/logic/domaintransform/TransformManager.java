@@ -139,6 +139,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	private static TransformManager theInstance;
 
+	public static boolean hasInstance() {
+		return theInstance!=null;
+	}
+
 	public static TransformManager get() {
 		if (theInstance == null) {
 			// well, throw an exception.

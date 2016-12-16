@@ -8,12 +8,15 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 
-public abstract class BaseMultilineRowEditorCustomiser<T extends HasIdAndLocalId>
+public abstract class BaseMultilineEditorCustomiser<T extends HasIdAndLocalId>
 		implements Customiser, BoundWidgetProvider {
+
 	private boolean editable;
+
 
 	@Override
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
@@ -22,13 +25,11 @@ public abstract class BaseMultilineRowEditorCustomiser<T extends HasIdAndLocalId
 		return this;
 	}
 
-	public abstract void doCreateRow(BoundTableExt table,
-			BaseMultilineRowEditor<T> editor);
+	public abstract void doCreateRow(Object model,
+			BaseMultilineEditor<T> editor);
 
-	public void doDeleteRows(BoundTableExt table,
-			BaseMultilineRowEditor<T> editor) {
-		List<T> selected = editor.provideSelected();
-		for (T t : selected) {
+	public void doDeleteRows(List<T> items, BaseMultilineEditor<T> editor) {
+		for (T t : items) {
 			deleteItem(t);
 			editor.getValue().remove(t);
 		}
@@ -41,16 +42,24 @@ public abstract class BaseMultilineRowEditorCustomiser<T extends HasIdAndLocalId
 
 	@Override
 	public BoundWidget get() {
-		BaseMultilineRowEditor editor = new BaseMultilineRowEditor();
-		editor.customiser = this;
+		BaseMultilineEditor editor = asMultipleGrids()
+				? new BaseMultilineGridEditor() : new BaseMultilineRowEditor();
+		editor.setCustomiser(this);
 		editor.setEditable(editable);
-		return editor;
+		return (BoundWidget) editor;
+	}
+
+	protected boolean asMultipleGrids() {
+		return false;
 	}
 
 	public void customiseActions(List<PermissibleAction> actions) {
 	}
 
-	public boolean handleCustomAction(MultilineRowEditor editor, PermissibleAction action) {
+	public boolean handleCustomAction(BaseMultilineEditor<T> editor,
+			PermissibleAction action) {
 		return false;
 	}
+
+	public abstract String getCreateActionDisplayName();
 }

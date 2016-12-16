@@ -1,0 +1,162 @@
+package cc.alcina.framework.gwt.client.widget.complex;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+
+import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.instances.CreateAction;
+import cc.alcina.framework.common.client.actions.instances.DeleteAction;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliComparator;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
+import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
+import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
+import cc.alcina.framework.gwt.client.widget.Link;
+import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
+
+public abstract class MultilineGridEditor<H extends HasIdAndLocalId>
+		extends AbstractBoundWidget<Set<H>> implements MultilineWidget {
+	private FlowPanel holder;
+
+	public static class CreateGridAction extends CreateAction {
+		private String name;
+
+		public CreateGridAction() {
+		}
+
+		public CreateGridAction(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public String getDisplayName() {
+			return name;
+		}
+	}
+
+	private PermissibleActionListener toolbarListener = new PermissibleActionListener() {
+		@Override
+		public void vetoableAction(PermissibleActionEvent evt) {
+			if (evt.getAction() instanceof CreateAction) {
+				doCreateRow();
+				renderTable();
+			} else {
+				if (handleCustomAction(MultilineGridEditor.this,
+						evt.getAction())) {
+					renderTable();
+				}
+			}
+		}
+	};
+
+	private Toolbar toolbar;;
+
+	BoundTableExt table;
+
+	private Set<H> value;
+
+	private boolean editable;
+
+	public MultilineGridEditor() {
+		holder = UsefulWidgetFactory.styledPanel("multi-line-editor grid");
+		initWidget(holder);
+	}
+
+	public abstract String getCreateActionDisplayName();
+
+	public Set<H> getValue() {
+		return this.value;
+	}
+
+	public boolean isEditable() {
+		return this.editable;
+	}
+
+	@Override
+	public boolean isMultiline() {
+		return true;
+	}
+
+	public void redraw() {
+		renderTable();
+	}
+
+	public void setEditable(boolean editable) {
+		this.editable = editable;
+	}
+
+	public void setValue(Set<H> value) {
+		this.value = value;
+		renderTable();
+		setStyleName("empty", value.isEmpty());
+	}
+
+	List<GridForm> grids;
+
+	private void renderTable() {
+		holder.clear();
+		List<PermissibleAction> actions = new ArrayList<>(
+				Arrays.asList(new PermissibleAction[] {
+						new CreateGridAction(getCreateActionDisplayName()) }));
+		customiseActions(actions);
+		FlowPanel tableToolbarHolder = UsefulWidgetFactory
+				.styledPanel("table-toolbar-holder");
+		toolbar = new ContentViewFactory().createToolbar(actions, false);
+		toolbar.removeStyleName("alcina-ToolbarSmall");
+		if (editable) {
+			tableToolbarHolder.add(toolbar);
+		}
+		List<H> values = new ArrayList<>(getValue());
+		values.sort(HiliComparator.INSTANCE);
+		values.forEach(v -> TransformManager.get().registerDomainObject(v));
+		grids = new ArrayList<>();
+		for (H value : values) {
+			PaneWrapperWithObjects view = new ContentViewFactory().noCaption()
+					.createBeanView(value, editable, null, true, true);
+			GridForm grid = (GridForm) view.getBoundWidget();
+			grid.setModel(value);
+			grid.setValue(value);
+			FlowPanel gridAndActions = new FlowPanel();
+			gridAndActions.setStyleName("grid-and-actions");
+			grids.add(grid);
+			gridAndActions.add(grid);
+			if (editable) {
+				Link link = Link.createNoUnderline("Delete", evt -> {
+					doDeleteRow(value);
+				});
+				gridAndActions.add(
+						UsefulWidgetFactory.styledSimplePanel(link, "delete"));
+			}
+			tableToolbarHolder.add(gridAndActions);
+		}
+		holder.add(tableToolbarHolder);
+		toolbar.addVetoableActionListener(toolbarListener);
+	}
+
+	protected void customiseActions(List<PermissibleAction> actions) {
+	}
+
+	protected abstract void doCreateRow();
+
+	protected abstract void doDeleteRow(H item);
+
+	/**
+	 * @param multilineRowEditor
+	 * @return true if the table should be refreshed
+	 */
+	protected boolean handleCustomAction(MultilineGridEditor multilineRowEditor,
+			PermissibleAction action) {
+		return false;
+	}
+}
