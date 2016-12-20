@@ -55,6 +55,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
+import cc.alcina.framework.common.client.util.DomainObjectCloner;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.NullWrappingMap;
@@ -63,11 +64,7 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
-import cc.alcina.framework.entity.projection.GraphProjection.ConstructorMethod;
-import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
-import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
-import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
-import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.entity.projection.PermissibleFieldFilter.AllFieldsFilter;
 
 @SuppressWarnings("unchecked")
 /**
@@ -337,8 +334,9 @@ public class GraphProjection {
 							"projectionMetrics")) {
 						System.out.format(
 								"Graph projection - %.3f ms - %s traversals %s creations\n",
-								((double)(System.nanoTime() - start))/1000000, traversalCount,
-								creationCount);
+								((double) (System.nanoTime() - start))
+										/ 1000000,
+								traversalCount, creationCount);
 					}
 				}
 			}
@@ -773,5 +771,41 @@ public class GraphProjection {
 
 		Object instantiateShellObject(T initializer,
 				GraphProjectionContext context);
+	}
+
+	public static String generateFieldwiseEqualString(Class clazz)
+			throws Exception {
+		List<String> fieldNames = new ArrayList<>();
+		GraphProjection graphProjection = new GraphProjection(
+				new AllFieldsFilter(), null);
+		for (Field field : graphProjection.getFieldsForClass(clazz)) {
+			String name = field.getName();
+			if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
+					.contains(name)) {
+				continue;
+			}
+			fieldNames.add(name);
+		}
+		String template = "@Override\npublic boolean equivalentTo(%s o) {\nreturn CommonUtils.equals(%s);\n}";
+		return String.format(template, clazz.getSimpleName(),
+				fieldNames.stream().map(n -> String.format("%s, o.%s ", n, n))
+						.collect(Collectors.joining(", ")));
+	}
+
+	public static String generateFieldwiseEquivalenceHash(Class clazz) throws Exception {
+		List<String> fieldNames = new ArrayList<>();
+		GraphProjection graphProjection = new GraphProjection(
+				new AllFieldsFilter(), null);
+		for (Field field : graphProjection.getFieldsForClass(clazz)) {
+			String name = field.getName();
+			if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
+					.contains(name)) {
+				continue;
+			}
+			fieldNames.add(name);
+		}
+		String template = "@Override\npublic int equivalenceHash() {\nreturn Objects.hash(%s);\n}";
+		return String.format(template, 
+				fieldNames.stream().collect(Collectors.joining(", ")));
 	}
 }

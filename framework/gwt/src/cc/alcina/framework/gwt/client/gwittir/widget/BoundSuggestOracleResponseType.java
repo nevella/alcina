@@ -6,18 +6,24 @@ import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 
 public interface BoundSuggestOracleResponseType {
 	String toSuggestionString();
-	
-	public static class BoundSuggestOracleSuggestion implements Suggestion,Serializable {
+
+	public interface BoundSuggestOracleModel extends Serializable{
+	}
+
+	public static class BoundSuggestOracleSuggestion
+			implements Suggestion, Serializable {
 		@Override
 		public String getDisplayString() {
 			return typedValue.toSuggestionString();
 		}
+
 		public BoundSuggestOracleSuggestion() {
 		}
-		public BoundSuggestOracleSuggestion(BoundSuggestOracleResponseType typedValue) {
+
+		public BoundSuggestOracleSuggestion(
+				BoundSuggestOracleResponseType typedValue) {
 			this.typedValue = typedValue;
 		}
-		
 
 		@Override
 		public String getReplacementString() {

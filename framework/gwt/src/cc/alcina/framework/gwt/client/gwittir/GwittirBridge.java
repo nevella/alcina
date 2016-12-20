@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.Binding;
@@ -237,7 +238,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			BoundWidgetTypeFactory factory, boolean editableWidgets,
 			boolean multiple) {
 		return fieldsForReflectedObjectAndSetupWidgetFactory(obj, factory,
-				editableWidgets, multiple, null);
+				editableWidgets, multiple, null, null);
 	}
 
 	private List<String> ignoreProperties;
@@ -449,7 +450,8 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 	public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj,
 			BoundWidgetTypeFactory factory, boolean editableWidgets,
-			boolean multiple, String propertyName) {
+			boolean multiple, String propertyName,
+			Predicate<String> editableFieldNameFilter) {
 		factory.add(Date.class, DateBox.PROVIDER);
 		List<Field> fields = new ArrayList<Field>();
 		ClientBeanReflector bi = ClientReflector.get()
@@ -467,7 +469,12 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			if (ignoreProperties != null && ignoreProperties.contains(pn)) {
 				continue;
 			}
-			Field f = getField(c, pn, editableWidgets, multiple, factory, obj);
+			boolean editableField = editableWidgets;
+			if (editableFieldNameFilter != null
+					&& !editableFieldNameFilter.test(pn)) {
+				editableField = false;
+			}
+			Field f = getField(c, pn, editableField, multiple, factory, obj);
 			if (f != null) {
 				fields.add(f);
 			}
@@ -521,7 +528,8 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					rsv.setSourceObject((HasIdAndLocalId) obj);
 				}
 				if (v instanceof RequiresContextBindable) {
-					((RequiresContextBindable) v).setBindable((SourcesPropertyChangeEvents) obj);
+					((RequiresContextBindable) v)
+							.setBindable((SourcesPropertyChangeEvents) obj);
 				}
 				NamedParameter msg = NamedParameter.Support.getParameter(
 						validatorAnnotation.parameters(),

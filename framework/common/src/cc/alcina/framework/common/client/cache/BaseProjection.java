@@ -33,18 +33,18 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 public abstract class BaseProjection<T extends HasIdAndLocalId>
 		implements CacheProjection<T> {
 	protected MultikeyMap<T> lookup = createLookup();
-	
-	private List<Class> types=null;
 
-	public List<Class> getTypes() {
-		return this.types;
-	}
+	private List<Class> types = null;
 
-	public void setTypes(List<Class> types) {
-		this.types = types;
-	}
+	private boolean derived = false;
 
 	private boolean enabled = true;
+
+	private ModificationChecker modificationChecker;
+
+	public MultikeyMap<T> asMap(Object... objects) {
+		return (MultikeyMap<T>) lookup.asMap(objects);
+	}
 
 	public <V> V first(Object... objects) {
 		return (V) CommonUtils.first(items(objects));
@@ -56,14 +56,16 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 				(HasIdAndLocalId) nonTransactional, objects);
 	}
 
-	public void populateWithPrivateCache(Collection<T> values) {
-		for (T t : values) {
-			insert(t);
-		}
+	public MultikeyMap<T> getLookup() {
+		return this.lookup;
 	}
 
-	public boolean isUnique() {
-		return false;
+	public ModificationChecker getModificationChecker() {
+		return modificationChecker;
+	}
+
+	public List<Class> getTypes() {
+		return this.types;
 	}
 
 	@Override
@@ -102,28 +104,16 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 		}
 	}
 
-	private ModificationChecker modificationChecker;
-
-	protected void checkModification(String modificationType) {
-		if (getModificationChecker() != null) {
-			getModificationChecker().check("fire");
-		}
-	}
-
-	protected void logDuplicateMapping(Object[] values, T existing) {
-		Registry.impl(TaggedLoggers.class)
-				.log(CommonUtils.formatJ(
-						"Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
-						this, Arrays.asList(values), existing), Domain.class,
-				TaggedLogger.WARN);
+	public boolean isDerived() {
+		return this.derived;
 	}
 
 	public boolean isEnabled() {
 		return this.enabled;
 	}
 
-	public MultikeyMap<T> asMap(Object... objects) {
-		return (MultikeyMap<T>) lookup.asMap(objects);
+	public boolean isUnique() {
+		return false;
 	}
 
 	public <V> Collection<V> items(Object... objects) {
@@ -145,30 +135,10 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 		return true;
 	}
 
-	// count:=-1 --> all
-	/**
-	 * Expose if subclass is instance of OrderableProjection
-	 */
-	protected Collection<T> order0(int count, CollectionFilter<T> filter,
-			boolean targetsOfFinalKey, boolean reverse,
-			boolean finishAfterFirstFilterFail, Object... objects) {
-		Collection source = (Collection) (reverse ? reverseItems(objects)
-				: items(objects));
-		PossibleSubIterator sub = new PossibleSubIterator(source,
-				targetsOfFinalKey, objects);
-		List<T> result = new ArrayList<T>();
-		while (count != 0 && sub.hasNext()) {
-			T next = sub.next();
-			if (filter == null || filter.allow(next)) {
-				count--;
-				result.add(next);
-			} else {
-				if (finishAfterFirstFilterFail) {
-					break;
-				}
-			}
+	public void populateWithPrivateCache(Collection<T> values) {
+		for (T t : values) {
+			insert(t);
 		}
-		return result;
 	}
 
 	@Override
@@ -196,8 +166,27 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 		return items == null ? Collections.EMPTY_LIST : items;
 	}
 
+	public void setDerived(boolean derived) {
+		this.derived = derived;
+	}
+
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public void
+			setModificationChecker(ModificationChecker modificationChecker) {
+		this.modificationChecker = modificationChecker;
+	}
+
+	public void setTypes(List<Class> types) {
+		this.types = types;
+	}
+
+	protected void checkModification(String modificationType) {
+		if (getModificationChecker() != null) {
+			getModificationChecker().check("fire");
+		}
 	}
 
 	protected MultikeyMap<T> createLookup() {
@@ -211,6 +200,40 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 	}
 
 	protected abstract int getDepth();
+
+	protected void logDuplicateMapping(Object[] values, T existing) {
+		Registry.impl(TaggedLoggers.class)
+				.log(CommonUtils.formatJ(
+						"Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
+						this, Arrays.asList(values), existing), Domain.class,
+						TaggedLogger.WARN);
+	}
+
+	// count:=-1 --> all
+	/**
+	 * Expose if subclass is instance of OrderableProjection
+	 */
+	protected Collection<T> order0(int count, CollectionFilter<T> filter,
+			boolean targetsOfFinalKey, boolean reverse,
+			boolean finishAfterFirstFilterFail, Object... objects) {
+		Collection source = (Collection) (reverse ? reverseItems(objects)
+				: items(objects));
+		PossibleSubIterator sub = new PossibleSubIterator(source,
+				targetsOfFinalKey, objects);
+		List<T> result = new ArrayList<T>();
+		while (count != 0 && sub.hasNext()) {
+			T next = sub.next();
+			if (filter == null || filter.allow(next)) {
+				count--;
+				result.add(next);
+			} else {
+				if (finishAfterFirstFilterFail) {
+					break;
+				}
+			}
+		}
+		return result;
+	}
 
 	protected abstract Object[] project(T t);
 
@@ -261,18 +284,5 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 				}
 			}
 		}
-	}
-
-	public MultikeyMap<T> getLookup() {
-		return this.lookup;
-	}
-
-	public ModificationChecker getModificationChecker() {
-		return modificationChecker;
-	}
-
-	public void
-			setModificationChecker(ModificationChecker modificationChecker) {
-		this.modificationChecker = modificationChecker;
 	}
 }

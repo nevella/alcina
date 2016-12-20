@@ -144,6 +144,8 @@ public class ContentViewFactory {
 
 	private String okButtonName = "Save";
 
+	private Predicate<String> editableFieldFilter;
+
 	public ActionTableHolder createActionTable(Collection beans,
 			Class beanClass, Converter converter,
 			Collection<PermissibleAction> actions,
@@ -245,7 +247,7 @@ public class ContentViewFactory {
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 		List<Field> fieldList = new ArrayList<>(Arrays.asList(GwittirBridge
 				.get().fieldsForReflectedObjectAndSetupWidgetFactory(bean,
-						factory, editable, false)));
+						factory, editable, false,null,editableFieldFilter)));
 		if (fieldFilter != null) {
 			fieldList.removeIf(f -> !fieldFilter.test(f));
 		}
@@ -432,6 +434,11 @@ public class ContentViewFactory {
 
 	public ContentViewFactory fieldFilter(Predicate<Field> fieldFilter) {
 		this.fieldFilter = fieldFilter;
+		return this;
+	}
+	
+	public ContentViewFactory editableFieldFilter(Predicate<String> editableFieldFilter) {
+		this.editableFieldFilter = editableFieldFilter;
 		return this;
 	}
 

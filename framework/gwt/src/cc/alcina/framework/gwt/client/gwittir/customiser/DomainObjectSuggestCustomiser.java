@@ -41,6 +41,7 @@ public class DomainObjectSuggestCustomiser
 	public static final String READONLY_CUSTOMISER_CLASS = "readonlyCustomiserClass";
 
 	public static final String HINT = "hint";
+	public static final String SHOW_ON_FOCUS = "showOnFocus";
 
 	private Class classValue;
 
@@ -49,6 +50,8 @@ public class DomainObjectSuggestCustomiser
 	private String hintValue;
 
 	private Class readonlyCustomiserClassValue;
+
+	private boolean showOnFocus;
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
@@ -60,7 +63,9 @@ public class DomainObjectSuggestCustomiser
 		readonlyCustomiserClassValue = NamedParameter.Support
 				.classValue(info.parameters(), READONLY_CUSTOMISER_CLASS, null);
 		hintValue = NamedParameter.Support.stringValue(info.parameters(),
-				RENDERER_CLASS, "");
+				HINT, "");
+		showOnFocus = NamedParameter.Support.booleanValue(info.parameters(),
+				SHOW_ON_FOCUS);
 		return editable ? this
 				: readonlyCustomiserClassValue == null
 						? new RenderedLabelProvider(rendererClassValue, null)
@@ -86,6 +91,7 @@ public class DomainObjectSuggestCustomiser
 				.newInstance(rendererClassValue));
 		boundSuggestBox.suggestOracle(
 				new BoundSuggestOracle().clazz(classValue).hint(hintValue));
+		boundSuggestBox.setShowOnFocus(showOnFocus);
 		return boundSuggestBox;
 	}
 }

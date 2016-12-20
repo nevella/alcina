@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadR
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 
 /**
  * 
@@ -90,5 +91,5 @@ public interface CommonRemoteService extends RemoteService {
 	@WebMethod
 	public String loadData(String key);
 
-	Response suggest(String name, Request request, String hint);
+	Response suggest(BoundSuggestOracleRequest request);
 }

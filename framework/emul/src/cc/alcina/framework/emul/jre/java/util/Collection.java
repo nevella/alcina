@@ -63,6 +63,9 @@ public interface Collection<E> extends Iterable<E> {
   default Stream<E> stream() {
       return new CollectionStream<E>(this);
   }
+  default Stream<E> parallelStream() {
+      return stream();
+  }
  
   default boolean removeIf(Predicate<? super E> filter) {
       Objects.requireNonNull(filter);

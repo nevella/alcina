@@ -75,9 +75,10 @@ public class ContentViewSections {
 				contentViewFactory.okButtonName("Create");
 			}
 			PaneWrapperWithObjects beanView = contentViewFactory
-					.fieldFilter(section).fieldOrder(section).noCaption()
-					.createBeanView(bean, editable, createListener, autoSave,
-							true, null, false);
+					.fieldFilter(section).fieldOrder(section)
+					.editableFieldFilter(section.editableFieldFilter())
+					.noCaption().createBeanView(bean, editable, createListener,
+							autoSave, true, null, false);
 			beanViews.add(beanView);
 			fp.add(beanView);
 		}
@@ -101,8 +102,15 @@ public class ContentViewSections {
 
 		public String name;
 
+		private List<String> editableFieldNames;
+
 		public ContentViewSection(String name) {
 			this.name = name;
+		}
+
+		public Predicate<String> editableFieldFilter() {
+			return s -> editableFieldNames == null
+					|| editableFieldNames.contains(s);
 		}
 
 		@Override
@@ -124,6 +132,10 @@ public class ContentViewSections {
 		@Override
 		public boolean test(Field t) {
 			return fieldNames.contains(t.getPropertyName());
+		}
+
+		public void editableFields(String... editableFieldNames) {
+			this.editableFieldNames = Arrays.asList(editableFieldNames);
 		}
 	}
 

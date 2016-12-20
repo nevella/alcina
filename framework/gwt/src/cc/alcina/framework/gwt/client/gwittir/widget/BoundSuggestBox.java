@@ -19,6 +19,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FocusListener;
 import com.google.gwt.user.client.ui.SuggestBox;
 import com.google.gwt.user.client.ui.SuggestOracle;
+import com.google.gwt.user.client.ui.SuggestOracle.Request;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -26,6 +27,7 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleModel;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleSuggestion;
 
 /**
@@ -41,8 +43,7 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 	@SuppressWarnings("unchecked")
 	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
 
-	@SuppressWarnings("unused")
-	private SuggestOracle suggestOracle;
+	private BoundSuggestOracle suggestOracle;
 
 	/** Creates a new instance of Label */
 	public BoundSuggestBox() {
@@ -65,7 +66,7 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 		this.renderer = newrenderer;
 	}
 
-	public void suggestOracle(SuggestOracle suggestOracle) {
+	public void suggestOracle(BoundSuggestOracle suggestOracle) {
 		this.suggestOracle = suggestOracle;
 		base = new SuggestBox(suggestOracle);
 		base.addSelectionHandler(evt -> {
@@ -84,9 +85,29 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 
 			@Override
 			public void onFocus(Widget sender) {
+				if (showOnFocus) {
+					showOnFocus = false;
+					base.showSuggestions(base.getText());
+				}
 			}
 		});
 		super.initWidget(base);
+	}
+
+	private boolean showOnFocus = false;
+
+	public boolean isShowOnFocus() {
+		return this.showOnFocus;
+	}
+
+	public void setShowOnFocus(boolean showOnFocus) {
+		this.showOnFocus = showOnFocus;
+	}
+
+	@Override
+	public void setModel(Object model) {
+		super.setModel(model);
+		suggestOracle.model = model;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -100,10 +121,23 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 		}
 	}
 
+	public static class BoundSuggestOracleRequest extends Request {
+		public BoundSuggestOracleModel model;
+
+		public String targetClassName;
+
+		public String hint;
+	}
+
 	public static class BoundSuggestOracle extends SuggestOracle {
+		public Object model;
+
 		private Class clazz;
 
 		private String hint;
+
+		public BoundSuggestOracle() {
+		}
 
 		public BoundSuggestOracle clazz(Class clazz) {
 			this.clazz = clazz;
@@ -116,10 +150,23 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 		}
 
 		@Override
+		public void requestDefaultSuggestions(Request request,
+				Callback callback) {
+			requestSuggestions(request, callback);
+		}
+
+		@Override
 		public void requestSuggestions(Request request, Callback callback) {
-			ClientBase.getCommonRemoteServiceAsyncInstance().suggest(
-					clazz.getName(), request, hint,
-					new AsyncCallback<Response>() {
+			BoundSuggestOracleRequest boundRequest = new BoundSuggestOracleRequest();
+			boundRequest.setLimit(request.getLimit());
+			boundRequest.setQuery(request.getQuery());
+			boundRequest.targetClassName = clazz.getName();
+			boundRequest.hint = hint;
+			if (model instanceof BoundSuggestOracleModel) {
+				boundRequest.model = (BoundSuggestOracleModel) model;
+			}
+			ClientBase.getCommonRemoteServiceAsyncInstance()
+					.suggest(boundRequest, new AsyncCallback<Response>() {
 						@Override
 						public void onFailure(Throwable caught) {
 							throw new WrappedRuntimeException(caught);

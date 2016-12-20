@@ -19,14 +19,10 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 	protected CacheLookup lookup;
 
 	private boolean enabled = true;
+	
+	private boolean derived;
 
 	public List<String> propertyPathAlia = new ArrayList<String>();
-
-	public boolean handles(Class clazz2, String propertyPath) {
-		return clazz2 == clazz && propertyPath != null
-				&& (propertyPath.equals(this.propertyPath)
-						|| propertyPathAlia.contains(propertyPath));
-	}
 
 	private CollectionFilter<T> relevanceFilter;
 
@@ -34,13 +30,13 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 
 	Function<T, ?> valueFunction;
 
-	public CacheLookupDescriptor(Class clazz, String propertyPath) {
-		this(clazz, propertyPath, false, null);
-	}
-
 	public CacheLookupDescriptor(Class clazz, Function<T, ?> valueFunction,
 			boolean concurrent) {
 		this(clazz, "no-path", concurrent, valueFunction);
+	}
+
+	public CacheLookupDescriptor(Class clazz, String propertyPath) {
+		this(clazz, propertyPath, false, null);
 	}
 
 	public CacheLookupDescriptor(Class clazz, String propertyPath,
@@ -60,11 +56,59 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 		propertyPathAlia.add(propertyPath);
 	}
 
+	public void createLookup() {
+		if (lookup == null) {
+			this.lookup = new CacheLookup(this);
+		}
+	}
+
 	public void ensureLookupWithPrivateCache() {
 		if (lookup == null) {
 			createLookup();
 			lookup.createPrivateCache();
 		}
+	}
+
+	public String getCanonicalPropertyPath(String propertyPath) {
+		if (propertyPathAlia.contains(propertyPath)) {
+			return this.propertyPath;
+		}
+		return null;
+	}
+
+	public CacheLookup getLookup() {
+		return lookup;
+	}
+
+	public CollectionFilter<T> getRelevanceFilter() {
+		return this.relevanceFilter;
+	}
+
+	public boolean handles(Class clazz2, String propertyPath) {
+		return clazz2 == clazz && propertyPath != null
+				&& (propertyPath.equals(this.propertyPath)
+						|| propertyPathAlia.contains(propertyPath));
+	}
+
+	public boolean isDerived() {
+		return this.derived;
+	}
+
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
+
+	public void setDerived(boolean derived) {
+		this.derived = derived;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	public void setRelevanceFilter(CollectionFilter<T> relevanceFilter) {
+		this.relevanceFilter = relevanceFilter;
 	}
 
 	@Override
@@ -73,19 +117,14 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 				clazz, propertyPath, idDescriptor);
 	}
 
-	public CacheLookup getLookup() {
-		return lookup;
-	}
-
-	public void createLookup() {
-		if (lookup == null) {
-			this.lookup = new CacheLookup(this);
-		}
-	}
-
 	public static class IdCacheLookupDescriptor<T extends HasIdAndLocalId>
 			extends CacheLookupDescriptor<T> {
 		private IdLookup idLookup;
+
+		public IdCacheLookupDescriptor(Class clazz,
+				Function<T, ?> valueFunction, boolean concurrent) {
+			super(clazz, "no-path", concurrent, valueFunction);
+		}
 
 		public IdCacheLookupDescriptor(Class clazz, String propertyPath) {
 			this(clazz, propertyPath, false);
@@ -96,16 +135,6 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 			super(clazz, propertyPath, concurrent, null);
 		}
 
-		public IdCacheLookupDescriptor(Class clazz,
-				Function<T, ?> valueFunction, boolean concurrent) {
-			super(clazz, "no-path", concurrent, valueFunction);
-		}
-
-		@Override
-		public IdLookup getLookup() {
-			return idLookup;
-		}
-
 		@Override
 		public void createLookup() {
 			if (lookup == null) {
@@ -113,28 +142,10 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 				lookup = idLookup;
 			}
 		}
-	}
 
-	public CollectionFilter<T> getRelevanceFilter() {
-		return this.relevanceFilter;
-	}
-
-	public void setRelevanceFilter(CollectionFilter<T> relevanceFilter) {
-		this.relevanceFilter = relevanceFilter;
-	}
-
-	public boolean isEnabled() {
-		return this.enabled;
-	}
-
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
-
-	public String getCanonicalPropertyPath(String propertyPath) {
-		if (propertyPathAlia.contains(propertyPath)) {
-			return this.propertyPath;
+		@Override
+		public IdLookup getLookup() {
+			return idLookup;
 		}
-		return null;
 	}
 }

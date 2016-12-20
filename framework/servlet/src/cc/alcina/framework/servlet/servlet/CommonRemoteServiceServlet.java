@@ -40,7 +40,6 @@ import org.apache.log4j.Logger;
 
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.SerializationException;
-import com.google.gwt.user.client.ui.SuggestOracle.Request;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 import com.google.gwt.user.server.rpc.RPC;
 import com.google.gwt.user.server.rpc.RPCRequest;
@@ -124,7 +123,9 @@ import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleModel;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleSuggestion;
 import cc.alcina.framework.servlet.CookieHelper;
 import cc.alcina.framework.servlet.ServletLayerObjects;
@@ -1191,28 +1192,29 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
-	public Response suggest(String className, Request request, String hint) {
+	public Response suggest(BoundSuggestOracleRequest request) {
 		try {
 			Class<? extends BoundSuggestOracleResponseType> clazz = (Class<? extends BoundSuggestOracleResponseType>) Class
-					.forName(className);
+					.forName(request.targetClassName);
 			return Registry.impl(BoundSuggestOracleRequestHandler.class, clazz)
-					.handleRequest(clazz, request, hint);
+					.handleRequest(clazz, request, request.hint);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
 
 	public static abstract class BoundSuggestOracleRequestHandler<T extends BoundSuggestOracleResponseType> {
-		public Response handleRequest(Class<T> clazz, Request request,
-				String hint) {
+		public Response handleRequest(Class<T> clazz,
+				BoundSuggestOracleRequest request, String hint) {
 			Response response = new Response();
-			List<T> responses = getResponses(request.getQuery());
+			List<T> responses = getResponses(request.getQuery(), request.model,hint);
 			response.setSuggestions(
 					responses.stream().map(BoundSuggestOracleSuggestion::new)
 							.collect(Collectors.toList()));
 			return GraphProjections.defaultProjections().project(response);
 		}
 
-		protected abstract List<T> getResponses(String query);
+		protected abstract List<T> getResponses(String query,
+				BoundSuggestOracleModel model, String hint);
 	}
 }

@@ -10,6 +10,9 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
  * 
  * @param <T>
  */
-public interface CacheProjection<T extends HasIdAndLocalId> extends
-		CacheListener<T> {
+public interface CacheProjection<T extends HasIdAndLocalId>
+		extends CacheListener<T> {
+	default boolean isDerived() {
+		return false;
+	}
 }
