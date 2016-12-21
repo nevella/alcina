@@ -69,6 +69,7 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 	public void suggestOracle(BoundSuggestOracle suggestOracle) {
 		this.suggestOracle = suggestOracle;
 		base = new SuggestBox(suggestOracle);
+		base.getValueBox().getElement().setPropertyString("placeholder", "Type for suggestions");
 		base.addSelectionHandler(evt -> {
 			if (evt.getSelectedItem() != null) {
 				setValue((T) ((BoundSuggestOracleSuggestion) evt

@@ -43,8 +43,9 @@ public class TxtCriterion extends SearchCriterion implements HasValue<String> {
 	public TxtCriterion() {
 	}
 
-	public TxtCriterion(String displayName) {
-		super(displayName);
+	public TxtCriterion(String text) {
+		super();
+		setText(text);
 	}
 
 	public void setText(String text) {
