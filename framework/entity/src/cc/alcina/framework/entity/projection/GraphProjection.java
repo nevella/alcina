@@ -792,7 +792,8 @@ public class GraphProjection {
 						.collect(Collectors.joining(", ")));
 	}
 
-	public static String generateFieldwiseEquivalenceHash(Class clazz) throws Exception {
+	public static String generateFieldwiseEquivalenceHash(Class clazz)
+			throws Exception {
 		List<String> fieldNames = new ArrayList<>();
 		GraphProjection graphProjection = new GraphProjection(
 				new AllFieldsFilter(), null);
@@ -805,7 +806,28 @@ public class GraphProjection {
 			fieldNames.add(name);
 		}
 		String template = "@Override\npublic int equivalenceHash() {\nreturn Objects.hash(%s);\n}";
-		return String.format(template, 
+		return String.format(template,
 				fieldNames.stream().collect(Collectors.joining(", ")));
+	}
+
+	public static String fieldwiseToString(Object obj) {
+		try {
+			List<String> fieldNames = new ArrayList<>();
+			GraphProjection graphProjection = new GraphProjection(
+					new AllFieldsFilter(), null);
+			StringBuilder sb = new StringBuilder();
+			for (Field field : graphProjection
+					.getFieldsForClass(obj.getClass())) {
+				String name = field.getName();
+				sb.append(field.getType().getSimpleName());
+				sb.append("/");
+				sb.append(name);
+				sb.append(": ");
+				sb.append(CommonUtils.nullSafeToString(field.get(obj)));
+			}
+			return sb.toString();
+		} catch (Exception e) {
+			return "Exception: " + e.getMessage();
+		}
 	}
 }
