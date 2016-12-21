@@ -824,6 +824,7 @@ public class GraphProjection {
 				sb.append(name);
 				sb.append(": ");
 				sb.append(CommonUtils.nullSafeToString(field.get(obj)));
+				sb.append("\n");
 			}
 			return sb.toString();
 		} catch (Exception e) {
