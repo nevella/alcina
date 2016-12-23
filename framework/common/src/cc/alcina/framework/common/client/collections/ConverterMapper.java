@@ -1,13 +1,14 @@
 package cc.alcina.framework.common.client.collections;
 
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.PropertyMapper.PropertyMapping;
-
-import com.totsp.gwittir.client.beans.Converter;
 
 public class ConverterMapper<A, B> implements Converter<A, B> {
 	protected Class<A> leftClass;
@@ -20,7 +21,27 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 
 	protected AuxiliaryMapper<B, A> rightAuxiliary;
 
+	protected Supplier<A> leftSupplier;
+
+	protected Supplier<B> rightSupplier;
+
 	public ConverterMapper() {
+	}
+
+	public BidiConverterAdapter bidiAdapter() {
+		return new BidiConverterAdapter();
+	}
+
+	public class BidiConverterAdapter extends BidiConverter<A, B> {
+		@Override
+		public B leftToRight(A a) {
+			return convert(a);
+		}
+
+		@Override
+		public A rightToLeft(B b) {
+			return invert().convert(b);
+		}
 	}
 
 	public ConverterMapper<B, A> invert() {
@@ -29,6 +50,8 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 		result.rightClass = leftClass;
 		result.leftAuxiliary = rightAuxiliary;
 		result.rightAuxiliary = leftAuxiliary;
+		result.leftSupplier = rightSupplier;
+		result.rightSupplier = leftSupplier;
 		result.mapper = mapper.reverseMapper();
 		return result;
 	}
@@ -41,7 +64,9 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 	@Override
 	public B convert(A a) {
 		try {
-			B b = Reflections.classLookup().newInstance(rightClass);
+			B b = rightSupplier == null
+					? Reflections.classLookup().newInstance(rightClass)
+					: rightSupplier.get();
 			apply(a, b);
 			return b;
 		} catch (Exception e) {

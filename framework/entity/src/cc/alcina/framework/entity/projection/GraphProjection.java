@@ -810,6 +810,28 @@ public class GraphProjection {
 				fieldNames.stream().collect(Collectors.joining(", ")));
 	}
 
+	public static String generateFieldwiseToString(Class clazz)
+			throws Exception {
+		GraphProjection graphProjection = new GraphProjection(
+				new AllFieldsFilter(), null);
+		StringBuilder lineParts = new StringBuilder();
+		for (Field field : graphProjection.getFieldsForClass(clazz)) {
+			String name = field.getName();
+			if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
+					.contains(name)) {
+				continue;
+			}
+			lineParts.append(String.format("sb.append(\"%s\");\n",name));
+			lineParts.append("sb.append(\":\");\n");
+			lineParts.append(String.format("sb.append(%s);\n",name));
+			lineParts.append("sb.append(\"\\n\");\n");
+		}
+		String template = "@Override\npublic String toString() {\n"
+				+ "StringBuilder sb = new StringBuilder();\n%s\n"
+				+ "return sb.toString();\n}";
+		return String.format(template, lineParts);
+	}
+
 	public static String fieldwiseToString(Object obj) {
 		try {
 			List<String> fieldNames = new ArrayList<>();

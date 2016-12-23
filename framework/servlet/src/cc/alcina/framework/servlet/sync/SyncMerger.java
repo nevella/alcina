@@ -30,6 +30,11 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.JvmPropertyAccessor;
+import cc.alcina.framework.servlet.sync.SyncMerger.FirstAndAllLookup;
+import cc.alcina.framework.servlet.sync.SyncMerger.MergeFilter;
+import cc.alcina.framework.servlet.sync.SyncMerger.SyncMapping;
+import cc.alcina.framework.servlet.sync.SyncMerger.SyncMappingWithLog;
+import cc.alcina.framework.servlet.sync.SyncMerger.SyncMappingWithLog.MergeHistory;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
 
 /**
@@ -136,6 +141,9 @@ public class SyncMerger<T> {
 				ambiguous
 						.add(String.format("multiple right matches for %s:\n%s",
 								allKeys, rightLookup.allLocators(allKeys)));
+				Collection ambiguousMatched = new ArrayList(
+						rightLookup.allKeyLookup.getForKeys(allKeys));
+				int debug = 3;
 			}
 			if (ambiguous.isEmpty()) {
 				// check, say, left has distinct firstkey to right - note,
@@ -197,6 +205,11 @@ public class SyncMerger<T> {
 				getIgnoreAmbiguityForReportingFilter());
 		CollectionFilters.filterInPlace(ambiguousRight.keySet(),
 				getIgnoreAmbiguityForReportingFilter());
+		if (ambiguousLeft.isEmpty() && ambiguousRight.isEmpty()) {
+			logger.info(
+					String.format("Merge [%s]", mergedClass.getSimpleName()));
+			return;
+		}
 		logger.info(String.format(
 				"Merge [%s]: %sambiguous left:\t%-6s\tambiguous right:\t%-6s",
 				mergedClass.getSimpleName(),
@@ -236,6 +249,19 @@ public class SyncMerger<T> {
 		stream.forEach(pd -> defineRight(pd.getName()));
 	}
 
+	protected void defineLeftExcluding(String... ignores) {
+		List<String> list = new ArrayList<>(Arrays.asList(ignores));
+		list.addAll(Arrays.asList("id", "localId", "propertyChangeListeners",
+				"class"));
+		List<PropertyDescriptor> sortedPropertyDescriptors = SEUtilities
+				.getSortedPropertyDescriptors(mergedClass);
+		Stream<PropertyDescriptor> stream = sortedPropertyDescriptors.stream()
+				.filter(pd -> !list.contains(pd.getName()))
+				.filter(pd -> pd.getReadMethod()
+						.getAnnotation(AlcinaTransient.class) == null);
+		stream.forEach(pd -> defineLeft(pd.getName()));
+	}
+
 	protected SyncMappingWithLog defineWithLog(String propertyName,
 			Function<T, Object[]> propertyKeyProvider) {
 		SyncMappingWithLog mapping = new SyncMappingWithLog(propertyName,
@@ -261,9 +287,11 @@ public class SyncMerger<T> {
 	protected boolean mergePair(SyncPair<T> pair) {
 		SyncPairAction syncType = getSyncType(pair);
 		if (syncType == null || syncType == SyncPairAction.IGNORE) {
+			if (syncType == SyncPairAction.IGNORE) {
+				pair.setAction(SyncPairAction.IGNORE);
+			}
 			return false;
 		}
-		pair.setAction(syncType);
 		switch (syncType) {
 		case DELETE_LEFT:
 		case DELETE_RIGHT:
@@ -331,6 +359,11 @@ public class SyncMerger<T> {
 		public SyncMapping mergeFilter(MergeFilter mergeFilter) {
 			this.filter = mergeFilter;
 			return this;
+		}
+
+		@Override
+		public String toString() {
+			return CommonUtils.formatJ("[%s]", propertyName);
 		}
 	}
 
@@ -442,8 +475,7 @@ public class SyncMerger<T> {
 							int debug = 3;
 						}
 						history.add(mergeHistory);
-						maybeRegister(left,right);
-						
+						maybeRegister(left, right);
 						propertyAccessor.setPropertyValue(left, propertyName,
 								value);
 						propertyAccessor.setPropertyValue(right, propertyName,
@@ -505,6 +537,6 @@ public class SyncMerger<T> {
 	}
 
 	public void maybeRegister(Object left, Object right) {
-		//if you'd like to TM-record object modifications
+		// if you'd like to TM-record object modifications
 	}
 }

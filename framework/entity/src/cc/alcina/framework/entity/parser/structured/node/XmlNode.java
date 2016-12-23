@@ -116,6 +116,13 @@ public class XmlNode {
 	public String fullToString() {
 		return XmlUtils.streamXML(node).replace(CommonUtils.XML_PI, "");
 	}
+	public String prettyToString() {
+		try {
+			return XmlUtils.prettyPrintWithDOM3LS(getElement());
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
 	public boolean has(String name) {
 		if (!isElement()) {
@@ -439,12 +446,16 @@ public class XmlNode {
 
 		public List<XmlNode> byTag(String tag) {
 			List<XmlNode> elements = elements();
-			elements.removeIf(n->!n.tagIs(tag));
+			elements.removeIf(n -> !n.tagIs(tag));
 			return elements;
 		}
 
 		public void clear() {
 			nodes().stream().forEach(XmlNode::removeFromParent);
+		}
+
+		public void append(Collection<XmlNode> childNodes) {
+			childNodes.stream().forEach(n->append(n));
 		}
 	}
 
@@ -542,18 +553,39 @@ public class XmlNode {
 			return Optional.ofNullable(node(xpath)).map(XmlNode::textContent)
 					.orElse("");
 		}
+
+		public boolean booleanValue(String xpath) {
+			return Boolean.valueOf(textOrEmpty(xpath));
+		}
 	}
 
 	public XmlNode unwrap() {
 		return this.getClass() == XmlNode.class ? this : doc.nodeFor(node);
 	}
-	
-	public void logToFile(){
+
+	public void logToFile() {
 		try {
 			XmlUtils.logToFile(node);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-		
+	}
+
+	public XmlNode ensurePath(String path) {
+		if (path.contains("/")) {
+			XmlNode cursor = this;
+			for (String pathPart : path.split("/")) {
+				cursor = cursor.ensurePath(pathPart);
+			}
+			return cursor;
+		}
+		List<XmlNode> kids = children.byTag(path);
+		if (kids.size() > 1) {
+			throw new RuntimeException("Ambiguous path");
+		}
+		if (kids.size() == 1) {
+			return kids.get(0);
+		}
+		return builder().tag(path).append();
 	}
 }

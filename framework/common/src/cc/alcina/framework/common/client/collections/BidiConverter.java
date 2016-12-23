@@ -24,4 +24,17 @@ public abstract class BidiConverter<A, B> {
 			}
 		};
 	}
+	public static class BidiIdentityConverter<A> extends BidiConverter<A, A>{
+
+		@Override
+		public A leftToRight(A a) {
+			return a;
+		}
+
+		@Override
+		public A rightToLeft(A b) {
+			return b;
+		}
+		
+	}
 }

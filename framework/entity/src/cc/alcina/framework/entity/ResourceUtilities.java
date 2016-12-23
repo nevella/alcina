@@ -564,6 +564,10 @@ public class ResourceUtilities {
 		return fieldwiseClone(t, false);
 	}
 	public static <T> T fieldwiseClone(T t, boolean withTransients) throws Exception {
+		T instance = (T) t.getClass().newInstance();
+		return fieldwiseCopy(t, instance, withTransients);
+	}
+	public static <T> T fieldwiseCopy(T t, T toInstance,boolean withTransients) throws Exception {
 		List<Field> allFields = new ArrayList<Field>();
 		Class c = t.getClass();
 		while (c != Object.class) {
@@ -580,11 +584,11 @@ public class ResourceUtilities {
 			}
 			c = c.getSuperclass();
 		}
-		T instance = (T) t.getClass().newInstance();
+		
 		for (Field field : allFields) {
-			field.set(instance, field.get(t));
+			field.set(toInstance, field.get(t));
 		}
-		return instance;
+		return toInstance;
 	}
 
 	public static byte[] readClassPathResourceAsByteArray(Class clazz,

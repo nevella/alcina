@@ -19,13 +19,22 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 		FlatDeltaPersisterResultType performSyncAction(SyncAction syncAction,
 				C object) throws Exception;
 	}
+	public static class DeltaItemPersisterNull<C> implements DeltaItemPersister<C>{
+
+		@Override
+		public FlatDeltaPersisterResultType performSyncAction(
+				SyncAction syncAction, C object) throws Exception {
+			return FlatDeltaPersisterResultType.UNMODIFIED;
+		}
+		
+	}
 
 	protected Map<Class, DeltaItemPersister> persisters = new LinkedHashMap<Class, DeltaItemPersister>();
 
-	protected final boolean applyLeft;
+	protected final boolean applyToLeft;
 
-	protected FlatDeltaPersister(boolean applyLeft) {
-		this.applyLeft = applyLeft;
+	protected FlatDeltaPersister(boolean applyToLeft) {
+		this.applyToLeft = applyToLeft;
 	}
 
 	protected abstract Class[] perClassDeltaOrder();
@@ -37,7 +46,7 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 			DeltaItemPersister persister = persisters.get(clazz);
 			for (SyncPair pair : delta.getDeltas().getAndEnsure(clazz)) {
 				SyncAction syncAction = pair.getAction()
-						.getDirectedAction(applyLeft);
+						.getDirectedAction(applyToLeft);
 				if (syncAction == null) {
 					perClassResult.noModificationCount++;
 					result.noModificationCount++;
@@ -48,7 +57,7 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 					result.noModificationCount++;
 					continue;
 				}
-				KeyedObject obj = applyLeft ? pair.getLeft() : pair.getRight();
+				KeyedObject obj = applyToLeft ? pair.getLeft() : pair.getRight();
 				FlatDeltaPersisterResultType resultType = persister
 						.performSyncAction(syncAction,
 								obj == null ? null : obj.getObject());
@@ -56,10 +65,15 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 				result.update(resultType);
 				perClassResult.update(resultType);
 			}
+			classDeltasPersisted();
 			JobRegistry.get().log("Flat delta persister/apply: %s - %s",
 					clazz.getSimpleName(), perClassResult);
 		}
 		return result;
+	}
+
+	protected void classDeltasPersisted() {
+		
 	}
 
 	protected void logAction(FlatDeltaPersisterResultType resultType,
@@ -93,6 +107,9 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 		@Override
 		protected boolean shouldApply(Class interchangeClass, SyncPair pair,
 				SyncAction syncAction) {
+			System.out.format("Would persist - %s :: %s :: %s\n",
+					interchangeClass.getSimpleName(), pair.getKey(),
+					syncAction);
 			return false;
 		}
 	}

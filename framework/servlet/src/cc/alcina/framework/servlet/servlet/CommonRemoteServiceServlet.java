@@ -690,8 +690,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			metricTracker.end(rpcRequest);
 			if (TransformManager.hasInstance()) {
 				ThreadlocalTransformManager.cast().resetTltm(null);
+				LooseContext.pop();
+			} else {
+				try {
+					LooseContext.pop();
+				} catch (Exception e) {// squelch, probably webapp undeployed
+				}
 			}
-			LooseContext.pop();
 		}
 	}
 
@@ -1207,7 +1212,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		public Response handleRequest(Class<T> clazz,
 				BoundSuggestOracleRequest request, String hint) {
 			Response response = new Response();
-			List<T> responses = getResponses(request.getQuery(), request.model,hint);
+			List<T> responses = getResponses(request.getQuery(), request.model,
+					hint);
 			response.setSuggestions(
 					responses.stream().map(BoundSuggestOracleSuggestion::new)
 							.collect(Collectors.toList()));

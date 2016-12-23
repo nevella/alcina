@@ -27,6 +27,15 @@ public class XmlDoc extends XmlNode {
 		}
 	}
 
+	@Override
+	public String prettyToString() {
+		try {
+			return XmlUtils.prettyPrintWithDOM3LS(domDoc());
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public Document domDoc() {
 		return super.domDoc();
 	}
@@ -43,5 +52,13 @@ public class XmlDoc extends XmlNode {
 	}
 
 	void register(XmlNode xmlNode) {
+	}
+
+	public XmlNode getDocumentElementNode() {
+		return nodeFor(domDoc().getDocumentElement());
+	}
+
+	public static XmlNode createDocumentElement(String tag) {
+		return new XmlDoc(String.format("<%s/>", tag)).getDocumentElementNode();
 	}
 }

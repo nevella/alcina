@@ -128,6 +128,7 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 			JSONObject jsonObject = resolved.leaf;
 			propertyName = resolved.resolvedPropertyName;
 			if (ignoreNullWrites && value == null) {
+				jsonObject.put(propertyName,"");
 				return;
 			}
 			jsonObject.put(propertyName, value);

@@ -1043,7 +1043,6 @@ public class CommonUtils {
 		return s + "s";
 	}
 
-
 	public static String pluraliseWithCount(String s, Collection c) {
 		return pluralise(s, c == null ? 0 : c.size(), true);
 	}
@@ -1076,6 +1075,18 @@ public class CommonUtils {
 		s = padStringLeft(s, places + 1, '0');
 		int len = s.length();
 		return s.substring(0, len - places) + "." + s.substring(len - places);
+	}
+
+	public static double roundNumeric(double d, int places) {
+		int multiplier = 1;
+		for (int i = 0; i < places; i++) {
+			multiplier *= 10;
+		}
+		String s = String.valueOf(Math.round(d * multiplier));
+		s = padStringLeft(s, places + 1, '0');
+		int len = s.length();
+		return Double.valueOf(
+				s.substring(0, len - places) + "." + s.substring(len - places));
 	}
 
 	// to 00.00:00 or 23:59.59
