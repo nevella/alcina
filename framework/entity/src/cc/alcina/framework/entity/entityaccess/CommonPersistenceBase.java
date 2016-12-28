@@ -1428,12 +1428,18 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			cp.getEntityManager().merge(iid);
 		}
 	}
+
 	@Override
 	public HiliLocatorMap reconstituteHiliMap(long clientInstanceId) {
 		ThreadlocalTransformManager tm = new ThreadlocalTransformManager();
 		tm.resetTltm(new HiliLocatorMap());
 		tm.setEntityManager(getEntityManager());
-		tm.setClientInstance(getHandshakeObjectProvider().getClientInstance(clientInstanceId));
+		ClientInstance clientInstance = getNewImplementationInstance(
+				ClientInstance.class);
+		clientInstance.setId(clientInstanceId);
+		// don't use the real client instance, requires
+		// permissionsmanager>>liveobjects
+		tm.setClientInstance(clientInstance);
 		HiliLocatorMap result = tm.reconstituteHiliMap();
 		tm.resetTltm(null);
 		return result;
