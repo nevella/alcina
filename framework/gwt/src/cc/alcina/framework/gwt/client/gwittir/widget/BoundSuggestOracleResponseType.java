@@ -7,7 +7,11 @@ import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 public interface BoundSuggestOracleResponseType {
 	String toSuggestionString();
 
-	public interface BoundSuggestOracleModel extends Serializable{
+	public interface BoundSuggestOracleModel extends Serializable {
+	}
+
+	public static class BoundSuggestOracleModelNoop
+			implements BoundSuggestOracleModel {
 	}
 
 	public static class BoundSuggestOracleSuggestion
