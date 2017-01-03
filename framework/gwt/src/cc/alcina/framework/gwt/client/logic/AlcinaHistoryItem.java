@@ -45,6 +45,16 @@ public class AlcinaHistoryItem {
 		return (T) item;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof AlcinaHistoryItem) {
+			AlcinaHistoryItem o = (AlcinaHistoryItem) obj;
+			return CommonUtils.equals(obj.getClass(), getClass(), o.params,
+					params, o.notAHistoryToken, notAHistoryToken, o.type, type);
+		}
+		return false;
+	}
+
 	public String getActionName() {
 		return getStringParameter(ACTION_KEY);
 	}
