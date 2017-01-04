@@ -5,6 +5,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublishe
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
+import cc.alcina.framework.gwt.client.widget.dialog.DecoratedRelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel.PositionCallback;
 
@@ -41,8 +42,8 @@ public class RelativePopupPositioning {
 					AxisCoordinate.V_CENTER, AxisCoordinate.V_BOTTOM },
 			AxisCoordinate.H_LEFT);
 
-	public static RelativePopupPositioningParams forAxes(
-			RelativePopupAxis[] axes) {
+	public static RelativePopupPositioningParams
+			forAxes(RelativePopupAxis[] axes) {
 		RelativePopupPositioningParams params = new RelativePopupPositioningParams();
 		params.axes = axes;
 		return params;
@@ -67,7 +68,8 @@ public class RelativePopupPositioning {
 	}
 
 	public static RelativePopupPanel showPopup(Widget relativeToWidget,
-			Widget widgetToShow, Widget boundingWidget, RelativePopupAxis axis) {
+			Widget widgetToShow, Widget boundingWidget,
+			RelativePopupAxis axis) {
 		return showPopup(relativeToWidget, widgetToShow, boundingWidget, axis,
 				null, null);
 	}
@@ -93,6 +95,22 @@ public class RelativePopupPositioning {
 		return showPopup(relativeToWidget.getElement(), widgetToShow,
 				boundingWidget, forAxes(axes), relativeContainer, rpp, shiftX,
 				shiftY);
+	}
+
+	public static RelativePopupPanel showPopup(final Widget elementContainer,
+			final Widget widgetToShow, final Widget boundingWidget,
+			RelativePopupPositioningParams positioningParams) {
+		Widget relativeContainer = WidgetUtils
+				.getPositioningParent(elementContainer);
+		RelativePopupPanel rpp = positioningParams.decorated
+				? new DecoratedRelativePopupPanel(true)
+				: new RelativePopupPanel(true);
+		if (positioningParams.decorated) {
+			rpp.setStyleName("tools-popup dropdown-popup");
+		}
+		rpp.setAnimationEnabled(true);
+		return showPopup(elementContainer, widgetToShow, boundingWidget,
+				positioningParams, relativeContainer, rpp);
 	}
 
 	public static RelativePopupPanel showPopup(final Widget elementContainer,
@@ -150,11 +168,9 @@ public class RelativePopupPositioning {
 		if (rl + rw > x + bwW) {
 			String pxl = rpp.getElement().getStyle().getLeft();
 			if (pxl.endsWith("px")) {
-				rpp.getElement()
-						.getStyle()
-						.setLeft(
-								Double.parseDouble(pxl.replace("px", ""))
-										- (rl + rw - x - bwW), Unit.PX);
+				rpp.getElement().getStyle()
+						.setLeft(Double.parseDouble(pxl.replace("px", ""))
+								- (rl + rw - x - bwW), Unit.PX);
 			}
 		}
 	}
@@ -162,8 +178,8 @@ public class RelativePopupPositioning {
 	public static RelativePopupPanel showPopup(
 			RelativePopupPositioningParams params, RelativePopupPanel rpp) {
 		return showPopup(params.relativeToElement, params.widgetToShow,
-				params.boundingWidget, params, params.relativeContainer, rpp,
-				0, 0);
+				params.boundingWidget, params, params.relativeContainer, rpp, 0,
+				0);
 	}
 
 	private static RelativePopupPanel showPopup(
@@ -175,12 +191,12 @@ public class RelativePopupPositioning {
 		final Widget positioningWidget = relativeContainer;
 		final Element relativeToElement = WidgetUtils
 				.getElementForAroundPositioning(relativeToElement0);
-		if (!LooseContext.getContext().getBoolean(
-				CONTEXT_KEEP_RELATIVE_PARENT_CLIP)) {
+		if (!LooseContext.getContext()
+				.getBoolean(CONTEXT_KEEP_RELATIVE_PARENT_CLIP)) {
 			if (!BrowserMod.isIEpre9()) {
 				Style style = positioningWidget.getElement().getStyle();
 				style.clearProperty("clip");
-			}// ie<9 doesn't like zat
+			} // ie<9 doesn't like zat
 		}
 		if (widgetToShow != null) {
 			rpp.setWidget(widgetToShow);
@@ -309,6 +325,12 @@ public class RelativePopupPositioning {
 					y += positioningParams.shiftY;
 					y -= offsetHeight;
 					break;
+				case TOP_CENTER:
+					x += positioningParams.shiftX;
+					x -= rw / 2;
+					x += relW / 2;
+					y += positioningParams.shiftY;
+					break;
 				case RIGHT_OR_LEFT_WITH_PREFERRED_TOP:
 					x += 2;
 					int clientY = positioningParams.nativeEvent.getClientY();
@@ -316,8 +338,8 @@ public class RelativePopupPositioning {
 					int oy = 0;
 					if (clientY > positioningParams.preferredTop) {
 						oy = Math.min(rh, clientY);
-						oy = Math.max(0, oy
-								- positioningParams.preferredFromBottom);
+						oy = Math.max(0,
+								oy - positioningParams.preferredFromBottom);
 					} else {
 						oy = Math.min(positioningParams.preferredTop, clientY);
 					}
@@ -426,8 +448,8 @@ public class RelativePopupPositioning {
 			.getName() + ".TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED";
 
 	public static void notifyPopupDisplayed(PopupWrapper rpp) {
-		GlobalTopicPublisher.get().publishTopic(
-				TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED, rpp);
+		GlobalTopicPublisher.get()
+				.publishTopic(TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED, rpp);
 	}
 
 	public static void notifyPopupDisplayedListenerDelta(
@@ -438,7 +460,7 @@ public class RelativePopupPositioning {
 
 	public enum OtherPositioningStrategy {
 		BELOW_WITH_PREFERRED_LEFT, RIGHT_OR_LEFT_WITH_PREFERRED_TOP,
-		BELOW_CENTER, ABOVE_CENTER, BELOW_RIGHT, ABOVE_RIGHT
+		BELOW_CENTER, ABOVE_CENTER, BELOW_RIGHT, ABOVE_RIGHT, TOP_CENTER
 	}
 
 	public static class RelativePopupAxis {
@@ -485,6 +507,8 @@ public class RelativePopupPositioning {
 		public int shiftX;
 
 		public boolean ignoreBoundingWidgetPopupConstraint;
+
+		public boolean decorated = false;
 
 		public void show(RelativePopupPanel panel) {
 			RelativePopupPositioning.showPopup(this, panel);
@@ -568,8 +592,8 @@ public class RelativePopupPositioning {
 		 * relative-bottom
 		 *
 		 */
-		int fit(int relX, int relY, int bw, int bh, int relW, int relH,
-				int ppW, int ppH, int bx, int by, AxisCoordinate favour,
+		int fit(int relX, int relY, int bw, int bh, int relW, int relH, int ppW,
+				int ppH, int bx, int by, AxisCoordinate favour,
 				boolean wrappingRelativeTo, boolean force) {
 			int relC = relX;
 			int bDim = bw;
@@ -591,8 +615,8 @@ public class RelativePopupPositioning {
 				result = wrappingRelativeTo ? relC : relC - ppDim;
 				break;
 			case POS:
-				result = wrappingRelativeTo ? relC + relDim - ppDim : relC
-						+ relDim;
+				result = wrappingRelativeTo ? relC + relDim - ppDim
+						: relC + relDim;
 				break;
 			case CENTER: // wrappingRelativeTo == true
 				if (favour.axisType() != null) {

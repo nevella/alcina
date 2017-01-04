@@ -798,7 +798,7 @@ public class WidgetUtils {
 		pp.show();
 		ta.setSelectionRange(0, text.length());
 		try {
-			copy();
+			execCopy();
 		} catch (JavaScriptException e) {
 			pp.hide();
 			if (e.getMessage().contains("NS_ERROR_XPC_NOT_ENOUGH_ARGS")) {
@@ -815,9 +815,6 @@ public class WidgetUtils {
 		pp.hide();
 	}
 
-	private static native void copy() /*-{
-        $doc.execCommand("Copy");
-	}-*/;
 
 	public static NativeEvent createZeroClick() {
 		return Document.get().createClickEvent(0, 0, 0, 0, 0, false, false,
@@ -1220,4 +1217,13 @@ public class WidgetUtils {
 			ClientNotifications.get().log(message);
 		}
 	}
+
+	public static native boolean isBrowserSupportsCopy() /*-{ 
+		return $wnd.document.queryCommandSupported("copy");
+	}-*/;
+	
+	public static native void execCopy() /*-{
+        return $wnd.document.execCommand("copy");
+	}-*/;
+
 }
