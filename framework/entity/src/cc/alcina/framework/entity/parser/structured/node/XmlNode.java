@@ -557,6 +557,10 @@ public class XmlNode {
 		public boolean booleanValue(String xpath) {
 			return Boolean.valueOf(textOrEmpty(xpath));
 		}
+
+		public Optional<XmlNode> optionalNode(String xpath) {
+			return Optional.ofNullable(node(xpath));
+		}
 	}
 
 	public XmlNode unwrap() {
