@@ -89,7 +89,7 @@ public class BaseProjectionLookupBuilder {
 	public static class BplDelegateMapCreatorStd
 			extends BaseProjectionLookupBuilder.BplDelegateMapCreator {
 		@Override
-		public Map createDelegateMap(int depthFromRoot) {
+		public Map createDelegateMap(int depthFromRoot, int depth) {
 			if (getBuilder().getCreators() != null) {
 				return getBuilder().getCreators()[depthFromRoot].get();
 			}

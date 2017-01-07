@@ -149,6 +149,9 @@ public class AlcinaMemCache implements RegistrableService {
 	public static final String TOPIC_UPDATE_EXCEPTION = AlcinaMemCache.class
 			.getName() + ".TOPIC_UPDATE_EXCEPTION";
 
+	public static final String TOPIC_MAPPING_EVENT = AlcinaMemCache.class
+			.getName() + ".TOPIC_MAPPING_EVENT";
+
 	public static final String CONTEXT_DEBUG_QUERY_METRICS = AlcinaMemCache.class
 			.getName() + ".CONTEXT_DEBUG_QUERY_METRICS";
 
@@ -345,7 +348,7 @@ public class AlcinaMemCache implements RegistrableService {
 	TimeZone startupTz = (TimeZone) startupCal.getTimeZone().clone();
 
 	boolean expectLongRunning = false;
-
+	boolean publishMappingEvents ;
 	public AlcinaMemCache() {
 		ThreadlocalTransformManager.threadTransformManagerWasResetListenerDelta(
 				resetListener, true);
@@ -354,6 +357,8 @@ public class AlcinaMemCache implements RegistrableService {
 		persistenceListener = new MemCachePersistenceListener();
 		maxLockQueueLength = ResourceUtilities.getInteger(AlcinaMemCache.class,
 				"maxLockQueueLength", 120);
+		publishMappingEvents= ResourceUtilities
+				.is(AlcinaMemCache.class, "publishMappingEvents");
 		Domain.registerHandler(new AlcinaMemCacheDomainHandler());
 	}
 
@@ -388,7 +393,7 @@ public class AlcinaMemCache implements RegistrableService {
 			List<Long> ids) {
 		Set<Long> result = new LinkedHashSet<Long>();
 		for (Long id : ids) {
-			boolean add = cache.get(clazz, id) == null ^ !returnIfNotInGraph;
+			boolean add = cache.get(clazz, id) != null ^ returnIfNotInGraph;
 			if (add) {
 				result.add(id);
 			}
@@ -497,7 +502,8 @@ public class AlcinaMemCache implements RegistrableService {
 			fullLockDump.format(
 					"Memcache log debugging----------\n"
 							+ "Writer thread trace:----------\n" + "%s\n",
-					getStacktraceSlice(postProcessWriterThread, 200));
+					SEUtilities.getStacktraceSlice(postProcessWriterThread,
+							200));
 		}
 		fullLockDump.line(lockDumpCause);
 		long time = System.currentTimeMillis();
@@ -505,16 +511,17 @@ public class AlcinaMemCache implements RegistrableService {
 			fullLockDump.line("Current locked thread dump:\n***************\n");
 			mainLock.getQueuedThreads()
 					.forEach(t2 -> fullLockDump.line("id:%s %s\n%s", t2.getId(),
-							t2, getStacktraceSlice(t2,
+							t2, SEUtilities.getStacktraceSlice(t2,
 									LONG_LOCK_TRACE_LENGTH)));
 			fullLockDump.line("\n\nThread pause times:\n***************\n");
 			threadQueueTimes.forEach((id, t2) -> fullLockDump
 					.format("id: %s - time: %s\n", id, time - t2));
 			synchronized (activeThreads) {
 				fullLockDump.line("\n\nActive threads:\n***************\n");
-				activeThreads.keySet().forEach(t2 -> fullLockDump.line(
-						"id:%s %s\n%s", t2.getId(), t2,
-						getStacktraceSlice(t2, LONG_LOCK_TRACE_LENGTH)));
+				activeThreads.keySet()
+						.forEach(t2 -> fullLockDump.line("id:%s %s\n%s",
+								t2.getId(), t2, SEUtilities.getStacktraceSlice(
+										t2, LONG_LOCK_TRACE_LENGTH)));
 			}
 			fullLockDump
 					.line("\n\nRecent lock acquisitions:\n***************\n");
@@ -961,20 +968,6 @@ public class AlcinaMemCache implements RegistrableService {
 		return null;
 	}
 
-	private String getStacktraceSlice(Thread t) {
-		return getStacktraceSlice(t, 20);
-	}
-
-	private String getStacktraceSlice(Thread t, int size) {
-		String log = "";
-		StackTraceElement[] trace = t.getStackTrace();
-		for (int i = 0; i < trace.length && i < size; i++) {
-			log += trace[i] + "\n";
-		}
-		log += "\n\n";
-		return log;
-	}
-
 	private Class getTargetEntityType(Method rm) {
 		ManyToOne manyToOne = rm.getAnnotation(ManyToOne.class);
 		if (manyToOne != null && manyToOne.targetEntity() != void.class) {
@@ -1170,7 +1163,7 @@ public class AlcinaMemCache implements RegistrableService {
 						pdOperator.field.set(hili, objects[i]);
 					}
 				}
-				cache.put(hili);
+				transformManager.store.mapObject(hili);
 			}
 		} finally {
 			releaseConn(conn);
@@ -1562,7 +1555,8 @@ public class AlcinaMemCache implements RegistrableService {
 				if (ResourceUtilities.is(AlcinaMemCache.class,
 						"debugLongLocks")) {
 					System.out.format("Long lock holder - %s ms - %s\n%s\n\n",
-							duration, e.getKey(), getStacktraceSlice(e.getKey(),
+							duration, e.getKey(),
+							SEUtilities.getStacktraceSlice(e.getKey(),
 									LONG_LOCK_TRACE_LENGTH));
 				}
 			}
@@ -1592,7 +1586,7 @@ public class AlcinaMemCache implements RegistrableService {
 						+ " %s\n\twriteHoldcount: %s\n\tsublock: %s\n\n ",
 				t.getId(), new Date(), mainLock.getQueuedReaderThreads().size(),
 				mainLock.getQueuedWriterThreads().size(), subgraphLock);
-		log += getStacktraceSlice(t);
+		log += SEUtilities.getStacktraceSlice(t);
 		return log;
 	}
 
@@ -2477,9 +2471,20 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 	}
 
+	
 	class DetachedCacheObjectStorePsAware extends DetachedCacheObjectStore {
+
 		public DetachedCacheObjectStorePsAware() {
 			super(new PsAwareMultiplexingObjectCache());
+		}
+
+		@Override
+		public void mapObject(HasIdAndLocalId obj) {
+			if (publishMappingEvents) {
+				GlobalTopicPublisher.get().publishTopic(TOPIC_MAPPING_EVENT,
+						obj);
+			}
+			super.mapObject(obj);
 		}
 	}
 

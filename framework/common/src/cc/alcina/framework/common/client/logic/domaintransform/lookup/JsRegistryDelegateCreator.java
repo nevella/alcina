@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.util.MultikeyMapBase.DelegateMapCreator
 
 public class JsRegistryDelegateCreator extends DelegateMapCreator {
 	@Override
-	public Map createDelegateMap(int depthFromRoot) {
+	public Map createDelegateMap(int depthFromRoot, int depth) {
 		return new JsUniqueMap<>(Class.class);
 	}
 }

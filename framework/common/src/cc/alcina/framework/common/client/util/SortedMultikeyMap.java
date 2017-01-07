@@ -35,7 +35,7 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Map createDelegateMap(int depthFromRoot) {
+		public Map createDelegateMap(int depthFromRoot, int depth) {
 			return new TreeMap();
 		}
 	}

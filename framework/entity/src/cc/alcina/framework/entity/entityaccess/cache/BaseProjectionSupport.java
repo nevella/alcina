@@ -40,7 +40,7 @@ public class BaseProjectionSupport {
 	public static class BplDelegateMapCreatorFastUnsorted
 			extends DelegateMapCreator {
 		@Override
-		public Map createDelegateMap(int depthFromRoot) {
+		public Map createDelegateMap(int depthFromRoot, int depth) {
 			return new Object2ObjectLinkedOpenHashMap();
 		}
 	}
@@ -49,15 +49,22 @@ public class BaseProjectionSupport {
 	public static class BplDelegateMapCreatorFastUtil
 			extends BaseProjectionLookupBuilder.BplDelegateMapCreator {
 		@Override
-		public Map createDelegateMap(int depthFromRoot) {
+		public Map createDelegateMap(int depthFromRoot, int depth) {
 			if (getBuilder().getCreators() != null) {
 				return getBuilder().getCreators()[depthFromRoot].get();
 			}
 			if (getBuilder().isNavigable()) {
 				return new TreeMap();
 			} else {
-				return getBuilder().isSorted() ? new Object2ObjectAVLTreeMap()
-						: new Object2ObjectLinkedOpenHashMap();
+				if (getBuilder().isSorted()) {
+					return new Object2ObjectAVLTreeMap();
+				} else {
+					if (depthFromRoot > 0 && depth == 1) {
+						return new Object2ObjectLinkedOpenHashMap(1);
+					} else {
+						return new Object2ObjectLinkedOpenHashMap();
+					}
+				}
 			}
 		}
 

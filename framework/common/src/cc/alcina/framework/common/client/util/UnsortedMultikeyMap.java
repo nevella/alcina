@@ -38,7 +38,7 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V> implements
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Map createDelegateMap(int depthFromRoot) {
+		public Map createDelegateMap(int depthFromRoot, int depth) {
 			return new LinkedHashMap<>();
 		}
 	}

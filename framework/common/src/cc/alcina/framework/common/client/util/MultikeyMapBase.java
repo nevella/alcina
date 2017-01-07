@@ -310,7 +310,7 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 	}
 
 	protected Map createDelegateMap() {
-		return delegateMapCreator.createDelegateMap(depthFromRoot);
+		return delegateMapCreator.createDelegateMap(depthFromRoot,depth);
 	}
 
 	protected abstract DelegateMapCreator ensureDelegateMapCreator();
@@ -349,7 +349,7 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 	public static abstract class DelegateMapCreator implements Serializable {
 		static final transient long serialVersionUID = -1L;
 
-		public abstract Map createDelegateMap(int depthFromRoot);
+		public abstract Map createDelegateMap(int depthFromRoot, int depth);
 
 		public boolean isSorted(Map m) {
 			return m instanceof SortedMap;

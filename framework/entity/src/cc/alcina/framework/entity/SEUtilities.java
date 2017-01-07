@@ -1205,6 +1205,20 @@ public class SEUtilities {
 		}
 	}
 
+	public static String getStacktraceSlice(Thread t) {
+		return getStacktraceSlice(t, 20);
+	}
+
+	public static String getStacktraceSlice(Thread t, int size) {
+		String log = "";
+		StackTraceElement[] trace = t.getStackTrace();
+		for (int i = 0; i < trace.length && i < size; i++) {
+			log += trace[i] + "\n";
+		}
+		log += "\n\n";
+		return log;
+	}
+
 	public static class Bytes {
 		public static int indexOf(byte[] src, byte[] toFind) {
 			return indexOf(src, toFind, 0);

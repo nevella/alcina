@@ -178,7 +178,7 @@ public class SubgraphTransformManager extends TransformManager {
 		@Override
 		public <T extends HasIdAndLocalId> void
 				loadObject(Class<? extends T> clazz, long id, long localId) {
-			store.getCache().put(AlcinaMemCache.get().find(clazz, id));
+			store.mapObject(AlcinaMemCache.get().find(clazz, id));
 		}
 	}
 
