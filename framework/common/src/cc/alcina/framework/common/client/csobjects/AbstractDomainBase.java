@@ -42,13 +42,13 @@ public abstract class AbstractDomainBase extends BaseBindable
 		return HiliHelper.equals(this, obj);
 	}
 
-	@Display(name = "Id", orderingHint = 900, visible = @Permission(access = AccessLevel.ADMIN) )
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE) , write = @Permission(access = AccessLevel.ROOT) )
+	@Display(name = "Id", orderingHint = 900, visible = @Permission(access = AccessLevel.ADMIN))
+	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
 	@Transient
 	public abstract long getId();
 
 	@Display(name = "Local id")
-	@PropertyPermissions(read = @Permission(access = AccessLevel.ROOT) , write = @Permission(access = AccessLevel.ROOT) )
+	@PropertyPermissions(read = @Permission(access = AccessLevel.ROOT), write = @Permission(access = AccessLevel.ROOT))
 	@Transient
 	public long getLocalId() {
 		return this.localId;
@@ -56,7 +56,7 @@ public abstract class AbstractDomainBase extends BaseBindable
 
 	@Version
 	@Column(name = "OPTLOCK")
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE) , write = @Permission(access = AccessLevel.ROOT) )
+	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
 	public int getVersionNumber() {
 		return versionNumber;
 	}
@@ -80,10 +80,13 @@ public abstract class AbstractDomainBase extends BaseBindable
 		return hash;
 	}
 
-	@UnsafeNativeLong
-	private native int fastHash(long id, long localId, int classHashCode)/*-{
-       
-	}-*/;
+	public long provideIdOrLocalIdIfZero() {
+		return getId() != 0 ? getId() : getLocalId();
+	}
+
+	public boolean provideIsLocal() {
+		return getId() == 0 && getLocalId() != 0;
+	}
 
 	/**
 	 * used - and why? Because an object we map will _always_ have either a
@@ -135,6 +138,11 @@ public abstract class AbstractDomainBase extends BaseBindable
 		return dn.substring(0, dn.length());
 	}
 
+	@UnsafeNativeLong
+	private native int fastHash(long id, long localId, int classHashCode)/*-{
+       
+	}-*/;
+
 	protected int _compareTo(AbstractDomainBase o) {
 		String s1 = comparisonString();
 		String s2 = o.comparisonString();
@@ -157,9 +165,5 @@ public abstract class AbstractDomainBase extends BaseBindable
 	protected String comparisonString() {
 		throw new RuntimeException(
 				"no display name available, and using comparator");
-	}
-
-	public long provideIdOrLocalIdIfZero() {
-		return getId() != 0 ? getId() : getLocalId();
 	}
 }
