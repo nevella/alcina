@@ -55,6 +55,16 @@ public class XmlNode {
 		this(from.node, from.doc);
 	}
 
+	public XmlNode addAttr(String name, String value, String separator) {
+		String currentValue = attr(name);
+		if (currentValue.length() > 0) {
+			currentValue += separator;
+		}
+		currentValue += value;
+		setAttr(name, value);
+		return this;
+	}
+
 	public XmlNodeAncestor ancestors() {
 		if (ancestor == null) {
 			ancestor = new XmlNodeAncestor();
@@ -95,6 +105,14 @@ public class XmlNode {
 		return doc.nodeFor(node.cloneNode(deep));
 	}
 
+	public void copyAttributesFrom(XmlNode xmlNode) {
+		xmlNode.attributes().forEach((k, v) -> setAttr(k, v));
+	}
+
+	public XmlNodeCss css() {
+		return new XmlNodeCss();
+	}
+
 	public XmlNodeDebug debug() {
 		return new XmlNodeDebug();
 	}
@@ -113,15 +131,30 @@ public class XmlNode {
 		return XmlUtils.streamXML(node);
 	}
 
+	public XmlNode ensurePath(String path) {
+		if (path.contains("/")) {
+			XmlNode cursor = this;
+			for (String pathPart : path.split("/")) {
+				cursor = cursor.ensurePath(pathPart);
+			}
+			return cursor;
+		}
+		List<XmlNode> kids = children.byTag(path);
+		if (kids.size() > 1) {
+			throw new RuntimeException("Ambiguous path");
+		}
+		if (kids.size() == 1) {
+			return kids.get(0);
+		}
+		return builder().tag(path).append();
+	}
+
 	public String fullToString() {
 		return XmlUtils.streamXML(node).replace(CommonUtils.XML_PI, "");
 	}
-	public String prettyToString() {
-		try {
-			return XmlUtils.prettyPrintWithDOM3LS(getElement());
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+
+	public Element getElement() {
+		return (Element) node;
 	}
 
 	public boolean has(String name) {
@@ -160,6 +193,14 @@ public class XmlNode {
 		return node.getNodeType() == Node.TEXT_NODE;
 	}
 
+	public void logToFile() {
+		try {
+			XmlUtils.logToFile(node);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public String name() {
 		return node.getNodeName();
 	}
@@ -174,6 +215,14 @@ public class XmlNode {
 
 	public XmlNode parent() {
 		return doc.nodeFor(node.getParentNode());
+	}
+
+	public String prettyToString() {
+		try {
+			return XmlUtils.prettyPrintWithDOM3LS(getElement());
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public XmlNodeRelative relative() {
@@ -253,15 +302,15 @@ public class XmlNode {
 				true);
 	}
 
+	public XmlNode unwrap() {
+		return this.getClass() == XmlNode.class ? this : doc.nodeFor(node);
+	}
+
 	public XmlNodeXpath xpath() {
 		if (xpath == null) {
 			xpath = new XmlNodeXpath();
 		}
 		return xpath;
-	}
-
-	public Element getElement() {
-		return (Element) node;
 	}
 
 	private ProcessingInstruction getProcessingInstruction() {
@@ -330,9 +379,27 @@ public class XmlNode {
 	public class XmlNodeChildren {
 		private List<XmlNode> nodes;
 
+		public void adoptFrom(XmlNode n) {
+			n.children.nodes().forEach(this::append);
+		}
+
+		public void append(Collection<XmlNode> childNodes) {
+			childNodes.stream().forEach(n -> append(n));
+		}
+
 		public void append(XmlNode xmlNode) {
 			XmlNode.this.node.appendChild(xmlNode.node);
 			invalidate();
+		}
+
+		public List<XmlNode> byTag(String tag) {
+			List<XmlNode> elements = elements();
+			elements.removeIf(n -> !n.tagIs(tag));
+			return elements;
+		}
+
+		public void clear() {
+			nodes().stream().forEach(XmlNode::removeFromParent);
 		}
 
 		public boolean contains(String tag) {
@@ -383,6 +450,14 @@ public class XmlNode {
 			return xmlNode != null && firstNode() == xmlNode.unwrap();
 		}
 
+		public boolean isLastChild(XmlNode node) {
+			return node != null && lastNode() == node.unwrap();
+		}
+
+		public boolean isLastElementNode(XmlNode node) {
+			return node != null && lastElementNode() == node.unwrap();
+		}
+
 		public XmlNode lastElementNode() {
 			List<XmlNode> nodes = nodes();
 			for (int idx = nodes.size() - 1; idx >= 0; idx--) {
@@ -431,31 +506,19 @@ public class XmlNode {
 			List<XmlNode> elts = elements();
 			return elts.size() == 1 && elts.get(0).tagIs(tag);
 		}
+	}
 
-		public boolean isLastChild(XmlNode node) {
-			return node != null && lastNode() == node.unwrap();
+	public class XmlNodeCss {
+		public void addBold() {
+			addStyle("font-weight: bold");
 		}
 
-		public boolean isLastElementNode(XmlNode node) {
-			return node != null && lastElementNode() == node.unwrap();
+		public void addClass(String className) {
+			addAttr("class", className, " ");
 		}
 
-		public void adoptFrom(XmlNode n) {
-			n.children.nodes().forEach(this::append);
-		}
-
-		public List<XmlNode> byTag(String tag) {
-			List<XmlNode> elements = elements();
-			elements.removeIf(n -> !n.tagIs(tag));
-			return elements;
-		}
-
-		public void clear() {
-			nodes().stream().forEach(XmlNode::removeFromParent);
-		}
-
-		public void append(Collection<XmlNode> childNodes) {
-			childNodes.stream().forEach(n->append(n));
+		public void addStyle(String style) {
+			addAttr("style", style, "; ");
 		}
 	}
 
@@ -484,6 +547,10 @@ public class XmlNode {
 	}
 
 	public class XmlNodeRelative {
+		public boolean hasNextSibling() {
+			return node.getNextSibling() != null;
+		}
+
 		public boolean hasPreviousSibling() {
 			return node.getPreviousSibling() != null;
 		}
@@ -499,23 +566,28 @@ public class XmlNode {
 			parent().node.insertBefore(node.node, XmlNode.this.node);
 		}
 
-		public boolean hasNextSibling() {
-			return node.getNextSibling() != null;
-		}
-
-		public XmlNode wrap(String tag) {
-			XmlNode wrapper = doc.nodeFor(doc.domDoc().createElement(tag));
-			replaceWith(wrapper);
-			wrapper.children.append(XmlNode.this);
-			return wrapper;
+		public XmlNode nextSibling() {
+			return doc.nodeFor(node.getNextSibling());
 		}
 
 		public XmlNode previousSibling() {
 			return doc.nodeFor(node.getPreviousSibling());
 		}
 
-		public XmlNode nextSibling() {
-			return doc.nodeFor(node.getNextSibling());
+		public XmlNode replaceWithTag(String tag) {
+			XmlNode wrapper = doc.nodeFor(doc.domDoc().createElement(tag));
+			replaceWith(wrapper);
+			wrapper.copyAttributesFrom(XmlNode.this);
+			wrapper.children.adoptFrom(XmlNode.this);
+			return wrapper;
+		}
+
+		public XmlNode wrap(String tag) {
+			XmlNode wrapper = doc.nodeFor(doc.domDoc().createElement(tag));
+			replaceWith(wrapper);
+			wrapper.children.append(XmlNode.this);
+			wrapper.copyAttributesFrom(XmlNode.this);
+			return wrapper;
 		}
 	}
 
@@ -527,6 +599,10 @@ public class XmlNode {
 		public XmlNodeXpath() {
 			xh = new XpathHelper(node);
 			eval = xh.createOptimisedEvaluator(node);
+		}
+
+		public boolean booleanValue(String xpath) {
+			return Boolean.valueOf(textOrEmpty(xpath));
 		}
 
 		public boolean contains(String xpath) {
@@ -544,6 +620,10 @@ public class XmlNode {
 					.collect(Collectors.toList());
 		}
 
+		public Optional<XmlNode> optionalNode(String xpath) {
+			return Optional.ofNullable(node(xpath));
+		}
+
 		public boolean selfIs(String xpath) {
 			return XmlNode.this.parent().xpath().nodes(xpath)
 					.contains(doc.nodeFor(node));
@@ -553,43 +633,5 @@ public class XmlNode {
 			return Optional.ofNullable(node(xpath)).map(XmlNode::textContent)
 					.orElse("");
 		}
-
-		public boolean booleanValue(String xpath) {
-			return Boolean.valueOf(textOrEmpty(xpath));
-		}
-
-		public Optional<XmlNode> optionalNode(String xpath) {
-			return Optional.ofNullable(node(xpath));
-		}
-	}
-
-	public XmlNode unwrap() {
-		return this.getClass() == XmlNode.class ? this : doc.nodeFor(node);
-	}
-
-	public void logToFile() {
-		try {
-			XmlUtils.logToFile(node);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public XmlNode ensurePath(String path) {
-		if (path.contains("/")) {
-			XmlNode cursor = this;
-			for (String pathPart : path.split("/")) {
-				cursor = cursor.ensurePath(pathPart);
-			}
-			return cursor;
-		}
-		List<XmlNode> kids = children.byTag(path);
-		if (kids.size() > 1) {
-			throw new RuntimeException("Ambiguous path");
-		}
-		if (kids.size() == 1) {
-			return kids.get(0);
-		}
-		return builder().tag(path).append();
 	}
 }
