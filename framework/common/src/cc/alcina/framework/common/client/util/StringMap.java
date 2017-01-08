@@ -137,4 +137,8 @@ public class StringMap extends LinkedHashMap<String, String> {
 		}
 		return string;
 	}
+
+	public String replaceMatch(String string) {
+		return containsKey(string) ? get(string) : string;
+	}
 }
