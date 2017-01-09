@@ -520,6 +520,10 @@ public class XmlNode {
 		public void addStyle(String style) {
 			addAttr("style", style, "; ");
 		}
+
+		public void displayNone() {
+			addStyle("display:none");
+		}
 	}
 
 	public class XmlNodeDebug {
