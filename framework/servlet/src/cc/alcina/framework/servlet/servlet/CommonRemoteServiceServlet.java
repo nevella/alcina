@@ -153,15 +153,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		implements CommonRemoteServiceExt {
 	public static final String UA_NULL_SERVER = "null/server";
 
-	public static void unexpectedExceptionBeforePostTransform(
-			TransformPersistenceToken persistenceToken) {
-		GlobalTopicPublisher.get().publishTopic(
-				TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION,
-				persistenceToken);
-	}
-
-	private Logger logger;
-
 	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
 
 	public static final String THRD_LOCAL_RPC_PAYLOAD = "THRD_LOCAL_RPC_PAYLOAD";
@@ -179,11 +170,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public static final String CONTEXT_OVERRIDE_CONTEXT = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_OVERRIDE_CONTEXT";
 
-	private int actionCount = 0;
-
-	private ThreadLocal<Integer> looseContextDepth = new ThreadLocal<>();
-
 	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
+
+	public static void unexpectedExceptionBeforePostTransform(
+			TransformPersistenceToken persistenceToken) {
+		GlobalTopicPublisher.get().publishTopic(
+				TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION,
+				persistenceToken);
+	}
 
 	public static void unexpectedExceptionBeforePostTransformListenerDelta(
 			TopicListener<TransformPersistenceToken> listener, boolean add) {
@@ -191,6 +185,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION, listener,
 				add);
 	}
+
+	private Logger logger;
+
+	private int actionCount = 0;
+
+	private ThreadLocal<Integer> looseContextDepth = new ThreadLocal<>();
 
 	@Override
 	@WebMethod(readonlyPermitted = true)
@@ -244,6 +244,25 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
+	public void initUserStateWithCookie(HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse) {
+		new CookieHelper().getIid(httpServletRequest, httpServletResponse);
+		Registry.impl(SessionHelper.class).initUserState(httpServletRequest,
+				httpServletResponse);
+		String userName = new CookieHelper()
+				.getRememberedUserName(httpServletRequest, httpServletResponse);
+		if (userName != null && !PermissionsManager.get().isLoggedIn()) {
+			try {
+				LoginResponse lrb = new LoginResponse();
+				lrb.setOk(true);
+				processValidLogin(lrb, userName, httpServletRequest,
+						httpServletResponse);
+			} catch (AuthenticationException e) {
+				// ignore
+			}
+		}
+	}
+
 	@WebMethod(readonlyPermitted = true)
 	public List<String> listRunningJobs() {
 		return JobRegistry.get().getRunningJobs();
@@ -269,25 +288,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public Long logClientError(String exceptionToString) {
 		return logClientError(exceptionToString,
 				LogMessageType.CLIENT_EXCEPTION.toString());
-	}
-
-	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
-	public DomainUpdate waitForTransforms(long lastTransformRequestId)
-			throws PermissionsException {
-		if (!waitForTransformsEnabled()) {
-			throw new PermissionsException();
-		}
-		Long clientInstanceId = Registry.impl(SessionHelper.class)
-				.getAuthenticatedClientInstanceId(getThreadLocalRequest());
-		if (clientInstanceId == null) {
-			throw new PermissionsException();
-		}
-		return new TransformCollector().waitForTransforms(
-				lastTransformRequestId, (long) clientInstanceId);
-	}
-
-	protected boolean waitForTransformsEnabled() {
-		return false;
 	}
 
 	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
@@ -371,34 +371,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} finally {
 			LooseContext.pop();
 		}
-	}
-
-	String describeRpcRequest(RPCRequest rpcRequest, String msg) {
-		msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
-		msg += "Parameters: \n";
-		Object[] parameters = rpcRequest.getParameters();
-		int i = 0;
-		ByteArrayOutputStream os = new ByteArrayOutputStream();
-		XMLEncoder enc = new XMLEncoder(os);
-		for (Object object : parameters) {
-			String xml = "";
-			if (object != null
-					&& CommonUtils.isStandardJavaClass(object.getClass())) {
-				try {
-					enc.writeObject(object);
-					enc.flush();
-					xml = new String(os.toByteArray());
-					os.reset();
-				} catch (Exception e) {
-					xml = "Unable to write object - "
-							+ object.getClass().getName();
-				}
-			}
-			msg += CommonUtils.formatJ("\t [%s] - %s\n\t   - %s\n", i++, object,
-					xml);
-		}
-		enc.close();
-		return msg;
 	}
 
 	public String performAction(final RemoteAction action) {
@@ -584,10 +556,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	protected boolean persistOfflineTransformsAsOneTransaction() {
-		return true;
-	}
-
 	@Override
 	public void ping() {
 	}
@@ -601,25 +569,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return null;
 		}
 		return JobRegistry.exportableForm(tracker);
-	}
-
-	public void initUserStateWithCookie(HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse) {
-		new CookieHelper().getIid(httpServletRequest, httpServletResponse);
-		Registry.impl(SessionHelper.class).initUserState(httpServletRequest,
-				httpServletResponse);
-		String userName = new CookieHelper()
-				.getRememberedUserName(httpServletRequest, httpServletResponse);
-		if (userName != null && !PermissionsManager.get().isLoggedIn()) {
-			try {
-				LoginResponse lrb = new LoginResponse();
-				lrb.setOk(true);
-				processValidLogin(lrb, userName, httpServletRequest,
-						httpServletResponse);
-			} catch (AuthenticationException e) {
-				// ignore
-			}
-		}
 	}
 
 	@Override
@@ -705,6 +654,18 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				.getCommonPersistence().search(def, pageNumber);
 	}
 
+	@Override
+	public Response suggest(BoundSuggestOracleRequest request) {
+		try {
+			Class<? extends BoundSuggestOracleResponseType> clazz = (Class<? extends BoundSuggestOracleResponseType>) Class
+					.forName(request.targetClassName);
+			return Registry.impl(BoundSuggestOracleRequestHandler.class, clazz)
+					.handleRequest(clazz, request, request.hint);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformRequestException {
 		return transform(request, false, false, true).response;
@@ -784,6 +745,21 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return results;
 	}
 
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	public DomainUpdate waitForTransforms(long lastTransformRequestId)
+			throws PermissionsException {
+		if (!waitForTransformsEnabled()) {
+			throw new PermissionsException();
+		}
+		Long clientInstanceId = Registry.impl(SessionHelper.class)
+				.getAuthenticatedClientInstanceId(getThreadLocalRequest());
+		if (clientInstanceId == null) {
+			throw new PermissionsException();
+		}
+		return new TransformCollector().waitForTransforms(
+				lastTransformRequestId, (long) clientInstanceId);
+	}
+
 	private File getDataDumpsFolder() {
 		File dataFolder = ServletLayerObjects.get().getDataFolder();
 		File dir = new File(
@@ -859,6 +835,15 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	protected String getRemoteAddress() {
 		return getThreadLocalRequest() == null ? null
 				: getThreadLocalRequest().getRemoteAddr();
+	}
+
+	protected HttpSession getSession() {
+		return getSession(getThreadLocalRequest());
+	}
+
+	protected HttpSession getSession(HttpServletRequest request) {
+		return Registry.impl(SessionProvider.class).getSession(request,
+				getThreadLocalResponse());
 	}
 
 	protected RPCRequest getThreadRpcRequest() {
@@ -959,6 +944,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	protected void onBeforeSpawnedThreadRun(Map properties) {
 	}
 
+	protected boolean persistOfflineTransformsAsOneTransaction() {
+		return true;
+	}
+
 	protected abstract void processValidLogin(LoginResponse lrb,
 			String userName, HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse)
@@ -1033,13 +1022,148 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	protected HttpSession getSession() {
-		return getSession(getThreadLocalRequest());
+	protected boolean waitForTransformsEnabled() {
+		return false;
 	}
 
-	protected HttpSession getSession(HttpServletRequest request) {
-		return Registry.impl(SessionProvider.class).getSession(request,
-				getThreadLocalResponse());
+	String describeRpcRequest(RPCRequest rpcRequest, String msg) {
+		msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
+		msg += "Parameters: \n";
+		Object[] parameters = rpcRequest.getParameters();
+		int i = 0;
+		ByteArrayOutputStream os = new ByteArrayOutputStream();
+		XMLEncoder enc = new XMLEncoder(os);
+		for (Object object : parameters) {
+			String xml = "";
+			if (object != null
+					&& CommonUtils.isStandardJavaClass(object.getClass())) {
+				try {
+					enc.writeObject(object);
+					enc.flush();
+					xml = new String(os.toByteArray());
+					os.reset();
+				} catch (Exception e) {
+					xml = "Unable to write object - "
+							+ object.getClass().getName();
+				}
+			}
+			msg += CommonUtils.formatJ("\t [%s] - %s\n\t   - %s\n", i++, object,
+					xml);
+		}
+		enc.close();
+		return msg;
+	}
+
+	public class ActionLauncher<T> {
+		private JobTracker actionTracker;
+
+		TopicListener<JobTracker> startListener = new TopicListener<JobTracker>() {
+			boolean processed = false;
+
+			@Override
+			public void topicPublished(String key, JobTracker message) {
+				if (processed) {
+				} else {
+					processed = true;
+					actionTracker = message;
+				}
+			}
+		};
+
+		protected ActionLogItem trackerToResult(final RemoteAction action) {
+			ActionLogItem logItem = Registry
+					.impl(CommonPersistenceProvider.class)
+					.getCommonPersistenceExTransaction()
+					.getNewImplementationInstance(ActionLogItem.class);
+			logItem.setActionClass(action.getClass());
+			logItem.setActionDate(new Date());
+			logItem.setShortDescription(CommonUtils
+					.trimToWsChars(actionTracker.getJobResult(), 220));
+			logItem.setActionLog(actionTracker.getLog());
+			return logItem;
+		}
+
+		protected ActionResult<T> trackerToResult(final RemoteAction action,
+				boolean nonPersistent) {
+			ActionResult<T> result = new ActionResult<T>();
+			if (actionTracker != null) {
+				ActionLogItem logItem = trackerToResult(action);
+				if (!actionTracker.provideIsRoot() || nonPersistent) {
+				} else {
+					Registry.impl(CommonPersistenceProvider.class)
+							.getCommonPersistence().logActionItem(logItem);
+				}
+				result.actionLogItem = logItem;
+				result.resultObject = (T) actionTracker.getJobResultObject();
+			}
+			return result;
+		}
+
+		ActionResult<T> performActionAndWait(final RemoteAction action)
+				throws WebException {
+			checkAnnotatedPermissions(action);
+			RemoteActionPerformer performer = (RemoteActionPerformer) Registry
+					.get().instantiateSingle(RemoteActionPerformer.class,
+							action.getClass());
+			if (performer instanceof RequiresHttpSession) {
+				RequiresHttpSession rhs = (RequiresHttpSession) performer;
+				rhs.setHttpSession(getSession());
+			}
+			boolean nonPersistent = LooseContext
+					.is(JobRegistry.CONTEXT_NON_PERSISTENT);
+			try {
+				ThreadlocalTransformManager.get().resetTltm(null);
+				LooseContext.push();
+				LooseContext.getContext().addTopicListener(
+						JobRegistry.TOPIC_JOB_STARTED, startListener);
+				performer.performAction(action);
+				return trackerToResult(action, nonPersistent);
+			} catch (Throwable t) {
+				Exception e = (Exception) ((t instanceof Exception) ? t
+						: new WrappedRuntimeException(t));
+				if (actionTracker != null && !actionTracker.isComplete()) {
+					JobRegistry.get().jobError(e);
+					trackerToResult(action, nonPersistent);
+				}
+				boolean log = true;
+				if (e instanceof WrappedRuntimeException) {
+					WrappedRuntimeException ire = (WrappedRuntimeException) e;
+					log = ire
+							.getSuggestedAction() != SuggestedAction.EXPECTED_EXCEPTION;
+				}
+				if (log) {
+					if (CommonUtils.extractCauseOfClass(e,
+							CancelledException.class) != null) {
+					} else {
+						logRpcException(e);
+					}
+				}
+				throw new WebException(e);
+			} finally {
+				LooseContext.pop();
+				ThreadlocalTransformManager.get().resetTltm(null);
+			}
+		}
+	}
+
+	public static abstract class BoundSuggestOracleRequestHandler<T extends BoundSuggestOracleResponseType> {
+		public Response handleRequest(Class<T> clazz,
+				BoundSuggestOracleRequest request, String hint) {
+			Response response = new Response();
+			List<T> responses = getResponses(request.getQuery(), request.model,
+					hint);
+			response.setSuggestions(
+					responses.stream().map(BoundSuggestOracleSuggestion::new)
+							.collect(Collectors.toList()));
+			return GraphProjections.defaultProjections().project(response);
+		}
+
+		protected abstract List<T> getResponses(String query,
+				BoundSuggestOracleModel model, String hint);
+	}
+
+	public static class ReuseIUserHolder {
+		public IUser iUser;
 	}
 
 	class ActionLauncherAsync extends AlcinaChildRunnable {
@@ -1088,102 +1212,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	public class ActionLauncher<T> {
-		private JobTracker actionTracker;
-
-		TopicListener<JobTracker> startListener = new TopicListener<JobTracker>() {
-			boolean processed = false;
-
-			@Override
-			public void topicPublished(String key, JobTracker message) {
-				if (processed) {
-				} else {
-					processed = true;
-					actionTracker = message;
-				}
-			}
-		};
-
-		ActionResult<T> performActionAndWait(final RemoteAction action)
-				throws WebException {
-			checkAnnotatedPermissions(action);
-			RemoteActionPerformer performer = (RemoteActionPerformer) Registry
-					.get().instantiateSingle(RemoteActionPerformer.class,
-							action.getClass());
-			if (performer instanceof RequiresHttpSession) {
-				RequiresHttpSession rhs = (RequiresHttpSession) performer;
-				rhs.setHttpSession(getSession());
-			}
-			boolean nonPersistent = LooseContext
-					.is(JobRegistry.CONTEXT_NON_PERSISTENT);
-			try {
-				ThreadlocalTransformManager.get().resetTltm(null);
-				LooseContext.push();
-				LooseContext.getContext().addTopicListener(
-						JobRegistry.TOPIC_JOB_STARTED, startListener);
-				performer.performAction(action);
-				return trackerToResult(action, nonPersistent);
-			} catch (Throwable t) {
-				Exception e = (Exception) ((t instanceof Exception) ? t
-						: new WrappedRuntimeException(t));
-				if (actionTracker != null && !actionTracker.isComplete()) {
-					JobRegistry.get().jobError(e);
-					trackerToResult(action, nonPersistent);
-				}
-				boolean log = true;
-				if (e instanceof WrappedRuntimeException) {
-					WrappedRuntimeException ire = (WrappedRuntimeException) e;
-					log = ire
-							.getSuggestedAction() != SuggestedAction.EXPECTED_EXCEPTION;
-				}
-				if (log) {
-					if (CommonUtils.extractCauseOfClass(e,
-							CancelledException.class) != null) {
-					} else {
-						logRpcException(e);
-					}
-				}
-				throw new WebException(e);
-			} finally {
-				LooseContext.pop();
-				ThreadlocalTransformManager.get().resetTltm(null);
-			}
-		}
-
-		protected ActionResult<T> trackerToResult(final RemoteAction action,
-				boolean nonPersistent) {
-			ActionResult<T> result = new ActionResult<T>();
-			if (actionTracker != null) {
-				ActionLogItem logItem = trackerToResult(action);
-				if (!actionTracker.provideIsRoot() || nonPersistent) {
-				} else {
-					Registry.impl(CommonPersistenceProvider.class)
-							.getCommonPersistence().logActionItem(logItem);
-				}
-				result.actionLogItem = logItem;
-				result.resultObject = (T) actionTracker.getJobResultObject();
-			}
-			return result;
-		}
-
-		protected ActionLogItem trackerToResult(final RemoteAction action) {
-			ActionLogItem logItem = Registry
-					.impl(CommonPersistenceProvider.class)
-					.getCommonPersistenceExTransaction()
-					.getNewImplementationInstance(ActionLogItem.class);
-			logItem.setActionClass(action.getClass());
-			logItem.setActionDate(new Date());
-			logItem.setShortDescription(CommonUtils
-					.trimToWsChars(actionTracker.getJobResult(), 220));
-			logItem.setActionLog(actionTracker.getLog());
-			return logItem;
-		}
-	}
-
-	public static class ReuseIUserHolder {
-		public IUser iUser;
-	}
-
 	static class IsWrappedObjectDteFilter
 			implements CollectionFilter<DomainTransformEvent> {
 		Class clazz = Registry.impl(CommonPersistenceProvider.class)
@@ -1194,33 +1222,5 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		public boolean allow(DomainTransformEvent o) {
 			return o.getObjectClass() == clazz;
 		}
-	}
-
-	@Override
-	public Response suggest(BoundSuggestOracleRequest request) {
-		try {
-			Class<? extends BoundSuggestOracleResponseType> clazz = (Class<? extends BoundSuggestOracleResponseType>) Class
-					.forName(request.targetClassName);
-			return Registry.impl(BoundSuggestOracleRequestHandler.class, clazz)
-					.handleRequest(clazz, request, request.hint);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static abstract class BoundSuggestOracleRequestHandler<T extends BoundSuggestOracleResponseType> {
-		public Response handleRequest(Class<T> clazz,
-				BoundSuggestOracleRequest request, String hint) {
-			Response response = new Response();
-			List<T> responses = getResponses(request.getQuery(), request.model,
-					hint);
-			response.setSuggestions(
-					responses.stream().map(BoundSuggestOracleSuggestion::new)
-							.collect(Collectors.toList()));
-			return GraphProjections.defaultProjections().project(response);
-		}
-
-		protected abstract List<T> getResponses(String query,
-				BoundSuggestOracleModel model, String hint);
 	}
 }

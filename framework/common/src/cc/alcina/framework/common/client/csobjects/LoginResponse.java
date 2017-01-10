@@ -14,6 +14,8 @@
 package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 
@@ -27,6 +29,15 @@ public class LoginResponse implements Serializable {
 	private String errorMsg;
 
 	private ClientInstance clientInstance;
+	private Map<String,String> properties = new LinkedHashMap<>();
+
+	public Map<String, String> getProperties() {
+		return this.properties;
+	}
+
+	public void setProperties(Map<String, String> properties) {
+		this.properties = properties;
+	}
 
 	public LoginResponse() {
 	}

@@ -14,6 +14,8 @@
 package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * 
@@ -25,6 +27,8 @@ public class LoginBean implements Serializable {
 	private String password;
 
 	private boolean rememberMe;
+	
+	private Map<String,String> properties = new LinkedHashMap<>();
 
 	public LoginBean() {
 	}
@@ -35,27 +39,35 @@ public class LoginBean implements Serializable {
 		this.rememberMe = rememberMe;
 	}
 
-	public String getUserName() {
-		return this.userName;
-	}
-
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
-
 	public String getPassword() {
 		return this.password;
 	}
 
-	public void setPassword(String password) {
-		this.password = password;
+	public Map<String, String> getProperties() {
+		return this.properties;
+	}
+
+	public String getUserName() {
+		return this.userName;
 	}
 
 	public boolean isRememberMe() {
 		return this.rememberMe;
 	}
 
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public void setProperties(Map<String, String> properties) {
+		this.properties = properties;
+	}
+
 	public void setRememberMe(boolean rememberMe) {
 		this.rememberMe = rememberMe;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
 	}
 }

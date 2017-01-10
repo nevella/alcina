@@ -244,7 +244,12 @@ public class Consort<D> {
 		topicPublisher.publishTopic(ERROR, throwable);
 		throw new WrappedRuntimeException(throwable);
 	}
-
+	protected void addStates(Collection<D> states) {
+		infoLogger.log(CommonUtils.formatJ("%s add:[%s]",
+				CommonUtils.padStringLeft("", depth(), '\t'),
+				CommonUtils.join(states, ", ")));
+		modifyStates(states, true);
+	}
 	public void removeStates(Collection<D> states) {
 		infoLogger.log(CommonUtils.formatJ("%s rmv:[%s]",
 				CommonUtils.padStringLeft("", depth(), '\t'),

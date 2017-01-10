@@ -121,17 +121,17 @@ public abstract class DevHelper {
 
 	public void loadJbossConfig(StringPrompter prompter) {
 		Preferences prefs = Preferences.userNodeForPackage(getClass());
-		String path = null;
+		configPath = null;
 		while (true) {
 			try {
-				path = getAppConfigPath(prefs);
+				configPath = getAppConfigPath(prefs);
 				ResourceUtilities
-						.registerCustomProperties(new FileInputStream(path));
+						.registerCustomProperties(new FileInputStream(configPath));
 				break;
 			} catch (Exception e) {
-				String prompt = getJbossConfigPrompt(path);
-				path = prompter.getValue(prompt);
-				prefs.put(JBOSS_CONFIG_PATH, path);
+				String prompt = getJbossConfigPrompt(configPath);
+				configPath = prompter.getValue(prompt);
+				prefs.put(JBOSS_CONFIG_PATH, configPath);
 			}
 		}
 	}
@@ -393,6 +393,8 @@ public abstract class DevHelper {
 	}
 
 	private Logger logger = null;
+
+	protected String configPath;
 
 	public Logger getTestLogger(String name) {
 		if (logger == null) {
