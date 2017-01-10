@@ -1437,4 +1437,10 @@ public class CommonUtils {
 					firstOnly, intersection, secondOnly);
 		}
 	}
+
+	public static void dedupeInPlace(List list) {
+		List mod = dedupe(list);
+		list.clear();
+		list.addAll(mod);
+	}
 }

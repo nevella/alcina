@@ -348,7 +348,9 @@ public class AlcinaMemCache implements RegistrableService {
 	TimeZone startupTz = (TimeZone) startupCal.getTimeZone().clone();
 
 	boolean expectLongRunning = false;
-	boolean publishMappingEvents ;
+
+	boolean publishMappingEvents;
+
 	public AlcinaMemCache() {
 		ThreadlocalTransformManager.threadTransformManagerWasResetListenerDelta(
 				resetListener, true);
@@ -357,8 +359,8 @@ public class AlcinaMemCache implements RegistrableService {
 		persistenceListener = new MemCachePersistenceListener();
 		maxLockQueueLength = ResourceUtilities.getInteger(AlcinaMemCache.class,
 				"maxLockQueueLength", 120);
-		publishMappingEvents= ResourceUtilities
-				.is(AlcinaMemCache.class, "publishMappingEvents");
+		publishMappingEvents = ResourceUtilities.is(AlcinaMemCache.class,
+				"publishMappingEvents");
 		Domain.registerHandler(new AlcinaMemCacheDomainHandler());
 	}
 
@@ -2471,9 +2473,7 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 	}
 
-	
 	class DetachedCacheObjectStorePsAware extends DetachedCacheObjectStore {
-
 		public DetachedCacheObjectStorePsAware() {
 			super(new PsAwareMultiplexingObjectCache());
 		}
@@ -2629,5 +2629,9 @@ public class AlcinaMemCache implements RegistrableService {
 		void startCommit() {
 			((PsAwareMultiplexingObjectCache) store.getCache()).startCommit();
 		}
+	}
+
+	public static <T extends HasIdAndLocalId> T ensureNonRawAndRegister(T t) {
+		return TransformManager.get().registerDomainObject(ensureNonRaw(t));
 	}
 }
