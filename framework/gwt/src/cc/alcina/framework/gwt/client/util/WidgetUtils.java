@@ -386,7 +386,7 @@ public class WidgetUtils {
 		if (parent == null) {
 			parent = (Panel) current.getParent();
 		}
-		if (current == null||current.getParent()!=parent) {
+		if (current == null || current.getParent() != parent) {
 			parent.add(newWidget);
 			return;
 		}
@@ -815,7 +815,6 @@ public class WidgetUtils {
 		pp.hide();
 	}
 
-
 	public static NativeEvent createZeroClick() {
 		return Document.get().createClickEvent(0, 0, 0, 0, 0, false, false,
 				false, false);
@@ -1218,12 +1217,26 @@ public class WidgetUtils {
 		}
 	}
 
-	public static native boolean isBrowserSupportsCopy() /*-{ 
-		return $wnd.document.queryCommandSupported("copy");
+	public static native boolean isBrowserSupportsCopy() /*-{
+        return $wnd.document.queryCommandSupported("copy");
 	}-*/;
-	
+
 	public static native void execCopy() /*-{
         return $wnd.document.execCommand("copy");
 	}-*/;
 
+	public static native void selectElement(Element el)/*-{
+        var  sel, range;
+        if ($wnd.getSelection && $doc.createRange) {
+            sel = $wnd.getSelection();
+            range = $doc.createRange();
+            range.selectNodeContents(el);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        } else if ($doc.body.createTextRange) {
+            range = $doc.body.createTextRange();
+            range.moveToElementText(el);
+            range.select();
+        }
+	}-*/;
 }
