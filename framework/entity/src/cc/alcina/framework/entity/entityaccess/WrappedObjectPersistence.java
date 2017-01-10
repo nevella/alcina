@@ -48,10 +48,9 @@ public class WrappedObjectPersistence {
 	public void unwrap(HasId wrapper, EntityManager entityManager,
 			WrappedObjectProvider wrappedObjectProvider,
 			Set<Long> invalidatedWrapperIds) throws Exception {
-		for (PropertyDescriptor pd : ensureWrapperDescriptors(wrapper
-				.getClass())) {
-			Wrapper info = pd.getReadMethod().getAnnotation(
-					Wrapper.class);
+		for (PropertyDescriptor pd : ensureWrapperDescriptors(
+				wrapper.getClass())) {
+			Wrapper info = pd.getReadMethod().getAnnotation(Wrapper.class);
 			PropertyDescriptor idpd = SEUtilities.getPropertyDescriptorByName(
 					wrapper.getClass(), info.idPropertyName());
 			Long wrapperId = (Long) idpd.getReadMethod().invoke(wrapper,
@@ -60,43 +59,48 @@ public class WrappedObjectPersistence {
 			if (invalidated) {
 				invalidatedWrapperIds.remove(wrapperId);
 			}
-			if (!invalidated
-					&& pd.getReadMethod().invoke(wrapper, new Object[0]) != null) {
+			if (!invalidated && pd.getReadMethod().invoke(wrapper,
+					new Object[0]) != null) {
 				continue;
 			}
 			if (wrapperId != null) {
-				Class<? extends WrapperPersistable> pType = (Class<? extends WrapperPersistable>) pd
-						.getPropertyType();
-				if (info.defaultImplementationType() != Void.class) {
-					pType = info.defaultImplementationType();
-				}
-				WrappedObject wrappedObject = wrappedObjectProvider
-						.getObjectWrapperForUser(pType, wrapperId,
-								entityManager);
-				Object unwrapped = null;
-				if (wrappedObject == null) {
-					if (LooseContext.is(CONTEXT_IGNORE_MISSING_WRAPPED_OBJECT)) {
-						TaggedLogger logger = Registry
-								.impl(TaggedLoggers.class)
-								.getLogger(
-										null,
-										AlcinaLoggingTags.WRAPPED_OBJECT_REF_INTEGRITY);
-						logger.format(
-								"Warning - ref integrity (wrapped object) - missing %s.%s #%s",
-								wrapper.getClass(), pd.getName(),
-								wrapper.getId());
-						if (LooseContext
-								.getBoolean(CONTEXT_THROW_MISSING_WRAPPED_OBJECT)) {
-							throw new MissingWrappedObjectException();
-						} else {
-							unwrapped = pType.newInstance();
-						}
+				try {
+					Class<? extends WrapperPersistable> pType = (Class<? extends WrapperPersistable>) pd
+							.getPropertyType();
+					if (info.defaultImplementationType() != Void.class) {
+						pType = info.defaultImplementationType();
 					}
-				} else {
-					checkWrappedObjectAccess(wrapper, wrappedObject, pType);
-					unwrapped = wrappedObject.getObject();
+					WrappedObject wrappedObject = wrappedObjectProvider
+							.getObjectWrapperForUser(pType, wrapperId,
+									entityManager);
+					Object unwrapped = null;
+					if (wrappedObject == null) {
+						if (LooseContext
+								.is(CONTEXT_IGNORE_MISSING_WRAPPED_OBJECT)) {
+							TaggedLogger logger = Registry
+									.impl(TaggedLoggers.class).getLogger(null,
+											AlcinaLoggingTags.WRAPPED_OBJECT_REF_INTEGRITY);
+							logger.format(
+									"Warning - ref integrity (wrapped object) - missing %s.%s #%s",
+									wrapper.getClass(), pd.getName(),
+									wrapper.getId());
+							if (LooseContext.getBoolean(
+									CONTEXT_THROW_MISSING_WRAPPED_OBJECT)) {
+								throw new MissingWrappedObjectException();
+							} else {
+								unwrapped = pType.newInstance();
+							}
+						}
+					} else {
+						checkWrappedObjectAccess(wrapper, wrappedObject, pType);
+						unwrapped = wrappedObject.getObject();
+					}
+					pd.getWriteMethod().invoke(wrapper, unwrapped);
+				} catch (RuntimeException e) {
+					System.out.format("Exception unwrapping/getObject %s\n",
+							wrapperId);
+					throw e;
 				}
-				pd.getWriteMethod().invoke(wrapper, unwrapped);
 			}
 		}
 	}
@@ -109,8 +113,8 @@ public class WrappedObjectPersistence {
 					.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				if (pd.getReadMethod() != null) {
-					Wrapper info = pd.getReadMethod().getAnnotation(
-							Wrapper.class);
+					Wrapper info = pd.getReadMethod()
+							.getAnnotation(Wrapper.class);
 					if (info != null) {
 						descriptors.add(pd);
 					}
@@ -134,37 +138,32 @@ public class WrappedObjectPersistence {
 		}
 	}
 
-	private void checkWrappedObjectAccess0(HasId wrapper,
-			WrappedObject wrapped, Class clazz) throws PermissionsException {
+	private void checkWrappedObjectAccess0(HasId wrapper, WrappedObject wrapped,
+			Class clazz) throws PermissionsException {
 		if (!PersistentSingleton.class.isAssignableFrom(clazz)
-				&& wrapped != null
-				&& wrapped.getUser().getId() != PermissionsManager.get()
-						.getUserId()) {
+				&& wrapped != null && wrapped.getUser()
+						.getId() != PermissionsManager.get().getUserId()) {
 			if (wrapper != null) {
 				if (wrapper instanceof IVersionableOwnable) {
 					IVersionableOwnable ivo = (IVersionableOwnable) wrapper;
 					if (ivo.getOwner().getId() == wrapped.getUser().getId()) {
 						return;// permitted
 					}
-					if (ivo.getOwnerGroup() != null
-							&& PermissionsManager.get().isMemberOfGroup(
-									ivo.getOwnerGroup().getName())) {
+					if (ivo.getOwnerGroup() != null && PermissionsManager.get()
+							.isMemberOfGroup(ivo.getOwnerGroup().getName())) {
 						return;// ditto
 					}
 				}
 			}
-			if (PermissionsManager.get().isPermissible(
-					PermissionsManager.ADMIN_PERMISSIBLE)) {
-				if (!PermissionsManager.get().isPermissible(
-						PermissionsManager.ROOT_PERMISSIBLE)) {
-					System.err
-							.println(CommonUtils
-									.formatJ(
-											"Warn - allowing access to %s : %s only via admin override",
-											wrapper == null ? "(null wrapper)"
-													: HiliHelper
-															.asDomainPoint(wrapper),
-											HiliHelper.asDomainPoint(wrapped)));
+			if (PermissionsManager.get()
+					.isPermissible(PermissionsManager.ADMIN_PERMISSIBLE)) {
+				if (!PermissionsManager.get()
+						.isPermissible(PermissionsManager.ROOT_PERMISSIBLE)) {
+					System.err.println(CommonUtils.formatJ(
+							"Warn - allowing access to %s : %s only via admin override",
+							wrapper == null ? "(null wrapper)"
+									: HiliHelper.asDomainPoint(wrapper),
+							HiliHelper.asDomainPoint(wrapped)));
 				}
 				return;// permitted
 			}
@@ -179,20 +178,20 @@ public class WrappedObjectPersistence {
 		List<Long> wrapperIds = new ArrayList<Long>();
 		try {
 			for (HasId wrapper : wrappers) {
-				PropertyDescriptor[] pds = Introspector.getBeanInfo(
-						wrapper.getClass()).getPropertyDescriptors();
+				PropertyDescriptor[] pds = Introspector
+						.getBeanInfo(wrapper.getClass())
+						.getPropertyDescriptors();
 				for (PropertyDescriptor pd : pds) {
 					if (pd.getReadMethod() != null) {
-						Wrapper info = pd.getReadMethod().getAnnotation(
-								Wrapper.class);
+						Wrapper info = pd.getReadMethod()
+								.getAnnotation(Wrapper.class);
 						if (info != null) {
 							PropertyDescriptor idpd = SEUtilities
 									.getPropertyDescriptorByName(
 											wrapper.getClass(),
 											info.idPropertyName());
-							Long wrapperId = (Long) idpd.getReadMethod()
-									.invoke(wrapper,
-											CommonUtils.EMPTY_OBJECT_ARRAY);
+							Long wrapperId = (Long) idpd.getReadMethod().invoke(
+									wrapper, CommonUtils.EMPTY_OBJECT_ARRAY);
 							if (wrapperId != null) {
 								wrapperIds.add(wrapperId);
 							}
