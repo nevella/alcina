@@ -156,10 +156,17 @@ public class CacheLookup<T, H extends HasIdAndLocalId>
 	@Override
 	public void remove(H hili) {
 		Object v1 = getChainedProperty(hili);
-		remove(normalise((T) v1), hili.getId());
+		if (v1 instanceof Collection) {
+			Set deduped = new LinkedHashSet((Collection) v1);
+			for (Object v2 : deduped) {
+				remove(normalise((T) v2), hili.getId());
+			}
+		} else {
+			remove(normalise((T) v1), hili.getId());
+		}
 	}
 
-	public void remove(T k1, Long value) {
+	private void remove(T k1, Long value) {
 		checkModification("remove");
 		Set<Long> set = get(k1);
 		if (set != null) {

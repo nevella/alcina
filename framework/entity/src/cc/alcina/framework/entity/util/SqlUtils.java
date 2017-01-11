@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 
@@ -214,6 +215,20 @@ public class SqlUtils {
 			conn.close();
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	public static <T> List<T> getMapped(Statement stmt, String sql,
+			ThrowingFunction<ResultSet, T> mapper) {
+		try {
+			ResultSet rs = stmt.executeQuery(sql);
+			List<T> result = new ArrayList<>();
+			while (rs.next()) {
+				result.add(mapper.apply(rs));
+			}
+			return result;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 }

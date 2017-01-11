@@ -63,19 +63,26 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 	public abstract IUser getUser();
 
 	public static class WrappedObjectHelper {
-		public static String xmlSerialize(Object object)  {
+		public static String xmlSerialize(Object object) {
 			List<Class> classes = getContextClasses(object.getClass());
 			try {
 				return xmlSerialize(object, classes);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
-			
+		}
+
+		public static String xmlSerializeTight(Object object) {
+			List<Class> classes = getContextClasses(object.getClass());
+			try {
+				return xmlSerialize(object, classes,true);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 
 		@SuppressWarnings("unchecked")
-		public static <T> T xmlDeserialize(Class<T> clazz, String xmlStr)
-				 {
+		public static <T> T xmlDeserialize(Class<T> clazz, String xmlStr) {
 			if (xmlStr == null) {
 				return null;
 			}
@@ -88,7 +95,6 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
-			
 		}
 
 		protected static <T> List<Class> getContextClasses(Class<T> clazz) {
@@ -96,7 +102,8 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 			if (!LooseContext.containsKey(CONTEXT_CLASSES)) {
 				classes = ensureJaxbSubclasses(clazz);
 			} else {
-				classes = new ArrayList<>((List)LooseContext.get(CONTEXT_CLASSES));
+				classes = new ArrayList<>(
+						(List) LooseContext.get(CONTEXT_CLASSES));
 			}
 			return classes;
 		}
@@ -120,9 +127,17 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 
 		public static String xmlSerialize(Object object,
 				Collection<Class> jaxbClasses) throws JAXBException {
+			return xmlSerialize(object, jaxbClasses, false);
+		}
+
+		public static String xmlSerialize(Object object,
+				Collection<Class> jaxbClasses, boolean tight)
+				throws JAXBException {
 			JAXBContext jc = JaxbUtils.getContext(jaxbClasses);
 			Marshaller m = jc.createMarshaller();
-			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+			if (!tight) {
+				m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+			}
 			StringWriter s = new StringWriter();
 			m.marshal(object, s);
 			return s.toString();
