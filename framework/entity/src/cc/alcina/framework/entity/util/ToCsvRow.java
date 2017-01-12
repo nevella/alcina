@@ -102,4 +102,10 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
+	protected void defineChildWithMultiple(String prefix, String... paths) {
+		for (String path : paths) {
+			define(String.format("%s.%s", prefix, path));
+		}
+	}
 }
