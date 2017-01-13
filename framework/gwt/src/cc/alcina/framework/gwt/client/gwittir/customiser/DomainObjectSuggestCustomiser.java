@@ -41,6 +41,7 @@ public class DomainObjectSuggestCustomiser
 	public static final String READONLY_CUSTOMISER_CLASS = "readonlyCustomiserClass";
 
 	public static final String HINT = "hint";
+
 	public static final String SHOW_ON_FOCUS = "showOnFocus";
 
 	private Class classValue;
@@ -62,8 +63,8 @@ public class DomainObjectSuggestCustomiser
 				BoundSuggestOracleResponseTypeRenderer.class);
 		readonlyCustomiserClassValue = NamedParameter.Support
 				.classValue(info.parameters(), READONLY_CUSTOMISER_CLASS, null);
-		hintValue = NamedParameter.Support.stringValue(info.parameters(),
-				HINT, "");
+		hintValue = NamedParameter.Support.stringValue(info.parameters(), HINT,
+				"");
 		showOnFocus = NamedParameter.Support.booleanValue(info.parameters(),
 				SHOW_ON_FOCUS);
 		return editable ? this

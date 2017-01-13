@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.widget.complex;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -118,6 +119,7 @@ public abstract class MultilineGridEditor<H extends HasIdAndLocalId>
 			tableToolbarHolder.add(toolbar);
 		}
 		List<H> values = new ArrayList<>(getValue());
+		values = filterVisibleValues(values);
 		values.sort(HiliComparator.INSTANCE);
 		values.forEach(v -> TransformManager.get().registerDomainObject(v));
 		grids = new ArrayList<>();
@@ -132,16 +134,30 @@ public abstract class MultilineGridEditor<H extends HasIdAndLocalId>
 			grids.add(grid);
 			gridAndActions.add(grid);
 			if (editable) {
-				Link link = Link.createNoUnderline("Delete", evt -> {
-					doDeleteRow(value);
-				});
-				gridAndActions.add(
-						UsefulWidgetFactory.styledSimplePanel(link, "delete"));
+				createPerObjectActions(gridAndActions, value);
 			}
 			tableToolbarHolder.add(gridAndActions);
 		}
 		holder.add(tableToolbarHolder);
 		toolbar.addVetoableActionListener(toolbarListener);
+	}
+
+	private void createPerObjectActions(FlowPanel gridAndActions, H rowValue) {
+		List<Link> links = createPerRowEditActions(rowValue);
+		FlowPanel panel = UsefulWidgetFactory.styledPanel("per-object-links");
+		links.stream().forEach(link -> panel.add(link));
+		gridAndActions.add(panel);
+	}
+
+	protected List<Link> createPerRowEditActions(H rowValue) {
+		Link link = Link.createNoUnderline("Delete", evt -> {
+			doDeleteRow(rowValue);
+		});
+		return Collections.singletonList(link);
+	}
+
+	protected List<H> filterVisibleValues(List<H> values) {
+		return values;
 	}
 
 	protected void customiseActions(List<PermissibleAction> actions) {

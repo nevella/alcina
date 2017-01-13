@@ -11,12 +11,11 @@ import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
+import cc.alcina.framework.gwt.client.widget.Link;
 
 public abstract class BaseMultilineEditorCustomiser<T extends HasIdAndLocalId>
 		implements Customiser, BoundWidgetProvider {
-
 	private boolean editable;
-
 
 	@Override
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
@@ -62,4 +61,13 @@ public abstract class BaseMultilineEditorCustomiser<T extends HasIdAndLocalId>
 	}
 
 	public abstract String getCreateActionDisplayName();
+
+	public List<T> filterVisibleValues(List<T> values) {
+		return values;
+	}
+
+	public List<Link> customisePerRowEditActions(List<Link> actions, T rowValue,
+			BaseMultilineEditor editor) {
+		return actions;
+	}
 }

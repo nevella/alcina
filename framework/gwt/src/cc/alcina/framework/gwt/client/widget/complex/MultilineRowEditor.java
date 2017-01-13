@@ -106,6 +106,7 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 					| BoundTableExt.HANDLES_AS_CHECKBOXES;
 		}
 		List<H> values = new ArrayList<>(getValue());
+		values = filterVisibleValues(values);
 		values.sort(HiliComparator.INSTANCE);
 		values.forEach(v -> TransformManager.get().registerDomainObject(v));
 		PaneWrapperWithObjects view = new ContentViewFactory().noCaption()
@@ -118,6 +119,10 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 		tableToolbarHolder.add(view);
 		holder.add(tableToolbarHolder);
 		toolbar.addVetoableActionListener(toolbarListener);
+	}
+
+	protected List<H> filterVisibleValues(List<H> values) {
+		return values;
 	}
 
 	protected void customiseActions(List<PermissibleAction> actions) {

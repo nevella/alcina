@@ -13,19 +13,12 @@ public class BaseMultilineRowEditor<T extends HasIdAndLocalId>
 		return this.customiser;
 	}
 
+	public List<T> provideSelected() {
+		return table.getSelected();
+	}
+
 	public void setCustomiser(BaseMultilineEditorCustomiser<T> customiser) {
 		this.customiser = customiser;
-	}
-
-	@Override
-	protected Class<T> getItemClass() {
-		return customiser.getItemClass();
-	}
-
-	@Override
-	protected boolean handleCustomAction(MultilineRowEditor editor,
-			PermissibleAction action) {
-		return customiser.handleCustomAction(this, action);
 	}
 
 	@Override
@@ -43,7 +36,19 @@ public class BaseMultilineRowEditor<T extends HasIdAndLocalId>
 		customiser.doDeleteRows(table.getSelected(), this);
 	}
 
-	public List<T> provideSelected() {
-		return table.getSelected();
+	@Override
+	protected List<T> filterVisibleValues(List<T> values) {
+		return customiser.filterVisibleValues(values);
+	}
+
+	@Override
+	protected Class<T> getItemClass() {
+		return customiser.getItemClass();
+	}
+
+	@Override
+	protected boolean handleCustomAction(MultilineRowEditor editor,
+			PermissibleAction action) {
+		return customiser.handleCustomAction(this, action);
 	}
 }
