@@ -937,7 +937,7 @@ public class SEUtilities {
 	}
 
 	public static String normalizeWhitespaceAndTrim(String input) {
-		return normalizeWhitespace(input).trim();
+		return input == null ? null : normalizeWhitespace(input).trim();
 	}
 
 	public static String normalizeWhitespaceBreaking(String input) {

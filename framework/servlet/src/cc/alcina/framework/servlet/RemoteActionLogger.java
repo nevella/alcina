@@ -6,7 +6,6 @@ import java.util.Enumeration;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.Category;
-import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.HierarchyEventListener;
@@ -14,6 +13,7 @@ import org.apache.log4j.spi.LoggerFactory;
 import org.apache.log4j.spi.LoggerRepository;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 
 public class RemoteActionLogger extends Logger {
@@ -104,7 +104,7 @@ public class RemoteActionLogger extends Logger {
 				.setName(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY);
 		addAppender(writerAppender);
 		setLevel(Level.DEBUG);
-		ConsoleAppender consoleAppender = new ConsoleAppender(
+		SafeConsoleAppender consoleAppender = new SafeConsoleAppender(
 				RemoteActionLoggerProvider.layout);
 		addAppender(consoleAppender);
 	}

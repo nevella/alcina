@@ -46,6 +46,7 @@ import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
+import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.ServletLayerObjects;
@@ -107,7 +108,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		Logger logger = Logger
 				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
 		Layout l = new PatternLayout("%-5p [%c{1}] %m%n");
-		Appender a = new ConsoleAppender(l);
+		Appender a = new SafeConsoleAppender(l);
 		String mainLoggerAppenderName = AlcinaServerConfig.MAIN_LOGGER_APPENDER;
 		a.setName(mainLoggerAppenderName);
 		if (logger.getAppender(mainLoggerAppenderName) == null) {
@@ -127,7 +128,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			Logger metricLogger = Logger.getLogger(metricLoggerName);
 			metricLogger.removeAllAppenders();
 			metricLogger.addAppender(
-					new ConsoleAppender(MetricLogging.METRIC_LAYOUT));
+					new SafeConsoleAppender(MetricLogging.METRIC_LAYOUT));
 			metricLogger.setLevel(Level.DEBUG);
 			metricLogger.setAdditivity(false);
 			// MetricLogging.muteLowPriority=false;

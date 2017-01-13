@@ -41,6 +41,12 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 			this.function = function;
 			accessor = new PropertyPathAccessor(propertyPath);
 		}
+
+		@Override
+		public String toString() {
+			return CommonUtils.formatJ("Path: %s - alias: %s - function: %s",
+					propertyPath, alias, function);
+		}
 	}
 
 	protected void define(String propertyPath) {

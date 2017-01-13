@@ -26,12 +26,16 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.WriterAppender;
+
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.GWTBridge;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
@@ -59,6 +63,7 @@ import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
+import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
@@ -68,11 +73,6 @@ import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 import cc.alcina.framework.servlet.ServletLayerObjects;
-
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.GWTBridge;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.Widget;
 
 public abstract class DevHelper {
 	public class GWTBridgeDummy extends GWTBridge {
@@ -401,7 +401,7 @@ public abstract class DevHelper {
 			logger = Logger.getLogger("");
 			logger.setLevel(Level.INFO);
 			Layout l = new PatternLayout("%-5p [%c{1}] %m%n");
-			ConsoleAppender a = new ConsoleAppender(l);
+			SafeConsoleAppender a = new SafeConsoleAppender(l);
 			messagingWriter = new MessagingWriter(System.out);
 			a.setWriter(messagingWriter);
 			String stdAppndrName = "Standard_appender";
@@ -418,7 +418,7 @@ public abstract class DevHelper {
 			Logger mlogger = MetricLogging.metricLogger;
 			mlogger.setLevel(Level.DEBUG);
 			Layout l2 = new PatternLayout("%m%n");
-			ConsoleAppender a2 = new ConsoleAppender(l2);
+			SafeConsoleAppender a2 = new SafeConsoleAppender(l2);
 			a2.setWriter(messagingWriter);
 			mlogger.addAppender(a2);
 			mlogger.setAdditivity(false);

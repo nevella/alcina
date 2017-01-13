@@ -35,6 +35,7 @@ import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
+import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 
 public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IUser, G extends IGroup, IID extends Iid> {
@@ -149,7 +150,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		Logger logger = Logger.getLogger(AlcinaServerConfig.get()
 				.getMainLoggerName());
 		Layout l = new PatternLayout("%-5p [%c{1}] %m%n");
-		Appender a = new ConsoleAppender(l);
+		Appender a = new SafeConsoleAppender(l);
 		String mainLoggerAppenderName = AlcinaServerConfig.MAIN_LOGGER_APPENDER;
 		a.setName(mainLoggerAppenderName);
 		if (logger.getAppender(mainLoggerAppenderName) == null) {
@@ -161,7 +162,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		if (metricLoggerName != null) {
 			Logger metricLogger = Logger.getLogger(metricLoggerName);
 			metricLogger.removeAllAppenders();
-			metricLogger.addAppender(new ConsoleAppender(
+			metricLogger.addAppender(new SafeConsoleAppender(
 					MetricLogging.METRIC_LAYOUT));
 			metricLogger.setLevel(Level.DEBUG);
 			metricLogger.setAdditivity(false);
