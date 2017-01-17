@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 public class StringMap extends LinkedHashMap<String, String> {
-	private static final long serialVersionUID = 8219302205025519855L;
+	private static final transient long serialVersionUID = 8219302205025519855L;
 	
 	public static final StringMap EMPTY_PROPS = new StringMap();
 
