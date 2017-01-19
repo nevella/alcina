@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.cache.CacheFilter;
 import cc.alcina.framework.common.client.cache.CacheQuery;
@@ -51,22 +52,16 @@ public class MemcacheSearcher {
 	static class TQuery extends CacheQuery<TQuery> {
 		@Override
 		public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
-			List<T> result = new ArrayList<>();
 			Collection<T> values = Registry.impl(SearcherCollectionSource.class)
 					.getCollectionFor(clazz);
-			for (T value : values) {
-				boolean allow = true;
+			return values.parallelStream().filter(v -> {
 				for (CacheFilter filter : getFilters()) {
-					if (!filter.asCollectionFilter().allow(value)) {
-						allow = false;
-						break;
+					if (!filter.asCollectionFilter().allow(v)) {
+						return false;
 					}
 				}
-				if (allow) {
-					result.add((T) value);
-				}
-			}
-			return result;
+				return true;
+			}).collect(Collectors.toList());
 		}
 	}
 

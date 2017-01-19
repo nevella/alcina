@@ -20,6 +20,10 @@ public class SearchOrders<T> implements Comparator<T>, Serializable {
 		addOrder(new IdOrder(), true);
 		return this;
 	}
+	public SearchOrders<T> addHiliDescOrder() {
+		addOrder(new IdOrder(), false);
+		return this;
+	}
 
 	private transient Entry<SearchOrder<T>, Boolean> soleOrder = null;
 

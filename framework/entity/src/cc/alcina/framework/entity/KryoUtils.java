@@ -114,6 +114,7 @@ public class KryoUtils {
 			object = writeReplace(object);
 			kryo.writeObject(output, object);
 			output.flush();
+			output.close();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -136,6 +137,7 @@ public class KryoUtils {
 
 	protected static Kryo newKryo() {
 		Kryo kryo = new Kryo();
+		kryo.getFieldSerializerConfig().setOptimizedGenerics(true);
 		if (LooseContext.containsKey(CONTEXT_OVERRIDE_CLASSLOADER)) {
 			kryo.setClassLoader(LooseContext.get(CONTEXT_OVERRIDE_CLASSLOADER));
 		} else {
