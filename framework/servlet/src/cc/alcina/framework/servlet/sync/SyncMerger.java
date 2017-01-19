@@ -41,6 +41,8 @@ import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
  * Target is 'right' - so if left doesn't exist, will be a delete - if right
  * doesn't, a create
  * 
+ * Note that left *must* have distinct keys
+ * 
  * @author nick@alcina.cc
  * 
  *         In general, when adding a merge field, make sure that the object's
