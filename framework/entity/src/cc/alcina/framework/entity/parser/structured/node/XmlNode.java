@@ -383,6 +383,11 @@ public class XmlNode {
 			n.children.nodes().forEach(this::append);
 		}
 
+		public void importFrom(XmlNode n) {
+			Node importNode = doc.domDoc().importNode(n.node, true);
+			append(doc.nodeFor(importNode));
+		}
+
 		public void append(Collection<XmlNode> childNodes) {
 			childNodes.stream().forEach(n -> append(n));
 		}
