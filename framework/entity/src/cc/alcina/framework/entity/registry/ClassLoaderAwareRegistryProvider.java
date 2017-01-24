@@ -13,40 +13,35 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry.Regi
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
+	public static void clearThreadLocals(Class... clear) {
+		try {
+			for (Class clazz : clear) {
+				while (clazz != null) {
+					for (Field f : clazz.getDeclaredFields()) {
+						if (ThreadLocal.class.isAssignableFrom(f.getType())
+								&& Modifier.isStatic(f.getModifiers())) {
+							f.setAccessible(true);
+							ThreadLocal tl = (ThreadLocal) f.get(null);
+							if (tl != null) {
+								tl.remove();
+							}
+						}
+					}
+					clazz = clazz.getSuperclass();
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	Map<ClassLoader, Registry> perClassLoader = new HashMap<ClassLoader, Registry>();
 
 	ClassLoader lastClassLoader;
 
 	Registry lastRegistry;
 
-	@Override
-	public Registry getRegistry() {
-		ClassLoader contextClassLoader = Thread.currentThread()
-				.getContextClassLoader();
-		if (contextClassLoader == lastClassLoader) {
-			return lastRegistry;
-		}
-		Registry registry = perClassLoader.get(contextClassLoader);
-		if (registry == null) {
-			if (perClassLoader.size() < 2) {
-				Registry existing = CommonUtils.first(perClassLoader.values());
-				registry = new Registry();
-				if (existing != null) {
-					existing.shareSingletonMapTo(registry);
-				}
-				perClassLoader.put(contextClassLoader, registry);
-				System.out.println("Created registry for classloader "
-						+ contextClassLoader);
-			} else {
-				throw new RuntimeException(
-						String.format("Too many registies: \n%s\n%s\n",
-								contextClassLoader, perClassLoader.keySet()));
-			}
-		}
-		lastClassLoader = contextClassLoader;
-		lastRegistry = registry;
-		return registry;
-	}
+	private ClassLoader servletLayerClassLoader;
 
 	@Override
 	public void appShutdown() {
@@ -87,25 +82,26 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 		}
 	}
 
-	public static void clearThreadLocals(Class... clear) {
-		try {
-			for (Class clazz : clear) {
-				while (clazz != null) {
-					for (Field f : clazz.getDeclaredFields()) {
-						if (ThreadLocal.class.isAssignableFrom(f.getType())
-								&& Modifier.isStatic(f.getModifiers())) {
-							f.setAccessible(true);
-							ThreadLocal tl = (ThreadLocal) f.get(null);
-							if (tl != null) {
-								tl.remove();
-							}
-						}
-					}
-					clazz = clazz.getSuperclass();
-				}
+	public <T> void ensureSingletonRegistered(Class<? super T> clazz, T t) {
+		for (Registry registryInstance : getPerClassLoader().values()) {
+			registryInstance.ensureSingletonRegistered(clazz, t);
+		}
+	}
+
+	public void forAllRegistries(Class<?> clazz) {
+		Registry sourceInstance = null;
+		for (Registry registryInstance : getPerClassLoader().values()) {
+			if (registryInstance.lookup(false, clazz, void.class,
+					false) != null) {
+				sourceInstance = registryInstance;
+				break;
 			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+		}
+		for (Registry registryInstance : getPerClassLoader().values()) {
+			if (registryInstance == sourceInstance) {
+				continue;
+			}
+			registryInstance.copyFrom(sourceInstance, clazz);
 		}
 	}
 
@@ -113,9 +109,43 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 		return this.perClassLoader;
 	}
 
-	public <T> void ensureSingletonRegistered(Class<? super T> clazz, T t) {
-		for (Registry registryInstance : getPerClassLoader().values()) {
-			registryInstance.ensureSingletonRegistered(clazz, t);
+	@Override
+	public Registry getRegistry() {
+		ClassLoader contextClassLoader = Thread.currentThread()
+				.getContextClassLoader();
+		if (contextClassLoader == lastClassLoader) {
+			return lastRegistry;
 		}
+		Registry registry = perClassLoader.get(contextClassLoader);
+		if (registry == null) {
+			if (perClassLoader.size() < 2) {
+				Registry existing = CommonUtils.first(perClassLoader.values());
+				registry = new Registry();
+				if (existing != null) {
+					existing.shareSingletonMapTo(registry);
+				}
+				perClassLoader.put(contextClassLoader, registry);
+				System.out.println("Created registry for classloader "
+						+ contextClassLoader);
+			} else {
+				throw new RuntimeException(
+						String.format("Too many registies: \n%s\n%s\n",
+								contextClassLoader, perClassLoader.keySet()));
+			}
+		}
+		lastClassLoader = contextClassLoader;
+		lastRegistry = registry;
+		return registry;
+	}
+
+	public void registerServletLayerClassloader(ClassLoader classLoader) {
+		this.servletLayerClassLoader = classLoader;
+	}
+
+	public static Registry servletLayerRegistry() {
+		ClassLoaderAwareRegistryProvider clRegistry = (ClassLoaderAwareRegistryProvider) Registry
+				.getProvider();
+		return clRegistry.perClassLoader
+				.get(clRegistry.servletLayerClassLoader);
 	}
 }

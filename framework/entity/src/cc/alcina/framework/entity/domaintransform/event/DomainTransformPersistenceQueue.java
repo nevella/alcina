@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.ThrowingSupplier;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
@@ -44,7 +45,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	private static final long PERIODIC_DB_CHECK_MS = 5
 			* TimeConstants.ONE_MINUTE_MS;
 
-	public static int WAIT_FOR_PERSISTED_REQUEST_TIMEOUT_MS = 30 * 1000;
+	public static int WAIT_FOR_PERSISTED_REQUEST_TIMEOUT_MS = ResourceUtilities.getInteger(DomainTransformPersistenceQueue.class,"timeoutMs");
 
 	boolean logDbEventCheck = true;
 

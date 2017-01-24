@@ -28,7 +28,7 @@ public class BaseMultilineRowEditor<T extends HasIdAndLocalId>
 
 	@Override
 	protected void doCreateRow() {
-		customiser.doCreateRow(table, this);
+		customiser.doCreateRow(getModel(), this);
 	}
 
 	@Override

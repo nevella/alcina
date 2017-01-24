@@ -629,4 +629,23 @@ public class Registry {
 			registerSingleton(clazz, void.class, t);
 		}
 	}
+
+	public void copyFrom(Registry sourceInstance, Class<?> clazz) {
+		registry.asMap(clazz).putMulti(sourceInstance.registry.asMap(clazz));
+		targetPriority.asMap(clazz)
+				.putMulti(sourceInstance.targetPriority.asMap(clazz));
+		exactMap.asMap(clazz).putMulti(sourceInstance.exactMap.asMap(clazz));
+		exactMap.asMap(clazz).putMulti(sourceInstance.exactMap.asMap(clazz));
+		implementationTypeMap.asMap(clazz)
+				.putMulti(sourceInstance.implementationTypeMap.asMap(clazz));
+		if (sourceInstance.singletons.containsKey(clazz)) {
+			singletons.asMap(clazz)
+					.putMulti(sourceInstance.singletons.asMap(clazz));
+			String cn = clazz.getName();
+			if (voidPointSingletons.containsKey(cn)) {
+				voidPointSingletons.put(cn,
+						sourceInstance.voidPointSingletons.get(cn));
+			}
+		}
+	}
 }
