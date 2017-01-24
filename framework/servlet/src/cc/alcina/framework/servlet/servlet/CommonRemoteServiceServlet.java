@@ -1154,8 +1154,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					hint);
 			response.setSuggestions(
 					responses.stream().map(BoundSuggestOracleSuggestion::new)
+							.limit(getSuggestionLimit())
 							.collect(Collectors.toList()));
 			return GraphProjections.defaultProjections().project(response);
+		}
+
+		protected long getSuggestionLimit() {
+			return 50;
 		}
 
 		protected abstract List<T> getResponses(String query,

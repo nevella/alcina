@@ -14,8 +14,8 @@
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.Objects;
+import java.util.Optional;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FocusListener;
 import com.google.gwt.user.client.ui.SuggestBox;
 import com.google.gwt.user.client.ui.SuggestOracle;
@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleModel;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleSuggestion;
+import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
 
 /**
  * 
@@ -69,7 +70,8 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 	public void suggestOracle(BoundSuggestOracle suggestOracle) {
 		this.suggestOracle = suggestOracle;
 		base = new SuggestBox(suggestOracle);
-		base.getValueBox().getElement().setPropertyString("placeholder", "Type for suggestions");
+		base.getValueBox().getElement().setPropertyString("placeholder",
+				"Type for suggestions");
 		base.addSelectionHandler(evt -> {
 			if (evt.getSelectedItem() != null) {
 				setValue((T) ((BoundSuggestOracleSuggestion) evt
@@ -131,6 +133,29 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 	}
 
 	public static class BoundSuggestOracle extends SuggestOracle {
+		class SuggestCallback extends CancellableAsyncCallback<Response> {
+			private Callback callback;
+
+			private Request request;
+
+			public SuggestCallback(Request request, Callback callback) {
+				this.request = request;
+				this.callback = callback;
+			}
+
+			@Override
+			public void onFailure(Throwable caught) {
+				throw new WrappedRuntimeException(caught);
+			}
+
+			@Override
+			public void onSuccess(Response response) {
+				if (!isCancelled()) {
+					callback.onSuggestionsReady(request, response);
+				}
+			}
+		}
+
 		public Object model;
 
 		private Class clazz;
@@ -156,6 +181,8 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 			requestSuggestions(request, callback);
 		}
 
+		SuggestCallback runningCallback = null;
+
 		@Override
 		public void requestSuggestions(Request request, Callback callback) {
 			BoundSuggestOracleRequest boundRequest = new BoundSuggestOracleRequest();
@@ -166,18 +193,10 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 			if (model instanceof BoundSuggestOracleModel) {
 				boundRequest.model = (BoundSuggestOracleModel) model;
 			}
-			ClientBase.getCommonRemoteServiceAsyncInstance()
-					.suggest(boundRequest, new AsyncCallback<Response>() {
-						@Override
-						public void onFailure(Throwable caught) {
-							throw new WrappedRuntimeException(caught);
-						}
-
-						@Override
-						public void onSuccess(Response response) {
-							callback.onSuggestionsReady(request, response);
-						}
-					});
+			Optional.ofNullable(runningCallback).ifPresent(sc->sc.setCancelled(true));
+			runningCallback=new SuggestCallback(request, callback);
+			ClientBase.getCommonRemoteServiceAsyncInstance().suggest(
+					boundRequest, runningCallback);
 		}
 	}
 }
