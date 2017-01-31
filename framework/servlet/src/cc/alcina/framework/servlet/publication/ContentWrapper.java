@@ -58,7 +58,7 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 			tSrc = tSrc.replace(XSL_OUTPUT_METHOD_XML, XSL_OUTPUT_METHOD_HTML);
 		}
 		trans = ResourceUtilities.writeStringToInputStream(tSrc);
-		Source trSource = new StreamSource(trans);
+		Source trSource = XmlUtils.interpolateStreamSource(trans);
 		Source dataSource = new DOMSource(wrappingDoc);
 		String wrappedContent = XmlUtils.transformDocToString(dataSource,
 				trSource, marker);
@@ -134,8 +134,8 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 	}
 
 	protected void marshallToDoc() throws Exception {
-		Set<Class> jaxbClasses = new HashSet<Class>(Registry.get().lookup(
-				JaxbContextRegistration.class));
+		Set<Class> jaxbClasses = new HashSet<Class>(
+				Registry.get().lookup(JaxbContextRegistration.class));
 		JAXBContext jc = JaxbUtils.getContext(jaxbClasses);
 		Marshaller m = jc.createMarshaller();
 		m.marshal(wrapper, wrappingDoc);
@@ -146,9 +146,10 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 
 	protected void transform(String xslPath, boolean formatRequiresXml)
 			throws Exception {
-		InputStream trans = getWrapperTransformClass().getResourceAsStream(xslPath);
-		String marker = getWrapperTransformClass().getName() + "/" + xslPath + "-"
-				+ formatRequiresXml;
+		InputStream trans = getWrapperTransformClass()
+				.getResourceAsStream(xslPath);
+		String marker = getWrapperTransformClass().getName() + "/" + xslPath
+				+ "-" + formatRequiresXml;
 		if (!ResourceUtilities.getBoolean(ContentWrapper.class,
 				"cacheTransforms")) {
 			marker += Math.random();

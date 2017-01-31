@@ -8,10 +8,11 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class StringMap extends LinkedHashMap<String, String> {
 	private static final transient long serialVersionUID = 8219302205025519855L;
-	
+
 	public static final StringMap EMPTY_PROPS = new StringMap();
 
 	public static StringMap fromKvStringList(String list) {
@@ -88,14 +89,14 @@ public class StringMap extends LinkedHashMap<String, String> {
 	public StringMap() {
 	}
 
-	public StringMap(Map<String, String> otherMap) {
-		super(otherMap);
-	}
-
 	public StringMap(List<String> list) {
 		for (Iterator<String> itr = list.iterator(); itr.hasNext();) {
 			put(itr.next(), itr.next());
 		}
+	}
+
+	public StringMap(Map<String, String> otherMap) {
+		super(otherMap);
 	}
 
 	@Override
@@ -103,8 +104,27 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return new StringMap(this);
 	}
 
+	public boolean existsAndIsBooleanFalse(String key) {
+		return containsKey(key) && !is(key);
+	}
+
+	public String firstKey() {
+		return size() == 0 ? null : keySet().iterator().next();
+	}
+
 	public boolean is(String key) {
 		return Boolean.valueOf(get(key));
+	}
+
+	public String replaceMatch(String string) {
+		return containsKey(string) ? get(string) : string;
+	}
+
+	public String replaceString(String string) {
+		for (Map.Entry<String, String> entry : entrySet()) {
+			string = string.replace(entry.getKey(), entry.getValue());
+		}
+		return string;
 	}
 
 	public void setBooleanOrRemove(String key, boolean value) {
@@ -113,6 +133,10 @@ public class StringMap extends LinkedHashMap<String, String> {
 		} else {
 			remove(key);
 		}
+	}
+
+	public StringMap sorted() {
+		return new StringMap(new TreeMap(this));
 	}
 
 	public String toPropertyString() {
@@ -127,20 +151,5 @@ public class StringMap extends LinkedHashMap<String, String> {
 					.replace("\n", "\\n"));
 		}
 		return sb.toString();
-	}
-
-	public String firstKey() {
-		return size() == 0 ? null : keySet().iterator().next();
-	}
-
-	public String replaceString(String string) {
-		for (Map.Entry<String, String> entry : entrySet()) {
-			string = string.replace(entry.getKey(), entry.getValue());
-		}
-		return string;
-	}
-
-	public String replaceMatch(String string) {
-		return containsKey(string) ? get(string) : string;
 	}
 }

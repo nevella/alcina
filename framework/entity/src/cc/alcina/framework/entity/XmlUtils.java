@@ -17,7 +17,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -44,6 +43,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import org.apache.xerces.parsers.DOMParser;
 import org.w3c.dom.Attr;
@@ -77,14 +77,6 @@ import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.XmlUtils.DOMLocation;
-import cc.alcina.framework.entity.XmlUtils.IsIgnorePredicate;
-import cc.alcina.framework.entity.XmlUtils.IsInlinePredicate;
-import cc.alcina.framework.entity.XmlUtils.SurroundingBlockTuple;
-import cc.alcina.framework.entity.XmlUtils.TransformerFactoryConfigurator;
-import cc.alcina.framework.entity.XmlUtils.XPointerConverter;
-import cc.alcina.framework.entity.XmlUtils.XmlErrHandler;
-import cc.alcina.framework.entity.XmlUtils.XmlInsertionCursor;
 
 /**
  *
@@ -107,6 +99,8 @@ public class XmlUtils {
 
 	public static final String CONTEXT_MUTE_XML_SAX_EXCEPTIONS = XmlUtils.class
 			.getName() + ".CONTEXT_MUTE_XML_SAX_EXCEPTIONS";
+
+	private static XPointerConverter xPointerConverter;
 
 	public static List<Node> allChildren(Node node) {
 		Stack<Node> nodes = new Stack<Node>();
@@ -144,6 +138,10 @@ public class XmlUtils {
 		return true;
 	}
 
+	public static List<Element> childElements(Node node) {
+		return nodeListToElementList(node.getChildNodes());
+	}
+
 	public static String cleanXmlHeaders(String xml) {
 		xml = xml.replaceAll("<\\?xml.+?\\?>", "");
 		String regex = "<!DOCTYPE .+?>";
@@ -170,11 +168,34 @@ public class XmlUtils {
 		return db.newDocument();
 	}
 
+	public static Element createElementAttr(Document doc, String tagName,
+			String attr, String value) {
+		Element e = doc.createElement(tagName);
+		e.setAttribute(attr, value);
+		return e;
+	}
+
 	public static Element createSimpleTextElement(Document doc, String tag,
 			String textContent) {
 		Element element = doc.createElement(tag);
 		element.setTextContent(textContent);
 		return element;
+	}
+
+	public static Element earliest(Element... elements) {
+		Element earliest = null;
+		for (Element element : elements) {
+			if (element != null) {
+				if (earliest == null) {
+					earliest = element;
+				} else {
+					if (isEarlierThan(element, earliest)) {
+						earliest = element;
+					}
+				}
+			}
+		}
+		return earliest;
 	}
 
 	public static String elementNamesToLowerCase(String s) {
@@ -284,6 +305,40 @@ public class XmlUtils {
 		return result;
 	}
 
+	public static Element getContainingBlock(Node n) {
+		while (n != null) {
+			if (n.getNodeType() == Node.ELEMENT_NODE
+					&& isBlockHTMLElement((Element) n)) {
+				return (Element) n;
+			}
+			n = n.getParentNode();
+		}
+		return null;
+	}
+
+	public static Element getContainingBlock(Node n,
+			Predicate<Element> blockTest) {
+		while (n != null) {
+			if (n.getNodeType() == Node.ELEMENT_NODE
+					&& (isBlockHTMLElement((Element) n)
+							|| blockTest.test((Element) n))) {
+				return (Element) n;
+			}
+			n = n.getParentNode();
+		}
+		return null;
+	}
+
+	public static Element getContainingElement(Node n) {
+		while (n != null) {
+			if (n.getNodeType() == Node.ELEMENT_NODE) {
+				return (Element) n;
+			}
+			n = n.getParentNode();
+		}
+		return null;
+	}
+
 	public static Element getElementExt(Element root, String tagName,
 			String attrName, String attrValue) {
 		List<Element> elementList = nodeListToElementList(
@@ -294,6 +349,184 @@ public class XmlUtils {
 			}
 		}
 		return null;
+	}
+
+	public static Text getFirstTextChild(Node node) {
+		NodeList nl = node.getChildNodes();
+		int length = nl.getLength();
+		for (int i = 0; i < length; i++) {
+			node = nl.item(i);
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				Text t = getFirstTextChild(node);
+				if (t != null) {
+					return t;
+				}
+			}
+			if (node.getNodeType() == Node.TEXT_NODE) {
+				return (Text) node;
+			}
+		}
+		return null;
+	}
+
+	public static Element getNextElement(Node node) {
+		List<Node> kids = nodeListToList(node.getParentNode().getChildNodes());
+		for (int idx = kids.indexOf(node) + 1; idx < kids.size(); idx++) {
+			Node kid = kids.get(idx);
+			if (kid.getNodeType() == Node.ELEMENT_NODE) {
+				return (Element) kid;
+			}
+		}
+		return null;
+	}
+
+	public static int getNodeIndexInParent(Node n) {
+		NodeList siblings = n.getParentNode().getChildNodes();
+		int index = 0;
+		short nodeType = n.getNodeType();
+		int length = siblings.getLength();
+		for (int i = 0; i < length; i++) {
+			Node test = siblings.item(i);
+			if (test.getNodeType() == nodeType) {
+				if (nodeType == Node.ELEMENT_NODE) {
+					if (test.getNodeName().equalsIgnoreCase(n.getNodeName())) {
+						index++;
+					}
+				} else {
+					index++;
+				}
+			}
+			if (test == n) {
+				break;
+			}
+		}
+		return index;
+	}
+
+	public static Element getParentElement(Element element) {
+		return (Element) element.getParentNode();
+	}
+
+	public static Element getPreContainingBlock(Element elt) {
+		Element preContainer = elt;
+		while (elt != null) {
+			if (isBlockHTMLElement(elt)) {
+				return preContainer;
+			}
+			preContainer = elt;
+			Node n = elt.getParentNode();
+			if (n.getNodeType() != Node.ELEMENT_NODE) {
+				return null;
+			}
+			elt = (Element) n;
+		}
+		return null;
+	}
+
+	public static Element getPreviousElement(Node node) {
+		List<Node> kids = nodeListToList(node.getParentNode().getChildNodes());
+		for (int idx = kids.indexOf(node) - 1; idx >= 0; idx--) {
+			Node kid = kids.get(idx);
+			if (kid.getNodeType() == Node.ELEMENT_NODE) {
+				return (Element) kid;
+			}
+		}
+		return null;
+	}
+
+	public static Node getRootContainer(Node node) {
+		if (node == null)
+			return null;
+		while (node.getParentNode() != null)
+			node = node.getParentNode();
+		return node;
+	}
+
+	public static Element getSucceedingBlock(Node node) {
+		SurroundingBlockTuple tuple = getSurroundingBlockTuple(node);
+		tuple.range.detach();
+		return tuple.nextBlock;
+	}
+
+	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node) {
+		return getSurroundingBlockTuple(node, n -> false);
+	}
+
+	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node,
+			Predicate<Node> blockResolver) {
+		Node prev = node;
+		Node next = node;
+		SurroundingBlockTuple tuple = new SurroundingBlockTuple(node);
+		Node sib = prev;
+		if (!hasLegalRootContainer(node)) {
+			throw new RuntimeException("Node has no legal root container");
+		}
+		while (true) {
+			sib = previousSibOrParentSibNode(sib);
+			if (sib.getNodeType() == Node.DOCUMENT_NODE) {
+				tuple.prevBlock = null;
+				break;
+			}
+			if (isOrContainsBlock(sib) || blockResolver.test(sib)) {
+				tuple.prevBlock = (Element) sib;
+				break;
+			} else {
+				if (hasLegalRootContainer(sib)) {
+					prev = sib;
+				}
+			}
+		}
+		sib = next;
+		while (true) {
+			sib = nextSibOrParentSibNode(sib);
+			if (sib == null || sib.getNodeType() == Node.DOCUMENT_NODE) {
+				tuple.nextBlock = null;
+				break;
+			}
+			if (isOrContainsBlock(sib) || blockResolver.test(sib)) {
+				tuple.nextBlock = (Element) sib;
+				break;
+			} else {
+				if (hasLegalRootContainer(sib)) {
+					next = sib;
+				}
+			}
+		}
+		Range r = ((DocumentRange) node.getOwnerDocument()).createRange();
+		r.setStartBefore(prev);
+		r.setEndAfter(next);
+		tuple.firstNode = prev;
+		tuple.range = r;
+		return tuple;
+	}
+
+	public static boolean hasAncestorWithTagName(Node n,
+			Collection<String> blks, Node stop) {
+		while (n != stop) {
+			if (blks.contains(n.getNodeName())) {
+				return true;
+			}
+			n = n.getParentNode();
+		}
+		return false;
+	}
+
+	public static boolean hasAncestorWithTagName(Node n, String tagName) {
+		return hasAncestorWithTagName(n,
+				Arrays.asList(new String[] { tagName }), null);
+	}
+
+	public static boolean hasLegalRootContainer(Node node) {
+		if (node == null)
+			return false;
+		Node rootContainer = getRootContainer(node);
+		switch (rootContainer.getNodeType()) {
+		case Node.ATTRIBUTE_NODE:
+		case Node.DOCUMENT_NODE:
+		case Node.DOCUMENT_FRAGMENT_NODE:
+			return true;
+		}
+		return false;
 	}
 
 	public static boolean hasOnlyTextChildren(Node node) {
@@ -316,12 +549,58 @@ public class XmlUtils {
 				insertAfter.getNextSibling());
 	}
 
+	public static Source interpolateStreamSource(InputStream trans) {
+		try {
+			String xsl = ResourceUtilities.readStreamToString(trans);
+			Pattern p = Pattern.compile("<\\?import \"res:/(.+?)\"\\?>");
+			Matcher m = p.matcher(xsl);
+			StringBuffer out = new StringBuffer();
+			while (m.find()) {
+				m.appendReplacement(out,
+						ResourceUtilities.readClassPathResourceAsString(
+								XmlUtils.class, m.group(1)));
+			}
+			m.appendTail(out);
+			return new StreamSource(
+					ResourceUtilities.writeStringToInputStream(out.toString()));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public static boolean isAncestorOf(Node possParent, Node node) {
 		while (node != null) {
 			if (node == possParent) {
 				return true;
 			}
 			node = node.getParentNode();
+		}
+		return false;
+	}
+
+	public static boolean isBlockHTMLElement(Element e) {
+		String tagName = e.getTagName().toUpperCase();
+		return isBlockTag(tagName);
+	}
+
+	public static boolean isBlockTag(String tagName) {
+		return CommonConstants.HTML_BLOCKS.contains("," + tagName + ",");
+	}
+
+	public static boolean isCompleteBlock(Element elt) {
+		Element block = getContainingBlock(elt);
+		if (block != null && elt.getTextContent().trim()
+				.equals(block.getTextContent().trim())) {
+			return true;
+		}
+		Element preContainer = getPreContainingBlock(elt);
+		if (preContainer.getTextContent().trim()
+				.equals(elt.getTextContent().trim())) {
+			Element prev = previousSibOrParentSib(preContainer);
+			Element next = nextSibOrParentSib(preContainer);
+			if (isBlockHTMLElement(prev) && isBlockHTMLElement(next)) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -353,6 +632,24 @@ public class XmlUtils {
 		return false;
 	}
 
+	public static boolean isOrContainsBlock(Node sib) {
+		if (sib == null || sib.getNodeType() != Node.ELEMENT_NODE) {
+			return false;
+		}
+		Element elt = (Element) sib;
+		if (isBlockHTMLElement(elt)) {
+			return true;
+		}
+		NodeList list = elt.getElementsByTagName("*");
+		int length = list.getLength();
+		for (int i = 0; i < length; i++) {
+			if (isBlockHTMLElement((Element) list.item(i))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static boolean isSoleNonWhitespaceChild(Element node) {
 		List<Node> kids = nodeListToList(node.getParentNode().getChildNodes());
 		for (Node kid : kids) {
@@ -376,6 +673,21 @@ public class XmlUtils {
 	public static boolean isWhitespaceText(Node node) {
 		return node.getNodeType() == Node.TEXT_NODE
 				&& SEUtilities.isWhitespaceOrEmpty(node.getTextContent());
+	}
+
+	public static Node lastDirectChild(Element element) {
+		NodeList childNodes = element.getChildNodes();
+		Node node = childNodes.item(childNodes.getLength() - 1);
+		return node;
+	}
+
+	public static Element lastDirectElementChild(Element element) {
+		NodeList childNodes = element.getChildNodes();
+		Node node = childNodes.item(childNodes.getLength() - 1);
+		if (node.getNodeType() == Node.ELEMENT_NODE) {
+			return (Element) node;
+		}
+		return getPreviousElement(node);
 	}
 
 	public static Element lastElementChild(Element element) {
@@ -407,21 +719,6 @@ public class XmlUtils {
 			}
 		}
 		return null;
-	}
-
-	public static Node lastDirectChild(Element element) {
-		NodeList childNodes = element.getChildNodes();
-		Node node = childNodes.item(childNodes.getLength() - 1);
-		return node;
-	}
-
-	public static Element lastDirectElementChild(Element element) {
-		NodeList childNodes = element.getChildNodes();
-		Node node = childNodes.item(childNodes.getLength() - 1);
-		if (node.getNodeType() == Node.ELEMENT_NODE) {
-			return (Element) node;
-		}
-		return getPreviousElement(node);
 	}
 
 	public static Document loadDocument(File f) throws Exception {
@@ -466,6 +763,60 @@ public class XmlUtils {
 		return loadDocument(url.openStream());
 	}
 
+	public static DOMLocation locationOfTextIndex(List<Text> texts, int index) {
+		MutableDomLocation result = new MutableDomLocation();
+		Text save = null;
+		for (Text t : texts) {
+			String s = t.getTextContent();
+			if (s.length() >= index) {
+				result.characterOffset = index;
+				result.node = t;
+			}
+			if (s.length() > index) {
+				return result.toDomLocation();
+			}
+			index -= s.length();
+			result.nodeIndex++;
+		}
+		return result.node == null ? null : result.toDomLocation();
+	}
+
+	public static DOMLocation locationOfTextIndex(Node container, int index) {
+		MutableDomLocation result = new MutableDomLocation();
+		TreeWalker walker = ((DocumentTraversal) container.getOwnerDocument())
+				.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, true);
+		Text t = (Text) (container.getNodeType() == Node.TEXT_NODE ? container
+				: null);
+		Text save = null;
+		while (t == container || (t = (Text) walker.nextNode()) != null) {
+			Node n2 = t;
+			Node parentNode = t.getParentNode();
+			String s = t.getTextContent();
+			result.node = t;
+			result.nodeIndex = getNodeIndexInParent(t);
+			if (s.length() >= index) {
+				result.characterOffset = index;
+			}
+			if (s.length() > index) {
+				return result.toDomLocation();
+			}
+			index -= s.length();
+			if (t == container) {
+				t = null;
+			}
+		}
+		if (index > 0) {
+			return locationOfTextIndex(nextSibOrParentSibNode(container),
+					index);
+		}
+		return result.node == null ? null : result.toDomLocation();
+	}
+
+	public static void logToFile(Node n) throws Exception {
+		ResourceUtilities.writeStringToFile(streamXML(n), "/tmp/tmp.xml");
+		ResourceUtilities.writeStringToFile(streamXML(n), "/tmp/tmp.html");
+	}
+
 	public static void merge(Element to, Element from) {
 		List<Node> nodes = nodeListToList(from.getChildNodes());
 		for (Node node : nodes) {
@@ -483,6 +834,66 @@ public class XmlUtils {
 			newNode.insertBefore(child, lastChild);
 			lastChild = child;
 		}
+	}
+
+	public static Element nextSibOrParentSib(Node fromNode) {
+		Node nextSibling = fromNode.getNextSibling();
+		if (nextSibling != null) {
+			if (nextSibling.getNodeType() == Node.ELEMENT_NODE) {
+				return (Element) nextSibling;
+			}
+			return nextSibOrParentSib(nextSibling);
+		}
+		Node parentNode = fromNode.getParentNode();
+		if (parentNode != null) {
+			return nextSibOrParentSib(parentNode);
+		}
+		return null;
+	}
+
+	public static Node nextSibOrParentSibNode(Node fromNode) {
+		Node nextSibling = fromNode.getNextSibling();
+		if (nextSibling != null) {
+			return nextSibling;
+		}
+		Node parentNode = fromNode.getParentNode();
+		if (parentNode != null) {
+			return nextSibOrParentSibNode(parentNode);
+		}
+		return null;
+	}
+
+	public static Node nextSibOrParentSibWithNonEmptyText(Node fromNode) {
+		Node nextSibling = fromNode.getNextSibling();
+		if (nextSibling != null) {
+			short nodeType = nextSibling.getNodeType();
+			if ((nodeType == Node.ELEMENT_NODE || nodeType == Node.TEXT_NODE)
+					&& !nextSibling.getTextContent().isEmpty()) {
+				return nextSibling;
+			}
+			return nextSibOrParentSibWithNonEmptyText(nextSibling);
+		}
+		Node parentNode = fromNode.getParentNode();
+		if (parentNode != null) {
+			return nextSibOrParentSibWithNonEmptyText(parentNode);
+		}
+		return null;
+	}
+
+	public static Node nextSibOrParentSibWithText(Node fromNode) {
+		Node nextSibling = fromNode.getNextSibling();
+		if (nextSibling != null) {
+			short nodeType = nextSibling.getNodeType();
+			if (nodeType == Node.ELEMENT_NODE || nodeType == Node.TEXT_NODE) {
+				return nextSibling;
+			}
+			return nextSibOrParentSibWithText(nextSibling);
+		}
+		Node parentNode = fromNode.getParentNode();
+		if (parentNode != null) {
+			return nextSibOrParentSibWithText(parentNode);
+		}
+		return null;
 	}
 
 	public static List<Element> nodeListToElementList(NodeList nl) {
@@ -580,6 +991,30 @@ public class XmlUtils {
 		}
 	}
 
+	public static String prettyPrintWithDOM3LS(Element e) throws Exception {
+		String xml = streamXML(e);
+		return prettyPrintWithDOM3LS(loadDocument(xml));
+	}
+
+	public static Element previousSibOrParentSib(Node fromNode) {
+		Node previousSibling = fromNode.getPreviousSibling();
+		if (previousSibling != null) {
+			if (previousSibling.getNodeType() == Node.ELEMENT_NODE) {
+				return (Element) previousSibling;
+			}
+			return previousSibOrParentSib(previousSibling);
+		}
+		return (Element) fromNode.getParentNode();
+	}
+
+	public static Node previousSibOrParentSibNode(Node fromNode) {
+		Node previousSibling = fromNode.getPreviousSibling();
+		if (previousSibling != null) {
+			return previousSibling;
+		}
+		return fromNode.getParentNode();
+	}
+
 	public static void rebaseImages(Document doc, String baseHref) {
 		if (baseHref.endsWith("/")) {
 			baseHref = baseHref.substring(0, baseHref.length() - 1);
@@ -646,8 +1081,25 @@ public class XmlUtils {
 		return xml.replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "");
 	}
 
+	public static void replaceNode(Element from, Element to) {
+		insertAfter(to, from);
+		moveKids(from, to);
+		removeNode(from);
+	}
+
 	public static void setUseJAXP(boolean useJAXP) {
 		XmlUtils.useJAXP = useJAXP;
+	}
+
+	public static Element splitNode(Element toSplit, Node splitAt) {
+		Element split = toSplit.getOwnerDocument()
+				.createElement(toSplit.getTagName());
+		insertAfter(split, toSplit);
+		List<Element> kids = nodeListToElementList(toSplit.getChildNodes());
+		for (int idx = kids.indexOf(splitAt); idx < kids.size(); idx++) {
+			split.appendChild(kids.get(idx));
+		}
+		return split;
 	}
 
 	public static String streamNCleanForBrowserHtmlFragment(Node n) {
@@ -742,6 +1194,13 @@ public class XmlUtils {
 		System.out.println(streamXML(node));
 	}
 
+	public static String toSimpleXPointer(Node n) {
+		if (xPointerConverter == null) {
+			xPointerConverter = Registry.impl(XPointerConverter.class);
+		}
+		return n == null ? "" : xPointerConverter.toSimpleXPointer(n);
+	}
+
 	public static void transformDoc(Source xmlSource, Source xsltSource,
 			StreamResult sr) throws Exception {
 		transformDoc(xmlSource, xsltSource, sr, null, null);
@@ -801,372 +1260,173 @@ public class XmlUtils {
 		}
 	}
 
-	public static String toSimpleXPointer(Node n) {
-		if (xPointerConverter == null) {
-			xPointerConverter = Registry.impl(XPointerConverter.class);
-		}
-		return n == null ? "" : xPointerConverter.toSimpleXPointer(n);
-	}
-
-	private static XPointerConverter xPointerConverter;
-
-	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node) {
-		return getSurroundingBlockTuple(node, n -> false);
-	}
-
-	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node,
-			Predicate<Node> blockResolver) {
-		Node prev = node;
-		Node next = node;
-		SurroundingBlockTuple tuple = new SurroundingBlockTuple(node);
-		Node sib = prev;
-		if (!hasLegalRootContainer(node)) {
-			throw new RuntimeException("Node has no legal root container");
-		}
-		while (true) {
-			sib = previousSibOrParentSibNode(sib);
-			if (sib.getNodeType() == Node.DOCUMENT_NODE) {
-				tuple.prevBlock = null;
-				break;
-			}
-			if (isOrContainsBlock(sib) || blockResolver.test(sib)) {
-				tuple.prevBlock = (Element) sib;
-				break;
+	public static class DOMLocation {
+		public static Range createRange(DOMLocation start, DOMLocation end) {
+			Range r = ((DocumentRange) start.node.getOwnerDocument())
+					.createRange();
+			r.setStart(start.node, start.characterOffset);
+			if (end.node.getNodeType() == Node.TEXT_NODE) {
+				r.setEnd(end.node, end.characterOffset);
 			} else {
-				if (hasLegalRootContainer(sib)) {
-					prev = sib;
-				}
+				r.setEndAfter(end.node);
 			}
+			return r;
 		}
-		sib = next;
-		while (true) {
-			sib = nextSibOrParentSibNode(sib);
-			if (sib == null || sib.getNodeType() == Node.DOCUMENT_NODE) {
-				tuple.nextBlock = null;
-				break;
-			}
-			if (isOrContainsBlock(sib) || blockResolver.test(sib)) {
-				tuple.nextBlock = (Element) sib;
-				break;
-			} else {
-				if (hasLegalRootContainer(sib)) {
-					next = sib;
-				}
-			}
+
+		public final Node node;
+
+		public final int characterOffset;
+
+		public final int nodeIndex;
+
+		private String toString;
+
+		public DOMLocation(Node node, int characterOffset, int nodeIndex) {
+			this.node = node;
+			this.characterOffset = characterOffset;
+			this.nodeIndex = nodeIndex;
 		}
-		Range r = ((DocumentRange) node.getOwnerDocument()).createRange();
-		r.setStartBefore(prev);
-		r.setEndAfter(next);
-		tuple.firstNode = prev;
-		tuple.range = r;
-		return tuple;
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof DOMLocation) {
+				return toString().equals(obj.toString());
+			}
+			return super.equals(obj);
+		}
+
+		@Override
+		public int hashCode() {
+			return toString().hashCode();
+		}
+
+		@Override
+		public String toString() {
+			if (toString == null) {
+				toString = toSimpleXPointer(node) + "[" + characterOffset + "]";
+			}
+			return toString;
+		}
 	}
 
-	public static boolean hasLegalRootContainer(Node node) {
-		if (node == null)
+	public interface IsIgnorePredicate {
+		boolean isIgnore(Node n);
+	}
+
+	public interface IsInlinePredicate {
+		boolean isInline(Element e);
+	}
+
+	public static class NodeComparator implements Comparator<Node> {
+		@Override
+		public int compare(Node o1, Node o2) {
+			if (o1 == o2) {
+				return 0;
+			}
+			return isEarlierThan(o1, o2) ? -1 : 1;
+		}
+	}
+
+	public static class SurroundingBlockTuple {
+		public Range range;
+
+		public Node firstNode;
+
+		public Element prevBlock;
+
+		public Element nextBlock;
+
+		private TreeWalker walker;
+
+		public Node forNode;
+
+		public SurroundingBlockTuple(Node forNode) {
+			this.forNode = forNode;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof SurroundingBlockTuple) {
+				SurroundingBlockTuple o = (SurroundingBlockTuple) obj;
+				return o.firstNode == firstNode;
+			}
 			return false;
-		Node rootContainer = getRootContainer(node);
-		switch (rootContainer.getNodeType()) {
-		case Node.ATTRIBUTE_NODE:
-		case Node.DOCUMENT_NODE:
-		case Node.DOCUMENT_FRAGMENT_NODE:
-			return true;
 		}
-		return false;
-	}
 
-	public static Node getRootContainer(Node node) {
-		if (node == null)
+		public Text getNextTextChild() {
+			Node n = null;
+			while ((n = walker.nextNode()) != null) {
+				if (n.getNodeType() == Node.TEXT_NODE) {
+					return (Text) n;
+				}
+				if (n == nextBlock) {
+					return null;
+				}
+			}
 			return null;
-		while (node.getParentNode() != null)
-			node = node.getParentNode();
-		return node;
+		}
+
+		public void resetWalker() {
+			Document doc = firstNode.getOwnerDocument();
+			walker = ((DocumentTraversal) doc).createTreeWalker(doc,
+					NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, null, true);
+			walker.setCurrentNode(firstNode);
+		}
 	}
 
-	public static Element getSucceedingBlock(Node node) {
-		SurroundingBlockTuple tuple = getSurroundingBlockTuple(node);
-		tuple.range.detach();
-		return tuple.nextBlock;
+	public static interface TransformerFactoryConfigurator {
+		public void configure(TransformerFactory transformerFactory);
 	}
 
-	public static Element previousSibOrParentSib(Node fromNode) {
-		Node previousSibling = fromNode.getPreviousSibling();
-		if (previousSibling != null) {
-			if (previousSibling.getNodeType() == Node.ELEMENT_NODE) {
-				return (Element) previousSibling;
+	public static class XmlInsertionCursor {
+		public Node node;
+
+		int textOffset;
+
+		public XmlInsertionCursor(Node node, int textOffset) {
+			this.node = node;
+			this.textOffset = textOffset;
+		}
+
+		public XmlInsertionCursor splitText() {
+			String textContent = node.getTextContent();
+			if (textOffset != 0 && textOffset != textContent.length()) {
+				Text t1 = (Text) node;
+				Text t2 = node.getOwnerDocument()
+						.createTextNode(textContent.substring(textOffset));
+				t1.setTextContent(textContent.substring(0, textOffset));
+				XmlUtils.insertAfter(t2, t1);
 			}
-			return previousSibOrParentSib(previousSibling);
+			return this;
 		}
-		return (Element) fromNode.getParentNode();
-	}
 
-	public static Node previousSibOrParentSibNode(Node fromNode) {
-		Node previousSibling = fromNode.getPreviousSibling();
-		if (previousSibling != null) {
-			return previousSibling;
-		}
-		return fromNode.getParentNode();
-	}
-
-	public static boolean isOrContainsBlock(Node sib) {
-		if (sib == null || sib.getNodeType() != Node.ELEMENT_NODE) {
-			return false;
-		}
-		Element elt = (Element) sib;
-		if (isBlockHTMLElement(elt)) {
-			return true;
-		}
-		NodeList list = elt.getElementsByTagName("*");
-		int length = list.getLength();
-		for (int i = 0; i < length; i++) {
-			if (isBlockHTMLElement((Element) list.item(i))) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public static Node nextSibOrParentSibNode(Node fromNode) {
-		Node nextSibling = fromNode.getNextSibling();
-		if (nextSibling != null) {
-			return nextSibling;
-		}
-		Node parentNode = fromNode.getParentNode();
-		if (parentNode != null) {
-			return nextSibOrParentSibNode(parentNode);
-		}
-		return null;
-	}
-
-	public static Node nextSibOrParentSibWithNonEmptyText(Node fromNode) {
-		Node nextSibling = fromNode.getNextSibling();
-		if (nextSibling != null) {
-			short nodeType = nextSibling.getNodeType();
-			if ((nodeType == Node.ELEMENT_NODE || nodeType == Node.TEXT_NODE)
-					&& !nextSibling.getTextContent().isEmpty()) {
-				return nextSibling;
-			}
-			return nextSibOrParentSibWithNonEmptyText(nextSibling);
-		}
-		Node parentNode = fromNode.getParentNode();
-		if (parentNode != null) {
-			return nextSibOrParentSibWithNonEmptyText(parentNode);
-		}
-		return null;
-	}
-
-	public static Node nextSibOrParentSibWithText(Node fromNode) {
-		Node nextSibling = fromNode.getNextSibling();
-		if (nextSibling != null) {
-			short nodeType = nextSibling.getNodeType();
-			if (nodeType == Node.ELEMENT_NODE || nodeType == Node.TEXT_NODE) {
-				return nextSibling;
-			}
-			return nextSibOrParentSibWithText(nextSibling);
-		}
-		Node parentNode = fromNode.getParentNode();
-		if (parentNode != null) {
-			return nextSibOrParentSibWithText(parentNode);
-		}
-		return null;
-	}
-
-	public static Element nextSibOrParentSib(Node fromNode) {
-		Node nextSibling = fromNode.getNextSibling();
-		if (nextSibling != null) {
-			if (nextSibling.getNodeType() == Node.ELEMENT_NODE) {
-				return (Element) nextSibling;
-			}
-			return nextSibOrParentSib(nextSibling);
-		}
-		Node parentNode = fromNode.getParentNode();
-		if (parentNode != null) {
-			return nextSibOrParentSib(parentNode);
-		}
-		return null;
-	}
-
-	public static boolean isCompleteBlock(Element elt) {
-		Element block = getContainingBlock(elt);
-		if (block != null && elt.getTextContent().trim()
-				.equals(block.getTextContent().trim())) {
-			return true;
-		}
-		Element preContainer = getPreContainingBlock(elt);
-		if (preContainer.getTextContent().trim()
-				.equals(elt.getTextContent().trim())) {
-			Element prev = previousSibOrParentSib(preContainer);
-			Element next = nextSibOrParentSib(preContainer);
-			if (isBlockHTMLElement(prev) && isBlockHTMLElement(next)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public static DOMLocation locationOfTextIndex(Node container, int index) {
-		DOMLocation result = new DOMLocation();
-		TreeWalker walker = ((DocumentTraversal) container.getOwnerDocument())
-				.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, true);
-		Text t = (Text) (container.getNodeType() == Node.TEXT_NODE ? container
-				: null);
-		Text save = null;
-		while (t == container || (t = (Text) walker.nextNode()) != null) {
-			Node n2 = t;
-			Node parentNode = t.getParentNode();
-			String s = t.getTextContent();
-			result.node = t;
-			result.nodeIndex = getNodeIndexInParent(t);
-			if (s.length() >= index) {
-				result.characterOffset = index;
-			}
-			if (s.length() > index) {
-				return result;
-			}
-			index -= s.length();
-			if (t == container) {
-				t = null;
-			}
-		}
-		if (index > 0) {
-			return locationOfTextIndex(nextSibOrParentSibNode(container),
-					index);
-		}
-		return result.node == null ? null : result;
-	}
-
-	public static boolean isBlockHTMLElement(Element e) {
-		String tagName = e.getTagName().toUpperCase();
-		return isBlockTag(tagName);
-	}
-
-	public static boolean isBlockTag(String tagName) {
-		return CommonConstants.HTML_BLOCKS.contains("," + tagName + ",");
-	}
-
-	public static Element getContainingBlock(Node n) {
-		while (n != null) {
-			if (n.getNodeType() == Node.ELEMENT_NODE
-					&& isBlockHTMLElement((Element) n)) {
-				return (Element) n;
-			}
-			n = n.getParentNode();
-		}
-		return null;
-	}
-
-	public static Element getContainingBlock(Node n,
-			Predicate<Element> blockTest) {
-		while (n != null) {
-			if (n.getNodeType() == Node.ELEMENT_NODE
-					&& (isBlockHTMLElement((Element) n)
-							|| blockTest.test((Element) n))) {
-				return (Element) n;
-			}
-			n = n.getParentNode();
-		}
-		return null;
-	}
-
-	public static Element getPreContainingBlock(Element elt) {
-		Element preContainer = elt;
-		while (elt != null) {
-			if (isBlockHTMLElement(elt)) {
-				return preContainer;
-			}
-			preContainer = elt;
-			Node n = elt.getParentNode();
-			if (n.getNodeType() != Node.ELEMENT_NODE) {
-				return null;
-			}
-			elt = (Element) n;
-		}
-		return null;
-	}
-
-	public static int getNodeIndexInParent(Node n) {
-		NodeList siblings = n.getParentNode().getChildNodes();
-		int index = 0;
-		short nodeType = n.getNodeType();
-		int length = siblings.getLength();
-		for (int i = 0; i < length; i++) {
-			Node test = siblings.item(i);
-			if (test.getNodeType() == nodeType) {
-				if (nodeType == Node.ELEMENT_NODE) {
-					if (test.getNodeName().equalsIgnoreCase(n.getNodeName())) {
-						index++;
+		public void toHighestContainingInline(IsInlinePredicate isInline,
+				IsIgnorePredicate isIgnore, boolean start) {
+			while (true) {
+				Node parent = node.getParentNode();
+				boolean continueAscent = isIgnore.isIgnore(node);
+				if (parent.getNodeType() == Node.ELEMENT_NODE
+						&& isInline.isInline((Element) parent)) {
+					if (start && node.getPreviousSibling() == null) {
+						continueAscent = true;
 					}
+					if (!start && node.getNextSibling() == null) {
+						continueAscent = true;
+					}
+				}
+				if (continueAscent) {
+					node = parent;
 				} else {
-					index++;
+					break;
 				}
 			}
-			if (test == n) {
-				break;
-			}
 		}
-		return index;
-	}
 
-	public static Element getContainingElement(Node n) {
-		while (n != null) {
-			if (n.getNodeType() == Node.ELEMENT_NODE) {
-				return (Element) n;
-			}
-			n = n.getParentNode();
+		@Override
+		public String toString() {
+			return String.format("Node: %s\ntextOffset: %s\n;Xml: %s", node,
+					textOffset, streamXML(node));
 		}
-		return null;
-	}
-
-	public static Text getFirstTextChild(Node node) {
-		NodeList nl = node.getChildNodes();
-		int length = nl.getLength();
-		for (int i = 0; i < length; i++) {
-			node = nl.item(i);
-			if (node.getNodeType() == Node.ELEMENT_NODE) {
-				Text t = getFirstTextChild(node);
-				if (t != null) {
-					return t;
-				}
-			}
-			if (node.getNodeType() == Node.TEXT_NODE) {
-				return (Text) node;
-			}
-		}
-		return null;
-	}
-
-	public static boolean hasAncestorWithTagName(Node n, String tagName) {
-		return hasAncestorWithTagName(n,
-				Arrays.asList(new String[] { tagName }), null);
-	}
-
-	public static boolean hasAncestorWithTagName(Node n,
-			Collection<String> blks, Node stop) {
-		while (n != stop) {
-			if (blks.contains(n.getNodeName())) {
-				return true;
-			}
-			n = n.getParentNode();
-		}
-		return false;
-	}
-
-	public static DOMLocation locationOfTextIndex(List<Text> texts, int index) {
-		DOMLocation result = new DOMLocation();
-		Text save = null;
-		for (Text t : texts) {
-			String s = t.getTextContent();
-			if (s.length() >= index) {
-				result.characterOffset = index;
-				result.node = t;
-			}
-			if (s.length() > index) {
-				return result;
-			}
-			index -= s.length();
-			result.nodeIndex++;
-		}
-		return result.node == null ? null : result;
 	}
 
 	@RegistryLocation(registryPoint = XPointerConverter.class, implementationType = ImplementationType.SINGLETON)
@@ -1214,18 +1474,16 @@ public class XmlUtils {
 		}
 	}
 
-	public static class NodeComparator implements Comparator<Node> {
-		@Override
-		public int compare(Node o1, Node o2) {
-			if (o1 == o2) {
-				return 0;
-			}
-			return isEarlierThan(o1, o2) ? -1 : 1;
-		}
-	}
+	private static class MutableDomLocation {
+		public Node node;
 
-	public static interface TransformerFactoryConfigurator {
-		public void configure(TransformerFactory transformerFactory);
+		public int characterOffset;
+
+		public int nodeIndex;
+
+		public DOMLocation toDomLocation() {
+			return new DOMLocation(node, characterOffset, nodeIndex);
+		}
 	}
 
 	static class XmlErrHandler implements ErrorHandler {
@@ -1256,224 +1514,5 @@ public class XmlUtils {
 				exception.printStackTrace();
 			}
 		}
-	}
-
-	public static class DOMLocation {
-		public static Range createRange(DOMLocation start, DOMLocation end) {
-			Range r = ((DocumentRange) start.node.getOwnerDocument())
-					.createRange();
-			r.setStart(start.node, start.characterOffset);
-			if (end.node.getNodeType() == Node.TEXT_NODE) {
-				r.setEnd(end.node, end.characterOffset);
-			} else {
-				r.setEndAfter(end.node);
-			}
-			return r;
-		}
-
-		public Node node;
-
-		public int characterOffset;
-
-		public int nodeIndex;
-
-		public DOMLocation() {
-		}
-
-		public DOMLocation(Node node, int characterOffset, int nodeIndex) {
-			this.node = node;
-			this.characterOffset = characterOffset;
-			this.nodeIndex = nodeIndex;
-		}
-
-		@Override
-		public String toString() {
-			return toSimpleXPointer(node) + "[" + characterOffset + "]";
-		}
-	}
-
-	public static class SurroundingBlockTuple {
-		public Range range;
-
-		public Node firstNode;
-
-		public Element prevBlock;
-
-		public Element nextBlock;
-
-		private TreeWalker walker;
-
-		public Node forNode;
-
-		public SurroundingBlockTuple(Node forNode) {
-			this.forNode = forNode;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof SurroundingBlockTuple) {
-				SurroundingBlockTuple o = (SurroundingBlockTuple) obj;
-				return o.firstNode == firstNode;
-			}
-			return false;
-		}
-
-		public void resetWalker() {
-			Document doc = firstNode.getOwnerDocument();
-			walker = ((DocumentTraversal) doc).createTreeWalker(doc,
-					NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, null, true);
-			walker.setCurrentNode(firstNode);
-		}
-
-		public Text getNextTextChild() {
-			Node n = null;
-			while ((n = walker.nextNode()) != null) {
-				if (n.getNodeType() == Node.TEXT_NODE) {
-					return (Text) n;
-				}
-				if (n == nextBlock) {
-					return null;
-				}
-			}
-			return null;
-		}
-	}
-
-	public static List<Element> childElements(Node node) {
-		return nodeListToElementList(node.getChildNodes());
-	}
-
-	public static Element getPreviousElement(Node node) {
-		List<Node> kids = nodeListToList(node.getParentNode().getChildNodes());
-		for (int idx = kids.indexOf(node) - 1; idx >= 0; idx--) {
-			Node kid = kids.get(idx);
-			if (kid.getNodeType() == Node.ELEMENT_NODE) {
-				return (Element) kid;
-			}
-		}
-		return null;
-	}
-
-	public static Element getNextElement(Node node) {
-		List<Node> kids = nodeListToList(node.getParentNode().getChildNodes());
-		for (int idx = kids.indexOf(node) + 1; idx < kids.size(); idx++) {
-			Node kid = kids.get(idx);
-			if (kid.getNodeType() == Node.ELEMENT_NODE) {
-				return (Element) kid;
-			}
-		}
-		return null;
-	}
-
-	public static Element splitNode(Element toSplit, Node splitAt) {
-		Element split = toSplit.getOwnerDocument()
-				.createElement(toSplit.getTagName());
-		insertAfter(split, toSplit);
-		List<Element> kids = nodeListToElementList(toSplit.getChildNodes());
-		for (int idx = kids.indexOf(splitAt); idx < kids.size(); idx++) {
-			split.appendChild(kids.get(idx));
-		}
-		return split;
-	}
-
-	public static void replaceNode(Element from, Element to) {
-		insertAfter(to, from);
-		moveKids(from, to);
-		removeNode(from);
-	}
-
-	public static Element createElementAttr(Document doc, String tagName,
-			String attr, String value) {
-		Element e = doc.createElement(tagName);
-		e.setAttribute(attr, value);
-		return e;
-	}
-
-	public static String prettyPrintWithDOM3LS(Element e) throws Exception {
-		String xml = streamXML(e);
-		return prettyPrintWithDOM3LS(loadDocument(xml));
-	}
-
-	public static Element earliest(Element... elements) {
-		Element earliest = null;
-		for (Element element : elements) {
-			if (element != null) {
-				if (earliest == null) {
-					earliest = element;
-				} else {
-					if (isEarlierThan(element, earliest)) {
-						earliest = element;
-					}
-				}
-			}
-		}
-		return earliest;
-	}
-
-	public static Element getParentElement(Element element) {
-		return (Element) element.getParentNode();
-	}
-
-	public static class XmlInsertionCursor {
-		public Node node;
-
-		int textOffset;
-
-		public XmlInsertionCursor(Node node, int textOffset) {
-			this.node = node;
-			this.textOffset = textOffset;
-		}
-
-		public void toHighestContainingInline(IsInlinePredicate isInline,
-				IsIgnorePredicate isIgnore, boolean start) {
-			while (true) {
-				Node parent = node.getParentNode();
-				boolean continueAscent = isIgnore.isIgnore(node);
-				if (parent.getNodeType() == Node.ELEMENT_NODE
-						&& isInline.isInline((Element) parent)) {
-					if (start && node.getPreviousSibling() == null) {
-						continueAscent = true;
-					}
-					if (!start && node.getNextSibling() == null) {
-						continueAscent = true;
-					}
-				}
-				if (continueAscent) {
-					node = parent;
-				} else {
-					break;
-				}
-			}
-		}
-
-		@Override
-		public String toString() {
-			return String.format("Node: %s\ntextOffset: %s\n;Xml: %s", node,
-					textOffset, streamXML(node));
-		}
-
-		public XmlInsertionCursor splitText() {
-			String textContent = node.getTextContent();
-			if (textOffset != 0 && textOffset != textContent.length()) {
-				Text t1 = (Text) node;
-				Text t2 = node.getOwnerDocument()
-						.createTextNode(textContent.substring(textOffset));
-				t1.setTextContent(textContent.substring(0, textOffset));
-				XmlUtils.insertAfter(t2, t1);
-			}
-			return this;
-		}
-	}
-
-	public interface IsInlinePredicate {
-		boolean isInline(Element e);
-	}
-
-	public interface IsIgnorePredicate {
-		boolean isIgnore(Node n);
-	}
-	public static void logToFile(Node n) throws Exception{
-		ResourceUtilities.writeStringToFile(streamXML(n), "/tmp/tmp.xml");
-		ResourceUtilities.writeStringToFile(streamXML(n), "/tmp/tmp.html");
 	}
 }

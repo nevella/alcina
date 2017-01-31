@@ -60,6 +60,14 @@ public interface HasEquivalence<T> {
 					: CommonUtils.first(intersection).o;
 		}
 
+		public static <T, V extends HasEquivalenceAdapter<T, ?>> List<T>
+				deDuplicate(Collection<T> o1, Function<T, V> mapper) {
+			List<V> l1 = o1.stream().map(mapper).collect(Collectors.toList());
+			List<V> duplicates = listDuplicates(l1);
+			l1.removeAll(duplicates);
+			return l1.stream().map(l -> l.o).collect(Collectors.toList());
+		}
+
 		public static <T, V extends HasEquivalenceAdapter<T, ?>> boolean
 				allEquivalent(Collection<T> o1, Function<T, V> mapper) {
 			if (o1.isEmpty()) {

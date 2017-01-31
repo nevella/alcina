@@ -205,6 +205,10 @@ public class XmlNode {
 		return node.getNodeName();
 	}
 
+	public boolean nameIs(String name) {
+		return name().equals(name);
+	}
+
 	public String ntc() {
 		if (normalisedTextContent == null) {
 			normalisedTextContent = SEUtilities
@@ -383,11 +387,6 @@ public class XmlNode {
 			n.children.nodes().forEach(this::append);
 		}
 
-		public void importFrom(XmlNode n) {
-			Node importNode = doc.domDoc().importNode(n.node, true);
-			append(doc.nodeFor(importNode));
-		}
-
 		public void append(Collection<XmlNode> childNodes) {
 			childNodes.stream().forEach(n -> append(n));
 		}
@@ -440,6 +439,11 @@ public class XmlNode {
 					.stream(iterable.spliterator(), false);
 			return targetStream.filter(t -> t.isText() || tagArray.isEmpty()
 					|| t.tagIsOneOf(tagArray));
+		}
+
+		public void importFrom(XmlNode n) {
+			Node importNode = doc.domDoc().importNode(n.node, true);
+			append(doc.nodeFor(importNode));
 		}
 
 		public void insertAsFirstChild(XmlNode newChild) {

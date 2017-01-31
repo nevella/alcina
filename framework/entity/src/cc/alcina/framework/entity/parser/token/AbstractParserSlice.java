@@ -12,6 +12,7 @@ import org.w3c.dom.traversal.TreeWalker;
 
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
+import cc.alcina.framework.entity.XmlUtils.DOMLocation;
 
 public class AbstractParserSlice<T extends ParserToken> {
 	public static Range createRange(AbstractParserSlice first,
@@ -33,6 +34,20 @@ public class AbstractParserSlice<T extends ParserToken> {
 
 	private String overrideText;
 
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof AbstractParserSlice) {
+			AbstractParserSlice slice = (AbstractParserSlice) obj;
+			return start.equals(slice.start) && end.equals(slice.end);
+		}
+		return super.equals(obj);
+	}
+
+	@Override
+	public int hashCode() {
+		return start.hashCode() ^ end.hashCode();
+	}
+
 	public AbstractParserSlice(XmlUtils.DOMLocation start,
 			XmlUtils.DOMLocation end, T token, int startOffsetInRun) {
 		assert start != null : "start is null";
@@ -53,9 +68,9 @@ public class AbstractParserSlice<T extends ParserToken> {
 		while ((n = itr.getCurrentNode()) != null) {
 			content.append(n.getNodeValue());
 			if (content.length() >= length) {
-				end.node = n;
-				end.characterOffset = start.characterOffset
-						+ n.getNodeValue().length() + length - content.length();
+				end = new DOMLocation(end.node, start.characterOffset
+						+ n.getNodeValue().length() + length - content.length(),
+						end.nodeIndex);
 				break;
 			}
 			itr.nextNode();
@@ -167,7 +182,7 @@ public class AbstractParserSlice<T extends ParserToken> {
 					|| n.getNodeName().equalsIgnoreCase("BODY")) {
 				return;
 			}
-			start.node = n;
+			start = new DOMLocation(n, start.characterOffset, start.nodeIndex);
 		}
 	}
 }

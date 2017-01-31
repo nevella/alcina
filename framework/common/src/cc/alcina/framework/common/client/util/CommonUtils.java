@@ -1443,4 +1443,10 @@ public class CommonUtils {
 		list.clear();
 		list.addAll(mod);
 	}
+
+	public static String firstNonEmpty(String... strings) {
+		return Arrays.asList(strings).stream()
+				.filter(s -> CommonUtils.isNotNullOrEmpty(s)).findFirst()
+				.orElse(null);
+	}
 }

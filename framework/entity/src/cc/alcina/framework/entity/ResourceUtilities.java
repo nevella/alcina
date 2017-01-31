@@ -560,14 +560,19 @@ public class ResourceUtilities {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
 	public static <T> T fieldwiseClone(T t) throws Exception {
 		return fieldwiseClone(t, false);
 	}
-	public static <T> T fieldwiseClone(T t, boolean withTransients) throws Exception {
+
+	public static <T> T fieldwiseClone(T t, boolean withTransients)
+			throws Exception {
 		T instance = (T) t.getClass().newInstance();
 		return fieldwiseCopy(t, instance, withTransients);
 	}
-	public static <T> T fieldwiseCopy(T t, T toInstance,boolean withTransients) throws Exception {
+
+	public static <T> T fieldwiseCopy(T t, T toInstance, boolean withTransients)
+			throws Exception {
 		List<Field> allFields = new ArrayList<Field>();
 		Class c = t.getClass();
 		while (c != Object.class) {
@@ -576,7 +581,8 @@ public class ResourceUtilities {
 				if (Modifier.isStatic(field.getModifiers())) {
 					continue;
 				}
-				if (Modifier.isTransient(field.getModifiers())&&!withTransients) {
+				if (Modifier.isTransient(field.getModifiers())
+						&& !withTransients) {
 					continue;
 				}
 				field.setAccessible(true);
@@ -584,7 +590,6 @@ public class ResourceUtilities {
 			}
 			c = c.getSuperclass();
 		}
-		
 		for (Field field : allFields) {
 			field.set(toInstance, field.get(t));
 		}
@@ -617,6 +622,19 @@ public class ResourceUtilities {
 			}
 		} else {
 			return readClassPathResourceAsString(clazz, path);
+		}
+	}
+
+	public static StringMap classPathStringMap(Class clazz, String path) {
+		return StringMap
+				.fromPropertyString(readClassPathResourceAsString(clazz, path));
+	}
+
+	public static void writeStringToFileNoUpdate(String content, String path)
+			throws Exception {
+		String current = readFileToString(path);
+		if (!current.equals(content)) {
+			writeStringToFile(content, path);
 		}
 	}
 }

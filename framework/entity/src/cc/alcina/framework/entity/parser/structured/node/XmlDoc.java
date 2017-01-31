@@ -61,4 +61,8 @@ public class XmlDoc extends XmlNode {
 	public static XmlNode createDocumentElement(String tag) {
 		return new XmlDoc(String.format("<%s/>", tag)).getDocumentElementNode();
 	}
+	public static XmlNode standaloneNodeFor(Node n){
+		XmlDoc doc = new XmlDoc(n.getOwnerDocument());
+		return doc.nodeFor(n);
+	}
 }

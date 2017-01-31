@@ -94,7 +94,7 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 			trans = getClass().getResourceAsStream(xslPath);
 		}
 		String marker = getClass().getName() + "/" + xslPath;
-		Source trSource = new StreamSource(trans);
+		Source trSource = XmlUtils.interpolateStreamSource(trans);
 		Source dataSource = new DOMSource(doc);
 		results.htmlContent = XmlUtils.transformDocToString(dataSource,
 				trSource, marker, getTransformerFactoryConfigurator());
