@@ -143,9 +143,14 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 	}
 
 	public static Registry servletLayerRegistry() {
-		ClassLoaderAwareRegistryProvider clRegistry = (ClassLoaderAwareRegistryProvider) Registry
-				.getProvider();
-		return clRegistry.perClassLoader
-				.get(clRegistry.servletLayerClassLoader);
+		if (Registry
+				.getProvider() instanceof ClassLoaderAwareRegistryProvider) {
+			ClassLoaderAwareRegistryProvider clRegistry = (ClassLoaderAwareRegistryProvider) Registry
+					.getProvider();
+			return clRegistry.perClassLoader
+					.get(clRegistry.servletLayerClassLoader);
+		} else {
+			return Registry.get();
+		}
 	}
 }
