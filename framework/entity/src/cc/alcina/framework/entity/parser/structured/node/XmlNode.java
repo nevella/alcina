@@ -401,7 +401,11 @@ public class XmlNode {
 			elements.removeIf(n -> !n.tagIs(tag));
 			return elements;
 		}
-
+		public List<XmlNode> byTags(String... tags) {
+			List<XmlNode> elements = elements();
+			elements.removeIf(n -> !n.tagIsOneOf(tags));
+			return elements;
+		}
 		public void clear() {
 			nodes().stream().forEach(XmlNode::removeFromParent);
 		}
