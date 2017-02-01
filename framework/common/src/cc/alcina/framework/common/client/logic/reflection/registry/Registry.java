@@ -274,6 +274,10 @@ public class Registry {
 		return CommonUtils.dedupe(result);
 	}
 
+	public UnsortedMultikeyMap<Class> getRegistry() {
+		return this.registry;
+	}
+
 	public List<Class> lookup(Class registryPoint) {
 		return lookup(false, registryPoint, void.class, true);
 	}

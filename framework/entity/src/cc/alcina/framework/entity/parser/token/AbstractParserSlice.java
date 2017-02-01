@@ -36,6 +36,9 @@ public class AbstractParserSlice<T extends ParserToken> {
 
 	@Override
 	public boolean equals(Object obj) {
+		if (useObjectHashAndEquality()) {
+			return super.equals(obj);
+		}
 		if (obj instanceof AbstractParserSlice) {
 			AbstractParserSlice slice = (AbstractParserSlice) obj;
 			return start.equals(slice.start) && end.equals(slice.end);
@@ -43,9 +46,14 @@ public class AbstractParserSlice<T extends ParserToken> {
 		return super.equals(obj);
 	}
 
+	protected boolean useObjectHashAndEquality() {
+		return true;
+	}
+
 	@Override
 	public int hashCode() {
-		return start.hashCode() ^ end.hashCode();
+		return useObjectHashAndEquality() ? super.hashCode()
+				: start.hashCode() ^ end.hashCode();
 	}
 
 	public AbstractParserSlice(XmlUtils.DOMLocation start,

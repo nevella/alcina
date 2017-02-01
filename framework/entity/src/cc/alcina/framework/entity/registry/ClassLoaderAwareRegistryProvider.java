@@ -153,4 +153,44 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 			return Registry.get();
 		}
 	}
+
+	public void dumpRegistries() {
+		perClassLoader.values().forEach(reg -> {
+			reg.getRegistry().keySet().forEach(k -> System.out
+					.format("%-12s %s\n", k.hashCode(), ((Class) k).getName()));
+		});
+	}
+
+	public static <T> Class<T> servletLayerClass(Class<T> clazz) {
+		if (Registry
+				.getProvider() instanceof ClassLoaderAwareRegistryProvider) {
+			ClassLoaderAwareRegistryProvider clRegistry = (ClassLoaderAwareRegistryProvider) Registry
+					.getProvider();
+			if (clazz.getClassLoader() == clRegistry.servletLayerClassLoader) {
+				return clazz;
+			} else {
+				try {
+					return (Class<T>) clRegistry.servletLayerClassLoader
+							.loadClass(clazz.getName());
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
+		return clazz;
+	}
+
+	private static ClassLoader pushedContextClassLoader;
+
+	public static void pushServletLayerRegistry() {
+		pushedContextClassLoader = Thread.currentThread()
+				.getContextClassLoader();
+		Thread.currentThread().setContextClassLoader(
+				((ClassLoaderAwareRegistryProvider) Registry
+						.getProvider()).servletLayerClassLoader);
+	}
+
+	public static void popServletLayerRegistry() {
+		Thread.currentThread().setContextClassLoader(pushedContextClassLoader);
+	}
 }
