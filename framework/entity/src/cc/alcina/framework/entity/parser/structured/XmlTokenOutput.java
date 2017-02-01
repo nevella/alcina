@@ -26,7 +26,8 @@ public class XmlTokenOutput {
 
 	public void close(XmlStructuralJoin outNode, String tag) {
 		if (!writeCursor.tagIs(tag)) {
-			System.out.println(XmlUtils.prettyPrintWithDOM3LS(outDoc.domDoc()));
+			outDoc.logToFile();
+			System.err.println("see /tmp/tmp.xml for details");
 			throw new RuntimeException(
 					String.format("closing unmatched tag : %s -> %s",
 							writeCursor.name(), tag));
