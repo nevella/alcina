@@ -401,11 +401,13 @@ public class XmlNode {
 			elements.removeIf(n -> !n.tagIs(tag));
 			return elements;
 		}
+
 		public List<XmlNode> byTags(String... tags) {
 			List<XmlNode> elements = elements();
 			elements.removeIf(n -> !n.tagIsOneOf(tags));
 			return elements;
 		}
+
 		public void clear() {
 			nodes().stream().forEach(XmlNode::removeFromParent);
 		}
@@ -518,6 +520,15 @@ public class XmlNode {
 		public boolean soleElement(String tag) {
 			List<XmlNode> elts = elements();
 			return elts.size() == 1 && elts.get(0).tagIs(tag);
+		}
+
+		public XmlNode
+				soleElementExcludingProcessingInstructionsAndWhitespace() {
+			List<XmlNode> nodes = nodes().stream().filter(
+					n -> !n.isProcessingInstruction() && !n.ntc().isEmpty())
+					.collect(Collectors.toList());
+			return nodes.size() == 1 && nodes.get(0).isElement() ? nodes.get(0)
+					: null;
 		}
 	}
 
