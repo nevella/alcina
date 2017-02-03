@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
@@ -82,7 +83,7 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 	public void setValue(Set<H> value) {
 		this.value = value;
 		renderTable();
-		setStyleName("empty", value.isEmpty());
+		setStyleName("empty", CommonUtils.nonNullSet(value).isEmpty());
 	}
 
 	private void renderTable() {
@@ -105,7 +106,7 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 			tableMask |= BoundTableExt.ROW_HANDLE_MASK
 					| BoundTableExt.HANDLES_AS_CHECKBOXES;
 		}
-		List<H> values = new ArrayList<>(getValue());
+		List<H> values = new ArrayList<>(CommonUtils.nonNullSet(getValue()));
 		values = filterVisibleValues(values);
 		values.sort(HiliComparator.INSTANCE);
 		values.forEach(v -> TransformManager.get().registerDomainObject(v));

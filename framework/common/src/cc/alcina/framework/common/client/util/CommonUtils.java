@@ -1449,4 +1449,8 @@ public class CommonUtils {
 				.filter(s -> CommonUtils.isNotNullOrEmpty(s)).findFirst()
 				.orElse(null);
 	}
+
+	public static Set nonNullSet(Set value) {
+		return value == null ? new LinkedHashSet<>() : value;
+	}
 }

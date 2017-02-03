@@ -183,14 +183,21 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 	private static ClassLoader pushedContextClassLoader;
 
 	public static void pushServletLayerRegistry() {
-		pushedContextClassLoader = Thread.currentThread()
-				.getContextClassLoader();
-		Thread.currentThread().setContextClassLoader(
-				((ClassLoaderAwareRegistryProvider) Registry
-						.getProvider()).servletLayerClassLoader);
+		if (Registry
+				.getProvider() instanceof ClassLoaderAwareRegistryProvider) {
+			pushedContextClassLoader = Thread.currentThread()
+					.getContextClassLoader();
+			Thread.currentThread().setContextClassLoader(
+					((ClassLoaderAwareRegistryProvider) Registry
+							.getProvider()).servletLayerClassLoader);
+		}
 	}
 
 	public static void popServletLayerRegistry() {
-		Thread.currentThread().setContextClassLoader(pushedContextClassLoader);
+		if (Registry
+				.getProvider() instanceof ClassLoaderAwareRegistryProvider) {
+			Thread.currentThread()
+					.setContextClassLoader(pushedContextClassLoader);
+		}
 	}
 }

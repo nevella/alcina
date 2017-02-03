@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.util.SynchronizedDateFormat;
 
 public class JobId implements Serializable, Comparable<JobId> {
 	static final transient long serialVersionUID = -3L;
@@ -18,7 +19,7 @@ public class JobId implements Serializable, Comparable<JobId> {
 
 	private static transient AtomicInteger counter = new AtomicInteger();
 
-	static transient SimpleDateFormat NUMERICAL_DATE_FORMAT = new SimpleDateFormat(
+	static transient SimpleDateFormat NUMERICAL_DATE_FORMAT = new SynchronizedDateFormat(
 			"yyyyMMdd_HHmmss_SSS");
 
 	public JobId(Class performerClass, String jobLauncher) {

@@ -88,6 +88,8 @@ public class ColumnsBuilder<T> {
 
 		private Cell editableCell;
 
+		private boolean numeric;
+
 		private Cell cell;
 
 		public ColumnBuilder(String name) {
@@ -119,6 +121,14 @@ public class ColumnsBuilder<T> {
 						@Override
 						public String getValue() {
 							return name;
+						}
+
+						@Override
+						public String getHeaderStyleNames() {
+							if (numeric) {
+								return "numeric";
+							}
+							return super.getHeaderStyleNames();
 						}
 					};
 					table.addColumn(col, header, footer);
@@ -167,6 +177,7 @@ public class ColumnsBuilder<T> {
 		}
 
 		public ColumnBuilder numeric() {
+			numeric = true;
 			return this.style("numeric");
 		}
 

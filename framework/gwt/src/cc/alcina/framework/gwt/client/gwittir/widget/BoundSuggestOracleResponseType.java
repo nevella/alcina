@@ -16,17 +16,21 @@ public interface BoundSuggestOracleResponseType {
 
 	public static class BoundSuggestOracleSuggestion
 			implements Suggestion, Serializable {
+		private String displayString;
+
 		@Override
 		public String getDisplayString() {
-			return typedValue.toSuggestionString();
+			return displayString;
 		}
 
 		public BoundSuggestOracleSuggestion() {
+			
 		}
 
 		public BoundSuggestOracleSuggestion(
 				BoundSuggestOracleResponseType typedValue) {
 			this.typedValue = typedValue;
+			displayString = typedValue.toSuggestionString();
 		}
 
 		@Override

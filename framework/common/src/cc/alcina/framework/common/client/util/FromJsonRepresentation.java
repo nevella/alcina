@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.util;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -18,9 +17,10 @@ import org.json.JSONObject;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.util.SynchronizedDateFormat;
 
 public interface FromJsonRepresentation {
-	static public final DateFormat CONVERSION_DATE_FORMAT = new SimpleDateFormat(
+	static public final DateFormat CONVERSION_DATE_FORMAT = new SynchronizedDateFormat(
 			"yyyy/MM/dd HH:mm:ss +0000");
 
 	public static class JsoToFromJsonRep implements Function<Object, Object> {

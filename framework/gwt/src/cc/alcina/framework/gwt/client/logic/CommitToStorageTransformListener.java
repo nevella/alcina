@@ -48,6 +48,7 @@ import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolutionToken;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolverAction;
+import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -527,5 +528,15 @@ public class CommitToStorageTransformListener extends StateListenable
 				}
 			}
 		}
+	}
+
+	public static void flushAndRun(Runnable runnable) {
+		Registry.impl(CommitToStorageTransformListener.class)
+				.flushWithOneoffCallback(new AsyncCallbackStd() {
+					@Override
+					public void onSuccess(Object result) {
+						runnable.run();
+					}
+				});
 	}
 }
