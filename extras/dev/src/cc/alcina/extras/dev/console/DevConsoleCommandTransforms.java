@@ -556,6 +556,7 @@ public class DevConsoleCommandTransforms {
 				if (outputTransforms) {
 					List<DomainTransformEvent> dtes = new RsrowToDteConverter(
 							true).convert(rs);
+					ResourceUtilities.writeStringToFile(dtes.toString(), "/tmp/transforms.txt");
 					System.out.println(dtes);
 				} else if (valuesOnly) {
 					while (rs.next()) {
