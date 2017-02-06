@@ -557,8 +557,9 @@ public class XmlUtils {
 			StringBuffer out = new StringBuffer();
 			while (m.find()) {
 				m.appendReplacement(out,
-						ResourceUtilities.readClassPathResourceAsString(
-								XmlUtils.class, m.group(1)));
+						Matcher.quoteReplacement(
+								ResourceUtilities.readClassPathResourceAsString(
+										XmlUtils.class, m.group(1))));
 			}
 			m.appendTail(out);
 			return new StreamSource(

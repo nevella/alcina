@@ -26,14 +26,19 @@ public class ShellWrapper {
 
 	public boolean logToStdOut = true;
 
-	public void runBashScript(String script) throws Exception {
+	public ShellOutputTuple runBashScript(String script) throws Exception {
 		File tmp = File.createTempFile("shell", ".sh");
 		tmp.deleteOnExit();
 		ResourceUtilities.writeStringToFile(script, tmp);
-		runShell(tmp.getPath(), "/bin/bash");
+		ShellOutputTuple outputTuple = runShell(tmp.getPath(), "/bin/bash");
 		tmp.delete();
+		return outputTuple;
 	}
 
+	public ShellWrapper noLogging(){
+		logToStdOut=false;
+		return this;
+	}
 	public ShellOutputTuple runProcessCatchOutputAndWait(String... cmdAndArgs)
 			throws Exception {
 		return runProcessCatchOutputAndWaitPrompt("", cmdAndArgs);
