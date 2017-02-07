@@ -95,6 +95,11 @@ public class StringMap extends LinkedHashMap<String, String> {
 		}
 	}
 
+	public Map<String,String> asLinkedHashMap()
+	{
+		return new LinkedHashMap<>(this);
+	}
+
 	public StringMap(Map<String, String> otherMap) {
 		super(otherMap);
 	}
