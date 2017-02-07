@@ -1319,7 +1319,17 @@ public class CommonUtils {
 		if (isNullOrEmpty(s)) {
 			return s;
 		}
-		return s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
+		String pre = "";
+		if (s.length() > 1 && s.matches("[({\\[].+")) {
+			pre += s.substring(0, 1);
+			s = s.substring(1);
+		}
+		if (s.length() > 2 && s.matches("[A-Z]['’].+")) {
+			pre += s.substring(0, 2);
+			s = s.substring(2);
+		}
+		return pre + s.substring(0, 1).toUpperCase()
+				+ s.substring(1).toLowerCase();
 	}
 
 	public static Collection wrapInCollection(Object o) {
