@@ -351,6 +351,10 @@ public class AlcinaMemCache implements RegistrableService {
 
 	boolean publishMappingEvents;
 
+	private AtomicInteger dumpLocksCount=new AtomicInteger();
+
+	private AtomicInteger longLocksCount=new AtomicInteger();
+
 	public AlcinaMemCache() {
 		ThreadlocalTransformManager.threadTransformManagerWasResetListenerDelta(
 				resetListener, true);
@@ -1206,6 +1210,9 @@ public class AlcinaMemCache implements RegistrableService {
 				System.out.println(getLockDumpString(lockDumpCause, time
 						- lastQueueDumpTime > 5 * TimeConstants.ONE_MINUTE_MS));
 			}
+			if (dumpLocksCount.incrementAndGet() > 100) {
+				dumpLocks = false;
+			}
 			if (collectLockAcquisitionPoints) {
 				synchronized (recentLockAcquisitions) {
 					recentLockAcquisitions.add(lockDumpCause);
@@ -1556,6 +1563,9 @@ public class AlcinaMemCache implements RegistrableService {
 					&& e.getKey() == postProcessWriterThread)) {
 				if (ResourceUtilities.is(AlcinaMemCache.class,
 						"debugLongLocks")) {
+					if (longLocksCount.incrementAndGet() > 200) {
+						return;
+					}
 					System.out.format("Long lock holder - %s ms - %s\n%s\n\n",
 							duration, e.getKey(),
 							SEUtilities.getStacktraceSlice(e.getKey(),
@@ -1790,15 +1800,32 @@ public class AlcinaMemCache implements RegistrableService {
 				if (!causes.isEmpty()) {
 					UmbrellaException umby = new UmbrellaException(causes);
 					causes.iterator().next().printStackTrace();
-					GlobalTopicPublisher.get()
-							.publishTopic(TOPIC_UPDATE_EXCEPTION, umby);
-					health.memcacheExceptionCount.incrementAndGet();
-					throw new MemcacheException(umby);
+					MemcacheUpdateException memcacheUpdateException = new MemcacheUpdateException(
+							umby);
+					GlobalTopicPublisher.get().publishTopic(
+							TOPIC_UPDATE_EXCEPTION, memcacheUpdateException);
+					if (memcacheUpdateException.ignoreForMemcacheExceptionCount) {
+						memcacheUpdateException.printStackTrace();
+					} else {
+						health.memcacheExceptionCount.incrementAndGet();
+						throw new MemcacheException(umby);
+					}
 				}
 			} catch (Throwable t) {
 				t.printStackTrace();
 			}
 		}
+	}
+
+	public static class MemcacheUpdateException extends Exception {
+		public UmbrellaException umby;
+
+		public MemcacheUpdateException(UmbrellaException umby) {
+			super("Memcache update exception - ignoreable", umby);
+			this.umby = umby;
+		}
+
+		public boolean ignoreForMemcacheExceptionCount;
 	}
 
 	synchronized LaterLookup warmupLaterLookup() {

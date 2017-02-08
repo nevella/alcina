@@ -77,6 +77,8 @@ import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
+import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 
 /**
  *
@@ -99,6 +101,9 @@ public class XmlUtils {
 
 	public static final String CONTEXT_MUTE_XML_SAX_EXCEPTIONS = XmlUtils.class
 			.getName() + ".CONTEXT_MUTE_XML_SAX_EXCEPTIONS";
+
+	public static final String CONTEXT_XSL_STRIP_WHITESPACE = XmlUtils.class
+			.getName() + ".CONTEXT_XSL_STRIP_WHITESPACE";
 
 	private static XPointerConverter xPointerConverter;
 
@@ -556,16 +561,33 @@ public class XmlUtils {
 			Matcher m = p.matcher(xsl);
 			StringBuffer out = new StringBuffer();
 			while (m.find()) {
-				m.appendReplacement(out,
-						Matcher.quoteReplacement(
-								ResourceUtilities.readClassPathResourceAsString(
-										XmlUtils.class, m.group(1))));
+				String toImport = ResourceUtilities
+						.readClassPathResourceAsString(XmlUtils.class,
+								m.group(1));
+				m.appendReplacement(out, Matcher.quoteReplacement(toImport));
 			}
 			m.appendTail(out);
+			if (LooseContext.is(CONTEXT_XSL_STRIP_WHITESPACE)) {
+				XmlDoc doc = new XmlDoc(out.toString());
+				doc.children.flat().filter(XmlNode::isText).forEach(
+						n -> n.setText(trimAndNormaliseWrappingNewlines(
+								n.parent().nameIs("xsl:text"),
+								n.textContent())));
+				out = new StringBuffer(streamXML(doc.domDoc()));
+			}
 			return new StreamSource(
 					ResourceUtilities.writeStringToInputStream(out.toString()));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	private static String trimAndNormaliseWrappingNewlines(
+			boolean parentIsTextNode, String text) {
+		if (parentIsTextNode) {
+			return text.replaceFirst("(?s)^[\n]*(.+?)[\n]*$", "$1");
+		} else {
+			return text.replaceFirst("(?s)^[ \t\n]*(.+?)[ \t\n]*$", "$1");
 		}
 	}
 
