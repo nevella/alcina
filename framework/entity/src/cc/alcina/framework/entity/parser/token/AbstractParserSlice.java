@@ -76,9 +76,12 @@ public class AbstractParserSlice<T extends ParserToken> {
 		while ((n = itr.getCurrentNode()) != null) {
 			content.append(n.getNodeValue());
 			if (content.length() >= length) {
-				end = new DOMLocation(end.node, start.characterOffset
+				end = new DOMLocation(n, start.characterOffset
 						+ n.getNodeValue().length() + length - content.length(),
 						end.nodeIndex);
+				// note - looks like DOMLocation.nodeIndex ain't that crucial
+				// (since that info's implicit in the node)
+				// may want to drop it?
 				break;
 			}
 			itr.nextNode();
