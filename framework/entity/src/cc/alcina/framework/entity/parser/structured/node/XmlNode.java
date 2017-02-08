@@ -530,6 +530,12 @@ public class XmlNode {
 			return nodes.size() == 1 && nodes.get(0).isElement() ? nodes.get(0)
 					: null;
 		}
+
+		public String textContent() {
+			return SEUtilities.normalizeWhitespaceAndTrim(nodes().stream()
+					.filter(XmlNode::isText).map(XmlNode::textContent)
+					.collect(Collectors.joining()));
+		}
 	}
 
 	public class XmlNodeCss {
@@ -625,7 +631,11 @@ public class XmlNode {
 		private XpathHelper xh;
 
 		public XmlNodeXpath() {
-			xh = new XpathHelper(node);
+			if (doc == XmlNode.this) {
+				xh = new XpathHelper(node);
+			} else {
+				xh = doc.xpath().xh;
+			}
 			eval = xh.createOptimisedEvaluator(node);
 		}
 
