@@ -33,6 +33,11 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.WriterAppender;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.GWTBridge;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.Widget;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
@@ -67,11 +72,6 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.GWTBridge;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.Widget;
-
 public abstract class DevHelper {
 	public class GWTBridgeDummy extends GWTBridge {
 		@Override
@@ -98,6 +98,8 @@ public abstract class DevHelper {
 
 	private MessagingWriter messagingWriter;
 
+	protected String configPath;
+
 	public interface StringPrompter {
 		String getValue(String prompt);
 	}
@@ -117,19 +119,22 @@ public abstract class DevHelper {
 
 	public abstract void readAppObjectGraph();
 
+	protected String getAppConfigPath(Preferences prefs) {
+		return prefs.get(JBOSS_CONFIG_PATH, "");
+	}
+
 	public void loadJbossConfig(StringPrompter prompter) {
 		Preferences prefs = Preferences.userNodeForPackage(getClass());
-		String path = null;
+		configPath = null;
 		while (true) {
 			try {
-				path = prefs.get(JBOSS_CONFIG_PATH, "");
-				ResourceUtilities.registerCustomProperties(new FileInputStream(
-						path));
+				configPath = getAppConfigPath(prefs);
+				ResourceUtilities.registerCustomProperties(new FileInputStream(configPath));
 				break;
 			} catch (Exception e) {
-				String prompt = getJbossConfigPrompt(path);
-				path = prompter.getValue(prompt);
-				prefs.put(JBOSS_CONFIG_PATH, path);
+				String prompt = getJbossConfigPrompt(configPath);
+				configPath = prompter.getValue(prompt);
+				prefs.put(JBOSS_CONFIG_PATH, configPath);
 			}
 		}
 	}
@@ -157,10 +162,10 @@ public abstract class DevHelper {
 		}
 	};
 
-	private TopicListener<Exception> devWarningListener=new TopicListener<Exception>() {
+	private TopicListener<Exception> devWarningListener = new TopicListener<Exception>() {
 		@Override
 		public void topicPublished(String key, Exception ex) {
-//			System.err.println(ex.getMessage());
+			// System.err.println(ex.getMessage());
 		}
 	};
 
@@ -207,8 +212,7 @@ public abstract class DevHelper {
 		EntityLayerObjects.get().setPersistentLogger(getTestLogger());
 		AlcinaTopics.notifyDevWarningListenerDelta(devWarningListener, true);
 		try {
-			Method m = GWT.class
-					.getDeclaredMethod("setBridge", GWTBridge.class);
+			Method m = GWT.class.getDeclaredMethod("setBridge", GWTBridge.class);
 			m.setAccessible(true);
 			m.invoke(null, new GWTBridgeDummy());
 		} catch (Exception e) {
@@ -223,9 +227,7 @@ public abstract class DevHelper {
 	protected void initClientReflector() {
 		try {
 			Object clientReflectorJvm = Class
-					.forName(
-							"cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm")
-					.newInstance();
+					.forName("cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm").newInstance();
 			ClientReflector.register((ClientReflector) clientReflectorJvm);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -242,11 +244,9 @@ public abstract class DevHelper {
 		try {
 			Logger logger = getTestLogger();
 			long t1 = System.currentTimeMillis();
-			ClassDataCache classes = new ServletClasspathScanner("*", true, true,
-					null, Registry.MARKER_RESOURCE, Arrays.asList(new String[] {}))
-					.getClasses();
-			new RegistryScanner().scan(classes, new ArrayList<String>(),
-					Registry.get(), "dev-helper");
+			ClassDataCache classes = new ServletClasspathScanner("*", true, true, null, Registry.MARKER_RESOURCE,
+					Arrays.asList(new String[] {})).getClasses();
+			new RegistryScanner().scan(classes, new ArrayList<String>(), Registry.get(), "dev-helper");
 			long t2 = System.currentTimeMillis();
 			// System.out.println("Registry scan: " + (t2 - t1));
 		} catch (Exception e) {
@@ -319,15 +319,14 @@ public abstract class DevHelper {
 		}
 
 		@Override
-		public void showDialog(String captionHTML, Widget captionWidget,
-				String msg, MessageType messageType, List<Button> extraButtons) {
+		public void showDialog(String captionHTML, Widget captionWidget, String msg, MessageType messageType,
+				List<Button> extraButtons) {
 			// TODO Auto-generated method stub
 		}
 
 		@Override
-		public void showDialog(String captionHTML, Widget captionWidget,
-				String msg, MessageType messageType, List<Button> extraButtons,
-				String containerStyle) {
+		public void showDialog(String captionHTML, Widget captionWidget, String msg, MessageType messageType,
+				List<Button> extraButtons, String containerStyle) {
 			// TODO Auto-generated method stub
 		}
 
@@ -433,11 +432,9 @@ public abstract class DevHelper {
 	}
 
 	public <V> V readObject(V template, String lkpName) {
-		File cacheFile = new File(getTestFolder().getPath() + File.separator
-				+ lkpName + ".ser");
+		File cacheFile = new File(getTestFolder().getPath() + File.separator + lkpName + ".ser");
 		try {
-			ObjectInputStream ois = new ObjectInputStream(
-					new BufferedInputStream(new FileInputStream(cacheFile)));
+			ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(cacheFile)));
 			V value = (V) ois.readObject();
 			ois.close();
 			return value;
@@ -493,8 +490,7 @@ public abstract class DevHelper {
 	}
 
 	private File getFile(String lkpName, boolean gz) {
-		File cacheFile = new File(getTestFolder().getPath() + File.separator
-				+ lkpName + ".ser" + (gz ? ".gz" : ""));
+		File cacheFile = new File(getTestFolder().getPath() + File.separator + lkpName + ".ser" + (gz ? ".gz" : ""));
 		return cacheFile;
 	}
 
@@ -513,8 +509,7 @@ public abstract class DevHelper {
 	public Connection getConnLocal() throws Exception {
 		if (connLocal == null) {
 			Class.forName("org.postgresql.Driver");
-			connLocal = DriverManager.getConnection(
-					"jdbc:postgresql://127.0.0.1:5432/jade", "jade", "jade");
+			connLocal = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/jade", "jade", "jade");
 		}
 		return connLocal;
 	}
@@ -532,8 +527,7 @@ public abstract class DevHelper {
 	public Connection getConnDev() throws Exception {
 		if (connDev == null) {
 			Class.forName("org.postgresql.Driver");
-			connDev = DriverManager.getConnection(
-					"jdbc:postgresql://127.0.0.1:5433/jade", "jade", "jade");
+			connDev = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5433/jade", "jade", "jade");
 		}
 		return connDev;
 	}
@@ -541,8 +535,7 @@ public abstract class DevHelper {
 	public Connection getConnProduction() throws Exception {
 		if (connProduction == null) {
 			Class.forName("org.postgresql.Driver");
-			connProduction = DriverManager.getConnection(
-					"jdbc:postgresql://127.0.0.1:5434/jade", "jade", "jade");
+			connProduction = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5434/jade", "jade", "jade");
 		}
 		return connProduction;
 	}
@@ -552,8 +545,7 @@ public abstract class DevHelper {
 	}
 
 	public Set<Long> getIds(String fileName) throws Exception {
-		String idStr = ResourceUtilities
-				.readFileToString(fileName);
+		String idStr = ResourceUtilities.readFileToString(fileName);
 		Pattern p = Pattern.compile("\\d+");
 		Set<Long> ids = new LinkedHashSet<Long>();
 		Matcher m = p.matcher(idStr);

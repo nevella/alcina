@@ -117,8 +117,7 @@ public class ResourceUtilities {
 		return readUrlAsString(strUrl, null);
 	}
 
-	public static String readUrlAsString(String strUrl, String charset)
-			throws Exception {
+	public static String readUrlAsString(String strUrl, String charset) throws Exception {
 		URL url = new URL(strUrl);
 		InputStream is = null;
 		is = url.openConnection().getInputStream();
@@ -126,8 +125,7 @@ public class ResourceUtilities {
 		return input;
 	}
 
-	public static int getInteger(Class clazz, String propertyName,
-			int defaultValue) {
+	public static int getInteger(Class clazz, String propertyName, int defaultValue) {
 		try {
 			String s = getBundledString(clazz, propertyName);
 			return Integer.valueOf(s);
@@ -136,16 +134,14 @@ public class ResourceUtilities {
 		}
 	}
 
-	public static synchronized String getBundledString(Class clazz,
-			String propertyName) {
-		String namespacedKey = (clazz == null) ? propertyName : clazz
-				.getSimpleName() + "." + propertyName;
+	public static synchronized String getBundledString(Class clazz, String propertyName) {
+		String namespacedKey = (clazz == null) ? propertyName : clazz.getSimpleName() + "." + propertyName;
 		if (customProperties.containsKey(namespacedKey)) {
 			return customProperties.get(namespacedKey);
 		}
 		ResourceBundle b = null;
-		b = ResourceBundle.getBundle(clazz.getPackage().getName() + ".Bundle",
-				Locale.getDefault(), clazz.getClassLoader());
+		b = ResourceBundle.getBundle(clazz.getPackage().getName() + ".Bundle", Locale.getDefault(),
+				clazz.getClassLoader());
 		if (b.keySet().contains(namespacedKey)) {
 			return b.getString(namespacedKey);
 		}
@@ -161,21 +157,18 @@ public class ResourceUtilities {
 		return asB64;
 	}
 
-	public static String writeObjectAsBase64URL(Object object)
-			throws IOException {
+	public static String writeObjectAsBase64URL(Object object) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream(baos);
 		oos.writeObject(object);
 		oos.close();
-		String asB64 = Base64.getUrlEncoder()
-				.encodeToString(baos.toByteArray());
+		String asB64 = Base64.getUrlEncoder().encodeToString(baos.toByteArray());
 		return asB64;
 	}
 
 	public static <T> T readObjectFromBase64(String string) throws IOException {
 		byte[] bytes = Base64.getDecoder().decode(string.trim());
-		try (ObjectInputStream in = new ObjectInputStream(
-				new ByteArrayInputStream(bytes))) {
+		try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
 			try {
 				return (T) in.readObject();
 			} catch (Exception e) {
@@ -184,11 +177,9 @@ public class ResourceUtilities {
 		}
 	}
 
-	public static <T> T readObjectFromBase64Url(String string)
-			throws IOException {
+	public static <T> T readObjectFromBase64Url(String string) throws IOException {
 		byte[] bytes = Base64.getUrlDecoder().decode(string.trim());
-		try (ObjectInputStream in = new ObjectInputStream(
-				new ByteArrayInputStream(bytes))) {
+		try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
 			try {
 				return (T) in.readObject();
 			} catch (Exception e) {
@@ -238,8 +229,7 @@ public class ResourceUtilities {
 		return beanInfo;
 	}
 
-	public static OutputStream scaleImage(InputStream in, int width,
-			int height, OutputStream out) throws IOException {
+	public static OutputStream scaleImage(InputStream in, int width, int height, OutputStream out) throws IOException {
 		byte[] b = readStreamToByteArray(in);
 		ImageIcon icon = new ImageIcon(b);
 		Image image = icon.getImage();
@@ -256,26 +246,22 @@ public class ResourceUtilities {
 		}
 		// draw original image to thumbnail image object and
 		// scale it to the new size on-the-fly
-		BufferedImage thumbImage = new BufferedImage(thumbWidth, thumbHeight,
-				BufferedImage.TYPE_INT_RGB);
+		BufferedImage thumbImage = new BufferedImage(thumbWidth, thumbHeight, BufferedImage.TYPE_INT_RGB);
 		Graphics2D graphics2D = thumbImage.createGraphics();
-		graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-				RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		graphics2D.drawImage(image, 0, 0, thumbWidth, thumbHeight, null);
 		// save thumbnail image to OUTFILE
 		ImageIO.write(thumbImage, "png", out);
 		return out;
 	}
 
-	public static byte[] readStreamToByteArray(InputStream is)
-			throws IOException {
+	public static byte[] readStreamToByteArray(InputStream is) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		writeStreamToStream(is, baos);
 		return baos.toByteArray();
 	}
 
-	public static void writeStreamToStream(InputStream is, OutputStream os)
-			throws IOException {
+	public static void writeStreamToStream(InputStream is, OutputStream os) throws IOException {
 		BufferedOutputStream bos = new BufferedOutputStream(os);
 		InputStream in = new BufferedInputStream(is);
 		int bufLength = 8192;
@@ -296,8 +282,7 @@ public class ResourceUtilities {
 			ObjectOutputStream out = new ObjectOutputStream(baos);
 			out.writeObject(bean);
 			out.close();
-			ObjectInputStream in = new ObjectInputStream(
-					new ByteArrayInputStream(baos.toByteArray()));
+			ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
 			result = in.readObject();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -305,16 +290,14 @@ public class ResourceUtilities {
 		return result;
 	}
 
-	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
-			Class methodFilterAnnotation, boolean cloneCollections) {
-		return copyBeanProperties(srcBean, tgtBean, methodFilterAnnotation,
-				cloneCollections, new ArrayList<String>());
+	public static <T> T copyBeanProperties(Object srcBean, T tgtBean, Class methodFilterAnnotation,
+			boolean cloneCollections) {
+		return copyBeanProperties(srcBean, tgtBean, methodFilterAnnotation, cloneCollections, new ArrayList<String>());
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
-			Class methodFilterAnnotation, boolean cloneCollections,
-			Collection<String> ignorePropertyNames) {
+	public static <T> T copyBeanProperties(Object srcBean, T tgtBean, Class methodFilterAnnotation,
+			boolean cloneCollections, Collection<String> ignorePropertyNames) {
 		BeanInfo info = getBeanInfo(srcBean.getClass());
 		BeanInfo infoTgt = getBeanInfo(tgtBean.getClass());
 		for (PropertyDescriptor pd : infoTgt.getPropertyDescriptors()) {
@@ -341,10 +324,8 @@ public class ResourceUtilities {
 			if (setMethod != null) {
 				try {
 					Object obj = getMethod.invoke(srcBean, (Object[]) null);
-					if (cloneCollections && obj instanceof Collection
-							&& obj instanceof Cloneable) {
-						Method clone = obj.getClass().getMethod("clone",
-								new Class[0]);
+					if (cloneCollections && obj instanceof Collection && obj instanceof Cloneable) {
+						Method clone = obj.getClass().getMethod("clone", new Class[0]);
 						clone.setAccessible(true);
 						obj = clone.invoke(obj, CommonUtils.EMPTY_OBJECT_ARRAY);
 					}
@@ -370,11 +351,9 @@ public class ResourceUtilities {
 
 	public static boolean isIntegralType(Class c) {
 		if (c.isPrimitive()) {
-			return c != char.class && c != boolean.class && c != float.class
-					&& c != double.class;
+			return c != char.class && c != boolean.class && c != float.class && c != double.class;
 		} else {
-			return c == Integer.class || c == Byte.class || c == Short.class
-					|| c == Long.class;
+			return c == Integer.class || c == Byte.class || c == Short.class || c == Long.class;
 		}
 	}
 
@@ -386,11 +365,9 @@ public class ResourceUtilities {
 		return readStreamToString(is, null);
 	}
 
-	public static String readStreamToString(InputStream is, String charsetName)
-			throws IOException {
+	public static String readStreamToString(InputStream is, String charsetName) throws IOException {
 		charsetName = charsetName == null ? "UTF-8" : charsetName;
-		BufferedReader in = new BufferedReader(new InputStreamReader(is,
-				charsetName));
+		BufferedReader in = new BufferedReader(new InputStreamReader(is, charsetName));
 		String s = readerToString(in);
 		is.close();
 		return s;
@@ -411,8 +388,7 @@ public class ResourceUtilities {
 		writeStringToOutputStream(s, new FileOutputStream(f));
 	}
 
-	public static void writeStringToOutputStream(String s, OutputStream os)
-			throws IOException {
+	public static void writeStringToOutputStream(String s, OutputStream os) throws IOException {
 		OutputStreamWriter fw = new OutputStreamWriter(os, "UTF-8");
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(s);
@@ -420,15 +396,13 @@ public class ResourceUtilities {
 	}
 
 	public static void writeStringToFileGz(String s, File f) throws IOException {
-		OutputStreamWriter fw = new OutputStreamWriter(new GZIPOutputStream(
-				new FileOutputStream(f)), "UTF-8");
+		OutputStreamWriter fw = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(f)), "UTF-8");
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(s);
 		bw.close();
 	}
 
-	public static InputStream writeStringToInputStream(String s)
-			throws IOException {
+	public static InputStream writeStringToInputStream(String s) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		OutputStreamWriter fw = new OutputStreamWriter(baos, "UTF-8");
 		BufferedWriter bw = new BufferedWriter(fw);
@@ -454,14 +428,12 @@ public class ResourceUtilities {
 		return readFileToString(new File(fileName));
 	}
 
-	public static String readFileToString(File f, String charsetName)
-			throws IOException {
+	public static String readFileToString(File f, String charsetName) throws IOException {
 		FileInputStream fis = new FileInputStream(f);
 		return readStreamToString(fis, charsetName);
 	}
 
-	public static BufferedImage getBufferedImage(Class clazz,
-			String relativePath) {
+	public static BufferedImage getBufferedImage(Class clazz, String relativePath) {
 		BufferedImage img = null;
 		if (img == null) {
 			try {
@@ -525,12 +497,15 @@ public class ResourceUtilities {
 		return instance;
 	}
 
-	public static byte[] readClassPathResourceAsByteArray(Class clazz,
-			String path) {
+	public static byte[] readClassPathResourceAsByteArray(Class clazz, String path) {
 		try {
 			return readStreamToByteArray(clazz.getResourceAsStream(path));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public static void writeBytesToFile(byte[] bytes, File dataFile) throws IOException {
+		writeStreamToStream(new ByteArrayInputStream(bytes), new FileOutputStream(dataFile));
 	}
 }
