@@ -12,7 +12,6 @@ public class XmlTokenOutput {
 
 	public StructuredTokenParserContext context;
 
-
 	private XmlNode lastTextNode;
 
 	public XmlNode getLastTextNode() {
@@ -25,6 +24,9 @@ public class XmlTokenOutput {
 	}
 
 	public void close(XmlStructuralJoin outNode, String tag) {
+		if (debug) {
+			System.out.format("close - %s\n", tag);
+		}
 		if (!writeCursor.tagIs(tag)) {
 			outDoc.logToFile();
 			System.err.println("see /tmp/tmp.xml for details");
@@ -41,7 +43,12 @@ public class XmlTokenOutput {
 		open(outNode, tag, new StringMap());
 	}
 
+	boolean debug = false;
+
 	public void open(XmlStructuralJoin outNode, String tag, StringMap attrs) {
+		if (debug) {
+			System.out.format("open - %s - %s\n", tag, attrs);
+		}
 		writeCursor = writeCursor.builder().tag(tag).attrs(attrs).append();
 		writeCursor.open = outNode;
 		outNode.targetNode = writeCursor;
@@ -62,8 +69,11 @@ public class XmlTokenOutput {
 	}
 
 	public void text(String text) {
-		if(text.isEmpty()){
+		if (text.isEmpty()) {
 			return;
+		}
+		if (debug) {
+			System.out.format("text - %s \n", text);
 		}
 		this.lastTextNode = writeCursor.builder().text(text).append();
 	}
@@ -89,5 +99,4 @@ public class XmlTokenOutput {
 		writeCursor.builder().processingInstruction().tag(name).text(data)
 				.append();
 	}
-
 }

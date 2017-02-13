@@ -11,6 +11,7 @@ import java.util.stream.StreamSupport;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
+import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -193,6 +194,14 @@ public class XmlNode {
 		return node.getNodeType() == Node.TEXT_NODE;
 	}
 
+	public void logPretty() {
+		try {
+			XmlUtils.logToFilePretty(node);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public void logToFile() {
 		try {
 			XmlUtils.logToFile(node);
@@ -223,7 +232,7 @@ public class XmlNode {
 
 	public String prettyToString() {
 		try {
-			return XmlUtils.prettyPrintWithDOM3LS(getElement());
+			return XmlUtils.prettyPrintWithDOM3LSNode(getElement());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -259,6 +268,14 @@ public class XmlNode {
 			}
 		}
 		invalidate();
+	}
+
+	public void strip() {
+		DocumentFragment frag = domDoc().createDocumentFragment();
+		XmlNode fragNode = new XmlNode(frag, doc);
+		fragNode.children.adoptFrom(this);
+		relative().insertBefore(fragNode);
+		removeFromParent();
 	}
 
 	public boolean tagIs(String tagName) {

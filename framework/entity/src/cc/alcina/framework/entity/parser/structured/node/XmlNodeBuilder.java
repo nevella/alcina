@@ -94,4 +94,18 @@ public class XmlNodeBuilder {
 		}
 		return doc().nodeFor(node);
 	}
+
+	public XmlNode wrapChildren() {
+		XmlNode node = generate();
+		node.children.adoptFrom(relativeTo);
+		relativeTo.children.append(node);
+		return node;
+	}
+
+	public XmlNode replaceWith() {
+		XmlNode node = generate();
+		node.children.adoptFrom(relativeTo);
+		relativeTo.replaceWith(node);
+		return node;
+	}
 }

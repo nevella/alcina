@@ -840,6 +840,17 @@ public class XmlUtils {
 		ResourceUtilities.writeStringToFile(streamXML(n), "/tmp/tmp.html");
 	}
 
+	public static void logToFilePretty(Node n) throws Exception {
+		if (n instanceof DocumentFragment) {
+			ResourceUtilities.writeStringToFile(
+					prettyPrintWithDOM3LS((DocumentFragment) n),
+					"/tmp/tmp.xml");
+		} else {
+			ResourceUtilities.writeStringToFile(prettyPrintWithDOM3LSNode(n),
+					"/tmp/tmp.xml");
+		}
+	}
+
 	public static void merge(Element to, Element from) {
 		List<Node> nodes = nodeListToList(from.getChildNodes());
 		for (Node node : nodes) {
@@ -1014,8 +1025,8 @@ public class XmlUtils {
 		}
 	}
 
-	public static String prettyPrintWithDOM3LS(Element e) throws Exception {
-		String xml = streamXML(e);
+	public static String prettyPrintWithDOM3LSNode(Node n) throws Exception {
+		String xml = streamXML(n);
 		return prettyPrintWithDOM3LS(loadDocument(xml));
 	}
 
