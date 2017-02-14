@@ -16,7 +16,7 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 
 	private DetachedEntityCacheArrayBacked main = new DetachedEntityCacheArrayBacked();
 
-	private List<PropertyStoreCacheWrapper> psWrappers=new ArrayList<>();
+	private List<PropertyStoreCacheWrapper> psWrappers = new ArrayList<>();
 
 	public void addPropertyStore(CacheItemDescriptor descriptor) {
 		psWrappers.add(new PropertyStoreCacheWrapper(
@@ -41,6 +41,12 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 	@Override
 	public boolean contains(HasIdAndLocalId hili) {
 		return main.contains(hili);
+	}
+
+	@Override
+	public <T extends HasIdAndLocalId> boolean contains(Class<T> clazz,
+			long id) {
+		return main.contains(clazz, id);
 	}
 
 	@Override
@@ -99,7 +105,8 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 	}
 
 	@Override
-	public void putAll(Class clazz, Collection<? extends HasIdAndLocalId> values) {
+	public void putAll(Class clazz,
+			Collection<? extends HasIdAndLocalId> values) {
 		main.putAll(clazz, values);
 	}
 
@@ -157,8 +164,8 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 		committing = true;
 	}
 
-	class PropertyStoreCacheWrapper<V extends HasIdAndLocalId> implements
-			MultiplexableCache {
+	class PropertyStoreCacheWrapper<V extends HasIdAndLocalId>
+			implements MultiplexableCache {
 		private PropertyStoreItemDescriptor descriptor;
 
 		Map<Long, V> commitLookup = new LinkedHashMap<>();
