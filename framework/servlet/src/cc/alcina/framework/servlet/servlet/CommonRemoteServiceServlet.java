@@ -1152,11 +1152,17 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			Response response = new Response();
 			List<T> responses = getResponses(request.getQuery(), request.model,
 					hint);
-			response.setSuggestions(
-					responses.stream().map(BoundSuggestOracleSuggestion::new)
-							.limit(getSuggestionLimit())
-							.collect(Collectors.toList()));
+			response.setSuggestions(responses.stream()
+					.map(BoundSuggestOracleSuggestion::new)
+					.limit(getSuggestionLimit()).collect(Collectors.toList()));
+			if (offerNullSuggestion()) {
+				((List) response.getSuggestions()).add(0, BoundSuggestOracleSuggestion.nullSuggestion());
+			}
 			return GraphProjections.defaultProjections().project(response);
+		}
+
+		protected boolean offerNullSuggestion() {
+			return true;
 		}
 
 		protected long getSuggestionLimit() {

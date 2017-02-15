@@ -24,7 +24,6 @@ public interface BoundSuggestOracleResponseType {
 		}
 
 		public BoundSuggestOracleSuggestion() {
-			
 		}
 
 		public BoundSuggestOracleSuggestion(
@@ -39,5 +38,11 @@ public interface BoundSuggestOracleResponseType {
 		}
 
 		public BoundSuggestOracleResponseType typedValue;
+
+		public static Object nullSuggestion() {
+			BoundSuggestOracleSuggestion suggestion = new BoundSuggestOracleSuggestion();
+			suggestion.displayString = "(empty)";
+			return suggestion;
+		}
 	}
 }
