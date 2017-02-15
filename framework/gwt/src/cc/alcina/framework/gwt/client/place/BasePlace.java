@@ -13,10 +13,25 @@ public abstract class BasePlace extends Place {
 		return Registry.impl(RegistryHistoryMapper.class).getToken(p);
 	}
 
+	private boolean refreshed;
+
+	public boolean isRefreshed() {
+		return this.refreshed;
+	}
+
+	public void setRefreshed(boolean refreshed) {
+		this.refreshed = refreshed;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj != null && obj.getClass() == getClass()) {
-			return tokenFor((BasePlace) obj).equals(tokenFor(this));
+			BasePlace other = (BasePlace) obj;
+			if (isRefreshed() || other.isRefreshed()) {
+				return obj == this;
+			} else {
+				return tokenFor(other).equals(tokenFor(this));
+			}
 		} else {
 			return false;
 		}
