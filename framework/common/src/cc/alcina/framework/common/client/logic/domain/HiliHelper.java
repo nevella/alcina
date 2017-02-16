@@ -125,4 +125,8 @@ public class HiliHelper {
 		}
 		return reverse ? join.descendingSet() : join;
 	}
+
+	public static String strGetIdOrZero(HasId hasId) {
+		return String.valueOf(getIdOrZero(hasId));
+	}
 }
