@@ -58,4 +58,17 @@ public class XmlTokenStream implements Iterator<XmlNode> {
 		skip.add(node);
 		skip.addAll(node.children.flatten().collect(Collectors.toList()));
 	}
+
+	public void dumpAround() {
+		for (int idx = 0; idx < 100; idx++) {
+			tw.previousNode();
+		}
+		for (int idx = 0; idx < 200; idx++) {
+			XmlNode xmlNode = doc.nodeFor(tw.nextNode());
+			System.out.format("%s: %s\n", idx - 100, xmlNode.fullToString());
+		}
+		for (int idx = 0; idx < 100; idx++) {
+			tw.previousNode();
+		}
+	}
 }

@@ -35,7 +35,7 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 		return out;
 	}
 
-	void handleNode(XmlNode node, C context) {
+	protected void handleNode(XmlNode node, C context) {
 		for (XmlToken token : tokens) {
 			if (token.matches(context, node)) {
 				XmlStructuralJoin outNode = new XmlStructuralJoin(node, token);
