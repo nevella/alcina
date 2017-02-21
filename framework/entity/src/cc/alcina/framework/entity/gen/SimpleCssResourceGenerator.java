@@ -124,7 +124,11 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 		Matcher m = urlPat.matcher(toWrite);
 		while (m.find()) {
 			String url = m.group(1);
-			url = url.replaceFirst("(.+?)\\?.*", "$1");
+			int qIdx = url.indexOf('?');
+			if (qIdx != -1) {
+				url = url.substring(0, qIdx);
+			}
+			// url = url.replaceFirst("(.+?)\\?.*", "$1");
 			url = url.replace("'", "").replace("\"", "");
 			StandardGeneratorContext generatorContext = (StandardGeneratorContext) context
 					.getGeneratorContext();
@@ -209,8 +213,8 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 		while (offset < length - 1) {
 			int subLength = Math.min(MAX_STRING_CHUNK, length - offset);
 			sw.print("builder.append(\"");
-			sw.print(Generator.escape(toWrite.substring(offset, offset
-					+ subLength)));
+			sw.print(Generator
+					.escape(toWrite.substring(offset, offset + subLength)));
 			sw.println("\");");
 			offset += subLength;
 		}
