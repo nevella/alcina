@@ -39,6 +39,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.google.gwt.safehtml.shared.SafeHtml;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.GArrayList;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -157,7 +159,8 @@ public class GraphProjection {
 				|| c == Character.class || c.isEnum() || c == Class.class
 				|| Number.class.isAssignableFrom(c)
 				|| Date.class.isAssignableFrom(c) || isEnumSubclass(c)
-				|| ProjectByValue.class.isAssignableFrom(c);
+				|| ProjectByValue.class.isAssignableFrom(c)
+				|| SafeHtml.class.isAssignableFrom(c);
 	}
 
 	public static synchronized void registerConstructorMethods(
@@ -821,9 +824,9 @@ public class GraphProjection {
 					.contains(name)) {
 				continue;
 			}
-			lineParts.append(String.format("sb.append(\"%s\");\n",name));
+			lineParts.append(String.format("sb.append(\"%s\");\n", name));
 			lineParts.append("sb.append(\":\");\n");
-			lineParts.append(String.format("sb.append(%s);\n",name));
+			lineParts.append(String.format("sb.append(%s);\n", name));
 			lineParts.append("sb.append(\"\\n\");\n");
 		}
 		String template = "@Override\npublic String toString() {\n"

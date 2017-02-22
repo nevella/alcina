@@ -46,6 +46,8 @@ public class XmlNode {
 
 	private XmlNodeAncestor ancestor;
 
+	private XmlNodeHtml xmlNodeHtml;
+
 	public XmlNode(Node node, XmlDoc xmlDoc) {
 		this.node = node;
 		this.doc = xmlDoc;
@@ -128,6 +130,10 @@ public class XmlNode {
 		return depth;
 	}
 
+	public Node domNode() {
+		return node;
+	}
+
 	public String dumpXml() {
 		return XmlUtils.streamXML(node);
 	}
@@ -163,6 +169,13 @@ public class XmlNode {
 			return false;
 		}
 		return ((Element) node).hasAttribute(name);
+	}
+
+	public XmlNodeHtml html() {
+		if (xmlNodeHtml == null) {
+			xmlNodeHtml = new XmlNodeHtml();
+		}
+		return xmlNodeHtml;
 	}
 
 	public void invalidate() {
@@ -597,6 +610,20 @@ public class XmlNode {
 		}
 	}
 
+	public class XmlNodeHtml {
+		public boolean isBlock() {
+			return isElement() && XmlUtils.isBlockHTMLElement(getElement());
+		}
+
+		public List<XmlNode> trs() {
+			List<XmlNode> trs = children.byTag("TR");
+			if(trs.isEmpty()){
+				trs = xpath().nodes("./TBODY/TR");
+			}
+			return trs;
+		}
+	}
+
 	public class XmlNodeRelative {
 		public boolean hasNextSibling() {
 			return node.getNextSibling() != null;
@@ -689,4 +716,5 @@ public class XmlNode {
 					.orElse("");
 		}
 	}
+
 }
