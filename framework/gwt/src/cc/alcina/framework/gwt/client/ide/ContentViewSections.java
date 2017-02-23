@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import com.google.gwt.event.logical.shared.AttachEvent;
@@ -77,6 +78,7 @@ public class ContentViewSections {
 			PaneWrapperWithObjects beanView = contentViewFactory
 					.fieldFilter(section).fieldOrder(section)
 					.editableFieldFilter(section.editableFieldFilter())
+					.fieldPostReflectiveSetupModifier(section.fieldPostReflectiveSetupModifier)
 					.noCaption().createBeanView(bean, editable, createListener,
 							autoSave, true, null, false);
 			beanViews.add(beanView);
@@ -104,6 +106,8 @@ public class ContentViewSections {
 
 		private List<String> editableFieldNames;
 
+		private Consumer<Field> fieldPostReflectiveSetupModifier;
+
 		public ContentViewSection(String name) {
 			this.name = name;
 		}
@@ -111,6 +115,12 @@ public class ContentViewSections {
 		public Predicate<String> editableFieldFilter() {
 			return s -> editableFieldNames == null
 					|| editableFieldNames.contains(s);
+		}
+
+		public ContentViewSection fieldPostReflectiveSetupModifier(
+				Consumer<Field> fieldPostReflectiveSetupModifier) {
+			this.fieldPostReflectiveSetupModifier = fieldPostReflectiveSetupModifier;
+			return this;
 		}
 
 		@Override
@@ -134,8 +144,9 @@ public class ContentViewSections {
 			return fieldNames.contains(t.getPropertyName());
 		}
 
-		public void editableFields(String... editableFieldNames) {
+		public ContentViewSection editableFields(String... editableFieldNames) {
 			this.editableFieldNames = Arrays.asList(editableFieldNames);
+			return this;
 		}
 	}
 

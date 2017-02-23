@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -146,6 +147,8 @@ public class ContentViewFactory {
 
 	private Predicate<String> editableFieldFilter;
 
+	private Consumer<Field> fieldPostReflectiveSetupModifier;
+
 	public ActionTableHolder createActionTable(Collection beans,
 			Class beanClass, Converter converter,
 			Collection<PermissibleAction> actions,
@@ -247,16 +250,18 @@ public class ContentViewFactory {
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 		List<Field> fieldList = new ArrayList<>(Arrays.asList(GwittirBridge
 				.get().fieldsForReflectedObjectAndSetupWidgetFactory(bean,
-						factory, editable, false,null,editableFieldFilter)));
+						factory, editable, false, null, editableFieldFilter)));
 		if (fieldFilter != null) {
 			fieldList.removeIf(f -> !fieldFilter.test(f));
 		}
 		if (fieldOrder != null) {
 			Collections.sort(fieldList, fieldOrder);
 		}
+		if (fieldPostReflectiveSetupModifier != null) {
+			fieldList.stream().forEach(fieldPostReflectiveSetupModifier);
+		}
 		Field[] fields = (Field[]) fieldList
 				.toArray(new Field[fieldList.size()]);
-		fieldList.toArray();
 		GridForm f = new GridForm(fields, 1, factory);
 		f.addAttachHandler(new RecheckVisibilityHandler(f));
 		f.setAutofocusField(GwittirBridge.get().getFieldToFocus(bean, fields));
@@ -421,10 +426,13 @@ public class ContentViewFactory {
 				: new NiceWidthBoundTable(mask, factory, fields, cdp);
 		return table;
 	}
+
 	public Toolbar createToolbar(List<PermissibleAction> actions) {
-		return createToolbar(actions,true);
+		return createToolbar(actions, true);
 	}
-	public Toolbar createToolbar(List<PermissibleAction> actions, boolean asButton) {
+
+	public Toolbar createToolbar(List<PermissibleAction> actions,
+			boolean asButton) {
 		Toolbar tb = new Toolbar();
 		tb.setAsButton(asButton);
 		tb.setActions(actions);
@@ -432,18 +440,25 @@ public class ContentViewFactory {
 		return tb;
 	}
 
-	public ContentViewFactory fieldFilter(Predicate<Field> fieldFilter) {
-		this.fieldFilter = fieldFilter;
+	public ContentViewFactory
+			editableFieldFilter(Predicate<String> editableFieldFilter) {
+		this.editableFieldFilter = editableFieldFilter;
 		return this;
 	}
-	
-	public ContentViewFactory editableFieldFilter(Predicate<String> editableFieldFilter) {
-		this.editableFieldFilter = editableFieldFilter;
+
+	public ContentViewFactory fieldFilter(Predicate<Field> fieldFilter) {
+		this.fieldFilter = fieldFilter;
 		return this;
 	}
 
 	public ContentViewFactory fieldOrder(Comparator<Field> fieldOrder) {
 		this.fieldOrder = fieldOrder;
+		return this;
+	}
+
+	public ContentViewFactory fieldPostReflectiveSetupModifier(
+			Consumer<Field> fieldPostReflectiveSetupModifier) {
+		this.fieldPostReflectiveSetupModifier = fieldPostReflectiveSetupModifier;
 		return this;
 	}
 
@@ -700,6 +715,14 @@ public class ContentViewFactory {
 			}
 		}
 
+		public Widget getCancelButton() {
+			return this.cancelButton;
+		}
+
+		public Widget getOkButton() {
+			return this.okButton;
+		}
+
 		protected Widget createButton(String buttonName) {
 			if (toolbarButtonStyle) {
 				StyledAWidget aWidget = new StyledAWidget(buttonName, true);
@@ -709,14 +732,6 @@ public class ContentViewFactory {
 			} else {
 				return new Button(buttonName);
 			}
-		}
-
-		public Widget getCancelButton() {
-			return this.cancelButton;
-		}
-
-		public Widget getOkButton() {
-			return this.okButton;
 		}
 	}
 
@@ -766,6 +781,8 @@ public class ContentViewFactory {
 			}
 		};
 
+		private Widget cancelButton;
+
 		public PaneWrapperWithObjects() {
 			getElement().getStyle().setProperty("position", "relative");
 			preDetachFocus.setVisible(false);
@@ -796,6 +813,10 @@ public class ContentViewFactory {
 
 		public HasBinding getBoundWidget() {
 			return boundWidget;
+		}
+
+		public Widget getCancelButton() {
+			return this.cancelButton;
 		}
 
 		public Collection getInitialObjects() {
@@ -860,6 +881,10 @@ public class ContentViewFactory {
 			this.boundWidget = boundWidget;
 		}
 
+		public void setCancelButton(Widget cancelButton) {
+			this.cancelButton = cancelButton;
+		}
+
 		public void setInitialObjects(Collection initialObjects) {
 			this.initialObjects = initialObjects;
 		}
@@ -878,15 +903,6 @@ public class ContentViewFactory {
 			if (this.initialObjects == null) {
 				initialObjects = new ArrayList(objects);
 			}
-		}
-
-		private Widget cancelButton;
-		public Widget getCancelButton() {
-			return this.cancelButton;
-		}
-
-		public void setCancelButton(Widget cancelButton) {
-			this.cancelButton = cancelButton;
 		}
 
 		public void setOkButton(Widget okButton) {
