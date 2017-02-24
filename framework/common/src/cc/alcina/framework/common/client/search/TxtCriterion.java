@@ -74,7 +74,8 @@ public class TxtCriterion extends SearchCriterion implements HasValue<String> {
 			return otherT.getDirection() == getDirection()
 					&& otherT.getTxtCriterionType() == getTxtCriterionType()
 					&& CommonUtils.equalsWithNullEquality(getText(),
-							otherT.getText());
+							otherT.getText())
+					&& getOperator() == otherT.getOperator();
 		}
 		return false;
 	}
