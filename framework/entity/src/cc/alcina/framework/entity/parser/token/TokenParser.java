@@ -54,8 +54,10 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 			context.lastBlockMatch = null;
 		}
 	}
-
 	private S validSequence() throws TokenParserException {
+		return validSequence(true);
+	}
+	private S validSequence(boolean emitOnMatch) throws TokenParserException {
 		ParserContext<T, S> context = peer.getContext();
 		int minOffset = 99999;
 		S bestMatch = null;
@@ -117,7 +119,7 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 			// complicated regex-like lookahead prob
 			int offset = context.startOffset;
 			if (context.moveToNextRange()) {
-				S nextRangeMatch = validSequence();
+				S nextRangeMatch = validSequence(false);
 				if (nextRangeMatch != null) {
 					bestMatch = nextRangeMatch;
 				} else {
@@ -125,7 +127,7 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 				}
 			}
 		}
-		if (bestMatch != null) {
+		if (bestMatch != null && emitOnMatch) {
 			try {
 				bestMatch.token.onMatch(context, bestMatch);
 			} catch (RuntimeException e) {
