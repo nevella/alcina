@@ -467,7 +467,7 @@ public abstract class SearchDefinition extends WrapperPersistable
 		}
 		PropertyChangeEvent event = new PropertyChangeEvent(this, null, null,
 				null);
-		for (PropertyChangeListener listener : globalListeners) {
+		for (PropertyChangeListener listener : new ArrayList<>(globalListeners)) {
 			if (!sc.emptyCriterion() && !doNotFireBecauseCriterionEmpty) {
 				listener.propertyChange(event);
 			}
@@ -480,7 +480,7 @@ public abstract class SearchDefinition extends WrapperPersistable
 		criteriaGroups.iterator().next().addCriterion(sc);
 		PropertyChangeEvent event = new PropertyChangeEvent(this, null, null,
 				null);
-		for (PropertyChangeListener listener : globalListeners) {
+		for (PropertyChangeListener listener : new ArrayList<>(globalListeners)) {
 			sc.addPropertyChangeListener(listener);
 			if (!sc.emptyCriterion()) {
 				listener.propertyChange(event);

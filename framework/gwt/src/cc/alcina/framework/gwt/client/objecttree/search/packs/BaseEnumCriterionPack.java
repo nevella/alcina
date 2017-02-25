@@ -51,7 +51,7 @@ public class BaseEnumCriterionPack {
 		}
 	}
 
-	public interface BaseEnumTextCriterionHandler<T, E extends Enum, C extends EnumCriterion<E>> {
+	public interface BaseEnumCriterionHandler<T, E extends Enum, C extends EnumCriterion<E>> {
 		default CacheFilter getFilter0(C sc) {
 			E e = sc.getValue();
 			if (e == null) {
@@ -60,7 +60,7 @@ public class BaseEnumCriterionPack {
 			return new CacheFilter(new CollectionFilter<T>() {
 				@Override
 				public boolean allow(T t) {
-					return BaseEnumTextCriterionHandler.this.test(t, e);
+					return BaseEnumCriterionHandler.this.test(t, e);
 				}
 			}).invertIf(
 					sc.getOperator() == StandardSearchOperator.DOES_NOT_EQUAL);
