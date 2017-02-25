@@ -108,4 +108,9 @@ public class XmlNodeBuilder {
 		relativeTo.replaceWith(node);
 		return node;
 	}
+
+	public XmlNodeBuilder className(String className) {
+		attrs("class",className);
+		return this;
+	}
 }

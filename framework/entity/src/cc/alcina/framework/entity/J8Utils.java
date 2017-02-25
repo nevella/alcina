@@ -1,24 +1,27 @@
 package cc.alcina.framework.entity;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-import java.util.stream.Collector.Characteristics;
 
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 public class J8Utils {
-	public static <T, K> Collector<T, ?, Map<K, T>> toKeyMap(Function<? super T, ? extends K> keyMapper) {
+	public static <T, K> Collector<T, ?, Map<K, T>>
+			toKeyMap(Function<? super T, ? extends K> keyMapper) {
 		return new ToMapCollector(keyMapper, LinkedHashMap::new);
 	}
 
@@ -26,27 +29,31 @@ public class J8Utils {
 		return new ToItemListCollector();
 	}
 
-	public static <T, K, U> Collector<T, ?, Multimap<K, List<U>>> toMultimap(Function<? super T, ? extends K> keyMapper,
+	public static <T, K, U> Collector<T, ?, Multimap<K, List<U>>> toMultimap(
+			Function<? super T, ? extends K> keyMapper,
 			Function<? super T, ? extends U> valueMapper) {
 		return new ToMultimapCollector(keyMapper, valueMapper, Multimap::new);
 	}
 
-	public static <T, K, U> Collector<T, ?, Multimap<K, List<U>>> toKeyMultimap(
-			Function<? super T, ? extends K> keyMapper) {
+	public static <T, K, U> Collector<T, ?, Multimap<K, List<U>>>
+			toKeyMultimap(Function<? super T, ? extends K> keyMapper) {
 		return new ToMultimapCollector(keyMapper, t -> t, Multimap::new);
 	}
 
-	public static <T, V> Collector<T, ?, UnsortedMultikeyMap<V>> toUnsortedMultikeyMapCollector(
-			Function<? super T, Object[]> mapper, int depth) {
+	public static <T, V> Collector<T, ?, UnsortedMultikeyMap<V>>
+			toUnsortedMultikeyMapCollector(Function<? super T, Object[]> mapper,
+					int depth) {
 		return new ToUnsortedMultikeyMapCollector(mapper, depth);
 	}
 
-	private static class ToMapCollector<T, K> implements java.util.stream.Collector<T, Map<K, T>, Map<K, T>> {
+	private static class ToMapCollector<T, K>
+			implements java.util.stream.Collector<T, Map<K, T>, Map<K, T>> {
 		private Function<? super T, ? extends K> keyMapper;
 
 		private Supplier<Map<K, T>> supplier;
 
-		public ToMapCollector(Function<? super T, ? extends K> keyMapper, Supplier<Map<K, T>> supplier) {
+		public ToMapCollector(Function<? super T, ? extends K> keyMapper,
+				Supplier<Map<K, T>> supplier) {
 			this.keyMapper = keyMapper;
 			this.supplier = supplier;
 		}
@@ -57,8 +64,10 @@ public class J8Utils {
 		}
 
 		@Override
-		public Set<java.util.stream.Collector.Characteristics> characteristics() {
-			return EnumSet.of(Characteristics.UNORDERED, Characteristics.IDENTITY_FINISH);
+		public Set<java.util.stream.Collector.Characteristics>
+				characteristics() {
+			return EnumSet.of(Characteristics.UNORDERED,
+					Characteristics.IDENTITY_FINISH);
 		}
 
 		@Override
@@ -80,13 +89,14 @@ public class J8Utils {
 		}
 	}
 
-	private static class ToItemListCollector<T> implements Collector<Collection<T>, List<T>, List<T>> {
-
+	private static class ToItemListCollector<T>
+			implements Collector<Collection<T>, List<T>, List<T>> {
 		public ToItemListCollector() {
 		}
 
 		@Override
-		public Set<java.util.stream.Collector.Characteristics> characteristics() {
+		public Set<java.util.stream.Collector.Characteristics>
+				characteristics() {
 			return EnumSet.of(Characteristics.IDENTITY_FINISH);
 		}
 
@@ -114,8 +124,8 @@ public class J8Utils {
 		}
 	}
 
-	private static class ToMultimapCollector<T, K, U>
-			implements java.util.stream.Collector<T, Multimap<K, List<U>>, Multimap<K, List<U>>> {
+	private static class ToMultimapCollector<T, K, U> implements
+			java.util.stream.Collector<T, Multimap<K, List<U>>, Multimap<K, List<U>>> {
 		private Function<? super T, ? extends K> keyMapper;
 
 		private Function<? super T, ? extends U> valueMapper;
@@ -123,7 +133,8 @@ public class J8Utils {
 		private Supplier<Multimap<K, List<U>>> supplier;
 
 		public ToMultimapCollector(Function<? super T, ? extends K> keyMapper,
-				Function<? super T, ? extends U> valueMapper, Supplier<Multimap<K, List<U>>> supplier) {
+				Function<? super T, ? extends U> valueMapper,
+				Supplier<Multimap<K, List<U>>> supplier) {
 			this.keyMapper = keyMapper;
 			this.valueMapper = valueMapper;
 			this.supplier = supplier;
@@ -131,12 +142,15 @@ public class J8Utils {
 
 		@Override
 		public BiConsumer<Multimap<K, List<U>>, T> accumulator() {
-			return (map, value) -> map.add(keyMapper.apply(value), valueMapper.apply(value));
+			return (map, value) -> map.add(keyMapper.apply(value),
+					valueMapper.apply(value));
 		}
 
 		@Override
-		public Set<java.util.stream.Collector.Characteristics> characteristics() {
-			return EnumSet.of(Characteristics.UNORDERED, Characteristics.IDENTITY_FINISH);
+		public Set<java.util.stream.Collector.Characteristics>
+				characteristics() {
+			return EnumSet.of(Characteristics.UNORDERED,
+					Characteristics.IDENTITY_FINISH);
 		}
 
 		@Override
@@ -158,13 +172,14 @@ public class J8Utils {
 		}
 	}
 
-	private static class ToUnsortedMultikeyMapCollector<T, V>
-			implements java.util.stream.Collector<T, UnsortedMultikeyMap<V>, UnsortedMultikeyMap<V>> {
+	private static class ToUnsortedMultikeyMapCollector<T, V> implements
+			java.util.stream.Collector<T, UnsortedMultikeyMap<V>, UnsortedMultikeyMap<V>> {
 		private Function<? super T, Object[]> mapper;
 
 		private Supplier<UnsortedMultikeyMap<V>> supplier;
 
-		public ToUnsortedMultikeyMapCollector(Function<? super T, Object[]> mapper, int depth) {
+		public ToUnsortedMultikeyMapCollector(
+				Function<? super T, Object[]> mapper, int depth) {
 			this.mapper = mapper;
 			this.supplier = new Supplier<UnsortedMultikeyMap<V>>() {
 				@Override
@@ -180,8 +195,10 @@ public class J8Utils {
 		}
 
 		@Override
-		public Set<java.util.stream.Collector.Characteristics> characteristics() {
-			return EnumSet.of(Characteristics.UNORDERED, Characteristics.IDENTITY_FINISH);
+		public Set<java.util.stream.Collector.Characteristics>
+				characteristics() {
+			return EnumSet.of(Characteristics.UNORDERED,
+					Characteristics.IDENTITY_FINISH);
 		}
 
 		@Override
@@ -193,7 +210,8 @@ public class J8Utils {
 		}
 
 		@Override
-		public Function<UnsortedMultikeyMap<V>, UnsortedMultikeyMap<V>> finisher() {
+		public Function<UnsortedMultikeyMap<V>, UnsortedMultikeyMap<V>>
+				finisher() {
 			return null;
 		}
 
@@ -201,5 +219,13 @@ public class J8Utils {
 		public Supplier<UnsortedMultikeyMap<V>> supplier() {
 			return supplier;
 		}
+	}
+
+	public static <T> Comparator<T>
+			comparingCaseInsensitive(Function<? super T, String> keyExtractor) {
+		Objects.requireNonNull(keyExtractor);
+		return (Comparator<T> & Serializable) (c1,
+				c2) -> String.CASE_INSENSITIVE_ORDER.compare(
+						keyExtractor.apply(c1), keyExtractor.apply(c2));
 	}
 }
