@@ -21,7 +21,10 @@ import java.util.function.Function;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.MultikeyMapBase.DelegateMapCreator;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCreator;
 
 /**
  * 
@@ -37,12 +40,18 @@ public class ClientPropertyReflector
 	private final String propertyName;
 
 	private Class propertyType;
+	
+	private static DelegateMapCreator annotationLookupCreator = new UnsortedMapCreator();
+
+	public static void setDelegateCreator(DelegateMapCreator annotationLookupCreator) {
+		ClientPropertyReflector.annotationLookupCreator = annotationLookupCreator;
+	}
 
 	public ClientPropertyReflector(String propertyName, Class propertyType,
 			Annotation[] anns) {
 		this.propertyName = propertyName;
 		this.propertyType = propertyType;
-		this.annotations = new HashMap<Class, Object>();
+		this.annotations = annotationLookupCreator.createDelegateMap(0, 0);
 		for (Annotation a : anns) {
 			annotations.put(a.annotationType(), a);
 		}

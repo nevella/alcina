@@ -69,11 +69,13 @@ import com.totsp.gwittir.rebind.beans.IntrospectorFilterHelper;
 
 @SuppressWarnings("unchecked")
 /**
- * Currently, it's a schemozzle - this was originally a standalone generator, so there's a mishmash
- * of usages of JVM vs GWT reflection -
- * it does, however, work, it's acceptably fast, it can be beautified later
+ * Currently, it's a schemozzle - this was originally a standalone generator, so
+ * there's a mishmash of usages of JVM vs GWT reflection - it does, however,
+ * work, it's acceptably fast, it can be beautified later
  *
- * -- update, pretty sure all usages of class changed to jclasstype where appropriate...
+ * -- update, pretty sure all usages of class changed to jclasstype where
+ * appropriate...
+ * 
  * @author Nick Reddel
  */
 public class ClientReflectionGenerator extends Generator {
@@ -96,8 +98,8 @@ public class ClientReflectionGenerator extends Generator {
 	public static final CollectionFilter<RegistryLocation> CLIENT_VISIBLE_ANNOTATION_FILTER = new CollectionFilter<RegistryLocation>() {
 		@Override
 		public boolean allow(RegistryLocation o) {
-			return o.registryPoint().getAnnotation(
-					NonClientRegistryPointType.class) == null;
+			return o.registryPoint()
+					.getAnnotation(NonClientRegistryPointType.class) == null;
 		}
 	};
 
@@ -114,15 +116,15 @@ public class ClientReflectionGenerator extends Generator {
 			String superClassName = null;
 			JClassType intrType = context.getTypeOracle().getType(typeName);
 			if (intrType.isInterface() != null) {
-				intrType = context.getTypeOracle().getType(
-						ClientReflector.class.getName());
+				intrType = context.getTypeOracle()
+						.getType(ClientReflector.class.getName());
 			}
 			ReflectionModule module = intrType
 					.getAnnotation(ReflectionModule.class);
 			String moduleName = module.value();
 			filter.setModuleName(moduleName);
-			String implementationName = String.format(
-					"ClientReflector_%s_Impl", moduleName);
+			String implementationName = String.format("ClientReflector_%s_Impl",
+					moduleName);
 			superClassName = intrType.getQualifiedSourceName();
 			crf = new ClassSourceFileComposerFactory(this.packageName,
 					implementationName);
@@ -148,10 +150,8 @@ public class ClientReflectionGenerator extends Generator {
 			List<JAnnotationType> jAnns = this.getClientVisibleAnnotations(
 					logger, context.getTypeOracle());
 			for (JAnnotationType jAnnotationType : jAnns) {
-				visibleAnnotationClasses
-						.add((Class<? extends Annotation>) Class
-								.forName(jAnnotationType
-										.getQualifiedBinaryName()));
+				visibleAnnotationClasses.add((Class<? extends Annotation>) Class
+						.forName(jAnnotationType.getQualifiedBinaryName()));
 			}
 			visibleAnnotationClasses.add(Omit.class);
 			filter.filterAnnotations(jAnns, visibleAnnotationClasses);
@@ -159,22 +159,23 @@ public class ClientReflectionGenerator extends Generator {
 					moduleName.equals(ReflectionModule.INITIAL));
 			List<JClassType> beanInfoTypes = this.getBeanInfoTypes(logger,
 					context.getTypeOracle(), crf);
-			List<JClassType> instantiableTypes = this.getInstantiableTypes(
-					logger, context.getTypeOracle(), crf);
-			Map<JClassType, Set<RegistryLocation>> gwtRegisteringClasses = getRegistryAnnotations(context
-					.getTypeOracle());
+			List<JClassType> instantiableTypes = this
+					.getInstantiableTypes(logger, context.getTypeOracle(), crf);
+			Map<JClassType, Set<RegistryLocation>> gwtRegisteringClasses = getRegistryAnnotations(
+					context.getTypeOracle());
 			filter.filterReflectionInfo(beanInfoTypes, instantiableTypes,
 					gwtRegisteringClasses);
 			SourceWriter srcW = createWriter(crf, printWriter);
 			writeIt(beanInfoTypes, instantiableTypes, srcW,
 					gwtRegisteringClasses, implementationName);
 			commit(context, logger, printWriter);
-			System.out.format("Client reflection generation  [%s] - "
-					+ "%s annotations, %s beans, "
-					+ "%s instantiable types - %s ms\n",
+			System.out.format(
+					"Client reflection generation  [%s] - "
+							+ "%s annotations, %s beans, "
+							+ "%s instantiable types - %s ms\n",
 					filter.getModuleName(), jAnns.size(), beanInfoTypes.size(),
-					instantiableTypes.size(), System.currentTimeMillis()
-							- start);
+					instantiableTypes.size(),
+					System.currentTimeMillis() - start);
 			filter.generationComplete();
 			return packageName + "." + implementationName;
 		} catch (Exception e) {
@@ -196,8 +197,8 @@ public class ClientReflectionGenerator extends Generator {
 		HashMap<JClassType, Set<RegistryLocation>> results = new HashMap<JClassType, Set<RegistryLocation>>();
 		JClassType[] types = typeOracle.getTypes();
 		for (JClassType jct : types) {
-			if ((jct.isAnnotationPresent(RegistryLocation.class) || jct
-					.isAnnotationPresent(RegistryLocations.class))
+			if ((jct.isAnnotationPresent(RegistryLocation.class)
+					|| jct.isAnnotationPresent(RegistryLocations.class))
 					&& !jct.isAbstract()) {
 				Set<RegistryLocation> rls = getClassAnnotations(jct,
 						RegistryLocation.class);
@@ -241,8 +242,9 @@ public class ClientReflectionGenerator extends Generator {
 		List<JClassType> results = new ArrayList<JClassType>();
 		JClassType[] types = typeOracle.getTypes();
 		for (JClassType jClassType : types) {
-			if ((hasAnnotationNamed(jClassType, ClientInstantiable.class) || jClassType
-					.isAnnotationPresent(cc.alcina.framework.common.client.logic.reflection.Bean.class))
+			if ((hasAnnotationNamed(jClassType, ClientInstantiable.class)
+					|| jClassType.isAnnotationPresent(
+							cc.alcina.framework.common.client.logic.reflection.Bean.class))
 					&& !ignore(jClassType, ReflectionAction.NEW_INSTANCE)) {
 				results.add(jClassType);
 				crf.addImport(jClassType.getQualifiedSourceName());
@@ -264,7 +266,8 @@ public class ClientReflectionGenerator extends Generator {
 			Annotation found = null;
 			while (c != null && found == null) {
 				for (Annotation a : c.getAnnotations()) {
-					if (a.annotationType().getSimpleName().equals(annClazzName)) {
+					if (a.annotationType().getSimpleName()
+							.equals(annClazzName)) {
 						found = a;
 						break;
 					}
@@ -281,8 +284,8 @@ public class ClientReflectionGenerator extends Generator {
 		List<JClassType> results = new ArrayList<JClassType>();
 		JClassType[] types = typeOracle.getTypes();
 		for (JClassType jClassType : types) {
-			if (jClassType
-					.isAnnotationPresent(cc.alcina.framework.common.client.logic.reflection.Bean.class)
+			if (jClassType.isAnnotationPresent(
+					cc.alcina.framework.common.client.logic.reflection.Bean.class)
 					&& !ignore(jClassType,
 							ReflectionAction.BEAN_INFO_DESCRIPTOR)) {
 				results.add(jClassType);
@@ -292,7 +295,8 @@ public class ClientReflectionGenerator extends Generator {
 		return results;
 	}
 
-	private void addImport(ClassSourceFileComposerFactory factory, Class<?> type) {
+	private void addImport(ClassSourceFileComposerFactory factory,
+			Class<?> type) {
 		if (!type.isPrimitive()) {
 			factory.addImport(type.getCanonicalName().replace("[]", ""));
 		}
@@ -304,8 +308,8 @@ public class ClientReflectionGenerator extends Generator {
 		for (JAnnotationType type : jAnns) {
 			Class<? extends Annotation> annClass = forName(type);
 			String implementationName = type.getName() + "_Impl";
-			ann2impl.put(annClass, type.getPackage().getName() + "."
-					+ implementationName);
+			ann2impl.put(annClass,
+					type.getPackage().getName() + "." + implementationName);
 		}
 		for (JAnnotationType type : jAnns) {
 			Class<? extends Annotation> annClass = forName(type);
@@ -339,18 +343,20 @@ public class ClientReflectionGenerator extends Generator {
 					String rn = returnType.getSimpleName();
 					String mn = method.getName();
 					StringBuffer sb = new StringBuffer();
-					writeLiteral(method.getDefaultValue(), returnType, sb, true);
+					writeLiteral(method.getDefaultValue(), returnType, sb,
+							true);
 					sw.println(String.format("private %s %s = %s;", rn, mn,
 							sb.toString()));
 					sw.println(String.format("public %s %s(){return %s;}", rn,
 							mn, mn));
-					sw.println(String
-							.format("public %s _set%s(%s %s){this.%s = %s;return this;}",
-									implementationName, mn, rn, mn, mn, mn));
+					sw.println(String.format(
+							"public %s _set%s(%s %s){this.%s = %s;return this;}",
+							implementationName, mn, rn, mn, mn, mn));
 					sw.println();
 				}
 				sw.println();
-				sw.println("public Class<? extends Annotation> annotationType() {");
+				sw.println(
+						"public Class<? extends Annotation> annotationType() {");
 				sw.indentln(String.format("return %s.class;",
 						annClass.getSimpleName()));
 				sw.println("}");
@@ -384,13 +390,13 @@ public class ClientReflectionGenerator extends Generator {
 			PrintWriter printWriter) {
 		context.commit(logger, printWriter);
 		if (wrappedWriters.containsKey(printWriter)) {
-			System.out.println(wrappedWriters.get(printWriter)
-					.getStringWriter().toString());
+			System.out.println(wrappedWriters.get(printWriter).getStringWriter()
+					.toString());
 		}
 	}
 
-	private List<JAnnotationType> getClientVisibleAnnotations(
-			TreeLogger logger, TypeOracle oracle) {
+	private List<JAnnotationType> getClientVisibleAnnotations(TreeLogger logger,
+			TypeOracle oracle) {
 		List<JAnnotationType> results = new ArrayList<JAnnotationType>();
 		JClassType[] types = oracle.getTypes();
 		for (JClassType jClassType : types) {
@@ -409,7 +415,8 @@ public class ClientReflectionGenerator extends Generator {
 			Map<JClassType, Set<RegistryLocation>> gwtRegisteringClasses,
 			String implName) throws Exception {
 		String qualifiedImplName = this.packageName + "." + implName;
-		List<String> methodNames = new ArrayList<String>();
+		Map<JClassType, String> initClassMethodNames = new LinkedHashMap<>();
+		Map<JClassType, String> initNewInstanceNames = new LinkedHashMap<>();
 		List<String> methodLines = new ArrayList<String>();
 		sw.indent();
 		sw.println("private JavaScriptObject createLookup;");
@@ -423,7 +430,8 @@ public class ClientReflectionGenerator extends Generator {
 		sw.println();
 		sw.println("@Override");
 		sw.println("@UnsafeNativeLong");
-		sw.println("public native <T> T newInstance0(Class<T> clazz, long objectId, long localId) /*-{");
+		sw.println(
+				"public native <T> T newInstance0(Class<T> clazz, long objectId, long localId) /*-{");
 		sw.indent();
 		sw.println(String.format(
 				"var constructor = this.@%s::createLookup[clazz];",
@@ -432,23 +440,32 @@ public class ClientReflectionGenerator extends Generator {
 		sw.outdent();
 		sw.println("}-*/;");
 		sw.println();
-		sw.println("public ClientBeanReflector beanInfoForClass(Class clazz) {");
+		sw.println(
+				"public ClientBeanReflector beanInfoForClass(Class clazz) {");
 		sw.indent();
-		sw.println("return gwbiMap.get(clazz);");
+		sw.println("ClientBeanReflector reflector = gwbiMap.get(clazz);");
+		sw.println("if(reflector==null){");
+		sw.indent();
+		sw.println("initReflector(clazz);");
+		sw.println("reflector = gwbiMap.get(clazz);");
+		sw.outdent();
+		sw.println("}");
+		sw.println("return reflector;");
 		sw.outdent();
 		sw.println("}");
 		sw.println();
 		int methodCount = 0;
 		for (JClassType jct : beanInfoTypes) {
-			if (filter
-					.omitForModule(jct, ReflectionAction.BEAN_INFO_DESCRIPTOR)) {
+			if (filter.omitForModule(jct,
+					ReflectionAction.BEAN_INFO_DESCRIPTOR)) {
 				continue;
 			}
 			String methodName = "initClass" + (methodCount++);
-			methodNames.add(methodName);
+			initClassMethodNames.put(jct, methodName);
 			sw.println(String.format("private void %s(){", methodName));
 			sw.indent();
-			sw.println("Map<String,ClientPropertyReflector> propertyReflectors = new LinkedHashMap<String,ClientPropertyReflector>();");
+			sw.println(
+					"Map<String,ClientPropertyReflector> propertyReflectors = new LinkedHashMap<String,ClientPropertyReflector>();");
 			for (JMethod method : getPropertyGetters(jct)) {
 				String propertyName = getPropertyNameForReadMethod(method);
 				if (propertyName.equals("class")
@@ -458,7 +475,8 @@ public class ClientReflectionGenerator extends Generator {
 				if (method.isStatic()) {
 					continue;
 				}
-				Collection<Annotation> annotations = getSuperclassAnnotationsForMethod(method);
+				Collection<Annotation> annotations = getSuperclassAnnotationsForMethod(
+						method);
 				int aCount = 0;
 				String annArray = "";
 				boolean ignore = false;
@@ -473,8 +491,8 @@ public class ClientReflectionGenerator extends Generator {
 				sw.println("{");
 				sw.indent();
 				for (Annotation a : annotations) {
-					if (!a.annotationType().isAnnotationPresent(
-							ClientVisible.class)
+					if (!a.annotationType()
+							.isAnnotationPresent(ClientVisible.class)
 							|| a.annotationType() == RegistryLocation.class) {
 						continue;
 					}
@@ -485,11 +503,15 @@ public class ClientReflectionGenerator extends Generator {
 					annArray += "a" + aCount;
 					sw.println(annImpl);
 				}
-				sw.println(String.format("ClientPropertyReflector reflector = "
-						+ "new ClientPropertyReflector(\"%s\",%s.class,"
-						+ " new Annotation[]{%s}) ;", propertyName, method
-						.getReturnType().getQualifiedSourceName(), annArray));
-				sw.println("propertyReflectors.put(reflector.getPropertyName(), reflector);");
+				sw.println(String.format(
+						"ClientPropertyReflector reflector = "
+								+ "new ClientPropertyReflector(\"%s\",%s.class,"
+								+ " new Annotation[]{%s}) ;",
+						propertyName,
+						method.getReturnType().getQualifiedSourceName(),
+						annArray));
+				sw.println(
+						"propertyReflectors.put(reflector.getPropertyName(), reflector);");
 				sw.outdent();
 				sw.println("}");
 			}
@@ -504,11 +526,12 @@ public class ClientReflectionGenerator extends Generator {
 				annArray += "a" + aCount;
 				sw.println(annImpl);
 			}
-			sw.println(String
-					.format("ClientBeanReflector beanReflector = new ClientBeanReflector("
+			sw.println(String.format(
+					"ClientBeanReflector beanReflector = new ClientBeanReflector("
 							+ "%s.class,new Annotation[]{%s},propertyReflectors);",
-							jct.getQualifiedSourceName(), annArray));
-			sw.println("gwbiMap.put(beanReflector.getBeanClass(),beanReflector );");
+					jct.getQualifiedSourceName(), annArray));
+			sw.println(
+					"gwbiMap.put(beanReflector.getBeanClass(),beanReflector );");
 			sw.outdent();
 			sw.println("}");
 			sw.println("");
@@ -533,12 +556,12 @@ public class ClientReflectionGenerator extends Generator {
 			 * closure.@au.com.barnet
 			 * .jade.client.test.TestClientReflector::createInstance0()(); }; }-
 			 */;
-			String registerMethodName = String.format(
-					"registerNewInstanceFunction%s", methodCount);
+			String registerMethodName = String
+					.format("registerNewInstanceFunction%s", methodCount);
 			String createMethodName = String.format("createInstance%s",
 					methodCount);
-			methodLines.add(String.format("%s(%s.class);", registerMethodName,
-					jClassType.getQualifiedSourceName()));
+			initNewInstanceNames.put(jClassType, String.format("%s(%s.class);",
+					registerMethodName, jClassType.getQualifiedSourceName()));
 			sw.println(String.format("private Object %s(){", createMethodName));
 			sw.indent();
 			sw.println(String.format("return GWT.create(%s.class);",
@@ -570,20 +593,47 @@ public class ClientReflectionGenerator extends Generator {
 		sw.outdent();
 		sw.println("}-*/;");
 		sw.println();
+		sw.println("private void initReflector(Class clazz) {");
+		sw.indent();
+		sw.println("switch(clazz.getName()){");
+		sw.indent();
+		initClassMethodNames.entrySet().forEach(e -> {
+			sw.println("case \"%s\":", e.getKey().getQualifiedBinaryName());
+			sw.indent();
+			sw.println("%s();", e.getValue());
+			sw.println("break;");
+			sw.outdent();
+		});
+		sw.outdent();
+		sw.println("}");
+		sw.outdent();
+		sw.println("}");
+		sw.println();
+		sw.println("protected void initialiseNewInstance(Class clazz) {");
+		sw.indent();
+		sw.println("switch(clazz.getName()){");
+		sw.indent();
+		initNewInstanceNames.entrySet().forEach(e -> {
+			sw.println("case \"%s\":", e.getKey().getQualifiedBinaryName());
+			sw.indent();
+			sw.println("%s", e.getValue());
+			sw.println("break;");
+			sw.outdent();
+		});
+		sw.outdent();
+		sw.println("}");
+		sw.outdent();
+		sw.println("}");
+		sw.println();
 		sw.println("private void init() {");
 		sw.indent();
 		sw.println("initCreateLookup0();");
 		for (JClassType t : allTypes) {
 			if (!filter.omitForModule(t, ReflectionAction.NEW_INSTANCE)) {
 				sw.println(String.format("forNameMap.put(\"%s\",%s.class);",
-						t.getQualifiedBinaryName(), t.getQualifiedSourceName()));
+						t.getQualifiedBinaryName(),
+						t.getQualifiedSourceName()));
 			}
-		}
-		for (String methodName : methodNames) {
-			sw.println(String.format("%s();", methodName));
-		}
-		for (String methodLine : methodLines) {
-			sw.println(methodLine);
 		}
 		sw.println("");
 		sw.println("//init registry");
@@ -592,9 +642,9 @@ public class ClientReflectionGenerator extends Generator {
 			for (RegistryLocation l : gwtRegisteringClasses.get(clazz)) {
 				StringBuffer sb = new StringBuffer();
 				writeAnnImpl(l, ann2impl, 0, false, sb, false);
-				sw.println(String.format(
-						"Registry.get().register(%s.class,%s);",
-						clazz.getQualifiedSourceName(), sb));
+				sw.println(
+						String.format("Registry.get().register(%s.class,%s);",
+								clazz.getQualifiedSourceName(), sb));
 			}
 		}
 		sw.outdent();
@@ -635,8 +685,8 @@ public class ClientReflectionGenerator extends Generator {
 	private void writeAnnImpl(Annotation a, Map<Class, String> ann2impl,
 			int count, boolean assignment, StringBuffer sb,
 			boolean qualifiedClassNames) throws Exception {
-		List<Method> declaredMethods = new ArrayList<Method>(Arrays.asList(a
-				.getClass().getDeclaredMethods()));
+		List<Method> declaredMethods = new ArrayList<Method>(
+				Arrays.asList(a.getClass().getDeclaredMethods()));
 		Collections.sort(declaredMethods, ToStringComparator.INSTANCE);
 		String implCN = ann2impl.get(a.annotationType());
 		String implSimpleName = implCN.substring(implCN.lastIndexOf(".") + 1);
@@ -645,11 +695,12 @@ public class ClientReflectionGenerator extends Generator {
 		}
 		sb.append(String.format("new %s()", implSimpleName));
 		for (Method m : declaredMethods) {
-			if ("hashCode|toString|equals|annotationType".contains(m.getName())) {
+			if ("hashCode|toString|equals|annotationType"
+					.contains(m.getName())) {
 				continue;
 			}
-			Object annotationValue = m
-					.invoke(a, CommonUtils.EMPTY_OBJECT_ARRAY);
+			Object annotationValue = m.invoke(a,
+					CommonUtils.EMPTY_OBJECT_ARRAY);
 			Object defaultValue = a.annotationType()
 					.getDeclaredMethod(m.getName(), new Class[0])
 					.getDefaultValue();
@@ -674,10 +725,12 @@ public class ClientReflectionGenerator extends Generator {
 		}
 		Class<? extends Object> c = object.getClass();
 		if (c.isArray()) {
-			String implClassName = ann2impl.containsKey(declaredType
-					.getComponentType()) ? ann2impl.get(declaredType
-					.getComponentType()) + "[]" : qualifiedClassNames ? c
-					.getCanonicalName() : c.getSimpleName();
+			String implClassName = ann2impl
+					.containsKey(declaredType.getComponentType())
+							? ann2impl.get(declaredType.getComponentType())
+									+ "[]"
+							: qualifiedClassNames ? c.getCanonicalName()
+									: c.getSimpleName();
 			sb.append(String.format("new %s{", implClassName));
 			int length = Array.getLength(object);
 			for (int i = 0; i < length; i++) {
@@ -697,8 +750,8 @@ public class ClientReflectionGenerator extends Generator {
 			sb.append(String.format("\"%s\"",
 					object.toString().replace("\\", "\\\\")));
 		} else if (Enum.class.isAssignableFrom(c)) {
-			sb.append((qualifiedClassNames ? c.getCanonicalName() : c
-					.getSimpleName()) + "." + object.toString());
+			sb.append((qualifiedClassNames ? c.getCanonicalName()
+					: c.getSimpleName()) + "." + object.toString());
 		} else {
 			sb.append(object.toString());
 		}
@@ -711,8 +764,9 @@ public class ClientReflectionGenerator extends Generator {
 			pbm.put("int", Integer.class);
 			pbm.put("boolean", Boolean.class);
 			if (!pbm.containsKey(c.getName())) {
-				throw new WrappedRuntimeException("Unimplemented primitive:"
-						+ c.getName(), SuggestedAction.NOTIFY_AND_SHUTDOWN);
+				throw new WrappedRuntimeException(
+						"Unimplemented primitive:" + c.getName(),
+						SuggestedAction.NOTIFY_AND_SHUTDOWN);
 			}
 			return pbm.get(c.getName());
 		}

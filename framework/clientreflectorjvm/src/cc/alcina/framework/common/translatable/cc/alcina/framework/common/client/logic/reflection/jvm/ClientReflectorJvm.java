@@ -72,5 +72,7 @@ public class ClientReflectorJvm extends ClientReflector {
 			return null;
 		}
 	}
-
+	@Override
+	protected void initialiseNewInstance(Class clazz) {
+	}
 }

@@ -50,7 +50,7 @@ public interface FromJsonRepresentation {
 		try {
 			Field[] fields = new GraphProjection().getFieldsForClass(this);
 			for (Field field : fields) {
-				if(Modifier.isTransient(field.getModifiers())){
+				if (Modifier.isTransient(field.getModifiers())) {
 					continue;
 				}
 				String key = field.getName();
@@ -61,7 +61,7 @@ public interface FromJsonRepresentation {
 								Function.identity());
 					}
 					if (value instanceof JSONObject) {
-						continue;//handle elsewhere
+						continue;// handle elsewhere
 					}
 					if (field.getType() == Date.class && value != null) {
 						value = CONVERSION_DATE_FORMAT.parse(value.toString());
@@ -78,6 +78,11 @@ public interface FromJsonRepresentation {
 							field.set(this, value);
 						}
 					} else {
+						if (field.getType() == Long.class) {
+							if (value instanceof Integer) {
+								value = ((Integer) value).longValue();
+							}
+						}
 						field.set(this, value);
 					}
 				}

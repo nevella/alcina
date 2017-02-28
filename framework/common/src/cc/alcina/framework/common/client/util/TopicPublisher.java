@@ -93,6 +93,7 @@ public class TopicPublisher {
 		}
 	}
 
+	@FunctionalInterface
 	public interface TopicListener<T> {
 		void topicPublished(String key, T message);
 	}

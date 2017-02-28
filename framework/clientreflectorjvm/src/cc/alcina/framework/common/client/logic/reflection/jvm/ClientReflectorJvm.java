@@ -313,4 +313,9 @@ public class ClientReflectorJvm extends ClientReflector {
 		}
 		return result;
 	}
+
+	@Override
+	protected void initialiseNewInstance(Class clazz) {
+		//could log, i guess
+	}
 }

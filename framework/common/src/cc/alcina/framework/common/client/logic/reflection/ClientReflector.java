@@ -156,6 +156,11 @@ public abstract class ClientReflector implements ClassLookup {
 			if (instance != null) {
 				return instance;
 			}
+			reflector.initialiseNewInstance(clazz);
+			instance=reflector.newInstance0(clazz, objectId, localId);
+			if (instance != null) {
+				return instance;
+			}
 		}
 		throw new RuntimeException("Class " + clazz
 				+ " not reflect-instantiable");
@@ -163,6 +168,8 @@ public abstract class ClientReflector implements ClassLookup {
 
 	protected abstract <T> T newInstance0(Class<T> clazz, long objectId,
 			long localId);
+	
+	protected abstract void initialiseNewInstance(Class clazz);
 
 	protected Map<String, Class> forNameMap = new HashMap<String, Class>();
 
