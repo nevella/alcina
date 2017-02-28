@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyExceptio
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.UnsafeNativeLong;
 import com.google.gwt.core.ext.Generator;
 import com.google.gwt.core.ext.GeneratorContext;
@@ -436,10 +437,12 @@ public class IntrospectorGenerator extends Generator {
 	}
 
 	boolean ignorePrimitiveGwt28(JPrimitiveType primitive) {
-		switch (primitive) {
-		case BOOLEAN:
-		case DOUBLE:
-			return true;
+		if (GWT.isScript()) {
+			switch (primitive) {
+			case BOOLEAN:
+			case DOUBLE:
+				return true;
+			}
 		}
 		return false;
 	}

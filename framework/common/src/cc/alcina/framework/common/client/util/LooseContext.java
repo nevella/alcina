@@ -90,6 +90,9 @@ public abstract class LooseContext {
 	public static void setBoolean(String key) {
 		getContext().setBoolean(key);
 	}
+	public static void setBoolean(String key, Boolean value) {
+		getContext().setBoolean(key,value);
+	}
 
 	/*
 	 * Named 'getInstance' rather than 'get' because we want get to be Map.get

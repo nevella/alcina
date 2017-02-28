@@ -66,7 +66,7 @@ public abstract class ClientReflector implements ClassLookup {
 
 	public void registerChild(ClientReflector child) {
 		reflectors.add(0, child);
-		gwbiMap.putAll(child.gwbiMap);
+		child.gwbiMap = gwbiMap;
 		forNameMap.putAll(child.forNameMap);
 	}
 
@@ -80,7 +80,23 @@ public abstract class ClientReflector implements ClassLookup {
 	}
 
 	public ClientBeanReflector beanInfoForClass(Class clazz) {
-		throw new RuntimeException("Operation not implemented");
+		ClientBeanReflector beanReflector = gwbiMap.get(clazz);
+		if (beanReflector == null) {
+			if (!gwbiMap.containsKey(clazz)) {
+				for (ClientReflector reflector : reflectors) {
+					reflector.initReflector(clazz);
+				}
+				beanReflector = gwbiMap.get(clazz);
+				if (beanReflector == null) {
+					// so we don't look again
+					gwbiMap.put(clazz, null);
+				}
+			}
+		}
+		return beanReflector;
+	}
+
+	protected void initReflector(Class clazz) {
 	}
 
 	public String displayNameForObject(Object o) {
@@ -103,10 +119,10 @@ public abstract class ClientReflector implements ClassLookup {
 
 	public <A extends Annotation> A getAnnotationForClass(Class targetClass,
 			Class<A> annotationClass) {
-		ClientBeanReflector beanInfo = ClientReflector.get().beanInfoForClass(
-				targetClass);
-		return beanInfo == null ? null : beanInfo
-				.getAnnotation(annotationClass);
+		ClientBeanReflector beanInfo = ClientReflector.get()
+				.beanInfoForClass(targetClass);
+		return beanInfo == null ? null
+				: beanInfo.getAnnotation(annotationClass);
 	}
 
 	public Class getClassForName(String fqn) {
@@ -114,8 +130,8 @@ public abstract class ClientReflector implements ClassLookup {
 		if (clazz != null) {
 			return clazz;
 		}
-		throw new WrappedRuntimeException(CommonUtils.formatJ(
-				"Class %s not reflect-instantiable", fqn),
+		throw new WrappedRuntimeException(
+				CommonUtils.formatJ("Class %s not reflect-instantiable", fqn),
 				SuggestedAction.NOTIFY_ERROR);
 	}
 
@@ -127,8 +143,8 @@ public abstract class ClientReflector implements ClassLookup {
 	@SuppressWarnings("unchecked")
 	public <T> T getTemplateInstance(Class<T> clazz) {
 		if (!templateInstances.containsKey(clazz)) {
-			templateInstances.put(clazz, Reflections.classLookup()
-					.newInstance(clazz, 0, 0));
+			templateInstances.put(clazz,
+					Reflections.classLookup().newInstance(clazz, 0, 0));
 		}
 		return (T) templateInstances.get(clazz);
 	}
@@ -156,27 +172,29 @@ public abstract class ClientReflector implements ClassLookup {
 			if (instance != null) {
 				return instance;
 			}
+		}
+		for (ClientReflector reflector : reflectors) {
 			reflector.initialiseNewInstance(clazz);
-			instance=reflector.newInstance0(clazz, objectId, localId);
+			T instance = reflector.newInstance0(clazz, objectId, localId);
 			if (instance != null) {
 				return instance;
 			}
 		}
-		throw new RuntimeException("Class " + clazz
-				+ " not reflect-instantiable");
+		throw new RuntimeException(
+				"Class " + clazz + " not reflect-instantiable");
 	}
 
 	protected abstract <T> T newInstance0(Class<T> clazz, long objectId,
 			long localId);
-	
+
 	protected abstract void initialiseNewInstance(Class clazz);
 
 	protected Map<String, Class> forNameMap = new HashMap<String, Class>();
 
 	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
 		List<PropertyInfoLite> infos = new ArrayList<PropertyInfoLite>();
-		BeanDescriptor descriptor = GwittirBridge.get().getDescriptorForClass(
-				clazz);
+		BeanDescriptor descriptor = GwittirBridge.get()
+				.getDescriptorForClass(clazz);
 		if (descriptor == null) {
 			return infos;
 		}
@@ -184,13 +202,15 @@ public abstract class ClientReflector implements ClassLookup {
 			if (p.getMutatorMethod() == null) {
 				continue;
 			}
-			infos.add(new PropertyInfoLite(p.getType(), p.getName(), p
-					.getAccessorMethod(), clazz));
+			infos.add(new PropertyInfoLite(p.getType(), p.getName(),
+					p.getAccessorMethod(), clazz));
 		}
 		return infos;
 	}
+
 	public List<String> allInterestingAlcinaBeanProperties(Object bean) {
-		return getWritableProperties(bean.getClass()).stream().map(p -> p.getPropertyName()).sorted()
+		return getWritableProperties(bean.getClass()).stream()
+				.map(p -> p.getPropertyName()).sorted()
 				.collect(Collectors.toList());
 	}
 }

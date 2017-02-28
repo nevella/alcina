@@ -21,6 +21,10 @@ public class ReflectiveSearchDefinitionSerializer
 
 	Map<Class, String> reverseAbbrevLookup = new LinkedHashMap<>();
 
+	private SearchDefinition lastDef;
+
+	private String lastStringDef;
+
 	public ReflectiveSearchDefinitionSerializer() {
 	}
 
@@ -60,30 +64,13 @@ public class ReflectiveSearchDefinitionSerializer
 	}
 
 	@Override
-	public String serialize(SearchDefinition def) {
-		ensureLookups();
-		try {
-			def = (SearchDefinition) ((GwtCloneable) def).clone();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+	public synchronized String serialize(SearchDefinition def) {
+		if (lastDef == def) {
+			return lastStringDef;
 		}
-		SearchDefinition defaultInstance = Reflections.classLookup()
-				.newInstance(def.getClass());
-		defaultInstance.resetLookups();
-		def.getCriteriaGroups().removeIf(cg -> {
-			CriteriaGroup ocg = defaultInstance.criteriaGroup(cg.getClass());
-			return ocg != null && ocg.equivalentTo(cg);
-		});
-		// order is important for order groups
-		def.getOrderGroups().removeIf(cg -> {
-			CriteriaGroup ocg = defaultInstance.orderGroup(cg.getClass());
-			return ocg != null && ocg.equivalentTo(cg)
-					&& ocg.getCriteria().isEmpty();
-		});
-		String str = Registry.impl(AlcinaBeanSerializer.class)
-				.registerLookups(abbrevLookup, reverseAbbrevLookup)
-				.serialize(def);
-		return RS0 + escapeJsonForUrl(str);
+		lastDef = def;
+		lastStringDef = serialize0(lastDef);
+		return lastStringDef;
 	}
 
 	private void ensureLookups() {
@@ -147,6 +134,32 @@ public class ReflectiveSearchDefinitionSerializer
 			}
 		}
 		return sb.toString();
+	}
+
+	private String serialize0(SearchDefinition def) {
+		ensureLookups();
+		try {
+			def = (SearchDefinition) ((GwtCloneable) def).clone();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		SearchDefinition defaultInstance = Reflections.classLookup()
+				.newInstance(def.getClass());
+		defaultInstance.resetLookups();
+		def.getCriteriaGroups().removeIf(cg -> {
+			CriteriaGroup ocg = defaultInstance.criteriaGroup(cg.getClass());
+			return ocg != null && ocg.equivalentTo(cg);
+		});
+		// order is important for order groups
+		def.getOrderGroups().removeIf(cg -> {
+			CriteriaGroup ocg = defaultInstance.orderGroup(cg.getClass());
+			return ocg != null && ocg.equivalentTo(cg)
+					&& ocg.getCriteria().isEmpty();
+		});
+		String str = Registry.impl(AlcinaBeanSerializer.class)
+				.registerLookups(abbrevLookup, reverseAbbrevLookup)
+				.serialize(def);
+		return RS0 + escapeJsonForUrl(str);
 	}
 
 	private String unescapeJsonForUrl(String serializedDef) {

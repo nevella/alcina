@@ -106,6 +106,9 @@ public class LooseContextInstance {
 	public void setBoolean(String key) {
 		properties.put(key, Boolean.TRUE);
 	}
+	public void setBoolean(String key,boolean value) {
+		properties.put(key, Boolean.valueOf(value));
+	}
 
 	public void removeTopicListener(String key, TopicListener listener) {
 		TopicPublisher publisher = ensureTopicPublisher();

@@ -440,19 +440,7 @@ public class ClientReflectionGenerator extends Generator {
 		sw.outdent();
 		sw.println("}-*/;");
 		sw.println();
-		sw.println(
-				"public ClientBeanReflector beanInfoForClass(Class clazz) {");
-		sw.indent();
-		sw.println("ClientBeanReflector reflector = gwbiMap.get(clazz);");
-		sw.println("if(reflector==null){");
-		sw.indent();
-		sw.println("initReflector(clazz);");
-		sw.println("reflector = gwbiMap.get(clazz);");
-		sw.outdent();
-		sw.println("}");
-		sw.println("return reflector;");
-		sw.outdent();
-		sw.println("}");
+		
 		sw.println();
 		int methodCount = 0;
 		for (JClassType jct : beanInfoTypes) {
@@ -593,7 +581,7 @@ public class ClientReflectionGenerator extends Generator {
 		sw.outdent();
 		sw.println("}-*/;");
 		sw.println();
-		sw.println("private void initReflector(Class clazz) {");
+		sw.println("protected void initReflector(Class clazz) {");
 		sw.indent();
 		sw.println("switch(clazz.getName()){");
 		sw.indent();
