@@ -17,8 +17,10 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
@@ -64,10 +66,14 @@ public abstract class ClientReflector implements ClassLookup {
 
 	private List<ClientReflector> reflectors = new ArrayList<ClientReflector>();
 
+	Set<Class> nullReflectors = new LinkedHashSet<>();
+
 	public void registerChild(ClientReflector child) {
 		reflectors.add(0, child);
 		child.gwbiMap = gwbiMap;
 		forNameMap.putAll(child.forNameMap);
+		gwbiMap.keySet().removeAll(nullReflectors);
+		nullReflectors.clear();
 	}
 
 	private Map<Class, Object> templateInstances = new HashMap<Class, Object>();
@@ -88,8 +94,9 @@ public abstract class ClientReflector implements ClassLookup {
 				}
 				beanReflector = gwbiMap.get(clazz);
 				if (beanReflector == null) {
-					// so we don't look again
+					// so we don't look again (until next module registered)
 					gwbiMap.put(clazz, null);
+					nullReflectors.add(clazz);
 				}
 			}
 		}

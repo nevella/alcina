@@ -283,6 +283,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 	public Field getField(Class c, String propertyName, boolean editableWidgets,
 			boolean multiple, BoundWidgetTypeFactory factory, Object obj) {
+		if(c.getName().equals("au.com.barnet.jade.cs.trans.searchcriteria.EditorialCheckedByCriterion")){
+			int debug=3;
+		}
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(c);
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
