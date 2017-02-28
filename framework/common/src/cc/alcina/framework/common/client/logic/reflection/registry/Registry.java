@@ -21,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -45,11 +46,27 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCre
 public class Registry {
 	public static final String MARKER_RESOURCE = "registry.properties";
 
+	private static RegistryProvider provider = new BasicRegistryProvider();
+
+	private static DelegateMapCreator delegateCreator = new UnsortedMapCreator();
+
+	public static void appShutdown() {
+		provider.appShutdown();
+	}
+
+	public static <T> T checkSingleton(Class<T> clazz) {
+		return get().singleton0(clazz, true);
+	}
+
 	public static void checkSingleton(RegistrySingleton singleton) {
 		if (Registry.get().voidPointSingletons
 				.containsKey(singleton.getClass().getName())) {
 			throw new MultipleSingletonException(singleton.getClass());
 		}
+	}
+
+	public static <T> T ensureSingleton(Class<T> clazz) {
+		return get().singleton0(clazz, false);
 	}
 
 	public static Set<RegistryLocation>
@@ -153,40 +170,21 @@ public class Registry {
 		return get().impls0(registryPoint, targetClass);
 	}
 
+	public static <T> Optional<T> optional(Class<T> registryPoint) {
+		return Optional.ofNullable(implOrNull(registryPoint));
+	}
+
 	public static void registerSingleton(Class<?> registryPoint,
 			Object object) {
 		get().registerSingleton(registryPoint, void.class, object);
 	}
 
-	public void registerSingleton(Class<?> registryPoint, Class<?> targetClass,
-			Object object) {
-		registerSingletonInLookups(registryPoint, targetClass, object);
-		register(object.getClass(), registryPoint, targetClass,
-				ImplementationType.SINGLETON, RegistryLocation.MANUAL_PRIORITY);
-	}
-
-	private synchronized void registerSingletonInLookups(Class<?> registryPoint,
-			Class<?> targetClass, Object object) {
-		boolean voidTarget = targetClass == void.class;
-		singletons.put(registryPoint, targetClass, object);
-		if (voidTarget) {
-			// use className so we don't have to get class objects from
-			// different parts of memory - this did seem to help a jvm
-			// optimisation
-			voidPointSingletons.put(registryPoint.getName(), object);
-		}
+	public static void setDelegateCreator(DelegateMapCreator delegateCreator) {
+		Registry.delegateCreator = delegateCreator;
 	}
 
 	public static void setProvider(RegistryProvider provider) {
 		Registry.provider = provider;
-	}
-
-	public static <T> T ensureSingleton(Class<T> clazz) {
-		return get().singleton0(clazz, false);
-	}
-
-	public static <T> T checkSingleton(Class<T> clazz) {
-		return get().singleton0(clazz, true);
 	}
 
 	public static <V> List<V> singletons(Class<V> registryPoint,
@@ -195,12 +193,6 @@ public class Registry {
 	}
 
 	private ClassLookup classLookup;
-
-	private static RegistryProvider provider = new BasicRegistryProvider();
-
-	public static void appShutdown() {
-		provider.appShutdown();
-	}
 
 	// registrypoint/targetClass/impl/impl
 	protected UnsortedMultikeyMap<Class> registry;
@@ -219,12 +211,6 @@ public class Registry {
 
 	protected Map<String, Object> voidPointSingletons;
 
-	private static DelegateMapCreator delegateCreator = new UnsortedMapCreator();
-
-	public static void setDelegateCreator(DelegateMapCreator delegateCreator) {
-		Registry.delegateCreator = delegateCreator;
-	}
-
 	public Registry() {
 		registry = new UnsortedMultikeyMap<Class>(3, 0, delegateCreator);
 		targetPriority = new UnsortedMultikeyMap<Integer>(2, 0,
@@ -234,6 +220,55 @@ public class Registry {
 		exactMap = new UnsortedMultikeyMap<Class>(2, 0, delegateCreator);
 		implementationTypeMap = new UnsortedMultikeyMap<ImplementationType>(2,
 				0, delegateCreator);
+	}
+
+	public void copyFrom(Registry sourceInstance, Class<?> clazz) {
+		registry.asMap(clazz).putMulti(sourceInstance.registry.asMap(clazz));
+		targetPriority.asMap(clazz)
+				.putMulti(sourceInstance.targetPriority.asMap(clazz));
+		exactMap.asMap(clazz).putMulti(sourceInstance.exactMap.asMap(clazz));
+		exactMap.asMap(clazz).putMulti(sourceInstance.exactMap.asMap(clazz));
+		implementationTypeMap.asMap(clazz)
+				.putMulti(sourceInstance.implementationTypeMap.asMap(clazz));
+		if (sourceInstance.singletons.containsKey(clazz)) {
+			singletons.asMap(clazz)
+					.putMulti(sourceInstance.singletons.asMap(clazz));
+			String cn = clazz.getName();
+			if (voidPointSingletons.containsKey(cn)) {
+				voidPointSingletons.put(cn,
+						sourceInstance.voidPointSingletons.get(cn));
+			}
+		}
+	}
+
+	public <T> void ensureSingletonRegistered(Class<? super T> clazz, T t) {
+		if (impl0(clazz, void.class, true) == null) {
+			registerSingleton(clazz, void.class, t);
+		}
+	}
+
+	public <T> Map<Enum, T> enumLookup(Class<T> registryPoint,
+			String propertyName) {
+		List<T> handlers = Registry.impls(registryPoint);
+		Map<Enum, T> byKey = new LinkedHashMap<>();
+		PropertyKeyValueMapper mapper = new PropertyKeyValueMapper(
+				propertyName);
+		for (T handler : handlers) {
+			Enum key = (Enum) mapper.getKey(handler);
+			if (byKey.containsKey(key)) {
+				throw new RuntimeException(CommonUtils.formatJ(
+						"Duplicate key for enum lookup - %s %s %s",
+						registryPoint.getClass().getSimpleName(), key,
+						handler.getClass().getSimpleName()));
+			} else {
+				byKey.put(key, handler);
+			}
+		}
+		return byKey;
+	}
+
+	public UnsortedMultikeyMap<Class> getRegistry() {
+		return this.registry;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -274,12 +309,27 @@ public class Registry {
 		return CommonUtils.dedupe(result);
 	}
 
-	public UnsortedMultikeyMap<Class> getRegistry() {
-		return this.registry;
-	}
-
 	public List<Class> lookup(Class registryPoint) {
 		return lookup(false, registryPoint, void.class, true);
+	}
+
+	public <T> T lookupImplementation(Class<T> registryPoint, Enum value,
+			String propertyName) {
+		return lookupImplementation(registryPoint, value, propertyName, false);
+	}
+
+	public <T> T lookupImplementation(Class<T> registryPoint, Enum value,
+			String propertyName, boolean newInstance) {
+		Map<Enum, T> byKey = enumLookup(registryPoint, propertyName);
+		T t = byKey.get(value);
+		if (t != null && newInstance) {
+			try {
+				t = (T) classLookup.newInstance(t.getClass());
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+		return t;
 	}
 
 	public Class lookupSingle(Class registryPoint, Class targetObject) {
@@ -354,6 +404,18 @@ public class Registry {
 		this.classLookup = classLookup;
 	}
 
+	public void registerSingleton(Class<?> registryPoint, Class<?> targetClass,
+			Object object) {
+		registerSingletonInLookups(registryPoint, targetClass, object);
+		register(object.getClass(), registryPoint, targetClass,
+				ImplementationType.SINGLETON, RegistryLocation.MANUAL_PRIORITY);
+	}
+
+	public void shareSingletonMapTo(Registry otherRegistry) {
+		otherRegistry.singletons = singletons;
+		otherRegistry.voidPointSingletons = voidPointSingletons;
+	}
+
 	public void shutdownSingletons() {
 		for (Object o : singletons.allValues()) {
 			if (o instanceof RegistrableService) {
@@ -399,6 +461,18 @@ public class Registry {
 	public void unregister(Class registryPoint, Class targetClass,
 			Class registeringClass) {
 		registry.remove(registryPoint, targetClass, registeringClass);
+	}
+
+	private synchronized void registerSingletonInLookups(Class<?> registryPoint,
+			Class<?> targetClass, Object object) {
+		boolean voidTarget = targetClass == void.class;
+		singletons.put(registryPoint, targetClass, object);
+		if (voidTarget) {
+			// use className so we don't have to get class objects from
+			// different parts of memory - this did seem to help a jvm
+			// optimisation
+			voidPointSingletons.put(registryPoint.getName(), object);
+		}
 	}
 
 	private String simpleName(Class c) {
@@ -582,74 +656,5 @@ public class Registry {
 		void appShutdown();
 
 		Registry getRegistry();
-	}
-
-	public void shareSingletonMapTo(Registry otherRegistry) {
-		otherRegistry.singletons = singletons;
-		otherRegistry.voidPointSingletons = voidPointSingletons;
-	}
-
-	public <T> T lookupImplementation(Class<T> registryPoint, Enum value,
-			String propertyName) {
-		return lookupImplementation(registryPoint, value, propertyName, false);
-	}
-
-	public <T> T lookupImplementation(Class<T> registryPoint, Enum value,
-			String propertyName, boolean newInstance) {
-		Map<Enum, T> byKey = enumLookup(registryPoint, propertyName);
-		T t = byKey.get(value);
-		if (t != null && newInstance) {
-			try {
-				t = (T) classLookup.newInstance(t.getClass());
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-		return t;
-	}
-
-	public <T> Map<Enum, T> enumLookup(Class<T> registryPoint,
-			String propertyName) {
-		List<T> handlers = Registry.impls(registryPoint);
-		Map<Enum, T> byKey = new LinkedHashMap<>();
-		PropertyKeyValueMapper mapper = new PropertyKeyValueMapper(
-				propertyName);
-		for (T handler : handlers) {
-			Enum key = (Enum) mapper.getKey(handler);
-			if (byKey.containsKey(key)) {
-				throw new RuntimeException(CommonUtils.formatJ(
-						"Duplicate key for enum lookup - %s %s %s",
-						registryPoint.getClass().getSimpleName(), key,
-						handler.getClass().getSimpleName()));
-			} else {
-				byKey.put(key, handler);
-			}
-		}
-		return byKey;
-	}
-
-	public <T> void ensureSingletonRegistered(Class<? super T> clazz, T t) {
-		if (impl0(clazz, void.class, true) == null) {
-			registerSingleton(clazz, void.class, t);
-		}
-	}
-
-	public void copyFrom(Registry sourceInstance, Class<?> clazz) {
-		registry.asMap(clazz).putMulti(sourceInstance.registry.asMap(clazz));
-		targetPriority.asMap(clazz)
-				.putMulti(sourceInstance.targetPriority.asMap(clazz));
-		exactMap.asMap(clazz).putMulti(sourceInstance.exactMap.asMap(clazz));
-		exactMap.asMap(clazz).putMulti(sourceInstance.exactMap.asMap(clazz));
-		implementationTypeMap.asMap(clazz)
-				.putMulti(sourceInstance.implementationTypeMap.asMap(clazz));
-		if (sourceInstance.singletons.containsKey(clazz)) {
-			singletons.asMap(clazz)
-					.putMulti(sourceInstance.singletons.asMap(clazz));
-			String cn = clazz.getName();
-			if (voidPointSingletons.containsKey(cn)) {
-				voidPointSingletons.put(cn,
-						sourceInstance.voidPointSingletons.get(cn));
-			}
-		}
 	}
 }
