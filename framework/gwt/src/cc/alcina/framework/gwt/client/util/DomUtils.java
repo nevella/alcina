@@ -2,12 +2,32 @@ package cc.alcina.framework.gwt.client.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Spliterator;
 import java.util.Stack;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.IntFunction;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.function.ToDoubleFunction;
+import java.util.function.ToIntFunction;
+import java.util.function.ToLongFunction;
+import java.util.stream.Collector;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -58,7 +78,8 @@ public class DomUtils implements NodeFromXpathProvider {
 		}
 		return false;
 	}
-	public Node getPrecededByNonHtmlDomNodes(Text text){
+
+	public Node getPrecededByNonHtmlDomNodes(Text text) {
 		return precededByNonHtmlDomNodes.get(text);
 	}
 
@@ -386,7 +407,7 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	private Map<Node, StringBuilder> exactTextMap;
 
-	private Map<Node,Node> precededByNonHtmlDomNodes = new LinkedHashMap<>();
+	private Map<Node, Node> precededByNonHtmlDomNodes = new LinkedHashMap<>();
 
 	public DomUtils() {
 		invalidateUnwrapOrIgnoreCache();
@@ -612,7 +633,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		return nodeProvider;
 	}
 
-	public Map<Node,Node> getPrecededByNonHtmlDomNodes() {
+	public Map<Node, Node> getPrecededByNonHtmlDomNodes() {
 		return this.precededByNonHtmlDomNodes;
 	}
 
@@ -658,8 +679,8 @@ public class DomUtils implements NodeFromXpathProvider {
 		this.nodeProvider = nodeProvider;
 	}
 
-	public void
-			setPrecededByNonHtmlDomNodes(Map<Node,Node> precededByNonHtmlDomNodes) {
+	public void setPrecededByNonHtmlDomNodes(
+			Map<Node, Node> precededByNonHtmlDomNodes) {
 		this.precededByNonHtmlDomNodes = precededByNonHtmlDomNodes;
 	}
 
@@ -1170,5 +1191,16 @@ public class DomUtils implements NodeFromXpathProvider {
 			this.elt = elt;
 			this.prefix = prefix;
 		}
+	}
+
+	public static Stream<Element> ancestorStream(Element element) {
+		// FIXME-jadex (not optimal)
+		List<Element> elements = new ArrayList<>();
+		Node node = element;
+		while (node != null && node.getNodeType() == Node.ELEMENT_NODE) {
+			elements.add((Element) node);
+			node = node.getParentNode();
+		}
+		return elements.stream();
 	}
 }

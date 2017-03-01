@@ -437,7 +437,7 @@ public class IntrospectorGenerator extends Generator {
 	}
 
 	boolean ignorePrimitiveGwt28(JPrimitiveType primitive) {
-		if (GWT.isScript()) {
+		if (!GWT.isClient()) {//i.e. not compiling for devmode - compiling to js
 			switch (primitive) {
 			case BOOLEAN:
 			case DOUBLE:
