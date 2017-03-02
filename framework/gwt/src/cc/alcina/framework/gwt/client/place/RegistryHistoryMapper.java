@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.place;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceHistoryMapper;
@@ -11,11 +12,12 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Multimap;
 
 @ClientInstantiable
 @RegistryLocation(registryPoint = RegistryHistoryMapper.class, implementationType = ImplementationType.SINGLETON)
 public class RegistryHistoryMapper implements PlaceHistoryMapper {
-	Map<String, BasePlaceTokenizer> tokenizersByPrefix = new LinkedHashMap<>();
+	Multimap<String, List<BasePlaceTokenizer>> tokenizersByPrefix = new Multimap<>();
 
 	Map<Class, BasePlaceTokenizer> tokenizersByPlace = new LinkedHashMap<>();
 
@@ -29,7 +31,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		List<BasePlaceTokenizer> impls = Registry
 				.impls(BasePlaceTokenizer.class);
 		for (BasePlaceTokenizer tokenizer : impls) {
-			tokenizersByPrefix.put(tokenizer.getPrefix(), tokenizer);
+			tokenizersByPrefix.add(tokenizer.getPrefix(), tokenizer);
 			tokenizersByPlace.put(tokenizer.getTokenizedClass(), tokenizer);
 		}
 	}
@@ -37,10 +39,13 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	@Override
 	public Place getPlace(String token) {
 		String top = token.split("/")[0];
-		BasePlaceTokenizer tokenizer = tokenizersByPrefix.get(top);
-		Place place = tokenizer == null ? null : tokenizer.getPlace(token);
+		Optional<BasePlaceTokenizer> o_tokenizer = tokenizersByPrefix.get(top)
+				.stream().filter(tokenizer -> tokenizer.handles(token))
+				.findFirst();
+		Place place = o_tokenizer.isPresent()
+				? o_tokenizer.get().getPlace(token) : null;
 		if (place == null) {
-			//handle doc internal hrefs
+			// handle doc internal hrefs
 			place = lastPlace;
 		}
 		lastPlace = place;

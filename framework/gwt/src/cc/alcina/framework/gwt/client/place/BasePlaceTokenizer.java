@@ -40,7 +40,6 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	@Override
 	public P getPlace(String token) {
-		ClientNotifications.get().log("to place: " + token);
 		parts = token.split("/");
 		try {
 			return getPlace0(token);
@@ -134,5 +133,9 @@ public abstract class BasePlaceTokenizer<P extends Place>
 	public P copyPlace(P place) {
 		String token = getToken(place);
 		return getPlace(token);
+	}
+
+	public boolean handles(String token) {
+		return true;
 	}
 }
