@@ -164,7 +164,14 @@ public class JobRegistry implements RegistrableService {
 		}
 		return running;
 	}
-
+	public boolean isCancelled() {
+		JobTracker jobTracker = getContextTracker();
+		if (jobTracker == null) {
+			return true;
+		} else {
+			return jobTracker.isCancelled();
+		}
+	}
 	public void checkCancelled() {
 		JobTracker jobTracker = getContextTracker();
 		if (jobTracker == null) {
