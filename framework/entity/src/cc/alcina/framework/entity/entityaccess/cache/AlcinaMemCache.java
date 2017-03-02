@@ -1202,16 +1202,19 @@ public class AlcinaMemCache implements RegistrableService {
 		long queuedTime = health.getMaxQueuedTime();
 		if (dumpLocks || (collectLockAcquisitionPoints
 				&& (write || queuedTime > MAX_QUEUED_TIME))) {
+			if(dumpLocksCount.get()>100){
+				dumpLocks = false;
+				collectLockAcquisitionPoints=false;
+				return;
+			}
 			String lockDumpCause = String.format("Memcache lock - %s - %s\n",
 					write ? "write" : "read", action);
 			String log = getLockStats();
 			lockDumpCause += log;
 			if (dumpLocks || (queuedTime > MAX_QUEUED_TIME)) {
+				dumpLocksCount.incrementAndGet();
 				System.out.println(getLockDumpString(lockDumpCause, time
 						- lastQueueDumpTime > 5 * TimeConstants.ONE_MINUTE_MS));
-			}
-			if (dumpLocksCount.incrementAndGet() > 100) {
-				dumpLocks = false;
 			}
 			if (collectLockAcquisitionPoints) {
 				synchronized (recentLockAcquisitions) {
