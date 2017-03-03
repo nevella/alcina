@@ -129,7 +129,7 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 						+ contextClassLoader);
 			} else {
 				throw new RuntimeException(
-						String.format("Too many registies: \n%s\n%s\n",
+						String.format("Too many registries: \n%s\n%s\n",
 								contextClassLoader, perClassLoader.keySet()));
 			}
 		}
