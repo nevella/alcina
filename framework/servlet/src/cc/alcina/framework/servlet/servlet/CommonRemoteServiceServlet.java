@@ -170,6 +170,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public static final String CONTEXT_OVERRIDE_CONTEXT = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_OVERRIDE_CONTEXT";
 
+	public static final String CONTEXT_THREAD_LOCAL_HTTP_REQUEST = CommonRemoteServiceServlet.class
+			.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_REQUEST";
+
 	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
 
 	public static void unexpectedExceptionBeforePostTransform(
@@ -581,6 +584,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			LooseContext.push();
 			initUserStateWithCookie(getThreadLocalRequest(),
 					getThreadLocalResponse());
+			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
+					getThreadLocalRequest());
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
 			if (rpcRequest
 					.getSerializationPolicy() instanceof LegacySerializationPolicy) {
@@ -1054,6 +1059,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return msg;
 	}
 
+	protected HttpServletRequest getCrossServletThreadLocalRequest() {
+		return LooseContext.get(
+				CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_REQUEST);
+	}
+
 	public class ActionLauncher<T> {
 		private JobTracker actionTracker;
 
@@ -1156,7 +1166,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					.map(BoundSuggestOracleSuggestion::new)
 					.limit(getSuggestionLimit()).collect(Collectors.toList()));
 			if (offerNullSuggestion()) {
-				((List) response.getSuggestions()).add(0, BoundSuggestOracleSuggestion.nullSuggestion());
+				((List) response.getSuggestions()).add(0,
+						BoundSuggestOracleSuggestion.nullSuggestion());
 			}
 			return GraphProjections.defaultProjections().project(response);
 		}

@@ -38,10 +38,11 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	@Override
 	public Place getPlace(String token) {
+		System.out.println("get place:" + token);
 		String top = token.split("/")[0];
-		Optional<BasePlaceTokenizer> o_tokenizer = tokenizersByPrefix.get(top)
-				.stream().filter(tokenizer -> tokenizer.handles(token))
-				.findFirst();
+		Optional<BasePlaceTokenizer> o_tokenizer = tokenizersByPrefix
+				.getAndEnsure(top).stream()
+				.filter(tokenizer -> tokenizer.handles(token)).findFirst();
 		Place place = o_tokenizer.isPresent()
 				? o_tokenizer.get().getPlace(token) : null;
 		if (place == null) {
