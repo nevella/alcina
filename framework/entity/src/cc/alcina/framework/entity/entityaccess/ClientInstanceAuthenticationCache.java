@@ -31,11 +31,10 @@ public class ClientInstanceAuthenticationCache {
 	}
 
 	public boolean isCached(Long id, Integer auth) {
-		return auth != null
-				&& id != null
+		return auth != null && id != null
 				&& clientInstanceAuthMap.containsKey(id)
-				&& auth.intValue() == CommonUtils.iv(clientInstanceAuthMap
-						.get(id));
+				&& auth.intValue() == CommonUtils
+						.iv(clientInstanceAuthMap.get(id));
 	}
 
 	public String getUserNameFor(long validatedClientInstanceId) {
@@ -57,8 +56,8 @@ public class ClientInstanceAuthenticationCache {
 			return;
 		}
 		iidUserNameByKeyMap.put(iid.getInstanceId(),
-				iid.getRememberMeUser() == null ? null : iid
-						.getRememberMeUser().getUserName());
+				iid.getRememberMeUser() == null ? null
+						: iid.getRememberMeUser().getUserName());
 	}
 
 	public boolean containsIIdKey(String iidKey) {
@@ -66,5 +65,10 @@ public class ClientInstanceAuthenticationCache {
 			return false;
 		}
 		return iidUserNameByKeyMap.containsKey(iidKey);
+	}
+
+	public void cacheUserNameFor(long validatedClientInstanceId,
+			String userName) {
+		clientInstanceUserNameMap.put(validatedClientInstanceId, userName);
 	}
 }

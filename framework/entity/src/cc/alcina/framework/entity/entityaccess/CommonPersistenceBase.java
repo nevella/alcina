@@ -656,6 +656,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			if (ci != null) {
 				userName = ci.getUser().getUserName();
 			}
+			Registry.impl(ClientInstanceAuthenticationCache.class)
+			.cacheUserNameFor(validatedClientInstanceId,userName);
 		}
 		return userName;
 	}
