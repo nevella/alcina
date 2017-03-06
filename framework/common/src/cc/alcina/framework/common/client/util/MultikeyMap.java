@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -77,4 +79,13 @@ public interface MultikeyMap<V> {
 	public abstract void stripNonDuplicates(int depth);
 
 	public abstract V ensure(Supplier<V> supplier, Object... objects);
+
+	default void addInteger(int delta, Object... objects) {
+		Integer value = (Integer) ensure(() -> (V) (Object) new Integer(0),
+				objects);
+		value += delta;
+		List<Object> list = new ArrayList<>(Arrays.asList(objects));
+		list.add(value);
+		put(list.toArray());
+	}
 }

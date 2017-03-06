@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -63,8 +64,10 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
+import cc.alcina.framework.common.client.util.SortedMultikeyMap;
 
 /**
  * TODO - abstract parts out to ClientTransformManager
@@ -140,7 +143,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	private static TransformManager theInstance;
 
 	public static boolean hasInstance() {
-		return theInstance!=null;
+		return theInstance != null;
 	}
 
 	public static TransformManager get() {
@@ -1836,5 +1839,19 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public void registerHiliMappingPriorToLocalIdDeletion(Class clazz, long id,
 			long localId) {
 		return;
+	}
+
+	public static String
+			logTransformStats(Set<DomainTransformEvent> transforms) {
+		// group by obj class, property, type
+		MultikeyMap<Integer> map = new SortedMultikeyMap<>(3);
+		transforms.stream().forEach(transform -> {
+			map.addInteger(1, transform.getObjectClass().getSimpleName(),
+					Optional.ofNullable(transform.getPropertyName())
+							.orElse("*"),
+					CommonUtils.friendlyConstant(transform.getTransformType()));
+		});
+		return map.asTuples(3).stream().map(Object::toString)
+				.collect(Collectors.joining("\n"));
 	}
 }
