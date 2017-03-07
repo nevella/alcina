@@ -14,9 +14,7 @@ public class XmlTokenOutput {
 
 	private XmlNode lastTextNode;
 
-	public XmlNode getLastTextNode() {
-		return this.lastTextNode;
-	}
+	boolean debug = false;
 
 	public XmlTokenOutput(XmlDoc outDoc) {
 		this.outDoc = outDoc;
@@ -39,11 +37,29 @@ public class XmlTokenOutput {
 		writeCursor = writeCursor.parent();
 	}
 
+	public void ensureClosed(XmlStructuralJoin outNode, String tag) {
+		if (writeCursor.tagIs(tag)) {
+			close(outNode, tag);
+		}
+	}
+
+	public void ensureOpen(XmlStructuralJoin outNode, String tag) {
+		if (!writeCursor.ancestors().orSelf().has(tag)) {
+			open(outNode, tag);
+		}
+	}
+
+	public XmlNode getLastTextNode() {
+		return this.lastTextNode;
+	}
+
+	public XmlNode getOutputNode() {
+		return writeCursor;
+	}
+
 	public void open(XmlStructuralJoin outNode, String tag) {
 		open(outNode, tag, new StringMap());
 	}
-
-	boolean debug = false;
 
 	public void open(XmlStructuralJoin outNode, String tag, StringMap attrs) {
 		if (debug) {
@@ -55,12 +71,9 @@ public class XmlTokenOutput {
 		context.targetNodeMapped(outNode);
 	}
 
-	XmlStructuralJoin getOutCursor() {
-		return writeCursor.open;
-	}
-
-	public XmlNode getOutputNode() {
-		return writeCursor;
+	public void pi(String name, String data) {
+		writeCursor.builder().processingInstruction().tag(name).text(data)
+				.append();
 	}
 
 	public void tag(XmlStructuralJoin node, String tag) {
@@ -83,20 +96,12 @@ public class XmlTokenOutput {
 				outDoc.domDoc().getDocumentElement().getFirstChild());
 	}
 
-	public void ensureOpen(XmlStructuralJoin outNode, String tag) {
-		if (!writeCursor.ancestors().orSelf().has(tag)) {
-			open(outNode, tag);
-		}
+	public void writeXml(String xmlString) {
+		XmlDoc insert = new XmlDoc(xmlString);
+		writeCursor.children.importFrom(insert.getDocumentElementNode());
 	}
 
-	public void ensureClosed(XmlStructuralJoin outNode, String tag) {
-		if (writeCursor.tagIs(tag)) {
-			close(outNode, tag);
-		}
-	}
-
-	public void pi(String name, String data) {
-		writeCursor.builder().processingInstruction().tag(name).text(data)
-				.append();
+	XmlStructuralJoin getOutCursor() {
+		return writeCursor.open;
 	}
 }

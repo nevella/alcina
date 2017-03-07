@@ -50,9 +50,21 @@ public class XmlNodeBuilder {
 		return node;
 	}
 
+	public XmlNodeBuilder className(String className) {
+		attrs("class",className);
+		return this;
+	}
+
 	public XmlNodeBuilder processingInstruction() {
 		this.processingInstruction = true;
 		return this;
+	}
+
+	public XmlNode replaceWith() {
+		XmlNode node = generate();
+		node.children.adoptFrom(relativeTo);
+		relativeTo.replaceWith(node);
+		return node;
 	}
 
 	public XmlNodeBuilder tag(String tag) {
@@ -71,6 +83,13 @@ public class XmlNodeBuilder {
 				relativeTo.node);
 		node.node.appendChild(relativeTo.node);
 		relativeTo.parent().invalidate();
+		return node;
+	}
+
+	public XmlNode wrapChildren() {
+		XmlNode node = generate();
+		node.children.adoptFrom(relativeTo);
+		relativeTo.children.append(node);
 		return node;
 	}
 
@@ -95,22 +114,10 @@ public class XmlNodeBuilder {
 		return doc().nodeFor(node);
 	}
 
-	public XmlNode wrapChildren() {
+	public XmlNode appendAsFirstChild() {
 		XmlNode node = generate();
-		node.children.adoptFrom(relativeTo);
-		relativeTo.children.append(node);
-		return node;
-	}
-
-	public XmlNode replaceWith() {
-		XmlNode node = generate();
-		node.children.adoptFrom(relativeTo);
-		relativeTo.replaceWith(node);
-		return node;
-	}
-
-	public XmlNodeBuilder className(String className) {
-		attrs("class",className);
-		return this;
+		relativeTo.node.insertBefore(node.node, relativeTo.node.getFirstChild());
+		relativeTo.children.invalidate();
+		return node;		
 	}
 }

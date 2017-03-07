@@ -261,7 +261,7 @@ public class XmlNode {
 	}
 
 	public void replaceWith(XmlNode other) {
-		relative().insertBefore(other);
+		relative().insertBeforeThis(other);
 		removeFromParent();
 	}
 
@@ -287,7 +287,7 @@ public class XmlNode {
 		DocumentFragment frag = domDoc().createDocumentFragment();
 		XmlNode fragNode = new XmlNode(frag, doc);
 		fragNode.children.adoptFrom(this);
-		relative().insertBefore(fragNode);
+		relative().insertBeforeThis(fragNode);
 		removeFromParent();
 	}
 
@@ -633,13 +633,13 @@ public class XmlNode {
 			return node.getPreviousSibling() != null;
 		}
 
-		public void insertAfter(XmlNode node) {
+		public void insertAfterThis(XmlNode node) {
 			parent().invalidate();
 			parent().node.insertBefore(node.node,
 					XmlNode.this.node.getNextSibling());
 		}
 
-		public void insertBefore(XmlNode node) {
+		public void insertBeforeThis(XmlNode node) {
 			parent().invalidate();
 			parent().node.insertBefore(node.node, XmlNode.this.node);
 		}
