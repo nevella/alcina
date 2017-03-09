@@ -29,7 +29,8 @@ public class LoginResponse implements Serializable {
 	private String errorMsg;
 
 	private ClientInstance clientInstance;
-	private Map<String,String> properties = new LinkedHashMap<>();
+
+	private Map<String, String> properties = new LinkedHashMap<>();
 
 	public Map<String, String> getProperties() {
 		return this.properties;
