@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -1462,5 +1463,13 @@ public class CommonUtils {
 
 	public static Set nonNullSet(Set value) {
 		return value == null ? new LinkedHashSet<>() : value;
+	}
+
+	public static <T> Stream<T> nullableStream(T t) {
+		List<T> list = new ArrayList<>();
+		if (t != null) {
+			list.add(t);
+		}
+		return list.stream();
 	}
 }
