@@ -31,6 +31,16 @@ public class BaseMultipleEnumCriterionPack {
 					value);
 		}
 
+		public BaseEnumMultipleCriterion add(E e) {
+			getValue().add(e);
+			return this;
+		}
+
+		public BaseEnumMultipleCriterion add(Set<E> e) {
+			getValue().addAll(e);
+			return this;
+		}
+
 		@Override
 		public BaseEnumMultipleCriterion clone()
 				throws CloneNotSupportedException {
