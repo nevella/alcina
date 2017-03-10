@@ -10,19 +10,17 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 @Introspectable
 @RegistryLocation(registryPoint = BasePlace.class)
-public abstract class BasePlace extends Place implements Serializable{
+public abstract class BasePlace extends Place implements Serializable {
 	private static String tokenFor(BasePlace p) {
 		return Registry.impl(RegistryHistoryMapper.class).getToken(p);
 	}
 
 	private boolean refreshed;
 
-	public boolean isRefreshed() {
-		return this.refreshed;
-	}
-
-	public void setRefreshed(boolean refreshed) {
-		this.refreshed = refreshed;
+	public <T extends BasePlace> T copy() {
+		RegistryHistoryMapper mapper = Registry
+				.impl(RegistryHistoryMapper.class);
+		return (T) mapper.copyPlace(this);
 	}
 
 	@Override
@@ -42,6 +40,14 @@ public abstract class BasePlace extends Place implements Serializable{
 	@Override
 	public int hashCode() {
 		return tokenFor(this).hashCode();
+	}
+
+	public boolean isRefreshed() {
+		return this.refreshed;
+	}
+
+	public void setRefreshed(boolean refreshed) {
+		this.refreshed = refreshed;
 	}
 
 	public String toTokenString() {
