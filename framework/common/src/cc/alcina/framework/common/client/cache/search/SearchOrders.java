@@ -56,4 +56,8 @@ public class SearchOrders<T> implements Comparator<T>, Serializable {
 			return t.getId();
 		}
 	}
+
+	public boolean isEmpty() {
+		return cmps.size()==0;
+	}
 }

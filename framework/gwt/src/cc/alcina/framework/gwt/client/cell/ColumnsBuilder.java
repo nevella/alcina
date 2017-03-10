@@ -1,7 +1,12 @@
 package cc.alcina.framework.gwt.client.cell;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -13,6 +18,7 @@ import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.cellview.client.AbstractCellTable;
 import com.google.gwt.user.cellview.client.Column;
+import com.google.gwt.user.cellview.client.ColumnSortEvent;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
 import com.google.gwt.user.cellview.client.Header;
 
@@ -29,6 +35,8 @@ public class ColumnsBuilder<T> {
 	private Header<String> footer;
 
 	private boolean edit;
+
+	private Map<SortableColumn, ColumnBuilder> built = new LinkedHashMap<>();
 
 	public ColumnsBuilder(AbstractCellTable<T> table, Class<T> clazz) {
 		this.table = table;
@@ -111,6 +119,7 @@ public class ColumnsBuilder<T> {
 			SortableColumn<T> col = new SortableColumn<T>(function,
 					sortFunction, nativeComparator, styleFunction, editInfo,
 					cell);
+			built.put(col, this);
 			// don't add if filtered
 			if (columnsFilter == null
 					|| columnsFilter.contains(name.toLowerCase())) {
@@ -291,5 +300,10 @@ public class ColumnsBuilder<T> {
 		public boolean isEditable() {
 			return propertyName != null;
 		}
+	}
+
+	public Comparator<T> getComparator(Column<?, ?> column) {
+		ColumnBuilder columnBuilder = built.get(column);
+		return Comparator.comparing(columnBuilder.sortFunction);
 	}
 }

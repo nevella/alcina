@@ -42,15 +42,13 @@ import com.google.gwt.user.server.rpc.impl.SerializedInstanceReference;
  * @see com.google.gwt.user.server.rpc.impl.ServerSerializationStreamWriter
  * @see com.google.gwt.user.server.rpc.impl.ServerSerializationStreamReader
  */
-public class SyncClientSerializationStreamReader extends
-        AbstractSerializationStreamReader {
+public class SyncClientSerializationStreamReader
+        extends AbstractSerializationStreamReader {
     private static final String MIDDY = "],[";
 
     private static final char JS_ESCAPE_CHAR = '\\';
-    
+
     private static final String STRINGCONCAT = "\"+\"";
-    
-    
 
     /**
      * Used to accumulate elements while deserializing array types. The generic
@@ -164,7 +162,8 @@ public class SyncClientSerializationStreamReader extends
                 return stream.readBoolean();
             }
 
-            protected void setSingleValue(Object array, int index, Object value) {
+            protected void setSingleValue(Object array, int index,
+                    Object value) {
                 Array.setBoolean(array, index, (Boolean) value);
             }
         },
@@ -175,7 +174,8 @@ public class SyncClientSerializationStreamReader extends
                 return stream.readByte();
             }
 
-            protected void setSingleValue(Object array, int index, Object value) {
+            protected void setSingleValue(Object array, int index,
+                    Object value) {
                 Array.setByte(array, index, (Byte) value);
             }
         },
@@ -186,7 +186,8 @@ public class SyncClientSerializationStreamReader extends
                 return stream.readChar();
             }
 
-            protected void setSingleValue(Object array, int index, Object value) {
+            protected void setSingleValue(Object array, int index,
+                    Object value) {
                 Array.setChar(array, index, (Character) value);
             }
         },
@@ -197,7 +198,8 @@ public class SyncClientSerializationStreamReader extends
                 return stream.readDouble();
             }
 
-            protected void setSingleValue(Object array, int index, Object value) {
+            protected void setSingleValue(Object array, int index,
+                    Object value) {
                 Array.setDouble(array, index, (Double) value);
             }
         },
@@ -208,7 +210,8 @@ public class SyncClientSerializationStreamReader extends
                 return stream.readFloat();
             }
 
-            protected void setSingleValue(Object array, int index, Object value) {
+            protected void setSingleValue(Object array, int index,
+                    Object value) {
                 Array.setFloat(array, index, (Float) value);
             }
         },
@@ -219,7 +222,8 @@ public class SyncClientSerializationStreamReader extends
                 return stream.readInt();
             }
 
-            protected void setSingleValue(Object array, int index, Object value) {
+            protected void setSingleValue(Object array, int index,
+                    Object value) {
                 Array.setInt(array, index, (Integer) value);
             }
         },
@@ -230,7 +234,8 @@ public class SyncClientSerializationStreamReader extends
                 return stream.readLong();
             }
 
-            protected void setSingleValue(Object array, int index, Object value) {
+            protected void setSingleValue(Object array, int index,
+                    Object value) {
                 Array.setLong(array, index, (Long) value);
             }
         },
@@ -241,7 +246,8 @@ public class SyncClientSerializationStreamReader extends
                 return stream.readObject();
             }
 
-            protected void setSingleValue(Object array, int index, Object value) {
+            protected void setSingleValue(Object array, int index,
+                    Object value) {
                 Array.set(array, index, value);
             }
         },
@@ -252,7 +258,8 @@ public class SyncClientSerializationStreamReader extends
                 return stream.readShort();
             }
 
-            protected void setSingleValue(Object array, int index, Object value) {
+            protected void setSingleValue(Object array, int index,
+                    Object value) {
                 Array.setShort(array, index, (Short) value);
             }
         },
@@ -263,7 +270,8 @@ public class SyncClientSerializationStreamReader extends
                 return stream.readString();
             }
 
-            protected void setSingleValue(Object array, int index, Object value) {
+            protected void setSingleValue(Object array, int index,
+                    Object value) {
                 Array.set(array, index, value);
             }
         };
@@ -312,9 +320,8 @@ public class SyncClientSerializationStreamReader extends
      */
     private static final Map<Class<?>, VectorReader> CLASS_TO_VECTOR_READER = new IdentityHashMap<Class<?>, VectorReader>();
     {
-        CLASS_TO_VECTOR_READER
-                .put(boolean[].class,
-                        SyncClientSerializationStreamReader.VectorReader.BOOLEAN_VECTOR);
+        CLASS_TO_VECTOR_READER.put(boolean[].class,
+                SyncClientSerializationStreamReader.VectorReader.BOOLEAN_VECTOR);
         CLASS_TO_VECTOR_READER.put(byte[].class,
                 SyncClientSerializationStreamReader.VectorReader.BYTE_VECTOR);
         CLASS_TO_VECTOR_READER.put(char[].class,
@@ -376,9 +383,9 @@ public class SyncClientSerializationStreamReader extends
         index = results.size();
         super.prepareToRead(encoded);
         if (getVersion() != SERIALIZATION_STREAM_VERSION) {
-            throw new IncompatibleRemoteServiceException("Expecting version "
-                    + SERIALIZATION_STREAM_VERSION + " from server, got "
-                    + getVersion() + ".");
+            throw new IncompatibleRemoteServiceException(
+                    "Expecting version " + SERIALIZATION_STREAM_VERSION
+                            + " from server, got " + getVersion() + ".");
         }
         buildStringTable();
     }
@@ -498,8 +505,8 @@ public class SyncClientSerializationStreamReader extends
 
     /**
      * Parse response from GWT RPC example:
-     * [3,23456,0,2,0,0,0,1,1,["dab.rpp.client.Person/1455343364"
-     * ,"My dad name","GWT User"],0,5]
+     * [3,23456,0,2,0,0,0,1,1,["dab.rpp.client.Person/1455343364" ,"My dad name"
+     * ,"GWT User"],0,5]
      *
      * @param encoded
      */
@@ -534,22 +541,39 @@ public class SyncClientSerializationStreamReader extends
 
     private static final String PRELUDE = "].concat([";
 
+    static boolean debug = false;
+
     // there should be only one array - the strings. any other ], ].concat([
     // blah etc must be stripp-ed
-    private static String removeConcats(String encoded) {
+    static String removeConcats(String encoded) {
         StringBuilder result = new StringBuilder(encoded.length());
         boolean inStr = false;
         int maxSub = PRELUDE.length();
+        int backslashCount = 0;
         for (int i = 0; i < encoded.length(); i++) {
             char ch = encoded.charAt(i);
-            char chl1 = i > 0 ? encoded.charAt(i - 1) : 0;
+            char chl1 = i == 0 ? 0 : encoded.charAt(i - 1);
+            if (i >= encoded.length() - 5) {
+                int debug = 3;
+            }
             if (inStr) {
-            	if (encoded.startsWith(STRINGCONCAT, i)) {
-            		i += STRINGCONCAT.length() - 1;
-            		continue;
-            	}
-                if (ch == '"' && chl1 != '\\') {
-                    inStr = false;
+                if (ch == '\\') {
+                    backslashCount++;
+                } else {
+                    if (chl1 != '\\') {
+                        backslashCount = 0;
+                    }
+                }
+                if (encoded.startsWith(STRINGCONCAT, i)) {
+                    i += STRINGCONCAT.length() - 1;
+                    continue;
+                } else {
+                    if (ch == '"' && !(backslashCount % 2 == 1)) {
+                        inStr = false;
+                        if (debug) {
+                            System.out.println(ch);
+                        }
+                    }
                 }
             } else {
                 if (ch == '"') {
@@ -572,12 +596,16 @@ public class SyncClientSerializationStreamReader extends
                     }
                 }
             }
+            if (inStr) {
+                System.out.print(ch);
+            }
             result.append(ch);
         }
         return result.toString();
     }
 
-    private Object instantiate(Class<?> customSerializer, Class<?> instanceClass)
+    private Object instantiate(Class<?> customSerializer,
+            Class<?> instanceClass)
             throws InstantiationException, IllegalAccessException,
             IllegalArgumentException, InvocationTargetException,
             NoSuchMethodException, SerializationException {
@@ -692,7 +720,8 @@ public class SyncClientSerializationStreamReader extends
         }
     }
 
-    public Object deserializeValue(Class<?> type) throws SerializationException {
+    public Object deserializeValue(Class<?> type)
+            throws SerializationException {
         ValueReader valueReader = CLASS_TO_VALUE_READER.get(type);
         if (valueReader != null) {
             return valueReader.readValue(this);
@@ -768,7 +797,8 @@ public class SyncClientSerializationStreamReader extends
                     b2 = hex2byte(raw.charAt(++i));
                     b3 = hex2byte(raw.charAt(++i));
                     b4 = hex2byte(raw.charAt(++i));
-                    ch = (char) (b1 * 16 * 16 * 16 + b2 * 16 * 16 + b3 * 16 + b4);
+                    ch = (char) (b1 * 16 * 16 * 16 + b2 * 16 * 16 + b3 * 16
+                            + b4);
                     buffer.append(ch);
                     break;
                 default:
