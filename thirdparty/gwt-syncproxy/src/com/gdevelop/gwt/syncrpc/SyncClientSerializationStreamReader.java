@@ -541,7 +541,7 @@ public class SyncClientSerializationStreamReader
 
     private static final String PRELUDE = "].concat([";
 
-    static boolean debug = true;
+    static boolean debug = false;
 
     // there should be only one array - the strings. any other ], ].concat([
     // blah etc must be stripp-ed
@@ -552,6 +552,7 @@ public class SyncClientSerializationStreamReader
         int backslashCount = 0;
         for (int i = 0; i < encoded.length(); i++) {
             char ch = encoded.charAt(i);
+            char chl1 = i == 0 ? 0 : encoded.charAt(i - 1);
             if (i >= encoded.length() - 5) {
                 int debug = 3;
             }
@@ -559,7 +560,9 @@ public class SyncClientSerializationStreamReader
                 if (ch == '\\') {
                     backslashCount++;
                 } else {
-                    backslashCount = 0;
+                    if (chl1 != '\\') {
+                        backslashCount = 0;
+                    }
                 }
                 if (encoded.startsWith(STRINGCONCAT, i)) {
                     i += STRINGCONCAT.length() - 1;
