@@ -53,6 +53,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
@@ -75,6 +76,7 @@ import javax.swing.tree.TreePath;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -87,6 +89,7 @@ import cc.alcina.framework.entity.util.JvmPropertyReflector;
  * @author nick@alcina.cc
  *
  */
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class SEUtilities {
 	public static int idCounter = 1;
 
@@ -96,20 +99,29 @@ public class SEUtilities {
 	private static UnsortedMultikeyMap<PropertyDescriptor> pdLookup = new UnsortedMultikeyMap<PropertyDescriptor>(
 			2);
 
-	public static List<Field> allFields(Class clazz) {
-		List<Field> result = new ArrayList<>();
-		try {
-			while (clazz != Object.class) {
-				for (Field f : clazz.getDeclaredFields()) {
-					f.setAccessible(true);
-					result.add(f);
+	private static Map<Class, List<Field>> allFieldsPerClass = new LinkedHashMap<>();
+
+	public static List<Field> allFields(Class clazz0) {
+		return allFieldsPerClass.computeIfAbsent(clazz0, clazz -> {
+			List<Field> result = new ArrayList<>();
+			try {
+				while (clazz != Object.class) {
+					for (Field f : clazz.getDeclaredFields()) {
+						f.setAccessible(true);
+						result.add(f);
+					}
+					clazz = clazz.getSuperclass();
 				}
-				clazz = clazz.getSuperclass();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
 			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-		return result;
+			return result;
+		});
+	}
+
+	public static Field getFieldByName(Class clazz, String name) {
+		return allFields(clazz).stream().filter(f -> f.getName().equals(name))
+				.findFirst().orElse(null);
 	}
 
 	public static void appShutdown() {
@@ -1322,6 +1334,68 @@ public class SEUtilities {
 			return string.substring(0, string.length() - 1);
 		} else {
 			return string;
+		}
+	}
+
+	public static Iterable<String> matchStream(String text, String regex) {
+		Pattern pattern = Pattern.compile(regex);
+		return new PatternIterable(pattern, text);
+	}
+
+	public static class PatternIterable implements Iterable<String> {
+		private final class MatcherIterator implements Iterator<String> {
+			private Matcher matcher;
+
+			public MatcherIterator(Matcher matcher) {
+				this.matcher = matcher;
+			}
+
+			boolean peeked = false;
+
+			String nextMatch;
+
+			boolean finished = false;
+
+			@Override
+			public String next() {
+				ensurePeeked();
+				if (finished) {
+					throw new NoSuchElementException();
+				}
+				peeked = false;
+				return nextMatch;
+			}
+
+			@Override
+			public boolean hasNext() {
+				ensurePeeked();
+				return !finished;
+			}
+
+			private void ensurePeeked() {
+				if (!peeked) {
+					peeked = true;
+					finished = !matcher.find();
+					if (!finished) {
+						nextMatch = matcher.group();
+					}
+				}
+			}
+		}
+
+		private Pattern pattern;
+
+		private String text;
+
+		public PatternIterable(Pattern pattern, String text) {
+			this.pattern = pattern;
+			this.text = text;
+		}
+
+		@Override
+		public Iterator<String> iterator() {
+			Matcher matcher = pattern.matcher(text);
+			return new MatcherIterator(matcher);
 		}
 	}
 }
