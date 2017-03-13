@@ -21,18 +21,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
-import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
-import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
-import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
-import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
-
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -50,7 +40,6 @@ import com.google.gwt.event.dom.client.MouseOverHandler;
 import com.google.gwt.event.logical.shared.CloseEvent;
 import com.google.gwt.event.logical.shared.CloseHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlexTable;
@@ -63,6 +52,17 @@ import com.totsp.gwittir.client.ui.table.DataProvider;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
+
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
+import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
+import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
+import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
+import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 
 @SuppressWarnings("unchecked")
 /**

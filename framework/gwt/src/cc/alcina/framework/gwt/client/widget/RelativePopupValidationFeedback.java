@@ -17,13 +17,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 
-import cc.alcina.framework.common.client.gwittir.validator.ServerValidator.ProcessingServerValidationException;
-import cc.alcina.framework.gwt.client.logic.WidgetByElementTracker;
-import cc.alcina.framework.gwt.client.util.DomUtils;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
-
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
@@ -35,6 +30,11 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.validator.AbstractValidationFeedback;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
+
+import cc.alcina.framework.common.client.gwittir.validator.ServerValidator.ProcessingServerValidationException;
+import cc.alcina.framework.gwt.client.logic.WidgetByElementTracker;
+import cc.alcina.framework.gwt.client.util.DomUtils;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * 

@@ -20,13 +20,12 @@ import java.util.List;
 
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.i18n.client.LocaleInfo;
 import com.google.gwt.safehtml.client.HasSafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Element;
 
 /**
  * An item that can be contained within a
@@ -71,9 +70,7 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 				return;
 			}
 			if (item.imageHolder == null) {
-				item.contentElem = item.resolve(item.contentElem);
 				item.contentElem.setClassName("gwt-TreeItem");
-				item.setElement(item.resolve(item.getElement()));
 				convertToFullNode(item);
 			}
 			if (state == PotentialState.INSTANTIATED) {
@@ -369,9 +366,9 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 	TreeItem(boolean isRoot) {
 		this.isRoot = isRoot;
 		// Element elem = DOM.clone(BASE_BARE_ELEM, true);
-		Element elem = PotentialElement.build(this).cast();
-		setElement(elem);
-		contentElem = PotentialElement.build(this).cast();
+//		Element elem = PotentialElement.build(this).cast();
+//		setElement(elem);
+//		contentElem = PotentialElement.build(this).cast();
 		// DOM.setElementAttribute(contentElem, "id", DOM.createUniqueId());
 		// The root item always has children.
 		if (isRoot) {
@@ -524,10 +521,10 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 	}
 
 	public String getText() {
-		if(((com.google.gwt.dom.client.Element)contentElem) instanceof PotentialElement){
-			PotentialElement pe=contentElem.cast();
-			return pe.getInnerText0();
-		}
+//		if(((com.google.gwt.dom.client.Element)contentElem) instanceof PotentialElement){
+//			PotentialElement pe=contentElem.cast();
+//			return pe.getInnerText0();
+//		}
 		return DOM.getInnerText(contentElem);
 	}
 
@@ -1072,13 +1069,5 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 		}
 	}
 
-	private Element resolve(Element elem) {
-		if (PotentialElement.isPotential(elem)) {
-			Element replacer = Document.get().createElement(elem.getTagName())
-					.cast();
-			replacer.setInnerHTML(elem.getInnerHTML());
-			return replacer;
-		}
-		return elem;
-	}
+	
 }

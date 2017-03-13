@@ -46,8 +46,9 @@ public class PotentialElement extends Element {
 	}
 
 	public static PotentialElement as(Element e) {
-		assert isPotential(e);
-		return (PotentialElement) e;
+		throw new UnsupportedOperationException();
+//		assert isPotential(e);
+//		return (PotentialElement) e;
 	}
 
 	/**
@@ -97,7 +98,7 @@ public class PotentialElement extends Element {
 	 *            the {@link JavaScriptObject} to be tested
 	 * @return true if the given object is a PotentialElement instance
 	 */
-	public static native boolean isPotential(JavaScriptObject o) /*-{
+	private static native boolean isPotential0(JavaScriptObject o) /*-{
 		try {
 			return (!!o) && (!!o.__gwt_resolve);
 		} catch (e) {
@@ -113,7 +114,8 @@ public class PotentialElement extends Element {
 	 * calls to this method with the same PotentialElement is an error.
 	 */
 	public static Element resolve(Element maybePotential) {
-		return maybePotential.<PotentialElement> cast().resolve();
+		throw new UnsupportedOperationException();
+//		return maybePotential.<PotentialElement> cast().resolve();
 	}
 
 	private static native JavaScriptObject buildResolveCallback(
@@ -228,5 +230,9 @@ public class PotentialElement extends Element {
 
 	public final String getInnerText0() {
 		return ClientUtils.simpleInnerText(getInnerHTML());
+	}
+
+	public static boolean isPotential(com.google.gwt.dom.client.Element elem) {
+		return false;
 	}
 }

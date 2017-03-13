@@ -15,9 +15,9 @@
  */
 package cc.alcina.framework.gwt.client.widget.dialog;
 
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.i18n.client.LocaleInfo;
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 

@@ -32,6 +32,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import com.google.gwt.dom.client.Node;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
@@ -1471,5 +1473,18 @@ public class CommonUtils {
 			list.add(t);
 		}
 		return list.stream();
+	}
+
+	public static <T> T indexedOrNullWithDelta(List<T> list, T item,
+			int delta) {
+		int idx = list.indexOf(item);
+		if (idx == -1) {
+			return null;
+		}
+		idx += delta;
+		if (idx < 0 || idx >= list.size()) {
+			return null;
+		}
+		return list.get(idx);
 	}
 }

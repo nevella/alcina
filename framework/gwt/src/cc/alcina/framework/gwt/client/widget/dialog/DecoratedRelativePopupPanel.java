@@ -17,13 +17,13 @@ package cc.alcina.framework.gwt.client.widget.dialog;
 
 import java.util.Iterator;
 
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
-
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.user.client.Element;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * <p>

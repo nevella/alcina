@@ -404,7 +404,7 @@ public class WidgetUtils {
 	}
 
 	public static void setOpacity(Widget w, int opacityPercent) {
-		com.google.gwt.user.client.Element e = w.getElement();
+		Element e = w.getElement();
 		String opacity = opacityPercent == 100 ? "1.0"
 				: "0." + CommonUtils.padTwo(opacityPercent);
 		DOM.setStyleAttribute(e, "opacity", opacity);
@@ -936,7 +936,7 @@ public class WidgetUtils {
 	}
 
 	public static void disableTextBoxHelpers(Widget textBox) {
-		com.google.gwt.user.client.Element elt = textBox.getElement();
+		Element elt = textBox.getElement();
 		elt.setAttribute("autocapitalize", "off");
 		elt.setAttribute("autocorrect", "off");
 		elt.setAttribute("autocomplete", "off");
