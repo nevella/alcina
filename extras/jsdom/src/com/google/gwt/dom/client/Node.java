@@ -43,9 +43,11 @@ public abstract class Node<DN extends DomNode, ND extends Node_Dom>
 
 	protected DN impl = null;
 
-	public  ND domImpl = null;
+	public ND domImpl = null;
 
 	protected boolean resolved;
+	
+	protected boolean vmLocal;
 
 	public <T extends Node> T appendChild(T newChild) {
 		return this.impl.appendChild(newChild);
@@ -119,7 +121,6 @@ public abstract class Node<DN extends DomNode, ND extends Node_Dom>
 		this.impl.setNodeValue(nodeValue);
 	}
 
-
 	/**
 	 * Assert that the given {@link JavaScriptObject} is a DOM node and
 	 * automatically typecast it.
@@ -157,6 +158,5 @@ public abstract class Node<DN extends DomNode, ND extends Node_Dom>
 	public boolean provideIsElement() {
 		return getNodeType() == ELEMENT_NODE;
 	}
-	
-	
+
 }

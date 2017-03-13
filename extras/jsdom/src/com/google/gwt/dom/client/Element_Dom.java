@@ -389,11 +389,18 @@ public class Element_Dom extends Node_Dom implements DomElement {
 	/**
 	 * Gets this element's {@link Style} object.
 	 */
-	@Override
-	public final native Style getStyle() /*-{
+	final native Style_Dom getStyle0() /*-{
         return this.style;
 	}-*/;
 
+	/**
+	 * Gets this element's {@link Style} object.
+	 */
+	@Override
+	public final  Style getStyle() {
+		return VmLocalDomBridge.styleObjectFor(getStyle0());
+		
+	}
 	/**
 	 * The element's advisory title.
 	 */

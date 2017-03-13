@@ -272,8 +272,11 @@ public class RootPanel extends AbsolutePanel {
     // set. Though it is not dependable in the general case that a widget will
     // have set its element's event listener at all times, it *is* dependable
     // if the widget is attached. Which it will be in this case.
-    element = element.getParentElement();
     BodyElement body = Document.get().getBody();
+    if(element==body){
+    	return false;
+    }
+    element = element.getParentElement();
     while ((element != null) && (body != element)) {
       if (Event.getEventListener(element) != null) {
         return true;

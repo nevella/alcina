@@ -1611,4 +1611,13 @@ public class Style implements DomStyle {
 	}
 
 	boolean resolved;
+
+	public Style_Dom domImpl() {
+		return (Style_Dom) impl;
+	}
+
+	 boolean provideIsVmLocal() {
+		return !resolved;
+	}
+	
 }

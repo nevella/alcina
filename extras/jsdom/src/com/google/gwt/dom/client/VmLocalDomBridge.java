@@ -38,7 +38,7 @@ public class VmLocalDomBridge {
 		return get().styleObjectFor0(o);
 	}
 
-	private synchronized static VmLocalDomBridge get() {
+	synchronized static VmLocalDomBridge get() {
 		if (bridge == null) {
 			bridge = new VmLocalDomBridge();
 		}
@@ -70,7 +70,7 @@ public class VmLocalDomBridge {
 	private void addToIdLookup(Node node) {
 		if (node.provideIsElement()) {
 			String id = ((Element) node).getId();
-			if (id != null&&id.length()>0) {
+			if (id != null && id.length() > 0) {
 				if (idLookup.containsKey(id)) {
 					throw new RuntimeException("duplicate id");
 				}
@@ -86,7 +86,14 @@ public class VmLocalDomBridge {
 			node = new Text();
 			break;
 		case Node.ELEMENT_NODE:
-			node = elementCreators.get(nodeName.toLowerCase()).get();
+			switch (nodeName.toLowerCase()) {
+			case "html":
+				node = new Element();
+				break;
+			default:
+				node = elementCreators.get(nodeName.toLowerCase()).get();
+				break;
+			}
 			break;
 		case Node.DOCUMENT_NODE:
 			// should already be registered
@@ -120,20 +127,21 @@ public class VmLocalDomBridge {
 		}
 		javascriptObjectNodeLookup.put(nodeDom, node);
 		node.domImpl = nodeDom;
+		node.vmLocal = false;
 		return nodeDom;
 	}
 
 	private native String getId(JavaScriptObject obj) /*-{
-        return obj.id;
-	}-*/;
+														return obj.id;
+														}-*/;
 
 	private native String getNodeName(JavaScriptObject obj) /*-{
-        return obj.nodeName;
-	}-*/;
+															return obj.nodeName;
+															}-*/;
 
 	private native int getNodeType(JavaScriptObject obj) /*-{
-        return obj.nodeType;
-	}-*/;
+															return obj.nodeType;
+															}-*/;
 
 	private <N extends Node> N nodeFor0(JavaScriptObject o) {
 		Node node = javascriptObjectNodeLookup.get(o);
@@ -141,7 +149,7 @@ public class VmLocalDomBridge {
 			return (N) node;
 		}
 		String id = getId(o);
-		if (id != null&&id.length()>0) {
+		if (id != null && id.length() > 0) {
 			node = idLookup.get(id);
 			if (node != null) {
 				return (N) node;
@@ -153,6 +161,7 @@ public class VmLocalDomBridge {
 		node.domImpl = o.cast();
 		node.impl = node.domImpl;
 		node.resolved = true;
+		node.vmLocal = false;
 		addToIdLookup(node);
 		javascriptObjectNodeLookup.put(o, node);
 		return (N) node;
@@ -182,6 +191,12 @@ public class VmLocalDomBridge {
 		style.impl = o.cast();
 		javascriptObjectStyleLookup.put(o, style);
 		style.resolved = true;
-		return null;
+		return style;
+	}
+
+	public static void ensureResolved(Node node) {
+		if (node.domImpl == null) {
+			throw new UnsupportedOperationException();
+		}
 	}
 }

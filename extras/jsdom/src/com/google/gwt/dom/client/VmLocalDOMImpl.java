@@ -19,37 +19,45 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JsArray;
 
 public class VmLocalDOMImpl {
-	final DOMImpl impl = GWT.create(DOMImpl.class);
+	final DOMImpl domImpl = GWT.create(DOMImpl.class);
 
-	/**
-	 * Fast helper method to convert small doubles to 32-bit int.
-	 *
-	 * <p>
-	 * Note: you should be aware that this uses JavaScript rounding and thus
-	 * does NOT provide the same semantics as
-	 * <code>int b = (int) someDouble;</code>. In particular, if x is outside
-	 * the range [-2^31,2^31), then toInt32(x) would return a value equivalent
-	 * to x modulo 2^32, whereas (int) x would evaluate to either MIN_INT or
-	 * MAX_INT.
-	 */
-	protected static native int toInt32(double val) /*-{
-        return val | 0;
-	}-*/;
+	IDOMImpl vmLocalImpl = null;
+
+	public boolean useVmLocalImpl = false;
+
+	VmLocalDomBridge bridge;
+
+	public VmLocalDOMImpl() {
+		bridge = VmLocalDomBridge.get();
+	}
 
 	public void buttonClick(ButtonElement button) {
-		impl.buttonClick(button);
+		resolveAllPending();
+		domImpl.buttonClick(button.domImpl);
 	}
 
 	public ButtonElement createButtonElement(Document doc, String type) {
-		return impl.createButtonElement(doc, type);
+		if (useVmLocalImpl) {
+			return vmLocalImpl.createButtonElement(doc, type);
+		} else {
+			return nodeFor(domImpl.createButtonElement(doc.domImpl, type));
+		}
 	}
 
 	public InputElement createCheckInputElement(Document doc) {
-		return impl.createCheckInputElement(doc);
+		if (useVmLocalImpl) {
+			return vmLocalImpl.createCheckInputElement(doc);
+		} else {
+			return nodeFor(domImpl.createCheckInputElement(doc.domImpl));
+		}
 	}
 
 	public Element createElement(Document doc, String tag) {
-		return nodeFor(impl.createElement(doc.domImpl, tag));
+		if (useVmLocalImpl) {
+			return vmLocalImpl.createVmLocalElement(doc, tag);
+		} else {
+			return nodeFor(domImpl.createElement(doc.domImpl, tag));
+		}
 	}
 
 	private <N extends Node> N nodeFor(Node_Dom node_dom) {
@@ -58,22 +66,39 @@ public class VmLocalDOMImpl {
 
 	public NativeEvent createHtmlEvent(Document doc, String type,
 			boolean canBubble, boolean cancelable) {
-		return impl.createHtmlEvent(doc, type, canBubble, cancelable);
+		checkNotInVmLocalImpl();
+		return domImpl.createHtmlEvent(doc.domImpl, type, canBubble,
+				cancelable);
+	}
+
+	private void checkNotInVmLocalImpl() {
+		if (useVmLocalImpl) {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	public InputElement createInputElement(Document doc, String type) {
-		return impl.createInputElement(doc, type);
+		if (useVmLocalImpl) {
+			return vmLocalImpl.createInputElement(doc, type);
+		} else {
+			return nodeFor(domImpl.createInputElement(doc.domImpl, type));
+		}
 	}
 
 	public InputElement createInputRadioElement(Document doc, String name) {
-		return impl.createInputRadioElement(doc, name);
+		if (useVmLocalImpl) {
+			return vmLocalImpl.createInputRadioElement(doc, name);
+		} else {
+			return nodeFor(domImpl.createInputRadioElement(doc.domImpl, name));
+		}
 	}
 
 	public NativeEvent createKeyCodeEvent(Document document, String type,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int keyCode) {
-		return impl.createKeyCodeEvent(document, type, ctrlKey, altKey,
-				shiftKey, metaKey, keyCode);
+		checkNotInVmLocalImpl();
+		return domImpl.createKeyCodeEvent(document.domImpl, type, ctrlKey,
+				altKey, shiftKey, metaKey, keyCode);
 	}
 
 	@Deprecated
@@ -81,14 +106,14 @@ public class VmLocalDOMImpl {
 			boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode) {
-		return impl.createKeyEvent(doc, type, canBubble, cancelable, ctrlKey,
-				altKey, shiftKey, metaKey, keyCode, charCode);
+		return domImpl.createKeyEvent(doc.domImpl, type, canBubble, cancelable,
+				ctrlKey, altKey, shiftKey, metaKey, keyCode, charCode);
 	}
 
 	public NativeEvent createKeyPressEvent(Document document, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int charCode) {
-		return impl.createKeyPressEvent(document, ctrlKey, altKey, shiftKey,
-				metaKey, charCode);
+		return domImpl.createKeyPressEvent(document.domImpl, ctrlKey, altKey,
+				shiftKey, metaKey, charCode);
 	}
 
 	public NativeEvent createMouseEvent(Document doc, String type,
@@ -96,163 +121,198 @@ public class VmLocalDOMImpl {
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return impl.createMouseEvent(doc, type, canBubble, cancelable, detail,
-				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
-				metaKey, button, relatedTarget);
+		return domImpl.createMouseEvent(doc.domImpl, type, canBubble,
+				cancelable, detail, screenX, screenY, clientX, clientY, ctrlKey,
+				altKey, shiftKey, metaKey, button, relatedTarget.domImpl);
 	}
 
 	public ScriptElement createScriptElement(Document doc, String source) {
-		ScriptElement elem = (ScriptElement) createElement(doc, "script");
-		elem.setText(source);
-		return elem;
+		if (useVmLocalImpl) {
+			return vmLocalImpl.createScriptElement(doc, source);
+		} else {
+			return domImpl.createScriptElement(doc.domImpl, source);
+		}
 	}
 
 	public void cssClearOpacity(Style style) {
-		impl.cssClearOpacity(style);
+		resolveAllPending();
+		domImpl.cssClearOpacity(style.domImpl());
 	}
 
 	public String cssFloatPropertyName() {
-		return "cssFloat";
+		checkNotInVmLocalImpl();
+		return domImpl.cssFloatPropertyName();
 	}
 
 	public void cssSetOpacity(Style style, double value) {
-		impl.cssSetOpacity(style, value);
+		resolveAllPending();
+		domImpl.cssSetOpacity(style.domImpl(), value);
 	}
 
 	public void dispatchEvent(Element target, NativeEvent evt) {
-		impl.dispatchEvent(target, evt);
+		checkNotInVmLocalImpl();
+		domImpl.dispatchEvent(target.domImpl, evt);
 	}
 
 	public boolean eventGetAltKey(NativeEvent evt) {
-		return impl.eventGetAltKey(evt);
+		return domImpl.eventGetAltKey(evt);
 	}
 
 	public int eventGetButton(NativeEvent evt) {
-		return impl.eventGetButton(evt);
+		return domImpl.eventGetButton(evt);
 	}
 
 	public int eventGetCharCode(NativeEvent evt) {
-		return impl.eventGetCharCode(evt);
+		return domImpl.eventGetCharCode(evt);
 	}
 
 	public int eventGetClientX(NativeEvent evt) {
-		return impl.eventGetClientX(evt);
+		return domImpl.eventGetClientX(evt);
 	}
 
 	public int eventGetClientY(NativeEvent evt) {
-		return impl.eventGetClientY(evt);
+		return domImpl.eventGetClientY(evt);
 	}
 
 	public boolean eventGetCtrlKey(NativeEvent evt) {
-		return impl.eventGetCtrlKey(evt);
+		return domImpl.eventGetCtrlKey(evt);
 	}
 
 	public EventTarget eventGetCurrentTarget(NativeEvent event) {
-		return impl.eventGetCurrentTarget(event);
+		return domImpl.eventGetCurrentTarget(event);
 	}
 
 	public int eventGetKeyCode(NativeEvent evt) {
-		return impl.eventGetKeyCode(evt);
+		return domImpl.eventGetKeyCode(evt);
 	}
 
 	public boolean eventGetMetaKey(NativeEvent evt) {
-		return impl.eventGetMetaKey(evt);
+		return domImpl.eventGetMetaKey(evt);
 	}
 
 	public int eventGetMouseWheelVelocityY(NativeEvent evt) {
-		return impl.eventGetMouseWheelVelocityY(evt);
+		return domImpl.eventGetMouseWheelVelocityY(evt);
 	}
 
 	public EventTarget eventGetRelatedTarget(NativeEvent nativeEvent) {
-		return impl.eventGetRelatedTarget(nativeEvent);
+		return domImpl.eventGetRelatedTarget(nativeEvent);
 	}
 
 	public double eventGetRotation(NativeEvent evt) {
-		return impl.eventGetRotation(evt);
+		return domImpl.eventGetRotation(evt);
 	}
 
 	public double eventGetScale(NativeEvent evt) {
-		return impl.eventGetScale(evt);
+		return domImpl.eventGetScale(evt);
 	}
 
 	public int eventGetScreenX(NativeEvent evt) {
-		return impl.eventGetScreenX(evt);
+		return domImpl.eventGetScreenX(evt);
 	}
 
 	public int eventGetScreenY(NativeEvent evt) {
-		return impl.eventGetScreenY(evt);
+		return domImpl.eventGetScreenY(evt);
 	}
 
 	public boolean eventGetShiftKey(NativeEvent evt) {
-		return impl.eventGetShiftKey(evt);
+		return domImpl.eventGetShiftKey(evt);
 	}
 
 	public EventTarget eventGetTarget(NativeEvent evt) {
-		return impl.eventGetTarget(evt);
+		return domImpl.eventGetTarget(evt);
 	}
 
 	public String eventGetType(NativeEvent evt) {
-		return impl.eventGetType(evt);
+		return domImpl.eventGetType(evt);
 	}
 
 	public void eventPreventDefault(NativeEvent evt) {
-		impl.eventPreventDefault(evt);
+		domImpl.eventPreventDefault(evt);
 	}
 
 	public void eventSetKeyCode(NativeEvent evt, char key) {
-		impl.eventSetKeyCode(evt, key);
+		domImpl.eventSetKeyCode(evt, key);
 	}
 
 	public void eventStopPropagation(NativeEvent evt) {
-		impl.eventStopPropagation(evt);
+		domImpl.eventStopPropagation(evt);
 	}
 
 	public String eventToString(NativeEvent evt) {
-		return impl.eventToString(evt);
+		return domImpl.eventToString(evt);
 	}
 
 	public int getAbsoluteLeft(Element elem) {
-		return impl.getAbsoluteLeft(elem);
+		resolveAllPending();
+		return domImpl.getAbsoluteLeft(elem.domImpl);
+	}
+
+	private void resolveAllPending() {
+		checkNotInVmLocalImpl();
 	}
 
 	public int getAbsoluteTop(Element elem) {
-		return impl.getAbsoluteTop(elem);
+		resolveAllPending();
+		return domImpl.getAbsoluteTop(elem.domImpl);
 	}
 
 	public String getAttribute(Element elem, String name) {
-		return impl.getAttribute(elem, name);
+		resolveAllPending();
+		return domImpl.getAttribute(elem.domImpl, name);
 	}
 
 	public int getBodyOffsetLeft(Document doc) {
-		return impl.getBodyOffsetLeft(doc);
+		resolveAllPending();
+		return domImpl.getBodyOffsetLeft(doc.domImpl);
 	}
 
 	public int getBodyOffsetTop(Document doc) {
-		return impl.getBodyOffsetTop(doc);
+		resolveAllPending();
+		return domImpl.getBodyOffsetTop(doc.domImpl);
 	}
 
 	public JsArray<Touch> getChangedTouches(NativeEvent evt) {
-		return impl.getChangedTouches(evt);
+		return domImpl.getChangedTouches(evt);
 	}
 
 	public Element getFirstChildElement(Element elem) {
-		return impl.getFirstChildElement(elem);
+		if (elem.vmLocal) {
+			return elem.getFirstChildElement();
+		} else {
+			return nodeFor(domImpl.getFirstChildElement(elem.domImpl));
+		}
 	}
 
 	public String getInnerHTML(Element elem) {
-		return impl.getInnerHTML(elem);
+		if (elem.vmLocal) {
+			return elem.getInnerHTML();
+		} else {
+			return domImpl.getInnerHTML(elem.domImpl);
+		}
 	}
 
 	public String getInnerText(Element node) {
-		return impl.getInnerText(node);
+		if (node.vmLocal) {
+			return node.getInnerText();
+		} else {
+			return domImpl.getInnerText(node.domImpl);
+		}
 	}
 
 	public Element getNextSiblingElement(Element elem) {
-		return impl.getNextSiblingElement(elem);
+		if (elem.vmLocal) {
+			return elem.getNextSiblingElement();
+		} else {
+			return nodeFor(domImpl.getNextSiblingElement(elem.domImpl));
+		}
 	}
 
 	public int getNodeType(Node node) {
-		return impl.getNodeType(node);
+		if (node.vmLocal) {
+			return node.getNodeType();
+		} else {
+			return domImpl.getNodeType(node.domImpl);
+		}
 	}
 
 	/**
@@ -264,131 +324,183 @@ public class VmLocalDOMImpl {
 	}
 
 	public Element getParentElement(Node node) {
-		return impl.getParentElement(node);
+		if (node.vmLocal) {
+			return node.getParentElement();
+		} else {
+			return nodeFor(domImpl.getParentElement(node.domImpl));
+		}
 	}
 
 	public Element getPreviousSiblingElement(Element elem) {
-		return impl.getPreviousSiblingElement(elem);
+		if (elem.vmLocal) {
+			return elem.getPreviousSiblingElement();
+		} else {
+			return nodeFor(domImpl.getPreviousSiblingElement(elem.domImpl));
+		}
 	}
 
 	public int getScrollLeft(Document doc) {
-		return impl.getScrollLeft(doc);
+		resolveAllPending();
+		return domImpl.getScrollLeft(doc.domImpl);
 	}
 
 	public int getScrollLeft(Element elem) {
-		return impl.getScrollLeft(elem);
+		resolveAllPending();
+		return domImpl.getScrollLeft(elem.domImpl);
 	}
 
 	public int getScrollTop(Document doc) {
-		return impl.getScrollTop(doc);
+		resolveAllPending();
+		return domImpl.getScrollTop(doc.domImpl);
 	}
 
 	public String getStyleProperty(Style style, String name) {
-		return impl.getStyleProperty(style, name);
+		if (style.provideIsVmLocal()) {
+			return style.getProperty(name);
+		} else {
+			return domImpl.getStyleProperty(style.domImpl(), name);
+		}
 	}
 
 	public int getTabIndex(Element elem) {
-		return impl.getTabIndex(elem);
+		resolveAllPending();
+		return domImpl.getTabIndex(elem.domImpl);
 	}
 
 	public String getTagName(Element elem) {
-		return impl.getTagName(elem.domImpl);
+		if (elem.vmLocal) {
+			return elem.getTagName();
+		} else {
+			return domImpl.getTagName(elem.domImpl);
+		}
 	}
 
 	public JsArray<Touch> getTargetTouches(NativeEvent evt) {
-		return impl.getTargetTouches(evt);
+		return domImpl.getTargetTouches(evt);
 	}
 
 	public JsArray<Touch> getTouches(NativeEvent evt) {
-		return impl.getTouches(evt);
+		return domImpl.getTouches(evt);
 	}
 
 	public boolean hasAttribute(Element elem, String name) {
-		return impl.hasAttribute(elem, name);
+		if (elem.vmLocal) {
+			return elem.hasAttribute(name);
+		} else {
+			return domImpl.hasAttribute(elem.domImpl, name);
+		}
 	}
 
 	public boolean isOrHasChild(Node parent, Node child) {
-		return impl.isOrHasChild(parent, child);
+		if (parent.vmLocal != child.vmLocal) {
+			return false;
+		}
+		if (parent.vmLocal) {
+			return parent.isOrHasChild(child);
+		} else {
+			return domImpl.isOrHasChild(parent.domImpl, child.domImpl);
+		}
 	}
 
 	public void scrollIntoView(Element elem) {
-		impl.scrollIntoView(elem);
+		resolveAllPending();
+		domImpl.scrollIntoView(elem.domImpl);
 	}
 
 	public void selectAdd(SelectElement select, OptionElement option,
 			OptionElement before) {
-		impl.selectAdd(select, option, before);
+		// FIXME
+		System.out.println("fix select population");
+		resolveAllPending();
+		domImpl.selectAdd(select.domImpl, option.domImpl, before.domImpl);
 	}
 
 	public void selectClear(SelectElement select) {
-		impl.selectClear(select);
+		resolveAllPending();
+		domImpl.selectClear(select.domImpl);
 	}
 
 	public int selectGetLength(SelectElement select) {
-		return impl.selectGetLength(select);
+		resolveAllPending();
+		return domImpl.selectGetLength(select.domImpl);
 	}
 
 	public NodeList<OptionElement> selectGetOptions(SelectElement select) {
-		return impl.selectGetOptions(select);
+		resolveAllPending();
+		return domImpl.selectGetOptions(select.domImpl);
 	}
 
 	public void selectRemoveOption(SelectElement select, int index) {
-		impl.selectRemoveOption(select, index);
+		resolveAllPending();
+		domImpl.selectRemoveOption(select.domImpl, index);
 	}
 
 	public void setDraggable(Element elem, String draggable) {
-		impl.setDraggable(elem, draggable);
+		resolveAllPending();
+		domImpl.setDraggable(elem.domImpl, draggable);
 	}
 
 	public void setInnerText(Element elem, String text) {
-		impl.setInnerText(elem.domImpl, text);
+		if (elem.vmLocal) {
+			elem.setInnerText(text);
+		} else {
+			domImpl.setInnerText(elem.domImpl, text);
+		}
+		
 	}
 
 	public void setScrollLeft(Document doc, int left) {
+		resolveAllPending();
 		doc.getViewportElement().setScrollLeft(left);
 	}
 
 	public void setScrollLeft(Element elem, int left) {
-		impl.setScrollLeft(elem, left);
+		resolveAllPending();
+		domImpl.setScrollLeft(elem.domImpl, left);
 	}
 
 	public void setScrollTop(Document doc, int top) {
+		resolveAllPending();
 		doc.getViewportElement().setScrollTop(top);
 	}
 
 	public String toString(Element elem) {
-		return impl.toString(elem);
+		if (elem.vmLocal) {
+			return elem.toString();
+		} else {
+			return domImpl.toString(elem.domImpl);
+		}
 	}
 
 	public int touchGetClientX(Touch touch) {
-		return impl.touchGetClientX(touch);
+		return domImpl.touchGetClientX(touch);
 	}
 
 	public int touchGetClientY(Touch touch) {
-		return impl.touchGetClientY(touch);
+		return domImpl.touchGetClientY(touch);
 	}
 
 	public int touchGetIdentifier(Touch touch) {
-		return impl.touchGetIdentifier(touch);
+		return domImpl.touchGetIdentifier(touch);
 	}
 
 	public int touchGetPageX(Touch touch) {
-		return impl.touchGetPageX(touch);
+		return domImpl.touchGetPageX(touch);
 	}
 
 	public int touchGetPageY(Touch touch) {
-		return impl.touchGetPageY(touch);
+		return domImpl.touchGetPageY(touch);
 	}
 
 	public int touchGetScreenX(Touch touch) {
-		return impl.touchGetScreenX(touch);
+		return domImpl.touchGetScreenX(touch);
 	}
 
 	public int touchGetScreenY(Touch touch) {
-		return impl.touchGetScreenY(touch);
+		return domImpl.touchGetScreenY(touch);
 	}
 
 	public EventTarget touchGetTarget(Touch touch) {
-		return impl.touchGetTarget(touch);
+		return domImpl.touchGetTarget(touch);
 	}
 }

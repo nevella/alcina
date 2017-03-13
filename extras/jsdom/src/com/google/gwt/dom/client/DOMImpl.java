@@ -22,9 +22,6 @@ abstract class DOMImpl {
 	static final VmLocalDOMImpl impl = new VmLocalDOMImpl();
 //	static final DOMImpl impl = GWT.create(DOMImpl.class);
 
-	public String yeah(){
-		return "";
-	}
 	/**
 	 * Fast helper method to convert small doubles to 32-bit int.
 	 *
@@ -39,204 +36,196 @@ abstract class DOMImpl {
 	protected static native int toInt32(double val) /*-{
         return val | 0;
 	}-*/;
-
-	public native void buttonClick(ButtonElement button) /*-{
-        button.click();
-	}-*/;
-
-	public native ButtonElement createButtonElement(Document doc,
+	protected native Node_Dom createButtonElement(Document_Dom doc,
 			String type) /*-{
         var e = doc.createElement("BUTTON");
         e.type = type;
         return e;
 	}-*/;
 
-	public native InputElement createCheckInputElement(Document doc) /*-{
+
+	protected native Element_Dom createCheckInputElement(Document_Dom doc) /*-{
         var e = doc.createElement("INPUT");
         e.type = 'checkbox';
         e.value = 'on';
         return e;
 	}-*/;
 
-	public native Element_Dom createElement(Document_Dom doc, String tag) /*-{
+	protected native Element_Dom createElement(Document_Dom doc, String tag) /*-{
         return doc.createElement(tag);
 	}-*/;
 
-	public abstract NativeEvent createHtmlEvent(Document doc, String type,
+	protected abstract NativeEvent createHtmlEvent(Document_Dom doc, String type,
 			boolean canBubble, boolean cancelable);
 
-	public native InputElement createInputElement(Document doc,
+	protected native Element_Dom createInputElement(Document_Dom doc,
 			String type) /*-{
         var e = doc.createElement("INPUT");
         e.type = type;
         return e;
 	}-*/;
 
-	public abstract InputElement createInputRadioElement(Document doc,
+	protected abstract Element_Dom createInputRadioElement(Document_Dom doc,
 			String name);
 
-	public abstract NativeEvent createKeyCodeEvent(Document document,
+	protected abstract NativeEvent createKeyCodeEvent(Document_Dom Document_Dom,
 			String type, boolean ctrlKey, boolean altKey, boolean shiftKey,
 			boolean metaKey, int keyCode);
 
 	@Deprecated
-	public abstract NativeEvent createKeyEvent(Document doc, String type,
+	protected abstract NativeEvent createKeyEvent(Document_Dom doc, String type,
 			boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode);
 
-	public abstract NativeEvent createKeyPressEvent(Document document,
+	protected abstract NativeEvent createKeyPressEvent(Document_Dom Document_Dom,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int charCode);
 
-	public abstract NativeEvent createMouseEvent(Document doc, String type,
+	protected abstract NativeEvent createMouseEvent(Document_Dom doc, String type,
 			boolean canBubble, boolean cancelable, int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
-			Element relatedTarget);
+			Element_Dom relatedTarget);
 
-	public ScriptElement createScriptElement(Document_Dom doc, String source) {
+	protected ScriptElement createScriptElement(Document_Dom doc, String source) {
 		ScriptElement elem = nodeFor(createElement(doc, "script"));
 		elem.setText(source);
 		return elem;
 	}
-	protected <N extends Node> N nodeFor(Node_Dom node_dom) {
-		return VmLocalDomBridge.nodeFor(node_dom);
-	}
 
-	public native void cssClearOpacity(Style style) /*-{
+	protected native void cssClearOpacity(Style_Dom style) /*-{
         style.opacity = '';
 	}-*/;
-
-	public String cssFloatPropertyName() {
+	protected String cssFloatPropertyName() {
 		return "cssFloat";
 	}
 
-	public native void cssSetOpacity(Style style, double value) /*-{
+	protected native void cssSetOpacity(Style_Dom style, double value) /*-{
         style.opacity = value;
 	}-*/;
 
-	public abstract void dispatchEvent(Element target, NativeEvent evt);
+	protected abstract void dispatchEvent(Element_Dom target, NativeEvent evt);
 
-	public native boolean eventGetAltKey(NativeEvent evt) /*-{
+	protected native boolean eventGetAltKey(NativeEvent evt) /*-{
         return !!evt.altKey;
 	}-*/;
 
-	public native int eventGetButton(NativeEvent evt) /*-{
+	protected native int eventGetButton(NativeEvent evt) /*-{
         return evt.button | 0;
 	}-*/;
 
-	public abstract int eventGetCharCode(NativeEvent evt);
+	protected abstract int eventGetCharCode(NativeEvent evt);
 
-	public int eventGetClientX(NativeEvent evt) {
+	protected int eventGetClientX(NativeEvent evt) {
 		return toInt32(eventGetSubPixelClientX(evt));
 	}
 
-	public int eventGetClientY(NativeEvent evt) {
+	protected int eventGetClientY(NativeEvent evt) {
 		return toInt32(eventGetSubPixelClientY(evt));
 	}
 
-	public native boolean eventGetCtrlKey(NativeEvent evt) /*-{
+	protected native boolean eventGetCtrlKey(NativeEvent evt) /*-{
         return !!evt.ctrlKey;
 	}-*/;
 
-	public native EventTarget eventGetCurrentTarget(NativeEvent event) /*-{
+	protected native EventTarget eventGetCurrentTarget(NativeEvent event) /*-{
         return event.currentTarget;
 	}-*/;
 
-	public final native int eventGetKeyCode(NativeEvent evt) /*-{
+	protected final native int eventGetKeyCode(NativeEvent evt) /*-{
         return evt.keyCode | 0;
 	}-*/;
 
-	public native boolean eventGetMetaKey(NativeEvent evt) /*-{
+	protected native boolean eventGetMetaKey(NativeEvent evt) /*-{
         return !!evt.metaKey;
 	}-*/;
 
-	public abstract int eventGetMouseWheelVelocityY(NativeEvent evt);
+	protected abstract int eventGetMouseWheelVelocityY(NativeEvent evt);
 
-	public abstract EventTarget eventGetRelatedTarget(NativeEvent nativeEvent);
+	protected abstract EventTarget eventGetRelatedTarget(NativeEvent nativeEvent);
 
-	public native double eventGetRotation(NativeEvent evt) /*-{
+	protected native double eventGetRotation(NativeEvent evt) /*-{
         return evt.rotation;
 	}-*/;
 
-	public native double eventGetScale(NativeEvent evt) /*-{
+	protected native double eventGetScale(NativeEvent evt) /*-{
         return evt.scale;
 	}-*/;
 
-	public int eventGetScreenX(NativeEvent evt) {
+	protected int eventGetScreenX(NativeEvent evt) {
 		return toInt32(eventGetSubPixelScreenX(evt));
 	}
 
-	public int eventGetScreenY(NativeEvent evt) {
+	protected int eventGetScreenY(NativeEvent evt) {
 		return toInt32(eventGetSubPixelScreenY(evt));
 	}
 
-	public native boolean eventGetShiftKey(NativeEvent evt) /*-{
+	protected native boolean eventGetShiftKey(NativeEvent evt) /*-{
         return !!evt.shiftKey;
 	}-*/;
 
-	public abstract EventTarget eventGetTarget(NativeEvent evt);
+	protected abstract EventTarget eventGetTarget(NativeEvent evt);
 
-	public final native String eventGetType(NativeEvent evt) /*-{
+	protected final native String eventGetType(NativeEvent evt) /*-{
         return evt.type;
 	}-*/;
 
-	public abstract void eventPreventDefault(NativeEvent evt);
+	protected abstract void eventPreventDefault(NativeEvent evt);
 
-	public native void eventSetKeyCode(NativeEvent evt, char key) /*-{
+	protected native void eventSetKeyCode(NativeEvent evt, char key) /*-{
         evt.keyCode = key;
 	}-*/;
 
-	public native void eventStopPropagation(NativeEvent evt) /*-{
+	protected native void eventStopPropagation(NativeEvent evt) /*-{
         evt.stopPropagation();
 	}-*/;
 
-	public abstract String eventToString(NativeEvent evt);
+	protected abstract String eventToString(NativeEvent evt);
 
-	public int getAbsoluteLeft(Element elem) {
+	protected int getAbsoluteLeft(Element_Dom elem) {
 		return toInt32(getSubPixelAbsoluteLeft(elem));
 	}
 
-	public int getAbsoluteTop(Element elem) {
+	protected int getAbsoluteTop(Element_Dom elem) {
 		return toInt32(getSubPixelAbsoluteTop(elem));
 	}
 
-	public native String getAttribute(Element elem, String name) /*-{
+	protected native String getAttribute(Element_Dom elem, String name) /*-{
         return elem.getAttribute(name) || '';
 	}-*/;
 
-	public native int getBodyOffsetLeft(Document doc) /*-{
+	protected native int getBodyOffsetLeft(Document_Dom doc) /*-{
         return 0;
 	}-*/;
 
-	public native int getBodyOffsetTop(Document doc) /*-{
+	protected native int getBodyOffsetTop(Document_Dom doc) /*-{
         return 0;
 	}-*/;
 
-	public native JsArray<Touch> getChangedTouches(NativeEvent evt) /*-{
+	protected native JsArray<Touch> getChangedTouches(NativeEvent evt) /*-{
         return evt.changedTouches;
 	}-*/;
 
-	public native Element getFirstChildElement(Element elem) /*-{
+	protected native Element_Dom getFirstChildElement(Element_Dom elem) /*-{
         var child = elem.firstChild;
         while (child && child.nodeType != 1)
             child = child.nextSibling;
         return child;
 	}-*/;
 
-	public native String getInnerHTML(Element elem) /*-{
+	protected native String getInnerHTML(Element_Dom elem) /*-{
         return elem.innerHTML;
 	}-*/;
 
-	public native String getInnerText(Element node) /*-{
+	protected native String getInnerText(Element_Dom node) /*-{
         // To mimic IE's 'innerText' property in the W3C DOM, we need to recursively
-        // concatenate all child text nodes (depth first).
+        // concatenate all child Text_Dom nodes (depth first).
         var text = '', child = node.firstChild;
         while (child) {
-            // 1 == Element node
+            // 1 == Element_Dom Node_Dom
             if (child.nodeType == 1) {
-                text += this.@com.google.gwt.dom.client.DOMImpl::getInnerText(Lcom/google/gwt/dom/client/Element;)(child);
+                text += this.@com.google.gwt.dom.client.DOMImpl::getInnerText(Lcom/google/gwt/dom/client/Element_Dom;)(child);
             } else if (child.nodeValue) {
                 text += child.nodeValue;
             }
@@ -245,14 +234,14 @@ abstract class DOMImpl {
         return text;
 	}-*/;
 
-	public native Element getNextSiblingElement(Element elem) /*-{
+	protected native Element_Dom getNextSiblingElement(Element_Dom elem) /*-{
         var sib = elem.nextSibling;
         while (sib && sib.nodeType != 1)
             sib = sib.nextSibling;
         return sib;
 	}-*/;
 
-	public native int getNodeType(Node node) /*-{
+	protected native int getNodeType(Node_Dom node) /*-{
         return node.nodeType;
 	}-*/;
 
@@ -260,11 +249,11 @@ abstract class DOMImpl {
 	 * Returns a numeric style property (such as zIndex) that may need to be
 	 * coerced to a string.
 	 */
-	public String getNumericStyleProperty(Style style, String name) {
+	protected String getNumericStyleProperty(Style_Dom style, String name) {
 		return getStyleProperty(style, name);
 	}
 
-	public native Element getParentElement(Node node) /*-{
+	protected native Element_Dom getParentElement(Node_Dom node) /*-{
         var parent = node.parentNode;
         if (!parent || parent.nodeType != 1) {
             parent = null;
@@ -272,52 +261,52 @@ abstract class DOMImpl {
         return parent;
 	}-*/;
 
-	public native Element getPreviousSiblingElement(Element elem) /*-{
+	protected native Element_Dom getPreviousSiblingElement(Element_Dom elem) /*-{
         var sib = elem.previousSibling;
         while (sib && sib.nodeType != 1)
             sib = sib.previousSibling;
         return sib;
 	}-*/;
 
-	public int getScrollLeft(Document doc) {
+	protected int getScrollLeft(Document_Dom doc) {
 		return doc.getViewportElement().getScrollLeft();
 	}
 
-	public int getScrollLeft(Element elem) {
+	protected int getScrollLeft(Element_Dom elem) {
 		return toInt32(getSubPixelScrollLeft(elem));
 	}
 
-	public int getScrollTop(Document doc) {
+	protected int getScrollTop(Document_Dom doc) {
 		return doc.getViewportElement().getScrollTop();
 	}
 
-	public native String getStyleProperty(Style style, String name) /*-{
+	protected native String getStyleProperty(Style_Dom style, String name) /*-{
         return style[name];
 	}-*/;
 
-	public native int getTabIndex(Element elem) /*-{
+	protected native int getTabIndex(Element_Dom elem) /*-{
         return elem.tabIndex;
 	}-*/;
 
-	public native String getTagName(Element_Dom elem) /*-{
+	protected native String getTagName(Element_Dom elem) /*-{
         return elem.tagName;
 	}-*/;
 
-	public native JsArray<Touch> getTargetTouches(NativeEvent evt) /*-{
+	protected native JsArray<Touch> getTargetTouches(NativeEvent evt) /*-{
         return evt.targetTouches;
 	}-*/;
 
-	public native JsArray<Touch> getTouches(NativeEvent evt) /*-{
+	protected native JsArray<Touch> getTouches(NativeEvent evt) /*-{
         return evt.touches;
 	}-*/;
 
-	public native boolean hasAttribute(Element elem, String name) /*-{
+	protected native boolean hasAttribute(Element_Dom elem, String name) /*-{
         return elem.hasAttribute(name);
 	}-*/;
 
-	public abstract boolean isOrHasChild(Node parent, Node child);
+	protected abstract boolean isOrHasChild(Node_Dom parent, Node_Dom child);
 
-	public native void scrollIntoView(Element elem) /*-{
+	protected native void scrollIntoView(Element_Dom elem) /*-{
         var left = elem.offsetLeft, top = elem.offsetTop;
         var width = elem.offsetWidth, height = elem.offsetHeight;
 
@@ -353,33 +342,33 @@ abstract class DOMImpl {
         }
 	}-*/;
 
-	public native void selectAdd(SelectElement select, OptionElement option,
-			OptionElement before) /*-{
+	protected native void selectAdd(Element_Dom select, Element_Dom option,
+			Element_Dom before) /*-{
         select.add(option, before);
 	}-*/;
 
-	public native void selectClear(SelectElement select) /*-{
+	protected native void selectClear(Element_Dom select) /*-{
         select.options.length = 0;
 	}-*/;
 
-	public native int selectGetLength(SelectElement select) /*-{
+	protected native int selectGetLength(Element_Dom select) /*-{
         return select.options.length;
 	}-*/;
 
-	public native NodeList<OptionElement>
-			selectGetOptions(SelectElement select) /*-{
+	protected native NodeList<OptionElement>
+			selectGetOptions(Element_Dom select) /*-{
         return select.options;
 	}-*/;
 
-	public native void selectRemoveOption(SelectElement select, int index) /*-{
+	protected native void selectRemoveOption(Element_Dom domImpl, int index) /*-{
         select.remove(index);
 	}-*/;
 
-	public native void setDraggable(Element elem, String draggable) /*-{
+	protected native void setDraggable(Element_Dom elem, String draggable) /*-{
         elem.draggable = draggable;
 	}-*/;
 
-	public native void setInnerText(Element_Dom elem, String text) /*-{
+	protected native void setInnerText(Element_Dom elem, String text) /*-{
         // Remove all children first.
         while (elem.firstChild) {
             elem.removeChild(elem.firstChild);
@@ -390,55 +379,75 @@ abstract class DOMImpl {
         }
 	}-*/;
 
-	public void setScrollLeft(Document doc, int left) {
+	protected void setScrollLeft(Document_Dom doc, int left) {
 		doc.getViewportElement().setScrollLeft(left);
 	}
 
-	public native void setScrollLeft(Element elem, int left) /*-{
+	protected native void setScrollLeft(Element_Dom elem, int left) /*-{
         elem.scrollLeft = left;
 	}-*/;
 
-	public void setScrollTop(Document doc, int top) {
+	protected void setScrollTop(Document_Dom doc, int top) {
 		doc.getViewportElement().setScrollTop(top);
 	}
 
-	public native String toString(Element elem) /*-{
+	protected native String toString(Element_Dom elem) /*-{
         return elem.outerHTML;
 	}-*/;
 
-	public int touchGetClientX(Touch touch) {
+	protected int touchGetClientX(Touch touch) {
 		return toInt32(touchGetSubPixelClientX(touch));
 	}
 
-	public int touchGetClientY(Touch touch) {
+	protected int touchGetClientY(Touch touch) {
 		return toInt32(touchGetSubPixelClientY(touch));
 	}
 
-	public native int touchGetIdentifier(Touch touch) /*-{
+	protected native int touchGetIdentifier(Touch touch) /*-{
         return touch.identifier;
 	}-*/;
 
-	public int touchGetPageX(Touch touch) {
+	protected int touchGetPageX(Touch touch) {
 		return toInt32(touchGetSubPixelPageX(touch));
 	}
 
-	public int touchGetPageY(Touch touch) {
+	protected int touchGetPageY(Touch touch) {
 		return toInt32(touchGetSubPixelPageY(touch));
 	}
 
-	public int touchGetScreenX(Touch touch) {
+	protected int touchGetScreenX(Touch touch) {
 		return toInt32(touchGetSubPixelScreenX(touch));
 	}
 
-	public int touchGetScreenY(Touch touch) {
+	protected int touchGetScreenY(Touch touch) {
 		return toInt32(touchGetSubPixelScreenY(touch));
 	}
 
-	public native EventTarget touchGetTarget(Touch touch) /*-{
+	protected native EventTarget touchGetTarget(Touch touch) /*-{
         return touch.target;
 	}-*/;
 
-	private native double getSubPixelAbsoluteLeft(Element elem) /*-{
+	protected String yeah(){
+		return "";
+	}
+
+	private native double eventGetSubPixelClientX(NativeEvent evt) /*-{
+        return evt.clientX || 0;
+	}-*/;
+
+	private native double eventGetSubPixelClientY(NativeEvent evt) /*-{
+        return evt.clientY || 0;
+	}-*/;
+
+	private native double eventGetSubPixelScreenX(NativeEvent evt) /*-{
+        return evt.screenX || 0;
+	}-*/;
+
+	private native double eventGetSubPixelScreenY(NativeEvent evt) /*-{
+        return evt.screenY || 0;
+	}-*/;
+
+	private native double getSubPixelAbsoluteLeft(Element_Dom elem) /*-{
         var left = 0;
         var curr = elem;
         // This intentionally excludes body which has a null offsetParent.
@@ -453,7 +462,7 @@ abstract class DOMImpl {
         return left;
 	}-*/;
 
-	private native double getSubPixelAbsoluteTop(Element elem) /*-{
+	private native double getSubPixelAbsoluteTop(Element_Dom elem) /*-{
         var top = 0;
         var curr = elem;
         // This intentionally excludes body which has a null offsetParent.
@@ -468,15 +477,7 @@ abstract class DOMImpl {
         return top;
 	}-*/;
 
-	private native double eventGetSubPixelScreenX(NativeEvent evt) /*-{
-        return evt.screenX || 0;
-	}-*/;
-
-	private native double eventGetSubPixelScreenY(NativeEvent evt) /*-{
-        return evt.screenY || 0;
-	}-*/;
-
-	private native double getSubPixelScrollLeft(Element elem) /*-{
+	private native double getSubPixelScrollLeft(Element_Dom elem) /*-{
         return elem.scrollLeft || 0;
 	}-*/;
 
@@ -504,11 +505,10 @@ abstract class DOMImpl {
         return touch.screenY || 0;
 	}-*/;
 
-	private native double eventGetSubPixelClientX(NativeEvent evt) /*-{
-        return evt.clientX || 0;
+	protected native void buttonClick(Element_Dom button) /*-{
+        button.click();
 	}-*/;
-
-	private native double eventGetSubPixelClientY(NativeEvent evt) /*-{
-        return evt.clientY || 0;
-	}-*/;
+	protected <N extends Node> N nodeFor(Node_Dom node_dom) {
+		return VmLocalDomBridge.nodeFor(node_dom);
+	}
 }

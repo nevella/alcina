@@ -26,32 +26,38 @@ import com.google.gwt.core.client.SingleJsoImpl;
  * The items in the NodeList are accessible via an integral index, starting from
  * 0.
  * 
- * @param <T> the type of contained node
+ * @param <T>
+ *            the type of contained node
  */
-public class NodeList_Dom<T extends Node> extends JavaScriptObject implements DomNodeList<T>{
+public class NodeList_Dom<T extends Node> extends JavaScriptObject
+		implements DomNodeList<T> {
+	protected NodeList_Dom() {
+	}
 
-  protected NodeList_Dom() {
-  }
+	/**
+	 * Returns the indexth item in the collection. If index is greater than or
+	 * equal to the number of nodes in the list, this returns null.
+	 * 
+	 * @param index
+	 *            Index into the collection
+	 * @return the node at the indexth position in the NodeList, or null if that
+	 *         is not a valid index.
+	 */
+	private final native Node_Dom getItem0(int index) /*-{
+        return this[index];
+	}-*/;
 
-  /**
-   * Returns the indexth item in the collection. If index is greater than or
-   * equal to the number of nodes in the list, this returns null.
-   * 
-   * @param index Index into the collection
-   * @return the node at the indexth position in the NodeList, or null if that
-   *         is not a valid index.
-   */
-  @Override
-  public final native T getItem(int index) /*-{
-    return this[index];
-  }-*/;
+	@Override
+	public final T getItem(int index) {
+		return VmLocalDomBridge.nodeFor(getItem0(index));
+	}
 
-  /**
-   * The number of nodes in the list. The range of valid child node indices is 0
-   * to length-1 inclusive.
-   */
-  @Override
-  public final native int getLength() /*-{
-    return this.length;
-  }-*/;
+	/**
+	 * The number of nodes in the list. The range of valid child node indices is
+	 * 0 to length-1 inclusive.
+	 */
+	@Override
+	public final native int getLength() /*-{
+        return this.length;
+	}-*/;
 }
