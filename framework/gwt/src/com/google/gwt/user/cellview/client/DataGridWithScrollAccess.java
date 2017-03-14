@@ -63,7 +63,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * @param <T>
  *            the data type of each row
  */
-public class DataGridWithScrollAccess<T> extends DataGrid<T> {
+public class DataGridWithScrollAccess<T> extends DataGrid<T> implements HasDataWidget<T>{
 	public DataGridWithScrollAccess(int pageSize,
 			com.google.gwt.user.cellview.client.DataGrid.Resources resources) {
 		super(pageSize, resources, null,
