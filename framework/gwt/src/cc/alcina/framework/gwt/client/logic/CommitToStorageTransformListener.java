@@ -293,7 +293,7 @@ public class CommitToStorageTransformListener extends StateListenable
 
 			public void onSuccess(DomainTransformResponse response) {
 				try {
-					LooseContext.pushWithBoolean(
+					LooseContext.pushWithTrue(
 							CommitToStorageTransformListener.CONTEXT_REPLAYING_SYNTHESISED_EVENTS);
 					onSuccess0(response);
 				} finally {

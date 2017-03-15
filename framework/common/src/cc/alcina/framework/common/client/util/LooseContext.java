@@ -51,6 +51,7 @@ public abstract class LooseContext {
 	public static boolean containsKey(String key) {
 		return getContext().containsKey(key);
 	}
+
 	public static boolean has(String key) {
 		return containsKey(key);
 	}
@@ -75,8 +76,12 @@ public abstract class LooseContext {
 		getContext().pushWithKey(key, value);
 	}
 
-	public static void pushWithBoolean(String key) {
+	public static void pushWithTrue(String key) {
 		getContext().pushWithKey(key, Boolean.TRUE);
+	}
+
+	public static void pushWithBoolean(String key, boolean value) {
+		getContext().pushWithKey(key, value);
 	}
 
 	public static void register(LooseContext tm) {
@@ -90,8 +95,9 @@ public abstract class LooseContext {
 	public static void setBoolean(String key) {
 		getContext().setBoolean(key);
 	}
+
 	public static void setBoolean(String key, Boolean value) {
-		getContext().setBoolean(key,value);
+		getContext().setBoolean(key, value);
 	}
 
 	/*
@@ -161,11 +167,9 @@ public abstract class LooseContext {
 		return t;
 	}
 
-	public static void setIfMissing(String key,
-			Object object) {
-		if(!has(key)){
-			set(key,object);
+	public static void setIfMissing(String key, Object object) {
+		if (!has(key)) {
+			set(key, object);
 		}
 	}
-
 }

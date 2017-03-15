@@ -424,7 +424,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		try {
 			// this prevents a deadlock where we might have a waiting write
 			// preventing us from getting the lock
-			LooseContext.pushWithBoolean(AlcinaMemCache.CONTEXT_NO_LOCKS);
+			LooseContext.pushWithTrue(AlcinaMemCache.CONTEXT_NO_LOCKS);
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			PermissibleFieldFilter.disablePerObjectPermissions = true;
 			return supplier.get();

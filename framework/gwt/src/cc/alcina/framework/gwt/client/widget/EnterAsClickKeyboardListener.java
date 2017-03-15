@@ -60,7 +60,7 @@ public class EnterAsClickKeyboardListener implements KeyPressHandler,
 		if ((charCode == KeyCodes.KEY_ENTER || keyCode == KeyCodes.KEY_ENTER)
 				&& checkCanClick()) {
 			try {
-				LooseContext.pushWithBoolean(CONTEXT_ENTER_EVENT_ACTIVE);
+				LooseContext.pushWithTrue(CONTEXT_ENTER_EVENT_ACTIVE);
 				if (button != null) {
 					button.click();
 				}
