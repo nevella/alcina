@@ -278,11 +278,17 @@ public class ColumnsBuilder<T> {
 
 		@Override
 		public Object getValue(T t) {
-			Object value = function.apply(t);
-			if (cell == null && editInfo.cell.getClass() == TextCell.class) {
-				value = value == null ? null : value.toString();
+			try {
+				Object value = function.apply(t);
+				if (cell == null
+						&& editInfo.cell.getClass() == TextCell.class) {
+					value = value == null ? null : value.toString();
+				}
+				return value;
+			} catch (Exception e) {
+				throw new RuntimeException(
+						"Exception getting column value - " + t, e);
 			}
-			return value;
 		}
 
 		public Function<T, Comparable> sortFunction() {
