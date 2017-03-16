@@ -1,8 +1,6 @@
 package cc.alcina.framework.gwt.client.cell;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,11 +16,11 @@ import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.cellview.client.AbstractCellTable;
 import com.google.gwt.user.cellview.client.Column;
-import com.google.gwt.user.cellview.client.ColumnSortEvent;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
 import com.google.gwt.user.cellview.client.Header;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 
 public class ColumnsBuilder<T> {
 	private AbstractCellTable<T> table;
@@ -45,7 +43,7 @@ public class ColumnsBuilder<T> {
 	}
 
 	public ColumnBuilder col(Enum enumValue) {
-		return new ColumnBuilder(CommonUtils.friendlyConstant(enumValue));
+		return new ColumnBuilder(HasDisplayName.displayName(enumValue));
 	}
 
 	public ColumnBuilder col(String name) {
@@ -53,8 +51,9 @@ public class ColumnsBuilder<T> {
 	}
 
 	public ColumnsBuilder columnsFilter(Collection validColumns) {
-		columnsFilter = (List<String>) validColumns.stream()
-				.map(o -> o.toString().replace("_", " ").toLowerCase())
+		columnsFilter = (List<String>) validColumns
+				.stream().map(o -> HasDisplayName.displayName(o)
+						.replace("_", " ").toLowerCase())
 				.collect(Collectors.toList());
 		return this;
 	}
@@ -286,8 +285,15 @@ public class ColumnsBuilder<T> {
 				}
 				return value;
 			} catch (Exception e) {
+				String toString = null;
+				try {
+					toString = t.toString();
+				} catch (Exception e1) {
+					toString = "(exception generating string)";
+					e1.printStackTrace();
+				}
 				throw new RuntimeException(
-						"Exception getting column value - " + t, e);
+						"Exception getting column value - " + toString, e);
 			}
 		}
 
