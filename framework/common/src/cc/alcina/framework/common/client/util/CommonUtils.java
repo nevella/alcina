@@ -1416,6 +1416,13 @@ public class CommonUtils {
 		return false;
 	}
 
+	public static String highlightForLog(String template, Object... args) {
+		String inner = Ax.format(template, args);
+		String star = padStringLeft("", 40, "*");
+		return Ax.format("\n\n%s%s\n%s\n%s%s\n\n", star, star, inner, star,
+				star);
+	}
+
 	public enum DateStyle {
 		AU_DATE_SLASH, AU_DATE_MONTH, AU_DATE_MONTH_DAY, AU_DATE_TIME,
 		AU_DATE_TIME_HUMAN, AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT,

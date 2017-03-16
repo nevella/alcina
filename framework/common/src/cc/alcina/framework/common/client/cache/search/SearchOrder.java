@@ -6,8 +6,10 @@ import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliComparator;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
+@ClientInstantiable
 public interface SearchOrder<T>
 		extends Function<T, Comparable>, Serializable, Comparator<T> {
 	@Override

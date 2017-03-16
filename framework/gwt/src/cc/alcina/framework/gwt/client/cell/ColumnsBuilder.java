@@ -43,11 +43,18 @@ public class ColumnsBuilder<T> {
 	}
 
 	public ColumnBuilder col(Enum enumValue) {
-		return new ColumnBuilder(HasDisplayName.displayName(enumValue));
+		return new ColumnBuilder(enumValue,
+				HasDisplayName.displayName(enumValue));
 	}
 
 	public ColumnBuilder col(String name) {
 		return new ColumnBuilder(name);
+	}
+
+	public Column colFor(Enum name) {
+		return built.entrySet().stream()
+				.filter(e -> e.getValue().enumKey == name).findFirst()
+				.map(e -> e.getKey()).get();
 	}
 
 	public ColumnsBuilder columnsFilter(Collection validColumns) {
@@ -66,6 +73,11 @@ public class ColumnsBuilder<T> {
 	public ColumnsBuilder footer(Header<String> footer) {
 		this.footer = footer;
 		return this;
+	}
+
+	public Comparator<T> getComparator(Column<?, ?> column) {
+		ColumnBuilder columnBuilder = built.get(column);
+		return Comparator.comparing(columnBuilder.sortFunction);
 	}
 
 	public class ColumnBuilder {
@@ -99,6 +111,13 @@ public class ColumnsBuilder<T> {
 
 		private Cell cell;
 
+		private Enum enumKey;
+
+		public ColumnBuilder(Enum enumValue, String displayName) {
+			this(displayName);
+			this.enumKey = enumValue;
+		}
+
 		public ColumnBuilder(String name) {
 			this.name = name;
 		}
@@ -127,16 +146,16 @@ public class ColumnsBuilder<T> {
 				} else {
 					Header<String> header = new Header<String>(new TextCell()) {
 						@Override
-						public String getValue() {
-							return name;
-						}
-
-						@Override
 						public String getHeaderStyleNames() {
 							if (numeric) {
 								return "numeric";
 							}
 							return super.getHeaderStyleNames();
+						}
+
+						@Override
+						public String getValue() {
+							return name;
 						}
 					};
 					table.addColumn(col, header, footer);
@@ -184,6 +203,11 @@ public class ColumnsBuilder<T> {
 			return this;
 		}
 
+		public ColumnBuilder noWrap() {
+			style("nowrap");
+			return this;
+		}
+
 		public ColumnBuilder numeric() {
 			numeric = true;
 			return this.style("numeric");
@@ -214,11 +238,6 @@ public class ColumnsBuilder<T> {
 		public ColumnBuilder width(double width, Unit unit) {
 			this.width = width;
 			this.unit = unit;
-			return this;
-		}
-
-		public ColumnBuilder noWrap() {
-			style("nowrap");
 			return this;
 		}
 	}
@@ -312,10 +331,5 @@ public class ColumnsBuilder<T> {
 		public boolean isEditable() {
 			return propertyName != null;
 		}
-	}
-
-	public Comparator<T> getComparator(Column<?, ?> column) {
-		ColumnBuilder columnBuilder = built.get(column);
-		return Comparator.comparing(columnBuilder.sortFunction);
 	}
 }

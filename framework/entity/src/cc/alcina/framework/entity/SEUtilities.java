@@ -1398,11 +1398,4 @@ public class SEUtilities {
 			return new MatcherIterator(matcher);
 		}
 	}
-
-	public static String highlightForLog(String template, Object... args) {
-		String inner = String.format(template, args);
-		String star = CommonUtils.padStringLeft("", 40, "*");
-		return String.format("\n\n%s%s\n%s\n%s%s\n\n", star, star, inner, star,
-				star);
-	}
 }
