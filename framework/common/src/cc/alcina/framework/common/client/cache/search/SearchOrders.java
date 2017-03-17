@@ -9,12 +9,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import com.totsp.gwittir.client.beans.annotations.Introspectable;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @ClientInstantiable
+@Introspectable
 public class SearchOrders<T> implements Comparator<T>, Serializable {
 	private Map<SearchOrder<T>, Boolean> cmps = new LinkedHashMap<>();
 
@@ -99,6 +102,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable {
 	}
 
 	@ClientInstantiable
+	@Introspectable
 	public static class SerializableSearchOrder implements Serializable {
 		private String searchOrderClassName;
 
