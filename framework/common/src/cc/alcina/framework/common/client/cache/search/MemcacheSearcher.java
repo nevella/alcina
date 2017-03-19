@@ -54,7 +54,6 @@ public class MemcacheSearcher {
 		public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
 			Collection<T> values = Registry.impl(SearcherCollectionSource.class)
 					.getCollectionFor(clazz);
-			MetricLogging.get().start("alcina coll");
 			return values.parallelStream().filter(v -> {
 				for (CacheFilter filter : getFilters()) {
 					if (!filter.asCollectionFilter().allow(v)) {
