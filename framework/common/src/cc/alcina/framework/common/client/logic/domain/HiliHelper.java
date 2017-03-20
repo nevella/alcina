@@ -80,10 +80,10 @@ public class HiliHelper {
 		return set;
 	}
 
-	public static Map<Long, HasIdAndLocalId>
-			toIdMap(Collection<? extends HasIdAndLocalId> hilis) {
-		return CollectionFilters.map((Collection<HasIdAndLocalId>) hilis,
-				new HiliToIdMapper());
+	public static <T extends HasIdAndLocalId> Map<Long, T>
+			toIdMap(Collection<T> hilis) {
+		return (Map<Long, T>) CollectionFilters
+				.map((Collection<HasIdAndLocalId>) hilis, new HiliToIdMapper());
 	}
 
 	public static String asDomainPoint(HasId hi) {

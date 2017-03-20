@@ -42,8 +42,6 @@ public class ServletLayerUtils {
 	public static final transient String CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK = ServletLayerUtils.class
 			.getName() + ".CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK";
 
-	
-
 	public static int pushTransformsAsRoot() {
 		return pushTransforms(true);
 	}
@@ -55,7 +53,8 @@ public class ServletLayerUtils {
 	private static int pushTransforms(boolean asRoot) {
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
-		if (AppPersistenceBase.isTest()) {
+		if (AppPersistenceBase.isTest() && !ResourceUtilities
+				.is(ServletLayerUtils.class, "testTransformCascade")) {
 			if (!LooseContext.is(CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH)) {
 				TransformManager.get().clearTransforms();
 			}
@@ -66,6 +65,7 @@ public class ServletLayerUtils {
 	}
 
 	private static boolean appServletInitialised;
+
 	public static boolean isAppServletInitialised() {
 		return appServletInitialised;
 	}
@@ -79,7 +79,7 @@ public class ServletLayerUtils {
 	public static DomainTransformLayerWrapper pushTransforms(String tag,
 			boolean asRoot, boolean returnResponse) {
 		if (tag == null) {
-			tag=DomainTransformRequestTagProvider.get().getTag();
+			tag = DomainTransformRequestTagProvider.get().getTag();
 		}
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
@@ -87,7 +87,8 @@ public class ServletLayerUtils {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			return new DomainTransformLayerWrapper();
 		}
-		if (AppPersistenceBase.isTest()) {
+		if (AppPersistenceBase.isTest() && !ResourceUtilities
+				.is(ServletLayerUtils.class, "testTransformCascade")) {
 			return new DomainTransformLayerWrapper();
 		}
 		int maxTransformChunkSize = ResourceUtilities.getInteger(
@@ -150,7 +151,8 @@ public class ServletLayerUtils {
 							.impl(CommonPersistenceProvider.class)
 							.getCommonPersistence()
 							.createClientInstance("servlet-bulk: "
-									+ EntityLayerUtils.getLocalHostName(),null);
+									+ EntityLayerUtils.getLocalHostName(),
+									null);
 					List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>(
 							TransformManager.get().getTransformsByCommitType(
 									CommitType.TO_LOCAL_BEAN));
