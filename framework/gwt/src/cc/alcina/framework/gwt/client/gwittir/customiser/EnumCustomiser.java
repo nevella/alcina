@@ -57,19 +57,19 @@ public class EnumCustomiser implements Customiser {
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
-		NamedParameter parameter = NamedParameter.Support.getParameter(
-				info.parameters(), ENUM_CLASS);
+		NamedParameter parameter = NamedParameter.Support
+				.getParameter(info.parameters(), ENUM_CLASS);
 		Class<? extends Enum> clazz = parameter.classValue();
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				MULTIPLE);
 		boolean multipleSelect = parameter != null && parameter.booleanValue();
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				WITH_NULL);
-		boolean withNull = parameter != null && parameter.booleanValue();
+		boolean withNull = parameter == null || parameter.booleanValue();
 		ListBoxEnumProvider provider = new ListBoxEnumProvider(clazz, withNull);
 		provider.setMultiple(multipleSelect);
-		provider.setVisibleItemCount(NamedParameter.Support.intValue(
-				info.parameters(), VISIBLE_ITEM_COUNT, 4));
+		provider.setVisibleItemCount(NamedParameter.Support
+				.intValue(info.parameters(), VISIBLE_ITEM_COUNT, 4));
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				RENDERER_CLASS);
 		final Renderer renderer = parameter != null ? (Renderer) Reflections
@@ -77,8 +77,8 @@ public class EnumCustomiser implements Customiser {
 		if (renderer != null) {
 			provider.setRenderer(renderer);
 		}
-		String hiddenValuesStr = NamedParameter.Support.stringValue(
-				info.parameters(), HIDDEN_VALUES, null);
+		String hiddenValuesStr = NamedParameter.Support
+				.stringValue(info.parameters(), HIDDEN_VALUES, null);
 		if (hiddenValuesStr != null) {
 			List<Enum> hiddenValues = new ArrayList<Enum>();
 			String[] enumStrs = hiddenValuesStr.split(",");
@@ -96,19 +96,18 @@ public class EnumCustomiser implements Customiser {
 				ENUM_PROVIDER_CLASS);
 		if (parameter != null) {
 			ArrayList hiddenValues = new ArrayList(EnumSet.allOf(clazz));
-			hiddenValues.removeAll(((HasValue<Collection>) Reflections
-					.classLookup().newInstance(parameter.classValue()))
-					.getValue());
+			hiddenValues
+					.removeAll(((HasValue<Collection>) Reflections.classLookup()
+							.newInstance(parameter.classValue())).getValue());
 			provider.setHiddenValues(hiddenValues);
 		}
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				FILTER_CLASS);
 		if (parameter != null) {
 			ArrayList hiddenValues = new ArrayList(EnumSet.allOf(clazz));
-			hiddenValues.removeAll(CollectionFilters.filter(
-					hiddenValues,
-					(CollectionFilter) Reflections.classLookup().newInstance(
-							parameter.classValue())));
+			hiddenValues.removeAll(CollectionFilters.filter(hiddenValues,
+					(CollectionFilter) Reflections.classLookup()
+							.newInstance(parameter.classValue())));
 			provider.setHiddenValues(hiddenValues);
 		}
 		return editable ? provider : new BoundWidgetProvider() {
