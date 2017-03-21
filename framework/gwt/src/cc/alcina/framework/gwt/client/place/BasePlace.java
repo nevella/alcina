@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.place;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
@@ -9,6 +10,7 @@ import com.google.gwt.place.shared.Place;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 @Introspectable
+@ClientInstantiable
 @RegistryLocation(registryPoint = BasePlace.class)
 public abstract class BasePlace extends Place implements Serializable {
 	private static String tokenFor(BasePlace p) {
