@@ -202,6 +202,12 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 	public static class BoundWidgetTypeFactorySimpleGenerator
 			extends BoundWidgetTypeFactory {
+		private boolean withNull;
+
+		public BoundWidgetTypeFactorySimpleGenerator(boolean withNull) {
+			this();
+			this.withNull=withNull;
+		}
 		public BoundWidgetTypeFactorySimpleGenerator() {
 			super(true);
 			add(Date.class, DateBox.PROVIDER);
@@ -218,13 +224,14 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 		public BoundWidgetProvider getWidgetProvider(Class type) {
 			if (type.isEnum()) {
-				return new ListBoxEnumProvider(type, true);
+				return new ListBoxEnumProvider(type, withNull);
 			}
 			return super.getWidgetProvider(type);
 		}
 	}
 
 	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY = new BoundWidgetTypeFactorySimpleGenerator();
+	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY_NO_NULLS = new BoundWidgetTypeFactorySimpleGenerator(false);
 
 	public List<Field> fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
 			Object obj, BoundWidgetTypeFactory factory, boolean editableWidgets,

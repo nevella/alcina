@@ -8,6 +8,7 @@ import java.util.Optional;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceHistoryMapper;
 
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -21,6 +22,10 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	Map<Class, BasePlaceTokenizer> tokenizersByPlace = new LinkedHashMap<>();
 
+	Map<Class<? extends HasIdAndLocalId>, BasePlaceTokenizer> tokenizersByModelClass = new LinkedHashMap<>();
+
+	Map<Enum, BasePlace> placesBySubPlace = new LinkedHashMap<>();
+
 	private Place lastPlace;
 
 	public RegistryHistoryMapper() {
@@ -33,6 +38,13 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		for (BasePlaceTokenizer tokenizer : impls) {
 			tokenizersByPrefix.add(tokenizer.getPrefix(), tokenizer);
 			tokenizersByPlace.put(tokenizer.getTokenizedClass(), tokenizer);
+			tokenizersByModelClass.put(tokenizer.getModelClass(), tokenizer);
+		}
+		List<BasePlace> places = Registry.impls(BasePlace.class);
+		for (BasePlace place : places) {
+			if (place instanceof SubPlace) {
+				placesBySubPlace.put(((SubPlace) place).getSub(), place);
+			}
 		}
 	}
 
@@ -68,5 +80,13 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	public boolean equalPlaces(Place place1, Place place2) {
 		return getToken(place1).equals(getToken(place2));
+	}
+
+	public Place getPlaceByModelClass(Class<?> clazz) {
+		return tokenizersByModelClass.get(clazz).createDefaultPlace();
+	}
+
+	public BasePlace getPlaceBySubPlace(Enum value) {
+		return null;
 	}
 }
