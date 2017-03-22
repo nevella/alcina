@@ -32,6 +32,10 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		ensurePlaceLookup();
 	}
 
+	public static RegistryHistoryMapper get() {
+		return Registry.impl(RegistryHistoryMapper.class);
+	}
+
 	private void ensurePlaceLookup() {
 		List<BasePlaceTokenizer> impls = Registry
 				.impls(BasePlaceTokenizer.class);

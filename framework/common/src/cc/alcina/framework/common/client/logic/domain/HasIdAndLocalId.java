@@ -16,7 +16,6 @@ package cc.alcina.framework.common.client.logic.domain;
 import java.util.Comparator;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -60,6 +59,9 @@ public interface HasIdAndLocalId extends HasId {
 	public static class HiliComparator implements Comparator<HasIdAndLocalId> {
 		public static final HiliComparator INSTANCE = new HiliComparator();
 
+		public static final Comparator<HasIdAndLocalId> REVERSED_INSTANCE = new HiliComparator()
+				.reversed();
+
 		@Override
 		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
 			return HiliHelper.compare(o1, o2);
@@ -92,5 +94,4 @@ public interface HasIdAndLocalId extends HasId {
 			return o != null && (o.getId() == id ^ allowAllExceptId);
 		}
 	}
-
 }
