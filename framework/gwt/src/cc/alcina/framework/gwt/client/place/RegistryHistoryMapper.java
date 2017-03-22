@@ -51,10 +51,16 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	@Override
 	public Place getPlace(String token) {
 		System.out.println("get place:" + token);
-		String top = token.split("/")[0];
+		String[] split = token.split("/");
+		String top = split[0];
 		Optional<BasePlaceTokenizer> o_tokenizer = tokenizersByPrefix
 				.getAndEnsure(top).stream()
 				.filter(tokenizer -> tokenizer.handles(token)).findFirst();
+		if (!o_tokenizer.isPresent() && top.length() > 1) {
+			top = split[0] + "/" + split[1];
+			o_tokenizer = tokenizersByPrefix.getAndEnsure(top).stream()
+					.filter(tokenizer -> tokenizer.handles(token)).findFirst();
+		}
 		Place place = o_tokenizer.isPresent()
 				? o_tokenizer.get().getPlace(token) : null;
 		if (place == null) {
@@ -87,6 +93,6 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	}
 
 	public BasePlace getPlaceBySubPlace(Enum value) {
-		return null;
+		return placesBySubPlace.get(value).copy();
 	}
 }
