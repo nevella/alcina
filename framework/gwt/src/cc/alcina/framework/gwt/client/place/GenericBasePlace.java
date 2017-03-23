@@ -11,26 +11,31 @@ import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelpe
 
 @RegistryLocation(registryPoint = GenericBasePlace.class)
 @ClientInstantiable
-public abstract class GenericBasePlace<V extends HasIdAndLocalId, SD extends SearchDefinition>
-		extends BasePlace {
-	public String id;
-
-	public SD def;
-
+public abstract class GenericBasePlace<SD extends SearchDefinition>
+		extends BasePlace implements PlaceWithSearchDefinition<SD> {
 	public GenericBasePlace() {
 		def = createSearchDefinition();
 	}
 
-	protected abstract SD createSearchDefinition();
+	public long fromId;
 
-	public void setId(long objectId) {
-		id = String.valueOf(objectId);
+	public long id;
+
+	public SD def;
+
+	@Override
+	public SD getSearchDefinition() {
+		return def;
 	}
+
+	public String stringId() {
+		return String.valueOf(id);
+	}
+
+	protected abstract SD createSearchDefinition();
 
 	public boolean provideIsDefaultDefs() {
 		GenericBasePlace o = Reflections.classLookup().newInstance(getClass());
 		return HasEquivalenceHelper.argwiseEquivalent(def, o.def);
 	}
-
-	public abstract Place toTokenizablePlace() ;
 }
