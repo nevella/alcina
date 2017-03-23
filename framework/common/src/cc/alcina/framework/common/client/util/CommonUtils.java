@@ -1329,7 +1329,7 @@ public class CommonUtils {
 			pre += s.substring(0, 2);
 			s = s.substring(2);
 		}
-		if (s.length() > 3 && s.matches("(?i)mc.+")) {
+		if (s.length() > 3 && s.toLowerCase().startsWith("mc")) {
 			pre = "Mc";
 			s = s.substring(2);
 		}
