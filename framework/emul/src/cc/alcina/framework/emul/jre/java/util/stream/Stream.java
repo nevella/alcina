@@ -122,4 +122,13 @@ public interface Stream<T> {
 		}
 		return false;
 	}
+	default boolean allMatch(Predicate<? super T> predicate) {
+		for (Iterator<T> itr = iterator(); itr.hasNext();) {
+			T t = itr.next();
+			if (!predicate.test(t)) {
+				return false;
+			}
+		}
+		return true;
+	}
 }

@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public class Ax {
@@ -22,5 +24,9 @@ public class Ax {
 	public static String blankTo(String string,
 			Supplier<String> defaultValueSupplier) {
 		return isBlank(string) ? defaultValueSupplier.get() : string;
+	}
+
+	public static <T> Optional<T> first(Collection<T> collection) {
+		return collection.size()==0?Optional.empty():Optional.of(collection.iterator().next());
 	}
 }

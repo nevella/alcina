@@ -1329,6 +1329,10 @@ public class CommonUtils {
 			pre += s.substring(0, 2);
 			s = s.substring(2);
 		}
+		if (s.length() > 3 && s.matches("(?i)mc.+")) {
+			pre = "Mc";
+			s = s.substring(2);
+		}
 		return pre + s.substring(0, 1).toUpperCase()
 				+ s.substring(1).toLowerCase();
 	}
