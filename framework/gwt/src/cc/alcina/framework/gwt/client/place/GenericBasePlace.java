@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
 
 @RegistryLocation(registryPoint = GenericBasePlace.class)
-@ClientInstantiable
 public abstract class GenericBasePlace<SD extends SearchDefinition>
 		extends BasePlace implements PlaceWithSearchDefinition<SD> {
 	public GenericBasePlace() {

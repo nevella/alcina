@@ -28,6 +28,27 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.UnsafeNativeLong;
+import com.google.gwt.core.ext.Generator;
+import com.google.gwt.core.ext.GeneratorContext;
+import com.google.gwt.core.ext.TreeLogger;
+import com.google.gwt.core.ext.UnableToCompleteException;
+import com.google.gwt.core.ext.typeinfo.HasAnnotations;
+import com.google.gwt.core.ext.typeinfo.JAnnotationType;
+import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JMethod;
+import com.google.gwt.core.ext.typeinfo.JParameterizedType;
+import com.google.gwt.core.ext.typeinfo.JType;
+import com.google.gwt.core.ext.typeinfo.TypeOracle;
+import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
+import com.google.gwt.user.rebind.SourceWriter;
+import com.totsp.gwittir.client.beans.annotations.Omit;
+import com.totsp.gwittir.rebind.beans.IntrospectorFilter;
+import com.totsp.gwittir.rebind.beans.IntrospectorFilterHelper;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
@@ -47,25 +68,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.core.client.UnsafeNativeLong;
-import com.google.gwt.core.ext.Generator;
-import com.google.gwt.core.ext.GeneratorContext;
-import com.google.gwt.core.ext.TreeLogger;
-import com.google.gwt.core.ext.UnableToCompleteException;
-import com.google.gwt.core.ext.typeinfo.HasAnnotations;
-import com.google.gwt.core.ext.typeinfo.JAnnotationType;
-import com.google.gwt.core.ext.typeinfo.JClassType;
-import com.google.gwt.core.ext.typeinfo.JMethod;
-import com.google.gwt.core.ext.typeinfo.JType;
-import com.google.gwt.core.ext.typeinfo.TypeOracle;
-import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
-import com.google.gwt.user.rebind.SourceWriter;
-import com.totsp.gwittir.client.beans.annotations.Omit;
-import com.totsp.gwittir.rebind.beans.IntrospectorFilter;
-import com.totsp.gwittir.rebind.beans.IntrospectorFilterHelper;
 
 @SuppressWarnings("unchecked")
 /**
@@ -201,9 +203,9 @@ public class ClientReflectionGenerator extends Generator {
 					|| jct.isAnnotationPresent(RegistryLocations.class))
 					&& !jct.isAbstract()) {
 				Set<RegistryLocation> rls = getClassAnnotations(jct,
-						RegistryLocation.class);
+						RegistryLocation.class, true);
 				Set<RegistryLocations> rlsSet = getClassAnnotations(jct,
-						RegistryLocations.class);
+						RegistryLocations.class, true);
 				for (RegistryLocations rlcs : rlsSet) {
 					for (RegistryLocation rl : rlcs.value()) {
 						rls.add(rl);
@@ -221,9 +223,10 @@ public class ClientReflectionGenerator extends Generator {
 	}
 
 	private <T> Set<T> getClassAnnotations(JClassType jct,
-			Class<T> annotationType) {
+			Class<T> annotationType, boolean allowMultiple) {
 		return (Set) getClassAnnotations(jct,
-				(List) Collections.singletonList(annotationType));
+				(List) Collections.singletonList(annotationType),
+				allowMultiple);
 	}
 
 	private boolean ignore(JClassType jClassType) {
@@ -440,7 +443,6 @@ public class ClientReflectionGenerator extends Generator {
 		sw.outdent();
 		sw.println("}-*/;");
 		sw.println();
-		
 		sw.println();
 		int methodCount = 0;
 		for (JClassType jct : beanInfoTypes) {
@@ -506,7 +508,7 @@ public class ClientReflectionGenerator extends Generator {
 			int aCount = 0;
 			String annArray = "";
 			for (Annotation a : getClassAnnotations(jct,
-					visibleAnnotationClasses)) {
+					visibleAnnotationClasses, false)) {
 				if (aCount++ != 0) {
 					annArray += ", ";
 				}
@@ -805,17 +807,30 @@ public class ClientReflectionGenerator extends Generator {
 	private IntrospectorFilter filter;
 
 	public Set<Annotation> getClassAnnotations(JClassType clazz,
-			List<Class<? extends Annotation>> annotationClasses) {
+			List<Class<? extends Annotation>> annotationClasses,
+			boolean allowMultiple) {
 		if (superAnnotationMap.containsKey(clazz, annotationClasses)) {
 			return superAnnotationMap.get(clazz, annotationClasses);
 		}
 		Map<Class, Annotation> uniqueMap = new HashMap<Class, Annotation>();
 		Set<? extends JClassType> flattenedSupertypeHierarchy = clazz
 				.getFlattenedSupertypeHierarchy();
-		for (JClassType jct : flattenedSupertypeHierarchy) {
+		List<? extends JClassType> nonGeneric = flattenedSupertypeHierarchy
+				.stream().map(cl -> {
+					if (cl instanceof JParameterizedType) {
+						return ((JParameterizedType) cl).getBaseType();
+					} else {
+						return cl;
+					}
+				}).collect(Collectors.toList());
+		Set values = new HashSet();
+		for (JClassType jct : nonGeneric) {
 			try {
-				for (Annotation a : getVisibleAnnotations(jct,
-						annotationClasses)) {
+				int debug = 3;
+				List<Annotation> visibleAnnotations = getVisibleAnnotations(jct,
+						annotationClasses);
+				values.addAll(visibleAnnotations);
+				for (Annotation a : visibleAnnotations) {
 					if (!uniqueMap.containsKey(a.annotationType())) {
 						uniqueMap.put(a.annotationType(), a);
 					}
@@ -823,7 +838,9 @@ public class ClientReflectionGenerator extends Generator {
 			} catch (Exception e) {
 			}
 		}
-		HashSet values = new HashSet(uniqueMap.values());
+		if (!allowMultiple) {
+			values = uniqueMap.values().stream().collect(Collectors.toSet());
+		}
 		superAnnotationMap.put(clazz, annotationClasses, values);
 		return values;
 	}

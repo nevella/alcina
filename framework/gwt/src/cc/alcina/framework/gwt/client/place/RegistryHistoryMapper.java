@@ -29,14 +29,19 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	private Place lastPlace;
 
 	public RegistryHistoryMapper() {
-		ensurePlaceLookup();
 	}
 
 	public static RegistryHistoryMapper get() {
 		return Registry.impl(RegistryHistoryMapper.class);
 	}
 
-	private void ensurePlaceLookup() {
+	boolean initialised = false;
+
+	public void ensurePlaceLookup() {
+		if (initialised) {
+			return;
+		}
+		initialised = true;
 		List<BasePlaceTokenizer> impls = Registry
 				.impls(BasePlaceTokenizer.class);
 		for (BasePlaceTokenizer tokenizer : impls) {
