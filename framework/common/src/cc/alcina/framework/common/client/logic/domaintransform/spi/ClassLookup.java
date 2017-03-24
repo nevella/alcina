@@ -16,11 +16,11 @@ package cc.alcina.framework.common.client.logic.domaintransform.spi;
 import java.lang.annotation.Annotation;
 import java.util.List;
 
+import com.totsp.gwittir.client.beans.Method;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.util.CommonUtils;
-
-import com.totsp.gwittir.client.beans.Method;
 
 /**
  * 
@@ -28,7 +28,9 @@ import com.totsp.gwittir.client.beans.Method;
  */
 public interface ClassLookup {
 	public Class getClassForName(String fqn);
-
+	default <T> T newInstance(String fqn){
+		return (T) newInstance(getClassForName(fqn)); 
+	}
 	public <T> T newInstance(Class<T> clazz);
 
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId);
@@ -57,7 +59,7 @@ public interface ClassLookup {
 
 		private final Class beanType;
 
-		public PropertyInfoLite(Class beanType,String propertyName) {
+		public PropertyInfoLite(Class beanType, String propertyName) {
 			this.propertyName = propertyName;
 			this.beanType = beanType;
 		}
@@ -69,8 +71,8 @@ public interface ClassLookup {
 			this.propertyType = CommonUtils.getWrapperType(propertyType);
 			this.propertyName = propertyName;
 			DomainProperty ann = Reflections.propertyAccessor()
-					.getAnnotationForProperty(beanType,
-							DomainProperty.class, propertyName);
+					.getAnnotationForProperty(beanType, DomainProperty.class,
+							propertyName);
 			serializeCollectionOnClient = ann != null
 					&& ann.serializeOnClient();
 		}
@@ -106,4 +108,6 @@ public interface ClassLookup {
 			return beanType.hashCode() ^ propertyName.hashCode();
 		}
 	}
+
+	
 }

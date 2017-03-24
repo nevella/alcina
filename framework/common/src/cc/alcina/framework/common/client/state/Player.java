@@ -37,6 +37,9 @@ public abstract class Player<D> {
 	public Player(Runnable runnable) {
 		this.runnable = runnable;
 	}
+	protected Player(){
+		
+	}
 
 	public void addProvides(D state) {
 		provides.add(state);
@@ -197,5 +200,8 @@ public abstract class Player<D> {
 
 	public String shortName() {
 		return CommonUtils.simpleClassName(getClass());
+	}
+	public String provideNameForTransitions() {
+		return getClass().getSimpleName();
 	}
 }

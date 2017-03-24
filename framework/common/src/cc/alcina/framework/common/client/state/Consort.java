@@ -33,7 +33,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  */
 public class Consort<D> {
 	private static final String PLAYERS_WITH_EQUAL_DEPS_ERR = "Players with equal"
-			+ " dependencies and priorities: \n%s\n%s";
+			+ " dependencies and priorities: \n%s\n%s\n  - deps: %s";
 
 	public static final transient String BEFORE_PLAY = "BEFORE_PLAY";
 
@@ -106,7 +106,8 @@ public class Consort<D> {
 			boolean finishes) {
 		D lastRequired = CommonUtils.last(players).getProvides().iterator()
 				.next();
-		addPlayer(new EndpointPlayer(lastRequired, completionCallback, finishes));
+		addPlayer(
+				new EndpointPlayer(lastRequired, completionCallback, finishes));
 	}
 
 	public void addIfNotMember(Player player) {
@@ -119,8 +120,8 @@ public class Consort<D> {
 		addPlayer(player);
 	}
 
-	public OneTimeFinishedAsyncCallbackAdapter addOneTimeFinishedCallback(
-			AsyncCallback finishedCallback) {
+	public OneTimeFinishedAsyncCallbackAdapter
+			addOneTimeFinishedCallback(AsyncCallback finishedCallback) {
 		if (finishedCallback != null) {
 			return new OneTimeFinishedAsyncCallbackAdapter(finishedCallback);
 		} else {
@@ -131,7 +132,8 @@ public class Consort<D> {
 	public OneTimeFinishedAsyncCallbackAdapter addOneTimeStateCallback(D state,
 			AsyncCallback stateCallback) {
 		if (stateCallback != null) {
-			return new OneTimeFinishedAsyncCallbackAdapter(stateCallback, state);
+			return new OneTimeFinishedAsyncCallbackAdapter(stateCallback,
+					state);
 		} else {
 			return null;
 		}
@@ -143,8 +145,10 @@ public class Consort<D> {
 		return player;
 	}
 
-	public StateListenerWrapper addStateListener(TopicListener listener, D state) {
-		StateListenerWrapper wrapper = new StateListenerWrapper(listener, state);
+	public StateListenerWrapper addStateListener(TopicListener listener,
+			D state) {
+		StateListenerWrapper wrapper = new StateListenerWrapper(listener,
+				state);
 		topicPublisher.listenerDelta(STATES, wrapper, true);
 		wrapper.fireIfExisting();
 		return wrapper;
@@ -190,8 +194,8 @@ public class Consort<D> {
 
 	public void deferredRemove(final List<String> keys,
 			final TopicListener listener) {
-		Registry.impl(TimerWrapperProvider.class).scheduleDeferred(
-				new Runnable() {
+		Registry.impl(TimerWrapperProvider.class)
+				.scheduleDeferred(new Runnable() {
 					@Override
 					public void run() {
 						for (String key : keys) {
@@ -244,12 +248,14 @@ public class Consort<D> {
 		topicPublisher.publishTopic(ERROR, throwable);
 		throw new WrappedRuntimeException(throwable);
 	}
+
 	protected void addStates(Collection<D> states) {
 		infoLogger.log(CommonUtils.formatJ("%s add:[%s]",
 				CommonUtils.padStringLeft("", depth(), '\t'),
 				CommonUtils.join(states, ", ")));
 		modifyStates(states, true);
 	}
+
 	public void removeStates(Collection<D> states) {
 		infoLogger.log(CommonUtils.formatJ("%s rmv:[%s]",
 				CommonUtils.padStringLeft("", depth(), '\t'),
@@ -296,6 +302,7 @@ public class Consort<D> {
 	}
 
 	public void start() {
+		infoLogger.format("Starting consort - %s", this);
 		running = true;
 		playedCount = 0;
 		consumeQueue();
@@ -344,11 +351,11 @@ public class Consort<D> {
 
 	private void modifyStates(Collection<D> states, boolean add) {
 		LightSet<D> reachedCopy = new LightSet<D>(reachedStates);
-		boolean mod = add ? reachedStates.addAll(states) : reachedStates
-				.removeAll(states);
+		boolean mod = add ? reachedStates.addAll(states)
+				: reachedStates.removeAll(states);
 		if (mod) {
-			publishTopicWithBubble(STATES, new StatesDelta(reachedCopy,
-					reachedStates));
+			publishTopicWithBubble(STATES,
+					new StatesDelta(reachedCopy, reachedStates));
 			debugLogger.log(CommonUtils.formatJ("%s     [%s]",
 					CommonUtils.padStringLeft("", depth(), '\t'),
 					CommonUtils.join(states, ", ")));
@@ -427,10 +434,10 @@ public class Consort<D> {
 								if (!player.isAllowEqualPriority()
 										|| result.isAllowEqualPriority()) {
 									throw new RuntimeException(
-											CommonUtils
-													.formatJ(
-															PLAYERS_WITH_EQUAL_DEPS_ERR,
-															player, result));
+											CommonUtils.formatJ(
+													PLAYERS_WITH_EQUAL_DEPS_ERR,
+													player, result,
+													providerDependencies));
 								}
 							}
 						}
@@ -453,8 +460,8 @@ public class Consort<D> {
 			if (providerDependencies.size() == lastCheckedCount) {
 				if (playedCount == 0 || hasNonProviders) {
 					if (players.size() > 0 && playing.isEmpty()) {
-						Player missed = lastAdded != null ? lastAdded : players
-								.iterator().next();
+						Player missed = lastAdded != null ? lastAdded
+								: players.iterator().next();
 						String message = CommonUtils.formatJ(
 								"Unable to resolve dependencies: %s\n\t%s",
 								missed.getRequires(), missed);
@@ -537,13 +544,12 @@ public class Consort<D> {
 	private String lastInfoLogMessage = null;
 
 	protected void executePlayer(Player<D> player, boolean replaying) {
-		String message = CommonUtils.formatJ(
-				"%s%s%s -> %s",
-				(playing.size() == 1 ? "    " : CommonUtils.formatJ("[%s] ",
-						playing.size())), CommonUtils.padStringLeft("",
-						depth(), "    "), CommonUtils
-						.simpleClassName(getClass()), CommonUtils
-						.simpleClassName(player.getClass()));
+		String message = CommonUtils.formatJ("%s%s%s -> %s",
+				(playing.size() == 1 ? "    "
+						: CommonUtils.formatJ("[%s] ", playing.size())),
+				CommonUtils.padStringLeft("", depth(), "    "),
+				CommonUtils.simpleClassName(getClass()),
+				player.provideNameForTransitions());
 		if (!CommonUtils.equalsWithNullEmptyEquality(message,
 				lastInfoLogMessage)) {
 			infoLogger.log(message);
@@ -669,8 +675,8 @@ public class Consort<D> {
 		}
 
 		public void fireIfExisting() {
-			Registry.impl(TimerWrapperProvider.class).scheduleDeferred(
-					new Runnable() {
+			Registry.impl(TimerWrapperProvider.class)
+					.scheduleDeferred(new Runnable() {
 						@Override
 						public void run() {
 							StatesDelta delta = new StatesDelta(
@@ -704,8 +710,10 @@ public class Consort<D> {
 				listenerDelta(Consort.NO_ACTIVE_PLAYERS, listener, true);
 			}
 		} else {
-			deferredRemove(Arrays.asList(Consort.CANCELLED, Consort.ERROR,
-					Consort.FINISHED, Consort.NO_ACTIVE_PLAYERS), listener);
+			deferredRemove(
+					Arrays.asList(Consort.CANCELLED, Consort.ERROR,
+							Consort.FINISHED, Consort.NO_ACTIVE_PLAYERS),
+					listener);
 		}
 	}
 
