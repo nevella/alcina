@@ -18,7 +18,10 @@ public interface HasStringId {
 		}
 	}
 
-	static String nullSafeId(HasStringId hasStringId) {
+	default String nullSafeId(HasStringId hasStringId) {
+		return hasStringId == null ? null : hasStringId.stringId();
+	}
+	static String nullSafeId0(HasStringId hasStringId) {
 		return hasStringId == null ? null : hasStringId.stringId();
 	}
 }
