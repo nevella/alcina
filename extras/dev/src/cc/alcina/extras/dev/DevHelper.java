@@ -125,8 +125,8 @@ public abstract class DevHelper {
 		while (true) {
 			try {
 				configPath = getAppConfigPath(prefs);
-				ResourceUtilities
-						.registerCustomProperties(new FileInputStream(configPath));
+				ResourceUtilities.registerCustomProperties(
+						new FileInputStream(configPath));
 				break;
 			} catch (Exception e) {
 				String prompt = getJbossConfigPrompt(configPath);
@@ -203,7 +203,10 @@ public abstract class DevHelper {
 		scanRegistry();
 		initClientReflector();
 		initDummyServices();
-		TestPersistenceHelper.get();
+		if (Thread.currentThread().getContextClassLoader() != null) {
+			TestPersistenceHelper.get().setReflectiveClassLoader(
+					Thread.currentThread().getContextClassLoader());
+		}
 		TransformManager.register(createTransformManager());
 		initCustomServicesFirstHalf();
 		AppPersistenceBase.setTest();
@@ -259,7 +262,7 @@ public abstract class DevHelper {
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					Registry.get(), "dev-helper");
 			long t2 = System.currentTimeMillis();
-			 System.out.println("Registry scan: " + (t2 - t1));
+			System.out.println("Registry scan: " + (t2 - t1));
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WrappedRuntimeException(e);

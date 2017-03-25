@@ -249,6 +249,11 @@ public class Consort<D> {
 		throw new WrappedRuntimeException(throwable);
 	}
 
+	protected void addState(D state) {
+		//only do on startup - no logging
+		modifyStates(Collections.singletonList(state),true);
+	}
+
 	protected void addStates(Collection<D> states) {
 		infoLogger.log(CommonUtils.formatJ("%s add:[%s]",
 				CommonUtils.padStringLeft("", depth(), '\t'),
@@ -591,7 +596,7 @@ public class Consort<D> {
 		return playing.isEmpty() || parallelArbiter != null;
 	}
 
-	Set<D> getReachedStates() {
+	protected Set<D> getReachedStates() {
 		return this.reachedStates;
 	}
 
