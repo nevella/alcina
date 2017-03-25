@@ -47,13 +47,6 @@ import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 @SuppressWarnings("unchecked")
 public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		PropertyAccessor, CurrentUtcDateProvider {
-	private TestPersistenceHelper() {
-		super();
-		Reflections.registerClassLookup(this);
-		Reflections.registerObjectLookup(this);
-		Reflections.registerPropertyAccessor(this);
-	}
-
 	public static TestPersistenceHelper get() {
 		TestPersistenceHelper singleton = Registry
 				.checkSingleton(TestPersistenceHelper.class);
@@ -64,49 +57,35 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		return singleton;
 	}
 
-	CachingMap<String, Class> fqnLookup = new CachingMap<String, Class>(
-			fqn -> Class.forName(fqn));
+	private ClassLoader reflectiveClassLoader;
 
-	public Class getClassForName(String fqn) {
-		return fqnLookup.get(fqn);
-	}
-
-	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
-			long id, long localId) {
-		// uses thread-local instance
-		return TransformManager.get().getObject(c, id, localId);
-	}
-
-	public void setPropertyValue(Object bean, String propertyName, Object value) {
-		SEUtilities.setPropertyValue(bean, propertyName, value);
-	}
-
-	public <T extends HasIdAndLocalId> T getObject(T bean) {
-		return (T) TransformManager.get().getObject(bean.getClass(),
-				bean.getId(), bean.getLocalId());
-	}
-
-	public Object getPropertyValue(Object bean, String propertyName) {
-		return SEUtilities.getPropertyValue(bean, propertyName);
-	}
-
-	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
-			Class<A> annotationClass, String propertyName) {
+	CachingMap<String, Class> fqnLookup = new CachingMap<String, Class>(fqn -> {
 		try {
-			PropertyDescriptor pd = SEUtilities.getPropertyDescriptorByName(
-					targetClass, propertyName);
-			if (pd != null) {
-				return pd.getReadMethod().getAnnotation(annotationClass);
-			}
-			return null;
+			return reflectiveClassLoader.loadClass(fqn);
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			throw e;
 		}
+	});
+
+	private TestPersistenceHelper() {
+		super();
+		reflectiveClassLoader = getClass().getClassLoader();
+		Reflections.registerClassLookup(this);
+		Reflections.registerObjectLookup(this);
+		Reflections.registerPropertyAccessor(this);
 	}
 
-	public <A extends Annotation> A getAnnotationForClass(Class targetClass,
-			Class<A> annotationClass) {
-		return (A) targetClass.getAnnotation(annotationClass);
+	@Override
+	public IndividualPropertyAccessor cachedAccessor(Class clazz,
+			String propertyName) {
+		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+	}
+
+	@SuppressWarnings("deprecation")
+	// it works...yeah, calendar shmalendar
+	public Date currentUtcDate() {
+		Date d = new Date();
+		return new Date(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
 	}
 
 	public String displayNameForObject(Object o) {
@@ -128,10 +107,9 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
 					.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
-				if (pd.getReadMethod() != null
-						&& pd.getWriteMethod() != null
-						&& pd.getReadMethod().getAnnotation(
-								Display.class) != null) {
+				if (pd.getReadMethod() != null && pd.getWriteMethod() != null
+						&& pd.getReadMethod()
+								.getAnnotation(Display.class) != null) {
 					result.add(pd.getName());
 				}
 			}
@@ -139,6 +117,40 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public <A extends Annotation> A getAnnotationForClass(Class targetClass,
+			Class<A> annotationClass) {
+		return (A) targetClass.getAnnotation(annotationClass);
+	}
+
+	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
+			Class<A> annotationClass, String propertyName) {
+		try {
+			PropertyDescriptor pd = SEUtilities
+					.getPropertyDescriptorByName(targetClass, propertyName);
+			if (pd != null) {
+				return pd.getReadMethod().getAnnotation(annotationClass);
+			}
+			return null;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public Class getClassForName(String fqn) {
+		return fqnLookup.get(fqn);
+	}
+
+	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
+			long id, long localId) {
+		// uses thread-local instance
+		return TransformManager.get().getObject(c, id, localId);
+	}
+
+	public <T extends HasIdAndLocalId> T getObject(T bean) {
+		return (T) TransformManager.get().getObject(bean.getClass(),
+				bean.getId(), bean.getLocalId());
 	}
 
 	public Class getPropertyType(Class clazz, String propertyName) {
@@ -156,40 +168,16 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		}
 	}
 
-	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
-		try {
-			HasIdAndLocalId newInstance = (HasIdAndLocalId) clazz.newInstance();
-			newInstance.setLocalId(localId);
-			return (T) newInstance;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+	public Object getPropertyValue(Object bean, String propertyName) {
+		return SEUtilities.getPropertyValue(bean, propertyName);
 	}
 
-	protected Enum getTargetEnumValue(DomainTransformEvent evt) {
-		if (Enum.class.isAssignableFrom(evt.getValueClass())) {
-			return Enum.valueOf(evt.getValueClass(), evt.getNewStringValue());
-		}
-		return null;
-	}
-
-	public <T> T newInstance(Class<T> clazz) {
-		try {
-			return clazz.newInstance();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+	public ClassLoader getReflectiveClassLoader() {
+		return this.reflectiveClassLoader;
 	}
 
 	public <T> T getTemplateInstance(Class<T> clazz) {
 		return newInstance(clazz);
-	}
-
-	@SuppressWarnings("deprecation")
-	// it works...yeah, calendar shmalendar
-	public Date currentUtcDate() {
-		Date d = new Date();
-		return new Date(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
 	}
 
 	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
@@ -205,8 +193,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 					propertyType = Registry.impl(ImplementationLookup.class)
 							.getImplementation(propertyType);
 				}
-				infos.add(new PropertyInfoLite(propertyType, pd.getName(),
-						null, clazz));
+				infos.add(new PropertyInfoLite(propertyType, pd.getName(), null,
+						clazz));
 			}
 			return infos;
 		} catch (Exception e) {
@@ -214,9 +202,37 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		}
 	}
 
-	@Override
-	public IndividualPropertyAccessor cachedAccessor(Class clazz,
-			String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+	public <T> T newInstance(Class<T> clazz) {
+		try {
+			return clazz.newInstance();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
+		try {
+			HasIdAndLocalId newInstance = (HasIdAndLocalId) clazz.newInstance();
+			newInstance.setLocalId(localId);
+			return (T) newInstance;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public void setPropertyValue(Object bean, String propertyName,
+			Object value) {
+		SEUtilities.setPropertyValue(bean, propertyName, value);
+	}
+
+	public void setReflectiveClassLoader(ClassLoader reflectiveClassLoader) {
+		this.reflectiveClassLoader = reflectiveClassLoader;
+	}
+
+	protected Enum getTargetEnumValue(DomainTransformEvent evt) {
+		if (Enum.class.isAssignableFrom(evt.getValueClass())) {
+			return Enum.valueOf(evt.getValueClass(), evt.getNewStringValue());
+		}
+		return null;
 	}
 }

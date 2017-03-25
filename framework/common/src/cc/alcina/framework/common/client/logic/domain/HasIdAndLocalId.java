@@ -36,8 +36,8 @@ public interface HasIdAndLocalId extends HasId {
 
 	public void setLocalId(long localId);
 
-	public static class HiliComparatorPreferLocals implements
-			Comparator<HasIdAndLocalId> {
+	public static class HiliComparatorPreferLocals
+			implements Comparator<HasIdAndLocalId> {
 		@Override
 		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
 			int i = o1.getClass().getName().compareTo(o2.getClass().getName());
@@ -59,14 +59,17 @@ public interface HasIdAndLocalId extends HasId {
 	public static class HiliComparator implements Comparator<HasIdAndLocalId> {
 		public static final HiliComparator INSTANCE = new HiliComparator();
 
+		public static final Comparator<HasIdAndLocalId> REVERSED_INSTANCE = new HiliComparator()
+				.reversed();
+
 		@Override
 		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
 			return HiliHelper.compare(o1, o2);
 		}
 	}
 
-	public static class HiliNoLocalComparator implements
-			Comparator<HasIdAndLocalId> {
+	public static class HiliNoLocalComparator
+			implements Comparator<HasIdAndLocalId> {
 		public static final HiliNoLocalComparator INSTANCE = new HiliNoLocalComparator();
 
 		@Override
@@ -75,8 +78,8 @@ public interface HasIdAndLocalId extends HasId {
 		}
 	}
 
-	public static class HiliByIdFilter implements
-			CollectionFilter<HasIdAndLocalId> {
+	public static class HiliByIdFilter
+			implements CollectionFilter<HasIdAndLocalId> {
 		private final boolean allowAllExceptId;
 
 		private final long id;

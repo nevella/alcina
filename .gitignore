@@ -9,3 +9,4 @@
 /bin2
 /dist-tasks
 /.gwt-tmp
+/extras/jsdom/build*

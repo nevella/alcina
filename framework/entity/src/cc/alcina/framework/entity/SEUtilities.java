@@ -63,6 +63,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -1337,9 +1339,24 @@ public class SEUtilities {
 		}
 	}
 
-	public static Iterable<String> matchStream(String text, String regex) {
+	public static Iterable<String> matchIterable(String text, String regex) {
+		return matchIterable(text, regex, 0);
+	}
+
+	public static Stream<String> matchStream(String text, String regex) {
+		return matchStream(text, regex, 0);
+	}
+
+	public static Iterable<String> matchIterable(String text, String regex,
+			int group) {
 		Pattern pattern = Pattern.compile(regex);
-		return new PatternIterable(pattern, text);
+		return new PatternIterable(pattern, text, group);
+	}
+
+	public static Stream<String> matchStream(String text, String regex,
+			int group) {
+		Iterable<String> matchIterable = matchIterable(text, regex, group);
+		return StreamSupport.stream(matchIterable.spliterator(), false);
 	}
 
 	public static class PatternIterable implements Iterable<String> {
@@ -1377,7 +1394,7 @@ public class SEUtilities {
 					peeked = true;
 					finished = !matcher.find();
 					if (!finished) {
-						nextMatch = matcher.group();
+						nextMatch = matcher.group(group);
 					}
 				}
 			}
@@ -1387,9 +1404,12 @@ public class SEUtilities {
 
 		private String text;
 
-		public PatternIterable(Pattern pattern, String text) {
+		private int group;
+
+		public PatternIterable(Pattern pattern, String text, int group) {
 			this.pattern = pattern;
 			this.text = text;
+			this.group = group;
 		}
 
 		@Override

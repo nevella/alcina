@@ -1331,6 +1331,10 @@ public class CommonUtils {
 			pre += s.substring(0, 2);
 			s = s.substring(2);
 		}
+		if (s.length() > 3 && s.toLowerCase().startsWith("mc")) {
+			pre = "Mc";
+			s = s.substring(2);
+		}
 		return pre + s.substring(0, 1).toUpperCase()
 				+ s.substring(1).toLowerCase();
 	}
@@ -1416,6 +1420,13 @@ public class CommonUtils {
 			}
 		}
 		return false;
+	}
+
+	public static String highlightForLog(String template, Object... args) {
+		String inner = Ax.format(template, args);
+		String star = padStringLeft("", 40, "*");
+		return Ax.format("\n\n%s%s\n%s\n%s%s\n\n", star, star, inner, star,
+				star);
 	}
 
 	public enum DateStyle {

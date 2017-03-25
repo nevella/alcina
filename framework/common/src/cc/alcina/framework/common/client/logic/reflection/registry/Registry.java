@@ -357,6 +357,7 @@ public class Registry {
 	}
 
 	public void register(Class registeringClass, Class registryPoint) {
+		
 		register(registeringClass, registryPoint, void.class,
 				ImplementationType.MULTIPLE, 10);
 	}

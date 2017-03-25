@@ -8,6 +8,7 @@ import java.util.Optional;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceHistoryMapper;
 
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -21,28 +22,54 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	Map<Class, BasePlaceTokenizer> tokenizersByPlace = new LinkedHashMap<>();
 
+	Map<Class<? extends HasIdAndLocalId>, BasePlaceTokenizer> tokenizersByModelClass = new LinkedHashMap<>();
+
+	Map<Enum, BasePlace> placesBySubPlace = new LinkedHashMap<>();
+
 	private Place lastPlace;
 
 	public RegistryHistoryMapper() {
-		ensurePlaceLookup();
 	}
 
-	private void ensurePlaceLookup() {
+	public static RegistryHistoryMapper get() {
+		return Registry.impl(RegistryHistoryMapper.class);
+	}
+
+	boolean initialised = false;
+
+	public void ensurePlaceLookup() {
+		if (initialised) {
+			return;
+		}
+		initialised = true;
 		List<BasePlaceTokenizer> impls = Registry
 				.impls(BasePlaceTokenizer.class);
 		for (BasePlaceTokenizer tokenizer : impls) {
 			tokenizersByPrefix.add(tokenizer.getPrefix(), tokenizer);
 			tokenizersByPlace.put(tokenizer.getTokenizedClass(), tokenizer);
+			tokenizersByModelClass.put(tokenizer.getModelClass(), tokenizer);
+		}
+		List<BasePlace> places = Registry.impls(BasePlace.class);
+		for (BasePlace place : places) {
+			if (place instanceof SubPlace) {
+				placesBySubPlace.put(((SubPlace) place).getSub(), place);
+			}
 		}
 	}
 
 	@Override
 	public Place getPlace(String token) {
 		System.out.println("get place:" + token);
-		String top = token.split("/")[0];
+		String[] split = token.split("/");
+		String top = split[0];
 		Optional<BasePlaceTokenizer> o_tokenizer = tokenizersByPrefix
 				.getAndEnsure(top).stream()
 				.filter(tokenizer -> tokenizer.handles(token)).findFirst();
+		if (!o_tokenizer.isPresent() && top.length() > 1) {
+			top = split[0] + "/" + split[1];
+			o_tokenizer = tokenizersByPrefix.getAndEnsure(top).stream()
+					.filter(tokenizer -> tokenizer.handles(token)).findFirst();
+		}
 		Place place = o_tokenizer.isPresent()
 				? o_tokenizer.get().getPlace(token) : null;
 		if (place == null) {
@@ -68,5 +95,13 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	public boolean equalPlaces(Place place1, Place place2) {
 		return getToken(place1).equals(getToken(place2));
+	}
+
+	public Place getPlaceByModelClass(Class<?> clazz) {
+		return tokenizersByModelClass.get(clazz).createDefaultPlace();
+	}
+
+	public BasePlace getPlaceBySubPlace(Enum value) {
+		return placesBySubPlace.get(value).copy();
 	}
 }

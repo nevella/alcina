@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.IgnoreIntrospectionChecks;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.registry.ClassDataCache;
@@ -268,7 +269,8 @@ public class ClientReflectorJvm extends ClientReflector {
 				&& clazz.getAnnotation(
 						cc.alcina.framework.common.client.logic.reflection.Bean.class) == null) {
 			throw new IntrospectionException(
-					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation");
+					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation",
+					clazz);
 		}
 		checkedClassAnnotationsForInstantiation.add(clazz);
 	}
@@ -281,7 +283,7 @@ public class ClientReflectorJvm extends ClientReflector {
 		if (Modifier.isAbstract(mod) || clazz.isAnonymousClass()
 				|| (clazz.isMemberClass() && !Modifier.isStatic(mod))) {
 			throw new IntrospectionException(
-					"not reflectable class - abstract or non-static");
+					"not reflectable class - abstract or non-static", clazz);
 		}
 		boolean introspectable = AnnotationUtils.hasAnnotationNamed(clazz,
 				ClientInstantiable.class)
@@ -294,14 +296,16 @@ public class ClientReflectorJvm extends ClientReflector {
 		if (!introspectable && clazz
 				.getAnnotation(IgnoreIntrospectionChecks.class) == null) {
 			throw new IntrospectionException(
-					"not reflectable class - no clientinstantiable/beandescriptor/introspectable annotation");
+					"not reflectable class - no clientinstantiable/beandescriptor/introspectable annotation",
+					clazz);
 		}
 		checkedClassAnnotations.add(clazz);
 	}
 
 	public static class IntrospectionException extends RuntimeException {
-		public IntrospectionException(String message) {
-			super(message);
+		public IntrospectionException(String message, Class clazz) {
+			super(CommonUtils.highlightForLog("reason: %s\nclass:%s", message,
+					clazz));
 		}
 	}
 
@@ -316,6 +320,6 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	@Override
 	protected void initialiseNewInstance(Class clazz) {
-		//could log, i guess
+		// could log, i guess
 	}
 }

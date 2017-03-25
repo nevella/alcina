@@ -920,7 +920,7 @@ public class ContentViewFactory {
 					GwittirUtils
 							.commitAllTextBoxes(getBoundWidget().getBinding());
 				}
-				LooseContext.pushWithBoolean(CONTEXT_VALIDATING_BEAN);
+				LooseContext.pushWithTrue(CONTEXT_VALIDATING_BEAN);
 				if (!validateBean()) {
 					return false;
 				}

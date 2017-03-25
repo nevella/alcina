@@ -6,10 +6,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 /*
  * -- dependencies :: always attempt to resolve
@@ -36,6 +36,13 @@ public abstract class Player<D> {
 
 	public Player(Runnable runnable) {
 		this.runnable = runnable;
+	}
+
+	protected Player() {
+	}
+
+	protected void logToInfo(String string, Object... args) {
+		consort.infoLogger.format(string, args);
 	}
 
 	public void addProvides(D state) {
@@ -129,8 +136,8 @@ public abstract class Player<D> {
 		consort.onFailure(caught);
 	}
 
-	public abstract static class RunnableAsyncCallbackPlayer<C, D> extends
-			Player<D> implements Runnable, AsyncCallback<C> {
+	public abstract static class RunnableAsyncCallbackPlayer<C, D>
+			extends Player<D> implements Runnable, AsyncCallback<C> {
 		public RunnableAsyncCallbackPlayer() {
 			super(null);
 			setAsynchronous(true);
@@ -175,8 +182,8 @@ public abstract class Player<D> {
 		}
 	}
 
-	public abstract static class RunnablePlayer<D> extends Player<D> implements
-			Runnable {
+	public abstract static class RunnablePlayer<D> extends Player<D>
+			implements Runnable {
 		public RunnablePlayer() {
 			super(null);
 			runnable = this;
@@ -197,5 +204,9 @@ public abstract class Player<D> {
 
 	public String shortName() {
 		return CommonUtils.simpleClassName(getClass());
+	}
+
+	public String provideNameForTransitions() {
+		return getClass().getSimpleName();
 	}
 }

@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.cache.CacheFilter;
 import cc.alcina.framework.common.client.cache.CacheQuery;
@@ -22,6 +21,7 @@ import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.entity.MetricLogging;
 
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class MemcacheSearcher {
@@ -61,7 +61,7 @@ public class MemcacheSearcher {
 					}
 				}
 				return true;
-			}).collect(Collectors.toList());
+			}).collect(Registry.impl(ListCollector.class).toList());
 		}
 	}
 

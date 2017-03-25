@@ -57,7 +57,7 @@ public class TransformPersister {
 		while (perform) {
 			perform = false;
 			try {
-				LooseContext.pushWithBoolean(
+				LooseContext.pushWithTrue(
 						TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
 				Registry.impl(CommonPersistenceProvider.class)
 						.getCommonPersistence()

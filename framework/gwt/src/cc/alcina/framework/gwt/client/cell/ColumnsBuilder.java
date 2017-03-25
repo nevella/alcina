@@ -1,8 +1,6 @@
 package cc.alcina.framework.gwt.client.cell;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,11 +16,11 @@ import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.cellview.client.AbstractCellTable;
 import com.google.gwt.user.cellview.client.Column;
-import com.google.gwt.user.cellview.client.ColumnSortEvent;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
 import com.google.gwt.user.cellview.client.Header;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 
 public class ColumnsBuilder<T> {
 	private AbstractCellTable<T> table;
@@ -45,16 +43,24 @@ public class ColumnsBuilder<T> {
 	}
 
 	public ColumnBuilder col(Enum enumValue) {
-		return new ColumnBuilder(CommonUtils.friendlyConstant(enumValue));
+		return new ColumnBuilder(enumValue,
+				HasDisplayName.displayName(enumValue));
 	}
 
 	public ColumnBuilder col(String name) {
 		return new ColumnBuilder(name);
 	}
 
+	public Column colFor(Enum name) {
+		return built.entrySet().stream()
+				.filter(e -> e.getValue().enumKey == name).findFirst()
+				.map(e -> e.getKey()).get();
+	}
+
 	public ColumnsBuilder columnsFilter(Collection validColumns) {
-		columnsFilter = (List<String>) validColumns.stream()
-				.map(o -> o.toString().replace("_", " ").toLowerCase())
+		columnsFilter = (List<String>) validColumns
+				.stream().map(o -> HasDisplayName.displayName(o)
+						.replace("_", " ").toLowerCase())
 				.collect(Collectors.toList());
 		return this;
 	}
@@ -67,6 +73,11 @@ public class ColumnsBuilder<T> {
 	public ColumnsBuilder footer(Header<String> footer) {
 		this.footer = footer;
 		return this;
+	}
+
+	public Comparator<T> getComparator(Column<?, ?> column) {
+		ColumnBuilder columnBuilder = built.get(column);
+		return Comparator.comparing(columnBuilder.sortFunction);
 	}
 
 	public class ColumnBuilder {
@@ -100,6 +111,13 @@ public class ColumnsBuilder<T> {
 
 		private Cell cell;
 
+		private Enum enumKey;
+
+		public ColumnBuilder(Enum enumValue, String displayName) {
+			this(displayName);
+			this.enumKey = enumValue;
+		}
+
 		public ColumnBuilder(String name) {
 			this.name = name;
 		}
@@ -128,16 +146,16 @@ public class ColumnsBuilder<T> {
 				} else {
 					Header<String> header = new Header<String>(new TextCell()) {
 						@Override
-						public String getValue() {
-							return name;
-						}
-
-						@Override
 						public String getHeaderStyleNames() {
 							if (numeric) {
 								return "numeric";
 							}
 							return super.getHeaderStyleNames();
+						}
+
+						@Override
+						public String getValue() {
+							return name;
 						}
 					};
 					table.addColumn(col, header, footer);
@@ -185,6 +203,11 @@ public class ColumnsBuilder<T> {
 			return this;
 		}
 
+		public ColumnBuilder noWrap() {
+			style("nowrap");
+			return this;
+		}
+
 		public ColumnBuilder numeric() {
 			numeric = true;
 			return this.style("numeric");
@@ -215,11 +238,6 @@ public class ColumnsBuilder<T> {
 		public ColumnBuilder width(double width, Unit unit) {
 			this.width = width;
 			this.unit = unit;
-			return this;
-		}
-
-		public ColumnBuilder noWrap() {
-			style("nowrap");
 			return this;
 		}
 	}
@@ -278,11 +296,24 @@ public class ColumnsBuilder<T> {
 
 		@Override
 		public Object getValue(T t) {
-			Object value = function.apply(t);
-			if (cell == null && editInfo.cell.getClass() == TextCell.class) {
-				value = value == null ? null : value.toString();
+			try {
+				Object value = function.apply(t);
+				if (cell == null
+						&& editInfo.cell.getClass() == TextCell.class) {
+					value = value == null ? null : value.toString();
+				}
+				return value;
+			} catch (Exception e) {
+				String toString = null;
+				try {
+					toString = t.toString();
+				} catch (Exception e1) {
+					toString = "(exception generating string)";
+					e1.printStackTrace();
+				}
+				throw new RuntimeException(
+						"Exception getting column value - " + toString, e);
 			}
-			return value;
 		}
 
 		public Function<T, Comparable> sortFunction() {
@@ -300,10 +331,5 @@ public class ColumnsBuilder<T> {
 		public boolean isEditable() {
 			return propertyName != null;
 		}
-	}
-
-	public Comparator<T> getComparator(Column<?, ?> column) {
-		ColumnBuilder columnBuilder = built.get(column);
-		return Comparator.comparing(columnBuilder.sortFunction);
 	}
 }

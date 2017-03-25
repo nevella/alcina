@@ -3,6 +3,8 @@ package cc.alcina.framework.gwt.client.place;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceTokenizer;
 
+import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -22,6 +24,17 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	private StringMap params;
 
+	boolean added = false;
+
+	public P copyPlace(P place) {
+		String token = getToken(place);
+		return getPlace(token);
+	}
+
+	public Place createDefaultPlace() {
+		return Reflections.classLookup().newInstance(getTokenizedClass());
+	}
+
 	public boolean getBooleanParameter(String key) {
 		String value = params.get(key);
 		return value == null ? false
@@ -36,6 +49,10 @@ public abstract class BasePlaceTokenizer<P extends Place>
 	public long getLongParameter(String key) {
 		String value = params.get(key);
 		return value == null ? 0 : CommonUtils.friendlyParseLong(value);
+	}
+
+	public Class<? extends HasIdAndLocalId> getModelClass(){
+		return null;
 	}
 
 	@Override
@@ -74,6 +91,10 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	public abstract Class<P> getTokenizedClass();
 
+	public boolean handles(String token) {
+		return true;
+	}
+
 	public void setParameter(String key, Object value) {
 		if (value instanceof Number) {
 			if (((Number) value).longValue() == 0) {
@@ -92,7 +113,9 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		params.put(key, value == null ? null : value.toString());
 	}
 
-	boolean added = false;
+	protected void addTokenPart(long l) {
+		addTokenPart(String.valueOf(l));
+	}
 
 	protected void addTokenPart(String part) {
 		if (part == null) {
@@ -108,7 +131,6 @@ public abstract class BasePlaceTokenizer<P extends Place>
 	protected <E extends Enum> E enumValue(Class<E> clazz, String value) {
 		return enumValue(clazz, value, null);
 	}
-
 	protected <E extends Enum> E enumValue(Class<E> clazz, String value,
 			E defaultValue) {
 		return CommonUtils.getEnumValueOrNull(clazz, value, true, defaultValue);
@@ -128,14 +150,5 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	protected SearchDefinitionSerializer searchDefinitionSerializer() {
 		return Registry.impl(SearchDefinitionSerializer.class);
-	}
-
-	public P copyPlace(P place) {
-		String token = getToken(place);
-		return getPlace(token);
-	}
-
-	public boolean handles(String token) {
-		return true;
 	}
 }

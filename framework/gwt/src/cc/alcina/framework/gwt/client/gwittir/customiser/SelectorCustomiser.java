@@ -47,8 +47,9 @@ public class SelectorCustomiser implements Customiser {
 	public static final String RENDERER_CLASS = "rendererClass";
 
 	public static final String USE_CELL_LIST = "useCellList";
-	
+
 	public static final String USE_MINIMAL_SELECTOR = "useMinimalSelector";
+
 	public static final String USE_FLAT_SELECTOR = "useFlatSelector";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
@@ -56,32 +57,33 @@ public class SelectorCustomiser implements Customiser {
 		if (editable) {
 			CollectionFilter filter = null;
 			int maxSelectedItems = 0;
-			NamedParameter parameter = NamedParameter.Support.getParameter(
-					info.parameters(), FILTER_CLASS);
+			NamedParameter parameter = NamedParameter.Support
+					.getParameter(info.parameters(), FILTER_CLASS);
 			if (parameter != null) {
 				filter = (CollectionFilter) Reflections.classLookup()
 						.newInstance(parameter.classValue(), 0, 0);
 			}
-			Renderer renderer = NamedParameter.Support.instantiateClass(
-					info.parameters(), RENDERER_CLASS);
+			Renderer renderer = NamedParameter.Support
+					.instantiateClass(info.parameters(), RENDERER_CLASS);
 			parameter = NamedParameter.Support.getParameter(info.parameters(),
 					MAX_SELECTED_ITEMS);
 			if (parameter != null) {
 				maxSelectedItems = parameter.intValue();
 			}
-			boolean useCellList = NamedParameter.Support.booleanValue(
-					info.parameters(), USE_CELL_LIST);
-			boolean useMinimalSelector= NamedParameter.Support.booleanValue(
-					info.parameters(), USE_MINIMAL_SELECTOR);
-			boolean useFlatSelector= NamedParameter.Support.booleanValue(
-					info.parameters(), USE_FLAT_SELECTOR);
+			boolean useCellList = NamedParameter.Support
+					.booleanValue(info.parameters(), USE_CELL_LIST);
+			boolean useMinimalSelector = NamedParameter.Support
+					.booleanValue(info.parameters(), USE_MINIMAL_SELECTOR);
+			boolean useFlatSelector = NamedParameter.Support
+					.booleanValue(info.parameters(), USE_FLAT_SELECTOR);
 			return new SelectorProvider(clazz, filter, maxSelectedItems,
-					renderer, useCellList,useMinimalSelector,useFlatSelector);
+					renderer, useCellList, useMinimalSelector, useFlatSelector);
 		} else {
 			if (multiple) {
-				NamedParameter p = NamedParameter.Support.getParameter(
-						info.parameters(), MAX_WIDTH);
-				int maxLength = p == null ? GwittirBridge.MAX_EXPANDABLE_LABEL_LENGTH
+				NamedParameter p = NamedParameter.Support
+						.getParameter(info.parameters(), MAX_WIDTH);
+				int maxLength = p == null
+						? GwittirBridge.MAX_EXPANDABLE_LABEL_LENGTH
 						: p.intValue();
 				p = NamedParameter.Support.getParameter(info.parameters(),
 						FORCE_COLUMN_WIDTH);

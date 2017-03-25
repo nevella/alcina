@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.collections;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.collections.PropertyMapper.PropertyMapping;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -15,7 +16,8 @@ public class PropertyMapper {
 
 	private List<PropertyMapping> mappings = new ArrayList<PropertyMapping>();
 
-	public static class NoSuchVariantPropertyException extends RuntimeException {
+	public static class NoSuchVariantPropertyException
+			extends RuntimeException {
 		public NoSuchVariantPropertyException(String propertyName) {
 			super(propertyName);
 		}
@@ -40,8 +42,8 @@ public class PropertyMapper {
 
 		@Override
 		public String toString() {
-			return CommonUtils.formatJ("propertyMapping: %s ->%s (custom: %s)", leftName,
-					rightName, leftToRightConverter != null
+			return CommonUtils.formatJ("propertyMapping: %s ->%s (custom: %s)",
+					leftName, rightName, leftToRightConverter != null
 							|| rightToLeftConverter != null);
 		}
 
@@ -63,7 +65,8 @@ public class PropertyMapper {
 				return;
 			}
 			try {
-				if(!required && !mapper.leftAccessor.hasPropertyKey(left,leftName)){
+				if (!required && !mapper.leftAccessor.hasPropertyKey(left,
+						leftName)) {
 					return;
 				}
 				Object value = mapper.leftAccessor.getPropertyValue(left,
@@ -98,7 +101,8 @@ public class PropertyMapper {
 			return this;
 		}
 
-		public PropertyMapping applyToRightFilter(CollectionFilter rightFilter) {
+		public PropertyMapping
+				applyToRightFilter(CollectionFilter rightFilter) {
 			this.applyToRightFilter = rightFilter;
 			return this;
 		}
@@ -171,13 +175,16 @@ public class PropertyMapper {
 
 	public PropertyMapping define(String left, String right) {
 		PropertyMapping mapping = new PropertyMapping(left, right);
-		mapping.mapper = this;
-		mappings.add(mapping);
-		return mapping;
+		return addMapping(mapping);
 	}
 
 	public List<PropertyMapping> getMappings() {
 		return this.mappings;
 	}
 
+	public PropertyMapping addMapping(PropertyMapping mapping) {
+		mapping.mapper = this;
+		mappings.add(mapping);
+		return mapping;
+	}
 }

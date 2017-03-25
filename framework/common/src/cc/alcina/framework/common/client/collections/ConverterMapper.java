@@ -60,6 +60,7 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 		return mapper.getMappings().stream().map(m -> m.getLeftName())
 				.collect(Collectors.toList());
 	}
+
 	public List<String> getRightPropertyNames() {
 		return mapper.getMappings().stream().map(m -> m.getRightName())
 				.collect(Collectors.toList());
@@ -92,6 +93,10 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 	protected PropertyMapping define(String leftPropertyName,
 			String rightPropertyName) {
 		return mapper.define(leftPropertyName, rightPropertyName);
+	}
+
+	protected PropertyMapping define(PropertyMapping mapping) {
+		return mapper.addMapping(mapping);
 	}
 
 	protected PropertyMapping define(String both) {
