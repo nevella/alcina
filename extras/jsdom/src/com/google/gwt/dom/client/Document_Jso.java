@@ -2,12 +2,12 @@ package com.google.gwt.dom.client;
 
 import com.google.gwt.core.client.GWT;
 
-public class Document_Dom extends Node_Dom implements DomDocument {
+public class Document_Jso extends Node_Jso implements DomDocument {
 	/**
 	 * We cache Document.nativeGet() in DevMode, because crossing the JSNI
 	 * boundary thousands of times just to read a constant value is slow.
 	 */
-	private static Document_Dom doc;
+	private static Document_Jso doc;
 
 	/**
 	 * Gets the default document. This is the document in which the module is
@@ -15,7 +15,7 @@ public class Document_Dom extends Node_Dom implements DomDocument {
 	 * 
 	 * @return the default document
 	 */
-	static Document_Dom get() {
+	static Document_Jso get() {
 		if (GWT.isScript()) {
 			return nativeGet();
 		}
@@ -26,11 +26,11 @@ public class Document_Dom extends Node_Dom implements DomDocument {
 		return doc;
 	}
 
-	private static native Document_Dom nativeGet() /*-{
+	private static native Document_Jso nativeGet() /*-{
         return $doc;
 	}-*/;
 
-	protected Document_Dom() {
+	protected Document_Jso() {
 	}
 
 	/**
@@ -81,7 +81,7 @@ public class Document_Dom extends Node_Dom implements DomDocument {
 	 * 
 	 * @return the document's body
 	 */
-	private final native Node_Dom getBody0() /*-{
+	private final native Node_Jso getBody0() /*-{
         return this.body;
 	}-*/;
 
@@ -214,11 +214,15 @@ public class Document_Dom extends Node_Dom implements DomDocument {
 	 *            <code>"*"</code> matches all tags)
 	 * @return a list containing all the matched elements
 	 */
-	@Override
-	public final native NodeList<Element>
-			getElementsByTagName(String tagName) /*-{
+	 final native NodeList_Jso<Element>
+			getElementsByTagName0(String tagName) /*-{
         return this.getElementsByTagName(tagName);
 	}-*/;
+	@Override
+	public final  NodeList<Element>
+			getElementsByTagName(String tagName) {
+		return new NodeList(getElementsByTagName0(tagName));
+	}
 
 	/**
 	 * The element that contains metadata about the document, including links to

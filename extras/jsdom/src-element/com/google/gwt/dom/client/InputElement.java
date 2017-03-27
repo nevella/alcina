@@ -79,14 +79,14 @@ public class InputElement extends Element {
 
   
   public final  void click() {
-	  click0(domImpl);
+	  click0(typedDomImpl);
   }
   
   /**
    * Simulate a mouse-click. For INPUT elements whose type attribute has one of
    * the following values: "button", "checkbox", "radio", "reset", or "submit".
    */
-	private native void click0(Element_Dom elt) /*-{
+	private native void click0(Element_Jso elt) /*-{
     elt.click();
   }-*/;
 
@@ -255,12 +255,12 @@ public class InputElement extends Element {
    * Select the contents of the text area. For INPUT elements whose type
    * attribute has one of the following values: "text", "file", or "password".
    */
-  private  native void select0(Element_Dom elt) /*-{
+  private  native void select0(Element_Jso elt) /*-{
     elt.select();
   }-*/;
   
   public final  void select() {
-	  select0(domImpl);
+	  select0(typedDomImpl);
   }
   /**
    * A comma-separated list of content types that a server processing this form

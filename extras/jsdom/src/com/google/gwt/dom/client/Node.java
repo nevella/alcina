@@ -15,7 +15,7 @@
  */
 package com.google.gwt.dom.client;
 
-import com.google.gwt.core.client.CastableFromJavascriptObject;
+import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.core.client.JavaScriptObject;
 
 /**
@@ -24,8 +24,7 @@ import com.google.gwt.core.client.JavaScriptObject;
  * implementing the Node interface expose methods for dealing with children, not
  * all objects implementing the Node interface may have children.
  */
-public abstract class Node<DN extends DomNode, ND extends Node_Dom>
-		implements CastableFromJavascriptObject, DomNode {
+public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	/**
 	 * The node is an {@link Element}.
 	 */
@@ -41,13 +40,15 @@ public abstract class Node<DN extends DomNode, ND extends Node_Dom>
 	 */
 	public static final short DOCUMENT_NODE = 9;
 
-	protected DN impl = null;
+	 DomNode impl = null;
 
-	public ND domImpl = null;
+	Node_Jso domImpl = null;
 
 	protected boolean resolved;
-	
+
 	protected boolean vmLocal;
+
+	public abstract <T extends JavascriptObjectEquivalent> T cast();
 
 	public <T extends Node> T appendChild(T newChild) {
 		return this.impl.appendChild(newChild);
@@ -125,9 +126,22 @@ public abstract class Node<DN extends DomNode, ND extends Node_Dom>
 	 * Assert that the given {@link JavaScriptObject} is a DOM node and
 	 * automatically typecast it.
 	 */
-	public static Node as(JavaScriptObject o) {
-		assert is(o);
-		return VmLocalDomBridge.nodeFor(o);
+	public static Node as(JavascriptObjectEquivalent o) {
+		if (o instanceof JavaScriptObject) {
+			JavaScriptObject jso = (JavaScriptObject) o;
+			assert isJso(jso);
+			return VmLocalDomBridge.nodeFor(jso);
+		} else {
+			return (Node) o;
+		}
+	}
+
+	public static boolean is(JavascriptObjectEquivalent o) {
+		if (o instanceof JavaScriptObject) {
+			JavaScriptObject jso = (JavaScriptObject) o;
+			return isJso(jso);
+		}
+		return o instanceof Node;
 	}
 
 	/**
@@ -136,7 +150,7 @@ public abstract class Node<DN extends DomNode, ND extends Node_Dom>
 	 * <code>false</code>. The try catch is needed for the firefox permission
 	 * error: "Permission denied to access property 'nodeType'"
 	 */
-	public static native boolean is(JavaScriptObject o) /*-{
+	private static native boolean isJso(JavaScriptObject o) /*-{
         try {
             return (!!o) && (!!o.nodeType);
         } catch (e) {
@@ -159,4 +173,46 @@ public abstract class Node<DN extends DomNode, ND extends Node_Dom>
 		return getNodeType() == ELEMENT_NODE;
 	}
 
+	@Override
+	public Node getChild(int index) {
+		return DomNode_Static.getChild(this, index);
+	}
+
+	@Override
+	public int getChildCount() {
+		return DomNode_Static.getChildCount(this);
+	}
+
+	@Override
+	public boolean hasParentElement() {
+		return DomNode_Static.hasParentElement(this);
+	}
+
+	@Override
+	public Node insertAfter(Node newChild, Node refChild) {
+		return DomNode_Static.insertAfter(this, newChild, refChild);
+	}
+
+	@Override
+	public Node insertFirst(Node child) {
+		return DomNode_Static.insertFirst(this, child);
+	}
+
+	@Override
+	public void removeFromParent() {
+		DomNode_Static.removeFromParent(this);
+	}
+
+	@Override
+	public void callMethod(String methodName) {
+		DomNode_Static.callMethod(this, methodName);
+	}
+
+	@Override
+	public Node removeAllChildren() {
+		return DomNode_Static.removeAllChildren(this);
+	}
+
+	public abstract void putDomImpl(Node_Jso nodeDom) ;
+	public abstract void putImpl(DomNode impl) ;
 }

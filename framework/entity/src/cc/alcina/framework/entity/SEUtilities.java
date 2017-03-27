@@ -1418,4 +1418,7 @@ public class SEUtilities {
 			return new MatcherIterator(matcher);
 		}
 	}
+	public static void dumpMethods(Object o){
+		System.out.println("dump"+o);
+	}
 }

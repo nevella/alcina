@@ -15,12 +15,15 @@
  */
 package com.google.gwt.dom.client;
 
-import com.google.gwt.core.client.CastableFromJavascriptObject;
+import com.google.gwt.core.client.JavascriptObjectEquivalent;
 
 /**
  * The Text interface represents textual content.
  */
-public class Text extends Node<Text, Text_Dom> implements DomText {
+public class Text extends Node implements DomText {
+	
+	DomText typedImpl;
+	Text_Jso typedDomImpl;
 	/**
 	 * Assert that the given {@link Node} is of type {@link Node#TEXT_NODE} and
 	 * automatically typecast it.
@@ -29,39 +32,49 @@ public class Text extends Node<Text, Text_Dom> implements DomText {
 		assert node.getNodeType() == Node.TEXT_NODE;
 		return (Text) node;
 	}
-
 	public Text cast() {
 		return this;
 	}
 
 	public void deleteData(int offset, int length) {
-		this.impl.deleteData(offset, length);
+		typedImpl.deleteData(offset, length);
 	}
 
 	public String getData() {
-		return this.impl.getData();
+		return typedImpl.getData();
 	}
 
 	public int getLength() {
-		return this.impl.getLength();
+		return typedImpl.getLength();
 	}
 
 	public void insertData(int offset, String data) {
-		this.impl.insertData(offset, data);
+		typedImpl.insertData(offset, data);
 	}
 
 	public void replaceData(int offset, int length, String data) {
-		this.impl.replaceData(offset, length, data);
+		typedImpl.replaceData(offset, length, data);
 	}
 
 	public void setData(String data) {
-		this.impl.setData(data);
+		typedImpl.setData(data);
 	}
 
 	public Text splitText(int offset) {
-		return this.impl.splitText(offset);
+		return typedImpl.splitText(offset);
 	}
 
 	protected Text() {
+	}
+	@Override
+	public void putDomImpl(Node_Jso nodeDom) {
+		typedDomImpl = (Text_Jso) nodeDom;
+		domImpl = nodeDom;
+	}
+
+	@Override
+	public void putImpl(DomNode impl) {
+		typedImpl = (DomText) impl;
+		this.impl = impl;
 	}
 }

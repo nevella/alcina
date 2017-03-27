@@ -21,7 +21,7 @@ package com.google.gwt.dom.client;
 class DOMImplIE9 extends DOMImplStandardBase {
 
   @Override
-  protected int getAbsoluteLeft(Element_Dom elem) {
+  protected int getAbsoluteLeft(Element_Jso elem) {
     double left = getBoundingClientRectLeft(elem) + getDocumentScrollLeftImpl();
     if (isRTL(elem)) { // in RTL, account for the scroll bar shift if present
       left += getParentOffsetDelta(elem);
@@ -30,7 +30,7 @@ class DOMImplIE9 extends DOMImplStandardBase {
   }
 
   @Override
-  protected int getAbsoluteTop(Element_Dom elem) {
+  protected int getAbsoluteTop(Element_Jso elem) {
     return toInt32(getBoundingClientRectTop(elem) + getDocumentScrollTopImpl());
   }
 
@@ -39,17 +39,17 @@ class DOMImplIE9 extends DOMImplStandardBase {
    * types.
    */
   @Override
-  protected native String getNumericStyleProperty(Style_Dom style, String name) /*-{
+  protected native String getNumericStyleProperty(Style_Jso style, String name) /*-{
     return typeof(style[name]) == "number" ? "" + style[name] : style[name];
   }-*/;
 
   @Override
-  protected int getScrollLeft(Document_Dom doc) {
+  protected int getScrollLeft(Document_Jso doc) {
     return toInt32(getDocumentScrollLeftImpl());
   }
 
   @Override
-  protected int getScrollLeft(Element_Dom elem) {
+  protected int getScrollLeft(Element_Jso elem) {
     int left = toInt32(getScrollLeftImpl(elem));
     if (isRTL(elem)) {
       left = -left;
@@ -58,23 +58,23 @@ class DOMImplIE9 extends DOMImplStandardBase {
   }
 
   @Override
-  protected int getScrollTop(Document_Dom doc) {
+  protected int getScrollTop(Document_Jso doc) {
     return toInt32(getDocumentScrollTopImpl());
   }
 
   @Override
-  protected native int getTabIndex(Element_Dom elem) /*-{ 
+  protected native int getTabIndex(Element_Jso elem) /*-{ 
     return elem.tabIndex < 65535 ? elem.tabIndex : -(elem.tabIndex % 65535) - 1;
   }-*/;
 
   @Override
-  protected boolean isOrHasChild(Node_Dom parent, Node_Dom child) {
+  protected boolean isOrHasChild(Node_Jso parent, Node_Jso child) {
     // IE9 still behaves like IE8 for this method
     return DOMImplTrident.isOrHasChildImpl(parent, child);
   }
 
   @Override
-  protected native void selectRemoveOption(Element_Dom select, int index) /*-{
+  protected native void selectRemoveOption(Element_Jso select, int index) /*-{
     try {
       // IE9 throws if elem at index is an optgroup
       select.remove(index);
@@ -84,7 +84,7 @@ class DOMImplIE9 extends DOMImplStandardBase {
   }-*/;
 
   @Override
-  protected void setScrollLeft(Element_Dom elem, int left) {
+  protected void setScrollLeft(Element_Jso elem, int left) {
     if (isRTL(elem)) {
       left = -left;
     }
@@ -92,13 +92,13 @@ class DOMImplIE9 extends DOMImplStandardBase {
   }
 
   @Override
-  protected void setScrollLeft(Document_Dom doc, int left) {
-    setScrollLeft(doc.getDocumentElement().domImpl, left);
+  protected void setScrollLeft(Document_Jso doc, int left) {
+    setScrollLeft(doc.getDocumentElement().typedDomImpl, left);
   }
 
-  private native double getBoundingClientRectLeft(Element_Dom elem) /*-{
+  private native double getBoundingClientRectLeft(Element_Jso elem) /*-{
     // getBoundingClientRect() throws a JS exception if the elem is not attached
-    // to the Document_Dom, so we wrap it in a try/catch block
+    // to the doc, so we wrap it in a try/catch block
     try {
       return elem.getBoundingClientRect().left;
     } catch (e) {
@@ -107,9 +107,9 @@ class DOMImplIE9 extends DOMImplStandardBase {
     }
   }-*/;
 
-  private native double getBoundingClientRectTop(Element_Dom elem) /*-{
+  private native double getBoundingClientRectTop(Element_Jso elem) /*-{
     // getBoundingClientRect() throws a JS exception if the elem is not attached
-    // to the Document_Dom, so we wrap it in a try/catch block
+    // to the doc, so we wrap it in a try/catch block
     try {
       return elem.getBoundingClientRect().top;
     } catch (e) {
@@ -126,7 +126,7 @@ class DOMImplIE9 extends DOMImplStandardBase {
     return $wnd.pageYOffset;
   }-*/;
 
-  private native double getParentOffsetDelta(Element_Dom elem) /*-{
+  private native double getParentOffsetDelta(Element_Jso elem) /*-{
     var offsetParent = elem.offsetParent;
     if (offsetParent) {
       return offsetParent.offsetWidth - offsetParent.clientWidth;
@@ -134,11 +134,11 @@ class DOMImplIE9 extends DOMImplStandardBase {
     return 0;
   }-*/;
 
-  private native double getScrollLeftImpl(Element_Dom elem) /*-{
+  private native double getScrollLeftImpl(Element_Jso elem) /*-{
     return elem.scrollLeft || 0;
   }-*/; 
 
-  private native void setScrollLeftImpl(Element_Dom elem, int left) /*-{
+  private native void setScrollLeftImpl(Element_Jso elem, int left) /*-{
     elem.scrollLeft = left;
   }-*/; 
 }

@@ -23,7 +23,7 @@ import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Element_Dom;
+import com.google.gwt.dom.client.Element_Jso;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.TableCellElement;
 import com.google.gwt.dom.client.TableRowElement;
@@ -70,9 +70,9 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment.VerticalAlignmentConst
 public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		HasAllDragAndDropHandlers, HasClickHandlers, HasDoubleClickHandlers {
 	static class ElementArray<T extends Node> {
-		private JsArray<Element_Dom> jsArray;
+		private JsArray<Element_Jso> jsArray;
 
-		public ElementArray(JsArray<Element_Dom> elements) {
+		public ElementArray(JsArray<Element_Jso> elements) {
 			this.jsArray = elements;
 		}
 
@@ -99,24 +99,24 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 */
 	@SuppressWarnings("unused") // used due to rebinding
 	private static class HTMLTableStandardImpl implements HTMLTableImpl {
-		native JsArray<Element_Dom> getRows0(Element_Dom tbody) /*-{
+		native JsArray<Element_Jso> getRows0(Element_Jso tbody) /*-{
             return tbody.rows;
 		}-*/;
 
-		native JsArray<Element_Dom> getCells0(Element_Dom row) /*-{
+		native JsArray<Element_Jso> getCells0(Element_Jso row) /*-{
             return row.cells;
 		}-*/;
 
 		@Override
 		public ElementArray<Element> getRows(Element tbody) {
 			// TODO Auto-generated method stub
-			return new ElementArray<Element>(getRows0(tbody.domImpl));
+			return new ElementArray<Element>(getRows0(tbody.getTypedDomImpl()));
 		}
 
 		@Override
 		public ElementArray<Element> getCells(Element row) {
 			// TODO Auto-generated method stub
-			return new ElementArray<Element>(getCells0(row.domImpl));
+			return new ElementArray<Element>(getCells0(row.getTypedDomImpl()));
 		}
 	}
 
@@ -125,24 +125,24 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 */
 	@SuppressWarnings("unused") // used due to rebinding
 	private static class HTMLTableIEImpl implements HTMLTableImpl {
-		native JsArray<Element_Dom> getRows0(Element_Dom tbody) /*-{
+		native JsArray<Element_Jso> getRows0(Element_Jso tbody) /*-{
             return tbody.children;
 		}-*/;
 
-		native JsArray<Element_Dom> getCells0(Element_Dom row) /*-{
+		native JsArray<Element_Jso> getCells0(Element_Jso row) /*-{
             return row.children;
 		}-*/;
 
 		@Override
 		public ElementArray<Element> getRows(Element tbody) {
 			// TODO Auto-generated method stub
-			return new ElementArray<Element>(getRows0(tbody.domImpl));
+			return new ElementArray<Element>(getRows0(tbody.getTypedDomImpl()));
 		}
 
 		@Override
 		public ElementArray<Element> getCells(Element row) {
 			// TODO Auto-generated method stub
-			return new ElementArray<Element>(getCells0(row.domImpl));
+			return new ElementArray<Element>(getCells0(row.getTypedDomImpl()));
 		}
 	}
 
@@ -181,7 +181,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 * 
 		 * @return the cell's element.
 		 */
-		public com.google.gwt.user.client.Element getElement() {
+		public Element getElement() {
 			return DOM
 					.asOld(getCellFormatter().getElement(rowIndex, cellIndex));
 		}
@@ -227,7 +227,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 * @return the column's TD element
 		 * @throws IndexOutOfBoundsException
 		 */
-		public com.google.gwt.user.client.Element getElement(int row,
+		public Element getElement(int row,
 				int column) {
 			checkCellBounds(row, column);
 			return DOM.asOld(getCellElement(bodyElem, row, column));
@@ -475,7 +475,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 * @return the cell's element
 		 * @throws IndexOutOfBoundsException
 		 */
-		protected com.google.gwt.user.client.Element ensureElement(int row,
+		protected Element ensureElement(int row,
 				int column) {
 			prepareCell(row, column);
 			return DOM.asOld(getCellElement(bodyElem, row, column));
@@ -576,7 +576,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 *            the column index
 		 * @return the col element
 		 */
-		public com.google.gwt.user.client.Element getElement(int column) {
+		public Element getElement(int column) {
 			return DOM.asOld(ensureColumn(column));
 		}
 
@@ -733,7 +733,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 * @return the row's TR element
 		 * @throws IndexOutOfBoundsException
 		 */
-		public com.google.gwt.user.client.Element getElement(int row) {
+		public Element getElement(int row) {
 			checkRowBounds(row);
 			return DOM.asOld(getRow(bodyElem, row));
 		}
@@ -857,23 +857,18 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 * @return the row's TR element
 		 * @throws IndexOutOfBoundsException
 		 */
-		protected com.google.gwt.user.client.Element ensureElement(int row) {
+		protected Element ensureElement(int row) {
 			prepareRow(row);
 			return DOM.asOld(getRow(bodyElem, row));
 		}
 
-		@SuppressWarnings("deprecation")
-		protected com.google.gwt.user.client.Element getRow(Element tbody,
-				int row) {
-			return getRow(DOM.asOld(tbody), row);
-		}
+		
 
 		/**
 		 * @deprecated Call and override {@link #getRow(Element, int)} instead.
 		 */
-		@Deprecated
-		protected com.google.gwt.user.client.Element
-				getRow(com.google.gwt.user.client.Element tbody, int row) {
+		protected Element
+				getRow(Element tbody, int row) {
 			return DOM.asOld(impl.getRows(tbody).get(row));
 		}
 
@@ -1434,7 +1429,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 * 
 	 * @return the newly created TD
 	 */
-	protected com.google.gwt.user.client.Element createCell() {
+	protected Element createCell() {
 		return DOM.createTD();
 	}
 
@@ -1443,7 +1438,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 * 
 	 * @return the TBODY element
 	 */
-	protected com.google.gwt.user.client.Element getBodyElement() {
+	protected Element getBodyElement() {
 		return DOM.asOld(bodyElem);
 	}
 
@@ -1456,17 +1451,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 *            the row
 	 * @return number of columns in the row
 	 */
-	@SuppressWarnings("deprecation")
-	protected int getDOMCellCount(Element tableBody, int row) {
-		return getDOMCellCount(DOM.asOld(tableBody), row);
-	}
-
-	/**
-	 * @deprecated Call and override {@link #getDOMCellCount(Element, int)}
-	 *             instead.
-	 */
-	@Deprecated
-	protected int getDOMCellCount(com.google.gwt.user.client.Element tableBody,
+	protected int getDOMCellCount(Element tableBody,
 			int row) {
 		Element rowElement = impl.getRows(tableBody).get(row);
 		return impl.getCells(rowElement).length();
@@ -1492,16 +1477,9 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		return getDOMRowCount(bodyElem);
 	}
 
-	@SuppressWarnings("deprecation")
-	protected int getDOMRowCount(Element tbody) {
-		return getDOMRowCount(DOM.asOld(tbody));
-	}
 
-	/**
-	 * @deprecated Call and override {@link #getDOMRowCount(Element)} instead.
-	 */
 	@Deprecated
-	protected int getDOMRowCount(com.google.gwt.user.client.Element tbody) {
+	protected int getDOMRowCount(Element tbody) {
 		return impl.getRows(tbody).length();
 	}
 
@@ -1598,17 +1576,13 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 *            should the cell's inner html be cleared?
 	 * @return returns whether a widget was cleared
 	 */
-	@SuppressWarnings("deprecation")
-	protected boolean internalClearCell(Element td, boolean clearInnerHTML) {
-		return internalClearCell(DOM.asOld(td), clearInnerHTML);
-	}
+	
 
 	/**
 	 * @deprecated Call and override {@link internalClearCell(Element, boolean)}
 	 *             instead.
 	 */
-	@Deprecated
-	protected boolean internalClearCell(com.google.gwt.user.client.Element td,
+	protected boolean internalClearCell(Element td,
 			boolean clearInnerHTML) {
 		Element maybeChild = DOM.getFirstChild(td);
 		Widget widget = null;

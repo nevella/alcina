@@ -1,112 +1,70 @@
 package com.google.gwt.dom.client;
 
+import java.util.Map;
+
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.core.client.SingleJsoImpl;
 import com.google.gwt.safehtml.shared.SafeHtml;
+
 public interface DomElement extends DomNode {
-	/**
-	 * Adds a name to this element's class property. If the name is already
-	 * present, this method has no effect.
-	 * 
-	 * @param className
-	 *            the class name to be added
-	 * @return <code>true</code> if this element did not already have the
-	 *         specified class name
-	 * @see #setClassName(String)
-	 */
-	default boolean addClassName(String className) {
-		return DomElement_Static.addClassName(this,className);
-	}
+	boolean addClassName(String className);
 
-	default void blur() {
-		DomElement_Static.blur(this);
-	}
+	void blur();
 
-	default void dispatchEvent(NativeEvent evt) {
-		DomElement_Static.dispatchEvent(this,evt);
-	}
+	void dispatchEvent(NativeEvent evt);
 
-	default void focus() {
-		DomElement_Static.focus(this);
-	}
+	void focus();
 
-	default int getAbsoluteBottom() {
-		return DomElement_Static.getAbsoluteBottom(this);
-	}
+	int getAbsoluteBottom();
 
-	default int getAbsoluteLeft() {
-		return DomElement_Static.getAbsoluteLeft(this);
-	}
+	int getAbsoluteLeft();
 
-	default int getAbsoluteRight() {
-		return DomElement_Static.getAbsoluteRight(this);
-	}
+	int getAbsoluteRight();
 
-	default int getAbsoluteTop() {
-		return DomElement_Static.getAbsoluteTop(this);
-	}
+	int getAbsoluteTop();
 
 	String getAttribute(String name);
 
 	String getClassName();
 
-	default int getClientHeight() {
-		return DomElement_Static.getClientHeight(this);
-	}
+	int getClientHeight();
 
-	default int getClientWidth() {
-		return DomElement_Static.getClientWidth(this);
-	}
+	int getClientWidth();
 
-	default String getDir() {
-		return DomElement_Static.getDir(this);
-	}
+	String getDir();
 
-	default String getDraggable() {
-		return DomElement_Static.getDraggable(this);
-	}
+	String getDraggable();
 
 	NodeList<Element> getElementsByTagName(String name);
+	
+	Map<String,String> getAttributes();
 
 	/**
 	 * The first child of element this element. If there is no such element,
 	 * this returns null.
 	 */
-	default Element getFirstChildElement() {
-		return DomElement_Static.getFirstChildElement(this);
-	}
+	Element getFirstChildElement();
 
 	String getId();
 
 	/**
 	 * All of the markup and content within a given element.
 	 */
-	default String getInnerHTML() {
-		return DomElement_Static.getInnerHTML(this);
-	}
+	String getInnerHTML();
 
 	/**
 	 * The text between the start and end tags of the object.
 	 */
-	default String getInnerText() {
-		return DomElement_Static.getInnerText(this);
-	}
+	String getInnerText();
 
-	default String getLang() {
-		return DomElement_Static.getLang(this);
-	}
+	String getLang();
 
 	/**
 	 * The element immediately following this element. If there is no such
 	 * element, this returns null.
 	 */
-	default Element getNextSiblingElement() {
-		return DomElement_Static.getNextSiblingElement(this);
-	}
+	Element getNextSiblingElement();
 
-	default int getOffsetHeight() {
-		return DomElement_Static.getOffsetHeight(this);
-	}
+	int getOffsetHeight();
 
 	int getOffsetLeft();
 
@@ -120,9 +78,7 @@ public interface DomElement extends DomNode {
 	 * The element immediately preceding this element. If there is no such
 	 * element, this returns null.
 	 */
-	default Element getPreviousSiblingElement() {
-		return DomElement_Static.getPreviousSiblingElement(this);
-	}
+	Element getPreviousSiblingElement();
 
 	boolean getPropertyBoolean(String name);
 
@@ -136,9 +92,7 @@ public interface DomElement extends DomNode {
 
 	String getPropertyString(String name);
 
-	default int getScrollHeight() {
-		return DomElement_Static.getScrollHeight(this);
-	}
+	int getScrollHeight();
 
 	/**
 	 * The number of pixels that an element's content is scrolled from the left.
@@ -148,29 +102,20 @@ public interface DomElement extends DomNode {
 	 * of the number of pixels scrolled from the right.
 	 * </p>
 	 */
-	default int getScrollLeft() {
-		return DomElement_Static.getScrollLeft(this);
-	}
+	int getScrollLeft();
 
-	default int getScrollTop() {
-		return DomElement_Static.getScrollTop(this);
-	}
+	int getScrollTop();
 
-	default int getScrollWidth() {
-		return DomElement_Static.getScrollWidth(this);
-	}
+	int getScrollWidth();
 
 	/**
 	 * Gets a string representation of this element (as outer HTML).
 	 * 
-	 * We do not override {@link #toString()} because it is final in
-	 * {@link com.google.gwt.core.client.JavaScriptObject}.
+	 * We do not override ; because it is final in ;.
 	 * 
 	 * @return the string representation of this element
 	 */
-	default String getString() {
-		return DomElement_Static.getString(this);
-	}
+	String getString();
 
 	Style getStyle();
 
@@ -181,9 +126,7 @@ public interface DomElement extends DomNode {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-tabindex">
 	 *      W3C HTML Specification</a>
 	 */
-	default int getTabIndex() {
-		return DomElement_Static.getTabIndex(this);
-	}
+	int getTabIndex();
 
 	/**
 	 * Gets the element's full tag name, including the namespace-prefix if
@@ -191,9 +134,7 @@ public interface DomElement extends DomNode {
 	 * 
 	 * @return the element's tag name
 	 */
-	default String getTagName() {
-		return DomElement_Static.getTagName(this);
-	}
+	String getTagName();
 
 	String getTitle();
 
@@ -209,9 +150,7 @@ public interface DomElement extends DomNode {
 	 *            the name of the attribute
 	 * @return <code>true</code> if this element has the specified attribute
 	 */
-	default boolean hasAttribute(String name) {
-		return DomElement_Static.hasAttribute(this,name);
-	}
+	boolean hasAttribute(String name);
 
 	/**
 	 * Checks if this element's class property contains specified class name.
@@ -220,9 +159,7 @@ public interface DomElement extends DomNode {
 	 *            the class name to be added
 	 * @return <code>true</code> if this element has the specified class name
 	 */
-	default boolean hasClassName(String className) {
-		return DomElement_Static.hasClassName(this,className);
-	}
+	boolean hasClassName(String className);
 
 	/**
 	 * Determines whether this element has the given tag name.
@@ -231,9 +168,7 @@ public interface DomElement extends DomNode {
 	 *            the tag name, including namespace-prefix (if present)
 	 * @return <code>true</code> if the element has the given tag name
 	 */
-	default boolean hasTagName(String tagName) {
-		return DomElement_Static.hasTagName(this,tagName);
-	}
+	boolean hasTagName(String tagName);
 
 	void removeAttribute(String name);
 
@@ -246,9 +181,25 @@ public interface DomElement extends DomNode {
 	 * @return <code>true</code> if this element had the specified class name
 	 * @see #setClassName(String)
 	 */
-	default boolean removeClassName(String className) {
-		return DomElement_Static.removeClassName(this,className);
-	}
+	boolean removeClassName(String className);
+
+	/**
+	 * Add the class name if it doesn't exist or removes it if does.
+	 *
+	 * @param className
+	 *            the class name to be toggled
+	 */
+	void toggleClassName(String className);
+
+	/**
+	 * Replace one class name with another.
+	 *
+	 * @param oldClassName
+	 *            the class name to be replaced
+	 * @param newClassName
+	 *            the class name to replace it
+	 */
+	void replaceClassName(String oldClassName, String newClassName);
 
 	/**
 	 * Returns the index of the first occurrence of name in a space-separated
@@ -284,28 +235,6 @@ public interface DomElement extends DomNode {
 	}
 
 	/**
-	 * Add the class name if it doesn't exist or removes it if does.
-	 *
-	 * @param className
-	 *            the class name to be toggled
-	 */
-	default void toggleClassName(String className) {
-		DomElement_Static.toggleClassName(this,className);
-	}
-
-	/**
-	 * Replace one class name with another.
-	 *
-	 * @param oldClassName
-	 *            the class name to be replaced
-	 * @param newClassName
-	 *            the class name to replace it
-	 */
-	default void replaceClassName(String oldClassName, String newClassName) {
-		DomElement_Static.replaceClassName(this,oldClassName,newClassName);
-	}
-
-	/**
 	 * Scrolls this element into view.
 	 * 
 	 * <p>
@@ -315,28 +244,21 @@ public interface DomElement extends DomNode {
 	 * by the minimum amount necessary.
 	 * </p>
 	 */
-	default void scrollIntoView() {
-		DomElement_Static.scrollIntoView(this);
-	}
+	void scrollIntoView();
 
 	void setAttribute(String name, String value);
 
 	void setClassName(String className);
 
-	default void setDir(String dir) {
-		DomElement_Static.setDir(this,dir);
-	}
+	void setDir(String dir);
 
 	/**
-	 * Changes the draggable attribute to one of {@link #DRAGGABLE_AUTO},
-	 * {@link #DRAGGABLE_FALSE}, or {@link #DRAGGABLE_TRUE}.
+	 * Changes the draggable attribute to one of ;, ;, or ;.
 	 * 
 	 * @param draggable
 	 *            a String constants
 	 */
-	default void setDraggable(String draggable) {
-		DomElement_Static.setDraggable(this,draggable);
-	}
+	void setDraggable(String draggable);
 
 	void setId(String id);
 
@@ -345,20 +267,14 @@ public interface DomElement extends DomNode {
 	/**
 	 * All of the markup and content within a given element.
 	 */
-	default void setInnerSafeHtml(SafeHtml html) {
-		DomElement_Static.setInnerSafeHtml(this,html);
-	}
+	void setInnerSafeHtml(SafeHtml html);
 
 	/**
 	 * The text between the start and end tags of the object.
 	 */
-	default void setInnerText(String text) {
-		DomElement_Static.setInnerText(this,text);
-	}
+	void setInnerText(String text);
 
-	default void setLang(String lang) {
-		DomElement_Static.setLang(this,lang);
-	}
+	void setLang(String lang);
 
 	void setPropertyBoolean(String name, boolean value);
 
@@ -375,17 +291,15 @@ public interface DomElement extends DomNode {
 	/**
 	 * The number of pixels that an element's content is scrolled to the left.
 	 */
-	default void setScrollLeft(int scrollLeft) {
-		DomElement_Static.setScrollLeft(this,scrollLeft);
-	}
+	void setScrollLeft(int scrollLeft);
 
-	default void setScrollTop(int scrollTop) {
-		DomElement_Static.setScrollTop(this,scrollTop);
-	}
+	void setScrollTop(int scrollTop);
 
 	void setTabIndex(int tabIndex);
 
 	void setTitle(String title);
 
 	Element elementFor();
+
+	void sinkEvents(int eventBits);
 }

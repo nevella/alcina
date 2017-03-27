@@ -58,7 +58,7 @@ public class WidgetWrapper extends Composite implements HasClickHandlers {
 			}
 		}
 		if (hasReplacedChild) {
-			com.google.gwt.user.client.Element ctr = DOM.createDiv();
+			Element ctr = DOM.createDiv();
 			FlowPanel fp = new FlowPanel();
 			for (Element e2 : kids) {
 				Widget w = replaceMap.get(e2);

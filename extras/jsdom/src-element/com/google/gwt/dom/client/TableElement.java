@@ -82,12 +82,12 @@ public class TableElement extends Element {
 	 * 
 	 * @return A CAPTION element.
 	 */
-	private native Element_Dom createCaption0(Element_Dom elt) /*-{
+	private native Element_Jso createCaption0(Element_Jso elt) /*-{
         return elt.createCaption();
 	}-*/;
 
 	public TableCaptionElement createCaption() {
-		return VmLocalDomBridge.nodeFor(createCaption0(domImpl));
+		return VmLocalDomBridge.nodeFor(createCaption0(typedDomImpl));
 	}
 
 	/**
@@ -95,12 +95,12 @@ public class TableElement extends Element {
 	 * 
 	 * @return A footer element (TFOOT)
 	 */
-	private native Element_Dom createTFoot0(Element_Dom elt) /*-{
+	private native Element_Jso createTFoot0(Element_Jso elt) /*-{
         return elt.createTFoot();
 	}-*/;
 
 	public TableSectionElement createTFoot() {
-		return VmLocalDomBridge.nodeFor(createTFoot0(domImpl));
+		return VmLocalDomBridge.nodeFor(createTFoot0(typedDomImpl));
 	}
 
 	/**
@@ -108,23 +108,23 @@ public class TableElement extends Element {
 	 * 
 	 * @return A new table header element (THEAD)
 	 */
-	native Element_Dom createTHead0(Element_Dom elt) /*-{
+	native Element_Jso createTHead0(Element_Jso elt) /*-{
         return elt.createTHead();
 	}-*/;
 
 	public TableSectionElement createTHead() {
-		return VmLocalDomBridge.nodeFor(createTHead0(domImpl));
+		return VmLocalDomBridge.nodeFor(createTHead0(typedDomImpl));
 	}
 
 	/**
 	 * Delete the table caption, if one exists.
 	 */
-	native void deleteCaption0(Element_Dom elt) /*-{
+	native void deleteCaption0(Element_Jso elt) /*-{
         elt.deleteCaption();
 	}-*/;
 
 	public void deleteCaption() {
-		deleteCaption0(domImpl);
+		deleteCaption0(typedDomImpl);
 	}
 
 	/**
@@ -136,34 +136,34 @@ public class TableElement extends Element {
 	 *            all the rows contained inside the table. If the index is -1
 	 *            the last row in the table is deleted
 	 */
-	native void deleteRow0(Element_Dom elt, int index) /*-{
+	native void deleteRow0(Element_Jso elt, int index) /*-{
         elt.deleteRow(index);
 	}-*/;
 
 	public void deleteRow(int index) {
-		deleteRow0(domImpl, index);
+		deleteRow0(typedDomImpl, index);
 	}
 
 	/**
 	 * Delete the header from the table, if one exists.
 	 */
-	native void deleteTFoot0(Element_Dom elt) /*-{
+	native void deleteTFoot0(Element_Jso elt) /*-{
         elt.deleteTFoot();
 	}-*/;
 
 	public void deleteTFoot() {
-		deleteTFoot0(domImpl);
+		deleteTFoot0(typedDomImpl);
 	}
 
 	/**
 	 * Delete the header from the table, if one exists.
 	 */
-	native void deleteTHead0(Element_Dom elt) /*-{
+	native void deleteTHead0(Element_Jso elt) /*-{
         elt.deleteTHead();
 	}-*/;
 
 	public void deleteTHead() {
-		deleteTHead0(domImpl);
+		deleteTHead0(typedDomImpl);
 	}
 
 	/**

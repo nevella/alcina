@@ -1,5 +1,7 @@
 package com.google.gwt.dom.client;
 
+import java.util.Map;
+
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Style.BorderStyle;
 import com.google.gwt.dom.client.Style.Clear;
@@ -23,8 +25,8 @@ import com.google.gwt.dom.client.Style.VerticalAlign;
 import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.dom.client.Style.WhiteSpace;
 
-public final class Style_Dom extends JavaScriptObject implements DomStyle {
-	protected Style_Dom() {
+public final class Style_Jso extends JavaScriptObject implements DomStyle {
+	protected Style_Jso() {
 	}
 
 	/**
@@ -799,5 +801,10 @@ public final class Style_Dom extends JavaScriptObject implements DomStyle {
 	@Override
 	public final String getPropertyImpl(String name) {
 		return DomStyle_Static.getPropertyImpl(this, name);
+	}
+
+	@Override
+	public Map<String, String> getProperties() {
+		throw new UnsupportedOperationException();
 	}
 }

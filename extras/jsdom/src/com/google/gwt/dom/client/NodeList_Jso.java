@@ -29,9 +29,9 @@ import com.google.gwt.core.client.SingleJsoImpl;
  * @param <T>
  *            the type of contained node
  */
-public class NodeList_Dom<T extends Node> extends JavaScriptObject
+public class NodeList_Jso<T extends Node> extends JavaScriptObject
 		implements DomNodeList<T> {
-	protected NodeList_Dom() {
+	protected NodeList_Jso() {
 	}
 
 	/**
@@ -43,7 +43,7 @@ public class NodeList_Dom<T extends Node> extends JavaScriptObject
 	 * @return the node at the indexth position in the NodeList, or null if that
 	 *         is not a valid index.
 	 */
-	private final native Node_Dom getItem0(int index) /*-{
+	private final native Node_Jso getItem0(int index) /*-{
         return this[index];
 	}-*/;
 

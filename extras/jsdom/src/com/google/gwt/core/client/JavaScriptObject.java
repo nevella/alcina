@@ -23,7 +23,7 @@ package com.google.gwt.core.client;
  * <code>JavaScriptObject</code> passed back into JSNI from Java becomes the
  * original object, and can be accessed in JavaScript as expected.
  */
-public class JavaScriptObject implements CastableFromJavascriptObject{
+public class JavaScriptObject implements JavascriptObjectEquivalent{
 
   /**
    * Returns a new array.
@@ -122,7 +122,7 @@ public class JavaScriptObject implements CastableFromJavascriptObject{
    * @return this object as a different type
    */
   @SuppressWarnings("unchecked")
-  public  <T extends CastableFromJavascriptObject> T cast() {
+  public  <T extends JavascriptObjectEquivalent> T cast() {
     return (T) this;
   }
 

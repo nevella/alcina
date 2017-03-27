@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -20,18 +21,27 @@ public abstract class Node_Jvm implements DomNode {
 	protected Node_Jvm() {
 	}
 
-	private List<Node_Jvm> children;
+	protected List<Node_Jvm> children = new ArrayList<>();
 
-	private StringMap attributes;
+	protected StringMap attributes = new StringMap();
 
-	private Node_Jvm parentNode;
+	protected Node_Jvm parentNode;
 
-	private Document_Jvm ownerDocument;
+	protected Document_Jvm ownerDocument;
+
+	protected Node node;
+
+	@Override
+	public abstract String getNodeName();
+
+	@Override
+	public abstract short getNodeType();
 
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
 		Preconditions.checkArgument(newChild.impl instanceof Node_Jvm);
 		children.add((Node_Jvm) newChild.impl);
+		((Node_Jvm) newChild.impl).parentNode = this;
 		return newChild;
 	}
 
@@ -121,4 +131,53 @@ public abstract class Node_Jvm implements DomNode {
 		children.remove(oldChild_Jvm);
 		return oldChild;
 	}
+
+	@Override
+	public Node getChild(int index) {
+		return DomNode_Static.getChild(this, index);
+	}
+
+	@Override
+	public int getChildCount() {
+		return DomNode_Static.getChildCount(this);
+	}
+
+	@Override
+	public Element getParentElement() {
+		return VmLocalDomBridge.nodeFor(parentNode);
+	}
+
+	@Override
+	public boolean hasParentElement() {
+		return DomNode_Static.hasParentElement(this);
+	}
+
+	@Override
+	public Node insertAfter(Node newChild, Node refChild) {
+		return DomNode_Static.insertAfter(this, newChild, refChild);
+	}
+
+	@Override
+	public Node insertFirst(Node child) {
+		return DomNode_Static.insertFirst(this, child);
+	}
+
+	@Override
+	public void removeFromParent() {
+		DomNode_Static.removeFromParent(this);
+	}
+
+	@Override
+	public void callMethod(String methodName) {
+		DomNode_Static.callMethod(this, methodName);
+	}
+
+	@Override
+	public Node removeAllChildren() {
+		return DomNode_Static.removeAllChildren(this);
+	}
+
+	abstract void appendOuterHtml(UnsafeHtmlBuilder builder);
+
+	
 }

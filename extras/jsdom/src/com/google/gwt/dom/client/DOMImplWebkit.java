@@ -46,7 +46,8 @@ class DOMImplWebkit extends DOMImplStandardBase {
     if (target && target.nodeType == 3) {
       target = target.parentNode;
     }
-    return target;
+    var wrapped = @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(target);
+    return wrapped;
   }-*/;
 
   /**
@@ -54,7 +55,7 @@ class DOMImplWebkit extends DOMImplStandardBase {
    * attribute to make an Element_Dom draggable.
    */
   @Override
-  public void setDraggable(Element_Dom elem, String draggable) {
+  public void setDraggable(Element_Jso elem, String draggable) {
     super.setDraggable(elem, draggable);
     if ("true".equals(draggable)) {
       elem.getStyle().setProperty("webkitUserDrag", "Element_Dom");

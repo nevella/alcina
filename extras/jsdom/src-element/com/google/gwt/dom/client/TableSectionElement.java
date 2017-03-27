@@ -87,12 +87,12 @@ public class TableSectionElement extends Element {
 	 *            row. This index starts from 0 and is relative only to the rows
 	 *            contained inside this section, not all the rows in the table.
 	 */
-	native void deleteRow0(Element_Dom elt, int index) /*-{
+	native void deleteRow0(Element_Jso elt, int index) /*-{
         elt.deleteRow(index);
 	}-*/;
 
 	public void deleteRow(int index) {
-		deleteRow0(domImpl, index);
+		deleteRow0(typedDomImpl, index);
 	}
 
 	/**

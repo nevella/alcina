@@ -10,14 +10,14 @@
 	<classpathentry kind="src" path="extras/collections/src"/>
 	<classpathentry kind="src" path="framework/entity/src"/>
 	<classpathentry kind="src" path="framework/impl/jboss-hibernate/src"/>
-	<classpathentry kind="src" path="framework/gwt/src"/>
+	<classpathentry excluding="com/google/gwt/user/client/impl/*|com/google/gwt/user/client/ui/PopupPanel.java" kind="src" path="framework/gwt/src"/>
 	<classpathentry kind="src" path="framework/servlet/src"/>
 	<classpathentry kind="src" path="extras/cluster/tasks-src"/>
 	<classpathentry kind="src" path="extras/dev/src"/>
 	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" output="framework/clientreflectorjvm/build" path="framework/clientreflectorjvm/src"/>
 	<classpathentry excluding="cc/alcina/extras/misc/ie/override/" kind="src" path="extras/misc/src"/>
 	<classpathentry kind="src" path="extras/ios6/src"/>
-	<classpathentry kind="src" output="extras/jsdom/build" path="extras/jsdom/src"/>
+	<classpathentry excluding="com.google.gwt.regexp.super.com.google.gwt.regexp.shared/" kind="src" output="extras/jsdom/build" path="extras/jsdom/src"/>
 	<classpathentry kind="src" output="extras/jsdom/build-element" path="extras/jsdom/src-element"/>
 	<classpathentry kind="lib" path="lib/extras/cluster/ant.jar" sourcepath="/Users/ouiji/Documents/programmin/java/apache-ant-1.9.5/src/"/>
 	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>

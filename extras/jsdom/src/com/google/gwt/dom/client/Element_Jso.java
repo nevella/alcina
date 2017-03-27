@@ -1,11 +1,14 @@
 package com.google.gwt.dom.client;
 
+import java.util.Map;
+
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.i18n.client.Messages.Offset;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 
-public class Element_Dom extends Node_Dom implements DomElement {
+public class Element_Jso extends Node_Jso implements DomElement {
 	/**
 	 * Fast helper method to convert small doubles to 32-bit int.
 	 *
@@ -45,7 +48,7 @@ public class Element_Dom extends Node_Dom implements DomElement {
 	 * return <code>false</code>.
 	 */
 	public static boolean is(JavaScriptObject o) {
-		if (Node.is(o)) {
+		if (Node_Jso.is(o)) {
 			return is(nodeFor(o));
 		}
 		return false;
@@ -60,7 +63,7 @@ public class Element_Dom extends Node_Dom implements DomElement {
 		return (node != null) && (node.getNodeType() == Node.ELEMENT_NODE);
 	}
 
-	protected Element_Dom() {
+	protected Element_Jso() {
 	}
 
 	/**
@@ -389,7 +392,7 @@ public class Element_Dom extends Node_Dom implements DomElement {
 	/**
 	 * Gets this element's {@link Style} object.
 	 */
-	final native Style_Dom getStyle0() /*-{
+	final native Style_Jso getStyle0() /*-{
         return this.style;
 	}-*/;
 
@@ -397,10 +400,10 @@ public class Element_Dom extends Node_Dom implements DomElement {
 	 * Gets this element's {@link Style} object.
 	 */
 	@Override
-	public final  Style getStyle() {
+	public final Style getStyle() {
 		return VmLocalDomBridge.styleObjectFor(getStyle0());
-		
 	}
+
 	/**
 	 * The element's advisory title.
 	 */
@@ -739,5 +742,15 @@ public class Element_Dom extends Node_Dom implements DomElement {
 	@Override
 	public final void setScrollLeft(int scrollLeft) {
 		DomElement_Static.setScrollLeft(this, scrollLeft);
+	}
+
+	@Override
+	public final Map<String, String> getAttributes() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public final void sinkEvents(int eventBits) {
+		
 	}
 }

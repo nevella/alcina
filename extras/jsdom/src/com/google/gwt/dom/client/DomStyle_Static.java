@@ -1103,7 +1103,7 @@ class DomStyle_Static {
 		return domStyle.getPropertyImpl(name);
 	}
 
-	static String getPropertyImpl(Style_Dom style_Dom, String name) {
+	static String getPropertyImpl(Style_Jso style_Dom, String name) {
 		// FIXME - more direct call maybe
 		return DOMImpl.impl.getStyleProperty(
 				VmLocalDomBridge.styleObjectFor(style_Dom), name);
@@ -1112,4 +1112,6 @@ class DomStyle_Static {
 	public static void clearProperty(DomStyle domStyle, String name) {
 		domStyle.setProperty(name, "");
 	}
+
+	
 }

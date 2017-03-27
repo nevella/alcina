@@ -1,5 +1,7 @@
 package com.google.gwt.dom.client;
 
+import java.util.Map;
+
 import com.google.gwt.core.client.SingleJsoImpl;
 import com.google.gwt.dom.client.Style.BorderStyle;
 import com.google.gwt.dom.client.Style.Clear;
@@ -28,1072 +30,769 @@ public interface DomStyle {
 	/**
 	 * Clear the background-color css property.
 	 */
-	default void clearBackgroundColor() {
-		DomStyle_Static.clearBackgroundColor(this);
-	}
+	void clearBackgroundColor();
 
 	/**
 	 * Clear the background-image css property.
 	 */
-	default void clearBackgroundImage() {
-		DomStyle_Static.clearBackgroundImage(this);
-	}
+	void clearBackgroundImage();
 
 	/**
 	 * Clear the border-color css property.
 	 */
-	default void clearBorderColor() {
-		DomStyle_Static.clearBorderColor(this);
-	}
+	void clearBorderColor();
 
 	/**
 	 * Clears the border-style CSS property.
 	 */
-	default void clearBorderStyle() {
-		DomStyle_Static.clearBorderStyle(this);
-	}
+	void clearBorderStyle();
 
 	/**
 	 * Clear the border-width css property.
 	 */
-	default void clearBorderWidth() {
-		DomStyle_Static.clearBorderWidth(this);
-	}
+	void clearBorderWidth();
 
 	/**
 	 * Clear the bottom css property.
 	 */
-	default void clearBottom() {
-		DomStyle_Static.clearBottom(this);
-	}
+	void clearBottom();
 
 	/**
 	 * Clear the 'clear' CSS property.
 	 */
-	default void clearClear() {
-		DomStyle_Static.clearClear(this);
-	}
+	void clearClear();
 
 	/**
 	 * Clear the color css property.
 	 */
-	default void clearColor() {
-		DomStyle_Static.clearColor(this);
-	}
+	void clearColor();
 
 	/**
 	 * Clears the cursor CSS property.
 	 */
-	default void clearCursor() {
-		DomStyle_Static.clearCursor(this);
-	}
+	void clearCursor();
 
 	/**
 	 * Clears the display CSS property.
 	 */
-	default void clearDisplay() {
-		DomStyle_Static.clearDisplay(this);
-	}
+	void clearDisplay();
 
 	/**
 	 * Clear the float css property.
 	 */
-	default void clearFloat() {
-		DomStyle_Static.clearFloat(this);
-	}
+	void clearFloat();
 
 	/**
 	 * Clear the font-size css property.
 	 */
-	default void clearFontSize() {
-		DomStyle_Static.clearFontSize(this);
-	}
+	void clearFontSize();
 
 	/**
 	 * Clears the font-style CSS property.
 	 */
-	default void clearFontStyle() {
-		DomStyle_Static.clearFontStyle(this);
-	}
+	void clearFontStyle();
 
 	/**
 	 * Clears the font-weight CSS property.
 	 */
-	default void clearFontWeight() {
-		DomStyle_Static.clearFontWeight(this);
-	}
+	void clearFontWeight();
 
 	/**
 	 * Clear the height css property.
 	 */
-	default void clearHeight() {
-		DomStyle_Static.clearHeight(this);
-	}
+	void clearHeight();
 
 	/**
 	 * Clear the left css property.
 	 */
-	default void clearLeft() {
-		DomStyle_Static.clearLeft(this);
-	}
+	void clearLeft();
 
 	/**
 	 * Clear the line-height css property.
 	 */
-	default void clearLineHeight() {
-		DomStyle_Static.clearLineHeight(this);
-	}
+	void clearLineHeight();
 
 	/**
 	 * Clears the list-style-type CSS property.
 	 */
-	default void clearListStyleType() {
-		DomStyle_Static.clearListStyleType(this);
-	}
+	void clearListStyleType();
 
 	/**
 	 * Clear the margin css property.
 	 */
-	default void clearMargin() {
-		DomStyle_Static.clearMargin(this);
-	}
+	void clearMargin();
 
 	/**
 	 * Clear the margin-bottom css property.
 	 */
-	default void clearMarginBottom() {
-		DomStyle_Static.clearMarginBottom(this);
-	}
+	void clearMarginBottom();
 
 	/**
 	 * Clear the margin-left css property.
 	 */
-	default void clearMarginLeft() {
-		DomStyle_Static.clearMarginLeft(this);
-	}
+	void clearMarginLeft();
 
 	/**
 	 * Clear the margin-right css property.
 	 */
-	default void clearMarginRight() {
-		DomStyle_Static.clearMarginRight(this);
-	}
+	void clearMarginRight();
 
 	/**
 	 * Clear the margin-top css property.
 	 */
-	default void clearMarginTop() {
-		DomStyle_Static.clearMarginTop(this);
-	}
+	void clearMarginTop();
 
 	/**
 	 * Clear the opacity css property.
 	 */
-	default void clearOpacity() {
-		DomStyle_Static.clearOpacity(this);
-	}
+	void clearOpacity();
 
 	Style styleObject();
 
 	/**
 	 * Clear the outline-color css property.
 	 */
-	default void clearOutlineColor() {
-		DomStyle_Static.clearOutlineColor(this);
-	}
+	void clearOutlineColor();
 
 	/**
 	 * Clears the outline-style CSS property.
 	 */
-	default void clearOutlineStyle() {
-		DomStyle_Static.clearOutlineStyle(this);
-	}
+	void clearOutlineStyle();
 
 	/**
 	 * Clear the outline-width css property.
 	 */
-	default void clearOutlineWidth() {
-		DomStyle_Static.clearOutlineWidth(this);
-	}
+	void clearOutlineWidth();
 
 	/**
 	 * Clears the overflow CSS property.
 	 */
-	default void clearOverflow() {
-		DomStyle_Static.clearOverflow(this);
-	}
+	void clearOverflow();
 
 	/**
 	 * Clears the overflow-x CSS property.
 	 */
-	default void clearOverflowX() {
-		DomStyle_Static.clearOverflowX(this);
-	}
+	void clearOverflowX();
 
 	/**
 	 * Clears the overflow-y CSS property.
 	 */
-	default void clearOverflowY() {
-		DomStyle_Static.clearOverflowY(this);
-	}
+	void clearOverflowY();
 
 	/**
 	 * Clear the padding css property.
 	 */
-	default void clearPadding() {
-		DomStyle_Static.clearPadding(this);
-	}
+	void clearPadding();
 
 	/**
 	 * Clear the padding-bottom css property.
 	 */
-	default void clearPaddingBottom() {
-		DomStyle_Static.clearPaddingBottom(this);
-	}
+	void clearPaddingBottom();
 
 	/**
 	 * Clear the padding-left css property.
 	 */
-	default void clearPaddingLeft() {
-		DomStyle_Static.clearPaddingLeft(this);
-	}
+	void clearPaddingLeft();
 
 	/**
 	 * Clear the padding-right css property.
 	 */
-	default void clearPaddingRight() {
-		DomStyle_Static.clearPaddingRight(this);
-	}
+	void clearPaddingRight();
 
 	/**
 	 * Clear the padding-top css property.
 	 */
-	default void clearPaddingTop() {
-		DomStyle_Static.clearPaddingTop(this);
-	}
+	void clearPaddingTop();
 
 	/**
 	 * Clears the position CSS property.
 	 */
-	default void clearPosition() {
-		DomStyle_Static.clearPosition(this);
-	}
+	void clearPosition();
 
 	/**
 	 * Clears the value of a named property, causing it to revert to its
 	 * default.
 	 */
-	default void clearProperty(String name) {
-		DomStyle_Static.clearProperty(this, name);
-	}
+	void clearProperty(String name);
 
 	/**
 	 * Clear the right css property.
 	 */
-	default void clearRight() {
-		DomStyle_Static.clearRight(this);
-	}
+	void clearRight();
 
 	/**
 	 * Clear the table-layout css property.
 	 */
-	default void clearTableLayout() {
-		DomStyle_Static.clearTableLayout(this);
-	}
+	void clearTableLayout();
 
 	/**
 	 * Clear the 'text-align' CSS property.
 	 */
-	default void clearTextAlign() {
-		DomStyle_Static.clearTextAlign(this);
-	}
+	void clearTextAlign();
 
 	/**
 	 * Clears the text-decoration CSS property.
 	 */
-	default void clearTextDecoration() {
-		DomStyle_Static.clearTextDecoration(this);
-	}
+	void clearTextDecoration();
 
 	/**
 	 * Clear the 'text-indent' CSS property.
 	 */
-	default void clearTextIndent() {
-		DomStyle_Static.clearTextIndent(this);
-	}
+	void clearTextIndent();
 
 	/**
 	 * Clear the 'text-justify' CSS3 property.
 	 */
-	default void clearTextJustify() {
-		DomStyle_Static.clearTextJustify(this);
-	}
+	void clearTextJustify();
 
 	/**
 	 * Clear the 'text-overflow' CSS3 property.
 	 */
-	default void clearTextOverflow() {
-		DomStyle_Static.clearTextOverflow(this);
-	}
+	void clearTextOverflow();
 
 	/**
 	 * Clear the 'text-transform' CSS property.
 	 */
-	default void clearTextTransform() {
-		DomStyle_Static.clearTextTransform(this);
-	}
+	void clearTextTransform();
 
 	/**
 	 * Clear the top css property.
 	 */
-	default void clearTop() {
-		DomStyle_Static.clearTop(this);
-	}
+	void clearTop();
 
 	/**
 	 * Clears the visibility CSS property.
 	 */
-	default void clearVisibility() {
-		DomStyle_Static.clearVisibility(this);
-	}
+	void clearVisibility();
 
 	/**
 	 * Clear the 'white-space' CSS property.
 	 */
-	default void clearWhiteSpace() {
-		DomStyle_Static.clearWhiteSpace(this);
-	}
+	void clearWhiteSpace();
 
 	/**
 	 * Clear the width css property.
 	 */
-	default void clearWidth() {
-		DomStyle_Static.clearWidth(this);
-	}
+	void clearWidth();
 
 	/**
 	 * Clear the z-index css property.
 	 */
-	default void clearZIndex() {
-		DomStyle_Static.clearZIndex(this);
-	}
+	void clearZIndex();
 
 	/**
 	 * Get the background-color css property.
 	 */
-	default String getBackgroundColor() {
-		return DomStyle_Static.getBackgroundColor(this);
-	}
+	String getBackgroundColor();
 
 	/**
 	 * Get the background-image css property.
 	 */
-	default String getBackgroundImage() {
-		return DomStyle_Static.getBackgroundImage(this);
-	}
+	String getBackgroundImage();
 
 	/**
 	 * Get the border-color css property.
 	 */
-	default String getBorderColor() {
-		return DomStyle_Static.getBorderColor(this);
-	}
+	String getBorderColor();
 
 	/**
 	 * Gets the border-style CSS property.
 	 */
-	default String getBorderStyle() {
-		return DomStyle_Static.getBorderStyle(this);
-	}
+	String getBorderStyle();
 
 	/**
 	 * Get the border-width css property.
 	 */
-	default String getBorderWidth() {
-		return DomStyle_Static.getBorderWidth(this);
-	}
+	String getBorderWidth();
 
 	/**
 	 * Get the bottom css property.
 	 */
-	default String getBottom() {
-		return DomStyle_Static.getBottom(this);
-	}
+	String getBottom();
 
 	/**
 	 * Get the 'clear' CSS property.
 	 */
-	default String getClear() {
-		return DomStyle_Static.getClear(this);
-	}
+	String getClear();
 
 	/**
 	 * Get the color css property.
 	 */
-	default String getColor() {
-		return DomStyle_Static.getColor(this);
-	}
+	String getColor();
 
 	/**
 	 * Gets the cursor CSS property.
 	 */
-	default String getCursor() {
-		return DomStyle_Static.getCursor(this);
-	}
+	String getCursor();
 
 	/**
 	 * Gets the display CSS property.
 	 */
-	default String getDisplay() {
-		return DomStyle_Static.getDisplay(this);
-	}
+	String getDisplay();
 
 	/**
 	 * Get the font-size css property.
 	 */
-	default String getFontSize() {
-		return DomStyle_Static.getFontSize(this);
-	}
+	String getFontSize();
 
 	/**
 	 * Gets the font-style CSS property.
 	 */
-	default String getFontStyle() {
-		return DomStyle_Static.getFontStyle(this);
-	}
+	String getFontStyle();
 
 	/**
 	 * Gets the font-weight CSS property.
 	 */
-	default String getFontWeight() {
-		return DomStyle_Static.getFontWeight(this);
-	}
+	String getFontWeight();
 
 	/**
 	 * Get the height css property.
 	 */
-	default String getHeight() {
-		return DomStyle_Static.getHeight(this);
-	}
+	String getHeight();
 
 	/**
 	 * Get the left css property.
 	 */
-	default String getLeft() {
-		return DomStyle_Static.getLeft(this);
-	}
+	String getLeft();
 
 	/**
 	 * Get the line-height css property.
 	 */
-	default String getLineHeight() {
-		return DomStyle_Static.getLineHeight(this);
-	}
+	String getLineHeight();
 
 	/**
 	 * Gets the list-style-type CSS property.
 	 */
-	default String getListStyleType() {
-		return DomStyle_Static.getListStyleType(this);
-	}
+	String getListStyleType();
 
 	/**
 	 * Get the margin css property.
 	 */
-	default String getMargin() {
-		return DomStyle_Static.getMargin(this);
-	}
+	String getMargin();
 
 	/**
 	 * Get the margin-bottom css property.
 	 */
-	default String getMarginBottom() {
-		return DomStyle_Static.getMarginBottom(this);
-	}
+	String getMarginBottom();
 
 	/**
 	 * Get the margin-left css property.
 	 */
-	default String getMarginLeft() {
-		return DomStyle_Static.getMarginLeft(this);
-	}
+	String getMarginLeft();
 
 	/**
 	 * Get the margin-right css property.
 	 */
-	default String getMarginRight() {
-		return DomStyle_Static.getMarginRight(this);
-	}
+	String getMarginRight();
 
 	/**
 	 * Get the margin-top css property.
 	 */
-	default String getMarginTop() {
-		return DomStyle_Static.getMarginTop(this);
-	}
+	String getMarginTop();
 
 	/**
 	 * Get the opacity css property.
 	 */
-	default String getOpacity() {
-		return DomStyle_Static.getOpacity(this);
-	}
+	String getOpacity();
 
 	/**
 	 * Gets the overflow CSS property.
 	 */
-	default String getOverflow() {
-		return DomStyle_Static.getOverflow(this);
-	}
+	String getOverflow();
 
 	/**
 	 * Gets the overflow-x CSS property.
 	 */
-	default String getOverflowX() {
-		return DomStyle_Static.getOverflowX(this);
-	}
+	String getOverflowX();
 
 	/**
 	 * Gets the overflow-y CSS property.
 	 */
-	default String getOverflowY() {
-		return DomStyle_Static.getOverflowY(this);
-	}
+	String getOverflowY();
 
 	/**
 	 * Get the padding css property.
 	 */
-	default String getPadding() {
-		return DomStyle_Static.getPadding(this);
-	}
+	String getPadding();
 
 	/**
 	 * Get the padding-bottom css property.
 	 */
-	default String getPaddingBottom() {
-		return DomStyle_Static.getPaddingBottom(this);
-	}
+	String getPaddingBottom();
 
 	/**
 	 * Get the padding-left css property.
 	 */
-	default String getPaddingLeft() {
-		return DomStyle_Static.getPaddingLeft(this);
-	}
+	String getPaddingLeft();
 
 	/**
 	 * Get the padding-right css property.
 	 */
-	default String getPaddingRight() {
-		return DomStyle_Static.getPaddingRight(this);
-	}
+	String getPaddingRight();
 
 	/**
 	 * Get the padding-top css property.
 	 */
-	default String getPaddingTop() {
-		return DomStyle_Static.getPaddingTop(this);
-	}
+	String getPaddingTop();
 
 	/**
 	 * Gets the position CSS property.
 	 */
-	default String getPosition() {
-		return DomStyle_Static.getPosition(this);
-	}
+	String getPosition();
 
 	/**
 	 * Gets the value of a named property.
 	 */
-	default String getProperty(String name) {
-		return DomStyle_Static.getProperty(this, name);
-	}
+	String getProperty(String name);
 
 	/**
 	 * Get the right css property.
 	 */
-	default String getRight() {
-		return DomStyle_Static.getRight(this);
-	}
+	String getRight();
 
 	/**
 	 * Gets the table-layout property.
 	 */
-	default String getTableLayout() {
-		return DomStyle_Static.getTableLayout(this);
-	}
+	String getTableLayout();
 
 	/**
 	 * Get the 'text-align' CSS property.
 	 */
-	default String getTextAlign() {
-		return DomStyle_Static.getTextAlign(this);
-	}
+	String getTextAlign();
 
 	/**
 	 * Gets the text-decoration CSS property.
 	 */
-	default String getTextDecoration() {
-		return DomStyle_Static.getTextDecoration(this);
-	}
+	String getTextDecoration();
 
 	/**
 	 * Get the 'text-indent' CSS property.
 	 */
-	default String getTextIndent() {
-		return DomStyle_Static.getTextIndent(this);
-	}
+	String getTextIndent();
 
 	/**
 	 * Get the 'text-justify' CSS3 property.
 	 */
-	default String getTextJustify() {
-		return DomStyle_Static.getTextJustify(this);
-	}
+	String getTextJustify();
 
 	/**
 	 * Get the 'text-overflow' CSS3 property.
 	 */
-	default String getTextOverflow() {
-		return DomStyle_Static.getTextOverflow(this);
-	}
+	String getTextOverflow();
 
 	/**
 	 * Get the 'text-transform' CSS property.
 	 */
-	default String getTextTransform() {
-		return DomStyle_Static.getTextTransform(this);
-	}
+	String getTextTransform();
 
 	/**
 	 * Get the top css property.
 	 */
-	default String getTop() {
-		return DomStyle_Static.getTop(this);
-	}
+	String getTop();
 
 	/**
 	 * Gets the vertical-align CSS property.
 	 */
-	default String getVerticalAlign() {
-		return DomStyle_Static.getVerticalAlign(this);
-	}
+	String getVerticalAlign();
 
 	/**
 	 * Gets the visibility CSS property.
 	 */
-	default String getVisibility() {
-		return DomStyle_Static.getVisibility(this);
-	}
+	String getVisibility();
 
 	/**
 	 * Get the 'white-space' CSS property.
 	 */
-	default String getWhiteSpace() {
-		return DomStyle_Static.getWhiteSpace(this);
-	}
+	String getWhiteSpace();
 
 	/**
 	 * Get the width css property.
 	 */
-	default String getWidth() {
-		return DomStyle_Static.getWidth(this);
-	}
+	String getWidth();
 
 	/**
 	 * Get the z-index css property.
 	 */
-	default String getZIndex() {
-		return DomStyle_Static.getZIndex(this);
-	}
+	String getZIndex();
 
 	/**
 	 * Set the background-color css property.
 	 */
-	default void setBackgroundColor(String value) {
-		DomStyle_Static.setBackgroundColor(this, value);
-	}
+	void setBackgroundColor(String value);
 
 	/**
 	 * Set the background-image css property.
 	 */
-	default void setBackgroundImage(@IsSafeUri String value) {
-		DomStyle_Static.setBackgroundImage(this, value);
-	}
+	void setBackgroundImage(@IsSafeUri String value);
 
 	/**
 	 * Set the border-color css property.
 	 */
-	default void setBorderColor(String value) {
-		DomStyle_Static.setBorderColor(this, value);
-	}
+	void setBorderColor(String value);
 
 	/**
 	 * Sets the border-style CSS property.
 	 */
-	default void setBorderStyle(BorderStyle value) {
-		DomStyle_Static.setBorderStyle(this, value);
-	}
+	void setBorderStyle(BorderStyle value);
 
 	/**
 	 * Set the border-width css property.
 	 */
-	default void setBorderWidth(double value, Unit unit) {
-		DomStyle_Static.setBorderWidth(this, value, unit);
-	}
+	void setBorderWidth(double value, Unit unit);
 
 	/**
 	 * Set the bottom css property.
 	 */
-	default void setBottom(double value, Unit unit) {
-		DomStyle_Static.setBottom(this, value, unit);
-	}
+	void setBottom(double value, Unit unit);
 
 	/**
 	 * Sets the 'clear' CSS property.
 	 */
-	default void setClear(Clear value) {
-		DomStyle_Static.setClear(this, value);
-	}
+	void setClear(Clear value);
 
 	/**
 	 * Sets the color CSS property.
 	 */
-	default void setColor(String value) {
-		DomStyle_Static.setColor(this, value);
-	}
+	void setColor(String value);
 
 	/**
 	 * Sets the cursor CSS property.
 	 */
-	default void setCursor(Cursor value) {
-		DomStyle_Static.setCursor(this, value);
-	}
+	void setCursor(Cursor value);
 
 	/**
 	 * Sets the display CSS property.
 	 */
-	default void setDisplay(Display value) {
-		DomStyle_Static.setDisplay(this, value);
-	}
+	void setDisplay(Display value);
 
 	/**
 	 * Set the float css property.
 	 */
-	default void setFloat(Float value) {
-		DomStyle_Static.setFloat(this, value);
-	}
+	void setFloat(Float value);
 
 	/**
 	 * Set the font-size css property.
 	 */
-	default void setFontSize(double value, Unit unit) {
-		DomStyle_Static.setFontSize(this, value, unit);
-	}
+	void setFontSize(double value, Unit unit);
 
 	/**
 	 * Sets the font-style CSS property.
 	 */
-	default void setFontStyle(FontStyle value) {
-		DomStyle_Static.setFontStyle(this, value);
-	}
+	void setFontStyle(FontStyle value);
 
 	/**
 	 * Sets the font-weight CSS property.
 	 */
-	default void setFontWeight(FontWeight value) {
-		DomStyle_Static.setFontWeight(this, value);
-	}
+	void setFontWeight(FontWeight value);
 
 	/**
 	 * Set the height css property.
 	 */
-	default void setHeight(double value, Unit unit) {
-		DomStyle_Static.setHeight(this, value, unit);
-	}
+	void setHeight(double value, Unit unit);
 
 	/**
 	 * Set the left css property.
 	 */
-	default void setLeft(double value, Unit unit) {
-		DomStyle_Static.setLeft(this, value, unit);
-	}
+	void setLeft(double value, Unit unit);
 
 	/**
 	 * Set the line-height css property.
 	 */
-	default void setLineHeight(double value, Unit unit) {
-		DomStyle_Static.setLineHeight(this, value, unit);
-	}
+	void setLineHeight(double value, Unit unit);
 
 	/**
 	 * Sets the list-style-type CSS property.
 	 */
-	default void setListStyleType(ListStyleType value) {
-		DomStyle_Static.setListStyleType(this, value);
-	}
+	void setListStyleType(ListStyleType value);
 
 	/**
 	 * Set the margin css property.
 	 */
-	default void setMargin(double value, Unit unit) {
-		DomStyle_Static.setMargin(this, value, unit);
-	}
+	void setMargin(double value, Unit unit);
 
 	/**
 	 * Set the margin-bottom css property.
 	 */
-	default void setMarginBottom(double value, Unit unit) {
-		DomStyle_Static.setMarginBottom(this, value, unit);
-	}
+	void setMarginBottom(double value, Unit unit);
 
 	/**
 	 * Set the margin-left css property.
 	 */
-	default void setMarginLeft(double value, Unit unit) {
-		DomStyle_Static.setMarginLeft(this, value, unit);
-	}
+	void setMarginLeft(double value, Unit unit);
 
 	/**
 	 * Set the margin-right css property.
 	 */
-	default void setMarginRight(double value, Unit unit) {
-		DomStyle_Static.setMarginRight(this, value, unit);
-	}
+	void setMarginRight(double value, Unit unit);
 
 	/**
 	 * Set the margin-top css property.
 	 */
-	default void setMarginTop(double value, Unit unit) {
-		DomStyle_Static.setMarginTop(this, value, unit);
-	}
+	void setMarginTop(double value, Unit unit);
 
 	/**
 	 * Set the opacity css property.
 	 */
-	default void setOpacity(double value) {
-		DomStyle_Static.setOpacity(this, value);
-	}
+	void setOpacity(double value);
 
 	/**
 	 * Set the outline-color css property.
 	 */
-	default void setOutlineColor(String value) {
-		DomStyle_Static.setOutlineColor(this, value);
-	}
+	void setOutlineColor(String value);
 
 	/**
 	 * Sets the outline-style CSS property.
 	 */
-	default void setOutlineStyle(OutlineStyle value) {
-		DomStyle_Static.setOutlineStyle(this, value);
-	}
+	void setOutlineStyle(OutlineStyle value);
 
 	/**
 	 * Set the outline-width css property.
 	 */
-	default void setOutlineWidth(double value, Unit unit) {
-		DomStyle_Static.setOutlineWidth(this, value, unit);
-	}
+	void setOutlineWidth(double value, Unit unit);
 
 	/**
 	 * Sets the overflow CSS property.
 	 */
-	default void setOverflow(Overflow value) {
-		DomStyle_Static.setOverflow(this, value);
-	}
+	void setOverflow(Overflow value);
 
 	/**
 	 * Sets the overflow-x CSS property.
 	 */
-	default void setOverflowX(Overflow value) {
-		DomStyle_Static.setOverflowX(this, value);
-	}
+	void setOverflowX(Overflow value);
 
 	/**
 	 * Sets the overflow-y CSS property.
 	 */
-	default void setOverflowY(Overflow value) {
-		DomStyle_Static.setOverflowY(this, value);
-	}
+	void setOverflowY(Overflow value);
 
 	/**
 	 * Set the padding css property.
 	 */
-	default void setPadding(double value, Unit unit) {
-		DomStyle_Static.setPadding(this, value, unit);
-	}
+	void setPadding(double value, Unit unit);
 
 	/**
 	 * Set the padding-bottom css property.
 	 */
-	default void setPaddingBottom(double value, Unit unit) {
-		DomStyle_Static.setPaddingBottom(this, value, unit);
-	}
+	void setPaddingBottom(double value, Unit unit);
 
 	/**
 	 * Set the padding-left css property.
 	 */
-	default void setPaddingLeft(double value, Unit unit) {
-		DomStyle_Static.setPaddingLeft(this, value, unit);
-	}
+	void setPaddingLeft(double value, Unit unit);
 
 	/**
 	 * Set the padding-right css property.
 	 */
-	default void setPaddingRight(double value, Unit unit) {
-		DomStyle_Static.setPaddingRight(this, value, unit);
-	}
+	void setPaddingRight(double value, Unit unit);
 
 	/**
 	 * Set the padding-top css property.
 	 */
-	default void setPaddingTop(double value, Unit unit) {
-		DomStyle_Static.setPaddingTop(this, value, unit);
-	}
+	void setPaddingTop(double value, Unit unit);
 
 	/**
 	 * Sets the position CSS property.
 	 */
-	default void setPosition(Position value) {
-		DomStyle_Static.setPosition(this, value);
-	}
+	void setPosition(Position value);
 
 	/**
 	 * Sets the value of a named property.
 	 */
-	default void setProperty(String name, String value) {
-		DomStyle_Static.setProperty(this, name, value);
-	}
+	void setProperty(String name, String value);
 
 	/**
 	 * Sets the value of a named property in the specified units.
 	 */
-	default void setProperty(String name, double value, Unit unit) {
-		DomStyle_Static.setProperty(this, name, value, unit);
-	}
+	void setProperty(String name, double value, Unit unit);
 
 	/**
 	 * Sets the value of a named property, in pixels.
 	 * 
 	 * This is shorthand for <code>value + "px"</code>.
 	 */
-	default void setPropertyPx(String name, int value) {
-		DomStyle_Static.setPropertyPx(this, name, value);
-	}
+	void setPropertyPx(String name, int value);
 
 	/**
 	 * Set the right css property.
 	 */
-	default void setRight(double value, Unit unit) {
-		DomStyle_Static.setRight(this, value, unit);
-	}
+	void setRight(double value, Unit unit);
 
 	/**
 	 * Set the table-layout CSS property.
 	 */
-	default void setTableLayout(TableLayout value) {
-		DomStyle_Static.setTableLayout(this, value);
-	}
+	void setTableLayout(TableLayout value);
 
 	/**
 	 * Set the 'text-align' CSS property.
 	 */
-	default void setTextAlign(TextAlign value) {
-		DomStyle_Static.setTextAlign(this, value);
-	}
+	void setTextAlign(TextAlign value);
 
 	/**
 	 * Sets the text-decoration CSS property.
 	 */
-	default void setTextDecoration(TextDecoration value) {
-		DomStyle_Static.setTextDecoration(this, value);
-	}
+	void setTextDecoration(TextDecoration value);
 
 	/**
 	 * Set the 'text-indent' CSS property.
 	 */
-	default void setTextIndent(double value, Unit unit) {
-		DomStyle_Static.setTextIndent(this, value, unit);
-	}
+	void setTextIndent(double value, Unit unit);
 
 	/**
 	 * Set the 'text-justify' CSS3 property.
 	 */
-	default void setTextJustify(TextJustify value) {
-		DomStyle_Static.setTextJustify(this, value);
-	}
+	void setTextJustify(TextJustify value);
 
 	/**
 	 * Set the 'text-overflow' CSS3 property.
 	 */
-	default void setTextOverflow(TextOverflow value) {
-		DomStyle_Static.setTextOverflow(this, value);
-	}
+	void setTextOverflow(TextOverflow value);
 
 	/**
 	 * Set the 'text-transform' CSS property.
 	 */
-	default void setTextTransform(TextTransform value) {
-		DomStyle_Static.setTextTransform(this, value);
-	}
+	void setTextTransform(TextTransform value);
 
 	/**
 	 * Set the top css property.
 	 */
-	default void setTop(double value, Unit unit) {
-		DomStyle_Static.setTop(this, value, unit);
-	}
+	void setTop(double value, Unit unit);
 
 	/**
 	 * Sets the vertical-align CSS property.
 	 */
-	default void setVerticalAlign(VerticalAlign value) {
-		DomStyle_Static.setVerticalAlign(this, value);
-	}
+	void setVerticalAlign(VerticalAlign value);
 
 	/**
 	 * Sets the vertical-align CSS property.
 	 */
-	default void setVerticalAlign(double value, Unit unit) {
-		DomStyle_Static.setVerticalAlign(this, value, unit);
-	}
+	void setVerticalAlign(double value, Unit unit);
 
 	/**
 	 * Sets the visibility CSS property.
 	 */
-	default void setVisibility(Visibility value) {
-		DomStyle_Static.setVisibility(this, value);
-	}
+	void setVisibility(Visibility value);
 
 	/**
 	 * Set the 'white-space' CSS property.
 	 */
-	default void setWhiteSpace(WhiteSpace value) {
-		DomStyle_Static.setWhiteSpace(this, value);
-	}
+	void setWhiteSpace(WhiteSpace value);
 
 	/**
 	 * Set the width css property.
 	 */
-	default void setWidth(double value, Unit unit) {
-		DomStyle_Static.setWidth(this, value, unit);
-	}
+	void setWidth(double value, Unit unit);
 
 	/**
 	 * Set the z-index css property.
 	 */
-	default void setZIndex(int value) {
-		DomStyle_Static.setZIndex(this, value);
-	}
+	void setZIndex(int value);
 
 	/**
 	 * Gets the value of a named property.
 	 */
-	default String getPropertyImpl(String name) {
-		return DOMImpl.impl.getStyleProperty(styleObject(), name);
-	}
+	String getPropertyImpl(String name);
 
 	void setPropertyImpl(String name, String value);
-	
+
+	Map<String, String> getProperties();
 }

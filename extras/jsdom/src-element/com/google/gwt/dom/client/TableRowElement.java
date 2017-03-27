@@ -80,12 +80,12 @@ public class TableRowElement extends Element {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-align-TD">
 	 *      W3C HTML Specification</a>
 	 */
-	native void deleteCell0(Element_Dom elt, int index) /*-{
+	native void deleteCell0(Element_Jso elt, int index) /*-{
         elt.deleteCell(index);
 	}-*/;
 
 	public void deleteCell(int index) {
-		deleteCell0(domImpl, index);
+		deleteCell0(typedDomImpl, index);
 	}
 
 	/**

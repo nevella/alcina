@@ -14,18 +14,14 @@ public interface DomNode {
 	 *            the index of the node to be retrieved
 	 * @return the child node at the given index
 	 */
-	default Node getChild(int index) {
-		return DomNode_Static.getChild(this, index);
-	}
+	Node getChild(int index);
 
 	/**
 	 * Gets the number of child nodes contained within this node.
 	 * 
 	 * @return the number of child nodes
 	 */
-	default int getChildCount() {
-		return DomNode_Static.getChildCount(this);
-	}
+	int getChildCount();
 
 	NodeList<Node> getChildNodes();
 
@@ -46,9 +42,7 @@ public interface DomNode {
 	 * 
 	 * @return this node's parent element, or <code>null</code> if none exists
 	 */
-	default Element getParentElement() {
-		return DomNode_Static.getParentElement(this);
-	}
+	Element getParentElement();
 
 	Node nodeFor();
 
@@ -65,9 +59,7 @@ public interface DomNode {
 	 * 
 	 * @return true if the node has a parent element
 	 */
-	default boolean hasParentElement() {
-		return DomNode_Static.hasParentElement(this);
-	}
+	boolean hasParentElement();
 
 	/**
 	 * Inserts the node newChild after the existing child node refChild. If
@@ -81,9 +73,7 @@ public interface DomNode {
 	 *            must be inserted), or <code>null</code>
 	 * @return The node being inserted
 	 */
-	default Node insertAfter(Node newChild, Node refChild) {
-		return DomNode_Static.insertAfter(this, newChild, refChild);
-	}
+	Node insertAfter(Node newChild, Node refChild);
 
 	Node insertBefore(Node newChild, Node refChild);
 
@@ -94,18 +84,14 @@ public interface DomNode {
 	 *            the child to be inserted
 	 * @return The node being inserted
 	 */
-	default Node insertFirst(Node child) {
-		return DomNode_Static.insertFirst(this, child);
-	}
+	Node insertFirst(Node child);
 
 	boolean isOrHasChild(Node child);
 
 	/**
 	 * Removes this node from its parent node if it is attached to one.
 	 */
-	default void removeFromParent() {
-		DomNode_Static.removeFromParent(this);
-	}
+	void removeFromParent();
 
 	Node replaceChild(Node newChild, Node oldChild);
 
@@ -113,11 +99,7 @@ public interface DomNode {
 
 	Node removeChild(Node oldChild);
 
-	default void callMethod(String methodName) {
-		DomNode_Static.callMethod(this, methodName);
-	}
+	void callMethod(String methodName);
 
-	default Node removeAllChildren() {
-		return DomNode_Static.removeAllChildren(this);
-	}
+	Node removeAllChildren();
 }

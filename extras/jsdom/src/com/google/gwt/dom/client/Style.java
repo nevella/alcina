@@ -15,10 +15,9 @@
  */
 package com.google.gwt.dom.client;
 
-import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.safehtml.shared.annotations.IsSafeUri;
-
 import static com.google.gwt.dom.client.DomStyleConstants.*;
+
+import java.util.Map;
 
 /**
  * Provides programmatic access to properties of the style object.
@@ -1612,12 +1611,16 @@ public class Style implements DomStyle {
 
 	boolean resolved;
 
-	public Style_Dom domImpl() {
-		return (Style_Dom) impl;
+	public Style_Jso domImpl() {
+		return (Style_Jso) impl;
 	}
 
 	 boolean provideIsVmLocal() {
 		return !resolved;
+	}
+
+	public Map<String,String> getProperties() {
+		return this.impl.getProperties();
 	}
 	
 }

@@ -18,8 +18,6 @@ package cc.alcina.framework.gwt.client.widget.dialog;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
@@ -54,6 +52,8 @@ import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.client.ui.impl.PopupImpl;
+
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 
 /**
  * A panel that can "pop up" over other widgets. It overlays the browser's
@@ -1006,7 +1006,7 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 	}
 
 	@Override
-	protected com.google.gwt.user.client.Element getContainerElement() {
+	protected Element getContainerElement() {
 		return impl.getContainerElement(getPopupImplElement()).cast();
 	}
 
@@ -1156,7 +1156,7 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 	 * 
 	 * @return the Element that {@link PopupImpl} creates and expects
 	 */
-	private com.google.gwt.user.client.Element getPopupImplElement() {
+	private Element getPopupImplElement() {
 		return DOM.getFirstChild(super.getContainerElement());
 	}
 

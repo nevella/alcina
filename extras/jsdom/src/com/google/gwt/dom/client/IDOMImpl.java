@@ -1,7 +1,6 @@
 package com.google.gwt.dom.client;
 
 public interface IDOMImpl {
-
 	Element createVmLocalElement(Document doc, String tag);
 
 	InputElement createInputElement(Document doc, String type);
@@ -12,11 +11,9 @@ public interface IDOMImpl {
 
 	InputElement createInputRadioElement(Document doc, String name);
 
-	default ScriptElement createScriptElement(Document doc, String source){
-		ScriptElement elem = (ScriptElement) createElement(doc, "script");
+	default ScriptElement createScriptElement(Document doc, String source) {
+		ScriptElement elem = (ScriptElement) createVmLocalElement(doc, "script");
 		elem.setText(source);
 		return elem;
 	}
-
-	ScriptElement createElement(Document doc, String string);
 }

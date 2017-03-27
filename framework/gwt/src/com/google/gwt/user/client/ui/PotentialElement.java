@@ -59,19 +59,21 @@ public class PotentialElement extends Element {
 	public static PotentialElement build(UIObject o) {
 		return build(o, "div");
 	}
-
+	public static  PotentialElement build(UIObject o, String tagName) {
+		throw new UnsupportedOperationException();
+	}
 	/**
 	 * Builds a new PotentialElement. This element keeps track of the
 	 * {@link UIObject} so that it can call
 	 * {@link UIObject#resolvePotentialElement} to get a real element when that
 	 * is needed.
 	 */
-	public static native PotentialElement build(UIObject o, String tagName) /*-{
-		var el = new $wnd.GwtPotentialElementShim();
-		el.tagName = tagName;
-		el.__gwt_resolve = @com.google.gwt.user.client.ui.PotentialElement::buildResolveCallback(Lcom/google/gwt/user/client/ui/UIObject;)(o);
-		return @com.google.gwt.dom.client.Element::as(Lcom/google/gwt/core/client/JavaScriptObject;)(el);
-	}-*/;
+//	public static native PotentialElement build(UIObject o, String tagName) /*-{
+//		var el = new $wnd.GwtPotentialElementShim();
+//		el.tagName = tagName;
+//		el.__gwt_resolve = @com.google.gwt.user.client.ui.PotentialElement::buildResolveCallback(Lcom/google/gwt/user/client/ui/UIObject;)(o);
+//		return @com.google.gwt.dom.client.Element::as(Lcom/google/gwt/core/client/JavaScriptObject;)(el);
+//	}-*/;
 
 	/**
 	 * Creates an {@link HtmlElementBuilder} instance inheriting all attributes

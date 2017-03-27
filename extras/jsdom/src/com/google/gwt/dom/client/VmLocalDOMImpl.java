@@ -23,24 +23,29 @@ public class VmLocalDOMImpl {
 
 	IDOMImpl vmLocalImpl = null;
 
+	public void setVmLocalImpl(IDOMImpl vmLocalImpl) {
+		this.vmLocalImpl = vmLocalImpl;
+	}
+
 	public boolean useVmLocalImpl = false;
 
 	VmLocalDomBridge bridge;
 
 	public VmLocalDOMImpl() {
 		bridge = VmLocalDomBridge.get();
+		bridge.vmLocalDomImpl=this;
 	}
 
 	public void buttonClick(ButtonElement button) {
 		resolveAllPending();
-		domImpl.buttonClick(button.domImpl);
+		domImpl.buttonClick(button.typedDomImpl);
 	}
 
 	public ButtonElement createButtonElement(Document doc, String type) {
 		if (useVmLocalImpl) {
 			return vmLocalImpl.createButtonElement(doc, type);
 		} else {
-			return nodeFor(domImpl.createButtonElement(doc.domImpl, type));
+			return nodeFor(domImpl.createButtonElement(doc.typedDomImpl, type));
 		}
 	}
 
@@ -48,7 +53,7 @@ public class VmLocalDOMImpl {
 		if (useVmLocalImpl) {
 			return vmLocalImpl.createCheckInputElement(doc);
 		} else {
-			return nodeFor(domImpl.createCheckInputElement(doc.domImpl));
+			return nodeFor(domImpl.createCheckInputElement(doc.typedDomImpl));
 		}
 	}
 
@@ -56,18 +61,19 @@ public class VmLocalDOMImpl {
 		if (useVmLocalImpl) {
 			return vmLocalImpl.createVmLocalElement(doc, tag);
 		} else {
-			return nodeFor(domImpl.createElement(doc.domImpl, tag));
+			return nodeFor(domImpl.createElement(doc.typedDomImpl, tag));
 		}
 	}
 
-	private <N extends Node> N nodeFor(Node_Dom node_dom) {
+
+	private <N extends Node> N nodeFor(Node_Jso node_dom) {
 		return VmLocalDomBridge.nodeFor(node_dom);
 	}
 
 	public NativeEvent createHtmlEvent(Document doc, String type,
 			boolean canBubble, boolean cancelable) {
 		checkNotInVmLocalImpl();
-		return domImpl.createHtmlEvent(doc.domImpl, type, canBubble,
+		return domImpl.createHtmlEvent(doc.typedDomImpl, type, canBubble,
 				cancelable);
 	}
 
@@ -81,7 +87,7 @@ public class VmLocalDOMImpl {
 		if (useVmLocalImpl) {
 			return vmLocalImpl.createInputElement(doc, type);
 		} else {
-			return nodeFor(domImpl.createInputElement(doc.domImpl, type));
+			return nodeFor(domImpl.createInputElement(doc.typedDomImpl, type));
 		}
 	}
 
@@ -89,7 +95,7 @@ public class VmLocalDOMImpl {
 		if (useVmLocalImpl) {
 			return vmLocalImpl.createInputRadioElement(doc, name);
 		} else {
-			return nodeFor(domImpl.createInputRadioElement(doc.domImpl, name));
+			return nodeFor(domImpl.createInputRadioElement(doc.typedDomImpl, name));
 		}
 	}
 
@@ -97,7 +103,7 @@ public class VmLocalDOMImpl {
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int keyCode) {
 		checkNotInVmLocalImpl();
-		return domImpl.createKeyCodeEvent(document.domImpl, type, ctrlKey,
+		return domImpl.createKeyCodeEvent(document.typedDomImpl, type, ctrlKey,
 				altKey, shiftKey, metaKey, keyCode);
 	}
 
@@ -106,13 +112,13 @@ public class VmLocalDOMImpl {
 			boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode) {
-		return domImpl.createKeyEvent(doc.domImpl, type, canBubble, cancelable,
+		return domImpl.createKeyEvent(doc.typedDomImpl, type, canBubble, cancelable,
 				ctrlKey, altKey, shiftKey, metaKey, keyCode, charCode);
 	}
 
 	public NativeEvent createKeyPressEvent(Document document, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int charCode) {
-		return domImpl.createKeyPressEvent(document.domImpl, ctrlKey, altKey,
+		return domImpl.createKeyPressEvent(document.typedDomImpl, ctrlKey, altKey,
 				shiftKey, metaKey, charCode);
 	}
 
@@ -121,16 +127,16 @@ public class VmLocalDOMImpl {
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return domImpl.createMouseEvent(doc.domImpl, type, canBubble,
+		return domImpl.createMouseEvent(doc.typedDomImpl, type, canBubble,
 				cancelable, detail, screenX, screenY, clientX, clientY, ctrlKey,
-				altKey, shiftKey, metaKey, button, relatedTarget.domImpl);
+				altKey, shiftKey, metaKey, button, relatedTarget.typedDomImpl);
 	}
 
 	public ScriptElement createScriptElement(Document doc, String source) {
 		if (useVmLocalImpl) {
 			return vmLocalImpl.createScriptElement(doc, source);
 		} else {
-			return domImpl.createScriptElement(doc.domImpl, source);
+			return domImpl.createScriptElement(doc.typedDomImpl, source);
 		}
 	}
 
@@ -151,7 +157,7 @@ public class VmLocalDOMImpl {
 
 	public void dispatchEvent(Element target, NativeEvent evt) {
 		checkNotInVmLocalImpl();
-		domImpl.dispatchEvent(target.domImpl, evt);
+		domImpl.dispatchEvent(target.typedDomImpl, evt);
 	}
 
 	public boolean eventGetAltKey(NativeEvent evt) {
@@ -219,6 +225,7 @@ public class VmLocalDOMImpl {
 	}
 
 	public EventTarget eventGetTarget(NativeEvent evt) {
+		EventTarget eventGetTarget = domImpl.eventGetTarget(evt);
 		return domImpl.eventGetTarget(evt);
 	}
 
@@ -244,7 +251,7 @@ public class VmLocalDOMImpl {
 
 	public int getAbsoluteLeft(Element elem) {
 		resolveAllPending();
-		return domImpl.getAbsoluteLeft(elem.domImpl);
+		return domImpl.getAbsoluteLeft(elem.typedDomImpl);
 	}
 
 	private void resolveAllPending() {
@@ -253,22 +260,22 @@ public class VmLocalDOMImpl {
 
 	public int getAbsoluteTop(Element elem) {
 		resolveAllPending();
-		return domImpl.getAbsoluteTop(elem.domImpl);
+		return domImpl.getAbsoluteTop(elem.typedDomImpl);
 	}
 
 	public String getAttribute(Element elem, String name) {
 		resolveAllPending();
-		return domImpl.getAttribute(elem.domImpl, name);
+		return domImpl.getAttribute(elem.typedDomImpl, name);
 	}
 
 	public int getBodyOffsetLeft(Document doc) {
 		resolveAllPending();
-		return domImpl.getBodyOffsetLeft(doc.domImpl);
+		return domImpl.getBodyOffsetLeft(doc.typedDomImpl);
 	}
 
 	public int getBodyOffsetTop(Document doc) {
 		resolveAllPending();
-		return domImpl.getBodyOffsetTop(doc.domImpl);
+		return domImpl.getBodyOffsetTop(doc.typedDomImpl);
 	}
 
 	public JsArray<Touch> getChangedTouches(NativeEvent evt) {
@@ -279,7 +286,7 @@ public class VmLocalDOMImpl {
 		if (elem.vmLocal) {
 			return elem.getFirstChildElement();
 		} else {
-			return nodeFor(domImpl.getFirstChildElement(elem.domImpl));
+			return nodeFor(domImpl.getFirstChildElement(elem.typedDomImpl));
 		}
 	}
 
@@ -287,7 +294,7 @@ public class VmLocalDOMImpl {
 		if (elem.vmLocal) {
 			return elem.getInnerHTML();
 		} else {
-			return domImpl.getInnerHTML(elem.domImpl);
+			return domImpl.getInnerHTML(elem.typedDomImpl);
 		}
 	}
 
@@ -295,7 +302,7 @@ public class VmLocalDOMImpl {
 		if (node.vmLocal) {
 			return node.getInnerText();
 		} else {
-			return domImpl.getInnerText(node.domImpl);
+			return domImpl.getInnerText(node.typedDomImpl);
 		}
 	}
 
@@ -303,7 +310,7 @@ public class VmLocalDOMImpl {
 		if (elem.vmLocal) {
 			return elem.getNextSiblingElement();
 		} else {
-			return nodeFor(domImpl.getNextSiblingElement(elem.domImpl));
+			return nodeFor(domImpl.getNextSiblingElement(elem.typedDomImpl));
 		}
 	}
 
@@ -335,23 +342,23 @@ public class VmLocalDOMImpl {
 		if (elem.vmLocal) {
 			return elem.getPreviousSiblingElement();
 		} else {
-			return nodeFor(domImpl.getPreviousSiblingElement(elem.domImpl));
+			return nodeFor(domImpl.getPreviousSiblingElement(elem.typedDomImpl));
 		}
 	}
 
 	public int getScrollLeft(Document doc) {
 		resolveAllPending();
-		return domImpl.getScrollLeft(doc.domImpl);
+		return domImpl.getScrollLeft(doc.typedDomImpl);
 	}
 
 	public int getScrollLeft(Element elem) {
 		resolveAllPending();
-		return domImpl.getScrollLeft(elem.domImpl);
+		return domImpl.getScrollLeft(elem.typedDomImpl);
 	}
 
 	public int getScrollTop(Document doc) {
 		resolveAllPending();
-		return domImpl.getScrollTop(doc.domImpl);
+		return domImpl.getScrollTop(doc.typedDomImpl);
 	}
 
 	public String getStyleProperty(Style style, String name) {
@@ -364,14 +371,14 @@ public class VmLocalDOMImpl {
 
 	public int getTabIndex(Element elem) {
 		resolveAllPending();
-		return domImpl.getTabIndex(elem.domImpl);
+		return domImpl.getTabIndex(elem.typedDomImpl);
 	}
 
 	public String getTagName(Element elem) {
 		if (elem.vmLocal) {
 			return elem.getTagName();
 		} else {
-			return domImpl.getTagName(elem.domImpl);
+			return domImpl.getTagName(elem.typedDomImpl);
 		}
 	}
 
@@ -387,7 +394,7 @@ public class VmLocalDOMImpl {
 		if (elem.vmLocal) {
 			return elem.hasAttribute(name);
 		} else {
-			return domImpl.hasAttribute(elem.domImpl, name);
+			return domImpl.hasAttribute(elem.typedDomImpl, name);
 		}
 	}
 
@@ -404,7 +411,7 @@ public class VmLocalDOMImpl {
 
 	public void scrollIntoView(Element elem) {
 		resolveAllPending();
-		domImpl.scrollIntoView(elem.domImpl);
+		domImpl.scrollIntoView(elem.typedDomImpl);
 	}
 
 	public void selectAdd(SelectElement select, OptionElement option,
@@ -412,41 +419,40 @@ public class VmLocalDOMImpl {
 		// FIXME
 		System.out.println("fix select population");
 		resolveAllPending();
-		domImpl.selectAdd(select.domImpl, option.domImpl, before.domImpl);
+		domImpl.selectAdd(select.typedDomImpl, option.typedDomImpl, before.typedDomImpl);
 	}
 
 	public void selectClear(SelectElement select) {
 		resolveAllPending();
-		domImpl.selectClear(select.domImpl);
+		domImpl.selectClear(select.typedDomImpl);
 	}
 
 	public int selectGetLength(SelectElement select) {
 		resolveAllPending();
-		return domImpl.selectGetLength(select.domImpl);
+		return domImpl.selectGetLength(select.typedDomImpl);
 	}
 
 	public NodeList<OptionElement> selectGetOptions(SelectElement select) {
 		resolveAllPending();
-		return domImpl.selectGetOptions(select.domImpl);
+		return domImpl.selectGetOptions(select.typedDomImpl);
 	}
 
 	public void selectRemoveOption(SelectElement select, int index) {
 		resolveAllPending();
-		domImpl.selectRemoveOption(select.domImpl, index);
+		domImpl.selectRemoveOption(select.typedDomImpl, index);
 	}
 
 	public void setDraggable(Element elem, String draggable) {
 		resolveAllPending();
-		domImpl.setDraggable(elem.domImpl, draggable);
+		domImpl.setDraggable(elem.typedDomImpl, draggable);
 	}
 
 	public void setInnerText(Element elem, String text) {
 		if (elem.vmLocal) {
 			elem.setInnerText(text);
 		} else {
-			domImpl.setInnerText(elem.domImpl, text);
+			domImpl.setInnerText(elem.typedDomImpl, text);
 		}
-		
 	}
 
 	public void setScrollLeft(Document doc, int left) {
@@ -456,7 +462,7 @@ public class VmLocalDOMImpl {
 
 	public void setScrollLeft(Element elem, int left) {
 		resolveAllPending();
-		domImpl.setScrollLeft(elem.domImpl, left);
+		domImpl.setScrollLeft(elem.typedDomImpl, left);
 	}
 
 	public void setScrollTop(Document doc, int top) {
@@ -468,7 +474,7 @@ public class VmLocalDOMImpl {
 		if (elem.vmLocal) {
 			return elem.toString();
 		} else {
-			return domImpl.toString(elem.domImpl);
+			return domImpl.toString(elem.typedDomImpl);
 		}
 	}
 

@@ -180,11 +180,11 @@ public class TextAreaElement extends Element {
   /**
    * Select the contents of the TEXTAREA.
    */
-   native void select0(Element_Dom elt) /*-{
+   native void select0(Element_Jso elt) /*-{
     this.select();
   }-*/;
   public final  void select() {
-	  select0(domImpl);
+	  select0(typedDomImpl);
   }
   /**
    * A single character access key to give access to the form control.

@@ -1,7 +1,7 @@
 package com.google.gwt.dom.client;
 
-public class Text_Dom extends Node_Dom implements DomText {
-	protected Text_Dom() {
+public class Text_Jso extends Node_Jso implements DomText {
+	protected Text_Jso() {
 	}
 	/**
 	 * Deletes data at the given [offset, length] range.
@@ -81,7 +81,7 @@ public class Text_Dom extends Node_Dom implements DomText {
 	 * before the split offset is kept in this node, and a new sibling node is
 	 * created to contain the text after the offset.
 	 */
-	private final native Text_Dom splitText0(int offset) /*-{
+	private final native Text_Jso splitText0(int offset) /*-{
         return this.splitText(offset);
 	}-*/;
 

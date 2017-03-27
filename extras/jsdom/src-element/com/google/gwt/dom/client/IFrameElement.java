@@ -75,13 +75,13 @@ public class IFrameElement extends Element {
   }
 
   public final  Document getContentDocument() {
-	  return VmLocalDomBridge.nodeFor(getContentDocument0(domImpl));
+	  return VmLocalDomBridge.nodeFor(getContentDocument0(typedDomImpl));
   }
   /**
    * The document this frame contains, if there is any and it is available, or
    * null otherwise.
    */
-  private final native Document_Dom getContentDocument0(Element_Dom element) /*-{
+  private final native Document_Jso getContentDocument0(Element_Jso element) /*-{
      // This is known to work on all modern browsers.
      return this.contentWindow.document;
    }-*/;
