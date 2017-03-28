@@ -114,7 +114,8 @@ public class Element extends Node implements DomElement {
 	}
 
 	public void focus() {
-		typedImpl.focus();
+		VmLocalDomBridge.ensureJso(this);
+		typedDomImpl.focus();
 	}
 
 	public Document getOwnerDocument() {
@@ -518,5 +519,9 @@ public class Element extends Node implements DomElement {
 	public void putImpl(DomNode impl) {
 		typedImpl = (DomElement) impl;
 		this.impl = impl;
+	}
+	@Override
+	public Integer indexInParentChildren() {
+		return typedImpl.indexInParentChildren();
 	}
 }

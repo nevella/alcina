@@ -200,10 +200,12 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 	 * @return the matching element
 	 */
 	@Override
-	public final native Element getElementById(String elementId) /*-{
-        return this.getElementById(elementId);
-	}-*/;
-
+	public final  Element getElementById(String elementId) {
+        return VmLocalDomBridge.nodeFor(getElementById0(elementId));
+	}
+	 final native Element_Jso getElementById0(String elementId) /*-{
+    return this.getElementById(elementId);
+}-*/;
 	/**
 	 * Returns a {@link NodeList} of all the {@link Element Elements} with a
 	 * given tag name in the order in which they are encountered in a preorder
@@ -932,4 +934,6 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 	public final VideoElement createVideoElement() {
 		return DomDocument_Static.createVideoElement(this);
 	}
+
+	
 }

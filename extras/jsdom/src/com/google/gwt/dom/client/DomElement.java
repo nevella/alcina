@@ -302,4 +302,6 @@ public interface DomElement extends DomNode {
 	Element elementFor();
 
 	void sinkEvents(int eventBits);
+
+	Integer indexInParentChildren();
 }

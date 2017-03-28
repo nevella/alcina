@@ -751,6 +751,10 @@ public class Element_Jso extends Node_Jso implements DomElement {
 
 	@Override
 	public final void sinkEvents(int eventBits) {
-		
+	}
+
+	@Override
+	public final Integer indexInParentChildren() {
+		throw new UnsupportedOperationException();
 	}
 }

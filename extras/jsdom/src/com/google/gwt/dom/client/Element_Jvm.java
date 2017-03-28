@@ -91,7 +91,8 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 
 	@Override
 	public final int getTabIndex() {
-		return DomElement_Static.getTabIndex(this);
+		String index = getAttribute("tabindex");
+		return index.isEmpty()?0:Integer.parseInt(index);
 	}
 
 	@Override
@@ -443,8 +444,8 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 	@Override
 	public final Element getNextSiblingElement() {
 		boolean seen = false;
-		for (int idx = 0; idx < children.size(); idx++) {
-			Node_Jvm node = children.get(idx);
+		for (int idx = 0; idx < parentNode.children.size(); idx++) {
+			Node_Jvm node = parentNode.children.get(idx);
 			if (node == this) {
 				seen = true;
 			} else {
@@ -459,8 +460,8 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 	@Override
 	public final Element getPreviousSiblingElement() {
 		boolean seen = false;
-		for (int idx = children.size() - 1; idx >= 0; idx--) {
-			Node_Jvm node = children.get(idx);
+		for (int idx = parentNode.children.size() - 1; idx >= 0; idx--) {
+			Node_Jvm node = parentNode.children.get(idx);
 			if (node == this) {
 				seen = true;
 			} else {
@@ -470,5 +471,10 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public final Integer indexInParentChildren() {
+		return parentNode.children.indexOf(this);
 	}
 }

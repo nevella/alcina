@@ -417,7 +417,6 @@ public class VmLocalDOMImpl {
 	public void selectAdd(SelectElement select, OptionElement option,
 			OptionElement before) {
 		// FIXME
-		System.out.println("fix select population");
 		resolveAllPending();
 		domImpl.selectAdd(select.typedDomImpl, option.typedDomImpl, before.typedDomImpl);
 	}

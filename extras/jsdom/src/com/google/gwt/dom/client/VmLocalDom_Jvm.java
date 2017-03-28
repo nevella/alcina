@@ -9,7 +9,9 @@ public class VmLocalDom_Jvm implements IDOMImpl {
 
 	@Override
 	public InputElement createInputElement(Document doc, String type) {
-		throw new UnsupportedOperationException();
+		Element_Jvm element_Jvm = doc.vmLocalImpl.createElement_Jvm("input");
+		element_Jvm.setAttribute("type", type);
+		return (InputElement) element_Jvm.nodeFor();
 	}
 
 	@Override

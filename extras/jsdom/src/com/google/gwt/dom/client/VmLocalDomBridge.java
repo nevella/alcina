@@ -138,19 +138,25 @@ public class VmLocalDomBridge {
 		elementCreators.put(StyleElement.TAG, () -> new StyleElement());
 		elementCreators.put(TableElement.TAG, () -> new TableElement());
 		elementCreators.put(HeadElement.TAG, () -> new HeadElement());
-		elementCreators.put(TableSectionElement.TAG_TBODY, () -> new TableSectionElement());
-		elementCreators.put(TableSectionElement.TAG_TFOOT, () -> new TableSectionElement());
-		elementCreators.put(TableSectionElement.TAG_THEAD, () -> new TableSectionElement());
+		elementCreators.put(TableSectionElement.TAG_TBODY,
+				() -> new TableSectionElement());
+		elementCreators.put(TableSectionElement.TAG_TFOOT,
+				() -> new TableSectionElement());
+		elementCreators.put(TableSectionElement.TAG_THEAD,
+				() -> new TableSectionElement());
 		elementCreators.put(TableCaptionElement.TAG, () -> new HeadElement());
-		elementCreators.put(TableCellElement.TAG_TD, () -> new TableCellElement());
-		elementCreators.put(TableCellElement.TAG_TH, () -> new TableCellElement());
-		
-		elementCreators.put(TableColElement.TAG_COL, () -> new TableColElement());
-		elementCreators.put(TableColElement.TAG_COLGROUP, () -> new TableColElement());
+		elementCreators.put(TableCellElement.TAG_TD,
+				() -> new TableCellElement());
+		elementCreators.put(TableCellElement.TAG_TH,
+				() -> new TableCellElement());
+		elementCreators.put(TableColElement.TAG_COL,
+				() -> new TableColElement());
+		elementCreators.put(TableColElement.TAG_COLGROUP,
+				() -> new TableColElement());
 		elementCreators.put(TableRowElement.TAG, () -> new TableRowElement());
 		elementCreators.put(HeadElement.TAG, () -> new HeadElement());
 		elementCreators.put(HeadElement.TAG, () -> new HeadElement());
-		
+		elementCreators.put(InputElement.TAG, () -> new InputElement());
 	}
 
 	public void flush() {
@@ -191,7 +197,6 @@ public class VmLocalDomBridge {
 				node = new Element();
 				break;
 			default:
-				System.out.println("creating: " + nodeName);
 				node = elementCreators.get(nodeName.toLowerCase()).get();
 				break;
 			}
@@ -323,5 +328,24 @@ public class VmLocalDomBridge {
 
 	private void registerId0(Element_Jvm element_Jvm) {
 		idLookup.put(element_Jvm.getId(), element_Jvm.node);
+	}
+
+	public static void ensureJso(Element element) {
+		List<Integer> indicies = new ArrayList<>();
+		// hmmm...ascend to dom, descend...
+		while (element.typedDomImpl == null) {
+			indicies.add(element.typedImpl.indexInParentChildren());
+			element = element.getParentElement();
+			// got to first with jso, use nodeindex
+		}
+		for (int idx = indicies.size() - 1; idx >= 0; idx--) {
+			int nodeIdx = indicies.get(idx);
+			Element item = (Element) element.typedDomImpl.getChildNodes()
+					.getItem(nodeIdx);
+			Element_Jso child_jso = (Element_Jso) item.domImpl;
+			element = item;
+			element.putDomImpl(child_jso);
+		}
+		element.typedDomImpl.focus();
 	}
 }
