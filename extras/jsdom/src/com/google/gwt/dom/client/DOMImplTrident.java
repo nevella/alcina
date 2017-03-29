@@ -74,7 +74,7 @@ abstract class DOMImplTrident extends DOMImpl {
       // Remove the Element_Dom before returning it, so that there's no chance of
       // it getting clobbered later.
       Element_Jso elem = container.getFirstChildElement().typedDomImpl;
-      container.removeChild(VmLocalDomBridge.nodeFor(elem));
+      container.removeChild(LocalDomBridge.nodeFor(elem));
       return elem;
     }
 

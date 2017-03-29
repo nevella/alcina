@@ -410,18 +410,20 @@ public class WidgetUtils {
 		return from.getParentElement();
 	}
 
-	public static native Element getElementForSelector(Element elt,
+	public static native Element getElementForSelector(Element elto,
 			String selector) /*-{
         if (!($doc.querySelector)) {
             return null;
         }
+        var elt = elto.@com.google.gwt.dom.client.Element::ensureJso()();
         var from = (elt) ? elt : $doc;
         var splits = selector.split("::");
         for (var idx = 0; idx < splits.length; idx += 2) {
             var selectorPart = splits[idx];
             var textRegex = idx == splits.length - 1 ? null : splits[idx + 1];
             if (textRegex == null) {
-                return from.querySelector(selectorPart);
+                from =  from.querySelector(selectorPart);
+                break;
             }
             var nl = from.querySelectorAll(splits[idx]);
             var found = false;
@@ -438,16 +440,19 @@ public class WidgetUtils {
                 return null;
             }
         }
-        return from;
+        var eltout=@com.google.gwt.dom.client.LocalDomBridge::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(from);
+        return eltout;
 	}-*/;
 
-	public static native NodeList getElementsForSelector(Element elt,
+	public static native NodeList getElementsForSelector(Element elto,
 			String selector) /*-{
         if (!($doc.querySelector)) {
             return null;
         }
+        var elt = elto.@com.google.gwt.dom.client.Element::ensureJso()();
         var from = (elt) ? elt : $doc;
-        return from.querySelectorAll(selector);
+        var nodeList =  from.querySelectorAll(selector);
+        return @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/DomNodeList;)(nodeList);
 	}-*/;
 
 	public static native Element getFocussedDocumentElement()/*-{

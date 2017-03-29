@@ -131,7 +131,7 @@ class DOMImplMozilla extends DOMImplStandard {
     }
     try {
       var nodeName = relatedTarget.nodeName;
-      return relatedTarget;
+      return  @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(relatedTarget);
     } catch (e) {
       return null;
     }

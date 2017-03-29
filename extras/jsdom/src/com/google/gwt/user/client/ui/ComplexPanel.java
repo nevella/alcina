@@ -172,15 +172,6 @@ public abstract class ComplexPanel extends Panel implements IndexedPanel.ForIsWi
    */
   protected void insert(Widget child, Element container, int beforeIndex,
       boolean domInsert) {
-    insert(child, DOM.asOld(container), beforeIndex, domInsert);
-  }
-
-  /**
-   * @deprecated Call and override {@link insert(Widget, Element, int, boolean)} instead.
-   */
-  @Deprecated
-  protected void insert(Widget child, com.google.gwt.user.client.Element container,
-      int beforeIndex, boolean domInsert) {
     // Validate index; adjust if the widget is already a child of this panel.
     beforeIndex = adjustIndex(child, beforeIndex);
 

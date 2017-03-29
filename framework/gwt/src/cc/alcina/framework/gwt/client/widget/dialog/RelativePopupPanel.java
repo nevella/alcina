@@ -1022,7 +1022,7 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 	}
 
 	@Override
-	protected com.google.gwt.user.client.Element getStyleElement() {
+	protected Element getStyleElement() {
 		return impl.getStyleElement(getPopupImplElement()).cast();
 	}
 

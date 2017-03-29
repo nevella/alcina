@@ -103,8 +103,12 @@ public class TableRowElement extends Element {
 	 * The collection of cells in this row.
 	 */
 	public NodeList<TableCellElement> getCells() {
-		throw new FixmeUnsupportedOperationException();
+		return new NodeList<>(getCells0(ensureJso()));
 	}
+
+	private final native NodeList_Jso getCells0(Element_Jso elem) /*-{
+        return elem.cells;
+	}-*/;
 
 	/**
 	 * Alignment character for cells in a column.

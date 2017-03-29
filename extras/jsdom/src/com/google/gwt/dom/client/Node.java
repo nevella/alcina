@@ -46,7 +46,7 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	protected boolean resolved;
 
-	protected boolean vmLocal;
+	protected boolean local;
 
 	public abstract <T extends JavascriptObjectEquivalent> T cast();
 
@@ -130,7 +130,7 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		if (o instanceof JavaScriptObject) {
 			JavaScriptObject jso = (JavaScriptObject) o;
 			assert isJso(jso);
-			return VmLocalDomBridge.nodeFor(jso);
+			return LocalDomBridge.nodeFor(jso);
 		} else {
 			return (Node) o;
 		}

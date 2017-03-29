@@ -209,37 +209,18 @@ public abstract class CellPanel extends ComplexPanel {
     return DOM.asOld(table);
   }
 
-  @SuppressWarnings("deprecation")
   protected void setCellHorizontalAlignment(Element td,
       HorizontalAlignmentConstant align) {
-    setCellHorizontalAlignment(DOM.asOld(td), align);
+	  td.setPropertyString("align", align.getTextAlignString());
   }
 
-  /**
-   * @deprecated Call and override {@link #setCellHorizontalAlignment(Element,
-   *             HorizontalAlignmentConstant)} instead.
-   */
-  @Deprecated
-  protected void setCellHorizontalAlignment(com.google.gwt.user.client.Element td,
-      HorizontalAlignmentConstant align) {
-    td.setPropertyString("align", align.getTextAlignString());
-  }
+ 
 
-  @SuppressWarnings("deprecation")
   protected void setCellVerticalAlignment(Element td,
       VerticalAlignmentConstant align) {
-    setCellVerticalAlignment(DOM.asOld(td), align);
+	  td.getStyle().setProperty("verticalAlign", align.getVerticalAlignString());
   }
 
-  /**
-   * @deprecated Call and override {@link #setCellVerticalAlignment(Element,
-   *             VerticalAlignmentConstant)} instead.
-   */
-  @Deprecated
-  protected void setCellVerticalAlignment(com.google.gwt.user.client.Element td,
-      VerticalAlignmentConstant align) {
-    td.getStyle().setProperty("verticalAlign", align.getVerticalAlignString());
-  }
 
   Element getWidgetTd(Widget w) {
     if (w.getParent() != this) {

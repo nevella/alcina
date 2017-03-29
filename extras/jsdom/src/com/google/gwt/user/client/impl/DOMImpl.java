@@ -18,7 +18,7 @@ package com.google.gwt.user.client.impl;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Element_Jso;
-import com.google.gwt.dom.client.VmLocalDomBridge;
+import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
 
@@ -30,7 +30,7 @@ public abstract class DOMImpl {
   protected static boolean eventSystemIsInitialized;
 
   public static  EventListener getEventListener(Element elem) {
-  	return getEventListener0(VmLocalDomBridge.elementJso(elem));
+  	return getEventListener0(LocalDomBridge.elementJso(elem));
   }
   private static native EventListener getEventListener0(Element_Jso elem) /*-{
     // Return elem.__listener if and only if it was assigned from our module
@@ -38,7 +38,7 @@ public abstract class DOMImpl {
     return @com.google.gwt.user.client.impl.DOMImpl::isMyListener(*)(maybeListener) ? maybeListener : null;
   }-*/;
   public static  void setEventListener(Element elem, EventListener listener){
-	  Element_Jso elementJso = VmLocalDomBridge.elementJso(elem,false);
+	  Element_Jso elementJso = LocalDomBridge.elementJso(elem,false);
 	  if(elementJso!=null){
 		  setEventListener0(elementJso, listener);
 	  }else{
@@ -137,8 +137,15 @@ public abstract class DOMImpl {
   public abstract int getChildCount(Element elem);
 
   public abstract int getChildIndex(Element parent, Element child);
-
-  public native int getEventsSunk(Element elem) /*-{
+  public  int getEventsSunk(Element elem) {
+	  if(elem.provideIsDomElement()){
+		  Element_Jso elementJso = LocalDomBridge.elementJso(elem);
+		  return getEventsSunk0(elementJso);
+	  }else{
+		  return elem.localEventBitsSunk();
+	  }
+  }
+  native int getEventsSunk0(Element_Jso elem) /*-{
     return elem.__eventBits || 0;
   }-*/;
 

@@ -30,7 +30,7 @@ public class Document extends Node implements DomDocument {
 
 	Document_Jso typedDomImpl;
 
-	DomDocument vmLocalImpl;
+	DomDocument localImpl;
 
 	public Document cast() {
 		return this;
@@ -687,7 +687,7 @@ public class Document extends Node implements DomDocument {
 		// No need to be MT-safe. Single-threaded JS code.
 		if (doc == null) {
 			doc = create(new Document_Jvm());
-			VmLocalDomBridge.register(doc);
+			LocalDomBridge.register(doc);
 		}
 		return doc;
 	}
@@ -697,7 +697,7 @@ public class Document extends Node implements DomDocument {
 		Document_Jso jsoDoc = Document_Jso.get();
 		doc.putDomImpl(jsoDoc);
 		doc.putImpl(jsoDoc);
-		doc.vmLocalImpl = localImpl;
+		doc.localImpl = localImpl;
 		return doc;
 	}
 
@@ -713,7 +713,7 @@ public class Document extends Node implements DomDocument {
 	public void putDomImpl(Node_Jso nodeDom) {
 		typedDomImpl = (Document_Jso) nodeDom;
 		domImpl = nodeDom;
-		vmLocal = false;
+		local = false;
 	}
 
 	@Override
@@ -722,7 +722,7 @@ public class Document extends Node implements DomDocument {
 		this.impl = impl;
 	}
 
-	public <T extends DomDocument> T castVmLocalImpl() {
-		return (T) vmLocalImpl;
+	public <T extends DomDocument> T castLocalImpl() {
+		return (T) localImpl;
 	}
 }

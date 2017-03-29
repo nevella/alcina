@@ -88,15 +88,17 @@ abstract class DOMImplStandard extends DOMImpl {
     return evt.charCode || 0;
   }-*/;
 
-  @Override
-  protected native EventTarget eventGetRelatedTarget(NativeEvent evt) /*-{
-    return evt.relatedTarget;
-  }-*/;
+	@Override
+	protected native EventTarget eventGetRelatedTarget(NativeEvent evt) /*-{
+        return !evt.relatedTarget ? null
+                : @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(evt.relatedTarget);
+	}-*/;
 
-  @Override
-  protected native EventTarget eventGetTarget(NativeEvent evt) /*-{
-  	return  @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(evt.target);
-  }-*/;
+	@Override
+	protected native EventTarget eventGetTarget(NativeEvent evt) /*-{
+        return !evt.target ? null
+                : @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(evt.target);
+	}-*/;
 
   @Override
   protected native void eventPreventDefault(NativeEvent evt) /*-{

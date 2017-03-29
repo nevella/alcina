@@ -96,7 +96,7 @@ public class Element_Jso extends Node_Jso implements DomElement {
 
 	@Override
 	public final Element elementFor() {
-		return VmLocalDomBridge.nodeFor(this);
+		return LocalDomBridge.nodeFor(this);
 	}
 
 	/**
@@ -401,7 +401,7 @@ public class Element_Jso extends Node_Jso implements DomElement {
 	 */
 	@Override
 	public final Style getStyle() {
-		return VmLocalDomBridge.styleObjectFor(getStyle0());
+		return LocalDomBridge.styleObjectFor(getStyle0());
 	}
 
 	/**

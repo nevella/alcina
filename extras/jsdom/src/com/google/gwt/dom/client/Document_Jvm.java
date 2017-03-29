@@ -29,7 +29,7 @@ public class Document_Jvm extends Node_Jvm implements DomDocument {
 	@Override
 	public Text createTextNode(String data) {
 		Text_Jvm jvmNode = new Text_Jvm(data);
-		return VmLocalDomBridge.nodeFor(jvmNode);
+		return LocalDomBridge.nodeFor(jvmNode);
 	}
 
 	@Override

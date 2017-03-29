@@ -15,7 +15,10 @@
  */
 package com.google.gwt.user.client.ui;
 
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.TableCellElement;
+import com.google.gwt.dom.client.TableRowElement;
 import com.google.gwt.user.client.DOM;
 
 /**
@@ -73,7 +76,18 @@ public class Grid extends HTMLTable {
    * @param rows number of rows to add
    * @param columns the number of columns per row
    */
-  private static native void addRows(Element table, int rows, int columns) /*-{
+	private static  void addRows(Element table, int rows, int columns) {
+		for(int rowIdx = 0;rowIdx<rows;rowIdx++){
+			TableRowElement row = Document.get().createTRElement();
+			for(int cellIdx = 0;cellIdx<columns;cellIdx++){
+				TableCellElement cell = Document.get().createTDElement();
+				cell.setInnerText("\u00A0");
+				row.appendChild(cell);
+			}
+			table.appendChild(row);
+		}
+	}
+  private static native void addRows0(Element table, int rows, int columns) /*-{
      var td = $doc.createElement("td");
      td.innerHTML = "&nbsp;";
      var row = $doc.createElement("tr");

@@ -13,11 +13,11 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	}
 
 	static <N extends Node> N nodeFor(JavaScriptObject o) {
-		return VmLocalDomBridge.nodeFor(o);
+		return LocalDomBridge.nodeFor(o);
 	}
 
 	public final Node nodeFor() {
-		return VmLocalDomBridge.nodeFor(this);
+		return LocalDomBridge.nodeFor(this);
 	}
 
 	@Override
@@ -90,7 +90,7 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 		if (node.resolved) {
 			return node.domImpl;
 		}
-		return VmLocalDomBridge.ensurePendingResolutionNode(node);
+		return LocalDomBridge.ensurePendingResolutionNode(node);
 	}
 
 	/**

@@ -21,7 +21,7 @@ import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Element_Jso;
 import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.VmLocalDomBridge;
+import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 
@@ -138,7 +138,7 @@ public abstract class DOMImplStandard extends DOMImpl {
 
   @Override
   public  Element getChild(Element elem, int index) {
-	  return VmLocalDomBridge.nodeFor(getChild0(VmLocalDomBridge.elementJso(elem),index));
+	  return LocalDomBridge.nodeFor(getChild0(LocalDomBridge.elementJso(elem),index));
   }
   
    native Element_Jso getChild0(Element_Jso elem, int index) /*-{
@@ -167,7 +167,10 @@ public abstract class DOMImplStandard extends DOMImpl {
   }-*/;
 
   @Override
-  public native int getChildIndex(Element parent, Element toFind) /*-{
+  public  int getChildIndex(Element parent, Element toFind) {
+  		return getChildIndex0(parent.ensureJso(), toFind.ensureJso());
+  }
+  native int getChildIndex0(Element_Jso parent, Element_Jso toFind) /*-{
     var count = 0, child = parent.firstChild;
     while (child) {
       if (child === toFind) {
@@ -215,13 +218,13 @@ public abstract class DOMImplStandard extends DOMImpl {
   @Override
   public void sinkBitlessEvent(Element elem, String eventTypeName) {
     maybeInitializeEventSystem();
-    sinkBitlessEventImpl(VmLocalDomBridge.elementJso(elem), eventTypeName);
+    sinkBitlessEventImpl(LocalDomBridge.elementJso(elem), eventTypeName);
   }
 
   @Override
   public void sinkEvents(Element elem, int bits) {
     maybeInitializeEventSystem();
-    sinkEventsImpl(VmLocalDomBridge.elementJso(elem), bits);
+    sinkEventsImpl(LocalDomBridge.elementJso(elem), bits);
   }
 
   @SuppressWarnings("deprecation")

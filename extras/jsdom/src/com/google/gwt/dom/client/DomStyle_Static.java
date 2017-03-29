@@ -1106,7 +1106,7 @@ class DomStyle_Static {
 	static String getPropertyImpl(Style_Jso style_Dom, String name) {
 		// FIXME - more direct call maybe
 		return DOMImpl.impl.getStyleProperty(
-				VmLocalDomBridge.styleObjectFor(style_Dom), name);
+				LocalDomBridge.styleObjectFor(style_Dom), name);
 	}
 
 	public static void clearProperty(DomStyle domStyle, String name) {

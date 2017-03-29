@@ -176,7 +176,7 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 	 */
 	@Override
 	public  final  Element getDocumentElement() {
-		return VmLocalDomBridge.nodeFor(getDocumentElement0());
+		return LocalDomBridge.nodeFor(getDocumentElement0());
 	}
 	
 	 final native Element_Jso getDocumentElement0() /*-{
@@ -205,7 +205,7 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 	 */
 	@Override
 	public final  Element getElementById(String elementId) {
-        return VmLocalDomBridge.nodeFor(getElementById0(elementId));
+        return LocalDomBridge.nodeFor(getElementById0(elementId));
 	}
 	 final native Element_Jso getElementById0(String elementId) /*-{
     return this.getElementById(elementId);

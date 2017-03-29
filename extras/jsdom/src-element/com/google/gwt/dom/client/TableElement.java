@@ -87,7 +87,7 @@ public class TableElement extends Element {
 	}-*/;
 
 	public TableCaptionElement createCaption() {
-		return VmLocalDomBridge.nodeFor(createCaption0(typedDomImpl));
+		return LocalDomBridge.nodeFor(createCaption0(typedDomImpl));
 	}
 
 	/**
@@ -100,7 +100,7 @@ public class TableElement extends Element {
 	}-*/;
 
 	public TableSectionElement createTFoot() {
-		return VmLocalDomBridge.nodeFor(createTFoot0(typedDomImpl));
+		return LocalDomBridge.nodeFor(createTFoot0(typedDomImpl));
 	}
 
 	/**
@@ -113,7 +113,7 @@ public class TableElement extends Element {
 	}-*/;
 
 	public TableSectionElement createTHead() {
-		return VmLocalDomBridge.nodeFor(createTHead0(typedDomImpl));
+		return LocalDomBridge.nodeFor(createTHead0(typedDomImpl));
 	}
 
 	/**
@@ -241,21 +241,41 @@ public class TableElement extends Element {
 	 * Returns a collection of the table bodies (including implicit ones).
 	 */
 	public NodeList<TableSectionElement> getTBodies() {
-		throw new FixmeUnsupportedOperationException();
+		return new NodeList<>(getTBodies0(ensureJso()));
 	}
+	/**
+	   * Returns a collection of the table bodies (including implicit ones).
+	   */
+	  private final native NodeList_Jso getTBodies0(Element_Jso elem) /*-{
+	    return elem.tBodies;
+	  }-*/;
 
+	  /**
+	   * The table's TFOOT, or null if none exists.
+	   */
+	   final native Element_Jso getTFoot0(Element_Jso elem) /*-{
+	     return elem.tFoot;
+	   }-*/;
+
+	  /**
+	   * The table's THEAD, or null if none exists.
+	   */
+	   final native Element_Jso getTHead0(Element_Jso elem) /*-{
+	     return elem.tHead;
+	   }-*/;
 	/**
 	 * The table's TFOOT, or null if none exists.
 	 */
 	public TableSectionElement getTFoot() {
-		throw new FixmeUnsupportedOperationException();
+		return LocalDomBridge.nodeFor( getTFoot0(ensureJso()));
+		
 	}
 
 	/**
 	 * The table's THEAD, or null if none exists.
 	 */
 	public TableSectionElement getTHead() {
-		throw new FixmeUnsupportedOperationException();
+		return LocalDomBridge.nodeFor( getTHead0(ensureJso()));
 	}
 
 	/**

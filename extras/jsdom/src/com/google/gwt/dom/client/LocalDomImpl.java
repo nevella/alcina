@@ -18,22 +18,22 @@ package com.google.gwt.dom.client;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JsArray;
 
-public class VmLocalDomImpl {
+public class LocalDomImpl {
 	final DOMImpl domImpl = GWT.create(DOMImpl.class);
 
-	IDOMImpl vmLocalImpl = null;
+	IDOMImpl localImpl = null;
 
-	public void setVmLocalImpl(IDOMImpl vmLocalImpl) {
-		this.vmLocalImpl = vmLocalImpl;
+	public void setLocalImpl(IDOMImpl localImpl) {
+		this.localImpl = localImpl;
 	}
 
-	public static boolean useVmLocalImpl = false;
+	public static boolean useLocalImpl = false;
 
-	VmLocalDomBridge bridge;
+	LocalDomBridge bridge;
 
-	public VmLocalDomImpl() {
-		bridge = VmLocalDomBridge.get();
-		bridge.vmLocalDomImpl = this;
+	public LocalDomImpl() {
+		bridge = LocalDomBridge.get();
+		bridge.localDomImpl = this;
 	}
 
 	public void buttonClick(ButtonElement button) {
@@ -42,57 +42,57 @@ public class VmLocalDomImpl {
 	}
 
 	public ButtonElement createButtonElement(Document doc, String type) {
-		if (useVmLocalImpl) {
-			return vmLocalImpl.createButtonElement(doc, type);
+		if (useLocalImpl) {
+			return localImpl.createButtonElement(doc, type);
 		} else {
 			return nodeFor(domImpl.createButtonElement(doc.typedDomImpl, type));
 		}
 	}
 
 	public InputElement createCheckInputElement(Document doc) {
-		if (useVmLocalImpl) {
-			return vmLocalImpl.createCheckInputElement(doc);
+		if (useLocalImpl) {
+			return localImpl.createCheckInputElement(doc);
 		} else {
 			return nodeFor(domImpl.createCheckInputElement(doc.typedDomImpl));
 		}
 	}
 
 	public Element createElement(Document doc, String tag) {
-		if (useVmLocalImpl) {
-			return vmLocalImpl.createVmLocalElement(doc, tag);
+		if (useLocalImpl) {
+			return localImpl.createLocalElement(doc, tag);
 		} else {
 			return nodeFor(domImpl.createElement(doc.typedDomImpl, tag));
 		}
 	}
 
 	private <N extends Node> N nodeFor(Node_Jso node_dom) {
-		return VmLocalDomBridge.nodeFor(node_dom);
+		return LocalDomBridge.nodeFor(node_dom);
 	}
 
 	public NativeEvent createHtmlEvent(Document doc, String type,
 			boolean canBubble, boolean cancelable) {
-		checkNotInVmLocalImpl();
+		checkNotInLocalImpl();
 		return domImpl.createHtmlEvent(doc.typedDomImpl, type, canBubble,
 				cancelable);
 	}
 
-	private void checkNotInVmLocalImpl() {
-		if (useVmLocalImpl) {
+	private void checkNotInLocalImpl() {
+		if (useLocalImpl) {
 			throw new UnsupportedOperationException();
 		}
 	}
 
 	public InputElement createInputElement(Document doc, String type) {
-		if (useVmLocalImpl) {
-			return vmLocalImpl.createInputElement(doc, type);
+		if (useLocalImpl) {
+			return localImpl.createInputElement(doc, type);
 		} else {
 			return nodeFor(domImpl.createInputElement(doc.typedDomImpl, type));
 		}
 	}
 
 	public InputElement createInputRadioElement(Document doc, String name) {
-		if (useVmLocalImpl) {
-			return vmLocalImpl.createInputRadioElement(doc, name);
+		if (useLocalImpl) {
+			return localImpl.createInputRadioElement(doc, name);
 		} else {
 			return nodeFor(
 					domImpl.createInputRadioElement(doc.typedDomImpl, name));
@@ -102,7 +102,7 @@ public class VmLocalDomImpl {
 	public NativeEvent createKeyCodeEvent(Document document, String type,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int keyCode) {
-		checkNotInVmLocalImpl();
+		checkNotInLocalImpl();
 		return domImpl.createKeyCodeEvent(document.typedDomImpl, type, ctrlKey,
 				altKey, shiftKey, metaKey, keyCode);
 	}
@@ -134,8 +134,8 @@ public class VmLocalDomImpl {
 	}
 
 	public ScriptElement createScriptElement(Document doc, String source) {
-		if (useVmLocalImpl) {
-			return vmLocalImpl.createScriptElement(doc, source);
+		if (useLocalImpl) {
+			return localImpl.createScriptElement(doc, source);
 		} else {
 			return domImpl.createScriptElement(doc.typedDomImpl, source);
 		}
@@ -147,7 +147,7 @@ public class VmLocalDomImpl {
 	}
 
 	public String cssFloatPropertyName() {
-		checkNotInVmLocalImpl();
+		checkNotInLocalImpl();
 		return domImpl.cssFloatPropertyName();
 	}
 
@@ -157,7 +157,7 @@ public class VmLocalDomImpl {
 	}
 
 	public void dispatchEvent(Element target, NativeEvent evt) {
-		checkNotInVmLocalImpl();
+		checkNotInLocalImpl();
 		domImpl.dispatchEvent(target.typedDomImpl, evt);
 	}
 
@@ -256,9 +256,9 @@ public class VmLocalDomImpl {
 	}
 
 	private void resolveAllPending() {
-		if(useVmLocalImpl){
-		VmLocalDomBridge.get().flush();
-		VmLocalDomBridge.get().useJvmDom();
+		if(useLocalImpl){
+		LocalDomBridge.get().flush();
+		LocalDomBridge.get().useJvmDom();
 		}
 	}
 
@@ -287,7 +287,7 @@ public class VmLocalDomImpl {
 	}
 
 	public Element getFirstChildElement(Element elem) {
-		if (elem.vmLocal) {
+		if (elem.local) {
 			return elem.getFirstChildElement();
 		} else {
 			return nodeFor(domImpl.getFirstChildElement(elem.typedDomImpl));
@@ -295,7 +295,7 @@ public class VmLocalDomImpl {
 	}
 
 	public String getInnerHTML(Element elem) {
-		if (elem.vmLocal) {
+		if (elem.local) {
 			return elem.getInnerHTML();
 		} else {
 			return domImpl.getInnerHTML(elem.typedDomImpl);
@@ -303,7 +303,7 @@ public class VmLocalDomImpl {
 	}
 
 	public String getInnerText(Element node) {
-		if (node.vmLocal) {
+		if (node.local) {
 			return node.getInnerText();
 		} else {
 			return domImpl.getInnerText(node.typedDomImpl);
@@ -311,7 +311,7 @@ public class VmLocalDomImpl {
 	}
 
 	public Element getNextSiblingElement(Element elem) {
-		if (elem.vmLocal) {
+		if (elem.local) {
 			return elem.getNextSiblingElement();
 		} else {
 			return nodeFor(domImpl.getNextSiblingElement(elem.typedDomImpl));
@@ -319,7 +319,7 @@ public class VmLocalDomImpl {
 	}
 
 	public int getNodeType(Node node) {
-		if (node.vmLocal) {
+		if (node.local) {
 			return node.getNodeType();
 		} else {
 			return domImpl.getNodeType(node.domImpl);
@@ -335,7 +335,7 @@ public class VmLocalDomImpl {
 	}
 
 	public Element getParentElement(Node node) {
-		if (node.vmLocal) {
+		if (node.local) {
 			if (node.domImpl != null) {
 				int debug = 3;
 			}
@@ -346,7 +346,7 @@ public class VmLocalDomImpl {
 	}
 
 	public Element getPreviousSiblingElement(Element elem) {
-		if (elem.vmLocal) {
+		if (elem.local) {
 			return elem.getPreviousSiblingElement();
 		} else {
 			return nodeFor(
@@ -370,7 +370,7 @@ public class VmLocalDomImpl {
 	}
 
 	public String getStyleProperty(Style style, String name) {
-		if (style.provideIsVmLocal()) {
+		if (style.provideIsLocal()) {
 			return style.getProperty(name);
 		} else {
 			return domImpl.getStyleProperty(style.domImpl(), name);
@@ -383,7 +383,7 @@ public class VmLocalDomImpl {
 	}
 
 	public String getTagName(Element elem) {
-		if (elem.vmLocal) {
+		if (elem.local) {
 			return elem.getTagName();
 		} else {
 			return domImpl.getTagName(elem.typedDomImpl);
@@ -399,7 +399,7 @@ public class VmLocalDomImpl {
 	}
 
 	public boolean hasAttribute(Element elem, String name) {
-		if (elem.vmLocal) {
+		if (elem.local) {
 			return elem.hasAttribute(name);
 		} else {
 			return domImpl.hasAttribute(elem.typedDomImpl, name);
@@ -407,10 +407,10 @@ public class VmLocalDomImpl {
 	}
 
 	public boolean isOrHasChild(Node parent, Node child) {
-		if (parent.vmLocal != child.vmLocal) {
+		if (parent.local != child.local) {
 			return false;
 		}
-		if (parent.vmLocal) {
+		if (parent.local) {
 			return parent.isOrHasChild(child);
 		} else {
 			return domImpl.isOrHasChild(parent.domImpl, child.domImpl);
@@ -456,7 +456,7 @@ public class VmLocalDomImpl {
 	}
 
 	public void setInnerText(Element elem, String text) {
-		if (elem.vmLocal) {
+		if (elem.local) {
 			elem.setInnerText(text);
 		} else {
 			domImpl.setInnerText(elem.typedDomImpl, text);
@@ -479,7 +479,7 @@ public class VmLocalDomImpl {
 	}
 
 	public String toString(Element elem) {
-		if (elem.vmLocal) {
+		if (elem.local) {
 			return elem.toString();
 		} else {
 			return domImpl.toString(elem.typedDomImpl);

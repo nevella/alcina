@@ -18,7 +18,7 @@ package com.google.gwt.user.client.ui;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.VmLocalDomBridge;
+import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.editor.client.IsEditor;
 import com.google.gwt.editor.client.LeafValueEditor;
 import com.google.gwt.editor.client.adapters.TakesValueEditor;
@@ -693,7 +693,6 @@ public class SuggestBox extends Composite
 
 	private final ValueBoxBase<String> box;
 
-	private boolean firstTime = true;
 	private final Callback callback = new Callback() {
 		public void onSuggestionsReady(Request request, Response response) {
 			// If disabled while request was in-flight, drop it
@@ -702,14 +701,9 @@ public class SuggestBox extends Composite
 			}
 			display.setMoreSuggestions(response.hasMoreSuggestions(),
 					response.getMoreSuggestionsCount());
-			VmLocalDomBridge.get().useVmLocalDom();
-			VmLocalDomBridge.get().autoFlush = firstTime;
 			display.showSuggestions(SuggestBox.this, response.getSuggestions(),
 					oracle.isDisplayStringHTML(), isAutoSelectEnabled(),
 					suggestionCallback);
-			VmLocalDomBridge.get().flush();
-			VmLocalDomBridge.get().autoFlush =false;
-			firstTime = false;
 		}
 	};
 

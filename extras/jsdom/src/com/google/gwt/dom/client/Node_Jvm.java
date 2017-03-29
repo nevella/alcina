@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.util.StringMap;
 
 public abstract class Node_Jvm implements DomNode {
 	static <N extends Node> N nodeFor(Node_Jvm node_jvm) {
-		return (N) VmLocalDomBridge.nodeFor(node_jvm);
+		return (N) LocalDomBridge.nodeFor(node_jvm);
 	}
 
 	public Node nodeFor() {
@@ -76,12 +76,12 @@ public abstract class Node_Jvm implements DomNode {
 
 	@Override
 	public Document getOwnerDocument() {
-		return (Document) VmLocalDomBridge.nodeFor(ownerDocument);
+		return (Document) LocalDomBridge.nodeFor(ownerDocument);
 	}
 
 	@Override
 	public Node getParentNode() {
-		return VmLocalDomBridge.nodeFor(parentNode);
+		return LocalDomBridge.nodeFor(parentNode);
 	}
 
 	@Override
@@ -147,7 +147,7 @@ public abstract class Node_Jvm implements DomNode {
 
 	@Override
 	public Element getParentElement() {
-		return VmLocalDomBridge.nodeFor(parentNode);
+		return LocalDomBridge.nodeFor(parentNode);
 	}
 
 	@Override

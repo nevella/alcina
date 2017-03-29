@@ -1615,7 +1615,7 @@ public class Style implements DomStyle {
 		return (Style_Jso) impl;
 	}
 
-	 boolean provideIsVmLocal() {
+	 boolean provideIsLocal() {
 		return !resolved;
 	}
 

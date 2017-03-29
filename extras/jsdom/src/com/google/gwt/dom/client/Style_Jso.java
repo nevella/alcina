@@ -39,7 +39,7 @@ public final class Style_Jso extends JavaScriptObject implements DomStyle {
 
 	@Override
 	public final Style styleObject() {
-		return VmLocalDomBridge.styleObjectFor(this);
+		return LocalDomBridge.styleObjectFor(this);
 	}
 
 	@Override

@@ -16,10 +16,11 @@
 package com.google.gwt.dom.client;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 
 abstract class DOMImpl {
-	static final VmLocalDomImpl impl = new VmLocalDomImpl();
+	static final LocalDomImpl impl = new LocalDomImpl();
 //	static final DOMImpl impl = GWT.create(DOMImpl.class);
 
 	/**
@@ -128,8 +129,11 @@ abstract class DOMImpl {
 	protected native boolean eventGetCtrlKey(NativeEvent evt) /*-{
         return !!evt.ctrlKey;
 	}-*/;
-
-	protected native EventTarget eventGetCurrentTarget(NativeEvent event) /*-{
+	protected  EventTarget eventGetCurrentTarget(NativeEvent event){
+		JavaScriptObject jso = eventGetNativeTarget(event);
+		return jso==null?null:new EventTarget(jso);
+	}
+	private native JavaScriptObject eventGetNativeTarget(NativeEvent event) /*-{
         return event.currentTarget;
 	}-*/;
 
@@ -509,6 +513,6 @@ abstract class DOMImpl {
         button.click();
 	}-*/;
 	protected <N extends Node> N nodeFor(Node_Jso node_dom) {
-		return VmLocalDomBridge.nodeFor(node_dom);
+		return LocalDomBridge.nodeFor(node_dom);
 	}
 }

@@ -27,7 +27,7 @@ import com.google.gwt.dom.client.Element_Jso;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.TableCellElement;
 import com.google.gwt.dom.client.TableRowElement;
-import com.google.gwt.dom.client.VmLocalDomBridge;
+import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DoubleClickEvent;
@@ -77,7 +77,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		}
 
 		public Element get(int row) {
-			return VmLocalDomBridge.nodeFor(jsArray.get(row));
+			return LocalDomBridge.nodeFor(jsArray.get(row));
 		}
 
 		public int length() {
@@ -529,7 +529,10 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 * @return the element
 		 */
 		private Element getCellElement(Element tbody, int row, int col) {
-			return impl.getCells(impl.getRows(tbody).get(row)).get(col);
+			Element rowObj = impl.getRows(tbody).get(row);
+			
+			ElementArray<Element> cells = impl.getCells(rowObj);
+			return cells.get(col);
 		}
 
 		/**
@@ -1578,10 +1581,6 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 */
 	
 
-	/**
-	 * @deprecated Call and override {@link internalClearCell(Element, boolean)}
-	 *             instead.
-	 */
 	protected boolean internalClearCell(Element td,
 			boolean clearInnerHTML) {
 		Element maybeChild = DOM.getFirstChild(td);

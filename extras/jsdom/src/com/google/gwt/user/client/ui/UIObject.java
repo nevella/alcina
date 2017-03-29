@@ -22,8 +22,11 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.debug.client.DebugInfo;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Element_Jso;
-import com.google.gwt.dom.client.VmLocalDomBridge;
+import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.user.client.DOM;
+
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * The superclass for all user-interface objects. It simply wraps a DOM element,
@@ -236,7 +239,7 @@ public abstract class UIObject implements HasVisibility {
    * </p>
    */
   public static  boolean isVisible(Element elem){
-  		return isVisible0(VmLocalDomBridge.elementJso(elem));
+  		return isVisible0(LocalDomBridge.elementJso(elem));
   }
   private static native boolean isVisible0(Element_Jso elem) /*-{
     return (elem.style.display != 'none');
@@ -254,14 +257,14 @@ public abstract class UIObject implements HasVisibility {
    * {@code setVisible(elem, true)}.
    * </p>
    */
-  public static native void setVisible(Element elem, boolean visible) /*-{
-    elem.style.display = visible ? '' : 'none';
-    if (visible) {
-      elem.removeAttribute('aria-hidden');
-    } else {
-      elem.setAttribute('aria-hidden', 'true');
-    }
-  }-*/;
+  public static  void setVisible(Element elem, boolean visible){
+	  elem.getStyle().setProperty("display", visible?"":"none");
+	  if(visible){
+		  elem.removeAttribute("aria-hidden");
+	  }else{
+		  elem.setAttribute("aria-hidden", "true");
+	  }
+  }
 
   /**
    * Set the debug id of a specific element. The id will be appended to the end
@@ -367,10 +370,40 @@ public abstract class UIObject implements HasVisibility {
     updatePrimaryAndDependentStyleNames(elem, style);
   }
 
+	/**
+	 * Replaces all instances of the primary style name with
+	 * newPrimaryStyleName.
+	 */
+	private static void updatePrimaryAndDependentStyleNames(Element elem,
+			String newPrimaryStyle) {
+		if (elem.provideIsDomElement()) {
+			updatePrimaryAndDependentStyleNames0(
+					LocalDomBridge.elementJso(elem), newPrimaryStyle);
+		} else {
+			String className = elem.getClassName();
+			if (Ax.isBlank(className)) {
+				return;
+			}
+			String[] classes = className.split("\\s+");
+			String oldPrimaryStyle = classes[0];
+			int oldPrimaryStyleLen = oldPrimaryStyle.length();
+			classes[0] = newPrimaryStyle;
+			for (int i = 1, n = classes.length; i < n; i++) {
+				String name = classes[i];
+				if (name.length() > oldPrimaryStyleLen
+						&& name.charAt(oldPrimaryStyleLen) == '-'
+						&& name.indexOf(oldPrimaryStyle) == 0) {
+					classes[i] = newPrimaryStyle
+							+ name.substring(oldPrimaryStyleLen);
+				}
+			}
+			elem.setClassName(CommonUtils.join(classes, " "));
+		}
+	}
   /**
    * Replaces all instances of the primary style name with newPrimaryStyleName.
    */
-  private static native void updatePrimaryAndDependentStyleNames(Element elem,
+  private static native void updatePrimaryAndDependentStyleNames0(Element_Jso elem,
       String newPrimaryStyle) /*-{
     var classes = (elem.className || "").split(/\s+/);
     if (!classes) {
@@ -573,7 +606,7 @@ public abstract class UIObject implements HasVisibility {
    * @return the object's offset height
    */
   public int getOffsetHeight() {
-    return getElement().getPropertyInt("offsetHeight");
+    return getElement().ensureDomImpl().getPropertyInt("offsetHeight");
   }
 
   /**
@@ -583,7 +616,7 @@ public abstract class UIObject implements HasVisibility {
    * @return the object's offset width
    */
   public int getOffsetWidth() {
-    return getElement().getPropertyInt("offsetWidth");
+    return getElement().ensureDomImpl().getPropertyInt("offsetWidth");
   }
 
   /**

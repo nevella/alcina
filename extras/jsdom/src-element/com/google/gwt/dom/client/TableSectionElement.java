@@ -129,8 +129,12 @@ public class TableSectionElement extends Element {
 	 * The collection of rows in this table section.
 	 */
 	public NodeList<TableRowElement> getRows() {
-		throw new FixmeUnsupportedOperationException();
+		return new NodeList<>(getRows0(ensureJso()));
 	}
+
+	private final native NodeList_Jso getRows0(Element_Jso elem) /*-{
+        return elem.rows;
+	}-*/;
 
 	/**
 	 * Vertical alignment of data in cells. See the valign attribute for

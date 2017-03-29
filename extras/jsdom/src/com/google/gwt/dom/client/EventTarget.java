@@ -43,7 +43,7 @@ public class EventTarget implements JavascriptObjectEquivalent {
 	@Override
 	public <T extends JavascriptObjectEquivalent> T cast() {
 		if (Element_Jso.is(nativeTarget)) {
-			return (T) VmLocalDomBridge.nodeFor(nativeTarget);
+			return (T) LocalDomBridge.nodeFor(nativeTarget);
 		}
 		throw new FixmeUnsupportedOperationException();
 	}

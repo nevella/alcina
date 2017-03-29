@@ -1,10 +1,10 @@
 package com.google.gwt.dom.client;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.safehtml.shared.SafeHtml;
-import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 
 public class Element_Jvm extends Node_Jvm implements DomElement {
 	private String tagName;
@@ -50,7 +50,7 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 
 	@Override
 	public void setInnerText(String text) {
-		children.stream().forEach(Node_Jvm::removeFromParent);
+		new ArrayList<>(children).stream().forEach(Node_Jvm::removeFromParent);
 		appendChild(ownerDocument.createTextNode(text));
 	}
 
@@ -298,7 +298,7 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 	public Style getStyle() {
 		if (style == null) {
 			Style_Jvm style_Jvm = new Style_Jvm();
-			style = VmLocalDomBridge.styleObjectFor(style_Jvm);
+			style = LocalDomBridge.styleObjectFor(style_Jvm);
 		}
 		return style;
 	}
@@ -326,12 +326,12 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 	@Override
 	public void setId(String id) {
 		setAttribute("id", id);
-		VmLocalDomBridge.registerId(this);
+		LocalDomBridge.registerId(this);
 	}
 
 	@Override
 	public void setInnerHTML(String html) {
-		children.stream().forEach(Node_Jvm::removeFromParent);
+		new ArrayList<>(children).stream().forEach(Node_Jvm::removeFromParent);
 		this.innerHtml = html;
 	}
 
@@ -377,7 +377,7 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 
 	@Override
 	public Element elementFor() {
-		return VmLocalDomBridge.nodeFor(this);
+		return LocalDomBridge.nodeFor(this);
 	}
 
 	@Override
@@ -401,7 +401,7 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 			builder.appendHtmlConstantNoCheck(" style=\"");
 			((Style_Jvm) style.impl).properties.entrySet().forEach(e -> {
 				builder.appendEscaped(
-						VmLocalDomBridge.declarativeCssName(e.getKey()));
+						LocalDomBridge.declarativeCssName(e.getKey()));
 				builder.appendHtmlConstantNoCheck(":");
 				builder.appendEscaped(e.getValue());
 				builder.appendHtmlConstantNoCheck("; ");

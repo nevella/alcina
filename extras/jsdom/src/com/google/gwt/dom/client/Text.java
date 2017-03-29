@@ -68,7 +68,7 @@ public class Text extends Node implements DomText {
 	}
 	@Override
 	public void putDomImpl(Node_Jso nodeDom) {
-		vmLocal=false;
+		local=false;
 		typedDomImpl = (Text_Jso) nodeDom;
 		domImpl = nodeDom;
 	}

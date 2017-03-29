@@ -104,7 +104,11 @@ public class Element extends Node implements DomElement {
 	}
 
 	public Element getParentElement() {
-		return typedImpl().getParentElement();
+		// no resolution
+		if(typedImpl==null){
+			int debug=3;
+		}
+		return typedImpl.getParentElement();
 	}
 
 	public void blur() {
@@ -116,7 +120,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	public void focus() {
-		VmLocalDomBridge.ensureJso(this);
+		LocalDomBridge.ensureJso(this);
 		typedDomImpl.focus();
 	}
 
@@ -446,7 +450,7 @@ public class Element extends Node implements DomElement {
 			return ((EventTarget) o).cast();
 		} else if (o instanceof JavaScriptObject) {
 			JavaScriptObject jso = (JavaScriptObject) o;
-			return VmLocalDomBridge.nodeFor(jso);
+			return LocalDomBridge.nodeFor(jso);
 		} else {
 			return (Element) o;
 		}
@@ -513,13 +517,14 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	public void putDomImpl(Node_Jso nodeDom) {
-		vmLocal = false;
+		local = false;
 		typedDomImpl = (Element_Jso) nodeDom;
 		domImpl = nodeDom;
 	}
 
 	@Override
 	public void putImpl(DomNode impl) {
+		LocalDomBridge.get().checkInPreconditionList(this,impl);
 		if (typedImpl != null) {
 			localImpl = typedImpl;
 		}
@@ -547,11 +552,42 @@ public class Element extends Node implements DomElement {
 	}
 
 	DomElement typedImpl() {
-		if (!VmLocalDomImpl.useVmLocalImpl
-				&& !VmLocalDomBridge.ensuringPendingResolutionNode
-				&& domImpl == null) {
-			VmLocalDomBridge.ensureJso(this);
+		if (domImpl == null && LocalDomBridge.shouldUseDomNodes()
+				&& isAttached()) {
+			LocalDomBridge.ensureJso(this);
 		}
 		return typedImpl;
+	}
+
+	private boolean isAttached() {
+		Element cursor = this;
+		while (cursor != null) {
+			if (cursor.domImpl != null) {
+				return true;
+			}
+			cursor = cursor.getParentElement();
+		}
+		return false;
+	}
+	public Element_Jso ensureJso() {
+		return ensureDomImpl().typedDomImpl;
+	}
+	public Element ensureDomImpl() {
+		LocalDomBridge.ensureJso(this);
+		if (!(typedImpl instanceof JavaScriptObject)) {
+			if(typedImpl==null){
+				int debug=3;
+			}
+			putImpl(typedDomImpl);
+		}
+		return this;
+	}
+
+	public boolean provideIsDomElement() {
+		return domImpl!=null;
+	}
+
+	public int localEventBitsSunk() {
+		return ((Element_Jvm)impl).eventBits;
 	}
 }

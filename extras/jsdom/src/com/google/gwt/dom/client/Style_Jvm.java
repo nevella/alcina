@@ -31,12 +31,12 @@ public class Style_Jvm implements DomStyle {
 
 	@Override
 	public final Style styleObject() {
-		return VmLocalDomBridge.styleObjectFor(this);
+		return LocalDomBridge.styleObjectFor(this);
 	}
 
 	@Override
 	public String getPropertyImpl(String name) {
-		return properties.get(name);
+		return properties.computeIfAbsent(name, lambda_name -> "");
 	}
 
 	@Override
@@ -803,5 +803,4 @@ public class Style_Jvm implements DomStyle {
 	public Map<String, String> getProperties() {
 		return properties;
 	}
-
 }

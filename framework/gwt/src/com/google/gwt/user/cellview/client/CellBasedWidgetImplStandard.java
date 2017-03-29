@@ -15,19 +15,20 @@
  */
 package com.google.gwt.user.cellview.client;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Element_Jso;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.ui.Widget;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Standard implementation used by most cell based widgets.
@@ -107,7 +108,7 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
       Element elem = widget.getElement();
       if (!isNonBubblingEventHandled(elem, typeName)) {
         elem.setAttribute("__gwtCellBasedWidgetImplDispatching" + typeName, "true");
-        sinkEventImpl(elem, typeName);
+        sinkEventImpl(elem.ensureJso(), typeName);
       }
       return -1;
     } else {
@@ -134,7 +135,7 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
    * @param elem     the element to sink the event on
    * @param typeName the name of the event to sink
    */
-  private native void sinkEventImpl(Element elem, String typeName) /*-{
+  private native void sinkEventImpl(Element_Jso elem, String typeName) /*-{
     elem.addEventListener(typeName, @com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent, true);
   }-*/;
 }

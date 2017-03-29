@@ -49,7 +49,7 @@ public class NodeList_Jso<T extends Node> extends JavaScriptObject
 
 	@Override
 	public final T getItem(int index) {
-		return VmLocalDomBridge.nodeFor(getItem0(index));
+		return LocalDomBridge.nodeFor(getItem0(index));
 	}
 
 	/**

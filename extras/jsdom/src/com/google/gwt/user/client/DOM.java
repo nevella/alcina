@@ -25,7 +25,7 @@ import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.OptionElement;
 import com.google.gwt.dom.client.SelectElement;
-import com.google.gwt.dom.client.VmLocalDomBridge;
+import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.impl.DOMImpl;
@@ -1524,9 +1524,10 @@ public class DOM {
 	 *            possible values are described in {@link Event})
 	 */
 	public static void sinkEvents(Element elem, int eventBits) {
-		elem.sinkEvents(eventBits);
-		if (VmLocalDomBridge.elementJso(elem) != null) {
+		if (LocalDomBridge.elementJso(elem) != null) {
 			impl.sinkEvents(elem, eventBits);
+		}else{
+			elem.sinkEvents(eventBits);
 		}
 	}
 
@@ -1641,7 +1642,7 @@ public class DOM {
 		EventTarget eventTarget = evt.getEventTarget();
 		if (Element.is(eventTarget)) {
 			Element rel = Element.as(eventTarget);
-			while (rel != elem) {
+			while (rel != elem && rel!=null) {
 				if (rel.uiObjectListener != null) {
 					rel.uiObjectListener.onBrowserEvent(evt);
 				}
