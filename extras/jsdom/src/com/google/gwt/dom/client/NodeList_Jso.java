@@ -43,7 +43,7 @@ public class NodeList_Jso<T extends Node> extends JavaScriptObject
 	 * @return the node at the indexth position in the NodeList, or null if that
 	 *         is not a valid index.
 	 */
-	private final native Node_Jso getItem0(int index) /*-{
+	 final native Node_Jso getItem0(int index) /*-{
         return this[index];
 	}-*/;
 

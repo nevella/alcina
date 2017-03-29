@@ -18,7 +18,7 @@ package com.google.gwt.dom.client;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JsArray;
 
-public class VmLocalDOMImpl {
+public class VmLocalDomImpl {
 	final DOMImpl domImpl = GWT.create(DOMImpl.class);
 
 	IDOMImpl vmLocalImpl = null;
@@ -27,13 +27,13 @@ public class VmLocalDOMImpl {
 		this.vmLocalImpl = vmLocalImpl;
 	}
 
-	public boolean useVmLocalImpl = false;
+	public static boolean useVmLocalImpl = false;
 
 	VmLocalDomBridge bridge;
 
-	public VmLocalDOMImpl() {
+	public VmLocalDomImpl() {
 		bridge = VmLocalDomBridge.get();
-		bridge.vmLocalDomImpl=this;
+		bridge.vmLocalDomImpl = this;
 	}
 
 	public void buttonClick(ButtonElement button) {
@@ -65,7 +65,6 @@ public class VmLocalDOMImpl {
 		}
 	}
 
-
 	private <N extends Node> N nodeFor(Node_Jso node_dom) {
 		return VmLocalDomBridge.nodeFor(node_dom);
 	}
@@ -95,7 +94,8 @@ public class VmLocalDOMImpl {
 		if (useVmLocalImpl) {
 			return vmLocalImpl.createInputRadioElement(doc, name);
 		} else {
-			return nodeFor(domImpl.createInputRadioElement(doc.typedDomImpl, name));
+			return nodeFor(
+					domImpl.createInputRadioElement(doc.typedDomImpl, name));
 		}
 	}
 
@@ -112,14 +112,15 @@ public class VmLocalDOMImpl {
 			boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode) {
-		return domImpl.createKeyEvent(doc.typedDomImpl, type, canBubble, cancelable,
-				ctrlKey, altKey, shiftKey, metaKey, keyCode, charCode);
+		return domImpl.createKeyEvent(doc.typedDomImpl, type, canBubble,
+				cancelable, ctrlKey, altKey, shiftKey, metaKey, keyCode,
+				charCode);
 	}
 
 	public NativeEvent createKeyPressEvent(Document document, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int charCode) {
-		return domImpl.createKeyPressEvent(document.typedDomImpl, ctrlKey, altKey,
-				shiftKey, metaKey, charCode);
+		return domImpl.createKeyPressEvent(document.typedDomImpl, ctrlKey,
+				altKey, shiftKey, metaKey, charCode);
 	}
 
 	public NativeEvent createMouseEvent(Document doc, String type,
@@ -255,7 +256,10 @@ public class VmLocalDOMImpl {
 	}
 
 	private void resolveAllPending() {
-		checkNotInVmLocalImpl();
+		if(useVmLocalImpl){
+		VmLocalDomBridge.get().flush();
+		VmLocalDomBridge.get().useJvmDom();
+		}
 	}
 
 	public int getAbsoluteTop(Element elem) {
@@ -269,12 +273,12 @@ public class VmLocalDOMImpl {
 	}
 
 	public int getBodyOffsetLeft(Document doc) {
-		resolveAllPending();
+//		resolveAllPending();
 		return domImpl.getBodyOffsetLeft(doc.typedDomImpl);
 	}
 
 	public int getBodyOffsetTop(Document doc) {
-		resolveAllPending();
+//		resolveAllPending();
 		return domImpl.getBodyOffsetTop(doc.typedDomImpl);
 	}
 
@@ -332,6 +336,9 @@ public class VmLocalDOMImpl {
 
 	public Element getParentElement(Node node) {
 		if (node.vmLocal) {
+			if (node.domImpl != null) {
+				int debug = 3;
+			}
 			return node.getParentElement();
 		} else {
 			return nodeFor(domImpl.getParentElement(node.domImpl));
@@ -342,7 +349,8 @@ public class VmLocalDOMImpl {
 		if (elem.vmLocal) {
 			return elem.getPreviousSiblingElement();
 		} else {
-			return nodeFor(domImpl.getPreviousSiblingElement(elem.typedDomImpl));
+			return nodeFor(
+					domImpl.getPreviousSiblingElement(elem.typedDomImpl));
 		}
 	}
 
@@ -418,7 +426,8 @@ public class VmLocalDOMImpl {
 			OptionElement before) {
 		// FIXME
 		resolveAllPending();
-		domImpl.selectAdd(select.typedDomImpl, option.typedDomImpl, before.typedDomImpl);
+		domImpl.selectAdd(select.typedDomImpl, option.typedDomImpl,
+				before.typedDomImpl);
 	}
 
 	public void selectClear(SelectElement select) {

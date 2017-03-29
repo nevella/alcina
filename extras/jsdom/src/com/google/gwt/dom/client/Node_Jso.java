@@ -67,12 +67,12 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 * error: "Permission denied to access property 'nodeType'"
 	 */
 	public static native boolean is(JavaScriptObject o) /*-{
-        try {
-            return (!!o) && (!!o.nodeType);
-        } catch (e) {
-            return false;
-        }
-	}-*/;
+														try {
+														return (!!o) && (!!o.nodeType);
+														} catch (e) {
+														return false;
+														}
+														}-*/;
 
 	protected Node_Jso() {
 	}
@@ -84,6 +84,9 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	}
 
 	private Node_Jso resolvedOrPending(Node node) {
+		if (node == null) {
+			return null;
+		}
 		if (node.resolved) {
 			return node.domImpl;
 		}
@@ -99,8 +102,8 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 * @return The node added
 	 */
 	private final native Node_Jso appendChild0(Node_Jso newChild) /*-{
-        return this.appendChild(newChild);
-	}-*/;
+																	return this.appendChild(newChild);
+																	}-*/;
 
 	/**
 	 * Returns a duplicate of this node, i.e., serves as a generic copy
@@ -122,8 +125,8 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 * @return The duplicate node
 	 */
 	private final native Node_Jso cloneNode0(boolean deep) /*-{
-        return this.cloneNode(deep);
-	}-*/;
+															return this.cloneNode(deep);
+															}-*/;
 
 	@Override
 	public final Node cloneNode(boolean deep) {
@@ -140,16 +143,16 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	}
 
 	private final native NodeList_Jso<Node> getChildNodes0() /*-{
-        return this.childNodes;
-	}-*/;
+																return this.childNodes;
+																}-*/;
 
 	/**
 	 * The first child of this node. If there is no such node, this returns
 	 * null.
 	 */
 	public final native Node_Jso getFirstChild0() /*-{
-        return this.firstChild;
-	}-*/;
+													return this.firstChild;
+													}-*/;
 
 	@Override
 	public final Node getFirstChild() {
@@ -160,8 +163,8 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 * The last child of this node. If there is no such node, this returns null.
 	 */
 	private final native Node_Jso getLastChild0() /*-{
-        return this.lastChild;
-	}-*/;
+													return this.lastChild;
+													}-*/;
 
 	@Override
 	public final Node getLastChild() {
@@ -173,8 +176,8 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 * returns null.
 	 */
 	private final native Node_Jso getNextSibling0() /*-{
-        return this.nextSibling;
-	}-*/;
+													return this.nextSibling;
+													}-*/;
 
 	@Override
 	public final Node getNextSibling() {
@@ -186,16 +189,16 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 */
 	@Override
 	public final native String getNodeName() /*-{
-        return this.nodeName;
-	}-*/;
+												return this.nodeName;
+												}-*/;
 
 	/**
 	 * A code representing the type of the underlying object, as defined above.
 	 */
 	@Override
 	public final native short getNodeType() /*-{
-        return this.nodeType;
-	}-*/;
+											return this.nodeType;
+											}-*/;
 
 	/**
 	 * The value of this node, depending on its type; see the table above. When
@@ -203,16 +206,16 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 */
 	@Override
 	public final native String getNodeValue() /*-{
-        return this.nodeValue;
-	}-*/;
+												return this.nodeValue;
+												}-*/;
 
 	/**
 	 * The Document object associated with this node. This is also the
 	 * {@link Document} object used to create new nodes.
 	 */
 	private final native Document_Jso getOwnerDocument0() /*-{
-        return this.ownerDocument;
-	}-*/;
+															return this.ownerDocument;
+															}-*/;
 
 	@Override
 	public final Document getOwnerDocument() {
@@ -224,9 +227,9 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 * However, if a node has just been created and not yet added to the tree,
 	 * or if it has been removed from the tree, this is null.
 	 */
-	private final native Node_Jso getParentNode0() /*-{
-        return this.parentNode;
-	}-*/;
+	final native Node_Jso getParentNode0() /*-{
+											return this.parentNode;
+											}-*/;
 
 	@Override
 	public final Node getParentNode() {
@@ -238,8 +241,8 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 * returns null.
 	 */
 	private final native Node_Jso getPreviousSibling0() /*-{
-        return this.previousSibling;
-	}-*/;
+														return this.previousSibling;
+														}-*/;
 
 	@Override
 	public final Node getPreviousSibling() {
@@ -251,8 +254,8 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 */
 	@Override
 	public final native boolean hasChildNodes() /*-{
-        return this.hasChildNodes();
-	}-*/;
+												return this.hasChildNodes();
+												}-*/;
 
 	/**
 	 * Inserts the node newChild before the existing child node refChild. If
@@ -268,8 +271,8 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 */
 	private final native Node_Jso insertBefore0(Node_Jso newChild,
 			Node_Jso refChild) /*-{
-        return this.insertBefore(newChild, refChild);
-	}-*/;
+								return this.insertBefore(newChild, refChild);
+								}-*/;
 
 	@Override
 	public final Node insertBefore(Node newChild, Node refChild) {
@@ -300,8 +303,8 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 * @return The node removed
 	 */
 	private final native Node_Jso removeChild0(Node_Jso oldChild) /*-{
-        return this.removeChild(oldChild);
-	}-*/;
+																	return this.removeChild(oldChild);
+																	}-*/;
 
 	@Override
 	public final Node removeChild(Node oldChild) {
@@ -320,8 +323,8 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 */
 	private final native Node_Jso replaceChild0(Node_Jso newChild,
 			Node_Jso oldChild) /*-{
-        return this.replaceChild(newChild, oldChild);
-	}-*/;
+								return this.replaceChild(newChild, oldChild);
+								}-*/;
 
 	@Override
 	public final Node replaceChild(Node newChild, Node oldChild) {
@@ -336,11 +339,11 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 */
 	@Override
 	public final native void setNodeValue(String nodeValue) /*-{
-        this.nodeValue = nodeValue;
-	}-*/;
+															this.nodeValue = nodeValue;
+															}-*/;
 
 	@Override
 	public final native void callMethod(String methodName) /*-{
-        this[methodName]();
-	}-*/;
+															this[methodName]();
+															}-*/;
 }

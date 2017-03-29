@@ -12,6 +12,9 @@ import com.google.gwt.user.client.DOM;
 public class VmLocalDomBridge {
 	static VmLocalDomBridge bridge = null;
 
+	// FIXME - better map
+	private static Map<String, String> declarativeCssNames = new LinkedHashMap<>();
+
 	public static String declarativeCssName(String key) {
 		return declarativeCssNames.computeIfAbsent(key, k -> {
 			String lcKey = k.toLowerCase();
@@ -31,6 +34,64 @@ public class VmLocalDomBridge {
 				return k;
 			}
 		});
+	}
+
+	public static Element_Jso elementJso(Element elem) {
+		return elementJso(elem, true);
+	}
+
+	public static Element_Jso elementJso(Element elem, boolean maybeEnsure) {
+		if (!VmLocalDomImpl.useVmLocalImpl && maybeEnsure) {
+			ensureJso(elem);
+		}
+		return elem.typedDomImpl;
+	}
+
+	private static boolean ensuring = false;
+
+	public static boolean resolving;
+
+	public static void ensureJso(Element element) {
+		if (element.typedDomImpl != null) {
+			return;
+		}
+		if (ensuring) {
+			return;
+		}
+		try {
+			ensuring = true;
+			String id = element.getId();
+			if (!id.isEmpty()) {
+				element.typedDomImpl = Document.get().typedDomImpl
+						.getElementById0(id);
+				return;
+			}
+			Element original = element;
+			// these will be Element_Jvms
+			List<Element> chain = new ArrayList<>();
+			// hmmm...ascend to dom, descend...
+			while (element.typedDomImpl == null) {
+				chain.add(element);
+				element = element.getParentElement();
+			}
+			chain.add(element);
+			for (int idx = chain.size() - 1; idx >= 0; idx--) {
+				Element withDom = chain.get(idx);
+				Element_Jvm vmImpl = (Element_Jvm) withDom.localImpl();
+				NodeList_Jso<Element> childNodes = (NodeList_Jso) withDom.typedDomImpl
+						.getChildNodes().impl;
+				for (int idx2 = 0; idx2 < vmImpl.children.size(); idx2++) {
+					Element_Jvm child_jvm = (Element_Jvm) vmImpl.children
+							.get(idx2);
+					((Element) child_jvm.node)
+							.putDomImpl(childNodes.getItem0(idx2));
+					((Element) child_jvm.node)
+							.putImpl(childNodes.getItem0(idx2));
+				}
+			}
+		} finally {
+			ensuring = false;
+		}
 	}
 
 	public static Node_Jso ensurePendingResolutionNode(Node node) {
@@ -56,6 +117,7 @@ public class VmLocalDomBridge {
 			});
 			int bits = ((Element_Jvm) vmlocal_elt).orSunkEventsOfAllChildren(0);
 			DOM.sinkEvents(elem, bits);
+			node.putImpl(node.domImpl);
 		}
 	}
 
@@ -84,6 +146,10 @@ public class VmLocalDomBridge {
 		get().register0(doc);
 	}
 
+	public static void registerId(Element_Jvm element_Jvm) {
+		get().registerId0(element_Jvm);
+	}
+
 	public static Style styleObjectFor(JavaScriptObject o) {
 		if (o == null) {
 			return null;
@@ -98,16 +164,13 @@ public class VmLocalDomBridge {
 		return get().styleObjectFor0(style_jvm);
 	}
 
-	// FIXME - better map
-	private static Map<String, String> declarativeCssNames = new LinkedHashMap<>();
-
 	Map<JavaScriptObject, Node> javascriptObjectNodeLookup;
 
 	Map<JavaScriptObject, Style> javascriptObjectStyleLookup;
 
-	Map<Node_Jvm, Node> nodeJvmLookup;
+	Map<DomNode, Node> localNodeLookup;
 
-	Map<Style_Jvm, Style> styleJvmLookup;
+	Map<DomStyle, Style> localStyleLookup;
 
 	Map<String, Node> idLookup;
 
@@ -117,7 +180,9 @@ public class VmLocalDomBridge {
 
 	List<Node> pendingResolution = new ArrayList<>();
 
-	VmLocalDOMImpl vmLocalDomImpl;
+	VmLocalDomImpl vmLocalDomImpl;
+
+	static boolean ensuringPendingResolutionNode;
 
 	private VmLocalDomBridge() {
 		// FIXME - weak maps
@@ -126,43 +191,14 @@ public class VmLocalDomBridge {
 		idLookup = new LinkedHashMap<>();
 		elementCreators = new LinkedHashMap<>();
 		initElementCreators();
-		nodeJvmLookup = new LinkedHashMap<>();
-		styleJvmLookup = new LinkedHashMap<>();
-	}
-
-	private void initElementCreators() {
-		elementCreators.put(DivElement.TAG, () -> new DivElement());
-		elementCreators.put(SpanElement.TAG, () -> new SpanElement());
-		elementCreators.put(BodyElement.TAG, () -> new BodyElement());
-		elementCreators.put(ButtonElement.TAG, () -> new ButtonElement());
-		elementCreators.put(StyleElement.TAG, () -> new StyleElement());
-		elementCreators.put(TableElement.TAG, () -> new TableElement());
-		elementCreators.put(HeadElement.TAG, () -> new HeadElement());
-		elementCreators.put(TableSectionElement.TAG_TBODY,
-				() -> new TableSectionElement());
-		elementCreators.put(TableSectionElement.TAG_TFOOT,
-				() -> new TableSectionElement());
-		elementCreators.put(TableSectionElement.TAG_THEAD,
-				() -> new TableSectionElement());
-		elementCreators.put(TableCaptionElement.TAG, () -> new HeadElement());
-		elementCreators.put(TableCellElement.TAG_TD,
-				() -> new TableCellElement());
-		elementCreators.put(TableCellElement.TAG_TH,
-				() -> new TableCellElement());
-		elementCreators.put(TableColElement.TAG_COL,
-				() -> new TableColElement());
-		elementCreators.put(TableColElement.TAG_COLGROUP,
-				() -> new TableColElement());
-		elementCreators.put(TableRowElement.TAG, () -> new TableRowElement());
-		elementCreators.put(HeadElement.TAG, () -> new HeadElement());
-		elementCreators.put(HeadElement.TAG, () -> new HeadElement());
-		elementCreators.put(InputElement.TAG, () -> new InputElement());
+		localNodeLookup = new LinkedHashMap<>();
+		localStyleLookup = new LinkedHashMap<>();
 	}
 
 	public void flush() {
 		pendingResolution.stream().forEach(VmLocalDomBridge::ensureResolved);
 		pendingResolution.clear();
-		vmLocalDomImpl.useVmLocalImpl = false;
+		VmLocalDomImpl.useVmLocalImpl = false;
 	}
 
 	public void useJvmDom() {
@@ -170,7 +206,7 @@ public class VmLocalDomBridge {
 	}
 
 	public void useVmLocalDom() {
-		vmLocalDomImpl.useVmLocalImpl = true;
+		VmLocalDomImpl.useVmLocalImpl = true;
 	}
 
 	private void addToIdLookup(Node node) {
@@ -215,48 +251,78 @@ public class VmLocalDomBridge {
 			return node.domImpl;
 		}
 		pendingResolution.add(node);
-		boolean useVmLocalImpl = vmLocalDomImpl.useVmLocalImpl;
-		try {
-			vmLocalDomImpl.useVmLocalImpl = false;
-			Node_Jso nodeDom = null;
-			int nodeType = node.getNodeType();
-			switch (nodeType) {
-			case Node.TEXT_NODE:
-				// FIXME - these go to DomImpl, all the document.create calls
-				// get
-				// rewritten
-				nodeDom = doc.createTextNode(((Text) node).getData()).domImpl;
-				break;
-			case Node.ELEMENT_NODE:
-				nodeDom = doc
-						.createElement(((Element) node).getTagName()).domImpl;
-				break;
-			case Node.DOCUMENT_NODE:
-				nodeDom = doc.domImpl;
-				break;
-			default:
-				throw new UnsupportedOperationException();
-			}
-			javascriptObjectNodeLookup.put(nodeDom, node);
-			node.putDomImpl(nodeDom);
-			node.vmLocal = false;
-			return nodeDom;
-		} finally {
-			vmLocalDomImpl.useVmLocalImpl = useVmLocalImpl;
+		boolean useVmLocalImpl = VmLocalDomImpl.useVmLocalImpl;
+		ensuringPendingResolutionNode = true;
+		VmLocalDomImpl.useVmLocalImpl = false;
+		Node_Jso nodeDom = null;
+		int nodeType = node.getNodeType();
+		switch (nodeType) {
+		case Node.TEXT_NODE:
+			// FIXME - these go to DomImpl, all the document.create calls
+			// get
+			// rewritten
+			nodeDom = doc.createTextNode(((Text) node).getData()).domImpl;
+			break;
+		case Node.ELEMENT_NODE:
+			nodeDom = doc.createElement(((Element) node).getTagName()).domImpl;
+			break;
+		case Node.DOCUMENT_NODE:
+			nodeDom = doc.domImpl;
+			break;
+		default:
+			throw new UnsupportedOperationException();
 		}
+		javascriptObjectNodeLookup.put(nodeDom, node);
+		node.putDomImpl(nodeDom);
+		ensuringPendingResolutionNode = false;
+		VmLocalDomImpl.useVmLocalImpl = useVmLocalImpl;
+		if (autoFlush) {
+			flush();
+		}
+		return nodeDom;
 	}
 
 	private native String getId(JavaScriptObject obj) /*-{
-        return obj.id;
-	}-*/;
+														return obj.id;
+														}-*/;
 
 	private native String getNodeName(JavaScriptObject obj) /*-{
-        return obj.nodeName;
-	}-*/;
+															return obj.nodeName;
+															}-*/;
 
 	private native int getNodeType(JavaScriptObject obj) /*-{
-        return obj.nodeType;
-	}-*/;
+															return obj.nodeType;
+															}-*/;
+
+	private void initElementCreators() {
+		elementCreators.put(DivElement.TAG, () -> new DivElement());
+		elementCreators.put(SpanElement.TAG, () -> new SpanElement());
+		elementCreators.put(BodyElement.TAG, () -> new BodyElement());
+		elementCreators.put(ButtonElement.TAG, () -> new ButtonElement());
+		elementCreators.put(StyleElement.TAG, () -> new StyleElement());
+		elementCreators.put(TableElement.TAG, () -> new TableElement());
+		elementCreators.put(HeadElement.TAG, () -> new HeadElement());
+		elementCreators.put(TableSectionElement.TAG_TBODY,
+				() -> new TableSectionElement());
+		elementCreators.put(TableSectionElement.TAG_TFOOT,
+				() -> new TableSectionElement());
+		elementCreators.put(TableSectionElement.TAG_THEAD,
+				() -> new TableSectionElement());
+		elementCreators.put(TableCaptionElement.TAG, () -> new HeadElement());
+		elementCreators.put(TableCellElement.TAG_TD,
+				() -> new TableCellElement());
+		elementCreators.put(TableCellElement.TAG_TH,
+				() -> new TableCellElement());
+		elementCreators.put(TableColElement.TAG_COL,
+				() -> new TableColElement());
+		elementCreators.put(TableColElement.TAG_COLGROUP,
+				() -> new TableColElement());
+		elementCreators.put(TableRowElement.TAG, () -> new TableRowElement());
+		elementCreators.put(HeadElement.TAG, () -> new HeadElement());
+		elementCreators.put(HeadElement.TAG, () -> new HeadElement());
+		elementCreators.put(InputElement.TAG, () -> new InputElement());
+		elementCreators.put(TextAreaElement.TAG, () -> new TextAreaElement());
+	}
 
 	private <N extends Node> N nodeFor0(JavaScriptObject o) {
 		Node node = javascriptObjectNodeLookup.get(o);
@@ -276,14 +342,13 @@ public class VmLocalDomBridge {
 		node.putDomImpl(o.cast());
 		node.putImpl(o.cast());
 		node.resolved = true;
-		node.vmLocal = false;
 		addToIdLookup(node);
 		javascriptObjectNodeLookup.put(o, node);
 		return (N) node;
 	}
 
 	private Node nodeFor0(Node_Jvm node_jvm) {
-		return nodeJvmLookup.computeIfAbsent(node_jvm, key -> {
+		return localNodeLookup.computeIfAbsent(node_jvm, key -> {
 			Node node = createNode(node_jvm.getNodeType(),
 					node_jvm.getNodeName());
 			node.vmLocal = true;
@@ -296,6 +361,11 @@ public class VmLocalDomBridge {
 	private void register0(Document doc) {
 		this.doc = doc;
 		javascriptObjectNodeLookup.put(doc.domImpl, doc);
+		localNodeLookup.put(doc.vmLocalImpl, doc);
+	}
+
+	private void registerId0(Element_Jvm element_Jvm) {
+		idLookup.put(element_Jvm.getId(), element_Jvm.node);
 	}
 
 	private Style styleObjectFor0(JavaScriptObject o) {
@@ -311,41 +381,13 @@ public class VmLocalDomBridge {
 	}
 
 	private Style styleObjectFor0(Style_Jvm style_jvm) {
-		return styleJvmLookup.computeIfAbsent(style_jvm, key -> {
+		return localStyleLookup.computeIfAbsent(style_jvm, key -> {
 			Style style = new Style();
 			style.impl = style_jvm;
 			return style;
 		});
 	}
 
-	public static Element_Jso elementJso(Element elem) {
-		return elem.typedDomImpl;
-	}
+	public boolean autoFlush = false;
 
-	public static void registerId(Element_Jvm element_Jvm) {
-		get().registerId0(element_Jvm);
-	}
-
-	private void registerId0(Element_Jvm element_Jvm) {
-		idLookup.put(element_Jvm.getId(), element_Jvm.node);
-	}
-
-	public static void ensureJso(Element element) {
-		List<Integer> indicies = new ArrayList<>();
-		// hmmm...ascend to dom, descend...
-		while (element.typedDomImpl == null) {
-			indicies.add(element.typedImpl.indexInParentChildren());
-			element = element.getParentElement();
-			// got to first with jso, use nodeindex
-		}
-		for (int idx = indicies.size() - 1; idx >= 0; idx--) {
-			int nodeIdx = indicies.get(idx);
-			Element item = (Element) element.typedDomImpl.getChildNodes()
-					.getItem(nodeIdx);
-			Element_Jso child_jso = (Element_Jso) item.domImpl;
-			element = item;
-			element.putDomImpl(child_jso);
-		}
-		element.typedDomImpl.focus();
-	}
 }

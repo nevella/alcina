@@ -6,22 +6,24 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 public class Document_Jvm extends Node_Jvm implements DomDocument {
 	@Override
 	public String getNodeName() {
-		return ((DomDocument) this).getNodeName();
+		return "#document";
 	}
 
+	public Document_Jvm() {
+	}
 	@Override
 	public short getNodeType() {
-		return ((DomDocument) this).getNodeType();
+		return Node.DOCUMENT_NODE;
 	}
 
 	@Override
 	public String getNodeValue() {
-		return ((DomDocument) this).getNodeValue();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setNodeValue(String nodeValue) {
-		((DomDocument) this).setNodeValue(nodeValue);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -32,8 +34,7 @@ public class Document_Jvm extends Node_Jvm implements DomDocument {
 
 	@Override
 	public Document nodeFor() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -62,5 +63,10 @@ public class Document_Jvm extends Node_Jvm implements DomDocument {
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
 		throw new UnsupportedOperationException();
 		
+	}
+
+	@Override
+	void appendTextContent(StringBuilder builder) {
+throw new UnsupportedOperationException();		
 	}
 }

@@ -31,6 +31,7 @@
 			<classpath>
 				<path refid="framework.common.lib.path" />
 			</classpath>
+
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${framework.impl.jboss-hibernate.build.dir}" />
@@ -144,6 +145,7 @@
 				<include name="**/*.*" />
 				<!-- put in server (servlet/war) jar due to GWT/RPC classloader issues -->
 				<exclude name="${framework.remote.interface.package}" />
+				<exclude name="com/google/gwt/dom/client/**.*" />
 
 			</fileset>
 

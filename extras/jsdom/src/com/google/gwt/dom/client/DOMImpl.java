@@ -19,7 +19,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JsArray;
 
 abstract class DOMImpl {
-	static final VmLocalDOMImpl impl = new VmLocalDOMImpl();
+	static final VmLocalDomImpl impl = new VmLocalDomImpl();
 //	static final DOMImpl impl = GWT.create(DOMImpl.class);
 
 	/**

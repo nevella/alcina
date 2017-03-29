@@ -137,7 +137,11 @@ public abstract class DOMImplStandard extends DOMImpl {
   }
 
   @Override
-  public native Element getChild(Element elem, int index) /*-{
+  public  Element getChild(Element elem, int index) {
+	  return VmLocalDomBridge.nodeFor(getChild0(VmLocalDomBridge.elementJso(elem),index));
+  }
+  
+   native Element_Jso getChild0(Element_Jso elem, int index) /*-{
     var count = 0, child = elem.firstChild;
     while (child) {
       if (child.nodeType == 1) {

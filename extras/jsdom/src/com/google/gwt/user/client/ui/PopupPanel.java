@@ -77,8 +77,7 @@ import com.google.gwt.user.client.ui.impl.PopupImpl;
  * </p>
  * 
  * <p>
- * <h3>Example</h3>
- * {@example com.google.gwt.examples.PopupPanelExample}
+ * <h3>Example</h3> {@example com.google.gwt.examples.PopupPanelExample}
  * </p>
  * <h3>CSS Style Rules</h3>
  * <dl>
@@ -505,7 +504,8 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		autoHidePartners.add(partner);
 	}
 
-	public HandlerRegistration addCloseHandler(CloseHandler<PopupPanel> handler) {
+	public HandlerRegistration
+			addCloseHandler(CloseHandler<PopupPanel> handler) {
 		return addHandler(handler, CloseEvent.getType());
 	}
 
@@ -707,8 +707,8 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	 */
 	@Override
 	public boolean isVisible() {
-		return !"hidden".equals(getElement().getStyle().getProperty(
-				"visibility"));
+		return !"hidden"
+				.equals(getElement().getStyle().getProperty("visibility"));
 	}
 
 	/**
@@ -904,9 +904,9 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		topPosition = top;
 		// Account for the difference between absolute position and the
 		// body's positioning context.
-		if(!initialPopupPosition){
-		left -= Document.get().getBodyOffsetLeft();
-		top -= Document.get().getBodyOffsetTop();
+		if (!initialPopupPosition) {
+			left -= Document.get().getBodyOffsetLeft();
+			top -= Document.get().getBodyOffsetTop();
 		}
 		// Set the popup's position manually, allowing setPopupPosition() to be
 		// called before show() is called (so a popup can be positioned without
@@ -982,8 +982,8 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		// Because the panel is absolutely positioned, this will not create
 		// "holes" in displayed contents and it allows normal layout passes
 		// to occur so the size of the PopupPanel can be reliably determined.
-		DOM.setStyleAttribute(getElement(), "visibility", visible ? "visible"
-				: "hidden");
+		DOM.setStyleAttribute(getElement(), "visibility",
+				visible ? "visible" : "hidden");
 		// If the PopupImpl creates an iframe shim, it's also necessary to hide
 		// it
 		// as well.
@@ -1160,11 +1160,11 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	 *            The Element on which <code>blur()</code> will be invoked
 	 */
 	private native void blur(Element elt) /*-{
-	// Issue 2390: blurring the body causes IE to disappear to the background
-	if (elt.blur && elt != $doc.body) {
-	    elt.blur();
-	}
-	}-*/;
+											// Issue 2390: blurring the body causes IE to disappear to the background
+											if (elt.blur && elt != $doc.body) {
+											elt.blur();
+											}
+											}-*/;
 
 	/**
 	 * Does the event target one of the partner elements?
@@ -1376,18 +1376,14 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		if (cachedIsMobile == null) {
 			cachedIsMobile = BrowserMod.isMobile();
 		}
-		boolean wasTouchMaybeDrag = cachedIsMobile
-				&& (BrowserEvents.TOUCHSTART.equals(nativeEvent.getType())
-						|| BrowserEvents.TOUCHEND.equals(nativeEvent.getType())
-						|| BrowserEvents.TOUCHMOVE
-								.equals(nativeEvent.getType())
-						|| BrowserEvents.GESTURECHANGE.equals(nativeEvent
-								.getType())
-						|| BrowserEvents.GESTUREEND.equals(nativeEvent
-								.getType())
-						|| BrowserEvents.GESTURESTART.equals(nativeEvent
-								.getType()) || BrowserEvents.SCROLL
-							.equals(nativeEvent.getType()));
+		boolean wasTouchMaybeDrag = cachedIsMobile && (BrowserEvents.TOUCHSTART
+				.equals(nativeEvent.getType())
+				|| BrowserEvents.TOUCHEND.equals(nativeEvent.getType())
+				|| BrowserEvents.TOUCHMOVE.equals(nativeEvent.getType())
+				|| BrowserEvents.GESTURECHANGE.equals(nativeEvent.getType())
+				|| BrowserEvents.GESTUREEND.equals(nativeEvent.getType())
+				|| BrowserEvents.GESTURESTART.equals(nativeEvent.getType())
+				|| BrowserEvents.SCROLL.equals(nativeEvent.getType()));
 		if (eventTargetsPopupOrPartner || eventTargetsScrollBar
 				|| wasTouchMaybeDrag) {
 			event.consume();
@@ -1450,11 +1446,14 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 			break;
 		}
 		case Event.ONFOCUS: {
-			Element target = nativeEvent.getTarget();
-			if (modal && !eventTargetsPopupOrPartner && (target != null)) {
-				blur(target);
-				event.cancel();
-				return;
+			EventTarget eventTarget = nativeEvent.getEventTarget();
+			if (Element.is(eventTarget)) {
+				Element target = eventTarget.cast();
+				if (modal && !eventTargetsPopupOrPartner && (target != null)) {
+					blur(target);
+					event.cancel();
+					return;
+				}
 			}
 			break;
 		}
@@ -1478,14 +1477,15 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		if (showing) {
 			nativePreviewHandlerRegistration = Event
 					.addNativePreviewHandler(new NativePreviewHandler() {
-						public void onPreviewNativeEvent(
-								NativePreviewEvent event) {
+						public void
+								onPreviewNativeEvent(NativePreviewEvent event) {
 							previewNativeEvent(event);
 						}
 					});
 			historyHandlerRegistration = History
 					.addValueChangeHandler(new ValueChangeHandler<String>() {
-						public void onValueChange(ValueChangeEvent<String> event) {
+						public void
+								onValueChange(ValueChangeEvent<String> event) {
 							if (autoHideOnHistoryEvents) {
 								hide();
 							}

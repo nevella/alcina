@@ -69,4 +69,9 @@ public class Text_Jvm extends Node_Jvm implements DomText {
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
 		builder.appendEscaped(text);
 	}
+
+	@Override
+	void appendTextContent(StringBuilder builder) {
+		builder.append(getData());
+	}
 }

@@ -103,7 +103,7 @@ public abstract class Node_Jvm implements DomNode {
 		if (refChild == null) {
 			children.add((Node_Jvm) newChild.impl);
 		} else {
-			int idx = children.indexOf(newChild.impl);
+			int idx = children.indexOf(refChild.impl);
 			Preconditions.checkArgument(idx != -1,
 					"refchild not a child of this node");
 			children.add(idx, (Node_Jvm) newChild.impl);
@@ -113,7 +113,10 @@ public abstract class Node_Jvm implements DomNode {
 
 	@Override
 	public boolean isOrHasChild(Node child) {
-		throw new UnsupportedOperationException();
+		//FIXME
+		return false;
+		
+//		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -178,6 +181,7 @@ public abstract class Node_Jvm implements DomNode {
 	}
 
 	abstract void appendOuterHtml(UnsafeHtmlBuilder builder);
+	abstract void appendTextContent(StringBuilder builder);
 
 	
 }

@@ -15,13 +15,15 @@
  */
 package com.google.gwt.user.client.ui;
 
+import java.util.Locale;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.debug.client.DebugInfo;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Element_Jso;
+import com.google.gwt.dom.client.VmLocalDomBridge;
 import com.google.gwt.user.client.DOM;
-
-import java.util.Locale;
 
 /**
  * The superclass for all user-interface objects. It simply wraps a DOM element,
@@ -233,7 +235,10 @@ public abstract class UIObject implements HasVisibility {
    * accurately reflect whether the element is actually visible in the browser.
    * </p>
    */
-  public static native boolean isVisible(Element elem) /*-{
+  public static  boolean isVisible(Element elem){
+  		return isVisible0(VmLocalDomBridge.elementJso(elem));
+  }
+  private static native boolean isVisible0(Element_Jso elem) /*-{
     return (elem.style.display != 'none');
   }-*/;
 

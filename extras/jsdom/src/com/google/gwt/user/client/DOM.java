@@ -22,6 +22,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.OptionElement;
 import com.google.gwt.dom.client.SelectElement;
 import com.google.gwt.dom.client.VmLocalDomBridge;
@@ -831,7 +832,16 @@ public class DOM {
 	 */
 	public static Element getChild(Element parent,
 			int index) {
-		return asOld(impl.getChild(parent, index));
+		NodeList<Node> childNodes = parent.getChildNodes();
+		for(int idx=0;idx<childNodes.getLength();idx++){
+			Node node = childNodes.getItem(idx);
+			if(node.getNodeType()==Node.ELEMENT_NODE){
+				if(index--==0){
+					return (Element) node;
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -842,7 +852,15 @@ public class DOM {
 	 * @return the number of children
 	 */
 	public static int getChildCount(Element parent) {
-		return impl.getChildCount(parent);
+		NodeList<Node> childNodes = parent.getChildNodes();
+		int count=0;
+		for(int idx=0;idx<childNodes.getLength();idx++){
+			Node node = childNodes.getItem(idx);
+			if(node.getNodeType()==Node.ELEMENT_NODE){
+				count++;
+			}
+		}
+		return count;
 	}
 
 	/**
@@ -1117,7 +1135,8 @@ public class DOM {
 	 * @see com.google.gwt.user.client.ui.PotentialElement#resolve(Element)
 	 */
 	public static void insertChild(Element parent, Element child, int index) {
-		impl.insertChild(parent, child, index);
+		Element refChild = getChild(parent, index);
+		parent.insertBefore(child, refChild);
 	}
 
 	/**

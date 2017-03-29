@@ -38,7 +38,7 @@ public abstract class DOMImpl {
     return @com.google.gwt.user.client.impl.DOMImpl::isMyListener(*)(maybeListener) ? maybeListener : null;
   }-*/;
   public static  void setEventListener(Element elem, EventListener listener){
-	  Element_Jso elementJso = VmLocalDomBridge.elementJso(elem);
+	  Element_Jso elementJso = VmLocalDomBridge.elementJso(elem,false);
 	  if(elementJso!=null){
 		  setEventListener0(elementJso, listener);
 	  }else{

@@ -28,7 +28,9 @@ import com.google.gwt.user.client.EventListener;
  * All HTML element interfaces derive from this class.
  */
 public class Element extends Node implements DomElement {
-	DomElement typedImpl;
+	private DomElement typedImpl;
+
+	DomElement localImpl;
 
 	Element_Jso typedDomImpl;
 
@@ -54,63 +56,63 @@ public class Element extends Node implements DomElement {
 	public static final String DRAGGABLE_TRUE = "true";
 
 	public <T extends Node> T appendChild(T newChild) {
-		return typedImpl.appendChild(newChild);
+		return typedImpl().appendChild(newChild);
 	}
 
 	public Node cloneNode(boolean deep) {
-		return typedImpl.cloneNode(deep);
+		return typedImpl().cloneNode(deep);
 	}
 
 	public boolean addClassName(String className) {
-		return typedImpl.addClassName(className);
+		return typedImpl().addClassName(className);
 	}
 
 	public Node getChild(int index) {
-		return typedImpl.getChild(index);
+		return typedImpl().getChild(index);
 	}
 
 	public int getChildCount() {
-		return typedImpl.getChildCount();
+		return typedImpl().getChildCount();
 	}
 
 	public NodeList<Node> getChildNodes() {
-		return typedImpl.getChildNodes();
+		return typedImpl().getChildNodes();
 	}
 
 	public Node getFirstChild() {
-		return typedImpl.getFirstChild();
+		return typedImpl().getFirstChild();
 	}
 
 	public Node getLastChild() {
-		return typedImpl.getLastChild();
+		return typedImpl().getLastChild();
 	}
 
 	public Node getNextSibling() {
-		return typedImpl.getNextSibling();
+		return typedImpl().getNextSibling();
 	}
 
 	public String getNodeName() {
-		return typedImpl.getNodeName();
+		return typedImpl().getNodeName();
 	}
 
 	public short getNodeType() {
-		return typedImpl.getNodeType();
+		return typedImpl().getNodeType();
 	}
 
 	public String getNodeValue() {
-		return typedImpl.getNodeValue();
+		return typedImpl().getNodeValue();
 	}
 
 	public Element getParentElement() {
-		return typedImpl.getParentElement();
+		return typedImpl().getParentElement();
 	}
 
 	public void blur() {
-		typedImpl.blur();
+		typedImpl().blur();
 	}
 
 	public void dispatchEvent(NativeEvent evt) {
-		typedImpl.dispatchEvent(evt);
+		typedImpl().dispatchEvent(evt);
 	}
 
 	public void focus() {
@@ -119,319 +121,319 @@ public class Element extends Node implements DomElement {
 	}
 
 	public Document getOwnerDocument() {
-		return typedImpl.getOwnerDocument();
+		return typedImpl().getOwnerDocument();
 	}
 
 	public Node getParentNode() {
-		return typedImpl.getParentNode();
+		return typedImpl().getParentNode();
 	}
 
 	public int getAbsoluteBottom() {
-		return typedImpl.getAbsoluteBottom();
+		return typedImpl().getAbsoluteBottom();
 	}
 
 	public Node getPreviousSibling() {
-		return typedImpl.getPreviousSibling();
+		return typedImpl().getPreviousSibling();
 	}
 
 	public boolean hasChildNodes() {
-		return typedImpl.hasChildNodes();
+		return typedImpl().hasChildNodes();
 	}
 
 	public boolean hasParentElement() {
-		return typedImpl.hasParentElement();
+		return typedImpl().hasParentElement();
 	}
 
 	public int getAbsoluteLeft() {
-		return typedImpl.getAbsoluteLeft();
+		return typedImpl().getAbsoluteLeft();
 	}
 
 	public int getAbsoluteRight() {
-		return typedImpl.getAbsoluteRight();
+		return typedImpl().getAbsoluteRight();
 	}
 
 	public int getAbsoluteTop() {
-		return typedImpl.getAbsoluteTop();
+		return typedImpl().getAbsoluteTop();
 	}
 
 	public Node insertAfter(Node newChild, Node refChild) {
-		return typedImpl.insertAfter(newChild, refChild);
+		return typedImpl().insertAfter(newChild, refChild);
 	}
 
 	public String getAttribute(String name) {
-		return typedImpl.getAttribute(name);
+		return typedImpl().getAttribute(name);
 	}
 
 	public String getClassName() {
-		return typedImpl.getClassName();
+		return typedImpl().getClassName();
 	}
 
 	public int getClientHeight() {
-		return typedImpl.getClientHeight();
+		return typedImpl().getClientHeight();
 	}
 
 	public int getClientWidth() {
-		return typedImpl.getClientWidth();
+		return typedImpl().getClientWidth();
 	}
 
 	public String getDir() {
-		return typedImpl.getDir();
+		return typedImpl().getDir();
 	}
 
 	public String getDraggable() {
-		return typedImpl.getDraggable();
+		return typedImpl().getDraggable();
 	}
 
 	public NodeList<Element> getElementsByTagName(String name) {
-		return typedImpl.getElementsByTagName(name);
+		return typedImpl().getElementsByTagName(name);
 	}
 
 	public Element getFirstChildElement() {
-		return typedImpl.getFirstChildElement();
+		return typedImpl().getFirstChildElement();
 	}
 
 	public Element nodeFor() {
-		return typedImpl.elementFor();
+		return typedImpl().elementFor();
 	}
 
 	public Node insertBefore(Node newChild, Node refChild) {
-		return typedImpl.insertBefore(newChild, refChild);
+		return typedImpl().insertBefore(newChild, refChild);
 	}
 
 	public String getId() {
-		return typedImpl.getId();
+		return typedImpl().getId();
 	}
 
 	public String getInnerHTML() {
-		return typedImpl.getInnerHTML();
+		return typedImpl().getInnerHTML();
 	}
 
 	public Node insertFirst(Node child) {
-		return typedImpl.insertFirst(child);
+		return typedImpl().insertFirst(child);
 	}
 
 	public String getInnerText() {
-		return typedImpl.getInnerText();
+		return typedImpl().getInnerText();
 	}
 
 	public String getLang() {
-		return typedImpl.getLang();
+		return typedImpl().getLang();
 	}
 
 	public boolean isOrHasChild(Node child) {
-		return typedImpl.isOrHasChild(child);
+		return typedImpl().isOrHasChild(child);
 	}
 
 	public void removeFromParent() {
-		typedImpl.removeFromParent();
+		typedImpl().removeFromParent();
 	}
 
 	public Element getNextSiblingElement() {
-		return typedImpl.getNextSiblingElement();
+		return typedImpl().getNextSiblingElement();
 	}
 
 	public Node replaceChild(Node newChild, Node oldChild) {
-		return typedImpl.replaceChild(newChild, oldChild);
+		return typedImpl().replaceChild(newChild, oldChild);
 	}
 
 	public int getOffsetHeight() {
-		return typedImpl.getOffsetHeight();
+		return typedImpl().getOffsetHeight();
 	}
 
 	public void setNodeValue(String nodeValue) {
-		typedImpl.setNodeValue(nodeValue);
+		typedImpl().setNodeValue(nodeValue);
 	}
 
 	public Node removeChild(Node oldChild) {
-		return typedImpl.removeChild(oldChild);
+		return typedImpl().removeChild(oldChild);
 	}
 
 	public int getOffsetLeft() {
-		return typedImpl.getOffsetLeft();
+		return typedImpl().getOffsetLeft();
 	}
 
 	public Element getOffsetParent() {
-		return typedImpl.getOffsetParent();
+		return typedImpl().getOffsetParent();
 	}
 
 	public int getOffsetTop() {
-		return typedImpl.getOffsetTop();
+		return typedImpl().getOffsetTop();
 	}
 
 	public int getOffsetWidth() {
-		return typedImpl.getOffsetWidth();
+		return typedImpl().getOffsetWidth();
 	}
 
 	public Element getPreviousSiblingElement() {
-		return typedImpl.getPreviousSiblingElement();
+		return typedImpl().getPreviousSiblingElement();
 	}
 
 	public boolean getPropertyBoolean(String name) {
-		return typedImpl.getPropertyBoolean(name);
+		return typedImpl().getPropertyBoolean(name);
 	}
 
 	public double getPropertyDouble(String name) {
-		return typedImpl.getPropertyDouble(name);
+		return typedImpl().getPropertyDouble(name);
 	}
 
 	public int getPropertyInt(String name) {
-		return typedImpl.getPropertyInt(name);
+		return typedImpl().getPropertyInt(name);
 	}
 
 	public JavaScriptObject getPropertyJSO(String name) {
-		return typedImpl.getPropertyJSO(name);
+		return typedImpl().getPropertyJSO(name);
 	}
 
 	public Object getPropertyObject(String name) {
-		return typedImpl.getPropertyObject(name);
+		return typedImpl().getPropertyObject(name);
 	}
 
 	public String getPropertyString(String name) {
-		return typedImpl.getPropertyString(name);
+		return typedImpl().getPropertyString(name);
 	}
 
 	public int getScrollHeight() {
-		return typedImpl.getScrollHeight();
+		return typedImpl().getScrollHeight();
 	}
 
 	public int getScrollLeft() {
-		return typedImpl.getScrollLeft();
+		return typedImpl().getScrollLeft();
 	}
 
 	public int getScrollTop() {
-		return typedImpl.getScrollTop();
+		return typedImpl().getScrollTop();
 	}
 
 	public int getScrollWidth() {
-		return typedImpl.getScrollWidth();
+		return typedImpl().getScrollWidth();
 	}
 
 	public String getString() {
-		return typedImpl.getString();
+		return typedImpl().getString();
 	}
 
 	public Style getStyle() {
-		return typedImpl.getStyle();
+		return typedImpl().getStyle();
 	}
 
 	public int getTabIndex() {
-		return typedImpl.getTabIndex();
+		return typedImpl().getTabIndex();
 	}
 
 	public String getTagName() {
-		return typedImpl.getTagName();
+		return typedImpl().getTagName();
 	}
 
 	public String getTitle() {
-		return typedImpl.getTitle();
+		return typedImpl().getTitle();
 	}
 
 	public boolean hasAttribute(String name) {
-		return typedImpl.hasAttribute(name);
+		return typedImpl().hasAttribute(name);
 	}
 
 	public boolean hasClassName(String className) {
-		return typedImpl.hasClassName(className);
+		return typedImpl().hasClassName(className);
 	}
 
 	public boolean hasTagName(String tagName) {
-		return typedImpl.hasTagName(tagName);
+		return typedImpl().hasTagName(tagName);
 	}
 
 	public void removeAttribute(String name) {
-		typedImpl.removeAttribute(name);
+		typedImpl().removeAttribute(name);
 	}
 
 	public boolean removeClassName(String className) {
-		return typedImpl.removeClassName(className);
+		return typedImpl().removeClassName(className);
 	}
 
 	public void toggleClassName(String className) {
-		typedImpl.toggleClassName(className);
+		typedImpl().toggleClassName(className);
 	}
 
 	public void replaceClassName(String oldClassName, String newClassName) {
-		typedImpl.replaceClassName(oldClassName, newClassName);
+		typedImpl().replaceClassName(oldClassName, newClassName);
 	}
 
 	public void scrollIntoView() {
-		typedImpl.scrollIntoView();
+		typedImpl().scrollIntoView();
 	}
 
 	public void setAttribute(String name, String value) {
-		typedImpl.setAttribute(name, value);
+		typedImpl().setAttribute(name, value);
 	}
 
 	public void setClassName(String className) {
-		typedImpl.setClassName(className);
+		typedImpl().setClassName(className);
 	}
 
 	public void setDir(String dir) {
-		typedImpl.setDir(dir);
+		typedImpl().setDir(dir);
 	}
 
 	public void setDraggable(String draggable) {
-		typedImpl.setDraggable(draggable);
+		typedImpl().setDraggable(draggable);
 	}
 
 	public void setId(String id) {
-		typedImpl.setId(id);
+		typedImpl().setId(id);
 	}
 
 	public void setInnerHTML(String html) {
-		typedImpl.setInnerHTML(html);
+		typedImpl().setInnerHTML(html);
 	}
 
 	public void setInnerSafeHtml(SafeHtml html) {
-		typedImpl.setInnerSafeHtml(html);
+		typedImpl().setInnerSafeHtml(html);
 	}
 
 	public void setInnerText(String text) {
-		typedImpl.setInnerText(text);
+		typedImpl().setInnerText(text);
 	}
 
 	public void setLang(String lang) {
-		typedImpl.setLang(lang);
+		typedImpl().setLang(lang);
 	}
 
 	public void setPropertyBoolean(String name, boolean value) {
-		typedImpl.setPropertyBoolean(name, value);
+		typedImpl().setPropertyBoolean(name, value);
 	}
 
 	public void setPropertyDouble(String name, double value) {
-		typedImpl.setPropertyDouble(name, value);
+		typedImpl().setPropertyDouble(name, value);
 	}
 
 	public void setPropertyInt(String name, int value) {
-		typedImpl.setPropertyInt(name, value);
+		typedImpl().setPropertyInt(name, value);
 	}
 
 	public void setPropertyJSO(String name, JavaScriptObject value) {
-		typedImpl.setPropertyJSO(name, value);
+		typedImpl().setPropertyJSO(name, value);
 	}
 
 	public void setPropertyObject(String name, Object value) {
-		typedImpl.setPropertyObject(name, value);
+		typedImpl().setPropertyObject(name, value);
 	}
 
 	public void setPropertyString(String name, String value) {
-		typedImpl.setPropertyString(name, value);
+		typedImpl().setPropertyString(name, value);
 	}
 
 	public void setScrollLeft(int scrollLeft) {
-		typedImpl.setScrollLeft(scrollLeft);
+		typedImpl().setScrollLeft(scrollLeft);
 	}
 
 	public void setScrollTop(int scrollTop) {
-		typedImpl.setScrollTop(scrollTop);
+		typedImpl().setScrollTop(scrollTop);
 	}
 
 	public void setTabIndex(int tabIndex) {
-		typedImpl.setTabIndex(tabIndex);
+		typedImpl().setTabIndex(tabIndex);
 	}
 
 	public void setTitle(String title) {
-		typedImpl.setTitle(title);
+		typedImpl().setTitle(title);
 	}
 
 	/**
@@ -498,11 +500,11 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	public Map<String, String> getAttributes() {
-		return typedImpl.getAttributes();
+		return typedImpl().getAttributes();
 	}
 
 	public void sinkEvents(int eventBits) {
-		typedImpl.sinkEvents(eventBits);
+		typedImpl().sinkEvents(eventBits);
 	}
 
 	public Element_Jso getTypedDomImpl() {
@@ -511,17 +513,45 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	public void putDomImpl(Node_Jso nodeDom) {
+		vmLocal = false;
 		typedDomImpl = (Element_Jso) nodeDom;
 		domImpl = nodeDom;
 	}
 
 	@Override
 	public void putImpl(DomNode impl) {
+		if (typedImpl != null) {
+			localImpl = typedImpl;
+		}
 		typedImpl = (DomElement) impl;
 		this.impl = impl;
 	}
+
 	@Override
 	public Integer indexInParentChildren() {
-		return typedImpl.indexInParentChildren();
+		return typedImpl().indexInParentChildren();
+	}
+
+	public void ensureId() {
+		if (typedDomImpl == null) {
+			typedImpl().ensureId();
+		}
+	}
+
+	public DomElement localImpl() {
+		if (localImpl != null) {
+			return localImpl;
+		} else {
+			return typedImpl;
+		}
+	}
+
+	DomElement typedImpl() {
+		if (!VmLocalDomImpl.useVmLocalImpl
+				&& !VmLocalDomBridge.ensuringPendingResolutionNode
+				&& domImpl == null) {
+			VmLocalDomBridge.ensureJso(this);
+		}
+		return typedImpl;
 	}
 }

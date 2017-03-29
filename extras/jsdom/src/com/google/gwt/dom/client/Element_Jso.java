@@ -757,4 +757,8 @@ public class Element_Jso extends Node_Jso implements DomElement {
 	public final Integer indexInParentChildren() {
 		throw new UnsupportedOperationException();
 	}
+	@Override
+	public final void ensureId() {
+		throw new UnsupportedOperationException();
+	}
 }

@@ -175,7 +175,11 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 	 * @return the document element
 	 */
 	@Override
-	public final native Element getDocumentElement() /*-{
+	public  final  Element getDocumentElement() {
+		return VmLocalDomBridge.nodeFor(getDocumentElement0());
+	}
+	
+	 final native Element_Jso getDocumentElement0() /*-{
         return this.documentElement;
 	}-*/;
 

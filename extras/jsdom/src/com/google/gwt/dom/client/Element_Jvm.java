@@ -76,7 +76,14 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 
 	@Override
 	public final String getInnerText() {
-		return DomElement_Static.getInnerText(this);
+		StringBuilder builder = new StringBuilder();
+		appendTextContent(builder);
+		return builder.toString();
+	}
+
+	@Override
+	void appendTextContent(StringBuilder builder) {
+		children.stream().forEach(node -> node.appendTextContent(builder));
 	}
 
 	@Override
@@ -92,7 +99,7 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 	@Override
 	public final int getTabIndex() {
 		String index = getAttribute("tabindex");
-		return index.isEmpty()?0:Integer.parseInt(index);
+		return index.isEmpty() ? 0 : Integer.parseInt(index);
 	}
 
 	@Override
@@ -319,6 +326,7 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 	@Override
 	public void setId(String id) {
 		setAttribute("id", id);
+		VmLocalDomBridge.registerId(this);
 	}
 
 	@Override
@@ -422,10 +430,10 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 
 	static int _idCounter;
 
-	private void ensureId() {
+	@Override
+	public void ensureId() {
 		if (getId().isEmpty()) {
 			setId("__localdom__" + (++_idCounter));
-			VmLocalDomBridge.registerId(this);
 		}
 	}
 
