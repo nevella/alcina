@@ -15,6 +15,9 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gwt.core.client.JavaScriptObject;
 
 /**
@@ -103,7 +106,20 @@ public class TableRowElement extends Element {
 	 * The collection of cells in this row.
 	 */
 	public NodeList<TableCellElement> getCells() {
-		return new NodeList<>(getCells0(ensureJso()));
+		if (provideIsLocal()) {
+			List<Node> nodes = new ArrayList<>();
+			NodeList<Node> childNodes = getChildNodes();
+			for (Node node : childNodes) {
+				if (node.getNodeName().equalsIgnoreCase(TableCellElement.TAG_TD)
+						|| node.getNodeName()
+								.equalsIgnoreCase(TableCellElement.TAG_TH)) {
+					nodes.add(node);
+				}
+			}
+			return new NodeList<>(new NodeList_Wrapped<>(nodes));
+		} else {
+			return new NodeList<>(getCells0(ensureJso()));
+		}
 	}
 
 	private final native NodeList_Jso getCells0(Element_Jso elem) /*-{

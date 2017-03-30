@@ -308,7 +308,16 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 
 	@Override
 	public final Node removeChild(Node oldChild) {
-		return nodeFor(removeChild0(resolvedOrPending(oldChild)));
+		 Node_Jso firstChild0 = getFirstChild0();
+		 if(getChildNodes0().getLength()>2){
+		 Node_Jso item0 = getChildNodes0().getItem0(2);
+		 int debug=3;
+		 }
+		 if(oldChild.provideIsElement()&&!oldChild.provideIsDom()){
+			 ((Element)oldChild).ensureJso();
+		 }
+		Node_Jso resolvedOrPending = resolvedOrPending(oldChild);
+		return nodeFor(removeChild0(resolvedOrPending));
 	}
 
 	/**

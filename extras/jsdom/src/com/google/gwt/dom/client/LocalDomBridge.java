@@ -2,8 +2,10 @@ package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
@@ -21,6 +23,14 @@ public class LocalDomBridge {
 
 	// FIXME - better map
 	private static Map<String, String> declarativeCssNames = new LinkedHashMap<>();
+
+	static LocalDomBridgeDebug debug = new LocalDomBridgeDebug();
+
+	private static boolean ensuring = false;
+
+	public static boolean resolving;
+
+	static boolean ensuringPendingResolutionNode;
 
 	public static String declarativeCssName(String key) {
 		return declarativeCssNames.computeIfAbsent(key, k -> {
@@ -48,105 +58,19 @@ public class LocalDomBridge {
 	}
 
 	public static Element_Jso elementJso(Element elem, boolean maybeEnsure) {
-		if (!LocalDomImpl.useLocalImpl && maybeEnsure) {
+		if (!LocalDomImpl.useLocalImpl && maybeEnsure
+				&& elem.typedDomImpl != null) {
 			ensureJso(elem);
 		}
 		return elem.typedDomImpl;
 	}
 
-	private static boolean ensuring = false;
-
-	public static boolean resolving;
-
 	public static void ensureJso(Element element) {
-		if (get().flushCommand != null) {
-			get().flush();
-		}
-		if (element.typedDomImpl != null) {
-			return;
-		}
-		if (ensuring) {
-			return;
-		}
-		try {
-			ensuring = true;
-			if (debug) {
-				Ax.format("ensure jso - %s\n", element);
-				new Exception().printStackTrace();
-				System.out.println("\n\n*****\n\n");
-			}
-			String id = element.getId();
-			if (!id.isEmpty()) {
-				Element_Jso domImpl = Document.get().typedDomImpl
-						.getElementById0(id);
-				element.putDomImpl(domImpl);
-				element.putImpl(domImpl);
-				return;
-			}
-			Element original = element;
-			// these will be Element_Jvms
-			List<Element> chain = new ArrayList<>();
-			// hmmm...ascend to dom, descend...
-			while (element.typedDomImpl == null) {
-				chain.add(element);
-				element = element.getParentElement();
-			}
-			chain.add(element);
-			//don't go to zero (children of this elt)
-			for (int idx = chain.size() - 1; idx >= 1; idx--) {
-				Element withDom = chain.get(idx);
-				Element_Jvm vmImpl = (Element_Jvm) withDom.localImpl();
-				NodeList_Jso<Element> childNodes = (NodeList_Jso) withDom.typedDomImpl
-						.getChildNodes().impl;
-				if (debug) {
-					Preconditions.checkState(
-							childNodes.getLength() == vmImpl.children.size());
-				}
-				for (int idx2 = 0; idx2 < vmImpl.children.size(); idx2++) {
-					Element_Jvm child_jvm = (Element_Jvm) vmImpl.children
-							.get(idx2);
-					Node_Jso domImpl = childNodes.getItem0(idx2);
-					if (debug) {
-						Preconditions.checkState(domImpl.getNodeName()
-								.equalsIgnoreCase(child_jvm.getNodeName()));
-					}
-					((Element) child_jvm.node).putDomImpl(domImpl);
-					((Element) child_jvm.node).putImpl(domImpl);
-				}
-			}
-		} finally {
-			ensuring = false;
-		}
+		ensureJso(element, true);
 	}
-
-	static boolean debug = true;
 
 	public static Node_Jso ensurePendingResolutionNode(Node node) {
 		return get().ensurePendingResolutionNode0(node);
-	}
-
-	public void ensureResolved(Node node) {
-		if (node.domImpl == null) {
-			throw new UnsupportedOperationException();
-		}
-		if (node.impl != null && node.impl != node.domImpl) {
-			Element elem = (Element) node;
-			Element_Jso dom_elt = (Element_Jso) node.domImpl;
-			DomElement vmlocal_elt = (DomElement) node.impl;
-			dom_elt.setInnerHTML(vmlocal_elt.getInnerHTML());
-			// doesn't include style
-			vmlocal_elt.getAttributes().entrySet().forEach(e -> {
-				dom_elt.setAttribute(e.getKey(), e.getValue());
-			});
-			vmlocal_elt.getStyle().getProperties().entrySet().forEach(e -> {
-				Style domStyle = dom_elt.getStyle();
-				domStyle.setProperty(e.getKey(), e.getValue());
-			});
-			int bits = ((Element_Jvm) vmlocal_elt).orSunkEventsOfAllChildren(0);
-			DOM.sinkEvents(elem, bits);
-			pendingResolution.remove(node);
-			node.putImpl(node.domImpl);
-		}
 	}
 
 	public synchronized static LocalDomBridge get() {
@@ -178,6 +102,11 @@ public class LocalDomBridge {
 		get().registerId0(element_Jvm);
 	}
 
+	public static boolean shouldUseDomNodes() {
+		return !LocalDomBridge.ensuringPendingResolutionNode
+				&& get().flushCommand == null;
+	}
+
 	public static Style styleObjectFor(JavaScriptObject o) {
 		if (o == null) {
 			return null;
@@ -190,6 +119,69 @@ public class LocalDomBridge {
 			return null;
 		}
 		return get().styleObjectFor0(style_jvm);
+	}
+
+	static void ensureJso(Element element, boolean flush) {
+		if (get().flushCommand != null && flush &&get().pendingResolution.size()>0) {
+			get().flush();
+		}
+		if (element.typedDomImpl != null) {
+			return;
+		}
+		if (ensuring) {
+			return;
+		}
+		try {
+			ensuring = true;
+			if (debug.on) {
+				Ax.format("ensure jso - %s\n", element);
+				new Exception().printStackTrace();
+				System.out.println("\n\n*****\n\n");
+			}
+			String id = element.getId();
+			if (!id.isEmpty()) {
+				Element_Jso domImpl = Document.get().typedDomImpl
+						.getElementById0(id);
+				get().javascriptObjectNodeLookup.put(domImpl, element);
+				element.putDomImpl(domImpl);
+				element.putImpl(domImpl);
+				return;
+			}
+			Element original = element;
+			// these will be Element_Jvms
+			List<Element> chain = new ArrayList<>();
+			// hmmm...ascend to dom, descend...
+			while (element.typedDomImpl == null) {
+				chain.add(element);
+				element = element.getParentElement();
+			}
+			chain.add(element);
+			// don't go to zero (children of this elt)
+			for (int idx = chain.size() - 1; idx >= 1; idx--) {
+				Element withDom = chain.get(idx);
+				Element_Jvm vmImpl = (Element_Jvm) withDom.localImpl();
+				NodeList_Jso<Element> childNodes = (NodeList_Jso) withDom.typedDomImpl
+						.getChildNodes().impl;
+				if (debug.on) {
+					Preconditions.checkState(
+							childNodes.getLength() == vmImpl.children.size());
+				}
+				for (int idx2 = 0; idx2 < vmImpl.children.size(); idx2++) {
+					Element_Jvm child_jvm = (Element_Jvm) vmImpl.children
+							.get(idx2);
+					Node_Jso domImpl = childNodes.getItem0(idx2);
+					if (debug.on) {
+						Preconditions.checkState(domImpl.getNodeName()
+								.equalsIgnoreCase(child_jvm.getNodeName()));
+					}
+					get().javascriptObjectNodeLookup.put(domImpl, child_jvm.node);
+					((Element) child_jvm.node).putDomImpl(domImpl);
+					((Element) child_jvm.node).putImpl(domImpl);
+				}
+			}
+		} finally {
+			ensuring = false;
+		}
 	}
 
 	Map<JavaScriptObject, Node> javascriptObjectNodeLookup;
@@ -210,7 +202,9 @@ public class LocalDomBridge {
 
 	LocalDomImpl localDomImpl;
 
-	static boolean ensuringPendingResolutionNode;
+	List<DomElement> createdLocals = new ArrayList<>();
+
+	ScheduledCommand flushCommand = null;
 
 	private LocalDomBridge() {
 		// FIXME - weak maps
@@ -223,10 +217,76 @@ public class LocalDomBridge {
 		localStyleLookup = new LinkedHashMap<>();
 	}
 
+	public void checkInPreconditionList(Element element, DomNode impl) {
+		if (impl instanceof JavaScriptObject) {
+			if (pendingResolution.contains(element)) {
+				Preconditions.checkState(false);
+			}
+		}
+	}
+
+	public void createdLocalElement(DomElement local) {
+		createdLocals.add(local);
+		ensureFlush();
+	}
+
+	public void ensureResolved(Node node) {
+		if (node.domImpl == null) {
+			throw new UnsupportedOperationException();
+		}
+		if (node.impl != null && node.impl != node.domImpl) {
+			Element elem = (Element) node;
+			Element_Jso dom_elt = (Element_Jso) node.domImpl;
+			DomElement vmlocal_elt = (DomElement) node.impl;
+			dom_elt.setInnerHTML(vmlocal_elt.getInnerHTML());
+			// doesn't include style
+			vmlocal_elt.getAttributes().entrySet().forEach(e -> {
+				switch (e.getKey()) {
+				case "text":
+					dom_elt.setPropertyString(e.getKey(), e.getValue());
+					break;
+				default:
+					dom_elt.setAttribute(e.getKey(), e.getValue());
+					break;
+				}
+			});
+			vmlocal_elt.getStyle().getProperties().entrySet().forEach(e -> {
+				Style domStyle = dom_elt.getStyle();
+				domStyle.setProperty(e.getKey(), e.getValue());
+			});
+			int bits = ((Element_Jvm) vmlocal_elt).orSunkEventsOfAllChildren(0);
+			DOM.sinkEvents(elem, bits);
+			pendingResolution.remove(node);
+			node.putImpl(node.domImpl);
+		}
+	}
+
 	public void flush() {
+		if (flushCommand == null) {
+			Preconditions.checkState(createdLocals.size() == 0);
+			return;
+		}
 		flushCommand = null;
+		System.out.println("**flush**");
+		if (pendingResolution.size() == 0) {
+			createdLocals.stream().forEach(e -> {
+				Element_Jvm el = (Element_Jvm) e;
+				if (((Element) el.node).uiObject != null) {
+					System.out.println(
+							((Element) el.node).uiObject.getClass().getName());
+				}
+			});
+			int debug = 3;
+		}
+		Preconditions.checkState(pendingResolution.size() > 0);
 		new ArrayList<>(pendingResolution).stream()
 				.forEach(this::ensureResolved);
+		debug.checkCreatedLocals(createdLocals);
+		createdLocals.clear();
+	}
+
+	public void useJsoDom() {
+		LocalDomImpl.useLocalImpl = false;
 	}
 
 	public void useJvmDom() {
@@ -235,6 +295,10 @@ public class LocalDomBridge {
 
 	public void useLocalDom() {
 		LocalDomImpl.useLocalImpl = true;
+	}
+
+	public boolean wasCreatedThisLoop(Element element) {
+		return createdLocals.contains(element.impl);
 	}
 
 	private void addToIdLookup(Node node) {
@@ -280,6 +344,15 @@ public class LocalDomBridge {
 		return node;
 	}
 
+	private void ensureFlush() {
+		if (flushCommand == null) {
+			System.out.println(CommonUtils.highlightForLog("ensure flush"));
+			new Exception().printStackTrace(System.out);
+			flushCommand = () -> flush();
+			Scheduler.get().scheduleFinally(flushCommand);
+		}
+	}
+
 	private Node_Jso ensurePendingResolutionNode0(Node node) {
 		if (node.domImpl != null) {
 			return node.domImpl;
@@ -307,7 +380,12 @@ public class LocalDomBridge {
 		default:
 			throw new UnsupportedOperationException();
 		}
-		javascriptObjectNodeLookup.put(nodeDom, node);
+		System.out.println("pending:" + node.impl.hashCode());
+		if (!javascriptObjectNodeLookup.containsKey(nodeDom)) {
+			Preconditions.checkState(false);
+			javascriptObjectNodeLookup.put(nodeDom, node);
+		}
+		debug.removeAssignment(nodeDom);
 		node.putDomImpl(nodeDom);
 		ensuringPendingResolutionNode = false;
 		LocalDomImpl.useLocalImpl = useLocalImpl;
@@ -379,11 +457,11 @@ public class LocalDomBridge {
 		int nodeType = getNodeType(o);
 		String nodeName = getNodeName(o);
 		node = createNode(nodeType, nodeName);
+		node.resolved = true;
+		javascriptObjectNodeLookup.put(o, node);
 		node.putDomImpl(o.cast());
 		node.putImpl(o.cast());
-		node.resolved = true;
 		addToIdLookup(node);
-		javascriptObjectNodeLookup.put(o, node);
 		return (N) node;
 	}
 
@@ -428,29 +506,63 @@ public class LocalDomBridge {
 		});
 	}
 
-	public static boolean shouldUseDomNodes() {
-		return !LocalDomBridge.ensuringPendingResolutionNode
-				&& get().flushCommand == null;
-	}
+	static class LocalDomBridgeDebug {
+		public boolean on;
 
-	public void createdLocalElement() {
-		ensureFlush();
-	}
+		Set<Node_Jvm> nodesInHierarchy = new LinkedHashSet<>();
 
-	ScheduledCommand flushCommand = null;
+		Map<Node_Jso, Element> assigned = new LinkedHashMap<>();
 
-	private void ensureFlush() {
-		if (flushCommand == null) {
-			flushCommand = () -> flush();
-			Scheduler.get().scheduleFinally(flushCommand);
+		public void added(Node_Jvm impl) {
+			nodesInHierarchy.add(impl);
+			System.out.println("add:" + impl.hashCode());
 		}
-	}
 
-	public void checkInPreconditionList(Element element, DomNode impl) {
-		if (impl instanceof JavaScriptObject) {
-			if (pendingResolution.contains(element)) {
-				Preconditions.checkState(false);
+		public void removeAssignment(Node_Jso nodeDom) {
+			assigned.remove(nodeDom);
+		}
+
+		public void checkCreatedLocals(List<DomElement> createdLocals) {
+			createdLocals.stream().forEach(e -> {
+				Node_Jso domImpl = ((Element_Jvm) e).provideAncestorDomImpl();
+				if (domImpl == null && ((Element_Jvm) e).parentNode == null) {
+					if (nodesInHierarchy.contains(e)) {
+						System.out.println("Orphan:" + e.hashCode());
+						int debug = 3;
+					}
+				}
+			});
+		}
+
+		public void removed(Node_Jvm oldChild_Jvm) {
+			nodesInHierarchy.remove(oldChild_Jvm);
+			System.out.println("remove:" + oldChild_Jvm.hashCode());
+		}
+
+		public void checkMultipleAssignment(Element element, Node_Jso nodeDom) {
+			System.out.println("check:" + nodeDom.hashCode());
+			System.out.println("check:" + nodeDom);
+			new Exception().printStackTrace(System.out);
+			if(!get().javascriptObjectNodeLookup.containsKey(nodeDom)){
+				int debug=3;
 			}
+			if (assigned.containsKey(nodeDom)) {
+				if (assigned.get(nodeDom) != element) {
+					int debug = 3;
+				}
+			}
+			assigned.put(nodeDom, element);
 		}
+	}
+
+	public static void replaceWithJso(Element element) {
+		LocalDomImpl.useLocalImpl=false;
+		LocalDomElement localDomElement = element.provideLocalDomElement();
+		Element_Jso element_Jso = get().localDomImpl.createDomElement(Document.get(), element.getTagName());
+		element_Jso.setInnerHTML(localDomElement.getPendingInnerHtml());
+		get().javascriptObjectNodeLookup.put(element_Jso, element);
+		element.putDomImpl(element_Jso);
+		element.putImpl(element_Jso);
+		
 	}
 }

@@ -239,11 +239,8 @@ public abstract class UIObject implements HasVisibility {
    * </p>
    */
   public static  boolean isVisible(Element elem){
-  		return isVisible0(LocalDomBridge.elementJso(elem));
+  		return !elem.getStyle().getDisplay().equals("none");
   }
-  private static native boolean isVisible0(Element_Jso elem) /*-{
-    return (elem.style.display != 'none');
-  }-*/;
 
   /**
    * Shows or hides the given element. Also updates the "aria-hidden" attribute
@@ -376,7 +373,7 @@ public abstract class UIObject implements HasVisibility {
 	 */
 	private static void updatePrimaryAndDependentStyleNames(Element elem,
 			String newPrimaryStyle) {
-		if (elem.provideIsDomElement()) {
+		if (elem.provideIsDom()) {
 			updatePrimaryAndDependentStyleNames0(
 					LocalDomBridge.elementJso(elem), newPrimaryStyle);
 		} else {
@@ -941,6 +938,7 @@ public abstract class UIObject implements HasVisibility {
   protected final void setElement(Element elem) {
 	  assert (element == null || PotentialElement.isPotential(element)) : SETELEMENT_TWICE_ERROR;
 	    this.element = elem;
+	    elem.uiObject=this;
   }
 
  

@@ -9,13 +9,18 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 
-public abstract class Node_Jvm implements DomNode {
+public abstract class Node_Jvm implements DomNode, LocalDomNode {
 	static <N extends Node> N nodeFor(Node_Jvm node_jvm) {
 		return (N) LocalDomBridge.nodeFor(node_jvm);
 	}
 
 	public Node nodeFor() {
 		return nodeFor(this);
+	}
+
+	@Override
+	public List<LocalDomNode> localDomChildren() {
+		return (List) children;
 	}
 
 	protected Node_Jvm() {
@@ -39,10 +44,27 @@ public abstract class Node_Jvm implements DomNode {
 
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
+		maybeConvertToLocal(newChild);
 		Preconditions.checkArgument(newChild.impl instanceof Node_Jvm);
 		children.add((Node_Jvm) newChild.impl);
 		((Node_Jvm) newChild.impl).parentNode = this;
+		LocalDomBridge.debug.added((Node_Jvm) newChild.impl);
 		return newChild;
+	}
+
+	private <T extends Node> void maybeConvertToLocal(T newChild) {
+		if (!(newChild.impl instanceof Node_Jvm)) {
+			Element_Jso elt = (Element_Jso) newChild.impl;
+			Element_Jvm jvmElt = (Element_Jvm) LocalDomBridge
+					.get().localDomImpl.localImpl.createUnwrappedLocalElement(
+							Document.get(), elt.getTagName());
+			jvmElt.setInnerHTML(elt.getInnerHTML());
+			elt.getAttributes().entrySet().forEach(e -> {
+				jvmElt.setAttribute(e.getKey(), e.getValue());
+			});
+			jvmElt.node=newChild;
+			newChild.putImpl(jvmElt);
+		}
 	}
 
 	@Override
@@ -97,6 +119,7 @@ public abstract class Node_Jvm implements DomNode {
 
 	@Override
 	public Node insertBefore(Node newChild, Node refChild) {
+		maybeConvertToLocal(newChild);
 		Preconditions.checkArgument(newChild.impl instanceof Node_Jvm);
 		Preconditions.checkArgument(
 				refChild == null || refChild.impl instanceof Node_Jvm);
@@ -108,15 +131,16 @@ public abstract class Node_Jvm implements DomNode {
 					"refchild not a child of this node");
 			children.add(idx, (Node_Jvm) newChild.impl);
 		}
+		((Node_Jvm) newChild.impl).parentNode = this;
+		LocalDomBridge.debug.added((Node_Jvm) newChild.impl);
 		return newChild;
 	}
 
 	@Override
 	public boolean isOrHasChild(Node child) {
-		//FIXME
+		// FIXME
 		return false;
-		
-//		throw new UnsupportedOperationException();
+		// throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -130,6 +154,7 @@ public abstract class Node_Jvm implements DomNode {
 	public Node removeChild(Node oldChild) {
 		Preconditions.checkArgument(oldChild.impl instanceof Node_Jvm);
 		Node_Jvm oldChild_Jvm = (Node_Jvm) oldChild.impl;
+		LocalDomBridge.debug.removed(oldChild_Jvm);
 		oldChild_Jvm.parentNode = null;
 		children.remove(oldChild_Jvm);
 		return oldChild;
@@ -181,7 +206,6 @@ public abstract class Node_Jvm implements DomNode {
 	}
 
 	abstract void appendOuterHtml(UnsafeHtmlBuilder builder);
-	abstract void appendTextContent(StringBuilder builder);
 
-	
+	abstract void appendTextContent(StringBuilder builder);
 }

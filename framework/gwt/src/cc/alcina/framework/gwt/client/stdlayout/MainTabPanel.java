@@ -97,8 +97,10 @@ public class MainTabPanel extends TabPanel {
 		mainMenuContainer = new FlowPanel();
 		mainMenuContainer.setStyleName("alcina-MainMenuContainer");
 		mainMenuContainer.add(dockPanel);
+		vp.getElement().dumpLocal();
 		tabBarProt = (TabBar) vp.getWidget(0);
 		vp.remove(tabBarProt);
+		vp.getElement().dumpLocal();
 		if (isWrapCenterContainer()) {
 			centerContainer = new SpanPanel();
 			centerContainer.add(tabBarProt);

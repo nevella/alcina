@@ -334,7 +334,7 @@ public abstract class DOMImplStandard extends DOMImpl {
     Element curElem = evt.getCurrentEventTarget().cast();
     while (curElem != null && getEventListener(curElem) == null) {
       Node parentNode = curElem.getParentNode();
-      curElem = parentNode.cast();
+      curElem = parentNode==null?null:parentNode.cast();
     }
     return curElem;
   }

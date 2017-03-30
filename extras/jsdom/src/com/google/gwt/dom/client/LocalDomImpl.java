@@ -57,6 +57,9 @@ public class LocalDomImpl {
 		}
 	}
 
+	public Element_Jso createDomElement(Document doc, String tag) {
+		return domImpl.createElement(doc.typedDomImpl, tag);
+	}
 	public Element createElement(Document doc, String tag) {
 		if (useLocalImpl) {
 			return localImpl.createLocalElement(doc, tag);

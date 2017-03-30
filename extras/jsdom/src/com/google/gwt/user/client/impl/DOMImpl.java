@@ -138,7 +138,7 @@ public abstract class DOMImpl {
 
   public abstract int getChildIndex(Element parent, Element child);
   public  int getEventsSunk(Element elem) {
-	  if(elem.provideIsDomElement()){
+	  if(elem.provideIsDom()){
 		  Element_Jso elementJso = LocalDomBridge.elementJso(elem);
 		  return getEventsSunk0(elementJso);
 	  }else{

@@ -164,10 +164,12 @@ public final class UnsafeHtmlBuilder {
 	 * @see SafeHtmlUtils#htmlEscape(String)
 	 */
 	public UnsafeHtmlBuilder appendEscaped(String text) {
-		if (!text.matches("[&<>'\"]")) {
-			sb.append(text);
-		} else {
-			sb.append(SafeHtmlUtils.htmlEscape(text));
+		if (text != null) {
+			if (!text.matches("[&<>'\"]")) {
+				sb.append(text);
+			} else {
+				sb.append(SafeHtmlUtils.htmlEscape(text));
+			}
 		}
 		return this;
 	}
@@ -243,6 +245,7 @@ public final class UnsafeHtmlBuilder {
 		sb.append(html);
 		return this;
 	}
+
 	public UnsafeHtmlBuilder appendUnsafeHtml(String html) {
 		sb.append(html);
 		return this;

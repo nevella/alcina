@@ -1640,6 +1640,9 @@ public class DOM {
 			}
 		}
 		EventTarget eventTarget = evt.getEventTarget();
+		if(evt.getType().toLowerCase().contains("click")){
+			int debug=3;
+		}
 		if (Element.is(eventTarget)) {
 			Element rel = Element.as(eventTarget);
 			while (rel != elem && rel!=null) {

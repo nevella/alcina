@@ -215,4 +215,11 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	public abstract void putDomImpl(Node_Jso nodeDom) ;
 	public abstract void putImpl(DomNode impl) ;
+	public boolean provideIsDom() {
+		return domImpl != null;
+	}
+
+	public boolean provideIsLocal() {
+		return domImpl == null;
+	}
 }

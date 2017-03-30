@@ -1,12 +1,13 @@
 package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
-public class Element_Jvm extends Node_Jvm implements DomElement {
+public class Element_Jvm extends Node_Jvm implements DomElement,LocalDomElement {
 	private String tagName;
 
 	Element_Jvm(Document_Jvm document_Jvm, String tagName) {
@@ -18,6 +19,13 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 
 	private String innerHtml;
 
+	public String getPendingInnerHtml() {
+		return this.innerHtml;
+	}
+	@Override
+	public LocalDomElement create(String tagName) {
+		return LocalDomBridge.get().localDomImpl.localImpl.createLocalElement(Document.get(), tagName).provideLocalDomElement();
+	}
 	@Override
 	public String getNodeName() {
 		return getTagName();
@@ -266,7 +274,7 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 
 	@Override
 	public boolean getPropertyBoolean(String name) {
-		throw new UnsupportedOperationException();
+		return Boolean.valueOf(getPropertyString(name));
 	}
 
 	@Override
@@ -276,7 +284,7 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 
 	@Override
 	public int getPropertyInt(String name) {
-		throw new UnsupportedOperationException();
+		return Integer.parseInt(getPropertyString(name));
 	}
 
 	@Override
@@ -337,7 +345,7 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
-		throw new UnsupportedOperationException();
+		setPropertyString(name, String.valueOf(value));
 	}
 
 	@Override
@@ -444,6 +452,9 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 
 	int eventBits;
 
+	public int getEventBits() {
+		return this.eventBits;
+	}
 	@Override
 	public void sinkEvents(int eventBits) {
 		this.eventBits |= eventBits;
@@ -452,6 +463,10 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 	@Override
 	public final Element getNextSiblingElement() {
 		boolean seen = false;
+		if(parentNode==null){
+			//possibly dodgy - at least in UiBinder
+			return null;
+		}
 		for (int idx = 0; idx < parentNode.children.size(); idx++) {
 			Node_Jvm node = parentNode.children.get(idx);
 			if (node == this) {
@@ -484,5 +499,16 @@ public class Element_Jvm extends Node_Jvm implements DomElement {
 	@Override
 	public final Integer indexInParentChildren() {
 		return parentNode.children.indexOf(this);
+	}
+
+	@Override
+	public String toString() {
+		return super.toString() + "\n\t" + getTagName();
+	}
+
+	public Node_Jso provideAncestorDomImpl() {
+		Element domAncestor = ((Element) node)
+				.provideAncestorElementAttachedToDom();
+		return domAncestor == null ? null : domAncestor.domImpl;
 	}
 }

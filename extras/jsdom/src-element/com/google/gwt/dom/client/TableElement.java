@@ -15,6 +15,8 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.Collections;
+
 import com.google.gwt.core.client.JavaScriptObject;
 
 /**
@@ -100,7 +102,12 @@ public class TableElement extends Element {
 	}-*/;
 
 	public TableSectionElement createTFoot() {
-		return LocalDomBridge.nodeFor(createTFoot0(typedDomImpl));
+		if (provideIsLocal()) {
+			return (TableSectionElement) provideLocalDomElement()
+					.createOrReturnChild("tfoot");
+		} else {
+			return LocalDomBridge.nodeFor(createTFoot0(typedDomImpl));
+		}
 	}
 
 	/**
@@ -113,7 +120,12 @@ public class TableElement extends Element {
 	}-*/;
 
 	public TableSectionElement createTHead() {
-		return LocalDomBridge.nodeFor(createTHead0(typedDomImpl));
+		if (provideIsLocal()) {
+			return (TableSectionElement) provideLocalDomElement()
+					.createOrReturnChild("thead");
+		} else {
+			return LocalDomBridge.nodeFor(createTHead0(typedDomImpl));
+		}
 	}
 
 	/**
@@ -241,41 +253,49 @@ public class TableElement extends Element {
 	 * Returns a collection of the table bodies (including implicit ones).
 	 */
 	public NodeList<TableSectionElement> getTBodies() {
-		return new NodeList<>(getTBodies0(ensureJso()));
+		if (provideIsLocal()) {
+			TableSectionElement body = (TableSectionElement) provideLocalDomElement()
+					.createOrReturnChild("tbody");
+			return new NodeList<>(
+					new NodeList_Wrapped(Collections.singletonList(body)));
+		} else {
+			return new NodeList<>(getTBodies0(ensureJso()));
+		}
 	}
+
 	/**
-	   * Returns a collection of the table bodies (including implicit ones).
-	   */
-	  private final native NodeList_Jso getTBodies0(Element_Jso elem) /*-{
-	    return elem.tBodies;
-	  }-*/;
+	 * Returns a collection of the table bodies (including implicit ones).
+	 */
+	private final native NodeList_Jso getTBodies0(Element_Jso elem) /*-{
+        return elem.tBodies;
+	}-*/;
 
-	  /**
-	   * The table's TFOOT, or null if none exists.
-	   */
-	   final native Element_Jso getTFoot0(Element_Jso elem) /*-{
-	     return elem.tFoot;
-	   }-*/;
+	/**
+	 * The table's TFOOT, or null if none exists.
+	 */
+	final native Element_Jso getTFoot0(Element_Jso elem) /*-{
+        return elem.tFoot;
+	}-*/;
 
-	  /**
-	   * The table's THEAD, or null if none exists.
-	   */
-	   final native Element_Jso getTHead0(Element_Jso elem) /*-{
-	     return elem.tHead;
-	   }-*/;
+	/**
+	 * The table's THEAD, or null if none exists.
+	 */
+	final native Element_Jso getTHead0(Element_Jso elem) /*-{
+        return elem.tHead;
+	}-*/;
+
 	/**
 	 * The table's TFOOT, or null if none exists.
 	 */
 	public TableSectionElement getTFoot() {
-		return LocalDomBridge.nodeFor( getTFoot0(ensureJso()));
-		
+		return LocalDomBridge.nodeFor(getTFoot0(ensureJso()));
 	}
 
 	/**
 	 * The table's THEAD, or null if none exists.
 	 */
 	public TableSectionElement getTHead() {
-		return LocalDomBridge.nodeFor( getTHead0(ensureJso()));
+		return LocalDomBridge.nodeFor(getTHead0(ensureJso()));
 	}
 
 	/**

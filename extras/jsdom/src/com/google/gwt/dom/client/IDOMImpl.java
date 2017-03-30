@@ -16,4 +16,6 @@ public interface IDOMImpl {
 		elem.setText(source);
 		return elem;
 	}
+
+	LocalDomElement createUnwrappedLocalElement(Document document, String tagName);
 }

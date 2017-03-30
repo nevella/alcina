@@ -15,7 +15,8 @@
  */
 package com.google.gwt.dom.client;
 
-import com.google.gwt.core.client.JavaScriptObject;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * The NodeList interface provides the abstraction of an ordered collection of
@@ -28,7 +29,7 @@ import com.google.gwt.core.client.JavaScriptObject;
  * @param <T>
  *            the type of contained node
  */
-public class NodeList<T extends Node> implements DomNodeList<T> {
+public class NodeList<T extends Node> implements DomNodeList<T>, Iterable<T> {
 	DomNodeList<T> impl;
 
 	public NodeList(DomNodeList<T> impl) {
@@ -41,5 +42,27 @@ public class NodeList<T extends Node> implements DomNodeList<T> {
 
 	public int getLength() {
 		return this.impl.getLength();
+	}
+
+	@Override
+	public Iterator<T> iterator() {
+		return new NodeListIterator();
+	}
+
+	private class NodeListIterator implements Iterator<T> {
+		int cursor = 0;
+
+		@Override
+		public boolean hasNext() {
+			return getLength() > cursor;
+		}
+
+		@Override
+		public T next() {
+			if (cursor >= getLength()) {
+				throw new NoSuchElementException();
+			}
+			return getItem(cursor++);
+		}
 	}
 }

@@ -8,6 +8,8 @@ import com.google.gwt.i18n.client.Messages.Offset;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 
+import cc.alcina.framework.common.client.util.StringMap;
+
 public class Element_Jso extends Node_Jso implements DomElement {
 	/**
 	 * Fast helper method to convert small doubles to 32-bit int.
@@ -746,8 +748,22 @@ public class Element_Jso extends Node_Jso implements DomElement {
 
 	@Override
 	public final Map<String, String> getAttributes() {
-		throw new UnsupportedOperationException();
+		StringMap result = new StringMap();
+		JsArrayString arr = getAttributeList();
+		for(int idx=0;idx<arr.length();idx+=2){
+			result.put(arr.get(idx), arr.get(idx+1));
+		}
+		return result;
 	}
+	private final native JsArrayString getAttributeList()/*-{
+    	var result=[];
+    	var attrs = this.attributes;
+       for(var i = 0; i < attrs.length; i++) {
+         result.push( attrs[i].name); 
+         result.push( attrs[i].value); 
+       }
+       return result;
+	}-*/;
 
 	@Override
 	public final void sinkEvents(int eventBits) {
