@@ -22,6 +22,7 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDomBridge;
+import com.google.gwt.dom.client.LocalDomImpl;
 import com.google.gwt.dom.client.Style.Overflow;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ScrollEvent;
@@ -194,6 +195,7 @@ public class CustomScrollPanel extends ScrollPanel {
     // Initialize the default scrollbars using the transparent styles.
     NativeHorizontalScrollbar.Resources hResources =
         GWT.create(NativeHorizontalScrollbar.ResourcesTransparant.class);
+    boolean useLocalDom = LocalDomImpl.useLocalImpl;
     LocalDomBridge.get().useJsoDom();
     NativeHorizontalScrollbar h_scrollbar = new NativeHorizontalScrollbar(hResources);
 //	setHorizontalScrollbar(h_scrollbar, AbstractNativeScrollbar
@@ -203,7 +205,9 @@ public class CustomScrollPanel extends ScrollPanel {
     NativeVerticalScrollbar v_scrollbar = new NativeVerticalScrollbar(vResources);
 //	setVerticalScrollbar(v_scrollbar, AbstractNativeScrollbar
 //        .getNativeScrollbarWidth());
+    if(useLocalDom){
 	LocalDomBridge.get().useLocalDom();
+    }
 
     /*
      * Add a handler to catch changes in the content size and update the

@@ -35,7 +35,7 @@ class DOMImplMozilla extends DOMImplStandard {
   @Override
   public void sinkEvents(Element elem, int bits) {
     super.sinkEvents(elem, bits);
-    sinkEventsMozilla(elem.ensureJso(), bits);
+    sinkEventsMozilla(elem.ensureJsoNoFlush(), bits);
   }
 
   @SuppressWarnings("deprecation")

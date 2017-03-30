@@ -116,7 +116,8 @@ public class TableRowElement extends Element {
 					nodes.add(node);
 				}
 			}
-			return new NodeList<>(new NodeList_Wrapped<>(nodes));
+			return new NodeList<TableCellElement>(
+					(NodeList_Wrapped) new NodeList_Wrapped<>(nodes));
 		} else {
 			return new NodeList<>(getCells0(ensureJso()));
 		}

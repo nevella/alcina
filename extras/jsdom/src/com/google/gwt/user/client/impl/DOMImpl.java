@@ -29,9 +29,10 @@ public abstract class DOMImpl {
 
   protected static boolean eventSystemIsInitialized;
 
-  public static  EventListener getEventListener(Element elem) {
-  	return getEventListener0(LocalDomBridge.elementJso(elem));
-  }
+	public static EventListener getEventListener(Element elem) {
+		Element_Jso elementJso = LocalDomBridge.elementJso(elem);
+		return elementJso == null ? null : getEventListener0(elementJso);
+	}
   private static native EventListener getEventListener0(Element_Jso elem) /*-{
     // Return elem.__listener if and only if it was assigned from our module
     var maybeListener = elem.__listener;

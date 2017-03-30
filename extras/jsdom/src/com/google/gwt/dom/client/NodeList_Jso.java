@@ -15,6 +15,8 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.stream.Stream;
+
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.SingleJsoImpl;
 
@@ -60,4 +62,9 @@ public class NodeList_Jso<T extends Node> extends JavaScriptObject
 	public final native int getLength() /*-{
         return this.length;
 	}-*/;
+	
+	@Override
+	public final Stream<T> stream() {
+		return DomNodeList_Static.stream0(this);
+	}
 }

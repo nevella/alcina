@@ -60,6 +60,7 @@ public class LocalDomImpl {
 	public Element_Jso createDomElement(Document doc, String tag) {
 		return domImpl.createElement(doc.typedDomImpl, tag);
 	}
+
 	public Element createElement(Document doc, String tag) {
 		if (useLocalImpl) {
 			return localImpl.createLocalElement(doc, tag);
@@ -259,9 +260,9 @@ public class LocalDomImpl {
 	}
 
 	private void resolveAllPending() {
-		if(useLocalImpl){
-		LocalDomBridge.get().flush();
-		LocalDomBridge.get().useJvmDom();
+		if (useLocalImpl) {
+			LocalDomBridge.get().flush();
+			LocalDomBridge.get().useJvmDom();
 		}
 	}
 
@@ -276,12 +277,12 @@ public class LocalDomImpl {
 	}
 
 	public int getBodyOffsetLeft(Document doc) {
-//		resolveAllPending();
+		// resolveAllPending();
 		return domImpl.getBodyOffsetLeft(doc.typedDomImpl);
 	}
 
 	public int getBodyOffsetTop(Document doc) {
-//		resolveAllPending();
+		// resolveAllPending();
 		return domImpl.getBodyOffsetTop(doc.typedDomImpl);
 	}
 
@@ -430,7 +431,7 @@ public class LocalDomImpl {
 		// FIXME
 		resolveAllPending();
 		domImpl.selectAdd(select.typedDomImpl, option.typedDomImpl,
-				before.typedDomImpl);
+				before == null ? null : before.typedDomImpl);
 	}
 
 	public void selectClear(SelectElement select) {
@@ -439,13 +440,20 @@ public class LocalDomImpl {
 	}
 
 	public int selectGetLength(SelectElement select) {
-		resolveAllPending();
-		return domImpl.selectGetLength(select.typedDomImpl);
+		if (select.provideIsLocal()) {
+			return selectGetOptions(select).getLength();
+		} else {
+			return domImpl.selectGetLength(select.typedDomImpl);
+		}
 	}
 
 	public NodeList<OptionElement> selectGetOptions(SelectElement select) {
-		resolveAllPending();
-		return domImpl.selectGetOptions(select.typedDomImpl);
+		if (select.provideIsLocal()) {
+			return select.provideLocalDomElement().getChildNodes()
+					.filteredSubList(n -> n instanceof OptionElement);
+		} else {
+			return domImpl.selectGetOptions(select.typedDomImpl);
+		}
 	}
 
 	public void selectRemoveOption(SelectElement select, int index) {

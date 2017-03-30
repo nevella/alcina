@@ -361,7 +361,8 @@ abstract class DOMImpl {
 
 	protected native NodeList<OptionElement>
 			selectGetOptions(Element_Jso select) /*-{
-        return select.options;
+		var out=@com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/DomNodeList;)(select.options);
+        return out;
 	}-*/;
 
 	protected native void selectRemoveOption(Element_Jso domImpl, int index) /*-{

@@ -1,11 +1,12 @@
 package com.google.gwt.dom.client;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 class NodeList_Wrapped<T extends Node> implements DomNodeList<T> {
-	private List<Node> nodes;
+	private List<T> nodes;
 
-	NodeList_Wrapped(List<Node> nodes) {
+	NodeList_Wrapped(List<T> nodes) {
 		this.nodes = nodes;
 	}
 
@@ -21,5 +22,9 @@ class NodeList_Wrapped<T extends Node> implements DomNodeList<T> {
 	@Override
 	public int getLength() {
 		return nodes.size();
+	}
+	@Override
+	public Stream<T> stream() {
+		return nodes.stream();
 	}
 }

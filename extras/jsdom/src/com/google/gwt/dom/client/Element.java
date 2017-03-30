@@ -490,6 +490,9 @@ public class Element extends Node implements DomElement {
 	public void putImpl(DomNode impl) {
 		LocalDomBridge.get().checkInPreconditionList(this, impl);
 		// debug, can remove
+		if(impl==null){
+			int debug=3;
+		}
 		if (impl instanceof JavaScriptObject && typedImpl == null) {
 			if (impl.getNodeName().equalsIgnoreCase("tbody")) {
 				int debug = 3;
@@ -676,5 +679,12 @@ public class Element extends Node implements DomElement {
 	public void setOuterHtml(String html) {
 		Preconditions.checkState(provideIsLocal());
 		provideLocalDomElement().setOuterHtml(html);
+	}
+
+	public Element_Jso ensureJsoNoFlush() {
+		if(typedDomImpl!=null){
+			return typedDomImpl;
+		}
+		return ensureJso();
 	}
 }

@@ -15,8 +15,13 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The NodeList interface provides the abstraction of an ordered collection of
@@ -64,5 +69,15 @@ public class NodeList<T extends Node> implements DomNodeList<T>, Iterable<T> {
 			}
 			return getItem(cursor++);
 		}
+	}
+
+	public <V extends Node> NodeList<V>
+			filteredSubList(Predicate<T> predicate) {
+		return new NodeList<V>(new NodeList_Wrapped<V>((List) stream()
+				.filter(predicate).collect(Collectors.toList())));
+	}
+	@Override
+	public Stream<T> stream() {
+		return DomNodeList_Static.stream0(this);
 	}
 }

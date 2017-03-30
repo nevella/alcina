@@ -169,7 +169,9 @@ public class LocalDomBridge {
 				for (int idx2 = 0; idx2 < vmImpl.children.size(); idx2++) {
 					Element_Jvm child_jvm = (Element_Jvm) vmImpl.children
 							.get(idx2);
+					int len = childNodes.getLength();
 					Node_Jso domImpl = childNodes.getItem0(idx2);
+					Node_Jso domImplCopy = domImpl; 
 					if (debug.on) {
 						Preconditions.checkState(domImpl.getNodeName()
 								.equalsIgnoreCase(child_jvm.getNodeName()));
@@ -440,6 +442,8 @@ public class LocalDomBridge {
 		elementCreators.put(ImageElement.TAG, () -> new ImageElement());
 		elementCreators.put(LabelElement.TAG, () -> new LabelElement());
 		elementCreators.put(ScriptElement.TAG, () -> new ScriptElement());
+		elementCreators.put(SelectElement.TAG, () -> new SelectElement());
+		elementCreators.put(OptionElement.TAG, () -> new OptionElement());
 	}
 
 	private <N extends Node> N nodeFor0(JavaScriptObject o) {
@@ -507,7 +511,7 @@ public class LocalDomBridge {
 	}
 
 	static class LocalDomBridgeDebug {
-		public boolean on;
+		public boolean on=true;
 
 		Set<Node_Jvm> nodesInHierarchy = new LinkedHashSet<>();
 
@@ -515,7 +519,7 @@ public class LocalDomBridge {
 
 		public void added(Node_Jvm impl) {
 			nodesInHierarchy.add(impl);
-			System.out.println("add:" + impl.hashCode());
+//			System.out.println("add:" + impl.hashCode());
 		}
 
 		public void removeAssignment(Node_Jso nodeDom) {
@@ -527,7 +531,7 @@ public class LocalDomBridge {
 				Node_Jso domImpl = ((Element_Jvm) e).provideAncestorDomImpl();
 				if (domImpl == null && ((Element_Jvm) e).parentNode == null) {
 					if (nodesInHierarchy.contains(e)) {
-						System.out.println("Orphan:" + e.hashCode());
+//						System.out.println("Orphan:" + e.hashCode());
 						int debug = 3;
 					}
 				}
@@ -536,13 +540,13 @@ public class LocalDomBridge {
 
 		public void removed(Node_Jvm oldChild_Jvm) {
 			nodesInHierarchy.remove(oldChild_Jvm);
-			System.out.println("remove:" + oldChild_Jvm.hashCode());
+//			System.out.println("remove:" + oldChild_Jvm.hashCode());
 		}
 
 		public void checkMultipleAssignment(Element element, Node_Jso nodeDom) {
-			System.out.println("check:" + nodeDom.hashCode());
-			System.out.println("check:" + nodeDom);
-			new Exception().printStackTrace(System.out);
+//			System.out.println("check:" + nodeDom.hashCode());
+//			System.out.println("check:" + nodeDom);
+//			new Exception().printStackTrace(System.out);
 			if(!get().javascriptObjectNodeLookup.containsKey(nodeDom)){
 				int debug=3;
 			}
@@ -565,4 +569,5 @@ public class LocalDomBridge {
 		element.putImpl(element_Jso);
 		
 	}
+
 }

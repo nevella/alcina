@@ -1,6 +1,7 @@
 package com.google.gwt.dom.client;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 class NodeList_Jvm<T extends Node> implements DomNodeList<T> {
 	private List<Node_Jvm> nodes;
@@ -21,5 +22,9 @@ class NodeList_Jvm<T extends Node> implements DomNodeList<T> {
 	@Override
 	public int getLength() {
 		return nodes.size();
+	}
+	@Override
+	public Stream<T> stream() {
+		return DomNodeList_Static.stream0(this);
 	}
 }

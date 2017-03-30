@@ -136,11 +136,12 @@ public class TableSectionElement extends Element {
 			List<Node> nodes = new ArrayList<>();
 			NodeList<Node> childNodes = getChildNodes();
 			for (Node node : childNodes) {
-				if(node.getNodeName().equalsIgnoreCase(TableRowElement.TAG)){
+				if (node.getNodeName().equalsIgnoreCase(TableRowElement.TAG)) {
 					nodes.add(node);
 				}
 			}
-			return new NodeList<>(new NodeList_Wrapped<>(nodes));
+			return new NodeList<>(
+					(NodeList_Wrapped) new NodeList_Wrapped<>(nodes));
 		} else {
 			return new NodeList<>(getRows0(typedDomImpl));
 		}
