@@ -5,9 +5,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.regexp.shared.MatchResult;
+import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
-public class Element_Jvm extends Node_Jvm implements DomElement,LocalDomElement {
+public class Element_Jvm extends Node_Jvm
+		implements DomElement, LocalDomElement {
 	private String tagName;
 
 	Element_Jvm(Document_Jvm document_Jvm, String tagName) {
@@ -22,10 +25,14 @@ public class Element_Jvm extends Node_Jvm implements DomElement,LocalDomElement 
 	public String getPendingInnerHtml() {
 		return this.innerHtml;
 	}
+
 	@Override
 	public LocalDomElement create(String tagName) {
-		return LocalDomBridge.get().localDomImpl.localImpl.createLocalElement(Document.get(), tagName).provideLocalDomElement();
+		return LocalDomBridge.get().localDomImpl.localImpl
+				.createLocalElement(Document.get(), tagName)
+				.provideLocalDomElement();
 	}
+
 	@Override
 	public String getNodeName() {
 		return getTagName();
@@ -69,10 +76,27 @@ public class Element_Jvm extends Node_Jvm implements DomElement,LocalDomElement 
 
 	@Override
 	public final Element getFirstChildElement() {
-		return children.stream()
+		return resolveChildren().stream()
 				.filter(node_jvm -> node_jvm.getNodeType() == Node.ELEMENT_NODE)
 				.findFirst().map(node_jvm -> (Element) node_jvm.nodeFor())
 				.orElse(null);
+	}
+
+	private List<Node_Jvm> resolveChildren() {
+		if (children.isEmpty() && innerHtml != null) {
+			RegExp tag = RegExp.compile("<(\\S+)( .+?)?>(.+)?</.+>", "m");
+			RegExp tagNoContents = RegExp.compile("<(\\S+)( .+?)?/?>", "m");
+			MatchResult matchResult = tag.exec(innerHtml);
+			if (matchResult == null) {
+				matchResult = tagNoContents.exec(innerHtml);
+			}
+			Element_Jvm element = (Element_Jvm) create(matchResult.getGroup(1));
+			Element created = LocalDomBridge.nodeFor((Node_Jvm) element);
+			created.setOuterHtml(innerHtml);
+			node.appendChild(created);
+			innerHtml = null;
+		}
+		return children;
 	}
 
 	@Override
@@ -455,6 +479,7 @@ public class Element_Jvm extends Node_Jvm implements DomElement,LocalDomElement 
 	public int getEventBits() {
 		return this.eventBits;
 	}
+
 	@Override
 	public void sinkEvents(int eventBits) {
 		this.eventBits |= eventBits;
@@ -463,8 +488,8 @@ public class Element_Jvm extends Node_Jvm implements DomElement,LocalDomElement 
 	@Override
 	public final Element getNextSiblingElement() {
 		boolean seen = false;
-		if(parentNode==null){
-			//possibly dodgy - at least in UiBinder
+		if (parentNode == null) {
+			// possibly dodgy - at least in UiBinder
 			return null;
 		}
 		for (int idx = 0; idx < parentNode.children.size(); idx++) {

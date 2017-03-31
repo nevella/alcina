@@ -24,7 +24,7 @@ public interface LocalDomElement extends LocalDomNode {
 	void setAttribute(String name, String value);
 
 	default void setOuterHtml(String html) {
-		RegExp tag = RegExp.compile("<\\S+( .+?)>(.+)</.+>", "m");
+		RegExp tag = RegExp.compile("<\\S+( .+?)?>(.+)</.+>", "m");
 		RegExp attr = RegExp.compile("(\\S+?)=[\"'](.+?)[\"']", "mg");
 		MatchResult matchResult = tag.exec(html);
 		String attrString = matchResult.getGroup(1);

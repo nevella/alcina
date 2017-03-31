@@ -428,10 +428,12 @@ public class LocalDomImpl {
 
 	public void selectAdd(SelectElement select, OptionElement option,
 			OptionElement before) {
-		// FIXME
-		resolveAllPending();
-		domImpl.selectAdd(select.typedDomImpl, option.typedDomImpl,
-				before == null ? null : before.typedDomImpl);
+		if (select.provideIsLocal()) {
+			select.insertBefore(option, before);
+		} else {
+			domImpl.selectAdd(select.typedDomImpl, option.typedDomImpl,
+					before == null ? null : before.typedDomImpl);
+		}
 	}
 
 	public void selectClear(SelectElement select) {

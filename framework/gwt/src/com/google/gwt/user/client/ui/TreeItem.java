@@ -1059,7 +1059,7 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 	}
 
 	private void convertToFullNode() {
-		impl.convertToFullNode(this);
+//		impl.convertToFullNode(this);
 	}
 
 	private void updateStateRecursiveHelper() {
