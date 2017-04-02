@@ -815,18 +815,18 @@ public class ClientReflectionGenerator extends Generator {
 		Map<Class, Annotation> uniqueMap = new HashMap<Class, Annotation>();
 		Set<? extends JClassType> flattenedSupertypeHierarchy = clazz
 				.getFlattenedSupertypeHierarchy();
-		List<? extends JClassType> nonGeneric = flattenedSupertypeHierarchy
-				.stream().map(cl -> {
-					if (cl instanceof JParameterizedType) {
-						return ((JParameterizedType) cl).getBaseType();
-					} else {
-						return cl;
-					}
-				}).collect(Collectors.toList());
+		//uhoh-nono
+//		List<? extends JClassType> nonGeneric = flattenedSupertypeHierarchy
+//				.stream().map(cl -> {
+//					if (cl instanceof JParameterizedType) {
+//						return ((JParameterizedType) cl).getBaseType();
+//					} else {
+//						return cl;
+//					}
+//				}).collect(Collectors.toList());
 		Set values = new HashSet();
-		for (JClassType jct : nonGeneric) {
+		for (JClassType jct : flattenedSupertypeHierarchy) {
 			try {
-				int debug = 3;
 				List<Annotation> visibleAnnotations = getVisibleAnnotations(jct,
 						annotationClasses);
 				values.addAll(visibleAnnotations);
