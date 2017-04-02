@@ -15,15 +15,13 @@
  */
 package com.google.gwt.regexp.shared;
 
-import com.google.gwt.core.client.GwtScriptOnly;
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.core.client.GwtScriptOnly;
+
 /**
  * GWT wrapper for the Javascript RegExp class extended with the Javascript
  * String class's replace and split methods, which can take a RegExp parameter.
  */
-@GwtScriptOnly
-public class RegExp extends JavaScriptObject {
+public class RegExp_Jso extends JavaScriptObject implements IRegExp {
 
   /**
    * Creates a regular expression object from a pattern with no flags.
@@ -33,7 +31,7 @@ public class RegExp extends JavaScriptObject {
    * @throws RuntimeException if the pattern is invalid
    */
   public static native RegExp compile(String pattern) /*-{
-     return new RegExp(pattern);
+     return @com.google.gwt.regexp.shared.RegExp::new(Lcom/google/gwt/regexp/shared/IRegExp;)(new RegExp(pattern));
    }-*/;
 
   /**
@@ -47,7 +45,7 @@ public class RegExp extends JavaScriptObject {
    * @throws RuntimeException if the pattern or the flags are invalid
    */
   public static native RegExp compile(String pattern, String flags) /*-{
-     return new RegExp(pattern, flags);
+     return @com.google.gwt.regexp.shared.RegExp::new(Lcom/google/gwt/regexp/shared/IRegExp;)(new RegExp(pattern, flags));
    }-*/;
 
   /**
@@ -67,7 +65,7 @@ public class RegExp extends JavaScriptObject {
     return (input + '').replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
   }-*/;
 
-  protected RegExp() {
+  protected RegExp_Jso() {
   }
 
   /**
@@ -78,7 +76,7 @@ public class RegExp extends JavaScriptObject {
    * @return a match result if the string matches, else {@code null}
    */
   public final native MatchResult exec(String input) /*-{
-     return this.exec(input);
+     return @com.google.gwt.regexp.shared.MatchResult::new(Lcom/google/gwt/regexp/shared/IMatchResult;)(this.exec(input));
    }-*/;
 
   /**
@@ -165,7 +163,7 @@ public class RegExp extends JavaScriptObject {
    * @return the strings split off, any of which may be empty.
    */
   public final native SplitResult split(String input) /*-{
-     return input.split(this);
+     return @com.google.gwt.regexp.shared.SplitResult::new(Lcom/google/gwt/regexp/shared/ISplitResult;)(input.split(this));
    }-*/;
 
   /**
@@ -182,7 +180,7 @@ public class RegExp extends JavaScriptObject {
    * @return the strings split off, any of which may be empty.
    */
   public final native SplitResult split(String input, int limit) /*-{
-     return input.split(this, limit);
+     return @com.google.gwt.regexp.shared.SplitResult::new(Lcom/google/gwt/regexp/shared/ISplitResult;)(input.split(this, limit));
    }-*/;
 
   /**

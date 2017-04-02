@@ -122,7 +122,8 @@ public class LocalDomBridge {
 	}
 
 	static void ensureJso(Element element, boolean flush) {
-		if (get().flushCommand != null && flush &&get().pendingResolution.size()>0) {
+		if (get().flushCommand != null && flush
+				&& get().pendingResolution.size() > 0) {
 			get().flush();
 		}
 		if (element.typedDomImpl != null) {
@@ -171,12 +172,13 @@ public class LocalDomBridge {
 							.get(idx2);
 					int len = childNodes.getLength();
 					Node_Jso domImpl = childNodes.getItem0(idx2);
-					Node_Jso domImplCopy = domImpl; 
+					Node_Jso domImplCopy = domImpl;
 					if (debug.on) {
 						Preconditions.checkState(domImpl.getNodeName()
 								.equalsIgnoreCase(child_jvm.getNodeName()));
 					}
-					get().javascriptObjectNodeLookup.put(domImpl, child_jvm.node);
+					get().javascriptObjectNodeLookup.put(domImpl,
+							child_jvm.node);
 					((Element) child_jvm.node).putDomImpl(domImpl);
 					((Element) child_jvm.node).putImpl(domImpl);
 				}
@@ -348,8 +350,10 @@ public class LocalDomBridge {
 
 	private void ensureFlush() {
 		if (flushCommand == null) {
-			System.out.println(CommonUtils.highlightForLog("ensure flush"));
-			new Exception().printStackTrace(System.out);
+			if (debug.on) {
+				System.out.println(CommonUtils.highlightForLog("ensure flush"));
+				new Exception().printStackTrace(System.out);
+			}
 			flushCommand = () -> flush();
 			Scheduler.get().scheduleFinally(flushCommand);
 		}
@@ -395,16 +399,16 @@ public class LocalDomBridge {
 	}
 
 	private native String getId(JavaScriptObject obj) /*-{
-														return obj.id;
-														}-*/;
+        return obj.id;
+	}-*/;
 
 	private native String getNodeName(JavaScriptObject obj) /*-{
-															return obj.nodeName;
-															}-*/;
+        return obj.nodeName;
+	}-*/;
 
 	private native int getNodeType(JavaScriptObject obj) /*-{
-															return obj.nodeType;
-															}-*/;
+        return obj.nodeType;
+	}-*/;
 
 	private void initElementCreators() {
 		elementCreators.put(DivElement.TAG, () -> new DivElement());
@@ -444,6 +448,7 @@ public class LocalDomBridge {
 		elementCreators.put(ScriptElement.TAG, () -> new ScriptElement());
 		elementCreators.put(SelectElement.TAG, () -> new SelectElement());
 		elementCreators.put(OptionElement.TAG, () -> new OptionElement());
+		elementCreators.put("SVG", () -> new Element());
 	}
 
 	private <N extends Node> N nodeFor0(JavaScriptObject o) {
@@ -511,7 +516,7 @@ public class LocalDomBridge {
 	}
 
 	static class LocalDomBridgeDebug {
-		public boolean on=true;
+		public boolean on = false;
 
 		Set<Node_Jvm> nodesInHierarchy = new LinkedHashSet<>();
 
@@ -519,7 +524,7 @@ public class LocalDomBridge {
 
 		public void added(Node_Jvm impl) {
 			nodesInHierarchy.add(impl);
-//			System.out.println("add:" + impl.hashCode());
+			// System.out.println("add:" + impl.hashCode());
 		}
 
 		public void removeAssignment(Node_Jso nodeDom) {
@@ -531,7 +536,7 @@ public class LocalDomBridge {
 				Node_Jso domImpl = ((Element_Jvm) e).provideAncestorDomImpl();
 				if (domImpl == null && ((Element_Jvm) e).parentNode == null) {
 					if (nodesInHierarchy.contains(e)) {
-//						System.out.println("Orphan:" + e.hashCode());
+						// System.out.println("Orphan:" + e.hashCode());
 						int debug = 3;
 					}
 				}
@@ -540,15 +545,15 @@ public class LocalDomBridge {
 
 		public void removed(Node_Jvm oldChild_Jvm) {
 			nodesInHierarchy.remove(oldChild_Jvm);
-//			System.out.println("remove:" + oldChild_Jvm.hashCode());
+			// System.out.println("remove:" + oldChild_Jvm.hashCode());
 		}
 
 		public void checkMultipleAssignment(Element element, Node_Jso nodeDom) {
-//			System.out.println("check:" + nodeDom.hashCode());
-//			System.out.println("check:" + nodeDom);
-//			new Exception().printStackTrace(System.out);
-			if(!get().javascriptObjectNodeLookup.containsKey(nodeDom)){
-				int debug=3;
+			// System.out.println("check:" + nodeDom.hashCode());
+			// System.out.println("check:" + nodeDom);
+			// new Exception().printStackTrace(System.out);
+			if (!get().javascriptObjectNodeLookup.containsKey(nodeDom)) {
+				int debug = 3;
 			}
 			if (assigned.containsKey(nodeDom)) {
 				if (assigned.get(nodeDom) != element) {
@@ -560,14 +565,13 @@ public class LocalDomBridge {
 	}
 
 	public static void replaceWithJso(Element element) {
-		LocalDomImpl.useLocalImpl=false;
+		LocalDomImpl.useLocalImpl = false;
 		LocalDomElement localDomElement = element.provideLocalDomElement();
-		Element_Jso element_Jso = get().localDomImpl.createDomElement(Document.get(), element.getTagName());
+		Element_Jso element_Jso = get().localDomImpl
+				.createDomElement(Document.get(), element.getTagName());
 		element_Jso.setInnerHTML(localDomElement.getPendingInnerHtml());
 		get().javascriptObjectNodeLookup.put(element_Jso, element);
 		element.putDomImpl(element_Jso);
 		element.putImpl(element_Jso);
-		
 	}
-
 }

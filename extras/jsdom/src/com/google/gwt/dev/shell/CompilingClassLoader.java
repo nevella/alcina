@@ -1111,11 +1111,13 @@ public final class CompilingClassLoader extends ClassLoader implements
       }
 
       // Get the bytes, compiling if necessary.
+      if(className.contains("RegExp")){
+    	  int debug=3;
+      }
       byte[] classBytes = findClassBytes(className);
       if (classBytes == null) {
         throw new ClassNotFoundException(className);
       }
-
       if (HasAnnotation.hasAnnotation(classBytes, GwtScriptOnly.class)) {
         scriptOnlyClasses.add(className);
         maybeInitializeScriptOnlyClassLoader();
