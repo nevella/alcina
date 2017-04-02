@@ -214,6 +214,7 @@ public class ClientReflectionGenerator extends Generator {
 				rls = new LinkedHashSet<RegistryLocation>(rls);
 				CollectionFilters.filterInPlace(rls,
 						CLIENT_VISIBLE_ANNOTATION_FILTER);
+				rls = Registry.filterForRegistryPointUniqueness(rls);
 				if (!rls.isEmpty() && !ignore(jct)) {
 					results.put(jct, rls);
 				}
@@ -815,16 +816,17 @@ public class ClientReflectionGenerator extends Generator {
 		Map<Class, Annotation> uniqueMap = new HashMap<Class, Annotation>();
 		Set<? extends JClassType> flattenedSupertypeHierarchy = clazz
 				.getFlattenedSupertypeHierarchy();
-		//uhoh-nono
-//		List<? extends JClassType> nonGeneric = flattenedSupertypeHierarchy
-//				.stream().map(cl -> {
-//					if (cl instanceof JParameterizedType) {
-//						return ((JParameterizedType) cl).getBaseType();
-//					} else {
-//						return cl;
-//					}
-//				}).collect(Collectors.toList());
-		Set values = new HashSet();
+		// uhoh-nono
+		// List<? extends JClassType> nonGeneric = flattenedSupertypeHierarchy
+		// .stream().map(cl -> {
+		// if (cl instanceof JParameterizedType) {
+		// return ((JParameterizedType) cl).getBaseType();
+		// } else {
+		// return cl;
+		// }
+		// }).collect(Collectors.toList());
+		Set values = new LinkedHashSet();// order important - lowest ordinal,
+											// highest priority
 		for (JClassType jct : flattenedSupertypeHierarchy) {
 			try {
 				List<Annotation> visibleAnnotations = getVisibleAnnotations(jct,

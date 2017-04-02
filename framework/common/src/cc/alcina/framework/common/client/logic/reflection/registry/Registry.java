@@ -338,6 +338,8 @@ public class Registry {
 
 	public Class lookupSingle(Class registryPoint, Class targetObject,
 			boolean errorOnNull) {
+		
+				
 		Class cached = exactMap.get(registryPoint, targetObject);
 		if (cached == null) {
 			List<Class> lookup = lookup(true, registryPoint, targetObject,
