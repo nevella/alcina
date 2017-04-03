@@ -234,7 +234,15 @@ public class SelectElement extends Element {
    * 
    * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-multiple">W3C HTML Specification</a>
    */  public  void setMultiple(boolean multiple){
-   this.setPropertyBoolean("multiple",multiple);
+	   if(provideIsLocal()){
+		if(multiple){
+			setPropertyBoolean("multiple", multiple);
+		}else{
+			removeAttribute("multiple");
+		}
+	   }else{
+		   this.setPropertyBoolean("multiple",multiple);
+	   }
 }
 
 

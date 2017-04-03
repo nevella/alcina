@@ -249,8 +249,6 @@ public class Element extends Node implements DomElement {
 		return typedImpl(true).getFirstChildElement();
 	}
 
-	
-
 	public String getId() {
 		return typedImpl().getId();
 	}
@@ -292,19 +290,19 @@ public class Element extends Node implements DomElement {
 	}
 
 	public int getOffsetHeight() {
-		return typedImpl().getOffsetHeight();
+		return ensureJso().getOffsetHeight();
 	}
 
 	public int getOffsetLeft() {
-		return typedImpl().getOffsetLeft();
+		return ensureJso().getOffsetLeft();
 	}
 
 	public Element getOffsetParent() {
-		return typedImpl().getOffsetParent();
+		return ensureJso().getOffsetParent();
 	}
 
 	public int getOffsetTop() {
-		return typedImpl().getOffsetTop();
+		return ensureJso().getOffsetTop();
 	}
 
 	public int getOffsetWidth() {
@@ -477,21 +475,21 @@ public class Element extends Node implements DomElement {
 		typedDomImpl = (Element_Jso) nodeDom;
 		domImpl = nodeDom;
 		if (impl instanceof LocalDomElement) {
-			LocalDomElement localDomElement=(LocalDomElement) impl;
+			LocalDomElement localDomElement = (LocalDomElement) impl;
 			if (localDomElement != null
 					&& localDomElement.getEventBits() != 0) {
 				DOM.sinkEvents(this, localDomElement.getEventBits());
 			}
 		}
-		LocalDomBridge.debug.checkMultipleAssignment(this,nodeDom);
+		LocalDomBridge.debug.checkMultipleAssignment(this, nodeDom);
 	}
 
 	@Override
 	public void putImpl(DomNode impl) {
 		LocalDomBridge.get().checkInPreconditionList(this, impl);
 		// debug, can remove
-		if(impl==null){
-			int debug=3;
+		if (impl == null) {
+			int debug = 3;
 		}
 		if (impl instanceof JavaScriptObject && typedImpl == null) {
 			if (impl.getNodeName().equalsIgnoreCase("tbody")) {
@@ -502,7 +500,8 @@ public class Element extends Node implements DomElement {
 			if (typedImpl instanceof JavaScriptObject) {
 				Preconditions.checkState(impl instanceof LocalDomNode);
 				// orphan - to handle direct html writing of UiBinder
-				LocalDomBridge.get().javascriptObjectNodeLookup.remove(typedDomImpl);
+				LocalDomBridge.get().javascriptObjectNodeLookup
+						.remove(typedDomImpl);
 				domImpl = null;
 				typedDomImpl = null;
 			} else {
@@ -660,17 +659,19 @@ public class Element extends Node implements DomElement {
 			cursor = cursor.getParentElement();
 		}
 		return false;
-	}DomElement typedImpl() {
-	return typedImpl(false);	
 	}
+
+	DomElement typedImpl() {
+		return typedImpl(false);
+	}
+
 	DomElement typedImpl(boolean flushIfInnerHtml) {
-	
 		if (domImpl == null && LocalDomBridge.shouldUseDomNodes()
 				&& isAttached()) {
 			LocalDomBridge.ensureJso(this);
 		}
-		if(domImpl == null&&flushIfInnerHtml && LocalDomBridge.shouldUseDomNodes()
-				&&!isAttached()){
+		if (domImpl == null && flushIfInnerHtml
+				&& LocalDomBridge.shouldUseDomNodes() && !isAttached()) {
 			LocalDomBridge.replaceWithJso(this);
 		}
 		return typedImpl;
@@ -682,9 +683,24 @@ public class Element extends Node implements DomElement {
 	}
 
 	public Element_Jso ensureJsoNoFlush() {
-		if(typedDomImpl!=null){
+		if (typedDomImpl != null) {
 			return typedDomImpl;
 		}
 		return ensureJso();
+	}
+
+	@Override
+	public Node removeAllChildren() {
+		if (provideIsDom()) {
+			setInnerHTML("");
+			removeLocalImpl();
+			return null;
+		} else {
+			return super.removeAllChildren();
+		}
+	}
+
+	private void removeLocalImpl() {
+		localImpl = null;
 	}
 }

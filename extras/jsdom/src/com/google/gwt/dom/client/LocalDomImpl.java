@@ -436,8 +436,11 @@ public class LocalDomImpl {
 	}
 
 	public void selectClear(SelectElement select) {
-		resolveAllPending();
-		domImpl.selectClear(select.typedDomImpl);
+		if (select.provideIsLocal()) {
+			select.provideLocalDomElement().removeAllChildren();
+		} else {
+			domImpl.selectClear(select.typedDomImpl);
+		}
 	}
 
 	public int selectGetLength(SelectElement select) {

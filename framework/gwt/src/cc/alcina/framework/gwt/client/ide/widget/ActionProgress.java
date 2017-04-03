@@ -334,9 +334,10 @@ public class ActionProgress extends Composite
 		if (info.isComplete()) {
 			info.setPercentComplete(Math.max(1.0, info.getPercentComplete()));
 		}
-		progress.setWidth(Math.max(0,
-				((int) (bar.getOffsetWidth() - 2) * info.getPercentComplete()))
-				+ "px");
+		if (isAttached()) {
+			progress.setWidth(Math.max(0, ((int) (bar.getOffsetWidth() - 2)
+					* info.getPercentComplete())) + "px");
+		}
 	}
 
 	@Override

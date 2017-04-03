@@ -184,7 +184,11 @@ public class OptionElement extends Element {
   /**
    * The text contained within the option element.
    */  public  void setText(String text){
-   this.setPropertyString("text",text);
+   if(provideIsLocal()){
+	   setInnerText(text);
+   }else{
+	   this.setPropertyString("text",text);
+   }
 }
 
 

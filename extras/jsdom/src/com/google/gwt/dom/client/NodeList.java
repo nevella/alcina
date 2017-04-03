@@ -80,4 +80,6 @@ public class NodeList<T extends Node> implements DomNodeList<T>, Iterable<T> {
 	public Stream<T> stream() {
 		return DomNodeList_Static.stream0(this);
 	}
+
+	
 }

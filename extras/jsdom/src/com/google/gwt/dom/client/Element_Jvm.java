@@ -60,7 +60,8 @@ public class Element_Jvm extends Node_Jvm
 
 	@Override
 	public String getAttribute(String name) {
-		return attributes.computeIfAbsent(name, k -> "");
+		String value = attributes.get(name);
+		return value != null ? value : "";
 	}
 
 	@Override
@@ -84,8 +85,10 @@ public class Element_Jvm extends Node_Jvm
 
 	private List<Node_Jvm> resolveChildren() {
 		if (children.isEmpty() && innerHtml != null) {
-			RegExp tag = RegExp.compile("<([A-Za-z0-9_\\-.]+)( .+?)?>(.+)?</.+>", "m");
-			RegExp tagNoContents = RegExp.compile("<([A-Za-z0-9_\\-.]+)( .+?)?/?>", "m");
+			RegExp tag = RegExp
+					.compile("<([A-Za-z0-9_\\-.]+)( .+?)?>(.+)?</.+>", "m");
+			RegExp tagNoContents = RegExp
+					.compile("<([A-Za-z0-9_\\-.]+)( .+?)?/?>", "m");
 			MatchResult matchResult = tag.exec(innerHtml);
 			if (matchResult == null) {
 				matchResult = tagNoContents.exec(innerHtml);
@@ -101,9 +104,13 @@ public class Element_Jvm extends Node_Jvm
 
 	@Override
 	public String getInnerHTML() {
-		UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder();
-		children.stream().forEach(node -> node.appendOuterHtml(builder));
-		return builder.toSafeHtml().asString();
+		if (children.isEmpty() && innerHtml != null) {
+			return innerHtml;
+		} else {
+			UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder();
+			children.stream().forEach(node -> node.appendOuterHtml(builder));
+			return builder.toSafeHtml().asString();
+		}
 	}
 
 	@Override

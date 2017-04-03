@@ -20,6 +20,7 @@ import java.util.Iterator;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -210,6 +211,7 @@ public class DecoratedRelativePopupPanel extends RelativePopupPanel {
 	}
 
 	public void insertDecoratorHtml(String selector, String className) {
+		LocalDomBridge.ensurePendingResolutionNode(getElement());
 		Element elt = (Element) WidgetUtils.getElementForSelector(getElement(),
 				selector);
 		if (elt != null) {
