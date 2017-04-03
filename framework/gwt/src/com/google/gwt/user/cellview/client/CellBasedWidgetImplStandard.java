@@ -53,7 +53,8 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 		@Override
 		public void onAttachOrDetach(AttachEvent event) {
 			Preconditions.checkArgument(event.isAttached());
-			sinkEventImpl(elem.ensureJso(), typeName);
+			Scheduler.get().scheduleFinally(
+					() -> sinkEventImpl(elem.ensureJso(), typeName));
 			registration.removeHandler();
 		}
 	}
@@ -80,7 +81,8 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 		// specified event type.
 		String typeName = event.getType();
 		EventListener listener = DOM.getEventListener(target);
-		while (target != null && listener == null) {
+		while (target != null && listener == null
+				&& target.getParentElement() != null) {
 			target = target.getParentElement().cast();
 			if (target != null && isNonBubblingEventHandled(target, typeName)) {
 				// The target handles the event, so this must be the event
@@ -158,7 +160,8 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 	 * Initialize the event system.
 	 */
 	private native void initEventSystem() /*-{
-											@com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent = $entry(function (evt) {
+											@com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent = $entry(function(
+											evt) {
 											@com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::handleNonBubblingEvent(Lcom/google/gwt/user/client/Event;)(evt);
 											});
 											}-*/;
@@ -172,6 +175,10 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 	 *            the name of the event to sink
 	 */
 	private native void sinkEventImpl(Element_Jso elem, String typeName) /*-{
-																			elem.addEventListener(typeName, @com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent, true);
+																			elem
+																			.addEventListener(
+																			typeName,
+																			@com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent,
+																			true);
 																			}-*/;
 }

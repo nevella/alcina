@@ -84,8 +84,8 @@ public class Element_Jvm extends Node_Jvm
 
 	private List<Node_Jvm> resolveChildren() {
 		if (children.isEmpty() && innerHtml != null) {
-			RegExp tag = RegExp.compile("<(\\S+)( .+?)?>(.+)?</.+>", "m");
-			RegExp tagNoContents = RegExp.compile("<(\\S+)( .+?)?/?>", "m");
+			RegExp tag = RegExp.compile("<([A-Za-z0-9_\\-.]+)( .+?)?>(.+)?</.+>", "m");
+			RegExp tagNoContents = RegExp.compile("<([A-Za-z0-9_\\-.]+)( .+?)?/?>", "m");
 			MatchResult matchResult = tag.exec(innerHtml);
 			if (matchResult == null) {
 				matchResult = tagNoContents.exec(innerHtml);

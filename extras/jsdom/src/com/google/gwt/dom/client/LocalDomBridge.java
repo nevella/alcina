@@ -259,6 +259,7 @@ public class LocalDomBridge {
 				domStyle.setProperty(e.getKey(), e.getValue());
 			});
 			int bits = ((Element_Jvm) vmlocal_elt).orSunkEventsOfAllChildren(0);
+			bits |= DOM.getEventsSunk(elem);
 			DOM.sinkEvents(elem, bits);
 			pendingResolution.remove(node);
 			node.putImpl(node.domImpl);
@@ -290,6 +291,7 @@ public class LocalDomBridge {
 	}
 
 	public void useJsoDom() {
+		debug.logUseLocal(false);
 		LocalDomImpl.useLocalImpl = false;
 	}
 
@@ -298,6 +300,7 @@ public class LocalDomBridge {
 	}
 
 	public void useLocalDom() {
+		debug.logUseLocal(true);
 		LocalDomImpl.useLocalImpl = true;
 	}
 
@@ -367,7 +370,7 @@ public class LocalDomBridge {
 		pendingResolution.add(node);
 		boolean useLocalImpl = LocalDomImpl.useLocalImpl;
 		ensuringPendingResolutionNode = true;
-		LocalDomImpl.useLocalImpl = false;
+		useJsoDom();
 		Node_Jso nodeDom = null;
 		int nodeType = node.getNodeType();
 		switch (nodeType) {
@@ -394,7 +397,9 @@ public class LocalDomBridge {
 		debug.removeAssignment(nodeDom);
 		node.putDomImpl(nodeDom);
 		ensuringPendingResolutionNode = false;
-		LocalDomImpl.useLocalImpl = useLocalImpl;
+		if(useLocalImpl){
+			useLocalDom();
+		}
 		return nodeDom;
 	}
 
@@ -527,6 +532,11 @@ public class LocalDomBridge {
 			// System.out.println("add:" + impl.hashCode());
 		}
 
+		public void logUseLocal(boolean b) {
+//			System.out.println("use local:"+b);
+			
+		}
+
 		public void removeAssignment(Node_Jso nodeDom) {
 			assigned.remove(nodeDom);
 		}
@@ -565,7 +575,8 @@ public class LocalDomBridge {
 	}
 
 	public static void replaceWithJso(Element element) {
-		LocalDomImpl.useLocalImpl = false;
+		boolean saveLocalImpl = LocalDomImpl.useLocalImpl;
+		get().useJsoDom();
 		LocalDomElement localDomElement = element.provideLocalDomElement();
 		Element_Jso element_Jso = get().localDomImpl
 				.createDomElement(Document.get(), element.getTagName());
@@ -573,5 +584,8 @@ public class LocalDomBridge {
 		get().javascriptObjectNodeLookup.put(element_Jso, element);
 		element.putDomImpl(element_Jso);
 		element.putImpl(element_Jso);
+		if(saveLocalImpl){
+			get().useLocalDom();
+		}
 	}
 }

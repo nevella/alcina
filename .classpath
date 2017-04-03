@@ -4,11 +4,12 @@
 	<classpathentry kind="lib" path="lib/extras/dev/httpcore-4.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/framework/entity/commons-lang-2.5.jar"/>
 	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" path="framework/common/src"/>
+	<classpathentry kind="src" path="extras/jsdom/src-regex"/>
 	<classpathentry excluding="com/google/gwt/user/client/translatable/" kind="src" output="framework/extras/rpc/client/build" path="extras/rpc/client/src"/>
 	<classpathentry kind="src" output="framework/extras/rpc/servlet/build" path="extras/rpc/servlet/src"/>
 	<classpathentry kind="src" output="framework/jvmclient/build" path="framework/jvmclient/src"/>
 	<classpathentry kind="src" path="extras/collections/src"/>
-	<classpathentry kind="src" path="framework/entity/src"/>
+	<classpathentry excluding="org/json/" kind="src" path="framework/entity/src"/>
 	<classpathentry kind="src" path="framework/impl/jboss-hibernate/src"/>
 	<classpathentry excluding="com/google/gwt/user/client/impl/*|com/google/gwt/user/client/ui/PopupPanel.java" kind="src" path="framework/gwt/src"/>
 	<classpathentry kind="src" path="framework/servlet/src"/>
@@ -19,7 +20,6 @@
 	<classpathentry kind="src" path="extras/ios6/src"/>
 	<classpathentry excluding="com.google.gwt.regexp.super.com.google.gwt.regexp.shared/" kind="src" output="extras/jsdom/build" path="extras/jsdom/src"/>
 	<classpathentry kind="src" output="extras/jsdom/build-element" path="extras/jsdom/src-element"/>
-	<classpathentry kind="src" path="extras/jsdom/src-regex"/>
 	<classpathentry kind="lib" path="lib/extras/cluster/ant.jar" sourcepath="/Users/ouiji/Documents/programmin/java/apache-ant-1.9.5/src/"/>
 	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/common/jaxb-api.jar"/>
@@ -34,8 +34,8 @@
 	<classpathentry kind="lib" path="lib/framework/gwt/validation-api-1.0.0.GA.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-commons-annotations-3.2.0.Final.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core-4.0.0.Beta1.jar" sourcepath="/Users/ouiji/git/minor/hibernate-orm"/>
-	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar" sourcepath="/jboss-hibernate-orm"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-user.jar"/>
+	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar" sourcepath="/jboss-hibernate-orm"/>
 	<classpathentry kind="lib" path="lib/framework/servlet/activation.jar"/>
 	<classpathentry kind="lib" path="lib/framework/servlet/mail-1.4.4.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/javax.ejb-api-3.2.jar"/>

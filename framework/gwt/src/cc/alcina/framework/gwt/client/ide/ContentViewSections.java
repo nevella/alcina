@@ -29,17 +29,18 @@ public class ContentViewSections {
 		public void onAttachOrDetach(AttachEvent event) {
 			if (event.isAttached()) {
 				int maxLeft = 0;
-				for (PaneWrapperWithObjects beanView : beanViews) {
-					maxLeft = Math.max(maxLeft,
-							((GridForm) beanView.getBoundWidget())
-									.getCaptionColumnWidth());
-				}
-				for (PaneWrapperWithObjects beanView : beanViews) {
-					((GridForm) beanView.getBoundWidget())
-							.setCaptionColumnWidth(maxLeft);
-					((GridForm) beanView.getBoundWidget())
-							.addStyleName("section-table");
-				}
+//				for (PaneWrapperWithObjects beanView : beanViews) {
+//					System.out.println("get max cc w");
+//					maxLeft = Math.max(maxLeft,
+//							((GridForm) beanView.getBoundWidget())
+//									.getCaptionColumnWidth());
+//				}
+//				for (PaneWrapperWithObjects beanView : beanViews) {
+//					((GridForm) beanView.getBoundWidget())
+//							.setCaptionColumnWidth(maxLeft);
+//					((GridForm) beanView.getBoundWidget())
+//							.addStyleName("section-table");
+//				}
 			}
 		}
 	};

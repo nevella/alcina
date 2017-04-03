@@ -134,7 +134,7 @@ public class LocalDomImpl {
 			Element relatedTarget) {
 		return domImpl.createMouseEvent(doc.typedDomImpl, type, canBubble,
 				cancelable, detail, screenX, screenY, clientX, clientY, ctrlKey,
-				altKey, shiftKey, metaKey, button, relatedTarget.typedDomImpl);
+				altKey, shiftKey, metaKey, button, relatedTarget==null?null:relatedTarget.typedDomImpl);
 	}
 
 	public ScriptElement createScriptElement(Document doc, String source) {
@@ -262,7 +262,7 @@ public class LocalDomImpl {
 	private void resolveAllPending() {
 		if (useLocalImpl) {
 			LocalDomBridge.get().flush();
-			LocalDomBridge.get().useJvmDom();
+			LocalDomBridge.get().useLocalDom();
 		}
 	}
 
@@ -272,7 +272,6 @@ public class LocalDomImpl {
 	}
 
 	public String getAttribute(Element elem, String name) {
-		resolveAllPending();
 		return domImpl.getAttribute(elem.typedDomImpl, name);
 	}
 
