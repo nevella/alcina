@@ -18,18 +18,21 @@ import cc.alcina.framework.servlet.servlet.DownloadServlet.DownloadItem;
 public class ContentDeliveryDownloadInline implements ContentDelivery {
 	protected String deliverViaServlet(InputStream stream, String mimeType,
 			String suggestedFileName, String suffix) throws Exception {
+		if (suggestedFileName.isEmpty()) {
+			suggestedFileName = "ContentDeliveryDownloadInline-"
+					+ System.currentTimeMillis();
+		}
 		File file = File.createTempFile(suggestedFileName, "." + suffix);
 		file.deleteOnExit();
 		ResourceUtilities.writeStreamToStream(stream,
 				new FileOutputStream(file));
-		DownloadItem item = new DownloadServlet.DownloadItem(mimeType,
-				null, file.getPath());
+		DownloadItem item = new DownloadServlet.DownloadItem(mimeType, null,
+				file.getPath());
 		return DownloadServlet.add(item);
 	}
 
-	public String deliver(PublicationContext ctx,InputStream convertedContent,
-			DeliveryModel deliveryModel, FormatConverter hfc)
-			throws Exception {
+	public String deliver(PublicationContext ctx, InputStream convertedContent,
+			DeliveryModel deliveryModel, FormatConverter hfc) throws Exception {
 		return deliverViaServlet(convertedContent, hfc.getMimeType(),
 				deliveryModel.getSuggestedFileName(), hfc.getFileExtension());
 	}

@@ -248,6 +248,13 @@ public class TextAreaElement extends Element {
    this.setPropertyInt("rows",rows);
 }
 
+   @Override
+	public void setPropertyString(String name, String value) {
+	   if("value".equals(name)&&provideIsLocal()){
+		   setInnerText(value); 
+	   }
+		super.setPropertyString(name, value);
+	}
 
   /**
    * Represents the current contents of the corresponding form control, in an
@@ -256,7 +263,7 @@ public class TextAreaElement extends Element {
    * entirety of the data can not fit into a single string, the implementation
    * may truncate the data.
    */  public  void setValue(String value){
-   this.setPropertyString("value",value);
-}
+		   this.setPropertyString("value",value);
+   	}
 
 }

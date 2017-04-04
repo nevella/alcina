@@ -454,6 +454,7 @@ public class LocalDomBridge {
 		elementCreators.put(SelectElement.TAG, () -> new SelectElement());
 		elementCreators.put(OptionElement.TAG, () -> new OptionElement());
 		elementCreators.put("SVG", () -> new Element());
+		elementCreators.put(IFrameElement.TAG, () -> new IFrameElement());
 	}
 
 	private <N extends Node> N nodeFor0(JavaScriptObject o) {

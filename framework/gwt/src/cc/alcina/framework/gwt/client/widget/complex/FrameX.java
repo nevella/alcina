@@ -46,7 +46,8 @@ public class FrameX extends Frame {
 	}
 
 	private native void _setDocumentHtml(String html)/*-{
-	var elt = this.@cc.alcina.framework.gwt.client.widget.complex.FrameX::getElement()();
+	var elt_wr = this.@cc.alcina.framework.gwt.client.widget.complex.FrameX::getElement()();
+	var elt = elt_wr.@com.google.gwt.dom.client.Element::ensureJso()();
 	var oDoc = elt.contentWindow || elt.contentDocument;
 	if (oDoc.document) {
 		oDoc = oDoc.document;

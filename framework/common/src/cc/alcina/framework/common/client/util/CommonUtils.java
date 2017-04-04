@@ -1498,4 +1498,7 @@ public class CommonUtils {
 		}
 		return list.get(idx);
 	}
+	public static interface IidGenerator{
+		String generate();
+	}
 }

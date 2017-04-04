@@ -15,6 +15,7 @@
  */
 package java.util;
 
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
@@ -85,5 +86,15 @@ public interface Map<K, V> {
       }
 
       return v;
+  }
+  default void forEach(BiConsumer<? super K, ? super V> action) {
+      Objects.requireNonNull(action);
+      for (Map.Entry<K, V> entry : entrySet()) {
+          K k;
+          V v;
+          k = entry.getKey();
+          v = entry.getValue();
+          action.accept(k, v);
+      }
   }
 }
