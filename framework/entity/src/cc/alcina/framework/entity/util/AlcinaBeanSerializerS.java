@@ -21,6 +21,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.gwt.core.client.GWT;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -51,7 +53,12 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 	public <T> T deserialize(String jsonString) {
 		try {
 			JSONObject obj = new JSONObject(jsonString);
-			cl = Thread.currentThread().getContextClassLoader();
+			if (GWT.isClient()) {
+				// devmode
+				cl = getClass().getClassLoader().getParent();
+			} else {
+				cl = Thread.currentThread().getContextClassLoader();
+			}
 			return (T) deserializeObject(obj);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

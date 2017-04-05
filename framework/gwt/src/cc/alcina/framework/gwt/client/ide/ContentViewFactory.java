@@ -1042,8 +1042,10 @@ public class ContentViewFactory {
 
 		@Override
 		protected void onDetach() {
-			preDetachFocus.setVisible(true);
-			preDetachFocus.setFocus(true);
+			if (editable) {
+				preDetachFocus.setVisible(true);
+				preDetachFocus.setFocus(true);
+			}
 			if (editable && isVisible()) {
 				GwittirUtils.refreshTextBoxes(getBoundWidget().getBinding(),
 						null, false, false, true);

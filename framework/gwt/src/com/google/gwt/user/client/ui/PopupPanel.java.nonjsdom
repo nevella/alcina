@@ -440,6 +440,8 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	// The top style attribute in pixels
 	private int topPosition = -1;
 
+	private boolean initialPopupPosition;
+
 	/**
 	 * Creates an empty popup panel. A child widget must be added to it before
 	 * it is shown.
@@ -450,7 +452,9 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		// Default position of popup should be in the upper-left corner of the
 		// window. By setting a default position, the popup will not appear in
 		// an undefined location if it is shown before its position is set.
+		initialPopupPosition = true;
 		setPopupPosition(0, 0);
+		initialPopupPosition = false;
 		setStyleName(DEFAULT_STYLENAME);
 		setStyleName(getContainerElement(), "popupContent");
 	}
@@ -900,8 +904,10 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		topPosition = top;
 		// Account for the difference between absolute position and the
 		// body's positioning context.
+		if(!initialPopupPosition){
 		left -= Document.get().getBodyOffsetLeft();
 		top -= Document.get().getBodyOffsetTop();
+		}
 		// Set the popup's position manually, allowing setPopupPosition() to be
 		// called before show() is called (so a popup can be positioned without
 		// it
@@ -1205,7 +1211,7 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	 * 
 	 * @return the Element that {@link PopupImpl} creates and expects
 	 */
-	private com.google.gwt.user.client.Element getPopupImplElement() {
+	private Element getPopupImplElement() {
 		return DOM.getFirstChild(super.getContainerElement());
 	}
 

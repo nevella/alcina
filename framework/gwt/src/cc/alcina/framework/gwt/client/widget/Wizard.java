@@ -186,6 +186,7 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 
 	public Widget renderPage() {
 		FlowPanel fp = new FlowPanel();
+		fp.addAttachHandler(evt->System.out.println(fp.getElement().getInnerHTML()));
 		currentWidget = fp;
 		fp.setStyleName(FRAME_STYLE_NAME);
 		fp.addStyleName(getStyleName());

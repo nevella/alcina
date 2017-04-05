@@ -16,7 +16,7 @@
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.FocusWidget;
 import com.google.gwt.user.client.ui.HasHTML;
@@ -25,23 +25,12 @@ import com.google.gwt.user.client.ui.HasHTML;
  * Uses an input-button element, rather than a button
  */
 public class InputButton extends FocusWidget implements HasHTML {
-	static native void adjustType(Element button) /*-{
-		try { 
-		  button.setAttribute("type", "button"); 
-		} catch (e) { 
-		}
-	}-*/;
-
-	static native void click(Element button) /*-{
-		button.click();
-	}-*/;
 
 	/**
 	 * Creates a button with no caption.
 	 */
 	public InputButton() {
-		Element button = Document.get().createElement("input");
-		adjustType(button);
+		InputElement button = Document.get().createButtonInputElement();
 		setElement(button);
 		setStyleName("gwt-Button");
 		button.setPropertyString("name", "");
@@ -73,7 +62,7 @@ public class InputButton extends FocusWidget implements HasHTML {
 	 * Programmatic equivalent of the user clicking the button.
 	 */
 	public void click() {
-		click(getElement());
+		InputElement.as(getElement()).click();
 	}
 
 	public void setHTML(String html) {

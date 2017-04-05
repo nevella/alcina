@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.widget;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 
 import com.google.gwt.user.client.ui.HTML;
@@ -10,8 +11,10 @@ import com.google.gwt.user.client.ui.Widget;
 public class VariableWizardVisibilityHelper<U> {
 	Multimap<U, List<Widget>> toShowWidgets = new Multimap<U, List<Widget>>();
 
-	public Widget createRequiredFieldCaption(String captionText, U toShowSection) {
-		HTML w = new HTML(captionText + "<span class='req-risk'>*</span>");
+	public Widget createRequiredFieldCaption(String captionText,
+			U toShowSection) {
+		HTML w = new HTML(Ax.format(
+				"<span>%s</span><span class='req-risk'>*</span>", captionText));
 		w.setStyleName("form-caption");
 		toShowWidgets.add(toShowSection, w);
 		return w;
@@ -24,7 +27,7 @@ public class VariableWizardVisibilityHelper<U> {
 	}
 
 	public Widget createFieldCaption(String captionText, U toShowSection) {
-		HTML w = new HTML(captionText);
+		HTML w = new HTML(Ax.format("<span>%s</span>", captionText));
 		w.setStyleName("form-caption");
 		toShowWidgets.add(toShowSection, w);
 		return w;

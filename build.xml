@@ -31,6 +31,7 @@
 			<classpath>
 				<path refid="framework.common.lib.path" />
 			</classpath>
+
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${framework.impl.jboss-hibernate.build.dir}" />
@@ -95,7 +96,7 @@
 		<javac target="8" source="8" includeantruntime="false" debug="on" destdir="${framework.jvmclient.build.dir}">
 			<src path="${framework.jvmclient.src.dir}" />
 			<src path="${framework.jvmclient.src.dir.2}" />
-			<exclude name="cc/alcina/framework/common/translatable/**"/>
+			<exclude name="cc/alcina/framework/common/translatable/**" />
 			<classpath>
 				<path refid="framework.common.lib.path" />
 				<pathelement path="${framework.entity.build.dir}" />
@@ -107,6 +108,20 @@
 	<target name="check-cluster-tasks-jar">
 		<available file="${extras.tasks.dist.dir}/${ant.project.name}-cluster-tasks.jar" property="cluster-tasks-jar.present" />
 	</target>
+	<target name="make-gwt-dev-jar" description="gwt-dev-overrid" depends="">
+		<jar destfile="${alcina.home}/dist-extras/gwt-dev-patch.jar">
+			<fileset dir="${alcina.home}/extras/jsdom/build">
+				<include name="**/JAbstractMethod.class" />
+			</fileset>
+		</jar>
+	</target>
+	<target name="make-gwittir-trunk-jar" description="make-gwittir-trunk-jar" depends="">
+			<jar destfile="${alcina.home}/dist-extras/gwittir-trunk-2.jar">
+				<fileset dir="${alcina.home}/lib/framework/gwt/gwittir-trunk/">
+					<include name="**/*.*" />
+				</fileset>
+			</jar>
+		</target>
 	<target name="make-ant-jar" description="Make the build support jar" depends="compile,check-cluster-tasks-jar" unless="cluster-tasks-jar.present">
 		<mkdir dir="${extras.dist.dir}" />
 		<mkdir dir="${extras.tasks.dist.dir}" />
@@ -130,6 +145,7 @@
 				<include name="**/*.*" />
 				<!-- put in server (servlet/war) jar due to GWT/RPC classloader issues -->
 				<exclude name="${framework.remote.interface.package}" />
+				<exclude name="com/google/gwt/dom/client/**.*" />
 
 			</fileset>
 

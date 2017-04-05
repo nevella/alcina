@@ -33,13 +33,13 @@ import java.util.Map.Entry;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.ClickListener;
@@ -760,10 +760,7 @@ public class BoundTableExt extends AbstractTableWidget
 			((SourcesClickEvents) entry.getKey())
 					.removeClickListener((ClickListener) entry.getValue());
 		}
-		this.table.clear();
-		while (table.getRowCount() > 0) {
-			this.table.removeRow(0);
-		}
+		createTable();
 		if (this.selectedRowStyles != null) {
 			this.selectedRowStyles.clear();
 		}
@@ -1180,15 +1177,12 @@ public class BoundTableExt extends AbstractTableWidget
 		if ((this.masks & BoundTableExt.ROW_HANDLE_MASK) > 0) {
 			this.rowHandles = new ArrayList();
 		}
-		this.table = createTableImpl();
-		if ((this.masks & BoundTableExt.SELECT_ROW_MASK) > 0) {
-			this.table.addClickHandler(rowSelectHandler);
-		}
-		this.table.setCellPadding(0);
-		this.table.setCellSpacing(0);
 		esp = new EventingSimplePanel();
-		esp.setWidget(table);
+		createTable();
 		if ((masks & BoundTableExt.SCROLL_MASK) > 0) {
+			if("".isEmpty()){
+				throw new UnsupportedOperationException();
+			}
 			this.scroll = new ScrollPanel();
 			this.scroll.setWidget(table);
 			super.initWidget(esp);
@@ -1208,26 +1202,7 @@ public class BoundTableExt extends AbstractTableWidget
 		} else {
 			super.initWidget(esp);
 		}
-		this.table.setCellSpacing(0);
-		table.addTableListener(new TableListener() {
-			public void onCellClicked(SourcesTableEvents sender, int row,
-					int cell) {
-				setActive(true);
-				int startColumn = ((masks & BoundTableExt.ROW_HANDLE_MASK) > 0)
-						? 1 : 0;
-				if (startColumn == 0) {
-					handleSelect(true, row, cell);
-				}
-				if (((masks & BoundTableExt.SORT_MASK) > 0)
-						&& ((masks & BoundTableExt.HEADER_MASK) > 0)
-						&& (row == 0) && !(BoundTableExt.this.value == null
-								|| BoundTableExt.this.value.isEmpty())) {
-					sortColumn(cell - startColumn);
-				}
-			}
-		});
-		this.base = ((this.scroll == null) ? (Widget) this.table
-				: (Widget) this.scroll);
+		
 		this.value = (this.value == null) ? new ArrayList() : this.value;
 		this.columns = (this.columns == null) ? new Field[0] : this.columns;
 		this.setStyleName("gwittir-BoundTable");
@@ -1300,6 +1275,34 @@ public class BoundTableExt extends AbstractTableWidget
 				}
 			}
 		});
+	}
+
+	private void createTable() {
+		this.table = createTableImpl();
+		if ((this.masks & BoundTableExt.SELECT_ROW_MASK) > 0) {
+			this.table.addClickHandler(rowSelectHandler);
+		}
+		this.table.setCellPadding(0);
+		this.table.setCellSpacing(0);
+		table.addTableListener(new TableListener() {
+			public void onCellClicked(SourcesTableEvents sender, int row,
+					int cell) {
+				setActive(true);
+				int startColumn = ((masks & BoundTableExt.ROW_HANDLE_MASK) > 0)
+						? 1 : 0;
+				if (startColumn == 0) {
+					handleSelect(true, row, cell);
+				}
+				if (((masks & BoundTableExt.SORT_MASK) > 0)
+						&& ((masks & BoundTableExt.HEADER_MASK) > 0)
+						&& (row == 0) && !(BoundTableExt.this.value == null
+								|| BoundTableExt.this.value.isEmpty())) {
+					sortColumn(cell - startColumn);
+				}
+			}
+		});
+		this.base=this.table;
+		esp.setWidget(this.table);
 	}
 
 	public void handleKeyupEvent(KeyUpEvent event) {

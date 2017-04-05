@@ -27,4 +27,7 @@ public interface PublicationContent extends Serializable{
 	default List getGridRows(){
 		return null;
 	}
+	default String getCss(){
+		return "";
+	}
 }

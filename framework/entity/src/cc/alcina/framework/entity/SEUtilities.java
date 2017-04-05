@@ -83,6 +83,7 @@ import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.util.JvmPropertyReflector;
@@ -530,6 +531,14 @@ public class SEUtilities {
 			}
 		}
 		return sb.toString();
+	}
+
+	@RegistryLocation(registryPoint = IidGenerator.class)
+	public static class IidGeneratorJ2SE implements IidGenerator {
+		@Override
+		public String generate() {
+			return generateId();
+		}
 	}
 
 	public static String generateId() {
@@ -1417,5 +1426,9 @@ public class SEUtilities {
 			Matcher matcher = pattern.matcher(text);
 			return new MatcherIterator(matcher);
 		}
+	}
+
+	public static void dumpMethods(Object o) {
+		System.out.println("dump" + o);
 	}
 }

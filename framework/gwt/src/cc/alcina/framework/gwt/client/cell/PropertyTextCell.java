@@ -383,7 +383,7 @@ public class PropertyTextCell
 	 * Get the input element in edit mode.
 	 */
 	private InputElement getInputElement(Element parent) {
-		return parent.getFirstChild().<InputElement> cast();
+		return (InputElement) parent.getFirstChild().cast();
 	}
 
 	/**

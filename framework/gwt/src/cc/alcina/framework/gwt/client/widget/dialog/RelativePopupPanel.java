@@ -18,8 +18,6 @@ package cc.alcina.framework.gwt.client.widget.dialog;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
@@ -55,6 +53,8 @@ import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.client.ui.impl.PopupImpl;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+
 /**
  * A panel that can "pop up" over other widgets. It overlays the browser's
  * client area (and any previously-created popups).
@@ -83,8 +83,7 @@ import com.google.gwt.user.client.ui.impl.PopupImpl;
  * </p>
  * 
  * <p>
- * <h3>Example</h3>
- * {@example com.google.gwt.examples.PopupPanelExample}
+ * <h3>Example</h3> {@example com.google.gwt.examples.PopupPanelExample}
  * </p>
  * <h3>CSS Style Rules</h3>
  * <dl>
@@ -97,8 +96,8 @@ import com.google.gwt.user.client.ui.impl.PopupImpl;
  * </dl>
  */
 @SuppressWarnings("deprecation")
-public class RelativePopupPanel extends SimplePanel implements HasAnimation,
-		HasCloseHandlers<RelativePopupPanel> {
+public class RelativePopupPanel extends SimplePanel
+		implements HasAnimation, HasCloseHandlers<RelativePopupPanel> {
 	/**
 	 * A callback that is used to set the position of a
 	 * {@link RelativePopupPanel} right before it is shown.
@@ -478,8 +477,8 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 		autoHidePartners.add(partner);
 	}
 
-	public HandlerRegistration addCloseHandler(
-			CloseHandler<RelativePopupPanel> handler) {
+	public HandlerRegistration
+			addCloseHandler(CloseHandler<RelativePopupPanel> handler) {
 		return addHandler(handler, CloseEvent.getType());
 	}
 
@@ -673,8 +672,8 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 	 */
 	@Override
 	public boolean isVisible() {
-		return !"hidden".equals(getElement().getStyle().getProperty(
-				"visibility"));
+		return !"hidden"
+				.equals(getElement().getStyle().getProperty("visibility"));
 	}
 
 	/**
@@ -938,8 +937,8 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 		// "holes" in displayed contents and it allows normal layout passes
 		// to occur so the size of the RelativePopupPanel can be reliably
 		// determined.
-		DOM.setStyleAttribute(getElement(), "visibility", visible ? "visible"
-				: "hidden");
+		DOM.setStyleAttribute(getElement(), "visibility",
+				visible ? "visible" : "hidden");
 	}
 
 	@Override
@@ -1006,7 +1005,7 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 	}
 
 	@Override
-	protected com.google.gwt.user.client.Element getContainerElement() {
+	protected Element getContainerElement() {
 		return impl.getContainerElement(getPopupImplElement()).cast();
 	}
 
@@ -1022,7 +1021,7 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 	}
 
 	@Override
-	protected com.google.gwt.user.client.Element getStyleElement() {
+	protected Element getStyleElement() {
 		return impl.getStyleElement(getPopupImplElement()).cast();
 	}
 
@@ -1105,11 +1104,11 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 	 *            The Element on which <code>blur()</code> will be invoked
 	 */
 	private native void blur(Element elt) /*-{
-	// Issue 2390: blurring the body causes IE to disappear to the background
-	if (elt.blur && elt != $doc.body) {
-	    elt.blur();
-	}
-	}-*/;
+											// Issue 2390: blurring the body causes IE to disappear to the background
+											if (elt.blur && elt != $doc.body) {
+											elt.blur();
+											}
+											}-*/;
 
 	/**
 	 * Does the event target one of the partner elements?
@@ -1156,7 +1155,7 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 	 * 
 	 * @return the Element that {@link PopupImpl} creates and expects
 	 */
-	private com.google.gwt.user.client.Element getPopupImplElement() {
+	private Element getPopupImplElement() {
 		return DOM.getFirstChild(super.getContainerElement());
 	}
 
@@ -1350,11 +1349,13 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 			break;
 		}
 		case Event.ONFOCUS: {
-			Element target = nativeEvent.getEventTarget().cast();
-			if (modal && !eventTargetsPopupOrPartner && (target != null)) {
-				blur(target);
-				event.cancel();
-				return;
+			if (nativeEvent.getEventTarget().is(Element.class)) {
+				Element target = nativeEvent.getEventTarget().cast();
+				if (modal && !eventTargetsPopupOrPartner && (target != null)) {
+					blur(target);
+					event.cancel();
+					return;
+				}
 			}
 			break;
 		}
@@ -1391,14 +1392,15 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 		if (showing) {
 			nativePreviewHandlerRegistration = Event
 					.addNativePreviewHandler(new NativePreviewHandler() {
-						public void onPreviewNativeEvent(
-								NativePreviewEvent event) {
+						public void
+								onPreviewNativeEvent(NativePreviewEvent event) {
 							previewNativeEvent(event);
 						}
 					});
 			historyHandlerRegistration = History
 					.addValueChangeHandler(new ValueChangeHandler<String>() {
-						public void onValueChange(ValueChangeEvent<String> event) {
+						public void
+								onValueChange(ValueChangeEvent<String> event) {
 							if (autoHideOnHistoryEvents) {
 								hide();
 							}
@@ -1432,8 +1434,8 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 		this.hideOnEscape = hideOnEscape;
 	}
 
-	public static class RelativePopupPanelFilter implements
-			CollectionFilter<Widget> {
+	public static class RelativePopupPanelFilter
+			implements CollectionFilter<Widget> {
 		@Override
 		public boolean allow(Widget o) {
 			return o instanceof RelativePopupPanel;
