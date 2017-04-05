@@ -34,6 +34,8 @@ public class LocalDomBridge {
 
 	static boolean ensuringPendingResolutionNode;
 
+	public static boolean fastRemoveAll = true;
+
 	public static String declarativeCssName(String key) {
 		return declarativeCssNames.computeIfAbsent(key, k -> {
 			String lcKey = k.toLowerCase();

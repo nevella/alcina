@@ -111,6 +111,10 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		init0();
 	}
 
+	@Override
+	protected void onDetach() {
+		super.onDetach();
+	}
 	/** Creates a new instance of ListBox */
 	public SetBasedListBox(ListAddItemHandler listAddItemHandler) {
 		super();
