@@ -1640,7 +1640,7 @@ public class DOM {
 			}
 		}
 		EventTarget eventTarget = evt.getEventTarget();
-		if(evt.getType().toLowerCase().contains("click")){
+		if(evt.getType().toLowerCase().contains("change")){
 			int debug=3;
 		}
 		if (Element.is(eventTarget)) {

@@ -199,5 +199,12 @@ public class OptionElement extends Element {
    */  public  void setValue(String value){
    this.setPropertyString("value",value);
 }
-
+   @Override
+	public void setPropertyBoolean(String name, boolean value) {
+	if(provideIsLocal()&&(name.equals("selected"))&&!Boolean.valueOf(value)){
+		   removeAttribute(name);
+		   return;
+	   }
+		super.setPropertyBoolean(name, value);
+	}
 }

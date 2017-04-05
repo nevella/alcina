@@ -355,6 +355,9 @@ public class Element_Jvm extends Node_Jvm
 	@Override
 	public void setAttribute(String name, String value) {
 		attributes.put(name, value);
+		if(name.equals("id")&&value.length()>0){
+			LocalDomBridge.registerId(this);
+		}
 	}
 
 	@Override
@@ -365,7 +368,6 @@ public class Element_Jvm extends Node_Jvm
 	@Override
 	public void setId(String id) {
 		setAttribute("id", id);
-		LocalDomBridge.registerId(this);
 	}
 
 	@Override

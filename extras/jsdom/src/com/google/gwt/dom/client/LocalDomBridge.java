@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import javax.swing.text.StyledEditorKit.BoldAction;
+
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
@@ -100,6 +102,21 @@ public class LocalDomBridge {
 
 	public static void registerId(Element_Jvm element_Jvm) {
 		get().registerId0(element_Jvm);
+	}
+
+	public static void replaceWithJso(Element element) {
+		boolean saveLocalImpl = LocalDomImpl.useLocalImpl;
+		get().useJsoDom();
+		LocalDomElement localDomElement = element.provideLocalDomElement();
+		Element_Jso element_Jso = get().localDomImpl
+				.createDomElement(Document.get(), element.getTagName());
+		element_Jso.setInnerHTML(localDomElement.getPendingInnerHtml());
+		get().javascriptObjectNodeLookup.put(element_Jso, element);
+		element.putDomImpl(element_Jso);
+		element.putImpl(element_Jso);
+		if (saveLocalImpl) {
+			get().useLocalDom();
+		}
 	}
 
 	public static boolean shouldUseDomNodes() {
@@ -274,6 +291,12 @@ public class LocalDomBridge {
 		flushCommand = null;
 		System.out.println("**flush**");
 		if (pendingResolution.size() == 0) {
+			boolean detachedAndPending = createdLocals.stream()
+					.anyMatch(e -> e.getParentNode() == null);
+			if (detachedAndPending) {
+				// e.g. dialog box
+				return;
+			}
 			createdLocals.stream().forEach(e -> {
 				Element_Jvm el = (Element_Jvm) e;
 				if (((Element) el.node).uiObject != null) {
@@ -397,7 +420,7 @@ public class LocalDomBridge {
 		debug.removeAssignment(nodeDom);
 		node.putDomImpl(nodeDom);
 		ensuringPendingResolutionNode = false;
-		if(useLocalImpl){
+		if (useLocalImpl) {
 			useLocalDom();
 		}
 		return nodeDom;
@@ -453,8 +476,12 @@ public class LocalDomBridge {
 		elementCreators.put(ScriptElement.TAG, () -> new ScriptElement());
 		elementCreators.put(SelectElement.TAG, () -> new SelectElement());
 		elementCreators.put(OptionElement.TAG, () -> new OptionElement());
-		elementCreators.put("SVG", () -> new Element());
+		elementCreators.put("svg", () -> new Element());
 		elementCreators.put(IFrameElement.TAG, () -> new IFrameElement());
+		elementCreators.put(UListElement.TAG, () -> new UListElement());
+		elementCreators.put(OListElement.TAG, () -> new OListElement());
+		elementCreators.put(LIElement.TAG, () -> new LIElement());
+		elementCreators.put("b", () -> new Element());
 	}
 
 	private <N extends Node> N nodeFor0(JavaScriptObject o) {
@@ -521,6 +548,10 @@ public class LocalDomBridge {
 		});
 	}
 
+	boolean hasPendingResolutionNodes() {
+		return pendingResolution.size() > 0;
+	}
+
 	static class LocalDomBridgeDebug {
 		public boolean on = false;
 
@@ -533,15 +564,6 @@ public class LocalDomBridge {
 			// System.out.println("add:" + impl.hashCode());
 		}
 
-		public void logUseLocal(boolean b) {
-//			System.out.println("use local:"+b);
-			
-		}
-
-		public void removeAssignment(Node_Jso nodeDom) {
-			assigned.remove(nodeDom);
-		}
-
 		public void checkCreatedLocals(List<DomElement> createdLocals) {
 			createdLocals.stream().forEach(e -> {
 				Node_Jso domImpl = ((Element_Jvm) e).provideAncestorDomImpl();
@@ -552,11 +574,6 @@ public class LocalDomBridge {
 					}
 				}
 			});
-		}
-
-		public void removed(Node_Jvm oldChild_Jvm) {
-			nodesInHierarchy.remove(oldChild_Jvm);
-			// System.out.println("remove:" + oldChild_Jvm.hashCode());
 		}
 
 		public void checkMultipleAssignment(Element element, Node_Jso nodeDom) {
@@ -573,20 +590,18 @@ public class LocalDomBridge {
 			}
 			assigned.put(nodeDom, element);
 		}
-	}
 
-	public static void replaceWithJso(Element element) {
-		boolean saveLocalImpl = LocalDomImpl.useLocalImpl;
-		get().useJsoDom();
-		LocalDomElement localDomElement = element.provideLocalDomElement();
-		Element_Jso element_Jso = get().localDomImpl
-				.createDomElement(Document.get(), element.getTagName());
-		element_Jso.setInnerHTML(localDomElement.getPendingInnerHtml());
-		get().javascriptObjectNodeLookup.put(element_Jso, element);
-		element.putDomImpl(element_Jso);
-		element.putImpl(element_Jso);
-		if(saveLocalImpl){
-			get().useLocalDom();
+		public void logUseLocal(boolean b) {
+			// System.out.println("use local:"+b);
+		}
+
+		public void removeAssignment(Node_Jso nodeDom) {
+			assigned.remove(nodeDom);
+		}
+
+		public void removed(Node_Jvm oldChild_Jvm) {
+			nodesInHierarchy.remove(oldChild_Jvm);
+			// System.out.println("remove:" + oldChild_Jvm.hashCode());
 		}
 	}
 }

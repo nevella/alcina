@@ -317,7 +317,11 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 			 ((Element)oldChild).ensureJso();
 		 }
 		Node_Jso resolvedOrPending = resolvedOrPending(oldChild);
+		if(resolvedOrPending.getParentNode()==null){
+			return nodeFor(resolvedOrPending);
+		}else{
 		return nodeFor(removeChild0(resolvedOrPending));
+		}
 	}
 
 	/**

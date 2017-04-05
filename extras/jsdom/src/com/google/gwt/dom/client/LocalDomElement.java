@@ -23,22 +23,75 @@ public interface LocalDomElement extends LocalDomNode {
 
 	void setAttribute(String name, String value);
 
+	enum AttrParseState {
+		START, NAME, EQ, VALUE
+	}
+
 	default void setOuterHtml(String html) {
-		RegExp tag = RegExp.compile("<\\S+( .+?)?>(.+)</.+>", "m");
-		RegExp attr = RegExp.compile("(\\S+?)=[\"'](.+?)[\"']", "mg");
+		RegExp tag = RegExp.compile("<([A-Za-z0-9_\\-.]+)( .+?)?>(.+)?</.+>",
+				"m");
+		RegExp tagNoContents = RegExp.compile("<([A-Za-z0-9_\\-.]+)( .+?)?/?>",
+				"m");
 		MatchResult matchResult = tag.exec(html);
-		String attrString = matchResult.getGroup(1);
+		if (matchResult == null) {
+			matchResult = tagNoContents.exec(html);
+		}
+		String attrString = matchResult.getGroup(2);
 		if (attrString != null) {
-			MatchResult attrMatch = null;
-			while ((attrMatch = attr.exec(attrString)) != null) {
-				setAttribute(attrMatch.getGroup(1), attrMatch.getGroup(2));
+			char valueDelimiter = '-';
+			AttrParseState state = AttrParseState.START;
+			StringBuilder nameBuilder = null;
+			StringBuilder valueBuilder = null;
+			for (int idx = 0; idx < attrString.length(); idx++) {
+				char c = attrString.charAt(idx);
+				if (c == ' ') {
+					switch (state) {
+					case VALUE:
+						break;
+					default:
+						continue;
+					}
+				}
+				switch (state) {
+				case START:
+					state = AttrParseState.NAME;
+					nameBuilder = new StringBuilder();
+					nameBuilder.append(c);
+					break;
+				case NAME:
+					if (c == '=') {
+						state = AttrParseState.EQ;
+					} else {
+						nameBuilder.append(c);
+					}
+					break;
+				case EQ:
+					if (c == '\'' || c == '"') {
+						valueBuilder = new StringBuilder();
+						state = AttrParseState.VALUE;
+						valueDelimiter = c;
+					}
+					break;
+				case VALUE:
+					if (c == valueDelimiter) {
+						setAttribute(nameBuilder.toString(),
+								valueBuilder.toString());
+						state = AttrParseState.START;
+					} else {
+						valueBuilder.append(c);
+					}
+					break;
+				}
 			}
 		}
-		setInnerHTML(matchResult.getGroup(2));
+		if (matchResult.getGroupCount() == 4) {
+			setInnerHTML(matchResult.getGroup(3));
+		}
 	}
 
 	void setInnerHTML(String html);
+
 	int getEventBits();
 
-	 String getPendingInnerHtml();
+	String getPendingInnerHtml();
 }

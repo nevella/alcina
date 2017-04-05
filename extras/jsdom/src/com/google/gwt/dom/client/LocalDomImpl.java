@@ -260,7 +260,7 @@ public class LocalDomImpl {
 	}
 
 	private void resolveAllPending() {
-		if (useLocalImpl) {
+		if (useLocalImpl&&LocalDomBridge.get().hasPendingResolutionNodes()) {
 			LocalDomBridge.get().flush();
 			LocalDomBridge.get().useLocalDom();
 		}

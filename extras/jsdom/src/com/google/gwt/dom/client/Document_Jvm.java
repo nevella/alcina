@@ -39,8 +39,7 @@ public class Document_Jvm extends Node_Jvm implements DomDocument {
 
 	@Override
 	public String createUniqueId() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

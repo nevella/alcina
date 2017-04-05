@@ -124,7 +124,9 @@ public class Element extends Node implements DomElement {
 	public <T extends Node> T appendChild(T newChild) {
 		if (domImpl == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
 				&& provideAncestorElementAttachedToDom() != null) {
-			LocalDomBridge.ensureJso(this, false);
+			System.out.println("ensure, maybe falsey?");
+//			LocalDomBridge.ensureJso(this, false);
+			LocalDomBridge.ensureJso(this);
 		}
 		return typedImpl().appendChild(newChild);
 	}
@@ -691,6 +693,10 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	public Node removeAllChildren() {
+		if (domImpl == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
+				&& provideAncestorElementAttachedToDom() != null) {
+			ensureJso();
+		}
 		if (provideIsDom()) {
 			setInnerHTML("");
 			removeLocalImpl();

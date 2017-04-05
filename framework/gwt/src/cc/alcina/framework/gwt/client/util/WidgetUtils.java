@@ -291,8 +291,9 @@ public class WidgetUtils {
 		return getBestOffsetWidth(e, false);
 	}
 
-	public static native String getComputedStyle(Element elt,
+	public static native String getComputedStyle(Element eltMulti,
 			String attributeName)/*-{
+		var elt = eltMulti.@com.google.gwt.dom.client.Element::ensureJso()();
         if (elt.currentStyle) {
             return elt.currentStyle[attributeName];
         }
@@ -301,8 +302,9 @@ public class WidgetUtils {
         }
 	}-*/;
 
-	public static native String getComputedStyleProperty(Element elem,
+	public static native String getComputedStyleProperty(Element eltMulti,
 			String strCssRule) /*-{
+		var elem = eltMulti.@com.google.gwt.dom.client.Element::ensureJso()();
         if ($doc.defaultView && $doc.defaultView.getComputedStyle) {
             strValue = $doc.defaultView.getComputedStyle(elem, "")
                     .getPropertyValue(strCssRule);
@@ -317,7 +319,6 @@ public class WidgetUtils {
 
 	public static native Element getElementByNameOrId(Document doc,
 			String name) /*-{
-
         var e = doc.getElementById(name);
         if (!e) {
             e = doc.getElementsByName(name)

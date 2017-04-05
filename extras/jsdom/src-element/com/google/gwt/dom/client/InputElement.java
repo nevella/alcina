@@ -423,4 +423,12 @@ public class InputElement extends Element {
 	public final boolean useMap() {
 		return getPropertyBoolean("useMap");
 	}
+@Override
+	public void setPropertyBoolean(String name, boolean value) {
+	if(provideIsLocal()&&(name.equals("checked")||name.equals("defaultChecked"))&&!Boolean.valueOf(value)){
+		   removeAttribute(name);
+		   return;
+	   }
+		super.setPropertyBoolean(name, value);
+	}
 }
