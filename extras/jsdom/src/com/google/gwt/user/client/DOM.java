@@ -15,26 +15,31 @@
  */
 package com.google.gwt.user.client;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.ImageElement;
+import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.OptionElement;
 import com.google.gwt.dom.client.SelectElement;
-import com.google.gwt.dom.client.LocalDomBridge;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.impl.DOMImpl;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  * This class provides a set of static methods that allow you to manipulate the
  * browser's Document Object Model (DOM). It contains methods for manipulating
- * both {@link Element elements} and
- * {@link com.google.gwt.user.client.Event events}.
+ * both {@link Element elements} and {@link com.google.gwt.user.client.Event
+ * events}.
  */
 public class DOM {
 	private static class NativePreview extends BaseListenerWrapper<EventPreview>
@@ -197,8 +202,7 @@ public class DOM {
 	 *            the HTML tag of the element to be created
 	 * @return the newly-created element
 	 */
-	public static Element
-			createElement(String tagName) {
+	public static Element createElement(String tagName) {
 		return Document.get().createElement(tagName).cast();
 	}
 
@@ -264,8 +268,7 @@ public class DOM {
 	 *            associated
 	 * @return the newly-created element
 	 */
-	public static Element
-			createInputRadio(String name) {
+	public static Element createInputRadio(String name) {
 		return Document.get().createRadioInputElement(name).cast();
 	}
 
@@ -337,8 +340,7 @@ public class DOM {
 	 *            true if multiple selection of options is allowed
 	 * @return the newly-created element
 	 */
-	public static Element
-			createSelect(boolean multiple) {
+	public static Element createSelect(boolean multiple) {
 		SelectElement selectElement = Document.get().createSelectElement();
 		selectElement.setMultiple(multiple);
 		return selectElement.cast();
@@ -535,8 +537,7 @@ public class DOM {
 	 * @return the event's current target element
 	 * @see DOM#eventGetTarget(Event)
 	 */
-	public static Element
-			eventGetCurrentTarget(Event evt) {
+	public static Element eventGetCurrentTarget(Event evt) {
 		return evt.getCurrentEventTarget().cast();
 	}
 
@@ -548,8 +549,7 @@ public class DOM {
 	 *            the event to be tested
 	 * @return the element from which the mouse pointer was moved
 	 */
-	public static Element
-			eventGetFromElement(Event evt) {
+	public static Element eventGetFromElement(Event evt) {
 		return asOld(impl.eventGetFromElement(evt));
 	}
 
@@ -681,8 +681,7 @@ public class DOM {
 	 *            the event to be tested
 	 * @return the element to which the mouse pointer was moved
 	 */
-	public static Element
-			eventGetToElement(Event evt) {
+	public static Element eventGetToElement(Event evt) {
 		return asOld(impl.eventGetToElement(evt));
 	}
 
@@ -830,13 +829,12 @@ public class DOM {
 	 *            the index of the child element
 	 * @return the n-th child element
 	 */
-	public static Element getChild(Element parent,
-			int index) {
+	public static Element getChild(Element parent, int index) {
 		NodeList<Node> childNodes = parent.getChildNodes();
-		for(int idx=0;idx<childNodes.getLength();idx++){
+		for (int idx = 0; idx < childNodes.getLength(); idx++) {
 			Node node = childNodes.getItem(idx);
-			if(node.getNodeType()==Node.ELEMENT_NODE){
-				if(index--==0){
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				if (index-- == 0) {
 					return (Element) node;
 				}
 			}
@@ -853,10 +851,10 @@ public class DOM {
 	 */
 	public static int getChildCount(Element parent) {
 		NodeList<Node> childNodes = parent.getChildNodes();
-		int count=0;
-		for(int idx=0;idx<childNodes.getLength();idx++){
+		int count = 0;
+		for (int idx = 0; idx < childNodes.getLength(); idx++) {
 			Node node = childNodes.getItem(idx);
-			if(node.getNodeType()==Node.ELEMENT_NODE){
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
 				count++;
 			}
 		}
@@ -980,8 +978,7 @@ public class DOM {
 	 *            the element whose child is to be retrieved
 	 * @return the child element
 	 */
-	public static Element
-			getFirstChild(Element elem) {
+	public static Element getFirstChild(Element elem) {
 		return asOld(elem.getFirstChildElement());
 	}
 
@@ -1526,7 +1523,7 @@ public class DOM {
 	public static void sinkEvents(Element elem, int eventBits) {
 		if (LocalDomBridge.elementJso(elem) != null) {
 			impl.sinkEvents(elem, eventBits);
-		}else{
+		} else {
 			elem.sinkEvents(eventBits);
 		}
 	}
@@ -1630,6 +1627,8 @@ public class DOM {
 		return ret;
 	}
 
+	//chromium hosted mode double-dispatch checl
+	private static Event lastDispatchedClickEvent;
 	private static void dispatchEventImpl(Event evt, Element elem,
 			EventListener listener) {
 		// If this element has capture...
@@ -1640,16 +1639,33 @@ public class DOM {
 			}
 		}
 		EventTarget eventTarget = evt.getEventTarget();
-		if(evt.getType().toLowerCase().contains("change")){
-			int debug=3;
+		if (evt.getType().toLowerCase().contains("click")) {
+			if(lastDispatchedClickEvent==evt){
+				return;
+			}
+			lastDispatchedClickEvent=evt;
+			System.out.println("dispatch click event:" + evt.hashCode());
+//			new Exception().printStackTrace(System.out);
+			int debug = 3;
 		}
 		if (Element.is(eventTarget)) {
 			Element rel = Element.as(eventTarget);
-			while (rel != elem && rel!=null) {
+			// get the listeners early, to prevent overwrite. Note that this
+			// isn't perfect
+			// ideally there'd be an is-still-in-chain check for bubbling
+			List<EventListener> forDispatch = new ArrayList<>();
+			while (rel != elem && rel != null) {
 				if (rel.uiObjectListener != null) {
-					rel.uiObjectListener.onBrowserEvent(evt);
+					forDispatch.add(rel.uiObjectListener);
 				}
 				rel = rel.getParentElement();
+			}
+			for (EventListener eventListener : forDispatch) {
+				if (evt.getType().toLowerCase().contains("click")) {
+					System.out.println(
+							"dispatch to relative:" + eventListener.hashCode());
+				}
+				eventListener.onBrowserEvent(evt);
 			}
 		}
 		// Pass the event to the listener.
@@ -1658,9 +1674,9 @@ public class DOM {
 
 	/**
 	 * Provided as a convenient way to upcast values statically typed as
-	 * {@link Element} to {@link Element}. For easier
-	 * upgrades in the future, it's recommended that this function only be
-	 * called within a <code>return</code> statement.
+	 * {@link Element} to {@link Element}. For easier upgrades in the future,
+	 * it's recommended that this function only be called within a
+	 * <code>return</code> statement.
 	 * <p>
 	 * Does <em>not</em> throw a {@link NullPointerException} if elem is null.
 	 */

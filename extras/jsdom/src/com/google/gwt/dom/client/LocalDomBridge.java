@@ -527,7 +527,13 @@ public class LocalDomBridge {
 	}
 
 	private void registerId0(Element_Jvm element_Jvm) {
-		idLookup.put(element_Jvm.getId(), element_Jvm.node);
+		String id = element_Jvm.getId();
+		if (id.length() > 0) {
+			if (idLookup.containsKey(id)) {
+				debug.warnDuplicateId(id, idLookup.get(id), element_Jvm);
+			}
+			idLookup.put(id, element_Jvm.node);
+		}
 	}
 
 	private Style styleObjectFor0(JavaScriptObject o) {
@@ -564,6 +570,11 @@ public class LocalDomBridge {
 		public void added(Node_Jvm impl) {
 			nodesInHierarchy.add(impl);
 			// System.out.println("add:" + impl.hashCode());
+		}
+
+		public void warnDuplicateId(String id, Node node,
+				Element_Jvm element_Jvm) {
+			throw new IllegalStateException();
 		}
 
 		public void checkCreatedLocals(List<DomElement> createdLocals) {
