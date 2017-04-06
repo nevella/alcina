@@ -27,7 +27,7 @@
 	</target>
 	<target name="compile" description="Compiles all J2SE modules">
 		<mkdir dir="${framework.entity.build.dir}" />
-		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${framework.entity.src.dirs}" destdir="${framework.entity.build.dir}">
+		<javac target="8" source="8"  includeantruntime="false" debug="on" srcdir="${framework.entity.src.dirs}" destdir="${framework.entity.build.dir}">
 			<classpath>
 				<path refid="framework.common.lib.path" />
 			</classpath>
@@ -155,6 +155,9 @@
 			<fileset dir="${framework.dir}/gwt/src">
 				<include name="**/*.java" />
 			</fileset>
+			<fileset dir="${framework.dir}/gwt/src">
+							<include name="**/*.java" />
+						</fileset>
 			<fileset dir="${framework.entity.base.dir}/src">
 				<include name="**/*.java" />
 				<include name="**/*.properties" />
