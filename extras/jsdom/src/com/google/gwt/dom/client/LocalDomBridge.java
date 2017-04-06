@@ -264,9 +264,14 @@ public class LocalDomBridge {
 			dom_elt.setInnerHTML(vmlocal_elt.getInnerHTML());
 			// doesn't include style
 			vmlocal_elt.getAttributes().entrySet().forEach(e -> {
+				Element_Jso dom_elt2=dom_elt;
 				switch (e.getKey()) {
 				case "text":
+				case "className":
 					dom_elt.setPropertyString(e.getKey(), e.getValue());
+					break;
+				case "class":
+					dom_elt.setPropertyString("className", e.getValue());
 					break;
 				default:
 					dom_elt.setAttribute(e.getKey(), e.getValue());
@@ -275,7 +280,8 @@ public class LocalDomBridge {
 			});
 			vmlocal_elt.getStyle().getProperties().entrySet().forEach(e -> {
 				Style domStyle = dom_elt.getStyle();
-				domStyle.setProperty(e.getKey(), e.getValue());
+				String key = e.getKey();
+				domStyle.setProperty(key, e.getValue());
 			});
 			int bits = ((Element_Jvm) vmlocal_elt).orSunkEventsOfAllChildren(0);
 			bits |= DOM.getEventsSunk(elem);
@@ -574,8 +580,8 @@ public class LocalDomBridge {
 
 		public void warnDuplicateId(String id, Node node,
 				Element_Jvm element_Jvm) {
-			System.out.println("**warn - duplicate elt id - "+id);
-//			throw new IllegalStateException();
+			System.out.println("**warn - duplicate elt id - " + id);
+			// throw new IllegalStateException();
 		}
 
 		public void checkCreatedLocals(List<DomElement> createdLocals) {

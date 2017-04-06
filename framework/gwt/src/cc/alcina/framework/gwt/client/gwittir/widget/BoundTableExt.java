@@ -1302,6 +1302,7 @@ public class BoundTableExt extends AbstractTableWidget
 			}
 		});
 		this.base=this.table;
+		this.setStyleName("gwittir-BoundTable");
 		esp.setWidget(this.table);
 	}
 
