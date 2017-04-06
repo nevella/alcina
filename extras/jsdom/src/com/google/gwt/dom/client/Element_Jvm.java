@@ -8,6 +8,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 
 public class Element_Jvm extends Node_Jvm
 		implements DomElement, LocalDomElement {
@@ -93,10 +94,23 @@ public class Element_Jvm extends Node_Jvm
 			if (matchResult == null) {
 				matchResult = tagNoContents.exec(innerHtml);
 			}
-			Element_Jvm element = (Element_Jvm) create(matchResult.getGroup(1));
-			Element created = LocalDomBridge.nodeFor((Node_Jvm) element);
-			created.setOuterHtml(innerHtml);
-			node.appendChild(created);
+			if (matchResult == null) {
+				if (innerHtml.isEmpty()) {
+				} else {
+					DomText domText = LocalDomBridge
+							.get().localDomImpl.localImpl
+									.createUnwrappedLocalText(
+											getOwnerDocument(), innerHtml);
+					node.appendChild(
+							LocalDomBridge.nodeFor((Node_Jvm) domText));
+				}
+			} else {
+				Element_Jvm element = (Element_Jvm) create(
+						matchResult.getGroup(1));
+				Element created = LocalDomBridge.nodeFor((Node_Jvm) element);
+				created.setOuterHtml(innerHtml);
+				node.appendChild(created);
+			}
 			innerHtml = null;
 		}
 		return children;
@@ -355,7 +369,7 @@ public class Element_Jvm extends Node_Jvm
 	@Override
 	public void setAttribute(String name, String value) {
 		attributes.put(name, value);
-		if(name.equals("id")&&value.length()>0){
+		if (name.equals("id") && value.length() > 0) {
 			LocalDomBridge.registerId(this);
 		}
 	}

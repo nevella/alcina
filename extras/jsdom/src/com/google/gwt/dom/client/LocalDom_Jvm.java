@@ -8,14 +8,14 @@ public class LocalDom_Jvm implements IDOMImpl {
 
 	@Override
 	public InputElement createInputElement(Document doc, String type) {
-		Element_Jvm element_Jvm = createUnwrappedLocalElement(doc,"input");
+		Element_Jvm element_Jvm = createUnwrappedLocalElement(doc, "input");
 		element_Jvm.setAttribute("type", type);
 		return (InputElement) element_Jvm.nodeFor();
 	}
 
 	@Override
 	public ButtonElement createButtonElement(Document doc, String type) {
-		Element_Jvm element_Jvm = createUnwrappedLocalElement(doc,"button");
+		Element_Jvm element_Jvm = createUnwrappedLocalElement(doc, "button");
 		element_Jvm.setAttribute("type", type);
 		return (ButtonElement) element_Jvm.nodeFor();
 	}
@@ -40,6 +40,13 @@ public class LocalDom_Jvm implements IDOMImpl {
 		Document_Jvm document_Jvm = doc.castLocalImpl();
 		Element_Jvm element_Jvm = document_Jvm.createElement_Jvm(tag);
 		LocalDomBridge.get().createdLocalElement(element_Jvm);
+		return element_Jvm;
+	}
+
+	@Override
+	public DomText createUnwrappedLocalText(Document doc, String text) {
+		Document_Jvm document_Jvm = doc.castLocalImpl();
+		Text_Jvm element_Jvm = document_Jvm.createText_Jvm(text);
 		return element_Jvm;
 	}
 }

@@ -273,19 +273,31 @@ public class SelectElement extends Element {
 }
 
 
-  /**
-   * The current form control value (i.e., the value of the currently
-   * selected option), if multiple options are selected this is the value of the
-   * first selected option.
-   */  public  void setValue(String value){
-   this.setPropertyString("value",value);
-}
-   @Override
+	/**
+	 * The current form control value (i.e., the value of the currently selected
+	 * option), if multiple options are selected this is the value of the first
+	 * selected option.
+	 */
+	public void setValue(String value) {
+		this.setPropertyString("value", value);
+	}
+
+	@Override
 	public void setPropertyString(String name, String value) {
-	   if(provideIsLocal()&&name.equals("multiple")&&!Boolean.valueOf(value)){
-		   removeAttribute("multiple");
-		   return;
-	   }
+		if (provideIsLocal() && name.equals("multiple")
+				&& !Boolean.valueOf(value)) {
+			removeAttribute("multiple");
+			return;
+		}
 		super.setPropertyString(name, value);
+	}
+
+	@Override
+	public void setPropertyBoolean(String name, boolean value) {
+		if (provideIsLocal() && name.equals("multiple") && !value) {
+			removeAttribute(name);
+			return;
+		}
+		super.setPropertyBoolean(name, value);
 	}
 }

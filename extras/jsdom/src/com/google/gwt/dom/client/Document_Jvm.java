@@ -68,4 +68,8 @@ public class Document_Jvm extends Node_Jvm implements DomDocument {
 	void appendTextContent(StringBuilder builder) {
 throw new UnsupportedOperationException();		
 	}
+
+	public Text_Jvm createText_Jvm(String text) {
+		return new Text_Jvm(text);
+	}
 }

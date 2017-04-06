@@ -85,9 +85,9 @@ public class Registry {
 			if (!uniques.containsKey(loc.registryPoint())) {
 				uniques.put(loc.registryPoint(), loc);
 			} else {
-				System.out.println(CommonUtils.formatJ("Discarded - %s, %s",
-						CommonUtils.simpleClassName(loc.registryPoint()),
-						CommonUtils.simpleClassName(loc.targetClass())));
+//				System.out.println(CommonUtils.formatJ("Discarded - %s, %s",
+//						CommonUtils.simpleClassName(loc.registryPoint()),
+//						CommonUtils.simpleClassName(loc.targetClass())));
 			}
 		}
 		return new LinkedHashSet<RegistryLocation>(uniques.allValues());

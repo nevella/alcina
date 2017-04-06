@@ -18,4 +18,5 @@ public interface IDOMImpl {
 	}
 
 	LocalDomElement createUnwrappedLocalElement(Document document, String tagName);
+	DomText createUnwrappedLocalText(Document document, String text);
 }

@@ -574,7 +574,8 @@ public class LocalDomBridge {
 
 		public void warnDuplicateId(String id, Node node,
 				Element_Jvm element_Jvm) {
-			throw new IllegalStateException();
+			System.out.println("**warn - duplicate elt id - "+id);
+//			throw new IllegalStateException();
 		}
 
 		public void checkCreatedLocals(List<DomElement> createdLocals) {
