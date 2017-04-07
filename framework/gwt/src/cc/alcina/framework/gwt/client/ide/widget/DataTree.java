@@ -22,6 +22,8 @@ import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventType;
 import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithFirst;
 
+import java.util.Objects;
+
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
@@ -114,7 +116,7 @@ public class DataTree extends FilterableTree
 				if (userObject != null) {
 					if ((classNameTest && userObject.getClass().getName()
 							.replace("$", ".").equals(obj))
-							|| obj.equals(userObject)) {
+							|| Objects.equals(obj, userObject)) {
 						result = target;
 					}
 				}

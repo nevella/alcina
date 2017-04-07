@@ -31,6 +31,13 @@ public class Text_Jvm extends Node_Jvm implements DomText {
 	}
 
 	@Override
+	public Node cloneNode(boolean deep) {
+		Text_Jvm impl = (Text_Jvm) LocalDomBridge.get().localDomImpl.localImpl
+				.createUnwrappedLocalText(getOwnerDocument(), text);
+		return LocalDomBridge.nodeFor(impl);
+	}
+
+	@Override
 	public short getNodeType() {
 		return Node.TEXT_NODE;
 	}

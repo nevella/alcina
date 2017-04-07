@@ -28,6 +28,7 @@ import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -84,7 +85,7 @@ public class SimpleWorkspaceVisualiser extends Composite
 					CommonUtils.formatJ("<a href='#' onfocus='blur()'>%s</a>",
 							view.getName()),
 					true);
-			view.ensureDebugId("");
+			view.getElement().setId(Document.get().createUniqueId());
 			view.addVetoableActionListener(actionListener);
 		}
 		hsp.addWest(viewHolder, defaultSplitterPosition);

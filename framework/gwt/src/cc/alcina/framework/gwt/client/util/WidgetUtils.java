@@ -1111,7 +1111,8 @@ public class WidgetUtils {
         }
 	}-*/;
 
-	private native static boolean isVisibleWithOffsetParent(Element elem)/*-{
+	private native static boolean isVisibleWithOffsetParent(Element elemMulti)/*-{
+		var elem = elemMulti.@com.google.gwt.dom.client.Element::ensureJso()();
         return (elem.style.display != 'none' && elem.offsetParent != null);
 	}-*/;
 

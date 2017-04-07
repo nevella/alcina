@@ -10,8 +10,8 @@ import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType
 
 import com.google.gwt.user.client.ui.Widget;
 
-public class StackPanel100pcHeight extends DivStackPanel implements
-		HasLayoutInfo {
+public class StackPanel100pcHeight extends DivStackPanel
+		implements HasLayoutInfo {
 	public LayoutInfo getLayoutInfo() {
 		return new LayoutInfo() {
 			@Override
@@ -46,9 +46,7 @@ public class StackPanel100pcHeight extends DivStackPanel implements
 		int oldIndex = getSelectedIndex();
 		super.showStack(index);
 		if (oldIndex != index) {
-			LayoutEvents.get().fireLayoutEvent(
-					new LayoutEvent(
-							LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
+			LayoutEvents.get().fireDeferredGlobalRelayoutIfNoneQueued();
 		}
 	}
 }

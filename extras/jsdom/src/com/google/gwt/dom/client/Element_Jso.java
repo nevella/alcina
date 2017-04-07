@@ -366,7 +366,10 @@ public class Element_Jso extends Node_Jso implements DomElement {
 	public final native String getPropertyString(String name) /*-{
         return (this[name] == null) ? null : String(this[name]);
 	}-*/;
-
+	public final native String getPropertyStringDebug(String name) /*-{
+		debugger;
+        return (this[name] == null) ? null : String(this[name]);
+	}-*/;
 	/**
 	 * The height of the scroll view of an element.
 	 */

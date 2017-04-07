@@ -306,4 +306,6 @@ public interface DomElement extends DomNode {
 	Integer indexInParentChildren();
 
 	void ensureId();
+
+	
 }

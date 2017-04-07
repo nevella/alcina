@@ -16,6 +16,7 @@
 package com.google.gwt.dom.client;
 
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.user.client.ui.AbstractImagePrototype.ImagePrototypeElement;
 
 /**
  * Embedded image.
@@ -23,7 +24,7 @@ import com.google.gwt.core.client.JavaScriptObject;
  * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#edef-IMG">W3C HTML Specification</a>
  */
 @TagName(ImageElement.TAG)
-public class ImageElement extends Element {
+public class ImageElement extends ImagePrototypeElement {
 
   public static final String TAG = "img";
 

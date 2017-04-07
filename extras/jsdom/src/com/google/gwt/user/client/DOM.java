@@ -15,8 +15,10 @@
  */
 package com.google.gwt.user.client;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -32,8 +34,6 @@ import com.google.gwt.dom.client.Style;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.impl.DOMImpl;
-
-import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * This class provides a set of static methods that allow you to manipulate the
@@ -447,6 +447,7 @@ public class DOM {
 	 *            <code>true</code> to cancel bubbling
 	 */
 	public static void eventCancelBubble(Event evt, boolean cancel) {
+		LocalDomBridge.get().eventMod(evt, "eventCancelBubble");
 		impl.eventCancelBubble(evt, cancel);
 	}
 
@@ -538,8 +539,11 @@ public class DOM {
 	 * @see DOM#eventGetTarget(Event)
 	 */
 	public static Element eventGetCurrentTarget(Event evt) {
-		return evt.getCurrentEventTarget().cast();
+//		return evt.getCurrentEventTarget().cast();
+		return eventCurrentTarget;
 	}
+
+	private static Element eventCurrentTarget;
 
 	/**
 	 * Gets the element from which the mouse pointer was moved (valid for
@@ -718,6 +722,7 @@ public class DOM {
 	 */
 	@Deprecated
 	public static void eventPreventDefault(Event evt) {
+		LocalDomBridge.get().eventMod(evt, "eventPreventDefault");
 		evt.preventDefault();
 	}
 
@@ -1627,8 +1632,9 @@ public class DOM {
 		return ret;
 	}
 
-	//chromium hosted mode double-dispatch checl
+	// chromium hosted mode double-dispatch checl
 	private static Event lastDispatchedClickEvent;
+
 	private static void dispatchEventImpl(Event evt, Element elem,
 			EventListener listener) {
 		// If this element has capture...
@@ -1640,12 +1646,10 @@ public class DOM {
 		}
 		EventTarget eventTarget = evt.getEventTarget();
 		if (evt.getType().toLowerCase().contains("click")) {
-			if(lastDispatchedClickEvent==evt){
+			if (lastDispatchedClickEvent == evt) {
 				return;
 			}
-			lastDispatchedClickEvent=evt;
-			System.out.println("dispatch click event:" + evt.hashCode());
-//			new Exception().printStackTrace(System.out);
+			lastDispatchedClickEvent = evt;
 			int debug = 3;
 		}
 		if (Element.is(eventTarget)) {
@@ -1653,21 +1657,26 @@ public class DOM {
 			// get the listeners early, to prevent overwrite. Note that this
 			// isn't perfect
 			// ideally there'd be an is-still-in-chain check for bubbling
-			List<EventListener> forDispatch = new ArrayList<>();
+			Map<Element, EventListener> forDispatch = new LinkedHashMap<>();
 			while (rel != elem && rel != null) {
 				if (rel.uiObjectListener != null) {
-					forDispatch.add(rel.uiObjectListener);
+					forDispatch.put(rel, rel.uiObjectListener);
 				}
 				rel = rel.getParentElement();
 			}
-			for (EventListener eventListener : forDispatch) {
+			for (Entry<Element, EventListener> entry : forDispatch.entrySet()) {
+				eventCurrentTarget = entry.getKey();
+				EventListener eventListener = entry.getValue();
 				if (evt.getType().toLowerCase().contains("click")) {
-					System.out.println(
-							"dispatch to relative:" + eventListener.hashCode());
+					System.out.println("dispatch click - " + eventListener);
 				}
 				eventListener.onBrowserEvent(evt);
+				if (LocalDomBridge.get().isStopPropogation(evt)) {
+					return;
+				}
 			}
 		}
+		eventCurrentTarget = evt.getCurrentEventTarget().cast();
 		// Pass the event to the listener.
 		listener.onBrowserEvent(evt);
 	}
@@ -1682,5 +1691,17 @@ public class DOM {
 	 */
 	public static Element asOld(Element elem) {
 		return (Element) elem;
+	}
+
+	public static String getElementPropertyOrAttribute(Element elem,
+			String name) {
+		String value = getElementProperty(elem, name);
+		if (value == null) {
+			value = getElementAttribute(elem, name);
+			if (value.isEmpty()) {
+				value = null;
+			}
+		}
+		return value;
 	}
 }

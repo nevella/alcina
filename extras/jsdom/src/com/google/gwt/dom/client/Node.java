@@ -47,11 +47,13 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	protected boolean resolved;
 
 	protected boolean local;
-
+	
 	public abstract <T extends JavascriptObjectEquivalent> T cast();
 
 	public <T extends Node> T appendChild(T newChild) {
-		return this.impl.appendChild(newChild);
+		T node = this.impl.appendChild(newChild);
+		node.localDomResolutionOnly=localDomResolutionOnly;
+		return node;
 	}
 
 	public Node cloneNode(boolean deep) {
@@ -107,7 +109,9 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	}
 
 	public Node insertBefore(Node newChild, Node refChild) {
-		return this.impl.insertBefore(newChild, refChild);
+		Node node = this.impl.insertBefore(newChild, refChild);
+		node.localDomResolutionOnly=localDomResolutionOnly;
+		return node;
 	}
 
 	public boolean isOrHasChild(Node child) {
@@ -221,5 +225,11 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	public boolean provideIsLocal() {
 		return domImpl == null;
+	}
+	boolean localDomResolutionOnly;
+
+	public void localDomResolutionOnly() {
+		localDomResolutionOnly = true;
+		getChildNodes().forEach(Node::localDomResolutionOnly);
 	}
 }

@@ -55,6 +55,9 @@ abstract class DOMImpl {
 	protected native Element_Jso createElement(Document_Jso doc, String tag) /*-{
         return doc.createElement(tag);
 	}-*/;
+	protected native Element_Jso createTextNode(Document_Jso doc, String data) /*-{
+    return doc.createTextNode(data);
+}-*/;
 
 	protected abstract NativeEvent createHtmlEvent(Document_Jso doc, String type,
 			boolean canBubble, boolean cancelable);

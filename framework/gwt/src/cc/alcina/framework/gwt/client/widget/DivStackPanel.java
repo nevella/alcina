@@ -28,6 +28,7 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent;
 import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent.CollapseHandler;
 import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent.HasCollapseHandlers;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 /**
  * 
@@ -156,7 +157,7 @@ public class DivStackPanel extends ComplexPanel {
 				showStack(index);
 			}
 			if (target.getTagName().equalsIgnoreCase("A")
-					&& target.getAttribute("href").isEmpty()) {
+					&& target.getAttribute("href").matches("#?")) {
 				event.preventDefault();
 			}
 		}
@@ -277,10 +278,11 @@ public class DivStackPanel extends ComplexPanel {
 
 	private int findDividerIndex(Element elem) {
 		while (elem != getElement()) {
-			String expando = DOM.getElementProperty(elem, "__index");
+			String expando = DOM.getElementPropertyOrAttribute(elem, "__index");
 			if (expando != null) {
 				// Make sure it belongs to me!
-				int ownerHash = DOM.getElementPropertyInt(elem, "__owner");
+				String hashString = DOM.getElementPropertyOrAttribute(elem, "__owner");
+				int ownerHash = hashString.length()>0?Integer.parseInt(hashString):-1;
 				if (ownerHash == hashCode()) {
 					// Yes, it's mine.
 					return Integer.parseInt(expando);

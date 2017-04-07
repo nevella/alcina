@@ -217,7 +217,7 @@ public class WorkspaceView extends Composite implements HasName,
 			});
 			filter.getHolder().add(collapse);
 			this.dataTree = createTree();
-			dataTree.ensureDebugId(DataTree.DEBUG_ID);
+//			dataTree.ensureDebugId(DataTree.DEBUG_ID);
 			dataTree.addExtraTreeEventListener(this);
 			filter.registerFilterable(dataTree);
 			this.fp = new FlowPanel100pcHeight();
@@ -383,7 +383,11 @@ public class WorkspaceView extends Composite implements HasName,
 				treeInitialised = true;
 				resetTree();
 			}
-			filter.getTextBox().setFocus(true);
+			addAttachHandler(evt -> {
+				if (evt.isAttached()) {
+					filter.getTextBox().setFocus(true);
+				}
+			});
 		}
 
 		public void vetoableAction(PermissibleActionEvent evt) {

@@ -2,6 +2,7 @@ package com.google.gwt.dom.client;
 
 import java.util.Map;
 
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Style.BorderStyle;
 import com.google.gwt.dom.client.Style.Clear;
 import com.google.gwt.dom.client.Style.Cursor;
@@ -28,21 +29,6 @@ import cc.alcina.framework.common.client.util.StringMap;
 
 public class Style_Jvm implements DomStyle {
 	StringMap properties = new StringMap();
-
-	@Override
-	public final Style styleObject() {
-		return LocalDomBridge.styleObjectFor(this);
-	}
-
-	@Override
-	public String getPropertyImpl(String name) {
-		return properties.computeIfAbsent(name, lambda_name -> "");
-	}
-
-	@Override
-	public void setPropertyImpl(String name, String value) {
-		properties.put(name, value);
-	}
 
 	@Override
 	public final void clearBackgroundColor() {
@@ -294,6 +280,12 @@ public class Style_Jvm implements DomStyle {
 		DomStyle_Static.clearZIndex(this);
 	}
 
+	public Style_Jvm cloneStyle() {
+		Style_Jvm clone = new Style_Jvm();
+		clone.properties = new StringMap(properties);
+		return clone;
+	}
+
 	@Override
 	public final String getBackgroundColor() {
 		return DomStyle_Static.getBackgroundColor(this);
@@ -455,8 +447,18 @@ public class Style_Jvm implements DomStyle {
 	}
 
 	@Override
+	public Map<String, String> getProperties() {
+		return properties;
+	}
+
+	@Override
 	public final String getProperty(String name) {
 		return DomStyle_Static.getProperty(this, name);
+	}
+
+	@Override
+	public String getPropertyImpl(String name) {
+		return properties.computeIfAbsent(name, lambda_name -> "");
 	}
 
 	@Override
@@ -710,13 +712,18 @@ public class Style_Jvm implements DomStyle {
 	}
 
 	@Override
+	public final void setProperty(String name, double value, Unit unit) {
+		DomStyle_Static.setProperty(this, name, value, unit);
+	}
+
+	@Override
 	public final void setProperty(String name, String value) {
 		DomStyle_Static.setProperty(this, name, value);
 	}
 
 	@Override
-	public final void setProperty(String name, double value, Unit unit) {
-		DomStyle_Static.setProperty(this, name, value, unit);
+	public void setPropertyImpl(String name, String value) {
+		properties.put(name, value);
 	}
 
 	@Override
@@ -770,13 +777,13 @@ public class Style_Jvm implements DomStyle {
 	}
 
 	@Override
-	public final void setVerticalAlign(VerticalAlign value) {
-		DomStyle_Static.setVerticalAlign(this, value);
+	public final void setVerticalAlign(double value, Unit unit) {
+		DomStyle_Static.setVerticalAlign(this, value, unit);
 	}
 
 	@Override
-	public final void setVerticalAlign(double value, Unit unit) {
-		DomStyle_Static.setVerticalAlign(this, value, unit);
+	public final void setVerticalAlign(VerticalAlign value) {
+		DomStyle_Static.setVerticalAlign(this, value);
 	}
 
 	@Override
@@ -800,7 +807,7 @@ public class Style_Jvm implements DomStyle {
 	}
 
 	@Override
-	public Map<String, String> getProperties() {
-		return properties;
+	public final Style styleObject() {
+		return LocalDomBridge.styleObjectFor(this);
 	}
 }

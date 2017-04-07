@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.i18n.client.LocaleInfo;
@@ -35,12 +36,11 @@ import com.google.gwt.user.client.DOM;
  * {@link com.google.gwt.user.client.ui.Accessibility} for more information.
  * 
  * <p>
- * <h3>Example</h3>
- * {@example com.google.gwt.examples.TreeExample}
+ * <h3>Example</h3> {@example com.google.gwt.examples.TreeExample}
  * </p>
  */
-public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
-		HasHTML, HasSafeHtml {
+public class TreeItem extends UIObject
+		implements IsTreeItem, HasTreeItems, HasHTML, HasSafeHtml {
 	/*
 	 * For compatibility with UiBinder interface HasTreeItems should be declared
 	 * before HasHTML, so that children items and widgets are processed before
@@ -70,7 +70,9 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 				return;
 			}
 			if (item.imageHolder == null) {
+//				item.contentElem = item.resolve(item.contentElem);
 				item.contentElem.setClassName("gwt-TreeItem");
+//				item.setElement(item.resolve(item.getElement()));
 				convertToFullNode(item);
 			}
 			if (state == PotentialState.INSTANTIATED) {
@@ -82,8 +84,9 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 					&& item.getElement().getParentElement() == null) {
 				ensureState(parentItem, PotentialState.INSTANTIATED);
 				ensureMargin(item, parentItem);
-				Element childContainer = parentItem.isRoot ? item.getTree()
-						.getElement() : parentItem.childSpanElem;
+				Element childContainer = parentItem.isRoot
+						? item.getTree().getElement()
+						: parentItem.childSpanElem;
 				childContainer.appendChild(item.getElement());
 				item.updateState(false, false);
 			}
@@ -140,17 +143,17 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 		}
 	}
 
-	
 	/**
-	   * IE specific implementation class for {@link TreeItem}.
-	   */
-	  public static class TreeItemImplIE8ToIE10 extends TreeItemImpl {
-	    @Override
-	    void convertToFullNode(TreeItem item) {
-	      super.convertToFullNode(item);
-	      item.getElement().getStyle().setProperty("marginBottom", "0px");
-	    }
-	  }
+	 * IE specific implementation class for {@link TreeItem}.
+	 */
+	public static class TreeItemImplIE8ToIE10 extends TreeItemImpl {
+		@Override
+		void convertToFullNode(TreeItem item) {
+			super.convertToFullNode(item);
+			item.getElement().getStyle().setProperty("marginBottom", "0px");
+		}
+	}
+
 	/**
 	 * An {@link Animation} used to open the child elements. If a
 	 * {@link TreeItem} is in the process of opening, it will immediately be
@@ -187,8 +190,8 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 			if (animate) {
 				curItem = item;
 				opening = item.open;
-				run(Math.min(ANIMATION_DURATION, ANIMATION_DURATION_PER_ITEM
-						* curItem.getChildCount()));
+				run(Math.min(ANIMATION_DURATION,
+						ANIMATION_DURATION_PER_ITEM * curItem.getChildCount()));
 			} else {
 				if (item.potentialState == PotentialState.INSTANTIATED) {
 					UIObject.setVisible(item.childSpanElem, item.open);
@@ -250,13 +253,13 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 			// children
 			// instead of hiding them completely.
 			height = Math.max(height, 1);
-			DOM.setStyleAttribute(curItem.childSpanElem, "height", height
-					+ "px");
+			DOM.setStyleAttribute(curItem.childSpanElem, "height",
+					height + "px");
 			// We need to set the width explicitly of the item might be cropped
 			int scrollWidth = DOM.getElementPropertyInt(curItem.childSpanElem,
 					"scrollWidth");
-			DOM.setStyleAttribute(curItem.childSpanElem, "width", scrollWidth
-					+ "px");
+			DOM.setStyleAttribute(curItem.childSpanElem, "width",
+					scrollWidth + "px");
 		}
 	}
 
@@ -367,14 +370,19 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 		this.isRoot = isRoot;
 		// Element elem = DOM.clone(BASE_BARE_ELEM, true);
 //		Element elem = PotentialElement.build(this).cast();
-//		setElement(elem);
-//		contentElem = PotentialElement.build(this).cast();
+		Element elem = Document.get().createDivElement();
+		elem.ensureId();;
+		setElement(elem);
+		elem.localDomResolutionOnly();
+		//contentElem = PotentialElement.build(this).cast();
+		contentElem = Document.get().createDivElement();
+		contentElem.ensureId();
 		// DOM.setElementAttribute(contentElem, "id", DOM.createUniqueId());
 		// The root item always has children.
 		if (isRoot) {
 			initChildren();
-			impl.ensureState(this, PotentialState.INSTANTIATED);
 		}
+		impl.ensureState(this, PotentialState.INSTANTIATED);
 	}
 
 	/**
@@ -521,10 +529,10 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 	}
 
 	public String getText() {
-//		if(((com.google.gwt.dom.client.Element)contentElem) instanceof PotentialElement){
-//			PotentialElement pe=contentElem.cast();
-//			return pe.getInnerText0();
-//		}
+		if (((com.google.gwt.dom.client.Element) contentElem) instanceof PotentialElement) {
+			PotentialElement pe = contentElem.cast();
+			return pe.getInnerText0();
+		}
 		return DOM.getInnerText(contentElem);
 	}
 
@@ -1059,7 +1067,7 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 	}
 
 	private void convertToFullNode() {
-//		impl.convertToFullNode(this);
+		impl.convertToFullNode(this);
 	}
 
 	private void updateStateRecursiveHelper() {
@@ -1069,5 +1077,13 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 		}
 	}
 
-	
+	private Element resolve(Element elem) {
+		if (PotentialElement.isPotential(elem)) {
+			Element replacer = Document.get().createElement(elem.getTagName())
+					.cast();
+			replacer.setInnerHTML(elem.getInnerHTML());
+			return replacer;
+		}
+		return elem;
+	}
 }

@@ -8,7 +8,8 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
-import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+
+import cc.alcina.framework.common.client.util.StringMap;
 
 public class Element_Jvm extends Node_Jvm
 		implements DomElement, LocalDomElement {
@@ -26,12 +27,32 @@ public class Element_Jvm extends Node_Jvm
 	public String getPendingInnerHtml() {
 		return this.innerHtml;
 	}
+	
+	boolean treeResolved;
 
 	@Override
 	public LocalDomElement create(String tagName) {
 		return LocalDomBridge.get().localDomImpl.localImpl
 				.createLocalElement(Document.get(), tagName)
 				.provideLocalDomElement();
+	}
+
+	@Override
+	public Node cloneNode(boolean deep) {
+		Element_Jvm clone_jvm = (Element_Jvm) create(getTagName());
+		if (style != null) {
+			clone_jvm.style = LocalDomBridge
+					.styleObjectFor(((Style_Jvm) style.impl).cloneStyle());
+		}
+		clone_jvm.attributes = new StringMap(attributes);
+		clone_jvm.eventBits = eventBits;
+		Node clone = LocalDomBridge.nodeFor(clone_jvm);
+		if (deep) {
+			clone_jvm.innerHtml = innerHtml;
+			getChildNodes().stream()
+					.forEach(cn -> clone.appendChild(cn.cloneNode(true)));
+		}
+		return clone;
 	}
 
 	@Override
@@ -558,5 +579,16 @@ public class Element_Jvm extends Node_Jvm
 		Element domAncestor = ((Element) node)
 				.provideAncestorElementAttachedToDom();
 		return domAncestor == null ? null : domAncestor.domImpl;
+	}
+
+	@Override
+	public void treeResolved() {
+		treeResolved=true;
+		children.stream().forEach(n->{
+			if(n instanceof Element_Jvm){
+				((Element_Jvm) n).treeResolved();
+			}
+		});
+		
 	}
 }

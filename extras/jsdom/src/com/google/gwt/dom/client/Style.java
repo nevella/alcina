@@ -1622,5 +1622,10 @@ public class Style implements DomStyle {
 	public Map<String,String> getProperties() {
 		return this.impl.getProperties();
 	}
+
+	public void removePropertyImpl(String name) {
+		this.impl.setProperty(name, "");
+		
+	}
 	
 }

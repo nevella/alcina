@@ -447,7 +447,9 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	 */
 	public PopupPanel() {
 		super();
-		super.getContainerElement().appendChild(impl.createElement());
+		Element implElement = impl.createElement();
+		super.getContainerElement().appendChild(implElement);
+//		implElement.ensureId();
 		// Default position of popup should be in the upper-left corner of the
 		// window. By setting a default position, the popup will not appear in
 		// an undefined location if it is shown before its position is set.
@@ -1212,7 +1214,11 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	 * @return the Element that {@link PopupImpl} creates and expects
 	 */
 	private Element getPopupImplElement() {
-		return DOM.getFirstChild(super.getContainerElement());
+		
+		System.out.println("get child for popup: "+hashCode());
+		Element firstChild = DOM.getFirstChild(super.getContainerElement());
+		System.out.println("hash:"+firstChild.hashCode());
+		return firstChild;
 	}
 
 	/**

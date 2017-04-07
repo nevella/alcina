@@ -16,6 +16,7 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -108,14 +109,10 @@ public class LocalDomBridge {
 
 	public static void replaceWithJso(Element element) {
 		boolean saveLocalImpl = LocalDomImpl.useLocalImpl;
-		get().useJsoDom();
-		LocalDomElement localDomElement = element.provideLocalDomElement();
 		Element_Jso element_Jso = get().localDomImpl
 				.createDomElement(Document.get(), element.getTagName());
-		element_Jso.setInnerHTML(localDomElement.getPendingInnerHtml());
-		get().javascriptObjectNodeLookup.put(element_Jso, element);
 		element.putDomImpl(element_Jso);
-		element.putImpl(element_Jso);
+		get().ensureResolved(element);
 		if (saveLocalImpl) {
 			get().useLocalDom();
 		}
@@ -198,8 +195,10 @@ public class LocalDomBridge {
 					}
 					get().javascriptObjectNodeLookup.put(domImpl,
 							child_jvm.node);
-					((Element) child_jvm.node).putDomImpl(domImpl);
-					((Element) child_jvm.node).putImpl(domImpl);
+					if (child_jvm.node.domImpl != domImpl) {
+						((Element) child_jvm.node).putDomImpl(domImpl);
+						((Element) child_jvm.node).putImpl(domImpl);
+					}
 				}
 			}
 		} finally {
@@ -264,7 +263,7 @@ public class LocalDomBridge {
 			dom_elt.setInnerHTML(vmlocal_elt.getInnerHTML());
 			// doesn't include style
 			vmlocal_elt.getAttributes().entrySet().forEach(e -> {
-				Element_Jso dom_elt2=dom_elt;
+				Element_Jso dom_elt2 = dom_elt;
 				switch (e.getKey()) {
 				case "text":
 				case "className":
@@ -283,6 +282,7 @@ public class LocalDomBridge {
 				String key = e.getKey();
 				domStyle.setProperty(key, e.getValue());
 			});
+			((LocalDomElement) vmlocal_elt).treeResolved();
 			int bits = ((Element_Jvm) vmlocal_elt).orSunkEventsOfAllChildren(0);
 			bits |= DOM.getEventsSunk(elem);
 			DOM.sinkEvents(elem, bits);
@@ -302,6 +302,8 @@ public class LocalDomBridge {
 			boolean detachedAndPending = createdLocals.stream()
 					.anyMatch(e -> e.getParentNode() == null);
 			if (detachedAndPending) {
+				System.out.println(
+						CommonUtils.highlightForLog("dialog box pending"));
 				// e.g. dialog box
 				return;
 			}
@@ -312,6 +314,8 @@ public class LocalDomBridge {
 							((Element) el.node).uiObject.getClass().getName());
 				}
 			});
+			System.out.println(
+					CommonUtils.highlightForLog("has created pending"));
 			int debug = 3;
 		}
 		Preconditions.checkState(pendingResolution.size() > 0);
@@ -397,6 +401,12 @@ public class LocalDomBridge {
 		if (node.domImpl != null) {
 			return node.domImpl;
 		}
+		if (node instanceof Element) {
+			Element elem = (Element) node;
+			if (elem.getId().isEmpty()) {
+				elem.setId(Document.get().createUniqueId());
+			}
+		}
 		ensureFlush();
 		pendingResolution.add(node);
 		boolean useLocalImpl = LocalDomImpl.useLocalImpl;
@@ -409,10 +419,12 @@ public class LocalDomBridge {
 			// FIXME - these go to DomImpl, all the document.create calls
 			// get
 			// rewritten
-			nodeDom = doc.createTextNode(((Text) node).getData()).domImpl;
+			nodeDom = localDomImpl.createDomText(Document.get(),
+					((Text) node).getData());
 			break;
 		case Node.ELEMENT_NODE:
-			nodeDom = doc.createElement(((Element) node).getTagName()).domImpl;
+			nodeDom = localDomImpl.createDomElement(Document.get(),
+					((Element) node).getTagName());
 			break;
 		case Node.DOCUMENT_NODE:
 			nodeDom = doc.domImpl;
@@ -421,10 +433,10 @@ public class LocalDomBridge {
 			throw new UnsupportedOperationException();
 		}
 		System.out.println("pending:" + node.impl.hashCode());
-		if (!javascriptObjectNodeLookup.containsKey(nodeDom)) {
+		if (javascriptObjectNodeLookup.containsKey(nodeDom)) {
 			Preconditions.checkState(false);
-			javascriptObjectNodeLookup.put(nodeDom, node);
 		}
+		javascriptObjectNodeLookup.put(nodeDom, node);
 		debug.removeAssignment(nodeDom);
 		node.putDomImpl(nodeDom);
 		ensuringPendingResolutionNode = false;
@@ -489,7 +501,9 @@ public class LocalDomBridge {
 		elementCreators.put(UListElement.TAG, () -> new UListElement());
 		elementCreators.put(OListElement.TAG, () -> new OListElement());
 		elementCreators.put(LIElement.TAG, () -> new LIElement());
+		elementCreators.put(ParagraphElement.TAG, () -> new ParagraphElement());
 		elementCreators.put("b", () -> new Element());
+		elementCreators.put("i", () -> new Element());
 	}
 
 	private <N extends Node> N nodeFor0(JavaScriptObject o) {
@@ -522,6 +536,9 @@ public class LocalDomBridge {
 			node.local = true;
 			node_jvm.node = node;
 			node.putImpl(node_jvm);
+			if(node instanceof Element){
+				((Element) node).ensureId();
+			}
 			return node;
 		});
 	}
@@ -623,5 +640,26 @@ public class LocalDomBridge {
 			nodesInHierarchy.remove(oldChild_Jvm);
 			// System.out.println("remove:" + oldChild_Jvm.hashCode());
 		}
+	}
+
+	Map<NativeEvent, List<String>> eventMods = new LinkedHashMap<>();
+
+	public void eventMod(NativeEvent evt, String eventName) {
+		System.out.println(Ax.format("eventMod - %s %s", evt, eventName));
+		if (!eventMods.keySet().contains(evt)) {
+			eventMods.clear();
+			eventMods.put(evt, new ArrayList<>());
+		}
+		eventMods.get(evt).add(eventName);
+	}
+
+	public boolean isStopPropogation(NativeEvent evt) {
+		List<String> list = eventMods.get(evt);
+		return list != null && (list.contains("eventStopPropagation")
+				|| list.contains("eventCancelBubble"));
+	}
+
+	public boolean isPending(Element element) {
+		return pendingResolution.contains(element);
 	}
 }

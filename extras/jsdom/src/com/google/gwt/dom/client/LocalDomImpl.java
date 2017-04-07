@@ -19,15 +19,11 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JsArray;
 
 public class LocalDomImpl {
+	public static boolean useLocalImpl = false;
+
 	final DOMImpl domImpl = GWT.create(DOMImpl.class);
 
 	IDOMImpl localImpl = null;
-
-	public void setLocalImpl(IDOMImpl localImpl) {
-		this.localImpl = localImpl;
-	}
-
-	public static boolean useLocalImpl = false;
 
 	LocalDomBridge bridge;
 
@@ -61,6 +57,10 @@ public class LocalDomImpl {
 		return domImpl.createElement(doc.typedDomImpl, tag);
 	}
 
+	public Node_Jso createDomText(Document doc, String data) {
+		return domImpl.createTextNode(doc.typedDomImpl, data);
+	}
+
 	public Element createElement(Document doc, String tag) {
 		if (useLocalImpl) {
 			return localImpl.createLocalElement(doc, tag);
@@ -69,21 +69,11 @@ public class LocalDomImpl {
 		}
 	}
 
-	private <N extends Node> N nodeFor(Node_Jso node_dom) {
-		return LocalDomBridge.nodeFor(node_dom);
-	}
-
 	public NativeEvent createHtmlEvent(Document doc, String type,
 			boolean canBubble, boolean cancelable) {
 		checkNotInLocalImpl();
 		return domImpl.createHtmlEvent(doc.typedDomImpl, type, canBubble,
 				cancelable);
-	}
-
-	private void checkNotInLocalImpl() {
-		if (useLocalImpl) {
-			throw new UnsupportedOperationException();
-		}
 	}
 
 	public InputElement createInputElement(Document doc, String type) {
@@ -146,8 +136,11 @@ public class LocalDomImpl {
 	}
 
 	public void cssClearOpacity(Style style) {
-		resolveAllPending();
+		if(useLocalImpl){
+			style.removePropertyImpl("opacity");
+		}else{
 		domImpl.cssClearOpacity(style.domImpl());
+		}
 	}
 
 	public String cssFloatPropertyName() {
@@ -156,8 +149,11 @@ public class LocalDomImpl {
 	}
 
 	public void cssSetOpacity(Style style, double value) {
-		resolveAllPending();
+		if(useLocalImpl){
+			style.setPropertyImpl("opacity", String.valueOf(value));
+		}else{
 		domImpl.cssSetOpacity(style.domImpl(), value);
+		}
 	}
 
 	public void dispatchEvent(Element target, NativeEvent evt) {
@@ -239,6 +235,7 @@ public class LocalDomImpl {
 	}
 
 	public void eventPreventDefault(NativeEvent evt) {
+		LocalDomBridge.get().eventMod(evt,"eventPreventDefault");
 		domImpl.eventPreventDefault(evt);
 	}
 
@@ -247,6 +244,7 @@ public class LocalDomImpl {
 	}
 
 	public void eventStopPropagation(NativeEvent evt) {
+		LocalDomBridge.get().eventMod(evt,"eventStopPropagation");
 		domImpl.eventStopPropagation(evt);
 	}
 
@@ -257,13 +255,6 @@ public class LocalDomImpl {
 	public int getAbsoluteLeft(Element elem) {
 		resolveAllPending();
 		return domImpl.getAbsoluteLeft(elem.typedDomImpl);
-	}
-
-	private void resolveAllPending() {
-		if (useLocalImpl&&LocalDomBridge.get().hasPendingResolutionNodes()) {
-			LocalDomBridge.get().flush();
-			LocalDomBridge.get().useLocalDom();
-		}
 	}
 
 	public int getAbsoluteTop(Element elem) {
@@ -478,6 +469,10 @@ public class LocalDomImpl {
 		}
 	}
 
+	public void setLocalImpl(IDOMImpl localImpl) {
+		this.localImpl = localImpl;
+	}
+
 	public void setScrollLeft(Document doc, int left) {
 		resolveAllPending();
 		doc.getViewportElement().setScrollLeft(left);
@@ -531,5 +526,22 @@ public class LocalDomImpl {
 
 	public EventTarget touchGetTarget(Touch touch) {
 		return domImpl.touchGetTarget(touch);
+	}
+
+	private void checkNotInLocalImpl() {
+		if (useLocalImpl) {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	private <N extends Node> N nodeFor(Node_Jso node_dom) {
+		return LocalDomBridge.nodeFor(node_dom);
+	}
+
+	private void resolveAllPending() {
+		if (useLocalImpl&&LocalDomBridge.get().hasPendingResolutionNodes()) {
+			LocalDomBridge.get().flush();
+			LocalDomBridge.get().useLocalDom();
+		}
 	}
 }

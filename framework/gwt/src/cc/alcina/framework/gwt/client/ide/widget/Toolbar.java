@@ -42,6 +42,7 @@ import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlers;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlersSupport;
 
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
@@ -58,8 +59,8 @@ import com.google.gwt.user.client.ui.Widget;
  * 
  * @author Nick Reddel
  */
-public class Toolbar extends Composite implements
-		PermissibleActionEvent.PermissibleActionSource, ClickHandler,
+public class Toolbar extends Composite
+		implements PermissibleActionEvent.PermissibleActionSource, ClickHandler,
 		HasChildHandlers {
 	public static final String CONTEXT_DO_NOT_REMOVE_LISTENERS_ON_DETACH = Toolbar.class
 			.getName() + ".CONTEXT_DO_NOT_REMOVE_LISTENERS_ON_DETACH";
@@ -101,6 +102,7 @@ public class Toolbar extends Composite implements
 		panel.setStyleName("toolbar clearfix");
 		this.vetoableActionSupport = new PermissibleActionEvent.PermissibleActionSupport();
 		initWidget(panel);
+		getElement().setId(Document.get().createUniqueId());
 		redraw();
 	}
 
@@ -148,9 +150,8 @@ public class Toolbar extends Composite implements
 	@Override
 	protected void onDetach() {
 		super.onDetach();
-		if (removeListenersOnDetach
-				&& !LooseContext
-						.getBoolean(CONTEXT_DO_NOT_REMOVE_LISTENERS_ON_DETACH)) {
+		if (removeListenersOnDetach && !LooseContext
+				.getBoolean(CONTEXT_DO_NOT_REMOVE_LISTENERS_ON_DETACH)) {
 			vetoableActionSupport.removeAllListeners();
 		}
 	}
@@ -195,16 +196,16 @@ public class Toolbar extends Composite implements
 				for (PermissibleAction action : g.actions) {
 					ToolbarButton button = new ToolbarButton(action,
 							buttonStyleName, asButton);
-					hasChildHandlersSupport.addHandler(button
-							.addClickHandler(this));
+					hasChildHandlersSupport
+							.addHandler(button.addClickHandler(this));
 					fp.add(button);
 					actionButtons.put(action.getClass(), button);
 					actionButtonsByAction.put(action, button);
 					actions.add(action);
 					if (isHideUnpermittedActions()
 							&& action instanceof Permissible
-							&& !PermissionsManager.get().isPermissible(
-									(Permissible) action)) {
+							&& !PermissionsManager.get()
+									.isPermissible((Permissible) action)) {
 						button.setVisible(false);
 					}
 				}
@@ -219,17 +220,17 @@ public class Toolbar extends Composite implements
 				panel.add(button);
 				actionButtons.put(action.getClass(), button);
 				actionButtonsByAction.put(action, button);
-				if (isHideUnpermittedActions()
-						&& action instanceof Permissible
-						&& !PermissionsManager.get().isPermissible(
-								(Permissible) action)) {
+				if (isHideUnpermittedActions() && action instanceof Permissible
+						&& !PermissionsManager.get()
+								.isPermissible((Permissible) action)) {
 					button.setVisible(false);
 				}
 			}
 		}
 	}
 
-	public void removeVetoableActionListener(PermissibleActionListener listener) {
+	public void
+			removeVetoableActionListener(PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
 	}
 
@@ -274,16 +275,16 @@ public class Toolbar extends Composite implements
 	}
 
 	public abstract static class PermissibleActionWithDelegateAndDropdown
-			extends PermissibleActionWithDelegate implements
-			HasDropdownPresenter {
+			extends PermissibleActionWithDelegate
+			implements HasDropdownPresenter {
 		public PermissibleActionWithDelegateAndDropdown(
 				PermissibleAction delegate) {
 			super(delegate);
 		}
 	}
 
-	public static class ToolbarButton extends Composite implements
-			HasClickHandlers {
+	public static class ToolbarButton extends Composite
+			implements HasClickHandlers {
 		private final PermissibleAction action;
 
 		private StyledAWidget aWidget;
@@ -383,13 +384,11 @@ public class Toolbar extends Composite implements
 			}
 			RelativePopupPanel rpp = new RelativePopupPanel(true);
 			rpp.setAnimationEnabled(false);
-			RelativePopupPositioning
-					.showPopup(
-							getWidget(),
-							dropDown,
-							RootPanel.get(),
-							new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
-							RootPanel.get(), rpp, -6, 6);
+			RelativePopupPositioning.showPopup(getWidget(), dropDown,
+					RootPanel.get(),
+					new RelativePopupAxis[] {
+							RelativePopupPositioning.BOTTOM_LTR },
+					RootPanel.get(), rpp, -6, 6);
 			rpp.setAnimationEnabled(false);
 			if (action instanceof HasDropdownPresenter) {
 				((HasDropdownPresenter) action).setPopup(rpp);
@@ -458,9 +457,8 @@ public class Toolbar extends Composite implements
 		Widget sender = (Widget) event.getSource();
 		if (sender.getParent() instanceof ToolbarButton) {
 			ToolbarButton tb = (ToolbarButton) sender.getParent();
-			vetoableActionSupport
-					.fireVetoableActionEvent(new PermissibleActionEvent(sender,
-							tb.getAction()));
+			vetoableActionSupport.fireVetoableActionEvent(
+					new PermissibleActionEvent(sender, tb.getAction()));
 		}
 	}
 

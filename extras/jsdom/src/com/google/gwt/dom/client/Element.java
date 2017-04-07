@@ -15,6 +15,7 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
@@ -23,9 +24,8 @@ import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.EventListener;
+import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.UIObject;
-import com.google.gwt.user.client.ui.VerticalPanel;
-import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -124,10 +124,14 @@ public class Element extends Node implements DomElement {
 	public <T extends Node> T appendChild(T newChild) {
 		if (domImpl == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
 				&& provideAncestorElementAttachedToDom() != null) {
-//			LocalDomBridge.ensureJso(this, false);
+			// LocalDomBridge.ensureJso(this, false);
 			LocalDomBridge.ensureJso(this);
 		}
-		return typedImpl().appendChild(newChild);
+		T node = typedImpl().appendChild(newChild);
+		if (localDomResolutionOnly) {
+			node.localDomResolutionOnly();
+		}
+		return node;
 	}
 
 	public void blur() {
@@ -207,15 +211,15 @@ public class Element extends Node implements DomElement {
 	}
 
 	public Node getChild(int index) {
-		return typedImpl().getChild(index);
+		return typedImpl(true, true).getChild(index);
 	}
 
 	public int getChildCount() {
-		return typedImpl().getChildCount();
+		return typedImpl(true, true).getChildCount();
 	}
 
 	public NodeList<Node> getChildNodes() {
-		return typedImpl().getChildNodes();
+		return typedImpl(true, true).getChildNodes();
 	}
 
 	public String getClassName() {
@@ -243,11 +247,11 @@ public class Element extends Node implements DomElement {
 	}
 
 	public Node getFirstChild() {
-		return typedImpl().getFirstChild();
+		return typedImpl(true, true).getFirstChild();
 	}
 
 	public Element getFirstChildElement() {
-		return typedImpl(true).getFirstChildElement();
+		return typedImpl(true, true).getFirstChildElement();
 	}
 
 	public String getId() {
@@ -355,7 +359,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	public String getPropertyString(String name) {
-		return typedImpl().getPropertyString(name);
+		return typedImpl(false, true).getPropertyString(name);
 	}
 
 	public int getScrollHeight() {
@@ -436,7 +440,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	public boolean isOrHasChild(Node child) {
-		return typedImpl().isOrHasChild(child);
+		return typedImpl(true, true).isOrHasChild(child);
 	}
 
 	public int localEventBitsSunk() {
@@ -470,8 +474,22 @@ public class Element extends Node implements DomElement {
 		return (LocalDomElement) impl;
 	}
 
+	static Map<Node_Jso, Node> assigned = new LinkedHashMap<>();
+
 	@Override
 	public void putDomImpl(Node_Jso nodeDom) {
+		// System.out.println(Ax.format("assign node_jso: %s %s",
+		// nodeDom.hashCode(), hashCode()));
+		// new Exception().printStackTrace(System.out);
+		Node current = assigned.get(nodeDom);
+		if (current != null && current != this) {
+			if (((Element) current).uiObject instanceof PopupPanel) {
+				// fix orrible
+			} else {
+				throw new IllegalArgumentException();
+			}
+		}
+		assigned.put(nodeDom, this);
 		local = false;
 		typedDomImpl = (Element_Jso) nodeDom;
 		domImpl = nodeDom;
@@ -506,6 +524,10 @@ public class Element extends Node implements DomElement {
 				domImpl = null;
 				typedDomImpl = null;
 			} else {
+				if (typedImpl instanceof Element_Jvm
+						&& !((Element_Jvm) typedImpl).treeResolved) {
+					int debug = 3;
+				}
 				localImpl = typedImpl;
 			}
 		}
@@ -518,6 +540,9 @@ public class Element extends Node implements DomElement {
 	}
 
 	public Node removeChild(Node oldChild) {
+		if(oldChild.provideIsDom()&&isAttached()){
+			ensureDomImpl();
+		}
 		return typedImpl().removeChild(oldChild);
 	}
 
@@ -663,17 +688,21 @@ public class Element extends Node implements DomElement {
 	}
 
 	DomElement typedImpl() {
-		return typedImpl(false);
+		return typedImpl(false, false);
 	}
 
-	DomElement typedImpl(boolean flushIfInnerHtml) {
-		if (domImpl == null && LocalDomBridge.shouldUseDomNodes()
-				&& isAttached()) {
-			LocalDomBridge.ensureJso(this);
-		}
-		if (domImpl == null && flushIfInnerHtml
-				&& LocalDomBridge.shouldUseDomNodes() && !isAttached()) {
-			LocalDomBridge.replaceWithJso(this);
+	DomElement typedImpl(boolean flushIfInnerHtml,
+			boolean respectLocalResolutionOnly) {
+		// immutable structure - e.g. trees
+		if (!(localDomResolutionOnly && respectLocalResolutionOnly)) {
+			if (domImpl == null && LocalDomBridge.shouldUseDomNodes()
+					&& isAttached()) {
+				LocalDomBridge.ensureJso(this);
+			}
+			if (domImpl == null && flushIfInnerHtml
+					&& LocalDomBridge.shouldUseDomNodes() && !isAttached()) {
+				LocalDomBridge.replaceWithJso(this);
+			}
 		}
 		return typedImpl;
 	}
@@ -696,7 +725,7 @@ public class Element extends Node implements DomElement {
 				&& provideAncestorElementAttachedToDom() != null) {
 			ensureJso();
 		}
-		if (provideIsDom()&&LocalDomBridge.fastRemoveAll) {
+		if (provideIsDom() && LocalDomBridge.fastRemoveAll) {
 			setInnerHTML("");
 			removeLocalImpl();
 			return null;

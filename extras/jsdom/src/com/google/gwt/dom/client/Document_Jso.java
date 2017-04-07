@@ -60,7 +60,7 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 	 */
 	@Override
 	public native final Text createTextNode(String data) /*-{
-        return this.createTextNode(data);
+		throw new Exception();
 	}-*/;
 
 	/**
