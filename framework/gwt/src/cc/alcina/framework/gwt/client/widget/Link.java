@@ -176,7 +176,9 @@ public class Link<T> extends Widget
 
 	public void setHref(String href) {
 		DOM.setElementProperty(anchorElem, "href", href);
-		setPreventDefault(false);
+		if (href != null && !href.matches("#?")) {
+			setPreventDefault(false);
+		}
 	}
 
 	public void setHTML(String html) {
@@ -229,8 +231,7 @@ public class Link<T> extends Widget
 		ensureDebugId(anchorElem, "", baseID);
 	}
 
-	public static Link createHashHref(String text,
-			String token) {
-		return createHrefNoUnderline(text, "#"+token);
+	public static Link createHashHref(String text, String token) {
+		return createHrefNoUnderline(text, "#" + token);
 	}
 }

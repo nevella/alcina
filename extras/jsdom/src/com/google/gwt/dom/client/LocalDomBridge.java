@@ -580,7 +580,12 @@ public class LocalDomBridge {
 				// case 1 or 2
 				for (int idx2 = 0; idx2 < toLink.size(); idx2++) {
 					Node_Jso item = toLink.get(idx2);
-					createJsoNode(item);
+					if (!LocalDomImpl.useLocalImpl
+							&& javascriptObjectNodeLookup.containsKey(item)) {
+						// edge cases in cell widgets
+					} else {
+						createJsoNode(item);
+					}
 					// and that's it...subtree created. not currently creating
 					// dummy localdomnodes
 				}
