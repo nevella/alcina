@@ -29,6 +29,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	private Place lastPlace;
 
 	public RegistryHistoryMapper() {
+		ensurePlaceLookup();
 	}
 
 	public static RegistryHistoryMapper get() {
@@ -37,7 +38,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	boolean initialised = false;
 
-	public void ensurePlaceLookup() {
+	private void ensurePlaceLookup() {
 		if (initialised) {
 			return;
 		}
