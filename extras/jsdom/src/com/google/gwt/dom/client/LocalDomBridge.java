@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.swing.text.StyledEditorKit.BoldAction;
 
@@ -16,7 +17,6 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -111,6 +111,7 @@ public class LocalDomBridge {
 		boolean saveLocalImpl = LocalDomImpl.useLocalImpl;
 		Element_Jso element_Jso = get().localDomImpl
 				.createDomElement(Document.get(), element.getTagName());
+		get().javascriptObjectNodeLookup.put(element_Jso, element);
 		element.putDomImpl(element_Jso);
 		get().ensureResolved(element);
 		if (saveLocalImpl) {
@@ -135,6 +136,42 @@ public class LocalDomBridge {
 			return null;
 		}
 		return get().styleObjectFor0(style_jvm);
+	}
+
+	private static void linkTreesLocal(Element element) {
+		Element original = element;
+		// these will be Element_Jvms
+		List<Element> chain = new ArrayList<>();
+		// hmmm...ascend to dom, descend...
+		while (element.typedDomImpl == null) {
+			chain.add(element);
+			element = element.getParentElement();
+		}
+		chain.add(element);
+		// don't go to zero (children of this elt)
+		for (int idx = chain.size() - 1; idx >= 1; idx--) {
+			Element withDom = chain.get(idx);
+			Element_Jvm vmImpl = (Element_Jvm) withDom.localImpl();
+			NodeList_Jso<Element> childNodes = (NodeList_Jso) withDom.typedDomImpl
+					.getChildNodes().impl;
+			if (debug.on) {
+				Preconditions.checkState(
+						childNodes.getLength() == vmImpl.children.size());
+			}
+			for (int idx2 = 0; idx2 < vmImpl.children.size(); idx2++) {
+				Element_Jvm child_jvm = (Element_Jvm) vmImpl.children.get(idx2);
+				int len = childNodes.getLength();
+				Node_Jso domImpl = childNodes.getItem0(idx2);
+				Node_Jso domImplCopy = domImpl;
+				if (debug.on) {
+					Preconditions.checkState(domImpl.getNodeName()
+							.equalsIgnoreCase(child_jvm.getNodeName()));
+				}
+				get().javascriptObjectNodeLookup.put(domImpl, child_jvm.node);
+				((Element) child_jvm.node).putDomImpl(domImpl);
+				((Element) child_jvm.node).putImpl(domImpl);
+			}
+		}
 	}
 
 	static void ensureJso(Element element, boolean flush) {
@@ -164,43 +201,7 @@ public class LocalDomBridge {
 				element.putImpl(domImpl);
 				return;
 			}
-			Element original = element;
-			// these will be Element_Jvms
-			List<Element> chain = new ArrayList<>();
-			// hmmm...ascend to dom, descend...
-			while (element.typedDomImpl == null) {
-				chain.add(element);
-				element = element.getParentElement();
-			}
-			chain.add(element);
-			// don't go to zero (children of this elt)
-			for (int idx = chain.size() - 1; idx >= 1; idx--) {
-				Element withDom = chain.get(idx);
-				Element_Jvm vmImpl = (Element_Jvm) withDom.localImpl();
-				NodeList_Jso<Element> childNodes = (NodeList_Jso) withDom.typedDomImpl
-						.getChildNodes().impl;
-				if (debug.on) {
-					Preconditions.checkState(
-							childNodes.getLength() == vmImpl.children.size());
-				}
-				for (int idx2 = 0; idx2 < vmImpl.children.size(); idx2++) {
-					Element_Jvm child_jvm = (Element_Jvm) vmImpl.children
-							.get(idx2);
-					int len = childNodes.getLength();
-					Node_Jso domImpl = childNodes.getItem0(idx2);
-					Node_Jso domImplCopy = domImpl;
-					if (debug.on) {
-						Preconditions.checkState(domImpl.getNodeName()
-								.equalsIgnoreCase(child_jvm.getNodeName()));
-					}
-					get().javascriptObjectNodeLookup.put(domImpl,
-							child_jvm.node);
-					if (child_jvm.node.domImpl != domImpl) {
-						((Element) child_jvm.node).putDomImpl(domImpl);
-						((Element) child_jvm.node).putImpl(domImpl);
-					}
-				}
-			}
+			linkTreesLocal(element);
 		} finally {
 			ensuring = false;
 		}
@@ -227,6 +228,8 @@ public class LocalDomBridge {
 	List<DomElement> createdLocals = new ArrayList<>();
 
 	ScheduledCommand flushCommand = null;
+
+	Map<NativeEvent, List<String>> eventMods = new LinkedHashMap<>();
 
 	private LocalDomBridge() {
 		// FIXME - weak maps
@@ -263,14 +266,9 @@ public class LocalDomBridge {
 			dom_elt.setInnerHTML(vmlocal_elt.getInnerHTML());
 			// doesn't include style
 			vmlocal_elt.getAttributes().entrySet().forEach(e -> {
-				Element_Jso dom_elt2 = dom_elt;
 				switch (e.getKey()) {
 				case "text":
-				case "className":
 					dom_elt.setPropertyString(e.getKey(), e.getValue());
-					break;
-				case "class":
-					dom_elt.setPropertyString("className", e.getValue());
 					break;
 				default:
 					dom_elt.setAttribute(e.getKey(), e.getValue());
@@ -279,16 +277,23 @@ public class LocalDomBridge {
 			});
 			vmlocal_elt.getStyle().getProperties().entrySet().forEach(e -> {
 				Style domStyle = dom_elt.getStyle();
-				String key = e.getKey();
-				domStyle.setProperty(key, e.getValue());
+				domStyle.setProperty(e.getKey(), e.getValue());
 			});
-			((LocalDomElement) vmlocal_elt).treeResolved();
 			int bits = ((Element_Jvm) vmlocal_elt).orSunkEventsOfAllChildren(0);
 			bits |= DOM.getEventsSunk(elem);
 			DOM.sinkEvents(elem, bits);
 			pendingResolution.remove(node);
 			node.putImpl(node.domImpl);
 		}
+	}
+
+	public void eventMod(NativeEvent evt, String eventName) {
+		System.out.println(Ax.format("eventMod - %s %s", evt, eventName));
+		if (!eventMods.keySet().contains(evt)) {
+			eventMods.clear();
+			eventMods.put(evt, new ArrayList<>());
+		}
+		eventMods.get(evt).add(eventName);
 	}
 
 	public void flush() {
@@ -302,8 +307,6 @@ public class LocalDomBridge {
 			boolean detachedAndPending = createdLocals.stream()
 					.anyMatch(e -> e.getParentNode() == null);
 			if (detachedAndPending) {
-				System.out.println(
-						CommonUtils.highlightForLog("dialog box pending"));
 				// e.g. dialog box
 				return;
 			}
@@ -314,8 +317,6 @@ public class LocalDomBridge {
 							((Element) el.node).uiObject.getClass().getName());
 				}
 			});
-			System.out.println(
-					CommonUtils.highlightForLog("has created pending"));
 			int debug = 3;
 		}
 		Preconditions.checkState(pendingResolution.size() > 0);
@@ -323,6 +324,16 @@ public class LocalDomBridge {
 				.forEach(this::ensureResolved);
 		debug.checkCreatedLocals(createdLocals);
 		createdLocals.clear();
+	}
+
+	public boolean isPending(Element element) {
+		return pendingResolution.contains(element);
+	}
+
+	public boolean isStopPropogation(NativeEvent evt) {
+		List<String> list = eventMods.get(evt);
+		return list != null && (list.contains("eventStopPropagation")
+				|| list.contains("eventCancelBubble"));
 	}
 
 	public void useJsoDom() {
@@ -355,6 +366,17 @@ public class LocalDomBridge {
 		}
 	}
 
+	private void createJsoNode(Node_Jso item) {
+		int nodeType = item.getNodeType();
+		String nodeName = item.getNodeName();
+		Node node = createNode(nodeType, nodeName);
+		node.resolved = true;
+		javascriptObjectNodeLookup.put(item, node);
+		node.putDomImpl(item);
+		node.putImpl(item);
+		addToIdLookup(node);
+	}
+
 	private Node createNode(int nodeType, String nodeName) {
 		Node node = null;
 		switch (nodeType) {
@@ -362,20 +384,13 @@ public class LocalDomBridge {
 			node = new Text();
 			break;
 		case Node.ELEMENT_NODE:
-			switch (nodeName.toLowerCase()) {
-			case "html":
-				node = new Element();
-				break;
-			default:
-				Supplier<Element> creator = elementCreators
-						.get(nodeName.toLowerCase());
-				if (creator == null) {
-					GWT.log(CommonUtils.highlightForLog(
-							"Missing element creator - %s", nodeName));
-				}
-				node = creator.get();
-				break;
+			Supplier<Element> creator = elementCreators
+					.get(nodeName.toLowerCase());
+			if (creator == null) {
+				GWT.log(CommonUtils.highlightForLog(
+						"Missing element creator - %s", nodeName));
 			}
+			node = creator.get();
 			break;
 		case Node.DOCUMENT_NODE:
 			// should already be registered
@@ -400,12 +415,6 @@ public class LocalDomBridge {
 	private Node_Jso ensurePendingResolutionNode0(Node node) {
 		if (node.domImpl != null) {
 			return node.domImpl;
-		}
-		if (node instanceof Element) {
-			Element elem = (Element) node;
-			if (elem.getId().isEmpty()) {
-				elem.setId(Document.get().createUniqueId());
-			}
 		}
 		ensureFlush();
 		pendingResolution.add(node);
@@ -432,10 +441,8 @@ public class LocalDomBridge {
 		default:
 			throw new UnsupportedOperationException();
 		}
-		System.out.println("pending:" + node.impl.hashCode());
-		if (javascriptObjectNodeLookup.containsKey(nodeDom)) {
-			Preconditions.checkState(false);
-		}
+		System.out.println(
+				"created pending resolution node:" + node.impl.hashCode());
 		javascriptObjectNodeLookup.put(nodeDom, node);
 		debug.removeAssignment(nodeDom);
 		node.putDomImpl(nodeDom);
@@ -447,16 +454,8 @@ public class LocalDomBridge {
 	}
 
 	private native String getId(JavaScriptObject obj) /*-{
-        return obj.id;
-	}-*/;
-
-	private native String getNodeName(JavaScriptObject obj) /*-{
-        return obj.nodeName;
-	}-*/;
-
-	private native int getNodeType(JavaScriptObject obj) /*-{
-        return obj.nodeType;
-	}-*/;
+														return obj.id;
+														}-*/;
 
 	private void initElementCreators() {
 		elementCreators.put(DivElement.TAG, () -> new DivElement());
@@ -501,12 +500,112 @@ public class LocalDomBridge {
 		elementCreators.put(UListElement.TAG, () -> new UListElement());
 		elementCreators.put(OListElement.TAG, () -> new OListElement());
 		elementCreators.put(LIElement.TAG, () -> new LIElement());
-		elementCreators.put(ParagraphElement.TAG, () -> new ParagraphElement());
 		elementCreators.put("b", () -> new Element());
-		elementCreators.put("i", () -> new Element());
+		elementCreators.put("html", () -> new Element());
+		elementCreators.put(ParagraphElement.TAG, () -> new ParagraphElement());
+		elementCreators.put(BRElement.TAG, () -> new BRElement());
+		elementCreators.put(HRElement.TAG, () -> new HRElement());
 	}
 
-	private <N extends Node> N nodeFor0(JavaScriptObject o) {
+	private Node linkTreesDom(Node_Jso node_jso) {
+		Node_Jso original = node_jso;
+		// these will be Element_Jvms
+		List<Node_Jso> chain = new ArrayList<>();
+		// hmmm...ascend to dom, descend...
+		Node linkedNode = null;
+		while (true) {
+			linkedNode = javascriptObjectNodeLookup.get(node_jso);
+			chain.add(node_jso);
+			if (linkedNode != null) {
+				break;
+			}
+			Node_Jso parentNode0 = node_jso.getParentNode0();
+			if (parentNode0 == null) {
+				if (chain.size() == 1) {
+					int debug = 3;
+					// patch for native scroll bars, which use gnarly
+					// uibinder
+					// innerhtml/element combos
+					/*
+					 * actually, dropped that code - but datagrid.replace
+					 * children arrives here
+					 */
+					createJsoNode(node_jso);
+					return nodeFor0(node_jso);
+				} else {
+					// unattached dom tree...so a baily
+					throw new IllegalArgumentException();
+				}
+			}
+			node_jso = parentNode0;
+		}
+		// don't go to zero (children of this elt)
+		for (int idx = chain.size() - 1; idx >= 1; idx--) {
+			Node_Jso jso = chain.get(idx);
+			Node withDom = (Node) javascriptObjectNodeLookup.get(jso);
+			Node_Jvm vmImpl = (Node_Jvm) withDom.localImpl();
+			NodeList_Jso childNodesSub = (NodeList_Jso) jso
+					.getChildNodes().impl;
+			/*
+			 * future optimisation - don't create this list if we're mapping to
+			 * existing elements - instead have some sort of 'potential state' -
+			 * to save getting the whole child list
+			 */
+			List<Node_Jso> toLink = new ArrayList<>();
+			int childCount = childNodesSub.getLength();
+			for (int idx2 = 0; idx2 < childCount; idx2++) {
+				Node_Jso item0 = childNodesSub.getItem0(idx2);
+				switch (item0.getNodeType()) {
+				case Node.ELEMENT_NODE:
+				case Node.DOCUMENT_NODE:
+				case Node.TEXT_NODE:
+					toLink.add(item0);
+					break;
+				}
+			}
+			/*
+			 * either this is:
+			 * 
+			 * a dom tree with no corresponding element structure (from an
+			 * innerhtml) - create all
+			 * 
+			 * a few top-level dom objects (html, body) - create all
+			 * 
+			 * a dom tree mapping to an existing element structure - link all
+			 * 
+			 */
+			Document ownerDocument = (Document) (withDom instanceof Document
+					? withDom : withDom.getOwnerDocument());
+			if (vmImpl == null || vmImpl.getChildCount() == 0) {
+				// case 1 or 2
+				for (int idx2 = 0; idx2 < toLink.size(); idx2++) {
+					Node_Jso item = toLink.get(idx2);
+					createJsoNode(item);
+					// and that's it...subtree created. not currently creating
+					// dummy localdomnodes
+				}
+			} else {
+				// if (debug.on) {
+				Preconditions
+						.checkState(toLink.size() == vmImpl.children.size());
+				// }
+				for (int idx2 = 0; idx2 < vmImpl.children.size(); idx2++) {
+					Node_Jvm child_jvm = vmImpl.children.get(idx2);
+					Node_Jso domImpl = toLink.get(idx2);
+					Preconditions.checkState(domImpl.getNodeName()
+							.equalsIgnoreCase(child_jvm.getNodeName()));
+					get().javascriptObjectNodeLookup.put(domImpl,
+							child_jvm.node);
+					child_jvm.node.putDomImpl(domImpl);
+					child_jvm.node.putImpl(domImpl);
+				}
+			}
+		}
+		return nodeFor(original);
+	}
+
+	private <N extends Node> N nodeFor0(JavaScriptObject jso) {
+		Node_Jso o = jso.cast();
 		Node node = javascriptObjectNodeLookup.get(o);
 		if (node != null) {
 			return (N) node;
@@ -515,18 +614,15 @@ public class LocalDomBridge {
 		if (id != null && id.length() > 0) {
 			node = idLookup.get(id);
 			if (node != null) {
+				if (node.provideIsLocal()) {
+					javascriptObjectNodeLookup.put(o, node);
+					node.putDomImpl(o);
+					node.putImpl(o);
+				}
 				return (N) node;
 			}
 		}
-		int nodeType = getNodeType(o);
-		String nodeName = getNodeName(o);
-		node = createNode(nodeType, nodeName);
-		node.resolved = true;
-		javascriptObjectNodeLookup.put(o, node);
-		node.putDomImpl(o.cast());
-		node.putImpl(o.cast());
-		addToIdLookup(node);
-		return (N) node;
+		return (N) linkTreesDom(o);
 	}
 
 	private Node nodeFor0(Node_Jvm node_jvm) {
@@ -536,9 +632,6 @@ public class LocalDomBridge {
 			node.local = true;
 			node_jvm.node = node;
 			node.putImpl(node_jvm);
-			if(node instanceof Element){
-				((Element) node).ensureId();
-			}
 			return node;
 		});
 	}
@@ -595,12 +688,6 @@ public class LocalDomBridge {
 			// System.out.println("add:" + impl.hashCode());
 		}
 
-		public void warnDuplicateId(String id, Node node,
-				Element_Jvm element_Jvm) {
-			System.out.println("**warn - duplicate elt id - " + id);
-			// throw new IllegalStateException();
-		}
-
 		public void checkCreatedLocals(List<DomElement> createdLocals) {
 			createdLocals.stream().forEach(e -> {
 				Node_Jso domImpl = ((Element_Jvm) e).provideAncestorDomImpl();
@@ -618,11 +705,11 @@ public class LocalDomBridge {
 			// System.out.println("check:" + nodeDom);
 			// new Exception().printStackTrace(System.out);
 			if (!get().javascriptObjectNodeLookup.containsKey(nodeDom)) {
-				int debug = 3;
+				throw new IllegalStateException();
 			}
 			if (assigned.containsKey(nodeDom)) {
 				if (assigned.get(nodeDom) != element) {
-					int debug = 3;
+					throw new IllegalStateException();
 				}
 			}
 			assigned.put(nodeDom, element);
@@ -640,26 +727,11 @@ public class LocalDomBridge {
 			nodesInHierarchy.remove(oldChild_Jvm);
 			// System.out.println("remove:" + oldChild_Jvm.hashCode());
 		}
-	}
 
-	Map<NativeEvent, List<String>> eventMods = new LinkedHashMap<>();
-
-	public void eventMod(NativeEvent evt, String eventName) {
-		System.out.println(Ax.format("eventMod - %s %s", evt, eventName));
-		if (!eventMods.keySet().contains(evt)) {
-			eventMods.clear();
-			eventMods.put(evt, new ArrayList<>());
+		public void warnDuplicateId(String id, Node node,
+				Element_Jvm element_Jvm) {
+			System.out.println("**warn - duplicate elt id - " + id);
+			// throw new IllegalStateException();
 		}
-		eventMods.get(evt).add(eventName);
-	}
-
-	public boolean isStopPropogation(NativeEvent evt) {
-		List<String> list = eventMods.get(evt);
-		return list != null && (list.contains("eventStopPropagation")
-				|| list.contains("eventCancelBubble"));
-	}
-
-	public boolean isPending(Element element) {
-		return pendingResolution.contains(element);
 	}
 }

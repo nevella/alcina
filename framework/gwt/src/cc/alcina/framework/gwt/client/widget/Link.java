@@ -176,6 +176,7 @@ public class Link<T> extends Widget
 
 	public void setHref(String href) {
 		DOM.setElementProperty(anchorElem, "href", href);
+		setPreventDefault(false);
 	}
 
 	public void setHTML(String html) {

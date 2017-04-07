@@ -15,8 +15,8 @@
  */
 package com.google.gwt.dom.client;
 
-import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.JavascriptObjectEquivalent;
 
 /**
  * The Node interface is the primary datatype for the entire Document Object
@@ -232,4 +232,7 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		localDomResolutionOnly = true;
 		getChildNodes().forEach(Node::localDomResolutionOnly);
 	}
+	 DomNode localImpl() {
+		 return domImpl!=null?null:impl;
+	 }
 }

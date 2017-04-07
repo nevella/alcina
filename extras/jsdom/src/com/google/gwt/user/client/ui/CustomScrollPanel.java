@@ -195,19 +195,19 @@ public class CustomScrollPanel extends ScrollPanel {
     // Initialize the default scrollbars using the transparent styles.
     NativeHorizontalScrollbar.Resources hResources =
         GWT.create(NativeHorizontalScrollbar.ResourcesTransparant.class);
-    boolean useLocalDom = LocalDomImpl.useLocalImpl;
-    LocalDomBridge.get().useJsoDom();
-    NativeHorizontalScrollbar h_scrollbar = new NativeHorizontalScrollbar(hResources);
-//	setHorizontalScrollbar(h_scrollbar, AbstractNativeScrollbar
-//        .getNativeScrollbarHeight());
-    NativeVerticalScrollbar.Resources vResources =
-        GWT.create(NativeVerticalScrollbar.ResourcesTransparant.class);
-    NativeVerticalScrollbar v_scrollbar = new NativeVerticalScrollbar(vResources);
-//	setVerticalScrollbar(v_scrollbar, AbstractNativeScrollbar
-//        .getNativeScrollbarWidth());
-    if(useLocalDom){
-	LocalDomBridge.get().useLocalDom();
-    }
+//    boolean useLocalDom = LocalDomImpl.useLocalImpl;
+//    LocalDomBridge.get().useJsoDom();
+//    NativeHorizontalScrollbar h_scrollbar = new NativeHorizontalScrollbar(hResources);
+////	setHorizontalScrollbar(h_scrollbar, AbstractNativeScrollbar
+////        .getNativeScrollbarHeight());
+//    NativeVerticalScrollbar.Resources vResources =
+//        GWT.create(NativeVerticalScrollbar.ResourcesTransparant.class);
+//    NativeVerticalScrollbar v_scrollbar = new NativeVerticalScrollbar(vResources);
+////	setVerticalScrollbar(v_scrollbar, AbstractNativeScrollbar
+////        .getNativeScrollbarWidth());
+//    if(useLocalDom){
+//	LocalDomBridge.get().useLocalDom();
+//    }
 
     /*
      * Add a handler to catch changes in the content size and update the

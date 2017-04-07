@@ -15,7 +15,6 @@
  */
 package com.google.gwt.dom.client;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
@@ -24,8 +23,9 @@ import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.EventListener;
-import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.UIObject;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -127,11 +127,7 @@ public class Element extends Node implements DomElement {
 			// LocalDomBridge.ensureJso(this, false);
 			LocalDomBridge.ensureJso(this);
 		}
-		T node = typedImpl().appendChild(newChild);
-		if (localDomResolutionOnly) {
-			node.localDomResolutionOnly();
-		}
-		return node;
+		return typedImpl().appendChild(newChild);
 	}
 
 	public void blur() {
@@ -211,15 +207,15 @@ public class Element extends Node implements DomElement {
 	}
 
 	public Node getChild(int index) {
-		return typedImpl(true, true).getChild(index);
+		return typedImpl().getChild(index);
 	}
 
 	public int getChildCount() {
-		return typedImpl(true, true).getChildCount();
+		return typedImpl().getChildCount();
 	}
 
 	public NodeList<Node> getChildNodes() {
-		return typedImpl(true, true).getChildNodes();
+		return typedImpl().getChildNodes();
 	}
 
 	public String getClassName() {
@@ -247,11 +243,11 @@ public class Element extends Node implements DomElement {
 	}
 
 	public Node getFirstChild() {
-		return typedImpl(true, true).getFirstChild();
+		return typedImpl().getFirstChild();
 	}
 
 	public Element getFirstChildElement() {
-		return typedImpl(true, true).getFirstChildElement();
+		return typedImpl(true).getFirstChildElement();
 	}
 
 	public String getId() {
@@ -359,7 +355,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	public String getPropertyString(String name) {
-		return typedImpl(false, true).getPropertyString(name);
+		return typedImpl().getPropertyString(name);
 	}
 
 	public int getScrollHeight() {
@@ -440,7 +436,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	public boolean isOrHasChild(Node child) {
-		return typedImpl(true, true).isOrHasChild(child);
+		return typedImpl().isOrHasChild(child);
 	}
 
 	public int localEventBitsSunk() {
@@ -451,7 +447,11 @@ public class Element extends Node implements DomElement {
 		if (localImpl != null) {
 			return localImpl;
 		} else {
-			return typedImpl;
+			if (domImpl != typedImpl) {
+				return typedImpl;
+			} else {
+				return null;
+			}
 		}
 	}
 
@@ -474,22 +474,8 @@ public class Element extends Node implements DomElement {
 		return (LocalDomElement) impl;
 	}
 
-	static Map<Node_Jso, Node> assigned = new LinkedHashMap<>();
-
 	@Override
 	public void putDomImpl(Node_Jso nodeDom) {
-		// System.out.println(Ax.format("assign node_jso: %s %s",
-		// nodeDom.hashCode(), hashCode()));
-		// new Exception().printStackTrace(System.out);
-		Node current = assigned.get(nodeDom);
-		if (current != null && current != this) {
-			if (((Element) current).uiObject instanceof PopupPanel) {
-				// fix orrible
-			} else {
-				throw new IllegalArgumentException();
-			}
-		}
-		assigned.put(nodeDom, this);
 		local = false;
 		typedDomImpl = (Element_Jso) nodeDom;
 		domImpl = nodeDom;
@@ -505,6 +491,9 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	public void putImpl(DomNode impl) {
+		if(impl==this.impl){
+			return;
+		}
 		LocalDomBridge.get().checkInPreconditionList(this, impl);
 		// debug, can remove
 		if (impl == null) {
@@ -524,10 +513,6 @@ public class Element extends Node implements DomElement {
 				domImpl = null;
 				typedDomImpl = null;
 			} else {
-				if (typedImpl instanceof Element_Jvm
-						&& !((Element_Jvm) typedImpl).treeResolved) {
-					int debug = 3;
-				}
 				localImpl = typedImpl;
 			}
 		}
@@ -540,9 +525,6 @@ public class Element extends Node implements DomElement {
 	}
 
 	public Node removeChild(Node oldChild) {
-		if(oldChild.provideIsDom()&&isAttached()){
-			ensureDomImpl();
-		}
 		return typedImpl().removeChild(oldChild);
 	}
 
@@ -688,21 +670,17 @@ public class Element extends Node implements DomElement {
 	}
 
 	DomElement typedImpl() {
-		return typedImpl(false, false);
+		return typedImpl(false);
 	}
 
-	DomElement typedImpl(boolean flushIfInnerHtml,
-			boolean respectLocalResolutionOnly) {
-		// immutable structure - e.g. trees
-		if (!(localDomResolutionOnly && respectLocalResolutionOnly)) {
-			if (domImpl == null && LocalDomBridge.shouldUseDomNodes()
-					&& isAttached()) {
-				LocalDomBridge.ensureJso(this);
-			}
-			if (domImpl == null && flushIfInnerHtml
-					&& LocalDomBridge.shouldUseDomNodes() && !isAttached()) {
-				LocalDomBridge.replaceWithJso(this);
-			}
+	DomElement typedImpl(boolean flushIfInnerHtml) {
+		if (domImpl == null && LocalDomBridge.shouldUseDomNodes()
+				&& isAttached()) {
+			LocalDomBridge.ensureJso(this);
+		}
+		if (domImpl == null && flushIfInnerHtml
+				&& LocalDomBridge.shouldUseDomNodes() && !isAttached()) {
+			LocalDomBridge.replaceWithJso(this);
 		}
 		return typedImpl;
 	}

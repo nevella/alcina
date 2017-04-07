@@ -76,16 +76,16 @@ public class BreadcrumbBar extends Composite {
 						: "breadcrumb-next";
 				ParaPanel para = new ParaPanel();
 				para.setStyleName(className);
-				Hyperlink hl = new Hyperlink(crumb.displayName, asHTML,
-						crumb.historyToken);
-				hl.setStyleName("");
-				para.add(hl);
+				Link link = new Link(crumb.displayName, asHTML);
+				link.setHref("#" + crumb.historyToken);
+				para.add(new SpanPanel(link));
 				fp.add(para);
 			}
 		}
 		addButtons();
 		initWidget(fp);
 	}
+
 	private void addButtons() {
 		if (buttons == null) {
 			return;
@@ -120,16 +120,18 @@ public class BreadcrumbBar extends Composite {
 		return l;
 	}
 
-	public static class BreadcrumbBarMaximiseButton extends Composite implements
-			ClickHandler {
+	public static class BreadcrumbBarMaximiseButton extends Composite
+			implements ClickHandler {
 		private ToggleButton toggleButton;
 
 		private Widget widgetToMaximise;
 
 		public BreadcrumbBarMaximiseButton() {
-			this.toggleButton = new ToggleButton(AbstractImagePrototype.create(
-					images.maximise()).createImage(), AbstractImagePrototype
-					.create(images.minimise()).createImage());
+			this.toggleButton = new ToggleButton(
+					AbstractImagePrototype.create(images.maximise())
+							.createImage(),
+					AbstractImagePrototype.create(images.minimise())
+							.createImage());
 			toggleButton.addStyleName("maximise");
 			toggleButton.addClickHandler(this);
 			initWidget(toggleButton);
@@ -166,9 +168,8 @@ public class BreadcrumbBar extends Composite {
 				WidgetUtils.maximiseWidget(widgetToMaximise);
 			} else {
 				WidgetUtils.restoreFromMaximise();
-				LayoutEvents.get().fireLayoutEvent(
-						new LayoutEvent(
-								LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
+				LayoutEvents.get().fireLayoutEvent(new LayoutEvent(
+						LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
 			}
 		}
 
@@ -188,15 +189,15 @@ public class BreadcrumbBar extends Composite {
 		private int left;
 
 		public BreadcrumbBarMaximiseButton2() {
-			this.toggleButton = new ToggleButton(AbstractImagePrototype.create(
-					images.maximise2()).createImage(), AbstractImagePrototype
-					.create(images.minimise2()).createImage());
-			toggleButton.getUpHoveringFace().setImage(
-					AbstractImagePrototype.create(images.maximise2over())
+			this.toggleButton = new ToggleButton(
+					AbstractImagePrototype.create(images.maximise2())
+							.createImage(),
+					AbstractImagePrototype.create(images.minimise2())
 							.createImage());
-			toggleButton.getDownHoveringFace().setImage(
-					AbstractImagePrototype.create(images.minimise2over())
-							.createImage());
+			toggleButton.getUpHoveringFace().setImage(AbstractImagePrototype
+					.create(images.maximise2over()).createImage());
+			toggleButton.getDownHoveringFace().setImage(AbstractImagePrototype
+					.create(images.minimise2over()).createImage());
 			toggleButton.addClickHandler(this);
 			initWidget(toggleButton);
 		}
@@ -225,9 +226,8 @@ public class BreadcrumbBar extends Composite {
 				WidgetUtils.maximiseWidget(widgetToMaximise);
 			} else {
 				WidgetUtils.restoreFromMaximise();
-				LayoutEvents.get().fireLayoutEvent(
-						new LayoutEvent(
-								LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
+				LayoutEvents.get().fireLayoutEvent(new LayoutEvent(
+						LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
 				new Timer() {
 					@Override
 					public void run() {
@@ -250,8 +250,8 @@ public class BreadcrumbBar extends Composite {
 		}
 	}
 
-	public static class BreadcrumbBarButton extends Composite implements
-			HasClickHandlers {
+	public static class BreadcrumbBarButton extends Composite
+			implements HasClickHandlers {
 		protected APanel panel;
 
 		private boolean asHtml;

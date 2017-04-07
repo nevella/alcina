@@ -206,7 +206,9 @@ div.alcina-BreadcrumbBar.tlr-borders {
 	border: 1px solid #cecece;
 	border-bottom: none;
 }
-
+div.alcina-BreadcrumbBar p span{
+	display:block;
+}
 div.alcina-BreadcrumbBar div.right {
 	float: right;
 	padding-left: 3px;

@@ -13,6 +13,7 @@ public interface DomNodeList<T extends Node> {
 	int getLength();
 	
 	Stream<T> stream();
+
 	
 	
 }

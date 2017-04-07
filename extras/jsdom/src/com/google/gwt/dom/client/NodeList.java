@@ -76,10 +76,23 @@ public class NodeList<T extends Node> implements DomNodeList<T>, Iterable<T> {
 		return new NodeList<V>(new NodeList_Wrapped<V>((List) stream()
 				.filter(predicate).collect(Collectors.toList())));
 	}
+
 	@Override
 	public Stream<T> stream() {
 		return DomNodeList_Static.stream0(this);
 	}
 
-	
+	public static DomNodeList<? extends Node>
+			gwtOnlySubList(DomNodeList<? extends Node> childNodes) {
+		return new NodeList<>(childNodes).filteredSubList(n -> {
+			switch (n.getNodeType()) {
+			case Node.DOCUMENT_NODE:
+			case Node.ELEMENT_NODE:
+			case Node.TEXT_NODE:
+				return true;
+			default:
+				return false;
+			}
+		});
+	}
 }

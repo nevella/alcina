@@ -188,5 +188,13 @@ public class ButtonElement extends Element {
    */  public  void setValue(String value){
    this.setPropertyString("value",value);
 }
+   @Override
+	public void setPropertyBoolean(String name, boolean value) {
+	if(provideIsLocal()&&(name.equals("disabled"))&&!Boolean.valueOf(value)){
+		   removeAttribute(name);
+		   return;
+	   }
+		super.setPropertyBoolean(name, value);
+	}
 
 }

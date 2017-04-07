@@ -725,4 +725,8 @@ public class Document extends Node implements DomDocument {
 	public <T extends DomDocument> T castLocalImpl() {
 		return (T) localImpl;
 	}
+	@Override
+	DomNode localImpl() {
+		return localImpl;
+	}
 }

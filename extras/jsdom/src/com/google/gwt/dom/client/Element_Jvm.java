@@ -89,6 +89,7 @@ public class Element_Jvm extends Node_Jvm
 	@Override
 	public void setInnerText(String text) {
 		new ArrayList<>(children).stream().forEach(Node_Jvm::removeFromParent);
+		innerHtml=null;
 		appendChild(ownerDocument.createTextNode(text));
 	}
 
