@@ -42,6 +42,7 @@ public interface HasGwtJsonRepresentation {
 		if (value == null) {
 			return JSONNull.getInstance();
 		}
+		
 		if (value instanceof Date) {
 			return new JSONString(
 					Ax.format("__JsDate(%s)", ((Date) value).getTime()));
@@ -66,6 +67,8 @@ public interface HasGwtJsonRepresentation {
 			return JSONBoolean.getInstance((Boolean) value);
 		} else if (value instanceof Number) {
 			return new JSONNumber(((Number) value).doubleValue());
+		} else if (value instanceof JSONValue){
+			return (JSONValue) value;
 		}
 		return new JSONString(value.toString());
 	}

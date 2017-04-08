@@ -34,4 +34,8 @@ public class Ax {
 	public static boolean notBlank(String string) {
 		return !isBlank(string);
 	}
+
+	public static void sysLogHigh(String template, Object... args) {
+		System.out.println(CommonUtils.highlightForLog(template, args));
+	}
 }
