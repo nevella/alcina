@@ -8,10 +8,12 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 	public static void clearThreadLocals(Class... clear) {
 		try {
@@ -125,12 +127,13 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 					existing.shareSingletonMapTo(registry);
 				}
 				perClassLoader.put(contextClassLoader, registry);
-				System.out.println("Created registry for classloader "
-						+ contextClassLoader);
+				System.out.format("Created registry for classloader %s - %s\n",
+						contextClassLoader, contextClassLoader.hashCode());
 			} else {
-				throw new RuntimeException(
-						String.format("Too many registries: \n%s\n%s\n",
-								contextClassLoader, perClassLoader.keySet()));
+				throw new RuntimeException(String.format(
+						"Too many registries: \n%s\n%s\n%s\n",
+						contextClassLoader, contextClassLoader.hashCode(),
+						perClassLoader.keySet()));
 			}
 		}
 		lastClassLoader = contextClassLoader;

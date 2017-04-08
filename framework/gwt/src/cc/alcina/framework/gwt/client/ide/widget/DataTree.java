@@ -99,7 +99,8 @@ public class DataTree extends FilterableTree
 
 	public TreeItem selectNodeForObject(Object obj) {
 		getNodeForObject(obj);
-		if (result != null) {
+		TreeItem current = getSelectedItem();
+		if (result != null && result != current) {
 			setSelectedItem(null);
 			setSelectedItem(result);
 			ensureSelectedItemVisible();

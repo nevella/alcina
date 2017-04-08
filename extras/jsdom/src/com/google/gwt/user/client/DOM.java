@@ -35,6 +35,8 @@ import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.impl.DOMImpl;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  * This class provides a set of static methods that allow you to manipulate the
  * browser's Document Object Model (DOM). It contains methods for manipulating
@@ -539,7 +541,7 @@ public class DOM {
 	 * @see DOM#eventGetTarget(Event)
 	 */
 	public static Element eventGetCurrentTarget(Event evt) {
-//		return evt.getCurrentEventTarget().cast();
+		// return evt.getCurrentEventTarget().cast();
 		return eventCurrentTarget;
 	}
 
@@ -1633,7 +1635,7 @@ public class DOM {
 	}
 
 	// chromium hosted mode double-dispatch checl
-	private static Event lastDispatchedClickEvent;
+	private static Event lastDispatchedMouseEvent;
 
 	private static void dispatchEventImpl(Event evt, Element elem,
 			EventListener listener) {
@@ -1645,13 +1647,14 @@ public class DOM {
 			}
 		}
 		EventTarget eventTarget = evt.getEventTarget();
-		if (evt.getType().toLowerCase().contains("click")) {
-			if (lastDispatchedClickEvent == evt) {
+		String lcType = evt.getType().toLowerCase();
+		if (lcType.contains("click") || lcType.contains("mousedown")) {
+			if (lastDispatchedMouseEvent == evt) {
 				return;
 			}
-			lastDispatchedClickEvent = evt;
-			int debug = 3;
+			lastDispatchedMouseEvent = evt;
 		}
+		System.out.println(Ax.format("dispatch  event - %s", lcType));
 		if (Element.is(eventTarget)) {
 			Element rel = Element.as(eventTarget);
 			// get the listeners early, to prevent overwrite. Note that this
@@ -1667,8 +1670,10 @@ public class DOM {
 			for (Entry<Element, EventListener> entry : forDispatch.entrySet()) {
 				eventCurrentTarget = entry.getKey();
 				EventListener eventListener = entry.getValue();
-				if (evt.getType().toLowerCase().contains("click")) {
-					System.out.println("dispatch click - " + eventListener);
+				if (lcType.contains("click") || lcType.contains("mousedown")) {
+					System.out
+							.println(Ax.format("dispatch mouse event - %s - %s",
+									lcType, eventListener));
 				}
 				eventListener.onBrowserEvent(evt);
 				if (LocalDomBridge.get().isStopPropogation(evt)) {

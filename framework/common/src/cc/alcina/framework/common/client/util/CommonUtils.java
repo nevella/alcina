@@ -37,12 +37,15 @@ import com.google.gwt.dom.client.Node;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
 @SuppressWarnings("unchecked")
 /**
  *
  * @author Nick Reddel
  */
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class CommonUtils {
 	public static final String XML_PI = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 

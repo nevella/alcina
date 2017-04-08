@@ -38,7 +38,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	boolean initialised = false;
 
-	private void ensurePlaceLookup() {
+	private synchronized void ensurePlaceLookup() {
 		if (initialised) {
 			return;
 		}
@@ -59,7 +59,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	}
 
 	@Override
-	public Place getPlace(String token) {
+	public synchronized Place getPlace(String token) {
 		System.out.println("get place:" + token);
 		String[] split = token.split("/");
 		String top = split[0];
@@ -82,7 +82,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	}
 
 	@Override
-	public String getToken(Place place) {
+	public synchronized String getToken(Place place) {
 		if (place == null) {
 			return "";
 		}
@@ -98,11 +98,11 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		return getToken(place1).equals(getToken(place2));
 	}
 
-	public Place getPlaceByModelClass(Class<?> clazz) {
+	public synchronized  Place getPlaceByModelClass(Class<?> clazz) {
 		return tokenizersByModelClass.get(clazz).createDefaultPlace();
 	}
 
-	public BasePlace getPlaceBySubPlace(Enum value) {
+	public synchronized BasePlace getPlaceBySubPlace(Enum value) {
 		return placesBySubPlace.get(value).copy();
 	}
 }

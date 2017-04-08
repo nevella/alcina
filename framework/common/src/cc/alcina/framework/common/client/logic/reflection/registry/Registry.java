@@ -43,6 +43,7 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCre
  *
  * @author Nick Reddel
  */
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class Registry {
 	public static final String MARKER_RESOURCE = "registry.properties";
 

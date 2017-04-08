@@ -252,9 +252,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			MetricLogging.get().appShutdown();
 			SEUtilities.appShutdown();
 			ResourceUtilities.appShutdown();
-			Registry.appShutdown();
 			Registry.impl(CommonRemoteServiceServletSupport.class)
 					.appShutdown();
+			Registry.appShutdown();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

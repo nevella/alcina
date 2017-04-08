@@ -1,7 +1,9 @@
 package cc.alcina.framework.common.client.cache;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class Domain {
 	public interface DomainHandler {
 		public <V extends HasIdAndLocalId> V resolveTransactional(
