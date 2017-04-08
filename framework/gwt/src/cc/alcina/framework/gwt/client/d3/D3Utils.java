@@ -21,12 +21,9 @@ public class D3Utils {
 	public final static class D3Visualisation extends JavaScriptObject {
 		protected D3Visualisation() {
 		}
-		public  void renderGraph(Element_Jso element, int ctrWidth,
-				int ctrHeight){
-			renderGraph(element, ctrWidth, ctrHeight,null);
-		}
+
 		public native void renderGraph(Element_Jso element, int ctrWidth,
-				int ctrHeight, JavaScriptObject data)/*-{
+				int ctrHeight)/*-{
             try {
                 this.render(element, ctrWidth, ctrHeight, data);
             } catch (e) {
