@@ -505,6 +505,7 @@ public class LocalDomBridge {
 		elementCreators.put(ParagraphElement.TAG, () -> new ParagraphElement());
 		elementCreators.put(BRElement.TAG, () -> new BRElement());
 		elementCreators.put(HRElement.TAG, () -> new HRElement());
+		elementCreators.put(FormElement.TAG, () -> new FormElement());
 	}
 
 	private Node linkTreesDom(Node_Jso node_jso) {
