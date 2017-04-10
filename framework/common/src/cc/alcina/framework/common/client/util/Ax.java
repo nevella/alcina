@@ -27,6 +27,15 @@ public class Ax {
 	}
 
 	public static <T> Optional<T> first(Collection<T> collection) {
-		return collection.size()==0?Optional.empty():Optional.of(collection.iterator().next());
+		return collection.size() == 0 ? Optional.empty()
+				: Optional.of(collection.iterator().next());
+	}
+
+	public static boolean notBlank(String string) {
+		return !isBlank(string);
+	}
+
+	public static void sysLogHigh(String template, Object... args) {
+		System.out.println(CommonUtils.highlightForLog(template, args));
 	}
 }
