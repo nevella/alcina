@@ -674,7 +674,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	DomElement typedImpl(boolean flushIfInnerHtml) {
-		if (domImpl == null && LocalDomBridge.shouldUseDomNodes()
+		if (domImpl == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
 				&& isAttached()) {
 			LocalDomBridge.ensureJso(this);
 		}

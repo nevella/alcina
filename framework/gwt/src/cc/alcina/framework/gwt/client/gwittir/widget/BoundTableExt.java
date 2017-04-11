@@ -1303,8 +1303,13 @@ public class BoundTableExt extends AbstractTableWidget
 		});
 		this.base=this.table;
 		this.setStyleName("gwittir-BoundTable");
+		if(++setCounter==5){
+			//should be number 5 in seq
+			int debug=3;
+		}
 		esp.setWidget(this.table);
 	}
+	static int setCounter=0;
 
 	public void handleKeyupEvent(KeyUpEvent event) {
 		int delta = 0;

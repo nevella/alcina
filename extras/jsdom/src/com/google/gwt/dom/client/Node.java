@@ -48,6 +48,8 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	protected boolean local;
 	
+	protected boolean wasFlushed;
+	
 	public abstract <T extends JavascriptObjectEquivalent> T cast();
 
 	public <T extends Node> T appendChild(T newChild) {

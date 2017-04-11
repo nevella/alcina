@@ -510,6 +510,7 @@ public class LocalDomBridge {
 		elementCreators.put("g", () -> new Element());
 		elementCreators.put("text", () -> new Element());
 		elementCreators.put("line", () -> new Element());
+		elementCreators.put("rect", () -> new Element());
 		elementCreators.put("circle", () -> new Element());
 	}
 
