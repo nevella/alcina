@@ -495,7 +495,6 @@ public class LocalDomBridge {
 		elementCreators.put(ScriptElement.TAG, () -> new ScriptElement());
 		elementCreators.put(SelectElement.TAG, () -> new SelectElement());
 		elementCreators.put(OptionElement.TAG, () -> new OptionElement());
-		elementCreators.put("svg", () -> new Element());
 		elementCreators.put(IFrameElement.TAG, () -> new IFrameElement());
 		elementCreators.put(UListElement.TAG, () -> new UListElement());
 		elementCreators.put(OListElement.TAG, () -> new OListElement());
@@ -506,6 +505,12 @@ public class LocalDomBridge {
 		elementCreators.put(BRElement.TAG, () -> new BRElement());
 		elementCreators.put(HRElement.TAG, () -> new HRElement());
 		elementCreators.put(FormElement.TAG, () -> new FormElement());
+		//svg
+		elementCreators.put("svg", () -> new Element());
+		elementCreators.put("g", () -> new Element());
+		elementCreators.put("text", () -> new Element());
+		elementCreators.put("line", () -> new Element());
+		elementCreators.put("circle", () -> new Element());
 	}
 
 	private Node linkTreesDom(Node_Jso node_jso) {

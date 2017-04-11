@@ -25,7 +25,7 @@ public class D3Utils {
 		public native void renderGraph(Element_Jso element, int ctrWidth,
 				int ctrHeight)/*-{
             try {
-                this.render(element, ctrWidth, ctrHeight, data);
+                this.render(element, ctrWidth, ctrHeight);
             } catch (e) {
                 debugger;
                 throw e;
