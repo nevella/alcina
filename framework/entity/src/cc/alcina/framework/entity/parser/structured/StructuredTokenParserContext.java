@@ -81,7 +81,7 @@ public class StructuredTokenParserContext {
 		return false;
 	}
 
-	public void log(XmlStructuralJoin outNode) {
+	public String getLogMessage(XmlStructuralJoin outNode) {
 		XmlNode targetNode = outNode.targetNode;
 		XmlNode sourceNode = outNode.sourceNode;
 		int depthOut = lastDepthOut + 1;
@@ -109,8 +109,13 @@ public class StructuredTokenParserContext {
 		String inStr = sourceNode == null ? "(no input)"
 				: sourceNode.debug().shortRepresentation();
 		String match = outNode.token.name;
-		System.out.format("%-30s%-30s%s\n", depthInSpacer + inStr,
+		String message = String.format("%-30s%-30s%s", depthInSpacer + inStr,
 				depthOutSpacer + outStr, match);
+		return message;
+	}
+
+	public void log(XmlStructuralJoin outNode) {
+		System.out.println(getLogMessage(outNode));
 	}
 
 	public boolean outputOpen(XmlToken token) {
@@ -149,8 +154,8 @@ public class StructuredTokenParserContext {
 		return outAncestors(stopNodes);
 	}
 
-	public NodeAncestorsContextProvider
-			xmlInputContext(XmlStructuralJoin outNode,Predicate<XmlStructuralJoin> stopNodes) {
+	public NodeAncestorsContextProvider xmlInputContext(
+			XmlStructuralJoin outNode, Predicate<XmlStructuralJoin> stopNodes) {
 		return new NodeAncestors(outNode, stopNodes, NodeAncestorsTypes.SOURCE);
 	}
 
@@ -209,7 +214,8 @@ public class StructuredTokenParserContext {
 
 		@Override
 		public boolean hasNext() {
-			return cursor != null && tokenNode != null &&(stopNodes==null||stopNodes.test(tokenNode));
+			return cursor != null && tokenNode != null
+					&& (stopNodes == null || stopNodes.test(tokenNode));
 		}
 
 		@Override
@@ -269,7 +275,7 @@ public class StructuredTokenParserContext {
 		}
 
 		public Iterator<XmlStructuralJoin> nodeIterator() {
-			return new NodeAncestorIterator(node, stopNodes,isTarget());
+			return new NodeAncestorIterator(node, stopNodes, isTarget());
 		}
 
 		private boolean isTarget() {
