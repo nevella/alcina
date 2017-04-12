@@ -617,19 +617,10 @@ public class XmlNode {
 
 		public List<XmlNode> trs() {
 			List<XmlNode> trs = children.byTag("TR");
-			if(trs.isEmpty()){
+			if (trs.isEmpty()) {
 				trs = xpath().nodes("./TBODY/TR");
 			}
 			return trs;
-		}
-
-		public void addClass(String className) {
-			String attr = attr("class");
-			if(attr.length()>0){
-				attr+=" ";
-			}
-			attr+=className;
-			setAttr("class", attr);
 		}
 	}
 
@@ -725,5 +716,4 @@ public class XmlNode {
 					.orElse("");
 		}
 	}
-
 }
