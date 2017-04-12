@@ -622,6 +622,15 @@ public class XmlNode {
 			}
 			return trs;
 		}
+
+		public void addClass(String className) {
+			String attr = attr("class");
+			if(attr.length()>0){
+				attr+=" ";
+			}
+			attr+=className;
+			setAttr("class", attr);
+		}
 	}
 
 	public class XmlNodeRelative {
