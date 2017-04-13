@@ -1,6 +1,10 @@
 package cc.alcina.framework.gwt.client.widget.complex;
 
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
+import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -51,4 +55,13 @@ public class BaseMultilineRowEditor<T extends HasIdAndLocalId>
 			PermissibleAction action) {
 		return customiser.handleCustomAction(this, action);
 	}
+	@Override
+	protected Predicate<Field> getFieldFilter() {
+		return customiser.getFieldFilter();
+	}
+	@Override
+	protected Consumer<Field> getTableFieldModifier() {
+		return customiser.getTableFieldModifier();
+	}
+	
 }

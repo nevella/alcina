@@ -511,7 +511,12 @@ public class LocalDomBridge {
 		elementCreators.put("text", () -> new Element());
 		elementCreators.put("line", () -> new Element());
 		elementCreators.put("rect", () -> new Element());
+		elementCreators.put("ellipse", () -> new Element());
+		elementCreators.put("tspan", () -> new Element());
+		elementCreators.put("polygon", () -> new Element());
 		elementCreators.put("circle", () -> new Element());
+		elementCreators.put("path", () -> new Element());
+		elementCreators.put("defs", () -> new Element());
 	}
 
 	private Node linkTreesDom(Node_Jso node_jso) {

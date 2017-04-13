@@ -1,8 +1,11 @@
 package cc.alcina.framework.gwt.client.widget.complex;
 
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
+import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
@@ -69,5 +72,13 @@ public abstract class BaseMultilineEditorCustomiser<T extends HasIdAndLocalId>
 	public List<Link> customisePerRowEditActions(List<Link> actions, T rowValue,
 			BaseMultilineEditor editor) {
 		return actions;
+	}
+
+	protected Predicate<Field> getFieldFilter() {
+		return field->true;
+	}
+
+	public Consumer<Field> getTableFieldModifier() {
+		return field->{};
 	}
 }

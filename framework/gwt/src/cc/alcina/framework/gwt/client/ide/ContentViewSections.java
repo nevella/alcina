@@ -93,6 +93,10 @@ public class ContentViewSections {
 		return this;
 	}
 
+	public boolean isEditable() {
+		return this.editable;
+	}
+
 	public ContentViewSection section(String name) {
 		ContentViewSection section = new ContentViewSection(name);
 		sections.add(section);

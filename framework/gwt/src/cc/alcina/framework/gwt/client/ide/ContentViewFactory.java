@@ -412,9 +412,20 @@ public class ContentViewFactory {
 	public BoundTableExt createTable(Collection beans, boolean editable,
 			int tableMask, Object templateBean) {
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-		Field[] fields = GwittirBridge.get()
-				.fieldsForReflectedObjectAndSetupWidgetFactory(templateBean,
-						factory, editable, true);
+		List<Field> fieldList = new ArrayList<>(Arrays.asList(GwittirBridge
+				.get().fieldsForReflectedObjectAndSetupWidgetFactory(
+						templateBean, factory, editable, true)));
+		if (fieldFilter != null) {
+			fieldList.removeIf(f -> !fieldFilter.test(f));
+		}
+		if (fieldOrder != null) {
+			Collections.sort(fieldList, fieldOrder);
+		}
+		if (fieldPostReflectiveSetupModifier != null) {
+			fieldList.stream().forEach(fieldPostReflectiveSetupModifier);
+		}
+		Field[] fields = (Field[]) fieldList
+				.toArray(new Field[fieldList.size()]);
 		int mask = tableMask | BoundTableExt.HEADER_MASK
 				| BoundTableExt.SORT_MASK;
 		CollectionDataProvider cdp = new CollectionDataProvider(beans);

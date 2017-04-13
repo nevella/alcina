@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
@@ -111,6 +114,8 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 		values.sort(HiliComparator.INSTANCE);
 		values.forEach(v -> TransformManager.get().registerDomainObject(v));
 		PaneWrapperWithObjects view = new ContentViewFactory().noCaption()
+				.fieldFilter(getFieldFilter())
+				.fieldPostReflectiveSetupModifier(getTableFieldModifier())
 				.createMultipleBeanView(values, getItemClass(), editable, null,
 						true, true, tableMask);
 		table = (BoundTableExt) view.getBoundWidget();
@@ -120,6 +125,15 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 		tableToolbarHolder.add(view);
 		holder.add(tableToolbarHolder);
 		toolbar.addVetoableActionListener(toolbarListener);
+	}
+
+	protected Predicate<Field> getFieldFilter() {
+		return field->true;
+	}
+
+	protected Consumer<Field> getTableFieldModifier() {
+		return field -> {
+		};
 	}
 
 	protected List<H> filterVisibleValues(List<H> values) {
