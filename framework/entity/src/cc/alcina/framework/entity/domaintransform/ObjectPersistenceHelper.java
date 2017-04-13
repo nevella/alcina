@@ -49,7 +49,8 @@ import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
  * 
  */
 @SuppressWarnings("unchecked")
-public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup, PropertyAccessor, RegistrableService {
+public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
+		PropertyAccessor, RegistrableService {
 	// Initialises this. Note - not a thread-specific singleton,
 	// any thread (client) specific work delegated to tltm
 	public ObjectPersistenceHelper() {
@@ -64,8 +65,25 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup, Prope
 		Reflections.registerPropertyAccessor(this);
 	}
 
+	private ClassLoader servletLayerClassloader;
+
+	public ClassLoader getServletLayerClassloader() {
+		return this.servletLayerClassloader;
+	}
+
+	public void
+			setServletLayerClassloader(ClassLoader servletLayerClassloader) {
+		this.servletLayerClassloader = servletLayerClassloader;
+	}
+
 	private CachingConcurrentMap<String, Class> classNameLookup = new CachingConcurrentMap<String, Class>(
-			cn -> Class.forName(cn), 100);
+			cn -> {
+				if (servletLayerClassloader != null) {
+					return servletLayerClassloader.loadClass(cn);
+				} else {
+					return Class.forName(cn);
+				}
+			}, 100);
 
 	static volatile ObjectPersistenceHelper singleton;
 
@@ -85,8 +103,10 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup, Prope
 	}
 
 	@Override
-	public IndividualPropertyAccessor cachedAccessor(Class clazz, String propertyName) {
-		return (ThreadlocalTransformManager.cast()).cachedAccessor(clazz, propertyName);
+	public IndividualPropertyAccessor cachedAccessor(Class clazz,
+			String propertyName) {
+		return (ThreadlocalTransformManager.cast()).cachedAccessor(clazz,
+				propertyName);
 	}
 
 	public String displayNameForObject(Object o) {
@@ -98,17 +118,20 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup, Prope
 		if (info != null) {
 			dnpn = info.displayNamePropertyName();
 		}
-		Object pv = CommonUtils.isNullOrEmpty(dnpn) ? null : Reflections.propertyAccessor().getPropertyValue(o, dnpn);
+		Object pv = CommonUtils.isNullOrEmpty(dnpn) ? null
+				: Reflections.propertyAccessor().getPropertyValue(o, dnpn);
 		return (pv == null) ? "---" : pv.toString();
 	}
 
 	public List<String> getAnnotatedPropertyNames(Class clazz) {
 		try {
 			List<String> result = new ArrayList<String>();
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz).getPropertyDescriptors();
+			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
+					.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				if (pd.getReadMethod() != null && pd.getWriteMethod() != null
-						&& pd.getReadMethod().getAnnotation(Display.class) != null) {
+						&& pd.getReadMethod()
+								.getAnnotation(Display.class) != null) {
 					result.add(pd.getName());
 				}
 			}
@@ -118,16 +141,19 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup, Prope
 		}
 	}
 
-	public <A extends Annotation> A getAnnotationForClass(Class targetClass, Class<A> annotationClass) {
+	public <A extends Annotation> A getAnnotationForClass(Class targetClass,
+			Class<A> annotationClass) {
 		return (A) targetClass.getAnnotation(annotationClass);
 	}
 
-	public <A extends Annotation> A getAnnotationForProperty(Class targetClass, Class<A> annotationClass,
-			String propertyName) {
+	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
+			Class<A> annotationClass, String propertyName) {
 		try {
-			PropertyDescriptor pd = SEUtilities.getPropertyDescriptorByName(targetClass, propertyName);
+			PropertyDescriptor pd = SEUtilities
+					.getPropertyDescriptorByName(targetClass, propertyName);
 			return pd == null ? null
-					: pd.getReadMethod() == null ? null : pd.getReadMethod().getAnnotation(annotationClass);
+					: pd.getReadMethod() == null ? null
+							: pd.getReadMethod().getAnnotation(annotationClass);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -137,18 +163,21 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup, Prope
 		return classNameLookup.get(fqn);
 	}
 
-	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c, long id, long localId) {
+	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
+			long id, long localId) {
 		// uses thread-local instance
 		return TransformManager.get().getObject(c, id, localId);
 	}
 
 	public <T extends HasIdAndLocalId> T getObject(T bean) {
-		return (T) TransformManager.get().getObject(bean.getClass(), bean.getId(), bean.getLocalId());
+		return (T) TransformManager.get().getObject(bean.getClass(),
+				bean.getId(), bean.getLocalId());
 	}
 
 	public Class getPropertyType(Class clazz, String propertyName) {
 		try {
-			PropertyDescriptor descriptor = SEUtilities.getPropertyDescriptorByName(clazz, propertyName);
+			PropertyDescriptor descriptor = SEUtilities
+					.getPropertyDescriptorByName(clazz, propertyName);
 			return descriptor == null ? null : descriptor.getPropertyType();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -156,7 +185,8 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup, Prope
 	}
 
 	public Object getPropertyValue(Object bean, String propertyName) {
-		return (ThreadlocalTransformManager.cast()).getPropertyValue(bean, propertyName);
+		return (ThreadlocalTransformManager.cast()).getPropertyValue(bean,
+				propertyName);
 	}
 
 	public <T> T getTemplateInstance(Class<T> clazz) {
@@ -176,9 +206,11 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup, Prope
 				if (propertyType.isInterface() && propertyType != Set.class) {
 					// this seems to vary (unnecessary on 1.5, necessary on
 					// 1.6)-propertydescriptor change probly
-					propertyType = Registry.impl(ImplementationLookup.class).getImplementation(propertyType);
+					propertyType = Registry.impl(ImplementationLookup.class)
+							.getImplementation(propertyType);
 				}
-				infos.add(new PropertyInfoLite(propertyType, pd.getName(), null, clazz));
+				infos.add(new PropertyInfoLite(propertyType, pd.getName(), null,
+						clazz));
 			}
 			return infos;
 		} catch (Exception e) {
@@ -195,11 +227,14 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup, Prope
 	}
 
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
-		return (ThreadlocalTransformManager.cast()).newInstance(clazz, objectId, localId);
+		return (ThreadlocalTransformManager.cast()).newInstance(clazz, objectId,
+				localId);
 	}
 
-	public void setPropertyValue(Object bean, String propertyName, Object value) {
-		(ThreadlocalTransformManager.cast()).setPropertyValue(bean, propertyName, value);
+	public void setPropertyValue(Object bean, String propertyName,
+			Object value) {
+		(ThreadlocalTransformManager.cast()).setPropertyValue(bean,
+				propertyName, value);
 	}
 
 	protected Enum getTargetEnumValue(DomainTransformEvent evt) {
@@ -210,7 +245,8 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup, Prope
 	}
 
 	@RegistryLocation(registryPoint = CurrentUtcDateProvider.class, implementationType = ImplementationType.SINGLETON)
-	public static class JvmCurrentUtcDateProvider implements CurrentUtcDateProvider {
+	public static class JvmCurrentUtcDateProvider
+			implements CurrentUtcDateProvider {
 		@SuppressWarnings("deprecation")
 		// it works...yeah, calendar shmalendar
 		public Date currentUtcDate() {
