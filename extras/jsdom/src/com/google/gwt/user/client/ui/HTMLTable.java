@@ -109,12 +109,12 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	@SuppressWarnings("unused") // used due to rebinding
 	private static class HTMLTableStandardImpl implements HTMLTableImpl {
 		native JsArray<Element_Jso> getRows0(Element_Jso tbody) /*-{
-																return tbody.rows;
-																}-*/;
+            return tbody.rows;
+		}-*/;
 
 		native JsArray<Element_Jso> getCells0(Element_Jso row) /*-{
-																return row.cells;
-																}-*/;
+            return row.cells;
+		}-*/;
 
 		@Override
 		public ElementArray<Element> getRows(Element tbody) {
@@ -143,26 +143,14 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 * IE specific implementation for accessing the Table DOM. see: issue 6938
 	 */
 	@SuppressWarnings("unused") // used due to rebinding
-	private static class HTMLTableIEImpl implements HTMLTableImpl {
+	private static class HTMLTableIEImpl extends HTMLTableStandardImpl {
 		native JsArray<Element_Jso> getRows0(Element_Jso tbody) /*-{
-																return tbody.children;
-																}-*/;
+            return tbody.children;
+		}-*/;
 
 		native JsArray<Element_Jso> getCells0(Element_Jso row) /*-{
-																return row.children;
-																}-*/;
-
-		@Override
-		public ElementArray<Element> getRows(Element tbody) {
-			// TODO Auto-generated method stub
-			return new ElementArray<Element>(getRows0(tbody.getTypedDomImpl()));
-		}
-
-		@Override
-		public ElementArray<Element> getCells(Element row) {
-			// TODO Auto-generated method stub
-			return new ElementArray<Element>(getCells0(row.getTypedDomImpl()));
-		}
+            return row.children;
+		}-*/;
 	}
 
 	/**

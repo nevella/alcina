@@ -495,15 +495,6 @@ public class Element extends Node implements DomElement {
 			return;
 		}
 		LocalDomBridge.get().checkInPreconditionList(this, impl);
-		// debug, can remove
-		if (impl == null) {
-			int debug = 3;
-		}
-		if (impl instanceof JavaScriptObject && typedImpl == null) {
-			if (impl.getNodeName().equalsIgnoreCase("tbody")) {
-				int debug = 3;
-			}
-		}
 		if (typedImpl != null) {
 			if (typedImpl instanceof JavaScriptObject) {
 				Preconditions.checkState(impl instanceof LocalDomNode);

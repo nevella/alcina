@@ -367,14 +367,27 @@ public class LocalDomBridge {
 	}
 
 	private void createJsoNode(Node_Jso item) {
-		int nodeType = item.getNodeType();
-		String nodeName = item.getNodeName();
-		Node node = createNode(nodeType, nodeName);
+		Node node = null;
+		boolean mayHaveId = true;
+		try {
+			int nodeType = item.getNodeType();
+			String nodeName = item.getNodeName();
+			node = createNode(nodeType, nodeName);
+		} catch (Exception e) {
+			// IE9
+			if (item.toString().contains("CSSStyle")) {
+				StyleElement ieElt = new StyleElement();
+				node = ieElt;
+			}
+			mayHaveId = false;
+		}
 		node.resolved = true;
 		javascriptObjectNodeLookup.put(item, node);
 		node.putDomImpl(item);
 		node.putImpl(item);
-		addToIdLookup(node);
+		if (mayHaveId) {
+			addToIdLookup(node);
+		}
 	}
 
 	private Node createNode(int nodeType, String nodeName) {
@@ -454,8 +467,8 @@ public class LocalDomBridge {
 	}
 
 	private native String getId(JavaScriptObject obj) /*-{
-														return obj.id;
-														}-*/;
+        return obj.id;
+	}-*/;
 
 	private void initElementCreators() {
 		elementCreators.put(DivElement.TAG, () -> new DivElement());
@@ -505,7 +518,7 @@ public class LocalDomBridge {
 		elementCreators.put(BRElement.TAG, () -> new BRElement());
 		elementCreators.put(HRElement.TAG, () -> new HRElement());
 		elementCreators.put(FormElement.TAG, () -> new FormElement());
-		//svg
+		// svg
 		elementCreators.put("svg", () -> new Element());
 		elementCreators.put("g", () -> new Element());
 		elementCreators.put("text", () -> new Element());
