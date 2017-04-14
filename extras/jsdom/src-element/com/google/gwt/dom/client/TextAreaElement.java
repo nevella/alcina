@@ -249,11 +249,28 @@ public class TextAreaElement extends Element {
 }
 
    @Override
+	public void setPropertyBoolean(String name, boolean value) {
+		if (provideIsLocal() && (name.equals("readOnly")||name.equals("disabled")) && !value) {
+			removeAttribute(name);
+			return;
+		}
+		super.setPropertyBoolean(name, value);
+	}
+   
+   @Override
+	public String getPropertyString(String name) {
+	   if("value".equals(name)&&provideIsLocal()){
+		   return getInnerText(); 
+	   }
+		return super.getPropertyString(name);
+	}
+   @Override
 	public void setPropertyString(String name, String value) {
 	   if("value".equals(name)&&provideIsLocal()){
 		   setInnerText(value); 
-	   }
+	   }else{
 		super.setPropertyString(name, value);
+	   }
 	}
 
   /**

@@ -42,6 +42,14 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		super.initWidget(base);
 	}
 
+	public boolean isEnabled() {
+		return this.base.isEnabled();
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.base.setEnabled(enabled);
+	}
+
 	public HandlerRegistration addClickHandler(ClickHandler handler) {
 		return this.base.addClickHandler(handler);
 	}
@@ -140,7 +148,7 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 	}
 
 	public void setHref(String href) {
-		DOM.setElementProperty(base.getElement(), "href", href);
+		base.setHref(href);
 	}
 
 	public void setPixelSize(int width, int height) {

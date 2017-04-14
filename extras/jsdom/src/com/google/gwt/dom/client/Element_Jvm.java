@@ -9,6 +9,7 @@ import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class Element_Jvm extends Node_Jvm
@@ -27,7 +28,7 @@ public class Element_Jvm extends Node_Jvm
 	public String getPendingInnerHtml() {
 		return this.innerHtml;
 	}
-	
+
 	boolean treeResolved;
 
 	@Override
@@ -89,8 +90,11 @@ public class Element_Jvm extends Node_Jvm
 	@Override
 	public void setInnerText(String text) {
 		new ArrayList<>(children).stream().forEach(Node_Jvm::removeFromParent);
-		innerHtml=null;
-		appendChild(ownerDocument.createTextNode(text));
+		innerHtml = null;
+		if (Ax.isBlank(text)) {
+		} else {
+			appendChild(ownerDocument.createTextNode(text));
+		}
 	}
 
 	@Override
@@ -584,12 +588,11 @@ public class Element_Jvm extends Node_Jvm
 
 	@Override
 	public void treeResolved() {
-		treeResolved=true;
-		children.stream().forEach(n->{
-			if(n instanceof Element_Jvm){
+		treeResolved = true;
+		children.stream().forEach(n -> {
+			if (n instanceof Element_Jvm) {
 				((Element_Jvm) n).treeResolved();
 			}
 		});
-		
 	}
 }
