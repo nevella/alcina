@@ -18,7 +18,6 @@ package com.google.gwt.user.client;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -34,6 +33,7 @@ import com.google.gwt.dom.client.Style;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.impl.DOMImpl;
+import com.google.gwt.user.client.ui.FlexTable;
 
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -1528,10 +1528,30 @@ public class DOM {
 	 *            possible values are described in {@link Event})
 	 */
 	public static void sinkEvents(Element elem, int eventBits) {
+		elem.resolveIfAppropriate();
 		if (LocalDomBridge.elementJso(elem) != null) {
 			impl.sinkEvents(elem, eventBits);
 		} else {
-			elem.sinkEvents(eventBits);
+			Element attachedAncestor = elem
+					.provideAncestorElementAttachedToDom();
+			boolean attachToAncestor = attachedAncestor != null
+					&& attachedAncestor != elem;
+			if (attachToAncestor && attachedAncestor.uiObject != null) {
+				if (attachedAncestor.uiObject instanceof FlexTable) {
+					// celltable hack
+					attachToAncestor = false;
+				}
+			}
+			if (attachToAncestor) {
+				// System.out.println("attaching to impl:"+attachedAncestor);
+				impl.sinkEvents(attachedAncestor, eventBits);
+			} else {
+			}
+			if (attachedAncestor != elem) {
+				elem.sinkEvents(eventBits);
+				// since sinking normally takes place only onAttach, should
+				// maybe throw an exception here (except, see celltable hack)
+			}
 		}
 	}
 

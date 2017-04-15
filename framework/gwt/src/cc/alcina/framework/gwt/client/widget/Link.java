@@ -36,6 +36,10 @@ import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
  */
 public class Link<T> extends Widget
 		implements HasHTML, HasEnabled, HasClickHandlers, HasItem<T>, HasText {
+	public static Link createHashHref(String text, String token) {
+		return createHrefNoUnderline(text, "#" + token);
+	}
+
 	public static Link createHrefNoUnderline(String text,
 			AlcinaHistoryItem epoch) {
 		return createHrefNoUnderline(text, epoch.toHref());
@@ -229,9 +233,5 @@ public class Link<T> extends Widget
 	@Override
 	protected void onEnsureDebugId(String baseID) {
 		ensureDebugId(anchorElem, "", baseID);
-	}
-
-	public static Link createHashHref(String text, String token) {
-		return createHrefNoUnderline(text, "#" + token);
 	}
 }

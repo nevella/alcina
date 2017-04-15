@@ -1441,4 +1441,5 @@ public class RelativePopupPanel extends SimplePanel
 			return o instanceof RelativePopupPanel;
 		}
 	}
+	
 }

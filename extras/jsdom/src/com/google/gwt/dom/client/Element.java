@@ -176,6 +176,13 @@ public class Element extends Node implements DomElement {
 		return ensureDomImpl().typedDomImpl;
 	}
 
+	public Element_Jso ensureJsoNoFlush() {
+		if (typedDomImpl != null) {
+			return typedDomImpl;
+		}
+		return ensureJso();
+	}
+
 	public void focus() {
 		LocalDomBridge.ensureJso(this);
 		typedDomImpl.focus();
@@ -491,7 +498,7 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	public void putImpl(DomNode impl) {
-		if(impl==this.impl){
+		if (impl == this.impl) {
 			return;
 		}
 		LocalDomBridge.get().checkInPreconditionList(this, impl);
@@ -509,6 +516,21 @@ public class Element extends Node implements DomElement {
 		}
 		typedImpl = (DomElement) impl;
 		this.impl = impl;
+	}
+
+	@Override
+	public Node removeAllChildren() {
+		if (domImpl == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
+				&& provideAncestorElementAttachedToDom() != null) {
+			ensureJso();
+		}
+		if (provideIsDom() && LocalDomBridge.fastRemoveAll) {
+			setInnerHTML("");
+			removeLocalImpl();
+			return null;
+		} else {
+			return super.removeAllChildren();
+		}
 	}
 
 	public void removeAttribute(String name) {
@@ -533,6 +555,10 @@ public class Element extends Node implements DomElement {
 
 	public void replaceClassName(String oldClassName, String newClassName) {
 		typedImpl().replaceClassName(oldClassName, newClassName);
+	}
+
+	public void resolveIfAppropriate() {
+		resolveIfAppropriate(false);
 	}
 
 	public void scrollIntoView() {
@@ -577,6 +603,11 @@ public class Element extends Node implements DomElement {
 
 	public void setNodeValue(String nodeValue) {
 		typedImpl().setNodeValue(nodeValue);
+	}
+
+	public void setOuterHtml(String html) {
+		Preconditions.checkState(provideIsLocal());
+		provideLocalDomElement().setOuterHtml(html);
 	}
 
 	public void setPropertyBoolean(String name, boolean value) {
@@ -629,7 +660,9 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	public String toString() {
-		return impl == null ? super.toString() : impl.toString();
+		return impl == null ? super.toString()
+				: impl.toString() + (uiObject == null ? ""
+						: ": " + uiObject.getClass().getSimpleName());
 	}
 
 	private void dumpLocal0(int depth) {
@@ -660,11 +693,11 @@ public class Element extends Node implements DomElement {
 		return false;
 	}
 
-	DomElement typedImpl() {
-		return typedImpl(false);
+	private void removeLocalImpl() {
+		localImpl = null;
 	}
 
-	DomElement typedImpl(boolean flushIfInnerHtml) {
+	private void resolveIfAppropriate(boolean flushIfInnerHtml) {
 		if (domImpl == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
 				&& isAttached()) {
 			LocalDomBridge.ensureJso(this);
@@ -673,37 +706,14 @@ public class Element extends Node implements DomElement {
 				&& LocalDomBridge.shouldUseDomNodes() && !isAttached()) {
 			LocalDomBridge.replaceWithJso(this);
 		}
+	}
+
+	DomElement typedImpl() {
+		return typedImpl(false);
+	}
+
+	DomElement typedImpl(boolean flushIfInnerHtml) {
+		resolveIfAppropriate(flushIfInnerHtml);
 		return typedImpl;
-	}
-
-	public void setOuterHtml(String html) {
-		Preconditions.checkState(provideIsLocal());
-		provideLocalDomElement().setOuterHtml(html);
-	}
-
-	public Element_Jso ensureJsoNoFlush() {
-		if (typedDomImpl != null) {
-			return typedDomImpl;
-		}
-		return ensureJso();
-	}
-
-	@Override
-	public Node removeAllChildren() {
-		if (domImpl == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
-				&& provideAncestorElementAttachedToDom() != null) {
-			ensureJso();
-		}
-		if (provideIsDom() && LocalDomBridge.fastRemoveAll) {
-			setInnerHTML("");
-			removeLocalImpl();
-			return null;
-		} else {
-			return super.removeAllChildren();
-		}
-	}
-
-	private void removeLocalImpl() {
-		localImpl = null;
 	}
 }
