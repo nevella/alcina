@@ -176,7 +176,7 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 							context = peer.getContext();
 						}
 						surroundingTuple.resetWalker();
-						Text txt = surroundingTuple.getNextTextChild();
+						Text txt = surroundingTuple.getCurrentTextChildAndIncrement();
 						if (XmlUtils.getContainingBlock(txt) == XmlUtils
 								.getContainingBlock(n)) {
 							context.reverseItalicBehaviour = peer
