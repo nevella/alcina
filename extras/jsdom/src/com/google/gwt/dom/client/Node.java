@@ -40,21 +40,21 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	 */
 	public static final short DOCUMENT_NODE = 9;
 
-	 DomNode impl = null;
+	DomNode impl = null;
 
 	Node_Jso domImpl = null;
 
 	protected boolean resolved;
 
 	protected boolean local;
-	
+
 	protected boolean wasFlushed;
-	
+
 	public abstract <T extends JavascriptObjectEquivalent> T cast();
 
 	public <T extends Node> T appendChild(T newChild) {
 		T node = this.impl.appendChild(newChild);
-		node.localDomResolutionOnly=localDomResolutionOnly;
+		node.localDomResolutionOnly = localDomResolutionOnly;
 		return node;
 	}
 
@@ -112,7 +112,7 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	public Node insertBefore(Node newChild, Node refChild) {
 		Node node = this.impl.insertBefore(newChild, refChild);
-		node.localDomResolutionOnly=localDomResolutionOnly;
+		node.localDomResolutionOnly = localDomResolutionOnly;
 		return node;
 	}
 
@@ -219,8 +219,10 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		return DomNode_Static.removeAllChildren(this);
 	}
 
-	public abstract void putDomImpl(Node_Jso nodeDom) ;
-	public abstract void putImpl(DomNode impl) ;
+	public abstract void putDomImpl(Node_Jso nodeDom);
+
+	public abstract void putImpl(DomNode impl);
+
 	public boolean provideIsDom() {
 		return domImpl != null;
 	}
@@ -228,13 +230,16 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	public boolean provideIsLocal() {
 		return domImpl == null;
 	}
+
 	boolean localDomResolutionOnly;
 
 	public void localDomResolutionOnly() {
 		localDomResolutionOnly = true;
 		getChildNodes().forEach(Node::localDomResolutionOnly);
 	}
-	 DomNode localImpl() {
-		 return domImpl!=null?null:impl;
-	 }
+
+	DomNode localImpl() {
+		return domImpl != null ? null : impl;
+	}
+
 }

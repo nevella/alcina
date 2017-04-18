@@ -338,6 +338,9 @@ public class LocalDomImpl {
 			return nodeFor(domImpl.getParentElement(node.domImpl));
 		}
 	}
+	public Element_Jso getParentElementJso(Node_Jso node){
+		return domImpl.getParentElement(node);
+	}
 
 	public Element getPreviousSiblingElement(Element elem) {
 		if (elem.local) {

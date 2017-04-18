@@ -54,6 +54,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.client.ui.impl.PopupImpl;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 /**
  * A panel that can "pop up" over other widgets. It overlays the browser's
@@ -1142,7 +1143,8 @@ public class RelativePopupPanel extends SimplePanel
 	private boolean eventTargetsPopup(NativeEvent event) {
 		EventTarget target = event.getEventTarget();
 		if (Element.is(target)) {
-			return getElement().isOrHasChild(Element.as(target));
+			Element eTarget = Element.as(target);
+			return getElement().isOrHasChild(eTarget);
 		}
 		return false;
 	}
@@ -1332,6 +1334,10 @@ public class RelativePopupPanel extends SimplePanel
 				return;
 			}
 			if (!eventTargetsPopupOrPartner && autoHide) {
+				EventTarget target = nativeEvent.getEventTarget();
+//				if (Element.is(target)) {
+//					ClientUtils.dumpElementTree(Element.as(target));
+//				}
 				hide(true);
 				return;
 			}

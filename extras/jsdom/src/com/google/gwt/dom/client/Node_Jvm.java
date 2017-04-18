@@ -44,7 +44,7 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
-		maybeConvertToLocal(newChild);
+		maybeConvertToLocal(newChild, false);
 		Preconditions.checkArgument(newChild.impl instanceof Node_Jvm);
 		children.add((Node_Jvm) newChild.impl);
 		((Node_Jvm) newChild.impl).parentNode = this;
@@ -52,18 +52,39 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 		return newChild;
 	}
 
-	private <T extends Node> void maybeConvertToLocal(T newChild) {
-		if (!(newChild.impl instanceof Node_Jvm)) {
-			Element_Jso elt = (Element_Jso) newChild.impl;
-			Element_Jvm jvmElt = (Element_Jvm) LocalDomBridge
-					.get().localDomImpl.localImpl.createUnwrappedLocalElement(
-							Document.get(), elt.getTagName());
-			jvmElt.setInnerHTML(elt.getInnerHTML());
+	private static <T extends Node> void maybeConvertToLocal(T node,
+			boolean deep) {
+		if (!(node.impl instanceof Node_Jvm)) {
+			Element_Jso elt = (Element_Jso) node.impl;
+			// must detach all refs to existing nodes
+			LocalDomBridge.get().detachDomNode(elt);
+			DomNode localImpl = node.localImpl();
+			Element_Jvm jvmEltOld = localImpl instanceof Element_Jvm
+					? (Element_Jvm) localImpl : null;
+			Element_Jvm jvmElt = jvmEltOld != null ? jvmEltOld
+					: (Element_Jvm) LocalDomBridge.get().localDomImpl.localImpl
+							.createUnwrappedLocalElement(Document.get(),
+									elt.getTagName());
+			jvmElt.attributes.clear();
 			elt.getAttributes().entrySet().forEach(e -> {
 				jvmElt.setAttribute(e.getKey(), e.getValue());
 			});
-			jvmElt.node=newChild;
-			newChild.putImpl(jvmElt);
+			jvmElt.node = node;
+			node.putImpl(jvmElt);
+			if (jvmElt.children.isEmpty()) {
+				Preconditions.checkState(elt.getInnerHTML0().isEmpty());
+				// jvmElt.setInnerHTML(elt.getInnerHTML());
+			} else {
+				for (Node_Jvm child : jvmElt.children) {
+					maybeConvertToLocal(child.node, true);
+				}
+			}
+		} else {
+			if (deep) {
+				for (Node_Jvm child : ((Node_Jvm) node.impl).children) {
+					maybeConvertToLocal(child.node, true);
+				}
+			}
 		}
 	}
 
@@ -119,7 +140,7 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 
 	@Override
 	public Node insertBefore(Node newChild, Node refChild) {
-		maybeConvertToLocal(newChild);
+		maybeConvertToLocal(newChild, false);
 		Preconditions.checkArgument(newChild.impl instanceof Node_Jvm);
 		Preconditions.checkArgument(
 				refChild == null || refChild.impl instanceof Node_Jvm);

@@ -29,6 +29,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.TextUtils;
 
 /**
@@ -483,17 +484,24 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	public void putDomImpl(Node_Jso nodeDom) {
-		local = false;
 		typedDomImpl = (Element_Jso) nodeDom;
 		domImpl = nodeDom;
-		if (impl instanceof LocalDomElement) {
-			LocalDomElement localDomElement = (LocalDomElement) impl;
-			if (localDomElement != null
-					&& localDomElement.getEventBits() != 0) {
-				DOM.sinkEvents(this, localDomElement.getEventBits());
+		local = nodeDom == null;
+		if (nodeDom != null) {
+			if (typedDomImpl.getId().length() > 0) {
+				String localId = localImpl() != null ? localImpl().getId() : "";
+				System.out.println(Ax.format("[id:%s,%s]->jso:%s", typedDomImpl.getId(),localId,
+						nodeDom.hashCode()));
 			}
+			if (impl instanceof LocalDomElement) {
+				LocalDomElement localDomElement = (LocalDomElement) impl;
+				if (localDomElement != null
+						&& localDomElement.getEventBits() != 0) {
+					DOM.sinkEvents(this, localDomElement.getEventBits());
+				}
+			}
+			LocalDomBridge.debug.checkMultipleAssignment(this, nodeDom);
 		}
-		LocalDomBridge.debug.checkMultipleAssignment(this, nodeDom);
 	}
 
 	@Override

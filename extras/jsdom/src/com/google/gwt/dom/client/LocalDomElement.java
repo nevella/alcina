@@ -95,4 +95,6 @@ public interface LocalDomElement extends LocalDomNode {
 
 	String getPendingInnerHtml();
 	void treeResolved();
+
+	
 }

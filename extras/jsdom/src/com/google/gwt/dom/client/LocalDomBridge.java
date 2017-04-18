@@ -22,6 +22,14 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
+/**
+ * Gotchas:
+ * 
+ * remove dom nodes when attaching
+ * 
+ * @author nick@alcina.cc
+ *
+ */
 public class LocalDomBridge {
 	static LocalDomBridge bridge = null;
 
@@ -264,7 +272,11 @@ public class LocalDomBridge {
 			Element elem = (Element) node;
 			Element_Jso dom_elt = (Element_Jso) node.domImpl;
 			DomElement vmlocal_elt = (DomElement) node.impl;
-			dom_elt.setInnerHTML(vmlocal_elt.getInnerHTML());
+			String innerHTML = vmlocal_elt.getInnerHTML();
+			if (innerHTML.contains("__localdom__46")) {
+				int debug = 3;
+			}
+			dom_elt.setInnerHTML(innerHTML);
 			// doesn't include style
 			vmlocal_elt.getAttributes().entrySet().forEach(e -> {
 				switch (e.getKey()) {
@@ -468,8 +480,8 @@ public class LocalDomBridge {
 	}
 
 	private native String getId(JavaScriptObject obj) /*-{
-														return obj.id;
-														}-*/;
+        return obj.id;
+	}-*/;
 
 	private void initElementCreators() {
 		elementCreators.put(DivElement.TAG, () -> new DivElement());
@@ -764,6 +776,22 @@ public class LocalDomBridge {
 				Element_Jvm element_Jvm) {
 			System.out.println("**warn - duplicate elt id - " + id);
 			// throw new IllegalStateException();
+		}
+	}
+
+	public void detachDomNode(Node_Jso domImpl) {
+		javascriptObjectNodeLookup.remove(domImpl);
+		debug.removeAssignment(domImpl);
+		if (domImpl instanceof Element_Jso) {
+			Element_Jso elem = (Element_Jso) domImpl;
+			String id = elem.getId();
+			System.out.println("detach id:"+id);
+			idLookup.remove(id);
+			NodeList_Jso<Node> kids = elem.getChildNodes0();
+			int length = kids.getLength();
+			for (int idx = 0; idx < length; idx++) {
+				detachDomNode(kids.getItem0(idx));
+			}
 		}
 	}
 }

@@ -1,5 +1,6 @@
 package com.google.gwt.dom.client;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.google.gwt.core.client.JavaScriptObject;
@@ -366,10 +367,12 @@ public class Element_Jso extends Node_Jso implements DomElement {
 	public final native String getPropertyString(String name) /*-{
         return (this[name] == null) ? null : String(this[name]);
 	}-*/;
+
 	public final native String getPropertyStringDebug(String name) /*-{
-		debugger;
+        debugger;
         return (this[name] == null) ? null : String(this[name]);
 	}-*/;
+
 	/**
 	 * The height of the scroll view of an element.
 	 */
@@ -753,19 +756,20 @@ public class Element_Jso extends Node_Jso implements DomElement {
 	public final Map<String, String> getAttributes() {
 		StringMap result = new StringMap();
 		JsArrayString arr = getAttributeList();
-		for(int idx=0;idx<arr.length();idx+=2){
-			result.put(arr.get(idx), arr.get(idx+1));
+		for (int idx = 0; idx < arr.length(); idx += 2) {
+			result.put(arr.get(idx), arr.get(idx + 1));
 		}
 		return result;
 	}
+
 	private final native JsArrayString getAttributeList()/*-{
-    	var result=[];
-    	var attrs = this.attributes;
-       for(var i = 0; i < attrs.length; i++) {
-         result.push( attrs[i].name); 
-         result.push( attrs[i].value); 
-       }
-       return result;
+        var result = [];
+        var attrs = this.attributes;
+        for (var i = 0; i < attrs.length; i++) {
+            result.push(attrs[i].name);
+            result.push(attrs[i].value);
+        }
+        return result;
 	}-*/;
 
 	@Override
@@ -777,8 +781,17 @@ public class Element_Jso extends Node_Jso implements DomElement {
 	public final Integer indexInParentChildren() {
 		throw new UnsupportedOperationException();
 	}
+
 	@Override
 	public final void ensureId() {
 		throw new UnsupportedOperationException();
 	}
+
+	public final Element_Jso getParentElementJso() {
+		return LocalDomBridge.get().localDomImpl.getParentElementJso(this);
+	}
+
+	final native String getInnerHTML0()/*-{
+		return this.innerHTML;
+	}-*/;
 }

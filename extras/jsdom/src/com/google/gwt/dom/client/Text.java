@@ -21,9 +21,10 @@ import com.google.gwt.core.client.JavascriptObjectEquivalent;
  * The Text interface represents textual content.
  */
 public class Text extends Node implements DomText {
-	
 	DomText typedImpl;
+
 	Text_Jso typedDomImpl;
+
 	/**
 	 * Assert that the given {@link Node} is of type {@link Node#TEXT_NODE} and
 	 * automatically typecast it.
@@ -32,6 +33,7 @@ public class Text extends Node implements DomText {
 		assert node.getNodeType() == Node.TEXT_NODE;
 		return (Text) node;
 	}
+
 	public Text cast() {
 		return this;
 	}
@@ -66,11 +68,12 @@ public class Text extends Node implements DomText {
 
 	protected Text() {
 	}
+
 	@Override
 	public void putDomImpl(Node_Jso nodeDom) {
-		local=false;
 		typedDomImpl = (Text_Jso) nodeDom;
 		domImpl = nodeDom;
+		local = nodeDom == null;
 	}
 
 	@Override

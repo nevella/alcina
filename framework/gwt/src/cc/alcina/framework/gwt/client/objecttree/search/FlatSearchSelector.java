@@ -31,6 +31,7 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 		search.setShowSelectedItemsInSearch(true);
 		search.setShowFilterRelativeTo(() -> resultsWidget);
 		search.setCloseOnPopdownFilterEmpty(false);
+		search.setRecreateItemHolderOnRefresh(true);
 	}
 
 	public FlatSearchSelector() {

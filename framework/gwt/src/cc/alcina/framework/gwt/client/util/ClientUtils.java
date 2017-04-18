@@ -24,6 +24,7 @@ import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NodeList;
+import com.google.gwt.dom.client.Node_Jso;
 import com.google.gwt.http.client.UrlBuilder;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
@@ -41,6 +42,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
@@ -381,6 +383,7 @@ public class ClientUtils {
 
 	public static native void invokeJsDebugger(Element e) /*-{
         var v = e;
+        var jso = e.@com.google.gwt.dom.client.Element::typedDomImpl;
         debugger;
 	}-*/;
 
@@ -421,5 +424,14 @@ public class ClientUtils {
 			array.push(t);
 		}
 		return array;
+	}
+
+	public static void dumpElementTree(Element elt) {
+		Node_Jso jso = elt.ensureJso();
+		while (jso != null) {
+			System.out
+					.println(Ax.format("dump - %s - %s", jso.hashCode(), jso));
+			jso = jso.getParentNode0();
+		}
 	}
 }

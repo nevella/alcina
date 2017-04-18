@@ -54,4 +54,9 @@ public class EventTarget implements JavascriptObjectEquivalent {
 		}
 		return false;
 	}
+
+	@Override
+	public String toString() {
+		return super.toString() + ":" + nativeTarget;
+	}
 }

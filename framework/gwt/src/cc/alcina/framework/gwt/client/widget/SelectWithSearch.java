@@ -238,6 +238,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	private int shiftX;
 
+	private boolean recreateItemHolderOnRefresh;
+
+	private String emptyItemsText;
+
 	public SelectWithSearch() {
 	}
 
@@ -438,6 +442,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		handlerManager.fireEvent(event);
 	}
 
+	public String getEmptyItemsText() {
+		return this.emptyItemsText;
+	}
+
 	public ClickHandler getEnterHandler() {
 		return enterHandler;
 	}
@@ -514,6 +522,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return separatorText;
 	}
 
+	public int getShiftX() {
+		return shiftX;
+	}
+
 	public Supplier<Widget> getShowFilterRelativeTo() {
 		return this.showFilterRelativeTo;
 	}
@@ -552,8 +564,17 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return popdown;
 	}
 
+	public boolean isRecreateItemHolderOnRefresh() {
+		return this.recreateItemHolderOnRefresh;
+	}
+
 	public boolean isShowFilterInPopup() {
 		return this.showFilterInPopup;
+	}
+
+	public boolean isShowingPopdown() {
+		return relativePopupPanel != null
+				&& WidgetUtils.isVisibleAncestorChain(relativePopupPanel);
 	}
 
 	public boolean isShowSelectedItemsInSearch() {
@@ -615,6 +636,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	public void
 			setCloseOnPopdownFilterEmpty(boolean closeOnPopdownFilterEmpty) {
 		this.closeOnPopdownFilterEmpty = closeOnPopdownFilterEmpty;
+	}
+
+	public void setEmptyItemsText(String emptyItemsText) {
+		this.emptyItemsText = emptyItemsText;
 	}
 
 	public void setEnterHandler(ClickHandler enterHandler) {
@@ -731,12 +756,21 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		this.popupPanelCssClassName = popupPanelCssClassName;
 	}
 
+	public void setRecreateItemHolderOnRefresh(
+			boolean recreateItemHolderOnRefresh) {
+		this.recreateItemHolderOnRefresh = recreateItemHolderOnRefresh;
+	}
+
 	public void setRenderer(Function renderer) {
 		this.renderer = renderer;
 	}
 
 	public void setSeparatorText(String separatorText) {
 		this.separatorText = separatorText;
+	}
+
+	public void setShiftX(int shiftX) {
+		this.shiftX = shiftX;
 	}
 
 	public void setShowFilterInPopup(boolean showFilterInPopup) {
@@ -960,11 +994,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		closingOnClick = false;
 	}
 
-	public boolean isShowingPopdown() {
-		return relativePopupPanel != null
-				&& WidgetUtils.isVisibleAncestorChain(relativePopupPanel);
-	}
-
 	protected boolean maybeShowDepdendentOnFilter() {
 		return true;
 	}
@@ -980,29 +1009,16 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				holderHeight);
 	}
 
-	public int getShiftX() {
-		return shiftX;
-	}
-
-	public void setShiftX(int shiftX) {
-		this.shiftX = shiftX;
-	}
-
 	protected int shiftY() {
 		return 0;
 	}
 
-	private String emptyItemsText;
-
-	public String getEmptyItemsText() {
-		return this.emptyItemsText;
-	}
-
-	public void setEmptyItemsText(String emptyItemsText) {
-		this.emptyItemsText = emptyItemsText;
-	}
-
 	protected void updateItems() {
+		if (isRecreateItemHolderOnRefresh() && itemHolder.getParent() != null) {
+			itemHolder.removeFromParent();
+			createItemHolder();
+			scroller.setWidget(itemHolder);
+		}
 		HasWidgets itemHolder = itemHolderAsHasWidgets();
 		itemHolder.clear();
 		if (isUseCellList()) {
