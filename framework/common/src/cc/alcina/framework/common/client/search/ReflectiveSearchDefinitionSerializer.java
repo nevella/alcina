@@ -86,7 +86,8 @@ public class ReflectiveSearchDefinitionSerializer
 				}
 				if (abbrevLookup.containsKey(info.value())) {
 					throw new RuntimeException(
-							"Searchdef serialization abbreviation collision");
+							"Searchdef serialization abbreviation collision:"
+									+ info.value());
 				}
 				abbrevLookup.put(info.value(), clazz);
 				reverseAbbrevLookup.put(clazz, info.value());
