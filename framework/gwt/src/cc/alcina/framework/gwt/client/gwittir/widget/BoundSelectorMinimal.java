@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -91,7 +92,8 @@ public class BoundSelectorMinimal extends BoundSelector {
 							return;
 						}
 						if (elt == resultsTop) {
-							search.getFilter().getTextBox().setFocus(true);
+							Scheduler.get().scheduleDeferred(() -> search
+									.getFilter().getTextBox().setFocus(true));
 						}
 						elt = elt.getParentElement();
 					}

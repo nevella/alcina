@@ -793,7 +793,8 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				RootPanel.get(), panelForPopup, getShiftX(), shiftY());
 		if (isShowFilterInPopup()) {
 			filter.setValue("");
-			filter.getTextBox().setFocus(true);
+			Scheduler.get()
+					.scheduleDeferred(() -> filter.getTextBox().setFocus(true));
 		}
 		onPopdownShowing(relativePopupPanel, true);
 		int border = 2;
@@ -958,9 +959,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		lastClosingClickMillis = System.currentTimeMillis();
 		closingOnClick = false;
 	}
-	
-	public boolean isShowingPopdown(){
-		return relativePopupPanel!=null&&WidgetUtils.isVisibleAncestorChain(relativePopupPanel);
+
+	public boolean isShowingPopdown() {
+		return relativePopupPanel != null
+				&& WidgetUtils.isVisibleAncestorChain(relativePopupPanel);
 	}
 
 	protected boolean maybeShowDepdendentOnFilter() {
