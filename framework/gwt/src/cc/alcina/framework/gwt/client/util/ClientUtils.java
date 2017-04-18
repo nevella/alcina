@@ -198,6 +198,11 @@ public class ClientUtils {
         debugger;
 	}-*/;
 
+	public static native void invokeJsDebugger(JavaScriptObject jso) /*-{
+        debugger;
+        var v = jso;
+	}-*/;
+
 	public static void fireHistoryToken(String token) {
 		if (token == null) {
 			return;
@@ -223,32 +228,35 @@ public class ClientUtils {
 	public static EditContentViewWidgets makeContentView(final Object model,
 			boolean editable) {
 		return makeContentView(model, null, null, null, false, editable, false,
-				true, null,null);
+				true, null, null);
 	}
+
 	public static EditContentViewWidgets makeContentViewWithButtons(
-			final Object model, boolean editable, PermissibleActionListener pal) {
+			final Object model, boolean editable,
+			PermissibleActionListener pal) {
 		return makeContentView(model, pal, null, null, false, editable, false,
-				false, null,null);
+				false, null, null);
 	}
+
 	public static EditContentViewWidgets makeContentViewWithButtons(
 			final Object model, boolean editable, PermissibleActionListener pal,
-			Predicate<String> fieldFilter,String okButtonName) {
+			Predicate<String> fieldFilter, String okButtonName) {
 		return makeContentView(model, pal, null, null, false, editable, false,
-				false, fieldFilter,okButtonName);
+				false, fieldFilter, okButtonName);
 	}
 
 	public static EditContentViewWidgets popupContentView(final Object model,
 			final PermissibleActionListener pal, String caption,
 			String messageHtml, final boolean hideOnClick, boolean editable) {
 		return makeContentView(model, pal, caption, messageHtml, hideOnClick,
-				editable, true, false, null,null);
+				editable, true, false, null, null);
 	}
 
 	private static EditContentViewWidgets makeContentView(final Object model,
 			final PermissibleActionListener pal, String caption,
 			String messageHtml, final boolean hideOnClick, boolean editable,
-			boolean inDialog, boolean noButtons,
-			Predicate<String> fieldFilter, String okButtonName) {
+			boolean inDialog, boolean noButtons, Predicate<String> fieldFilter,
+			String okButtonName) {
 		ContentViewFactory cvf = new ContentViewFactory();
 		cvf.setNoCaption(true);
 		cvf.setNoButtons(noButtons);

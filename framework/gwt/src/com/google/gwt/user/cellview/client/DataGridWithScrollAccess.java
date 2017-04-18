@@ -15,16 +15,12 @@
  */
 package com.google.gwt.user.cellview.client;
 
-import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.cellview.client.LoadingStateChangeEvent.LoadingState;
-import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
-
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * A tabular view with a fixed header and footer section and a scrollable data
@@ -68,6 +64,12 @@ public class DataGridWithScrollAccess<T> extends DataGrid<T> implements HasDataW
 			com.google.gwt.user.cellview.client.DataGrid.Resources resources) {
 		super(pageSize, resources, null,
 				createDefaultLoadingIndicator(resources));
+		addRedrawHandler(()->forceReflow());
+	}
+
+	private void forceReflow() {
+		//-webkit-transform: translate3d(0,0,0);
+		getElement().getStyle().setProperty("webkitTransform", "translate3d(0,0,0)");
 	}
 
 	private static Widget createDefaultLoadingIndicator(Resources resources) {
@@ -92,9 +94,5 @@ public class DataGridWithScrollAccess<T> extends DataGrid<T> implements HasDataW
 		}
 		super.onLoadingStateChanged(state);
 	}
-	@Override
-	protected void onAttach() {
-		// TODO Auto-generated method stub
-		super.onAttach();
-	}
+	
 }

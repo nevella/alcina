@@ -27,15 +27,11 @@ import com.totsp.gwittir.client.validator.ValidationException;
 public class RegexValidator implements ParameterisedValidator {
 	public static final String PARAM_REGEX = "regex";
 
+	public static final String REGEX_REPLACE = "234IBBDA";
+
 	private String regex;
 
-	public String getRegex() {
-		return this.regex;
-	}
-
-	public void setRegex(String regex) {
-		this.regex = regex;
-	}
+	private String feedbackMessage;
 
 	public RegexValidator() {
 	}
@@ -44,7 +40,24 @@ public class RegexValidator implements ParameterisedValidator {
 		this.regex = regex;
 	}
 
-	public static final String REGEX_REPLACE = "234IBBDA";
+	public RegexValidator feedbackMessage(String feedbackMessage) {
+		this.feedbackMessage = feedbackMessage;
+		return this;
+	}
+
+	public String getRegex() {
+		return this.regex;
+	}
+
+	public void setParameters(NamedParameter[] params) {
+		NamedParameter p = NamedParameter.Support.getParameter(params,
+				PARAM_REGEX);
+		regex = p.stringValue();
+	}
+
+	public void setRegex(String regex) {
+		this.regex = regex;
+	}
 
 	public Object validate(Object value) throws ValidationException {
 		if (value == null) {
@@ -53,16 +66,12 @@ public class RegexValidator implements ParameterisedValidator {
 		value = value.toString().trim();
 		String sz = value.toString();
 		if (!sz.replaceAll(getRegex(), REGEX_REPLACE).equals(REGEX_REPLACE)) {
-			throw new ValidationException(CommonUtils.formatJ(
-					"Does not match regex ('%s')", getRegex()),
+			String message = feedbackMessage != null ? feedbackMessage
+					: CommonUtils.formatJ("Does not match regex ('%s')",
+							getRegex());
+			throw new ValidationException(feedbackMessage,
 					RegexValidator.class);
 		}
 		return value;
-	}
-
-	public void setParameters(NamedParameter[] params) {
-		NamedParameter p = NamedParameter.Support.getParameter(params,
-				PARAM_REGEX);
-		regex = p.stringValue();
 	}
 }

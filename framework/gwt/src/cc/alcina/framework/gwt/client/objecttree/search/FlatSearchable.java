@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.search.SearchCriterion;
@@ -106,5 +107,9 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 	@Override
 	public String toString() {
 		return CommonUtils.formatJ("%s : %s", category, name);
+	}
+
+	public Validator getValidator() {
+		return null;
 	}
 }

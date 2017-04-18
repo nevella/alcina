@@ -190,7 +190,7 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 			return false;
 		}
 		for (SearchCriterion sc : def.allCriteria()) {
-			if (sc instanceof TxtCriterion) {
+			if (sc.getClass()==TxtCriterion.class) {
 				continue;
 			}
 			Optional<FlatSearchable> searchable = searchableForCriterion(sc);

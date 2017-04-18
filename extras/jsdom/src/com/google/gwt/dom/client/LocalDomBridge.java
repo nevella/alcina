@@ -20,6 +20,7 @@ import com.google.gwt.user.client.DOM;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 public class LocalDomBridge {
 	static LocalDomBridge bridge = null;
@@ -467,8 +468,8 @@ public class LocalDomBridge {
 	}
 
 	private native String getId(JavaScriptObject obj) /*-{
-        return obj.id;
-	}-*/;
+														return obj.id;
+														}-*/;
 
 	private void initElementCreators() {
 		elementCreators.put(DivElement.TAG, () -> new DivElement());
@@ -558,8 +559,9 @@ public class LocalDomBridge {
 					createJsoNode(node_jso);
 					return nodeFor0(node_jso);
 				} else {
-					// unattached dom tree...so a baily
-					throw new IllegalArgumentException();
+					// unattached dom tree...e.g. mouseout firing on a shadow
+					// root
+					return null;
 				}
 			}
 			node_jso = parentNode0;

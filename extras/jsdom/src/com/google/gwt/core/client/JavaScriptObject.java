@@ -76,7 +76,11 @@ public class JavaScriptObject implements JavascriptObjectEquivalent{
       return strip(obj.outerHTML);
     // Output nodes that have innerHTML
     if (defined(obj.innerHTML) && obj.cloneNode) {
-      $doc.createElement('div').appendChild(obj.cloneNode(true)).innerHTML;
+    	  try{
+	      return $doc.createElement('div').appendChild(obj.cloneNode(true)).innerHTML;
+	      }catch(e){
+	      //e.g. shadowroot cloning
+	      }
     }
     // Output text nodes
     if (defined(obj.nodeType) && obj.nodeType == 3) {

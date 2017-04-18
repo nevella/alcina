@@ -191,6 +191,7 @@ public class CustomScrollPanel extends ScrollPanel {
     cornerElem = Document.get().createDivElement();
     cornerElem.addClassName(style.customScrollPanelCorner());
     cornerLayer = layout.attachChild(cornerElem);
+    cornerElem.getStyle().setBackgroundColor("green");
 
     // Initialize the default scrollbars using the transparent styles.
     NativeHorizontalScrollbar.Resources hResources =
