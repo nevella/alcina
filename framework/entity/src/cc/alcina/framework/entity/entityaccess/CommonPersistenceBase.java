@@ -105,6 +105,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public static final transient String CONTEXT_CLIENT_IP_ADDRESS = CommonPersistenceBase.class
 			.getName() + ".CONTEXT_CLIENT_IP_ADDRESS";
+	public static final transient String CONTEXT_CLIENT_INSTANCE_ID = CommonPersistenceBase.class
+			.getName() + ".CONTEXT_CLIENT_INSTANCE_ID";
 
 	private static Class<? extends HandshakeObjectProvider> handshakeObjectProviderClass = CheckReadOnlyHandshakeObjectProvider.class;
 

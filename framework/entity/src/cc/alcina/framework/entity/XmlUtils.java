@@ -447,7 +447,7 @@ public class XmlUtils {
 		return node;
 	}
 
-	public static Element getSucceedingBlock(Node node) {
+	public static Node getSucceedingBlock(Node node) {
 		SurroundingBlockTuple tuple = getSurroundingBlockTuple(node);
 		tuple.range.detach();
 		return tuple.nextBlock;
@@ -462,38 +462,44 @@ public class XmlUtils {
 		Node prev = node;
 		Node next = node;
 		SurroundingBlockTuple tuple = new SurroundingBlockTuple(node);
-		Node sib = prev;
+		Node cursor = prev;
 		if (!hasLegalRootContainer(node)) {
 			throw new RuntimeException("Node has no legal root container");
 		}
+		Node currentBlockAncestor = XmlUtils.getContainingBlock(cursor);
 		while (true) {
-			sib = previousSibOrParentSibNode(sib);
-			if (sib.getNodeType() == Node.DOCUMENT_NODE) {
+			cursor = previousSibOrParentSibNode(cursor);
+			if (cursor.getNodeType() == Node.DOCUMENT_NODE) {
 				tuple.prevBlock = null;
 				break;
 			}
-			if (isOrContainsBlock(sib) || blockResolver.test(sib)) {
-				tuple.prevBlock = (Element) sib;
+			if (isOrContainsBlock(cursor) || blockResolver.test(cursor)
+					|| XmlUtils.getContainingBlock(
+							cursor) != currentBlockAncestor) {
+				tuple.prevBlock = cursor;
 				break;
 			} else {
-				if (hasLegalRootContainer(sib)) {
-					prev = sib;
+				if (hasLegalRootContainer(cursor)) {
+					prev = cursor;
 				}
 			}
 		}
-		sib = next;
+		cursor = next;
+		currentBlockAncestor = XmlUtils.getContainingBlock(cursor);
 		while (true) {
-			sib = nextSibOrParentSibNode(sib);
-			if (sib == null || sib.getNodeType() == Node.DOCUMENT_NODE) {
+			cursor = nextSibOrParentSibNode(cursor);
+			if (cursor == null || cursor.getNodeType() == Node.DOCUMENT_NODE) {
 				tuple.nextBlock = null;
 				break;
 			}
-			if (isOrContainsBlock(sib) || blockResolver.test(sib)) {
-				tuple.nextBlock = (Element) sib;
+			if (isOrContainsBlock(cursor) || blockResolver.test(cursor)
+					|| XmlUtils.getContainingBlock(
+							cursor) != currentBlockAncestor) {
+				tuple.nextBlock = cursor;
 				break;
 			} else {
-				if (hasLegalRootContainer(sib)) {
-					next = sib;
+				if (hasLegalRootContainer(cursor)) {
+					next = cursor;
 				}
 			}
 		}
@@ -1366,9 +1372,9 @@ public class XmlUtils {
 
 		public Node firstNode;
 
-		public Element prevBlock;
+		public Node prevBlock;
 
-		public Element nextBlock;
+		public Node nextBlock;
 
 		private TreeWalker walker;
 
@@ -1387,24 +1393,47 @@ public class XmlUtils {
 			return false;
 		}
 
-		public Text getNextTextChild() {
+		boolean walkerFinished = false;
+
+		public Text getCurrentTextChildAndIncrement() {
 			Node n = null;
-			while ((n = walker.nextNode()) != null) {
-				if (n.getNodeType() == Node.TEXT_NODE) {
-					return (Text) n;
-				}
+			while ((n = walker.getCurrentNode()) != null && !walkerFinished) {
 				if (n == nextBlock) {
 					return null;
+				}
+				if (walker.nextNode() == null) {
+					walkerFinished = true;
+				}
+				if (n.getNodeType() == Node.TEXT_NODE) {
+					return (Text) n;
 				}
 			}
 			return null;
 		}
 
 		public void resetWalker() {
+			walkerFinished = false;
 			Document doc = firstNode.getOwnerDocument();
 			walker = ((DocumentTraversal) doc).createTreeWalker(doc,
 					NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, null, true);
 			walker.setCurrentNode(firstNode);
+		}
+
+		public void detach() {
+			range.detach();
+		}
+
+		public boolean provideIsAnonymousTextBlock() {
+			return firstNode.getNodeType() == Node.TEXT_NODE
+					&& !(prevBlock != null
+							&& XmlUtils.isAncestorOf(prevBlock, firstNode));
+		}
+
+		public Text provideFirstText() {
+			resetWalker();
+			Text textChild = getCurrentTextChildAndIncrement();
+			resetWalker();
+			return textChild;
 		}
 	}
 

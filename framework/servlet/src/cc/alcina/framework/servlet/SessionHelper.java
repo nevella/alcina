@@ -56,8 +56,12 @@ public class SessionHelper {
 
 	public static Long getAuthenticatedSessionClientInstanceId(
 			HttpServletRequest request) {
-		return (Long) request
-				.getAttribute(SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID);
+		if (request == null) {
+			return null;
+		} else {
+			return (Long) request
+					.getAttribute(SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID);
+		}
 	}
 
 	private HttpSession getSession(HttpServletRequest request,
@@ -70,15 +74,15 @@ public class SessionHelper {
 		initaliseRequest(request, response);
 		String clientInstanceId = getClientInstanceId(request);
 		if (clientInstanceId != null) {
-			String clientInstanceAuth = request
-					.getHeader(AlcinaRpcRequestBuilder.CLIENT_INSTANCE_AUTH_KEY);
+			String clientInstanceAuth = request.getHeader(
+					AlcinaRpcRequestBuilder.CLIENT_INSTANCE_AUTH_KEY);
 			try {
 				String userName = getValidatedClientInstanceUserName(
 						Long.parseLong(clientInstanceId),
 						Integer.parseInt(clientInstanceAuth));
 				if (userName != null) {
-					getSession(request, response).setAttribute(
-							SESSION_ATTR_USERNAME, userName);
+					getSession(request, response)
+							.setAttribute(SESSION_ATTR_USERNAME, userName);
 					request.setAttribute(SESSION_ATTR_USERNAME, userName);
 					request.setAttribute(
 							SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID,
@@ -122,15 +126,15 @@ public class SessionHelper {
 	protected void resetPermissions(HttpServletRequest request) {
 		ThreadedPermissionsManager.cast().reset();
 		PermissionsManager.get().setLoginState(LoginState.NOT_LOGGED_IN);
-		CommonPersistenceLocal up = Registry.impl(
-				CommonPersistenceProvider.class)
+		CommonPersistenceLocal up = Registry
+				.impl(CommonPersistenceProvider.class)
 				.getCommonPersistenceExTransaction();
 		PermissionsManager.get().setUser(getUser(up.getAnonymousUserName()));
 	}
 
 	protected IUser getUser(String userName) {
-		CommonPersistenceLocal up = Registry.impl(
-				CommonPersistenceProvider.class).getCommonPersistence();
+		CommonPersistenceLocal up = Registry
+				.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		return up.getUserByName(userName, true);
 	}
 
@@ -147,7 +151,8 @@ public class SessionHelper {
 	}
 
 	public Long getAuthenticatedClientInstanceId(HttpServletRequest request) {
-		return (Long) request.getAttribute(SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID);
+		return (Long) request
+				.getAttribute(SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID);
 	}
 
 	public String getClientInstanceId(HttpServletRequest request) {
@@ -158,8 +163,8 @@ public class SessionHelper {
 
 	public String getValidatedClientInstanceUserName(long clientInstanceId,
 			int clientInstanceAuth) {
-		CommonPersistenceLocal up = Registry.impl(
-				CommonPersistenceProvider.class).getCommonPersistence();
+		CommonPersistenceLocal up = Registry
+				.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		if (up.validateClientInstance(clientInstanceId, clientInstanceAuth)) {
 			return up.getUserNameForClientInstanceId(clientInstanceId);
 		}

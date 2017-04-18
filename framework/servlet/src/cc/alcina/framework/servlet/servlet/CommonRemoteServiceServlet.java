@@ -586,6 +586,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					getThreadLocalResponse());
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
 					getThreadLocalRequest());
+			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_INSTANCE_ID,
+					SessionHelper.getAuthenticatedSessionClientInstanceId(
+							getThreadLocalRequest()));
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
 			if (rpcRequest
 					.getSerializationPolicy() instanceof LegacySerializationPolicy) {
