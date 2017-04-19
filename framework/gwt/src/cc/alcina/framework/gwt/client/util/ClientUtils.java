@@ -68,6 +68,8 @@ public class ClientUtils {
 
 	private static final String CSS_TEXT_PROPERTY = "cssText";
 
+	public static boolean noGlass;
+
 	public static boolean maybeOffline(Throwable t) {
 		while (t instanceof WrappedRuntimeException) {
 			if (t == t.getCause() || t.getCause() == null) {
@@ -269,6 +271,9 @@ public class ClientUtils {
 		}
 		FlowPanel fp = new FlowPanel();
 		final GlassDialogBox gdb = new GlassDialogBox();
+		if(noGlass){
+			gdb.setGlassHidden(true);
+		}
 		PermissibleActionListener closeWrapper = new PermissibleActionListener() {
 			@Override
 			public void vetoableAction(PermissibleActionEvent evt) {

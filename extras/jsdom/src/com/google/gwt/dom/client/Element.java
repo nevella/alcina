@@ -325,7 +325,9 @@ public class Element extends Node implements DomElement {
 	public Element getParentElement() {
 		// no resolution
 		if (typedImpl == null) {
-			int debug = 3;
+			//FIXME - when does this happen (suggest box clear is one place)
+			return null;
+//			int debug = 3;
 		}
 		return typedImpl.getParentElement();
 	}
@@ -508,6 +510,9 @@ public class Element extends Node implements DomElement {
 	public void putImpl(DomNode impl) {
 		if (impl == this.impl) {
 			return;
+		}
+		if(impl==null){
+			int debug=3;
 		}
 		LocalDomBridge.get().checkInPreconditionList(this, impl);
 		if (typedImpl != null) {

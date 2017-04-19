@@ -206,8 +206,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 		public BoundWidgetTypeFactorySimpleGenerator(boolean withNull) {
 			this();
-			this.withNull=withNull;
+			this.withNull = withNull;
 		}
+
 		public BoundWidgetTypeFactorySimpleGenerator() {
 			super(true);
 			add(Date.class, DateBox.PROVIDER);
@@ -231,7 +232,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	}
 
 	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY = new BoundWidgetTypeFactorySimpleGenerator();
-	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY_NO_NULLS = new BoundWidgetTypeFactorySimpleGenerator(false);
+
+	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY_NO_NULLS = new BoundWidgetTypeFactorySimpleGenerator(
+			false);
 
 	public List<Field> fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
 			Object obj, BoundWidgetTypeFactory factory, boolean editableWidgets,
@@ -290,9 +293,6 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 	public Field getField(Class c, String propertyName, boolean editableWidgets,
 			boolean multiple, BoundWidgetTypeFactory factory, Object obj) {
-		if(c.getName().equals("au.com.barnet.jade.cs.trans.searchcriteria.EditorialCheckedByCriterion")){
-			int debug=3;
-		}
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(c);
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();

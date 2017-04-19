@@ -19,11 +19,11 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 @ClientInstantiable
 @Introspectable
 public class SearchOrders<T> implements Comparator<T>, Serializable {
-	private Map<SearchOrder<T>, Boolean> cmps = new LinkedHashMap<>();
+	private Map<SearchOrder<T, ?>, Boolean> cmps = new LinkedHashMap<>();
 
 	private List<SerializableSearchOrder> serializableSearchOrders = new ArrayList<>();
 
-	private transient Entry<SearchOrder<T>, Boolean> soleOrder = null;
+	private transient Entry<SearchOrder<T, ?>, Boolean> soleOrder = null;
 
 	public SearchOrders() {
 	}
@@ -52,8 +52,8 @@ public class SearchOrders<T> implements Comparator<T>, Serializable {
 			return soleOrder.getKey().compare(o1, o2)
 					* (soleOrder.getValue() ? 1 : -1);
 		}
-		for (Entry<SearchOrder<T>, Boolean> entry : _getCmps().entrySet()) {
-			SearchOrder<T> cmp = entry.getKey();
+		for (Entry<SearchOrder<T, ?>, Boolean> entry : _getCmps().entrySet()) {
+			SearchOrder<T, ?> cmp = entry.getKey();
 			int i = cmp.compare(o1, o2);
 			if (i != 0) {
 				return i * (entry.getValue() ? 1 : -1);
@@ -81,7 +81,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable {
 				.collect(Collectors.toList());
 	}
 
-	Map<SearchOrder<T>, Boolean> _getCmps() {
+	Map<SearchOrder<T, ?>, Boolean> _getCmps() {
 		if (cmps.isEmpty() && serializableSearchOrders.size() > 0) {
 			cmps = (Map) serializableSearchOrders.stream()
 					.collect(Collectors.toMap(sso -> {
@@ -94,9 +94,10 @@ public class SearchOrders<T> implements Comparator<T>, Serializable {
 		return cmps;
 	}
 
-	public static class IdOrder<H extends HasId> implements SearchOrder<H> {
+	public static class IdOrder<H extends HasId>
+			implements SearchOrder<H, Long> {
 		@Override
-		public Comparable apply(H t) {
+		public Long apply(H t) {
 			return t.getId();
 		}
 	}

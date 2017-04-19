@@ -10,8 +10,8 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @ClientInstantiable
-public interface SearchOrder<T>
-		extends Function<T, Comparable>, Serializable, Comparator<T> {
+public interface SearchOrder<T, V extends Comparable>
+		extends Function<T, V>, Serializable, Comparator<T> {
 	@Override
 	default int compare(T o1, T o2) {
 		int comparison = CommonUtils.compareWithNullMinusOne(apply(o1),

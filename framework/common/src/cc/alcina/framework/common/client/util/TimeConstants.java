@@ -27,4 +27,8 @@ public class TimeConstants {
 	public static final long ONE_DAY_MS = ONE_HOUR_MS * 24;
 
 	public static final long ONE_YEAR_MS = ONE_DAY_MS * 365;
+
+	public static boolean within(long time, long delta) {
+		return (System.currentTimeMillis() - time) < delta;
+	}
 }

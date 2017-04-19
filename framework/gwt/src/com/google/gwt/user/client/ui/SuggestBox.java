@@ -322,8 +322,12 @@ public class SuggestBox extends Composite
 		}
 
 		protected void init() {
-			createSuggestionMenu();
 			suggestionPopup = createPopup();
+			recreateMenu();
+		}
+
+		private void recreateMenu() {
+			createSuggestionMenu();
 			suggestionPopup.setWidget(decorateSuggestionList(suggestionMenu));
 		}
 
@@ -505,6 +509,7 @@ public class SuggestBox extends Composite
 				Collection<? extends Suggestion> suggestions,
 				boolean isDisplayStringHTML, boolean isAutoSelectEnabled,
 				final SuggestionCallback callback) {
+			recreateMenu();
 			// Hide the popup if there are no suggestions to display.
 			boolean anySuggestions = (suggestions != null
 					&& suggestions.size() > 0);
@@ -519,7 +524,8 @@ public class SuggestBox extends Composite
 			if (suggestionPopup.isAttached()) {
 				suggestionPopup.hide();
 			}
-			suggestionMenu.clearItems();
+			recreateMenu();
+//			suggestionMenu.clearItems();
 			for (final Suggestion curSuggestion : suggestions) {
 				final SuggestionMenuItem menuItem = new SuggestionMenuItem(
 						curSuggestion, isDisplayStringHTML);

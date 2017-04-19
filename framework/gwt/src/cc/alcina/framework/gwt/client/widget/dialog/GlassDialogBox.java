@@ -32,14 +32,29 @@ import com.google.gwt.user.client.ui.DialogBox;
 public class GlassDialogBox extends DialogBox {
 	@Override
 	public void hide() {
-		if(HIDE_INSTANTLY){
+		if (HIDE_INSTANTLY) {
 			setAnimationEnabled(false);
 		}
 		super.hide();
 		forgetScrollback();
 		glass.show(false);
 	}
-	public static boolean HIDE_INSTANTLY=false;
+
+	private boolean glassHidden;
+
+	public boolean isGlassHidden() {
+		return this.glassHidden;
+	}
+
+	public void setGlassHidden(boolean glassHidden) {
+		this.glassHidden = glassHidden;
+		if (glassHidden) {
+			addStyleName("glass-hidden");
+		}
+	}
+
+	public static boolean HIDE_INSTANTLY = false;
+
 	private GlassDisplayer glass = new GlassDisplayer();
 
 	private int scrollLeft;
@@ -94,13 +109,17 @@ public class GlassDialogBox extends DialogBox {
 	@Override
 	// glass won't be visible, but will be added to DOM before dialog
 	public void center() {
-		glass.show(true);
+		if (!isGlassHidden()) {
+			glass.show(true);
+		}
 		super.center();
 	}
 
 	@Override
 	public void show() {
-		glass.show(true);
+		if (!isGlassHidden()) {
+			glass.show(true);
+		}
 		scrollLeft = Window.getScrollLeft();
 		scrollTop = Window.getScrollTop();
 		if (this.handlerRegistration == null && !BrowserMod.isMobile()) {

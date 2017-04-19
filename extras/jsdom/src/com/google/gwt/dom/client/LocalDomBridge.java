@@ -205,10 +205,12 @@ public class LocalDomBridge {
 			if (!id.isEmpty()) {
 				Element_Jso domImpl = Document.get().typedDomImpl
 						.getElementById0(id);
-				get().javascriptObjectNodeLookup.put(domImpl, element);
-				element.putDomImpl(domImpl);
-				element.putImpl(domImpl);
-				return;
+				if (domImpl != null) {
+					get().javascriptObjectNodeLookup.put(domImpl, element);
+					element.putDomImpl(domImpl);
+					element.putImpl(domImpl);
+					return;
+				}
 			}
 			linkTreesLocal(element);
 		} finally {
@@ -480,8 +482,8 @@ public class LocalDomBridge {
 	}
 
 	private native String getId(JavaScriptObject obj) /*-{
-        return obj.id;
-	}-*/;
+														return obj.id;
+														}-*/;
 
 	private void initElementCreators() {
 		elementCreators.put(DivElement.TAG, () -> new DivElement());
@@ -785,7 +787,7 @@ public class LocalDomBridge {
 		if (domImpl instanceof Element_Jso) {
 			Element_Jso elem = (Element_Jso) domImpl;
 			String id = elem.getId();
-			System.out.println("detach id:"+id);
+			System.out.println("detach id:" + id);
 			idLookup.remove(id);
 			NodeList_Jso<Node> kids = elem.getChildNodes0();
 			int length = kids.getLength();
