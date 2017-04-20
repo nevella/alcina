@@ -399,7 +399,7 @@ public class ContentViewFactory {
 		BoundTableExt table = createTable(beans, editable, tableMask, bean);
 		cp.add(table);
 		cp.setBoundWidget(table);
-		if (editable && !autoSave) {
+		if (editable && !autoSave && !noButtons) {
 			OkCancelPanel sp = new OkCancelPanel("Save", cp, isCancelButton());
 			cp.add(sp);
 			cp.setOkButton(sp.okButton);
