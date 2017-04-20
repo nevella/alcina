@@ -16,8 +16,16 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.LocalDomBridge.LocalDomBridgeCollections;
+import com.google.gwt.dom.client.LocalDomBridge.LocalDomBridgeCollections_Script;
 import com.google.gwt.user.client.DOM;
 
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
@@ -33,9 +41,6 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
 public class LocalDomBridge {
 	static LocalDomBridge bridge = null;
 
-	// FIXME - better map
-	private static Map<String, String> declarativeCssNames = new LinkedHashMap<>();
-
 	static LocalDomBridgeDebug debug = new LocalDomBridgeDebug();
 
 	private static boolean ensuring = false;
@@ -46,37 +51,15 @@ public class LocalDomBridge {
 
 	public static boolean fastRemoveAll = true;
 
-	public static String declarativeCssName(String key) {
-		return declarativeCssNames.computeIfAbsent(key, k -> {
-			String lcKey = k.toLowerCase();
-			if (!lcKey.equals(k)) {
-				StringBuilder sb = new StringBuilder();
-				for (int idx = 0; idx < k.length(); idx++) {
-					char c = k.charAt(idx);
-					if (c >= 'A' && c <= 'Z') {
-						sb.append("-");
-						sb.append(String.valueOf(c).toLowerCase());
-					} else {
-						sb.append(c);
-					}
-				}
-				return sb.toString();
-			} else {
-				return k;
-			}
-		});
-	}
-
 	public static Element_Jso elementJso(Element elem) {
 		return elementJso(elem, true);
 	}
 
 	public static Element_Jso elementJso(Element elem, boolean maybeEnsure) {
-		if (!LocalDomImpl.useLocalImpl && maybeEnsure
-				&& elem.typedDomImpl != null) {
+		if (!LocalDomImpl.useLocalImpl && maybeEnsure && elem.domImpl != null) {
 			ensureJso(elem);
 		}
-		return elem.typedDomImpl;
+		return elem.domImpl;
 	}
 
 	public static void ensureJso(Element element) {
@@ -152,7 +135,7 @@ public class LocalDomBridge {
 		// these will be Element_Jvms
 		List<Element> chain = new ArrayList<>();
 		// hmmm...ascend to dom, descend...
-		while (element.typedDomImpl == null) {
+		while (element.domImpl == null) {
 			chain.add(element);
 			element = element.getParentElement();
 		}
@@ -161,7 +144,7 @@ public class LocalDomBridge {
 		for (int idx = chain.size() - 1; idx >= 1; idx--) {
 			Element withDom = chain.get(idx);
 			Element_Jvm vmImpl = (Element_Jvm) withDom.localImpl();
-			NodeList_Jso<Element> childNodes = (NodeList_Jso) withDom.typedDomImpl
+			NodeList_Jso<Element> childNodes = (NodeList_Jso) withDom.domImpl
 					.getChildNodes().impl;
 			if (debug.on) {
 				Preconditions.checkState(
@@ -188,7 +171,7 @@ public class LocalDomBridge {
 				&& get().pendingResolution.size() > 0) {
 			get().flush();
 		}
-		if (element.typedDomImpl != null) {
+		if (element.domImpl != null) {
 			return;
 		}
 		if (ensuring) {
@@ -203,7 +186,7 @@ public class LocalDomBridge {
 			}
 			String id = element.getId();
 			if (!id.isEmpty()) {
-				Element_Jso domImpl = Document.get().typedDomImpl
+				Element_Jso domImpl = Document.get().domImpl
 						.getElementById0(id);
 				if (domImpl != null) {
 					get().javascriptObjectNodeLookup.put(domImpl, element);
@@ -217,6 +200,9 @@ public class LocalDomBridge {
 			ensuring = false;
 		}
 	}
+
+	// FIXME - better map
+	private Map<String, String> declarativeCssNames;
 
 	Map<JavaScriptObject, Node> javascriptObjectNodeLookup;
 
@@ -242,15 +228,25 @@ public class LocalDomBridge {
 
 	Map<NativeEvent, List<String>> eventMods = new LinkedHashMap<>();
 
+	LocalDomBridgeCollections collections;
+
 	private LocalDomBridge() {
-		// FIXME - weak maps
-		javascriptObjectNodeLookup = new LinkedHashMap<>();
-		javascriptObjectStyleLookup = new LinkedHashMap<>();
-		idLookup = new LinkedHashMap<>();
-		elementCreators = new LinkedHashMap<>();
+		if (GWT.isScript()) {
+			JavascriptKeyableLookup.initJs();
+			collections = new LocalDomBridgeCollections_Script();
+		} else {
+			collections = new LocalDomBridgeCollections();
+		}
+		declarativeCssNames = collections.createStringMap();
+		javascriptObjectNodeLookup = collections
+				.createIdentityEqualsMap(JavaScriptObject.class);
+		javascriptObjectStyleLookup = collections
+				.createIdentityEqualsMap(JavaScriptObject.class);
+		idLookup = collections.createIdentityEqualsMap(String.class);
+		elementCreators = collections.createIdentityEqualsMap(String.class);
 		initElementCreators();
-		localNodeLookup = new LinkedHashMap<>();
-		localStyleLookup = new LinkedHashMap<>();
+		localNodeLookup = collections.createIdentityEqualsMap(DomNode.class);
+		localStyleLookup = collections.createIdentityEqualsMap(DomStyle.class);
 	}
 
 	public void checkInPreconditionList(Element element, DomNode impl) {
@@ -266,14 +262,51 @@ public class LocalDomBridge {
 		ensureFlush();
 	}
 
+	public String declarativeCssName(String key) {
+		return declarativeCssNames.computeIfAbsent(key, k -> {
+			String lcKey = k.toLowerCase();
+			if (!lcKey.equals(k)) {
+				StringBuilder sb = new StringBuilder();
+				for (int idx = 0; idx < k.length(); idx++) {
+					char c = k.charAt(idx);
+					if (c >= 'A' && c <= 'Z') {
+						sb.append("-");
+						sb.append(String.valueOf(c).toLowerCase());
+					} else {
+						sb.append(c);
+					}
+				}
+				return sb.toString();
+			} else {
+				return k;
+			}
+		});
+	}
+
+	public void detachDomNode(Node_Jso domImpl) {
+		javascriptObjectNodeLookup.remove(domImpl);
+		debug.removeAssignment(domImpl);
+		if (domImpl instanceof Element_Jso) {
+			Element_Jso elem = (Element_Jso) domImpl;
+			String id = elem.getId();
+			System.out.println("detach id:" + id);
+			idLookup.remove(id);
+			NodeList_Jso<Node> kids = elem.getChildNodes0();
+			int length = kids.getLength();
+			for (int idx = 0; idx < length; idx++) {
+				detachDomNode(kids.getItem0(idx));
+			}
+		}
+	}
+
 	public void ensureResolved(Node node) {
-		if (node.domImpl == null) {
+		if (node.domImpl() == null) {
 			throw new UnsupportedOperationException();
 		}
-		if (node.impl != null && node.impl != node.domImpl) {
+		if (node.impl() != null && node.impl() != node.domImpl()) {
 			Element elem = (Element) node;
-			Element_Jso dom_elt = (Element_Jso) node.domImpl;
-			DomElement vmlocal_elt = (DomElement) node.impl;
+			Element_Jso dom_elt = (Element_Jso) node.domImpl();
+			DomElement vmlocal_elt = (DomElement) node.impl();
 			String innerHTML = vmlocal_elt.getInnerHTML();
 			if (innerHTML.contains("__localdom__46")) {
 				int debug = 3;
@@ -298,7 +331,7 @@ public class LocalDomBridge {
 			bits |= DOM.getEventsSunk(elem);
 			DOM.sinkEvents(elem, bits);
 			pendingResolution.remove(node);
-			node.putImpl(node.domImpl);
+			node.putImpl(node.domImpl());
 		}
 	}
 
@@ -366,7 +399,7 @@ public class LocalDomBridge {
 	}
 
 	public boolean wasCreatedThisLoop(Element element) {
-		return createdLocals.contains(element.impl);
+		return createdLocals.contains(element.implNoResolve());
 	}
 
 	private void addToIdLookup(Node node) {
@@ -396,7 +429,6 @@ public class LocalDomBridge {
 			}
 			mayHaveId = false;
 		}
-		node.resolved = true;
 		javascriptObjectNodeLookup.put(item, node);
 		node.putDomImpl(item);
 		node.putImpl(item);
@@ -441,8 +473,8 @@ public class LocalDomBridge {
 	}
 
 	private Node_Jso ensurePendingResolutionNode0(Node node) {
-		if (node.domImpl != null) {
-			return node.domImpl;
+		if (node.domImpl() != null) {
+			return node.domImpl();
 		}
 		ensureFlush();
 		pendingResolution.add(node);
@@ -464,13 +496,13 @@ public class LocalDomBridge {
 					((Element) node).getTagName());
 			break;
 		case Node.DOCUMENT_NODE:
-			nodeDom = doc.domImpl;
+			nodeDom = doc.domImpl();
 			break;
 		default:
 			throw new UnsupportedOperationException();
 		}
 		System.out.println(
-				"created pending resolution node:" + node.impl.hashCode());
+				"created pending resolution node:" + node.impl().hashCode());
 		javascriptObjectNodeLookup.put(nodeDom, node);
 		debug.removeAssignment(nodeDom);
 		node.putDomImpl(nodeDom);
@@ -482,8 +514,8 @@ public class LocalDomBridge {
 	}
 
 	private native String getId(JavaScriptObject obj) /*-{
-														return obj.id;
-														}-*/;
+        return obj.id;
+	}-*/;
 
 	private void initElementCreators() {
 		elementCreators.put(DivElement.TAG, () -> new DivElement());
@@ -675,7 +707,6 @@ public class LocalDomBridge {
 		return localNodeLookup.computeIfAbsent(node_jvm, key -> {
 			Node node = createNode(node_jvm.getNodeType(),
 					node_jvm.getNodeName());
-			node.local = true;
 			node_jvm.node = node;
 			node.putImpl(node_jvm);
 			return node;
@@ -684,7 +715,7 @@ public class LocalDomBridge {
 
 	private void register0(Document doc) {
 		this.doc = doc;
-		javascriptObjectNodeLookup.put(doc.domImpl, doc);
+		javascriptObjectNodeLookup.put(doc.domImpl(), doc);
 		localNodeLookup.put(doc.localImpl, doc);
 	}
 
@@ -720,6 +751,29 @@ public class LocalDomBridge {
 
 	boolean hasPendingResolutionNodes() {
 		return pendingResolution.size() > 0;
+	}
+
+	public static class LocalDomBridgeCollections {
+		public <K, V> Map<K, V> createIdentityEqualsMap(Class<K> keyClass) {
+			return new LinkedHashMap<>();
+		}
+
+		public Map<String, String> createStringMap() {
+			return createIdentityEqualsMap(String.class);
+		}
+	}
+
+	public static class LocalDomBridgeCollections_Script
+			extends LocalDomBridgeCollections {
+		public <K, V> Map<K, V> createIdentityEqualsMap(Class<K> keyClass) {
+			if (JsUniqueMap.supportsJsMap()) {
+				// element.attributes will need entryset, not yet supported in
+				// nativemap
+				return JsUniqueMap.create(keyClass, keyClass != String.class);
+			} else {
+				return super.createIdentityEqualsMap(keyClass);
+			}
+		}
 	}
 
 	static class LocalDomBridgeDebug {
@@ -778,22 +832,6 @@ public class LocalDomBridge {
 				Element_Jvm element_Jvm) {
 			System.out.println("**warn - duplicate elt id - " + id);
 			// throw new IllegalStateException();
-		}
-	}
-
-	public void detachDomNode(Node_Jso domImpl) {
-		javascriptObjectNodeLookup.remove(domImpl);
-		debug.removeAssignment(domImpl);
-		if (domImpl instanceof Element_Jso) {
-			Element_Jso elem = (Element_Jso) domImpl;
-			String id = elem.getId();
-			System.out.println("detach id:" + id);
-			idLookup.remove(id);
-			NodeList_Jso<Node> kids = elem.getChildNodes0();
-			int length = kids.getLength();
-			for (int idx = 0; idx < length; idx++) {
-				detachDomNode(kids.getItem0(idx));
-			}
 		}
 	}
 }

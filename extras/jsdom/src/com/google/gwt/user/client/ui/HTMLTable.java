@@ -106,7 +106,6 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	/**
 	 * Standard implementation for accessing the Table DOM.
 	 */
-	@SuppressWarnings("unused") // used due to rebinding
 	private static class HTMLTableStandardImpl implements HTMLTableImpl {
 		native JsArray<Element_Jso> getRows0(Element_Jso tbody) /*-{
             return tbody.rows;
@@ -123,7 +122,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 						((TableSectionElement) tbody).getRows());
 			} else {
 				return new ElementArray<Element>(
-						getRows0(tbody.getTypedDomImpl()));
+						getRows0(tbody.getdomImpl()));
 			}
 		}
 
@@ -134,7 +133,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 						((TableRowElement) row).getCells());
 			} else {
 				return new ElementArray<Element>(
-						getCells0(row.getTypedDomImpl()));
+						getCells0(row.getdomImpl()));
 			}
 		}
 	}

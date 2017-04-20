@@ -2,12 +2,11 @@ package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.StringMap;
 
 public abstract class Node_Jvm implements DomNode, LocalDomNode {
 	static <N extends Node> N nodeFor(Node_Jvm node_jvm) {
@@ -28,7 +27,8 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 
 	protected List<Node_Jvm> children = new ArrayList<>();
 
-	protected StringMap attributes = new StringMap();
+	protected Map<String, String> attributes = LocalDomBridge.get().collections
+			.createStringMap();
 
 	protected Node_Jvm parentNode;
 
@@ -45,17 +45,17 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
 		maybeConvertToLocal(newChild, false);
-		Preconditions.checkArgument(newChild.impl instanceof Node_Jvm);
-		children.add((Node_Jvm) newChild.impl);
-		((Node_Jvm) newChild.impl).parentNode = this;
-		LocalDomBridge.debug.added((Node_Jvm) newChild.impl);
+		Preconditions.checkArgument(newChild.implNoResolve() instanceof Node_Jvm);
+		children.add((Node_Jvm) newChild.implNoResolve());
+		((Node_Jvm) newChild.implNoResolve()).parentNode = this;
+		LocalDomBridge.debug.added((Node_Jvm) newChild.implNoResolve());
 		return newChild;
 	}
 
 	private static <T extends Node> void maybeConvertToLocal(T node,
 			boolean deep) {
-		if (!(node.impl instanceof Node_Jvm)) {
-			Element_Jso elt = (Element_Jso) node.impl;
+		if (!(node.impl() instanceof Node_Jvm)) {
+			Element_Jso elt = (Element_Jso) node.impl();
 			// must detach all refs to existing nodes
 			LocalDomBridge.get().detachDomNode(elt);
 			DomNode localImpl = node.localImpl();
@@ -81,7 +81,7 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 			}
 		} else {
 			if (deep) {
-				for (Node_Jvm child : ((Node_Jvm) node.impl).children) {
+				for (Node_Jvm child : ((Node_Jvm) node.impl()).children) {
 					maybeConvertToLocal(child.node, true);
 				}
 			}
@@ -141,19 +141,19 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 	@Override
 	public Node insertBefore(Node newChild, Node refChild) {
 		maybeConvertToLocal(newChild, false);
-		Preconditions.checkArgument(newChild.impl instanceof Node_Jvm);
+		Preconditions.checkArgument(newChild.impl() instanceof Node_Jvm);
 		Preconditions.checkArgument(
-				refChild == null || refChild.impl instanceof Node_Jvm);
+				refChild == null || refChild.impl() instanceof Node_Jvm);
 		if (refChild == null) {
-			children.add((Node_Jvm) newChild.impl);
+			children.add((Node_Jvm) newChild.impl());
 		} else {
-			int idx = children.indexOf(refChild.impl);
+			int idx = children.indexOf(refChild.impl());
 			Preconditions.checkArgument(idx != -1,
 					"refchild not a child of this node");
-			children.add(idx, (Node_Jvm) newChild.impl);
+			children.add(idx, (Node_Jvm) newChild.impl());
 		}
-		((Node_Jvm) newChild.impl).parentNode = this;
-		LocalDomBridge.debug.added((Node_Jvm) newChild.impl);
+		((Node_Jvm) newChild.impl()).parentNode = this;
+		LocalDomBridge.debug.added((Node_Jvm) newChild.impl());
 		return newChild;
 	}
 
@@ -173,8 +173,8 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 
 	@Override
 	public Node removeChild(Node oldChild) {
-		Preconditions.checkArgument(oldChild.impl instanceof Node_Jvm);
-		Node_Jvm oldChild_Jvm = (Node_Jvm) oldChild.impl;
+		Preconditions.checkArgument(oldChild.impl() instanceof Node_Jvm);
+		Node_Jvm oldChild_Jvm = (Node_Jvm) oldChild.impl();
 		LocalDomBridge.debug.removed(oldChild_Jvm);
 		oldChild_Jvm.parentNode = null;
 		children.remove(oldChild_Jvm);

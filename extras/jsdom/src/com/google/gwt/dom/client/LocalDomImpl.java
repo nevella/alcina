@@ -34,14 +34,14 @@ public class LocalDomImpl {
 
 	public void buttonClick(ButtonElement button) {
 		resolveAllPending();
-		domImpl.buttonClick(button.typedDomImpl);
+		domImpl.buttonClick(button.domImpl);
 	}
 
 	public ButtonElement createButtonElement(Document doc, String type) {
 		if (useLocalImpl) {
 			return localImpl.createButtonElement(doc, type);
 		} else {
-			return nodeFor(domImpl.createButtonElement(doc.typedDomImpl, type));
+			return nodeFor(domImpl.createButtonElement(doc.domImpl, type));
 		}
 	}
 
@@ -49,30 +49,30 @@ public class LocalDomImpl {
 		if (useLocalImpl) {
 			return localImpl.createCheckInputElement(doc);
 		} else {
-			return nodeFor(domImpl.createCheckInputElement(doc.typedDomImpl));
+			return nodeFor(domImpl.createCheckInputElement(doc.domImpl));
 		}
 	}
 
 	public Element_Jso createDomElement(Document doc, String tag) {
-		return domImpl.createElement(doc.typedDomImpl, tag);
+		return domImpl.createElement(doc.domImpl, tag);
 	}
 
 	public Node_Jso createDomText(Document doc, String data) {
-		return domImpl.createTextNode(doc.typedDomImpl, data);
+		return domImpl.createTextNode(doc.domImpl, data);
 	}
 
 	public Element createElement(Document doc, String tag) {
 		if (useLocalImpl) {
 			return localImpl.createLocalElement(doc, tag);
 		} else {
-			return nodeFor(domImpl.createElement(doc.typedDomImpl, tag));
+			return nodeFor(domImpl.createElement(doc.domImpl, tag));
 		}
 	}
 
 	public NativeEvent createHtmlEvent(Document doc, String type,
 			boolean canBubble, boolean cancelable) {
 		checkNotInLocalImpl();
-		return domImpl.createHtmlEvent(doc.typedDomImpl, type, canBubble,
+		return domImpl.createHtmlEvent(doc.domImpl, type, canBubble,
 				cancelable);
 	}
 
@@ -80,7 +80,7 @@ public class LocalDomImpl {
 		if (useLocalImpl) {
 			return localImpl.createInputElement(doc, type);
 		} else {
-			return nodeFor(domImpl.createInputElement(doc.typedDomImpl, type));
+			return nodeFor(domImpl.createInputElement(doc.domImpl, type));
 		}
 	}
 
@@ -89,7 +89,7 @@ public class LocalDomImpl {
 			return localImpl.createInputRadioElement(doc, name);
 		} else {
 			return nodeFor(
-					domImpl.createInputRadioElement(doc.typedDomImpl, name));
+					domImpl.createInputRadioElement(doc.domImpl, name));
 		}
 	}
 
@@ -97,7 +97,7 @@ public class LocalDomImpl {
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int keyCode) {
 		checkNotInLocalImpl();
-		return domImpl.createKeyCodeEvent(document.typedDomImpl, type, ctrlKey,
+		return domImpl.createKeyCodeEvent(document.domImpl, type, ctrlKey,
 				altKey, shiftKey, metaKey, keyCode);
 	}
 
@@ -106,14 +106,14 @@ public class LocalDomImpl {
 			boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode) {
-		return domImpl.createKeyEvent(doc.typedDomImpl, type, canBubble,
+		return domImpl.createKeyEvent(doc.domImpl, type, canBubble,
 				cancelable, ctrlKey, altKey, shiftKey, metaKey, keyCode,
 				charCode);
 	}
 
 	public NativeEvent createKeyPressEvent(Document document, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int charCode) {
-		return domImpl.createKeyPressEvent(document.typedDomImpl, ctrlKey,
+		return domImpl.createKeyPressEvent(document.domImpl, ctrlKey,
 				altKey, shiftKey, metaKey, charCode);
 	}
 
@@ -122,24 +122,25 @@ public class LocalDomImpl {
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return domImpl.createMouseEvent(doc.typedDomImpl, type, canBubble,
+		return domImpl.createMouseEvent(doc.domImpl, type, canBubble,
 				cancelable, detail, screenX, screenY, clientX, clientY, ctrlKey,
-				altKey, shiftKey, metaKey, button, relatedTarget==null?null:relatedTarget.typedDomImpl);
+				altKey, shiftKey, metaKey, button,
+				relatedTarget == null ? null : relatedTarget.domImpl);
 	}
 
 	public ScriptElement createScriptElement(Document doc, String source) {
 		if (useLocalImpl) {
 			return localImpl.createScriptElement(doc, source);
 		} else {
-			return domImpl.createScriptElement(doc.typedDomImpl, source);
+			return domImpl.createScriptElement(doc.domImpl, source);
 		}
 	}
 
 	public void cssClearOpacity(Style style) {
-		if(useLocalImpl){
+		if (useLocalImpl) {
 			style.removePropertyImpl("opacity");
-		}else{
-		domImpl.cssClearOpacity(style.domImpl());
+		} else {
+			domImpl.cssClearOpacity(style.domImpl());
 		}
 	}
 
@@ -149,16 +150,16 @@ public class LocalDomImpl {
 	}
 
 	public void cssSetOpacity(Style style, double value) {
-		if(useLocalImpl){
+		if (useLocalImpl) {
 			style.setPropertyImpl("opacity", String.valueOf(value));
-		}else{
-		domImpl.cssSetOpacity(style.domImpl(), value);
+		} else {
+			domImpl.cssSetOpacity(style.domImpl(), value);
 		}
 	}
 
 	public void dispatchEvent(Element target, NativeEvent evt) {
 		checkNotInLocalImpl();
-		domImpl.dispatchEvent(target.typedDomImpl, evt);
+		domImpl.dispatchEvent(target.domImpl, evt);
 	}
 
 	public boolean eventGetAltKey(NativeEvent evt) {
@@ -235,7 +236,7 @@ public class LocalDomImpl {
 	}
 
 	public void eventPreventDefault(NativeEvent evt) {
-		LocalDomBridge.get().eventMod(evt,"eventPreventDefault");
+		LocalDomBridge.get().eventMod(evt, "eventPreventDefault");
 		domImpl.eventPreventDefault(evt);
 	}
 
@@ -244,7 +245,7 @@ public class LocalDomImpl {
 	}
 
 	public void eventStopPropagation(NativeEvent evt) {
-		LocalDomBridge.get().eventMod(evt,"eventStopPropagation");
+		LocalDomBridge.get().eventMod(evt, "eventStopPropagation");
 		domImpl.eventStopPropagation(evt);
 	}
 
@@ -254,26 +255,26 @@ public class LocalDomImpl {
 
 	public int getAbsoluteLeft(Element elem) {
 		resolveAllPending();
-		return domImpl.getAbsoluteLeft(elem.typedDomImpl);
+		return domImpl.getAbsoluteLeft(elem.domImpl);
 	}
 
 	public int getAbsoluteTop(Element elem) {
 		resolveAllPending();
-		return domImpl.getAbsoluteTop(elem.typedDomImpl);
+		return domImpl.getAbsoluteTop(elem.domImpl);
 	}
 
 	public String getAttribute(Element elem, String name) {
-		return domImpl.getAttribute(elem.typedDomImpl, name);
+		return domImpl.getAttribute(elem.domImpl, name);
 	}
 
 	public int getBodyOffsetLeft(Document doc) {
 		// resolveAllPending();
-		return domImpl.getBodyOffsetLeft(doc.typedDomImpl);
+		return domImpl.getBodyOffsetLeft(doc.domImpl);
 	}
 
 	public int getBodyOffsetTop(Document doc) {
 		// resolveAllPending();
-		return domImpl.getBodyOffsetTop(doc.typedDomImpl);
+		return domImpl.getBodyOffsetTop(doc.domImpl);
 	}
 
 	public JsArray<Touch> getChangedTouches(NativeEvent evt) {
@@ -281,42 +282,42 @@ public class LocalDomImpl {
 	}
 
 	public Element getFirstChildElement(Element elem) {
-		if (elem.local) {
+		if (elem.provideIsLocal()) {
 			return elem.getFirstChildElement();
 		} else {
-			return nodeFor(domImpl.getFirstChildElement(elem.typedDomImpl));
+			return nodeFor(domImpl.getFirstChildElement(elem.domImpl));
 		}
 	}
 
 	public String getInnerHTML(Element elem) {
-		if (elem.local) {
+		if (elem.provideIsLocal()) {
 			return elem.getInnerHTML();
 		} else {
-			return domImpl.getInnerHTML(elem.typedDomImpl);
+			return domImpl.getInnerHTML(elem.domImpl);
 		}
 	}
 
 	public String getInnerText(Element node) {
-		if (node.local) {
+		if (node.provideIsLocal()) {
 			return node.getInnerText();
 		} else {
-			return domImpl.getInnerText(node.typedDomImpl);
+			return domImpl.getInnerText(node.domImpl);
 		}
 	}
 
 	public Element getNextSiblingElement(Element elem) {
-		if (elem.local) {
+		if (elem.provideIsLocal()) {
 			return elem.getNextSiblingElement();
 		} else {
-			return nodeFor(domImpl.getNextSiblingElement(elem.typedDomImpl));
+			return nodeFor(domImpl.getNextSiblingElement(elem.domImpl));
 		}
 	}
 
 	public int getNodeType(Node node) {
-		if (node.local) {
+		if (node.provideIsLocal()) {
 			return node.getNodeType();
 		} else {
-			return domImpl.getNodeType(node.domImpl);
+			return domImpl.getNodeType(node.domImpl());
 		}
 	}
 
@@ -329,41 +330,42 @@ public class LocalDomImpl {
 	}
 
 	public Element getParentElement(Node node) {
-		if (node.local) {
-			if (node.domImpl != null) {
+		if (node.provideIsLocal()) {
+			if (node.domImpl() != null) {
 				int debug = 3;
 			}
 			return node.getParentElement();
 		} else {
-			return nodeFor(domImpl.getParentElement(node.domImpl));
+			return nodeFor(domImpl.getParentElement(node.domImpl()));
 		}
 	}
-	public Element_Jso getParentElementJso(Node_Jso node){
+
+	public Element_Jso getParentElementJso(Node_Jso node) {
 		return domImpl.getParentElement(node);
 	}
 
 	public Element getPreviousSiblingElement(Element elem) {
-		if (elem.local) {
+		if (elem.provideIsLocal()) {
 			return elem.getPreviousSiblingElement();
 		} else {
 			return nodeFor(
-					domImpl.getPreviousSiblingElement(elem.typedDomImpl));
+					domImpl.getPreviousSiblingElement(elem.domImpl));
 		}
 	}
 
 	public int getScrollLeft(Document doc) {
 		resolveAllPending();
-		return domImpl.getScrollLeft(doc.typedDomImpl);
+		return domImpl.getScrollLeft(doc.domImpl);
 	}
 
 	public int getScrollLeft(Element elem) {
 		resolveAllPending();
-		return domImpl.getScrollLeft(elem.typedDomImpl);
+		return domImpl.getScrollLeft(elem.domImpl);
 	}
 
 	public int getScrollTop(Document doc) {
 		resolveAllPending();
-		return domImpl.getScrollTop(doc.typedDomImpl);
+		return domImpl.getScrollTop(doc.domImpl);
 	}
 
 	public String getStyleProperty(Style style, String name) {
@@ -376,14 +378,14 @@ public class LocalDomImpl {
 
 	public int getTabIndex(Element elem) {
 		resolveAllPending();
-		return domImpl.getTabIndex(elem.typedDomImpl);
+		return domImpl.getTabIndex(elem.domImpl);
 	}
 
 	public String getTagName(Element elem) {
-		if (elem.local) {
+		if (elem.provideIsLocal()) {
 			return elem.getTagName();
 		} else {
-			return domImpl.getTagName(elem.typedDomImpl);
+			return domImpl.getTagName(elem.domImpl);
 		}
 	}
 
@@ -396,27 +398,27 @@ public class LocalDomImpl {
 	}
 
 	public boolean hasAttribute(Element elem, String name) {
-		if (elem.local) {
+		if (elem.provideIsLocal()) {
 			return elem.hasAttribute(name);
 		} else {
-			return domImpl.hasAttribute(elem.typedDomImpl, name);
+			return domImpl.hasAttribute(elem.domImpl, name);
 		}
 	}
 
 	public boolean isOrHasChild(Node parent, Node child) {
-		if (parent.local != child.local) {
+		if (parent.provideIsLocal() != child.provideIsLocal()) {
 			return false;
 		}
-		if (parent.local) {
+		if (parent.provideIsLocal()) {
 			return parent.isOrHasChild(child);
 		} else {
-			return domImpl.isOrHasChild(parent.domImpl, child.domImpl);
+			return domImpl.isOrHasChild(parent.domImpl(), child.domImpl());
 		}
 	}
 
 	public void scrollIntoView(Element elem) {
 		resolveAllPending();
-		domImpl.scrollIntoView(elem.typedDomImpl);
+		domImpl.scrollIntoView(elem.domImpl);
 	}
 
 	public void selectAdd(SelectElement select, OptionElement option,
@@ -424,8 +426,8 @@ public class LocalDomImpl {
 		if (select.provideIsLocal()) {
 			select.insertBefore(option, before);
 		} else {
-			domImpl.selectAdd(select.typedDomImpl, option.typedDomImpl,
-					before == null ? null : before.typedDomImpl);
+			domImpl.selectAdd(select.domImpl, option.domImpl,
+					before == null ? null : before.domImpl);
 		}
 	}
 
@@ -433,7 +435,7 @@ public class LocalDomImpl {
 		if (select.provideIsLocal()) {
 			select.provideLocalDomElement().removeAllChildren();
 		} else {
-			domImpl.selectClear(select.typedDomImpl);
+			domImpl.selectClear(select.domImpl);
 		}
 	}
 
@@ -441,7 +443,7 @@ public class LocalDomImpl {
 		if (select.provideIsLocal()) {
 			return selectGetOptions(select).getLength();
 		} else {
-			return domImpl.selectGetLength(select.typedDomImpl);
+			return domImpl.selectGetLength(select.domImpl);
 		}
 	}
 
@@ -450,25 +452,25 @@ public class LocalDomImpl {
 			return select.provideLocalDomElement().getChildNodes()
 					.filteredSubList(n -> n instanceof OptionElement);
 		} else {
-			return domImpl.selectGetOptions(select.typedDomImpl);
+			return domImpl.selectGetOptions(select.domImpl);
 		}
 	}
 
 	public void selectRemoveOption(SelectElement select, int index) {
 		resolveAllPending();
-		domImpl.selectRemoveOption(select.typedDomImpl, index);
+		domImpl.selectRemoveOption(select.domImpl, index);
 	}
 
 	public void setDraggable(Element elem, String draggable) {
 		resolveAllPending();
-		domImpl.setDraggable(elem.typedDomImpl, draggable);
+		domImpl.setDraggable(elem.domImpl, draggable);
 	}
 
 	public void setInnerText(Element elem, String text) {
-		if (elem.local) {
+		if (elem.provideIsLocal()) {
 			elem.setInnerText(text);
 		} else {
-			domImpl.setInnerText(elem.typedDomImpl, text);
+			domImpl.setInnerText(elem.domImpl, text);
 		}
 	}
 
@@ -483,7 +485,7 @@ public class LocalDomImpl {
 
 	public void setScrollLeft(Element elem, int left) {
 		resolveAllPending();
-		domImpl.setScrollLeft(elem.typedDomImpl, left);
+		domImpl.setScrollLeft(elem.domImpl, left);
 	}
 
 	public void setScrollTop(Document doc, int top) {
@@ -492,10 +494,10 @@ public class LocalDomImpl {
 	}
 
 	public String toString(Element elem) {
-		if (elem.local) {
+		if (elem.provideIsLocal()) {
 			return elem.toString();
 		} else {
-			return domImpl.toString(elem.typedDomImpl);
+			return domImpl.toString(elem.domImpl);
 		}
 	}
 
@@ -542,7 +544,7 @@ public class LocalDomImpl {
 	}
 
 	private void resolveAllPending() {
-		if (useLocalImpl&&LocalDomBridge.get().hasPendingResolutionNodes()) {
+		if (useLocalImpl && LocalDomBridge.get().hasPendingResolutionNodes()) {
 			LocalDomBridge.get().flush();
 			LocalDomBridge.get().useLocalDom();
 		}

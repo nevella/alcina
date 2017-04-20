@@ -11,7 +11,10 @@ public final class JavascriptKeyableLookup extends JavaScriptObject {
         return new $wnd.AlcJsKeyableMap(intLookup);
 	}-*/;
 
-	public static native JavascriptKeyableLookup initJs()/*-{
+	public static native void initJs()/*-{
+		if($wnd.AlcJsKeyableMap){
+			return;
+		}
         function AlcJsKeyableMap(intLookup) {
             this.length = 0;
             this.modCount = 0;

@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import com.google.gwt.core.client.JavaScriptObject;
+
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup.EntryIterator;
 
@@ -20,7 +22,20 @@ public class JsUniqueMap<K, V> implements Map<K, V> {
 
 	private boolean intLookup = false;
 
-	public JsUniqueMap(Class keyClass) {
+	public static native boolean supportsJsMap()/*-{
+        return !!(window.Map && window.Map.prototype.clear);
+	}-*/;
+
+	public static <K, V> Map<K, V> create(Class keyClass,
+			boolean allowNativePartialSupportMap) {
+		if (supportsJsMap() && allowNativePartialSupportMap) {
+			return new JsNativeMapWrapper();
+		} else {
+			return new JsUniqueMap<>(keyClass);
+		}
+	}
+
+	private JsUniqueMap(Class keyClass) {
 		setupMappers(keyClass);
 		lookup = JavascriptKeyableLookup.create(intLookup);
 	}

@@ -89,7 +89,7 @@ public class TableElement extends Element {
 	}-*/;
 
 	public TableCaptionElement createCaption() {
-		return LocalDomBridge.nodeFor(createCaption0(typedDomImpl));
+		return LocalDomBridge.nodeFor(createCaption0(domImpl));
 	}
 
 	/**
@@ -106,7 +106,7 @@ public class TableElement extends Element {
 			return (TableSectionElement) provideLocalDomElement()
 					.createOrReturnChild("tfoot");
 		} else {
-			return LocalDomBridge.nodeFor(createTFoot0(typedDomImpl));
+			return LocalDomBridge.nodeFor(createTFoot0(domImpl));
 		}
 	}
 
@@ -124,7 +124,7 @@ public class TableElement extends Element {
 			return (TableSectionElement) provideLocalDomElement()
 					.createOrReturnChild("thead");
 		} else {
-			return LocalDomBridge.nodeFor(createTHead0(typedDomImpl));
+			return LocalDomBridge.nodeFor(createTHead0(domImpl));
 		}
 	}
 
@@ -136,7 +136,7 @@ public class TableElement extends Element {
 	}-*/;
 
 	public void deleteCaption() {
-		deleteCaption0(typedDomImpl);
+		deleteCaption0(domImpl);
 	}
 
 	/**
@@ -153,7 +153,7 @@ public class TableElement extends Element {
 	}-*/;
 
 	public void deleteRow(int index) {
-		deleteRow0(typedDomImpl, index);
+		deleteRow0(domImpl, index);
 	}
 
 	/**
@@ -164,7 +164,7 @@ public class TableElement extends Element {
 	}-*/;
 
 	public void deleteTFoot() {
-		deleteTFoot0(typedDomImpl);
+		deleteTFoot0(domImpl);
 	}
 
 	/**
@@ -175,7 +175,7 @@ public class TableElement extends Element {
 	}-*/;
 
 	public void deleteTHead() {
-		deleteTHead0(typedDomImpl);
+		deleteTHead0(domImpl);
 	}
 
 	/**

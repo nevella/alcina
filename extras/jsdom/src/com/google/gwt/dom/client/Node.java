@@ -40,94 +40,6 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	 */
 	public static final short DOCUMENT_NODE = 9;
 
-	DomNode impl = null;
-
-	Node_Jso domImpl = null;
-
-	protected boolean resolved;
-
-	protected boolean local;
-
-	protected boolean wasFlushed;
-
-	public abstract <T extends JavascriptObjectEquivalent> T cast();
-
-	public <T extends Node> T appendChild(T newChild) {
-		T node = this.impl.appendChild(newChild);
-		node.localDomResolutionOnly = localDomResolutionOnly;
-		return node;
-	}
-
-	public Node cloneNode(boolean deep) {
-		return this.impl.cloneNode(deep);
-	}
-
-	public NodeList<Node> getChildNodes() {
-		return this.impl.getChildNodes();
-	}
-
-	public Node getFirstChild() {
-		return this.impl.getFirstChild();
-	}
-
-	public Node getLastChild() {
-		return this.impl.getLastChild();
-	}
-
-	public Node getNextSibling() {
-		return this.impl.getNextSibling();
-	}
-
-	public String getNodeName() {
-		return this.impl.getNodeName();
-	}
-
-	public short getNodeType() {
-		return this.impl.getNodeType();
-	}
-
-	public String getNodeValue() {
-		return this.impl.getNodeValue();
-	}
-
-	public Element getParentElement() {
-		return this.impl.getParentElement();
-	}
-
-	public Document getOwnerDocument() {
-		return this.impl.getOwnerDocument();
-	}
-
-	public Node getParentNode() {
-		return this.impl.getParentNode();
-	}
-
-	public Node getPreviousSibling() {
-		return this.impl.getPreviousSibling();
-	}
-
-	public boolean hasChildNodes() {
-		return this.impl.hasChildNodes();
-	}
-
-	public Node insertBefore(Node newChild, Node refChild) {
-		Node node = this.impl.insertBefore(newChild, refChild);
-		node.localDomResolutionOnly = localDomResolutionOnly;
-		return node;
-	}
-
-	public boolean isOrHasChild(Node child) {
-		return this.impl.isOrHasChild(child);
-	}
-
-	public Node replaceChild(Node newChild, Node oldChild) {
-		return this.impl.replaceChild(newChild, oldChild);
-	}
-
-	public void setNodeValue(String nodeValue) {
-		this.impl.setNodeValue(nodeValue);
-	}
-
 	/**
 	 * Assert that the given {@link JavaScriptObject} is a DOM node and
 	 * automatically typecast it.
@@ -164,19 +76,26 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
         }
 	}-*/;
 
+	boolean localDomResolutionOnly;
+
 	protected Node() {
 	}
 
-	public Node nodeFor() {
-		return this;
+	public <T extends Node> T appendChild(T newChild) {
+		T node = this.impl().appendChild(newChild);
+		node.localDomResolutionOnly = localDomResolutionOnly;
+		return node;
 	}
 
-	public Node removeChild(Node oldChild) {
-		return this.impl.removeChild(oldChild);
+	@Override
+	public void callMethod(String methodName) {
+		DomNode_Static.callMethod(this, methodName);
 	}
 
-	public boolean provideIsElement() {
-		return getNodeType() == ELEMENT_NODE;
+	public abstract <T extends JavascriptObjectEquivalent> T cast();
+
+	public Node cloneNode(boolean deep) {
+		return this.impl().cloneNode(deep);
 	}
 
 	@Override
@@ -189,6 +108,54 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		return DomNode_Static.getChildCount(this);
 	}
 
+	public NodeList<Node> getChildNodes() {
+		return this.impl().getChildNodes();
+	}
+
+	public Node getFirstChild() {
+		return this.impl().getFirstChild();
+	}
+
+	public Node getLastChild() {
+		return this.impl().getLastChild();
+	}
+
+	public Node getNextSibling() {
+		return this.impl().getNextSibling();
+	}
+
+	public String getNodeName() {
+		return this.impl().getNodeName();
+	}
+
+	public short getNodeType() {
+		return this.impl().getNodeType();
+	}
+
+	public String getNodeValue() {
+		return this.impl().getNodeValue();
+	}
+
+	public Document getOwnerDocument() {
+		return this.impl().getOwnerDocument();
+	}
+
+	public Element getParentElement() {
+		return this.impl().getParentElement();
+	}
+
+	public Node getParentNode() {
+		return this.impl().getParentNode();
+	}
+
+	public Node getPreviousSibling() {
+		return this.impl().getPreviousSibling();
+	}
+
+	public boolean hasChildNodes() {
+		return this.impl().hasChildNodes();
+	}
+
 	@Override
 	public boolean hasParentElement() {
 		return DomNode_Static.hasParentElement(this);
@@ -199,9 +166,53 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		return DomNode_Static.insertAfter(this, newChild, refChild);
 	}
 
+	public Node insertBefore(Node newChild, Node refChild) {
+		Node node = this.impl().insertBefore(newChild, refChild);
+		node.localDomResolutionOnly = localDomResolutionOnly;
+		return node;
+	}
+
 	@Override
 	public Node insertFirst(Node child) {
 		return DomNode_Static.insertFirst(this, child);
+	}
+
+	public boolean isOrHasChild(Node child) {
+		return this.impl().isOrHasChild(child);
+	}
+
+	public void localDomResolutionOnly() {
+		localDomResolutionOnly = true;
+		getChildNodes().forEach(Node::localDomResolutionOnly);
+	}
+
+	public Node nodeFor() {
+		return this;
+	}
+
+	public boolean provideIsDom() {
+		return domImpl() != null;
+	}
+
+	public boolean provideIsElement() {
+		return getNodeType() == ELEMENT_NODE;
+	}
+
+	public boolean provideIsLocal() {
+		return domImpl() == null || domImpl() != impl();
+	}
+
+	public abstract void putDomImpl(Node_Jso nodeDom);
+
+	public abstract void putImpl(DomNode impl);
+
+	@Override
+	public Node removeAllChildren() {
+		return DomNode_Static.removeAllChildren(this);
+	}
+
+	public Node removeChild(Node oldChild) {
+		return this.impl().removeChild(oldChild);
 	}
 
 	@Override
@@ -209,37 +220,19 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		DomNode_Static.removeFromParent(this);
 	}
 
-	@Override
-	public void callMethod(String methodName) {
-		DomNode_Static.callMethod(this, methodName);
+	public Node replaceChild(Node newChild, Node oldChild) {
+		return this.impl().replaceChild(newChild, oldChild);
 	}
 
-	@Override
-	public Node removeAllChildren() {
-		return DomNode_Static.removeAllChildren(this);
+	public void setNodeValue(String nodeValue) {
+		this.impl().setNodeValue(nodeValue);
 	}
 
-	public abstract void putDomImpl(Node_Jso nodeDom);
+	abstract Node_Jso domImpl();
 
-	public abstract void putImpl(DomNode impl);
-
-	public boolean provideIsDom() {
-		return domImpl != null;
-	}
-
-	public boolean provideIsLocal() {
-		return domImpl == null;
-	}
-
-	boolean localDomResolutionOnly;
-
-	public void localDomResolutionOnly() {
-		localDomResolutionOnly = true;
-		getChildNodes().forEach(Node::localDomResolutionOnly);
-	}
-
+	abstract DomNode impl();
+	abstract DomNode implNoResolve();
 	DomNode localImpl() {
-		return domImpl != null ? null : impl;
+		return domImpl() != null ? null : impl();
 	}
-
 }

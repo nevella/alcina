@@ -83,14 +83,18 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 		return (T) nodeFor(appendChild0(toAppend));
 	}
 
+	/**
+	 * Link remote to [remote or local]
+	 */
 	private Node_Jso resolvedOrPending(Node node) {
 		if (node == null) {
 			return null;
 		}
-		if (node.resolved) {
-			return node.domImpl;
+		if (node.provideIsDom()) {
+			return node.domImpl();
+		} else {
+			return LocalDomBridge.ensurePendingResolutionNode(node);
 		}
-		return LocalDomBridge.ensurePendingResolutionNode(node);
 	}
 
 	/**
@@ -142,7 +146,7 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 		return new NodeList<>(getChildNodes0());
 	}
 
-	 final native NodeList_Jso<Node> getChildNodes0() /*-{
+	final native NodeList_Jso<Node> getChildNodes0() /*-{
         return this.childNodes;
 	}-*/;
 

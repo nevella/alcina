@@ -388,7 +388,7 @@ public class ClientUtils {
 
 	public static native void invokeJsDebugger(Element e) /*-{
         var v = e;
-        var jso = e.@com.google.gwt.dom.client.Element::typedDomImpl;
+        var jso = e.@com.google.gwt.dom.client.Element::domImpl;
         debugger;
 	}-*/;
 

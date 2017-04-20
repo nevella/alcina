@@ -41,7 +41,7 @@ public class Element_Jso extends Node_Jso implements DomElement {
 	 * automatically typecast it.
 	 */
 	public static Element as(Node node) {
-		assert is(node.domImpl);
+		assert is(node.domImpl());
 		return (Element) node;
 	}
 

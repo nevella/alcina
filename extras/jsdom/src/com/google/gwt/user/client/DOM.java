@@ -879,6 +879,9 @@ public class DOM {
 	 *         not a child of the given parent
 	 */
 	public static int getChildIndex(Element parent, Element child) {
+		if(parent.provideIsLocal()&&child.provideIsLocal()){
+			return parent.getChildIndexLocal(child);
+		}
 		return impl.getChildIndex(parent, child);
 	}
 

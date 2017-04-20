@@ -105,11 +105,11 @@ public class Element extends Node implements DomElement {
 		return (node != null) && (node.getNodeType() == Node.ELEMENT_NODE);
 	}
 
-	private DomElement typedImpl;
+	private DomElement impl;
 
 	DomElement localImpl;
 
-	Element_Jso typedDomImpl;
+	Element_Jso domImpl;
 
 	public UIObject uiObject;
 
@@ -119,20 +119,20 @@ public class Element extends Node implements DomElement {
 	}
 
 	public boolean addClassName(String className) {
-		return typedImpl().addClassName(className);
+		return impl().addClassName(className);
 	}
 
 	public <T extends Node> T appendChild(T newChild) {
-		if (domImpl == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
+		if (domImpl() == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
 				&& provideAncestorElementAttachedToDom() != null) {
 			// LocalDomBridge.ensureJso(this, false);
 			LocalDomBridge.ensureJso(this);
 		}
-		return typedImpl().appendChild(newChild);
+		return impl().appendChild(newChild);
 	}
 
 	public void blur() {
-		typedImpl().blur();
+		impl().blur();
 	}
 
 	public <T extends JavascriptObjectEquivalent> T cast() {
@@ -140,11 +140,11 @@ public class Element extends Node implements DomElement {
 	}
 
 	public Node cloneNode(boolean deep) {
-		return typedImpl().cloneNode(deep);
+		return impl().cloneNode(deep);
 	}
 
 	public void dispatchEvent(NativeEvent evt) {
-		typedImpl().dispatchEvent(evt);
+		impl().dispatchEvent(evt);
 	}
 
 	public void dumpLocal() {
@@ -158,100 +158,100 @@ public class Element extends Node implements DomElement {
 
 	public Element ensureDomImpl() {
 		LocalDomBridge.ensureJso(this);
-		if (!(typedImpl instanceof JavaScriptObject)) {
-			if (typedImpl == null) {
+		if (!(impl instanceof JavaScriptObject)) {
+			if (impl == null) {
 				int debug = 3;
 			}
-			putImpl(typedDomImpl);
+			putImpl(domImpl);
 		}
 		return this;
 	}
 
 	public void ensureId() {
-		if (typedDomImpl == null) {
-			typedImpl().ensureId();
+		if (domImpl == null) {
+			impl().ensureId();
 		}
 	}
 
 	public Element_Jso ensureJso() {
-		return ensureDomImpl().typedDomImpl;
+		return ensureDomImpl().domImpl;
 	}
 
 	public Element_Jso ensureJsoNoFlush() {
-		if (typedDomImpl != null) {
-			return typedDomImpl;
+		if (domImpl != null) {
+			return domImpl;
 		}
 		return ensureJso();
 	}
 
 	public void focus() {
 		LocalDomBridge.ensureJso(this);
-		typedDomImpl.focus();
+		domImpl.focus();
 	}
 
 	public int getAbsoluteBottom() {
-		return typedImpl().getAbsoluteBottom();
+		return impl().getAbsoluteBottom();
 	}
 
 	public int getAbsoluteLeft() {
-		return typedImpl().getAbsoluteLeft();
+		return impl().getAbsoluteLeft();
 	}
 
 	public int getAbsoluteRight() {
-		return typedImpl().getAbsoluteRight();
+		return impl().getAbsoluteRight();
 	}
 
 	public int getAbsoluteTop() {
-		return typedImpl().getAbsoluteTop();
+		return impl().getAbsoluteTop();
 	}
 
 	public String getAttribute(String name) {
-		return typedImpl().getAttribute(name);
+		return impl().getAttribute(name);
 	}
 
 	@Override
 	public Map<String, String> getAttributes() {
-		return typedImpl().getAttributes();
+		return impl().getAttributes();
 	}
 
 	public Node getChild(int index) {
-		return typedImpl().getChild(index);
+		return impl().getChild(index);
 	}
 
 	public int getChildCount() {
-		return typedImpl().getChildCount();
+		return impl().getChildCount();
 	}
 
 	public NodeList<Node> getChildNodes() {
-		return typedImpl().getChildNodes();
+		return impl().getChildNodes();
 	}
 
 	public String getClassName() {
-		return typedImpl().getClassName();
+		return impl().getClassName();
 	}
 
 	public int getClientHeight() {
-		return typedImpl().getClientHeight();
+		return impl().getClientHeight();
 	}
 
 	public int getClientWidth() {
-		return typedImpl().getClientWidth();
+		return impl().getClientWidth();
 	}
 
 	public String getDir() {
-		return typedImpl().getDir();
+		return impl().getDir();
 	}
 
 	public String getDraggable() {
-		return typedImpl().getDraggable();
+		return impl().getDraggable();
 	}
 
 	public NodeList<Element> getElementsByTagName(String name) {
-		return typedImpl().getElementsByTagName(name);
+		return impl().getElementsByTagName(name);
 	}
 
 	public Node getFirstChild() {
-		return typedImpl().getFirstChild();
+		return impl().getFirstChild();
 	}
 
 	public Element getFirstChildElement() {
@@ -259,43 +259,43 @@ public class Element extends Node implements DomElement {
 	}
 
 	public String getId() {
-		return typedImpl().getId();
+		return impl().getId();
 	}
 
 	public String getInnerHTML() {
-		return typedImpl().getInnerHTML();
+		return impl().getInnerHTML();
 	}
 
 	public String getInnerText() {
-		return typedImpl().getInnerText();
+		return impl().getInnerText();
 	}
 
 	public String getLang() {
-		return typedImpl().getLang();
+		return impl().getLang();
 	}
 
 	public Node getLastChild() {
-		return typedImpl().getLastChild();
+		return impl().getLastChild();
 	}
 
 	public Node getNextSibling() {
-		return typedImpl().getNextSibling();
+		return impl().getNextSibling();
 	}
 
 	public Element getNextSiblingElement() {
-		return typedImpl().getNextSiblingElement();
+		return impl().getNextSiblingElement();
 	}
 
 	public String getNodeName() {
-		return typedImpl().getNodeName();
+		return impl().getNodeName();
 	}
 
 	public short getNodeType() {
-		return typedImpl().getNodeType();
+		return impl().getNodeType();
 	}
 
 	public String getNodeValue() {
-		return typedImpl().getNodeValue();
+		return impl().getNodeValue();
 	}
 
 	public int getOffsetHeight() {
@@ -319,134 +319,134 @@ public class Element extends Node implements DomElement {
 	}
 
 	public Document getOwnerDocument() {
-		return typedImpl().getOwnerDocument();
+		return impl().getOwnerDocument();
 	}
 
 	public Element getParentElement() {
 		// no resolution
-		if (typedImpl == null) {
-			//FIXME - when does this happen (suggest box clear is one place)
+		if (impl == null) {
+			// FIXME - when does this happen (suggest box clear is one place)
 			return null;
-//			int debug = 3;
+			// int debug = 3;
 		}
-		return typedImpl.getParentElement();
+		return impl.getParentElement();
 	}
 
 	public Node getParentNode() {
-		return typedImpl().getParentNode();
+		return impl().getParentNode();
 	}
 
 	public Node getPreviousSibling() {
-		return typedImpl().getPreviousSibling();
+		return impl().getPreviousSibling();
 	}
 
 	public Element getPreviousSiblingElement() {
-		return typedImpl().getPreviousSiblingElement();
+		return impl().getPreviousSiblingElement();
 	}
 
 	public boolean getPropertyBoolean(String name) {
-		return typedImpl().getPropertyBoolean(name);
+		return impl().getPropertyBoolean(name);
 	}
 
 	public double getPropertyDouble(String name) {
-		return typedImpl().getPropertyDouble(name);
+		return impl().getPropertyDouble(name);
 	}
 
 	public int getPropertyInt(String name) {
-		return typedImpl().getPropertyInt(name);
+		return impl().getPropertyInt(name);
 	}
 
 	public JavaScriptObject getPropertyJSO(String name) {
-		return typedImpl().getPropertyJSO(name);
+		return impl().getPropertyJSO(name);
 	}
 
 	public Object getPropertyObject(String name) {
-		return typedImpl().getPropertyObject(name);
+		return impl().getPropertyObject(name);
 	}
 
 	public String getPropertyString(String name) {
-		return typedImpl().getPropertyString(name);
+		return impl().getPropertyString(name);
 	}
 
 	public int getScrollHeight() {
-		return typedImpl().getScrollHeight();
+		return impl().getScrollHeight();
 	}
 
 	public int getScrollLeft() {
-		return typedImpl().getScrollLeft();
+		return impl().getScrollLeft();
 	}
 
 	public int getScrollTop() {
-		return typedImpl().getScrollTop();
+		return impl().getScrollTop();
 	}
 
 	public int getScrollWidth() {
-		return typedImpl().getScrollWidth();
+		return impl().getScrollWidth();
 	}
 
 	public String getString() {
-		return typedImpl().getString();
+		return impl().getString();
 	}
 
 	public Style getStyle() {
-		return typedImpl().getStyle();
+		return impl().getStyle();
 	}
 
 	public int getTabIndex() {
-		return typedImpl().getTabIndex();
+		return impl().getTabIndex();
 	}
 
 	public String getTagName() {
-		return typedImpl().getTagName();
+		return impl().getTagName();
 	}
 
 	public String getTitle() {
-		return typedImpl().getTitle();
+		return impl().getTitle();
 	}
 
-	public Element_Jso getTypedDomImpl() {
-		return typedDomImpl;
+	public Element_Jso getdomImpl() {
+		return domImpl;
 	}
 
 	public boolean hasAttribute(String name) {
-		return typedImpl().hasAttribute(name);
+		return impl().hasAttribute(name);
 	}
 
 	public boolean hasChildNodes() {
-		return typedImpl().hasChildNodes();
+		return impl().hasChildNodes();
 	}
 
 	public boolean hasClassName(String className) {
-		return typedImpl().hasClassName(className);
+		return impl().hasClassName(className);
 	}
 
 	public boolean hasParentElement() {
-		return typedImpl().hasParentElement();
+		return impl().hasParentElement();
 	}
 
 	public boolean hasTagName(String tagName) {
-		return typedImpl().hasTagName(tagName);
+		return impl().hasTagName(tagName);
 	}
 
 	@Override
 	public Integer indexInParentChildren() {
-		return typedImpl().indexInParentChildren();
+		return impl().indexInParentChildren();
 	}
 
 	public Node insertAfter(Node newChild, Node refChild) {
-		return typedImpl().insertAfter(newChild, refChild);
+		return impl().insertAfter(newChild, refChild);
 	}
 
 	public Node insertBefore(Node newChild, Node refChild) {
-		return typedImpl().insertBefore(newChild, refChild);
+		return impl().insertBefore(newChild, refChild);
 	}
 
 	public Node insertFirst(Node child) {
-		return typedImpl().insertFirst(child);
+		return impl().insertFirst(child);
 	}
 
 	public boolean isOrHasChild(Node child) {
-		return typedImpl().isOrHasChild(child);
+		return impl().isOrHasChild(child);
 	}
 
 	public int localEventBitsSunk() {
@@ -457,8 +457,8 @@ public class Element extends Node implements DomElement {
 		if (localImpl != null) {
 			return localImpl;
 		} else {
-			if (domImpl != typedImpl) {
-				return typedImpl;
+			if (domImpl != impl) {
+				return impl;
 			} else {
 				return null;
 			}
@@ -466,11 +466,11 @@ public class Element extends Node implements DomElement {
 	}
 
 	public Element nodeFor() {
-		return typedImpl().elementFor();
+		return impl().elementFor();
 	}
 
 	public Element provideAncestorElementAttachedToDom() {
-		if (domImpl != null) {
+		if (domImpl() != null) {
 			return this;
 		}
 		if (getParentElement() != null) {
@@ -481,22 +481,20 @@ public class Element extends Node implements DomElement {
 
 	public LocalDomElement provideLocalDomElement() {
 		Preconditions.checkState(provideIsLocal());
-		return (LocalDomElement) impl;
+		return (LocalDomElement) impl();
 	}
 
 	@Override
 	public void putDomImpl(Node_Jso nodeDom) {
-		typedDomImpl = (Element_Jso) nodeDom;
-		domImpl = nodeDom;
-		local = nodeDom == null;
+		domImpl = (Element_Jso) nodeDom;
 		if (nodeDom != null) {
-			if (typedDomImpl.getId().length() > 0) {
+			if (domImpl.getId().length() > 0) {
 				String localId = localImpl() != null ? localImpl().getId() : "";
-				System.out.println(Ax.format("[id:%s,%s]->jso:%s", typedDomImpl.getId(),localId,
-						nodeDom.hashCode()));
+				System.out.println(Ax.format("[id:%s,%s]->jso:%s",
+						domImpl.getId(), localId, nodeDom.hashCode()));
 			}
-			if (impl instanceof LocalDomElement) {
-				LocalDomElement localDomElement = (LocalDomElement) impl;
+			if (impl() instanceof LocalDomElement) {
+				LocalDomElement localDomElement = (LocalDomElement) impl();
 				if (localDomElement != null
 						&& localDomElement.getEventBits() != 0) {
 					DOM.sinkEvents(this, localDomElement.getEventBits());
@@ -511,29 +509,26 @@ public class Element extends Node implements DomElement {
 		if (impl == this.impl) {
 			return;
 		}
-		if(impl==null){
-			int debug=3;
-		}
 		LocalDomBridge.get().checkInPreconditionList(this, impl);
-		if (typedImpl != null) {
-			if (typedImpl instanceof JavaScriptObject) {
+		if (this.impl != null) {
+			if (this.impl instanceof JavaScriptObject) {
 				Preconditions.checkState(impl instanceof LocalDomNode);
 				// orphan - to handle direct html writing of UiBinder
-				LocalDomBridge.get().javascriptObjectNodeLookup
-						.remove(typedDomImpl);
+				LocalDomBridge.get().javascriptObjectNodeLookup.remove(domImpl);
 				domImpl = null;
-				typedDomImpl = null;
 			} else {
-				localImpl = typedImpl;
+				if (this.impl instanceof JavaScriptObject) {
+					int debug = 3;
+				}
+				localImpl = (DomElement) this.impl;
 			}
 		}
-		typedImpl = (DomElement) impl;
-		this.impl = impl;
+		this.impl = (DomElement) impl;
 	}
 
 	@Override
 	public Node removeAllChildren() {
-		if (domImpl == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
+		if (domImpl() == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
 				&& provideAncestorElementAttachedToDom() != null) {
 			ensureJso();
 		}
@@ -547,27 +542,27 @@ public class Element extends Node implements DomElement {
 	}
 
 	public void removeAttribute(String name) {
-		typedImpl().removeAttribute(name);
+		impl().removeAttribute(name);
 	}
 
 	public Node removeChild(Node oldChild) {
-		return typedImpl().removeChild(oldChild);
+		return impl().removeChild(oldChild);
 	}
 
 	public boolean removeClassName(String className) {
-		return typedImpl().removeClassName(className);
+		return impl().removeClassName(className);
 	}
 
 	public void removeFromParent() {
-		typedImpl().removeFromParent();
+		impl().removeFromParent();
 	}
 
 	public Node replaceChild(Node newChild, Node oldChild) {
-		return typedImpl().replaceChild(newChild, oldChild);
+		return impl().replaceChild(newChild, oldChild);
 	}
 
 	public void replaceClassName(String oldClassName, String newClassName) {
-		typedImpl().replaceClassName(oldClassName, newClassName);
+		impl().replaceClassName(oldClassName, newClassName);
 	}
 
 	public void resolveIfAppropriate() {
@@ -575,47 +570,47 @@ public class Element extends Node implements DomElement {
 	}
 
 	public void scrollIntoView() {
-		typedImpl().scrollIntoView();
+		impl().scrollIntoView();
 	}
 
 	public void setAttribute(String name, String value) {
-		typedImpl().setAttribute(name, value);
+		impl().setAttribute(name, value);
 	}
 
 	public void setClassName(String className) {
-		typedImpl().setClassName(className);
+		impl().setClassName(className);
 	}
 
 	public void setDir(String dir) {
-		typedImpl().setDir(dir);
+		impl().setDir(dir);
 	}
 
 	public void setDraggable(String draggable) {
-		typedImpl().setDraggable(draggable);
+		impl().setDraggable(draggable);
 	}
 
 	public void setId(String id) {
-		typedImpl().setId(id);
+		impl().setId(id);
 	}
 
 	public void setInnerHTML(String html) {
-		typedImpl().setInnerHTML(html);
+		impl().setInnerHTML(html);
 	}
 
 	public void setInnerSafeHtml(SafeHtml html) {
-		typedImpl().setInnerSafeHtml(html);
+		impl().setInnerSafeHtml(html);
 	}
 
 	public void setInnerText(String text) {
-		typedImpl().setInnerText(text);
+		impl().setInnerText(text);
 	}
 
 	public void setLang(String lang) {
-		typedImpl().setLang(lang);
+		impl().setLang(lang);
 	}
 
 	public void setNodeValue(String nodeValue) {
-		typedImpl().setNodeValue(nodeValue);
+		impl().setNodeValue(nodeValue);
 	}
 
 	public void setOuterHtml(String html) {
@@ -624,64 +619,64 @@ public class Element extends Node implements DomElement {
 	}
 
 	public void setPropertyBoolean(String name, boolean value) {
-		typedImpl().setPropertyBoolean(name, value);
+		impl().setPropertyBoolean(name, value);
 	}
 
 	public void setPropertyDouble(String name, double value) {
-		typedImpl().setPropertyDouble(name, value);
+		impl().setPropertyDouble(name, value);
 	}
 
 	public void setPropertyInt(String name, int value) {
-		typedImpl().setPropertyInt(name, value);
+		impl().setPropertyInt(name, value);
 	}
 
 	public void setPropertyJSO(String name, JavaScriptObject value) {
-		typedImpl().setPropertyJSO(name, value);
+		impl().setPropertyJSO(name, value);
 	}
 
 	public void setPropertyObject(String name, Object value) {
-		typedImpl().setPropertyObject(name, value);
+		impl().setPropertyObject(name, value);
 	}
 
 	public void setPropertyString(String name, String value) {
-		typedImpl().setPropertyString(name, value);
+		impl().setPropertyString(name, value);
 	}
 
 	public void setScrollLeft(int scrollLeft) {
-		typedImpl().setScrollLeft(scrollLeft);
+		impl().setScrollLeft(scrollLeft);
 	}
 
 	public void setScrollTop(int scrollTop) {
-		typedImpl().setScrollTop(scrollTop);
+		impl().setScrollTop(scrollTop);
 	}
 
 	public void setTabIndex(int tabIndex) {
-		typedImpl().setTabIndex(tabIndex);
+		impl().setTabIndex(tabIndex);
 	}
 
 	public void setTitle(String title) {
-		typedImpl().setTitle(title);
+		impl().setTitle(title);
 	}
 
 	public void sinkEvents(int eventBits) {
-		typedImpl().sinkEvents(eventBits);
+		impl().sinkEvents(eventBits);
 	}
 
 	public void toggleClassName(String className) {
-		typedImpl().toggleClassName(className);
+		impl().toggleClassName(className);
 	}
 
 	@Override
 	public String toString() {
-		return impl == null ? super.toString()
-				: impl.toString() + (uiObject == null ? ""
+		return impl() == null ? super.toString()
+				: impl().toString() + (uiObject == null ? ""
 						: ": " + uiObject.getClass().getSimpleName());
 	}
 
 	private void dumpLocal0(int depth) {
 		String indent = CommonUtils.padStringLeft("", depth * 2, ' ');
 		System.out.println(Ax.format("%s%s [%s,%s,%s]: ", indent, getTagName(),
-				hashCode(), impl.hashCode(), domImpl == null ? "f" : "t"));
+				hashCode(), impl().hashCode(), domImpl() == null ? "f" : "t"));
 		for (Node node : getChildNodes()) {
 			switch (node.getNodeType()) {
 			case Node.TEXT_NODE:
@@ -698,7 +693,7 @@ public class Element extends Node implements DomElement {
 	private boolean isAttached() {
 		Element cursor = this;
 		while (cursor != null) {
-			if (cursor.domImpl != null) {
+			if (cursor.domImpl() != null) {
 				return true;
 			}
 			cursor = cursor.getParentElement();
@@ -711,22 +706,39 @@ public class Element extends Node implements DomElement {
 	}
 
 	private void resolveIfAppropriate(boolean flushIfInnerHtml) {
-		if (domImpl == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
+		if (domImpl() == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
 				&& isAttached()) {
 			LocalDomBridge.ensureJso(this);
 		}
-		if (domImpl == null && flushIfInnerHtml
+		if (domImpl() == null && flushIfInnerHtml
 				&& LocalDomBridge.shouldUseDomNodes() && !isAttached()) {
 			LocalDomBridge.replaceWithJso(this);
 		}
 	}
 
-	DomElement typedImpl() {
-		return typedImpl(false);
+	private DomElement typedImpl(boolean flushIfInnerHtml) {
+		resolveIfAppropriate(flushIfInnerHtml);
+		return impl;
 	}
 
-	DomElement typedImpl(boolean flushIfInnerHtml) {
-		resolveIfAppropriate(flushIfInnerHtml);
-		return typedImpl;
+	@Override
+	Node_Jso domImpl() {
+		return domImpl;
+	}
+
+	@Override
+	DomElement impl() {
+		return typedImpl(false);
+	}
+@Override
+	DomElement implNoResolve() {
+		return impl;
+	}
+
+	public int getChildIndexLocal(Element child) {
+		if (child.getParentElement() != this) {
+			return -1;
+		}
+		return child.indexInParentChildren();
 	}
 }

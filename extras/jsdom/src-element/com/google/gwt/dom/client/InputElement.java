@@ -79,7 +79,7 @@ public class InputElement extends Element {
 
   
   public final  void click() {
-	  click0(typedDomImpl);
+	  click0(domImpl);
   }
   
   /**
@@ -260,7 +260,7 @@ public class InputElement extends Element {
   }-*/;
   
   public final  void select() {
-	  select0(typedDomImpl);
+	  select0(domImpl);
   }
   /**
    * A comma-separated list of content types that a server processing this form

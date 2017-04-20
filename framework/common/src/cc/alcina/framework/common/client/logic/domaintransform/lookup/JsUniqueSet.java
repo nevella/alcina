@@ -2,14 +2,15 @@ package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
 import java.util.AbstractSet;
 import java.util.Iterator;
+import java.util.Map;
 
 public class JsUniqueSet<E> extends AbstractSet<E> {
 	private static final Object PRESENT = new Object();
 
-	private JsUniqueMap<E, Object> map;
+	private Map<E, Object> map;
 
 	public JsUniqueSet(Class keyClass) {
-		this.map = new JsUniqueMap<E, Object>(keyClass);
+		this.map = (Map<E, Object>) JsUniqueMap.create(keyClass, false);
 	}
 
 	public boolean add(E e) {

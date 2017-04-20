@@ -93,7 +93,7 @@ class DOMImplIE9 extends DOMImplStandardBase {
 
   @Override
   protected void setScrollLeft(Document_Jso doc, int left) {
-    setScrollLeft(doc.getDocumentElement().typedDomImpl, left);
+    setScrollLeft(doc.getDocumentElement().domImpl, left);
   }
 
   private native double getBoundingClientRectLeft(Element_Jso elem) /*-{

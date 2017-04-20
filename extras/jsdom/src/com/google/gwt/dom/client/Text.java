@@ -21,10 +21,6 @@ import com.google.gwt.core.client.JavascriptObjectEquivalent;
  * The Text interface represents textual content.
  */
 public class Text extends Node implements DomText {
-	DomText typedImpl;
-
-	Text_Jso typedDomImpl;
-
 	/**
 	 * Assert that the given {@link Node} is of type {@link Node#TEXT_NODE} and
 	 * automatically typecast it.
@@ -34,51 +30,66 @@ public class Text extends Node implements DomText {
 		return (Text) node;
 	}
 
+	private DomText impl;
+
+	private Text_Jso domImpl;
+
+	protected Text() {
+	}
+
 	public Text cast() {
 		return this;
 	}
 
 	public void deleteData(int offset, int length) {
-		typedImpl.deleteData(offset, length);
+		impl().deleteData(offset, length);
 	}
 
 	public String getData() {
-		return typedImpl.getData();
+		return impl().getData();
 	}
 
 	public int getLength() {
-		return typedImpl.getLength();
+		return impl().getLength();
 	}
 
 	public void insertData(int offset, String data) {
-		typedImpl.insertData(offset, data);
-	}
-
-	public void replaceData(int offset, int length, String data) {
-		typedImpl.replaceData(offset, length, data);
-	}
-
-	public void setData(String data) {
-		typedImpl.setData(data);
-	}
-
-	public Text splitText(int offset) {
-		return typedImpl.splitText(offset);
-	}
-
-	protected Text() {
+		impl().insertData(offset, data);
 	}
 
 	@Override
 	public void putDomImpl(Node_Jso nodeDom) {
-		typedDomImpl = (Text_Jso) nodeDom;
-		domImpl = nodeDom;
-		local = nodeDom == null;
+		this.domImpl = (Text_Jso) nodeDom;
 	}
 
 	@Override
 	public void putImpl(DomNode impl) {
-		typedImpl = (DomText) impl;
-		this.impl = impl;
+		this.impl = (DomText) impl;
+	}
+
+	public void replaceData(int offset, int length, String data) {
+		impl().replaceData(offset, length, data);
+	}
+
+	public void setData(String data) {
+		impl().setData(data);
+	}
+
+	public Text splitText(int offset) {
+		return impl().splitText(offset);
+	}
+
+	@Override
+	Text_Jso domImpl() {
+		return domImpl;
+	}
+
+	@Override
+	DomText impl() {
+		return impl;
+	}
+	@Override
+	DomText implNoResolve() {
+		return impl();
 	}
 }

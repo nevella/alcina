@@ -95,7 +95,7 @@ public class TableSectionElement extends Element {
 	}-*/;
 
 	public void deleteRow(int index) {
-		deleteRow0(typedDomImpl, index);
+		deleteRow0(domImpl, index);
 	}
 
 	/**
@@ -143,7 +143,7 @@ public class TableSectionElement extends Element {
 			return new NodeList<>(
 					(NodeList_Wrapped) new NodeList_Wrapped<>(nodes));
 		} else {
-			return new NodeList<>(getRows0(typedDomImpl));
+			return new NodeList<>(getRows0(domImpl));
 		}
 	}
 

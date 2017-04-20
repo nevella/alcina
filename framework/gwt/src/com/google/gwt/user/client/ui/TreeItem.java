@@ -1077,6 +1077,7 @@ public class TreeItem extends UIObject
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private Element resolve(Element elem) {
 		if (PotentialElement.isPotential(elem)) {
 			Element replacer = Document.get().createElement(elem.getTagName())

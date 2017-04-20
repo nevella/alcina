@@ -154,12 +154,10 @@ public abstract class UIObject implements HasVisibility {
    * default.
    */
   public static class DebugIdImpl {
-    @SuppressWarnings("unused")
     // parameters
     public void ensureDebugId(UIObject uiObject, String id) {
     }
 
-    @SuppressWarnings("unused")
     // parameters
     public void ensureDebugId(Element elem, String baseID, String id) {
     }

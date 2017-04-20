@@ -356,7 +356,7 @@ public class Element_Jvm extends Node_Jvm
 	public Node_Jso provideAncestorDomImpl() {
 		Element domAncestor = ((Element) node)
 				.provideAncestorElementAttachedToDom();
-		return domAncestor == null ? null : domAncestor.domImpl;
+		return domAncestor == null ? null : domAncestor.domImpl();
 	}
 
 	@Override
@@ -564,7 +564,7 @@ public class Element_Jvm extends Node_Jvm
 			builder.appendHtmlConstantNoCheck(" style=\"");
 			((Style_Jvm) style.impl).properties.entrySet().forEach(e -> {
 				builder.appendEscaped(
-						LocalDomBridge.declarativeCssName(e.getKey()));
+						LocalDomBridge.get().declarativeCssName(e.getKey()));
 				builder.appendHtmlConstantNoCheck(":");
 				builder.appendEscaped(e.getValue());
 				builder.appendHtmlConstantNoCheck("; ");
@@ -595,6 +595,4 @@ public class Element_Jvm extends Node_Jvm
 		sunk |= eventBits;
 		return sunk;
 	}
-
-	
 }

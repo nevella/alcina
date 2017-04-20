@@ -88,7 +88,7 @@ public class TableRowElement extends Element {
 	}-*/;
 
 	public void deleteCell(int index) {
-		deleteCell0(typedDomImpl, index);
+		deleteCell0(domImpl, index);
 	}
 
 	/**

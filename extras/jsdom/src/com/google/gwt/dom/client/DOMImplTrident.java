@@ -73,7 +73,7 @@ abstract class DOMImplTrident extends DOMImpl {
 
       // Remove the Element_Dom before returning it, so that there's no chance of
       // it getting clobbered later.
-      Element_Jso elem = container.getFirstChildElement().typedDomImpl;
+      Element_Jso elem = container.getFirstChildElement().domImpl;
       container.removeChild(LocalDomBridge.nodeFor(elem));
       return elem;
     }
@@ -229,12 +229,12 @@ abstract class DOMImplTrident extends DOMImpl {
 
   @Override
   protected int getBodyOffsetLeft(Document_Jso doc) {
-    return getClientLeft(doc.getViewportElement().typedDomImpl);
+    return getClientLeft(doc.getViewportElement().domImpl);
   }
 
   @Override
   protected int getBodyOffsetTop(Document_Jso doc) {
-    return getClientTop(doc.getViewportElement().typedDomImpl);
+    return getClientTop(doc.getViewportElement().domImpl);
   }
 
   @Override
