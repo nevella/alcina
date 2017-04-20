@@ -58,6 +58,8 @@ public class StatsFilter extends CollectionProjectionFilter {
 
 	private boolean bypassGwtTransient;
 
+	private boolean dumpPaths;
+
 	public StatsFilter() {
 	}
 
@@ -70,8 +72,8 @@ public class StatsFilter extends CollectionProjectionFilter {
 		if (bypass(context.field)) {
 			return null;
 		}
-		visited.put(context.projectedOwner, context.projectedOwner);
-		visited.put(filtered, filtered);
+		visited.put(context.projectedOwner, context.toPath());
+		visited.put(filtered, context.toPath());
 		ownerMap.add(context.projectedOwner, filtered);
 		ownerMap.ensureKey(filtered);
 		owneeMap.add(filtered, context.projectedOwner);
@@ -176,6 +178,8 @@ public class StatsFilter extends CollectionProjectionFilter {
 		return projectableFields.get(clazz);
 	}
 
+	IdentityHashMap pathDumped = new IdentityHashMap<>();
+
 	void dumpStats() {
 		try {
 			Set<Object> owned = new LinkedHashSet<Object>();
@@ -260,6 +264,14 @@ public class StatsFilter extends CollectionProjectionFilter {
 											new Multiset<String, Set>());
 								}
 								ownershipStats.get(clazz2).add(key, o1);
+								if (dumpPaths) {
+									if (pathDumped.containsKey(o1)) {
+									} else {
+										pathDumped.put(o1, o1);
+										System.out.println(
+												visited.get(o1) + "::" + o1);
+									}
+								}
 							}
 						}
 					}
@@ -475,6 +487,11 @@ public class StatsFilter extends CollectionProjectionFilter {
 
 	public StatsFilter bypassGwtTransient() {
 		this.bypassGwtTransient = true;
+		return this;
+	}
+
+	public StatsFilter dumpPaths() {
+		dumpPaths = true;
 		return this;
 	}
 }
