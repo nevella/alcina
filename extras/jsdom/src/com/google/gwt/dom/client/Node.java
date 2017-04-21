@@ -199,7 +199,7 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	}
 
 	public boolean provideIsLocal() {
-		return domImpl() == null || domImpl() != impl();
+		return domImpl() == null || domImpl() != implNoResolve();
 	}
 
 	public abstract void putDomImpl(Node_Jso nodeDom);

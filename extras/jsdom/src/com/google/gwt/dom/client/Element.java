@@ -512,20 +512,25 @@ public class Element extends Node implements DomElement {
 		LocalDomBridge.get().checkInPreconditionList(this, impl);
 		if (this.impl != null) {
 			if (this.impl instanceof JavaScriptObject) {
-				Preconditions.checkState(impl instanceof LocalDomNode);
+				if (impl instanceof LocalDomNode) {
+				} else {
+					if (this.impl.getNodeType() == Node.ELEMENT_NODE) {
+						// FIXME - pushbutton requires this (rather than a fail)
+						Preconditions.checkState(((Element_Jso) this.impl)
+								.getInnerHTML0()
+								.equals(((Element_Jso) impl).getInnerHTML0()));
+					}
+				}
 				// orphan - to handle direct html writing of UiBinder
 				LocalDomBridge.get().javascriptObjectNodeLookup.remove(domImpl);
 				domImpl = null;
 			} else {
-				if (this.impl instanceof JavaScriptObject) {
-					int debug = 3;
-				}
+				Preconditions
+						.checkState(!(this.impl instanceof JavaScriptObject));
 				localImpl = (DomElement) this.impl;
 			}
 		}
-		if (impl == null) {
-			int debug = 3;
-		}
+		Preconditions.checkState(impl != null);
 		this.impl = (DomElement) impl;
 	}
 
