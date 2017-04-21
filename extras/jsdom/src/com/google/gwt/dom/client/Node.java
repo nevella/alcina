@@ -233,6 +233,6 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	abstract DomNode impl();
 	abstract DomNode implNoResolve();
 	DomNode localImpl() {
-		return domImpl() != null ? null : impl();
+		return domImpl() != null ? null : implNoResolve();
 	}
 }

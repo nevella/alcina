@@ -523,6 +523,9 @@ public class Element extends Node implements DomElement {
 				localImpl = (DomElement) this.impl;
 			}
 		}
+		if (impl == null) {
+			int debug = 3;
+		}
 		this.impl = (DomElement) impl;
 	}
 
@@ -730,7 +733,8 @@ public class Element extends Node implements DomElement {
 	DomElement impl() {
 		return typedImpl(false);
 	}
-@Override
+
+	@Override
 	DomElement implNoResolve() {
 		return impl;
 	}
