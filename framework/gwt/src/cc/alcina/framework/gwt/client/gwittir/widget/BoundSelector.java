@@ -177,9 +177,10 @@ public class BoundSelector extends AbstractBoundWidget
 		results.setRenderer(renderer);
 		results.setUseCellList(useCellList);
 		resultsWidget = results.createWidget(SelectWithSearch.emptyItems(),
-				click -> resultItemSelected(
-						((HasItem) click.getSource()).getItem()),
-				MAX_SINGLE_LINE_CHARS);
+				click -> {
+					click.stopPropagation();
+					resultItemSelected(((HasItem) click.getSource()).getItem());
+				}, MAX_SINGLE_LINE_CHARS);
 		results.addSelectionHandler(
 				evt -> resultItemSelected(evt.getSelectedItem()));
 		if (shouldHideResultFilter()) {

@@ -189,7 +189,7 @@ public class RelativePopupPositioning {
 			Widget relativeContainer, final RelativePopupPanel rpp,
 			final int shiftX, final int shiftY) {
 		final Widget positioningWidget = relativeContainer;
-		final Element relativeToElement = WidgetUtils
+		Element relativeToElement = WidgetUtils
 				.getElementForAroundPositioning(relativeToElement0);
 		if (!LooseContext.getContext()
 				.getBoolean(CONTEXT_KEEP_RELATIVE_PARENT_CLIP)) {
