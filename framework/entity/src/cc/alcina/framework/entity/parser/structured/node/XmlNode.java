@@ -17,6 +17,11 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
+import org.w3c.dom.ranges.DocumentRange;
+import org.w3c.dom.ranges.Range;
+import org.w3c.dom.traversal.DocumentTraversal;
+import org.w3c.dom.traversal.NodeFilter;
+import org.w3c.dom.traversal.TreeWalker;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -245,7 +250,12 @@ public class XmlNode {
 
 	public String prettyToString() {
 		try {
-			return XmlUtils.prettyPrintWithDOM3LSNode(getElement());
+			if (node.getNodeType() == Node.DOCUMENT_FRAGMENT_NODE) {
+				return XmlUtils
+						.prettyPrintWithDOM3LSNode((DocumentFragment) node);
+			} else {
+				return XmlUtils.prettyPrintWithDOM3LSNode(getElement());
+			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -717,4 +727,52 @@ public class XmlNode {
 		}
 	}
 
+	public class XmlRange {
+		private XmlNode end;
+
+		public XmlRange end(XmlNode end) {
+			this.end = end;
+			return this;
+		}
+
+		public XmlNode toNode() {
+			Range range = createRange();
+			DocumentFragment frag = range.cloneContents();
+			range.detach();
+			return doc.nodeFor(frag);
+		}
+
+		private Range createRange() {
+			Range range = ((DocumentRange) doc.domDoc()).createRange();
+			range.setStartBefore(node);
+			range.setEndAfter(end.node);
+			return range;
+		}
+
+		public DocumentFragment asFragment() {
+			return (DocumentFragment) toNode().node;
+		}
+
+		public XmlRange endBefore(XmlNode endBefore) {
+			TreeWalker tw = ((DocumentTraversal) doc.domDoc()).createTreeWalker(
+					doc.domDoc(), NodeFilter.SHOW_ALL, null, true);
+			tw.setCurrentNode(endBefore.node);
+			tw.previousNode();
+			end = doc.nodeFor(tw.getCurrentNode());
+			return this;
+		}
+
+		public XmlNode toWrappedNode(String tag) {
+			Element wrapper = doc.domDoc().createElement(tag);
+			Range range = createRange();
+			DocumentFragment frag = range.cloneContents();
+			range.detach();
+			wrapper.appendChild(frag);
+			return doc.nodeFor(wrapper);
+		}
+	}
+
+	public XmlRange range() {
+		return new XmlRange();
+	}
 }

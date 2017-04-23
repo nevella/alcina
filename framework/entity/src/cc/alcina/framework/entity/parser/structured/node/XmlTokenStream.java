@@ -16,6 +16,10 @@ public class XmlTokenStream implements Iterator<XmlNode> {
 
 	private XmlDoc doc;
 
+	public XmlDoc getDoc() {
+		return this.doc;
+	}
+
 	public XmlTokenStream(XmlNode node) {
 		this.doc = node.doc;
 		this.tw = ((DocumentTraversal) doc.domDoc()).createTreeWalker(node.node,
