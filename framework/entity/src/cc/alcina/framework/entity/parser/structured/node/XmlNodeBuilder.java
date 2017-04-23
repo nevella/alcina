@@ -32,6 +32,14 @@ public class XmlNodeBuilder {
 		return node;
 	}
 
+	public XmlNode appendAsFirstChild() {
+		XmlNode node = generate();
+		relativeTo.node.insertBefore(node.node,
+				relativeTo.node.getFirstChild());
+		relativeTo.children.invalidate();
+		return node;
+	}
+
 	public XmlNodeBuilder attrs(String... strings) {
 		this.attrs = new StringMap(Arrays.asList(strings));
 		return this;
@@ -51,8 +59,13 @@ public class XmlNodeBuilder {
 	}
 
 	public XmlNodeBuilder className(String className) {
-		attrs("class",className);
+		attrs("class", className);
 		return this;
+	}
+
+	public void insertAfter() {
+		XmlNode node = generate();
+		relativeTo.relative().insertAfterThis(node);
 	}
 
 	public XmlNodeBuilder processingInstruction() {
@@ -112,12 +125,5 @@ public class XmlNodeBuilder {
 			node = doc().domDoc().createTextNode(text);
 		}
 		return doc().nodeFor(node);
-	}
-
-	public XmlNode appendAsFirstChild() {
-		XmlNode node = generate();
-		relativeTo.node.insertBefore(node.node, relativeTo.node.getFirstChild());
-		relativeTo.children.invalidate();
-		return node;		
 	}
 }

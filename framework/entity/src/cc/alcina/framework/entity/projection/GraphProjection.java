@@ -729,6 +729,16 @@ public class GraphProjection {
 			return (parent == null ? "" : parent.toString() + "::")
 					+ clazz.getSimpleName() + "." + fieldName;
 		}
+
+		public String toPath() {
+			String string = sourceOwner.toString();
+			if (string.contains("@")
+					&& string.contains(sourceOwner.getClass().getName())) {
+				string = "@" + sourceOwner.hashCode();
+			}
+			return (parent == null ? "" : parent.toPath() + "::")
+					+ clazz.getSimpleName() + "/" + string + "." + fieldName;
+		}
 	}
 
 	public static interface GraphProjectionDataFilter {

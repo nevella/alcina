@@ -3,6 +3,8 @@ package cc.alcina.framework.entity.parser.structured;
 import java.util.List;
 import java.util.function.Supplier;
 
+import com.google.gwt.canvas.dom.client.Context;
+
 import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 import cc.alcina.framework.entity.parser.structured.node.XmlTokenStream;
@@ -24,6 +26,7 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 		out.context = context;
 		context.stream = stream;
 		context.parser = this;
+		context.start();
 		while (stream.hasNext()) {
 			XmlNode node = stream.next();
 			handleNode(node, context);
