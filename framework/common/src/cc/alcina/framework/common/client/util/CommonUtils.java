@@ -1501,7 +1501,27 @@ public class CommonUtils {
 		}
 		return list.get(idx);
 	}
-	public static interface IidGenerator{
+
+	public static interface IidGenerator {
 		String generate();
+	}
+
+	public static String normalisedNumericOrdering(String string) {
+		if (string == null) {
+			return "";
+		}
+		String[] parts = string.split(" ");
+		StringBuffer out = new StringBuffer();
+		for (String part : parts) {
+			if (out.length() != 0) {
+				out.append(" ");
+			}
+			if (part.matches("\\d+")) {
+				out.append(CommonUtils.padStringLeft(part, 10, "0"));
+			} else {
+				out.append(part);
+			}
+		}
+		return out.toString();
 	}
 }
