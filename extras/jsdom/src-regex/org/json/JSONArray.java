@@ -832,7 +832,7 @@ public class JSONArray {
      * @throws JSONException
      */
     public String toString(int indentFactor) throws JSONException {
-        return toString(indentFactor, 0);
+        return toString(indentFactor, 0,true);
     }
 
 
@@ -846,7 +846,7 @@ public class JSONArray {
      *  representation of the array.
      * @throws JSONException
      */
-    String toString(int indentFactor, int indent) throws JSONException {
+    String toString(int indentFactor, int indent, boolean sortedKeys) throws JSONException {
         int len = length();
         if (len == 0) {
             return "[]";
@@ -855,7 +855,7 @@ public class JSONArray {
         StringBuffer sb = new StringBuffer("[");
         if (len == 1) {
             sb.append(JSONObject.valueToString(this.myArrayList.get(0),
-                    indentFactor, indent));
+                    indentFactor, indent,sortedKeys));
         } else {
             int newindent = indent + indentFactor;
             sb.append('\n');
@@ -867,7 +867,7 @@ public class JSONArray {
                     sb.append(' ');
                 }
                 sb.append(JSONObject.valueToString(this.myArrayList.get(i),
-                        indentFactor, newindent));
+                        indentFactor, newindent,sortedKeys));
             }
             sb.append('\n');
             for (i = 0; i < indent; i += 1) {
