@@ -147,6 +147,9 @@ public class StructuredTokenParserContext {
 	public void skipChildren() {
 		stream.skipChildren();
 	}
+	public void skipChildren(Predicate<XmlNode> predicate) {
+		stream.skipChildren(predicate);
+	}
 
 	public void start() {
 	}

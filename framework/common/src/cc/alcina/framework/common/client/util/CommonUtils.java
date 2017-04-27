@@ -32,15 +32,20 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import com.google.gwt.dom.client.Node;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
 @SuppressWarnings("unchecked")
 /**
  *
  * @author Nick Reddel
  */
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class CommonUtils {
 	public static final String XML_PI = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
@@ -1482,5 +1487,41 @@ public class CommonUtils {
 			list.add(t);
 		}
 		return list.stream();
+	}
+
+	public static <T> T indexedOrNullWithDelta(List<T> list, T item,
+			int delta) {
+		int idx = list.indexOf(item);
+		if (idx == -1) {
+			return null;
+		}
+		idx += delta;
+		if (idx < 0 || idx >= list.size()) {
+			return null;
+		}
+		return list.get(idx);
+	}
+
+	public static interface IidGenerator {
+		String generate();
+	}
+
+	public static String normalisedNumericOrdering(String string) {
+		if (string == null) {
+			return "";
+		}
+		String[] parts = string.split(" ");
+		StringBuffer out = new StringBuffer();
+		for (String part : parts) {
+			if (out.length() != 0) {
+				out.append(" ");
+			}
+			if (part.matches("\\d+")) {
+				out.append(CommonUtils.padStringLeft(part, 10, "0"));
+			} else {
+				out.append(part);
+			}
+		}
+		return out.toString();
 	}
 }
