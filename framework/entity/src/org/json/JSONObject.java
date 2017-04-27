@@ -32,6 +32,7 @@ import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeSet;
 
@@ -146,7 +147,7 @@ public class JSONObject {
      * Construct an empty JSONObject.
      */
     public JSONObject() {
-        this.map = new HashMap();
+        this.map = new LinkedHashMap();
     }
 
 
@@ -1313,7 +1314,11 @@ public class JSONObject {
      * @throws JSONException If the object contains an invalid number.
      */
     public String toString(int indentFactor) throws JSONException {
-        return toString(indentFactor, 0);
+        return toString(indentFactor, 0,true);
+    }
+    
+    public String toString(int indentFactor, boolean sortedKeys) throws JSONException {
+        return toString(indentFactor, 0,sortedKeys);
     }
 
 
@@ -1330,13 +1335,13 @@ public class JSONObject {
      *  with <code>}</code>&nbsp;<small>(right brace)</small>.
      * @throws JSONException If the object contains an invalid number.
      */
-    String toString(int indentFactor, int indent) throws JSONException {
+    String toString(int indentFactor, int indent, boolean sortedKeys) throws JSONException {
         int j;
         int n = length();
         if (n == 0) {
             return "{}";
         }
-        Iterator     keys = sortedKeys();
+        Iterator     keys = sortedKeys?sortedKeys():keys();
         StringBuffer sb = new StringBuffer("{");
         int          newindent = indent + indentFactor;
         Object       o;
@@ -1345,7 +1350,7 @@ public class JSONObject {
             sb.append(quote(o.toString()));
             sb.append(": ");
             sb.append(valueToString(this.map.get(o), indentFactor,
-                    indent));
+                    indent,sortedKeys));
         } else {
             while (keys.hasNext()) {
                 o = keys.next();
@@ -1360,7 +1365,7 @@ public class JSONObject {
                 sb.append(quote(o.toString()));
                 sb.append(": ");
                 sb.append(valueToString(this.map.get(o), indentFactor,
-                        newindent));
+                        newindent,sortedKeys));
             }
             if (sb.length() > 1) {
                 sb.append('\n');
@@ -1439,13 +1444,14 @@ public class JSONObject {
      * @param indentFactor The number of spaces to add to each level of
      *  indentation.
      * @param indent The indentation of the top level.
+     * @param sortedKeys 
      * @return a printable, displayable, transmittable
      *  representation of the object, beginning
      *  with <code>{</code>&nbsp;<small>(left brace)</small> and ending
      *  with <code>}</code>&nbsp;<small>(right brace)</small>.
      * @throws JSONException If the object contains an invalid number.
      */
-     static String valueToString(Object value, int indentFactor, int indent)
+     static String valueToString(Object value, int indentFactor, int indent, boolean sortedKeys)
             throws JSONException {
         if (value == null || value.equals(null)) {
             return "null";
@@ -1466,19 +1472,19 @@ public class JSONObject {
             return value.toString();
         }
         if (value instanceof JSONObject) {
-            return ((JSONObject)value).toString(indentFactor, indent);
+            return ((JSONObject)value).toString(indentFactor, indent,sortedKeys);
         }
         if (value instanceof JSONArray) {
-            return ((JSONArray)value).toString(indentFactor, indent);
+            return ((JSONArray)value).toString(indentFactor, indent,sortedKeys);
         }
         if (value instanceof Map) {
-            return new JSONObject((Map)value).toString(indentFactor, indent);
+            return new JSONObject((Map)value).toString(indentFactor, indent,sortedKeys);
         }
         if (value instanceof Collection) {
-            return new JSONArray((Collection)value).toString(indentFactor, indent);
+            return new JSONArray((Collection)value).toString(indentFactor, indent,sortedKeys);
         }
         if (value.getClass().isArray()) {
-            return new JSONArray(value).toString(indentFactor, indent);
+            return new JSONArray(value).toString(indentFactor, indent,sortedKeys);
         }
         return quote(value.toString());
     }
