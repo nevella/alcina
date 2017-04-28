@@ -19,6 +19,7 @@ import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
 import com.google.gwt.user.cellview.client.Header;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 
@@ -136,7 +137,7 @@ public class ColumnsBuilder<T> {
 			}
 			SortableColumn<T> col = new SortableColumn<T>(function,
 					sortFunction, nativeComparator, styleFunction, editInfo,
-					cell);
+					cell, name);
 			built.put(col, this);
 			// don't add if filtered
 			if (columnsFilter == null
@@ -255,11 +256,13 @@ public class ColumnsBuilder<T> {
 
 		private Cell cell;
 
+		private String name;
+
 		public SortableColumn(Function<T, Object> function,
 				Function<T, Comparable> sortFunction,
 				DirectedComparator nativeComparator,
-				Function<T, String> styleFunction, EditInfo editInfo,
-				Cell cell) {
+				Function<T, String> styleFunction, EditInfo editInfo, Cell cell,
+				String name) {
 			super(cell != null ? cell : editInfo.cell);
 			this.function = function;
 			this.sortFunction = sortFunction;
@@ -267,6 +270,7 @@ public class ColumnsBuilder<T> {
 			this.styleFunction = styleFunction;
 			this.editInfo = editInfo;
 			this.cell = cell;
+			this.name = name;
 			if (editInfo.fieldUpdater != null) {
 				setFieldUpdater(editInfo.fieldUpdater);
 			}
@@ -312,7 +316,9 @@ public class ColumnsBuilder<T> {
 					e1.printStackTrace();
 				}
 				throw new RuntimeException(
-						"Exception getting column value - " + toString, e);
+						Ax.format("Exception getting column value - %s - %s",
+								name, toString),
+						e);
 			}
 		}
 
