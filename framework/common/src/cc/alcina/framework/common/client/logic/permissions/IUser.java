@@ -35,6 +35,8 @@ import java.util.Set;
 	public abstract Set<? extends IGroup> getSecondaryGroups();
 
 	public abstract String getUserName();
+	
+	public void setUserName(String userName);
 
 	
 }

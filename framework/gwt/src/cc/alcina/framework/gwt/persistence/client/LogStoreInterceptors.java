@@ -236,8 +236,9 @@ public class LogStoreInterceptors {
 		return statsMuteCounter > 0;
 	}
 
-	final native String getClassName(Element elt) /*-{
-        var cn = elt.className;
+	final native String getClassName(Element elem_multi) /*-{
+		var elem = elem_multi.@com.google.gwt.dom.client.Element::ensureJso()();
+        var cn = elem.className;
         //note - someone says IE DOM objects don't support - hence try/catch
         try {
             if (cn.hasOwnProperty("baseVal")) {
