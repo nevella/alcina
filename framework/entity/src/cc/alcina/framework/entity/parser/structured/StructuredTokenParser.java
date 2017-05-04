@@ -14,12 +14,18 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 
 	public XmlTokenOutput parse(Class<?> tokenClass, XmlTokenStream stream,
 			C context) {
-		return parse(tokenClass, stream, context, () -> true);
+		return parse(tokenClass, stream, context, () -> true,
+				getTokens(tokenClass));
+	}
+
+	public static List<XmlToken> getTokens(Class<?> tokenClass) {
+		return XmlTokens.get().getTokens(tokenClass);
 	}
 
 	public XmlTokenOutput parse(Class<?> tokenClass, XmlTokenStream stream,
-			C context, Supplier<Boolean> shouldContinue) {
-		this.tokens = XmlTokens.get().getTokens(tokenClass);
+			C context, Supplier<Boolean> shouldContinue,
+			List<XmlToken> tokens) {
+		this.tokens = tokens;
 		XmlDoc outDoc = new XmlDoc("<root/>");
 		XmlTokenOutput out = new XmlTokenOutput(outDoc);
 		context.out = out;
