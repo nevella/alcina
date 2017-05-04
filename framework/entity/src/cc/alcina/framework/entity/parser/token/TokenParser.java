@@ -3,7 +3,6 @@ package cc.alcina.framework.entity.parser.token;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
-import org.w3c.dom.html.HTMLDocument;
 import org.w3c.dom.traversal.DocumentTraversal;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.TreeWalker;
