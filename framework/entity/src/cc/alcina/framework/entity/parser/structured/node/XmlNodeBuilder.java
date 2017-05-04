@@ -50,7 +50,7 @@ public class XmlNodeBuilder {
 		return this;
 	}
 
-	public XmlNode before() {
+	public XmlNode insertBeforeThis() {
 		XmlNode node = generate();
 		relativeTo.node.getParentNode().insertBefore(node.node,
 				relativeTo.node);
