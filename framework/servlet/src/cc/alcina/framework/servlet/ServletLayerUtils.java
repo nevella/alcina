@@ -217,4 +217,13 @@ public class ServletLayerUtils {
 	public static boolean checkForBrokenClientPipe(Exception e) {
 		return SEUtilities.getFullExceptionMessage(e).contains("Broken pipe");
 	}
+
+	public static String robustGetRemoteAddr(HttpServletRequest request) {
+		if (request == null) {
+			return null;
+		}
+		String forwarded = request.getHeader("X-Forwarded-For");
+		return CommonUtils.isNotNullOrEmpty(forwarded) ? forwarded
+				: request.getRemoteAddr();
+	}
 }
