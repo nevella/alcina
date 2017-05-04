@@ -351,9 +351,11 @@ public class AlcinaMemCache implements RegistrableService {
 
 	boolean publishMappingEvents;
 
-	private AtomicInteger dumpLocksCount=new AtomicInteger();
+	private AtomicInteger dumpLocksCount = new AtomicInteger();
 
-	private AtomicInteger longLocksCount=new AtomicInteger();
+	private AtomicInteger longLocksCount = new AtomicInteger();
+
+	private DomainTransformPersistenceEvent postProcessEvent;
 
 	public AlcinaMemCache() {
 		ThreadlocalTransformManager.threadTransformManagerWasResetListenerDelta(
@@ -510,6 +512,11 @@ public class AlcinaMemCache implements RegistrableService {
 							+ "Writer thread trace:----------\n" + "%s\n",
 					SEUtilities.getStacktraceSlice(postProcessWriterThread,
 							200));
+			if (full) {
+				fullLockDump.format("Writer thread transforms:\n%s\n\n",
+						postProcessEvent
+								.getDomainTransformLayerWrapper().persistentEvents);
+			}
 		}
 		fullLockDump.line(lockDumpCause);
 		long time = System.currentTimeMillis();
@@ -1202,9 +1209,9 @@ public class AlcinaMemCache implements RegistrableService {
 		long queuedTime = health.getMaxQueuedTime();
 		if (dumpLocks || (collectLockAcquisitionPoints
 				&& (write || queuedTime > MAX_QUEUED_TIME))) {
-			if(dumpLocksCount.get()>100){
+			if (dumpLocksCount.get() > 100) {
 				dumpLocks = false;
-				collectLockAcquisitionPoints=false;
+				collectLockAcquisitionPoints = false;
 				return;
 			}
 			String lockDumpCause = String.format("Memcache lock - %s - %s\n",
@@ -1688,6 +1695,7 @@ public class AlcinaMemCache implements RegistrableService {
 			postProcessStart = System.currentTimeMillis();
 			MetricLogging.get().start("post-process");
 			postProcessWriterThread = Thread.currentThread();
+			postProcessEvent = persistenceEvent;
 			health.memcachePostProcessStartTime = System.currentTimeMillis();
 			transformManager.startCommit();
 			List<DomainTransformEvent> dtes = (List) persistenceEvent
@@ -1787,6 +1795,7 @@ public class AlcinaMemCache implements RegistrableService {
 			transformManager.endCommit();
 			health.memcachePostProcessStartTime = 0;
 			postProcessWriterThread = null;
+			postProcessEvent = null;
 			long postProcessTime = System.currentTimeMillis()
 					- postProcessStart;
 			health.memcacheMaxPostProcessTime = Math
