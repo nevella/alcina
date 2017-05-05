@@ -93,6 +93,9 @@ public class MethodIndividualPropertyAccessor
 			ensureMethods(bean);
 			writeMethod.invoke(bean, value);
 		} catch (Exception e) {
+			System.err.format(
+					"Exception setting property value: \nObject: %s\nProperty: %s - %s\nValue: %s\n",
+					bean, propertyName, fullPath, value);
 			throw new WrappedRuntimeException(e);
 		}
 	}

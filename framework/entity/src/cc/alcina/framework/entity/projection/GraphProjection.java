@@ -846,6 +846,11 @@ public class GraphProjection {
 	}
 
 	public static String fieldwiseToString(Object obj) {
+		return fieldwiseToString(obj, true, 999);
+	}
+
+	public static String fieldwiseToString(Object obj, boolean withTypes,
+			int maxLen) {
 		try {
 			List<String> fieldNames = new ArrayList<>();
 			GraphProjection graphProjection = new GraphProjection(
@@ -854,11 +859,19 @@ public class GraphProjection {
 			for (Field field : graphProjection
 					.getFieldsForClass(obj.getClass())) {
 				String name = field.getName();
-				sb.append(field.getType().getSimpleName());
-				sb.append("/");
+				if (withTypes) {
+					sb.append(field.getType().getSimpleName());
+					sb.append("/");
+				}
 				sb.append(name);
+				if (maxLen < 100 && !withTypes) {
+					sb.append(CommonUtils.padStringLeft("", 18 - name.length(),
+							" "));
+				}
 				sb.append(": ");
-				sb.append(CommonUtils.nullSafeToString(field.get(obj)));
+				String str = CommonUtils.nullSafeToString(field.get(obj));
+				str = CommonUtils.trimToWsChars(str, maxLen, true);
+				sb.append(str);
 				sb.append("\n");
 			}
 			return sb.toString();
