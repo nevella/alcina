@@ -129,6 +129,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseT
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleSuggestion;
 import cc.alcina.framework.servlet.CookieHelper;
 import cc.alcina.framework.servlet.ServletLayerObjects;
+import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.SessionProvider;
@@ -586,6 +587,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					getThreadLocalResponse());
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
 					getThreadLocalRequest());
+			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
+					ServletLayerUtils
+							.robustGetRemoteAddr(getThreadLocalRequest()));
 			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_INSTANCE_ID,
 					SessionHelper.getAuthenticatedSessionClientInstanceId(
 							getThreadLocalRequest()));

@@ -842,18 +842,21 @@ public class XmlUtils {
 	}
 
 	public static void logToFile(Node n) throws Exception {
-		ResourceUtilities.writeStringToFile(streamXML(n), "/tmp/tmp.xml");
-		ResourceUtilities.writeStringToFile(streamXML(n), "/tmp/tmp.html");
+		new File("/tmp/log").mkdirs();
+		ResourceUtilities.writeStringToFile(streamXML(n), "/tmp/log/log.xml");
+		ResourceUtilities.writeStringToFile(streamXML(n), "/tmp/log/log.html");
 	}
 
 	public static void logToFilePretty(Node n) throws Exception {
 		if (n instanceof DocumentFragment) {
+			new File("/tmp/log").mkdirs();
 			ResourceUtilities.writeStringToFile(
 					prettyPrintWithDOM3LS((DocumentFragment) n),
-					"/tmp/tmp.xml");
+					"/tmp/log/log.xml");
 		} else {
+			new File("/tmp/log").mkdirs();
 			ResourceUtilities.writeStringToFile(prettyPrintWithDOM3LSNode(n),
-					"/tmp/tmp.xml");
+					"/tmp/log/log.xml");
 		}
 	}
 
