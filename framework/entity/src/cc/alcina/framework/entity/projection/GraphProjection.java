@@ -22,6 +22,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -850,15 +851,19 @@ public class GraphProjection {
 	}
 
 	public static String fieldwiseToString(Object obj, boolean withTypes,
-			int maxLen) {
+			int maxLen, String... excludeFields) {
 		try {
 			List<String> fieldNames = new ArrayList<>();
 			GraphProjection graphProjection = new GraphProjection(
 					new AllFieldsFilter(), null);
 			StringBuilder sb = new StringBuilder();
+			List<String> excludeList=Arrays.asList(excludeFields);
 			for (Field field : graphProjection
 					.getFieldsForClass(obj.getClass())) {
 				String name = field.getName();
+				if(excludeList.contains(name)){
+					continue;
+				}
 				if (withTypes) {
 					sb.append(field.getType().getSimpleName());
 					sb.append("/");
