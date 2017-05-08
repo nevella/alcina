@@ -1687,6 +1687,29 @@ public class AlcinaMemCache implements RegistrableService {
 	// reader thread
 	synchronized void
 			postProcess(DomainTransformPersistenceEvent persistenceEvent) {
+		// preload outside of the writer lock - this uses a db conn, and there
+		// have been some odd networking issues...
+		{
+			List<DomainTransformEvent> dtes = (List) persistenceEvent
+					.getDomainTransformLayerWrapper().persistentEvents;
+			List<DomainTransformEvent> filtered = filterInterestedTransforms(
+					dtes);
+			Multimap<HiliLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
+					.multimap(filtered, new DteToLocatorMapper());
+			for (DomainTransformEvent dte : filtered) {
+				// remove from indicies before first change - and only if
+				// preexisting object
+				DomainTransformEvent first = CommonUtils
+						.first(perObjectTransforms
+								.get(HiliLocator.objectLocator(dte)));
+				DomainTransformEvent last = CommonUtils.last(perObjectTransforms
+						.get(HiliLocator.objectLocator(dte)));
+				if (dte.getTransformType() != TransformType.CREATE_OBJECT
+						&& first == dte) {
+					HasIdAndLocalId obj = transformManager.getObject(dte, true);
+				}
+			}
+		}
 		Set<Throwable> causes = new LinkedHashSet<Throwable>();
 		StringBuilder warnBuilder = new StringBuilder();
 		long postProcessStart = 0;

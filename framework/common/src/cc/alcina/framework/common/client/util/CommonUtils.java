@@ -1101,6 +1101,7 @@ public class CommonUtils {
 		d.setHours(up ? 23 : 0);
 		d.setMinutes(up ? 59 : 0);
 		d.setSeconds(up ? 59 : 0);
+		d.setTime(d.getTime() - d.getTime() % 1000);
 		return d;
 	}
 
