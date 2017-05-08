@@ -1428,7 +1428,7 @@ public class SEUtilities {
 		}
 	}
 
-	public static void dumpMethods(Object o) {
-		System.out.println("dump" + o);
+	public static void ensureLogFolder() {
+		new File("/tmp/log").mkdirs();
 	}
 }
