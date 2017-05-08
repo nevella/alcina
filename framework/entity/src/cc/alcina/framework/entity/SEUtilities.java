@@ -1418,4 +1418,8 @@ public class SEUtilities {
 			return new MatcherIterator(matcher);
 		}
 	}
+
+	public static void ensureLogFolder() {
+		new File("/tmp/log").mkdirs();
+	}
 }
