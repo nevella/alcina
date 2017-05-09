@@ -83,7 +83,8 @@ public class StringMap extends LinkedHashMap<String, String> {
 	}
 
 	private static String unescape(String string) {
-		return string.replace("\\n", "\n").replace("\\r", "\r");
+		return string.replace("\\n", "\n").replace("\\r", "\r").replace("\\\\",
+				"\\");
 	}
 
 	public StringMap() {
@@ -95,8 +96,7 @@ public class StringMap extends LinkedHashMap<String, String> {
 		}
 	}
 
-	public Map<String,String> asLinkedHashMap()
-	{
+	public Map<String, String> asLinkedHashMap() {
 		return new LinkedHashMap<>(this);
 	}
 
@@ -156,5 +156,23 @@ public class StringMap extends LinkedHashMap<String, String> {
 					.replace("\n", "\\n"));
 		}
 		return sb.toString();
+	}
+
+	public String toKvStringList() {
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<String, String> entry : entrySet()) {
+			if (sb.length() != 0) {
+				sb.append("\n");
+			}
+			sb.append(entry.getKey());
+			sb.append("\n");
+			sb.append(escape(entry.getValue()));
+		}
+		return sb.toString();
+	}
+
+	private String escape(String string) {
+		return string.replace("\\", "\\\\").replace("\r", "\\r").replace("\n",
+				"\\n");
 	}
 }

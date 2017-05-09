@@ -212,11 +212,17 @@ public class XmlNode {
 		return node.getNodeType() == Node.TEXT_NODE;
 	}
 
-	public void logPretty() {
+	public String logPretty() {
 		try {
 			XmlUtils.logToFilePretty(node);
+			return "ok";
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			try {
+				XmlUtils.logToFile(node);
+				return "could not log pretty - logged raw instead";
+			} catch (Exception e1) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 	}
 
@@ -627,7 +633,7 @@ public class XmlNode {
 
 		public List<XmlNode> trs() {
 			List<XmlNode> trs = children.byTag("TR");
-			if(trs.isEmpty()){
+			if (trs.isEmpty()) {
 				trs = xpath().nodes("./TBODY/TR");
 			}
 			return trs;
@@ -774,5 +780,15 @@ public class XmlNode {
 
 	public XmlRange range() {
 		return new XmlRange();
+	}
+
+	public XmlNode clearAttributes() {
+		attributes().keySet()
+				.forEach(k -> node.getAttributes().removeNamedItem(k));
+		return this;
+	}
+
+	public void removeAttribute(String key) {
+		node.getAttributes().removeNamedItem(key);
 	}
 }
