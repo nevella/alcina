@@ -94,5 +94,10 @@ public class DataGridWithScrollAccess<T> extends DataGrid<T> implements HasDataW
 		}
 		super.onLoadingStateChanged(state);
 	}
+	@Override
+	protected void onAttach() {
+		// TODO Auto-generated method stub
+		super.onAttach();
+	}
 	
 }

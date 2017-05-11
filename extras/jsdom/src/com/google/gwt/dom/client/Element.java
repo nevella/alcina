@@ -497,7 +497,9 @@ public class Element extends Node implements DomElement {
 				LocalDomElement localDomElement = (LocalDomElement) impl();
 				if (localDomElement != null
 						&& localDomElement.getEventBits() != 0) {
-					DOM.sinkEvents(this, localDomElement.getEventBits());
+					int existingBits = DOM.getEventsSunk(this);
+					DOM.sinkEvents(this,
+							existingBits | localDomElement.getEventBits());
 				}
 			}
 			LocalDomBridge.debug.checkMultipleAssignment(this, nodeDom);

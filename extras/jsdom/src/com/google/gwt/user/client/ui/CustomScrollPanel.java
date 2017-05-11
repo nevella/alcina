@@ -230,8 +230,8 @@ public class CustomScrollPanel extends ScrollPanel {
      * element if the user clicks and drags the content, which reveals the
      * hidden scrollbars.
      */
-    Event.sinkEvents(getElement(), Event.ONSCROLL);
-    Event.sinkEvents(getScrollableElement(), Event.ONSCROLL);
+    Event.sinkEvents(getElement(),  Event.getEventsSunk(getElement())|Event.ONSCROLL);
+    Event.sinkEvents(getScrollableElement(), Event.getEventsSunk(getScrollableElement())| Event.ONSCROLL);
   }
 
   /**

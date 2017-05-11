@@ -879,7 +879,7 @@ public class DOM {
 	 *         not a child of the given parent
 	 */
 	public static int getChildIndex(Element parent, Element child) {
-		if(parent.provideIsLocal()&&child.provideIsLocal()){
+		if (parent.provideIsLocal() && child.provideIsLocal()) {
 			return parent.getChildIndexLocal(child);
 		}
 		return impl.getChildIndex(parent, child);
@@ -1547,7 +1547,8 @@ public class DOM {
 			}
 			if (attachToAncestor) {
 				// System.out.println("attaching to impl:"+attachedAncestor);
-				impl.sinkEvents(attachedAncestor, eventBits);
+				impl.sinkEvents(attachedAncestor,
+						DOM.getEventsSunk(attachedAncestor) | eventBits);
 			} else {
 			}
 			if (attachedAncestor != elem) {
@@ -1660,6 +1661,8 @@ public class DOM {
 	// chromium hosted mode double-dispatch checl
 	private static Event lastDispatchedMouseEvent;
 
+	private static EventListener lastDispatchedMouseEventListener;
+
 	private static void dispatchEventImpl(Event evt, Element elem,
 			EventListener listener) {
 		// If this element has capture...
@@ -1672,10 +1675,12 @@ public class DOM {
 		EventTarget eventTarget = evt.getEventTarget();
 		String lcType = evt.getType().toLowerCase();
 		if (lcType.contains("click") || lcType.contains("mousedown")) {
-			if (lastDispatchedMouseEvent == evt) {
+			if (lastDispatchedMouseEvent == evt
+					&& listener == lastDispatchedMouseEventListener) {
 				return;
 			}
 			lastDispatchedMouseEvent = evt;
+			lastDispatchedMouseEventListener = listener;
 		}
 		System.out.println(Ax.format("dispatch  event - %s", lcType));
 		if (Element.is(eventTarget)) {

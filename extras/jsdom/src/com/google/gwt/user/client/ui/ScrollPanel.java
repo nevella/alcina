@@ -84,7 +84,7 @@ public class ScrollPanel extends SimplePanel implements SourcesScrollEvents,
      * Sink the event on the scrollable element, which may not be the root
      * element.
      */
-    Event.sinkEvents(getScrollableElement(), Event.ONSCROLL);
+    Event.sinkEvents(getScrollableElement(), Event.getEventsSunk(getScrollableElement())|Event.ONSCROLL);
     return addHandler(handler, ScrollEvent.getType());
   }
 

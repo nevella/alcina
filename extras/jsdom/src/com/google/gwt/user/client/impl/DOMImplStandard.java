@@ -25,6 +25,8 @@ import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  * Base implementation of {@link com.google.gwt.user.client.impl.DOMImpl} shared
  * by those browsers that come a bit closer to supporting a common standard (ie,
@@ -224,7 +226,8 @@ public abstract class DOMImplStandard extends DOMImpl {
   @Override
   public void sinkEvents(Element elem, int bits) {
     maybeInitializeEventSystem();
-    sinkEventsImpl(LocalDomBridge.elementJso(elem), bits);
+    Element_Jso elem_jso = LocalDomBridge.elementJso(elem);
+	sinkEventsImpl(elem_jso, bits);
   }
 
   @SuppressWarnings("deprecation")
