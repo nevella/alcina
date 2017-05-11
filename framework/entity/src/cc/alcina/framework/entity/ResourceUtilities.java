@@ -29,7 +29,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,7 +53,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.ResourceBundle;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -67,7 +65,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
+import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
 /**
  * @author nick@alcina.cc
@@ -75,48 +73,355 @@ import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class ResourceUtilities {
+	private static Map<String, String> customProperties = new ConcurrentHashMap<String, String>();
+
+	private static BeanInfoHelper helper;
+
+	private static ConcurrentHashMap<Class, BeanInfo> beanInfoLookup = new ConcurrentHashMap<>();
+
 	public static void appShutdown() {
 		customProperties.clear();
 	}
 
-	private static Map<String, String> customProperties = new ConcurrentHashMap<String, String>();
-
-	public static void registerCustomProperties(InputStream ios) {
-		try {
-			Properties p = new Properties();
-			if (ios != null) {
-				p.load(ios);
-				ios.close();
-				registerCustomProperties(p);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public static StringMap classPathStringMap(Class clazz, String path) {
+		return StringMap
+				.fromPropertyString(readClassPathResourceAsString(clazz, path));
 	}
 
-	public static void registerCustomProperties(Properties p) {
-		for (Entry<Object, Object> entry : p.entrySet()) {
-			Object key = entry.getKey();
-			Object value = entry.getValue();
-			if (!(key instanceof String) || !(value instanceof String)) {
+	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
+			Class methodFilterAnnotation, boolean cloneCollections) {
+		return copyBeanProperties(srcBean, tgtBean, methodFilterAnnotation,
+				cloneCollections, new ArrayList<String>());
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
+			Class methodFilterAnnotation, boolean cloneCollections,
+			Collection<String> ignorePropertyNames) {
+		BeanInfo info = getBeanInfo(srcBean.getClass());
+		BeanInfo infoTgt = getBeanInfo(tgtBean.getClass());
+		for (PropertyDescriptor pd : infoTgt.getPropertyDescriptors()) {
+			Method getMethod = null;
+			String tgtPName = pd.getName();
+			if (ignorePropertyNames.contains(tgtPName)) {
 				continue;
 			}
-			customProperties.put((String) key, (String) value);
+			for (PropertyDescriptor pd2 : info.getPropertyDescriptors()) {
+				if (pd2.getName().equals(tgtPName)) {
+					getMethod = pd2.getReadMethod();
+					break;
+				}
+			}
+			if (getMethod == null) {
+				continue;
+			}
+			if (methodFilterAnnotation != null) {
+				if (getMethod.isAnnotationPresent(methodFilterAnnotation)) {
+					continue;
+				}
+			}
+			Method setMethod = pd.getWriteMethod();
+			if (setMethod != null) {
+				try {
+					Object obj = getMethod.invoke(srcBean, (Object[]) null);
+					if (cloneCollections && obj instanceof Collection
+							&& obj instanceof Cloneable) {
+						Method clone = obj.getClass().getMethod("clone",
+								new Class[0]);
+						clone.setAccessible(true);
+						obj = clone.invoke(obj, CommonUtils.EMPTY_OBJECT_ARRAY);
+					}
+					setMethod.invoke(tgtBean, obj);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
+		return tgtBean;
+	}
+
+	public static <T> T deserializeKryoOrAlcina(String string, Class<T> clazz) {
+		try {
+			return KryoUtils.deserializeFromBase64(string, clazz);
+		} catch (Exception e) {
+			return new AlcinaBeanSerializerS().deserialize(string);
 		}
 	}
 
-	public static void registerCustomProperties(String path) {
-		InputStream ios = ResourceUtilities.class.getResourceAsStream(path);
-		registerCustomProperties(ios);
+	public static <T> T fieldwiseClone(T t) throws Exception {
+		return fieldwiseClone(t, false);
+	}
+
+	public static <T> T fieldwiseClone(T t, boolean withTransients)
+			throws Exception {
+		T instance = (T) t.getClass().newInstance();
+		return fieldwiseCopy(t, instance, withTransients);
+	}
+
+	public static <T> T fieldwiseCopy(T t, T toInstance, boolean withTransients)
+			throws Exception {
+		List<Field> allFields = new ArrayList<Field>();
+		Class c = t.getClass();
+		while (c != Object.class) {
+			Field[] fields = c.getDeclaredFields();
+			for (Field field : fields) {
+				if (Modifier.isStatic(field.getModifiers())) {
+					continue;
+				}
+				if (Modifier.isTransient(field.getModifiers())
+						&& !withTransients) {
+					continue;
+				}
+				field.setAccessible(true);
+				allFields.add(field);
+			}
+			c = c.getSuperclass();
+		}
+		for (Field field : allFields) {
+			field.set(toInstance, field.get(t));
+		}
+		return toInstance;
+	}
+
+	public static String get(Class clazz, String propertyName) {
+		return getBundledString(clazz, propertyName);
+	}
+
+	/**
+	 * Retrieves the BeanInfo for a Class
+	 */
+	public static BeanInfo getBeanInfo(Class cls) {
+		if (beanInfoLookup.containsKey(cls)) {
+			return beanInfoLookup.get(cls);
+		}
+		BeanInfo beanInfo = null;
+		try {
+			beanInfo = Introspector.getBeanInfo(cls);
+			if (helper != null) {
+				beanInfo = helper.postProcessBeanInfo(beanInfo);
+			}
+			beanInfoLookup.put(cls, beanInfo);
+			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
+			for (PropertyDescriptor pd : pds) {
+				if (pd.getReadMethod() != null) {
+					pd.getReadMethod().setAccessible(true);
+				}
+				if (pd.getWriteMethod() != null) {
+					pd.getWriteMethod().setAccessible(true);
+				}
+			}
+		} catch (IntrospectionException ex) {
+			ex.printStackTrace();
+		}
+		return beanInfo;
+	}
+
+	public static boolean getBoolean(Class clazz, String propertyName) {
+		String s = getBundledString(clazz, propertyName);
+		return Boolean.valueOf(s);
+	}
+
+	public static BufferedImage getBufferedImage(Class clazz,
+			String relativePath) {
+		BufferedImage img = null;
+		if (img == null) {
+			try {
+				img = ImageIO.read(clazz.getResource(relativePath));
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+		return img;
+	}
+
+	public static synchronized String getBundledString(Class clazz,
+			String propertyName) {
+		String namespacedKey = (clazz == null) ? propertyName
+				: clazz.getSimpleName() + "." + propertyName;
+		if (customProperties.containsKey(namespacedKey)) {
+			return customProperties.get(namespacedKey);
+		}
+		ResourceBundle b = null;
+		b = ResourceBundle.getBundle(clazz.getPackage().getName() + ".Bundle",
+				Locale.getDefault(), clazz.getClassLoader());
+		if (b.keySet().contains(namespacedKey)) {
+			return b.getString(namespacedKey);
+		}
+		return b.getString(propertyName);
+	}
+
+	public static Map<String, String> getCustomProperties() {
+		return customProperties;
+	}
+
+	public static int getInteger(Class clazz, String propertyName) {
+		return Integer.valueOf(getBundledString(clazz, propertyName));
+	}
+
+	public static int getInteger(Class clazz, String propertyName,
+			int defaultValue) {
+		try {
+			String s = getBundledString(clazz, propertyName);
+			return Integer.valueOf(s);
+		} catch (Exception e) {
+			return defaultValue;
+		}
 	}
 
 	public static boolean is(Class clazz, String propertyName) {
 		return getBoolean(clazz, propertyName);
 	}
 
-	public static boolean getBoolean(Class clazz, String propertyName) {
-		String s = getBundledString(clazz, propertyName);
-		return Boolean.valueOf(s);
+	public static boolean isIntegralType(Class c) {
+		if (c.isPrimitive()) {
+			return c != char.class && c != boolean.class && c != float.class
+					&& c != double.class;
+		} else {
+			return c == Integer.class || c == Byte.class || c == Short.class
+					|| c == Long.class;
+		}
+	}
+
+	public static boolean isNullOrEmpty(String s) {
+		return (s == null || s.length() == 0);
+	}
+
+	public static boolean isNumericPrimitive(Class c) {
+		return (c.isPrimitive() && c != char.class && c != boolean.class);
+	}
+
+	public static String objectOrPrimitiveToString(Object object) {
+		if (object == null) {
+			return null;
+		}
+		return object.toString();
+	}
+
+	public static byte[] readClassPathResourceAsByteArray(Class clazz,
+			String path) {
+		try {
+			return readStreamToByteArray(clazz.getResourceAsStream(path));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static String readClassPathResourceAsString(Class clazz,
+			String path) {
+		try {
+			return readStreamToString(clazz.getResourceAsStream(path));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static String readClassPathResourceAsStringPreferFile(Class clazz,
+			String path, String filePath) {
+		File file = new File(filePath);
+		if (is(ResourceUtilities.class, "useDevResources") && file.exists()) {
+			try {
+				return ResourceUtilities.readFileToString(file);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		} else {
+			return readClassPathResourceAsString(clazz, path);
+		}
+	}
+
+	public static String readerToString(BufferedReader in) throws IOException {
+		StringWriter sw = new StringWriter();
+		char[] cb = new char[4096];
+		int len = -1;
+		while ((len = in.read(cb, 0, 4096)) != -1) {
+			sw.write(cb, 0, len);
+		}
+		in.close();
+		return sw.toString();
+	}
+
+	public static byte[] readFileToByteArray(File f) throws IOException {
+		FileInputStream fis = new FileInputStream(f);
+		return readStreamToByteArray(fis);
+	}
+
+	public static String readFileToString(File f) throws IOException {
+		InputStream fis = new FileInputStream(f);
+		return readStreamToString(fis);
+	}
+
+	public static String readFileToString(File f, String charsetName)
+			throws IOException {
+		FileInputStream fis = new FileInputStream(f);
+		return readStreamToString(fis, charsetName);
+	}
+
+	public static String readFileToString(String fileName) throws IOException {
+		return readFileToString(new File(fileName));
+	}
+
+	public static String readFileToStringGz(File f) throws IOException {
+		InputStream fis = new FileInputStream(f);
+		if (f.getName().endsWith(".gz")) {
+			fis = new GZIPInputStream(new BufferedInputStream(fis));
+		}
+		return readStreamToString(fis);
+	}
+
+	public static <T> T readObjectFromBase64(String string) throws IOException {
+		byte[] bytes = Base64.getDecoder().decode(string.trim());
+		try (ObjectInputStream in = new ObjectInputStream(
+				new ByteArrayInputStream(bytes))) {
+			try {
+				return (T) in.readObject();
+			} catch (Exception e) {
+				throw new IOException(e);
+			}
+		}
+	}
+
+	public static <T> T readObjectFromBase64Url(String string)
+			throws IOException {
+		byte[] bytes = Base64.getUrlDecoder().decode(string.trim());
+		try (ObjectInputStream in = new ObjectInputStream(
+				new ByteArrayInputStream(bytes))) {
+			try {
+				return (T) in.readObject();
+			} catch (Exception e) {
+				throw new IOException(e);
+			}
+		}
+	}
+
+	public static byte[] readStreamToByteArray(InputStream is)
+			throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		writeStreamToStream(is, baos);
+		return baos.toByteArray();
+	}
+
+	public static String readStreamToString(InputStream is) throws IOException {
+		return readStreamToString(is, null);
+	}
+
+	public static String readStreamToString(InputStream is, String charsetName)
+			throws IOException {
+		try {
+			charsetName = charsetName == null ? "UTF-8" : charsetName;
+			BufferedReader in = new BufferedReader(
+					new InputStreamReader(is, charsetName));
+			String s = readerToString(in);
+			return s;
+		} finally {
+			is.close();
+		}
+	}
+
+	public static byte[] readUrlAsByteArray(String strUrl) throws IOException {
+		URL url = new URL(strUrl);
+		InputStream is = null;
+		is = url.openConnection().getInputStream();
+		return readStreamToByteArray(is);
 	}
 
 	public static String readUrlAsString(String strUrl) throws Exception {
@@ -172,120 +477,37 @@ public class ResourceUtilities {
 		}
 	}
 
-	public static int getInteger(Class clazz, String propertyName) {
-		return Integer.valueOf(getBundledString(clazz, propertyName));
-	}
-
-	public static int getInteger(Class clazz, String propertyName,
-			int defaultValue) {
-		try {
-			String s = getBundledString(clazz, propertyName);
-			return Integer.valueOf(s);
-		} catch (Exception e) {
-			return defaultValue;
-		}
-	}
-
-	public static synchronized String getBundledString(Class clazz,
-			String propertyName) {
-		String namespacedKey = (clazz == null) ? propertyName
-				: clazz.getSimpleName() + "." + propertyName;
-		if (customProperties.containsKey(namespacedKey)) {
-			return customProperties.get(namespacedKey);
-		}
-		ResourceBundle b = null;
-		b = ResourceBundle.getBundle(clazz.getPackage().getName() + ".Bundle",
-				Locale.getDefault(), clazz.getClassLoader());
-		if (b.keySet().contains(namespacedKey)) {
-			return b.getString(namespacedKey);
-		}
-		return b.getString(propertyName);
-	}
-
-	public static String writeObjectAsBase64(Object object) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectOutputStream oos = new ObjectOutputStream(baos);
-		oos.writeObject(object);
-		oos.close();
-		String asB64 = Base64.getEncoder().encodeToString(baos.toByteArray());
-		return asB64;
-	}
-
-	public static String writeObjectAsBase64URL(Object object)
-			throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectOutputStream oos = new ObjectOutputStream(baos);
-		oos.writeObject(object);
-		oos.close();
-		String asB64 = Base64.getUrlEncoder()
-				.encodeToString(baos.toByteArray());
-		return asB64;
-	}
-
-	public static <T> T readObjectFromBase64(String string) throws IOException {
-		byte[] bytes = Base64.getDecoder().decode(string.trim());
-		try (ObjectInputStream in = new ObjectInputStream(
-				new ByteArrayInputStream(bytes))) {
-			try {
-				return (T) in.readObject();
-			} catch (Exception e) {
-				throw new IOException(e);
-			}
-		}
-	}
-
-	public static <T> T readObjectFromBase64Url(String string)
-			throws IOException {
-		byte[] bytes = Base64.getUrlDecoder().decode(string.trim());
-		try (ObjectInputStream in = new ObjectInputStream(
-				new ByteArrayInputStream(bytes))) {
-			try {
-				return (T) in.readObject();
-			} catch (Exception e) {
-				throw new IOException(e);
-			}
-		}
-	}
-
-	public static interface BeanInfoHelper {
-		BeanInfo postProcessBeanInfo(BeanInfo beanInfo);
-	}
-
-	private static BeanInfoHelper helper;
-
 	public static void registerBeanInfoHelper(BeanInfoHelper theHelper) {
 		helper = theHelper;
 	}
 
-	private static ConcurrentHashMap<Class, BeanInfo> beanInfoLookup = new ConcurrentHashMap<>();
-
-	/**
-	 * Retrieves the BeanInfo for a Class
-	 */
-	public static BeanInfo getBeanInfo(Class cls) {
-		if (beanInfoLookup.containsKey(cls)) {
-			return beanInfoLookup.get(cls);
-		}
-		BeanInfo beanInfo = null;
+	public static void registerCustomProperties(InputStream ios) {
 		try {
-			beanInfo = Introspector.getBeanInfo(cls);
-			if (helper != null) {
-				beanInfo = helper.postProcessBeanInfo(beanInfo);
+			Properties p = new Properties();
+			if (ios != null) {
+				p.load(ios);
+				ios.close();
+				registerCustomProperties(p);
 			}
-			beanInfoLookup.put(cls, beanInfo);
-			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getReadMethod() != null) {
-					pd.getReadMethod().setAccessible(true);
-				}
-				if (pd.getWriteMethod() != null) {
-					pd.getWriteMethod().setAccessible(true);
-				}
-			}
-		} catch (IntrospectionException ex) {
-			ex.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		return beanInfo;
+	}
+
+	public static void registerCustomProperties(Properties p) {
+		for (Entry<Object, Object> entry : p.entrySet()) {
+			Object key = entry.getKey();
+			Object value = entry.getValue();
+			if (!(key instanceof String) || !(value instanceof String)) {
+				continue;
+			}
+			customProperties.put((String) key, (String) value);
+		}
+	}
+
+	public static void registerCustomProperties(String path) {
+		InputStream ios = ResourceUtilities.class.getResourceAsStream(path);
+		registerCustomProperties(ios);
 	}
 
 	public static OutputStream scaleImage(InputStream in, int width, int height,
@@ -317,11 +539,54 @@ public class ResourceUtilities {
 		return out;
 	}
 
-	public static byte[] readStreamToByteArray(InputStream is)
+	public static Object serialClone(Object bean) {
+		Object result = null;
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ObjectOutputStream out = new ObjectOutputStream(baos);
+			out.writeObject(bean);
+			out.close();
+			ObjectInputStream in = new ObjectInputStream(
+					new ByteArrayInputStream(baos.toByteArray()));
+			result = in.readObject();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		return result;
+	}
+
+	public static String serializeAlcinaOrKryo(Object o, boolean kryo) {
+		if (kryo) {
+			return KryoUtils.serializeToBase64(o);
+		} else {
+			return new AlcinaBeanSerializerS().serialize(o);
+		}
+	}
+
+	public static void writeBytesToFile(byte[] bytes, File dataFile)
+			throws IOException {
+		writeStreamToStream(new ByteArrayInputStream(bytes),
+				new FileOutputStream(dataFile));
+	}
+
+	public static String writeObjectAsBase64(Object object) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream oos = new ObjectOutputStream(baos);
+		oos.writeObject(object);
+		oos.close();
+		String asB64 = Base64.getEncoder().encodeToString(baos.toByteArray());
+		return asB64;
+	}
+
+	public static String writeObjectAsBase64URL(Object object)
 			throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		writeStreamToStream(is, baos);
-		return baos.toByteArray();
+		ObjectOutputStream oos = new ObjectOutputStream(baos);
+		oos.writeObject(object);
+		oos.close();
+		String asB64 = Base64.getUrlEncoder()
+				.encodeToString(baos.toByteArray());
+		return asB64;
 	}
 
 	public static void writeStreamToStream(InputStream is, OutputStream os)
@@ -339,127 +604,6 @@ public class ResourceUtilities {
 		is.close();
 	}
 
-	public static Object serialClone(Object bean) {
-		Object result = null;
-		try {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ObjectOutputStream out = new ObjectOutputStream(baos);
-			out.writeObject(bean);
-			out.close();
-			ObjectInputStream in = new ObjectInputStream(
-					new ByteArrayInputStream(baos.toByteArray()));
-			result = in.readObject();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-		return result;
-	}
-
-	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
-			Class methodFilterAnnotation, boolean cloneCollections) {
-		return copyBeanProperties(srcBean, tgtBean, methodFilterAnnotation,
-				cloneCollections, new ArrayList<String>());
-	}
-
-	@SuppressWarnings("unchecked")
-	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
-			Class methodFilterAnnotation, boolean cloneCollections,
-			Collection<String> ignorePropertyNames) {
-		BeanInfo info = getBeanInfo(srcBean.getClass());
-		BeanInfo infoTgt = getBeanInfo(tgtBean.getClass());
-		for (PropertyDescriptor pd : infoTgt.getPropertyDescriptors()) {
-			Method getMethod = null;
-			String tgtPName = pd.getName();
-			if (ignorePropertyNames.contains(tgtPName)) {
-				continue;
-			}
-			for (PropertyDescriptor pd2 : info.getPropertyDescriptors()) {
-				if (pd2.getName().equals(tgtPName)) {
-					getMethod = pd2.getReadMethod();
-					break;
-				}
-			}
-			if (getMethod == null) {
-				continue;
-			}
-			if (methodFilterAnnotation != null) {
-				if (getMethod.isAnnotationPresent(methodFilterAnnotation)) {
-					continue;
-				}
-			}
-			Method setMethod = pd.getWriteMethod();
-			if (setMethod != null) {
-				try {
-					Object obj = getMethod.invoke(srcBean, (Object[]) null);
-					if (cloneCollections && obj instanceof Collection
-							&& obj instanceof Cloneable) {
-						Method clone = obj.getClass().getMethod("clone",
-								new Class[0]);
-						clone.setAccessible(true);
-						obj = clone.invoke(obj, CommonUtils.EMPTY_OBJECT_ARRAY);
-					}
-					setMethod.invoke(tgtBean, obj);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}
-		return tgtBean;
-	}
-
-	public static boolean isNumericPrimitive(Class c) {
-		return (c.isPrimitive() && c != char.class && c != boolean.class);
-	}
-
-	public static String objectOrPrimitiveToString(Object object) {
-		if (object == null) {
-			return null;
-		}
-		return object.toString();
-	}
-
-	public static boolean isIntegralType(Class c) {
-		if (c.isPrimitive()) {
-			return c != char.class && c != boolean.class && c != float.class
-					&& c != double.class;
-		} else {
-			return c == Integer.class || c == Byte.class || c == Short.class
-					|| c == Long.class;
-		}
-	}
-
-	public static boolean isNullOrEmpty(String s) {
-		return (s == null || s.length() == 0);
-	}
-
-	public static String readStreamToString(InputStream is) throws IOException {
-		return readStreamToString(is, null);
-	}
-
-	public static String readStreamToString(InputStream is, String charsetName)
-			throws IOException {
-		try {
-			charsetName = charsetName == null ? "UTF-8" : charsetName;
-			BufferedReader in = new BufferedReader(
-					new InputStreamReader(is, charsetName));
-			String s = readerToString(in);
-			return s;
-		} finally {
-			is.close();
-		}
-	}
-
-	public static String readerToString(BufferedReader in) throws IOException {
-		StringWriter sw = new StringWriter();
-		char[] cb = new char[4096];
-		int len = -1;
-		while ((len = in.read(cb, 0, 4096)) != -1) {
-			sw.write(cb, 0, len);
-		}
-		in.close();
-		return sw.toString();
-	}
-
 	public static void writeStringToFile(String s, File f) throws IOException {
 		writeStringToOutputStream(s, new FileOutputStream(f));
 	}
@@ -469,14 +613,6 @@ public class ResourceUtilities {
 		writeStringToOutputStream(s, new FileOutputStream(filename));
 	}
 
-	public static void writeStringToOutputStream(String s, OutputStream os)
-			throws IOException {
-		OutputStreamWriter fw = new OutputStreamWriter(os, "UTF-8");
-		BufferedWriter bw = new BufferedWriter(fw);
-		bw.write(s);
-		bw.close();
-	}
-
 	public static void writeStringToFileGz(String s, File f)
 			throws IOException {
 		OutputStreamWriter fw = new OutputStreamWriter(
@@ -484,6 +620,14 @@ public class ResourceUtilities {
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(s);
 		bw.close();
+	}
+
+	public static void writeStringToFileNoUpdate(String content, String path)
+			throws Exception {
+		String current = readFileToString(path);
+		if (!current.equals(content)) {
+			writeStringToFile(content, path);
+		}
 	}
 
 	public static InputStream writeStringToInputStream(String s)
@@ -496,145 +640,15 @@ public class ResourceUtilities {
 		return new ByteArrayInputStream(baos.toByteArray());
 	}
 
-	public static String readFileToStringGz(File f) throws IOException {
-		InputStream fis = new FileInputStream(f);
-		if (f.getName().endsWith(".gz")) {
-			fis = new GZIPInputStream(new BufferedInputStream(fis));
-		}
-		return readStreamToString(fis);
-	}
-
-	public static String readFileToString(File f) throws IOException {
-		InputStream fis = new FileInputStream(f);
-		return readStreamToString(fis);
-	}
-
-	public static String readFileToString(String fileName) throws IOException {
-		return readFileToString(new File(fileName));
-	}
-
-	public static String readFileToString(File f, String charsetName)
+	public static void writeStringToOutputStream(String s, OutputStream os)
 			throws IOException {
-		FileInputStream fis = new FileInputStream(f);
-		return readStreamToString(fis, charsetName);
+		OutputStreamWriter fw = new OutputStreamWriter(os, "UTF-8");
+		BufferedWriter bw = new BufferedWriter(fw);
+		bw.write(s);
+		bw.close();
 	}
 
-	public static BufferedImage getBufferedImage(Class clazz,
-			String relativePath) {
-		BufferedImage img = null;
-		if (img == null) {
-			try {
-				img = ImageIO.read(clazz.getResource(relativePath));
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-		return img;
-	}
-
-	public static byte[] readFileToByteArray(File f) throws IOException {
-		FileInputStream fis = new FileInputStream(f);
-		return readStreamToByteArray(fis);
-	}
-
-	public static byte[] readUrlAsByteArray(String strUrl) throws IOException {
-		URL url = new URL(strUrl);
-		InputStream is = null;
-		is = url.openConnection().getInputStream();
-		return readStreamToByteArray(is);
-	}
-
-	public static Map<String, String> getCustomProperties() {
-		return customProperties;
-	}
-
-	public static String get(Class clazz, String propertyName) {
-		return getBundledString(clazz, propertyName);
-	}
-
-	public static String readClassPathResourceAsString(Class clazz,
-			String path) {
-		try {
-			return readStreamToString(clazz.getResourceAsStream(path));
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static <T> T fieldwiseClone(T t) throws Exception {
-		return fieldwiseClone(t, false);
-	}
-
-	public static <T> T fieldwiseClone(T t, boolean withTransients)
-			throws Exception {
-		T instance = (T) t.getClass().newInstance();
-		return fieldwiseCopy(t, instance, withTransients);
-	}
-
-	public static <T> T fieldwiseCopy(T t, T toInstance, boolean withTransients)
-			throws Exception {
-		List<Field> allFields = new ArrayList<Field>();
-		Class c = t.getClass();
-		while (c != Object.class) {
-			Field[] fields = c.getDeclaredFields();
-			for (Field field : fields) {
-				if (Modifier.isStatic(field.getModifiers())) {
-					continue;
-				}
-				if (Modifier.isTransient(field.getModifiers())
-						&& !withTransients) {
-					continue;
-				}
-				field.setAccessible(true);
-				allFields.add(field);
-			}
-			c = c.getSuperclass();
-		}
-		for (Field field : allFields) {
-			field.set(toInstance, field.get(t));
-		}
-		return toInstance;
-	}
-
-	public static byte[] readClassPathResourceAsByteArray(Class clazz,
-			String path) {
-		try {
-			return readStreamToByteArray(clazz.getResourceAsStream(path));
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static void writeBytesToFile(byte[] bytes, File dataFile)
-			throws IOException {
-		writeStreamToStream(new ByteArrayInputStream(bytes),
-				new FileOutputStream(dataFile));
-	}
-
-	public static String readClassPathResourceAsStringPreferFile(Class clazz,
-			String path, String filePath) {
-		File file = new File(filePath);
-		if (is(ResourceUtilities.class, "useDevResources") && file.exists()) {
-			try {
-				return ResourceUtilities.readFileToString(file);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		} else {
-			return readClassPathResourceAsString(clazz, path);
-		}
-	}
-
-	public static StringMap classPathStringMap(Class clazz, String path) {
-		return StringMap
-				.fromPropertyString(readClassPathResourceAsString(clazz, path));
-	}
-
-	public static void writeStringToFileNoUpdate(String content, String path)
-			throws Exception {
-		String current = readFileToString(path);
-		if (!current.equals(content)) {
-			writeStringToFile(content, path);
-		}
+	public static interface BeanInfoHelper {
+		BeanInfo postProcessBeanInfo(BeanInfo beanInfo);
 	}
 }
