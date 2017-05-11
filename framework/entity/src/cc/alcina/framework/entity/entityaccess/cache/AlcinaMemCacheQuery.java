@@ -1,11 +1,11 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.stream.Stream;
 
-import cc.alcina.framework.common.client.cache.CacheFilter;
 import cc.alcina.framework.common.client.cache.CacheQuery;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.projection.CollectionProjectionFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
@@ -26,13 +26,14 @@ public class AlcinaMemCacheQuery extends CacheQuery<AlcinaMemCacheQuery> {
 		return list(clazz);
 	}
 
-	public AlcinaMemCacheQuery dataFilter(GraphProjectionDataFilter dataFilter) {
+	public AlcinaMemCacheQuery
+			dataFilter(GraphProjectionDataFilter dataFilter) {
 		this.dataFilter = dataFilter;
 		return this;
 	}
 
-	public AlcinaMemCacheQuery fieldFilter(
-			GraphProjectionFieldFilter fieldFilter) {
+	public AlcinaMemCacheQuery
+			fieldFilter(GraphProjectionFieldFilter fieldFilter) {
 		this.fieldFilter = fieldFilter;
 		return this;
 	}
@@ -61,5 +62,10 @@ public class AlcinaMemCacheQuery extends CacheQuery<AlcinaMemCacheQuery> {
 		return AlcinaMemCache.get().list(clazz, this);
 	}
 
-	
+	public <T extends HasIdAndLocalId> Stream<T>
+			streamRegistered(Class<T> clazz) {
+		List<T> list = list(clazz);
+		list.forEach(t -> TransformManager.get().registerDomainObject(t));
+		return list.stream();
+	}
 }

@@ -2126,7 +2126,7 @@ public class AlcinaMemCache implements RegistrableService {
 						.get()
 						.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 				int pendingTransformCount = localTransforms.size();
-				if (pendingTransformCount != 0) {
+				if (pendingTransformCount != 0&&!AppPersistenceBase.isTest()) {
 					for (DomainTransformEvent dte : localTransforms) {
 						if (cacheDescriptor.perClass.keySet()
 								.contains(dte.getObjectClass())) {
@@ -2695,5 +2695,9 @@ public class AlcinaMemCache implements RegistrableService {
 
 	public static <T extends HasIdAndLocalId> T ensureNonRawAndRegister(T t) {
 		return TransformManager.get().registerDomainObject(ensureNonRaw(t));
+	}
+
+	public <T extends HasIdAndLocalId> void reindex(Class<T> clazz) {
+		
 	}
 }

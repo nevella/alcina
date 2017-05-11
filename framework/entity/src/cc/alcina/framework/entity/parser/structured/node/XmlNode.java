@@ -109,6 +109,12 @@ public class XmlNode {
 		return new XmlNodeBuilder(this);
 	}
 
+	public XmlNode clearAttributes() {
+		attributes().keySet()
+				.forEach(k -> node.getAttributes().removeNamedItem(k));
+		return this;
+	}
+
 	public XmlNode cloneNode(boolean deep) {
 		return doc.nodeFor(node.cloneNode(deep));
 	}
@@ -212,11 +218,17 @@ public class XmlNode {
 		return node.getNodeType() == Node.TEXT_NODE;
 	}
 
-	public void logPretty() {
+	public String logPretty() {
 		try {
 			XmlUtils.logToFilePretty(node);
+			return "ok";
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			try {
+				XmlUtils.logToFile(node);
+				return "could not log pretty - logged raw instead";
+			} catch (Exception e1) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 	}
 
@@ -261,8 +273,16 @@ public class XmlNode {
 		}
 	}
 
+	public XmlRange range() {
+		return new XmlRange();
+	}
+
 	public XmlNodeRelative relative() {
 		return new XmlNodeRelative();
+	}
+
+	public void deleteAttribute(String key) {
+		node.getAttributes().removeNamedItem(key);
 	}
 
 	public void removeFromParent() {
@@ -730,27 +750,13 @@ public class XmlNode {
 	public class XmlRange {
 		private XmlNode end;
 
+		public DocumentFragment asFragment() {
+			return (DocumentFragment) toNode().node;
+		}
+
 		public XmlRange end(XmlNode end) {
 			this.end = end;
 			return this;
-		}
-
-		public XmlNode toNode() {
-			Range range = createRange();
-			DocumentFragment frag = range.cloneContents();
-			range.detach();
-			return doc.nodeFor(frag);
-		}
-
-		private Range createRange() {
-			Range range = ((DocumentRange) doc.domDoc()).createRange();
-			range.setStartBefore(node);
-			range.setEndAfter(end.node);
-			return range;
-		}
-
-		public DocumentFragment asFragment() {
-			return (DocumentFragment) toNode().node;
 		}
 
 		public XmlRange endBefore(XmlNode endBefore) {
@@ -762,6 +768,13 @@ public class XmlNode {
 			return this;
 		}
 
+		public XmlNode toNode() {
+			Range range = createRange();
+			DocumentFragment frag = range.cloneContents();
+			range.detach();
+			return doc.nodeFor(frag);
+		}
+
 		public XmlNode toWrappedNode(String tag) {
 			Element wrapper = doc.domDoc().createElement(tag);
 			Range range = createRange();
@@ -770,9 +783,12 @@ public class XmlNode {
 			wrapper.appendChild(frag);
 			return doc.nodeFor(wrapper);
 		}
-	}
 
-	public XmlRange range() {
-		return new XmlRange();
+		private Range createRange() {
+			Range range = ((DocumentRange) doc.domDoc()).createRange();
+			range.setStartBefore(node);
+			range.setEndAfter(end.node);
+			return range;
+		}
 	}
 }

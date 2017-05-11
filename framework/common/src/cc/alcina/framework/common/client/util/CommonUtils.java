@@ -1525,4 +1525,16 @@ public class CommonUtils {
 		}
 		return out.toString();
 	}
+
+	public static void dumpAround(String text, String subString) {
+		int idx = text.indexOf(subString);
+		if (idx != -1) {
+			System.out.println(
+					"before:" + text.substring(Math.max(0, idx - 100), idx));
+			System.out.println(subString);
+			System.out.println("after: " + text.substring(
+					idx + subString.length(),
+					Math.min(idx + subString.length() + 100, text.length())));
+		}
+	}
 }
