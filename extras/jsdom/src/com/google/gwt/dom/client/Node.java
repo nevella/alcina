@@ -78,6 +78,10 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	boolean localDomResolutionOnly;
 
+	private String nodeName;
+
+	private short nodeType = -1;
+
 	protected Node() {
 	}
 
@@ -125,11 +129,17 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	}
 
 	public String getNodeName() {
-		return this.impl().getNodeName();
+		if (nodeName == null) {
+			nodeName = this.impl().getNodeName();
+		}
+		return nodeName;
 	}
 
 	public short getNodeType() {
-		return this.impl().getNodeType();
+		if (nodeType == -1) {
+			nodeType = this.impl().getNodeType();
+		}
+		return nodeType;
 	}
 
 	public String getNodeValue() {
@@ -231,7 +241,9 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	abstract Node_Jso domImpl();
 
 	abstract DomNode impl();
+
 	abstract DomNode implNoResolve();
+
 	DomNode localImpl() {
 		return domImpl() != null ? null : implNoResolve();
 	}

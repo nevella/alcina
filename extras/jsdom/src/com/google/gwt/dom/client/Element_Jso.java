@@ -50,7 +50,26 @@ public class Element_Jso extends Node_Jso implements DomElement {
 	 * {@link Element}. A <code>null</code> object will cause this method to
 	 * return <code>false</code>.
 	 */
+	
+	private static class ElementJsoCache{
+
+		public boolean lastIsResult;
+		public JavaScriptObject lastIs;
+		
+	}
+	private static ElementJsoCache cache=new ElementJsoCache();
 	public static boolean is(JavaScriptObject o) {
+		if(cache.lastIs==o){
+			return cache.lastIsResult;
+		}
+		boolean is0 = is0(o);
+		cache.lastIs=o;
+		cache.lastIsResult=is0;
+		return is0;
+		
+	}
+	private static boolean is0(JavaScriptObject o) {
+		
 		if (Node_Jso.is(o)) {
 			return is(nodeFor(o));
 		}

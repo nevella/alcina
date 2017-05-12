@@ -15,6 +15,7 @@
  */
 package com.google.gwt.user.client.impl;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Element_Jso;
@@ -95,39 +96,68 @@ public abstract class DOMImpl {
     return eventGetTypeInt(evt.getType());
   }
   
-  public native int eventGetTypeInt(String eventType) /*-{
-    switch (eventType) {
-    case "blur": return 0x01000;
-    case "change": return 0x00400;
-    case "click": return 0x00001;
-    case "dblclick": return 0x00002;
-    case "focus": return 0x00800;
-    case "keydown": return 0x00080;
-    case "keypress": return 0x00100;
-    case "keyup": return 0x00200;
-    case "load": return 0x08000;
-    case "losecapture": return 0x02000;
-    case "mousedown": return 0x00004;
-    case "mousemove": return 0x00040;
-    case "mouseout": return 0x00020;
-    case "mouseover": return 0x00010;
-    case "mouseup": return 0x00008;
-    case "scroll": return 0x04000;
-    case "error": return 0x10000;
-    case "mousewheel": return 0x20000;
-    case "DOMMouseScroll": return 0x20000;
-    case "contextmenu": return 0x40000;
-    case "paste": return 0x80000;
-    case "touchstart": return 0x100000;
-    case "touchmove": return 0x200000;
-    case "touchend": return 0x400000;
-    case "touchcancel": return 0x800000;
-    case "gesturestart": return 0x1000000;
-    case "gesturechange": return 0x2000000;
-    case "gestureend": return 0x4000000;
-    default: return -1;
-    }
-  }-*/; 
+	public int eventGetTypeInt(String eventType) {
+		switch (eventType) {
+		case "blur":
+			return 0x01000;
+		case "change":
+			return 0x00400;
+		case "click":
+			return 0x00001;
+		case "dblclick":
+			return 0x00002;
+		case "focus":
+			return 0x00800;
+		case "keydown":
+			return 0x00080;
+		case "keypress":
+			return 0x00100;
+		case "keyup":
+			return 0x00200;
+		case "load":
+			return 0x08000;
+		case "losecapture":
+			return 0x02000;
+		case "mousedown":
+			return 0x00004;
+		case "mousemove":
+			return 0x00040;
+		case "mouseout":
+			return 0x00020;
+		case "mouseover":
+			return 0x00010;
+		case "mouseup":
+			return 0x00008;
+		case "scroll":
+			return 0x04000;
+		case "error":
+			return 0x10000;
+		case "mousewheel":
+			return 0x20000;
+		case "DOMMouseScroll":
+			return 0x20000;
+		case "contextmenu":
+			return 0x40000;
+		case "paste":
+			return 0x80000;
+		case "touchstart":
+			return 0x100000;
+		case "touchmove":
+			return 0x200000;
+		case "touchend":
+			return 0x400000;
+		case "touchcancel":
+			return 0x800000;
+		case "gesturestart":
+			return 0x1000000;
+		case "gesturechange":
+			return 0x2000000;
+		case "gestureend":
+			return 0x4000000;
+		default:
+			return -1;
+		}
+	}
   
   public native void eventSetKeyCode(Event evt, char key) /*-{
     evt.keyCode = key;

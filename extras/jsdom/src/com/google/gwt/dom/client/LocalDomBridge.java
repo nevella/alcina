@@ -41,6 +41,8 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
  */
 public class LocalDomBridge {
 	static LocalDomBridge bridge = null;
+	
+	public static boolean isScript = GWT.isScript();
 
 	static LocalDomBridgeDebug debug = new LocalDomBridgeDebug();
 
@@ -560,6 +562,7 @@ public class LocalDomBridge {
 		elementCreators.put(UListElement.TAG, () -> new UListElement());
 		elementCreators.put(OListElement.TAG, () -> new OListElement());
 		elementCreators.put(LIElement.TAG, () -> new LIElement());
+		elementCreators.put(PreElement.TAG, () -> new PreElement());
 		elementCreators.put("b", () -> new Element());
 		elementCreators.put("html", () -> new Element());
 		elementCreators.put(ParagraphElement.TAG, () -> new ParagraphElement());

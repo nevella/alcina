@@ -24,12 +24,10 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.ui.UIObject;
-import com.google.gwt.user.client.ui.VerticalPanel;
-import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.util.TextUtils;
 
 /**
@@ -114,6 +112,8 @@ public class Element extends Node implements DomElement {
 	public UIObject uiObject;
 
 	public EventListener uiObjectListener;
+
+	private StringMap cachedAttributes;
 
 	protected Element() {
 	}
@@ -205,8 +205,33 @@ public class Element extends Node implements DomElement {
 		return impl().getAbsoluteTop();
 	}
 
+	private StringMap ensureCachedAttributes() {
+		if (cachedAttributes == null) {
+			cachedAttributes = new StringMap();
+		}
+		return cachedAttributes;
+	}
+
 	public String getAttribute(String name) {
-		return impl().getAttribute(name);
+		if (provideIsCacheableAttributeName(name)) {
+			StringMap cachedAttributes = ensureCachedAttributes();
+			if (!cachedAttributes.containsKey(name)) {
+				cachedAttributes.put(name, impl().getAttribute(name));
+			}
+			return cachedAttributes.get(name);
+		} else {
+			return impl().getAttribute(name);
+		}
+	}
+
+	private boolean provideIsCacheableAttributeName(String name) {
+		if (LocalDomBridge.isScript) {
+			return false;
+		}
+		if (name.startsWith("__gwtCellBasedWidgetImplDispatching")) {
+			return true;
+		}
+		return false;
 	}
 
 	@Override
@@ -585,6 +610,9 @@ public class Element extends Node implements DomElement {
 
 	public void setAttribute(String name, String value) {
 		impl().setAttribute(name, value);
+		if (provideIsCacheableAttributeName(name)) {
+			ensureCachedAttributes().put(name, value);
+		}
 	}
 
 	public void setClassName(String className) {

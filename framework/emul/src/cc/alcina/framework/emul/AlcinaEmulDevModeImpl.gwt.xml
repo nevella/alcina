@@ -1,0 +1,3 @@
+<module>
+<!-- unless overriden by classpath, this is a noop -->
+</module>

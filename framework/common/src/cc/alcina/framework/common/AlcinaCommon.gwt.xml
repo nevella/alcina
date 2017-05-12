@@ -9,6 +9,7 @@
 	
 	<inherits name='cc.alcina.framework.emul.AlcinaEmul' />
 	<inherits name='cc.alcina.framework.emul.AlcinaEmulDevModeRegex' />
+	<inherits name='cc.alcina.framework.emul.AlcinaEmulDevModeImpl' />
 	<replace-with class="cc.alcina.framework.common.client.util.StackFrameHelperIE">
 		<when-type-is class="cc.alcina.framework.common.client.util.StackFrameHelper" />
 		<when-property-is name="user.agent" value="ie6" />

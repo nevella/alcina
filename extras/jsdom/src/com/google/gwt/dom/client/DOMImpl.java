@@ -21,7 +21,9 @@ import com.google.gwt.core.client.JsArray;
 
 abstract class DOMImpl {
 	static final LocalDomImpl impl = new LocalDomImpl();
-//	static final DOMImpl impl = GWT.create(DOMImpl.class);
+	// static final DOMImpl impl = GWT.create(DOMImpl.class);
+
+	private static DomImplCache cache = new DomImplCache();
 
 	/**
 	 * Fast helper method to convert small doubles to 32-bit int.
@@ -37,13 +39,96 @@ abstract class DOMImpl {
 	protected static native int toInt32(double val) /*-{
         return val | 0;
 	}-*/;
+
+	private native JavaScriptObject
+			eventGetNativeTarget(NativeEvent event) /*-{
+        return event.currentTarget;
+	}-*/;
+
+	private native double eventGetSubPixelClientX(NativeEvent evt) /*-{
+        return evt.clientX || 0;
+	}-*/;
+
+	private native double eventGetSubPixelClientY(NativeEvent evt) /*-{
+        return evt.clientY || 0;
+	}-*/;
+
+	private native double eventGetSubPixelScreenX(NativeEvent evt) /*-{
+        return evt.screenX || 0;
+	}-*/;
+
+	private native double eventGetSubPixelScreenY(NativeEvent evt) /*-{
+        return evt.screenY || 0;
+	}-*/;
+
+	private native double getSubPixelAbsoluteLeft(Element_Jso elem) /*-{
+        var left = 0;
+        var curr = elem;
+        // This intentionally excludes body which has a null offsetParent.
+        while (curr.offsetParent) {
+            left -= curr.scrollLeft;
+            curr = curr.parentNode;
+        }
+        while (elem) {
+            left += elem.offsetLeft;
+            elem = elem.offsetParent;
+        }
+        return left;
+	}-*/;
+
+	private native double getSubPixelAbsoluteTop(Element_Jso elem) /*-{
+        var top = 0;
+        var curr = elem;
+        // This intentionally excludes body which has a null offsetParent.
+        while (curr.offsetParent) {
+            top -= curr.scrollTop;
+            curr = curr.parentNode;
+        }
+        while (elem) {
+            top += elem.offsetTop;
+            elem = elem.offsetParent;
+        }
+        return top;
+	}-*/;
+
+	private native double getSubPixelScrollLeft(Element_Jso elem) /*-{
+        return elem.scrollLeft || 0;
+	}-*/;
+
+	private native double touchGetSubPixelClientX(Touch touch) /*-{
+        return touch.clientX || 0;
+	}-*/;
+
+	private native double touchGetSubPixelClientY(Touch touch) /*-{
+        return touch.clientY || 0;
+	}-*/;
+
+	private native double touchGetSubPixelPageX(Touch touch) /*-{
+        return touch.pageX || 0;
+	}-*/;
+
+	private native double touchGetSubPixelPageY(Touch touch) /*-{
+        return touch.pageY || 0;
+	}-*/;
+
+	private native double touchGetSubPixelScreenX(Touch touch) /*-{
+        return touch.screenX || 0;
+	}-*/;
+
+	private native double touchGetSubPixelScreenY(Touch touch) /*-{
+        return touch.screenY || 0;
+	}-*/;
+
+	protected native void buttonClick(Element_Jso button) /*-{
+        button.click();
+	}-*/;
+
 	protected native Node_Jso createButtonElement(Document_Jso doc,
 			String type) /*-{
         var e = doc.createElement("BUTTON");
         e.type = type;
         return e;
 	}-*/;
-
 
 	protected native Element_Jso createCheckInputElement(Document_Jso doc) /*-{
         var e = doc.createElement("INPUT");
@@ -52,15 +137,13 @@ abstract class DOMImpl {
         return e;
 	}-*/;
 
-	protected native Element_Jso createElement(Document_Jso doc, String tag) /*-{
+	protected native Element_Jso createElement(Document_Jso doc,
+			String tag) /*-{
         return doc.createElement(tag);
 	}-*/;
-	protected native Element_Jso createTextNode(Document_Jso doc, String data) /*-{
-    return doc.createTextNode(data);
-}-*/;
 
-	protected abstract NativeEvent createHtmlEvent(Document_Jso doc, String type,
-			boolean canBubble, boolean cancelable);
+	protected abstract NativeEvent createHtmlEvent(Document_Jso doc,
+			String type, boolean canBubble, boolean cancelable);
 
 	protected native Element_Jso createInputElement(Document_Jso doc,
 			String type) /*-{
@@ -86,21 +169,28 @@ abstract class DOMImpl {
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int charCode);
 
-	protected abstract NativeEvent createMouseEvent(Document_Jso doc, String type,
-			boolean canBubble, boolean cancelable, int detail, int screenX,
-			int screenY, int clientX, int clientY, boolean ctrlKey,
+	protected abstract NativeEvent createMouseEvent(Document_Jso doc,
+			String type, boolean canBubble, boolean cancelable, int detail,
+			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element_Jso relatedTarget);
 
-	protected ScriptElement createScriptElement(Document_Jso doc, String source) {
+	protected ScriptElement createScriptElement(Document_Jso doc,
+			String source) {
 		ScriptElement elem = nodeFor(createElement(doc, "script"));
 		elem.setText(source);
 		return elem;
 	}
 
+	protected native Element_Jso createTextNode(Document_Jso doc,
+			String data) /*-{
+        return doc.createTextNode(data);
+	}-*/;
+
 	protected native void cssClearOpacity(Style_Jso style) /*-{
         style.opacity = '';
 	}-*/;
+
 	protected String cssFloatPropertyName() {
 		return "cssFloat";
 	}
@@ -132,13 +222,11 @@ abstract class DOMImpl {
 	protected native boolean eventGetCtrlKey(NativeEvent evt) /*-{
         return !!evt.ctrlKey;
 	}-*/;
-	protected  EventTarget eventGetCurrentTarget(NativeEvent event){
+
+	protected EventTarget eventGetCurrentTarget(NativeEvent event) {
 		JavaScriptObject jso = eventGetNativeTarget(event);
-		return jso==null?null:new EventTarget(jso);
+		return jso == null ? null : new EventTarget(jso);
 	}
-	private native JavaScriptObject eventGetNativeTarget(NativeEvent event) /*-{
-        return event.currentTarget;
-	}-*/;
 
 	protected final native int eventGetKeyCode(NativeEvent evt) /*-{
         return evt.keyCode | 0;
@@ -150,7 +238,8 @@ abstract class DOMImpl {
 
 	protected abstract int eventGetMouseWheelVelocityY(NativeEvent evt);
 
-	protected abstract EventTarget eventGetRelatedTarget(NativeEvent nativeEvent);
+	protected abstract EventTarget
+			eventGetRelatedTarget(NativeEvent nativeEvent);
 
 	protected native double eventGetRotation(NativeEvent evt) /*-{
         return evt.rotation;
@@ -174,7 +263,15 @@ abstract class DOMImpl {
 
 	protected abstract EventTarget eventGetTarget(NativeEvent evt);
 
-	protected final native String eventGetType(NativeEvent evt) /*-{
+	protected final String eventGetType(NativeEvent evt) {
+		if (cache.lastEventForGetType == null) {
+			cache.lastEventForGetType = evt;
+			cache.lastEventType = eventGetType0(evt);
+		}
+		return cache.lastEventType;
+	}
+
+	protected final native String eventGetType0(NativeEvent evt) /*-{
         return evt.type;
 	}-*/;
 
@@ -268,7 +365,8 @@ abstract class DOMImpl {
         return parent;
 	}-*/;
 
-	protected native Element_Jso getPreviousSiblingElement(Element_Jso elem) /*-{
+	protected native Element_Jso
+			getPreviousSiblingElement(Element_Jso elem) /*-{
         var sib = elem.previousSibling;
         while (sib && sib.nodeType != 1)
             sib = sib.previousSibling;
@@ -312,6 +410,10 @@ abstract class DOMImpl {
 	}-*/;
 
 	protected abstract boolean isOrHasChild(Node_Jso parent, Node_Jso child);
+
+	protected <N extends Node> N nodeFor(Node_Jso node_dom) {
+		return LocalDomBridge.nodeFor(node_dom);
+	}
 
 	protected native void scrollIntoView(Element_Jso elem) /*-{
         var left = elem.offsetLeft, top = elem.offsetTop;
@@ -364,11 +466,12 @@ abstract class DOMImpl {
 
 	protected native NodeList<OptionElement>
 			selectGetOptions(Element_Jso select) /*-{
-		var out=@com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/DomNodeList;)(select.options);
+        var out = @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/DomNodeList;)(select.options);
         return out;
 	}-*/;
 
-	protected native void selectRemoveOption(Element_Jso domImpl, int index) /*-{
+	protected native void selectRemoveOption(Element_Jso domImpl,
+			int index) /*-{
         select.remove(index);
 	}-*/;
 
@@ -435,88 +538,13 @@ abstract class DOMImpl {
         return touch.target;
 	}-*/;
 
-	protected String yeah(){
+	protected String yeah() {
 		return "";
 	}
 
-	private native double eventGetSubPixelClientX(NativeEvent evt) /*-{
-        return evt.clientX || 0;
-	}-*/;
+	private static class DomImplCache {
+		public String lastEventType;
 
-	private native double eventGetSubPixelClientY(NativeEvent evt) /*-{
-        return evt.clientY || 0;
-	}-*/;
-
-	private native double eventGetSubPixelScreenX(NativeEvent evt) /*-{
-        return evt.screenX || 0;
-	}-*/;
-
-	private native double eventGetSubPixelScreenY(NativeEvent evt) /*-{
-        return evt.screenY || 0;
-	}-*/;
-
-	private native double getSubPixelAbsoluteLeft(Element_Jso elem) /*-{
-        var left = 0;
-        var curr = elem;
-        // This intentionally excludes body which has a null offsetParent.
-        while (curr.offsetParent) {
-            left -= curr.scrollLeft;
-            curr = curr.parentNode;
-        }
-        while (elem) {
-            left += elem.offsetLeft;
-            elem = elem.offsetParent;
-        }
-        return left;
-	}-*/;
-
-	private native double getSubPixelAbsoluteTop(Element_Jso elem) /*-{
-        var top = 0;
-        var curr = elem;
-        // This intentionally excludes body which has a null offsetParent.
-        while (curr.offsetParent) {
-            top -= curr.scrollTop;
-            curr = curr.parentNode;
-        }
-        while (elem) {
-            top += elem.offsetTop;
-            elem = elem.offsetParent;
-        }
-        return top;
-	}-*/;
-
-	private native double getSubPixelScrollLeft(Element_Jso elem) /*-{
-        return elem.scrollLeft || 0;
-	}-*/;
-
-	private native double touchGetSubPixelClientX(Touch touch) /*-{
-        return touch.clientX || 0;
-	}-*/;
-
-	private native double touchGetSubPixelClientY(Touch touch) /*-{
-        return touch.clientY || 0;
-	}-*/;
-
-	private native double touchGetSubPixelPageX(Touch touch) /*-{
-        return touch.pageX || 0;
-	}-*/;
-
-	private native double touchGetSubPixelPageY(Touch touch) /*-{
-        return touch.pageY || 0;
-	}-*/;
-
-	private native double touchGetSubPixelScreenX(Touch touch) /*-{
-        return touch.screenX || 0;
-	}-*/;
-
-	private native double touchGetSubPixelScreenY(Touch touch) /*-{
-        return touch.screenY || 0;
-	}-*/;
-
-	protected native void buttonClick(Element_Jso button) /*-{
-        button.click();
-	}-*/;
-	protected <N extends Node> N nodeFor(Node_Jso node_dom) {
-		return LocalDomBridge.nodeFor(node_dom);
+		public NativeEvent lastEventForGetType;
 	}
 }
