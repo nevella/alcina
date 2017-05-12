@@ -384,6 +384,8 @@ public class FilterWidget extends Composite
 
 		boolean registered = true;
 
+		private TextBox registeredWith;
+
 		@Override
 		public void onFocus(FocusEvent event) {
 			if (!registered) {
@@ -418,11 +420,16 @@ public class FilterWidget extends Composite
 		}
 
 		public void registerWith(TextBox textBox) {
+			if (FilterWidget.this.initialCursorPos == 0
+					|| registeredWith == textBox) {
+				this.initialCursorPos = FilterWidget.this.initialCursorPos;
+				return;
+			}
 			textBox.addKeyDownHandler(this);
 			textBox.addFocusHandler(this);
 			textBox.addBlurHandler(this);
 			textBox.addClickHandler(this);
-			this.initialCursorPos = FilterWidget.this.initialCursorPos;
+			registeredWith = textBox;
 		}
 
 		@Override
@@ -443,7 +450,7 @@ public class FilterWidget extends Composite
 		textBox.setFocus(true);
 	}
 
-	private String lastText="";
+	private String lastText = "";
 
 	public String getLastText() {
 		return this.lastText;

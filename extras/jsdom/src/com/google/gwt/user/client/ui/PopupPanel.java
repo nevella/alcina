@@ -449,7 +449,7 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		super();
 		Element implElement = impl.createElement();
 		super.getContainerElement().appendChild(implElement);
-//		implElement.ensureId();
+		// implElement.ensureId();
 		// Default position of popup should be in the upper-left corner of the
 		// window. By setting a default position, the popup will not appear in
 		// an undefined location if it is shown before its position is set.
@@ -1214,10 +1214,9 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	 * @return the Element that {@link PopupImpl} creates and expects
 	 */
 	private Element getPopupImplElement() {
-		
-		System.out.println("get child for popup: "+hashCode());
+		System.out.println("get child for popup: " + hashCode());
 		Element firstChild = DOM.getFirstChild(super.getContainerElement());
-		System.out.println("hash:"+firstChild.hashCode());
+		System.out.println("hash:" + firstChild.hashCode());
 		return firstChild;
 	}
 
@@ -1356,9 +1355,18 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	 *            the {@link NativePreviewEvent}
 	 */
 	private void previewNativeEvent(NativePreviewEvent event) {
+		Event nativeEvent = Event.as(event.getNativeEvent());
+		boolean keyEvent = false;
+		switch (nativeEvent.getType()) {
+		case BrowserEvents.KEYDOWN:
+		case BrowserEvents.KEYPRESS:
+		case BrowserEvents.KEYUP:
+			keyEvent = true;
+			break;
+		}
 		// If the event has been canceled or consumed, ignore it
-		if (event.isCanceled()
-				|| (!previewAllNativeEvents && event.isConsumed())) {
+		if (event.isCanceled() || (!previewAllNativeEvents && !keyEvent
+				&& event.isConsumed())) {
 			// We need to ensure that we cancel the event even if its been
 			// consumed so
 			// that popups lower on the stack do not auto hide
@@ -1373,7 +1381,6 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 			return;
 		}
 		// If the event targets the popup or the partner, consume it
-		Event nativeEvent = Event.as(event.getNativeEvent());
 		boolean eventTargetsPopupOrPartner = eventTargetsPopup(nativeEvent)
 				|| eventTargetsPartner(nativeEvent);
 		EventTarget eTarget = nativeEvent.getEventTarget();
@@ -1396,7 +1403,7 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		}
 		// Cancel the event if it doesn't target the modal popup. Note that the
 		// event can be both canceled and consumed.
-		if (modal) {
+		if (modal && !keyEvent) {
 			event.cancel();
 		}
 		// Switch on the event type

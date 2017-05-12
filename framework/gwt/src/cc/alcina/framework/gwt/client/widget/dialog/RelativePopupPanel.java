@@ -22,6 +22,7 @@ import com.google.gwt.animation.client.Animation;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
@@ -1320,6 +1321,14 @@ public class RelativePopupPanel extends SimplePanel
 		// Cancel the event if it doesn't target the modal popup. Note that the
 		// event can be both canceled and consumed.
 		if (modal) {
+			switch(nativeEvent.getType()){
+			case BrowserEvents.KEYDOWN:
+			case BrowserEvents.KEYPRESS:
+			case BrowserEvents.KEYUP:
+				if(nativeEvent.getAltKey()||nativeEvent.getMetaKey()||nativeEvent.getCtrlKey()){
+					return;
+				}
+			}
 			event.cancel();
 		}
 		// Switch on the event type

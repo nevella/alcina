@@ -1674,6 +1674,9 @@ public class DOM {
 		}
 		EventTarget eventTarget = evt.getEventTarget();
 		String lcType = evt.getType().toLowerCase();
+		if (lcType.contains("key") ) {
+			int debug=3;
+		}
 		if (lcType.contains("click") || lcType.contains("mousedown")) {
 			if (lastDispatchedMouseEvent == evt
 					&& listener == lastDispatchedMouseEventListener) {
