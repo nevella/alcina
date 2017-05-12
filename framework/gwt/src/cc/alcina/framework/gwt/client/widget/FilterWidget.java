@@ -13,8 +13,8 @@
  */
 package cc.alcina.framework.gwt.client.widget;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -34,11 +34,15 @@ import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.TextBox;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * TODO - the "wrappedenterhandler" ClickHandler should be changed to
@@ -106,11 +110,6 @@ public class FilterWidget extends Composite
 		this.holder = new FlowPanel();
 		this.textBox = new TextBox();
 		textBox.setStyleName("alcina-Filter");
-		textBox.addKeyUpHandler(this);
-		textBox.addKeyDownHandler(this);
-		// textBox.addFocusHandler(this);
-		textBox.addBlurHandler(this);
-		textBox.addClickHandler(this);
 		holder.setStyleName("alcina-FilterHolder");
 		FlowPanel holder2 = new FlowPanel();
 		holder2.add(textBox);
@@ -260,7 +259,6 @@ public class FilterWidget extends Composite
 	public void setValue(String value) {
 		textBox.setText(value);
 		textBox.setCursorPos(initialCursorPos);
-		new MaintainCursorPosHandler().registerWith(textBox);
 		clearHint();
 	}
 
@@ -292,9 +290,16 @@ public class FilterWidget extends Composite
 		}
 	}
 
+	List<HandlerRegistration> registrations = new ArrayList<>();
+
 	@Override
 	protected void onAttach() {
 		super.onAttach();
+		//FIXME - localdom - attach/detach issue with popups meant was attaching to wrong element
+		registrations.add(textBox.addKeyUpHandler(this));
+		registrations.add(textBox.addKeyDownHandler(this));
+		registrations.add(textBox.addBlurHandler(this));
+		registrations.add(textBox.addClickHandler(this));
 		if (isFocusOnAttach()
 				&& WidgetUtils.getParentWidget(this, "GridForm") == null) {
 			// just in case this widget is inside a popup panel e.g.
@@ -321,6 +326,7 @@ public class FilterWidget extends Composite
 			queueingFinishedTimer = null;
 		}
 		changeListenerTimer.cancel();
+		registrations.forEach(HandlerRegistration::removeHandler);
 		super.onDetach();
 	}
 
@@ -375,71 +381,6 @@ public class FilterWidget extends Composite
 		@Override
 		public void onMouseDown(MouseDownEvent event) {
 			clearHint();
-		}
-	}
-
-	class MaintainCursorPosHandler
-			implements KeyDownHandler, FocusHandler, BlurHandler, ClickHandler {
-		private int initialCursorPos;
-
-		boolean registered = true;
-
-		private TextBox registeredWith;
-
-		@Override
-		public void onFocus(FocusEvent event) {
-			if (!registered) {
-				return;
-			}
-			fixPos();
-			// either we have keyevents enqueued...or we don't. either way, we
-			// fix the cursor position
-			new Timer() {
-				@Override
-				public void run() {
-					onKeyDown(null);
-				}
-			}.schedule(100);
-		}
-
-		public void fixPos() {
-			textBox.setCursorPos(initialCursorPos);
-		}
-
-		@Override
-		public void onKeyDown(KeyDownEvent event) {
-			if (!registered) {
-				return;
-			}
-			fixPos();
-			deregister();
-		}
-
-		void deregister() {
-			registered = false;
-		}
-
-		public void registerWith(TextBox textBox) {
-			if (FilterWidget.this.initialCursorPos == 0
-					|| registeredWith == textBox) {
-				this.initialCursorPos = FilterWidget.this.initialCursorPos;
-				return;
-			}
-			textBox.addKeyDownHandler(this);
-			textBox.addFocusHandler(this);
-			textBox.addBlurHandler(this);
-			textBox.addClickHandler(this);
-			registeredWith = textBox;
-		}
-
-		@Override
-		public void onBlur(BlurEvent event) {
-			deregister();
-		}
-
-		@Override
-		public void onClick(ClickEvent event) {
-			deregister();
 		}
 	}
 
