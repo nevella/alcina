@@ -55,7 +55,8 @@ public class Publisher {
 
 	@SuppressWarnings("unchecked")
 	public PublicationResult publish(ContentDefinition contentDefinition,
-			DeliveryModel deliveryModel, Publication original) throws Exception {
+			DeliveryModel deliveryModel, Publication original)
+			throws Exception {
 		int depth = LooseContext.depth();
 		try {
 			ctx = new PublicationContext();
@@ -76,7 +77,8 @@ public class Publisher {
 
 	@SuppressWarnings("unchecked")
 	private PublicationResult publish0(ContentDefinition contentDefinition,
-			DeliveryModel deliveryModel, Publication original) throws Exception {
+			DeliveryModel deliveryModel, Publication original)
+			throws Exception {
 		ContentModelHandler cmh = (ContentModelHandler) Registry.get()
 				.instantiateSingle(ContentModelHandler.class,
 						contentDefinition.getClass());
@@ -125,15 +127,16 @@ public class Publisher {
 			return null;
 		}
 		result.content = cw.wrappedContent;
-		if (deliveryModel.provideContentDeliveryType() == ContentDeliveryType.PRINT) {
+		if (deliveryModel
+				.provideContentDeliveryType() == ContentDeliveryType.PRINT) {
 			if (result.content == null & AppPersistenceBase.isTest()) {
 				result.content = Base64Utils.toBase64(cw.wrappedBytes);
 			}
 			return result;
 		}
-		FormatConverter fc = (FormatConverter) Registry.get()
-				.instantiateSingle(FormatConverter.class,
-						deliveryModel.provideTargetFormat().getClass());
+		FormatConverter fc = (FormatConverter) Registry.get().instantiateSingle(
+				FormatConverter.class,
+				deliveryModel.provideTargetFormat().getClass());
 		FormatConversionModel fcm = new FormatConversionModel();
 		fcm.html = cw.wrappedContent;
 		fcm.footer = cw.wrappedFooter;
@@ -141,8 +144,8 @@ public class Publisher {
 		fcm.rows = cw.wrapper.gridRows;
 		fcm.custom = cw.custom;
 		InputStream convertedContent = fc.convert(ctx, fcm);
-		convertedContent = ctx.getVisitorOrNoop().transformConvertedContent(
-				convertedContent);
+		convertedContent = ctx.getVisitorOrNoop()
+				.transformConvertedContent(convertedContent);
 		ctx.getVisitorOrNoop().beforeDelivery();
 		ContentDelivery deliverer = (ContentDelivery) Registry.get()
 				.instantiateSingle(ContentDeliveryType.class,
@@ -174,6 +177,7 @@ public class Publisher {
 		publication.setContentDefinition(contentDefinition);
 		publication.setDeliveryModel(deliveryModel);
 		publication.setUser(PermissionsManager.get().getUser());
+		publication.setMimeMessageId(PublicationContext.get().mimeMessageId);
 		publication.setPublicationDate(new Date());
 		publication.setOriginalPublication(original);
 		publication.setUserPublicationId(publicationUserId);
@@ -193,8 +197,8 @@ public class Publisher {
 		public void persistContentRendererResults(
 				ContentRendererResults results, long publicationId);
 
-		public ContentRendererResults getContentRendererResults(
-				long publicationId);
+		public ContentRendererResults
+				getContentRendererResults(long publicationId);
 	}
 
 	public PublicationContext getContext() {

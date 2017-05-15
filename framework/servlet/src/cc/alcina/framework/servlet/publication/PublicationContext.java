@@ -23,7 +23,6 @@ import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererRe
 public class PublicationContext {
 	public static final String CONTEXT_PUBLICATION_CONTEXT = PublicationContext.class
 			.getName() + ".CONTEXT_PUBLICATION_CONTEXT";
-	
 
 	public ContentDefinition contentDefinition;
 
@@ -34,25 +33,28 @@ public class PublicationContext {
 	public PublicationResult publicationResult;
 
 	public Map<String, Object> properties = new LinkedHashMap<String, Object>();
-	
+
 	public PublicationVisitor visitor;
 
 	public Logger logger;
 
+	public String mimeMessageId;
 
 	public ContentRendererResults renderedContent;
 
 	public String getContextInfoForPublicationException() {
 		String xmlForm = "Unable to serialize publication request";
-		String modelString=xmlForm;
+		String modelString = xmlForm;
 		try {
-			Set<Class> jaxbClasses = new HashSet<Class>(Registry
-					.get().lookup(JaxbContextRegistration.class));
-			xmlForm = String.format("Content definition:\n%s\n\n"
-					+ "Delivery model:\n%s", WrappedObjectHelper.xmlSerialize(
-					contentDefinition, jaxbClasses), WrappedObjectHelper
-					.xmlSerialize(deliveryModel, jaxbClasses));
-			modelString=deliveryModel.toString();
+			Set<Class> jaxbClasses = new HashSet<Class>(
+					Registry.get().lookup(JaxbContextRegistration.class));
+			xmlForm = String.format(
+					"Content definition:\n%s\n\n" + "Delivery model:\n%s",
+					WrappedObjectHelper.xmlSerialize(contentDefinition,
+							jaxbClasses),
+					WrappedObjectHelper.xmlSerialize(deliveryModel,
+							jaxbClasses));
+			modelString = deliveryModel.toString();
 		} catch (Exception e2) {
 			e2.printStackTrace();
 		}
@@ -64,14 +66,13 @@ public class PublicationContext {
 	protected void logPublicationException(Exception e) {
 		String message = getContextInfoForPublicationException();
 		logger.warn(message, e);
-		EntityLayerUtils.log(LogMessageType.PUBLICATION_EXCEPTION,
-				message, e);
+		EntityLayerUtils.log(LogMessageType.PUBLICATION_EXCEPTION, message, e);
 	}
 
 	public static String getContextInfoForPublicationExceptionT() {
 		PublicationContext ctx = get();
-		return ctx == null ? "--no publication context--" : ctx
-				.getContextInfoForPublicationException();
+		return ctx == null ? "--no publication context--"
+				: ctx.getContextInfoForPublicationException();
 	}
 
 	public static PublicationContext get() {
@@ -87,6 +88,6 @@ public class PublicationContext {
 	}
 
 	public PublicationVisitor getVisitorOrNoop() {
-		return this.visitor==null?new PublicationVisitor():this.visitor;
+		return this.visitor == null ? new PublicationVisitor() : this.visitor;
 	}
 }
