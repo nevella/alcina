@@ -17,7 +17,7 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
 
 	private int minEvictionSize;
 
-	private Class<T> clazz;
+	protected Class<T> clazz;
 
 	public LazyLoadProvideTask(long minEvictionAge, int minEvictionSize,
 			Class<T> clazz) {
@@ -72,8 +72,10 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
 
 	private void registerLoaded(AlcinaMemCache alcinaMemCache, List<T> requireLoad) {
 		for (T t : requireLoad) {
-			idEvictionAge.remove(t.getId());
 			idEvictionAge.put(t.getId(), System.currentTimeMillis());
+		}
+		if(isEvictionDisabled()){
+			return;
 		}
 		Iterator<Entry<Long, Long>> itr = idEvictionAge.entrySet().iterator();
 		while (idEvictionAge.size() > minEvictionSize && itr.hasNext()) {
@@ -87,6 +89,11 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
 				itr.remove();
 			}
 		}
+	}
+
+	protected boolean isEvictionDisabled() {
+		//current implementation faulty - it should only happen in a write-locked thread, for a start.
+		return true;
 	}
 
 	protected abstract void evict(AlcinaMemCache alcinaMemCache, Long key);

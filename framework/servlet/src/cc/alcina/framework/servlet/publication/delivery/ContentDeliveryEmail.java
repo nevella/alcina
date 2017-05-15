@@ -75,7 +75,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		props.put("mail.smtp.auth", authenticate.toString());
 		Session session = Session.getDefaultInstance(props, null);
 		session.setDebug(debug);
-		Message msg = new MimeMessage(session);
+		MimeMessage msg = new MimeMessage(session);
 		msg.setSentDate(new Date());
 		msg.setFrom(new InternetAddress(fromAddress, fromName));
 		List<InternetAddress> addresses = new ArrayList<InternetAddress>();
@@ -145,6 +145,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		}
 		Transport transport = session.getTransport("smtp");
 		transport.connect(host, port, userName, password);
+		PublicationContext.get().mimeMessageId=msg.getMessageID();
 		transport.sendMessage(msg, msg.getAllRecipients());
 		transport.close();
 		return "OK";
