@@ -180,4 +180,7 @@ public interface CommonPersistenceLocal {
 	public TransformCache warmupTransformCache();
 
 	public HiliLocatorMap reconstituteHiliMap(long l2);
+
+	public void updatePublicationMimeMessageId(Long publicationId,
+			String mimeMessageId);
 }

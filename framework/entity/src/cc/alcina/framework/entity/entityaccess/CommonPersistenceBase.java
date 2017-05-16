@@ -24,14 +24,13 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.regex.Pattern;
 import java.util.Random;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import javax.servlet.http.HttpServletRequest;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -69,7 +68,9 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.Wrapper;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DurationCounter;
 import cc.alcina.framework.common.client.util.LongPair;
@@ -86,7 +87,6 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
@@ -105,6 +105,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public static final transient String CONTEXT_CLIENT_IP_ADDRESS = CommonPersistenceBase.class
 			.getName() + ".CONTEXT_CLIENT_IP_ADDRESS";
+
 	public static final transient String CONTEXT_CLIENT_INSTANCE_ID = CommonPersistenceBase.class
 			.getName() + ".CONTEXT_CLIENT_INSTANCE_ID";
 
@@ -659,7 +660,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				userName = ci.getUser().getUserName();
 			}
 			Registry.impl(ClientInstanceAuthenticationCache.class)
-			.cacheUserNameFor(validatedClientInstanceId,userName);
+					.cacheUserNameFor(validatedClientInstanceId, userName);
 		}
 		return userName;
 	}
@@ -1447,5 +1448,17 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		HiliLocatorMap result = tm.reconstituteHiliMap();
 		tm.resetTltm(null);
 		return result;
+	}
+
+	@Override
+	public void updatePublicationMimeMessageId(Long publicationId,
+			String mimeMessageId) {
+		getEntityManager()
+				.createQuery(
+						Ax.format("update %s set mimeMessageId=? where id=?",
+								getImplementationSimpleClassName(
+										Publication.class)))
+				.setParameter(1, mimeMessageId).setParameter(2, publicationId)
+				.executeUpdate();
 	}
 }

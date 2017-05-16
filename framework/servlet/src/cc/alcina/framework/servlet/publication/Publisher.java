@@ -152,10 +152,23 @@ public class Publisher {
 						deliveryModel.provideContentDeliveryType().getClass());
 		String token = deliverer.deliver(ctx, convertedContent, deliveryModel,
 				fc);
+		if (forPublication && publicationContentPersister != null
+				&& !AppPersistenceBase.isInstanceReadOnly()) {
+			postDeliveryPersistence(result.publicationId);
+		}
+		publicationId = persist(contentDefinition, deliveryModel,
+				publicationUserId, original, publicationContentPersister);
 		result.content = null;
 		result.contentToken = token;
 		ctx.getVisitorOrNoop().publicationFinished(result);
 		return result;
+	}
+
+	private void postDeliveryPersistence(Long publicationId) {
+		if(getContext().mimeMessageId!=null){
+			Registry.impl(CommonPersistenceProvider.class)
+			.getCommonPersistence().updatePublicationMimeMessageId(publicationId,getContext().mimeMessageId);
+		}
 	}
 
 	private long persist(ContentDefinition contentDefinition,
@@ -177,7 +190,6 @@ public class Publisher {
 		publication.setContentDefinition(contentDefinition);
 		publication.setDeliveryModel(deliveryModel);
 		publication.setUser(PermissionsManager.get().getUser());
-		publication.setMimeMessageId(PublicationContext.get().mimeMessageId);
 		publication.setPublicationDate(new Date());
 		publication.setOriginalPublication(original);
 		publication.setUserPublicationId(publicationUserId);

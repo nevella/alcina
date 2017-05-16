@@ -145,8 +145,8 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		}
 		Transport transport = session.getTransport("smtp");
 		transport.connect(host, port, userName, password);
-		PublicationContext.get().mimeMessageId=msg.getMessageID();
 		transport.sendMessage(msg, msg.getAllRecipients());
+		PublicationContext.get().mimeMessageId=msg.getMessageID();
 		transport.close();
 		return "OK";
 	}
