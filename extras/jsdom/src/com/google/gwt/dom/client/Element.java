@@ -23,6 +23,7 @@ import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.EventListener;
+import com.google.gwt.user.client.LocalDomDebug;
 import com.google.gwt.user.client.ui.UIObject;
 
 import cc.alcina.framework.common.client.util.Ax;
@@ -515,8 +516,9 @@ public class Element extends Node implements DomElement {
 		if (nodeDom != null) {
 			if (domImpl.getId().length() > 0) {
 				String localId = localImpl() != null ? localImpl().getId() : "";
-				System.out.println(Ax.format("[id:%s,%s]->jso:%s",
-						domImpl.getId(), localId, nodeDom.hashCode()));
+				String message = Ax.format("[id:%s,%s]->jso:%s",
+						domImpl.getId(), localId, nodeDom.hashCode());
+				LocalDomBridge.log(LocalDomDebug.PUT_DOM_IMPL, message);
 			}
 			if (impl() instanceof LocalDomElement) {
 				LocalDomElement localDomElement = (LocalDomElement) impl();
@@ -713,13 +715,15 @@ public class Element extends Node implements DomElement {
 
 	private void dumpLocal0(int depth) {
 		String indent = CommonUtils.padStringLeft("", depth * 2, ' ');
-		System.out.println(Ax.format("%s%s [%s,%s,%s]: ", indent, getTagName(),
-				hashCode(), impl().hashCode(), domImpl() == null ? "f" : "t"));
+		String message = Ax.format("%s%s [%s,%s,%s]: ", indent, getTagName(),
+				hashCode(), impl().hashCode(), domImpl() == null ? "f" : "t");
+		LocalDomBridge.log(LocalDomDebug.DUMP_LOCAL, message);
 		for (Node node : getChildNodes()) {
 			switch (node.getNodeType()) {
 			case Node.TEXT_NODE:
-				System.out.println(indent + CommonUtils.trimToWsChars(
-						TextUtils.normalise(node.getNodeValue()), 50, true));
+				message = indent + CommonUtils.trimToWsChars(
+						TextUtils.normalise(node.getNodeValue()), 50, true);
+				LocalDomBridge.log(LocalDomDebug.DUMP_LOCAL, message);
 				break;
 			case ELEMENT_NODE:
 				((Element) node).dumpLocal0(depth + 1);

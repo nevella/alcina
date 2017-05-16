@@ -1214,9 +1214,7 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	 * @return the Element that {@link PopupImpl} creates and expects
 	 */
 	private Element getPopupImplElement() {
-		System.out.println("get child for popup: " + hashCode());
 		Element firstChild = DOM.getFirstChild(super.getContainerElement());
-		System.out.println("hash:" + firstChild.hashCode());
 		return firstChild;
 	}
 

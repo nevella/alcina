@@ -20,6 +20,7 @@ import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.LocalDomBridge.LocalDomBridgeCollections;
 import com.google.gwt.dom.client.LocalDomBridge.LocalDomBridgeCollections_Script;
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.LocalDomDebug;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
@@ -41,7 +42,7 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
  */
 public class LocalDomBridge {
 	static LocalDomBridge bridge = null;
-	
+
 	public static boolean isScript = GWT.isScript();
 
 	static LocalDomBridgeDebug debug = new LocalDomBridgeDebug();
@@ -183,9 +184,8 @@ public class LocalDomBridge {
 		try {
 			ensuring = true;
 			if (debug.on) {
-				Ax.format("ensure jso - %s\n", element);
-				new Exception().printStackTrace();
-				System.out.println("\n\n*****\n\n");
+				String message = Ax.format("ensure jso - %s\n", element);
+				log(LocalDomDebug.ENSURE_JSO, message);
 			}
 			String id = element.getId();
 			if (!id.isEmpty()) {
@@ -292,7 +292,7 @@ public class LocalDomBridge {
 		if (domImpl instanceof Element_Jso) {
 			Element_Jso elem = (Element_Jso) domImpl;
 			String id = elem.getId();
-			System.out.println("detach id:" + id);
+			log(LocalDomDebug.DETACH_ELEM_JSO, "detach id:" + id);
 			idLookup.remove(id);
 			NodeList_Jso<Node> kids = elem.getChildNodes0();
 			int length = kids.getLength();
@@ -339,7 +339,8 @@ public class LocalDomBridge {
 	}
 
 	public void eventMod(NativeEvent evt, String eventName) {
-		System.out.println(Ax.format("eventMod - %s %s", evt, eventName));
+		log(LocalDomDebug.EVENT_MOD,
+				Ax.format("eventMod - %s %s", evt, eventName));
 		if (!eventMods.keySet().contains(evt)) {
 			eventMods.clear();
 			eventMods.put(evt, new ArrayList<>());
@@ -353,7 +354,7 @@ public class LocalDomBridge {
 			return;
 		}
 		flushCommand = null;
-		System.out.println("**flush**");
+		log(LocalDomDebug.FLUSH, "**flush**");
 		if (pendingResolution.size() == 0) {
 			boolean detachedAndPending = createdLocals.stream()
 					.anyMatch(e -> e.getParentNode() == null);
@@ -364,11 +365,10 @@ public class LocalDomBridge {
 			createdLocals.stream().forEach(e -> {
 				Element_Jvm el = (Element_Jvm) e;
 				if (((Element) el.node).uiObject != null) {
-					System.out.println(
+					log(LocalDomDebug.FLUSH,
 							((Element) el.node).uiObject.getClass().getName());
 				}
 			});
-			int debug = 3;
 		}
 		Preconditions.checkState(pendingResolution.size() > 0);
 		new ArrayList<>(pendingResolution).stream()
@@ -467,8 +467,8 @@ public class LocalDomBridge {
 	private void ensureFlush() {
 		if (flushCommand == null) {
 			if (debug.on) {
-				System.out.println(CommonUtils.highlightForLog("ensure flush"));
-				new Exception().printStackTrace(System.out);
+				log(LocalDomDebug.ENSURE_FLUSH,
+						CommonUtils.highlightForLog("ensure flush"));
 			}
 			flushCommand = () -> flush();
 			Scheduler.get().scheduleFinally(flushCommand);
@@ -504,7 +504,7 @@ public class LocalDomBridge {
 		default:
 			throw new UnsupportedOperationException();
 		}
-		System.out.println(
+		log(LocalDomDebug.CREATED_PENDING_RESOLUTION,
 				"created pending resolution node:" + node.impl().hashCode());
 		javascriptObjectNodeLookup.put(nodeDom, node);
 		debug.removeAssignment(nodeDom);
@@ -789,7 +789,6 @@ public class LocalDomBridge {
 
 		public void added(Node_Jvm impl) {
 			nodesInHierarchy.add(impl);
-			// System.out.println("add:" + impl.hashCode());
 		}
 
 		public void checkCreatedLocals(List<DomElement> createdLocals) {
@@ -797,7 +796,6 @@ public class LocalDomBridge {
 				Node_Jso domImpl = ((Element_Jvm) e).provideAncestorDomImpl();
 				if (domImpl == null && ((Element_Jvm) e).parentNode == null) {
 					if (nodesInHierarchy.contains(e)) {
-						// System.out.println("Orphan:" + e.hashCode());
 						int debug = 3;
 					}
 				}
@@ -805,9 +803,6 @@ public class LocalDomBridge {
 		}
 
 		public void checkMultipleAssignment(Element element, Node_Jso nodeDom) {
-			// System.out.println("check:" + nodeDom.hashCode());
-			// System.out.println("check:" + nodeDom);
-			// new Exception().printStackTrace(System.out);
 			if (!get().javascriptObjectNodeLookup.containsKey(nodeDom)) {
 				throw new IllegalStateException();
 			}
@@ -820,7 +815,6 @@ public class LocalDomBridge {
 		}
 
 		public void logUseLocal(boolean b) {
-			// System.out.println("use local:"+b);
 		}
 
 		public void removeAssignment(Node_Jso nodeDom) {
@@ -829,13 +823,29 @@ public class LocalDomBridge {
 
 		public void removed(Node_Jvm oldChild_Jvm) {
 			nodesInHierarchy.remove(oldChild_Jvm);
-			// System.out.println("remove:" + oldChild_Jvm.hashCode());
 		}
 
 		public void warnDuplicateId(String id, Node node,
 				Element_Jvm element_Jvm) {
-			System.out.println("**warn - duplicate elt id - " + id);
-			// throw new IllegalStateException();
+			log(LocalDomDebug.DUPLICATE_ELT_ID,
+					"**warn - duplicate elt id - " + id);
 		}
+
+		public void log(LocalDomDebug channel, String message) {
+			switch (channel) {
+			case DOM_MOUSE_EVENT:
+			case DOM_EVENT:
+			case DUPLICATE_ELT_ID:
+			case DISPATCH_DETAILS:
+				System.out.println(message);
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	public static void log(LocalDomDebug channel, String message) {
+		debug.log(channel, message);
 	}
 }

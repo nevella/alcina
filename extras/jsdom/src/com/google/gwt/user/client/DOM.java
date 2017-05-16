@@ -15,7 +15,9 @@
  */
 package com.google.gwt.user.client;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -1059,8 +1061,8 @@ public class DOM {
 	 */
 	public static native int getIntStyleAttribute(Element elem,
 			String attr) /*-{
-							return parseInt(elem.style[attr]) || 0;
-							}-*/;
+        return parseInt(elem.style[attr]) || 0;
+	}-*/;
 
 	/**
 	 * Gets an element's next sibling element.
@@ -1546,7 +1548,6 @@ public class DOM {
 				}
 			}
 			if (attachToAncestor) {
-				// System.out.println("attaching to impl:"+attachedAncestor);
 				impl.sinkEvents(attachedAncestor,
 						DOM.getEventsSunk(attachedAncestor) | eventBits);
 			} else {
@@ -1659,9 +1660,11 @@ public class DOM {
 	}
 
 	// chromium hosted mode double-dispatch checl
-	private static Event lastDispatchedMouseEvent;
+	private static Event lastDispatchedEvent;
 
 	private static EventListener lastDispatchedMouseEventListener;
+
+	private static List<Element> dispatchedFor = new ArrayList<>();
 
 	private static void dispatchEventImpl(Event evt, Element elem,
 			EventListener listener) {
@@ -1674,18 +1677,28 @@ public class DOM {
 		}
 		EventTarget eventTarget = evt.getEventTarget();
 		String lcType = evt.getType().toLowerCase();
-		if (lcType.contains("key") ) {
-			int debug=3;
+		if (lcType.contains("key")) {
+			int debug = 3;
 		}
+		if (lastDispatchedEvent == evt
+				&& listener == lastDispatchedMouseEventListener) {
+			return;
+		}
+		if (lastDispatchedEvent != evt) {
+			dispatchedFor.clear();
+		}
+		lastDispatchedEvent = evt;
+		lastDispatchedMouseEventListener = listener;
 		if (lcType.contains("click") || lcType.contains("mousedown")) {
-			if (lastDispatchedMouseEvent == evt
-					&& listener == lastDispatchedMouseEventListener) {
-				return;
-			}
-			lastDispatchedMouseEvent = evt;
-			lastDispatchedMouseEventListener = listener;
+			LocalDomBridge.log(LocalDomDebug.DISPATCH_DETAILS,
+					Ax.format("evt/listener: %s/%s/%s %s/%s", evt.hashCode(),
+							listener.hashCode(), elem.hashCode(), lcType,
+							elem.getTagName()));
 		}
-		System.out.println(Ax.format("dispatch  event - %s", lcType));
+		{
+			String message = Ax.format("dispatch  event - %s", lcType);
+			LocalDomBridge.log(LocalDomDebug.DOM_EVENT, message);
+		}
 		if (Element.is(eventTarget)) {
 			Element rel = Element.as(eventTarget);
 			// get the listeners early, to prevent overwrite. Note that this
@@ -1693,7 +1706,9 @@ public class DOM {
 			// ideally there'd be an is-still-in-chain check for bubbling
 			Map<Element, EventListener> forDispatch = new LinkedHashMap<>();
 			while (rel != elem && rel != null) {
-				if (rel.uiObjectListener != null) {
+				if (rel.uiObjectListener != null
+						&& !dispatchedFor.contains(rel)) {
+					dispatchedFor.add(rel);
 					forDispatch.put(rel, rel.uiObjectListener);
 				}
 				rel = rel.getParentElement();
@@ -1702,9 +1717,9 @@ public class DOM {
 				eventCurrentTarget = entry.getKey();
 				EventListener eventListener = entry.getValue();
 				if (lcType.contains("click") || lcType.contains("mousedown")) {
-					System.out
-							.println(Ax.format("dispatch mouse event - %s - %s",
-									lcType, eventListener));
+					String message = Ax.format("dispatch mouse event - %s - %s",
+							lcType, eventListener.getClass().getName());
+					LocalDomBridge.log(LocalDomDebug.DOM_MOUSE_EVENT, message);
 				}
 				eventListener.onBrowserEvent(evt);
 				if (LocalDomBridge.get().isStopPropogation(evt)) {
