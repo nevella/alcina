@@ -113,6 +113,9 @@ public class XmlNodeBuilder {
 	private XmlNode generate() {
 		Node node = null;
 		if (processingInstruction) {
+			if (text == null) {
+				throw new RuntimeException("no text");
+			}
 			node = doc().domDoc().createProcessingInstruction(tag, text);
 		} else if (tag != null) {
 			node = doc().domDoc().createElement(tag);
