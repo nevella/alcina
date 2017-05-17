@@ -1709,8 +1709,6 @@ public class AlcinaMemCache implements RegistrableService {
 			Multimap<HiliLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
 					.multimap(filtered, new DteToLocatorMapper());
 			for (DomainTransformEvent dte : filtered) {
-				// remove from indicies before first change - and only if
-				// preexisting object
 				DomainTransformEvent first = CommonUtils
 						.first(perObjectTransforms
 								.get(HiliLocator.objectLocator(dte)));
