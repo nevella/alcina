@@ -26,6 +26,11 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	}
 
 	@Override
+	public boolean contains(Class<? extends HasIdAndLocalId> clazz, long id) {
+		return cache.contains(clazz, id);
+	}
+
+	@Override
 	public void deregisterObject(HasIdAndLocalId hili) {
 		// just remove
 		cache.remove(hili);

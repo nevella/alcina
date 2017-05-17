@@ -26,4 +26,6 @@ public interface ObjectStore extends ObjectLookup {
 	public abstract Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> getCollectionMap();
 
 	public abstract void invalidate(Class<? extends HasIdAndLocalId> clazz);
+
+	boolean contains(Class<? extends HasIdAndLocalId> clazz, long id);
 }
