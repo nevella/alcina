@@ -63,5 +63,7 @@ public abstract class CacheDescriptor {
 		 * @return true if cached data was modified
 		 */
 		public void run(Class clazz, Collection<T> objects) throws Exception;
+		
+		public void writeLockedCleanup();
 	}
 }

@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
@@ -291,6 +292,8 @@ public class AlcinaMemCache implements RegistrableService {
 	private ReentrantReadWriteLock subgraphLock = new ReentrantReadWriteLock(
 			true);
 
+	private ReentrantLock postInitConnectionLock = new ReentrantLock(true);
+
 	private BackupLazyLoader backupLazyLoader;
 
 	private boolean initialising;
@@ -356,6 +359,8 @@ public class AlcinaMemCache implements RegistrableService {
 	private AtomicInteger longLocksCount = new AtomicInteger();
 
 	private DomainTransformPersistenceEvent postProcessEvent;
+
+	private volatile Connection postInitConn;
 
 	public AlcinaMemCache() {
 		ThreadlocalTransformManager.threadTransformManagerWasResetListenerDelta(
@@ -895,9 +900,16 @@ public class AlcinaMemCache implements RegistrableService {
 			}
 		}
 		try {
-			Connection postInitConn = dataSource.getConnection();
-			postInitConn.setAutoCommit(true);
-			postInitConn.setReadOnly(true);
+			if (postInitConn == null) {
+				synchronized (postInitConnectionLock) {
+					if (postInitConn == null) {
+						postInitConn = dataSource.getConnection();
+						postInitConn.setAutoCommit(true);
+						postInitConn.setReadOnly(true);
+					}
+				}
+			}
+			postInitConnectionLock.lock();
 			return postInitConn;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -1336,7 +1348,7 @@ public class AlcinaMemCache implements RegistrableService {
 			if (initialising) {
 				releaseWarmupConnection(conn);
 			} else {
-				conn.close();
+				postInitConnectionLock.unlock();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1812,6 +1824,7 @@ public class AlcinaMemCache implements RegistrableService {
 					}
 				}
 			}
+			doEvictions();
 		} catch (Exception e) {
 			causes.add(e);
 		} finally {
@@ -1850,6 +1863,11 @@ public class AlcinaMemCache implements RegistrableService {
 				t.printStackTrace();
 			}
 		}
+	}
+
+	private void doEvictions() {
+		cacheDescriptor.preProvideTasks
+				.forEach(PreProvideTask::writeLockedCleanup);
 	}
 
 	public static class MemcacheUpdateException extends Exception {
@@ -2126,7 +2144,8 @@ public class AlcinaMemCache implements RegistrableService {
 						.get()
 						.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 				int pendingTransformCount = localTransforms.size();
-				if (pendingTransformCount != 0&&!AppPersistenceBase.isTest()) {
+				if (pendingTransformCount != 0
+						&& !AppPersistenceBase.isTest()) {
 					for (DomainTransformEvent dte : localTransforms) {
 						if (cacheDescriptor.perClass.keySet()
 								.contains(dte.getObjectClass())) {
@@ -2698,6 +2717,10 @@ public class AlcinaMemCache implements RegistrableService {
 	}
 
 	public <T extends HasIdAndLocalId> void reindex(Class<T> clazz) {
-		
+	}
+
+	public <T extends HasIdAndLocalId> void preLoad(Class<T> clazz,
+			Collection<Long> ids) {
+		new AlcinaMemCacheQuery().ids(ids).raw().list(clazz);
 	}
 }

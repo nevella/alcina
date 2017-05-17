@@ -11,8 +11,8 @@ import cc.alcina.framework.common.client.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 
-public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
-		PreProvideTask<T> {
+public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
+		implements PreProvideTask<T> {
 	private long minEvictionAge;
 
 	private int minEvictionSize;
@@ -40,8 +40,7 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
 	}
 
 	@Override
-	public void run( Class clazz,
-			Collection<T> objects) throws Exception {
+	public void run(Class clazz, Collection<T> objects) throws Exception {
 		AlcinaMemCache cache = AlcinaMemCache.get();
 		if (clazz != this.clazz) {
 			return;
@@ -67,33 +66,30 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
 
 	protected void loadDependents(AlcinaMemCache alcinaMemCache,
 			List<T> requireLoad) throws Exception {
-		
 	}
 
-	private void registerLoaded(AlcinaMemCache alcinaMemCache, List<T> requireLoad) {
+	private void registerLoaded(AlcinaMemCache alcinaMemCache,
+			List<T> requireLoad) {
 		for (T t : requireLoad) {
 			idEvictionAge.put(t.getId(), System.currentTimeMillis());
 		}
-		if(isEvictionDisabled()){
-			return;
-		}
+	}
+
+	@Override
+	public void writeLockedCleanup() {
 		Iterator<Entry<Long, Long>> itr = idEvictionAge.entrySet().iterator();
 		while (idEvictionAge.size() > minEvictionSize && itr.hasNext()) {
 			Entry<Long, Long> entry = itr.next();
-			if ((System.currentTimeMillis() - entry.getValue()) > minEvictionAge) {
+			if ((System.currentTimeMillis()
+					- entry.getValue()) > minEvictionAge) {
 				try {
-					evict(alcinaMemCache,entry.getKey());
+					evict(AlcinaMemCache.get(), entry.getKey());
 				} catch (Exception e) {
 					AlcinaTopics.notifyDevWarning(e);
 				}
 				itr.remove();
 			}
 		}
-	}
-
-	protected boolean isEvictionDisabled() {
-		//current implementation faulty - it should only happen in a write-locked thread, for a start.
-		return true;
 	}
 
 	protected abstract void evict(AlcinaMemCache alcinaMemCache, Long key);
