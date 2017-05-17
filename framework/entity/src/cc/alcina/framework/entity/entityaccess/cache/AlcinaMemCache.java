@@ -1680,7 +1680,7 @@ public class AlcinaMemCache implements RegistrableService {
 			}
 			try {
 				for (PreProvideTask task : cacheDescriptor.preProvideTasks) {
-					task.run(clazz, raw);
+					task.run(clazz, raw, true);
 				}
 				if (query.isRaw() || isWillProjectLater()) {
 					return raw;
