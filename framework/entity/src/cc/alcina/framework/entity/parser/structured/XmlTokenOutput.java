@@ -27,7 +27,7 @@ public class XmlTokenOutput {
 		}
 		if (!writeCursor.tagIs(tag)) {
 			outDoc.logToFile();
-			System.err.println("see /tmp/tmp.xml for details");
+			System.err.println("see /tmp/log/log.xml for details");
 			throw new RuntimeException(
 					String.format("closing unmatched tag : %s -> %s",
 							writeCursor.name(), tag));
