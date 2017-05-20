@@ -11,13 +11,17 @@ import cc.alcina.framework.common.client.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 
-public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
-		PreProvideTask<T> {
+public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
+		implements PreProvideTask<T> {
 	private long minEvictionAge;
 
 	private int minEvictionSize;
 
 	protected Class<T> clazz;
+
+	public Class<T> forClazz() {
+		return this.clazz;
+	}
 
 	public LazyLoadProvideTask(long minEvictionAge, int minEvictionSize,
 			Class<T> clazz) {
@@ -40,8 +44,8 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
 	}
 
 	@Override
-	public void run( Class clazz,
-			Collection<T> objects) throws Exception {
+	public void run(Class clazz, Collection<T> objects, boolean topLevel)
+			throws Exception {
 		AlcinaMemCache cache = AlcinaMemCache.get();
 		if (clazz != this.clazz) {
 			return;
@@ -53,10 +57,14 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
 			}
 			synchronized (getLockObject()) {
 				// reget, just in case of interim eviction
-				requireLoad = requireLazyLoad(objects);
+				// requireLoad = requireLazyLoad(objects);
+				// now eviction is happening in write-lock, and this only
+				// happens in read-lock, no need
 				lazyLoad(cache, requireLoad);
 				registerLoaded(cache, requireLoad);
-				loadDependents(cache, requireLoad);
+				if (topLevel) {
+					loadDependents(cache, requireLoad);
+				}
 			}
 		}
 	}
@@ -65,24 +73,28 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
 		return this;
 	}
 
-	protected void loadDependents(AlcinaMemCache alcinaMemCache,
-			List<T> requireLoad) throws Exception {
-		
-	}
+	protected abstract void loadDependents(AlcinaMemCache alcinaMemCache,
+			List<T> requireLoad) throws Exception ;
 
-	private void registerLoaded(AlcinaMemCache alcinaMemCache, List<T> requireLoad) {
+	private void registerLoaded(AlcinaMemCache alcinaMemCache,
+			List<T> requireLoad) {
 		for (T t : requireLoad) {
 			idEvictionAge.put(t.getId(), System.currentTimeMillis());
 		}
-		if(isEvictionDisabled()){
+	}
+
+	@Override
+	public void writeLockedCleanup() {
+		if (evictionDisabled()) {
 			return;
 		}
 		Iterator<Entry<Long, Long>> itr = idEvictionAge.entrySet().iterator();
 		while (idEvictionAge.size() > minEvictionSize && itr.hasNext()) {
 			Entry<Long, Long> entry = itr.next();
-			if ((System.currentTimeMillis() - entry.getValue()) > minEvictionAge) {
+			if ((System.currentTimeMillis()
+					- entry.getValue()) > minEvictionAge) {
 				try {
-					evict(alcinaMemCache,entry.getKey());
+					evict(AlcinaMemCache.get(), entry.getKey());
 				} catch (Exception e) {
 					AlcinaTopics.notifyDevWarning(e);
 				}
@@ -91,8 +103,7 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
 		}
 	}
 
-	protected boolean isEvictionDisabled() {
-		//current implementation faulty - it should only happen in a write-locked thread, for a start.
+	protected boolean evictionDisabled() {
 		return true;
 	}
 

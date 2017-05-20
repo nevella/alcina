@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
@@ -157,6 +158,12 @@ public class AlcinaMemCache implements RegistrableService {
 
 	public static final String CONTEXT_WILL_PROJECT_AFTER_READ_LOCK = AlcinaMemCache.class
 			.getName() + ".CONTEXT_WILL_PROJECT_AFTER_READ_LOCK";
+
+	public static final String CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH = AlcinaMemCache.class
+			.getName() + ".CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH";
+
+	public static final String CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS = AlcinaMemCache.class
+			.getName() + ".CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS";
 
 	// while debugging, prevent reentrant locks
 	public static final String CONTEXT_NO_LOCKS = AlcinaMemCache.class.getName()
@@ -291,6 +298,8 @@ public class AlcinaMemCache implements RegistrableService {
 	private ReentrantReadWriteLock subgraphLock = new ReentrantReadWriteLock(
 			true);
 
+	private ReentrantLock postInitConnectionLock = new ReentrantLock(true);
+
 	private BackupLazyLoader backupLazyLoader;
 
 	private boolean initialising;
@@ -356,6 +365,8 @@ public class AlcinaMemCache implements RegistrableService {
 	private AtomicInteger longLocksCount = new AtomicInteger();
 
 	private DomainTransformPersistenceEvent postProcessEvent;
+
+	private volatile Connection postInitConn;
 
 	public AlcinaMemCache() {
 		ThreadlocalTransformManager.threadTransformManagerWasResetListenerDelta(
@@ -624,13 +635,14 @@ public class AlcinaMemCache implements RegistrableService {
 		return new AlcinaMemCacheQuery().ids(getIds(clazz)).raw().list(clazz);
 	}
 
-	public void loadTable(Class clazz, String sqlFilter, ClassIdLock sublock)
-			throws Exception {
+	public <T extends HasIdAndLocalId> List<T> loadTable(Class clazz,
+			String sqlFilter, ClassIdLock sublock) throws Exception {
 		assert sublock != null;
 		try {
 			LooseContext.push();
 			LooseContext.remove(AlcinaMemCache.CONTEXT_NO_LOCKS);
-			loadTable(clazz, sqlFilter, sublock, new LaterLookup());
+			return (List<T>) loadTable(clazz, sqlFilter, sublock,
+					new LaterLookup());
 		} finally {
 			LooseContext.pop();
 		}
@@ -895,9 +907,16 @@ public class AlcinaMemCache implements RegistrableService {
 			}
 		}
 		try {
-			Connection postInitConn = dataSource.getConnection();
-			postInitConn.setAutoCommit(true);
-			postInitConn.setReadOnly(true);
+			if (postInitConn == null) {
+				synchronized (postInitConnectionLock) {
+					if (postInitConn == null) {
+						postInitConn = dataSource.getConnection();
+						postInitConn.setAutoCommit(true);
+						postInitConn.setReadOnly(true);
+					}
+				}
+			}
+			postInitConnectionLock.lock();
 			return postInitConn;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -1126,22 +1145,25 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 	}
 
-	private void loadTable(Class clazz, String sqlFilter, ClassIdLock sublock,
-			LaterLookup laterLookup) throws Exception {
+	private List<HasIdAndLocalId> loadTable(Class clazz, String sqlFilter,
+			ClassIdLock sublock, LaterLookup laterLookup) throws Exception {
 		if (sublock != null) {
 			sublock(sublock, true);
 		}
 		try {
 			List<HasIdAndLocalId> loaded = loadTable0(clazz, sqlFilter, sublock,
-					laterLookup);
+					laterLookup, !initialising);
+			boolean keepDetached = LooseContext
+					.is(CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
 			if (sublock != null) {
 				resolveRefs(laterLookup);
-				if (!initialising) {
+				if (!initialising && !keepDetached) {
 					for (HasIdAndLocalId hili : loaded) {
 						index(hili, true);
 					}
 				}
 			}
+			return loaded;
 		} finally {
 			if (sublock != null) {
 				sublock(sublock, false);
@@ -1150,15 +1172,26 @@ public class AlcinaMemCache implements RegistrableService {
 	}
 
 	private List<HasIdAndLocalId> loadTable0(Class clazz, String sqlFilter,
-			ClassIdLock sublock, LaterLookup laterLookup) throws Exception {
+			ClassIdLock sublock, LaterLookup laterLookup,
+			boolean ignoreIfExisting) throws Exception {
 		Connection conn = getConn();
 		List<HasIdAndLocalId> loaded;
 		try {
 			Iterable<Object[]> results = getData(conn, clazz, sqlFilter);
 			List<PdOperator> pds = descriptors.get(clazz);
 			loaded = new ArrayList<HasIdAndLocalId>();
+			PdOperator idOperator = pds.stream()
+					.filter(pd -> pd.name.equals("id")).findFirst().get();
+			boolean keepDetached = LooseContext
+					.is(CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
 			for (Object[] objects : results) {
 				HasIdAndLocalId hili = (HasIdAndLocalId) clazz.newInstance();
+				if (ignoreIfExisting) {
+					if (transformManager.store.contains(clazz,
+							(Long) objects[idOperator.idx])) {
+						continue;
+					}
+				}
 				if (sublock != null) {
 					loaded.add(hili);
 				}
@@ -1176,7 +1209,9 @@ public class AlcinaMemCache implements RegistrableService {
 						pdOperator.field.set(hili, objects[i]);
 					}
 				}
-				transformManager.store.mapObject(hili);
+				if (!keepDetached) {
+					transformManager.store.mapObject(hili);
+				}
 			}
 		} finally {
 			releaseConn(conn);
@@ -1336,7 +1371,7 @@ public class AlcinaMemCache implements RegistrableService {
 			if (initialising) {
 				releaseWarmupConnection(conn);
 			} else {
-				conn.close();
+				postInitConnectionLock.unlock();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1668,7 +1703,7 @@ public class AlcinaMemCache implements RegistrableService {
 			}
 			try {
 				for (PreProvideTask task : cacheDescriptor.preProvideTasks) {
-					task.run(clazz, raw);
+					task.run(clazz, raw, true);
 				}
 				if (query.isRaw() || isWillProjectLater()) {
 					return raw;
@@ -1689,7 +1724,9 @@ public class AlcinaMemCache implements RegistrableService {
 			postProcess(DomainTransformPersistenceEvent persistenceEvent) {
 		// preload outside of the writer lock - this uses a db conn, and there
 		// have been some odd networking issues...
-		{
+		try {
+			lock(false);
+			// we may lazy load - so need a read lock
 			List<DomainTransformEvent> dtes = (List) persistenceEvent
 					.getDomainTransformLayerWrapper().persistentEvents;
 			List<DomainTransformEvent> filtered = filterInterestedTransforms(
@@ -1697,8 +1734,6 @@ public class AlcinaMemCache implements RegistrableService {
 			Multimap<HiliLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
 					.multimap(filtered, new DteToLocatorMapper());
 			for (DomainTransformEvent dte : filtered) {
-				// remove from indicies before first change - and only if
-				// preexisting object
 				DomainTransformEvent first = CommonUtils
 						.first(perObjectTransforms
 								.get(HiliLocator.objectLocator(dte)));
@@ -1709,6 +1744,8 @@ public class AlcinaMemCache implements RegistrableService {
 					HasIdAndLocalId obj = transformManager.getObject(dte, true);
 				}
 			}
+		} finally {
+			unlock(false);
 		}
 		Set<Throwable> causes = new LinkedHashSet<Throwable>();
 		StringBuilder warnBuilder = new StringBuilder();
@@ -1812,6 +1849,7 @@ public class AlcinaMemCache implements RegistrableService {
 					}
 				}
 			}
+			doEvictions();
 		} catch (Exception e) {
 			causes.add(e);
 		} finally {
@@ -1850,6 +1888,11 @@ public class AlcinaMemCache implements RegistrableService {
 				t.printStackTrace();
 			}
 		}
+	}
+
+	private void doEvictions() {
+		cacheDescriptor.preProvideTasks
+				.forEach(PreProvideTask::writeLockedCleanup);
 	}
 
 	public static class MemcacheUpdateException extends Exception {
@@ -1932,12 +1975,22 @@ public class AlcinaMemCache implements RegistrableService {
 			 * per class (really, pd) ..so run linear
 			 */
 			public Void call() throws Exception {
+				boolean keepDetached = LooseContext
+						.is(CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
+				if (LooseContext.is(CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS)) {
+					this.items.clear();
+					return null;
+				}
 				for (LaterItem item : this.items) {
 					try {
 						PdOperator pdOperator = item.pdOperator;
 						Method rm = pdOperator.readMethod;
 						long id = item.id;
 						if (joinTables.containsKey(pdOperator.pd)) {
+							if (keepDetached) {
+								throw new RuntimeException(
+										"Cannot keep join tables detached");
+							}
 							Set set = (Set) pdOperator.readMethod
 									.invoke(item.source, new Object[0]);
 							if (set == null) {
@@ -1959,6 +2012,9 @@ public class AlcinaMemCache implements RegistrableService {
 										pdOperator.name, item.source.getId());
 							}
 							pdOperator.writeMethod.invoke(item.source, target);
+							if (keepDetached) {
+								continue;
+							}
 							PropertyDescriptor targetPd = manyToOneRev.get(
 									item.source.getClass(), pdOperator.name);
 							if (targetPd != null && target != null) {
@@ -2126,7 +2182,8 @@ public class AlcinaMemCache implements RegistrableService {
 						.get()
 						.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 				int pendingTransformCount = localTransforms.size();
-				if (pendingTransformCount != 0&&!AppPersistenceBase.isTest()) {
+				if (pendingTransformCount != 0
+						&& !AppPersistenceBase.isTest()) {
 					for (DomainTransformEvent dte : localTransforms) {
 						if (cacheDescriptor.perClass.keySet()
 								.contains(dte.getObjectClass())) {
@@ -2698,6 +2755,10 @@ public class AlcinaMemCache implements RegistrableService {
 	}
 
 	public <T extends HasIdAndLocalId> void reindex(Class<T> clazz) {
-		
+	}
+
+	public <T extends HasIdAndLocalId> void preLoad(Class<T> clazz,
+			Collection<Long> ids) {
+		new AlcinaMemCacheQuery().ids(ids).raw().list(clazz);
 	}
 }

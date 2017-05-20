@@ -15,6 +15,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -27,6 +28,9 @@ public class J8Utils {
 
 	public static <T> Collector<Collection<T>, ?, List<T>> toItemList() {
 		return new ToItemListCollector();
+	}
+	public static <T> Collector<Collection<T>, ?, Stream<T>> toItemStream() {
+		return new ToItemStreamCollector();
 	}
 
 	public static <T, K, U> Collector<T, ?, Multimap<K, List<U>>> toMultimap(
@@ -121,6 +125,41 @@ public class J8Utils {
 		@Override
 		public Function<List<T>, List<T>> finisher() {
 			return null;
+		}
+	}
+
+	private static class ToItemStreamCollector<T>
+			implements Collector<Collection<T>, List<T>, Stream<T>> {
+		public ToItemStreamCollector() {
+		}
+
+		@Override
+		public Set<java.util.stream.Collector.Characteristics>
+				characteristics() {
+			return EnumSet.noneOf(Characteristics.class);
+		}
+
+		@Override
+		public Supplier<List<T>> supplier() {
+			return ArrayList::new;
+		}
+
+		@Override
+		public BiConsumer<List<T>, Collection<T>> accumulator() {
+			return (list, coll) -> list.addAll(coll);
+		}
+
+		@Override
+		public BinaryOperator<List<T>> combiner() {
+			return (left, right) -> {
+				left.addAll(right);
+				return left;
+			};
+		}
+
+		@Override
+		public Function<List<T>, Stream<T>> finisher() {
+			return List::stream;
 		}
 	}
 

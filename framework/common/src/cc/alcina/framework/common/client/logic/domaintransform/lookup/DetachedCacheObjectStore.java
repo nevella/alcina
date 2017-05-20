@@ -26,6 +26,11 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	}
 
 	@Override
+	public boolean contains(Class<? extends HasIdAndLocalId> clazz, long id) {
+		return cache.contains(clazz, id);
+	}
+
+	@Override
 	public void deregisterObject(HasIdAndLocalId hili) {
 		// just remove
 		cache.remove(hili);
@@ -51,7 +56,8 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	}
 
 	@Override
-	public Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> getCollectionMap() {
+	public Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>>
+			getCollectionMap() {
 		return (Map) cache.getDetached();
 	}
 
@@ -63,7 +69,7 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
 			long id, long localId) {
 		T t = cache.get(c, id);
-		if (t == null && lazyObjectLoader != null ) {
+		if (t == null && lazyObjectLoader != null && id != 0) {
 			lazyObjectLoader.loadObject(c, id, localId);
 			t = cache.get(c, id);
 		}
@@ -72,8 +78,8 @@ public class DetachedCacheObjectStore implements ObjectStore {
 
 	@Override
 	public <T extends HasIdAndLocalId> T getObject(T bean) {
-		return (T) (bean == null ? null : getObject(bean.getClass(),
-				bean.getId(), 0));
+		return (T) (bean == null ? null
+				: getObject(bean.getClass(), bean.getId(), 0));
 	}
 
 	@Override
@@ -98,6 +104,5 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	@Override
 	public void invalidate(Class<? extends HasIdAndLocalId> clazz) {
 		cache.invalidate(clazz);
-
 	}
 }

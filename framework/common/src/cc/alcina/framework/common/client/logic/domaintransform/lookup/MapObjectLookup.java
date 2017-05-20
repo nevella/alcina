@@ -86,7 +86,8 @@ public abstract class MapObjectLookup implements ObjectStore {
 	}
 
 	@Override
-	public Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> getCollectionMap() {
+	public Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>>
+			getCollectionMap() {
 		return this.perClassLookups.getCollnMap();
 	}
 
@@ -127,14 +128,16 @@ public abstract class MapObjectLookup implements ObjectStore {
 	}
 
 	class PerClassLookup {
-		Map<Class<? extends HasIdAndLocalId>, FastIdLookup> lookups = new LinkedHashMap<Class<? extends HasIdAndLocalId>, FastIdLookup>(100);
+		Map<Class<? extends HasIdAndLocalId>, FastIdLookup> lookups = new LinkedHashMap<Class<? extends HasIdAndLocalId>, FastIdLookup>(
+				100);
 
 		public boolean contains(HasIdAndLocalId obj) {
 			FastIdLookup lookup = ensureLookup(obj.getClass());
 			return lookup.values().contains(obj);
 		}
 
-		public Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> getCollnMap() {
+		public Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>>
+				getCollnMap() {
 			Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> result = new LinkedHashMap<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>>();
 			for (Entry<Class<? extends HasIdAndLocalId>, FastIdLookup> entry : lookups
 					.entrySet()) {
@@ -175,5 +178,10 @@ public abstract class MapObjectLookup implements ObjectStore {
 	public void invalidate(Class<? extends HasIdAndLocalId> clazz) {
 		perClassLookups.lookups.remove(clazz);
 		perClassLookups.ensureLookup(clazz);
+	}
+
+	@Override
+	public boolean contains(Class<? extends HasIdAndLocalId> clazz, long id) {
+		return getObject(clazz, id, 0L) != null;
 	}
 }
