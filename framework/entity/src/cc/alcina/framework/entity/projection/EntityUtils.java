@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
@@ -35,8 +36,8 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
  * @author Nick Reddel
  */
 public class EntityUtils {
-	static class MultiIdentityMap extends
-			IdentityHashMap<Object, IdentityHashMap<Object, Object>> {
+	static class MultiIdentityMap
+			extends IdentityHashMap<Object, IdentityHashMap<Object, Object>> {
 		public void add(Object o1, Object o2) {
 			ensureKey(o1);
 			get(o1).put(o2, o2);
@@ -57,7 +58,8 @@ public class EntityUtils {
 		return longsToIdClause(hasIdsToIdList(hasIds));
 	}
 
-	public static List<Long> hasIdsToIdList(Collection<? extends HasId> hasIds) {
+	public static List<Long>
+			hasIdsToIdList(Collection<? extends HasId> hasIds) {
 		return hasIdsToIdList(hasIds, false);
 	}
 
@@ -84,10 +86,11 @@ public class EntityUtils {
 		return sb.toString();
 	}
 
-	
-
 	public static String stringListToClause(Collection<String> strs) {
 		StringBuffer sb = new StringBuffer();
+		if (strs.isEmpty()) {
+			strs.add("value##never##matched--" + SEUtilities.generateId());
+		}
 		sb.append(" (");
 		for (String str : strs) {
 			sb.append(sb.length() == 2 ? "'" : ", '");
@@ -135,9 +138,9 @@ public class EntityUtils {
 
 	public GraphProjections projections(InstantiateImplCallback callback,
 			DetachedEntityCache cache, boolean useMemCache) {
-		GraphProjectionDataFilter dataFilter = Registry.impl(
-				JPAImplementation.class).getResolvingFilter(callback, cache,
-				useMemCache);
+		GraphProjectionDataFilter dataFilter = Registry
+				.impl(JPAImplementation.class)
+				.getResolvingFilter(callback, cache, useMemCache);
 		return GraphProjections.defaultProjections()
 				.fieldFilter(Registry.impl(PermissibleFieldFilter.class))
 				.dataFilter(dataFilter);
@@ -155,9 +158,9 @@ public class EntityUtils {
 	public <T> T detachedCloneIgnorePermissions(T source,
 			InstantiateImplCallback callback) {
 		DetachedEntityCache cache = new DetachedEntityCache();
-		GraphProjectionDataFilter dataFilter = Registry.impl(
-				JPAImplementation.class).getResolvingFilter(callback, cache,
-				false);
+		GraphProjectionDataFilter dataFilter = Registry
+				.impl(JPAImplementation.class)
+				.getResolvingFilter(callback, cache, false);
 		try {
 			return new GraphProjection(null, dataFilter).project(source, null);
 		} catch (Exception e) {
@@ -174,8 +177,8 @@ public class EntityUtils {
 		}
 		Comparator<T> cmp = new Comparator<T>() {
 			public int compare(T o1, T o2) {
-				return orderPositions.get(o1.getId()).compareTo(
-						orderPositions.get(o2.getId()));
+				return orderPositions.get(o1.getId())
+						.compareTo(orderPositions.get(o2.getId()));
 			}
 		};
 		Collections.sort(incoming, cmp);

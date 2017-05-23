@@ -41,7 +41,8 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 public class ContentDeliveryEmail implements ContentDelivery {
 	public static final String PUBLICATION_REASON_MESSAGE = "<!--PUBLICATION_REASON_MESSAGE-->";
 
-	public String deliver(PublicationContext ctx,final InputStream convertedContent,
+	public String deliver(PublicationContext ctx,
+			final InputStream convertedContent,
 			final DeliveryModel deliveryModel, final FormatConverter hfc)
 			throws Exception {
 		byte[] msgBytes = ResourceUtilities
@@ -57,12 +58,11 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		boolean debug = false;
 		Properties props = new Properties();
 		Class c = ContentDeliveryEmail.class;
-		String host = ResourceUtilities.getBundledString(c,
-				"smtp.host.name");
-		Integer port = Integer.valueOf(ResourceUtilities
-				.getBundledString(c, "smtp.host.port"));
-		Boolean authenticate = Boolean.valueOf(ResourceUtilities
-				.getBundledString(c, "smtp.authenticate"));
+		String host = ResourceUtilities.getBundledString(c, "smtp.host.name");
+		Integer port = Integer.valueOf(
+				ResourceUtilities.getBundledString(c, "smtp.host.port"));
+		Boolean authenticate = Boolean.valueOf(
+				ResourceUtilities.getBundledString(c, "smtp.authenticate"));
 		String userName = ResourceUtilities.getBundledString(c,
 				"smtp.username");
 		String password = ResourceUtilities.getBundledString(c,
@@ -79,12 +79,13 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		msg.setSentDate(new Date());
 		msg.setFrom(new InternetAddress(fromAddress, fromName));
 		List<InternetAddress> addresses = new ArrayList<InternetAddress>();
-		String[] emailAddresses = deliveryModel.getEmailAddress().split("(;|,| )+");
-		String filterClassName = ResourceUtilities.getBundledString(AddressFilter.class,
-		"smtp.filter.className");
-		
+		String[] emailAddresses = deliveryModel.getEmailAddress()
+				.split("(;|,| )+");
+		String filterClassName = ResourceUtilities
+				.getBundledString(AddressFilter.class, "smtp.filter.className");
 		if (!SEUtilities.isNullOrEmpty(filterClassName)) {
-			AddressFilter filter = (AddressFilter) Class.forName(filterClassName).newInstance();
+			AddressFilter filter = (AddressFilter) Class
+					.forName(filterClassName).newInstance();
 			emailAddresses = filter.filterAddresses(emailAddresses);
 		}
 		for (String email : emailAddresses) {
@@ -92,14 +93,12 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			if (emTrim.length() == 0) {
 				continue;
 			}
-			if (requestorPass
-					&& !emTrim.equals(deliveryModel
-							.getSystemEmailAddressOfRequestor())) {
+			if (requestorPass && !emTrim
+					.equals(deliveryModel.getSystemEmailAddressOfRequestor())) {
 				continue;
 			}
-			if (!requestorPass
-					&& emTrim.equals(deliveryModel
-							.getSystemEmailAddressOfRequestor())) {
+			if (!requestorPass && emTrim
+					.equals(deliveryModel.getSystemEmailAddressOfRequestor())) {
 				continue;
 			}
 			addresses.add(new InternetAddress(emTrim));
@@ -110,44 +109,63 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		InternetAddress[] addressTo = (InternetAddress[]) addresses
 				.toArray(new InternetAddress[addresses.size()]);
 		msg.setRecipients(Message.RecipientType.TO, addressTo);
-		msg.setSubject(requestorPass ? deliveryModel
-				.getEmailSubjectForRequestor() : deliveryModel
-				.getEmailSubject());
+		msg.setSubject(
+				requestorPass ? deliveryModel.getEmailSubjectForRequestor()
+						: deliveryModel.getEmailSubject());
 		if (deliveryModel.isEmailInline()) {
 			String message = ResourceUtilities
 					.readStreamToString(convertedContent);
 			message = message.replace(PUBLICATION_REASON_MESSAGE,
-					requestorPass ? deliveryModel
-							.getAttachmentMessageForRequestor() : deliveryModel
-							.getAttachmentMessage());
+					requestorPass
+							? deliveryModel.getAttachmentMessageForRequestor()
+							: deliveryModel.getAttachmentMessage());
 			message = EntityCleaner.get().nonAsciiToUnicodeEntities(message);
 			msg.setContent(message, "text/html");
 		} else {
 			MimeBodyPart messageBodyPart = new MimeBodyPart();
-			messageBodyPart.setContent(requestorPass ? deliveryModel
-					.getAttachmentMessageForRequestor() : deliveryModel
-					.getAttachmentMessage(), "text/html");
+			messageBodyPart
+					.setContent(
+							requestorPass
+									? deliveryModel
+											.getAttachmentMessageForRequestor()
+									: deliveryModel.getAttachmentMessage(),
+							"text/html");
 			Multipart multipart = new MimeMultipart();
 			final String fileName = deliveryModel.getSuggestedFileName() + "."
 					+ hfc.getFileExtension();
 			multipart.addBodyPart(messageBodyPart);
 			messageBodyPart = new MimeBodyPart();
-			File file = File.createTempFile(deliveryModel
-					.getSuggestedFileName(), "." + hfc.getFileExtension());
+			File file = File.createTempFile(
+					deliveryModel.getSuggestedFileName(),
+					"." + hfc.getFileExtension());
 			file.deleteOnExit();
 			ResourceUtilities.writeStreamToStream(convertedContent,
 					new FileOutputStream(file));
-			messageBodyPart.setDataHandler(new DataHandler(new FileDataSource(
-					file)));
+			messageBodyPart
+					.setDataHandler(new DataHandler(new FileDataSource(file)));
 			messageBodyPart.setFileName(fileName);
 			multipart.addBodyPart(messageBodyPart);
 			msg.setContent(multipart);
 		}
+		if (isUseVerp()) {
+			Long publicationId = PublicationContext
+					.get().publicationResult.publicationId;
+			String replyTo = fromAddress.replaceFirst("(.+?)@(.+)",
+					String.format("$1+.r.%s@$2", publicationId));
+			String bounceTo = fromAddress.replaceFirst("(.+?)@(.+)",
+					String.format("$1+.b.%s@$2", publicationId));
+			msg.setHeader("Return-Path", bounceTo);
+			msg.setHeader("Reply-to", replyTo);
+		}
 		Transport transport = session.getTransport("smtp");
 		transport.connect(host, port, userName, password);
 		transport.sendMessage(msg, msg.getAllRecipients());
-		PublicationContext.get().mimeMessageId=msg.getMessageID();
+		PublicationContext.get().mimeMessageId = msg.getMessageID();
 		transport.close();
 		return "OK";
+	}
+
+	protected boolean isUseVerp() {
+		return false;
 	}
 }
