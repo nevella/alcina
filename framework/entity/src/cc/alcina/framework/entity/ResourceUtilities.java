@@ -651,4 +651,17 @@ public class ResourceUtilities {
 	public static interface BeanInfoHelper {
 		BeanInfo postProcessBeanInfo(BeanInfo beanInfo);
 	}
+
+	public static void logToFile(String content, String fileName) {
+		try {
+			new File("/tmp/log").mkdirs();
+			writeStringToFile(content, "/tmp/log/" + fileName);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+	public static void logToFile(String content) {
+		logToFile(content,"log.txt");
+		logToFile(content,"log.html");
+	}
 }

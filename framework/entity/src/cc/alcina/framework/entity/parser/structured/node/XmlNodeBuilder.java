@@ -129,4 +129,9 @@ public class XmlNodeBuilder {
 		}
 		return doc().nodeFor(node);
 	}
+
+	public XmlNodeBuilder attr(String key, String value) {
+		attrs(key,value);
+		return this;
+	}
 }
