@@ -564,6 +564,7 @@ public class LocalDomBridge {
 		elementCreators.put(LIElement.TAG, () -> new LIElement());
 		elementCreators.put(PreElement.TAG, () -> new PreElement());
 		elementCreators.put("b", () -> new Element());
+		elementCreators.put("i", () -> new Element());
 		elementCreators.put("html", () -> new Element());
 		elementCreators.put(ParagraphElement.TAG, () -> new ParagraphElement());
 		elementCreators.put(BRElement.TAG, () -> new BRElement());
