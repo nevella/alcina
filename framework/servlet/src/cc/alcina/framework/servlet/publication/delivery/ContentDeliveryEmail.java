@@ -17,8 +17,9 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+
+import com.sun.mail.smtp.SMTPMessage;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
@@ -75,7 +76,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		props.put("mail.smtp.auth", authenticate.toString());
 		Session session = Session.getDefaultInstance(props, null);
 		session.setDebug(debug);
-		MimeMessage msg = new MimeMessage(session);
+		SMTPMessage msg = new SMTPMessage(session);
 		msg.setSentDate(new Date());
 		msg.setFrom(new InternetAddress(fromAddress, fromName));
 		List<InternetAddress> addresses = new ArrayList<InternetAddress>();
@@ -154,7 +155,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 					String.format("$1+.r.%s@$2", publicationId));
 			String bounceTo = fromAddress.replaceFirst("(.+?)@(.+)",
 					String.format("$1+.b.%s@$2", publicationId));
-			msg.setHeader("Return-Path", bounceTo);
+			msg.setEnvelopeFrom(bounceTo);
 			msg.setHeader("Reply-to", replyTo);
 		}
 		Transport transport = session.getTransport("smtp");
