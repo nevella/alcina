@@ -727,9 +727,12 @@ public class XmlNode {
 		}
 
 		public List<XmlNode> nodes(String xpath) {
-			List<Node> domNodes = eval.getNodesByXpath(xpath, node);
-			return domNodes.stream().map(doc::nodeFor)
+			return stream(xpath)
 					.collect(Collectors.toList());
+		}
+		public Stream<XmlNode> stream(String xpath) {
+			List<Node> domNodes = eval.getNodesByXpath(xpath, node);
+			return domNodes.stream().map(doc::nodeFor);
 		}
 
 		public Optional<XmlNode> optionalNode(String xpath) {

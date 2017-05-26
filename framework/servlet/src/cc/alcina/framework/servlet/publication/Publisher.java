@@ -3,8 +3,6 @@ package cc.alcina.framework.servlet.publication;
 import java.io.InputStream;
 import java.util.Date;
 
-import org.apache.log4j.Logger;
-
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -59,12 +57,7 @@ public class Publisher {
 			throws Exception {
 		int depth = LooseContext.depth();
 		try {
-			ctx = new PublicationContext();
-			ctx.logger = Logger.getLogger(getClass());
-			ctx.contentDefinition = contentDefinition;
-			ctx.deliveryModel = deliveryModel;
-			LooseContext.pushWithKey(
-					PublicationContext.CONTEXT_PUBLICATION_CONTEXT, ctx);
+			ctx = PublicationContext.setupContext(contentDefinition, deliveryModel);
 			return publish0(contentDefinition, deliveryModel, original);
 		} catch (Exception e) {
 			ctx.logPublicationException(e);
