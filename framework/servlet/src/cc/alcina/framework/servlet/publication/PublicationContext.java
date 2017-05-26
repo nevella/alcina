@@ -79,6 +79,11 @@ public class PublicationContext {
 		return LooseContext.get(CONTEXT_PUBLICATION_CONTEXT);
 	}
 
+	public static void setupForExternalToPublisher(
+			ContentDefinition contentDefinition, DeliveryModel deliveryModel) {
+		setupContext(contentDefinition, deliveryModel);
+	}
+
 	public PublicationVisitor getVisitor() {
 		return this.visitor;
 	}
@@ -89,5 +94,15 @@ public class PublicationContext {
 
 	public PublicationVisitor getVisitorOrNoop() {
 		return this.visitor == null ? new PublicationVisitor() : this.visitor;
+	}
+
+	static PublicationContext setupContext(ContentDefinition contentDefinition,
+			DeliveryModel deliveryModel) {
+		PublicationContext ctx = new PublicationContext();
+		ctx.logger = Logger.getLogger(Publisher.class);
+		ctx.contentDefinition = contentDefinition;
+		ctx.deliveryModel = deliveryModel;
+		LooseContext.pushWithKey(CONTEXT_PUBLICATION_CONTEXT, ctx);
+		return ctx;
 	}
 }
