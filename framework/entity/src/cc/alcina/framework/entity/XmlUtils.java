@@ -209,8 +209,7 @@ public class XmlUtils {
 			char c = s.charAt(i);
 			sb.append(c);
 			if (c == '<') {
-				if (s.charAt(i + 1) == '/'
-						|| Character.isUpperCase(s.charAt(i + 1))) {
+				if (s.substring(i + 1, i + 2).matches("[/a-zA-Z_]")) {
 					int x = s.indexOf(">", i);
 					int y = s.indexOf(" ", i);
 					x = y != -1 && y < x ? y : x;
