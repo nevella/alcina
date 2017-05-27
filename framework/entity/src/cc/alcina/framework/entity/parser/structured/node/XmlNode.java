@@ -24,6 +24,7 @@ import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.TreeWalker;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.OptimizingXpathEvaluator;
@@ -652,6 +653,24 @@ public class XmlNode {
 			}
 			return trs;
 		}
+
+		public void setStyleProperty(String key, String value) {
+			StringMap styles = new StringMap();
+			// t0tes naive
+			if (has("style")) {
+				String existing = attr("style");
+				Arrays.stream(existing.split(";")).forEach(s -> {
+					String[] parts = s.split(":");
+					styles.put(parts[0], parts[1]);
+				});
+			}
+			styles.put(key, value);
+			setAttr("style",
+					styles.entrySet().stream()
+							.map(e -> Ax.format("%s:%s", e.getKey(),
+									e.getValue()))
+							.collect(Collectors.joining("; ")));
+		}
 	}
 
 	public class XmlNodeRelative {
@@ -727,9 +746,9 @@ public class XmlNode {
 		}
 
 		public List<XmlNode> nodes(String xpath) {
-			return stream(xpath)
-					.collect(Collectors.toList());
+			return stream(xpath).collect(Collectors.toList());
 		}
+
 		public Stream<XmlNode> stream(String xpath) {
 			List<Node> domNodes = eval.getNodesByXpath(xpath, node);
 			return domNodes.stream().map(doc::nodeFor);
