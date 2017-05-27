@@ -41,12 +41,12 @@ public class XmlNodeBuilder {
 	}
 
 	public XmlNodeBuilder attrs(String... strings) {
-		this.attrs = new StringMap(Arrays.asList(strings));
+		this.attrs.putAll(new StringMap(Arrays.asList(strings)));
 		return this;
 	}
 
 	public XmlNodeBuilder attrs(StringMap attrs) {
-		this.attrs = attrs;
+		this.attrs.putAll(attrs);
 		return this;
 	}
 
@@ -131,7 +131,7 @@ public class XmlNodeBuilder {
 	}
 
 	public XmlNodeBuilder attr(String key, String value) {
-		attrs(key,value);
+		attrs(key, value);
 		return this;
 	}
 }
