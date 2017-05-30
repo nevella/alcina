@@ -57,7 +57,8 @@ public class Publisher {
 			throws Exception {
 		int depth = LooseContext.depth();
 		try {
-			ctx = PublicationContext.setupContext(contentDefinition, deliveryModel);
+			ctx = PublicationContext.setupContext(contentDefinition,
+					deliveryModel);
 			return publish0(contentDefinition, deliveryModel, original);
 		} catch (Exception e) {
 			ctx.logPublicationException(e);
@@ -148,9 +149,9 @@ public class Publisher {
 		if (forPublication && publicationContentPersister != null
 				&& !AppPersistenceBase.isInstanceReadOnly()) {
 			postDeliveryPersistence(result.publicationId);
+			publicationId = persist(contentDefinition, deliveryModel,
+					publicationUserId, original, publicationContentPersister);
 		}
-		publicationId = persist(contentDefinition, deliveryModel,
-				publicationUserId, original, publicationContentPersister);
 		result.content = null;
 		result.contentToken = token;
 		ctx.getVisitorOrNoop().publicationFinished(result);
@@ -158,9 +159,10 @@ public class Publisher {
 	}
 
 	private void postDeliveryPersistence(Long publicationId) {
-		if(getContext().mimeMessageId!=null){
+		if (getContext().mimeMessageId != null) {
 			Registry.impl(CommonPersistenceProvider.class)
-			.getCommonPersistence().updatePublicationMimeMessageId(publicationId,getContext().mimeMessageId);
+					.getCommonPersistence().updatePublicationMimeMessageId(
+							publicationId, getContext().mimeMessageId);
 		}
 	}
 
