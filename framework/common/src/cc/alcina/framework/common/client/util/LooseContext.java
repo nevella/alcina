@@ -155,7 +155,9 @@ public abstract class LooseContext {
 	 * the executor might be a thread pool)
 	 */
 	public static void putContext(LooseContextInstance snapshot) {
-		getInstance().context = snapshot;
+		for (String key : snapshot.properties.keySet()) {
+			set(key, snapshot.properties.get(key));
+		}
 	}
 
 	public static <T> T ensure(String key, Supplier<T> supplier) {

@@ -20,6 +20,8 @@ import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 
@@ -54,13 +56,21 @@ public class MemcacheSearcher {
 		public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
 			Collection<T> values = Registry.impl(SearcherCollectionSource.class)
 					.getCollectionFor(clazz);
+			LooseContextInstance snapshot = LooseContext.getContext()
+					.snapshot();
 			return values.parallelStream().filter(v -> {
-				for (CacheFilter filter : getFilters()) {
-					if (!filter.asCollectionFilter().allow(v)) {
-						return false;
+				try {
+					LooseContext.push();
+					LooseContext.putContext(snapshot);
+					for (CacheFilter filter : getFilters()) {
+						if (!filter.asCollectionFilter().allow(v)) {
+							return false;
+						}
 					}
+					return true;
+				} finally {
+					LooseContext.pop();
 				}
-				return true;
 			}).collect(Registry.impl(ListCollector.class).toList());
 		}
 	}
