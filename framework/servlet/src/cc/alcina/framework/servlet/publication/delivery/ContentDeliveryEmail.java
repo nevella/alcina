@@ -151,12 +151,15 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		if (isUseVerp()) {
 			Long publicationId = PublicationContext
 					.get().publicationResult.publicationId;
-			String replyTo = fromAddress.replaceFirst("(.+?)@(.+)",
-					String.format("$1+.r.%s@$2", publicationId));
-			String bounceTo = fromAddress.replaceFirst("(.+?)@(.+)",
-					String.format("$1+.b.%s@$2", publicationId));
-			msg.setEnvelopeFrom(bounceTo);
-			msg.setHeader("Reply-to", replyTo);
+			//will be null if non-persistent
+			if (publicationId != null) {
+				String replyTo = fromAddress.replaceFirst("(.+?)@(.+)",
+						String.format("$1+.r.%s@$2", publicationId));
+				String bounceTo = fromAddress.replaceFirst("(.+?)@(.+)",
+						String.format("$1+.b.%s@$2", publicationId));
+				msg.setEnvelopeFrom(bounceTo);
+				msg.setHeader("Reply-to", replyTo);
+			}
 		}
 		Transport transport = session.getTransport("smtp");
 		transport.connect(host, port, userName, password);

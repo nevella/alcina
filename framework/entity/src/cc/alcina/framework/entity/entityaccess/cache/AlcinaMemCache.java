@@ -521,8 +521,8 @@ public class AlcinaMemCache implements RegistrableService {
 			fullLockDump.format(
 					"Memcache log debugging----------\n"
 							+ "Writer thread trace:----------\n" + "%s\n",
-					SEUtilities.getStacktraceSlice(postProcessWriterThread,
-							200));
+					SEUtilities.getStacktraceSlice(postProcessWriterThread, 200,
+							0));
 			if (full) {
 				fullLockDump.format("Writer thread transforms:\n%s\n\n",
 						postProcessEvent
@@ -536,7 +536,7 @@ public class AlcinaMemCache implements RegistrableService {
 			mainLock.getQueuedThreads()
 					.forEach(t2 -> fullLockDump.line("id:%s %s\n%s", t2.getId(),
 							t2, SEUtilities.getStacktraceSlice(t2,
-									LONG_LOCK_TRACE_LENGTH)));
+									LONG_LOCK_TRACE_LENGTH, 0)));
 			fullLockDump.line("\n\nThread pause times:\n***************\n");
 			threadQueueTimes.forEach((id, t2) -> fullLockDump
 					.format("id: %s - time: %s\n", id, time - t2));
@@ -545,7 +545,7 @@ public class AlcinaMemCache implements RegistrableService {
 				activeThreads.keySet()
 						.forEach(t2 -> fullLockDump.line("id:%s %s\n%s",
 								t2.getId(), t2, SEUtilities.getStacktraceSlice(
-										t2, LONG_LOCK_TRACE_LENGTH)));
+										t2, LONG_LOCK_TRACE_LENGTH, 0)));
 			}
 			fullLockDump
 					.line("\n\nRecent lock acquisitions:\n***************\n");
@@ -1614,7 +1614,7 @@ public class AlcinaMemCache implements RegistrableService {
 					System.out.format("Long lock holder - %s ms - %s\n%s\n\n",
 							duration, e.getKey(),
 							SEUtilities.getStacktraceSlice(e.getKey(),
-									LONG_LOCK_TRACE_LENGTH));
+									LONG_LOCK_TRACE_LENGTH, 0));
 				}
 			}
 		}

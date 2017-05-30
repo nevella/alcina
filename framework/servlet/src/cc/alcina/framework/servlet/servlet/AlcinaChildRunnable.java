@@ -5,7 +5,9 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.PermissionsManagerState;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 
 public abstract class AlcinaChildRunnable implements Runnable {
@@ -30,6 +32,12 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		this.permissionsManagerState = PermissionsManager.get().snapshotState();
 		this.contextClassLoader = Thread.currentThread()
 				.getContextClassLoader();
+		if (ResourceUtilities.is(AlcinaChildRunnable.class,
+				"traceConstruction")) {
+			Ax.out("Constructing AlcinaChildRunnable - thread id: %s name: %s\n\n%s",
+					Thread.currentThread().getId(), name, SEUtilities
+							.getStacktraceSlice(Thread.currentThread(), 30, 2));
+		}
 	}
 
 	public static class AlcinaChildContextRunner extends AlcinaChildRunnable {
