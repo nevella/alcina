@@ -34,8 +34,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * At the moment:
  * <ul>
  * <li>perist recent logs immediately (1K limit) to a cookie
- * <li>
- * persist in 1s/30kb chunks to webdb
+ * <li>persist in 1s/30kb chunks to webdb
  * <li>persist in 30s/30kb chunks to remote
  * </ul>
  * <p>
@@ -72,8 +71,8 @@ public class LogStore {
 
 	public static void notifyPersistedListenerDelta(
 			TopicListener<IntPair> listener, boolean add) {
-		GlobalTopicPublisher.get()
-				.listenerDelta(TOPIC_PERSISTED, listener, add);
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_PERSISTED, listener,
+				add);
 	}
 
 	private RemoteLogPersister remoteLogPersister;
@@ -156,7 +155,11 @@ public class LogStore {
 				AlcinaProperties.NON_BROWSER)) {
 			String cookie = Cookies.getCookie(STORAGE_COOKIE_KEY);
 			if (cookie != null) {
-				log("restart", cookie);
+				try {
+					log("restart", cookie);
+				} catch (Exception e) {
+					//probably module system not initialised
+				}
 			}
 		}
 	}
@@ -195,9 +198,8 @@ public class LogStore {
 				try {
 					// unfortunately, have to encode to base64 here - unless we
 					// want to be trixy with SQLLite
-					String maybeShorter = "lzwb:"
-							+ Base64Utils.toBase64(new Lzw().compress(
-									serialized).getBytes("UTF-8"));
+					String maybeShorter = "lzwb:" + Base64Utils.toBase64(
+							new Lzw().compress(serialized).getBytes("UTF-8"));
 					if (maybeShorter.length() < serialized.length()) {
 						if (!GWT.isScript()) {
 							locallyPersistLogs(serialized);
@@ -272,15 +274,15 @@ public class LogStore {
 		this.lastMessage = message;
 		this.lastTopic = topic;
 		ClientInstance cli = ClientBase.getClientInstance();
-		String clientInstanceAuth = cli == null ? "(before cli)" : String
-				.valueOf(cli.getAuth());
+		String clientInstanceAuth = cli == null ? "(before cli)"
+				: String.valueOf(cli.getAuth());
 		ClientLogRecord logRecord = new ClientLogRecord(++localSeriesIdCounter,
 				clientInstanceAuth, HiliHelper.getIdOrZero(cli), new Date(),
 				topic, message, null);
 		logs.addLogRecord(logRecord);
 		if (useCookieMsgBackup) {
-			String value = logs.buf.substring(Math.max(
-					logs.buf.length() - 1000, 0));
+			String value = logs.buf
+					.substring(Math.max(logs.buf.length() - 1000, 0));
 			Date d = new Date();
 			d.setYear(d.getYear() + 5);
 			Cookies.setCookie(STORAGE_COOKIE_KEY, value, d);
