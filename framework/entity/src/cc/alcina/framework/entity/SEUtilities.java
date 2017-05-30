@@ -1220,13 +1220,12 @@ public class SEUtilities {
 	}
 
 	public static String getStacktraceSlice(Thread t) {
-		return getStacktraceSlice(t, 20);
+		return getStacktraceSlice(t, 20,0);
 	}
-
-	public static String getStacktraceSlice(Thread t, int size) {
+	public static String getStacktraceSlice(Thread t, int size, int omitLowCount) {
 		String log = "";
 		StackTraceElement[] trace = t.getStackTrace();
-		for (int i = 0; i < trace.length && i < size; i++) {
+		for (int i = omitLowCount; i < trace.length && i < size; i++) {
 			log += trace[i] + "\n";
 		}
 		log += "\n\n";
