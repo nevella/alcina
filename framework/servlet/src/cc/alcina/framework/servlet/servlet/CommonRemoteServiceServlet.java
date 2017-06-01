@@ -377,6 +377,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
+	/**
+	 * Note - don't (normally) call this server-side, particularly in a loop,
+	 * since it spawns a potentially unlimited number of performers
+	 */
 	public String performAction(final RemoteAction action) {
 		checkAnnotatedPermissions(action);
 		final RemoteActionPerformer performer = (RemoteActionPerformer) Registry
