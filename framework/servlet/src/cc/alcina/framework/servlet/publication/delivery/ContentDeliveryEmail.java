@@ -74,7 +74,10 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				"smtp.from.name");
 		props.put("mail.smtp.host", host);
 		props.put("mail.smtp.auth", authenticate.toString());
-		Session session = Session.getDefaultInstance(props, null);
+		if (ResourceUtilities.is(c, "smtp.ttls")) {
+			props.setProperty("mail.smtp.starttls.enable", "true");
+		}
+		Session session = Session.getInstance(props, null);
 		session.setDebug(debug);
 		SMTPMessage msg = new SMTPMessage(session);
 		msg.setSentDate(new Date());
@@ -151,7 +154,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		if (isUseVerp()) {
 			Long publicationId = PublicationContext
 					.get().publicationResult.publicationId;
-			//will be null if non-persistent
+			// will be null if non-persistent
 			if (publicationId != null) {
 				String replyTo = fromAddress.replaceFirst("(.+?)@(.+)",
 						String.format("$1+.r.%s@$2", publicationId));
