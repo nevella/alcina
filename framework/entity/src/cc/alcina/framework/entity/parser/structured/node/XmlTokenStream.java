@@ -23,6 +23,8 @@ public class XmlTokenStream implements Iterator<XmlNode> {
 
 	private Node current;
 
+	private Node last;
+
 	public XmlTokenStream(XmlNode node) {
 		this.doc = node.doc;
 		this.tw = ((DocumentTraversal) doc.domDoc()).createTreeWalker(node.node,
@@ -52,9 +54,17 @@ public class XmlTokenStream implements Iterator<XmlNode> {
 		return next != null;
 	}
 
+	public void afterModification() {
+		if (last != null) {
+			tw.setCurrentNode(last);
+			next = tw.nextNode();
+		}
+	}
+
 	@Override
 	public XmlNode next() {
 		while (true) {
+			last = current;
 			current = next;
 			next = tw.nextNode();
 			XmlNode xmlNode = doc.nodeFor(current);
