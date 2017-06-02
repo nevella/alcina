@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -27,6 +28,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.J8Utils;
 import cc.alcina.framework.entity.OptimizingXpathEvaluator;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
@@ -670,6 +672,13 @@ public class XmlNode {
 							.map(e -> Ax.format("%s:%s", e.getKey(),
 									e.getValue()))
 							.collect(Collectors.joining("; ")));
+		}
+
+		public void addClassName(String string) {
+			Set<String> classes = Arrays.stream(attr("class").split(" "))
+					.collect(J8Utils.toLinkedHashSet());
+			classes.add(string);
+			setAttr("class", classes.stream().collect(Collectors.joining(" ")));
 		}
 	}
 

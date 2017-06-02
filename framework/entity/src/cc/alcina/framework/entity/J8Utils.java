@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,8 +30,13 @@ public class J8Utils {
 	public static <T> Collector<Collection<T>, ?, List<T>> toItemList() {
 		return new ToItemListCollector();
 	}
+
 	public static <T> Collector<Collection<T>, ?, Stream<T>> toItemStream() {
 		return new ToItemStreamCollector();
+	}
+
+	public static <T> Collector<T, ?, Set<T>> toLinkedHashSet() {
+		return new ToLinkedHashSetCollector<>();
 	}
 
 	public static <T, K, U> Collector<T, ?, Multimap<K, List<U>>> toMultimap(
@@ -89,6 +95,41 @@ public class J8Utils {
 
 		@Override
 		public Function<Map<K, T>, Map<K, T>> finisher() {
+			return null;
+		}
+	}
+
+	private static class ToLinkedHashSetCollector<T>
+			implements java.util.stream.Collector<T, Set<T>, Set<T>> {
+		public ToLinkedHashSetCollector() {
+		}
+
+		@Override
+		public Set<java.util.stream.Collector.Characteristics>
+				characteristics() {
+			return EnumSet.of(Characteristics.IDENTITY_FINISH);
+		}
+
+		@Override
+		public Supplier<Set<T>> supplier() {
+			return () -> new LinkedHashSet<>();
+		}
+
+		@Override
+		public BiConsumer<Set<T>, T> accumulator() {
+			return (set, t) -> set.add(t);
+		}
+
+		@Override
+		public BinaryOperator<Set<T>> combiner() {
+			return (left, right) -> {
+				left.addAll(right);
+				return left;
+			};
+		}
+
+		@Override
+		public Function<Set<T>, Set<T>> finisher() {
 			return null;
 		}
 	}
