@@ -20,6 +20,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Kryo.DefaultInstantiatorStrategy;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer;
 
 public class KryoUtils {
 	public static <T> T clone(T t) {
@@ -135,8 +136,14 @@ public class KryoUtils {
 	public static final String CONTEXT_OVERRIDE_CLASSLOADER = KryoUtils.class
 			.getName() + ".CONTEXT_OVERRIDE_CLASSLOADER";
 
+	public static final String CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER = KryoUtils.class
+			.getName() + ".CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER";
+
 	protected static Kryo newKryo() {
 		Kryo kryo = new Kryo();
+		if (LooseContext.is(CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER)) {
+			kryo.setDefaultSerializer(CompatibleFieldSerializer.class);
+		}
 		kryo.getFieldSerializerConfig().setOptimizedGenerics(true);
 		if (LooseContext.containsKey(CONTEXT_OVERRIDE_CLASSLOADER)) {
 			kryo.setClassLoader(LooseContext.get(CONTEXT_OVERRIDE_CLASSLOADER));

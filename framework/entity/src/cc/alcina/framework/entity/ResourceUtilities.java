@@ -669,5 +669,6 @@ public class ResourceUtilities {
 	public static void logToFile(String content) {
 		logToFile(content,"log.txt");
 		logToFile(content,"log.html");
+		logToFile(content,"log.xml");
 	}
 }
