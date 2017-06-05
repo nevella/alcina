@@ -50,7 +50,7 @@ import cc.alcina.framework.entity.util.ShellWrapper;
 
 @RegistryLocation(registryPoint = DevConsoleCommand.class)
 public abstract class DevConsoleCommand<C extends DevConsole> {
-	protected C console;
+	public C console;
 
 	public Logger logger;
 
