@@ -64,7 +64,7 @@ public class Text_Jvm extends Node_Jvm implements DomText {
 
 	@Override
 	public void setNodeValue(String nodeValue) {
-		this.text = nodeValue;
+		setData(nodeValue);
 	}
 
 	@Override
@@ -74,7 +74,7 @@ public class Text_Jvm extends Node_Jvm implements DomText {
 
 	@Override
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		builder.appendEscaped(text);
+		builder.appendEscapedNoQuotes(text);
 	}
 
 	@Override

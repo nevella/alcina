@@ -15,6 +15,7 @@
  */
 package com.google.gwt.dom.client;
 
+import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlHostedModeUtils;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
@@ -165,7 +166,7 @@ public final class UnsafeHtmlBuilder {
 	 */
 	public UnsafeHtmlBuilder appendEscaped(String text) {
 		if (text != null) {
-			if (!text.matches("[&<>'\"]")) {
+			if (unsafeTest.exec(text) == null) {
 				sb.append(text);
 			} else {
 				sb.append(SafeHtmlUtils.htmlEscape(text));
@@ -173,6 +174,22 @@ public final class UnsafeHtmlBuilder {
 		}
 		return this;
 	}
+
+	public UnsafeHtmlBuilder appendEscapedNoQuotes(String text) {
+		if (text != null) {
+			if (unsafeTestNoQuotes.exec(text) == null) {
+				sb.append(text);
+			} else {
+				sb.append(SafeHtmlUtils.htmlEscapeNoQuotes(text));
+			}
+		}
+		return this;
+	}
+	
+	
+
+	static RegExp unsafeTest = RegExp.compile("[&<>'\"]");
+	static RegExp unsafeTestNoQuotes = RegExp.compile("[&<>]");
 
 	/**
 	 * Appends a string consisting of several newline-separated lines after

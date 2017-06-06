@@ -450,10 +450,10 @@ public class LocalDomBridge {
 			Supplier<Element> creator = elementCreators
 					.get(nodeName.toLowerCase());
 			if (creator == null) {
-				GWT.log(CommonUtils.highlightForLog(
-						"Missing element creator - %s", nodeName));
+				node = new Element();
+			} else {
+				node = creator.get();
 			}
-			node = creator.get();
 			break;
 		case Node.DOCUMENT_NODE:
 			// should already be registered
@@ -517,8 +517,8 @@ public class LocalDomBridge {
 	}
 
 	private native String getId(JavaScriptObject obj) /*-{
-        return obj.id;
-	}-*/;
+														return obj.id;
+														}-*/;
 
 	private void initElementCreators() {
 		elementCreators.put(DivElement.TAG, () -> new DivElement());
@@ -563,25 +563,33 @@ public class LocalDomBridge {
 		elementCreators.put(OListElement.TAG, () -> new OListElement());
 		elementCreators.put(LIElement.TAG, () -> new LIElement());
 		elementCreators.put(PreElement.TAG, () -> new PreElement());
-		elementCreators.put("b", () -> new Element());
-		elementCreators.put("i", () -> new Element());
-		elementCreators.put("html", () -> new Element());
 		elementCreators.put(ParagraphElement.TAG, () -> new ParagraphElement());
 		elementCreators.put(BRElement.TAG, () -> new BRElement());
 		elementCreators.put(HRElement.TAG, () -> new HRElement());
 		elementCreators.put(FormElement.TAG, () -> new FormElement());
 		// svg
-		elementCreators.put("svg", () -> new Element());
-		elementCreators.put("g", () -> new Element());
-		elementCreators.put("text", () -> new Element());
-		elementCreators.put("line", () -> new Element());
-		elementCreators.put("rect", () -> new Element());
-		elementCreators.put("ellipse", () -> new Element());
-		elementCreators.put("tspan", () -> new Element());
-		elementCreators.put("polygon", () -> new Element());
-		elementCreators.put("circle", () -> new Element());
-		elementCreators.put("path", () -> new Element());
-		elementCreators.put("defs", () -> new Element());
+		elementCreators.put(MapElement.TAG, () -> new MapElement());
+		elementCreators.put(ParamElement.TAG, () -> new ParamElement());
+		elementCreators.put(OptGroupElement.TAG, () -> new OptGroupElement());
+		elementCreators.put(QuoteElement.TAG_BLOCKQUOTE,
+				() -> new QuoteElement());
+		elementCreators.put(QuoteElement.TAG_Q, () -> new QuoteElement());
+		elementCreators.put(TableCaptionElement.TAG,
+				() -> new TableCaptionElement());
+		elementCreators.put(DListElement.TAG, () -> new DListElement());
+		elementCreators.put(TitleElement.TAG, () -> new TitleElement());
+		elementCreators.put(FieldSetElement.TAG, () -> new FieldSetElement());
+		elementCreators.put(FrameSetElement.TAG, () -> new FrameSetElement());
+		elementCreators.put(MetaElement.TAG, () -> new MetaElement());
+		elementCreators.put(SourceElement.TAG, () -> new SourceElement());
+		elementCreators.put(LinkElement.TAG, () -> new LinkElement());
+		elementCreators.put(ObjectElement.TAG, () -> new ObjectElement());
+		elementCreators.put(ModElement.TAG_INS, () -> new ModElement());
+		elementCreators.put(ModElement.TAG_DEL, () -> new ModElement());
+		elementCreators.put(BaseElement.TAG, () -> new BaseElement());
+		elementCreators.put(FrameElement.TAG, () -> new FrameElement());
+		elementCreators.put(AreaElement.TAG, () -> new AreaElement());
+		elementCreators.put(LegendElement.TAG, () -> new LegendElement());
 	}
 
 	private Node linkTreesDom(Node_Jso node_jso) {
@@ -654,6 +662,16 @@ public class LocalDomBridge {
 			 */
 			Document ownerDocument = (Document) (withDom instanceof Document
 					? withDom : withDom.getOwnerDocument());
+			if (vmImpl != null && (toLink.size() != vmImpl.children.size())
+					&& toLink.size() != vmImpl.children.size()) {
+				switch (vmImpl.getNodeName()) {
+				case "colgroup":
+					// frankly don't really care
+					toLink.forEach(debug::removeAssignment);
+					vmImpl.children.clear();
+					break;
+				}
+			}
 			if (vmImpl == null || vmImpl.getChildCount() == 0) {
 				// case 1 or 2
 				for (int idx2 = 0; idx2 < toLink.size(); idx2++) {
