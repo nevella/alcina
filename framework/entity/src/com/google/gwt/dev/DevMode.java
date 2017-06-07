@@ -90,7 +90,8 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
 
     public ArgHandlerSuperDevMode(HostedModeOptions options) {
       this.options = options;
-      addTagValue("-superDevMode", true);
+      addTagValue("-nosuperDevMode", true);
+      setFlag(false);
     }
 
     @Override
