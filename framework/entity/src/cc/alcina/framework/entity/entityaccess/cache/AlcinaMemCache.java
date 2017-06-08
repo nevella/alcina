@@ -2221,7 +2221,7 @@ public class AlcinaMemCache implements RegistrableService {
 
 		public <T> T find(Class<T> clazz, long id) {
 			T t = cache.get(clazz, id);
-			if (transactionActiveInCurrentThread()) {
+			if (transactionActiveInCurrentThread()&&t!=null) {
 				return (T) transactions.get()
 						.ensureTransactional((HasIdAndLocalId) t);
 			} else {
