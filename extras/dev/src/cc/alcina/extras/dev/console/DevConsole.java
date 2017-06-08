@@ -78,7 +78,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	private static BiPrintStream out;
 
 	private static BiPrintStream err;
-
 	// has to happen early, otherwise can never redirect
 	static {
 		err = new BiPrintStream(new ByteArrayOutputStream());
@@ -111,11 +110,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	private JPanel panelLeft = new JPanel(new BorderLayout());
 
 	private JPanel panelRight = new JPanel(new BorderLayout());
-
 	{
 		panelLeft.add(consoleLeft, BorderLayout.CENTER);
 	}
-
 	{
 		panelRight.add(consoleRight, BorderLayout.CENTER);
 	}
@@ -123,7 +120,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	private JScrollPane scrollLeft = new JScrollPane(panelLeft);
 
 	private JScrollPane scrollRight = new JScrollPane(panelRight);
-
 	{
 		scrollLeft.getVerticalScrollBar().setUnitIncrement(16);
 		scrollRight.getVerticalScrollBar().setUnitIncrement(16);
@@ -572,7 +568,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		List<Runnable> runnableBuffer = new ArrayList();
 
 		private Timer commitThread = new Timer();
-
 		{
 			commitThread.scheduleAtFixedRate(new TimerTask() {
 				@Override
@@ -950,6 +945,23 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 					dumpFile);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	String outDumpFileName = null;
+
+	public void pipeOutput(String outDumpFileName) {
+		if (outDumpFileName != null) {
+			startRecordingSysout(true);
+			this.outDumpFileName = outDumpFileName;
+		} else {
+			try {
+				ResourceUtilities.writeStringToFile(endRecordingSysout(),
+						this.outDumpFileName);
+				this.outDumpFileName = null;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 	}
 }

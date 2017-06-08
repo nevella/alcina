@@ -13,14 +13,15 @@ import java.util.Base64;
 
 import org.objenesis.strategy.SerializingInstantiatorStrategy;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.util.LooseContext;
-
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Kryo.DefaultInstantiatorStrategy;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer;
+import com.esotericsoftware.kryo.serializers.FieldSerializer;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 public class KryoUtils {
 	public static <T> T clone(T t) {
@@ -142,6 +143,7 @@ public class KryoUtils {
 	protected static Kryo newKryo() {
 		Kryo kryo = new Kryo();
 		if (LooseContext.is(CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER)) {
+			kryo.getFieldSerializerConfig().setCachedFieldNameStrategy(FieldSerializer.CachedFieldNameStrategy.EXTENDED);
 			kryo.setDefaultSerializer(CompatibleFieldSerializer.class);
 		}
 		kryo.getFieldSerializerConfig().setOptimizedGenerics(true);

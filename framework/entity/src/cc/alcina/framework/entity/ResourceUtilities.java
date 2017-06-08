@@ -144,7 +144,13 @@ public class ResourceUtilities {
 		try {
 			return KryoUtils.deserializeFromBase64(string, clazz);
 		} catch (Exception e) {
-			return new AlcinaBeanSerializerS().deserialize(string);
+			try {
+				return new AlcinaBeanSerializerS().deserialize(string);
+			} catch (RuntimeException e1) {
+				e.printStackTrace();
+				e1.printStackTrace();
+				throw e1;
+			}
 		}
 	}
 
