@@ -389,6 +389,14 @@ public class XmlNode {
 				: node.getOwnerDocument();
 	}
 
+	/**
+	 * Basically, don't use in a loop - more a debugging aid
+	 */
+	public static XmlNode from(Node n){
+		XmlDoc doc = new XmlDoc(n.getOwnerDocument());
+		return doc.nodeFor(n);
+	}
+
 	public class XmlNodeAncestor {
 		private boolean orSelf = false;
 
@@ -440,6 +448,18 @@ public class XmlNode {
 		public XmlNodeAncestor orSelf() {
 			orSelf = true;
 			return this;
+		}
+
+		public XmlNode ancestorBefore(XmlNode node) {
+			XmlNode cursor = XmlNode.this;
+			while (cursor != null) {
+				XmlNode parent = cursor.parent();
+				if (parent == node) {
+					return cursor;
+				}
+				cursor = parent;
+			}
+			return null;
 		}
 	}
 
@@ -679,6 +699,11 @@ public class XmlNode {
 					.collect(J8Utils.toLinkedHashSet());
 			classes.add(string);
 			setAttr("class", classes.stream().collect(Collectors.joining(" ")));
+		}
+
+		public Optional<XmlNode> ancestorBlock() {
+			return ancestors().list().stream().filter(n -> n.html().isBlock())
+					.findFirst();
 		}
 	}
 
