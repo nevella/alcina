@@ -731,13 +731,16 @@ public class GraphProjection {
 					+ clazz.getSimpleName() + "." + fieldName;
 		}
 
-		public String toPath() {
-			String string = sourceOwner.toString();
-			if (string.contains("@")
-					&& string.contains(sourceOwner.getClass().getName())) {
-				string = "@" + sourceOwner.hashCode();
+		public String toPath(boolean withToString) {
+			String string = "?";
+			if (withToString) {
+				sourceOwner.toString();
+				if (string.contains("@")
+						&& string.contains(sourceOwner.getClass().getName())) {
+					string = "@" + sourceOwner.hashCode();
+				}
 			}
-			return (parent == null ? "" : parent.toPath() + "::")
+			return (parent == null ? "" : parent.toPath(withToString) + "::")
 					+ clazz.getSimpleName() + "/" + string + "." + fieldName;
 		}
 	}
@@ -857,11 +860,11 @@ public class GraphProjection {
 			GraphProjection graphProjection = new GraphProjection(
 					new AllFieldsFilter(), null);
 			StringBuilder sb = new StringBuilder();
-			List<String> excludeList=Arrays.asList(excludeFields);
+			List<String> excludeList = Arrays.asList(excludeFields);
 			for (Field field : graphProjection
 					.getFieldsForClass(obj.getClass())) {
 				String name = field.getName();
-				if(excludeList.contains(name)){
+				if (excludeList.contains(name)) {
 					continue;
 				}
 				if (withTypes) {

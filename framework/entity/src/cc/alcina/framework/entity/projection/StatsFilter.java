@@ -60,7 +60,21 @@ public class StatsFilter extends CollectionProjectionFilter {
 
 	private boolean dumpPaths;
 
+	IdentityHashMap pathDumped = new IdentityHashMap<>();
+
+	private boolean noPathToString;
+
 	public StatsFilter() {
+	}
+
+	public StatsFilter bypassGwtTransient() {
+		this.bypassGwtTransient = true;
+		return this;
+	}
+
+	public StatsFilter dumpPaths() {
+		dumpPaths = true;
+		return this;
 	}
 
 	@Override
@@ -72,22 +86,14 @@ public class StatsFilter extends CollectionProjectionFilter {
 		if (bypass(context.field)) {
 			return null;
 		}
-		visited.put(context.projectedOwner, context.toPath());
-		visited.put(filtered, context.toPath());
+		String toPath = noPathToString ? "..."
+				: context.toPath(!noPathToString);
+		visited.put(context.projectedOwner, toPath);
+		visited.put(filtered, toPath);
 		ownerMap.add(context.projectedOwner, filtered);
 		ownerMap.ensureKey(filtered);
 		owneeMap.add(filtered, context.projectedOwner);
 		return filtered;
-	}
-
-	private boolean bypass(Field field) {
-		if (bypassGwtTransient) {
-			if (field != null
-					&& field.getAnnotation(GwtTransient.class) != null) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	public void getGraphStats(Object source, Class[] calculateOwnerStatsFor,
@@ -108,50 +114,19 @@ public class StatsFilter extends CollectionProjectionFilter {
 		}
 	}
 
-	static class GraphProjectionNoLisetNulls extends GraphProjection {
-		public GraphProjectionNoLisetNulls() {
-			super();
-		}
+	public StatsFilter noPathToString() {
+		noPathToString = true;
+		return this;
+	}
 
-		public GraphProjectionNoLisetNulls(
-				GraphProjectionFieldFilter fieldFilter,
-				GraphProjectionDataFilter dataFilter) {
-			super(fieldFilter, dataFilter);
-		}
-
-		// TODO - shouldn't this be package-private?
-		public Collection projectCollection(Collection coll,
-				GraphProjectionContext context) throws Exception {
-			Collection c = null;
-			if (coll instanceof ArrayList || coll instanceof LinkedList) {
-				c = coll.getClass().newInstance();
-				// no "persistentLists", at least
-				// um...persistentBag??
-			} else if (coll instanceof List) {
-				c = new ArrayList();
-			} else if (coll instanceof LiSet) {
-				c = new LiSet();
-			} else if (coll instanceof Set) {
-				c = new LinkedHashSet();
-			} else if (coll instanceof ConcurrentLinkedQueue) {
-				c = new ConcurrentLinkedQueue();
+	private boolean bypass(Field field) {
+		if (bypassGwtTransient) {
+			if (field != null
+					&& field.getAnnotation(GwtTransient.class) != null) {
+				return true;
 			}
-			reached.put(coll, c == null ? NULL_MARKER : c);
-			Iterator itr = coll.iterator();
-			Object value;
-			for (; itr.hasNext();) {
-				value = itr.next();
-				Object projected = project(value, context);
-				if (projected == null && c instanceof LiSet) {
-					continue;// why does this happen? one of those never 'ave
-								// time bugs
-				}
-				if (value == null || projected != null) {
-					c.add(projected);
-				}
-			}
-			return c;
 		}
+		return false;
 	}
 
 	private Field[] getFieldsForClass(Object projected) {
@@ -177,8 +152,6 @@ public class StatsFilter extends CollectionProjectionFilter {
 		}
 		return projectableFields.get(clazz);
 	}
-
-	IdentityHashMap pathDumped = new IdentityHashMap<>();
 
 	void dumpStats() {
 		try {
@@ -355,10 +328,6 @@ public class StatsFilter extends CollectionProjectionFilter {
 		System.out.println("\n----------\n\n");
 	}
 
-	public enum StatsFilterSortKey {
-		CLASSNAME, RAW_SIZE, RETAINED_SIZE
-	}
-
 	public class Multiset<K, V extends Set> extends LinkedHashMap<K, V> {
 		public boolean add(K key, Object item) {
 			if (!containsKey(key)) {
@@ -367,10 +336,11 @@ public class StatsFilter extends CollectionProjectionFilter {
 			return get(key).add(item);
 		}
 
-		public void subtract(K key, Object item) {
-			if (containsKey(key)) {
-				get(key).remove(item);
+		public void addCollection(K key, Collection collection) {
+			if (!containsKey(key)) {
+				put(key, (V) new LinkedHashSet());
 			}
+			get(key).addAll(collection);
 		}
 
 		public V getAndEnsure(K key) {
@@ -380,12 +350,15 @@ public class StatsFilter extends CollectionProjectionFilter {
 			return get(key);
 		}
 
-		public void addCollection(K key, Collection collection) {
-			if (!containsKey(key)) {
-				put(key, (V) new LinkedHashSet());
+		public void subtract(K key, Object item) {
+			if (containsKey(key)) {
+				get(key).remove(item);
 			}
-			get(key).addAll(collection);
 		}
+	}
+
+	public enum StatsFilterSortKey {
+		CLASSNAME, RAW_SIZE, RETAINED_SIZE
 	}
 
 	static class CountingMap<K> extends LinkedHashMap<K, Integer> {
@@ -410,14 +383,6 @@ public class StatsFilter extends CollectionProjectionFilter {
 				return 0;
 			}
 			return get(key);
-		}
-
-		public int total() {
-			int result = 0;
-			for (Integer i : values()) {
-				result += i;
-			}
-			return result;
 		}
 
 		public K max() {
@@ -454,6 +419,60 @@ public class StatsFilter extends CollectionProjectionFilter {
 			}
 			return get(key);
 		}
+
+		public int total() {
+			int result = 0;
+			for (Integer i : values()) {
+				result += i;
+			}
+			return result;
+		}
+	}
+
+	static class GraphProjectionNoLisetNulls extends GraphProjection {
+		public GraphProjectionNoLisetNulls() {
+			super();
+		}
+
+		public GraphProjectionNoLisetNulls(
+				GraphProjectionFieldFilter fieldFilter,
+				GraphProjectionDataFilter dataFilter) {
+			super(fieldFilter, dataFilter);
+		}
+
+		// TODO - shouldn't this be package-private?
+		public Collection projectCollection(Collection coll,
+				GraphProjectionContext context) throws Exception {
+			Collection c = null;
+			if (coll instanceof ArrayList || coll instanceof LinkedList) {
+				c = coll.getClass().newInstance();
+				// no "persistentLists", at least
+				// um...persistentBag??
+			} else if (coll instanceof List) {
+				c = new ArrayList();
+			} else if (coll instanceof LiSet) {
+				c = new LiSet();
+			} else if (coll instanceof Set) {
+				c = new LinkedHashSet();
+			} else if (coll instanceof ConcurrentLinkedQueue) {
+				c = new ConcurrentLinkedQueue();
+			}
+			reached.put(coll, c == null ? NULL_MARKER : c);
+			Iterator itr = coll.iterator();
+			Object value;
+			for (; itr.hasNext();) {
+				value = itr.next();
+				Object projected = project(value, context);
+				if (projected == null && c instanceof LiSet) {
+					continue;// why does this happen? one of those never 'ave
+								// time bugs
+				}
+				if (value == null || projected != null) {
+					c.add(projected);
+				}
+			}
+			return c;
+		}
 	}
 
 	class StatsItem {
@@ -483,15 +502,5 @@ public class StatsFilter extends CollectionProjectionFilter {
 		public int size() {
 			return size;
 		}
-	}
-
-	public StatsFilter bypassGwtTransient() {
-		this.bypassGwtTransient = true;
-		return this;
-	}
-
-	public StatsFilter dumpPaths() {
-		dumpPaths = true;
-		return this;
 	}
 }
