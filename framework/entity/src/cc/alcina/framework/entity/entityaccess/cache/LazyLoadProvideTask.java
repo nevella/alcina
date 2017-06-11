@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import cc.alcina.framework.common.client.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.entity.MetricLogging;
 
 public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		implements PreProvideTask<T> {
@@ -18,6 +19,18 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 	private int minEvictionSize;
 
 	protected Class<T> clazz;
+
+	protected void log(String template, Object... args) {
+		AlcinaMemCache.get().sqlLogger.format(template, args);
+	}
+
+	public static void metric(String key, boolean end) {
+		if (end) {
+			MetricLogging.get().end(key, AlcinaMemCache.get().metricLogger);
+		} else {
+			MetricLogging.get().start(key);
+		}
+	}
 
 	public Class<T> forClazz() {
 		return this.clazz;
@@ -74,7 +87,7 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 	}
 
 	protected abstract void loadDependents(AlcinaMemCache alcinaMemCache,
-			List<T> requireLoad) throws Exception ;
+			List<T> requireLoad) throws Exception;
 
 	private void registerLoaded(AlcinaMemCache alcinaMemCache,
 			List<T> requireLoad) {

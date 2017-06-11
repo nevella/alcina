@@ -17,10 +17,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.objenesis.Objenesis;
+import org.objenesis.ObjenesisStd;
+import org.objenesis.instantiator.ObjectInstantiator;
+
+import com.google.gwt.user.client.rpc.GwtTransient;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -28,8 +34,6 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.entity.projection.EntityUtils.MultiIdentityMap;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
-
-import com.google.gwt.user.client.rpc.GwtTransient;
 
 public class StatsFilter extends CollectionProjectionFilter {
 	MultiIdentityMap ownerMap = new MultiIdentityMap();
@@ -64,6 +68,8 @@ public class StatsFilter extends CollectionProjectionFilter {
 
 	private boolean noPathToString;
 
+	private boolean noPath;
+
 	public StatsFilter() {
 	}
 
@@ -86,7 +92,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 		if (bypass(context.field)) {
 			return null;
 		}
-		String toPath = noPathToString ? "..."
+		String toPath = noPath? "..."
 				: context.toPath(!noPathToString);
 		visited.put(context.projectedOwner, toPath);
 		visited.put(filtered, toPath);
@@ -107,7 +113,10 @@ public class StatsFilter extends CollectionProjectionFilter {
 				Arrays.asList(calculatePathStatsFor));
 		DetachedEntityCache cache = new DetachedEntityCache();
 		try {
-			new GraphProjectionNoLisetNulls(null, this).project(source, null);
+			GraphProjectionNoLisetNulls projection = new GraphProjectionNoLisetNulls(
+					null, this);
+			projection.project(source, null);
+			System.err.println(projection.constructorExceptions);
 			dumpStats();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -116,6 +125,10 @@ public class StatsFilter extends CollectionProjectionFilter {
 
 	public StatsFilter noPathToString() {
 		noPathToString = true;
+		return this;
+	}
+	public StatsFilter noPath() {
+		noPath= true;
 		return this;
 	}
 
@@ -157,6 +170,9 @@ public class StatsFilter extends CollectionProjectionFilter {
 		try {
 			Set<Object> owned = new LinkedHashSet<Object>();
 			for (Object o : visited.keySet()) {
+				if (o == null) {
+					continue;
+				}
 				Class<? extends Object> clazz = o.getClass();
 				StatsItem item = new StatsItem(o);
 				statsClassLookup.add(clazz, item);
@@ -440,6 +456,33 @@ public class StatsFilter extends CollectionProjectionFilter {
 			super(fieldFilter, dataFilter);
 		}
 
+		Set<Class> constructorExceptions = new LinkedHashSet<>();
+
+		@Override
+		protected <T> T newInstance(Class sourceClass) throws Exception {
+			try {
+				return super.newInstance(sourceClass);
+			} catch (Exception e) {
+				try {
+					return tryWithObjenesis(sourceClass);
+				} catch (Throwable e1) {
+					constructorExceptions.add(sourceClass);
+					return null;
+				}
+			}
+		}
+
+		Map<Class, ObjectInstantiator> instantiators = new LinkedHashMap<>();
+
+		Objenesis objenesis = new ObjenesisStd(); // or ObjenesisSerializer
+
+		private <T> T tryWithObjenesis(Class sourceClass) {
+			ObjectInstantiator objectInstantiator = instantiators
+					.computeIfAbsent(sourceClass,
+							sc -> objenesis.getInstantiatorOf(sc));
+			return (T) objectInstantiator.newInstance();
+		}
+
 		// TODO - shouldn't this be package-private?
 		public Collection projectCollection(Collection coll,
 				GraphProjectionContext context) throws Exception {
@@ -448,6 +491,8 @@ public class StatsFilter extends CollectionProjectionFilter {
 				c = coll.getClass().newInstance();
 				// no "persistentLists", at least
 				// um...persistentBag??
+			}else if (coll instanceof Vector) {
+				c = new Vector();
 			} else if (coll instanceof List) {
 				c = new ArrayList();
 			} else if (coll instanceof LiSet) {

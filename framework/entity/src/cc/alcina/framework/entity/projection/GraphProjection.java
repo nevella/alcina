@@ -35,6 +35,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
@@ -526,6 +527,8 @@ public class GraphProjection {
 			c = new GArrayList();
 			// no "persistentLists", at least
 			// um...persistentBag??
+		} else if (coll instanceof Vector) {
+			c = new Vector();
 		} else if (coll instanceof List) {
 			c = new ArrayList();
 		} else if (coll.getClass() == LiSet.class) {

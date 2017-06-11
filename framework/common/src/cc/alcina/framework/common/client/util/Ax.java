@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import cc.alcina.framework.entity.parser.structured.node.XmlNode;
-
 public class Ax {
 	public static String blankTo(String string, String defaultValue) {
 		return isBlank(string) ? defaultValue : string;
@@ -48,5 +46,9 @@ public class Ax {
 
 	public static void sysLogHigh(String template, Object... args) {
 		System.out.println(CommonUtils.highlightForLog(template, args));
+	}
+
+	public static void newlineDump(Collection collection) {
+		System.out.println(CommonUtils.joinWithNewlines(collection));
 	}
 }
