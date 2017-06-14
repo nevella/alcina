@@ -1453,7 +1453,7 @@ table.gwittir-BoundTable.editable tr.odd td {
 .inlineTabDisplay .gwt-TabBar .gwt-TabBarItem {
 	display: inline-block;
 	text-align: left;
-	zoom: 1; *
+	zoom: 1; 
 	display: inline;
 }
 
