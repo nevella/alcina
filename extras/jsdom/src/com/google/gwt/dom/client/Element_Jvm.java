@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
@@ -161,7 +162,7 @@ public class Element_Jvm extends Node_Jvm
 			return innerHtml;
 		} else {
 			UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder();
-			children.stream().forEach(node -> node.appendOuterHtml(builder));
+			appendChildContents(builder);
 			return builder.toSafeHtml().asString();
 		}
 	}
@@ -572,13 +573,33 @@ public class Element_Jvm extends Node_Jvm
 			builder.appendHtmlConstantNoCheck("\"");
 		}
 		builder.appendHtmlConstantNoCheck(">");
-		children.stream().forEach(child -> child.appendOuterHtml(builder));
+		appendChildContents(builder);
 		if (innerHtml != null) {
 			builder.appendUnsafeHtml(innerHtml);
 		}
 		builder.appendHtmlConstantNoCheck("</");
 		builder.appendHtmlConstant(tagName);
 		builder.appendHtmlConstantNoCheck(">");
+	}
+
+	private void appendChildContents(UnsafeHtmlBuilder builder) {
+		if (containsUnescapedText()) {
+			children.stream().forEach(
+					node -> ((Text_Jvm) node).appendUnescaped(builder));
+		} else {
+			children.stream().forEach(child -> child.appendOuterHtml(builder));
+		}
+	}
+
+	private boolean containsUnescapedText() {
+		if (tagName.equalsIgnoreCase("style")
+				|| tagName.equalsIgnoreCase("script")) {
+			Preconditions.checkState(children.stream()
+					.allMatch(c -> c.getNodeType() == Node.TEXT_NODE));
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	@Override

@@ -77,6 +77,10 @@ public class Text_Jvm extends Node_Jvm implements DomText {
 		builder.appendEscapedNoQuotes(text);
 	}
 
+	void appendUnescaped(UnsafeHtmlBuilder builder) {
+		builder.appendUnsafeHtml(text);
+	}
+
 	@Override
 	void appendTextContent(StringBuilder builder) {
 		builder.append(getData());
