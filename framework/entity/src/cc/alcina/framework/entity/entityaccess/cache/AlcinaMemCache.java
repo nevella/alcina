@@ -237,10 +237,10 @@ public class AlcinaMemCache implements RegistrableService {
 
 	private CacheDescriptor cacheDescriptor;
 
-	private TaggedLogger sqlLogger = Registry.impl(TaggedLoggers.class)
+	 TaggedLogger sqlLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(Domain.class, TaggedLogger.DEBUG);
 
-	private TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
+	 TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(Domain.class, TaggedLogger.METRIC);
 
 	private TaggedLogger warnLogger = Registry.impl(TaggedLoggers.class)

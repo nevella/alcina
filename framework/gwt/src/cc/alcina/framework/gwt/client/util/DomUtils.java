@@ -2,31 +2,13 @@ package cc.alcina.framework.gwt.client.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Spliterator;
 import java.util.Stack;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.BinaryOperator;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.IntFunction;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.function.ToDoubleFunction;
-import java.util.function.ToIntFunction;
-import java.util.function.ToLongFunction;
-import java.util.stream.Collector;
-import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
-import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import com.google.gwt.core.client.GWT;
@@ -67,6 +49,19 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public static SequentialIdGenerator expandoIdProvider = new SequentialIdGenerator();
 
+	public static Supplier<Map> mapSupplier = () -> new LinkedHashMap<>();
+
+	public static Stream<Element> ancestorStream(Element element) {
+		// FIXME-jadex (not optimal)
+		List<Element> elements = new ArrayList<>();
+		Node node = element;
+		while (node != null && node.getNodeType() == Node.ELEMENT_NODE) {
+			elements.add((Element) node);
+			node = node.getParentNode();
+		}
+		return elements.stream();
+	}
+
 	public static boolean containsBlocks(Element elt) {
 		elt.getChildNodes();
 		for (int i = 0; i < elt.getChildCount(); i++) {
@@ -77,10 +72,6 @@ public class DomUtils implements NodeFromXpathProvider {
 			}
 		}
 		return false;
-	}
-
-	public Node getPrecededByNonHtmlDomNodes(Text text) {
-		return precededByNonHtmlDomNodes.get(text);
 	}
 
 	public static List<Element> getChildElements(Element elt) {
@@ -401,13 +392,13 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	private ClientNodeIterator walker;
 
-	Map<Element, DomRequiredSplitInfo> domRequiredSplitInfo = new LinkedHashMap<Element, DomRequiredSplitInfo>();
+	Map<Element, DomRequiredSplitInfo> domRequiredSplitInfo = mapSupplier.get();
 
 	Stack<XpathMapPoint> itrStack = null;
 
 	private Map<Node, StringBuilder> exactTextMap;
 
-	private Map<Node, Node> precededByNonHtmlDomNodes = new LinkedHashMap<>();
+	private Map<Node, Node> precededByNonHtmlDomNodes = mapSupplier.get();
 
 	public DomUtils() {
 		invalidateUnwrapOrIgnoreCache();
@@ -459,12 +450,12 @@ public class DomUtils implements NodeFromXpathProvider {
 			if (match == null) {
 				System.out.println(
 						"Prefix matched:" + lastMatchedPath + "\n----------\n");
-				Map<String, Node> xpathMap = new LinkedHashMap<String, Node>();
+				Map<String, Node> xpathMap = mapSupplier.get();
 				generateMap((Element) lastMatched, "", xpathMap);
 				dumpMap0(false, xpathMap);
 				if (count > 3) {
 					System.out.println("Parent map:");
-					xpathMap = new LinkedHashMap<String, Node>();
+					xpathMap = mapSupplier.get();
 					generateMap((Element) lastMatched.getParentElement(), "",
 							xpathMap);
 					dumpMap0(false, xpathMap);
@@ -490,7 +481,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		if (useXpathMap) {
 			if (lastContainer != container) {
 				lastContainer = container;
-				xpathMap = new LinkedHashMap<String, Node>();
+				xpathMap = mapSupplier.get();
 				ClientNotifications notifications = Registry
 						.implOrNull(ClientNotifications.class);
 				if (notifications != null) {
@@ -574,8 +565,8 @@ public class DomUtils implements NodeFromXpathProvider {
 	}
 
 	public void generateMapItr(XpathMapPoint point) {
-		Map<String, Integer> total = new HashMap<String, Integer>();
-		Map<String, Integer> current = new HashMap<String, Integer>();
+		Map<String, Integer> total = mapSupplier.get();
+		Map<String, Integer> current = mapSupplier.get();
 		Element elt = point.elt;
 		String prefix = point.prefix;
 		NodeList<Node> nodes = elt.getChildNodes();
@@ -637,6 +628,10 @@ public class DomUtils implements NodeFromXpathProvider {
 		return this.precededByNonHtmlDomNodes;
 	}
 
+	public Node getPrecededByNonHtmlDomNodes(Text text) {
+		return precededByNonHtmlDomNodes.get(text);
+	}
+
 	public void invalidateUnwrapOrIgnoreCache() {
 		// unwrapOrIgnoreCache = new IdentityHashMap<Node, Node>(10000);
 	}
@@ -663,7 +658,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		if (useXpathMap) {
 			if (lastContainer != container) {
 				lastContainer = container;
-				xpathMap = new LinkedHashMap<String, Node>();
+				xpathMap = mapSupplier.get();
 				ClientNotifications notifications = Registry
 						.implOrNull(ClientNotifications.class);
 				if (notifications != null) {
@@ -706,7 +701,6 @@ public class DomUtils implements NodeFromXpathProvider {
 			domRequiredSplitInfo.remove(el);
 		}
 	}
-
 	public void wrap(Element wrapper, Text toWrap) {
 		wrapper.setAttribute(ATTR_WRAP_EXPANDO_ID, "1");
 		Node t = toWrap;
@@ -738,8 +732,8 @@ public class DomUtils implements NodeFromXpathProvider {
 	private String dumpMap0(boolean regenerate, Map<String, Node> xpathMap) {
 		StringBuilder builder = new StringBuilder();
 		if (regenerate) {
-			exactTextMap = new LinkedHashMap<Node, StringBuilder>();
-			xpathMap = new LinkedHashMap<String, Node>();
+			exactTextMap = mapSupplier.get();
+			xpathMap = mapSupplier.get();
 			generateMap((Element) lastContainer, "", xpathMap);
 		} else {
 			exactTextMap = null;
@@ -762,8 +756,8 @@ public class DomUtils implements NodeFromXpathProvider {
 		if (container == null) {
 			return;
 		}
-		Map<String, Integer> total = new HashMap<String, Integer>();
-		Map<String, Integer> current = new HashMap<String, Integer>();
+		Map<String, Integer> total = mapSupplier.get();
+		Map<String, Integer> current = mapSupplier.get();
 		NodeList<Node> nodes = container.getChildNodes();
 		if (prefix.length() <= 1) {
 			xpathMap.put(prefix, container);
@@ -1191,16 +1185,5 @@ public class DomUtils implements NodeFromXpathProvider {
 			this.elt = elt;
 			this.prefix = prefix;
 		}
-	}
-
-	public static Stream<Element> ancestorStream(Element element) {
-		// FIXME-jadex (not optimal)
-		List<Element> elements = new ArrayList<>();
-		Node node = element;
-		while (node != null && node.getNodeType() == Node.ELEMENT_NODE) {
-			elements.add((Element) node);
-			node = node.getParentNode();
-		}
-		return elements.stream();
 	}
 }

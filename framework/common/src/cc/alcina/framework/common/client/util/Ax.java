@@ -51,4 +51,7 @@ public class Ax {
 	public static void newlineDump(Collection collection) {
 		System.out.println(CommonUtils.joinWithNewlines(collection));
 	}
+	public static void err(String template, Object... args) {
+		System.err.println(format(template, args));
+	}
 }

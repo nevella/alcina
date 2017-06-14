@@ -13,7 +13,11 @@ public class CachingMap<I, O> {
 		}
 	}
 
-	private final ThrowingFunction<I, O> function;
+	// for serialization
+	public CachingMap() {
+	}
+
+	private ThrowingFunction<I, O> function;
 
 	private Map<I, O> map;
 
