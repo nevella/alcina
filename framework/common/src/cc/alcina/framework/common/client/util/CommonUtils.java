@@ -601,6 +601,10 @@ public class CommonUtils {
 							friendlyConstant(ev, "-").toLowerCase(), ev);
 					enumValueLookup.put(enumClass, friendlyConstant(ev, "-"),
 							ev);
+					enumValueLookup.put(enumClass, friendlyConstant(ev, " "),
+							ev);
+					enumValueLookup.put(enumClass,
+							friendlyConstant(ev, " ").toLowerCase(), ev);
 				}
 			}
 		}
