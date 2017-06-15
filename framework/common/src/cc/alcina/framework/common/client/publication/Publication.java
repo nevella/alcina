@@ -70,4 +70,8 @@ public interface Publication extends HasId {
 
 	default void setMimeMessageId(String messageId) {
 	}
+
+	void setPublicationUid(String publicationUid);
+
+	String getPublicationUid();
 }
