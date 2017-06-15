@@ -46,4 +46,7 @@ package cc.alcina.framework.common.client.publication;
 	public String getAttachmentMessageForRequestor() ;
 	public boolean isNoPersistence();
 	public boolean isTest();
+	default String getPublicationUid(){
+		return null;
+	}
 }

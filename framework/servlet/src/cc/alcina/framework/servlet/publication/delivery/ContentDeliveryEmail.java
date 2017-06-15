@@ -152,14 +152,14 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			msg.setContent(multipart);
 		}
 		if (isUseVerp()) {
-			Long publicationId = PublicationContext
-					.get().publicationResult.publicationId;
+			String publicationUid = PublicationContext
+					.get().publicationResult.publicationUid;
 			// will be null if non-persistent
-			if (publicationId != null) {
+			if (publicationUid != null) {
 				String replyTo = fromAddress.replaceFirst("(.+?)@(.+)",
-						String.format("$1+.r.%s@$2", publicationId));
+						String.format("$1+.r.%s@$2", publicationUid));
 				String bounceTo = fromAddress.replaceFirst("(.+?)@(.+)",
-						String.format("$1+.b.%s@$2", publicationId));
+						String.format("$1+.b.%s@$2", publicationUid));
 				msg.setEnvelopeFrom(bounceTo);
 				msg.setHeader("Reply-to", replyTo);
 			}

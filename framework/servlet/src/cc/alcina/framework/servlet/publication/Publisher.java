@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
@@ -57,7 +58,8 @@ public class Publisher {
 			throws Exception {
 		int depth = LooseContext.depth();
 		try {
-			ctx = PublicationContext.setupContext(contentDefinition, deliveryModel);
+			ctx = PublicationContext.setupContext(contentDefinition,
+					deliveryModel);
 			return publish0(contentDefinition, deliveryModel, original);
 		} catch (Exception e) {
 			ctx.logPublicationException(e);
@@ -89,15 +91,16 @@ public class Publisher {
 				.implOrNull(PublicationContentPersister.class);
 		PublicationContent publicationContent = cmh.getPublicationContent();
 		ctx.publicationContent = publicationContent;
+		result.publicationUid= deliveryModel.getPublicationUid();
 		if (forPublication && publicationContentPersister != null
 				&& !AppPersistenceBase.isInstanceReadOnly()) {
 			publicationUserId = Registry.impl(PublicationPersistence.class)
 					.getNextPublicationIdForUser(
 							PermissionsManager.get().getUser());
-			publicationId = persist(contentDefinition, deliveryModel,
-					publicationUserId, original, publicationContentPersister);
-			result.publicationId = publicationId;
-			ctx.getVisitorOrNoop().afterPublicationPersistence(publicationId);
+			persist(contentDefinition, deliveryModel, publicationUserId,
+					original, publicationContentPersister, result);
+			ctx.getVisitorOrNoop()
+					.afterPublicationPersistence(result.publicationId);
 		}
 		ContentRenderer crh = (ContentRenderer) Registry.get()
 				.instantiateSingle(ContentRenderer.class,
@@ -148,9 +151,9 @@ public class Publisher {
 		if (forPublication && publicationContentPersister != null
 				&& !AppPersistenceBase.isInstanceReadOnly()) {
 			postDeliveryPersistence(result.publicationId);
+			persist(contentDefinition, deliveryModel, publicationUserId,
+					original, publicationContentPersister, result);
 		}
-		publicationId = persist(contentDefinition, deliveryModel,
-				publicationUserId, original, publicationContentPersister);
 		result.content = null;
 		result.contentToken = token;
 		ctx.getVisitorOrNoop().publicationFinished(result);
@@ -158,16 +161,18 @@ public class Publisher {
 	}
 
 	private void postDeliveryPersistence(Long publicationId) {
-		if(getContext().mimeMessageId!=null){
+		if (getContext().mimeMessageId != null) {
 			Registry.impl(CommonPersistenceProvider.class)
-			.getCommonPersistence().updatePublicationMimeMessageId(publicationId,getContext().mimeMessageId);
+					.getCommonPersistence().updatePublicationMimeMessageId(
+							publicationId, getContext().mimeMessageId);
 		}
 	}
 
-	private long persist(ContentDefinition contentDefinition,
+	private void persist(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Long publicationUserId,
 			Publication original,
-			PublicationContentPersister publicationContentPersister) {
+			PublicationContentPersister publicationContentPersister,
+			PublicationResult result) {
 		Publication publication = publicationContentPersister
 				.newPublicationInstance();
 		if (contentDefinition instanceof HasId) {
@@ -186,11 +191,14 @@ public class Publisher {
 		publication.setPublicationDate(new Date());
 		publication.setOriginalPublication(original);
 		publication.setUserPublicationId(publicationUserId);
+		publication.setPublicationUid(SEUtilities.generateId());
 		publication.setPublicationType(contentDefinition.getPublicationType());
 		try {
 			PermissionsManager.get().pushCurrentUser();
-			return Registry.impl(CommonPersistenceProvider.class)
+			long id = Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().merge(publication);
+			result.publicationId = id;
+			result.publicationUid = publication.getPublicationUid();
 		} finally {
 			PermissionsManager.get().popUser();
 		}
