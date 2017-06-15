@@ -24,7 +24,8 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 	@Override
 	protected void customiseLeftWidget() {
 		super.customiseLeftWidget();
-		search.setShiftX(-12);
+		search.setShiftX(-3);
+		search.setShiftY(2);
 		search.setSortGroups(false);
 		search.setSortGroupContents(false);
 		search.setShowFilterInPopup(true);
@@ -32,6 +33,7 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 		search.setShowFilterRelativeTo(() -> resultsWidget);
 		search.setCloseOnPopdownFilterEmpty(false);
 		search.setRecreateItemHolderOnRefresh(true);
+		search.setMatchWidthToSource(true);
 	}
 
 	public FlatSearchSelector() {
@@ -40,6 +42,11 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 
 	protected boolean allowsEmptySelection() {
 		return maxSelectedItems > 1;
+	}
+
+	@Override
+	public boolean isMultiline() {
+		return false;
 	}
 
 	public FlatSearchSelector(Class selectionObjectClass, int maxSelectedItems,

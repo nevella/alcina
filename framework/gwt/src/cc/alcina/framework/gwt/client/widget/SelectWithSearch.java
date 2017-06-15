@@ -242,6 +242,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	private String emptyItemsText;
 
+	private boolean matchWidthToSource;
+
+	private int shiftY;
+
 	public SelectWithSearch() {
 	}
 
@@ -526,6 +530,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return shiftX;
 	}
 
+	public int getShiftY() {
+		return this.shiftY;
+	}
+
 	public Supplier<Widget> getShowFilterRelativeTo() {
 		return this.showFilterRelativeTo;
 	}
@@ -558,6 +566,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	public boolean isFocusOnAttach() {
 		return focusOnAttach;
+	}
+
+	public boolean isMatchWidthToSource() {
+		return this.matchWidthToSource;
 	}
 
 	public boolean isPopdown() {
@@ -744,6 +756,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		this.lazyProvider = lazyProvider;
 	}
 
+	public void setMatchWidthToSource(boolean matchWidthToSource) {
+		this.matchWidthToSource = matchWidthToSource;
+	}
+
 	public void setPopdown(boolean popdown) {
 		this.popdown = popdown;
 	}
@@ -755,7 +771,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	public void setPopupPanelCssClassName(String popupPanelCssClassName) {
 		this.popupPanelCssClassName = popupPanelCssClassName;
 	}
-
 	public void setRecreateItemHolderOnRefresh(
 			boolean recreateItemHolderOnRefresh) {
 		this.recreateItemHolderOnRefresh = recreateItemHolderOnRefresh;
@@ -771,6 +786,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	public void setShiftX(int shiftX) {
 		this.shiftX = shiftX;
+	}
+
+	public void setShiftY(int shiftY) {
+		this.shiftY = shiftY;
 	}
 
 	public void setShowFilterInPopup(boolean showFilterInPopup) {
@@ -819,6 +838,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			fp.add(filter);
 			fp.add(panelForPopup.getWidget());
 			panelForPopup.setWidget(fp);
+		}
+		if (matchWidthToSource) {
+			filter.getElement().getStyle().setPropertyPx("minWidth",
+					showFilterRelativeTo.get().getOffsetWidth());
 		}
 		this.relativePopupPanel = RelativePopupPositioning.showPopup(
 				isShowFilterInPopup() ? showFilterRelativeTo.get() : filter,
@@ -1010,7 +1033,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	}
 
 	protected int shiftY() {
-		return 0;
+		return getShiftY();
 	}
 
 	protected void updateItems() {
