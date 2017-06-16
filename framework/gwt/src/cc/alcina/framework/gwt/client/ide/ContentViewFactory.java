@@ -115,6 +115,9 @@ public class ContentViewFactory {
 	public static final String CONTEXT_OVERRIDE_AUTOSAVE = ContentViewFactory.class
 			.getName() + ".CONTEXT_OVERRIDE_AUTOSAVE";
 
+	public static final String CONTEXT_FIELD_CUSTOMISER = ContentViewFactory.class
+			.getName() + ".CONTEXT_FIELD_CUSTOMISER";
+
 	public static final String CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS = ContentViewFactory.class
 			+ ".CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS";
 
@@ -215,6 +218,20 @@ public class ContentViewFactory {
 				doNotClone, additionalProvisional, false);
 	}
 
+	public static class ContentViewFactoryFieldCustomiser {
+		public Predicate<Field> getFilter() {
+			return null;
+		}
+
+		public Comparator<Field> getOrder() {
+			return null;
+		}
+
+		public Consumer<Field> getModifier() {
+			return null;
+		}
+	}
+
 	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
 			PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone, Object additionalProvisional,
@@ -222,6 +239,13 @@ public class ContentViewFactory {
 		ClientBeanReflector bi = ClientReflector.get()
 				.beanInfoForClass(bean.getClass());
 		Boolean overrideAutoSave = LooseContext.get(CONTEXT_OVERRIDE_AUTOSAVE);
+		if (LooseContext.has(CONTEXT_FIELD_CUSTOMISER)) {
+			ContentViewFactoryFieldCustomiser customiser = LooseContext
+					.get(CONTEXT_FIELD_CUSTOMISER);
+			fieldFilter = customiser.getFilter();
+			fieldOrder = customiser.getOrder();
+			fieldPostReflectiveSetupModifier = customiser.getModifier();
+		}
 		if (overrideAutoSave != null) {
 			autoSave = overrideAutoSave.booleanValue();
 		}
