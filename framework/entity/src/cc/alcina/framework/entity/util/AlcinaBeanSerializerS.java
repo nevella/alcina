@@ -299,7 +299,11 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 			int size = array.length();
 			for (int i = 0; i < size; i++) {
 				Object jv = array.get(i);
-				c.add(deserializeObject((JSONObject) jv));
+				if (jv == JSONObject.NULL) {
+					c.add(null);
+				} else {
+					c.add(deserializeObject((JSONObject) jv));
+				}
 			}
 		}
 	}
