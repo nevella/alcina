@@ -512,7 +512,7 @@ public class XmlUtils {
 
 	public static boolean hasAncestorWithTagName(Node n,
 			Collection<String> blks, Node stop) {
-		while (n != stop) {
+		while (n != stop && n != null) {
 			if (blks.contains(n.getNodeName())) {
 				return true;
 			}
