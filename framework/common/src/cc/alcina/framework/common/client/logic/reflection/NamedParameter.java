@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.Reflections;
  * @author Nick Reddel
  */
 
- public @interface NamedParameter {
+public @interface NamedParameter {
 	Class classValue() default void.class;
 
 	int intValue() default 0;
