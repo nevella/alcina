@@ -42,6 +42,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.console.FilterArgvFlag;
+import cc.alcina.framework.entity.console.FilterArgvParam;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
@@ -65,20 +66,19 @@ public class DevConsoleCommandTransforms {
 				DomainTransformEvent dte = new DomainTransformEvent();
 				dtes.add(dte);
 				dte.setNewStringValue(rs.getString("newStringValue"));
-				dte.setObjectClassRef(ClassRef.forId(rs
-						.getLong(modColNames ? "dte_objref"
-								: "objectclassref_id")));
+				dte.setObjectClassRef(ClassRef.forId(rs.getLong(
+						modColNames ? "dte_objref" : "objectclassref_id")));
 				dte.setPropertyName(rs.getString("propertyname"));
 				dte.setUtcDate(rs.getTimestamp("utcdate"));
-				dte.setObjectId(rs.getLong(modColNames ? "object_id"
-						: "objectId"));
+				dte.setObjectId(
+						rs.getLong(modColNames ? "object_id" : "objectId"));
 				dte.setObjectLocalId(rs.getLong("objectlocalid"));
 				dte.setValueId(rs.getLong("valueid"));
-				dte.setValueClassRef(ClassRef.forId(rs
-						.getLong("valueclassref_id")));
+				dte.setValueClassRef(
+						ClassRef.forId(rs.getLong("valueclassref_id")));
 				int i = rs.getInt("transformtype");
-				TransformType tt = rs.wasNull() ? null : TransformType.class
-						.getEnumConstants()[i];
+				TransformType tt = rs.wasNull() ? null
+						: TransformType.class.getEnumConstants()[i];
 				dte.setTransformType(tt);
 			}
 			return dtes;
@@ -89,10 +89,10 @@ public class DevConsoleCommandTransforms {
 		public LogsToDtrs() {
 		}
 
-		public Multimap<Long, List<DomainTransformEvent>> logsToDtrs(
-				String logFile, boolean removeDuplicates) {
-			Pattern lfPat = Pattern
-					.compile("\\s*(\\d{4}.+?)\\s+\\| transform\\s+\\| (\\d+)\\s+\\|(.+)");
+		public Multimap<Long, List<DomainTransformEvent>>
+				logsToDtrs(String logFile, boolean removeDuplicates) {
+			Pattern lfPat = Pattern.compile(
+					"\\s*(\\d{4}.+?)\\s+\\| transform\\s+\\| (\\d+)\\s+\\|(.+)");
 			Multimap<Long, List<DomainTransformEvent>> result = new Multimap<Long, List<DomainTransformEvent>>();
 			List<String> strs = CommonUtils.split(logFile, "\n");
 			Collections.reverse(strs);
@@ -126,8 +126,8 @@ public class DevConsoleCommandTransforms {
 				}
 			}
 			for (List<DomainTransformEvent> dtes : result.values()) {
-				Collections
-						.sort(dtes, DomainTransformEvent.UTC_DATE_COMPARATOR);
+				Collections.sort(dtes,
+						DomainTransformEvent.UTC_DATE_COMPARATOR);
 				DomainTransformEvent last = null;
 				for (Iterator<DomainTransformEvent> itr = dtes.iterator(); itr
 						.hasNext();) {
@@ -143,21 +143,21 @@ public class DevConsoleCommandTransforms {
 			return result;
 		}
 
-		public Multimap<Long, List<DomainTransformEvent>> dtrExpsToCliDteMap(
-				String folderPath) throws Exception {
-			List<File> files = new ArrayList<File>(Arrays.asList(new File(
-					folderPath).listFiles(new FileFilter() {
-				@Override
-				public boolean accept(File pathname) {
-					return NUMERIC_FN_PATTERN.matcher(pathname.getName())
-							.matches();
-				}
-			})));
+		public Multimap<Long, List<DomainTransformEvent>>
+				dtrExpsToCliDteMap(String folderPath) throws Exception {
+			List<File> files = new ArrayList<File>(Arrays
+					.asList(new File(folderPath).listFiles(new FileFilter() {
+						@Override
+						public boolean accept(File pathname) {
+							return NUMERIC_FN_PATTERN
+									.matcher(pathname.getName()).matches();
+						}
+					})));
 			return dtrExpsToCliDteMap(files);
 		}
 
-		public Multimap<Long, List<DomainTransformEvent>> dtrExpsToCliDteMap(
-				List<File> files) throws Exception {
+		public Multimap<Long, List<DomainTransformEvent>>
+				dtrExpsToCliDteMap(List<File> files) throws Exception {
 			Multimap<Long, List<DomainTransformEvent>> result = new Multimap<Long, List<DomainTransformEvent>>();
 			List<DeltaApplicationRecord> wrappers = new ArrayList<DeltaApplicationRecord>();
 			Collections.sort(files, new LongFnComparator());
@@ -222,16 +222,18 @@ public class DevConsoleCommandTransforms {
 			String arg0 = argv[0];
 			String arg1 = argv.length < 2 ? "0" : argv[1];
 			String filter = "";
-			filter += arg0.equals("0") ? "" : String.format(" and ci.id=%s ",
-					arg0);
+			filter += arg0.equals("0") ? ""
+					: String.format(" and ci.id=%s ", arg0);
 			if (!arg1.equals("0")) {
-				filter += arg1.matches("\\d+") ? String.format(" and u.id=%s ",
-						arg1) : String.format(" and u.username='%s' ", arg1);
+				filter += arg1.matches("\\d+")
+						? String.format(" and u.id=%s ", arg1)
+						: String.format(" and u.username='%s' ", arg1);
 			}
 			String arg2 = argv.length < 3 ? filter.isEmpty() ? "7" : "0"
 					: argv[2];
-			filter += arg2.equals("0") ? "" : String.format(
-					"  and age(ci.hellodate)<'%s days'  ", arg2);
+			filter += arg2.equals("0") ? ""
+					: String.format("  and age(ci.hellodate)<'%s days'  ",
+							arg2);
 			Connection conn = getConn();
 			sql = String.format(sql, filter);
 			System.out.println(console.breakAndPad(1, 80, sql, 0));
@@ -264,17 +266,18 @@ public class DevConsoleCommandTransforms {
 		}
 
 		@RegistryLocation(registryPoint = CmdListClientLogRecordsFilter.class)
-		public abstract static class CmdListClientLogRecordsFilter extends
-				DevConsoleFilter {
+		public abstract static class CmdListClientLogRecordsFilter
+				extends DevConsoleFilter {
 		}
 
-		public static class CmdListClientLogRecordsFilterClientInstance extends
-				CmdListClientLogRecordsFilter {
+		public static class CmdListClientLogRecordsFilterClientInstance
+				extends CmdListClientLogRecordsFilter {
 			@Override
 			public String getFilter(String value) {
 				value = CommonUtils.isNullOrEmpty(value) ? "-1" : value;
-				return String.format(value.contains(",") ? "ci.id in (%s)"
-						: "ci.id=%s", value);
+				return String.format(
+						value.contains(",") ? "ci.id in (%s)" : "ci.id=%s",
+						value);
 			}
 
 			@Override
@@ -288,13 +291,14 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListClientLogRecordsFilterUserId extends
-				CmdListClientLogRecordsFilter {
+		public static class CmdListClientLogRecordsFilterUserId
+				extends CmdListClientLogRecordsFilter {
 			@Override
 			public String getFilter(String value) {
 				value = CommonUtils.isNullOrEmpty(value) ? "-1" : value;
-				return String.format(value.contains(",") ? "u.id in (%s)"
-						: "u.id=%s", value);
+				return String.format(
+						value.contains(",") ? "u.id in (%s)" : "u.id=%s",
+						value);
 			}
 
 			@Override
@@ -308,8 +312,8 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListClientLogRecordsFilterDays extends
-				CmdListClientLogRecordsFilter {
+		public static class CmdListClientLogRecordsFilterDays
+				extends CmdListClientLogRecordsFilter {
 			@Override
 			public String getFilter(String value) {
 				return String.format("  age(clr.time)<'%s days' ", value);
@@ -326,8 +330,8 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListClientLogRecordsFilterMessage extends
-				CmdListClientLogRecordsFilter {
+		public static class CmdListClientLogRecordsFilterMessage
+				extends CmdListClientLogRecordsFilter {
 			@Override
 			public String getFilter(String value) {
 				return String.format("clr.message ilike '%%%s%%'", value);
@@ -344,12 +348,12 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListClientLogRecordsFilterTopic extends
-				CmdListClientLogRecordsFilter {
+		public static class CmdListClientLogRecordsFilterTopic
+				extends CmdListClientLogRecordsFilter {
 			@Override
 			public String getFilter(String value) {
-				StringMap keys = StringMap
-						.fromPropertyString("s=stat\nc=click\nh=history\nm=message\nt=transform\nz=metric");
+				StringMap keys = StringMap.fromPropertyString(
+						"s=stat\nc=click\nh=history\nm=message\nt=transform\nz=metric");
 				String notClause = "";
 				if (value.startsWith("!")) {
 					notClause = "not";
@@ -383,14 +387,14 @@ public class DevConsoleCommandTransforms {
 			FilterArgvFlag f = new FilterArgvFlag(argv, "-t");
 			FilterArgvFlag f2 = new FilterArgvFlag(f.argv, "-l");
 			FilterArgvFlag f3 = new FilterArgvFlag(f2.argv, "-m");
-			String sql = "select %s%s from "
-					+ "clientlogrecord clr inner join "
+			String sql = "select %s%s from " + "clientlogrecord clr inner join "
 					+ " client_instance ci on clr.clientinstanceid = ci.id "
 					+ " inner join users u " + "on ci.user_id=u.id " + "where "
 					+ " %s order by clr.id desc";
 			String metaSelect = f3.contains ? ""
 					: "clr.time, clr.topic, ci.id, ";
-			String messageSelect = f.contains ? "substr(replace(clr.message,'\\n','\\\\n'),0,80)"
+			String messageSelect = f.contains
+					? "substr(replace(clr.message,'\\n','\\\\n'),0,80)"
 					: f2.contains ? "replace(clr.message,'\\n','\\\\nlc7x--')"
 							: "clr.message";
 			argv = f3.argv;
@@ -464,6 +468,9 @@ public class DevConsoleCommandTransforms {
 				printFullUsage();
 				return "";
 			}
+			FilterArgvParam p = new FilterArgvParam(argv, "limit");
+			argv = p.argv;
+			int limit = Integer.parseInt(p.valueOrDefault("9999"));
 			FilterArgvFlag f = new FilterArgvFlag(argv, "-r");
 			boolean rqIdsOnly = f.contains;
 			argv = f.argv;
@@ -484,8 +491,8 @@ public class DevConsoleCommandTransforms {
 			argv = f.argv;
 			Connection conn = getConn();
 			ensureClassRefs(conn);
-			CommonPersistenceLocal cpl = Registry.impl(
-					CommonPersistenceProvider.class)
+			CommonPersistenceLocal cpl = Registry
+					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistenceExTransaction();
 			Class<? extends DomainTransformRequestPersistent> clazz = cpl
 					.getImplementation(DomainTransformRequestPersistent.class);
@@ -510,8 +517,9 @@ public class DevConsoleCommandTransforms {
 					+ "inner join users u on ci.user_id=u.id "
 					+ " inner join %s dtr on dtr.clientinstance_id=ci.id "
 					+ " inner join %s dte on dte.domaintransformrequestpersistent_id = dtr.id"
-					+ " where %s order by dte.id desc";
+					+ " where %s %s limit %s";
 			Set<Long> ids = null;
+			String orderClause = limit<100?"":"order by dte.id desc";
 			CollectionFilter<String> dteIdFilter = new CollectionFilter<String>() {
 				@Override
 				public boolean allow(String o) {
@@ -547,16 +555,17 @@ public class DevConsoleCommandTransforms {
 				System.out.format("Matched request ids: \n%s\n\n",
 						CommonUtils.join(ids, ", "));
 			} else {
-				filter = DevConsoleFilter.getFilters(
-						CmdListTransformsFilter.class, argv);
-				sql2 = String.format(sql2, dtrName, dteName, filter);
+				filter = DevConsoleFilter
+						.getFilters(CmdListTransformsFilter.class, argv);
+				sql2 = String.format(sql2, dtrName, dteName, filter,orderClause, limit);
 				PreparedStatement ps = conn.prepareStatement(sql2);
 				System.out.println(console.breakAndPad(1, 80, sql2, 0));
 				ResultSet rs = ps.executeQuery();
 				if (outputTransforms) {
 					List<DomainTransformEvent> dtes = new RsrowToDteConverter(
 							true).convert(rs);
-					ResourceUtilities.writeStringToFile(dtes.toString(), "/tmp/transforms.txt");
+					ResourceUtilities.writeStringToFile(dtes.toString(),
+							"/tmp/transforms.txt");
 					System.out.println(dtes);
 				} else if (valuesOnly) {
 					while (rs.next()) {
@@ -572,8 +581,8 @@ public class DevConsoleCommandTransforms {
 					formatters.put("dte_objref", new ClassRefNameFormatter());
 					formatters.put("servercommitdate", new DateTimeFormatter());
 					formatters.put("utcdate", new DateTimeFormatter());
-					formatters.put("transformtype", new EnumFormatter(
-							TransformType.class));
+					formatters.put("transformtype",
+							new EnumFormatter(TransformType.class));
 					formatters.put("newstringvalue",
 							new TrimmedStringFormatter(30));
 					SqlUtils.dumpResultSet(rs, formatters);
@@ -585,24 +594,25 @@ public class DevConsoleCommandTransforms {
 		}
 
 		private void printFullUsage() {
-			System.out
-					.format("trt <-r:=rq ids only> <-ndtr: no dtr prefilter> <-t: as transforms> {[%s] value}+\n",
-							DevConsoleFilter
-									.describeFilters(CmdListTransformsFilter.class));
+			System.out.format(
+					"trt <-r:=rq ids only> <-ndtr: no dtr prefilter> <-t: as transforms> {[%s] value}+\n",
+					DevConsoleFilter
+							.describeFilters(CmdListTransformsFilter.class));
 		}
 
 		@RegistryLocation(registryPoint = CmdListTransformsFilter.class)
-		public abstract static class CmdListTransformsFilter extends
-				DevConsoleFilter {
+		public abstract static class CmdListTransformsFilter
+				extends DevConsoleFilter {
 		}
 
-		public static class CmdListTransformsFilterClientInstance extends
-				CmdListTransformsFilter {
+		public static class CmdListTransformsFilterClientInstance
+				extends CmdListTransformsFilter {
 			@Override
 			public String getFilter(String value) {
 				value = CommonUtils.isNullOrEmpty(value) ? "-1" : value;
-				return String.format(value.contains(",") ? "ci.id in (%s)"
-						: "ci.id=%s", value);
+				return String.format(
+						value.contains(",") ? "ci.id in (%s)" : "ci.id=%s",
+						value);
 			}
 
 			@Override
@@ -616,8 +626,8 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListTransformsFilterCreationIds extends
-				CmdListTransformsFilter {
+		public static class CmdListTransformsFilterCreationIds
+				extends CmdListTransformsFilter {
 			@Override
 			public String getFilter(final String arg1) {
 				return "dte.transformType=0";
@@ -629,8 +639,8 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListTransformsFilterClass extends
-				CmdListTransformsFilter {
+		public static class CmdListTransformsFilterClass
+				extends CmdListTransformsFilter {
 			@Override
 			public String getFilter(final String arg1) {
 				Set<ClassRef> refs = ClassRef.all();
@@ -655,12 +665,12 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListTransformsFilterTransformType extends
-				CmdListTransformsFilter {
+		public static class CmdListTransformsFilterTransformType
+				extends CmdListTransformsFilter {
 			@Override
 			public String getFilter(final String arg1) {
-				return String.format("dte.transformtype = %s", TransformType
-						.valueOf(arg1).ordinal());
+				return String.format("dte.transformtype = %s",
+						TransformType.valueOf(arg1).ordinal());
 			}
 
 			@Override
@@ -669,8 +679,8 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListTransformsFilterDays extends
-				CmdListTransformsFilter {
+		public static class CmdListTransformsFilterDays
+				extends CmdListTransformsFilter {
 			@Override
 			public String getFilter(String value) {
 				return String.format("age(ci.hellodate)<'%s days'",
@@ -687,8 +697,8 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListTransformsFilterMinDays extends
-				CmdListTransformsFilter {
+		public static class CmdListTransformsFilterMinDays
+				extends CmdListTransformsFilter {
 			@Override
 			public String getFilter(String value) {
 				return String.format("age(ci.hellodate)>'%s days'",
@@ -705,13 +715,14 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListTransformsFilterDtrId extends
-				CmdListTransformsFilter {
+		public static class CmdListTransformsFilterDtrId
+				extends CmdListTransformsFilter {
 			@Override
 			public String getFilter(String value) {
 				value = value.isEmpty() ? "-1" : value;
-				return String.format(value.contains(",") ? "dtr.id in (%s)"
-						: "dtr.id=%s", value);
+				return String.format(
+						value.contains(",") ? "dtr.id in (%s)" : "dtr.id=%s",
+						value);
 			}
 
 			@Override
@@ -720,16 +731,17 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListTransformsFilterDteId extends
-				CmdListTransformsFilter {
+		public static class CmdListTransformsFilterDteId
+				extends CmdListTransformsFilter {
 			@Override
 			public String getFilter(String value) {
 				value = value.isEmpty() ? "-1" : value;
 				if (value.contains(">")) {
 					return String.format("dte.id %s", value);
 				}
-				return String.format(value.contains(",") ? "dte.id in (%s)"
-						: "dte.id=%s", value);
+				return String.format(
+						value.contains(",") ? "dte.id in (%s)" : "dte.id=%s",
+						value);
 			}
 
 			@Override
@@ -738,8 +750,8 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListTransformsFilterUser extends
-				CmdListTransformsFilter {
+		public static class CmdListTransformsFilterUser
+				extends CmdListTransformsFilter {
 			@Override
 			public String getFilter(String arg1) {
 				return arg1.matches("\\d+") ? String.format("u.id=%s", arg1)
@@ -752,8 +764,8 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListTransformsFilterNewStringValue extends
-				CmdListTransformsFilter {
+		public static class CmdListTransformsFilterNewStringValue
+				extends CmdListTransformsFilter {
 			@Override
 			public String getFilter(String arg1) {
 				return String.format("dte.newStringValue ilike '%%%s%%'", arg1);
@@ -765,13 +777,12 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListTransformsFilterValueId extends
-				CmdListTransformsFilter {
+		public static class CmdListTransformsFilterValueId
+				extends CmdListTransformsFilter {
 			@Override
 			public String getFilter(String value) {
-				return String.format(
-						value.contains(",") ? "dte.valueid in (%s)"
-								: "dte.valueid=%s", value);
+				return String.format(value.contains(",") ? "dte.valueid in (%s)"
+						: "dte.valueid=%s", value);
 			}
 
 			@Override
@@ -780,13 +791,12 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListTransformsObjectId extends
-				CmdListTransformsFilter {
+		public static class CmdListTransformsObjectId
+				extends CmdListTransformsFilter {
 			@Override
 			public String getFilter(String value) {
-				return String.format(
-						value.contains(",") ? "dte.objectid in (%s)"
-								: "dte.objectid=%s", value);
+				return String.format(value.contains(",")
+						? "dte.objectid in (%s)" : "dte.objectid=%s", value);
 			}
 
 			@Override
@@ -795,8 +805,8 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListTransformsPropertyName extends
-				CmdListTransformsFilter {
+		public static class CmdListTransformsPropertyName
+				extends CmdListTransformsFilter {
 			@Override
 			public String getFilter(String value) {
 				return String.format("dte.propertyname ='%s'", value);
@@ -832,13 +842,14 @@ public class DevConsoleCommandTransforms {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			String sql = "select  u.id, u.username, u.firstName, u.lastName  " + "from users u  "
+			String sql = "select  u.id, u.username, u.firstName, u.lastName  "
+					+ "from users u  "
 					+ "where u.id != -1 %s order by u.id desc";
 			String arg0 = argv[0];
 			String filter = "";
-			filter += arg0.matches("\\d+") ? String.format(" and u.id=%s ",
-					arg0) : String.format(" and u.username ilike '%%%s%%' ",
-					arg0);
+			filter += arg0.matches("\\d+")
+					? String.format(" and u.id=%s ", arg0)
+					: String.format(" and u.username ilike '%%%s%%' ", arg0);
 			Connection conn = getConn();
 			sql = String.format(sql, filter);
 			PreparedStatement ps = conn.prepareStatement(sql);
@@ -850,7 +861,8 @@ public class DevConsoleCommandTransforms {
 
 	public abstract static class DevConsoleFilter {
 		public static String getFilters(
-				Class<? extends DevConsoleFilter> registryPoint, String[] argv) {
+				Class<? extends DevConsoleFilter> registryPoint,
+				String[] argv) {
 			return getFilters(registryPoint, argv, null);
 		}
 
@@ -875,7 +887,8 @@ public class DevConsoleCommandTransforms {
 			for (DevConsoleFilter impl : impls) {
 				if (kv.containsKey(impl.getKey()) || impl.hasDefault()) {
 					String filterString = impl.getFilter(kv.get(impl.getKey()));
-					if (allowFilter == null || allowFilter.allow(filterString)) {
+					if (allowFilter == null
+							|| allowFilter.allow(filterString)) {
 						filters.add(filterString);
 					}
 				}
@@ -894,7 +907,8 @@ public class DevConsoleCommandTransforms {
 
 	static class ClassRefNameFormatter implements ColumnFormatter {
 		@Override
-		public String format(ResultSet rs, int columnIndex) throws SQLException {
+		public String format(ResultSet rs, int columnIndex)
+				throws SQLException {
 			long objRefId = rs.getLong(columnIndex);
 			return ClassRef.forId(objRefId).getRefClass().getSimpleName();
 		}
@@ -902,7 +916,8 @@ public class DevConsoleCommandTransforms {
 
 	static class DateTimeFormatter implements ColumnFormatter {
 		@Override
-		public String format(ResultSet rs, int columnIndex) throws SQLException {
+		public String format(ResultSet rs, int columnIndex)
+				throws SQLException {
 			Timestamp ts = rs.getTimestamp(columnIndex);
 			return CommonUtils.formatDate(ts, DateStyle.AU_DATE_TIME_HUMAN);
 		}
@@ -916,7 +931,8 @@ public class DevConsoleCommandTransforms {
 		}
 
 		@Override
-		public String format(ResultSet rs, int columnIndex) throws SQLException {
+		public String format(ResultSet rs, int columnIndex)
+				throws SQLException {
 			int i = rs.getInt(columnIndex);
 			return rs.wasNull() ? null : clazz.getEnumConstants()[i].toString();
 		}
@@ -930,7 +946,8 @@ public class DevConsoleCommandTransforms {
 		}
 
 		@Override
-		public String format(ResultSet rs, int columnIndex) throws SQLException {
+		public String format(ResultSet rs, int columnIndex)
+				throws SQLException {
 			return CommonUtils.trimToWsChars(
 					CommonUtils.nullToEmpty(rs.getString(columnIndex)), length);
 		}
