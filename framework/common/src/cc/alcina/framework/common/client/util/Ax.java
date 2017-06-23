@@ -3,6 +3,8 @@ package cc.alcina.framework.common.client.util;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class Ax {
@@ -51,7 +53,19 @@ public class Ax {
 	public static void newlineDump(Collection collection) {
 		System.out.println(CommonUtils.joinWithNewlines(collection));
 	}
+
 	public static void err(String template, Object... args) {
 		System.err.println(format(template, args));
+	}
+
+	public static AxStreams streams = new AxStreams();
+
+	public static class AxStreams {
+		public  <T> Function<T, T> visit(Consumer<T> consumer) {
+			return t -> {
+				consumer.accept(t);
+				return t;
+			};
+		}
 	}
 }

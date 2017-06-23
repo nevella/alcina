@@ -368,9 +368,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 			msg += "Stacktrace:\t " + sw.toString();
 			System.out.println(msg);
-			CommonPersistenceLocal cpl = Registry
-					.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence();
+			CommonPersistenceLocal cpl = null;
+			try {
+				cpl = Registry.impl(CommonPersistenceProvider.class)
+						.getCommonPersistence();
+			} catch (Exception e) {
+				// webapp restart
+				return;
+			}
 			cpl.log(msg, exceptionType);
 		} finally {
 			LooseContext.pop();

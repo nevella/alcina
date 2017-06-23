@@ -51,6 +51,7 @@ public class Consort<D> {
 
 	protected static final String IGNORE_PLAYED_STATES_IF_NOT_CONTAINED = Consort.class
 			.getName() + ".IGNORE_PLAYED_STATES_IF_NOT_CONTAINED";
+	
 
 	private TopicPublisher topicPublisher = new TopicPublisher();
 
