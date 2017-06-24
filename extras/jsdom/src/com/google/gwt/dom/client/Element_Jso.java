@@ -246,12 +246,15 @@ public class Element_Jso extends Node_Jso implements DomElement {
 	 *            all tags
 	 * @return A list of matching Element nodes
 	 */
-	@Override
-	public final native NodeList<Element>
-			getElementsByTagName(String name) /*-{
+	private final native NodeList_Jso<Element>
+			getElementsByTagName0(String name) /*-{
         return this.getElementsByTagName(name);
 	}-*/;
-
+	@Override
+	public final  NodeList<Element>
+			getElementsByTagName(String tagName) {
+		return new NodeList(getElementsByTagName0(tagName));
+	}
 	/**
 	 * The element's identifier.
 	 * 
