@@ -1,8 +1,12 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -17,4 +21,5 @@ public interface FromJsonRepresentation {
 		
 	}
 	void fromJson(JSONObject jso);
+	
 }

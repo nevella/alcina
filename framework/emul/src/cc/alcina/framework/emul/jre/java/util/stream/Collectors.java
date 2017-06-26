@@ -3,6 +3,7 @@ package java.util.stream;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -16,6 +17,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collector;
+
+import cc.alcina.framework.entity.J8Utils.ToItemStreamCollector;
 
 public class Collectors {
 	private static class ToListCollector<T>
