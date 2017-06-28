@@ -508,7 +508,7 @@ public class LocalDomBridge {
 			throw new UnsupportedOperationException();
 		}
 		log(LocalDomDebug.CREATED_PENDING_RESOLUTION,
-				"created pending resolution node:" + node.impl().hashCode());
+				"created pending resolution node:" + node.implNoResolve().hashCode());
 		javascriptObjectNodeLookup.put(nodeDom, node);
 		debug.removeAssignment(nodeDom);
 		node.putDomImpl(nodeDom);

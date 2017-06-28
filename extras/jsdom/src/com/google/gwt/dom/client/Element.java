@@ -317,7 +317,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	public short getNodeType() {
-		return impl().getNodeType();
+		return implNoResolve().getNodeType();
 	}
 
 	public String getNodeValue() {
@@ -424,7 +424,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	public String getTagName() {
-		return impl().getTagName();
+		return implNoResolve().getTagName();
 	}
 
 	public String getTitle() {
