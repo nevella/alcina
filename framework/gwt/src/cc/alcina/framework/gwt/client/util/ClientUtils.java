@@ -23,6 +23,7 @@ import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Node_Jso;
 import com.google.gwt.http.client.UrlBuilder;
@@ -121,6 +122,7 @@ public class ClientUtils {
 				return null;
 			}
 			headList.getItem(0).appendChild(styleElement);
+			LocalDomBridge.get().flush();
 		}
 		if (css.length() != 0) {
 			try {
@@ -152,8 +154,9 @@ public class ClientUtils {
         return JSON.parse(json, dateTimeReviver);
 	}-*/;
 
-	public static native boolean setCssTextViaCssTextProperty(Element styleTag,
+	public static native boolean setCssTextViaCssTextProperty(Element elem,
 			String css) /*-{
+		var styleTag=elem.@com.google.gwt.dom.client.Element::ensureJso()();
         var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
 
         if ('cssText' in sheet) { // Internet Explorer

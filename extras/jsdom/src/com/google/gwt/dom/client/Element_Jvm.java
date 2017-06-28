@@ -551,8 +551,12 @@ public class Element_Jvm extends Node_Jvm
 		}
 		builder.appendHtmlConstantNoCheck("<");
 		builder.appendHtmlConstant(tagName);
+		String styleAttributeValue = attributes.get("style");
 		if (!attributes.isEmpty()) {
 			attributes.entrySet().forEach(e -> {
+				if (e.getKey().equals("style") && style != null) {
+					return;
+				}
 				builder.appendHtmlConstantNoCheck(" ");
 				// invalid attr names will die on the voine
 				builder.appendEscaped(e.getKey());
@@ -563,6 +567,10 @@ public class Element_Jvm extends Node_Jvm
 		}
 		if (style != null) {
 			builder.appendHtmlConstantNoCheck(" style=\"");
+			if (Ax.notBlank(styleAttributeValue)) {
+				builder.appendUnsafeHtml(styleAttributeValue);
+				builder.appendHtmlConstantNoCheck("; ");
+			}
 			((Style_Jvm) style.impl).properties.entrySet().forEach(e -> {
 				builder.appendEscaped(
 						LocalDomBridge.get().declarativeCssName(e.getKey()));

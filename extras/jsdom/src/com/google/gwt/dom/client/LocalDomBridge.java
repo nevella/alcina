@@ -266,6 +266,9 @@ public class LocalDomBridge {
 	}
 
 	public String declarativeCssName(String key) {
+		if(key.equals("backgroundSize")){
+			int debug=3;
+		}
 		return declarativeCssNames.computeIfAbsent(key, k -> {
 			String lcKey = k.toLowerCase();
 			if (!lcKey.equals(k)) {

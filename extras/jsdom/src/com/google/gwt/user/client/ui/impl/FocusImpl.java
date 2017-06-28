@@ -80,7 +80,7 @@ public class FocusImpl {
   }
 
   public native void setAccessKey(Element elem, char key) /*-{
-  	var elem_jso=elem.@com.google.gwt.dom.client.Element::ensureDomImpl();
+  	var elem_jso=elem.@com.google.gwt.dom.client.Element::ensureJso()();
     elem_jso.accessKey = String.fromCharCode(key);
   }-*/;
 
