@@ -18,6 +18,7 @@ package cc.alcina.framework.gwt.client.widget;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -456,8 +457,10 @@ public class FlowTabBar extends Composite implements
 			}
 			sinkEvents(Event.ONCLICK | Event.ONKEYDOWN);
 		}
-
-		protected native Element createHiddenSpan() /*-{
+		protected  Element createHiddenSpan(){
+			return Document.get().createSpanElement();
+		}
+		protected native Element createHiddenSpan0() /*-{
 			var span = $doc.createElement('span');
 			span.style.width = span.style.height = 0;
 			span.style.opacity = 0;

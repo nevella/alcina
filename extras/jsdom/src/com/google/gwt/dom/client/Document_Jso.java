@@ -60,7 +60,9 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 	 */
 	@Override
 	public native final Text createTextNode(String data) /*-{
-		throw new Exception();
+		var text_jso = this.createTextNode(data);
+		var textOut=@com.google.gwt.dom.client.LocalDomBridge::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(text_jso);
+		return textOut;
 	}-*/;
 
 	/**

@@ -56,28 +56,35 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 	private static <T extends Node> void maybeConvertToLocal(T node,
 			boolean deep) {
 		if (!(node.implNoResolve() instanceof Node_Jvm)) {
-			Element_Jso elt = (Element_Jso) node.implNoResolve();
-			// must detach all refs to existing nodes
-			LocalDomBridge.get().detachDomNode(elt);
-			DomNode localImpl = node.localImpl();
-			Element_Jvm jvmEltOld = localImpl instanceof Element_Jvm
-					? (Element_Jvm) localImpl : null;
-			Element_Jvm jvmElt = jvmEltOld != null ? jvmEltOld
-					: (Element_Jvm) LocalDomBridge.get().localDomImpl.localImpl
-							.createUnwrappedLocalElement(Document.get(),
-									elt.getTagName());
-			jvmElt.attributes.clear();
-			elt.getAttributes().entrySet().forEach(e -> {
-				jvmElt.setAttribute(e.getKey(), e.getValue());
-			});
-			jvmElt.node = node;
-			node.putImpl(jvmElt);
-			if (jvmElt.children.isEmpty()) {
-				Preconditions.checkState(elt.getInnerHTML0().isEmpty());
-				// jvmElt.setInnerHTML(elt.getInnerHTML());
+			if (node.getNodeType() == Node.TEXT_NODE) {
+				Text_Jso text = (Text_Jso) node.implNoResolve();
+				node.putImpl(new Text_Jvm(text.getData()));
 			} else {
-				for (Node_Jvm child : jvmElt.children) {
-					maybeConvertToLocal(child.node, true);
+				Element_Jso elt = (Element_Jso) node.implNoResolve();
+				// must detach all refs to existing nodes
+				LocalDomBridge.get().detachDomNode(elt);
+				DomNode localImpl = node.localImpl();
+				Element_Jvm jvmEltOld = localImpl instanceof Element_Jvm
+						? (Element_Jvm) localImpl : null;
+				Element_Jvm jvmElt = jvmEltOld != null ? jvmEltOld
+						: (Element_Jvm) LocalDomBridge
+								.get().localDomImpl.localImpl
+										.createUnwrappedLocalElement(
+												Document.get(),
+												elt.getTagName());
+				jvmElt.attributes.clear();
+				elt.getAttributes().entrySet().forEach(e -> {
+					jvmElt.setAttribute(e.getKey(), e.getValue());
+				});
+				jvmElt.node = node;
+				node.putImpl(jvmElt);
+				if (jvmElt.children.isEmpty()) {
+					// Preconditions.checkState(elt.getInnerHTML0().isEmpty());
+					jvmElt.setInnerHTML(elt.getInnerHTML0());
+				} else {
+					for (Node_Jvm child : jvmElt.children) {
+						maybeConvertToLocal(child.node, true);
+					}
 				}
 			}
 		} else {

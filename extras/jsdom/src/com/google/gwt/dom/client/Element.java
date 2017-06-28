@@ -355,7 +355,8 @@ public class Element extends Node implements DomElement {
 			return null;
 			// int debug = 3;
 		}
-		return impl.getParentElement();
+		Element parent = impl.getParentElement();
+		return parent;
 	}
 
 	public Node getParentNode() {

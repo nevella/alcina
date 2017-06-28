@@ -524,4 +524,14 @@ public class Widget extends UIObject
 			}
 		}
 	}
+	@Override
+	public int getOffsetHeight() {
+		// FIXME - not efficient check
+		return isAttached()?super.getOffsetHeight():0;
+	}
+	@Override
+	public int getOffsetWidth() {
+		// FIXME - not efficient check
+		return isAttached()?super.getOffsetWidth():0;
+	}
 }

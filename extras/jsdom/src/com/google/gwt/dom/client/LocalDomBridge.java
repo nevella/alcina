@@ -155,7 +155,7 @@ public class LocalDomBridge {
 						childNodes.getLength() == vmImpl.children.size());
 			}
 			for (int idx2 = 0; idx2 < vmImpl.children.size(); idx2++) {
-				Element_Jvm child_jvm = (Element_Jvm) vmImpl.children.get(idx2);
+				Node_Jvm child_jvm = vmImpl.children.get(idx2);
 				int len = childNodes.getLength();
 				Node_Jso domImpl = childNodes.getItem0(idx2);
 				Node_Jso domImplCopy = domImpl;
@@ -164,8 +164,8 @@ public class LocalDomBridge {
 							.equalsIgnoreCase(child_jvm.getNodeName()));
 				}
 				get().javascriptObjectNodeLookup.put(domImpl, child_jvm.node);
-				((Element) child_jvm.node).putDomImpl(domImpl);
-				((Element) child_jvm.node).putImpl(domImpl);
+				child_jvm.node.putDomImpl(domImpl);
+				child_jvm.node.putImpl(domImpl);
 			}
 		}
 	}
@@ -350,6 +350,9 @@ public class LocalDomBridge {
 
 	public void flush() {
 		if (flushCommand == null) {
+			if(createdLocals.size()>0){
+				return;//FIXME - Jade
+			}
 			Preconditions.checkState(createdLocals.size() == 0);
 			return;
 		}
@@ -409,7 +412,7 @@ public class LocalDomBridge {
 		if (node.provideIsElement()) {
 			String id = ((Element) node).getId();
 			if (id != null && id.length() > 0) {
-				if (idLookup.containsKey(id)) {
+				if (idLookup.containsKey(id)&&debug.strict) {
 					throw new RuntimeException("duplicate id");
 				}
 				idLookup.put(id, node);
@@ -806,6 +809,8 @@ public class LocalDomBridge {
 
 		Map<Node_Jso, Element> assigned = new LinkedHashMap<>();
 
+		private boolean strict;
+
 		public void added(Node_Jvm impl) {
 			nodesInHierarchy.add(impl);
 		}
@@ -826,7 +831,7 @@ public class LocalDomBridge {
 				throw new IllegalStateException();
 			}
 			if (assigned.containsKey(nodeDom)) {
-				if (assigned.get(nodeDom) != element) {
+				if (assigned.get(nodeDom) != element &&debug.strict) {
 					throw new IllegalStateException();
 				}
 			}
@@ -856,6 +861,7 @@ public class LocalDomBridge {
 			case DOM_EVENT:
 			case DUPLICATE_ELT_ID:
 			case DISPATCH_DETAILS:
+			case DUMP_LOCAL:
 				System.out.println(message);
 				break;
 			default:

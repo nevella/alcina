@@ -13,8 +13,8 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.Hyperlink;
@@ -45,7 +45,7 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 			}
 		};
 		super.initWidget(base);
-		anchorElem = (Element) getElement().getFirstChild();
+		anchorElem =  (Element) getElement().getFirstChild();
 	}
 
 	public void addClickListener(ClickListener listener) {
