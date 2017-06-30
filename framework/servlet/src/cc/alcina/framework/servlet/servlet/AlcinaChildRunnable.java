@@ -54,6 +54,8 @@ public abstract class AlcinaChildRunnable implements Runnable {
 
 		private long launcherThreadId;
 
+		public Throwable thrown;
+
 		@Override
 		protected void run0() throws Exception {
 			getRunContext().runnable.run();
