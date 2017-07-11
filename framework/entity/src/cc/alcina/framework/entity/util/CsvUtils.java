@@ -218,6 +218,11 @@ public class CsvUtils {
 		public CsvRow next() {
 			return new CsvRow(this, idx++);
 		}
+		
+		public CsvRow addRow(){
+			grid.add(new ArrayList<String>());
+			return next();
+		}
 
 		public void addColumn(String string) {
 			colLookup.put(string, colLookup.size());
