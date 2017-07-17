@@ -37,7 +37,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 public class EmailAddressValidator implements ParameterisedValidator {
 	public static final String STANDARD_MULTIPLE_SEPARATOR = "(;|,| )+";
 
-	private static final String EMAIL_REGEX = "([a-zA-Z0-9_'+*$%\\^&!\\.\\-])+\\@(([a-zA-Z0-9\\-])+\\.)+([a-zA-Z0-9:]{2,4})+";
+	private static final String EMAIL_REGEX = "([a-zA-Z0-9_'+*$%\\^&!\\.\\-])+\\@(([a-zA-Z0-9\\-])+\\.)+([a-zA-Z0-9:]{2,8})+";
 
 	private static final String EMAIL_REGEX_REPLACE = "234@@@IBBDA";
 
