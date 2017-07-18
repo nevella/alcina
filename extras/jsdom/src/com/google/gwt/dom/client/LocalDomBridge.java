@@ -1,36 +1,26 @@
 package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
-import javax.swing.text.StyledEditorKit.BoldAction;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.shared.GWT;
-import com.google.gwt.dom.client.LocalDomBridge.LocalDomBridgeCollections;
-import com.google.gwt.dom.client.LocalDomBridge.LocalDomBridgeCollections_Script;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.LocalDomDebug;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 /**
  * Gotchas:
@@ -225,7 +215,8 @@ public class LocalDomBridge {
 
 	LocalDomImpl localDomImpl;
 
-	List<DomElement> createdLocals = new ArrayList<>();
+	Map<DomElement, DomElement> createdLocals;
+	List<DomElement> createdLocalValues = new ArrayList<>();
 
 	ScheduledCommand flushCommand = null;
 
@@ -245,6 +236,7 @@ public class LocalDomBridge {
 				.createIdentityEqualsMap(JavaScriptObject.class);
 		javascriptObjectStyleLookup = collections
 				.createIdentityEqualsMap(JavaScriptObject.class);
+		createdLocals = collections.createIdentityEqualsMap(DomElement.class);
 		idLookup = collections.createIdentityEqualsMap(String.class);
 		elementCreators = collections.createIdentityEqualsMap(String.class);
 		initElementCreators();
@@ -261,13 +253,14 @@ public class LocalDomBridge {
 	}
 
 	public void createdLocalElement(DomElement local) {
-		createdLocals.add(local);
+		createdLocals.put(local,local);
+		createdLocalValues.add(local);
 		ensureFlush();
 	}
 
 	public String declarativeCssName(String key) {
-		if(key.equals("backgroundSize")){
-			int debug=3;
+		if (key.equals("backgroundSize")) {
+			int debug = 3;
 		}
 		return declarativeCssNames.computeIfAbsent(key, k -> {
 			String lcKey = k.toLowerCase();
@@ -353,22 +346,22 @@ public class LocalDomBridge {
 
 	public void flush() {
 		if (flushCommand == null) {
-			if(createdLocals.size()>0){
-				return;//FIXME - Jade
+			if (createdLocalValues.size() > 0) {
+				return;// FIXME - Jade
 			}
-			Preconditions.checkState(createdLocals.size() == 0);
+			Preconditions.checkState(createdLocalValues.size() == 0);
 			return;
 		}
 		flushCommand = null;
 		log(LocalDomDebug.FLUSH, "**flush**");
 		if (pendingResolution.size() == 0) {
-			boolean detachedAndPending = createdLocals.stream()
+			boolean detachedAndPending = createdLocalValues.stream()
 					.anyMatch(e -> e.getParentNode() == null);
 			if (detachedAndPending) {
 				// e.g. dialog box
 				return;
 			}
-			createdLocals.stream().forEach(e -> {
+			createdLocalValues.stream().forEach(e -> {
 				Element_Jvm el = (Element_Jvm) e;
 				if (((Element) el.node).uiObject != null) {
 					log(LocalDomDebug.FLUSH,
@@ -379,8 +372,9 @@ public class LocalDomBridge {
 		Preconditions.checkState(pendingResolution.size() > 0);
 		new ArrayList<>(pendingResolution).stream()
 				.forEach(this::ensureResolved);
-		debug.checkCreatedLocals(createdLocals);
+		debug.checkCreatedLocals(createdLocalValues);
 		createdLocals.clear();
+		createdLocalValues.clear();
 	}
 
 	public boolean isPending(Element element) {
@@ -408,14 +402,14 @@ public class LocalDomBridge {
 	}
 
 	public boolean wasCreatedThisLoop(Element element) {
-		return createdLocals.contains(element.implNoResolve());
+		return createdLocals.containsKey(element.implNoResolve());
 	}
 
 	private void addToIdLookup(Node node) {
 		if (node.provideIsElement()) {
 			String id = ((Element) node).getId();
 			if (id != null && id.length() > 0) {
-				if (idLookup.containsKey(id)&&debug.strict) {
+				if (idLookup.containsKey(id) && debug.strict) {
 					throw new RuntimeException("duplicate id");
 				}
 				idLookup.put(id, node);
@@ -511,7 +505,8 @@ public class LocalDomBridge {
 			throw new UnsupportedOperationException();
 		}
 		log(LocalDomDebug.CREATED_PENDING_RESOLUTION,
-				"created pending resolution node:" + node.implNoResolve().hashCode());
+				"created pending resolution node:"
+						+ node.implNoResolve().hashCode());
 		javascriptObjectNodeLookup.put(nodeDom, node);
 		debug.removeAssignment(nodeDom);
 		node.putDomImpl(nodeDom);
@@ -523,8 +518,8 @@ public class LocalDomBridge {
 	}
 
 	private native String getId(JavaScriptObject obj) /*-{
-														return obj.id;
-														}-*/;
+        return obj.id;
+	}-*/;
 
 	private void initElementCreators() {
 		elementCreators.put(DivElement.TAG, () -> new DivElement());
@@ -818,7 +813,7 @@ public class LocalDomBridge {
 			nodesInHierarchy.add(impl);
 		}
 
-		public void checkCreatedLocals(List<DomElement> createdLocals) {
+		public void checkCreatedLocals(Collection<DomElement> createdLocals) {
 			createdLocals.stream().forEach(e -> {
 				Node_Jso domImpl = ((Element_Jvm) e).provideAncestorDomImpl();
 				if (domImpl == null && ((Element_Jvm) e).parentNode == null) {
@@ -834,7 +829,7 @@ public class LocalDomBridge {
 				throw new IllegalStateException();
 			}
 			if (assigned.containsKey(nodeDom)) {
-				if (assigned.get(nodeDom) != element &&debug.strict) {
+				if (assigned.get(nodeDom) != element && debug.strict) {
 					throw new IllegalStateException();
 				}
 			}

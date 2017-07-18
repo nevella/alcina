@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.cache.CacheFilter;
 import cc.alcina.framework.common.client.cache.CacheQuery;
@@ -15,6 +16,7 @@ import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
@@ -51,31 +53,7 @@ public class MemcacheSearcher {
 
 	private SearchDefinition def;
 
-	static class TQuery extends CacheQuery<TQuery> {
-		@Override
-		public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
-			Collection<T> values = Registry.impl(SearcherCollectionSource.class)
-					.getCollectionFor(clazz);
-			LooseContextInstance snapshot = LooseContext.getContext()
-					.snapshot();
-			return values.parallelStream().filter(v -> {
-				try {
-					LooseContext.push();
-					LooseContext.putContext(snapshot);
-					for (CacheFilter filter : getFilters()) {
-						if (!filter.asCollectionFilter().allow(v)) {
-							return false;
-						}
-					}
-					return true;
-				} finally {
-					LooseContext.pop();
-				}
-			}).collect(Registry.impl(ListCollector.class).toList());
-		}
-	}
-
-	CacheQuery query = new TQuery();
+	CacheQuery query = Registry.impl(TQuery.class);
 
 	public <T extends HasIdAndLocalId> List<T> search(SearchDefinition def,
 			Class<T> clazz, Comparator<T> order) {
@@ -88,16 +66,16 @@ public class MemcacheSearcher {
 		return list;
 	}
 
+	private MemcacheCriterionHandler getCriterionHandler(SearchCriterion sc) {
+		return handlers.get(def.getClass(), sc.getClass());
+	}
+
 	private void processDefinitionHandler() {
 		MemcacheDefinitionHandler handler = definitionHandlers
 				.get(def.getClass());
 		if (handler != null) {
 			query.filter(handler.getFilter(def));
 		}
-	}
-
-	private MemcacheCriterionHandler getCriterionHandler(SearchCriterion sc) {
-		return handlers.get(def.getClass(), sc.getClass());
 	}
 
 	protected void processHandlers() {
@@ -127,6 +105,30 @@ public class MemcacheSearcher {
 					query.filter(cgFilter);
 				}
 			}
+		}
+	}
+
+	@RegistryLocation(registryPoint = TQuery.class, implementationType = ImplementationType.INSTANCE)
+	public static class TQuery extends CacheQuery<TQuery> {
+		@Override
+		public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
+			Collection<T> values = Registry.impl(SearcherCollectionSource.class)
+					.getCollectionFor(clazz);
+			Stream<T> stream = getStream(values);
+			return stream.collect(Registry.impl(ListCollector.class).toList());
+		}
+
+		protected <T extends HasIdAndLocalId> Stream<T>
+				getStream(Collection<T> values) {
+			Stream<T> stream = values.stream().filter(v -> {
+				for (CacheFilter filter : getFilters()) {
+					if (!filter.asCollectionFilter().allow(v)) {
+						return false;
+					}
+				}
+				return true;
+			});
+			return stream;
 		}
 	}
 }
