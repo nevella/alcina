@@ -158,4 +158,9 @@ public class ContentViewSections {
 	public void addCreateListener(PermissibleActionListener createListener) {
 		this.createListener = createListener;
 	}
+
+	public ContentViewSections editable(boolean editable) {
+		this.editable=editable;
+		return this;
+	}
 }
