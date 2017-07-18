@@ -5,9 +5,12 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.util.CachingMap;
+import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
 public abstract class CacheDescriptor {
 	public Map<Class, CacheItemDescriptor> perClass = new LinkedHashMap<Class, CacheItemDescriptor>();
@@ -62,8 +65,22 @@ public abstract class CacheDescriptor {
 		/**
 		 * @return true if cached data was modified
 		 */
-		public void run(Class clazz, Collection<T> objects, boolean topLevel) throws Exception;
-		
+		public void run(Class clazz, Collection<T> objects, boolean topLevel)
+				throws Exception;
+
 		public void writeLockedCleanup();
+
+		Class<T> forClazz();
+	}
+
+	private CachingMap<Class, List<PreProvideTask>> perClassTasks = new CachingConcurrentMap<Class, List<PreProvideTask>>(
+			clazz -> preProvideTasks.stream()
+					.filter(task -> task.forClazz() == null
+							|| task.forClazz() == clazz)
+					.collect(Collectors.toList()),
+			50);
+
+	public <T> List<PreProvideTask<T>> getPreProvideTasks(Class<T> clazz) {
+		return (List) perClassTasks.get(clazz);
 	}
 }

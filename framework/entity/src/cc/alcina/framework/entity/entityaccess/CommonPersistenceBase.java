@@ -132,7 +132,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 							+ "|LoadImpactPageAnalyzer|LoadImpactRload|servlet"
 							+ "|WebCache|WebQL|WeCrawlForThePeace|Wget"
 							+ "|python-requests|FlipboardProxy|"
-							+ "BingPreview|Baiduspider|YandexBot|Java|rogerbot)",
+							+ "BingPreview|Baiduspider|YandexBot|Java|rogerbot|Slackbot)",
 					Pattern.CASE_INSENSITIVE);
 			String botExtraRegex = ResourceUtilities
 					.get(CommonPersistenceBase.class, "botUserAgentExtra");
