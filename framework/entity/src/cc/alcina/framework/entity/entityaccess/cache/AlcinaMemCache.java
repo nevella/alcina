@@ -237,10 +237,10 @@ public class AlcinaMemCache implements RegistrableService {
 
 	private CacheDescriptor cacheDescriptor;
 
-	 TaggedLogger sqlLogger = Registry.impl(TaggedLoggers.class)
+	TaggedLogger sqlLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(Domain.class, TaggedLogger.DEBUG);
 
-	 TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
+	TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(Domain.class, TaggedLogger.METRIC);
 
 	private TaggedLogger warnLogger = Registry.impl(TaggedLoggers.class)
@@ -483,7 +483,18 @@ public class AlcinaMemCache implements RegistrableService {
 	}
 
 	public <T extends HasIdAndLocalId> T findRaw(Class<T> clazz, long id) {
-		return cache.get(clazz, id);
+		T t = cache.get(clazz, id);
+		if (t != null) {
+			for (PreProvideTask task : cacheDescriptor
+					.getPreProvideTasks(clazz)) {
+				try {
+					task.run(clazz, Collections.singletonList(t), true);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
+		return t;
 	}
 
 	public <T extends HasIdAndLocalId> T findRaw(T t) {
@@ -2221,7 +2232,7 @@ public class AlcinaMemCache implements RegistrableService {
 
 		public <T> T find(Class<T> clazz, long id) {
 			T t = cache.get(clazz, id);
-			if (transactionActiveInCurrentThread()&&t!=null) {
+			if (transactionActiveInCurrentThread() && t != null) {
 				return (T) transactions.get()
 						.ensureTransactional((HasIdAndLocalId) t);
 			} else {

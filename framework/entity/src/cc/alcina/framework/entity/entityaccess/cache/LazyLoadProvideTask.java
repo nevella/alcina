@@ -32,6 +32,7 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		}
 	}
 
+	@Override
 	public Class<T> forClazz() {
 		return this.clazz;
 	}
