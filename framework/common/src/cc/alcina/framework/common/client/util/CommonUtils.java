@@ -1541,4 +1541,8 @@ public class CommonUtils {
 					Math.min(idx + subString.length() + 100, text.length())));
 		}
 	}
+
+	public static Object last(Object[] array) {
+		return array.length == 0 ? null : array[array.length - 1];
+	}
 }
