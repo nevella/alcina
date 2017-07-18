@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
@@ -84,14 +85,13 @@ public class Publisher {
 		PublicationResult result = new PublicationResult();
 		ctx.publicationResult = result;
 		long publicationUserId = 0;
-		long publicationId = 0;
 		boolean forPublication = !deliveryModel.isNoPersistence()
 				&& deliveryModel.provideContentDeliveryType().isRepublishable();
 		PublicationContentPersister publicationContentPersister = Registry
 				.implOrNull(PublicationContentPersister.class);
 		PublicationContent publicationContent = cmh.getPublicationContent();
 		ctx.publicationContent = publicationContent;
-		result.publicationUid= deliveryModel.getPublicationUid();
+		result.publicationUid = deliveryModel.getPublicationUid();
 		if (forPublication && publicationContentPersister != null
 				&& !AppPersistenceBase.isInstanceReadOnly()) {
 			publicationUserId = Registry.impl(PublicationPersistence.class)
@@ -102,6 +102,7 @@ public class Publisher {
 			ctx.getVisitorOrNoop()
 					.afterPublicationPersistence(result.publicationId);
 		}
+		long publicationId = CommonUtils.lv(result.publicationId);
 		ContentRenderer crh = (ContentRenderer) Registry.get()
 				.instantiateSingle(ContentRenderer.class,
 						publicationContent.getClass());
@@ -150,7 +151,7 @@ public class Publisher {
 				fc);
 		if (forPublication && publicationContentPersister != null
 				&& !AppPersistenceBase.isInstanceReadOnly()) {
-			postDeliveryPersistence(result.publicationId);
+			postDeliveryPersistence(publicationId);
 			persist(contentDefinition, deliveryModel, publicationUserId,
 					original, publicationContentPersister, result);
 		}
