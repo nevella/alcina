@@ -79,9 +79,9 @@ public class PublicationContext {
 		return LooseContext.get(CONTEXT_PUBLICATION_CONTEXT);
 	}
 
-	public static void setupForExternalToPublisher(
+	public static PublicationContext setupForExternalToPublisher(
 			ContentDefinition contentDefinition, DeliveryModel deliveryModel) {
-		setupContext(contentDefinition, deliveryModel);
+		return setupContext(contentDefinition, deliveryModel);
 	}
 
 	public PublicationVisitor getVisitor() {
@@ -102,7 +102,6 @@ public class PublicationContext {
 		ctx.logger = Logger.getLogger(Publisher.class);
 		ctx.contentDefinition = contentDefinition;
 		ctx.deliveryModel = deliveryModel;
-		LooseContext.pushWithKey(CONTEXT_PUBLICATION_CONTEXT, ctx);
 		return ctx;
 	}
 }
