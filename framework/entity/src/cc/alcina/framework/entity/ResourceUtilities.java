@@ -38,9 +38,11 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -62,6 +64,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.StringMap;
 
 /**
  * @author nick@alcina.cc
@@ -508,4 +511,44 @@ public class ResourceUtilities {
 	public static void writeBytesToFile(byte[] bytes, File dataFile) throws IOException {
 		writeStreamToStream(new ByteArrayInputStream(bytes), new FileOutputStream(dataFile));
 	}
+	public static String readUrlAsStringWithPost(String strUrl, String postBody,
+            StringMap headers) throws Exception {
+        InputStream in = null;
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(strUrl);
+            connection = (HttpURLConnection) (url.openConnection());
+            connection.setDoOutput(true);
+            connection.setDoInput(true);
+            connection.setUseCaches(false);
+            connection.setRequestMethod("POST");
+            for (Entry<String, String> e : headers.entrySet()) {
+                connection.setRequestProperty(e.getKey(), e.getValue());
+            }
+            OutputStream out = connection.getOutputStream();
+            Writer wout = new OutputStreamWriter(out, "UTF-8");
+            wout.write(postBody);
+            wout.flush();
+            wout.close();
+            in = connection.getInputStream();
+            String input = readStreamToString(in);
+            return input;
+        } catch (IOException ioe) {
+            if (connection != null) {
+                InputStream err = connection.getErrorStream();
+                String input = err == null ? null : readStreamToString(err);
+                throw new IOException(input, ioe);
+            } else {
+                throw ioe;
+            }
+        } finally {
+            if (in != null) {
+                in.close();
+            }
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
 }
