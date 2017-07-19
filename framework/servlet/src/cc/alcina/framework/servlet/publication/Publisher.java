@@ -61,6 +61,7 @@ public class Publisher {
 		try {
 			ctx = PublicationContext.setupContext(contentDefinition,
 					deliveryModel);
+			LooseContext.pushWithKey(PublicationContext.CONTEXT_PUBLICATION_CONTEXT, ctx);
 			return publish0(contentDefinition, deliveryModel, original);
 		} catch (Exception e) {
 			ctx.logPublicationException(e);
