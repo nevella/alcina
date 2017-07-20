@@ -392,7 +392,7 @@ public class XmlNode {
 	/**
 	 * Basically, don't use in a loop - more a debugging aid
 	 */
-	public static XmlNode from(Node n){
+	public static XmlNode from(Node n) {
 		XmlDoc doc = new XmlDoc(n.getOwnerDocument());
 		return doc.nodeFor(n);
 	}
@@ -729,6 +729,18 @@ public class XmlNode {
 
 		public XmlNode nextSibling() {
 			return doc.nodeFor(node.getNextSibling());
+		}
+
+		public XmlNode nextSiblingElement() {
+			Node cursor = node.getNextSibling();
+			while (cursor != null) {
+				XmlNode xnCursor = doc.nodeFor(cursor);
+				if (xnCursor.isElement()) {
+					return xnCursor;
+				}
+				cursor = cursor.getNextSibling();
+			}
+			return null;
 		}
 
 		public XmlNode previousSibling() {
