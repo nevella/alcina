@@ -20,9 +20,9 @@ public class EntityLayerUtils {
 	}
 
 	// convenience
-	public static void persistentLog(String message, String componentKey) {
+	public static void persistentLog(String message, Object componentKey) {
 		Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
-				.log(message, componentKey);
+				.log(message, componentKey.toString());
 	}
 
 	public static String getLocalHostName() {
