@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.CachingMap;
-import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
 public abstract class CacheDescriptor {
 	public Map<Class, CacheItemDescriptor> perClass = new LinkedHashMap<Class, CacheItemDescriptor>();
@@ -73,14 +72,14 @@ public abstract class CacheDescriptor {
 		Class<T> forClazz();
 	}
 
-	private CachingMap<Class, List<PreProvideTask>> perClassTasks = new CachingConcurrentMap<Class, List<PreProvideTask>>(
+	private CachingMap<Class, List<PreProvideTask>> perClassTasks = new CachingMap<Class, List<PreProvideTask>>(
 			clazz -> preProvideTasks.stream()
 					.filter(task -> task.forClazz() == null
 							|| task.forClazz() == clazz)
-					.collect(Collectors.toList()),
-			50);
+					.collect(Collectors.toList()));
 
-	public <T> List<PreProvideTask<T>> getPreProvideTasks(Class<T> clazz) {
+	public synchronized <T> List<PreProvideTask<T>>
+			getPreProvideTasks(Class<T> clazz) {
 		return (List) perClassTasks.get(clazz);
 	}
 }
