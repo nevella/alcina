@@ -535,9 +535,15 @@ public class AlcinaMemCache implements RegistrableService {
 					SEUtilities.getStacktraceSlice(postProcessWriterThread, 200,
 							0));
 			if (full) {
-				fullLockDump.format("Writer thread transforms:\n%s\n\n",
-						postProcessEvent
-								.getDomainTransformLayerWrapper().persistentEvents);
+				try {
+					fullLockDump.format("Writer thread transforms:\n%s\n\n",
+							postProcessEvent
+									.getDomainTransformLayerWrapper().persistentEvents);
+				} catch (Exception e) {
+					// outside chance of a race and npe here
+					System.out.println(
+							"could not print writer thread transforms - probably inconsequential race");
+				}
 			}
 		}
 		fullLockDump.line(lockDumpCause);
