@@ -432,9 +432,6 @@ public class SyncMerger<T> {
 			Object[] keys = propertyKeyProvider.apply((T) left);
 			List<PropertyModificationLogItem> items = propertyModificationLog
 					.itemsFor(new Object[] { keys[0], keys[1], propertyName });
-			if (Objects.equals(keys[1], "JCT-243017")) {
-				int debug = 3;
-			}
 			boolean withoutLog = items.isEmpty() || keys[1] == null
 					|| keys[0] == null;
 			withoutLog |= ((HasIdAndLocalId) left).getId() == 0
@@ -469,13 +466,6 @@ public class SyncMerger<T> {
 						MergeHistory mergeHistory = new MergeHistory(left,
 								right, leftValue, rightValue, value, items);
 						mergeHistory.log();
-						if (value == null) {
-							int debug = 3;
-						}
-						if (Objects.equals(value, rightValue)
-								&& propertyName.equals("email")) {
-							int debug = 3;
-						}
 						history.add(mergeHistory);
 						maybeRegister(left, right);
 						propertyAccessor.setPropertyValue(left, propertyName,

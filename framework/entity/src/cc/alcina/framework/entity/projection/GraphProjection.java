@@ -77,7 +77,7 @@ import cc.alcina.framework.entity.projection.PermissibleFieldFilter.AllFieldsFil
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class GraphProjection {
-	private static final int LOOKUP_SIZE = 1000;
+	public static final int LOOKUP_SIZE = 1000;
 
 	public static boolean replaceTimestampsWithDates = true;
 
@@ -220,6 +220,16 @@ public class GraphProjection {
 			LOOKUP_SIZE);
 
 	private int maxDepth = Integer.MAX_VALUE;
+
+	private boolean collectionReachedCheck = true;
+
+	public boolean isCollectionReachedCheck() {
+		return this.collectionReachedCheck;
+	}
+
+	public void setCollectionReachedCheck(boolean collectionReachedCheck) {
+		this.collectionReachedCheck = collectionReachedCheck;
+	}
 
 	private LinkedHashMap<HasIdAndLocalId, HasIdAndLocalId> replaceMap = null;
 
@@ -374,6 +384,7 @@ public class GraphProjection {
 			return null;
 		}
 		Class sourceClass = source.getClass();
+		boolean checkReachable = false;
 		if (!easysChecked) {
 			if (sourceClass == Timestamp.class && replaceTimestampsWithDates) {
 				// actually breaks the (T) contract here - naughty
@@ -389,17 +400,22 @@ public class GraphProjection {
 					&& replaceMap.containsKey(source)) {
 				source = (T) replaceMap.get(source);
 			}
+			checkReachable = checkReachable(source);
 			// check here unlikely to matter
 			// if (!reachableBySinglePath) {
-			Object projected = reached.get(source);
-			if (projected != null) {
-				if (projected == NULL_MARKER) {
-					return null;
-				} else {
-					return (T) projected;
+			if (checkReachable) {
+				Object projected = reached.get(source);
+				if (projected != null) {
+					if (projected == NULL_MARKER) {
+						return null;
+					} else {
+						return (T) projected;
+					}
 				}
 			}
 			// }
+		} else {
+			checkReachable = checkReachable(source);
 		}
 		if (!checkObjectPermissions(source)) {
 			return null;
@@ -415,7 +431,7 @@ public class GraphProjection {
 						? ((MemCacheProxy) source).nonProxy()
 						: newInstance(sourceClass));
 		boolean reachableBySinglePath = reachableBySinglePath(sourceClass);
-		if (context == null || !reachableBySinglePath) {
+		if ((context == null || !reachableBySinglePath) && checkReachable) {
 			reached.put(source, projected == null ? NULL_MARKER : projected);
 			if (alsoMapTo != null) {
 				reached.put(alsoMapTo,
@@ -431,7 +447,7 @@ public class GraphProjection {
 			T replaceProjected = dataFilter.filterData(source, projected,
 					context, this);
 			if (replaceProjected != projected) {
-				if (!reachableBySinglePath) {
+				if (!reachableBySinglePath && checkReachable) {
 					reached.put(source, replaceProjected == null ? NULL_MARKER
 							: replaceProjected);
 					if (alsoMapTo != null) {
@@ -511,6 +527,14 @@ public class GraphProjection {
 			}
 		}
 		return projected;
+	}
+
+	private boolean checkReachable(Object source) {
+		if (!collectionReachedCheck
+				&& (source instanceof Collection || source instanceof Map)) {
+			return false;
+		}
+		return true;
 	}
 
 	// TODO - shouldn't this be package-private?
@@ -627,9 +651,9 @@ public class GraphProjection {
 			Constructor ctor = sourceClass.getConstructor(new Class[] {});
 			ctor.setAccessible(true);
 			constructorLookup.put(sourceClass, ctor);
-		}
-		if (dumpProjectionStats) {
-			System.out.println("missing constructor - " + sourceClass);
+			if (dumpProjectionStats) {
+				System.out.println("missing constructor - " + sourceClass);
+			}
 		}
 		return (T) constructorLookup.get(sourceClass)
 				.newInstance(new Object[] {});

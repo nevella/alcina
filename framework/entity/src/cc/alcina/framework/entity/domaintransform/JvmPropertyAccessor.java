@@ -6,36 +6,31 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
+import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.SEUtilities;
 
 public class JvmPropertyAccessor implements PropertyAccessor {
-	public void setPropertyValue(Object bean, String propertyName, Object value) {
-		if (propertyName.contains(".")) {
-			PropertyPathAccessor pathAccessor = pathAccessors.get(propertyName);
-			if (pathAccessor == null) {
-				pathAccessor = new PropertyPathAccessor(propertyName);
-				pathAccessors.put(propertyName, pathAccessor);
-			}
-			pathAccessor.setChainedProperty(bean, value);
-		} else {
-			SEUtilities.setPropertyValue(bean, propertyName, value);
+	public void setPropertyValue(Object bean, String propertyName,
+			Object value) {
+		ensureAccessor(propertyName).setChainedProperty(bean, value);
+	}
+
+	private PropertyPathAccessor ensureAccessor(String propertyName) {
+		PropertyPathAccessor pathAccessor = pathAccessors.get(propertyName);
+		if (pathAccessor == null) {
+			pathAccessor = new PropertyPathAccessor(propertyName);
+			pathAccessors.put(propertyName, pathAccessor);
 		}
+		return pathAccessor;
 	}
 
 	private Map<String, PropertyPathAccessor> pathAccessors = new LinkedHashMap<String, PropertyPathAccessor>();
 
 	public Object getPropertyValue(Object bean, String propertyName) {
-		if (propertyName.contains(".")) {
-			PropertyPathAccessor pathAccessor = pathAccessors.get(propertyName);
-			if (pathAccessor == null) {
-				pathAccessor = new PropertyPathAccessor(propertyName);
-				pathAccessors.put(propertyName, pathAccessor);
-			}
-			return pathAccessor.getChainedProperty(bean);
-		} else {
-			return SEUtilities.getPropertyValue(bean, propertyName);
-		}
+		return ensureAccessor(propertyName).getChainedProperty(bean);
 	}
 
 	@Override
@@ -55,12 +50,17 @@ public class JvmPropertyAccessor implements PropertyAccessor {
 		}
 	}
 
+	MultikeyMap<Class> typeCache = new UnsortedMultikeyMap<>(2);
+
 	public Class getPropertyType(Class clazz, String propertyName) {
-		try {
-			return SEUtilities.getPropertyDescriptorByName(clazz, propertyName)
-					.getPropertyType();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		return typeCache.ensure(() -> {
+			try {
+				return SEUtilities
+						.getPropertyDescriptorByName(clazz, propertyName)
+						.getPropertyType();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}, clazz, propertyName);
 	}
 }

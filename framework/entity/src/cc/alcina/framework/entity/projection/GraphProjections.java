@@ -29,6 +29,21 @@ public class GraphProjections {
 		return instance;
 	}
 
+	public static MapObjectLookup reachable(Object target) {
+		CollectionProjectionFilterWithCache dataFilter = (CollectionProjectionFilterWithCache) Registry
+				.impl(CollectionProjectionFilter.class);
+		defaultProjections().dataFilter(dataFilter).project(target);
+		return dataFilter.getObjectLookup();
+	}
+
+	public static MapObjectLookup reachableForClasses(Object target,
+			Class... classes) {
+		CollectionProjectionFilterWithCache dataFilter = (CollectionProjectionFilterWithCache) Registry
+				.impl(CollectionProjectionFilter.class);
+		allow(classes).dataFilter(dataFilter).project(target);
+		return dataFilter.getObjectLookup();
+	}
+
 	Set<Class> permittedClasses = new LinkedHashSet<Class>();
 
 	Set<Class> forbiddenClasses = new LinkedHashSet<Class>();
@@ -37,22 +52,25 @@ public class GraphProjections {
 
 	private int maxDepth = Integer.MAX_VALUE;
 
-	public GraphProjections maxDepth(int maxDepth) {
-		this.maxDepth = maxDepth;
-		return this;
-	}
-
 	private GraphProjectionDataFilter dataFilter = Registry
 			.impl(CollectionProjectionFilter.class);
 
 	GraphProjectionFieldFilter fieldFilter = new PermissibleFieldFilterH();
+
+	private boolean collectionReachedCheck = true;
 
 	public GraphProjections dataFilter(GraphProjectionDataFilter dataFilter) {
 		this.dataFilter = dataFilter;
 		return this;
 	}
 
-	public GraphProjections fieldFilter(GraphProjectionFieldFilter fieldFilter) {
+	public GraphProjections executor(GraphProjection projector) {
+		this.projector = projector;
+		return this;
+	}
+
+	public GraphProjections
+			fieldFilter(GraphProjectionFieldFilter fieldFilter) {
 		this.fieldFilter = fieldFilter;
 		return this;
 	}
@@ -62,14 +80,19 @@ public class GraphProjections {
 		return this;
 	}
 
-	public GraphProjections executor(GraphProjection projector) {
-		this.projector = projector;
+	public GraphProjections implCallback(InstantiateImplCallback callback) {
+		dataFilter = Registry.impl(JPAImplementation.class)
+				.getResolvingFilter(callback, new DetachedEntityCache(), false);
 		return this;
 	}
 
-	public GraphProjections implCallback(InstantiateImplCallback callback) {
-		dataFilter = Registry.impl(JPAImplementation.class).getResolvingFilter(
-				callback, new DetachedEntityCache(), false);
+	public GraphProjections maxDepth(int maxDepth) {
+		this.maxDepth = maxDepth;
+		return this;
+	}
+
+	public GraphProjections noCollectionReachedCheck() {
+		collectionReachedCheck = false;
 		return this;
 	}
 
@@ -77,6 +100,7 @@ public class GraphProjections {
 		try {
 			projector.setFilters(fieldFilter, dataFilter);
 			projector.setMaxDepth(maxDepth);
+			projector.setCollectionReachedCheck(collectionReachedCheck);
 			return projector.project(t, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -86,6 +110,16 @@ public class GraphProjections {
 	public GraphProjections strict() {
 		fieldFilter = new StrictAllowForbid();
 		return this;
+	}
+
+	public static class CountingProjector extends GraphProjection {
+		public CountingMap<Class> counts = new CountingMap<Class>();
+
+		@Override
+		protected <T> T newInstance(Class sourceClass) throws Exception {
+			counts.add(sourceClass);
+			return super.newInstance(sourceClass);
+		}
 	}
 
 	public class StrictAllowForbid implements GraphProjectionFieldFilter {
@@ -98,7 +132,8 @@ public class GraphProjections {
 					&& !permittedClasses.contains(clazz)) {
 				return false;
 			}
-			if (forbiddenClasses.size() > 0 && forbiddenClasses.contains(clazz)) {
+			if (forbiddenClasses.size() > 0
+					&& forbiddenClasses.contains(clazz)) {
 				return false;
 			}
 			return true;
@@ -126,35 +161,11 @@ public class GraphProjections {
 					&& !permittedClasses.contains(clazz)) {
 				return false;
 			}
-			if (forbiddenClasses.size() > 0 && forbiddenClasses.contains(clazz)) {
+			if (forbiddenClasses.size() > 0
+					&& forbiddenClasses.contains(clazz)) {
 				return false;
 			}
 			return super.permitClass(clazz);
-		}
-	}
-
-	public static MapObjectLookup reachableForClasses(Object target,
-			Class... classes) {
-		CollectionProjectionFilterWithCache dataFilter = (CollectionProjectionFilterWithCache) Registry
-				.impl(CollectionProjectionFilter.class);
-		allow(classes).dataFilter(dataFilter).project(target);
-		return dataFilter.getObjectLookup();
-	}
-
-	public static MapObjectLookup reachable(Object target) {
-		CollectionProjectionFilterWithCache dataFilter = (CollectionProjectionFilterWithCache) Registry
-				.impl(CollectionProjectionFilter.class);
-		defaultProjections().dataFilter(dataFilter).project(target);
-		return dataFilter.getObjectLookup();
-	}
-
-	public static class CountingProjector extends GraphProjection {
-		public CountingMap<Class> counts = new CountingMap<Class>();
-
-		@Override
-		protected <T> T newInstance(Class sourceClass) throws Exception {
-			counts.add(sourceClass);
-			return super.newInstance(sourceClass);
 		}
 	}
 }

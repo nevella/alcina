@@ -65,6 +65,7 @@ import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -218,7 +219,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			performCommand("gen-objects");
 			return;
 		}
-		if (!props.lastCommand.isEmpty()) {
+		if (!props.lastCommand.isEmpty() && !props.lastCommand.equals("q")) {
 			runningLastCommand = true;
 			performCommand(props.lastCommand);
 		} else {
@@ -950,9 +951,23 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	String outDumpFileName = null;
 
+	public void closePipeHtml() {
+		try {
+			String val = endRecordingSysout();
+			val = val.replaceAll("(https?://\\S+)", "<a href='$1'>$1</a>");
+			val = Ax.format("<pre>%s</pre>", val);
+			ResourceUtilities.writeStringToFile(val, this.outDumpFileName);
+			this.outDumpFileName = null;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 	public void pipeOutput(String outDumpFileName) {
+		pipeOutput(outDumpFileName, true);
+	}
+	public void pipeOutput(String outDumpFileName, boolean mute) {
 		if (outDumpFileName != null) {
-			startRecordingSysout(true);
+			startRecordingSysout(mute);
 			this.outDumpFileName = outDumpFileName;
 		} else {
 			try {

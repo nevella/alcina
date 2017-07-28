@@ -17,6 +17,8 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Kryo.DefaultInstantiatorStrategy;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.io.UnsafeInput;
+import com.esotericsoftware.kryo.io.UnsafeOutput;
 import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
 
@@ -34,22 +36,13 @@ public class KryoUtils {
 		return (T) deserializeFromByteArray(serializeToByteArray(t), clazz);
 	}
 
-	public static <T> T deserializeFromBase64(String string, Class<T> clazz) {
-		return deserializeFromByteArray(
-				Base64.getDecoder().decode(string.trim()), clazz);
+	public static <T> T deserializeFromBase64(String value,
+			Class<T> knownType) {
+		return deserializeFromBase64(value, knownType, false);
 	}
 
 	public static <T> T deserializeFromByteArray(byte[] bytes, Class<T> clazz) {
-		try {
-			Kryo kryo = newKryo();
-			Input input = new Input(bytes);
-			T someObject = kryo.readObject(input, clazz);
-			input.close();
-			someObject = resolve(clazz, someObject);
-			return someObject;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		return deserializeFromByteArray(bytes, clazz, false);
 	}
 
 	private static <T> T resolve(Class<T> clazz, T someObject)
@@ -65,18 +58,19 @@ public class KryoUtils {
 	}
 
 	public static <T> T deserializeFromFile(File file, Class<T> clazz) {
-		try {
-			return deserializeFromStream(new FileInputStream(file), clazz);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		return deserializeFromFile(file, clazz, false);
 	}
 
 	public static <T> T deserializeFromStream(InputStream stream,
 			Class<T> clazz) {
+		return deserializeFromStream(stream, clazz, false);
+	}
+
+	public static <T> T deserializeFromStream(InputStream stream,
+			Class<T> clazz, boolean unsafe) {
 		try {
 			Kryo kryo = newKryo();
-			Input input = new Input(stream);
+			Input input = unsafe ? new UnsafeInput(stream) : new Input(stream);
 			T someObject = kryo.readObject(input, clazz);
 			input.close();
 			someObject = resolve(clazz, someObject);
@@ -92,27 +86,36 @@ public class KryoUtils {
 	}
 
 	public static String serializeToBase64(Object object) {
-		return Base64.getEncoder().encodeToString(serializeToByteArray(object));
+		return serializeToBase64(object, false);
 	}
 
 	public static byte[] serializeToByteArray(Object object) {
+		return serializeToByteArray(object, false);
+	}
+
+	public static byte[] serializeToByteArray(Object object, boolean unsafe) {
 		try {
 			Kryo kryo = newKryo();
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			Output output = new Output(baos);
+			Output output = unsafe ? new UnsafeOutput(10000, -1)
+					: new Output(10000, -1);
 			object = writeReplace(object);
 			kryo.writeObject(output, object);
 			output.flush();
-			return baos.toByteArray();
+			return output.getBuffer();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
 
 	public static void serializeToFile(Object object, File file) {
+		serializeToFile(object, file, false);
+	}
+
+	public static void serializeToFile(Object object, File file,
+			boolean unsafe) {
 		try (OutputStream os = new FileOutputStream(file)) {
 			Kryo kryo = newKryo();
-			Output output = new Output(os);
+			Output output = unsafe ? new UnsafeOutput(os) : new Output(os);
 			object = writeReplace(object);
 			kryo.writeObject(output, object);
 			output.flush();
@@ -143,7 +146,8 @@ public class KryoUtils {
 	protected static Kryo newKryo() {
 		Kryo kryo = new Kryo();
 		if (LooseContext.is(CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER)) {
-			kryo.getFieldSerializerConfig().setCachedFieldNameStrategy(FieldSerializer.CachedFieldNameStrategy.EXTENDED);
+			kryo.getFieldSerializerConfig().setCachedFieldNameStrategy(
+					FieldSerializer.CachedFieldNameStrategy.EXTENDED);
 			kryo.setDefaultSerializer(CompatibleFieldSerializer.class);
 		}
 		kryo.getFieldSerializerConfig().setOptimizedGenerics(true);
@@ -155,5 +159,40 @@ public class KryoUtils {
 		kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(
 				new SerializingInstantiatorStrategy()));
 		return kryo;
+	}
+
+	public static String serializeToBase64(Object object, boolean unsafe) {
+		return Base64.getEncoder()
+				.encodeToString(serializeToByteArray(object, unsafe));
+	}
+
+	public static <T> T deserializeFromBase64(String string, Class<T> knownType,
+			boolean unsafe) {
+		return deserializeFromByteArray(
+				Base64.getDecoder().decode(string.trim()), knownType, unsafe);
+	}
+
+	private static <T> T deserializeFromByteArray(byte[] bytes,
+			Class<T> knownType, boolean unsafe) {
+		try {
+			Kryo kryo = newKryo();
+			Input input = unsafe ? new UnsafeInput(bytes) : new Input(bytes);
+			T someObject = kryo.readObject(input, knownType);
+			input.close();
+			someObject = resolve(knownType, someObject);
+			return someObject;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static <T> T deserializeFromFile(File file, Class<T> knownType,
+			boolean unsafe) {
+		try {
+			return deserializeFromStream(new FileInputStream(file), knownType,
+					unsafe);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }
