@@ -38,7 +38,6 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 	// have it distributed
 	protected Map<Class, Map<Long, HasIdAndLocalId>> detached;
 
-
 	private Supplier<Map> classMapSupplier;
 
 	public DetachedEntityCache() {
@@ -49,7 +48,7 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 	public DetachedEntityCache(Supplier<Map> topMapSupplier,
 			Supplier<Map> classMapSupplier) {
 		this.classMapSupplier = classMapSupplier;
-		this.detached=topMapSupplier.get();
+		this.detached = topMapSupplier.get();
 	}
 
 	public Set<HasIdAndLocalId> allValues() {
@@ -68,6 +67,10 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 			long id) {
 		ensureMaps(clazz);
 		return detached.get(clazz).containsKey(id);
+	}
+
+	public <T extends HasIdAndLocalId> boolean containsMap(Class<T> clazz) {
+		return detached.containsKey(clazz);
 	}
 
 	public boolean contains(HasIdAndLocalId hili) {
