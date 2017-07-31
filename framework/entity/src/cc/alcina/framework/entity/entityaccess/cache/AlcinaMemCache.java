@@ -2001,9 +2001,10 @@ public class AlcinaMemCache implements RegistrableService {
 				for (LaterItem item : this.items) {
 					try {
 						PdOperator pdOperator = item.pdOperator;
+						pdOperator.resolveHelper.ensure(item.source.getClass());
 						Method rm = pdOperator.readMethod;
 						long id = item.id;
-						if (joinTables.containsKey(pdOperator.pd)) {
+						if (pdOperator.resolveHelper.inJoinTables) {
 							if (keepDetached) {
 								throw new RuntimeException(
 										"Cannot keep join tables detached");
@@ -2032,8 +2033,7 @@ public class AlcinaMemCache implements RegistrableService {
 							if (keepDetached) {
 								continue;
 							}
-							PropertyDescriptor targetPd = manyToOneRev.get(
-									item.source.getClass(), pdOperator.name);
+							PropertyDescriptor targetPd = pdOperator.resolveHelper.targetPd;
 							if (targetPd != null && target != null) {
 								Set set = (Set) targetPd.getReadMethod()
 										.invoke(target, new Object[0]);
@@ -2044,14 +2044,12 @@ public class AlcinaMemCache implements RegistrableService {
 								}
 								set.add(item.source);
 							}
-							targetPd = oneToOneRev.get(item.source.getClass(),
-									pdOperator.name);
+							targetPd = pdOperator.resolveHelper.oneToOnePd;
 							if (targetPd != null && target != null) {
 								targetPd.getWriteMethod().invoke(target,
 										new Object[] { item.source });
 							}
-							targetPd = memCacheColumnRev.get(
-									item.source.getClass(), pdOperator.name);
+							targetPd = pdOperator.resolveHelper.memCachePdRev;
 							if (targetPd != null && target != null) {
 								targetPd.getWriteMethod().invoke(target,
 										new Object[] { item.source });
@@ -2114,6 +2112,30 @@ public class AlcinaMemCache implements RegistrableService {
 	}
 
 	public class PdOperator {
+		class ResolveHelper {
+			public PropertyDescriptor memCachePdRev;
+
+			public PropertyDescriptor oneToOnePd;
+
+			public PropertyDescriptor targetPd;
+
+			public boolean inJoinTables;
+
+			boolean ensured = false;
+
+			public void ensure(Class<? extends HasIdAndLocalId> sourceClass) {
+				if (!ensured) {
+					inJoinTables = joinTables.containsKey(PdOperator.this.pd);
+					targetPd = manyToOneRev.get(sourceClass, name);
+					oneToOnePd = oneToOneRev.get(sourceClass, name);
+					memCachePdRev = memCacheColumnRev.get(sourceClass, name);
+					ensured = true;
+				}
+			}
+		}
+
+		ResolveHelper resolveHelper = new ResolveHelper();
+
 		Method readMethod;
 
 		ManyToMany manyToMany;
