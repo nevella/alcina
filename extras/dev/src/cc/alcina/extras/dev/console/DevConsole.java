@@ -12,7 +12,9 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -414,7 +416,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	private class JCommandLine extends JTextField {
-		private KeyListener arrowListener = new KeyAdapter() {
+		private KeyListener arrowListener = new KeyListener() {
 			@Override
 			public void keyReleased(KeyEvent e) {
 				int code = e.getKeyCode();
@@ -433,6 +435,18 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 						setTextWithPrompt(cmd);
 					}
 				}
+			}
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
 			}
 		};
 
