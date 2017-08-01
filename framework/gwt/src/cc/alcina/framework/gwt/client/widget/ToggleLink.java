@@ -35,15 +35,18 @@ public class ToggleLink extends Composite implements
 	private Link link2;
 
 	private int selectedIndex;
-
 	public ToggleLink(String state1, String state2,
 			SelectionHandler<Integer> handler) {
+		this(state1,state2,handler,0);
+	}
+	public ToggleLink(String state1, String state2,
+			SelectionHandler<Integer> handler,int initialIndex) {
 		this.fp = new FlowPanel();
 		this.link1 = new Link(state1, this);
 		this.link2 = new Link(state2, this);
 		fp.add(link1);
 		fp.add(link2);
-		setSelectedIndex(0);
+		setSelectedIndex(initialIndex);
 		addSelectionHandler(handler);
 		initWidget(fp);
 	}
