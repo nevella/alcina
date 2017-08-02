@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.AttachEvent.Handler;
@@ -14,10 +15,12 @@ import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.table.Field;
+import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
-import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
+import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 public class ContentViewSections {
 	public List<ContentViewSection> sections = new ArrayList<>();
@@ -29,18 +32,18 @@ public class ContentViewSections {
 		public void onAttachOrDetach(AttachEvent event) {
 			if (event.isAttached()) {
 				int maxLeft = 0;
-//				for (PaneWrapperWithObjects beanView : beanViews) {
-//					System.out.println("get max cc w");
-//					maxLeft = Math.max(maxLeft,
-//							((GridForm) beanView.getBoundWidget())
-//									.getCaptionColumnWidth());
-//				}
-//				for (PaneWrapperWithObjects beanView : beanViews) {
-//					((GridForm) beanView.getBoundWidget())
-//							.setCaptionColumnWidth(maxLeft);
-//					((GridForm) beanView.getBoundWidget())
-//							.addStyleName("section-table");
-//				}
+				// for (PaneWrapperWithObjects beanView : beanViews) {
+				// System.out.println("get max cc w");
+				// maxLeft = Math.max(maxLeft,
+				// ((GridForm) beanView.getBoundWidget())
+				// .getCaptionColumnWidth());
+				// }
+				// for (PaneWrapperWithObjects beanView : beanViews) {
+				// ((GridForm) beanView.getBoundWidget())
+				// .setCaptionColumnWidth(maxLeft);
+				// ((GridForm) beanView.getBoundWidget())
+				// .addStyleName("section-table");
+				// }
 			}
 		}
 	};
@@ -50,6 +53,8 @@ public class ContentViewSections {
 	private boolean autoSave = true;
 
 	private PermissibleActionListener createListener;
+
+	private PermissibleActionListener actionListener;
 
 	public boolean isAutoSave() {
 		return this.autoSave;
@@ -79,7 +84,8 @@ public class ContentViewSections {
 			PaneWrapperWithObjects beanView = contentViewFactory
 					.fieldFilter(section).fieldOrder(section)
 					.editableFieldFilter(section.editableFieldFilter())
-					.fieldPostReflectiveSetupModifier(section.fieldPostReflectiveSetupModifier)
+					.fieldPostReflectiveSetupModifier(
+							section.fieldPostReflectiveSetupModifier)
 					.noCaption().createBeanView(bean, editable, createListener,
 							autoSave, true, null, false);
 			beanViews.add(beanView);
@@ -160,7 +166,57 @@ public class ContentViewSections {
 	}
 
 	public ContentViewSections editable(boolean editable) {
-		this.editable=editable;
+		this.editable = editable;
+		return this;
+	}
+
+	public ContentViewSections allFields(Object bean) {
+		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
+		Field[] fields = GwittirBridge.get()
+				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
+						editable, false);
+		section("").fields(Arrays.asList(fields).stream()
+				.map(Field::getPropertyName).collect(Collectors.toList()));
+		buildWidget(bean);
+		return this;
+	}
+
+	public class ContentViewSectionsDialogBuilder {
+		private boolean noGlass = false;
+
+		private String caption;
+
+		private String okButtonName;
+
+		public ContentViewSectionsDialogBuilder
+				okButtonName(String okButtonName) {
+			this.okButtonName = okButtonName;
+			return this;
+		}
+
+		public ContentViewSectionsDialogBuilder caption(String caption) {
+			this.caption = caption;
+			return this;
+		}
+
+		public ContentViewSectionsDialogBuilder noGlass() {
+			noGlass = true;
+			return this;
+		}
+
+		public void show() {
+			ClientUtils.createEditContentViewWidgets(actionListener, caption, "",
+					beanViews.get(0), noGlass, true, true, true, true,
+					okButtonName);
+		}
+	}
+
+	public ContentViewSectionsDialogBuilder dialog() {
+		return new ContentViewSectionsDialogBuilder();
+	}
+
+	public ContentViewSections actionListener(PermissibleActionListener actionListener) {
+		this.actionListener = actionListener;
 		return this;
 	}
 }

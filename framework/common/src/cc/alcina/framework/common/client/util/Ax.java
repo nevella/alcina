@@ -68,4 +68,9 @@ public class Ax {
 			};
 		}
 	}
+
+
+	public static String nullSafe(String string) {
+		return string==null?"":string;
+	}
 }

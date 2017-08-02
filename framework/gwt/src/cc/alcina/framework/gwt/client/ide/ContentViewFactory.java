@@ -67,6 +67,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionHandler.Defaul
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.CancelAction;
 import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
+import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -1052,6 +1053,17 @@ public class ContentViewFactory {
 			return getBoundWidget().getBinding().validate();
 		}
 
+		private boolean fireOkButtonClickAsOkActionEvent;
+
+		public boolean isFireOkButtonClickAsOkActionEvent() {
+			return this.fireOkButtonClickAsOkActionEvent;
+		}
+
+		public void setFireOkButtonClickAsOkActionEvent(
+				boolean fireOkButtonClickAsOkActionEvent) {
+			this.fireOkButtonClickAsOkActionEvent = fireOkButtonClickAsOkActionEvent;
+		}
+
 		private void commitChanges(boolean fireViewEvent) {
 			if (isProvisionalObjects()) {
 				TransformManager.get().promoteToDomainObject(objects);
@@ -1060,9 +1072,11 @@ public class ContentViewFactory {
 			if (!fireViewEvent) {
 				return;
 			}
+			PermissibleAction actionInstance = isFireOkButtonClickAsOkActionEvent()
+					? OkAction.INSTANCE
+					: ClientReflector.get().newInstance(ViewAction.class);
 			final PermissibleActionEvent action = new PermissibleActionEvent(
-					initialObjects,
-					ClientReflector.get().newInstance(ViewAction.class));
+					initialObjects, actionInstance);
 			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 				public void execute() {
 					fireVetoableActionEvent(action);

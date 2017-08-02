@@ -69,8 +69,6 @@ public class ClientUtils {
 
 	private static final String CSS_TEXT_PROPERTY = "cssText";
 
-	public static boolean noGlass;
-
 	public static boolean maybeOffline(Throwable t) {
 		while (t instanceof WrappedRuntimeException) {
 			if (t == t.getCause() || t.getCause() == null) {
@@ -156,7 +154,7 @@ public class ClientUtils {
 
 	public static native boolean setCssTextViaCssTextProperty(Element elem,
 			String css) /*-{
-		var styleTag=elem.@com.google.gwt.dom.client.Element::ensureJso()();
+        var styleTag = elem.@com.google.gwt.dom.client.Element::ensureJso()();
         var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
 
         if ('cssText' in sheet) { // Internet Explorer
@@ -272,9 +270,21 @@ public class ClientUtils {
 		if (fieldFilter != null) {
 			cvf.fieldFilter(f -> fieldFilter.test(f.getPropertyName()));
 		}
+		PaneWrapperWithObjects view = cvf.createBeanView(model, editable, null,
+				false, true);
+		return createEditContentViewWidgets(pal, caption, messageHtml, view,
+				false, hideOnClick, inDialog, !editable && inDialog, false,
+				"OK");
+	}
+
+	public static EditContentViewWidgets createEditContentViewWidgets(
+			final PermissibleActionListener pal, String caption,
+			String messageHtml, PaneWrapperWithObjects view, boolean noGlass,
+			boolean hideOnClick, boolean inDialog, boolean withOk,
+			boolean withCancel, String okButtonName) {
 		FlowPanel fp = new FlowPanel();
 		final GlassDialogBox gdb = new GlassDialogBox();
-		if(noGlass){
+		if (noGlass) {
 			gdb.setGlassHidden(true);
 		}
 		PermissibleActionListener closeWrapper = new PermissibleActionListener() {
@@ -288,12 +298,17 @@ public class ClientUtils {
 				}
 			}
 		};
-		PaneWrapperWithObjects view = cvf.createBeanView(model, editable,
-				inDialog ? closeWrapper : pal, false, true);
+		PermissibleActionListener closeListener = inDialog ? closeWrapper : pal;
+		view.addVetoableActionListener(closeListener);
 		view.addStyleName("pwo-center-buttons");
-		if (!editable && inDialog) {
-			OkCancelPanel sp = new OkCancelPanel("OK", view, false);
-			view.add(sp);
+		if (withOk) {
+			OkCancelPanel okCancelPanel = new OkCancelPanel("OK", view,
+					withCancel);
+			view.add(okCancelPanel);
+			if (withOk && withCancel) {
+				view.setOkButton(okCancelPanel.getOkButton());
+				view.setFireOkButtonClickAsOkActionEvent(true);
+			}
 		}
 		List<Binding> bindings = view.getBoundWidget().getBinding()
 				.getChildren();

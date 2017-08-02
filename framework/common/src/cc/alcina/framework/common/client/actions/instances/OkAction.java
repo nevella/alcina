@@ -15,13 +15,13 @@
 package cc.alcina.framework.common.client.actions.instances;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.provider.TextProvider;
 
 /**
  *
  * @author Nick Reddel
  */
-
  public class OkAction extends PermissibleAction {
 	 public static final OkAction INSTANCE=new OkAction();
 	@Override
