@@ -34,7 +34,7 @@ public class MemcacheSearcher {
 
 	private static Map<Class, MemcacheDefinitionHandler> definitionHandlers = new LinkedHashMap<>();
 
-	private static void setupHandlers() {
+	private static synchronized void setupHandlers() {
 		if (handlers.isEmpty()) {
 			List<MemcacheCriterionHandler> impls = Registry
 					.impls(MemcacheCriterionHandler.class);
