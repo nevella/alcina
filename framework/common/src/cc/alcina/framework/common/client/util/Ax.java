@@ -45,6 +45,9 @@ public class Ax {
 	public static void out(String template, Object... args) {
 		System.out.println(format(template, args));
 	}
+	public static void out(Object o) {
+		System.out.println(o);
+	}
 
 	public static void sysLogHigh(String template, Object... args) {
 		System.out.println(CommonUtils.highlightForLog(template, args));
