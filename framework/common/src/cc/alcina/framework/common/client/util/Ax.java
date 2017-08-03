@@ -54,4 +54,7 @@ public class Ax {
 	public static void err(String template, Object... args) {
 		System.err.println(format(template, args));
 	}
+	public static String nullSafe(String string) {
+		return string==null?"":string;
+	}
 }
