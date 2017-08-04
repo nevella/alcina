@@ -123,6 +123,16 @@ public class CsvUtils {
 			return csvCols.grid.get(rowIdx).get(getColumnIndex(key));
 		}
 
+		public String set(String key, String value) {
+			ArrayList<String> list = (ArrayList<String>) csvCols.grid
+					.get(rowIdx);
+			int columnIndex = getColumnIndex(key);
+			for (; list.size() <= columnIndex;) {
+				list.add("");
+			}
+			return list.set(columnIndex, value);
+		}
+
 		private int getColumnIndex(String key) {
 			Integer index = csvCols.colLookup.get(key);
 			if (index != null) {
@@ -207,6 +217,22 @@ public class CsvUtils {
 		@Override
 		public CsvRow next() {
 			return new CsvRow(this, idx++);
+		}
+		
+		public CsvRow addRow(){
+			grid.add(new ArrayList<String>());
+			return next();
+		}
+
+		public void addColumn(String string) {
+			colLookup.put(string, colLookup.size());
+			colLookup.forEach((k, v) -> colLcLookup.put(k.toLowerCase(), v));
+		}
+
+		public String toCsv() {
+			return headerValuesToCsv(
+					colLookup.keySet().stream().collect(Collectors.toList()),
+					grid.subList(1, grid.size())).toString();
 		}
 	}
 }
