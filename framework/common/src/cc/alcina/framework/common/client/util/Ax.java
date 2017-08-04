@@ -45,6 +45,7 @@ public class Ax {
 	public static void out(String template, Object... args) {
 		System.out.println(format(template, args));
 	}
+
 	public static void out(Object o) {
 		System.out.println(o);
 	}
@@ -64,7 +65,7 @@ public class Ax {
 	public static AxStreams streams = new AxStreams();
 
 	public static class AxStreams {
-		public  <T> Function<T, T> visit(Consumer<T> consumer) {
+		public <T> Function<T, T> visit(Consumer<T> consumer) {
 			return t -> {
 				consumer.accept(t);
 				return t;
@@ -72,8 +73,7 @@ public class Ax {
 		}
 	}
 
-
 	public static String nullSafe(String string) {
-		return string==null?"":string;
+		return string == null ? "" : string;
 	}
 }
