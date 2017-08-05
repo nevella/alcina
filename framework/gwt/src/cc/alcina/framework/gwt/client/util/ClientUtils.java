@@ -274,14 +274,14 @@ public class ClientUtils {
 				false, true);
 		return createEditContentViewWidgets(pal, caption, messageHtml, view,
 				false, hideOnClick, inDialog, !editable && inDialog, false,
-				"OK");
+				"OK", "Cancel");
 	}
 
 	public static EditContentViewWidgets createEditContentViewWidgets(
 			final PermissibleActionListener pal, String caption,
 			String messageHtml, PaneWrapperWithObjects view, boolean noGlass,
 			boolean hideOnClick, boolean inDialog, boolean withOk,
-			boolean withCancel, String okButtonName) {
+			boolean withCancel, String okButtonName, String cancelButtonName) {
 		FlowPanel fp = new FlowPanel();
 		final GlassDialogBox gdb = new GlassDialogBox();
 		if (noGlass) {
@@ -302,8 +302,8 @@ public class ClientUtils {
 		view.addVetoableActionListener(closeListener);
 		view.addStyleName("pwo-center-buttons");
 		if (withOk) {
-			OkCancelPanel okCancelPanel = new OkCancelPanel("OK", view,
-					withCancel);
+			OkCancelPanel okCancelPanel = new OkCancelPanel(okButtonName,
+					cancelButtonName, view, withCancel, false);
 			view.add(okCancelPanel);
 			if (withOk && withCancel) {
 				view.setOkButton(okCancelPanel.getOkButton());

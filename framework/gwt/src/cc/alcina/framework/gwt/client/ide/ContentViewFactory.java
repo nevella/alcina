@@ -734,8 +734,11 @@ public class ContentViewFactory {
 				boolean hasCancel) {
 			this(okButtonName, clickHandler, hasCancel, false);
 		}
-
 		public OkCancelPanel(String okButtonName, ClickHandler clickHandler,
+				boolean hasCancel, boolean toolbarButtonStyle) {
+			this(okButtonName, "Cancel", clickHandler, hasCancel, toolbarButtonStyle);
+		}
+		public OkCancelPanel(String okButtonName,String cancelButtonName, ClickHandler clickHandler,
 				boolean hasCancel, boolean toolbarButtonStyle) {
 			this.toolbarButtonStyle = toolbarButtonStyle;
 			FlowPanel fp = this;
@@ -745,7 +748,7 @@ public class ContentViewFactory {
 			fp.add(okButton);
 			if (hasCancel) {
 				fp.add(UsefulWidgetFactory.createSpacer(2));
-				this.cancelButton = createButton("Cancel");
+				this.cancelButton = createButton(cancelButtonName);
 				((HasClickHandlers) cancelButton).addClickHandler(clickHandler);
 				fp.add(cancelButton);
 			}

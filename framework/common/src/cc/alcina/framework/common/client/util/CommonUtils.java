@@ -1089,7 +1089,7 @@ public class CommonUtils {
 
 	public static double roundNumeric(double d, int places) {
 		int multiplier = 1;
-		//cos Math.round((1.005 ) * 100) / 100 = 1, not 1.01
+		// cos Math.round((1.005 ) * 100) / 100 = 1, not 1.01
 		double pad = 0.0001;
 		for (int i = 0; i < places; i++) {
 			multiplier *= 10;
@@ -1547,5 +1547,9 @@ public class CommonUtils {
 
 	public static Object last(Object[] array) {
 		return array.length == 0 ? null : array[array.length - 1];
+	}
+
+	public static Date cloneDate(Date date) {
+		return date == null ? null : new Date(date.getTime());
 	}
 }

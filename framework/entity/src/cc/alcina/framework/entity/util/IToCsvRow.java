@@ -10,17 +10,24 @@ import java.util.stream.Collectors;
 public interface IToCsvRow<T> extends Function<T, List<String>> {
 	List<String> headers();
 
-	default  void setCustom(Object custom) {
+	default void setCustom(Object custom) {
 	}
 
-	default List<ArrayList<String>> doConvert(List<T> objects){
-		return (List) objects
-		.stream().map(r -> apply(r))
-		.collect(Collectors.toList());
+	default List<ArrayList<String>> doConvert(List<T> objects,
+			boolean withTotals) {
+		List list = (List) objects.stream().map(r -> apply(r))
+				.collect(Collectors.toList());
+		if (withTotals) {
+			doTotal(objects, list);
+		}
+		return list;
 	}
 
-	default String suggestFileName(String prefix){
+	default void doTotal(List<T> objects, List list) {
+	}
+
+	default String suggestFileName(String prefix) {
 		SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd-hhmmss");
-		return String.format("%s-%s", prefix,df.format(new Date()));
+		return String.format("%s-%s", prefix, df.format(new Date()));
 	}
 }

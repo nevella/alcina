@@ -132,8 +132,15 @@ public class LocalDomBridge {
 		while (element.domImpl == null) {
 			chain.add(element);
 			element = element.getParentElement();
+			// nix with localdom2
+			if (element == null) {
+				// bail
+				break;
+			}
 		}
-		chain.add(element);
+		if (element != null) {
+			chain.add(element);
+		}
 		// don't go to zero (children of this elt)
 		for (int idx = chain.size() - 1; idx >= 1; idx--) {
 			Element withDom = chain.get(idx);
@@ -216,6 +223,7 @@ public class LocalDomBridge {
 	LocalDomImpl localDomImpl;
 
 	Map<DomElement, DomElement> createdLocals;
+
 	List<DomElement> createdLocalValues = new ArrayList<>();
 
 	ScheduledCommand flushCommand = null;
@@ -253,7 +261,7 @@ public class LocalDomBridge {
 	}
 
 	public void createdLocalElement(DomElement local) {
-		createdLocals.put(local,local);
+		createdLocals.put(local, local);
 		createdLocalValues.add(local);
 		ensureFlush();
 	}

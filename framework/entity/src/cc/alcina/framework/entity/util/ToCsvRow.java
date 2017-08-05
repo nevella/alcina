@@ -17,57 +17,6 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 
 	private String prefix = "";
 
-	public String getPrefix() {
-		return this.prefix;
-	}
-
-	public void setPrefix(String prefix) {
-		this.prefix = prefix;
-	}
-
-	class Mapping {
-		String propertyPath;
-
-		Function<T, Object> function;
-
-		String alias;
-
-		PropertyPathAccessor accessor;
-
-		public Mapping(String propertyPath, String alias,
-				Function<T, Object> function) {
-			this.propertyPath = propertyPath;
-			this.alias = alias;
-			this.function = function;
-			accessor = new PropertyPathAccessor(propertyPath);
-		}
-
-		@Override
-		public String toString() {
-			return CommonUtils.formatJ("Path: %s - alias: %s - function: %s",
-					propertyPath, alias, function);
-		}
-	}
-
-	protected void define(String propertyPath) {
-		define(propertyPath, null, null);
-	}
-
-	protected void defineMultiple(String... paths) {
-		for (String path : paths) {
-			define(path);
-		}
-	}
-
-	protected void define(String propertyPath, String alias) {
-		define(propertyPath, alias, null);
-	}
-
-	protected void define(String propertyPath, String alias,
-			Function<T, Object> function) {
-		mappings.add(new Mapping(propertyPath, alias, function));
-	}
-
 	@Override
 	public List<String> apply(T t) {
 		List<String> result = new ArrayList<>();
@@ -83,11 +32,54 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 		return result;
 	}
 
+	public String getPrefix() {
+		return this.prefix;
+	}
+
 	@Override
 	public List<String> headers() {
-		return mappings.stream()
-				.map(m -> prefix + (m.alias != null ? m.alias : m.propertyPath))
+		return mappings.stream().map(m -> prefix + (m.getName()))
 				.collect(Collectors.toList());
+	}
+
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
+	}
+
+	private int getHeaderIndex(String headerName) {
+		int idx = 0;
+		for (Mapping mapping : mappings) {
+			if (mapping.nameIs(headerName)) {
+				return idx;
+			}
+			idx++;
+		}
+		return -1;
+	}
+
+	protected void setTotalValue(List list, String headerName, String value) {
+		int index = getHeaderIndex(headerName);
+		List<String> row = (List<String>) list.get(list.size() - 1);
+		row.set(index, value);
+	}
+
+	protected void define(String propertyPath) {
+		define(propertyPath, null, null);
+	}
+
+	protected void define(String propertyPath, String alias) {
+		define(propertyPath, alias, null);
+	}
+
+	protected void define(String propertyPath, String alias,
+			Function<T, Object> function) {
+		mappings.add(new Mapping(propertyPath, alias, function));
+	}
+
+	protected void defineChildWithMultiple(String prefix, String... paths) {
+		for (String path : paths) {
+			define(String.format("%s.%s", prefix, path));
+		}
 	}
 
 	protected void defineChildWithPrefix(Class clazz, String prefix,
@@ -109,9 +101,47 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 		}
 	}
 
-	protected void defineChildWithMultiple(String prefix, String... paths) {
+	protected void defineMultiple(String... paths) {
 		for (String path : paths) {
-			define(String.format("%s.%s", prefix, path));
+			define(path);
+		}
+	}
+
+	protected void generateTotalRow(List list) {
+		List<String> totalRow = new ArrayList<>();
+		mappings.forEach(m -> totalRow.add(""));
+		list.add(totalRow);
+	}
+
+	class Mapping {
+		String propertyPath;
+
+		Function<T, Object> function;
+
+		String alias;
+
+		PropertyPathAccessor accessor;
+
+		public Mapping(String propertyPath, String alias,
+				Function<T, Object> function) {
+			this.propertyPath = propertyPath;
+			this.alias = alias;
+			this.function = function;
+			accessor = new PropertyPathAccessor(propertyPath);
+		}
+
+		public String getName() {
+			return alias != null ? alias : propertyPath;
+		}
+
+		public boolean nameIs(String headerName) {
+			return getName().equals(headerName);
+		}
+
+		@Override
+		public String toString() {
+			return CommonUtils.formatJ("Path: %s - alias: %s - function: %s",
+					propertyPath, alias, function);
 		}
 	}
 }

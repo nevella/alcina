@@ -1,13 +1,18 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+
 public class Ax {
+	public static AxStreams streams = new AxStreams();
+
 	public static String blankTo(String string, String defaultValue) {
 		return isBlank(string) ? defaultValue : string;
 	}
@@ -15,6 +20,14 @@ public class Ax {
 	public static String blankTo(String string,
 			Supplier<String> defaultValueSupplier) {
 		return isBlank(string) ? defaultValueSupplier.get() : string;
+	}
+
+	public static  String dateSlash(Date date) {
+		return CommonUtils.formatDate(date, DateStyle.AU_DATE_SLASH);
+	}
+
+	public static void err(String template, Object... args) {
+		System.err.println(format(template, args));
 	}
 
 	public static <T> Optional<T> first(Collection<T> collection) {
@@ -29,40 +42,36 @@ public class Ax {
 	public static String friendly(Object o) {
 		return CommonUtils.friendlyConstant(o);
 	}
-
 	public static boolean isBlank(String string) {
 		return CommonUtils.isNullOrEmpty(string);
 	}
-
 	public static <T> T last(List<T> list) {
 		return CommonUtils.last(list);
-	}
-
-	public static boolean notBlank(String string) {
-		return !isBlank(string);
-	}
-
-	public static void out(String template, Object... args) {
-		System.out.println(format(template, args));
-	}
-
-	public static void out(Object o) {
-		System.out.println(o);
-	}
-
-	public static void sysLogHigh(String template, Object... args) {
-		System.out.println(CommonUtils.highlightForLog(template, args));
 	}
 
 	public static void newlineDump(Collection collection) {
 		System.out.println(CommonUtils.joinWithNewlines(collection));
 	}
 
-	public static void err(String template, Object... args) {
-		System.err.println(format(template, args));
+	public static boolean notBlank(String string) {
+		return !isBlank(string);
 	}
 
-	public static AxStreams streams = new AxStreams();
+	public static String nullSafe(String string) {
+		return string == null ? "" : string;
+	}
+
+	public static void out(Object o) {
+		System.out.println(o);
+	}
+
+	public static void out(String template, Object... args) {
+		System.out.println(format(template, args));
+	}
+
+	public static void sysLogHigh(String template, Object... args) {
+		System.out.println(CommonUtils.highlightForLog(template, args));
+	}
 
 	public static class AxStreams {
 		public <T> Function<T, T> visit(Consumer<T> consumer) {
@@ -71,9 +80,5 @@ public class Ax {
 				return t;
 			};
 		}
-	}
-
-	public static String nullSafe(String string) {
-		return string == null ? "" : string;
 	}
 }

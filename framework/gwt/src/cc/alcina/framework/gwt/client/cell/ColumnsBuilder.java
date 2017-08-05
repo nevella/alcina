@@ -26,7 +26,6 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
 public class ColumnsBuilder<T> {
 	private AbstractCellTable<T> table;
 
-	@SuppressWarnings("unused")
 	private Class<T> clazz;
 
 	private List<String> columnsFilter = null;
@@ -36,6 +35,8 @@ public class ColumnsBuilder<T> {
 	private boolean edit;
 
 	private Map<SortableColumn, ColumnBuilder> built = new LinkedHashMap<>();
+
+	private ColumnTotaller<T> totaller;
 
 	public ColumnsBuilder(AbstractCellTable<T> table, Class<T> clazz) {
 		this.table = table;
@@ -66,6 +67,11 @@ public class ColumnsBuilder<T> {
 		return this;
 	}
 
+	public ColumnsBuilder columnTotaller(ColumnTotaller<T> totaller) {
+		this.totaller = totaller;
+		return this;
+	}
+
 	public ColumnsBuilder editable(boolean edit) {
 		this.edit = edit;
 		return this;
@@ -79,6 +85,10 @@ public class ColumnsBuilder<T> {
 	public Comparator<T> getComparator(Column<?, ?> column) {
 		ColumnBuilder columnBuilder = built.get(column);
 		return Comparator.comparing(columnBuilder.sortFunction);
+	}
+
+	public ColumnTotaller<T> getTotaller() {
+		return this.totaller;
 	}
 
 	public class ColumnBuilder {
@@ -131,13 +141,14 @@ public class ColumnsBuilder<T> {
 						.orElse(new PropertyTextCell());
 				editInfo.fieldUpdater = fieldUpdater != null ? fieldUpdater
 						: new PropertyFieldUpdater(editablePropertyName);
+				function = new PropertyFieldGetter(editablePropertyName, clazz);
 			}
 			if (function == null) {
 				function = (Function) sortFunction;
 			}
 			SortableColumn<T> col = new SortableColumn<T>(function,
 					sortFunction, nativeComparator, styleFunction, editInfo,
-					cell, name);
+					cell, name, ColumnsBuilder.this);
 			built.put(col, this);
 			// don't add if filtered
 			if (columnsFilter == null
@@ -243,6 +254,14 @@ public class ColumnsBuilder<T> {
 		}
 	}
 
+	public interface ColumnTotaller<T> {
+		List<T> getList();
+
+		Object getTotalValue(String columnName);
+
+		boolean isTotalRow(T t);
+	}
+
 	public static class SortableColumn<T> extends Column<T, Object> {
 		private Function<T, Comparable> sortFunction;
 
@@ -258,11 +277,13 @@ public class ColumnsBuilder<T> {
 
 		private String name;
 
+		private ColumnsBuilder columnsBuilder;
+
 		public SortableColumn(Function<T, Object> function,
 				Function<T, Comparable> sortFunction,
 				DirectedComparator nativeComparator,
 				Function<T, String> styleFunction, EditInfo editInfo, Cell cell,
-				String name) {
+				String name, ColumnsBuilder columnsBuilder) {
 			super(cell != null ? cell : editInfo.cell);
 			this.function = function;
 			this.sortFunction = sortFunction;
@@ -271,6 +292,7 @@ public class ColumnsBuilder<T> {
 			this.editInfo = editInfo;
 			this.cell = cell;
 			this.name = name;
+			this.columnsBuilder = columnsBuilder;
 			if (editInfo.fieldUpdater != null) {
 				setFieldUpdater(editInfo.fieldUpdater);
 			}
@@ -301,7 +323,16 @@ public class ColumnsBuilder<T> {
 		@Override
 		public Object getValue(T t) {
 			try {
-				Object value = function.apply(t);
+				Object value = null;
+				if (columnsBuilder.totaller != null) {
+					if (columnsBuilder.totaller.isTotalRow(t)) {
+						value = columnsBuilder.totaller.getTotalValue(name);
+					} else {
+						value = function.apply(t);
+					}
+				} else {
+					value = function.apply(t);
+				}
 				if (cell == null
 						&& editInfo.cell.getClass() == TextCell.class) {
 					value = value == null ? null : value.toString();

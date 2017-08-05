@@ -37,7 +37,7 @@ public class DoubleValidator implements Validator {
     public static final DoubleValidator INSTANCE = new DoubleValidator();
     
     /** Creates a new instance of DoubleValidator */
-    private DoubleValidator() {
+    public DoubleValidator() {
     }
 
     public Object validate(Object value) throws ValidationException {
