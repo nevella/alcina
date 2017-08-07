@@ -25,7 +25,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.dom.client.NodeList;
-import com.google.gwt.dom.client.Node_Jso;
+import com.google.gwt.dom.client.NodeRemote;
 import com.google.gwt.http.client.UrlBuilder;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
@@ -450,7 +450,7 @@ public class ClientUtils {
 	}
 
 	public static void dumpElementTree(Element elt) {
-		Node_Jso jso = elt.ensureJso();
+		NodeRemote jso = elt.ensureJso();
 		while (jso != null) {
 			System.out
 					.println(Ax.format("dump - %s - %s", jso.hashCode(), jso));

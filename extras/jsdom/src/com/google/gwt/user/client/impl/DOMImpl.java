@@ -18,7 +18,7 @@ package com.google.gwt.user.client.impl;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Element_Jso;
+import com.google.gwt.dom.client.ElementRemote;
 import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
@@ -31,23 +31,23 @@ public abstract class DOMImpl {
   protected static boolean eventSystemIsInitialized;
 
 	public static EventListener getEventListener(Element elem) {
-		Element_Jso elementJso = LocalDomBridge.elementJso(elem);
+		ElementRemote elementJso = LocalDomBridge.elementJso(elem);
 		return elementJso == null ? null : getEventListener0(elementJso);
 	}
-  private static native EventListener getEventListener0(Element_Jso elem) /*-{
+  private static native EventListener getEventListener0(ElementRemote elem) /*-{
     // Return elem.__listener if and only if it was assigned from our module
     var maybeListener = elem.__listener;
     return @com.google.gwt.user.client.impl.DOMImpl::isMyListener(*)(maybeListener) ? maybeListener : null;
   }-*/;
   public static  void setEventListener(Element elem, EventListener listener){
-	  Element_Jso elementJso = LocalDomBridge.elementJso(elem,false);
+	  ElementRemote elementJso = LocalDomBridge.elementJso(elem,false);
 	  if(elementJso!=null){
 		  setEventListener0(elementJso, listener);
 	  }else{
 		  elem.uiObjectListener = listener;
 	  }
   }
-  private static native void setEventListener0(Element_Jso elem, EventListener listener) /*-{
+  private static native void setEventListener0(ElementRemote elem, EventListener listener) /*-{
     elem.__listener = listener;
   }-*/;
 
@@ -170,13 +170,13 @@ public abstract class DOMImpl {
   public abstract int getChildIndex(Element parent, Element child);
   public  int getEventsSunk(Element elem) {
 	  if(elem.provideIsDom()){
-		  Element_Jso elementJso = LocalDomBridge.elementJso(elem);
+		  ElementRemote elementJso = LocalDomBridge.elementJso(elem);
 		  return getEventsSunk0(elementJso);
 	  }else{
 		  return elem.localEventBitsSunk();
 	  }
   }
-  native int getEventsSunk0(Element_Jso elem) /*-{
+  native int getEventsSunk0(ElementRemote elem) /*-{
     return elem.__eventBits || 0;
   }-*/;
 

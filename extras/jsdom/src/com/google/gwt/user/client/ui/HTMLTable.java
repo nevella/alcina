@@ -23,7 +23,7 @@ import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Element_Jso;
+import com.google.gwt.dom.client.ElementRemote;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.TableCellElement;
@@ -72,11 +72,11 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment.VerticalAlignmentConst
 public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		HasAllDragAndDropHandlers, HasClickHandlers, HasDoubleClickHandlers {
 	static class ElementArray<T extends Node> {
-		private JsArray<Element_Jso> jsArray;
+		private JsArray<ElementRemote> jsArray;
 
 		private NodeList<? extends Element> nodeList;
 
-		public ElementArray(JsArray<Element_Jso> elements) {
+		public ElementArray(JsArray<ElementRemote> elements) {
 			this.jsArray = elements;
 		}
 
@@ -107,11 +107,11 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 * Standard implementation for accessing the Table DOM.
 	 */
 	private static class HTMLTableStandardImpl implements HTMLTableImpl {
-		native JsArray<Element_Jso> getRows0(Element_Jso tbody) /*-{
+		native JsArray<ElementRemote> getRows0(ElementRemote tbody) /*-{
             return tbody.rows;
 		}-*/;
 
-		native JsArray<Element_Jso> getCells0(Element_Jso row) /*-{
+		native JsArray<ElementRemote> getCells0(ElementRemote row) /*-{
             return row.cells;
 		}-*/;
 
@@ -143,11 +143,11 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 */
 	@SuppressWarnings("unused") // used due to rebinding
 	private static class HTMLTableIEImpl extends HTMLTableStandardImpl {
-		native JsArray<Element_Jso> getRows0(Element_Jso tbody) /*-{
+		native JsArray<ElementRemote> getRows0(ElementRemote tbody) /*-{
             return tbody.children;
 		}-*/;
 
-		native JsArray<Element_Jso> getCells0(Element_Jso row) /*-{
+		native JsArray<ElementRemote> getCells0(ElementRemote row) /*-{
             return row.children;
 		}-*/;
 	}

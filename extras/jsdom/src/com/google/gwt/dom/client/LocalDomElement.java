@@ -1,9 +1,7 @@
 package com.google.gwt.dom.client;
 
-import java.util.List;
 import java.util.Optional;
 
-import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
@@ -12,11 +10,11 @@ public interface LocalDomElement extends LocalDomNode {
 		Optional<LocalDomNode> optional = localDomChildren().stream()
 				.filter(n -> n.getNodeName().equals(tagName)).findFirst();
 		if (optional.isPresent()) {
-			return LocalDomBridge.nodeFor((Node_Jvm) optional.get());
+			return LocalDomBridge.nodeFor((NodeLocal) optional.get());
 		}
 		LocalDomElement newElement = create(tagName);
-		appendChild(LocalDomBridge.nodeFor((Node_Jvm) newElement));
-		return LocalDomBridge.nodeFor((Node_Jvm) newElement);
+		appendChild(LocalDomBridge.nodeFor((NodeLocal) newElement));
+		return LocalDomBridge.nodeFor((NodeLocal) newElement);
 	}
 
 	LocalDomElement create(String tagName);

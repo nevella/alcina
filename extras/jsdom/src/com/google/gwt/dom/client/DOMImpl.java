@@ -15,12 +15,11 @@
  */
 package com.google.gwt.dom.client;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 
 abstract class DOMImpl {
-	static final LocalDomImpl impl = new LocalDomImpl();
+	static final DomDispatch impl = new DomDispatch();
 //	static final DOMImpl impl = GWT.create(DOMImpl.class);
 
 	/**
@@ -37,7 +36,7 @@ abstract class DOMImpl {
 	protected static native int toInt32(double val) /*-{
         return val | 0;
 	}-*/;
-	protected native Node_Jso createButtonElement(Document_Jso doc,
+	protected native NodeRemote createButtonElement(DocumentRemote doc,
 			String type) /*-{
         var e = doc.createElement("BUTTON");
         e.type = type;
@@ -45,71 +44,71 @@ abstract class DOMImpl {
 	}-*/;
 
 
-	protected native Element_Jso createCheckInputElement(Document_Jso doc) /*-{
+	protected native ElementRemote createCheckInputElement(DocumentRemote doc) /*-{
         var e = doc.createElement("INPUT");
         e.type = 'checkbox';
         e.value = 'on';
         return e;
 	}-*/;
 
-	protected native Element_Jso createElement(Document_Jso doc, String tag) /*-{
+	protected native ElementRemote createElement(DocumentRemote doc, String tag) /*-{
         return doc.createElement(tag);
 	}-*/;
-	protected native Element_Jso createTextNode(Document_Jso doc, String data) /*-{
+	protected native ElementRemote createTextNode(DocumentRemote doc, String data) /*-{
     return doc.createTextNode(data);
 }-*/;
 
-	protected abstract NativeEvent createHtmlEvent(Document_Jso doc, String type,
+	protected abstract NativeEvent createHtmlEvent(DocumentRemote doc, String type,
 			boolean canBubble, boolean cancelable);
 
-	protected native Element_Jso createInputElement(Document_Jso doc,
+	protected native ElementRemote createInputElement(DocumentRemote doc,
 			String type) /*-{
         var e = doc.createElement("INPUT");
         e.type = type;
         return e;
 	}-*/;
 
-	protected abstract Element_Jso createInputRadioElement(Document_Jso doc,
+	protected abstract ElementRemote createInputRadioElement(DocumentRemote doc,
 			String name);
 
-	protected abstract NativeEvent createKeyCodeEvent(Document_Jso doc,
+	protected abstract NativeEvent createKeyCodeEvent(DocumentRemote doc,
 			String type, boolean ctrlKey, boolean altKey, boolean shiftKey,
 			boolean metaKey, int keyCode);
 
 	@Deprecated
-	protected abstract NativeEvent createKeyEvent(Document_Jso doc, String type,
+	protected abstract NativeEvent createKeyEvent(DocumentRemote doc, String type,
 			boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode);
 
-	protected abstract NativeEvent createKeyPressEvent(Document_Jso doc,
+	protected abstract NativeEvent createKeyPressEvent(DocumentRemote doc,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int charCode);
 
-	protected abstract NativeEvent createMouseEvent(Document_Jso doc, String type,
+	protected abstract NativeEvent createMouseEvent(DocumentRemote doc, String type,
 			boolean canBubble, boolean cancelable, int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
-			Element_Jso relatedTarget);
+			ElementRemote relatedTarget);
 
-	protected ScriptElement createScriptElement(Document_Jso doc, String source) {
+	protected ScriptElement createScriptElement(DocumentRemote doc, String source) {
 		ScriptElement elem = nodeFor(createElement(doc, "script"));
 		elem.setText(source);
 		return elem;
 	}
 
-	protected native void cssClearOpacity(Style_Jso style) /*-{
+	protected native void cssClearOpacity(StyleRemote style) /*-{
         style.opacity = '';
 	}-*/;
 	protected String cssFloatPropertyName() {
 		return "cssFloat";
 	}
 
-	protected native void cssSetOpacity(Style_Jso style, double value) /*-{
+	protected native void cssSetOpacity(StyleRemote style, double value) /*-{
         style.opacity = value;
 	}-*/;
 
-	protected abstract void dispatchEvent(Element_Jso target, NativeEvent evt);
+	protected abstract void dispatchEvent(ElementRemote target, NativeEvent evt);
 
 	protected native boolean eventGetAltKey(NativeEvent evt) /*-{
         return !!evt.altKey;
@@ -198,23 +197,23 @@ abstract class DOMImpl {
 
 	protected abstract String eventToString(NativeEvent evt);
 
-	protected int getAbsoluteLeft(Element_Jso elem) {
+	protected int getAbsoluteLeft(ElementRemote elem) {
 		return toInt32(getSubPixelAbsoluteLeft(elem));
 	}
 
-	protected int getAbsoluteTop(Element_Jso elem) {
+	protected int getAbsoluteTop(ElementRemote elem) {
 		return toInt32(getSubPixelAbsoluteTop(elem));
 	}
 
-	protected native String getAttribute(Element_Jso elem, String name) /*-{
+	protected native String getAttribute(ElementRemote elem, String name) /*-{
         return elem.getAttribute(name) || '';
 	}-*/;
 
-	protected native int getBodyOffsetLeft(Document_Jso doc) /*-{
+	protected native int getBodyOffsetLeft(DocumentRemote doc) /*-{
         return 0;
 	}-*/;
 
-	protected native int getBodyOffsetTop(Document_Jso doc) /*-{
+	protected native int getBodyOffsetTop(DocumentRemote doc) /*-{
         return 0;
 	}-*/;
 
@@ -222,25 +221,25 @@ abstract class DOMImpl {
         return evt.changedTouches;
 	}-*/;
 
-	protected native Element_Jso getFirstChildElement(Element_Jso elem) /*-{
+	protected native ElementRemote getFirstChildElement(ElementRemote elem) /*-{
         var child = elem.firstChild;
         while (child && child.nodeType != 1)
             child = child.nextSibling;
         return child;
 	}-*/;
 
-	protected native String getInnerHTML(Element_Jso elem) /*-{
+	protected native String getInnerHTML(ElementRemote elem) /*-{
         return elem.innerHTML;
 	}-*/;
 
-	protected native String getInnerText(Element_Jso node) /*-{
+	protected native String getInnerText(ElementRemote node) /*-{
         // To mimic IE's 'innerText' property in the W3C DOM, we need to recursively
         // concatenate all child Text_Dom nodes (depth first).
         var text = '', child = node.firstChild;
         while (child) {
             // 1 == Element_Dom Node_Dom
             if (child.nodeType == 1) {
-                text += this.@com.google.gwt.dom.client.DOMImpl::getInnerText(Lcom/google/gwt/dom/client/Element_Jso;)(child);
+                text += this.@com.google.gwt.dom.client.DOMImpl::getInnerText(Lcom/google/gwt/dom/client/ElementRemote;)(child);
             } else if (child.nodeValue) {
                 text += child.nodeValue;
             }
@@ -249,14 +248,14 @@ abstract class DOMImpl {
         return text;
 	}-*/;
 
-	protected native Element_Jso getNextSiblingElement(Element_Jso elem) /*-{
+	protected native ElementRemote getNextSiblingElement(ElementRemote elem) /*-{
         var sib = elem.nextSibling;
         while (sib && sib.nodeType != 1)
             sib = sib.nextSibling;
         return sib;
 	}-*/;
 
-	protected native int getNodeType(Node_Jso node) /*-{
+	protected native int getNodeType(NodeRemote node) /*-{
         return node.nodeType;
 	}-*/;
 
@@ -264,11 +263,11 @@ abstract class DOMImpl {
 	 * Returns a numeric style property (such as zIndex) that may need to be
 	 * coerced to a string.
 	 */
-	protected String getNumericStyleProperty(Style_Jso style, String name) {
+	protected String getNumericStyleProperty(StyleRemote style, String name) {
 		return getStyleProperty(style, name);
 	}
 
-	protected native Element_Jso getParentElement(Node_Jso node) /*-{
+	protected native ElementRemote getParentElement(NodeRemote node) /*-{
         var parent = node.parentNode;
         if (!parent || parent.nodeType != 1) {
             parent = null;
@@ -276,34 +275,34 @@ abstract class DOMImpl {
         return parent;
 	}-*/;
 
-	protected native Element_Jso getPreviousSiblingElement(Element_Jso elem) /*-{
+	protected native ElementRemote getPreviousSiblingElement(ElementRemote elem) /*-{
         var sib = elem.previousSibling;
         while (sib && sib.nodeType != 1)
             sib = sib.previousSibling;
         return sib;
 	}-*/;
 
-	protected int getScrollLeft(Document_Jso doc) {
+	protected int getScrollLeft(DocumentRemote doc) {
 		return doc.getViewportElement().getScrollLeft();
 	}
 
-	protected int getScrollLeft(Element_Jso elem) {
+	protected int getScrollLeft(ElementRemote elem) {
 		return toInt32(getSubPixelScrollLeft(elem));
 	}
 
-	protected int getScrollTop(Document_Jso doc) {
+	protected int getScrollTop(DocumentRemote doc) {
 		return doc.getViewportElement().getScrollTop();
 	}
 
-	protected native String getStyleProperty(Style_Jso style, String name) /*-{
+	protected native String getStyleProperty(StyleRemote style, String name) /*-{
         return style[name];
 	}-*/;
 
-	protected native int getTabIndex(Element_Jso elem) /*-{
+	protected native int getTabIndex(ElementRemote elem) /*-{
         return elem.tabIndex;
 	}-*/;
 
-	protected native String getTagName(Element_Jso elem) /*-{
+	protected native String getTagName(ElementRemote elem) /*-{
         return elem.tagName;
 	}-*/;
 
@@ -315,13 +314,13 @@ abstract class DOMImpl {
         return evt.touches;
 	}-*/;
 
-	protected native boolean hasAttribute(Element_Jso elem, String name) /*-{
+	protected native boolean hasAttribute(ElementRemote elem, String name) /*-{
         return elem.hasAttribute(name);
 	}-*/;
 
-	protected abstract boolean isOrHasChild(Node_Jso parent, Node_Jso child);
+	protected abstract boolean isOrHasChild(NodeRemote parent, NodeRemote child);
 
-	protected native void scrollIntoView(Element_Jso elem) /*-{
+	protected native void scrollIntoView(ElementRemote elem) /*-{
         var left = elem.offsetLeft, top = elem.offsetTop;
         var width = elem.offsetWidth, height = elem.offsetHeight;
 
@@ -357,34 +356,34 @@ abstract class DOMImpl {
         }
 	}-*/;
 
-	protected native void selectAdd(Element_Jso select, Element_Jso option,
-			Element_Jso before) /*-{
+	protected native void selectAdd(ElementRemote select, ElementRemote option,
+			ElementRemote before) /*-{
         select.add(option, before);
 	}-*/;
 
-	protected native void selectClear(Element_Jso select) /*-{
+	protected native void selectClear(ElementRemote select) /*-{
         select.options.length = 0;
 	}-*/;
 
-	protected native int selectGetLength(Element_Jso select) /*-{
+	protected native int selectGetLength(ElementRemote select) /*-{
         return select.options.length;
 	}-*/;
 
 	protected native NodeList<OptionElement>
-			selectGetOptions(Element_Jso select) /*-{
+			selectGetOptions(ElementRemote select) /*-{
 		var out=@com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/DomNodeList;)(select.options);
         return out;
 	}-*/;
 
-	protected native void selectRemoveOption(Element_Jso domImpl, int index) /*-{
+	protected native void selectRemoveOption(ElementRemote domImpl, int index) /*-{
         select.remove(index);
 	}-*/;
 
-	protected native void setDraggable(Element_Jso elem, String draggable) /*-{
+	protected native void setDraggable(ElementRemote elem, String draggable) /*-{
         elem.draggable = draggable;
 	}-*/;
 
-	protected native void setInnerText(Element_Jso elem, String text) /*-{
+	protected native void setInnerText(ElementRemote elem, String text) /*-{
         // Remove all children first.
         while (elem.firstChild) {
             elem.removeChild(elem.firstChild);
@@ -395,19 +394,19 @@ abstract class DOMImpl {
         }
 	}-*/;
 
-	protected void setScrollLeft(Document_Jso doc, int left) {
+	protected void setScrollLeft(DocumentRemote doc, int left) {
 		doc.getViewportElement().setScrollLeft(left);
 	}
 
-	protected native void setScrollLeft(Element_Jso elem, int left) /*-{
+	protected native void setScrollLeft(ElementRemote elem, int left) /*-{
         elem.scrollLeft = left;
 	}-*/;
 
-	protected void setScrollTop(Document_Jso doc, int top) {
+	protected void setScrollTop(DocumentRemote doc, int top) {
 		doc.getViewportElement().setScrollTop(top);
 	}
 
-	protected native String toString(Element_Jso elem) /*-{
+	protected native String toString(ElementRemote elem) /*-{
         return elem.outerHTML;
 	}-*/;
 
@@ -463,7 +462,7 @@ abstract class DOMImpl {
         return evt.screenY || 0;
 	}-*/;
 
-	private native double getSubPixelAbsoluteLeft(Element_Jso elem) /*-{
+	private native double getSubPixelAbsoluteLeft(ElementRemote elem) /*-{
         var left = 0;
         var curr = elem;
         // This intentionally excludes body which has a null offsetParent.
@@ -478,7 +477,7 @@ abstract class DOMImpl {
         return left;
 	}-*/;
 
-	private native double getSubPixelAbsoluteTop(Element_Jso elem) /*-{
+	private native double getSubPixelAbsoluteTop(ElementRemote elem) /*-{
         var top = 0;
         var curr = elem;
         // This intentionally excludes body which has a null offsetParent.
@@ -493,7 +492,7 @@ abstract class DOMImpl {
         return top;
 	}-*/;
 
-	private native double getSubPixelScrollLeft(Element_Jso elem) /*-{
+	private native double getSubPixelScrollLeft(ElementRemote elem) /*-{
         return elem.scrollLeft || 0;
 	}-*/;
 
@@ -521,10 +520,10 @@ abstract class DOMImpl {
         return touch.screenY || 0;
 	}-*/;
 
-	protected native void buttonClick(Element_Jso button) /*-{
+	protected native void buttonClick(ElementRemote button) /*-{
         button.click();
 	}-*/;
-	protected <N extends Node> N nodeFor(Node_Jso node_dom) {
+	protected <N extends Node> N nodeFor(NodeRemote node_dom) {
 		return LocalDomBridge.nodeFor(node_dom);
 	}
 	

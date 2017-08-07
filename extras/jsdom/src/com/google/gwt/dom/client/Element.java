@@ -89,7 +89,7 @@ public class Element extends Node implements DomElement {
 			}
 		} else if (o instanceof JavaScriptObject) {
 			JavaScriptObject jso = (JavaScriptObject) o;
-			return Element_Jso.is(jso);
+			return ElementRemote.is(jso);
 		} else {
 			return o instanceof Element;
 		}
@@ -108,7 +108,7 @@ public class Element extends Node implements DomElement {
 
 	DomElement localImpl;
 
-	Element_Jso domImpl;
+	ElementRemote domImpl;
 
 	public UIObject uiObject;
 
@@ -174,11 +174,11 @@ public class Element extends Node implements DomElement {
 		}
 	}
 
-	public Element_Jso ensureJso() {
+	public ElementRemote ensureJso() {
 		return ensureDomImpl().domImpl;
 	}
 
-	public Element_Jso ensureJsoNoFlush() {
+	public ElementRemote ensureJsoNoFlush() {
 		if (domImpl != null) {
 			return domImpl;
 		}
@@ -431,7 +431,7 @@ public class Element extends Node implements DomElement {
 		return impl().getTitle();
 	}
 
-	public Element_Jso getdomImpl() {
+	public ElementRemote getdomImpl() {
 		return domImpl;
 	}
 
@@ -477,7 +477,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	public int localEventBitsSunk() {
-		return ((Element_Jvm) impl).eventBits;
+		return ((ElementLocal) impl).eventBits;
 	}
 
 	public DomElement localImpl() {
@@ -512,8 +512,8 @@ public class Element extends Node implements DomElement {
 	}
 
 	@Override
-	public void putDomImpl(Node_Jso nodeDom) {
-		domImpl = (Element_Jso) nodeDom;
+	public void putDomImpl(NodeRemote nodeDom) {
+		domImpl = (ElementRemote) nodeDom;
 		if (nodeDom != null) {
 			if (domImpl.getId().length() > 0) {
 				String localId = localImpl() != null ? localImpl().getId() : "";
@@ -546,9 +546,9 @@ public class Element extends Node implements DomElement {
 				} else {
 					if (this.impl.getNodeType() == Node.ELEMENT_NODE) {
 						// FIXME - pushbutton requires this (rather than a fail)
-						Preconditions.checkState(((Element_Jso) this.impl)
+						Preconditions.checkState(((ElementRemote) this.impl)
 								.getInnerHTML0()
-								.equals(((Element_Jso) impl).getInnerHTML0()));
+								.equals(((ElementRemote) impl).getInnerHTML0()));
 					}
 				}
 				// orphan - to handle direct html writing of UiBinder
@@ -765,7 +765,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	@Override
-	Node_Jso domImpl() {
+	NodeRemote domImpl() {
 		return domImpl;
 	}
 

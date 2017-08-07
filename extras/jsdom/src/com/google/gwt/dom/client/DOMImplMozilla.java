@@ -81,7 +81,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }
 
   @Override
-  protected native void buttonClick(Element_Jso button) /*-{
+  protected native void buttonClick(ElementRemote button) /*-{
     var doc = button.ownerDocument;
     if (doc != null) {
       var evt = doc.createEvent('MouseEvents');
@@ -92,7 +92,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }-*/;
 
   @Override
-  protected NativeEvent createKeyCodeEvent(Document_Jso doc, String type,
+  protected NativeEvent createKeyCodeEvent(DocumentRemote doc, String type,
       boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
       int keyCode) {
     return createKeyEventImpl(doc, type, true, true, ctrlKey, altKey, shiftKey,
@@ -101,7 +101,7 @@ class DOMImplMozilla extends DOMImplStandard {
 
   @Override
   @Deprecated
-  protected NativeEvent createKeyEvent(Document_Jso doc, String type,
+  protected NativeEvent createKeyEvent(DocumentRemote doc, String type,
       boolean canBubble, boolean cancelable, boolean ctrlKey, boolean altKey,
       boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
     return createKeyEventImpl(doc, type, canBubble, cancelable, ctrlKey,
@@ -109,7 +109,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }
 
   @Override
-  protected NativeEvent createKeyPressEvent(Document_Jso doc, boolean ctrlKey,
+  protected NativeEvent createKeyPressEvent(DocumentRemote doc, boolean ctrlKey,
       boolean altKey, boolean shiftKey, boolean metaKey, int charCode) {
     return createKeyEventImpl(doc, "keypress", true, true, ctrlKey, altKey,
         shiftKey, metaKey, 0, charCode);
@@ -138,19 +138,19 @@ class DOMImplMozilla extends DOMImplStandard {
   }-*/;
 
   @Override
-  protected int getAbsoluteLeft(Element_Jso elem) {
+  protected int getAbsoluteLeft(ElementRemote elem) {
     return getAbsoluteLeftImpl(elem.getOwnerDocument().getViewportElement().domImpl,
         elem);
   }
 
   @Override
-  protected int getAbsoluteTop(Element_Jso elem) {
+  protected int getAbsoluteTop(ElementRemote elem) {
     return getAbsoluteTopImpl(elem.getOwnerDocument().getViewportElement().domImpl,
         elem);
   }
 
   @Override
-  protected native int getBodyOffsetLeft(Document_Jso doc) /*-{
+  protected native int getBodyOffsetLeft(DocumentRemote doc) /*-{
     var style = $wnd.getComputedStyle(doc.documentElement, null);
     if (style == null) {
       // Works around https://bugzilla.mozilla.org/show_bug.cgi?id=548397
@@ -160,7 +160,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }-*/;
 
   @Override
-  protected native int getBodyOffsetTop(Document_Jso doc) /*-{
+  protected native int getBodyOffsetTop(DocumentRemote doc) /*-{
     var style = $wnd.getComputedStyle(doc.documentElement, null);
     if (style == null) {
       // Works around https://bugzilla.mozilla.org/show_bug.cgi?id=548397
@@ -170,7 +170,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }-*/;
 
   @Override
-  protected native int getNodeType(Node_Jso node) /*-{
+  protected native int getNodeType(NodeRemote node) /*-{
     try {
       return node.nodeType;
     } catch (e) {
@@ -185,7 +185,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }-*/;
 
   @Override
-  protected int getScrollLeft(Element_Jso elem) {
+  protected int getScrollLeft(ElementRemote elem) {
     if (!isGecko19() && isRTL(elem)) {
       return super.getScrollLeft(elem)
           - (elem.getScrollWidth() - elem.getClientWidth());
@@ -194,14 +194,14 @@ class DOMImplMozilla extends DOMImplStandard {
   }
 
   @Override
-  protected native boolean isOrHasChild(Node_Jso parent, Node_Jso child) /*-{
+  protected native boolean isOrHasChild(NodeRemote parent, NodeRemote child) /*-{
     // For more information about compareDocumentPosition, see:
     // http://www.quirksmode.org/blog/archives/2006/01/contains_for_mo.html
     return (parent === child) || !!(parent.compareDocumentPosition(child) & 16);
   }-*/;
 
   @Override
-  protected void setScrollLeft(Element_Jso elem, int left) {
+  protected void setScrollLeft(ElementRemote elem, int left) {
     if (!isGecko19() && isRTL(elem)) {
       left += elem.getScrollWidth() - elem.getClientWidth();
     }
@@ -209,7 +209,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }
 
   @Override
-  protected native String toString(Element_Jso elem) /*-{
+  protected native String toString(ElementRemote elem) /*-{
     // Basic idea is to use the innerHTML property by copying the Node_Dom into a
     // div and getting the innerHTML
     var doc = elem.ownerDocument;
@@ -221,7 +221,7 @@ class DOMImplMozilla extends DOMImplStandard {
     return outer;
   }-*/;
 
-  private native NativeEvent createKeyEventImpl(Document_Jso doc, String type,
+  private native NativeEvent createKeyEventImpl(DocumentRemote doc, String type,
       boolean canBubble, boolean cancelable, boolean ctrlKey, boolean altKey,
       boolean shiftKey, boolean metaKey, int keyCode, int charCode) /*-{
     var evt = doc.createEvent('KeyboardEvent');
@@ -238,7 +238,7 @@ class DOMImplMozilla extends DOMImplStandard {
     return evt;
   }-*/;
 
-  private native int getAbsoluteLeftImpl(Element_Jso viewport, Element_Jso elem) /*-{
+  private native int getAbsoluteLeftImpl(ElementRemote viewport, ElementRemote elem) /*-{
     // Firefox 3 is actively throwing errors when getBoxObjectFor() is called,
     // so we use getBoundingClientRect() whenever possible (but it's not
     // supported on older versions). If changing this code, make sure to check
@@ -260,7 +260,7 @@ class DOMImplMozilla extends DOMImplStandard {
     }
   }-*/;
 
-  private native int getAbsoluteTopImpl(Element_Jso viewport, Element_Jso elem) /*-{
+  private native int getAbsoluteTopImpl(ElementRemote viewport, ElementRemote elem) /*-{
     // Firefox 3 is actively throwing errors when getBoxObjectFor() is called,
     // so we use getBoundingClientRect() whenever possible (but it's not
     // supported on older versions). If changing this code, make sure to check
@@ -280,7 +280,7 @@ class DOMImplMozilla extends DOMImplStandard {
     }
   }-*/;
 
-  private native boolean isRTL(Element_Jso elem) /*-{
+  private native boolean isRTL(ElementRemote elem) /*-{
     var style = elem.ownerDocument.defaultView.getComputedStyle(elem, null);
     return style.direction == 'rtl';
   }-*/;

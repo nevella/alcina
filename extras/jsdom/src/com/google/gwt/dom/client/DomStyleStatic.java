@@ -25,7 +25,7 @@ import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.dom.client.Style.WhiteSpace;
 import com.google.gwt.safehtml.shared.annotations.IsSafeUri;
 
-class DomStyle_Static {
+class DomStyleStatic {
 	/**
 	 * Clear the background-color css property.
 	 */
@@ -1103,7 +1103,7 @@ class DomStyle_Static {
 		return domStyle.getPropertyImpl(name);
 	}
 
-	static String getPropertyImpl(Style_Jso style_Dom, String name) {
+	static String getPropertyImpl(StyleRemote style_Dom, String name) {
 		// FIXME - more direct call maybe
 		return DOMImpl.impl.getStyleProperty(
 				LocalDomBridge.styleObjectFor(style_Dom), name);

@@ -15,7 +15,6 @@
  */
 package com.google.gwt.dom.client;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 
 /**
@@ -26,12 +25,10 @@ import com.google.gwt.core.client.JavascriptObjectEquivalent;
 public class Document extends Node implements DomDocument {
 	private static Document doc;
 
-	public static Document create(DomDocument localImpl) {
+	public static Document create(DomDocument local) {
 		Document doc = new Document();
-		Document_Jso jsoDoc = Document_Jso.get();
-		doc.putDomImpl(jsoDoc);
-		doc.putImpl(jsoDoc);
-		doc.localImpl = localImpl;
+		doc.local = local;
+		doc.remote = DocumentRemote.get();
 		return doc;
 	}
 
@@ -44,281 +41,279 @@ public class Document extends Node implements DomDocument {
 	public static Document get() {
 		// No need to be MT-safe. Single-threaded JS code.
 		if (doc == null) {
-			doc = create(new Document_Jvm());
+			doc = create(new DocumentLocal());
 			LocalDomBridge.register(doc);
 		}
 		return doc;
 	}
 
-	DomDocument impl;
+	DomDocument local;
 
-	Document_Jso domImpl;
+	DomDocument remote;
 
-	DomDocument localImpl;
+	public DocumentRemote castRemote() {
+		return (DocumentRemote) remote;
+	}
 
 	protected Document() {
 	}
 
 	public <T extends Node> T appendChild(T newChild) {
-		return impl.appendChild(newChild);
+		return local.appendChild(newChild);
 	}
 
 	public Document cast() {
 		return this;
 	}
 
-	public <T extends DomDocument> T castLocalImpl() {
-		return (T) localImpl;
-	}
-
 	public Node cloneNode(boolean deep) {
-		return impl.cloneNode(deep);
+		return local.cloneNode(deep);
 	}
 
 	public AnchorElement createAnchorElement() {
-		return impl.createAnchorElement();
+		return local.createAnchorElement();
 	}
 
 	public AreaElement createAreaElement() {
-		return impl.createAreaElement();
+		return local.createAreaElement();
 	}
 
 	public AudioElement createAudioElement() {
-		return impl.createAudioElement();
+		return local.createAudioElement();
 	}
 
 	public BaseElement createBaseElement() {
-		return impl.createBaseElement();
+		return local.createBaseElement();
 	}
 
 	public QuoteElement createBlockQuoteElement() {
-		return impl.createBlockQuoteElement();
+		return local.createBlockQuoteElement();
 	}
 
 	public NativeEvent createBlurEvent() {
-		return impl.createBlurEvent();
+		return local.createBlurEvent();
 	}
 
 	public BRElement createBRElement() {
-		return impl.createBRElement();
+		return local.createBRElement();
 	}
 
 	public ButtonElement createButtonElement() {
-		return impl.createButtonElement();
+		return local.createButtonElement();
 	}
 
 	public InputElement createButtonInputElement() {
-		return impl.createButtonInputElement();
+		return local.createButtonInputElement();
 	}
 
 	public CanvasElement createCanvasElement() {
-		return impl.createCanvasElement();
+		return local.createCanvasElement();
 	}
 
 	public TableCaptionElement createCaptionElement() {
-		return impl.createCaptionElement();
+		return local.createCaptionElement();
 	}
 
 	public NativeEvent createChangeEvent() {
-		return impl.createChangeEvent();
+		return local.createChangeEvent();
 	}
 
 	public InputElement createCheckInputElement() {
-		return impl.createCheckInputElement();
+		return local.createCheckInputElement();
 	}
 
 	public NativeEvent createClickEvent(int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey) {
-		return impl.createClickEvent(detail, screenX, screenY, clientX,
+		return local.createClickEvent(detail, screenX, screenY, clientX,
 				clientY, ctrlKey, altKey, shiftKey, metaKey);
 	}
 
 	public TableColElement createColElement() {
-		return impl.createColElement();
+		return local.createColElement();
 	}
 
 	public TableColElement createColGroupElement() {
-		return impl.createColGroupElement();
+		return local.createColGroupElement();
 	}
 
 	public NativeEvent createContextMenuEvent() {
-		return impl.createContextMenuEvent();
+		return local.createContextMenuEvent();
 	}
 
 	public NativeEvent createDblClickEvent(int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey) {
-		return impl.createDblClickEvent(detail, screenX, screenY, clientX,
+		return local.createDblClickEvent(detail, screenX, screenY, clientX,
 				clientY, ctrlKey, altKey, shiftKey, metaKey);
 	}
 
 	public ModElement createDelElement() {
-		return impl.createDelElement();
+		return local.createDelElement();
 	}
 
 	public DivElement createDivElement() {
-		return impl.createDivElement();
+		return local.createDivElement();
 	}
 
 	public DListElement createDLElement() {
-		return impl.createDLElement();
+		return local.createDLElement();
 	}
 
 	public Element createElement(String tagName) {
-		return impl.createElement(tagName);
+		return local.createElement(tagName);
 	}
 
 	public NativeEvent createErrorEvent() {
-		return impl.createErrorEvent();
+		return local.createErrorEvent();
 	}
 
 	public FieldSetElement createFieldSetElement() {
-		return impl.createFieldSetElement();
+		return local.createFieldSetElement();
 	}
 
 	public InputElement createFileInputElement() {
-		return impl.createFileInputElement();
+		return local.createFileInputElement();
 	}
 
 	public NativeEvent createFocusEvent() {
-		return impl.createFocusEvent();
+		return local.createFocusEvent();
 	}
 
 	public FormElement createFormElement() {
-		return impl.createFormElement();
+		return local.createFormElement();
 	}
 
 	public FrameElement createFrameElement() {
-		return impl.createFrameElement();
+		return local.createFrameElement();
 	}
 
 	public FrameSetElement createFrameSetElement() {
-		return impl.createFrameSetElement();
+		return local.createFrameSetElement();
 	}
 
 	public HeadElement createHeadElement() {
-		return impl.createHeadElement();
+		return local.createHeadElement();
 	}
 
 	public HeadingElement createHElement(int n) {
-		return impl.createHElement(n);
+		return local.createHElement(n);
 	}
 
 	public InputElement createHiddenInputElement() {
-		return impl.createHiddenInputElement();
+		return local.createHiddenInputElement();
 	}
 
 	public HRElement createHRElement() {
-		return impl.createHRElement();
+		return local.createHRElement();
 	}
 
 	public NativeEvent createHtmlEvent(String type, boolean canBubble,
 			boolean cancelable) {
-		return impl.createHtmlEvent(type, canBubble, cancelable);
+		return local.createHtmlEvent(type, canBubble, cancelable);
 	}
 
 	public IFrameElement createIFrameElement() {
-		return impl.createIFrameElement();
+		return local.createIFrameElement();
 	}
 
 	public ImageElement createImageElement() {
-		return impl.createImageElement();
+		return local.createImageElement();
 	}
 
 	public InputElement createImageInputElement() {
-		return impl.createImageInputElement();
+		return local.createImageInputElement();
 	}
 
 	public NativeEvent createInputEvent() {
-		return impl.createInputEvent();
+		return local.createInputEvent();
 	}
 
 	public ModElement createInsElement() {
-		return impl.createInsElement();
+		return local.createInsElement();
 	}
 
 	public NativeEvent createKeyCodeEvent(String type, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode) {
-		return impl.createKeyCodeEvent(type, ctrlKey, altKey, shiftKey,
+		return local.createKeyCodeEvent(type, ctrlKey, altKey, shiftKey,
 				metaKey, keyCode);
 	}
 
 	public NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode) {
-		return impl.createKeyDownEvent(ctrlKey, altKey, shiftKey, metaKey,
+		return local.createKeyDownEvent(ctrlKey, altKey, shiftKey, metaKey,
 				keyCode);
 	}
 
 	public NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return impl.createKeyDownEvent(ctrlKey, altKey, shiftKey, metaKey,
+		return local.createKeyDownEvent(ctrlKey, altKey, shiftKey, metaKey,
 				keyCode, charCode);
 	}
 
 	public NativeEvent createKeyEvent(String type, boolean canBubble,
 			boolean cancelable, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return impl.createKeyEvent(type, canBubble, cancelable, ctrlKey,
+		return local.createKeyEvent(type, canBubble, cancelable, ctrlKey,
 				altKey, shiftKey, metaKey, keyCode, charCode);
 	}
 
 	public NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int charCode) {
-		return impl.createKeyPressEvent(ctrlKey, altKey, shiftKey, metaKey,
+		return local.createKeyPressEvent(ctrlKey, altKey, shiftKey, metaKey,
 				charCode);
 	}
 
 	public NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return impl.createKeyPressEvent(ctrlKey, altKey, shiftKey, metaKey,
+		return local.createKeyPressEvent(ctrlKey, altKey, shiftKey, metaKey,
 				keyCode, charCode);
 	}
 
 	public NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode) {
-		return impl.createKeyUpEvent(ctrlKey, altKey, shiftKey, metaKey,
+		return local.createKeyUpEvent(ctrlKey, altKey, shiftKey, metaKey,
 				keyCode);
 	}
 
 	public NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return impl.createKeyUpEvent(ctrlKey, altKey, shiftKey, metaKey,
+		return local.createKeyUpEvent(ctrlKey, altKey, shiftKey, metaKey,
 				keyCode, charCode);
 	}
 
 	public LabelElement createLabelElement() {
-		return impl.createLabelElement();
+		return local.createLabelElement();
 	}
 
 	public LegendElement createLegendElement() {
-		return impl.createLegendElement();
+		return local.createLegendElement();
 	}
 
 	public LIElement createLIElement() {
-		return impl.createLIElement();
+		return local.createLIElement();
 	}
 
 	public LinkElement createLinkElement() {
-		return impl.createLinkElement();
+		return local.createLinkElement();
 	}
 
 	public NativeEvent createLoadEvent() {
-		return impl.createLoadEvent();
+		return local.createLoadEvent();
 	}
 
 	public MapElement createMapElement() {
-		return impl.createMapElement();
+		return local.createMapElement();
 	}
 
 	public MetaElement createMetaElement() {
-		return impl.createMetaElement();
+		return local.createMetaElement();
 	}
 
 	public NativeEvent createMouseDownEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		return impl.createMouseDownEvent(detail, screenX, screenY, clientX,
+		return local.createMouseDownEvent(detail, screenX, screenY, clientX,
 				clientY, ctrlKey, altKey, shiftKey, metaKey, button);
 	}
 
@@ -327,7 +322,7 @@ public class Document extends Node implements DomDocument {
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return impl.createMouseEvent(type, canBubble, cancelable, detail,
+		return local.createMouseEvent(type, canBubble, cancelable, detail,
 				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
 				metaKey, button, relatedTarget);
 	}
@@ -335,7 +330,7 @@ public class Document extends Node implements DomDocument {
 	public NativeEvent createMouseMoveEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		return impl.createMouseMoveEvent(detail, screenX, screenY, clientX,
+		return local.createMouseMoveEvent(detail, screenX, screenY, clientX,
 				clientY, ctrlKey, altKey, shiftKey, metaKey, button);
 	}
 
@@ -343,7 +338,7 @@ public class Document extends Node implements DomDocument {
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return impl.createMouseOutEvent(detail, screenX, screenY, clientX,
+		return local.createMouseOutEvent(detail, screenX, screenY, clientX,
 				clientY, ctrlKey, altKey, shiftKey, metaKey, button,
 				relatedTarget);
 	}
@@ -352,7 +347,7 @@ public class Document extends Node implements DomDocument {
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return impl.createMouseOverEvent(detail, screenX, screenY, clientX,
+		return local.createMouseOverEvent(detail, screenX, screenY, clientX,
 				clientY, ctrlKey, altKey, shiftKey, metaKey, button,
 				relatedTarget);
 	}
@@ -360,392 +355,384 @@ public class Document extends Node implements DomDocument {
 	public NativeEvent createMouseUpEvent(int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int button) {
-		return impl.createMouseUpEvent(detail, screenX, screenY, clientX,
+		return local.createMouseUpEvent(detail, screenX, screenY, clientX,
 				clientY, ctrlKey, altKey, shiftKey, metaKey, button);
 	}
 
 	public ObjectElement createObjectElement() {
-		return impl.createObjectElement();
+		return local.createObjectElement();
 	}
 
 	public OListElement createOLElement() {
-		return impl.createOLElement();
+		return local.createOLElement();
 	}
 
 	public OptGroupElement createOptGroupElement() {
-		return impl.createOptGroupElement();
+		return local.createOptGroupElement();
 	}
 
 	public OptionElement createOptionElement() {
-		return impl.createOptionElement();
+		return local.createOptionElement();
 	}
 
 	public ParamElement createParamElement() {
-		return impl.createParamElement();
+		return local.createParamElement();
 	}
 
 	public InputElement createPasswordInputElement() {
-		return impl.createPasswordInputElement();
+		return local.createPasswordInputElement();
 	}
 
 	public ParagraphElement createPElement() {
-		return impl.createPElement();
+		return local.createPElement();
 	}
 
 	public PreElement createPreElement() {
-		return impl.createPreElement();
+		return local.createPreElement();
 	}
 
 	public ButtonElement createPushButtonElement() {
-		return impl.createPushButtonElement();
+		return local.createPushButtonElement();
 	}
 
 	public QuoteElement createQElement() {
-		return impl.createQElement();
+		return local.createQElement();
 	}
 
 	public InputElement createRadioInputElement(String name) {
-		return impl.createRadioInputElement(name);
+		return local.createRadioInputElement(name);
 	}
 
 	public ButtonElement createResetButtonElement() {
-		return impl.createResetButtonElement();
+		return local.createResetButtonElement();
 	}
 
 	public InputElement createResetInputElement() {
-		return impl.createResetInputElement();
+		return local.createResetInputElement();
 	}
 
 	public ScriptElement createScriptElement() {
-		return impl.createScriptElement();
+		return local.createScriptElement();
 	}
 
 	public ScriptElement createScriptElement(String source) {
-		return impl.createScriptElement(source);
+		return local.createScriptElement(source);
 	}
 
 	public NativeEvent createScrollEvent() {
-		return impl.createScrollEvent();
+		return local.createScrollEvent();
 	}
 
 	public SelectElement createSelectElement() {
-		return impl.createSelectElement();
+		return local.createSelectElement();
 	}
 
 	public SelectElement createSelectElement(boolean multiple) {
-		return impl.createSelectElement(multiple);
+		return local.createSelectElement(multiple);
 	}
 
 	public SourceElement createSourceElement() {
-		return impl.createSourceElement();
+		return local.createSourceElement();
 	}
 
 	public SpanElement createSpanElement() {
-		return impl.createSpanElement();
+		return local.createSpanElement();
 	}
 
 	public StyleElement createStyleElement() {
-		return impl.createStyleElement();
+		return local.createStyleElement();
 	}
 
 	public ButtonElement createSubmitButtonElement() {
-		return impl.createSubmitButtonElement();
+		return local.createSubmitButtonElement();
 	}
 
 	public InputElement createSubmitInputElement() {
-		return impl.createSubmitInputElement();
+		return local.createSubmitInputElement();
 	}
 
 	public TableElement createTableElement() {
-		return impl.createTableElement();
+		return local.createTableElement();
 	}
 
 	public TableSectionElement createTBodyElement() {
-		return impl.createTBodyElement();
+		return local.createTBodyElement();
 	}
 
 	public TableCellElement createTDElement() {
-		return impl.createTDElement();
+		return local.createTDElement();
 	}
 
 	public TextAreaElement createTextAreaElement() {
-		return impl.createTextAreaElement();
+		return local.createTextAreaElement();
 	}
 
 	public InputElement createTextInputElement() {
-		return impl.createTextInputElement();
+		return local.createTextInputElement();
 	}
 
 	public Text createTextNode(String data) {
-		return impl.createTextNode(data);
+		return local.createTextNode(data);
 	}
 
 	public TableSectionElement createTFootElement() {
-		return impl.createTFootElement();
+		return local.createTFootElement();
 	}
 
 	public TableSectionElement createTHeadElement() {
-		return impl.createTHeadElement();
+		return local.createTHeadElement();
 	}
 
 	public TableCellElement createTHElement() {
-		return impl.createTHElement();
+		return local.createTHElement();
 	}
 
 	public TitleElement createTitleElement() {
-		return impl.createTitleElement();
+		return local.createTitleElement();
 	}
 
 	public TableRowElement createTRElement() {
-		return impl.createTRElement();
+		return local.createTRElement();
 	}
 
 	public UListElement createULElement() {
-		return impl.createULElement();
+		return local.createULElement();
 	}
 
 	public String createUniqueId() {
-		return impl.createUniqueId();
+		return local.createUniqueId();
 	}
 
 	public VideoElement createVideoElement() {
-		return impl.createVideoElement();
+		return local.createVideoElement();
+	}
+
+	public void enableScrolling(boolean enable) {
+		remote.enableScrolling(enable);
+	}
+
+	public BodyElement getBody() {
+		return remote.getBody();
+	}
+
+	public int getBodyOffsetLeft() {
+		return remote.getBodyOffsetLeft();
+	}
+
+	public int getBodyOffsetTop() {
+		return remote.getBodyOffsetTop();
+	}
+
+	public Node getChild(int index) {
+		return local.getChild(index);
+	}
+
+	public int getChildCount() {
+		return local.getChildCount();
+	}
+
+	public NodeList<Node> getChildNodes() {
+		return local.getChildNodes();
+	}
+
+	public int getClientHeight() {
+		return remote.getClientHeight();
+	}
+
+	public int getClientWidth() {
+		return remote.getClientWidth();
+	}
+
+	public String getCompatMode() {
+		return remote.getCompatMode();
+	}
+
+	public Element getDocumentElement() {
+		return local.getDocumentElement();
+	}
+
+	public String getDomain() {
+		return remote.getDomain();
+	}
+
+	public Element getElementById(String elementId) {
+		return remote.getElementById(elementId);
+	}
+
+	public NodeList<Element> getElementsByTagName(String tagName) {
+		return remote.getElementsByTagName(tagName);
+	}
+
+	public Node getFirstChild() {
+		return local.getFirstChild();
+	}
+
+	public HeadElement getHead() {
+		return local.getHead();
+	}
+
+	public Node getLastChild() {
+		return local.getLastChild();
+	}
+
+	public Node getNextSibling() {
+		return local.getNextSibling();
+	}
+
+	public String getNodeName() {
+		return local.getNodeName();
+	}
+
+	public short getNodeType() {
+		return local.getNodeType();
+	}
+
+	public String getNodeValue() {
+		return local.getNodeValue();
+	}
+
+	public Document getOwnerDocument() {
+		return null;
+	}
+
+	public Element getParentElement() {
+		return null;
+	}
+
+	public Node getParentNode() {
+		return null;
+	}
+
+	public Node getPreviousSibling() {
+		return null;
+	}
+
+	public String getReferrer() {
+		return remote.getReferrer();
+	}
+
+	public int getScrollHeight() {
+		return remote.getScrollHeight();
+	}
+
+	public int getScrollLeft() {
+		return remote.getScrollLeft();
+	}
+
+	public int getScrollTop() {
+		return remote.getScrollTop();
+	}
+
+	public int getScrollWidth() {
+		return remote.getScrollWidth();
+	}
+
+	public String getTitle() {
+		return remote.getTitle();
+	}
+
+	public String getURL() {
+		return remote.getURL();
+	}
+
+	public Element getViewportElement() {
+		return remote.getViewportElement();
+	}
+
+	public boolean hasChildNodes() {
+		return local.hasChildNodes();
+	}
+
+	public boolean hasParentElement() {
+		return false;
+	}
+
+	public void importNode(Node node, boolean deep) {
+		local.importNode(node, deep);
+		remote.importNode(node, deep);
+	}
+
+	public Node insertAfter(Node newChild, Node refChild) {
+		Node result = local.insertAfter(newChild, refChild);
+		remote.insertAfter(newChild, refChild);
+		return result;
+	}
+
+	public Node insertBefore(Node newChild, Node refChild) {
+		Node result = local.insertBefore(newChild, refChild);
+		remote.insertBefore(newChild, refChild);
+		return result;
+	}
+
+	public Node insertFirst(Node child) {
+		Node result = local.insertFirst(child);
+		remote.insertFirst(child);
+		return result;
+	}
+
+	public boolean isCSS1Compat() {
+		return remote.isCSS1Compat();
+	}
+
+	public boolean isOrHasChild(Node child) {
+		return local.isOrHasChild(child);
+	}
+
+	@Override
+	public void putRemote(NodeRemote nodeDom) {
+		throw new UnsupportedOperationException();
+	}
+
+	public Node removeChild(Node oldChild) {
+		Node result = local.removeChild(oldChild);
+		remote.removeChild(oldChild);
+		return result;
+	}
+
+	public void removeFromParent() {
+		throw new UnsupportedOperationException();
+	}
+
+	public Node replaceChild(Node newChild, Node oldChild) {
+		Node result = local.replaceChild(newChild, oldChild);
+		remote.replaceChild(newChild, oldChild);
+		return result;
+	}
+
+	public void setNodeValue(String nodeValue) {
+		throw new UnsupportedOperationException();
+	}
+
+	public void setScrollLeft(int left) {
+		remote.setScrollLeft(left);
+	}
+
+	public void setScrollTop(int top) {
+		remote.setScrollTop(top);
+	}
+
+	public void setTitle(String title) {
+		remote.setTitle(title);
+	}
+
+	@Override
+	public Node nodeFor() {
+		return this;
 	}
 
 	@Override
 	public Document documentFor() {
-		return nodeFor();
-	}
-
-	public void enableScrolling(boolean enable) {
-		impl.enableScrolling(enable);
-	}
-
-	public BodyElement getBody() {
-		return impl.getBody();
-	}
-
-	public int getBodyOffsetLeft() {
-		return impl.getBodyOffsetLeft();
-	}
-
-	public int getBodyOffsetTop() {
-		return impl.getBodyOffsetTop();
-	}
-
-	public Node getChild(int index) {
-		return impl.getChild(index);
-	}
-
-	public int getChildCount() {
-		return impl.getChildCount();
-	}
-
-	public NodeList<Node> getChildNodes() {
-		return impl.getChildNodes();
-	}
-
-	public int getClientHeight() {
-		return impl.getClientHeight();
-	}
-
-	public int getClientWidth() {
-		return impl.getClientWidth();
-	}
-
-	public String getCompatMode() {
-		return impl.getCompatMode();
-	}
-
-	public Element getDocumentElement() {
-		return impl.getDocumentElement();
-	}
-
-	public String getDomain() {
-		return impl.getDomain();
-	}
-
-	public Element getElementById(String elementId) {
-		return impl.getElementById(elementId);
-	}
-
-	public NodeList<Element> getElementsByTagName(String tagName) {
-		return impl.getElementsByTagName(tagName);
-	}
-
-	public Node getFirstChild() {
-		return impl.getFirstChild();
-	}
-
-	public HeadElement getHead() {
-		return impl.getHead();
-	}
-
-	public Node getLastChild() {
-		return impl.getLastChild();
-	}
-
-	public Node getNextSibling() {
-		return impl.getNextSibling();
-	}
-
-	public String getNodeName() {
-		return impl.getNodeName();
-	}
-
-	public short getNodeType() {
-		return impl.getNodeType();
-	}
-
-	public String getNodeValue() {
-		return impl.getNodeValue();
-	}
-
-	public Document getOwnerDocument() {
-		return impl.getOwnerDocument();
-	}
-
-	public Element getParentElement() {
-		return impl.getParentElement();
-	}
-
-	public Node getParentNode() {
-		return impl.getParentNode();
-	}
-
-	public Node getPreviousSibling() {
-		return impl.getPreviousSibling();
-	}
-
-	public String getReferrer() {
-		return impl.getReferrer();
-	}
-
-	public int getScrollHeight() {
-		return impl.getScrollHeight();
-	}
-
-	public int getScrollLeft() {
-		return impl.getScrollLeft();
-	}
-
-	public int getScrollTop() {
-		return impl.getScrollTop();
-	}
-
-	public int getScrollWidth() {
-		return impl.getScrollWidth();
-	}
-
-	public String getTitle() {
-		return impl.getTitle();
-	}
-
-	public String getURL() {
-		return impl.getURL();
-	}
-
-	public Element getViewportElement() {
-		return impl.getViewportElement();
-	}
-
-	public boolean hasChildNodes() {
-		return impl.hasChildNodes();
-	}
-
-	public boolean hasParentElement() {
-		return impl.hasParentElement();
-	}
-
-	public void importNode(Node node, boolean deep) {
-		impl.importNode(node, deep);
-	}
-
-	public Node insertAfter(Node newChild, Node refChild) {
-		return impl.insertAfter(newChild, refChild);
-	}
-
-	public Node insertBefore(Node newChild, Node refChild) {
-		return impl.insertBefore(newChild, refChild);
-	}
-
-	public Node insertFirst(Node child) {
-		return impl.insertFirst(child);
-	}
-
-	public boolean isCSS1Compat() {
-		return impl.isCSS1Compat();
-	}
-
-	public boolean isOrHasChild(Node child) {
-		return impl.isOrHasChild(child);
-	}
-
-	public Document nodeFor() {
-		return impl.documentFor();
+		return this;
 	}
 
 	@Override
-	public boolean provideIsLocal() {
-		return false;
+	protected DomDocument local() {
+		return local;
 	}
 
 	@Override
-	public void putDomImpl(Node_Jso nodeDom) {
-		domImpl = (Document_Jso) nodeDom;
+	protected DomDocument remote() {
+		return remote;
 	}
 
-	@Override
-	public void putImpl(DomNode impl) {
-		this.impl = (Document_Jso) impl;
-	}
-
-	public Node removeChild(Node oldChild) {
-		return impl.removeChild(oldChild);
-	}
-
-	public void removeFromParent() {
-		impl.removeFromParent();
-	}
-
-	public Node replaceChild(Node newChild, Node oldChild) {
-		return impl.replaceChild(newChild, oldChild);
-	}
-
-	public void setNodeValue(String nodeValue) {
-		impl.setNodeValue(nodeValue);
-	}
-
-	public void setScrollLeft(int left) {
-		impl.setScrollLeft(left);
-	}
-
-	public void setScrollTop(int top) {
-		impl.setScrollTop(top);
-	}
-
-	public void setTitle(String title) {
-		impl.setTitle(title);
-	}
-
-	@Override
-	Document_Jso domImpl() {
-		return domImpl;
-	}
-
-	@Override
-	DomDocument impl() {
-		return domImpl;
-	}
-
-	@Override
-	DomDocument localImpl() {
-		return localImpl;
-	}
-
-
-	@Override
-	DomDocument implNoResolve() {
-		return impl();
-	}
 }

@@ -1,17 +1,15 @@
 package com.google.gwt.dom.client;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArrayString;
-import com.google.gwt.i18n.client.Messages.Offset;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 
 import cc.alcina.framework.common.client.util.StringMap;
 
-public class Element_Jso extends Node_Jso implements DomElement {
+public class ElementRemote extends NodeRemote implements DomElement {
 	/**
 	 * Fast helper method to convert small doubles to 32-bit int.
 	 *
@@ -70,7 +68,7 @@ public class Element_Jso extends Node_Jso implements DomElement {
 	}
 	private static boolean is0(JavaScriptObject o) {
 		
-		if (Node_Jso.is(o)) {
+		if (NodeRemote.is(o)) {
 			return is(nodeFor(o));
 		}
 		return false;
@@ -85,7 +83,7 @@ public class Element_Jso extends Node_Jso implements DomElement {
 		return (node != null) && (node.getNodeType() == Node.ELEMENT_NODE);
 	}
 
-	protected Element_Jso() {
+	protected ElementRemote() {
 	}
 
 	/**
@@ -246,7 +244,7 @@ public class Element_Jso extends Node_Jso implements DomElement {
 	 *            all tags
 	 * @return A list of matching Element nodes
 	 */
-	private final native NodeList_Jso<Element>
+	private final native NodeListRemote<Element>
 			getElementsByTagName0(String name) /*-{
         return this.getElementsByTagName(name);
 	}-*/;
@@ -422,7 +420,7 @@ public class Element_Jso extends Node_Jso implements DomElement {
 	/**
 	 * Gets this element's {@link Style} object.
 	 */
-	final native Style_Jso getStyle0() /*-{
+	final native StyleRemote getStyle0() /*-{
         return this.style;
 	}-*/;
 
@@ -809,7 +807,7 @@ public class Element_Jso extends Node_Jso implements DomElement {
 		throw new UnsupportedOperationException();
 	}
 
-	public final Element_Jso getParentElementJso() {
+	public final ElementRemote getParentElementJso() {
 		return LocalDomBridge.get().localDomImpl.getParentElementJso(this);
 	}
 

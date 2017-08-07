@@ -76,175 +76,143 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
         }
 	}-*/;
 
-	boolean localDomResolutionOnly;
+	protected abstract <T extends DomNode> T local();
 
-	private String nodeName;
-
-	private short nodeType = -1;
+	protected abstract <T extends DomNode> T remote();
 
 	protected Node() {
 	}
 
 	public <T extends Node> T appendChild(T newChild) {
-		T node = this.impl().appendChild(newChild);
-		node.localDomResolutionOnly = localDomResolutionOnly;
+		T node = local().appendChild(newChild);
+		remote().appendChild(newChild);
 		return node;
 	}
 
 	@Override
 	public void callMethod(String methodName) {
-		DomNode_Static.callMethod(this, methodName);
+		DomNodeStatic.callMethod(this, methodName);
 	}
 
 	public abstract <T extends JavascriptObjectEquivalent> T cast();
 
 	public Node cloneNode(boolean deep) {
-		return this.impl().cloneNode(deep);
+		// FIXME - maybe - remote should probably always be resolved (so maybe
+		// ok)
+		return local().cloneNode(deep);
 	}
 
 	@Override
 	public Node getChild(int index) {
-		return DomNode_Static.getChild(this, index);
+		return DomNodeStatic.getChild(this, index);
 	}
 
 	@Override
 	public int getChildCount() {
-		return DomNode_Static.getChildCount(this);
+		return DomNodeStatic.getChildCount(this);
 	}
 
 	public NodeList<Node> getChildNodes() {
-		return this.impl().getChildNodes();
+		return local().getChildNodes();
 	}
 
 	public Node getFirstChild() {
-		return this.impl().getFirstChild();
+		return local().getFirstChild();
 	}
 
 	public Node getLastChild() {
-		return this.impl().getLastChild();
+		return local().getLastChild();
 	}
 
 	public Node getNextSibling() {
-		return this.impl().getNextSibling();
+		return local().getNextSibling();
 	}
 
 	public String getNodeName() {
-		if (nodeName == null) {
-			nodeName = this.impl().getNodeName();
-		}
-		return nodeName;
+		return local().getNodeName();
 	}
 
 	public short getNodeType() {
-		if (nodeType == -1) {
-			nodeType = this.impl().getNodeType();
-		}
-		return nodeType;
+		return local().getNodeType();
 	}
 
 	public String getNodeValue() {
-		return this.impl().getNodeValue();
+		return local().getNodeValue();
 	}
 
 	public Document getOwnerDocument() {
-		return this.impl().getOwnerDocument();
+		return local().getOwnerDocument();
 	}
 
 	public Element getParentElement() {
-		return this.impl().getParentElement();
+		return local().getParentElement();
 	}
 
 	public Node getParentNode() {
-		return this.impl().getParentNode();
+		return local().getParentNode();
 	}
 
 	public Node getPreviousSibling() {
-		return this.impl().getPreviousSibling();
+		return local().getPreviousSibling();
 	}
 
 	public boolean hasChildNodes() {
-		return this.impl().hasChildNodes();
+		return local().hasChildNodes();
 	}
 
 	@Override
 	public boolean hasParentElement() {
-		return DomNode_Static.hasParentElement(this);
+		return DomNodeStatic.hasParentElement(this);
 	}
 
 	@Override
 	public Node insertAfter(Node newChild, Node refChild) {
-		return DomNode_Static.insertAfter(this, newChild, refChild);
+		return DomNodeStatic.insertAfter(this, newChild, refChild);
 	}
 
 	public Node insertBefore(Node newChild, Node refChild) {
-		Node node = this.impl().insertBefore(newChild, refChild);
-		node.localDomResolutionOnly = localDomResolutionOnly;
-		return node;
+		return local().insertBefore(newChild, refChild);
 	}
 
 	@Override
 	public Node insertFirst(Node child) {
-		return DomNode_Static.insertFirst(this, child);
+		return DomNodeStatic.insertFirst(this, child);
 	}
 
 	public boolean isOrHasChild(Node child) {
-		return this.impl().isOrHasChild(child);
-	}
-
-	public void localDomResolutionOnly() {
-		localDomResolutionOnly = true;
-		getChildNodes().forEach(Node::localDomResolutionOnly);
-	}
-
-	public Node nodeFor() {
-		return this;
-	}
-
-	public boolean provideIsDom() {
-		return domImpl() != null;
+		return local().isOrHasChild(child);
 	}
 
 	public boolean provideIsElement() {
 		return getNodeType() == ELEMENT_NODE;
 	}
 
-	public boolean provideIsLocal() {
-		return domImpl() == null || domImpl() != implNoResolve();
-	}
+	protected abstract void putRemote(NodeRemote nodeDom);
 
-	public abstract void putDomImpl(Node_Jso nodeDom);
-
-	public abstract void putImpl(DomNode impl);
 
 	@Override
 	public Node removeAllChildren() {
-		return DomNode_Static.removeAllChildren(this);
+		return DomNodeStatic.removeAllChildren(this);
 	}
 
 	public Node removeChild(Node oldChild) {
-		return this.impl().removeChild(oldChild);
+		Node result = local().removeChild(oldChild);
+		remote().removeChild(oldChild);
+		return result;
 	}
 
 	@Override
 	public void removeFromParent() {
-		DomNode_Static.removeFromParent(this);
+		DomNodeStatic.removeFromParent(this);
 	}
 
 	public Node replaceChild(Node newChild, Node oldChild) {
-		return this.impl().replaceChild(newChild, oldChild);
+		Node result = local().replaceChild(newChild, oldChild);
+		remote().replaceChild(newChild, oldChild);
+		return result;
 	}
 
 	public void setNodeValue(String nodeValue) {
-		this.impl().setNodeValue(nodeValue);
-	}
-
-	abstract Node_Jso domImpl();
-
-	abstract DomNode impl();
-
-	abstract DomNode implNoResolve();
-
-	DomNode localImpl() {
-		return domImpl() != null ? null : implNoResolve();
+		local().setNodeValue(nodeValue);
 	}
 }

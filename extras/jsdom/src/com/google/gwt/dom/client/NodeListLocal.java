@@ -3,16 +3,16 @@ package com.google.gwt.dom.client;
 import java.util.List;
 import java.util.stream.Stream;
 
-class NodeList_Wrapped<T extends Node> implements DomNodeList<T> {
-	private List<T> nodes;
+class NodeListLocal<T extends Node> implements DomNodeList<T> {
+	private List<NodeLocal> nodes;
 
-	NodeList_Wrapped(List<T> nodes) {
+	NodeListLocal(List<NodeLocal> nodes) {
 		this.nodes = nodes;
 	}
 
 	@Override
 	public T getItem(int index) {
-		return (T)nodes.get(index);
+		return (T) LocalDomBridge.nodeFor(nodes.get(index));
 	}
 
 	/**
@@ -25,6 +25,6 @@ class NodeList_Wrapped<T extends Node> implements DomNodeList<T> {
 	}
 	@Override
 	public Stream<T> stream() {
-		return nodes.stream();
+		return DomNodeListStatic.stream0(this);
 	}
 }

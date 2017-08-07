@@ -1,15 +1,12 @@
 package com.google.gwt.dom.client;
 
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
-
-public class Document_Jvm extends Node_Jvm implements DomDocument {
+public class DocumentLocal extends NodeLocal implements DomDocument {
 	@Override
 	public String getNodeName() {
 		return "#document";
 	}
 
-	public Document_Jvm() {
+	public DocumentLocal() {
 	}
 	@Override
 	public short getNodeType() {
@@ -28,8 +25,8 @@ public class Document_Jvm extends Node_Jvm implements DomDocument {
 
 	@Override
 	public Text createTextNode(String data) {
-		Text_Jvm jvmNode = new Text_Jvm(data);
-		return LocalDomBridge.nodeFor(jvmNode);
+		TextLocal local = new TextLocal(data);
+		return new Text(local);
 	}
 
 	@Override
@@ -54,8 +51,8 @@ public class Document_Jvm extends Node_Jvm implements DomDocument {
 		return null;
 	}
 
-	public Element_Jvm createElement_Jvm(String tagName) {
-		return new Element_Jvm(this, tagName);
+	public ElementLocal createElement_Jvm(String tagName) {
+		return new ElementLocal(this, tagName);
 	}
 
 	@Override
@@ -69,7 +66,7 @@ public class Document_Jvm extends Node_Jvm implements DomDocument {
 throw new UnsupportedOperationException();		
 	}
 
-	public Text_Jvm createText_Jvm(String text) {
-		return new Text_Jvm(text);
+	public TextLocal createText_Jvm(String text) {
+		return new TextLocal(text);
 	}
 }

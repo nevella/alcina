@@ -1,7 +1,5 @@
 package com.google.gwt.dom.client;
 
-import com.google.gwt.core.client.SingleJsoImpl;
-
 public interface DomText extends DomNode {
 
 	void deleteData(int offset, int length);

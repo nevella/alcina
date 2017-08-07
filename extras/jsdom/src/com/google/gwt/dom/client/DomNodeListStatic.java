@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
- class DomNodeList_Static {
+ class DomNodeListStatic {
 	static  <T extends Node> Stream<T> stream0(DomNodeList<T> ref){
 		List<T> list = new ArrayList<>();
 		

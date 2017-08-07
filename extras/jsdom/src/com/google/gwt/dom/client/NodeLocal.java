@@ -8,8 +8,8 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public abstract class Node_Jvm implements DomNode, LocalDomNode {
-	static <N extends Node> N nodeFor(Node_Jvm node_jvm) {
+public abstract class NodeLocal implements DomNode, LocalDomNode {
+	static <N extends Node> N nodeFor(NodeLocal node_jvm) {
 		return (N) LocalDomBridge.nodeFor(node_jvm);
 	}
 
@@ -22,17 +22,17 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 		return (List) children;
 	}
 
-	protected Node_Jvm() {
+	protected NodeLocal() {
 	}
 
-	protected List<Node_Jvm> children = new ArrayList<>();
+	protected List<NodeLocal> children = new ArrayList<>();
 
 	protected Map<String, String> attributes = LocalDomBridge.get().collections
 			.createStringMap();
 
-	protected Node_Jvm parentNode;
+	protected NodeLocal parentNode;
 
-	protected Document_Jvm ownerDocument;
+	protected DocumentLocal ownerDocument;
 
 	protected Node node;
 
@@ -46,28 +46,28 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 	public <T extends Node> T appendChild(T newChild) {
 		maybeConvertToLocal(newChild, false);
 		Preconditions
-				.checkArgument(newChild.implNoResolve() instanceof Node_Jvm);
-		children.add((Node_Jvm) newChild.implNoResolve());
-		((Node_Jvm) newChild.implNoResolve()).parentNode = this;
-		LocalDomBridge.debug.added((Node_Jvm) newChild.implNoResolve());
+				.checkArgument(newChild.implNoResolve() instanceof NodeLocal);
+		children.add((NodeLocal) newChild.implNoResolve());
+		((NodeLocal) newChild.implNoResolve()).parentNode = this;
+		LocalDomBridge.debug.added((NodeLocal) newChild.implNoResolve());
 		return newChild;
 	}
 
 	private static <T extends Node> void maybeConvertToLocal(T node,
 			boolean deep) {
-		if (!(node.implNoResolve() instanceof Node_Jvm)) {
+		if (!(node.implNoResolve() instanceof NodeLocal)) {
 			if (node.getNodeType() == Node.TEXT_NODE) {
-				Text_Jso text = (Text_Jso) node.implNoResolve();
-				node.putImpl(new Text_Jvm(text.getData()));
+				TextRemote text = (TextRemote) node.implNoResolve();
+				node.putImpl(new TextLocal(text.getData()));
 			} else {
-				Element_Jso elt = (Element_Jso) node.implNoResolve();
+				ElementRemote elt = (ElementRemote) node.implNoResolve();
 				// must detach all refs to existing nodes
 				LocalDomBridge.get().detachDomNode(elt);
 				DomNode localImpl = node.localImpl();
-				Element_Jvm jvmEltOld = localImpl instanceof Element_Jvm
-						? (Element_Jvm) localImpl : null;
-				Element_Jvm jvmElt = jvmEltOld != null ? jvmEltOld
-						: (Element_Jvm) LocalDomBridge
+				ElementLocal jvmEltOld = localImpl instanceof ElementLocal
+						? (ElementLocal) localImpl : null;
+				ElementLocal jvmElt = jvmEltOld != null ? jvmEltOld
+						: (ElementLocal) LocalDomBridge
 								.get().localDomImpl.localImpl
 										.createUnwrappedLocalElement(
 												Document.get(),
@@ -82,14 +82,14 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 					// Preconditions.checkState(elt.getInnerHTML0().isEmpty());
 					jvmElt.setInnerHTML(elt.getInnerHTML0());
 				} else {
-					for (Node_Jvm child : jvmElt.children) {
+					for (NodeLocal child : jvmElt.children) {
 						maybeConvertToLocal(child.node, true);
 					}
 				}
 			}
 		} else {
 			if (deep) {
-				for (Node_Jvm child : ((Node_Jvm) node
+				for (NodeLocal child : ((NodeLocal) node
 						.implNoResolve()).children) {
 					maybeConvertToLocal(child.node, true);
 				}
@@ -104,7 +104,7 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 
 	@Override
 	public NodeList<Node> getChildNodes() {
-		return new NodeList(new NodeList_Jvm(children));
+		return new NodeList(new NodeListLocal(children));
 	}
 
 	@Override
@@ -150,19 +150,19 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 	@Override
 	public Node insertBefore(Node newChild, Node refChild) {
 		maybeConvertToLocal(newChild, false);
-		Preconditions.checkArgument(newChild.impl() instanceof Node_Jvm);
+		Preconditions.checkArgument(newChild.impl() instanceof NodeLocal);
 		Preconditions.checkArgument(
-				refChild == null || refChild.impl() instanceof Node_Jvm);
+				refChild == null || refChild.impl() instanceof NodeLocal);
 		if (refChild == null) {
-			children.add((Node_Jvm) newChild.impl());
+			children.add((NodeLocal) newChild.impl());
 		} else {
 			int idx = children.indexOf(refChild.impl());
 			Preconditions.checkArgument(idx != -1,
 					"refchild not a child of this node");
-			children.add(idx, (Node_Jvm) newChild.impl());
+			children.add(idx, (NodeLocal) newChild.impl());
 		}
-		((Node_Jvm) newChild.impl()).parentNode = this;
-		LocalDomBridge.debug.added((Node_Jvm) newChild.impl());
+		((NodeLocal) newChild.impl()).parentNode = this;
+		LocalDomBridge.debug.added((NodeLocal) newChild.impl());
 		return newChild;
 	}
 
@@ -182,8 +182,8 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 
 	@Override
 	public Node removeChild(Node oldChild) {
-		Preconditions.checkArgument(oldChild.impl() instanceof Node_Jvm);
-		Node_Jvm oldChild_Jvm = (Node_Jvm) oldChild.impl();
+		Preconditions.checkArgument(oldChild.impl() instanceof NodeLocal);
+		NodeLocal oldChild_Jvm = (NodeLocal) oldChild.impl();
 		LocalDomBridge.debug.removed(oldChild_Jvm);
 		oldChild_Jvm.parentNode = null;
 		children.remove(oldChild_Jvm);
@@ -192,12 +192,12 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 
 	@Override
 	public Node getChild(int index) {
-		return DomNode_Static.getChild(this, index);
+		return DomNodeStatic.getChild(this, index);
 	}
 
 	@Override
 	public int getChildCount() {
-		return DomNode_Static.getChildCount(this);
+		return DomNodeStatic.getChildCount(this);
 	}
 
 	@Override
@@ -207,32 +207,32 @@ public abstract class Node_Jvm implements DomNode, LocalDomNode {
 
 	@Override
 	public boolean hasParentElement() {
-		return DomNode_Static.hasParentElement(this);
+		return DomNodeStatic.hasParentElement(this);
 	}
 
 	@Override
 	public Node insertAfter(Node newChild, Node refChild) {
-		return DomNode_Static.insertAfter(this, newChild, refChild);
+		return DomNodeStatic.insertAfter(this, newChild, refChild);
 	}
 
 	@Override
 	public Node insertFirst(Node child) {
-		return DomNode_Static.insertFirst(this, child);
+		return DomNodeStatic.insertFirst(this, child);
 	}
 
 	@Override
 	public void removeFromParent() {
-		DomNode_Static.removeFromParent(this);
+		DomNodeStatic.removeFromParent(this);
 	}
 
 	@Override
 	public void callMethod(String methodName) {
-		DomNode_Static.callMethod(this, methodName);
+		DomNodeStatic.callMethod(this, methodName);
 	}
 
 	@Override
 	public Node removeAllChildren() {
-		return DomNode_Static.removeAllChildren(this);
+		return DomNodeStatic.removeAllChildren(this);
 	}
 
 	abstract void appendOuterHtml(UnsafeHtmlBuilder builder);

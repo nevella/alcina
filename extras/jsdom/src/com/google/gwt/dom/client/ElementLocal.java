@@ -13,7 +13,7 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 
-public class Element_Jvm extends Node_Jvm
+public class ElementLocal extends NodeLocal
 		implements DomElement, LocalDomElement {
 	static int _idCounter;
 
@@ -27,7 +27,7 @@ public class Element_Jvm extends Node_Jvm
 
 	int eventBits;
 
-	Element_Jvm(Document_Jvm document_Jvm, String tagName) {
+	ElementLocal(DocumentLocal document_Jvm, String tagName) {
 		ownerDocument = document_Jvm;
 		this.tagName = tagName;
 	}
@@ -43,10 +43,10 @@ public class Element_Jvm extends Node_Jvm
 
 	@Override
 	public Node cloneNode(boolean deep) {
-		Element_Jvm clone_jvm = (Element_Jvm) create(getTagName());
+		ElementLocal clone_jvm = (ElementLocal) create(getTagName());
 		if (style != null) {
 			clone_jvm.style = LocalDomBridge
-					.styleObjectFor(((Style_Jvm) style.impl).cloneStyle());
+					.styleObjectFor(((StyleLocal) style.impl).cloneStyle());
 		}
 		clone_jvm.attributes = new StringMap(attributes);
 		clone_jvm.eventBits = eventBits;
@@ -186,7 +186,7 @@ public class Element_Jvm extends Node_Jvm
 			return null;
 		}
 		for (int idx = 0; idx < parentNode.children.size(); idx++) {
-			Node_Jvm node = parentNode.children.get(idx);
+			NodeLocal node = parentNode.children.get(idx);
 			if (node == this) {
 				seen = true;
 			} else {
@@ -245,7 +245,7 @@ public class Element_Jvm extends Node_Jvm
 	public final Element getPreviousSiblingElement() {
 		boolean seen = false;
 		for (int idx = parentNode.children.size() - 1; idx >= 0; idx--) {
-			Node_Jvm node = parentNode.children.get(idx);
+			NodeLocal node = parentNode.children.get(idx);
 			if (node == this) {
 				seen = true;
 			} else {
@@ -312,7 +312,7 @@ public class Element_Jvm extends Node_Jvm
 	@Override
 	public Style getStyle() {
 		if (style == null) {
-			Style_Jvm style_Jvm = new Style_Jvm();
+			StyleLocal style_Jvm = new StyleLocal();
 			style = LocalDomBridge.styleObjectFor(style_Jvm);
 		}
 		return style;
@@ -354,7 +354,7 @@ public class Element_Jvm extends Node_Jvm
 		return parentNode.children.indexOf(this);
 	}
 
-	public Node_Jso provideAncestorDomImpl() {
+	public NodeRemote provideAncestorDomImpl() {
 		Element domAncestor = ((Element) node)
 				.provideAncestorElementAttachedToDom();
 		return domAncestor == null ? null : domAncestor.domImpl();
@@ -410,7 +410,7 @@ public class Element_Jvm extends Node_Jvm
 
 	@Override
 	public void setInnerHTML(String html) {
-		new ArrayList<>(children).stream().forEach(Node_Jvm::removeFromParent);
+		new ArrayList<>(children).stream().forEach(NodeLocal::removeFromParent);
 		this.innerHtml = html;
 	}
 
@@ -421,7 +421,7 @@ public class Element_Jvm extends Node_Jvm
 
 	@Override
 	public void setInnerText(String text) {
-		new ArrayList<>(children).stream().forEach(Node_Jvm::removeFromParent);
+		new ArrayList<>(children).stream().forEach(NodeLocal::removeFromParent);
 		innerHtml = null;
 		if (Ax.isBlank(text)) {
 		} else {
@@ -506,13 +506,13 @@ public class Element_Jvm extends Node_Jvm
 	public void treeResolved() {
 		treeResolved = true;
 		children.stream().forEach(n -> {
-			if (n instanceof Element_Jvm) {
-				((Element_Jvm) n).treeResolved();
+			if (n instanceof ElementLocal) {
+				((ElementLocal) n).treeResolved();
 			}
 		});
 	}
 
-	private List<Node_Jvm> resolveChildren() {
+	private List<NodeLocal> resolveChildren() {
 		if (children.isEmpty() && innerHtml != null) {
 			RegExp tag = RegExp
 					.compile("<([A-Za-z0-9_\\-.]+)( .+?)?>(.+)?</.+>", "m");
@@ -530,12 +530,12 @@ public class Element_Jvm extends Node_Jvm
 									.createUnwrappedLocalText(
 											getOwnerDocument(), innerHtml);
 					node.appendChild(
-							LocalDomBridge.nodeFor((Node_Jvm) domText));
+							LocalDomBridge.nodeFor((NodeLocal) domText));
 				}
 			} else {
-				Element_Jvm element = (Element_Jvm) create(
+				ElementLocal element = (ElementLocal) create(
 						matchResult.getGroup(1));
-				Element created = LocalDomBridge.nodeFor((Node_Jvm) element);
+				Element created = LocalDomBridge.nodeFor((NodeLocal) element);
 				created.setOuterHtml(innerHtml);
 				node.appendChild(created);
 			}
@@ -571,7 +571,7 @@ public class Element_Jvm extends Node_Jvm
 				builder.appendUnsafeHtml(styleAttributeValue);
 				builder.appendHtmlConstantNoCheck("; ");
 			}
-			((Style_Jvm) style.impl).properties.entrySet().forEach(e -> {
+			((StyleLocal) style.impl).properties.entrySet().forEach(e -> {
 				builder.appendEscaped(
 						LocalDomBridge.get().declarativeCssName(e.getKey()));
 				builder.appendHtmlConstantNoCheck(":");
@@ -593,7 +593,7 @@ public class Element_Jvm extends Node_Jvm
 	private void appendChildContents(UnsafeHtmlBuilder builder) {
 		if (containsUnescapedText()) {
 			children.stream().forEach(
-					node -> ((Text_Jvm) node).appendUnescaped(builder));
+					node -> ((TextLocal) node).appendUnescaped(builder));
 		} else {
 			children.stream().forEach(child -> child.appendOuterHtml(builder));
 		}
@@ -616,9 +616,9 @@ public class Element_Jvm extends Node_Jvm
 	}
 
 	int orSunkEventsOfAllChildren(int sunk) {
-		for (Node_Jvm child : children) {
-			if (child instanceof Element_Jvm) {
-				sunk = ((Element_Jvm) child).orSunkEventsOfAllChildren(sunk);
+		for (NodeLocal child : children) {
+			if (child instanceof ElementLocal) {
+				sunk = ((ElementLocal) child).orSunkEventsOfAllChildren(sunk);
 			}
 		}
 		sunk |= eventBits;

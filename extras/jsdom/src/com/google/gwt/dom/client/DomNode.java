@@ -1,7 +1,5 @@
 package com.google.gwt.dom.client;
 
-import com.google.gwt.core.client.JavaScriptObject;
-
 public interface DomNode {
 	<T extends Node> T appendChild(T newChild);
 

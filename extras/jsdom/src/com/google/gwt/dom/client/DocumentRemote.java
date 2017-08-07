@@ -2,12 +2,12 @@ package com.google.gwt.dom.client;
 
 import com.google.gwt.core.client.GWT;
 
-public class Document_Jso extends Node_Jso implements DomDocument {
+public class DocumentRemote extends NodeRemote implements DomDocument {
 	/**
 	 * We cache Document.nativeGet() in DevMode, because crossing the JSNI
 	 * boundary thousands of times just to read a constant value is slow.
 	 */
-	private static Document_Jso doc;
+	private static DocumentRemote doc;
 
 	/**
 	 * Gets the default document. This is the document in which the module is
@@ -15,7 +15,7 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 	 * 
 	 * @return the default document
 	 */
-	static Document_Jso get() {
+	static DocumentRemote get() {
 		if (GWT.isScript()) {
 			return nativeGet();
 		}
@@ -26,11 +26,11 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 		return doc;
 	}
 
-	private static native Document_Jso nativeGet() /*-{
+	private static native DocumentRemote nativeGet() /*-{
         return $doc;
 	}-*/;
 
-	protected Document_Jso() {
+	protected DocumentRemote() {
 	}
 
 	/**
@@ -83,7 +83,7 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 	 * 
 	 * @return the document's body
 	 */
-	private final native Node_Jso getBody0() /*-{
+	private final native NodeRemote getBody0() /*-{
         return this.body;
 	}-*/;
 
@@ -181,7 +181,7 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 		return LocalDomBridge.nodeFor(getDocumentElement0());
 	}
 	
-	 final native Element_Jso getDocumentElement0() /*-{
+	 final native ElementRemote getDocumentElement0() /*-{
         return this.documentElement;
 	}-*/;
 
@@ -209,7 +209,7 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 	public final  Element getElementById(String elementId) {
         return LocalDomBridge.nodeFor(getElementById0(elementId));
 	}
-	 final native Element_Jso getElementById0(String elementId) /*-{
+	 final native ElementRemote getElementById0(String elementId) /*-{
     return this.getElementById(elementId);
 }-*/;
 	/**
@@ -222,7 +222,7 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 	 *            <code>"*"</code> matches all tags)
 	 * @return a list containing all the matched elements
 	 */
-	 final native NodeList_Jso<Element>
+	 final native NodeListRemote<Element>
 			getElementsByTagName0(String tagName) /*-{
         return this.getElementsByTagName(tagName);
 	}-*/;
@@ -418,224 +418,224 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 
 	@Override
 	public final AnchorElement createAnchorElement() {
-		return DomDocument_Static.createAnchorElement(this);
+		return DomDocumentStatic.createAnchorElement(this);
 	}
 
 	@Override
 	public final AreaElement createAreaElement() {
-		return DomDocument_Static.createAreaElement(this);
+		return DomDocumentStatic.createAreaElement(this);
 	}
 
 	@Override
 	public final AudioElement createAudioElement() {
-		return DomDocument_Static.createAudioElement(this);
+		return DomDocumentStatic.createAudioElement(this);
 	}
 
 	@Override
 	public final BaseElement createBaseElement() {
-		return DomDocument_Static.createBaseElement(this);
+		return DomDocumentStatic.createBaseElement(this);
 	}
 
 	@Override
 	public final QuoteElement createBlockQuoteElement() {
-		return DomDocument_Static.createBlockQuoteElement(this);
+		return DomDocumentStatic.createBlockQuoteElement(this);
 	}
 
 	@Override
 	public final NativeEvent createBlurEvent() {
-		return DomDocument_Static.createBlurEvent(this);
+		return DomDocumentStatic.createBlurEvent(this);
 	}
 
 	@Override
 	public final BRElement createBRElement() {
-		return DomDocument_Static.createBRElement(this);
+		return DomDocumentStatic.createBRElement(this);
 	}
 
 	@Override
 	public final ButtonElement createButtonElement() {
-		return DomDocument_Static.createButtonElement(this);
+		return DomDocumentStatic.createButtonElement(this);
 	}
 
 	@Override
 	public final InputElement createButtonInputElement() {
-		return DomDocument_Static.createButtonInputElement(this);
+		return DomDocumentStatic.createButtonInputElement(this);
 	}
 
 	@Override
 	public final CanvasElement createCanvasElement() {
-		return DomDocument_Static.createCanvasElement(this);
+		return DomDocumentStatic.createCanvasElement(this);
 	}
 
 	@Override
 	public final TableCaptionElement createCaptionElement() {
-		return DomDocument_Static.createCaptionElement(this);
+		return DomDocumentStatic.createCaptionElement(this);
 	}
 
 	@Override
 	public final NativeEvent createChangeEvent() {
-		return DomDocument_Static.createChangeEvent(this);
+		return DomDocumentStatic.createChangeEvent(this);
 	}
 
 	@Override
 	public final InputElement createCheckInputElement() {
-		return DomDocument_Static.createCheckInputElement(this);
+		return DomDocumentStatic.createCheckInputElement(this);
 	}
 
 	@Override
 	public final NativeEvent createClickEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey) {
-		return DomDocument_Static.createClickEvent(this, detail, screenX, screenY,
+		return DomDocumentStatic.createClickEvent(this, detail, screenX, screenY,
 				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey);
 	}
 
 	@Override
 	public final TableColElement createColElement() {
-		return DomDocument_Static.createColElement(this);
+		return DomDocumentStatic.createColElement(this);
 	}
 
 	@Override
 	public final TableColElement createColGroupElement() {
-		return DomDocument_Static.createColGroupElement(this);
+		return DomDocumentStatic.createColGroupElement(this);
 	}
 
 	@Override
 	public final NativeEvent createContextMenuEvent() {
-		return DomDocument_Static.createContextMenuEvent(this);
+		return DomDocumentStatic.createContextMenuEvent(this);
 	}
 
 	@Override
 	public final NativeEvent createDblClickEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey) {
-		return DomDocument_Static.createDblClickEvent(this, detail, screenX, screenY,
+		return DomDocumentStatic.createDblClickEvent(this, detail, screenX, screenY,
 				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey);
 	}
 
 	@Override
 	public final ModElement createDelElement() {
-		return DomDocument_Static.createDelElement(this);
+		return DomDocumentStatic.createDelElement(this);
 	}
 
 	@Override
 	public final DivElement createDivElement() {
-		return DomDocument_Static.createDivElement(this);
+		return DomDocumentStatic.createDivElement(this);
 	}
 
 	@Override
 	public final DListElement createDLElement() {
-		return DomDocument_Static.createDLElement(this);
+		return DomDocumentStatic.createDLElement(this);
 	}
 
 	@Override
 	public final Element createElement(String tagName) {
-		return DomDocument_Static.createElement(this, tagName);
+		return DomDocumentStatic.createElement(this, tagName);
 	}
 
 	@Override
 	public final NativeEvent createErrorEvent() {
-		return DomDocument_Static.createErrorEvent(this);
+		return DomDocumentStatic.createErrorEvent(this);
 	}
 
 	@Override
 	public final FieldSetElement createFieldSetElement() {
-		return DomDocument_Static.createFieldSetElement(this);
+		return DomDocumentStatic.createFieldSetElement(this);
 	}
 
 	@Override
 	public final InputElement createFileInputElement() {
-		return DomDocument_Static.createFileInputElement(this);
+		return DomDocumentStatic.createFileInputElement(this);
 	}
 
 	@Override
 	public final NativeEvent createFocusEvent() {
-		return DomDocument_Static.createFocusEvent(this);
+		return DomDocumentStatic.createFocusEvent(this);
 	}
 
 	@Override
 	public final FormElement createFormElement() {
-		return DomDocument_Static.createFormElement(this);
+		return DomDocumentStatic.createFormElement(this);
 	}
 
 	@Override
 	public final FrameElement createFrameElement() {
-		return DomDocument_Static.createFrameElement(this);
+		return DomDocumentStatic.createFrameElement(this);
 	}
 
 	@Override
 	public final FrameSetElement createFrameSetElement() {
-		return DomDocument_Static.createFrameSetElement(this);
+		return DomDocumentStatic.createFrameSetElement(this);
 	}
 
 	@Override
 	public final HeadElement createHeadElement() {
-		return DomDocument_Static.createHeadElement(this);
+		return DomDocumentStatic.createHeadElement(this);
 	}
 
 	@Override
 	public final HeadingElement createHElement(int n) {
-		return DomDocument_Static.createHElement(this, n);
+		return DomDocumentStatic.createHElement(this, n);
 	}
 
 	@Override
 	public final InputElement createHiddenInputElement() {
-		return DomDocument_Static.createHiddenInputElement(this);
+		return DomDocumentStatic.createHiddenInputElement(this);
 	}
 
 	@Override
 	public final HRElement createHRElement() {
-		return DomDocument_Static.createHRElement(this);
+		return DomDocumentStatic.createHRElement(this);
 	}
 
 	@Override
 	public final NativeEvent createHtmlEvent(String type, boolean canBubble,
 			boolean cancelable) {
-		return DomDocument_Static.createHtmlEvent(this, type, canBubble, cancelable);
+		return DomDocumentStatic.createHtmlEvent(this, type, canBubble, cancelable);
 	}
 
 	@Override
 	public final IFrameElement createIFrameElement() {
-		return DomDocument_Static.createIFrameElement(this);
+		return DomDocumentStatic.createIFrameElement(this);
 	}
 
 	@Override
 	public final ImageElement createImageElement() {
-		return DomDocument_Static.createImageElement(this);
+		return DomDocumentStatic.createImageElement(this);
 	}
 
 	@Override
 	public final InputElement createImageInputElement() {
-		return DomDocument_Static.createImageInputElement(this);
+		return DomDocumentStatic.createImageInputElement(this);
 	}
 
 	@Override
 	public final NativeEvent createInputEvent() {
-		return DomDocument_Static.createInputEvent(this);
+		return DomDocumentStatic.createInputEvent(this);
 	}
 
 	@Override
 	public final ModElement createInsElement() {
-		return DomDocument_Static.createInsElement(this);
+		return DomDocumentStatic.createInsElement(this);
 	}
 
 	@Override
 	public final NativeEvent createKeyCodeEvent(String type, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode) {
-		return DomDocument_Static.createKeyCodeEvent(this, type, ctrlKey, altKey,
+		return DomDocumentStatic.createKeyCodeEvent(this, type, ctrlKey, altKey,
 				shiftKey, metaKey, keyCode);
 	}
 
 	@Override
 	public final NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode) {
-		return DomDocument_Static.createKeyDownEvent(this, ctrlKey, altKey, shiftKey,
+		return DomDocumentStatic.createKeyDownEvent(this, ctrlKey, altKey, shiftKey,
 				metaKey, keyCode);
 	}
 
 	@Override
 	public final NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return DomDocument_Static.createKeyDownEvent(this, ctrlKey, altKey, shiftKey,
+		return DomDocumentStatic.createKeyDownEvent(this, ctrlKey, altKey, shiftKey,
 				metaKey, keyCode, charCode);
 	}
 
@@ -643,14 +643,14 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 	public final NativeEvent createKeyEvent(String type, boolean canBubble,
 			boolean cancelable, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return DomDocument_Static.createKeyEvent(this, type, canBubble, cancelable,
+		return DomDocumentStatic.createKeyEvent(this, type, canBubble, cancelable,
 				ctrlKey, altKey, shiftKey, metaKey, keyCode, charCode);
 	}
 
 	@Override
 	public final NativeEvent createKeyPressEvent(boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int charCode) {
-		return DomDocument_Static.createKeyPressEvent(this, ctrlKey, altKey, shiftKey,
+		return DomDocumentStatic.createKeyPressEvent(this, ctrlKey, altKey, shiftKey,
 				metaKey, charCode);
 	}
 
@@ -658,64 +658,64 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 	public final NativeEvent createKeyPressEvent(boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode) {
-		return DomDocument_Static.createKeyPressEvent(this, ctrlKey, altKey, shiftKey,
+		return DomDocumentStatic.createKeyPressEvent(this, ctrlKey, altKey, shiftKey,
 				metaKey, keyCode, charCode);
 	}
 
 	@Override
 	public final NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode) {
-		return DomDocument_Static.createKeyUpEvent(this, ctrlKey, altKey, shiftKey,
+		return DomDocumentStatic.createKeyUpEvent(this, ctrlKey, altKey, shiftKey,
 				metaKey, keyCode);
 	}
 
 	@Override
 	public final NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return DomDocument_Static.createKeyUpEvent(this, ctrlKey, altKey, shiftKey,
+		return DomDocumentStatic.createKeyUpEvent(this, ctrlKey, altKey, shiftKey,
 				metaKey, keyCode, charCode);
 	}
 
 	@Override
 	public final LabelElement createLabelElement() {
-		return DomDocument_Static.createLabelElement(this);
+		return DomDocumentStatic.createLabelElement(this);
 	}
 
 	@Override
 	public final LegendElement createLegendElement() {
-		return DomDocument_Static.createLegendElement(this);
+		return DomDocumentStatic.createLegendElement(this);
 	}
 
 	@Override
 	public final LIElement createLIElement() {
-		return DomDocument_Static.createLIElement(this);
+		return DomDocumentStatic.createLIElement(this);
 	}
 
 	@Override
 	public final LinkElement createLinkElement() {
-		return DomDocument_Static.createLinkElement(this);
+		return DomDocumentStatic.createLinkElement(this);
 	}
 
 	@Override
 	public final NativeEvent createLoadEvent() {
-		return DomDocument_Static.createLoadEvent(this);
+		return DomDocumentStatic.createLoadEvent(this);
 	}
 
 	@Override
 	public final MapElement createMapElement() {
-		return DomDocument_Static.createMapElement(this);
+		return DomDocumentStatic.createMapElement(this);
 	}
 
 	@Override
 	public final MetaElement createMetaElement() {
-		return DomDocument_Static.createMetaElement(this);
+		return DomDocumentStatic.createMetaElement(this);
 	}
 
 	@Override
 	public final NativeEvent createMouseDownEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		return DomDocument_Static.createMouseDownEvent(this, detail, screenX, screenY,
+		return DomDocumentStatic.createMouseDownEvent(this, detail, screenX, screenY,
 				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button);
 	}
 
@@ -725,7 +725,7 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return DomDocument_Static.createMouseEvent(this, type, canBubble, cancelable,
+		return DomDocumentStatic.createMouseEvent(this, type, canBubble, cancelable,
 				detail, screenX, screenY, clientX, clientY, ctrlKey, altKey,
 				shiftKey, metaKey, button, relatedTarget);
 	}
@@ -734,7 +734,7 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 	public final NativeEvent createMouseMoveEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		return DomDocument_Static.createMouseMoveEvent(this, detail, screenX, screenY,
+		return DomDocumentStatic.createMouseMoveEvent(this, detail, screenX, screenY,
 				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button);
 	}
 
@@ -743,7 +743,7 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return DomDocument_Static.createMouseOutEvent(this, detail, screenX, screenY,
+		return DomDocumentStatic.createMouseOutEvent(this, detail, screenX, screenY,
 				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button,
 				relatedTarget);
 	}
@@ -753,7 +753,7 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return DomDocument_Static.createMouseOverEvent(this, detail, screenX, screenY,
+		return DomDocumentStatic.createMouseOverEvent(this, detail, screenX, screenY,
 				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button,
 				relatedTarget);
 	}
@@ -762,183 +762,183 @@ public class Document_Jso extends Node_Jso implements DomDocument {
 	public final NativeEvent createMouseUpEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		return DomDocument_Static.createMouseUpEvent(this, detail, screenX, screenY,
+		return DomDocumentStatic.createMouseUpEvent(this, detail, screenX, screenY,
 				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button);
 	}
 
 	@Override
 	public final ObjectElement createObjectElement() {
-		return DomDocument_Static.createObjectElement(this);
+		return DomDocumentStatic.createObjectElement(this);
 	}
 
 	@Override
 	public final OListElement createOLElement() {
-		return DomDocument_Static.createOLElement(this);
+		return DomDocumentStatic.createOLElement(this);
 	}
 
 	@Override
 	public final OptGroupElement createOptGroupElement() {
-		return DomDocument_Static.createOptGroupElement(this);
+		return DomDocumentStatic.createOptGroupElement(this);
 	}
 
 	@Override
 	public final OptionElement createOptionElement() {
-		return DomDocument_Static.createOptionElement(this);
+		return DomDocumentStatic.createOptionElement(this);
 	}
 
 	@Override
 	public final ParamElement createParamElement() {
-		return DomDocument_Static.createParamElement(this);
+		return DomDocumentStatic.createParamElement(this);
 	}
 
 	@Override
 	public final InputElement createPasswordInputElement() {
-		return DomDocument_Static.createPasswordInputElement(this);
+		return DomDocumentStatic.createPasswordInputElement(this);
 	}
 
 	@Override
 	public final ParagraphElement createPElement() {
-		return DomDocument_Static.createPElement(this);
+		return DomDocumentStatic.createPElement(this);
 	}
 
 	@Override
 	public final PreElement createPreElement() {
-		return DomDocument_Static.createPreElement(this);
+		return DomDocumentStatic.createPreElement(this);
 	}
 
 	@Override
 	public final ButtonElement createPushButtonElement() {
-		return DomDocument_Static.createPushButtonElement(this);
+		return DomDocumentStatic.createPushButtonElement(this);
 	}
 
 	@Override
 	public final QuoteElement createQElement() {
-		return DomDocument_Static.createQElement(this);
+		return DomDocumentStatic.createQElement(this);
 	}
 
 	@Override
 	public final InputElement createRadioInputElement(String name) {
-		return DomDocument_Static.createRadioInputElement(this, name);
+		return DomDocumentStatic.createRadioInputElement(this, name);
 	}
 
 	@Override
 	public final ButtonElement createResetButtonElement() {
-		return DomDocument_Static.createResetButtonElement(this);
+		return DomDocumentStatic.createResetButtonElement(this);
 	}
 
 	@Override
 	public final InputElement createResetInputElement() {
-		return DomDocument_Static.createResetInputElement(this);
+		return DomDocumentStatic.createResetInputElement(this);
 	}
 
 	@Override
 	public final ScriptElement createScriptElement() {
-		return DomDocument_Static.createScriptElement(this);
+		return DomDocumentStatic.createScriptElement(this);
 	}
 
 	@Override
 	public final ScriptElement createScriptElement(String source) {
-		return DomDocument_Static.createScriptElement(this, source);
+		return DomDocumentStatic.createScriptElement(this, source);
 	}
 
 	@Override
 	public final NativeEvent createScrollEvent() {
-		return DomDocument_Static.createScrollEvent(this);
+		return DomDocumentStatic.createScrollEvent(this);
 	}
 
 	@Override
 	public final SelectElement createSelectElement() {
-		return DomDocument_Static.createSelectElement(this);
+		return DomDocumentStatic.createSelectElement(this);
 	}
 
 	@Override
 	public final SelectElement createSelectElement(boolean multiple) {
-		return DomDocument_Static.createSelectElement(this, multiple);
+		return DomDocumentStatic.createSelectElement(this, multiple);
 	}
 
 	@Override
 	public final SourceElement createSourceElement() {
-		return DomDocument_Static.createSourceElement(this);
+		return DomDocumentStatic.createSourceElement(this);
 	}
 
 	@Override
 	public final SpanElement createSpanElement() {
-		return DomDocument_Static.createSpanElement(this);
+		return DomDocumentStatic.createSpanElement(this);
 	}
 
 	@Override
 	public final StyleElement createStyleElement() {
-		return DomDocument_Static.createStyleElement(this);
+		return DomDocumentStatic.createStyleElement(this);
 	}
 
 	@Override
 	public final ButtonElement createSubmitButtonElement() {
-		return DomDocument_Static.createSubmitButtonElement(this);
+		return DomDocumentStatic.createSubmitButtonElement(this);
 	}
 
 	@Override
 	public final InputElement createSubmitInputElement() {
-		return DomDocument_Static.createSubmitInputElement(this);
+		return DomDocumentStatic.createSubmitInputElement(this);
 	}
 
 	@Override
 	public final TableElement createTableElement() {
-		return DomDocument_Static.createTableElement(this);
+		return DomDocumentStatic.createTableElement(this);
 	}
 
 	@Override
 	public final TableSectionElement createTBodyElement() {
-		return DomDocument_Static.createTBodyElement(this);
+		return DomDocumentStatic.createTBodyElement(this);
 	}
 
 	@Override
 	public final TableCellElement createTDElement() {
-		return DomDocument_Static.createTDElement(this);
+		return DomDocumentStatic.createTDElement(this);
 	}
 
 	@Override
 	public final TextAreaElement createTextAreaElement() {
-		return DomDocument_Static.createTextAreaElement(this);
+		return DomDocumentStatic.createTextAreaElement(this);
 	}
 
 	@Override
 	public final InputElement createTextInputElement() {
-		return DomDocument_Static.createTextInputElement(this);
+		return DomDocumentStatic.createTextInputElement(this);
 	}
 
 	@Override
 	public final TableSectionElement createTFootElement() {
-		return DomDocument_Static.createTFootElement(this);
+		return DomDocumentStatic.createTFootElement(this);
 	}
 
 	@Override
 	public final TableSectionElement createTHeadElement() {
-		return DomDocument_Static.createTHeadElement(this);
+		return DomDocumentStatic.createTHeadElement(this);
 	}
 
 	@Override
 	public final TableCellElement createTHElement() {
-		return DomDocument_Static.createTHElement(this);
+		return DomDocumentStatic.createTHElement(this);
 	}
 
 	@Override
 	public final TitleElement createTitleElement() {
-		return DomDocument_Static.createTitleElement(this);
+		return DomDocumentStatic.createTitleElement(this);
 	}
 
 	@Override
 	public final TableRowElement createTRElement() {
-		return DomDocument_Static.createTRElement(this);
+		return DomDocumentStatic.createTRElement(this);
 	}
 
 	@Override
 	public final UListElement createULElement() {
-		return DomDocument_Static.createULElement(this);
+		return DomDocumentStatic.createULElement(this);
 	}
 
 	@Override
 	public final VideoElement createVideoElement() {
-		return DomDocument_Static.createVideoElement(this);
+		return DomDocumentStatic.createVideoElement(this);
 	}
 
 	

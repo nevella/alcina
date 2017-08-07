@@ -180,7 +180,7 @@ public class TextAreaElement extends Element {
   /**
    * Select the contents of the TEXTAREA.
    */
-   native void select0(Element_Jso elt) /*-{
+   native void select0(ElementRemote elt) /*-{
     this.select();
   }-*/;
   public final  void select() {

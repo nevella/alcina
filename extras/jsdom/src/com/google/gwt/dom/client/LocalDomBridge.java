@@ -45,11 +45,11 @@ public class LocalDomBridge {
 
 	public static boolean fastRemoveAll = true;
 
-	public static Element_Jso elementJso(Element elem) {
+	public static ElementRemote elementJso(Element elem) {
 		return elementJso(elem, true);
 	}
 
-	public static Element_Jso elementJso(Element elem, boolean maybeEnsure) {
+	public static ElementRemote elementJso(Element elem, boolean maybeEnsure) {
 		if (!LocalDomImpl.useLocalImpl && maybeEnsure && elem.domImpl != null) {
 			ensureJso(elem);
 		}
@@ -60,7 +60,7 @@ public class LocalDomBridge {
 		ensureJso(element, true);
 	}
 
-	public static Node_Jso ensurePendingResolutionNode(Node node) {
+	public static NodeRemote ensurePendingResolutionNode(Node node) {
 		return get().ensurePendingResolutionNode0(node);
 	}
 
@@ -78,7 +78,7 @@ public class LocalDomBridge {
 		return get().nodeFor0(o);
 	}
 
-	public static <N extends Node> N nodeFor(Node_Jvm node_Jvm) {
+	public static <N extends Node> N nodeFor(NodeLocal node_Jvm) {
 		if (node_Jvm == null) {
 			return null;
 		}
@@ -89,13 +89,13 @@ public class LocalDomBridge {
 		get().register0(doc);
 	}
 
-	public static void registerId(Element_Jvm element_Jvm) {
+	public static void registerId(ElementLocal element_Jvm) {
 		get().registerId0(element_Jvm);
 	}
 
 	public static void replaceWithJso(Element element) {
 		boolean saveLocalImpl = LocalDomImpl.useLocalImpl;
-		Element_Jso element_Jso = get().localDomImpl
+		ElementRemote element_Jso = get().localDomImpl
 				.createDomElement(Document.get(), element.getTagName());
 		get().javascriptObjectNodeLookup.put(element_Jso, element);
 		element.putDomImpl(element_Jso);
@@ -117,7 +117,7 @@ public class LocalDomBridge {
 		return get().styleObjectFor0(o);
 	}
 
-	public static Style styleObjectFor(Style_Jvm style_jvm) {
+	public static Style styleObjectFor(StyleLocal style_jvm) {
 		if (style_jvm == null) {
 			return null;
 		}
@@ -144,18 +144,18 @@ public class LocalDomBridge {
 		// don't go to zero (children of this elt)
 		for (int idx = chain.size() - 1; idx >= 1; idx--) {
 			Element withDom = chain.get(idx);
-			Element_Jvm vmImpl = (Element_Jvm) withDom.localImpl();
-			NodeList_Jso<Element> childNodes = (NodeList_Jso) withDom.domImpl
+			ElementLocal vmImpl = (ElementLocal) withDom.localImpl();
+			NodeListRemote<Element> childNodes = (NodeListRemote) withDom.domImpl
 					.getChildNodes().impl;
 			if (debug.on) {
 				Preconditions.checkState(
 						childNodes.getLength() == vmImpl.children.size());
 			}
 			for (int idx2 = 0; idx2 < vmImpl.children.size(); idx2++) {
-				Node_Jvm child_jvm = vmImpl.children.get(idx2);
+				NodeLocal child_jvm = vmImpl.children.get(idx2);
 				int len = childNodes.getLength();
-				Node_Jso domImpl = childNodes.getItem0(idx2);
-				Node_Jso domImplCopy = domImpl;
+				NodeRemote domImpl = childNodes.getItem0(idx2);
+				NodeRemote domImplCopy = domImpl;
 				if (debug.on) {
 					Preconditions.checkState(domImpl.getNodeName()
 							.equalsIgnoreCase(child_jvm.getNodeName()));
@@ -186,7 +186,7 @@ public class LocalDomBridge {
 			}
 			String id = element.getId();
 			if (!id.isEmpty()) {
-				Element_Jso domImpl = Document.get().domImpl
+				ElementRemote domImpl = Document.get().domImpl
 						.getElementById0(id);
 				if (domImpl != null) {
 					get().javascriptObjectNodeLookup.put(domImpl, element);
@@ -290,15 +290,15 @@ public class LocalDomBridge {
 		});
 	}
 
-	public void detachDomNode(Node_Jso domImpl) {
+	public void detachDomNode(NodeRemote domImpl) {
 		javascriptObjectNodeLookup.remove(domImpl);
 		debug.removeAssignment(domImpl);
-		if (domImpl instanceof Element_Jso) {
-			Element_Jso elem = (Element_Jso) domImpl;
+		if (domImpl instanceof ElementRemote) {
+			ElementRemote elem = (ElementRemote) domImpl;
 			String id = elem.getId();
 			log(LocalDomDebug.DETACH_ELEM_JSO, "detach id:" + id);
 			idLookup.remove(id);
-			NodeList_Jso<Node> kids = elem.getChildNodes0();
+			NodeListRemote<Node> kids = elem.getChildNodes0();
 			int length = kids.getLength();
 			for (int idx = 0; idx < length; idx++) {
 				detachDomNode(kids.getItem0(idx));
@@ -312,7 +312,7 @@ public class LocalDomBridge {
 		}
 		if (node.impl() != null && node.impl() != node.domImpl()) {
 			Element elem = (Element) node;
-			Element_Jso dom_elt = (Element_Jso) node.domImpl();
+			ElementRemote dom_elt = (ElementRemote) node.domImpl();
 			DomElement vmlocal_elt = (DomElement) node.impl();
 			String innerHTML = vmlocal_elt.getInnerHTML();
 			if (innerHTML.contains("__localdom__46")) {
@@ -334,7 +334,7 @@ public class LocalDomBridge {
 				Style domStyle = dom_elt.getStyle();
 				domStyle.setProperty(e.getKey(), e.getValue());
 			});
-			int bits = ((Element_Jvm) vmlocal_elt).orSunkEventsOfAllChildren(0);
+			int bits = ((ElementLocal) vmlocal_elt).orSunkEventsOfAllChildren(0);
 			bits |= DOM.getEventsSunk(elem);
 			DOM.sinkEvents(elem, bits);
 			pendingResolution.remove(node);
@@ -370,7 +370,7 @@ public class LocalDomBridge {
 				return;
 			}
 			createdLocalValues.stream().forEach(e -> {
-				Element_Jvm el = (Element_Jvm) e;
+				ElementLocal el = (ElementLocal) e;
 				if (((Element) el.node).uiObject != null) {
 					log(LocalDomDebug.FLUSH,
 							((Element) el.node).uiObject.getClass().getName());
@@ -425,7 +425,7 @@ public class LocalDomBridge {
 		}
 	}
 
-	private void createJsoNode(Node_Jso item) {
+	private void createJsoNode(NodeRemote item) {
 		Node node = null;
 		boolean mayHaveId = true;
 		try {
@@ -483,7 +483,7 @@ public class LocalDomBridge {
 		}
 	}
 
-	private Node_Jso ensurePendingResolutionNode0(Node node) {
+	private NodeRemote ensurePendingResolutionNode0(Node node) {
 		if (node.domImpl() != null) {
 			return node.domImpl();
 		}
@@ -492,7 +492,7 @@ public class LocalDomBridge {
 		boolean useLocalImpl = LocalDomImpl.useLocalImpl;
 		ensuringPendingResolutionNode = true;
 		useJsoDom();
-		Node_Jso nodeDom = null;
+		NodeRemote nodeDom = null;
 		int nodeType = node.getNodeType();
 		switch (nodeType) {
 		case Node.TEXT_NODE:
@@ -601,10 +601,10 @@ public class LocalDomBridge {
 		elementCreators.put(LegendElement.TAG, () -> new LegendElement());
 	}
 
-	private Node linkTreesDom(Node_Jso node_jso) {
-		Node_Jso original = node_jso;
+	private Node linkTreesDom(NodeRemote node_jso) {
+		NodeRemote original = node_jso;
 		// these will be Element_Jvms
-		List<Node_Jso> chain = new ArrayList<>();
+		List<NodeRemote> chain = new ArrayList<>();
 		// hmmm...ascend to dom, descend...
 		Node linkedNode = null;
 		while (true) {
@@ -613,7 +613,7 @@ public class LocalDomBridge {
 			if (linkedNode != null) {
 				break;
 			}
-			Node_Jso parentNode0 = node_jso.getParentNode0();
+			NodeRemote parentNode0 = node_jso.getParentNode0();
 			if (parentNode0 == null) {
 				if (chain.size() == 1) {
 					int debug = 3;
@@ -636,20 +636,20 @@ public class LocalDomBridge {
 		}
 		// don't go to zero (children of this elt)
 		for (int idx = chain.size() - 1; idx >= 1; idx--) {
-			Node_Jso jso = chain.get(idx);
+			NodeRemote jso = chain.get(idx);
 			Node withDom = (Node) javascriptObjectNodeLookup.get(jso);
-			Node_Jvm vmImpl = (Node_Jvm) withDom.localImpl();
-			NodeList_Jso childNodesSub = (NodeList_Jso) jso
+			NodeLocal vmImpl = (NodeLocal) withDom.localImpl();
+			NodeListRemote childNodesSub = (NodeListRemote) jso
 					.getChildNodes().impl;
 			/*
 			 * future optimisation - don't create this list if we're mapping to
 			 * existing elements - instead have some sort of 'potential state' -
 			 * to save getting the whole child list
 			 */
-			List<Node_Jso> toLink = new ArrayList<>();
+			List<NodeRemote> toLink = new ArrayList<>();
 			int childCount = childNodesSub.getLength();
 			for (int idx2 = 0; idx2 < childCount; idx2++) {
-				Node_Jso item0 = childNodesSub.getItem0(idx2);
+				NodeRemote item0 = childNodesSub.getItem0(idx2);
 				switch (item0.getNodeType()) {
 				case Node.ELEMENT_NODE:
 				case Node.DOCUMENT_NODE:
@@ -684,7 +684,7 @@ public class LocalDomBridge {
 			if (vmImpl == null || vmImpl.getChildCount() == 0) {
 				// case 1 or 2
 				for (int idx2 = 0; idx2 < toLink.size(); idx2++) {
-					Node_Jso item = toLink.get(idx2);
+					NodeRemote item = toLink.get(idx2);
 					if (!LocalDomImpl.useLocalImpl
 							&& javascriptObjectNodeLookup.containsKey(item)) {
 						// edge cases in cell widgets
@@ -700,8 +700,8 @@ public class LocalDomBridge {
 						.checkState(toLink.size() == vmImpl.children.size());
 				// }
 				for (int idx2 = 0; idx2 < vmImpl.children.size(); idx2++) {
-					Node_Jvm child_jvm = vmImpl.children.get(idx2);
-					Node_Jso domImpl = toLink.get(idx2);
+					NodeLocal child_jvm = vmImpl.children.get(idx2);
+					NodeRemote domImpl = toLink.get(idx2);
 					Preconditions.checkState(domImpl.getNodeName()
 							.equalsIgnoreCase(child_jvm.getNodeName()));
 					get().javascriptObjectNodeLookup.put(domImpl,
@@ -715,7 +715,7 @@ public class LocalDomBridge {
 	}
 
 	private <N extends Node> N nodeFor0(JavaScriptObject jso) {
-		Node_Jso o = jso.cast();
+		NodeRemote o = jso.cast();
 		Node node = javascriptObjectNodeLookup.get(o);
 		if (node != null) {
 			return (N) node;
@@ -735,7 +735,7 @@ public class LocalDomBridge {
 		return (N) linkTreesDom(o);
 	}
 
-	private Node nodeFor0(Node_Jvm node_jvm) {
+	private Node nodeFor0(NodeLocal node_jvm) {
 		return localNodeLookup.computeIfAbsent(node_jvm, key -> {
 			Node node = createNode(node_jvm.getNodeType(),
 					node_jvm.getNodeName());
@@ -751,7 +751,7 @@ public class LocalDomBridge {
 		localNodeLookup.put(doc.localImpl, doc);
 	}
 
-	private void registerId0(Element_Jvm element_Jvm) {
+	private void registerId0(ElementLocal element_Jvm) {
 		String id = element_Jvm.getId();
 		if (id.length() > 0) {
 			if (idLookup.containsKey(id)) {
@@ -773,7 +773,7 @@ public class LocalDomBridge {
 		return style;
 	}
 
-	private Style styleObjectFor0(Style_Jvm style_jvm) {
+	private Style styleObjectFor0(StyleLocal style_jvm) {
 		return localStyleLookup.computeIfAbsent(style_jvm, key -> {
 			Style style = new Style();
 			style.impl = style_jvm;
@@ -811,20 +811,20 @@ public class LocalDomBridge {
 	static class LocalDomBridgeDebug {
 		public boolean on = false;
 
-		Set<Node_Jvm> nodesInHierarchy = new LinkedHashSet<>();
+		Set<NodeLocal> nodesInHierarchy = new LinkedHashSet<>();
 
-		Map<Node_Jso, Element> assigned = new LinkedHashMap<>();
+		Map<NodeRemote, Element> assigned = new LinkedHashMap<>();
 
 		private boolean strict;
 
-		public void added(Node_Jvm impl) {
+		public void added(NodeLocal impl) {
 			nodesInHierarchy.add(impl);
 		}
 
 		public void checkCreatedLocals(Collection<DomElement> createdLocals) {
 			createdLocals.stream().forEach(e -> {
-				Node_Jso domImpl = ((Element_Jvm) e).provideAncestorDomImpl();
-				if (domImpl == null && ((Element_Jvm) e).parentNode == null) {
+				NodeRemote domImpl = ((ElementLocal) e).provideAncestorDomImpl();
+				if (domImpl == null && ((ElementLocal) e).parentNode == null) {
 					if (nodesInHierarchy.contains(e)) {
 						int debug = 3;
 					}
@@ -832,7 +832,7 @@ public class LocalDomBridge {
 			});
 		}
 
-		public void checkMultipleAssignment(Element element, Node_Jso nodeDom) {
+		public void checkMultipleAssignment(Element element, NodeRemote nodeDom) {
 			if (!get().javascriptObjectNodeLookup.containsKey(nodeDom)) {
 				throw new IllegalStateException();
 			}
@@ -847,16 +847,16 @@ public class LocalDomBridge {
 		public void logUseLocal(boolean b) {
 		}
 
-		public void removeAssignment(Node_Jso nodeDom) {
+		public void removeAssignment(NodeRemote nodeDom) {
 			assigned.remove(nodeDom);
 		}
 
-		public void removed(Node_Jvm oldChild_Jvm) {
+		public void removed(NodeLocal oldChild_Jvm) {
 			nodesInHierarchy.remove(oldChild_Jvm);
 		}
 
 		public void warnDuplicateId(String id, Node node,
-				Element_Jvm element_Jvm) {
+				ElementLocal element_Jvm) {
 			log(LocalDomDebug.DUPLICATE_ELT_ID,
 					"**warn - duplicate elt id - " + id);
 		}

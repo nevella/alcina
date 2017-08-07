@@ -30,11 +30,13 @@ public class Text extends Node implements DomText {
 		return (Text) node;
 	}
 
-	private DomText impl;
+	private DomText local;
 
-	private Text_Jso domImpl;
+	private DomText remote;
 
-	protected Text() {
+	protected Text(DomText local) {
+		this.local = local;
+		this.remote = TextNull.INSTANCE;
 	}
 
 	public Text cast() {
@@ -42,54 +44,57 @@ public class Text extends Node implements DomText {
 	}
 
 	public void deleteData(int offset, int length) {
-		impl().deleteData(offset, length);
+		local().deleteData(offset, length);
+		remote().deleteData(offset, length);
 	}
 
 	public String getData() {
-		return impl().getData();
+		return local().getData();
 	}
 
 	public int getLength() {
-		return impl().getLength();
+		return local().getLength();
 	}
 
 	public void insertData(int offset, String data) {
-		impl().insertData(offset, data);
-	}
-
-	@Override
-	public void putDomImpl(Node_Jso nodeDom) {
-		this.domImpl = (Text_Jso) nodeDom;
-	}
-
-	@Override
-	public void putImpl(DomNode impl) {
-		this.impl = (DomText) impl;
+		local().insertData(offset, data);
+		remote().insertData(offset, data);
 	}
 
 	public void replaceData(int offset, int length, String data) {
-		impl().replaceData(offset, length, data);
+		local().replaceData(offset, length, data);
+		remote().replaceData(offset, length, data);
 	}
 
 	public void setData(String data) {
-		impl().setData(data);
+		local().setData(data);
+		remote().setData(data);
 	}
 
 	public Text splitText(int offset) {
-		return impl().splitText(offset);
+		// FIXME - remote must use created text no9de
+		Text result = local().splitText(offset);
+		remote().splitText(offset);
+		return result;
 	}
 
 	@Override
-	Text_Jso domImpl() {
-		return domImpl;
+	protected DomText remote() {
+		return remote;
 	}
 
 	@Override
-	DomText impl() {
-		return impl;
+	protected DomText local() {
+		return local;
 	}
+
 	@Override
-	DomText implNoResolve() {
-		return impl();
+	public Node nodeFor() {
+		return this;
+	}
+
+	@Override
+	protected void putRemote(NodeRemote remote) {
+		this.remote = (DomText) remote;
 	}
 }

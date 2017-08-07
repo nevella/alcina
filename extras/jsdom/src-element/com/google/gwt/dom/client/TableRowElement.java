@@ -83,7 +83,7 @@ public class TableRowElement extends Element {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-align-TD">
 	 *      W3C HTML Specification</a>
 	 */
-	native void deleteCell0(Element_Jso elt, int index) /*-{
+	native void deleteCell0(ElementRemote elt, int index) /*-{
         elt.deleteCell(index);
 	}-*/;
 
@@ -117,13 +117,13 @@ public class TableRowElement extends Element {
 				}
 			}
 			return new NodeList<TableCellElement>(
-					(NodeList_Wrapped) new NodeList_Wrapped<>(nodes));
+					(NodeListWrapped) new NodeListWrapped<>(nodes));
 		} else {
 			return new NodeList<>(getCells0(ensureJso()));
 		}
 	}
 
-	private final native NodeList_Jso getCells0(Element_Jso elem) /*-{
+	private final native NodeListRemote getCells0(ElementRemote elem) /*-{
         return elem.cells;
 	}-*/;
 

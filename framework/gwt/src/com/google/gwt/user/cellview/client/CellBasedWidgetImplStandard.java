@@ -24,7 +24,7 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Element_Jso;
+import com.google.gwt.dom.client.ElementRemote;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.AttachEvent.Handler;
@@ -174,7 +174,7 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 	 * @param typeName
 	 *            the name of the event to sink
 	 */
-	private native void sinkEventImpl(Element_Jso elem, String typeName) /*-{
+	private native void sinkEventImpl(ElementRemote elem, String typeName) /*-{
 																			elem
 																			.addEventListener(
 																			typeName,

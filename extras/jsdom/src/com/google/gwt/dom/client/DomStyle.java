@@ -2,7 +2,6 @@ package com.google.gwt.dom.client;
 
 import java.util.Map;
 
-import com.google.gwt.core.client.SingleJsoImpl;
 import com.google.gwt.dom.client.Style.BorderStyle;
 import com.google.gwt.dom.client.Style.Clear;
 import com.google.gwt.dom.client.Style.Cursor;

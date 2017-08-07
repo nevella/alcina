@@ -21,7 +21,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.debug.client.DebugInfo;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Element_Jso;
+import com.google.gwt.dom.client.ElementRemote;
 import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.user.client.DOM;
 
@@ -398,7 +398,7 @@ public abstract class UIObject implements HasVisibility {
   /**
    * Replaces all instances of the primary style name with newPrimaryStyleName.
    */
-  private static native void updatePrimaryAndDependentStyleNames0(Element_Jso elem,
+  private static native void updatePrimaryAndDependentStyleNames0(ElementRemote elem,
       String newPrimaryStyle) /*-{
     var classes = (elem.className || "").split(/\s+/);
     if (!classes) {

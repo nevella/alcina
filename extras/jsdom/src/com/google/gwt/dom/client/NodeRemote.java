@@ -2,7 +2,7 @@ package com.google.gwt.dom.client;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
-public abstract class Node_Jso extends JavaScriptObject implements DomNode {
+public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	/**
 	 * Assert that the given {@link JavaScriptObject} is a DOM node and
 	 * automatically typecast it.
@@ -22,42 +22,42 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 
 	@Override
 	public final Node getChild(int index) {
-		return DomNode_Static.getChild(this, index);
+		return DomNodeStatic.getChild(this, index);
 	}
 
 	@Override
 	public final int getChildCount() {
-		return DomNode_Static.getChildCount(this);
+		return DomNodeStatic.getChildCount(this);
 	}
 
 	@Override
 	public final Element getParentElement() {
-		return DomNode_Static.getParentElement(this);
+		return DomNodeStatic.getParentElement(this);
 	}
 
 	@Override
 	public final boolean hasParentElement() {
-		return DomNode_Static.hasParentElement(this);
+		return DomNodeStatic.hasParentElement(this);
 	}
 
 	@Override
 	public final Node insertAfter(Node newChild, Node refChild) {
-		return DomNode_Static.insertAfter(this, newChild, refChild);
+		return DomNodeStatic.insertAfter(this, newChild, refChild);
 	}
 
 	@Override
 	public final Node insertFirst(Node child) {
-		return DomNode_Static.insertFirst(this, child);
+		return DomNodeStatic.insertFirst(this, child);
 	}
 
 	@Override
 	public final void removeFromParent() {
-		DomNode_Static.removeFromParent(this);
+		DomNodeStatic.removeFromParent(this);
 	}
 
 	@Override
 	public final Node removeAllChildren() {
-		return DomNode_Static.removeAllChildren(this);
+		return DomNodeStatic.removeAllChildren(this);
 	}
 
 	/**
@@ -74,19 +74,19 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
         }
 	}-*/;
 
-	protected Node_Jso() {
+	protected NodeRemote() {
 	}
 
 	@Override
 	public final <T extends Node> T appendChild(T newChild) {
-		Node_Jso toAppend = resolvedOrPending(newChild);
+		NodeRemote toAppend = resolvedOrPending(newChild);
 		return (T) nodeFor(appendChild0(toAppend));
 	}
 
 	/**
 	 * Link remote to [remote or local]
 	 */
-	private Node_Jso resolvedOrPending(Node node) {
+	private NodeRemote resolvedOrPending(Node node) {
 		if (node == null) {
 			return null;
 		}
@@ -105,7 +105,7 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 *            The node to add
 	 * @return The node added
 	 */
-	private final native Node_Jso appendChild0(Node_Jso newChild) /*-{
+	private final native NodeRemote appendChild0(NodeRemote newChild) /*-{
         return this.appendChild(newChild);
 	}-*/;
 
@@ -128,7 +128,7 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 *            attributes, if it is an {@link Element})
 	 * @return The duplicate node
 	 */
-	private final native Node_Jso cloneNode0(boolean deep) /*-{
+	private final native NodeRemote cloneNode0(boolean deep) /*-{
         return this.cloneNode(deep);
 	}-*/;
 
@@ -146,7 +146,7 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 		return new NodeList<>(getChildNodes0());
 	}
 
-	final native NodeList_Jso<Node> getChildNodes0() /*-{
+	final native NodeListRemote<Node> getChildNodes0() /*-{
         return this.childNodes;
 	}-*/;
 
@@ -154,7 +154,7 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 * The first child of this node. If there is no such node, this returns
 	 * null.
 	 */
-	public final native Node_Jso getFirstChild0() /*-{
+	public final native NodeRemote getFirstChild0() /*-{
         return this.firstChild;
 	}-*/;
 
@@ -166,7 +166,7 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	/**
 	 * The last child of this node. If there is no such node, this returns null.
 	 */
-	private final native Node_Jso getLastChild0() /*-{
+	private final native NodeRemote getLastChild0() /*-{
         return this.lastChild;
 	}-*/;
 
@@ -179,7 +179,7 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 * The node immediately following this node. If there is no such node, this
 	 * returns null.
 	 */
-	private final native Node_Jso getNextSibling0() /*-{
+	private final native NodeRemote getNextSibling0() /*-{
         return this.nextSibling;
 	}-*/;
 
@@ -217,7 +217,7 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 * The Document object associated with this node. This is also the
 	 * {@link Document} object used to create new nodes.
 	 */
-	private final native Document_Jso getOwnerDocument0() /*-{
+	private final native DocumentRemote getOwnerDocument0() /*-{
         return this.ownerDocument;
 	}-*/;
 
@@ -231,7 +231,7 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 * However, if a node has just been created and not yet added to the tree,
 	 * or if it has been removed from the tree, this is null.
 	 */
-	public final native Node_Jso getParentNode0() /*-{
+	public final native NodeRemote getParentNode0() /*-{
         return this.parentNode;
 	}-*/;
 
@@ -244,7 +244,7 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 * The node immediately preceding this node. If there is no such node, this
 	 * returns null.
 	 */
-	private final native Node_Jso getPreviousSibling0() /*-{
+	private final native NodeRemote getPreviousSibling0() /*-{
         return this.previousSibling;
 	}-*/;
 
@@ -273,15 +273,15 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 *            node must be inserted), or <code>null</code>
 	 * @return The node being inserted
 	 */
-	private final native Node_Jso insertBefore0(Node_Jso newChild,
-			Node_Jso refChild) /*-{
+	private final native NodeRemote insertBefore0(NodeRemote newChild,
+			NodeRemote refChild) /*-{
         return this.insertBefore(newChild, refChild);
 	}-*/;
 
 	@Override
 	public final Node insertBefore(Node newChild, Node refChild) {
-		Node_Jso newChildDom = resolvedOrPending(newChild);
-		Node_Jso refChildDom = resolvedOrPending(refChild);
+		NodeRemote newChildDom = resolvedOrPending(newChild);
+		NodeRemote refChildDom = resolvedOrPending(refChild);
 		return nodeFor(insertBefore0(newChildDom, refChildDom));
 	}
 
@@ -306,21 +306,21 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 *            The node being removed
 	 * @return The node removed
 	 */
-	private final native Node_Jso removeChild0(Node_Jso oldChild) /*-{
+	private final native NodeRemote removeChild0(NodeRemote oldChild) /*-{
         return this.removeChild(oldChild);
 	}-*/;
 
 	@Override
 	public final Node removeChild(Node oldChild) {
-		Node_Jso firstChild0 = getFirstChild0();
+		NodeRemote firstChild0 = getFirstChild0();
 		if (getChildNodes0().getLength() > 2) {
-			Node_Jso item0 = getChildNodes0().getItem0(2);
+			NodeRemote item0 = getChildNodes0().getItem0(2);
 			int debug = 3;
 		}
 		if (oldChild.provideIsElement() && !oldChild.provideIsDom()) {
 			((Element) oldChild).ensureJso();
 		}
-		Node_Jso resolvedOrPending = resolvedOrPending(oldChild);
+		NodeRemote resolvedOrPending = resolvedOrPending(oldChild);
 		if (resolvedOrPending.getParentNode() == null) {
 			return nodeFor(resolvedOrPending);
 		} else {
@@ -338,15 +338,15 @@ public abstract class Node_Jso extends JavaScriptObject implements DomNode {
 	 *            The node being replaced in the list
 	 * @return The node replaced
 	 */
-	private final native Node_Jso replaceChild0(Node_Jso newChild,
-			Node_Jso oldChild) /*-{
+	private final native NodeRemote replaceChild0(NodeRemote newChild,
+			NodeRemote oldChild) /*-{
         return this.replaceChild(newChild, oldChild);
 	}-*/;
 
 	@Override
 	public final Node replaceChild(Node newChild, Node oldChild) {
-		Node_Jso newChildDom = resolvedOrPending(newChild);
-		Node_Jso oldChildDom = resolvedOrPending(oldChild);
+		NodeRemote newChildDom = resolvedOrPending(newChild);
+		NodeRemote oldChildDom = resolvedOrPending(oldChild);
 		return nodeFor(replaceChild0(newChildDom, oldChildDom));
 	}
 

@@ -44,7 +44,7 @@ class DOMImplStandardBase extends DOMImplStandard {
     }-*/;
   }
 
-  private static native double getAbsoluteLeftUsingOffsets(Element_Jso elem) /*-{
+  private static native double getAbsoluteLeftUsingOffsets(ElementRemote elem) /*-{
     // Unattached elements and elements (or their ancestors) with style
     // 'display: none' have no offsetLeft.
     if (elem.offsetLeft == null) {
@@ -97,7 +97,7 @@ class DOMImplStandardBase extends DOMImplStandard {
     return left;
   }-*/;
 
-  private static native double getAbsoluteTopUsingOffsets(Element_Jso elem) /*-{
+  private static native double getAbsoluteTopUsingOffsets(ElementRemote elem) /*-{
     // Unattached elements and elements (or their ancestors) with style
     // 'display: none' have no offsetTop.
     if (elem.offsetTop == null) {
@@ -142,7 +142,7 @@ class DOMImplStandardBase extends DOMImplStandard {
     return top;
   }-*/;
 
-  private static native ClientRect getBoundingClientRect(Element_Jso elem) /*-{
+  private static native ClientRect getBoundingClientRect(ElementRemote elem) /*-{
     return elem.getBoundingClientRect && elem.getBoundingClientRect();
   }-*/;
 
@@ -151,37 +151,37 @@ class DOMImplStandardBase extends DOMImplStandard {
    * set it using setAttribute.
    */
   @Override
-  protected native Element_Jso createButtonElement(Document_Jso doc, String type) /*-{
+  protected native ElementRemote createButtonElement(DocumentRemote doc, String type) /*-{
     var e = doc.createElement("BUTTON");
     e.setAttribute('type', type);
     return e;
   }-*/;
 
   @Override
-  protected native NativeEvent createKeyCodeEvent(Document_Jso doc, String type,
+  protected native NativeEvent createKeyCodeEvent(DocumentRemote doc, String type,
       boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
       int keyCode) /*-{
-    var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/Document_Jso;Ljava/lang/String;ZZZZZZ)(doc, type, true, true, ctrlKey, altKey, shiftKey, metaKey)
+    var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentRemote;Ljava/lang/String;ZZZZZZ)(doc, type, true, true, ctrlKey, altKey, shiftKey, metaKey)
     evt.keyCode = keyCode;
     return evt;
   }-*/;
 
   @Override
   @Deprecated
-  protected native NativeEvent createKeyEvent(Document_Jso doc, String type,
+  protected native NativeEvent createKeyEvent(DocumentRemote doc, String type,
       boolean canBubble, boolean cancelable, boolean ctrlKey, boolean altKey,
       boolean shiftKey, boolean metaKey, int keyCode, int charCode) /*-{
-    var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/Document_Jso;Ljava/lang/String;ZZZZZZ)(doc, type, canBubble, cancelable, ctrlKey, altKey, shiftKey, metaKey)
+    var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentRemote;Ljava/lang/String;ZZZZZZ)(doc, type, canBubble, cancelable, ctrlKey, altKey, shiftKey, metaKey)
     evt.keyCode = keyCode;
     evt.charCode = charCode;
     return evt;
   }-*/;
 
   @Override
-  protected native NativeEvent createKeyPressEvent(Document_Jso doc,
+  protected native NativeEvent createKeyPressEvent(DocumentRemote doc,
       boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
       int charCode) /*-{
-    var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/Document_Jso;Ljava/lang/String;ZZZZZZ)(doc, 'keypress', true, true, ctrlKey, altKey, shiftKey, metaKey)
+    var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentRemote;Ljava/lang/String;ZZZZZZ)(doc, 'keypress', true, true, ctrlKey, altKey, shiftKey, metaKey)
     evt.charCode = charCode;
     return evt;
   }-*/;
@@ -190,7 +190,7 @@ class DOMImplStandardBase extends DOMImplStandard {
    * Safari 2 does not support {@link ScriptElement#setText(String)}.
    */
   @Override
-  protected ScriptElement createScriptElement(Document_Jso doc, String source) {
+  protected ScriptElement createScriptElement(DocumentRemote doc, String source) {
     ScriptElement elem = nodeFor( createElement(doc, "script"));
     elem.setInnerText(source);
     return elem;
@@ -207,7 +207,7 @@ class DOMImplStandardBase extends DOMImplStandard {
   }-*/;
 
   @Override
-  protected int getAbsoluteLeft(Element_Jso elem) {
+  protected int getAbsoluteLeft(ElementRemote elem) {
     ClientRect rect = getBoundingClientRect(elem);
     double left = rect != null ? rect.getSubPixelLeft()
         + elem.getOwnerDocument().getBody().getScrollLeft()
@@ -216,7 +216,7 @@ class DOMImplStandardBase extends DOMImplStandard {
   }
 
   @Override
-  protected int getAbsoluteTop(Element_Jso elem) {
+  protected int getAbsoluteTop(ElementRemote elem) {
     ClientRect rect = getBoundingClientRect(elem);
     double top = rect != null ? rect.getSubPixelTop()
         + elem.getOwnerDocument().getBody().getScrollTop()
@@ -225,14 +225,14 @@ class DOMImplStandardBase extends DOMImplStandard {
   }
 
   @Override
-  protected native int getScrollLeft(Document_Jso doc) /*-{
+  protected native int getScrollLeft(DocumentRemote doc) /*-{
     // Safari always applies doc scrolling to the body Element_Dom, even in strict mode.
     // The behavior of Chrome depends of the doctype mode.
     return doc.documentElement.scrollLeft || doc.body.scrollLeft;
   }-*/;
 
   @Override
-  protected int getScrollLeft(Element_Jso elem) {
+  protected int getScrollLeft(ElementRemote elem) {
     if (!elem.hasTagName(BodyElement.TAG) && isRTL(elem)) {
       return super.getScrollLeft(elem)
           - (elem.getScrollWidth() - elem.getClientWidth());
@@ -241,21 +241,21 @@ class DOMImplStandardBase extends DOMImplStandard {
   }
 
   @Override
-  protected native int getScrollTop(Document_Jso doc) /*-{
+  protected native int getScrollTop(DocumentRemote doc) /*-{
     // Safari always applies doc scrolling to the body Element_Dom, even in strict mode.
     // The behavior of Chrome depends of the doctype mode.
     return doc.documentElement.scrollTop || doc.body.scrollTop;
   }-*/;
 
   @Override
-  protected native int getTabIndex(Element_Jso elem) /*-{ 
+  protected native int getTabIndex(ElementRemote elem) /*-{ 
     // tabIndex is undefined for divs and other non-focusable elements prior to
     // Safari 4.
     return typeof elem.tabIndex != 'undefined' ? elem.tabIndex : -1;
   }-*/;
 
   @Override
-  protected native void setScrollLeft(Document_Jso doc, int left) /*-{
+  protected native void setScrollLeft(DocumentRemote doc, int left) /*-{
     // Safari always applies doc scrolling to the body Element_Dom, even in strict mode. The
     // behavior of Chrome depends of the doctype mode.
     // This instruction will be ignored by safari and chrome in quirks mode.
@@ -265,7 +265,7 @@ class DOMImplStandardBase extends DOMImplStandard {
   }-*/;
 
   @Override
-  protected void setScrollLeft(Element_Jso elem, int left) {
+  protected void setScrollLeft(ElementRemote elem, int left) {
     if (!elem.hasTagName(BodyElement.TAG) && isRTL(elem)) {
       left += elem.getScrollWidth() - elem.getClientWidth();
     }
@@ -273,7 +273,7 @@ class DOMImplStandardBase extends DOMImplStandard {
   }
 
   @Override
-  protected native void setScrollTop(Document_Jso doc, int top) /*-{
+  protected native void setScrollTop(DocumentRemote doc, int top) /*-{
     // Safari always applies doc scrolling to the body Element_Dom, even in strict mode. The
     // behavior of Chrome depends of the doctype mode.
     // This instruction will be ignored by safari and by chrome in quirks mode.
@@ -282,11 +282,11 @@ class DOMImplStandardBase extends DOMImplStandard {
     doc.body.scrollTop = top;
   }-*/;
 
-  protected native boolean isRTL(Element_Jso elem) /*-{
+  protected native boolean isRTL(ElementRemote elem) /*-{
     return elem.ownerDocument.defaultView.getComputedStyle(elem, '').direction == 'rtl';
   }-*/;
 
-  private native NativeEvent createKeyEvent(Document_Jso doc, String type,
+  private native NativeEvent createKeyEvent(DocumentRemote doc, String type,
       boolean canBubble, boolean cancelable, boolean ctrlKey, boolean altKey,
       boolean shiftKey, boolean metaKey) /*-{
     // WebKit's KeyboardEvent cannot set or even initialize charCode, keyCode, etc.

@@ -19,7 +19,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Element_Jso;
+import com.google.gwt.dom.client.ElementRemote;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.user.client.DOM;
@@ -143,7 +143,7 @@ public abstract class DOMImplStandard extends DOMImpl {
 	  return LocalDomBridge.nodeFor(getChild0(LocalDomBridge.elementJso(elem),index));
   }
   
-   native Element_Jso getChild0(Element_Jso elem, int index) /*-{
+   native ElementRemote getChild0(ElementRemote elem, int index) /*-{
     var count = 0, child = elem.firstChild;
     while (child) {
       if (child.nodeType == 1) {
@@ -172,7 +172,7 @@ public abstract class DOMImplStandard extends DOMImpl {
   public  int getChildIndex(Element parent, Element toFind) {
   		return getChildIndex0(parent.ensureJso(), toFind.ensureJso());
   }
-  native int getChildIndex0(Element_Jso parent, Element_Jso toFind) /*-{
+  native int getChildIndex0(ElementRemote parent, ElementRemote toFind) /*-{
     var count = 0, child = parent.firstChild;
     while (child) {
       if (child === toFind) {
@@ -226,7 +226,7 @@ public abstract class DOMImplStandard extends DOMImpl {
   @Override
   public void sinkEvents(Element elem, int bits) {
     maybeInitializeEventSystem();
-    Element_Jso elem_jso = LocalDomBridge.elementJso(elem);
+    ElementRemote elem_jso = LocalDomBridge.elementJso(elem);
 	sinkEventsImpl(elem_jso, bits);
   }
 
@@ -254,14 +254,14 @@ public abstract class DOMImplStandard extends DOMImpl {
     foreach(captureEvents, function(e, fn) { $wnd.addEventListener(e, fn, true); });
   }-*/;
 
-  protected native void sinkBitlessEventImpl(Element_Jso elem, String eventTypeName) /*-{
+  protected native void sinkBitlessEventImpl(ElementRemote elem, String eventTypeName) /*-{
     var dispatchMap = @com.google.gwt.user.client.impl.DOMImplStandard::bitlessEventDispatchers;
     var dispatcher = dispatchMap[eventTypeName] || dispatchMap['_default_'];
     elem.addEventListener(eventTypeName, dispatcher, false);
   }-*/;
 
   @SuppressWarnings("deprecation")
-  protected native void sinkEventsImpl(Element_Jso elem, int bits) /*-{
+  protected native void sinkEventsImpl(ElementRemote elem, int bits) /*-{
     var chMask = (elem.__eventBits || 0) ^ bits;
     elem.__eventBits = bits;
     if (!chMask) return;

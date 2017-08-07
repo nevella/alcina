@@ -84,7 +84,7 @@ public class TableElement extends Element {
 	 * 
 	 * @return A CAPTION element.
 	 */
-	private native Element_Jso createCaption0(Element_Jso elt) /*-{
+	private native ElementRemote createCaption0(ElementRemote elt) /*-{
         return elt.createCaption();
 	}-*/;
 
@@ -97,7 +97,7 @@ public class TableElement extends Element {
 	 * 
 	 * @return A footer element (TFOOT)
 	 */
-	private native Element_Jso createTFoot0(Element_Jso elt) /*-{
+	private native ElementRemote createTFoot0(ElementRemote elt) /*-{
         return elt.createTFoot();
 	}-*/;
 
@@ -115,7 +115,7 @@ public class TableElement extends Element {
 	 * 
 	 * @return A new table header element (THEAD)
 	 */
-	native Element_Jso createTHead0(Element_Jso elt) /*-{
+	native ElementRemote createTHead0(ElementRemote elt) /*-{
         return elt.createTHead();
 	}-*/;
 
@@ -131,7 +131,7 @@ public class TableElement extends Element {
 	/**
 	 * Delete the table caption, if one exists.
 	 */
-	native void deleteCaption0(Element_Jso elt) /*-{
+	native void deleteCaption0(ElementRemote elt) /*-{
         elt.deleteCaption();
 	}-*/;
 
@@ -148,7 +148,7 @@ public class TableElement extends Element {
 	 *            all the rows contained inside the table. If the index is -1
 	 *            the last row in the table is deleted
 	 */
-	native void deleteRow0(Element_Jso elt, int index) /*-{
+	native void deleteRow0(ElementRemote elt, int index) /*-{
         elt.deleteRow(index);
 	}-*/;
 
@@ -159,7 +159,7 @@ public class TableElement extends Element {
 	/**
 	 * Delete the header from the table, if one exists.
 	 */
-	native void deleteTFoot0(Element_Jso elt) /*-{
+	native void deleteTFoot0(ElementRemote elt) /*-{
         elt.deleteTFoot();
 	}-*/;
 
@@ -170,7 +170,7 @@ public class TableElement extends Element {
 	/**
 	 * Delete the header from the table, if one exists.
 	 */
-	native void deleteTHead0(Element_Jso elt) /*-{
+	native void deleteTHead0(ElementRemote elt) /*-{
         elt.deleteTHead();
 	}-*/;
 
@@ -257,7 +257,7 @@ public class TableElement extends Element {
 			TableSectionElement body = (TableSectionElement) provideLocalDomElement()
 					.createOrReturnChild("tbody");
 			return new NodeList<>(
-					new NodeList_Wrapped(Collections.singletonList(body)));
+					new NodeListWrapped(Collections.singletonList(body)));
 		} else {
 			return new NodeList<>(getTBodies0(ensureJso()));
 		}
@@ -266,21 +266,21 @@ public class TableElement extends Element {
 	/**
 	 * Returns a collection of the table bodies (including implicit ones).
 	 */
-	private final native NodeList_Jso getTBodies0(Element_Jso elem) /*-{
+	private final native NodeListRemote getTBodies0(ElementRemote elem) /*-{
         return elem.tBodies;
 	}-*/;
 
 	/**
 	 * The table's TFOOT, or null if none exists.
 	 */
-	final native Element_Jso getTFoot0(Element_Jso elem) /*-{
+	final native ElementRemote getTFoot0(ElementRemote elem) /*-{
         return elem.tFoot;
 	}-*/;
 
 	/**
 	 * The table's THEAD, or null if none exists.
 	 */
-	final native Element_Jso getTHead0(Element_Jso elem) /*-{
+	final native ElementRemote getTHead0(ElementRemote elem) /*-{
         return elem.tHead;
 	}-*/;
 

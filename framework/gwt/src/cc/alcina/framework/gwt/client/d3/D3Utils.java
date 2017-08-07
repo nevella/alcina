@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.d3;
 
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.dom.client.Element_Jso;
+import com.google.gwt.dom.client.ElementRemote;
 
 public class D3Utils {
 	private static int svgIdCounter;
@@ -22,7 +22,7 @@ public class D3Utils {
 		protected D3Visualisation() {
 		}
 
-		public native void renderGraph(Element_Jso element, int ctrWidth,
+		public native void renderGraph(ElementRemote element, int ctrWidth,
 				int ctrHeight)/*-{
             try {
                 this.render(element, ctrWidth, ctrHeight);

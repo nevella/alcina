@@ -1,88 +1,82 @@
 package com.google.gwt.dom.client;
 
-import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
-import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-
-public class Text_Jvm extends Node_Jvm implements DomText {
-	private String text;
-
-	Text_Jvm(String text) {
-		this.text = text;
+public class TextNull extends NodeLocal implements DomText {
+	static final TextNull INSTANCE = new TextNull();
+	TextNull() {
 	}
 
 	@Override
 	public void deleteData(int offset, int length) {
-		throw new UnsupportedOperationException();
+		// noop
 	}
 
 	@Override
 	public String getData() {
-		return text;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public int getLength() {
-		return text.length();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public String getNodeName() {
-		return "#text";
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Node cloneNode(boolean deep) {
-		Text_Jvm impl = (Text_Jvm) LocalDomBridge.get().localDomImpl.localImpl
-				.createUnwrappedLocalText(getOwnerDocument(), text);
-		return LocalDomBridge.nodeFor(impl);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public short getNodeType() {
-		return Node.TEXT_NODE;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public String getNodeValue() {
-		return text;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void insertData(int offset, String data) {
-		throw new UnsupportedOperationException();
+		// noop
 	}
 
 	@Override
 	public void replaceData(int offset, int length, String data) {
-		throw new UnsupportedOperationException();
+		// noop
 	}
 
 	@Override
 	public void setData(String data) {
-		this.text = data;
+		// noop
 	}
 
 	@Override
 	public void setNodeValue(String nodeValue) {
-		setData(nodeValue);
+		// noop
 	}
 
 	@Override
 	public Text splitText(int offset) {
-		throw new UnsupportedOperationException();
+		// noop
+		return null;
 	}
 
 	@Override
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		builder.appendEscapedNoQuotes(text);
+		throw new UnsupportedOperationException();
 	}
 
 	void appendUnescaped(UnsafeHtmlBuilder builder) {
-		builder.appendUnsafeHtml(text);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	void appendTextContent(StringBuilder builder) {
-		builder.append(getData());
+		throw new UnsupportedOperationException();
 	}
 }

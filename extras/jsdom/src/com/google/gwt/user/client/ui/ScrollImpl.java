@@ -19,7 +19,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Element_Jso;
+import com.google.gwt.dom.client.ElementRemote;
 
 /**
  * Implementation of scrolling behavior.
@@ -152,7 +152,7 @@ class ScrollImpl {
   public  boolean isRtl(Element scrollable) {
 	  return isRtl0(scrollable.ensureJso());
   }
-  private native boolean isRtl0(Element_Jso scrollable) /*-{
+  private native boolean isRtl0(ElementRemote scrollable) /*-{
     var computedStyle = $doc.defaultView.getComputedStyle(scrollable, null);
     return computedStyle.getPropertyValue('direction') == 'rtl';
   }-*/;

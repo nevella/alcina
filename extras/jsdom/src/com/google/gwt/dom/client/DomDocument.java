@@ -1,7 +1,5 @@
 package com.google.gwt.dom.client;
 
-import com.google.gwt.core.client.SingleJsoImpl;
-
 /**
  * all default methods should actually call through to domdocument_static ... when i get the time
  * @author nick@alcina.cc

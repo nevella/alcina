@@ -90,7 +90,7 @@ public class TableSectionElement extends Element {
 	 *            row. This index starts from 0 and is relative only to the rows
 	 *            contained inside this section, not all the rows in the table.
 	 */
-	native void deleteRow0(Element_Jso elt, int index) /*-{
+	native void deleteRow0(ElementRemote elt, int index) /*-{
         elt.deleteRow(index);
 	}-*/;
 
@@ -141,13 +141,13 @@ public class TableSectionElement extends Element {
 				}
 			}
 			return new NodeList<>(
-					(NodeList_Wrapped) new NodeList_Wrapped<>(nodes));
+					(NodeListWrapped) new NodeListWrapped<>(nodes));
 		} else {
 			return new NodeList<>(getRows0(domImpl));
 		}
 	}
 
-	private final native NodeList_Jso getRows0(Element_Jso elem) /*-{
+	private final native NodeListRemote getRows0(ElementRemote elem) /*-{
         return elem.rows;
 	}-*/;
 

@@ -83,7 +83,7 @@ public class FrameElement extends Element {
    * The document this frame contains, if there is any and it is available, or
    * null otherwise.
    */
-  private final native Document_Jso getContentDocument0(Element_Jso element) /*-{
+  private final native DocumentRemote getContentDocument0(ElementRemote element) /*-{
      // This is known to work on all modern browsers.
      return this.contentWindow.document;
    }-*/;

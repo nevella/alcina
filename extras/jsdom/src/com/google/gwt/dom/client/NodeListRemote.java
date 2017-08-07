@@ -18,7 +18,6 @@ package com.google.gwt.dom.client;
 import java.util.stream.Stream;
 
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.core.client.SingleJsoImpl;
 
 /**
  * The NodeList interface provides the abstraction of an ordered collection of
@@ -31,9 +30,9 @@ import com.google.gwt.core.client.SingleJsoImpl;
  * @param <T>
  *            the type of contained node
  */
-public class NodeList_Jso<T extends Node> extends JavaScriptObject
+public class NodeListRemote<T extends Node> extends JavaScriptObject
 		implements DomNodeList<T> {
-	protected NodeList_Jso() {
+	protected NodeListRemote() {
 	}
 
 	/**
@@ -45,7 +44,7 @@ public class NodeList_Jso<T extends Node> extends JavaScriptObject
 	 * @return the node at the indexth position in the NodeList, or null if that
 	 *         is not a valid index.
 	 */
-	 final native Node_Jso getItem0(int index) /*-{
+	 final native NodeRemote getItem0(int index) /*-{
         return this[index];
 	}-*/;
 
@@ -65,6 +64,6 @@ public class NodeList_Jso<T extends Node> extends JavaScriptObject
 	
 	@Override
 	public final Stream<T> stream() {
-		return DomNodeList_Static.stream0(this);
+		return DomNodeListStatic.stream0(this);
 	}
 }

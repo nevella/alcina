@@ -1,6 +1,6 @@
 package com.google.gwt.dom.client;
 
-public class DomDocument_Static {
+public class DomDocumentStatic {
 	static String getNodeName(DomDocument domDocument) {
 		return "#document";
 	}

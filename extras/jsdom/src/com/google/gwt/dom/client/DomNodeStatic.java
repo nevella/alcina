@@ -1,6 +1,11 @@
 package com.google.gwt.dom.client;
 
-class DomNode_Static {
+/**
+ * All 'static' classes are a workaround for jsos not allowing default methods
+ * @author nick@alcina.cc
+ *
+ */
+class DomNodeStatic {
 	 static Node getChild(DomNode domNode, int index) {
 		assert (index >= 0) && (index < domNode
 				.getChildCount()) : "Child index out of bounds";

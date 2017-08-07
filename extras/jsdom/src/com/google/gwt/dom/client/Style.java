@@ -991,6 +991,9 @@ public class Style implements DomStyle {
 	protected Style() {
 	}
 
+	DomStyle localImpl;
+	DomStyle remoteImpl;
+	
 	DomStyle impl;
 
 	public void clearBackgroundColor() {
@@ -1611,8 +1614,8 @@ public class Style implements DomStyle {
 
 	boolean resolved;
 
-	public Style_Jso domImpl() {
-		return (Style_Jso) impl;
+	public StyleRemote domImpl() {
+		return (StyleRemote) impl;
 	}
 
 	 boolean provideIsLocal() {
