@@ -8,6 +8,7 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	public DocumentLocal() {
 	}
+
 	@Override
 	public short getNodeType() {
 		return Node.DOCUMENT_NODE;
@@ -26,7 +27,8 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	@Override
 	public Text createTextNode(String data) {
 		TextLocal local = new TextLocal(data);
-		return new Text(local);
+		Text text = new Text(local);
+		local.registerNode(text);
 	}
 
 	@Override
@@ -41,13 +43,11 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public BodyElement getBody() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Document documentFor() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -58,15 +58,10 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	@Override
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
 		throw new UnsupportedOperationException();
-		
 	}
 
 	@Override
 	void appendTextContent(StringBuilder builder) {
-throw new UnsupportedOperationException();		
-	}
-
-	public TextLocal createText_Jvm(String text) {
-		return new TextLocal(text);
+		throw new UnsupportedOperationException();
 	}
 }

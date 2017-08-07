@@ -80,4 +80,6 @@ public class TextLocal extends NodeLocal implements DomText {
 	void appendTextContent(StringBuilder builder) {
 		builder.append(getData());
 	}
+
+	
 }

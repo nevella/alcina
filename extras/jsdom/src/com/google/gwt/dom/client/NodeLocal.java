@@ -9,12 +9,13 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public abstract class NodeLocal implements DomNode, LocalDomNode {
-	static <N extends Node> N nodeFor(NodeLocal node_jvm) {
-		return (N) LocalDomBridge.nodeFor(node_jvm);
+	protected void registerNode(Node node) {
+		this.node = node;
 	}
 
+	@Override
 	public Node nodeFor() {
-		return nodeFor(this);
+		return node;
 	}
 
 	@Override
