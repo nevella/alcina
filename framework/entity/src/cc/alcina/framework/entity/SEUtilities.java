@@ -203,6 +203,11 @@ public class SEUtilities {
 	}
 
 	public static int copyFile(File in, File out) throws IOException {
+		return copyFile(in, out, false);
+	}
+
+	public static int copyFile(File in, File out, boolean forceOverwrite)
+			throws IOException {
 		if (in.isDirectory()) {
 			return copyDirectory(in, out);
 		}
@@ -210,7 +215,8 @@ public class SEUtilities {
 			out.getParentFile().mkdirs();
 			out.createNewFile();
 		} else {
-			if (out.lastModified() >= in.lastModified()) {
+			if (out.lastModified() >= in.lastModified()
+					&& out.length() == in.length() && !forceOverwrite) {
 				return 0;
 			}
 		}
@@ -1229,9 +1235,11 @@ public class SEUtilities {
 	}
 
 	public static String getStacktraceSlice(Thread t) {
-		return getStacktraceSlice(t, 20,0);
+		return getStacktraceSlice(t, 20, 0);
 	}
-	public static String getStacktraceSlice(Thread t, int size, int omitLowCount) {
+
+	public static String getStacktraceSlice(Thread t, int size,
+			int omitLowCount) {
 		String log = "";
 		StackTraceElement[] trace = t.getStackTrace();
 		for (int i = omitLowCount; i < trace.length && i < size; i++) {
