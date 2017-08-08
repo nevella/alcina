@@ -1820,10 +1820,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return result;
 	}
 
-	public void
-			deleteMultiple(Collection<? extends HasIdAndLocalId> collection) {
-		collection.forEach(hili -> deleteObject(hili, true));
-	}
+
+    public <H extends HasIdAndLocalId> void deleteMultiple(Collection<H> collection) {
+        new ArrayList<H>(collection).forEach(hili -> deleteObject(hili, true));
+    }
 
 	/**
 	 * useful support in TLTM, ThreadedClientTM

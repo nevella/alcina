@@ -1089,10 +1089,13 @@ public class CommonUtils {
 
 	public static double roundNumeric(double d, int places) {
 		int multiplier = 1;
+		// cos Math.round((1.005 ) * 100) / 100 = 1, not 1.01
+		double pad = 0.0001;
 		for (int i = 0; i < places; i++) {
 			multiplier *= 10;
+			pad /= 10;
 		}
-		String s = String.valueOf(Math.round(d * multiplier));
+		String s = String.valueOf(Math.round(d * multiplier + pad));
 		s = padStringLeft(s, places + 1, '0');
 		int len = s.length();
 		return Double.valueOf(
@@ -1544,5 +1547,9 @@ public class CommonUtils {
 
 	public static Object last(Object[] array) {
 		return array.length == 0 ? null : array[array.length - 1];
+	}
+
+	public static Date cloneDate(Date date) {
+		return date == null ? null : new Date(date.getTime());
 	}
 }

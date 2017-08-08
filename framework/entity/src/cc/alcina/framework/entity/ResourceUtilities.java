@@ -671,4 +671,5 @@ public class ResourceUtilities {
 		logToFile(content,"log.html");
 		logToFile(content,"log.xml");
 	}
+	
 }

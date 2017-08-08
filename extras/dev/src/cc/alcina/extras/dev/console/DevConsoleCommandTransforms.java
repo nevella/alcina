@@ -498,7 +498,7 @@ public class DevConsoleCommandTransforms {
 					+ " inner join %s dtr on dtr.clientinstance_id=ci.id "
 					+ "where %s order by dtr.id desc";
 			String sql2 = "select ci.id as cli_id, u.username,  "
-					+ "  dtr.id as dtr_id, dte.id as dte_id, "
+					+ "  dtr.id as dtr_id,dtr.requestid as dtr_rid, dte.id as dte_id, "
 					+ " dte.objectclassref_id as dte_objref, dte.objectid as object_id, "
 					+ "dte.propertyname as propertyname, "
 					+ " dte.newstringvalue as newstringvalue,dte.transformtype as transformtype, "
