@@ -3,10 +3,10 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringMap;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface PersistenceObjectStore {
 	public abstract void getRange(int fromId, int toId,

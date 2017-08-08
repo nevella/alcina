@@ -13,11 +13,9 @@
  */
 package cc.alcina.framework.common.client.search;
 
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlTransient;

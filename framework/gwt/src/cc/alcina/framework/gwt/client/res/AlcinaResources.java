@@ -1,10 +1,10 @@
 package cc.alcina.framework.gwt.client.res;
 
-import cc.alcina.framework.gwt.client.gen.SimpleCssResource;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.TextResource;
+
+import cc.alcina.framework.gwt.client.gen.SimpleCssResource;
 
 public interface AlcinaResources extends ClientBundle {
 	public static final AlcinaResources INSTANCE = GWT

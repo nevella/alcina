@@ -1,7 +1,5 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
-import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
-
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
 import java.util.Collection;
@@ -12,6 +10,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 
 public class ArrayBackedLongMap<V> implements Map<Long, V> {
 	private transient Object[] elementData;

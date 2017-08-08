@@ -1,5 +1,8 @@
 package cc.alcina.framework.gwt.persistence.client;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -13,9 +16,6 @@ import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.util.OnetimeWrappingAsyncCallback;
 import cc.alcina.framework.gwt.client.util.WrappingAsyncCallback;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence.TypeSizeTuple;
-
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 @RegistryLocation(registryPoint = DatabaseStatsObserver.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable

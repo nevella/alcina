@@ -21,9 +21,6 @@ import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.gwt.client.gen.SimpleCssResource;
-
 import com.google.gwt.core.ext.BadPropertyValueException;
 import com.google.gwt.core.ext.ConfigurationProperty;
 import com.google.gwt.core.ext.Generator;
@@ -43,6 +40,9 @@ import com.google.gwt.resources.ext.ResourceGeneratorUtil;
 import com.google.gwt.resources.ext.SupportsGeneratorResultCaching;
 import com.google.gwt.user.rebind.SourceWriter;
 import com.google.gwt.user.rebind.StringSourceWriter;
+
+import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.gwt.client.gen.SimpleCssResource;
 
 /**
  * Provides implementations of SimpleCssResource.

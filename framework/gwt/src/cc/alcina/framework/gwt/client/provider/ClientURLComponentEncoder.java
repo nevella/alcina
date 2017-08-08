@@ -14,12 +14,12 @@
 
 package cc.alcina.framework.gwt.client.provider;
 
+import com.google.gwt.http.client.URL;
+
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.UrlEncoder;
-
-import com.google.gwt.http.client.URL;
 
 
 /**

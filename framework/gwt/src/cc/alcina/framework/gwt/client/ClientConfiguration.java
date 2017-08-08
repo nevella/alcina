@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client;
 
+import com.google.gwt.dom.client.StyleInjector;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
@@ -18,8 +20,6 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.res.AlcinaProperties;
 import cc.alcina.framework.gwt.client.res.AlcinaResources;
 import cc.alcina.framework.gwt.client.util.TimerWrapperGwt.TimerWrapperProviderGwt;
-
-import com.google.gwt.dom.client.StyleInjector;
 
 public class ClientConfiguration {
 	public void initServices() {

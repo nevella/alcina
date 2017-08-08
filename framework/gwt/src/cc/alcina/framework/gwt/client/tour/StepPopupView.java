@@ -1,15 +1,15 @@
 package cc.alcina.framework.gwt.client.tour;
 
-import cc.alcina.framework.common.client.actions.InlineButtonHandler;
-import cc.alcina.framework.common.client.util.TopicPublisher;
-import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
-import cc.alcina.framework.gwt.client.tour.Tour.PopupInfo;
-
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
+
+import cc.alcina.framework.common.client.actions.InlineButtonHandler;
+import cc.alcina.framework.common.client.util.TopicPublisher;
+import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
+import cc.alcina.framework.gwt.client.tour.Tour.PopupInfo;
 
 public class StepPopupView extends Composite {
 	private FlowPanel fp;

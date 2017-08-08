@@ -1,9 +1,9 @@
 package com.totsp.gwittir.rebind.beans;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-
 import com.google.gwt.core.ext.ConfigurationProperty;
 import com.google.gwt.core.ext.GeneratorContext;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class IntrospectorFilterHelper {
 	public static IntrospectorFilter getFilter(GeneratorContext context) {

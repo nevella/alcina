@@ -2,10 +2,10 @@ package cc.alcina.framework.gwt.client.widget;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.util.Multimap;
-
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.common.client.util.Multimap;
 
 public class VariableWizardVisibilityHelper<U> {
 	Multimap<U, List<Widget>> toShowWidgets = new Multimap<U, List<Widget>>();

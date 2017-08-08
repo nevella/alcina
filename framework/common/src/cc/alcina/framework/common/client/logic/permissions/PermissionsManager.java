@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
@@ -46,12 +48,9 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StackDebug;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 @SuppressWarnings("unchecked")
 /**

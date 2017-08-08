@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.logic;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
@@ -14,8 +16,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.gwt.client.ClientBase;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class WaitForTransformsClient implements AsyncCallback<DomainUpdate> {
 	private long lastCommittedRequestId;

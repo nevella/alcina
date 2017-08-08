@@ -2,9 +2,9 @@ package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-
 import com.google.gwt.user.client.rpc.AsyncCallback;
+
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 public class KeyValueStore {
 	public static KeyValueStore createNonStandardKeyValueStore(

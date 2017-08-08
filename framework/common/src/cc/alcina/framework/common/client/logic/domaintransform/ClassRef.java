@@ -24,11 +24,11 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.totsp.gwittir.client.ui.Renderer;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
-
-import com.totsp.gwittir.client.ui.Renderer;
 
 @MappedSuperclass
 /**

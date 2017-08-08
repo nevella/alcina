@@ -15,17 +15,17 @@ package cc.alcina.extras.misc.ie.client;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
-import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
 import com.google.gwt.event.logical.shared.CloseEvent;
 import com.google.gwt.event.logical.shared.CloseHandler;
 import com.google.gwt.user.client.Window;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
+import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 
 /**
  * Better stacktrace etc support for IE

@@ -17,6 +17,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.totsp.gwittir.client.beans.Binding;
+import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.BoundWidget;
+import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -29,12 +35,6 @@ import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
-
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  * 

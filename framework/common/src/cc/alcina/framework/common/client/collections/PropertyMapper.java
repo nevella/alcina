@@ -3,11 +3,10 @@ package cc.alcina.framework.common.client.collections;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.collections.PropertyMapper.PropertyMapping;
+import com.totsp.gwittir.client.beans.Converter;
+
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.util.CommonUtils;
-
-import com.totsp.gwittir.client.beans.Converter;
 
 public class PropertyMapper {
 	private PropertyAccessor leftAccessor;

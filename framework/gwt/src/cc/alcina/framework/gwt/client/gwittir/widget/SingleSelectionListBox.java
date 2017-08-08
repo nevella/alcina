@@ -24,8 +24,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-
 import com.google.gwt.user.client.ui.ChangeListener;
 import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.FocusListener;
@@ -40,6 +38,8 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.SimpleComparator;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 
 /**

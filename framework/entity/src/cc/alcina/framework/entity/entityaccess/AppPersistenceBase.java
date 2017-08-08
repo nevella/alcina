@@ -13,7 +13,6 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
 
 import org.apache.log4j.Appender;
-import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -35,8 +34,8 @@ import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
-import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
+import cc.alcina.framework.entity.util.SafeConsoleAppender;
 
 public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IUser, G extends IGroup, IID extends Iid> {
 	public static final String PERSISTENCE_TEST = AppPersistenceBase.class

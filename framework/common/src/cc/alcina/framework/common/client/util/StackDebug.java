@@ -1,7 +1,6 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 

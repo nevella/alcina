@@ -16,12 +16,12 @@
 package cc.alcina.framework.gwt.client.ide.widget;
 
 
-import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent.CollapseHandler;
-
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.event.shared.HasHandlers;
+
+import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent.CollapseHandler;
 
 /**
  * Represents a close event.

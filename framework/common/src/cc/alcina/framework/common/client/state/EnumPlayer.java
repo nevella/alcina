@@ -3,9 +3,9 @@ package cc.alcina.framework.common.client.state;
 import java.util.Collection;
 import java.util.Collections;
 
-import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
-
 import com.google.gwt.user.client.rpc.AsyncCallback;
+
+import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
 
 public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
 	private E from;

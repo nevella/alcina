@@ -3,13 +3,13 @@ package cc.alcina.framework.gwt.client.logic;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.AttachEvent.Handler;
 import com.google.gwt.user.client.ui.InsertPanel.ForIsWidget;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 public class WidgetByElementTracker implements Handler {
 	private WidgetByElementTracker() {

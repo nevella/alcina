@@ -17,6 +17,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -24,9 +27,6 @@ import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
-
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  * @author nick@alcina.cc

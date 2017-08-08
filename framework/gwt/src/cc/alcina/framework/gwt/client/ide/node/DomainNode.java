@@ -16,6 +16,11 @@ package cc.alcina.framework.gwt.client.ide.node;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import com.google.gwt.user.client.ui.AbstractImagePrototype;
+import com.google.gwt.user.client.ui.TreeItem;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -29,11 +34,6 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
-
-import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-import com.google.gwt.user.client.ui.AbstractImagePrototype;
-import com.google.gwt.user.client.ui.TreeItem;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  * 

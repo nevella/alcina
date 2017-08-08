@@ -16,10 +16,10 @@ package cc.alcina.framework.gwt.client.widget;
 
 import java.util.Stack;
 
-import cc.alcina.framework.common.client.util.Callback;
-
 import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
+
+import cc.alcina.framework.common.client.util.Callback;
 @SuppressWarnings("unchecked")
 /**
  *

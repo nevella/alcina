@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
+import com.google.gwt.user.client.History;
+
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -11,8 +13,6 @@ import cc.alcina.framework.gwt.client.LayoutManagerBase;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
-
-import com.google.gwt.user.client.History;
 
 public class InitLayoutPlayer extends RunnablePlayer {
 	public InitLayoutPlayer() {

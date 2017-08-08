@@ -19,9 +19,9 @@ import java.beans.PropertyChangeListener;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
-import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
-
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
+import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 
 /**
  * 

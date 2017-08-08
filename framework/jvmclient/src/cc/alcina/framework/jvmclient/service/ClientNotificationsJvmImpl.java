@@ -2,13 +2,13 @@ package cc.alcina.framework.jvmclient.service;
 
 import java.util.List;
 
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.Widget;
+
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
-
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.Widget;
 
 public class ClientNotificationsJvmImpl implements ClientNotifications {
 	@Override

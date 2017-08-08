@@ -3,12 +3,6 @@ package cc.alcina.framework.gwt.client.widget.complex;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientBase;
-import cc.alcina.framework.gwt.client.LayoutManagerBase;
-import cc.alcina.framework.gwt.client.widget.ModalNotifier;
-
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
@@ -18,6 +12,12 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
+
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.LayoutManagerBase;
+import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 public class StatusPanel extends Composite {
 	public static final String RUNNING_TEMPLATE = "<div>%s...<br><br></div><div class='loading2'></div>";

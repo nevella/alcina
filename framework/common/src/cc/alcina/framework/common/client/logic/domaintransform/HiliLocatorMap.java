@@ -16,10 +16,10 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import java.io.Serializable;
 import java.util.HashMap;
 
+import com.totsp.gwittir.client.beans.Converter;
+
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-
-import com.totsp.gwittir.client.beans.Converter;
 
 /**
  * The key is the (client's) localid of the Hili Most methods are

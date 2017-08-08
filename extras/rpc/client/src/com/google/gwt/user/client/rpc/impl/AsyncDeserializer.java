@@ -3,12 +3,12 @@ package com.google.gwt.user.client.rpc.impl;
 import java.util.Collection;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.util.MultikeyMap;
-
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.rpc.SerializationException;
+
+import cc.alcina.framework.common.client.util.MultikeyMap;
 
 class AsyncDeserializer implements RepeatingCommand {
 	private int typeTableLength;

@@ -32,8 +32,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import com.google.gwt.dom.client.Node;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
@@ -1552,4 +1550,15 @@ public class CommonUtils {
 	public static Date cloneDate(Date date) {
 		return date == null ? null : new Date(date.getTime());
 	}
+	public static <T> List<T> iteratorToList(Iterator<T> itr) {
+        List<T> result = new ArrayList<>();
+        while (itr.hasNext()) {
+            result.add(itr.next());
+        }
+        return result;
+    }
+
+    public static <T> T first(Iterator<T> itr) {
+        return itr.hasNext() ? itr.next() : null;
+    }
 }

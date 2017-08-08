@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -24,8 +26,6 @@ import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.util.DiscardInfoWrappingCallback;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 import cc.alcina.framework.gwt.persistence.client.PersistenceObjectStore;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 	private String tableName;

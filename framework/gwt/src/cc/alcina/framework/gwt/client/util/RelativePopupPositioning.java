@@ -1,14 +1,5 @@
 package cc.alcina.framework.gwt.client.util;
 
-import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
-import cc.alcina.framework.gwt.client.logic.RenderContext;
-import cc.alcina.framework.gwt.client.widget.dialog.DecoratedRelativePopupPanel;
-import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
-import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel.PositionCallback;
-
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Style;
@@ -19,6 +10,15 @@ import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
+import cc.alcina.framework.gwt.client.widget.dialog.DecoratedRelativePopupPanel;
+import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
+import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel.PositionCallback;
 
 public class RelativePopupPositioning {
 	public static final String RENDER_CONTEXT_BOUNDING_PARENT = "RENDER_CONTEXT_BOUNDING_PARENT";

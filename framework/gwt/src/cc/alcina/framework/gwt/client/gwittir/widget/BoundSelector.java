@@ -24,7 +24,6 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;

@@ -13,9 +13,9 @@
  */
 package cc.alcina.framework.gwt.client.ide.node;
 
-import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithParentEnforcesChildVisibility;
-
 import com.google.gwt.user.client.ui.TreeItem;
+
+import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithParentEnforcesChildVisibility;
 
 /**
  * 

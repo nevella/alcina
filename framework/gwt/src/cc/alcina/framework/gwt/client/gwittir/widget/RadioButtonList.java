@@ -20,8 +20,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.resources.client.ImageResource;
@@ -32,6 +30,8 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.totsp.gwittir.client.ui.AbstractBoundCollectionWidget;
 import com.totsp.gwittir.client.ui.Renderer;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 @SuppressWarnings("deprecation")
 /**

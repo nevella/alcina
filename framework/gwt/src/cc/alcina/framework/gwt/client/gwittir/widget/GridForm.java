@@ -19,11 +19,6 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import cc.alcina.framework.gwt.client.gwittir.HasBinding;
-import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
-import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
-import cc.alcina.framework.gwt.client.logic.RenderContext;
-
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.BlurEvent;
@@ -48,6 +43,11 @@ import com.totsp.gwittir.client.ui.HasDefaultBinding;
 import com.totsp.gwittir.client.ui.table.AbstractTableWidget;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
+
+import cc.alcina.framework.gwt.client.gwittir.HasBinding;
+import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
+import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
 
 /**
  * 

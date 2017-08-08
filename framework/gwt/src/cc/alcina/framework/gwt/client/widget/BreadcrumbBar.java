@@ -16,13 +16,6 @@ package cc.alcina.framework.gwt.client.widget;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
-import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -38,6 +31,13 @@ import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.ToggleButton;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
+import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
+import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
+import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType;
 
 /**
  * 

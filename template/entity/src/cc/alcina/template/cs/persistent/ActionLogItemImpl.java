@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 @Entity
 @Table(name = "actionlog", schema = "public")
 @SequenceGenerator(allocationSize=1,name = "actionlog_sequence", sequenceName = "actionlog_id_seq")
-@BeanInfo(displayNamePropertyName = "id")
+@Bean(displayNamePropertyName = "id")
 
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = ActionLogItem.class)
 public class ActionLogItemImpl extends DomainBaseVersionable implements ActionLogItem {

@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -22,8 +24,6 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * Manages an ecology of players - a sort of organic state machine

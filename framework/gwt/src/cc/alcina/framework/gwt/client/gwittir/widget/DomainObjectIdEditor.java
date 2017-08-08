@@ -13,12 +13,6 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.gwittir.renderer.IdToStringRenderer;
-
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -26,6 +20,12 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+
+import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.gwittir.renderer.IdToStringRenderer;
 
 /**
  * No validation (yet) - this is definitely an admin-only widget. Will throw

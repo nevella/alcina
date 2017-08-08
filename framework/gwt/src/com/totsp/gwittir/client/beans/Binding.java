@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import cc.alcina.framework.gwt.client.util.DomUtils;
-
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.log.Level;
 import com.totsp.gwittir.client.log.Logger;
@@ -37,6 +35,8 @@ import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 import com.totsp.gwittir.client.validator.Validator;
+
+import cc.alcina.framework.gwt.client.util.DomUtils;
 
 /**
  * This class represents a DataBinding between two objects. It also supports

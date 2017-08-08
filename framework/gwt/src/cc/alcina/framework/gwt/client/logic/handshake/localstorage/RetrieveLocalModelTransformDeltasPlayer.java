@@ -1,7 +1,8 @@
 package cc.alcina.framework.gwt.client.logic.handshake.localstorage;
 
 import java.util.Iterator;
-import java.util.List;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
@@ -13,8 +14,6 @@ import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.logic.handshake.objectdata.LoadObjectDataState;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence.DeltaApplicationFilters;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class RetrieveLocalModelTransformDeltasPlayer extends RunnableAsyncCallbackPlayer<Object, LoadObjectDataState> {
 	private RetrieveModelConsort retrieveModelConsort;

@@ -1,8 +1,8 @@
 package cc.alcina.framework.gwt.client.tour;
 
-import cc.alcina.framework.gwt.client.tour.Tour.Step;
-
 import com.google.gwt.core.client.JsArray;
+
+import cc.alcina.framework.gwt.client.tour.Tour.Step;
 
 public class TourModel {
 	private int stepIdx;

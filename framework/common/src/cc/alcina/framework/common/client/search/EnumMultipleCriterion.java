@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**

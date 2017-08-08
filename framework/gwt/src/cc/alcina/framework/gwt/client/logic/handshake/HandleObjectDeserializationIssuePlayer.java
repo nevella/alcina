@@ -1,13 +1,13 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
+import com.google.gwt.user.client.Window;
+
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.state.EndpointPlayer;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd.ReloadOnSuccessCallback;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
-
-import com.google.gwt.user.client.Window;
 
 @ClientInstantiable
 @RegistryLocation(registryPoint = HandleObjectDeserializationIssuePlayer.class, implementationType = ImplementationType.SINGLETON)

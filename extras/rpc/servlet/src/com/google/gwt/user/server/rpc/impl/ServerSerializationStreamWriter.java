@@ -33,16 +33,16 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 
-import cc.alcina.framework.common.client.util.AlcinaTopics;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.MultikeyMap;
-
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamWriter;
 import com.google.gwt.user.server.Base64Utils;
 import com.google.gwt.user.server.rpc.SerializationPolicy;
+
+import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.MultikeyMap;
 
 /**
  * For internal use only. Used for server call serialization. This class is

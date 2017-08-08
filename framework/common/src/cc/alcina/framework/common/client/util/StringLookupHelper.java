@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.totsp.gwittir.client.beans.Converter;
+
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.KeyValueMapper.FromObjectConverterMapper;
-
-import com.totsp.gwittir.client.beans.Converter;
 
 public class StringLookupHelper {
 	private static final String NULL = "<--null-->";

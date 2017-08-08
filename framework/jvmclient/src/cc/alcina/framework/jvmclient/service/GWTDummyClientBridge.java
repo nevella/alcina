@@ -21,12 +21,12 @@ import java.lang.reflect.Method;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWTBridge;
 import com.google.gwt.dev.About;
 import com.google.gwt.junit.GWTMockUtilities;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 /**
  * A dummy implementation of {@link GWTBridge}, which instantiates nothing.

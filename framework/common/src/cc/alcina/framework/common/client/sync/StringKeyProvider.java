@@ -3,9 +3,9 @@ package cc.alcina.framework.common.client.sync;
 import java.util.Collections;
 import java.util.List;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-
 import com.totsp.gwittir.client.beans.Converter;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public interface StringKeyProvider<T> {
 	public String firstKey(T object);

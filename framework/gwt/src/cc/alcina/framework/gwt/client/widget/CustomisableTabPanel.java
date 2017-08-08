@@ -17,8 +17,6 @@ package cc.alcina.framework.gwt.client.widget;
 
 import java.util.Iterator;
 
-import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
-
 import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
 import com.google.gwt.event.logical.shared.BeforeSelectionHandler;
 import com.google.gwt.event.logical.shared.HasBeforeSelectionHandlers;
@@ -39,6 +37,8 @@ import com.google.gwt.user.client.ui.TabListener;
 import com.google.gwt.user.client.ui.TabListenerCollection;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 
 /**
  * 

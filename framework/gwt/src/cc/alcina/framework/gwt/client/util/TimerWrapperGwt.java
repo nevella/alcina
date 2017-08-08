@@ -1,8 +1,8 @@
 package cc.alcina.framework.gwt.client.util;
 
-import cc.alcina.framework.common.client.util.TimerWrapper;
-
 import com.google.gwt.user.client.Timer;
+
+import cc.alcina.framework.common.client.util.TimerWrapper;
 
 public class TimerWrapperGwt extends Timer implements TimerWrapper {
 	private Runnable runnable;

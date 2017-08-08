@@ -18,16 +18,6 @@ import java.beans.PropertyChangeListener;
 
 import javax.persistence.Transient;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.csobjects.JobResultType;
-import cc.alcina.framework.common.client.csobjects.JobTracker;
-import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
-import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.gwt.client.ClientBase;
-import cc.alcina.framework.gwt.client.widget.Link;
-
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Timer;
@@ -42,6 +32,16 @@ import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.JobResultType;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
+import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
+import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.widget.Link;
 
 /**
  *

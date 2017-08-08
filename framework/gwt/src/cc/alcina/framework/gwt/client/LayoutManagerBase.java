@@ -1,13 +1,13 @@
 package cc.alcina.framework.gwt.client;
 
+import com.google.gwt.event.logical.shared.ResizeEvent;
+import com.google.gwt.event.logical.shared.ResizeHandler;
+import com.google.gwt.user.client.Window;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventListener;
-
-import com.google.gwt.event.logical.shared.ResizeEvent;
-import com.google.gwt.event.logical.shared.ResizeHandler;
-import com.google.gwt.user.client.Window;
 
 public abstract class LayoutManagerBase implements LayoutEventListener,
 		ResizeHandler {

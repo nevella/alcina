@@ -21,6 +21,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gwt.user.client.ui.ComplexPanel;
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.Widget;
+import com.totsp.gwittir.client.beans.Binding;
+import com.totsp.gwittir.client.beans.BindingBuilder;
+import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.Renderer;
+import com.totsp.gwittir.client.ui.table.Field;
+import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -34,19 +47,6 @@ import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer.RenderInstruction;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
-
-import com.google.gwt.user.client.ui.ComplexPanel;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.HasVerticalAlignment;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.BindingBuilder;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 /**
  * 

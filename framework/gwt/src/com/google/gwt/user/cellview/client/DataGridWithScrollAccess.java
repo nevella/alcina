@@ -15,16 +15,12 @@
  */
 package com.google.gwt.user.cellview.client;
 
-import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.cellview.client.LoadingStateChangeEvent.LoadingState;
-import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
-
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * A tabular view with a fixed header and footer section and a scrollable data

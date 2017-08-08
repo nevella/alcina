@@ -13,11 +13,11 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.provider;
 
-import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
-import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
-
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+
+import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
+import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 
 /**
  *

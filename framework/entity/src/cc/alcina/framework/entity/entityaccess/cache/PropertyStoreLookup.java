@@ -1,9 +1,5 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongListIterator;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Set;
@@ -13,6 +9,9 @@ import cc.alcina.framework.common.client.cache.CacheLookup;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongListIterator;
 
 /*
  * Only indexes Longs!

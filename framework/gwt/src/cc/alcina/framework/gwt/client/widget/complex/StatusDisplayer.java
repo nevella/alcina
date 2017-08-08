@@ -1,13 +1,5 @@
 package cc.alcina.framework.gwt.client.widget.complex;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.logic.CallManager;
-import cc.alcina.framework.gwt.client.logic.MessageManager;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
-
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -19,6 +11,14 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.gwt.client.logic.CallManager;
+import cc.alcina.framework.gwt.client.logic.MessageManager;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 public class StatusDisplayer {
 	private static final int FADER_DURATION = 3000;

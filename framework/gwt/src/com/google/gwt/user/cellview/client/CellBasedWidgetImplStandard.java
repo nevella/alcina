@@ -15,6 +15,9 @@
  */
 package com.google.gwt.user.cellview.client;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -25,9 +28,6 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.ui.Widget;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Standard implementation used by most cell based widgets.

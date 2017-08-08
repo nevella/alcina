@@ -13,6 +13,11 @@
  */
 package cc.alcina.framework.gwt.client.ide.widget;
 
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.ui.TreeItem;
+
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventEvent;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventListener;
@@ -21,11 +26,6 @@ import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventSupport
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventType;
 import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithFirst;
-
-import com.google.gwt.event.dom.client.KeyCodes;
-import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Event;
-import com.google.gwt.user.client.ui.TreeItem;
 
 /**
  * 

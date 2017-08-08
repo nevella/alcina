@@ -13,12 +13,12 @@
  */
 package cc.alcina.framework.gwt.client.ide.node;
 
-import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
-import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
-
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.TreeItem;
+
+import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
+import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 
 /**
  * 

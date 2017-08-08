@@ -17,15 +17,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.permissions.LoginStateVisibleWithWidget;
-import cc.alcina.framework.common.client.logic.permissions.Permissible;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.widget.BaseTab;
-import cc.alcina.framework.gwt.client.widget.SpanPanel;
-import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
-
 import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
 import com.google.gwt.event.logical.shared.BeforeSelectionHandler;
 import com.google.gwt.user.client.ui.DockPanel;
@@ -38,6 +29,15 @@ import com.google.gwt.user.client.ui.TabBar;
 import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.common.client.logic.permissions.LoginStateVisibleWithWidget;
+import cc.alcina.framework.common.client.logic.permissions.Permissible;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.gwt.client.widget.BaseTab;
+import cc.alcina.framework.gwt.client.widget.SpanPanel;
+import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 
 /**
  * 

@@ -2,14 +2,14 @@ package cc.alcina.framework.gwt.client;
 
 import java.util.List;
 
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.Widget;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.spi.LogWriter;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
-
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.Widget;
 
 public interface ClientNotifications extends LogWriter{
 	public static final String CONTEXT_AUTOSHOW_DIALOG_DETAIL=ClientNotifications.class.getName()+".CONTEXT_AUTOSHOW_DIALOG_DETAIL";

@@ -1,12 +1,5 @@
 package cc.alcina.framework.gwt.client.objecttree.search;
 
-import cc.alcina.framework.common.client.search.SearchCriterion;
-import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
-import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
-import cc.alcina.framework.gwt.client.widget.SpanPanel;
-
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -16,6 +9,13 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.BoundWidget;
+
+import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
+import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
+import cc.alcina.framework.gwt.client.widget.SpanPanel;
 
 public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 		implements ClickHandler {

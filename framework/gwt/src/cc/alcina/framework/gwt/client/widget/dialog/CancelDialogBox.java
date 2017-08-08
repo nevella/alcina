@@ -14,10 +14,10 @@
 
 package cc.alcina.framework.gwt.client.widget.dialog;
 
-import cc.alcina.framework.common.client.actions.PermissibleActionListener;
-
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 
 /**
  *

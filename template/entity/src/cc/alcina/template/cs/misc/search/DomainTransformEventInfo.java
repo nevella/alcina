@@ -21,7 +21,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 //has no pcls, read-only on client 
-@BeanInfo(displayNamePropertyName = "persistentId")
+@Bean(displayNamePropertyName = "persistentId")
 @Introspectable
 public class DomainTransformEventInfo extends DomainTransformEvent implements
 		SourcesPropertyChangeEvents, SearchResult {
@@ -54,7 +54,7 @@ public class DomainTransformEventInfo extends DomainTransformEvent implements
 
 	@Override
 	@DisplayInfo(name = "Object", orderingHint = 10)
-	@CustomiserInfo(customiserClass = ClassSimpleNameCustomiser.class)
+	@Custom(customiserClass = ClassSimpleNameCustomiser.class)
 	public String getObjectClassName() {
 		return super.getObjectClassRef() == null ? null : super
 				.getObjectClassRef().getRefClassName();
@@ -89,7 +89,7 @@ public class DomainTransformEventInfo extends DomainTransformEvent implements
 
 	@Transient
 	@DisplayInfo(name = "User", orderingHint = 5)
-	@CustomiserInfo(customiserClass = DomainObjectIdRefCustomiser.class, parameters = { @NamedParameter(name = DomainObjectIdRefCustomiser.TARGET_CLASS, classValue = AlcinaTemplateUser.class) })
+	@Custom(customiserClass = DomainObjectIdRefCustomiser.class, parameters = { @NamedParameter(name = DomainObjectIdRefCustomiser.TARGET_CLASS, classValue = AlcinaTemplateUser.class) })
 	public long getUserId() {
 		return userId;
 	}

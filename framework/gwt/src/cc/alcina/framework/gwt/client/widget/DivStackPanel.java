@@ -17,10 +17,6 @@ package cc.alcina.framework.gwt.client.widget;
 import java.util.HashMap;
 import java.util.Map;
 
-import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent;
-import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent.CollapseHandler;
-import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent.HasCollapseHandlers;
-
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Element;
@@ -28,6 +24,10 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent;
+import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent.CollapseHandler;
+import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent.HasCollapseHandlers;
 
 /**
  * 

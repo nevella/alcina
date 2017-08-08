@@ -6,7 +6,6 @@ import org.w3c.dom.Node;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.XmlUtils;
-import cc.alcina.framework.entity.parser.structured.XmlStructuralJoin;
 
 public class XmlDoc extends XmlNode {
 	public XmlDoc(Document domDocument) {

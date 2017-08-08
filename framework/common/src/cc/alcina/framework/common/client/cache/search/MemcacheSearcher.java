@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.cache.search;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -21,7 +20,6 @@ import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-import cc.alcina.framework.entity.MetricLogging;
 
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class MemcacheSearcher {

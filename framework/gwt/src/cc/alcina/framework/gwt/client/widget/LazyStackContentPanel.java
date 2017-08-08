@@ -16,10 +16,10 @@ package cc.alcina.framework.gwt.client.widget;
 
 import java.util.List;
 
-import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
-
 import com.google.gwt.user.client.ui.StackPanel;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
 
 /**
  *

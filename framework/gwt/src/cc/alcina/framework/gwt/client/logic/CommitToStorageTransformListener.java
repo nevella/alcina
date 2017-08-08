@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.StateChangeListener;
@@ -50,8 +52,6 @@ import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.Cli
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolverAction;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * 

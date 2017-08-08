@@ -13,14 +13,14 @@
  */
 package cc.alcina.framework.gwt.client.logic;
 
+import com.google.gwt.user.client.ui.Widget;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.objecttree.IsRenderableFilter;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
-
-import com.google.gwt.user.client.ui.Widget;
 
 /**
  * 

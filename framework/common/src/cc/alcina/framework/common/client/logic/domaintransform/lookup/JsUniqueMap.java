@@ -8,9 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup.EntryIterator;
-
 public class JsUniqueMap<K, V> implements Map<K, V> {
 	private Function keyUniquenessMapper = Function.identity();
 

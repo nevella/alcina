@@ -1,8 +1,5 @@
 package cc.alcina.framework.gwt.persistence.client;
 
-import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
-import cc.alcina.framework.common.client.util.CommonUtils;
-
 import com.google.code.gwt.database.client.Database;
 import com.google.code.gwt.database.client.GenericRow;
 import com.google.code.gwt.database.client.SQLError;
@@ -12,6 +9,9 @@ import com.google.code.gwt.database.client.SQLTransaction;
 import com.google.code.gwt.database.client.StatementCallback;
 import com.google.code.gwt.database.client.TransactionCallback;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class DatabaseStatsCollector {
 	private DatabaseStatsCollector.Phase phase = Phase.TRANSFORMS_DB_QUERY;

@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.CollectionFilters.PrefixedFilter;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -13,8 +15,6 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackNull;
 import cc.alcina.framework.gwt.client.util.DiscardInfoWrappingCallback;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class ObjectStoreMemoryImpl implements PersistenceObjectStore,
 		SyncObjectStore {

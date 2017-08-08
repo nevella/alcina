@@ -34,7 +34,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 @Entity
 @Table(name = "logging", schema = "public")
-@BeanInfo(displayNamePropertyName = "createdOn")
+@Bean(displayNamePropertyName = "createdOn")
 @SequenceGenerator(allocationSize=1,name = "logging_id_seq", sequenceName = "logging_id_seq")
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @Introspectable
@@ -89,7 +89,7 @@ public class LogRecord extends DomainBase implements SearchResult {
 
 	@Column(name = "text")
 	@DisplayInfo(name = "Text")
-	@CustomiserInfo(customiserClass = ExpandableLabelCustomiser.class)
+	@Custom(customiserClass = ExpandableLabelCustomiser.class)
 	@Lob
 	@Type(type="org.hibernate.type.StringClobType")
 	public String getText() {
@@ -102,7 +102,7 @@ public class LogRecord extends DomainBase implements SearchResult {
 
 	@Column(name = "user_id")
 	@DisplayInfo(name = "User", orderingHint = 30)
-	@CustomiserInfo(customiserClass = DomainObjectIdRefCustomiser.class, parameters = { @NamedParameter(name = DomainObjectIdRefCustomiser.TARGET_CLASS, classValue = AlcinaTemplateUser.class) })
+	@Custom(customiserClass = DomainObjectIdRefCustomiser.class, parameters = { @NamedParameter(name = DomainObjectIdRefCustomiser.TARGET_CLASS, classValue = AlcinaTemplateUser.class) })
 	public Long getUserId() {
 		return this.userId;
 	}

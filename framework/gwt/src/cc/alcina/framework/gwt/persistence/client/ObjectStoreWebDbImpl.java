@@ -8,12 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
-import cc.alcina.framework.gwt.client.util.DiscardInfoWrappingCallback;
-
 import com.google.code.gwt.database.client.Database;
 import com.google.code.gwt.database.client.GenericRow;
 import com.google.code.gwt.database.client.SQLError;
@@ -23,6 +17,12 @@ import com.google.code.gwt.database.client.SQLTransaction;
 import com.google.code.gwt.database.client.StatementCallback;
 import com.google.code.gwt.database.client.TransactionCallback;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
+import cc.alcina.framework.gwt.client.util.DiscardInfoWrappingCallback;
 
 public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 	Database db;

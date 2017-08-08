@@ -15,13 +15,13 @@
  */
 package com.google.gwt.user.client.ui;
 
-import cc.alcina.framework.gwt.client.util.ClientUtils;
-
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.builder.shared.HtmlBuilderFactory;
 import com.google.gwt.dom.builder.shared.HtmlElementBuilder;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.DOM;
+
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 /**
  * EXPERIMENTAL and subject to change. Do not use this in production code.

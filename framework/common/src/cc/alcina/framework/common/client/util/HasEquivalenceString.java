@@ -6,9 +6,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
-
 import com.totsp.gwittir.client.beans.Converter;
+
+import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
 
 public interface HasEquivalenceString<T> extends HasEquivalenceHash<T> {
 	public String equivalenceString();

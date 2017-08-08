@@ -15,15 +15,15 @@ package cc.alcina.framework.gwt.client.objecttree;
 
 import java.util.Collection;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.util.LooseContextInstance;
-import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
-import cc.alcina.framework.gwt.client.logic.RenderContext;
-
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
 
 /**
  * Note - rather than having this in a separate class to the (CriteriaGroup)

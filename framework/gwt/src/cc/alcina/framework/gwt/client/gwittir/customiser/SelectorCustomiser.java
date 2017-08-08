@@ -13,6 +13,10 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
+import com.totsp.gwittir.client.ui.BoundWidget;
+import com.totsp.gwittir.client.ui.Renderer;
+import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -23,10 +27,6 @@ import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeColle
 import cc.alcina.framework.gwt.client.gwittir.provider.SelectorProvider;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
-
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  * 

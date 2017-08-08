@@ -1,10 +1,5 @@
 package cc.alcina.framework.gwt.client.rpc;
 
-import cc.alcina.framework.common.client.util.AlcinaTopics;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.ClientBase;
-
 import com.google.gwt.http.client.Header;
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
@@ -12,6 +7,11 @@ import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.rpc.RpcRequestBuilder;
+
+import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.gwt.client.ClientBase;
 
 public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 	public static final String TOPIC_ALCINA_RPC_REQUEST_BUILDER_CREATED = AlcinaTopics.class

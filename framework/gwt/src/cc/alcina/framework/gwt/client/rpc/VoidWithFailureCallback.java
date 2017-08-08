@@ -1,8 +1,8 @@
 package cc.alcina.framework.gwt.client.rpc;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-
 import com.google.gwt.user.client.rpc.AsyncCallback;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 public class VoidWithFailureCallback implements AsyncCallback {
 	public void onFailure(Throwable caught) {

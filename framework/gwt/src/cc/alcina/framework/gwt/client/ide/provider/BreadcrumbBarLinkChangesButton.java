@@ -4,13 +4,13 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Collection;
 
-import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
-import cc.alcina.framework.gwt.client.widget.BreadcrumbBar.BreadcrumbBarButton;
-
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
+import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
+import cc.alcina.framework.gwt.client.widget.BreadcrumbBar.BreadcrumbBarButton;
 
 public class BreadcrumbBarLinkChangesButton extends BreadcrumbBarButton
 		implements ClickHandler {

@@ -8,9 +8,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
-import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.widget.Link;
 
 public abstract class BaseMultilineEditorCustomiser<T extends HasIdAndLocalId>

@@ -13,10 +13,10 @@
  */
 package cc.alcina.framework.gwt.client.ide.provider;
 
+import com.google.gwt.user.client.ui.HTML;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-
-import com.google.gwt.user.client.ui.HTML;
 
 /**
  * 

@@ -18,10 +18,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.google.gwt.user.client.rpc.GwtTransient;
+
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
-
-import com.google.gwt.user.client.rpc.GwtTransient;
 
 /**
  *
