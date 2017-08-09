@@ -13,8 +13,6 @@
  */
 package cc.alcina.framework.extras.history.client;
 
-import java.util.logging.Logger;
-
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.HistoryImpl;
 import com.google.gwt.user.client.Window;

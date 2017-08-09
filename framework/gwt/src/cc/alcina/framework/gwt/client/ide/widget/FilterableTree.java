@@ -15,15 +15,6 @@ package cc.alcina.framework.gwt.client.ide.widget;
 
 import java.util.Stack;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.util.Callback;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ide.node.TreeOrItem;
-import cc.alcina.framework.gwt.client.ide.node.TreeOrItemTree;
-import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
-import cc.alcina.framework.gwt.client.widget.VisualFilterable;
-import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithFirst;
-
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.event.dom.client.KeyCodes;
@@ -35,6 +26,15 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
+
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.ide.node.TreeOrItem;
+import cc.alcina.framework.gwt.client.ide.node.TreeOrItemTree;
+import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
+import cc.alcina.framework.gwt.client.widget.VisualFilterable;
+import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithFirst;
 
 /**
  * @author nick@alcina.cc

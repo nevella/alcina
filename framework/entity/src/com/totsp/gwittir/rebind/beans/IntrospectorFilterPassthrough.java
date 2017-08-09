@@ -5,14 +5,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.gwt.core.ext.GeneratorContext;
+import com.google.gwt.core.ext.typeinfo.JAnnotationType;
+import com.google.gwt.core.ext.typeinfo.JClassType;
+
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-
-import com.google.gwt.core.ext.GeneratorContext;
-import com.google.gwt.core.ext.typeinfo.JAnnotationType;
-import com.google.gwt.core.ext.typeinfo.JClassType;
 
 public class IntrospectorFilterPassthrough implements
 		IntrospectorFilter {

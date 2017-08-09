@@ -1,11 +1,5 @@
 package cc.alcina.framework.gwt.client.widget.dialog;
 
-import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
-import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
-import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
-import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupPositioningParams;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
-
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Document;
@@ -14,6 +8,12 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
+import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
+import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
+import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupPositioningParams;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 public class BubbleInfoPopupDisplayer {
 	private Widget toShow;

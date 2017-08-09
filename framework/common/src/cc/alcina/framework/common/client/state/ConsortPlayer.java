@@ -1,9 +1,9 @@
 package cc.alcina.framework.common.client.state;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface ConsortPlayer {
 	public Consort getStateConsort();

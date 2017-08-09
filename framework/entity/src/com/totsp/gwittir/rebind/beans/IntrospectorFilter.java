@@ -6,12 +6,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-
 import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.typeinfo.JAnnotationType;
 import com.google.gwt.core.ext.typeinfo.JClassType;
+
+import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
 public interface IntrospectorFilter {
 	public static final String ALCINA_INTROSPECTOR_FILTER_CLASSNAME = "alcina.introspectorFilter.classname";

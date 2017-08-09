@@ -15,15 +15,15 @@
 package cc.alcina.framework.gwt.client.widget.complex;
 
 
-import cc.alcina.framework.gwt.client.data.EmailPreview;
-import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
-
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Frame;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
+
+import cc.alcina.framework.gwt.client.data.EmailPreview;
+import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
 
 /**
  *

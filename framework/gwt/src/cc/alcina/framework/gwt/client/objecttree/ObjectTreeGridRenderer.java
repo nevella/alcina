@@ -16,13 +16,13 @@ package cc.alcina.framework.gwt.client.objecttree;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import cc.alcina.framework.gwt.client.logic.RenderContext;
-
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FlexTable.FlexCellFormatter;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.gwt.client.logic.RenderContext;
 
 /**
  * 

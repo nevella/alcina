@@ -3,7 +3,6 @@ package cc.alcina.framework.entity.util;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.util.CachingMap.CachingLcMap;
 import cc.alcina.framework.common.client.util.FastLcProvider;
 import cc.alcina.framework.entity.util.CachingConcurrentMap.CachingConcurrentLcMap;
 

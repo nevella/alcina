@@ -1,8 +1,8 @@
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
-
 import com.totsp.gwittir.client.ui.Label;
+
+import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 
 public class MultilineLabel extends Label implements MultilineWidget {
 	@Override

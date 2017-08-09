@@ -18,8 +18,6 @@ package com.google.gwt.user.client.ui;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
-
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.BrowserEvents;
@@ -49,6 +47,8 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.impl.PopupImpl;
+
+import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 
 /**
  * A panel that can "pop up" over other widgets. It overlays the browser's

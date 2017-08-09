@@ -15,6 +15,10 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 
+import com.totsp.gwittir.client.ui.BoundWidget;
+import com.totsp.gwittir.client.ui.Renderer;
+import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -24,10 +28,6 @@ import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundHyperlink;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
-
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @ClientInstantiable
 @SuppressWarnings("unchecked")

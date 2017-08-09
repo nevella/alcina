@@ -15,10 +15,10 @@
 package cc.alcina.framework.gwt.client.ide.node;
 
 
+import com.google.gwt.resources.client.ImageResource;
+
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.util.CommonUtils;
-
-import com.google.gwt.resources.client.ImageResource;
 
 /**
  *

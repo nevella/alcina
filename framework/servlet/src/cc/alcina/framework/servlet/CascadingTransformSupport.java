@@ -5,11 +5,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.gwt.event.shared.UmbrellaException;
+
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
-
-import com.google.gwt.event.shared.UmbrellaException;
 
 /**
  * <p>

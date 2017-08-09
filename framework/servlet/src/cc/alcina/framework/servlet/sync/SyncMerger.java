@@ -30,11 +30,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.JvmPropertyAccessor;
-import cc.alcina.framework.servlet.sync.SyncMerger.FirstAndAllLookup;
-import cc.alcina.framework.servlet.sync.SyncMerger.MergeFilter;
-import cc.alcina.framework.servlet.sync.SyncMerger.SyncMapping;
-import cc.alcina.framework.servlet.sync.SyncMerger.SyncMappingWithLog;
-import cc.alcina.framework.servlet.sync.SyncMerger.SyncMappingWithLog.MergeHistory;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
 
 /**

@@ -1,9 +1,9 @@
 package cc.alcina.framework.gwt.client.ide.provider;
 
+import com.totsp.gwittir.client.beans.Converter;
+
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-
-import com.totsp.gwittir.client.beans.Converter;
 
 public class RegisterObjectsConverter implements Converter {
 	@Override

@@ -13,13 +13,13 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 /**
  * A very, very, very simple, rapid implementation. Very.

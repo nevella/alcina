@@ -6,6 +6,9 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.gwt.core.client.GWT;
+import com.totsp.gwittir.client.beans.Converter;
+
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.IteratorWithCurrent;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsRequest;
@@ -32,9 +35,6 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.persistence.client.DeltaStore;
 import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta;
 import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta.DeltaApplicationRecordToDomainModelDeltaConverter;
-
-import com.google.gwt.core.client.GWT;
-import com.totsp.gwittir.client.beans.Converter;
 
 @RegistryLocation(registryPoint = HandshakeConsortModel.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable

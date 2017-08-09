@@ -4,10 +4,10 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
+import com.google.gwt.user.client.rpc.RemoteService;
+
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams.DevRemoterApi;
-
-import com.google.gwt.user.client.rpc.RemoteService;
 
 public abstract class ProxyRemoteService<I extends RemoteService> implements
 		InvocationHandler {

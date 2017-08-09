@@ -3,12 +3,12 @@ package cc.alcina.framework.gwt.client.logic;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import com.google.gwt.dom.client.Element;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
-
-import com.google.gwt.dom.client.Element;
 
 public class DevCSSHelper {
 	private PropertyChangeListener cssPropertyListener = new PropertyChangeListener() {

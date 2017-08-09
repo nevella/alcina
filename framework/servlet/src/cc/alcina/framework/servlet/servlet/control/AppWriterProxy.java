@@ -2,9 +2,9 @@ package cc.alcina.framework.servlet.servlet.control;
 
 import java.lang.reflect.Method;
 
-import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
-
 import com.google.gwt.user.server.rpc.RPCRequest;
+
+import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
 //not done yet, but for having a per-cluster writer machine
 public class AppWriterProxy {

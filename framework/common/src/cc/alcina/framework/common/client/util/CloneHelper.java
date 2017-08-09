@@ -22,6 +22,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.totsp.gwittir.client.beans.Property;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
@@ -30,8 +32,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.DeepCloneable;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
-
-import com.totsp.gwittir.client.beans.Property;
 
 /**
  * Not thread-safe - but then again, should only be used by one thread

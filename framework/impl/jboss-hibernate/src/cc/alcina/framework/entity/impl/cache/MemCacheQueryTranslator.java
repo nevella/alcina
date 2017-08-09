@@ -27,6 +27,8 @@ import org.hibernate.criterion.PropertyProjection;
 import org.hibernate.criterion.SimpleExpression;
 import org.hibernate.transform.ResultTransformer;
 
+import com.totsp.gwittir.client.beans.Converter;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.cache.CacheFilter;
 import cc.alcina.framework.common.client.cache.CompositeCacheFilter;
@@ -42,8 +44,6 @@ import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCacheQuery;
 import cc.alcina.framework.entity.entityaccess.cache.MemCacheRunner;
 import cc.alcina.framework.entity.entityaccess.cache.NotCacheFilter;
-
-import com.totsp.gwittir.client.beans.Converter;
 
 public class MemCacheQueryTranslator {
 	AlcinaMemCacheQuery query;

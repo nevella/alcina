@@ -4,18 +4,17 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.ClientNotifications;
-
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.validator.AbstractValidationFeedback;
 import com.totsp.gwittir.client.validator.ValidationException;
+
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 
 public class CombiningValidationFeedback extends AbstractValidationFeedback {
 	protected final CombiningValidationFeedbackCollector collector;

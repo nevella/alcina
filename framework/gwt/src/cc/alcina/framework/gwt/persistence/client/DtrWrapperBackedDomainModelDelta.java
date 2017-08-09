@@ -3,6 +3,10 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.util.Collection;
 import java.util.List;
 
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.totsp.gwittir.client.beans.Converter;
+
 import cc.alcina.framework.common.client.logic.RepeatingCommandWithPostCompletionCallback;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
@@ -17,10 +21,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.HasRequestReplayId;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DomainTrancheProtocolHandler;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
-
-import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.totsp.gwittir.client.beans.Converter;
 
 public class DtrWrapperBackedDomainModelDelta implements DomainModelDelta,
 		HasRequestReplayId {

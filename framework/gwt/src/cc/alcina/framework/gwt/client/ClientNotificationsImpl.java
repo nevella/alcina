@@ -19,25 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionListener;
-import cc.alcina.framework.common.client.actions.instances.OkAction;
-import cc.alcina.framework.common.client.provider.TextProvider;
-import cc.alcina.framework.common.client.util.AlcinaTopics;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.StringPair;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.logic.MessageManager;
-import cc.alcina.framework.gwt.client.logic.OkCallback;
-import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
-import cc.alcina.framework.gwt.client.widget.Link;
-import cc.alcina.framework.gwt.client.widget.ModalNotifier;
-import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
-import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
-import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -56,6 +37,25 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.instances.OkAction;
+import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.StringPair;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.gwt.client.logic.MessageManager;
+import cc.alcina.framework.gwt.client.logic.OkCallback;
+import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
+import cc.alcina.framework.gwt.client.widget.Link;
+import cc.alcina.framework.gwt.client.widget.ModalNotifier;
+import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
+import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
+import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
 
 public class ClientNotificationsImpl implements ClientNotifications {
 	private DialogBox dialogBox;

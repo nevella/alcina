@@ -3,9 +3,9 @@
  */
 package cc.alcina.framework.common.client.util;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-
 import com.totsp.gwittir.client.beans.Converter;
+
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 
 public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 	public long l1;

@@ -18,6 +18,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.totsp.gwittir.client.beans.BeanDescriptor;
+import com.totsp.gwittir.client.beans.Property;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -29,9 +32,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
-
-import com.totsp.gwittir.client.beans.BeanDescriptor;
-import com.totsp.gwittir.client.beans.Property;
 
 /**
  * 

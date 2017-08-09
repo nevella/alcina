@@ -13,18 +13,6 @@
  */
 package cc.alcina.framework.gwt.client;
 
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.provider.TextProvider;
-import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
-import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
-import cc.alcina.framework.common.client.remote.RemoteServiceProvider;
-import cc.alcina.framework.gwt.client.data.GeneralProperties;
-import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
-import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
-
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.CloseEvent;
@@ -36,6 +24,17 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.Window.ClosingEvent;
 import com.google.gwt.user.client.Window.ClosingHandler;
+
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
+import cc.alcina.framework.common.client.remote.RemoteServiceProvider;
+import cc.alcina.framework.gwt.client.data.GeneralProperties;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 
 /**
  */

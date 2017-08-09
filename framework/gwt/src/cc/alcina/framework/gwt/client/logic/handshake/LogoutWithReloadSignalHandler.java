@@ -1,13 +1,13 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.ConsortSignalHandler;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.logic.CallManager;
-
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class LogoutWithReloadSignalHandler implements
 		ConsortSignalHandler<HandshakeSignal>, AsyncCallback {

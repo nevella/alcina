@@ -4,16 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import cc.alcina.framework.common.client.entity.ClientLogRecord;
-import cc.alcina.framework.common.client.entity.ReplayInstruction;
-import cc.alcina.framework.common.client.util.AlcinaTopics;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.StringPair;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.ClientNotifications;
-import cc.alcina.framework.gwt.client.util.ClientNodeIterator;
-import cc.alcina.framework.gwt.client.util.TextUtils;
-
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
@@ -27,6 +17,16 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
 import com.google.gwt.user.client.History;
+
+import cc.alcina.framework.common.client.entity.ClientLogRecord;
+import cc.alcina.framework.common.client.entity.ReplayInstruction;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.StringPair;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.gwt.client.ClientNotifications;
+import cc.alcina.framework.gwt.client.util.ClientNodeIterator;
+import cc.alcina.framework.gwt.client.util.TextUtils;
 
 public class LogStoreInterceptors {
 	private ValueChangeHandler<String> historyListener = new ValueChangeHandler<String>() {

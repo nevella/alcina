@@ -1,11 +1,5 @@
 package cc.alcina.framework.gwt.client.widget.dialog;
 
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionListener;
-import cc.alcina.framework.common.client.actions.instances.OkAction;
-import cc.alcina.framework.common.client.util.Callback;
-import cc.alcina.framework.common.client.util.CommonUtils;
-
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
@@ -15,6 +9,12 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.TextBoxBase;
+
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.instances.OkAction;
+import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class Prompter implements PermissibleActionListener, KeyDownHandler {
 	private final String requiredMessage;

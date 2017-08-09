@@ -13,15 +13,6 @@
  */
 package cc.alcina.framework.gwt.client.widget.dialog;
 
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionListener;
-import cc.alcina.framework.common.client.actions.instances.CancelAction;
-import cc.alcina.framework.common.client.actions.instances.OkAction;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.ClientNotifications;
-import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
-import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
-
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
@@ -35,6 +26,15 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
+
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.instances.CancelAction;
+import cc.alcina.framework.common.client.actions.instances.OkAction;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.gwt.client.ClientNotifications;
+import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
+import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
 
 /**
  * 

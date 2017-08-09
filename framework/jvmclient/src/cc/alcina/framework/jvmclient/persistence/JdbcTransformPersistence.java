@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.jvmclient.persistence;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -23,12 +25,15 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
@@ -37,20 +42,19 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DomainTrancheProtocolHandler;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.EnumSerializer;
+import cc.alcina.framework.common.client.util.HasSize;
+import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta.DeltaApplicationRecordToDomainModelDeltaConverter;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 @SuppressWarnings("unchecked")
 /**
  *
  * @author Nick Reddel
  */
-public abstract class JdbcTransformPersistence extends
-LocalTransformPersistence {
+public abstract class JdbcTransformPersistence extends LocalTransformPersistence {
 	private String connectionUrl;
 
 	public String getConnectionUrl() {
@@ -65,8 +69,7 @@ LocalTransformPersistence {
 	}
 
 	@Override
-	public void clearPersistedClient(final ClientInstance exceptFor,
-			int exceptForId, final AsyncCallback callback,
+	public void clearPersistedClient(final ClientInstance exceptFor, int exceptForId, final AsyncCallback callback,
 			boolean clearDeltaStore) {
 		try {
 			String sql = clearPersistedClientSql(exceptFor, exceptForId);
@@ -77,18 +80,38 @@ LocalTransformPersistence {
 		}
 	}
 
-	Object[] transformParams = { "id", Integer.class, "transform",
-			String.class, "timestamp", Long.class, "user_id", Long.class,
-			"clientInstance_id", Long.class, "request_id", Integer.class,
-			"clientInstance_auth", Integer.class, "transform_request_type",
-			DeltaApplicationRecordType.class, "transform_event_protocol",
-			String.class, "tag", String.class };
+	private Object[] transformParams = { "id", Integer.class, "timestamp", Long.class, "user_id", Long.class,
+			"clientInstance_id", Long.class, "request_id", Integer.class, "clientInstance_auth", Integer.class,
+			"transform_request_type", DeltaApplicationRecordType.class, "transform_event_protocol", String.class, "tag",
+			String.class };
 
-	protected ResultSet getTransformsResultSet(
-			final DeltaApplicationFilters filters, CleanupTuple tuple)
-					throws SQLException {
+	protected ResultSet getTransformsResultSet(final DeltaApplicationFilters filters, CleanupTuple tuple)
+			throws SQLException {
 		String sql = getTransformWrapperSql(filters);
 		return tuple.executeQuery(sql);
+	}
+
+	private class PersistentDomainModelDeltaIterator implements Iterator<DomainModelDelta>, HasSize {
+		private Iterator<DeltaApplicationRecord> itr;
+
+		public PersistentDomainModelDeltaIterator(Iterator<DeltaApplicationRecord> result) {
+			this.itr = result;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return itr.hasNext();
+		}
+
+		@Override
+		public DomainModelDelta next() {
+			return new DeltaApplicationRecordToDomainModelDeltaConverter().convert(itr.next());
+		}
+
+		@Override
+		public int getSize() {
+			return ((HasSize) itr).getSize();
+		}
 	}
 
 	class CleanupTuple {
@@ -143,14 +166,12 @@ LocalTransformPersistence {
 					conn.close();
 				}
 			} catch (Exception e) {
-				throw new WrappedRuntimeException("Problem accessing local db",
-						e, SuggestedAction.NOTIFY_WARNING);
+				throw new WrappedRuntimeException("Problem accessing local db", e, SuggestedAction.NOTIFY_WARNING);
 			}
 		}
 
-		public PreparedStatement prepareStatement(String sql)
-				throws SQLException {
-			pstmt = conn.prepareStatement(sql);
+		public PreparedStatement prepareStatement(String sql) throws SQLException {
+			pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 			return pstmt;
 		}
 
@@ -164,18 +185,14 @@ LocalTransformPersistence {
 	}
 
 	@Override
-	public void init(
-			final DTESerializationPolicy dteSerializationPolicy,
-			final CommitToStorageTransformListener commitToServerTransformListener,
-			final AsyncCallback callback) {
+	public void init(final DTESerializationPolicy dteSerializationPolicy,
+			final CommitToStorageTransformListener commitToServerTransformListener, final AsyncCallback callback) {
 		final LocalTransformPersistence listener = this;
 		final AsyncCallback superCallback = new AsyncCallback() {
 			@Override
 			public void onSuccess(Object result) {
-				getCommitToStorageTransformListener().addStateChangeListener(
-						listener);
-				ClientTransformManager.cast().setPersistableTransformListener(
-						listener);
+				getCommitToStorageTransformListener().addStateChangeListener(listener);
+				ClientTransformManager.cast().setPersistableTransformListener(listener);
 				callback.onSuccess(null);
 			}
 
@@ -194,18 +211,15 @@ LocalTransformPersistence {
 
 			@Override
 			public void onSuccess(Object result) {
-				initSuper(dteSerializationPolicy,
-						commitToServerTransformListener, superCallback);
+				initSuper(dteSerializationPolicy, commitToServerTransformListener, superCallback);
 			}
 		});
 		callback.onSuccess(null);
 	}
 
 	private void initSuper(DTESerializationPolicy dteSerializationPolicy,
-			CommitToStorageTransformListener commitToServerTransformListener,
-			final AsyncCallback superCallback) {
-		super.init(dteSerializationPolicy, commitToServerTransformListener,
-				superCallback);
+			CommitToStorageTransformListener commitToServerTransformListener, final AsyncCallback superCallback) {
+		super.init(dteSerializationPolicy, commitToServerTransformListener, superCallback);
 	}
 
 	public Connection getConnection() {
@@ -233,8 +247,7 @@ LocalTransformPersistence {
 		callback.onSuccess(null);
 	}
 
-	private Map<String, Object> getFieldsAs(ResultSet rs, Object[] params)
-			throws Exception {
+	public static Map<String, Object> getFieldsAs(ResultSet rs, Object[] params) throws Exception {
 		Map<String, Object> result = new HashMap<String, Object>();
 		for (int i = 0; i < params.length; i += 2) {
 			String paramName = (String) params[i];
@@ -250,8 +263,7 @@ LocalTransformPersistence {
 				value = rs.getString(paramName);
 			}
 			if (paramClass.isEnum()) {
-				value = Registry.impl(EnumSerializer.class).deserialize(
-						paramClass, rs.getString(paramName));
+				value = Registry.impl(EnumSerializer.class).deserialize(paramClass, rs.getString(paramName));
 			}
 			result.put(paramName, value);
 		}
@@ -269,16 +281,12 @@ LocalTransformPersistence {
 	}
 
 	@Override
-	protected void persistFromFrontOfQueue(
-			final DeltaApplicationRecord wrapper, final AsyncCallback callback) {
+	protected void persistFromFrontOfQueue(final DeltaApplicationRecord wrapper, final AsyncCallback callback) {
 		CleanupTuple tuple = new CleanupTuple();
 		try {
-			PreparedStatement pstmt = tuple
-					.prepareStatement("INSERT INTO TransformRequests "
-							+ "(transform, timestamp,"
-							+ "user_id,clientInstance_id"
-							+ ",request_id,clientInstance_auth,"
-							+ "transform_request_type,transform_event_protocol,tag) VALUES (?, ?,?,?,?,?,?,?,?)");
+			PreparedStatement pstmt = tuple.prepareStatement("INSERT INTO TransformRequests " + "(transform, timestamp,"
+					+ "user_id,clientInstance_id" + ",request_id,clientInstance_auth,"
+					+ "transform_request_type,transform_event_protocol,tag) VALUES (?, ?,?,?,?,?,?,?,?)");
 			if (wrapper.getProtocolVersion() == null) {
 				throw new Exception("wrapper must have protocol version");
 			}
@@ -295,10 +303,9 @@ LocalTransformPersistence {
 			pstmt.setString(9, wrapper.getTag());
 			tuple.executePstmt();
 			ResultSet rs = tuple.getGeneratedKeys();
-			if (rs != null && rs.next()) {
-				int newid = rs.getInt(1);
-				wrapper.setId(newid);
-			}
+			rs.next();
+			int newid = rs.getInt(1);
+			wrapper.setId(newid);
 			callback.onSuccess(null);
 		} catch (Exception e) {
 			callback.onFailure(e);
@@ -308,13 +315,11 @@ LocalTransformPersistence {
 	}
 
 	@Override
-	protected void transformPersisted(
-			final List<DeltaApplicationRecord> persistedWrappers,
+	protected void transformPersisted(final List<DeltaApplicationRecord> persistedWrappers,
 			final AsyncCallback callback) {
 		try {
 			for (DeltaApplicationRecord wrapper : persistedWrappers) {
-				executeStatement("update  TransformRequests  set "
-						+ "transform_request_type='TO_REMOTE_COMPLETED'"
+				executeStatement("update  TransformRequests  set " + "transform_request_type='TO_REMOTE_COMPLETED'"
 						+ " where id = " + wrapper.getId());
 			}
 			callback.onSuccess(null);
@@ -324,14 +329,12 @@ LocalTransformPersistence {
 	}
 
 	@Override
-	public void reparentToClientInstance(final DeltaApplicationRecord wrapper,
-			final ClientInstance clientInstance, final AsyncCallback callback) {
+	public void reparentToClientInstance(final DeltaApplicationRecord wrapper, final ClientInstance clientInstance,
+			final AsyncCallback callback) {
 		CleanupTuple tuple = new CleanupTuple();
 		try {
-			PreparedStatement pstmt = tuple
-					.prepareStatement("update  TransformRequests  set "
-							+ "clientInstance_id=?,clientInstance_auth=? "
-							+ " where id = ?");
+			PreparedStatement pstmt = tuple.prepareStatement(
+					"update  TransformRequests  set " + "clientInstance_id=?,clientInstance_auth=? " + " where id = ?");
 			pstmt.setLong(1, clientInstance.getId());
 			pstmt.setInt(2, clientInstance.getAuth());
 			pstmt.setInt(3, wrapper.getId());
@@ -342,15 +345,12 @@ LocalTransformPersistence {
 			tuple.cleanup();
 		}
 	}
-	
-	public void reparentToClientInstance(long clientInstanceId,
-			ClientInstance clientInstance, AsyncCallback callback) {
+
+	public void reparentToClientInstance(long clientInstanceId, ClientInstance clientInstance, AsyncCallback callback) {
 		CleanupTuple tuple = new CleanupTuple();
 		try {
-			PreparedStatement pstmt = tuple
-					.prepareStatement("update TransformRequests set "
-							+ "CLIENTINSTANCE_ID=?,CLIENTINSTANCE_AUTH=? "
-							+ "where CLIENTINSTANCE_ID = ?");
+			PreparedStatement pstmt = tuple.prepareStatement("update TransformRequests set "
+					+ "CLIENTINSTANCE_ID=?,CLIENTINSTANCE_AUTH=? " + "where CLIENTINSTANCE_ID = ?");
 			pstmt.setLong(1, clientInstance.getId());
 			pstmt.setInt(2, clientInstance.getAuth());
 			pstmt.setLong(3, clientInstanceId);
@@ -363,14 +363,12 @@ LocalTransformPersistence {
 		}
 	}
 
-	public void reparentToClientInstanceAndUserId(long clientInstanceId,
-			ClientInstance clientInstance, long userId, AsyncCallback callback) {
+	public void reparentToClientInstanceAndUserId(long clientInstanceId, ClientInstance clientInstance, long userId,
+			AsyncCallback callback) {
 		CleanupTuple tuple = new CleanupTuple();
 		try {
-			PreparedStatement pstmt = tuple
-					.prepareStatement("update TransformRequests set "
-							+ "CLIENTINSTANCE_ID=?,CLIENTINSTANCE_AUTH=?,USER_ID=? "
-							+ "where CLIENTINSTANCE_ID = ?");
+			PreparedStatement pstmt = tuple.prepareStatement("update TransformRequests set "
+					+ "CLIENTINSTANCE_ID=?,CLIENTINSTANCE_AUTH=?,USER_ID=? " + "where CLIENTINSTANCE_ID = ?");
 			pstmt.setLong(1, clientInstance.getId());
 			pstmt.setInt(2, clientInstance.getAuth());
 			pstmt.setLong(3, userId);
@@ -387,10 +385,8 @@ LocalTransformPersistence {
 	public void updateTransformTableRequestType(AsyncCallback callback) {
 		CleanupTuple tuple = new CleanupTuple();
 		try {
-			PreparedStatement pstmt = tuple
-					.prepareStatement("update TransformRequests set "
-							+ "TRANSFORM_REQUEST_TYPE=? "
-							+ "where TRANSFORM_REQUEST_TYPE = ?");
+			PreparedStatement pstmt = tuple.prepareStatement(
+					"update TransformRequests set " + "TRANSFORM_REQUEST_TYPE=? " + "where TRANSFORM_REQUEST_TYPE = ?");
 			pstmt.setString(1, "LOCAL_TRANSFORMS_APPLIED");
 			pstmt.setString(2, "TO_REMOTE");
 			int rowsModified = pstmt.executeUpdate();
@@ -406,19 +402,16 @@ LocalTransformPersistence {
 	public void getDomainModelDeltaIterator(DeltaApplicationFilters filters,
 			final AsyncCallback<Iterator<DomainModelDelta>> callback) {
 		String sql = getTransformWrapperSql(filters);
-		AsyncCallback<List<DeltaApplicationRecord>> converterCallback = new AsyncCallback<List<DeltaApplicationRecord>>() {
+		AsyncCallback<Iterator<DeltaApplicationRecord>> converterCallback = new AsyncCallback<Iterator<DeltaApplicationRecord>>() {
 			@Override
 			public void onFailure(Throwable caught) {
 				callback.onFailure(caught);
 			}
 
 			@Override
-			public void onSuccess(List<DeltaApplicationRecord> result) {
-				callback.onSuccess(CollectionFilters
-						.convert(
-								result,
-								new DeltaApplicationRecordToDomainModelDeltaConverter())
-								.iterator());
+			public void onSuccess(Iterator<DeltaApplicationRecord> result) {
+				Iterator<DomainModelDelta> converter = new PersistentDomainModelDeltaIterator(result);
+				callback.onSuccess(converter);
 			}
 		};
 		getTransforms(filters, converterCallback);
@@ -431,32 +424,120 @@ LocalTransformPersistence {
 		getTransforms(filters, callback);
 	}
 
-	@Override
-	protected void getTransforms(DeltaApplicationFilters filters,
-			AsyncCallback<List<DeltaApplicationRecord>> callback) {
-		CleanupTuple cleanupTuple = new CleanupTuple();
-		List<DeltaApplicationRecord> transforms = new ArrayList<DeltaApplicationRecord>();
-		try {
-			ResultSet rs = getTransformsResultSet(filters, cleanupTuple);
-			while (rs.next()) {
-				Map<String, Object> map = getFieldsAs(rs, transformParams);
-				DeltaApplicationRecord wr = new DeltaApplicationRecord(
-						(Integer) map.get("id"), (String) map.get("transform"),
-						(Long) map.get("timestamp"), (Long) map.get("user_id"),
-						(Long) map.get("clientInstance_id"),
-						(Integer) map.get("request_id"),
-						(Integer) map.get("clientInstance_auth"),
-						(DeltaApplicationRecordType) map
-						.get("transform_request_type"),
-						(String) map.get("transform_event_protocol"),
-						(String) map.get("tag"));
-				transforms.add(wr);
+	public class RsIterator implements Iterator<DeltaApplicationRecord>, Closeable, HasSize {
+		private boolean hasNext;
+
+		private ResultSet rs;
+
+		private CleanupTuple cleanupTuple;
+
+		private CleanupTuple transformCleanupTuple;
+
+		private List<Long> ids;
+
+		@Override
+		public int getSize() {
+			return ids.size();
+		}
+
+		public RsIterator(ResultSet rs, CleanupTuple cleanupTuple, List<Long> ids) {
+			this.ids = ids;
+			this.transformCleanupTuple = new CleanupTuple();
+			try {
+				this.rs = rs;
+				this.cleanupTuple = cleanupTuple;
+				hasNext = rs.next();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
 			}
-		} catch (Exception e) {
-			callback.onFailure(e);
-		} finally {
+		}
+
+		@Override
+		public boolean hasNext() {
+			return hasNext;
+		}
+
+		@Override
+		public DeltaApplicationRecord next() {
+			if (!hasNext) {
+				throw new NoSuchElementException();
+			}
+			try {
+				Map<String, Object> map = getFieldsAs(rs, transformParams);
+				DeltaApplicationRecord wr = new DeltaApplicationRecord((Integer) map.get("id"),
+						getTransformText(rs, map.get("id").toString()), (Long) map.get("timestamp"),
+						(Long) map.get("user_id"), (Long) map.get("clientInstance_id"), (Integer) map.get("request_id"),
+						(Integer) map.get("clientInstance_auth"),
+						(DeltaApplicationRecordType) map.get("transform_request_type"),
+						(String) map.get("transform_event_protocol"), (String) map.get("tag"));
+				hasNext = rs.next();
+				return wr;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		Map<String, String> transformCache = new LinkedHashMap<>();
+
+		int precacheIndex = 0;
+
+		private String getTransformText(ResultSet rs2, String id) {
+			if (transformCache.containsKey(id)) {
+				return transformCache.get(id);
+			}
+			transformCache.clear();
+			List<Long> idsSub = ids.subList(precacheIndex, Math.min(ids.size(), precacheIndex + 1000));
+			try (ResultSet rs = transformCleanupTuple.stmt
+					.executeQuery(String.format("select id,transform from TransformRequests where id in %s order by id",
+							EntityUtils.longsToIdClause(idsSub)))) {
+				int maxChars = 200000000;
+				while (rs.next()) {
+					String rsId = rs.getString(1);
+					String transforms = rs.getString(2);
+					transformCache.put(rsId, transforms);
+					maxChars -= transforms.length();
+					precacheIndex++;
+					if (maxChars < 0) {
+						break;
+					}
+				}
+				rs.close();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			System.out.format("heap size: %smb\n",
+					(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000);
+			return transformCache.get(id);
+		}
+
+		@Override
+		public void close() throws IOException {
 			cleanupTuple.cleanup();
 		}
-		callback.onSuccess(transforms);
+	}
+
+	protected String getTransformWrapperSqlFields() {
+		return "id, timestamp,user_id,clientInstance_id,request_id,clientInstance_auth,transform_request_type,transform_event_protocol,tag";
+	}
+
+	@Override
+	protected void getTransforms(DeltaApplicationFilters filters,
+			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
+		CleanupTuple cleanupTuple = new CleanupTuple();
+		try {
+			String sql = getTransformWrapperSql(filters);
+			sql = sql.replaceFirst("select.+?from(.+?)(order by.+)$", "select id from $1 $2");
+			ResultSet countRs = cleanupTuple.executeQuery(sql);
+			List<Long> ids = new ArrayList<Long>();
+			while (countRs.next()) {
+				ids.add(countRs.getLong(1));
+			}
+			countRs.close();
+			ResultSet rs = getTransformsResultSet(filters, cleanupTuple);
+			callback.onSuccess(new RsIterator(rs, cleanupTuple, ids));
+		} catch (Exception e) {
+			callback.onFailure(e);
+			cleanupTuple.cleanup();
+		}
 	}
 }

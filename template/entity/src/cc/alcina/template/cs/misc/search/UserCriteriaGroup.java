@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.search.AbstractUserCriteriaGroup;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 
-@BeanInfo(displayNamePropertyName = "displayName")
+@Bean(displayNamePropertyName = "displayName")
 @PermissibleChildClasses({ UserCriterion.class })
 public class UserCriteriaGroup extends AbstractUserCriteriaGroup<UserCriterion> {
     private transient boolean restrictToCurrentUser;

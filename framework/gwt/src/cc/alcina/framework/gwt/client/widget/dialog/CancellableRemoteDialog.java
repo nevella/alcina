@@ -13,12 +13,6 @@
  */
 package cc.alcina.framework.gwt.client.widget.dialog;
 
-import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionListener;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.widget.ModalNotifier;
-
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.Button;
@@ -26,6 +20,12 @@ import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
+
+import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 /**
  * 

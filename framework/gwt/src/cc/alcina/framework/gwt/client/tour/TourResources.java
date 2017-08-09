@@ -1,8 +1,8 @@
 package cc.alcina.framework.gwt.client.tour;
 
-import cc.alcina.framework.gwt.client.gen.SimpleCssResource;
-
 import com.google.gwt.resources.client.ClientBundle;
+
+import cc.alcina.framework.gwt.client.gen.SimpleCssResource;
 
 public interface TourResources extends ClientBundle {
 	

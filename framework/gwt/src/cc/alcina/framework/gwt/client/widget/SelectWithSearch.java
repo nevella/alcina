@@ -79,7 +79,6 @@ import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SimpleKeyProvider;
 import com.google.gwt.view.client.SingleSelectionModel;
-import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 import cc.alcina.framework.common.client.util.CommonUtils;

@@ -14,9 +14,9 @@
 
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
-import cc.alcina.framework.common.client.util.HasPluralToString;
-
 import com.totsp.gwittir.client.ui.Renderer;
+
+import cc.alcina.framework.common.client.util.HasPluralToString;
 
 /**
  * To allow subclassing

@@ -33,10 +33,6 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
-import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
-import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.UnsafeNativeLong;
 import com.google.gwt.core.ext.Generator;
@@ -56,6 +52,10 @@ import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
 import com.totsp.gwittir.client.beans.TreeIntrospector;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
+
+import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
+import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /**
  * (Nick) Pretty much a complete rewrite of Robert's generator - because we

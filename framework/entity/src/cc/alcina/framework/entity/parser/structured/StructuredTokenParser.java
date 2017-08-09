@@ -3,8 +3,6 @@ package cc.alcina.framework.entity.parser.structured;
 import java.util.List;
 import java.util.function.Supplier;
 
-import com.google.gwt.canvas.dom.client.Context;
-
 import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 import cc.alcina.framework.entity.parser.structured.node.XmlTokenStream;

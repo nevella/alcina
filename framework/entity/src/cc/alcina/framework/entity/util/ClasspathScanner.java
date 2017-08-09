@@ -43,7 +43,6 @@ import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.ClassDataCache.ClassDataItem;
 

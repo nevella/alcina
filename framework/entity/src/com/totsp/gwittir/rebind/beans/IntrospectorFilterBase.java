@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.google.gwt.core.ext.GeneratorContext;
+import com.google.gwt.core.ext.typeinfo.JClassType;
+
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.reflection.NotIntrospected;
-
-import com.google.gwt.core.ext.GeneratorContext;
-import com.google.gwt.core.ext.typeinfo.JClassType;
 
 public abstract class IntrospectorFilterBase implements IntrospectorFilter {
 	private GeneratorContext context;

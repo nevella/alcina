@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.StateChangeListener;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -42,8 +44,6 @@ import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.util.Lzw;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
-
 /**
  * <p>
  * <b>Ordering of client transforms</b>
@@ -73,18 +73,15 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * @author nick@alcina.cc
  * 
  */
-public abstract class LocalTransformPersistence implements StateChangeListener,
-		ClientTransformManager.PersistableTransformListener {
-	public static final String CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED = LocalTransformPersistence.class
-			.getName() + "." + "CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED";
+public abstract class LocalTransformPersistence
+		implements StateChangeListener, ClientTransformManager.PersistableTransformListener {
+	public static final String CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED = LocalTransformPersistence.class.getName()
+			+ "." + "CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED";
 
 	public static final String CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS = LocalTransformPersistence.class
-			.getName()
-			+ "."
-			+ "CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS";;
+			.getName() + "." + "CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS";;
 
-	public static final String TOPIC_PERSISTING = LocalTransformPersistence.class
-			.getName() + "." + "TOPIC_PERSISTING";;
+	public static final String TOPIC_PERSISTING = LocalTransformPersistence.class.getName() + "." + "TOPIC_PERSISTING";;
 
 	public static class TypeSizeTuple {
 		public String type;
@@ -101,18 +98,15 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		GlobalTopicPublisher.get().publishTopic(TOPIC_PERSISTING, size);
 	}
 
-	public static void notifyPersistingListenerDelta(
-			TopicListener<TypeSizeTuple> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_PERSISTING, listener,
-				add);
+	public static void notifyPersistingListenerDelta(TopicListener<TypeSizeTuple> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_PERSISTING, listener, add);
 	}
 
 	public static LocalTransformPersistence get() {
 		return localTransformPersistence;
 	}
 
-	public static void registerLocalTransformPersistence(
-			LocalTransformPersistence localTransformPersistence) {
+	public static void registerLocalTransformPersistence(LocalTransformPersistence localTransformPersistence) {
 		LocalTransformPersistence.localTransformPersistence = localTransformPersistence;
 	}
 
@@ -137,19 +131,18 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	public LocalTransformPersistence() {
 	}
 
-	public abstract void clearPersistedClient(ClientInstance exceptFor,
-			int exceptForId, AsyncCallback callback, boolean clearDeltaStore);
+	public abstract void clearPersistedClient(ClientInstance exceptFor, int exceptForId, AsyncCallback callback,
+			boolean clearDeltaStore);
 
 	public void dumpDatabase(final Callback<String> callback) {
-		AsyncCallback<List<DeltaApplicationRecord>> transformCallback = new AsyncCallbackStd<List<DeltaApplicationRecord>>() {
+		AsyncCallback<Iterator<DeltaApplicationRecord>> transformCallback = new AsyncCallbackStd<Iterator<DeltaApplicationRecord>>() {
 			@Override
-			public void onSuccess(List<DeltaApplicationRecord> result) {
+			public void onSuccess(Iterator<DeltaApplicationRecord> result) {
 				StringBuilder sb = new StringBuilder();
-				for (DeltaApplicationRecord wrapper : result) {
-					sb.append(new DeltaApplicationRecordSerializerImpl()
-							.write(wrapper));
+				CommonUtils.iteratorToList(result).forEach(wrapper -> {
+					sb.append(new DeltaApplicationRecordSerializerImpl().write(wrapper));
 					sb.append("\n");
-				}
+				});
 				callback.apply(sb.toString());
 			}
 		};
@@ -179,8 +172,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	}
 
 	public void init(DTESerializationPolicy dteSerializationPolicy,
-			CommitToStorageTransformListener commitToServerTransformListener,
-			AsyncCallback<Void> callback) {
+			CommitToStorageTransformListener commitToServerTransformListener, AsyncCallback<Void> callback) {
 		setSerializationPolicy(dteSerializationPolicy);
 		setCommitToStorageTransformListener(commitToServerTransformListener);
 		callback.onSuccess(null);
@@ -202,35 +194,27 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		return this.useLzw;
 	}
 
-	public void persistableTransform(DomainTransformRequest dtr,
-			DeltaApplicationRecordType type) {
-		dtr.setProtocolVersion(getSerializationPolicy()
-				.getTransformPersistenceProtocol());
+	public void persistableTransform(DomainTransformRequest dtr, DeltaApplicationRecordType type) {
+		dtr.setProtocolVersion(getSerializationPolicy().getTransformPersistenceProtocol());
 		if (!dtr.getEvents().isEmpty()) {
 			if (!closing) {
 				new DTRAsyncSerializer(dtr, type).start();
 			} else {
-				DeltaApplicationRecord wrapper = new DeltaApplicationRecord(
-						dtr, type, false);
+				DeltaApplicationRecord wrapper = new DeltaApplicationRecord(dtr, type, false);
 				persist(wrapper, new AsyncCallbackNull());
 			}
 		}
 	}
 
-	public void recordDeltaApplication(DomainModelDeltaSignature signature,
-			AsyncCallback<Void> AsyncCallback) {
+	public void recordDeltaApplication(DomainModelDeltaSignature signature, AsyncCallback<Void> AsyncCallback) {
 		ClientInstance clientInstance = ClientBase.getClientInstance();
-		DeltaApplicationRecord wrapper = new DeltaApplicationRecord(0,
-				signature.toString(), System.currentTimeMillis(),
-				PermissionsManager.get().getUserId(), clientInstance.getId(),
-				0, clientInstance.getAuth(),
-				DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
-				DomainTrancheProtocolHandler.VERSION, "");
+		DeltaApplicationRecord wrapper = new DeltaApplicationRecord(0, signature.toString(), System.currentTimeMillis(),
+				PermissionsManager.get().getUserId(), clientInstance.getId(), 0, clientInstance.getAuth(),
+				DeltaApplicationRecordType.REMOTE_DELTA_APPLIED, DomainTrancheProtocolHandler.VERSION, "");
 		persist(wrapper, AsyncCallback);
 	}
 
-	public abstract void reparentToClientInstance(
-			DeltaApplicationRecord wrapper, ClientInstance clientInstance,
+	public abstract void reparentToClientInstance(DeltaApplicationRecord wrapper, ClientInstance clientInstance,
 			AsyncCallback callback);
 
 	public void restoreDatabase(String data, Callback callback) {
@@ -241,13 +225,11 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		this.closing = closing;
 	}
 
-	public void setCommitToStorageTransformListener(
-			CommitToStorageTransformListener commitToStorageTransformListener) {
+	public void setCommitToStorageTransformListener(CommitToStorageTransformListener commitToStorageTransformListener) {
 		this.commitToStorageTransformListener = commitToStorageTransformListener;
 	}
 
-	public void setSerializationPolicy(
-			DTESerializationPolicy serializationPolicy) {
+	public void setSerializationPolicy(DTESerializationPolicy serializationPolicy) {
 		this.serializationPolicy = serializationPolicy;
 	}
 
@@ -256,23 +238,17 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	}
 
 	public boolean shouldPersistClient(boolean clientSupportsRpcPersistence) {
-		return !ClientSession.get().isInitialObjectsPersisted()
-				|| clientSupportsRpcPersistence;
+		return !ClientSession.get().isInitialObjectsPersisted() || clientSupportsRpcPersistence;
 	}
 
 	public void stateChanged(Object source, String newState) {
 		if (newState == CommitToStorageTransformListener.COMMITTING) {
-			DomainTransformRequest rq = getCommitToStorageTransformListener()
-					.getCommittingRequest();
+			DomainTransformRequest rq = getCommitToStorageTransformListener().getCommittingRequest();
 			final int requestId = rq.getRequestId();
-			if (!getPersistedTransforms().containsKey(requestId)
-					&& !rq.getEvents().isEmpty()) {
-				rq.setProtocolVersion(getSerializationPolicy()
-						.getTransformPersistenceProtocol());
-				final DeltaApplicationRecord wrapper = new DeltaApplicationRecord(
-						rq,
-						DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
-						false);
+			if (!getPersistedTransforms().containsKey(requestId) && !rq.getEvents().isEmpty()) {
+				rq.setProtocolVersion(getSerializationPolicy().getTransformPersistenceProtocol());
+				final DeltaApplicationRecord wrapper = new DeltaApplicationRecord(rq,
+						DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED, false);
 				getPersistedTransforms().put(requestId, wrapper);
 				persist(wrapper, new AsyncCallbackStd<Void>() {
 					@Override
@@ -287,17 +263,14 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 				});
 			}
 		} else if (newState == CommitToStorageTransformListener.COMMITTED) {
-			List<DomainTransformRequest> rqs = getCommitToStorageTransformListener()
-					.getPriorRequestsWithoutResponse();
-			final Set<Integer> removeIds = new HashSet(getPersistedTransforms()
-					.keySet());
+			List<DomainTransformRequest> rqs = getCommitToStorageTransformListener().getPriorRequestsWithoutResponse();
+			final Set<Integer> removeIds = new HashSet(getPersistedTransforms().keySet());
 			for (DomainTransformRequest rq : rqs) {
 				removeIds.remove(rq.getRequestId());
 			}
 			List<DeltaApplicationRecord> persistedWrappers = new ArrayList<DeltaApplicationRecord>();
 			for (Integer i : removeIds) {
-				DeltaApplicationRecord wrapper = getPersistedTransforms()
-						.get(i);
+				DeltaApplicationRecord wrapper = getPersistedTransforms().get(i);
 				persistedWrappers.add(wrapper);
 			}
 			AsyncCallback<Void> afterTransformsMarkedAsPersistedCallback = new AsyncCallback<Void>() {
@@ -315,19 +288,14 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 					rq.setClientInstance(ClientBase.getClientInstance());
 					rq.setRequestId(0);
 					rq.setEvents(new ArrayList<DomainTransformEvent>(
-							getCommitToStorageTransformListener()
-									.getSynthesisedEvents()));
-					rq.setProtocolVersion(getSerializationPolicy()
-							.getTransformPersistenceProtocol());
-					DeltaApplicationRecord wrapper = new DeltaApplicationRecord(
-							rq,
-							DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
-							false);
+							getCommitToStorageTransformListener().getSynthesisedEvents()));
+					rq.setProtocolVersion(getSerializationPolicy().getTransformPersistenceProtocol());
+					DeltaApplicationRecord wrapper = new DeltaApplicationRecord(rq,
+							DeltaApplicationRecordType.REMOTE_DELTA_APPLIED, false);
 					persist(wrapper, new AsyncCallbackNull());
 				}
 			};
-			transformPersisted(persistedWrappers,
-					afterTransformsMarkedAsPersistedCallback);
+			transformPersisted(persistedWrappers, afterTransformsMarkedAsPersistedCallback);
 			return;
 		} else if (newState == CommitToStorageTransformListener.RELOAD) {
 			clearAllPersisted(new AsyncCallbackNull());
@@ -341,29 +309,27 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	}
 
 	protected void getTransforms(DeltaApplicationRecordType type,
-			AsyncCallback<List<DeltaApplicationRecord>> callback) {
+			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
 		getTransforms(new DeltaApplicationRecordType[] { type }, callback);
 	}
 
 	protected void getTransforms(final DeltaApplicationRecordType[] types,
-			final AsyncCallback<List<DeltaApplicationRecord>> callback) {
+			final AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
 		DeltaApplicationFilters filters = new DeltaApplicationFilters();
 		filters.types = types;
 		getTransforms(filters, callback);
 	}
+
 	protected abstract void getTransforms(DeltaApplicationFilters filters,
-			AsyncCallback<List<DeltaApplicationRecord>> callback) ;
+			AsyncCallback<Iterator<DeltaApplicationRecord>> callback);
 
 	private static final String LZW_PROTOCOL_ADDITION = "/lzw";
 
 	protected void maybeCompressWrapper(DeltaApplicationRecord wrapper) {
-		if (isUseLzw()
-				&& wrapper.getProtocolVersion() != null
-				&& !wrapper.getProtocolVersion()
-						.endsWith(LZW_PROTOCOL_ADDITION)) {
+		if (isUseLzw() && wrapper.getProtocolVersion() != null
+				&& !wrapper.getProtocolVersion().endsWith(LZW_PROTOCOL_ADDITION)) {
 			wrapper.setText(new Lzw().compress(wrapper.getText()));
-			wrapper.setProtocolVersion(wrapper.getProtocolVersion()
-					+ LZW_PROTOCOL_ADDITION);
+			wrapper.setProtocolVersion(wrapper.getProtocolVersion() + LZW_PROTOCOL_ADDITION);
 		}
 	}
 
@@ -380,8 +346,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 		private AsyncCallback failureCallback;
 
-		ProcessRecordQueueCallback(AsyncCallback successCallback,
-				AsyncCallback failureCallback) {
+		ProcessRecordQueueCallback(AsyncCallback successCallback, AsyncCallback failureCallback) {
 			this.successCallback = successCallback;
 			this.failureCallback = failureCallback;
 		}
@@ -400,26 +365,22 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		}
 	}
 
-	public void persist(List<DeltaApplicationRecord> wrappers,
-			AsyncCallback callback) {
+	public void persist(List<DeltaApplicationRecord> wrappers, AsyncCallback callback) {
 		for (int i = 0; i < wrappers.size(); i++) {
-			recordQueue.put(wrappers.get(i), new ProcessRecordQueueCallback(
-					i == wrappers.size() - 1 ? callback : null, callback));
+			recordQueue.put(wrappers.get(i),
+					new ProcessRecordQueueCallback(i == wrappers.size() - 1 ? callback : null, callback));
 		}
 		persistQueue();
 	}
 
-	protected void persist(DeltaApplicationRecord wrapper,
-			AsyncCallback callback) {
-		recordQueue.put(wrapper, new ProcessRecordQueueCallback(callback,
-				callback));
+	protected void persist(DeltaApplicationRecord wrapper, AsyncCallback callback) {
+		recordQueue.put(wrapper, new ProcessRecordQueueCallback(callback, callback));
 		persistQueue();
 	}
 
 	private void persistQueue() {
 		if (!recordQueue.isEmpty()) {
-			Entry<DeltaApplicationRecord, AsyncCallback> first = recordQueue
-					.entrySet().iterator().next();
+			Entry<DeltaApplicationRecord, AsyncCallback> first = recordQueue.entrySet().iterator().next();
 			// copy in case removal zaps the refs
 			DeltaApplicationRecord record = first.getKey();
 			AsyncCallback callback = first.getValue();
@@ -428,15 +389,12 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		}
 	}
 
-	protected abstract void persistFromFrontOfQueue(
-			DeltaApplicationRecord wrapper, AsyncCallback callback);
+	protected abstract void persistFromFrontOfQueue(DeltaApplicationRecord wrapper, AsyncCallback callback);
 
-	protected void persistOfflineTransforms(
-			List<DeltaApplicationRecord> uncommitted, ModalNotifier notifier,
+	protected void persistOfflineTransforms(List<DeltaApplicationRecord> uncommitted, ModalNotifier notifier,
 			AsyncCallback<Void> postPersistOfflineTransformsCallback) {
-		ClientBase.getCommonRemoteServiceAsyncInstance()
-				.persistOfflineTransforms(uncommitted,
-						postPersistOfflineTransformsCallback);
+		ClientBase.getCommonRemoteServiceAsyncInstance().persistOfflineTransforms(uncommitted,
+				postPersistOfflineTransformsCallback);
 	}
 
 	protected void setClientInstanceIdForGet(Long clientInstanceIdForGet) {
@@ -448,23 +406,16 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	}
 
 	protected void showOfflineLimitMessage() {
-		Registry.impl(ClientNotifications.class)
-				.showError(
-						"Unable to open offline session",
-						new Exception("Only one tab may be open "
-								+ "for this application when opening offline. "));
+		Registry.impl(ClientNotifications.class).showError("Unable to open offline session",
+				new Exception("Only one tab may be open " + "for this application when opening offline. "));
 	}
 
 	protected void showUnableToLoadOfflineMessage() {
 		Registry.impl(ClientNotifications.class)
-				.showMessage(
-						"<b>Unable to open offline session</b><br><br>"
-								+ "No data saved");
+				.showMessage("<b>Unable to open offline session</b><br><br>" + "No data saved");
 	}
 
-	protected abstract void transformPersisted(
-			List<DeltaApplicationRecord> persistedWrappers,
-			AsyncCallback callback);
+	protected abstract void transformPersisted(List<DeltaApplicationRecord> persistedWrappers, AsyncCallback callback);
 
 	ClientInstance getDomainObjectsPersistedBy() {
 		return this.domainObjectsPersistedBy;
@@ -488,16 +439,14 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 		Iterator<DeltaApplicationRecord> loadIterator;
 
-		public Loader(LocalTransformPersistence localTransformPersistence,
-				String data, Callback callback) {
+		public Loader(LocalTransformPersistence localTransformPersistence, String data, Callback callback) {
 			this.localTransformPersistence = localTransformPersistence;
 			this.data = data;
 			this.callback = callback;
 		}
 
 		public void start() {
-			List<DeltaApplicationRecord> wrappers = new DeltaApplicationRecordSerializerImpl()
-					.readMultiple(data);
+			List<DeltaApplicationRecord> wrappers = new DeltaApplicationRecordSerializerImpl().readMultiple(data);
 			loadIterator = wrappers.iterator();
 			iterate();
 		}
@@ -529,14 +478,12 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 		DTRProtocolHandler handler;
 
-		public DTRAsyncSerializer(DomainTransformRequest dtr,
-				DeltaApplicationRecordType type) {
+		public DTRAsyncSerializer(DomainTransformRequest dtr, DeltaApplicationRecordType type) {
 			super(1000, 200);
 			wrapper = new DeltaApplicationRecord(dtr, type, true);
 			items = dtr.getEvents();
 			handler = new DTRProtocolSerializer()
-					.getHandler(getSerializationPolicy()
-							.getTransformPersistenceProtocol());
+					.getHandler(getSerializationPolicy().getTransformPersistenceProtocol());
 		}
 
 		@Override
@@ -551,8 +498,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			persist(wrapper, new AsyncCallbackStd() {
 				@Override
 				public void onSuccess(Object result) {
-					Registry.impl(ClientNotifications.class)
-							.metricLogEnd("persist");
+					Registry.impl(ClientNotifications.class).metricLogEnd("persist");
 				}
 			});
 		}
@@ -577,12 +523,11 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		public String protocolVersion;
 	}
 
-	public abstract void getDomainModelDeltaIterator(
-			DeltaApplicationFilters filters,
+	public abstract void getDomainModelDeltaIterator(DeltaApplicationFilters filters,
 			AsyncCallback<Iterator<DomainModelDelta>> callback);
 
 	public static String stringListToClause(Collection<String> strs) {
-		if(strs.isEmpty()){
+		if (strs.isEmpty()) {
 			return " ('') ";
 		}
 		StringBuffer sb = new StringBuffer();
@@ -596,8 +541,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		return sb.toString();
 	}
 
-	public abstract void getClientInstanceIdOfDomainObjectDelta(
-			AsyncCallback callback);
+	public abstract void getClientInstanceIdOfDomainObjectDelta(AsyncCallback callback);
 
 	protected String getTransformWrapperSql(DeltaApplicationFilters filters) {
 		if (filters.clientInstanceId == null) {
@@ -605,41 +549,36 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		}
 		List<String> clauses = new ArrayList<String>();
 		if (filters.types.length > 0) {
-			String typeClause = "transform_request_type in "
-					+ stringListToClause(CollectionFilters.convert(
-							Arrays.asList(filters.types),
-							new ToStringConverter()));
+			String typeClause = "transform_request_type in " + stringListToClause(
+					CollectionFilters.convert(Arrays.asList(filters.types), new ToStringConverter()));
 			clauses.add(typeClause);
 		}
 		if (filters.clientInstanceId != null) {
-			clauses.add(CommonUtils.formatJ("  clientInstance_id=%s ",
-					filters.clientInstanceId));
+			clauses.add(CommonUtils.formatJ("  clientInstance_id=%s ", filters.clientInstanceId));
 		}
 		if (filters.protocolVersion != null) {
-			clauses.add(CommonUtils.formatJ("  transform_event_protocol='%s' ",
-					filters.protocolVersion));
+			clauses.add(CommonUtils.formatJ("  transform_event_protocol='%s' ", filters.protocolVersion));
 		}
 		if (clauses.isEmpty()) {
 			throw new RuntimeException("need some type of filter");
 		}
-		String sql = CommonUtils.formatJ("select * from TransformRequests"
-				+ " where %s  order by id asc",
-				CommonUtils.join(clauses, " and "));
+		String sql = CommonUtils.formatJ("select %s from TransformRequests" + " where %s  order by id asc",
+				getTransformWrapperSqlFields(), CommonUtils.join(clauses, " and "));
 		return sql;
 	}
 
+	protected String getTransformWrapperSqlFields() {
+		return "*";
+	}
+
 	protected String clearPersistedClientSql(ClientInstance exceptFor, int exceptForId) {
-		final String sql = CommonUtils.formatJ("DELETE from TransformRequests"
-				+ " where (transform_request_type "
-				+
-				// legacy
-				"in('CLIENT_OBJECT_LOAD','CLIENT_SYNC','TO_REMOTE_COMPLETED')"
-				+ " OR transform_request_type='%s'"
-				+ " OR transform_request_type='%s')"
-				+ " and (clientInstance_id != %s and id != %s)",
+		final String sql = CommonUtils.formatJ("DELETE from TransformRequests" + " where (transform_request_type " +
+		// legacy
+				"in('CLIENT_OBJECT_LOAD','CLIENT_SYNC','TO_REMOTE_COMPLETED')" + " OR transform_request_type='%s'"
+				+ " OR transform_request_type='%s')" + " and (clientInstance_id != %s and id != %s)",
 				DeltaApplicationRecordType.LOCAL_TRANSFORMS_REMOTE_PERSISTED,
-				DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
-				exceptFor == null ? -1 : exceptFor.getId(), exceptForId);
+				DeltaApplicationRecordType.REMOTE_DELTA_APPLIED, exceptFor == null ? -1 : exceptFor.getId(),
+				exceptForId);
 		return sql;
 	}
 }

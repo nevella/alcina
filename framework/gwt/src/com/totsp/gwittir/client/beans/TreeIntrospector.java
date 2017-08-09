@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
-
 import com.google.gwt.core.client.JavaScriptObject;
+
+import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 
 @ReflectionModule(ReflectionModule.INITIAL)
 public abstract class TreeIntrospector implements Introspector {

@@ -3,11 +3,11 @@ package cc.alcina.framework.common.client.state;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class ConsortWithSignals<D, S> extends Consort<D> {
 	Map<S, ConsortSignalHandler<S>> signalHandlers = new LinkedHashMap<S, ConsortSignalHandler<S>>();

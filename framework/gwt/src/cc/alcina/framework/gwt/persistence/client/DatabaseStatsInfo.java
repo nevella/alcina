@@ -3,11 +3,11 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.io.Serializable;
 import java.util.Map.Entry;
 
+import com.totsp.gwittir.client.beans.annotations.Introspectable;
+
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
-
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 @Bean
 @Introspectable

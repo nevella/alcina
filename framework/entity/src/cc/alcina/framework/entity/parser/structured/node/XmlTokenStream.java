@@ -5,7 +5,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.traversal.DocumentTraversal;

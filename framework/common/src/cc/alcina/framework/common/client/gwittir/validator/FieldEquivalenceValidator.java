@@ -1,7 +1,5 @@
 package cc.alcina.framework.common.client.gwittir.validator;
 
-import javax.xml.validation.Validator;
-
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.validator.ValidationException;
 

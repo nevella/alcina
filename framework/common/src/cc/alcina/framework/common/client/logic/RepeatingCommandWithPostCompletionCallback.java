@@ -1,10 +1,10 @@
 package cc.alcina.framework.common.client.logic;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
-
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 
 public class RepeatingCommandWithPostCompletionCallback implements
 		RepeatingCommand {

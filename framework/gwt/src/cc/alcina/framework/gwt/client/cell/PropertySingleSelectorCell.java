@@ -17,12 +17,10 @@ package cc.alcina.framework.gwt.client.cell;
 
 import static com.google.gwt.dom.client.BrowserEvents.*;
 
-import java.util.Set;
 import java.util.function.Function;
 
 import com.google.gwt.cell.client.AbstractEditableCell;
 import com.google.gwt.cell.client.ValueUpdater;
-import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.logical.shared.CloseEvent;
@@ -35,9 +33,7 @@ import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.PopupPanel.PositionCallback;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  *

@@ -2,13 +2,13 @@ package cc.alcina.framework.gwt.client.ide.widget;
 
 import java.util.Iterator;
 
+import com.google.gwt.user.client.ui.Widget;
+
 import cc.alcina.framework.gwt.client.widget.DivStackPanel.CollapsableDivStackPanel;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType;
-
-import com.google.gwt.user.client.ui.Widget;
 
 public class CollapsableStackPanel100pcHeight extends
 		CollapsableDivStackPanel implements HasLayoutInfo {

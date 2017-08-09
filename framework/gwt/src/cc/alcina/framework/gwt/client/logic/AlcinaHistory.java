@@ -19,14 +19,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.gwt.user.client.History;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlEncoder;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
-
-import com.google.gwt.user.client.History;
 
 /**
  * 

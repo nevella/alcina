@@ -17,15 +17,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import cc.alcina.framework.common.client.actions.PermissibleActionListener;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ide.Workspace.WSVisualModel;
-import cc.alcina.framework.gwt.client.ide.WorkspaceView.DataTreeView;
-import cc.alcina.framework.gwt.client.ide.widget.StackPanel100pcHeight;
-import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
-import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
-import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
-
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Document;
@@ -36,6 +27,15 @@ import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.ide.Workspace.WSVisualModel;
+import cc.alcina.framework.gwt.client.ide.WorkspaceView.DataTreeView;
+import cc.alcina.framework.gwt.client.ide.widget.StackPanel100pcHeight;
+import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
+import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
+import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 
 /**
  * 

@@ -1,7 +1,5 @@
 package cc.alcina.framework.gwt.client.widget;
 
-import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Display;
@@ -12,6 +10,8 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 
 public class MaskedColour extends Composite {
 	public MaskedColour(String cssColorOrRule, Image maskImage,

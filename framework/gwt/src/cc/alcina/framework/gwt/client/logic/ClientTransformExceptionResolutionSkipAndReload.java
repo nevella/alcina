@@ -3,6 +3,16 @@ package cc.alcina.framework.gwt.client.logic;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.RootPanel;
+import com.totsp.gwittir.client.ui.table.Field;
+import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
+
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
@@ -36,16 +46,6 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
-
-import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.RootPanel;
-import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 @RegistryLocation(registryPoint = ClientTransformExceptionResolver.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable

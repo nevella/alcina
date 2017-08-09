@@ -3,10 +3,6 @@ package cc.alcina.framework.gwt.client.widget.layout;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.widget.Link;
-import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
-
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.Composite;
@@ -14,6 +10,10 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.widget.Link;
+import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
 
 public class ExpandableListPanel extends Composite {
 	FlowPanel fp = new FlowPanel();

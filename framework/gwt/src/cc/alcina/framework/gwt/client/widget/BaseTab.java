@@ -13,6 +13,11 @@
  */
 package cc.alcina.framework.gwt.client.widget;
 
+import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.Widget;
+
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.LoginStateVisible;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
@@ -20,11 +25,6 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.Lo
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.widget.VisibilityChangeEvent.Handler;
 import cc.alcina.framework.gwt.client.widget.VisibilityChangeEvent.HasVisibilityChangeHandlers;
-
-import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.ScrollPanel;
-import com.google.gwt.user.client.ui.Widget;
 
 /**
  *
