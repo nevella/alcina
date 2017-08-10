@@ -728,6 +728,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				ids.add(Long.parseLong(m1.group()));
 			}
 			List<Long> uids = new ArrayList<Long>(ids);
+			uids = CommonUtils.dedupe(uids);
 			if (random) {
 				Collections.shuffle(uids);
 			}
