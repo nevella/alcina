@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import cc.alcina.framework.common.client.util.StringMap;
 
@@ -204,6 +206,10 @@ public class CsvUtils {
 			idx = 1;
 		}
 
+		public Stream<CsvRow> stream() {
+			return StreamSupport.stream(this.spliterator(), false);
+		}
+
 		@Override
 		public Iterator<CsvRow> iterator() {
 			return this;
@@ -218,8 +224,8 @@ public class CsvUtils {
 		public CsvRow next() {
 			return new CsvRow(this, idx++);
 		}
-		
-		public CsvRow addRow(){
+
+		public CsvRow addRow() {
 			grid.add(new ArrayList<String>());
 			return next();
 		}
