@@ -1562,4 +1562,40 @@ public class CommonUtils {
 	public static <T> T first(Iterator<T> itr) {
 		return itr.hasNext() ? itr.next() : null;
 	}
+
+	public enum ComparatorResult {
+		BOTH_NON_NULL, BOTH_NULL, FIRST_NULL, SECOND_NULL;
+		public int direction() {
+			switch (this) {
+			case FIRST_NULL:
+				return -1;
+			case SECOND_NULL:
+				return 1;
+			default:
+				return 0;
+			}
+		}
+
+		public boolean hadNull() {
+			switch (this) {
+			case BOTH_NON_NULL:
+				return false;
+			default:
+				return true;
+			}
+		}
+	}
+
+	public static ComparatorResult compareNullCheck(Object o1, Object o2) {
+		if (o1 == null && o2 == null) {
+			return ComparatorResult.BOTH_NULL;
+		}
+		if (o1 == null) {
+			return ComparatorResult.FIRST_NULL;
+		}
+		if (o2 == null) {
+			return ComparatorResult.SECOND_NULL;
+		}
+		return ComparatorResult.BOTH_NON_NULL;
+	}
 }

@@ -37,7 +37,7 @@ public interface ParserToken<C extends ParserContext, S extends AbstractParserSl
 
 	public boolean isIgnoreable(C context);
 
-	public boolean isStopToken();
+	public boolean isStopToken(C context);
 
 	public boolean shouldStartNewSequence(C context);
 

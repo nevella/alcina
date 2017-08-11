@@ -61,7 +61,7 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 		int minOffset = 99999;
 		S bestMatch = null;
 		T lastToken = context.lastToken();
-		if (lastToken != null && lastToken.isStopToken()) {
+		if (lastToken != null && lastToken.isStopToken(context)) {
 			return null;
 		}
 		// tokens can be greedy (all except AT,
