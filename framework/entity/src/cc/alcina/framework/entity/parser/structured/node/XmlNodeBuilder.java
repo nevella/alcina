@@ -134,4 +134,12 @@ public class XmlNodeBuilder {
 		attrs(key, value);
 		return this;
 	}
+
+	public XmlNodeBuilder attrNumeric(String key, double d) {
+		return attr(key, String.valueOf(d));
+	}
+
+	public XmlNodeBuilder attrNumeric(String key, int i) {
+		return attr(key, String.valueOf(i));
+	}
 }
