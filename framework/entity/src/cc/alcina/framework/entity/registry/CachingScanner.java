@@ -67,7 +67,7 @@ public abstract class CachingScanner {
 		int cc = 0;
 		long loadClassNanos = 0;
 		long loadClassErrNanos = 0;
-		boolean debug = true;
+		boolean debug = false;
 		int ignoreCount = 0;
 		ClassDataCache ignoreCache = getIgnoreMap(cachePath);
 		ClassDataCache outgoing = new ClassDataCache();
