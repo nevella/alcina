@@ -3,12 +3,12 @@ package cc.alcina.framework.common.client.logic;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;
-
-import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 
 public class RepeatingSequentialCommand implements RepeatingCommand {
 	protected List<RepeatingCommand> tasks = new ArrayList<RepeatingCommand>();

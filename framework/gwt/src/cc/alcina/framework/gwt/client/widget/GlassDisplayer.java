@@ -13,13 +13,13 @@
  */
 package cc.alcina.framework.gwt.client.widget;
 
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
-
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.RootPanel;
+
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * 

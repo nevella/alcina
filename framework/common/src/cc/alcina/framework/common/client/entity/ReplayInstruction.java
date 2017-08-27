@@ -1,10 +1,10 @@
 package cc.alcina.framework.common.client.entity;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.StringPair;
-
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.StringPair;
 
 public class ReplayInstruction {
 	public enum ReplayInstructionType {

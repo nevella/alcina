@@ -15,13 +15,13 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 
+import com.totsp.gwittir.client.ui.BoundWidget;
+import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ClassSimpleNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
-
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @ClientInstantiable
 /**

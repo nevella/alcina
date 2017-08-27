@@ -16,10 +16,10 @@ package cc.alcina.framework.gwt.client.widget.layout;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
  * 

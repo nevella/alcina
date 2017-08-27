@@ -15,9 +15,9 @@
 package cc.alcina.framework.gwt.client.logic;
 
 
-import cc.alcina.framework.common.client.logic.permissions.Permissible;
-
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.common.client.logic.permissions.Permissible;
 
 /**
  *

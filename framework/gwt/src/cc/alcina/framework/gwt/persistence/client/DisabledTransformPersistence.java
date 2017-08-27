@@ -3,13 +3,13 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class DisabledTransformPersistence extends LocalTransformPersistence {
 	@Override
@@ -23,7 +23,7 @@ public class DisabledTransformPersistence extends LocalTransformPersistence {
 
 	@Override
 	protected void getTransforms(DeltaApplicationRecordType[] types,
-			AsyncCallback<List<DeltaApplicationRecord>> callback) {
+			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
 	}
 
 	@Override
@@ -69,7 +69,7 @@ public class DisabledTransformPersistence extends LocalTransformPersistence {
 
 	@Override
 	protected void getTransforms(DeltaApplicationFilters filters,
-			AsyncCallback<List<DeltaApplicationRecord>> callback) {
+			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
 		
 	}
 }

@@ -28,7 +28,6 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent;
 import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent.CollapseHandler;
 import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent.HasCollapseHandlers;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 /**
  * 

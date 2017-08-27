@@ -16,6 +16,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.gwt.core.client.GWT;
+import com.totsp.gwittir.client.beans.annotations.Introspectable;
+import com.totsp.gwittir.client.beans.annotations.Omit;
+import com.totsp.gwittir.client.beans.internal.JVMIntrospector.MethodWrapper;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -35,11 +40,6 @@ import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
-
-import com.google.gwt.core.client.GWT;
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
-import com.totsp.gwittir.client.beans.annotations.Omit;
-import com.totsp.gwittir.client.beans.internal.JVMIntrospector.MethodWrapper;
 
 /**
  *

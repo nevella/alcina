@@ -4,6 +4,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.BrowserEvents;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.EventTarget;
+import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.dom.client.StyleInjector;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Event.NativePreviewEvent;
+import com.google.gwt.user.client.Event.NativePreviewHandler;
+import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.RootPanel;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.AllStatesConsort;
 import cc.alcina.framework.common.client.state.Consort;
@@ -21,22 +37,6 @@ import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.OtherPositio
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupPositioningParams;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.dialog.DecoratedRelativePopupPanel;
-
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.BrowserEvents;
-import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.EventTarget;
-import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.dom.client.StyleInjector;
-import com.google.gwt.event.dom.client.KeyCodes;
-import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Event;
-import com.google.gwt.user.client.Event.NativePreviewEvent;
-import com.google.gwt.user.client.Event.NativePreviewHandler;
-import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.RootPanel;
 
 public abstract class TourManager implements NativePreviewHandler {
 	protected List<DecoratedRelativePopupPanel> popups = new ArrayList<DecoratedRelativePopupPanel>();

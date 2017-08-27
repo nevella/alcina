@@ -19,6 +19,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.code.gwt.database.client.Database;
+import com.google.code.gwt.database.client.GenericRow;
+import com.google.code.gwt.database.client.SQLError;
+import com.google.code.gwt.database.client.SQLResultSet;
+import com.google.code.gwt.database.client.SQLResultSetRowList;
+import com.google.code.gwt.database.client.SQLTransaction;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.totsp.gwittir.client.beans.Converter;
+
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
@@ -36,22 +45,13 @@ import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta.DeltaApplicationRecordToDomainModelDeltaConverter;
 
-import com.google.code.gwt.database.client.Database;
-import com.google.code.gwt.database.client.GenericRow;
-import com.google.code.gwt.database.client.SQLError;
-import com.google.code.gwt.database.client.SQLResultSet;
-import com.google.code.gwt.database.client.SQLResultSetRowList;
-import com.google.code.gwt.database.client.SQLTransaction;
-import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.totsp.gwittir.client.beans.Converter;
-
 @SuppressWarnings("unchecked")
 /**
- *refactor-consort (init method)
+ * refactor-consort (init method)
+ * 
  * @author Nick Reddel
  */
-public class WebDatabaseTransformPersistence extends
-		LocalTransformPersistenceGwt {
+public class WebDatabaseTransformPersistence extends LocalTransformPersistenceGwt {
 	public static final String ALCINA_TRANSFORM_PERSISTENCE = "alcina-transform-persistence";
 
 	public static boolean isStorageQuotaError(SQLError error) {
@@ -62,11 +62,9 @@ public class WebDatabaseTransformPersistence extends
 
 	private String transformDatabaseName = ALCINA_TRANSFORM_PERSISTENCE;
 
-	Object[] transformParams = { "id", Integer.class, "transform",
-			String.class, "timestamp", Long.class, "user_id", Long.class,
-			"clientInstance_id", Long.class, "request_id", Integer.class,
-			"clientInstance_auth", Integer.class, "transform_request_type",
-			DeltaApplicationRecordType.class, "transform_event_protocol",
+	Object[] transformParams = { "id", Integer.class, "transform", String.class, "timestamp", Long.class, "user_id",
+			Long.class, "clientInstance_id", Long.class, "request_id", Integer.class, "clientInstance_auth",
+			Integer.class, "transform_request_type", DeltaApplicationRecordType.class, "transform_event_protocol",
 			String.class, "tag", String.class };
 
 	public WebDatabaseTransformPersistence() {
@@ -79,17 +77,15 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	public void callbackFail(final AsyncCallback callback, SQLError error) {
-		String message = "Problem saving work (web database) - "
-				+ error.getMessage() + " - " + error.getCode();
-		Exception exception = isStorageQuotaError(error) ? new StorageQuotaException(
-				message) : new Exception(message);
+		String message = "Problem saving work (web database) - " + error.getMessage() + " - " + error.getCode();
+		Exception exception = isStorageQuotaError(error) ? new StorageQuotaException(message) : new Exception(message);
 		AlcinaTopics.localPersistenceException(exception);
 		callback.onFailure(exception);
 	}
 
 	@Override
-	public void clearPersistedClient(ClientInstance exceptFor, int exceptForId,
-			final AsyncCallback callback, boolean clearDeltaStore) {
+	public void clearPersistedClient(ClientInstance exceptFor, int exceptForId, final AsyncCallback callback,
+			boolean clearDeltaStore) {
 		final String sql = clearPersistedClientSql(exceptFor, exceptForId);
 		AsyncCallbackStd deleteDeltaAppsCallback = new AsyncCallbackStd() {
 			@Override
@@ -114,14 +110,11 @@ public class WebDatabaseTransformPersistence extends
 	};
 
 	@Override
-	public void init(
-			final DTESerializationPolicy dteSerializationPolicy,
-			final CommitToStorageTransformListener commitToServerTransformListener,
-			final AsyncCallback callback) {
+	public void init(final DTESerializationPolicy dteSerializationPolicy,
+			final CommitToStorageTransformListener commitToServerTransformListener, final AsyncCallback callback) {
 		final LocalTransformPersistence listener = this;
 		try {
-			db = Database.openDatabase(getTransformDbName(), "1.0",
-					"Alcina Transforms", 5000000);
+			db = Database.openDatabase(getTransformDbName(), "1.0", "Alcina Transforms", 5000000);
 		} catch (Exception e) {
 			callback.onFailure(e);
 			return;
@@ -137,10 +130,8 @@ public class WebDatabaseTransformPersistence extends
 
 				@Override
 				public void onSuccess(Object result) {
-					getCommitToStorageTransformListener()
-							.addStateChangeListener(listener);
-					ClientTransformManager.cast()
-							.setPersistableTransformListener(listener);
+					getCommitToStorageTransformListener().addStateChangeListener(listener);
+					ClientTransformManager.cast().setPersistableTransformListener(listener);
 					callback.onSuccess(null);
 				}
 			};
@@ -153,8 +144,7 @@ public class WebDatabaseTransformPersistence extends
 
 				@Override
 				public void onSuccess(Object result) {
-					initSuper(dteSerializationPolicy,
-							commitToServerTransformListener, superCallback);
+					initSuper(dteSerializationPolicy, commitToServerTransformListener, superCallback);
 				}
 			});
 		} else {
@@ -163,20 +153,15 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	@Override
-	public void reparentToClientInstance(DeltaApplicationRecord wrapper,
-			ClientInstance clientInstance, AsyncCallback callback) {
-		String sql = "update  TransformRequests  set "
-				+ "clientInstance_id=?,clientInstance_auth=? "
-				+ " where id = ?";
-		executeSql(sql, callback, Long.toString(clientInstance.getId()),
-				Integer.toString(clientInstance.getAuth()),
+	public void reparentToClientInstance(DeltaApplicationRecord wrapper, ClientInstance clientInstance,
+			AsyncCallback callback) {
+		String sql = "update  TransformRequests  set " + "clientInstance_id=?,clientInstance_auth=? " + " where id = ?";
+		executeSql(sql, callback, Long.toString(clientInstance.getId()), Integer.toString(clientInstance.getAuth()),
 				Integer.toString(wrapper.getId()));
 	}
 
 	private void ensureDb(final AsyncCallback callback) {
-		String sql = "CREATE TABLE IF NOT EXISTS "
-				+ "TransformRequests"
-				+ " (id INTEGER PRIMARY KEY AUTOINCREMENT,"
+		String sql = "CREATE TABLE IF NOT EXISTS " + "TransformRequests" + " (id INTEGER PRIMARY KEY AUTOINCREMENT,"
 				+ " transform TEXT, timestamp INTEGER, user_id INTEGER,"
 				+ " clientInstance_id INTEGER, request_id INTEGER,"
 				+ "clientInstance_auth INTEGER, transform_request_type nvarchar(255),"
@@ -188,8 +173,7 @@ public class WebDatabaseTransformPersistence extends
 		executeSql(sql, callback, (Object[]) null);
 	}
 
-	private void executeSql(String sql, AsyncCallback callback,
-			Object... arguments) {
+	private void executeSql(String sql, AsyncCallback callback, Object... arguments) {
 		db.transaction(new ExecSqlPersistenceHandler(sql, callback, arguments));
 	}
 
@@ -210,8 +194,7 @@ public class WebDatabaseTransformPersistence extends
 				value = row.getString(paramName);
 			}
 			if (paramClass.isEnum()) {
-				value = Registry.impl(EnumSerializer.class).deserialize(
-						paramClass, row.getString(paramName));
+				value = Registry.impl(EnumSerializer.class).deserialize(paramClass, row.getString(paramName));
 			}
 			result.put(paramName, value);
 		}
@@ -219,10 +202,8 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	private void initSuper(DTESerializationPolicy dteSerializationPolicy,
-			CommitToStorageTransformListener commitToServerTransformListener,
-			final AsyncCallback superCallback) {
-		super.init(dteSerializationPolicy, commitToServerTransformListener,
-				superCallback);
+			CommitToStorageTransformListener commitToServerTransformListener, final AsyncCallback superCallback) {
+		super.init(dteSerializationPolicy, commitToServerTransformListener, superCallback);
 	}
 
 	@Override
@@ -235,40 +216,33 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	protected void getTransforms(DeltaApplicationFilters filters,
-			AsyncCallback<List<DeltaApplicationRecord>> callback) {
+			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
 		String sql = getTransformWrapperSql(filters);
 		db.transaction(new ListTransformWrappersCallback(sql, callback));
 	}
 
 	@Override
-	protected void persistFromFrontOfQueue(
-			final DeltaApplicationRecord wrapper, final AsyncCallback callback) {
-		notifyPersisting(new TypeSizeTuple(wrapper.getType().toString(),
-				wrapper.getText().length()));
+	protected void persistFromFrontOfQueue(final DeltaApplicationRecord wrapper, final AsyncCallback callback) {
+		notifyPersisting(new TypeSizeTuple(wrapper.getType().toString(), wrapper.getText().length()));
 		if (wrapper.getType() == DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED) {
-			AlcinaTopics.logCategorisedMessage(new StringPair(
-					AlcinaTopics.LOG_CATEGORY_TRANSFORM, wrapper.getText()));
+			AlcinaTopics.logCategorisedMessage(new StringPair(AlcinaTopics.LOG_CATEGORY_TRANSFORM, wrapper.getText()));
 		}
 		maybeCompressWrapper(wrapper);
 		if (wrapper.getProtocolVersion() == null) {
-			callback.onFailure(new Exception(
-					"wrapper must have protocol version"));
+			callback.onFailure(new Exception("wrapper must have protocol version"));
 		}
 		db.transaction(new PersistTransformsHandler(callback, wrapper));
 	}
 
 	@Override
-	protected void persistOfflineTransforms(
-			List<DeltaApplicationRecord> uncommitted,
-			ModalNotifier modalNotifier,
+	protected void persistOfflineTransforms(List<DeltaApplicationRecord> uncommitted, ModalNotifier modalNotifier,
 			AsyncCallback<Void> postPersistOfflineTransformsCallback) {
-		new PartialDtrUploader().persistOfflineTransforms(uncommitted,
-				modalNotifier, postPersistOfflineTransformsCallback);
+		new PartialDtrUploader().persistOfflineTransforms(uncommitted, modalNotifier,
+				postPersistOfflineTransformsCallback);
 	}
 
 	@Override
-	protected void transformPersisted(
-			final List<DeltaApplicationRecord> persistedWrappers,
+	protected void transformPersisted(final List<DeltaApplicationRecord> persistedWrappers,
 			final AsyncCallback callback) {
 		Converter<DeltaApplicationRecord, Integer> getIdConverter = new Converter<DeltaApplicationRecord, Integer>() {
 			@Override
@@ -276,12 +250,10 @@ public class WebDatabaseTransformPersistence extends
 				return original.getId();
 			}
 		};
-		List<Integer> ids = CollectionFilters.convert(persistedWrappers,
-				getIdConverter);
-		executeSql(CommonUtils.formatJ("update  TransformRequests  set "
-				+ "transform_request_type='%s'" + " where id in (%s)",
-				DeltaApplicationRecordType.LOCAL_TRANSFORMS_REMOTE_PERSISTED,
-				CommonUtils.join(ids, ", ")), callback);
+		List<Integer> ids = CollectionFilters.convert(persistedWrappers, getIdConverter);
+		executeSql(CommonUtils.formatJ(
+				"update  TransformRequests  set " + "transform_request_type='%s'" + " where id in (%s)",
+				DeltaApplicationRecordType.LOCAL_TRANSFORMS_REMOTE_PERSISTED, CommonUtils.join(ids, ", ")), callback);
 	}
 
 	public static class StorageQuotaException extends Exception {
@@ -290,21 +262,17 @@ public class WebDatabaseTransformPersistence extends
 		}
 	}
 
-	class ExecSqlPersistenceHandler<T> extends
-			FailureDecoratedPersistenceHandler<T> {
-		public ExecSqlPersistenceHandler(String sql,
-				AsyncCallback<T> postTransactionCallback) {
+	class ExecSqlPersistenceHandler<T> extends FailureDecoratedPersistenceHandler<T> {
+		public ExecSqlPersistenceHandler(String sql, AsyncCallback<T> postTransactionCallback) {
 			super(sql, postTransactionCallback);
 		}
 
-		public ExecSqlPersistenceHandler(String sql,
-				AsyncCallback<T> postTransactionCallback, Object... arguments) {
+		public ExecSqlPersistenceHandler(String sql, AsyncCallback<T> postTransactionCallback, Object... arguments) {
 			super(sql, postTransactionCallback, arguments);
 		}
 
 		@Override
-		public void onSuccess(SQLTransaction transaction,
-				SQLResultSet<GenericRow> resultSet) {
+		public void onSuccess(SQLTransaction transaction, SQLResultSet<GenericRow> resultSet) {
 		}
 
 		@Override
@@ -313,87 +281,70 @@ public class WebDatabaseTransformPersistence extends
 		}
 	}
 
-	abstract class FailureDecoratedPersistenceHandler<T> extends
-			WebdbSingleSqlStatementPersistenceHandler<T> {
-		public FailureDecoratedPersistenceHandler(String sql,
-				AsyncCallback<T> postTransactionCallback) {
+	abstract class FailureDecoratedPersistenceHandler<T> extends WebdbSingleSqlStatementPersistenceHandler<T> {
+		public FailureDecoratedPersistenceHandler(String sql, AsyncCallback<T> postTransactionCallback) {
 			super(sql, postTransactionCallback);
 		}
 
-		public FailureDecoratedPersistenceHandler(String sql,
-				AsyncCallback<T> postTransactionCallback, Object[] arguments) {
+		public FailureDecoratedPersistenceHandler(String sql, AsyncCallback<T> postTransactionCallback,
+				Object[] arguments) {
 			super(sql, postTransactionCallback, arguments);
 		}
 
 		@Override
 		public void onTransactionFailure(SQLError error) {
-			callbackFail(postTransactionCallback,
-					statementError != null ? statementError : error);
+			callbackFail(postTransactionCallback, statementError != null ? statementError : error);
 		}
 	}
 
-	abstract class ListTransformsCallback<T> extends
-			FailureDecoratedPersistenceHandler<T> {
+	abstract class ListTransformsCallback<T> extends FailureDecoratedPersistenceHandler<T> {
 		final List<DeltaApplicationRecord> transforms = new ArrayList<DeltaApplicationRecord>();
 
-		public ListTransformsCallback(String sql,
-				AsyncCallback<T> postTransactionCallback) {
+		public ListTransformsCallback(String sql, AsyncCallback<T> postTransactionCallback) {
 			super(sql, postTransactionCallback);
 		}
 
 		@Override
-		public void onSuccess(SQLTransaction transaction,
-				SQLResultSet<GenericRow> resultSet) {
+		public void onSuccess(SQLTransaction transaction, SQLResultSet<GenericRow> resultSet) {
 			SQLResultSetRowList<GenericRow> rs = resultSet.getRows();
 			for (int i = 0; i < rs.getLength(); i++) {
-				Map<String, Object> map = getFieldsAs(rs.getItem(i),
-						transformParams);
-				DeltaApplicationRecord wr = new DeltaApplicationRecord(
-						(Integer) map.get("id"), (String) map.get("transform"),
-						(Long) map.get("timestamp"), (Long) map.get("user_id"),
-						(Long) map.get("clientInstance_id"),
-						(Integer) map.get("request_id"),
+				Map<String, Object> map = getFieldsAs(rs.getItem(i), transformParams);
+				DeltaApplicationRecord wr = new DeltaApplicationRecord((Integer) map.get("id"),
+						(String) map.get("transform"), (Long) map.get("timestamp"), (Long) map.get("user_id"),
+						(Long) map.get("clientInstance_id"), (Integer) map.get("request_id"),
 						(Integer) map.get("clientInstance_auth"),
-						(DeltaApplicationRecordType) map
-								.get("transform_request_type"),
-						(String) map.get("transform_event_protocol"),
-						(String) map.get("tag"));
+						(DeltaApplicationRecordType) map.get("transform_request_type"),
+						(String) map.get("transform_event_protocol"), (String) map.get("tag"));
 				maybeDecompressWrapper(wr);
 				transforms.add(wr);
 			}
 		}
 	}
 
-	class ListTransformWrappersCallback extends
-			ListTransformsCallback<List<DeltaApplicationRecord>> {
-		public ListTransformWrappersCallback(
-				String sql,
-				AsyncCallback<List<DeltaApplicationRecord>> postTransactionCallback) {
+	class ListTransformWrappersCallback extends ListTransformsCallback<Iterator<DeltaApplicationRecord>> {
+		public ListTransformWrappersCallback(String sql,
+				AsyncCallback<Iterator<DeltaApplicationRecord>> postTransactionCallback) {
 			super(sql, postTransactionCallback);
 		}
 
 		@Override
-		protected List<DeltaApplicationRecord> getResult() {
-			return transforms;
+		protected Iterator<DeltaApplicationRecord> getResult() {
+			return transforms.iterator();
 		}
 	}
 
-	class PersistTransformsHandler extends
-			FailureDecoratedPersistenceHandler<Void> {
+	class PersistTransformsHandler extends FailureDecoratedPersistenceHandler<Void> {
 		private DeltaApplicationRecord wrapper;
 
 		private int persistSpacePass;
 
-		public PersistTransformsHandler(
-				AsyncCallback<Void> postTransactionCallback,
-				DeltaApplicationRecord wrapper) {
+		public PersistTransformsHandler(AsyncCallback<Void> postTransactionCallback, DeltaApplicationRecord wrapper) {
 			super(null, postTransactionCallback);
 			this.wrapper = wrapper;
 		}
 
 		@Override
-		public void onSuccess(SQLTransaction transaction,
-				SQLResultSet<GenericRow> resultSet) {
+		public void onSuccess(SQLTransaction transaction, SQLResultSet<GenericRow> resultSet) {
 			int insertId = resultSet.getInsertId();
 			wrapper.setId(insertId);
 		}
@@ -408,19 +359,13 @@ public class WebDatabaseTransformPersistence extends
 		}
 
 		public void onTransactionStart(SQLTransaction tx) {
-			String sql = "INSERT INTO TransformRequests "
-					+ "(transform, timestamp,"
-					+ "user_id,clientInstance_id"
+			String sql = "INSERT INTO TransformRequests " + "(transform, timestamp," + "user_id,clientInstance_id"
 					+ ",request_id,clientInstance_auth,"
 					+ "transform_request_type,transform_event_protocol,tag) VALUES (?, ?,?,?,?,?,?,?,?)";
-			String[] arguments = new String[] { wrapper.getText(),
-					Long.toString(wrapper.getTimestamp()),
-					Long.toString(wrapper.getUserId()),
-					Long.toString(wrapper.getClientInstanceId()),
-					Long.toString(wrapper.getRequestId()),
-					Long.toString(wrapper.getClientInstanceAuth()),
-					wrapper.getType().toString(), wrapper.getProtocolVersion(),
-					wrapper.getTag() };
+			String[] arguments = new String[] { wrapper.getText(), Long.toString(wrapper.getTimestamp()),
+					Long.toString(wrapper.getUserId()), Long.toString(wrapper.getClientInstanceId()),
+					Long.toString(wrapper.getRequestId()), Long.toString(wrapper.getClientInstanceAuth()),
+					wrapper.getType().toString(), wrapper.getProtocolVersion(), wrapper.getTag() };
 			tx.executeSql(sql, arguments, this);
 		}
 
@@ -430,10 +375,8 @@ public class WebDatabaseTransformPersistence extends
 		}
 	}
 
-	class ListTransformsAsDeltasCallback extends
-			ListTransformsCallback<Iterator<DomainModelDelta>> {
-		public ListTransformsAsDeltasCallback(
-				String sql,
+	class ListTransformsAsDeltasCallback extends ListTransformsCallback<Iterator<DomainModelDelta>> {
+		public ListTransformsAsDeltasCallback(String sql,
 				AsyncCallback<Iterator<DomainModelDelta>> postTransactionCallback) {
 			super(sql, postTransactionCallback);
 		}
@@ -444,10 +387,7 @@ public class WebDatabaseTransformPersistence extends
 		protected Iterator<DomainModelDelta> getResult() {
 			if (iterator == null) {
 				iterator = CollectionFilters
-						.convert(
-								transforms,
-								new DeltaApplicationRecordToDomainModelDeltaConverter())
-						.iterator();
+						.convert(transforms, new DeltaApplicationRecordToDomainModelDeltaConverter()).iterator();
 			}
 			return iterator;
 		}

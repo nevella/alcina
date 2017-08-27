@@ -1,7 +1,6 @@
 package cc.alcina.framework.common.client.log;
 
 import cc.alcina.framework.common.client.log.TaggedLogger.TaggedLoggerHandler;
-import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class StringBuilderHandler implements TaggedLoggerHandler {
 	private StringBuilder stringBuilder = new StringBuilder();

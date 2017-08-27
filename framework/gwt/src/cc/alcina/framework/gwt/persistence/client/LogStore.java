@@ -4,6 +4,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.client.Cookies;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
@@ -25,10 +29,6 @@ import cc.alcina.framework.gwt.client.res.AlcinaProperties;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.gwt.client.util.Lzw;
-
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.user.client.Cookies;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * At the moment:

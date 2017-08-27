@@ -1,15 +1,14 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntIterator;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Set;
 
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
 public class IntBackedPropertyStore extends PropertyStore {
 	Int2IntOpenHashMap rowLookup;

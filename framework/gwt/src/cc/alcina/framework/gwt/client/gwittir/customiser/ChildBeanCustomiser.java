@@ -13,6 +13,17 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.Label;
+import com.totsp.gwittir.client.beans.Binding;
+import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.BoundWidget;
+import com.totsp.gwittir.client.ui.table.Field;
+import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
+
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -27,17 +38,6 @@ import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObje
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.RecheckVisibilityHandler;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.Link;
-
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Label;
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 @ClientInstantiable
 @SuppressWarnings("unchecked")

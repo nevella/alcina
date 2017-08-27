@@ -15,9 +15,9 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.Comparator;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-
 import com.totsp.gwittir.client.ui.Renderer;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class RendererComparator implements Comparator {
 	private final Renderer renderer;

@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Widget;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -28,10 +32,6 @@ import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.EditActionHandl
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.ViewActionHandler;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.Widget;
 
 public class WorkspaceDefaultActionHandlers {
 	@ClientInstantiable

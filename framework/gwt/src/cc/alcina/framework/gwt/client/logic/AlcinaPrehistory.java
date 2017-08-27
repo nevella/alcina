@@ -4,6 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gwt.dom.client.NativeEvent;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -11,8 +13,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
-
-import com.google.gwt.dom.client.NativeEvent;
 
 @RegistryLocation(registryPoint = AlcinaPrehistory.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable

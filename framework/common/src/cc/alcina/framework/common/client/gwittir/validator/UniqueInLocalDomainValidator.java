@@ -15,14 +15,14 @@ package cc.alcina.framework.common.client.gwittir.validator;
 
 import java.util.Collection;
 
+import com.totsp.gwittir.client.validator.ValidationException;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
-
-import com.totsp.gwittir.client.validator.ValidationException;
 
 /**
  * 

@@ -13,10 +13,10 @@
  */
 package cc.alcina.framework.gwt.client.stdlayout.image;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
+
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
  * 

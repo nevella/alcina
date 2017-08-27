@@ -49,7 +49,7 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.ValidatorInfo;
+import cc.alcina.framework.common.client.logic.reflection.Validator;
 import cc.alcina.framework.common.client.logic.reflection.Validators;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.gwt.client.gwittir.customiser.SelectorCustomiser;
@@ -60,7 +60,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 @Entity
 @Table(name = "users", schema = "public")
 @SequenceGenerator(allocationSize=1,name = "users_id_seq", sequenceName = "users_id_seq")
-@BeanInfo(actions = @ObjectActions( {
+@Bean(actions = @ObjectActions( {
 		@Action(actionClass = ViewAction.class),
 		@Action(actionClass = EditAction.class),
 		@Action(actionClass = CreateAction.class),
@@ -239,7 +239,7 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 	@DisplayInfo(name = "Groups", orderingHint = 96)
 	@Association(implementationClass = AlcinaTemplateGroup.class, propertyName = "memberUsers")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER))
-	@CustomiserInfo(customiserClass = SelectorCustomiser.class)
+	@Custom(customiserClass = SelectorCustomiser.class)
 	@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
 	@XmlTransient
 	public Set<AlcinaTemplateGroup> getSecondaryGroups() {
@@ -250,11 +250,11 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 	@DisplayInfo(name = "User name (Email)", orderingHint = 1)
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER))
 	@Validators(validators = {
-			@ValidatorInfo(validator = EmailAddressValidator.class),
-			@ValidatorInfo(validator = ServerUniquenessValidator.class, parameters = {
+			@Validator(validator = EmailAddressValidator.class),
+			@Validator(validator = ServerUniquenessValidator.class, parameters = {
 					@NamedParameter(name = ServerUniquenessValidator.OBJECT_CLASS, classValue = AlcinaTemplateUser.class),
 					@NamedParameter(name = ServerUniquenessValidator.PROPERTY_NAME, stringValue = "username"),
-					@NamedParameter(name = ValidatorInfo.FEEDBACK_MESSAGE, stringValue = "This email address is in use") }) })
+					@NamedParameter(name = Validator.FEEDBACK_MESSAGE, stringValue = "This email address is in use") }) })
 	public String getUserName() {
 		return this.userName;
 	}

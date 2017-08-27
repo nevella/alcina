@@ -1,8 +1,8 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-
 import com.totsp.gwittir.client.beans.Converter;
+
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
 public class HiliLocatorConverter implements Converter<HasIdAndLocalId,HiliLocator>{
 

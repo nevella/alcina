@@ -3,6 +3,11 @@ package cc.alcina.framework.gwt.client.logic;
 import java.util.Set;
 import java.util.Stack;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
+import com.google.gwt.event.shared.UmbrellaException;
+import com.google.gwt.user.client.History;
+
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -12,11 +17,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
-
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
-import com.google.gwt.event.shared.UmbrellaException;
-import com.google.gwt.user.client.History;
 
 public class ClientExceptionHandler implements UncaughtExceptionHandler {
 	public static final String PRE_STACKTRACE_MARKER = "\n\t-----\n";

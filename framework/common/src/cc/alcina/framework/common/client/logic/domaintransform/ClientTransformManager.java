@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -47,8 +49,6 @@ import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier.ModalNotifierNull;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public abstract class ClientTransformManager extends TransformManager {
 	public static ClientTransformManager cast() {

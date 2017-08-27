@@ -15,11 +15,11 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.Custom;
-
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
+
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 
 @ClientInstantiable
 /**

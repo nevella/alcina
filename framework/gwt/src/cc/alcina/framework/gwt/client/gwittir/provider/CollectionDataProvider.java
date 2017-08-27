@@ -21,16 +21,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gwt.user.client.Timer;
+import com.totsp.gwittir.client.beans.Property;
+import com.totsp.gwittir.client.ui.table.HasChunks;
+import com.totsp.gwittir.client.ui.table.SortableDataProvider;
+
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
-
-import com.google.gwt.user.client.Timer;
-import com.totsp.gwittir.client.beans.Property;
-import com.totsp.gwittir.client.ui.table.HasChunks;
-import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 
 @SuppressWarnings("unchecked")
 /**

@@ -1,8 +1,8 @@
 package cc.alcina.framework.gwt.client.util;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-
 import com.google.gwt.user.client.rpc.AsyncCallback;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 public class AsyncCallbackNull implements AsyncCallback {
 	@Override

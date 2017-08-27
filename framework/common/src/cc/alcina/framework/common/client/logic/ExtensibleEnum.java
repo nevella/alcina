@@ -3,11 +3,11 @@ package cc.alcina.framework.common.client.logic;
 import java.util.Collection;
 import java.util.List;
 
+import com.totsp.gwittir.client.beans.Converter;
+
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-
-import com.totsp.gwittir.client.beans.Converter;
 
 /**
  * <h3>Why?</h3>

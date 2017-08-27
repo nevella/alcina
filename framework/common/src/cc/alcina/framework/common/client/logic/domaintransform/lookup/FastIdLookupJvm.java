@@ -6,10 +6,10 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.google.gwt.core.client.GWT;
+
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
-
-import com.google.gwt.core.client.GWT;
 
 public class FastIdLookupJvm implements FastIdLookup {
 	private Map<Long, HasIdAndLocalId> idLookup = new LinkedHashMap<Long, HasIdAndLocalId>();

@@ -20,6 +20,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.google.gwt.core.ext.typeinfo.JClassType;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -27,8 +29,6 @@ import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.entity.ResourceUtilities;
-
-import com.google.gwt.core.ext.typeinfo.JClassType;
 
 public class ModuleIntrospectionHelper {
 	private IntrospectorFilterBase filter;

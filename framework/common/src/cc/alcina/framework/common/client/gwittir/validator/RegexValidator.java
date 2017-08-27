@@ -13,11 +13,11 @@
  */
 package cc.alcina.framework.common.client.gwittir.validator;
 
+import com.totsp.gwittir.client.validator.ValidationException;
+
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.util.CommonUtils;
-
-import com.totsp.gwittir.client.validator.ValidationException;
 
 @ClientInstantiable
 /**

@@ -1,22 +1,18 @@
 package cc.alcina.framework.gwt.client.objecttree.search;
 
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import cc.alcina.framework.common.client.search.SearchCriterion;
-import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.common.client.search.TxtCriterion;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
-import cc.alcina.framework.gwt.client.logic.RenderContext;
-import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
-
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.BoundWidget;
+
+import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.search.TxtCriterion;
+import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 
 public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 	private FlowPanel fp;

@@ -16,7 +16,6 @@ package cc.alcina.framework.common.client.remote;
 import java.util.List;
 
 import com.google.gwt.user.client.rpc.RemoteService;
-import com.google.gwt.user.client.ui.SuggestOracle.Request;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 
 import cc.alcina.framework.common.client.csobjects.JobTracker;

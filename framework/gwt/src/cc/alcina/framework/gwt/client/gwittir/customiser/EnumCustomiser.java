@@ -18,6 +18,10 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 
+import com.totsp.gwittir.client.ui.BoundWidget;
+import com.totsp.gwittir.client.ui.Renderer;
+import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -27,10 +31,6 @@ import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
-
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @ClientInstantiable
 @SuppressWarnings("unchecked")

@@ -553,9 +553,6 @@ public class SyncClientSerializationStreamReader
         for (int i = 0; i < encoded.length(); i++) {
             char ch = encoded.charAt(i);
             char chl1 = i == 0 ? 0 : encoded.charAt(i - 1);
-            if (i >= encoded.length() - 5) {
-                int debug = 3;
-            }
             if (inStr) {
                 if (ch == '\\') {
                     backslashCount++;
@@ -570,9 +567,6 @@ public class SyncClientSerializationStreamReader
                 } else {
                     if (ch == '"' && !(backslashCount % 2 == 1)) {
                         inStr = false;
-                        if (debug) {
-                            System.out.println(ch);
-                        }
                     }
                 }
             } else {
@@ -595,9 +589,6 @@ public class SyncClientSerializationStreamReader
                         continue;
                     }
                 }
-            }
-            if (inStr) {
-                System.out.print(ch);
             }
             result.append(ch);
         }

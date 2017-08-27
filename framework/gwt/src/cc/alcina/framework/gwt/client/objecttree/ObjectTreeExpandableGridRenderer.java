@@ -16,13 +16,6 @@ package cc.alcina.framework.gwt.client.objecttree;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContextInstance;
-import cc.alcina.framework.gwt.client.logic.RenderContext;
-import cc.alcina.framework.gwt.client.widget.ToggleLink;
-import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
-
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.user.client.ui.ComplexPanel;
@@ -31,6 +24,13 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
+import cc.alcina.framework.gwt.client.widget.ToggleLink;
+import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
+import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
 
 /**
  * 

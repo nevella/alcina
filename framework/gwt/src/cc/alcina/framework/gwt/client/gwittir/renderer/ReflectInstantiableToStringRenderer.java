@@ -14,9 +14,9 @@
 
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-
 import com.totsp.gwittir.client.ui.Renderer;
+
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 /**
  * To allow subclassing

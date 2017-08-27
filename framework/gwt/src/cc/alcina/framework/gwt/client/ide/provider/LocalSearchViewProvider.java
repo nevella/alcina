@@ -15,17 +15,6 @@ package cc.alcina.framework.gwt.client.ide.provider;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
-import cc.alcina.framework.common.client.search.LocalSearchDefinition;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
-import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
-import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable;
-import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
-import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
-import cc.alcina.framework.gwt.client.widget.InputButton;
-
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.ComplexPanel;
@@ -36,6 +25,17 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
+
+import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.search.LocalSearchDefinition;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable;
+import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
+import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
+import cc.alcina.framework.gwt.client.widget.InputButton;
 
 /**
  * 

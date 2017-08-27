@@ -1,10 +1,10 @@
 package cc.alcina.framework.common.client.remote;
 
-import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
-import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
-
 import com.google.gwt.user.client.rpc.RpcRequestBuilder;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
+
+import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
+import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 
 public abstract class RemoteServiceProvider<S> {
 	public S getServiceInstance() {

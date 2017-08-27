@@ -2,13 +2,11 @@ package cc.alcina.framework.gwt.client.ide.widget;
 
 import java.util.Iterator;
 
+import com.google.gwt.user.client.ui.Widget;
+
 import cc.alcina.framework.gwt.client.widget.DivStackPanel;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType;
-
-import com.google.gwt.user.client.ui.Widget;
 
 public class StackPanel100pcHeight extends DivStackPanel
 		implements HasLayoutInfo {

@@ -15,6 +15,8 @@ package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
 
+import com.totsp.gwittir.client.beans.annotations.Introspectable;
+
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.domain.ObjectWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
@@ -23,8 +25,6 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
-
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 /**
  * 

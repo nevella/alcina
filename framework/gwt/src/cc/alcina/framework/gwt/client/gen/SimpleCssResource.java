@@ -15,11 +15,11 @@
  */
 package cc.alcina.framework.gwt.client.gen;
 
-import cc.alcina.framework.entity.gen.SimpleCssResourceGenerator;
-
 import com.google.gwt.resources.client.ResourcePrototype;
 import com.google.gwt.resources.ext.DefaultExtensions;
 import com.google.gwt.resources.ext.ResourceGeneratorType;
+
+import cc.alcina.framework.entity.gen.SimpleCssResourceGenerator;
 
 /**
  * A resource that contains text that should be incorporated into the compiled

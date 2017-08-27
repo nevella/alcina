@@ -20,6 +20,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gwt.user.client.ui.ComplexPanel;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.TreeItem;
+import com.google.gwt.user.client.ui.Widget;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
@@ -50,12 +56,6 @@ import cc.alcina.framework.gwt.client.ide.node.ProvidesParenting;
 import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.ViewProvider;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
-
-import com.google.gwt.user.client.ui.ComplexPanel;
-import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.TreeItem;
-import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  * Hooks up the various navigation views and the editor widget

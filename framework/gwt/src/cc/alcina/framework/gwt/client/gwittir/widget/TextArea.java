@@ -15,9 +15,6 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.Comparator;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -47,6 +44,9 @@ import com.totsp.gwittir.client.action.Action;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.SimpleComparator;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 
 @SuppressWarnings("deprecation")
 /**

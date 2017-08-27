@@ -1,10 +1,6 @@
 package cc.alcina.framework.gwt.client.place;
 
-import com.google.gwt.place.shared.Place;
-
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;

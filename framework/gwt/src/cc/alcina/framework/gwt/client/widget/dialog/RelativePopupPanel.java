@@ -55,7 +55,6 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.client.ui.impl.PopupImpl;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 /**
  * A panel that can "pop up" over other widgets. It overlays the browser's

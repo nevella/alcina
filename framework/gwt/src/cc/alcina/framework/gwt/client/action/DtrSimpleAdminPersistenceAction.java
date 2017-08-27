@@ -2,14 +2,14 @@ package cc.alcina.framework.gwt.client.action;
 
 import java.io.Serializable;
 
+import com.google.gwt.core.client.GWT;
+
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
-
-import com.google.gwt.core.client.GWT;
 
 public class DtrSimpleAdminPersistenceAction extends
 		RemoteActionWithParameters<DeltaApplicationRecord> implements

@@ -2,7 +2,6 @@ package cc.alcina.framework.entity.parser.structured.node;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;

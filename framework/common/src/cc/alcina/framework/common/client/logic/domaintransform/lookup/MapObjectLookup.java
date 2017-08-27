@@ -8,11 +8,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
-
 import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 
 public abstract class MapObjectLookup implements ObjectStore {
 	protected PropertyChangeListener listener;

@@ -2,13 +2,13 @@ package cc.alcina.framework.gwt.client.tour;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
-
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.JsArrayString;
+
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 public class Tour extends JavaScriptObject {
 	protected Tour() {

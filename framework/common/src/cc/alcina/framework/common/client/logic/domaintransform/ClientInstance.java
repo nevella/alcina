@@ -19,12 +19,12 @@ import java.util.Date;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import com.google.gwt.user.client.rpc.GwtTransient;
+import com.totsp.gwittir.client.beans.annotations.Introspectable;
+
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-
-import com.google.gwt.user.client.rpc.GwtTransient;
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 @MappedSuperclass
 @ClientInstantiable

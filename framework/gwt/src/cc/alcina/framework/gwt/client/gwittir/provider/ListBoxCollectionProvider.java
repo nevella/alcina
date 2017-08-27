@@ -15,14 +15,14 @@ package cc.alcina.framework.gwt.client.gwittir.provider;
 
 import java.util.Comparator;
 
+import com.totsp.gwittir.client.ui.Renderer;
+import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.gwt.client.gwittir.Comparators;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ListAddItemHandler;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox.DomainListBox;
-
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 public  class ListBoxCollectionProvider implements
 		BoundWidgetProvider {

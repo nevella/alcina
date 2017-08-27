@@ -15,6 +15,9 @@
  */
 package com.google.gwt.user.client.ui;
 
+import java.util.Collection;
+import java.util.List;
+
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
@@ -41,9 +44,6 @@ import com.google.gwt.user.client.ui.SuggestOracle.Callback;
 import com.google.gwt.user.client.ui.SuggestOracle.Request;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * A {@link SuggestBox} is a text box or text area which displays a

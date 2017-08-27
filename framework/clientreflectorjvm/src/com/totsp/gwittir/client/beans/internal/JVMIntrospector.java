@@ -8,18 +8,18 @@ import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.util.HashMap;
 
+import com.totsp.gwittir.client.beans.BeanDescriptor;
+import com.totsp.gwittir.client.beans.Introspector;
+import com.totsp.gwittir.client.beans.Method;
+import com.totsp.gwittir.client.beans.Property;
+import com.totsp.gwittir.client.beans.SelfDescribed;
+
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
-
-import com.totsp.gwittir.client.beans.BeanDescriptor;
-import com.totsp.gwittir.client.beans.Introspector;
-import com.totsp.gwittir.client.beans.Method;
-import com.totsp.gwittir.client.beans.Property;
-import com.totsp.gwittir.client.beans.SelfDescribed;
 
 /**
  *

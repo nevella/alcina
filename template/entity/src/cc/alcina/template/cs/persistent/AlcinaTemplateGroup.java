@@ -47,7 +47,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 @Entity
 @Table(name = "groups", schema = "public")
 @SequenceGenerator(allocationSize=1,name = "groups_id_seq", sequenceName = "groups_id_seq")
-@BeanInfo(actions = @ObjectActions( { @Action(actionClass = ViewAction.class),
+@Bean(actions = @ObjectActions( { @Action(actionClass = ViewAction.class),
 		@Action(actionClass = EditAction.class),
 		@Action(actionClass = CreateAction.class),
 		@Action(actionClass = DeleteAction.class) }), displayNamePropertyName = "groupName")
@@ -115,7 +115,7 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 	@DisplayInfo(name = "Member groups", orderingHint = 91) 
 	@Association(implementationClass = AlcinaTemplateGroup.class, propertyName="memberOfGroups")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN))
-	@CustomiserInfo(customiserClass = SelectorCustomiser.class )
+	@Custom(customiserClass = SelectorCustomiser.class )
 	public Set<AlcinaTemplateGroup> getMemberGroups() {
 		return this.memberGroups;
 	}
@@ -124,7 +124,7 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 	@DisplayInfo(name = "Member of groups", orderingHint = 92)
 @Association(implementationClass=AlcinaTemplateGroup.class,propertyName="memberGroups")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN))
-	@CustomiserInfo(customiserClass = SelectorCustomiser.class )
+	@Custom(customiserClass = SelectorCustomiser.class )
 	public Set<AlcinaTemplateGroup> getMemberOfGroups() {
 		return memberOfGroups;
 	}
@@ -134,7 +134,7 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 	@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
 	@DisplayInfo(name = "Member users", orderingHint = 90)
 @Association(implementationClass=AlcinaTemplateUser.class,propertyName="secondaryGroups")
-	@CustomiserInfo(customiserClass = SelectorCustomiser.class)
+	@Custom(customiserClass = SelectorCustomiser.class)
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN))
 	public Set<AlcinaTemplateUser> getMemberUsers() {
 		return this.memberUsers;

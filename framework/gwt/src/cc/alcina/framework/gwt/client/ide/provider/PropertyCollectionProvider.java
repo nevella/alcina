@@ -18,6 +18,8 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
@@ -25,8 +27,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
-
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  * 

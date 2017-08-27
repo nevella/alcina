@@ -19,10 +19,10 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.google.gwt.core.shared.GwtIncompatible;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.PublicCloneable;
-
-import com.google.gwt.core.shared.GwtIncompatible;
 
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.

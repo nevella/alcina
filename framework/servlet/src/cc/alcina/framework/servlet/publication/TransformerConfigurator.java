@@ -6,7 +6,6 @@ import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.URIResolver;
-import javax.xml.transform.stream.StreamSource;
 
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.XmlUtils.TransformerFactoryConfigurator;

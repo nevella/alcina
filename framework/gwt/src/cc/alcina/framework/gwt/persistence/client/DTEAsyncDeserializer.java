@@ -3,12 +3,12 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
+
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
-
-import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 
 public class DTEAsyncDeserializer implements RepeatingCommand {
 	private List<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>();

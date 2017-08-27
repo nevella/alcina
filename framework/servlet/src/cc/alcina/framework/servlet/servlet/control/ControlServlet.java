@@ -8,8 +8,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.control.ClusterStateProvider;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
@@ -40,12 +43,24 @@ public class ControlServlet extends HttpServlet {
 		resp.getWriter().close();
 	}
 
+	public void writeAndCloseHtml(String s, HttpServletRequest req,
+			HttpServletResponse resp) throws IOException {
+		resp.setContentType("text/html");
+		String host = req.getRequestURL().toString()
+				.replaceFirst("https?://(.+?)/.+", "$1");
+		String html = String.format(
+				"<html><head><style>body{font-family:courier;white-space:pre;font-size:13px}</style><title>%s control servlet</title></head><body>%s</body></html>",
+				host, StringEscapeUtils.escapeHtml(s));
+		resp.getWriter().write(html);
+		resp.getWriter().close();
+	}
+
 	private void doGet0(HttpServletRequest req, HttpServletResponse resp)
 			throws Exception {
 		String apiKey = getApiKey();
 		authenticate(req, req.getParameter("apiKey"), apiKey);
 		ControlServletRequest csr = parseRequest(req, resp);
-		handleRequest(csr, resp);
+		handleRequest(csr, req, resp);
 	}
 
 	private ControlServletRequest parseRequest(HttpServletRequest req,
@@ -68,21 +83,19 @@ public class ControlServlet extends HttpServlet {
 		} else if (cmd.equals("cluster-status")) {
 			csr.setCommand(ControlServletRequestCommand.CLUSTER_STATUS);
 			return csr;
+		} else if (cmd.equals("vm-health")) {
+			csr.setCommand(ControlServletRequestCommand.VM_HEALTH);
+			return csr;
 		}
-		 else if (cmd.equals("vm-health")) {
-				csr.setCommand(ControlServletRequestCommand.VM_HEALTH);
-				return csr;
-			}
 		writeAndClose(
-				"Usage:\n"
-						+ "control.do?apiKey=xxx&"
+				"Usage:\n" + "control.do?apiKey=xxx&"
 						+ "{json=yyy|cmd=[refresh-config|to-reader|to-writer|get-status|vm-health]}",
 				resp);
 		return null;
 	}
 
 	private void handleRequest(ControlServletRequest csr,
-			HttpServletResponse resp) throws Exception {
+			HttpServletRequest req, HttpServletResponse resp) throws Exception {
 		if (csr.getCommand() == null) {
 			return;
 		}
@@ -94,8 +107,8 @@ public class ControlServlet extends HttpServlet {
 					resp);
 			break;
 		case GET_STATUS:
-			ControlServletState status = Registry.impl(
-					AppLifecycleManager.class).getState();
+			ControlServletState status = Registry
+					.impl(AppLifecycleManager.class).getState();
 			if (csr.isJson()) {
 				writeAndClose(new AlcinaBeanSerializerS().serialize(status),
 						resp);
@@ -108,12 +121,13 @@ public class ControlServlet extends HttpServlet {
 			}
 			break;
 		case CLUSTER_STATUS:
-			writeAndClose(Registry.impl(ClusterStateProvider.class)
-					.getMemberClusterState(), resp);
+			writeAndCloseHtml(Registry.impl(ClusterStateProvider.class)
+					.getMemberClusterState(), req, resp);
 			break;
 		case VM_HEALTH:
-			writeAndClose(Registry.impl(ClusterStateProvider.class)
-					.getVmHealth(), resp);
+			writeAndClose(
+					Registry.impl(ClusterStateProvider.class).getVmHealth(),
+					resp);
 			break;
 		}
 	}

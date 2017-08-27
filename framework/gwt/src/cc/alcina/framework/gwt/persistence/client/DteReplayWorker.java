@@ -5,11 +5,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
+
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-
-import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 
 public class DteReplayWorker implements RepeatingCommand {
 	protected Iterator<DomainTransformEvent> iterator;

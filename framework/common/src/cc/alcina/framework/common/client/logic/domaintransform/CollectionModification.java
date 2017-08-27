@@ -18,10 +18,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * Signals to listeners (collection nodes) that they should recalc their

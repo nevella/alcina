@@ -5,16 +5,16 @@ import java.beans.PropertyChangeListener;
 import java.util.Arrays;
 import java.util.Collection;
 
+import com.google.gwt.user.client.ui.ComplexPanel;
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.Renderer;
+
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
 import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
-
-import com.google.gwt.user.client.ui.ComplexPanel;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
 
 /**
  * We're not obeying all bound widget stuff here...

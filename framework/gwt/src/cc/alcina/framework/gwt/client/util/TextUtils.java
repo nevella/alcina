@@ -3,9 +3,6 @@ package cc.alcina.framework.gwt.client.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.IntPair;
-
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Display;
@@ -13,6 +10,9 @@ import com.google.gwt.dom.client.Style.Position;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.IntPair;
 
 public class TextUtils {
 	public static String normaliseAndTrim(String text) {

@@ -3,16 +3,16 @@ package cc.alcina.framework.gwt.client.widget.dialog;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionListener;
-import cc.alcina.framework.common.client.util.Callback;
-import cc.alcina.framework.gwt.client.widget.Link;
-
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
+
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.gwt.client.widget.Link;
 
 public class SelectionPrompter<T> implements PermissibleActionListener {
 

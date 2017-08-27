@@ -39,7 +39,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.UrlCustomiser;
 
 @Entity
 @Table(name = "bookmark", schema = "public")
-@BeanInfo(displayNamePropertyName = "title", actions = @ObjectActions({
+@Bean(displayNamePropertyName = "title", actions = @ObjectActions({
 		@Action(actionClass = ViewAction.class),
 		@Action(actionClass = EditAction.class),
 		@Action(actionClass = CreateAction.class),
@@ -73,8 +73,8 @@ public class Bookmark extends DomainBaseVersionable implements
 	}
 
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "parent")
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Children", orderingHint = 10, displayMask = DisplayInfo.DISPLAY_AS_TREE_NODE
-			| DisplayInfo.DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER))
+	@Display(name = "Children", orderingHint = 10, displayMask = Display.DISPLAY_AS_TREE_NODE
+			| Display.DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER))
 	@Association(implementationClass = Bookmark.class, propertyName = "parent")
 	@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
 	public Set<Bookmark> getChildren() {
@@ -101,7 +101,7 @@ public class Bookmark extends DomainBaseVersionable implements
 	}
 
 	@DisplayInfo(name = "URL", orderingHint = 20)
-	@CustomiserInfo(customiserClass = UrlCustomiser.class, parameters = { @NamedParameter(name = UrlCustomiser.TARGET, stringValue = "_blank") })
+	@Custom(customiserClass = UrlCustomiser.class, parameters = { @NamedParameter(name = UrlCustomiser.TARGET, stringValue = "_blank") })
 	public String getUrl() {
 		return url;
 	}

@@ -15,9 +15,9 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 
-import cc.alcina.framework.common.client.logic.reflection.Custom;
-
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 
 /**
  *

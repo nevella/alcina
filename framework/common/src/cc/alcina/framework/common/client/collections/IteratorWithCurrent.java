@@ -5,6 +5,10 @@ import java.util.Iterator;
 public class IteratorWithCurrent<T> {
 	private Iterator<T> itr;
 
+	public Iterator<T> getItr() {
+		return this.itr;
+	}
+
 	public IteratorWithCurrent(Iterator<T> itr) {
 		this.itr = itr;
 		if (itr.hasNext()) {
