@@ -43,8 +43,6 @@ public class LocalDomBridge {
 
 	static boolean ensuringPendingResolutionNode;
 
-	public static boolean fastRemoveAll = true;
-
 	public static Element_Jso elementJso(Element elem) {
 		return elementJso(elem, true);
 	}

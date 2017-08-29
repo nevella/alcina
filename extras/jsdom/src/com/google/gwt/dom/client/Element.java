@@ -570,7 +570,7 @@ public class Element extends Node implements DomElement {
 				&& provideAncestorElementAttachedToDom() != null) {
 			ensureJso();
 		}
-		if (provideIsDom() && LocalDomBridge.fastRemoveAll) {
+		if (provideIsDom() && LocalDom.fastRemoveAll) {
 			setInnerHTML("");
 			removeLocalImpl();
 			return null;
@@ -784,5 +784,9 @@ public class Element extends Node implements DomElement {
 			return -1;
 		}
 		return child.indexInParentChildren();
+	}
+
+	public Element_Jso typedRemote() {
+		return ensureJso();
 	}
 }

@@ -15,8 +15,6 @@ import cc.alcina.framework.entity.util.CachingConcurrentMap;
 @RegistryLocation(registryPoint = TQuery.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 public class TQueryParallel extends TQuery {
 	static class TQueryThread {
-		private LooseContextInstance snapshot;
-
 		public TQueryThread(Thread thread) {
 		}
 
@@ -28,7 +26,6 @@ public class TQueryParallel extends TQuery {
 			if (snapshot != null) {
 				return;
 			}
-			this.snapshot = snapshot;
 			LooseContext.push();
 			LooseContext.putContext(snapshot);
 		}
