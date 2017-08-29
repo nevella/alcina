@@ -39,7 +39,7 @@ public final class StyleRemote extends JavaScriptObject implements DomStyle {
 
 	@Override
 	public final Style styleObject() {
-		return LocalDomBridge.styleObjectFor(this);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -797,14 +797,19 @@ public final class StyleRemote extends JavaScriptObject implements DomStyle {
 		DomStyleStatic.setZIndex(this, value);
 	}
 
-
 	@Override
+	// LD2 - never called
 	public final String getPropertyImpl(String name) {
-		return DomStyleStatic.getPropertyImpl(this, name);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Map<String, String> getProperties() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void cloneStyleFrom(DomStyle local) {
 		throw new UnsupportedOperationException();
 	}
 }

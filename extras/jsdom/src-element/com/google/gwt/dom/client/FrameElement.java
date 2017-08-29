@@ -77,7 +77,7 @@ public class FrameElement extends Element {
 
   
   public final  Document getContentDocument() {
-	  return LocalDomBridge.nodeFor(getContentDocument0(domImpl));
+	  return LocalDom.nodeFor(getContentDocument0(typedRemote()));
   }
   /**
    * The document this frame contains, if there is any and it is available, or

@@ -211,7 +211,10 @@ public class DecoratedRelativePopupPanel extends RelativePopupPanel {
 	}
 
 	public void insertDecoratorHtml(String selector, String className) {
-		LocalDomBridge.ensurePendingResolutionNode(getElement());
+//		LocalDomBridge.ensurePendingResolutionNode(getElement());
+		if("".isEmpty()){
+			throw new UnsupportedOperationException();
+		}
 		Element elt = (Element) WidgetUtils.getElementForSelector(getElement(),
 				selector);
 		if (elt != null) {

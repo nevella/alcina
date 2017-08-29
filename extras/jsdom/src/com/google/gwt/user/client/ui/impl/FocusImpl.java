@@ -80,8 +80,8 @@ public class FocusImpl {
   }
 
   public native void setAccessKey(Element elem, char key) /*-{
-  	var elem_jso=elem.@com.google.gwt.dom.client.Element::ensureJso()();
-    elem_jso.accessKey = String.fromCharCode(key);
+  	var remote=elem.@com.google.gwt.dom.client.Element::typedRemote()();
+    remote.accessKey = String.fromCharCode(key);
   }-*/;
 
   public void setTabIndex(Element elem, int index) {

@@ -16,6 +16,7 @@
 package com.google.gwt.dom.client;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -28,7 +29,6 @@ import com.google.gwt.user.client.ui.UIObject;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.util.TextUtils;
 
 /**
@@ -60,7 +60,7 @@ public class Element extends Node implements DomElement {
 			return ((EventTarget) o).cast();
 		} else if (o instanceof JavaScriptObject) {
 			JavaScriptObject jso = (JavaScriptObject) o;
-			return LocalDomBridge.nodeFor(jso);
+			return LocalDom.nodeFor(jso);
 		} else {
 			return (Element) o;
 		}
@@ -104,627 +104,65 @@ public class Element extends Node implements DomElement {
 		return (node != null) && (node.getNodeType() == Node.ELEMENT_NODE);
 	}
 
-	private DomElement impl;
+	private ElementLocal local;
 
-	DomElement localImpl;
+	private DomElement remote;
 
-	ElementRemote domImpl;
+	private Style style;
 
 	public UIObject uiObject;
 
 	public EventListener uiObjectListener;
 
-	private StringMap cachedAttributes;
+	private boolean pendingResolution;
+	
 
 	protected Element() {
 	}
+	
 
 	public boolean addClassName(String className) {
-		return impl().addClassName(className);
-	}
-
-	public <T extends Node> T appendChild(T newChild) {
-		if (domImpl() == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
-				&& provideAncestorElementAttachedToDom() != null) {
-			// LocalDomBridge.ensureJso(this, false);
-			LocalDomBridge.ensureJso(this);
-		}
-		return impl().appendChild(newChild);
+		boolean result = local().addClassName(className);
+		remote().addClassName(className);
+		return result;
 	}
 
 	public void blur() {
-		impl().blur();
+		runIfWithRemote(false, () -> remote().blur());
 	}
 
 	public <T extends JavascriptObjectEquivalent> T cast() {
 		return (T) this;
 	}
 
-	public Node cloneNode(boolean deep) {
-		return impl().cloneNode(deep);
+	public void cloneLocalStyle(Element from) {
+		if (from.hasStyle()) {
+			getStyle().cloneStyleFrom(from.getStyle());
+		}
 	}
 
 	public void dispatchEvent(NativeEvent evt) {
-		impl().dispatchEvent(evt);
+		remote().dispatchEvent(evt);
 	}
 
-	public void dumpLocal() {
+	public void dump() {
+		if (linkedToRemote()) {
+			Ax.out("Outer html: \n%s\n\n", typedRemote().getOuterHtml());
+		}
 		dumpLocal0(0);
-	}
-
-	@Override
-	public Element elementFor() {
-		return nodeFor();
-	}
-
-	public Element ensureDomImpl() {
-		LocalDomBridge.ensureJso(this);
-		if (!(impl instanceof JavaScriptObject)) {
-			if (impl == null) {
-				int debug = 3;
-			}
-			putImpl(domImpl);
-		}
-		return this;
-	}
-
-	public void ensureId() {
-		if (domImpl == null) {
-			impl().ensureId();
-		}
-	}
-
-	public ElementRemote ensureJso() {
-		return ensureDomImpl().domImpl;
-	}
-
-	public ElementRemote ensureJsoNoFlush() {
-		if (domImpl != null) {
-			return domImpl;
-		}
-		return ensureJso();
-	}
-
-	public void focus() {
-		LocalDomBridge.ensureJso(this);
-		domImpl.focus();
-	}
-
-	public int getAbsoluteBottom() {
-		return impl().getAbsoluteBottom();
-	}
-
-	public int getAbsoluteLeft() {
-		return impl().getAbsoluteLeft();
-	}
-
-	public int getAbsoluteRight() {
-		return impl().getAbsoluteRight();
-	}
-
-	public int getAbsoluteTop() {
-		return impl().getAbsoluteTop();
-	}
-
-	private StringMap ensureCachedAttributes() {
-		if (cachedAttributes == null) {
-			cachedAttributes = new StringMap();
-		}
-		return cachedAttributes;
-	}
-
-	public String getAttribute(String name) {
-		if (provideIsCacheableAttributeName(name)) {
-			StringMap cachedAttributes = ensureCachedAttributes();
-			if (!cachedAttributes.containsKey(name)) {
-				cachedAttributes.put(name, impl().getAttribute(name));
-			}
-			return cachedAttributes.get(name);
-		} else {
-			return impl().getAttribute(name);
-		}
-	}
-
-	private boolean provideIsCacheableAttributeName(String name) {
-		if (LocalDomBridge.isScript) {
-			return false;
-		}
-		if (name.startsWith("__gwtCellBasedWidgetImplDispatching")) {
-			return true;
-		}
-		return false;
-	}
-
-	@Override
-	public Map<String, String> getAttributes() {
-		return impl().getAttributes();
-	}
-
-	public Node getChild(int index) {
-		return impl().getChild(index);
-	}
-
-	public int getChildCount() {
-		return impl().getChildCount();
-	}
-
-	public NodeList<Node> getChildNodes() {
-		return impl().getChildNodes();
-	}
-
-	public String getClassName() {
-		return impl().getClassName();
-	}
-
-	public int getClientHeight() {
-		return impl().getClientHeight();
-	}
-
-	public int getClientWidth() {
-		return impl().getClientWidth();
-	}
-
-	public String getDir() {
-		return impl().getDir();
-	}
-
-	public String getDraggable() {
-		return impl().getDraggable();
-	}
-
-	public NodeList<Element> getElementsByTagName(String name) {
-		return impl().getElementsByTagName(name);
-	}
-
-	public Node getFirstChild() {
-		return impl().getFirstChild();
-	}
-
-	public Element getFirstChildElement() {
-		return typedImpl(true).getFirstChildElement();
-	}
-
-	public String getId() {
-		return impl().getId();
-	}
-
-	public String getInnerHTML() {
-		return impl().getInnerHTML();
-	}
-
-	public String getInnerText() {
-		return impl().getInnerText();
-	}
-
-	public String getLang() {
-		return impl().getLang();
-	}
-
-	public Node getLastChild() {
-		return impl().getLastChild();
-	}
-
-	public Node getNextSibling() {
-		return impl().getNextSibling();
-	}
-
-	public Element getNextSiblingElement() {
-		return impl().getNextSiblingElement();
-	}
-
-	public String getNodeName() {
-		return impl().getNodeName();
-	}
-
-	public short getNodeType() {
-		return implNoResolve().getNodeType();
-	}
-
-	public String getNodeValue() {
-		return impl().getNodeValue();
-	}
-
-	public int getOffsetHeight() {
-		return ensureJso().getOffsetHeight();
-	}
-
-	public int getOffsetLeft() {
-		return ensureJso().getOffsetLeft();
-	}
-
-	public Element getOffsetParent() {
-		return ensureJso().getOffsetParent();
-	}
-
-	public int getOffsetTop() {
-		return ensureJso().getOffsetTop();
-	}
-
-	public int getOffsetWidth() {
-		return ensureJso().getOffsetWidth();
-	}
-
-	public Document getOwnerDocument() {
-		return impl().getOwnerDocument();
-	}
-
-	public Element getParentElement() {
-		// no resolution
-		if (impl == null) {
-			// FIXME - when does this happen (suggest box clear is one place)
-			return null;
-			// int debug = 3;
-		}
-		Element parent = impl.getParentElement();
-		return parent;
-	}
-
-	public Node getParentNode() {
-		return impl().getParentNode();
-	}
-
-	public Node getPreviousSibling() {
-		return impl().getPreviousSibling();
-	}
-
-	public Element getPreviousSiblingElement() {
-		return impl().getPreviousSiblingElement();
-	}
-
-	public boolean getPropertyBoolean(String name) {
-		return impl().getPropertyBoolean(name);
-	}
-
-	public double getPropertyDouble(String name) {
-		return impl().getPropertyDouble(name);
-	}
-
-	public int getPropertyInt(String name) {
-		return impl().getPropertyInt(name);
-	}
-
-	public JavaScriptObject getPropertyJSO(String name) {
-		return impl().getPropertyJSO(name);
-	}
-
-	public Object getPropertyObject(String name) {
-		return impl().getPropertyObject(name);
-	}
-
-	public String getPropertyString(String name) {
-		return impl().getPropertyString(name);
-	}
-
-	public int getScrollHeight() {
-		return impl().getScrollHeight();
-	}
-
-	public int getScrollLeft() {
-		return impl().getScrollLeft();
-	}
-
-	public int getScrollTop() {
-		return impl().getScrollTop();
-	}
-
-	public int getScrollWidth() {
-		return impl().getScrollWidth();
-	}
-
-	public String getString() {
-		return impl().getString();
-	}
-
-	public Style getStyle() {
-		return impl().getStyle();
-	}
-
-	public int getTabIndex() {
-		return impl().getTabIndex();
-	}
-
-	public String getTagName() {
-		return implNoResolve().getTagName();
-	}
-
-	public String getTitle() {
-		return impl().getTitle();
-	}
-
-	public ElementRemote getdomImpl() {
-		return domImpl;
-	}
-
-	public boolean hasAttribute(String name) {
-		return impl().hasAttribute(name);
-	}
-
-	public boolean hasChildNodes() {
-		return impl().hasChildNodes();
-	}
-
-	public boolean hasClassName(String className) {
-		return impl().hasClassName(className);
-	}
-
-	public boolean hasParentElement() {
-		return impl().hasParentElement();
-	}
-
-	public boolean hasTagName(String tagName) {
-		return impl().hasTagName(tagName);
-	}
-
-	@Override
-	public Integer indexInParentChildren() {
-		return impl().indexInParentChildren();
-	}
-
-	public Node insertAfter(Node newChild, Node refChild) {
-		return impl().insertAfter(newChild, refChild);
-	}
-
-	public Node insertBefore(Node newChild, Node refChild) {
-		return impl().insertBefore(newChild, refChild);
-	}
-
-	public Node insertFirst(Node child) {
-		return impl().insertFirst(child);
-	}
-
-	public boolean isOrHasChild(Node child) {
-		return impl().isOrHasChild(child);
-	}
-
-	public int localEventBitsSunk() {
-		return ((ElementLocal) impl).eventBits;
-	}
-
-	public DomElement localImpl() {
-		if (localImpl != null) {
-			return localImpl;
-		} else {
-			if (domImpl != impl) {
-				return impl;
-			} else {
-				return null;
-			}
-		}
-	}
-
-	public Element nodeFor() {
-		return impl().elementFor();
-	}
-
-	public Element provideAncestorElementAttachedToDom() {
-		if (domImpl() != null) {
-			return this;
-		}
-		if (getParentElement() != null) {
-			return getParentElement().provideAncestorElementAttachedToDom();
-		}
-		return null;
-	}
-
-	public LocalDomElement provideLocalDomElement() {
-		Preconditions.checkState(provideIsLocal());
-		return (LocalDomElement) impl();
-	}
-
-	@Override
-	public void putDomImpl(NodeRemote nodeDom) {
-		domImpl = (ElementRemote) nodeDom;
-		if (nodeDom != null) {
-			if (domImpl.getId().length() > 0) {
-				String localId = localImpl() != null ? localImpl().getId() : "";
-				String message = Ax.format("[id:%s,%s]->jso:%s",
-						domImpl.getId(), localId, nodeDom.hashCode());
-				LocalDomBridge.log(LocalDomDebug.PUT_DOM_IMPL, message);
-			}
-			if (impl() instanceof LocalDomElement) {
-				LocalDomElement localDomElement = (LocalDomElement) impl();
-				if (localDomElement != null
-						&& localDomElement.getEventBits() != 0) {
-					int existingBits = DOM.getEventsSunk(this);
-					DOM.sinkEvents(this,
-							existingBits | localDomElement.getEventBits());
-				}
-			}
-			LocalDomBridge.debug.checkMultipleAssignment(this, nodeDom);
-		}
-	}
-
-	@Override
-	public void putImpl(DomNode impl) {
-		if (impl == this.impl) {
-			return;
-		}
-		LocalDomBridge.get().checkInPreconditionList(this, impl);
-		if (this.impl != null) {
-			if (this.impl instanceof JavaScriptObject) {
-				if (impl instanceof LocalDomNode) {
-				} else {
-					if (this.impl.getNodeType() == Node.ELEMENT_NODE) {
-						// FIXME - pushbutton requires this (rather than a fail)
-						Preconditions.checkState(((ElementRemote) this.impl)
-								.getInnerHTML0()
-								.equals(((ElementRemote) impl).getInnerHTML0()));
-					}
-				}
-				// orphan - to handle direct html writing of UiBinder
-				LocalDomBridge.get().javascriptObjectNodeLookup.remove(domImpl);
-				domImpl = null;
-			} else {
-				Preconditions
-						.checkState(!(this.impl instanceof JavaScriptObject));
-				localImpl = (DomElement) this.impl;
-			}
-		}
-		Preconditions.checkState(impl != null);
-		this.impl = (DomElement) impl;
-	}
-
-	@Override
-	public Node removeAllChildren() {
-		if (domImpl() == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
-				&& provideAncestorElementAttachedToDom() != null) {
-			ensureJso();
-		}
-		if (provideIsDom() && LocalDomBridge.fastRemoveAll) {
-			setInnerHTML("");
-			removeLocalImpl();
-			return null;
-		} else {
-			return super.removeAllChildren();
-		}
-	}
-
-	public void removeAttribute(String name) {
-		impl().removeAttribute(name);
-	}
-
-	public Node removeChild(Node oldChild) {
-		return impl().removeChild(oldChild);
-	}
-
-	public boolean removeClassName(String className) {
-		return impl().removeClassName(className);
-	}
-
-	public void removeFromParent() {
-		impl().removeFromParent();
-	}
-
-	public Node replaceChild(Node newChild, Node oldChild) {
-		return impl().replaceChild(newChild, oldChild);
-	}
-
-	public void replaceClassName(String oldClassName, String newClassName) {
-		impl().replaceClassName(oldClassName, newClassName);
-	}
-
-	public void resolveIfAppropriate() {
-		resolveIfAppropriate(false);
-	}
-
-	public void scrollIntoView() {
-		impl().scrollIntoView();
-	}
-
-	public void setAttribute(String name, String value) {
-		impl().setAttribute(name, value);
-		if (provideIsCacheableAttributeName(name)) {
-			ensureCachedAttributes().put(name, value);
-		}
-	}
-
-	public void setClassName(String className) {
-		impl().setClassName(className);
-	}
-
-	public void setDir(String dir) {
-		impl().setDir(dir);
-	}
-
-	public void setDraggable(String draggable) {
-		impl().setDraggable(draggable);
-	}
-
-	public void setId(String id) {
-		impl().setId(id);
-	}
-
-	public void setInnerHTML(String html) {
-		impl().setInnerHTML(html);
-	}
-
-	public void setInnerSafeHtml(SafeHtml html) {
-		impl().setInnerSafeHtml(html);
-	}
-
-	public void setInnerText(String text) {
-		impl().setInnerText(text);
-	}
-
-	public void setLang(String lang) {
-		impl().setLang(lang);
-	}
-
-	public void setNodeValue(String nodeValue) {
-		impl().setNodeValue(nodeValue);
-	}
-
-	public void setOuterHtml(String html) {
-		Preconditions.checkState(provideIsLocal());
-		provideLocalDomElement().setOuterHtml(html);
-	}
-
-	public void setPropertyBoolean(String name, boolean value) {
-		impl().setPropertyBoolean(name, value);
-	}
-
-	public void setPropertyDouble(String name, double value) {
-		impl().setPropertyDouble(name, value);
-	}
-
-	public void setPropertyInt(String name, int value) {
-		impl().setPropertyInt(name, value);
-	}
-
-	public void setPropertyJSO(String name, JavaScriptObject value) {
-		impl().setPropertyJSO(name, value);
-	}
-
-	public void setPropertyObject(String name, Object value) {
-		impl().setPropertyObject(name, value);
-	}
-
-	public void setPropertyString(String name, String value) {
-		impl().setPropertyString(name, value);
-	}
-
-	public void setScrollLeft(int scrollLeft) {
-		impl().setScrollLeft(scrollLeft);
-	}
-
-	public void setScrollTop(int scrollTop) {
-		impl().setScrollTop(scrollTop);
-	}
-
-	public void setTabIndex(int tabIndex) {
-		impl().setTabIndex(tabIndex);
-	}
-
-	public void setTitle(String title) {
-		impl().setTitle(title);
-	}
-
-	public void sinkEvents(int eventBits) {
-		impl().sinkEvents(eventBits);
-	}
-
-	public void toggleClassName(String className) {
-		impl().toggleClassName(className);
-	}
-
-	@Override
-	public String toString() {
-		return impl() == null ? super.toString()
-				: impl().toString() + (uiObject == null ? ""
-						: ": " + uiObject.getClass().getSimpleName());
 	}
 
 	private void dumpLocal0(int depth) {
 		String indent = CommonUtils.padStringLeft("", depth * 2, ' ');
 		String message = Ax.format("%s%s [%s,%s,%s]: ", indent, getTagName(),
-				hashCode(), impl().hashCode(), domImpl() == null ? "f" : "t");
-		LocalDomBridge.log(LocalDomDebug.DUMP_LOCAL, message);
+				hashCode(), local().hashCode(), !linkedToRemote() ? "f" : "t");
+		LocalDom.log(LocalDomDebug.DUMP_LOCAL, message);
 		for (Node node : getChildNodes()) {
 			switch (node.getNodeType()) {
 			case Node.TEXT_NODE:
 				message = indent + CommonUtils.trimToWsChars(
 						TextUtils.normalise(node.getNodeValue()), 50, true);
-				LocalDomBridge.log(LocalDomDebug.DUMP_LOCAL, message);
+				LocalDom.log(LocalDomDebug.DUMP_LOCAL, message);
 				break;
 			case ELEMENT_NODE:
 				((Element) node).dumpLocal0(depth + 1);
@@ -733,50 +171,53 @@ public class Element extends Node implements DomElement {
 		}
 	}
 
-	private boolean isAttached() {
-		Element cursor = this;
-		while (cursor != null) {
-			if (cursor.domImpl() != null) {
-				return true;
-			}
-			cursor = cursor.getParentElement();
-		}
-		return false;
+	@Override
+	public Element elementFor() {
+		return nodeFor();
 	}
 
-	private void removeLocalImpl() {
-		localImpl = null;
-	}
-
-	private void resolveIfAppropriate(boolean flushIfInnerHtml) {
-		if (domImpl() == null && !LocalDomBridge.get().wasCreatedThisLoop(this)
-				&& isAttached()) {
-			LocalDomBridge.ensureJso(this);
-		}
-		if (domImpl() == null && flushIfInnerHtml
-				&& LocalDomBridge.shouldUseDomNodes() && !isAttached()) {
-			LocalDomBridge.replaceWithJso(this);
+	public void ensureId() {
+		if (!linkedToRemote()) {
+			local().ensureId();
 		}
 	}
 
-	private DomElement typedImpl(boolean flushIfInnerHtml) {
-		resolveIfAppropriate(flushIfInnerHtml);
-		return impl;
+	public ElementRemote typedRemoteNoFlush() {
+		// FIXME - may be necessary - but should ext classes have this access?
+		throw new UnsupportedOperationException();
+		// if (domImpl != null) {
+		// return domImpl;
+		// }
+		// return typedRemote();
+	}
+
+	public void focus() {
+		ensureRemote().focus();
+	}
+
+	public int getAbsoluteBottom() {
+		return remote().getAbsoluteBottom();
+	}
+
+	public int getAbsoluteLeft() {
+		return remote().getAbsoluteLeft();
+	}
+
+	public int getAbsoluteRight() {
+		return remote().getAbsoluteRight();
+	}
+
+	public int getAbsoluteTop() {
+		return remote().getAbsoluteTop();
+	}
+
+	public String getAttribute(String name) {
+		return local().getAttribute(name);
 	}
 
 	@Override
-	NodeRemote domImpl() {
-		return domImpl;
-	}
-
-	@Override
-	DomElement impl() {
-		return typedImpl(false);
-	}
-
-	@Override
-	DomElement implNoResolve() {
-		return impl;
+	public Map<String, String> getAttributes() {
+		return local().getAttributes();
 	}
 
 	public int getChildIndexLocal(Element child) {
@@ -784,5 +225,515 @@ public class Element extends Node implements DomElement {
 			return -1;
 		}
 		return child.indexInParentChildren();
+	}
+
+	public String getClassName() {
+		return local().getClassName();
+	}
+
+	public int getClientHeight() {
+		return remote().getClientHeight();
+	}
+
+	public int getClientWidth() {
+		return remote().getClientWidth();
+	}
+
+	public String getDir() {
+		return local().getDir();
+	}
+
+	public String getDraggable() {
+		return remote().getDraggable();
+	}
+
+	public NodeList<Element> getElementsByTagName(String name) {
+		if (!linkedToRemote()) {
+			throw new UnsupportedOperationException();
+		}
+		return remote().getElementsByTagName(name);
+	}
+
+	public Element getFirstChildElement() {
+		return local().getFirstChildElement();
+	}
+
+	public String getId() {
+		return local().getId();
+	}
+
+	public String getInnerHTML() {
+		return local().getInnerHTML();
+	}
+
+	public String getInnerText() {
+		return local().getInnerText();
+	}
+
+	public String getLang() {
+		return local().getLang();
+	}
+
+	public Node getLastChild() {
+		return local().getLastChild();
+	}
+
+	public Node getNextSibling() {
+		return local().getNextSibling();
+	}
+
+	public Element getNextSiblingElement() {
+		return local().getNextSiblingElement();
+	}
+
+	public String getNodeName() {
+		return local().getNodeName();
+	}
+
+	public short getNodeType() {
+		return local().getNodeType();
+	}
+
+	public String getNodeValue() {
+		return local().getNodeValue();
+	}
+
+	public int getOffsetHeight() {
+		return callWithRemoteOrDefault(true, () -> remote().getOffsetHeight(),
+				0);
+	}
+
+	public int getOffsetLeft() {
+		return callWithRemoteOrDefault(true, () -> remote().getOffsetLeft(), 0);
+	}
+
+	public Element getOffsetParent() {
+		return callWithRemoteOrDefault(true, () -> remote().getOffsetParent(),
+				null);
+	}
+
+	public int getOffsetTop() {
+		return callWithRemoteOrDefault(true, () -> remote().getOffsetTop(), 0);
+	}
+
+	public int getOffsetWidth() {
+		return callWithRemoteOrDefault(true, () -> remote().getOffsetWidth(),
+				0);
+	}
+
+	public Element getPreviousSiblingElement() {
+		return local().getPreviousSiblingElement();
+	}
+
+	public boolean getPropertyBoolean(String name) {
+		return local().getPropertyBoolean(name);
+	}
+
+	public double getPropertyDouble(String name) {
+		return local().getPropertyDouble(name);
+	}
+
+	public int getPropertyInt(String name) {
+		return local().getPropertyInt(name);
+	}
+
+	@Override
+	public JavaScriptObject getPropertyJSO(String name) {
+		return remote().getPropertyJSO(name);
+	}
+
+	@Override
+	public Object getPropertyObject(String name) {
+		return remote().getPropertyObject(name);
+	}
+
+	public String getPropertyString(String name) {
+		return local().getPropertyString(name);
+	}
+
+	public int getScrollHeight() {
+		return callWithRemoteOrDefault(true, () -> remote().getScrollHeight(),
+				0);
+	}
+
+	public int getScrollLeft() {
+		return callWithRemoteOrDefault(true, () -> remote().getScrollLeft(), 0);
+	}
+
+	public int getScrollTop() {
+		return callWithRemoteOrDefault(true, () -> remote().getScrollTop(), 0);
+	}
+
+	public int getScrollWidth() {
+		return callWithRemoteOrDefault(true, () -> remote().getScrollWidth(),
+				0);
+	}
+
+	public String getString() {
+		return local().getString();
+	}
+
+	public Style getStyle() {
+		if (style == null) {
+			style = new Style(this);
+		}
+		return style;
+	}
+
+	public int getTabIndex() {
+		return local().getTabIndex();
+	}
+
+	public String getTagName() {
+		return local().getTagName();
+	}
+
+	public String getTitle() {
+		return local().getTitle();
+	}
+
+	public boolean hasAttribute(String name) {
+		return local().hasAttribute(name);
+	}
+
+	public boolean hasClassName(String className) {
+		return local().hasClassName(className);
+	}
+
+	public boolean hasStyle() {
+		return style != null;
+	}
+
+	public boolean hasTagName(String tagName) {
+		return local().hasTagName(tagName);
+	}
+
+	@Override
+	public Integer indexInParentChildren() {
+		return local().indexInParentChildren();
+	}
+
+	public int localEventBitsSunk() {
+		return local().eventBits;
+	}
+
+	public Element nodeFor() {
+		return this;
+	}
+
+	Element provideSelfOrAncestorLinkedToRemote() {
+		if (linkedToRemote()) {
+			return this;
+		}
+		if (getParentElement() != null) {
+			return getParentElement().provideSelfOrAncestorLinkedToRemote();
+		}
+		return null;
+	}
+
+	@Override
+	public void putRemote(NodeRemote remote) {
+		this.remote = (ElementRemote) remote;
+		if (remote != null) {
+			if (local() != null && local().getEventBits() != 0) {
+				int existingBits = DOM.getEventsSunk(this);
+				DOM.sinkEvents(this, existingBits | local().getEventBits());
+			}
+		}
+	}
+
+	// @Override
+	// public void putImpl(DomNode impl) {
+	// if (impl == this.impl) {
+	// return;
+	// }
+	// LocalDomBridge.get().checkInPreconditionList(this, impl);
+	// if (this.impl != null) {
+	// if (this.impl instanceof JavaScriptObject) {
+	// if (impl instanceof LocalDomNode) {
+	// } else {
+	// if (this.impl.getNodeType() == Node.ELEMENT_NODE) {
+	// // FIXME - pushbutton requires this (rather than a fail)
+	// Preconditions.checkState(((ElementRemote) this.impl)
+	// .getInnerHTML0().equals(((ElementRemote) impl)
+	// .getInnerHTML0()));
+	// }
+	// }
+	// // orphan - to handle direct html writing of UiBinder
+	// LocalDomBridge.get().javascriptObjectNodeLookup.remove(domImpl);
+	// domImpl = null;
+	// } else {
+	// Preconditions
+	// .checkState(!(this.impl instanceof JavaScriptObject));
+	// localImpl = (DomElement) this.impl;
+	// }
+	// }
+	// Preconditions.checkState(impl != null);
+	// this.impl = (DomElement) impl;
+	// }
+	@Override
+	public Node removeAllChildren() {
+		if (linkedToRemote() && LocalDom.fastRemoveAll) {
+			setInnerHTML("");
+			local().removeAllChildren();
+			return null;
+		} else {
+			return super.removeAllChildren();
+		}
+	}
+
+	public void removeAttribute(String name) {
+		local().removeAttribute(name);
+		remote().removeAttribute(name);
+	}
+
+	public boolean removeClassName(String className) {
+		boolean result = local().removeClassName(className);
+		remote().removeClassName(className);
+		return result;
+	}
+
+	public void replaceClassName(String oldClassName, String newClassName) {
+		local().replaceClassName(oldClassName, newClassName);
+		remote().replaceClassName(oldClassName, newClassName);
+	}
+
+	public void scrollIntoView() {
+		runIfWithRemote(true, () -> remote().scrollIntoView());
+	}
+
+	public void setAttribute(String name, String value) {
+		local().setAttribute(name, value);
+		remote().setAttribute(name, value);
+	}
+
+	public void setClassName(String className) {
+		local().setClassName(className);
+		remote().setClassName(className);
+	}
+
+	public void setDir(String dir) {
+		local().setDir(dir);
+		remote().setDir(dir);
+	}
+
+	public void setDraggable(String draggable) {
+		local().setDraggable(draggable);
+		remote().setDraggable(draggable);
+	}
+
+	public void setId(String id) {
+		local().setId(id);
+		remote().setId(id);
+	}
+
+	public void setInnerHTML(String html) {
+		local().setInnerHTML(html);
+		remote().setInnerHTML(html);
+	}
+
+	public void setInnerSafeHtml(SafeHtml html) {
+		local().setInnerSafeHtml(html);
+		remote().setInnerSafeHtml(html);
+	}
+
+	public void setInnerText(String text) {
+		local().setInnerText(text);
+		remote().setInnerText(text);
+	}
+
+	public void setLang(String lang) {
+		local().setLang(lang);
+		remote().setLang(lang);
+	}
+
+	public void setNodeValue(String nodeValue) {
+		local().setNodeValue(nodeValue);
+		remote().setNodeValue(nodeValue);
+	}
+
+	public void setOuterHtml(String html) {
+		Preconditions.checkState(!linkedToRemote());
+		local().setOuterHtml(html);
+	}
+
+	public void setPropertyBoolean(String name, boolean value) {
+		local().setPropertyBoolean(name, value);
+		remote().setPropertyBoolean(name, value);
+	}
+
+	public void setPropertyDouble(String name, double value) {
+		local().setPropertyDouble(name, value);
+		remote().setPropertyDouble(name, value);
+	}
+
+	public void setPropertyInt(String name, int value) {
+		local().setPropertyInt(name, value);
+		remote().setPropertyInt(name, value);
+	}
+
+	public void setPropertyJSO(String name, JavaScriptObject value) {
+		local().setPropertyJSO(name, value);
+		remote().setPropertyJSO(name, value);
+	}
+
+	public void setPropertyObject(String name, Object value) {
+		local().setPropertyObject(name, value);
+		remote().setPropertyObject(name, value);
+	}
+
+	public void setPropertyString(String name, String value) {
+		local().setPropertyString(name, value);
+		remote().setPropertyString(name, value);
+	}
+
+	public void setScrollLeft(int scrollLeft) {
+		local().setScrollLeft(scrollLeft);
+		remote().setScrollLeft(scrollLeft);
+	}
+
+	public void setScrollTop(int scrollTop) {
+		local().setScrollTop(scrollTop);
+		remote().setScrollTop(scrollTop);
+	}
+
+	public void setTabIndex(int tabIndex) {
+		local().setTabIndex(tabIndex);
+		remote().setTabIndex(tabIndex);
+	}
+
+	public void setTitle(String title) {
+		local().setTitle(title);
+		remote().setTitle(title);
+	}
+
+	public void sinkEvents(int eventBits) {
+		local().sinkEvents(eventBits);
+		remote().sinkEvents(eventBits);
+	}
+
+	public void toggleClassName(String className) {
+		local().toggleClassName(className);
+		remote().toggleClassName(className);
+	}
+
+	@Override
+	public String toString() {
+		return local().toString() + (uiObject == null ? ""
+				: ": " + uiObject.getClass().getSimpleName());
+	}
+	// private void dumpLocal0(int depth) {
+	// String indent = CommonUtils.padStringLeft("", depth * 2, ' ');
+	// String message = Ax.format("%s%s [%s,%s,%s]: ", indent, getTagName(),
+	// hashCode(), impl().hashCode(), domImpl() == null ? "f" : "t");
+	// LocalDomBridge.log(LocalDomDebug.DUMP_LOCAL, message);
+	// for (Node node : getChildNodes()) {
+	// switch (node.getNodeType()) {
+	// case Node.TEXT_NODE:
+	// message = indent + CommonUtils.trimToWsChars(
+	// TextUtils.normalise(node.getNodeValue()), 50, true);
+	// LocalDomBridge.log(LocalDomDebug.DUMP_LOCAL, message);
+	// break;
+	// case ELEMENT_NODE:
+	// ((Element) node).dumpLocal0(depth + 1);
+	// break;
+	// }
+	// }
+	// }
+
+	public ElementRemote typedRemote() {
+		return (ElementRemote) remote();
+	}
+
+	private <T> T callWithRemoteOrDefault(boolean flush, Supplier<T> supplier,
+			T defaultValue) {
+		if (!linkedToRemote() && flush) {
+			ensureRemote();
+		}
+		if (linkedToRemote()) {
+			return supplier.get();
+		} else {
+			return defaultValue;
+		}
+	}
+
+	protected ElementRemote ensureRemote() {
+		LocalDom.flush();
+		LocalDom.ensureRemote(this);
+		return typedRemote();
+	}
+
+	private void runIfWithRemote(boolean flush, Runnable runnable) {
+		if (!linkedToRemote() && flush) {
+			ensureRemote();
+		}
+		if (linkedToRemote()) {
+			runnable.run();
+		}
+	}
+
+	@Override
+	protected boolean linkedToRemote() {
+		return remote() != ElementNull.INSTANCE;
+	}
+
+	@Override
+	protected ElementLocal local() {
+		return local;
+	}
+
+	@Override
+	protected DomElement remote() {
+		return remote;
+	}
+
+	Element putLocal(ElementLocal local) {
+		Preconditions.checkState(this.local == null);
+		this.local = local;
+		local.putElement(this);
+		this.remote = ElementNull.INSTANCE;
+		return this;
+	}
+
+	public void pendingResolution() {
+		this.pendingResolution = true;
+	}
+
+	public boolean isPendingResolution() {
+		return this.pendingResolution;
+	}
+
+	public class ElementImplAccess {
+		public boolean linkedToRemote() {
+			return Element.this.linkedToRemote();
+		}
+
+		public ElementRemote typedRemoteOrNull() {
+			return linkedToRemote() ? typedRemote() : null;
+		}
+
+		public DomElement remote() {
+			return Element.this.remote();
+		}
+
+		public Element provideSelfOrAncestorLinkedToRemote() {
+			return Element.this.provideSelfOrAncestorLinkedToRemote();
+		}
+	}
+
+	public ElementImplAccess implAccess() {
+		return new ElementImplAccess();
+	}
+
+	public Element getChildElement(int index) {
+		for (int idx = 0; idx < getChildCount(); idx++) {
+			Node child = getChild(idx);
+			if (child.provideIsElement()) {
+				if (index-- == 0) {
+					return (Element) child;
+				}
+			}
+		}
+		return null;
 	}
 }

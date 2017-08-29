@@ -54,7 +54,7 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 		public void onAttachOrDetach(AttachEvent event) {
 			Preconditions.checkArgument(event.isAttached());
 			Scheduler.get().scheduleFinally(
-					() -> sinkEventImpl(elem.ensureJso(), typeName));
+					() -> sinkEventImpl(elem.typedRemote(), typeName));
 			registration.removeHandler();
 		}
 	}

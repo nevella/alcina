@@ -12,7 +12,7 @@ class NodeListLocal<T extends Node> implements DomNodeList<T> {
 
 	@Override
 	public T getItem(int index) {
-		return (T) LocalDomBridge.nodeFor(nodes.get(index));
+		return (T) nodes.get(index).nodeFor();
 	}
 
 	/**

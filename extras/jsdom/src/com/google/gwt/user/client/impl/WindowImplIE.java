@@ -18,7 +18,7 @@ package com.google.gwt.user.client.impl;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.LocalDomBridge;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.ScriptElement;
 import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.TextResource;
@@ -123,7 +123,7 @@ public class WindowImplIE extends WindowImpl {
       // Embed the init script on the page
       ScriptElement scriptElem = Document.get().createScriptElement(initFunc);
       Document.get().getBody().appendChild(scriptElem);
-      LocalDomBridge.get().flush();
+      LocalDom.flush();
   
       // Initialize the handler
       cmd.execute();

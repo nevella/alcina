@@ -24,12 +24,12 @@ import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementRemote;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.TableCellElement;
 import com.google.gwt.dom.client.TableRowElement;
 import com.google.gwt.dom.client.TableSectionElement;
-import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DoubleClickEvent;
@@ -86,7 +86,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 
 		public Element get(int idx) {
 			return nodeList != null ? nodeList.getItem(idx)
-					: LocalDomBridge.nodeFor(jsArray.get(idx));
+					: LocalDom.nodeFor(jsArray.get(idx));
 		}
 
 		public int length() {
@@ -117,24 +117,14 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 
 		@Override
 		public ElementArray<Element> getRows(Element tbody) {
-			if (tbody.provideIsLocal()) {
 				return new ElementArray<Element>(
 						((TableSectionElement) tbody).getRows());
-			} else {
-				return new ElementArray<Element>(
-						getRows0(tbody.getdomImpl()));
-			}
 		}
 
 		@Override
 		public ElementArray<Element> getCells(Element row) {
-			if (row.provideIsLocal()) {
 				return new ElementArray<Element>(
 						((TableRowElement) row).getCells());
-			} else {
-				return new ElementArray<Element>(
-						getCells0(row.getdomImpl()));
-			}
 		}
 	}
 

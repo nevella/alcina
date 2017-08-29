@@ -13,7 +13,7 @@ public class DomDispatchLocal implements IDomDispatch {
 
 	@Override
 	public void cssSetOpacity(Style style, double value) {
-		style.localImpl.setPropertyImpl("opacity", String.valueOf(value));
+		style.setProperty("opacity", String.valueOf(value));
 	}
 
 	@Override
@@ -29,12 +29,12 @@ public class DomDispatchLocal implements IDomDispatch {
 	@Override
 	public void selectAdd(SelectElement select, OptionElement option,
 			OptionElement before) {
-		select.localImpl.insertBefore(option, before);
+		select.local().insertBefore(option, before);
 	}
 
 	@Override
 	public void selectClear(SelectElement select) {
-		select.localImpl.removeAllChildren();
+		select.local().removeAllChildren();
 	}
 
 	@Override

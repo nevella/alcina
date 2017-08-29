@@ -29,7 +29,7 @@ public class FormPanelImpl {
    * @return the response html
    */
   public native String getContents(Element iframe_mult) /*-{
-  	var iframe = iframe_mult.@com.google.gwt.dom.client.Element::ensureJso()();
+  	var iframe = iframe_mult.@com.google.gwt.dom.client.Element::typedRemote()();
     try {
       // Make sure the iframe's window & document are loaded.
       if (!iframe.contentWindow || !iframe.contentWindow.document)
@@ -49,7 +49,7 @@ public class FormPanelImpl {
    * @return the form's encoding type
    */
   public native String getEncoding(Element form_multi) /*-{
-  	var form = form_multi.@com.google.gwt.dom.client.Element::ensureJso()();
+  	var form = form_multi.@com.google.gwt.dom.client.Element::typedRemote()();
     // We can always get 'enctype', no matter which browser, because we set
     // both 'encoding' and 'enctype' in setEncoding().
     return form.enctype;
@@ -64,8 +64,8 @@ public class FormPanelImpl {
    */
   public native void hookEvents(Element iframe_multi, Element form_multi,
       FormPanelImplHost listener) /*-{
-      	var form = form_multi.@com.google.gwt.dom.client.Element::ensureJso()();
-      	var iframe = iframe_multi==null?null:iframe_multi.@com.google.gwt.dom.client.Element::ensureJso()();
+      	var form = form_multi.@com.google.gwt.dom.client.Element::typedRemote()();
+      	var iframe = iframe_multi==null?null:iframe_multi.@com.google.gwt.dom.client.Element::typedRemote()();
     if (iframe) {
       iframe.onload = $entry(function() {
         // If there is no __formAction yet, this is a spurious onload
@@ -92,7 +92,7 @@ public class FormPanelImpl {
    * @param form the form to be reset
    */
   public native void reset(Element form_multi) /*-{
-  	var form = form_multi.@com.google.gwt.dom.client.Element::ensureJso()();
+  	var form = form_multi.@com.google.gwt.dom.client.Element::typedRemote()();
     form.reset();
   }-*/;
 
@@ -103,7 +103,7 @@ public class FormPanelImpl {
    * @param encoding the new encoding type
    */
   public native void setEncoding(Element form_multi, String encoding) /*-{
-  	var form = form_multi.@com.google.gwt.dom.client.Element::ensureJso()();
+  	var form = form_multi.@com.google.gwt.dom.client.Element::typedRemote()();
     // To be safe, setting both.
     form.enctype = encoding;
     form.encoding = encoding;
@@ -116,8 +116,8 @@ public class FormPanelImpl {
    * @param iframe the iframe that is targetted, or <code>null</code>
    */
   public native void submit(Element form_multi, Element iframe_multi) /*-{
-  	var form = form_multi.@com.google.gwt.dom.client.Element::ensureJso()();
-     var iframe = iframe_multi==null?null:iframe_multi.@com.google.gwt.dom.client.Element::ensureJso()();
+  	var form = form_multi.@com.google.gwt.dom.client.Element::typedRemote()();
+     var iframe = iframe_multi==null?null:iframe_multi.@com.google.gwt.dom.client.Element::typedRemote()();
     // Hang on to the form's action url, needed in the
     // onload/onreadystatechange handler.
     if (iframe)
@@ -132,8 +132,8 @@ public class FormPanelImpl {
    * @param form the form whose onSubmit event is to be unhooked
    */
   public native void unhookEvents( Element iframe_multi,Element form_multi) /*-{
-  	var form = form_multi.@com.google.gwt.dom.client.Element::ensureJso()();
-     var iframe = iframe_multi==null?null:iframe_multi.@com.google.gwt.dom.client.Element::ensureJso()();
+  	var form = form_multi.@com.google.gwt.dom.client.Element::typedRemote()();
+     var iframe = iframe_multi==null?null:iframe_multi.@com.google.gwt.dom.client.Element::typedRemote()();
     if (iframe)
       iframe.onload = null;
     form.onsubmit = null;

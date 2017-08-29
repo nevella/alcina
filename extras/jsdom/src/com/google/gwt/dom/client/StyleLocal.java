@@ -29,6 +29,8 @@ import cc.alcina.framework.common.client.util.StringMap;
 public class StyleLocal implements DomStyle {
 	StringMap properties = new StringMap();
 
+	private Style styleObject;
+
 	@Override
 	public final void clearBackgroundColor() {
 		DomStyleStatic.clearBackgroundColor(this);
@@ -279,10 +281,10 @@ public class StyleLocal implements DomStyle {
 		DomStyleStatic.clearZIndex(this);
 	}
 
-	public StyleLocal cloneStyle() {
+	@Override
+	public void cloneStyleFrom(DomStyle other) {
 		StyleLocal clone = new StyleLocal();
-		clone.properties = new StringMap(properties);
-		return clone;
+		clone.properties = new StringMap(((StyleLocal) other).properties);
 	}
 
 	@Override
@@ -807,6 +809,6 @@ public class StyleLocal implements DomStyle {
 
 	@Override
 	public final Style styleObject() {
-		return LocalDomBridge.styleObjectFor(this);
+		return styleObject;
 	}
 }

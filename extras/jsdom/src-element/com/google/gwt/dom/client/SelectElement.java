@@ -284,19 +284,21 @@ public class SelectElement extends Element {
 
 	@Override
 	public void setPropertyString(String name, String value) {
-		if (provideIsLocal() && name.equals("multiple")
+		if ( name.equals("multiple")
 				&& !Boolean.valueOf(value)) {
-			removeAttribute("multiple");
-			return;
+			local().removeAttribute("multiple");
+		}else{
+			local().setPropertyString(name, value);
 		}
-		super.setPropertyString(name, value);
+		remote().setPropertyString(name, value);
 	}
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
-		if (provideIsLocal() && name.equals("multiple") && !value) {
-			removeAttribute(name);
-			return;
+		if (name.equals("multiple") && !value) {
+			local().removeAttribute("multiple");
+		}else{
+			local().setPropertyBoolean(name, value);
 		}
 		super.setPropertyBoolean(name, value);
 	}

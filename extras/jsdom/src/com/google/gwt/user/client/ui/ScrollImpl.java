@@ -150,7 +150,7 @@ class ScrollImpl {
    * @return true if the direction is RTL, false if LTR
    */
   public  boolean isRtl(Element scrollable) {
-	  return isRtl0(scrollable.ensureJso());
+	  return isRtl0(scrollable.typedRemote());
   }
   private native boolean isRtl0(ElementRemote scrollable) /*-{
     var computedStyle = $doc.defaultView.getComputedStyle(scrollable, null);

@@ -110,8 +110,8 @@ public class StyleInjector {
 
 		private static native StyleElement
 				getDocumentStyleSheet(int index) /*-{
-            var elt_jso = $doc.styleSheets[index];
-            return @com.google.gwt.dom.client.LocalDomBridge::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(elt_jso);
+            var remote = $doc.styleSheets[index];
+            return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
 		}-*/;
 
 		private static native int getDocumentStyleSheetLength(int index) /*-{
@@ -120,7 +120,7 @@ public class StyleInjector {
 
 		public native void appendContents(StyleElement style,
 				String contents) /*-{
-            style.@com.google.gwt.dom.client.Element::ensureJso()().cssText += contents;
+            style.@com.google.gwt.dom.client.Element::ensureRemote()().cssText += contents;
 		}-*/;
 
 		@Override
@@ -199,8 +199,8 @@ public class StyleInjector {
 		}
 
 		private native StyleElement createElement() /*-{
-            var elt_jso = $doc.createStyleSheet();
-            return @com.google.gwt.dom.client.LocalDomBridge::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(elt_jso);
+            var remote = $doc.createStyleSheet();
+            return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
             ;
 		}-*/;
 

@@ -1,13 +1,10 @@
 package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.regexp.shared.MatchResult;
-import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
 import cc.alcina.framework.common.client.util.Ax;
@@ -19,18 +16,19 @@ public class ElementLocal extends NodeLocal
 
 	private String tagName;
 
-	private Style style;
-
 	private String innerHtml;
 
-	boolean treeResolved;
 
 	int eventBits;
+
+	private Element element;
 
 	ElementLocal(DocumentLocal document_Jvm, String tagName) {
 		ownerDocument = document_Jvm;
 		this.tagName = tagName;
 	}
+	protected Map<String, String> attributes = LocalDom.collections()
+			.createStringMap();
 
 	@Override
 	public final boolean addClassName(String className) {
@@ -43,27 +41,17 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public Node cloneNode(boolean deep) {
-		ElementLocal clone_jvm = (ElementLocal) create(getTagName());
-		if (style != null) {
-			clone_jvm.style = LocalDomBridge
-					.styleObjectFor(((StyleLocal) style.impl).cloneStyle());
-		}
-		clone_jvm.attributes = new StringMap(attributes);
-		clone_jvm.eventBits = eventBits;
-		Node clone = LocalDomBridge.nodeFor(clone_jvm);
+		ElementLocal cloneLocal = new ElementLocal(ownerDocument, tagName);
+		Element clone = new Element().putLocal(cloneLocal);
+		clone.cloneLocalStyle(element);
+		cloneLocal.attributes = new StringMap(attributes);
+		cloneLocal.eventBits = eventBits;
 		if (deep) {
-			clone_jvm.innerHtml = innerHtml;
+			cloneLocal.innerHtml = innerHtml;
 			getChildNodes().stream()
 					.forEach(cn -> clone.appendChild(cn.cloneNode(true)));
 		}
 		return clone;
-	}
-
-	@Override
-	public LocalDomElement create(String tagName) {
-		return LocalDomBridge.get().localDomImpl.localImpl
-				.createLocalElement(Document.get(), tagName)
-				.provideLocalDomElement();
 	}
 
 	public void dispatchEvent(NativeEvent evt) {
@@ -72,7 +60,7 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public Element elementFor() {
-		return LocalDomBridge.nodeFor(this);
+		return element;
 	}
 
 	@Override
@@ -145,12 +133,20 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public final Element getFirstChildElement() {
-		return resolveChildren().stream()
-				.filter(node_jvm -> node_jvm.getNodeType() == Node.ELEMENT_NODE)
-				.findFirst().map(node_jvm -> (Element) node_jvm.nodeFor())
+		return getChildNodes().stream()
+				.filter(nodeLocal -> nodeLocal
+						.getNodeType() == Node.ELEMENT_NODE)
+				.findFirst().map(nodeLocal -> (Element) nodeLocal.nodeFor())
 				.orElse(null);
 	}
 
+	// @Override
+	// public final Element getFirstChildElement() {
+	// return resolveChildren().stream()
+	// .filter(node_jvm -> node_jvm.getNodeType() == Node.ELEMENT_NODE)
+	// .findFirst().map(node_jvm -> (Element) node_jvm.nodeFor())
+	// .orElse(null);
+	// }
 	@Override
 	public String getId() {
 		return getAttribute("id");
@@ -309,13 +305,8 @@ public class ElementLocal extends NodeLocal
 		return DomElement_Static.getString(this);
 	}
 
-	@Override
 	public Style getStyle() {
-		if (style == null) {
-			StyleLocal style_Jvm = new StyleLocal();
-			style = LocalDomBridge.styleObjectFor(style_Jvm);
-		}
-		return style;
+		return element.getStyle();
 	}
 
 	@Override
@@ -354,10 +345,9 @@ public class ElementLocal extends NodeLocal
 		return parentNode.children.indexOf(this);
 	}
 
-	public NodeRemote provideAncestorDomImpl() {
-		Element domAncestor = ((Element) node)
-				.provideAncestorElementAttachedToDom();
-		return domAncestor == null ? null : domAncestor.domImpl();
+	public void putElement(Element element) {
+		this.element = element;
+		this.node = element;
 	}
 
 	@Override
@@ -384,9 +374,10 @@ public class ElementLocal extends NodeLocal
 	@Override
 	public void setAttribute(String name, String value) {
 		attributes.put(name, value);
-		if (name.equals("id") && value.length() > 0) {
-			LocalDomBridge.registerId(this);
-		}
+		//FIXME
+//		if (name.equals("id") && value.length() > 0) {
+//			LocalDomBridge.registerId(this);
+//		}
 	}
 
 	@Override
@@ -502,93 +493,6 @@ public class ElementLocal extends NodeLocal
 		return super.toString() + "\n\t" + getTagName();
 	}
 
-	@Override
-	public void treeResolved() {
-		treeResolved = true;
-		children.stream().forEach(n -> {
-			if (n instanceof ElementLocal) {
-				((ElementLocal) n).treeResolved();
-			}
-		});
-	}
-
-	private List<NodeLocal> resolveChildren() {
-		if (children.isEmpty() && innerHtml != null) {
-			RegExp tag = RegExp
-					.compile("<([A-Za-z0-9_\\-.]+)( .+?)?>(.+)?</.+>", "m");
-			RegExp tagNoContents = RegExp
-					.compile("<([A-Za-z0-9_\\-.]+)( .+?)?/?>", "m");
-			MatchResult matchResult = tag.exec(innerHtml);
-			if (matchResult == null) {
-				matchResult = tagNoContents.exec(innerHtml);
-			}
-			if (matchResult == null) {
-				if (innerHtml.isEmpty()) {
-				} else {
-					DomText domText = LocalDomBridge
-							.get().localDomImpl.localImpl
-									.createUnwrappedLocalText(
-											getOwnerDocument(), innerHtml);
-					node.appendChild(
-							LocalDomBridge.nodeFor((NodeLocal) domText));
-				}
-			} else {
-				ElementLocal element = (ElementLocal) create(
-						matchResult.getGroup(1));
-				Element created = LocalDomBridge.nodeFor((NodeLocal) element);
-				created.setOuterHtml(innerHtml);
-				node.appendChild(created);
-			}
-			innerHtml = null;
-		}
-		return children;
-	}
-
-	@Override
-	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		if (eventBits != 0) {
-			ensureId();
-		}
-		builder.appendHtmlConstantNoCheck("<");
-		builder.appendHtmlConstant(tagName);
-		String styleAttributeValue = attributes.get("style");
-		if (!attributes.isEmpty()) {
-			attributes.entrySet().forEach(e -> {
-				if (e.getKey().equals("style") && style != null) {
-					return;
-				}
-				builder.appendHtmlConstantNoCheck(" ");
-				// invalid attr names will die on the voine
-				builder.appendEscaped(e.getKey());
-				builder.appendHtmlConstantNoCheck("=\"");
-				builder.appendEscaped(e.getValue());
-				builder.appendHtmlConstantNoCheck("\"");
-			});
-		}
-		if (style != null) {
-			builder.appendHtmlConstantNoCheck(" style=\"");
-			if (Ax.notBlank(styleAttributeValue)) {
-				builder.appendUnsafeHtml(styleAttributeValue);
-				builder.appendHtmlConstantNoCheck("; ");
-			}
-			((StyleLocal) style.impl).properties.entrySet().forEach(e -> {
-				builder.appendEscaped(
-						LocalDomBridge.get().declarativeCssName(e.getKey()));
-				builder.appendHtmlConstantNoCheck(":");
-				builder.appendEscaped(e.getValue());
-				builder.appendHtmlConstantNoCheck("; ");
-			});
-			builder.appendHtmlConstantNoCheck("\"");
-		}
-		builder.appendHtmlConstantNoCheck(">");
-		appendChildContents(builder);
-		if (innerHtml != null) {
-			builder.appendUnsafeHtml(innerHtml);
-		}
-		builder.appendHtmlConstantNoCheck("</");
-		builder.appendHtmlConstant(tagName);
-		builder.appendHtmlConstantNoCheck(">");
-	}
 
 	private void appendChildContents(UnsafeHtmlBuilder builder) {
 		if (containsUnescapedText()) {
@@ -608,6 +512,84 @@ public class ElementLocal extends NodeLocal
 		} else {
 			return false;
 		}
+	}
+
+	// private List<NodeLocal> resolveChildren() {
+	// if (children.isEmpty() && innerHtml != null) {
+	// RegExp tag = RegExp
+	// .compile("<([A-Za-z0-9_\\-.]+)( .+?)?>(.+)?</.+>", "m");
+	// RegExp tagNoContents = RegExp
+	// .compile("<([A-Za-z0-9_\\-.]+)( .+?)?/?>", "m");
+	// MatchResult matchResult = tag.exec(innerHtml);
+	// if (matchResult == null) {
+	// matchResult = tagNoContents.exec(innerHtml);
+	// }
+	// if (matchResult == null) {
+	// if (innerHtml.isEmpty()) {
+	// } else {
+	// DomText domText = LocalDomBridge
+	// .get().localDomImpl.localImpl
+	// .createUnwrappedLocalText(
+	// getOwnerDocument(), innerHtml);
+	// node.appendChild(
+	// LocalDom.nodeFor((NodeLocal) domText));
+	// }
+	// } else {
+	// ElementLocal element = (ElementLocal) create(
+	// matchResult.getGroup(1));
+	// Element created = LocalDom.nodeFor((NodeLocal) element);
+	// created.setOuterHtml(innerHtml);
+	// node.appendChild(created);
+	// }
+	// innerHtml = null;
+	// }
+	// return children;
+	// }
+	@Override
+	void appendOuterHtml(UnsafeHtmlBuilder builder) {
+		if (eventBits != 0) {
+			ensureId();
+		}
+		builder.appendHtmlConstantNoCheck("<");
+		builder.appendHtmlConstant(tagName);
+		String styleAttributeValue = attributes.get("style");
+		if (!attributes.isEmpty()) {
+			attributes.entrySet().forEach(e -> {
+				if (e.getKey().equals("style") && element.hasStyle()) {
+					return;
+				}
+				builder.appendHtmlConstantNoCheck(" ");
+				// invalid attr names will die on the voine
+				builder.appendEscaped(e.getKey());
+				builder.appendHtmlConstantNoCheck("=\"");
+				builder.appendEscaped(e.getValue());
+				builder.appendHtmlConstantNoCheck("\"");
+			});
+		}
+		if (element.getStyle() != null) {
+			builder.appendHtmlConstantNoCheck(" style=\"");
+			if (Ax.notBlank(styleAttributeValue)) {
+				builder.appendUnsafeHtml(styleAttributeValue);
+				builder.appendHtmlConstantNoCheck("; ");
+			}
+			((StyleLocal) element.getStyle().local()).properties.entrySet()
+					.forEach(e -> {
+						builder.appendEscaped(LocalDom
+								.declarativeCssName(e.getKey()));
+						builder.appendHtmlConstantNoCheck(":");
+						builder.appendEscaped(e.getValue());
+						builder.appendHtmlConstantNoCheck("; ");
+					});
+			builder.appendHtmlConstantNoCheck("\"");
+		}
+		builder.appendHtmlConstantNoCheck(">");
+		appendChildContents(builder);
+		if (innerHtml != null) {
+			builder.appendUnsafeHtml(innerHtml);
+		}
+		builder.appendHtmlConstantNoCheck("</");
+		builder.appendHtmlConstant(tagName);
+		builder.appendHtmlConstantNoCheck(">");
 	}
 
 	@Override

@@ -1,8 +1,14 @@
 package com.google.gwt.dom.client;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.JsArray;
+import com.google.gwt.core.client.JsArrayInteger;
 import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
@@ -39,7 +45,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 * automatically typecast it.
 	 */
 	public static Element as(Node node) {
-		assert is(node.domImpl());
+		assert is((JavaScriptObject) node.remote());
 		return (Element) node;
 	}
 
@@ -48,26 +54,25 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 * {@link Element}. A <code>null</code> object will cause this method to
 	 * return <code>false</code>.
 	 */
-	
-	private static class ElementJsoCache{
-
+	private static class remoteCache {
 		public boolean lastIsResult;
+
 		public JavaScriptObject lastIs;
-		
 	}
-	private static ElementJsoCache cache=new ElementJsoCache();
+
+	private static remoteCache cache = new remoteCache();
+
 	public static boolean is(JavaScriptObject o) {
-		if(cache.lastIs==o){
+		if (cache.lastIs == o) {
 			return cache.lastIsResult;
 		}
 		boolean is0 = is0(o);
-		cache.lastIs=o;
-		cache.lastIsResult=is0;
+		cache.lastIs = o;
+		cache.lastIsResult = is0;
 		return is0;
-		
 	}
+
 	private static boolean is0(JavaScriptObject o) {
-		
 		if (NodeRemote.is(o)) {
 			return is(nodeFor(o));
 		}
@@ -116,7 +121,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final Element elementFor() {
-		return LocalDomBridge.nodeFor(this);
+		return LocalDom.nodeFor(this);
 	}
 
 	/**
@@ -248,11 +253,12 @@ public class ElementRemote extends NodeRemote implements DomElement {
 			getElementsByTagName0(String name) /*-{
         return this.getElementsByTagName(name);
 	}-*/;
+
 	@Override
-	public final  NodeList<Element>
-			getElementsByTagName(String tagName) {
+	public final NodeList<Element> getElementsByTagName(String tagName) {
 		return new NodeList(getElementsByTagName0(tagName));
 	}
+
 	/**
 	 * The element's identifier.
 	 * 
@@ -429,7 +435,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final Style getStyle() {
-		return LocalDomBridge.styleObjectFor(getStyle0());
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -807,11 +813,85 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		throw new UnsupportedOperationException();
 	}
 
-	public final ElementRemote getParentElementJso() {
-		return LocalDomBridge.get().localDomImpl.getParentElementJso(this);
+	final native String getInnerHTML0()/*-{
+        return this.innerHTML;
+	}-*/;
+
+	public final StyleRemote getStyleRemote() {
+		return getStyle0();
 	}
 
-	final native String getInnerHTML0()/*-{
-		return this.innerHTML;
+	static class ElementRemoteIndex extends JavaScriptObject {
+		protected ElementRemoteIndex() {
+		}
+
+		final native ElementRemote hasNode()/*-{
+            return this.hasNode;
+		}-*/;
+
+		final native ElementRemote root()/*-{
+            return this.root;
+		}-*/;
+
+		final native JsArrayInteger jsIndicies()/*-{
+            return this.indicies;
+		}-*/;
+
+		final native JsArray ancestors()/*-{
+            return this.ancestors;
+		}-*/;
+
+		final native String stringIndicies()/*-{
+            return this.indicies.join(",");
+		}-*/;
+
+		final List<Integer> indicies() {
+			String stringIndicies = stringIndicies();
+			if(stringIndicies.isEmpty()){
+				return Collections.emptyList();
+			}
+			return Arrays.asList(stringIndicies.split(",")).stream()
+					.map(Integer::parseInt)
+					.collect(Collectors.toList());
+		}
+	}
+
+	final native ElementRemoteIndex provideRemoteIndex()/*-{
+        var result = {
+            hasNode : null,
+            root : null,
+            indicies : [],
+            ancestors : []
+        };
+        var cursor = this;
+        while (true) {
+            var hasNode = @com.google.gwt.dom.client.LocalDom::hasNode(Lcom/google/gwt/core/client/JavaScriptObject;)(cursor);
+            if (hasNode) {
+                result.hasNode = cursor;
+                break;
+            }
+            var parent = cursor.parentElement;
+            if (parent == null) {
+                result.root = cursor;
+                break;
+            }
+            var idx = 0;
+            var size = parent.childNodes.length;
+            for (; idx < size; idx++) {
+                var node = parent.childNodes.item(idx);
+                if (node == cursor) {
+                    result.indicies.push(idx);
+                    result.ancestors.push(cursor);
+                    break;
+                }
+            }
+            cursor = parent;
+        }
+        return result;
+
+	}-*/;
+
+	final native String getOuterHtml()/*-{
+        return this.outerHTML;
 	}-*/;
 }

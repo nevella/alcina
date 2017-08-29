@@ -26,6 +26,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.ImageElement;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
@@ -451,7 +452,7 @@ public class DOM {
 	 *            <code>true</code> to cancel bubbling
 	 */
 	public static void eventCancelBubble(Event evt, boolean cancel) {
-		LocalDomBridge.get().eventMod(evt, "eventCancelBubble");
+		LocalDom.eventMod(evt, "eventCancelBubble");
 		impl.eventCancelBubble(evt, cancel);
 	}
 
@@ -726,7 +727,7 @@ public class DOM {
 	 */
 	@Deprecated
 	public static void eventPreventDefault(Event evt) {
-		LocalDomBridge.get().eventMod(evt, "eventPreventDefault");
+		LocalDom.eventMod(evt, "eventPreventDefault");
 		evt.preventDefault();
 	}
 
@@ -881,10 +882,11 @@ public class DOM {
 	 *         not a child of the given parent
 	 */
 	public static int getChildIndex(Element parent, Element child) {
-		if (parent.provideIsLocal() && child.provideIsLocal()) {
-			return parent.getChildIndexLocal(child);
-		}
-		return impl.getChildIndex(parent, child);
+//		if (parent.provideIsLocal() && child.provideIsLocal()) {
+//			return parent.getChildIndexLocal(child);
+//		}
+//		return impl.getChildIndex(parent, child);
+		return parent.getChildIndexLocal(child); 
 	}
 
 	/**
@@ -1533,12 +1535,12 @@ public class DOM {
 	 *            possible values are described in {@link Event})
 	 */
 	public static void sinkEvents(Element elem, int eventBits) {
-		elem.resolveIfAppropriate();
-		if (LocalDomBridge.elementJso(elem) != null) {
+//		elem.resolveIfAppropriate();
+		if (elem.implAccess().linkedToRemote()) {
 			impl.sinkEvents(elem, eventBits);
 		} else {
-			Element attachedAncestor = elem
-					.provideAncestorElementAttachedToDom();
+			Element attachedAncestor = elem.implAccess()
+					.provideSelfOrAncestorLinkedToRemote();
 			boolean attachToAncestor = attachedAncestor != null
 					&& attachedAncestor != elem;
 			if (attachToAncestor && attachedAncestor.uiObject != null) {
@@ -1690,14 +1692,14 @@ public class DOM {
 		lastDispatchedEvent = evt;
 		lastDispatchedMouseEventListener = listener;
 		if (lcType.contains("click") || lcType.contains("mousedown")) {
-			LocalDomBridge.log(LocalDomDebug.DISPATCH_DETAILS,
+			LocalDom.log(LocalDomDebug.DISPATCH_DETAILS,
 					Ax.format("evt/listener: %s/%s/%s %s/%s", evt.hashCode(),
 							listener.hashCode(), elem.hashCode(), lcType,
 							elem.getTagName()));
 		}
 		{
 			String message = Ax.format("dispatch  event - %s", lcType);
-			LocalDomBridge.log(LocalDomDebug.DOM_EVENT, message);
+			LocalDom.log(LocalDomDebug.DOM_EVENT, message);
 		}
 		if (Element.is(eventTarget)) {
 			Element rel = Element.as(eventTarget);
@@ -1719,10 +1721,10 @@ public class DOM {
 				if (lcType.contains("click") || lcType.contains("mousedown")) {
 					String message = Ax.format("dispatch mouse event - %s - %s",
 							lcType, eventListener.getClass().getName());
-					LocalDomBridge.log(LocalDomDebug.DOM_MOUSE_EVENT, message);
+					LocalDom.log(LocalDomDebug.DOM_MOUSE_EVENT, message);
 				}
 				eventListener.onBrowserEvent(evt);
-				if (LocalDomBridge.get().isStopPropogation(evt)) {
+				if (LocalDom.isStopPropogation(evt)) {
 					return;
 				}
 			}

@@ -20,7 +20,7 @@ import com.google.gwt.core.client.JsArray;
 
 abstract class DOMImpl {
 	static final DomDispatch impl = new DomDispatch();
-//	static final DOMImpl impl = GWT.create(DOMImpl.class);
+	// static final DOMImpl impl = GWT.create(DOMImpl.class);
 
 	/**
 	 * Fast helper method to convert small doubles to 32-bit int.
@@ -36,6 +36,7 @@ abstract class DOMImpl {
 	protected static native int toInt32(double val) /*-{
         return val | 0;
 	}-*/;
+
 	protected native NodeRemote createButtonElement(DocumentRemote doc,
 			String type) /*-{
         var e = doc.createElement("BUTTON");
@@ -43,23 +44,26 @@ abstract class DOMImpl {
         return e;
 	}-*/;
 
-
-	protected native ElementRemote createCheckInputElement(DocumentRemote doc) /*-{
+	protected native ElementRemote
+			createCheckInputElement(DocumentRemote doc) /*-{
         var e = doc.createElement("INPUT");
         e.type = 'checkbox';
         e.value = 'on';
         return e;
 	}-*/;
 
-	protected native ElementRemote createElement(DocumentRemote doc, String tag) /*-{
+	protected native ElementRemote createElement(DocumentRemote doc,
+			String tag) /*-{
         return doc.createElement(tag);
 	}-*/;
-	protected native ElementRemote createTextNode(DocumentRemote doc, String data) /*-{
-    return doc.createTextNode(data);
-}-*/;
 
-	protected abstract NativeEvent createHtmlEvent(DocumentRemote doc, String type,
-			boolean canBubble, boolean cancelable);
+	protected native ElementRemote createTextNode(DocumentRemote doc,
+			String data) /*-{
+        return doc.createTextNode(data);
+	}-*/;
+
+	protected abstract NativeEvent createHtmlEvent(DocumentRemote doc,
+			String type, boolean canBubble, boolean cancelable);
 
 	protected native ElementRemote createInputElement(DocumentRemote doc,
 			String type) /*-{
@@ -76,8 +80,8 @@ abstract class DOMImpl {
 			boolean metaKey, int keyCode);
 
 	@Deprecated
-	protected abstract NativeEvent createKeyEvent(DocumentRemote doc, String type,
-			boolean canBubble, boolean cancelable, boolean ctrlKey,
+	protected abstract NativeEvent createKeyEvent(DocumentRemote doc,
+			String type, boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode);
 
@@ -85,30 +89,33 @@ abstract class DOMImpl {
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int charCode);
 
-	protected abstract NativeEvent createMouseEvent(DocumentRemote doc, String type,
-			boolean canBubble, boolean cancelable, int detail, int screenX,
-			int screenY, int clientX, int clientY, boolean ctrlKey,
+	protected abstract NativeEvent createMouseEvent(DocumentRemote doc,
+			String type, boolean canBubble, boolean cancelable, int detail,
+			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			ElementRemote relatedTarget);
 
-	protected ScriptElement createScriptElement(DocumentRemote doc, String source) {
+	protected ScriptElement createScriptElement(DocumentRemote doc,
+			String source) {
 		ScriptElement elem = nodeFor(createElement(doc, "script"));
 		elem.setText(source);
 		return elem;
 	}
 
-	protected native void cssClearOpacity(StyleRemote style) /*-{
-        style.opacity = '';
-	}-*/;
+	protected void cssClearOpacity(Style style) {
+		style.setProperty("opacity", "");
+	}
+
 	protected String cssFloatPropertyName() {
 		return "cssFloat";
 	}
 
-	protected native void cssSetOpacity(StyleRemote style, double value) /*-{
-        style.opacity = value;
-	}-*/;
+	protected void cssSetOpacity(Style style, double value) {
+		style.setProperty("opacity", String.valueOf(value));
+	}
 
-	protected abstract void dispatchEvent(ElementRemote target, NativeEvent evt);
+	protected abstract void dispatchEvent(ElementRemote target,
+			NativeEvent evt);
 
 	protected native boolean eventGetAltKey(NativeEvent evt) /*-{
         return !!evt.altKey;
@@ -131,11 +138,14 @@ abstract class DOMImpl {
 	protected native boolean eventGetCtrlKey(NativeEvent evt) /*-{
         return !!evt.ctrlKey;
 	}-*/;
-	protected  EventTarget eventGetCurrentTarget(NativeEvent event){
+
+	protected EventTarget eventGetCurrentTarget(NativeEvent event) {
 		JavaScriptObject jso = eventGetNativeTarget(event);
-		return jso==null?null:new EventTarget(jso);
+		return jso == null ? null : new EventTarget(jso);
 	}
-	private native JavaScriptObject eventGetNativeTarget(NativeEvent event) /*-{
+
+	private native JavaScriptObject
+			eventGetNativeTarget(NativeEvent event) /*-{
         return event.currentTarget;
 	}-*/;
 
@@ -149,7 +159,8 @@ abstract class DOMImpl {
 
 	protected abstract int eventGetMouseWheelVelocityY(NativeEvent evt);
 
-	protected abstract EventTarget eventGetRelatedTarget(NativeEvent nativeEvent);
+	protected abstract EventTarget
+			eventGetRelatedTarget(NativeEvent nativeEvent);
 
 	protected native double eventGetRotation(NativeEvent evt) /*-{
         return evt.rotation;
@@ -221,7 +232,8 @@ abstract class DOMImpl {
         return evt.changedTouches;
 	}-*/;
 
-	protected native ElementRemote getFirstChildElement(ElementRemote elem) /*-{
+	protected native ElementRemote
+			getFirstChildElement(ElementRemote elem) /*-{
         var child = elem.firstChild;
         while (child && child.nodeType != 1)
             child = child.nextSibling;
@@ -248,7 +260,8 @@ abstract class DOMImpl {
         return text;
 	}-*/;
 
-	protected native ElementRemote getNextSiblingElement(ElementRemote elem) /*-{
+	protected native ElementRemote
+			getNextSiblingElement(ElementRemote elem) /*-{
         var sib = elem.nextSibling;
         while (sib && sib.nodeType != 1)
             sib = sib.nextSibling;
@@ -275,7 +288,8 @@ abstract class DOMImpl {
         return parent;
 	}-*/;
 
-	protected native ElementRemote getPreviousSiblingElement(ElementRemote elem) /*-{
+	protected native ElementRemote
+			getPreviousSiblingElement(ElementRemote elem) /*-{
         var sib = elem.previousSibling;
         while (sib && sib.nodeType != 1)
             sib = sib.previousSibling;
@@ -294,7 +308,8 @@ abstract class DOMImpl {
 		return doc.getViewportElement().getScrollTop();
 	}
 
-	protected native String getStyleProperty(StyleRemote style, String name) /*-{
+	protected native String getStyleProperty(StyleRemote style,
+			String name) /*-{
         return style[name];
 	}-*/;
 
@@ -318,7 +333,8 @@ abstract class DOMImpl {
         return elem.hasAttribute(name);
 	}-*/;
 
-	protected abstract boolean isOrHasChild(NodeRemote parent, NodeRemote child);
+	protected abstract boolean isOrHasChild(NodeRemote parent,
+			NodeRemote child);
 
 	protected native void scrollIntoView(ElementRemote elem) /*-{
         var left = elem.offsetLeft, top = elem.offsetTop;
@@ -371,15 +387,17 @@ abstract class DOMImpl {
 
 	protected native NodeList<OptionElement>
 			selectGetOptions(ElementRemote select) /*-{
-		var out=@com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/DomNodeList;)(select.options);
+        var out = @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/DomNodeList;)(select.options);
         return out;
 	}-*/;
 
-	protected native void selectRemoveOption(ElementRemote domImpl, int index) /*-{
+	protected native void selectRemoveOption(ElementRemote domImpl,
+			int index) /*-{
         select.remove(index);
 	}-*/;
 
-	protected native void setDraggable(ElementRemote elem, String draggable) /*-{
+	protected native void setDraggable(ElementRemote elem,
+			String draggable) /*-{
         elem.draggable = draggable;
 	}-*/;
 
@@ -442,7 +460,7 @@ abstract class DOMImpl {
         return touch.target;
 	}-*/;
 
-	protected String yeah(){
+	protected String yeah() {
 		return "";
 	}
 
@@ -523,12 +541,13 @@ abstract class DOMImpl {
 	protected native void buttonClick(ElementRemote button) /*-{
         button.click();
 	}-*/;
+
 	protected <N extends Node> N nodeFor(NodeRemote node_dom) {
-		return LocalDomBridge.nodeFor(node_dom);
+		return LocalDom.nodeFor(node_dom);
 	}
-	
+
 	private static DomImplCache cache = new DomImplCache();
-	
+
 	private static class DomImplCache {
 		public String lastEventType;
 

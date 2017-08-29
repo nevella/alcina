@@ -88,7 +88,8 @@ public class TableRowElement extends Element {
 	}-*/;
 
 	public void deleteCell(int index) {
-		deleteCell0(domImpl, index);
+		// deleteCell0(domImpl, index);
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -106,21 +107,17 @@ public class TableRowElement extends Element {
 	 * The collection of cells in this row.
 	 */
 	public NodeList<TableCellElement> getCells() {
-		if (provideIsLocal()) {
-			List<Node> nodes = new ArrayList<>();
-			NodeList<Node> childNodes = getChildNodes();
-			for (Node node : childNodes) {
-				if (node.getNodeName().equalsIgnoreCase(TableCellElement.TAG_TD)
-						|| node.getNodeName()
-								.equalsIgnoreCase(TableCellElement.TAG_TH)) {
-					nodes.add(node);
-				}
+		List<Node> nodes = new ArrayList<>();
+		NodeList<Node> childNodes = getChildNodes();
+		for (Node node : childNodes) {
+			if (node.getNodeName().equalsIgnoreCase(TableCellElement.TAG_TD)
+					|| node.getNodeName()
+							.equalsIgnoreCase(TableCellElement.TAG_TH)) {
+				nodes.add(node);
 			}
-			return new NodeList<TableCellElement>(
-					(NodeListWrapped) new NodeListWrapped<>(nodes));
-		} else {
-			return new NodeList<>(getCells0(ensureJso()));
 		}
+		return new NodeList<TableCellElement>(
+				(NodeListWrapped) new NodeListWrapped<>(nodes));
 	}
 
 	private final native NodeListRemote getCells0(ElementRemote elem) /*-{

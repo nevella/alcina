@@ -13,11 +13,11 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	}
 
 	static <N extends Node> N nodeFor(JavaScriptObject o) {
-		return LocalDomBridge.nodeFor(o);
+		return LocalDom.nodeFor(o);
 	}
 
 	public final Node nodeFor() {
-		return LocalDomBridge.nodeFor(this);
+		return LocalDom.nodeFor(this);
 	}
 
 	@Override
@@ -90,10 +90,10 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 		if (node == null) {
 			return null;
 		}
-		if (node.provideIsDom()) {
-			return node.domImpl();
+		if (node.linkedToRemote()) {
+			return node.remote();
 		} else {
-			return LocalDomBridge.ensurePendingResolutionNode(node);
+			return LocalDom.ensurePendingResolutionNode(node);
 		}
 	}
 
@@ -312,14 +312,10 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 
 	@Override
 	public final Node removeChild(Node oldChild) {
-		NodeRemote firstChild0 = getFirstChild0();
-		if (getChildNodes0().getLength() > 2) {
-			NodeRemote item0 = getChildNodes0().getItem0(2);
-			int debug = 3;
-		}
-		if (oldChild.provideIsElement() && !oldChild.provideIsDom()) {
-			((Element) oldChild).ensureJso();
-		}
+		//TODO - have a think about this
+//		if (oldChild.provideIsElement() && !oldChild.provideIsDom()) {
+//			((Element) oldChild).typedRemote();
+//		}
 		NodeRemote resolvedOrPending = resolvedOrPending(oldChild);
 		if (resolvedOrPending.getParentNode() == null) {
 			return nodeFor(resolvedOrPending);

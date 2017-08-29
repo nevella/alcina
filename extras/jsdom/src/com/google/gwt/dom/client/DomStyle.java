@@ -794,4 +794,7 @@ public interface DomStyle {
 	void setPropertyImpl(String name, String value);
 
 	Map<String, String> getProperties();
+
+	void cloneStyleFrom(DomStyle local);
+
 }

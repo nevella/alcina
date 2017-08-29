@@ -62,7 +62,7 @@ public class DomDispatch implements IDomDispatch {
 	}
 
 	public Element createElement(Document doc, String tagName) {
-		return doc.createElement(tagName);
+		return doc.local().createElement(tagName);
 	}
 
 	public NativeEvent createHtmlEvent(Document doc, String type,
@@ -119,7 +119,7 @@ public class DomDispatch implements IDomDispatch {
 		return remoteImpl().createMouseEvent(doc.castRemote(), type, canBubble,
 				cancelable, detail, screenX, screenY, clientX, clientY, ctrlKey,
 				altKey, shiftKey, metaKey, button,
-				relatedTarget == null ? null : relatedTarget.domImpl);
+				relatedTarget == null ? null : relatedTarget.typedRemote());
 	}
 
 	public ScriptElement createScriptElement(Document doc, String source) {
@@ -143,7 +143,7 @@ public class DomDispatch implements IDomDispatch {
 	}
 
 	public void dispatchEvent(Element target, NativeEvent evt) {
-		remoteImpl().dispatchEvent(target.domImpl, evt);
+		remoteImpl().dispatchEvent(target.typedRemote(), evt);
 	}
 
 	public boolean eventGetAltKey(NativeEvent evt) {
@@ -239,12 +239,12 @@ public class DomDispatch implements IDomDispatch {
 
 	public int getAbsoluteLeft(Element elem) {
 		resolveAllPending();
-		return remoteImpl().getAbsoluteLeft(elem.domImpl);
+		return remoteImpl().getAbsoluteLeft(elem.typedRemote());
 	}
 
 	public int getAbsoluteTop(Element elem) {
 		resolveAllPending();
-		return remoteImpl().getAbsoluteTop(elem.domImpl);
+		return remoteImpl().getAbsoluteTop(elem.typedRemote());
 	}
 
 	public String getAttribute(Element elem, String name) {
@@ -313,7 +313,7 @@ public class DomDispatch implements IDomDispatch {
 
 	public int getScrollLeft(Element elem) {
 		resolveAllPending();
-		return remoteImpl().getScrollLeft(elem.domImpl);
+		return remoteImpl().getScrollLeft(elem.typedRemote());
 	}
 
 	public int getScrollTop(Document doc) {
@@ -355,7 +355,7 @@ public class DomDispatch implements IDomDispatch {
 
 	public void scrollIntoView(Element elem) {
 		resolveAllPending();
-		remoteImpl().scrollIntoView(elem.domImpl);
+		remoteImpl().scrollIntoView(elem.typedRemote());
 	}
 
 	public void selectAdd(SelectElement select, OptionElement option,
@@ -387,7 +387,7 @@ public class DomDispatch implements IDomDispatch {
 
 	public void setDraggable(Element elem, String draggable) {
 		resolveAllPending();
-		remoteImpl().setDraggable(elem.domImpl, draggable);
+		remoteImpl().setDraggable(elem.typedRemote(), draggable);
 	}
 
 	public void setInnerText(Element elem, String text) {
@@ -401,7 +401,7 @@ public class DomDispatch implements IDomDispatch {
 
 	public void setScrollLeft(Element elem, int left) {
 		resolveAllPending();
-		remoteImpl().setScrollLeft(elem.domImpl, left);
+		remoteImpl().setScrollLeft(elem.typedRemote(), left);
 	}
 
 	public void setScrollTop(Document doc, int top) {

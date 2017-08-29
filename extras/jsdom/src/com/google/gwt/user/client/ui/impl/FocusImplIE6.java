@@ -25,7 +25,7 @@ public class FocusImplIE6 extends FocusImpl {
 
   @Override
   public native void focus(Element elem_multi) /*-{
-  var elem = elem_multi.@com.google.gwt.dom.client.Element::ensureJso()();
+  var elem = elem_multi.@com.google.gwt.dom.client.Element::typedRemote()();
     try {
       elem.focus();
     } catch (e) {

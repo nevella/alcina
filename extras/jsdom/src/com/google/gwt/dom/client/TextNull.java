@@ -1,6 +1,6 @@
 package com.google.gwt.dom.client;
 
-public class TextNull extends NodeLocal implements DomText {
+public class TextNull extends NodeLocalNull implements DomText {
 	static final TextNull INSTANCE = new TextNull();
 	TextNull() {
 	}

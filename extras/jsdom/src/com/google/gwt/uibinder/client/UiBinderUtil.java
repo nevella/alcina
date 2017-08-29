@@ -17,7 +17,6 @@ package com.google.gwt.uibinder.client;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.LocalDomImpl;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import com.google.gwt.user.client.ui.RootPanel;

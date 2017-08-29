@@ -86,12 +86,12 @@ public interface DomElement extends DomNode {
 
 	int getPropertyInt(String name);
 
+	String getPropertyString(String name);
+
 	JavaScriptObject getPropertyJSO(String name);
 
 	Object getPropertyObject(String name);
-
-	String getPropertyString(String name);
-
+	
 	int getScrollHeight();
 
 	/**

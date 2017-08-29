@@ -1049,7 +1049,8 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget, HasWidgets
 
     TreeItem item = findItemByChain(chain, 0, root);
     if (item != null && item != root) {
-    	item.getElement().ensureDomImpl();
+    	//FIXME - delete next line?
+//    	item.getElement().ensureDomImpl();
       if (item.getChildCount() > 0
           && DOM.isOrHasChild(item.getImageElement(), hElem)) {
         item.setState(!item.getState(), true);

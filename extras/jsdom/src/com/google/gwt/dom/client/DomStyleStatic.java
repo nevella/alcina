@@ -1103,11 +1103,12 @@ class DomStyleStatic {
 		return domStyle.getPropertyImpl(name);
 	}
 
-	static String getPropertyImpl(StyleRemote style_Dom, String name) {
-		// FIXME - more direct call maybe
-		return DOMImpl.impl.getStyleProperty(
-				LocalDomBridge.styleObjectFor(style_Dom), name);
-	}
+	//FIXME - LD2 - remove (never get remote obj prop) 
+//	static String getPropertyImpl(StyleRemote style_Dom, String name) {
+//		// FIXME - more direct call maybe
+//		return DOMImpl.impl.getStyleProperty(
+//				LocalDomBridge.styleObjectFor(style_Dom), name);
+//	}
 
 	public static void clearProperty(DomStyle domStyle, String name) {
 		domStyle.setProperty(name, "");

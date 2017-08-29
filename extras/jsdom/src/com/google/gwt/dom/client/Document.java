@@ -28,7 +28,9 @@ public class Document extends Node implements DomDocument {
 	public static Document create(DomDocument local) {
 		Document doc = new Document();
 		doc.local = local;
-		doc.remote = DocumentRemote.get();
+		if (LocalDom.isUseRemoteDom()) {
+			doc.remote = DocumentRemote.get();
+		}
 		return doc;
 	}
 
@@ -41,8 +43,10 @@ public class Document extends Node implements DomDocument {
 	public static Document get() {
 		// No need to be MT-safe. Single-threaded JS code.
 		if (doc == null) {
-			doc = create(new DocumentLocal());
-			LocalDomBridge.register(doc);
+			DocumentLocal local = new DocumentLocal();
+			doc = create(local);
+			local.document = doc;
+			LocalDom.register(doc);
 		}
 		return doc;
 	}
@@ -153,7 +157,7 @@ public class Document extends Node implements DomDocument {
 	}
 
 	public DivElement createDivElement() {
-		return local.createDivElement();
+		return DomDocumentStatic.createDivElement(this);
 	}
 
 	public DListElement createDLElement() {
@@ -512,7 +516,7 @@ public class Document extends Node implements DomDocument {
 	}
 
 	public BodyElement getBody() {
-		return remote.getBody();
+		return local.getBody();
 	}
 
 	public int getBodyOffsetLeft() {
@@ -547,8 +551,16 @@ public class Document extends Node implements DomDocument {
 		return remote.getCompatMode();
 	}
 
+	Element documentElement;
+
 	public Element getDocumentElement() {
-		return local.getDocumentElement();
+		if (documentElement == null) {
+			documentElement = local.getDocumentElement();
+			if (documentElement == null) {
+				documentElement = remote().getDocumentElement();
+			}
+		}
+		return documentElement;
 	}
 
 	public String getDomain() {
@@ -735,4 +747,12 @@ public class Document extends Node implements DomDocument {
 		return remote;
 	}
 
+	@Override
+	protected boolean linkedToRemote() {
+		return true;
+	}
+
+	public DocumentRemote typedRemote() {
+		return (DocumentRemote) remote;
+	}
 }

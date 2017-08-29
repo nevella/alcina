@@ -237,7 +237,7 @@ public class LogStoreInterceptors {
 	}
 
 	final native String getClassName(Element elem_multi) /*-{
-		var elem = elem_multi.@com.google.gwt.dom.client.Element::ensureJso()();
+		var elem = elem_multi.@com.google.gwt.dom.client.Element::typedRemote()();
         var cn = elem.className;
         //note - someone says IE DOM objects don't support - hence try/catch
         try {

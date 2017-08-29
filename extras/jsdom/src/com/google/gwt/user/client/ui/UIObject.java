@@ -371,10 +371,11 @@ public abstract class UIObject implements HasVisibility {
 	 */
 	private static void updatePrimaryAndDependentStyleNames(Element elem,
 			String newPrimaryStyle) {
-		if (elem.provideIsDom()) {
-			updatePrimaryAndDependentStyleNames0(
-					LocalDomBridge.elementJso(elem), newPrimaryStyle);
-		} else {
+//		if (elem.provideIsDom()) {
+//			updatePrimaryAndDependentStyleNames0(
+//					LocalDomBridge.remote(elem), newPrimaryStyle);
+//		} else {
+		//FIXME - probably delete the static
 			String className = elem.getClassName();
 			if (Ax.isBlank(className)) {
 				return;
@@ -393,7 +394,7 @@ public abstract class UIObject implements HasVisibility {
 				}
 			}
 			elem.setClassName(CommonUtils.join(classes, " "));
-		}
+//		}
 	}
   /**
    * Replaces all instances of the primary style name with newPrimaryStyleName.
@@ -601,7 +602,7 @@ public abstract class UIObject implements HasVisibility {
    * @return the object's offset height
    */
   public int getOffsetHeight() {
-    return getElement().ensureDomImpl().getPropertyInt("offsetHeight");
+    return getElement().implAccess().remote().getPropertyInt("offsetHeight");
   }
 
   /**
@@ -611,7 +612,7 @@ public abstract class UIObject implements HasVisibility {
    * @return the object's offset width
    */
   public int getOffsetWidth() {
-    return getElement().ensureDomImpl().getPropertyInt("offsetWidth");
+    return getElement().implAccess().remote().getPropertyInt("offsetWidth");
   }
 
   /**

@@ -48,7 +48,7 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		if (o instanceof JavaScriptObject) {
 			JavaScriptObject jso = (JavaScriptObject) o;
 			assert isJso(jso);
-			return LocalDomBridge.nodeFor(jso);
+			return LocalDom.nodeFor(jso);
 		} else {
 			return (Node) o;
 		}
@@ -76,14 +76,11 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
         }
 	}-*/;
 
-	protected abstract <T extends DomNode> T local();
-
-	protected abstract <T extends DomNode> T remote();
-
 	protected Node() {
 	}
 
 	public <T extends Node> T appendChild(T newChild) {
+		writeCheck();
 		T node = local().appendChild(newChild);
 		remote().appendChild(newChild);
 		return node;
@@ -92,6 +89,15 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	@Override
 	public void callMethod(String methodName) {
 		DomNodeStatic.callMethod(this, methodName);
+	}
+
+	boolean fromParsedRemote;
+
+	protected void writeCheck() {
+		if (fromParsedRemote && !linkedToRemote()
+				&& !LocalDom.isDisableWriteCheck()) {
+			LocalDom.ensureRemote((Element) this);
+		}
 	}
 
 	public abstract <T extends JavascriptObjectEquivalent> T cast();
@@ -187,9 +193,6 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		return getNodeType() == ELEMENT_NODE;
 	}
 
-	protected abstract void putRemote(NodeRemote nodeDom);
-
-
 	@Override
 	public Node removeAllChildren() {
 		return DomNodeStatic.removeAllChildren(this);
@@ -215,4 +218,12 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	public void setNodeValue(String nodeValue) {
 		local().setNodeValue(nodeValue);
 	}
+
+	protected abstract boolean linkedToRemote();
+
+	protected abstract <T extends DomNode> T local();
+
+	protected abstract void putRemote(NodeRemote nodeDom);
+
+	protected abstract <T extends DomNode> T remote();
 }

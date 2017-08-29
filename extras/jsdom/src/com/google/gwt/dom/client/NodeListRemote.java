@@ -50,7 +50,7 @@ public class NodeListRemote<T extends Node> extends JavaScriptObject
 
 	@Override
 	public final T getItem(int index) {
-		return LocalDomBridge.nodeFor(getItem0(index));
+		return LocalDom.nodeFor(getItem0(index));
 	}
 
 	/**

@@ -23,7 +23,7 @@ import com.google.gwt.dom.client.Element;
 public class TextBoxImpl {
 
   public native int getCursorPos(Element elem_multi) /*-{
-  	var elem = elem_multi.@com.google.gwt.dom.client.Element::ensureJso()();
+  	var elem = elem_multi.@com.google.gwt.dom.client.Element::typedRemote()();
     // Guard needed for FireFox.
      try{
        return elem.selectionStart;
@@ -33,7 +33,7 @@ public class TextBoxImpl {
   }-*/;
 
   public native int getSelectionLength(Element elem_multi) /*-{
-  	var elem = elem_multi.@com.google.gwt.dom.client.Element::ensureJso()();
+  	var elem = elem_multi.@com.google.gwt.dom.client.Element::typedRemote()();
     // Guard needed for FireFox.
     try{
       return elem.selectionEnd - elem.selectionStart;
@@ -51,7 +51,7 @@ public class TextBoxImpl {
   }
 
   public native void setSelectionRange(Element elem_multi, int pos, int length) /*-{
-  	var elem = elem_multi.@com.google.gwt.dom.client.Element::ensureJso()();
+  	var elem = elem_multi.@com.google.gwt.dom.client.Element::typedRemote()();
     try {
       elem.setSelectionRange(pos, pos + length);
     } catch (e) {

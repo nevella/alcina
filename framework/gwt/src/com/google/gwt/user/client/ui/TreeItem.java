@@ -373,7 +373,6 @@ public class TreeItem extends UIObject
 		Element elem = Document.get().createDivElement();
 		elem.ensureId();;
 		setElement(elem);
-		elem.localDomResolutionOnly();
 		//contentElem = PotentialElement.build(this).cast();
 		contentElem = Document.get().createDivElement();
 		contentElem.ensureId();

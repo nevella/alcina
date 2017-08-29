@@ -95,7 +95,8 @@ public class TableSectionElement extends Element {
 	}-*/;
 
 	public void deleteRow(int index) {
-		deleteRow0(domImpl, index);
+		// deleteRow0(domImpl, index);
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -132,19 +133,14 @@ public class TableSectionElement extends Element {
 	 * The collection of rows in this table section.
 	 */
 	public NodeList<TableRowElement> getRows() {
-		if (provideIsLocal()) {
-			List<Node> nodes = new ArrayList<>();
-			NodeList<Node> childNodes = getChildNodes();
-			for (Node node : childNodes) {
-				if (node.getNodeName().equalsIgnoreCase(TableRowElement.TAG)) {
-					nodes.add(node);
-				}
+		List<Node> nodes = new ArrayList<>();
+		NodeList<Node> childNodes = getChildNodes();
+		for (Node node : childNodes) {
+			if (node.getNodeName().equalsIgnoreCase(TableRowElement.TAG)) {
+				nodes.add(node);
 			}
-			return new NodeList<>(
-					(NodeListWrapped) new NodeListWrapped<>(nodes));
-		} else {
-			return new NodeList<>(getRows0(domImpl));
 		}
+		return new NodeList<>((NodeListWrapped) new NodeListWrapped<>(nodes));
 	}
 
 	private final native NodeListRemote getRows0(ElementRemote elem) /*-{

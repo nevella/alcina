@@ -1,0 +1,265 @@
+package com.google.gwt.dom.client;
+
+import cc.alcina.framework.common.client.util.StringMap;
+
+public class HtmlParser {
+	enum TokenState {
+		EXPECTING_NODE, EXPECTING_TAG, TEXT, EXPECTING_COMMENT,
+		EXPECTING_ATTRIBUTES, EXPECTING_ATTR_SEP, EXPECTING_ATTR_VALUE_DELIM,
+		EXPECTING_ATTR_VALUE
+	}
+
+	StringBuilder builder = new StringBuilder();
+
+	boolean builderIsWhiteSpace = true;
+
+	boolean selfCloseTag = false;
+
+	TokenState tokenState;
+
+	void resetBuilder() {
+		builder.setLength(0);
+	}
+
+	int idx = 0;
+
+	private String html;
+
+	private String tag;
+
+	private String attrName;
+
+	private char attrDelim;
+
+	private String attrValue;
+
+	// FIXME - optimise
+	private StringMap attributes = new StringMap();
+
+	private Element rootResult;
+
+	private Element cursor;
+
+	public Element parse(ElementRemote root) {
+		resetBuilder();
+		tokenState = TokenState.EXPECTING_NODE;
+		html = root.getOuterHtml();
+		LocalDom.setDisableWriteCheck(true);
+		while (idx < html.length()) {
+			char c = html.charAt(idx++);
+			boolean isWhiteSpace = false;
+			boolean emptyBuffer = builder.length() == 0;
+			switch (c) {
+			case ' ':
+			case '\t':
+			case '\n':
+			case '\r':
+				isWhiteSpace = true;
+			}
+			// ignoreable whitespace
+			switch (tokenState) {
+			case EXPECTING_NODE:
+				if (c == '<') {
+					resetBuilder();
+					tokenState = TokenState.EXPECTING_TAG;
+				} else {
+					tokenState = TokenState.TEXT;
+					builder.append(c);
+				}
+				break;
+			case TEXT:
+				if (c == '<') {
+					emitText(builder.toString());
+					resetBuilder();
+					tokenState = TokenState.EXPECTING_TAG;
+				} else {
+					builder.append(c);
+				}
+				break;
+			case EXPECTING_TAG:
+				selfCloseTag = false;
+				if (isWhiteSpace) {
+					tag = builder.toString();
+					resetBuilder();
+					if (tag.equals("!--")) {
+						tokenState = TokenState.EXPECTING_COMMENT;
+					} else {
+						tokenState = TokenState.EXPECTING_ATTRIBUTES;
+					}
+				} else {
+					switch (c) {
+					case '/':
+						if (builder.length() > 0) {
+							selfCloseTag = true;
+						} else {
+							builder.append(c);
+						}
+						break;
+					case '>':
+						emitElement();
+						resetBuilder();
+						break;
+					default:
+						builder.append(c);
+						break;
+					}
+				}
+				break;
+			case EXPECTING_COMMENT:
+				if (c == '>' && builder.toString().endsWith("--")) {
+					builder.setLength(builder.length() - 2);
+					emitComment(builder.toString());
+					resetBuilder();
+					tokenState = TokenState.EXPECTING_NODE;
+				} else {
+					builder.append(c);
+				}
+				break;
+			case EXPECTING_ATTRIBUTES:
+				if (isWhiteSpace) {
+					continue;
+				}
+				switch (c) {
+				case '/':
+					selfCloseTag = true;
+					break;
+				case '>':
+					emitElement();
+					resetBuilder();
+					break;
+				default:
+					builder.append(c);
+					tokenState = TokenState.EXPECTING_ATTR_SEP;
+					break;
+				}
+				break;
+			case EXPECTING_ATTR_SEP:
+				switch (c) {
+				case '=':
+					attrName = builder.toString();
+					attrValue = "";
+					resetBuilder();
+					tokenState = TokenState.EXPECTING_ATTR_VALUE_DELIM;
+					break;
+				default:
+					builder.append(c);
+					break;
+				}
+				break;
+			case EXPECTING_ATTR_VALUE_DELIM:
+				switch (c) {
+				case '"':
+				case '\'':
+					attrDelim = c;
+					tokenState = TokenState.EXPECTING_ATTR_VALUE;
+					break;
+				case ' ':
+					emitAttribute();
+					resetBuilder();
+					break;
+				default:
+					attrDelim = ' ';
+					builder.append(c);
+					tokenState = TokenState.EXPECTING_ATTR_VALUE;
+					break;
+				}
+				break;
+			case EXPECTING_ATTR_VALUE:
+				boolean handled = false;
+				if (attrDelim == ' ' && c == '>') {
+					emitAttribute();
+					emitElement();
+					resetBuilder();
+					break;
+				}
+				if (c == attrDelim) {
+					emitAttribute();
+					resetBuilder();
+					tokenState = TokenState.EXPECTING_ATTRIBUTES;
+					break;
+				}
+				builder.append(c);
+				break;
+			}
+		}
+		LocalDom.setDisableWriteCheck(false);
+		return rootResult;
+	}
+
+	private void emitAttribute() {
+		attributes.put(attrName, resolveEntities(attrValue));
+	}
+
+	private String resolveEntities(String text) {
+		return text;
+	}
+
+	private void emitElement() {
+		boolean closeTag = false;
+		if (tag == null) {
+			tag = builder.toString();
+			if (tag.startsWith("/")) {
+				tag = tag.substring(1);
+				closeTag = true;
+			}
+		}
+		if (!closeTag) {
+			emitStartElement(tag);
+		}
+		// https://www.thoughtco.com/html-singleton-tags-3468620
+		switch (tag) {
+		case "area":
+		case "base":
+		case "br":
+		case "col":
+		case "command":
+		case "embed":
+		case "hr":
+		case "img":
+		case "input":
+		case "keygen":
+		case "link":
+		case "meta":
+		case "param":
+		case "source":
+		case "track":
+		case "wbr":
+			selfCloseTag = true;
+			break;
+		}
+		if (closeTag || selfCloseTag) {
+			emitEndElement(tag);
+		}
+		tokenState = TokenState.EXPECTING_NODE;
+		tag = null;
+		selfCloseTag = false;
+	}
+
+	private void emitStartElement(String tag) {
+		Element element = Document.get().createElement(tag);
+		element.fromParsedRemote=true;
+		element.local().attributes = attributes;
+		attributes = new StringMap();
+		if (rootResult == null) {
+			rootResult = element;
+			cursor = element;
+		} else {
+			cursor.appendChild(element);
+			cursor = element;
+		}
+	}
+
+	private void emitEndElement(String tag) {
+		cursor = cursor.getParentElement();
+	}
+
+	private void emitComment(String string) {
+		// FIXME - probably add comments, PIs...
+	}
+
+	private void emitText(String string) {
+		Text text = Document.get().createTextNode(resolveEntities(string));
+		text.fromParsedRemote=true;
+		cursor.appendChild(text);
+	}
+}

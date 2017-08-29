@@ -89,7 +89,8 @@ public class TableElement extends Element {
 	}-*/;
 
 	public TableCaptionElement createCaption() {
-		return LocalDomBridge.nodeFor(createCaption0(domImpl));
+		throw new UnsupportedOperationException();
+//		return LocalDom.nodeFor(createCaption0(domImpl));
 	}
 
 	/**
@@ -102,12 +103,13 @@ public class TableElement extends Element {
 	}-*/;
 
 	public TableSectionElement createTFoot() {
-		if (provideIsLocal()) {
-			return (TableSectionElement) provideLocalDomElement()
-					.createOrReturnChild("tfoot");
-		} else {
-			return LocalDomBridge.nodeFor(createTFoot0(domImpl));
-		}
+		throw new UnsupportedOperationException();
+//		if (provideIsLocal()) {
+//			return (TableSectionElement) provideLocalDomElement()
+//					.createOrReturnChild("tfoot");
+//		} else {
+//			return LocalDom.nodeFor(createTFoot0(domImpl));
+//		}
 	}
 
 	/**
@@ -120,12 +122,13 @@ public class TableElement extends Element {
 	}-*/;
 
 	public TableSectionElement createTHead() {
-		if (provideIsLocal()) {
-			return (TableSectionElement) provideLocalDomElement()
-					.createOrReturnChild("thead");
-		} else {
-			return LocalDomBridge.nodeFor(createTHead0(domImpl));
-		}
+		throw new UnsupportedOperationException();
+//		if (provideIsLocal()) {
+//			return (TableSectionElement) provideLocalDomElement()
+//					.createOrReturnChild("thead");
+//		} else {
+//			return LocalDom.nodeFor(createTHead0(domImpl));
+//		}
 	}
 
 	/**
@@ -136,7 +139,8 @@ public class TableElement extends Element {
 	}-*/;
 
 	public void deleteCaption() {
-		deleteCaption0(domImpl);
+		throw new UnsupportedOperationException();
+//		deleteCaption0(domImpl);
 	}
 
 	/**
@@ -153,7 +157,8 @@ public class TableElement extends Element {
 	}-*/;
 
 	public void deleteRow(int index) {
-		deleteRow0(domImpl, index);
+		throw new UnsupportedOperationException();
+//		deleteRow0(domImpl, index);
 	}
 
 	/**
@@ -164,7 +169,8 @@ public class TableElement extends Element {
 	}-*/;
 
 	public void deleteTFoot() {
-		deleteTFoot0(domImpl);
+		throw new UnsupportedOperationException();
+//		deleteTFoot0(domImpl);
 	}
 
 	/**
@@ -175,7 +181,8 @@ public class TableElement extends Element {
 	}-*/;
 
 	public void deleteTHead() {
-		deleteTHead0(domImpl);
+		throw new UnsupportedOperationException();
+//		deleteTHead0(domImpl);
 	}
 
 	/**
@@ -253,14 +260,15 @@ public class TableElement extends Element {
 	 * Returns a collection of the table bodies (including implicit ones).
 	 */
 	public NodeList<TableSectionElement> getTBodies() {
-		if (provideIsLocal()) {
-			TableSectionElement body = (TableSectionElement) provideLocalDomElement()
-					.createOrReturnChild("tbody");
-			return new NodeList<>(
-					new NodeListWrapped(Collections.singletonList(body)));
-		} else {
-			return new NodeList<>(getTBodies0(ensureJso()));
-		}
+		throw new UnsupportedOperationException();
+//		if (provideIsLocal()) {
+//			TableSectionElement body = (TableSectionElement) provideLocalDomElement()
+//					.createOrReturnChild("tbody");
+//			return new NodeList<>(
+//					new NodeListWrapped(Collections.singletonList(body)));
+//		} else {
+//			return new NodeList<>(getTBodies0(typedRemote()));
+//		}
 	}
 
 	/**
@@ -288,14 +296,16 @@ public class TableElement extends Element {
 	 * The table's TFOOT, or null if none exists.
 	 */
 	public TableSectionElement getTFoot() {
-		return LocalDomBridge.nodeFor(getTFoot0(ensureJso()));
+		throw new UnsupportedOperationException();
+//		return LocalDom.nodeFor(getTFoot0(typedRemote()));
 	}
 
 	/**
 	 * The table's THEAD, or null if none exists.
 	 */
 	public TableSectionElement getTHead() {
-		return LocalDomBridge.nodeFor(getTHead0(ensureJso()));
+		throw new UnsupportedOperationException();
+//		return LocalDom.nodeFor(getTHead0(typedRemote()));
 	}
 
 	/**

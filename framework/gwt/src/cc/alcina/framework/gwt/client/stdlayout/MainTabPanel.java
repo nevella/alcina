@@ -99,7 +99,7 @@ public class MainTabPanel extends TabPanel {
 		mainMenuContainer.add(dockPanel);
 		tabBarProt = (TabBar) vp.getWidget(0);
 		vp.remove(tabBarProt);
-		vp.getElement().dumpLocal();
+		vp.getElement().dump();
 		if (isWrapCenterContainer()) {
 			centerContainer = new SpanPanel();
 			centerContainer.add(tabBarProt);

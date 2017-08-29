@@ -20,12 +20,11 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementRemote;
-import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.LocalDomBridge;
+import com.google.gwt.dom.client.Node;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
-
-import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * Base implementation of {@link com.google.gwt.user.client.impl.DOMImpl} shared
@@ -140,7 +139,7 @@ public abstract class DOMImplStandard extends DOMImpl {
 
   @Override
   public  Element getChild(Element elem, int index) {
-	  return LocalDomBridge.nodeFor(getChild0(LocalDomBridge.elementJso(elem),index));
+	  return elem.getChildElement(index);
   }
   
    native ElementRemote getChild0(ElementRemote elem, int index) /*-{
@@ -170,7 +169,7 @@ public abstract class DOMImplStandard extends DOMImpl {
 
   @Override
   public  int getChildIndex(Element parent, Element toFind) {
-  		return getChildIndex0(parent.ensureJso(), toFind.ensureJso());
+  		return getChildIndex0(parent.typedRemote(), toFind.typedRemote());
   }
   native int getChildIndex0(ElementRemote parent, ElementRemote toFind) /*-{
     var count = 0, child = parent.firstChild;
@@ -220,14 +219,14 @@ public abstract class DOMImplStandard extends DOMImpl {
   @Override
   public void sinkBitlessEvent(Element elem, String eventTypeName) {
     maybeInitializeEventSystem();
-    sinkBitlessEventImpl(LocalDomBridge.elementJso(elem), eventTypeName);
+    sinkBitlessEventImpl(elem.typedRemote(), eventTypeName);
   }
 
   @Override
   public void sinkEvents(Element elem, int bits) {
     maybeInitializeEventSystem();
-    ElementRemote elem_jso = LocalDomBridge.elementJso(elem);
-	sinkEventsImpl(elem_jso, bits);
+    ElementRemote remote = elem.typedRemote();
+	sinkEventsImpl(remote, bits);
   }
 
   @SuppressWarnings("deprecation")

@@ -23,7 +23,7 @@ import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.LocalDomBridge;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.NodeRemote;
 import com.google.gwt.http.client.UrlBuilder;
@@ -120,7 +120,7 @@ public class ClientUtils {
 				return null;
 			}
 			headList.getItem(0).appendChild(styleElement);
-			LocalDomBridge.get().flush();
+			LocalDom.flush();
 		}
 		if (css.length() != 0) {
 			try {
@@ -154,7 +154,7 @@ public class ClientUtils {
 
 	public static native boolean setCssTextViaCssTextProperty(Element elem,
 			String css) /*-{
-        var styleTag = elem.@com.google.gwt.dom.client.Element::ensureJso()();
+        var styleTag = elem.@com.google.gwt.dom.client.Element::typedRemote()();
         var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
 
         if ('cssText' in sheet) { // Internet Explorer
@@ -406,7 +406,7 @@ public class ClientUtils {
 
 	public static native void invokeJsDebugger(Element e) /*-{
         var v = e;
-        var jso = e.@com.google.gwt.dom.client.Element::domImpl;
+        var jso = e.@com.google.gwt.dom.client.Element::typedRemote();
         debugger;
 	}-*/;
 
@@ -450,7 +450,7 @@ public class ClientUtils {
 	}
 
 	public static void dumpElementTree(Element elt) {
-		NodeRemote jso = elt.ensureJso();
+		NodeRemote jso = elt.typedRemote();
 		while (jso != null) {
 			System.out
 					.println(Ax.format("dump - %s - %s", jso.hashCode(), jso));

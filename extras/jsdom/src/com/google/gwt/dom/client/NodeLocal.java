@@ -28,13 +28,11 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 
 	protected List<NodeLocal> children = new ArrayList<>();
 
-	protected Map<String, String> attributes = LocalDomBridge.get().collections
-			.createStringMap();
-
 	protected NodeLocal parentNode;
 
 	protected DocumentLocal ownerDocument;
 
+	//FIXME - node should be typed - and parentnode can be the doc (of the html/doc elt)
 	protected Node node;
 
 	@Override
@@ -45,57 +43,9 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
-		maybeConvertToLocal(newChild, false);
-		Preconditions
-				.checkArgument(newChild.implNoResolve() instanceof NodeLocal);
-		children.add((NodeLocal) newChild.implNoResolve());
-		((NodeLocal) newChild.implNoResolve()).parentNode = this;
-		LocalDomBridge.debug.added((NodeLocal) newChild.implNoResolve());
+		children.add(newChild.local());
+		((NodeLocal) newChild.local()).setParentNode(this);
 		return newChild;
-	}
-
-	private static <T extends Node> void maybeConvertToLocal(T node,
-			boolean deep) {
-		if (!(node.implNoResolve() instanceof NodeLocal)) {
-			if (node.getNodeType() == Node.TEXT_NODE) {
-				TextRemote text = (TextRemote) node.implNoResolve();
-				node.putImpl(new TextLocal(text.getData()));
-			} else {
-				ElementRemote elt = (ElementRemote) node.implNoResolve();
-				// must detach all refs to existing nodes
-				LocalDomBridge.get().detachDomNode(elt);
-				DomNode localImpl = node.localImpl();
-				ElementLocal jvmEltOld = localImpl instanceof ElementLocal
-						? (ElementLocal) localImpl : null;
-				ElementLocal jvmElt = jvmEltOld != null ? jvmEltOld
-						: (ElementLocal) LocalDomBridge
-								.get().localDomImpl.localImpl
-										.createUnwrappedLocalElement(
-												Document.get(),
-												elt.getTagName());
-				jvmElt.attributes.clear();
-				elt.getAttributes().entrySet().forEach(e -> {
-					jvmElt.setAttribute(e.getKey(), e.getValue());
-				});
-				jvmElt.node = node;
-				node.putImpl(jvmElt);
-				if (jvmElt.children.isEmpty()) {
-					// Preconditions.checkState(elt.getInnerHTML0().isEmpty());
-					jvmElt.setInnerHTML(elt.getInnerHTML0());
-				} else {
-					for (NodeLocal child : jvmElt.children) {
-						maybeConvertToLocal(child.node, true);
-					}
-				}
-			}
-		} else {
-			if (deep) {
-				for (NodeLocal child : ((NodeLocal) node
-						.implNoResolve()).children) {
-					maybeConvertToLocal(child.node, true);
-				}
-			}
-		}
 	}
 
 	@Override
@@ -111,6 +61,10 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 	@Override
 	public Node getFirstChild() {
 		return nodeFor(CommonUtils.first(children));
+	}
+
+	private Node nodeFor(NodeLocal nodeLocal) {
+		return nodeLocal == null ? null : nodeLocal.nodeFor();
 	}
 
 	@Override
@@ -129,12 +83,12 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 
 	@Override
 	public Document getOwnerDocument() {
-		return (Document) LocalDomBridge.nodeFor(ownerDocument);
+		return ownerDocument.documentFor();
 	}
 
 	@Override
 	public Node getParentNode() {
-		return LocalDomBridge.nodeFor(parentNode);
+		return nodeFor(parentNode);
 	}
 
 	@Override
@@ -150,28 +104,28 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 
 	@Override
 	public Node insertBefore(Node newChild, Node refChild) {
-		maybeConvertToLocal(newChild, false);
-		Preconditions.checkArgument(newChild.impl() instanceof NodeLocal);
-		Preconditions.checkArgument(
-				refChild == null || refChild.impl() instanceof NodeLocal);
 		if (refChild == null) {
-			children.add((NodeLocal) newChild.impl());
+			children.add(newChild.local());
 		} else {
-			int idx = children.indexOf(refChild.impl());
+			int idx = children.indexOf(newChild.local());
 			Preconditions.checkArgument(idx != -1,
 					"refchild not a child of this node");
-			children.add(idx, (NodeLocal) newChild.impl());
+			children.add(idx, newChild.local());
 		}
-		((NodeLocal) newChild.impl()).parentNode = this;
-		LocalDomBridge.debug.added((NodeLocal) newChild.impl());
+		((NodeLocal) newChild.local()).setParentNode(this);
 		return newChild;
+	}
+
+	void setParentNode(NodeLocal local) {
+		// TODO - trigger check of the registered element graph
+		parentNode = local;
 	}
 
 	@Override
 	public boolean isOrHasChild(Node child) {
 		// FIXME
-		return false;
-		// throw new UnsupportedOperationException();
+		// return false;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -183,11 +137,8 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 
 	@Override
 	public Node removeChild(Node oldChild) {
-		Preconditions.checkArgument(oldChild.impl() instanceof NodeLocal);
-		NodeLocal oldChild_Jvm = (NodeLocal) oldChild.impl();
-		LocalDomBridge.debug.removed(oldChild_Jvm);
-		oldChild_Jvm.parentNode = null;
-		children.remove(oldChild_Jvm);
+		((NodeLocal) oldChild.local()).setParentNode(null);
+		children.remove(oldChild.local());
 		return oldChild;
 	}
 
@@ -203,7 +154,7 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 
 	@Override
 	public Element getParentElement() {
-		return LocalDomBridge.nodeFor(parentNode);
+		return parentNode == null ? null : (Element) parentNode.node;
 	}
 
 	@Override

@@ -7,17 +7,16 @@ import com.google.gwt.regexp.shared.RegExp;
 
 public interface LocalDomElement extends LocalDomNode {
 	default Element createOrReturnChild(String tagName) {
-		Optional<LocalDomNode> optional = localDomChildren().stream()
-				.filter(n -> n.getNodeName().equals(tagName)).findFirst();
+		Optional<Node> optional = nodeFor().getChildNodes().stream()
+		.filter(n -> n.getNodeName().equals(tagName)).findFirst();
 		if (optional.isPresent()) {
-			return LocalDomBridge.nodeFor((NodeLocal) optional.get());
+			return (Element) optional.get();
 		}
-		LocalDomElement newElement = create(tagName);
-		appendChild(LocalDomBridge.nodeFor((NodeLocal) newElement));
-		return LocalDomBridge.nodeFor((NodeLocal) newElement);
+		Element newElement = nodeFor().getOwnerDocument().createElement(tagName);
+		nodeFor().appendChild(newElement);
+		return newElement;
 	}
 
-	LocalDomElement create(String tagName);
 
 	void setAttribute(String name, String value);
 
@@ -92,7 +91,6 @@ public interface LocalDomElement extends LocalDomNode {
 	int getEventBits();
 
 	String getPendingInnerHtml();
-	void treeResolved();
 
 	
 }

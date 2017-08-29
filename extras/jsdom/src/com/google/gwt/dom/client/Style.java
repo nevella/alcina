@@ -31,6 +31,8 @@ import java.util.Map;
  * @see Element#getStyle()
  */
 public class Style implements DomStyle {
+	private Element element;
+
 	/**
 	 * Interface to be implemented by enumerated CSS values.
 	 */
@@ -988,647 +990,764 @@ public class Style implements DomStyle {
 		public abstract String getCssName();
 	}
 
-	protected Style() {
+	protected Style(Element element) {
+		this.element = element;
 	}
 
-	DomStyle localImpl;
-	DomStyle remoteImpl;
-	
-	DomStyle impl;
+	private DomStyle local = new StyleLocal();
+
+	private DomStyle remote = new StyleNull();
+
+	protected DomStyle remote() {
+		if (!linkedToRemote() && element.linkedToRemote()) {
+			remote = element.typedRemote().getStyleRemote();
+		}
+		return remote;
+	}
+
+	boolean linkedToRemote() {
+		return remote != StyleNull.INSTANCE;
+	}
+
+	protected DomStyle local() {
+		return local;
+	}
 
 	public void clearBackgroundColor() {
-		this.impl.clearBackgroundColor();
+		local().clearBackgroundColor();
+		remote().clearBackgroundColor();
 	}
 
 	public void clearBackgroundImage() {
-		this.impl.clearBackgroundImage();
+		local().clearBackgroundImage();
+		remote().clearBackgroundImage();
 	}
 
 	public void clearBorderColor() {
-		this.impl.clearBorderColor();
+		local().clearBorderColor();
+		remote().clearBorderColor();
 	}
 
 	public void clearBorderStyle() {
-		this.impl.clearBorderStyle();
+		local().clearBorderStyle();
+		remote().clearBorderStyle();
 	}
 
 	public void clearBorderWidth() {
-		this.impl.clearBorderWidth();
+		local().clearBorderWidth();
+		remote().clearBorderWidth();
 	}
 
 	public void clearBottom() {
-		this.impl.clearBottom();
+		local().clearBottom();
+		remote().clearBottom();
 	}
 
 	public void clearClear() {
-		this.impl.clearClear();
+		local().clearClear();
+		remote().clearClear();
 	}
 
 	public void clearColor() {
-		this.impl.clearColor();
+		local().clearColor();
+		remote().clearColor();
 	}
 
 	public void clearCursor() {
-		this.impl.clearCursor();
+		local().clearCursor();
+		remote().clearCursor();
 	}
 
 	public void clearDisplay() {
-		this.impl.clearDisplay();
+		local().clearDisplay();
+		remote().clearDisplay();
 	}
 
 	public void clearFloat() {
-		this.impl.clearFloat();
+		local().clearFloat();
+		remote().clearFloat();
 	}
 
 	public void clearFontSize() {
-		this.impl.clearFontSize();
+		local().clearFontSize();
+		remote().clearFontSize();
 	}
 
 	public void clearFontStyle() {
-		this.impl.clearFontStyle();
+		local().clearFontStyle();
+		remote().clearFontStyle();
 	}
 
 	public void clearFontWeight() {
-		this.impl.clearFontWeight();
+		local().clearFontWeight();
+		remote().clearFontWeight();
 	}
 
 	public void clearHeight() {
-		this.impl.clearHeight();
+		local().clearHeight();
+		remote().clearHeight();
 	}
 
 	public void clearLeft() {
-		this.impl.clearLeft();
+		local().clearLeft();
+		remote().clearLeft();
 	}
 
 	public void clearLineHeight() {
-		this.impl.clearLineHeight();
+		local().clearLineHeight();
+		remote().clearLineHeight();
 	}
 
 	public void clearListStyleType() {
-		this.impl.clearListStyleType();
+		local().clearListStyleType();
+		remote().clearListStyleType();
 	}
 
 	public void clearMargin() {
-		this.impl.clearMargin();
+		local().clearMargin();
+		remote().clearMargin();
 	}
 
 	public void clearMarginBottom() {
-		this.impl.clearMarginBottom();
+		local().clearMarginBottom();
+		remote().clearMarginBottom();
 	}
 
 	public void clearMarginLeft() {
-		this.impl.clearMarginLeft();
+		local().clearMarginLeft();
+		remote().clearMarginLeft();
 	}
 
 	public void clearMarginRight() {
-		this.impl.clearMarginRight();
+		local().clearMarginRight();
+		remote().clearMarginRight();
 	}
 
 	public void clearMarginTop() {
-		this.impl.clearMarginTop();
+		local().clearMarginTop();
+		remote().clearMarginTop();
 	}
 
 	public void clearOpacity() {
-		this.impl.clearOpacity();
+		local().clearOpacity();
+		remote().clearOpacity();
 	}
 
 	public Style styleObject() {
-		return this.impl.styleObject();
+		// return local().styleObject();
+		throw new UnsupportedOperationException();// do we need this?
 	}
 
 	public void clearOutlineColor() {
-		this.impl.clearOutlineColor();
+		local().clearOutlineColor();
+		remote().clearOutlineColor();
 	}
 
 	public void clearOutlineStyle() {
-		this.impl.clearOutlineStyle();
+		local().clearOutlineStyle();
+		remote().clearOutlineStyle();
 	}
 
 	public void clearOutlineWidth() {
-		this.impl.clearOutlineWidth();
+		local().clearOutlineWidth();
+		remote().clearOutlineWidth();
 	}
 
 	public void clearOverflow() {
-		this.impl.clearOverflow();
+		local().clearOverflow();
+		remote().clearOverflow();
 	}
 
 	public void clearOverflowX() {
-		this.impl.clearOverflowX();
+		local().clearOverflowX();
+		remote().clearOverflowX();
 	}
 
 	public void clearOverflowY() {
-		this.impl.clearOverflowY();
+		local().clearOverflowY();
+		remote().clearOverflowY();
 	}
 
 	public void clearPadding() {
-		this.impl.clearPadding();
+		local().clearPadding();
+		remote().clearPadding();
 	}
 
 	public void clearPaddingBottom() {
-		this.impl.clearPaddingBottom();
+		local().clearPaddingBottom();
+		remote().clearPaddingBottom();
 	}
 
 	public void clearPaddingLeft() {
-		this.impl.clearPaddingLeft();
+		local().clearPaddingLeft();
+		remote().clearPaddingLeft();
 	}
 
 	public void clearPaddingRight() {
-		this.impl.clearPaddingRight();
+		local().clearPaddingRight();
+		remote().clearPaddingRight();
 	}
 
 	public void clearPaddingTop() {
-		this.impl.clearPaddingTop();
+		local().clearPaddingTop();
+		remote().clearPaddingTop();
 	}
 
 	public void clearPosition() {
-		this.impl.clearPosition();
+		local().clearPosition();
+		remote().clearPosition();
 	}
 
 	public void clearProperty(String name) {
-		this.impl.clearProperty(name);
+		local().clearProperty(name);
+		remote().clearProperty(name);
 	}
 
 	public void clearRight() {
-		this.impl.clearRight();
+		local().clearRight();
+		remote().clearRight();
 	}
 
 	public void clearTableLayout() {
-		this.impl.clearTableLayout();
+		local().clearTableLayout();
+		remote().clearTableLayout();
 	}
 
 	public void clearTextAlign() {
-		this.impl.clearTextAlign();
+		local().clearTextAlign();
+		remote().clearTextAlign();
 	}
 
 	public void clearTextDecoration() {
-		this.impl.clearTextDecoration();
+		local().clearTextDecoration();
+		remote().clearTextDecoration();
 	}
 
 	public void clearTextIndent() {
-		this.impl.clearTextIndent();
+		local().clearTextIndent();
+		remote().clearTextIndent();
 	}
 
 	public void clearTextJustify() {
-		this.impl.clearTextJustify();
+		local().clearTextJustify();
+		remote().clearTextJustify();
 	}
 
 	public void clearTextOverflow() {
-		this.impl.clearTextOverflow();
+		local().clearTextOverflow();
+		remote().clearTextOverflow();
 	}
 
 	public void clearTextTransform() {
-		this.impl.clearTextTransform();
+		local().clearTextTransform();
+		remote().clearTextTransform();
 	}
 
 	public void clearTop() {
-		this.impl.clearTop();
+		local().clearTop();
+		remote().clearTop();
 	}
 
 	public void clearVisibility() {
-		this.impl.clearVisibility();
+		local().clearVisibility();
+		remote().clearVisibility();
 	}
 
 	public void clearWhiteSpace() {
-		this.impl.clearWhiteSpace();
+		local().clearWhiteSpace();
+		remote().clearWhiteSpace();
 	}
 
 	public void clearWidth() {
-		this.impl.clearWidth();
+		local().clearWidth();
+		remote().clearWidth();
 	}
 
 	public void clearZIndex() {
-		this.impl.clearZIndex();
+		local().clearZIndex();
+		remote().clearZIndex();
 	}
 
 	public String getBackgroundColor() {
-		return this.impl.getBackgroundColor();
+		return local().getBackgroundColor();
 	}
 
 	public String getBackgroundImage() {
-		return this.impl.getBackgroundImage();
+		return local().getBackgroundImage();
 	}
 
 	public String getBorderColor() {
-		return this.impl.getBorderColor();
+		return local().getBorderColor();
 	}
 
 	public String getBorderStyle() {
-		return this.impl.getBorderStyle();
+		return local().getBorderStyle();
 	}
 
 	public String getBorderWidth() {
-		return this.impl.getBorderWidth();
+		return local().getBorderWidth();
 	}
 
 	public String getBottom() {
-		return this.impl.getBottom();
+		return local().getBottom();
 	}
 
 	public String getClear() {
-		return this.impl.getClear();
+		return local().getClear();
 	}
 
 	public String getColor() {
-		return this.impl.getColor();
+		return local().getColor();
 	}
 
 	public String getCursor() {
-		return this.impl.getCursor();
+		return local().getCursor();
 	}
 
 	public String getDisplay() {
-		return this.impl.getDisplay();
+		return local().getDisplay();
 	}
 
 	public String getFontSize() {
-		return this.impl.getFontSize();
+		return local().getFontSize();
 	}
 
 	public String getFontStyle() {
-		return this.impl.getFontStyle();
+		return local().getFontStyle();
 	}
 
 	public String getFontWeight() {
-		return this.impl.getFontWeight();
+		return local().getFontWeight();
 	}
 
 	public String getHeight() {
-		return this.impl.getHeight();
+		return local().getHeight();
 	}
 
 	public String getLeft() {
-		return this.impl.getLeft();
+		return local().getLeft();
 	}
 
 	public String getLineHeight() {
-		return this.impl.getLineHeight();
+		return local().getLineHeight();
 	}
 
 	public String getListStyleType() {
-		return this.impl.getListStyleType();
+		return local().getListStyleType();
 	}
 
 	public String getMargin() {
-		return this.impl.getMargin();
+		return local().getMargin();
 	}
 
 	public String getMarginBottom() {
-		return this.impl.getMarginBottom();
+		return local().getMarginBottom();
 	}
 
 	public String getMarginLeft() {
-		return this.impl.getMarginLeft();
+		return local().getMarginLeft();
 	}
 
 	public String getMarginRight() {
-		return this.impl.getMarginRight();
+		return local().getMarginRight();
 	}
 
 	public String getMarginTop() {
-		return this.impl.getMarginTop();
+		return local().getMarginTop();
 	}
 
 	public String getOpacity() {
-		return this.impl.getOpacity();
+		return local().getOpacity();
 	}
 
 	public String getOverflow() {
-		return this.impl.getOverflow();
+		return local().getOverflow();
 	}
 
 	public String getOverflowX() {
-		return this.impl.getOverflowX();
+		return local().getOverflowX();
 	}
 
 	public String getOverflowY() {
-		return this.impl.getOverflowY();
+		return local().getOverflowY();
 	}
 
 	public String getPadding() {
-		return this.impl.getPadding();
+		return local().getPadding();
 	}
 
 	public String getPaddingBottom() {
-		return this.impl.getPaddingBottom();
+		return local().getPaddingBottom();
 	}
 
 	public String getPaddingLeft() {
-		return this.impl.getPaddingLeft();
+		return local().getPaddingLeft();
 	}
 
 	public String getPaddingRight() {
-		return this.impl.getPaddingRight();
+		return local().getPaddingRight();
 	}
 
 	public String getPaddingTop() {
-		return this.impl.getPaddingTop();
+		return local().getPaddingTop();
 	}
 
 	public String getPosition() {
-		return this.impl.getPosition();
+		return local().getPosition();
 	}
 
 	public String getProperty(String name) {
-		return this.impl.getProperty(name);
+		return local().getProperty(name);
 	}
 
 	public String getRight() {
-		return this.impl.getRight();
+		return local().getRight();
 	}
 
 	public String getTableLayout() {
-		return this.impl.getTableLayout();
+		return local().getTableLayout();
 	}
 
 	public String getTextAlign() {
-		return this.impl.getTextAlign();
+		return local().getTextAlign();
 	}
 
 	public String getTextDecoration() {
-		return this.impl.getTextDecoration();
+		return local().getTextDecoration();
 	}
 
 	public String getTextIndent() {
-		return this.impl.getTextIndent();
+		return local().getTextIndent();
 	}
 
 	public String getTextJustify() {
-		return this.impl.getTextJustify();
+		return local().getTextJustify();
 	}
 
 	public String getTextOverflow() {
-		return this.impl.getTextOverflow();
+		return local().getTextOverflow();
 	}
 
 	public String getTextTransform() {
-		return this.impl.getTextTransform();
+		return local().getTextTransform();
 	}
 
 	public String getTop() {
-		return this.impl.getTop();
+		return local().getTop();
 	}
 
 	public String getVerticalAlign() {
-		return this.impl.getVerticalAlign();
+		return local().getVerticalAlign();
 	}
 
 	public String getVisibility() {
-		return this.impl.getVisibility();
+		return local().getVisibility();
 	}
 
 	public String getWhiteSpace() {
-		return this.impl.getWhiteSpace();
+		return local().getWhiteSpace();
 	}
 
 	public String getWidth() {
-		return this.impl.getWidth();
+		return local().getWidth();
 	}
 
 	public String getZIndex() {
-		return this.impl.getZIndex();
+		return local().getZIndex();
 	}
 
 	public void setBackgroundColor(String value) {
-		this.impl.setBackgroundColor(value);
+		local().setBackgroundColor(value);
+		remote().setBackgroundColor(value);
 	}
 
 	public void setBackgroundImage(String value) {
-		this.impl.setBackgroundImage(value);
+		local().setBackgroundImage(value);
+		remote().setBackgroundImage(value);
 	}
 
 	public void setBorderColor(String value) {
-		this.impl.setBorderColor(value);
+		local().setBorderColor(value);
+		remote().setBorderColor(value);
 	}
 
 	public void setBorderStyle(BorderStyle value) {
-		this.impl.setBorderStyle(value);
+		local().setBorderStyle(value);
+		remote().setBorderStyle(value);
 	}
 
 	public void setBorderWidth(double value, Unit unit) {
-		this.impl.setBorderWidth(value, unit);
+		local().setBorderWidth(value, unit);
+		remote().setBorderWidth(value, unit);
 	}
 
 	public void setBottom(double value, Unit unit) {
-		this.impl.setBottom(value, unit);
+		local().setBottom(value, unit);
+		remote().setBottom(value, unit);
 	}
 
 	public void setClear(Clear value) {
-		this.impl.setClear(value);
+		local().setClear(value);
+		remote().setClear(value);
 	}
 
 	public void setColor(String value) {
-		this.impl.setColor(value);
+		local().setColor(value);
+		remote().setColor(value);
 	}
 
 	public void setCursor(Cursor value) {
-		this.impl.setCursor(value);
+		local().setCursor(value);
+		remote().setCursor(value);
 	}
 
 	public void setDisplay(Display value) {
-		this.impl.setDisplay(value);
+		local().setDisplay(value);
+		remote().setDisplay(value);
 	}
 
 	public void setFloat(Float value) {
-		this.impl.setFloat(value);
+		local().setFloat(value);
+		remote().setFloat(value);
 	}
 
 	public void setFontSize(double value, Unit unit) {
-		this.impl.setFontSize(value, unit);
+		local().setFontSize(value, unit);
+		remote().setFontSize(value, unit);
 	}
 
 	public void setFontStyle(FontStyle value) {
-		this.impl.setFontStyle(value);
+		local().setFontStyle(value);
+		remote().setFontStyle(value);
 	}
 
 	public void setFontWeight(FontWeight value) {
-		this.impl.setFontWeight(value);
+		local().setFontWeight(value);
+		remote().setFontWeight(value);
 	}
 
 	public void setHeight(double value, Unit unit) {
-		this.impl.setHeight(value, unit);
+		local().setHeight(value, unit);
+		remote().setHeight(value, unit);
 	}
 
 	public void setLeft(double value, Unit unit) {
-		this.impl.setLeft(value, unit);
+		local().setLeft(value, unit);
+		remote().setLeft(value, unit);
 	}
 
 	public void setLineHeight(double value, Unit unit) {
-		this.impl.setLineHeight(value, unit);
+		local().setLineHeight(value, unit);
+		remote().setLineHeight(value, unit);
 	}
 
 	public void setListStyleType(ListStyleType value) {
-		this.impl.setListStyleType(value);
+		local().setListStyleType(value);
+		remote().setListStyleType(value);
 	}
 
 	public void setMargin(double value, Unit unit) {
-		this.impl.setMargin(value, unit);
+		local().setMargin(value, unit);
+		remote().setMargin(value, unit);
 	}
 
 	public void setMarginBottom(double value, Unit unit) {
-		this.impl.setMarginBottom(value, unit);
+		local().setMarginBottom(value, unit);
+		remote().setMarginBottom(value, unit);
 	}
 
 	public void setMarginLeft(double value, Unit unit) {
-		this.impl.setMarginLeft(value, unit);
+		local().setMarginLeft(value, unit);
+		remote().setMarginLeft(value, unit);
 	}
 
 	public void setMarginRight(double value, Unit unit) {
-		this.impl.setMarginRight(value, unit);
+		local().setMarginRight(value, unit);
+		remote().setMarginRight(value, unit);
 	}
 
 	public void setMarginTop(double value, Unit unit) {
-		this.impl.setMarginTop(value, unit);
+		local().setMarginTop(value, unit);
+		remote().setMarginTop(value, unit);
 	}
 
 	public void setOpacity(double value) {
-		this.impl.setOpacity(value);
+		local().setOpacity(value);
+		remote().setOpacity(value);
 	}
 
 	public void setOutlineColor(String value) {
-		this.impl.setOutlineColor(value);
+		local().setOutlineColor(value);
+		remote().setOutlineColor(value);
 	}
 
 	public void setOutlineStyle(OutlineStyle value) {
-		this.impl.setOutlineStyle(value);
+		local().setOutlineStyle(value);
+		remote().setOutlineStyle(value);
 	}
 
 	public void setOutlineWidth(double value, Unit unit) {
-		this.impl.setOutlineWidth(value, unit);
+		local().setOutlineWidth(value, unit);
+		remote().setOutlineWidth(value, unit);
 	}
 
 	public void setOverflow(Overflow value) {
-		this.impl.setOverflow(value);
+		local().setOverflow(value);
+		remote().setOverflow(value);
 	}
 
 	public void setOverflowX(Overflow value) {
-		this.impl.setOverflowX(value);
+		local().setOverflowX(value);
+		remote().setOverflowX(value);
 	}
 
 	public void setOverflowY(Overflow value) {
-		this.impl.setOverflowY(value);
+		local().setOverflowY(value);
+		remote().setOverflowY(value);
 	}
 
 	public void setPadding(double value, Unit unit) {
-		this.impl.setPadding(value, unit);
+		local().setPadding(value, unit);
+		remote().setPadding(value, unit);
 	}
 
 	public void setPaddingBottom(double value, Unit unit) {
-		this.impl.setPaddingBottom(value, unit);
+		local().setPaddingBottom(value, unit);
+		remote().setPaddingBottom(value, unit);
 	}
 
 	public void setPaddingLeft(double value, Unit unit) {
-		this.impl.setPaddingLeft(value, unit);
+		local().setPaddingLeft(value, unit);
+		remote().setPaddingLeft(value, unit);
 	}
 
 	public void setPaddingRight(double value, Unit unit) {
-		this.impl.setPaddingRight(value, unit);
+		local().setPaddingRight(value, unit);
+		remote().setPaddingRight(value, unit);
 	}
 
 	public void setPaddingTop(double value, Unit unit) {
-		this.impl.setPaddingTop(value, unit);
+		local().setPaddingTop(value, unit);
+		remote().setPaddingTop(value, unit);
 	}
 
 	public void setPosition(Position value) {
-		this.impl.setPosition(value);
+		local().setPosition(value);
+		remote().setPosition(value);
 	}
 
 	public void setProperty(String name, String value) {
-		this.impl.setProperty(name, value);
+		local().setProperty(name, value);
+		remote().setProperty(name, value);
 	}
 
 	public void setProperty(String name, double value, Unit unit) {
-		this.impl.setProperty(name, value, unit);
+		local().setProperty(name, value, unit);
+		remote().setProperty(name, value, unit);
 	}
 
 	public void setPropertyPx(String name, int value) {
-		this.impl.setPropertyPx(name, value);
+		local().setPropertyPx(name, value);
+		remote().setPropertyPx(name, value);
 	}
 
 	public void setRight(double value, Unit unit) {
-		this.impl.setRight(value, unit);
+		local().setRight(value, unit);
+		remote().setRight(value, unit);
 	}
 
 	public void setTableLayout(TableLayout value) {
-		this.impl.setTableLayout(value);
+		local().setTableLayout(value);
+		remote().setTableLayout(value);
 	}
 
 	public void setTextAlign(TextAlign value) {
-		this.impl.setTextAlign(value);
+		local().setTextAlign(value);
+		remote().setTextAlign(value);
 	}
 
 	public void setTextDecoration(TextDecoration value) {
-		this.impl.setTextDecoration(value);
+		local().setTextDecoration(value);
+		remote().setTextDecoration(value);
 	}
 
 	public void setTextIndent(double value, Unit unit) {
-		this.impl.setTextIndent(value, unit);
+		local().setTextIndent(value, unit);
+		remote().setTextIndent(value, unit);
 	}
 
 	public void setTextJustify(TextJustify value) {
-		this.impl.setTextJustify(value);
+		local().setTextJustify(value);
+		remote().setTextJustify(value);
 	}
 
 	public void setTextOverflow(TextOverflow value) {
-		this.impl.setTextOverflow(value);
+		local().setTextOverflow(value);
+		remote().setTextOverflow(value);
 	}
 
 	public void setTextTransform(TextTransform value) {
-		this.impl.setTextTransform(value);
+		local().setTextTransform(value);
+		remote().setTextTransform(value);
 	}
 
 	public void setTop(double value, Unit unit) {
-		this.impl.setTop(value, unit);
+		local().setTop(value, unit);
+		remote().setTop(value, unit);
 	}
 
 	public void setVerticalAlign(VerticalAlign value) {
-		this.impl.setVerticalAlign(value);
+		local().setVerticalAlign(value);
+		remote().setVerticalAlign(value);
 	}
 
 	public void setVerticalAlign(double value, Unit unit) {
-		this.impl.setVerticalAlign(value, unit);
+		local().setVerticalAlign(value, unit);
+		remote().setVerticalAlign(value, unit);
 	}
 
 	public void setVisibility(Visibility value) {
-		this.impl.setVisibility(value);
+		local().setVisibility(value);
+		remote().setVisibility(value);
 	}
 
 	public void setWhiteSpace(WhiteSpace value) {
-		this.impl.setWhiteSpace(value);
+		local().setWhiteSpace(value);
+		remote().setWhiteSpace(value);
 	}
 
 	public void setWidth(double value, Unit unit) {
-		this.impl.setWidth(value, unit);
+		local().setWidth(value, unit);
+		remote().setWidth(value, unit);
 	}
 
 	public void setZIndex(int value) {
-		this.impl.setZIndex(value);
+		local().setZIndex(value);
+		remote().setZIndex(value);
 	}
 
 	public String getPropertyImpl(String name) {
-		return this.impl.getPropertyImpl(name);
+		return local().getPropertyImpl(name);
 	}
 
 	public void setPropertyImpl(String name, String value) {
-		this.impl.setPropertyImpl(name, value);
+		local().setPropertyImpl(name, value);
+		remote().setPropertyImpl(name, value);
 	}
 
-	boolean resolved;
-
-	public StyleRemote domImpl() {
-		return (StyleRemote) impl;
-	}
-
-	 boolean provideIsLocal() {
-		return !resolved;
-	}
-
-	public Map<String,String> getProperties() {
-		return this.impl.getProperties();
+	public Map<String, String> getProperties() {
+		return local().getProperties();
 	}
 
 	public void removePropertyImpl(String name) {
-		this.impl.setProperty(name, "");
-		
+		local().setProperty(name, "");
+		remote().setProperty(name, "");
 	}
-	
+
+	@Override
+	public void cloneStyleFrom(DomStyle domStyle) {
+		Style style = (Style) domStyle;
+		local().cloneStyleFrom(style.local());
+		remote().cloneStyleFrom(style.local());
+	}
 }

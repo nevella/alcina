@@ -139,13 +139,13 @@ class DOMImplMozilla extends DOMImplStandard {
 
   @Override
   protected int getAbsoluteLeft(ElementRemote elem) {
-    return getAbsoluteLeftImpl(elem.getOwnerDocument().getViewportElement().domImpl,
+    return getAbsoluteLeftImpl(elem.getOwnerDocument().getViewportElement().typedRemote(),
         elem);
   }
 
   @Override
   protected int getAbsoluteTop(ElementRemote elem) {
-    return getAbsoluteTopImpl(elem.getOwnerDocument().getViewportElement().domImpl,
+    return getAbsoluteTopImpl(elem.getOwnerDocument().getViewportElement().typedRemote(),
         elem);
   }
 

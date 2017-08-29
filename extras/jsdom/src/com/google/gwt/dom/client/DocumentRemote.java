@@ -61,7 +61,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	@Override
 	public native final Text createTextNode(String data) /*-{
 		var text_jso = this.createTextNode(data);
-		var textOut=@com.google.gwt.dom.client.LocalDomBridge::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(text_jso);
+		var textOut=@com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(text_jso);
 		return textOut;
 	}-*/;
 
@@ -178,7 +178,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 */
 	@Override
 	public  final  Element getDocumentElement() {
-		return LocalDomBridge.nodeFor(getDocumentElement0());
+		return LocalDom.nodeFor(getDocumentElement0());
 	}
 	
 	 final native ElementRemote getDocumentElement0() /*-{
@@ -207,7 +207,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 */
 	@Override
 	public final  Element getElementById(String elementId) {
-        return LocalDomBridge.nodeFor(getElementById0(elementId));
+        return LocalDom.nodeFor(getElementById0(elementId));
 	}
 	 final native ElementRemote getElementById0(String elementId) /*-{
     return this.getElementById(elementId);

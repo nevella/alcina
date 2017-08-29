@@ -61,6 +61,11 @@ public class Text extends Node implements DomText {
 		remote().insertData(offset, data);
 	}
 
+	@Override
+	public Node nodeFor() {
+		return this;
+	}
+
 	public void replaceData(int offset, int length, String data) {
 		local().replaceData(offset, length, data);
 		remote().replaceData(offset, length, data);
@@ -79,8 +84,8 @@ public class Text extends Node implements DomText {
 	}
 
 	@Override
-	protected DomText remote() {
-		return remote;
+	protected boolean linkedToRemote() {
+		return remote != TextNull.INSTANCE;
 	}
 
 	@Override
@@ -89,12 +94,12 @@ public class Text extends Node implements DomText {
 	}
 
 	@Override
-	public Node nodeFor() {
-		return this;
+	protected void putRemote(NodeRemote remote) {
+		this.remote = (DomText) remote;
 	}
 
 	@Override
-	protected void putRemote(NodeRemote remote) {
-		this.remote = (DomText) remote;
+	protected DomText remote() {
+		return remote;
 	}
 }

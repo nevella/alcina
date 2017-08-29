@@ -1,6 +1,12 @@
 package com.google.gwt.dom.client;
 
 public class DocumentLocal extends NodeLocal implements DomDocument {
+	public Document document;
+
+	private Element bodyElement;
+
+	private Element headElement;
+
 	@Override
 	public String getNodeName() {
 		return "#document";
@@ -12,6 +18,11 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	@Override
 	public short getNodeType() {
 		return Node.DOCUMENT_NODE;
+	}
+
+	@Override
+	public Element getDocumentElement() {
+		return null;
 	}
 
 	@Override
@@ -29,11 +40,12 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 		TextLocal local = new TextLocal(data);
 		Text text = new Text(local);
 		local.registerNode(text);
+		return text;
 	}
 
 	@Override
 	public Document nodeFor() {
-		throw new UnsupportedOperationException();
+		return document;
 	}
 
 	@Override
@@ -42,17 +54,33 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	}
 
 	@Override
-	public BodyElement getBody() {
-		throw new UnsupportedOperationException();
+	public Document documentFor() {
+		return document;
 	}
 
 	@Override
-	public Document documentFor() {
-		return null;
+	public Element createElement(String tagName) {
+		ElementLocal local = new ElementLocal(this, tagName);
+		Element element = LocalDom.createElement(tagName).putLocal(local);
+		switch (element.getTagName()) {
+		case "head":
+			headElement = element;
+			break;
+		case "body":
+			bodyElement = element;
+			break;
+		}
+		return element;
 	}
 
-	public ElementLocal createElement_Jvm(String tagName) {
-		return new ElementLocal(this, tagName);
+	@Override
+	public BodyElement getBody() {
+		return (BodyElement) this.bodyElement;
+	}
+
+	@Override
+	public HeadElement getHead() {
+		return (HeadElement) this.headElement;
 	}
 
 	@Override
