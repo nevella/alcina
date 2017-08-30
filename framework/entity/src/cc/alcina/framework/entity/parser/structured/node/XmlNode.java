@@ -369,7 +369,7 @@ public class XmlNode {
 				true);
 	}
 
-	public XmlNode unwrap() {
+	public XmlNode asXmlNode() {
 		return this.getClass() == XmlNode.class ? this : doc.nodeFor(node);
 	}
 
@@ -420,8 +420,8 @@ public class XmlNode {
 		}
 
 		public boolean has(XmlNode test) {
-			test = test.unwrap();
-			XmlNode node = XmlNode.this.unwrap();
+			test = test.asXmlNode();
+			XmlNode node = XmlNode.this.asXmlNode();
 			while (node != null) {
 				if (node == test) {
 					return true;
@@ -545,15 +545,15 @@ public class XmlNode {
 		}
 
 		public boolean isFirstChild(XmlNode xmlNode) {
-			return xmlNode != null && firstNode() == xmlNode.unwrap();
+			return xmlNode != null && firstNode() == xmlNode.asXmlNode();
 		}
 
 		public boolean isLastChild(XmlNode node) {
-			return node != null && lastNode() == node.unwrap();
+			return node != null && lastNode() == node.asXmlNode();
 		}
 
 		public boolean isLastElementNode(XmlNode node) {
-			return node != null && lastElementNode() == node.unwrap();
+			return node != null && lastElementNode() == node.asXmlNode();
 		}
 
 		public XmlNode lastElementNode() {
@@ -762,6 +762,10 @@ public class XmlNode {
 			wrapper.copyAttributesFrom(XmlNode.this);
 			return wrapper;
 		}
+
+		public void insertAsFirstChild(XmlNode other) {
+			other.children.insertAsFirstChild(XmlNode.this);
+		}
 	}
 
 	public class XmlNodeXpath {
@@ -855,8 +859,54 @@ public class XmlNode {
 		private Range createRange() {
 			Range range = ((DocumentRange) doc.domDoc()).createRange();
 			range.setStartBefore(node);
-			range.setEndAfter(end.node);
+			range.setEndAfter(end == null ? node : end.node);
 			return range;
 		}
+
+		public boolean isBefore(XmlNode other) {
+			Range r1 = createRange();
+			Range r2 = other.range().createRange();
+			boolean result = r1.compareBoundaryPoints(Range.START_TO_START,
+					r2) < 0;
+			r1.detach();
+			r2.detach();
+			return result;
+		}
+
+		public void clearNodes() {
+			List<XmlNode> kids = doc.getDocumentElementNode().children.flat()
+					.collect(Collectors.toList());
+			boolean inRange = false;
+			for (XmlNode xmlNode : kids) {
+				if (xmlNode == XmlNode.this) {
+					inRange = true;
+				}
+				if (inRange) {
+					xmlNode.removeFromParent();
+				}
+				if (xmlNode == end) {
+					break;
+				}
+			}
+		}
+	}
+
+	public class XmlNodeTree {
+		private TreeWalker tw;
+
+		public XmlNodeTree() {
+			tw = ((DocumentTraversal) doc.domDoc()).createTreeWalker(
+					doc.domDoc(), NodeFilter.SHOW_ALL, null, true);
+			tw.setCurrentNode(node);
+		}
+
+		public XmlNode nextLogicalNode() {
+			Node next = tw.nextNode();
+			return doc.nodeFor(next);
+		}
+	}
+
+	public XmlNodeTree tree() {
+		return new XmlNodeTree();
 	}
 }
