@@ -36,6 +36,14 @@ import cc.alcina.framework.entity.XpathHelper;
 import cc.alcina.framework.entity.parser.structured.XmlStructuralJoin;
 
 public class XmlNode {
+	/**
+	 * Basically, don't use in a loop - more a debugging aid
+	 */
+	public static XmlNode from(Node n) {
+		XmlDoc doc = new XmlDoc(n.getOwnerDocument());
+		return doc.nodeFor(n);
+	}
+
 	protected Node node;
 
 	public XmlDoc doc;
@@ -81,6 +89,10 @@ public class XmlNode {
 			ancestor = new XmlNodeAncestor();
 		}
 		return ancestor;
+	}
+
+	public XmlNode asXmlNode() {
+		return this.getClass() == XmlNode.class ? this : doc.nodeFor(node);
 	}
 
 	public String attr(String name) {
@@ -132,6 +144,10 @@ public class XmlNode {
 
 	public XmlNodeDebug debug() {
 		return new XmlNodeDebug();
+	}
+
+	public void deleteAttribute(String key) {
+		node.getAttributes().removeNamedItem(key);
 	}
 
 	public int depth() {
@@ -221,6 +237,10 @@ public class XmlNode {
 		return node.getNodeType() == Node.TEXT_NODE;
 	}
 
+	public boolean isWhitespaceTextContent() {
+		return ntc().length() == 0;
+	}
+
 	public String logPretty() {
 		try {
 			XmlUtils.logToFilePretty(node);
@@ -282,10 +302,6 @@ public class XmlNode {
 
 	public XmlNodeRelative relative() {
 		return new XmlNodeRelative();
-	}
-
-	public void deleteAttribute(String key) {
-		node.getAttributes().removeNamedItem(key);
 	}
 
 	public void removeFromParent() {
@@ -369,8 +385,8 @@ public class XmlNode {
 				true);
 	}
 
-	public XmlNode asXmlNode() {
-		return this.getClass() == XmlNode.class ? this : doc.nodeFor(node);
+	public XmlNodeTree tree() {
+		return new XmlNodeTree();
 	}
 
 	public XmlNodeXpath xpath() {
@@ -389,16 +405,20 @@ public class XmlNode {
 				: node.getOwnerDocument();
 	}
 
-	/**
-	 * Basically, don't use in a loop - more a debugging aid
-	 */
-	public static XmlNode from(Node n) {
-		XmlDoc doc = new XmlDoc(n.getOwnerDocument());
-		return doc.nodeFor(n);
-	}
-
 	public class XmlNodeAncestor {
 		private boolean orSelf = false;
+
+		public XmlNode ancestorBefore(XmlNode node) {
+			XmlNode cursor = XmlNode.this;
+			while (cursor != null) {
+				XmlNode parent = cursor.parent();
+				if (parent == node) {
+					return cursor;
+				}
+				cursor = parent;
+			}
+			return null;
+		}
 
 		public XmlNode get(String... tags) {
 			List<String> tagList = Arrays.asList(tags);
@@ -448,18 +468,6 @@ public class XmlNode {
 		public XmlNodeAncestor orSelf() {
 			orSelf = true;
 			return this;
-		}
-
-		public XmlNode ancestorBefore(XmlNode node) {
-			XmlNode cursor = XmlNode.this;
-			while (cursor != null) {
-				XmlNode parent = cursor.parent();
-				if (parent == node) {
-					return cursor;
-				}
-				cursor = parent;
-			}
-			return null;
 		}
 	}
 
@@ -664,16 +672,20 @@ public class XmlNode {
 	}
 
 	public class XmlNodeHtml {
-		public boolean isBlock() {
-			return isElement() && XmlUtils.isBlockHTMLElement(getElement());
+		public void addClassName(String string) {
+			Set<String> classes = Arrays.stream(attr("class").split(" "))
+					.collect(J8Utils.toLinkedHashSet());
+			classes.add(string);
+			setAttr("class", classes.stream().collect(Collectors.joining(" ")));
 		}
 
-		public List<XmlNode> trs() {
-			List<XmlNode> trs = children.byTag("TR");
-			if (trs.isEmpty()) {
-				trs = xpath().nodes("./TBODY/TR");
-			}
-			return trs;
+		public Optional<XmlNode> ancestorBlock() {
+			return ancestors().list().stream().filter(n -> n.html().isBlock())
+					.findFirst();
+		}
+
+		public boolean isBlock() {
+			return isElement() && XmlUtils.isBlockHTMLElement(getElement());
 		}
 
 		public void setStyleProperty(String key, String value) {
@@ -694,16 +706,12 @@ public class XmlNode {
 							.collect(Collectors.joining("; ")));
 		}
 
-		public void addClassName(String string) {
-			Set<String> classes = Arrays.stream(attr("class").split(" "))
-					.collect(J8Utils.toLinkedHashSet());
-			classes.add(string);
-			setAttr("class", classes.stream().collect(Collectors.joining(" ")));
-		}
-
-		public Optional<XmlNode> ancestorBlock() {
-			return ancestors().list().stream().filter(n -> n.html().isBlock())
-					.findFirst();
+		public List<XmlNode> trs() {
+			List<XmlNode> trs = children.byTag("TR");
+			if (trs.isEmpty()) {
+				trs = xpath().nodes("./TBODY/TR");
+			}
+			return trs;
 		}
 	}
 
@@ -720,6 +728,10 @@ public class XmlNode {
 			parent().invalidate();
 			parent().node.insertBefore(node.node,
 					XmlNode.this.node.getNextSibling());
+		}
+
+		public void insertAsFirstChild(XmlNode other) {
+			other.children.insertAsFirstChild(XmlNode.this);
 		}
 
 		public void insertBeforeThis(XmlNode node) {
@@ -762,9 +774,20 @@ public class XmlNode {
 			wrapper.copyAttributesFrom(XmlNode.this);
 			return wrapper;
 		}
+	}
 
-		public void insertAsFirstChild(XmlNode other) {
-			other.children.insertAsFirstChild(XmlNode.this);
+	public class XmlNodeTree {
+		private TreeWalker tw;
+
+		public XmlNodeTree() {
+			tw = ((DocumentTraversal) doc.domDoc()).createTreeWalker(
+					doc.domDoc(), NodeFilter.SHOW_ALL, null, true);
+			tw.setCurrentNode(node);
+		}
+
+		public XmlNode nextLogicalNode() {
+			Node next = tw.nextNode();
+			return doc.nodeFor(next);
 		}
 	}
 
@@ -799,11 +822,6 @@ public class XmlNode {
 			return stream(xpath).collect(Collectors.toList());
 		}
 
-		public Stream<XmlNode> stream(String xpath) {
-			List<Node> domNodes = eval.getNodesByXpath(xpath, node);
-			return domNodes.stream().map(doc::nodeFor);
-		}
-
 		public Optional<XmlNode> optionalNode(String xpath) {
 			return Optional.ofNullable(node(xpath));
 		}
@@ -811,6 +829,11 @@ public class XmlNode {
 		public boolean selfIs(String xpath) {
 			return XmlNode.this.parent().xpath().nodes(xpath)
 					.contains(doc.nodeFor(node));
+		}
+
+		public Stream<XmlNode> stream(String xpath) {
+			List<Node> domNodes = eval.getNodesByXpath(xpath, node);
+			return domNodes.stream().map(doc::nodeFor);
 		}
 
 		public String textOrEmpty(String xpath) {
@@ -826,6 +849,23 @@ public class XmlNode {
 			return (DocumentFragment) toNode().node;
 		}
 
+		public void clearNodes() {
+			List<XmlNode> kids = doc.getDocumentElementNode().children.flat()
+					.collect(Collectors.toList());
+			boolean inRange = false;
+			for (XmlNode xmlNode : kids) {
+				if (xmlNode == XmlNode.this) {
+					inRange = true;
+				}
+				if (inRange) {
+					xmlNode.removeFromParent();
+				}
+				if (xmlNode == end) {
+					break;
+				}
+			}
+		}
+
 		public XmlRange end(XmlNode end) {
 			this.end = end;
 			return this;
@@ -838,6 +878,16 @@ public class XmlNode {
 			tw.previousNode();
 			end = doc.nodeFor(tw.getCurrentNode());
 			return this;
+		}
+
+		public boolean isBefore(XmlNode other) {
+			Range r1 = createRange();
+			Range r2 = other.range().createRange();
+			boolean result = r1.compareBoundaryPoints(Range.START_TO_START,
+					r2) < 0;
+			r1.detach();
+			r2.detach();
+			return result;
 		}
 
 		public XmlNode toNode() {
@@ -862,51 +912,5 @@ public class XmlNode {
 			range.setEndAfter(end == null ? node : end.node);
 			return range;
 		}
-
-		public boolean isBefore(XmlNode other) {
-			Range r1 = createRange();
-			Range r2 = other.range().createRange();
-			boolean result = r1.compareBoundaryPoints(Range.START_TO_START,
-					r2) < 0;
-			r1.detach();
-			r2.detach();
-			return result;
-		}
-
-		public void clearNodes() {
-			List<XmlNode> kids = doc.getDocumentElementNode().children.flat()
-					.collect(Collectors.toList());
-			boolean inRange = false;
-			for (XmlNode xmlNode : kids) {
-				if (xmlNode == XmlNode.this) {
-					inRange = true;
-				}
-				if (inRange) {
-					xmlNode.removeFromParent();
-				}
-				if (xmlNode == end) {
-					break;
-				}
-			}
-		}
-	}
-
-	public class XmlNodeTree {
-		private TreeWalker tw;
-
-		public XmlNodeTree() {
-			tw = ((DocumentTraversal) doc.domDoc()).createTreeWalker(
-					doc.domDoc(), NodeFilter.SHOW_ALL, null, true);
-			tw.setCurrentNode(node);
-		}
-
-		public XmlNode nextLogicalNode() {
-			Node next = tw.nextNode();
-			return doc.nodeFor(next);
-		}
-	}
-
-	public XmlNodeTree tree() {
-		return new XmlNodeTree();
 	}
 }
