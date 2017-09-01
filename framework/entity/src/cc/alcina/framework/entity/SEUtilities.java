@@ -1060,6 +1060,23 @@ public class SEUtilities {
 		}
 	}
 
+	public static String threadDumpToString() {
+		StringBuilder sb = new StringBuilder();
+		Set<Entry<Thread, StackTraceElement[]>> allStackTraces = Thread
+				.getAllStackTraces().entrySet();
+		for (Entry<Thread, StackTraceElement[]> entry : allStackTraces) {
+			sb.append(entry.getKey());
+			sb.append("\n");
+			StackTraceElement[] value = entry.getValue();
+			for (StackTraceElement stackTraceElement : value) {
+				sb.append("\t");
+				sb.append(stackTraceElement);
+				sb.append("\n");
+			}
+		}
+		return sb.toString();
+	}
+
 	public static void throwFutureException(List<Future<Object>> futures)
 			throws Exception {
 		for (Future<Object> future : futures) {
@@ -1220,9 +1237,11 @@ public class SEUtilities {
 	}
 
 	public static String getStacktraceSlice(Thread t) {
-		return getStacktraceSlice(t, 20,0);
+		return getStacktraceSlice(t, 20, 0);
 	}
-	public static String getStacktraceSlice(Thread t, int size, int omitLowCount) {
+
+	public static String getStacktraceSlice(Thread t, int size,
+			int omitLowCount) {
 		String log = "";
 		StackTraceElement[] trace = t.getStackTrace();
 		for (int i = omitLowCount; i < trace.length && i < size; i++) {
