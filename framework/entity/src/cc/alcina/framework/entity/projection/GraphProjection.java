@@ -138,6 +138,9 @@ public class GraphProjection {
 	public static boolean isEnumSubclass(Class c) {
 		return c.getSuperclass() != null && c.getSuperclass().isEnum();
 	}
+	public static boolean isEnumOrEnumSubclass(Class c) {
+        return c.isEnum()||isEnumSubclass(c);
+    }
 
 	public static boolean isGenericHiliType(Field field) {
 		if (!genericHiliTypeLookup.containsKey(field)) {

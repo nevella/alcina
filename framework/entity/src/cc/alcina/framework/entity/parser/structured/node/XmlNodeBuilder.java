@@ -63,9 +63,10 @@ public class XmlNodeBuilder {
 		return this;
 	}
 
-	public void insertAfter() {
+	public XmlNode insertAfter() {
 		XmlNode node = generate();
 		relativeTo.relative().insertAfterThis(node);
+		return node;
 	}
 
 	public XmlNodeBuilder processingInstruction() {
