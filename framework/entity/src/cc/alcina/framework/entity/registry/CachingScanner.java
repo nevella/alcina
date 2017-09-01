@@ -74,6 +74,9 @@ public abstract class CachingScanner {
 		long start = System.currentTimeMillis();
 		for (ClassDataItem foundItem : found.classData.values()) {
 			String className = foundItem.className;
+			if(className.contains("DefaultViewActionHandler3")){
+	            int debug2=3;
+	        }
 			Class c = null;
 			ClassDataItem ignore = ignoreCache.classData.get(foundItem.className);
 			if (ignore != null) {
