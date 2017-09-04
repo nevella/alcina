@@ -183,4 +183,6 @@ public interface CommonPersistenceLocal {
 
 	public void updatePublicationMimeMessageId(Long publicationId,
 			String mimeMessageId);
+
+	List<Long> listRecentClientInstanceIds(String iidKey);
 }

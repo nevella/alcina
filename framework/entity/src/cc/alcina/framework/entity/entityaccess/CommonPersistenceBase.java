@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -995,6 +996,17 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					.cacheAuthentication(ci);
 		}
 		return authorised;
+	}
+
+	@Override
+	public List<Long> listRecentClientInstanceIds(String iidKey) {
+		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(
+				ClientInstance.class);
+		return getEntityManager()
+				.createQuery(String.format(
+						"select ci.id from %s ci where ci.iid = iidKey order by id desc",
+						clientInstanceImpl.getSimpleName()))
+				.setMaxResults(99).getResultList();
 	}
 
 	/**
