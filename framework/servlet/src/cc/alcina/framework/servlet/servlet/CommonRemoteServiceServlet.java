@@ -854,12 +854,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	protected HttpSession getSession() {
-		return getSession(getThreadLocalRequest());
+		return getSession(getThreadLocalRequest(), getThreadLocalResponse());
 	}
 
-	protected HttpSession getSession(HttpServletRequest request) {
+	protected HttpSession getSession(HttpServletRequest request,
+			HttpServletResponse httpServletResponse) {
 		return Registry.impl(SessionProvider.class).getSession(request,
-				getThreadLocalResponse());
+				httpServletResponse);
 	}
 
 	protected RPCRequest getThreadRpcRequest() {

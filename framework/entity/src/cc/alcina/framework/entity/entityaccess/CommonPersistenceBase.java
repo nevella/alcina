@@ -1004,8 +1004,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				ClientInstance.class);
 		return getEntityManager()
 				.createQuery(String.format(
-						"select ci.id from %s ci where ci.iid = iidKey order by id desc",
-						clientInstanceImpl.getSimpleName()))
+						"select ci.id from %s ci where ci.iid = ?1 order by id desc",
+						clientInstanceImpl.getSimpleName())).setParameter(1, iidKey)
 				.setMaxResults(99).getResultList();
 	}
 
