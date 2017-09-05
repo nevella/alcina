@@ -57,8 +57,8 @@ public class ClientReflectorJvm extends ClientReflector {
 	public ClientReflectorJvm() {
 		try {
 			ClassDataCache classes = null;
-			boolean cacheIt = ResourceUtilities.is(ClientReflectorJvm.class,
-					"cacheClasspathScan");
+			boolean cacheIt = !GWT.isClient() && ResourceUtilities
+					.is(ClientReflectorJvm.class, "cacheClasspathScan");
 			File cacheFile = cacheIt ? new File(ResourceUtilities
 					.get(ClientReflectorJvm.class, "cacheClasspathScanFile"))
 					: null;

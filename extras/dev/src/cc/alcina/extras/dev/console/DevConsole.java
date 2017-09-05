@@ -73,6 +73,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable.AlcinaChildContextRunner;
 
 public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>
 		implements ClipboardOwner {
@@ -174,7 +175,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	protected void init() throws Exception {
 		MetricLogging.get().start("init-console");
 		// osx =>
-		//https://bugs.openjdk.java.net/browse/JDK-8179209
+		// https://bugs.openjdk.java.net/browse/JDK-8179209
 		loadFontMetrics();
 		createDevHelper();
 		devHelper.loadJbossConfig(null);
@@ -381,7 +382,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 					performCommandInThread(args, c, true);
 				}
 			};
-			new Thread(runnable).start();
+			new AlcinaChildContextRunner(
+					"dev-runner-" + c.getClass().getSimpleName())
+							.callNewThread(runnable);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

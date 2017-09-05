@@ -713,6 +713,11 @@ public class XmlNode {
 			}
 			return trs;
 		}
+
+		public boolean hasClassName(String className) {
+			return Arrays.stream(attr("class").split(" "))
+					.anyMatch(cn -> cn.equals(className));
+		}
 	}
 
 	public class XmlNodeRelative {

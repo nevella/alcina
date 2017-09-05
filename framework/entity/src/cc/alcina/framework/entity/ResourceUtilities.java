@@ -439,7 +439,13 @@ public class ResourceUtilities {
 
 	public static String readUrlAsString(String strUrl, String charset)
 			throws Exception {
-		return readUrlAsString(strUrl, charset, new StringMap());
+		//don't use cc.alcina.framework.entity.ResourceUtilities.readUrlAsString(String, String, StringMap)
+		//we a java UA inter alia
+		URL url = new URL(strUrl);
+		InputStream is = null;
+		is = url.openConnection().getInputStream();
+		String input = readStreamToString(is, charset);
+		return input;
 	}
 
 	public static String readUrlAsString(String strUrl, String charset,
