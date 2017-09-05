@@ -1,20 +1,23 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import java.util.Comparator;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.cache.CacheProjection;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
-public class SortedIdentityProjection<T extends HasIdAndLocalId> implements
+public abstract class SortedIdentityProjection<T extends HasIdAndLocalId> implements
 		CacheProjection<T> {
 	private Class<T> listenedClass;
 
-	TreeMap<T, T> sorted = new TreeMap<>();
+	TreeMap<T, T> sorted = new TreeMap<>(getComparator());
 
 	public SortedMap<T, T> getSorted() {
 		return this.sorted;
 	}
+
+	protected abstract Comparator<T> getComparator() ;
 
 	private boolean enabled;
 

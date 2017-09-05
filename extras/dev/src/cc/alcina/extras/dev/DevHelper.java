@@ -52,6 +52,7 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -119,7 +120,12 @@ public abstract class DevHelper {
 
 	public abstract void readAppObjectGraph();
 
+	public boolean configLoaded = false;
+
 	public void loadJbossConfig(StringPrompter prompter) {
+		if (configLoaded) {
+			return;
+		}
 		Preferences prefs = Preferences.userNodeForPackage(getClass());
 		configPath = null;
 		while (true) {
@@ -127,11 +133,14 @@ public abstract class DevHelper {
 				configPath = getAppConfigPath(prefs);
 				ResourceUtilities.registerCustomProperties(
 						new FileInputStream(configPath));
+				configLoaded = true;
 				break;
 			} catch (Exception e) {
-				String prompt = getJbossConfigPrompt(configPath);
-				configPath = prompter.getValue(prompt);
-				prefs.put(JBOSS_CONFIG_PATH, configPath);
+				if (prompter != null) {
+					String prompt = getJbossConfigPrompt(configPath);
+					configPath = prompter.getValue(prompt);
+					prefs.put(JBOSS_CONFIG_PATH, configPath);
+				}
 			}
 		}
 	}
@@ -256,9 +265,22 @@ public abstract class DevHelper {
 		try {
 			Logger logger = getTestLogger();
 			long t1 = System.currentTimeMillis();
-			ClassDataCache classes = new ServletClasspathScanner("*", true,
-					true, null, Registry.MARKER_RESOURCE,
-					Arrays.asList(new String[] {})).getClasses();
+			ClassDataCache classes = null;
+			boolean cacheIt = ResourceUtilities.is(DevHelper.class,
+					"cacheClasspathScan");
+			File cacheFile = SEUtilities.getChildFile(getDataFolder(),
+					"servlet-classpath.ser");
+			if (cacheIt && cacheFile.exists()) {
+				classes = KryoUtils.deserializeFromFile(cacheFile,
+						ClassDataCache.class);
+			} else {
+				classes = new ServletClasspathScanner("*", true, true, null,
+						Registry.MARKER_RESOURCE,
+						Arrays.asList(new String[] {})).getClasses();
+				if (cacheIt) {
+					KryoUtils.serializeToFile(classes, cacheFile);
+				}
+			}
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					Registry.get(), "dev-helper");
 			long t2 = System.currentTimeMillis();
