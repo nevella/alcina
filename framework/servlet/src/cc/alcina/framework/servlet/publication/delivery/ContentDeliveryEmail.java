@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.Properties;
 
 import javax.activation.DataHandler;
+import javax.activation.DataSource;
 import javax.activation.FileDataSource;
+import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.Multipart;
 import javax.mail.Session;
@@ -18,6 +20,7 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.util.ByteArrayDataSource;
 
 import com.sun.mail.smtp.SMTPMessage;
 
@@ -25,6 +28,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType.ContentDeliveryType_EMAIL;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
+import cc.alcina.framework.common.client.publication.DeliveryModel.MailInlineImage;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.publication.EntityCleaner;
@@ -87,22 +91,28 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				.split("(;|,| )+");
 		String filterClassName = ResourceUtilities
 				.getBundledString(AddressFilter.class, "smtp.filter.className");
+		String systemEmailAddressOfRequestor = deliveryModel
+				.getSystemEmailAddressOfRequestor();
 		if (!SEUtilities.isNullOrEmpty(filterClassName)) {
 			AddressFilter filter = (AddressFilter) Class
 					.forName(filterClassName).newInstance();
 			emailAddresses = filter.filterAddresses(emailAddresses);
+			if (systemEmailAddressOfRequestor != null) {
+				systemEmailAddressOfRequestor = filter.filterAddresses(
+						new String[] { systemEmailAddressOfRequestor })[0];
+			}
 		}
 		for (String email : emailAddresses) {
 			String emTrim = email.trim();
 			if (emTrim.length() == 0) {
 				continue;
 			}
-			if (requestorPass && !emTrim
-					.equals(deliveryModel.getSystemEmailAddressOfRequestor())) {
+			if (requestorPass
+					&& !emTrim.equals(systemEmailAddressOfRequestor)) {
 				continue;
 			}
-			if (!requestorPass && emTrim
-					.equals(deliveryModel.getSystemEmailAddressOfRequestor())) {
+			if (!requestorPass
+					&& emTrim.equals(systemEmailAddressOfRequestor)) {
 				continue;
 			}
 			addresses.add(new InternetAddress(emTrim));
@@ -124,7 +134,29 @@ public class ContentDeliveryEmail implements ContentDelivery {
 							? deliveryModel.getAttachmentMessageForRequestor()
 							: deliveryModel.getAttachmentMessage());
 			message = EntityCleaner.get().nonAsciiToUnicodeEntities(message);
-			msg.setContent(message, "text/html");
+			if (deliveryModel.provideImages().isEmpty()) {
+				msg.setContent(message, "text/html");
+			} else {
+				MimeMultipart multipart = new MimeMultipart("related");
+				// first part (the html)
+				BodyPart messageBodyPart = new MimeBodyPart();
+				messageBodyPart.setContent(message, "text/html");
+				multipart.addBodyPart(messageBodyPart);
+				for (MailInlineImage image : deliveryModel.provideImages()) {
+					MimeBodyPart imageBodyPart = new MimeBodyPart();
+					imageBodyPart.setHeader("Content-Type", image.contentType);
+					imageBodyPart.setHeader("Content-Transfer-Encoding",
+							"base64");
+					imageBodyPart.setDisposition(MimeBodyPart.INLINE);
+					imageBodyPart.setContentID(image.uid);
+					DataSource ds = new ByteArrayDataSource(image.requestBytes,
+							"image/jpeg");
+					imageBodyPart.setDataHandler(new DataHandler(ds));
+					// add it
+					multipart.addBodyPart(imageBodyPart);
+				}
+				msg.setContent(multipart);
+			}
 		} else {
 			MimeBodyPart messageBodyPart = new MimeBodyPart();
 			messageBodyPart
