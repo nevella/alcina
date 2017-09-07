@@ -14,6 +14,7 @@
 
 package cc.alcina.framework.common.client.publication;
 
+import java.util.List;
 
 /**
  *
@@ -31,6 +32,7 @@ package cc.alcina.framework.common.client.publication;
 	public String getSuggestedFileName();
 	public String getEmailSubject();
 	public String getEmailSubjectForRequestor();
+	public List<MailInlineImage> provideImages();
 	/**
 	 * comma separated fields which indicate the queryString to be put at the
 	 * end of a URL.  eg link.do?alert,97,a987db34. (link.do? is not included)
@@ -49,4 +51,10 @@ package cc.alcina.framework.common.client.publication;
 	default String getPublicationUid(){
 		return null;
 	}
+	public static class MailInlineImage{
+		public String uid;
+		public String contentType;
+		public byte[] requestBytes;
+	}
+
 }

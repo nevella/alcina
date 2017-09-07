@@ -14,7 +14,9 @@
 package cc.alcina.framework.common.client.publication.request;
 
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Transient;
@@ -97,8 +99,17 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	private Map<String, String> properties = new LinkedHashMap<String, String>();
 
+	public transient List<MailInlineImage> images = new ArrayList<>();
+
+	@Override
+	public List<MailInlineImage> provideImages() {
+		return images;
+	}
+
 	private String opaqueRequestXml;
+
 	private String opaqueRequestClassname;
+
 	public String getOpaqueRequestClassname() {
 		return this.opaqueRequestClassname;
 	}
@@ -132,8 +143,9 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	}
 
 	public String getEmailAddress() {
-		return emailAddress == null ? PermissionsManager.get().getUser() == null ? null
-				: PermissionsManager.get().getUser().getEmail()
+		return emailAddress == null
+				? PermissionsManager.get().getUser() == null ? null
+						: PermissionsManager.get().getUser().getEmail()
 				: this.emailAddress;
 	}
 
@@ -222,7 +234,7 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return systemMessage;
 	}
 
-	public boolean hasProperty(String key){
+	public boolean hasProperty(String key) {
 		return properties.containsKey(key);
 	}
 
@@ -257,8 +269,8 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	}
 
 	public PublicationFontOptions providePublicationFontOptions() {
-		return ExtensibleEnum
-				.valueOf(PublicationFontOptions.class, fontOptions);
+		return ExtensibleEnum.valueOf(PublicationFontOptions.class,
+				fontOptions);
 	}
 
 	@Override
@@ -343,8 +355,8 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	public void setFooter(boolean footer) {
 		boolean old_footer = this.footer;
 		this.footer = footer;
-		propertyChangeSupport()
-				.firePropertyChange("footer", old_footer, footer);
+		propertyChangeSupport().firePropertyChange("footer", old_footer,
+				footer);
 	}
 
 	public void setMimeType(String MimeType) {
@@ -375,12 +387,12 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 				old_outputFormat, outputFormat);
 	}
 
-	public void setPageBreakAfterEachDocument(boolean pageBreakAfterEachDocument) {
+	public void
+			setPageBreakAfterEachDocument(boolean pageBreakAfterEachDocument) {
 		boolean old_pageBreakAfterEachDocument = this.pageBreakAfterEachDocument;
 		this.pageBreakAfterEachDocument = pageBreakAfterEachDocument;
-		propertyChangeSupport().firePropertyChange(
-				"pageBreakAfterEachDocument", old_pageBreakAfterEachDocument,
-				pageBreakAfterEachDocument);
+		propertyChangeSupport().firePropertyChange("pageBreakAfterEachDocument",
+				old_pageBreakAfterEachDocument, pageBreakAfterEachDocument);
 	}
 
 	public void setPermalinkQuery(String permalinkQuery) {
@@ -441,13 +453,14 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	public void setTest(boolean test) {
 		this.test = test;
 	}
+
 	@Override
 	public String toString() {
 		if (publicDescription != null) {
 			return publicDescription;
 		}
-		String s = contentDefinition == null ? "" : getContentDefinition()
-				.toString() + "\n" + "-";
+		String s = contentDefinition == null ? ""
+				: getContentDefinition().toString() + "\n" + "-";
 		return s + " Delivery mode: "
 				+ CommonUtils.friendlyConstant(getDeliveryMode()) + " - "
 				+ " Format: " + CommonUtils.friendlyConstant(getOutputFormat());
