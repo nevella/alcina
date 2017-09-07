@@ -400,6 +400,7 @@ public class WorkspaceView extends Composite implements HasName,
 			List<Class<? extends PermissibleAction>> actions = new ArrayList<Class<? extends PermissibleAction>>();
 			Class domainClass = null;
 			Object obj = null;
+			Object parentObject = null;
 			if (item instanceof DomainNode) {
 				DomainNode dn = (DomainNode) item;
 				SourcesPropertyChangeEvents userObject = dn.getUserObject();
@@ -431,8 +432,9 @@ public class WorkspaceView extends Composite implements HasName,
 						&& isAllowEditCollections()) {
 					actions.add(EditAction.class);
 				}
+				obj = Reflections.classLookup().newInstance(domainClass);
 				if (item.getParentItem() instanceof DomainNode) {
-					obj = ((DomainNode) item.getParentItem()).getUserObject();
+				    parentObject = item.getParentItem().getUserObject();
 				}
 			}
 			if (item instanceof ActionDisplayNode) {
@@ -448,29 +450,35 @@ public class WorkspaceView extends Composite implements HasName,
 				op = op == null
 						? PermissionsManager.get().getDefaultObjectPermissions()
 						: op;
-				for (Iterator<Class<? extends PermissibleAction>> itr = actions
-						.iterator(); itr.hasNext();) {
-					Class<? extends PermissibleAction> actionClass = itr.next();
-					Permission p = null;
-					if (actionClass == CreateAction.class) {
-						p = op.create();
-					}
-					if (actionClass == EditAction.class) {
-						p = op.write();
-					}
-					if (actionClass == ViewAction.class) {
-						p = op.read();
-					}
-					if (actionClass == DeleteAction.class) {
-						p = op.delete();
-					}
-					if (p != null) {
-						if (!PermissionsManager.get().isPermissible(obj,
-								new AnnotatedPermissible(p))) {
-							itr.remove();
-						}
-					}
-				}
+				try {
+				    LooseContext.pushWithKey(PermissionsManager.CONTEXT_CREATION_PARENT, parentObject);
+                    for (Iterator<Class<? extends PermissibleAction>> itr = actions
+                            .iterator(); itr.hasNext();) {
+                        Class<? extends PermissibleAction> actionClass = itr
+                                .next();
+                        Permission p = null;
+                        if (actionClass == CreateAction.class) {
+                            p = op.create();
+                        }
+                        if (actionClass == EditAction.class) {
+                            p = op.write();
+                        }
+                        if (actionClass == ViewAction.class) {
+                            p = op.read();
+                        }
+                        if (actionClass == DeleteAction.class) {
+                            p = op.delete();
+                        }
+                        if (p != null) {
+                            if (!PermissionsManager.get().isPermissible(obj,
+                                    new AnnotatedPermissible(p))) {
+                                itr.remove();
+                            }
+                        }
+                    } 
+                } catch (Exception e) {
+                    LooseContext.pop();
+                }
 			}
 			return actions;
 		}
