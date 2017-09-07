@@ -103,6 +103,9 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	@Override
 	public List<MailInlineImage> provideImages() {
+		if (images == null) {
+			images = new ArrayList<>();
+		}
 		return images;
 	}
 

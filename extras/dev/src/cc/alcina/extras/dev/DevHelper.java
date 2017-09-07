@@ -145,6 +145,17 @@ public abstract class DevHelper {
 		}
 	}
 
+	public void deleteClasspathCacheFiles() throws Exception {
+		File cacheFile = SEUtilities.getChildFile(getDataFolder(),
+				"servlet-classpath.ser");
+		cacheFile.delete();
+		Class<?> clazz = Class.forName(
+				"cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm");
+		cacheFile = new File(
+				ResourceUtilities.get(clazz, "cacheClasspathScanFile"));
+		cacheFile.delete();
+	}
+
 	protected String getAppConfigPath(Preferences prefs) {
 		return prefs.get(JBOSS_CONFIG_PATH, "");
 	}
