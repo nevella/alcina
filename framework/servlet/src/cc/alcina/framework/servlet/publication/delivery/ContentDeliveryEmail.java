@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType.ContentDeliveryType_EMAIL;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.DeliveryModel.MailInlineImage;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.publication.EntityCleaner;
@@ -148,7 +149,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 					imageBodyPart.setHeader("Content-Transfer-Encoding",
 							"base64");
 					imageBodyPart.setDisposition(MimeBodyPart.INLINE);
-					imageBodyPart.setContentID(image.uid);
+					imageBodyPart.setContentID(Ax.format("<%s>", image.uid));
 					DataSource ds = new ByteArrayDataSource(image.requestBytes,
 							"image/jpeg");
 					imageBodyPart.setDataHandler(new DataHandler(ds));
