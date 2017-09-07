@@ -47,7 +47,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -146,12 +145,14 @@ public abstract class DevHelper {
 		}
 	}
 
-	public void deleteClasspathCacheFiles() {
+	public void deleteClasspathCacheFiles() throws Exception {
 		File cacheFile = SEUtilities.getChildFile(getDataFolder(),
 				"servlet-classpath.ser");
 		cacheFile.delete();
-		cacheFile = new File(ResourceUtilities.get(ClientReflectorJvm.class,
-				"cacheClasspathScanFile"));
+		Class<?> clazz = Class.forName(
+				"cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm");
+		cacheFile = new File(
+				ResourceUtilities.get(clazz, "cacheClasspathScanFile"));
 		cacheFile.delete();
 	}
 
