@@ -135,7 +135,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 							? deliveryModel.getAttachmentMessageForRequestor()
 							: deliveryModel.getAttachmentMessage());
 			message = EntityCleaner.get().nonAsciiToUnicodeEntities(message);
-			if (deliveryModel.provideImages().isEmpty()) {
+			if (deliveryModel.provideImages()==null||deliveryModel.provideImages().isEmpty()) {
 				msg.setContent(message, "text/html");
 			} else {
 				MimeMultipart multipart = new MimeMultipart("related");

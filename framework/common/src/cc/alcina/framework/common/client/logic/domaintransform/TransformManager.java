@@ -101,7 +101,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public static long getEventIdCounter() {
 		return eventIdCounter;
 	}
-
 	public static List<Long> idListToLongs(String str) {
 		ArrayList<Long> result = new ArrayList<Long>();
 		if (CommonUtils.isNullOrEmpty(str)) {
