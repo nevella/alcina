@@ -86,372 +86,374 @@ import cc.alcina.framework.gwt.client.widget.layout.ScrollPanel100pcHeight;
  * @author Nick Reddel
  */
 public class WorkspaceView extends Composite implements HasName,
-		PermissibleActionEvent.PermissibleActionSource, HasLayoutInfo {
-	protected static final StandardDataImages images = GWT
-			.create(StandardDataImages.class);
+        PermissibleActionEvent.PermissibleActionSource, HasLayoutInfo {
+    protected static final StandardDataImages images = GWT
+            .create(StandardDataImages.class);
 
-	public static final String DEBUG_ID_PREFIX = "WorkspaceView-";
+    public static final String DEBUG_ID_PREFIX = "WorkspaceView-";
 
-	private String name;
+    private String name;
 
-	protected String id;
+    protected String id;
 
-	private Widget widget;
+    private Widget widget;
 
-	private PermissibleActionEvent.PermissibleActionSupport vetoableActionSupport = new PermissibleActionEvent.PermissibleActionSupport();
+    private PermissibleActionEvent.PermissibleActionSupport vetoableActionSupport = new PermissibleActionEvent.PermissibleActionSupport();
 
-	public WorkspaceView() {
-	}
+    public WorkspaceView() {
+    }
 
-	public WorkspaceView(Widget widget, String name) {
-		this.widget = widget;
-		this.name = name;
-		initWidget(widget);
-	}
+    public WorkspaceView(Widget widget, String name) {
+        this.widget = widget;
+        this.name = name;
+        initWidget(widget);
+    }
 
-	public void addVetoableActionListener(PermissibleActionListener listener) {
-		this.vetoableActionSupport.addVetoableActionListener(listener);
-	}
+    public void addVetoableActionListener(PermissibleActionListener listener) {
+        this.vetoableActionSupport.addVetoableActionListener(listener);
+    }
 
-	public void fireVetoableActionEvent(PermissibleActionEvent event) {
-		this.vetoableActionSupport.fireVetoableActionEvent(event);
-	}
+    public void fireVetoableActionEvent(PermissibleActionEvent event) {
+        this.vetoableActionSupport.fireVetoableActionEvent(event);
+    }
 
-	public LayoutInfo getLayoutInfo() {
-		return new LayoutInfo();
-	}
+    public LayoutInfo getLayoutInfo() {
+        return new LayoutInfo();
+    }
 
-	public String getName() {
-		return this.name;
-	}
+    public String getName() {
+        return this.name;
+    }
 
-	public Widget getPageWidget() {
-		return this.widget;
-	}
+    public Widget getPageWidget() {
+        return this.widget;
+    }
 
-	public void
-			removeVetoableActionListener(PermissibleActionListener listener) {
-		this.vetoableActionSupport.removeVetoableActionListener(listener);
-	}
+    public void removeVetoableActionListener(
+            PermissibleActionListener listener) {
+        this.vetoableActionSupport.removeVetoableActionListener(listener);
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	protected void onEnsureDebugId(String baseID) {
-		ensureDebugId(getElement(), DEBUG_ID_PREFIX + (id == null ? name : id));
-	}
+    protected void onEnsureDebugId(String baseID) {
+        ensureDebugId(getElement(), DEBUG_ID_PREFIX + (id == null ? name : id));
+    }
 
-	public static abstract class DataTreeView extends WorkspaceView
-			implements ExtraTreeEventListener, PermissibleActionListener,
-			HasLayoutInfo, SelectionHandler<TreeItem>, HasFirstFocusable {
-		public static final String CONTEXT_IGNORE_TREE_SELECTION = DataTreeView.class
-				.getName() + ".CONTEXT_IGNORE_TREE_SELECTION";
+    public static abstract class DataTreeView extends WorkspaceView
+            implements ExtraTreeEventListener, PermissibleActionListener,
+            HasLayoutInfo, SelectionHandler<TreeItem>, HasFirstFocusable {
+        public static final String CONTEXT_IGNORE_TREE_SELECTION = DataTreeView.class
+                .getName() + ".CONTEXT_IGNORE_TREE_SELECTION";
 
-		public static final String CONTEXT_CLEAR_FILTER_IF_INVISIBLE = DataTreeView.class
-				.getName() + ".CONTEXT_CLEAR_FILTER_IF_INVISIBLE";
+        public static final String CONTEXT_CLEAR_FILTER_IF_INVISIBLE = DataTreeView.class
+                .getName() + ".CONTEXT_CLEAR_FILTER_IF_INVISIBLE";
 
-		private boolean showCollapseButton;
+        private boolean showCollapseButton;
 
-		private DataTree dataTree;
+        private DataTree dataTree;
 
-		protected Toolbar toolbar;
+        protected Toolbar toolbar;
 
-		private FlowPanel fp;
+        private FlowPanel fp;
 
-		private ScrollPanel scroller;
+        private ScrollPanel scroller;
 
-		private boolean allowEditCollections = true;
+        private boolean allowEditCollections = true;
 
-		private FilterWidget filter;
+        private FilterWidget filter;
 
-		public FilterWidget getFilter() {
-			return this.filter;
-		}
+        public FilterWidget getFilter() {
+            return this.filter;
+        }
 
-		public void setFilter(FilterWidget filter) {
-			this.filter = filter;
-		}
+        public void setFilter(FilterWidget filter) {
+            this.filter = filter;
+        }
 
-		private Image collapse;
+        private Image collapse;
 
-		public DataTreeView(String name) {
-			this(name, null);
-		}
+        public DataTreeView(String name) {
+            this(name, null);
+        }
 
-		public Focusable firstFocusable() {
-			return filter.getTextBox();
-		}
+        public Focusable firstFocusable() {
+            return filter.getTextBox();
+        }
 
-		@Override
-		protected void onLoad() {
-			super.onLoad();
-			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-				@Override
-				public void execute() {
-					if (isVisible() && WidgetUtils.isVisibleAncestorChain(
-							DataTreeView.this) && !treeInitialised) {
-						treeInitialised = true;
-						resetTree();
-					}
-				}
-			});
-			if (toolbar != null) {
-				toolbar.processAvailableActions(getAvailableActions(null));
-			}
-		}
+        @Override
+        protected void onLoad() {
+            super.onLoad();
+            Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+                @Override
+                public void execute() {
+                    if (isVisible() && WidgetUtils.isVisibleAncestorChain(
+                            DataTreeView.this) && !treeInitialised) {
+                        treeInitialised = true;
+                        resetTree();
+                    }
+                }
+            });
+            if (toolbar != null) {
+                toolbar.processAvailableActions(getAvailableActions(null));
+            }
+        }
 
-		public DataTreeView(String name, String debugId) {
-			setName(name);
-			this.toolbar = new Toolbar();
-			toolbar.addVetoableActionListener(this);
-			filter = new FilterWidget();
-			this.collapse = AbstractImagePrototype.create(images.collapse())
-					.createImage();
-			collapse.setVisible(false);
-			collapse.setStyleName("alcina-Filter-collapse");
-			collapse.addClickHandler(new ClickHandler() {
-				public void onClick(ClickEvent event) {
-					dataTree.collapseToFirstLevel();
-				}
-			});
-			filter.getHolder().add(collapse);
-			this.dataTree = createTree();
-			dataTree.ensureDebugId(DataTree.DEBUG_ID);
-			dataTree.addExtraTreeEventListener(this);
-			filter.registerFilterable(dataTree);
-			this.fp = new FlowPanel100pcHeight();
-			fp.add(toolbar);
-			Widget w = getPreFilterWidget();
-			if (w != null) {
-				fp.add(w);
-			}
-			fp.add(filter);
-			w = getPostFilterWidget();
-			if (w != null) {
-				fp.add(w);
-			}
-			this.scroller = new ScrollPanel100pcHeight(dataTree) {
-				@Override
-				public void setHeight(String height) {
-					// TODO Auto-generated method stub
-					super.setHeight(height);
-				}
-			};
-			fp.add(scroller);
-			fp.setWidth("100%");
-			dataTree.addSelectionHandler(this);
-			initWidget(fp);
-		}
+        public DataTreeView(String name, String debugId) {
+            setName(name);
+            this.toolbar = new Toolbar();
+            toolbar.addVetoableActionListener(this);
+            filter = new FilterWidget();
+            this.collapse = AbstractImagePrototype.create(images.collapse())
+                    .createImage();
+            collapse.setVisible(false);
+            collapse.setStyleName("alcina-Filter-collapse");
+            collapse.addClickHandler(new ClickHandler() {
+                public void onClick(ClickEvent event) {
+                    dataTree.collapseToFirstLevel();
+                }
+            });
+            filter.getHolder().add(collapse);
+            this.dataTree = createTree();
+            dataTree.ensureDebugId(DataTree.DEBUG_ID);
+            dataTree.addExtraTreeEventListener(this);
+            filter.registerFilterable(dataTree);
+            this.fp = new FlowPanel100pcHeight();
+            fp.add(toolbar);
+            Widget w = getPreFilterWidget();
+            if (w != null) {
+                fp.add(w);
+            }
+            fp.add(filter);
+            w = getPostFilterWidget();
+            if (w != null) {
+                fp.add(w);
+            }
+            this.scroller = new ScrollPanel100pcHeight(dataTree) {
+                @Override
+                public void setHeight(String height) {
+                    // TODO Auto-generated method stub
+                    super.setHeight(height);
+                }
+            };
+            fp.add(scroller);
+            fp.setWidth("100%");
+            dataTree.addSelectionHandler(this);
+            initWidget(fp);
+        }
 
-		protected Widget getPreFilterWidget() {
-			return null;
-		}
+        protected Widget getPreFilterWidget() {
+            return null;
+        }
 
-		protected Widget getPostFilterWidget() {
-			return null;
-		}
+        protected Widget getPostFilterWidget() {
+            return null;
+        }
 
-		protected DataTree createTree() {
-			return new DataTree();
-		}
+        protected DataTree createTree() {
+            return new DataTree();
+        }
 
-		public DataTree getDataTree() {
-			return this.dataTree;
-		}
+        public DataTree getDataTree() {
+            return this.dataTree;
+        }
 
-		@Override
-		public LayoutInfo getLayoutInfo() {
-			return new LayoutInfo() {
-				@Override
-				public int getClientAdjustHeight() {
-					return 0;// 2
-				}
+        @Override
+        public LayoutInfo getLayoutInfo() {
+            return new LayoutInfo() {
+                @Override
+                public int getClientAdjustHeight() {
+                    return 0;// 2
+                }
 
-				@Override
-				public Iterator<Widget> getLayoutWidgets() {
-					return Arrays.asList(new Widget[] { fp }).iterator();
-				}
+                @Override
+                public Iterator<Widget> getLayoutWidgets() {
+                    return Arrays.asList(new Widget[] { fp }).iterator();
+                }
 
-				@Override
-				public boolean to100percentOfAvailableHeight() {
-					return true;
-				}
-			};
-		}
+                @Override
+                public boolean to100percentOfAvailableHeight() {
+                    return true;
+                }
+            };
+        }
 
-		public ScrollPanel getScroller() {
-			return this.scroller;
-		}
+        public ScrollPanel getScroller() {
+            return this.scroller;
+        }
 
-		public Toolbar getToolbar() {
-			return this.toolbar;
-		}
+        public Toolbar getToolbar() {
+            return this.toolbar;
+        }
 
-		public boolean isAllowEditCollections() {
-			return allowEditCollections;
-		}
+        public boolean isAllowEditCollections() {
+            return allowEditCollections;
+        }
 
-		public boolean isShowCollapseButton() {
-			return showCollapseButton;
-		}
+        public boolean isShowCollapseButton() {
+            return showCollapseButton;
+        }
 
-		public void onExtraTreeEvent(ExtraTreeEventEvent evt) {
-			List<Class<? extends PermissibleAction>> actions = getAvailableActions(
-					evt.getSource());
-			boolean canEdit = actions.contains(EditAction.class);
-			if (actions.contains(ViewAction.class)
-					&& evt.getType() == ExtraTreeEventType.DBL_CLICK) {
-				Class<? extends PermissibleAction> actionClass = canEdit
-						&& (allowEditCollections || evt.getSource()
-								.getUserObject() instanceof HasIdAndLocalId)
-										? EditAction.class : ViewAction.class;
-				vetoableAction(new PermissibleActionEvent(evt.getSource(),
-						ClientReflector.get().newInstance(actionClass)));
-			}
-		}
+        public void onExtraTreeEvent(ExtraTreeEventEvent evt) {
+            List<Class<? extends PermissibleAction>> actions = getAvailableActions(
+                    evt.getSource());
+            boolean canEdit = actions.contains(EditAction.class);
+            if (actions.contains(ViewAction.class)
+                    && evt.getType() == ExtraTreeEventType.DBL_CLICK) {
+                Class<? extends PermissibleAction> actionClass = canEdit
+                        && (allowEditCollections || evt.getSource()
+                                .getUserObject() instanceof HasIdAndLocalId)
+                                        ? EditAction.class : ViewAction.class;
+                vetoableAction(new PermissibleActionEvent(evt.getSource(),
+                        ClientReflector.get().newInstance(actionClass)));
+            }
+        }
 
-		public void onSelection(SelectionEvent<TreeItem> event) {
-			if (LooseContext.getBoolean(CONTEXT_IGNORE_TREE_SELECTION)) {
-				return;
-			}
-			TreeItem item = event.getSelectedItem();
-			onTreeItemSelected(item);
-		}
+        public void onSelection(SelectionEvent<TreeItem> event) {
+            if (LooseContext.getBoolean(CONTEXT_IGNORE_TREE_SELECTION)) {
+                return;
+            }
+            TreeItem item = event.getSelectedItem();
+            onTreeItemSelected(item);
+        }
 
-		protected void onTreeItemSelected(TreeItem item) {
-			if (!item.isVisible()) {
-				if (LooseContext.is(CONTEXT_CLEAR_FILTER_IF_INVISIBLE)) {
-					filter.clear();
-					filter.filter();
-				}
-				if (!item.isVisible()) {
-					return;
-				}
-			}
-			List<Class<? extends PermissibleAction>> actions = getAvailableActions(
-					item);
-			toolbar.processAvailableActions(actions);
-			if (actions.contains(ViewAction.class)
-					&& (item instanceof DomainNode
-							|| item instanceof ActionDisplayNode)) {
-				RenderContext.get().pushWithKey(
-						RenderContext.CONTEXT_IGNORE_AUTOFOCUS,
-						!(item.getUserObject() instanceof ForceAutofocus));
-				fireVetoableActionEvent(new PermissibleActionEvent(item,
-						ClientReflector.get().newInstance(ViewAction.class)));
-				RenderContext.get().pop();
-			}
-		}
+        protected void onTreeItemSelected(TreeItem item) {
+            if (!item.isVisible()) {
+                if (LooseContext.is(CONTEXT_CLEAR_FILTER_IF_INVISIBLE)) {
+                    filter.clear();
+                    filter.filter();
+                }
+                if (!item.isVisible()) {
+                    return;
+                }
+            }
+            List<Class<? extends PermissibleAction>> actions = getAvailableActions(
+                    item);
+            toolbar.processAvailableActions(actions);
+            if (actions.contains(ViewAction.class)
+                    && (item instanceof DomainNode
+                            || item instanceof ActionDisplayNode)) {
+                RenderContext.get().pushWithKey(
+                        RenderContext.CONTEXT_IGNORE_AUTOFOCUS,
+                        !(item.getUserObject() instanceof ForceAutofocus));
+                fireVetoableActionEvent(new PermissibleActionEvent(item,
+                        ClientReflector.get().newInstance(ViewAction.class)));
+                RenderContext.get().pop();
+            }
+        }
 
-		@SuppressWarnings("unchecked")
-		public void resetTree() {
-			getDataTree().removeItems();
-			Object items = getTopLevelItems();
-			if (items instanceof TreeItem) {
-				TreeItem root = (TreeItem) items;
-				getDataTree().addItem(root);
-				root.setState(true);
-			} else {
-				Collection<TreeItem> roots = (Collection<TreeItem>) items;
-				for (TreeItem root : roots) {
-					getDataTree().addItem(root);
-					root.setState(true);
-				}
-			}
-		}
+        @SuppressWarnings("unchecked")
+        public void resetTree() {
+            getDataTree().removeItems();
+            Object items = getTopLevelItems();
+            if (items instanceof TreeItem) {
+                TreeItem root = (TreeItem) items;
+                getDataTree().addItem(root);
+                root.setState(true);
+            } else {
+                Collection<TreeItem> roots = (Collection<TreeItem>) items;
+                for (TreeItem root : roots) {
+                    getDataTree().addItem(root);
+                    root.setState(true);
+                }
+            }
+        }
 
-		public TreeItem selectNodeForObject(Object object) {
-			return dataTree.selectNodeForObject(object);
-		}
+        public TreeItem selectNodeForObject(Object object) {
+            return dataTree.selectNodeForObject(object);
+        }
 
-		public void setAllowEditCollections(boolean allowEditCollections) {
-			this.allowEditCollections = allowEditCollections;
-		}
+        public void setAllowEditCollections(boolean allowEditCollections) {
+            this.allowEditCollections = allowEditCollections;
+        }
 
-		public void setShowCollapseButton(boolean showCollapseButton) {
-			this.showCollapseButton = showCollapseButton;
-			collapse.setVisible(showCollapseButton);
-		}
+        public void setShowCollapseButton(boolean showCollapseButton) {
+            this.showCollapseButton = showCollapseButton;
+            collapse.setVisible(showCollapseButton);
+        }
 
-		protected boolean treeInitialised = false;
+        protected boolean treeInitialised = false;
 
-		@Override
-		public void setVisible(boolean visible) {
-			super.setVisible(visible);
-			if (!treeInitialised && visible && isAttached()) {
-				treeInitialised = true;
-				resetTree();
-			}
-			filter.getTextBox().setFocus(true);
-		}
+        @Override
+        public void setVisible(boolean visible) {
+            super.setVisible(visible);
+            if (!treeInitialised && visible && isAttached()) {
+                treeInitialised = true;
+                resetTree();
+            }
+            filter.getTextBox().setFocus(true);
+        }
 
-		public void vetoableAction(PermissibleActionEvent evt) {
-			TreeItem item = dataTree.getSelectedItem();
-			if (evt.getAction().getClass() == DeleteAction.class) {
-				onTreeItemSelected(item);
-			}
-			fireVetoableActionEvent(
-					new PermissibleActionEvent(item, evt.getAction()));
-		}
+        public void vetoableAction(PermissibleActionEvent evt) {
+            TreeItem item = dataTree.getSelectedItem();
+            if (evt.getAction().getClass() == DeleteAction.class) {
+                onTreeItemSelected(item);
+            }
+            fireVetoableActionEvent(
+                    new PermissibleActionEvent(item, evt.getAction()));
+        }
 
-		protected List<Class<? extends PermissibleAction>>
-				getAvailableActions(TreeItem item) {
-			List<Class<? extends PermissibleAction>> actions = new ArrayList<Class<? extends PermissibleAction>>();
-			Class domainClass = null;
-			Object obj = null;
-			Object parentObject = null;
-			if (item instanceof DomainNode) {
-				DomainNode dn = (DomainNode) item;
-				SourcesPropertyChangeEvents userObject = dn.getUserObject();
-				obj = userObject;
-				domainClass = userObject.getClass();
-				ClientBeanReflector info = ClientReflector.get()
-						.beanInfoForClass(domainClass);
-				actions.addAll(info.getActions(userObject));
-			}
-			if (item instanceof HasVisibleCollection) {
-				if (!item.getState()) {
-					item.setState(true, false);
-					item.setState(false, false);
-				}
-				HasVisibleCollection hvc = (HasVisibleCollection) item;
-				domainClass = hvc.getCollectionMemberClass();
-				int size = hvc.getVisibleCollection().size();
-				ClientBeanReflector info = ClientReflector.get()
-						.beanInfoForClass(domainClass);
-				List<Class<? extends PermissibleAction>> availableActions = info
-						.getActions(null);
-				if (availableActions.contains(CreateAction.class)) {
-					actions.add(CreateAction.class);
-				}
-				if (availableActions.contains(ViewAction.class) && size != 0) {
-					actions.add(ViewAction.class);
-				}
-				if (availableActions.contains(EditAction.class) && size != 0
-						&& isAllowEditCollections()) {
-					actions.add(EditAction.class);
-				}
-				obj = Reflections.classLookup().newInstance(domainClass);
-				if (item.getParentItem() instanceof DomainNode) {
-				    parentObject = item.getParentItem().getUserObject();
-				}
-			}
-			if (item instanceof ActionDisplayNode) {
-				if (PermissionsManager.get().isPermissible(
-						(PermissibleAction) item.getUserObject())) {
-					actions.add(ViewAction.class);
-				}
-			}
-			if (domainClass != null) {
-				ObjectPermissions op = Reflections.classLookup()
-						.getAnnotationForClass(domainClass,
-								ObjectPermissions.class);
-				op = op == null
-						? PermissionsManager.get().getDefaultObjectPermissions()
-						: op;
-				try {
-				    LooseContext.pushWithKey(PermissionsManager.CONTEXT_CREATION_PARENT, parentObject);
+        protected List<Class<? extends PermissibleAction>> getAvailableActions(
+                TreeItem item) {
+            List<Class<? extends PermissibleAction>> actions = new ArrayList<Class<? extends PermissibleAction>>();
+            Class domainClass = null;
+            Object obj = null;
+            Object parentObject = null;
+            if (item instanceof DomainNode) {
+                DomainNode dn = (DomainNode) item;
+                SourcesPropertyChangeEvents userObject = dn.getUserObject();
+                obj = userObject;
+                domainClass = userObject.getClass();
+                ClientBeanReflector info = ClientReflector.get()
+                        .beanInfoForClass(domainClass);
+                actions.addAll(info.getActions(userObject));
+            }
+            if (item instanceof HasVisibleCollection) {
+                if (!item.getState()) {
+                    item.setState(true, false);
+                    item.setState(false, false);
+                }
+                HasVisibleCollection hvc = (HasVisibleCollection) item;
+                domainClass = hvc.getCollectionMemberClass();
+                int size = hvc.getVisibleCollection().size();
+                ClientBeanReflector info = ClientReflector.get()
+                        .beanInfoForClass(domainClass);
+                List<Class<? extends PermissibleAction>> availableActions = info
+                        .getActions(null);
+                if (availableActions.contains(CreateAction.class)) {
+                    actions.add(CreateAction.class);
+                }
+                if (availableActions.contains(ViewAction.class) && size != 0) {
+                    actions.add(ViewAction.class);
+                }
+                if (availableActions.contains(EditAction.class) && size != 0
+                        && isAllowEditCollections()) {
+                    actions.add(EditAction.class);
+                }
+                obj = Reflections.classLookup().newInstance(domainClass);
+                if (item.getParentItem() instanceof DomainNode) {
+                    parentObject = item.getParentItem().getUserObject();
+                }
+            }
+            if (item instanceof ActionDisplayNode) {
+                if (PermissionsManager.get().isPermissible(
+                        (PermissibleAction) item.getUserObject())) {
+                    actions.add(ViewAction.class);
+                }
+            }
+            if (domainClass != null) {
+                ObjectPermissions op = Reflections.classLookup()
+                        .getAnnotationForClass(domainClass,
+                                ObjectPermissions.class);
+                op = op == null
+                        ? PermissionsManager.get().getDefaultObjectPermissions()
+                        : op;
+                try {
+                    LooseContext.pushWithKey(
+                            PermissionsManager.CONTEXT_CREATION_PARENT,
+                            parentObject);
                     for (Iterator<Class<? extends PermissibleAction>> itr = actions
                             .iterator(); itr.hasNext();) {
                         Class<? extends PermissibleAction> actionClass = itr
@@ -475,88 +477,88 @@ public class WorkspaceView extends Composite implements HasName,
                                 itr.remove();
                             }
                         }
-                    } 
-                } catch (Exception e) {
+                    }
+                } finally {
                     LooseContext.pop();
                 }
-			}
-			return actions;
-		}
+            }
+            return actions;
+        }
 
-		@SuppressWarnings("unchecked")
-		protected <C> ContainerNode getBasicCollectionNode(String name,
-				Class<C> clazz, ImageResource imageResource) {
-			return getBasicCollectionNode(name, clazz, imageResource, null);
-		}
+        @SuppressWarnings("unchecked")
+        protected <C> ContainerNode getBasicCollectionNode(String name,
+                Class<C> clazz, ImageResource imageResource) {
+            return getBasicCollectionNode(name, clazz, imageResource, null);
+        }
 
-		@SuppressWarnings("unchecked")
-		protected <C> ContainerNode getBasicCollectionNode(String name,
-				Class<C> clazz, ImageResource imageResource,
-				NodeFactory nodeFactory) {
-			Collection domainCollection = TransformManager.get()
-					.getCollection(clazz);
-			SimpleCollectionProvider<C> provider = new SimpleCollectionProvider<C>(
-					domainCollection, clazz);
-			CollectionProviderNode node = new CollectionProviderNode(provider,
-					name, imageResource, false, nodeFactory);
-			TransformManager.get().addCollectionModificationListener(provider,
-					clazz);
-			return node;
-		}
+        @SuppressWarnings("unchecked")
+        protected <C> ContainerNode getBasicCollectionNode(String name,
+                Class<C> clazz, ImageResource imageResource,
+                NodeFactory nodeFactory) {
+            Collection domainCollection = TransformManager.get()
+                    .getCollection(clazz);
+            SimpleCollectionProvider<C> provider = new SimpleCollectionProvider<C>(
+                    domainCollection, clazz);
+            CollectionProviderNode node = new CollectionProviderNode(provider,
+                    name, imageResource, false, nodeFactory);
+            TransformManager.get().addCollectionModificationListener(provider,
+                    clazz);
+            return node;
+        }
 
-		@SuppressWarnings("unchecked")
-		protected <C> ContainerNode getFilteredCollectionNode(String name,
-				Class<C> clazz, ImageResource imageResource,
-				CollectionFilter cf) {
-			return getFilteredCollectionNode(name, clazz, imageResource, cf,
-					null);
-		}
+        @SuppressWarnings("unchecked")
+        protected <C> ContainerNode getFilteredCollectionNode(String name,
+                Class<C> clazz, ImageResource imageResource,
+                CollectionFilter cf) {
+            return getFilteredCollectionNode(name, clazz, imageResource, cf,
+                    null);
+        }
 
-		@SuppressWarnings("unchecked")
-		protected <C> ContainerNode getFilteredCollectionNode(String name,
-				Class<C> clazz, ImageResource imageResource,
-				CollectionFilter cf, NodeFactory nodeFactory) {
-			return getFilteredCollectionNode(name, clazz, imageResource, cf,
-					nodeFactory, null);
-		}
+        @SuppressWarnings("unchecked")
+        protected <C> ContainerNode getFilteredCollectionNode(String name,
+                Class<C> clazz, ImageResource imageResource,
+                CollectionFilter cf, NodeFactory nodeFactory) {
+            return getFilteredCollectionNode(name, clazz, imageResource, cf,
+                    nodeFactory, null);
+        }
 
-		@SuppressWarnings("unchecked")
-		protected <C> ContainerNode getFilteredCollectionNode(String name,
-				Class<C> clazz, ImageResource imageResource,
-				CollectionFilter cf, NodeFactory nodeFactory,
-				Comparator<C> comparator) {
-			Collection domainCollection = TransformManager.get()
-					.getCollection(clazz);
-			SimpleCollectionProvider<C> provider = new SimpleCollectionProvider<C>(
-					domainCollection, clazz);
-			provider.setComparator(comparator);
-			// will fire change event
-			provider.setFilter(cf);
-			CollectionProviderNode node = new CollectionProviderNode(provider,
-					name, imageResource, comparator != null, nodeFactory);
-			TransformManager.get().addCollectionModificationListener(provider,
-					clazz, true);
-			return node;
-		}
+        @SuppressWarnings("unchecked")
+        protected <C> ContainerNode getFilteredCollectionNode(String name,
+                Class<C> clazz, ImageResource imageResource,
+                CollectionFilter cf, NodeFactory nodeFactory,
+                Comparator<C> comparator) {
+            Collection domainCollection = TransformManager.get()
+                    .getCollection(clazz);
+            SimpleCollectionProvider<C> provider = new SimpleCollectionProvider<C>(
+                    domainCollection, clazz);
+            provider.setComparator(comparator);
+            // will fire change event
+            provider.setFilter(cf);
+            CollectionProviderNode node = new CollectionProviderNode(provider,
+                    name, imageResource, comparator != null, nodeFactory);
+            TransformManager.get().addCollectionModificationListener(provider,
+                    clazz, true);
+            return node;
+        }
 
-		@SuppressWarnings("unchecked")
-		protected <C> ContainerNode getUmbrellaProviderNode(String name,
-				Class<C> clazz, ImageResource imageResource,
-				UmbrellaProvider umbrellaProvider,
-				CollectionFilter collectionFilter, NodeFactory nodeFactory) {
-			Collection domainCollection = TransformManager.get()
-					.getCollection(clazz);
-			UmbrellaCollectionProviderMultiplexer<C> collectionProvider = new UmbrellaCollectionProviderMultiplexer<C>(
-					domainCollection, clazz, umbrellaProvider, collectionFilter,
-					3);
-			UmbrellaProviderNode node = new UmbrellaProviderNode(
-					collectionProvider.getRootSubprovider(), name,
-					imageResource, nodeFactory);
-			TransformManager.get().addCollectionModificationListener(
-					collectionProvider, clazz, true);
-			return node;
-		}
+        @SuppressWarnings("unchecked")
+        protected <C> ContainerNode getUmbrellaProviderNode(String name,
+                Class<C> clazz, ImageResource imageResource,
+                UmbrellaProvider umbrellaProvider,
+                CollectionFilter collectionFilter, NodeFactory nodeFactory) {
+            Collection domainCollection = TransformManager.get()
+                    .getCollection(clazz);
+            UmbrellaCollectionProviderMultiplexer<C> collectionProvider = new UmbrellaCollectionProviderMultiplexer<C>(
+                    domainCollection, clazz, umbrellaProvider, collectionFilter,
+                    3);
+            UmbrellaProviderNode node = new UmbrellaProviderNode(
+                    collectionProvider.getRootSubprovider(), name,
+                    imageResource, nodeFactory);
+            TransformManager.get().addCollectionModificationListener(
+                    collectionProvider, clazz, true);
+            return node;
+        }
 
-		protected abstract Object getTopLevelItems();
-	}
+        protected abstract Object getTopLevelItems();
+    }
 }
