@@ -2,6 +2,8 @@ package cc.alcina.framework.entity.parser.structured.node;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -10,6 +12,8 @@ import org.w3c.dom.Node;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CachingMap;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 
 public class XmlDoc extends XmlNode {
@@ -71,21 +75,22 @@ public class XmlDoc extends XmlNode {
 	}
 
 	public void restoreNamespaces() {
-		pushedNamespaceAttrs.forEach(attr -> {
-		});
-		int debug = 3;
+		String fullToString = doc.fullToString();
+		Pattern p = Pattern.compile("(?s)<[A-Za-z]\\S+>");
+		Matcher m = p.matcher(fullToString);
+		fullToString = m.replaceFirst(CommonUtils.escapeRegex(firstTag));
+		loadFromXml(fullToString);
 	}
 
-	List<Attr> pushedNamespaceAttrs = new ArrayList<>();
+	private String firstTag;
 
 	public void removeNamespaces() {
-		NamedNodeMap atts = domDoc().getDocumentElement().getAttributes();
-		for (; atts.getLength() > 0;) {
-			Attr attr = (Attr) atts.item(0);
-			pushedNamespaceAttrs.add(attr);
-			atts.removeNamedItem(attr.getName());
-		}
 		String fullToString = doc.fullToString();
+		Pattern p = Pattern.compile("(?s)<([A-Za-z]\\S+) .+?>");
+		Matcher m = p.matcher(fullToString);
+		m.find();
+		firstTag = m.group();
+		fullToString = m.replaceFirst("<$1>");
 		loadFromXml(fullToString);
 	}
 }
