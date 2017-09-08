@@ -8,10 +8,10 @@ import cc.alcina.framework.entity.util.CachingConcurrentMap.CachingConcurrentLcM
 
 @RegistryLocation(registryPoint = FastLcProvider.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 @ClientInstantiable
-public class FastLcProviderConcurrent extends FastLcProvider{
+public class FastLcProviderConcurrent extends FastLcProvider {
 	private CachingConcurrentLcMap map = new CachingConcurrentLcMap();
 
 	public String lc(String string) {
-		return map.get(string);
+		return string == null ? null : map.get(string);
 	}
 }
