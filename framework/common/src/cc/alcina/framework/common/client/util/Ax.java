@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.util;
 
+import java.beans.PropertyDescriptor;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -22,7 +23,7 @@ public class Ax {
 		return isBlank(string) ? defaultValueSupplier.get() : string;
 	}
 
-	public static  String dateSlash(Date date) {
+	public static String dateSlash(Date date) {
 		return CommonUtils.formatDate(date, DateStyle.AU_DATE_SLASH);
 	}
 
@@ -42,9 +43,11 @@ public class Ax {
 	public static String friendly(Object o) {
 		return CommonUtils.friendlyConstant(o);
 	}
+
 	public static boolean isBlank(String string) {
 		return CommonUtils.isNullOrEmpty(string);
 	}
+
 	public static <T> T last(List<T> list) {
 		return CommonUtils.last(list);
 	}
@@ -80,5 +83,9 @@ public class Ax {
 				return t;
 			};
 		}
+	}
+
+	public static void runtimeException(String template, Object... args) {
+		throw new RuntimeException(format(template, args));
 	}
 }

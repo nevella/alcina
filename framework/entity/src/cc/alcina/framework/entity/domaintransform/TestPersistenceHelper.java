@@ -187,7 +187,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				Class<?> propertyType = pd.getPropertyType();
-				if (propertyType.isInterface() && propertyType != Set.class) {
+				if (propertyType.isInterface() && propertyType != Set.class
+						&& propertyType != List.class) {
 					// this seems to vary (unnecessary on 1.5, necessary on
 					// 1.6)-propertydescriptor change probly
 					propertyType = Registry.impl(ImplementationLookup.class)

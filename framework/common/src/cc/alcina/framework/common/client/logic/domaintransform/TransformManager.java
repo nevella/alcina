@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
@@ -61,6 +62,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHis
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -101,6 +103,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public static long getEventIdCounter() {
 		return eventIdCounter;
 	}
+
 	public static List<Long> idListToLongs(String str) {
 		ArrayList<Long> result = new ArrayList<Long>();
 		if (CommonUtils.isNullOrEmpty(str)) {
@@ -459,6 +462,19 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (value instanceof Set) {
 			return;
 		}
+		if (value instanceof List || value instanceof Map) {
+			ClassLookup classLookup = classLookup();
+			PropertyInfoLite pd = classLookup
+					.getWritableProperties(evt.getObjectClass()).stream()
+					.filter(pd1 -> pd1.getPropertyName()
+							.equals(evt.getPropertyName()))
+					.findFirst().get();
+			Preconditions.checkArgument(pd.isSerializeWithBeanSerialization());
+			evt.setNewStringValue(
+					Registry.impl(AlcinaBeanSerializer.class).serialize(value));
+			evt.setValueClass(String.class);
+			return;
+		}
 		evt.setValueClass(value instanceof Enum
 				? ((Enum) value).getDeclaringClass() : value.getClass());
 		if (value.getClass() == Integer.class
@@ -796,6 +812,17 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (valueClass == Date.class) {
 			return new Date(SimpleStringParser.toLong(evt.getNewStringValue()));
 		}
+		if (valueClass == List.class || valueClass == Map.class) {
+			ClassLookup classLookup = classLookup();
+			PropertyInfoLite pd = classLookup
+					.getWritableProperties(evt.getObjectClass()).stream()
+					.filter(pd1 -> pd1.getPropertyName()
+							.equals(evt.getPropertyName()))
+					.findFirst().get();
+			Preconditions.checkArgument(pd.isSerializeWithBeanSerialization());
+			return Registry.impl(AlcinaBeanSerializer.class)
+					.deserialize(evt.getNewStringValue());
+		}
 		Enum e = getTargetEnumValue(evt);
 		if (e != null) {
 			return e;
@@ -959,7 +986,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 						continue;
 					}
 				}
-				if (value instanceof Collection) {
+				if (value instanceof Collection || value instanceof Map) {
 					if (pd.isSerializableCollection()) {
 						Iterator itr = ((Set) value).iterator();
 						for (; itr.hasNext();) {
@@ -985,6 +1012,18 @@ public abstract class TransformManager implements PropertyChangeListener,
 							}
 							dtes.add(dte);
 						}
+					} else if (pd.isSerializeWithBeanSerialization()) {
+						dte = new DomainTransformEvent();
+						dte.setUtcDate(new Date(0L));
+						dte.setObjectId(id);
+						dte.setObjectClass(clazz);
+						dte.setPropertyName(propertyName);
+						dte.setNewValue(null);
+						AlcinaBeanSerializer serializer = Registry
+								.impl(AlcinaBeanSerializer.class);
+						String serialized = serializer.serialize(value);
+						dte.setNewStringValue(serialized);
+						dte.setValueClass(String.class);
 					}
 				} else {
 					dte = new DomainTransformEvent();
@@ -1819,10 +1858,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return result;
 	}
 
-
-    public <H extends HasIdAndLocalId> void deleteMultiple(Collection<H> collection) {
-        new ArrayList<H>(collection).forEach(hili -> deleteObject(hili, true));
-    }
+	public <H extends HasIdAndLocalId> void
+			deleteMultiple(Collection<H> collection) {
+		new ArrayList<H>(collection).forEach(hili -> deleteObject(hili, true));
+	}
 
 	/**
 	 * useful support in TLTM, ThreadedClientTM

@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
 
 public abstract class AbstractTaskPerformer implements Runnable {
@@ -30,9 +31,12 @@ public abstract class AbstractTaskPerformer implements Runnable {
 	@Override
 	public void run() {
 		try {
+			LooseContext.push();
 			run0();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}finally{
+			LooseContext.pop();
 		}
 	}
 

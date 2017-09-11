@@ -163,7 +163,7 @@ public class GraphProjection {
 		return c.isPrimitive() || c == String.class || c == Boolean.class
 				|| c == Character.class || c.isEnum() || c == Class.class
 				|| Number.class.isAssignableFrom(c)
-				|| Date.class.isAssignableFrom(c) || isEnumSubclass(c)
+				|| Date.class.isAssignableFrom(c) || isEnumOrEnumSubclass(c)
 				|| ProjectByValue.class.isAssignableFrom(c)
 				|| SafeHtml.class.isAssignableFrom(c);
 	}
