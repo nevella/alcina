@@ -19,6 +19,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -203,7 +204,9 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 				if (pd.getWriteMethod() == null) {
 					continue;
 				}
-				if (propertyType.isInterface() && propertyType != Set.class) {
+				if (propertyType.isInterface() && propertyType != Set.class
+						&& propertyType != List.class
+						&& propertyType != Map.class) {
 					// this seems to vary (unnecessary on 1.5, necessary on
 					// 1.6)-propertydescriptor change probly
 					propertyType = Registry.impl(ImplementationLookup.class)

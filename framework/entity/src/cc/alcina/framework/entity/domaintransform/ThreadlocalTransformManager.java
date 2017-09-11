@@ -356,7 +356,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public void flush() {
-		entityManager.flush();
+		flush(new ArrayList<>());
 	}
 
 	public List<String> getAnnotatedPropertyNames(Class clazz) {
@@ -649,6 +649,10 @@ public class ThreadlocalTransformManager extends TransformManager
 			return;
 		}
 		lastEvent = dte;
+		super.propertyChange(evt);
+	}
+
+	protected void propertyChangeSuper(PropertyChangeEvent evt) {
 		super.propertyChange(evt);
 	}
 
@@ -1141,5 +1145,9 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public static class UncomittedTransformsException extends Exception {
+	}
+
+	public void flush(List<DomainTransformEventPersistent> dtreps) {
+		entityManager.flush();
 	}
 }

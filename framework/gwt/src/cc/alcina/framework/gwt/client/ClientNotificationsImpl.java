@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
@@ -238,7 +239,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		dialogBox.setWidget(ft);
 		dialogBox.center();
 		dialogBox.show();
-		closeButton.setFocus(true);
+		Scheduler.get().scheduleDeferred(() -> closeButton.setFocus(true));
 	}
 
 	private void ensureImages() {

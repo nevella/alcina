@@ -1851,7 +1851,7 @@ input.alcina-Filter {
 	width:80vw;
 	height:40vw;
 	font-family: 'Courier New';
-	white-space: pre;
+	white-space: pre-wrap;
 	color:#000;
 	border: solid 1px #eee;
 	margin:1em;

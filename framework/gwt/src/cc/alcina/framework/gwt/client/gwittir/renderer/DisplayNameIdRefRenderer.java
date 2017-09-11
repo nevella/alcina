@@ -16,14 +16,14 @@ package cc.alcina.framework.gwt.client.gwittir.renderer;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
  * 
  * @author Nick Reddel
  */
 public class DisplayNameIdRefRenderer extends FlexibleToStringRenderer {
-	private  Class targetClass;
-
+	private Class targetClass;
 
 	public DisplayNameIdRefRenderer(Class targetClass) {
 		this.targetClass = targetClass;
@@ -34,13 +34,23 @@ public class DisplayNameIdRefRenderer extends FlexibleToStringRenderer {
 			return "0";
 		}
 		Long id = (Long) o;
-		HasIdAndLocalId object = Reflections.objectLookup().getObject(
-				targetClass, id, 0);
+		HasIdAndLocalId object = Reflections.objectLookup()
+				.getObject(targetClass, id, 0);
 		String dn = null;
 		if (object != null) {
 			return ClientReflector.get().displayNameForObject(object);
 		} else {
-			return "(" + id + ")";
+			DisplayNameIdRefResolver resolver = Registry
+					.implOrNull(DisplayNameIdRefResolver.class);
+			if (resolver != null) {
+				return resolver.resolveName(targetClass, id);
+			} else {
+				return "(" + id + ")";
+			}
 		}
+	}
+
+	public static interface DisplayNameIdRefResolver {
+		public String resolveName(Class clazz, long id);
 	}
 }

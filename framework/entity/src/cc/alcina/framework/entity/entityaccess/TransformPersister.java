@@ -452,7 +452,7 @@ public class TransformPersister {
 			} // dtrs
 			switch (token.getPass()) {
 			case TRY_COMMIT:
-				tm.flush();
+				tm.flush(dtreps);
 				DomainTransformResponse dtr = new DomainTransformResponse();
 				dtr.getEventsToUseForClientUpdate()
 						.addAll(token.getClientUpdateEvents());

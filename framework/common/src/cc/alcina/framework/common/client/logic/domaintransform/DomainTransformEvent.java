@@ -32,8 +32,8 @@ import cc.alcina.framework.common.client.util.LooseContext;
  *
  * @author Nick Reddel
  */
-public class DomainTransformEvent implements Serializable,
-		Comparable<DomainTransformEvent>, Cloneable {
+public class DomainTransformEvent
+		implements Serializable, Comparable<DomainTransformEvent>, Cloneable {
 	public static transient final String CONTEXT_IGNORE_UNHANDLED_DOMAIN_CLASSES = DomainTransformEvent.class
 			.getName() + ".CONTEXT_IGNORE_UNHANDLED_DOMAIN_CLASSES";
 
@@ -98,8 +98,7 @@ public class DomainTransformEvent implements Serializable,
 	}
 
 	public boolean equivalentTo(DomainTransformEvent o) {
-		return o != null
-				&& objectId == o.objectId
+		return o != null && objectId == o.objectId
 				&& (objectId != 0 || objectLocalId == o.objectLocalId)
 				&& getObjectClass() == o.getObjectClass()
 				&& valueId == o.valueId
@@ -152,8 +151,8 @@ public class DomainTransformEvent implements Serializable,
 				this.objectClass = this.objectClassRef.getRefClass();
 			}
 			if (this.objectClass == null && this.objectClassName != null) {
-				this.objectClass = Reflections.classLookup().getClassForName(
-						this.objectClassName);
+				this.objectClass = Reflections.classLookup()
+						.getClassForName(this.objectClassName);
 			}
 		}
 		return this.objectClass;
@@ -161,6 +160,12 @@ public class DomainTransformEvent implements Serializable,
 
 	@Transient
 	public String getObjectClassName() {
+		if (this.objectClassName == null) {
+			Class clazz = getObjectClass();
+			if (clazz != null) {
+				this.objectClassName = clazz.getName();
+			}
+		}
 		return this.objectClassName;
 	}
 
@@ -217,8 +222,8 @@ public class DomainTransformEvent implements Serializable,
 			}
 			if (this.valueClass == null && this.valueClassName != null
 					&& !this.valueClassName.equals("null")) {
-				this.valueClass = Reflections.classLookup().getClassForName(
-						this.valueClassName);
+				this.valueClass = Reflections.classLookup()
+						.getClassForName(this.valueClassName);
 			}
 		}
 		return this.valueClass;
@@ -302,7 +307,8 @@ public class DomainTransformEvent implements Serializable,
 
 	public boolean related(DomainTransformEvent itrEvent) {
 		if (transformType == TransformType.DELETE_OBJECT) {
-			if (itrEvent.getTransformType() == TransformType.REMOVE_REF_FROM_COLLECTION
+			if (itrEvent
+					.getTransformType() == TransformType.REMOVE_REF_FROM_COLLECTION
 					&& itrEvent.getValueClass() == getObjectClass()
 					&& itrEvent.getValueId() == getObjectId()
 					&& itrEvent.getValueLocalId() == getObjectLocalId()) {
@@ -312,8 +318,8 @@ public class DomainTransformEvent implements Serializable,
 					&& itrEvent.getObjectClass() == getObjectClass()
 					&& itrEvent.getObjectId() == getObjectId()
 					&& itrEvent.getObjectLocalId() == getObjectLocalId()) {
-				Class type = Reflections.propertyAccessor().getPropertyType(
-						getObjectClass(), getPropertyName());
+				Class type = Reflections.propertyAccessor()
+						.getPropertyType(getObjectClass(), getPropertyName());
 				return !CommonUtils.isStandardJavaClass(type);
 			}
 		}
@@ -347,17 +353,16 @@ public class DomainTransformEvent implements Serializable,
 
 	public void setObjectClass(Class objectClass) {
 		this.objectClass = objectClass;
-		this.objectClassRef = (objectClass == null) ? null : ClassRef
-				.forClass(objectClass);
-		if (objectClass != null
-				&& objectClassRef == null
+		this.objectClassRef = (objectClass == null) ? null
+				: ClassRef.forClass(objectClass);
+		if (objectClass != null && objectClassRef == null
 				&& !LooseContext.is(CONTEXT_IGNORE_UNHANDLED_DOMAIN_CLASSES)
 				&& !TransformManager.get()
 						.isIgnoreUnrecognizedDomainClassException()) {
 			throw new UnrecognizedDomainClassException(objectClass);
 		}
-		this.objectClassName = objectClass == null ? null : objectClass
-				.getName();
+		this.objectClassName = objectClass == null ? null
+				: objectClass.getName();
 	}
 
 	public void setObjectClassName(String objectClassName) {
@@ -402,10 +407,9 @@ public class DomainTransformEvent implements Serializable,
 
 	public void setValueClass(Class valueClass) {
 		this.valueClass = valueClass;
-		this.valueClassRef = (valueClass == null) ? null : ClassRef
-				.forClass(valueClass);
-		if (valueClass != null
-				&& valueClassRef == null
+		this.valueClassRef = (valueClass == null) ? null
+				: ClassRef.forClass(valueClass);
+		if (valueClass != null && valueClassRef == null
 				&& !LooseContext.is(CONTEXT_IGNORE_UNHANDLED_DOMAIN_CLASSES)
 				&& !TransformManager.get()
 						.isIgnoreUnrecognizedDomainClassException()) {

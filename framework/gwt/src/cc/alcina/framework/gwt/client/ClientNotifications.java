@@ -11,8 +11,10 @@ import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
-public interface ClientNotifications extends LogWriter{
-	public static final String CONTEXT_AUTOSHOW_DIALOG_DETAIL=ClientNotifications.class.getName()+".CONTEXT_AUTOSHOW_DIALOG_DETAIL";
+public interface ClientNotifications extends LogWriter {
+	public static final String CONTEXT_AUTOSHOW_DIALOG_DETAIL = ClientNotifications.class
+			.getName() + ".CONTEXT_AUTOSHOW_DIALOG_DETAIL";
+
 	public abstract void confirm(String msg, final OkCallback callback);
 
 	public abstract String getLogString();
@@ -27,8 +29,8 @@ public interface ClientNotifications extends LogWriter{
 
 	public abstract void metricLogStart(String key);
 
-	public abstract void setDialogAnimationEnabled(
-			boolean dialogAnimationEnabled);
+	public abstract void
+			setDialogAnimationEnabled(boolean dialogAnimationEnabled);
 
 	public abstract void showDialog(String captionHTML, Widget captionWidget,
 			String msg, MessageType messageType, List<Button> extraButtons);
@@ -54,12 +56,11 @@ public interface ClientNotifications extends LogWriter{
 	public abstract void notifyOfCompletedSaveFromOffline();
 
 	public abstract ModalNotifier getModalNotifier(String message);
-	
-	static ClientNotifications get(){
+
+	static ClientNotifications get() {
 		return Registry.impl(ClientNotifications.class);
 	}
 
-	default void showDevError(Throwable e){
-		
+	default void showDevError(Throwable e) {
 	}
 }
