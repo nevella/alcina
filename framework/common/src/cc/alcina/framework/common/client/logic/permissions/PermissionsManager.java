@@ -460,6 +460,11 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
     public boolean isPermissible(Object o, Permissible p,
             boolean doNotEvaluateNullObjectPermissions) {
+        return isPermissible(o, null, p, doNotEvaluateNullObjectPermissions);
+    }
+
+    public boolean isPermissible(Object o, Object assigningTo, Permissible p,
+            boolean doNotEvaluateNullObjectPermissions) {
         if (allPermissible) {
             return true;
         }
@@ -496,7 +501,13 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
         }
         if (!permitted && !doNotEvaluateNullObjectPermissions) {
             if (getPermissionsExtension() != null) {
-                Boolean b = getPermissionsExtension().isPermitted(o, p);
+                Boolean b = null;
+                if (assigningTo != null) {
+                    b = getPermissionsExtension().isPermitted(o, assigningTo,
+                            p);
+                } else {
+                    b = getPermissionsExtension().isPermitted(o, p);
+                }
                 if (b != null) {
                     permitted = b;
                 }
@@ -733,6 +744,11 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
     public static interface PermissionsExtension {
         public Boolean isPermitted(Object o, Permissible p);
+
+        default Boolean isPermitted(Object o, Object assigningTo,
+                Permissible p) {
+            return isPermitted(o, p);
+        }
     }
 
     @RegistryLocation(registryPoint = PermissionsExtensionForClass.class)
@@ -826,6 +842,10 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
                 return extensionMapForRule.get(ruleName).isPermitted(o, p);
             }
             return null;
+        }
+
+        public PermissionsExtensionForRule getExtension(String ruleName) {
+            return extensionMapForRule.get(ruleName);
         }
     }
 }

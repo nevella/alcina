@@ -203,6 +203,10 @@ public class JobRegistry implements RegistrableService {
 		Logger contextLogger = (Logger) tracker.getLogger();
 		return flushLogger(contextLogger);
 	}
+	
+	public boolean hasTracker(){
+	    return getContextTracker()!=null;
+	}
 
 	public Logger getContextLogger() {
 		JobTracker tracker = getContextTracker();
