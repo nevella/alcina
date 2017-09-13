@@ -832,14 +832,24 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
             extensionMapForRule.put(ext.getRuleName(), ext);
         }
 
+        @Override
         public Boolean isPermitted(Object o, Permissible p) {
+            return isPermitted(o, null, p);
+        }
+
+        @Override
+        public Boolean isPermitted(Object o, Object assigningTo,
+                Permissible p) {
             Class<? extends Object> clazz = o == null ? null : o.getClass();
             String ruleName = p != null ? p.rule() : "";
             if (extensionMapForClass.containsKey(clazz)) {
-                return extensionMapForClass.get(clazz).isPermitted(o, p);
+                return extensionMapForClass.get(clazz).isPermitted(o,
+                        assigningTo, p);
             }
             if (extensionMapForRule.containsKey(ruleName)) {
-                return extensionMapForRule.get(ruleName).isPermitted(o, p);
+                PermissionsExtensionForRule extension = extensionMapForRule.get(ruleName);
+                return extension.isPermitted(o,
+                        assigningTo, p);
             }
             return null;
         }

@@ -211,7 +211,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
     public boolean checkPropertyAccess(HasIdAndLocalId hili,
             String propertyName, boolean read) throws IntrospectionException {
-        if (hili.getId() != 0) {
+        if (hili.provideWasPersisted()||LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
             PropertyDescriptor descriptor = SEUtilities
                     .getPropertyDescriptorByName(hili.getClass(), propertyName);
             if (descriptor == null) {
@@ -897,12 +897,12 @@ public class ThreadlocalTransformManager extends TransformManager
             return;
         }
         if (!PermissionsManager.get().isPermissible(assigning, oph.read())) {
-            throw new DomainTransformException(new Exception(
+            throw new DomainTransformException(new PermissionsException(
                     "Permission denied : read - target object " + evt));
         }
         if (aph != null && !PermissionsManager.get().isPermissible(assigning,
                 assigningTo, new AnnotatedPermissible(aph.value()), false)) {
-            throw new DomainTransformException(new Exception(
+            throw new DomainTransformException(new PermissionsException(
                     "Permission denied : assign - target object " + evt));
         }
     }
@@ -925,11 +925,21 @@ public class ThreadlocalTransformManager extends TransformManager
     }
 
     public boolean testPermissions(HasIdAndLocalId hili,
-            DomainTransformEvent evt, String propertyName, Object change) {
+            DomainTransformEvent evt, String propertyName, Object change,
+            boolean read) {
         if (!LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
             throw new RuntimeException("test property not set");
         }
-        return checkPermissions(hili, evt, propertyName, change, true);
+        if (read) {
+            try {
+                checkPropertyReadAccessAndThrow(hili, propertyName, evt);
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        } else {
+            return checkPermissions(hili, evt, propertyName, change, true);
+        }
     }
 
     @Override
