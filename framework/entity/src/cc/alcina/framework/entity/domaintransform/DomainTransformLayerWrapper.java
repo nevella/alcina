@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -28,42 +29,45 @@ import cc.alcina.framework.common.client.util.Multimap;
  * @author Nick Reddel
  */
 public class DomainTransformLayerWrapper {
-	public DomainTransformResponse response;
+    public DomainTransformResponse response;
 
-	public HiliLocatorMap locatorMap;
+    public HiliLocatorMap locatorMap;
 
-	public int ignored;
+    public int ignored;
 
-	public List<DomainTransformEventPersistent> persistentEvents = new ArrayList<DomainTransformEventPersistent>();
+    public List<DomainTransformEventPersistent> persistentEvents = new ArrayList<DomainTransformEventPersistent>();
 
-	public Set<Class> getTransformedClasses() {
-		return getEventsByClass().keySet();
-	}
+    public List<DomainTransformEvent> remoteEventsPersisted = new ArrayList<DomainTransformEvent>();
 
-	private Multimap<Class, List<DomainTransformEventPersistent>> eventsByClass;
+    private Multimap<Class, List<DomainTransformEventPersistent>> eventsByClass;
 
-	public List<DomainTransformRequestPersistent> persistentRequests = new ArrayList<DomainTransformRequestPersistent>();
+    public List<DomainTransformRequestPersistent> persistentRequests = new ArrayList<DomainTransformRequestPersistent>();
 
-	public boolean containsTransformClasses(Class... classes) {
-		return !CommonUtils.intersection(getTransformedClasses(),
-				Arrays.asList(classes)).isEmpty();
-	}
+    public boolean containsTransformClasses(Class... classes) {
+        return !CommonUtils
+                .intersection(getTransformedClasses(), Arrays.asList(classes))
+                .isEmpty();
+    }
 
-	public Multimap<Class, List<DomainTransformEventPersistent>> getEventsByClass() {
-		if (eventsByClass == null) {
-			eventsByClass = new Multimap<Class, List<DomainTransformEventPersistent>>();
-			for (DomainTransformEventPersistent dte : persistentEvents) {
-				eventsByClass.add(dte.getObjectClass(), dte);
-			}
-		}
-		return this.eventsByClass;
-	}
+    public Multimap<Class, List<DomainTransformEventPersistent>> getEventsByClass() {
+        if (eventsByClass == null) {
+            eventsByClass = new Multimap<Class, List<DomainTransformEventPersistent>>();
+            for (DomainTransformEventPersistent dte : persistentEvents) {
+                eventsByClass.add(dte.getObjectClass(), dte);
+            }
+        }
+        return this.eventsByClass;
+    }
 
-	public List<DomainTransformEventPersistent> getTransformsFor(Class clazz) {
-		return getEventsByClass().getAndEnsure(clazz);
-	}
+    public Set<Class> getTransformedClasses() {
+        return getEventsByClass().keySet();
+    }
 
-	public HiliLocatorMap locatorMapOrEmpty() {
-		return locatorMap == null ? new HiliLocatorMap() : locatorMap;
-	}
+    public List<DomainTransformEventPersistent> getTransformsFor(Class clazz) {
+        return getEventsByClass().getAndEnsure(clazz);
+    }
+
+    public HiliLocatorMap locatorMapOrEmpty() {
+        return locatorMap == null ? new HiliLocatorMap() : locatorMap;
+    }
 }
