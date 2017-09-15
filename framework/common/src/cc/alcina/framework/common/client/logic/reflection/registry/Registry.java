@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry.NoResolvedImplementationException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.MultikeyMapBase.DelegateMapCreator;
@@ -45,6 +46,16 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCre
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class Registry {
+	public static class NoResolvedImplementationException extends RuntimeException {
+		public NoResolvedImplementationException() {
+			super();
+		}
+
+		public NoResolvedImplementationException(String message) {
+			super(message);
+		}
+	}
+
 	public static final String MARKER_RESOURCE = "registry.properties";
 
 	private static RegistryProvider provider = new BasicRegistryProvider();
@@ -86,9 +97,9 @@ public class Registry {
 			if (!uniques.containsKey(loc.registryPoint())) {
 				uniques.put(loc.registryPoint(), loc);
 			} else {
-//				System.out.println(CommonUtils.formatJ("Discarded - %s, %s",
-//						CommonUtils.simpleClassName(loc.registryPoint()),
-//						CommonUtils.simpleClassName(loc.targetClass())));
+				// System.out.println(CommonUtils.formatJ("Discarded - %s, %s",
+				// CommonUtils.simpleClassName(loc.registryPoint()),
+				// CommonUtils.simpleClassName(loc.targetClass())));
 			}
 		}
 		return new LinkedHashSet<RegistryLocation>(uniques.allValues());
@@ -339,8 +350,6 @@ public class Registry {
 
 	public Class lookupSingle(Class registryPoint, Class targetObject,
 			boolean errorOnNull) {
-		
-				
 		Class cached = exactMap.get(registryPoint, targetObject);
 		if (cached == null) {
 			List<Class> lookup = lookup(true, registryPoint, targetObject,
@@ -360,7 +369,6 @@ public class Registry {
 	}
 
 	public void register(Class registeringClass, Class registryPoint) {
-		
 		register(registeringClass, registryPoint, void.class,
 				ImplementationType.MULTIPLE, 10);
 	}
@@ -576,7 +584,7 @@ public class Registry {
 		if (allowNull) {
 			return null;
 		}
-		throw new RuntimeException(CommonUtils.formatJ(
+		throw new NoResolvedImplementationException(CommonUtils.formatJ(
 				"Registry: no resolved implementation type for %s :: %s",
 				CommonUtils.simpleClassName(registryPoint),
 				CommonUtils.simpleClassName(targetObjectClass)));
