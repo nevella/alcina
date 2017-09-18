@@ -87,6 +87,10 @@ public class ResourceUtilities {
 		return StringMap
 				.fromPropertyString(readClassPathResourceAsString(clazz, path));
 	}
+	public static StringMap classPathStringExistenceMap(Class clazz, String path) {
+		return StringMap
+				.fromStringList(readClassPathResourceAsString(clazz, path));
+	}
 
 	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
 			Class methodFilterAnnotation, boolean cloneCollections) {
