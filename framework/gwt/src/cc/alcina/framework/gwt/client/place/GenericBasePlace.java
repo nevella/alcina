@@ -27,6 +27,11 @@ public abstract class GenericBasePlace<SD extends SearchDefinition>
 		return String.valueOf(id);
 	}
 
+	public <T extends GenericBasePlace> T putId(String stringId) {
+		id = Long.parseLong(stringId);
+		return (T) this;
+	}
+
 	protected abstract SD createSearchDefinition();
 
 	public boolean provideIsDefaultDefs() {

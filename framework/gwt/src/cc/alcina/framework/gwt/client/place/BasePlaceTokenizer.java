@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.place;
 
+import java.util.Map;
+
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceTokenizer;
 
@@ -50,7 +52,7 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		return value == null ? 0 : CommonUtils.friendlyParseLong(value);
 	}
 
-	public Class<? extends HasIdAndLocalId> getModelClass(){
+	public Class<? extends HasIdAndLocalId> getModelClass() {
 		return null;
 	}
 
@@ -94,6 +96,10 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		return true;
 	}
 
+	public boolean isCanonicalModelClassTokenizer() {
+		return true;
+	}
+
 	public void setParameter(String key, Object value) {
 		if (value instanceof Number) {
 			if (((Number) value).longValue() == 0) {
@@ -110,6 +116,13 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	public void setParameter(String key, Object value, boolean explicitBlanks) {
 		params.put(key, value == null ? null : value.toString());
+	}
+
+	protected void addTokenPart(Enum part) {
+		if (part == null) {
+			return;
+		}
+		addTokenPart(part.toString().toLowerCase());
 	}
 
 	protected void addTokenPart(long l) {
@@ -130,6 +143,7 @@ public abstract class BasePlaceTokenizer<P extends Place>
 	protected <E extends Enum> E enumValue(Class<E> clazz, String value) {
 		return enumValue(clazz, value, null);
 	}
+
 	protected <E extends Enum> E enumValue(Class<E> clazz, String value,
 			E defaultValue) {
 		return CommonUtils.getEnumValueOrNull(clazz, value, true, defaultValue);
@@ -149,5 +163,10 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	protected SearchDefinitionSerializer searchDefinitionSerializer() {
 		return Registry.impl(SearchDefinitionSerializer.class);
+	}
+
+	public void register(
+			Map<Class<? extends HasIdAndLocalId>, BasePlaceTokenizer> tokenizersByModelClass) {
+		
 	}
 }

@@ -3,14 +3,17 @@ package cc.alcina.framework.entity.util;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.util.ToCsvRow.Mapping;
 
 public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 	List<Mapping> mappings = new ArrayList<>();
@@ -21,13 +24,7 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 	public List<String> apply(T t) {
 		List<String> result = new ArrayList<>();
 		for (Mapping mapping : mappings) {
-			if (mapping.function != null) {
-				result.add(CommonUtils
-						.nullSafeToString(mapping.function.apply(t)));
-			} else {
-				Object value = mapping.accessor.getChainedProperty(t);
-				result.add(CommonUtils.nullSafeToString(value));
-			}
+			result.add(mapping.stringValue(t));
 		}
 		return result;
 	}
@@ -63,17 +60,19 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 		row.set(index, value);
 	}
 
-	protected void define(String propertyPath) {
-		define(propertyPath, null, null);
+	protected Mapping define(String propertyPath) {
+		return define(propertyPath, null, null);
 	}
 
-	protected void define(String propertyPath, String alias) {
-		define(propertyPath, alias, null);
+	protected Mapping define(String propertyPath, String alias) {
+		return define(propertyPath, alias, null);
 	}
 
-	protected void define(String propertyPath, String alias,
+	protected Mapping define(String propertyPath, String alias,
 			Function<T, Object> function) {
-		mappings.add(new Mapping(propertyPath, alias, function));
+		Mapping mapping = new Mapping(propertyPath, alias, function);
+		mappings.add(mapping);
+		return mapping;
 	}
 
 	protected void defineChildWithMultiple(String prefix, String... paths) {
@@ -113,7 +112,23 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 		list.add(totalRow);
 	}
 
-	class Mapping {
+	public static class FieldAccessor {
+		private String fieldName;
+
+		public FieldAccessor(String fieldName) {
+			this.fieldName = fieldName;
+		}
+
+		public Object get(Object t) {
+			try {
+				return t.getClass().getField(fieldName).get(t);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
+	public class Mapping {
 		String propertyPath;
 
 		Function<T, Object> function;
@@ -122,12 +137,42 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 
 		PropertyPathAccessor accessor;
 
+		private FieldAccessor fieldAccessor;
+
+		private Function mapper;
+
 		public Mapping(String propertyPath, String alias,
 				Function<T, Object> function) {
 			this.propertyPath = propertyPath;
 			this.alias = alias;
 			this.function = function;
 			accessor = new PropertyPathAccessor(propertyPath);
+		}
+
+		public String stringValue(T t) {
+			Object value = null;
+			if (function != null) {
+				value = function.apply(t);
+			} else if (accessor != null) {
+				value = accessor.getChainedProperty(t);
+			} else {
+				value = fieldAccessor.get(t);
+			}
+			if (mapper != null) {
+				value = mapper.apply(value);
+			}
+			return CommonUtils.nullSafeToString(value);
+		}
+
+		public Mapping field() {
+			accessor = null;
+			fieldAccessor = new FieldAccessor(propertyPath);
+			return this;
+		}
+
+		public Mapping auDate() {
+			mapper = d -> d == null ? null : Ax.dateSlash((Date) d);
+			return this;
 		}
 
 		public String getName() {
@@ -142,6 +187,11 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 		public String toString() {
 			return CommonUtils.formatJ("Path: %s - alias: %s - function: %s",
 					propertyPath, alias, function);
+		}
+
+		public Mapping friendly() {
+			mapper = o -> o == null ? null : Ax.friendly(o);
+			return this;
 		}
 	}
 }

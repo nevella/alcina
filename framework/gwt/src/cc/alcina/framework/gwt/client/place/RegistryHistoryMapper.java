@@ -48,7 +48,10 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		for (BasePlaceTokenizer tokenizer : impls) {
 			tokenizersByPrefix.add(tokenizer.getPrefix(), tokenizer);
 			tokenizersByPlace.put(tokenizer.getTokenizedClass(), tokenizer);
+			if(tokenizer.isCanonicalModelClassTokenizer()){
 			tokenizersByModelClass.put(tokenizer.getModelClass(), tokenizer);
+			}
+			tokenizer.register(tokenizersByModelClass);
 		}
 		List<BasePlace> places = Registry.impls(BasePlace.class);
 		for (BasePlace place : places) {
