@@ -288,6 +288,9 @@ public class TransformPersister {
 									tm.setIgnorePropertyChangesTo(event);
 									tm.fireDomainTransform(event);
 									tm.setIgnorePropertyChangesTo(null);
+									if(tm.provideIsMarkedFlushTransform(event)){
+										tm.flush();
+									}
 								}
 								eventsPersisted.add(event);
 								transformCount++;

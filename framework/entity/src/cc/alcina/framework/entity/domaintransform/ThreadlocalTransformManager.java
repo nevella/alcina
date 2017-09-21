@@ -191,6 +191,8 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private boolean useTlIdGenerator = false;
 
+	private Set<DomainTransformEvent> flushAfterTransforms = new LinkedHashSet<>();
+
 	@Override
 	public void addTransform(DomainTransformEvent evt) {
 		if (transformsExplicitlyPermitted) {
@@ -719,7 +721,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public void resetTltm(HiliLocatorMap locatorMap,
 			PersistenceLayerTransformExceptionPolicy exceptionPolicy,
-			boolean keepExplicitlyPermittedTransforms) {
+			boolean keepExplicitlyPermittedAndFlushAfterTransforms) {
 		setEntityManager(null);
 		setDetachedEntityCache(null);
 		this.exceptionPolicy = exceptionPolicy;
@@ -730,8 +732,9 @@ public class ThreadlocalTransformManager extends TransformManager
 		transformListenerSupport.clear();
 		deleted = new LinkedHashSet<HasIdAndLocalId>();
 		createdObjectLocators.clear();
-		if (!keepExplicitlyPermittedTransforms) {
+		if (!keepExplicitlyPermittedAndFlushAfterTransforms) {
 			explicitlyPermittedTransforms.clear();
+			flushAfterTransforms.clear();
 		}
 		this.lastEvent = null;
 		for (SourcesPropertyChangeEvents spce : listeningTo) {
@@ -1141,5 +1144,13 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public static class UncomittedTransformsException extends Exception {
+	}
+
+	public void markFlushTransforms() {
+		flushAfterTransforms.add(CommonUtils.last(getTransforms().iterator()));
+	}
+
+	public boolean provideIsMarkedFlushTransform(DomainTransformEvent event) {
+		return flushAfterTransforms.contains(event);
 	}
 }
