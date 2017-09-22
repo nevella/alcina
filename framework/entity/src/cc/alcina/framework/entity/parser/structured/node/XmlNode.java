@@ -718,8 +718,13 @@ public class XmlNode {
 			return Arrays.stream(attr("class").split(" "))
 					.anyMatch(cn -> cn.equals(className));
 		}
-	}
 
+		
+
+		public XmlNodeHtmlTableBuilder tableBuilder() {
+			return new XmlNodeHtmlTableBuilder(XmlNode.this);
+		}
+	}
 	public class XmlNodeRelative {
 		public boolean hasNextSibling() {
 			return node.getNextSibling() != null;
