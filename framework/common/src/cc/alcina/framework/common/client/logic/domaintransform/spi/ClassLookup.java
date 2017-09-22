@@ -117,5 +117,9 @@ public interface ClassLookup {
 		}
 	}
 
+	default boolean isPrimitive(Class<?> clazz){
+		return clazz.isPrimitive();
+	}
+
 	
 }

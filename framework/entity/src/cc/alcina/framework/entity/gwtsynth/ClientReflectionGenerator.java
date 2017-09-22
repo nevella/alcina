@@ -691,6 +691,10 @@ public class ClientReflectionGenerator extends Generator {
 			}
 			Object annotationValue = m.invoke(a,
 					CommonUtils.EMPTY_OBJECT_ARRAY);
+			if (annotationValue instanceof String) {
+				annotationValue = ((String) annotationValue).replace("\n",
+						"\\n");
+			}
 			Object defaultValue = a.annotationType()
 					.getDeclaredMethod(m.getName(), new Class[0])
 					.getDefaultValue();

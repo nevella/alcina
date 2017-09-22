@@ -174,9 +174,15 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 				} else {
 					Object value2 = deserializeField(jsonValue,
 							pd.getPropertyType());
-					try {
-						SEUtilities.setPropertyValue(obj, propertyName, value2);
-					} catch (NoSuchPropertyException e) {
+					if (value2 == null && Reflections.classLookup()
+							.isPrimitive(pd.getPropertyType())) {
+						// use default, probably a refactoring issue
+					} else {
+						try {
+							SEUtilities.setPropertyValue(obj, propertyName,
+									value2);
+						} catch (NoSuchPropertyException e) {
+						}
 					}
 				}
 			}

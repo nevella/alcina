@@ -1,6 +1,6 @@
 /* General & Main Containers ######################################################### */
 /* Top-level containers */ /* reset the gwt body etc definition */
-body, table td, select {
+body,table td,select {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 100%;
 }
@@ -94,7 +94,7 @@ div.alcina-MainContent div.alcina-NoLayoutContentRight {
 	text-decoration: underline;
 }
 
-div.alcina-ContentLeft div input.small, table.alcina-ContentLeft div input.small
+div.alcina-ContentLeft div input.small,table.alcina-ContentLeft div input.small
 	{
 	width: 90px;
 }
@@ -104,10 +104,8 @@ div.alcina-MainContent.content-100pc-lhs {
 	margin-bottom: 0px;
 }
 /* Main menu */
-.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a,
-	.alcina-MainMenu .gwt-TabBar  .gwt-TabBarItem-selected a:active,
-	.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a:visited,
-	.alcina-MainMenu .gwt-TabBar  .gwt-TabBarItem-selected a:hover {
+.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a,.alcina-MainMenu .gwt-TabBar  .gwt-TabBarItem-selected a:active,.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a:visited,.alcina-MainMenu .gwt-TabBar  .gwt-TabBarItem-selected a:hover
+	{
 	background-color: #104860;
 	font-weight: bold;
 	white-space: nowrap;
@@ -120,8 +118,8 @@ table.mainTabPanel .alcina-MainMenu {
 	border-bottom: 4px solid #104860;
 }
 
-.alcina-MainMenu a, .alcina-MainMenu a:link, .alcina-MainMenu a:visited,
-	.alcina-MainMenu a:active {
+.alcina-MainMenu a,.alcina-MainMenu a:link,.alcina-MainMenu a:visited,.alcina-MainMenu a:active
+	{
 	padding: 7px 15px 7px 15px;
 	color: #ffffff;
 	display: block;
@@ -133,8 +131,8 @@ table.mainTabPanel .alcina-MainMenu {
 	white-space: nowrap;
 }
 
-.alcina-MainMenu .gwt-TabBarItem a, .alcina-MainMenu .gwt-TabBarItem a:active,
-	.alcina-MainMenu .gwt-TabBarItem a:visited {
+.alcina-MainMenu .gwt-TabBarItem a,.alcina-MainMenu .gwt-TabBarItem a:active,.alcina-MainMenu .gwt-TabBarItem a:visited
+	{
 	background-position: right bottom;
 }
 
@@ -149,8 +147,8 @@ table.mainTabPanel .alcina-MainMenu {
 	white-space: nowrap;
 }
 
-.alcina-MainMenuRight a, .alcina-MainMenuRight a:active,
-	.alcina-MainMenuRight a:visited {
+.alcina-MainMenuRight a,.alcina-MainMenuRight a:active,.alcina-MainMenuRight a:visited
+	{
 	background-position: left bottom;
 	float: right;
 }
@@ -206,16 +204,18 @@ div.alcina-BreadcrumbBar.tlr-borders {
 	border: 1px solid #cecece;
 	border-bottom: none;
 }
-div.alcina-BreadcrumbBar p span{
-	display:block;
+
+div.alcina-BreadcrumbBar p span {
+	display: block;
 }
+
 div.alcina-BreadcrumbBar div.right {
 	float: right;
 	padding-left: 3px;
 	background: url(_pix/bg-seperator-toolbar.gif) left bottom repeat-y;
 }
 
-div.alcina-BreadcrumbBar div.right a.button, div.alcina-BreadcrumbBar div.right a.dropdown
+div.alcina-BreadcrumbBar div.right a.button,div.alcina-BreadcrumbBar div.right a.dropdown
 	{
 	padding: 6px 8px;
 	display: block;
@@ -231,7 +231,7 @@ div.alcina-BreadcrumbBar div a.dropdown:hover {
 	background: url(_pix/breadcrumb-dropdown-over.png) right bottom repeat-y;
 }
 
-div.alcina-BreadcrumbBar div a.button:hover, div.alcina-BreadcrumbBar div a.dropdown:hover
+div.alcina-BreadcrumbBar div a.button:hover,div.alcina-BreadcrumbBar div a.dropdown:hover
 	{
 	background-color: #f4f4f4;
 }
@@ -256,13 +256,13 @@ div.alcina-BreadcrumbBar p.date {
 	width: 100px;
 }
 
-.alcina-BreadcrumbBar a:link, .alcina-BreadcrumbBar a:visited,
-	.alcina-BreadcrumbBar a:active {
+.alcina-BreadcrumbBar a:link,.alcina-BreadcrumbBar a:visited,.alcina-BreadcrumbBar a:active
+	{
 	color: #717171;
 	text-decoration: none;
 }
 
-.alcina-BreadcrumbBar a:hover, .link-black a:hover {
+.alcina-BreadcrumbBar a:hover,.link-black a:hover {
 	text-decoration: underline;
 }
 
@@ -320,7 +320,7 @@ h1 {
 }
 
 /* Links ######################################################### */
-a, a:link, a:visited, a:active {
+a,a:link,a:visited,a:active {
 	color: #227e4d;
 	text-decoration: underline
 }
@@ -330,12 +330,11 @@ a:hover {
 	cursor: pointer;
 }
 
-div.gwt-TabBarItem input:focus, div.gwt-TabBarItem input {
+div.gwt-TabBarItem input:focus,div.gwt-TabBarItem input {
 	outline-width: 0;
 }
 
-.alcina-Footer a:link, .alcina-Footer a:visited, .alcina-Footer a:active
-	{
+.alcina-Footer a:link,.alcina-Footer a:visited,.alcina-Footer a:active {
 	color: #c7d7dd;
 	text-decoration: underline
 }
@@ -344,7 +343,7 @@ div.gwt-TabBarItem input:focus, div.gwt-TabBarItem input {
 	color: #ffffff;
 }
 
-.link-black a:link, .link-black a:visited, .link-black a:active {
+.link-black a:link,.link-black a:visited,.link-black a:active {
 	color: #000;
 	text-decoration: none;
 }
@@ -354,7 +353,7 @@ div.gwt-TabBarItem input:focus, div.gwt-TabBarItem input {
 }
 
 /* Buttons ######################################################### */
-a.button-grey, a.button-grey:active, a.button-grey:visited, a.button-grey.disabled:hover
+a.button-grey,a.button-grey:active,a.button-grey:visited,a.button-grey.disabled:hover
 	{
 	background: #e9e9e9;
 	border: 1px solid #cdcdcd;
@@ -367,12 +366,12 @@ a.button-grey, a.button-grey:active, a.button-grey:visited, a.button-grey.disabl
 	line-height: 1em;
 }
 
-a.button-grey.disabled, a.button-grey.disabled:hover {
+a.button-grey.disabled,a.button-grey.disabled:hover {
 	color: #777777;
 }
 
-.alcina-ToolbarSmall a.button-grey, .alcina-ToolbarSmall a.button-grey:active,
-	.alcina-ToolbarSmall a.button-grey:visited {
+.alcina-ToolbarSmall a.button-grey,.alcina-ToolbarSmall a.button-grey:active,.alcina-ToolbarSmall a.button-grey:visited
+	{
 	background: #e9e9e9;
 	border: 1px solid #cdcdcd;
 	color: #333333;
@@ -388,7 +387,7 @@ a.button-grey.disabled, a.button-grey.disabled:hover {
 	padding: 3px;
 }
 
-a.button-grey:hover, .alcina-ToolbarSmall a.button-grey:hover {
+a.button-grey:hover,.alcina-ToolbarSmall a.button-grey:hover {
 	color: #333333;
 	background: #ffffff url(_pix/bg-button-large-grey.gif) bottom left
 		repeat-x;
@@ -498,12 +497,12 @@ form {
 	margin: 0;
 }
 
-input, select, textarea {
+input,select,textarea {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 1em;
 }
 
-input.button-submit, button.button-submit {
+input.button-submit,button.button-submit {
 	background: #78a3b6 url(_pix/bg-button-blue.gif) left top repeat;
 	border: 1px solid #114a62;
 	font-family: Arial, Helvetica, sans-serif;
@@ -669,7 +668,7 @@ div.pad-top-0 {
 	position: relative;
 }
 
-input.wide-text, td.wide-text input {
+input.wide-text,td.wide-text input {
 	width: 450px;
 }
 /** Specific alcina elements (misc) **/
@@ -679,7 +678,7 @@ input.wide-text, td.wide-text input {
 }
 
 /* Tables ######################################################### */
-table.home, div.alcina-GeneralContentHolder, div.wizard {
+table.home,div.alcina-GeneralContentHolder,div.wizard {
 	width: 100%;
 	border: 1px solid #cdcdcd;
 	background: #fff;
@@ -757,7 +756,7 @@ table.gwittir-GridForm table.alcina-SelectorFrame td {
 	padding: 0px;
 }
 
-div.alcina-Selector .chooser-item.selected, div.select-item-container .chooser-item.selected
+div.alcina-Selector .chooser-item.selected,div.select-item-container .chooser-item.selected
 	{
 	background-color: #A8D3E6;
 }
@@ -804,7 +803,7 @@ div.alcina-Selector div.select-item-container {
 	padding-left: 4px;
 }
 
-div.alcina-Selector a, div.alcina-Selector a:link, div.alcina-Selector a:visited
+div.alcina-Selector a,div.alcina-Selector a:link,div.alcina-Selector a:visited
 	{
 	color: black;
 	text-decoration: none;
@@ -968,7 +967,7 @@ div.alcina-ObjectTree .results-table {
 	width: 100%;
 }
 
-div.alcina-ObjectTree .alcina-Selector .group-heading, .alcina-Selector .popupContent .group-heading
+div.alcina-ObjectTree .alcina-Selector .group-heading,.alcina-Selector .popupContent .group-heading
 	{
 	color: #717171;
 	background-color: #f4f4f4;
@@ -1005,7 +1004,7 @@ table.results-table {
 	border: solid 1px #FCC;
 }
 
-.gwittir-ValidationPopup.dateChooser, .gwittir-ValidationPopup.withBkg {
+.gwittir-ValidationPopup.dateChooser,.gwittir-ValidationPopup.withBkg {
 	border: 1px solid rgb(206, 206, 206);
 	padding: 1px 4px 1px 4px;
 	background-color: white;
@@ -1022,7 +1021,7 @@ table.results-table {
 	color: black;
 }
 
-.login-error, .error {
+.login-error,.error {
 	color: #ff3333;
 }
 
@@ -1134,8 +1133,7 @@ div.table-toolbar {
 	padding-bottom: 5px;
 }
 
-div.table-toolbar a.button-grey, div.table-toolbar a.button-grey:active,
-	div.table-toolbar a.button-grey:visited, div.table-toolbar a.button-grey:hover
+div.table-toolbar a.button-grey,div.table-toolbar a.button-grey:active,div.table-toolbar a.button-grey:visited,div.table-toolbar a.button-grey:hover
 	{
 	margin-left: 20px;
 }
@@ -1166,7 +1164,7 @@ div.alcina-Status {
 	border-style: solid;
 }
 
-div.alcina-Status.icy, div.alcina-Status .icy {
+div.alcina-Status.icy,div.alcina-Status .icy {
 	color: #FFFFFF;
 	background-color: #9999FF;
 }
@@ -1215,7 +1213,7 @@ div.alcina-MainContent div.workspaceViews.alcina-ContentLeft {
 	padding: 5px 0 5px 0;
 }
 /** Date picker (now gwt) stuff **/
-input.calendarText.alcina-DateBox, div.alcina-ObjectTree  input.gwt-DateBox.alcina-DateBox
+input.calendarText.alcina-DateBox,div.alcina-ObjectTree  input.gwt-DateBox.alcina-DateBox
 	{
 	border: 1px solid #CECECE;
 	padding: 1px 4px 1px 4px;
@@ -1245,19 +1243,19 @@ table.gwittir-BoundTable .rowHandleCheckbox {
 	padding: 0px 5px 0px 5px;
 }
 
-table.gwittir-BoundTable, table.gwittir-GridForm {
+table.gwittir-BoundTable,table.gwittir-GridForm {
 	font-size: 0.9em;
 }
 
-table.gwittir-BoundTable td, table.gwittir-GridForm td {
+table.gwittir-BoundTable td,table.gwittir-GridForm td {
 	padding: 2px 12px 2px 2px;
 	border: none;
 	color: #222222;
 	vertical-align: top;
 }
 
-table.gwittir-BoundTable .no-content, .alcina-widgetList .no-content,
-	.alcina-cellTable.no-content {
+table.gwittir-BoundTable .no-content,.alcina-widgetList .no-content,.alcina-cellTable.no-content
+	{
 	padding: 15px;
 	text-align: center;
 }
@@ -1284,7 +1282,7 @@ table.gwittir-BoundTable tr.odd {
 	background-color: #F0F0FE;
 }
 
-table.gwittir-BoundTable tr.even.selected, table.gwittir-BoundTable tr.odd.selected
+table.gwittir-BoundTable tr.even.selected,table.gwittir-BoundTable tr.odd.selected
 	{
 	font-weight: bold;
 }
@@ -1334,7 +1332,7 @@ table.gwittir-BoundTable tr.header {
 	color: red;
 }
 /** editable overlay **/
-table.gwittir-BoundTable.editable tr.even td.editableOver, table.gwittir-BoundTable.editable tr.odd td.editableOver
+table.gwittir-BoundTable.editable tr.even td.editableOver,table.gwittir-BoundTable.editable tr.odd td.editableOver
 	{
 	background-color: #F4F4F4;
 	cursor: pointer;
@@ -1383,8 +1381,8 @@ table.gwittir-BoundTable.editable tr.odd td {
 	width: 230px;
 }
 
-.alcina-Notification a, .alcina-Notification a:active,
-	.alcina-Notification a:link {
+.alcina-Notification a,.alcina-Notification a:active,.alcina-Notification a:link
+	{
 	color: #1111cc;
 }
 
@@ -1393,7 +1391,7 @@ table.gwittir-BoundTable.editable tr.odd td {
 	padding-right: 10px;
 }
 
-.alcina-Notification .info, .alcina-Notification .warning {
+.alcina-Notification .info,.alcina-Notification .warning {
 	text-align: left;
 }
 
@@ -1453,7 +1451,7 @@ table.gwittir-BoundTable.editable tr.odd td {
 .inlineTabDisplay .gwt-TabBar .gwt-TabBarItem {
 	display: inline-block;
 	text-align: left;
-	zoom: 1; 
+	zoom: 1;
 	display: inline;
 }
 
@@ -1475,8 +1473,8 @@ table.gwittir-BoundTable.editable tr.odd td {
 	background-color: #fff;
 }
 
-.alcina-expandableLabel a, .alcina-expandableLabel a:link,
-	.alcina-expandableLabel a:visited, .alcina-expandableLabel a:active {
+.alcina-expandableLabel a,.alcina-expandableLabel a:link,.alcina-expandableLabel a:visited,.alcina-expandableLabel a:active
+	{
 	text-decoration: none;
 }
 
@@ -1558,8 +1556,8 @@ div.max .gwt-RichTextArea {
 }
 
 /** more misc - added 2011.08.24 **/
-a.link-no-underline:link, a.link-no-underline:visited, a.link-no-underline:active,
-	a.link-no-underline {
+a.link-no-underline:link,a.link-no-underline:visited,a.link-no-underline:active,a.link-no-underline
+	{
 	text-decoration: none;
 }
 
@@ -1573,7 +1571,7 @@ div.popdown-select {
 	background-color: white;
 }
 
-div.popdown-select a, div.popdown-select a:link {
+div.popdown-select a,div.popdown-select a:link {
 	color: #555;
 	font-size: 0.9em;
 	white-space: nowrap;
@@ -1685,7 +1683,7 @@ div.popdown-select a:hover {
 	white-space: normal;
 }
 
-.gwt-RadioButton, .gwt-CheckBox {
+.gwt-RadioButton,.gwt-CheckBox {
 	white-space: nowrap;
 }
 
@@ -1709,12 +1707,12 @@ textarea.hint {
 	color: #777;
 }
 
-.alcina-BeanPanel.pwo-center-buttons  .alcina-SavePanel, .button-panel {
+.alcina-BeanPanel.pwo-center-buttons  .alcina-SavePanel,.button-panel {
 	text-align: center;
 	margin-top: 2em;
 }
 
-.alcina-BeanPanel.pwo-center-buttons  .alcina-SavePanel button, button.flat
+.alcina-BeanPanel.pwo-center-buttons  .alcina-SavePanel button,button.flat
 	{
 	background: #E9E9E9;
 	border: 1px solid #CDCDCD;
@@ -1726,13 +1724,13 @@ textarea.hint {
 	min-width: 5em;
 }
 
-.alcina-BeanPanel.pwo-center-buttons  .alcina-SavePanel button:hover,
-	button.flat:hover {
+.alcina-BeanPanel.pwo-center-buttons  .alcina-SavePanel button:hover,button.flat:hover
+	{
 	background: #DDD;
 	border: 1px solid #AAA;
 }
 
-.monospace, .monospace textarea {
+.monospace,.monospace textarea {
 	font-family: monospace;
 	font-size: 125%;
 }
@@ -1827,7 +1825,6 @@ div.gwt-PopupPanel.bubble .bubble-up {
 	background-position: right center;
 }
 
-
 .flat-search-row .operator table.alcina-SelectorFrame.minimal .select-item-container
 	{
 	min-width: 100px;
@@ -1847,14 +1844,38 @@ div.gwt-PopupPanel.bubble .bubble-up {
 input.alcina-Filter {
 	width: calc(100% - 15px);
 }
-.alcina-expandable-label-popup{
-	width:80vw;
-	height:40vw;
+
+.alcina-expandable-label-popup {
+	width: 80vw;
+	height: 40vw;
 	font-family: 'Courier New';
 	white-space: pre-wrap;
-	color:#000;
+	color: #000;
 	border: solid 1px #eee;
-	margin:1em;
-	padding:1em;
-	font-size:1.1em;	
+	margin: 1em;
+	padding: 1em;
+	font-size: 1.1em;
+}
+
+.gwittir-GridForm-Help {
+	background: white;
+	border: solid 1px hsl(213, 70%, 35%);
+	padding: 1.0em;
+	white-space: pre-wrap;
+	max-width: 300px;
+}
+
+div.has-help-text span:after {
+	content: ' (*)';
+	vertical-align: super;
+	padding-left: 0.5em;
+}
+
+div.has-help-text:hover {
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+div.has-help-text:hover span:after {
+	visibility: hidden
 }
