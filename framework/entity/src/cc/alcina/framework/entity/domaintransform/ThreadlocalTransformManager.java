@@ -100,6 +100,9 @@ public class ThreadlocalTransformManager extends TransformManager
 	public static final String CONTEXT_IGNORE_DOUBLE_DELETION = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_IGNORE_DOUBLE_DELETION";
 
+	public static final String CONTEXT_FLUSH_BEFORE_DELETE = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_FLUSH_BEFORE_DELETE";
+
 	private static final String TOPIC_RESET_THREAD_TRANSFORM_MANAGER = ThreadlocalTransformManager.class
 			.getName() + ".TOPIC_RESET_THREAD_TRANSFORM_MANAGER";
 
@@ -197,6 +200,10 @@ public class ThreadlocalTransformManager extends TransformManager
 	public void addTransform(DomainTransformEvent evt) {
 		if (transformsExplicitlyPermitted) {
 			explicitlyPermittedTransforms.add(evt);
+		}
+		if (evt.getTransformType() == TransformType.DELETE_OBJECT
+				&& LooseContext.is(CONTEXT_FLUSH_BEFORE_DELETE)) {
+			markFlushTransforms();
 		}
 		super.addTransform(evt);
 	}

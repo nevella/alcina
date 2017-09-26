@@ -80,7 +80,7 @@ public class BasicSearcher implements Searcher {
 
 	private Query searchStub(SingleTableSearchDefinition sdef, String prefix,
 			String postfix, boolean withOrderClause) {
-		EqlWithParameters ewp = sdef.eql(withOrderClause);
+		EqlWithParameters ewp = getEqlWithParameters(sdef, withOrderClause);
 		Query query = getEntityManager().createQuery(
 				prefix + " " + ewp.eql + postfix);
 		int i = 1;
@@ -88,5 +88,11 @@ public class BasicSearcher implements Searcher {
 			query.setParameter(i++, o);
 		}
 		return query;
+	}
+
+	protected EqlWithParameters getEqlWithParameters(
+			SingleTableSearchDefinition sdef, boolean withOrderClause) {
+		EqlWithParameters ewp = sdef.eql(withOrderClause);
+		return ewp;
 	}
 }
