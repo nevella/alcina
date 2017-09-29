@@ -1,0 +1,1 @@
+for dev/hosted mode, remember to add /alcina/framework/emul/dev to the target classpath  
