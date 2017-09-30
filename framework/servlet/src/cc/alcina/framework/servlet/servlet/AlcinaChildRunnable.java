@@ -1,8 +1,13 @@
 package cc.alcina.framework.servlet.servlet;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.PermissionsManagerState;
 import cc.alcina.framework.common.client.util.Ax;
@@ -62,11 +67,21 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		}
 
 		public Object callNewThread(Runnable runnable) {
+			return callNewThread(runnable, null);
+		}
+
+		public Object callNewThread(Runnable runnable, CountDownLatch latch) {
 			new Thread() {
 				@Override
 				public void run() {
 					getRunContext().runnable = runnable;
-					AlcinaChildContextRunner.this.run();
+					try {
+						AlcinaChildContextRunner.this.run();
+					} finally {
+						if (latch != null) {
+							latch.countDown();
+						}
+					}
 				}
 			}.start();
 			return null;
@@ -130,6 +145,22 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		} finally {
 			LooseContext.confirmDepth(getRunContext().tLooseContextDepth);
 			LooseContext.pop();
+		}
+	}
+
+	public static <T> void parallelStream(String name, List<T> items,
+			Consumer<T> consumer) {
+		CountDownLatch latch = new CountDownLatch(items.size());
+		items.stream().forEach(i -> {
+			Runnable itemRunnable = () -> consumer.accept(i);
+			new AlcinaChildContextRunner(
+					Ax.format("%s-%s", name, items.indexOf(i)))
+							.callNewThread(itemRunnable, latch);
+		});
+		try {
+			latch.await();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 }

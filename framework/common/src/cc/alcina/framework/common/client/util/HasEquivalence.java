@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -318,6 +319,13 @@ public interface HasEquivalence<T> {
 				}
 			}
 			return true;
+		}
+
+		public static <C extends HasEquivalence> Predicate<C>
+				deDuplicateFilter(Collection<C> values) {
+			Set<C> duplicates = listDuplicates(values).stream()
+					.collect(Collectors.toSet());
+			return v -> !duplicates.contains(v);
 		}
 	}
 }

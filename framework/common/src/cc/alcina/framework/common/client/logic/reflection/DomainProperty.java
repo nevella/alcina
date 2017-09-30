@@ -50,4 +50,6 @@ public @interface DomainProperty {
 	boolean ignoreForDeletionChecking() default false;
 	
 	boolean cascadeDeletionFromRef() default false;
+	
+	boolean serializeWithBeanSerialization() default false;
 }

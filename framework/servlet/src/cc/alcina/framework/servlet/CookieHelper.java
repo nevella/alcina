@@ -74,16 +74,18 @@ public class CookieHelper {
 				iid = null;
 			}
 		}
-		if (iid == null || iid.isEmpty()) {
-			iid = SEUtilities.generateId();
-			Cookie cookie = new Cookie(IID, iid);
-			cookie.setPath("/");
-			cookie.setMaxAge(86400 * 365 * 10);
-			addToRqAndRsp(request, response, cookie);
-			CommonPersistenceLocal up = Registry
-					.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence();
-			up.updateIid(iid, null, false);
+		if (response != null) {
+			if (iid == null || iid.isEmpty()) {
+				iid = SEUtilities.generateId();
+				Cookie cookie = new Cookie(IID, iid);
+				cookie.setPath("/");
+				cookie.setMaxAge(86400 * 365 * 10);
+				addToRqAndRsp(request, response, cookie);
+				CommonPersistenceLocal up = Registry
+						.impl(CommonPersistenceProvider.class)
+						.getCommonPersistence();
+				up.updateIid(iid, null, false);
+			}
 		}
 		return iid;
 	}

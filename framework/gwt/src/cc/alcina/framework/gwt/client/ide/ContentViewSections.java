@@ -186,9 +186,9 @@ public class ContentViewSections {
 
 		private String caption;
 
-		private String okButtonName="OK";
+		private String okButtonName = "OK";
 
-		private String cancelButtonName="Cancel";
+		private String cancelButtonName = "Cancel";
 
 		public ContentViewSectionsDialogBuilder
 				okButtonName(String okButtonName) {
@@ -216,6 +216,12 @@ public class ContentViewSections {
 			ClientUtils.createEditContentViewWidgets(actionListener, caption,
 					"", beanViews.get(0), noGlass, true, true, true, true,
 					okButtonName, cancelButtonName);
+		}
+
+		public ContentViewSectionsDialogBuilder
+				actionListener(PermissibleActionListener actionListener) {
+			ContentViewSections.this.actionListener = actionListener;
+			return this;
 		}
 	}
 

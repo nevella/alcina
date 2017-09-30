@@ -59,6 +59,8 @@ public interface ClassLookup {
 
 		private final Class beanType;
 
+		private boolean serializeWithBeanSerialization;
+
 		public PropertyInfoLite(Class beanType, String propertyName) {
 			this.propertyName = propertyName;
 			this.beanType = beanType;
@@ -75,6 +77,12 @@ public interface ClassLookup {
 							propertyName);
 			serializeCollectionOnClient = ann != null
 					&& ann.serializeOnClient();
+			serializeWithBeanSerialization = ann != null
+					&& ann.serializeWithBeanSerialization();
+		}
+
+		public boolean isSerializeWithBeanSerialization() {
+			return this.serializeWithBeanSerialization;
 		}
 
 		public Class getPropertyType() {
@@ -107,6 +115,10 @@ public interface ClassLookup {
 		public int hashCode() {
 			return beanType.hashCode() ^ propertyName.hashCode();
 		}
+	}
+
+	default boolean isPrimitive(Class<?> clazz){
+		return clazz.isPrimitive();
 	}
 
 	

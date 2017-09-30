@@ -100,6 +100,9 @@ public class ThreadlocalTransformManager extends TransformManager
 	public static final String CONTEXT_IGNORE_DOUBLE_DELETION = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_IGNORE_DOUBLE_DELETION";
 
+	public static final String CONTEXT_FLUSH_BEFORE_DELETE = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_FLUSH_BEFORE_DELETE";
+
 	private static final String TOPIC_RESET_THREAD_TRANSFORM_MANAGER = ThreadlocalTransformManager.class
 			.getName() + ".TOPIC_RESET_THREAD_TRANSFORM_MANAGER";
 
@@ -191,10 +194,16 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private boolean useTlIdGenerator = false;
 
+	private Set<DomainTransformEvent> flushAfterTransforms = new LinkedHashSet<>();
+
 	@Override
 	public void addTransform(DomainTransformEvent evt) {
 		if (transformsExplicitlyPermitted) {
 			explicitlyPermittedTransforms.add(evt);
+		}
+		if (evt.getTransformType() == TransformType.DELETE_OBJECT
+				&& LooseContext.is(CONTEXT_FLUSH_BEFORE_DELETE)) {
+			markFlushTransforms();
 		}
 		super.addTransform(evt);
 	}
@@ -356,7 +365,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public void flush() {
-		entityManager.flush();
+		flush(new ArrayList<>());
 	}
 
 	public List<String> getAnnotatedPropertyNames(Class clazz) {
@@ -652,6 +661,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		super.propertyChange(evt);
 	}
 
+	protected void propertyChangeSuper(PropertyChangeEvent evt) {
+		super.propertyChange(evt);
+	}
+
 	public HiliLocatorMap reconstituteHiliMap() {
 		if (clientInstance != null) {
 			CommonPersistenceLocal cp = Registry
@@ -719,7 +732,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public void resetTltm(HiliLocatorMap locatorMap,
 			PersistenceLayerTransformExceptionPolicy exceptionPolicy,
-			boolean keepExplicitlyPermittedTransforms) {
+			boolean keepExplicitlyPermittedAndFlushAfterTransforms) {
 		setEntityManager(null);
 		setDetachedEntityCache(null);
 		this.exceptionPolicy = exceptionPolicy;
@@ -730,8 +743,9 @@ public class ThreadlocalTransformManager extends TransformManager
 		transformListenerSupport.clear();
 		deleted = new LinkedHashSet<HasIdAndLocalId>();
 		createdObjectLocators.clear();
-		if (!keepExplicitlyPermittedTransforms) {
+		if (!keepExplicitlyPermittedAndFlushAfterTransforms) {
 			explicitlyPermittedTransforms.clear();
+			flushAfterTransforms.clear();
 		}
 		this.lastEvent = null;
 		for (SourcesPropertyChangeEvents spce : listeningTo) {
@@ -1141,5 +1155,17 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public static class UncomittedTransformsException extends Exception {
+	}
+
+	public void flush(List<DomainTransformEventPersistent> dtreps) {
+		entityManager.flush();
+	}
+
+	public void markFlushTransforms() {
+		flushAfterTransforms.add(CommonUtils.last(getTransforms().iterator()));
+	}
+
+	public boolean provideIsMarkedFlushTransform(DomainTransformEvent event) {
+		return flushAfterTransforms.contains(event);
 	}
 }

@@ -87,6 +87,10 @@ public class ResourceUtilities {
 		return StringMap
 				.fromPropertyString(readClassPathResourceAsString(clazz, path));
 	}
+	public static StringMap classPathStringExistenceMap(Class clazz, String path) {
+		return StringMap
+				.fromStringList(readClassPathResourceAsString(clazz, path));
+	}
 
 	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
 			Class methodFilterAnnotation, boolean cloneCollections) {
@@ -172,6 +176,9 @@ public class ResourceUtilities {
 			Field[] fields = c.getDeclaredFields();
 			for (Field field : fields) {
 				if (Modifier.isStatic(field.getModifiers())) {
+					continue;
+				}
+				if (Modifier.isFinal(field.getModifiers())) {
 					continue;
 				}
 				if (Modifier.isTransient(field.getModifiers())
@@ -436,11 +443,48 @@ public class ResourceUtilities {
 
 	public static String readUrlAsString(String strUrl, String charset)
 			throws Exception {
+		//don't use cc.alcina.framework.entity.ResourceUtilities.readUrlAsString(String, String, StringMap)
+		//we a java UA inter alia
 		URL url = new URL(strUrl);
 		InputStream is = null;
 		is = url.openConnection().getInputStream();
 		String input = readStreamToString(is, charset);
 		return input;
+	}
+
+	public static String readUrlAsString(String strUrl, String charset,
+			StringMap headers) throws Exception {
+		InputStream in = null;
+		HttpURLConnection connection = null;
+		try {
+			URL url = new URL(strUrl);
+			connection = (HttpURLConnection) (url.openConnection());
+			connection.setDoOutput(false);
+			connection.setDoInput(true);
+			connection.setUseCaches(false);
+			connection.setRequestMethod("GET");
+			for (Entry<String, String> e : headers.entrySet()) {
+				connection.setRequestProperty(e.getKey(), e.getValue());
+			}
+			in = connection.getInputStream();
+			String input = readStreamToString(in);
+			return input;
+		} catch (IOException ioe) {
+			if (connection != null) {
+				InputStream err = connection.getErrorStream();
+				String input = err == null ? null : readStreamToString(err);
+				throw new IOException(input, ioe);
+			} else {
+				throw ioe;
+			}
+		} finally {
+			if (in != null) {
+				in.close();
+			}
+			if (connection != null) {
+				connection.disconnect();
+			}
+		}
 	}
 
 	public static String readUrlAsStringWithPost(String strUrl, String postBody,
@@ -666,10 +710,10 @@ public class ResourceUtilities {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
 	public static void logToFile(String content) {
-		logToFile(content,"log.txt");
-		logToFile(content,"log.html");
-		logToFile(content,"log.xml");
+		logToFile(content, "log.txt");
+		logToFile(content, "log.html");
+		logToFile(content, "log.xml");
 	}
-	
 }

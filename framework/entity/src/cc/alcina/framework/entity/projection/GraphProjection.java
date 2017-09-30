@@ -139,6 +139,10 @@ public class GraphProjection {
 		return c.getSuperclass() != null && c.getSuperclass().isEnum();
 	}
 
+	public static boolean isEnumOrEnumSubclass(Class c) {
+		return c.isEnum() || isEnumSubclass(c);
+	}
+
 	public static boolean isGenericHiliType(Field field) {
 		if (!genericHiliTypeLookup.containsKey(field)) {
 			Type pt = getGenericType(field);
@@ -160,7 +164,7 @@ public class GraphProjection {
 		return c.isPrimitive() || c == String.class || c == Boolean.class
 				|| c == Character.class || c.isEnum() || c == Class.class
 				|| Number.class.isAssignableFrom(c)
-				|| Date.class.isAssignableFrom(c) || isEnumSubclass(c)
+				|| Date.class.isAssignableFrom(c) || isEnumOrEnumSubclass(c)
 				|| ProjectByValue.class.isAssignableFrom(c)
 				|| SafeHtml.class.isAssignableFrom(c);
 	}
@@ -198,6 +202,8 @@ public class GraphProjection {
 	private GraphProjectionDataFilter dataFilter;
 
 	private GraphProjectionFieldFilter fieldFilter;
+
+	private String contextDebugPath;
 
 	public static Supplier<Map> reachedSupplier = () -> new IdentityHashMap(
 			10 * LOOKUP_SIZE);
@@ -382,6 +388,13 @@ public class GraphProjection {
 		traversalCount++;
 		if (source == null) {
 			return null;
+		}
+		if (context != null) {
+			if (contextDebugPath != null) {
+				if (context.toString().contains(contextDebugPath)) {
+					int debug = 3;
+				}
+			}
 		}
 		Class sourceClass = source.getClass();
 		boolean checkReachable = false;

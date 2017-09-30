@@ -1112,7 +1112,7 @@ public class CommonUtils {
 
 	public static String safeToString(Object obj) {
 		try {
-			return obj.toString();
+			return obj == null ? "(null)" : obj.toString();
 		} catch (Exception e) {
 			return "Exception in toString() - " + e.getMessage();
 		}

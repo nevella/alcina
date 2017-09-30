@@ -55,8 +55,8 @@ public class RegistryScanner extends CachingScanner {
 	protected void process(Class c, String className, ClassDataItem foundItem,
 			ClassDataCache outgoing) {
 		c = maybeNormaliseClass(c);
-		//GWT, for instance, will replace a JavaScriptObject class with the synthetic interface
-
+		// GWT, for instance, will replace a JavaScriptObject class with the
+		// synthetic interface
 		if (!Modifier.isPublic(c.getModifiers())
 				|| Modifier.isAbstract(c.getModifiers()) || c.isInterface()) {
 			outgoing.add(foundItem);

@@ -8,7 +8,7 @@ import org.w3c.dom.Node;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class XmlNodeBuilder {
-	private XmlNode relativeTo;
+	protected XmlNode relativeTo;
 
 	private String tag;
 
@@ -17,6 +17,10 @@ public class XmlNodeBuilder {
 	private boolean processingInstruction;
 
 	private StringMap attrs = new StringMap();
+	
+	protected boolean built;
+
+	private XmlNode builtNode;
 
 	public XmlNodeBuilder() {
 	}
@@ -26,18 +30,28 @@ public class XmlNodeBuilder {
 	}
 
 	public XmlNode append() {
-		XmlNode node = generate();
-		relativeTo.node.appendChild(node.node);
-		relativeTo.children.invalidate();
-		return node;
+		return appendTo(relativeTo);
 	}
 
 	public XmlNode appendAsFirstChild() {
-		XmlNode node = generate();
+		XmlNode node = build();
 		relativeTo.node.insertBefore(node.node,
 				relativeTo.node.getFirstChild());
 		relativeTo.children.invalidate();
 		return node;
+	}
+
+	public XmlNodeBuilder attr(String key, String value) {
+		attrs(key, value);
+		return this;
+	}
+
+	public XmlNodeBuilder attrNumeric(String key, double d) {
+		return attr(key, String.valueOf(d));
+	}
+
+	public XmlNodeBuilder attrNumeric(String key, int i) {
+		return attr(key, String.valueOf(i));
 	}
 
 	public XmlNodeBuilder attrs(String... strings) {
@@ -50,67 +64,8 @@ public class XmlNodeBuilder {
 		return this;
 	}
 
-	public XmlNode insertBeforeThis() {
-		XmlNode node = generate();
-		relativeTo.node.getParentNode().insertBefore(node.node,
-				relativeTo.node);
-		relativeTo.parent().invalidate();
-		return node;
-	}
-
-	public XmlNodeBuilder className(String className) {
-		attrs("class", className);
-		return this;
-	}
-
-	public void insertAfter() {
-		XmlNode node = generate();
-		relativeTo.relative().insertAfterThis(node);
-	}
-
-	public XmlNodeBuilder processingInstruction() {
-		this.processingInstruction = true;
-		return this;
-	}
-
-	public XmlNode replaceWith() {
-		XmlNode node = generate();
-		node.children.adoptFrom(relativeTo);
-		relativeTo.replaceWith(node);
-		return node;
-	}
-
-	public XmlNodeBuilder tag(String tag) {
-		this.tag = tag;
-		return this;
-	}
-
-	public XmlNodeBuilder text(String text) {
-		this.text = text;
-		return this;
-	}
-
-	public XmlNode wrap() {
-		XmlNode node = generate();
-		relativeTo.node.getParentNode().insertBefore(node.node,
-				relativeTo.node);
-		node.node.appendChild(relativeTo.node);
-		relativeTo.parent().invalidate();
-		return node;
-	}
-
-	public XmlNode wrapChildren() {
-		XmlNode node = generate();
-		node.children.adoptFrom(relativeTo);
-		relativeTo.children.append(node);
-		return node;
-	}
-
-	private XmlDoc doc() {
-		return relativeTo.doc;
-	}
-
-	private XmlNode generate() {
+	public XmlNode build() {
+		built = true;
 		Node node = null;
 		if (processingInstruction) {
 			if (text == null) {
@@ -127,19 +82,83 @@ public class XmlNodeBuilder {
 		} else {
 			node = doc().domDoc().createTextNode(text);
 		}
-		return doc().nodeFor(node);
+		builtNode = doc().nodeFor(node);
+		return builtNode;
 	}
 
-	public XmlNodeBuilder attr(String key, String value) {
-		attrs(key, value);
+	public XmlNode builtNode() {
+		return builtNode;
+	}
+
+	public XmlNodeBuilder className(String className) {
+		attrs("class", className);
 		return this;
 	}
 
-	public XmlNodeBuilder attrNumeric(String key, double d) {
-		return attr(key, String.valueOf(d));
+	public XmlNode insertAfter() {
+		XmlNode node = build();
+		relativeTo.relative().insertAfterThis(node);
+		return node;
 	}
 
-	public XmlNodeBuilder attrNumeric(String key, int i) {
-		return attr(key, String.valueOf(i));
+	public XmlNode insertBeforeThis() {
+		return insertBefore(relativeTo);
+		
 	}
+
+	public XmlNodeBuilder processingInstruction() {
+		this.processingInstruction = true;
+		return this;
+	}
+
+	public XmlNode replaceWith() {
+		XmlNode node = build();
+		node.children.adoptFrom(relativeTo);
+		relativeTo.replaceWith(node);
+		return node;
+	}
+
+	public XmlNodeBuilder tag(String tag) {
+		this.tag = tag;
+		return this;
+	}
+
+	public XmlNodeBuilder text(String text) {
+		this.text = text;
+		return this;
+	}
+
+	public XmlNode wrap() {
+		XmlNode node = build();
+		relativeTo.node.getParentNode().insertBefore(node.node,
+				relativeTo.node);
+		node.node.appendChild(relativeTo.node);
+		relativeTo.parent().invalidate();
+		return node;
+	}
+
+	public XmlNode wrapChildren() {
+		XmlNode node = build();
+		node.children.adoptFrom(relativeTo);
+		relativeTo.children.append(node);
+		return node;
+	}
+
+	private XmlNode appendTo(XmlNode appendTo) {
+		XmlNode node = build();
+		appendTo.node.appendChild(node.node);
+		appendTo.children.invalidate();
+		return node;		
+	}
+	private XmlDoc doc() {
+		return relativeTo.doc;
+	}
+	private XmlNode insertBefore(XmlNode insertBefore) {
+		XmlNode node = build();
+		insertBefore.node.getParentNode().insertBefore(node.node,
+				insertBefore.node);
+		insertBefore.parent().invalidate();
+		return node;		
+	}
+	
 }

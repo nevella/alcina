@@ -392,6 +392,13 @@ public class AlcinaMemCache implements RegistrableService {
 		if (timer != null) {
 			timer.cancel();
 		}
+		if(postInitConn!=null){
+			try {
+				postInitConn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public <T extends HasIdAndLocalId> Set<T> asSet(Class<T> clazz) {
@@ -1388,6 +1395,10 @@ public class AlcinaMemCache implements RegistrableService {
 			if (initialising) {
 				releaseWarmupConnection(conn);
 			} else {
+				if (postInitConn != null) {
+					postInitConn.commit();
+					postInitConn.setAutoCommit(true);
+				}
 				postInitConnectionLock.unlock();
 			}
 		} catch (Exception e) {
@@ -2662,7 +2673,9 @@ public class AlcinaMemCache implements RegistrableService {
 			case ADD_REF_TO_COLLECTION:
 			case REMOVE_REF_FROM_COLLECTION:
 			case CHANGE_PROPERTY_REF:
-				return cacheDescriptor.cachePostTransform(o.getValueClass(), o);
+				return GraphProjection.isEnumOrEnumSubclass(o.getValueClass())
+						|| cacheDescriptor.cachePostTransform(o.getValueClass(),
+								o);
 			}
 			return true;
 		}

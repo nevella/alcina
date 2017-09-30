@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdExecRunnable;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
@@ -14,7 +15,8 @@ import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
 @RegistryLocation(registryPoint = DevConsoleRunnable.class)
 public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
-	public abstract String[] tagStrings();
+	public static final String CONTEXT_ACTION_RESULT = CmdExecRunnable.class
+			.getName() + ".CONTEXT_ACTION_RESULT";
 
 	public DevConsole console;
 
@@ -22,11 +24,23 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 
 	public String[] argv;
 
-	public static final String CONTEXT_ACTION_RESULT = CmdExecRunnable.class
-			.getName() + ".CONTEXT_ACTION_RESULT";
+	public boolean canUseProductionConn() {
+		return false;
+	}
 
-	protected String writeTempFile(Class clazz, String extension, String content)
-			throws IOException {
+	@Override
+	public void run() {
+		try {
+			run0();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public abstract String[] tagStrings();
+
+	protected String writeTempFile(Class clazz, String extension,
+			String content) throws IOException {
 		File dir = console.devHelper.getDevFolder();
 		String outPath = String.format("%s/%s.%s", dir.getPath(),
 				clazz.getSimpleName(), extension);
@@ -40,27 +54,20 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 		String outPath = String.format("%s/%s.%s", dir.getPath(),
 				clazz.getSimpleName(), extension);
 		;
-		ResourceUtilities
-				.writeStreamToStream(
-						new ByteArrayInputStream(Base64Utils
-								.fromBase64(content)), new FileOutputStream(
-								outPath));
+		ResourceUtilities.writeStreamToStream(
+				new ByteArrayInputStream(Base64Utils.fromBase64(content)),
+				new FileOutputStream(outPath));
 		return outPath;
 	}
+
 	protected String writeTempFileFs(Class clazz, String extension,
 			File content) throws IOException {
 		File dir = console.devHelper.getDevFolder();
 		String outPath = String.format("%s/%s.%s", dir.getPath(),
 				clazz.getSimpleName(), extension);
 		;
-		ResourceUtilities
-				.writeStreamToStream(
-						new FileInputStream(content), new FileOutputStream(
-								outPath));
+		ResourceUtilities.writeStreamToStream(new FileInputStream(content),
+				new FileOutputStream(outPath));
 		return outPath;
-	}
-
-	public boolean canUseProductionConn() {
-		return false;
 	}
 }

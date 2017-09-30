@@ -293,7 +293,7 @@ public class WidgetUtils {
 
 	public static native String getComputedStyle(Element eltMulti,
 			String attributeName)/*-{
-		var elt = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
+        var elt = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
         if (elt.currentStyle) {
             return elt.currentStyle[attributeName];
         }
@@ -304,7 +304,7 @@ public class WidgetUtils {
 
 	public static native String getComputedStyleProperty(Element eltMulti,
 			String strCssRule) /*-{
-		var elem = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
+        var elem = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
         if ($doc.defaultView && $doc.defaultView.getComputedStyle) {
             strValue = $doc.defaultView.getComputedStyle(elem, "")
                     .getPropertyValue(strCssRule);
@@ -423,7 +423,7 @@ public class WidgetUtils {
             var selectorPart = splits[idx];
             var textRegex = idx == splits.length - 1 ? null : splits[idx + 1];
             if (textRegex == null) {
-                from =  from.querySelector(selectorPart);
+                from = from.querySelector(selectorPart);
                 break;
             }
             var nl = from.querySelectorAll(splits[idx]);
@@ -441,7 +441,7 @@ public class WidgetUtils {
                 return null;
             }
         }
-        var eltout=@com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(from);
+        var eltout = @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(from);
         return eltout;
 	}-*/;
 
@@ -452,7 +452,7 @@ public class WidgetUtils {
         }
         var elt = elto.@com.google.gwt.dom.client.Element::typedRemote()();
         var from = (elt) ? elt : $doc;
-        var nodeList =  from.querySelectorAll(selector);
+        var nodeList = from.querySelectorAll(selector);
         return @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/DomNodeList;)(nodeList);
 	}-*/;
 
@@ -1111,8 +1111,9 @@ public class WidgetUtils {
         }
 	}-*/;
 
-	private native static boolean isVisibleWithOffsetParent(Element elemMulti)/*-{
-		var elem = elemMulti.@com.google.gwt.dom.client.Element::typedRemote()();
+	private native static boolean
+			isVisibleWithOffsetParent(Element elemMulti)/*-{
+        var elem = elemMulti.@com.google.gwt.dom.client.Element::ensureJso()();
         return (elem.style.display != 'none' && elem.offsetParent != null);
 	}-*/;
 
@@ -1174,7 +1175,7 @@ public class WidgetUtils {
 
 	private static void scrollElementIntoView(Element e) {
 		debugScroll(CommonUtils.formatJ("elt:%s", e));
-		DOM.scrollIntoView((com.google.gwt.user.client.Element) e);
+		e.scrollIntoView();
 	}
 
 	// those values might be needed for non-webkit

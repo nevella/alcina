@@ -18,6 +18,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +55,6 @@ import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 import javax.swing.text.TabSet;
 import javax.swing.text.TabStop;
-import javax.xml.bind.JAXBException;
 
 import org.apache.log4j.Logger;
 
@@ -68,10 +68,12 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable.AlcinaChildContextRunner;
 
 public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>
 		implements ClipboardOwner {
@@ -172,7 +174,11 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	protected void init() throws Exception {
 		MetricLogging.get().start("init-console");
+		// osx =>
+		// https://bugs.openjdk.java.net/browse/JDK-8179209
+		loadFontMetrics();
 		createDevHelper();
+		devHelper.loadJbossConfig(null);
 		devHelper.initLightweightServices();
 		logger = devHelper.getTestLogger();
 		List<Class> lookup = Registry.get().lookup(DevConsoleCommand.class);
@@ -185,6 +191,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 		System.setProperty("awt.useSystemAAFontSettings", "gasp");
 		System.setProperty("swing.aatext", "true");
+		System.setProperty(
+				"com.sun.xml.internal.bind.v2.runtime.JAXBContextImpl.fastBoot",
+				"true");
+		System.setProperty(
+				"com.sun.xml.internal.bind.v2.bytecode.ClassTailor.noOptimize",
+				"true");
 		// need to be before ui init, cos window height is a preference
 		initFiles();
 		LooseContext.runWithKeyValue(WrappedObject.CONTEXT_CLASSES,
@@ -195,6 +207,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		new Thread() {
 			public void run() {
 				try {
+					// init full jaxb
 					WrappedObjectHelper
 							.xmlSerialize(new DevConsoleProperties());
 				} catch (Exception e) {
@@ -224,6 +237,13 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		} else {
 			consoleLeft.ok("Enter 'h' for help\n\n");
 		}
+	}
+
+	private void loadFontMetrics() {
+		new Thread(() -> {
+			new BufferedImage(1, 1, BufferedImage.TYPE_BYTE_GRAY)
+					.createGraphics().getFontMetrics();
+		}).start();
 	}
 
 	protected List<Class> getInitClasses() {
@@ -257,26 +277,23 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		return new File(String.format("%s/%s", devFolder.getPath(), path));
 	}
 
-	public void loadConfig() throws JAXBException, IOException {
+	public void loadConfig() throws Exception {
 		// eclipse may be caching - read directly
 		if (consolePropertiesFile.exists()) {
-			props = (P) WrappedObjectHelper.xmlDeserialize(
-					DevConsoleProperties.class,
-					ResourceUtilities.readFileToString(consolePropertiesFile));
+			props = (P) deserializeProperties(newConsoleProperties().getClass(),
+					consolePropertiesFile);
 		} else {
 			props = newConsoleProperties();
 		}
 		if (consoleHistoryFile.exists()) {
-			history = WrappedObjectHelper.xmlDeserialize(
-					DevConsoleHistory.class,
-					ResourceUtilities.readFileToString(consoleHistoryFile));
+			history = deserializeProperties(DevConsoleHistory.class,
+					consoleHistoryFile);
 		} else {
 			history = new DevConsoleHistory();
 		}
 		if (consoleStringsFile.exists()) {
-			strings = WrappedObjectHelper.xmlDeserialize(
-					DevConsoleStrings.class,
-					ResourceUtilities.readFileToString(consoleStringsFile));
+			strings = deserializeProperties(DevConsoleStrings.class,
+					consoleStringsFile);
 		} else {
 			strings = new DevConsoleStrings();
 		}
@@ -284,6 +301,17 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		if (props.useMountSshfsFs) {
 			devHelper.useMountSshfsFs();
 		}
+	}
+
+	private <T> T deserializeProperties(Class<T> clazz, File file)
+			throws Exception {
+		try {
+			return KryoUtils.deserializeFromFile(file, clazz);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return WrappedObjectHelper.xmlDeserialize(clazz,
+				ResourceUtilities.readFileToString(file));
 	}
 
 	protected abstract P newConsoleProperties();
@@ -354,7 +382,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 					performCommandInThread(args, c, true);
 				}
 			};
-			new Thread(runnable).start();
+			new AlcinaChildContextRunner(
+					"dev-runner-" + c.getClass().getSimpleName())
+							.callNewThread(runnable);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -406,13 +436,20 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	public Logger logger;
 
-	public void saveConfig() throws IOException, JAXBException {
-		ResourceUtilities.writeStringToFile(
-				WrappedObjectHelper.xmlSerialize(props), consolePropertiesFile);
-		ResourceUtilities.writeStringToFile(
-				WrappedObjectHelper.xmlSerialize(history), consoleHistoryFile);
-		ResourceUtilities.writeStringToFile(
-				WrappedObjectHelper.xmlSerialize(strings), consoleStringsFile);
+	public void saveConfig() throws Exception {
+		serializeObject(props, consolePropertiesFile);
+		serializeObject(history, consoleHistoryFile);
+		serializeObject(strings, consoleStringsFile);
+		// ResourceUtilities.writeStringToFile(
+		// WrappedObjectHelper.xmlSerialize(props), consolePropertiesFile);
+		// ResourceUtilities.writeStringToFile(
+		// WrappedObjectHelper.xmlSerialize(history), consoleHistoryFile);
+		// ResourceUtilities.writeStringToFile(
+		// WrappedObjectHelper.xmlSerialize(strings), consoleStringsFile);
+	}
+
+	private void serializeObject(Object object, File file) {
+		KryoUtils.serializeToFile(object, file);
 	}
 
 	private class JCommandLine extends JTextField {
@@ -904,6 +941,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	public void resetObjects() {
+		devHelper.configLoaded = false;
 		devHelper.loadJbossConfig();
 		devHelper.readAppObjectGraph();
 		devHelper.initPostObjectServices();

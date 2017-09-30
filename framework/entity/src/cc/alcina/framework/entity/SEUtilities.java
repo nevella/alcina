@@ -1075,6 +1075,23 @@ public class SEUtilities {
 		}
 	}
 
+	public static String threadDumpToString() {
+		StringBuilder sb = new StringBuilder();
+		Set<Entry<Thread, StackTraceElement[]>> allStackTraces = Thread
+				.getAllStackTraces().entrySet();
+		for (Entry<Thread, StackTraceElement[]> entry : allStackTraces) {
+			sb.append(entry.getKey());
+			sb.append("\n");
+			StackTraceElement[] value = entry.getValue();
+			for (StackTraceElement stackTraceElement : value) {
+				sb.append("\t");
+				sb.append(stackTraceElement);
+				sb.append("\n");
+			}
+		}
+		return sb.toString();
+	}
+
 	public static void throwFutureException(List<Future<Object>> futures)
 			throws Exception {
 		for (Future<Object> future : futures) {

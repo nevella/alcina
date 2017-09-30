@@ -288,6 +288,9 @@ public class TransformPersister {
 									tm.setIgnorePropertyChangesTo(event);
 									tm.fireDomainTransform(event);
 									tm.setIgnorePropertyChangesTo(null);
+									if(tm.provideIsMarkedFlushTransform(event)){
+										tm.flush();
+									}
 								}
 								eventsPersisted.add(event);
 								transformCount++;
@@ -452,7 +455,7 @@ public class TransformPersister {
 			} // dtrs
 			switch (token.getPass()) {
 			case TRY_COMMIT:
-				tm.flush();
+				tm.flush(dtreps);
 				DomainTransformResponse dtr = new DomainTransformResponse();
 				dtr.getEventsToUseForClientUpdate()
 						.addAll(token.getClientUpdateEvents());

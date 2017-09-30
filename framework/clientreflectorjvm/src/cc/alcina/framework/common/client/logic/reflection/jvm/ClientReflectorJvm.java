@@ -36,6 +36,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.entity.KryoUtils;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.AnnotationUtils;
@@ -54,9 +56,28 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	public ClientReflectorJvm() {
 		try {
-			ClassDataCache classes = new ServletClasspathScanner("*", true,
-					false, null, Registry.MARKER_RESOURCE,
-					Arrays.asList(new String[] {})).getClasses();
+			ClassDataCache classes = null;
+			boolean cacheIt = !GWT.isClient() && ResourceUtilities
+					.is(ClientReflectorJvm.class, "cacheClasspathScan");
+			File cacheFile = cacheIt ? new File(ResourceUtilities
+					.get(ClientReflectorJvm.class, "cacheClasspathScanFile"))
+					: null;
+			if (cacheIt && cacheFile.exists()) {
+				try {
+					classes = KryoUtils.deserializeFromFile(cacheFile,
+							ClassDataCache.class);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			if (classes == null) {
+				classes = new ServletClasspathScanner("*", true, false, null,
+						Registry.MARKER_RESOURCE,
+						Arrays.asList(new String[] {})).getClasses();
+				if (cacheIt) {
+					KryoUtils.serializeToFile(classes, cacheFile);
+				}
+			}
 			String filterClassName = System.getProperty(PROP_FILTER_CLASSNAME);
 			/*
 			 * The reason for this is that gwt needs the compiled annotation

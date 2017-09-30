@@ -33,6 +33,7 @@ import com.google.gwt.user.client.ui.FocusListener;
 import com.google.gwt.user.client.ui.Focusable;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasFocus;
+import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.action.BindingAction;
@@ -48,6 +49,7 @@ import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
+import cc.alcina.framework.gwt.client.widget.FlowPanelClickable;
 
 /**
  * 
@@ -258,7 +260,8 @@ public class GridForm extends AbstractTableWidget
 				}
 				widget.ensureDebugId(AlcinaDebugIds.GRID_FORM_FIELD_DEBUG_PREFIX
 						+ field.getPropertyName());
-				HTML label = new HTML(field.getLabel());
+				FlowPanelClickable label = new FlowPanelClickable();
+				label.add(new InlineHTML(field.getLabel()));
 				this.base.setWidget(row, col * 2, label);
 				this.base.getCellFormatter().setStyleName(row, col * 2,
 						"label");
@@ -272,6 +275,7 @@ public class GridForm extends AbstractTableWidget
 				this.base.getCellFormatter().setStyleName(row, (col * 2) + 1,
 						"field");
 				if (field.getHelpText() != null) {
+					label.addStyleName("has-help-text");
 					label.addClickHandler(new ClickHandler() {
 						public void onClick(ClickEvent event) {
 							Widget sender = (Widget) event.getSource();

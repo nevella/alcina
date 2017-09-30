@@ -80,8 +80,9 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 	}
 
 	public SortedMultimap<Integer, List<K>> reverseMap(boolean descending) {
-		SortedMultimap<Integer, List<K>> result = descending ? new SortedMultimap<Integer, List<K>>(
-				Collections.reverseOrder())
+		SortedMultimap<Integer, List<K>> result = descending
+				? new SortedMultimap<Integer, List<K>>(
+						Collections.reverseOrder())
 				: new SortedMultimap<Integer, List<K>>();
 		for (Map.Entry<K, Integer> entry : entrySet()) {
 			result.add(entry.getValue(), entry.getKey());
@@ -121,5 +122,10 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 	@Override
 	public String toString() {
 		return CommonUtils.join(entrySet(), "\n");
+	}
+
+	public void dumpReverseMap(boolean dir) {
+		reverseMap(dir).forEach((k, v) -> Ax.out("%s%s",
+				CommonUtils.padStringRight(k.toString(), 30, ' '), v));
 	}
 }

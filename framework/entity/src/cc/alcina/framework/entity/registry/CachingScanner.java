@@ -75,7 +75,7 @@ public abstract class CachingScanner {
 		for (ClassDataItem foundItem : found.classData.values()) {
 			String className = foundItem.className;
 			Class c = null;
-			ClassDataItem ignore = ignoreCache.classData.get(foundItem.className);
+			ClassDataItem ignore = ignoreCache.classData.get(foundItem.className);	
 			if (ignore != null) {
 				if (ignore.date.getTime() >= foundItem.date.getTime()) {
 					outgoing.add(ignore);
