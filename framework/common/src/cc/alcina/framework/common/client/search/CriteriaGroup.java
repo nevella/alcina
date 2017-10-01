@@ -34,18 +34,14 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.HasEquivalence;
+import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
 @Bean(displayNamePropertyName = "displayName")
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
-/**
- *
- * @author Nick Reddel
- */
 public abstract class CriteriaGroup<SC extends SearchCriterion>
 		extends BaseBindable implements TreeRenderable, Permissible,
-		HasPermissionsValidation, HasEquivalence<CriteriaGroup> {
+		HasPermissionsValidation, HasReflectiveEquivalence<CriteriaGroup> {
 	static final transient long serialVersionUID = -1L;
 
 	private FilterCombinator combinator = FilterCombinator.AND;
@@ -55,78 +51,42 @@ public abstract class CriteriaGroup<SC extends SearchCriterion>
 	public CriteriaGroup() {
 	}
 
-	//
-	// @Override
-	// public boolean equals(Object obj) {
-	// if (obj != null && obj.getClass() == getClass()) {
-	// CriteriaGroup cg = (CriteriaGroup) obj;
-	// return criteria.equals(cg.criteria) && combinator == cg.combinator;
-	// }
-	// return super.equals(obj);
-	// }
-	//
-	// Duh
-	// @Override
-	// public int hashCode() {
-	// int h = getClass().hashCode() ^ combinator.hashCode();
-	// for (SC c : criteria) {
-	// h ^= c.hashCode();
-	// }
-	// return h;
-	// }
-	public boolean equivalentTo(CriteriaGroup other) {
-		if (other == null || other.getClass() != getClass()
-				|| other.getEntityClass() != getEntityClass()
-				|| other.getCombinator() != getCombinator()
-				|| other.criteriaSizeIgnoreEmpty() != criteriaSizeIgnoreEmpty()) {
-			return false;
-		}
-		List<SC> otherCriteria = new ArrayList<SC>(other.getCriteria());
-		for (SC sc : getCriteria()) {
-			boolean foundEquiv = false;
-			for (SC otherCriterion : otherCriteria) {
-				if (sc.equivalentTo(otherCriterion)) {
-					otherCriteria.remove(otherCriterion);
-					foundEquiv = true;
-					break;
-				}
-			}
-			if (!foundEquiv) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private int criteriaSizeIgnoreEmpty() {
-		if (getCriteria().size() == 0) {
-			return 0;
-		}
-		int counter = 0;
-		for (SC sc : getCriteria()) {
-			if (sc != null && !sc.emptyCriterion()) {
-				counter++;
-			}
-		}
-		return counter;
-	}
-
-	public boolean provideIsEmpty() {
-		for (SearchCriterion criterion : getCriteria()) {
-			if (criterion instanceof HasValue
-					&& ((HasValue) criterion).getValue() == null) {
-				continue;
-			} else {
-				return false;
-			}
-		}
-		return true;
+	public AccessLevel accessLevel() {
+		return AccessLevel.EVERYONE;
 	}
 
 	public void addCriterion(SC criterion) {
 		Set<SC> deltaSet = TransformManager.getDeltaSet(criteria, criterion,
 				CollectionModificationType.ADD);
 		setCriteria(deltaSet);
+	}
+
+	public String asString(boolean withGroupName, boolean asHtml) {
+		if (provideIsEmpty()) {
+			return "";
+		}
+		String displayName = provideDisplayNamePrefix(withGroupName);
+		String result = "";
+		int ct = 0;
+		Set<String> duplicateDisplayTextCriterionSet = new HashSet<String>();
+		for (SC searchCriterion : criteria) {
+			String scString = asHtml ? searchCriterion.toHtml()
+					: searchCriterion.toString();
+			if (duplicateDisplayTextCriterionSet.contains(scString)) {
+				continue;
+			}
+			duplicateDisplayTextCriterionSet.add(scString);
+			if (scString != null && scString.length() > 0) {
+				if (ct++ != 0) {
+					result += " " + combinatorString() + " ";
+				}
+				result += scString;
+				if (searchCriterion instanceof SelfNamingCriterion) {
+					displayName = "";
+				}
+			}
+		}
+		return result.length() == 0 ? result : displayName + result;
 	}
 
 	public <S extends SearchCriterion> S ensureCriterion(S criterion) {
@@ -137,25 +97,6 @@ public abstract class CriteriaGroup<SC extends SearchCriterion>
 		}
 		addCriterion((SC) criterion);
 		return criterion;
-	}
-
-	public <S extends SearchCriterion> S findCriterion(Class<S> clazz) {
-		for (SC sc : getCriteria()) {
-			if (sc.getClass() == clazz) {
-				return (S) sc;
-			}
-		}
-		return null;
-	}
-
-	public <S extends SearchCriterion> List<S> findCriteria(Class<S> clazz) {
-		List<S> result = new ArrayList<S>();
-		for (SC sc : getCriteria()) {
-			if (sc.getClass() == clazz) {
-				result.add((S) sc);
-			}
-		}
-		return result;
 	}
 
 	/*
@@ -189,6 +130,25 @@ public abstract class CriteriaGroup<SC extends SearchCriterion>
 		return ewp;
 	}
 
+	public <S extends SearchCriterion> List<S> findCriteria(Class<S> clazz) {
+		List<S> result = new ArrayList<S>();
+		for (SC sc : getCriteria()) {
+			if (sc.getClass() == clazz) {
+				result.add((S) sc);
+			}
+		}
+		return result;
+	}
+
+	public <S extends SearchCriterion> S findCriterion(Class<S> clazz) {
+		for (SC sc : getCriteria()) {
+			if (sc.getClass() == clazz) {
+				return (S) sc;
+			}
+		}
+		return null;
+	}
+
 	public FilterCombinator getCombinator() {
 		return combinator;
 	}
@@ -201,105 +161,6 @@ public abstract class CriteriaGroup<SC extends SearchCriterion>
 
 	@XmlTransient
 	public abstract Class getEntityClass();
-
-	public void setCombinator(FilterCombinator combinator) {
-		this.combinator = combinator;
-	}
-
-	public void setCriteria(Set<SC> criteria) {
-		Set<SC> old_criteria = this.criteria;
-		this.criteria = criteria;
-		propertyChangeSupport().firePropertyChange("criteria", old_criteria,
-				criteria);
-	}
-
-	public String toHtml() {
-		return asString(true, true);
-	}
-
-	@SuppressWarnings("unchecked")
-	public <S extends SearchCriterion> S soleCriterion() {
-		return criteria.isEmpty() ? null : (S) criteria.iterator().next();
-	}
-
-	public void toSoleCriterion(SC criterion) {
-		criteria.clear();
-		criteria.add(criterion);
-	}
-
-	public String asString(boolean withGroupName, boolean asHtml) {
-		if (provideIsEmpty()) {
-			return "";
-		}
-		String displayName = provideDisplayNamePrefix(withGroupName);
-		String result = "";
-		int ct = 0;
-		Set<String> duplicateDisplayTextCriterionSet = new HashSet<String>();
-		for (SC searchCriterion : criteria) {
-			String scString = asHtml ? searchCriterion.toHtml()
-					: searchCriterion.toString();
-			if (duplicateDisplayTextCriterionSet.contains(scString)) {
-				continue;
-			}
-			duplicateDisplayTextCriterionSet.add(scString);
-			if (scString != null && scString.length() > 0) {
-				if (ct++ != 0) {
-					result += " " + combinatorString() + " ";
-				}
-				result += scString;
-				if (searchCriterion instanceof SelfNamingCriterion) {
-					displayName = "";
-				}
-			}
-		}
-		return result.length() == 0 ? result : displayName + result;
-	}
-
-	protected String provideDisplayNamePrefix(boolean withGroupName) {
-		return CommonUtils.isNullOrEmpty(getDisplayName()) || !withGroupName
-				? ""
-				: CommonUtils.pluralise(
-						CommonUtils.capitaliseFirst(getDisplayName()), criteria)
-						+ ": ";
-	}
-
-	protected String combinatorString() {
-		return combinator.toString().toLowerCase();
-	}
-
-	public String toString() {
-		return asString(true, false);
-	}
-
-	public AccessLevel accessLevel() {
-		return AccessLevel.EVERYONE;
-	}
-
-	public String rule() {
-		return "";
-	}
-
-	protected <T extends CriteriaGroup> T deepCopyFrom(T cg)
-			throws CloneNotSupportedException {
-		combinator = cg.getCombinator();
-		criteria.clear();
-		Set<SC> cgCriteria = cg.getCriteria();
-		for (SC sc : cgCriteria) {
-			criteria.add((SC) sc.clone());
-		}
-		return (T) this;
-	}
-
-	public CriteriaGroup clone() throws CloneNotSupportedException {
-		throw new CloneNotSupportedException();
-	}
-
-	public String validatePermissions() {
-		if (!PermissionsManager.get().isPermissible(this)) {
-			return null;// won't be used in search anyway
-		}
-		return DefaultValidation.validatePermissions(this, getCriteria());
-	}
 
 	/**
 	 * To disallow injection attacks here, the criteria/property name mapping
@@ -314,7 +175,85 @@ public abstract class CriteriaGroup<SC extends SearchCriterion>
 		}
 	}
 
+	public boolean provideIsEmpty() {
+		for (SearchCriterion criterion : getCriteria()) {
+			if (criterion instanceof HasValue
+					&& ((HasValue) criterion).getValue() == null) {
+				continue;
+			} else {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public void removeCriterion(SearchCriterion criterion) {
 		criteria.remove(criterion);
+	}
+
+	public String rule() {
+		return "";
+	}
+
+	public void setCombinator(FilterCombinator combinator) {
+		this.combinator = combinator;
+	}
+
+	public void setCriteria(Set<SC> criteria) {
+		Set<SC> old_criteria = this.criteria;
+		this.criteria = criteria;
+		propertyChangeSupport().firePropertyChange("criteria", old_criteria,
+				criteria);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <S extends SearchCriterion> S soleCriterion() {
+		return criteria.isEmpty() ? null : (S) criteria.iterator().next();
+	}
+
+	public String toHtml() {
+		return asString(true, true);
+	}
+
+	public void toSoleCriterion(SC criterion) {
+		criteria.clear();
+		criteria.add(criterion);
+	}
+
+	public String toString() {
+		return asString(true, false);
+	}
+
+	public String validatePermissions() {
+		if (!PermissionsManager.get().isPermissible(this)) {
+			// won't be used in search anyway
+			return null;
+		}
+		return DefaultValidation.validatePermissions(this, getCriteria());
+	}
+
+	private int criteriaSizeIgnoreEmpty() {
+		if (getCriteria().size() == 0) {
+			return 0;
+		}
+		int counter = 0;
+		for (SC sc : getCriteria()) {
+			if (sc != null && !sc.emptyCriterion()) {
+				counter++;
+			}
+		}
+		return counter;
+	}
+
+	protected String combinatorString() {
+		return combinator.toString().toLowerCase();
+	}
+
+	protected String provideDisplayNamePrefix(boolean withGroupName) {
+		return CommonUtils.isNullOrEmpty(getDisplayName()) || !withGroupName
+				? ""
+				: CommonUtils.pluralise(
+						CommonUtils.capitaliseFirst(getDisplayName()), criteria)
+						+ ": ";
 	}
 }

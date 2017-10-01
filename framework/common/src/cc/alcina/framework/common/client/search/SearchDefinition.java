@@ -37,22 +37,19 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.HasEquivalence;
+import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
 //
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
-/**
- *
- * @author Nick Reddel
- */
 public abstract class SearchDefinition extends WrapperPersistable
 		implements Serializable, TreeRenderable, ContentDefinition,
-		HasPermissionsValidation, HasEquivalence<SearchDefinition> {
+		HasPermissionsValidation, HasReflectiveEquivalence<SearchDefinition>,
+		ReflectCloneable<SearchDefinition> {
 	static final transient long serialVersionUID = -1L;
 
-	transient final String orderJoin = ", ";
+	final transient String orderJoin = ", ";
 
 	private int resultsPerPage;
 
@@ -116,24 +113,6 @@ public abstract class SearchDefinition extends WrapperPersistable
 		return (C) cgs.get(clazz);
 	}
 
-	public <S extends SearchDefinition> S deepCopyFrom(SearchDefinition def)
-			throws CloneNotSupportedException {
-		charWidth = def.charWidth;
-		clientSearchIndex = def.clientSearchIndex;
-		for (CriteriaGroup cg : def.criteriaGroups) {
-			criteriaGroups.add(cg.clone());
-		}
-		name = def.name;
-		for (OrderGroup og : def.orderGroups) {
-			orderGroups.add(og.clone());
-		}
-		orderName = def.orderName;
-		publicationType = def.publicationType;
-		resultsPerPage = def.resultsPerPage;
-		resetLookups();
-		return (S) this;
-	}
-
 	public void ensureCriteriaGroups(CriteriaGroup... criteriaGroups) {
 		resetLookups();
 		for (CriteriaGroup cg : criteriaGroups) {
@@ -186,28 +165,6 @@ public abstract class SearchDefinition extends WrapperPersistable
 		}
 		ewp.eql = sb.toString();
 		return ewp;
-	}
-
-	public boolean equivalentTo(SearchDefinition other) {
-		if (other == null || other.getClass() != getClass()) {
-			return false;
-		}
-		List<CriteriaGroup> otherCriteriaGroups = new ArrayList<CriteriaGroup>(
-				other.getCriteriaGroups());
-		for (CriteriaGroup cg : getCriteriaGroups()) {
-			boolean foundEquiv = false;
-			for (CriteriaGroup otherCg : otherCriteriaGroups) {
-				if (cg.equivalentTo(otherCg)) {
-					otherCriteriaGroups.remove(otherCg);
-					foundEquiv = true;
-					break;
-				}
-			}
-			if (!foundEquiv) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	public String filterDescription(boolean html) {
@@ -467,7 +424,8 @@ public abstract class SearchDefinition extends WrapperPersistable
 		}
 		PropertyChangeEvent event = new PropertyChangeEvent(this, null, null,
 				null);
-		for (PropertyChangeListener listener : new ArrayList<>(globalListeners)) {
+		for (PropertyChangeListener listener : new ArrayList<>(
+				globalListeners)) {
 			if (!sc.emptyCriterion() && !doNotFireBecauseCriterionEmpty) {
 				listener.propertyChange(event);
 			}
@@ -480,7 +438,8 @@ public abstract class SearchDefinition extends WrapperPersistable
 		criteriaGroups.iterator().next().addCriterion(sc);
 		PropertyChangeEvent event = new PropertyChangeEvent(this, null, null,
 				null);
-		for (PropertyChangeListener listener : new ArrayList<>(globalListeners)) {
+		for (PropertyChangeListener listener : new ArrayList<>(
+				globalListeners)) {
 			sc.addPropertyChangeListener(listener);
 			if (!sc.emptyCriterion()) {
 				listener.propertyChange(event);

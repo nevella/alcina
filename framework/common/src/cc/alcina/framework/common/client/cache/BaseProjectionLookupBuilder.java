@@ -6,8 +6,8 @@ import java.util.TreeMap;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.MultikeyMap;
-import cc.alcina.framework.common.client.util.MultikeyMapBase.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 

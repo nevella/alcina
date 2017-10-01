@@ -24,17 +24,17 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.HasEquivalence;
+import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 @Bean(displayNamePropertyName = "displayName", allPropertiesVisualisable = true)
-@ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE) , write = @Permission(access = AccessLevel.EVERYONE) )
+@ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
-public abstract class SearchCriterion extends BaseBindable implements
-		TreeRenderable, HasEquivalence<SearchCriterion>, GwtCloneable {
+public abstract class SearchCriterion extends BaseBindable
+		implements TreeRenderable, HasReflectiveEquivalence<SearchCriterion> {
 	public static final transient String CONTEXT_ENSURE_DISPLAY_NAME = SearchCriterion.class
 			+ ".CONTEXT_ENSURE_DISPLAY_NAME";
 
@@ -48,18 +48,15 @@ public abstract class SearchCriterion extends BaseBindable implements
 
 	private StandardSearchOperator operator;
 
-	public StandardSearchOperator getOperator() {
-		return this.operator;
-	}
-
-	public void setOperator(StandardSearchOperator operator) {
-		StandardSearchOperator old_operator = this.operator;
-		this.operator = operator;
-		propertyChangeSupport().firePropertyChange("operator", old_operator,
-				operator);
-	}
-
 	public SearchCriterion() {
+	}
+
+	public SearchCriterion(String displayName) {
+		this.displayName = displayName;
+	}
+
+	public CollectionProvider collectionProvider() {
+		return null;
 	}
 
 	public boolean emptyCriterion() {
@@ -74,14 +71,6 @@ public abstract class SearchCriterion extends BaseBindable implements
 		return false;
 	}
 
-	public SearchCriterion(String displayName) {
-		this.displayName = displayName;
-	}
-
-	public CollectionProvider collectionProvider() {
-		return null;
-	}
-
 	public EqlWithParameters eql() {
 		return null;
 	}
@@ -90,20 +79,16 @@ public abstract class SearchCriterion extends BaseBindable implements
 		return this.direction;
 	}
 
-	protected String targetPropertyNameWithTable() {
-		String targetPropertyName = getTargetPropertyName();
-		if (targetPropertyName == null || targetPropertyName.contains(".")) {
-			return targetPropertyName;
-		}
-		return "t." + targetPropertyName;
-	}
-
 	public String getDisplayName() {
 		if (CommonUtils.isNullOrEmpty(displayName)
 				&& LooseContext.is(CONTEXT_ENSURE_DISPLAY_NAME)) {
 			return CommonUtils.simpleClassName(getClass());
 		}
 		return this.displayName;
+	}
+
+	public StandardSearchOperator getOperator() {
+		return this.operator;
 	}
 
 	public String getTargetPropertyName() {
@@ -121,6 +106,13 @@ public abstract class SearchCriterion extends BaseBindable implements
 		this.displayName = displayName;
 	}
 
+	public void setOperator(StandardSearchOperator operator) {
+		StandardSearchOperator old_operator = this.operator;
+		this.operator = operator;
+		propertyChangeSupport().firePropertyChange("operator", old_operator,
+				operator);
+	}
+
 	public void setTargetPropertyName(String propertyName) {
 		this.targetPropertyName = propertyName;
 	}
@@ -129,17 +121,12 @@ public abstract class SearchCriterion extends BaseBindable implements
 		return toString();
 	}
 
-	protected <SC extends SearchCriterion> SC
-			copyPropertiesFrom(SC copyFromCriterion) {
-		direction = copyFromCriterion.getDirection();
-		displayName = copyFromCriterion.getDisplayName();
-		operator = copyFromCriterion.getOperator();
-		return (SC) this;
-	}
-
-	@Override
-	public SearchCriterion clone() throws CloneNotSupportedException {
-		throw new CloneNotSupportedException();
+	protected String targetPropertyNameWithTable() {
+		String targetPropertyName = getTargetPropertyName();
+		if (targetPropertyName == null || targetPropertyName.contains(".")) {
+			return targetPropertyName;
+		}
+		return "t." + targetPropertyName;
 	}
 
 	/**

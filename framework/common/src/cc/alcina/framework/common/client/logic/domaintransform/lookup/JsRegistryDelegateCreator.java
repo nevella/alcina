@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
 import java.util.Map;
 
-import cc.alcina.framework.common.client.util.MultikeyMapBase.DelegateMapCreator;
+import cc.alcina.framework.common.client.util.DelegateMapCreator;
 
 public class JsRegistryDelegateCreator extends DelegateMapCreator {
 	@Override

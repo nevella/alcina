@@ -27,9 +27,9 @@ import com.totsp.gwittir.client.beans.Property;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.search.DeepCloneable;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
@@ -57,9 +57,11 @@ public class CloneHelper {
 			c = (T) new HashSet();
 		} else if (coll instanceof LiSet) {
 			c = (T) new LiSet();
+		}else if (coll instanceof LightSet) {
+			c = (T) new LightSet();
 		} else {
-			throw new RuntimeException("Can't clone - "
-					+ coll.getClass().getName());
+			throw new RuntimeException(
+					"Can't clone - " + coll.getClass().getName());
 		}
 		for (Object o2 : coll) {
 			c.add(deepObjectClone(o2));
@@ -86,9 +88,9 @@ public class CloneHelper {
 		if (createdMap.containsKey(o)) {
 			return (T) createdMap.get(o);
 		}
-		if (o instanceof DeepCloneable) {
-			return (T) ((DeepCloneable) o).deepClone();
-		}
+		// if (o instanceof ReflectCloneable) {
+		// return (T) ((ReflectCloneable) o).deepClone();
+		// }
 		T ret = newInstance(o);
 		createdMap.put(o, ret);
 		Property[] prs = beanDescriptorProvider.getDescriptor(ret)
@@ -105,14 +107,14 @@ public class CloneHelper {
 			}
 			if (val != null) {
 				if (!ignore(o.getClass(), pr.getName(), o)) {
-					args[0] = deepProperty(o, pr.getName()) ? deepObjectClone(val)
-							: shallowishObjectClone(val);
+					args[0] = deepProperty(o, pr.getName())
+							? deepObjectClone(val) : shallowishObjectClone(val);
 					pr.getMutatorMethod().invoke(ret, args);
 				}
 			}
 		}
-		DeepBeanClonePostHandler postHandler = Registry.impl(
-				DeepBeanClonePostHandler.class, o.getClass(), true);
+		DeepBeanClonePostHandler postHandler = Registry
+				.impl(DeepBeanClonePostHandler.class, o.getClass(), true);
 		if (postHandler != null) {
 			postHandler.postClone(ret);
 		}
@@ -152,7 +154,8 @@ public class CloneHelper {
 		Property[] prs = beanDescriptorProvider.getDescriptor(target)
 				.getProperties();
 		for (Property pr : prs) {
-			if (pr.getMutatorMethod() == null || pr.getAccessorMethod() == null) {
+			if (pr.getMutatorMethod() == null
+					|| pr.getAccessorMethod() == null) {
 				continue;
 			}
 			Object val = pr.getAccessorMethod().invoke(source,
@@ -177,8 +180,9 @@ public class CloneHelper {
 			copyBeanProperties(o, ret, null);
 			return ret;
 		} catch (Exception e) {
-			throw new WrappedRuntimeException("Unable to clone: "
-					+ o.getClass(), e, SuggestedAction.NOTIFY_WARNING);
+			throw new WrappedRuntimeException(
+					"Unable to clone: " + o.getClass(), e,
+					SuggestedAction.NOTIFY_WARNING);
 		}
 	}
 }

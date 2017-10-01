@@ -1,62 +1,45 @@
 package cc.alcina.framework.common.client.search;
 
 import javax.xml.bind.annotation.XmlTransient;
-
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class PersistentObjectCriterion extends SearchCriterion {
-	static final transient long serialVersionUID = -1L;
 
-	public PersistentObjectCriterion() {
-	}
+    static final transient long serialVersionUID = -1L;
 
-	public PersistentObjectCriterion(String displayName) {
-		super(displayName);
-	}
+    public PersistentObjectCriterion() {
+    }
 
-	private ClassRef classRef;
+    public PersistentObjectCriterion(String displayName) {
+        super(displayName);
+    }
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public EqlWithParameters eql() {
-		EqlWithParameters result = new EqlWithParameters();
-		if (classRef == null) {
-			return result;
-		}
-		result.eql = targetPropertyNameWithTable() + ".id = ?";
-		result.parameters.add(classRef.getId());
-		return result;
-	}
-	public boolean equivalentTo(SearchCriterion other) {
-		if (other == null || other.getClass() != getClass()) {
-			return false;
-		}
-		PersistentObjectCriterion otherImpl = (PersistentObjectCriterion) other;
-		return otherImpl.getDirection() == getDirection()
-				&& CommonUtils.equalsWithNullEquality(getClassRef(), otherImpl
-						.getClassRef());
-	}
+    private ClassRef classRef;
 
-	@Override
-	public String toString() {
-		return classRef == null ? "" : "class: "
-				+ CommonUtils.simpleClassName(classRef.getRefClass());
-	}
+    @Override
+    @SuppressWarnings("unchecked")
+    public EqlWithParameters eql() {
+        EqlWithParameters result = new EqlWithParameters();
+        if (classRef == null) {
+            return result;
+        }
+        result.eql = targetPropertyNameWithTable() + ".id = ?";
+        result.parameters.add(classRef.getId());
+        return result;
+    }
 
-	public void setClassRef(ClassRef classRef) {
-		this.classRef = classRef;
-	}
+    @Override
+    public String toString() {
+        return classRef == null ? "" : "class: " + CommonUtils.simpleClassName(classRef.getRefClass());
+    }
 
-	@XmlTransient
-	public ClassRef getClassRef() {
-		return classRef;
-	}
-	@Override
-	public PersistentObjectCriterion clone() throws CloneNotSupportedException {
-		PersistentObjectCriterion copy = new PersistentObjectCriterion();
-		copy.copyPropertiesFrom(this);
-		copy.classRef=classRef;
-		return copy;
-	}
+    public void setClassRef(ClassRef classRef) {
+        this.classRef = classRef;
+    }
+
+    @XmlTransient
+    public ClassRef getClassRef() {
+        return classRef;
+    }
 }

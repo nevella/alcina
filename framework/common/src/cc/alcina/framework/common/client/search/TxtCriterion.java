@@ -14,7 +14,6 @@
 package cc.alcina.framework.common.client.search;
 
 import javax.xml.bind.annotation.XmlTransient;
-
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -29,109 +28,82 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 @SearchDefinitionSerializationInfo("tx")
 @RegistryLocation(registryPoint = SearchDefinitionSerializationInfo.class)
 public class TxtCriterion extends SearchCriterion implements HasValue<String> {
-	static final transient long serialVersionUID = -2L;
 
-	@ClientInstantiable
-	public static enum TxtCriterionType {
-		CONTAINS, EQUALS, EQUALS_OR_LIKE
-	}
+    static final transient long serialVersionUID = -2L;
 
-	private String text;
+    @ClientInstantiable
+    public static enum TxtCriterionType {
 
-	private TxtCriterionType txtCriterionType = TxtCriterionType.CONTAINS;
+        CONTAINS, EQUALS, EQUALS_OR_LIKE
+    }
 
-	public TxtCriterion() {
-	}
+    private String text;
 
-	public TxtCriterion(String text) {
-		super();
-		setText(text);
-	}
+    private TxtCriterionType txtCriterionType = TxtCriterionType.CONTAINS;
 
-	public void setText(String text) {
-		String old_text = this.text;
-		this.text = text;
-		propertyChangeSupport().firePropertyChange("text", old_text, text);
-	}
+    public TxtCriterion() {
+    }
 
-	@XmlTransient
-	@AlcinaTransient
-	public String getValue() {
-		return getText();
-	}
+    public TxtCriterion(String text) {
+        super();
+        setText(text);
+    }
 
-	public void setValue(String text) {
-		setText(text);
-	}
+    public void setText(String text) {
+        String old_text = this.text;
+        this.text = text;
+        propertyChangeSupport().firePropertyChange("text", old_text, text);
+    }
 
-	public String getText() {
-		return text;
-	}
+    @XmlTransient
+    @AlcinaTransient
+    public String getValue() {
+        return getText();
+    }
 
-	public boolean equivalentTo(SearchCriterion other) {
-		if (other instanceof TxtCriterion) {
-			TxtCriterion otherT = (TxtCriterion) other;
-			return otherT.getDirection() == getDirection()
-					&& otherT.getTxtCriterionType() == getTxtCriterionType()
-					&& CommonUtils.equalsWithNullEquality(getText(),
-							otherT.getText())
-					&& getOperator() == otherT.getOperator();
-		}
-		return false;
-	}
+    public void setValue(String text) {
+        setText(text);
+    }
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public EqlWithParameters eql() {
-		EqlWithParameters result = new EqlWithParameters();
-		if (CommonUtils.isNullOrEmpty(text)) {
-			return result;
-		}
-		switch (txtCriterionType) {
-		case EQUALS:
-			result.eql = "lower(" + targetPropertyNameWithTable() + ") =  ? ";
-			result.parameters.add(text.toLowerCase());
-			break;
-		case CONTAINS:
-			result.eql = "lower(" + targetPropertyNameWithTable()
-					+ ") like  ? ";
-			result.parameters.add("%" + text.toLowerCase() + "%");
-			break;
-		case EQUALS_OR_LIKE:
-			result.eql = "lower(" + targetPropertyNameWithTable() + ") "
-					+ (text.contains("%") ? "like" : "=") + "  ? ";
-			result.parameters.add(text.toLowerCase());
-			break;
-		}
-		return result;
-	}
+    public String getText() {
+        return text;
+    }
 
-	public void setTxtCriterionType(TxtCriterionType txtCriterionType) {
-		this.txtCriterionType = txtCriterionType;
-	}
+    @Override
+    @SuppressWarnings("unchecked")
+    public EqlWithParameters eql() {
+        EqlWithParameters result = new EqlWithParameters();
+        if (CommonUtils.isNullOrEmpty(text)) {
+            return result;
+        }
+        switch(txtCriterionType) {
+            case EQUALS:
+                result.eql = "lower(" + targetPropertyNameWithTable() + ") =  ? ";
+                result.parameters.add(text.toLowerCase());
+                break;
+            case CONTAINS:
+                result.eql = "lower(" + targetPropertyNameWithTable() + ") like  ? ";
+                result.parameters.add("%" + text.toLowerCase() + "%");
+                break;
+            case EQUALS_OR_LIKE:
+                result.eql = "lower(" + targetPropertyNameWithTable() + ") " + (text.contains("%") ? "like" : "=") + "  ? ";
+                result.parameters.add(text.toLowerCase());
+                break;
+        }
+        return result;
+    }
 
-	public TxtCriterionType getTxtCriterionType() {
-		return txtCriterionType;
-	}
+    public void setTxtCriterionType(TxtCriterionType txtCriterionType) {
+        this.txtCriterionType = txtCriterionType;
+    }
 
-	@Override
-	public String toString() {
-		String string = CommonUtils.nullToEmpty(getText());
-		return string.length() == 0 ? "" : getDisplayName() + ": " + string;
-	}
+    public TxtCriterionType getTxtCriterionType() {
+        return txtCriterionType;
+    }
 
-	@Override
-	protected TxtCriterion copyPropertiesFrom(SearchCriterion searchCriterion) {
-		TxtCriterion copyFromCriterion = (TxtCriterion) searchCriterion;
-		text = copyFromCriterion.text;
-		txtCriterionType = copyFromCriterion.txtCriterionType;
-		return super.copyPropertiesFrom(copyFromCriterion);
-	}
-
-	@Override
-	public TxtCriterion clone() throws CloneNotSupportedException {
-		TxtCriterion copy = new TxtCriterion();
-		copy.copyPropertiesFrom(this);
-		return copy;
-	}
+    @Override
+    public String toString() {
+        String string = CommonUtils.nullToEmpty(getText());
+        return string.length() == 0 ? "" : getDisplayName() + ": " + string;
+    }
 }

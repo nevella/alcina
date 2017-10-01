@@ -140,7 +140,7 @@ public class ReflectiveSearchDefinitionSerializer
 	private String serialize0(SearchDefinition def) {
 		ensureLookups();
 		try {
-			def = (SearchDefinition) ((GwtCloneable) def).clone();
+			def = def.cloneObject();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
