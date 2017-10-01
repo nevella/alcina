@@ -13,6 +13,7 @@ import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class ElementRemote extends NodeRemote implements DomElement {
@@ -813,6 +814,10 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		throw new UnsupportedOperationException();
 	}
 
+	final native String getTagName0()/*-{
+        return this.tagName;
+	}-*/;
+
 	final native String getInnerHTML0()/*-{
         return this.innerHTML;
 	}-*/;
@@ -837,6 +842,10 @@ public class ElementRemote extends NodeRemote implements DomElement {
             return this.indicies;
 		}-*/;
 
+		final native JsArrayInteger jsSizes()/*-{
+            return this.sizes;
+		}-*/;
+
 		final native JsArray ancestors()/*-{
             return this.ancestors;
 		}-*/;
@@ -845,23 +854,94 @@ public class ElementRemote extends NodeRemote implements DomElement {
             return this.indicies.join(",");
 		}-*/;
 
+		final native String stringSizes()/*-{
+            return this.sizes.join(",");
+		}-*/;
+
+		final native String debugData()/*-{
+            return this.debugData.join("\n\n");
+		}-*/;
+
+		final native String debugLog()/*-{
+            return this.debugLog;
+		}-*/;
+
 		final List<Integer> indicies() {
-			String stringIndicies = stringIndicies();
-			if(stringIndicies.isEmpty()){
-				return Collections.emptyList();
-			}
-			return Arrays.asList(stringIndicies.split(",")).stream()
-					.map(Integer::parseInt)
-					.collect(Collectors.toList());
+			return commaSeparatedIntsToList(stringIndicies());
+		}
+
+		public final String getString() {
+			FormatBuilder fb = new FormatBuilder();
+			fb.line("Element remote:\n===========");
+			fb.line("Indicies (lowest first):\n%s", stringIndicies());
+			fb.line("Ancestors (lowest first):\n%s", ancestors());
+			fb.line("Root:\n%s", root().getTagName0());
+			fb.line("Debug data:\n%s", debugData());
+			fb.line("\nDebug log:\n%s", debugLog());
+			return fb.toString();
 		}
 	}
 
-	final native ElementRemoteIndex provideRemoteIndex()/*-{
+	public final String provideRemoteDomTree() {
+		return provideRemoteDomTree0();
+	}
+
+	static List<Integer> commaSeparatedIntsToList(String string) {
+		if (string.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return Arrays.asList(string.split(",")).stream().map(Integer::parseInt)
+				.collect(Collectors.toList());
+	}
+
+	final native String provideRemoteDomTree0()/*-{
+        function addNode(node, buffer, depth) {
+            var buf = buffer.buf;
+            for (var idx = 0; idx < depth; idx++) {
+                buf += ' ';
+            }
+            buf += node.nodeType;
+            buf += ': ';
+            switch (node.nodeType) {
+            case 3:
+            case 8:
+                buf += '[';
+                buf += node.data.split('\n').join('\\n').split('\t')
+                        .join('\\t');
+                buf += ']';
+                break;
+            case 1:
+                buf += node.tagName;
+                buf += ' : ';
+                break;
+            }
+            buf += '\n';
+            buffer.buf = buf;
+            if (node.nodeType == 1) {
+                var idx = 0;
+                var size = node.childNodes.length;
+                for (; idx < size; idx++) {
+                    var child = node.childNodes.item(idx);
+                    addNode(child, buffer, depth + 1);
+                }
+            }
+        }
+        var buffer = {
+            buf : ''
+        };
+        addNode(this, buffer, 0);
+        return buffer.buf;
+	}-*/;
+
+	final native ElementRemoteIndex provideRemoteIndex(boolean debug)/*-{
         var result = {
             hasNode : null,
             root : null,
             indicies : [],
-            ancestors : []
+            ancestors : [],
+            sizes : [],
+            debugData : [],
+            debugLog : ''
         };
         var cursor = this;
         while (true) {
@@ -879,11 +959,46 @@ public class ElementRemote extends NodeRemote implements DomElement {
             var size = parent.childNodes.length;
             for (; idx < size; idx++) {
                 var node = parent.childNodes.item(idx);
+                if (debug) {
+                    result.debugLog += "Checking node - depth: "
+                            + result.indicies.length;
+                    result.debugLog += " - idx: " + idx;
+                    result.debugLog += " - Node type: " + node.nodeType;
+                    result.debugLog += " - Node name: " + node.nodeName;
+                    result.debugLog += " - Cursor type: " + node.nodeType;
+                    result.debugLog += " - Cursor name: " + node.nodeName;
+                    result.debugLog += "\n";
+                }
                 if (node == cursor) {
                     result.indicies.push(idx);
                     result.ancestors.push(cursor);
                     break;
                 }
+            }
+            if (debug) {
+                result.sizes.push(size);
+                var buf = '';
+            	var idx=0;
+                for (; idx < size; idx++) {
+                    var node = parent.childNodes.item(idx);
+                    buf += node.nodeType;
+                    buf += ': ';
+                    switch (node.nodeType) {
+                    case 3:
+                    case 8:
+                        buf += '[';
+                        buf += node.data.split('\n').join('\\n').split('\t')
+                                .join('\\t');
+                        buf += ']';
+                        break;
+                    case 1:
+                        buf += node.tagName;
+                        buf += ' : ';
+                        break;
+                    }
+                    buf += "\n";
+                }
+                result.debugData.push(buf);
             }
             cursor = parent;
         }
@@ -891,7 +1006,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	}-*/;
 
-	final native String getOuterHtml()/*-{
+	public final native String getOuterHtml()/*-{
         return this.outerHTML;
 	}-*/;
 }

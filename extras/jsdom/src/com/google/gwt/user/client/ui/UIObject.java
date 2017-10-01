@@ -602,7 +602,7 @@ public abstract class UIObject implements HasVisibility {
    * @return the object's offset height
    */
   public int getOffsetHeight() {
-    return getElement().implAccess().remote().getPropertyInt("offsetHeight");
+    return getElement().implAccess().ensureRemote().getPropertyInt("offsetHeight");
   }
 
   /**
@@ -612,7 +612,7 @@ public abstract class UIObject implements HasVisibility {
    * @return the object's offset width
    */
   public int getOffsetWidth() {
-    return getElement().implAccess().remote().getPropertyInt("offsetWidth");
+    return getElement().implAccess().ensureRemote().getPropertyInt("offsetWidth");
   }
 
   /**

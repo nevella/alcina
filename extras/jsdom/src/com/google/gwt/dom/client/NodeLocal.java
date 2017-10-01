@@ -107,7 +107,7 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 		if (refChild == null) {
 			children.add(newChild.local());
 		} else {
-			int idx = children.indexOf(newChild.local());
+			int idx = children.indexOf(refChild.local());
 			Preconditions.checkArgument(idx != -1,
 					"refchild not a child of this node");
 			children.add(idx, newChild.local());

@@ -1111,10 +1111,10 @@ public class WidgetUtils {
         }
 	}-*/;
 
-	private native static boolean
-			isVisibleWithOffsetParent(Element elemMulti)/*-{
-        var elem = elemMulti.@com.google.gwt.dom.client.Element::ensureJso()();
-        return (elem.style.display != 'none' && elem.offsetParent != null);
+	private native static boolean isVisibleWithOffsetParent(Element elem)/*-{
+        var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
+        var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
+        return (remote.style.display != 'none' && remote.offsetParent != null);
 	}-*/;
 
 	private static void morphSplitPanel(SplitLayoutPanel splitPanel,
@@ -1135,42 +1135,7 @@ public class WidgetUtils {
 		if (!restore) {
 			morphedWidgets.add(splitPanel);
 		}
-		// splitPanel.getWidgetCount()
-		// com.google.gwt.user.client.Element root, splitter, container0,
-		// container1, contained0, contained1, keepDisplaying;
-		// root = (com.google.gwt.user.client.Element) splitPanel.getElement()
-		// ;
-		// String str = root.getString();
-		// NodeList<Node> childNodes = root.getChildNodes();
-		// container0 = (com.google.gwt.user.client.Element)
-		// childNodes.getItem(0);
-		// splitter = (com.google.gwt.user.client.Element)
-		// childNodes.getItem(1);
-		// container1 = (com.google.gwt.user.client.Element)
-		// childNodes.getItem(2);
-		// contained0 = (com.google.gwt.user.client.Element) container0
-		// .getChildNodes().getItem(0);
-		// contained1 = (com.google.gwt.user.client.Element) container1
-		// .getChildNodes().getItem(0);
-		// int splitPos = hsp ? container0.getOffsetWidth() : container0
-		// .getOffsetHeight();
-		// String display = restore ? "" : "none";
-		// String position = restore ? "absolute" : "";
-		// splitter.getStyle().setProperty("display", display);
-		// container0.getStyle().setProperty("display", display);
-		// container1.getStyle().setProperty("display", display);
-		// container0.getStyle().setProperty("position", position);
-		// container1.getStyle().setProperty("position", position);
-		// if (!restore) {
-		// keepDisplaying = contained0 == keepChild.getElement() ? container0
-		// : container1;
-		// keepDisplaying.getStyle().setProperty("display", "");
-		// morphedWidgets.add(splitPanel);
-		// root.setPropertyInt(SPLIT_PANEL_RESTORE_PROP, splitPos);
-		// } else {
-		// splitPos = root.getPropertyInt(SPLIT_PANEL_RESTORE_PROP);
-		// splitPanel.setWidgetSize(splitPanel.getWidget(0), splitPos);
-		// }
+		
 	}
 
 	private static void scrollElementIntoView(Element e) {
@@ -1198,19 +1163,13 @@ public class WidgetUtils {
 
 		void maximise() {
 			position = element.getStyle().getProperty("position");
-			// width = element.getStyle().getProperty("width");
-			// height = element.getStyle().getProperty("height");
 			overflow = element.getStyle().getProperty("overflow");
 			element.getStyle().setProperty("position", "");
-			// element.getStyle().setProperty("width", "");
-			// element.getStyle().setProperty("height", "");
 			element.getStyle().setProperty("overflow", "");
 		}
 
 		void restore() {
 			element.getStyle().setProperty("position", position);
-			// element.getStyle().setProperty("width", width);
-			// element.getStyle().setProperty("height", height);
 			element.getStyle().setProperty("overflow", overflow);
 		}
 	}

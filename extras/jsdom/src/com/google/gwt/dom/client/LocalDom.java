@@ -33,6 +33,7 @@ public class LocalDom {
 	private static boolean useRemoteDom = true;
 
 	private static boolean disableWriteCheck;
+
 	public static boolean isDisableWriteCheck() {
 		return disableWriteCheck;
 	}
@@ -104,7 +105,8 @@ public class LocalDom {
 			return node;
 		}
 		ElementRemote elem = (ElementRemote) remote;
-		ElementRemoteIndex remoteIndex = elem.provideRemoteIndex();
+		boolean debug = false;
+		ElementRemoteIndex remoteIndex = elem.provideRemoteIndex(debug);
 		ElementRemote hasNodeRemote = remoteIndex.hasNode();
 		if (hasNodeRemote == null) {
 			Element hasNode = parse(remoteIndex.root());
@@ -115,12 +117,19 @@ public class LocalDom {
 		Element hasNode = (Element) remoteLookup.get(hasNodeRemote);
 		List<Integer> indicies = remoteIndex.indicies();
 		JsArray ancestors = remoteIndex.ancestors();
+		String dom = null;
+		String remoteDebug = null;
+		if (debug) {
+			dom = hasNodeRemote.provideRemoteDomTree();
+			remoteDebug = remoteIndex.getString();
+		}
 		for (int idx = indicies.size() - 1; idx >= 0; idx--) {
 			int nodeIndex = indicies.get(idx);
 			Element child = (Element) hasNode.getChild(nodeIndex);
 			NodeRemote childRemote = (NodeRemote) ancestors.get(idx);
 			child.putRemote(childRemote);
-			remoteLookup.put(childRemote, node);
+			remoteLookup.put(childRemote, child);
+			hasNode = child;
 		}
 		return (T) remoteLookup.get(remote);
 	}
@@ -210,8 +219,8 @@ public class LocalDom {
 				}
 			});
 			local.getStyle().getProperties().entrySet().forEach(e -> {
-				Style domStyle = remote.getStyle();
-				domStyle.setProperty(e.getKey(), e.getValue());
+				StyleRemote remoteStyle = remote.getStyle0();
+				remoteStyle.setProperty(e.getKey(), e.getValue());
 			});
 			int bits = ((ElementLocal) local).orSunkEventsOfAllChildren(0);
 			bits |= DOM.getEventsSunk(elem);

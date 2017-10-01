@@ -196,19 +196,19 @@ public class Element extends Node implements DomElement {
 	}
 
 	public int getAbsoluteBottom() {
-		return remote().getAbsoluteBottom();
+		return ensureRemote().getAbsoluteBottom();
 	}
 
 	public int getAbsoluteLeft() {
-		return remote().getAbsoluteLeft();
+		return ensureRemote().getAbsoluteLeft();
 	}
 
 	public int getAbsoluteRight() {
-		return remote().getAbsoluteRight();
+		return ensureRemote().getAbsoluteRight();
 	}
 
 	public int getAbsoluteTop() {
-		return remote().getAbsoluteTop();
+		return ensureRemote().getAbsoluteTop();
 	}
 
 	public String getAttribute(String name) {
@@ -710,6 +710,9 @@ public class Element extends Node implements DomElement {
 
 		public ElementRemote typedRemoteOrNull() {
 			return linkedToRemote() ? typedRemote() : null;
+		}
+		public ElementRemote ensureRemote() {
+			return Element.this.ensureRemote();
 		}
 
 		public DomElement remote() {
