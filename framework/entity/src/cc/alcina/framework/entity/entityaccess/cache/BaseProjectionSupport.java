@@ -5,7 +5,7 @@ import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.cache.BaseProjectionLookupBuilder;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.util.MultikeyMapBase.DelegateMapCreator;
+import cc.alcina.framework.common.client.util.DelegateMapCreator;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;

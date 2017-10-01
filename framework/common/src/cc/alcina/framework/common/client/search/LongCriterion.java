@@ -21,69 +21,48 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public class LongCriterion extends SearchCriterion implements HasValue<Long> {
-	static final transient long serialVersionUID = -1L;
 
-	private Long value;
+    static final transient long serialVersionUID = -1L;
 
-	public LongCriterion() {
-	}
+    private Long value;
 
-	public LongCriterion(Long value) {
-		setValue(value);
-	}
+    public LongCriterion() {
+    }
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public EqlWithParameters eql() {
-		EqlWithParameters result = new EqlWithParameters();
-		if (value == null) {
-			return result;
-		}
-		result.eql = targetPropertyNameWithTable() + " =  ? ";
-		result.parameters.add(value);
-		return result;
-	}
+    public LongCriterion(Long value) {
+        setValue(value);
+    }
 
-	@Override
-	public String toString() {
-		return value == null ? "" : value.toString();
-	}
+    @Override
+    @SuppressWarnings("unchecked")
+    public EqlWithParameters eql() {
+        EqlWithParameters result = new EqlWithParameters();
+        if (value == null) {
+            return result;
+        }
+        result.eql = targetPropertyNameWithTable() + " =  ? ";
+        result.parameters.add(value);
+        return result;
+    }
 
-	public Long getLong() {
-		return value;
-	}
+    @Override
+    public String toString() {
+        return value == null ? "" : value.toString();
+    }
 
-	public void setLong(Long value) {
-		this.value = value;
-	}
+    public Long getLong() {
+        return value;
+    }
 
-	public void setValue(Long value) {
-		setLong(value);
-	}
+    public void setLong(Long value) {
+        this.value = value;
+    }
 
-	public boolean equivalentTo(SearchCriterion other) {
-		if (other == null || other.getClass() != getClass()) {
-			return false;
-		}
-		LongCriterion otherImpl = (LongCriterion) other;
-		return otherImpl.getDirection() == getDirection()
-				&& CommonUtils.equalsWithNullEquality(getValue(),
-						otherImpl.getValue());
-	}
+    public void setValue(Long value) {
+        setLong(value);
+    }
 
-	public Long getValue() {
-		return getLong();
-	}
-	@Override
-	protected LongCriterion copyPropertiesFrom(SearchCriterion searchCriterion) {
-		LongCriterion copyFromCriterion = (LongCriterion) searchCriterion;
-		value=copyFromCriterion.value;
-		return super.copyPropertiesFrom(copyFromCriterion);
-	}
-	@Override
-	public LongCriterion clone() throws CloneNotSupportedException {
-		LongCriterion copy = new LongCriterion();
-		copy.copyPropertiesFrom(this);
-		return copy;
-	}
+    public Long getValue() {
+        return getLong();
+    }
 }

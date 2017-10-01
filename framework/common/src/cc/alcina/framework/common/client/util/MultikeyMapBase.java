@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.function.Supplier;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
@@ -344,15 +343,5 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 			}
 		}
 		return m;
-	}
-
-	public static abstract class DelegateMapCreator implements Serializable {
-		static final transient long serialVersionUID = -1L;
-
-		public abstract Map createDelegateMap(int depthFromRoot, int depth);
-
-		public boolean isSorted(Map m) {
-			return m instanceof SortedMap;
-		}
 	}
 }

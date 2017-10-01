@@ -16,44 +16,37 @@ package cc.alcina.framework.common.client.search;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 
 @Bean(displayNamePropertyName = "displayName")
-/**
- *
- * @author Nick Reddel
- */
 public class EnumCriteriaGroup extends CriteriaGroup<EnumCriterion> {
-	static final transient long serialVersionUID = -1L;
 
-	public EnumCriteriaGroup() {
-		super();
-	}
+    static final transient long serialVersionUID = -1L;
 
-	@Override
-	public Class getEntityClass() {
-		return null;
-	}
+    public EnumCriteriaGroup() {
+        super();
+    }
 
-	@Override
-	public String getDisplayName() {
-		if (getCriteria().isEmpty()) {
-			return "";
-		}
-		return getCriteria().iterator().next().getDisplayName();
-	}
+    @Override
+    public Class getEntityClass() {
+        return null;
+    }
 
-	@Override
-	public String validatePermissions() {
-		try {
-			for (EnumCriterion ec : getCriteria()) {
-				ec.toString();
-			}
-		} catch (Exception e) {
-			return "Access not permitted: (not enum criterion)";
-		}
-		return null;// either subclass, or rely on property mappings
-	}
+    @Override
+    public String getDisplayName() {
+        if (getCriteria().isEmpty()) {
+            return "";
+        }
+        return getCriteria().iterator().next().getDisplayName();
+    }
 
-	@Override
-	public CriteriaGroup clone() throws CloneNotSupportedException {
-		return new EnumCriteriaGroup().deepCopyFrom(this);
-	}
+    @Override
+    public String validatePermissions() {
+        try {
+            for (EnumCriterion ec : getCriteria()) {
+                ec.toString();
+            }
+        } catch (Exception e) {
+            return "Access not permitted: (not enum criterion)";
+        }
+        // either subclass, or rely on property mappings
+        return null;
+    }
 }

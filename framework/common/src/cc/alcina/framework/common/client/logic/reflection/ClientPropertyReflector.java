@@ -22,8 +22,8 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.MultikeyMapBase.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCreator;
 
 /**

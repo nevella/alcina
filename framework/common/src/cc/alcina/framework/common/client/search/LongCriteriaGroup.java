@@ -24,38 +24,34 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
  */
 @PermissibleChildClasses({ LongCriterion.class })
 public class LongCriteriaGroup extends CriteriaGroup<LongCriterion> {
-	static final transient long serialVersionUID = -1L;
 
-	private String displayName = "Long";
+    static final transient long serialVersionUID = -1L;
 
-	public String getDisplayName() {
-		return this.displayName;
-	}
+    private String displayName = "Long";
 
-	@Override
-	public Class getEntityClass() {
-		return null;
-	}
+    public String getDisplayName() {
+        return this.displayName;
+    }
 
-	public void setDisplayName(String displayName) {
-		this.displayName = displayName;
-	}
+    @Override
+    public Class getEntityClass() {
+        return null;
+    }
 
-	public LongCriteriaGroup() {
-		super();
-		setCombinator(FilterCombinator.OR);
-	}
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
 
-	public LongCriteriaGroup(String displayName) {
-		this();
-		LongCriterion lc = new LongCriterion();
-		lc.setDisplayName(displayName);
-		setDisplayName(displayName);
-		getCriteria().add(lc);
-	}
+    public LongCriteriaGroup() {
+        super();
+        setCombinator(FilterCombinator.OR);
+    }
 
-	@Override
-	public CriteriaGroup clone() throws CloneNotSupportedException {
-		return new LongCriteriaGroup().deepCopyFrom(this);
-	}
+    public LongCriteriaGroup(String displayName) {
+        this();
+        LongCriterion lc = new LongCriterion();
+        lc.setDisplayName(displayName);
+        setDisplayName(displayName);
+        getCriteria().add(lc);
+    }
 }

@@ -14,48 +14,42 @@
 package cc.alcina.framework.common.client.search;
 
 import javax.xml.bind.annotation.XmlTransient;
-
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 
 /**
  *
  * @author Nick Reddel
  */
-public abstract class OrderGroup extends CriteriaGroup<OrderCriterion>
-		implements GwtCloneable {
-	@XmlTransient
-	@AlcinaTransient
-	public OrderCriterion getSoleCriterion() {
-		if (getCriteria().iterator().hasNext()) {
-			return getCriteria().iterator().next();
-		}
-		return null;
-	}
+public abstract class OrderGroup extends CriteriaGroup<OrderCriterion> {
 
-	@Override
-	public Class getEntityClass() {
-		return null;
-	}
+    @XmlTransient
+    @AlcinaTransient
+    public OrderCriterion getSoleCriterion() {
+        if (getCriteria().iterator().hasNext()) {
+            return getCriteria().iterator().next();
+        }
+        return null;
+    }
 
-	public void setSoleCriterion(OrderCriterion soleCriterion) {
-		OrderCriterion old_soleCriterion = getSoleCriterion();
-		getCriteria().clear();
-		if (soleCriterion != null) {
-			getCriteria().add(soleCriterion);
-		}
-		propertyChangeSupport().firePropertyChange("soleCriterion",
-				old_soleCriterion, soleCriterion);
-	}
+    @Override
+    public Class getEntityClass() {
+        return null;
+    }
 
-	@Override
-	/**
+    public void setSoleCriterion(OrderCriterion soleCriterion) {
+        OrderCriterion old_soleCriterion = getSoleCriterion();
+        getCriteria().clear();
+        if (soleCriterion != null) {
+            getCriteria().add(soleCriterion);
+        }
+        propertyChangeSupport().firePropertyChange("soleCriterion", old_soleCriterion, soleCriterion);
+    }
+
+    @Override
+    public /**
 	 * Either subclass, or rely on property mappings. No real risk of information leakage 'ere
 	 */
-	public String validatePermissions() {
-		return null;
-	}
-
-	public OrderGroup clone() throws CloneNotSupportedException {
-		throw new CloneNotSupportedException();
-	}
+    String validatePermissions() {
+        return null;
+    }
 }

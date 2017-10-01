@@ -13,61 +13,49 @@
  */
 package cc.alcina.framework.common.client.search;
 
-
 /**
  * 
  * @author Nick Reddel
  */
 public class DateRangeEnumCriterion extends EnumCriterion<DateRange> {
-	static final transient long serialVersionUID = -1L;
 
-	private DateRange dateRange;
+    static final transient long serialVersionUID = -1L;
 
-	public DateRangeEnumCriterion() {
-	}
+    private DateRange dateRange;
 
-	public DateRangeEnumCriterion(String criteriaDisplayName,
-			boolean withNull) {
-		super(criteriaDisplayName, withNull);
-	}
+    public DateRangeEnumCriterion() {
+    }
 
-	public DateRangeEnumCriterion(DateRange value) {
-		setValue(value);
-	}
+    public DateRangeEnumCriterion(String criteriaDisplayName, boolean withNull) {
+        super(criteriaDisplayName, withNull);
+    }
 
-	@Override
-	protected boolean valueAsString() {
-		return true;
-	}
+    public DateRangeEnumCriterion(DateRange value) {
+        setValue(value);
+    }
 
-	public DateRange getDateRange() {
-		return this.dateRange;
-	}
+    @Override
+    protected boolean valueAsString() {
+        return true;
+    }
 
-	public void setDateRange(
-			DateRange dateRange) {
-		DateRange old_dateRange = this.dateRange;
-		this.dateRange = dateRange;
-		propertyChangeSupport().firePropertyChange("dateRange",
-				old_dateRange, dateRange);
-	}
+    public DateRange getDateRange() {
+        return this.dateRange;
+    }
 
-	@Override
-	public DateRange getValue() {
-		return getDateRange();
-	}
+    public void setDateRange(DateRange dateRange) {
+        DateRange old_dateRange = this.dateRange;
+        this.dateRange = dateRange;
+        propertyChangeSupport().firePropertyChange("dateRange", old_dateRange, dateRange);
+    }
 
-	@Override
-	public void setValue(DateRange value) {
-		setDateRange(value);
-	}
+    @Override
+    public DateRange getValue() {
+        return getDateRange();
+    }
 
-	@Override
-	public DateRangeEnumCriterion clone()
-			throws CloneNotSupportedException {
-		DateRangeEnumCriterion copy = new DateRangeEnumCriterion();
-		copy.copyPropertiesFrom(this);
-		copy.dateRange = dateRange;
-		return copy;
-	}
+    @Override
+    public void setValue(DateRange value) {
+        setDateRange(value);
+    }
 }

@@ -17,9 +17,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import javax.xml.bind.annotation.XmlTransient;
-
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
@@ -31,71 +29,53 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
  * 
  * 
  */
-public abstract class IdMultipleCriterion<E extends HasIdAndLocalId>
-		extends SearchCriterion implements HasValue<Set<E>> {
-	static final transient long serialVersionUID = -1L;
+public abstract class IdMultipleCriterion<E extends HasIdAndLocalId> extends SearchCriterion implements HasValue<Set<E>> {
 
-	private Set<Long> ids = new LinkedHashSet<>();
+    static final transient long serialVersionUID = -1L;
 
-	public Set<Long> getIds() {
-		return this.ids;
-	}
+    private Set<Long> ids = new LinkedHashSet<>();
 
-	public void setIds(Set<Long> ids) {
-		this.ids = ids;
-	}
+    public Set<Long> getIds() {
+        return this.ids;
+    }
 
-	private transient Set<E> value;
+    public void setIds(Set<Long> ids) {
+        this.ids = ids;
+    }
 
-	public IdMultipleCriterion() {
-	}
+    private transient Set<E> value;
 
-	public abstract Function<Long, E> objectSupplier();
+    public IdMultipleCriterion() {
+    }
 
-	public boolean equivalentTo(SearchCriterion other) {
-		if (other == null || other.getClass() != getClass()) {
-			return false;
-		}
-		IdMultipleCriterion otherImpl = (IdMultipleCriterion) other;
-		return getOperator()==other.getOperator()
-				&& otherImpl.getValue().equals(getValue());
-	}
+    public abstract Function<Long, E> objectSupplier();
 
-	public IdMultipleCriterion(String criteriaDisplayName) {
-		super(criteriaDisplayName);
-	}
+    public IdMultipleCriterion(String criteriaDisplayName) {
+        super(criteriaDisplayName);
+    }
 
-	@AlcinaTransient
-	@XmlTransient
-	public Set<E> getValue() {
-		if (value == null) {
-			Function<Long, E> supplier = objectSupplier();
-			value = ids.stream().map(id -> supplier.apply(id))
-					.collect(Collectors.toSet());
-		}
-		return value;
-	}
+    @AlcinaTransient
+    @XmlTransient
+    public Set<E> getValue() {
+        if (value == null) {
+            Function<Long, E> supplier = objectSupplier();
+            value = ids.stream().map(id -> supplier.apply(id)).collect(Collectors.toSet());
+        }
+        return value;
+    }
 
-	/**
+    /**
 	 * add property change firing to the subclass implementation, if you care
 	 */
-	public void setValue(Set<E> value) {
-		setIds(HiliHelper.toIdSet(value));
-		Set<E> old_value = this.value;
-		this.value = value;
-		propertyChangeSupport().firePropertyChange("value", old_value, value);
-	}
+    public void setValue(Set<E> value) {
+        setIds(HiliHelper.toIdSet(value));
+        Set<E> old_value = this.value;
+        this.value = value;
+        propertyChangeSupport().firePropertyChange("value", old_value, value);
+    }
 
-	@Override
-	protected IdMultipleCriterion
-			copyPropertiesFrom(SearchCriterion searchCriterion) {
-		IdMultipleCriterion copyFromCriterion = (IdMultipleCriterion) searchCriterion;
-		ids = new LinkedHashSet<>(copyFromCriterion.ids);
-		return super.copyPropertiesFrom(copyFromCriterion);
-	}
-
-	@Override
-	public String toString() {
-		return String.valueOf(getValue());
-	}
+    @Override
+    public String toString() {
+        return String.valueOf(getValue());
+    }
 }

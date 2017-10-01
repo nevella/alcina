@@ -40,16 +40,6 @@ public class BaseMultipleEnumCriterionPack {
 			getValue().addAll(e);
 			return this;
 		}
-
-		@Override
-		public BaseEnumMultipleCriterion clone()
-				throws CloneNotSupportedException {
-			BaseEnumMultipleCriterion copy = Reflections.classLookup()
-					.newInstance(getClass());
-			copy.copyPropertiesFrom(this);
-			copy.value = new LinkedHashSet<>(value);
-			return copy;
-		}
 	}
 
 	public static abstract class BaseEnumMultipleCriterionSearchable<E extends Enum, C extends EnumMultipleCriterion<E>>
