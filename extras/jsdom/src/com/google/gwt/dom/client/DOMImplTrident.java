@@ -57,13 +57,13 @@ abstract class DOMImplTrident extends DOMImpl {
   }-*/;
 
   @Override
-  protected native NodeRemote createButtonElement(DocumentRemote doc, String type) /*-{
+  protected native Node createButtonElement(Document  doc, String type) /*-{
     return doc.createElement("<BUTTON type='" + type + "'></BUTTON>");
   }-*/;
 
   @Override
   @SuppressIsSafeHtmlCastCheck
-  protected ElementRemote createElement(DocumentRemote doc, String tagName) {
+  protected ElementRemote createElement(Document  doc, String tagName) {
     if (tagName.contains(":")) {
       // Special implementation for tag names with namespace-prefixes. The only
       // way to get IE to reliably create namespace-prefixed elements is
@@ -84,7 +84,7 @@ abstract class DOMImplTrident extends DOMImpl {
   }
 
   @Override
-  protected native NativeEvent createHtmlEvent(DocumentRemote doc, String type,
+  protected native NativeEvent createHtmlEvent(Document  doc, String type,
       boolean canBubble, boolean cancelable) /*-{
     // NOTE: IE doesn't support changing bubbling and canceling behavior (this
     // is documented publicly in doc.createHtmlEvent()).
@@ -94,12 +94,12 @@ abstract class DOMImplTrident extends DOMImpl {
   }-*/;
 
   @Override
-  protected native ElementRemote createInputRadioElement(DocumentRemote doc, String name) /*-{
+  protected native Element createInputRadioElement(Document  doc, String name) /*-{
     return doc.createElement("<INPUT type='RADIO' name='" + name + "'>");
   }-*/;
 
   @Override
-  protected native NativeEvent createKeyCodeEvent(DocumentRemote doc, String type,
+  protected native NativeEvent createKeyCodeEvent(Document  doc, String type,
       boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
       int keyCode) /*-{
     var evt = doc.createEventObject();
@@ -114,7 +114,7 @@ abstract class DOMImplTrident extends DOMImpl {
 
   @Override
   @Deprecated
-  protected native NativeEvent createKeyEvent(DocumentRemote doc, String type,
+  protected native NativeEvent createKeyEvent(Document  doc, String type,
       boolean canBubble, boolean cancelable, boolean ctrlKey, boolean altKey,
       boolean shiftKey, boolean metaKey, int keyCode, int charCode) /*-{
     // NOTE: IE doesn't support changing bubbling and canceling behavior (this
@@ -125,7 +125,7 @@ abstract class DOMImplTrident extends DOMImpl {
   }-*/;
 
   @Override
-  protected NativeEvent createKeyPressEvent(DocumentRemote doc, boolean ctrlKey,
+  protected NativeEvent createKeyPressEvent(Document  doc, boolean ctrlKey,
       boolean altKey, boolean shiftKey, boolean metaKey, int charCode) {
     // NOTE: in IE, keyCode is used in both keydown/keyup and keypress, so we
     // delegate to createKeyCodeEvent instead of duplicating code.
@@ -134,7 +134,7 @@ abstract class DOMImplTrident extends DOMImpl {
   }
 
   @Override
-  protected native NativeEvent createMouseEvent(DocumentRemote doc, String type,
+  protected native NativeEvent createMouseEvent(Document  doc, String type,
       boolean canBubble, boolean cancelable, int detail, int screenX,
       int screenY, int clientX, int clientY, boolean ctrlKey, boolean altKey,
       boolean shiftKey, boolean metaKey, int button, ElementRemote relatedTarget) /*-{
@@ -168,7 +168,7 @@ abstract class DOMImplTrident extends DOMImpl {
   }
 
   @Override
-  protected native void dispatchEvent(ElementRemote target, NativeEvent evt) /*-{
+  protected native void dispatchEvent(Element target, NativeEvent evt) /*-{
     target.fireEvent("on" + evt.type, evt);
   }-*/;
 
@@ -222,23 +222,23 @@ abstract class DOMImplTrident extends DOMImpl {
    * runtime JS exception.
    */
   @Override
-  protected native String getAttribute(ElementRemote elem, String name) /*-{
+  protected native String getAttribute(Element elem, String name) /*-{
     var attr = elem.getAttribute(name);
     return attr == null ? '' : attr + '';
   }-*/;
 
   @Override
-  protected int getBodyOffsetLeft(DocumentRemote doc) {
+  protected int getBodyOffsetLeft(Document  doc) {
     return getClientLeft(doc.getViewportElement().typedRemote());
   }
 
   @Override
-  protected int getBodyOffsetTop(DocumentRemote doc) {
+  protected int getBodyOffsetTop(Document  doc) {
     return getClientTop(doc.getViewportElement().typedRemote());
   }
 
   @Override
-  protected native String getInnerText(ElementRemote elem) /*-{
+  protected native String getInnerText(Element elem) /*-{
     return elem.innerText;
   }-*/;
 
@@ -252,7 +252,7 @@ abstract class DOMImplTrident extends DOMImpl {
   }-*/;
 
   @Override
-  protected String getTagName(ElementRemote elem) {
+  protected String getTagName(Element elem) {
     String tagName = getTagNameInternal(elem);
     String scopeName = getScopeNameInternal(elem);
 
@@ -264,7 +264,7 @@ abstract class DOMImplTrident extends DOMImpl {
   }
 
   @Override
-  protected native boolean hasAttribute(ElementRemote elem, String name) /*-{
+  protected native boolean hasAttribute(Element elem, String name) /*-{
     var node = elem.getAttributeNode(name);
     return !!(node && node.specified);
   }-*/;
@@ -275,7 +275,7 @@ abstract class DOMImplTrident extends DOMImpl {
   }
 
   @Override
-  protected native void selectAdd(ElementRemote select, ElementRemote option,
+  protected native void selectAdd(Element select, ElementRemote option,
 			ElementRemote before) /*-{
     // IE only accepts indices for the second argument.
     if (before) {
@@ -286,11 +286,11 @@ abstract class DOMImplTrident extends DOMImpl {
   }-*/;
 
   @Override
-  protected native void setInnerText(ElementRemote elem, String text) /*-{
+  protected native void setInnerText(Element elem, String text) /*-{
     elem.innerText = text || '';
   }-*/;
 
-  protected native int getBoundingClientRectLeft(ElementRemote elem) /*-{
+  protected native int getBoundingClientRectLeft(Element elem) /*-{
     // getBoundingClientRect() throws a JS exception if the elem is not attached
     // to the Document, so we wrap it in a try/catch block
     try {
@@ -300,7 +300,7 @@ abstract class DOMImplTrident extends DOMImpl {
     }
   }-*/;
 
-  protected native int getBoundingClientRectTop(ElementRemote elem) /*-{
+  protected native int getBoundingClientRectTop(Element elem) /*-{
     // getBoundingClientRect() throws a JS exception if the elem is not attached
     // to the Document, so we wrap it in a try/catch block
     try {
@@ -310,16 +310,16 @@ abstract class DOMImplTrident extends DOMImpl {
     }
   }-*/;
 
-  protected native boolean isRTL(ElementRemote elem) /*-{
+  protected native boolean isRTL(Element elem) /*-{
     return elem.currentStyle.direction == 'rtl';
   }-*/;
 
-  private native ElementRemote createElementInternal(DocumentRemote doc, String tagName) /*-{
+  private native Element createElementInternal(Document  doc, String tagName) /*-{
     return doc.createElement(tagName);
   }-*/;
 
   // IE needs a container div *for each Document* for use by createElement().
-  private native ElementRemote ensureContainer(DocumentRemote doc) /*-{
+  private native Element ensureContainer(Document  doc) /*-{
     if (!doc.__gwt_container) {
       doc.__gwt_container = doc.createElement('div');
     }
@@ -329,22 +329,22 @@ abstract class DOMImplTrident extends DOMImpl {
   /**
    * clientLeft is non-standard and not implemented on all browsers.
    */
-  private native int getClientLeft(ElementRemote elem) /*-{
+  private native int getClientLeft(Element elem) /*-{
     return elem.clientLeft;
   }-*/;
 
   /**
    * clientTop is non-standard and not implemented on all browsers.
    */
-  private native int getClientTop(ElementRemote elem) /*-{
+  private native int getClientTop(Element elem) /*-{
     return elem.clientTop;
   }-*/;
 
-  private native String getScopeNameInternal(ElementRemote elem) /*-{
+  private native String getScopeNameInternal(Element elem) /*-{
     return elem.scopeName;
   }-*/;
 
-  private native String getTagNameInternal(ElementRemote elem) /*-{
+  private native String getTagNameInternal(Element elem) /*-{
     return elem.tagName;
   }-*/;
 }

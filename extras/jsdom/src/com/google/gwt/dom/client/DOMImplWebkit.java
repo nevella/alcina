@@ -55,7 +55,7 @@ class DOMImplWebkit extends DOMImplStandardBase {
    * attribute to make an Element_Dom draggable.
    */
   @Override
-  public void setDraggable(ElementRemote elem, String draggable) {
+  public void setDraggable(Element elem, String draggable) {
     super.setDraggable(elem, draggable);
     if ("true".equals(draggable)) {
       elem.getStyle().setProperty("webkitUserDrag", "Element_Dom");

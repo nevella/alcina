@@ -81,7 +81,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }
 
   @Override
-  protected native void buttonClick(ElementRemote button) /*-{
+  protected native void buttonClick(Element button) /*-{
     var doc = button.ownerDocument;
     if (doc != null) {
       var evt = doc.createEvent('MouseEvents');
@@ -92,7 +92,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }-*/;
 
   @Override
-  protected NativeEvent createKeyCodeEvent(DocumentRemote doc, String type,
+  protected NativeEvent createKeyCodeEvent(Document  doc, String type,
       boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
       int keyCode) {
     return createKeyEventImpl(doc, type, true, true, ctrlKey, altKey, shiftKey,
@@ -101,7 +101,7 @@ class DOMImplMozilla extends DOMImplStandard {
 
   @Override
   @Deprecated
-  protected NativeEvent createKeyEvent(DocumentRemote doc, String type,
+  protected NativeEvent createKeyEvent(Document  doc, String type,
       boolean canBubble, boolean cancelable, boolean ctrlKey, boolean altKey,
       boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
     return createKeyEventImpl(doc, type, canBubble, cancelable, ctrlKey,
@@ -109,7 +109,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }
 
   @Override
-  protected NativeEvent createKeyPressEvent(DocumentRemote doc, boolean ctrlKey,
+  protected NativeEvent createKeyPressEvent(Document  doc, boolean ctrlKey,
       boolean altKey, boolean shiftKey, boolean metaKey, int charCode) {
     return createKeyEventImpl(doc, "keypress", true, true, ctrlKey, altKey,
         shiftKey, metaKey, 0, charCode);
@@ -138,19 +138,19 @@ class DOMImplMozilla extends DOMImplStandard {
   }-*/;
 
   @Override
-  protected int getAbsoluteLeft(ElementRemote elem) {
+  protected int getAbsoluteLeft(Element elem) {
     return getAbsoluteLeftImpl(elem.getOwnerDocument().getViewportElement().typedRemote(),
         elem);
   }
 
   @Override
-  protected int getAbsoluteTop(ElementRemote elem) {
+  protected int getAbsoluteTop(Element elem) {
     return getAbsoluteTopImpl(elem.getOwnerDocument().getViewportElement().typedRemote(),
         elem);
   }
 
   @Override
-  protected native int getBodyOffsetLeft(DocumentRemote doc) /*-{
+  protected native int getBodyOffsetLeft(Document  doc) /*-{
     var style = $wnd.getComputedStyle(doc.documentElement, null);
     if (style == null) {
       // Works around https://bugzilla.mozilla.org/show_bug.cgi?id=548397
@@ -160,7 +160,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }-*/;
 
   @Override
-  protected native int getBodyOffsetTop(DocumentRemote doc) /*-{
+  protected native int getBodyOffsetTop(Document  doc) /*-{
     var style = $wnd.getComputedStyle(doc.documentElement, null);
     if (style == null) {
       // Works around https://bugzilla.mozilla.org/show_bug.cgi?id=548397
@@ -185,7 +185,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }-*/;
 
   @Override
-  protected int getScrollLeft(ElementRemote elem) {
+  protected int getScrollLeft(Element elem) {
     if (!isGecko19() && isRTL(elem)) {
       return super.getScrollLeft(elem)
           - (elem.getScrollWidth() - elem.getClientWidth());
@@ -201,7 +201,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }-*/;
 
   @Override
-  protected void setScrollLeft(ElementRemote elem, int left) {
+  protected void setScrollLeft(Element elem, int left) {
     if (!isGecko19() && isRTL(elem)) {
       left += elem.getScrollWidth() - elem.getClientWidth();
     }
@@ -209,7 +209,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }
 
   @Override
-  protected native String toString(ElementRemote elem) /*-{
+  protected native String toString(Element elem) /*-{
     // Basic idea is to use the innerHTML property by copying the Node_Dom into a
     // div and getting the innerHTML
     var doc = elem.ownerDocument;
@@ -221,7 +221,7 @@ class DOMImplMozilla extends DOMImplStandard {
     return outer;
   }-*/;
 
-  private native NativeEvent createKeyEventImpl(DocumentRemote doc, String type,
+  private native NativeEvent createKeyEventImpl(Document  doc, String type,
       boolean canBubble, boolean cancelable, boolean ctrlKey, boolean altKey,
       boolean shiftKey, boolean metaKey, int keyCode, int charCode) /*-{
     var evt = doc.createEvent('KeyboardEvent');
@@ -238,7 +238,7 @@ class DOMImplMozilla extends DOMImplStandard {
     return evt;
   }-*/;
 
-  private native int getAbsoluteLeftImpl(ElementRemote viewport, ElementRemote elem) /*-{
+  private native int getAbsoluteLeftImpl(Element viewport, ElementRemote elem) /*-{
     // Firefox 3 is actively throwing errors when getBoxObjectFor() is called,
     // so we use getBoundingClientRect() whenever possible (but it's not
     // supported on older versions). If changing this code, make sure to check
@@ -260,7 +260,7 @@ class DOMImplMozilla extends DOMImplStandard {
     }
   }-*/;
 
-  private native int getAbsoluteTopImpl(ElementRemote viewport, ElementRemote elem) /*-{
+  private native int getAbsoluteTopImpl(Element viewport, ElementRemote elem) /*-{
     // Firefox 3 is actively throwing errors when getBoxObjectFor() is called,
     // so we use getBoundingClientRect() whenever possible (but it's not
     // supported on older versions). If changing this code, make sure to check
@@ -280,8 +280,9 @@ class DOMImplMozilla extends DOMImplStandard {
     }
   }-*/;
 
-  private native boolean isRTL(ElementRemote elem) /*-{
-    var style = elem.ownerDocument.defaultView.getComputedStyle(elem, null);
+  private native boolean isRTL(Element elem) /*-{
+  	var remote = elem.@com.google.gwt.dom.client.Element::typedRemote()();
+    var style = remote.ownerDocument.defaultView.getComputedStyle(remote, null);
     return style.direction == 'rtl';
   }-*/;
 }

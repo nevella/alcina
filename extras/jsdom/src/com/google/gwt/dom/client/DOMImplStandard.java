@@ -23,7 +23,7 @@ package com.google.gwt.dom.client;
 abstract class DOMImplStandard extends DOMImpl {
 
   @Override
-  protected native NativeEvent createHtmlEvent(DocumentRemote doc, String type,
+  protected native NativeEvent createHtmlEvent(Document  doc, String type,
       boolean canBubble, boolean cancelable) /*-{
     var evt = doc.createEvent('HTMLEvents');
     evt.initEvent(type, canBubble, cancelable);
@@ -32,7 +32,7 @@ abstract class DOMImplStandard extends DOMImpl {
   }-*/;
 
   @Override
-  protected native ElementRemote createInputRadioElement(DocumentRemote doc, String name) /*-{
+  protected native Element createInputRadioElement(Document  doc, String name) /*-{
     var elem = doc.createElement("INPUT");
     elem.type = 'radio';
     elem.name = name;
@@ -41,7 +41,7 @@ abstract class DOMImplStandard extends DOMImpl {
   }-*/;
 
   @Override
-  protected native NativeEvent createMouseEvent(DocumentRemote doc, String type,
+  protected native NativeEvent createMouseEvent(Document  doc, String type,
       boolean canBubble, boolean cancelable, int detail, int screenX,
       int screenY, int clientX, int clientY, boolean ctrlKey, boolean altKey,
       boolean shiftKey, boolean metaKey, int button, ElementRemote relatedTarget) /*-{
@@ -65,7 +65,7 @@ abstract class DOMImplStandard extends DOMImpl {
   }-*/;
 
   @Override
-  protected native void dispatchEvent(ElementRemote target, NativeEvent evt) /*-{
+  protected native void dispatchEvent(Element target, NativeEvent evt) /*-{
     target.dispatchEvent(evt);
   }-*/;
 
@@ -118,7 +118,7 @@ abstract class DOMImplStandard extends DOMImpl {
    *     does not recalculate styles as it does for innerText.
    */ 
   @Override
-  protected native String getInnerText(ElementRemote elem) /*-{
+  protected native String getInnerText(Element elem) /*-{
     return elem.textContent;
   }-*/;
 
@@ -131,7 +131,7 @@ abstract class DOMImplStandard extends DOMImpl {
    * See getInnerText for why textContent is used instead of innerText.
    */
   @Override
-  protected native void setInnerText(ElementRemote elem, String text) /*-{
+  protected native void setInnerText(Element elem, String text) /*-{
     elem.textContent = text || '';
   }-*/;
 }
