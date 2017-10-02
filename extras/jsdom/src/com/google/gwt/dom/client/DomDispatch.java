@@ -313,7 +313,7 @@ public class DomDispatch implements IDomDispatch {
 
 	public int getScrollLeft(Element elem) {
 		resolveAllPending();
-		return remoteImpl().getScrollLeft(elem.typedRemote());
+		return remoteImpl().getScrollLeft(elem);
 	}
 
 	public int getScrollTop(Document doc) {

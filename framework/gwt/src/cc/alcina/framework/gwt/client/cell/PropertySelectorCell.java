@@ -77,6 +77,27 @@ public class PropertySelectorCell<T extends HasIdAndLocalId>
 		this.toStringMapper = toStringMapper;
 		this.selector = selector;
 		this.renderer = SimpleSafeHtmlRenderer.getInstance();
+		// Hide the panel and call valueUpdater.update when a value is selected
+		selector.addPropertyChangeListener("value", event -> {
+			// Remember the values before hiding the popup.
+			Element cellParent = lastParent;
+			Set<T> oldValue = lastValue;
+			Object key = lastKey;
+			int index = lastIndex;
+			int column = lastColumn;
+			ensurePopup().hide();
+			// Update the cell and value updater.
+			Set<T> value = (Set<T>) event.getNewValue();
+			setViewData(key, value);
+			setValue(new Context(index, column, key), cellParent, oldValue);
+			if (valueUpdater != null) {
+				valueUpdater.update(value);
+			}
+			lastFilterText = selector.getLastFilterText();
+		});
+	}
+
+	private PopupPanel ensurePopup() {
 		this.panel = new PopupPanel(true, true) {
 			@Override
 			protected void onPreviewNativeEvent(NativePreviewEvent event) {
@@ -105,24 +126,7 @@ public class PropertySelectorCell<T extends HasIdAndLocalId>
 			}
 		});
 		panel.add(selector);
-		// Hide the panel and call valueUpdater.update when a value is selected
-		selector.addPropertyChangeListener("value", event -> {
-			// Remember the values before hiding the popup.
-			Element cellParent = lastParent;
-			Set<T> oldValue = lastValue;
-			Object key = lastKey;
-			int index = lastIndex;
-			int column = lastColumn;
-			panel.hide();
-			// Update the cell and value updater.
-			Set<T> value = (Set<T>) event.getNewValue();
-			setViewData(key, value);
-			setValue(new Context(index, column, key), cellParent, oldValue);
-			if (valueUpdater != null) {
-				valueUpdater.update(value);
-			}
-			lastFilterText = selector.getLastFilterText();
-		});
+		return panel;
 	}
 
 	@Override
@@ -173,6 +177,7 @@ public class PropertySelectorCell<T extends HasIdAndLocalId>
 		this.valueUpdater = valueUpdater;
 		Set<T> viewData = getViewData(lastKey);
 		selector.setValue(value);
+		ensurePopup();
 		panel.setPopupPositionAndShow(new PositionCallback() {
 			public void setPosition(int offsetWidth, int offsetHeight) {
 				panel.setPopupPosition(lastParent.getAbsoluteLeft() + offsetX,

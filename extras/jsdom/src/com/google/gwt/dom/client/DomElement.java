@@ -303,7 +303,7 @@ public interface DomElement extends DomNode {
 
 	void sinkEvents(int eventBits);
 
-	Integer indexInParentChildren();
+	int indexInParentChildren();
 
 	void ensureId();
 

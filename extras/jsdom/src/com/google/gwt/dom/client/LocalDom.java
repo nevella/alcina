@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
@@ -20,6 +21,7 @@ import com.google.gwt.user.client.LocalDomDebug;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class LocalDom {
 	private static LocalDom instance = new LocalDom();
@@ -34,39 +36,12 @@ public class LocalDom {
 
 	private static boolean disableWriteCheck;
 
-	public static boolean isDisableWriteCheck() {
-		return disableWriteCheck;
-	}
-
-	public static void setDisableWriteCheck(boolean disableWriteCheck) {
-		LocalDom.disableWriteCheck = disableWriteCheck;
-	}
-
 	public static NodeRemote ensurePendingResolutionNode(Node node) {
 		return get().ensurePendingResolutionNode0(node);
 	}
 
 	public static void ensureRemote(Element element) {
-		List<Element> ancestors = new ArrayList<>();
-		Element cursor = element;
-		Element withRemote = null;
-		while (cursor != null) {
-			if (cursor.linkedToRemote()) {
-				withRemote = cursor;
-				break;
-			} else {
-				ancestors.add(cursor);
-				cursor = cursor.getParentElement();
-			}
-		}
-		Collections.reverse(ancestors);
-		for (Element ancestor : ancestors) {
-			Integer idx = ancestor.indexInParentChildren();
-			NodeRemote remote = withRemote.typedRemote().getChildNodes0()
-					.getItem0(idx);
-			ancestor.putRemote(remote);
-			withRemote = ancestor;
-		}
+		get().ensureRemote0(element);
 	}
 
 	public static void eventMod(NativeEvent evt, String eventName) {
@@ -78,6 +53,10 @@ public class LocalDom {
 		// TODO Auto-generated method stub
 	}
 
+	public static boolean isDisableWriteCheck() {
+		return disableWriteCheck;
+	}
+
 	public static boolean isStopPropogation(NativeEvent evt) {
 		return get().isStopPropogation0(evt);
 	}
@@ -86,9 +65,9 @@ public class LocalDom {
 		return useRemoteDom;
 	}
 
-	public static void log(LocalDomDebug channel, String message) {
-		System.out.println(message);
-		// LocalDomBridge.log(channel, message);
+	public static void log(LocalDomDebug channel, String message,
+			Object... args) {
+		get().debugImpl.log(channel, message, args);
 	}
 
 	public static <T extends Node> T nodeFor(JavaScriptObject jso) {
@@ -99,53 +78,14 @@ public class LocalDom {
 		return (T) get().nodeFor0(remote);
 	}
 
-	private <T extends Node> T nodeFor0(NodeRemote remote) {
-		T node = (T) remoteLookup.get(remote);
-		if (node != null) {
-			return node;
-		}
-		ElementRemote elem = (ElementRemote) remote;
-		boolean debug = false;
-		ElementRemoteIndex remoteIndex = elem.provideRemoteIndex(debug);
-		ElementRemote hasNodeRemote = remoteIndex.hasNode();
-		if (hasNodeRemote == null) {
-			Element hasNode = parse(remoteIndex.root());
-			hasNode.putRemote(remoteIndex.root());
-			hasNodeRemote = remoteIndex.root();
-			remoteLookup.put(hasNodeRemote, hasNode);
-		}
-		Element hasNode = (Element) remoteLookup.get(hasNodeRemote);
-		List<Integer> indicies = remoteIndex.indicies();
-		JsArray ancestors = remoteIndex.ancestors();
-		String dom = null;
-		String remoteDebug = null;
-		if (debug) {
-			dom = hasNodeRemote.provideRemoteDomTree();
-			remoteDebug = remoteIndex.getString();
-		}
-		for (int idx = indicies.size() - 1; idx >= 0; idx--) {
-			int nodeIndex = indicies.get(idx);
-			Element child = (Element) hasNode.getChild(nodeIndex);
-			NodeRemote childRemote = (NodeRemote) ancestors.get(idx);
-			child.putRemote(childRemote);
-			remoteLookup.put(childRemote, child);
-			hasNode = child;
-		}
-		return (T) remoteLookup.get(remote);
-	}
-
-	private Element parse(ElementRemote root) {
-		return new HtmlParser().parse(root);
-	}
-
-	static boolean hasNode(JavaScriptObject remote) {
-		return get().remoteLookup.containsKey(remote);
-	}
-
 	public static void register(Document doc) {
 		if (useRemoteDom) {
 			get().remoteLookup.put(doc.typedRemote(), doc);
 		}
+	}
+
+	public static void setDisableWriteCheck(boolean disableWriteCheck) {
+		LocalDom.disableWriteCheck = disableWriteCheck;
 	}
 
 	public static void setUseRemoteDom(boolean useRemoteDom) {
@@ -158,6 +98,10 @@ public class LocalDom {
 
 	static LocalDomCollections collections() {
 		return collections;
+	}
+
+	static Element createElement(String tagName) {
+		return get().createElement0(tagName);
 	}
 
 	synchronized static String declarativeCssName(String key) {
@@ -181,6 +125,12 @@ public class LocalDom {
 		});
 	}
 
+	static boolean hasNode(JavaScriptObject remote) {
+		return get().remoteLookup.containsKey(remote);
+	}
+
+	LocalDomDebugImpl debugImpl = new LocalDomDebugImpl();
+
 	private Map<NodeRemote, Node> remoteLookup;
 
 	private Map<String, Supplier<Element>> elementCreators;
@@ -190,6 +140,8 @@ public class LocalDom {
 	List<Node> pendingResolution = new ArrayList<>();
 
 	ScheduledCommand flushCommand = null;
+
+	private int wasResolvedEventId = 1;
 
 	public LocalDom() {
 		remoteLookup = new LinkedHashMap<>();
@@ -218,6 +170,12 @@ public class LocalDom {
 					break;
 				}
 			});
+			log(LocalDomDebug.FLUSH, "%s - uiobj: %s - \n%s",
+					element.getTagName(),
+					Optional.ofNullable(element.uiObject)
+							.map(ui -> ui.getClass().getSimpleName())
+							.orElse("(null)"),
+					CommonUtils.trimToWsChars(innerHTML, 1000));
 			local.getStyle().getProperties().entrySet().forEach(e -> {
 				StyleRemote remoteStyle = remote.getStyle0();
 				remoteStyle.setProperty(e.getKey(), e.getValue());
@@ -226,6 +184,16 @@ public class LocalDom {
 			bits |= DOM.getEventsSunk(elem);
 			DOM.sinkEvents(elem, bits);
 			pendingResolution.remove(node);
+			wasResolved(elem);
+		}
+	}
+
+	private Element createElement0(String tagName) {
+		Supplier<Element> creator = elementCreators.get(tagName.toLowerCase());
+		if (creator == null) {
+			return new Element();
+		} else {
+			return creator.get();
 		}
 	}
 
@@ -254,6 +222,8 @@ public class LocalDom {
 			remote = ((DomDispatchRemote) DOMImpl.impl.remote)
 					.createElement(element.getTagName());
 			element.pendingResolution();
+			log(LocalDomDebug.CREATED_PENDING_RESOLUTION,
+					"created pending resolution node:" + element.getTagName());
 			break;
 		// case Node.TEXT_NODE:
 		// nodeDom = localDomImpl.createDomText(Document.get(),
@@ -265,12 +235,33 @@ public class LocalDom {
 		default:
 			throw new UnsupportedOperationException();
 		}
-		// log(LocalDomDebug.CREATED_PENDING_RESOLUTION,
-		// "created pending resolution node:"
-		// + node.implNoResolve().hashCode());
 		remoteLookup.put(remote, node);
 		node.putRemote(remote);
 		return remote;
+	}
+
+	private void ensureRemote0(Element element) {
+		List<Element> ancestors = new ArrayList<>();
+		Element cursor = element;
+		Element withRemote = null;
+		while (cursor != null) {
+			if (cursor.linkedToRemote()) {
+				withRemote = cursor;
+				break;
+			} else {
+				ancestors.add(cursor);
+				cursor = cursor.getParentElement();
+			}
+		}
+		Collections.reverse(ancestors);
+		for (Element needsRemote : ancestors) {
+			int idx = needsRemote.indexInParentChildren();
+			debugImpl.debugPutRemote(needsRemote, idx, withRemote);
+			NodeRemote remote = withRemote.typedRemote().getChildNodes0()
+					.getItem0(idx);
+			needsRemote.putRemote(remote);
+			withRemote = needsRemote;
+		}
 	}
 
 	private void eventMod0(NativeEvent evt, String eventName) {
@@ -355,19 +346,6 @@ public class LocalDom {
 		elementCreators.put(LegendElement.TAG, () -> new LegendElement());
 	}
 
-	static Element createElement(String tagName) {
-		return get().createElement0(tagName);
-	}
-
-	private Element createElement0(String tagName) {
-		Supplier<Element> creator = elementCreators.get(tagName.toLowerCase());
-		if (creator == null) {
-			return new Element();
-		} else {
-			return creator.get();
-		}
-	}
-
 	private void initStatics() {
 		if (GWT.isScript()) {
 			JavascriptKeyableLookup.initJs();
@@ -384,6 +362,44 @@ public class LocalDom {
 		List<String> list = eventMods.get(evt);
 		return list != null && (list.contains("eventStopPropagation")
 				|| list.contains("eventCancelBubble"));
+	}
+
+	private <T extends Node> T nodeFor0(NodeRemote remote) {
+		T node = (T) remoteLookup.get(remote);
+		if (node != null) {
+			return node;
+		}
+		ElementRemote elem = (ElementRemote) remote;
+		boolean debug = false;
+		ElementRemoteIndex remoteIndex = elem.provideRemoteIndex(debug);
+		ElementRemote hasNodeRemote = remoteIndex.hasNode();
+		if (hasNodeRemote == null) {
+			Element hasNode = parse(remoteIndex.root());
+			hasNode.putRemote(remoteIndex.root());
+			hasNodeRemote = remoteIndex.root();
+			remoteLookup.put(hasNodeRemote, hasNode);
+		}
+		Element hasNode = (Element) remoteLookup.get(hasNodeRemote);
+		List<Integer> indicies = remoteIndex.indicies();
+		JsArray ancestors = remoteIndex.ancestors();
+		for (int idx = indicies.size() - 1; idx >= 0; idx--) {
+			int nodeIndex = indicies.get(idx);
+			Element child = (Element) hasNode.getChild(nodeIndex);
+			NodeRemote childRemote = (NodeRemote) ancestors.get(idx);
+			child.putRemote(childRemote);
+			remoteLookup.put(childRemote, child);
+			hasNode = child;
+		}
+		return (T) remoteLookup.get(remote);
+	}
+
+	private Element parse(ElementRemote root) {
+		return new HtmlParser().parse(root);
+	}
+
+	private void wasResolved(Element elem) {
+		elem.local().walk(nl -> nl.wasResolvedEventId = wasResolvedEventId);
+		wasResolvedEventId++;
 	}
 
 	void flush0() {

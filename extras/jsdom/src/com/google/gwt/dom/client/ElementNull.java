@@ -269,7 +269,7 @@ public class ElementNull extends NodeLocalNull
 	}
 
 	@Override
-	public final Integer indexInParentChildren() {
+	public final int indexInParentChildren() {
 		throw new UnsupportedOperationException();
 	}
 

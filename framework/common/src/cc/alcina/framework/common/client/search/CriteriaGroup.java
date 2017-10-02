@@ -232,19 +232,6 @@ public abstract class CriteriaGroup<SC extends SearchCriterion>
 		return DefaultValidation.validatePermissions(this, getCriteria());
 	}
 
-	private int criteriaSizeIgnoreEmpty() {
-		if (getCriteria().size() == 0) {
-			return 0;
-		}
-		int counter = 0;
-		for (SC sc : getCriteria()) {
-			if (sc != null && !sc.emptyCriterion()) {
-				counter++;
-			}
-		}
-		return counter;
-	}
-
 	protected String combinatorString() {
 		return combinator.toString().toLowerCase();
 	}

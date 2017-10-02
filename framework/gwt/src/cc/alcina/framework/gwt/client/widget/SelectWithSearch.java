@@ -365,9 +365,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		holder.setStyleName("alcina-Chooser");
 		holder.add(filter);
 		if (popdown) {
-			panelForPopup = new DecoratedRelativePopupPanel(true);
-			setPanelForPopupUI(panelForPopup);
-			panelForPopup.add(scroller);
 			filter.getTextBox().addFocusHandler(this);
 			filter.getTextBox().addClickHandler(new ClickHandler() {
 				public void onClick(ClickEvent event) {
@@ -409,6 +406,15 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			lazyProvider.getData(callback);
 		}
 		return holder;
+	}
+
+	private DecoratedRelativePopupPanel ensurePanelForPopup() {
+		if (panelForPopup == null) {
+			panelForPopup = new DecoratedRelativePopupPanel(true);
+			setPanelForPopupUI(panelForPopup);
+			panelForPopup.add(scroller);
+		}
+		return panelForPopup;
 	}
 
 	public boolean filter(String filterText) {
@@ -614,7 +620,8 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			RelativePopupPositioning.showPopup(filter, null, RootPanel.get(),
 					new RelativePopupAxis[] {
 							RelativePopupPositioning.BOTTOM_LTR },
-					RootPanel.get(), panelForPopup, getShiftX(), shiftY());
+					RootPanel.get(), ensurePanelForPopup(), getShiftX(),
+					shiftY());
 		}
 	}
 
@@ -770,6 +777,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	public void setPopupPanelCssClassName(String popupPanelCssClassName) {
 		this.popupPanelCssClassName = popupPanelCssClassName;
 	}
+
 	public void setRecreateItemHolderOnRefresh(
 			boolean recreateItemHolderOnRefresh) {
 		this.recreateItemHolderOnRefresh = recreateItemHolderOnRefresh;
@@ -825,6 +833,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	}
 
 	public void showPopupWithData(boolean filterTextBox) {
+		ensurePanelForPopup();
 		if (popdownStyleName != null) {
 			panelForPopup.addStyleName(popdownStyleName);
 		}

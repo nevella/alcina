@@ -80,7 +80,7 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	}
 
 	public <T extends Node> T appendChild(T newChild) {
-		writeCheck();
+		ensureRemoteCheck();
 		T node = local().appendChild(newChild);
 		remote().appendChild(newChild);
 		return node;
@@ -93,8 +93,13 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	boolean fromParsedRemote;
 
-	protected void writeCheck() {
-		if (fromParsedRemote && !linkedToRemote()
+	/**
+	 * If the node was flushed, need to create a pending remote node for later
+	 * resolution
+	 */
+	protected void ensureRemoteCheck() {
+		if (!linkedToRemote()
+				&& (fromParsedRemote || local().provideWasFlushed())
 				&& !LocalDom.isDisableWriteCheck()) {
 			LocalDom.ensureRemote((Element) this);
 		}
@@ -221,7 +226,7 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	protected abstract boolean linkedToRemote();
 
-	protected abstract <T extends DomNode> T local();
+	protected abstract <T extends NodeLocal> T local();
 
 	protected abstract void putRemote(NodeRemote nodeDom);
 

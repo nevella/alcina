@@ -359,4 +359,8 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	public final native void callMethod(String methodName) /*-{
         this[methodName]();
 	}-*/;
+
+	 final boolean provideIsElement() {
+		return getNodeType()==Node.ELEMENT_NODE;
+	}
 }

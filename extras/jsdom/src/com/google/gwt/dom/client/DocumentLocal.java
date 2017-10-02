@@ -7,6 +7,8 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	private Element headElement;
 
+	private int gwtLuid = 1;
+
 	@Override
 	public String getNodeName() {
 		return "#document";
@@ -50,7 +52,7 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public String createUniqueId() {
-		throw new UnsupportedOperationException();
+		return "gwt-luid-" + this.gwtLuid++;
 	}
 
 	@Override
@@ -92,6 +94,7 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	void appendTextContent(StringBuilder builder) {
 		throw new UnsupportedOperationException();
 	}
+
 	@Override
 	public final AnchorElement createAnchorElement() {
 		return DomDocumentStatic.createAnchorElement(this);
@@ -151,10 +154,12 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	public final TableColElement createColElement() {
 		return DomDocumentStatic.createColElement(this);
 	}
-	 @Override
+
+	@Override
 	public final TableColElement createColGroupElement() {
 		return DomDocumentStatic.createColGroupElement(this);
 	}
+
 	@Override
 	public final ModElement createDelElement() {
 		return DomDocumentStatic.createDelElement(this);

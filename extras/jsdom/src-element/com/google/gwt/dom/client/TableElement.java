@@ -17,6 +17,7 @@ package com.google.gwt.dom.client;
 
 import java.util.Collections;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 
 /**
@@ -90,7 +91,7 @@ public class TableElement extends Element {
 
 	public TableCaptionElement createCaption() {
 		throw new UnsupportedOperationException();
-//		return LocalDom.nodeFor(createCaption0(domImpl));
+		// return LocalDom.nodeFor(createCaption0(domImpl));
 	}
 
 	/**
@@ -103,13 +104,8 @@ public class TableElement extends Element {
 	}-*/;
 
 	public TableSectionElement createTFoot() {
-		throw new UnsupportedOperationException();
-//		if (provideIsLocal()) {
-//			return (TableSectionElement) provideLocalDomElement()
-//					.createOrReturnChild("tfoot");
-//		} else {
-//			return LocalDom.nodeFor(createTFoot0(domImpl));
-//		}
+		Preconditions.checkState(!linkedToRemote());
+		return (TableSectionElement) local().createOrReturnChild("tfoot");
 	}
 
 	/**
@@ -122,13 +118,9 @@ public class TableElement extends Element {
 	}-*/;
 
 	public TableSectionElement createTHead() {
-		throw new UnsupportedOperationException();
-//		if (provideIsLocal()) {
-//			return (TableSectionElement) provideLocalDomElement()
-//					.createOrReturnChild("thead");
-//		} else {
-//			return LocalDom.nodeFor(createTHead0(domImpl));
-//		}
+		Preconditions.checkState(!linkedToRemote());
+		return (TableSectionElement) local().createOrReturnChild("thead");
+		// else case remote to TableElementRemote, write there
 	}
 
 	/**
@@ -140,7 +132,7 @@ public class TableElement extends Element {
 
 	public void deleteCaption() {
 		throw new UnsupportedOperationException();
-//		deleteCaption0(domImpl);
+		// deleteCaption0(domImpl);
 	}
 
 	/**
@@ -158,7 +150,7 @@ public class TableElement extends Element {
 
 	public void deleteRow(int index) {
 		throw new UnsupportedOperationException();
-//		deleteRow0(domImpl, index);
+		// deleteRow0(domImpl, index);
 	}
 
 	/**
@@ -170,7 +162,7 @@ public class TableElement extends Element {
 
 	public void deleteTFoot() {
 		throw new UnsupportedOperationException();
-//		deleteTFoot0(domImpl);
+		// deleteTFoot0(domImpl);
 	}
 
 	/**
@@ -182,7 +174,7 @@ public class TableElement extends Element {
 
 	public void deleteTHead() {
 		throw new UnsupportedOperationException();
-//		deleteTHead0(domImpl);
+		// deleteTHead0(domImpl);
 	}
 
 	/**
@@ -260,15 +252,21 @@ public class TableElement extends Element {
 	 * Returns a collection of the table bodies (including implicit ones).
 	 */
 	public NodeList<TableSectionElement> getTBodies() {
-		throw new UnsupportedOperationException();
-//		if (provideIsLocal()) {
-//			TableSectionElement body = (TableSectionElement) provideLocalDomElement()
-//					.createOrReturnChild("tbody");
-//			return new NodeList<>(
-//					new NodeListWrapped(Collections.singletonList(body)));
-//		} else {
-//			return new NodeList<>(getTBodies0(typedRemote()));
-//		}
+		Preconditions.checkState(!linkedToRemote());
+		TableSectionElement body = (TableSectionElement) local()
+				.createOrReturnChild("tbody");
+		return new NodeList<>(
+				new NodeListWrapped(Collections.singletonList(body)));
+		// throw new UnsupportedOperationException();
+		// // if (provideIsLocal()) {
+		// // TableSectionElement body = (TableSectionElement)
+		// // provideLocalDomElement()
+		// // .createOrReturnChild("tbody");
+		// // return new NodeList<>(
+		// // new NodeListWrapped(Collections.singletonList(body)));
+		// // } else {
+		// // return new NodeList<>(getTBodies0(typedRemote()));
+		// // }
 	}
 
 	/**
@@ -297,7 +295,7 @@ public class TableElement extends Element {
 	 */
 	public TableSectionElement getTFoot() {
 		throw new UnsupportedOperationException();
-//		return LocalDom.nodeFor(getTFoot0(typedRemote()));
+		// return LocalDom.nodeFor(getTFoot0(typedRemote()));
 	}
 
 	/**
@@ -305,7 +303,7 @@ public class TableElement extends Element {
 	 */
 	public TableSectionElement getTHead() {
 		throw new UnsupportedOperationException();
-//		return LocalDom.nodeFor(getTHead0(typedRemote()));
+		// return LocalDom.nodeFor(getTHead0(typedRemote()));
 	}
 
 	/**

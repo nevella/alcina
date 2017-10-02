@@ -25,7 +25,7 @@ import com.google.gwt.core.client.JavascriptObjectEquivalent;
 public class Document extends Node implements DomDocument {
 	private static Document doc;
 
-	public static Document create(DomDocument local) {
+	public static Document create(DocumentLocal local) {
 		Document doc = new Document();
 		doc.local = local;
 		if (LocalDom.isUseRemoteDom()) {
@@ -51,7 +51,7 @@ public class Document extends Node implements DomDocument {
 		return doc;
 	}
 
-	DomDocument local;
+	DocumentLocal local;
 
 	DomDocument remote;
 
@@ -738,7 +738,7 @@ public class Document extends Node implements DomDocument {
 	}
 
 	@Override
-	protected DomDocument local() {
+	protected DocumentLocal local() {
 		return local;
 	}
 

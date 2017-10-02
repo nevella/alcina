@@ -18,7 +18,6 @@ public class ElementLocal extends NodeLocal
 
 	private String innerHtml;
 
-
 	int eventBits;
 
 	private Element element;
@@ -27,6 +26,7 @@ public class ElementLocal extends NodeLocal
 		ownerDocument = document_Jvm;
 		this.tagName = tagName;
 	}
+
 	protected Map<String, String> attributes = LocalDom.collections()
 			.createStringMap();
 
@@ -341,7 +341,7 @@ public class ElementLocal extends NodeLocal
 	}
 
 	@Override
-	public final Integer indexInParentChildren() {
+	public final int indexInParentChildren() {
 		return parentNode.children.indexOf(this);
 	}
 
@@ -374,10 +374,10 @@ public class ElementLocal extends NodeLocal
 	@Override
 	public void setAttribute(String name, String value) {
 		attributes.put(name, value);
-		//FIXME
-//		if (name.equals("id") && value.length() > 0) {
-//			LocalDomBridge.registerId(this);
-//		}
+		// FIXME
+		// if (name.equals("id") && value.length() > 0) {
+		// LocalDomBridge.registerId(this);
+		// }
 	}
 
 	@Override
@@ -493,7 +493,6 @@ public class ElementLocal extends NodeLocal
 		return super.toString() + "\n\t" + getTagName();
 	}
 
-
 	private void appendChildContents(UnsafeHtmlBuilder builder) {
 		if (containsUnescapedText()) {
 			children.stream().forEach(
@@ -574,8 +573,8 @@ public class ElementLocal extends NodeLocal
 			}
 			((StyleLocal) element.getStyle().local()).properties.entrySet()
 					.forEach(e -> {
-						builder.appendEscaped(LocalDom
-								.declarativeCssName(e.getKey()));
+						builder.appendEscaped(
+								LocalDom.declarativeCssName(e.getKey()));
 						builder.appendHtmlConstantNoCheck(":");
 						builder.appendEscaped(e.getValue());
 						builder.appendHtmlConstantNoCheck("; ");

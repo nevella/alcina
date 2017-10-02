@@ -115,11 +115,9 @@ public class Element extends Node implements DomElement {
 	public EventListener uiObjectListener;
 
 	private boolean pendingResolution;
-	
 
 	protected Element() {
 	}
-	
 
 	public boolean addClassName(String className) {
 		boolean result = local().addClassName(className);
@@ -409,7 +407,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	@Override
-	public Integer indexInParentChildren() {
+	public int indexInParentChildren() {
 		return local().indexInParentChildren();
 	}
 
@@ -622,24 +620,6 @@ public class Element extends Node implements DomElement {
 		return local().toString() + (uiObject == null ? ""
 				: ": " + uiObject.getClass().getSimpleName());
 	}
-	// private void dumpLocal0(int depth) {
-	// String indent = CommonUtils.padStringLeft("", depth * 2, ' ');
-	// String message = Ax.format("%s%s [%s,%s,%s]: ", indent, getTagName(),
-	// hashCode(), impl().hashCode(), domImpl() == null ? "f" : "t");
-	// LocalDomBridge.log(LocalDomDebug.DUMP_LOCAL, message);
-	// for (Node node : getChildNodes()) {
-	// switch (node.getNodeType()) {
-	// case Node.TEXT_NODE:
-	// message = indent + CommonUtils.trimToWsChars(
-	// TextUtils.normalise(node.getNodeValue()), 50, true);
-	// LocalDomBridge.log(LocalDomDebug.DUMP_LOCAL, message);
-	// break;
-	// case ELEMENT_NODE:
-	// ((Element) node).dumpLocal0(depth + 1);
-	// break;
-	// }
-	// }
-	// }
 
 	public ElementRemote typedRemote() {
 		return (ElementRemote) remote();
@@ -711,6 +691,7 @@ public class Element extends Node implements DomElement {
 		public ElementRemote typedRemoteOrNull() {
 			return linkedToRemote() ? typedRemote() : null;
 		}
+
 		public ElementRemote ensureRemote() {
 			return Element.this.ensureRemote();
 		}

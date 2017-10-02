@@ -805,7 +805,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	}
 
 	@Override
-	public final Integer indexInParentChildren() {
+	public final int indexInParentChildren() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -978,7 +978,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
             if (debug) {
                 result.sizes.push(size);
                 var buf = '';
-            	var idx=0;
+                var idx = 0;
                 for (; idx < size; idx++) {
                     var node = parent.childNodes.item(idx);
                     buf += node.nodeType;
@@ -1008,5 +1008,9 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	public final native String getOuterHtml()/*-{
         return this.outerHTML;
+	}-*/;
+
+	final native ElementRemote getParentElement0()/*-{
+        return this.parentElement;
 	}-*/;
 }

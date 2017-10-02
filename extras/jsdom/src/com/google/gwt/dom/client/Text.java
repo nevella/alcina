@@ -15,8 +15,6 @@
  */
 package com.google.gwt.dom.client;
 
-import com.google.gwt.core.client.JavascriptObjectEquivalent;
-
 /**
  * The Text interface represents textual content.
  */
@@ -30,11 +28,11 @@ public class Text extends Node implements DomText {
 		return (Text) node;
 	}
 
-	private DomText local;
+	private TextLocal local;
 
 	private DomText remote;
 
-	protected Text(DomText local) {
+	protected Text(TextLocal local) {
 		this.local = local;
 		this.remote = TextNull.INSTANCE;
 	}
@@ -89,7 +87,7 @@ public class Text extends Node implements DomText {
 	}
 
 	@Override
-	protected DomText local() {
+	protected TextLocal local() {
 		return local;
 	}
 
