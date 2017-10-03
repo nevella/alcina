@@ -15,6 +15,7 @@
  */
 package com.google.gwt.dom.client;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 
@@ -39,6 +40,9 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	 * The node is a {@link Document}.
 	 */
 	public static final short DOCUMENT_NODE = 9;
+
+	@Override
+	public abstract Node nodeFor();
 
 	/**
 	 * Assert that the given {@link JavaScriptObject} is a DOM node and
@@ -76,10 +80,15 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
         }
 	}-*/;
 
+	public int wasResolvedEventId;
+
 	protected Node() {
 	}
 
 	public <T extends Node> T appendChild(T newChild) {
+		if (newChild.linkedToRemote() && !linkedToRemote()) {
+			LocalDom.ensureRemote((Element) this);
+		}
 		ensureRemoteCheck();
 		T node = local().appendChild(newChild);
 		remote().appendChild(newChild);
@@ -89,20 +98,6 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	@Override
 	public void callMethod(String methodName) {
 		DomNodeStatic.callMethod(this, methodName);
-	}
-
-	boolean fromParsedRemote;
-
-	/**
-	 * If the node was flushed, need to create a pending remote node for later
-	 * resolution
-	 */
-	protected void ensureRemoteCheck() {
-		if (!linkedToRemote()
-				&& (fromParsedRemote || local().provideWasFlushed())
-				&& !LocalDom.isDisableWriteCheck()) {
-			LocalDom.ensureRemote((Element) this);
-		}
 	}
 
 	public abstract <T extends JavascriptObjectEquivalent> T cast();
@@ -182,7 +177,17 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	}
 
 	public Node insertBefore(Node newChild, Node refChild) {
-		return local().insertBefore(newChild, refChild);
+		ensureRemoteCheck();
+		if (newChild.linkedToRemote() && !linkedToRemote()) {
+			LocalDom.ensureRemote((Element) this);
+		}
+		// must do this before inserting in local tree
+		if (refChild != null) {
+			refChild.ensureRemoteCheck();
+		}
+		Node result = local().insertBefore(newChild, refChild);
+		remote().insertBefore(newChild, refChild);
+		return result;
 	}
 
 	@Override
@@ -204,6 +209,8 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	}
 
 	public Node removeChild(Node oldChild) {
+		ensureRemoteCheck();
+		oldChild.ensureRemoteCheck();
 		Node result = local().removeChild(oldChild);
 		remote().removeChild(oldChild);
 		return result;
@@ -215,20 +222,63 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	}
 
 	public Node replaceChild(Node newChild, Node oldChild) {
+		ensureRemoteCheck();
+		oldChild.ensureRemoteCheck();
 		Node result = local().replaceChild(newChild, oldChild);
 		remote().replaceChild(newChild, oldChild);
 		return result;
 	}
 
 	public void setNodeValue(String nodeValue) {
+		ensureRemoteCheck();
 		local().setNodeValue(nodeValue);
+	}
+
+	boolean provideWasFlushed() {
+		return wasResolvedEventId > 0;
+	}
+
+	/**
+	 * If the node was flushed, then we need to link to the remote (or our
+	 * local/remote will be inconsistent)
+	 * 
+	 */
+	protected void ensureRemoteCheck() {
+		if (!linkedToRemote() && provideWasFlushed()
+				&& provideSelfOrAncestorLinkedToRemote() != null
+				&& !LocalDom.isDisableRemoteWrite()) {
+			LocalDom.ensureRemote((Element) this);
+		}
 	}
 
 	protected abstract boolean linkedToRemote();
 
 	protected abstract <T extends NodeLocal> T local();
 
+	protected Node provideRoot() {
+		if (getParentElement() != null) {
+			return getParentElement().provideRoot();
+		}
+		return this;
+	}
+
+	protected Node provideSelfOrAncestorLinkedToRemote() {
+		if (linkedToRemote()) {
+			return this;
+		}
+		if (getParentElement() != null) {
+			return getParentElement().provideSelfOrAncestorLinkedToRemote();
+		}
+		return null;
+	}
+
 	protected abstract void putRemote(NodeRemote nodeDom);
 
 	protected abstract <T extends DomNode> T remote();
+
+	void wasResolved(int wasResolvedEventId) {
+		Preconditions.checkState(this.wasResolvedEventId == 0
+				|| this.wasResolvedEventId == wasResolvedEventId);
+		this.wasResolvedEventId = wasResolvedEventId;
+	}
 }

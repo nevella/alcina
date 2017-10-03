@@ -3,9 +3,11 @@ package com.google.gwt.dom.client;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
@@ -34,7 +36,7 @@ public class LocalDom {
 
 	private static boolean useRemoteDom = true;
 
-	private static boolean disableWriteCheck;
+	private static boolean disableRemoteWrite;
 
 	public static NodeRemote ensurePendingResolutionNode(Node node) {
 		return get().ensurePendingResolutionNode0(node);
@@ -50,11 +52,10 @@ public class LocalDom {
 
 	public static void flush() {
 		get().flush0();
-		// TODO Auto-generated method stub
 	}
 
-	public static boolean isDisableWriteCheck() {
-		return disableWriteCheck;
+	public static boolean isDisableRemoteWrite() {
+		return disableRemoteWrite;
 	}
 
 	public static boolean isStopPropogation(NativeEvent evt) {
@@ -80,12 +81,22 @@ public class LocalDom {
 
 	public static void register(Document doc) {
 		if (useRemoteDom) {
-			get().remoteLookup.put(doc.typedRemote(), doc);
+			get().linkRemote(doc.typedRemote(), doc);
 		}
 	}
 
-	public static void setDisableWriteCheck(boolean disableWriteCheck) {
-		LocalDom.disableWriteCheck = disableWriteCheck;
+	private void linkRemote(NodeRemote remote, Node node) {
+		Preconditions.checkState(!remoteLookup.containsKey(remote));
+		// Ax.out("put: %s %s - %s", node.getNodeName(), remote.hashCode(),
+		// node.hashCode());
+		// if (node.getNodeName().equals("tfoot")) {
+		// int debug = 3;
+		// }
+		remoteLookup.put(remote, node);
+	}
+
+	public static void setDisableRemoteWrite(boolean disableRemoteWrite) {
+		LocalDom.disableRemoteWrite = disableRemoteWrite;
 	}
 
 	public static void setUseRemoteDom(boolean useRemoteDom) {
@@ -143,6 +154,8 @@ public class LocalDom {
 
 	private int wasResolvedEventId = 1;
 
+	private boolean wasResolvedEventIdDirty;
+
 	public LocalDom() {
 		remoteLookup = new LinkedHashMap<>();
 		if (collections == null) {
@@ -158,6 +171,9 @@ public class LocalDom {
 			ElementRemote remote = (ElementRemote) node.remote();
 			DomElement local = node.local();
 			String innerHTML = local.getInnerHTML();
+			if (innerHTML.contains("class=\"workspaceViews")) {
+				int debug = 3;
+			}
 			remote.setInnerHTML(innerHTML);
 			// doesn't include style
 			local.getAttributes().entrySet().forEach(e -> {
@@ -199,10 +215,6 @@ public class LocalDom {
 
 	private void ensureFlush() {
 		if (flushCommand == null) {
-			// if (debug.on) {
-			// log(LocalDomDebug.ENSURE_FLUSH,
-			// CommonUtils.highlightForLog("ensure flush"));
-			// }
 			flushCommand = () -> flush();
 			Scheduler.get().scheduleFinally(flushCommand);
 		}
@@ -235,7 +247,7 @@ public class LocalDom {
 		default:
 			throw new UnsupportedOperationException();
 		}
-		remoteLookup.put(remote, node);
+		linkRemote(remote, node);
 		node.putRemote(remote);
 		return remote;
 	}
@@ -254,11 +266,20 @@ public class LocalDom {
 			}
 		}
 		Collections.reverse(ancestors);
+		if (withRemote == null) {
+			// attaching with-remote to without-remote (say, a popup)
+			Element root = ancestors.get(0);
+			ensurePendingResolutionNode(root);
+			flush();
+			ensureRemote0(element);
+			return;
+		}
 		for (Element needsRemote : ancestors) {
 			int idx = needsRemote.indexInParentChildren();
 			debugImpl.debugPutRemote(needsRemote, idx, withRemote);
 			NodeRemote remote = withRemote.typedRemote().getChildNodes0()
 					.getItem0(idx);
+			linkRemote(remote, needsRemote);
 			needsRemote.putRemote(remote);
 			withRemote = needsRemote;
 		}
@@ -370,66 +391,79 @@ public class LocalDom {
 			return node;
 		}
 		ElementRemote elem = (ElementRemote) remote;
-		boolean debug = false;
-		ElementRemoteIndex remoteIndex = elem.provideRemoteIndex(debug);
+		ElementRemoteIndex remoteIndex = elem.provideRemoteIndex(false);
 		ElementRemote hasNodeRemote = remoteIndex.hasNode();
+		boolean hadNode = hasNodeRemote != null;
 		if (hasNodeRemote == null) {
-			Element hasNode = parse(remoteIndex.root());
-			hasNode.putRemote(remoteIndex.root());
-			hasNodeRemote = remoteIndex.root();
-			remoteLookup.put(hasNodeRemote, hasNode);
+			ElementRemote root = remoteIndex.root();
+			Element hasNode = parse(root, null);
+			linkRemote(root, hasNode);
+			hasNode.putRemote(root);
+			hasNodeRemote = root;
 		}
 		Element hasNode = (Element) remoteLookup.get(hasNodeRemote);
 		List<Integer> indicies = remoteIndex.indicies();
+		List<Boolean> remoteDefined = remoteIndex.remoteDefined();
 		JsArray ancestors = remoteIndex.ancestors();
+		debugImpl.debugNodeFor0(elem, hasNode, remoteIndex, true);
+		Element cursor = hasNode;
 		for (int idx = indicies.size() - 1; idx >= 0; idx--) {
 			int nodeIndex = indicies.get(idx);
-			Element child = (Element) hasNode.getChild(nodeIndex);
+			cursor.resolveRemoteDefined();
+			Element child = (Element) cursor.getChild(nodeIndex);
 			NodeRemote childRemote = (NodeRemote) ancestors.get(idx);
 			child.putRemote(childRemote);
-			remoteLookup.put(childRemote, child);
-			hasNode = child;
+			linkRemote(childRemote, child);
+			cursor = child;
 		}
+		debugImpl.debugNodeFor0(elem, hasNode, remoteIndex, false);
 		return (T) remoteLookup.get(remote);
 	}
 
-	private Element parse(ElementRemote root) {
-		return new HtmlParser().parse(root);
+	private Element parse(ElementRemote root, Element replaceContents) {
+		Element parsed = new HtmlParser().parse(root, replaceContents);
+		wasResolved(parsed);
+		return parsed;
 	}
 
 	private void wasResolved(Element elem) {
-		elem.local().walk(nl -> nl.wasResolvedEventId = wasResolvedEventId);
-		wasResolvedEventId++;
+		elem.local().walk(nl -> nl.node.wasResolved(wasResolvedEventId));
+		wasResolvedEventIdDirty = true;
 	}
 
 	void flush0() {
 		if (flushCommand == null) {
-			// if (createdLocalValues.size() > 0) {
-			// return;// FIXME - Jade
-			// }
-			// Preconditions.checkState(createdLocalValues.size() == 0);
 			return;
 		}
 		flushCommand = null;
 		log(LocalDomDebug.FLUSH, "**flush**");
-		// if (pendingResolution.size() == 0) {
-		// boolean detachedAndPending = createdLocalValues.stream()
-		// .anyMatch(e -> e.getParentNode() == null);
-		// if (detachedAndPending) {
-		// // e.g. dialog box
-		// return;
-		// }
-		// createdLocalValues.stream().forEach(e -> {
-		// ElementLocal el = (ElementLocal) e;
-		// if (((Element) el.node).uiObject != null) {
-		// log(LocalDomDebug.FLUSH,
-		// ((Element) el.node).uiObject.getClass().getName());
-		// }
-		// });
-		// }
-		// Preconditions.checkState(pendingResolution.size() > 0);
-		new ArrayList<>(pendingResolution).stream()
-				.forEach(this::ensureResolved);
+		try {
+			if (wasResolvedEventIdDirty) {
+				wasResolvedEventId++;
+				wasResolvedEventIdDirty = false;
+			}
+			new ArrayList<>(pendingResolution).stream()
+					.forEach(this::ensureResolved);
+			requiresSync.removeIf(elem -> resolveSync(elem));
+			if (wasResolvedEventIdDirty) {
+				wasResolvedEventId++;
+			}
+		} finally {
+			wasResolvedEventIdDirty = false;
+		}
+	}
+
+	private boolean resolveSync(Element element) {
+		element.ensureRemoteCheck();
+		if (element.linkedToRemote()) {
+			LocalDom.log(LocalDomDebug.REQUIRES_SYNC, "%s: %s --> resolved",
+					element.hashCode(), element.getTagName());
+			Preconditions.checkState(!element.local().hasChildNodes());
+			syncToRemote(element);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public static class LocalDomCollections {
@@ -452,5 +486,38 @@ public class LocalDom {
 				return super.createIdentityEqualsMap(keyClass);
 			}
 		}
+	}
+
+	public static void syncToRemote(Element element) {
+		get().parse(element.typedRemote(), element);
+	}
+
+	Set<Element> requiresSync = new LinkedHashSet<>();
+
+	public static void checkRequiresSync(ElementLocal elementLocal) {
+		if (disableRemoteWrite || !elementLocal.requiresSync) {
+			return;
+		}
+		get().requiresSync0(elementLocal);
+	}
+
+	private void requiresSync0(ElementLocal elementLocal) {
+		elementLocal.requiresSync = false;
+		// this may not be in a pendingresolution tree
+		Element element = elementLocal.elementFor();
+		if (element.linkedToRemote()) {
+			syncToRemote(element);
+		} else {
+			requiresSync.add(element);
+		}
+	}
+
+	public static boolean isPending(NodeRemote nodeRemote) {
+		return get().isPending0(nodeRemote);
+	}
+
+	private boolean isPending0(NodeRemote nodeRemote) {
+		return pendingResolution.size() > 0 && pendingResolution.stream()
+				.anyMatch(n -> n.remote() == nodeRemote);
 	}
 }

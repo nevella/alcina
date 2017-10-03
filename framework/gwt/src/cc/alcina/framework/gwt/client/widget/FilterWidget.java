@@ -34,6 +34,7 @@ import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
+import com.google.gwt.event.logical.shared.AttachEvent.Handler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
@@ -258,8 +259,14 @@ public class FilterWidget extends Composite
 
 	public void setValue(String value) {
 		textBox.setText(value);
-		textBox.setCursorPos(initialCursorPos);
 		clearHint();
+		if (WidgetUtils.isVisibleAncestorChain(textBox)) {
+			textBox.setCursorPos(initialCursorPos);
+		} else {
+			OneOffHandler oneOff = new OneOffHandler(
+					() -> textBox.setCursorPos(initialCursorPos));
+			oneOff.register(addAttachHandler(e -> oneOff.run()));
+		}
 	}
 
 	private void clearHint() {
@@ -295,7 +302,8 @@ public class FilterWidget extends Composite
 	@Override
 	protected void onAttach() {
 		super.onAttach();
-		//FIXME - localdom - attach/detach issue with popups meant was attaching to wrong element
+		// FIXME - localdom - attach/detach issue with popups meant was
+		// attaching to wrong element
 		registrations.add(textBox.addKeyUpHandler(this));
 		registrations.add(textBox.addKeyDownHandler(this));
 		registrations.add(textBox.addBlurHandler(this));

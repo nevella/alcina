@@ -18,6 +18,11 @@ package com.google.gwt.dom.client;
 import static com.google.gwt.dom.client.DomStyleConstants.*;
 
 import java.util.Map;
+import java.util.Optional;
+
+import com.google.gwt.user.client.LocalDomDebug;
+
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * Provides programmatic access to properties of the style object.
@@ -992,13 +997,15 @@ public class Style implements DomStyle {
 
 	protected Style(Element element) {
 		this.element = element;
+		local = new StyleLocal(this);
 	}
 
-	private DomStyle local = new StyleLocal();
+	StyleLocal local;
 
-	private DomStyle remote = new StyleNull();
+	private DomStyle remote = StyleNull.INSTANCE;
 
 	protected DomStyle remote() {
+		element.ensureRemoteCheck();
 		if (!linkedToRemote() && element.linkedToRemote()) {
 			remote = element.typedRemote().getStyleRemote();
 		}
@@ -1009,7 +1016,7 @@ public class Style implements DomStyle {
 		return remote != StyleNull.INSTANCE;
 	}
 
-	protected DomStyle local() {
+	protected StyleLocal local() {
 		return local;
 	}
 
@@ -1637,6 +1644,13 @@ public class Style implements DomStyle {
 	}
 
 	public void setProperty(String name, String value) {
+		if (name.equals("display") && element.linkedToRemote()) {
+			LocalDom.log(LocalDomDebug.STYLE, "%s %s : %s", element,
+					Optional.ofNullable(element.uiObject).map(
+							uiObject -> uiObject.getClass().getSimpleName())
+							.orElse("(null)"),
+					value);
+		}
 		local().setProperty(name, value);
 		remote().setProperty(name, value);
 	}
@@ -1744,10 +1758,8 @@ public class Style implements DomStyle {
 		remote().setProperty(name, "");
 	}
 
-	@Override
 	public void cloneStyleFrom(DomStyle domStyle) {
 		Style style = (Style) domStyle;
-		local().cloneStyleFrom(style.local());
-		remote().cloneStyleFrom(style.local());
+		local().cloneStyleFrom(style.local(), this);
 	}
 }

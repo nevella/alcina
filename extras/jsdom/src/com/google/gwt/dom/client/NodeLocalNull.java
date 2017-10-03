@@ -2,6 +2,8 @@ package com.google.gwt.dom.client;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 public abstract class NodeLocalNull extends NodeLocal {
 	@Override
 	protected void registerNode(Node node) {
@@ -150,4 +152,10 @@ public abstract class NodeLocalNull extends NodeLocal {
 	abstract void appendOuterHtml(UnsafeHtmlBuilder builder);
 
 	abstract void appendTextContent(StringBuilder builder);
+
+	@Override
+	public String toString() {
+		return Ax.format("%s: null::remote-placeholder",
+				getClass().getSimpleName());
+	}
 }

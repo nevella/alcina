@@ -51,7 +51,8 @@ public class ClientConfiguration {
 	protected void extraConfiguration() {
 	}
 
-	protected CommitToStorageTransformListener createStorageTransformListener() {
+	protected CommitToStorageTransformListener
+			createStorageTransformListener() {
 		return new CommitToStorageTransformListener();
 	}
 
@@ -65,8 +66,8 @@ public class ClientConfiguration {
 		TransformManager.register(createTransformManager());
 		LooseContext.register(new ClientLooseContextProvider());
 		TransformManager.get().setupClientListeners();
-		TransformManager.get().addDomainTransformListener(
-				PermissionsManager.get());
+		TransformManager.get()
+				.addDomainTransformListener(PermissionsManager.get());
 		Registry.registerSingleton(CommitToStorageTransformListener.class,
 				createStorageTransformListener());
 		Registry.registerSingleton(TimerWrapperProvider.class,
@@ -76,6 +77,7 @@ public class ClientConfiguration {
 				Registry.impl(CommitToStorageTransformListener.class));
 		registerExtraTransformListenersPostStorage();
 		Reflections.registerPropertyAccessor(GwittirBridge.get());
+		Reflections.registerBeanDescriptorProvider(GwittirBridge.get());
 		Reflections.registerClassLookup(ClientReflector.get());
 		Reflections.registerObjectLookup(TransformManager.get());
 	}

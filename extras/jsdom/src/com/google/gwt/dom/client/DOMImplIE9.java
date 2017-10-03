@@ -21,7 +21,7 @@ package com.google.gwt.dom.client;
 class DOMImplIE9 extends DOMImplStandardBase {
 
   @Override
-  protected int getAbsoluteLeft(ElementRemote elem) {
+  protected int getAbsoluteLeft(Element elem) {
     double left = getBoundingClientRectLeft(elem) + getDocumentScrollLeftImpl();
     if (isRTL(elem)) { // in RTL, account for the scroll bar shift if present
       left += getParentOffsetDelta(elem);
@@ -30,7 +30,7 @@ class DOMImplIE9 extends DOMImplStandardBase {
   }
 
   @Override
-  protected int getAbsoluteTop(ElementRemote elem) {
+  protected int getAbsoluteTop(Element elem) {
     return toInt32(getBoundingClientRectTop(elem) + getDocumentScrollTopImpl());
   }
 
@@ -44,12 +44,12 @@ class DOMImplIE9 extends DOMImplStandardBase {
   }-*/;
 
   @Override
-  protected int getScrollLeft(DocumentRemote doc) {
+  protected int getScrollLeft(Document doc) {
     return toInt32(getDocumentScrollLeftImpl());
   }
 
   @Override
-  protected int getScrollLeft(ElementRemote elem) {
+  protected int getScrollLeft(Element elem) {
     int left = toInt32(getScrollLeftImpl(elem));
     if (isRTL(elem)) {
       left = -left;
@@ -58,7 +58,7 @@ class DOMImplIE9 extends DOMImplStandardBase {
   }
 
   @Override
-  protected int getScrollTop(DocumentRemote doc) {
+  protected int getScrollTop(Document doc) {
     return toInt32(getDocumentScrollTopImpl());
   }
 
@@ -84,7 +84,7 @@ class DOMImplIE9 extends DOMImplStandardBase {
   }-*/;
 
   @Override
-  protected void setScrollLeft(ElementRemote elem, int left) {
+  protected void setScrollLeft(Element elem, int left) {
     if (isRTL(elem)) {
       left = -left;
     }
@@ -93,10 +93,11 @@ class DOMImplIE9 extends DOMImplStandardBase {
 
   @Override
   protected void setScrollLeft(DocumentRemote doc, int left) {
-    setScrollLeft(doc.getDocumentElement().typedRemote(), left);
+    setScrollLeft(doc.getDocumentElement(), left);
   }
 
-  private native double getBoundingClientRectLeft(ElementRemote elem) /*-{
+  private native double getBoundingClientRectLeft(Element multiplex) /*-{
+  	var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
     // getBoundingClientRect() throws a JS exception if the elem is not attached
     // to the doc, so we wrap it in a try/catch block
     try {
@@ -107,7 +108,8 @@ class DOMImplIE9 extends DOMImplStandardBase {
     }
   }-*/;
 
-  private native double getBoundingClientRectTop(ElementRemote elem) /*-{
+  private native double getBoundingClientRectTop(Element multiplex) /*-{
+  	var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
     // getBoundingClientRect() throws a JS exception if the elem is not attached
     // to the doc, so we wrap it in a try/catch block
     try {
@@ -126,7 +128,8 @@ class DOMImplIE9 extends DOMImplStandardBase {
     return $wnd.pageYOffset;
   }-*/;
 
-  private native double getParentOffsetDelta(ElementRemote elem) /*-{
+  private native double getParentOffsetDelta(Element multiplex) /*-{
+  	var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
     var offsetParent = elem.offsetParent;
     if (offsetParent) {
       return offsetParent.offsetWidth - offsetParent.clientWidth;
@@ -134,11 +137,13 @@ class DOMImplIE9 extends DOMImplStandardBase {
     return 0;
   }-*/;
 
-  private native double getScrollLeftImpl(ElementRemote elem) /*-{
+  private native double getScrollLeftImpl(Element multiplex) /*-{
+  	var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
     return elem.scrollLeft || 0;
   }-*/; 
 
-  private native void setScrollLeftImpl(ElementRemote elem, int left) /*-{
+  private native void setScrollLeftImpl(Element multiplex, int left) /*-{
+  	var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
     elem.scrollLeft = left;
   }-*/; 
 }

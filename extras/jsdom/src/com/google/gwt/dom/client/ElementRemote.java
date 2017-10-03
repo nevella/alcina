@@ -814,7 +814,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		throw new UnsupportedOperationException();
 	}
 
-	final native String getTagName0()/*-{
+	final native String getTagNameInternal()/*-{
         return this.tagName;
 	}-*/;
 
@@ -854,6 +854,10 @@ public class ElementRemote extends NodeRemote implements DomElement {
             return this.indicies.join(",");
 		}-*/;
 
+		final native String stringRemoteDefined()/*-{
+            return this.remoteDefined.join(",");
+		}-*/;
+
 		final native String stringSizes()/*-{
             return this.sizes.join(",");
 		}-*/;
@@ -870,15 +874,32 @@ public class ElementRemote extends NodeRemote implements DomElement {
 			return commaSeparatedIntsToList(stringIndicies());
 		}
 
+		final List<Boolean> remoteDefined() {
+			return commaSeparatedBoolsToList(stringRemoteDefined());
+		}
+
+		final List<Integer> sizes() {
+			return commaSeparatedIntsToList(stringSizes());
+		}
+
 		public final String getString() {
 			FormatBuilder fb = new FormatBuilder();
 			fb.line("Element remote:\n===========");
 			fb.line("Indicies (lowest first):\n%s", stringIndicies());
 			fb.line("Ancestors (lowest first):\n%s", ancestors());
-			fb.line("Root:\n%s", root().getTagName0());
+			fb.line("Root:\n%s", root().getTagNameInternal());
 			fb.line("Debug data:\n%s", debugData());
 			fb.line("\nDebug log:\n%s", debugLog());
 			return fb.toString();
+		}
+
+		final boolean hasRemoteDefined() {
+			for (Boolean value : remoteDefined()) {
+				if (value) {
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 
@@ -892,6 +913,14 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		}
 		return Arrays.asList(string.split(",")).stream().map(Integer::parseInt)
 				.collect(Collectors.toList());
+	}
+
+	static List<Boolean> commaSeparatedBoolsToList(String string) {
+		if (string.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return Arrays.asList(string.split(",")).stream()
+				.map(Boolean::parseBoolean).collect(Collectors.toList());
 	}
 
 	final native String provideRemoteDomTree0()/*-{
@@ -941,7 +970,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
             ancestors : [],
             sizes : [],
             debugData : [],
-            debugLog : ''
+            remoteDefined : [],
+            debugLog : '',
         };
         var cursor = this;
         while (true) {
@@ -972,11 +1002,17 @@ public class ElementRemote extends NodeRemote implements DomElement {
                 if (node == cursor) {
                     result.indicies.push(idx);
                     result.ancestors.push(cursor);
+                    var className = cursor.className;
+                    if (!className.indexOf && typeof className.baseVal == 'string') {
+                        className = className.baseVal;
+                    }
+                    result.remoteDefined.push(className
+                            .indexOf("remote-defined") != -1);
                     break;
                 }
             }
+            result.sizes.push(size);
             if (debug) {
-                result.sizes.push(size);
                 var buf = '';
                 var idx = 0;
                 for (; idx < size; idx++) {
@@ -1013,4 +1049,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	final native ElementRemote getParentElement0()/*-{
         return this.parentElement;
 	}-*/;
+
+	final boolean hasTagNameInternal(String tag) {
+		return getTagNameInternal().equals(tag);
+	}
 }

@@ -18,9 +18,13 @@ import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.totsp.gwittir.client.beans.BeanDescriptor;
+import com.totsp.gwittir.client.beans.SelfDescribed;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -38,6 +42,7 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
+import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 /**
  * j2se, but no ref to tltm
@@ -47,7 +52,7 @@ import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
  */
 @SuppressWarnings("unchecked")
 public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
-		PropertyAccessor, CurrentUtcDateProvider {
+		PropertyAccessor, CurrentUtcDateProvider, BeanDescriptorProvider {
 	public static TestPersistenceHelper get() {
 		TestPersistenceHelper singleton = Registry
 				.checkSingleton(TestPersistenceHelper.class);
@@ -74,6 +79,7 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		Reflections.registerClassLookup(this);
 		Reflections.registerObjectLookup(this);
 		Reflections.registerPropertyAccessor(this);
+		Reflections.registerBeanDescriptorProvider(this);
 	}
 
 	@Override
@@ -237,5 +243,24 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 			return Enum.valueOf(evt.getValueClass(), evt.getNewStringValue());
 		}
 		return null;
+	}
+
+	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
+
+	public BeanDescriptor getDescriptor(Object object) {
+		if (cache.containsKey(object.getClass())) {
+			return cache.get(object.getClass());
+		}
+		BeanDescriptor result = null;
+		if (object instanceof SelfDescribed) {
+			// System.out.println("SelfDescribed\t"+
+			// object.getClass().getName());
+			result = ((SelfDescribed) object).__descriptor();
+		} else {
+			// System.out.println("Reflection\t"+ object.getClass().getName());
+			result = new ReflectionBeanDescriptor(object.getClass());
+			cache.put(object.getClass(), result);
+		}
+		return result;
 	}
 }

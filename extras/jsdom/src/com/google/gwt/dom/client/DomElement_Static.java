@@ -367,19 +367,16 @@ public class DomElement_Static {
 	}
 
 	static void setLang(DomElement domElement, String lang) {
-		throw new UnsupportedOperationException();
+		domElement.setPropertyString("lang", lang);
 	}
 
 
-	/**
-	 * The number of pixels that an element's content is scrolled to the left.
-	 */
 	static void setScrollLeft(DomElement domElement, int scrollLeft) {
 		DOMImpl.impl.setScrollLeft(domElement.elementFor(), scrollLeft);
 	}
 
 	static void setScrollTop(DomElement domElement, int scrollTop) {
-		throw new UnsupportedOperationException();
+		domElement.setPropertyInt("scrollTop", scrollTop);
 	}
 
 }

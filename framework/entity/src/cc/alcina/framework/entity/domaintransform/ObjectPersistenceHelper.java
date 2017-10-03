@@ -18,9 +18,13 @@ import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.totsp.gwittir.client.beans.BeanDescriptor;
+import com.totsp.gwittir.client.beans.SelfDescribed;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -41,7 +45,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
+import cc.alcina.framework.entity.util.MethodWrapper;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
+import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 /**
  * a fair bit of overlap with tltm - should clean up
@@ -51,7 +57,7 @@ import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
  */
 @SuppressWarnings("unchecked")
 public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
-		PropertyAccessor, RegistrableService {
+		PropertyAccessor, RegistrableService,BeanDescriptorProvider {
 	// Initialises this. Note - not a thread-specific singleton,
 	// any thread (client) specific work delegated to tltm
 	public ObjectPersistenceHelper() {
@@ -201,7 +207,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				Class<?> propertyType = pd.getPropertyType();
-				if (pd.getWriteMethod() == null) {
+				if (pd.getWriteMethod() == null||pd.getReadMethod()==null) {
 					continue;
 				}
 				if (propertyType.isInterface() && propertyType != Set.class
@@ -209,10 +215,14 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 						&& propertyType != Map.class) {
 					// this seems to vary (unnecessary on 1.5, necessary on
 					// 1.6)-propertydescriptor change probly
-					propertyType = Registry.impl(ImplementationLookup.class)
+					Class implementation = Registry
+							.impl(ImplementationLookup.class)
 							.getImplementation(propertyType);
+					if (implementation != null) {
+						propertyType = implementation;
+					}
 				}
-				infos.add(new PropertyInfoLite(propertyType, pd.getName(), null,
+				infos.add(new PropertyInfoLite(propertyType, pd.getName(), new MethodWrapper(pd.getReadMethod()),
 						clazz));
 			}
 			return infos;
@@ -256,5 +266,23 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 			Date d = new Date();
 			return new Date(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
 		}
+	}
+	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
+
+	public BeanDescriptor getDescriptor(Object object) {
+		if (cache.containsKey(object.getClass())) {
+			return cache.get(object.getClass());
+		}
+		BeanDescriptor result = null;
+		if (object instanceof SelfDescribed) {
+			// System.out.println("SelfDescribed\t"+
+			// object.getClass().getName());
+			result = ((SelfDescribed) object).__descriptor();
+		} else {
+			// System.out.println("Reflection\t"+ object.getClass().getName());
+			result = new ReflectionBeanDescriptor(object.getClass());
+			cache.put(object.getClass(), result);
+		}
+		return result;
 	}
 }

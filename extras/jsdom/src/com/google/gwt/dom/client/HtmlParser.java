@@ -40,11 +40,17 @@ public class HtmlParser {
 
 	private Element cursor;
 
-	public Element parse(ElementRemote root) {
+	private Element replaceContents;
+
+	public Element parse(DomElement root, Element replaceContents) {
+		this.replaceContents = replaceContents;
 		resetBuilder();
 		tokenState = TokenState.EXPECTING_NODE;
 		html = root.getOuterHtml();
-		LocalDom.setDisableWriteCheck(true);
+		LocalDom.setDisableRemoteWrite(true);
+		if (replaceContents != null) {
+			replaceContents.local().setInnerHTML(null);
+		}
 		while (idx < html.length()) {
 			char c = html.charAt(idx++);
 			boolean isWhiteSpace = false;
@@ -154,6 +160,7 @@ public class HtmlParser {
 					tokenState = TokenState.EXPECTING_ATTR_VALUE;
 					break;
 				case ' ':
+					attrValue = "";
 					emitAttribute();
 					resetBuilder();
 					break;
@@ -167,12 +174,14 @@ public class HtmlParser {
 			case EXPECTING_ATTR_VALUE:
 				boolean handled = false;
 				if (attrDelim == ' ' && c == '>') {
+					attrValue = builder.toString();
 					emitAttribute();
 					emitElement();
 					resetBuilder();
 					break;
 				}
 				if (c == attrDelim) {
+					attrValue = builder.toString();
 					emitAttribute();
 					resetBuilder();
 					tokenState = TokenState.EXPECTING_ATTRIBUTES;
@@ -182,15 +191,21 @@ public class HtmlParser {
 				break;
 			}
 		}
-		LocalDom.setDisableWriteCheck(false);
+		LocalDom.setDisableRemoteWrite(false);
 		return rootResult;
 	}
 
 	private void emitAttribute() {
+		if (attrName.equals("__gwt_row")) {
+			int debug = 3;
+		}
 		attributes.put(attrName, resolveEntities(attrValue));
 	}
 
-	private String resolveEntities(String text) {
+	static String resolveEntities(String text) {
+		if (text.contains("&")) {
+			text = text.replace("&nbsp;", "\u00A0");
+		}
 		return text;
 	}
 
@@ -236,9 +251,15 @@ public class HtmlParser {
 	}
 
 	private void emitStartElement(String tag) {
-		Element element = Document.get().createElement(tag);
-		element.fromParsedRemote=true;
-		element.local().attributes = attributes;
+		Element element = null;
+		if (rootResult == null && replaceContents != null) {
+			element = replaceContents;
+			// ignore outer element attributes here - but this will only be
+			// called to recalculate innerHtml
+		} else {
+			element = Document.get().createElement(tag);
+			element.local().attributes = attributes;
+		}
 		attributes = new StringMap();
 		if (rootResult == null) {
 			rootResult = element;
@@ -259,7 +280,6 @@ public class HtmlParser {
 
 	private void emitText(String string) {
 		Text text = Document.get().createTextNode(resolveEntities(string));
-		text.fromParsedRemote=true;
 		cursor.appendChild(text);
 	}
 }

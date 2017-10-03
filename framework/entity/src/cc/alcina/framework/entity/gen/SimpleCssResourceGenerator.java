@@ -120,7 +120,7 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 	private String replaceWithDataUrls(ResourceContext context, String toWrite)
 			throws Exception {
 		Pattern urlPat = Pattern
-				.compile("url\\s*\\((?!data:)(?!http:)(.+?)\\)");
+				.compile("url\\s*\\((?!'?data:)(?!http:)(.+?)\\)");
 		Matcher m = urlPat.matcher(toWrite);
 		while (m.find()) {
 			String url = m.group(1);

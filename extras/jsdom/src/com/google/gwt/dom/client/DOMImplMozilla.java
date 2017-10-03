@@ -138,14 +138,14 @@ class DOMImplMozilla extends DOMImplStandard {
   }-*/;
 
   @Override
-  protected int getAbsoluteLeft(ElementRemote elem) {
-    return getAbsoluteLeftImpl(elem.getOwnerDocument().getViewportElement().typedRemote(),
+  protected int getAbsoluteLeft(Element elem) {
+    return getAbsoluteLeftImpl(elem.getOwnerDocument().getViewportElement(),
         elem);
   }
 
   @Override
-  protected int getAbsoluteTop(ElementRemote elem) {
-    return getAbsoluteTopImpl(elem.getOwnerDocument().getViewportElement().typedRemote(),
+  protected int getAbsoluteTop(Element elem) {
+    return getAbsoluteTopImpl(elem.getOwnerDocument().getViewportElement(),
         elem);
   }
 
@@ -185,7 +185,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }-*/;
 
   @Override
-  protected int getScrollLeft(ElementRemote elem) {
+  protected int getScrollLeft(Element elem) {
     if (!isGecko19() && isRTL(elem)) {
       return super.getScrollLeft(elem)
           - (elem.getScrollWidth() - elem.getClientWidth());
@@ -201,7 +201,7 @@ class DOMImplMozilla extends DOMImplStandard {
   }-*/;
 
   @Override
-  protected void setScrollLeft(ElementRemote elem, int left) {
+  protected void setScrollLeft(Element elem, int left) {
     if (!isGecko19() && isRTL(elem)) {
       left += elem.getScrollWidth() - elem.getClientWidth();
     }
@@ -238,7 +238,9 @@ class DOMImplMozilla extends DOMImplStandard {
     return evt;
   }-*/;
 
-  private native int getAbsoluteLeftImpl(ElementRemote viewport, ElementRemote elem) /*-{
+  private native int getAbsoluteLeftImpl(Element viewportMultiplex, Element elemMultiplex) /*-{
+  	var elem = elemMultiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+  	var viewport = viewportMultiplex.@com.google.gwt.dom.client.Element::typedRemote()();
     // Firefox 3 is actively throwing errors when getBoxObjectFor() is called,
     // so we use getBoundingClientRect() whenever possible (but it's not
     // supported on older versions). If changing this code, make sure to check
@@ -260,7 +262,9 @@ class DOMImplMozilla extends DOMImplStandard {
     }
   }-*/;
 
-  private native int getAbsoluteTopImpl(ElementRemote viewport, ElementRemote elem) /*-{
+  private native int getAbsoluteTopImpl(Element viewportMultiplex, Element elemMultiplex) /*-{
+  	var elem = elemMultiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+  	var viewport = viewportMultiplex.@com.google.gwt.dom.client.Element::typedRemote()();
     // Firefox 3 is actively throwing errors when getBoxObjectFor() is called,
     // so we use getBoundingClientRect() whenever possible (but it's not
     // supported on older versions). If changing this code, make sure to check
@@ -280,7 +284,8 @@ class DOMImplMozilla extends DOMImplStandard {
     }
   }-*/;
 
-  private native boolean isRTL(ElementRemote elem) /*-{
+  private native boolean isRTL(Element multiplex) /*-{
+  	var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
     var style = elem.ownerDocument.defaultView.getComputedStyle(elem, null);
     return style.direction == 'rtl';
   }-*/;

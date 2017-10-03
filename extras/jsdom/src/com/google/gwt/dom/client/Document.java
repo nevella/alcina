@@ -55,10 +55,6 @@ public class Document extends Node implements DomDocument {
 
 	DomDocument remote;
 
-	public DocumentRemote castRemote() {
-		return (DocumentRemote) remote;
-	}
-
 	protected Document() {
 	}
 
@@ -95,7 +91,7 @@ public class Document extends Node implements DomDocument {
 	}
 
 	public NativeEvent createBlurEvent() {
-		return local.createBlurEvent();
+		return typedRemote().createBlurEvent();
 	}
 
 	public BRElement createBRElement() {
@@ -119,7 +115,7 @@ public class Document extends Node implements DomDocument {
 	}
 
 	public NativeEvent createChangeEvent() {
-		return local.createChangeEvent();
+		return typedRemote().createChangeEvent();
 	}
 
 	public InputElement createCheckInputElement() {
@@ -129,7 +125,7 @@ public class Document extends Node implements DomDocument {
 	public NativeEvent createClickEvent(int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey) {
-		return local.createClickEvent(detail, screenX, screenY, clientX,
+		return typedRemote().createClickEvent(detail, screenX, screenY, clientX,
 				clientY, ctrlKey, altKey, shiftKey, metaKey);
 	}
 
@@ -142,13 +138,13 @@ public class Document extends Node implements DomDocument {
 	}
 
 	public NativeEvent createContextMenuEvent() {
-		return local.createContextMenuEvent();
+		return typedRemote().createContextMenuEvent();
 	}
 
 	public NativeEvent createDblClickEvent(int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey) {
-		return local.createDblClickEvent(detail, screenX, screenY, clientX,
+		return typedRemote().createDblClickEvent(detail, screenX, screenY, clientX,
 				clientY, ctrlKey, altKey, shiftKey, metaKey);
 	}
 
@@ -169,7 +165,7 @@ public class Document extends Node implements DomDocument {
 	}
 
 	public NativeEvent createErrorEvent() {
-		return local.createErrorEvent();
+		return typedRemote().createErrorEvent();
 	}
 
 	public FieldSetElement createFieldSetElement() {
@@ -181,7 +177,7 @@ public class Document extends Node implements DomDocument {
 	}
 
 	public NativeEvent createFocusEvent() {
-		return local.createFocusEvent();
+		return typedRemote().createFocusEvent();
 	}
 
 	public FormElement createFormElement() {
@@ -214,7 +210,7 @@ public class Document extends Node implements DomDocument {
 
 	public NativeEvent createHtmlEvent(String type, boolean canBubble,
 			boolean cancelable) {
-		return local.createHtmlEvent(type, canBubble, cancelable);
+		return typedRemote().createHtmlEvent(type, canBubble, cancelable);
 	}
 
 	public IFrameElement createIFrameElement() {
@@ -230,7 +226,7 @@ public class Document extends Node implements DomDocument {
 	}
 
 	public NativeEvent createInputEvent() {
-		return local.createInputEvent();
+		return typedRemote().createInputEvent();
 	}
 
 	public ModElement createInsElement() {
@@ -239,50 +235,50 @@ public class Document extends Node implements DomDocument {
 
 	public NativeEvent createKeyCodeEvent(String type, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode) {
-		return local.createKeyCodeEvent(type, ctrlKey, altKey, shiftKey,
+		return typedRemote().createKeyCodeEvent(type, ctrlKey, altKey, shiftKey,
 				metaKey, keyCode);
 	}
 
 	public NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode) {
-		return local.createKeyDownEvent(ctrlKey, altKey, shiftKey, metaKey,
+		return typedRemote().createKeyDownEvent(ctrlKey, altKey, shiftKey, metaKey,
 				keyCode);
 	}
 
 	public NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return local.createKeyDownEvent(ctrlKey, altKey, shiftKey, metaKey,
+		return typedRemote().createKeyDownEvent(ctrlKey, altKey, shiftKey, metaKey,
 				keyCode, charCode);
 	}
 
 	public NativeEvent createKeyEvent(String type, boolean canBubble,
 			boolean cancelable, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return local.createKeyEvent(type, canBubble, cancelable, ctrlKey,
+		return typedRemote().createKeyEvent(type, canBubble, cancelable, ctrlKey,
 				altKey, shiftKey, metaKey, keyCode, charCode);
 	}
 
 	public NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int charCode) {
-		return local.createKeyPressEvent(ctrlKey, altKey, shiftKey, metaKey,
+		return typedRemote().createKeyPressEvent(ctrlKey, altKey, shiftKey, metaKey,
 				charCode);
 	}
 
 	public NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return local.createKeyPressEvent(ctrlKey, altKey, shiftKey, metaKey,
+		return typedRemote().createKeyPressEvent(ctrlKey, altKey, shiftKey, metaKey,
 				keyCode, charCode);
 	}
 
 	public NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode) {
-		return local.createKeyUpEvent(ctrlKey, altKey, shiftKey, metaKey,
+		return typedRemote().createKeyUpEvent(ctrlKey, altKey, shiftKey, metaKey,
 				keyCode);
 	}
 
 	public NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return local.createKeyUpEvent(ctrlKey, altKey, shiftKey, metaKey,
+		return typedRemote().createKeyUpEvent(ctrlKey, altKey, shiftKey, metaKey,
 				keyCode, charCode);
 	}
 
@@ -303,7 +299,7 @@ public class Document extends Node implements DomDocument {
 	}
 
 	public NativeEvent createLoadEvent() {
-		return local.createLoadEvent();
+		return typedRemote().createLoadEvent();
 	}
 
 	public MapElement createMapElement() {
@@ -317,7 +313,7 @@ public class Document extends Node implements DomDocument {
 	public NativeEvent createMouseDownEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		return local.createMouseDownEvent(detail, screenX, screenY, clientX,
+		return typedRemote().createMouseDownEvent(detail, screenX, screenY, clientX,
 				clientY, ctrlKey, altKey, shiftKey, metaKey, button);
 	}
 
@@ -326,7 +322,7 @@ public class Document extends Node implements DomDocument {
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return local.createMouseEvent(type, canBubble, cancelable, detail,
+		return typedRemote().createMouseEvent(type, canBubble, cancelable, detail,
 				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
 				metaKey, button, relatedTarget);
 	}
@@ -334,7 +330,7 @@ public class Document extends Node implements DomDocument {
 	public NativeEvent createMouseMoveEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		return local.createMouseMoveEvent(detail, screenX, screenY, clientX,
+		return typedRemote().createMouseMoveEvent(detail, screenX, screenY, clientX,
 				clientY, ctrlKey, altKey, shiftKey, metaKey, button);
 	}
 
@@ -342,7 +338,7 @@ public class Document extends Node implements DomDocument {
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return local.createMouseOutEvent(detail, screenX, screenY, clientX,
+		return typedRemote().createMouseOutEvent(detail, screenX, screenY, clientX,
 				clientY, ctrlKey, altKey, shiftKey, metaKey, button,
 				relatedTarget);
 	}
@@ -351,7 +347,7 @@ public class Document extends Node implements DomDocument {
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return local.createMouseOverEvent(detail, screenX, screenY, clientX,
+		return typedRemote().createMouseOverEvent(detail, screenX, screenY, clientX,
 				clientY, ctrlKey, altKey, shiftKey, metaKey, button,
 				relatedTarget);
 	}
@@ -359,7 +355,7 @@ public class Document extends Node implements DomDocument {
 	public NativeEvent createMouseUpEvent(int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int button) {
-		return local.createMouseUpEvent(detail, screenX, screenY, clientX,
+		return typedRemote().createMouseUpEvent(detail, screenX, screenY, clientX,
 				clientY, ctrlKey, altKey, shiftKey, metaKey, button);
 	}
 
@@ -424,7 +420,7 @@ public class Document extends Node implements DomDocument {
 	}
 
 	public NativeEvent createScrollEvent() {
-		return local.createScrollEvent();
+		return typedRemote().createScrollEvent();
 	}
 
 	public SelectElement createSelectElement() {
@@ -684,10 +680,6 @@ public class Document extends Node implements DomDocument {
 
 	public boolean isCSS1Compat() {
 		return remote.isCSS1Compat();
-	}
-
-	public boolean isOrHasChild(Node child) {
-		return local.isOrHasChild(child);
 	}
 
 	@Override

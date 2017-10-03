@@ -2,12 +2,17 @@ package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.regexp.shared.MatchResult;
+import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.user.client.LocalDomDebug;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class ElementLocal extends NodeLocal
@@ -16,19 +21,19 @@ public class ElementLocal extends NodeLocal
 
 	private String tagName;
 
-	private String innerHtml;
+	String innerHtml;
 
 	int eventBits;
 
 	private Element element;
 
+	protected Map<String, String> attributes = LocalDom.collections()
+			.createStringMap();
+
 	ElementLocal(DocumentLocal document_Jvm, String tagName) {
 		ownerDocument = document_Jvm;
 		this.tagName = tagName;
 	}
-
-	protected Map<String, String> attributes = LocalDom.collections()
-			.createStringMap();
 
 	@Override
 	public final boolean addClassName(String className) {
@@ -52,6 +57,18 @@ public class ElementLocal extends NodeLocal
 					.forEach(cn -> clone.appendChild(cn.cloneNode(true)));
 		}
 		return clone;
+	}
+
+	public Element createOrReturnChild(String tagName) {
+		Optional<Node> optional = nodeFor().getChildNodes().stream()
+				.filter(n -> n.getNodeName().equals(tagName)).findFirst();
+		if (optional.isPresent()) {
+			return (Element) optional.get();
+		}
+		Element newElement = nodeFor().getOwnerDocument()
+				.createElement(tagName);
+		nodeFor().appendChild(newElement);
+		return newElement;
 	}
 
 	public void dispatchEvent(NativeEvent evt) {
@@ -401,9 +418,23 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public void setInnerHTML(String html) {
+		this.innerHtml = null;
 		new ArrayList<>(children).stream().forEach(NodeLocal::removeFromParent);
-		this.innerHtml = html;
+		if (Ax.notBlank(html)) {
+			if (!html.contains("<")) {
+				appendChild(ownerDocument
+						.createTextNode(HtmlParser.resolveEntities(html)));
+			} else {
+				this.innerHtml = html;
+				LocalDom.log(LocalDomDebug.REQUIRES_SYNC, "%s: %s %s",
+						getTagName(), hashCode(),
+						CommonUtils.trimToWsChars(html, 500));
+				requiresSync = true;
+			}
+		}
 	}
+
+	boolean requiresSync;
 
 	@Override
 	public final void setInnerSafeHtml(SafeHtml html) {
@@ -427,6 +458,69 @@ public class ElementLocal extends NodeLocal
 	@Override
 	public void setNodeValue(String nodeValue) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setOuterHtml(String html) {
+		RegExp tag = RegExp.compile("<([A-Za-z0-9_\\-.]+)( .+?)?>(.+)?</.+>",
+				"m");
+		RegExp tagNoContents = RegExp.compile("<([A-Za-z0-9_\\-.]+)( .+?)?/?>",
+				"m");
+		MatchResult matchResult = tag.exec(html);
+		if (matchResult == null) {
+			matchResult = tagNoContents.exec(html);
+		}
+		String attrString = matchResult.getGroup(2);
+		if (attrString != null) {
+			char valueDelimiter = '-';
+			AttrParseState state = AttrParseState.START;
+			StringBuilder nameBuilder = null;
+			StringBuilder valueBuilder = null;
+			for (int idx = 0; idx < attrString.length(); idx++) {
+				char c = attrString.charAt(idx);
+				if (c == ' ') {
+					switch (state) {
+					case VALUE:
+						break;
+					default:
+						continue;
+					}
+				}
+				switch (state) {
+				case START:
+					state = AttrParseState.NAME;
+					nameBuilder = new StringBuilder();
+					nameBuilder.append(c);
+					break;
+				case NAME:
+					if (c == '=') {
+						state = AttrParseState.EQ;
+					} else {
+						nameBuilder.append(c);
+					}
+					break;
+				case EQ:
+					if (c == '\'' || c == '"') {
+						valueBuilder = new StringBuilder();
+						state = AttrParseState.VALUE;
+						valueDelimiter = c;
+					}
+					break;
+				case VALUE:
+					if (c == valueDelimiter) {
+						setAttribute(nameBuilder.toString(),
+								valueBuilder.toString());
+						state = AttrParseState.START;
+					} else {
+						valueBuilder.append(c);
+					}
+					break;
+				}
+			}
+		}
+		if (matchResult.getGroupCount() == 4) {
+			setInnerHTML(matchResult.getGroup(3));
+		}
 	}
 
 	@Override
@@ -461,11 +555,11 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public final void setScrollLeft(int scrollLeft) {
-		DomElement_Static.setScrollLeft(this, scrollLeft);
+		throw new UnsupportedOperationException();
 	}
 
 	public void setScrollTop(int scrollTop) {
-		DomElement_Static.setScrollTop(this, scrollTop);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -513,37 +607,6 @@ public class ElementLocal extends NodeLocal
 		}
 	}
 
-	// private List<NodeLocal> resolveChildren() {
-	// if (children.isEmpty() && innerHtml != null) {
-	// RegExp tag = RegExp
-	// .compile("<([A-Za-z0-9_\\-.]+)( .+?)?>(.+)?</.+>", "m");
-	// RegExp tagNoContents = RegExp
-	// .compile("<([A-Za-z0-9_\\-.]+)( .+?)?/?>", "m");
-	// MatchResult matchResult = tag.exec(innerHtml);
-	// if (matchResult == null) {
-	// matchResult = tagNoContents.exec(innerHtml);
-	// }
-	// if (matchResult == null) {
-	// if (innerHtml.isEmpty()) {
-	// } else {
-	// DomText domText = LocalDomBridge
-	// .get().localDomImpl.localImpl
-	// .createUnwrappedLocalText(
-	// getOwnerDocument(), innerHtml);
-	// node.appendChild(
-	// LocalDom.nodeFor((NodeLocal) domText));
-	// }
-	// } else {
-	// ElementLocal element = (ElementLocal) create(
-	// matchResult.getGroup(1));
-	// Element created = LocalDom.nodeFor((NodeLocal) element);
-	// created.setOuterHtml(innerHtml);
-	// node.appendChild(created);
-	// }
-	// innerHtml = null;
-	// }
-	// return children;
-	// }
 	@Override
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
 		if (eventBits != 0) {
@@ -551,6 +614,9 @@ public class ElementLocal extends NodeLocal
 		}
 		builder.appendHtmlConstantNoCheck("<");
 		builder.appendHtmlConstant(tagName);
+		if (tagName.equals("button")) {
+			int debug = 3;
+		}
 		String styleAttributeValue = attributes.get("style");
 		if (!attributes.isEmpty()) {
 			attributes.entrySet().forEach(e -> {
@@ -565,7 +631,8 @@ public class ElementLocal extends NodeLocal
 				builder.appendHtmlConstantNoCheck("\"");
 			});
 		}
-		if (element.getStyle() != null) {
+		if (element.getStyle() != null
+				&& !element.getStyle().local().isEmpty()) {
 			builder.appendHtmlConstantNoCheck(" style=\"");
 			if (Ax.notBlank(styleAttributeValue)) {
 				builder.appendUnsafeHtml(styleAttributeValue);
@@ -604,5 +671,24 @@ public class ElementLocal extends NodeLocal
 		}
 		sunk |= eventBits;
 		return sunk;
+	}
+
+	enum AttrParseState {
+		START, NAME, EQ, VALUE
+	}
+
+	public ElementLocal resolveLocal() {
+		if (innerHtml != null) {
+			Preconditions.checkState(!element.linkedToRemote());
+			new HtmlParser().parse(this, element);
+		}
+		return this;
+	}
+
+	@Override
+	public String getOuterHtml() {
+		// FIXME - lopri
+		return Ax.format("<%s>%s</%s>", getNodeName(), getInnerHTML(),
+				getNodeName());
 	}
 }

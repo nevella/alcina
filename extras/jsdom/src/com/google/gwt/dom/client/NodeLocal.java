@@ -9,8 +9,6 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public abstract class NodeLocal implements DomNode, LocalDomNode {
-	protected int wasResolvedEventId;
-
 	protected List<NodeLocal> children = new ArrayList<>();
 
 	protected NodeLocal parentNode;
@@ -38,6 +36,11 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 
 	@Override
 	public Node cloneNode(boolean deep) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String getNodeValue() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -71,8 +74,13 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 	 */
 	@Override
 	public Node getNextSibling() {
-		return nodeFor(CommonUtils.indexedOrNullWithDelta(parentNode.children,
-				this, 1));
+		if (parentNode == null) {
+			// detached nodes don't have siblings...sorta
+			return null;
+		}
+		NodeLocal nextLocal = CommonUtils
+				.indexedOrNullWithDelta(parentNode.children, this, 1);
+		return nodeFor(nextLocal);
 	}
 
 	@Override
@@ -138,9 +146,14 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 
 	@Override
 	public boolean isOrHasChild(Node child) {
-		// FIXME
-		// return false;
-		throw new UnsupportedOperationException();
+		NodeLocal cursor = child.local();
+		while (cursor != null) {
+			if (cursor == this) {
+				return true;
+			}
+			cursor = cursor.parentNode;
+		}
+		return false;
 	}
 
 	@Override
@@ -153,12 +166,8 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 		return node;
 	}
 
-	public final String provideRemoteDomTree() {
+	public final String provideLocalDomTree() {
 		return provideRemoteDomTree0(new StringBuilder(), 0).toString();
-	}
-
-	boolean provideWasFlushed() {
-		return wasResolvedEventId > 0;
 	}
 
 	@Override

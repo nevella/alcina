@@ -29,12 +29,16 @@ import com.google.gwt.user.client.ui.UIObject;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.util.TextUtils;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * All HTML element interfaces derive from this class.
  */
 public class Element extends Node implements DomElement {
+	private static final String REMOTE_DEFINED = "remote-defined";
+
 	/**
 	 * Constant returned from {@link #getDraggable()}.
 	 */
@@ -139,6 +143,10 @@ public class Element extends Node implements DomElement {
 		}
 	}
 
+	public String debugLocalDom() {
+		return local().provideLocalDomTree();
+	}
+
 	public void dispatchEvent(NativeEvent evt) {
 		remote().dispatchEvent(evt);
 	}
@@ -150,25 +158,6 @@ public class Element extends Node implements DomElement {
 		dumpLocal0(0);
 	}
 
-	private void dumpLocal0(int depth) {
-		String indent = CommonUtils.padStringLeft("", depth * 2, ' ');
-		String message = Ax.format("%s%s [%s,%s,%s]: ", indent, getTagName(),
-				hashCode(), local().hashCode(), !linkedToRemote() ? "f" : "t");
-		LocalDom.log(LocalDomDebug.DUMP_LOCAL, message);
-		for (Node node : getChildNodes()) {
-			switch (node.getNodeType()) {
-			case Node.TEXT_NODE:
-				message = indent + CommonUtils.trimToWsChars(
-						TextUtils.normalise(node.getNodeValue()), 50, true);
-				LocalDom.log(LocalDomDebug.DUMP_LOCAL, message);
-				break;
-			case ELEMENT_NODE:
-				((Element) node).dumpLocal0(depth + 1);
-				break;
-			}
-		}
-	}
-
 	@Override
 	public Element elementFor() {
 		return nodeFor();
@@ -178,15 +167,6 @@ public class Element extends Node implements DomElement {
 		if (!linkedToRemote()) {
 			local().ensureId();
 		}
-	}
-
-	public ElementRemote typedRemoteNoFlush() {
-		// FIXME - may be necessary - but should ext classes have this access?
-		throw new UnsupportedOperationException();
-		// if (domImpl != null) {
-		// return domImpl;
-		// }
-		// return typedRemote();
 	}
 
 	public void focus() {
@@ -216,6 +196,18 @@ public class Element extends Node implements DomElement {
 	@Override
 	public Map<String, String> getAttributes() {
 		return local().getAttributes();
+	}
+
+	public Element getChildElement(int index) {
+		for (int idx = 0; idx < getChildCount(); idx++) {
+			Node child = getChild(idx);
+			if (child.provideIsElement()) {
+				if (index-- == 0) {
+					return (Element) child;
+				}
+			}
+		}
+		return null;
 	}
 
 	public int getChildIndexLocal(Element child) {
@@ -253,7 +245,11 @@ public class Element extends Node implements DomElement {
 	}
 
 	public Element getFirstChildElement() {
-		return local().getFirstChildElement();
+		return resolveLocal().getFirstChildElement();
+	}
+
+	private ElementLocal resolveLocal() {
+		return local().resolveLocal();
 	}
 
 	public String getId() {
@@ -324,15 +320,15 @@ public class Element extends Node implements DomElement {
 	}
 
 	public boolean getPropertyBoolean(String name) {
-		return local().getPropertyBoolean(name);
+		return implForPropertyName(name).getPropertyBoolean(name);
 	}
 
 	public double getPropertyDouble(String name) {
-		return local().getPropertyDouble(name);
+		return implForPropertyName(name).getPropertyDouble(name);
 	}
 
 	public int getPropertyInt(String name) {
-		return local().getPropertyInt(name);
+		return implForPropertyName(name).getPropertyInt(name);
 	}
 
 	@Override
@@ -342,11 +338,25 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	public Object getPropertyObject(String name) {
-		return remote().getPropertyObject(name);
+		return implForPropertyName(name).getPropertyObject(name);
 	}
 
 	public String getPropertyString(String name) {
-		return local().getPropertyString(name);
+		return implForPropertyName(name).getPropertyString(name);
+	}
+
+	private DomElement implForPropertyName(String name) {
+		if (!provideWasFlushed()) {
+			return local();
+		}
+		ensureRemoteCheck();
+		if (linkedToRemote()) {
+			return remote();
+		} else {
+			return local();
+		}
+		// may need to make more conservative
+		// return ensureRemote();
 	}
 
 	public int getScrollHeight() {
@@ -406,9 +416,17 @@ public class Element extends Node implements DomElement {
 		return local().hasTagName(tagName);
 	}
 
+	public ElementImplAccess implAccess() {
+		return new ElementImplAccess();
+	}
+
 	@Override
 	public int indexInParentChildren() {
 		return local().indexInParentChildren();
+	}
+
+	public boolean isPendingResolution() {
+		return this.pendingResolution;
 	}
 
 	public int localEventBitsSunk() {
@@ -419,18 +437,15 @@ public class Element extends Node implements DomElement {
 		return this;
 	}
 
-	Element provideSelfOrAncestorLinkedToRemote() {
-		if (linkedToRemote()) {
-			return this;
-		}
-		if (getParentElement() != null) {
-			return getParentElement().provideSelfOrAncestorLinkedToRemote();
-		}
-		return null;
+	public void pendingResolution() {
+		this.pendingResolution = true;
 	}
 
 	@Override
 	public void putRemote(NodeRemote remote) {
+		// FIXME
+//		 Preconditions.checkState(
+//		 this.remote == ElementNull.INSTANCE || remote == this.remote);
 		this.remote = (ElementRemote) remote;
 		if (remote != null) {
 			if (local() != null && local().getEventBits() != 0) {
@@ -440,35 +455,6 @@ public class Element extends Node implements DomElement {
 		}
 	}
 
-	// @Override
-	// public void putImpl(DomNode impl) {
-	// if (impl == this.impl) {
-	// return;
-	// }
-	// LocalDomBridge.get().checkInPreconditionList(this, impl);
-	// if (this.impl != null) {
-	// if (this.impl instanceof JavaScriptObject) {
-	// if (impl instanceof LocalDomNode) {
-	// } else {
-	// if (this.impl.getNodeType() == Node.ELEMENT_NODE) {
-	// // FIXME - pushbutton requires this (rather than a fail)
-	// Preconditions.checkState(((ElementRemote) this.impl)
-	// .getInnerHTML0().equals(((ElementRemote) impl)
-	// .getInnerHTML0()));
-	// }
-	// }
-	// // orphan - to handle direct html writing of UiBinder
-	// LocalDomBridge.get().javascriptObjectNodeLookup.remove(domImpl);
-	// domImpl = null;
-	// } else {
-	// Preconditions
-	// .checkState(!(this.impl instanceof JavaScriptObject));
-	// localImpl = (DomElement) this.impl;
-	// }
-	// }
-	// Preconditions.checkState(impl != null);
-	// this.impl = (DomElement) impl;
-	// }
 	@Override
 	public Node removeAllChildren() {
 		if (linkedToRemote() && LocalDom.fastRemoveAll) {
@@ -526,16 +512,24 @@ public class Element extends Node implements DomElement {
 	}
 
 	public void setInnerHTML(String html) {
+		ensureRemoteCheck();
+		wasResolvedEventId=0;
 		local().setInnerHTML(html);
 		remote().setInnerHTML(html);
+		LocalDom.checkRequiresSync(local());
 	}
 
 	public void setInnerSafeHtml(SafeHtml html) {
+		ensureRemoteCheck();
+		wasResolvedEventId=0;
 		local().setInnerSafeHtml(html);
 		remote().setInnerSafeHtml(html);
+		LocalDom.checkRequiresSync(local());
 	}
 
 	public void setInnerText(String text) {
+		ensureRemoteCheck();
+		wasResolvedEventId=0;
 		local().setInnerText(text);
 		remote().setInnerText(text);
 	}
@@ -586,13 +580,11 @@ public class Element extends Node implements DomElement {
 	}
 
 	public void setScrollLeft(int scrollLeft) {
-		local().setScrollLeft(scrollLeft);
-		remote().setScrollLeft(scrollLeft);
+		ensureRemote().setScrollLeft(scrollLeft);
 	}
 
 	public void setScrollTop(int scrollTop) {
-		local().setScrollTop(scrollTop);
-		remote().setScrollTop(scrollTop);
+		ensureRemote().setScrollTop(scrollTop);
 	}
 
 	public void setTabIndex(int tabIndex) {
@@ -617,12 +609,31 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	public String toString() {
-		return local().toString() + (uiObject == null ? ""
-				: ": " + uiObject.getClass().getSimpleName());
+		FormatBuilder fb = new FormatBuilder();
+		fb.format("%s - %s", local().toString(), (uiObject == null
+				? "(no uiobject)" : uiObject.getClass().getSimpleName()));
+		if (getChildCount() != 0) {
+			fb.format("\n\t");
+			NodeLocal cursor = local();
+			while (cursor.getChildCount() > 0) {
+				cursor = cursor.children.get(0);
+				fb.format("%s ", cursor.getNodeName());
+			}
+		}
+		return fb.toString();
 	}
 
 	public ElementRemote typedRemote() {
 		return (ElementRemote) remote();
+	}
+
+	public ElementRemote typedRemoteNoFlush() {
+		// FIXME - may be necessary - but should ext classes have this access?
+		throw new UnsupportedOperationException();
+		// if (domImpl != null) {
+		// return domImpl;
+		// }
+		// return typedRemote();
 	}
 
 	private <T> T callWithRemoteOrDefault(boolean flush, Supplier<T> supplier,
@@ -637,10 +648,23 @@ public class Element extends Node implements DomElement {
 		}
 	}
 
-	protected ElementRemote ensureRemote() {
-		LocalDom.flush();
-		LocalDom.ensureRemote(this);
-		return typedRemote();
+	private void dumpLocal0(int depth) {
+		String indent = CommonUtils.padStringLeft("", depth * 2, ' ');
+		String message = Ax.format("%s%s [%s,%s,%s]: ", indent, getTagName(),
+				hashCode(), local().hashCode(), !linkedToRemote() ? "f" : "t");
+		LocalDom.log(LocalDomDebug.DUMP_LOCAL, message);
+		for (Node node : getChildNodes()) {
+			switch (node.getNodeType()) {
+			case Node.TEXT_NODE:
+				message = indent + CommonUtils.trimToWsChars(
+						TextUtils.normalise(node.getNodeValue()), 50, true);
+				LocalDom.log(LocalDomDebug.DUMP_LOCAL, message);
+				break;
+			case ELEMENT_NODE:
+				((Element) node).dumpLocal0(depth + 1);
+				break;
+			}
+		}
 	}
 
 	private void runIfWithRemote(boolean flush, Runnable runnable) {
@@ -650,6 +674,12 @@ public class Element extends Node implements DomElement {
 		if (linkedToRemote()) {
 			runnable.run();
 		}
+	}
+
+	protected ElementRemote ensureRemote() {
+		LocalDom.flush();
+		LocalDom.ensureRemote(this);
+		return typedRemote();
 	}
 
 	@Override
@@ -664,6 +694,9 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	protected DomElement remote() {
+		if (LocalDom.isDisableRemoteWrite()) {
+			return ElementNull.INSTANCE;
+		}
 		return remote;
 	}
 
@@ -675,49 +708,42 @@ public class Element extends Node implements DomElement {
 		return this;
 	}
 
-	public void pendingResolution() {
-		this.pendingResolution = true;
-	}
-
-	public boolean isPendingResolution() {
-		return this.pendingResolution;
-	}
-
 	public class ElementImplAccess {
+		public ElementRemote ensureRemote() {
+			return Element.this.ensureRemote();
+		}
+
 		public boolean linkedToRemote() {
 			return Element.this.linkedToRemote();
 		}
 
-		public ElementRemote typedRemoteOrNull() {
-			return linkedToRemote() ? typedRemote() : null;
+		public ElementLocal local() {
+			return Element.this.local();
 		}
 
-		public ElementRemote ensureRemote() {
-			return Element.this.ensureRemote();
+		public Node provideSelfOrAncestorLinkedToRemote() {
+			return Element.this.provideSelfOrAncestorLinkedToRemote();
 		}
 
 		public DomElement remote() {
 			return Element.this.remote();
 		}
 
-		public Element provideSelfOrAncestorLinkedToRemote() {
-			return Element.this.provideSelfOrAncestorLinkedToRemote();
+		public ElementRemote typedRemoteOrNull() {
+			return linkedToRemote() ? typedRemote() : null;
 		}
 	}
 
-	public ElementImplAccess implAccess() {
-		return new ElementImplAccess();
+	@Override
+	public String getOuterHtml() {
+		throw new UnsupportedOperationException();
 	}
 
-	public Element getChildElement(int index) {
-		for (int idx = 0; idx < getChildCount(); idx++) {
-			Node child = getChild(idx);
-			if (child.provideIsElement()) {
-				if (index-- == 0) {
-					return (Element) child;
-				}
-			}
+	public void resolveRemoteDefined() {
+		if (getClassName().contains(REMOTE_DEFINED)) {
+			ensureRemote();
+			LocalDom.syncToRemote(this);
+			UIObject.setStyleName(this, REMOTE_DEFINED, false);
 		}
-		return null;
 	}
 }

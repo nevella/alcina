@@ -79,6 +79,9 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 
 	@Override
 	public final <T extends Node> T appendChild(T newChild) {
+		if (LocalDom.isPending(this)) {
+			return null;
+		}
 		NodeRemote toAppend = resolvedOrPending(newChild);
 		return (T) nodeFor(appendChild0(toAppend));
 	}
@@ -93,7 +96,12 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 		if (node.linkedToRemote()) {
 			return node.remote();
 		} else {
-			return LocalDom.ensurePendingResolutionNode(node);
+			if (node.provideWasFlushed()) {
+				LocalDom.ensureRemote((Element) node);
+				return node.remote();
+			} else {
+				return LocalDom.ensurePendingResolutionNode(node);
+			}
 		}
 	}
 
@@ -280,6 +288,9 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 
 	@Override
 	public final Node insertBefore(Node newChild, Node refChild) {
+		if (LocalDom.isPending(this)) {
+			return null;
+		}
 		NodeRemote newChildDom = resolvedOrPending(newChild);
 		NodeRemote refChildDom = resolvedOrPending(refChild);
 		return nodeFor(insertBefore0(newChildDom, refChildDom));
@@ -312,16 +323,17 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 
 	@Override
 	public final Node removeChild(Node oldChild) {
-		//TODO - have a think about this
-//		if (oldChild.provideIsElement() && !oldChild.provideIsDom()) {
-//			((Element) oldChild).typedRemote();
-//		}
-		NodeRemote resolvedOrPending = resolvedOrPending(oldChild);
-		if (resolvedOrPending.getParentNode() == null) {
-			return nodeFor(resolvedOrPending);
-		} else {
-			return nodeFor(removeChild0(resolvedOrPending));
+		// removed node should never be used - so can optimise as follows
+		if (oldChild.linkedToRemote()) {
+			removeChild0(oldChild.remote());
 		}
+		return null;
+		// NodeRemote resolvedOrPending = resolvedOrPending(oldChild);
+		// if (resolvedOrPending.getParentNode() == null) {
+		// return nodeFor(resolvedOrPending);
+		// } else {
+		// return nodeFor(removeChild0(resolvedOrPending));
+		// }
 	}
 
 	/**
@@ -360,7 +372,7 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
         this[methodName]();
 	}-*/;
 
-	 final boolean provideIsElement() {
-		return getNodeType()==Node.ELEMENT_NODE;
+	final boolean provideIsElement() {
+		return getNodeType() == Node.ELEMENT_NODE;
 	}
 }

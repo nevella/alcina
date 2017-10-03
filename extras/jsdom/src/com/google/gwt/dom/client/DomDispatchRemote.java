@@ -6,12 +6,14 @@ public class DomDispatchRemote implements IDomDispatch {
 
 	@Override
 	public void buttonClick(ButtonElement button) {
-		domImpl.buttonClick(button.typedRemote());
+		domImpl.buttonClick(button.implAccess().ensureRemote());
 	}
 
 	@Override
 	public void cssClearOpacity(Style style) {
-		domImpl.cssClearOpacity(style);
+		if (style.linkedToRemote()) {
+			domImpl.cssClearOpacity(style);
+		}
 	}
 
 	@Override
@@ -21,7 +23,9 @@ public class DomDispatchRemote implements IDomDispatch {
 
 	@Override
 	public void cssSetOpacity(Style style, double value) {
-		domImpl.cssSetOpacity(style, value);
+		if (style.linkedToRemote()) {
+			domImpl.cssSetOpacity(style, value);
+		}
 	}
 
 	@Override
@@ -37,18 +41,25 @@ public class DomDispatchRemote implements IDomDispatch {
 	@Override
 	public void selectAdd(SelectElement select, OptionElement option,
 			OptionElement before) {
-		domImpl.selectAdd(select.typedRemote(), option.typedRemote(),
-				before == null ? null : before.typedRemote());
+		if (select.linkedToRemote()) {
+			domImpl.selectAdd(select.typedRemote(),
+					option.implAccess().ensureRemote(),
+					before == null ? null : before.typedRemote());
+		}
 	}
 
 	@Override
 	public void selectClear(SelectElement select) {
-		domImpl.selectClear(select.typedRemote());
+		if (select.linkedToRemote()) {
+			domImpl.selectClear(select.typedRemote());
+		}
 	}
 
 	@Override
 	public void selectRemoveOption(SelectElement select, int index) {
-		domImpl.selectRemoveOption(select.typedRemote(), index);
+		if (select.linkedToRemote()) {
+			domImpl.selectRemoveOption(select.typedRemote(), index);
+		}
 	}
 
 	public ElementRemote createElement(String tagName) {

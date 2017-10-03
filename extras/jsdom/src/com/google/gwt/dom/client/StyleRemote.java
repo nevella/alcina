@@ -808,8 +808,4 @@ public final class StyleRemote extends JavaScriptObject implements DomStyle {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public void cloneStyleFrom(DomStyle local) {
-		throw new UnsupportedOperationException();
-	}
 }

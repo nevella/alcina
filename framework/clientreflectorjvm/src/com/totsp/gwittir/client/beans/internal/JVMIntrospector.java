@@ -14,6 +14,7 @@ import com.totsp.gwittir.client.beans.Method;
 import com.totsp.gwittir.client.beans.Property;
 import com.totsp.gwittir.client.beans.SelfDescribed;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm;
@@ -52,17 +53,17 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 	}
 
 	public JVMIntrospector() {
-		Registry.registerSingleton(BeanDescriptorProvider.class, this);
+		Reflections.registerBeanDescriptorProvider(this);
 	}
 
-	private static class ReflectionBeanDescriptor implements BeanDescriptor {
+	public static class ReflectionBeanDescriptor implements BeanDescriptor {
 		BeanInfo info;
 
 		Property[] props;
 
 		String className;
 
-		ReflectionBeanDescriptor(Class clazz) {
+		public ReflectionBeanDescriptor(Class clazz) {
 			try {
 				className = clazz.getName();
 				ClientReflectorJvm.checkClassAnnotations(clazz);
@@ -94,7 +95,8 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 									: new MethodWrapper(d.getReadMethod()),
 							d.getWriteMethod() == null ? null
 									: new MethodWrapper(d.getWriteMethod()));
-					// System.out.println(clazz+" mapped property: "+props[index]);
+					// System.out.println(clazz+" mapped property:
+					// "+props[index]);
 					index++;
 				}
 			} catch (Exception e) {
@@ -112,8 +114,8 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 					return p;
 				}
 			}
-			throw new NoSuchPropertyException("Unknown property: " + name
-					+ " on class " + className);
+			throw new NoSuchPropertyException(
+					"Unknown property: " + name + " on class " + className);
 		}
 	}
 

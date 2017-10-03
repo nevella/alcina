@@ -24,14 +24,13 @@ import java.util.Set;
 
 import com.totsp.gwittir.client.beans.Property;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
-import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 /**
  * Not thread-safe - but then again, should only be used by one thread
@@ -42,9 +41,6 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 @SuppressWarnings("unchecked")
 public class CloneHelper {
 	private Map createdMap = new IdentityHashMap();
-
-	private BeanDescriptorProvider beanDescriptorProvider = Registry
-			.impl(BeanDescriptorProvider.class);
 
 	public <T extends Collection> T deepCollectionClone(T coll)
 			throws Exception {
@@ -57,7 +53,7 @@ public class CloneHelper {
 			c = (T) new HashSet();
 		} else if (coll instanceof LiSet) {
 			c = (T) new LiSet();
-		}else if (coll instanceof LightSet) {
+		} else if (coll instanceof LightSet) {
 			c = (T) new LightSet();
 		} else {
 			throw new RuntimeException(
@@ -93,7 +89,7 @@ public class CloneHelper {
 		// }
 		T ret = newInstance(o);
 		createdMap.put(o, ret);
-		Property[] prs = beanDescriptorProvider.getDescriptor(ret)
+		Property[] prs = Reflections.beanDescriptorProvider().getDescriptor(ret)
 				.getProperties();
 		for (Property pr : prs) {
 			if (pr.getMutatorMethod() == null) {
@@ -127,7 +123,7 @@ public class CloneHelper {
 
 	protected <T> T newInstance(T o) {
 		Class<? extends Object> clazz = o.getClass();
-		return (T) ClientReflector.get().newInstance(clazz, 0, 0);
+		return (T) Reflections.classLookup().newInstance(clazz);
 	}
 
 	protected boolean deepProperty(Object o, String propertyName) {
@@ -151,8 +147,8 @@ public class CloneHelper {
 	 */
 	public void copyBeanProperties(Object source, Object target,
 			Set<String> excludeProperties) throws Exception {
-		Property[] prs = beanDescriptorProvider.getDescriptor(target)
-				.getProperties();
+		Property[] prs = Reflections.beanDescriptorProvider()
+				.getDescriptor(target).getProperties();
 		for (Property pr : prs) {
 			if (pr.getMutatorMethod() == null
 					|| pr.getAccessorMethod() == null) {

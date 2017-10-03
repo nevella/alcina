@@ -18,287 +18,302 @@ package com.google.gwt.dom.client;
 import com.google.gwt.core.client.JavaScriptObject;
 
 /**
- * StandardBase implementation of {@link com.google.gwt.user.client.impl.DOMImpl}.
+ * StandardBase implementation of
+ * {@link com.google.gwt.user.client.impl.DOMImpl}.
  */
 class DOMImplStandardBase extends DOMImplStandard {
+	private static class ClientRect extends JavaScriptObject {
+		protected ClientRect() {
+		}
 
-  private static class ClientRect extends JavaScriptObject {
-    
-    protected ClientRect() {
-    }
+		protected final int getLeft() {
+			return toInt32(getSubPixelLeft());
+		}
 
-    protected final int getLeft() {
-      return toInt32(getSubPixelLeft());
-    }
+		protected final int getTop() {
+			return toInt32(getSubPixelTop());
+		}
 
-    protected final int getTop() {
-      return toInt32(getSubPixelTop());
-    }
+		private final native double getSubPixelLeft() /*-{
+            return this.left;
+		}-*/;
 
-    private final native double getSubPixelLeft() /*-{
-      return this.left;
-    }-*/;
+		private final native double getSubPixelTop() /*-{
+            return this.top;
+		}-*/;
+	}
 
-    private final native double getSubPixelTop() /*-{
-      return this.top;
-    }-*/;
-  }
-
-  private static native double getAbsoluteLeftUsingOffsets(ElementRemote elem) /*-{
-    // Unattached elements and elements (or their ancestors) with style
-    // 'display: none' have no offsetLeft.
-    if (elem.offsetLeft == null) {
-      return 0;
-    }
-
-    var left = 0;
-    var doc = elem.ownerDocument;
-    var curr = elem.parentNode;
-    if (curr) {
-      // This intentionally excludes body which has a null offsetParent.
-      while (curr.offsetParent) {
-        left -= curr.scrollLeft;
-
-        // In RTL mode, offsetLeft is relative to the left edge of the
-        // scrollable area when scrolled all the way to the right, so we need
-        // to add back that difference.
-        if (doc.defaultView.getComputedStyle(curr, '').getPropertyValue('direction') == 'rtl') {
-          left += (curr.scrollWidth - curr.clientWidth);
+	private static native double
+			getAbsoluteLeftUsingOffsets(Element multiplex) /*-{
+        var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+        // Unattached elements and elements (or their ancestors) with style
+        // 'display: none' have no offsetLeft.
+        if (elem.offsetLeft == null) {
+            return 0;
         }
 
-        curr = curr.parentNode;
-      }
-    }
+        var left = 0;
+        var doc = elem.ownerDocument;
+        var curr = elem.parentNode;
+        if (curr) {
+            // This intentionally excludes body which has a null offsetParent.
+            while (curr.offsetParent) {
+                left -= curr.scrollLeft;
 
-    while (elem) {
-      left += elem.offsetLeft;
+                // In RTL mode, offsetLeft is relative to the left edge of the
+                // scrollable area when scrolled all the way to the right, so we need
+                // to add back that difference.
+                if (doc.defaultView.getComputedStyle(curr, '')
+                        .getPropertyValue('direction') == 'rtl') {
+                    left += (curr.scrollWidth - curr.clientWidth);
+                }
 
-      if (doc.defaultView.getComputedStyle(elem, '')['position'] == 'fixed') {
-        left += doc.body.scrollLeft;
+                curr = curr.parentNode;
+            }
+        }
+
+        while (elem) {
+            left += elem.offsetLeft;
+
+            if (doc.defaultView.getComputedStyle(elem, '')['position'] == 'fixed') {
+                left += doc.body.scrollLeft;
+                return left;
+            }
+
+            // Safari 3 does not include borders with offsetLeft, so we need to add
+            // the borders of the parent manually.
+            var parent = elem.offsetParent;
+            if (parent && $wnd.devicePixelRatio) {
+                left += parseInt(doc.defaultView.getComputedStyle(parent, '')
+                        .getPropertyValue('border-left-width'));
+            }
+
+            // Safari bug: a top-level absolutely positioned Element_Dom includes the
+            // body's offset position already.
+            if (parent && (parent.tagName == 'BODY')
+                    && (elem.style.position == 'absolute')) {
+                break;
+            }
+
+            elem = parent;
+        }
         return left;
-      }
+	}-*/;
 
-      // Safari 3 does not include borders with offsetLeft, so we need to add
-      // the borders of the parent manually.
-      var parent = elem.offsetParent;
-      if (parent && $wnd.devicePixelRatio) {
-        left += parseInt(doc.defaultView.getComputedStyle(parent, '').getPropertyValue('border-left-width'));
-      }
+	private static native double
+			getAbsoluteTopUsingOffsets(Element multiplex) /*-{
+        var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+        // Unattached elements and elements (or their ancestors) with style
+        // 'display: none' have no offsetTop.
+        if (elem.offsetTop == null) {
+            return 0;
+        }
 
-      // Safari bug: a top-level absolutely positioned Element_Dom includes the
-      // body's offset position already.
-      if (parent && (parent.tagName == 'BODY') &&
-          (elem.style.position == 'absolute')) {
-        break;
-      }
+        var top = 0;
+        var doc = elem.ownerDocument;
+        var curr = elem.parentNode;
+        if (curr) {
+            // This intentionally excludes body which has a null offsetParent.
+            while (curr.offsetParent) {
+                top -= curr.scrollTop;
+                curr = curr.parentNode;
+            }
+        }
 
-      elem = parent;
-    }
-    return left;
-  }-*/;
+        while (elem) {
+            top += elem.offsetTop;
 
-  private static native double getAbsoluteTopUsingOffsets(ElementRemote elem) /*-{
-    // Unattached elements and elements (or their ancestors) with style
-    // 'display: none' have no offsetTop.
-    if (elem.offsetTop == null) {
-      return 0;
-    }
+            if (doc.defaultView.getComputedStyle(elem, '')['position'] == 'fixed') {
+                top += doc.body.scrollTop;
+                return top;
+            }
 
-    var top = 0;
-    var doc = elem.ownerDocument;
-    var curr = elem.parentNode;
-    if (curr) {
-      // This intentionally excludes body which has a null offsetParent.
-      while (curr.offsetParent) {
-        top -= curr.scrollTop;
-        curr = curr.parentNode;
-      }
-    }
+            // Safari 3 does not include borders with offsetTop, so we need to add the
+            // borders of the parent manually.
+            var parent = elem.offsetParent;
+            if (parent && $wnd.devicePixelRatio) {
+                top += parseInt(doc.defaultView.getComputedStyle(parent, '')
+                        .getPropertyValue('border-top-width'));
+            }
 
-    while (elem) {
-      top += elem.offsetTop;
+            // Safari bug: a top-level absolutely positioned Element_Dom includes the
+            // body's offset position already.
+            if (parent && (parent.tagName == 'BODY')
+                    && (elem.style.position == 'absolute')) {
+                break;
+            }
 
-      if (doc.defaultView.getComputedStyle(elem, '')['position'] == 'fixed') {
-        top += doc.body.scrollTop;
+            elem = parent;
+        }
         return top;
-      }
+	}-*/;
 
-      // Safari 3 does not include borders with offsetTop, so we need to add the
-      // borders of the parent manually.
-      var parent = elem.offsetParent;
-      if (parent && $wnd.devicePixelRatio) {
-        top += parseInt(doc.defaultView.getComputedStyle(parent, '').getPropertyValue('border-top-width'));
-      }
+	private static native ClientRect
+			getBoundingClientRect(Element multiplex) /*-{
+        var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+        return elem.getBoundingClientRect && elem.getBoundingClientRect();
+	}-*/;
 
-      // Safari bug: a top-level absolutely positioned Element_Dom includes the
-      // body's offset position already.
-      if (parent && (parent.tagName == 'BODY') &&
-          (elem.style.position == 'absolute')) {
-        break;
-      }
+	/**
+	 * The type property on a button Element_Dom is read-only in safari, so we
+	 * need to set it using setAttribute.
+	 */
+	@Override
+	protected native ElementRemote createButtonElement(DocumentRemote doc,
+			String type) /*-{
+        var e = doc.createElement("BUTTON");
+        e.setAttribute('type', type);
+        return e;
+	}-*/;
 
-      elem = parent;
-    }
-    return top;
-  }-*/;
+	@Override
+	protected native NativeEvent createKeyCodeEvent(DocumentRemote doc,
+			String type, boolean ctrlKey, boolean altKey, boolean shiftKey,
+			boolean metaKey, int keyCode) /*-{
+        var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentRemote;Ljava/lang/String;ZZZZZZ)(doc, type, true, true, ctrlKey, altKey, shiftKey, metaKey)
+        evt.keyCode = keyCode;
+        return evt;
+	}-*/;
 
-  private static native ClientRect getBoundingClientRect(ElementRemote elem) /*-{
-    return elem.getBoundingClientRect && elem.getBoundingClientRect();
-  }-*/;
+	@Override
+	@Deprecated
+	protected native NativeEvent createKeyEvent(DocumentRemote doc, String type,
+			boolean canBubble, boolean cancelable, boolean ctrlKey,
+			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
+			int charCode) /*-{
+        var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentRemote;Ljava/lang/String;ZZZZZZ)(doc, type, canBubble, cancelable, ctrlKey, altKey, shiftKey, metaKey)
+        evt.keyCode = keyCode;
+        evt.charCode = charCode;
+        return evt;
+	}-*/;
 
-  /**
-   * The type property on a button Element_Dom is read-only in safari, so we need to
-   * set it using setAttribute.
-   */
-  @Override
-  protected native ElementRemote createButtonElement(DocumentRemote doc, String type) /*-{
-    var e = doc.createElement("BUTTON");
-    e.setAttribute('type', type);
-    return e;
-  }-*/;
+	@Override
+	protected native NativeEvent createKeyPressEvent(DocumentRemote doc,
+			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
+			int charCode) /*-{
+        var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentRemote;Ljava/lang/String;ZZZZZZ)(doc, 'keypress', true, true, ctrlKey, altKey, shiftKey, metaKey)
+        evt.charCode = charCode;
+        return evt;
+	}-*/;
 
-  @Override
-  protected native NativeEvent createKeyCodeEvent(DocumentRemote doc, String type,
-      boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
-      int keyCode) /*-{
-    var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentRemote;Ljava/lang/String;ZZZZZZ)(doc, type, true, true, ctrlKey, altKey, shiftKey, metaKey)
-    evt.keyCode = keyCode;
-    return evt;
-  }-*/;
+	/**
+	 * Safari 2 does not support {@link ScriptElement#setText(String)}.
+	 */
+	@Override
+	protected ScriptElement createScriptElement(DocumentRemote doc,
+			String source) {
+		ScriptElement elem = nodeFor(createElement(doc, "script"));
+		elem.setInnerText(source);
+		return elem;
+	}
 
-  @Override
-  @Deprecated
-  protected native NativeEvent createKeyEvent(DocumentRemote doc, String type,
-      boolean canBubble, boolean cancelable, boolean ctrlKey, boolean altKey,
-      boolean shiftKey, boolean metaKey, int keyCode, int charCode) /*-{
-    var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentRemote;Ljava/lang/String;ZZZZZZ)(doc, type, canBubble, cancelable, ctrlKey, altKey, shiftKey, metaKey)
-    evt.keyCode = keyCode;
-    evt.charCode = charCode;
-    return evt;
-  }-*/;
+	@Override
+	protected native EventTarget eventGetCurrentTarget(NativeEvent event) /*-{
+        return @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(event.currentTarget || $wnd);
+	}-*/;
 
-  @Override
-  protected native NativeEvent createKeyPressEvent(DocumentRemote doc,
-      boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
-      int charCode) /*-{
-    var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentRemote;Ljava/lang/String;ZZZZZZ)(doc, 'keypress', true, true, ctrlKey, altKey, shiftKey, metaKey)
-    evt.charCode = charCode;
-    return evt;
-  }-*/;
+	@Override
+	protected native int eventGetMouseWheelVelocityY(NativeEvent evt) /*-{
+        return Math.round(-evt.wheelDelta / 40) || 0;
+	}-*/;
 
-  /**
-   * Safari 2 does not support {@link ScriptElement#setText(String)}.
-   */
-  @Override
-  protected ScriptElement createScriptElement(DocumentRemote doc, String source) {
-    ScriptElement elem = nodeFor( createElement(doc, "script"));
-    elem.setInnerText(source);
-    return elem;
-  }
+	@Override
+	protected int getAbsoluteLeft(Element elem) {
+		ClientRect rect = getBoundingClientRect(elem);
+		double left = rect != null
+				? rect.getSubPixelLeft()
+						+ elem.getOwnerDocument().getBody().getScrollLeft()
+				: getAbsoluteLeftUsingOffsets(elem);
+		return toInt32(left);
+	}
 
-  @Override
-  protected native EventTarget eventGetCurrentTarget(NativeEvent event) /*-{
-  return @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(event.currentTarget || $wnd);
-  }-*/;
+	@Override
+	protected int getAbsoluteTop(Element elem) {
+		ClientRect rect = getBoundingClientRect(elem);
+		double top = rect != null
+				? rect.getSubPixelTop()
+						+ elem.getOwnerDocument().getBody().getScrollTop()
+				: getAbsoluteTopUsingOffsets(elem);
+		return toInt32(top);
+	}
 
-  @Override
-  protected native int eventGetMouseWheelVelocityY(NativeEvent evt) /*-{
-    return Math.round(-evt.wheelDelta / 40) || 0;
-  }-*/;
+	@Override
+	protected native int getScrollLeft(Document multiplex) /*-{
+        // Safari always applies doc scrolling to the body Element_Dom, even in strict mode.
+        // The behavior of Chrome depends of the doctype mode.
+        var doc = multiplex.@com.google.gwt.dom.client.Document::typedRemote()();
+        return doc.documentElement.scrollLeft || doc.body.scrollLeft;
+	}-*/;
 
-  @Override
-  protected int getAbsoluteLeft(ElementRemote elem) {
-    ClientRect rect = getBoundingClientRect(elem);
-    double left = rect != null ? rect.getSubPixelLeft()
-        + elem.getOwnerDocument().getBody().getScrollLeft()
-        : getAbsoluteLeftUsingOffsets(elem);
-    return toInt32(left);
-  }
+	@Override
+	protected int getScrollLeft(Element elem) {
+		if (!elem.hasTagName(BodyElement.TAG) && isRTL(elem)) {
+			return super.getScrollLeft(elem)
+					- (elem.getScrollWidth() - elem.getClientWidth());
+		}
+		return super.getScrollLeft(elem);
+	}
 
-  @Override
-  protected int getAbsoluteTop(ElementRemote elem) {
-    ClientRect rect = getBoundingClientRect(elem);
-    double top = rect != null ? rect.getSubPixelTop()
-        + elem.getOwnerDocument().getBody().getScrollTop()
-        : getAbsoluteTopUsingOffsets(elem);
-    return toInt32(top);
-  }
+	@Override
+	protected native int getScrollTop(Document multiplex) /*-{
+        // Safari always applies doc scrolling to the body Element_Dom, even in strict mode.
+        // The behavior of Chrome depends of the doctype mode.
+        var doc = multiplex.@com.google.gwt.dom.client.Document::typedRemote()();
+        return doc.documentElement.scrollTop || doc.body.scrollTop;
+	}-*/;
 
-  @Override
-  protected native int getScrollLeft(DocumentRemote doc) /*-{
-    // Safari always applies doc scrolling to the body Element_Dom, even in strict mode.
-    // The behavior of Chrome depends of the doctype mode.
-    return doc.documentElement.scrollLeft || doc.body.scrollLeft;
-  }-*/;
+	@Override
+	protected native int getTabIndex(ElementRemote elem) /*-{
+        // tabIndex is undefined for divs and other non-focusable elements prior to
+        // Safari 4.
+        return typeof elem.tabIndex != 'undefined' ? elem.tabIndex : -1;
+	}-*/;
 
-  @Override
-  protected int getScrollLeft(ElementRemote elem) {
-    if (!elem.hasTagName(BodyElement.TAG) && isRTL(elem)) {
-      return super.getScrollLeft(elem)
-          - (elem.getScrollWidth() - elem.getClientWidth());
-    }
-    return super.getScrollLeft(elem);
-  }
+	@Override
+	protected native void setScrollLeft(DocumentRemote doc, int left) /*-{
+        // Safari always applies doc scrolling to the body Element_Dom, even in strict mode. The
+        // behavior of Chrome depends of the doctype mode.
+        // This instruction will be ignored by safari and chrome in quirks mode.
+        doc.documentElement.scrollLeft = left;
+        // Will be ignored by chrome in strict mode.
+        doc.body.scrollLeft = left;
+	}-*/;
 
-  @Override
-  protected native int getScrollTop(DocumentRemote doc) /*-{
-    // Safari always applies doc scrolling to the body Element_Dom, even in strict mode.
-    // The behavior of Chrome depends of the doctype mode.
-    return doc.documentElement.scrollTop || doc.body.scrollTop;
-  }-*/;
+	@Override
+	protected void setScrollLeft(Element elem, int left) {
+		if (!elem.hasTagName(BodyElement.TAG) && isRTL(elem)) {
+			left += elem.getScrollWidth() - elem.getClientWidth();
+		}
+		super.setScrollLeft(elem, left);
+	}
 
-  @Override
-  protected native int getTabIndex(ElementRemote elem) /*-{ 
-    // tabIndex is undefined for divs and other non-focusable elements prior to
-    // Safari 4.
-    return typeof elem.tabIndex != 'undefined' ? elem.tabIndex : -1;
-  }-*/;
+	@Override
+	protected native void setScrollTop(DocumentRemote doc, int top) /*-{
+        // Safari always applies doc scrolling to the body Element_Dom, even in strict mode. The
+        // behavior of Chrome depends of the doctype mode.
+        // This instruction will be ignored by safari and by chrome in quirks mode.
+        doc.documentElement.scrollTop = top;
+        // Will be ignored by chrome in strict mode.
+        doc.body.scrollTop = top;
+	}-*/;
 
-  @Override
-  protected native void setScrollLeft(DocumentRemote doc, int left) /*-{
-    // Safari always applies doc scrolling to the body Element_Dom, even in strict mode. The
-    // behavior of Chrome depends of the doctype mode.
-    // This instruction will be ignored by safari and chrome in quirks mode.
-    doc.documentElement.scrollLeft = left;
-    // Will be ignored by chrome in strict mode.
-    doc.body.scrollLeft = left;
-  }-*/;
+	protected native boolean isRTL(Element multiplex) /*-{
+        var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+        return elem.ownerDocument.defaultView.getComputedStyle(elem, '').direction == 'rtl';
+	}-*/;
 
-  @Override
-  protected void setScrollLeft(ElementRemote elem, int left) {
-    if (!elem.hasTagName(BodyElement.TAG) && isRTL(elem)) {
-      left += elem.getScrollWidth() - elem.getClientWidth();
-    }
-    super.setScrollLeft(elem, left);
-  }
-
-  @Override
-  protected native void setScrollTop(DocumentRemote doc, int top) /*-{
-    // Safari always applies doc scrolling to the body Element_Dom, even in strict mode. The
-    // behavior of Chrome depends of the doctype mode.
-    // This instruction will be ignored by safari and by chrome in quirks mode.
-    doc.documentElement.scrollTop = top;
-    // Will be ignored by chrome in strict mode.
-    doc.body.scrollTop = top;
-  }-*/;
-
-  protected native boolean isRTL(ElementRemote elem) /*-{
-    return elem.ownerDocument.defaultView.getComputedStyle(elem, '').direction == 'rtl';
-  }-*/;
-
-  private native NativeEvent createKeyEvent(DocumentRemote doc, String type,
-      boolean canBubble, boolean cancelable, boolean ctrlKey, boolean altKey,
-      boolean shiftKey, boolean metaKey) /*-{
-    // WebKit's KeyboardEvent cannot set or even initialize charCode, keyCode, etc.
-    // And UIEvent's charCode and keyCode are read-only.
-    // So we "fake" an event using a raw Event and expandos
-    var evt = doc.createEvent('Event');
-    evt.initEvent(type, canBubble, cancelable);
-    evt.ctrlKey = ctrlKey;
-    evt.altKey = altKey;
-    evt.shiftKey = shiftKey;
-    evt.metaKey = metaKey;
-    return evt;
-  }-*/;
+	private native NativeEvent createKeyEvent(DocumentRemote doc, String type,
+			boolean canBubble, boolean cancelable, boolean ctrlKey,
+			boolean altKey, boolean shiftKey, boolean metaKey) /*-{
+        // WebKit's KeyboardEvent cannot set or even initialize charCode, keyCode, etc.
+        // And UIEvent's charCode and keyCode are read-only.
+        // So we "fake" an event using a raw Event and expandos
+        var evt = doc.createEvent('Event');
+        evt.initEvent(type, canBubble, cancelable);
+        evt.ctrlKey = ctrlKey;
+        evt.altKey = altKey;
+        evt.shiftKey = shiftKey;
+        evt.metaKey = metaKey;
+        return evt;
+	}-*/;
 }
-

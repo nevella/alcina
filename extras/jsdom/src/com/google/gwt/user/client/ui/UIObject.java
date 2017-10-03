@@ -309,7 +309,7 @@ public abstract class UIObject implements HasVisibility {
    * @param elem the element whose style is to be modified
    * @param styleName the new style name
    */
-  protected static void setStyleName(Element elem, String styleName) {
+  public static void setStyleName(Element elem, String styleName) {
     elem.setClassName(styleName);
   }
 
@@ -325,7 +325,7 @@ public abstract class UIObject implements HasVisibility {
    * @param add <code>true</code> to add the given style, <code>false</code> to
    *          remove it
    */
-  protected static void setStyleName(Element elem, String style, boolean add) {
+  public static void setStyleName(Element elem, String style, boolean add) {
     if (elem == null) {
       throw new RuntimeException(NULL_HANDLE_MSG);
     }

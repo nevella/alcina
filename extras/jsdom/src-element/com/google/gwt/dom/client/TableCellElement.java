@@ -17,6 +17,8 @@ package com.google.gwt.dom.client;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 /**
  * The object used to represent the TH and TD elements.
  * 
@@ -87,7 +89,7 @@ public class TableCellElement extends Element {
    * The index of this cell in the row, starting from 0. This index is in
    * document tree order and not display order. 
    */  public  int getCellIndex(){
-  return this.getPropertyInt("cellIndex");
+  return indexInParentChildren();
 }
 
 

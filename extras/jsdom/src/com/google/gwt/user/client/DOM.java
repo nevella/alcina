@@ -1539,7 +1539,7 @@ public class DOM {
 		if (elem.implAccess().linkedToRemote()) {
 			impl.sinkEvents(elem, eventBits);
 		} else {
-			Element attachedAncestor = elem.implAccess()
+			Element attachedAncestor = (Element) elem.implAccess()
 					.provideSelfOrAncestorLinkedToRemote();
 			boolean attachToAncestor = attachedAncestor != null
 					&& attachedAncestor != elem;

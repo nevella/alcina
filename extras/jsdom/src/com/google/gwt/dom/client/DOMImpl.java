@@ -208,11 +208,11 @@ abstract class DOMImpl {
 
 	protected abstract String eventToString(NativeEvent evt);
 
-	protected int getAbsoluteLeft(ElementRemote elem) {
+	protected int getAbsoluteLeft(Element elem) {
 		return toInt32(getSubPixelAbsoluteLeft(elem));
 	}
 
-	protected int getAbsoluteTop(ElementRemote elem) {
+	protected int getAbsoluteTop(Element elem) {
 		return toInt32(getSubPixelAbsoluteTop(elem));
 	}
 
@@ -296,15 +296,15 @@ abstract class DOMImpl {
         return sib;
 	}-*/;
 
-	protected int getScrollLeft(DocumentRemote doc) {
+	protected int getScrollLeft(Document doc) {
 		return doc.getViewportElement().getScrollLeft();
 	}
 
-	protected int getScrollLeft(ElementRemote elem) {
+	protected int getScrollLeft(Element elem) {
 		return toInt32(getSubPixelScrollLeft(elem));
 	}
 
-	protected int getScrollTop(DocumentRemote doc) {
+	protected int getScrollTop(Document doc) {
 		return doc.getViewportElement().getScrollTop();
 	}
 
@@ -416,7 +416,8 @@ abstract class DOMImpl {
 		doc.getViewportElement().setScrollLeft(left);
 	}
 
-	protected native void setScrollLeft(ElementRemote elem, int left) /*-{
+	protected native void setScrollLeft(Element multiplex, int left) /*-{
+		var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
         elem.scrollLeft = left;
 	}-*/;
 
@@ -480,7 +481,8 @@ abstract class DOMImpl {
         return evt.screenY || 0;
 	}-*/;
 
-	private native double getSubPixelAbsoluteLeft(ElementRemote elem) /*-{
+	private native double getSubPixelAbsoluteLeft(Element multiplex) /*-{
+		var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
         var left = 0;
         var curr = elem;
         // This intentionally excludes body which has a null offsetParent.
@@ -495,7 +497,8 @@ abstract class DOMImpl {
         return left;
 	}-*/;
 
-	private native double getSubPixelAbsoluteTop(ElementRemote elem) /*-{
+	private native double getSubPixelAbsoluteTop(Element multiplex) /*-{
+		var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
         var top = 0;
         var curr = elem;
         // This intentionally excludes body which has a null offsetParent.
@@ -510,7 +513,8 @@ abstract class DOMImpl {
         return top;
 	}-*/;
 
-	private native double getSubPixelScrollLeft(ElementRemote elem) /*-{
+	private native double getSubPixelScrollLeft(Element multiplex) /*-{
+		var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
         return elem.scrollLeft || 0;
 	}-*/;
 

@@ -8,12 +8,12 @@ public class DomDispatchLocal implements IDomDispatch {
 
 	@Override
 	public void cssClearOpacity(Style style) {
-		style.removePropertyImpl("opacity");
+		style.local.removeProperty("opacity");
 	}
 
 	@Override
 	public void cssSetOpacity(Style style, double value) {
-		style.setProperty("opacity", String.valueOf(value));
+		style.local.setProperty("opacity", String.valueOf(value));
 	}
 
 	@Override

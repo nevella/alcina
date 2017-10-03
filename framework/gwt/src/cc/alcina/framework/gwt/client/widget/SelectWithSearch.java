@@ -627,7 +627,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	public void onFocus(FocusEvent event) {
 		Widget sender = (Widget) event.getSource();
-		int i = 0;
+		if (sender == filter.getTextBox()) {
+			return;
+		}
 		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			@Override
 			public void execute() {
@@ -858,8 +860,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				RootPanel.get(), panelForPopup, getShiftX(), shiftY());
 		if (isShowFilterInPopup()) {
 			filter.setValue("");
-			Scheduler.get()
-					.scheduleDeferred(() -> filter.getTextBox().setFocus(true));
+			filter.getTextBox().setFocus(true);
+			Scheduler.get().scheduleDeferred(() -> {
+				filter.getTextBox().setFocus(true);
+			});
 		}
 		onPopdownShowing(relativePopupPanel, true);
 		int border = 2;
@@ -1045,10 +1049,11 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	}
 
 	protected void updateItems() {
-		if (isRecreateItemHolderOnRefresh() && itemHolder.getParent() != null) {
+		boolean recreateItemHolder = isRecreateItemHolderOnRefresh()
+				&& itemHolder.getParent() != null;
+		if (recreateItemHolder) {
 			itemHolder.removeFromParent();
 			createItemHolder();
-			scroller.setWidget(itemHolder);
 		}
 		HasWidgets itemHolder = itemHolderAsHasWidgets();
 		itemHolder.clear();
@@ -1095,6 +1100,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			Label empty = new Label(emptyItemsText);
 			empty.setStyleName("empty-items");
 			itemHolder.add(empty);
+		}
+		if (recreateItemHolder) {
+			scroller.setWidget(this.itemHolder);
 		}
 		afterUpdateItems(emptyItems);
 	}

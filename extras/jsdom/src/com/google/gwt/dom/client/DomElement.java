@@ -307,5 +307,7 @@ public interface DomElement extends DomNode {
 
 	void ensureId();
 
+	String getOuterHtml();
+
 	
 }

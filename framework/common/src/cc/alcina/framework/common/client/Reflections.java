@@ -5,10 +5,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class Reflections {
 	private static Reflections theInstance;
+
+	private BeanDescriptorProvider beanDescriptorProvider;
 
 	private static Reflections get() {
 		if (theInstance == null) {
@@ -25,6 +28,14 @@ public class Reflections {
 
 	public static void registerPropertyAccessor(PropertyAccessor accessor) {
 		get().propertyAccessor = accessor;
+	}
+
+	public static void registerBeanDescriptorProvider(
+			BeanDescriptorProvider beanDescriptorProvider) {
+		if(beanDescriptorProvider!=null){
+			int debug = 3;
+		}
+		get().beanDescriptorProvider = beanDescriptorProvider;
 	}
 
 	public static PropertyAccessor propertyAccessor() {
@@ -49,5 +60,9 @@ public class Reflections {
 
 	public static ClassLookup classLookup() {
 		return get().classLookup;
+	}
+
+	public static BeanDescriptorProvider beanDescriptorProvider() {
+		return get().beanDescriptorProvider;
 	}
 }
