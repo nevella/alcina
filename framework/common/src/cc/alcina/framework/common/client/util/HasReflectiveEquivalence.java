@@ -20,18 +20,20 @@ public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
 				Object o1 = pd.getReadMethod().invoke(this, new Object[] {});
 				Object o2 = pd.getReadMethod().invoke(other, new Object[] {});
 				if (CommonUtils.equalsWithNullEquality(o1, o2)) {
+					continue;
 				} else {
 					if (o1 == null || o2 == null) {
-						return false;
+						return debugInequivalence(pd,o1,o2);
 					}
 					if (o1.getClass() != o2.getClass()) {
-						return false;
+						return debugInequivalence(pd,o1,o2);
 					}
 					if (o1 instanceof HasEquivalence) {
 						if (((HasEquivalence) o1)
 								.equivalentTo((HasEquivalence) o2)) {
+							continue;
 						} else {
-							return false;
+							return debugInequivalence(pd,o1,o2);
 						}
 					} else if (o1 instanceof Collection) {
 						Collection c1 = (Collection) o1;
@@ -40,12 +42,12 @@ public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
 								&& (c1.iterator()
 										.next() instanceof HasEquivalence)
 								&& HasEquivalenceHelper.equivalent(c1, c2)) {
-							return true;
+							continue;
 						} else {
-							return false;
+							return debugInequivalence(pd,o1,o2);
 						}
 					} else {
-						return false;
+						return debugInequivalence(pd,o1,o2);
 					}
 				}
 			}
@@ -53,5 +55,9 @@ public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
 			throw new WrappedRuntimeException(e);
 		}
 		return true;
+	}
+
+	default boolean debugInequivalence(PropertyInfoLite pd,Object o1,Object o2){
+		return false;
 	}
 }

@@ -444,8 +444,8 @@ public class Element extends Node implements DomElement {
 	@Override
 	public void putRemote(NodeRemote remote) {
 		// FIXME
-//		 Preconditions.checkState(
-//		 this.remote == ElementNull.INSTANCE || remote == this.remote);
+		// Preconditions.checkState(
+		// this.remote == ElementNull.INSTANCE || remote == this.remote);
 		this.remote = (ElementRemote) remote;
 		if (remote != null) {
 			if (local() != null && local().getEventBits() != 0) {
@@ -513,7 +513,7 @@ public class Element extends Node implements DomElement {
 
 	public void setInnerHTML(String html) {
 		ensureRemoteCheck();
-		wasResolvedEventId=0;
+		clearResolved();
 		local().setInnerHTML(html);
 		remote().setInnerHTML(html);
 		LocalDom.checkRequiresSync(local());
@@ -521,7 +521,7 @@ public class Element extends Node implements DomElement {
 
 	public void setInnerSafeHtml(SafeHtml html) {
 		ensureRemoteCheck();
-		wasResolvedEventId=0;
+		clearResolved();
 		local().setInnerSafeHtml(html);
 		remote().setInnerSafeHtml(html);
 		LocalDom.checkRequiresSync(local());
@@ -529,7 +529,7 @@ public class Element extends Node implements DomElement {
 
 	public void setInnerText(String text) {
 		ensureRemoteCheck();
-		wasResolvedEventId=0;
+		clearResolved();
 		local().setInnerText(text);
 		remote().setInnerText(text);
 	}
@@ -739,11 +739,17 @@ public class Element extends Node implements DomElement {
 		throw new UnsupportedOperationException();
 	}
 
-	public void resolveRemoteDefined() {
+	public boolean resolveRemoteDefined() {
 		if (getClassName().contains(REMOTE_DEFINED)) {
+			Ax.out("resolve remote defined: %s", hashCode());
 			ensureRemote();
 			LocalDom.syncToRemote(this);
 			UIObject.setStyleName(this, REMOTE_DEFINED, false);
+			return true;
+		} else {
+			return false;
 		}
 	}
+
+	
 }

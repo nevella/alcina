@@ -20,6 +20,7 @@ import com.totsp.gwittir.client.beans.Method;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -28,9 +29,11 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  */
 public interface ClassLookup {
 	public Class getClassForName(String fqn);
-	default <T> T newInstance(String fqn){
-		return (T) newInstance(getClassForName(fqn)); 
+
+	default <T> T newInstance(String fqn) {
+		return (T) newInstance(getClassForName(fqn));
 	}
+
 	public <T> T newInstance(Class<T> clazz);
 
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId);
@@ -115,11 +118,15 @@ public interface ClassLookup {
 		public int hashCode() {
 			return beanType.hashCode() ^ propertyName.hashCode();
 		}
+
+		@Override
+		public String toString() {
+			return Ax.format("Property: %s.%s :: %s", beanType.getSimpleName(),
+					propertyName, propertyType.getSimpleName());
+		}
 	}
 
-	default boolean isPrimitive(Class<?> clazz){
+	default boolean isPrimitive(Class<?> clazz) {
 		return clazz.isPrimitive();
 	}
-
-	
 }

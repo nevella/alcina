@@ -73,16 +73,23 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	 * error: "Permission denied to access property 'nodeType'"
 	 */
 	private static native boolean isJso(JavaScriptObject o) /*-{
-															try {
-															return (!!o) && (!!o.nodeType);
-															} catch (e) {
-															return false;
-															}
-															}-*/;
+        try {
+            return (!!o) && (!!o.nodeType);
+        } catch (e) {
+            return false;
+        }
+	}-*/;
 
-	public int wasResolvedEventId;
+	private int wasResolvedEventId;
 
 	protected Node() {
+	}
+
+	/**
+	 * only call on reparse
+	 */
+	void clearResolved() {
+		wasResolvedEventId = 0;
 	}
 
 	public <T extends Node> T appendChild(T newChild) {

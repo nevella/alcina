@@ -50,6 +50,7 @@ public class HtmlParser {
 		LocalDom.setDisableRemoteWrite(true);
 		if (replaceContents != null) {
 			replaceContents.local().setInnerHTML(null);
+			replaceContents.clearResolved();
 		}
 		while (idx < html.length()) {
 			char c = html.charAt(idx++);

@@ -15,10 +15,13 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasEquivalence;
+import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 
 @ClientInstantiable
 @Introspectable
-public class SearchOrders<T> implements Comparator<T>, Serializable {
+public class SearchOrders<T> implements Comparator<T>, Serializable,
+		HasEquivalence<SearchOrders<T>> {
 	private Map<SearchOrder<T, ?>, Boolean> cmps = new LinkedHashMap<>();
 
 	private List<SerializableSearchOrder> serializableSearchOrders = new ArrayList<>();
@@ -60,6 +63,14 @@ public class SearchOrders<T> implements Comparator<T>, Serializable {
 			}
 		}
 		return 0;
+	}
+
+	@Override
+	public boolean equivalentTo(SearchOrders<T> other) {
+		refreshSerializable();
+		other.refreshSerializable();
+		return HasEquivalenceHelper.equivalent(serializableSearchOrders,
+				other.serializableSearchOrders);
 	}
 
 	public List<SerializableSearchOrder> getSerializableSearchOrders() {
@@ -104,7 +115,8 @@ public class SearchOrders<T> implements Comparator<T>, Serializable {
 
 	@ClientInstantiable
 	@Introspectable
-	public static class SerializableSearchOrder implements Serializable {
+	public static class SerializableSearchOrder implements Serializable,
+			HasReflectiveEquivalence<SerializableSearchOrder> {
 		private String searchOrderClassName;
 
 		private boolean ascending;
