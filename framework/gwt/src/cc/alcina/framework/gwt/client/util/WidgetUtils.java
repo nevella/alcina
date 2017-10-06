@@ -410,12 +410,16 @@ public class WidgetUtils {
 		}
 		return from.getParentElement();
 	}
-
+	private static void ensureRemote(Element element){
+		element.implAccess().ensureRemote();
+	}
+	
 	public static native Element getElementForSelector(Element elto,
 			String selector) /*-{
         if (!($doc.querySelector)) {
             return null;
         }
+        @cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(elto);
         var elt = elto.@com.google.gwt.dom.client.Element::typedRemote()();
         var from = (elt) ? elt : $doc;
         var splits = selector.split("::");

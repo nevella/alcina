@@ -65,7 +65,8 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * <li>.gwt-DecoratedPopupPanel .popupMiddleLeft { the middle left cell }</li>
  * <li>.gwt-DecoratedPopupPanel .popupMiddleLeftInner { the inner element of the
  * cell }</li>
- * <li>.gwt-DecoratedPopupPanel .popupMiddleCenter { the middle center cell }</li>
+ * <li>.gwt-DecoratedPopupPanel .popupMiddleCenter { the middle center cell }
+ * </li>
  * <li>.gwt-DecoratedPopupPanel .popupMiddleCenterInner { the inner element of
  * the cell }</li>
  * <li>.gwt-DecoratedPopupPanel .popupMiddleRight { the middle right cell }</li>
@@ -74,7 +75,8 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * <li>.gwt-DecoratedPopupPanel .popupBottomLeft { the bottom left cell }</li>
  * <li>.gwt-DecoratedPopupPanel .popupBottomLeftInner { the inner element of the
  * cell }</li>
- * <li>.gwt-DecoratedPopupPanel .popupBottomCenter { the bottom center cell }</li>
+ * <li>.gwt-DecoratedPopupPanel .popupBottomCenter { the bottom center cell }
+ * </li>
  * <li>.gwt-DecoratedPopupPanel .popupBottomCenterInner { the inner element of
  * the cell }</li>
  * <li>.gwt-DecoratedPopupPanel .popupBottomRight { the bottom right cell }</li>
@@ -137,7 +139,8 @@ public class DecoratedRelativePopupPanel extends RelativePopupPanel {
 	 * @param prefix
 	 *            the prefix applied to child style names
 	 */
-	DecoratedRelativePopupPanel(boolean autoHide, boolean modal, String prefix) {
+	DecoratedRelativePopupPanel(boolean autoHide, boolean modal,
+			String prefix) {
 		super(autoHide, modal);
 		String[] rowStyles = new String[] { prefix + "Top", prefix + "Middle",
 				prefix + "Bottom" };
@@ -211,10 +214,6 @@ public class DecoratedRelativePopupPanel extends RelativePopupPanel {
 	}
 
 	public void insertDecoratorHtml(String selector, String className) {
-//		LocalDomBridge.ensurePendingResolutionNode(getElement());
-		if("".isEmpty()){
-			throw new UnsupportedOperationException();
-		}
 		Element elt = (Element) WidgetUtils.getElementForSelector(getElement(),
 				selector);
 		if (elt != null) {
@@ -250,6 +249,6 @@ public class DecoratedRelativePopupPanel extends RelativePopupPanel {
 
 	public void arrowRightDown() {
 		arrowCenterDown();
-		addStyleName("arrow-center-down arrow-right-down");		
+		addStyleName("arrow-center-down arrow-right-down");
 	}
 }

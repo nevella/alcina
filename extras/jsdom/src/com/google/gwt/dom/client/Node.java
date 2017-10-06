@@ -73,12 +73,12 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	 * error: "Permission denied to access property 'nodeType'"
 	 */
 	private static native boolean isJso(JavaScriptObject o) /*-{
-        try {
-            return (!!o) && (!!o.nodeType);
-        } catch (e) {
-            return false;
-        }
-	}-*/;
+															try {
+															return (!!o) && (!!o.nodeType);
+															} catch (e) {
+															return false;
+															}
+															}-*/;
 
 	public int wasResolvedEventId;
 
@@ -246,7 +246,8 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	protected void ensureRemoteCheck() {
 		if (!linkedToRemote() && provideWasFlushed()
 				&& provideSelfOrAncestorLinkedToRemote() != null
-				&& !LocalDom.isDisableRemoteWrite()) {
+				&& !LocalDom.isDisableRemoteWrite()
+				&& getNodeType() == ELEMENT_NODE) {
 			LocalDom.ensureRemote((Element) this);
 		}
 	}
