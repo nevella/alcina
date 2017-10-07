@@ -177,7 +177,7 @@ public class SEUtilities {
 	}
 
 	public static String consoleReadline(String prompt) {
-		System.out.println(prompt);
+		System.out.print(prompt);
 		InputStreamReader converter = new InputStreamReader(System.in);
 		BufferedReader in = new BufferedReader(converter);
 		try {
