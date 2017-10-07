@@ -31,7 +31,7 @@ public abstract class DOMImpl {
   protected static boolean eventSystemIsInitialized;
 
 	public static EventListener getEventListener(Element elem) {
-		return elem.implAccess().linkedToRemote()?getEventListener0(elem.typedRemote()): null;
+		return elem.implAccess().linkedToRemote()?getEventListener0(elem.implAccess().typedRemote()): null;
 	}
   private static native EventListener getEventListener0(ElementRemote elem) /*-{
     // Return elem.__listener if and only if it was assigned from our module
@@ -169,7 +169,7 @@ public abstract class DOMImpl {
   public abstract int getChildIndex(Element parent, Element child);
   public  int getEventsSunk(Element elem) {
 	  if(elem.implAccess().linkedToRemote()){
-		  ElementRemote remote = elem.typedRemote();
+		  ElementRemote remote = elem.implAccess().typedRemote();
 		  return getEventsSunk0(remote);
 	  }else{
 		  return elem.localEventBitsSunk();

@@ -98,6 +98,8 @@ public class StyleInjector {
 		 */
 		private static final int MAX_STYLE_SHEETS = 31;
 
+		private boolean injectedOnce = false;
+
 		/**
 		 * A cache of the lengths of the current style sheets. A value of 0
 		 * indicates that the length has not yet been retrieved.
@@ -105,22 +107,37 @@ public class StyleInjector {
 		private static int[] styleSheetLengths = new int[MAX_STYLE_SHEETS];
 
 		private static native int getDocumentStyleCount() /*-{
-            return $doc.styleSheets.length;
+            var count = 0;
+            for (var idx = 0; idx < $doc.styleSheets.length; idx++) {
+                var sheet = $doc.styleSheets[idx];
+                if (sheet.owningElement.tagName.toLowerCase() == 'style') {
+                    count++;
+                }
+            }
+            return count;
 		}-*/;
 
-		private static native StyleElement
-				getDocumentStyleSheet(int index) /*-{
-            var remote = $doc.styleSheets[index];
-            return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
+		static native StyleElement getDocumentStyleSheet(int index) /*-{
+            for (var idx = 0; idx < $doc.styleSheets.length; idx++) {
+                var sheet = $doc.styleSheets[idx];
+                if (sheet.owningElement.tagName.toLowerCase() == 'style') {
+                    if (index-- == 0) {
+                        var remote = sheet.owningElement;
+                        return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
+                    }
+                }
+            }
+            return null;
 		}-*/;
 
 		private static native int getDocumentStyleSheetLength(int index) /*-{
-            return $doc.styleSheets[index].cssText.length;
+            var remote = @com.google.gwt.dom.client.StyleInjector.StyleInjectorImplIE::getDocumentStyleSheet(I)(index);
+            return remote.sheet.cssText.length;
 		}-*/;
 
 		public native void appendContents(StyleElement style,
 				String contents) /*-{
-            style.@com.google.gwt.dom.client.Element::ensureRemote()().cssText += contents;
+            style.@com.google.gwt.dom.client.Element::ensureRemote()().sheet.cssText += contents;
 		}-*/;
 
 		@Override
@@ -184,7 +201,7 @@ public class StyleInjector {
 
 		public native void prependContents(StyleElement style,
 				String contents) /*-{
-            style.cssText = contents + style.cssText;
+            style.sheet.cssText = contents + style.sheet.cssText;
 		}-*/;
 
 		private StyleElement appendToStyleSheet(int idx, String contents,
@@ -199,16 +216,17 @@ public class StyleInjector {
 		}
 
 		private native StyleElement createElement() /*-{
-            var remote = $doc.createStyleSheet();
+            var sheet = $doc.createStyleSheet();
+            var remote = sheet.owningElement;
             return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
-            ;
 		}-*/;
 
-		private StyleElement createNewStyleSheet(String contents) {
-			StyleElement style = createElement();
-			style.setCssText(contents);
-			return style;
-		}
+		private native StyleElement createNewStyleSheet(String contents) /*-{
+            var element = this.@com.google.gwt.dom.client.StyleInjector.StyleInjectorImplIE::createElement()();
+            var remote = element.@com.google.gwt.dom.client.Element::typedRemote()();
+            remote.sheet.cssText = contents;
+            return element;
+		}-*/;
 	}
 
 	private static final JsArrayString toInject = JavaScriptObject.createArray()

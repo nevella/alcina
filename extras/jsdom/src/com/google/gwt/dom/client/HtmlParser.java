@@ -1,5 +1,8 @@
 package com.google.gwt.dom.client;
 
+import com.google.common.base.Preconditions;
+
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class HtmlParser {
@@ -47,6 +50,14 @@ public class HtmlParser {
 		resetBuilder();
 		tokenState = TokenState.EXPECTING_NODE;
 		html = root.getOuterHtml();
+		if(html == null){
+			
+		}
+		String innerHtml = null;
+		;
+		if (root instanceof ElementRemote) {
+			innerHtml = ((ElementRemote) root).getInnerHTML0();
+		}
 		LocalDom.setDisableRemoteWrite(true);
 		if (replaceContents != null) {
 			replaceContents.local().setInnerHTML(null);
@@ -76,7 +87,7 @@ public class HtmlParser {
 				break;
 			case TEXT:
 				if (c == '<') {
-					emitText(builder.toString());
+					emitEscapedText(builder.toString());
 					resetBuilder();
 					tokenState = TokenState.EXPECTING_TAG;
 				} else {
@@ -246,6 +257,23 @@ public class HtmlParser {
 		if (closeTag || selfCloseTag) {
 			emitEndElement(tag);
 		}
+		switch (tag) {
+		case "script":
+		case "style":
+			Preconditions.checkState(!closeTag);
+			String close = Ax.format("</%s>", tag);
+			String close2 = Ax.format("</%s>", tag.toUpperCase());
+			int idx2 = html.indexOf(close, idx);
+			int idx3 = html.indexOf(close2, idx);
+			if (idx2 == -1 || (idx3 != -1 && idx3 < idx2)) {
+				idx2 = idx3;
+			}
+			String textContent = html.substring(idx, idx2);
+			emitText(textContent);
+			emitEndElement(tag);
+			idx = idx2 + close.length();
+			break;
+		}
 		tokenState = TokenState.EXPECTING_NODE;
 		tag = null;
 		selfCloseTag = false;
@@ -279,8 +307,15 @@ public class HtmlParser {
 		// FIXME - probably add comments, PIs...
 	}
 
+	private void emitEscapedText(String string) {
+		emitText(resolveEntities(string));
+	}
+
 	private void emitText(String string) {
-		Text text = Document.get().createTextNode(resolveEntities(string));
+		if (string.isEmpty()) {
+			return;
+		}
+		Text text = Document.get().createTextNode(string);
 		cursor.appendChild(text);
 	}
 }

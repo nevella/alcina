@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.Javascript
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 
 public class LocalDom {
 	private static LocalDom instance = new LocalDom();
@@ -37,6 +38,8 @@ public class LocalDom {
 	private static boolean useRemoteDom = true;
 
 	private static boolean disableRemoteWrite;
+
+	private boolean ie9;
 
 	public static NodeRemote ensurePendingResolutionNode(Node node) {
 		return get().ensurePendingResolutionNode0(node);
@@ -156,52 +159,93 @@ public class LocalDom {
 
 	private boolean wasResolvedEventIdDirty;
 
+	private boolean flushing;
+
 	public LocalDom() {
 		remoteLookup = new LinkedHashMap<>();
+		ie9 = BrowserMod.isIE9();
 		if (collections == null) {
 			initStatics();
 		}
 	}
 
-	public void ensureResolved(Node node) {
+	public void ensurePendingResolved(Node node) {
 		Preconditions.checkState(node.linkedToRemote());
 		Element element = (Element) node;
 		if (element.isPendingResolution()) {
-			Element elem = (Element) node;
 			ElementRemote remote = (ElementRemote) node.remote();
 			DomElement local = node.local();
-			String innerHTML = local.getInnerHTML();
-			if (innerHTML.contains("class=\"workspaceViews")) {
-				int debug = 3;
-			}
-			remote.setInnerHTML(innerHTML);
-			// doesn't include style
-			local.getAttributes().entrySet().forEach(e -> {
-				switch (e.getKey()) {
-				case "text":
-					remote.setPropertyString(e.getKey(), e.getValue());
-					break;
-				default:
-					remote.setAttribute(e.getKey(), e.getValue());
-					break;
-				}
-			});
-			log(LocalDomDebug.FLUSH, "%s - uiobj: %s - \n%s",
-					element.getTagName(),
-					Optional.ofNullable(element.uiObject)
-							.map(ui -> ui.getClass().getSimpleName())
-							.orElse("(null)"),
-					CommonUtils.trimToWsChars(innerHTML, 1000));
-			local.getStyle().getProperties().entrySet().forEach(e -> {
-				StyleRemote remoteStyle = remote.getStyle0();
-				remoteStyle.setProperty(e.getKey(), e.getValue());
-			});
-			int bits = ((ElementLocal) local).orSunkEventsOfAllChildren(0);
-			bits |= DOM.getEventsSunk(elem);
-			DOM.sinkEvents(elem, bits);
-			pendingResolution.remove(node);
-			wasResolved(elem);
+			localToRemote(element, remote, local);
 		}
+	}
+
+	private void localToRemote(Element element, ElementRemote remote,
+			DomElement local) {
+		String innerHTML = local.getInnerHTML();
+		if (ie9) {
+			switch (element.getTagName()) {
+			case "table":
+				remote = writeIe9Table((TableElement) element, remote);
+				break;
+			case "tr":
+				remote = writeIe9Tr((TableRowElement) element, remote);
+				break;
+			default:
+				remote.setInnerHTML(innerHTML);
+			}
+		} else {
+			remote.setInnerHTML(innerHTML);
+		}
+		log(LocalDomDebug.FLUSH, "%s - uiobj: %s - \n%s", element.getTagName(),
+				Optional.ofNullable(element.uiObject)
+						.map(ui -> ui.getClass().getSimpleName())
+						.orElse("(null)"),
+				CommonUtils.trimToWsChars(innerHTML, 1000));
+		ElementRemote f_remote = remote;
+		// doesn't include style
+		local.getAttributes().entrySet().forEach(e -> {
+			switch (e.getKey()) {
+			case "text":
+				f_remote.setPropertyString(e.getKey(), e.getValue());
+				break;
+			default:
+				f_remote.setAttribute(e.getKey(), e.getValue());
+				break;
+			}
+		});
+		local.getStyle().getProperties().entrySet().forEach(e -> {
+			StyleRemote remoteStyle = f_remote.getStyle0();
+			remoteStyle.setProperty(e.getKey(), e.getValue());
+		});
+		int bits = ((ElementLocal) local).orSunkEventsOfAllChildren(0);
+		bits |= DOM.getEventsSunk(element);
+		DOM.sinkEvents(element, bits);
+		pendingResolution.remove(element);
+		element.resolvePending();
+		wasResolved(element);
+	}
+
+	private ElementRemote writeIe9Table(TableElement elem,
+			ElementRemote remote) {
+		String outer = elem.local().getOuterHtml();
+		remoteLookup.remove(remote);
+		remote = Document.get().typedRemote().generateFromOuterHtml(outer);
+		elem.replaceRemote(remote);
+		return remote;
+	}
+
+	private ElementRemote writeIe9Tr(TableRowElement elem,
+			ElementRemote remote) {
+		Preconditions.checkArgument(elem.getChildNodes().stream()
+				.allMatch(n -> n.getNodeName().equals("td")));
+		int idx = 0;
+		for (Node node : elem.getChildNodes()) {
+			Element child = (Element) node;
+			ElementRemote remoteCell = elem.insertCellRemote(idx);
+			localToRemote(child, remoteCell, child.local());
+			idx++;
+		}
+		return remote;
 	}
 
 	private Element createElement0(String tagName) {
@@ -253,6 +297,7 @@ public class LocalDom {
 	}
 
 	private void ensureRemote0(Element element) {
+		flush0(true);
 		List<Element> ancestors = new ArrayList<>();
 		Element cursor = element;
 		Element withRemote = null;
@@ -270,7 +315,6 @@ public class LocalDom {
 			// attaching with-remote to without-remote (say, a popup)
 			Element root = ancestors.get(0);
 			ensurePendingResolutionNode(root);
-			flush();
 			ensureRemote0(element);
 			return;
 		}
@@ -402,7 +446,7 @@ public class LocalDom {
 			hasNodeRemote = root;
 		}
 		Element hasNode = (Element) remoteLookup.get(hasNodeRemote);
-		if(hasNode.resolveRemoteDefined()){
+		if (hasNode.resolveRemoteDefined()) {
 			return nodeFor0(hasNodeRemote);
 		}
 		List<Integer> indicies = remoteIndex.indicies();
@@ -435,24 +479,33 @@ public class LocalDom {
 	}
 
 	void flush0() {
-		if (flushCommand == null) {
+		flush0(false);
+	}
+
+	void flush0(boolean force) {
+		if (flushing) {
+			return;
+		}
+		if (flushCommand == null && !force) {
 			return;
 		}
 		flushCommand = null;
 		log(LocalDomDebug.FLUSH, "**flush**");
 		try {
+			flushing = true;
 			if (wasResolvedEventIdDirty) {
 				wasResolvedEventId++;
 				wasResolvedEventIdDirty = false;
 			}
 			new ArrayList<>(pendingResolution).stream()
-					.forEach(this::ensureResolved);
+					.forEach(this::ensurePendingResolved);
 			requiresSync.removeIf(elem -> resolveSync(elem));
 			if (wasResolvedEventIdDirty) {
 				wasResolvedEventId++;
 			}
 		} finally {
 			wasResolvedEventIdDirty = false;
+			flushing = false;
 		}
 	}
 

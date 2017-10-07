@@ -1003,7 +1003,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
                     result.indicies.push(idx);
                     result.ancestors.push(cursor);
                     var className = cursor.className;
-                    if (!className.indexOf && typeof className.baseVal == 'string') {
+                    if (!className.indexOf
+                            && typeof className.baseVal == 'string') {
                         className = className.baseVal;
                     }
                     result.remoteDefined.push(className
@@ -1053,4 +1054,22 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	final boolean hasTagNameInternal(String tag) {
 		return getTagNameInternal().equals(tag);
 	}
+
+	final Node removeAllChildrenElement() {
+		if (LocalDom.fastRemoveAll) {
+			setInnerHTML("");
+		} else {
+			removeAllChildrenElement0();
+		}
+		return nodeFor();
+	}
+
+	final native void removeAllChildrenElement0()/*-{
+        while (this.lastChild) {
+            this.removeChild(this.lastChild);
+        }
+	}-*/;
+	final native void removeFromParent0()/*-{
+		this.parentElement.removeChild(this);
+	}-*/;
 }

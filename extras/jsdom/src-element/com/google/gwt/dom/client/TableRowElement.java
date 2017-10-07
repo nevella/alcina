@@ -184,7 +184,14 @@ public class TableRowElement extends Element {
 	 *      W3C HTML Specification</a>
 	 */
 	public final native TableCellElement insertCell(int index) /*-{
-        return this.insertCell(index);
+        var remote = this.@com.google.gwt.dom.client.Element::typedRemote()();
+        var cell = remote.insertCell(index);
+        return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(cell);
+	}-*/;
+	public final native ElementRemote insertCellRemote(int index) /*-{
+	    var remote = this.@com.google.gwt.dom.client.Element::typedRemote()();
+	    var cell = remote.insertCell(index);
+	    return cell;
 	}-*/;
 
 	/**

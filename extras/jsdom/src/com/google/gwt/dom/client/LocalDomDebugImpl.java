@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.gwt.dom.client.ElementRemote.ElementRemoteIndex;
 import com.google.gwt.user.client.LocalDomDebug;
+import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -25,6 +26,7 @@ public class LocalDomDebugImpl {
 			case DISPATCH_DETAILS:
 			case DOM_MOUSE_EVENT:
 			case STYLE:
+			case EVENT_MOD:
 				return;
 			}
 		}
@@ -32,6 +34,10 @@ public class LocalDomDebugImpl {
 			message = Ax.format(message, args);
 		}
 		Ax.out("%s: %s", channel, message);
+		if (channel == LocalDomDebug.DEBUG_ISSUE
+				&& Window.Location.getPort().contains("8080")) {
+			throw new RuntimeException();
+		}
 	}
 
 	public void debugPutRemote(Element needsRemote, int idx,
@@ -102,6 +108,7 @@ public class LocalDomDebugImpl {
 		}
 		remoteIndex = elementRemote.provideRemoteIndex(false);
 		String remoteDebug = null;
+		String remoteDomHasNode = hasNode.typedRemote().provideRemoteDomTree();
 		String remoteDom = elementRemote.provideRemoteDomTree();
 		String localDom = hasNode.local().provideLocalDomTree();
 		ElementRemote parentRemote = elementRemote.getParentElement0();

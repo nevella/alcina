@@ -24,8 +24,9 @@ import com.google.gwt.dom.client.Element;
 public class FocusImplIE6 extends FocusImpl {
 
   @Override
-  public native void focus(Element elem_multi) /*-{
-  var elem = elem_multi.@com.google.gwt.dom.client.Element::typedRemote()();
+  public native void focus(Element bi) /*-{
+  	@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(bi);
+  var elem = bi.@com.google.gwt.dom.client.Element::typedRemote()();
     try {
       elem.focus();
     } catch (e) {

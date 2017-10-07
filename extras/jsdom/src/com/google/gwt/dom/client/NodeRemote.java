@@ -57,7 +57,11 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 
 	@Override
 	public final Node removeAllChildren() {
-		return DomNodeStatic.removeAllChildren(this);
+		if (getNodeType() == Node.ELEMENT_NODE) {
+			return ((ElementRemote) this).removeAllChildrenElement();
+		} else {
+			return DomNodeStatic.removeAllChildren(this);
+		}
 	}
 
 	/**
@@ -281,8 +285,9 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 *            node must be inserted), or <code>null</code>
 	 * @return The node being inserted
 	 */
-	private final native NodeRemote insertBefore0(NodeRemote newChild,
+	final native NodeRemote insertBefore0(NodeRemote newChild,
 			NodeRemote refChild) /*-{
+				debugger;
         return this.insertBefore(newChild, refChild);
 	}-*/;
 

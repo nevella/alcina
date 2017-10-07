@@ -687,8 +687,8 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public String getOuterHtml() {
-		// FIXME - lopri
-		return Ax.format("<%s>%s</%s>", getNodeName(), getInnerHTML(),
-				getNodeName());
+		UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder();
+		appendOuterHtml(builder);
+		return builder.toSafeHtml().asString();
 	}
 }

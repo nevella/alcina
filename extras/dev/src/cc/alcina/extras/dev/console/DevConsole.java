@@ -472,6 +472,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 						setTextWithPrompt(cmd);
 					}
 				}
+				if(e.isMetaDown()&&e.getKeyChar()=='k'){
+					clear();
+				}
 			}
 
 			@Override

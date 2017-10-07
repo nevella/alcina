@@ -8,6 +8,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
@@ -19,6 +20,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringPair;
@@ -158,7 +160,7 @@ public class LogStore {
 				try {
 					log("restart", cookie);
 				} catch (Exception e) {
-					//probably module system not initialised
+					// probably module system not initialised
 				}
 			}
 		}
@@ -259,7 +261,20 @@ public class LogStore {
 
 	@SuppressWarnings("deprecation")
 	public void log(String topic, String message) {
+		try {
+			log0(topic, message);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	private void log0(String topic, String message) {
 		if (CommonUtils.equalsWithNullEquality(message, lastMessage) || muted) {
+			return;
+		}
+		if (Reflections.classLookup() == null) {
+			Ax.out("Before reflection: \n%s\n%s\n", topic, message);
 			return;
 		}
 		if (topic.equals(AlcinaTopics.LOG_CATEGORY_TRANSFORM)) {

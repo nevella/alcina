@@ -169,7 +169,8 @@ public abstract class DOMImplStandard extends DOMImpl {
 
   @Override
   public  int getChildIndex(Element parent, Element toFind) {
-  		return getChildIndex0(parent.typedRemote(), toFind.typedRemote());
+	  throw new UnsupportedOperationException();
+//  		return getChildIndex0(parent.typedRemote(), toFind.typedRemote());
   }
   native int getChildIndex0(ElementRemote parent, ElementRemote toFind) /*-{
     var count = 0, child = parent.firstChild;
@@ -219,14 +220,17 @@ public abstract class DOMImplStandard extends DOMImpl {
   @Override
   public void sinkBitlessEvent(Element elem, String eventTypeName) {
     maybeInitializeEventSystem();
-    sinkBitlessEventImpl(elem.typedRemote(), eventTypeName);
+    if(elem.implAccess().linkedToRemote()){
+    	sinkBitlessEventImpl(elem.implAccess().typedRemote(), eventTypeName);
+    }
   }
 
   @Override
   public void sinkEvents(Element elem, int bits) {
     maybeInitializeEventSystem();
-    ElementRemote remote = elem.typedRemote();
-	sinkEventsImpl(remote, bits);
+    if(elem.implAccess().linkedToRemote()){
+        sinkEventsImpl(elem.implAccess().typedRemote(), bits);
+     }
   }
 
   @SuppressWarnings("deprecation")

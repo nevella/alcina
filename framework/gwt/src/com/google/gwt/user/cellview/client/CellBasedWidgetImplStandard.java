@@ -53,8 +53,8 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 		@Override
 		public void onAttachOrDetach(AttachEvent event) {
 			Preconditions.checkArgument(event.isAttached());
-			Scheduler.get().scheduleFinally(
-					() -> sinkEventImpl(elem.typedRemote(), typeName));
+			Scheduler.get().scheduleFinally(() -> sinkEventImpl(
+					elem.implAccess().ensureRemote(), typeName));
 			registration.removeHandler();
 		}
 	}
@@ -160,11 +160,11 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 	 * Initialize the event system.
 	 */
 	private native void initEventSystem() /*-{
-											@com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent = $entry(function(
-											evt) {
-											@com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::handleNonBubblingEvent(Lcom/google/gwt/user/client/Event;)(evt);
-											});
-											}-*/;
+        @com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent = $entry(function(
+                evt) {
+            @com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::handleNonBubblingEvent(Lcom/google/gwt/user/client/Event;)(evt);
+        });
+	}-*/;
 
 	/**
 	 * Sink an event on the element.
@@ -175,10 +175,10 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 	 *            the name of the event to sink
 	 */
 	private native void sinkEventImpl(ElementRemote elem, String typeName) /*-{
-																			elem
-																			.addEventListener(
-																			typeName,
-																			@com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent,
-																			true);
-																			}-*/;
+        elem
+                .addEventListener(
+                        typeName,
+                        @com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent,
+                        true);
+	}-*/;
 }

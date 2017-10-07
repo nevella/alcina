@@ -450,7 +450,7 @@ public class ClientUtils {
 	}
 
 	public static void dumpElementTree(Element elt) {
-		NodeRemote jso = elt.typedRemote();
+		NodeRemote jso = elt.implAccess().ensureRemote();
 		while (jso != null) {
 			System.out
 					.println(Ax.format("dump - %s - %s", jso.hashCode(), jso));

@@ -248,10 +248,6 @@ public class Element extends Node implements DomElement {
 		return resolveLocal().getFirstChildElement();
 	}
 
-	private ElementLocal resolveLocal() {
-		return local().resolveLocal();
-	}
-
 	public String getId() {
 		return local().getId();
 	}
@@ -315,6 +311,11 @@ public class Element extends Node implements DomElement {
 				0);
 	}
 
+	@Override
+	public String getOuterHtml() {
+		throw new UnsupportedOperationException();
+	}
+
 	public Element getPreviousSiblingElement() {
 		return local().getPreviousSiblingElement();
 	}
@@ -343,20 +344,6 @@ public class Element extends Node implements DomElement {
 
 	public String getPropertyString(String name) {
 		return implForPropertyName(name).getPropertyString(name);
-	}
-
-	private DomElement implForPropertyName(String name) {
-		if (!provideWasFlushed()) {
-			return local();
-		}
-		ensureRemoteCheck();
-		if (linkedToRemote()) {
-			return remote();
-		} else {
-			return local();
-		}
-		// may need to make more conservative
-		// return ensureRemote();
 	}
 
 	public int getScrollHeight() {
@@ -443,9 +430,8 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	public void putRemote(NodeRemote remote) {
-		// FIXME
-		// Preconditions.checkState(
-		// this.remote == ElementNull.INSTANCE || remote == this.remote);
+		Preconditions.checkState(
+				this.remote == ElementNull.INSTANCE || remote == this.remote);
 		this.remote = (ElementRemote) remote;
 		if (remote != null) {
 			if (local() != null && local().getEventBits() != 0) {
@@ -457,13 +443,9 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	public Node removeAllChildren() {
-		if (linkedToRemote() && LocalDom.fastRemoveAll) {
-			setInnerHTML("");
-			local().removeAllChildren();
-			return null;
-		} else {
-			return super.removeAllChildren();
-		}
+		local().removeAllChildren();
+		remote().removeAllChildren();
+		return this;
 	}
 
 	public void removeAttribute(String name) {
@@ -480,6 +462,22 @@ public class Element extends Node implements DomElement {
 	public void replaceClassName(String oldClassName, String newClassName) {
 		local().replaceClassName(oldClassName, newClassName);
 		remote().replaceClassName(oldClassName, newClassName);
+	}
+
+	public void resolvePending() {
+		pendingResolution = false;
+	}
+
+	public boolean resolveRemoteDefined() {
+		if (getClassName().contains(REMOTE_DEFINED)) {
+			Ax.out("resolve remote defined: %s", hashCode());
+			ensureRemote();
+			LocalDom.syncToRemote(this);
+			UIObject.setStyleName(this, REMOTE_DEFINED, false);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public void scrollIntoView() {
@@ -623,19 +621,6 @@ public class Element extends Node implements DomElement {
 		return fb.toString();
 	}
 
-	public ElementRemote typedRemote() {
-		return (ElementRemote) remote();
-	}
-
-	public ElementRemote typedRemoteNoFlush() {
-		// FIXME - may be necessary - but should ext classes have this access?
-		throw new UnsupportedOperationException();
-		// if (domImpl != null) {
-		// return domImpl;
-		// }
-		// return typedRemote();
-	}
-
 	private <T> T callWithRemoteOrDefault(boolean flush, Supplier<T> supplier,
 			T defaultValue) {
 		if (!linkedToRemote() && flush) {
@@ -665,6 +650,24 @@ public class Element extends Node implements DomElement {
 				break;
 			}
 		}
+	}
+
+	private DomElement implForPropertyName(String name) {
+		if (!provideWasFlushed()) {
+			return local();
+		}
+		ensureRemoteCheck();
+		if (linkedToRemote()) {
+			return remote();
+		} else {
+			return local();
+		}
+		// may need to make more conservative
+		// return ensureRemote();
+	}
+
+	private ElementLocal resolveLocal() {
+		return local().resolveLocal();
 	}
 
 	private void runIfWithRemote(boolean flush, Runnable runnable) {
@@ -708,6 +711,19 @@ public class Element extends Node implements DomElement {
 		return this;
 	}
 
+	void replaceRemote(ElementRemote remote) {
+		ElementRemote parentRemote = typedRemote().getParentElement0();
+		if (parentRemote != null) {
+			parentRemote.insertBefore0(remote, typedRemote());
+			typedRemote().removeFromParent0();
+		}
+		this.remote = remote;
+	}
+
+	ElementRemote typedRemote() {
+		return (ElementRemote) remote();
+	}
+
 	public class ElementImplAccess {
 		public ElementRemote ensureRemote() {
 			return Element.this.ensureRemote();
@@ -729,27 +745,12 @@ public class Element extends Node implements DomElement {
 			return Element.this.remote();
 		}
 
+		public ElementRemote typedRemote() {
+			return Element.this.typedRemote();
+		}
+
 		public ElementRemote typedRemoteOrNull() {
-			return linkedToRemote() ? typedRemote() : null;
+			return linkedToRemote() ? Element.this.typedRemote() : null;
 		}
 	}
-
-	@Override
-	public String getOuterHtml() {
-		throw new UnsupportedOperationException();
-	}
-
-	public boolean resolveRemoteDefined() {
-		if (getClassName().contains(REMOTE_DEFINED)) {
-			Ax.out("resolve remote defined: %s", hashCode());
-			ensureRemote();
-			LocalDom.syncToRemote(this);
-			UIObject.setStyleName(this, REMOTE_DEFINED, false);
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	
 }

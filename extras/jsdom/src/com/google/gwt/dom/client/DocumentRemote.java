@@ -941,5 +941,10 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
         return this.getElementsByTagName(tagName);
 	}-*/;
 
+	final native  ElementRemote generateFromOuterHtml(String outer) /*-{
+		var div = this.createElement("div");
+		div.innerHTML = outer;
+		return div.childNodes[0];
+	}-*/;
 	
 }

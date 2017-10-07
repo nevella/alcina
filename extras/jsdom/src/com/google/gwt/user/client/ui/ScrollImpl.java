@@ -78,24 +78,27 @@ class ScrollImpl {
 
     @Override
     public native void initialize(Element scrollable, Element container) /*-{
+    	var scrollableRemote = scrollable.@com.google.gwt.dom.client.Element::typedRemote()();
+    	var containerRemote = container.@com.google.gwt.dom.client.Element::typedRemote()();
       // Remember the last scroll position.
-      scrollable.__lastScrollTop = scrollable.__lastScrollLeft = 0;
-      scrollable.attachEvent('onscroll',
+      scrollableRemote.__lastScrollTop = scrollableRemote.__lastScrollLeft = 0;
+      scrollableRemote.attachEvent('onscroll',
         @com.google.gwt.user.client.ui.ScrollImpl.ScrollImplTrident::scrollHandler);
 
-      // Detect if the scrollable element or the container within it changes
+      // Detect if the scrollableRemote element or the containerRemote within it changes
       // size, either of which could affect the scroll position.
-      scrollable.attachEvent('onresize',
+      scrollableRemote.attachEvent('onresize',
         @com.google.gwt.user.client.ui.ScrollImpl.ScrollImplTrident::resizeHandler);
-      container.attachEvent('onresize',
+      containerRemote.attachEvent('onresize',
         @com.google.gwt.user.client.ui.ScrollImpl.ScrollImplTrident::resizeHandler);
-      // use boolean (primitive, won't leak) hint to resizeHandler that its the container
-      container.__isScrollContainer = true;
+      // use boolean (primitive, won't leak) hint to resizeHandler that its the containerRemote
+      containerRemote.__isScrollContainer = true;
     }-*/;
 
     @Override
     public native boolean isRtl(Element scrollable) /*-{
-      return scrollable.currentStyle.direction == 'rtl';
+    	var scrollableRemote = scrollable.@com.google.gwt.dom.client.Element::typedRemote()();
+      return scrollableRemote.currentStyle.direction == 'rtl';
     }-*/;
   }
 
