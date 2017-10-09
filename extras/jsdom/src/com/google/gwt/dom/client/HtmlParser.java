@@ -50,8 +50,7 @@ public class HtmlParser {
 		resetBuilder();
 		tokenState = TokenState.EXPECTING_NODE;
 		html = root.getOuterHtml();
-		if(html == null){
-			
+		if (html == null) {
 		}
 		String innerHtml = null;
 		;
@@ -208,9 +207,6 @@ public class HtmlParser {
 	}
 
 	private void emitAttribute() {
-		if (attrName.equals("__gwt_row")) {
-			int debug = 3;
-		}
 		attributes.put(attrName, resolveEntities(attrValue));
 	}
 
@@ -304,7 +300,8 @@ public class HtmlParser {
 	}
 
 	private void emitComment(String string) {
-		// FIXME - probably add comments, PIs...
+		tag = null;
+		// FIXME - if ie<=9, hmm....panic?
 	}
 
 	private void emitEscapedText(String string) {

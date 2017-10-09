@@ -287,7 +287,6 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 */
 	final native NodeRemote insertBefore0(NodeRemote newChild,
 			NodeRemote refChild) /*-{
-				debugger;
         return this.insertBefore(newChild, refChild);
 	}-*/;
 

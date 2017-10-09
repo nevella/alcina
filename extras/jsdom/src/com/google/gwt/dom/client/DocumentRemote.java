@@ -528,12 +528,15 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 * @return the newly created element
 	 */
 	@Override
-	public native final Text createTextNode(String data) /*-{
-		var text_jso = this.createTextNode(data);
-		var textOut=@com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(text_jso);
-		return textOut;
-	}-*/;
+	public  final Text createTextNode(String data) {
+		TextRemote remote = createTextNode0(data);
+		return LocalDom.nodeFor(remote);
+	}
 
+	native final TextRemote createTextNode0(String data) /*-{
+		return this.createTextNode(data);
+	}-*/;
+	
 	@Override
 	public final TableSectionElement createTFootElement() {
 		return DomDocumentStatic.createTFootElement(this);

@@ -344,7 +344,7 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public final boolean hasAttribute(String name) {
-		return DomElement_Static.hasAttribute(this, name);
+		return attributes.containsKey(name);
 	}
 
 	@Override

@@ -15,6 +15,7 @@
  */
 package com.google.gwt.user.client.ui;
 
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Overflow;
@@ -371,8 +372,11 @@ public class ScrollPanel extends SimplePanel implements SourcesScrollEvents,
     setTouchScrollingDisabled(false);
 
     // Initialize the scrollable element.
-    scrollableElem.implAccess().ensureRemote();
-    containerElem.implAccess().ensureRemote();
-    ScrollImpl.get().initialize(scrollableElem, containerElem);
+    //FIXME - localdom2 - this gives edge-case resolution issues
+    Scheduler.get().scheduleFinally(()->{
+	    scrollableElem.implAccess().ensureRemote();
+	    containerElem.implAccess().ensureRemote();
+	    ScrollImpl.get().initialize(scrollableElem, containerElem);
+    });
   }
 }

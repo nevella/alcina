@@ -269,7 +269,6 @@ public class LocalDom {
 			return node.remote();
 		}
 		ensureFlush();
-		pendingResolution.add(node);
 		NodeRemote remote = null;
 		int nodeType = node.getNodeType();
 		switch (nodeType) {
@@ -278,13 +277,14 @@ public class LocalDom {
 			remote = ((DomDispatchRemote) DOMImpl.impl.remote)
 					.createElement(element.getTagName());
 			element.pendingResolution();
+			pendingResolution.add(node);
 			log(LocalDomDebug.CREATED_PENDING_RESOLUTION,
 					"created pending resolution node:" + element.getTagName());
 			break;
-		// case Node.TEXT_NODE:
-		// nodeDom = localDomImpl.createDomText(Document.get(),
-		// ((Text) node).getData());
-		// break;
+		case Node.TEXT_NODE:
+			remote = Document.get().typedRemote()
+					.createTextNode0(((Text) node).getData());
+			break;
 		// case Node.DOCUMENT_NODE:
 		// nodeDom = doc.domImpl();
 		// break;
@@ -474,6 +474,9 @@ public class LocalDom {
 	}
 
 	private void wasResolved(Element elem) {
+		if (wasResolvedEventId == 25) {
+			int debug = 3;
+		}
 		elem.local().walk(nl -> nl.node.wasResolved(wasResolvedEventId));
 		wasResolvedEventIdDirty = true;
 	}
