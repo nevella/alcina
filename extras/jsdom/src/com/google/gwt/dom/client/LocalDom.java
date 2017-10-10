@@ -41,12 +41,12 @@ public class LocalDom {
 
 	private boolean ie9;
 
-	public static NodeRemote ensurePendingResolutionNode(Node node) {
-		return get().ensurePendingResolutionNode0(node);
+	public static NodeRemote ensureRemoteNodeMaybePendingResolution(Node node) {
+		return get().ensureRemoteNodeMaybePendingResolution0(node);
 	}
 
-	public static void ensureRemote(Element element) {
-		get().ensureRemote0(element);
+	public static void ensureRemote(Node node) {
+		get().ensureRemote0(node);
 	}
 
 	public static void eventMod(NativeEvent evt, String eventName) {
@@ -264,7 +264,7 @@ public class LocalDom {
 		}
 	}
 
-	private NodeRemote ensurePendingResolutionNode0(Node node) {
+	private NodeRemote ensureRemoteNodeMaybePendingResolution0(Node node) {
 		if (node.linkedToRemote()) {
 			return node.remote();
 		}
@@ -296,11 +296,11 @@ public class LocalDom {
 		return remote;
 	}
 
-	private void ensureRemote0(Element element) {
+	private void ensureRemote0(Node node) {
 		flush0(true);
-		List<Element> ancestors = new ArrayList<>();
-		Element cursor = element;
-		Element withRemote = null;
+		List<Node> ancestors = new ArrayList<>();
+		Node cursor = node;
+		Node withRemote = null;
 		while (cursor != null) {
 			if (cursor.linkedToRemote()) {
 				withRemote = cursor;
@@ -313,14 +313,18 @@ public class LocalDom {
 		Collections.reverse(ancestors);
 		if (withRemote == null) {
 			// attaching with-remote to without-remote (say, a popup)
-			Element root = ancestors.get(0);
-			ensurePendingResolutionNode(root);
-			ensureRemote0(element);
+			Node root = ancestors.get(0);
+			ensureRemoteNodeMaybePendingResolution(root);
+			ensureRemote0(node);
 			return;
 		}
-		for (Element needsRemote : ancestors) {
+		for (Node needsRemote : ancestors) {
 			int idx = needsRemote.indexInParentChildren();
-			debugImpl.debugPutRemote(needsRemote, idx, withRemote);
+			if (needsRemote instanceof Element
+					&& withRemote instanceof Element) {
+				debugImpl.debugPutRemote((Element) needsRemote, idx,
+						(Element) withRemote);
+			}
 			NodeRemote remote = withRemote.typedRemote().getChildNodes0()
 					.getItem0(idx);
 			linkRemote(remote, needsRemote);
@@ -430,9 +434,25 @@ public class LocalDom {
 	}
 
 	private <T extends Node> T nodeFor0(NodeRemote remote) {
+		if (remote == null) {
+			return null;
+		}
 		T node = (T) remoteLookup.get(remote);
 		if (node != null) {
 			return node;
+		}
+		if (remote.provideIsText()) {
+			// FIXME - non-performant, but rare (exception for selectionish)
+			ElementRemote parentRemote = (ElementRemote) remote
+					.getParentNode0();
+			Node parent = nodeFor0(parentRemote);
+			int index = remote.indexInParentChildren();
+			Node childNode = parent.getChild(index);
+			childNode.putRemote(remote);
+			return (T) childNode;
+		}
+		if (!remote.provideIsElement()) {
+			return null;// say, shadowroot...
 		}
 		ElementRemote elem = (ElementRemote) remote;
 		ElementRemoteIndex remoteIndex = elem.provideRemoteIndex(false);

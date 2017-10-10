@@ -74,6 +74,20 @@ public class Text extends Node implements DomText {
 		remote().setData(data);
 	}
 
+	public TextImplAccess implAccess() {
+		return new TextImplAccess();
+	}
+
+	public class TextImplAccess {
+		public TextRemote typedRemote() {
+			return Text.this.typedRemote();
+		}
+	}
+
+	protected TextRemote typedRemote() {
+		return (TextRemote) remote();
+	}
+
 	public Text splitText(int offset) {
 		// FIXME - remote must use created text no9de
 		Text result = local().splitText(offset);
@@ -93,6 +107,9 @@ public class Text extends Node implements DomText {
 
 	@Override
 	protected void putRemote(NodeRemote remote) {
+		if (remote == null) {
+			int debug = 3;
+		}
 		this.remote = (DomText) remote;
 	}
 

@@ -100,5 +100,6 @@ public interface DomNode {
 	void callMethod(String methodName);
 
 	Node removeAllChildren();
-	
+
+	int indexInParentChildren();
 }

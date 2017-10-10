@@ -804,10 +804,6 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public final int indexInParentChildren() {
-		throw new UnsupportedOperationException();
-	}
 
 	@Override
 	public final void ensureId() {
@@ -1069,7 +1065,10 @@ public class ElementRemote extends NodeRemote implements DomElement {
             this.removeChild(this.lastChild);
         }
 	}-*/;
+
 	final native void removeFromParent0()/*-{
-		this.parentElement.removeChild(this);
+        this.parentElement.removeChild(this);
 	}-*/;
+
+	
 }

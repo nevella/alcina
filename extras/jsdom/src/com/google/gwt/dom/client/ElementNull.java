@@ -273,11 +273,6 @@ public class ElementNull extends NodeLocalNull
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public final int indexInParentChildren() {
-		throw new UnsupportedOperationException();
-	}
-
 	public void putElement(Element element) {
 	}
 
@@ -407,6 +402,7 @@ public class ElementNull extends NodeLocalNull
 	int orSunkEventsOfAllChildren(int sunk) {
 		throw new UnsupportedOperationException();
 	}
+
 	@Override
 	public String getOuterHtml() {
 		throw new UnsupportedOperationException();

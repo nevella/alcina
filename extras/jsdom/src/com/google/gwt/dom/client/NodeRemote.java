@@ -101,10 +101,10 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 			return node.remote();
 		} else {
 			if (node.provideWasFlushed()) {
-				LocalDom.ensureRemote((Element) node);
+				LocalDom.ensureRemote(node);
 				return node.remote();
 			} else {
-				return LocalDom.ensurePendingResolutionNode(node);
+				return LocalDom.ensureRemoteNodeMaybePendingResolution(node);
 			}
 		}
 	}
@@ -379,4 +379,22 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	final boolean provideIsElement() {
 		return getNodeType() == Node.ELEMENT_NODE;
 	}
+
+	final boolean provideIsText() {
+		return getNodeType() == Node.TEXT_NODE;
+	}
+
+	@Override
+	public final native int indexInParentChildren() /*-{
+        var idx = 0;
+        var size = parent.childNodes.length;
+        for (; idx < size; idx++) {
+            var node = parent.childNodes.item(idx);
+            if (node == child) {
+                return idx;
+            }
+            idx++;
+        }
+        return -1;
+	}-*/;
 }

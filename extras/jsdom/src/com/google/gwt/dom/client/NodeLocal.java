@@ -247,4 +247,9 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 		// TODO - trigger check of the registered element graph
 		parentNode = local;
 	}
+
+	@Override
+	public final int indexInParentChildren() {
+		return parentNode.children.indexOf(this);
+	}
 }

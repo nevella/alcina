@@ -303,8 +303,6 @@ public interface DomElement extends DomNode {
 
 	void sinkEvents(int eventBits);
 
-	int indexInParentChildren();
-
 	void ensureId();
 
 	String getOuterHtml();

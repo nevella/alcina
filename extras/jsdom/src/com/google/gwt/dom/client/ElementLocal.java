@@ -357,11 +357,6 @@ public class ElementLocal extends NodeLocal
 		return DomElement_Static.hasTagName(this, tagName);
 	}
 
-	@Override
-	public final int indexInParentChildren() {
-		return parentNode.children.indexOf(this);
-	}
-
 	public void putElement(Element element) {
 		this.element = element;
 		this.node = element;

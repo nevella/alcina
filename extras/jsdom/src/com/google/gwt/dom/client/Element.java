@@ -407,11 +407,6 @@ public class Element extends Node implements DomElement {
 		return new ElementImplAccess();
 	}
 
-	@Override
-	public int indexInParentChildren() {
-		return local().indexInParentChildren();
-	}
-
 	public boolean isPendingResolution() {
 		return this.pendingResolution;
 	}
@@ -720,7 +715,7 @@ public class Element extends Node implements DomElement {
 		this.remote = remote;
 	}
 
-	ElementRemote typedRemote() {
+	protected ElementRemote typedRemote() {
 		return (ElementRemote) remote();
 	}
 

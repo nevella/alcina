@@ -41,9 +41,6 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	 */
 	public static final short DOCUMENT_NODE = 9;
 
-	@Override
-	public abstract Node nodeFor();
-
 	/**
 	 * Assert that the given {@link JavaScriptObject} is a DOM node and
 	 * automatically typecast it.
@@ -83,13 +80,6 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	private int wasResolvedEventId;
 
 	protected Node() {
-	}
-
-	/**
-	 * only call on reparse
-	 */
-	void clearResolved() {
-		wasResolvedEventId = 0;
 	}
 
 	public <T extends Node> T appendChild(T newChild) {
@@ -206,8 +196,15 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		return local().isOrHasChild(child);
 	}
 
+	@Override
+	public abstract Node nodeFor();
+
 	public boolean provideIsElement() {
 		return getNodeType() == ELEMENT_NODE;
+	}
+
+	public boolean provideIsText() {
+		return getNodeType() == TEXT_NODE;
 	}
 
 	@Override
@@ -241,10 +238,6 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		local().setNodeValue(nodeValue);
 	}
 
-	boolean provideWasFlushed() {
-		return wasResolvedEventId > 0;
-	}
-
 	/**
 	 * If the node was flushed, then we need to link to the remote (or our
 	 * local/remote will be inconsistent)
@@ -254,8 +247,8 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		if (!linkedToRemote() && provideWasFlushed()
 				&& provideSelfOrAncestorLinkedToRemote() != null
 				&& !LocalDom.isDisableRemoteWrite()
-				&& getNodeType() == ELEMENT_NODE) {
-			LocalDom.ensureRemote((Element) this);
+				&& (provideIsText() || provideIsElement())) {
+			LocalDom.ensureRemote(this);
 		}
 	}
 
@@ -284,9 +277,27 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	protected abstract <T extends DomNode> T remote();
 
+	/**
+	 * only call on reparse
+	 */
+	void clearResolved() {
+		wasResolvedEventId = 0;
+	}
+
+	boolean provideWasFlushed() {
+		return wasResolvedEventId > 0;
+	}
+
 	void wasResolved(int wasResolvedEventId) {
 		Preconditions.checkState(this.wasResolvedEventId == 0
 				|| this.wasResolvedEventId == wasResolvedEventId);
 		this.wasResolvedEventId = wasResolvedEventId;
+	}
+
+	protected abstract NodeRemote typedRemote();
+
+	@Override
+	public int indexInParentChildren() {
+		return local().indexInParentChildren();
 	}
 }

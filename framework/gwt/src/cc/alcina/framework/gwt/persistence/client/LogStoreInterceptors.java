@@ -235,8 +235,14 @@ public class LogStoreInterceptors {
 	boolean areStatsMuted() {
 		return statsMuteCounter > 0;
 	}
-
-	final native String getClassName(Element elem_multi) /*-{
+	final  String getClassName(Element elem_multi){
+		if(!elem_multi.implAccess().linkedToRemote()){
+			return elem_multi.getClassName();
+		}else{
+			return getClassName0(elem_multi);
+		}
+	}
+	final native String getClassName0(Element elem_multi) /*-{
 		var elem = elem_multi.@com.google.gwt.dom.client.Element::typedRemote()();
         var cn = elem.className;
         //note - someone says IE DOM objects don't support - hence try/catch
