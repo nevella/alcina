@@ -470,10 +470,12 @@ public class WidgetUtils {
 	}-*/;
 
 	public static native int getOffsetHeightWithMargins(Element elem) /*-{
-        if (elem.style.display == 'none') {
+		var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
+        var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
+        if (remote.style.display == 'none') {
             return 0;
         }
-        var h = elem.offsetHeight;
+        var h = remote.offsetHeight;
         var marginTop = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
         var marginBottom = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
         if (marginTop.indexOf("px") != -1) {

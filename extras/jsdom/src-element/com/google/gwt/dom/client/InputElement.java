@@ -79,7 +79,7 @@ public class InputElement extends Element {
 	}
 
 	public final void click() {
-		click0(typedRemote());
+		click0(ensureRemote());
 	}
 
 	/**

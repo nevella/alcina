@@ -54,7 +54,7 @@ public class LocalDom {
 	}
 
 	public static void flush() {
-		get().flush0();
+		get().resolve0();
 	}
 
 	public static boolean isDisableRemoteWrite() {
@@ -90,11 +90,6 @@ public class LocalDom {
 
 	private void linkRemote(NodeRemote remote, Node node) {
 		Preconditions.checkState(!remoteLookup.containsKey(remote));
-		// Ax.out("put: %s %s - %s", node.getNodeName(), remote.hashCode(),
-		// node.hashCode());
-		// if (node.getNodeName().equals("tfoot")) {
-		// int debug = 3;
-		// }
 		remoteLookup.put(remote, node);
 	}
 
@@ -153,13 +148,13 @@ public class LocalDom {
 
 	List<Node> pendingResolution = new ArrayList<>();
 
-	ScheduledCommand flushCommand = null;
+	ScheduledCommand resolveCommand = null;
 
-	private int wasResolvedEventId = 1;
+	private int resolutionEventId = 1;
 
-	private boolean wasResolvedEventIdDirty;
+	private boolean resolutionEventIdDirty;
 
-	private boolean flushing;
+	private boolean resolving;
 
 	public LocalDom() {
 		remoteLookup = new LinkedHashMap<>();
@@ -196,7 +191,8 @@ public class LocalDom {
 		} else {
 			remote.setInnerHTML(innerHTML);
 		}
-		log(LocalDomDebug.FLUSH, "%s - uiobj: %s - \n%s", element.getTagName(),
+		log(LocalDomDebug.RESOLVE, "%s - uiobj: %s - \n%s",
+				element.getTagName(),
 				Optional.ofNullable(element.uiObject)
 						.map(ui -> ui.getClass().getSimpleName())
 						.orElse("(null)"),
@@ -258,9 +254,9 @@ public class LocalDom {
 	}
 
 	private void ensureFlush() {
-		if (flushCommand == null) {
-			flushCommand = () -> flush();
-			Scheduler.get().scheduleFinally(flushCommand);
+		if (resolveCommand == null) {
+			resolveCommand = () -> flush();
+			Scheduler.get().scheduleFinally(resolveCommand);
 		}
 	}
 
@@ -292,12 +288,12 @@ public class LocalDom {
 			throw new UnsupportedOperationException();
 		}
 		linkRemote(remote, node);
-		node.putRemote(remote);
+		node.putRemote(remote, false);
 		return remote;
 	}
 
 	private void ensureRemote0(Node node) {
-		flush0(true);
+		resolve0(true);
 		List<Node> ancestors = new ArrayList<>();
 		Node cursor = node;
 		Node withRemote = null;
@@ -328,7 +324,7 @@ public class LocalDom {
 			NodeRemote remote = withRemote.typedRemote().getChildNodes0()
 					.getItem0(idx);
 			linkRemote(remote, needsRemote);
-			needsRemote.putRemote(remote);
+			needsRemote.putRemote(remote, true);
 			withRemote = needsRemote;
 		}
 	}
@@ -448,7 +444,7 @@ public class LocalDom {
 			Node parent = nodeFor0(parentRemote);
 			int index = remote.indexInParentChildren();
 			Node childNode = parent.getChild(index);
-			childNode.putRemote(remote);
+			childNode.putRemote(remote, true);
 			return (T) childNode;
 		}
 		if (!remote.provideIsElement()) {
@@ -462,7 +458,7 @@ public class LocalDom {
 			ElementRemote root = remoteIndex.root();
 			Element hasNode = parse(root, null);
 			linkRemote(root, hasNode);
-			hasNode.putRemote(root);
+			hasNode.putRemote(root, true);
 			hasNodeRemote = root;
 		}
 		Element hasNode = (Element) remoteLookup.get(hasNodeRemote);
@@ -479,7 +475,7 @@ public class LocalDom {
 			cursor.resolveRemoteDefined();
 			Element child = (Element) cursor.getChild(nodeIndex);
 			NodeRemote childRemote = (NodeRemote) ancestors.get(idx);
-			child.putRemote(childRemote);
+			child.putRemote(childRemote, true);
 			linkRemote(childRemote, child);
 			cursor = child;
 		}
@@ -494,41 +490,38 @@ public class LocalDom {
 	}
 
 	private void wasResolved(Element elem) {
-		if (wasResolvedEventId == 25) {
-			int debug = 3;
-		}
-		elem.local().walk(nl -> nl.node.wasResolved(wasResolvedEventId));
-		wasResolvedEventIdDirty = true;
+		elem.local().walk(nl -> nl.node.resolved(resolutionEventId));
+		resolutionEventIdDirty = true;
 	}
 
-	void flush0() {
-		flush0(false);
+	void resolve0() {
+		resolve0(false);
 	}
 
-	void flush0(boolean force) {
-		if (flushing) {
+	void resolve0(boolean force) {
+		if (resolving) {
 			return;
 		}
-		if (flushCommand == null && !force) {
+		if (resolveCommand == null && !force) {
 			return;
 		}
-		flushCommand = null;
-		log(LocalDomDebug.FLUSH, "**flush**");
+		resolveCommand = null;
+		log(LocalDomDebug.RESOLVE, "**resolve**");
 		try {
-			flushing = true;
-			if (wasResolvedEventIdDirty) {
-				wasResolvedEventId++;
-				wasResolvedEventIdDirty = false;
+			resolving = true;
+			if (resolutionEventIdDirty) {
+				resolutionEventId++;
+				resolutionEventIdDirty = false;
 			}
 			new ArrayList<>(pendingResolution).stream()
 					.forEach(this::ensurePendingResolved);
 			requiresSync.removeIf(elem -> resolveSync(elem));
-			if (wasResolvedEventIdDirty) {
-				wasResolvedEventId++;
+			if (resolutionEventIdDirty) {
+				resolutionEventId++;
 			}
 		} finally {
-			wasResolvedEventIdDirty = false;
-			flushing = false;
+			resolutionEventIdDirty = false;
+			resolving = false;
 		}
 	}
 
@@ -598,5 +591,26 @@ public class LocalDom {
 	private boolean isPending0(NodeRemote nodeRemote) {
 		return pendingResolution.size() > 0 && pendingResolution.stream()
 				.anyMatch(n -> n.remote() == nodeRemote);
+	}
+
+	public static void detach(Node node) {
+		if (node.wasResolved()) {
+			LocalDom instance = get();
+			node.local().walk(nl -> {
+				if (nl.node.linkedToRemote()) {
+					instance.removeReference(nl.node.typedRemote());
+				}
+			});
+		}
+	}
+
+	private void removeReference(NodeRemote typedRemote) {
+		Node node = get().remoteLookup.get(typedRemote);
+		if (node != null && node.provideIsElement()) {
+			Element element = (Element) node;
+			pendingResolution.remove(element);
+			requiresSync.remove(element);
+		}
+		get().remoteLookup.remove(typedRemote);
 	}
 }

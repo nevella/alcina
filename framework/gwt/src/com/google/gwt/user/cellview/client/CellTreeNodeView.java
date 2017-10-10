@@ -1285,14 +1285,13 @@ void setKeyboardSelected(boolean selected, boolean stealFocus) {
 	cellParent.removeAttribute("accessKey");
 	} else {
 	FocusImpl focusImpl = FocusImpl.getFocusImplForWidget();
-	com.google.gwt.user.client.Element cellElem = cellParent.cast();
-	focusImpl.setTabIndex(cellElem, tree.getTabIndex());
+	focusImpl.setTabIndex(cellParent, tree.getTabIndex());
 	char accessKey = tree.getAccessKey();
 	if (accessKey != 0) {
-		focusImpl.setAccessKey(cellElem, accessKey);
+		focusImpl.setAccessKey(cellParent, accessKey);
 	}
 	if (stealFocus && !tree.cellIsEditing) {
-		cellElem.focus();
+		cellParent.focus();
 	}
 	}
 

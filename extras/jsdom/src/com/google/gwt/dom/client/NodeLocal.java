@@ -244,7 +244,6 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 	abstract void appendTextContent(StringBuilder builder);
 
 	void setParentNode(NodeLocal local) {
-		// TODO - trigger check of the registered element graph
 		parentNode = local;
 	}
 

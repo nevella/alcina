@@ -1762,4 +1762,8 @@ public class Style implements DomStyle {
 		Style style = (Style) domStyle;
 		local().cloneStyleFrom(style.local(), this);
 	}
+
+	void detachFromRemote() {
+		remote = StyleNull.INSTANCE;
+	}
 }

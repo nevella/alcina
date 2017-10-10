@@ -19,7 +19,7 @@ public class LocalDomDebugImpl {
 		}
 		if (!debugAll) {
 			switch (channel) {
-			case FLUSH:
+			case RESOLVE:
 			case DOM_EVENT:
 			case REQUIRES_SYNC:
 			case CREATED_PENDING_RESOLUTION:

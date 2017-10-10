@@ -15,6 +15,10 @@
  */
 package com.google.gwt.dom.client;
 
+import com.google.common.base.Preconditions;
+
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  * The Text interface represents textual content.
  */
@@ -54,7 +58,12 @@ public class Text extends Node implements DomText {
 		return local().getLength();
 	}
 
+	public TextImplAccess implAccess() {
+		return new TextImplAccess();
+	}
+
 	public void insertData(int offset, String data) {
+		ensureRemoteCheck();
 		local().insertData(offset, data);
 		remote().insertData(offset, data);
 	}
@@ -65,35 +74,25 @@ public class Text extends Node implements DomText {
 	}
 
 	public void replaceData(int offset, int length, String data) {
+		ensureRemoteCheck();
 		local().replaceData(offset, length, data);
 		remote().replaceData(offset, length, data);
 	}
 
 	public void setData(String data) {
+		ensureRemoteCheck();
 		local().setData(data);
 		remote().setData(data);
 	}
 
-	public TextImplAccess implAccess() {
-		return new TextImplAccess();
-	}
-
-	public class TextImplAccess {
-		public TextRemote typedRemote() {
-			return Text.this.typedRemote();
-		}
-	}
-
-	protected TextRemote typedRemote() {
-		return (TextRemote) remote();
-	}
-
 	public Text splitText(int offset) {
-		// FIXME - remote must use created text no9de
-		Text result = local().splitText(offset);
-		remote().splitText(offset);
-		return result;
+		throw new UnsupportedOperationException();
+		// // FIXME - remote must use created text no9de
+		// Text result = local().splitText(offset);
+		// remote().splitText(offset);
+		// return result;
 	}
+
 
 	@Override
 	protected boolean linkedToRemote() {
@@ -106,15 +105,28 @@ public class Text extends Node implements DomText {
 	}
 
 	@Override
-	protected void putRemote(NodeRemote remote) {
-		if (remote == null) {
-			int debug = 3;
-		}
+	protected void putRemote(NodeRemote remote,boolean resolved) {
+		Preconditions.checkState(wasResolved()==resolved);
 		this.remote = (DomText) remote;
 	}
 
 	@Override
 	protected DomText remote() {
 		return remote;
+	}
+
+	protected TextRemote typedRemote() {
+		return (TextRemote) remote();
+	}
+
+	public class TextImplAccess {
+		public TextRemote typedRemote() {
+			return Text.this.typedRemote();
+		}
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("#TEXT[%s]", local().getData());
 	}
 }

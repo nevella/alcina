@@ -15,6 +15,7 @@
  */
 package com.google.gwt.dom.client;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 
 /**
@@ -59,7 +60,7 @@ public class Document extends Node implements DomDocument {
 	}
 
 	public <T extends Node> T appendChild(T newChild) {
-		return local.appendChild(newChild);
+		throw new UnsupportedOperationException();
 	}
 
 	public Document cast() {
@@ -144,8 +145,8 @@ public class Document extends Node implements DomDocument {
 	public NativeEvent createDblClickEvent(int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey) {
-		return typedRemote().createDblClickEvent(detail, screenX, screenY, clientX,
-				clientY, ctrlKey, altKey, shiftKey, metaKey);
+		return typedRemote().createDblClickEvent(detail, screenX, screenY,
+				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey);
 	}
 
 	public ModElement createDelElement() {
@@ -241,45 +242,45 @@ public class Document extends Node implements DomDocument {
 
 	public NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode) {
-		return typedRemote().createKeyDownEvent(ctrlKey, altKey, shiftKey, metaKey,
-				keyCode);
+		return typedRemote().createKeyDownEvent(ctrlKey, altKey, shiftKey,
+				metaKey, keyCode);
 	}
 
 	public NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return typedRemote().createKeyDownEvent(ctrlKey, altKey, shiftKey, metaKey,
-				keyCode, charCode);
+		return typedRemote().createKeyDownEvent(ctrlKey, altKey, shiftKey,
+				metaKey, keyCode, charCode);
 	}
 
 	public NativeEvent createKeyEvent(String type, boolean canBubble,
 			boolean cancelable, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return typedRemote().createKeyEvent(type, canBubble, cancelable, ctrlKey,
-				altKey, shiftKey, metaKey, keyCode, charCode);
+		return typedRemote().createKeyEvent(type, canBubble, cancelable,
+				ctrlKey, altKey, shiftKey, metaKey, keyCode, charCode);
 	}
 
 	public NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int charCode) {
-		return typedRemote().createKeyPressEvent(ctrlKey, altKey, shiftKey, metaKey,
-				charCode);
+		return typedRemote().createKeyPressEvent(ctrlKey, altKey, shiftKey,
+				metaKey, charCode);
 	}
 
 	public NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return typedRemote().createKeyPressEvent(ctrlKey, altKey, shiftKey, metaKey,
-				keyCode, charCode);
+		return typedRemote().createKeyPressEvent(ctrlKey, altKey, shiftKey,
+				metaKey, keyCode, charCode);
 	}
 
 	public NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode) {
-		return typedRemote().createKeyUpEvent(ctrlKey, altKey, shiftKey, metaKey,
-				keyCode);
+		return typedRemote().createKeyUpEvent(ctrlKey, altKey, shiftKey,
+				metaKey, keyCode);
 	}
 
 	public NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return typedRemote().createKeyUpEvent(ctrlKey, altKey, shiftKey, metaKey,
-				keyCode, charCode);
+		return typedRemote().createKeyUpEvent(ctrlKey, altKey, shiftKey,
+				metaKey, keyCode, charCode);
 	}
 
 	public LabelElement createLabelElement() {
@@ -313,8 +314,8 @@ public class Document extends Node implements DomDocument {
 	public NativeEvent createMouseDownEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		return typedRemote().createMouseDownEvent(detail, screenX, screenY, clientX,
-				clientY, ctrlKey, altKey, shiftKey, metaKey, button);
+		return typedRemote().createMouseDownEvent(detail, screenX, screenY,
+				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button);
 	}
 
 	public NativeEvent createMouseEvent(String type, boolean canBubble,
@@ -322,24 +323,24 @@ public class Document extends Node implements DomDocument {
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return typedRemote().createMouseEvent(type, canBubble, cancelable, detail,
-				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
-				metaKey, button, relatedTarget);
+		return typedRemote().createMouseEvent(type, canBubble, cancelable,
+				detail, screenX, screenY, clientX, clientY, ctrlKey, altKey,
+				shiftKey, metaKey, button, relatedTarget);
 	}
 
 	public NativeEvent createMouseMoveEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		return typedRemote().createMouseMoveEvent(detail, screenX, screenY, clientX,
-				clientY, ctrlKey, altKey, shiftKey, metaKey, button);
+		return typedRemote().createMouseMoveEvent(detail, screenX, screenY,
+				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button);
 	}
 
 	public NativeEvent createMouseOutEvent(int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return typedRemote().createMouseOutEvent(detail, screenX, screenY, clientX,
-				clientY, ctrlKey, altKey, shiftKey, metaKey, button,
+		return typedRemote().createMouseOutEvent(detail, screenX, screenY,
+				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button,
 				relatedTarget);
 	}
 
@@ -347,16 +348,16 @@ public class Document extends Node implements DomDocument {
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return typedRemote().createMouseOverEvent(detail, screenX, screenY, clientX,
-				clientY, ctrlKey, altKey, shiftKey, metaKey, button,
+		return typedRemote().createMouseOverEvent(detail, screenX, screenY,
+				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button,
 				relatedTarget);
 	}
 
 	public NativeEvent createMouseUpEvent(int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int button) {
-		return typedRemote().createMouseUpEvent(detail, screenX, screenY, clientX,
-				clientY, ctrlKey, altKey, shiftKey, metaKey, button);
+		return typedRemote().createMouseUpEvent(detail, screenX, screenY,
+				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button);
 	}
 
 	public ObjectElement createObjectElement() {
@@ -660,47 +661,17 @@ public class Document extends Node implements DomDocument {
 		remote.importNode(node, deep);
 	}
 
-	public Node insertAfter(Node newChild, Node refChild) {
-		Node result = local.insertAfter(newChild, refChild);
-		remote.insertAfter(newChild, refChild);
-		return result;
-	}
-
-	public Node insertBefore(Node newChild, Node refChild) {
-		Node result = local.insertBefore(newChild, refChild);
-		remote.insertBefore(newChild, refChild);
-		return result;
-	}
-
-	public Node insertFirst(Node child) {
-		Node result = local.insertFirst(child);
-		remote.insertFirst(child);
-		return result;
-	}
-
 	public boolean isCSS1Compat() {
 		return remote.isCSS1Compat();
 	}
 
 	@Override
-	public void putRemote(NodeRemote nodeDom) {
+	protected void putRemote(NodeRemote remote,boolean resolved) {
 		throw new UnsupportedOperationException();
-	}
-
-	public Node removeChild(Node oldChild) {
-		Node result = local.removeChild(oldChild);
-		remote.removeChild(oldChild);
-		return result;
 	}
 
 	public void removeFromParent() {
 		throw new UnsupportedOperationException();
-	}
-
-	public Node replaceChild(Node newChild, Node oldChild) {
-		Node result = local.replaceChild(newChild, oldChild);
-		remote.replaceChild(newChild, oldChild);
-		return result;
 	}
 
 	public void setNodeValue(String nodeValue) {
@@ -747,4 +718,5 @@ public class Document extends Node implements DomDocument {
 	public DocumentRemote typedRemote() {
 		return (DocumentRemote) remote;
 	}
+
 }

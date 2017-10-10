@@ -100,7 +100,7 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 		if (node.linkedToRemote()) {
 			return node.remote();
 		} else {
-			if (node.provideWasFlushed()) {
+			if (node.wasResolved()) {
 				LocalDom.ensureRemote(node);
 				return node.remote();
 			} else {
@@ -387,13 +387,12 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	@Override
 	public final native int indexInParentChildren() /*-{
         var idx = 0;
-        var size = parent.childNodes.length;
+        var size = this.parentNode.childNodes.length;
         for (; idx < size; idx++) {
-            var node = parent.childNodes.item(idx);
-            if (node == child) {
+            var node = this.parentNode.childNodes.item(idx);
+            if (node == this) {
                 return idx;
             }
-            idx++;
         }
         return -1;
 	}-*/;

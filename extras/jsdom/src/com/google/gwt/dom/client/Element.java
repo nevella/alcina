@@ -15,8 +15,10 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -31,7 +33,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.util.TextUtils;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * All HTML element interfaces derive from this class.
@@ -238,9 +239,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	public NodeList<Element> getElementsByTagName(String name) {
-		if (!linkedToRemote()) {
-			throw new UnsupportedOperationException();
-		}
+		ensureRemote();
 		return remote().getElementsByTagName(name);
 	}
 
@@ -424,7 +423,8 @@ public class Element extends Node implements DomElement {
 	}
 
 	@Override
-	public void putRemote(NodeRemote remote) {
+	protected void putRemote(NodeRemote remote,boolean resolved) {
+		Preconditions.checkState(wasResolved()==resolved);
 		Preconditions.checkState(
 				this.remote == ElementNull.INSTANCE || remote == this.remote);
 		this.remote = (ElementRemote) remote;
@@ -438,6 +438,7 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	public Node removeAllChildren() {
+		getChildNodes().forEach(n->doPreTreeResolution(n));
 		local().removeAllChildren();
 		remote().removeAllChildren();
 		return this;
@@ -507,24 +508,33 @@ public class Element extends Node implements DomElement {
 	public void setInnerHTML(String html) {
 		ensureRemoteCheck();
 		clearResolved();
+		List<Node> oldChildren = getChildNodes().stream()
+				.collect(Collectors.toList());
 		local().setInnerHTML(html);
 		remote().setInnerHTML(html);
+		oldChildren.forEach(LocalDom::detach);
 		LocalDom.checkRequiresSync(local());
 	}
 
 	public void setInnerSafeHtml(SafeHtml html) {
 		ensureRemoteCheck();
 		clearResolved();
+		List<Node> oldChildren = getChildNodes().stream()
+				.collect(Collectors.toList());
 		local().setInnerSafeHtml(html);
 		remote().setInnerSafeHtml(html);
+		oldChildren.forEach(LocalDom::detach);
 		LocalDom.checkRequiresSync(local());
 	}
 
 	public void setInnerText(String text) {
 		ensureRemoteCheck();
 		clearResolved();
+		List<Node> oldChildren = getChildNodes().stream()
+				.collect(Collectors.toList());
 		local().setInnerText(text);
 		remote().setInnerText(text);
+		oldChildren.forEach(LocalDom::detach);
 	}
 
 	public void setLang(String lang) {
@@ -648,7 +658,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	private DomElement implForPropertyName(String name) {
-		if (!provideWasFlushed()) {
+		if (!wasResolved()) {
 			return local();
 		}
 		ensureRemoteCheck();
@@ -747,5 +757,11 @@ public class Element extends Node implements DomElement {
 		public ElementRemote typedRemoteOrNull() {
 			return linkedToRemote() ? Element.this.typedRemote() : null;
 		}
+
+		public boolean wasResolved() {
+			return Element.this.wasResolved();
+		}
 	}
+
+	
 }

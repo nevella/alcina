@@ -70,26 +70,37 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	 * error: "Permission denied to access property 'nodeType'"
 	 */
 	private static native boolean isJso(JavaScriptObject o) /*-{
-															try {
-															return (!!o) && (!!o.nodeType);
-															} catch (e) {
-															return false;
-															}
-															}-*/;
+        try {
+            return (!!o) && (!!o.nodeType);
+        } catch (e) {
+            return false;
+        }
+	}-*/;
 
-	private int wasResolvedEventId;
+	private int resolvedEventId;
 
 	protected Node() {
 	}
 
 	public <T extends Node> T appendChild(T newChild) {
-		if (newChild.linkedToRemote() && !linkedToRemote()) {
-			LocalDom.ensureRemote((Element) this);
-		}
-		ensureRemoteCheck();
+		doPreTreeResolution(newChild);
 		T node = local().appendChild(newChild);
 		remote().appendChild(newChild);
 		return node;
+	}
+
+	protected void doPreTreeResolution(Node child) {
+		if (child != null) {
+			boolean ensureBecauseChildResolved = child.wasResolved()
+					&& !linkedToRemote();
+			if (ensureBecauseChildResolved) {
+				LocalDom.ensureRemote(this);
+			}
+			if (linkedToRemote() && child.wasResolved()) {
+				LocalDom.ensureRemote(child);
+			}
+		}
+		boolean linkedBecauseFlushed = ensureRemoteCheck();
 	}
 
 	@Override
@@ -174,14 +185,9 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	}
 
 	public Node insertBefore(Node newChild, Node refChild) {
-		ensureRemoteCheck();
-		if (newChild.linkedToRemote() && !linkedToRemote()) {
-			LocalDom.ensureRemote((Element) this);
-		}
-		// must do this before inserting in local tree
-		if (refChild != null) {
-			refChild.ensureRemoteCheck();
-		}
+		// new child first
+		doPreTreeResolution(newChild);
+		doPreTreeResolution(refChild);
 		Node result = local().insertBefore(newChild, refChild);
 		remote().insertBefore(newChild, refChild);
 		return result;
@@ -213,10 +219,10 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	}
 
 	public Node removeChild(Node oldChild) {
-		ensureRemoteCheck();
-		oldChild.ensureRemoteCheck();
+		doPreTreeResolution(oldChild);
 		Node result = local().removeChild(oldChild);
 		remote().removeChild(oldChild);
+		LocalDom.detach(oldChild);
 		return result;
 	}
 
@@ -226,10 +232,11 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	}
 
 	public Node replaceChild(Node newChild, Node oldChild) {
-		ensureRemoteCheck();
-		oldChild.ensureRemoteCheck();
+		doPreTreeResolution(oldChild);
+		doPreTreeResolution(newChild);
 		Node result = local().replaceChild(newChild, oldChild);
 		remote().replaceChild(newChild, oldChild);
+		LocalDom.detach(oldChild);
 		return result;
 	}
 
@@ -243,12 +250,15 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	 * local/remote will be inconsistent)
 	 * 
 	 */
-	protected void ensureRemoteCheck() {
-		if (!linkedToRemote() && provideWasFlushed()
+	protected boolean ensureRemoteCheck() {
+		if (!linkedToRemote() && wasResolved()
 				&& provideSelfOrAncestorLinkedToRemote() != null
 				&& !LocalDom.isDisableRemoteWrite()
 				&& (provideIsText() || provideIsElement())) {
 			LocalDom.ensureRemote(this);
+			return true;
+		} else {
+			return false;
 		}
 	}
 
@@ -273,7 +283,7 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		return null;
 	}
 
-	protected abstract void putRemote(NodeRemote nodeDom);
+	protected abstract void putRemote(NodeRemote nodeDom, boolean resolved);
 
 	protected abstract <T extends DomNode> T remote();
 
@@ -281,17 +291,17 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	 * only call on reparse
 	 */
 	void clearResolved() {
-		wasResolvedEventId = 0;
+		resolvedEventId = 0;
 	}
 
-	boolean provideWasFlushed() {
-		return wasResolvedEventId > 0;
+	boolean wasResolved() {
+		return resolvedEventId > 0;
 	}
 
-	void wasResolved(int wasResolvedEventId) {
-		Preconditions.checkState(this.wasResolvedEventId == 0
-				|| this.wasResolvedEventId == wasResolvedEventId);
-		this.wasResolvedEventId = wasResolvedEventId;
+	void resolved(int wasResolvedEventId) {
+		Preconditions.checkState(this.resolvedEventId == 0
+				|| this.resolvedEventId == wasResolvedEventId);
+		this.resolvedEventId = wasResolvedEventId;
 	}
 
 	protected abstract NodeRemote typedRemote();

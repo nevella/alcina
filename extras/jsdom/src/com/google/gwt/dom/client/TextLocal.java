@@ -1,5 +1,7 @@
 package com.google.gwt.dom.client;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 public class TextLocal extends NodeLocal implements DomText {
 	private String text;
 
@@ -81,5 +83,8 @@ public class TextLocal extends NodeLocal implements DomText {
 		builder.append(getData());
 	}
 
-	
+	@Override
+	public String toString() {
+		return Ax.format("#TEXT[%s]", getData());
+	}
 }

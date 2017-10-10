@@ -53,7 +53,6 @@ public class HtmlParser {
 		if (html == null) {
 		}
 		String innerHtml = null;
-		;
 		if (root instanceof ElementRemote) {
 			innerHtml = ((ElementRemote) root).getInnerHTML0();
 		}
