@@ -1071,7 +1071,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return msg;
 	}
 
-	protected HttpServletRequest getCrossServletThreadLocalRequest() {
+	public static HttpServletRequest getCrossServletThreadLocalRequest() {
 		return LooseContext.get(
 				CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_REQUEST);
 	}
