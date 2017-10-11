@@ -50,12 +50,15 @@ public class HtmlParser {
 		resetBuilder();
 		tokenState = TokenState.EXPECTING_NODE;
 		html = root.getOuterHtml();
-		if (html == null) {
-		}
 		String innerHtml = null;
-		if (root instanceof ElementRemote) {
-			innerHtml = ((ElementRemote) root).getInnerHTML0();
-		}
+		// if (root instanceof ElementRemote) {
+		// innerHtml = ((ElementRemote) root).getInnerHTML0();
+		// String provideRemoteDomTree = ((ElementRemote)
+		// root).provideRemoteDomTree();
+		// if (innerHtml.contains("Provocation at common law")) {
+		// int debug = 3;
+		// }
+		// }
 		LocalDom.setDisableRemoteWrite(true);
 		if (replaceContents != null) {
 			replaceContents.local().setInnerHTML(null);
@@ -94,30 +97,34 @@ public class HtmlParser {
 				break;
 			case EXPECTING_TAG:
 				selfCloseTag = false;
-				if (isWhiteSpace) {
-					tag = builder.toString();
+				String tagLookahead = builder.toString();
+				if (tagLookahead.equals("!--")) {
+					tag = tagLookahead;
 					resetBuilder();
-					if (tag.equals("!--")) {
-						tokenState = TokenState.EXPECTING_COMMENT;
-					} else {
-						tokenState = TokenState.EXPECTING_ATTRIBUTES;
-					}
+					builder.append(c);
+					tokenState = TokenState.EXPECTING_COMMENT;
 				} else {
-					switch (c) {
-					case '/':
-						if (builder.length() > 0) {
-							selfCloseTag = true;
-						} else {
-							builder.append(c);
-						}
-						break;
-					case '>':
-						emitElement();
+					if (isWhiteSpace) {
+						tag = tagLookahead;
 						resetBuilder();
-						break;
-					default:
-						builder.append(c);
-						break;
+						tokenState = TokenState.EXPECTING_ATTRIBUTES;
+					} else {
+						switch (c) {
+						case '/':
+							if (builder.length() > 0) {
+								selfCloseTag = true;
+							} else {
+								builder.append(c);
+							}
+							break;
+						case '>':
+							emitElement();
+							resetBuilder();
+							break;
+						default:
+							builder.append(c);
+							break;
+						}
 					}
 				}
 				break;
@@ -300,6 +307,10 @@ public class HtmlParser {
 
 	private void emitComment(String string) {
 		tag = null;
+		if (string.matches("\\?.+\\?")) {
+			// FIXME - make this a real PI
+			emitText(string);
+		}
 		// FIXME - if ie<=9, hmm....panic?
 	}
 

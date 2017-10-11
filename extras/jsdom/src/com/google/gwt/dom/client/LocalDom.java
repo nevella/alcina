@@ -39,14 +39,30 @@ public class LocalDom {
 
 	private static boolean disableRemoteWrite;
 
-	private boolean ie9;
+	public static void checkRequiresSync(ElementLocal elementLocal) {
+		if (disableRemoteWrite || !elementLocal.requiresSync) {
+			return;
+		}
+		get().requiresSync0(elementLocal);
+	}
 
-	public static NodeRemote ensureRemoteNodeMaybePendingResolution(Node node) {
-		return get().ensureRemoteNodeMaybePendingResolution0(node);
+	public static void detach(Node node) {
+		if (node.wasResolved()) {
+			LocalDom instance = get();
+			node.local().walk(nl -> {
+				if (nl.node.linkedToRemote()) {
+					instance.removeReference(nl.node.typedRemote());
+				}
+			});
+		}
 	}
 
 	public static void ensureRemote(Node node) {
 		get().ensureRemote0(node);
+	}
+
+	public static NodeRemote ensureRemoteNodeMaybePendingResolution(Node node) {
+		return get().ensureRemoteNodeMaybePendingResolution0(node);
 	}
 
 	public static void eventMod(NativeEvent evt, String eventName) {
@@ -59,6 +75,10 @@ public class LocalDom {
 
 	public static boolean isDisableRemoteWrite() {
 		return disableRemoteWrite;
+	}
+
+	public static boolean isPending(NodeRemote nodeRemote) {
+		return get().isPending0(nodeRemote);
 	}
 
 	public static boolean isStopPropogation(NativeEvent evt) {
@@ -88,17 +108,16 @@ public class LocalDom {
 		}
 	}
 
-	private void linkRemote(NodeRemote remote, Node node) {
-		Preconditions.checkState(!remoteLookup.containsKey(remote));
-		remoteLookup.put(remote, node);
-	}
-
 	public static void setDisableRemoteWrite(boolean disableRemoteWrite) {
 		LocalDom.disableRemoteWrite = disableRemoteWrite;
 	}
 
 	public static void setUseRemoteDom(boolean useRemoteDom) {
 		LocalDom.useRemoteDom = useRemoteDom;
+	}
+
+	public static void syncToRemote(Element element) {
+		get().parse(element.typedRemote(), element);
 	}
 
 	private static LocalDom get() {
@@ -138,6 +157,8 @@ public class LocalDom {
 		return get().remoteLookup.containsKey(remote);
 	}
 
+	static boolean ie9;
+
 	LocalDomDebugImpl debugImpl = new LocalDomDebugImpl();
 
 	private Map<NodeRemote, Node> remoteLookup;
@@ -156,9 +177,14 @@ public class LocalDom {
 
 	private boolean resolving;
 
+	static boolean emitCommentPisAsText;
+
+	Set<Element> requiresSync = new LinkedHashSet<>();
+
 	public LocalDom() {
 		remoteLookup = new LinkedHashMap<>();
 		ie9 = BrowserMod.isIE9();
+		emitCommentPisAsText = true;
 		if (collections == null) {
 			initStatics();
 		}
@@ -172,76 +198,6 @@ public class LocalDom {
 			DomElement local = node.local();
 			localToRemote(element, remote, local);
 		}
-	}
-
-	private void localToRemote(Element element, ElementRemote remote,
-			DomElement local) {
-		String innerHTML = local.getInnerHTML();
-		if (ie9) {
-			switch (element.getTagName()) {
-			case "table":
-				remote = writeIe9Table((TableElement) element, remote);
-				break;
-			case "tr":
-				remote = writeIe9Tr((TableRowElement) element, remote);
-				break;
-			default:
-				remote.setInnerHTML(innerHTML);
-			}
-		} else {
-			remote.setInnerHTML(innerHTML);
-		}
-		log(LocalDomDebug.RESOLVE, "%s - uiobj: %s - \n%s",
-				element.getTagName(),
-				Optional.ofNullable(element.uiObject)
-						.map(ui -> ui.getClass().getSimpleName())
-						.orElse("(null)"),
-				CommonUtils.trimToWsChars(innerHTML, 1000));
-		ElementRemote f_remote = remote;
-		// doesn't include style
-		local.getAttributes().entrySet().forEach(e -> {
-			switch (e.getKey()) {
-			case "text":
-				f_remote.setPropertyString(e.getKey(), e.getValue());
-				break;
-			default:
-				f_remote.setAttribute(e.getKey(), e.getValue());
-				break;
-			}
-		});
-		local.getStyle().getProperties().entrySet().forEach(e -> {
-			StyleRemote remoteStyle = f_remote.getStyle0();
-			remoteStyle.setProperty(e.getKey(), e.getValue());
-		});
-		int bits = ((ElementLocal) local).orSunkEventsOfAllChildren(0);
-		bits |= DOM.getEventsSunk(element);
-		DOM.sinkEvents(element, bits);
-		pendingResolution.remove(element);
-		element.resolvePending();
-		wasResolved(element);
-	}
-
-	private ElementRemote writeIe9Table(TableElement elem,
-			ElementRemote remote) {
-		String outer = elem.local().getOuterHtml();
-		remoteLookup.remove(remote);
-		remote = Document.get().typedRemote().generateFromOuterHtml(outer);
-		elem.replaceRemote(remote);
-		return remote;
-	}
-
-	private ElementRemote writeIe9Tr(TableRowElement elem,
-			ElementRemote remote) {
-		Preconditions.checkArgument(elem.getChildNodes().stream()
-				.allMatch(n -> n.getNodeName().equals("td")));
-		int idx = 0;
-		for (Node node : elem.getChildNodes()) {
-			Element child = (Element) node;
-			ElementRemote remoteCell = elem.insertCellRemote(idx);
-			localToRemote(child, remoteCell, child.local());
-			idx++;
-		}
-		return remote;
 	}
 
 	private Element createElement0(String tagName) {
@@ -258,38 +214,6 @@ public class LocalDom {
 			resolveCommand = () -> flush();
 			Scheduler.get().scheduleFinally(resolveCommand);
 		}
-	}
-
-	private NodeRemote ensureRemoteNodeMaybePendingResolution0(Node node) {
-		if (node.linkedToRemote()) {
-			return node.remote();
-		}
-		ensureFlush();
-		NodeRemote remote = null;
-		int nodeType = node.getNodeType();
-		switch (nodeType) {
-		case Node.ELEMENT_NODE:
-			Element element = (Element) node;
-			remote = ((DomDispatchRemote) DOMImpl.impl.remote)
-					.createElement(element.getTagName());
-			element.pendingResolution();
-			pendingResolution.add(node);
-			log(LocalDomDebug.CREATED_PENDING_RESOLUTION,
-					"created pending resolution node:" + element.getTagName());
-			break;
-		case Node.TEXT_NODE:
-			remote = Document.get().typedRemote()
-					.createTextNode0(((Text) node).getData());
-			break;
-		// case Node.DOCUMENT_NODE:
-		// nodeDom = doc.domImpl();
-		// break;
-		default:
-			throw new UnsupportedOperationException();
-		}
-		linkRemote(remote, node);
-		node.putRemote(remote, false);
-		return remote;
 	}
 
 	private void ensureRemote0(Node node) {
@@ -327,6 +251,38 @@ public class LocalDom {
 			needsRemote.putRemote(remote, true);
 			withRemote = needsRemote;
 		}
+	}
+
+	private NodeRemote ensureRemoteNodeMaybePendingResolution0(Node node) {
+		if (node.linkedToRemote()) {
+			return node.remote();
+		}
+		ensureFlush();
+		NodeRemote remote = null;
+		int nodeType = node.getNodeType();
+		switch (nodeType) {
+		case Node.ELEMENT_NODE:
+			Element element = (Element) node;
+			remote = ((DomDispatchRemote) DOMImpl.impl.remote)
+					.createElement(element.getTagName());
+			element.pendingResolution();
+			pendingResolution.add(node);
+			log(LocalDomDebug.CREATED_PENDING_RESOLUTION,
+					"created pending resolution node:" + element.getTagName());
+			break;
+		case Node.TEXT_NODE:
+			remote = Document.get().typedRemote()
+					.createTextNode0(((Text) node).getData());
+			break;
+		// case Node.DOCUMENT_NODE:
+		// nodeDom = doc.domImpl();
+		// break;
+		default:
+			throw new UnsupportedOperationException();
+		}
+		linkRemote(remote, node);
+		node.putRemote(remote, false);
+		return remote;
 	}
 
 	private void eventMod0(NativeEvent evt, String eventName) {
@@ -423,10 +379,67 @@ public class LocalDom {
 		initElementCreators();
 	}
 
+	private boolean isPending0(NodeRemote nodeRemote) {
+		return pendingResolution.size() > 0 && pendingResolution.stream()
+				.anyMatch(n -> n.remote() == nodeRemote);
+	}
+
 	private boolean isStopPropogation0(NativeEvent evt) {
 		List<String> list = eventMods.get(evt);
 		return list != null && (list.contains("eventStopPropagation")
 				|| list.contains("eventCancelBubble"));
+	}
+
+	private void linkRemote(NodeRemote remote, Node node) {
+		Preconditions.checkState(!remoteLookup.containsKey(remote));
+		remoteLookup.put(remote, node);
+	}
+
+	private void localToRemote(Element element, ElementRemote remote,
+			DomElement local) {
+		String innerHTML = local.getInnerHTML();
+		if (ie9) {
+			switch (element.getTagName()) {
+			case "table":
+				remote = writeIe9Table((TableElement) element, remote);
+				break;
+			case "tr":
+				remote = writeIe9Tr((TableRowElement) element, remote);
+				break;
+			default:
+				remote.setInnerHTML(innerHTML);
+			}
+		} else {
+			remote.setInnerHTML(innerHTML);
+		}
+		log(LocalDomDebug.RESOLVE, "%s - uiobj: %s - \n%s",
+				element.getTagName(),
+				Optional.ofNullable(element.uiObject)
+						.map(ui -> ui.getClass().getSimpleName())
+						.orElse("(null)"),
+				CommonUtils.trimToWsChars(innerHTML, 1000));
+		ElementRemote f_remote = remote;
+		// doesn't include style
+		local.getAttributes().entrySet().forEach(e -> {
+			switch (e.getKey()) {
+			case "text":
+				f_remote.setPropertyString(e.getKey(), e.getValue());
+				break;
+			default:
+				f_remote.setAttribute(e.getKey(), e.getValue());
+				break;
+			}
+		});
+		local.getStyle().getProperties().entrySet().forEach(e -> {
+			StyleRemote remoteStyle = f_remote.getStyle0();
+			remoteStyle.setProperty(e.getKey(), e.getValue());
+		});
+		int bits = ((ElementLocal) local).orSunkEventsOfAllChildren(0);
+		bits |= DOM.getEventsSunk(element);
+		DOM.sinkEvents(element, bits);
+		pendingResolution.remove(element);
+		element.resolvePending();
+		wasResolved(element);
 	}
 
 	private <T extends Node> T nodeFor0(NodeRemote remote) {
@@ -489,9 +502,71 @@ public class LocalDom {
 		return parsed;
 	}
 
+	private void removeReference(NodeRemote typedRemote) {
+		Node node = get().remoteLookup.get(typedRemote);
+		if (node != null && node.provideIsElement()) {
+			Element element = (Element) node;
+			pendingResolution.remove(element);
+			requiresSync.remove(element);
+		}
+		get().remoteLookup.remove(typedRemote);
+	}
+
+	private void requiresSync0(ElementLocal elementLocal) {
+		elementLocal.requiresSync = false;
+		// this may not be in a pendingresolution tree
+		Element element = elementLocal.elementFor();
+		if (element.linkedToRemote()) {
+			syncToRemote(element);
+		} else {
+			requiresSync.add(element);
+		}
+	}
+
+	private boolean resolveSync(Element element) {
+		element.ensureRemoteCheck();
+		if (element.linkedToRemote()) {
+			LocalDom.log(LocalDomDebug.REQUIRES_SYNC, "%s: %s --> resolved",
+					element.hashCode(), element.getTagName());
+			// FIXME - was probably resolved in a tree?
+			if (element.local().hasChildNodes() && element.wasResolved()) {
+				return true;
+			} else {
+				Preconditions.checkState(!element.local().hasChildNodes());
+				syncToRemote(element);
+				return true;
+			}
+		} else {
+			return false;
+		}
+	}
+
 	private void wasResolved(Element elem) {
 		elem.local().walk(nl -> nl.node.resolved(resolutionEventId));
 		resolutionEventIdDirty = true;
+	}
+
+	private ElementRemote writeIe9Table(TableElement elem,
+			ElementRemote remote) {
+		String outer = elem.local().getOuterHtml();
+		remoteLookup.remove(remote);
+		remote = Document.get().typedRemote().generateFromOuterHtml(outer);
+		elem.replaceRemote(remote);
+		return remote;
+	}
+
+	private ElementRemote writeIe9Tr(TableRowElement elem,
+			ElementRemote remote) {
+		Preconditions.checkArgument(elem.getChildNodes().stream()
+				.allMatch(n -> n.getNodeName().equals("td")));
+		int idx = 0;
+		for (Node node : elem.getChildNodes()) {
+			Element child = (Element) node;
+			ElementRemote remoteCell = elem.insertCellRemote(idx);
+			localToRemote(child, remoteCell, child.local());
+			idx++;
+		}
+		return remote;
 	}
 
 	void resolve0() {
@@ -525,19 +600,6 @@ public class LocalDom {
 		}
 	}
 
-	private boolean resolveSync(Element element) {
-		element.ensureRemoteCheck();
-		if (element.linkedToRemote()) {
-			LocalDom.log(LocalDomDebug.REQUIRES_SYNC, "%s: %s --> resolved",
-					element.hashCode(), element.getTagName());
-			Preconditions.checkState(!element.local().hasChildNodes());
-			syncToRemote(element);
-			return true;
-		} else {
-			return false;
-		}
-	}
-
 	public static class LocalDomCollections {
 		public <K, V> Map<K, V> createIdentityEqualsMap(Class<K> keyClass) {
 			return new LinkedHashMap<>();
@@ -558,59 +620,5 @@ public class LocalDom {
 				return super.createIdentityEqualsMap(keyClass);
 			}
 		}
-	}
-
-	public static void syncToRemote(Element element) {
-		get().parse(element.typedRemote(), element);
-	}
-
-	Set<Element> requiresSync = new LinkedHashSet<>();
-
-	public static void checkRequiresSync(ElementLocal elementLocal) {
-		if (disableRemoteWrite || !elementLocal.requiresSync) {
-			return;
-		}
-		get().requiresSync0(elementLocal);
-	}
-
-	private void requiresSync0(ElementLocal elementLocal) {
-		elementLocal.requiresSync = false;
-		// this may not be in a pendingresolution tree
-		Element element = elementLocal.elementFor();
-		if (element.linkedToRemote()) {
-			syncToRemote(element);
-		} else {
-			requiresSync.add(element);
-		}
-	}
-
-	public static boolean isPending(NodeRemote nodeRemote) {
-		return get().isPending0(nodeRemote);
-	}
-
-	private boolean isPending0(NodeRemote nodeRemote) {
-		return pendingResolution.size() > 0 && pendingResolution.stream()
-				.anyMatch(n -> n.remote() == nodeRemote);
-	}
-
-	public static void detach(Node node) {
-		if (node.wasResolved()) {
-			LocalDom instance = get();
-			node.local().walk(nl -> {
-				if (nl.node.linkedToRemote()) {
-					instance.removeReference(nl.node.typedRemote());
-				}
-			});
-		}
-	}
-
-	private void removeReference(NodeRemote typedRemote) {
-		Node node = get().remoteLookup.get(typedRemote);
-		if (node != null && node.provideIsElement()) {
-			Element element = (Element) node;
-			pendingResolution.remove(element);
-			requiresSync.remove(element);
-		}
-		get().remoteLookup.remove(typedRemote);
 	}
 }

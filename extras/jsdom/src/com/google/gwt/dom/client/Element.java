@@ -199,7 +199,13 @@ public class Element extends Node implements DomElement {
 		return local().getAttributes();
 	}
 
+	@Override
+	public Node getChild(int index) {
+		resolveLocal();
+		return super.getChild(index);
+	}
 	public Element getChildElement(int index) {
+		resolveLocal();
 		for (int idx = 0; idx < getChildCount(); idx++) {
 			Node child = getChild(idx);
 			if (child.provideIsElement()) {
@@ -244,7 +250,8 @@ public class Element extends Node implements DomElement {
 	}
 
 	public Element getFirstChildElement() {
-		return resolveLocal().getFirstChildElement();
+		ElementLocal elementLocal = resolveLocal();
+		return elementLocal.getFirstChildElement();
 	}
 
 	public String getId() {
@@ -423,22 +430,8 @@ public class Element extends Node implements DomElement {
 	}
 
 	@Override
-	protected void putRemote(NodeRemote remote,boolean resolved) {
-		Preconditions.checkState(wasResolved()==resolved);
-		Preconditions.checkState(
-				this.remote == ElementNull.INSTANCE || remote == this.remote);
-		this.remote = (ElementRemote) remote;
-		if (remote != null) {
-			if (local() != null && local().getEventBits() != 0) {
-				int existingBits = DOM.getEventsSunk(this);
-				DOM.sinkEvents(this, existingBits | local().getEventBits());
-			}
-		}
-	}
-
-	@Override
 	public Node removeAllChildren() {
-		getChildNodes().forEach(n->doPreTreeResolution(n));
+		getChildNodes().forEach(n -> doPreTreeResolution(n));
 		local().removeAllChildren();
 		remote().removeAllChildren();
 		return this;
@@ -701,11 +694,29 @@ public class Element extends Node implements DomElement {
 	}
 
 	@Override
+	protected void putRemote(NodeRemote remote, boolean resolved) {
+		Preconditions.checkState(wasResolved() == resolved);
+		Preconditions.checkState(
+				this.remote == ElementNull.INSTANCE || remote == this.remote);
+		this.remote = (ElementRemote) remote;
+		if (remote != null) {
+			if (local() != null && local().getEventBits() != 0) {
+				int existingBits = DOM.getEventsSunk(this);
+				DOM.sinkEvents(this, existingBits | local().getEventBits());
+			}
+		}
+	}
+
+	@Override
 	protected DomElement remote() {
 		if (LocalDom.isDisableRemoteWrite()) {
 			return ElementNull.INSTANCE;
 		}
 		return remote;
+	}
+
+	protected ElementRemote typedRemote() {
+		return (ElementRemote) remote();
 	}
 
 	Element putLocal(ElementLocal local) {
@@ -723,10 +734,6 @@ public class Element extends Node implements DomElement {
 			typedRemote().removeFromParent0();
 		}
 		this.remote = remote;
-	}
-
-	protected ElementRemote typedRemote() {
-		return (ElementRemote) remote();
 	}
 
 	public class ElementImplAccess {
@@ -762,6 +769,4 @@ public class Element extends Node implements DomElement {
 			return Element.this.wasResolved();
 		}
 	}
-
-	
 }
