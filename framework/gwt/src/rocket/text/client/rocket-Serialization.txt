@@ -1,0 +1,2 @@
+# rocket.text
+rocket.text.client.*

@@ -1,0 +1,10 @@
+# rocket.util
+# blacklist everything except for Colour and HueSaturationValue
+rocket.util.client.Checker
+rocket.util.client.Constants
+rocket.util.client.Destroyable
+rocket.util.client.JavaScript
+rocket.util.client.StackTrace
+rocket.util.client.StringComparator
+rocket.util.client.Tester
+rocket.util.client.Utilities

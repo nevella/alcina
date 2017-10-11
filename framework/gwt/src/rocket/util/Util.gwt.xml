@@ -1,0 +1,6 @@
+<module>
+	<inherits name="com.google.gwt.user.User" />		
+	<inherits name="rocket.text.Text" />
+	
+	<source path="client" />			
+</module>
