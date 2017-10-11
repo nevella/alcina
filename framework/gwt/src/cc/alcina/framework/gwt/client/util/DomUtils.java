@@ -500,6 +500,14 @@ public class DomUtils implements NodeFromXpathProvider {
 			if (node == null && ucXpath.endsWith(possiblyWrappedTextPost)) {
 				node = xpathMap.get(ucXpath + "[1]");
 			}
+			if (node == null && container.getNodeName().equals("judgment")
+					&& ucXpath.contains("/")) {
+				if (ucXpath.startsWith("/")) {
+					ucXpath = ucXpath.substring(1);
+				}
+				node = xpathMap
+						.get(ucXpath.substring(ucXpath.indexOf("/") + 1));
+			}
 			return node;
 		} else {
 			if (lastContainer != container) {
@@ -700,6 +708,7 @@ public class DomUtils implements NodeFromXpathProvider {
 			domRequiredSplitInfo.remove(el);
 		}
 	}
+
 	public void wrap(Element wrapper, Text toWrap) {
 		wrapper.setAttribute(ATTR_WRAP_EXPANDO_ID, "1");
 		Node t = toWrap;
