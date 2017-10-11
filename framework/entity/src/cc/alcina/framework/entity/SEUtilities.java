@@ -31,6 +31,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -1454,5 +1455,23 @@ public class SEUtilities {
 
 	public static void ensureLogFolder() {
 		new File("/tmp/log").mkdirs();
+	}
+
+	public static void clearAllFields(Object object) {
+		try {
+			List<Field> fields = allFields(object.getClass());
+			Object template = object.getClass().newInstance();
+			for (Field field : fields) {
+				int modifiers = field.getModifiers();
+				if (Modifier.isFinal(modifiers)
+						|| Modifier.isStatic(modifiers)) {
+					continue;
+				} else {
+					field.set(object, field.get(template));
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }
