@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.Javascript
 
 public class JsNativeMapWrapper<K, V> implements Map<K, V> {
 	private JsNativeMap<K,V> map;
+	private boolean weak;
 
 	public final void clear() {
 		this.map.clear();
@@ -29,6 +30,9 @@ public class JsNativeMapWrapper<K, V> implements Map<K, V> {
 	}
 
 	public final Set<java.util.Map.Entry<K, V>> entrySet() {
+		if(weak){
+			throw new UnsupportedOperationException();
+		}
 		return this.map.entrySet();
 	}
 
@@ -64,8 +68,9 @@ public class JsNativeMapWrapper<K, V> implements Map<K, V> {
 		return this.map.values();
 	}
 
-	JsNativeMapWrapper() {
-		map = JsNativeMap.createJsNativeMap();
+	JsNativeMapWrapper(boolean weak) {
+		this.weak = weak;
+		map = JsNativeMap.createJsNativeMap(weak);
 	}
 
 }

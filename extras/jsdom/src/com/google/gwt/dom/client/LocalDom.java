@@ -21,6 +21,7 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.LocalDomDebug;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsNativeMapWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -174,7 +175,11 @@ public class LocalDom {
 	static boolean emitCommentPisAsText;
 
 	public LocalDom() {
-		remoteLookup = new LinkedHashMap<>();
+		if (GWT.isScript() && JsUniqueMap.supportsJsWeakMap()) {
+			remoteLookup = JsUniqueMap.createWeakMap();
+		} else {
+			remoteLookup = new LinkedHashMap<>();
+		}
 		ie9 = BrowserMod.isIE9();
 		emitCommentPisAsText = true;
 		if (collections == null) {

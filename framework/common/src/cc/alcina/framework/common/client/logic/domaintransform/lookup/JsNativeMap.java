@@ -17,8 +17,8 @@ public class JsNativeMap<K, V> extends JavaScriptObject {
 	protected JsNativeMap() {
 	}
 
-	static native JsNativeMap createJsNativeMap()/*-{
-        return new Map();
+	static native JsNativeMap createJsNativeMap(boolean weak)/*-{
+        return weak ? new WeakMap() : new Map();
 	}-*/;
 
 	public final native void clear()/*-{
@@ -27,7 +27,6 @@ public class JsNativeMap<K, V> extends JavaScriptObject {
 
 	public final boolean containsKey(Object key) {
 		return this.get(key) != null;
-		// throw new UnsupportedOperationException();
 	}
 
 	public final boolean containsValue(Object value) {
