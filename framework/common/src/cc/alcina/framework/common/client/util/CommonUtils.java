@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -1597,5 +1598,11 @@ public class CommonUtils {
 			return ComparatorResult.SECOND_NULL;
 		}
 		return ComparatorResult.BOTH_NON_NULL;
+	}
+
+	public static String trimLinesToChars(String string, int i) {
+		return Arrays.asList(string.split("\n")).stream()
+				.map(s -> trimToWsChars(s, 100))
+				.collect(Collectors.joining("\n"));
 	}
 }
