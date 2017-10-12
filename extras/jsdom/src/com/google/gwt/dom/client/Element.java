@@ -527,9 +527,6 @@ public class Element extends Node implements DomElement {
 		if (notPendingAndLinked()) {
 			remote().setInnerSafeHtml(html);
 			String remoteHtml = typedRemote().getInnerHTML0();
-			Ax.out("set inner safe: %s, %s,%s %s %s", getTagName(), hashCode(),
-					local().hashCode(), remote().hashCode(),
-					CommonUtils.trimToWsChars(remoteHtml, 300));
 			local().setInnerHTML(remoteHtml);
 			LocalDom.wasResolved(this);
 		} else {
@@ -719,9 +716,6 @@ public class Element extends Node implements DomElement {
 		Preconditions.checkState(
 				this.remote == ElementNull.INSTANCE || remote == this.remote);
 		this.remote = (ElementRemote) remote;
-		if (getTagName().equals("tbody")) {
-			Ax.out("put-remote: %s %s %s",hashCode(), local.hashCode(),remote.hashCode());
-		}
 		if (remote != null) {
 			if (local() != null && local().getEventBits() != 0) {
 				int existingBits = DOM.getEventsSunk(this);
