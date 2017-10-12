@@ -405,7 +405,7 @@ public class ElementLocal extends NodeLocal
 		if (Ax.notBlank(html)) {
 			if (!html.contains("<")) {
 				appendChild(ownerDocument
-						.createTextNode(HtmlParser.resolveEntities(html)));
+						.createTextNode(HtmlParser.decodeEntities(html)));
 			} else {
 				String outerHtml = getOuterHtml();
 				int idx = outerHtml.indexOf("</");

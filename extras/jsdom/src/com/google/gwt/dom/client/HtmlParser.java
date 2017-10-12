@@ -45,6 +45,8 @@ public class HtmlParser {
 
 	private Element replaceContents;
 
+	static EntityDecoder decoder = new EntityDecoder();
+
 	public Element parse(DomElement root, Element replaceContents) {
 		html = root.getOuterHtml();
 		return parse(html, replaceContents);
@@ -207,14 +209,11 @@ public class HtmlParser {
 	}
 
 	private void emitAttribute() {
-		attributes.put(attrName, resolveEntities(attrValue));
+		attributes.put(attrName, decodeEntities(attrValue));
 	}
 
-	static String resolveEntities(String text) {
-		if (text.contains("&")) {
-			text = text.replace("&nbsp;", "\u00A0");
-		}
-		return text;
+	static String decodeEntities(String text) {
+		return decoder.decode(text);
 	}
 
 	private void emitElement() {
@@ -309,7 +308,7 @@ public class HtmlParser {
 	}
 
 	private void emitEscapedText(String string) {
-		emitText(resolveEntities(string));
+		emitText(decodeEntities(string));
 	}
 
 	private void emitText(String string) {
