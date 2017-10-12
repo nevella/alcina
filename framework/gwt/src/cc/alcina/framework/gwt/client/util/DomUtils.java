@@ -500,13 +500,27 @@ public class DomUtils implements NodeFromXpathProvider {
 			if (node == null && ucXpath.endsWith(possiblyWrappedTextPost)) {
 				node = xpathMap.get(ucXpath + "[1]");
 			}
-			if (node == null && container.getNodeName().equals("judgment")
+			// FIXME - generalise to arbitrary non-html
+			if (node == null
+					&& container.getNodeName().equalsIgnoreCase("judgment")
 					&& ucXpath.contains("/")) {
-				if (ucXpath.startsWith("/")) {
-					ucXpath = ucXpath.substring(1);
-				}
 				node = xpathMap
 						.get(ucXpath.substring(ucXpath.indexOf("/") + 1));
+				if (node == null && ucXpath.length() > 1
+						&& ucXpath.indexOf("/") == 0) {
+					String adjusted = ucXpath
+							.substring(ucXpath.indexOf("/", 1) + 1);
+					node = xpathMap.get(adjusted);
+					if (node == null) {
+						if (adjusted.isEmpty()
+								|| adjusted.equalsIgnoreCase("/JUDGMENT")) {
+							node = container;
+						}
+					}
+				}
+				if (node == null) {
+					int debug = 3;
+				}
 			}
 			return node;
 		} else {
