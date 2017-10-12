@@ -167,7 +167,7 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 	}
 
 	public final String provideLocalDomTree() {
-		return provideRemoteDomTree0(new StringBuilder(), 0).toString();
+		return provideLocalDomTree0(new StringBuilder(), 0).toString();
 	}
 
 	@Override
@@ -205,7 +205,7 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 		return nodeLocal == null ? null : nodeLocal.nodeFor();
 	}
 
-	private StringBuilder provideRemoteDomTree0(StringBuilder buf, int depth) {
+	private StringBuilder provideLocalDomTree0(StringBuilder buf, int depth) {
 		for (int idx = 0; idx < depth; idx++) {
 			buf.append(' ');
 		}
@@ -216,11 +216,11 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 		case 8:
 			buf.append("[");
 			buf.append(node.getNodeValue().replace("\n", "\\n").replace("\t",
-					"\\t"));
+					"\\t").replace("\r", "\\r"));
 			buf.append("]");
 			break;
 		case 1:
-			buf.append(node.getNodeName());
+			buf.append(node.getNodeName().toUpperCase());
 			buf.append(" : ");
 			break;
 		}
@@ -229,7 +229,7 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 			int idx = 0;
 			for (; idx < children.size(); idx++) {
 				NodeLocal child = children.get(idx);
-				child.provideRemoteDomTree0(buf, depth + 1);
+				child.provideLocalDomTree0(buf, depth + 1);
 			}
 		}
 		return buf;

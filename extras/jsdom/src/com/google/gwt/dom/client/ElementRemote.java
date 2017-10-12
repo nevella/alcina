@@ -931,7 +931,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
             case 8:
                 buf += '[';
                 buf += node.data.split('\n').join('\\n').split('\t')
-                        .join('\\t');
+                        .join('\\t').split('\r')
+                        .join('\\r');
                 buf += ']';
                 break;
             case 1:

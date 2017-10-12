@@ -7,6 +7,7 @@ import com.google.gwt.user.client.LocalDomDebug;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class LocalDomDebugImpl {
 	final static boolean debug = true;
@@ -111,6 +112,8 @@ public class LocalDomDebugImpl {
 		String remoteDomHasNode = hasNode.typedRemote().provideRemoteDomTree();
 		String remoteDom = elementRemote.provideRemoteDomTree();
 		String localDomHasNode = hasNode.local().provideLocalDomTree();
+		String remoteDomHasNode2 = CommonUtils.trimLinesToChars(remoteDomHasNode,50);
+		String localDomHasNode2 = CommonUtils.trimLinesToChars(localDomHasNode,50);
 		ElementRemote parentRemote = elementRemote.getParentElement0();
 		remoteDebug = remoteIndex.getString();
 		String hashes = Ax.format("%s: %s %s %s", hasNode.getTagName(),

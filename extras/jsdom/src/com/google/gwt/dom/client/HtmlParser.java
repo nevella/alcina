@@ -45,8 +45,6 @@ public class HtmlParser {
 
 	private Element replaceContents;
 
-	static EntityDecoder decoder = new EntityDecoder();
-
 	public Element parse(DomElement root, Element replaceContents) {
 		html = root.getOuterHtml();
 		return parse(html, replaceContents);
@@ -213,7 +211,7 @@ public class HtmlParser {
 	}
 
 	static String decodeEntities(String text) {
-		return decoder.decode(text);
+		return EntityDecoder.decode(text);
 	}
 
 	private void emitElement() {
@@ -300,8 +298,10 @@ public class HtmlParser {
 
 	private void emitComment(String string) {
 		tag = null;
-		if (string.matches("\\?.+\\?")) {
+		if (string.matches("\\?.+\\?") || true) {
 			// FIXME - make this a real PI
+			// hmm...now chromium seems to want comments preserved. weird. but
+			// wonderful
 			emitText(string);
 		}
 		// FIXME - if ie<=9, hmm....panic?
