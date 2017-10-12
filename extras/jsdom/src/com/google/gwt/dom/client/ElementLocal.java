@@ -21,8 +21,6 @@ public class ElementLocal extends NodeLocal
 
 	private String tagName;
 
-	String innerHtml;
-
 	int eventBits;
 
 	private Element element;
@@ -52,7 +50,6 @@ public class ElementLocal extends NodeLocal
 		cloneLocal.attributes = new StringMap(attributes);
 		cloneLocal.eventBits = eventBits;
 		if (deep) {
-			cloneLocal.innerHtml = innerHtml;
 			getChildNodes().stream()
 					.forEach(cn -> clone.appendChild(cn.cloneNode(true)));
 		}
@@ -171,13 +168,9 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public String getInnerHTML() {
-		if (children.isEmpty() && innerHtml != null) {
-			return innerHtml;
-		} else {
-			UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder();
-			appendChildContents(builder);
-			return builder.toSafeHtml().asString();
-		}
+		UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder();
+		appendChildContents(builder);
+		return builder.toSafeHtml().asString();
 	}
 
 	@Override
@@ -248,10 +241,6 @@ public class ElementLocal extends NodeLocal
 	@Override
 	public int getOffsetWidth() {
 		throw new UnsupportedOperationException();
-	}
-
-	public String getPendingInnerHtml() {
-		return this.innerHtml;
 	}
 
 	@Override
@@ -413,18 +402,16 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public void setInnerHTML(String html) {
-		this.innerHtml = null;
-		new ArrayList<>(children).stream().forEach(NodeLocal::removeFromParent);
 		if (Ax.notBlank(html)) {
 			if (!html.contains("<")) {
 				appendChild(ownerDocument
 						.createTextNode(HtmlParser.resolveEntities(html)));
 			} else {
-				this.innerHtml = html;
-				LocalDom.log(LocalDomDebug.REQUIRES_SYNC, "%s: %s %s",
-						getTagName(), hashCode(),
-						CommonUtils.trimToWsChars(html, 500));
-				requiresSync = true;
+				String outerHtml = getOuterHtml();
+				int idx = outerHtml.indexOf("</");
+				outerHtml = Ax.format("%s%s%s", outerHtml.substring(0, idx),
+						html, outerHtml.substring(idx));
+				new HtmlParser().parse(outerHtml, element);
 			}
 		}
 	}
@@ -438,8 +425,6 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public void setInnerText(String text) {
-		new ArrayList<>(children).stream().forEach(NodeLocal::removeFromParent);
-		innerHtml = null;
 		if (Ax.isBlank(text)) {
 		} else {
 			appendChild(ownerDocument.createTextNode(text));
@@ -609,9 +594,6 @@ public class ElementLocal extends NodeLocal
 		}
 		builder.appendHtmlConstantNoCheck("<");
 		builder.appendHtmlConstant(tagName);
-		if (tagName.equals("button")) {
-			int debug = 3;
-		}
 		String styleAttributeValue = attributes.get("style");
 		if (!attributes.isEmpty()) {
 			attributes.entrySet().forEach(e -> {
@@ -645,9 +627,6 @@ public class ElementLocal extends NodeLocal
 		}
 		builder.appendHtmlConstantNoCheck(">");
 		appendChildContents(builder);
-		if (innerHtml != null) {
-			builder.appendUnsafeHtml(innerHtml);
-		}
 		builder.appendHtmlConstantNoCheck("</");
 		builder.appendHtmlConstant(tagName);
 		builder.appendHtmlConstantNoCheck(">");
@@ -670,14 +649,6 @@ public class ElementLocal extends NodeLocal
 
 	enum AttrParseState {
 		START, NAME, EQ, VALUE
-	}
-
-	public ElementLocal resolveLocal() {
-		if (innerHtml != null) {
-			Preconditions.checkState(!element.linkedToRemote());
-			new HtmlParser().parse(this, element);
-		}
-		return this;
 	}
 
 	@Override

@@ -15,6 +15,4 @@ public interface LocalDomElement extends LocalDomNode {
 	void setInnerHTML(String html);
 
 	int getEventBits();
-
-	String getPendingInnerHtml();
 }

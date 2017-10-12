@@ -110,9 +110,13 @@ public class LocalDomDebugImpl {
 		String remoteDebug = null;
 		String remoteDomHasNode = hasNode.typedRemote().provideRemoteDomTree();
 		String remoteDom = elementRemote.provideRemoteDomTree();
-		String localDom = hasNode.local().provideLocalDomTree();
+		String localDomHasNode = hasNode.local().provideLocalDomTree();
 		ElementRemote parentRemote = elementRemote.getParentElement0();
 		remoteDebug = remoteIndex.getString();
+		String hashes = Ax.format("%s: %s %s %s", hasNode.getTagName(),
+				hasNode.hashCode(), hasNode.local().hashCode(),
+				hasNode.remote().hashCode());
+		LocalDom.debug(hasNode.typedRemote());
 		log(LocalDomDebug.DEBUG_ISSUE, "mismatched sizes");
 		int debug = 3;
 	}

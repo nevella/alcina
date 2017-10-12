@@ -46,22 +46,16 @@ public class HtmlParser {
 	private Element replaceContents;
 
 	public Element parse(DomElement root, Element replaceContents) {
+		html = root.getOuterHtml();
+		return parse(html, replaceContents);
+	}
+
+	public Element parse(String html, Element replaceContents) {
 		this.replaceContents = replaceContents;
 		resetBuilder();
 		tokenState = TokenState.EXPECTING_NODE;
-		html = root.getOuterHtml();
-		String innerHtml = null;
-		// if (root instanceof ElementRemote) {
-		// innerHtml = ((ElementRemote) root).getInnerHTML0();
-		// String provideRemoteDomTree = ((ElementRemote)
-		// root).provideRemoteDomTree();
-		// if (innerHtml.contains("Provocation at common law")) {
-		// int debug = 3;
-		// }
-		// }
 		LocalDom.setDisableRemoteWrite(true);
 		if (replaceContents != null) {
-			replaceContents.local().setInnerHTML(null);
 			replaceContents.clearResolved();
 		}
 		while (idx < html.length()) {

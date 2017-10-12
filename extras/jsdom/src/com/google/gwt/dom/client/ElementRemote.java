@@ -804,7 +804,6 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		throw new UnsupportedOperationException();
 	}
 
-
 	@Override
 	public final void ensureId() {
 		throw new UnsupportedOperationException();
@@ -1052,11 +1051,12 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	}
 
 	final Node removeAllChildrenElement() {
-		if (LocalDom.fastRemoveAll) {
-			setInnerHTML("");
-		} else {
-			removeAllChildrenElement0();
-		}
+		// can't, because need to sync local and remote nodes
+		// if (LocalDom.fastRemoveAll) {
+		// setInnerHTML("");
+		// } else {
+		removeAllChildrenElement0();
+		// }
 		return nodeFor();
 	}
 
@@ -1069,6 +1069,4 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	final native void removeFromParent0()/*-{
         this.parentElement.removeChild(this);
 	}-*/;
-
-	
 }

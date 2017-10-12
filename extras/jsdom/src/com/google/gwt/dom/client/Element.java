@@ -201,11 +201,10 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	public Node getChild(int index) {
-		resolveLocal();
 		return super.getChild(index);
 	}
+
 	public Element getChildElement(int index) {
-		resolveLocal();
 		for (int idx = 0; idx < getChildCount(); idx++) {
 			Node child = getChild(idx);
 			if (child.provideIsElement()) {
@@ -250,8 +249,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	public Element getFirstChildElement() {
-		ElementLocal elementLocal = resolveLocal();
-		return elementLocal.getFirstChildElement();
+		return local().getFirstChildElement();
 	}
 
 	public String getId() {
@@ -503,10 +501,21 @@ public class Element extends Node implements DomElement {
 		clearResolved();
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
-		local().setInnerHTML(html);
-		remote().setInnerHTML(html);
+		removeAllChildren();
+		if (notPendingAndLinked()) {
+			remote().setInnerHTML(html);
+			// tbodies? foots? proudfeet?
+			String remoteHtml = typedRemote().getInnerHTML0();
+			local().setInnerHTML(remoteHtml);
+			LocalDom.wasResolved(this);
+		} else {
+			local().setInnerHTML(html);
+		}
 		oldChildren.forEach(LocalDom::detach);
-		LocalDom.checkRequiresSync(local());
+	}
+
+	private boolean notPendingAndLinked() {
+		return linkedToRemote() && !isPendingResolution();
 	}
 
 	public void setInnerSafeHtml(SafeHtml html) {
@@ -514,10 +523,19 @@ public class Element extends Node implements DomElement {
 		clearResolved();
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
-		local().setInnerSafeHtml(html);
-		remote().setInnerSafeHtml(html);
+		removeAllChildren();
+		if (notPendingAndLinked()) {
+			remote().setInnerSafeHtml(html);
+			String remoteHtml = typedRemote().getInnerHTML0();
+			Ax.out("set inner safe: %s, %s,%s %s %s", getTagName(), hashCode(),
+					local().hashCode(), remote().hashCode(),
+					CommonUtils.trimToWsChars(remoteHtml, 300));
+			local().setInnerHTML(remoteHtml);
+			LocalDom.wasResolved(this);
+		} else {
+			local().setInnerSafeHtml(html);
+		}
 		oldChildren.forEach(LocalDom::detach);
-		LocalDom.checkRequiresSync(local());
 	}
 
 	public void setInnerText(String text) {
@@ -525,8 +543,14 @@ public class Element extends Node implements DomElement {
 		clearResolved();
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
-		local().setInnerText(text);
-		remote().setInnerText(text);
+		removeAllChildren();
+		if (notPendingAndLinked()) {
+			remote().setInnerText(text);
+			local().setInnerText(text);
+			LocalDom.wasResolved(this);
+		} else {
+			local().setInnerText(text);
+		}
 		oldChildren.forEach(LocalDom::detach);
 	}
 
@@ -664,10 +688,6 @@ public class Element extends Node implements DomElement {
 		// return ensureRemote();
 	}
 
-	private ElementLocal resolveLocal() {
-		return local().resolveLocal();
-	}
-
 	private void runIfWithRemote(boolean flush, Runnable runnable) {
 		if (!linkedToRemote() && flush) {
 			ensureRemote();
@@ -699,6 +719,9 @@ public class Element extends Node implements DomElement {
 		Preconditions.checkState(
 				this.remote == ElementNull.INSTANCE || remote == this.remote);
 		this.remote = (ElementRemote) remote;
+		if (getTagName().equals("tbody")) {
+			Ax.out("put-remote: %s %s %s",hashCode(), local.hashCode(),remote.hashCode());
+		}
 		if (remote != null) {
 			if (local() != null && local().getEventBits() != 0) {
 				int existingBits = DOM.getEventsSunk(this);

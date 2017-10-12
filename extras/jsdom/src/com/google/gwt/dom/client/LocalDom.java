@@ -39,22 +39,16 @@ public class LocalDom {
 
 	private static boolean disableRemoteWrite;
 
-	public static void checkRequiresSync(ElementLocal elementLocal) {
-		if (disableRemoteWrite || !elementLocal.requiresSync) {
-			return;
-		}
-		get().requiresSync0(elementLocal);
-	}
-
 	public static void detach(Node node) {
-		if (node.wasResolved()) {
-			LocalDom instance = get();
-			node.local().walk(nl -> {
-				if (nl.node.linkedToRemote()) {
-					instance.removeReference(nl.node.typedRemote());
-				}
-			});
-		}
+		// see "removereference"
+		// if (node.wasResolved()) {
+		// LocalDom instance = get();
+		// node.local().walk(nl -> {
+		// if (nl.node.linkedToRemote()) {
+		// instance.removeReference(nl.node.typedRemote());
+		// }
+		// });
+		// }
 	}
 
 	public static void ensureRemote(Node node) {
@@ -178,8 +172,6 @@ public class LocalDom {
 	private boolean resolving;
 
 	static boolean emitCommentPisAsText;
-
-	Set<Element> requiresSync = new LinkedHashSet<>();
 
 	public LocalDom() {
 		remoteLookup = new LinkedHashMap<>();
@@ -439,7 +431,7 @@ public class LocalDom {
 		DOM.sinkEvents(element, bits);
 		pendingResolution.remove(element);
 		element.resolvePending();
-		wasResolved(element);
+		wasResolved0(element);
 	}
 
 	private <T extends Node> T nodeFor0(NodeRemote remote) {
@@ -457,6 +449,7 @@ public class LocalDom {
 			Node parent = nodeFor0(parentRemote);
 			int index = remote.indexInParentChildren();
 			Node childNode = parent.getChild(index);
+			linkRemote(remote, childNode);
 			childNode.putRemote(remote, true);
 			return (T) childNode;
 		}
@@ -488,8 +481,8 @@ public class LocalDom {
 			cursor.resolveRemoteDefined();
 			Element child = (Element) cursor.getChild(nodeIndex);
 			NodeRemote childRemote = (NodeRemote) ancestors.get(idx);
-			child.putRemote(childRemote, true);
 			linkRemote(childRemote, child);
+			child.putRemote(childRemote, true);
 			cursor = child;
 		}
 		debugImpl.debugNodeFor0(elem, hasNode, remoteIndex, false);
@@ -498,50 +491,31 @@ public class LocalDom {
 
 	private Element parse(ElementRemote root, Element replaceContents) {
 		Element parsed = new HtmlParser().parse(root, replaceContents);
-		wasResolved(parsed);
+		wasResolved0(parsed);
 		return parsed;
 	}
 
+	@SuppressWarnings("unused")
 	private void removeReference(NodeRemote typedRemote) {
-		Node node = get().remoteLookup.get(typedRemote);
-		if (node != null && node.provideIsElement()) {
-			Element element = (Element) node;
-			pendingResolution.remove(element);
-			requiresSync.remove(element);
-		}
-		get().remoteLookup.remove(typedRemote);
+		// unfortunately doesn't work - if node is later reattached
+		// FIXME - do remove, but add a unique 'reattach id' field
+		// that way we at least lose the remote node ref
+		// also, have a say 30 sec deallocate loop. this is the urkiest of
+		// localdom
+		// note that weakmaps would save'us'ere
+		// Node node = get().remoteLookup.get(typedRemote);
+		// if (node != null && node.provideIsElement()) {
+		// Element element = (Element) node;
+		// pendingResolution.remove(element);
+		// }
+		// get().remoteLookup.remove(typedRemote);
 	}
 
-	private void requiresSync0(ElementLocal elementLocal) {
-		elementLocal.requiresSync = false;
-		// this may not be in a pendingresolution tree
-		Element element = elementLocal.elementFor();
-		if (element.linkedToRemote()) {
-			syncToRemote(element);
-		} else {
-			requiresSync.add(element);
-		}
+	static void wasResolved(Element elem) {
+		get().wasResolved0(elem);
 	}
 
-	private boolean resolveSync(Element element) {
-		element.ensureRemoteCheck();
-		if (element.linkedToRemote()) {
-			LocalDom.log(LocalDomDebug.REQUIRES_SYNC, "%s: %s --> resolved",
-					element.hashCode(), element.getTagName());
-			// FIXME - was probably resolved in a tree?
-			if (element.local().hasChildNodes() && element.wasResolved()) {
-				return true;
-			} else {
-				Preconditions.checkState(!element.local().hasChildNodes());
-				syncToRemote(element);
-				return true;
-			}
-		} else {
-			return false;
-		}
-	}
-
-	private void wasResolved(Element elem) {
+	private void wasResolved0(Element elem) {
 		elem.local().walk(nl -> nl.node.resolved(resolutionEventId));
 		resolutionEventIdDirty = true;
 	}
@@ -590,7 +564,6 @@ public class LocalDom {
 			}
 			new ArrayList<>(pendingResolution).stream()
 					.forEach(this::ensurePendingResolved);
-			requiresSync.removeIf(elem -> resolveSync(elem));
 			if (resolutionEventIdDirty) {
 				resolutionEventId++;
 			}
@@ -620,5 +593,13 @@ public class LocalDom {
 				return super.createIdentityEqualsMap(keyClass);
 			}
 		}
+	}
+
+	public static void debug(ElementRemote elementRemote) {
+		get().debug0(elementRemote);
+	}
+
+	private void debug0(ElementRemote elementRemote) {
+		int debug = 3;
 	}
 }

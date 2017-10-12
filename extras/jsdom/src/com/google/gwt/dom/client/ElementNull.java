@@ -178,10 +178,6 @@ public class ElementNull extends NodeLocalNull
 		throw new UnsupportedOperationException();
 	}
 
-	public String getPendingInnerHtml() {
-		throw new UnsupportedOperationException();
-	}
-
 	@Override
 	public final Element getPreviousSiblingElement() {
 		throw new UnsupportedOperationException();
