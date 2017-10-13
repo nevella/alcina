@@ -325,7 +325,7 @@ public class Toolbar extends Composite
 					button.addClickHandler((ClickHandler) action);
 				}
 			} else {
-				aWidget = new StyledAWidget(action.getDisplayName(), true);
+				aWidget = new StyledAWidget(action.getDisplayName(), false);
 				aWidget.setStyleName(buttonStyleName != null ? buttonStyleName
 						: "button-grey");
 				aWidget.setWordWrap(false);
@@ -353,7 +353,7 @@ public class Toolbar extends Composite
 					AbstractImagePrototype aip = AbstractImagePrototype
 							.create(StandardDataImageProvider.get()
 									.getDataImages().downGrey());
-					dropDown = new StyledAWidget(aip.getHTML(), true);
+					dropDown = new StyledAWidget(aip.getHTML(), false);
 					dropDown.addStyleName("button-grey drop-down");
 					sp.add(dropDown);
 					dropDown.addClickHandler(new ClickHandler() {
