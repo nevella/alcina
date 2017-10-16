@@ -627,9 +627,11 @@ public class ElementLocal extends NodeLocal
 		}
 		builder.appendHtmlConstantNoCheck(">");
 		appendChildContents(builder);
-		builder.appendHtmlConstantNoCheck("</");
-		builder.appendHtmlConstant(tagName);
-		builder.appendHtmlConstantNoCheck(">");
+		if (!HtmlParser.isSelfClosingTag(tagName)) {
+			builder.appendHtmlConstantNoCheck("</");
+			builder.appendHtmlConstant(tagName);
+			builder.appendHtmlConstantNoCheck(">");
+		}
 	}
 
 	@Override

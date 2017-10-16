@@ -226,27 +226,7 @@ public class HtmlParser {
 		if (!closeTag) {
 			emitStartElement(tag);
 		}
-		// https://www.thoughtco.com/html-singleton-tags-3468620
-		switch (tag) {
-		case "area":
-		case "base":
-		case "br":
-		case "col":
-		case "command":
-		case "embed":
-		case "hr":
-		case "img":
-		case "input":
-		case "keygen":
-		case "link":
-		case "meta":
-		case "param":
-		case "source":
-		case "track":
-		case "wbr":
-			selfCloseTag = true;
-			break;
-		}
+		selfCloseTag |= isSelfClosingTag(tag);
 		if (closeTag || selfCloseTag) {
 			emitEndElement(tag);
 		}
@@ -270,6 +250,30 @@ public class HtmlParser {
 		tokenState = TokenState.EXPECTING_NODE;
 		tag = null;
 		selfCloseTag = false;
+	}
+
+	// https://www.thoughtco.com/html-singleton-tags-3468620
+	static boolean isSelfClosingTag(String tag) {
+		switch (tag) {
+		case "area":
+		case "base":
+		case "br":
+		case "col":
+		case "command":
+		case "embed":
+		case "hr":
+		case "img":
+		case "input":
+		case "keygen":
+		case "link":
+		case "meta":
+		case "param":
+		case "source":
+		case "track":
+		case "wbr":
+			return true;
+		}
+		return false;
 	}
 
 	private void emitStartElement(String tag) {
