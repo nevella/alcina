@@ -353,7 +353,7 @@ public class Toolbar extends Composite
 					AbstractImagePrototype aip = AbstractImagePrototype
 							.create(StandardDataImageProvider.get()
 									.getDataImages().downGrey());
-					dropDown = new StyledAWidget(aip.getHTML(), false);
+					dropDown = new StyledAWidget(aip.getHTML(), true);
 					dropDown.addStyleName("button-grey drop-down");
 					sp.add(dropDown);
 					dropDown.addClickHandler(new ClickHandler() {

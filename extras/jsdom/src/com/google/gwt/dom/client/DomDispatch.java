@@ -91,8 +91,8 @@ public class DomDispatch implements IDomDispatch {
 	public NativeEvent createKeyCodeEvent(Document document, String type,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int keyCode) {
-		return remoteImpl().createKeyCodeEvent(document.typedRemote(), type, ctrlKey,
-				altKey, shiftKey, metaKey, keyCode);
+		return remoteImpl().createKeyCodeEvent(document.typedRemote(), type,
+				ctrlKey, altKey, shiftKey, metaKey, keyCode);
 	}
 
 	@Deprecated
@@ -360,13 +360,22 @@ public class DomDispatch implements IDomDispatch {
 
 	public void selectAdd(SelectElement select, OptionElement option,
 			OptionElement before) {
-		local.selectAdd(select, option, before);
+		if (select.linkedToRemote()) {
+			select.ensureRemote();
+			option.ensureRemote();
+			if (before != null) {
+				before.ensureRemote();
+			}
+		}
+		//remote before local - otherwise the indicies will be out
 		remote.selectAdd(select, option, before);
+		local.selectAdd(select, option, before);
 	}
 
 	public void selectClear(SelectElement select) {
-		local.selectClear(select);
+		select.ensureRemoteCheck();
 		remote.selectClear(select);
+		local.selectClear(select);
 	}
 
 	public int selectGetLength(SelectElement select) {
@@ -379,17 +388,18 @@ public class DomDispatch implements IDomDispatch {
 	}
 
 	public void selectRemoveOption(SelectElement select, int index) {
-		resolveAllPending();
-		local.selectRemoveOption(select, index);
+		select.ensureRemoteCheck();
 		remote.selectRemoveOption(select, index);
+		local.selectRemoveOption(select, index);
 	}
 
 	public void setDraggable(Element elem, String draggable) {
-		resolveAllPending();
+		elem.ensureRemote();
 		remoteImpl().setDraggable(elem.typedRemote(), draggable);
 	}
 
 	public void setInnerText(Element elem, String text) {
+		elem.ensureRemote();
 		remoteImpl().setInnerText(elem.typedRemote(), text);
 	}
 
@@ -399,7 +409,7 @@ public class DomDispatch implements IDomDispatch {
 	}
 
 	public void setScrollLeft(Element elem, int left) {
-		resolveAllPending();
+		elem.ensureRemote();
 		remoteImpl().setScrollLeft(elem, left);
 	}
 

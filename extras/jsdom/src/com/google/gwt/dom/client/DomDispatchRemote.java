@@ -43,7 +43,7 @@ public class DomDispatchRemote implements IDomDispatch {
 			OptionElement before) {
 		if (select.linkedToRemote()) {
 			domImpl.selectAdd(select.typedRemote(),
-					option.implAccess().ensureRemote(),
+					option.typedRemote(),
 					before == null ? null : before.typedRemote());
 		}
 	}
