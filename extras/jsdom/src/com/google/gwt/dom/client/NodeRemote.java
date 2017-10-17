@@ -57,7 +57,7 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 
 	@Override
 	public final Node removeAllChildren() {
-		throw new UnsupportedOperationException();
+		return DomNodeStatic.removeAllChildren(this);
 	}
 
 	/**

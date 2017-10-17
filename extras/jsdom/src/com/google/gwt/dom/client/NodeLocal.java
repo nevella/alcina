@@ -172,8 +172,8 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 
 	@Override
 	public Node removeAllChildren() {
-		//do not call directly
-		throw new UnsupportedOperationException();
+		//respects local/remote; OK
+		return DomNodeStatic.removeAllChildren(this);
 	}
 
 	@Override
