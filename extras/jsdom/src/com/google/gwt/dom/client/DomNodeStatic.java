@@ -42,7 +42,8 @@ class DomNodeStatic {
 	static void removeFromParent(DomNode domNode) {
 		Element parent = domNode.getParentElement();
 		if (parent != null) {
-			parent.removeChild(domNode.nodeFor());
+			DomNode parentDomNode = parent.sameTreeNodeFor(domNode);
+			parentDomNode.removeChild(domNode.nodeFor());
 		}
 	}
 

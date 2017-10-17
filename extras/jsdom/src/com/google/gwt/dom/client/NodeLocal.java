@@ -122,7 +122,7 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 
 	@Override
 	public Node insertAfter(Node newChild, Node refChild) {
-		return DomNodeStatic.insertAfter(this, newChild, refChild);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -141,7 +141,7 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 
 	@Override
 	public Node insertFirst(Node child) {
-		return DomNodeStatic.insertFirst(this, child);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -172,7 +172,8 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 
 	@Override
 	public Node removeAllChildren() {
-		return DomNodeStatic.removeAllChildren(this);
+		//do not call directly
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -190,7 +191,7 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 	@Override
 	public Node replaceChild(Node newChild, Node oldChild) {
 		insertBefore(newChild, oldChild);
-		oldChild.removeFromParent();
+		oldChild.local().removeFromParent();
 		return newChild;
 	}
 

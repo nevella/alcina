@@ -70,12 +70,12 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	 * error: "Permission denied to access property 'nodeType'"
 	 */
 	private static native boolean isJso(JavaScriptObject o) /*-{
-        try {
-            return (!!o) && (!!o.nodeType);
-        } catch (e) {
-            return false;
-        }
-	}-*/;
+															try {
+															return (!!o) && (!!o.nodeType);
+															} catch (e) {
+															return false;
+															}
+															}-*/;
 
 	private int resolvedEventId;
 
@@ -96,11 +96,11 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 			if (ensureBecauseChildResolved) {
 				LocalDom.ensureRemote(this);
 			}
-			if (linkedToRemote() && child.wasResolved()) {
+			boolean linkedBecauseFlushed = ensureRemoteCheck();
+			if (linkedToRemote() && (wasResolved() || child.wasResolved())) {
 				LocalDom.ensureRemote(child);
 			}
 		}
-		boolean linkedBecauseFlushed = ensureRemoteCheck();
 	}
 
 	@Override
@@ -215,6 +215,7 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	@Override
 	public Node removeAllChildren() {
+		getChildNodes().forEach(n -> doPreTreeResolution(n));
 		return DomNodeStatic.removeAllChildren(this);
 	}
 
@@ -231,11 +232,22 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		DomNodeStatic.removeFromParent(this);
 	}
 
+	public DomNode sameTreeNodeFor(DomNode domNode) {
+		if (domNode == null) {
+			return null;
+		}
+		if (domNode instanceof LocalDomNode) {
+			return local();
+		} else {
+			return remote();
+		}
+	}
+
 	public Node replaceChild(Node newChild, Node oldChild) {
 		doPreTreeResolution(oldChild);
 		doPreTreeResolution(newChild);
-		Node result = local().replaceChild(newChild, oldChild);
 		remote().replaceChild(newChild, oldChild);
+		Node result = local().replaceChild(newChild, oldChild);
 		LocalDom.detach(oldChild);
 		return result;
 	}

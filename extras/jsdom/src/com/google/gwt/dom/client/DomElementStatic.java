@@ -2,7 +2,7 @@ package com.google.gwt.dom.client;
 
 import com.google.gwt.safehtml.shared.SafeHtml;
 
-public class DomElement_Static {
+public class DomElementStatic {
 	
 	/**
 	 * Adds a name to this element's class property. If the name is already

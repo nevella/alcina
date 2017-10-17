@@ -42,12 +42,12 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 
 	@Override
 	public final Node insertAfter(Node newChild, Node refChild) {
-		return DomNodeStatic.insertAfter(this, newChild, refChild);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public final Node insertFirst(Node child) {
-		return DomNodeStatic.insertFirst(this, child);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -57,11 +57,7 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 
 	@Override
 	public final Node removeAllChildren() {
-		if (getNodeType() == Node.ELEMENT_NODE) {
-			return ((ElementRemote) this).removeAllChildrenElement();
-		} else {
-			return DomNodeStatic.removeAllChildren(this);
-		}
+		throw new UnsupportedOperationException();
 	}
 
 	/**

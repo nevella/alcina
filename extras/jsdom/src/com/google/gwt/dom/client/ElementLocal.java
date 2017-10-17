@@ -35,11 +35,11 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public final boolean addClassName(String className) {
-		return DomElement_Static.addClassName(this, className);
+		return DomElementStatic.addClassName(this, className);
 	}
 
 	public void blur() {
-		DomElement_Static.blur(this);
+		DomElementStatic.blur(this);
 	}
 
 	@Override
@@ -69,7 +69,7 @@ public class ElementLocal extends NodeLocal
 	}
 
 	public void dispatchEvent(NativeEvent evt) {
-		DomElement_Static.dispatchEvent(this, evt);
+		DomElementStatic.dispatchEvent(this, evt);
 	}
 
 	@Override
@@ -85,23 +85,23 @@ public class ElementLocal extends NodeLocal
 	}
 
 	public void focus() {
-		DomElement_Static.focus(this);
+		DomElementStatic.focus(this);
 	}
 
 	public int getAbsoluteBottom() {
-		return DomElement_Static.getAbsoluteBottom(this);
+		return DomElementStatic.getAbsoluteBottom(this);
 	}
 
 	public int getAbsoluteLeft() {
-		return DomElement_Static.getAbsoluteLeft(this);
+		return DomElementStatic.getAbsoluteLeft(this);
 	}
 
 	public int getAbsoluteRight() {
-		return DomElement_Static.getAbsoluteRight(this);
+		return DomElementStatic.getAbsoluteRight(this);
 	}
 
 	public int getAbsoluteTop() {
-		return DomElement_Static.getAbsoluteTop(this);
+		return DomElementStatic.getAbsoluteTop(this);
 	}
 
 	@Override
@@ -121,19 +121,19 @@ public class ElementLocal extends NodeLocal
 	}
 
 	public int getClientHeight() {
-		return DomElement_Static.getClientHeight(this);
+		return DomElementStatic.getClientHeight(this);
 	}
 
 	public int getClientWidth() {
-		return DomElement_Static.getClientWidth(this);
+		return DomElementStatic.getClientWidth(this);
 	}
 
 	public String getDir() {
-		return DomElement_Static.getDir(this);
+		return DomElementStatic.getDir(this);
 	}
 
 	public String getDraggable() {
-		return DomElement_Static.getDraggable(this);
+		return DomElementStatic.getDraggable(this);
 	}
 
 	@Override
@@ -181,7 +181,7 @@ public class ElementLocal extends NodeLocal
 	}
 
 	public String getLang() {
-		return DomElement_Static.getLang(this);
+		return DomElementStatic.getLang(this);
 	}
 
 	@Override
@@ -220,7 +220,7 @@ public class ElementLocal extends NodeLocal
 	}
 
 	public int getOffsetHeight() {
-		return DomElement_Static.getOffsetHeight(this);
+		return DomElementStatic.getOffsetHeight(this);
 	}
 
 	@Override
@@ -290,25 +290,25 @@ public class ElementLocal extends NodeLocal
 	}
 
 	public int getScrollHeight() {
-		return DomElement_Static.getScrollHeight(this);
+		return DomElementStatic.getScrollHeight(this);
 	}
 
 	@Override
 	public final int getScrollLeft() {
-		return DomElement_Static.getScrollLeft(this);
+		return DomElementStatic.getScrollLeft(this);
 	}
 
 	public int getScrollTop() {
-		return DomElement_Static.getScrollTop(this);
+		return DomElementStatic.getScrollTop(this);
 	}
 
 	public int getScrollWidth() {
-		return DomElement_Static.getScrollWidth(this);
+		return DomElementStatic.getScrollWidth(this);
 	}
 
 	@Override
 	public final String getString() {
-		return DomElement_Static.getString(this);
+		return DomElementStatic.getString(this);
 	}
 
 	public Style getStyle() {
@@ -338,12 +338,12 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public final boolean hasClassName(String className) {
-		return DomElement_Static.hasClassName(this, className);
+		return DomElementStatic.hasClassName(this, className);
 	}
 
 	@Override
 	public final boolean hasTagName(String tagName) {
-		return DomElement_Static.hasTagName(this, tagName);
+		return DomElementStatic.hasTagName(this, tagName);
 	}
 
 	public void putElement(Element element) {
@@ -358,18 +358,18 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public final boolean removeClassName(String className) {
-		return DomElement_Static.removeClassName(this, className);
+		return DomElementStatic.removeClassName(this, className);
 	}
 
 	@Override
 	public final void replaceClassName(String oldClassName,
 			String newClassName) {
-		DomElement_Static.replaceClassName(this, oldClassName, newClassName);
+		DomElementStatic.replaceClassName(this, oldClassName, newClassName);
 	}
 
 	@Override
 	public final void scrollIntoView() {
-		DomElement_Static.scrollIntoView(this);
+		DomElementStatic.scrollIntoView(this);
 	}
 
 	@Override
@@ -387,12 +387,12 @@ public class ElementLocal extends NodeLocal
 	}
 
 	public void setDir(String dir) {
-		DomElement_Static.setDir(this, dir);
+		DomElementStatic.setDir(this, dir);
 	}
 
 	@Override
 	public final void setDraggable(String draggable) {
-		DomElement_Static.setDraggable(this, draggable);
+		DomElementStatic.setDraggable(this, draggable);
 	}
 
 	@Override
@@ -420,7 +420,7 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public final void setInnerSafeHtml(SafeHtml html) {
-		DomElement_Static.setInnerSafeHtml(this, html);
+		DomElementStatic.setInnerSafeHtml(this, html);
 	}
 
 	@Override
@@ -432,7 +432,7 @@ public class ElementLocal extends NodeLocal
 	}
 
 	public void setLang(String lang) {
-		DomElement_Static.setLang(this, lang);
+		DomElementStatic.setLang(this, lang);
 	}
 
 	@Override
@@ -559,7 +559,7 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public final void toggleClassName(String className) {
-		DomElement_Static.toggleClassName(this, className);
+		DomElementStatic.toggleClassName(this, className);
 	}
 
 	@Override

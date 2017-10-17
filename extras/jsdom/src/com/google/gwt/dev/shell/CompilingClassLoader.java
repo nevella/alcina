@@ -1104,16 +1104,13 @@ public final class CompilingClassLoader extends ClassLoader implements
         // Allow the child ClassLoader to handle this
         throw new ClassNotFoundException();
       }
-
+   // Get the bytes, compiling if necessary.
       // Check for a bridge class that spans hosted and user space.
       if (BRIDGE_CLASS_NAMES.containsKey(className)) {
         return BRIDGE_CLASS_NAMES.get(className);
       }
 
-      // Get the bytes, compiling if necessary.
-      if(className.contains("RegExp")){
-    	  int debug=3;
-      }
+      
       byte[] classBytes = findClassBytes(className);
       if (classBytes == null) {
         throw new ClassNotFoundException(className);
@@ -1207,7 +1204,6 @@ public final class CompilingClassLoader extends ClassLoader implements
     if (Beans.isDesignTime()) {
       return super.loadClass(name, resolve);
     }
-
     Class c = findLoadedClass(name);
     if (c != null) {
       if (resolve) {

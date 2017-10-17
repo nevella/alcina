@@ -427,13 +427,6 @@ public class Element extends Node implements DomElement {
 		this.pendingResolution = true;
 	}
 
-	@Override
-	public Node removeAllChildren() {
-		getChildNodes().forEach(n -> doPreTreeResolution(n));
-		local().removeAllChildren();
-		remote().removeAllChildren();
-		return this;
-	}
 
 	public void removeAttribute(String name) {
 		local().removeAttribute(name);
@@ -786,4 +779,6 @@ public class Element extends Node implements DomElement {
 			return Element.this.wasResolved();
 		}
 	}
+
+	
 }

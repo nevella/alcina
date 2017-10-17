@@ -46,11 +46,11 @@ public class HtmlParser {
 	private Element replaceContents;
 
 	public Element parse(DomElement root, Element replaceContents) {
-		html = root.getOuterHtml();
-		return parse(html, replaceContents);
+		return parse(root.getOuterHtml(), replaceContents);
 	}
 
 	public Element parse(String html, Element replaceContents) {
+		this.html = html;
 		this.replaceContents = replaceContents;
 		resetBuilder();
 		tokenState = TokenState.EXPECTING_NODE;

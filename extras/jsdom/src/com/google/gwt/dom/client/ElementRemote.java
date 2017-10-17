@@ -675,108 +675,108 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final boolean addClassName(String className) {
-		return DomElement_Static.addClassName(this, className);
+		return DomElementStatic.addClassName(this, className);
 	}
 
 	@Override
 	public final Element getFirstChildElement() {
-		return DomElement_Static.getFirstChildElement(this);
+		return DomElementStatic.getFirstChildElement(this);
 	}
 
 	@Override
 	public final String getInnerHTML() {
-		return DomElement_Static.getInnerHTML(this);
+		return DomElementStatic.getInnerHTML(this);
 	}
 
 	@Override
 	public final String getInnerText() {
-		return DomElement_Static.getInnerText(this);
+		return DomElementStatic.getInnerText(this);
 	}
 
 	@Override
 	public final Element getNextSiblingElement() {
-		return DomElement_Static.getNextSiblingElement(this);
+		return DomElementStatic.getNextSiblingElement(this);
 	}
 
 	@Override
 	public final Element getPreviousSiblingElement() {
-		return DomElement_Static.getPreviousSiblingElement(this);
+		return DomElementStatic.getPreviousSiblingElement(this);
 	}
 
 	@Override
 	public final int getScrollLeft() {
-		return DomElement_Static.getScrollLeft(this);
+		return DomElementStatic.getScrollLeft(this);
 	}
 
 	@Override
 	public final String getString() {
-		return DomElement_Static.getString(this);
+		return DomElementStatic.getString(this);
 	}
 
 	@Override
 	public final int getTabIndex() {
-		return DomElement_Static.getTabIndex(this);
+		return DomElementStatic.getTabIndex(this);
 	}
 
 	@Override
 	public final String getTagName() {
-		return DomElement_Static.getTagName(this);
+		return DomElementStatic.getTagName(this);
 	}
 
 	@Override
 	public final boolean hasAttribute(String name) {
-		return DomElement_Static.hasAttribute(this, name);
+		return DomElementStatic.hasAttribute(this, name);
 	}
 
 	@Override
 	public final boolean hasClassName(String className) {
-		return DomElement_Static.hasClassName(this, className);
+		return DomElementStatic.hasClassName(this, className);
 	}
 
 	@Override
 	public final boolean hasTagName(String tagName) {
-		return DomElement_Static.hasTagName(this, tagName);
+		return DomElementStatic.hasTagName(this, tagName);
 	}
 
 	@Override
 	public final boolean removeClassName(String className) {
-		return DomElement_Static.removeClassName(this, className);
+		return DomElementStatic.removeClassName(this, className);
 	}
 
 	@Override
 	public final void toggleClassName(String className) {
-		DomElement_Static.toggleClassName(this, className);
+		DomElementStatic.toggleClassName(this, className);
 	}
 
 	@Override
 	public final void replaceClassName(String oldClassName,
 			String newClassName) {
-		DomElement_Static.replaceClassName(this, oldClassName, newClassName);
+		DomElementStatic.replaceClassName(this, oldClassName, newClassName);
 	}
 
 	@Override
 	public final void scrollIntoView() {
-		DomElement_Static.scrollIntoView(this);
+		DomElementStatic.scrollIntoView(this);
 	}
 
 	@Override
 	public final void setDraggable(String draggable) {
-		DomElement_Static.setDraggable(this, draggable);
+		DomElementStatic.setDraggable(this, draggable);
 	}
 
 	@Override
 	public final void setInnerSafeHtml(SafeHtml html) {
-		DomElement_Static.setInnerSafeHtml(this, html);
+		DomElementStatic.setInnerSafeHtml(this, html);
 	}
 
 	@Override
 	public final void setInnerText(String text) {
-		DomElement_Static.setInnerText(this, text);
+		DomElementStatic.setInnerText(this, text);
 	}
 
 	@Override
 	public final void setScrollLeft(int scrollLeft) {
-		DomElement_Static.setScrollLeft(this, scrollLeft);
+		DomElementStatic.setScrollLeft(this, scrollLeft);
 	}
 
 	@Override
