@@ -365,6 +365,10 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public void flush() {
+		flush(new ArrayList<>());
+	}
+
+	public void flush(List<DomainTransformEventPersistent> dtreps) {
 		entityManager.flush();
 	}
 
@@ -572,6 +576,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		return useObjectCreationId;
 	}
 
+	public void markFlushTransforms() {
+		flushAfterTransforms.add(CommonUtils.last(getTransforms().iterator()));
+	}
+
 	public void maybeListenToObjectWrapper(WrappedObject wrapper) {
 		EntityLayerTransformPropogation transformPropogation = Registry
 				.impl(EntityLayerTransformPropogation.class, void.class, true);
@@ -659,6 +667,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 		lastEvent = dte;
 		super.propertyChange(evt);
+	}
+
+	public boolean provideIsMarkedFlushTransform(DomainTransformEvent event) {
+		return flushAfterTransforms.contains(event);
 	}
 
 	public HiliLocatorMap reconstituteHiliMap() {
@@ -903,12 +915,12 @@ public class ThreadlocalTransformManager extends TransformManager
 			return;
 		}
 		if (!PermissionsManager.get().isPermissible(target, oph.read())) {
-			throw new DomainTransformException(new Exception(
+			throw new DomainTransformException(new PermissionsException(
 					"Permission denied : read - target object " + evt));
 		}
 		if (aph != null && !PermissionsManager.get().isPermissible(target,
 				aph.value())) {
-			throw new DomainTransformException(new Exception(
+			throw new DomainTransformException(new PermissionsException(
 					"Permission denied : assign - target object " + evt));
 		}
 	}
@@ -1116,6 +1128,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 	}
 
+	protected void propertyChangeSuper(PropertyChangeEvent evt) {
+		super.propertyChange(evt);
+	}
+
 	@Override
 	protected void removeAssociations(HasIdAndLocalId hili) {
 		new ServerTransformManagerSupport().removeAssociations(hili);
@@ -1151,13 +1167,5 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public static class UncomittedTransformsException extends Exception {
-	}
-
-	public void markFlushTransforms() {
-		flushAfterTransforms.add(CommonUtils.last(getTransforms().iterator()));
-	}
-
-	public boolean provideIsMarkedFlushTransform(DomainTransformEvent event) {
-		return flushAfterTransforms.contains(event);
 	}
 }

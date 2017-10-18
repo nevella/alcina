@@ -392,7 +392,7 @@ public class AlcinaMemCache implements RegistrableService {
 		if (timer != null) {
 			timer.cancel();
 		}
-		if(postInitConn!=null){
+		if (postInitConn != null) {
 			try {
 				postInitConn.close();
 			} catch (SQLException e) {
@@ -2812,5 +2812,13 @@ public class AlcinaMemCache implements RegistrableService {
 	public <T extends HasIdAndLocalId> void preLoad(Class<T> clazz,
 			Collection<Long> ids) {
 		new AlcinaMemCacheQuery().ids(ids).raw().list(clazz);
+	}
+
+	public static <T extends HasIdAndLocalId> T raw(T t) {
+		return get().findRaw(t);
+	}
+
+	public static <T extends HasIdAndLocalId> T raw(HiliLocator objectLocator) {
+		return (T) get().findRaw(objectLocator.clazz, objectLocator.id);
 	}
 }
