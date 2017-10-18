@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -137,7 +138,9 @@ public class WrappedObjectPersistence {
 					wrapper, wrapped, clazz);
 		}
 	}
-
+	public interface WrappedObjectPermissionsExtension{
+		boolean allow(HasId wrapper);
+	}
 	private void checkWrappedObjectAccess0(HasId wrapper, WrappedObject wrapped,
 			Class clazz) throws PermissionsException {
 		if (!PersistentSingleton.class.isAssignableFrom(clazz)
@@ -153,6 +156,12 @@ public class WrappedObjectPersistence {
 							.isMemberOfGroup(ivo.getOwnerGroup().getName())) {
 						return;// ditto
 					}
+				}
+			}
+			Optional<WrappedObjectPermissionsExtension> extension = Registry.implOptional(WrappedObjectPermissionsExtension.class);
+			if(extension.isPresent()){
+				if(extension.get().allow(wrapper)){
+					return;
 				}
 			}
 			if (PermissionsManager.get()

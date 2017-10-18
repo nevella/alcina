@@ -1005,8 +1005,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return getEntityManager()
 				.createQuery(String.format(
 						"select ci.id from %s ci where ci.iid = ?1 order by id desc",
-						clientInstanceImpl.getSimpleName())).setParameter(1, iidKey)
-				.setMaxResults(99).getResultList();
+						clientInstanceImpl.getSimpleName()))
+				.setParameter(1, iidKey).setMaxResults(99).getResultList();
 	}
 
 	/**
@@ -1472,5 +1472,21 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 										Publication.class)))
 				.setParameter(1, mimeMessageId).setParameter(2, publicationId)
 				.executeUpdate();
+	}
+
+	@Override
+	public void changeWrappedObjectOwner(long id, IUser fromUser,
+			IUser toUser) {
+		List<WrappedObject> wrapped = getEntityManager()
+				.createQuery(Ax.format("from %s where id = %s",
+						getImplementation(WrappedObject.class).getSimpleName(),
+						id))
+				.getResultList();
+		if (wrapped.size() == 1) {
+			wrapped.get(0).setUser(getEntityManager().find(toUser.getClass(), toUser.getId()));
+			Ax.out("changed wrapped object owner - %s - %s -> %s", id,
+					fromUser,
+					toUser);
+		}
 	}
 }

@@ -185,4 +185,7 @@ public interface CommonPersistenceLocal {
 			String mimeMessageId);
 
 	List<Long> listRecentClientInstanceIds(String iidKey);
+
+	public void changeWrappedObjectOwner(long parseLong, IUser fromUser,
+			IUser toUser);
 }
