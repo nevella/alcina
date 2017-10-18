@@ -351,4 +351,8 @@ public class GridForm extends AbstractTableWidget
 	public void addButtonWidget(Widget widget) {
 		base.setWidget(base.getRowCount(), 1, widget);
 	}
+
+	public <T extends Widget> T getBoundWidget(int row) {
+		return (T) base.getWidget(row,1);
+	}
 }

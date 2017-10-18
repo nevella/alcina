@@ -44,9 +44,11 @@ public class SelectorProvider implements BoundWidgetProvider {
 
 	private boolean useFlatSelector;
 
+	private String hint;
+
 	public SelectorProvider(Class selectionObjectClass, CollectionFilter filter,
 			int maxSelectedItems, Renderer renderer, boolean useCellList,
-			boolean useMinimalSelector, boolean useFlatSelector) {
+			boolean useMinimalSelector, boolean useFlatSelector, String hint) {
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;
 		this.maxSelectedItems = maxSelectedItems;
@@ -54,6 +56,7 @@ public class SelectorProvider implements BoundWidgetProvider {
 		this.useCellList = useCellList;
 		this.useMinimalSelector = useMinimalSelector;
 		this.useFlatSelector = useFlatSelector;
+		this.hint = hint;
 	}
 
 	public BoundSelector get() {
@@ -67,8 +70,10 @@ public class SelectorProvider implements BoundWidgetProvider {
 						}
 					});
 		} else if (useMinimalSelector) {
-			return new BoundSelectorMinimal(selectionObjectClass, filter,
-					maxSelectedItems, renderer);
+			BoundSelectorMinimal selectorMinimal = new BoundSelectorMinimal(
+					selectionObjectClass, filter, maxSelectedItems, renderer,
+					hint);
+			return selectorMinimal;
 		} else {
 			return new BoundSelector(selectionObjectClass, filter,
 					maxSelectedItems, renderer, useCellList);

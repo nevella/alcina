@@ -83,6 +83,7 @@ import com.totsp.gwittir.client.util.ListSorter;
 
 import cc.alcina.framework.common.client.logic.RepeatingSequentialCommand;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -1180,7 +1181,7 @@ public class BoundTableExt extends AbstractTableWidget
 		esp = new EventingSimplePanel();
 		createTable();
 		if ((masks & BoundTableExt.SCROLL_MASK) > 0) {
-			if("".isEmpty()){
+			if ("".isEmpty()) {
 				throw new UnsupportedOperationException();
 			}
 			this.scroll = new ScrollPanel();
@@ -1202,7 +1203,6 @@ public class BoundTableExt extends AbstractTableWidget
 		} else {
 			super.initWidget(esp);
 		}
-		
 		this.value = (this.value == null) ? new ArrayList() : this.value;
 		this.columns = (this.columns == null) ? new Field[0] : this.columns;
 		this.setStyleName("gwittir-BoundTable");
@@ -1278,6 +1278,10 @@ public class BoundTableExt extends AbstractTableWidget
 	}
 
 	private void createTable() {
+		String oldStyleNames = "";
+		if (this.table != null) {
+			oldStyleNames = this.table.getStyleName();
+		}
 		this.table = createTableImpl();
 		if ((this.masks & BoundTableExt.SELECT_ROW_MASK) > 0) {
 			this.table.addClickHandler(rowSelectHandler);
@@ -1301,15 +1305,19 @@ public class BoundTableExt extends AbstractTableWidget
 				}
 			}
 		});
-		this.base=this.table;
-		this.setStyleName("gwittir-BoundTable");
-		if(++setCounter==5){
-			//should be number 5 in seq
-			int debug=3;
+		this.base = this.table;
+		this.setStyleName("gwittir-BoundTable", true);
+		if (Ax.notBlank(oldStyleNames)) {
+			this.setStyleName(oldStyleNames);
+		}
+		if (++setCounter == 5) {
+			// should be number 5 in seq
+			int debug = 3;
 		}
 		esp.setWidget(this.table);
 	}
-	static int setCounter=0;
+
+	static int setCounter = 0;
 
 	public void handleKeyupEvent(KeyUpEvent event) {
 		int delta = 0;
@@ -1335,8 +1343,8 @@ public class BoundTableExt extends AbstractTableWidget
 	}
 
 	protected native Element getRow(Element elem, int row)/*-{
-        return elem.rows[row];
-	}-*/;
+															return elem.rows[row];
+															}-*/;
 
 	private void insertNestedWidget(int row) {
 		// GWT.log( "Inserting nested for row "+row, null);
@@ -1874,6 +1882,11 @@ public class BoundTableExt extends AbstractTableWidget
 	@Override
 	public void setStyleName(String style) {
 		this.base.setStyleName(style);
+	}
+
+	@Override
+	public void setStyleName(String style, boolean add) {
+		this.base.setStyleName(style, add);
 	}
 
 	public void setValue(Object value) {
