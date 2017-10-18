@@ -217,6 +217,7 @@ public class OptionElement extends Element {
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
+		ensureRemoteCheck();
 		if (name.equals("selected") && !Boolean.valueOf(value)) {
 			local().removeAttribute(name);
 		} else {

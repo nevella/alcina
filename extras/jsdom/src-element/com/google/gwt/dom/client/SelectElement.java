@@ -310,6 +310,7 @@ public class SelectElement extends Element {
 
 	@Override
 	public void setPropertyString(String name, String value) {
+		ensureRemoteCheck();
 		if (name.equals("multiple") && !Boolean.valueOf(value)) {
 			local().removeAttribute("multiple");
 		} else {
@@ -320,6 +321,7 @@ public class SelectElement extends Element {
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
+		ensureRemoteCheck();
 		if (name.equals("multiple") && !value) {
 			local().removeAttribute("multiple");
 		} else {

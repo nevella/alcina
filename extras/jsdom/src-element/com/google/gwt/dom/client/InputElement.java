@@ -486,6 +486,7 @@ public class InputElement extends Element {
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
+		ensureRemoteCheck();
 		if ((name.equals("checked") || name.equals("defaultChecked"))
 				&& !Boolean.valueOf(value)) {
 			local().removeAttribute(name);

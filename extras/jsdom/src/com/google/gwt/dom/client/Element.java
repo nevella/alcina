@@ -125,6 +125,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	public boolean addClassName(String className) {
+		ensureRemoteCheck();
 		boolean result = local().addClassName(className);
 		remote().addClassName(className);
 		return result;
@@ -317,7 +318,7 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	public String getOuterHtml() {
-		throw new UnsupportedOperationException();
+		return local().getOuterHtml();
 	}
 
 	public Element getPreviousSiblingElement() {
@@ -429,17 +430,20 @@ public class Element extends Node implements DomElement {
 
 
 	public void removeAttribute(String name) {
+		ensureRemoteCheck();
 		local().removeAttribute(name);
 		remote().removeAttribute(name);
 	}
 
 	public boolean removeClassName(String className) {
+		ensureRemoteCheck();
 		boolean result = local().removeClassName(className);
 		remote().removeClassName(className);
 		return result;
 	}
 
 	public void replaceClassName(String oldClassName, String newClassName) {
+		ensureRemoteCheck();
 		local().replaceClassName(oldClassName, newClassName);
 		remote().replaceClassName(oldClassName, newClassName);
 	}
@@ -465,26 +469,31 @@ public class Element extends Node implements DomElement {
 	}
 
 	public void setAttribute(String name, String value) {
+		ensureRemoteCheck();
 		local().setAttribute(name, value);
 		remote().setAttribute(name, value);
 	}
 
 	public void setClassName(String className) {
+		ensureRemoteCheck();
 		local().setClassName(className);
 		remote().setClassName(className);
 	}
 
 	public void setDir(String dir) {
+		ensureRemoteCheck();
 		local().setDir(dir);
 		remote().setDir(dir);
 	}
 
 	public void setDraggable(String draggable) {
+		ensureRemoteCheck();
 		local().setDraggable(draggable);
 		remote().setDraggable(draggable);
 	}
 
 	public void setId(String id) {
+		ensureRemoteCheck();
 		local().setId(id);
 		remote().setId(id);
 	}
@@ -505,10 +514,6 @@ public class Element extends Node implements DomElement {
 			local().setInnerHTML(html);
 		}
 		oldChildren.forEach(LocalDom::detach);
-	}
-
-	private boolean notPendingAndLinked() {
-		return linkedToRemote() && !isPendingResolution();
 	}
 
 	public void setInnerSafeHtml(SafeHtml html) {
@@ -545,11 +550,13 @@ public class Element extends Node implements DomElement {
 	}
 
 	public void setLang(String lang) {
+		ensureRemoteCheck();
 		local().setLang(lang);
 		remote().setLang(lang);
 	}
 
 	public void setNodeValue(String nodeValue) {
+		ensureRemoteCheck();
 		local().setNodeValue(nodeValue);
 		remote().setNodeValue(nodeValue);
 	}
@@ -560,31 +567,37 @@ public class Element extends Node implements DomElement {
 	}
 
 	public void setPropertyBoolean(String name, boolean value) {
+		ensureRemoteCheck();
 		local().setPropertyBoolean(name, value);
 		remote().setPropertyBoolean(name, value);
 	}
 
 	public void setPropertyDouble(String name, double value) {
+		ensureRemoteCheck();
 		local().setPropertyDouble(name, value);
 		remote().setPropertyDouble(name, value);
 	}
 
 	public void setPropertyInt(String name, int value) {
+		ensureRemoteCheck();
 		local().setPropertyInt(name, value);
 		remote().setPropertyInt(name, value);
 	}
 
 	public void setPropertyJSO(String name, JavaScriptObject value) {
+		ensureRemoteCheck();
 		local().setPropertyJSO(name, value);
 		remote().setPropertyJSO(name, value);
 	}
 
 	public void setPropertyObject(String name, Object value) {
+		ensureRemoteCheck();
 		local().setPropertyObject(name, value);
 		remote().setPropertyObject(name, value);
 	}
 
 	public void setPropertyString(String name, String value) {
+		ensureRemoteCheck();
 		local().setPropertyString(name, value);
 		remote().setPropertyString(name, value);
 	}
@@ -598,11 +611,13 @@ public class Element extends Node implements DomElement {
 	}
 
 	public void setTabIndex(int tabIndex) {
+		ensureRemoteCheck();
 		local().setTabIndex(tabIndex);
 		remote().setTabIndex(tabIndex);
 	}
 
 	public void setTitle(String title) {
+		ensureRemoteCheck();
 		local().setTitle(title);
 		remote().setTitle(title);
 	}
@@ -613,6 +628,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	public void toggleClassName(String className) {
+		ensureRemoteCheck();
 		local().toggleClassName(className);
 		remote().toggleClassName(className);
 	}
@@ -676,6 +692,10 @@ public class Element extends Node implements DomElement {
 		}
 		// may need to make more conservative
 		// return ensureRemote();
+	}
+
+	private boolean notPendingAndLinked() {
+		return linkedToRemote() && !isPendingResolution();
 	}
 
 	private void runIfWithRemote(boolean flush, Runnable runnable) {

@@ -278,6 +278,7 @@ public class TextAreaElement extends Element {
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
+		ensureRemoteCheck();
 		if ((name.equals("readOnly") || name.equals("disabled")) && !value) {
 			local().removeAttribute(name);
 		}else{
@@ -288,6 +289,7 @@ public class TextAreaElement extends Element {
 
 	@Override
 	public String getPropertyString(String name) {
+		ensureRemoteCheck();
 		if ("value".equals(name)) {
 			if (linkedToRemote()) {
 				return typedRemote().getPropertyString(name);
@@ -300,6 +302,7 @@ public class TextAreaElement extends Element {
 
 	@Override
 	public void setPropertyString(String name, String value) {
+		ensureRemoteCheck();
 		if ("value".equals(name)) {
 			local().setInnerText(value);
 		} else {
