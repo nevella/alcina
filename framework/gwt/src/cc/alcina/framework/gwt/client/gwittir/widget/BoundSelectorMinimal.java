@@ -19,6 +19,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.totsp.gwittir.client.ui.Renderer;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.widget.FlowPanelClickable;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
@@ -54,15 +55,19 @@ public class BoundSelectorMinimal extends BoundSelector {
 	}
 
 	public BoundSelectorMinimal(Class selectionObjectClass,
-			CollectionFilter filter, int maxSelectedItems, Renderer renderer) {
-		super(selectionObjectClass, filter, maxSelectedItems, renderer, false);
+			CollectionFilter filter, int maxSelectedItems, Renderer renderer,
+			String hint) {
+		super(selectionObjectClass, filter, maxSelectedItems, renderer, false,
+				() -> TransformManager.get()
+						.getCollection(selectionObjectClass),
+				null, hint);
 	}
 
 	public BoundSelectorMinimal(Class selectionObjectClass, Predicate filter,
 			int maxSelectedItems, Function renderer, boolean useCellList,
 			Supplier<Collection> supplier, String noResultsMessage) {
 		super(selectionObjectClass, filter, maxSelectedItems, renderer,
-				useCellList, supplier, noResultsMessage);
+				useCellList, supplier, noResultsMessage, null);
 	}
 
 	@Override

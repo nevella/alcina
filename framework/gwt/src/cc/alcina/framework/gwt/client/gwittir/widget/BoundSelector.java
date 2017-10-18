@@ -89,18 +89,19 @@ public class BoundSelector extends AbstractBoundWidget
 		this(selectionObjectClass, filter, maxSelectedItems, renderer,
 				useCellList, () -> TransformManager.get()
 						.getCollection(selectionObjectClass),
-				null);
+				null,null);
 	}
 
 	public BoundSelector(Class selectionObjectClass, Predicate filter,
 			int maxSelectedItems, Function renderer, boolean useCellList,
-			Supplier<Collection> supplier, String noResultsMessage) {
+			Supplier<Collection> supplier, String noResultsMessage,String hint) {
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;
 		this.maxSelectedItems = maxSelectedItems;
 		this.useCellList = useCellList;
 		this.supplier = supplier;
 		this.noResultsMessage = noResultsMessage;
+		this.hint = hint;
 		if (renderer != null) {
 			this.renderer = renderer;
 		}
@@ -109,8 +110,14 @@ public class BoundSelector extends AbstractBoundWidget
 		redrawGrid();
 	}
 
+	private String hint;
+
 	public String getHint() {
-		return null;
+		return this.hint;
+	}
+
+	public void setHint(String hint) {
+		this.hint = hint;
 	}
 
 	public Object getValue() {

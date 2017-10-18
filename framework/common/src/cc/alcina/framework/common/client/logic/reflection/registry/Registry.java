@@ -157,6 +157,9 @@ public class Registry {
 	public static <V> V implOrNull(Class<V> registryPoint) {
 		return implOrNull(registryPoint, void.class);
 	}
+	public static <V> Optional<V> implOptional(Class<V> registryPoint) {
+		return Optional.<V>ofNullable(implOrNull(registryPoint, void.class));
+	}
 
 	public static <V> V implOrNull(Class<V> registryPoint, Class targetClass) {
 		return get().impl0(registryPoint, targetClass, true);
