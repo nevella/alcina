@@ -474,7 +474,7 @@ public class LocalDom {
 		}
 		Element hasNode = (Element) remoteLookup.get(hasNodeRemote);
 		if (hasNode.resolveRemoteDefined()) {
-			return nodeFor0(hasNodeRemote);
+			return nodeFor0(remote);
 		}
 		List<Integer> indicies = remoteIndex.indicies();
 		List<Boolean> remoteDefined = remoteIndex.remoteDefined();

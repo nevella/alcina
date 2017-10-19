@@ -32,8 +32,16 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 
 	@Override
 	public final Element getParentElement() {
-		return DomNodeStatic.getParentElement(this);
+		return nodeFor(getParentElement0(this));
 	}
+
+	public final native ElementRemote getParentElement0(NodeRemote node) /*-{
+        var parent = node.parentNode;
+        if (!parent || parent.nodeType != 1) {
+            parent = null;
+        }
+        return parent;
+	}-*/;
 
 	@Override
 	public final boolean hasParentElement() {

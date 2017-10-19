@@ -70,12 +70,12 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	 * error: "Permission denied to access property 'nodeType'"
 	 */
 	private static native boolean isJso(JavaScriptObject o) /*-{
-															try {
-															return (!!o) && (!!o.nodeType);
-															} catch (e) {
-															return false;
-															}
-															}-*/;
+        try {
+            return (!!o) && (!!o.nodeType);
+        } catch (e) {
+            return false;
+        }
+	}-*/;
 
 	private int resolvedEventId;
 
@@ -87,20 +87,6 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		T node = local().appendChild(newChild);
 		remote().appendChild(newChild);
 		return node;
-	}
-
-	protected void doPreTreeResolution(Node child) {
-		if (child != null) {
-			boolean ensureBecauseChildResolved = child.wasResolved()
-					&& !linkedToRemote();
-			if (ensureBecauseChildResolved) {
-				LocalDom.ensureRemote(this);
-			}
-			boolean linkedBecauseFlushed = ensureRemoteCheck();
-			if (linkedToRemote() && (wasResolved() || child.wasResolved())) {
-				LocalDom.ensureRemote(child);
-			}
-		}
 	}
 
 	@Override
@@ -180,6 +166,11 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	}
 
 	@Override
+	public int indexInParentChildren() {
+		return local().indexInParentChildren();
+	}
+
+	@Override
 	public Node insertAfter(Node newChild, Node refChild) {
 		return DomNodeStatic.insertAfter(this, newChild, refChild);
 	}
@@ -229,7 +220,18 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	@Override
 	public void removeFromParent() {
-		DomNodeStatic.removeFromParent(this);
+		ensureRemoteCheck();
+		remote().removeFromParent();
+		local().removeFromParent();
+	}
+
+	public Node replaceChild(Node newChild, Node oldChild) {
+		doPreTreeResolution(oldChild);
+		doPreTreeResolution(newChild);
+		remote().replaceChild(newChild, oldChild);
+		Node result = local().replaceChild(newChild, oldChild);
+		LocalDom.detach(oldChild);
+		return result;
 	}
 
 	public DomNode sameTreeNodeFor(DomNode domNode) {
@@ -243,18 +245,25 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		}
 	}
 
-	public Node replaceChild(Node newChild, Node oldChild) {
-		doPreTreeResolution(oldChild);
-		doPreTreeResolution(newChild);
-		remote().replaceChild(newChild, oldChild);
-		Node result = local().replaceChild(newChild, oldChild);
-		LocalDom.detach(oldChild);
-		return result;
-	}
-
 	public void setNodeValue(String nodeValue) {
 		ensureRemoteCheck();
 		local().setNodeValue(nodeValue);
+		remote().setNodeValue(nodeValue);
+		;
+	}
+
+	protected void doPreTreeResolution(Node child) {
+		if (child != null) {
+			boolean ensureBecauseChildResolved = child.wasResolved()
+					&& !linkedToRemote();
+			if (ensureBecauseChildResolved) {
+				LocalDom.ensureRemote(this);
+			}
+			boolean linkedBecauseFlushed = ensureRemoteCheck();
+			if (linkedToRemote() && (wasResolved() || child.wasResolved())) {
+				LocalDom.ensureRemote(child);
+			}
+		}
 	}
 
 	/**
@@ -299,15 +308,13 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	protected abstract <T extends DomNode> T remote();
 
+	protected abstract NodeRemote typedRemote();
+
 	/**
 	 * only call on reparse
 	 */
 	void clearResolved() {
 		resolvedEventId = 0;
-	}
-
-	boolean wasResolved() {
-		return resolvedEventId > 0;
 	}
 
 	void resolved(int wasResolvedEventId) {
@@ -316,10 +323,7 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		this.resolvedEventId = wasResolvedEventId;
 	}
 
-	protected abstract NodeRemote typedRemote();
-
-	@Override
-	public int indexInParentChildren() {
-		return local().indexInParentChildren();
+	boolean wasResolved() {
+		return resolvedEventId > 0;
 	}
 }

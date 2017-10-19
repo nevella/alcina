@@ -172,7 +172,7 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 
 	@Override
 	public Node removeAllChildren() {
-		//respects local/remote; OK
+		// respects local/remote; OK
 		return DomNodeStatic.removeAllChildren(this);
 	}
 
@@ -216,8 +216,8 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 		case 3:
 		case 8:
 			buf.append("[");
-			buf.append(node.getNodeValue().replace("\n", "\\n").replace("\t",
-					"\\t").replace("\r", "\\r"));
+			buf.append(node.getNodeValue().replace("\n", "\\n")
+					.replace("\t", "\\t").replace("\r", "\\r"));
 			buf.append("]");
 			break;
 		case 1:
@@ -245,6 +245,11 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 	abstract void appendTextContent(StringBuilder builder);
 
 	void setParentNode(NodeLocal local) {
+		if (parentNode != local && parentNode != null && local != null) {
+			// otherwise we go all loopy (do this instead of
+			// parentNode.removeChild(this)
+			parentNode.children.remove(this);
+		}
 		parentNode = local;
 	}
 

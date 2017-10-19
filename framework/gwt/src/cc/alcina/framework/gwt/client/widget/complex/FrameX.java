@@ -46,9 +46,10 @@ public class FrameX extends Frame {
 	}
 
 	private native void _setDocumentHtml(String html)/*-{
-	var elt_wr = this.@cc.alcina.framework.gwt.client.widget.complex.FrameX::getElement()();
-	var elt = elt_wr.@com.google.gwt.dom.client.Element::typedRemote()();
-	var oDoc = elt.contentWindow || elt.contentDocument;
+	var elem = this.@cc.alcina.framework.gwt.client.widget.complex.FrameX::getElement()();
+	var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
+    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
+	var oDoc = remote.contentWindow || remote.contentDocument;
 	if (oDoc.document) {
 		oDoc = oDoc.document;
 	}
