@@ -45,13 +45,16 @@ public class HtmlParser {
 
 	private Element replaceContents;
 
-	public Element parse(DomElement root, Element replaceContents) {
-		return parse(root.getOuterHtml(), replaceContents);
+	private boolean emitHtmlHeadBodyTags;
+
+	public Element parse(DomElement root, Element replaceContents, boolean emitHtmlHeadBodyTags) {
+		return parse(root.getOuterHtml(), replaceContents,emitHtmlHeadBodyTags);
 	}
 
-	public Element parse(String html, Element replaceContents) {
+	public Element parse(String html, Element replaceContents,boolean emitHtmlHeadBodyTags) {
 		this.html = html;
 		this.replaceContents = replaceContents;
+		this.emitHtmlHeadBodyTags = emitHtmlHeadBodyTags;
 		resetBuilder();
 		tokenState = TokenState.EXPECTING_NODE;
 		LocalDom.setDisableRemoteWrite(true);
@@ -277,6 +280,14 @@ public class HtmlParser {
 	}
 
 	private void emitStartElement(String tag) {
+		if(!emitHtmlHeadBodyTags){
+			switch(tag){
+			case "html":
+			case "head":
+			case "body":
+				return;
+			}
+		}
 		Element element = null;
 		if (rootResult == null && replaceContents != null) {
 			element = replaceContents;
@@ -297,6 +308,14 @@ public class HtmlParser {
 	}
 
 	private void emitEndElement(String tag) {
+		if(!emitHtmlHeadBodyTags){
+			switch(tag){
+			case "html":
+			case "head":
+			case "body":
+				return;
+			}
+		}
 		cursor = cursor.getParentElement();
 	}
 

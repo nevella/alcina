@@ -411,7 +411,7 @@ public class ElementLocal extends NodeLocal
 				int idx = outerHtml.indexOf("</");
 				outerHtml = Ax.format("%s%s%s", outerHtml.substring(0, idx),
 						html, outerHtml.substring(idx));
-				new HtmlParser().parse(outerHtml, element);
+				new HtmlParser().parse(outerHtml, element, false);
 			}
 		}
 	}

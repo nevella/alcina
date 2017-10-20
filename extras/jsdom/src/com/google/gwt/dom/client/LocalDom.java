@@ -495,7 +495,7 @@ public class LocalDom {
 	}
 
 	private Element parse(ElementRemote root, Element replaceContents) {
-		Element parsed = new HtmlParser().parse(root, replaceContents);
+		Element parsed = new HtmlParser().parse(root, replaceContents,root==Document.get().typedRemote().getDocumentElement0());
 		wasResolved0(parsed);
 		return parsed;
 	}

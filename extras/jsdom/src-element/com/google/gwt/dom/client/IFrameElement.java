@@ -25,7 +25,7 @@ import com.google.gwt.safehtml.shared.annotations.IsSafeUri;
  * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#edef-IFRAME">W3C HTML Specification</a>
  */
 @TagName(IFrameElement.TAG)
-public class IFrameElement extends Element {
+public class IFrameElement extends FrameElement {
 
   public static final String TAG = "iframe";
 
@@ -74,9 +74,6 @@ public class IFrameElement extends Element {
   protected IFrameElement() {
   }
 
-  public final  Document getContentDocument() {
-	  return LocalDom.nodeFor(getContentDocument0(typedRemote()));
-  }
   /**
    * The document this frame contains, if there is any and it is available, or
    * null otherwise.
@@ -203,14 +200,7 @@ public class IFrameElement extends Element {
 }
 
 
-  /**
-   * A URI designating the initial frame contents.
-   *
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-src-FRAME">W3C HTML Specification</a>
-   */
-  public final void setSrc(SafeUri src) {
-    setSrc(src.asString());
-  }
+  
 
   /**
    * A URI designating the initial frame contents.
