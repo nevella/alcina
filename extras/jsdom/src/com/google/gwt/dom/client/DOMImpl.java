@@ -337,6 +337,10 @@ abstract class DOMImpl {
 			NodeRemote child);
 
 	protected native void scrollIntoView(ElementRemote elem) /*-{
+		if(elem.scrollIntoView){
+			elem.scrollIntoView();
+			return;
+		}
         var left = elem.offsetLeft, top = elem.offsetTop;
         var width = elem.offsetWidth, height = elem.offsetHeight;
 

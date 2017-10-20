@@ -222,7 +222,7 @@ class DOMImplStandardBase extends DOMImplStandard {
 		ClientRect rect = getBoundingClientRect(elem);
 		double left = rect != null
 				? rect.getSubPixelLeft()
-						+ elem.getOwnerDocument().getBody().getScrollLeft()
+						+ getScrollLeft(elem.getOwnerDocument())
 				: getAbsoluteLeftUsingOffsets(elem);
 		return toInt32(left);
 	}
@@ -232,7 +232,7 @@ class DOMImplStandardBase extends DOMImplStandard {
 		ClientRect rect = getBoundingClientRect(elem);
 		double top = rect != null
 				? rect.getSubPixelTop()
-						+ elem.getOwnerDocument().getBody().getScrollTop()
+						+ getScrollTop(elem.getOwnerDocument())
 				: getAbsoluteTopUsingOffsets(elem);
 		return toInt32(top);
 	}
