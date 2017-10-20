@@ -882,11 +882,11 @@ public class DOM {
 	 *         not a child of the given parent
 	 */
 	public static int getChildIndex(Element parent, Element child) {
-//		if (parent.provideIsLocal() && child.provideIsLocal()) {
-//			return parent.getChildIndexLocal(child);
-//		}
-//		return impl.getChildIndex(parent, child);
-		return parent.getChildIndexLocal(child); 
+		// if (parent.provideIsLocal() && child.provideIsLocal()) {
+		// return parent.getChildIndexLocal(child);
+		// }
+		// return impl.getChildIndex(parent, child);
+		return parent.getChildIndexLocal(child);
 	}
 
 	/**
@@ -1063,8 +1063,8 @@ public class DOM {
 	 */
 	public static native int getIntStyleAttribute(Element elem,
 			String attr) /*-{
-        return parseInt(elem.style[attr]) || 0;
-	}-*/;
+							return parseInt(elem.style[attr]) || 0;
+							}-*/;
 
 	/**
 	 * Gets an element's next sibling element.
@@ -1535,7 +1535,7 @@ public class DOM {
 	 *            possible values are described in {@link Event})
 	 */
 	public static void sinkEvents(Element elem, int eventBits) {
-//		elem.resolveIfAppropriate();
+		// elem.resolveIfAppropriate();
 		if (elem.implAccess().linkedToRemote()) {
 			impl.sinkEvents(elem, eventBits);
 		} else {
@@ -1679,9 +1679,7 @@ public class DOM {
 		}
 		EventTarget eventTarget = evt.getEventTarget();
 		String lcType = evt.getType().toLowerCase();
-		if (lcType.contains("key")) {
-			int debug = 3;
-		}
+		int eventTypeInt = Event.getTypeInt(lcType);
 		if (lastDispatchedEvent == evt
 				&& listener == lastDispatchedMouseEventListener) {
 			return;
@@ -1691,16 +1689,16 @@ public class DOM {
 		}
 		lastDispatchedEvent = evt;
 		lastDispatchedMouseEventListener = listener;
-		if (lcType.contains("click") || lcType.contains("mousedown")) {
-			LocalDom.log(LocalDomDebug.DISPATCH_DETAILS,
-					Ax.format("evt/listener: %s/%s/%s %s/%s", evt.hashCode(),
-							listener.hashCode(), elem.hashCode(), lcType,
-							elem.getTagName()));
-		}
-		{
-			String message = Ax.format("dispatch  event - %s", lcType);
-			LocalDom.log(LocalDomDebug.DOM_EVENT, message);
-		}
+		// if (lcType.contains("click") || lcType.contains("mousedown")) {
+		// LocalDom.log(LocalDomDebug.DISPATCH_DETAILS,
+		// Ax.format("evt/listener: %s/%s/%s %s/%s", evt.hashCode(),
+		// listener.hashCode(), elem.hashCode(), lcType,
+		// elem.getTagName()));
+		// }
+		// {
+		// String message = Ax.format("dispatch event - %s", lcType);
+		// LocalDom.log(LocalDomDebug.DOM_EVENT, message);
+		// }
 		if (Element.is(eventTarget)) {
 			Element rel = Element.as(eventTarget);
 			// get the listeners early, to prevent overwrite. Note that this
@@ -1710,8 +1708,13 @@ public class DOM {
 			while (rel != elem && rel != null) {
 				if (rel.uiObjectListener != null
 						&& !dispatchedFor.contains(rel)) {
-					dispatchedFor.add(rel);
-					forDispatch.put(rel, rel.uiObjectListener);
+					// FIXME - bitless?
+					int bitsSunk = rel.localEventBitsSunk();
+					if (eventTypeInt != -1 && (bitsSunk & eventTypeInt) == 0) {
+					} else {
+						dispatchedFor.add(rel);
+						forDispatch.put(rel, rel.uiObjectListener);
+					}
 				}
 				rel = rel.getParentElement();
 			}
