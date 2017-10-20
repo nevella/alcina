@@ -330,6 +330,9 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		S last = CommonUtils.last(matched);
 		return last == null ? null : last.getToken();
 	}
+	public S lastMatched() {
+		return CommonUtils.last(matched);
+	}
 
 	public boolean matches(T[] tokens) {
 		int j = 0;
