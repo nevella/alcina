@@ -363,7 +363,7 @@ public abstract class ClientTransformManager extends TransformManager {
 					// required for deletion permission checks, and should never
 					// be the collection owner of non-userland objects
 					HasIdAndLocalId target = (HasIdAndLocalId) object;
-					if (!checkRemoveAssociation(hili, target)) {
+					if (!checkRemoveAssociation(hili, target,pr.getPropertyName())) {
 						continue;
 					}
 					boolean wasRegistered = getObject(target) != null;
@@ -380,7 +380,7 @@ public abstract class ClientTransformManager extends TransformManager {
 	}
 
 	protected boolean checkRemoveAssociation(HasIdAndLocalId hili,
-			HasIdAndLocalId target) {
+			HasIdAndLocalId target, String propertyName) {
 		return !(target instanceof IUser || target instanceof IGroup);
 	}
 
