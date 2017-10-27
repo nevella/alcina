@@ -140,6 +140,8 @@ public abstract class DevHelper {
 					String prompt = getJbossConfigPrompt(configPath);
 					configPath = prompter.getValue(prompt);
 					prefs.put(JBOSS_CONFIG_PATH, configPath);
+				} else {
+					return;
 				}
 			}
 		}
