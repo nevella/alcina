@@ -20,6 +20,8 @@ import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSe
 import com.google.gwt.user.cellview.client.Header;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ColumnMapper;
+import cc.alcina.framework.common.client.util.ColumnMapper.ColumnMapping;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 
@@ -367,6 +369,13 @@ public class ColumnsBuilder<T> {
 
 		public boolean isEditable() {
 			return propertyName != null;
+		}
+	}
+
+	public void buildFromColumnMappings(ColumnMapper<T> mapper) {
+		List<ColumnMapper<T>.ColumnMapping> mappings = mapper.getMappings();
+		for (ColumnMapping columnMapping : mappings) {
+			col(columnMapping.name).function(columnMapping.mapping).build();
 		}
 	}
 }

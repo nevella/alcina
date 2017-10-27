@@ -10,10 +10,11 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ColumnMapper;
+import cc.alcina.framework.common.client.util.ColumnMapper.ColumnMapping;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.entity.projection.GraphProjection;
-import cc.alcina.framework.entity.util.ToCsvRow.Mapping;
 
 public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 	List<Mapping> mappings = new ArrayList<>();
@@ -31,6 +32,13 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 
 	public String getPrefix() {
 		return this.prefix;
+	}
+
+	protected void loadFromColumnMappings(
+			List<ColumnMapper<T>.ColumnMapping> mappings) {
+		for (ColumnMapping mapping : mappings) {
+			define(mapping.name, null, mapping.mapping);
+		}
 	}
 
 	@Override
