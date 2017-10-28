@@ -51,11 +51,12 @@ public class MemcacheSearcher {
 
 	private SearchDefinition def;
 
-	CacheQuery query = Registry.impl(TQuery.class);
+	MemoryStoreQuery query = Registry.impl(MemoryStoreQuery.class);
 
 	public <T extends HasIdAndLocalId> List<T> search(SearchDefinition def,
 			Class<T> clazz, Comparator<T> order) {
 		this.def = def;
+		query.def = def;
 		setupHandlers();
 		processDefinitionHandler();
 		processHandlers();
@@ -106,12 +107,16 @@ public class MemcacheSearcher {
 		}
 	}
 
-	@RegistryLocation(registryPoint = TQuery.class, implementationType = ImplementationType.INSTANCE)
-	public static class TQuery extends CacheQuery<TQuery> {
+	@RegistryLocation(registryPoint = MemoryStoreQuery.class, implementationType = ImplementationType.INSTANCE)
+	public static class MemoryStoreQuery extends CacheQuery<MemoryStoreQuery> {
+		
+		
+		protected SearchDefinition def;
+
 		@Override
 		public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
 			Collection<T> values = Registry.impl(SearcherCollectionSource.class)
-					.getCollectionFor(clazz);
+					.getCollectionFor(clazz,def);
 			Stream<T> stream = getStream(values);
 			return stream.collect(Registry.impl(ListCollector.class).toList());
 		}
