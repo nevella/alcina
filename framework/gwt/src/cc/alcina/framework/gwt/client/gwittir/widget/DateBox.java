@@ -39,10 +39,11 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  * 
  * @author Nick Reddel
  */
-public class DateBox extends AbstractBoundWidget<Date> implements
-		ValueChangeHandler {
-	public static final BoundWidgetProvider PROVIDER = new BoundWidgetProvider() {
-		public BoundWidget get() {
+public class DateBox extends AbstractBoundWidget<Date>
+		implements ValueChangeHandler {
+	public static class DateBoxProvider
+			implements BoundWidgetProvider<DateBox> {
+		public DateBox get() {
 			return new DateBox();
 		}
 	};

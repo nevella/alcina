@@ -40,14 +40,6 @@ import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 	
 	private int visibleItemCount=4;
 
-	public int getVisibleItemCount() {
-		return this.visibleItemCount;
-	}
-
-	public void setVisibleItemCount(int visibleItemCount) {
-		this.visibleItemCount = visibleItemCount;
-	}
-
 	private Renderer renderer = FriendlyEnumRenderer.INSTANCE;
 
 	public ListBoxEnumProvider(Class<? extends Enum> clazz) {
@@ -80,35 +72,47 @@ import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 		return listBox;
 	}
 
-	public void setHiddenValues(List<Enum> hiddenValues) {
-		this.hiddenValues = hiddenValues;
+	public Class<? extends Enum> getEnumClass() {
+		return clazz;
 	}
 
 	public List<Enum> getHiddenValues() {
 		return hiddenValues;
 	}
 
-	public void setWithNull(boolean withNull) {
-		this.withNull = withNull;
+	public Renderer getRenderer() {
+		return renderer;
 	}
 
-	public boolean isWithNull() {
-		return withNull;
-	}
-
-	public void setMultiple(boolean multiple) {
-		this.multiple = multiple;
+	public int getVisibleItemCount() {
+		return this.visibleItemCount;
 	}
 
 	public boolean isMultiple() {
 		return multiple;
 	}
 
+	public boolean isWithNull() {
+		return withNull;
+	}
+
+	public void setHiddenValues(List<Enum> hiddenValues) {
+		this.hiddenValues = hiddenValues;
+	}
+
+	public void setMultiple(boolean multiple) {
+		this.multiple = multiple;
+	}
+
 	public void setRenderer(Renderer renderer) {
 		this.renderer = renderer;
 	}
 
-	public Renderer getRenderer() {
-		return renderer;
+	public void setVisibleItemCount(int visibleItemCount) {
+		this.visibleItemCount = visibleItemCount;
+	}
+
+	public void setWithNull(boolean withNull) {
+		this.withNull = withNull;
 	}
 }

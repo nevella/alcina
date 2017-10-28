@@ -9,8 +9,9 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.customiser.DomainObjectSuggestCustomiser;
 
-public class PropertyFieldGetter<O> implements Function<O, String> {
+public class PropertyFieldGetter<O> implements Function<O, Object> {
 	private String propertyName;
 
 	private Field field;
@@ -22,7 +23,7 @@ public class PropertyFieldGetter<O> implements Function<O, String> {
 	}
 
 	@Override
-	public String apply(O object) {
+	public Object apply(O object) {
 		HasIdAndLocalId hili = (HasIdAndLocalId) object;
 		Object value = Reflections.propertyAccessor().getPropertyValue(hili,
 				propertyName);
@@ -36,6 +37,6 @@ public class PropertyFieldGetter<O> implements Function<O, String> {
 		if (field.getConverter() != null) {
 			value = field.getConverter().convert(value);
 		}
-		return CommonUtils.nullSafeToString(value);
+		return value;
 	}
 }

@@ -17,11 +17,10 @@ package cc.alcina.framework.gwt.client.cell;
 
 import static com.google.gwt.dom.client.BrowserEvents.*;
 
-import java.util.LinkedHashSet;
 import java.util.Locale;
-import java.util.Set;
 
 import com.google.gwt.cell.client.AbstractEditableCell;
+import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.cell.client.ValueUpdater;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
@@ -39,19 +38,17 @@ import com.google.gwt.text.shared.SimpleSafeHtmlRenderer;
 /**
  * An editable text cell. Click to edit, escape to cancel, return to commit.
  */
-public class PropertyTextCell
-		extends AbstractEditableCell<String, PropertyTextCell.ViewData> {
+public class EditTextCell
+		extends AbstractEditableCell<String, EditTextCell.ViewData> {
 	private static Template template;
 
 	private final SafeHtmlRenderer<String> renderer;
-
-	Set<Object> editedKeys = new LinkedHashSet<>();
 
 	/**
 	 * Construct a new EditTextCell that will use a
 	 * {@link SimpleSafeHtmlRenderer}.
 	 */
-	public PropertyTextCell() {
+	public EditTextCell() {
 		this(SimpleSafeHtmlRenderer.getInstance());
 	}
 
@@ -62,7 +59,7 @@ public class PropertyTextCell
 	 * @param renderer
 	 *            a {@link SafeHtmlRenderer SafeHtmlRenderer<String>} instance
 	 */
-	public PropertyTextCell(SafeHtmlRenderer<String> renderer) {
+	public EditTextCell(SafeHtmlRenderer<String> renderer) {
 		super(CLICK, KEYUP, KEYDOWN, BLUR);
 		if (template == null) {
 			template = GWT.create(Template.class);
@@ -118,9 +115,6 @@ public class PropertyTextCell
 		String toRender = value;
 		if (viewData != null) {
 			String text = viewData.getText();
-			if (text == null) {
-				text = "";
-			}
 			if (viewData.isEditing()) {
 				/*
 				 * Do not use the renderer in edit mode because the value of a
@@ -134,7 +128,6 @@ public class PropertyTextCell
 				toRender = text;
 			}
 		}
-		sb.appendHtmlConstant("<span class='property-text-cell'>");
 		if (toRender != null && toRender.trim().length() > 0) {
 			sb.append(renderer.render(toRender));
 		} else {
@@ -144,7 +137,6 @@ public class PropertyTextCell
 			 */
 			sb.appendHtmlConstant("\u00A0");
 		}
-		sb.appendHtmlConstant("</span>");
 	}
 
 	@Override
@@ -154,24 +146,6 @@ public class PropertyTextCell
 			return true;
 		}
 		return false;
-	}
-
-	@Override
-	public void setValue(com.google.gwt.cell.client.Cell.Context context,
-			Element parent, String value) {
-		super.setValue(context, parent, value);
-		Object key = context.getKey();
-		ViewData viewData = getViewData(key);
-		if (editedKeys.contains(key)
-				&& (viewData == null || !viewData.isEditing())) {
-			parent.getParentElement().removeClassName("editing");
-			editedKeys.remove(key);
-			return;
-		}
-		if (viewData != null && viewData.isEditing()) {
-			parent.getParentElement().addClassName("editing");
-			editedKeys.add(key);
-		}
 	}
 
 	/**
@@ -198,11 +172,11 @@ public class PropertyTextCell
 	 *            the input element
 	 */
 	private native void clearInput(Element input) /*-{
-													if (input.selectionEnd)
-													input.selectionEnd = input.selectionStart;
-													else if ($doc.selection)
-													$doc.selection.clear();
-													}-*/;
+        if (input.selectionEnd)
+            input.selectionEnd = input.selectionStart;
+        else if ($doc.selection)
+            $doc.selection.clear();
+	}-*/;
 
 	/**
 	 * Commit the current value.

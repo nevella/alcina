@@ -80,7 +80,7 @@ import cc.alcina.framework.gwt.client.gwittir.provider.FriendlyEnumLabelProvider
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxCollectionProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
-import cc.alcina.framework.gwt.client.gwittir.widget.DateBox;
+import cc.alcina.framework.gwt.client.gwittir.widget.DateBox.DateBoxProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
@@ -194,7 +194,8 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		return INSTANCE;
 	}
 
-	public static final BoundWidgetProvider<TextBox> TEXTBOX_PROVIDER = new BoundWidgetProvider<TextBox>() {
+	public static class BoundWidgetProviderTextBox
+			implements BoundWidgetProvider<TextBox> {
 		public TextBox get() {
 			return new TextBox();
 		}
@@ -211,16 +212,16 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 		public BoundWidgetTypeFactorySimpleGenerator() {
 			super(true);
-			add(Date.class, DateBox.PROVIDER);
-			add(String.class, GwittirBridge.TEXTBOX_PROVIDER);
-			add(Integer.class, GwittirBridge.TEXTBOX_PROVIDER);
-			add(int.class, GwittirBridge.TEXTBOX_PROVIDER);
-			add(Long.class, GwittirBridge.TEXTBOX_PROVIDER);
-			add(long.class, GwittirBridge.TEXTBOX_PROVIDER);
-			add(Float.class, GwittirBridge.TEXTBOX_PROVIDER);
-			add(float.class, GwittirBridge.TEXTBOX_PROVIDER);
-			add(Double.class, GwittirBridge.TEXTBOX_PROVIDER);
-			add(double.class, GwittirBridge.TEXTBOX_PROVIDER);
+			add(Date.class, new DateBoxProvider());
+			add(String.class, new BoundWidgetProviderTextBox());
+			add(Integer.class, new BoundWidgetProviderTextBox());
+			add(int.class, new BoundWidgetProviderTextBox());
+			add(Long.class, new BoundWidgetProviderTextBox());
+			add(long.class, new BoundWidgetProviderTextBox());
+			add(Float.class, new BoundWidgetProviderTextBox());
+			add(float.class, new BoundWidgetProviderTextBox());
+			add(Double.class, new BoundWidgetProviderTextBox());
+			add(double.class, new BoundWidgetProviderTextBox());
 		}
 
 		public BoundWidgetProvider getWidgetProvider(Class type) {
@@ -448,7 +449,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			return Converter.DOUBLE_TO_STRING_CONVERTER;
 		}
 		if (bwp == BoundWidgetTypeFactory.TEXTBOX_PROVIDER
-				|| bwp == TEXTBOX_PROVIDER) {
+				|| bwp.getClass() == BoundWidgetProviderTextBox.class) {
 			return Converter.TO_STRING_CONVERTER;
 			/*
 			 * these seem to be being introspected as value-type object, not
@@ -462,7 +463,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			BoundWidgetTypeFactory factory, boolean editableWidgets,
 			boolean multiple, String propertyName,
 			Predicate<String> editableFieldNameFilter) {
-		factory.add(Date.class, DateBox.PROVIDER);
+		factory.add(Date.class, new DateBoxProvider());
 		List<Field> fields = new ArrayList<Field>();
 		ClientBeanReflector bi = ClientReflector.get()
 				.beanInfoForClass(obj.getClass());

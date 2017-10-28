@@ -1,8 +1,11 @@
 package com.google.gwt.dom.client;
 
+import java.util.Objects;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class HtmlParser {
@@ -47,11 +50,14 @@ public class HtmlParser {
 
 	private boolean emitHtmlHeadBodyTags;
 
-	public Element parse(DomElement root, Element replaceContents, boolean emitHtmlHeadBodyTags) {
-		return parse(root.getOuterHtml(), replaceContents,emitHtmlHeadBodyTags);
+	public Element parse(DomElement root, Element replaceContents,
+			boolean emitHtmlHeadBodyTags) {
+		return parse(root.getOuterHtml(), replaceContents,
+				emitHtmlHeadBodyTags);
 	}
 
-	public Element parse(String html, Element replaceContents,boolean emitHtmlHeadBodyTags) {
+	public Element parse(String html, Element replaceContents,
+			boolean emitHtmlHeadBodyTags) {
 		this.html = html;
 		this.replaceContents = replaceContents;
 		this.emitHtmlHeadBodyTags = emitHtmlHeadBodyTags;
@@ -230,8 +236,14 @@ public class HtmlParser {
 			emitStartElement(tag);
 		}
 		selfCloseTag |= isSelfClosingTag(tag);
-		if (closeTag || selfCloseTag) {
-			emitEndElement(tag);
+		if (closeTag && selfCloseTag) {
+			// exclusive or really. we'll have already emitted the close here,
+			// so ignore
+			// e.g. is gwt celltable safehtml for input
+		} else {
+			if (closeTag || selfCloseTag) {
+				emitEndElement(tag);
+			}
 		}
 		switch (tag) {
 		case "script":
@@ -280,8 +292,8 @@ public class HtmlParser {
 	}
 
 	private void emitStartElement(String tag) {
-		if(!emitHtmlHeadBodyTags){
-			switch(tag){
+		if (!emitHtmlHeadBodyTags) {
+			switch (tag) {
 			case "html":
 			case "head":
 			case "body":
@@ -300,23 +312,47 @@ public class HtmlParser {
 		attributes = new StringMap();
 		if (rootResult == null) {
 			rootResult = element;
-			cursor = element;
+			setCursor(element, tag, 1);
 		} else {
 			cursor.appendChild(element);
-			cursor = element;
+			setCursor(element, tag, 1);
 		}
 	}
 
+	boolean debugCursor = true;
+
+	int debugCursorDepth = 0;
+
+	private void setCursor(Element element, String tag, int delta) {
+		if (debugCursor) {
+			String fromTag = cursor == null ? "(null)" : cursor.getTagName();
+			String toTag = element == null ? "(null)" : element.getTagName();
+			Ax.out("%s -> %s: %s -> %s", debugCursorDepth,
+					debugCursorDepth + delta, fromTag, toTag);
+			if (delta == 1) {
+				if (!Objects.equals(toTag, tag)) {
+					Ax.err(">> %s, expected %s", toTag, tag);
+				}
+			} else {
+				if (!Objects.equals(fromTag, tag)) {
+					Ax.err("<< %s, expected %s", fromTag, tag);
+				}
+			}
+			debugCursorDepth += delta;
+		}
+		cursor = element;
+	}
+
 	private void emitEndElement(String tag) {
-		if(!emitHtmlHeadBodyTags){
-			switch(tag){
+		if (!emitHtmlHeadBodyTags) {
+			switch (tag) {
 			case "html":
 			case "head":
 			case "body":
 				return;
 			}
 		}
-		cursor = cursor.getParentElement();
+		setCursor(cursor.getParentElement(), tag, -1);
 	}
 
 	private void emitComment(String string) {
@@ -340,5 +376,8 @@ public class HtmlParser {
 		}
 		Text text = Document.get().createTextNode(string);
 		cursor.appendChild(text);
+		if (debugCursor) {
+			Ax.out("  tx: %s", CommonUtils.trimToWsChars(string, 50, true));
+		}
 	}
 }

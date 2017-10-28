@@ -36,7 +36,7 @@ public class LocalDom {
 
 	public static boolean fastRemoveAll = true;
 
-	private static boolean useRemoteDom = true;
+	private static boolean useRemoteDom = GWT.isClient();
 
 	private static boolean disableRemoteWrite;
 
@@ -180,7 +180,7 @@ public class LocalDom {
 		} else {
 			remoteLookup = new LinkedHashMap<>();
 		}
-		ie9 = BrowserMod.isIE9();
+		ie9 = GWT.isClient() ? BrowserMod.isIE9() : false;
 		emitCommentPisAsText = true;
 		if (collections == null) {
 			initStatics();
@@ -495,7 +495,8 @@ public class LocalDom {
 	}
 
 	private Element parse(ElementRemote root, Element replaceContents) {
-		Element parsed = new HtmlParser().parse(root, replaceContents,root==Document.get().typedRemote().getDocumentElement0());
+		Element parsed = new HtmlParser().parse(root, replaceContents,
+				root == Document.get().typedRemote().getDocumentElement0());
 		wasResolved0(parsed);
 		return parsed;
 	}

@@ -53,6 +53,14 @@ public class DomainObjectSuggestCustomiser
 
 	private boolean showOnFocus;
 
+	public boolean isShowOnFocus() {
+		return this.showOnFocus;
+	}
+
+	public void setShowOnFocus(boolean showOnFocus) {
+		this.showOnFocus = showOnFocus;
+	}
+
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		classValue = NamedParameter.Support
@@ -87,11 +95,15 @@ public class DomainObjectSuggestCustomiser
 	@Override
 	public BoundWidget get() {
 		BoundSuggestBox boundSuggestBox = new BoundSuggestBox<>();
-		boundSuggestBox.setRenderer((Renderer) Reflections.classLookup()
-				.newInstance(rendererClassValue));
+		boundSuggestBox.setRenderer(getRenderer());
 		boundSuggestBox.suggestOracle(
 				new BoundSuggestOracle().clazz(classValue).hint(hintValue));
 		boundSuggestBox.setShowOnFocus(showOnFocus);
 		return boundSuggestBox;
+	}
+
+	public Renderer getRenderer() {
+		return (Renderer) Reflections.classLookup()
+				.newInstance(rendererClassValue);
 	}
 }

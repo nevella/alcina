@@ -26,6 +26,7 @@ import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleModel;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleSuggestion;
@@ -197,6 +198,17 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 			runningCallback=new SuggestCallback(request, callback);
 			ClientBase.getCommonRemoteServiceAsyncInstance().suggest(
 					boundRequest, runningCallback);
+		}
+	}
+
+	public String getLastFilterText() {
+		return base.getText();
+	}
+
+	public void setFilterText(String filterText) {
+		base.setText(filterText);
+		if(!Ax.isBlank(filterText)){
+			base.showSuggestions(filterText);
 		}
 	}
 }

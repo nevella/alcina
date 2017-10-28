@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.GwittirBridge.BoundWidgetProviderTextBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 
 @ClientInstantiable
@@ -46,7 +46,7 @@ public class RenderedLabelCustomiser implements Customiser {
 		boolean textBoxIfEditable = NamedParameter.Support
 				.booleanValue(info.parameters(), TEXT_BOX_IF_EDITABLE);
 		if (editable && textBoxIfEditable) {
-			return GwittirBridge.TEXTBOX_PROVIDER;
+			return new BoundWidgetProviderTextBox();
 		} else {
 			return new RenderedLabelProvider(rendererClass, widgetCssClass);
 		}

@@ -5,7 +5,6 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -18,12 +17,22 @@ import com.google.gwt.user.cellview.client.AbstractCellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
 import com.google.gwt.user.cellview.client.Header;
+import com.totsp.gwittir.client.ui.Renderer;
+import com.totsp.gwittir.client.ui.table.Field;
+import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ColumnMapper;
 import cc.alcina.framework.common.client.util.ColumnMapper.ColumnMapping;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
+import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.GwittirBridge.BoundWidgetProviderTextBox;
+import cc.alcina.framework.gwt.client.gwittir.customiser.DomainObjectSuggestCustomiser;
+import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox;
+import cc.alcina.framework.gwt.client.gwittir.widget.DateBox.DateBoxProvider;
+import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
 
 public class ColumnsBuilder<T> {
 	private AbstractCellTable<T> table;
@@ -139,11 +148,7 @@ public class ColumnsBuilder<T> {
 			EditInfo editInfo = new EditInfo();
 			editInfo.propertyName = editablePropertyName;
 			if (edit && editablePropertyName != null) {
-				editInfo.cell = Optional.ofNullable(editableCell)
-						.orElse(new PropertyTextCell());
-				editInfo.fieldUpdater = fieldUpdater != null ? fieldUpdater
-						: new PropertyFieldUpdater(editablePropertyName);
-				function = new PropertyFieldGetter(editablePropertyName, clazz);
+				setupEditInfo(editInfo);
 			}
 			if (function == null) {
 				function = (Function) sortFunction;
@@ -184,6 +189,41 @@ public class ColumnsBuilder<T> {
 			col.setSortable(sortable);
 			col.setDefaultSortAscending(!reversed);
 			return col;
+		}
+
+		protected void setupEditInfo(EditInfo editInfo) {
+			Field field = null;
+			if (editableCell != null) {
+				editInfo.cell = editableCell;
+			} else {
+				field = GwittirBridge.get().getField(clazz,
+						editInfo.propertyName, true, true,
+						GwittirBridge.SIMPLE_FACTORY_NO_NULLS, null);
+				BoundWidgetProvider cellProvider = field.getCellProvider();
+				if (cellProvider instanceof ListBoxEnumProvider) {
+					ListBoxEnumProvider listBoxEnumProvider = (ListBoxEnumProvider) cellProvider;
+					Class<? extends Enum> enumClass = listBoxEnumProvider
+							.getEnumClass();
+					Renderer renderer = listBoxEnumProvider.getRenderer();
+					editInfo.cell = new PropertySingleSelectorCell(enumClass,
+							renderer, new FlatSearchSelector(enumClass, 1,
+									renderer, new EnumSupplier(enumClass)));
+				} else if (cellProvider instanceof DomainObjectSuggestCustomiser) {
+					DomainObjectSuggestCustomiser suggestCustomiser = (DomainObjectSuggestCustomiser) cellProvider;
+					Renderer renderer = suggestCustomiser.getRenderer();
+					editInfo.cell = new PropertyDomainSuggestCell(renderer,
+							(BoundSuggestBox) suggestCustomiser.get());
+				} else if (cellProvider instanceof DateBoxProvider) {
+					editInfo.cell = new PropertyDateCell();
+				} else if (cellProvider instanceof BoundWidgetProviderTextBox) {
+					editInfo.cell = new PropertyTextCell();
+				} else {
+					throw new UnsupportedOperationException();
+				}
+			}
+			editInfo.fieldUpdater = fieldUpdater != null ? fieldUpdater
+					: new PropertyFieldUpdater(editablePropertyName, field);
+			function = new PropertyFieldGetter(editablePropertyName, clazz);
 		}
 
 		public ColumnBuilder cell(Cell cell) {
@@ -335,9 +375,10 @@ public class ColumnsBuilder<T> {
 				} else {
 					value = function.apply(t);
 				}
-				if (cell == null
-						&& editInfo.cell.getClass() == TextCell.class) {
-					value = value == null ? null : value.toString();
+				if (cell == null && (editInfo.cell.getClass() == TextCell.class
+						|| editInfo.cell
+								.getClass() == PropertyTextCell.class)) {
+					value = CommonUtils.nullSafeToString(value);
 				}
 				return value;
 			} catch (Exception e) {
