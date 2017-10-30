@@ -305,21 +305,29 @@ public class IntrospectorGenerator extends Generator {
 					p.getName() + " (Erased) " + ptype.getQualifiedSourceName(),
 					null);
 			writer.print("Method readMethod = ");
+			String returnType = p.getReadMethod().getBaseMethod()
+					.getReturnType().getQualifiedSourceName();
+			String extendsMarker = " extends ";
+			int idx = returnType.indexOf(extendsMarker);
+			if (idx != -1) {
+				returnType = returnType.substring(idx + extendsMarker.length());
+			}
 			if (p.getReadMethod() == null) {
 				writer.println("null;");
 			} else {
 				writer.println(String.format(
-						"new NativeMethodWrapper(%s.class, \"%s\",this);",
+						"new NativeMethodWrapper(%s.class, \"%s\",%s.class,this);",
 						p.getReadMethod().getDeclaringType()
 								.getQualifiedSourceName(),
-						p.getReadMethod().getBaseMethod().getName()));
+						p.getReadMethod().getBaseMethod().getName(),
+						returnType));
 			}
 			writer.print("Method writeMethod = ");
 			if (p.getWriteMethod() == null) {
 				writer.println("null;");
 			} else {
 				writer.println(String.format(
-						"new NativeMethodWrapper(%s.class, \"%s\",this);",
+						"new NativeMethodWrapper(%s.class, \"%s\",void.class,this);",
 						p.getWriteMethod().getDeclaringType()
 								.getQualifiedSourceName(),
 						p.getWriteMethod().getBaseMethod().getName()));
@@ -437,7 +445,8 @@ public class IntrospectorGenerator extends Generator {
 	}
 
 	boolean ignorePrimitiveGwt28(JPrimitiveType primitive) {
-		if (!GWT.isClient()) {//i.e. not compiling for devmode - compiling to js
+		if (!GWT.isClient()) {// i.e. not compiling for devmode - compiling to
+								// js
 			switch (primitive) {
 			case BOOLEAN:
 			case DOUBLE:
