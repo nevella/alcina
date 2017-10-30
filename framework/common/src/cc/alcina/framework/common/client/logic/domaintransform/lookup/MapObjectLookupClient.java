@@ -74,10 +74,8 @@ public class MapObjectLookupClient extends MapObjectLookup {
 					return false;
 				} catch (Exception e) {
 					Registry.impl(ClientExceptionHandler.class)
-							.handleException(
-									new WrappedRuntimeException(
-											"Exception in post-register command",
-											e));
+							.handleException(new WrappedRuntimeException(
+									"Exception in post-register command", e));
 					return false;
 				}
 			}
@@ -122,15 +120,15 @@ public class MapObjectLookupClient extends MapObjectLookup {
 		}
 		boolean lookupCreated = registerChildren.containsKey(clazz);
 		if (!registerChildren.containsKey(clazz)) {
-			ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
-					clazz);
-			Collection<ClientPropertyReflector> prs = bi == null ? new ArrayList<ClientPropertyReflector>()
+			ClientBeanReflector bi = ClientReflector.get()
+					.beanInfoForClass(clazz);
+			Collection<ClientPropertyReflector> prs = bi == null
+					? new ArrayList<ClientPropertyReflector>()
 					: bi.getPropertyReflectors().values();
 			List<ClientPropertyReflector> target = new ArrayList<ClientPropertyReflector>();
 			registerChildren.put(clazz, target);
 			for (ClientPropertyReflector pr : prs) {
-				DomainProperty dpi = pr
-						.getAnnotation(DomainProperty.class);
+				DomainProperty dpi = pr.getAnnotation(DomainProperty.class);
 				if (dpi != null && dpi.registerChildren()) {
 					target.add(pr);
 				}
@@ -140,8 +138,8 @@ public class MapObjectLookupClient extends MapObjectLookup {
 				.get(clazz);
 		if (!childRegisterReflectors.isEmpty()) {
 			for (ClientPropertyReflector pr : childRegisterReflectors) {
-				Object value = Reflections.propertyAccessor().getPropertyValue(
-						obj, pr.getPropertyName());
+				Object value = Reflections.propertyAccessor()
+						.getPropertyValue(obj, pr.getPropertyName());
 				addObjectOrCollectionToEndOfQueue(value);
 			}
 		}
