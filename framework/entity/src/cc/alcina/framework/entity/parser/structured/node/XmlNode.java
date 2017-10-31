@@ -163,6 +163,9 @@ public class XmlNode {
 	public Node domNode() {
 		return node;
 	}
+	public Element domElement() {
+		return (Element) node;
+	}
 
 	public String dumpXml() {
 		return XmlUtils.streamXML(node);
