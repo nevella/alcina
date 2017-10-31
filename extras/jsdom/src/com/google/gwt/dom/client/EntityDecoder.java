@@ -44,7 +44,7 @@ public class EntityDecoder {
 						builder.append(chrs[0]);
 						builder.append(chrs[1]);
 					} else {
-						builder.append(entityValue);
+						builder.append((char)entityValue);
 					}
 				} catch (NumberFormatException ex) {
 					i++;

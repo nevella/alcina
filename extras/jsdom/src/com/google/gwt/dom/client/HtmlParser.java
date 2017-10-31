@@ -1,5 +1,7 @@
 package com.google.gwt.dom.client;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import com.google.common.base.Preconditions;
@@ -59,6 +61,7 @@ public class HtmlParser {
 	public Element parse(String html, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
 		this.html = html;
+		debugCursor = false;
 		this.replaceContents = replaceContents;
 		this.emitHtmlHeadBodyTags = emitHtmlHeadBodyTags;
 		resetBuilder();
@@ -314,21 +317,36 @@ public class HtmlParser {
 			rootResult = element;
 			setCursor(element, tag, 1);
 		} else {
+			if (tag.equals("tr") && cursor.getTagName().equals("table")) {
+				Element tbody = Document.get().createElement("tbody");
+				cursor.appendChild(tbody);
+				syntheticElements.add(tbody);
+				setCursor(tbody, "tbody", 1);
+			}
 			cursor.appendChild(element);
 			setCursor(element, tag, 1);
 		}
 	}
+
+	private List<Element> syntheticElements = new ArrayList<>();
 
 	boolean debugCursor = true;
 
 	int debugCursorDepth = 0;
 
 	private void setCursor(Element element, String tag, int delta) {
+		if (syntheticElements.contains(cursor) && delta == -1) {
+			syntheticElements.remove(cursor);
+			cursor = cursor.getParentElement();
+			element = element.getParentElement();
+			debugCursorDepth += delta;
+		}
 		if (debugCursor) {
 			String fromTag = cursor == null ? "(null)" : cursor.getTagName();
 			String toTag = element == null ? "(null)" : element.getTagName();
-			Ax.out("%s -> %s: %s -> %s", debugCursorDepth,
-					debugCursorDepth + delta, fromTag, toTag);
+			Ax.out("%s%s -> %s: %s -> %s",
+					CommonUtils.padStringLeft("", debugCursorDepth, ' '),
+					debugCursorDepth, debugCursorDepth + delta, fromTag, toTag);
 			if (delta == 1) {
 				if (!Objects.equals(toTag, tag)) {
 					Ax.err(">> %s, expected %s", toTag, tag);
