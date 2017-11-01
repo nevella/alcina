@@ -13,6 +13,10 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 
 	public String propertyPath;
 
+	public String getPropertyPath() {
+		return this.propertyPath;
+	}
+
 	public boolean idDescriptor;
 
 	protected CacheLookup lookup;
