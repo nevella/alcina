@@ -1439,6 +1439,13 @@ public class CommonUtils {
 				star);
 	}
 
+	@SuppressWarnings("deprecation")
+	public static String toYearMonth(Date date) {
+		return date == null ? null
+				: Ax.format("%sM%s", padFour(1900 + date.getYear()),
+						padTwo(date.getMonth() + 1));
+	}
+
 	public enum DateStyle {
 		AU_DATE_SLASH, AU_DATE_MONTH, AU_DATE_MONTH_DAY, AU_DATE_TIME,
 		AU_DATE_TIME_HUMAN, AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT,
