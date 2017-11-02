@@ -11,6 +11,8 @@ import com.google.gwt.user.client.ui.HasEnabled;
 import com.google.gwt.user.client.ui.HasName;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.gwt.client.util.ClientUtils;
+
 public class FileInput extends Widget implements HasName, HasChangeHandlers,
 		HasEnabled {
 	private static class FileInputImpl {
@@ -27,12 +29,13 @@ public class FileInput extends Widget implements HasName, HasChangeHandlers,
 		}
 
 		public native JsArray<Html5File> getFiles(InputElement inputElement) /*-{
-			return inputElement.value && inputElement.value!=""?
-				[{fileName: inputElement.value, fileSize: -1}]:
+			var remote = inputElement.@com.google.gwt.dom.client.Element::typedRemote()();
+			return remote.value && remote.value!=""?
+				[{fileName: remote.value, fileSize: -1}]:
 				[];
 		}-*/;
 	}
-
+	
 	private static class FileInputImplHtml5 extends FileInputImpl {
 		@Override
 		public boolean supportsFileAPI() {
@@ -56,7 +59,8 @@ public class FileInput extends Widget implements HasName, HasChangeHandlers,
 
 		@Override
 		public native JsArray<Html5File> getFiles(InputElement inputElement) /*-{
-			return inputElement.files;
+			var remote = inputElement.@com.google.gwt.dom.client.Element::typedRemote()();
+			return remote.files;
 		}-*/;
 	}
 
