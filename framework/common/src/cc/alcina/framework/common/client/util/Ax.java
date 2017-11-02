@@ -23,6 +23,10 @@ public class Ax {
 		return isBlank(string) ? defaultValueSupplier.get() : string;
 	}
 
+	public static String blankToEmpty(String string) {
+		return blankTo(string, "");
+	}
+
 	public static String dateSlash(Date date) {
 		return CommonUtils.formatDate(date, DateStyle.AU_DATE_SLASH);
 	}
@@ -72,6 +76,10 @@ public class Ax {
 		System.out.println(format(template, args));
 	}
 
+	public static void runtimeException(String template, Object... args) {
+		throw new RuntimeException(format(template, args));
+	}
+
 	public static void sysLogHigh(String template, Object... args) {
 		System.out.println(CommonUtils.highlightForLog(template, args));
 	}
@@ -83,9 +91,5 @@ public class Ax {
 				return t;
 			};
 		}
-	}
-
-	public static void runtimeException(String template, Object... args) {
-		throw new RuntimeException(format(template, args));
 	}
 }
