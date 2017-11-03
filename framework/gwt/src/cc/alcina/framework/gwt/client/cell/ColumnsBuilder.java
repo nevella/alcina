@@ -296,6 +296,7 @@ public class ColumnsBuilder<T> {
 		}
 	}
 
+	
 	public interface ColumnTotaller<T> {
 		List<T> getList();
 

@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.IgnoreIntrospectionChecks;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.ClientReflector.BeaninfoClassResolver;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -145,6 +146,8 @@ public class ClientReflectorJvm extends ClientReflector {
 	}
 
 	public ClientBeanReflector beanInfoForClass(Class clazz) {
+		BeaninfoClassResolver bea = Registry.impl(BeaninfoClassResolver.class);
+		clazz = bea.resolveForBeanInfo(clazz);
 		if (!hasBeanInfo(clazz)) {
 			return null;
 		}

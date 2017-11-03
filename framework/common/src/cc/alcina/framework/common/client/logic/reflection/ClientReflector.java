@@ -30,6 +30,8 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
@@ -85,7 +87,17 @@ public abstract class ClientReflector implements ClassLookup {
 		reflectors.add(this);
 	}
 
+	@RegistryLocation(registryPoint = BeaninfoClassResolver.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	public static class BeaninfoClassResolver {
+		public Class resolveForBeanInfo(Class clazz) {
+			return clazz;
+		}
+	}
+
 	public ClientBeanReflector beanInfoForClass(Class clazz) {
+		BeaninfoClassResolver bea = Registry.impl(BeaninfoClassResolver.class);
+		clazz = bea.resolveForBeanInfo(clazz);
 		ClientBeanReflector beanReflector = gwbiMap.get(clazz);
 		if (beanReflector == null) {
 			if (!gwbiMap.containsKey(clazz)) {
@@ -149,6 +161,8 @@ public abstract class ClientReflector implements ClassLookup {
 
 	@SuppressWarnings("unchecked")
 	public <T> T getTemplateInstance(Class<T> clazz) {
+		BeaninfoClassResolver bea = Registry.impl(BeaninfoClassResolver.class);
+		clazz = bea.resolveForBeanInfo(clazz);
 		if (!templateInstances.containsKey(clazz)) {
 			templateInstances.put(clazz,
 					Reflections.classLookup().newInstance(clazz, 0, 0));

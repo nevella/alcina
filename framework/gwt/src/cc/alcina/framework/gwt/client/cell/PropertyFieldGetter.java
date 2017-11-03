@@ -5,11 +5,10 @@ import java.util.function.Function;
 import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
-import cc.alcina.framework.gwt.client.gwittir.customiser.DomainObjectSuggestCustomiser;
 
 public class PropertyFieldGetter<O> implements Function<O, Object> {
 	private String propertyName;
@@ -31,7 +30,11 @@ public class PropertyFieldGetter<O> implements Function<O, Object> {
 			try {
 				value = field.getValidator().validate(value);
 			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
+				ClientNotifications.get()
+						.log(Ax.format(
+								"warn - invalid value in property get - %s - %s - %s",
+								object, value, e.getMessage()));
+				// throw new WrappedRuntimeException(e);
 			}
 		}
 		if (field.getConverter() != null) {
