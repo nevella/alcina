@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.Comparator.NaturalOrderComparator;
 
 /**
  * An interface used a basis for implementing custom ordering. <a
@@ -58,5 +59,22 @@ public interface Comparator<T> {
     }
 	public static <T extends Comparable<? super T>> Comparator<T> reverseOrder() {
         return Collections.reverseOrder();
+    }
+	enum NaturalOrderComparator implements Comparator<Comparable<Object>> {
+        INSTANCE;
+
+        @Override
+        public int compare(Comparable<Object> c1, Comparable<Object> c2) {
+            return c1.compareTo(c2);
+        }
+
+        @Override
+        public Comparator<Comparable<Object>> reversed() {
+            return Comparator.reverseOrder();
+        }
+    }
+	@SuppressWarnings("unchecked")
+    public static <T extends Comparable<? super T>> Comparator<T> naturalOrder() {
+        return (Comparator<T>) NaturalOrderComparator.INSTANCE;
     }
 }

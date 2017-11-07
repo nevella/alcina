@@ -66,8 +66,8 @@ public class ChildBeanCustomiser implements Customiser {
 		}
 	}
 
-	public static class ChildBeanWidget extends AbstractBoundWidget implements
-			MultilineWidget, HasBinding {
+	public static class ChildBeanWidget extends AbstractBoundWidget
+			implements MultilineWidget, HasBinding {
 		private FlowPanel fp;
 
 		private GridForm gridForm;
@@ -84,7 +84,7 @@ public class ChildBeanCustomiser implements Customiser {
 			Field[] fields = GwittirBridge.get()
 					.fieldsForReflectedObjectAndSetupWidgetFactory(bean,
 							factory, editable, false);
-			this.gridForm = new GridForm(fields, 1, factory);
+			this.gridForm = new GridForm(fields, 1, factory, false);
 			gridForm.setDirectSetModelDisabled(true);
 			gridForm.addAttachHandler(new RecheckVisibilityHandler(gridForm));
 			// the model should be the child
@@ -99,9 +99,10 @@ public class ChildBeanCustomiser implements Customiser {
 					Class clazz = ChildBeanWidget.this.objectClass;
 					boolean autoSave = ClientBase.getGeneralProperties()
 							.isAutoSave();
-					HasIdAndLocalId obj = autoSave ? TransformManager.get()
-							.createDomainObject(clazz) : TransformManager.get()
-							.createProvisionalObject(clazz);
+					HasIdAndLocalId obj = autoSave
+							? TransformManager.get().createDomainObject(clazz)
+							: TransformManager.get()
+									.createProvisionalObject(clazz);
 					ClientTransformManager.cast().prepareObject(obj, autoSave,
 							true, editable);
 					// register with the containing savepanel
@@ -144,8 +145,8 @@ public class ChildBeanCustomiser implements Customiser {
 				gridForm.setValue(value);
 			}
 			if (this.getValue() != old
-					&& (this.getValue() == null || (this.getValue() != null && !this
-							.getValue().equals(old)))) {
+					&& (this.getValue() == null || (this.getValue() != null
+							&& !this.getValue().equals(old)))) {
 				this.changes.firePropertyChange("value", old, this.getValue());
 			}
 		}

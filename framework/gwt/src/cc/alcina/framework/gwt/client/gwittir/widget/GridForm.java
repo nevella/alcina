@@ -45,6 +45,7 @@ import com.totsp.gwittir.client.ui.table.AbstractTableWidget;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
@@ -115,84 +116,11 @@ public class GridForm extends AbstractTableWidget
 
 	private boolean directSetModelDisabled = false;
 
-	/** Creates a new instance of GridForm */
-	public GridForm(Field[] fields) {
-		this.fields = fields;
-		this.factory = new BoundWidgetTypeFactory(true);
-		super.initWidget(this.base);
-		this.setStyleName(GridForm.STYLE_NAME);
-		this.setAction(GridForm.DEFAULT_ACTION);
-	}
-
-	public GridForm(Field[] fields, int columns) {
-		this.fields = fields;
-		this.columns = columns;
-		this.factory = new BoundWidgetTypeFactory(true);
-		super.initWidget(this.base);
-		this.setStyleName(GridForm.STYLE_NAME);
-		this.setAction(GridForm.DEFAULT_ACTION);
-	}
-
-	public GridForm(Field[] fields, int columns,
-			BoundWidgetTypeFactory factory) {
-		this.fields = fields;
-		this.columns = columns;
-		this.factory = factory;
-		super.initWidget(this.base);
-		this.setStyleName(GridForm.STYLE_NAME);
-		this.setAction(GridForm.DEFAULT_ACTION);
-	}
-
-	public void bind() {
-		this.binding.bind();
-	}
-
-	public Binding getBinding() {
-		return this.binding;
-	}
-
-	public Object getValue() {
-		return this.getModel();
-	}
-
-	public boolean isDirectSetModelDisabled() {
-		return directSetModelDisabled;
-	}
-
-	public void set() {
-		this.binding.setLeft();
-	}
-
-	public void setDirectSetModelDisabled(boolean directSetModelDisabled) {
-		this.directSetModelDisabled = directSetModelDisabled;
-	}
-
-	public void setModel(Object model) {
-		setModel(model, true);
-	}
-
-	public void setValue(Object value) {
-		Object old = this.getModel();
-		this.setModel(value, false);
-		this.changes.firePropertyChange("value", old, value);
-	}
-
-	public void unbind() {
-		this.binding.unbind();
-	}
-
 	private Focusable focusOnDetachIfEditorFocussed;
 
-	public Focusable getFocusOnDetachIfEditorFocussed() {
-		return this.focusOnDetachIfEditorFocussed;
-	}
-
-	public void setFocusOnDetachIfEditorFocussed(
-			Focusable focusOnDetachIfEditorFocussed) {
-		this.focusOnDetachIfEditorFocussed = focusOnDetachIfEditorFocussed;
-	}
-
 	private Object focussedWidget;
+
+	private boolean horizontalGrid;
 
 	private FocusHandler focusHandler = new FocusHandler() {
 		public void onFocus(FocusEvent event) {
@@ -210,14 +138,14 @@ public class GridForm extends AbstractTableWidget
 	};
 
 	private FocusListener focusListener = new FocusListener() {
+		public void onFocus(Widget sender) {
+			focussedWidget = sender;
+		}
+
 		public void onLostFocus(Widget sender) {
 			if (focussedWidget == sender) {
 				focussedWidget = null;
 			}
-		}
-
-		public void onFocus(Widget sender) {
-			focussedWidget = sender;
 		}
 	};
 
@@ -225,10 +153,110 @@ public class GridForm extends AbstractTableWidget
 
 	private Widget autofocusWidget;
 
-	protected void onUnload() {
-		if (focussedWidget != null && focusOnDetachIfEditorFocussed != null) {
-			focusOnDetachIfEditorFocussed.setFocus(true);
+	public GridForm(Field[] fields, int columns, BoundWidgetTypeFactory factory,
+			boolean horizontalGrid) {
+		this.fields = fields;
+		this.columns = columns;
+		this.factory = factory;
+		this.horizontalGrid = horizontalGrid;
+		super.initWidget(this.base);
+		this.setStyleName(GridForm.STYLE_NAME);
+		this.setAction(GridForm.DEFAULT_ACTION);
+	}
+
+	public void addButtonWidget(Widget widget) {
+		base.setWidget(row(base.getRowCount(), 1), col(base.getRowCount(), 1),
+				widget);
+	}
+
+	private int col(int vRow, int vCol) {
+		return horizontalGrid ? vRow : vCol;
+	}
+
+	private int row(int vRow, int vCol) {
+		return horizontalGrid ? vCol : vRow;
+	}
+
+	public void bind() {
+		this.binding.bind();
+	}
+
+	public Field getAutofocusField() {
+		return this.autofocusField;
+	}
+
+	public Binding getBinding() {
+		return this.binding;
+	}
+
+	public <T extends Widget> T getBoundWidget(int row) {
+		return (T) base.getWidget(row(row, 1), col(row, 1));
+	}
+
+	public int getCaptionColumnWidth() {
+		if (this.fields.length == 0) {
+			return 0;
 		}
+		return base.getFlexCellFormatter().getElement(0, 0).getOffsetWidth();
+	}
+
+	public Field[] getFields() {
+		return this.fields;
+	}
+
+	public Focusable getFocusOnDetachIfEditorFocussed() {
+		return this.focusOnDetachIfEditorFocussed;
+	}
+
+	public Object getValue() {
+		return this.getModel();
+	}
+
+	public boolean isDirectSetModelDisabled() {
+		return directSetModelDisabled;
+	}
+
+	public void set() {
+		this.binding.setLeft();
+	}
+
+	public void setAutofocusField(Field autofocusField) {
+		this.autofocusField = autofocusField;
+	}
+
+	public void setCaptionColumnWidth(int pixelWidth) {
+		base.getFlexCellFormatter().setWidth(0, 0, pixelWidth + "px");
+	}
+
+	public void setDirectSetModelDisabled(boolean directSetModelDisabled) {
+		this.directSetModelDisabled = directSetModelDisabled;
+	}
+
+	public void setFocusOnDetachIfEditorFocussed(
+			Focusable focusOnDetachIfEditorFocussed) {
+		this.focusOnDetachIfEditorFocussed = focusOnDetachIfEditorFocussed;
+	}
+
+	public void setModel(Object model) {
+		setModel(model, true);
+	}
+
+	public void setRowVisibility(int row, boolean visible) {
+		if (horizontalGrid) {
+			base.getColumnFormatter().setVisible(row, visible);
+		} else {
+			base.getRowFormatter().setVisible(row, visible);
+		}
+	}
+
+	public void setValue(Object value) {
+		Object old = this.getModel();
+		this.setModel(value, false);
+		this.changes.firePropertyChange("value", old, value);
+	}
+
+	public void unbind() {
+		this.binding.unbind();
 	}
 
 	private void render() {
@@ -262,17 +290,23 @@ public class GridForm extends AbstractTableWidget
 						+ field.getPropertyName());
 				FlowPanelClickable label = new FlowPanelClickable();
 				label.add(new InlineHTML(field.getLabel()));
-				this.base.setWidget(row, col * 2, label);
-				this.base.getCellFormatter().setStyleName(row, col * 2,
-						"label");
+				int vRow = row(row, col * 2);
+				int vCol = col(row, col * 2);
+				int vRowPlus1 = row(row, col * 2 + 1);
+				int vColPlus1 = col(row, col * 2 + 1);
+				this.base.setWidget(vRow, vCol, label);
+				this.base.getCellFormatter().setStyleName(vRow, vCol, "label");
 				boolean multiline = ((widget instanceof MultilineWidget)
 						&& ((MultilineWidget) widget).isMultiline());
 				if (multiline) {
-					this.base.getCellFormatter().addStyleName(row, col * 2,
+					this.base.getCellFormatter().addStyleName(vRow, vCol,
 							"multiline-field");
 				}
-				this.base.setWidget(row, (col * 2) + 1, widget);
-				this.base.getCellFormatter().setStyleName(row, (col * 2) + 1,
+				if (Ax.notBlank(field.getWidgetStyleName())) {
+					widget.addStyleName(field.getWidgetStyleName());
+				}
+				this.base.setWidget(vRowPlus1, vColPlus1, widget);
+				this.base.getCellFormatter().setStyleName(vRowPlus1, vColPlus1,
 						"field");
 				if (field.getHelpText() != null) {
 					label.addStyleName("has-help-text");
@@ -290,8 +324,8 @@ public class GridForm extends AbstractTableWidget
 					});
 				}
 				if (field.getStyleName() != null) {
-					this.base.getCellFormatter().addStyleName(row,
-							(col * 2) + 1, field.getStyleName());
+					this.base.getCellFormatter().addStyleName(vRowPlus1,
+							vColPlus1, field.getStyleName());
 				}
 				i++;
 			}
@@ -321,38 +355,9 @@ public class GridForm extends AbstractTableWidget
 		}
 	}
 
-	public void setAutofocusField(Field autofocusField) {
-		this.autofocusField = autofocusField;
-	}
-
-	public Field getAutofocusField() {
-		return this.autofocusField;
-	}
-
-	public void setRowVisibility(int row, boolean visible) {
-		base.getRowFormatter().setVisible(row, visible);
-	}
-
-	public Field[] getFields() {
-		return this.fields;
-	}
-
-	public int getCaptionColumnWidth() {
-		if (this.fields.length == 0) {
-			return 0;
+	protected void onUnload() {
+		if (focussedWidget != null && focusOnDetachIfEditorFocussed != null) {
+			focusOnDetachIfEditorFocussed.setFocus(true);
 		}
-		return base.getFlexCellFormatter().getElement(0, 0).getOffsetWidth();
-	}
-
-	public void setCaptionColumnWidth(int pixelWidth) {
-		base.getFlexCellFormatter().setWidth(0, 0, pixelWidth + "px");
-	}
-
-	public void addButtonWidget(Widget widget) {
-		base.setWidget(base.getRowCount(), 1, widget);
-	}
-
-	public <T extends Widget> T getBoundWidget(int row) {
-		return (T) base.getWidget(row,1);
 	}
 }

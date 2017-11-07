@@ -656,6 +656,19 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		public void setWidth(int column, String width) {
 			ensureColumn(column).setPropertyString("width", width);
 		}
+		/**
+		 * Sets whether this row is visible.
+		 * 
+		 * @param row
+		 *            the row whose visibility is to be set
+		 * @param visible
+		 *            <code>true</code> to show the row, <code>false</code> to
+		 *            hide it
+		 */
+		public void setVisible(int column, boolean visible) {
+			Element e =ensureColumn(column);
+			UIObject.setVisible(e, visible);
+		}
 
 		/**
 		 * Resize the column group element.

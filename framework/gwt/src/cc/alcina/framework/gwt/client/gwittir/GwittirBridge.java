@@ -391,6 +391,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 				if (!displayInfo.styleName().isEmpty()) {
 					field.setStyleName(displayInfo.styleName());
 				}
+				if (!displayInfo.widgetStyleName().isEmpty()) {
+					field.setWidgetStyleName(displayInfo.widgetStyleName());
+				}
 				if (!displayInfo.helpText().isEmpty()) {
 					field.setHelpText(displayInfo.helpText());
 				}

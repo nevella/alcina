@@ -208,15 +208,17 @@ public class ContentViewFactory {
 	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
 			PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone) {
-		return createBeanView(bean, editable, actionListener, autoSave,
-				doNotClone, null, false);
+		return editable(editable).actionListener(actionListener)
+				.autoSave(autoSave).doNotClone(doNotClone).createBeanView(bean);
 	}
 
 	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
 			PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone, Object additionalProvisional) {
-		return createBeanView(bean, editable, actionListener, autoSave,
-				doNotClone, additionalProvisional, false);
+		return editable(editable).actionListener(actionListener)
+				.autoSave(autoSave).doNotClone(doNotClone)
+				.additionalProvisional(additionalProvisional)
+				.createBeanView(bean);
 	}
 
 	public static class ContentViewFactoryFieldCustomiser {
@@ -233,10 +235,58 @@ public class ContentViewFactory {
 		}
 	}
 
-	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
-			PermissibleActionListener actionListener, boolean autoSave,
-			boolean doNotClone, Object additionalProvisional,
-			boolean doNotPrepare) {
+	private Object additionalProvisional;
+
+	private PermissibleActionListener actionListener;
+
+	public ContentViewFactory
+			additionalProvisional(Object additionalProvisional) {
+		this.additionalProvisional = additionalProvisional;
+		return this;
+	}
+
+	public ContentViewFactory editable(boolean editable) {
+		this.editable = editable;
+		return this;
+	}
+
+	public ContentViewFactory autoSave(boolean autoSave) {
+		this.autoSave = autoSave;
+		return this;
+	}
+
+	public ContentViewFactory doNotClone(boolean doNotClone) {
+		this.doNotClone = doNotClone;
+		return this;
+	}
+
+	public ContentViewFactory doNotPrepare(boolean doNotPrepare) {
+		this.doNotPrepare = doNotPrepare;
+		return this;
+	}
+
+	public ContentViewFactory horizontalGrid(boolean horizontalGrid) {
+		this.horizontalGrid = horizontalGrid;
+		return this;
+	}
+
+	public ContentViewFactory
+			actionListener(PermissibleActionListener actionListener) {
+		this.actionListener = actionListener;
+		return this;
+	}
+
+	private boolean editable;
+
+	private boolean autoSave;
+
+	private boolean doNotClone;
+
+	private boolean doNotPrepare;
+
+	private boolean horizontalGrid;
+
+	public PaneWrapperWithObjects createBeanView(Object bean) {
 		ClientBeanReflector bi = ClientReflector.get()
 				.beanInfoForClass(bean.getClass());
 		Boolean overrideAutoSave = LooseContext.get(CONTEXT_OVERRIDE_AUTOSAVE);
@@ -287,7 +337,7 @@ public class ContentViewFactory {
 		}
 		Field[] fields = (Field[]) fieldList
 				.toArray(new Field[fieldList.size()]);
-		GridForm f = new GridForm(fields, 1, factory);
+		GridForm f = new GridForm(fields, 1, factory,horizontalGrid);
 		f.addAttachHandler(new RecheckVisibilityHandler(f));
 		f.setAutofocusField(GwittirBridge.get().getFieldToFocus(bean, fields));
 		f.setValue(bean);
@@ -734,12 +784,16 @@ public class ContentViewFactory {
 				boolean hasCancel) {
 			this(okButtonName, clickHandler, hasCancel, false);
 		}
+
 		public OkCancelPanel(String okButtonName, ClickHandler clickHandler,
 				boolean hasCancel, boolean toolbarButtonStyle) {
-			this(okButtonName, "Cancel", clickHandler, hasCancel, toolbarButtonStyle);
+			this(okButtonName, "Cancel", clickHandler, hasCancel,
+					toolbarButtonStyle);
 		}
-		public OkCancelPanel(String okButtonName,String cancelButtonName, ClickHandler clickHandler,
-				boolean hasCancel, boolean toolbarButtonStyle) {
+
+		public OkCancelPanel(String okButtonName, String cancelButtonName,
+				ClickHandler clickHandler, boolean hasCancel,
+				boolean toolbarButtonStyle) {
 			this.toolbarButtonStyle = toolbarButtonStyle;
 			FlowPanel fp = this;
 			fp.setStyleName("alcina-SavePanel");

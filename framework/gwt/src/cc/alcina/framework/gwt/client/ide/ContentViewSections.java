@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.gwt.client.widget.typedbinding.EnumeratedBinding;
 
 public class ContentViewSections {
 	public List<ContentViewSection> sections = new ArrayList<>();
@@ -81,13 +82,17 @@ public class ContentViewSections {
 			if (!autoSave) {
 				contentViewFactory.okButtonName("Create");
 			}
-			PaneWrapperWithObjects beanView = contentViewFactory
-					.fieldFilter(section).fieldOrder(section)
+			contentViewFactory.fieldFilter(section).fieldOrder(section)
 					.editableFieldFilter(section.editableFieldFilter())
 					.fieldPostReflectiveSetupModifier(
 							section.fieldPostReflectiveSetupModifier)
-					.noCaption().createBeanView(bean, editable, createListener,
-							autoSave, true, null, false);
+					.noCaption();
+			contentViewFactory.horizontalGrid(section.horizontalGrid);
+			contentViewFactory.editable(editable).actionListener(createListener)
+					.autoSave(autoSave).doNotClone(true)
+					.additionalProvisional(null).doNotPrepare(false);
+			PaneWrapperWithObjects beanView = contentViewFactory
+					.createBeanView(bean);
 			beanViews.add(beanView);
 			fp.add(beanView);
 		}
@@ -111,6 +116,13 @@ public class ContentViewSections {
 
 	public class ContentViewSection
 			implements Comparator<Field>, Predicate<Field> {
+		private boolean horizontalGrid;
+
+		public ContentViewSection horizontalGrid() {
+			this.horizontalGrid = true;
+			return this;
+		}
+
 		public List<String> fieldNames;
 
 		public String name;
@@ -157,6 +169,14 @@ public class ContentViewSections {
 
 		public ContentViewSection editableFields(String... editableFieldNames) {
 			this.editableFieldNames = Arrays.asList(editableFieldNames);
+			return this;
+		}
+
+		public ContentViewSection
+				fields(EnumeratedBinding... enumeratedBindings) {
+			this.fieldNames = Arrays.asList(enumeratedBindings).stream()
+					.map(EnumeratedBinding::getPath)
+					.collect(Collectors.toList());
 			return this;
 		}
 	}

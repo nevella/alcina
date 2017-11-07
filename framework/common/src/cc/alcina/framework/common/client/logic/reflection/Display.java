@@ -66,4 +66,6 @@ public @interface Display {
 
 	Permission visible() default @Permission(access = AccessLevel.EVERYONE)
 	;
+
+	String widgetStyleName() default "";
 }

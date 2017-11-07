@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
@@ -26,6 +27,7 @@ public interface Stream<T> {
 		}
 		return (Stream<R>) new CollectionStream<R>(result);
 	}
+	
 
 	default <R, A> R collect(Collector<? super T, A, R> collector) {
 		return collector.collect((Stream) this);

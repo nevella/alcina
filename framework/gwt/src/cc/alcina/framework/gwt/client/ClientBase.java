@@ -61,8 +61,10 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 	private static String initialHistoryToken = "";
 
 	public ClientBase() {
+//		GWT.log("client base const.");
 		if (GWT.isClient()) {
 			initInitialTokenHandler();
+			Window.addCloseHandler(this);
 		}
 	}
 	protected void initInitialTokenHandler() {
@@ -92,6 +94,7 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 	private HandlerRegistration isFirstHistoryTokenHandlerRegistration;
 
 	public void onClose(CloseEvent<Window> event) {
+//		GWT.log("window closing");
 	}
 
 	public boolean isWindowClosing() {
