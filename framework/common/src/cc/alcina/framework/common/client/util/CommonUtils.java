@@ -1612,4 +1612,13 @@ public class CommonUtils {
 				.map(s -> trimToWsChars(s, 100))
 				.collect(Collectors.joining("\n"));
 	}
+
+	@SuppressWarnings("deprecation")
+	public static String toFinancialYear(Date date) {
+		int year = date.getYear() + 1900;
+		if (date.getMonth() < 6) {
+			year -= 1;
+		}
+		return formatJ("FY%s%s", year, year + 1);
+	}
 }
