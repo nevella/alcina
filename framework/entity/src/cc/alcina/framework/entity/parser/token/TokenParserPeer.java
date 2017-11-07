@@ -39,4 +39,8 @@ public interface TokenParserPeer<T extends ParserToken, S extends AbstractParser
 	default SurroundingBlockTuple getSurroundingBlockTuple(Node n) {
 		return null;
 	}
+
+	default boolean ignorePrecedingExceptions(){
+		return false;
+	}
 }

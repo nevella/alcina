@@ -9,6 +9,7 @@ import org.w3c.dom.traversal.TreeWalker;
 
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.XmlUtils.SurroundingBlockTuple;
+import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 
 public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>> {
 	public static String debugMarker = "%%^^##**x";
@@ -163,8 +164,12 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 										surroundingTuple.firstNode);
 						if ((posCompared
 								& Node.DOCUMENT_POSITION_PRECEDING) > 0) {
+							if(peer.ignorePrecedingExceptions()){
+								
+							}else{
 							throw new RuntimeException(
 									"Surround tuple before lastSurroundingTuple");
+							}
 						}
 					}
 					if (peer.continueBlock(lastSurroundingTuple,
