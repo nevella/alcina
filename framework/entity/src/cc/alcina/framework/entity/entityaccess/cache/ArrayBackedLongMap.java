@@ -85,7 +85,7 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 			}
 			if (l < 10000000 && l > 0) {
 				int idx = (int) l;
-				ensureCapacity(idx);
+				ensureCapacity(idx+1);
 				return idx;
 			}
 		}
