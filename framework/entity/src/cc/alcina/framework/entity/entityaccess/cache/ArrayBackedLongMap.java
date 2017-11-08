@@ -85,7 +85,7 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 			}
 			if (l < 10000000 && l > 0) {
 				int idx = (int) l;
-				ensureCapacity(idx);
+				ensureCapacity(idx + 1);
 				return idx;
 			}
 		}
@@ -393,9 +393,9 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 	@Override
 	public String toString() {
 		return CommonUtils.formatJ("Array-backed long map - [%s] - %s",
-				elementData == null ? "(failover)" + failover.size() : size
-						+ "," + elementData.length, entrySet().iterator()
-						.hasNext() ? entrySet().iterator().next().getClass()
-						: null);
+				elementData == null ? "(failover)" + failover.size()
+						: size + "," + elementData.length,
+				entrySet().iterator().hasNext()
+						? entrySet().iterator().next().getClass() : null);
 	}
 }
