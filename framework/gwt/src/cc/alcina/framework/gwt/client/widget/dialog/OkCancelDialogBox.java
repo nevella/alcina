@@ -171,6 +171,12 @@ public class OkCancelDialogBox extends GlassDialogBox {
 					&& e.getNativeEvent().getKeyCode() == KeyCodes.KEY_ESCAPE) {
 				cancel();
 			}
+			if (evtCode == Event.ONKEYDOWN
+					&& e.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER && e.getNativeEvent().getCtrlKey()) {
+				e.cancel();
+				okButton.setFocus(true);
+				onOkButtonClicked();
+			}
 		});
 	}
 

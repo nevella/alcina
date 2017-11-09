@@ -36,10 +36,12 @@ public class TextAreaCustomiser implements Customiser {
 
 	public static final String NON_EDITABLE_AS_LABEL = "non-editable-as-label";
 
+	public static final String ENSURE_ALL_LINES_VISIBLE = "ENSURE_ALL_LINES_VISIBLE";
+
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
-		NamedParameter param = NamedParameter.Support.getParameter(
-				info.parameters(), WIDTH);
+		NamedParameter param = NamedParameter.Support
+				.getParameter(info.parameters(), WIDTH);
 		int width = param == null ? 0 : param.intValue();
 		param = NamedParameter.Support.getParameter(info.parameters(), LINES);
 		int lines = param == null ? 4 : param.intValue();
@@ -48,7 +50,9 @@ public class TextAreaCustomiser implements Customiser {
 		boolean neal = param == null ? false : param.booleanValue();
 		return new TextAreaProvider(editable, width, lines, neal,
 				NamedParameter.Support.stringValue(info.parameters(), HINT,
-						null));
+						null),
+				NamedParameter.Support.booleanValue(info.parameters(),
+						ENSURE_ALL_LINES_VISIBLE));
 	}
 
 	public static class TextAreaProvider implements BoundWidgetProvider {
@@ -62,13 +66,16 @@ public class TextAreaCustomiser implements Customiser {
 
 		private final String hint;
 
+		private boolean ensureAllLinesVisible;
+
 		public TextAreaProvider(boolean editable, int width, int lines,
-				boolean neal, String hint) {
+				boolean neal, String hint, boolean ensureAllLinesVisible) {
 			this.editable = editable;
 			this.width = width;
 			this.lines = lines;
 			this.neal = neal;
 			this.hint = hint;
+			this.ensureAllLinesVisible = ensureAllLinesVisible;
 		}
 
 		public BoundWidget get() {
@@ -86,6 +93,7 @@ public class TextAreaCustomiser implements Customiser {
 			if (width != 0) {
 				area.setWidth(width + "px");
 			}
+			area.setEnsureAllLinesVisible(ensureAllLinesVisible);
 			return area;
 		}
 	}

@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.widget.Link;
 
 public abstract class BaseMultilineEditorCustomiser<T extends HasIdAndLocalId>
@@ -72,11 +73,8 @@ public abstract class BaseMultilineEditorCustomiser<T extends HasIdAndLocalId>
 		return actions;
 	}
 
-	protected Predicate<Field> getFieldFilter() {
-		return field->true;
-	}
-
-	public Consumer<Field> getTableFieldModifier() {
-		return field->{};
+	public void
+			customiseContentViewFactory(ContentViewFactory contentViewFactory) {
+		
 	}
 }

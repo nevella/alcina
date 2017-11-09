@@ -48,6 +48,15 @@ public class ContentViewSections {
 			}
 		}
 	};
+	private String tableStyleName;
+
+	public String getTableStyleName() {
+		return this.tableStyleName;
+	}
+
+	public void setTableStyleName(String tableStyleName) {
+		this.tableStyleName = tableStyleName;
+	}
 
 	private boolean editable;
 
@@ -91,6 +100,7 @@ public class ContentViewSections {
 			contentViewFactory.editable(editable).actionListener(createListener)
 					.autoSave(autoSave).doNotClone(true)
 					.additionalProvisional(null).doNotPrepare(false);
+			contentViewFactory.setTableStyleName(tableStyleName);
 			PaneWrapperWithObjects beanView = contentViewFactory
 					.createBeanView(bean);
 			beanViews.add(beanView);

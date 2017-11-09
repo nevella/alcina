@@ -106,6 +106,7 @@ import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.layout.ExpandableListPanel;
+import javafx.beans.binding.SetExpression;
 
 @SuppressWarnings("unchecked")
 /**
@@ -152,6 +153,16 @@ public class ContentViewFactory {
 	private Predicate<String> editableFieldFilter;
 
 	private Consumer<Field> fieldPostReflectiveSetupModifier;
+
+	private String tableStyleName;
+
+	public String getTableStyleName() {
+		return this.tableStyleName;
+	}
+
+	public void setTableStyleName(String tableStyleName) {
+		this.tableStyleName = tableStyleName;
+	}
 
 	public ActionTableHolder createActionTable(Collection beans,
 			Class beanClass, Converter converter,
@@ -337,7 +348,10 @@ public class ContentViewFactory {
 		}
 		Field[] fields = (Field[]) fieldList
 				.toArray(new Field[fieldList.size()]);
-		GridForm f = new GridForm(fields, 1, factory,horizontalGrid);
+		GridForm f = new GridForm(fields, 1, factory, horizontalGrid);
+		if (tableStyleName != null) {
+			f.addStyleName(tableStyleName);
+		}
 		f.addAttachHandler(new RecheckVisibilityHandler(f));
 		f.setAutofocusField(GwittirBridge.get().getFieldToFocus(bean, fields));
 		f.setValue(bean);
@@ -441,14 +455,38 @@ public class ContentViewFactory {
 			Class beanClass, boolean editable,
 			PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone) {
-		return createMultipleBeanView(beans, beanClass, editable,
-				actionListener, autoSave, doNotClone, 0);
+		setBeanClass(beanClass);
+		this.editable(editable);
+		this.actionListener(actionListener);
+		this.autoSave(autoSave);
+		this.doNotClone(doNotClone);
+		this.setTableMask(0);
+		return createMultipleBeanView(beans);
 	}
 
-	public PaneWrapperWithObjects createMultipleBeanView(Collection beans,
-			Class beanClass, boolean editable,
-			PermissibleActionListener actionListener, boolean autoSave,
-			boolean doNotClone, int tableMask) {
+	private Class beanClass;
+
+	public Class getBeanClass() {
+		return this.beanClass;
+	}
+
+	private int tableMask;
+
+	public int getTableMask() {
+		return this.tableMask;
+	}
+
+	public ContentViewFactory setTableMask(int tableMask) {
+		this.tableMask = tableMask;
+		return this;
+	}
+
+	public ContentViewFactory setBeanClass(Class beanClass) {
+		this.beanClass = beanClass;
+		return this;
+	}
+
+	public PaneWrapperWithObjects createMultipleBeanView(Collection beans) {
 		ClientBeanReflector bi = ClientReflector.get()
 				.beanInfoForClass(beanClass);
 		boolean cloned = false;
@@ -472,6 +510,9 @@ public class ContentViewFactory {
 			cp.add(createMultiCaption(beanClass, cp));
 		}
 		BoundTableExt table = createTable(beans, editable, tableMask, bean);
+		if (tableStyleName != null) {
+			table.addStyleName(tableStyleName);
+		}
 		cp.add(table);
 		cp.setBoundWidget(table);
 		if (editable && !autoSave && !noButtons) {

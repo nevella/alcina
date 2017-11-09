@@ -8,6 +8,7 @@ import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 
 public class BaseMultilineRowEditor<T extends HasIdAndLocalId>
 		extends MultilineRowEditor<T> implements BaseMultilineEditor<T> {
@@ -55,13 +56,10 @@ public class BaseMultilineRowEditor<T extends HasIdAndLocalId>
 			PermissibleAction action) {
 		return customiser.handleCustomAction(this, action);
 	}
+
 	@Override
-	protected Predicate<Field> getFieldFilter() {
-		return customiser.getFieldFilter();
+	protected void
+			customiseContentViewFactory(ContentViewFactory contentViewFactory) {
+		customiser.customiseContentViewFactory(contentViewFactory);
 	}
-	@Override
-	protected Consumer<Field> getTableFieldModifier() {
-		return customiser.getTableFieldModifier();
-	}
-	
 }

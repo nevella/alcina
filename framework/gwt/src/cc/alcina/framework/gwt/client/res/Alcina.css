@@ -1269,6 +1269,9 @@ table.gwittir-GridForm td.label {
 	vertical-align: middle;
 	white-space: nowrap;
 }
+table.gwittir-GridForm.suppress-field-labels > tbody > tr > td.label {
+	display: none;
+}
 
 table.gwittir-GridForm td.label.multiline-field {
 	vertical-align: top;

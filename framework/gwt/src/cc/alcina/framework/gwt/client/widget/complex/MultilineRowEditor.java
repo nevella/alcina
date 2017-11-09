@@ -113,11 +113,11 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 		values = filterVisibleValues(values);
 		values.sort(HiliComparator.INSTANCE);
 		values.forEach(v -> TransformManager.get().registerDomainObject(v));
-		PaneWrapperWithObjects view = new ContentViewFactory().noCaption()
-				.fieldFilter(getFieldFilter())
-				.fieldPostReflectiveSetupModifier(getTableFieldModifier())
-				.createMultipleBeanView(values, getItemClass(), editable, null,
-						true, true, tableMask);
+		ContentViewFactory contentViewFactory = new ContentViewFactory().noCaption()
+				.setBeanClass(getItemClass()).editable(editable).autoSave(true)
+				.doNotClone(true).setTableMask(tableMask);
+		customiseContentViewFactory(contentViewFactory);
+		PaneWrapperWithObjects view = contentViewFactory.createMultipleBeanView(values);
 		table = (BoundTableExt) view.getBoundWidget();
 		table.setNoContentMessage("0 items");
 		table.setModel(getModel());
@@ -127,14 +127,13 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 		toolbar.addVetoableActionListener(toolbarListener);
 	}
 
-	protected Predicate<Field> getFieldFilter() {
-		return field->true;
+	protected void
+			customiseContentViewFactory(ContentViewFactory contentViewFactory) {
+//		x		.fieldFilter(getFieldFilter())
+//		.fieldPostReflectiveSetupModifier(getTableFieldModifier())
 	}
 
-	protected Consumer<Field> getTableFieldModifier() {
-		return field -> {
-		};
-	}
+	
 
 	protected List<H> filterVisibleValues(List<H> values) {
 		return values;

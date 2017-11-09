@@ -623,6 +623,9 @@ public class BoundTableExt extends AbstractTableWidget
 							topBinding.getChildren().size() - 1,
 							col + startColumn);
 				}
+				if (this.columns[col].getWidgetStyleName() != null) {
+					widget.addStyleName(this.columns[col].getWidgetStyleName());
+				}
 				if (this.columns[col].getStyleName() != null) {
 					table.getCellFormatter().setStyleName(row,
 							col + startColumn,

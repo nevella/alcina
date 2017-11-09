@@ -209,6 +209,9 @@ public class FastROBoundTable extends BoundTableExt {
 		}
 		for (int col = 0; col < this.columns.length; col++) {
 			Widget widget = (Widget) createCellWidget(col, o);
+			if (this.columns[col].getWidgetStyleName() != null) {
+				widget.addStyleName(this.columns[col].getWidgetStyleName());
+			}
 			table.setWidget(row, col + startColumn, widget);
 			if (this.columns[col].getStyleName() != null) {
 				table.getCellFormatter().setStyleName(row, col + startColumn,
