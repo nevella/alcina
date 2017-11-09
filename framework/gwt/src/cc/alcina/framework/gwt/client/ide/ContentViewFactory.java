@@ -92,6 +92,7 @@ import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.HasMaxWidth;
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
+import cc.alcina.framework.gwt.client.gwittir.widget.EndRowButtonClickedEvent.EndRowButtonClickedHandler;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
@@ -106,7 +107,6 @@ import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.layout.ExpandableListPanel;
-import javafx.beans.binding.SetExpression;
 
 @SuppressWarnings("unchecked")
 /**
@@ -288,6 +288,21 @@ public class ContentViewFactory {
 	}
 
 	private boolean editable;
+
+	private EndRowButtonClickedHandler endRowButtonClickedHandler;
+
+	public EndRowButtonClickedHandler getEndRowButtonClickedHandler() {
+		return this.endRowButtonClickedHandler;
+	}
+
+	public void setEndRowButtonClickedHandler(
+			EndRowButtonClickedHandler endRowButtonClickedHandler) {
+		this.endRowButtonClickedHandler = endRowButtonClickedHandler;
+	}
+
+	public boolean isEditable() {
+		return this.editable;
+	}
 
 	private boolean autoSave;
 
@@ -521,6 +536,9 @@ public class ContentViewFactory {
 			cp.setOkButton(sp.okButton);
 			cp.setProvisionalObjects(cloned);
 			cp.setObjects(beans);
+		}
+		if (editable && endRowButtonClickedHandler != null) {
+			table.addEndRowClickedHandler(endRowButtonClickedHandler);
 		}
 		return cp;
 	}

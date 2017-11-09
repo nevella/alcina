@@ -18,6 +18,7 @@ import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
@@ -80,10 +81,12 @@ public class ContentViewSections {
 		fp.addAttachHandler(captionColEqualiser);
 		for (int idx = 0; idx < sections.size(); idx++) {
 			ContentViewSection section = sections.get(idx);
+			if(Ax.notBlank(section.name)){
 			InlineLabel sectionLabel = new InlineLabel(section.name);
 			SimplePanel holder = new SimplePanel(sectionLabel);
 			holder.setStyleName("section-label");
-			fp.add(holder);
+				fp.add(holder);
+			}
 			ContentViewFactory contentViewFactory = new ContentViewFactory();
 			if (idx < sections.size() - 1) {
 				contentViewFactory.setNoButtons(true);

@@ -43,6 +43,8 @@ public class DomainObjectSuggestCustomiser
 
 	public static final String SHOW_ON_FOCUS = "showOnFocus";
 
+	public static final String WITH_PLACEHOLDER = "with-placeholder";
+
 	private Class classValue;
 
 	private Class rendererClassValue;
@@ -52,6 +54,8 @@ public class DomainObjectSuggestCustomiser
 	private Class readonlyCustomiserClassValue;
 
 	private boolean showOnFocus;
+
+	private boolean withPlaceholder;
 
 	public boolean isShowOnFocus() {
 		return this.showOnFocus;
@@ -74,6 +78,8 @@ public class DomainObjectSuggestCustomiser
 				"");
 		showOnFocus = NamedParameter.Support.booleanValue(info.parameters(),
 				SHOW_ON_FOCUS);
+		withPlaceholder = NamedParameter.Support
+				.booleanValueDefaultTrue(info.parameters(), WITH_PLACEHOLDER);
 		return editable ? this
 				: readonlyCustomiserClassValue == null
 						? new RenderedLabelProvider(rendererClassValue, null)
@@ -96,6 +102,7 @@ public class DomainObjectSuggestCustomiser
 	public BoundWidget get() {
 		BoundSuggestBox boundSuggestBox = new BoundSuggestBox<>();
 		boundSuggestBox.setRenderer(getRenderer());
+		boundSuggestBox.setWithPlaceholder(withPlaceholder);
 		boundSuggestBox.suggestOracle(
 				new BoundSuggestOracle().clazz(classValue).hint(hintValue));
 		boundSuggestBox.setShowOnFocus(showOnFocus);

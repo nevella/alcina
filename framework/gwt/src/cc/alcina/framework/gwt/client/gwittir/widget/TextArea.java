@@ -18,6 +18,8 @@ import java.util.Comparator;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.FocusEvent;
@@ -53,9 +55,9 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
  *
  * @author Nick Reddel
  */
-public class TextArea<B> extends AbstractBoundWidget<String> implements
-		HasFocus, HasEnabled, SourcesKeyboardEvents, SourcesClickEvents,
-		MultilineWidget, Focusable {
+public class TextArea<B> extends AbstractBoundWidget<String>
+		implements HasFocus, HasEnabled, SourcesKeyboardEvents,
+		SourcesClickEvents, MultilineWidget, Focusable {
 	private com.google.gwt.user.client.ui.TextArea base = new com.google.gwt.user.client.ui.TextArea();
 
 	private ChangeListenerCollection changeListeners = new ChangeListenerCollection();
@@ -82,7 +84,8 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 		this.setComparator(SimpleComparator.INSTANCE);
 		if (updateOnKeypress) {
 			this.addKeyboardListener(new KeyboardListener() {
-				public void onKeyDown(Widget sender, char keyCode, int modifiers) {
+				public void onKeyDown(Widget sender, char keyCode,
+						int modifiers) {
 				}
 
 				public void onKeyPress(Widget sender, char keyCode,
@@ -91,7 +94,8 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 					old = (String) getValue();
 				}
 
-				public void onKeyUp(Widget sender, char keyCode, int modifiers) {
+				public void onKeyUp(Widget sender, char keyCode,
+						int modifiers) {
 				}
 			});
 		} else {
@@ -361,7 +365,7 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 	}
 
 	public void setValue(String value) {
-		setStyleName("empty",CommonUtils.isNullOrEmpty(value));
+		setStyleName("empty", CommonUtils.isNullOrEmpty(value));
 		if (provideIsHinted()) {
 			if (CommonUtils.isNullOrEmpty(value)) {
 				return;
@@ -372,12 +376,15 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 		String old = this.getValue();
 		this.setText(value);
 		if (ensureAllLinesVisible) {
-			base.setVisibleLines((CommonUtils.nullToEmpty(getValue()).length() * 10 / 9)
-					/ base.getCharacterWidth() + 1);
+			Scheduler.get().scheduleDeferred(() -> {
+				Element element = this.base.getElement();
+				element.getStyle().setProperty("height", "auto");
+				int scrollHeight = element.getScrollHeight();
+				element.getStyle().setHeight(scrollHeight, Unit.PX);
+			});
 		}
-		if (this.getValue() != old
-				&& (this.getValue() == null || (this.getValue() != null && !this
-						.getValue().equals(old)))) {
+		if (this.getValue() != old && (this.getValue() == null
+				|| (this.getValue() != null && !this.getValue().equals(old)))) {
 			this.changes.firePropertyChange("value", old, this.getValue());
 		}
 		if (CommonUtils.isNullOrEmpty(value)) {
@@ -412,7 +419,8 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 	public String getHint() {
 		return this.hint;
 	}
-	 private void clearHint() {
+
+	private void clearHint() {
 		base.setText(getValue());
 		base.removeStyleName("hint");
 		if (keydownHandlerRegistration != null) {
@@ -422,9 +430,10 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 			focusHandlerRegistration = null;
 		}
 	}
+
 	public void setHint(String hint) {
-		if (hint != null
-				&& (provideIsHinted() || CommonUtils.isNullOrEmpty(getValue()))) {
+		if (hint != null && (provideIsHinted()
+				|| CommonUtils.isNullOrEmpty(getValue()))) {
 			base.setText(hint);
 			base.addStyleName("hint");
 			keydownHandlerRegistration = base
@@ -433,10 +442,7 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 						public void onKeyDown(KeyDownEvent event) {
 							clearHint();
 						}
-
-						
 					});
-			
 			focusHandlerRegistration = base.addFocusHandler(new FocusHandler() {
 				@Override
 				public void onFocus(FocusEvent event) {

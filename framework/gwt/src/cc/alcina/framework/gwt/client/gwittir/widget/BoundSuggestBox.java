@@ -47,6 +47,16 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 
 	private BoundSuggestOracle suggestOracle;
 
+	private boolean withPlaceholder = true;
+
+	public boolean isWithPlaceholder() {
+		return this.withPlaceholder;
+	}
+
+	public void setWithPlaceholder(boolean withPlaceholder) {
+		this.withPlaceholder = withPlaceholder;
+	}
+
 	/** Creates a new instance of Label */
 	public BoundSuggestBox() {
 	}
@@ -71,8 +81,10 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 	public void suggestOracle(BoundSuggestOracle suggestOracle) {
 		this.suggestOracle = suggestOracle;
 		base = new SuggestBox(suggestOracle);
-		base.getValueBox().getElement().setPropertyString("placeholder",
-				"Type for suggestions");
+		if (withPlaceholder) {
+			base.getValueBox().getElement().setPropertyString("placeholder",
+					"Type for suggestions");
+		}
 		base.addSelectionHandler(evt -> {
 			if (evt.getSelectedItem() != null) {
 				setValue((T) ((BoundSuggestOracleSuggestion) evt
@@ -194,10 +206,11 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 			if (model instanceof BoundSuggestOracleModel) {
 				boundRequest.model = (BoundSuggestOracleModel) model;
 			}
-			Optional.ofNullable(runningCallback).ifPresent(sc->sc.setCancelled(true));
-			runningCallback=new SuggestCallback(request, callback);
-			ClientBase.getCommonRemoteServiceAsyncInstance().suggest(
-					boundRequest, runningCallback);
+			Optional.ofNullable(runningCallback)
+					.ifPresent(sc -> sc.setCancelled(true));
+			runningCallback = new SuggestCallback(request, callback);
+			ClientBase.getCommonRemoteServiceAsyncInstance()
+					.suggest(boundRequest, runningCallback);
 		}
 	}
 
@@ -207,7 +220,7 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 
 	public void setFilterText(String filterText) {
 		base.setText(filterText);
-		if(!Ax.isBlank(filterText)){
+		if (!Ax.isBlank(filterText)) {
 			base.showSuggestions(filterText);
 		}
 	}

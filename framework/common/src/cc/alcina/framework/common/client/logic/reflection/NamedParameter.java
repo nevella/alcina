@@ -62,6 +62,13 @@ public @interface NamedParameter {
 			}
 			return false;
 		}
+		public static boolean booleanValueDefaultTrue(NamedParameter[] parameters, String name) {
+			NamedParameter p = Support.getParameter(parameters, name);
+			if (p!=null){
+				return p.booleanValue();
+			}
+			return true;
+		}
 		public static <T> T instantiateClass(NamedParameter[] parameters, String name){
 			NamedParameter p = Support.getParameter(parameters, name);
 			if (p!=null && p.classValue()!=null){

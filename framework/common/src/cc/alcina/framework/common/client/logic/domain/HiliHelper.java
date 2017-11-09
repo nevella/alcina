@@ -26,6 +26,21 @@ public class HiliHelper {
 		}
 		return CommonUtils.compareInts(o1.hashCode(), o2.hashCode());
 	}
+	public static int compareLocalsHigh(HasIdAndLocalId o1, HasIdAndLocalId o2) {
+		int i = o1.getClass().getName().compareTo(o2.getClass().getName());
+		if (i != 0) {
+			return i;
+		}
+		i = CommonUtils.compareLongs(o1.getLocalId(), o2.getLocalId());
+		if (i != 0) {
+			return i;
+		}
+		i = CommonUtils.compareLongs(o1.getId(), o2.getId());
+		if (i != 0) {
+			return i;
+		}
+		return CommonUtils.compareInts(o1.hashCode(), o2.hashCode());
+	}
 
 	public static String toIdString(Collection<? extends HasIdAndLocalId> hilis) {
 		StringBuffer sb = new StringBuffer();

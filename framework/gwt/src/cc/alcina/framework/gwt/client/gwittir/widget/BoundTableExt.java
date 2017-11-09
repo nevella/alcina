@@ -36,6 +36,7 @@ import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -43,6 +44,7 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.ClickListener;
+import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FocusListener;
 import com.google.gwt.user.client.ui.Grid;
@@ -89,8 +91,12 @@ import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
+import cc.alcina.framework.gwt.client.gwittir.widget.EndRowButtonClickedEvent.EndRowButtonClickedHandler;
+import cc.alcina.framework.gwt.client.gwittir.widget.EndRowButtonClickedEvent.HasEndRowClickedHandlers;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.HasRenderContext;
+import cc.alcina.framework.gwt.client.widget.FlowPanelClickable;
+import cc.alcina.framework.gwt.client.widget.SpanPanel;
 
 /**
  * This is an option-rich table for use with objects implementing the
@@ -124,8 +130,8 @@ import cc.alcina.framework.gwt.client.objecttree.HasRenderContext;
  *         </ul>
  */
 @SuppressWarnings({ "unchecked", "deprecation" })
-public class BoundTableExt extends AbstractTableWidget
-		implements HasChunks, HasBinding, HasRenderContext {
+public class BoundTableExt extends AbstractTableWidget implements HasChunks,
+		HasBinding, HasRenderContext, HasEndRowClickedHandlers {
 	private static BoundTableExt activeTable = null;
 
 	/**
@@ -204,6 +210,8 @@ public class BoundTableExt extends AbstractTableWidget
 	public static final int MULTI_REQUIRES_SHIFT = 2048;
 
 	public static final int HANDLES_AS_CHECKBOXES = 4096;
+
+	public static final int END_ROW_BUTTON = 8192;
 
 	private static final String DEFAULT_STYLE = "default";
 
@@ -635,6 +643,15 @@ public class BoundTableExt extends AbstractTableWidget
 				BoundTableExt.LOG.log(Level.ERROR, widget + "", e);
 			}
 		}
+		if ((this.masks & BoundTableExt.END_ROW_BUTTON) > 0) {
+			EndRowButton endRowButton=new EndRowButton();
+			table.setWidget(row, this.columns.length + startColumn,
+					endRowButton);
+			int f_row = row;
+			endRowButton.addClickHandler(e -> {
+				EndRowButtonClickedEvent.fire(BoundTableExt.this, f_row, o);
+			});
+		}
 		if (collectionPropertyChangeListener != null) {
 			o.addPropertyChangeListener(collectionPropertyChangeListener);
 			listenedToByCollectionChangeListener.add(o);
@@ -645,6 +662,23 @@ public class BoundTableExt extends AbstractTableWidget
 		if (this.isAttached()) {
 			bindingRow.setLeft();
 			bindingRow.bind();
+		}
+	}
+
+	static class EndRowButton extends Composite implements HasClickHandlers {
+		private FlowPanelClickable fpc;
+
+		public EndRowButton() {
+			fpc = new FlowPanelClickable();
+			initWidget(fpc);
+			SpanPanel inner = new SpanPanel();
+			fpc.add(inner);
+			setStyleName("end-row-button");
+		}
+
+		@Override
+		public HandlerRegistration addClickHandler(ClickHandler handler) {
+			return fpc.addClickHandler(handler);
 		}
 	}
 
@@ -1346,8 +1380,8 @@ public class BoundTableExt extends AbstractTableWidget
 	}
 
 	protected native Element getRow(Element elem, int row)/*-{
-															return elem.rows[row];
-															}-*/;
+        return elem.rows[row];
+	}-*/;
 
 	private void insertNestedWidget(int row) {
 		// GWT.log( "Inserting nested for row "+row, null);
@@ -1612,6 +1646,10 @@ public class BoundTableExt extends AbstractTableWidget
 				}
 			}
 			this.table.getRowFormatter().setStyleName(0, "header");
+		}
+		if ((this.masks & BoundTableExt.END_ROW_BUTTON) > 0) {
+			this.table.setWidget(0, this.columns.length + startColumn,
+					new HTML("\u00A0"));
 		}
 		if (sortedColumn != -1) {
 			if ((this.masks & BoundTableExt.HEADER_MASK) > 0) {
@@ -2034,5 +2072,11 @@ public class BoundTableExt extends AbstractTableWidget
 		System.out.println(CommonUtils.formatJ("set model - %s %s\n",
 				model.hashCode(), model));
 		super.setModel(model);
+	}
+
+	@Override
+	public HandlerRegistration
+			addEndRowClickedHandler(EndRowButtonClickedHandler handler) {
+		return addHandler(handler, EndRowButtonClickedEvent.getType());
 	}
 }
