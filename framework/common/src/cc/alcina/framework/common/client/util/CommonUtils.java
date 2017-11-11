@@ -1094,11 +1094,16 @@ public class CommonUtils {
 			multiplier *= 10;
 			pad /= 10;
 		}
-		String s = String.valueOf(Math.round(d * multiplier + pad));
+		double absD = Math.abs(d);
+		String s = String.valueOf(Math.round(absD * multiplier + pad));
 		s = padStringLeft(s, places + 1, '0');
 		int len = s.length();
-		return Double.valueOf(
+		double val = Double.valueOf(
 				s.substring(0, len - places) + "." + s.substring(len - places));
+		if (d<0) {
+			val *= -1;
+		}
+		return val;
 	}
 
 	// to 00.00:00 or 23:59.59

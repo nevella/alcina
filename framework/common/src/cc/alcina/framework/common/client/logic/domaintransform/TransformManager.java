@@ -967,6 +967,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			dte.setSource(null);
 			dte.setUtcDate(new Date(0L));
 			Long id = asObjectSpec ? (Long) arr[0] : hili.getId();
+			long localId = id == 0 ? hili.getLocalId() : 0L;
+			dte.setObjectLocalId(localId);
 			dte.setObjectId(id);
 			dte.setObjectClass(clazz);
 			dte.setTransformType(TransformType.CREATE_OBJECT);
@@ -994,6 +996,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 							dte = new DomainTransformEvent();
 							dte.setUtcDate(new Date(0L));
 							dte.setObjectId(id);
+							dte.setObjectLocalId(localId);
 							dte.setObjectClass(clazz);
 							dte.setPropertyName(propertyName);
 							dte.setTransformType(
@@ -1016,6 +1019,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 						dte = new DomainTransformEvent();
 						dte.setUtcDate(new Date(0L));
 						dte.setObjectId(id);
+						dte.setObjectLocalId(localId);
 						dte.setObjectClass(clazz);
 						dte.setPropertyName(propertyName);
 						dte.setNewValue(null);
@@ -1041,8 +1045,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 								TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 					} else {
 						dte.setValueClass(propertyType);
-						dte.setValueId(asObjectSpec ? (Long) value
-								: ((HasIdAndLocalId) value).getId());
+						long valueId = asObjectSpec ? (Long) value
+								: ((HasIdAndLocalId) value).getId();
+						long valueLocalId = valueId == 0L
+								? ((HasIdAndLocalId) value).getLocalId() : 0L;
+						dte.setValueId(valueId);
+						dte.setValueLocalId(valueLocalId);
 						dte.setTransformType(TransformType.CHANGE_PROPERTY_REF);
 					}
 					dtes.add(dte);

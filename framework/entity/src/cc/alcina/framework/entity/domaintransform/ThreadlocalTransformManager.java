@@ -60,6 +60,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AssignmentPermission;
@@ -100,6 +101,10 @@ public class ThreadlocalTransformManager extends TransformManager
 	public static final String CONTEXT_IGNORE_DOUBLE_DELETION = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_IGNORE_DOUBLE_DELETION";
 
+	public static final String CONTEXT_TEST_PERMISSIONS = ThreadlocalTransformManager.class
+            .getName() + ".CONTEXT_TEST_PERMISSIONS";
+
+	
 	public static final String CONTEXT_FLUSH_BEFORE_DELETE = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_FLUSH_BEFORE_DELETE";
 
@@ -216,7 +221,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public boolean checkPropertyAccess(HasIdAndLocalId hili,
 			String propertyName, boolean read) throws IntrospectionException {
-		if (hili.getId() != 0) {
+		if (hili.provideWasPersisted()||LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
 			PropertyDescriptor descriptor = SEUtilities
 					.getPropertyDescriptorByName(hili.getClass(), propertyName);
 			if (descriptor == null) {
@@ -907,23 +912,23 @@ public class ThreadlocalTransformManager extends TransformManager
 		return true;
 	}
 
-	private void checkTargetReadAndAssignmentAccessAndThrow(
-			HasIdAndLocalId target, ObjectPermissions oph,
-			AssignmentPermission aph, DomainTransformEvent evt)
-			throws DomainTransformException {
-		if (target == null) {
-			return;
-		}
-		if (!PermissionsManager.get().isPermissible(target, oph.read())) {
-			throw new DomainTransformException(new PermissionsException(
-					"Permission denied : read - target object " + evt));
-		}
-		if (aph != null && !PermissionsManager.get().isPermissible(target,
-				aph.value())) {
-			throw new DomainTransformException(new PermissionsException(
-					"Permission denied : assign - target object " + evt));
-		}
-	}
+	 private void checkTargetReadAndAssignmentAccessAndThrow(
+	            HasIdAndLocalId assigningTo, HasIdAndLocalId assigning,
+	            ObjectPermissions oph, AssignmentPermission aph,
+	            DomainTransformEvent evt) throws DomainTransformException {
+	        if (assigning == null) {
+	            return;
+	        }
+	        if (!PermissionsManager.get().isPermissible(assigning, oph.read())) {
+	            throw new DomainTransformException(new PermissionsException(
+	                    "Permission denied : read - target object " + evt));
+	        }
+	        if (aph != null && !PermissionsManager.get().isPermissible(assigning,
+	                assigningTo, new AnnotatedPermissible(aph.value()), false)) {
+	            throw new DomainTransformException(new PermissionsException(
+	                    "Permission denied : assign - target object " + evt));
+	        }
+	    }
 
 	private boolean explicitlyPermitted(DomainTransformEvent evt) {
 		return explicitlyPermittedTransforms.contains(evt);
@@ -942,86 +947,112 @@ public class ThreadlocalTransformManager extends TransformManager
 						&& getEntityManager() == null);
 	}
 
-	@Override
-	protected boolean checkPermissions(HasIdAndLocalId hili,
-			DomainTransformEvent evt, String propertyName, Object change) {
-		if (ResourceUtilities.getBoolean(ThreadlocalTransformManager.class,
-				"ignoreTransformPermissions")) {
-			return true;
-		}
-		if (explicitlyPermitted(evt)) {
-			return true;
-		}
-		try {
-			if (hili == null) {
-				hili = (HasIdAndLocalId) evt.getObjectClass().newInstance();
-			} else {
-				hili = ensureNonProxy(hili);
-			}
-			Class<? extends HasIdAndLocalId> objectClass = hili.getClass();
-			ObjectPermissions op = objectClass
-					.getAnnotation(ObjectPermissions.class);
-			op = op == null
-					? PermissionsManager.get().getDefaultObjectPermissions()
-					: op;
-			HasIdAndLocalId hiliChange = (HasIdAndLocalId) (change instanceof HasIdAndLocalId
-					? change : null);
-			ObjectPermissions oph = null;
-			AssignmentPermission aph = Reflections.propertyAccessor()
-					.getAnnotationForProperty(objectClass,
-							AssignmentPermission.class, propertyName);
-			if (hiliChange != null) {
-				oph = hiliChange.getClass()
-						.getAnnotation(ObjectPermissions.class);
-				oph = oph == null
-						? PermissionsManager.get().getDefaultObjectPermissions()
-						: oph;
-			}
-			switch (evt.getTransformType()) {
-			case ADD_REF_TO_COLLECTION:
-			case REMOVE_REF_FROM_COLLECTION:
-				checkPropertyReadAccessAndThrow(hili, propertyName, evt);
-				checkTargetReadAndAssignmentAccessAndThrow(hiliChange, oph, aph,
-						evt);
-				break;
-			case CHANGE_PROPERTY_REF:
-				checkTargetReadAndAssignmentAccessAndThrow(hiliChange, oph, aph,
-						evt);
-				// deliberate fall-through
-			case NULL_PROPERTY_REF:
-			case CHANGE_PROPERTY_SIMPLE_VALUE:
-				return checkPropertyWriteAccessAndThrow(hili, propertyName,
-						evt);
-			case CREATE_OBJECT:
-				if (!PermissionsManager.get().isPermissible(hili,
-						op.create())) {
-					throw new DomainTransformException(new Exception(
-							"Permission denied : create - object " + evt));
-				}
-				break;
-			case DELETE_OBJECT:
-				if (!PermissionsManager.get().isPermissible(hili,
-						op.delete())) {
-					throw new DomainTransformException(new Exception(
-							"Permission denied : delete - object " + evt));
-				}
-				break;
-			}
-			// TODO:3.2, check r/w access for bean for add/remove ref
-			// check r/w access for bean for all
-		} catch (Exception e) {
-			if (e instanceof DomainTransformException) {
-				DomainTransformException dtex = (DomainTransformException) e;
-				dtex.setEvent(evt);
-				evt.setSource(hili);
-				evt.setPropertyName(propertyName);
-			}
-			EntityLayerUtils.log(LogMessageType.TRANSFORM_EXCEPTION,
-					"Domain transform permissions exception", e);
-			throw new WrappedRuntimeException(e);
-		}
-		return true;
-	}
+	 public boolean testPermissions(HasIdAndLocalId hili,
+	            DomainTransformEvent evt, String propertyName, Object change,
+	            boolean read) {
+	        if (!LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
+	            throw new RuntimeException("test property not set");
+	        }
+	        if (read) {
+	            try {
+	                checkPropertyReadAccessAndThrow(hili, propertyName, evt);
+	                return true;
+	            } catch (Exception e) {
+	                return false;
+	            }
+	        } else {
+	            return checkPermissions(hili, evt, propertyName, change, true);
+	        }
+	    }
+
+	    @Override
+	    protected boolean checkPermissions(HasIdAndLocalId hili,
+	            DomainTransformEvent evt, String propertyName, Object change) {
+	        return checkPermissions(hili, evt, propertyName, change, false);
+	    }
+
+	    private boolean checkPermissions(HasIdAndLocalId hili,
+	            DomainTransformEvent evt, String propertyName, Object change,
+	            boolean muteLogging) {
+	        if (ResourceUtilities.getBoolean(ThreadlocalTransformManager.class,
+	                "ignoreTransformPermissions")) {
+	            return true;
+	        }
+	        if (explicitlyPermitted(evt)) {
+	            return true;
+	        }
+	        try {
+	            if (hili == null) {
+	                hili = (HasIdAndLocalId) evt.getObjectClass().newInstance();
+	            } else {
+	                hili = ensureNonProxy(hili);
+	            }
+	            Class<? extends HasIdAndLocalId> objectClass = hili.getClass();
+	            ObjectPermissions op = objectClass
+	                    .getAnnotation(ObjectPermissions.class);
+	            op = op == null
+	                    ? PermissionsManager.get().getDefaultObjectPermissions()
+	                    : op;
+	            HasIdAndLocalId hiliChange = (HasIdAndLocalId) (change instanceof HasIdAndLocalId
+	                    ? change : null);
+	            ObjectPermissions oph = null;
+	            AssignmentPermission aph = Reflections.propertyAccessor()
+	                    .getAnnotationForProperty(objectClass,
+	                            AssignmentPermission.class, propertyName);
+	            if (hiliChange != null) {
+	                oph = hiliChange.getClass()
+	                        .getAnnotation(ObjectPermissions.class);
+	                oph = oph == null
+	                        ? PermissionsManager.get().getDefaultObjectPermissions()
+	                        : oph;
+	            }
+	            switch (evt.getTransformType()) {
+	            case ADD_REF_TO_COLLECTION:
+	            case REMOVE_REF_FROM_COLLECTION:
+	                checkPropertyReadAccessAndThrow(hili, propertyName, evt);
+	                checkTargetReadAndAssignmentAccessAndThrow(hili, hiliChange,
+	                        oph, aph, evt);
+	                break;
+	            case CHANGE_PROPERTY_REF:
+	                checkTargetReadAndAssignmentAccessAndThrow(hili, hiliChange,
+	                        oph, aph, evt);
+	                // deliberate fall-through
+	            case NULL_PROPERTY_REF:
+	            case CHANGE_PROPERTY_SIMPLE_VALUE:
+	                return checkPropertyWriteAccessAndThrow(hili, propertyName,
+	                        evt);
+	            case CREATE_OBJECT:
+	                if (!PermissionsManager.get().isPermissible(hili,
+	                        op.create())) {
+	                    throw new DomainTransformException(new PermissionsException(
+	                            "Permission denied : create - object " + evt));
+	                }
+	                break;
+	            case DELETE_OBJECT:
+	                if (!PermissionsManager.get().isPermissible(hili,
+	                        op.delete())) {
+	                    throw new DomainTransformException(new PermissionsException(
+	                            "Permission denied : delete - object " + evt));
+	                }
+	                break;
+	            }
+	            // TODO:3.2, check r/w access for bean for add/remove ref
+	            // check r/w access for bean for all
+	        } catch (Exception e) {
+	            if (e instanceof DomainTransformException) {
+	                DomainTransformException dtex = (DomainTransformException) e;
+	                dtex.setEvent(evt);
+	                evt.setSource(hili);
+	                evt.setPropertyName(propertyName);
+	            }
+	            if (!muteLogging) {
+	                EntityLayerUtils.log(LogMessageType.TRANSFORM_EXCEPTION,
+	                        "Domain transform permissions exception", e);
+	            }
+	            throw new WrappedRuntimeException(e);
+	        }
+	        return true;
+	    }
 
 	@Override
 	protected void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)

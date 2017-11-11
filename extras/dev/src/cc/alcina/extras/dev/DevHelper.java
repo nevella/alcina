@@ -105,7 +105,7 @@ public abstract class DevHelper {
 		String getValue(String prompt);
 	}
 
-	static class ConsolePrompter implements StringPrompter {
+	public static class ConsolePrompter implements StringPrompter {
 		@Override
 		public String getValue(String prompt) {
 			return SEUtilities.consoleReadline(String.format("%s\n> ", prompt));

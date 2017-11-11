@@ -67,15 +67,16 @@ public interface HasIdAndLocalId extends HasId {
 			return HiliHelper.compare(o1, o2);
 		}
 	}
-	public static class HiliComparatorLocalsHigh
-	implements Comparator<HasIdAndLocalId> {
-public static final HiliComparatorLocalsHigh INSTANCE = new HiliComparatorLocalsHigh();
 
-@Override
-public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
-	return HiliHelper.compareLocalsHigh(o1, o2);
-}
-}
+	public static class HiliComparatorLocalsHigh
+			implements Comparator<HasIdAndLocalId> {
+		public static final HiliComparatorLocalsHigh INSTANCE = new HiliComparatorLocalsHigh();
+
+		@Override
+		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
+			return HiliHelper.compareLocalsHigh(o1, o2);
+		}
+	}
 
 	public static class HiliNoLocalComparator
 			implements Comparator<HasIdAndLocalId> {
@@ -85,6 +86,10 @@ public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
 		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
 			return HiliHelper.compareNoLocals(o1, o2);
 		}
+	}
+
+	default boolean provideWasPersisted() {
+		return getId() != 0;
 	}
 
 	public static class HiliByIdFilter

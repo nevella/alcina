@@ -59,6 +59,7 @@ public class TransformPersister {
 			try {
 				LooseContext.pushWithTrue(
 						TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
+				LooseContext.set(CONTEXT_TRANSFORM_LAYER_WRAPPER, wrapper);
 				Registry.impl(CommonPersistenceProvider.class)
 						.getCommonPersistence()
 						.transformInPersistenceContext(this, token, wrapper);
@@ -162,6 +163,8 @@ public class TransformPersister {
 
 	public static final String CONTEXT_REPLAYING_FOR_LOGS = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_REPLAYING_FOR_LOGS";
+	public static final String CONTEXT_TRANSFORM_LAYER_WRAPPER = ThreadlocalTransformManager.class
+            .getName() + ".CONTEXT_TRANSFORM_LAYER_WRAPPER";
 
 	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITH_DET_EXCEPTIONS = 20
 			* 1000;
@@ -293,6 +296,7 @@ public class TransformPersister {
 									}
 								}
 								eventsPersisted.add(event);
+								wrapper.remoteEventsPersisted.add(event);
 								transformCount++;
 							}
 						} catch (Exception e) {

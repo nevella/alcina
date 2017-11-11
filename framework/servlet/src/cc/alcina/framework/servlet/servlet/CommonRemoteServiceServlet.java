@@ -368,14 +368,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 			msg += "Stacktrace:\t " + sw.toString();
 			System.out.println(msg);
-			CommonPersistenceLocal cpl = null;
-			try {
-				cpl = Registry.impl(CommonPersistenceProvider.class)
-						.getCommonPersistence();
-			} catch (Exception e) {
-				// webapp restart
-				return;
-			}
+			CommonPersistenceLocal cpl = Registry
+					.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence();
 			cpl.log(msg, exceptionType);
 		} finally {
 			LooseContext.pop();
@@ -1138,8 +1133,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 			boolean nonPersistent = LooseContext
 					.is(JobRegistry.CONTEXT_NON_PERSISTENT);
+			TransformManager transformManager = TransformManager.get();
 			try {
-				ThreadlocalTransformManager.get().resetTltm(null);
+				if (transformManager instanceof ThreadlocalTransformManager) {
+					ThreadlocalTransformManager.get().resetTltm(null);
+				}
 				LooseContext.push();
 				LooseContext.getContext().addTopicListener(
 						JobRegistry.TOPIC_JOB_STARTED, startListener);
@@ -1168,7 +1166,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				throw new WebException(e);
 			} finally {
 				LooseContext.pop();
-				ThreadlocalTransformManager.get().resetTltm(null);
+				if (transformManager instanceof ThreadlocalTransformManager) {
+					ThreadlocalTransformManager.get().resetTltm(null);
+				}
 			}
 		}
 	}

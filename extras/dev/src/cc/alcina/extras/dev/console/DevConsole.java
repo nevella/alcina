@@ -219,6 +219,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		consoleLeft.initAttrs(props.fontName);
 		consoleRight.initAttrs(props.fontName);
 		mainFrame = new MainFrame();
+		mainFrame.setName("Dev Console");
 		mainFrame.setVisible(true);
 		devHelper.loadJbossConfig(new SwingPrompter());
 		MetricLogging.get().end("init-console");
