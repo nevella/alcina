@@ -146,6 +146,7 @@ public abstract class SearchDefinition extends WrapperPersistable
 		StringBuffer sb = new StringBuffer();
 		sb.append("\n WHERE ");
 		int ct = 0;
+		int paramCounter = 1;
 		for (CriteriaGroup cg : getCriteriaGroups()) {
 			if (!PermissionsManager.get().isPermissible(cg)) {
 				continue;
@@ -157,7 +158,16 @@ public abstract class SearchDefinition extends WrapperPersistable
 			if (ct++ != 0) {
 				sb.append(" AND ");
 			}
-			sb.append(ewp2.eql);
+			String eql = "";
+			String[] split = ewp2.eql.split("\\?");
+			for (int i = 0; i < split.length; i++) {
+				String s = split[i];
+				eql += s;
+				if (i < split.length - 1) {
+					eql += "?" + paramCounter++;
+				}
+			}
+			sb.append(eql);
 			ewp.parameters.addAll(ewp2.parameters);
 		}
 		if (withOrderClause) {

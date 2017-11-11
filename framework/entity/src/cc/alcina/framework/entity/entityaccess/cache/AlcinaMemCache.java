@@ -2818,6 +2818,10 @@ public class AlcinaMemCache implements RegistrableService {
 		return get().findRaw(t);
 	}
 
+	public static <T extends HasIdAndLocalId> T raw(Class<T> clazz, long id) {
+		return (T) get().findRaw(clazz, id);
+	}
+
 	public static <T extends HasIdAndLocalId> T raw(HiliLocator objectLocator) {
 		return (T) get().findRaw(objectLocator.clazz, objectLocator.id);
 	}

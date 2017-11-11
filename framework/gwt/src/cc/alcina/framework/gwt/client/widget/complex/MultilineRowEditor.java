@@ -108,7 +108,7 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 		}
 		List<H> values = new ArrayList<>(CommonUtils.nonNullSet(getValue()));
 		values = filterVisibleValues(values);
-		values.sort(HiliComparatorLocalsHigh.INSTANCE);
+		sortValues(values);
 		values.forEach(v -> TransformManager.get().registerDomainObject(v));
 		ContentViewFactory contentViewFactory = new ContentViewFactory().noCaption()
 				.setBeanClass(getItemClass()).editable(editable).autoSave(true)
@@ -123,6 +123,10 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 		holder.add(tableToolbarHolder);
 		toolbar.addVetoableActionListener(toolbarListener);
 	}
+
+	
+
+	protected abstract void sortValues(List<H> values);
 
 	protected void
 			customiseContentViewFactory(ContentViewFactory contentViewFactory) {

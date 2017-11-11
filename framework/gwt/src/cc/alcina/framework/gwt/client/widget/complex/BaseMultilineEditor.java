@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliComparatorLocalsHigh;
 
 public interface BaseMultilineEditor<T extends HasIdAndLocalId> {
 	public void setEditable(boolean editable);
@@ -17,4 +18,8 @@ public interface BaseMultilineEditor<T extends HasIdAndLocalId> {
 	public void redraw();
 
 	public Object getModel();
+	
+	 default void sortValues(List<T> values) {
+		values.sort(HiliComparatorLocalsHigh.INSTANCE);
+	}
 }

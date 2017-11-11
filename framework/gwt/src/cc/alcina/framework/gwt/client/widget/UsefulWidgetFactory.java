@@ -28,8 +28,10 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  */
 public class UsefulWidgetFactory {
 	public static final String BULLET_SEPARATOR_HTML = "\u00A0\u00A0\u00A0\u2022\u00A0\u00A0\u00A0";
-	
+
 	public static final String NARROW_BULLET_SEPARATOR_HTML = "\u00A0\u00A0\u2022\u00A0\u00A0";
+
+	public static final String WIDE_BULLET_SEPARATOR_HTML = "\u00A0\u00A0\u00A0\u00A0\u2022\u00A0\u00A0\u00A0\u00A0";
 
 	public static FlowPanel mediumTitleWidget(String title) {
 		FlowPanel fp = new FlowPanel();
@@ -72,12 +74,12 @@ public class UsefulWidgetFactory {
 	public static Widget createBulletSeparator() {
 		return new InlineHTML(BULLET_SEPARATOR_HTML);
 	}
+
 	public static Widget createNarrowBulletSeparator() {
 		return new InlineHTML(NARROW_BULLET_SEPARATOR_HTML);
 	}
 
-	public static Label formatLabel(String template,
-			Object...params ) {
+	public static Label formatLabel(String template, Object... params) {
 		return new Label(CommonUtils.formatJ(template, params));
 	}
 
@@ -86,7 +88,9 @@ public class UsefulWidgetFactory {
 		panel.setStyleName(cssClassName);
 		return panel;
 	}
-	public static SimplePanel styledSimplePanel(Widget child,String cssClassName) {
+
+	public static SimplePanel styledSimplePanel(Widget child,
+			String cssClassName) {
 		SimplePanel panel = new SimplePanel(child);
 		panel.setStyleName(cssClassName);
 		return panel;
