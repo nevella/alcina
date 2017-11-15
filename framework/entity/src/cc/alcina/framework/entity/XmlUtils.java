@@ -454,7 +454,7 @@ public class XmlUtils {
 	}
 
 	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node) {
-		return getSurroundingBlockTuple(node, n -> false);
+		return getSurroundingBlockTuple(node, new BlockResolverHtml());
 	}
 
 	public static interface BlockResolver extends Predicate<XmlNode> {
