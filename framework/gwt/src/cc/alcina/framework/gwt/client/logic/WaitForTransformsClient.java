@@ -3,11 +3,13 @@ package cc.alcina.framework.gwt.client.logic;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -45,7 +47,8 @@ public class WaitForTransformsClient implements AsyncCallback<DomainUpdate> {
 		TransformManager tm = TransformManager.get();
 		for (DomainTransformRequest dtr : result.requests) {
 			long clientInstanceId = dtr.getClientInstance().getId();
-			boolean ignoreCreates = ClientBase.getClientInstance().getId() == clientInstanceId;
+			ClientInstance clientInstance = PermissionsManager.get().getClientInstance();
+			boolean ignoreCreates = clientInstance.getId() == clientInstanceId;
 			try {
 				CollectionModificationSupport.queue(true);
 				ClientTransformManager.cast()

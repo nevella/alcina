@@ -44,6 +44,7 @@ public class HandshakeConsortModel {
 		@Override
 		public DeltaApplicationRecord convert(
 				DomainModelDeltaTransport transport) {
+		    ClientInstance clientInstance = PermissionsManager.get().getClientInstance();
 			return new DeltaApplicationRecord(0, transport.getSignature(),
 					new Date().getTime(), PermissionsManager.get().getUserId(),
 					clientInstance.getId(), 0, clientInstance.getAuth(),
@@ -54,7 +55,6 @@ public class HandshakeConsortModel {
 
 	private LoginResponse loginResponse;
 
-	private ClientInstance clientInstance;
 
 	public ModalNotifier loadObjectsNotifier;
 
@@ -85,13 +85,13 @@ public class HandshakeConsortModel {
 	private boolean loadedWithLocalOnlyTransforms;
 
 	public void ensureClientInstanceFromModelDeltas() {
-		if (getClientInstance() == null) {
+		if (PermissionsManager.get().getClientInstance() == null) {
 			ClientInstance impl = Registry.impl(ClientInstance.class);
 			DeltaApplicationRecord wrapper = ((DtrWrapperBackedDomainModelDelta) deltasToApply
 					.current()).getWrapper();
 			impl.setAuth(wrapper.getClientInstanceAuth());
 			impl.setId(wrapper.getClientInstanceId());
-			setClientInstance(impl);
+			PermissionsManager.get().setClientInstance(impl);
 		}
 	}
 
@@ -105,9 +105,6 @@ public class HandshakeConsortModel {
 		return loadObjectsNotifier;
 	}
 
-	public ClientInstance getClientInstance() {
-		return this.clientInstance;
-	}
 
 	public LoadObjectsRequest getLoadObjectsRequest() {
 		LoadObjectsRequest request = new LoadObjectsRequest();
@@ -124,7 +121,7 @@ public class HandshakeConsortModel {
 	}
 
 	public LoginState getLoginState() {
-		if (clientInstance == null) {
+		if (PermissionsManager.get().getClientInstance() == null) {
 			return LoginState.NOT_LOGGED_IN;
 		}
 		return PermissionsManager.get().isAnonymousUser() ? LoginState.NOT_LOGGED_IN
@@ -136,14 +133,11 @@ public class HandshakeConsortModel {
 				&& deltasToApply.current() != null;
 	}
 
-	public void setClientInstance(ClientInstance clientInstance) {
-		this.clientInstance = clientInstance;
-	}
 
 	public void setLoginResponse(LoginResponse loginResponse) {
 		this.loginResponse = loginResponse;
 		if (loginResponse != null) {
-			setClientInstance(loginResponse.getClientInstance());
+		    PermissionsManager.get().setClientInstance(loginResponse.getClientInstance());
 		}
 	}
 

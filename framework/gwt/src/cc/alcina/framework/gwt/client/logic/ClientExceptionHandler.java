@@ -88,7 +88,7 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 	}
 
 	public String extraInfoForExceptionText() {
-		ClientInstance clientInstance = ClientBase.getClientInstance();
+		ClientInstance clientInstance = PermissionsManager.get().getClientInstance();
 		long clientInstanceId=HiliHelper.getIdOrZero(clientInstance);
 		String extraInfo = "\n\nUser agent: "
 				+ BrowserMod.getUserAgent()

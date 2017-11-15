@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -39,6 +40,11 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 
     public static ThreadedPermissionsManager cast() {
         return (ThreadedPermissionsManager) PermissionsManager.get();
+    }
+
+    @Override
+    public ClientInstance getClientInstance() {
+        return ThreadedPmClientInstanceResolver.get().getClientInstance();
     }
 
     public static void clearThreadLocal() {

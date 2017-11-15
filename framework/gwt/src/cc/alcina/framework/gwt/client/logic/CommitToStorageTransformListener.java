@@ -220,7 +220,9 @@ public class CommitToStorageTransformListener extends StateListenable
     }
 
     private ClientInstance getClientInstance() {
-        ClientInstance clientInstance = ClientBase.getClientInstance().clone();
+        ClientInstance clientInstance = PermissionsManager.get()
+                .getClientInstance();
+        clientInstance = clientInstance.clone();
         clientInstance.setUser(null);
         return clientInstance;
     }

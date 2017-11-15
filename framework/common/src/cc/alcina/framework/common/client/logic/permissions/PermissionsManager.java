@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 
@@ -33,6 +34,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.Vetoer;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
@@ -101,6 +103,9 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
     private static final String TOPIC_ONLINE_STATE = PermissionsManager.class
             .getName() + ".TOPIC_ONLINE_STATE";
 
+    private static final String TOPIC_CLIENT_INSTANCE = PermissionsManager.class
+            .getName() + ".TOPIC_CLIENT_INSTANCE";
+
     public static final String CONTEXT_CREATION_PARENT = PermissionsManager.class
             .getName() + ".CONTEXT_CREATION_PARENT";
 
@@ -139,6 +144,16 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
     public static boolean isOnline() {
         return !isOffline();
+    }
+
+    public static void notifyClientInstanceChange(ClientInstance state) {
+        GlobalTopicPublisher.get().publishTopic(TOPIC_CLIENT_INSTANCE, state);
+    }
+
+    public static void notifyClientInstanceChangeListenerDelta(
+            TopicListener<ClientInstance> listener, boolean add) {
+        GlobalTopicPublisher.get().listenerDelta(TOPIC_CLIENT_INSTANCE,
+                listener, add);
     }
 
     public static void notifyLoginState(LoginState state) {
@@ -192,6 +207,8 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
     private PropertyChangeListener userListener;
 
     private IUser user;
+
+    private ClientInstance clientInstance;
 
     private IUser instantiatedUser;
 
@@ -310,6 +327,10 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
     public Long getAuthenticatedClientInstanceId() {
         return this.authenticatedClientInstanceId;
+    }
+
+    public ClientInstance getClientInstance() {
+        return this.clientInstance;
     }
 
     public ObjectPermissions getDefaultObjectPermissions() {
@@ -454,15 +475,6 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
         return this.overrideAsOwnedObject;
     }
 
-    public boolean isPermissible(Object o, Permissible p) {
-        return isPermissible(o, p, false);
-    }
-
-    public boolean isPermissible(Object o, Permissible p,
-            boolean doNotEvaluateNullObjectPermissions) {
-        return isPermissible(o, null, p, doNotEvaluateNullObjectPermissions);
-    }
-
     public boolean isPermissible(Object o, Object assigningTo, Permissible p,
             boolean doNotEvaluateNullObjectPermissions) {
         if (allPermissible) {
@@ -514,6 +526,15 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
             }
         }
         return permitted;
+    }
+
+    public boolean isPermissible(Object o, Permissible p) {
+        return isPermissible(o, p, false);
+    }
+
+    public boolean isPermissible(Object o, Permissible p,
+            boolean doNotEvaluateNullObjectPermissions) {
+        return isPermissible(o, null, p, doNotEvaluateNullObjectPermissions);
     }
 
     public boolean isPermissible(Object o, Permission p) {
@@ -605,6 +626,14 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
     public void setAuthenticatedClientInstanceId(
             Long authenticatedClientInstanceId) {
         this.authenticatedClientInstanceId = authenticatedClientInstanceId;
+    }
+
+    public void setClientInstance(ClientInstance clientInstance) {
+        ClientInstance old_clientInstance = clientInstance;
+        this.clientInstance = clientInstance;
+        if (!Objects.equals(clientInstance, old_clientInstance)) {
+            notifyClientInstanceChange(clientInstance);
+        }
     }
 
     public void setDefaultObjectPermissions(
@@ -828,13 +857,8 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
             }
         }
 
-        public void register(PermissionsExtensionForRule ext) {
-            extensionMapForRule.put(ext.getRuleName(), ext);
-        }
-
-        @Override
-        public Boolean isPermitted(Object o, Permissible p) {
-            return isPermitted(o, null, p);
+        public PermissionsExtensionForRule getExtension(String ruleName) {
+            return extensionMapForRule.get(ruleName);
         }
 
         @Override
@@ -854,8 +878,13 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
             return null;
         }
 
-        public PermissionsExtensionForRule getExtension(String ruleName) {
-            return extensionMapForRule.get(ruleName);
+        @Override
+        public Boolean isPermitted(Object o, Permissible p) {
+            return isPermitted(o, null, p);
+        }
+
+        public void register(PermissionsExtensionForRule ext) {
+            extensionMapForRule.put(ext.getRuleName(), ext);
         }
     }
 }

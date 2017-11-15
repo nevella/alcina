@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -271,11 +272,11 @@ public class LogStore {
 		}
 		this.lastMessage = message;
 		this.lastTopic = topic;
-		ClientInstance cli = ClientBase.getClientInstance();
-		String clientInstanceAuth = cli == null ? "(before cli)" : String
-				.valueOf(cli.getAuth());
+		ClientInstance clientInstance = PermissionsManager.get().getClientInstance();
+		String clientInstanceAuth = clientInstance == null ? "(before cli)" : String
+				.valueOf(clientInstance.getAuth());
 		ClientLogRecord logRecord = new ClientLogRecord(++localSeriesIdCounter,
-				clientInstanceAuth, HiliHelper.getIdOrZero(cli), new Date(),
+				clientInstanceAuth, HiliHelper.getIdOrZero(clientInstance), new Date(),
 				topic, message, null);
 		logs.addLogRecord(logRecord);
 		if (useCookieMsgBackup) {
