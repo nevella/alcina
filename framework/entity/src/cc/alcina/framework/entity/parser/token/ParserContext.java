@@ -5,9 +5,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -23,6 +25,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
+import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 
 public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<T>> {
 	public static final String LONG_BLANK_STRING = "        ";
@@ -607,5 +610,21 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 
 	public boolean isStrictCategoryChecking() {
 		return false;
+	}
+	public Optional<XmlNode> getContainingNode(Matcher matcher) {
+		return getContainingNode(new IntPair(matcher.start(),matcher.end()));
+	}
+	public Optional<XmlNode> getContainingNode(IntPair containingRange) {
+		containingRange = containingRange.shiftRight(startOffset);
+		int offset = 0;
+		for(Text text: allTexts){
+			int length = text.getLength();
+			IntPair textRange = new IntPair(offset,offset+length);
+			if(containingRange.contains(textRange)){
+				return Optional.of(XmlNode.from(text));
+			}
+			offset+=length;
+		}
+		return Optional.empty();
 	}
 }

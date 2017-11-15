@@ -28,7 +28,6 @@ public class AbstractParserSlice<T extends ParserToken> {
 
 	public int startOffsetInRun;
 
-	public HTMLAnchorElement anchor;
 
 	private String cachedContents = null;
 
