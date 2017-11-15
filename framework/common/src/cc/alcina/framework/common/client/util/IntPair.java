@@ -130,7 +130,7 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 	}
 	
 	public boolean containsExEnd(IntPair other) {
-		return  i2 > other.i2;
+		return contains(other) &&  i2 > other.i2;
 	}
 
 	/**

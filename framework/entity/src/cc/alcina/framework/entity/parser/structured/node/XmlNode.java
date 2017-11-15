@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -32,6 +33,7 @@ import cc.alcina.framework.entity.J8Utils;
 import cc.alcina.framework.entity.OptimizingXpathEvaluator;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
+import cc.alcina.framework.entity.XmlUtils.BlockResolver;
 import cc.alcina.framework.entity.XpathHelper;
 import cc.alcina.framework.entity.parser.structured.XmlStructuralJoin;
 
@@ -160,11 +162,12 @@ public class XmlNode {
 		return depth;
 	}
 
-	public Node domNode() {
-		return node;
-	}
 	public Element domElement() {
 		return (Element) node;
+	}
+
+	public Node domNode() {
+		return node;
 	}
 
 	public String dumpXml() {
@@ -218,6 +221,10 @@ public class XmlNode {
 
 	public boolean isAncestorOf(XmlNode xmlNode) {
 		return XmlUtils.isAncestorOf(node, xmlNode.node);
+	}
+
+	public boolean isDocumentNode() {
+		return node.getNodeType() == Node.DOCUMENT_NODE;
 	}
 
 	public boolean isElement() {
@@ -344,19 +351,21 @@ public class XmlNode {
 	}
 
 	public boolean tagIs(String tagName) {
-		return isElement() && getElement().getTagName().equals(tagName)
+		return isElement()
+				&& getElement().getTagName().equalsIgnoreCase(tagName)
 				|| isProcessingInstruction() && getProcessingInstruction()
-						.getNodeName().equals(tagName);
+						.getNodeName().equalsIgnoreCase(tagName);
 	}
 
 	public boolean tagIsOneOf(Collection<String> tags) {
-		return isElement() && tags.contains(name());
+		return isElement()
+				&& tags.stream().anyMatch(t -> t.equalsIgnoreCase(name()));
 	}
 
 	public boolean tagIsOneOf(String... tags) {
 		if (isElement()) {
 			for (int idx = 0; idx < tags.length; idx++) {
-				if (name().equals(tags[idx])) {
+				if (name().equalsIgnoreCase(tags[idx])) {
 					return true;
 				}
 			}
@@ -468,9 +477,21 @@ public class XmlNode {
 			return result;
 		}
 
+		public Optional<XmlNode> match(Predicate<XmlNode> predicate) {
+			XmlNode cursor = XmlNode.this;
+			while (cursor != null) {
+				if (predicate.test(cursor)) {
+					return Optional.of(cursor);
+				}
+				cursor = cursor.parent();
+			}
+			return Optional.empty();
+		}
+
 		public XmlNodeAncestor orSelf() {
-			orSelf = true;
-			return this;
+			XmlNodeAncestor ancestor = new XmlNodeAncestor();
+			ancestor.orSelf = true;
+			return ancestor;
 		}
 	}
 
@@ -687,8 +708,13 @@ public class XmlNode {
 					.findFirst();
 		}
 
+		public boolean hasClassName(String className) {
+			return Arrays.stream(attr("class").split(" "))
+					.anyMatch(cn -> cn.equals(className));
+		}
+
 		public boolean isBlock() {
-			return isElement() && XmlUtils.isBlockHTMLElement(getElement());
+			return isElement() && XmlUtils.isBlockTag(name());
 		}
 
 		public void setStyleProperty(String key, String value) {
@@ -709,6 +735,10 @@ public class XmlNode {
 							.collect(Collectors.joining("; ")));
 		}
 
+		public XmlNodeHtmlTableBuilder tableBuilder() {
+			return new XmlNodeHtmlTableBuilder(XmlNode.this);
+		}
+
 		public List<XmlNode> trs() {
 			List<XmlNode> trs = children.byTag("TR");
 			if (trs.isEmpty()) {
@@ -717,17 +747,14 @@ public class XmlNode {
 			return trs;
 		}
 
-		public boolean hasClassName(String className) {
-			return Arrays.stream(attr("class").split(" "))
-					.anyMatch(cn -> cn.equals(className));
-		}
-
-		
-
-		public XmlNodeHtmlTableBuilder tableBuilder() {
-			return new XmlNodeHtmlTableBuilder(XmlNode.this);
+		public boolean isOrContainsBlock(BlockResolver blockResolver) {
+			if (blockResolver.isBlock(XmlNode.this)) {
+				return true;
+			}
+			return children.flat().anyMatch(blockResolver::isBlock);
 		}
 	}
+
 	public class XmlNodeRelative {
 		public boolean hasNextSibling() {
 			return node.getNextSibling() != null;
@@ -772,6 +799,14 @@ public class XmlNode {
 			return doc.nodeFor(node.getPreviousSibling());
 		}
 
+		public XmlNode previousSibOrParentSibNode() {
+			if (hasPreviousSibling()) {
+				return previousSibling();
+			} else {
+				return parent();
+			}
+		}
+
 		public XmlNode replaceWithTag(String tag) {
 			XmlNode wrapper = doc.nodeFor(doc.domDoc().createElement(tag));
 			replaceWith(wrapper);
@@ -786,6 +821,31 @@ public class XmlNode {
 			wrapper.children.append(XmlNode.this);
 			wrapper.copyAttributesFrom(XmlNode.this);
 			return wrapper;
+		}
+
+		public XmlNode nextSibOrParentSibNode() {
+			if (hasNextSibling()) {
+				return nextSibling();
+			}
+			XmlNode parent = parent();
+			if (parent != null) {
+				return parent.relative().nextSibOrParentSibNode();
+			}
+			return null;
+		}
+
+		public XmlNode previousSiblingExcludingWhitespace() {
+			XmlNode cursor = XmlNode.this;
+			while (true) {
+				cursor = cursor.relative().previousSibling();
+				if (cursor == null) {
+					return null;
+				}
+				if (cursor.isText() && cursor.isWhitespaceTextContent()) {
+				} else {
+					return cursor;
+				}
+			}
 		}
 	}
 

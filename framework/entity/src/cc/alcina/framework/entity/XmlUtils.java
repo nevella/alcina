@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -456,56 +457,92 @@ public class XmlUtils {
 		return getSurroundingBlockTuple(node, n -> false);
 	}
 
+	public static interface BlockResolver extends Predicate<XmlNode> {
+		default Optional<XmlNode> getContainingBlock(XmlNode cursor) {
+			return cursor.ancestors().orSelf().match(this);
+		}
+
+		boolean isBlock(XmlNode node);
+
+		default boolean test(XmlNode node) {
+			return isBlock(node);
+		}
+
+		default boolean isBlock(Element e) {
+			return isBlock(XmlNode.from(e));
+		}
+	}
+
+	public static class BlockResolverHtml implements BlockResolver {
+		@Override
+		public boolean isBlock(XmlNode node) {
+			return node.html().isBlock();
+		}
+
+		XmlDoc doc = null;
+
+		@Override
+		public boolean isBlock(Element e) {
+			if (doc == null) {
+				doc = XmlNode.from(e).doc;
+			}
+			return isBlock(doc.nodeFor(e));
+		}
+	}
+
 	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node,
-			Predicate<Node> blockResolver) {
-		Node prev = node;
-		Node next = node;
-		SurroundingBlockTuple tuple = new SurroundingBlockTuple(node);
-		Node cursor = prev;
+			BlockResolver blockResolver) {
+		XmlDoc xmlDoc = new XmlDoc(node.getOwnerDocument());
+		XmlNode prev = xmlDoc.nodeFor(node);
+		XmlNode next = prev;
+		SurroundingBlockTuple tuple = new SurroundingBlockTuple(prev.domNode());
+		XmlNode cursor = prev;
 		if (!hasLegalRootContainer(node)) {
 			throw new RuntimeException("Node has no legal root container");
 		}
-		Node currentBlockAncestor = XmlUtils.getContainingBlock(cursor);
+		XmlNode currentBlockAncestor = blockResolver.getContainingBlock(cursor)
+				.orElse(null);
 		while (true) {
-			cursor = previousSibOrParentSibNode(cursor);
-			if (cursor.getNodeType() == Node.DOCUMENT_NODE) {
+			cursor = cursor.relative().previousSibOrParentSibNode();
+			if (cursor.isDocumentNode()) {
 				tuple.prevBlock = null;
 				break;
 			}
-			if (isOrContainsBlock(cursor) || blockResolver.test(cursor)
-					|| XmlUtils.getContainingBlock(
-							cursor) != currentBlockAncestor) {
-				tuple.prevBlock = cursor;
+			if (cursor.html().isOrContainsBlock(blockResolver)
+					|| blockResolver.getContainingBlock(cursor)
+							.orElse(null) != currentBlockAncestor) {
+				tuple.prevBlock = cursor.domNode();
 				break;
 			} else {
-				if (hasLegalRootContainer(cursor)) {
+				if (hasLegalRootContainer(cursor.domNode())) {
 					prev = cursor;
 				}
 			}
 		}
 		cursor = next;
-		currentBlockAncestor = XmlUtils.getContainingBlock(cursor);
+		currentBlockAncestor = blockResolver.getContainingBlock(cursor)
+				.orElse(null);
 		while (true) {
-			cursor = nextSibOrParentSibNode(cursor);
-			if (cursor == null || cursor.getNodeType() == Node.DOCUMENT_NODE) {
+			cursor = cursor.relative().nextSibOrParentSibNode();
+			if (cursor == null || cursor.isDocumentNode()) {
 				tuple.nextBlock = null;
 				break;
 			}
-			if (isOrContainsBlock(cursor) || blockResolver.test(cursor)
-					|| XmlUtils.getContainingBlock(
-							cursor) != currentBlockAncestor) {
-				tuple.nextBlock = cursor;
+			if (cursor.html().isOrContainsBlock(blockResolver)
+					|| blockResolver.getContainingBlock(cursor)
+							.orElse(null) != currentBlockAncestor) {
+				tuple.nextBlock = cursor.domNode();
 				break;
 			} else {
-				if (hasLegalRootContainer(cursor)) {
+				if (hasLegalRootContainer(cursor.domNode())) {
 					next = cursor;
 				}
 			}
 		}
 		Range r = ((DocumentRange) node.getOwnerDocument()).createRange();
-		r.setStartBefore(prev);
-		r.setEndAfter(next);
-		tuple.firstNode = prev;
+		r.setStartBefore(prev.domNode());
+		r.setEndAfter(next.domNode());
+		tuple.firstNode = prev.domNode();
 		tuple.range = r;
 		return tuple;
 	}
