@@ -419,7 +419,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				try {
 					saveConfig();
 				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
+					throw new  WrappedRuntimeException(e);
 				}
 			}
 		} catch (Exception e) {
