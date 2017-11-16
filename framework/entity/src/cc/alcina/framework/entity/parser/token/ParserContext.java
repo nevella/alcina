@@ -184,7 +184,7 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 
 	public List<HTMLAnchorElement> getAnchors() {
 		List<HTMLAnchorElement> anchors = new ArrayList<HTMLAnchorElement>();
-		if (allTexts.size() == 0) {
+		if (allTexts.size() == 0 || getCurrentTextRange() == null) {
 			return anchors;
 		}
 		for (Text t : getCurrentTextRange().texts) {
@@ -333,6 +333,7 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		S last = CommonUtils.last(matched);
 		return last == null ? null : last.getToken();
 	}
+
 	public S lastMatched() {
 		return CommonUtils.last(matched);
 	}
@@ -493,6 +494,7 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 			}
 			return false;
 		}
+
 		@Override
 		public int hashCode() {
 			return texts.hashCode();
@@ -611,19 +613,21 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 	public boolean isStrictCategoryChecking() {
 		return false;
 	}
+
 	public Optional<XmlNode> getContainingNode(Matcher matcher) {
-		return getContainingNode(new IntPair(matcher.start(),matcher.end()));
+		return getContainingNode(new IntPair(matcher.start(), matcher.end()));
 	}
+
 	public Optional<XmlNode> getContainingNode(IntPair containingRange) {
 		containingRange = containingRange.shiftRight(startOffset);
 		int offset = 0;
-		for(Text text: allTexts){
+		for (Text text : allTexts) {
 			int length = text.getLength();
-			IntPair textRange = new IntPair(offset,offset+length);
-			if(containingRange.contains(textRange)){
+			IntPair textRange = new IntPair(offset, offset + length);
+			if (containingRange.contains(textRange)) {
 				return Optional.of(XmlNode.from(text));
 			}
-			offset+=length;
+			offset += length;
 		}
 		return Optional.empty();
 	}
