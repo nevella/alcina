@@ -46,6 +46,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolutionToken;
@@ -73,6 +75,30 @@ public class CommitToStorageTransformListener extends StateListenable
 
     public static final transient String CONTEXT_REPLAYING_SYNTHESISED_EVENTS = CommitToStorageTransformListener.class
             .getName() + ".CONTEXT_REPLAYING_SYNTHESISED_EVENTS";
+
+    private static final String TOPIC_DOMAIN_EXCEPTION = CommitToStorageTransformListener.class
+            .getName() + ".TOPIC_DOMAIN_EXCEPTION";
+
+    public static void flushAndRun(Runnable runnable) {
+        Registry.impl(CommitToStorageTransformListener.class)
+                .flushWithOneoffCallback(new AsyncCallbackStd() {
+                    @Override
+                    public void onSuccess(Object result) {
+                        runnable.run();
+                    }
+                });
+    }
+
+    public static void notifyCommitDomainExceptionListenerDelta(
+            TopicListener<Throwable> listener, boolean add) {
+        GlobalTopicPublisher.get().listenerDelta(TOPIC_DOMAIN_EXCEPTION,
+                listener, add);
+    }
+
+    static void notifyCommitDomainException(Throwable message) {
+        GlobalTopicPublisher.get().publishTopic(TOPIC_DOMAIN_EXCEPTION,
+                message);
+    }
 
     private List<DomainTransformEvent> transformQueue;
 
@@ -290,6 +316,7 @@ public class CommitToStorageTransformListener extends StateListenable
                     }
                     throw new UnknownTransformFailedException(caught);
                 }
+                notifyCommitDomainException(caught);
                 fireStateChanged(ERROR);
             }
 
@@ -534,15 +561,5 @@ public class CommitToStorageTransformListener extends StateListenable
                 }
             }
         }
-    }
-
-    public static void flushAndRun(Runnable runnable) {
-        Registry.impl(CommitToStorageTransformListener.class)
-                .flushWithOneoffCallback(new AsyncCallbackStd() {
-                    @Override
-                    public void onSuccess(Object result) {
-                        runnable.run();
-                    }
-                });
     }
 }
