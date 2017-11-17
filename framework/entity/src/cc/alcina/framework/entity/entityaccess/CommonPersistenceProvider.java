@@ -11,22 +11,20 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.entityaccess;
 
-
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
  *
  * @author Nick Reddel
  */
+public interface CommonPersistenceProvider {
+	public static CommonPersistenceProvider get() {
+		return Registry.impl(CommonPersistenceProvider.class);
+	}
 
- public interface CommonPersistenceProvider {
 	public CommonPersistenceLocal getCommonPersistence();
 
 	CommonPersistenceLocal getCommonPersistenceExTransaction();
-
- public static CommonPersistenceProvider get() {
-                return Registry.impl(CommonPersistenceProvider.class);
-        }
 }
