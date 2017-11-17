@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
@@ -61,6 +62,18 @@ public class SessionHelper {
 		} else {
 			return (Long) request
 					.getAttribute(SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID);
+		}
+	}
+
+	public static ClientInstance
+			getAuthenticatedSessionClientInstance(HttpServletRequest request) {
+		Long clientInstanceId = getAuthenticatedSessionClientInstanceId(
+				request);
+		if (clientInstanceId != null) {
+			return CommonPersistenceProvider.get().getCommonPersistence()
+					.getClientInstance(clientInstanceId.toString());
+		} else {
+			return null;
 		}
 	}
 
