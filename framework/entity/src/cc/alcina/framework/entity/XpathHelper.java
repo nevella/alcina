@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 public class XpathHelper {
 	private Document primaryDoc;
 
-	private Map<Document, XPath> docXpathMap = new LinkedHashMap<Document, XPath>();
+	private Map<Document, XpathAndExpressionCache> docXpathMap = new LinkedHashMap<Document, XpathAndExpressionCache>();
 
 	public XpathHelper() {
 	}
@@ -103,14 +103,6 @@ public class XpathHelper {
 		register(doc);
 	}
 
-	public void registerSecondary(Document doc) {
-		register(doc);
-	}
-
-	public void releaseSecondary(Document doc) {
-		docXpathMap.remove(doc);
-	}
-
 	public static interface XpathHelperExt {
 		default void configureXpath(XPath xpath) {
 			synchronized (this) {
@@ -129,14 +121,14 @@ public class XpathHelper {
 	}
 
 	private XPath getXpath(Document doc) {
-		return docXpathMap.get(doc);
+		return docXpathMap.get(doc).xPath;
 	}
 
 	private void register(Document doc) {
 		if (docXpathMap.containsKey(doc)) {
 			throw new RuntimeException("Doc already registered");
 		}
-		docXpathMap.put(doc, createXpath());
+		docXpathMap.put(doc, new XpathAndExpressionCache(createXpath()));
 	}
 
 	public OptimizingXpathEvaluator createOptimisedEvaluator(Node node) {
@@ -172,6 +164,5 @@ public class XpathHelper {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-		
 	}
 }
