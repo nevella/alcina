@@ -6,17 +6,17 @@ import java.util.regex.Pattern;
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
 
 public class OptimizingXpathEvaluator {
-	private XPath xpath;
-
 	private boolean optimiseXpathEvaluationSpeed = false;
 
 	private Node removedNode;
@@ -30,10 +30,10 @@ public class OptimizingXpathEvaluator {
 
 	private Node node;
 
-	private String xpathStr;
+	private CachingMap<String, XPathExpression> expressionCache;
 
-	public OptimizingXpathEvaluator(XPath xpath) {
-		this.xpath = xpath;
+	public OptimizingXpathEvaluator(XpathAndExpressionCache xexc) {
+		this.expressionCache = xexc.expressionCache;
 	}
 
 	public String getTextContentOrEmpty(String xpath, Node from) {
@@ -51,7 +51,8 @@ public class OptimizingXpathEvaluator {
 			ThrowingFunction<Object, T> mapper) {
 		try {
 			maybeRemove(xpathStr, node);
-			Object result = xpath.evaluate(this.xpathStr, this.node, qName);
+			Object result = expressionCache.get(xpathStr).evaluate(this.node,
+					qName);
 			maybeReinsert();
 			return mapper.apply(result);
 		} catch (Exception e) {
@@ -93,7 +94,6 @@ public class OptimizingXpathEvaluator {
 			node = node.getParentNode();
 		}
 		this.node = node;
-		this.xpathStr = xpathStr;
 		if (isOptimiseXpathEvaluationSpeed()
 				&& !nonOptimise.matcher(xpathStr).find()
 				&& node.getNodeType() == Node.ELEMENT_NODE
