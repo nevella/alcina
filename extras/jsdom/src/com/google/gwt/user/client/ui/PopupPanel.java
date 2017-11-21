@@ -1229,7 +1229,7 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	 * @param offsetHeight
 	 *            the drop down's offset height
 	 */
-	private void position(final UIObject relativeObject, int offsetWidth,
+	void position(final UIObject relativeObject, int offsetWidth,
 			int offsetHeight) {
 		// Calculate left position for the popup. The computation for
 		// the left position is bidi-sensitive.

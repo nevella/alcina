@@ -57,6 +57,8 @@ public class DomainObjectSuggestCustomiser
 
 	private boolean withPlaceholder;
 
+	private Class suggestionRendererClassValue;
+
 	public boolean isShowOnFocus() {
 		return this.showOnFocus;
 	}
@@ -91,6 +93,14 @@ public class DomainObjectSuggestCustomiser
 
 	@ClientInstantiable
 	public static class BoundSuggestOracleResponseTypeRenderer
+			implements Renderer<BoundSuggestOracleResponseType, String> {
+		@Override
+		public String render(BoundSuggestOracleResponseType o) {
+			return o == null ? null : o.toSuggestionResultString();
+		}
+	}
+	@ClientInstantiable
+	public static class BoundSuggestOracleResponseTypeSuggestionRenderer
 			implements Renderer<BoundSuggestOracleResponseType, String> {
 		@Override
 		public String render(BoundSuggestOracleResponseType o) {

@@ -16,6 +16,7 @@ import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Label;
 
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
+import cc.alcina.framework.gwt.client.widget.Link;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyData;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyDataProvider;
@@ -107,11 +108,15 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 			public HasClickHandlers createItem(Object item, boolean asHTML,
 					int charWidth, boolean itemsHaveLinefeeds, Label ownerLabel,
 					String sep) {
-				return allowsEmptySelection()
-						? new SelectWithSearchItemX(item, asHTML, charWidth,
-								itemsHaveLinefeeds, ownerLabel, sep)
-						: new SelectWithSearchItem(item, asHTML, charWidth,
-								itemsHaveLinefeeds, ownerLabel, sep);
+				if (allowsEmptySelection()) {
+					return new SelectWithSearchItemX(item, asHTML, charWidth,
+							itemsHaveLinefeeds, ownerLabel, sep);
+				} else {
+					Link link = new SelectWithSearchItem(item, asHTML,
+							charWidth, itemsHaveLinefeeds, ownerLabel, sep);
+					link.addClickHandler(evt -> search.checkShowPopup(true));
+					return link;
+				}
 			};
 
 			@Override

@@ -6,6 +6,10 @@ import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 
 public interface BoundSuggestOracleResponseType {
 	String toSuggestionString();
+	
+	default String toSuggestionResultString(){
+		return toSuggestionString();
+	}
 
 	public interface BoundSuggestOracleModel extends Serializable {
 	}

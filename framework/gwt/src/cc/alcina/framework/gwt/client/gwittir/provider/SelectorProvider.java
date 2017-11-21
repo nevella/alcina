@@ -13,8 +13,10 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.provider;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
@@ -65,8 +67,15 @@ public class SelectorProvider implements BoundWidgetProvider {
 					maxSelectedItems, renderer, new Supplier<Collection>() {
 						@Override
 						public Collection get() {
-							return TransformManager.get()
-									.getCollection(selectionObjectClass);
+							if (selectionObjectClass.isEnum()) {
+								return Arrays
+										.asList(selectionObjectClass
+												.getEnumConstants())
+										.stream().collect(Collectors.toList());
+							} else {
+								return TransformManager.get()
+										.getCollection(selectionObjectClass);
+							}
 						}
 					});
 		} else if (useMinimalSelector) {

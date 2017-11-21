@@ -161,6 +161,9 @@ public class GridForm extends AbstractTableWidget
 		this.horizontalGrid = horizontalGrid;
 		super.initWidget(this.base);
 		this.setStyleName(GridForm.STYLE_NAME);
+		if(horizontalGrid){
+			this.addStyleName("horizontal-grid");
+		}
 		this.setAction(GridForm.DEFAULT_ACTION);
 	}
 

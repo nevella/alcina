@@ -100,8 +100,49 @@ public abstract class TransformManager implements PropertyChangeListener,
 			Arrays.asList(new String[] { "class", "id", "localId",
 					"propertyChangeListeners" }));
 
+	private static long eventIdCounter = 0;
+
+	protected static SequentialIdGenerator localIdGenerator = new SequentialIdGenerator();
+
+	private static TransformManager theInstance;
+
+	public static String fromEnumValueCollection(Collection objects) {
+		return CommonUtils.join(objects, ",");
+	}
+
+	public static String fromEnumValues(Object... objects) {
+		return CommonUtils.join(objects, ",");
+	}
+
+	public static TransformManager get() {
+		if (theInstance == null) {
+			// well, throw an exception.
+		}
+		TransformManager tm = theInstance.getT();
+		if (tm != null) {
+			return tm;
+		}
+		return theInstance;
+	}
+
+	public static <H> Set<H> getDeltaSet(Collection<H> old, Object delta,
+			CollectionModificationType modificationType) {
+		Collection deltaC = CommonUtils.wrapInCollection(delta);
+		Set c = new LinkedHashSet(old);
+		if (modificationType == CollectionModificationType.ADD) {
+			c.addAll(deltaC);
+		} else {
+			c.removeAll(deltaC);
+		}
+		return c;
+	}
+
 	public static long getEventIdCounter() {
 		return eventIdCounter;
+	}
+
+	public static boolean hasInstance() {
+		return theInstance != null;
 	}
 
 	public static List<Long> idListToLongs(String str) {
@@ -126,42 +167,53 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return result;
 	}
 
+	public static String
+			logTransformStats(Set<DomainTransformEvent> transforms) {
+		// group by obj class, property, type
+		MultikeyMap<Integer> map = new SortedMultikeyMap<>(3);
+		transforms.stream().forEach(transform -> {
+			map.addInteger(1, transform.getObjectClass().getSimpleName(),
+					Optional.ofNullable(transform.getPropertyName())
+							.orElse("*"),
+					CommonUtils.friendlyConstant(transform.getTransformType()));
+		});
+		return map.asTuples(3).stream().map(Object::toString)
+				.collect(Collectors.joining("\n"));
+	}
+
+	public static void register(TransformManager tm) {
+		theInstance = tm;
+	}
+
 	public static String stringId(HasIdAndLocalId hili) {
 		return hili.getId() != 0 ? hili.getId() + "" : hili.getLocalId() + "L";
 	}
 
+	public static <E extends Enum> Set<E> toEnumValues(String s,
+			Class<E> clazz) {
+		Set<E> result = new LinkedHashSet<>();
+		if (s != null) {
+			for (String sPart : s.split(",")) {
+				E value = CommonUtils.getEnumValueOrNull(clazz, sPart);
+				if (value == null && sPart.length() > 0) {
+					System.out.println(CommonUtils.formatJ(
+							"Warning - can't deserialize %s for %s", sPart,
+							clazz));
+				}
+				result.add(value);
+			}
+			result.remove(null);
+		}
+		return result;
+	}
+
 	private ObjectStore domainObjects;
-
-	private static long eventIdCounter = 0;
-
-	protected static SequentialIdGenerator localIdGenerator = new SequentialIdGenerator();
 
 	final Set<DomainTransformEvent> transforms = new LinkedHashSet<DomainTransformEvent>();
 
 	final Map<CommitType, LinkedHashSet<DomainTransformEvent>> transformsByType = new HashMap<CommitType, LinkedHashSet<DomainTransformEvent>>();
 
 	protected DomainTransformSupport transformListenerSupport;
-
-	private static TransformManager theInstance;
-
-	public static boolean hasInstance() {
-		return theInstance != null;
-	}
-
-	public static TransformManager get() {
-		if (theInstance == null) {
-			// well, throw an exception.
-		}
-		TransformManager tm = theInstance.getT();
-		if (tm != null) {
-			return tm;
-		}
-		return theInstance;
-	}
-
-	public static void register(TransformManager tm) {
-		theInstance = tm;
-	}
 
 	protected IdentityHashMap<Object, Boolean> provisionalObjects = new IdentityHashMap<>();
 
@@ -176,15 +228,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 	private TransformHistoryManager undoManager = new NullUndoManager();
 
 	private boolean ignoreUnrecognizedDomainClassException;
-
-	public boolean isIgnoreUnrecognizedDomainClassException() {
-		return this.ignoreUnrecognizedDomainClassException;
-	}
-
-	public void setIgnoreUnrecognizedDomainClassException(
-			boolean ignoreUnrecognizedDomainClassException) {
-		this.ignoreUnrecognizedDomainClassException = ignoreUnrecognizedDomainClassException;
-	}
 
 	protected TransformManager() {
 		this.transformListenerSupport = new DomainTransformSupport();
@@ -432,20 +475,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		currentEvent = null;
 	}
 
-	protected void objectCreated(HasIdAndLocalId hili) {
-	}
-
-	protected void maybeModifyAsPropertyChange(HasIdAndLocalId obj,
-			String propertyName, Object newTargetValue,
-			CollectionModificationType collectionModificationType) {
-		// for clients to force collection modifications to publish as property
-		// changes (when replaying remote events)
-	}
-
-	protected boolean isZeroCreatedObjectLocalId(Class clazz) {
-		return false;
-	}
-
 	public boolean containsObject(DomainTransformEvent dte) {
 		HasIdAndLocalId obj = getObjectLookup().getObject(dte.getObjectClass(),
 				dte.getObjectId(), dte.getObjectLocalId());
@@ -544,6 +573,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return currentEvent.getObjectLocalId() != 0;
 	}
 
+	public <H extends HasIdAndLocalId> void
+			deleteMultiple(Collection<H> collection) {
+		new ArrayList<H>(collection).forEach(hili -> deleteObject(hili, true));
+	}
+
 	public DomainTransformEvent deleteObject(HasIdAndLocalId hili) {
 		return deleteObject(hili, false);
 	}
@@ -604,6 +638,15 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		trs.removeAll(toRemove);
 		transforms.removeAll(toRemove);
+	}
+
+	public void deleteObjects(Class<? extends HasIdAndLocalId> clazz,
+			Collection<Long> ids) {
+		for (Long id : ids) {
+			HasIdAndLocalId hili = Reflections.classLookup().newInstance(clazz);
+			hili.setId(id);
+			deleteObject(hili, true);
+		}
 	}
 
 	public void deregisterDomainObject(Object o) {
@@ -708,6 +751,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return this.domainObjects;
 	}
 
+	/**
+	 * useful support in TLTM, ThreadedClientTM
+	 */
+	public <H extends HasIdAndLocalId> long
+			getLocalIdForClientInstance(H hili) {
+		return hili.getLocalId();
+	}
+
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
 			long id, long localId) {
 		if (this.getDomainObjects() != null) {
@@ -743,13 +794,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return obj;
 	}
 
+	public <T extends HasIdAndLocalId> T getObject(HiliLocator hiliLocator) {
+		return (T) getObject(hiliLocator.getClazz(),hiliLocator.getId(), 0L);
+	}
+
 	public <T extends HasIdAndLocalId> T getObject(T hili) {
 		return (T) getObjectLookup().getObject(hili.getClass(), hili.getId(),
 				hili.getLocalId());
-	}
-
-	protected Collection getProvisionalObjects() {
-		return provisionalObjects.keySet();
 	}
 
 	public TransformManager getT() {
@@ -846,11 +897,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return this.transforms;
 	}
 
-	public void pushTransformsInCurrentThread(
-			Collection<DomainTransformEvent> dtes) {
-		getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).addAll(dtes);
-	}
-
 	public LinkedHashSet<DomainTransformEvent>
 			getTransformsByCommitType(CommitType ct) {
 		if (transformsByType.get(ct) == null) {
@@ -879,6 +925,31 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return this.ignorePropertyChanges;
 	}
 
+	public boolean isIgnoreUnrecognizedDomainClassException() {
+		return this.ignoreUnrecognizedDomainClassException;
+	}
+
+	public boolean isInCreationRequest(HasIdAndLocalId hasOwner) {
+		return false;
+	}
+
+	public <T extends HasIdAndLocalId> boolean
+			isProvisionalObject(final T object) {
+		if (getProvisionalObjects().contains(object)) {
+			for (Object o : getProvisionalObjects()) {
+				if (o == object) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public boolean isRegistered(HasIdAndLocalId hili) {
+		HasIdAndLocalId registered = getObject(hili);
+		return registered == hili;
+	}
+
 	public boolean isReplayingRemoteEvent() {
 		return this.replayingRemoteEvent;
 	}
@@ -902,18 +973,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		propertyAccessor().setPropertyValue(objectWithCollection,
 				collectionPropertyName, c);
-	}
-
-	public static <H> Set<H> getDeltaSet(Collection<H> old, Object delta,
-			CollectionModificationType modificationType) {
-		Collection deltaC = CommonUtils.wrapInCollection(delta);
-		Set c = new LinkedHashSet(old);
-		if (modificationType == CollectionModificationType.ADD) {
-			c.addAll(deltaC);
-		} else {
-			c.removeAll(deltaC);
-		}
-		return c;
 	}
 
 	public synchronized long nextEventIdCounter() {
@@ -1199,9 +1258,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	public boolean isRegistered(HasIdAndLocalId hili) {
-		HasIdAndLocalId registered = getObject(hili);
-		return registered == hili;
+	public void pushTransformsInCurrentThread(
+			Collection<DomainTransformEvent> dtes) {
+		getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).addAll(dtes);
 	}
 
 	public <T extends HasIdAndLocalId> T registerDomainObject(T hili) {
@@ -1262,6 +1321,30 @@ public abstract class TransformManager implements PropertyChangeListener,
 				});
 	}
 
+	public <V extends HasIdAndLocalId> Set<V>
+			registeredObjectsAsSet(Class<V> clazz) {
+		return new LinkedHashSet<V>(getDomainObjects().getCollection(clazz));
+	}
+
+	public <V extends HasIdAndLocalId> V registeredSingleton(Class<V> clazz) {
+		Collection<V> c = getDomainObjects().getCollection(clazz);
+		return c.isEmpty() ? null : c.iterator().next();
+	}
+
+	/**
+	 * @see getLocalIdForClientInstance
+	 */
+	public void registerHiliMappingPriorToLocalIdDeletion(Class clazz, long id,
+			long localId) {
+		return;
+	}
+
+	public void registerModelObject(final DomainModelObject h,
+			final AsyncCallback<Void> postRegisterCallback) {
+		getDomainObjects().registerObjects(h.registrableObjects());
+		postRegisterCallback.onSuccess(null);
+	}
+
 	public void registerModelObjectAsync(final DomainModelObject h,
 			final AsyncCallback<Void> postRegisterCallback) {
 		((MapObjectLookupClient) getDomainObjects())
@@ -1271,22 +1354,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 						postRegisterCallback.onSuccess(null);
 					}
 				});
-	}
-
-	public void registerModelObject(final DomainModelObject h,
-			final AsyncCallback<Void> postRegisterCallback) {
-		getDomainObjects().registerObjects(h.registrableObjects());
-		postRegisterCallback.onSuccess(null);
-	}
-
-	public <V extends HasIdAndLocalId> Set<V>
-			registeredObjectsAsSet(Class<V> clazz) {
-		return new LinkedHashSet<V>(getDomainObjects().getCollection(clazz));
-	}
-
-	public <V extends HasIdAndLocalId> V registeredSingleton(Class<V> clazz) {
-		Collection<V> c = getDomainObjects().getCollection(clazz);
-		return c.isEmpty() ? null : c.iterator().next();
 	}
 
 	public void registerProvisionalObject(Object o) {
@@ -1346,6 +1413,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public void setIgnorePropertyChanges(boolean ignorePropertyChanges) {
 		this.ignorePropertyChanges = ignorePropertyChanges;
+	}
+
+	public void setIgnoreUnrecognizedDomainClassException(
+			boolean ignoreUnrecognizedDomainClassException) {
+		this.ignoreUnrecognizedDomainClassException = ignoreUnrecognizedDomainClassException;
 	}
 
 	public void setReplayingRemoteEvent(boolean replayingRemoteEvent) {
@@ -1467,11 +1539,19 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return Reflections.objectLookup();
 	}
 
+	protected Collection getProvisionalObjects() {
+		return provisionalObjects.keySet();
+	}
+
 	protected boolean ignorePropertyForCaching(Class objectType,
 			Class propertyType, String propertyName) {
 		return ignorePropertiesForCaching.contains(propertyName)
 				|| propertyType == Class.class || !PermissionsManager.get()
 						.checkReadable(objectType, propertyName, null);
+	}
+
+	protected boolean isZeroCreatedObjectLocalId(Class clazz) {
+		return false;
 	}
 
 	protected void maybeAddVersionNumbers(DomainTransformEvent evt,
@@ -1489,6 +1569,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 	protected void maybeFireCollectionModificationEvent(
 			Class<? extends Object> collectionClass,
 			boolean fromPropertyChange) {
+	}
+
+	protected void maybeModifyAsPropertyChange(HasIdAndLocalId obj,
+			String propertyName, Object newTargetValue,
+			CollectionModificationType collectionModificationType) {
+		// for clients to force collection modifications to publish as property
+		// changes (when replaying remote events)
+	}
+
+	protected void objectCreated(HasIdAndLocalId hili) {
 	}
 
 	/**
@@ -1674,6 +1764,39 @@ public abstract class TransformManager implements PropertyChangeListener,
 		ADD, REMOVE
 	}
 
+	public static class CommitToLocalDomainTransformListener
+			implements DomainTransformListener {
+		/**
+		 * Until 23/11/2010, case NULL_PROPERTY_REF: case CHANGE_PROPERTY_REF:
+		 * were not in the case
+		 *
+		 * I think that's in error - but checking. Basically, the transforms
+		 * will be ignored if they're a double-dip (the property won't change)
+		 */
+		public void domainTransform(DomainTransformEvent evt) {
+			if (evt.getCommitType() == CommitType.TO_LOCAL_GRAPH) {
+				TransformManager tm = TransformManager.get();
+				switch (evt.getTransformType()) {
+				case CREATE_OBJECT:
+				case DELETE_OBJECT:
+				case ADD_REF_TO_COLLECTION:
+				case REMOVE_REF_FROM_COLLECTION:
+				case NULL_PROPERTY_REF:
+				case CHANGE_PROPERTY_REF:
+					try {
+						tm.consume(evt);
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+					break;
+				default:
+					break;
+				}
+				tm.setTransformCommitType(evt, CommitType.TO_STORAGE);
+			}
+		}
+	}
+
 	public static class DomainObjectReverseLookup<K extends HasIdAndLocalId, V extends HasIdAndLocalId>
 			implements DomainTransformListener {
 		private final Class<K> childClass;
@@ -1763,51 +1886,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	public static class CommitToLocalDomainTransformListener
-			implements DomainTransformListener {
-		/**
-		 * Until 23/11/2010, case NULL_PROPERTY_REF: case CHANGE_PROPERTY_REF:
-		 * were not in the case
-		 *
-		 * I think that's in error - but checking. Basically, the transforms
-		 * will be ignored if they're a double-dip (the property won't change)
-		 */
-		public void domainTransform(DomainTransformEvent evt) {
-			if (evt.getCommitType() == CommitType.TO_LOCAL_GRAPH) {
-				TransformManager tm = TransformManager.get();
-				switch (evt.getTransformType()) {
-				case CREATE_OBJECT:
-				case DELETE_OBJECT:
-				case ADD_REF_TO_COLLECTION:
-				case REMOVE_REF_FROM_COLLECTION:
-				case NULL_PROPERTY_REF:
-				case CHANGE_PROPERTY_REF:
-					try {
-						tm.consume(evt);
-					} catch (Exception e) {
-						throw new WrappedRuntimeException(e);
-					}
-					break;
-				default:
-					break;
-				}
-				tm.setTransformCommitType(evt, CommitType.TO_STORAGE);
-			}
-		}
-	}
-
-	public <T extends HasIdAndLocalId> boolean
-			isProvisionalObject(final T object) {
-		if (getProvisionalObjects().contains(object)) {
-			for (Object o : getProvisionalObjects()) {
-				if (o == object) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
 	public static class RecordTransformListener
 			implements DomainTransformListener {
 		private CurrentUtcDateProvider utcDateProvider = Registry
@@ -1825,79 +1903,5 @@ public abstract class TransformManager implements PropertyChangeListener,
 				return;
 			}
 		}
-	}
-
-	public boolean isInCreationRequest(HasIdAndLocalId hasOwner) {
-		return false;
-	}
-
-	public void deleteObjects(Class<? extends HasIdAndLocalId> clazz,
-			Collection<Long> ids) {
-		for (Long id : ids) {
-			HasIdAndLocalId hili = Reflections.classLookup().newInstance(clazz);
-			hili.setId(id);
-			deleteObject(hili, true);
-		}
-	}
-
-	public static String fromEnumValues(Object... objects) {
-		return CommonUtils.join(objects, ",");
-	}
-
-	public static String fromEnumValueCollection(Collection objects) {
-		return CommonUtils.join(objects, ",");
-	}
-
-	public static <E extends Enum> Set<E> toEnumValues(String s,
-			Class<E> clazz) {
-		Set<E> result = new LinkedHashSet<>();
-		if (s != null) {
-			for (String sPart : s.split(",")) {
-				E value = CommonUtils.getEnumValueOrNull(clazz, sPart);
-				if (value == null && sPart.length() > 0) {
-					System.out.println(CommonUtils.formatJ(
-							"Warning - can't deserialize %s for %s", sPart,
-							clazz));
-				}
-				result.add(value);
-			}
-			result.remove(null);
-		}
-		return result;
-	}
-
-	public <H extends HasIdAndLocalId> void
-			deleteMultiple(Collection<H> collection) {
-		new ArrayList<H>(collection).forEach(hili -> deleteObject(hili, true));
-	}
-
-	/**
-	 * useful support in TLTM, ThreadedClientTM
-	 */
-	public <H extends HasIdAndLocalId> long
-			getLocalIdForClientInstance(H hili) {
-		return hili.getLocalId();
-	}
-
-	/**
-	 * @see getLocalIdForClientInstance
-	 */
-	public void registerHiliMappingPriorToLocalIdDeletion(Class clazz, long id,
-			long localId) {
-		return;
-	}
-
-	public static String
-			logTransformStats(Set<DomainTransformEvent> transforms) {
-		// group by obj class, property, type
-		MultikeyMap<Integer> map = new SortedMultikeyMap<>(3);
-		transforms.stream().forEach(transform -> {
-			map.addInteger(1, transform.getObjectClass().getSimpleName(),
-					Optional.ofNullable(transform.getPropertyName())
-							.orElse("*"),
-					CommonUtils.friendlyConstant(transform.getTransformType()));
-		});
-		return map.asTuples(3).stream().map(Object::toString)
-				.collect(Collectors.joining("\n"));
 	}
 }

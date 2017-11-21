@@ -113,7 +113,7 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 		ContentViewFactory contentViewFactory = new ContentViewFactory().noCaption()
 				.setBeanClass(getItemClass()).editable(editable).autoSave(true)
 				.doNotClone(true).setTableMask(tableMask);
-		customiseContentViewFactory(contentViewFactory);
+		customiseContentViewFactory(contentViewFactory,getModel());
 		PaneWrapperWithObjects view = contentViewFactory.createMultipleBeanView(values);
 		table = (BoundTableExt) view.getBoundWidget();
 		table.setNoContentMessage("0 items");
@@ -129,9 +129,7 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 	protected abstract void sortValues(List<H> values);
 
 	protected void
-			customiseContentViewFactory(ContentViewFactory contentViewFactory) {
-//		x		.fieldFilter(getFieldFilter())
-//		.fieldPostReflectiveSetupModifier(getTableFieldModifier())
+			customiseContentViewFactory(ContentViewFactory contentViewFactory, Object model) {
 	}
 
 	

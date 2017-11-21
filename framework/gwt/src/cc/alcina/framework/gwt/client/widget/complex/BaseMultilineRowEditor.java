@@ -59,8 +59,8 @@ public class BaseMultilineRowEditor<T extends HasIdAndLocalId>
 
 	@Override
 	protected void
-			customiseContentViewFactory(ContentViewFactory contentViewFactory) {
-		customiser.customiseContentViewFactory(contentViewFactory);
+			customiseContentViewFactory(ContentViewFactory contentViewFactory, Object model) {
+		customiser.customiseContentViewFactory(contentViewFactory,model);
 	}
 	@Override
 	public void sortValues(List<T> values) {

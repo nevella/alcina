@@ -75,7 +75,7 @@ public abstract class BaseMultilineEditorCustomiser<T extends HasIdAndLocalId>
 	}
 
 	public void
-			customiseContentViewFactory(ContentViewFactory contentViewFactory) {
+			customiseContentViewFactory(ContentViewFactory contentViewFactory, Object model) {
 	}
 
 	public void sortValues(List<T> values) {

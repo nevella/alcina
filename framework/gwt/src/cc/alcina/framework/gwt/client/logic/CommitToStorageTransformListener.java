@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -36,6 +37,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestTagProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -74,13 +76,29 @@ public class CommitToStorageTransformListener extends StateListenable
 	public static final transient String CONTEXT_REPLAYING_SYNTHESISED_EVENTS = CommitToStorageTransformListener.class
 			.getName() + ".CONTEXT_REPLAYING_SYNTHESISED_EVENTS";
 
-	private List<DomainTransformEvent> transformQueue;
+	public static void flushAndRun(Runnable runnable) {
+		Registry.impl(CommitToStorageTransformListener.class)
+				.flushWithOneoffCallback(new AsyncCallbackStd() {
+					@Override
+					public void onSuccess(Object result) {
+						runnable.run();
+					}
+				});
+	}
 
-	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
+	public static void
+			flushAndRunWithCreationConsumer(Consumer<HiliLocator> r2) {
+		flushAndRun(() -> r2.accept(CommitToStorageTransformListener
+				.get().lastCreatedObjectLocator));
+	}
 
 	public static CommitToStorageTransformListener get() {
 		return Registry.impl(CommitToStorageTransformListener.class);
 	}
+
+	private List<DomainTransformEvent> transformQueue;
+
+	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
 
 	protected TimerWrapper queueingFinishedTimer;
 
@@ -105,6 +123,8 @@ public class CommitToStorageTransformListener extends StateListenable
 	private DomainTransformRequest committingRequest;
 
 	private boolean localStorageOnly;
+
+	private HiliLocator lastCreatedObjectLocator;
 
 	public CommitToStorageTransformListener() {
 		resetQueue();
@@ -349,6 +369,8 @@ public class CommitToStorageTransformListener extends StateListenable
 							tm.registerHiliMappingPriorToLocalIdDeletion(
 									dte.getObjectClass(), id,
 									dte.getObjectLocalId());
+							lastCreatedObjectLocator = new HiliLocator(
+									dte.getObjectClass(), id, 0L);
 						}
 						// if (dte.getObjectVersionNumber() != 0 && id != 0) {
 						// if we have zero id at this stage, we're probably in a
@@ -536,15 +558,5 @@ public class CommitToStorageTransformListener extends StateListenable
 				}
 			}
 		}
-	}
-
-	public static void flushAndRun(Runnable runnable) {
-		Registry.impl(CommitToStorageTransformListener.class)
-				.flushWithOneoffCallback(new AsyncCallbackStd() {
-					@Override
-					public void onSuccess(Object result) {
-						runnable.run();
-					}
-				});
 	}
 }

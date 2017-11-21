@@ -40,6 +40,7 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.PopupPanel.AnimationType;
+import com.google.gwt.user.client.ui.PopupPanel.PositionCallback;
 import com.google.gwt.user.client.ui.SuggestOracle.Callback;
 import com.google.gwt.user.client.ui.SuggestOracle.Request;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
@@ -525,7 +526,7 @@ public class SuggestBox extends Composite
 				suggestionPopup.hide();
 			}
 			recreateMenu();
-//			suggestionMenu.clearItems();
+			// suggestionMenu.clearItems();
 			for (final Suggestion curSuggestion : suggestions) {
 				final SuggestionMenuItem menuItem = new SuggestionMenuItem(
 						curSuggestion, isDisplayStringHTML);
@@ -551,8 +552,22 @@ public class SuggestBox extends Composite
 				suggestionPopup.addAutoHidePartner(suggestBox.getElement());
 			}
 			// Show the popup under the TextBox.
-			suggestionPopup.showRelativeTo(positionRelativeTo != null
-					? positionRelativeTo : suggestBox);
+			UIObject relativeTo = positionRelativeTo != null
+					? positionRelativeTo : suggestBox;
+			suggestionPopup.setPopupPositionAndShow(new PositionCallback() {
+				public void setPosition(int offsetWidth, int offsetHeight) {
+					if (isMatchTextBoxWidth()) {
+						int minWidth = suggestBox.getValueBox().getOffsetWidth()
+								+ getMatchTextBoxAdjust();
+						if (minWidth > offsetWidth) {
+							offsetWidth = minWidth;
+							suggestionPopup.setWidth(offsetWidth + "px");
+						}
+					}
+					suggestionPopup.position(relativeTo, offsetWidth,
+							offsetHeight);
+				}
+			});
 		}
 
 		@Override
@@ -568,6 +583,26 @@ public class SuggestBox extends Composite
 		@Override
 		void setPopupStyleNameImpl(String style) {
 			setPopupStyleName(style);
+		}
+
+		private int matchTextBoxAdjust;
+
+		public int getMatchTextBoxAdjust() {
+			return this.matchTextBoxAdjust;
+		}
+
+		public void setMatchTextBoxAdjust(int matchTextBoxAdjust) {
+			this.matchTextBoxAdjust = matchTextBoxAdjust;
+		}
+
+		private boolean matchTextBoxWidth;
+
+		public boolean isMatchTextBoxWidth() {
+			return this.matchTextBoxWidth;
+		}
+
+		public void setMatchTextBoxWidth(boolean matchTextBoxWidth) {
+			this.matchTextBoxWidth = matchTextBoxWidth;
 		}
 	}
 
@@ -713,10 +748,21 @@ public class SuggestBox extends Composite
 		}
 	};
 
+	private boolean inSuggestionCallback;
+
+	public boolean isInSuggestionCallback() {
+		return this.inSuggestionCallback;
+	}
+
 	private final SuggestionCallback suggestionCallback = new SuggestionCallback() {
 		public void onSuggestionSelected(Suggestion suggestion) {
-			box.setFocus(true);
-			setNewSelection(suggestion);
+			try {
+				inSuggestionCallback = true;
+				box.setFocus(true);
+				setNewSelection(suggestion);
+			} finally {
+				inSuggestionCallback = false;
+			}
 		}
 	};
 

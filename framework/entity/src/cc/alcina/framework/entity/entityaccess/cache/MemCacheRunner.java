@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.ThrowingRunnable;
 
 public abstract class MemCacheRunner extends MemCacheReader<Void, Void> {
 	@Override
@@ -35,10 +36,5 @@ public abstract class MemCacheRunner extends MemCacheReader<Void, Void> {
 				runnable.run();
 			}
 		};
-	}
-
-	@FunctionalInterface
-	public static interface ThrowingRunnable {
-		public void run() throws Exception;
 	}
 }

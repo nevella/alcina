@@ -98,11 +98,14 @@ public abstract class MapObjectLookup implements ObjectStore {
 		if (lookup == null) {
 			return null;
 		}
+		T t = null;
 		if (id != 0) {
-			return (T) lookup.get(id, false);
-		} else {
-			return (T) lookup.get(localId, true);
+			t = (T) lookup.get(id, false);
 		}
+		if (t == null && localId != 0) {
+			t = (T) lookup.get(localId, true);
+		}
+		return t;
 	}
 
 	@Override

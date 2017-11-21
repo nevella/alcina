@@ -16,10 +16,14 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.FocusListener;
 import com.google.gwt.user.client.ui.SuggestBox;
+import com.google.gwt.user.client.ui.SuggestBox.DefaultSuggestionDisplay;
 import com.google.gwt.user.client.ui.SuggestOracle;
 import com.google.gwt.user.client.ui.SuggestOracle.Request;
+import com.google.gwt.user.client.ui.TextBoxBase;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -44,7 +48,6 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 
 	@SuppressWarnings("unchecked")
 	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
-
 	private BoundSuggestOracle suggestOracle;
 
 	private boolean withPlaceholder = true;
@@ -81,6 +84,12 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 	public void suggestOracle(BoundSuggestOracle suggestOracle) {
 		this.suggestOracle = suggestOracle;
 		base = new SuggestBox(suggestOracle);
+		((DefaultSuggestionDisplay) base.getSuggestionDisplay())
+				.setPopupStyleName("bound-suggest-box-popup");
+		((DefaultSuggestionDisplay) base.getSuggestionDisplay())
+		.setMatchTextBoxWidth(true);
+		((DefaultSuggestionDisplay) base.getSuggestionDisplay())
+		.setMatchTextBoxAdjust(-4);
 		if (withPlaceholder) {
 			base.getValueBox().getElement().setPropertyString("placeholder",
 					"Type for suggestions");
@@ -101,9 +110,20 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 
 			@Override
 			public void onFocus(Widget sender) {
-				if (showOnFocus) {
+				TextBoxBase baseBox = (TextBoxBase) base.getValueBox();
+				String baseTextAtFocusTime = base.getText();
+				if (showOnFocus || !Ax.isBlank(baseTextAtFocusTime)) {
 					showOnFocus = false;
-					base.showSuggestions(base.getText());
+					if (!Ax.isBlank(baseTextAtFocusTime)
+							&& !base.isInSuggestionCallback()) {
+						Scheduler.get().scheduleDeferred(() -> {
+							if (baseBox.getText().equals(baseTextAtFocusTime)) {
+								baseBox.setSelectionRange(0,
+										baseBox.getText().length());
+							}
+						});
+						base.showSuggestions(baseTextAtFocusTime);
+					}
 				}
 			}
 		});
