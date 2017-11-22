@@ -21,6 +21,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
+import au.com.barnet.jade.server.AppServletStatusFileNotifier;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -173,6 +174,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			// push to registry
 			Registry.setProvider(new ClassLoaderAwareRegistryProvider());
 			initBootstrapRegistry();
+			new AppServletStatusFileNotifier().deploying();
 			initNames();
 			initLoggers();
 			initJPA();
@@ -188,6 +190,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initServletConfig = null;
 		}
 		MetricLogging.get().end("Web app startup");
+		new AppServletStatusFileNotifier().ready();
 	}
 
 	protected void initBootstrapRegistry() {
@@ -246,6 +249,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	@Override
 	public void destroy() {
 		try {
+new			AppServletStatusFileNotifier().destroyed();
 			MetricLogging.get().appShutdown();
 			SEUtilities.appShutdown();
 			ResourceUtilities.appShutdown();
