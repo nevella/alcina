@@ -1,7 +1,9 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -68,5 +70,18 @@ public class CachingMap<I, O> {
 
 	public int size() {
 		return map.size();
+	}
+
+	public Collection<O> values() {
+		return map.values();
+	}
+
+	public void merge(CachingMap<I, O> otherCachingMap,
+			BiConsumer<O, O> merger) {
+		otherCachingMap.getMap().entrySet().forEach(e -> {
+			O to = get(e.getKey());
+			// it's a method on the "to" object, so that shd be first argument
+			merger.accept(to, e.getValue());
+		});
 	}
 }
