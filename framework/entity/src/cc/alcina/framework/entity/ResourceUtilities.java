@@ -87,7 +87,9 @@ public class ResourceUtilities {
 		return StringMap
 				.fromPropertyString(readClassPathResourceAsString(clazz, path));
 	}
-	public static StringMap classPathStringExistenceMap(Class clazz, String path) {
+
+	public static StringMap classPathStringExistenceMap(Class clazz,
+			String path) {
 		return StringMap
 				.fromStringList(readClassPathResourceAsString(clazz, path));
 	}
@@ -443,8 +445,10 @@ public class ResourceUtilities {
 
 	public static String readUrlAsString(String strUrl, String charset)
 			throws Exception {
-		//don't use cc.alcina.framework.entity.ResourceUtilities.readUrlAsString(String, String, StringMap)
-		//we a java UA inter alia
+		// don't use
+		// cc.alcina.framework.entity.ResourceUtilities.readUrlAsString(String,
+		// String, StringMap)
+		// we a java UA inter alia
 		URL url = new URL(strUrl);
 		InputStream is = null;
 		is = url.openConnection().getInputStream();

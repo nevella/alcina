@@ -177,6 +177,7 @@ public class CsvUtils {
 
 		public Map<String, CsvRow> rowLookup(String columnHeader) {
 			Map<String, CsvRow> result = new LinkedHashMap<>();
+			idx = 1;
 			while (hasNext()) {
 				CsvRow row = next();
 				result.put(row.get(columnHeader), row);
