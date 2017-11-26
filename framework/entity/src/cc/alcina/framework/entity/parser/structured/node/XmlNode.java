@@ -401,10 +401,11 @@ public class XmlNode {
 		return new XmlNodeTree();
 	}
 
-	public XmlNodeXpath xpath() {
+	public XmlNodeXpath xpath(String query) {
 		if (xpath == null) {
 			xpath = new XmlNodeXpath();
 		}
+		xpath.query=query;
 		return xpath;
 	}
 
@@ -742,7 +743,7 @@ public class XmlNode {
 		public List<XmlNode> trs() {
 			List<XmlNode> trs = children.byTag("TR");
 			if (trs.isEmpty()) {
-				trs = xpath().nodes("./TBODY/TR");
+				trs = xpath("./TBODY/TR").nodes();
 			}
 			return trs;
 		}
@@ -865,6 +866,8 @@ public class XmlNode {
 	}
 
 	public class XmlNodeXpath {
+		public String query;
+
 		private OptimizingXpathEvaluator eval;
 
 		private XpathHelper xh;
@@ -873,44 +876,44 @@ public class XmlNode {
 			if (doc == XmlNode.this) {
 				xh = new XpathHelper(node);
 			} else {
-				xh = doc.xpath().xh;
+				xh = doc.xpath(query).xh;
 			}
 			eval = xh.createOptimisedEvaluator(node);
 		}
 
-		public boolean booleanValue(String xpath) {
-			return Boolean.valueOf(textOrEmpty(xpath));
+		public boolean booleanValue() {
+			return Boolean.valueOf(textOrEmpty());
 		}
 
-		public boolean contains(String xpath) {
-			return node(xpath) != null;
+		public boolean contains() {
+			return node() != null;
 		}
 
-		public XmlNode node(String xpath) {
-			Node domNode = eval.getNodeByXpath(xpath, node);
+		public XmlNode node() {
+			Node domNode = eval.getNodeByXpath(query, node);
 			return doc.nodeFor(domNode);
 		}
 
-		public List<XmlNode> nodes(String xpath) {
-			return stream(xpath).collect(Collectors.toList());
+		public List<XmlNode> nodes() {
+			return stream().collect(Collectors.toList());
 		}
 
-		public Optional<XmlNode> optionalNode(String xpath) {
-			return Optional.ofNullable(node(xpath));
+		public Optional<XmlNode> optionalNode() {
+			return Optional.ofNullable(node());
 		}
 
-		public boolean selfIs(String xpath) {
-			return XmlNode.this.parent().xpath().nodes(xpath)
+		public boolean selfIs() {
+			return XmlNode.this.parent().xpath(query).nodes()
 					.contains(doc.nodeFor(node));
 		}
 
-		public Stream<XmlNode> stream(String xpath) {
-			List<Node> domNodes = eval.getNodesByXpath(xpath, node);
+		public Stream<XmlNode> stream() {
+			List<Node> domNodes = eval.getNodesByXpath(query, node);
 			return domNodes.stream().map(doc::nodeFor);
 		}
 
-		public String textOrEmpty(String xpath) {
-			return Optional.ofNullable(node(xpath)).map(XmlNode::textContent)
+		public String textOrEmpty() {
+			return Optional.ofNullable(node()).map(XmlNode::textContent)
 					.orElse("");
 		}
 	}
