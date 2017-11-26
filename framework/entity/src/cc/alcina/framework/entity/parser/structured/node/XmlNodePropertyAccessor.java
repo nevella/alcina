@@ -37,7 +37,7 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 
 	public Object getPropertyValue(Object bean, String propertyName) {
 		XmlNode node = (XmlNode) bean;
-		XmlNode resolved = node.xpath().node(propertyName);
+		XmlNode resolved = node.xpath(propertyName).node();
 		if (resolved == null) {
 			return null;
 		}
