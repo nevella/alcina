@@ -125,14 +125,14 @@ public class CsvUtils {
 			return csvCols.grid.get(rowIdx).get(getColumnIndex(key));
 		}
 
-		public String set(String key, String value) {
+		public String set(String key, Object value) {
 			ArrayList<String> list = (ArrayList<String>) csvCols.grid
 					.get(rowIdx);
 			int columnIndex = getColumnIndex(key);
 			for (; list.size() <= columnIndex;) {
 				list.add("");
 			}
-			return list.set(columnIndex, value);
+			return list.set(columnIndex, String.valueOf(value));
 		}
 
 		private int getColumnIndex(String key) {
@@ -177,7 +177,7 @@ public class CsvUtils {
 
 		public Map<String, CsvRow> rowLookup(String columnHeader) {
 			Map<String, CsvRow> result = new LinkedHashMap<>();
-			idx = 1;
+			reset();
 			while (hasNext()) {
 				CsvRow row = next();
 				result.put(row.get(columnHeader), row);
@@ -204,11 +204,15 @@ public class CsvUtils {
 							s.trim().replace("\"", "").replace("\ufeff", ""),
 							idx++));
 			colLookup.forEach((k, v) -> colLcLookup.put(k.toLowerCase(), v));
-			idx = 1;
+			reset();
 		}
 
 		public Stream<CsvRow> stream() {
 			return StreamSupport.stream(this.spliterator(), false);
+		}
+
+		public void reset() {
+			idx = 1;
 		}
 
 		@Override
