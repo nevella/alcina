@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -21,6 +20,7 @@ import com.esotericsoftware.kryo.io.UnsafeInput;
 import com.esotericsoftware.kryo.io.UnsafeOutput;
 import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
+import com.esotericsoftware.minlog.Log;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -194,5 +194,8 @@ public class KryoUtils {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+	public static void onlyErrorLogging(){
+		Log.set(Log.LEVEL_ERROR);
 	}
 }
