@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.customiser.RenderedLabelCustomiser.RenderedLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.SelectorProvider;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
@@ -99,7 +100,8 @@ public class SelectorCustomiser implements Customiser {
 			String hint = NamedParameter.Support.stringValue(info.parameters(),
 					HINT, null);
 			return new SelectorProvider(clazz, filter, maxSelectedItems,
-					renderer, useCellList, useMinimalSelector, useFlatSelector,hint);
+					renderer, useCellList, useMinimalSelector, useFlatSelector,
+					hint);
 		} else {
 			if (multiple) {
 				NamedParameter p = NamedParameter.Support
@@ -113,7 +115,10 @@ public class SelectorCustomiser implements Customiser {
 				return new ExpandableDomainNodeCollectionLabelProvider(
 						maxLength, forceColumnWidth);
 			} else {
-				return DN_LABEL_PROVIDER;
+				Class<? extends Renderer> rendererClass = NamedParameter.Support
+						.classValue(info.parameters(), RENDERER_CLASS,
+								DisplayNameRenderer.class);
+				return new RenderedLabelProvider(rendererClass, null);
 			}
 		}
 	}
