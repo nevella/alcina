@@ -14,8 +14,10 @@
 package cc.alcina.framework.gwt.client.gwittir.provider;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
+import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.gwt.client.gwittir.HasMaxWidth;
 import cc.alcina.framework.gwt.client.gwittir.widget.ExpandableLabel;
 
@@ -35,13 +37,17 @@ public class ExpandableStringLabelProvider
 
 	private boolean escapeHtml;
 
+	private Class rendererClass;
+
 	public ExpandableStringLabelProvider(int maxWidth, boolean forceColumnWidth,
-			boolean showNewlinesAsBreaks, boolean showAsPopup, boolean escapeHtml) {
+			boolean showNewlinesAsBreaks, boolean showAsPopup,
+			boolean escapeHtml, Class rendererClass) {
 		this.maxWidth = maxWidth;
 		this.forceColumnWidth = forceColumnWidth;
 		this.showNewlinesAsBreaks = showNewlinesAsBreaks;
 		this.showAsPopup = showAsPopup;
 		this.escapeHtml = escapeHtml;
+		this.rendererClass = rendererClass;
 	}
 
 	public BoundWidget get() {
@@ -49,6 +55,11 @@ public class ExpandableStringLabelProvider
 		label.setShowNewlinesAsBreaks(showNewlinesAsBreaks);
 		label.setShowAsPopup(showAsPopup);
 		label.setEscapeHtml(escapeHtml);
+		if (rendererClass != null) {
+			label.setRenderer(
+					(Renderer) Reflections.classLookup()
+							.newInstance(rendererClass));
+		}
 		return label;
 	}
 

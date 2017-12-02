@@ -155,6 +155,7 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		}
 		wrappedContent = transform(trans, wrappingDoc, marker,
 				formatRequiresXml);
+		int debug=3;
 	}
 
 	protected Class getWrapperTransformClass() {

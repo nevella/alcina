@@ -38,7 +38,7 @@ public interface HasEquivalence<T> {
 
 	public abstract static class HasEquivalenceAdapter<T, E extends HasEquivalenceAdapter>
 			implements HasEquivalenceHash<E> {
-		protected T o;
+		public T o;
 
 		public T left;
 

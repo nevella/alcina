@@ -96,4 +96,8 @@ public class Ax {
 	public static String dateTimeSlash(Date date) {
 		return CommonUtils.formatDate(date, DateStyle.AU_DATE_TIME_HUMAN);
 	}
+
+	public static Date cloneDate(Date date) {
+		return date == null?null: new Date(date.getTime());
+	}
 }

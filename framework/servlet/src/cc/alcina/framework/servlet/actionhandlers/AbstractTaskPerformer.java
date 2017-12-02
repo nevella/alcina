@@ -16,11 +16,17 @@ public abstract class AbstractTaskPerformer implements Runnable {
 
 	public String result;
 
+	public AbstractTaskPerformer asSubTask(AbstractTaskPerformer parent) {
+		actionLogger = parent.actionLogger;
+		jobTracker = parent.jobTracker;
+		return this;
+	}
+
 	public void runLogged() {
 		try {
 			MetricLogging.get().start(getClass().getSimpleName());
-			System.out
-					.format("Starting task: %s\n", getClass().getSimpleName());
+			System.out.format("Starting task: %s\n",
+					getClass().getSimpleName());
 			run();
 		} finally {
 			System.out.format("Ended task: %s\n", getClass().getSimpleName());
@@ -35,7 +41,7 @@ public abstract class AbstractTaskPerformer implements Runnable {
 			run0();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
-		}finally{
+		} finally {
 			LooseContext.pop();
 		}
 	}
