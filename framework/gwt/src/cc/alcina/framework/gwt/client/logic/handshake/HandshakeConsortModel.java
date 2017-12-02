@@ -59,8 +59,18 @@ public class HandshakeConsortModel {
 	public ModalNotifier loadObjectsNotifier;
 
 	private LoadObjectsResponse loadObjectsResponse;
+	
+	private boolean priorRemoteConnections;
 
-	public void clearLoadObjectsNotifier() {
+	public boolean isPriorRemoteConnections() {
+        return this.priorRemoteConnections;
+    }
+
+    public void setPriorRemoteConnections(boolean priorRemoteConnections) {
+        this.priorRemoteConnections = priorRemoteConnections;
+    }
+
+    public void clearLoadObjectsNotifier() {
 		if (loadObjectsNotifier != null) {
 			loadObjectsNotifier.modalOff();
 		}

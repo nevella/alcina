@@ -8,6 +8,7 @@ import com.google.gwt.core.client.Scheduler;
 
 import cc.alcina.framework.common.client.collections.IteratorWithCurrent;
 import cc.alcina.framework.common.client.logic.RepeatingCommandWithPostCompletionCallback;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelObjectsRegistrar;
@@ -24,6 +25,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.persistence.client.DteReplayWorker;
+import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta;
 
 /**
  * 
@@ -175,6 +177,12 @@ public class UnwrapAndRegisterObjectsPlayer extends RunnableAsyncCallbackPlayer<
 		// apps which allow "always offline" should create a model holder if the
 		// first delta doesn't have a holder;
 		if (currentDelta.getDomainModelHolder() != null) {
+		    if(currentDelta instanceof DtrWrapperBackedDomainModelDelta){
+		        DeltaApplicationRecordType type = ((DtrWrapperBackedDomainModelDelta) currentDelta).getWrapper().getType();
+		        if(type==DeltaApplicationRecordType.REMOTE_DELTA_APPLIED){
+		            HandshakeConsortModel.get().setPriorRemoteConnections(true);
+		        }
+		    }
 			registerDomainModelHolder(currentDelta.getDomainModelHolder());
 			return true;
 		}
