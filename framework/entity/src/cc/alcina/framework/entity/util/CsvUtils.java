@@ -1,7 +1,9 @@
 package cc.alcina.framework.entity.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -244,6 +246,21 @@ public class CsvUtils {
 			return headerValuesToCsv(
 					colLookup.keySet().stream().collect(Collectors.toList()),
 					grid.subList(1, grid.size())).toString();
+		}
+
+		public void preserveColumns(String string) {
+			List<String> colNames = Arrays.asList(string.split(","));
+			List<String> keys = colLookup.keySet().stream()
+					.collect(Collectors.toList());
+			Collections.reverse(keys);
+			;
+			for (String k : keys) {
+				if (!colNames.contains(k)) {
+					int idx = colLookup.get(k);
+					grid.forEach(row -> row.remove(idx));
+				}
+			}
+			colLookup.keySet().removeIf(k -> !colNames.contains(k));
 		}
 	}
 }
