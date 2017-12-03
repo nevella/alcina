@@ -188,4 +188,6 @@ public interface CommonPersistenceLocal {
 
 	public void changeWrappedObjectOwner(long parseLong, IUser fromUser,
 			IUser toUser);
+
+	long getMaxPublicationIdForUser(IUser user);
 }

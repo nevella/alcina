@@ -1483,10 +1483,23 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						id))
 				.getResultList();
 		if (wrapped.size() == 1) {
-			wrapped.get(0).setUser(getEntityManager().find(toUser.getClass(), toUser.getId()));
-			Ax.out("changed wrapped object owner - %s - %s -> %s", id,
-					fromUser,
+			wrapped.get(0).setUser(
+					getEntityManager().find(toUser.getClass(), toUser.getId()));
+			Ax.out("changed wrapped object owner - %s - %s -> %s", id, fromUser,
 					toUser);
 		}
+	}
+
+	@Override
+	public long getMaxPublicationIdForUser(IUser user) {
+		List<Long> longs = getEntityManager()
+				.createQuery(
+						Ax.format(
+								"select userPublicationId from %s j where user = ?"
+										+ " order by id desc",
+						getImplementationSimpleClassName(Publication.class)))
+				.setParameter(1, user).setMaxResults(1).getResultList();
+		long maxId = longs.isEmpty() ? 0 : longs.get(0);
+		return maxId;
 	}
 }
