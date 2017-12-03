@@ -178,6 +178,7 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 			}
 			this.button = new Button("Run now");
 			button.ensureDebugId(AlcinaDebugIds.ACTION_VIEW_RUN);
+			button.setStyleName("action-view-button");
 			// dill, not redrawn
 			// hasChildHandlersSupport.addHandler(button.addClickHandler(this));
 			button.addClickHandler(this);

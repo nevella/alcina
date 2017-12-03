@@ -1661,7 +1661,6 @@ div.popdown-select a:hover {
 	position: relative;
 	padding-top: 2px;
 	padding-bottom: 4px;
-	cursor: hand;
 	cursor: pointer;
 	zoom: 1;
 }
@@ -1673,7 +1672,6 @@ div.popdown-select a:hover {
 	position: absolute;
 	padding-top: 2px;
 	padding-bottom: 2px;
-	cursor: hand;
 	cursor: pointer;
 	zoom: 1;
 }
@@ -1881,4 +1879,13 @@ div.has-help-text:hover {
 
 div.has-help-text:hover span:after {
 	visibility: hidden
+}
+button, .gwt-Button{
+	padding: 4px 9px 2px;
+	font-size:inherit;
+	background:#f0f0f0;
+	border: solid 1px rgb(209, 209, 209);
+}
+.action-view-button{
+	margin-left: 20px;
 }
