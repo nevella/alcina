@@ -43,7 +43,7 @@ public abstract class BooleanEnumCriterion extends EnumCriterion<BooleanEnum> {
         setBooleanEnum(value);
     }
 
-    public <T extends BooleanEnumCriterion> T setAndReturn(BooleanEnum value) {
+    public <T extends BooleanEnumCriterion> T putAndReturn(BooleanEnum value) {
         setValue(value);
         return (T) this;
     }
