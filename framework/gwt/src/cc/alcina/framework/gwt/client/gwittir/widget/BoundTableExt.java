@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Map.Entry;
 
 import com.google.gwt.core.client.GWT;
@@ -644,7 +645,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			}
 		}
 		if ((this.masks & BoundTableExt.END_ROW_BUTTON) > 0) {
-			EndRowButton endRowButton=new EndRowButton();
+			EndRowButton endRowButton = new EndRowButton();
 			table.setWidget(row, this.columns.length + startColumn,
 					endRowButton);
 			int f_row = row;
@@ -798,6 +799,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			((SourcesClickEvents) entry.getKey())
 					.removeClickListener((ClickListener) entry.getValue());
 		}
+		lastRendered=null;
 		createTable();
 		if (this.selectedRowStyles != null) {
 			this.selectedRowStyles.clear();
@@ -810,6 +812,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		this.selectedRowLastStyle = BoundTableExt.DEFAULT_STYLE;
 		this.selectedCellRowLastIndex = -1;
 		this.cleanUpCaches.schedule(50);
+		
 	}
 
 	private void clearSelectedCell() {
@@ -1380,8 +1383,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	}
 
 	protected native Element getRow(Element elem, int row)/*-{
-        return elem.rows[row];
-	}-*/;
+															return elem.rows[row];
+															}-*/;
 
 	private void insertNestedWidget(int row) {
 		// GWT.log( "Inserting nested for row "+row, null);
@@ -1554,6 +1557,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	private BoundTableExtIncrementalRenderer incrementalRenderer;
 
+	private Collection lastRendered;
+
 	private void renderIncremental() {
 		if (incrementalRenderer != null) {
 			incrementalRenderer.cancel();
@@ -1570,6 +1575,10 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	}
 
 	private void renderNonIncremental() {
+		if (value != null
+				&& Objects.equals(lastRendered, new ArrayList(value))) {
+			return;
+		}
 		if (!renderCheck()) {
 			return;
 		}
@@ -1578,6 +1587,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			renderTop();
 			renderRows(Integer.MAX_VALUE);
 			renderBottom();
+			lastRendered = new ArrayList(value);
 		} finally {
 			RenderContext.get().pop();
 		}

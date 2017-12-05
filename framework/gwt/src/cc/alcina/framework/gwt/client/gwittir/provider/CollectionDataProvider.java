@@ -56,8 +56,8 @@ public class CollectionDataProvider implements SortableDataProvider {
 		if (first == null) {
 			return new String[0];
 		}
-		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
-				first.getClass());
+		ClientBeanReflector bi = ClientReflector.get()
+				.beanInfoForClass(first.getClass());
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
 		List<String> fieldNames = new ArrayList<String>();
@@ -138,8 +138,8 @@ public class CollectionDataProvider implements SortableDataProvider {
 
 	public <V> Collection<? extends V> getChunk(int chunkNumber) {
 		ArrayList result = new ArrayList();
-		int maxSize = Math.min(getPageSize(), sort.size() - chunkNumber
-				* getPageSize());
+		int maxSize = Math.min(getPageSize(),
+				sort.size() - chunkNumber * getPageSize());
 		for (int i = 0; i < maxSize; i++) {
 			result.add(sort.get(i + chunkNumber * getPageSize()));
 		}
@@ -147,22 +147,12 @@ public class CollectionDataProvider implements SortableDataProvider {
 	}
 
 	public void getChunk(final HasChunks table, final int chunkNumber) {
-		new Timer() {
-			@Override
-			public void run() {
-				table.setChunk(getChunk(chunkNumber));
-			}
-		}.schedule(1);
+		table.setChunk(getChunk(chunkNumber));
 	}
 
 	public void init(final HasChunks table) {
-		new Timer() {
-			@Override
-			public void run() {
-				table.init(getChunk(0),
-						(sort.size() - 1) / Math.max(getPageSize(), 1) + 1);
-			}
-		}.schedule(1);
+		table.init(getChunk(0),
+				(sort.size() - 1) / Math.max(getPageSize(), 1) + 1);
 	}
 
 	public void setPageSize(int pageSize) {

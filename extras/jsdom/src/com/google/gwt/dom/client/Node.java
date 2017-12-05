@@ -15,6 +15,9 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.AbstractList;
+import java.util.List;
+
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
@@ -114,6 +117,22 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	public NodeList<Node> getChildNodes() {
 		return local().getChildNodes();
+	}
+
+	public List<Node> provideChildNodeList() {
+		return new ChildNodeList();
+	}
+
+	class ChildNodeList extends AbstractList<Node> {
+		@Override
+		public Node get(int index) {
+			return local().children.get(index).node;
+		}
+
+		@Override
+		public int size() {
+			return local().children.size();
+		}
 	}
 
 	public Node getFirstChild() {

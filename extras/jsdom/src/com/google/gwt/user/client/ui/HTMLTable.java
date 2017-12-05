@@ -17,6 +17,7 @@ package com.google.gwt.user.client.ui;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import com.google.gwt.core.client.JsArray;
@@ -76,6 +77,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 
 		private NodeList<? extends Element> nodeList;
 
+		private List<? extends Element> jvmList;
+
 		public ElementArray(JsArray<ElementRemote> elements) {
 			this.jsArray = elements;
 		}
@@ -84,12 +87,22 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 			this.nodeList = nodeList;
 		}
 
+		public ElementArray(List<? extends Element> jvmList) {
+			this.jvmList = jvmList;
+		}
+
 		public Element get(int idx) {
+			if (jvmList != null) {
+				return jvmList.get(idx);
+			}
 			return nodeList != null ? nodeList.getItem(idx)
 					: LocalDom.nodeFor(jsArray.get(idx));
 		}
 
 		public int length() {
+			if (jvmList != null) {
+				return jvmList.size();
+			}
 			return nodeList != null ? nodeList.getLength() : jsArray.length();
 		}
 	}
@@ -117,14 +130,14 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 
 		@Override
 		public ElementArray<Element> getRows(Element tbody) {
-				return new ElementArray<Element>(
-						((TableSectionElement) tbody).getRows());
+			return new ElementArray<Element>((List)
+					((TableSectionElement) tbody).provideChildNodeList());
 		}
 
 		@Override
 		public ElementArray<Element> getCells(Element row) {
-				return new ElementArray<Element>(
-						((TableRowElement) row).getCells());
+			return new ElementArray<Element>((List)
+					((TableRowElement) row).provideChildNodeList());
 		}
 	}
 
@@ -656,6 +669,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		public void setWidth(int column, String width) {
 			ensureColumn(column).setPropertyString("width", width);
 		}
+
 		/**
 		 * Sets whether this row is visible.
 		 * 
@@ -666,7 +680,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 *            hide it
 		 */
 		public void setVisible(int column, boolean visible) {
-			Element e =ensureColumn(column);
+			Element e = ensureColumn(column);
 			UIObject.setVisible(e, visible);
 		}
 

@@ -92,8 +92,12 @@ public class StatsFilter extends CollectionProjectionFilter {
 		if (bypass(context.field)) {
 			return null;
 		}
-		String toPath = noPath? "..."
-				: context.toPath(!noPathToString);
+		if (original.getClass().getName().endsWith("Shipment")) {
+			if (Math.random() < 0.02) {
+				int debug = 3;
+			}
+		}
+		String toPath = noPath ? "..." : context.toPath(!noPathToString);
 		visited.put(context.projectedOwner, toPath);
 		visited.put(filtered, toPath);
 		ownerMap.add(context.projectedOwner, filtered);
@@ -127,8 +131,9 @@ public class StatsFilter extends CollectionProjectionFilter {
 		noPathToString = true;
 		return this;
 	}
+
 	public StatsFilter noPath() {
-		noPath= true;
+		noPath = true;
 		return this;
 	}
 
@@ -491,7 +496,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 				c = coll.getClass().newInstance();
 				// no "persistentLists", at least
 				// um...persistentBag??
-			}else if (coll instanceof Vector) {
+			} else if (coll instanceof Vector) {
 				c = new Vector();
 			} else if (coll instanceof List) {
 				c = new ArrayList();
