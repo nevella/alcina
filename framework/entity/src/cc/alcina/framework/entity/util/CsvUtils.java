@@ -1,7 +1,9 @@
 package cc.alcina.framework.entity.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -125,14 +127,14 @@ public class CsvUtils {
 			return csvCols.grid.get(rowIdx).get(getColumnIndex(key));
 		}
 
-		public String set(String key, String value) {
+		public String set(String key, Object value) {
 			ArrayList<String> list = (ArrayList<String>) csvCols.grid
 					.get(rowIdx);
 			int columnIndex = getColumnIndex(key);
 			for (; list.size() <= columnIndex;) {
 				list.add("");
 			}
-			return list.set(columnIndex, value);
+			return list.set(columnIndex, String.valueOf(value));
 		}
 
 		private int getColumnIndex(String key) {
@@ -177,6 +179,7 @@ public class CsvUtils {
 
 		public Map<String, CsvRow> rowLookup(String columnHeader) {
 			Map<String, CsvRow> result = new LinkedHashMap<>();
+			reset();
 			while (hasNext()) {
 				CsvRow row = next();
 				result.put(row.get(columnHeader), row);
@@ -203,11 +206,15 @@ public class CsvUtils {
 							s.trim().replace("\"", "").replace("\ufeff", ""),
 							idx++));
 			colLookup.forEach((k, v) -> colLcLookup.put(k.toLowerCase(), v));
-			idx = 1;
+			reset();
 		}
 
 		public Stream<CsvRow> stream() {
 			return StreamSupport.stream(this.spliterator(), false);
+		}
+
+		public void reset() {
+			idx = 1;
 		}
 
 		@Override
@@ -239,6 +246,21 @@ public class CsvUtils {
 			return headerValuesToCsv(
 					colLookup.keySet().stream().collect(Collectors.toList()),
 					grid.subList(1, grid.size())).toString();
+		}
+
+		public void preserveColumns(String string) {
+			List<String> colNames = Arrays.asList(string.split(","));
+			List<String> keys = colLookup.keySet().stream()
+					.collect(Collectors.toList());
+			Collections.reverse(keys);
+			;
+			for (String k : keys) {
+				if (!colNames.contains(k)) {
+					int idx = colLookup.get(k);
+					grid.forEach(row -> row.remove(idx));
+				}
+			}
+			colLookup.keySet().removeIf(k -> !colNames.contains(k));
 		}
 	}
 }
