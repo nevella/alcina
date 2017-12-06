@@ -31,11 +31,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -74,6 +76,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -1616,5 +1619,23 @@ public class XmlUtils {
 				exception.printStackTrace();
 			}
 		}
+	}
+
+	public static String divWrapper(String content, boolean wrap) {
+		if (wrap) {
+			return String.format("<div>%s</div>", content);
+		} else {
+			return content.replaceFirst("(?is)^.*?<div>(.+)</div>$", "$1");
+		}
+	}
+	private static Set<String> selfClosingTags = Arrays.asList("area", "base",
+			"br", "col", "command", "embed", "hr", "img", "input", "keygen",
+			"link", "meta", "param", "source", "track", "wbr").stream()
+			.collect(Collectors.toSet());
+
+	public static String removeSelfClosingHtmlTags(String content) {
+		String regex = Ax.format("</(%s)>",
+				selfClosingTags.stream().collect(Collectors.joining("|")));
+		return content.replaceAll(regex, "");
 	}
 }

@@ -66,7 +66,7 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		if (formatRequiresXml) {
 			wrappedContent = XML_PI + "\n" + wrappedContent;
 		} else {
-			wrappedContent = wrappedContent.replace("<br></br>", "<br>");
+			wrappedContent = XmlUtils.removeSelfClosingHtmlTags(wrappedContent);
 		}
 		trans.close();
 		return wrappedContent;
