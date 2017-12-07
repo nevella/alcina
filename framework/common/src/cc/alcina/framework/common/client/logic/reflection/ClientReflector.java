@@ -96,8 +96,7 @@ public abstract class ClientReflector implements ClassLookup {
 	}
 
 	public ClientBeanReflector beanInfoForClass(Class clazz) {
-		BeaninfoClassResolver bea = Registry.impl(BeaninfoClassResolver.class);
-		clazz = bea.resolveForBeanInfo(clazz);
+		clazz = getBeanInfoClassResolver().resolveForBeanInfo(clazz);
 		ClientBeanReflector beanReflector = gwbiMap.get(clazz);
 		if (beanReflector == null) {
 			if (!gwbiMap.containsKey(clazz)) {
@@ -159,10 +158,13 @@ public abstract class ClientReflector implements ClassLookup {
 				.getType();
 	}
 
+	private BeaninfoClassResolver getBeanInfoClassResolver() {
+		return Registry.impl(BeaninfoClassResolver.class);
+	}
+
 	@SuppressWarnings("unchecked")
 	public <T> T getTemplateInstance(Class<T> clazz) {
-		BeaninfoClassResolver bea = Registry.impl(BeaninfoClassResolver.class);
-		clazz = bea.resolveForBeanInfo(clazz);
+		clazz = getBeanInfoClassResolver().resolveForBeanInfo(clazz);
 		if (!templateInstances.containsKey(clazz)) {
 			templateInstances.put(clazz,
 					Reflections.classLookup().newInstance(clazz, 0, 0));
