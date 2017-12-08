@@ -13,6 +13,7 @@ import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.place.shared.Place;
 import com.google.gwt.user.cellview.client.AbstractCellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
@@ -135,6 +136,8 @@ public class ColumnsBuilder<T> {
 
 		private Enum enumKey;
 
+		private Function<T, Place> placeFunction;
+
 		public ColumnBuilder(Enum enumValue, String displayName) {
 			this(displayName);
 			this.enumKey = enumValue;
@@ -153,9 +156,12 @@ public class ColumnsBuilder<T> {
 			if (function == null) {
 				function = (Function) sortFunction;
 			}
+			if (placeFunction != null) {
+				cell = new PlaceLinkCell();
+			}
 			SortableColumn<T> col = new SortableColumn<T>(function,
-					sortFunction, nativeComparator, styleFunction, editInfo,
-					cell, name, ColumnsBuilder.this);
+					sortFunction, placeFunction, nativeComparator,
+					styleFunction, editInfo, cell, name, ColumnsBuilder.this);
 			built.put(col, this);
 			// don't add if filtered
 			if (columnsFilter == null
@@ -294,9 +300,13 @@ public class ColumnsBuilder<T> {
 			this.unit = unit;
 			return this;
 		}
+
+		public ColumnBuilder place(Function<T, Place> placeFunction) {
+			this.placeFunction = placeFunction;
+			return this;
+		}
 	}
 
-	
 	public interface ColumnTotaller<T> {
 		List<T> getList();
 
@@ -322,14 +332,18 @@ public class ColumnsBuilder<T> {
 
 		private ColumnsBuilder columnsBuilder;
 
+		private Function<T, Place> placeFunction;
+
 		public SortableColumn(Function<T, Object> function,
 				Function<T, Comparable> sortFunction,
+				Function<T, Place> placeFunction,
 				DirectedComparator nativeComparator,
 				Function<T, String> styleFunction, EditInfo editInfo, Cell cell,
 				String name, ColumnsBuilder columnsBuilder) {
 			super(cell != null ? cell : editInfo.cell);
 			this.function = function;
 			this.sortFunction = sortFunction;
+			this.placeFunction = placeFunction;
 			this.nativeComparator = nativeComparator;
 			this.styleFunction = styleFunction;
 			this.editInfo = editInfo;
@@ -380,6 +394,12 @@ public class ColumnsBuilder<T> {
 						|| editInfo.cell
 								.getClass() == PropertyTextCell.class)) {
 					value = CommonUtils.nullSafeToString(value);
+				}
+				if (placeFunction != null) {
+					TextPlaceTuple tuple = new TextPlaceTuple();
+					tuple.text = (String) value;
+					tuple.place = placeFunction.apply(t);
+					value = tuple;
 				}
 				return value;
 			} catch (Exception e) {

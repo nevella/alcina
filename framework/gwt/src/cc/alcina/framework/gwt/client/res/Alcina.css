@@ -1881,7 +1881,7 @@ div.has-help-text:hover span:after {
 	visibility: hidden
 }
 button, .gwt-Button{
-	padding: 4px 9px 2px;
+	padding: 4px 9px 4px;
 	font-size:inherit;
 	background:#f0f0f0;
 	border: solid 1px rgb(209, 209, 209);
