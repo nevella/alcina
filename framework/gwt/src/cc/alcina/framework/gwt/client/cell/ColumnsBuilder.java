@@ -138,6 +138,8 @@ public class ColumnsBuilder<T> {
 
 		private Function<T, Place> placeFunction;
 
+		private boolean asUnsafeHtml;
+
 		public ColumnBuilder(Enum enumValue, String displayName) {
 			this(displayName);
 			this.enumKey = enumValue;
@@ -158,6 +160,12 @@ public class ColumnsBuilder<T> {
 			}
 			if (placeFunction != null) {
 				cell = new PlaceLinkCell();
+			}
+			if (asUnsafeHtml) {
+				cell = new UnsafeHtmlCell();
+				if (style == null) {
+					style = "pre";
+				}
 			}
 			SortableColumn<T> col = new SortableColumn<T>(function,
 					sortFunction, placeFunction, nativeComparator,
@@ -305,6 +313,11 @@ public class ColumnsBuilder<T> {
 			this.placeFunction = placeFunction;
 			return this;
 		}
+
+		public ColumnBuilder asUnsafeHtml(boolean asUnsafeHtml) {
+			this.asUnsafeHtml = asUnsafeHtml;
+			return this;
+		}
 	}
 
 	public interface ColumnTotaller<T> {
@@ -437,7 +450,8 @@ public class ColumnsBuilder<T> {
 	public void buildFromColumnMappings(ColumnMapper<T> mapper) {
 		List<ColumnMapper<T>.ColumnMapping> mappings = mapper.getMappings();
 		for (ColumnMapping columnMapping : mappings) {
-			col(columnMapping.name).function(columnMapping.mapping).build();
+			col(columnMapping.name).function(columnMapping.mapping)
+					.asUnsafeHtml(columnMapping.asHtml).build();
 		}
 	}
 }

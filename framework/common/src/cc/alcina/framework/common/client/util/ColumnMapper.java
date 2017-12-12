@@ -21,13 +21,19 @@ public abstract class ColumnMapper<T> {
 
 		public Function<T, Object> mapping;
 
-		public ColumnMapping(String name, Function mapping) {
+		public boolean asHtml;
+
+		public ColumnMapping(String name, Function mapping, boolean asHtml) {
 			this.name = name;
 			this.mapping = mapping;
+			this.asHtml = asHtml;
 		}
 	}
 
 	protected void define(String name, Function<T, Object> mapping) {
-		mappings.add(new ColumnMapping(name, mapping));
+		mappings.add(new ColumnMapping(name, mapping,false));
+	}
+	protected void defineHtml(String name, Function<T, Object> mapping) {
+		mappings.add(new ColumnMapping(name, mapping,true));
 	}
 }
