@@ -29,8 +29,6 @@ import cc.alcina.framework.gwt.client.util.Base64Utils;
 public abstract class DevRemoterServlet extends HttpServlet {
 	public static final String DEV_REMOTER_PARAMS = "devRemoterParams";
 
-	
-
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse res)
 			throws ServletException, IOException {
@@ -51,9 +49,8 @@ public abstract class DevRemoterServlet extends HttpServlet {
 			}
 			doPost0(req, res);
 		} catch (Exception e) {
-			System.out
-					.println(String.format(
-							"DevRemoterServlet info: user:%s - url: %s",
+			System.out.println(
+					String.format("DevRemoterServlet info: user:%s - url: %s",
 							PermissionsManager.get().getUserName(),
 							req.getRequestURI()));
 			if (e instanceof ServletException) {
@@ -69,8 +66,8 @@ public abstract class DevRemoterServlet extends HttpServlet {
 		byte[] bytes = Base64Utils.fromBase64(encodedParams);
 		DevRemoterParams params = (DevRemoterParams) new ObjectInputStream(
 				new ByteArrayInputStream(bytes)).readObject();
-		CommonPersistenceLocal up = Registry.impl(
-				CommonPersistenceProvider.class).getCommonPersistence();
+		CommonPersistenceLocal up = Registry
+				.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		IUser user = up.getUserByName(params.username, true);
 		try {
 			PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);
@@ -95,8 +92,8 @@ public abstract class DevRemoterServlet extends HttpServlet {
 			}
 			Object out = null;
 			try {
-				System.out.format("DevRemoter - %s.%s\n", api.getClass()
-						.getSimpleName(), method.getName());
+				System.out.format("DevRemoter - %s.%s\n",
+						api.getClass().getSimpleName(), method.getName());
 				out = method.invoke(api, params.args);
 			} catch (Exception e) {
 				e.printStackTrace();
