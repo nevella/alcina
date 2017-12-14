@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.publication.ContentDeliveryType.Content
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.DeliveryModel.MailInlineImage;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.publication.EntityCleaner;
@@ -46,6 +47,12 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 @RegistryLocation(registryPoint = ContentDeliveryType.class, targetClass = ContentDeliveryType_EMAIL.class)
 public class ContentDeliveryEmail implements ContentDelivery {
 	public static final String PUBLICATION_REASON_MESSAGE = "<!--PUBLICATION_REASON_MESSAGE-->";
+
+	public static final String CONTEXT_SMTP_FROM_NAME = ContentDeliveryEmail.class
+			.getName() + ".CONTEXT_SMTP_FROM_NAME";
+
+	public static final String CONTEXT_SMTP_FROM_EMAIL = ContentDeliveryEmail.class
+			.getName() + ".CONTEXT_SMTP_FROM_EMAIL";
 
 	public String deliver(PublicationContext ctx,
 			final InputStream convertedContent,
@@ -77,6 +84,12 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				"smtp.from.address");
 		String fromName = ResourceUtilities.getBundledString(c,
 				"smtp.from.name");
+		if (LooseContext.has(CONTEXT_SMTP_FROM_EMAIL)) {
+			fromAddress = LooseContext.get(CONTEXT_SMTP_FROM_EMAIL);
+		}
+		if (LooseContext.has(CONTEXT_SMTP_FROM_NAME)) {
+			fromName = LooseContext.get(CONTEXT_SMTP_FROM_NAME);
+		}
 		props.put("mail.smtp.host", host);
 		props.put("mail.smtp.auth", authenticate.toString());
 		if (ResourceUtilities.is(c, "smtp.ttls")) {
@@ -135,7 +148,8 @@ public class ContentDeliveryEmail implements ContentDelivery {
 							? deliveryModel.getAttachmentMessageForRequestor()
 							: deliveryModel.getAttachmentMessage());
 			message = EntityCleaner.get().nonAsciiToUnicodeEntities(message);
-			if (deliveryModel.provideImages()==null||deliveryModel.provideImages().isEmpty()) {
+			if (deliveryModel.provideImages() == null
+					|| deliveryModel.provideImages().isEmpty()) {
 				msg.setContent(message, "text/html");
 			} else {
 				MimeMultipart multipart = new MimeMultipart("related");
