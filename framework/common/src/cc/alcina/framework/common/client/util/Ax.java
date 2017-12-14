@@ -100,4 +100,7 @@ public class Ax {
 	public static Date cloneDate(Date date) {
 		return date == null?null: new Date(date.getTime());
 	}
+	public static String blankToEmpty(String string) {
+		return blankTo(string, "");
+	}
 }
