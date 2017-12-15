@@ -511,6 +511,9 @@ public class CommonUtils {
 	}
 
 	public static String formatJ(String source, Object... args) {
+		if (source == null) {
+			return null;
+		}
 		boolean modSource = source.endsWith("%s");
 		String s2 = modSource ? source + "." : source;
 		String[] strs = s2.split("%s");
@@ -1100,7 +1103,7 @@ public class CommonUtils {
 		int len = s.length();
 		double val = Double.valueOf(
 				s.substring(0, len - places) + "." + s.substring(len - places));
-		if (d<0) {
+		if (d < 0) {
 			val *= -1;
 		}
 		return val;

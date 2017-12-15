@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.parser.structured.node;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -400,12 +401,14 @@ public class XmlNode {
 	public XmlNodeTree tree() {
 		return new XmlNodeTree();
 	}
-
 	public XmlNodeXpath xpath(String query) {
+		return xpath(query,new Object[]{});
+	}
+	public XmlNodeXpath xpath(String query,Object...args) {
 		if (xpath == null) {
 			xpath = new XmlNodeXpath();
 		}
-		xpath.query=query;
+		xpath.query = Ax.format(query,args);
 		return xpath;
 	}
 
@@ -988,5 +991,23 @@ public class XmlNode {
 			range.setEndAfter(end == null ? node : end.node);
 			return range;
 		}
+	}
+
+	/*
+	 * only sort if element-only children
+	 * 
+	 */
+	public void sort() { 
+		List<XmlNode> nodes = children.nodes();
+		if (nodes.stream().allMatch(XmlNode::isElement)) {
+			nodes.forEach(XmlNode::removeFromParent);
+			nodes = nodes.stream().sorted(Comparator.comparing(XmlNode::name))
+					.collect(Collectors.toList());
+			children.append(nodes);
+			nodes.forEach(XmlNode::sort);
+		}
+	}
+	public void removeWhitespaceNodes(){
+		children.flat().filter(n->n.isText()&&n.isWhitespaceTextContent()).forEach(XmlNode::removeFromParent);
 	}
 }
