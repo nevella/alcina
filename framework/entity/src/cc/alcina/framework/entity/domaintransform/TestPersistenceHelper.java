@@ -41,6 +41,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.MethodWrapper;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
@@ -194,6 +195,9 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				Class<?> propertyType = pd.getPropertyType();
+				if (pd.getWriteMethod() == null || pd.getReadMethod() == null) {
+					continue;
+				}
 				if (propertyType.isInterface() && propertyType != Set.class
 						&& propertyType != List.class
 						&& propertyType != Map.class) {
@@ -202,8 +206,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 					propertyType = Registry.impl(ImplementationLookup.class)
 							.getImplementation(propertyType);
 				}
-				infos.add(new PropertyInfoLite(propertyType, pd.getName(), null,
-						clazz));
+				infos.add(new PropertyInfoLite(propertyType, pd.getName(),
+						new MethodWrapper(pd.getReadMethod()), clazz));
 			}
 			return infos;
 		} catch (Exception e) {
