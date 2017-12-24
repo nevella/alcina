@@ -910,7 +910,11 @@ public class DevConsoleCommandTransforms {
 		public String format(ResultSet rs, int columnIndex)
 				throws SQLException {
 			long objRefId = rs.getLong(columnIndex);
-			return ClassRef.forId(objRefId).getRefClass().getSimpleName();
+			ClassRef forId = ClassRef.forId(objRefId);
+			if(forId==null){
+				return "unknown";
+			}
+			return forId.getRefClass().getSimpleName();
 		}
 	}
 
