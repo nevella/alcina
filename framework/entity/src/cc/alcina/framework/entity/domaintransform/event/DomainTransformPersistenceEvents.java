@@ -102,4 +102,8 @@ public class DomainTransformPersistenceEvents {
 			//NOOP
 		}
 	}
+
+	public long getMaxPublishedId() {
+		return queue.getMaxDbPersistedRequestId();
+	}
 }

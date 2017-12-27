@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -40,18 +41,28 @@ import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 
+/**
+ * Improvement: rather than a strict dtrp-id queue, use 'happens after' field of
+ * dtrp to allow out-of-sequence publishing
+ * 
+ * @author nick@alcina.cc
+ *
+ */
 @RegistryLocation(registryPoint = DomainTransformPersistenceQueue.class, implementationType = ImplementationType.SINGLETON)
 public class DomainTransformPersistenceQueue implements RegistrableService {
 	private static final long PERIODIC_DB_CHECK_MS = 5
 			* TimeConstants.ONE_MINUTE_MS;
 
-	public static int WAIT_FOR_PERSISTED_REQUEST_TIMEOUT_MS = ResourceUtilities.getInteger(DomainTransformPersistenceQueue.class,"timeoutMs");
+	public static int WAIT_FOR_PERSISTED_REQUEST_TIMEOUT_MS = ResourceUtilities
+			.getInteger(DomainTransformPersistenceQueue.class, "timeoutMs");
 
 	boolean logDbEventCheck = true;
 
 	LinkedList<DtrpQueued> requestQueue = new LinkedList<>();
 
 	Map<Long, DtrpQueued> dtrpIdQueueLookup = new LinkedHashMap<>();
+	
+	TreeMap<Long,Boolean> publishedIdLookup = new TreeMap<>();
 
 	private int requestQueueUnpublishedIndex = 0;
 

@@ -35,6 +35,7 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken.Pass;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceQueue;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy.TransformExceptionAction;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
@@ -408,6 +409,7 @@ public class TransformPersister {
 						tm.persist(dtrp);
 						Registry.impl(DomainTransformPersistenceEvents.class)
 								.registerPersisting(dtrp);
+						dtrp.setHappensAfterId(Registry.impl(DomainTransformPersistenceEvents.class).getMaxPublishedId());
 						dtr.setEvents(null);
 						dtrp.wrap(dtr);
 						dtrp.setEvents(new ArrayList<DomainTransformEvent>());
