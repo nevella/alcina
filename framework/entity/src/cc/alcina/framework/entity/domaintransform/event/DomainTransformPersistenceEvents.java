@@ -90,4 +90,16 @@ public class DomainTransformPersistenceEvents {
 	public void registerPersisting(DomainTransformRequestPersistent dtrp) {
 		queue.registerPersisting(dtrp);
 	}
+
+	public synchronized void acquireCommitLock(boolean lock) {
+		Registry.impl(DomainTransformPersistenceEventsCommitLock.class)
+				.acquireCommitLock(lock);
+	}
+
+	@RegistryLocation(registryPoint = DomainTransformPersistenceEventsCommitLock.class, implementationType = ImplementationType.SINGLETON)
+	public static class DomainTransformPersistenceEventsCommitLock {
+		public void acquireCommitLock(boolean lock) {
+			//NOOP
+		}
+	}
 }
