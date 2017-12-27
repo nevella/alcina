@@ -102,4 +102,11 @@ public class DomainTransformPersistenceEvents {
 			//NOOP
 		}
 	}
+<<<<<<< HEAD
+=======
+
+	public long getMaxPublishedId() {
+		return queue.getMaxDbPersistedRequestId();
+	}
+>>>>>>> jade
 }
