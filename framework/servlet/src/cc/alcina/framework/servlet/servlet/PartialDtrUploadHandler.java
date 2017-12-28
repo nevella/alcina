@@ -111,8 +111,6 @@ public class PartialDtrUploadHandler {
 					.size();
 			if (request.commitOnReceipt) {
 				try {
-					Registry.impl(DomainTransformPersistenceQueue.class)
-							.setPauseCheck(true);
 					commonRemoteServiceServlet
 							.persistOfflineTransforms(new ArrayList<DeltaApplicationRecord>(
 									fullWrappers.values()));
@@ -128,10 +126,7 @@ public class PartialDtrUploadHandler {
 							LogMessageType.OFFLINE_TRANSFORM_MERGE_EXCEPTION
 									.toString());
 					throw e;
-				} finally {
-					Registry.impl(DomainTransformPersistenceQueue.class)
-							.setPauseCheck(false);
-				}
+				} 
 				response.committed = true;
 			}
 			ServletLayerObjects

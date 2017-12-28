@@ -1459,32 +1459,5 @@ public class SEUtilities {
 			throw new WrappedRuntimeException(e);
 		}
 	}
-	public static String normaliseEnglishTitle(String name) {
-		if (name == null) {
-			return null;
-		}
-		Matcher m = Pattern.compile("\\w+").matcher(name);
-		Pattern nonTitle = Pattern.compile(
-				"(?i)(?:a|an|the|and|but|o|nor|for|yet|so|as|at|by|for|in|of|on|to|from|vs|v|etc)");
-		int idx2 = 0;
-		StringBuilder out = new StringBuilder();
-		while (m.find()) {
-			String priorDelim = name.substring(idx2, m.start());
-			out.append(priorDelim);
-			idx2 = m.end();
-			String part = m.group();
-			if (m.start() == 0 || m.end() == name.length()) {
-				// always capitalise
-			} else {
-				if (nonTitle.matcher(part).matches()) {
-					part = part.toLowerCase();
-				} else {
-					part = CommonUtils.titleCaseKeepAcronyms(part);
-				}
-			}
-			out.append(part);
-		}
-		out.append(name.substring(idx2));
-		return out.toString();
-	}
+	
 }

@@ -978,13 +978,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			TransformPersistenceToken persistenceToken)
 			throws DomainTransformRequestException {
 		boolean unexpectedException = true;
-		boolean lockAcquired = false;
 		try {
 			LooseContext.getContext().push();
 			AppPersistenceBase.checkNotReadOnly();
-			Registry.impl(DomainTransformPersistenceEvents.class)
-					.acquireCommitLock(true);
-			lockAcquired = true;
 			Registry.impl(DomainTransformPersistenceEvents.class)
 					.fireDomainTransformPersistenceEvent(
 							new DomainTransformPersistenceEvent(
@@ -995,11 +991,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					.impl(TransformPersistenceQueue.class)
 					.submit(persistenceToken);
 			MetricLogging.get().end("transform-commit");
-			// can release lock, (and should, since next
-			// fireDomainTransformPersistenceEvent might be reentrant)
-			Registry.impl(DomainTransformPersistenceEvents.class)
-					.acquireCommitLock(false);
-			lockAcquired = false;
 			handleWrapperTransforms();
 			wrapper.ignored = persistenceToken.ignored;
 			Registry.impl(DomainTransformPersistenceEvents.class)
@@ -1015,10 +1006,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				throw new DomainTransformRequestException(wrapper.response);
 			}
 		} finally {
-			if (lockAcquired) {
-				Registry.impl(DomainTransformPersistenceEvents.class)
-						.acquireCommitLock(false);
-			}
 			if (unexpectedException) {
 				try {
 					unexpectedExceptionBeforePostTransform(persistenceToken);
