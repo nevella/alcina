@@ -24,19 +24,21 @@ public class TransformCollector {
 		long maxTime = System.currentTimeMillis()
 				+ 61 * TimeConstants.ONE_SECOND_MS;
 		while (System.currentTimeMillis() < maxTime) {
-			maxDbId = MemCacheRunner.get(() -> {
-				return queue.getMaxDbPersistedRequestId();
-			});
-			if (maxDbId > lastTransformRequestId) {
-				break;
-			}
-			synchronized (queue) {
-				try {
-					queue.wait(30 * TimeConstants.ONE_SECOND_MS);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
+			//doesn't take account of out-of-order transform persistence. use published id instead
+			throw new UnsupportedOperationException();
+//			maxDbId = MemCacheRunner.get(() -> {
+//				return queue.getMaxPublishedRequestId();
+//			});
+//			if (maxDbId > lastTransformRequestId) {
+//				break;
+//			}
+//			synchronized (queue) {
+//				try {
+//					queue.wait(30 * TimeConstants.ONE_SECOND_MS);
+//				} catch (Exception e) {
+//					throw new WrappedRuntimeException(e);
+//				}
+//			}
 		}
 		List<DomainTransformRequestPersistent> requests = Registry
 				.impl(CommonPersistenceProvider.class).getCommonPersistence()

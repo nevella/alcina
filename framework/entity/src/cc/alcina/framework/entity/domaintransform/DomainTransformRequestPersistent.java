@@ -27,16 +27,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 public abstract class DomainTransformRequestPersistent
 		extends DomainTransformRequest implements HasId {
 	private long id;
-	
-	private Long happensAfterId;
-
-	public Long getHappensAfterId() {
-		return this.happensAfterId;
-	}
-
-	public void setHappensAfterId(Long happensAfterId) {
-		this.happensAfterId = happensAfterId;
-	}
 
 	public void clearForSimplePersistence() {
 		setClientInstance(null);

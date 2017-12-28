@@ -411,9 +411,8 @@ public class TransformPersister {
 						DomainTransformRequestPersistent dtrp = dtrqImpl
 								.newInstance();
 						tm.persist(dtrp);
-						Registry.impl(DomainTransformPersistenceEvents.class)
+						Registry.impl(DomainTransformPersistenceQueue.class)
 								.registerPersisting(dtrp);
-						dtrp.setHappensAfterId(Registry.impl(DomainTransformPersistenceEvents.class).getMaxPublishedId());
 						dtr.setEvents(null);
 						dtrp.wrap(dtr);
 						dtrp.setEvents(new ArrayList<DomainTransformEvent>());
