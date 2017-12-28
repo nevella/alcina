@@ -84,6 +84,7 @@ import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.util.JvmPropertyReflector;
@@ -178,7 +179,7 @@ public class SEUtilities {
 	}
 
 	public static String consoleReadline(String prompt) {
-		System.out.println(prompt);
+		System.out.print(prompt);
 		InputStreamReader converter = new InputStreamReader(System.in);
 		BufferedReader in = new BufferedReader(converter);
 		try {
@@ -203,6 +204,11 @@ public class SEUtilities {
 	}
 
 	public static int copyFile(File in, File out) throws IOException {
+		return copyFile(in, out, false);
+	}
+
+	public static int copyFile(File in, File out, boolean forceOverwrite)
+			throws IOException {
 		if (in.isDirectory()) {
 			return copyDirectory(in, out);
 		}
@@ -210,7 +216,8 @@ public class SEUtilities {
 			out.getParentFile().mkdirs();
 			out.createNewFile();
 		} else {
-			if (out.lastModified() >= in.lastModified()) {
+			if (out.lastModified() >= in.lastModified()
+					&& out.length() == in.length() && !forceOverwrite) {
 				return 0;
 			}
 		}
@@ -531,6 +538,43 @@ public class SEUtilities {
 			}
 		}
 		return sb.toString();
+	}
+
+	public static String normaliseEnglishTitle(String name) {
+		if (name == null) {
+			return null;
+		}
+		Matcher m = Pattern.compile("\\w+").matcher(name);
+		Pattern nonTitle = Pattern.compile(
+				"(?i)(?:a|an|the|and|but|o|nor|for|yet|so|as|at|by|for|in|of|on|to|from|vs|v|etc)");
+		int idx2 = 0;
+		StringBuilder out = new StringBuilder();
+		while (m.find()) {
+			String priorDelim = name.substring(idx2, m.start());
+			out.append(priorDelim);
+			idx2 = m.end();
+			String part = m.group();
+			if (m.start() == 0 || m.end() == name.length()) {
+				// always capitalise
+			} else {
+				if (nonTitle.matcher(part).matches()) {
+					part = part.toLowerCase();
+				} else {
+					part = CommonUtils.titleCaseKeepAcronyms(part);
+				}
+			}
+			out.append(part);
+		}
+		out.append(name.substring(idx2));
+		return out.toString();
+	}
+
+	@RegistryLocation(registryPoint = IidGenerator.class)
+	public static class IidGeneratorJ2SE implements IidGenerator {
+		@Override
+		public String generate() {
+			return generateId();
+		}
 	}
 
 	public static String generateId() {
