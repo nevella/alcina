@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.Column;
 import javax.persistence.EnumType;
@@ -2367,6 +2368,30 @@ public class AlcinaMemCache implements RegistrableService {
 		public <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
 				long id) {
 			return (V) transactional.find(clazz, id);
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> V find(Class clazz, long id) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> Collection<V> list(Class<V> clazz) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> Stream<V> stream(Class<V> clazz) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> V writeable(V v) {
+			// TODO Auto-generated method stub
+			return null;
 		}
 	}
 
