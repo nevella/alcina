@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.publication;
 
 import java.util.List;
@@ -20,41 +19,60 @@ import java.util.List;
  *
  * @author Nick Reddel
  */
+public interface DeliveryModel {
+	public String getAttachmentMessage();
 
- public interface DeliveryModel {
-	public boolean isCoverPage();
-	public boolean isFooter();
-	public boolean isPageBreakAfterEachDocument();
-	public FormatConversionTarget provideTargetFormat();
-	public ContentDeliveryType provideContentDeliveryType();
+	public String getAttachmentMessageForRequestor();
+
 	public String getEmailAddress();
-	public String getSystemEmailAddressOfRequestor();
-	public String getSuggestedFileName();
+
 	public String getEmailSubject();
+
 	public String getEmailSubjectForRequestor();
-	public List<MailInlineImage> provideImages();
-	/**
-	 * comma separated fields which indicate the queryString to be put at the
-	 * end of a URL.  eg link.do?alert,97,a987db34. (link.do? is not included)
-	 * first field is always the type.
-	 */
-	public String getPermalinkQuery();
+
 	/**
 	 * The mime type of the content
 	 */
 	public String getMimeType();
+
+	/**
+	 * comma separated fields which indicate the queryString to be put at the
+	 * end of a URL. eg link.do?alert,97,a987db34. (link.do? is not included)
+	 * first field is always the type.
+	 */
+	public String getPermalinkQuery();
+
+	public String getSuggestedFileName();
+
+	public String getSystemEmailAddressOfRequestor();
+
+	public boolean isCoverPage();
+
 	public boolean isEmailInline();
-	public String getAttachmentMessage() ;
-	public String getAttachmentMessageForRequestor() ;
+
+	public boolean isFooter();
+
 	public boolean isNoPersistence();
+
+	public boolean isPageBreakAfterEachDocument();
+
 	public boolean isTest();
-	default String getPublicationUid(){
+
+	public ContentDeliveryType provideContentDeliveryType();
+
+	public List<MailInlineImage> provideImages();
+
+	public FormatConversionTarget provideTargetFormat();
+
+	default String getPublicationUid() {
 		return null;
 	}
-	public static class MailInlineImage{
+
+	public static class MailInlineImage {
 		public String uid;
+
 		public String contentType;
+
 		public byte[] requestBytes;
 	}
-
 }

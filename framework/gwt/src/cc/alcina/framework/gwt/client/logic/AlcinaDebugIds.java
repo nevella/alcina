@@ -52,11 +52,15 @@ public class AlcinaDebugIds {
 
 	public static final String DEBUG_SUPPRESS_UI_EXCEPTION_NOTIFICATIONS = "d-suppress-ui-exceptions";
 
-	public static final List<String> DEBUG_IDS = new ArrayList(
-			Arrays.asList(new String[] { DEBUG_SIMULATE_OFFLINE,
-					DEBUG_LOG_LOAD_METRICS,DEBUG_SUPPRESS_UI_EXCEPTION_NOTIFICATIONS }));
+	public static final List<String> DEBUG_IDS = new ArrayList(Arrays.asList(
+			new String[] { DEBUG_SIMULATE_OFFLINE, DEBUG_LOG_LOAD_METRICS,
+					DEBUG_SUPPRESS_UI_EXCEPTION_NOTIFICATIONS }));
 
 	static List<String> debugIdsMatched = new ArrayList<String>();
+
+	public static void clearFlag(String key) {
+		debugIdsMatched.remove(key);
+	}
 
 	public static String getButtonId(String key) {
 		return TOP_BUTTON + "-" + key;
@@ -68,10 +72,5 @@ public class AlcinaDebugIds {
 
 	public static void setFlag(String key) {
 		debugIdsMatched.add(key);
-	}
-
-	public static void clearFlag(String key) {
-		debugIdsMatched.remove(key);
-		
 	}
 }

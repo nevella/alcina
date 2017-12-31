@@ -10,15 +10,16 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 
 @RegistryLocation(registryPoint = FormatConverter.class, targetClass = FormatConversionTarget_TEXT.class)
 public class FormatConverterText implements FormatConverter {
-	public InputStream convert(PublicationContext ctx,FormatConversionModel fcm) throws Exception {
+	public InputStream convert(PublicationContext ctx,
+			FormatConversionModel fcm) throws Exception {
 		return new ByteArrayInputStream(fcm.bytes);
-	}
-
-	public String getMimeType() {
-		return "text/plain";
 	}
 
 	public String getFileExtension() {
 		return "txt";
+	}
+
+	public String getMimeType() {
+		return "text/plain";
 	}
 }

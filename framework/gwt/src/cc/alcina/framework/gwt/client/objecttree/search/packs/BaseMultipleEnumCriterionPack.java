@@ -7,7 +7,6 @@ import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.cache.CacheFilter;
 import cc.alcina.framework.common.client.search.EnumMultipleCriterion;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
@@ -20,6 +19,16 @@ public class BaseMultipleEnumCriterionPack {
 			extends EnumMultipleCriterion<E> {
 		private Set<E> value = new LinkedHashSet<>();
 
+		public BaseEnumMultipleCriterion add(E e) {
+			getValue().add(e);
+			return this;
+		}
+
+		public BaseEnumMultipleCriterion add(Set<E> e) {
+			getValue().addAll(e);
+			return this;
+		}
+
 		public Set<E> getValue() {
 			return this.value;
 		}
@@ -29,16 +38,6 @@ public class BaseMultipleEnumCriterionPack {
 			this.value = value;
 			propertyChangeSupport().firePropertyChange("value", old_value,
 					value);
-		}
-
-		public BaseEnumMultipleCriterion add(E e) {
-			getValue().add(e);
-			return this;
-		}
-
-		public BaseEnumMultipleCriterion add(Set<E> e) {
-			getValue().addAll(e);
-			return this;
 		}
 	}
 
@@ -57,8 +56,10 @@ public class BaseMultipleEnumCriterionPack {
 		}
 
 		@Override
-		public boolean hasValue(C sc) {
-			return sc.getValue() != null && sc.getValue().size() > 0;
+		public AbstractBoundWidget createEditor() {
+			return new FlatSearchSelector(enumClass, maxSelectedItems,
+					FriendlyEnumRenderer.INSTANCE,
+					() -> Arrays.asList(enumClass.getEnumConstants()));
 		}
 
 		@Override
@@ -66,21 +67,21 @@ public class BaseMultipleEnumCriterionPack {
 			return "value";
 		}
 
+		@Override
+		public boolean hasValue(C sc) {
+			return sc.getValue() != null && sc.getValue().size() > 0;
+		}
+
 		protected <T extends BaseEnumMultipleCriterionSearchable> T
 				maxSelectedItems(int maxSelectedItems) {
 			this.maxSelectedItems = maxSelectedItems;
 			return (T) this;
 		}
-
-		@Override
-		public AbstractBoundWidget createEditor() {
-			return new FlatSearchSelector(enumClass, maxSelectedItems,
-					FriendlyEnumRenderer.INSTANCE,
-					() -> Arrays.asList(enumClass.getEnumConstants()));
-		}
 	}
 
 	public interface BaseMultipleEnumCriterionHandler<T, E extends Enum, SC extends EnumMultipleCriterion<E>> {
+		public boolean test(T t, Set<E> value);
+
 		default CacheFilter getFilter0(SC sc) {
 			Set<E> values = sc.getValue();
 			if (values.isEmpty()) {
@@ -90,7 +91,5 @@ public class BaseMultipleEnumCriterionPack {
 			return new CacheFilter(pred).invertIf(sc
 					.getOperator() == StandardSearchOperator.DOES_NOT_CONTAIN);
 		}
-
-		public boolean test(T t, Set<E> value);
 	}
 }

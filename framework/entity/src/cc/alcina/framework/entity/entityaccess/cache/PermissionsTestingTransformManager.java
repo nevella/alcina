@@ -16,6 +16,8 @@ public class PermissionsTestingTransformManager
 		extends ThreadlocalTransformManager implements LazyObjectLoader {
 	protected DetachedCacheObjectStore store;
 
+	ClassLookupWrapper classLookupWrapper;
+
 	public PermissionsTestingTransformManager() {
 		super();
 		createObjectLookup();
@@ -25,18 +27,6 @@ public class PermissionsTestingTransformManager
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
 			long id, long localId) {
 		return getDomainObjects().getObject(c, id, localId);
-	}
-
-	@Override
-	protected void createObjectLookup() {
-		store = new DetachedCacheObjectStore(new DetachedEntityCache());
-		store.setLazyObjectLoader(this);
-		setDomainObjects(store);
-	}
-
-	@Override
-	protected ObjectLookup getObjectLookup() {
-		return store;
 	}
 
 	@Override
@@ -59,7 +49,17 @@ public class PermissionsTestingTransformManager
 		return classLookupWrapper;
 	}
 
-	ClassLookupWrapper classLookupWrapper;
+	@Override
+	protected void createObjectLookup() {
+		store = new DetachedCacheObjectStore(new DetachedEntityCache());
+		store.setLazyObjectLoader(this);
+		setDomainObjects(store);
+	}
+
+	@Override
+	protected ObjectLookup getObjectLookup() {
+		return store;
+	}
 
 	class ClassLookupWrapper implements ClassLookup {
 		private ClassLookup delegate;
@@ -68,21 +68,12 @@ public class PermissionsTestingTransformManager
 			this.delegate = delegate;
 		}
 
-		public Class getClassForName(String fqn) {
-			return this.delegate.getClassForName(fqn);
-		}
-
-		public <T> T newInstance(Class<T> clazz) {
-			return this.delegate.newInstance(clazz);
-		}
-
-		public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
-			return PermissionsTestingTransformManager.this.newInstance(clazz,
-					objectId, localId);
-		}
-
 		public String displayNameForObject(Object o) {
 			return this.delegate.displayNameForObject(o);
+		}
+
+		public List<String> getAnnotatedPropertyNames(Class clazz) {
+			return this.delegate.getAnnotatedPropertyNames(clazz);
 		}
 
 		public <A extends Annotation> A getAnnotationForClass(Class targetClass,
@@ -91,8 +82,8 @@ public class PermissionsTestingTransformManager
 					annotationClass);
 		}
 
-		public List<String> getAnnotatedPropertyNames(Class clazz) {
-			return this.delegate.getAnnotatedPropertyNames(clazz);
+		public Class getClassForName(String fqn) {
+			return this.delegate.getClassForName(fqn);
 		}
 
 		public Class getPropertyType(Class clazz, String propertyName) {
@@ -105,6 +96,15 @@ public class PermissionsTestingTransformManager
 
 		public List<PropertyInfoLite> getWritableProperties(Class clazz) {
 			return this.delegate.getWritableProperties(clazz);
+		}
+
+		public <T> T newInstance(Class<T> clazz) {
+			return this.delegate.newInstance(clazz);
+		}
+
+		public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
+			return PermissionsTestingTransformManager.this.newInstance(clazz,
+					objectId, localId);
 		}
 	}
 }

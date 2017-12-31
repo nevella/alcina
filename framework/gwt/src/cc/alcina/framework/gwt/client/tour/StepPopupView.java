@@ -14,10 +14,6 @@ import cc.alcina.framework.gwt.client.tour.Tour.PopupInfo;
 public class StepPopupView extends Composite {
 	private FlowPanel fp;
 
-	enum Action {
-		NEXT, CLOSE, BACK;
-	}
-
 	TopicPublisher topicPublisher = new TopicPublisher();
 
 	PopupInfo popupInfo;
@@ -54,16 +50,8 @@ public class StepPopupView extends Composite {
 		fp.add(w);
 	}
 
-	class Next extends InlineButtonHandler {
-		@Override
-		public String getDisplayName() {
-			return "Next";
-		}
-
-		@Override
-		public void onClick(ClickEvent event) {
-			topicPublisher.publishTopic(null, Action.NEXT);
-		}
+	enum Action {
+		NEXT, CLOSE, BACK;
 	}
 
 	class Back extends InlineButtonHandler {
@@ -99,6 +87,18 @@ public class StepPopupView extends Composite {
 		@Override
 		public void onClick(ClickEvent event) {
 			topicPublisher.publishTopic(null, Action.CLOSE);
+		}
+	}
+
+	class Next extends InlineButtonHandler {
+		@Override
+		public String getDisplayName() {
+			return "Next";
+		}
+
+		@Override
+		public void onClick(ClickEvent event) {
+			topicPublisher.publishTopic(null, Action.NEXT);
 		}
 	}
 }

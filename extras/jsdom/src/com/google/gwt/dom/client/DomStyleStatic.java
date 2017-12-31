@@ -26,6 +26,32 @@ import com.google.gwt.dom.client.Style.WhiteSpace;
 import com.google.gwt.safehtml.shared.annotations.IsSafeUri;
 
 class DomStyleStatic {
+	public static void clearProperty(DomStyle domStyle, String name) {
+		domStyle.setProperty(name, "");
+	}
+
+	/**
+	 * Assert that the specified property does not contain a hyphen.
+	 * 
+	 * @param name
+	 *            the property name
+	 */
+	static void assertCamelCase(DomStyle domStyle, String name) {
+		assert !name.contains("-") : "The style name '" + name
+				+ "' should be in camelCase format";
+	}
+
+	/**
+	 * Assert that the specified property does not contain a hyphen.
+	 * 
+	 * @param name
+	 *            the property name
+	 */
+	static void assertCamelCase(String name) {
+		assert !name.contains("-") : "The style name '" + name
+				+ "' should be in camelCase format";
+	}
+
 	/**
 	 * Clear the background-color css property.
 	 */
@@ -593,6 +619,11 @@ class DomStyleStatic {
 		return domStyle.getProperty(STYLE_POSITION);
 	}
 
+	static String getProperty(DomStyle domStyle, String name) {
+		assertCamelCase(name);
+		return domStyle.getPropertyImpl(name);
+	}
+
 	/**
 	 * Get the right css property.
 	 */
@@ -946,14 +977,6 @@ class DomStyleStatic {
 	}
 
 	/**
-	 * Sets the value of a named property.
-	 */
-	static void setProperty(DomStyle domStyle, String name, String value) {
-		assertCamelCase(name);
-		domStyle.setPropertyImpl(name, value);
-	}
-
-	/**
 	 * Sets the value of a named property in the specified units.
 	 */
 	static void setProperty(DomStyle domStyle, String name, double value,
@@ -963,14 +986,11 @@ class DomStyleStatic {
 	}
 
 	/**
-	 * Assert that the specified property does not contain a hyphen.
-	 * 
-	 * @param name
-	 *            the property name
+	 * Sets the value of a named property.
 	 */
-	static void assertCamelCase(String name) {
-		assert !name.contains("-") : "The style name '" + name
-				+ "' should be in camelCase format";
+	static void setProperty(DomStyle domStyle, String name, String value) {
+		assertCamelCase(name);
+		domStyle.setPropertyImpl(name, value);
 	}
 
 	/**
@@ -1048,15 +1068,15 @@ class DomStyleStatic {
 	/**
 	 * Sets the vertical-align CSS property.
 	 */
-	static void setVerticalAlign(DomStyle domStyle, VerticalAlign value) {
-		domStyle.setProperty(STYLE_VERTICAL_ALIGN, value.getCssName());
+	static void setVerticalAlign(DomStyle domStyle, double value, Unit unit) {
+		domStyle.setProperty(STYLE_VERTICAL_ALIGN, value, unit);
 	}
 
 	/**
 	 * Sets the vertical-align CSS property.
 	 */
-	static void setVerticalAlign(DomStyle domStyle, double value, Unit unit) {
-		domStyle.setProperty(STYLE_VERTICAL_ALIGN, value, unit);
+	static void setVerticalAlign(DomStyle domStyle, VerticalAlign value) {
+		domStyle.setProperty(STYLE_VERTICAL_ALIGN, value.getCssName());
 	}
 
 	/**
@@ -1080,39 +1100,16 @@ class DomStyleStatic {
 		domStyle.setProperty(STYLE_WIDTH, value, unit);
 	}
 
+	// FIXME - LD2 - remove (never get remote obj prop)
+	// static String getPropertyImpl(StyleRemote style_Dom, String name) {
+	// // FIXME - more direct call maybe
+	// return DOMImpl.impl.getStyleProperty(
+	// LocalDomBridge.styleObjectFor(style_Dom), name);
+	// }
 	/**
 	 * Set the z-index css property.
 	 */
 	static void setZIndex(DomStyle domStyle, int value) {
 		domStyle.setProperty(STYLE_Z_INDEX, value + "");
 	}
-
-	/**
-	 * Assert that the specified property does not contain a hyphen.
-	 * 
-	 * @param name
-	 *            the property name
-	 */
-	static void assertCamelCase(DomStyle domStyle, String name) {
-		assert !name.contains("-") : "The style name '" + name
-				+ "' should be in camelCase format";
-	}
-
-	static String getProperty(DomStyle domStyle, String name) {
-		assertCamelCase(name);
-		return domStyle.getPropertyImpl(name);
-	}
-
-	//FIXME - LD2 - remove (never get remote obj prop) 
-//	static String getPropertyImpl(StyleRemote style_Dom, String name) {
-//		// FIXME - more direct call maybe
-//		return DOMImpl.impl.getStyleProperty(
-//				LocalDomBridge.styleObjectFor(style_Dom), name);
-//	}
-
-	public static void clearProperty(DomStyle domStyle, String name) {
-		domStyle.setProperty(name, "");
-	}
-
-	
 }

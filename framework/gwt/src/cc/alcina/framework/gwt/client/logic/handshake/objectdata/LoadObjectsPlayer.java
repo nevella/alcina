@@ -10,8 +10,8 @@ import cc.alcina.framework.gwt.client.logic.handshake.HandshakeState;
 import cc.alcina.framework.gwt.client.logic.handshake.localstorage.MergeObjectDeltasPlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.localstorage.RetrieveLocalModelTransformDeltasPlayer;
 
-public class LoadObjectsPlayer extends RunnablePlayer<HandshakeState> implements
-		ConsortPlayer {
+public class LoadObjectsPlayer extends RunnablePlayer<HandshakeState>
+		implements ConsortPlayer {
 	private LoadObjectsConsort loadObjectsConsort;
 
 	public LoadObjectsPlayer() {
@@ -22,7 +22,26 @@ public class LoadObjectsPlayer extends RunnablePlayer<HandshakeState> implements
 		loadObjectsConsort = new LoadObjectsConsort();
 	}
 
-	public static class LoadObjectsConsort extends Consort<LoadObjectDataState> {
+	@Override
+	public Consort getStateConsort() {
+		return loadObjectsConsort;
+	}
+
+	@Override
+	public void run() {
+		new SubconsortSupport().run(consort, loadObjectsConsort, this);
+	}
+
+	@Override
+	protected void wasPlayed() {
+		boolean success = loadObjectsConsort
+				.containsState(LoadObjectDataState.OBJECT_DATA_LOADED);
+		super.wasPlayed(success ? HandshakeState.OBJECT_DATA_LOADED
+				: HandshakeState.OBJECT_DATA_LOAD_FAILED);
+	}
+
+	public static class LoadObjectsConsort
+			extends Consort<LoadObjectDataState> {
 		public LoadObjectsConsort() {
 			addPlayer(Registry.impl(LoadObjectsHelloPlayer.class));
 			addPlayer(Registry.impl(LoadObjectsFromRemotePlayer.class));
@@ -43,23 +62,5 @@ public class LoadObjectsPlayer extends RunnablePlayer<HandshakeState> implements
 					.clearLoadObjectsNotifier();
 			super.finished();
 		}
-	}
-
-	@Override
-	protected void wasPlayed() {
-		boolean success = loadObjectsConsort
-				.containsState(LoadObjectDataState.OBJECT_DATA_LOADED);
-		super.wasPlayed(success ? HandshakeState.OBJECT_DATA_LOADED
-				: HandshakeState.OBJECT_DATA_LOAD_FAILED);
-	}
-
-	@Override
-	public void run() {
-		new SubconsortSupport().run(consort, loadObjectsConsort, this);
-	}
-
-	@Override
-	public Consort getStateConsort() {
-		return loadObjectsConsort;
 	}
 }

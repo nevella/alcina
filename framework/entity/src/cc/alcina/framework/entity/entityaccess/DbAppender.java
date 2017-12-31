@@ -32,6 +32,13 @@ public class DbAppender extends AppenderSkeleton {
 		setLayout(l);
 	}
 
+	public void close() {
+	}
+
+	public boolean requiresLayout() {
+		return false;
+	}
+
 	@Override
 	protected void append(LoggingEvent event) {
 		String renderedMessage = event.getRenderedMessage();
@@ -50,12 +57,5 @@ public class DbAppender extends AppenderSkeleton {
 					String.format("%s\n%s", renderedMessage, sw.toString()),
 					"Unknown exception type");
 		}
-	}
-
-	public void close() {
-	}
-
-	public boolean requiresLayout() {
-		return false;
 	}
 }

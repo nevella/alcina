@@ -37,8 +37,8 @@ import cc.alcina.framework.gwt.client.widget.VisualFilterable.HasSatisfiesFilter
  * @author Nick Reddel
  */
 @SuppressWarnings("unchecked")
-public class UmbrellaCollectionProviderMultiplexer<T> implements
-		CollectionModificationListener {
+public class UmbrellaCollectionProviderMultiplexer<T>
+		implements CollectionModificationListener {
 	protected final Collection<T> collection;
 
 	protected final UmbrellaProvider<T> umbrellaProvider;
@@ -50,15 +50,6 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 	private final int minFilterableDepth;
 
 	private CollectionFilter<T> collectionFilter;
-
-	public CollectionFilter<T> getCollectionFilter() {
-		return this.collectionFilter;
-	}
-
-	public void setCollectionFilter(CollectionFilter<T> collectionFilter) {
-		this.collectionFilter = collectionFilter;
-		collectionModification(new CollectionModificationEvent(this));
-	}
 
 	public UmbrellaCollectionProviderMultiplexer(Collection<T> colln,
 			Class<? extends T> baseClass, UmbrellaProvider<T> umbrellaProvider,
@@ -78,12 +69,29 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 		remap(simpleEvent);
 	}
 
+	public UmbrellaCollectionProvider createProviderChild(String key) {
+		return new UmbrellaCollectionProviderChildString(key);
+	}
+
 	public Collection getCollection() {
 		return null;
 	}
 
+	public CollectionFilter<T> getCollectionFilter() {
+		return this.collectionFilter;
+	}
+
+	public UmbrellaCollectionProvider getRootSubprovider() {
+		return items.get("");
+	}
+
 	public void onDetach() {
 		TransformManager.get().removeCollectionModificationListener(this);
+	}
+
+	public void setCollectionFilter(CollectionFilter<T> collectionFilter) {
+		this.collectionFilter = collectionFilter;
+		collectionModification(new CollectionModificationEvent(this));
 	}
 
 	private void remap(CollectionModificationEvent simpleEvent) {
@@ -91,8 +99,8 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 		Stack<UmbrellaCollectionProvider> providerStack = new Stack<UmbrellaCollectionProvider>();
 		String key = "";
 		for (UmbrellaCollectionProvider existing : items.values()) {
-			existing.childIterator = umbrellaProvider.getUmbrellaNames(
-					existing.key).iterator();
+			existing.childIterator = umbrellaProvider
+					.getUmbrellaNames(existing.key).iterator();
 		}
 		UmbrellaCollectionProvider root = items.get(key);
 		if (root == null) {
@@ -124,14 +132,6 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 		}
 	}
 
-	public UmbrellaCollectionProvider getRootSubprovider() {
-		return items.get("");
-	}
-
-	public UmbrellaCollectionProvider createProviderChild(String key) {
-		return new UmbrellaCollectionProviderChildString(key);
-	}
-
 	public class UmbrellaCollectionProvider implements
 			LazyCollectionProvider<T>, Comparable<UmbrellaCollectionProvider> {
 		private CollectionModificationSupport collectionModificationSupport = new CollectionModificationSupport();
@@ -144,10 +144,7 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 
 		Set<UmbrellaCollectionProvider> childProviders = new LinkedHashSet<UmbrellaCollectionProvider>();
 
-		@Override
-		public int compareTo(UmbrellaCollectionProvider o) {
-			return key.compareTo(o.key);
-		}
+		private List filteredCollection;
 
 		public UmbrellaCollectionProvider(String key) {
 			this.key = key;
@@ -163,73 +160,29 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 		}
 
 		@Override
+		public int compareTo(UmbrellaCollectionProvider o) {
+			return key.compareTo(o.key);
+		}
+
+		@Override
+		public boolean containsObject(Object userObject) {
+			if (objects.contains(userObject)) {
+				return true;
+			}
+			for (LazyCollectionProvider<T> provider : getChildProviders()) {
+				if (provider.containsObject(userObject)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof UmbrellaCollectionProviderMultiplexer.UmbrellaCollectionProvider) {
 				return key.equals(((UmbrellaCollectionProvider) obj).key);
 			}
 			return false;
-		}
-
-		public List getObjects() {
-			return this.objects;
-		}
-
-		@Override
-		public Set<UmbrellaCollectionProvider> getChildProviders() {
-			return this.childProviders;
-		}
-
-		public void fireCollectionModificationEvent(
-				CollectionModificationEvent event) {
-			this.collectionModificationSupport
-					.fireCollectionModificationEvent(event);
-		}
-
-		private List filteredCollection;
-
-		@Override
-		public Collection getCollection() {
-			if (filteredCollection == null) {
-				resetFilteredCollection();
-			}
-			return filteredCollection;
-		}
-
-		private void resetFilteredCollection() {
-			filteredCollection = new ArrayList();
-			filteredCollection.addAll(childProviders);
-			filteredCollection.addAll(objects);
-		}
-
-		@Override
-		public Class getCollectionMemberClass() {
-			return baseClass;
-		}
-
-		@Override
-		public int getCollectionSize() {
-			return childProviders.size() + objects.size();
-		}
-
-		@Override
-		public int hashCode() {
-			return key.hashCode();
-		}
-
-		@Override
-		public void onDetach() {
-		}
-
-		@Override
-		public void removeCollectionModificationListener(
-				CollectionModificationListener listener) {
-			this.collectionModificationSupport
-					.removeCollectionModificationListener(listener);
-		}
-
-		@Override
-		public String getTitle() {
-			return key;
 		}
 
 		@Override
@@ -257,6 +210,44 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 			return filteredCollection.size() > 0;
 		}
 
+		public void fireCollectionModificationEvent(
+				CollectionModificationEvent event) {
+			this.collectionModificationSupport
+					.fireCollectionModificationEvent(event);
+		}
+
+		@Override
+		public Set<UmbrellaCollectionProvider> getChildProviders() {
+			return this.childProviders;
+		}
+
+		@Override
+		public Collection getCollection() {
+			if (filteredCollection == null) {
+				resetFilteredCollection();
+			}
+			return filteredCollection;
+		}
+
+		@Override
+		public Class getCollectionMemberClass() {
+			return baseClass;
+		}
+
+		@Override
+		public int getCollectionSize() {
+			return childProviders.size() + objects.size();
+		}
+
+		@Override
+		public int getMinFilterableLength() {
+			return minFilterableDepth;
+		}
+
+		public List getObjects() {
+			return this.objects;
+		}
+
 		@Override
 		public Collection getObjectsRecursive(List list) {
 			list = list == null ? new ArrayList() : list;
@@ -272,26 +263,35 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 		}
 
 		@Override
-		public int getMinFilterableLength() {
-			return minFilterableDepth;
+		public String getTitle() {
+			return key;
 		}
 
 		@Override
-		public boolean containsObject(Object userObject) {
-			if (objects.contains(userObject)) {
-				return true;
-			}
-			for (LazyCollectionProvider<T> provider : getChildProviders()) {
-				if (provider.containsObject(userObject)) {
-					return true;
-				}
-			}
-			return false;
+		public int hashCode() {
+			return key.hashCode();
+		}
+
+		@Override
+		public void onDetach() {
+		}
+
+		@Override
+		public void removeCollectionModificationListener(
+				CollectionModificationListener listener) {
+			this.collectionModificationSupport
+					.removeCollectionModificationListener(listener);
+		}
+
+		private void resetFilteredCollection() {
+			filteredCollection = new ArrayList();
+			filteredCollection.addAll(childProviders);
+			filteredCollection.addAll(objects);
 		}
 	}
 
-	protected class UmbrellaCollectionProviderChildString extends
-			UmbrellaCollectionProvider {
+	protected class UmbrellaCollectionProviderChildString
+			extends UmbrellaCollectionProvider {
 		public UmbrellaCollectionProviderChildString(String key) {
 			super(key);
 		}

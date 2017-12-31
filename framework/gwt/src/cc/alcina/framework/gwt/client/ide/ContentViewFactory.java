@@ -156,12 +156,41 @@ public class ContentViewFactory {
 
 	private String tableStyleName;
 
-	public String getTableStyleName() {
-		return this.tableStyleName;
+	private Object additionalProvisional;
+
+	private PermissibleActionListener actionListener;
+
+	private boolean editable;
+
+	private EndRowButtonClickedHandler endRowButtonClickedHandler;
+
+	private boolean autoSave;
+
+	private boolean doNotClone;
+
+	private boolean doNotPrepare;
+
+	private boolean horizontalGrid;
+
+	private Class beanClass;
+
+	private int tableMask;
+
+	public ContentViewFactory
+			actionListener(PermissibleActionListener actionListener) {
+		this.actionListener = actionListener;
+		return this;
 	}
 
-	public void setTableStyleName(String tableStyleName) {
-		this.tableStyleName = tableStyleName;
+	public ContentViewFactory
+			additionalProvisional(Object additionalProvisional) {
+		this.additionalProvisional = additionalProvisional;
+		return this;
+	}
+
+	public ContentViewFactory autoSave(boolean autoSave) {
+		this.autoSave = autoSave;
+		return this;
 	}
 
 	public ActionTableHolder createActionTable(Collection beans,
@@ -215,102 +244,6 @@ public class ContentViewFactory {
 				actions, listener, withObjectActions, multiple));
 		return cp;
 	}
-
-	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
-			PermissibleActionListener actionListener, boolean autoSave,
-			boolean doNotClone) {
-		return editable(editable).actionListener(actionListener)
-				.autoSave(autoSave).doNotClone(doNotClone).createBeanView(bean);
-	}
-
-	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
-			PermissibleActionListener actionListener, boolean autoSave,
-			boolean doNotClone, Object additionalProvisional) {
-		return editable(editable).actionListener(actionListener)
-				.autoSave(autoSave).doNotClone(doNotClone)
-				.additionalProvisional(additionalProvisional)
-				.createBeanView(bean);
-	}
-
-	public static class ContentViewFactoryFieldCustomiser {
-		public Predicate<Field> getFilter() {
-			return null;
-		}
-
-		public Comparator<Field> getOrder() {
-			return null;
-		}
-
-		public Consumer<Field> getModifier() {
-			return null;
-		}
-	}
-
-	private Object additionalProvisional;
-
-	private PermissibleActionListener actionListener;
-
-	public ContentViewFactory
-			additionalProvisional(Object additionalProvisional) {
-		this.additionalProvisional = additionalProvisional;
-		return this;
-	}
-
-	public ContentViewFactory editable(boolean editable) {
-		this.editable = editable;
-		return this;
-	}
-
-	public ContentViewFactory autoSave(boolean autoSave) {
-		this.autoSave = autoSave;
-		return this;
-	}
-
-	public ContentViewFactory doNotClone(boolean doNotClone) {
-		this.doNotClone = doNotClone;
-		return this;
-	}
-
-	public ContentViewFactory doNotPrepare(boolean doNotPrepare) {
-		this.doNotPrepare = doNotPrepare;
-		return this;
-	}
-
-	public ContentViewFactory horizontalGrid(boolean horizontalGrid) {
-		this.horizontalGrid = horizontalGrid;
-		return this;
-	}
-
-	public ContentViewFactory
-			actionListener(PermissibleActionListener actionListener) {
-		this.actionListener = actionListener;
-		return this;
-	}
-
-	private boolean editable;
-
-	private EndRowButtonClickedHandler endRowButtonClickedHandler;
-
-	public EndRowButtonClickedHandler getEndRowButtonClickedHandler() {
-		return this.endRowButtonClickedHandler;
-	}
-
-	public void setEndRowButtonClickedHandler(
-			EndRowButtonClickedHandler endRowButtonClickedHandler) {
-		this.endRowButtonClickedHandler = endRowButtonClickedHandler;
-	}
-
-	public boolean isEditable() {
-		return this.editable;
-	}
-
-	private boolean autoSave;
-
-	private boolean doNotClone;
-
-	private boolean doNotPrepare;
-
-	private boolean horizontalGrid;
 
 	public PaneWrapperWithObjects createBeanView(Object bean) {
 		ClientBeanReflector bi = ClientReflector.get()
@@ -427,6 +360,22 @@ public class ContentViewFactory {
 		return cp;
 	}
 
+	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
+			PermissibleActionListener actionListener, boolean autoSave,
+			boolean doNotClone) {
+		return editable(editable).actionListener(actionListener)
+				.autoSave(autoSave).doNotClone(doNotClone).createBeanView(bean);
+	}
+
+	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
+			PermissibleActionListener actionListener, boolean autoSave,
+			boolean doNotClone, Object additionalProvisional) {
+		return editable(editable).actionListener(actionListener)
+				.autoSave(autoSave).doNotClone(doNotClone)
+				.additionalProvisional(additionalProvisional)
+				.createBeanView(bean);
+	}
+
 	public Widget createExtraActionsWidget(final Object bean) {
 		ClientBeanReflector bi = ClientReflector.get()
 				.beanInfoForClass(bean.getClass());
@@ -464,41 +413,6 @@ public class ContentViewFactory {
 			}
 		}
 		return fp;
-	}
-
-	public PaneWrapperWithObjects createMultipleBeanView(Collection beans,
-			Class beanClass, boolean editable,
-			PermissibleActionListener actionListener, boolean autoSave,
-			boolean doNotClone) {
-		setBeanClass(beanClass);
-		this.editable(editable);
-		this.actionListener(actionListener);
-		this.autoSave(autoSave);
-		this.doNotClone(doNotClone);
-		this.setTableMask(0);
-		return createMultipleBeanView(beans);
-	}
-
-	private Class beanClass;
-
-	public Class getBeanClass() {
-		return this.beanClass;
-	}
-
-	private int tableMask;
-
-	public int getTableMask() {
-		return this.tableMask;
-	}
-
-	public ContentViewFactory setTableMask(int tableMask) {
-		this.tableMask = tableMask;
-		return this;
-	}
-
-	public ContentViewFactory setBeanClass(Class beanClass) {
-		this.beanClass = beanClass;
-		return this;
 	}
 
 	public PaneWrapperWithObjects createMultipleBeanView(Collection beans) {
@@ -543,6 +457,19 @@ public class ContentViewFactory {
 		return cp;
 	}
 
+	public PaneWrapperWithObjects createMultipleBeanView(Collection beans,
+			Class beanClass, boolean editable,
+			PermissibleActionListener actionListener, boolean autoSave,
+			boolean doNotClone) {
+		setBeanClass(beanClass);
+		this.editable(editable);
+		this.actionListener(actionListener);
+		this.autoSave(autoSave);
+		this.doNotClone(doNotClone);
+		this.setTableMask(0);
+		return createMultipleBeanView(beans);
+	}
+
 	public BoundTableExt createTable(Collection beans, boolean editable,
 			int tableMask, Object templateBean) {
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
@@ -585,6 +512,21 @@ public class ContentViewFactory {
 		return tb;
 	}
 
+	public ContentViewFactory doNotClone(boolean doNotClone) {
+		this.doNotClone = doNotClone;
+		return this;
+	}
+
+	public ContentViewFactory doNotPrepare(boolean doNotPrepare) {
+		this.doNotPrepare = doNotPrepare;
+		return this;
+	}
+
+	public ContentViewFactory editable(boolean editable) {
+		this.editable = editable;
+		return this;
+	}
+
 	public ContentViewFactory
 			editableFieldFilter(Predicate<String> editableFieldFilter) {
 		this.editableFieldFilter = editableFieldFilter;
@@ -607,8 +549,33 @@ public class ContentViewFactory {
 		return this;
 	}
 
+	public Class getBeanClass() {
+		return this.beanClass;
+	}
+
+	public EndRowButtonClickedHandler getEndRowButtonClickedHandler() {
+		return this.endRowButtonClickedHandler;
+	}
+
+	public int getTableMask() {
+		return this.tableMask;
+	}
+
+	public String getTableStyleName() {
+		return this.tableStyleName;
+	}
+
+	public ContentViewFactory horizontalGrid(boolean horizontalGrid) {
+		this.horizontalGrid = horizontalGrid;
+		return this;
+	}
+
 	public boolean isCancelButton() {
 		return cancelButton;
+	}
+
+	public boolean isEditable() {
+		return this.editable;
 	}
 
 	public boolean isInFormButtons() {
@@ -661,8 +628,18 @@ public class ContentViewFactory {
 		dialog.show();
 	}
 
+	public ContentViewFactory setBeanClass(Class beanClass) {
+		this.beanClass = beanClass;
+		return this;
+	}
+
 	public void setCancelButton(boolean cancelButton) {
 		this.cancelButton = cancelButton;
+	}
+
+	public void setEndRowButtonClickedHandler(
+			EndRowButtonClickedHandler endRowButtonClickedHandler) {
+		this.endRowButtonClickedHandler = endRowButtonClickedHandler;
 	}
 
 	public void setInFormButtons(boolean inFormButtons) {
@@ -680,6 +657,15 @@ public class ContentViewFactory {
 	public void setNoCaptionsOrButtons(boolean noCaptionsOrButtons) {
 		this.noCaption = noCaptionsOrButtons;
 		this.noButtons = noCaptionsOrButtons;
+	}
+
+	public ContentViewFactory setTableMask(int tableMask) {
+		this.tableMask = tableMask;
+		return this;
+	}
+
+	public void setTableStyleName(String tableStyleName) {
+		this.tableStyleName = tableStyleName;
 	}
 
 	public void setToolbarButtonStyle(boolean toolbarButtonStyle) {
@@ -737,6 +723,20 @@ public class ContentViewFactory {
 
 		public NiceWidthBoundTable getTable() {
 			return this.table;
+		}
+	}
+
+	public static class ContentViewFactoryFieldCustomiser {
+		public Predicate<Field> getFilter() {
+			return null;
+		}
+
+		public Consumer<Field> getModifier() {
+			return null;
+		}
+
+		public Comparator<Field> getOrder() {
+			return null;
 		}
 	}
 
@@ -935,6 +935,8 @@ public class ContentViewFactory {
 
 		private Widget cancelButton;
 
+		private boolean fireOkButtonClickAsOkActionEvent;
+
 		public PaneWrapperWithObjects() {
 			getElement().getStyle().setProperty("position", "relative");
 			preDetachFocus.setVisible(false);
@@ -987,6 +989,10 @@ public class ContentViewFactory {
 			return this.alwaysDisallowOkIfInvalid;
 		}
 
+		public boolean isFireOkButtonClickAsOkActionEvent() {
+			return this.fireOkButtonClickAsOkActionEvent;
+		}
+
 		public boolean isProvisionalObjects() {
 			return provisionalObjects;
 		}
@@ -1035,6 +1041,11 @@ public class ContentViewFactory {
 
 		public void setCancelButton(Widget cancelButton) {
 			this.cancelButton = cancelButton;
+		}
+
+		public void setFireOkButtonClickAsOkActionEvent(
+				boolean fireOkButtonClickAsOkActionEvent) {
+			this.fireOkButtonClickAsOkActionEvent = fireOkButtonClickAsOkActionEvent;
 		}
 
 		public void setInitialObjects(Collection initialObjects) {
@@ -1167,17 +1178,6 @@ public class ContentViewFactory {
 
 		public boolean validateFields() {
 			return getBoundWidget().getBinding().validate();
-		}
-
-		private boolean fireOkButtonClickAsOkActionEvent;
-
-		public boolean isFireOkButtonClickAsOkActionEvent() {
-			return this.fireOkButtonClickAsOkActionEvent;
-		}
-
-		public void setFireOkButtonClickAsOkActionEvent(
-				boolean fireOkButtonClickAsOkActionEvent) {
-			this.fireOkButtonClickAsOkActionEvent = fireOkButtonClickAsOkActionEvent;
 		}
 
 		private void commitChanges(boolean fireViewEvent) {

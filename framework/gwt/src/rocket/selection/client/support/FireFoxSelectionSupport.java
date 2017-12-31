@@ -35,38 +35,6 @@ import rocket.util.client.JavaScript;
  */
 public class FireFoxSelectionSupport extends SelectionSupport {
 	@Override
-	native public Selection getSelection(final JavaScriptObject window)/*-{
-        return window.getSelection();
-	}-*/;
-
-	@Override
-	public SelectionEndPoint getStart(final Selection selection) {
-		final SelectionEndPoint start = new SelectionEndPoint();
-		NodeRemote nodeRemote = JavaScript
-				.getObject(selection, Constants.ANCHOR_NODE).cast();
-		start.setNode(LocalDom.nodeFor(nodeRemote));
-		start.setOffset(
-				JavaScript.getInteger(selection, Constants.ANCHOR_OFFSET));
-		if (start.getNode().getNodeType() == Node.ELEMENT_NODE) {
-			Element parent = (Element) start.getNode().cast();
-			Node node = parent.getChildNodes().getItem(start.getOffset());
-			if (node.getNodeType() == Node.TEXT_NODE) {
-				start.setTextNode((Text) node);
-				start.setOffset(0);
-			} else {
-				TextRemote textRemote = getFirstTextDepthFirstWithParent(
-						((Element) node).implAccess().typedRemote(), 1);
-				Text text = LocalDom.nodeFor(textRemote);
-				start.setTextNode(text);
-				start.setOffset(0);
-			}
-		} else {
-			start.setTextNode((Text) start.getNode().cast());
-		}
-		return start;
-	}
-
-	@Override
 	public SelectionEndPoint getEnd(final Selection selection) {
 		final SelectionEndPoint end = new SelectionEndPoint();
 		NodeRemote nodeRemote = JavaScript
@@ -96,5 +64,37 @@ public class FireFoxSelectionSupport extends SelectionSupport {
 			end.setTextNode((Text) end.getNode().cast());
 		}
 		return end;
+	}
+
+	@Override
+	native public Selection getSelection(final JavaScriptObject window)/*-{
+																		return window.getSelection();
+																		}-*/;
+
+	@Override
+	public SelectionEndPoint getStart(final Selection selection) {
+		final SelectionEndPoint start = new SelectionEndPoint();
+		NodeRemote nodeRemote = JavaScript
+				.getObject(selection, Constants.ANCHOR_NODE).cast();
+		start.setNode(LocalDom.nodeFor(nodeRemote));
+		start.setOffset(
+				JavaScript.getInteger(selection, Constants.ANCHOR_OFFSET));
+		if (start.getNode().getNodeType() == Node.ELEMENT_NODE) {
+			Element parent = (Element) start.getNode().cast();
+			Node node = parent.getChildNodes().getItem(start.getOffset());
+			if (node.getNodeType() == Node.TEXT_NODE) {
+				start.setTextNode((Text) node);
+				start.setOffset(0);
+			} else {
+				TextRemote textRemote = getFirstTextDepthFirstWithParent(
+						((Element) node).implAccess().typedRemote(), 1);
+				Text text = LocalDom.nodeFor(textRemote);
+				start.setTextNode(text);
+				start.setOffset(0);
+			}
+		} else {
+			start.setTextNode((Text) start.getNode().cast());
+		}
+		return start;
 	}
 }

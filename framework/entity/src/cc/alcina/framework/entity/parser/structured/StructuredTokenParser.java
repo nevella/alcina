@@ -8,16 +8,16 @@ import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 import cc.alcina.framework.entity.parser.structured.node.XmlTokenStream;
 
 public class StructuredTokenParser<C extends StructuredTokenParserContext> {
+	public static List<XmlToken> getTokens(Class<?> tokenClass) {
+		return XmlTokens.get().getTokens(tokenClass);
+	}
+
 	private List<XmlToken> tokens;
 
 	public XmlTokenOutput parse(Class<?> tokenClass, XmlTokenStream stream,
 			C context) {
 		return parse(tokenClass, stream, context, () -> true,
 				getTokens(tokenClass));
-	}
-
-	public static List<XmlToken> getTokens(Class<?> tokenClass) {
-		return XmlTokens.get().getTokens(tokenClass);
 	}
 
 	public XmlTokenOutput parse(Class<?> tokenClass, XmlTokenStream stream,

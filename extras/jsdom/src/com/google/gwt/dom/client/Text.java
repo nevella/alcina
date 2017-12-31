@@ -93,6 +93,10 @@ public class Text extends Node implements DomText {
 		// return result;
 	}
 
+	@Override
+	public String toString() {
+		return Ax.format("#TEXT[%s]", local().getData());
+	}
 
 	@Override
 	protected boolean linkedToRemote() {
@@ -105,8 +109,8 @@ public class Text extends Node implements DomText {
 	}
 
 	@Override
-	protected void putRemote(NodeRemote remote,boolean resolved) {
-		Preconditions.checkState(wasResolved()==resolved);
+	protected void putRemote(NodeRemote remote, boolean resolved) {
+		Preconditions.checkState(wasResolved() == resolved);
 		this.remote = (DomText) remote;
 	}
 
@@ -123,10 +127,5 @@ public class Text extends Node implements DomText {
 		public TextRemote typedRemote() {
 			return Text.this.typedRemote();
 		}
-	}
-
-	@Override
-	public String toString() {
-		return Ax.format("#TEXT[%s]", local().getData());
 	}
 }

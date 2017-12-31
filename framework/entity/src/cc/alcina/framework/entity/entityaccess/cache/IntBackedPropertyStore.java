@@ -22,8 +22,19 @@ public class IntBackedPropertyStore extends PropertyStore {
 		return res;
 	}
 
-	protected void initRowLookup() {
-		rowLookup = new Int2IntOpenHashMap(getInitialSize());
+	@Override
+	public Object getValue(PdOperator pd, Long id) {
+		Object val = super.getValue(pd, id);
+		if (val instanceof Integer) {
+			return Long.valueOf(((Integer) val).longValue());
+		} else {
+			return val;
+		}
+	}
+
+	@Override
+	public void remove(long id) {
+		rowLookup.remove((int) id);
 	}
 
 	protected int ensureRow(long id) {
@@ -33,6 +44,13 @@ public class IntBackedPropertyStore extends PropertyStore {
 			ensureStoreSizes(rowLookup.size());
 		}
 		return rowLookup.get(iid);
+	}
+
+	protected FieldStore getFieldStoreFor(Class<?> propertyType) {
+		if (propertyType == long.class || propertyType == Long.class) {
+			return new TruncatedLongStore(tableSize);
+		}
+		return super.getFieldStoreFor(propertyType);
 	}
 
 	@Override
@@ -47,11 +65,8 @@ public class IntBackedPropertyStore extends PropertyStore {
 		return -1;
 	}
 
-	protected FieldStore getFieldStoreFor(Class<?> propertyType) {
-		if (propertyType == long.class || propertyType == Long.class) {
-			return new TruncatedLongStore(tableSize);
-		}
-		return super.getFieldStoreFor(propertyType);
+	protected void initRowLookup() {
+		rowLookup = new Int2IntOpenHashMap(getInitialSize());
 	}
 
 	static class TruncatedLongStore extends LongStore {
@@ -60,6 +75,13 @@ public class IntBackedPropertyStore extends PropertyStore {
 		public TruncatedLongStore(int size) {
 			super(size);
 			list = new IntArrayList(size);
+		}
+
+		@Override
+		public void ensureCapacity(int capacity) {
+			if (list.size() < capacity) {
+				list.add(0);
+			}
 		}
 
 		@Override
@@ -84,27 +106,5 @@ public class IntBackedPropertyStore extends PropertyStore {
 				list.set(rowIdx, (int) value);
 			}
 		}
-
-		@Override
-		public void ensureCapacity(int capacity) {
-			if (list.size() < capacity) {
-				list.add(0);
-			}
-		}
-	}
-
-	@Override
-	public Object getValue(PdOperator pd, Long id) {
-		Object val = super.getValue(pd, id);
-		if (val instanceof Integer) {
-			return Long.valueOf(((Integer) val).longValue());
-		} else {
-			return val;
-		}
-	}
-
-	@Override
-	public void remove(long id) {
-		rowLookup.remove((int) id);
 	}
 }

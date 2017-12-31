@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget.dialog;
 
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
@@ -23,13 +22,14 @@ import cc.alcina.framework.common.client.actions.PermissibleActionListener;
  *
  * @author Nick Reddel
  */
-
- public class OkDialogBox extends OkCancelDialogBox {
+public class OkDialogBox extends OkCancelDialogBox {
 	public OkDialogBox(String title, Widget widget) {
-		super(title, widget, null,HasHorizontalAlignment.ALIGN_LEFT);
+		super(title, widget, null, HasHorizontalAlignment.ALIGN_LEFT);
 	}
-	public OkDialogBox(String title, Widget widget,final PermissibleActionListener l) {
-		super(title, widget, l,HasHorizontalAlignment.ALIGN_LEFT);
+
+	public OkDialogBox(String title, Widget widget,
+			final PermissibleActionListener l) {
+		super(title, widget, l, HasHorizontalAlignment.ALIGN_LEFT);
 	}
 
 	@Override

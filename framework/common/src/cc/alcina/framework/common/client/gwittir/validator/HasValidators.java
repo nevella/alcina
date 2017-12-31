@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.gwittir.validator;
 
 import java.util.HashMap;
@@ -23,25 +22,30 @@ import com.totsp.gwittir.client.validator.Validator;
  *
  * @author Nick Reddel
  */
-
- public interface HasValidators {
+public interface HasValidators {
 	public Validator validator(String propertyName);
-	public static class ValidatorSupport{
+
+	public static class ValidatorSupport {
 		Map<String, Validator> validatorMap = new HashMap<String, Validator>();
+
 		private boolean initialised;
-		public ValidatorSupport addValidator(String propertyName, Validator validator){
+
+		public ValidatorSupport addValidator(String propertyName,
+				Validator validator) {
 			validatorMap.put(propertyName, validator);
-			
 			return this;
 		}
-		public Validator validator(String propertyName){
-			return validatorMap.get(propertyName);
+
+		public boolean isInitialised() {
+			return initialised;
 		}
+
 		public void setInitialised(boolean initialised) {
 			this.initialised = initialised;
 		}
-		public boolean isInitialised() {
-			return initialised;
+
+		public Validator validator(String propertyName) {
+			return validatorMap.get(propertyName);
 		}
 	}
 }

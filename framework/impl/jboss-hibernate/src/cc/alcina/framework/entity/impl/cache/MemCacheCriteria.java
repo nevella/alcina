@@ -46,15 +46,15 @@ public class MemCacheCriteria implements Criteria {
 	private ResultTransformer resultTransformer;
 
 	public MemCacheCriteria(Class clazz, String alias,
-			Criteria entityManagerCriteria, MemCacheSession memCacheSession) {
-		this(clazz, alias, entityManagerCriteria, JoinType.NONE,
+			Criteria entityManagerCriteria, JoinType joinType,
+			MemCacheSession memCacheSession) {
+		this(clazz, alias, null, entityManagerCriteria, joinType,
 				memCacheSession);
 	}
 
 	public MemCacheCriteria(Class clazz, String alias,
-			Criteria entityManagerCriteria, JoinType joinType,
-			MemCacheSession memCacheSession) {
-		this(clazz, alias, null, entityManagerCriteria, joinType,
+			Criteria entityManagerCriteria, MemCacheSession memCacheSession) {
+		this(clazz, alias, entityManagerCriteria, JoinType.NONE,
 				memCacheSession);
 	}
 
@@ -136,8 +136,8 @@ public class MemCacheCriteria implements Criteria {
 
 	public Criteria createCriteria(String arg0, String arg1, int arg2,
 			Criterion arg3) throws HibernateException {
-		return this.entityManagerCriteria
-				.createCriteria(arg0, arg1, arg2, arg3);
+		return this.entityManagerCriteria.createCriteria(arg0, arg1, arg2,
+				arg3);
 	}
 
 	public Criteria createCriteria(String associationPath, String alias,
@@ -153,12 +153,16 @@ public class MemCacheCriteria implements Criteria {
 
 	public Criteria createCriteria(String arg0, String arg1, JoinType arg2,
 			Criterion arg3) throws HibernateException {
-		return this.entityManagerCriteria
-				.createCriteria(arg0, arg1, arg2, arg3);
+		return this.entityManagerCriteria.createCriteria(arg0, arg1, arg2,
+				arg3);
 	}
 
 	public String getAlias() {
 		return this.entityManagerCriteria.getAlias();
+	}
+
+	public ResultTransformer getResultTransformer() {
+		return this.resultTransformer;
 	}
 
 	public boolean isReadOnly() {
@@ -260,10 +264,6 @@ public class MemCacheCriteria implements Criteria {
 		} else {
 			return null;
 		}
-	}
-
-	public ResultTransformer getResultTransformer() {
-		return this.resultTransformer;
 	}
 
 	public Criteria setTimeout(int arg0) {

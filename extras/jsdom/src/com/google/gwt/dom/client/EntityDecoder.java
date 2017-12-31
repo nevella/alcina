@@ -4,74 +4,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class EntityDecoder {
-	public static final String decode(final String input) {
-		if(!input.contains("&")){
-			return input;
-		}
-		StringBuilder builder = null;
-		int len = input.length();
-		int i = 1;
-		int st = 0;
-		while (true) {
-			while (i < len && input.charAt(i - 1) != '&')
-				i++;
-			if (i >= len)
-				break;
-			int j = i;
-			while (j < len && j < i + MAX_ESCAPE + 1 && input.charAt(j) != ';')
-				j++;
-			if (j == len || j < i + MIN_ESCAPE || j == i + MAX_ESCAPE + 1) {
-				i++;
-				continue;
-			}
-			if (input.charAt(i) == '#') {
-				int k = i + 1;
-				int radix = 10;
-				final char firstChar = input.charAt(k);
-				if (firstChar == 'x' || firstChar == 'X') {
-					k++;
-					radix = 16;
-				}
-				try {
-					int entityValue = Integer.parseInt(input.substring(k, j),
-							radix);
-					if (builder == null) {
-						builder = new StringBuilder();
-					}
-					builder.append(input.substring(st, i - 1));
-					if (entityValue > 0xFFFF) {
-						final char[] chrs = Character.toChars(entityValue);
-						builder.append(chrs[0]);
-						builder.append(chrs[1]);
-					} else {
-						builder.append((char)entityValue);
-					}
-				} catch (NumberFormatException ex) {
-					i++;
-					continue;
-				}
-			} else {
-				CharSequence value = lookupMap.get(input.substring(i, j));
-				if (value == null) {
-					i++;
-					continue;
-				}
-				if (builder == null) {
-					builder = new StringBuilder();
-				}
-				builder.append(input.substring(st, i - 1));
-				builder.append(value);
-			}
-			st = j + 1;
-			i = st;
-		}
-		if (builder != null) {
-			builder.append(input.substring(st, len));
-			return builder.toString();
-		}
-		return input;
-	}
-
 	private static final int MIN_ESCAPE = 2;
 
 	private static final int MAX_ESCAPE = 6;
@@ -141,5 +73,73 @@ public class EntityDecoder {
 			int c = HTML_CODES[i];
 			lookupMap.put(a, String.valueOf((char) c));
 		}
+	}
+
+	public static final String decode(final String input) {
+		if (!input.contains("&")) {
+			return input;
+		}
+		StringBuilder builder = null;
+		int len = input.length();
+		int i = 1;
+		int st = 0;
+		while (true) {
+			while (i < len && input.charAt(i - 1) != '&')
+				i++;
+			if (i >= len)
+				break;
+			int j = i;
+			while (j < len && j < i + MAX_ESCAPE + 1 && input.charAt(j) != ';')
+				j++;
+			if (j == len || j < i + MIN_ESCAPE || j == i + MAX_ESCAPE + 1) {
+				i++;
+				continue;
+			}
+			if (input.charAt(i) == '#') {
+				int k = i + 1;
+				int radix = 10;
+				final char firstChar = input.charAt(k);
+				if (firstChar == 'x' || firstChar == 'X') {
+					k++;
+					radix = 16;
+				}
+				try {
+					int entityValue = Integer.parseInt(input.substring(k, j),
+							radix);
+					if (builder == null) {
+						builder = new StringBuilder();
+					}
+					builder.append(input.substring(st, i - 1));
+					if (entityValue > 0xFFFF) {
+						final char[] chrs = Character.toChars(entityValue);
+						builder.append(chrs[0]);
+						builder.append(chrs[1]);
+					} else {
+						builder.append((char) entityValue);
+					}
+				} catch (NumberFormatException ex) {
+					i++;
+					continue;
+				}
+			} else {
+				CharSequence value = lookupMap.get(input.substring(i, j));
+				if (value == null) {
+					i++;
+					continue;
+				}
+				if (builder == null) {
+					builder = new StringBuilder();
+				}
+				builder.append(input.substring(st, i - 1));
+				builder.append(value);
+			}
+			st = j + 1;
+			i = st;
+		}
+		if (builder != null) {
+			builder.append(input.substring(st, len));
+			return builder.toString();
+		}
+		return input;
 	}
 }

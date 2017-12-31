@@ -22,40 +22,41 @@ import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
  * @author nreddel@barnet.com.au
  * 
  */
-public class CriteriaGroupSelectorCustomiserWrapper<C extends CriteriaGroup> extends AbstractBoundWidget<CriteriaGroup>{
+public class CriteriaGroupSelectorCustomiserWrapper<C extends CriteriaGroup>
+		extends AbstractBoundWidget<CriteriaGroup> {
 	protected C criteriaGroup;
+
 	protected BoundSelectorMinimal customiser;
+
 	protected RadioButtonList<FilterCombinator> filterRbl;
+
 	protected Renderer<FilterCombinator, String> fcRend = new Renderer<FilterCombinator, String>() {
-			public String render(FilterCombinator o) {
-				if (o == null) {
-					return "";
-				}
-				switch (o) {
-				case AND:
-					return "Match all selected ('and')";
-				case OR:
-					return "Match any selected ('or')";
-				}
+		public String render(FilterCombinator o) {
+			if (o == null) {
 				return "";
 			}
-		};
-
+			switch (o) {
+			case AND:
+				return "Match all selected ('and')";
+			case OR:
+				return "Match any selected ('or')";
+			}
+			return "";
+		}
+	};
 
 	protected ComplexPanel container;
-
 
 	public CriteriaGroupSelectorCustomiserWrapper() {
 		this(null, "");
 	}
 
-
-	public CriteriaGroupSelectorCustomiserWrapper(BoundSelectorMinimal customiser,
-			String groupName) {
+	public CriteriaGroupSelectorCustomiserWrapper(
+			BoundSelectorMinimal customiser, String groupName) {
 		this.customiser = customiser;
 		filterRbl = new RadioButtonList<FilterCombinator>(
-				"FilterCombinator_" + groupName, Arrays
-						.asList(FilterCombinator.values()), fcRend);
+				"FilterCombinator_" + groupName,
+				Arrays.asList(FilterCombinator.values()), fcRend);
 		filterRbl.setColumnCount(2);
 		createContainer();
 		container.add(customiser);
@@ -63,10 +64,6 @@ public class CriteriaGroupSelectorCustomiserWrapper<C extends CriteriaGroup> ext
 		initWidget(container);
 	}
 
-
-	protected void createContainer() {
-		this.container = new FlowPanel();
-	}
 	public CriteriaGroup getValue() {
 		// noop
 		return null;
@@ -99,13 +96,16 @@ public class CriteriaGroupSelectorCustomiserWrapper<C extends CriteriaGroup> ext
 		// noop
 	}
 
+	protected void createContainer() {
+		this.container = new FlowPanel();
+	}
 
 	protected void updateRblVisibility() {
 		Collection values = (Collection) customiser.getValue();
 		boolean newVis = values != null && values.size() > 1;
 		boolean oldVis = filterRbl.isVisible();
 		filterRbl.setVisible(newVis);
-		if (oldVis!=newVis){
+		if (oldVis != newVis) {
 			LayoutEvents.get().fireRequiresGlobalRelayout();
 		}
 	}

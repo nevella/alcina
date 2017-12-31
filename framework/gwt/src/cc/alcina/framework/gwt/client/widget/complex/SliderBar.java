@@ -65,126 +65,14 @@ import com.google.gwt.user.client.ui.Image;
  * <li>.gwt-SliderBar-shell .gwt-SliderBar-knob { the sliding knob }</li>
  * <li>.gwt-SliderBar-shell .gwt-SliderBar-knob-sliding { the sliding knob when
  * sliding }</li>
- * <li>
- * .gwt-SliderBar-shell .gwt-SliderBar-tick { the ticks along the line }</li>
+ * <li>.gwt-SliderBar-shell .gwt-SliderBar-tick { the ticks along the line }
+ * </li>
  * <li>.gwt-SliderBar-shell .gwt-SliderBar-label { the text labels along the
  * line }</li>
  * </ul>
  */
-public class SliderBar extends FocusPanel implements
-		HasValueChangeHandlers<Double> {
-	/**
-	 * The timer used to continue to shift the knob as the user holds down one
-	 * of the left/right arrow keys. Only IE auto-repeats, so we just keep
-	 * catching the events.
-	 */
-	private class KeyTimer extends Timer {
-		/**
-		 * A bit indicating that this is the first run.
-		 */
-		private boolean firstRun = true;
-
-		/**
-		 * The delay between shifts, which shortens as the user holds down the
-		 * button.
-		 */
-		private int repeatDelay = 30;
-
-		/**
-		 * A bit indicating whether we are shifting to a higher or lower value.
-		 */
-		private boolean shiftHigher = false;
-
-		/**
-		 * The number of steps to shift with each press.
-		 */
-		private int multiplier = 1;
-
-		/**
-		 * This method will be called when a timer fires. Override it to
-		 * implement the timer's logic.
-		 */
-		@Override
-		public void run() {
-			// Highlight the knob on first run
-			if (firstRun) {
-				firstRun = false;
-				startSliding(true, false);
-			}
-			// Slide the slider bar
-			if (shiftHigher) {
-				setCurrentValue(curValue + multiplier * stepSize);
-			} else {
-				setCurrentValue(curValue - multiplier * stepSize);
-			}
-			// Repeat this timer until cancelled by keyup event
-			schedule(repeatDelay);
-		}
-
-		/**
-		 * Schedules a timer to elapse in the future.
-		 *
-		 * @param delayMillis
-		 *            how long to wait before the timer elapses, in milliseconds
-		 * @param shiftHigher
-		 *            whether to shift up or not
-		 * @param multiplier
-		 *            the number of steps to shift
-		 */
-		public void schedule(int delayMillis, boolean shiftHigher,
-				int multiplier) {
-			firstRun = true;
-			this.shiftHigher = shiftHigher;
-			this.multiplier = multiplier;
-			super.schedule(delayMillis);
-		}
-	}
-
-	/**
-	 * A formatter used to format the labels displayed in the widget.
-	 */
-	public static interface LabelFormatter {
-		/**
-		 * Generate the text to display in each label based on the label's
-		 * value.
-		 *
-		 * Override this method to change the text displayed within the
-		 * SliderBar.
-		 *
-		 * @param slider
-		 *            the Slider bar
-		 * @param value
-		 *            the value the label displays
-		 * @return the text to display for the label
-		 */
-		String formatLabel(SliderBar slider, double value);
-	}
-
-	/**
-	 */
-	public static interface SliderBarImages extends ClientBundle {
-		/**
-		 * An image used for the sliding knob.
-		 *
-		 * @return a prototype of this image
-		 */
-		ImageResource slider();
-
-		/**
-		 * An image used for the sliding knob.
-		 *
-		 * @return a prototype of this image
-		 */
-		ImageResource sliderDisabled();
-
-		/**
-		 * An image used for the sliding knob while sliding.
-		 *
-		 * @return a prototype of this image
-		 */
-		ImageResource sliderSliding();
-	}
-
+public class SliderBar extends FocusPanel
+		implements HasValueChangeHandlers<Double> {
 	/**
 	 * The current value.
 	 */
@@ -280,21 +168,7 @@ public class SliderBar extends FocusPanel implements
 
 	private boolean absolutePositioning;
 
-	public boolean isAbsolutePositioning() {
-		return this.absolutePositioning;
-	}
-
-	public void setAbsolutePositioning(boolean absolutePositioning) {
-		this.absolutePositioning = absolutePositioning;
-	}
-
-	public boolean isVertical() {
-		return this.vertical;
-	}
-
-	public void setVertical(boolean vertical) {
-		this.vertical = vertical;
-	}
+	private boolean keyEventsEnabled = true;
 
 	/**
 	 * Create a slider bar.
@@ -320,8 +194,8 @@ public class SliderBar extends FocusPanel implements
 	 */
 	public SliderBar(double minValue, double maxValue,
 			LabelFormatter labelFormatter) {
-		this(minValue, maxValue, labelFormatter, (SliderBarImages) GWT
-				.create(SliderBarImages.class));
+		this(minValue, maxValue, labelFormatter,
+				(SliderBarImages) GWT.create(SliderBarImages.class));
 	}
 
 	/**
@@ -360,6 +234,12 @@ public class SliderBar extends FocusPanel implements
 		sinkEvents(Event.MOUSEEVENTS | Event.KEYEVENTS | Event.FOCUSEVENTS);
 	}
 
+	@Override
+	public HandlerRegistration
+			addValueChangeHandler(ValueChangeHandler<Double> handler) {
+		return addHandler(handler, ValueChangeEvent.getType());
+	}
+
 	/**
 	 * Return the current value.
 	 *
@@ -376,6 +256,11 @@ public class SliderBar extends FocusPanel implements
 	 */
 	public LabelFormatter getLabelFormatter() {
 		return labelFormatter;
+	}
+
+	public void getLinePreOffset(int width, int lineMajorDimension) {
+		linePreOffset = lineAlignedPre ? 0
+				: (width / 2) - (lineMajorDimension / 2);
 	}
 
 	/**
@@ -436,6 +321,10 @@ public class SliderBar extends FocusPanel implements
 		}
 	}
 
+	public boolean isAbsolutePositioning() {
+		return this.absolutePositioning;
+	}
+
 	/**
 	 * @return Gets whether this widget is enabled
 	 */
@@ -443,13 +332,16 @@ public class SliderBar extends FocusPanel implements
 		return enabled;
 	}
 
-	private boolean keyEventsEnabled=true;
 	public boolean isKeyEventsEnabled() {
 		return this.keyEventsEnabled;
 	}
 
-	public void setKeyEventsEnabled(boolean keyEventsEnabled) {
-		this.keyEventsEnabled = keyEventsEnabled;
+	public boolean isLineAlignedLeft() {
+		return this.lineAlignedPre;
+	}
+
+	public boolean isVertical() {
+		return this.vertical;
 	}
 
 	/**
@@ -493,7 +385,7 @@ public class SliderBar extends FocusPanel implements
 				break;
 			// Shift left or right on key press
 			case Event.ONKEYDOWN:
-				if (!slidingKeyboard&&isKeyEventsEnabled()) {
+				if (!slidingKeyboard && isKeyEventsEnabled()) {
 					int multiplier = 1;
 					if (DOM.eventGetCtrlKey(event)) {
 						multiplier = (int) (getTotalRange() / stepSize / 10);
@@ -583,29 +475,20 @@ public class SliderBar extends FocusPanel implements
 		drawKnob();
 	}
 
-	private String getMajorCssPreProperty() {
-		return vertical ? "top" : "left";
-	}
-
-	private int getMajorDimension(int width, int height) {
-		return vertical ? height : width;
-	}
-
-	public void getLinePreOffset(int width, int lineMajorDimension) {
-		linePreOffset = lineAlignedPre ? 0 : (width / 2)
-				- (lineMajorDimension / 2);
-	}
-
 	/**
 	 * Redraw the progress bar when something changes the layout.
 	 */
 	public void redraw() {
 		if (isAttached()) {
 			int width = DOM.getElementPropertyInt(getElement(), "clientWidth");
-			int height = DOM
-					.getElementPropertyInt(getElement(), "clientHeight");
+			int height = DOM.getElementPropertyInt(getElement(),
+					"clientHeight");
 			onResize(width, height);
 		}
+	}
+
+	public void setAbsolutePositioning(boolean absolutePositioning) {
+		this.absolutePositioning = absolutePositioning;
 	}
 
 	/**
@@ -657,12 +540,16 @@ public class SliderBar extends FocusPanel implements
 			DOM.setElementProperty(lineElement, "className",
 					"gwt-SliderBar-line");
 		} else {
-			AbstractImagePrototype.create(images.sliderDisabled()).applyTo(
-					knobImage);
+			AbstractImagePrototype.create(images.sliderDisabled())
+					.applyTo(knobImage);
 			DOM.setElementProperty(lineElement, "className",
 					"gwt-SliderBar-line gwt-SliderBar-line-disabled");
 		}
 		redraw();
+	}
+
+	public void setKeyEventsEnabled(boolean keyEventsEnabled) {
+		this.keyEventsEnabled = keyEventsEnabled;
 	}
 
 	/**
@@ -673,6 +560,10 @@ public class SliderBar extends FocusPanel implements
 	 */
 	public void setLabelFormatter(LabelFormatter labelFormatter) {
 		this.labelFormatter = labelFormatter;
+	}
+
+	public void setLineAlignedLeft(boolean lineAlignedLeft) {
+		this.lineAlignedPre = lineAlignedLeft;
 	}
 
 	/**
@@ -756,6 +647,10 @@ public class SliderBar extends FocusPanel implements
 		resetCurrentValue();
 	}
 
+	public void setVertical(boolean vertical) {
+		this.vertical = vertical;
+	}
+
 	/**
 	 * Shift to the left (smaller value).
 	 *
@@ -777,59 +672,6 @@ public class SliderBar extends FocusPanel implements
 	}
 
 	/**
-	 * Format the label to display above the ticks
-	 *
-	 * Override this method in a subclass to customize the format. By default,
-	 * this method returns the integer portion of the value.
-	 *
-	 * @param value
-	 *            the value at the label
-	 * @return the text to put in the label
-	 */
-	protected String formatLabel(double value) {
-		if (labelFormatter != null) {
-			return labelFormatter.formatLabel(this, value);
-		} else {
-			return (int) (10 * value) / 10.0 + "";
-		}
-	}
-
-	/**
-	 * Get the percentage of the knob's position relative to the size of the
-	 * line. The return value will be between 0.0 and 1.0.
-	 *
-	 * @return the current percent complete
-	 */
-	protected double getKnobPercent() {
-		// If we have no range
-		if (maxValue <= minValue) {
-			return 0;
-		}
-		// Calculate the relative progress
-		double percent = (curValue - minValue) / (maxValue - minValue);
-		return Math.max(0.0, Math.min(1.0, percent));
-	}
-
-	/**
-	 * This method is called immediately after a widget becomes attached to the
-	 * browser's document.
-	 */
-	@Override
-	protected void onLoad() {
-		// Reset the position attribute of the parent element
-		DOM.setStyleAttribute(getElement(), "position", getPositioning());
-		redraw();
-	}
-
-	private String getPositioning() {
-		return absolutePositioning ? "absolute" : "relative";
-	}
-
-	@Override
-	protected void onUnload() {
-	}
-
-	/**
 	 * Draw the knob where it is supposed to be relative to the line.
 	 */
 	private void drawKnob() {
@@ -842,21 +684,12 @@ public class SliderBar extends FocusPanel implements
 		int lineMajorDimension = getLineMajorDimension();
 		int knobMajorDimension = getKnobMajorDimension();
 		int knobPreOffset = (int) (linePreOffset
-				+ (getKnobPercent() * lineMajorDimension) - (knobMajorDimension / 2));
+				+ (getKnobPercent() * lineMajorDimension)
+				- (knobMajorDimension / 2));
 		knobPreOffset = Math.min(knobPreOffset, linePreOffset
 				+ lineMajorDimension - (knobMajorDimension / 2) - 1);
 		DOM.setStyleAttribute(knobElement, getMajorCssPreProperty(),
 				knobPreOffset + "px");
-	}
-
-	private int getLineMajorDimension() {
-		return DOM.getElementPropertyInt(lineElement, vertical ? "offsetHeight"
-				: "offsetWidth");
-	}
-
-	private int getKnobMajorDimension() {
-		return DOM.getElementPropertyInt(knobImage.getElement(),
-				vertical ? "offsetHeight" : "offsetWidth");
 	}
 
 	/**
@@ -898,13 +731,13 @@ public class SliderBar extends FocusPanel implements
 				// shell
 				DOM.setStyleAttribute(label, "left", "0px");
 				// Position the label and make it visible
-				int labelWidth = DOM
-						.getElementPropertyInt(label, "offsetWidth");
+				int labelWidth = DOM.getElementPropertyInt(label,
+						"offsetWidth");
 				int labelLeftOffset = linePreOffset
 						+ (lineMajorDimension * i / numLabels)
 						- (labelWidth / 2);
-				labelLeftOffset = Math.min(labelLeftOffset, linePreOffset
-						+ lineMajorDimension - labelWidth);
+				labelLeftOffset = Math.min(labelLeftOffset,
+						linePreOffset + lineMajorDimension - labelWidth);
 				labelLeftOffset = Math.max(labelLeftOffset, linePreOffset);
 				DOM.setStyleAttribute(label, "left", labelLeftOffset + "px");
 				DOM.setStyleAttribute(label, "visibility", "visible");
@@ -956,8 +789,8 @@ public class SliderBar extends FocusPanel implements
 				int tickWidth = DOM.getElementPropertyInt(tick, "offsetWidth");
 				int tickLeftOffset = linePreOffset
 						+ (lineMajorDimension * i / numTicks) - (tickWidth / 2);
-				tickLeftOffset = Math.min(tickLeftOffset, linePreOffset
-						+ lineMajorDimension - tickWidth);
+				tickLeftOffset = Math.min(tickLeftOffset,
+						linePreOffset + lineMajorDimension - tickWidth);
 				DOM.setStyleAttribute(tick, "left", tickLeftOffset + "px");
 				DOM.setStyleAttribute(tick, "visibility", "visible");
 			}
@@ -972,6 +805,28 @@ public class SliderBar extends FocusPanel implements
 		}
 		knobImage.getElement().removeFromParent();
 		DOM.appendChild(getElement(), knobImage.getElement());
+	}
+
+	private int getKnobMajorDimension() {
+		return DOM.getElementPropertyInt(knobImage.getElement(),
+				vertical ? "offsetHeight" : "offsetWidth");
+	}
+
+	private int getLineMajorDimension() {
+		return DOM.getElementPropertyInt(lineElement,
+				vertical ? "offsetHeight" : "offsetWidth");
+	}
+
+	private String getMajorCssPreProperty() {
+		return vertical ? "top" : "left";
+	}
+
+	private int getMajorDimension(int width, int height) {
+		return vertical ? height : width;
+	}
+
+	private String getPositioning() {
+		return absolutePositioning ? "absolute" : "relative";
 	}
 
 	/**
@@ -1023,8 +878,8 @@ public class SliderBar extends FocusPanel implements
 					"gwt-SliderBar-line gwt-SliderBar-line-sliding");
 			DOM.setElementProperty(knobImage.getElement(), "className",
 					"gwt-SliderBar-knob gwt-SliderBar-knob-sliding");
-			AbstractImagePrototype.create(images.sliderSliding()).applyTo(
-					knobImage);
+			AbstractImagePrototype.create(images.sliderSliding())
+					.applyTo(knobImage);
 		}
 	}
 
@@ -1053,17 +908,164 @@ public class SliderBar extends FocusPanel implements
 		setStyleName(getStylePrimaryName() + "-focused", false);
 	}
 
+	/**
+	 * Format the label to display above the ticks
+	 *
+	 * Override this method in a subclass to customize the format. By default,
+	 * this method returns the integer portion of the value.
+	 *
+	 * @param value
+	 *            the value at the label
+	 * @return the text to put in the label
+	 */
+	protected String formatLabel(double value) {
+		if (labelFormatter != null) {
+			return labelFormatter.formatLabel(this, value);
+		} else {
+			return (int) (10 * value) / 10.0 + "";
+		}
+	}
+
+	/**
+	 * Get the percentage of the knob's position relative to the size of the
+	 * line. The return value will be between 0.0 and 1.0.
+	 *
+	 * @return the current percent complete
+	 */
+	protected double getKnobPercent() {
+		// If we have no range
+		if (maxValue <= minValue) {
+			return 0;
+		}
+		// Calculate the relative progress
+		double percent = (curValue - minValue) / (maxValue - minValue);
+		return Math.max(0.0, Math.min(1.0, percent));
+	}
+
+	/**
+	 * This method is called immediately after a widget becomes attached to the
+	 * browser's document.
+	 */
 	@Override
-	public HandlerRegistration addValueChangeHandler(
-			ValueChangeHandler<Double> handler) {
-		return addHandler(handler, ValueChangeEvent.getType());
+	protected void onLoad() {
+		// Reset the position attribute of the parent element
+		DOM.setStyleAttribute(getElement(), "position", getPositioning());
+		redraw();
 	}
 
-	public boolean isLineAlignedLeft() {
-		return this.lineAlignedPre;
+	@Override
+	protected void onUnload() {
 	}
 
-	public void setLineAlignedLeft(boolean lineAlignedLeft) {
-		this.lineAlignedPre = lineAlignedLeft;
+	/**
+	 * A formatter used to format the labels displayed in the widget.
+	 */
+	public static interface LabelFormatter {
+		/**
+		 * Generate the text to display in each label based on the label's
+		 * value.
+		 *
+		 * Override this method to change the text displayed within the
+		 * SliderBar.
+		 *
+		 * @param slider
+		 *            the Slider bar
+		 * @param value
+		 *            the value the label displays
+		 * @return the text to display for the label
+		 */
+		String formatLabel(SliderBar slider, double value);
+	}
+
+	/**
+	 */
+	public static interface SliderBarImages extends ClientBundle {
+		/**
+		 * An image used for the sliding knob.
+		 *
+		 * @return a prototype of this image
+		 */
+		ImageResource slider();
+
+		/**
+		 * An image used for the sliding knob.
+		 *
+		 * @return a prototype of this image
+		 */
+		ImageResource sliderDisabled();
+
+		/**
+		 * An image used for the sliding knob while sliding.
+		 *
+		 * @return a prototype of this image
+		 */
+		ImageResource sliderSliding();
+	}
+
+	/**
+	 * The timer used to continue to shift the knob as the user holds down one
+	 * of the left/right arrow keys. Only IE auto-repeats, so we just keep
+	 * catching the events.
+	 */
+	private class KeyTimer extends Timer {
+		/**
+		 * A bit indicating that this is the first run.
+		 */
+		private boolean firstRun = true;
+
+		/**
+		 * The delay between shifts, which shortens as the user holds down the
+		 * button.
+		 */
+		private int repeatDelay = 30;
+
+		/**
+		 * A bit indicating whether we are shifting to a higher or lower value.
+		 */
+		private boolean shiftHigher = false;
+
+		/**
+		 * The number of steps to shift with each press.
+		 */
+		private int multiplier = 1;
+
+		/**
+		 * This method will be called when a timer fires. Override it to
+		 * implement the timer's logic.
+		 */
+		@Override
+		public void run() {
+			// Highlight the knob on first run
+			if (firstRun) {
+				firstRun = false;
+				startSliding(true, false);
+			}
+			// Slide the slider bar
+			if (shiftHigher) {
+				setCurrentValue(curValue + multiplier * stepSize);
+			} else {
+				setCurrentValue(curValue - multiplier * stepSize);
+			}
+			// Repeat this timer until cancelled by keyup event
+			schedule(repeatDelay);
+		}
+
+		/**
+		 * Schedules a timer to elapse in the future.
+		 *
+		 * @param delayMillis
+		 *            how long to wait before the timer elapses, in milliseconds
+		 * @param shiftHigher
+		 *            whether to shift up or not
+		 * @param multiplier
+		 *            the number of steps to shift
+		 */
+		public void schedule(int delayMillis, boolean shiftHigher,
+				int multiplier) {
+			firstRun = true;
+			this.shiftHigher = shiftHigher;
+			this.multiplier = multiplier;
+			super.schedule(delayMillis);
+		}
 	}
 }

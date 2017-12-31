@@ -33,28 +33,15 @@ import cc.alcina.framework.gwt.client.gwittir.renderer.IdToStringRenderer;
  * 
  * @author Nick Reddel
  */
-public class DomainObjectIdEditor extends AbstractBoundWidget implements
-		ValueChangeHandler {
-	public static class DomainObjectIdEditorProvider implements
-			BoundWidgetProvider {
-		private final Class domainObjectClass;
-
-		public DomainObjectIdEditorProvider(Class domainObjectClass) {
-			this.domainObjectClass = domainObjectClass;
-		}
-
-		public BoundWidget get() {
-			DomainObjectIdEditor editor = new DomainObjectIdEditor(
-					domainObjectClass);
-			return editor;
-		}
-	};
-
-	private Class<? extends HasIdAndLocalId> domainObjectClass;
+public class DomainObjectIdEditor extends AbstractBoundWidget
+		implements ValueChangeHandler {
+	private Class<? extends HasIdAndLocalId> domainObjectClass;;
 
 	private FlowPanel fp;
 
 	private TextBox tb;
+
+	private Object currentValue;
 
 	public DomainObjectIdEditor() {
 	}
@@ -67,8 +54,6 @@ public class DomainObjectIdEditor extends AbstractBoundWidget implements
 		fp.add(tb);
 		initWidget(fp);
 	}
-
-	private Object currentValue;
 
 	public Object getValue() {
 		String text = tb.getText();
@@ -94,6 +79,10 @@ public class DomainObjectIdEditor extends AbstractBoundWidget implements
 		return currentValue;
 	}
 
+	public void onValueChange(ValueChangeEvent event) {
+		changes.firePropertyChange("value", currentValue, getValue());
+	}
+
 	public void setValue(Object value) {
 		Object old = getValue();
 		currentValue = value;
@@ -104,7 +93,18 @@ public class DomainObjectIdEditor extends AbstractBoundWidget implements
 		changes.firePropertyChange("value", old, getValue());
 	}
 
-	public void onValueChange(ValueChangeEvent event) {
-		changes.firePropertyChange("value", currentValue, getValue());
+	public static class DomainObjectIdEditorProvider
+			implements BoundWidgetProvider {
+		private final Class domainObjectClass;
+
+		public DomainObjectIdEditorProvider(Class domainObjectClass) {
+			this.domainObjectClass = domainObjectClass;
+		}
+
+		public BoundWidget get() {
+			DomainObjectIdEditor editor = new DomainObjectIdEditor(
+					domainObjectClass);
+			return editor;
+		}
 	}
 }

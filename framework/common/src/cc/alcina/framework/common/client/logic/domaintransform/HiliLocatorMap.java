@@ -37,19 +37,9 @@ public class HiliLocatorMap implements Cloneable, Serializable {
 	public HiliLocatorMap() {
 	}
 
-	public static class ToCreatedIdConverter<H extends HasIdAndLocalId>
-			implements Converter<H, Long> {
-		private HiliLocatorMap map;
-
-		public ToCreatedIdConverter(HiliLocatorMap map) {
-			this.map = map;
-		}
-
-		@Override
-		public Long convert(H original) {
-			return map.localToPersistent.containsKey(original.getLocalId()) ? map.localToPersistent
-					.get(original.getLocalId()).getId() : null;
-		}
+	public void clear() {
+		localToPersistent.clear();
+		persistentToLocal.clear();
 	}
 
 	public HiliLocatorMap clone() {
@@ -58,6 +48,14 @@ public class HiliLocatorMap implements Cloneable, Serializable {
 				.clone();
 		clone.persistentToLocal = persistentToLocal.clone();
 		return clone;
+	}
+
+	public boolean containsKey(Long localId) {
+		return localToPersistent.containsKey(localId);
+	}
+
+	public HiliLocator get(Long localId) {
+		return localToPersistent.get(localId);
 	}
 
 	public HiliLocator getFor(HasIdAndLocalId hili) {
@@ -73,25 +71,8 @@ public class HiliLocatorMap implements Cloneable, Serializable {
 		return localToPersistent.get(ref.getLocalId());
 	}
 
-	public void clear() {
-		localToPersistent.clear();
-		persistentToLocal.clear();
-	}
-
-	public void putAll(HiliLocatorMap other) {
-		localToPersistent.putAll(other.localToPersistent);
-		persistentToLocal.putMulti(other.persistentToLocal);
-	}
-
-	public boolean containsKey(Long localId) {
-		return localToPersistent.containsKey(localId);
-	}
-
-	public HiliLocator get(Long localId) {
-		return localToPersistent.get(localId);
-	}
-
-	public <H extends HasIdAndLocalId> long getLocalIdForClientInstance(H hili) {
+	public <H extends HasIdAndLocalId> long
+			getLocalIdForClientInstance(H hili) {
 		if (hili.getLocalId() != 0) {
 			return hili.getLocalId();
 		}
@@ -103,20 +84,41 @@ public class HiliLocatorMap implements Cloneable, Serializable {
 		return 0;
 	}
 
-	public void putToLookups(HiliLocator hiliLocator) {
-		localToPersistent.put(hiliLocator.localId, hiliLocator);
-		persistentToLocal.put(hiliLocator.clazz, hiliLocator.id, hiliLocator);
+	public HiliLocator getPersistentLocator(HasIdAndLocalId hili) {
+		if (hili.getId() != 0) {
+			return new HiliLocator(hili);
+		} else {
+			return localToPersistent.get(hili.getLocalId());
+		}
 	}
 
 	public boolean isEmpty() {
 		return localToPersistent.isEmpty();
 	}
 
-	public HiliLocator getPersistentLocator(HasIdAndLocalId hili) {
-		if (hili.getId() != 0) {
-			return new HiliLocator(hili);
-		} else {
-			return localToPersistent.get(hili.getLocalId());
+	public void putAll(HiliLocatorMap other) {
+		localToPersistent.putAll(other.localToPersistent);
+		persistentToLocal.putMulti(other.persistentToLocal);
+	}
+
+	public void putToLookups(HiliLocator hiliLocator) {
+		localToPersistent.put(hiliLocator.localId, hiliLocator);
+		persistentToLocal.put(hiliLocator.clazz, hiliLocator.id, hiliLocator);
+	}
+
+	public static class ToCreatedIdConverter<H extends HasIdAndLocalId>
+			implements Converter<H, Long> {
+		private HiliLocatorMap map;
+
+		public ToCreatedIdConverter(HiliLocatorMap map) {
+			this.map = map;
+		}
+
+		@Override
+		public Long convert(H original) {
+			return map.localToPersistent.containsKey(original.getLocalId())
+					? map.localToPersistent.get(original.getLocalId()).getId()
+					: null;
 		}
 	}
 }

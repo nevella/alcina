@@ -37,6 +37,13 @@ public class DomainTransformEvent
 	public static transient final String CONTEXT_IGNORE_UNHANDLED_DOMAIN_CLASSES = DomainTransformEvent.class
 			.getName() + ".CONTEXT_IGNORE_UNHANDLED_DOMAIN_CLASSES";
 
+	public static transient final Comparator<DomainTransformEvent> UTC_DATE_COMPARATOR = new Comparator<DomainTransformEvent>() {
+		@Override
+		public int compare(DomainTransformEvent o1, DomainTransformEvent o2) {
+			return CommonUtils.compareDates(o1.getUtcDate(), o2.getUtcDate());
+		}
+	};
+
 	private String propertyName;
 
 	private transient Object newValue;
@@ -82,13 +89,6 @@ public class DomainTransformEvent
 	private transient Object oldValue;
 
 	private transient boolean inImmediatePropertyChangeCommit;
-
-	public static transient final Comparator<DomainTransformEvent> UTC_DATE_COMPARATOR = new Comparator<DomainTransformEvent>() {
-		@Override
-		public int compare(DomainTransformEvent o1, DomainTransformEvent o2) {
-			return CommonUtils.compareDates(o1.getUtcDate(), o2.getUtcDate());
-		}
-	};
 
 	public DomainTransformEvent() {
 	}

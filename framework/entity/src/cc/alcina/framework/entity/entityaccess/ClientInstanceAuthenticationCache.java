@@ -30,11 +30,25 @@ public class ClientInstanceAuthenticationCache {
 		}
 	}
 
-	public boolean isCached(Long id, Integer auth) {
-		return auth != null && id != null
-				&& clientInstanceAuthMap.containsKey(id)
-				&& auth.intValue() == CommonUtils
-						.iv(clientInstanceAuthMap.get(id));
+	public void cacheIid(Iid iid) {
+		if (iid.getInstanceId() == null) {
+			return;
+		}
+		iidUserNameByKeyMap.put(iid.getInstanceId(),
+				iid.getRememberMeUser() == null ? null
+						: iid.getRememberMeUser().getUserName());
+	}
+
+	public void cacheUserNameFor(long validatedClientInstanceId,
+			String userName) {
+		clientInstanceUserNameMap.put(validatedClientInstanceId, userName);
+	}
+
+	public boolean containsIIdKey(String iidKey) {
+		if (iidKey == null) {
+			return false;
+		}
+		return iidUserNameByKeyMap.containsKey(iidKey);
 	}
 
 	public String getUserNameFor(long validatedClientInstanceId) {
@@ -51,24 +65,10 @@ public class ClientInstanceAuthenticationCache {
 		return iidUserNameByKeyMap.get(iid);
 	}
 
-	public void cacheIid(Iid iid) {
-		if (iid.getInstanceId() == null) {
-			return;
-		}
-		iidUserNameByKeyMap.put(iid.getInstanceId(),
-				iid.getRememberMeUser() == null ? null
-						: iid.getRememberMeUser().getUserName());
-	}
-
-	public boolean containsIIdKey(String iidKey) {
-		if (iidKey == null) {
-			return false;
-		}
-		return iidUserNameByKeyMap.containsKey(iidKey);
-	}
-
-	public void cacheUserNameFor(long validatedClientInstanceId,
-			String userName) {
-		clientInstanceUserNameMap.put(validatedClientInstanceId, userName);
+	public boolean isCached(Long id, Integer auth) {
+		return auth != null && id != null
+				&& clientInstanceAuthMap.containsKey(id)
+				&& auth.intValue() == CommonUtils
+						.iv(clientInstanceAuthMap.get(id));
 	}
 }

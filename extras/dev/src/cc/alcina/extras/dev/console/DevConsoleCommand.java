@@ -60,8 +60,14 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 	private boolean cancelled;
 
+	private StringBuilder commandOutputBuffer = new StringBuilder();
+
 	public void cancel() {
 		cancelled = true;
+	}
+
+	public boolean canUseProductionConn() {
+		return false;
 	}
 
 	public void checkCancelled() {
@@ -70,50 +76,34 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
+	public void cleanup() throws SQLException {
+		if (connLocal != null) {
+			connLocal.close();
+			connLocal = null;
+		}
+	}
+
+	public boolean clsBeforeRun() {
+		return false;
+	};
+
+	public void configure() {
+	}
+
+	public String dumpCommandOutputBuffer() {
+		return commandOutputBuffer.toString();
+	}
+
 	public void format(String format, Object... args) {
 		String out = String.format(format, args);
 		System.out.print(out);
 		commandOutputBuffer.append(out);
 	}
 
-	private StringBuilder commandOutputBuffer = new StringBuilder();
-
-	public String dumpCommandOutputBuffer() {
-		return commandOutputBuffer.toString();
-	}
-
-	protected void println(String string) {
-		System.out.println(string);
-		commandOutputBuffer.append(string);
-		commandOutputBuffer.append("\n");
-	};
-
-	public boolean canUseProductionConn() {
-		return false;
-	}
-
 	public abstract String[] getCommandIds();
-
-	public abstract String getDescription();
-
-	public abstract String getUsage();
-
-	public abstract String run(String[] argv) throws Exception;
-
-	public void setEnvironment(C console) {
-		this.console = console;
-		this.logger = console.logger;
-	}
-
-	public void configure() {
-	}
 
 	public Connection getConn() throws Exception {
 		return getConn(false, false);
-	}
-
-	protected Connection getConn(boolean forceNewLocal) throws Exception {
-		return getConn(true, false);
 	}
 
 	public Connection getConn(boolean forceNewLocal, boolean forceRemote)
@@ -172,9 +162,47 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		return conn;
 	}
 
+	public abstract String getDescription();
+
+	public abstract String getUsage();
+
+	public void printUsage() {
+		System.err.format("Usage: %s\n\n", getUsage());
+	}
+
+	public boolean rerunIfMostRecentOnRestart() {
+		return false;
+	}
+
+	public abstract String run(String[] argv) throws Exception;
+
+	public String runSubcommand(DevConsoleCommand sub, String[] argv)
+			throws Exception {
+		console.prepareCommand(sub);
+		return sub.run(argv == null ? new String[0] : argv);
+	}
+
+	public void setEnvironment(C console) {
+		this.console = console;
+		this.logger = console.logger;
+	}
+
+	public boolean silent() {
+		return false;
+	}
+
+	protected Connection getConn(boolean forceNewLocal) throws Exception {
+		return getConn(true, false);
+	}
+
 	protected int getIntArg(String[] argv, int argIndex, int defaultValue) {
 		return argv.length <= argIndex ? defaultValue
 				: Integer.parseInt(argv[argIndex]);
+	}
+
+	protected int getIntArg(String[] argv, String argName, int defaultValue) {
+		String stringArg = getStringArg(argv, argName, null);
+		return stringArg == null ? defaultValue : Integer.parseInt(stringArg);
 	}
 
 	protected String getStringArg(String[] argv, int argIndex,
@@ -182,10 +210,22 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		return argv.length <= argIndex ? defaultValue : argv[argIndex];
 	}
 
-	public String runSubcommand(DevConsoleCommand sub, String[] argv)
-			throws Exception {
-		console.prepareCommand(sub);
-		return sub.run(argv == null ? new String[0] : argv);
+	protected String getStringArg(String[] argv, String argName,
+			String defaultValue) {
+		Pattern argMatcher = Pattern.compile(String.format("%s=(.+)", argName));
+		for (String arg : argv) {
+			Matcher m = argMatcher.matcher(arg);
+			if (m.matches()) {
+				return m.group(1);
+			}
+		}
+		return defaultValue;
+	}
+
+	protected void println(String string) {
+		System.out.println(string);
+		commandOutputBuffer.append(string);
+		commandOutputBuffer.append("\n");
 	}
 
 	protected String simpleParserName(Object parser) {
@@ -219,57 +259,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
-	public static class CmdDeleteClasspathScanCaches extends DevConsoleCommand {
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "delcpscan" };
-		}
-
-		@Override
-		public String getDescription() {
-			return "Delete classpath scan caches";
-		}
-
-		@Override
-		public String getUsage() {
-			return "";
-		}
-
-		@Override
-		public String run(String[] argv) throws Exception {
-			console.devHelper.deleteClasspathCacheFiles();
-			return "files deleted";
-		}
-	}
-
-	public static class CmdFind extends DevConsoleCommand {
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "f" };
-		}
-
-		@Override
-		public String getDescription() {
-			return "Find text in main console";
-		}
-
-		@Override
-		public String getUsage() {
-			return "f <text|last text>";
-		}
-
-		@Override
-		public String run(String[] argv) throws Exception {
-			console.find(argv.length == 0 ? null : argv[0]);
-			return null;
-		}
-
-		@Override
-		public boolean silent() {
-			return true;
-		}
-	}
-
 	public static class CmdClearBuffer extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
@@ -293,8 +282,131 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
+	public static class CmdDeleteClasspathScanCaches extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "delcpscan" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "Delete classpath scan caches";
+		}
+
+		@Override
+		public String getUsage() {
+			return "";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			console.devHelper.deleteClasspathCacheFiles();
+			return "files deleted";
+		}
+	}
+
+	public static class CmdDevProfile extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "profile" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "save/restore a named dev profile (serialized obj collection, props, state)";
+		}
+
+		@Override
+		public String getUsage() {
+			return "profile [load|save] name";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			if (argv.length < 2) {
+				listProfiles();
+				printUsage();
+				return "";
+			}
+			boolean load = argv[0].equals("load");
+			String name = argv[1];
+			File profile = SEUtilities.getChildFile(console.profileFolder,
+					name);
+			File profileSer = SEUtilities.getChildFile(profile, "ser");
+			File testFolder = console.devHelper.getTestFolder();
+			if (load) {
+				if (!profile.exists()) {
+					System.err.format("Profile '%s' does not exist\n", name);
+					listProfiles();
+					return "";
+				} else {
+					SEUtilities.copyFile(profileSer, testFolder);
+					SEUtilities
+							.copyFile(
+									SEUtilities.getChildFile(profile,
+											console.consolePropertiesFile
+													.getName()),
+									console.consolePropertiesFile);
+					SEUtilities
+							.copyFile(
+									SEUtilities.getChildFile(profile,
+											console.consoleHistoryFile
+													.getName()),
+									console.consoleHistoryFile);
+					console.loadConfig();
+					runSubcommand(new CmdReset(), new String[0]);
+				}
+			} else {
+				SEUtilities.copyFile(testFolder, profileSer);
+				SEUtilities.copyFile(console.consolePropertiesFile,
+						SEUtilities.getChildFile(profile,
+								console.consolePropertiesFile.getName()));
+				SEUtilities.copyFile(console.consoleHistoryFile,
+						SEUtilities.getChildFile(profile,
+								console.consoleHistoryFile.getName()));
+			}
+			return load ? String.format("Loaded config from profile '%s'", name)
+					: String.format("Saved config to profile '%s'", name);
+		}
+
+		private void listProfiles() {
+			File[] files = console.profileFolder.listFiles(new FileFilter() {
+				@Override
+				public boolean accept(File f) {
+					return f.isDirectory();
+				}
+			});
+			System.out.println("Profiles:");
+			for (File file : files) {
+				System.out.format("\t%s\n", file.getName());
+			}
+		}
+	}
+
 	public static class CmdExecRunnable extends DevConsoleCommand {
+		static void listRunnables(List<Class> classes, String runnableNamePart)
+				throws InstantiationException, IllegalAccessException {
+			SortedMap<String, Class> map = CollectionFilters.sortedMap(classes,
+					new ClassSimpleNameMapper());
+			if (CommonUtils.isNotNullOrEmpty(runnableNamePart)) {
+				map.entrySet().removeIf(e -> !e.getKey().toLowerCase()
+						.contains(runnableNamePart.toLowerCase()));
+			}
+			System.out.format("%-45s%-20s\n", "Available runnables:", "Tags");
+			for (Entry<String, Class> entry : map.entrySet()) {
+				String[] tags = ((DevConsoleRunnable) entry.getValue()
+						.newInstance()).tagStrings();
+				System.out.format("%-45s%-20s\n", entry.getKey(),
+						CommonUtils.join(tags, ", ").toLowerCase());
+			}
+		}
+
 		private DevConsoleRunnable r;
+
+		@Override
+		public boolean canUseProductionConn() {
+			return r.canUseProductionConn();
+		}
 
 		@Override
 		public String[] getCommandIds() {
@@ -313,11 +425,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		@Override
 		public boolean rerunIfMostRecentOnRestart() {
 			return true;
-		}
-
-		@Override
-		public boolean canUseProductionConn() {
-			return r.canUseProductionConn();
 		}
 
 		@Override
@@ -351,72 +458,160 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			return String.format("no runnable with classname '%s' found",
 					runnableName);
 		}
-
-		static void listRunnables(List<Class> classes, String runnableNamePart)
-				throws InstantiationException, IllegalAccessException {
-			SortedMap<String, Class> map = CollectionFilters.sortedMap(classes,
-					new ClassSimpleNameMapper());
-			if (CommonUtils.isNotNullOrEmpty(runnableNamePart)) {
-				map.entrySet().removeIf(e -> !e.getKey().toLowerCase()
-						.contains(runnableNamePart.toLowerCase()));
-			}
-			System.out.format("%-45s%-20s\n", "Available runnables:", "Tags");
-			for (Entry<String, Class> entry : map.entrySet()) {
-				String[] tags = ((DevConsoleRunnable) entry.getValue()
-						.newInstance()).tagStrings();
-				System.out.format("%-45s%-20s\n", entry.getKey(),
-						CommonUtils.join(tags, ", ").toLowerCase());
-			}
-		}
 	}
 
-	public static class CmdListRunnables extends DevConsoleCommand {
+	public static class CmdExpandShortTransform extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
-			return new String[] { "xl" };
+			return new String[] { "xst" };
 		}
 
 		@Override
 		public String getDescription() {
-			return "List runnables matching tag substrings";
+			return "expand short transform text";
 		}
 
+		@Override
 		public String getUsage() {
-			return "xl {tag substring,...}";
+			return "xst (will prompt for text, or copy from clipboard)";
 		}
 
 		@Override
-		public boolean rerunIfMostRecentOnRestart() {
-			return false;
-		}
-
-		@Override
-		public String run(final String[] argv) throws Exception {
-			List<Class> classes = Registry.get()
-					.lookup(DevConsoleRunnable.class);
-			CollectionFilter<Class> filter = new CollectionFilter<Class>() {
-				@Override
-				public boolean allow(Class o) {
-					try {
-						String[] tags = ((DevConsoleRunnable) o.newInstance())
-								.tagStrings();
-						for (String tag : tags) {
-							for (String arg : argv) {
-								if (tag.toLowerCase()
-										.startsWith(arg.toLowerCase())) {
-									return true;
-								}
-							}
-						}
-						return false;
-					} catch (Exception e) {
-						throw new WrappedRuntimeException(e);
-					}
-				}
-			};
-			CmdExecRunnable.listRunnables(
-					CollectionFilters.filter(classes, filter), null);
+		public String run(String[] argv) throws Exception {
+			String xs = console.getMultilineInput(
+					"Enter the pg text, or blank for clipboard: ");
+			xs = xs.isEmpty() ? console.getClipboardContents() : xs;
+			List<DomainTransformEvent> list = new PlaintextProtocolHandlerShort()
+					.deserialize(xs);
+			String out = CommonUtils.join(list, "\n");
+			System.out.println(out);
+			console.setClipboardContents(out);
+			System.out.println("\n");
 			return "";
+		}
+	}
+
+	public static class CmdExtractChromeCacheFile extends DevConsoleCommand {
+		static String lastFileName = "";
+
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "chrx" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "extract chrome cache file text";
+		}
+
+		@Override
+		public String getUsage() {
+			return "chrx (will prompt for text, or copy from clipboard)";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			String chrx = console.getMultilineInput(
+					"Enter the chrome cache file text, or blank for clipboard: ");
+			chrx = chrx.isEmpty() ? console.getClipboardContents() : chrx;
+			lastFileName = console.getSingleLineInput("Save to file:",
+					lastFileName);
+			Pattern p = Pattern.compile("00000000:");
+			Matcher m1 = p.matcher(chrx);
+			m1.find();
+			m1.find();
+			int idx0 = m1.start();
+			Pattern p2 = Pattern.compile("[0-9a-f]{8}:(?:  [0-9a-f]{2}){1,16}");
+			Pattern p3 = Pattern.compile("  ([0-9a-f]{2})");
+			Matcher m2 = p2.matcher(chrx.substring(idx0));
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			while (m2.find()) {
+				Matcher m3 = p3.matcher(m2.group());
+				while (m3.find()) {
+					baos.write(Integer.parseInt(m3.group(1), 16));
+				}
+			}
+			int size = baos.size();
+			BufferedOutputStream bos = new BufferedOutputStream(
+					new FileOutputStream(lastFileName));
+			ResourceUtilities.writeStreamToStream(
+					new ByteArrayInputStream(baos.toByteArray()), bos);
+			System.out.format("Wrote %s bytes to \n\t'%s'\n", size,
+					lastFileName);
+			return "";
+		}
+	}
+
+	public static class CmdExtractIdList extends DevConsoleCommand {
+		private LinkedHashSet<Long> ids;
+
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "idle" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "extract an id list from clipboard text";
+		}
+
+		@Override
+		public String getUsage() {
+			return "idle {-r :: randomise} (from clipboard)";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			boolean random = argv.length == 1 && argv[0].equals("-r");
+			String idle = console.getMultilineInput(
+					"Enter the id list text, or blank for clipboard: ");
+			idle = idle.isEmpty() ? console.getClipboardContents() : idle;
+			System.out.format("Creating list:\n%s\n\n",
+					console.padLeft(idle, 1, 0));
+			Pattern p1 = Pattern.compile("\\d+");
+			Matcher m1 = p1.matcher(idle);
+			ids = new LinkedHashSet<Long>();
+			while (m1.find()) {
+				ids.add(Long.parseLong(m1.group()));
+			}
+			List<Long> uids = new ArrayList<Long>(ids);
+			uids = CommonUtils.dedupe(uids);
+			if (random) {
+				Collections.shuffle(uids);
+			}
+			String list = CommonUtils.join(uids, ", ");
+			System.out.println(list);
+			console.setClipboardContents(list);
+			System.out.println("\n");
+			return "";
+		}
+	}
+
+	public static class CmdFind extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "f" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "Find text in main console";
+		}
+
+		@Override
+		public String getUsage() {
+			return "f <text|last text>";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			console.find(argv.length == 0 ? null : argv[0]);
+			return null;
+		}
+
+		@Override
+		public boolean silent() {
+			return true;
 		}
 	}
 
@@ -462,161 +657,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 						cmd2.getUsage(), desc);
 			}
 			return null;
-		}
-	}
-
-	public static class CmdQuit extends DevConsoleCommand {
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "q" };
-		}
-
-		@Override
-		public String getDescription() {
-			return "Quit the console";
-		}
-
-		@Override
-		public String getUsage() {
-			return "";
-		}
-
-		@Override
-		public String run(String[] argv) throws Exception {
-			System.exit(0);
-			return "";
-		}
-	}
-
-	public static class CmdReset extends DevConsoleCommand {
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "reset" };
-		}
-
-		@Override
-		public String getDescription() {
-			return "Reload metadata parser xml, reload citables cache and server.properties";
-		}
-
-		@Override
-		public String getUsage() {
-			return "";
-		}
-
-		@Override
-		public String run(String[] argv) throws Exception {
-			console.resetObjects();
-			return "Lookups reset";
-		}
-	}
-
-	public static class CmdSetId extends DevConsoleCommand {
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "i" };
-		}
-
-		@Override
-		public String getDescription() {
-			return "set current working set - either a numeric id, or an idList name";
-		}
-
-		@Override
-		public String getUsage() {
-			return "i [id|idListName]";
-		}
-
-		@Override
-		public String run(String[] argv) throws Exception {
-			console.props.idOrSet = argv[0];
-			console.saveConfig();
-			return String.format("set id to '%s'", console.props.idOrSet);
-		}
-	}
-
-	public static class CmdSearchHistory extends DevConsoleCommand {
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "sh" };
-		}
-
-		@Override
-		public String getDescription() {
-			return "search history for matching cmd(s)";
-		}
-
-		@Override
-		public String getUsage() {
-			return "sh [cmd substring]";
-		}
-
-		@Override
-		public String run(String[] argv) throws Exception {
-			List<String> matches = new ArrayList<String>(
-					console.history.getMatches(argv[0]));
-			Collections.reverse(matches);
-			CollectionFilter<String> filter = new CollectionFilter<String>() {
-				@Override
-				public boolean allow(String o) {
-					return !o.startsWith("sh ");
-				}
-			};
-			CollectionFilters.filterInPlace(matches, filter);
-			if (matches.size() > 1) {
-				System.out.format("Matches:\n-------\n%s\n\n",
-						CommonUtils.join(matches, "\n"));
-			}
-			if (matches.size() > 0) {
-				console.setCommandLineText(
-						CommonUtils.last(matches.iterator()));
-			}
-			return "";
-		}
-	}
-
-	public static class CmdRsync extends DevConsoleCommand {
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "rsync" };
-		}
-
-		@Override
-		public String getDescription() {
-			return "get or put a file";
-		}
-
-		@Override
-		public String getUsage() {
-			return "rsync  [get|put] local remote";
-		}
-
-		private void importViaRsync(String arg1, String remotePort, String from,
-				String to) throws Exception {
-			String[] cmdAndArgs = new String[] { "/usr/bin/rsync", "-avz",
-					"--progress", "--partial", arg1, remotePort, from, to };
-			new ShellWrapper().runProcessCatchOutputAndWait(cmdAndArgs);
-		}
-
-		@Override
-		public String run(String[] argv) throws Exception {
-			String homeDir = (System.getenv("USERPROFILE") != null)
-					? System.getenv("USERPROFILE")
-					: System.getProperty("user.home");
-			String localPath = SEUtilities.combinePaths(homeDir + "/", argv[1]);
-			String remotePath = String.format("%s:%s", console.props.remoteSsh,
-					(argv[2].startsWith("'") ? argv[2]
-							: (SEUtilities.combinePaths(
-									console.props.remoteHomeDir + "/",
-									argv[2]))));
-			String remotePortStr = String.format(
-					"/usr/bin/ssh -o StrictHostKeychecking=no -p %s",
-					console.props.remoteSshPort);
-			boolean put = argv[0].equals("put");
-			String f1 = put ? localPath : remotePath;
-			String f2 = put ? remotePath : localPath;
-			importViaRsync("--rsh", remotePortStr, f1, f2);
-			return String.format("%s -> %s", f1, f2);
 		}
 	}
 
@@ -711,92 +751,88 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
-	public static class CmdUnescapeJson extends DevConsoleCommand {
+	public static class CmdListRunnables extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
-			return new String[] { "jsun" };
+			return new String[] { "xl" };
 		}
 
 		@Override
 		public String getDescription() {
-			return "unescape json";
+			return "List runnables matching tag substrings";
 		}
 
-		@Override
 		public String getUsage() {
-			return "jsun (will prompt for text, or copy from clipboard)";
+			return "xl {tag substring,...}";
 		}
 
 		@Override
-		public String run(String[] argv) throws Exception {
-			String jsun = console.getMultilineInput(
-					"Enter the pg text, or blank for clipboard: ");
-			jsun = jsun.isEmpty() ? console.getClipboardContents() : jsun;
-			if ("".isEmpty()) {
-				throw new RuntimeException("some eclipse build problem...");
-			}
-			jsun = StringEscapeUtils.unescapeJavaScript(jsun);
-			System.out.println(jsun);
-			console.setClipboardContents(jsun);
-			System.out.println("\n");
+		public boolean rerunIfMostRecentOnRestart() {
+			return false;
+		}
+
+		@Override
+		public String run(final String[] argv) throws Exception {
+			List<Class> classes = Registry.get()
+					.lookup(DevConsoleRunnable.class);
+			CollectionFilter<Class> filter = new CollectionFilter<Class>() {
+				@Override
+				public boolean allow(Class o) {
+					try {
+						String[] tags = ((DevConsoleRunnable) o.newInstance())
+								.tagStrings();
+						for (String tag : tags) {
+							for (String arg : argv) {
+								if (tag.toLowerCase()
+										.startsWith(arg.toLowerCase())) {
+									return true;
+								}
+							}
+						}
+						return false;
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				}
+			};
+			CmdExecRunnable.listRunnables(
+					CollectionFilters.filter(classes, filter), null);
 			return "";
 		}
 	}
 
-	public static class CmdExtractIdList extends DevConsoleCommand {
-		private LinkedHashSet<Long> ids;
-
+	public static class CmdQuit extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
-			return new String[] { "idle" };
+			return new String[] { "q" };
 		}
 
 		@Override
 		public String getDescription() {
-			return "extract an id list from clipboard text";
+			return "Quit the console";
 		}
 
 		@Override
 		public String getUsage() {
-			return "idle {-r :: randomise} (from clipboard)";
+			return "";
 		}
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			boolean random = argv.length == 1 && argv[0].equals("-r");
-			String idle = console.getMultilineInput(
-					"Enter the id list text, or blank for clipboard: ");
-			idle = idle.isEmpty() ? console.getClipboardContents() : idle;
-			System.out.format("Creating list:\n%s\n\n",
-					console.padLeft(idle, 1, 0));
-			Pattern p1 = Pattern.compile("\\d+");
-			Matcher m1 = p1.matcher(idle);
-			ids = new LinkedHashSet<Long>();
-			while (m1.find()) {
-				ids.add(Long.parseLong(m1.group()));
-			}
-			List<Long> uids = new ArrayList<Long>(ids);
-			uids = CommonUtils.dedupe(uids);
-			if (random) {
-				Collections.shuffle(uids);
-			}
-			String list = CommonUtils.join(uids, ", ");
-			System.out.println(list);
-			console.setClipboardContents(list);
-			System.out.println("\n");
+			System.exit(0);
 			return "";
 		}
 	}
 
 	public static class CmdReplicateWrappedObjects extends DevConsoleCommand {
 		@Override
-		public String[] getCommandIds() {
-			return new String[] { "rwo" };
+		public boolean canUseProductionConn() {
+			return true;
 		}
 
 		@Override
-		public boolean canUseProductionConn() {
-			return true;
+		public String[] getCommandIds() {
+			return new String[] { "rwo" };
 		}
 
 		@Override
@@ -859,34 +895,135 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
-	public static class CmdExpandShortTransform extends DevConsoleCommand {
+	public static class CmdReset extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
-			return new String[] { "xst" };
+			return new String[] { "reset" };
 		}
 
 		@Override
 		public String getDescription() {
-			return "expand short transform text";
+			return "Reload metadata parser xml, reload citables cache and server.properties";
 		}
 
 		@Override
 		public String getUsage() {
-			return "xst (will prompt for text, or copy from clipboard)";
+			return "";
 		}
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			String xs = console.getMultilineInput(
-					"Enter the pg text, or blank for clipboard: ");
-			xs = xs.isEmpty() ? console.getClipboardContents() : xs;
-			List<DomainTransformEvent> list = new PlaintextProtocolHandlerShort()
-					.deserialize(xs);
-			String out = CommonUtils.join(list, "\n");
-			System.out.println(out);
-			console.setClipboardContents(out);
-			System.out.println("\n");
+			console.resetObjects();
+			return "Lookups reset";
+		}
+	}
+
+	public static class CmdRsync extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "rsync" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "get or put a file";
+		}
+
+		@Override
+		public String getUsage() {
+			return "rsync  [get|put] local remote";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			String homeDir = (System.getenv("USERPROFILE") != null)
+					? System.getenv("USERPROFILE")
+					: System.getProperty("user.home");
+			String localPath = SEUtilities.combinePaths(homeDir + "/", argv[1]);
+			String remotePath = String.format("%s:%s", console.props.remoteSsh,
+					(argv[2].startsWith("'") ? argv[2]
+							: (SEUtilities.combinePaths(
+									console.props.remoteHomeDir + "/",
+									argv[2]))));
+			String remotePortStr = String.format(
+					"/usr/bin/ssh -o StrictHostKeychecking=no -p %s",
+					console.props.remoteSshPort);
+			boolean put = argv[0].equals("put");
+			String f1 = put ? localPath : remotePath;
+			String f2 = put ? remotePath : localPath;
+			importViaRsync("--rsh", remotePortStr, f1, f2);
+			return String.format("%s -> %s", f1, f2);
+		}
+
+		private void importViaRsync(String arg1, String remotePort, String from,
+				String to) throws Exception {
+			String[] cmdAndArgs = new String[] { "/usr/bin/rsync", "-avz",
+					"--progress", "--partial", arg1, remotePort, from, to };
+			new ShellWrapper().runProcessCatchOutputAndWait(cmdAndArgs);
+		}
+	}
+
+	public static class CmdSearchHistory extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "sh" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "search history for matching cmd(s)";
+		}
+
+		@Override
+		public String getUsage() {
+			return "sh [cmd substring]";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			List<String> matches = new ArrayList<String>(
+					console.history.getMatches(argv[0]));
+			Collections.reverse(matches);
+			CollectionFilter<String> filter = new CollectionFilter<String>() {
+				@Override
+				public boolean allow(String o) {
+					return !o.startsWith("sh ");
+				}
+			};
+			CollectionFilters.filterInPlace(matches, filter);
+			if (matches.size() > 1) {
+				System.out.format("Matches:\n-------\n%s\n\n",
+						CommonUtils.join(matches, "\n"));
+			}
+			if (matches.size() > 0) {
+				console.setCommandLineText(
+						CommonUtils.last(matches.iterator()));
+			}
 			return "";
+		}
+	}
+
+	public static class CmdSetId extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "i" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "set current working set - either a numeric id, or an idList name";
+		}
+
+		@Override
+		public String getUsage() {
+			return "i [id|idListName]";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			console.props.idOrSet = argv[0];
+			console.saveConfig();
+			return String.format("set id to '%s'", console.props.idOrSet);
 		}
 	}
 
@@ -1006,103 +1143,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
-	public static class CmdDevProfile extends DevConsoleCommand {
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "profile" };
-		}
-
-		@Override
-		public String getDescription() {
-			return "save/restore a named dev profile (serialized obj collection, props, state)";
-		}
-
-		@Override
-		public String getUsage() {
-			return "profile [load|save] name";
-		}
-
-		@Override
-		public String run(String[] argv) throws Exception {
-			if (argv.length < 2) {
-				listProfiles();
-				printUsage();
-				return "";
-			}
-			boolean load = argv[0].equals("load");
-			String name = argv[1];
-			File profile = SEUtilities.getChildFile(console.profileFolder,
-					name);
-			File profileSer = SEUtilities.getChildFile(profile, "ser");
-			File testFolder = console.devHelper.getTestFolder();
-			if (load) {
-				if (!profile.exists()) {
-					System.err.format("Profile '%s' does not exist\n", name);
-					listProfiles();
-					return "";
-				} else {
-					SEUtilities.copyFile(profileSer, testFolder);
-					SEUtilities
-							.copyFile(
-									SEUtilities.getChildFile(profile,
-											console.consolePropertiesFile
-													.getName()),
-									console.consolePropertiesFile);
-					SEUtilities
-							.copyFile(
-									SEUtilities.getChildFile(profile,
-											console.consoleHistoryFile
-													.getName()),
-									console.consoleHistoryFile);
-					console.loadConfig();
-					runSubcommand(new CmdReset(), new String[0]);
-				}
-			} else {
-				SEUtilities.copyFile(testFolder, profileSer);
-				SEUtilities.copyFile(console.consolePropertiesFile,
-						SEUtilities.getChildFile(profile,
-								console.consolePropertiesFile.getName()));
-				SEUtilities.copyFile(console.consoleHistoryFile,
-						SEUtilities.getChildFile(profile,
-								console.consoleHistoryFile.getName()));
-			}
-			return load ? String.format("Loaded config from profile '%s'", name)
-					: String.format("Saved config to profile '%s'", name);
-		}
-
-		private void listProfiles() {
-			File[] files = console.profileFolder.listFiles(new FileFilter() {
-				@Override
-				public boolean accept(File f) {
-					return f.isDirectory();
-				}
-			});
-			System.out.println("Profiles:");
-			for (File file : files) {
-				System.out.format("\t%s\n", file.getName());
-			}
-		}
-	}
-
-	public enum TestResultFolder {
-		CURRENT, OK
-	}
-
-	public boolean rerunIfMostRecentOnRestart() {
-		return false;
-	}
-
-	public void printUsage() {
-		System.err.format("Usage: %s\n\n", getUsage());
-	}
-
-	public void cleanup() throws SQLException {
-		if (connLocal != null) {
-			connLocal.close();
-			connLocal = null;
-		}
-	}
-
 	public static class CmdTags extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
@@ -1180,79 +1220,39 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
-	public boolean silent() {
-		return false;
-	}
-
-	protected int getIntArg(String[] argv, String argName, int defaultValue) {
-		String stringArg = getStringArg(argv, argName, null);
-		return stringArg == null ? defaultValue : Integer.parseInt(stringArg);
-	}
-
-	protected String getStringArg(String[] argv, String argName,
-			String defaultValue) {
-		Pattern argMatcher = Pattern.compile(String.format("%s=(.+)", argName));
-		for (String arg : argv) {
-			Matcher m = argMatcher.matcher(arg);
-			if (m.matches()) {
-				return m.group(1);
-			}
-		}
-		return defaultValue;
-	}
-
-	public static class CmdExtractChromeCacheFile extends DevConsoleCommand {
+	public static class CmdUnescapeJson extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
-			return new String[] { "chrx" };
+			return new String[] { "jsun" };
 		}
 
 		@Override
 		public String getDescription() {
-			return "extract chrome cache file text";
+			return "unescape json";
 		}
 
 		@Override
 		public String getUsage() {
-			return "chrx (will prompt for text, or copy from clipboard)";
+			return "jsun (will prompt for text, or copy from clipboard)";
 		}
-
-		static String lastFileName = "";
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			String chrx = console.getMultilineInput(
-					"Enter the chrome cache file text, or blank for clipboard: ");
-			chrx = chrx.isEmpty() ? console.getClipboardContents() : chrx;
-			lastFileName = console.getSingleLineInput("Save to file:",
-					lastFileName);
-			Pattern p = Pattern.compile("00000000:");
-			Matcher m1 = p.matcher(chrx);
-			m1.find();
-			m1.find();
-			int idx0 = m1.start();
-			Pattern p2 = Pattern.compile("[0-9a-f]{8}:(?:  [0-9a-f]{2}){1,16}");
-			Pattern p3 = Pattern.compile("  ([0-9a-f]{2})");
-			Matcher m2 = p2.matcher(chrx.substring(idx0));
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			while (m2.find()) {
-				Matcher m3 = p3.matcher(m2.group());
-				while (m3.find()) {
-					baos.write(Integer.parseInt(m3.group(1), 16));
-				}
+			String jsun = console.getMultilineInput(
+					"Enter the pg text, or blank for clipboard: ");
+			jsun = jsun.isEmpty() ? console.getClipboardContents() : jsun;
+			if ("".isEmpty()) {
+				throw new RuntimeException("some eclipse build problem...");
 			}
-			int size = baos.size();
-			BufferedOutputStream bos = new BufferedOutputStream(
-					new FileOutputStream(lastFileName));
-			ResourceUtilities.writeStreamToStream(
-					new ByteArrayInputStream(baos.toByteArray()), bos);
-			System.out.format("Wrote %s bytes to \n\t'%s'\n", size,
-					lastFileName);
+			jsun = StringEscapeUtils.unescapeJavaScript(jsun);
+			System.out.println(jsun);
+			console.setClipboardContents(jsun);
+			System.out.println("\n");
 			return "";
 		}
 	}
 
-	public boolean clsBeforeRun() {
-		return false;
+	public enum TestResultFolder {
+		CURRENT, OK
 	}
 }

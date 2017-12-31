@@ -26,8 +26,8 @@ import com.google.gwt.user.client.ui.FlowPanel;
  *
  * @author Nick Reddel
  */
-public class ToggleLink extends Composite implements
-		HasSelectionHandlers<Integer>, ClickHandler {
+public class ToggleLink extends Composite
+		implements HasSelectionHandlers<Integer>, ClickHandler {
 	private FlowPanel fp;
 
 	private Link link1;
@@ -35,12 +35,14 @@ public class ToggleLink extends Composite implements
 	private Link link2;
 
 	private int selectedIndex;
+
 	public ToggleLink(String state1, String state2,
 			SelectionHandler<Integer> handler) {
-		this(state1,state2,handler,0);
+		this(state1, state2, handler, 0);
 	}
+
 	public ToggleLink(String state1, String state2,
-			SelectionHandler<Integer> handler,int initialIndex) {
+			SelectionHandler<Integer> handler, int initialIndex) {
 		this.fp = new FlowPanel();
 		this.link1 = new Link(state1, this);
 		this.link2 = new Link(state2, this);
@@ -56,13 +58,18 @@ public class ToggleLink extends Composite implements
 		link2.addStyleName(style);
 	}
 
-	private void updateVisibility() {
-		link1.setVisible(selectedIndex == 0);
-		link2.setVisible(selectedIndex == 1);
+	public HandlerRegistration
+			addSelectionHandler(SelectionHandler<Integer> handler) {
+		return addHandler(handler, SelectionEvent.getType());
 	}
 
 	public int getSelectedIndex() {
 		return this.selectedIndex;
+	}
+
+	public void onClick(ClickEvent event) {
+		setSelectedIndex(Math.abs((event.getSource() == link1 ? 0 : 1) - 1));
+		SelectionEvent.fire(this, selectedIndex);
 	}
 
 	public void setSelectedIndex(int selectedIndex) {
@@ -70,13 +77,8 @@ public class ToggleLink extends Composite implements
 		updateVisibility();
 	}
 
-	public HandlerRegistration addSelectionHandler(
-			SelectionHandler<Integer> handler) {
-		return addHandler(handler, SelectionEvent.getType());
-	}
-
-	public void onClick(ClickEvent event) {
-		setSelectedIndex(Math.abs((event.getSource() == link1 ? 0 : 1) - 1));
-		SelectionEvent.fire(this, selectedIndex);
+	private void updateVisibility() {
+		link1.setVisible(selectedIndex == 0);
+		link2.setVisible(selectedIndex == 1);
 	}
 }

@@ -61,6 +61,13 @@ public class TokenParserHelper<T extends ParserToken, C extends ParserContext, S
 		}
 	}
 
+	public S matchWithFollowCheck(C context) {
+		if (!token.canFollow(context)) {
+			return null;
+		}
+		return extractSubstringAndMatch(context);
+	}
+
 	public S sliceFromMatcher(C context, String visibleSubstring, Matcher m) {
 		if (token.skipMatchingWhitespace(context, visibleSubstring,
 				m.start())) {
@@ -72,12 +79,5 @@ public class TokenParserHelper<T extends ParserToken, C extends ParserContext, S
 				context.allTexts, m.end() + context.startOffset);
 		context.startOffset += m.end();
 		return (S) token.createSlice(context, start, end, m.start());
-	}
-
-	public S matchWithFollowCheck(C context) {
-		if (!token.canFollow(context)) {
-			return null;
-		}
-		return extractSubstringAndMatch(context);
 	}
 }

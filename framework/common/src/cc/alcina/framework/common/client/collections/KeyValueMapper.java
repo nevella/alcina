@@ -7,21 +7,8 @@ public interface KeyValueMapper<K, V, O> {
 
 	public V getValue(O o);
 
-	public static class LongArray2Mapper implements
-			KeyValueMapper<Long, Long, Object[]> {
-		@Override
-		public Long getKey(Object[] o) {
-			return (Long) o[0];
-		}
-
-		@Override
-		public Long getValue(Object[] o) {
-			return (Long) o[1];
-		}
-	}
-
-	public static class FromObjectConverterMapper<K, V> extends
-			FromObjectKeyValueMapper<K, V> {
+	public static class FromObjectConverterMapper<K, V>
+			extends FromObjectKeyValueMapper<K, V> {
 		private Converter<? super V, K> converter;
 
 		public FromObjectConverterMapper(Converter<? super V, K> converter) {
@@ -31,6 +18,19 @@ public interface KeyValueMapper<K, V, O> {
 		@Override
 		public K getKey(V o) {
 			return converter.convert(o);
+		}
+	}
+
+	public static class LongArray2Mapper
+			implements KeyValueMapper<Long, Long, Object[]> {
+		@Override
+		public Long getKey(Object[] o) {
+			return (Long) o[0];
+		}
+
+		@Override
+		public Long getValue(Object[] o) {
+			return (Long) o[1];
 		}
 	}
 }

@@ -38,6 +38,8 @@ public interface MultikeyMap<V> {
 
 	public abstract Map delegate();
 
+	public abstract V ensure(Supplier<V> supplier, Object... objects);
+
 	public abstract V get(Object... objects);
 
 	public abstract int getDepth();
@@ -47,7 +49,7 @@ public interface MultikeyMap<V> {
 	public abstract <T> Collection<T> items(Object... objects);
 
 	public <T> Set<T> keySet();
-	
+
 	public abstract void put(Object... objects);
 
 	public abstract Object remove(Object... objects);
@@ -60,11 +62,22 @@ public interface MultikeyMap<V> {
 
 	public int size();
 
+	public abstract void stripNonDuplicates(int depth);
+
 	public abstract MultikeyMap<V> swapKeysZeroAndOne();
 
 	public abstract <T> Collection<T> values(Object... objects);
 
 	public abstract Map writeableDelegate();
+
+	default void addInteger(int delta, Object... objects) {
+		Integer value = (Integer) ensure(() -> (V) (Object) new Integer(0),
+				objects);
+		value += delta;
+		List<Object> list = new ArrayList<>(Arrays.asList(objects));
+		list.add(value);
+		put(list.toArray());
+	}
 
 	void addValues(List<V> values);
 
@@ -75,17 +88,4 @@ public interface MultikeyMap<V> {
 	void putMulti(MultikeyMap<V> multi);
 
 	void setDepth(int depth);
-
-	public abstract void stripNonDuplicates(int depth);
-
-	public abstract V ensure(Supplier<V> supplier, Object... objects);
-
-	default void addInteger(int delta, Object... objects) {
-		Integer value = (Integer) ensure(() -> (V) (Object) new Integer(0),
-				objects);
-		value += delta;
-		List<Object> list = new ArrayList<>(Arrays.asList(objects));
-		list.add(value);
-		put(list.toArray());
-	}
 }

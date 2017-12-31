@@ -28,13 +28,13 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  * Custom field serializer for {@link java.util.TreeMap}.
  */
 @SuppressWarnings("rawtypes")
-public class TreeSet_CustomFieldSerializer extends
-		CustomFieldSerializer<TreeSet> {
+public class TreeSet_CustomFieldSerializer
+		extends CustomFieldSerializer<TreeSet> {
 	/* for now, build it entry by entry. Can optimize later via bulk loading */
 	public static void deserialize(SerializationStreamReader streamReader,
 			TreeSet instance) throws SerializationException {
-		Collection_CustomFieldSerializerBase
-				.deserialize(streamReader, instance);
+		Collection_CustomFieldSerializerBase.deserialize(streamReader,
+				instance);
 	}
 
 	@SuppressWarnings("unchecked")

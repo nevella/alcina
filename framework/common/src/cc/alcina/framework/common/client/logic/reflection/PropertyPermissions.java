@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
@@ -22,10 +21,9 @@ import java.lang.annotation.Target;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 
-
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Target( { ElementType.METHOD })
+@Target({ ElementType.METHOD })
 @ClientVisible
 /**
  * Relaxed by design - because we may be inheriting from the object

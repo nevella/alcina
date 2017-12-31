@@ -21,8 +21,8 @@ public class DomainModelDeltaLookup {
 	public void addSignature(String signatureString) {
 		DomainModelDeltaSignature signature = DomainModelDeltaSignature
 				.parseSignature(signatureString);
-		nonVersionedSignatures
-				.put(signature.nonVersionedSignature(), signature);
+		nonVersionedSignatures.put(signature.nonVersionedSignature(),
+				signature);
 		versionedSignatures.add(signature.toString());
 	}
 

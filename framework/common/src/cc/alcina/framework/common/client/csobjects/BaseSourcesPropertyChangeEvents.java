@@ -41,6 +41,14 @@ public class BaseSourcesPropertyChangeEvents
 				listener);
 	}
 
+	/**
+	 * Useful for collection listeners - a "check the kids" thing
+	 */
+	public void fireNullPropertyChange(String name) {
+		((MutablePropertyChangeSupport) this.propertyChangeSupport())
+				.fireNullPropertyChange(name);
+	}
+
 	public void firePropertyChange(PropertyChangeEvent evt) {
 		this.propertyChangeSupport().firePropertyChange(evt);
 	}
@@ -90,13 +98,5 @@ public class BaseSourcesPropertyChangeEvents
 			propertyChangeSupport = new MutablePropertyChangeSupport(this);
 		}
 		return propertyChangeSupport;
-	}
-
-	/**
-	 * Useful for collection listeners - a "check the kids" thing
-	 */
-	public void fireNullPropertyChange(String name) {
-		((MutablePropertyChangeSupport) this.propertyChangeSupport())
-				.fireNullPropertyChange(name);
 	}
 }

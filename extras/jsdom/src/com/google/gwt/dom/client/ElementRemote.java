@@ -17,20 +17,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class ElementRemote extends NodeRemote implements DomElement {
-	/**
-	 * Fast helper method to convert small doubles to 32-bit int.
-	 *
-	 * <p>
-	 * Note: you should be aware that this uses JavaScript rounding and thus
-	 * does NOT provide the same semantics as
-	 * <code>int b = (int) someDouble;</code>. In particular, if x is outside
-	 * the range [-2^31,2^31), then toInt32(x) would return a value equivalent
-	 * to x modulo 2^32, whereas (int) x would evaluate to either MIN_INT or
-	 * MAX_INT.
-	 */
-	private static native int toInt32(double val) /*-{
-        return val | 0;
-	}-*/;
+	private static remoteCache cache = new remoteCache();
 
 	/**
 	 * Assert that the given {@link Node} is an {@link Element} and
@@ -50,19 +37,6 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		return (Element) node;
 	}
 
-	/**
-	 * Determines whether the given {@link JavaScriptObject} can be cast to an
-	 * {@link Element}. A <code>null</code> object will cause this method to
-	 * return <code>false</code>.
-	 */
-	private static class remoteCache {
-		public boolean lastIsResult;
-
-		public JavaScriptObject lastIs;
-	}
-
-	private static remoteCache cache = new remoteCache();
-
 	public static boolean is(JavaScriptObject o) {
 		if (cache.lastIs == o) {
 			return cache.lastIsResult;
@@ -71,13 +45,6 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		cache.lastIs = o;
 		cache.lastIsResult = is0;
 		return is0;
-	}
-
-	private static boolean is0(JavaScriptObject o) {
-		if (NodeRemote.is(o)) {
-			return is(nodeFor(o));
-		}
-		return false;
 	}
 
 	/**
@@ -89,7 +56,58 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		return (node != null) && (node.getNodeType() == Node.ELEMENT_NODE);
 	}
 
+	private static boolean is0(JavaScriptObject o) {
+		if (NodeRemote.is(o)) {
+			return is(nodeFor(o));
+		}
+		return false;
+	}
+
+	/**
+	 * Fast helper method to convert small doubles to 32-bit int.
+	 *
+	 * <p>
+	 * Note: you should be aware that this uses JavaScript rounding and thus
+	 * does NOT provide the same semantics as
+	 * <code>int b = (int) someDouble;</code>. In particular, if x is outside
+	 * the range [-2^31,2^31), then toInt32(x) would return a value equivalent
+	 * to x modulo 2^32, whereas (int) x would evaluate to either MIN_INT or
+	 * MAX_INT.
+	 */
+	private static native int toInt32(double val) /*-{
+													return val | 0;
+													}-*/;
+
+	static List<Boolean> commaSeparatedBoolsToList(String string) {
+		if (string.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return Arrays.asList(string.split(",")).stream()
+				.map(Boolean::parseBoolean).collect(Collectors.toList());
+	}
+
+	static List<Integer> commaSeparatedIntsToList(String string) {
+		if (string.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return Arrays.asList(string.split(",")).stream().map(Integer::parseInt)
+				.collect(Collectors.toList());
+	}
+
+	static int indexOfName(String nameList, String name) {
+		return DomElement.indexOfName(nameList, name);
+	}
+
+	static String trimClassName(String className) {
+		return DomElement.trimClassName(className);
+	}
+
 	protected ElementRemote() {
+	}
+
+	@Override
+	public final boolean addClassName(String className) {
+		return DomElementStatic.addClassName(this, className);
 	}
 
 	/**
@@ -97,8 +115,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void blur() /*-{
-        this.blur();
-	}-*/;
+									this.blur();
+									}-*/;
 
 	/**
 	 * Dispatched the given event with this element as its target. The event
@@ -125,13 +143,18 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		return LocalDom.nodeFor(this);
 	}
 
+	@Override
+	public final void ensureId() {
+		throw new UnsupportedOperationException();
+	}
+
 	/**
 	 * Gives keyboard focus to this element.
 	 */
 	@Override
 	public final native void focus() /*-{
-        this.focus();
-	}-*/;
+										this.focus();
+										}-*/;
 
 	/**
 	 * Gets an element's absolute bottom coordinate in the document's coordinate
@@ -185,6 +208,16 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		return DOMImpl.impl.getAttribute(elementFor(), name);
 	}
 
+	@Override
+	public final Map<String, String> getAttributes() {
+		StringMap result = new StringMap();
+		JsArrayString arr = getAttributeList();
+		for (int idx = 0; idx < arr.length(); idx += 2) {
+			result.put(arr.get(idx), arr.get(idx + 1));
+		}
+		return result;
+	}
+
 	/**
 	 * The class attribute of the element. This attribute has been renamed due
 	 * to conflicts with the "class" keyword exposed by many languages.
@@ -195,8 +228,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native String getClassName() /*-{
-        return this.className || "";
-	}-*/;
+												return this.className || "";
+												}-*/;
 
 	/**
 	 * Returns the inner height of an element in pixels, including padding but
@@ -226,8 +259,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native String getDir() /*-{
-        return this.dir;
-	}-*/;
+										return this.dir;
+										}-*/;
 
 	/**
 	 * Returns the draggable attribute of this element.
@@ -237,27 +270,17 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native String getDraggable() /*-{
-        return this.draggable || null;
-	}-*/;
-
-	/**
-	 * Returns a NodeList of all descendant Elements with a given tag name, in
-	 * the order in which they are encountered in a preorder traversal of this
-	 * Element tree.
-	 * 
-	 * @param name
-	 *            The name of the tag to match on. The special value "*" matches
-	 *            all tags
-	 * @return A list of matching Element nodes
-	 */
-	private final native NodeListRemote<Element>
-			getElementsByTagName0(String name) /*-{
-        return this.getElementsByTagName(name);
-	}-*/;
+												return this.draggable || null;
+												}-*/;
 
 	@Override
 	public final NodeList<Element> getElementsByTagName(String tagName) {
 		return new NodeList(getElementsByTagName0(tagName));
+	}
+
+	@Override
+	public final Element getFirstChildElement() {
+		return DomElementStatic.getFirstChildElement(this);
 	}
 
 	/**
@@ -269,16 +292,31 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native String getId() /*-{
-        return this.id;
-	}-*/;
+										return this.id;
+										}-*/;
+
+	@Override
+	public final String getInnerHTML() {
+		return DomElementStatic.getInnerHTML(this);
+	}
+
+	@Override
+	public final String getInnerText() {
+		return DomElementStatic.getInnerText(this);
+	}
 
 	/**
 	 * Language code defined in RFC 1766.
 	 */
 	@Override
 	public final native String getLang() /*-{
-        return this.lang;
-	}-*/;
+											return this.lang;
+											}-*/;
+
+	@Override
+	public final Element getNextSiblingElement() {
+		return DomElementStatic.getNextSiblingElement(this);
+	}
 
 	/**
 	 * The height of an element relative to the layout.
@@ -303,8 +341,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native Element getOffsetParent() /*-{
-        return this.offsetParent;
-	}-*/;
+													return this.offsetParent;
+													}-*/;
 
 	/**
 	 * The number of pixels that the upper top corner of the current element is
@@ -323,6 +361,15 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		return toInt32(getSubPixelOffsetWidth());
 	}
 
+	public final native String getOuterHtml()/*-{
+												return this.outerHTML;
+												}-*/;
+
+	@Override
+	public final Element getPreviousSiblingElement() {
+		return DomElementStatic.getPreviousSiblingElement(this);
+	}
+
 	/**
 	 * Gets a boolean property from this element.
 	 * 
@@ -332,8 +379,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native boolean getPropertyBoolean(String name) /*-{
-        return !!this[name];
-	}-*/;
+																return !!this[name];
+																}-*/;
 
 	/**
 	 * Gets a double property from this element.
@@ -344,8 +391,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native double getPropertyDouble(String name) /*-{
-        return parseFloat(this[name]) || 0.0;
-	}-*/;
+																return parseFloat(this[name]) || 0.0;
+																}-*/;
 
 	/**
 	 * Gets an integer property from this element.
@@ -356,8 +403,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native int getPropertyInt(String name) /*-{
-        return parseInt(this[name]) | 0;
-	}-*/;
+														return parseInt(this[name]) | 0;
+														}-*/;
 
 	/**
 	 * Gets a JSO property from this element.
@@ -368,8 +415,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native JavaScriptObject getPropertyJSO(String name) /*-{
-        return this[name] || null;
-	}-*/;
+																		return this[name] || null;
+																		}-*/;
 
 	/**
 	 * Gets an object property from this element.
@@ -380,8 +427,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native Object getPropertyObject(String name) /*-{
-        return this[name] || null;
-	}-*/;
+																return this[name] || null;
+																}-*/;
 
 	/**
 	 * Gets a property from this element.
@@ -392,13 +439,13 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native String getPropertyString(String name) /*-{
-        return (this[name] == null) ? null : String(this[name]);
-	}-*/;
+																return (this[name] == null) ? null : String(this[name]);
+																}-*/;
 
 	public final native String getPropertyStringDebug(String name) /*-{
-        debugger;
-        return (this[name] == null) ? null : String(this[name]);
-	}-*/;
+																	debugger;
+																	return (this[name] == null) ? null : String(this[name]);
+																	}-*/;
 
 	/**
 	 * The height of the scroll view of an element.
@@ -406,6 +453,11 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	@Override
 	public final int getScrollHeight() {
 		return toInt32(getSubPixelScrollHeight());
+	}
+
+	@Override
+	public final int getScrollLeft() {
+		return DomElementStatic.getScrollLeft(this);
 	}
 
 	/**
@@ -424,12 +476,10 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		return toInt32(getSubPixelScrollWidth());
 	}
 
-	/**
-	 * Gets this element's {@link Style} object.
-	 */
-	final native StyleRemote getStyle0() /*-{
-        return this.style;
-	}-*/;
+	@Override
+	public final String getString() {
+		return DomElementStatic.getString(this);
+	}
 
 	/**
 	 * Gets this element's {@link Style} object.
@@ -439,278 +489,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		throw new UnsupportedOperationException();
 	}
 
-	/**
-	 * The element's advisory title.
-	 */
-	@Override
-	public final native String getTitle() /*-{
-        return this.title;
-	}-*/;
-
-	/**
-	 * Removes an attribute by name.
-	 */
-	@Override
-	public final native void removeAttribute(String name) /*-{
-        this.removeAttribute(name);
-	}-*/;
-
-	/**
-	 * Adds a new attribute. If an attribute with that name is already present
-	 * in the element, its value is changed to be that of the value parameter.
-	 * 
-	 * @param name
-	 *            The name of the attribute to create or alter
-	 * @param value
-	 *            Value to set in string form
-	 */
-	@Override
-	public final native void setAttribute(String name, String value) /*-{
-        this.setAttribute(name, value);
-	}-*/;
-
-	/**
-	 * The class attribute of the element. This attribute has been renamed due
-	 * to conflicts with the "class" keyword exposed by many languages.
-	 * 
-	 * @see <a href=
-	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-class">
-	 *      W3C HTML Specification</a>
-	 */
-	@Override
-	public final native void setClassName(String className) /*-{
-        this.className = className || "";
-	}-*/;
-
-	/**
-	 * Specifies the base direction of directionally neutral text and the
-	 * directionality of tables.
-	 */
-	@Override
-	public final native void setDir(String dir) /*-{
-        this.dir = dir;
-	}-*/;
-
-	/**
-	 * The element's identifier.
-	 * 
-	 * @see <a href=
-	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-id">
-	 *      W3C HTML Specification</a>
-	 */
-	@Override
-	public final native void setId(String id) /*-{
-        this.id = id;
-	}-*/;
-
-	/**
-	 * All of the markup and content within a given element.
-	 */
-	@Override
-	public final native void setInnerHTML(@IsSafeHtml String html) /*-{
-        this.innerHTML = html || '';
-	}-*/;
-
-	/**
-	 * Language code defined in RFC 1766.
-	 */
-	@Override
-	public final native void setLang(String lang) /*-{
-        this.lang = lang;
-	}-*/;
-
-	/**
-	 * Sets a boolean property on this element.
-	 * 
-	 * @param name
-	 *            the name of the property to be set
-	 * @param value
-	 *            the new property value
-	 */
-	@Override
-	public final native void setPropertyBoolean(String name,
-			boolean value) /*-{
-        this[name] = value;
-	}-*/;
-
-	/**
-	 * Sets a double property on this element.
-	 * 
-	 * @param name
-	 *            the name of the property to be set
-	 * @param value
-	 *            the new property value
-	 */
-	@Override
-	public final native void setPropertyDouble(String name, double value) /*-{
-        this[name] = value;
-	}-*/;
-
-	/**
-	 * Sets an integer property on this element.
-	 * 
-	 * @param name
-	 *            the name of the property to be set
-	 * @param value
-	 *            the new property value
-	 */
-	@Override
-	public final native void setPropertyInt(String name, int value) /*-{
-        this[name] = value;
-	}-*/;
-
-	/**
-	 * Sets a JSO property on this element.
-	 *
-	 * @param name
-	 *            the name of the property to be set
-	 * @param value
-	 *            the new property value
-	 */
-	@Override
-	public final native void setPropertyJSO(String name,
-			JavaScriptObject value) /*-{
-        this[name] = value;
-	}-*/;
-
-	/**
-	 * Sets an object property on this element.
-	 *
-	 * @param name
-	 *            the name of the property to be set
-	 * @param value
-	 *            the new property value
-	 */
-	@Override
-	public final native void setPropertyObject(String name, Object value) /*-{
-        this[name] = value;
-	}-*/;
-
-	/**
-	 * Sets a property on this element.
-	 * 
-	 * @param name
-	 *            the name of the property to be set
-	 * @param value
-	 *            the new property value
-	 */
-	@Override
-	public final native void setPropertyString(String name, String value) /*-{
-        this[name] = value;
-	}-*/;
-
-	/**
-	 * The number of pixels that an element's content is scrolled to the top.
-	 */
-	@Override
-	public final native void setScrollTop(int scrollTop) /*-{
-        this.scrollTop = scrollTop;
-	}-*/;
-
-	/**
-	 * The index that represents the element's position in the tabbing order.
-	 * 
-	 * @see <a href=
-	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-tabindex">
-	 *      W3C HTML Specification</a>
-	 */
-	@Override
-	public final native void setTabIndex(int tabIndex) /*-{
-        this.tabIndex = tabIndex;
-	}-*/;
-
-	static String trimClassName(String className) {
-		return DomElement.trimClassName(className);
-	}
-
-	static int indexOfName(String nameList, String name) {
-		return DomElement.indexOfName(nameList, name);
-	}
-
-	/**
-	 * The element's advisory title.
-	 */
-	@Override
-	public final native void setTitle(String title) /*-{
-        // Setting the title to null results in the string "null" being displayed
-        // on some browsers.
-        this.title = title || '';
-	}-*/;
-
-	private final native double getSubPixelClientHeight() /*-{
-        return this.clientHeight;
-	}-*/;
-
-	private final native double getSubPixelClientWidth() /*-{
-        return this.clientWidth;
-	}-*/;
-
-	private final native double getSubPixelOffsetHeight() /*-{
-        return this.offsetHeight || 0;
-	}-*/;
-
-	private final native double getSubPixelOffsetLeft() /*-{
-        return this.offsetLeft || 0;
-	}-*/;
-
-	private final native double getSubPixelOffsetTop() /*-{
-        return this.offsetTop || 0;
-	}-*/;
-
-	private final native double getSubPixelOffsetWidth() /*-{
-        return this.offsetWidth || 0;
-	}-*/;
-
-	private final native double getSubPixelScrollHeight() /*-{
-        return this.scrollHeight || 0;
-	}-*/;
-
-	private final native double getSubPixelScrollTop() /*-{
-        return this.scrollTop || 0;
-	}-*/;
-
-	private final native double getSubPixelScrollWidth() /*-{
-        return this.scrollWidth || 0;
-	}-*/;
-
-	@Override
-	public final boolean addClassName(String className) {
-		return DomElementStatic.addClassName(this, className);
-	}
-
-	@Override
-	public final Element getFirstChildElement() {
-		return DomElementStatic.getFirstChildElement(this);
-	}
-
-	@Override
-	public final String getInnerHTML() {
-		return DomElementStatic.getInnerHTML(this);
-	}
-
-	@Override
-	public final String getInnerText() {
-		return DomElementStatic.getInnerText(this);
-	}
-
-	@Override
-	public final Element getNextSiblingElement() {
-		return DomElementStatic.getNextSiblingElement(this);
-	}
-
-	@Override
-	public final Element getPreviousSiblingElement() {
-		return DomElementStatic.getPreviousSiblingElement(this);
-	}
-
-	@Override
-	public final int getScrollLeft() {
-		return DomElementStatic.getScrollLeft(this);
-	}
-
-	@Override
-	public final String getString() {
-		return DomElementStatic.getString(this);
+	public final StyleRemote getStyleRemote() {
+		return getStyle0();
 	}
 
 	@Override
@@ -722,6 +502,14 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	public final String getTagName() {
 		return DomElementStatic.getTagName(this);
 	}
+
+	/**
+	 * The element's advisory title.
+	 */
+	@Override
+	public final native String getTitle() /*-{
+											return this.title;
+											}-*/;
 
 	@Override
 	public final boolean hasAttribute(String name) {
@@ -738,14 +526,21 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		return DomElementStatic.hasTagName(this, tagName);
 	}
 
+	public final String provideRemoteDomTree() {
+		return provideRemoteDomTree0();
+	}
+
+	/**
+	 * Removes an attribute by name.
+	 */
+	@Override
+	public final native void removeAttribute(String name) /*-{
+															this.removeAttribute(name);
+															}-*/;
+
 	@Override
 	public final boolean removeClassName(String className) {
 		return DomElementStatic.removeClassName(this, className);
-	}
-
-	@Override
-	public final void toggleClassName(String className) {
-		DomElementStatic.toggleClassName(this, className);
 	}
 
 	@Override
@@ -759,10 +554,66 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		DomElementStatic.scrollIntoView(this);
 	}
 
+	/**
+	 * Adds a new attribute. If an attribute with that name is already present
+	 * in the element, its value is changed to be that of the value parameter.
+	 * 
+	 * @param name
+	 *            The name of the attribute to create or alter
+	 * @param value
+	 *            Value to set in string form
+	 */
+	@Override
+	public final native void setAttribute(String name, String value) /*-{
+																		this.setAttribute(name, value);
+																		}-*/;
+
+	/**
+	 * The class attribute of the element. This attribute has been renamed due
+	 * to conflicts with the "class" keyword exposed by many languages.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-class">
+	 *      W3C HTML Specification</a>
+	 */
+	@Override
+	public final native void setClassName(String className) /*-{
+															this.className = className || "";
+															}-*/;
+
+	/**
+	 * Specifies the base direction of directionally neutral text and the
+	 * directionality of tables.
+	 */
+	@Override
+	public final native void setDir(String dir) /*-{
+												this.dir = dir;
+												}-*/;
+
 	@Override
 	public final void setDraggable(String draggable) {
 		DomElementStatic.setDraggable(this, draggable);
 	}
+
+	/**
+	 * The element's identifier.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-id">
+	 *      W3C HTML Specification</a>
+	 */
+	@Override
+	public final native void setId(String id) /*-{
+												this.id = id;
+												}-*/;
+
+	/**
+	 * All of the markup and content within a given element.
+	 */
+	@Override
+	public final native void setInnerHTML(@IsSafeHtml String html) /*-{
+																	this.innerHTML = html || '';
+																	}-*/;
 
 	@Override
 	public final void setInnerSafeHtml(SafeHtml html) {
@@ -774,30 +625,128 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		DomElementStatic.setInnerText(this, text);
 	}
 
+	/**
+	 * Language code defined in RFC 1766.
+	 */
+	@Override
+	public final native void setLang(String lang) /*-{
+													this.lang = lang;
+													}-*/;
+
+	/**
+	 * Sets a boolean property on this element.
+	 * 
+	 * @param name
+	 *            the name of the property to be set
+	 * @param value
+	 *            the new property value
+	 */
+	@Override
+	public final native void setPropertyBoolean(String name,
+			boolean value) /*-{
+							this[name] = value;
+							}-*/;
+
+	/**
+	 * Sets a double property on this element.
+	 * 
+	 * @param name
+	 *            the name of the property to be set
+	 * @param value
+	 *            the new property value
+	 */
+	@Override
+	public final native void setPropertyDouble(String name, double value) /*-{
+																			this[name] = value;
+																			}-*/;
+
+	/**
+	 * Sets an integer property on this element.
+	 * 
+	 * @param name
+	 *            the name of the property to be set
+	 * @param value
+	 *            the new property value
+	 */
+	@Override
+	public final native void setPropertyInt(String name, int value) /*-{
+																	this[name] = value;
+																	}-*/;
+
+	/**
+	 * Sets a JSO property on this element.
+	 *
+	 * @param name
+	 *            the name of the property to be set
+	 * @param value
+	 *            the new property value
+	 */
+	@Override
+	public final native void setPropertyJSO(String name,
+			JavaScriptObject value) /*-{
+									this[name] = value;
+									}-*/;
+
+	/**
+	 * Sets an object property on this element.
+	 *
+	 * @param name
+	 *            the name of the property to be set
+	 * @param value
+	 *            the new property value
+	 */
+	@Override
+	public final native void setPropertyObject(String name, Object value) /*-{
+																			this[name] = value;
+																			}-*/;
+
+	/**
+	 * Sets a property on this element.
+	 * 
+	 * @param name
+	 *            the name of the property to be set
+	 * @param value
+	 *            the new property value
+	 */
+	@Override
+	public final native void setPropertyString(String name, String value) /*-{
+																			this[name] = value;
+																			}-*/;
+
 	@Override
 	public final void setScrollLeft(int scrollLeft) {
 		DomElementStatic.setScrollLeft(this, scrollLeft);
 	}
 
+	/**
+	 * The number of pixels that an element's content is scrolled to the top.
+	 */
 	@Override
-	public final Map<String, String> getAttributes() {
-		StringMap result = new StringMap();
-		JsArrayString arr = getAttributeList();
-		for (int idx = 0; idx < arr.length(); idx += 2) {
-			result.put(arr.get(idx), arr.get(idx + 1));
-		}
-		return result;
-	}
+	public final native void setScrollTop(int scrollTop) /*-{
+															this.scrollTop = scrollTop;
+															}-*/;
 
-	private final native JsArrayString getAttributeList()/*-{
-        var result = [];
-        var attrs = this.attributes;
-        for (var i = 0; i < attrs.length; i++) {
-            result.push(attrs[i].name);
-            result.push(attrs[i].value);
-        }
-        return result;
-	}-*/;
+	/**
+	 * The index that represents the element's position in the tabbing order.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-tabindex">
+	 *      W3C HTML Specification</a>
+	 */
+	@Override
+	public final native void setTabIndex(int tabIndex) /*-{
+														this.tabIndex = tabIndex;
+														}-*/;
+
+	/**
+	 * The element's advisory title.
+	 */
+	@Override
+	public final native void setTitle(String title) /*-{
+													// Setting the title to null results in the string "null" being displayed
+													// on some browsers.
+													this.title = title || '';
+													}-*/;
 
 	@Override
 	public final void sinkEvents(int eventBits) {
@@ -805,76 +754,248 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	}
 
 	@Override
-	public final void ensureId() {
-		throw new UnsupportedOperationException();
+	public final void toggleClassName(String className) {
+		DomElementStatic.toggleClassName(this, className);
 	}
 
-	final native String getTagNameInternal()/*-{
-        return this.tagName;
-	}-*/;
+	private final native JsArrayString getAttributeList()/*-{
+															var result = [];
+															var attrs = this.attributes;
+															for (var i = 0; i < attrs.length; i++) {
+															result.push(attrs[i].name);
+															result.push(attrs[i].value);
+															}
+															return result;
+															}-*/;
+
+	/**
+	 * Returns a NodeList of all descendant Elements with a given tag name, in
+	 * the order in which they are encountered in a preorder traversal of this
+	 * Element tree.
+	 * 
+	 * @param name
+	 *            The name of the tag to match on. The special value "*" matches
+	 *            all tags
+	 * @return A list of matching Element nodes
+	 */
+	private final native NodeListRemote<Element>
+			getElementsByTagName0(String name) /*-{
+												return this.getElementsByTagName(name);
+												}-*/;
+
+	private final native double getSubPixelClientHeight() /*-{
+															return this.clientHeight;
+															}-*/;
+
+	private final native double getSubPixelClientWidth() /*-{
+															return this.clientWidth;
+															}-*/;
+
+	private final native double getSubPixelOffsetHeight() /*-{
+															return this.offsetHeight || 0;
+															}-*/;
+
+	private final native double getSubPixelOffsetLeft() /*-{
+														return this.offsetLeft || 0;
+														}-*/;
+
+	private final native double getSubPixelOffsetTop() /*-{
+														return this.offsetTop || 0;
+														}-*/;
+
+	private final native double getSubPixelOffsetWidth() /*-{
+															return this.offsetWidth || 0;
+															}-*/;
+
+	private final native double getSubPixelScrollHeight() /*-{
+															return this.scrollHeight || 0;
+															}-*/;
+
+	private final native double getSubPixelScrollTop() /*-{
+														return this.scrollTop || 0;
+														}-*/;
+
+	private final native double getSubPixelScrollWidth() /*-{
+															return this.scrollWidth || 0;
+															}-*/;
 
 	final native String getInnerHTML0()/*-{
-        return this.innerHTML;
-	}-*/;
+										return this.innerHTML;
+										}-*/;
 
-	public final StyleRemote getStyleRemote() {
-		return getStyle0();
+	final native ElementRemote getParentElement0()/*-{
+													return this.parentElement;
+													}-*/;
+
+	/**
+	 * Gets this element's {@link Style} object.
+	 */
+	final native StyleRemote getStyle0() /*-{
+											return this.style;
+											}-*/;
+
+	final native String getTagNameInternal()/*-{
+											return this.tagName;
+											}-*/;
+
+	final boolean hasTagNameInternal(String tag) {
+		return getTagNameInternal().equals(tag);
+	}
+
+	final native String provideRemoteDomTree0()/*-{
+												function addNode(node, buffer, depth) {
+												var buf = buffer.buf;
+												for (var idx = 0; idx < depth; idx++) {
+												buf += ' ';
+												}
+												buf += node.nodeType;
+												buf += ': ';
+												switch (node.nodeType) {
+												case 3:
+												case 8:
+												buf += '[';
+												buf += node.data.split('\n').join('\\n').split('\t')
+												.join('\\t').split('\r')
+												.join('\\r');
+												buf += ']';
+												break;
+												case 1:
+												buf += node.tagName;
+												buf += ' : ';
+												break;
+												}
+												buf += '\n';
+												buffer.buf = buf;
+												if (node.nodeType == 1) {
+												var idx = 0;
+												var size = node.childNodes.length;
+												for (; idx < size; idx++) {
+												var child = node.childNodes.item(idx);
+												addNode(child, buffer, depth + 1);
+												}
+												}
+												}
+												var buffer = {
+												buf : ''
+												};
+												addNode(this, buffer, 0);
+												return buffer.buf;
+												}-*/;
+
+	final native ElementRemoteIndex provideRemoteIndex(boolean debug)/*-{
+																		var result = {
+																		hasNode : null,
+																		root : null,
+																		indicies : [],
+																		ancestors : [],
+																		sizes : [],
+																		debugData : [],
+																		remoteDefined : [],
+																		debugLog : '',
+																		};
+																		var cursor = this;
+																		while (true) {
+																		var hasNode = @com.google.gwt.dom.client.LocalDom::hasNode(Lcom/google/gwt/core/client/JavaScriptObject;)(cursor);
+																		if (hasNode) {
+																		result.hasNode = cursor;
+																		break;
+																		}
+																		var parent = cursor.parentElement;
+																		if (parent == null) {
+																		result.root = cursor;
+																		break;
+																		}
+																		var idx = 0;
+																		var size = parent.childNodes.length;
+																		for (; idx < size; idx++) {
+																		var node = parent.childNodes.item(idx);
+																		if (debug) {
+																		result.debugLog += "Checking node - depth: "
+																		+ result.indicies.length;
+																		result.debugLog += " - idx: " + idx;
+																		result.debugLog += " - Node type: " + node.nodeType;
+																		result.debugLog += " - Node name: " + node.nodeName;
+																		result.debugLog += " - Cursor type: " + node.nodeType;
+																		result.debugLog += " - Cursor name: " + node.nodeName;
+																		result.debugLog += "\n";
+																		}
+																		if (node == cursor) {
+																		result.indicies.push(idx);
+																		result.ancestors.push(cursor);
+																		var className = cursor.className;
+																		if (!className.indexOf
+																		&& typeof className.baseVal == 'string') {
+																		className = className.baseVal;
+																		}
+																		result.remoteDefined.push(className
+																		.indexOf("remote-defined") != -1);
+																		break;
+																		}
+																		}
+																		result.sizes.push(size);
+																		if (debug) {
+																		var buf = '';
+																		var idx = 0;
+																		for (; idx < size; idx++) {
+																		var node = parent.childNodes.item(idx);
+																		buf += node.nodeType;
+																		buf += ': ';
+																		switch (node.nodeType) {
+																		case 3:
+																		case 8:
+																		buf += '[';
+																		buf += node.data.split('\n').join('\\n').split('\t')
+																		.join('\\t');
+																		buf += ']';
+																		break;
+																		case 1:
+																		buf += node.tagName;
+																		buf += ' : ';
+																		break;
+																		}
+																		buf += "\n";
+																		}
+																		result.debugData.push(buf);
+																		}
+																		cursor = parent;
+																		}
+																		return result;
+																		
+																		}-*/;
+
+	final Node removeAllChildrenElement() {
+		// can't, because need to sync local and remote nodes
+		// if (LocalDom.fastRemoveAll) {
+		// setInnerHTML("");
+		// } else {
+		removeAllChildrenElement0();
+		// }
+		return nodeFor();
+	}
+
+	final native void removeAllChildrenElement0()/*-{
+													while (this.lastChild) {
+													this.removeChild(this.lastChild);
+													}
+													}-*/;
+
+	final native void removeFromParent0()/*-{
+											this.parentElement.removeChild(this);
+											}-*/;
+
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to an
+	 * {@link Element}. A <code>null</code> object will cause this method to
+	 * return <code>false</code>.
+	 */
+	private static class remoteCache {
+		public boolean lastIsResult;
+
+		public JavaScriptObject lastIs;
 	}
 
 	static class ElementRemoteIndex extends JavaScriptObject {
 		protected ElementRemoteIndex() {
-		}
-
-		final native ElementRemote hasNode()/*-{
-            return this.hasNode;
-		}-*/;
-
-		final native ElementRemote root()/*-{
-            return this.root;
-		}-*/;
-
-		final native JsArrayInteger jsIndicies()/*-{
-            return this.indicies;
-		}-*/;
-
-		final native JsArrayInteger jsSizes()/*-{
-            return this.sizes;
-		}-*/;
-
-		final native JsArray ancestors()/*-{
-            return this.ancestors;
-		}-*/;
-
-		final native String stringIndicies()/*-{
-            return this.indicies.join(",");
-		}-*/;
-
-		final native String stringRemoteDefined()/*-{
-            return this.remoteDefined.join(",");
-		}-*/;
-
-		final native String stringSizes()/*-{
-            return this.sizes.join(",");
-		}-*/;
-
-		final native String debugData()/*-{
-            return this.debugData.join("\n\n");
-		}-*/;
-
-		final native String debugLog()/*-{
-            return this.debugLog;
-		}-*/;
-
-		final List<Integer> indicies() {
-			return commaSeparatedIntsToList(stringIndicies());
-		}
-
-		final List<Boolean> remoteDefined() {
-			return commaSeparatedBoolsToList(stringRemoteDefined());
-		}
-
-		final List<Integer> sizes() {
-			return commaSeparatedIntsToList(stringSizes());
 		}
 
 		public final String getString() {
@@ -888,6 +1009,22 @@ public class ElementRemote extends NodeRemote implements DomElement {
 			return fb.toString();
 		}
 
+		final native JsArray ancestors()/*-{
+										return this.ancestors;
+										}-*/;
+
+		final native String debugData()/*-{
+										return this.debugData.join("\n\n");
+										}-*/;
+
+		final native String debugLog()/*-{
+										return this.debugLog;
+										}-*/;
+
+		final native ElementRemote hasNode()/*-{
+											return this.hasNode;
+											}-*/;
+
 		final boolean hasRemoteDefined() {
 			for (Boolean value : remoteDefined()) {
 				if (value) {
@@ -896,178 +1033,41 @@ public class ElementRemote extends NodeRemote implements DomElement {
 			}
 			return false;
 		}
-	}
 
-	public final String provideRemoteDomTree() {
-		return provideRemoteDomTree0();
-	}
-
-	static List<Integer> commaSeparatedIntsToList(String string) {
-		if (string.isEmpty()) {
-			return Collections.emptyList();
+		final List<Integer> indicies() {
+			return commaSeparatedIntsToList(stringIndicies());
 		}
-		return Arrays.asList(string.split(",")).stream().map(Integer::parseInt)
-				.collect(Collectors.toList());
-	}
 
-	static List<Boolean> commaSeparatedBoolsToList(String string) {
-		if (string.isEmpty()) {
-			return Collections.emptyList();
+		final native JsArrayInteger jsIndicies()/*-{
+												return this.indicies;
+												}-*/;
+
+		final native JsArrayInteger jsSizes()/*-{
+												return this.sizes;
+												}-*/;
+
+		final List<Boolean> remoteDefined() {
+			return commaSeparatedBoolsToList(stringRemoteDefined());
 		}
-		return Arrays.asList(string.split(",")).stream()
-				.map(Boolean::parseBoolean).collect(Collectors.toList());
+
+		final native ElementRemote root()/*-{
+											return this.root;
+											}-*/;
+
+		final List<Integer> sizes() {
+			return commaSeparatedIntsToList(stringSizes());
+		}
+
+		final native String stringIndicies()/*-{
+											return this.indicies.join(",");
+											}-*/;
+
+		final native String stringRemoteDefined()/*-{
+													return this.remoteDefined.join(",");
+													}-*/;
+
+		final native String stringSizes()/*-{
+											return this.sizes.join(",");
+											}-*/;
 	}
-
-	final native String provideRemoteDomTree0()/*-{
-        function addNode(node, buffer, depth) {
-            var buf = buffer.buf;
-            for (var idx = 0; idx < depth; idx++) {
-                buf += ' ';
-            }
-            buf += node.nodeType;
-            buf += ': ';
-            switch (node.nodeType) {
-            case 3:
-            case 8:
-                buf += '[';
-                buf += node.data.split('\n').join('\\n').split('\t')
-                        .join('\\t').split('\r')
-                        .join('\\r');
-                buf += ']';
-                break;
-            case 1:
-                buf += node.tagName;
-                buf += ' : ';
-                break;
-            }
-            buf += '\n';
-            buffer.buf = buf;
-            if (node.nodeType == 1) {
-                var idx = 0;
-                var size = node.childNodes.length;
-                for (; idx < size; idx++) {
-                    var child = node.childNodes.item(idx);
-                    addNode(child, buffer, depth + 1);
-                }
-            }
-        }
-        var buffer = {
-            buf : ''
-        };
-        addNode(this, buffer, 0);
-        return buffer.buf;
-	}-*/;
-
-	final native ElementRemoteIndex provideRemoteIndex(boolean debug)/*-{
-        var result = {
-            hasNode : null,
-            root : null,
-            indicies : [],
-            ancestors : [],
-            sizes : [],
-            debugData : [],
-            remoteDefined : [],
-            debugLog : '',
-        };
-        var cursor = this;
-        while (true) {
-            var hasNode = @com.google.gwt.dom.client.LocalDom::hasNode(Lcom/google/gwt/core/client/JavaScriptObject;)(cursor);
-            if (hasNode) {
-                result.hasNode = cursor;
-                break;
-            }
-            var parent = cursor.parentElement;
-            if (parent == null) {
-                result.root = cursor;
-                break;
-            }
-            var idx = 0;
-            var size = parent.childNodes.length;
-            for (; idx < size; idx++) {
-                var node = parent.childNodes.item(idx);
-                if (debug) {
-                    result.debugLog += "Checking node - depth: "
-                            + result.indicies.length;
-                    result.debugLog += " - idx: " + idx;
-                    result.debugLog += " - Node type: " + node.nodeType;
-                    result.debugLog += " - Node name: " + node.nodeName;
-                    result.debugLog += " - Cursor type: " + node.nodeType;
-                    result.debugLog += " - Cursor name: " + node.nodeName;
-                    result.debugLog += "\n";
-                }
-                if (node == cursor) {
-                    result.indicies.push(idx);
-                    result.ancestors.push(cursor);
-                    var className = cursor.className;
-                    if (!className.indexOf
-                            && typeof className.baseVal == 'string') {
-                        className = className.baseVal;
-                    }
-                    result.remoteDefined.push(className
-                            .indexOf("remote-defined") != -1);
-                    break;
-                }
-            }
-            result.sizes.push(size);
-            if (debug) {
-                var buf = '';
-                var idx = 0;
-                for (; idx < size; idx++) {
-                    var node = parent.childNodes.item(idx);
-                    buf += node.nodeType;
-                    buf += ': ';
-                    switch (node.nodeType) {
-                    case 3:
-                    case 8:
-                        buf += '[';
-                        buf += node.data.split('\n').join('\\n').split('\t')
-                                .join('\\t');
-                        buf += ']';
-                        break;
-                    case 1:
-                        buf += node.tagName;
-                        buf += ' : ';
-                        break;
-                    }
-                    buf += "\n";
-                }
-                result.debugData.push(buf);
-            }
-            cursor = parent;
-        }
-        return result;
-
-	}-*/;
-
-	public final native String getOuterHtml()/*-{
-        return this.outerHTML;
-	}-*/;
-
-	final native ElementRemote getParentElement0()/*-{
-        return this.parentElement;
-	}-*/;
-
-	final boolean hasTagNameInternal(String tag) {
-		return getTagNameInternal().equals(tag);
-	}
-
-	final Node removeAllChildrenElement() {
-		// can't, because need to sync local and remote nodes
-		// if (LocalDom.fastRemoveAll) {
-		// setInnerHTML("");
-		// } else {
-		removeAllChildrenElement0();
-		// }
-		return nodeFor();
-	}
-
-	final native void removeAllChildrenElement0()/*-{
-        while (this.lastChild) {
-            this.removeChild(this.lastChild);
-        }
-	}-*/;
-
-	final native void removeFromParent0()/*-{
-        this.parentElement.removeChild(this);
-	}-*/;
 }

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.dom.client.Element;
@@ -21,8 +20,7 @@ import com.google.gwt.user.client.DOM;
  *
  * @author Nick Reddel
  */
-
- public class StyledAWidget<O> extends Link {
+public class StyledAWidget<O> extends Link {
 	private Element spanElem;
 
 	public StyledAWidget(String text) {
@@ -45,9 +43,17 @@ import com.google.gwt.user.client.DOM;
 		}
 	}
 
+	public String getTarget() {
+		return DOM.getElementProperty(anchorElem, "target");
+	}
+
 	@Override
 	public void setHTML(String html) {
 		DOM.setInnerHTML(spanElem, html);
+	}
+
+	public void setTarget(String target) {
+		DOM.setElementProperty(anchorElem, "target", target);
 	}
 
 	@Override
@@ -58,14 +64,5 @@ import com.google.gwt.user.client.DOM;
 	@Override
 	protected Element getStyleElement() {
 		return anchorElem;
-	}
-
-	
-	public String getTarget() {
-		return DOM.getElementProperty(anchorElem, "target");
-	}
-
-	public void setTarget(String target) {
-		DOM.setElementProperty(anchorElem, "target", target);
 	}
 }

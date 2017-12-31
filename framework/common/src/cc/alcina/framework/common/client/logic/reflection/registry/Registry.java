@@ -32,7 +32,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry.NoResolvedImplementationException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.MultikeyMap;
@@ -46,16 +45,6 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCre
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class Registry {
-	public static class NoResolvedImplementationException extends RuntimeException {
-		public NoResolvedImplementationException() {
-			super();
-		}
-
-		public NoResolvedImplementationException(String message) {
-			super(message);
-		}
-	}
-
 	public static final String MARKER_RESOURCE = "registry.properties";
 
 	private static RegistryProvider provider = new BasicRegistryProvider();
@@ -166,11 +155,12 @@ public class Registry {
 		return get().impl0(registryPoint, targetObjectClass, allowNull);
 	}
 
+	public static <V> Optional<V> implOptional(Class<V> registryPoint) {
+		return Optional.<V> ofNullable(implOrNull(registryPoint, void.class));
+	}
+
 	public static <V> V implOrNull(Class<V> registryPoint) {
 		return implOrNull(registryPoint, void.class);
-	}
-	public static <V> Optional<V> implOptional(Class<V> registryPoint) {
-		return Optional.<V>ofNullable(implOrNull(registryPoint, void.class));
 	}
 
 	public static <V> V implOrNull(Class<V> registryPoint, Class targetClass) {
@@ -648,6 +638,17 @@ public class Registry {
 
 	public static class NoImplementationException extends RegistryException {
 		public NoImplementationException(String message) {
+			super(message);
+		}
+	}
+
+	public static class NoResolvedImplementationException
+			extends RuntimeException {
+		public NoResolvedImplementationException() {
+			super();
+		}
+
+		public NoResolvedImplementationException(String message) {
 			super(message);
 		}
 	}

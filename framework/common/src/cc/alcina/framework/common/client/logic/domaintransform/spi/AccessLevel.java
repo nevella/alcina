@@ -11,11 +11,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform.spi;
+
 /**
- * Controls visible access, property write (server) controlled by action permissions
+ * Controls visible access, property write (server) controlled by action
+ * permissions
  */
 public enum AccessLevel {
-	EVERYONE,LOGGED_IN,GROUP,ADMIN_OR_OWNER,ADMIN,DEVELOPER,ROOT
+	EVERYONE, LOGGED_IN, GROUP, ADMIN_OR_OWNER, ADMIN, DEVELOPER, ROOT
 }

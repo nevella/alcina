@@ -27,6 +27,16 @@ import rocket.util.client.Checker;
  * @author Miroslav Pokorny (mP)
  */
 public class SelectionEndPoint {
+	private Text textNode;
+
+	private Node node;
+
+	/**
+	 * The number of characters starting from the beginning of the textNode
+	 * where the selection begins/ends.
+	 */
+	public int offset;
+
 	public SelectionEndPoint() {
 		super();
 	}
@@ -37,12 +47,17 @@ public class SelectionEndPoint {
 		this.setOffset(offset);
 	}
 
-	private Text textNode;
-
-	private Node node;
-
 	public Node getNode() {
 		return this.node;
+	}
+
+	public int getOffset() {
+		return offset;
+	}
+
+	public Text getTextNode() {
+		Checker.notNull("field:textNode", textNode);
+		return textNode;
 	}
 
 	public void setNode(Node node) {
@@ -52,29 +67,14 @@ public class SelectionEndPoint {
 		}
 	}
 
-	public Text getTextNode() {
-		Checker.notNull("field:textNode", textNode);
-		return textNode;
+	public void setOffset(final int offset) {
+		this.offset = offset;
 	}
 
 	public void setTextNode(final Text textNode) {
 		Checker.notNull("parameter:textNode", textNode);
 		this.textNode = textNode;
-		this.node=textNode;
-	}
-
-	/**
-	 * The number of characters starting from the beginning of the textNode
-	 * where the selection begins/ends.
-	 */
-	public int offset;
-
-	public int getOffset() {
-		return offset;
-	}
-
-	public void setOffset(final int offset) {
-		this.offset = offset;
+		this.node = textNode;
 	}
 
 	public String toString() {

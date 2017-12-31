@@ -16,13 +16,12 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 
 @RegistryLocation(registryPoint = FormatConverter.class, targetClass = FormatConversionTarget_XLS.class)
 public class FormatConverterXls implements FormatConverter {
-	public InputStream convert(PublicationContext ctx, FormatConversionModel fcm)
-			throws Exception {
-		if(fcm.bytes==null){
+	public InputStream convert(PublicationContext ctx,
+			FormatConversionModel fcm) throws Exception {
+		if (fcm.bytes == null) {
 			ExcelExporter ee = new ExcelExporter();
 			Document doc = ee.getTemplate();
-			ee.addCollectionToBook(fcm.rows, doc,
-					"results");
+			ee.addCollectionToBook(fcm.rows, doc, "results");
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			OutputStreamWriter writer = new OutputStreamWriter(baos, "UTF-8");
 			XmlUtils.streamXML(doc, writer);
@@ -31,11 +30,11 @@ public class FormatConverterXls implements FormatConverter {
 		return new ByteArrayInputStream(fcm.bytes);
 	}
 
-	public String getMimeType() {
-		return "application/msexcel";
-	}
-
 	public String getFileExtension() {
 		return "xls";
+	}
+
+	public String getMimeType() {
+		return "application/msexcel";
 	}
 }

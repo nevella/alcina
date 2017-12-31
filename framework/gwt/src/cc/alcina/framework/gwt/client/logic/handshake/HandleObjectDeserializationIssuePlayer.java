@@ -11,7 +11,8 @@ import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 
 @ClientInstantiable
 @RegistryLocation(registryPoint = HandleObjectDeserializationIssuePlayer.class, implementationType = ImplementationType.SINGLETON)
-public class HandleObjectDeserializationIssuePlayer  extends EndpointPlayer<HandshakeState> {
+public class HandleObjectDeserializationIssuePlayer
+		extends EndpointPlayer<HandshakeState> {
 	public HandleObjectDeserializationIssuePlayer() {
 		super(HandshakeState.OBJECTS_FATAL_DESERIALIZATION_EXCEPTION);
 	}
@@ -19,7 +20,8 @@ public class HandleObjectDeserializationIssuePlayer  extends EndpointPlayer<Hand
 	@Override
 	public void run() {
 		if (LocalTransformPersistence.get() != null) {
-			Window.alert("Failure in unwrap/register -  press 'OK' to clear and reload");
+			Window.alert(
+					"Failure in unwrap/register -  press 'OK' to clear and reload");
 			LocalTransformPersistence.get().clearPersistedClient(null, -1,
 					new ReloadOnSuccessCallback(), true);
 		} else {

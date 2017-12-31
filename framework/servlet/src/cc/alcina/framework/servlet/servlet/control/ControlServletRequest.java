@@ -6,19 +6,27 @@ public class ControlServletRequest {
 	private ControlServletRequestCommand command;
 
 	private ControlServletModes modes;
-	
+
 	private boolean json;
 
 	public ControlServletRequestCommand getCommand() {
 		return this.command;
 	}
 
+	public ControlServletModes getModes() {
+		return this.modes;
+	}
+
+	public boolean isJson() {
+		return this.json;
+	}
+
 	public void setCommand(ControlServletRequestCommand command) {
 		this.command = command;
 	}
 
-	public ControlServletModes getModes() {
-		return this.modes;
+	public void setJson(boolean json) {
+		this.json = json;
 	}
 
 	public void setModes(ControlServletModes modes) {
@@ -30,13 +38,5 @@ public class ControlServletRequest {
 		return CommonUtils.formatJ("\tcmd:\t%s\n" + "\tstates:\t%s\n",
 				CommonUtils.nullSafeToString(command),
 				CommonUtils.nullSafeToString(modes));
-	}
-
-	public boolean isJson() {
-		return this.json;
-	}
-
-	public void setJson(boolean json) {
-		this.json = json;
 	}
 }

@@ -33,13 +33,25 @@ import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
  * 
  * @author Nick Reddel
  */
-public class ServerValidator implements
-		ParameterisedValidator, Serializable {
+public class ServerValidator implements ParameterisedValidator, Serializable {
 	public static final transient String TOPIC_SERVER_VALIDATION_RESULT = ServerValidator.class
 			.getName() + ".TOPIC_SERVER_VALIDATION_RESULT";
+
 	public static final String TOPIC_SERVER_VALIDATION_BEFORE_SEND = ServerValidator.class
 			.getName() + ".TOPIC_SERVER_VALIDATION_BEFORE_SEND";
+
 	public static boolean performingBeanValidation = false;
+
+	public static void beforeServerValidation(ServerValidator validator) {
+		GlobalTopicPublisher.get()
+				.publishTopic(TOPIC_SERVER_VALIDATION_BEFORE_SEND, validator);
+	}
+
+	public static void beforeServerValidationListenerDelta(
+			TopicListener<ServerValidator> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(
+				TOPIC_SERVER_VALIDATION_BEFORE_SEND, listener, add);
+	}
 
 	public static boolean listIsValid(List<ServerValidator> svs) {
 		for (ServerValidator sv : svs) {
@@ -52,8 +64,8 @@ public class ServerValidator implements
 
 	public static void notifyServerValidationResultListenerDelta(
 			TopicListener<ServerValidator> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(
-				TOPIC_SERVER_VALIDATION_RESULT, listener, add);
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_SERVER_VALIDATION_RESULT,
+				listener, add);
 	}
 
 	private String message;
@@ -101,7 +113,8 @@ public class ServerValidator implements
 	public void setParameters(NamedParameter[] params) {
 	}
 
-	public void setServerValidationResult(ServerValidationResult serverValidationResult) {
+	public void setServerValidationResult(
+			ServerValidationResult serverValidationResult) {
 		this.serverValidationResult = serverValidationResult;
 	}
 
@@ -141,7 +154,8 @@ public class ServerValidator implements
 					setMessage("Validator error");
 					resolveFeedback(null);
 					cleanUp();
-					throw new WrappedRuntimeException("Validator error", caught);
+					throw new WrappedRuntimeException("Validator error",
+							caught);
 				}
 
 				public void onSuccess(List<ServerValidator> result) {
@@ -175,7 +189,8 @@ public class ServerValidator implements
 				}
 
 				@SuppressWarnings("unchecked")
-				void resolveFeedback(ServerValidator lastValidatorWithException) {
+				void resolveFeedback(
+						ServerValidator lastValidatorWithException) {
 					if (psve.feedback == null) {
 						return;
 					}
@@ -213,22 +228,13 @@ public class ServerValidator implements
 		}
 		return value;
 	}
-	public static void beforeServerValidation(ServerValidator validator) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_SERVER_VALIDATION_BEFORE_SEND, validator);
-	}
 
-	public static void beforeServerValidationListenerDelta(
-			TopicListener<ServerValidator> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(
-				TOPIC_SERVER_VALIDATION_BEFORE_SEND, listener, add);
+	protected void handleServerValidationException(ServerValidator sv) {
+		setMessage(sv.getMessage());
 	}
 
 	protected ValidationException provideTypedException(String sMessage) {
 		return new ValidationException(sMessage, getClass());
-	}
-
-	protected void handleServerValidationException(ServerValidator sv) {
-		setMessage(sv.getMessage());
 	}
 
 	protected void validateWithCallback(
@@ -237,8 +243,8 @@ public class ServerValidator implements
 				Arrays.asList(new ServerValidator[] { this }), callback);
 	}
 
-	public static class ProcessingServerValidationException extends
-			ValidationException {
+	public static class ProcessingServerValidationException
+			extends ValidationException {
 		private Object sourceWidget;
 
 		private RelativePopupValidationFeedback feedback;

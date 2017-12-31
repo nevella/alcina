@@ -6,8 +6,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 
-public class RepeatingCommandWithPostCompletionCallback implements
-		RepeatingCommand {
+public class RepeatingCommandWithPostCompletionCallback
+		implements RepeatingCommand {
 	private AsyncCallback postCompletionCallback;
 
 	private RepeatingCommand delegate;
@@ -22,15 +22,15 @@ public class RepeatingCommandWithPostCompletionCallback implements
 
 	@Override
 	public boolean execute() {
-		if(cancelled){
+		if (cancelled) {
 			return false;
 		}
 		boolean shouldContinue = false;
 		try {
 			shouldContinue = delegate.execute();
 		} catch (final Exception e) {
-			Registry.impl(TimerWrapperProvider.class).scheduleDeferredIfOnUIThread(
-					new Runnable() {
+			Registry.impl(TimerWrapperProvider.class)
+					.scheduleDeferredIfOnUIThread(new Runnable() {
 						@Override
 						public void run() {
 							postCompletionCallback.onFailure(e);
@@ -38,8 +38,8 @@ public class RepeatingCommandWithPostCompletionCallback implements
 					});
 		}
 		if (!shouldContinue) {
-			Registry.impl(TimerWrapperProvider.class).scheduleDeferredIfOnUIThread(
-					new Runnable() {
+			Registry.impl(TimerWrapperProvider.class)
+					.scheduleDeferredIfOnUIThread(new Runnable() {
 						@Override
 						public void run() {
 							postCompletionCallback.onSuccess(null);
@@ -48,6 +48,7 @@ public class RepeatingCommandWithPostCompletionCallback implements
 		}
 		return shouldContinue;
 	}
+
 	public boolean isCancelled() {
 		return this.cancelled;
 	}

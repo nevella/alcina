@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.customiser;
-
 
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
@@ -28,16 +26,15 @@ import cc.alcina.framework.gwt.client.gwittir.provider.FixedWidthLabelProvider;
  *
  * @author Nick Reddel
  */
-
- public class FixedWidthLabelCustomiser implements Customiser {
+public class FixedWidthLabelCustomiser implements Customiser {
 	public static final String MAX_WIDTH = "maxLabelWidth";
 
 	public static final String SHOW_NEWLINES_AS_HTML_BREAKS = "showNewlinesAsBreaks";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
-		NamedParameter p = NamedParameter.Support.getParameter(info
-				.parameters(), MAX_WIDTH);
+		NamedParameter p = NamedParameter.Support
+				.getParameter(info.parameters(), MAX_WIDTH);
 		int maxLength = p == null ? GwittirBridge.MAX_EXPANDABLE_LABEL_LENGTH
 				: p.intValue();
 		p = NamedParameter.Support.getParameter(info.parameters(),

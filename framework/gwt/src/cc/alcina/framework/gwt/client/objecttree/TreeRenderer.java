@@ -41,9 +41,20 @@ import cc.alcina.framework.gwt.client.logic.RenderContext;
 public interface TreeRenderer<T extends TreeRenderable> {
 	public static final String TOOLTIP_HINT = "(Tooltip)";
 
+	public TreeRenderer childRendererForRenderableClass(
+			Class<? extends TreeRenderable> clazz);
+
+	public Collection<? extends TreeRenderer> childRenderers();
+
+	public CollectionFilter collectionFilter();
+
 	public CollectionProvider collectionProvider();
 
 	public String emptyChildText();
+
+	public AbstractBoundWidget getBoundWidget();
+
+	public LooseContextInstance getContext();
 
 	public T getRenderable();
 
@@ -51,56 +62,45 @@ public interface TreeRenderer<T extends TreeRenderable> {
 
 	public boolean isAlwaysExpanded();
 
+	public default boolean isNoTitle() {
+		return false;
+	}
+
 	public boolean isSingleLineCustomiser();
 
 	public Collection<? extends TreeRenderable> renderableChildren();
 
-	public Collection<? extends TreeRenderer> childRenderers();
-
-	public TreeRenderer childRendererForRenderableClass(
-			Class<? extends TreeRenderable> clazz);
-
 	public String renderablePropertyName();
+
+	public String renderableText();
 
 	public boolean renderChildrenHorizontally();
 
 	public String renderCss();
 
-	public String renderableText();
-
 	public BoundWidgetProvider renderCustomiser();
-
-	public AbstractBoundWidget getBoundWidget();
-
-	public void setBoundWidget(AbstractBoundWidget widget);
-
-	public RenderInstruction renderInstruction();
-
-	public String section();
-
-	public void setRenderable(T renderable);
-
-	public enum RenderInstruction {
-		AS_WIDGET, AS_TITLE, AS_WIDGET_WITH_TITLE_IF_MORE_THAN_ONE_CHILD,
-		IGNORE_AND_DESCEND, NO_RENDER
-	}
-
-	public CollectionFilter collectionFilter();
-
-	public LooseContextInstance getContext();
-
-	public void setContext(RenderContext context);
-
-	public String title();
 
 	public default Renderer<?, String> renderer() {
 		return null;
 	}
 
+	public RenderInstruction renderInstruction();
+
+	public String section();
+
+	public void setBoundWidget(AbstractBoundWidget widget);
+
+	public void setContext(RenderContext context);
+
+	public void setRenderable(T renderable);
+
+	public String title();
+
 	default void parentBinding(Binding binding) {
 	}
 
-	public default boolean isNoTitle() {
-		return false;
+	public enum RenderInstruction {
+		AS_WIDGET, AS_TITLE, AS_WIDGET_WITH_TITLE_IF_MORE_THAN_ONE_CHILD,
+		IGNORE_AND_DESCEND, NO_RENDER
 	}
 }

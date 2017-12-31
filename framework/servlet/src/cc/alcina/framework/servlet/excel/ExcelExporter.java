@@ -56,33 +56,79 @@ public class ExcelExporter {
 
 	private Element sheetTemplate = null;
 
-	private final class ToPdMultiConverterFilter implements
-			ConverterFilter<PropertyDescriptor, ExcelExporter.PdMultiplexer> {
-		@Override
-		public PdMultiplexer convert(PropertyDescriptor original) {
-			return new PdMultiplexer(original);
+	private List<List> cellList = new ArrayList<>();
+
+	private Pattern percentPattern = Pattern
+			.compile("-?(([0-9]+\\.?[0-9]*)|([0-9]*\\.?[0-9]+))%");
+
+	private Pattern numericPattern = Pattern
+			.compile("-?([0-9]+\\.?[0-9]*)|([0-9]*\\.?[0-9]+)");
+
+	public void add2dCollectionToBook(Collection coll, Document book,
+			String sheetName) throws Exception {
+		Iterator topItr = coll.iterator();
+		if (!topItr.hasNext()) {
+			return;
 		}
-
-		@Override
-		public boolean allowPreConvert(PropertyDescriptor t) {
-			return !ignorePd(t);
+		Element sn = (Element) sheetTemplate.cloneNode(true);
+		sn.setAttributeNS(SS_NS, "ss:Name", sheetName);
+		book.getDocumentElement().appendChild(sn);
+		Element table = (Element) sn.getElementsByTagName("Table").item(0);
+		Collection rowCollection = (Collection) topItr.next();
+		table.setAttributeNS(SS_NS, "ss:ExpandedColumnCount",
+				String.valueOf(rowCollection.size()));
+		table.setAttributeNS(SS_NS, "ss:ExpandedRowCount",
+				String.valueOf(coll.size()));
+		Element row;
+		Element cell;
+		Element data;
+		Text txt;
+		row = book.createElement("Row");
+		row.setAttributeNS(SS_NS, "ss:StyleID", "sHeaderRow");
+		for (Iterator itr = rowCollection.iterator(); itr.hasNext();) {
+			Object value = itr.next();
+			Element col = book.createElement("Column");
+			col.setAttributeNS(SS_NS, "ss:AutoFitWidth", "0");
+			col.setAttributeNS(SS_NS, "ss:Width", "120");
+			table.appendChild(col);
+			cell = book.createElement("Cell");
+			data = book.createElement("Data");
+			row.appendChild(cell);
+			cell.appendChild(data);
+			data.setAttributeNS(SS_NS, "ss:Type", "String");
+			txt = book.createTextNode(strVal(value));
+			data.appendChild(txt);
 		}
-
-		@Override
-		public boolean allowPostConvert(PdMultiplexer c) {
-			return true;
-		}
-	}
-
-	public static class ExcelEmptyBean implements Serializable {
-		private String name = "No data";
-
-		public String getName() {
-			return this.name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
+		table.appendChild(row);
+		for (Iterator it = topItr; it.hasNext();) {
+			rowCollection = (Collection) it.next();
+			row = book.createElement("Row");
+			int colIndex = 1;
+			for (Iterator itr = rowCollection.iterator(); itr.hasNext();) {
+				Object value = itr.next();
+				cell = book.createElement("Cell");
+				data = book.createElement("Data");
+				cell.setAttributeNS(SS_NS, "ss:Index",
+						String.valueOf(colIndex++));
+				if (value == null) {
+					continue;
+				}
+				row.appendChild(cell);
+				cell.appendChild(data);
+				String strVal = strVal(value);
+				data.setAttributeNS(SS_NS, "ss:Type",
+						isNumeric(strVal) ? "Number" : "String");
+				Matcher m = percentPattern.matcher(strVal);
+				if (m.matches()) {
+					Double v2 = Double.parseDouble(m.group(1)) / 100;
+					strVal = v2.toString();
+					data.setAttributeNS(SS_NS, "ss:Type", "Number");
+					cell.setAttributeNS(SS_NS, "ss:StyleID", "sPercent");
+				}
+				txt = book.createTextNode(strVal);
+				data.appendChild(txt);
+			}
+			table.appendChild(row);
 		}
 	}
 
@@ -102,53 +148,25 @@ public class ExcelExporter {
 		addCollectionToBook(coll, book, sheetName, pdMultis);
 	}
 
-	private List<List> cellList = new ArrayList<>();
-
-	public List<List> getCellList() {
-		return this.cellList;
-	}
-
-	static class PdMultiplexer implements Comparable<PdMultiplexer> {
-		private ExcelFormatAnnotation xfa;
-
-		private Display dia;
-
-		PropertyDescriptor pd;
-
-		public PdMultiplexer(PropertyDescriptor pd) {
-			this.pd = pd;
-			Method readMethod = pd.getReadMethod();
-			this.xfa = readMethod.getAnnotation(ExcelFormatAnnotation.class);
-			this.dia = readMethod.getAnnotation(Display.class);
-		}
-
-		public int order() {
-			return xfa != null ? xfa.order()
-					: dia != null ? dia.orderingHint()
-							: ExcelFormatAnnotation.DEFAULT_ORDER_POS;
-		}
-
-		public String name() {
-			return xfa != null && !xfa.displayName().isEmpty()
-					? xfa.displayName()
-					: dia != null ? dia.name() : pd.getName();
-		}
-
-		@Override
-		public int compareTo(PdMultiplexer o) {
-			return order() - o.order();
-		}
-
-		public String styleId() {
-			return xfa == null ? "" : xfa.styleId();
-		}
-	}
-
 	public void addCollectionToBook(Collection coll, Document book,
 			String sheetName, PropertyDescriptor[] pds) throws Exception {
 		List<PdMultiplexer> pdMultis = CollectionFilters.convertAndFilter(
 				Arrays.asList(pds), new ToPdMultiConverterFilter());
 		addCollectionToBook(coll, book, sheetName, pds);
+	}
+
+	public List<List> getCellList() {
+		return this.cellList;
+	}
+
+	public Document getTemplate() throws Exception {
+		InputStream stream = this.getClass()
+				.getResourceAsStream(DOC_TEMPLATE_XML);
+		Document document = XmlUtils.loadDocument(stream);
+		sheetTemplate = (Element) document.getDocumentElement()
+				.getElementsByTagName("Worksheet").item(0);
+		sheetTemplate.getParentNode().removeChild(sheetTemplate);
+		return document;
 	}
 
 	private void addCollectionToBook(Collection coll, Document book,
@@ -261,80 +279,6 @@ public class ExcelExporter {
 				|| (ann != null && ann.omit());
 	}
 
-	public void add2dCollectionToBook(Collection coll, Document book,
-			String sheetName) throws Exception {
-		Iterator topItr = coll.iterator();
-		if (!topItr.hasNext()) {
-			return;
-		}
-		Element sn = (Element) sheetTemplate.cloneNode(true);
-		sn.setAttributeNS(SS_NS, "ss:Name", sheetName);
-		book.getDocumentElement().appendChild(sn);
-		Element table = (Element) sn.getElementsByTagName("Table").item(0);
-		Collection rowCollection = (Collection) topItr.next();
-		table.setAttributeNS(SS_NS, "ss:ExpandedColumnCount",
-				String.valueOf(rowCollection.size()));
-		table.setAttributeNS(SS_NS, "ss:ExpandedRowCount",
-				String.valueOf(coll.size()));
-		Element row;
-		Element cell;
-		Element data;
-		Text txt;
-		row = book.createElement("Row");
-		row.setAttributeNS(SS_NS, "ss:StyleID", "sHeaderRow");
-		for (Iterator itr = rowCollection.iterator(); itr.hasNext();) {
-			Object value = itr.next();
-			Element col = book.createElement("Column");
-			col.setAttributeNS(SS_NS, "ss:AutoFitWidth", "0");
-			col.setAttributeNS(SS_NS, "ss:Width", "120");
-			table.appendChild(col);
-			cell = book.createElement("Cell");
-			data = book.createElement("Data");
-			row.appendChild(cell);
-			cell.appendChild(data);
-			data.setAttributeNS(SS_NS, "ss:Type", "String");
-			txt = book.createTextNode(strVal(value));
-			data.appendChild(txt);
-		}
-		table.appendChild(row);
-		for (Iterator it = topItr; it.hasNext();) {
-			rowCollection = (Collection) it.next();
-			row = book.createElement("Row");
-			int colIndex = 1;
-			for (Iterator itr = rowCollection.iterator(); itr.hasNext();) {
-				Object value = itr.next();
-				cell = book.createElement("Cell");
-				data = book.createElement("Data");
-				cell.setAttributeNS(SS_NS, "ss:Index",
-						String.valueOf(colIndex++));
-				if (value == null) {
-					continue;
-				}
-				row.appendChild(cell);
-				cell.appendChild(data);
-				String strVal = strVal(value);
-				data.setAttributeNS(SS_NS, "ss:Type",
-						isNumeric(strVal) ? "Number" : "String");
-				Matcher m = percentPattern.matcher(strVal);
-				if (m.matches()) {
-					Double v2 = Double.parseDouble(m.group(1)) / 100;
-					strVal = v2.toString();
-					data.setAttributeNS(SS_NS, "ss:Type", "Number");
-					cell.setAttributeNS(SS_NS, "ss:StyleID", "sPercent");
-				}
-				txt = book.createTextNode(strVal);
-				data.appendChild(txt);
-			}
-			table.appendChild(row);
-		}
-	}
-
-	private Pattern percentPattern = Pattern
-			.compile("-?(([0-9]+\\.?[0-9]*)|([0-9]*\\.?[0-9]+))%");
-
-	private Pattern numericPattern = Pattern
-			.compile("-?([0-9]+\\.?[0-9]*)|([0-9]*\\.?[0-9]+)");
-
 	private boolean isNumeric(String strVal) {
 		return strVal != null && numericPattern.matcher(strVal).matches();
 	}
@@ -343,18 +287,74 @@ public class ExcelExporter {
 		return value == null ? "" : value.toString();
 	}
 
-	public Document getTemplate() throws Exception {
-		InputStream stream = this.getClass()
-				.getResourceAsStream(DOC_TEMPLATE_XML);
-		Document document = XmlUtils.loadDocument(stream);
-		sheetTemplate = (Element) document.getDocumentElement()
-				.getElementsByTagName("Worksheet").item(0);
-		sheetTemplate.getParentNode().removeChild(sheetTemplate);
-		return document;
-	}
-
 	String colnameFromFieldname(String fieldName) {
 		String s = fieldName.replace(" ", "_");
 		return s.substring(0, 1).toUpperCase() + s.substring(1);
+	}
+
+	public static class ExcelEmptyBean implements Serializable {
+		private String name = "No data";
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+	}
+
+	private final class ToPdMultiConverterFilter implements
+			ConverterFilter<PropertyDescriptor, ExcelExporter.PdMultiplexer> {
+		@Override
+		public boolean allowPostConvert(PdMultiplexer c) {
+			return true;
+		}
+
+		@Override
+		public boolean allowPreConvert(PropertyDescriptor t) {
+			return !ignorePd(t);
+		}
+
+		@Override
+		public PdMultiplexer convert(PropertyDescriptor original) {
+			return new PdMultiplexer(original);
+		}
+	}
+
+	static class PdMultiplexer implements Comparable<PdMultiplexer> {
+		private ExcelFormatAnnotation xfa;
+
+		private Display dia;
+
+		PropertyDescriptor pd;
+
+		public PdMultiplexer(PropertyDescriptor pd) {
+			this.pd = pd;
+			Method readMethod = pd.getReadMethod();
+			this.xfa = readMethod.getAnnotation(ExcelFormatAnnotation.class);
+			this.dia = readMethod.getAnnotation(Display.class);
+		}
+
+		@Override
+		public int compareTo(PdMultiplexer o) {
+			return order() - o.order();
+		}
+
+		public String name() {
+			return xfa != null && !xfa.displayName().isEmpty()
+					? xfa.displayName()
+					: dia != null ? dia.name() : pd.getName();
+		}
+
+		public int order() {
+			return xfa != null ? xfa.order()
+					: dia != null ? dia.orderingHint()
+							: ExcelFormatAnnotation.DEFAULT_ORDER_POS;
+		}
+
+		public String styleId() {
+			return xfa == null ? "" : xfa.styleId();
+		}
 	}
 }

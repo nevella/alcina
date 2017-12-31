@@ -21,7 +21,6 @@ import java.util.Date;
 
 import com.google.gwt.cell.client.AbstractEditableCell;
 import com.google.gwt.cell.client.Cell;
-import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.cell.client.ValueUpdater;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
@@ -106,18 +105,6 @@ public class PropertyDateCell extends AbstractEditableCell<Date, Date> {
 	}
 
 	/**
-	 * Constructs a new DatePickerCell that uses the date/time format given by
-	 * {@link DateTimeFormat#getFullDateFormat} and the given
-	 * {@link SafeHtmlRenderer}.
-	 * 
-	 * @param renderer
-	 *            a {@link SafeHtmlRenderer SafeHtmlRenderer<String>} instance
-	 */
-	public PropertyDateCell(SafeHtmlRenderer<String> renderer) {
-		this(DateTimeFormat.getFormat(PredefinedFormat.DATE_FULL), renderer);
-	}
-
-	/**
 	 * Constructs a new DatePickerCell that uses the given date/time format and
 	 * {@link SafeHtmlRenderer}.
 	 *
@@ -184,6 +171,18 @@ public class PropertyDateCell extends AbstractEditableCell<Date, Date> {
 				}
 			}
 		});
+	}
+
+	/**
+	 * Constructs a new DatePickerCell that uses the date/time format given by
+	 * {@link DateTimeFormat#getFullDateFormat} and the given
+	 * {@link SafeHtmlRenderer}.
+	 * 
+	 * @param renderer
+	 *            a {@link SafeHtmlRenderer SafeHtmlRenderer<String>} instance
+	 */
+	public PropertyDateCell(SafeHtmlRenderer<String> renderer) {
+		this(DateTimeFormat.getFormat(PredefinedFormat.DATE_FULL), renderer);
 	}
 
 	/**

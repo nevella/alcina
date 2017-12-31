@@ -18,6 +18,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.client.ui.TreeItem;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
@@ -37,10 +41,6 @@ import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.UmbrellaCollectionProviderMultiplexer.UmbrellaCollectionProvider;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.user.client.ui.TreeItem;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-
 /**
  * 
  * @author Nick Reddel
@@ -48,10 +48,6 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 public class NodeFactory {
 	protected static final StandardDataImages images = GWT
 			.create(StandardDataImages.class);
-
-	protected NodeFactory() {
-		super();
-	}
 
 	public static NodeFactory get() {
 		NodeFactory singleton = Registry.checkSingleton(NodeFactory.class);
@@ -68,58 +64,21 @@ public class NodeFactory {
 
 	private NodeCreator nodeCreator;
 
-	@SuppressWarnings("unchecked")
-	protected DomainNode createDomainNode(
-			SourcesPropertyChangeEvents domainObject) {
-		Class clazz = domainObject.getClass();
-		if (lastDomainObjectClass != clazz) {
-			nodeCreator = (NodeCreator) Registry.get().instantiateSingle(
-					NodeCreator.class, clazz);
-		}
-		return nodeCreator.createDomainNode(domainObject, this);
-	}
-
-	public static interface NodeCreator {
-		public DomainNode createDomainNode(
-				SourcesPropertyChangeEvents domainObject, NodeFactory factory);
-	}
-
-	@RegistryLocation(registryPoint = NodeCreator.class)
-	@ClientInstantiable
-	public static class DefaultNodeCreator implements NodeCreator {
-		@Override
-		public DomainNode createDomainNode(
-				SourcesPropertyChangeEvents domainObject, NodeFactory factory) {
-			return new DomainNode(domainObject, factory);
-		}
-	}
-
-	public TreeItem getNodeForObject(Object object) {
-		if (object instanceof SourcesPropertyChangeEvents) {
-			return getNodeForDomainObject((SourcesPropertyChangeEvents) object);
-		}
-		if (object instanceof UmbrellaCollectionProvider) {
-			return getNodeForUmbrella((LazyCollectionProvider) object);
-		}
-		return null;
-	}
-
-	private UmbrellaProviderNode getNodeForUmbrella(
-			LazyCollectionProvider providerChild) {
-		return new UmbrellaProviderNode(providerChild, null, null, this);
-	}
-
 	private Multimap<Class, List<ClientPropertyReflector>> subCollectionFolders = new Multimap<Class, List<ClientPropertyReflector>>();
 
-	public DomainNode getNodeForDomainObject(
-			SourcesPropertyChangeEvents domainObject) {
+	protected NodeFactory() {
+		super();
+	}
+
+	public DomainNode
+			getNodeForDomainObject(SourcesPropertyChangeEvents domainObject) {
 		DomainNode dn = createDomainNode(domainObject);
 		if (childlessBindables.contains(domainObject.getClass())) {
 			return dn;
 		}
 		boolean isChildlessPoorThing = true;
-		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
-				domainObject.getClass());
+		ClientBeanReflector bi = ClientReflector.get()
+				.beanInfoForClass(domainObject.getClass());
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
 		Class<? extends Object> c = domainObject.getClass();
@@ -133,7 +92,8 @@ public class NodeFactory {
 						.getAnnotation(PropertyPermissions.class);
 				Display displayInfo = pr.getDisplayInfo();
 				boolean fieldVisible = displayInfo != null
-						&& ((displayInfo.displayMask() & Display.DISPLAY_AS_TREE_NODE) != 0)
+						&& ((displayInfo.displayMask()
+								& Display.DISPLAY_AS_TREE_NODE) != 0)
 						&& PermissionsManager.get()
 								.checkEffectivePropertyPermission(op, pp,
 										domainObject, true)
@@ -147,8 +107,10 @@ public class NodeFactory {
 		for (ClientPropertyReflector pr : subCollectionFolders.get(c)) {
 			Display displayInfo = pr.getDisplayInfo();
 			isChildlessPoorThing = false;
-			boolean withoutContainer = (displayInfo.displayMask() & Display.DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER) != 0;
-			boolean lazyCollectionNode = (displayInfo.displayMask() & Display.DISPLAY_LAZY_COLLECTION_NODE) != 0;
+			boolean withoutContainer = (displayInfo.displayMask()
+					& Display.DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER) != 0;
+			boolean lazyCollectionNode = (displayInfo.displayMask()
+					& Display.DISPLAY_LAZY_COLLECTION_NODE) != 0;
 			// this is not implemented - it'd be sort of hard (but possible)
 			// main thing is, we'd need a parallel (tree) structure of
 			// collections
@@ -167,8 +129,8 @@ public class NodeFactory {
 				// .get().getLabelText(c, pr), images.folder(),
 				// false, this);
 				ContainerNode node = new CollectionProviderNode(provider,
-						TextProvider.get().getLabelText(c, pr),
-						images.folder(), false, this);
+						TextProvider.get().getLabelText(c, pr), images.folder(),
+						false, this);
 				createdNodes.add(displayInfo.orderingHint(), node);
 			}
 		}
@@ -179,5 +141,46 @@ public class NodeFactory {
 			childlessBindables.add(domainObject);
 		}
 		return dn;
+	}
+
+	public TreeItem getNodeForObject(Object object) {
+		if (object instanceof SourcesPropertyChangeEvents) {
+			return getNodeForDomainObject((SourcesPropertyChangeEvents) object);
+		}
+		if (object instanceof UmbrellaCollectionProvider) {
+			return getNodeForUmbrella((LazyCollectionProvider) object);
+		}
+		return null;
+	}
+
+	private UmbrellaProviderNode
+			getNodeForUmbrella(LazyCollectionProvider providerChild) {
+		return new UmbrellaProviderNode(providerChild, null, null, this);
+	}
+
+	@SuppressWarnings("unchecked")
+	protected DomainNode
+			createDomainNode(SourcesPropertyChangeEvents domainObject) {
+		Class clazz = domainObject.getClass();
+		if (lastDomainObjectClass != clazz) {
+			nodeCreator = (NodeCreator) Registry.get()
+					.instantiateSingle(NodeCreator.class, clazz);
+		}
+		return nodeCreator.createDomainNode(domainObject, this);
+	}
+
+	@RegistryLocation(registryPoint = NodeCreator.class)
+	@ClientInstantiable
+	public static class DefaultNodeCreator implements NodeCreator {
+		@Override
+		public DomainNode createDomainNode(
+				SourcesPropertyChangeEvents domainObject, NodeFactory factory) {
+			return new DomainNode(domainObject, factory);
+		}
+	}
+
+	public static interface NodeCreator {
+		public DomainNode createDomainNode(
+				SourcesPropertyChangeEvents domainObject, NodeFactory factory);
 	}
 }

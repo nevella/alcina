@@ -20,10 +20,7 @@ import com.google.gwt.core.client.JsArrayString;
 /**
  * GWT wrapper for Javascript string.split results.
  */
-public class SplitResult_Jso extends JsArrayString implements ISplitResult{
-
-  protected SplitResult_Jso() {
-  }
-
-
+public class SplitResult_Jso extends JsArrayString implements ISplitResult {
+	protected SplitResult_Jso() {
+	}
 }

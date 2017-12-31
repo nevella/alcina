@@ -28,9 +28,8 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  * the three-arg constructor to account for variances in implementations of
  * Date.
  */
-public final class Date_CustomFieldSerializer extends
-		CustomFieldSerializer<Date> {
-	
+public final class Date_CustomFieldSerializer
+		extends CustomFieldSerializer<Date> {
 	public static void deserialize(SerializationStreamReader streamReader,
 			Date instance) {
 		// No fields
@@ -43,7 +42,7 @@ public final class Date_CustomFieldSerializer extends
 
 	public static void serialize(SerializationStreamWriter streamWriter,
 			Date instance) throws SerializationException {
-		if(GWT.isClient()){
+		if (GWT.isClient()) {
 			streamWriter.writeLong(instance.getTime());
 		}
 	}
@@ -55,12 +54,6 @@ public final class Date_CustomFieldSerializer extends
 	}
 
 	@Override
-	public void serializeConstructor(SerializationStreamWriter streamWriter,
-			Date instance) throws SerializationException {
-		streamWriter.writeLong(instance.getTime());
-	}
-
-	@Override
 	public boolean hasCustomInstantiateInstance() {
 		return true;
 	}
@@ -69,6 +62,12 @@ public final class Date_CustomFieldSerializer extends
 	public Date instantiateInstance(SerializationStreamReader streamReader)
 			throws SerializationException {
 		return instantiate(streamReader);
+	}
+
+	@Override
+	public void serializeConstructor(SerializationStreamWriter streamWriter,
+			Date instance) throws SerializationException {
+		streamWriter.writeLong(instance.getTime());
 	}
 
 	@Override

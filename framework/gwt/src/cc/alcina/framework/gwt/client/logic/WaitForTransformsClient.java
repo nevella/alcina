@@ -10,24 +10,26 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.gwt.client.ClientBase;
 
+@RegistryLocation(registryPoint = WaitForTransformsClient.class, implementationType = ImplementationType.SINGLETON)
 public class WaitForTransformsClient implements AsyncCallback<DomainUpdate> {
-	private long lastCommittedRequestId;
-
-	public void start(long maxDbPersistedRequestId) {
-		this.lastCommittedRequestId = maxDbPersistedRequestId;
-		waitForTransforms();
+	public static WaitForTransformsClient get() {
+		return Registry.impl(WaitForTransformsClient.class);
 	}
 
-	private void waitForTransforms() {
-		ClientBase.getCommonRemoteServiceAsyncInstance().waitForTransforms(
-				lastCommittedRequestId, this);
+	private DomainTransformCommitPosition position;
+
+	public DomainTransformCommitPosition getPosition() {
+		return this.position;
 	}
 
 	@Override
@@ -45,7 +47,8 @@ public class WaitForTransformsClient implements AsyncCallback<DomainUpdate> {
 		TransformManager tm = TransformManager.get();
 		for (DomainTransformRequest dtr : result.requests) {
 			long clientInstanceId = dtr.getClientInstance().getId();
-			boolean ignoreCreates = ClientBase.getClientInstance().getId() == clientInstanceId;
+			boolean ignoreCreates = ClientBase.getClientInstance()
+					.getId() == clientInstanceId;
 			try {
 				CollectionModificationSupport.queue(true);
 				ClientTransformManager.cast()
@@ -74,7 +77,17 @@ public class WaitForTransformsClient implements AsyncCallback<DomainUpdate> {
 				CollectionModificationSupport.queue(false);
 			}
 		}
-		lastCommittedRequestId = result.maxDbPersistedRequestId;
+		position = result.commitPosition;
 		waitForTransforms();
+	}
+
+	public void start(DomainTransformCommitPosition initialPosition) {
+		this.position = initialPosition;
+		waitForTransforms();
+	}
+
+	private void waitForTransforms() {
+		ClientBase.getCommonRemoteServiceAsyncInstance()
+				.waitForTransforms(position, this);
 	}
 }

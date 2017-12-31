@@ -8,6 +8,11 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
 
 public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
+	default boolean debugInequivalence(PropertyInfoLite pd, Object o1,
+			Object o2) {
+		return false;
+	}
+
 	@Override
 	default boolean equivalentTo(T other) {
 		if (other == null || getClass() != other.getClass()) {
@@ -23,17 +28,17 @@ public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
 					continue;
 				} else {
 					if (o1 == null || o2 == null) {
-						return debugInequivalence(pd,o1,o2);
+						return debugInequivalence(pd, o1, o2);
 					}
 					if (o1.getClass() != o2.getClass()) {
-						return debugInequivalence(pd,o1,o2);
+						return debugInequivalence(pd, o1, o2);
 					}
 					if (o1 instanceof HasEquivalence) {
 						if (((HasEquivalence) o1)
 								.equivalentTo((HasEquivalence) o2)) {
 							continue;
 						} else {
-							return debugInequivalence(pd,o1,o2);
+							return debugInequivalence(pd, o1, o2);
 						}
 					} else if (o1 instanceof Collection) {
 						Collection c1 = (Collection) o1;
@@ -44,10 +49,10 @@ public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
 								&& HasEquivalenceHelper.equivalent(c1, c2)) {
 							continue;
 						} else {
-							return debugInequivalence(pd,o1,o2);
+							return debugInequivalence(pd, o1, o2);
 						}
 					} else {
-						return debugInequivalence(pd,o1,o2);
+						return debugInequivalence(pd, o1, o2);
 					}
 				}
 			}
@@ -55,9 +60,5 @@ public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
 			throw new WrappedRuntimeException(e);
 		}
 		return true;
-	}
-
-	default boolean debugInequivalence(PropertyInfoLite pd,Object o1,Object o2){
-		return false;
 	}
 }

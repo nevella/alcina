@@ -7,9 +7,9 @@ public interface CacheListener<H extends HasIdAndLocalId> {
 
 	public abstract void insert(H o);
 
-	public abstract void remove(H o);
-
 	public boolean isEnabled();
+
+	public abstract void remove(H o);
 
 	public void setEnabled(boolean enabled);
 

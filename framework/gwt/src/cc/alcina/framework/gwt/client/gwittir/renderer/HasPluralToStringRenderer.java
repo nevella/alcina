@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
 import com.totsp.gwittir.client.ui.Renderer;
@@ -20,21 +19,21 @@ import cc.alcina.framework.common.client.util.HasPluralToString;
 
 /**
  * To allow subclassing
+ * 
  * @author nick@alcina.cc
  *
  * @param <T>
  */
-public class HasPluralToStringRenderer<T> implements Renderer<T,String> {
+public class HasPluralToStringRenderer<T> implements Renderer<T, String> {
+	public static final HasPluralToStringRenderer<Object> INSTANCE = new HasPluralToStringRenderer<Object>();
 
-    public static final HasPluralToStringRenderer<Object> INSTANCE = new HasPluralToStringRenderer<Object>();
-
-    public String render(T o) {
-    	if (o == null) {
+	public String render(T o) {
+		if (o == null) {
 			return null;
 		}
 		if (o instanceof HasPluralToString) {
 			return ((HasPluralToString) o).pluralToString();
 		}
 		return o.toString();
-    }
+	}
 }

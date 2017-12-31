@@ -20,51 +20,6 @@ import java.util.Stack;
 import java.util.regex.Pattern;
 
 class Utils {
-	public static List<File> listFilesRecursive(String initialPath,
-			FileFilter filter, boolean removeFolders) {
-		return listFilesRecursive(initialPath, filter, removeFolders, null);
-	}
-
-	public static List<File> listFilesRecursive(String initialPath,
-			FileFilter filter, boolean removeFolders,
-			Pattern doNotCheckFolderPattern) {
-		Stack<File> folders = new Stack<File>();
-		List<File> results = new ArrayList<File>();
-		folders.add(new File(initialPath));
-		while (!folders.isEmpty()) {
-			File folder = folders.pop();
-			File[] files = filter == null ? folder.listFiles() : folder
-					.listFiles(filter);
-			for (File file : files) {
-				if (doNotCheckFolderPattern == null
-						|| !doNotCheckFolderPattern.matcher(file.getName())
-								.matches()) {
-					if (file.isDirectory()) {
-						folders.push(file);
-					}
-				}
-				results.add(file);
-			}
-		}
-		if (removeFolders) {
-			for (Iterator<File> itr = results.iterator(); itr.hasNext();) {
-				File file = itr.next();
-				if (doNotCheckFolderPattern == null
-						|| !doNotCheckFolderPattern.matcher(file.getName())
-								.matches()) {
-					if (file.isDirectory()) {
-						itr.remove();
-					}
-				}
-			}
-		}
-		return results;
-	}
-
-	public static File getChildFile(File folder, String childFileName) {
-		return new File(String.format("%s/%s", folder.getPath(), childFileName));
-	}
-
 	public static int copyFile(File in, File out) throws IOException {
 		if (in.isDirectory()) {
 			return copyDirectory(in, out);
@@ -83,40 +38,6 @@ class Utils {
 		out.setLastModified(in.lastModified());
 		ins.close();
 		return 1;
-	}
-
-	public static void writeStreamToStream(InputStream is, OutputStream os)
-			throws IOException {
-		BufferedOutputStream bos = new BufferedOutputStream(os);
-		InputStream in = new BufferedInputStream(is);
-		int bufLength = 8192;
-		byte[] buffer = new byte[bufLength];
-		int result;
-		while ((result = in.read(buffer)) != -1) {
-			bos.write(buffer, 0, result);
-		}
-		bos.flush();
-		bos.close();
-		is.close();
-	}
-
-	private static int copyDirectory(File in, File out) throws IOException {
-		int fc = 0;
-		if (out.exists()) {
-			if (out.isDirectory()) {
-				deleteDirectory(out);
-			} else {
-				out.delete();
-			}
-		}
-		out.mkdirs();
-		File[] files = in.listFiles();
-		for (File subIn : files) {
-			File subOut = new File(out.getPath() + File.separator
-					+ subIn.getName());
-			fc += copyFile(subIn, subOut);
-		}
-		return fc;
 	}
 
 	public static boolean deleteDirectory(File folder) {
@@ -155,19 +76,55 @@ class Utils {
 		return true;
 	}
 
-	public static String readUrlAsString(String strUrl) throws Exception {
-		URL url = new URL(strUrl);
-		InputStream is = null;
-		is = url.openConnection().getInputStream();
-		String input = readStreamToString(is, "UTF-8");
-		return input;
+	public static File getChildFile(File folder, String childFileName) {
+		return new File(
+				String.format("%s/%s", folder.getPath(), childFileName));
+	}
+
+	public static List<File> listFilesRecursive(String initialPath,
+			FileFilter filter, boolean removeFolders) {
+		return listFilesRecursive(initialPath, filter, removeFolders, null);
+	}
+
+	public static List<File> listFilesRecursive(String initialPath,
+			FileFilter filter, boolean removeFolders,
+			Pattern doNotCheckFolderPattern) {
+		Stack<File> folders = new Stack<File>();
+		List<File> results = new ArrayList<File>();
+		folders.add(new File(initialPath));
+		while (!folders.isEmpty()) {
+			File folder = folders.pop();
+			File[] files = filter == null ? folder.listFiles()
+					: folder.listFiles(filter);
+			for (File file : files) {
+				if (doNotCheckFolderPattern == null || !doNotCheckFolderPattern
+						.matcher(file.getName()).matches()) {
+					if (file.isDirectory()) {
+						folders.push(file);
+					}
+				}
+				results.add(file);
+			}
+		}
+		if (removeFolders) {
+			for (Iterator<File> itr = results.iterator(); itr.hasNext();) {
+				File file = itr.next();
+				if (doNotCheckFolderPattern == null || !doNotCheckFolderPattern
+						.matcher(file.getName()).matches()) {
+					if (file.isDirectory()) {
+						itr.remove();
+					}
+				}
+			}
+		}
+		return results;
 	}
 
 	public static String readStreamToString(InputStream is, String charsetName)
 			throws IOException {
 		charsetName = charsetName == null ? "UTF-8" : charsetName;
-		BufferedReader in = new BufferedReader(new InputStreamReader(is,
-				charsetName));
+		BufferedReader in = new BufferedReader(
+				new InputStreamReader(is, charsetName));
 		StringWriter sw = new StringWriter();
 		char[] cb = new char[4096];
 		int len = -1;
@@ -176,5 +133,47 @@ class Utils {
 		}
 		is.close();
 		return sw.toString();
+	}
+
+	public static String readUrlAsString(String strUrl) throws Exception {
+		URL url = new URL(strUrl);
+		InputStream is = null;
+		is = url.openConnection().getInputStream();
+		String input = readStreamToString(is, "UTF-8");
+		return input;
+	}
+
+	public static void writeStreamToStream(InputStream is, OutputStream os)
+			throws IOException {
+		BufferedOutputStream bos = new BufferedOutputStream(os);
+		InputStream in = new BufferedInputStream(is);
+		int bufLength = 8192;
+		byte[] buffer = new byte[bufLength];
+		int result;
+		while ((result = in.read(buffer)) != -1) {
+			bos.write(buffer, 0, result);
+		}
+		bos.flush();
+		bos.close();
+		is.close();
+	}
+
+	private static int copyDirectory(File in, File out) throws IOException {
+		int fc = 0;
+		if (out.exists()) {
+			if (out.isDirectory()) {
+				deleteDirectory(out);
+			} else {
+				out.delete();
+			}
+		}
+		out.mkdirs();
+		File[] files = in.listFiles();
+		for (File subIn : files) {
+			File subOut = new File(
+					out.getPath() + File.separator + subIn.getName());
+			fc += copyFile(subIn, subOut);
+		}
+		return fc;
 	}
 }

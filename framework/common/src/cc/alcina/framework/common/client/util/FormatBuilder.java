@@ -5,13 +5,10 @@ public class FormatBuilder {
 
 	private String separator = "";
 
-	public FormatBuilder separator(String separator) {
-		this.separator = separator;
-		return this;
-	}
-
-	public FormatBuilder line(String template, Object... args) {
-		return format(template, args).newLine();
+	public void appendIfNonEmpty(String optional) {
+		if (sb.length() > 0) {
+			sb.append(optional);
+		}
 	}
 
 	public FormatBuilder format(String template, Object... args) {
@@ -20,15 +17,8 @@ public class FormatBuilder {
 		return this;
 	}
 
-	private void maybeAppendSeparator() {
-		if (sb.length() > 0 && separator.length() > 0) {
-			sb.append(separator);
-		}
-	}
-
-	@Override
-	public String toString() {
-		return sb.toString();
+	public FormatBuilder line(String template, Object... args) {
+		return format(template, args).newLine();
 	}
 
 	public FormatBuilder newLine() {
@@ -36,9 +26,19 @@ public class FormatBuilder {
 		return this;
 	}
 
-	public void appendIfNonEmpty(String optional) {
-		if (sb.length() > 0) {
-			sb.append(optional);
+	public FormatBuilder separator(String separator) {
+		this.separator = separator;
+		return this;
+	}
+
+	@Override
+	public String toString() {
+		return sb.toString();
+	}
+
+	private void maybeAppendSeparator() {
+		if (sb.length() > 0 && separator.length() > 0) {
+			sb.append(separator);
 		}
 	}
 }

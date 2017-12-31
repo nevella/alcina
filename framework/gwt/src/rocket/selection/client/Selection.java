@@ -35,8 +35,12 @@ public class Selection extends JavaScriptObject {
 	static private SelectionSupport support = (SelectionSupport) GWT
 			.create(SelectionSupport.class);
 
-	static SelectionSupport getSupport() {
-		return Selection.support;
+	/**
+	 * Clears or removes any current text selection.
+	 * 
+	 */
+	public static void clearAnySelectedText() {
+		Selection.getSelection().clear();
 	}
 
 	/**
@@ -57,41 +61,12 @@ public class Selection extends JavaScriptObject {
 		return Selection.support.getSelection(window);
 	}
 
-	/**
-	 * Clears or removes any current text selection.
-	 * 
-	 */
-	public static void clearAnySelectedText() {
-		Selection.getSelection().clear();
+	static SelectionSupport getSupport() {
+		return Selection.support;
 	}
 
 	protected Selection() {
 		super();
-	}
-
-	final public SelectionEndPoint getStart() {
-		return Selection.getSupport().getStart(this);
-	}
-
-	final public void setStart(final SelectionEndPoint start) {
-		Selection.getSupport().setStart(this, start);
-	}
-
-	final public SelectionEndPoint getEnd() {
-		return Selection.getSupport().getEnd(this);
-	}
-
-	final public void setEnd(final SelectionEndPoint end) {
-		Selection.getSupport().setEnd(this, end);
-	}
-
-	/**
-	 * Tests if anything is currently being selected
-	 * 
-	 * @return True if empty false otherwise
-	 */
-	final public boolean isEmpty() {
-		return Selection.getSupport().isEmpty(this);
 	}
 
 	/**
@@ -99,6 +74,13 @@ public class Selection extends JavaScriptObject {
 	 */
 	final public void clear() {
 		Selection.getSupport().clear(this);
+	}
+
+	/**
+	 * Deletes the selection's content from the document.
+	 */
+	final public void delete() {
+		Selection.getSupport().delete(this);
 	}
 
 	/**
@@ -112,6 +94,31 @@ public class Selection extends JavaScriptObject {
 		return Selection.getSupport().extract(this);
 	}
 
+	final public SelectionEndPoint getEnd() {
+		return Selection.getSupport().getEnd(this);
+	}
+
+	final public SelectionEndPoint getStart() {
+		return Selection.getSupport().getStart(this);
+	}
+
+	/**
+	 * Tests if anything is currently being selected
+	 * 
+	 * @return True if empty false otherwise
+	 */
+	final public boolean isEmpty() {
+		return Selection.getSupport().isEmpty(this);
+	}
+
+	final public void setEnd(final SelectionEndPoint end) {
+		Selection.getSupport().setEnd(this, end);
+	}
+
+	final public void setStart(final SelectionEndPoint start) {
+		Selection.getSupport().setStart(this, start);
+	}
+
 	/**
 	 * Inserts the given element into the dom so that it is a child of the given
 	 * element and yet contains the selected area.
@@ -123,12 +130,5 @@ public class Selection extends JavaScriptObject {
 	 */
 	final public void surround(final Element element) {
 		Selection.getSupport().surround(this, element);
-	}
-
-	/**
-	 * Deletes the selection's content from the document.
-	 */
-	final public void delete() {
-		Selection.getSupport().delete(this);
 	}
 }

@@ -4,22 +4,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 
 public abstract class MemCacheRunner extends MemCacheReader<Void, Void> {
-	@Override
-	protected Void read0(Void input) throws Exception {
-		run();
-		return null;
-	}
-
-	public MemCacheRunner() {
-		try {
-			read(null);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	protected abstract void run() throws Exception;
-
 	public static void run(Runnable runnable) {
 		new MemCacheRunner() {
 			@Override
@@ -37,4 +21,20 @@ public abstract class MemCacheRunner extends MemCacheReader<Void, Void> {
 			}
 		};
 	}
+
+	public MemCacheRunner() {
+		try {
+			read(null);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	@Override
+	protected Void read0(Void input) throws Exception {
+		run();
+		return null;
+	}
+
+	protected abstract void run() throws Exception;
 }

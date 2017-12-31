@@ -41,33 +41,9 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 
 	private InstantiateImplCallbackWithShellObject shellInstantiator;
 
-	public DetachedEntityCache getCache() {
-		if (this.cache == null) {
-			this.cache = new DetachedEntityCache();
-		}
-		return this.cache;
-	}
-
-	public void setCache(DetachedEntityCache cache) {
-		this.cache = cache;
-	}
-
-	@Override
-	public boolean ignoreObjectHasReadPermissionCheck() {
-		return true;
-	}
-
 	private InstantiateImplCallback instantiateImplCallback;
 
 	private boolean useRawMemCache;
-
-	public boolean isUseRawMemCache() {
-		return this.useRawMemCache;
-	}
-
-	public void setUseRawMemCache(boolean useMemCache) {
-		this.useRawMemCache = useMemCache;
-	}
 
 	public EntityCacheHibernateResolvingFilter() {
 	}
@@ -82,7 +58,8 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	}
 
 	public EntityCacheHibernateResolvingFilter(
-			InstantiateImplCallback instantiateImplCallback, boolean blankCache) {
+			InstantiateImplCallback instantiateImplCallback,
+			boolean blankCache) {
 		this(instantiateImplCallback);
 		setCache(new DetachedEntityCache());
 	}
@@ -111,16 +88,16 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				Object impl = getCache().get(persistentClass, (Long) id);
 				if (impl == null) {
 					if (useRawMemCache) {
-						if (AlcinaMemCache.get().isCachedTransactional(
-								persistentClass)) {
-							impl = (T) AlcinaMemCache.get().findRaw(
-									persistentClass, (Long) id);
+						if (AlcinaMemCache.get()
+								.isCachedTransactional(persistentClass)) {
+							impl = (T) AlcinaMemCache.get()
+									.findRaw(persistentClass, (Long) id);
 						}
 					}
 				}
 				if (impl == null && instantiateImplCallback != null) {
-					if (instantiateImplCallback.instantiateLazyInitializer(
-							lazy, context)) {
+					if (instantiateImplCallback.instantiateLazyInitializer(lazy,
+							context)) {
 						impl = ((HibernateProxy) value)
 								.getHibernateLazyInitializer()
 								.getImplementation();
@@ -165,6 +142,40 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 		return super.filterData(value, cloned, context, graphCloner);
 	}
 
+	public DetachedEntityCache getCache() {
+		if (this.cache == null) {
+			this.cache = new DetachedEntityCache();
+		}
+		return this.cache;
+	}
+
+	public Map<? extends HasIdAndLocalId, ? extends HasIdAndLocalId>
+			getEnsureInjected() {
+		return this.ensureInjected;
+	}
+
+	@Override
+	public boolean ignoreObjectHasReadPermissionCheck() {
+		return true;
+	}
+
+	public boolean isUseRawMemCache() {
+		return this.useRawMemCache;
+	}
+
+	public void setCache(DetachedEntityCache cache) {
+		this.cache = cache;
+	}
+
+	public void setEnsureInjected(
+			Map<? extends HasIdAndLocalId, ? extends HasIdAndLocalId> ensureInjected) {
+		this.ensureInjected = ensureInjected;
+	}
+
+	public void setUseRawMemCache(boolean useMemCache) {
+		this.useRawMemCache = useMemCache;
+	}
+
 	@Override
 	protected Object clonePersistentSet(Set ps, GraphProjectionContext context,
 			GraphProjection graphCloner) throws Exception {
@@ -181,8 +192,8 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 							.getHibernateLazyInitializer();
 					Object impl = ((HibernateProxy) value)
 							.getHibernateLazyInitializer().getImplementation();
-					projected = graphCloner
-							.project(impl, value, context, false);
+					projected = graphCloner.project(impl, value, context,
+							false);
 					getCache().put((HasIdAndLocalId) projected);
 				} else {
 					projected = graphCloner.project(value, context);
@@ -193,14 +204,5 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 			}
 		}
 		return hs;
-	}
-
-	public Map<? extends HasIdAndLocalId, ? extends HasIdAndLocalId> getEnsureInjected() {
-		return this.ensureInjected;
-	}
-
-	public void setEnsureInjected(
-			Map<? extends HasIdAndLocalId, ? extends HasIdAndLocalId> ensureInjected) {
-		this.ensureInjected = ensureInjected;
 	}
 }

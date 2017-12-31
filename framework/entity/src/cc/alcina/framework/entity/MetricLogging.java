@@ -43,6 +43,31 @@ public class MetricLogging {
 
 	public static final String METRIC_MARKER = "jpmtx1:";
 
+	public static Set<Class> sysoutClasses = new LinkedHashSet<Class>();
+
+	public static final String LOG_CONTEXT_THREAD_ID = "threadId";
+
+	public static boolean useLog4j = true;
+
+	public static final Layout METRIC_LAYOUT = new PatternLayout(
+			"[" + METRIC_MARKER + "%c{1}:%X{threadId}] %m%n");
+
+	private static ThreadLocal TL = new ThreadLocal() {
+		protected synchronized Object initialValue() {
+			MetricLogging metricLogging = new MetricLogging();
+			metricLogging.reset();
+			return metricLogging;
+		}
+	};
+
+	public static boolean muteLowPriority = true;
+
+	public static MetricLogging get() {
+		MetricLogging m = (MetricLogging) TL.get();
+		long tid = Thread.currentThread().getId();
+		return m;
+	}
+
 	private Logger perThreadLogger;
 
 	private Map<String, Long> metricStart;
@@ -67,34 +92,13 @@ public class MetricLogging {
 
 	private WriterAccessWriterAppender wa;
 
-	public static Set<Class> sysoutClasses = new LinkedHashSet<Class>();
-
-	public static final String LOG_CONTEXT_THREAD_ID = "threadId";
-
-	public static boolean useLog4j = true;
-
 	private boolean muted = false;
 
-	public static final Layout METRIC_LAYOUT = new PatternLayout("["
-			+ METRIC_MARKER + "%c{1}:%X{threadId}] %m%n");
-
-	private static ThreadLocal TL = new ThreadLocal() {
-		protected synchronized Object initialValue() {
-			MetricLogging metricLogging = new MetricLogging();
-			metricLogging.reset();
-			return metricLogging;
-		}
-	};
-
-	public static boolean muteLowPriority = true;
-
-	public static MetricLogging get() {
-		MetricLogging m = (MetricLogging) TL.get();
-		long tid = Thread.currentThread().getId();
-		return m;
+	private MetricLogging() {
 	}
 
-	private MetricLogging() {
+	public void appShutdown() {
+		sysoutClasses = null;
 	}
 
 	public void average(String key) {
@@ -109,17 +113,108 @@ public class MetricLogging {
 		end(key, "");
 	}
 
-	public void endMem(String key) {
-		System.gc();
-		end(key, "", false, null);
-	}
-
 	public void end(String key, String extraInfo) {
 		end(key, extraInfo, true, null);
 	}
 
 	public void end(String key, TaggedLogger taggedLogger) {
 		end(key, "", true, taggedLogger);
+	}
+
+	public void endMem(String key) {
+		System.gc();
+		end(key, "", false, null);
+	}
+
+	public void endTicks(String key) {
+		long cn = System.nanoTime();
+		key = keyWithParents(key, false);
+		if (!ticksSum.containsKey(key)) {
+			ticksSum.put(key, 0L);
+		}
+		if (!ticks.containsKey(key)) {
+			ticks.put(key, cn);
+		}
+		ticksSum.put(key, ticksSum.get(key) + (cn - ticks.get(key)));
+	}
+
+	public String getPerThreadLog() {
+		return wa == null ? "" : wa.getWriterAccess().toString();
+	}
+
+	public boolean isMuted() {
+		return muted;
+	}
+
+	public void lowPriorityEnd(String key) {
+		if (!muteLowPriority) {
+			end(key);
+		}
+	}
+
+	public void lowPriorityStart(String key) {
+		if (!muteLowPriority) {
+			start(key);
+		}
+	}
+
+	public synchronized void reset() {
+		if (isMuted()) {
+			System.out.println("Unmuting muted metric thread");
+			Thread.dumpStack();
+		}
+		setMuted(false);
+		if (useLog4j) {
+			MDC.put(LOG_CONTEXT_THREAD_ID, getCurrentThreadId());
+			perThreadLogger = Logger.getLogger(
+					getClass().getName() + "-" + getCurrentThreadId());
+			perThreadLogger.removeAllAppenders();
+			perThreadLogger.setAdditivity(false);
+			wa = new WriterAccessWriterAppender();
+			wa.setWriter(new StringWriter());
+			wa.setLayout(new PatternLayout("%-5p [%c{1}] %m%n"));
+			wa.setName(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY);
+			perThreadLogger.addAppender(wa);
+			thisLoggerThreadId = getCurrentThreadId();
+		}
+		metricStart = new LinkedHashMap<String, Long>();
+		metricStartThreadIds = new LinkedHashMap<String, Long>();
+		sum = new HashMap<String, Long>();
+		averageCount = new HashMap<String, Long>();
+		keyToKeyWithParents = new HashMap<String, String>();
+		ticks = new HashMap<String, Long>();
+		ticksSum = new HashMap<String, Long>();
+		sysout = new LinkedHashMap<String, Boolean>();
+		terminated = new HashSet<String>();
+	}
+
+	public void setMuted(boolean muted) {
+		this.muted = muted;
+	}
+
+	public synchronized void start(String key) {
+		key = keyWithParents(key, false);
+		metricStart.put(key, System.currentTimeMillis());
+		metricStartThreadIds.put(key, getCurrentThreadId());
+	}
+
+	public void start(String key, Class clazz) {
+		start(key);
+		if (sysoutClasses.contains(clazz)) {
+			key = keyWithParents(key, true);
+			sysout.put(key, true);
+		}
+	}
+
+	public synchronized void startMem(String key) {
+		key = keyWithParents(key, false);
+		metricStart.put(key, Runtime.getRuntime().freeMemory());
+		metricStartThreadIds.put(key, getCurrentThreadId());
+	}
+
+	public void startTicks(String key) {
+		key = keyWithParents(key, false);
+		ticks.put(key, System.nanoTime());
 	}
 
 	private synchronized void end(String key, String extraInfo, boolean time,
@@ -129,14 +224,15 @@ public class MetricLogging {
 			System.out.println("Warning - metric end without start - " + key);
 			return;
 		}
-		long delta = time ? ticksSum.containsKey(key) ? ticksSum.get(key) / 1000000
-				: System.currentTimeMillis() - metricStart.get(key)
+		long delta = time
+				? ticksSum.containsKey(key) ? ticksSum.get(key) / 1000000
+						: System.currentTimeMillis() - metricStart.get(key)
 				: Runtime.getRuntime().freeMemory() - metricStart.get(key);
 		ticksSum.remove(key);
 		String units = time ? "ms" : "bytes";
-		String message = CommonUtils.formatJ("Metric: %s - %s %s%s", key,
-				delta, units, CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - "
-						+ extraInfo);
+		String message = CommonUtils.formatJ("Metric: %s - %s %s%s", key, delta,
+				units,
+				CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - " + extraInfo);
 		if (taggedLogger != null) {
 			taggedLogger.log(message);
 		} else {
@@ -164,85 +260,6 @@ public class MetricLogging {
 		terminated.add(key);
 	}
 
-	public void endTicks(String key) {
-		long cn = System.nanoTime();
-		key = keyWithParents(key, false);
-		if (!ticksSum.containsKey(key)) {
-			ticksSum.put(key, 0L);
-		}
-		if (!ticks.containsKey(key)) {
-			ticks.put(key, cn);
-		}
-		ticksSum.put(key, ticksSum.get(key) + (cn - ticks.get(key)));
-	}
-
-	public String getPerThreadLog() {
-		return wa == null ? "" : wa.getWriterAccess().toString();
-	}
-
-	public void lowPriorityEnd(String key) {
-		if (!muteLowPriority) {
-			end(key);
-		}
-	}
-
-	public void lowPriorityStart(String key) {
-		if (!muteLowPriority) {
-			start(key);
-		}
-	}
-
-	public void setMuted(boolean muted) {
-		this.muted = muted;
-	}
-
-	public synchronized void reset() {
-		if (isMuted()) {
-			System.out.println("Unmuting muted metric thread");
-			Thread.dumpStack();
-		}
-		setMuted(false);
-		if (useLog4j) {
-			MDC.put(LOG_CONTEXT_THREAD_ID, getCurrentThreadId());
-			perThreadLogger = Logger.getLogger(getClass().getName() + "-"
-					+ getCurrentThreadId());
-			perThreadLogger.removeAllAppenders();
-			perThreadLogger.setAdditivity(false);
-			wa = new WriterAccessWriterAppender();
-			wa.setWriter(new StringWriter());
-			wa.setLayout(new PatternLayout("%-5p [%c{1}] %m%n"));
-			wa.setName(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY);
-			perThreadLogger.addAppender(wa);
-			thisLoggerThreadId = getCurrentThreadId();
-		}
-		metricStart = new LinkedHashMap<String, Long>();
-		metricStartThreadIds = new LinkedHashMap<String, Long>();
-		sum = new HashMap<String, Long>();
-		averageCount = new HashMap<String, Long>();
-		keyToKeyWithParents = new HashMap<String, String>();
-		ticks = new HashMap<String, Long>();
-		ticksSum = new HashMap<String, Long>();
-		sysout = new LinkedHashMap<String, Boolean>();
-		terminated = new HashSet<String>();
-	}
-
-	public synchronized void start(String key) {
-		key = keyWithParents(key, false);
-		metricStart.put(key, System.currentTimeMillis());
-		metricStartThreadIds.put(key, getCurrentThreadId());
-	}
-
-	public synchronized void startMem(String key) {
-		key = keyWithParents(key, false);
-		metricStart.put(key, Runtime.getRuntime().freeMemory());
-		metricStartThreadIds.put(key, getCurrentThreadId());
-	}
-
-	public void startTicks(String key) {
-		key = keyWithParents(key, false);
-		ticks.put(key, System.nanoTime());
-	}
-
 	private Long getCurrentThreadId() {
 		return Thread.currentThread().getId();
 	}
@@ -255,29 +272,13 @@ public class MetricLogging {
 		for (String parentKey : metricStart.keySet()) {
 			Long tid = metricStartThreadIds.get(parentKey);
 			if (!terminated.contains(parentKey)
-					&& (tid.equals(thisLoggerThreadId) || tid
-							.equals(getCurrentThreadId()))) {
+					&& (tid.equals(thisLoggerThreadId)
+							|| tid.equals(getCurrentThreadId()))) {
 				withParents = parentKey + "/";
 			}
 		}
 		withParents += key;
 		keyToKeyWithParents.put(key, withParents);
 		return withParents;
-	}
-
-	public void start(String key, Class clazz) {
-		start(key);
-		if (sysoutClasses.contains(clazz)) {
-			key = keyWithParents(key, true);
-			sysout.put(key, true);
-		}
-	}
-
-	public void appShutdown() {
-		sysoutClasses = null;
-	}
-
-	public boolean isMuted() {
-		return muted;
 	}
 }

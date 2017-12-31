@@ -20,15 +20,6 @@ public class MultiIterator<E> implements Iterator<E> {
 		return ensureCurrentIterator() != null;
 	}
 
-	private Iterator<E> ensureCurrentIterator() {
-		while (idx < iterators.length) {
-			if (iterators[idx].hasNext()) {
-				return iterators[idx];
-			}
-			idx++;
-		}
-		return null;
-	}
 	@Override
 	public E next() {
 		Iterator<E> itr = ensureCurrentIterator();
@@ -49,5 +40,15 @@ public class MultiIterator<E> implements Iterator<E> {
 			return;
 		}
 		throw new IllegalArgumentException("Remove not permitted");
+	}
+
+	private Iterator<E> ensureCurrentIterator() {
+		while (idx < iterators.length) {
+			if (iterators[idx].hasNext()) {
+				return iterators[idx];
+			}
+			idx++;
+		}
+		return null;
 	}
 }

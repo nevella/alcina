@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import java.util.Stack;
@@ -20,13 +19,13 @@ import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
 
 import cc.alcina.framework.common.client.util.Callback;
+
 @SuppressWarnings("unchecked")
 /**
  *
  * @author Nick Reddel
  */
-
- public class TreeNodeWalker {
+public class TreeNodeWalker {
 	public void walk(Tree tree, Callback callback) {
 		Stack<TreeItem> items = new Stack<TreeItem>();
 		int itemCount = tree.getItemCount();
@@ -41,6 +40,7 @@ import cc.alcina.framework.common.client.util.Callback;
 			}
 		}
 	}
+
 	public void walk(TreeItem item, Callback callback) {
 		Stack<TreeItem> items = new Stack<TreeItem>();
 		items.push(item);

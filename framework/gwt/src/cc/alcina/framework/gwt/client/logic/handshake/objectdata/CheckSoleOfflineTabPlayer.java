@@ -9,20 +9,13 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.handshake.CheckSoleInstancePlayer.NotSoleInstanceException;
 import cc.alcina.framework.gwt.persistence.client.ClientSession;
 
-@RegistryLocation(registryPoint=CheckSoleOfflineTabPlayer.class,implementationType=ImplementationType.SINGLETON)
+@RegistryLocation(registryPoint = CheckSoleOfflineTabPlayer.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
 public class CheckSoleOfflineTabPlayer
-		extends
-		RunnableAsyncCallbackPlayer<Boolean, LoadObjectDataState> {
+		extends RunnableAsyncCallbackPlayer<Boolean, LoadObjectDataState> {
 	public CheckSoleOfflineTabPlayer() {
 		addProvides(LoadObjectDataState.SOLE_OPEN_TAB_CHECKED);
 		addRequires(LoadObjectDataState.HELLO_OFFLINE);
-	}
-
-
-	@Override
-	public void run() {
-		ClientSession.get().checkSoleOpenTab(this);
 	}
 
 	@Override
@@ -35,7 +28,13 @@ public class CheckSoleOfflineTabPlayer
 		}
 	}
 
-	protected  void checkFailed(){
-		Registry.impl(ClientNotifications.class).getModalNotifier("Only one offline tab permitted");
+	@Override
+	public void run() {
+		ClientSession.get().checkSoleOpenTab(this);
+	}
+
+	protected void checkFailed() {
+		Registry.impl(ClientNotifications.class)
+				.getModalNotifier("Only one offline tab permitted");
 	}
 }

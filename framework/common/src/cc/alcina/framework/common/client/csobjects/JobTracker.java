@@ -7,6 +7,10 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
 
 public interface JobTracker {
+	public abstract void childComplete(JobTracker tracker);
+
+	public abstract JobTracker exportableForm();
+
 	public abstract List<JobTracker> getChildren();
 
 	public abstract Date getEndTime();
@@ -44,6 +48,8 @@ public interface JobTracker {
 	public abstract String getProgressMessage();
 
 	public abstract Date getStartTime();
+
+	public abstract String getSubProgressMessage();
 
 	public abstract boolean isCancelled();
 
@@ -93,21 +99,9 @@ public interface JobTracker {
 
 	public abstract void setStartTime(Date startTime);
 
-	public abstract void updateJob(int completedDelta);
-
-	public abstract void childComplete(JobTracker tracker);
-
-	public abstract JobTracker exportableForm();
-
 	public abstract void setSubProgressMessage(String subProgressMessage);
 
-	public abstract String getSubProgressMessage();
-
-
-	default void updatePercent() {
-		setPercentComplete((getItemCount() == 0 ? 0.0
-				: ((double) getItemsCompleted()) / ((double) getItemCount())));
-	}
+	public abstract void updateJob(int completedDelta);
 
 	default void startup(Class jobClass, String jobName, String message) {
 		setComplete(false);
@@ -118,5 +112,8 @@ public interface JobTracker {
 		setStartTime(new Date());
 	}
 
-	
+	default void updatePercent() {
+		setPercentComplete((getItemCount() == 0 ? 0.0
+				: ((double) getItemsCompleted()) / ((double) getItemCount())));
+	}
 }

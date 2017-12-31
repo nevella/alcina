@@ -34,15 +34,13 @@ public abstract class Player<D> {
 
 	private List<D> provides = new ArrayList<D>();
 
+	private long start;
+
 	public Player(Runnable runnable) {
 		this.runnable = runnable;
 	}
 
 	protected Player() {
-	}
-
-	protected void logToInfo(String string, Object... args) {
-		consort.infoLogger.format(string, args);
 	}
 
 	public void addProvides(D state) {
@@ -53,8 +51,11 @@ public abstract class Player<D> {
 		requires.add(state);
 	}
 
-	public void removeRequires(D... requiresStates) {
-		requires.removeAll(Arrays.asList(requiresStates));
+	public void cancel() {
+	}
+
+	public boolean canRunInParallelWith(Player<D> otherPlayer) {
+		return false;
 	}
 
 	public Consort<D> getConsort() {
@@ -82,15 +83,16 @@ public abstract class Player<D> {
 		return requires;
 	}
 
+	public long getStart() {
+		return this.start;
+	}
+
 	public boolean isAllowEqualPriority() {
 		return false;
 	}
 
-	public boolean canRunInParallelWith(Player<D> otherPlayer) {
-		return false;
-	}
-
-	public void cancel() {
+	public boolean isAsynchronous() {
+		return this.asynchronous;
 	}
 
 	public boolean isCancellable() {
@@ -105,7 +107,9 @@ public abstract class Player<D> {
 		return getProvides().isEmpty();
 	}
 
-	private long start;
+	public void onFailure(Throwable caught) {
+		consort.onFailure(caught);
+	}
 
 	public void play(boolean replaying) {
 		if (replaying) {
@@ -119,8 +123,28 @@ public abstract class Player<D> {
 		}
 	}
 
+	public String provideNameForTransitions() {
+		return getClass().getSimpleName();
+	}
+
+	public void removeRequires(D... requiresStates) {
+		requires.removeAll(Arrays.asList(requiresStates));
+	}
+
+	public void setAsynchronous(boolean asynchronous) {
+		this.asynchronous = asynchronous;
+	}
+
 	public void setConsort(Consort<D> consort) {
 		this.consort = consort;
+	}
+
+	public String shortName() {
+		return CommonUtils.simpleClassName(getClass());
+	}
+
+	protected void logToInfo(String string, Object... args) {
+		consort.infoLogger.format(string, args);
 	}
 
 	protected void wasPlayed() {
@@ -130,24 +154,6 @@ public abstract class Player<D> {
 	protected void wasPlayed(D dep) {
 		consort.wasPlayed(this, dep == null ? Collections.EMPTY_LIST
 				: Collections.singletonList(dep));
-	}
-
-	public void onFailure(Throwable caught) {
-		consort.onFailure(caught);
-	}
-
-	public abstract static class RunnableAsyncCallbackPlayer<C, D>
-			extends Player<D> implements Runnable, AsyncCallback<C> {
-		public RunnableAsyncCallbackPlayer() {
-			super(null);
-			setAsynchronous(true);
-			runnable = this;
-		}
-
-		@Override
-		public void onSuccess(C result) {
-			wasPlayed();
-		}
 	}
 
 	public abstract static class RepeatingCommandPlayer<D> extends Player<D>
@@ -182,31 +188,25 @@ public abstract class Player<D> {
 		}
 	}
 
+	public abstract static class RunnableAsyncCallbackPlayer<C, D>
+			extends Player<D> implements Runnable, AsyncCallback<C> {
+		public RunnableAsyncCallbackPlayer() {
+			super(null);
+			setAsynchronous(true);
+			runnable = this;
+		}
+
+		@Override
+		public void onSuccess(C result) {
+			wasPlayed();
+		}
+	}
+
 	public abstract static class RunnablePlayer<D> extends Player<D>
 			implements Runnable {
 		public RunnablePlayer() {
 			super(null);
 			runnable = this;
 		}
-	}
-
-	public boolean isAsynchronous() {
-		return this.asynchronous;
-	}
-
-	public void setAsynchronous(boolean asynchronous) {
-		this.asynchronous = asynchronous;
-	}
-
-	public long getStart() {
-		return this.start;
-	}
-
-	public String shortName() {
-		return CommonUtils.simpleClassName(getClass());
-	}
-
-	public String provideNameForTransitions() {
-		return getClass().getSimpleName();
 	}
 }

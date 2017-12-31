@@ -45,17 +45,15 @@ public class UniqueInCollectionValidator implements Validator {
 			return value;
 		}
 		for (Object o : c) {
-			if (o != sourceObject
-					&& value.equals(Reflections.propertyAccessor()
-							.getPropertyValue(o, propertyName))) {
+			if (o != sourceObject && value.equals(Reflections.propertyAccessor()
+					.getPropertyValue(o, propertyName))) {
 				if (o instanceof HasIdAndLocalId
 						&& sourceObject instanceof HasIdAndLocalId) {
 					if (HiliHelper.equals((HasIdAndLocalId) o, sourceObject)) {
 						continue;
 					}
 				}
-				throw new ValidationException(
-						"Value must be unique",
+				throw new ValidationException("Value must be unique",
 						UniqueInCollectionValidator.class);
 			}
 		}

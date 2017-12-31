@@ -14,18 +14,13 @@ public class SortedCountingMap<K> extends TreeMap<K, Integer> {
 			put(key, get(key) + 1);
 		}
 	}
-	public void add(K key,int i) {
+
+	public void add(K key, int i) {
 		if (!containsKey(key)) {
 			put(key, i);
 		} else {
 			put(key, get(key) + i);
 		}
-	}
-	public int size(K key) {
-		if (!containsKey(key)) {
-			return 0;
-		}
-		return get(key);
 	}
 
 	public K max() {
@@ -46,13 +41,20 @@ public class SortedCountingMap<K> extends TreeMap<K, Integer> {
 	}
 
 	public SortedMultimap<Integer, List<K>> reverseMap(boolean descending) {
-		SortedMultimap<Integer, List<K>> result = descending ? new SortedMultimap<Integer, List<K>>(
-				Collections.reverseOrder())
+		SortedMultimap<Integer, List<K>> result = descending
+				? new SortedMultimap<Integer, List<K>>(
+						Collections.reverseOrder())
 				: new SortedMultimap<Integer, List<K>>();
 		for (K key : keySet()) {
 			result.add(get(key), key);
 		}
 		return result;
 	}
-	
+
+	public int size(K key) {
+		if (!containsKey(key)) {
+			return 0;
+		}
+		return get(key);
+	}
 }

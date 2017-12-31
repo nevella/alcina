@@ -48,15 +48,31 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 
 	protected ContentRendererResults results;
 
-	public ContentRendererResults getResults() {
-		return this.results;
-	}
-
 	protected V deliveryModel;
 
 	protected Document doc;
 
 	protected RenderTransformWrapper wrapper;
+
+	public ContentRendererResults getResults() {
+		return this.results;
+	}
+
+	public void renderContent(D contentDefinition, M publicationContent,
+			V deliveryModel, long publicationId, long publicationUserId)
+			throws Exception {
+		this.contentDefinition = contentDefinition;
+		this.publicationContent = publicationContent;
+		this.deliveryModel = deliveryModel;
+		results = new ContentRendererResults();
+		doc = XmlUtils.createDocument();
+		renderContent(publicationId, publicationUserId);
+	}
+
+	protected TransformerFactoryConfigurator
+			getTransformerFactoryConfigurator() {
+		return new TransformerConfigurator();
+	}
 
 	protected void marshallToDoc() throws Exception {
 		Set<Class> jaxbClasses = new HashSet<Class>(
@@ -72,17 +88,6 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 
 	protected abstract void renderContent(long publicationId,
 			long publicationUserId) throws Exception;
-
-	public void renderContent(D contentDefinition, M publicationContent,
-			V deliveryModel, long publicationId, long publicationUserId)
-			throws Exception {
-		this.contentDefinition = contentDefinition;
-		this.publicationContent = publicationContent;
-		this.deliveryModel = deliveryModel;
-		results = new ContentRendererResults();
-		doc = XmlUtils.createDocument();
-		renderContent(publicationId, publicationUserId);
-	}
 
 	protected void transform(String xslPath) throws Exception {
 		InputStream trans = null;
@@ -103,11 +108,6 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 			trans.close();
 		} catch (Exception e) {
 		}
-	}
-
-	protected TransformerFactoryConfigurator
-			getTransformerFactoryConfigurator() {
-		return new TransformerConfigurator();
 	}
 
 	@RegistryLocation(registryPoint = JaxbContextRegistration.class)

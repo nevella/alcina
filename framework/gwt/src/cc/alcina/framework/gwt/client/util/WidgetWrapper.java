@@ -20,13 +20,15 @@ public class WidgetWrapper extends Composite implements HasClickHandlers {
 
 	private WidgetElementReplacer replacer;
 
+	Map<Element, Widget> replaceMap = new HashMap<Element, Widget>();
+
 	public WidgetWrapper() {
 		this.fp = new FlowPanel();
 		initWidget(fp);
 	}
 
-	public interface WidgetElementReplacer {
-		public Widget replace(Element elt);
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addDomHandler(handler, ClickEvent.getType());
 	}
 
 	public void wrap(HTML html, WidgetElementReplacer replacer) {
@@ -41,16 +43,14 @@ public class WidgetWrapper extends Composite implements HasClickHandlers {
 		replaceMap.clear();
 	}
 
-	Map<Element, Widget> replaceMap = new HashMap<Element, Widget>();
-
 	private Widget maybeWrap(Element element) {
 		Widget replace = replacer.replace(element);
 		replaceMap.put(element, replace);
 		if (replace != null) {
 			return replace;
 		}
-		List<Element> kids = DomUtils.nodeListToElementList(element
-				.getChildNodes());
+		List<Element> kids = DomUtils
+				.nodeListToElementList(element.getChildNodes());
 		boolean hasReplacedChild = false;
 		for (Element e2 : kids) {
 			if (maybeWrap(e2) != null) {
@@ -79,7 +79,7 @@ public class WidgetWrapper extends Composite implements HasClickHandlers {
 		return null;
 	}
 
-	public HandlerRegistration addClickHandler(ClickHandler handler) {
-		return addDomHandler(handler, ClickEvent.getType());
+	public interface WidgetElementReplacer {
+		public Widget replace(Element elt);
 	}
 }

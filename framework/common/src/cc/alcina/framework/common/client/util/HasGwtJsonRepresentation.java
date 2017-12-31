@@ -1,14 +1,11 @@
 package cc.alcina.framework.common.client.util;
 
-import java.lang.reflect.Modifier;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 
-import com.google.gwt.dev.protobuf.UnknownFieldSet.Field;
 import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONBoolean;
 import com.google.gwt.json.client.JSONException;
@@ -19,30 +16,12 @@ import com.google.gwt.json.client.JSONString;
 import com.google.gwt.json.client.JSONValue;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.entity.projection.GraphProjection;
 
 public interface HasGwtJsonRepresentation {
-	JSONObject asJson() throws JSONException;
-
-	default JSONObject simpleMapping(Object... params) {
-		try {
-			JSONObject jso = new JSONObject();
-			for (int i = 0; i < params.length; i += 2) {
-				String key = (String) params[i];
-				Object value = params[i + 1];
-				jso.put(key, encode(value));
-			}
-			return jso;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 	static JSONValue encode(Object value) {
 		if (value == null) {
 			return JSONNull.getInstance();
 		}
-		
 		if (value instanceof Date) {
 			return new JSONString(
 					Ax.format("__JsDate(%s)", ((Date) value).getTime()));
@@ -67,27 +46,22 @@ public interface HasGwtJsonRepresentation {
 			return JSONBoolean.getInstance((Boolean) value);
 		} else if (value instanceof Number) {
 			return new JSONNumber(((Number) value).doubleValue());
-		} else if (value instanceof JSONValue){
+		} else if (value instanceof JSONValue) {
 			return (JSONValue) value;
 		}
 		return new JSONString(value.toString());
 	}
 
-	static JSONObject toJsMap(Map<String, String> stringMap) {
+	static JSONArray stringListToJsArray(List<String> objects) {
 		try {
-			JSONObject result = new JSONObject();
-			for (Entry<String, String> entry : stringMap.entrySet()) {
-				result.put(entry.getKey(), new JSONString(entry.getValue()));
+			JSONArray array = new JSONArray();
+			for (String string : objects) {
+				array.set(array.size(), new JSONString(string));
 			}
-			return result;
+			return array;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	default JSONArray
-			toJsArray(List<? extends HasGwtJsonRepresentation> objects) {
-		return toJsArrayStatic(objects);
 	}
 
 	static JSONArray
@@ -103,16 +77,36 @@ public interface HasGwtJsonRepresentation {
 		}
 	}
 
-	static JSONArray stringListToJsArray(List<String> objects) {
+	static JSONObject toJsMap(Map<String, String> stringMap) {
 		try {
-			JSONArray array = new JSONArray();
-			for (String string : objects) {
-				array.set(array.size(), new JSONString(string));
+			JSONObject result = new JSONObject();
+			for (Entry<String, String> entry : stringMap.entrySet()) {
+				result.put(entry.getKey(), new JSONString(entry.getValue()));
 			}
-			return array;
+			return result;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
 
+	JSONObject asJson() throws JSONException;
+
+	default JSONObject simpleMapping(Object... params) {
+		try {
+			JSONObject jso = new JSONObject();
+			for (int i = 0; i < params.length; i += 2) {
+				String key = (String) params[i];
+				Object value = params[i + 1];
+				jso.put(key, encode(value));
+			}
+			return jso;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	default JSONArray
+			toJsArray(List<? extends HasGwtJsonRepresentation> objects) {
+		return toJsArrayStatic(objects);
+	}
 }

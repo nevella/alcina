@@ -60,6 +60,45 @@ import cc.alcina.framework.entity.util.AnnotationUtils;
 public class ClassrefScanner extends CachingScanner {
 	private LinkedHashSet<Class> persistableClasses;
 
+	private long roIdCounter = 0;
+
+	boolean persistent = true;
+
+	boolean reachabilityCheck = true;
+
+	// persistableClasses.addAll(Arrays.asList(new Class[] { long.class,
+	// double.class, float.class, int.class, short.class,
+	// boolean.class }));
+	public void fixEntities(Class entityClass, String strPropName,
+			String crPropName, EntityManager em,
+			CommonPersistenceLocal persister) {
+		Set all = persister.getAll(entityClass);
+		for (Object o : all) {
+			String cName = (String) SEUtilities.getPropertyValue(o,
+					strPropName);
+			if (cName == null) {
+				continue;
+			}
+			ClassRef ref = ClassRef.forName(cName);
+			if (ref == null) {
+				throw new WrappedRuntimeException("Classref not found:" + cName,
+						SuggestedAction.NOTIFY_WARNING);
+			}
+			SEUtilities.setPropertyValue(o, crPropName, ref);
+		}
+		em.flush();
+	}
+
+	public ClassrefScanner noPersistence() {
+		persistent = false;
+		return this;
+	}
+
+	public ClassrefScanner noReachabilityCheck() {
+		reachabilityCheck = false;
+		return this;
+	}
+
 	public void scan(ClassDataCache cache) throws Exception {
 		String cachePath = getHomeDir().getPath() + File.separator
 				+ getClass().getSimpleName() + "-cache.ser";
@@ -251,8 +290,6 @@ public class ClassrefScanner extends CachingScanner {
 		}
 	}
 
-	private long roIdCounter = 0;
-
 	@Override
 	protected void process(Class c, String className, ClassDataItem foundItem,
 			ClassDataCache outgoing) {
@@ -277,42 +314,5 @@ public class ClassrefScanner extends CachingScanner {
 		} else {
 			outgoing.add(foundItem);
 		}
-	}
-
-	// persistableClasses.addAll(Arrays.asList(new Class[] { long.class,
-	// double.class, float.class, int.class, short.class,
-	// boolean.class }));
-	public void fixEntities(Class entityClass, String strPropName,
-			String crPropName, EntityManager em,
-			CommonPersistenceLocal persister) {
-		Set all = persister.getAll(entityClass);
-		for (Object o : all) {
-			String cName = (String) SEUtilities.getPropertyValue(o,
-					strPropName);
-			if (cName == null) {
-				continue;
-			}
-			ClassRef ref = ClassRef.forName(cName);
-			if (ref == null) {
-				throw new WrappedRuntimeException("Classref not found:" + cName,
-						SuggestedAction.NOTIFY_WARNING);
-			}
-			SEUtilities.setPropertyValue(o, crPropName, ref);
-		}
-		em.flush();
-	}
-
-	boolean persistent = true;
-
-	boolean reachabilityCheck = true;
-
-	public ClassrefScanner noPersistence() {
-		persistent = false;
-		return this;
-	}
-
-	public ClassrefScanner noReachabilityCheck() {
-		reachabilityCheck = false;
-		return this;
 	}
 }

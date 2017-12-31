@@ -260,6 +260,12 @@ public class AlcinaHistoryItem {
 		return result;
 	}
 
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ("%s\nNot a history token: %s Type: %s",
+				params, notAHistoryToken, type);
+	}
+
 	public String toTokenString() {
 		return AlcinaHistory.toHash(params);
 	}
@@ -291,11 +297,5 @@ public class AlcinaHistoryItem {
 			}
 		}
 		setLocation(CommonUtils.join(parts, "*"));
-	}
-
-	@Override
-	public String toString() {
-		return CommonUtils.formatJ("%s\nNot a history token: %s Type: %s",
-				params, notAHistoryToken, type);
 	}
 }

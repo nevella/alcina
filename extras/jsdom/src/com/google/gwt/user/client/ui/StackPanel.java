@@ -81,6 +81,19 @@ public class StackPanel extends ComplexPanel
 	}
 
 	/**
+	 * Adds a new child with the given widget and header, optionally
+	 * interpreting the header as HTML.
+	 *
+	 * @param w
+	 *            the widget to be added
+	 * @param stackHtml
+	 *            the header html associated with this widget
+	 */
+	public void add(Widget w, SafeHtml stackHtml) {
+		add(w, stackHtml.asString(), true);
+	}
+
+	/**
 	 * Adds a new child with the given widget and header.
 	 *
 	 * @param w
@@ -99,19 +112,6 @@ public class StackPanel extends ComplexPanel
 	 *
 	 * @param w
 	 *            the widget to be added
-	 * @param stackHtml
-	 *            the header html associated with this widget
-	 */
-	public void add(Widget w, SafeHtml stackHtml) {
-		add(w, stackHtml.asString(), true);
-	}
-
-	/**
-	 * Adds a new child with the given widget and header, optionally
-	 * interpreting the header as HTML.
-	 *
-	 * @param w
-	 *            the widget to be added
 	 * @param stackText
 	 *            the header text associated with this widget
 	 * @param asHTML
@@ -120,6 +120,25 @@ public class StackPanel extends ComplexPanel
 	public void add(Widget w, @IsSafeHtml String stackText, boolean asHTML) {
 		add(w);
 		setStackText(getWidgetCount() - 1, stackText, asHTML);
+	}
+
+	/**
+	 * Adds the {@code styleName} on the {@code 
+	 * 
+	<tr>
+	 * } for the header specified by {@code index}.
+	 *
+	 * @param index
+	 *            the index of the header row to apply to the style to
+	 * @param styleName
+	 *            the name of the class to add
+	 */
+	public void addHeaderStyleName(int index, String styleName) {
+		if (index >= getWidgetCount()) {
+			return;
+		}
+		Element tr = DOM.getChild(body, index * 2);
+		setStyleName(tr, styleName, true /* add */);
 	}
 
 	/**
@@ -201,16 +220,22 @@ public class StackPanel extends ComplexPanel
 	}
 
 	/**
-	 * Sets the text associated with a child by its index.
+	 * Removes the {@code styleName} off the {@code 
+	 * 
+	<tr>
+	 * } for the header specified by {@code index}.
 	 *
 	 * @param index
-	 *            the index of the child whose text is to be set
-	 * @param text
-	 *            the text to be associated with it
+	 *            the index of the header row to remove the style from
+	 * @param styleName
+	 *            the name of the class to remove
 	 */
-	@SuppressIsSafeHtmlCastCheck
-	public void setStackText(int index, String text) {
-		setStackText(index, text, false);
+	public void removeHeaderStyleName(int index, String styleName) {
+		if (index >= getWidgetCount()) {
+			return;
+		}
+		Element tr = DOM.getChild(body, index * 2);
+		setStyleName(tr, styleName, false /* remove */);
 	}
 
 	/**
@@ -223,6 +248,19 @@ public class StackPanel extends ComplexPanel
 	 */
 	public void setStackText(int index, SafeHtml html) {
 		setStackText(index, html.asString(), true);
+	}
+
+	/**
+	 * Sets the text associated with a child by its index.
+	 *
+	 * @param index
+	 *            the index of the child whose text is to be set
+	 * @param text
+	 *            the text to be associated with it
+	 */
+	@SuppressIsSafeHtmlCastCheck
+	public void setStackText(int index, String text) {
+		setStackText(index, text, false);
 	}
 
 	/**
@@ -265,88 +303,6 @@ public class StackPanel extends ComplexPanel
 		}
 		visibleStack = index;
 		setStackVisible(visibleStack, true);
-	}
-
-	/**
-	 * <b>Affected Elements:</b>
-	 * <ul>
-	 * <li>-text# = The element around the header at the specified index.</li>
-	 * <li>-text-wrapper# = The element around the header at the specified
-	 * index.</li>
-	 * <li>-content# = The element around the body at the specified index.</li>
-	 * </ul>
-	 *
-	 * @see UIObject#onEnsureDebugId(String)
-	 */
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		super.onEnsureDebugId(baseID);
-		int numHeaders = DOM.getChildCount(body) >> 1;
-		for (int i = 0; i < numHeaders; i++) {
-			Element tdWrapper = DOM.getFirstChild(DOM.getChild(body, 2 * i));
-			Element headerElem = DOM.getFirstChild(tdWrapper);
-			Element bodyElem = DOM.getFirstChild(DOM.getChild(body, 2 * i + 1));
-			ensureDebugId(tdWrapper, baseID, "text-wrapper" + i);
-			ensureDebugId(bodyElem, baseID, "content" + i);
-			ensureDebugId(getHeaderTextElem(headerElem), baseID, "text" + i);
-		}
-	}
-
-	/**
-	 * Returns a header element.
-	 */
-	Element createHeaderElem() {
-		return DOM.createDiv();
-	}
-
-	/**
-	 * Get the element that holds the header text given the header element
-	 * created by #createHeaderElement.
-	 *
-	 * @param headerElem
-	 *            the header element
-	 * @return the element around the header text
-	 */
-	Element getHeaderTextElem(Element headerElem) {
-		return headerElem;
-	}
-
-	/**
-	 * Adds the {@code styleName} on the {@code 
-	 * 
-	<tr>
-	 * } for the header specified by {@code index}.
-	 *
-	 * @param index
-	 *            the index of the header row to apply to the style to
-	 * @param styleName
-	 *            the name of the class to add
-	 */
-	public void addHeaderStyleName(int index, String styleName) {
-		if (index >= getWidgetCount()) {
-			return;
-		}
-		Element tr = DOM.getChild(body, index * 2);
-		setStyleName(tr, styleName, true /* add */);
-	}
-
-	/**
-	 * Removes the {@code styleName} off the {@code 
-	 * 
-	<tr>
-	 * } for the header specified by {@code index}.
-	 *
-	 * @param index
-	 *            the index of the header row to remove the style from
-	 * @param styleName
-	 *            the name of the class to remove
-	 */
-	public void removeHeaderStyleName(int index, String styleName) {
-		if (index >= getWidgetCount()) {
-			return;
-		}
-		Element tr = DOM.getChild(body, index * 2);
-		setStyleName(tr, styleName, false /* remove */);
 	}
 
 	private int findDividerIndex(Element elem) {
@@ -434,5 +390,49 @@ public class StackPanel extends ComplexPanel
 				setStyleName(childTD, DEFAULT_ITEM_STYLENAME + "-first", false);
 			}
 		}
+	}
+
+	/**
+	 * <b>Affected Elements:</b>
+	 * <ul>
+	 * <li>-text# = The element around the header at the specified index.</li>
+	 * <li>-text-wrapper# = The element around the header at the specified
+	 * index.</li>
+	 * <li>-content# = The element around the body at the specified index.</li>
+	 * </ul>
+	 *
+	 * @see UIObject#onEnsureDebugId(String)
+	 */
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		super.onEnsureDebugId(baseID);
+		int numHeaders = DOM.getChildCount(body) >> 1;
+		for (int i = 0; i < numHeaders; i++) {
+			Element tdWrapper = DOM.getFirstChild(DOM.getChild(body, 2 * i));
+			Element headerElem = DOM.getFirstChild(tdWrapper);
+			Element bodyElem = DOM.getFirstChild(DOM.getChild(body, 2 * i + 1));
+			ensureDebugId(tdWrapper, baseID, "text-wrapper" + i);
+			ensureDebugId(bodyElem, baseID, "content" + i);
+			ensureDebugId(getHeaderTextElem(headerElem), baseID, "text" + i);
+		}
+	}
+
+	/**
+	 * Returns a header element.
+	 */
+	Element createHeaderElem() {
+		return DOM.createDiv();
+	}
+
+	/**
+	 * Get the element that holds the header text given the header element
+	 * created by #createHeaderElement.
+	 *
+	 * @param headerElem
+	 *            the header element
+	 * @return the element around the header text
+	 */
+	Element getHeaderTextElem(Element headerElem) {
+		return headerElem;
 	}
 }

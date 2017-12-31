@@ -50,31 +50,24 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 	@Transient
 	public abstract T getObject(ClassLoader classLoader);
 
-	public abstract void setObject(T object);
-
 	@Lob
 	public abstract String getSerializedXml();
+
+	public abstract IUser getUser();
+
+	public abstract void setObject(T object);
 
 	public abstract void setSerializedXml(String serializedXml);
 
 	public abstract void setUser(IUser user);
 
-	public abstract IUser getUser();
-
 	public static class WrappedObjectHelper {
-		public static String xmlSerialize(Object object) {
-			List<Class> classes = getContextClasses(object.getClass());
-			try {
-				return xmlSerialize(object, classes);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
+		static List<Class> jaxbSubclasses = null;
 
-		public static String xmlSerializeTight(Object object) {
-			List<Class> classes = getContextClasses(object.getClass());
+		public static <T> T clone(T object) {
 			try {
-				return xmlSerialize(object, classes,true);
+				String s = xmlSerialize(object);
+				return (T) xmlDeserialize(object.getClass(), s);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -96,32 +89,13 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 			}
 		}
 
-		protected static <T> List<Class> getContextClasses(Class<T> clazz) {
-			List<Class> classes = null;
-			if (!LooseContext.containsKey(CONTEXT_CLASSES)) {
-				classes = ensureJaxbSubclasses(clazz);
-			} else {
-				classes = new ArrayList<>(
-						(List) LooseContext.get(CONTEXT_CLASSES));
+		public static String xmlSerialize(Object object) {
+			List<Class> classes = getContextClasses(object.getClass());
+			try {
+				return xmlSerialize(object, classes);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
 			}
-			return classes;
-		}
-
-		static List<Class> jaxbSubclasses = null;
-
-		protected static List<Class> ensureJaxbSubclasses(Class addClass) {
-			if (jaxbSubclasses == null) {
-				jaxbSubclasses = Registry.impl(WrappedObjectProvider.class)
-						.getJaxbSubclasses();
-			}
-			if (addClass == null) {
-				AlcinaTopics.notifyDevWarning(
-						new Exception("xml ser/deser of null class"));
-				return new ArrayList<Class>(jaxbSubclasses);
-			}
-			ArrayList<Class> classes = new ArrayList<Class>(jaxbSubclasses);
-			classes.add(0, addClass);
-			return classes;
 		}
 
 		public static String xmlSerialize(Object object,
@@ -142,13 +116,39 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 			return s.toString();
 		}
 
-		public static <T> T clone(T object) {
+		public static String xmlSerializeTight(Object object) {
+			List<Class> classes = getContextClasses(object.getClass());
 			try {
-				String s = xmlSerialize(object);
-				return (T) xmlDeserialize(object.getClass(), s);
+				return xmlSerialize(object, classes, true);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
+		}
+
+		protected static List<Class> ensureJaxbSubclasses(Class addClass) {
+			if (jaxbSubclasses == null) {
+				jaxbSubclasses = Registry.impl(WrappedObjectProvider.class)
+						.getJaxbSubclasses();
+			}
+			if (addClass == null) {
+				AlcinaTopics.notifyDevWarning(
+						new Exception("xml ser/deser of null class"));
+				return new ArrayList<Class>(jaxbSubclasses);
+			}
+			ArrayList<Class> classes = new ArrayList<Class>(jaxbSubclasses);
+			classes.add(0, addClass);
+			return classes;
+		}
+
+		protected static <T> List<Class> getContextClasses(Class<T> clazz) {
+			List<Class> classes = null;
+			if (!LooseContext.containsKey(CONTEXT_CLASSES)) {
+				classes = ensureJaxbSubclasses(clazz);
+			} else {
+				classes = new ArrayList<>(
+						(List) LooseContext.get(CONTEXT_CLASSES));
+			}
+			return classes;
 		}
 	}
 }

@@ -15,12 +15,12 @@ public class CheckboxList<T> extends RadioButtonList<T> {
 	}
 
 	@Override
-	protected boolean singleResult() {
-		return false;
+	protected CheckBox createCheckBox(String displayText) {
+		return new CheckBox(displayText, true);
 	}
 
 	@Override
-	protected CheckBox createCheckBox(String displayText) {
-		return new CheckBox(displayText, true);
+	protected boolean singleResult() {
+		return false;
 	}
 }

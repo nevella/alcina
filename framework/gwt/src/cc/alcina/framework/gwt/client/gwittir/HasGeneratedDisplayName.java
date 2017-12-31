@@ -11,14 +11,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir;
 
 /**
  *
  * @author Nick Reddel
  */
-
- public interface HasGeneratedDisplayName {
+public interface HasGeneratedDisplayName {
 	public String generatedDisplayName();
 }

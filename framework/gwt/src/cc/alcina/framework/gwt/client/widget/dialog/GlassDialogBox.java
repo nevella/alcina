@@ -30,40 +30,15 @@ import cc.alcina.framework.gwt.client.widget.GlassDisplayer;
  * @author Nick Reddel
  */
 public class GlassDialogBox extends DialogBox {
-	@Override
-	public void hide() {
-		if (HIDE_INSTANTLY) {
-			setAnimationEnabled(false);
-		}
-		super.hide();
-		forgetScrollback();
-		glass.show(false);
-	}
+	public static boolean HIDE_INSTANTLY = false;
 
 	private boolean glassHidden;
-
-	public boolean isGlassHidden() {
-		return this.glassHidden;
-	}
-
-	public void setGlassHidden(boolean glassHidden) {
-		this.glassHidden = glassHidden;
-		if (glassHidden) {
-			addStyleName("glass-hidden");
-		}
-	}
-
-	public static boolean HIDE_INSTANTLY = false;
 
 	private GlassDisplayer glass = new GlassDisplayer();
 
 	private int scrollLeft;
 
 	private int scrollTop;
-
-	public GlassDialogBox() {
-		setAutoHideOnHistoryEventsEnabled(true);
-	}
 
 	private AtEndOfEventSeriesTimer scrollBackTimer = new AtEndOfEventSeriesTimer(
 			100, new Runnable() {
@@ -83,27 +58,12 @@ public class GlassDialogBox extends DialogBox {
 				scrollBackTimer.triggerEventOccurred();
 			}
 		}
-	};;;
-
-	protected void onDetach() {
-		super.onDetach();
-		forgetScrollback();
 	};
-
-	private void forgetScrollback() {
-		if (handlerRegistration != null) {
-			handlerRegistration.removeHandler();
-			handlerRegistration = null;
-		}
-		if (scrollBackTimer != null) {
-			scrollBackTimer.cancel();
-		}
-	}
 
 	private HandlerRegistration handlerRegistration;
 
-	public GlassDisplayer getGlass() {
-		return this.glass;
+	public GlassDialogBox() {
+		setAutoHideOnHistoryEventsEnabled(true);
 	}
 
 	@Override
@@ -113,6 +73,31 @@ public class GlassDialogBox extends DialogBox {
 			glass.show(true);
 		}
 		super.center();
+	}
+
+	public GlassDisplayer getGlass() {
+		return this.glass;
+	};;
+
+	@Override
+	public void hide() {
+		if (HIDE_INSTANTLY) {
+			setAnimationEnabled(false);
+		}
+		super.hide();
+		forgetScrollback();
+		glass.show(false);
+	};
+
+	public boolean isGlassHidden() {
+		return this.glassHidden;
+	}
+
+	public void setGlassHidden(boolean glassHidden) {
+		this.glassHidden = glassHidden;
+		if (glassHidden) {
+			addStyleName("glass-hidden");
+		}
 	}
 
 	@Override
@@ -127,6 +112,21 @@ public class GlassDialogBox extends DialogBox {
 					.addWindowScrollHandler(scrollHandler);
 		}
 		super.show();
+	}
+
+	private void forgetScrollback() {
+		if (handlerRegistration != null) {
+			handlerRegistration.removeHandler();
+			handlerRegistration = null;
+		}
+		if (scrollBackTimer != null) {
+			scrollBackTimer.cancel();
+		}
+	}
+
+	protected void onDetach() {
+		super.onDetach();
+		forgetScrollback();
 	}
 
 	@Override

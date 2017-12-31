@@ -12,13 +12,11 @@ public interface MemCacheProxy<T> extends HasIdAndLocalId {
 	public static final String CONTEXT_MEMCACHE_PROXY_CONTEXT = MemCacheProxy.class
 			.getName() + ".CONTEXT_MEMCACHE_PROXY_CONTEXT";
 
-	public T nonProxy();
+	public void beforeProjection();
 
 	public void checkPropertyChange(PropertyChangeEvent propertyChangeEvent);
 
-	public void beforeProjection();
-
-	
+	public T nonProxy();
 
 	public static class MemcacheProxyContext {
 		public static final Supplier<MemcacheProxyContext> SUPPLIER = new Supplier<MemCacheProxy.MemcacheProxyContext>() {
@@ -27,6 +25,7 @@ public interface MemCacheProxy<T> extends HasIdAndLocalId {
 				return new MemcacheProxyContext();
 			}
 		};
+
 		Map<HiliLocator, MemCacheProxy> projectionProxies = new LinkedHashMap<>();
 	}
 }

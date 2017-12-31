@@ -18,9 +18,8 @@ public class IsClassesFilter implements CollectionFilter {
 
 	@Override
 	public boolean allow(Object o) {
-		return o != null
-				&& (checkingClassObjects ? classes.contains(o) : classes
-						.contains(o.getClass()));
+		return o != null && (checkingClassObjects ? classes.contains(o)
+				: classes.contains(o.getClass()));
 	}
 
 	public boolean isCheckingClassObjects() {

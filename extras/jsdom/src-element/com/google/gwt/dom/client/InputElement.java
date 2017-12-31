@@ -43,6 +43,15 @@ public class InputElement extends Element {
 	}
 
 	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
+
+	/**
 	 * Determines whether the given {@link JavaScriptObject} can be cast to this
 	 * class. A <code>null</code> object will cause this method to return
 	 * <code>false</code>.
@@ -66,30 +75,12 @@ public class InputElement extends Element {
 		return false;
 	}
 
-	/**
-	 * Determine whether the given {@link Element} can be cast to this class. A
-	 * <code>null</code> node will cause this method to return
-	 * <code>false</code>.
-	 */
-	public static boolean is(Element elem) {
-		return elem != null && elem.hasTagName(TAG);
-	}
-
 	protected InputElement() {
 	}
 
 	public final void click() {
 		click0(ensureRemote());
 	}
-
-	/**
-	 * Simulate a mouse-click. For INPUT elements whose type attribute has one
-	 * of the following values: "button", "checkbox", "radio", "reset", or
-	 * "submit".
-	 */
-	private native void click0(ElementRemote elt) /*-{
-        elt.click();
-	}-*/;
 
 	/**
 	 * A comma-separated list of content types that a server processing this
@@ -280,14 +271,6 @@ public class InputElement extends Element {
 		return this.getPropertyBoolean("readOnly");
 	}
 
-	/**
-	 * Select the contents of the text area. For INPUT elements whose type
-	 * attribute has one of the following values: "text", "file", or "password".
-	 */
-	private native void select0(ElementRemote elt) /*-{
-        elt.select();
-	}-*/;
-
 	public final void select() {
 		select0(typedRemote());
 	}
@@ -408,6 +391,18 @@ public class InputElement extends Element {
 		this.setPropertyString("name", name);
 	}
 
+	@Override
+	public void setPropertyBoolean(String name, boolean value) {
+		ensureRemoteCheck();
+		if ((name.equals("checked") || name.equals("defaultChecked")
+				|| name.equals("disabled")) && !Boolean.valueOf(value)) {
+			local().removeAttribute(name);
+		} else {
+			local().setPropertyBoolean(name, value);
+		}
+		remote().setPropertyBoolean(name, value);
+	}
+
 	/**
 	 * This control is read-only. Relevant only when type has the value "text"
 	 * or "password".
@@ -484,15 +479,20 @@ public class InputElement extends Element {
 		return getPropertyBoolean("useMap");
 	}
 
-	@Override
-	public void setPropertyBoolean(String name, boolean value) {
-		ensureRemoteCheck();
-		if ((name.equals("checked") || name.equals("defaultChecked")|| name.equals("disabled"))
-				&& !Boolean.valueOf(value)) {
-			local().removeAttribute(name);
-		} else {
-			local().setPropertyBoolean(name, value);
-		}
-		remote().setPropertyBoolean(name, value);
-	}
+	/**
+	 * Simulate a mouse-click. For INPUT elements whose type attribute has one
+	 * of the following values: "button", "checkbox", "radio", "reset", or
+	 * "submit".
+	 */
+	private native void click0(ElementRemote elt) /*-{
+													elt.click();
+													}-*/;
+
+	/**
+	 * Select the contents of the text area. For INPUT elements whose type
+	 * attribute has one of the following values: "text", "file", or "password".
+	 */
+	private native void select0(ElementRemote elt) /*-{
+													elt.select();
+													}-*/;
 }

@@ -40,29 +40,61 @@ import rocket.util.client.Checker;
  */
 public class InputOutput {
 	/**
-	 * Wraps the given reader with a BufferedReader if necessary
+	 * Closes a previously open InputStream if necessary
 	 * 
-	 * @param reader
-	 *            Reader
-	 * @return A guaranteed BufferedReader
+	 * @param stream
+	 *            The InputStream which may be null
 	 */
-	public static BufferedReader makeReaderBuffered(final Reader reader) {
-		Checker.notNull("parameter:reader", reader);
-		return reader instanceof BufferedReader ? (BufferedReader) reader
-				: new BufferedReader(reader);
+	public static void closeIfNecessary(final InputStream stream) {
+		if (stream != null) {
+			try {
+				stream.close();
+			} catch (final IOException closing) {
+				closing.printStackTrace();
+			}
+		}
 	}
 
 	/**
-	 * Wraps the given writer with a BufferedWriter if necessary
+	 * Closes and flushes a previously open OutputStream if necessary
 	 * 
-	 * @param writer
-	 *            Writer
-	 * @return A guaranteed BufferedWriter
+	 * @param stream
+	 *            The OutputStream which may be null
 	 */
-	public static BufferedWriter makeWriterBuffered(final Writer writer) {
-		Checker.notNull("parameter:writer", writer);
-		return writer instanceof BufferedWriter ? (BufferedWriter) writer
-				: new BufferedWriter(writer);
+	public static void closeIfNecessary(final OutputStream stream) {
+		if (stream != null) {
+			try {
+				stream.flush();
+			} catch (final IOException closing) {
+				closing.printStackTrace();
+			}
+			try {
+				stream.close();
+			} catch (final IOException closing) {
+				closing.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * Closes a previously open PrintWriter if necessary
+	 * 
+	 * @param printWriter
+	 *            The PrintWriter which may be null
+	 */
+	public static void closeIfNecessary(final PrintWriter printWriter) {
+		if (printWriter != null) {
+			try {
+				printWriter.flush();
+			} catch (final Exception flushProblem) {
+				flushProblem.printStackTrace();
+			}
+			try {
+				printWriter.close();
+			} catch (final Exception closing) {
+				closing.printStackTrace();
+			}
+		}
 	}
 
 	/**
@@ -103,110 +135,6 @@ public class InputOutput {
 	}
 
 	/**
-	 * Closes and flushes a previously open OutputStream if necessary
-	 * 
-	 * @param stream
-	 *            The OutputStream which may be null
-	 */
-	public static void closeIfNecessary(final OutputStream stream) {
-		if (stream != null) {
-			try {
-				stream.flush();
-			} catch (final IOException closing) {
-				closing.printStackTrace();
-			}
-			try {
-				stream.close();
-			} catch (final IOException closing) {
-				closing.printStackTrace();
-			}
-		}
-	}
-
-	/**
-	 * Closes a previously open InputStream if necessary
-	 * 
-	 * @param stream
-	 *            The InputStream which may be null
-	 */
-	public static void closeIfNecessary(final InputStream stream) {
-		if (stream != null) {
-			try {
-				stream.close();
-			} catch (final IOException closing) {
-				closing.printStackTrace();
-			}
-		}
-	}
-
-	/**
-	 * Asserts that the given object is not null and is serializable.
-	 * 
-	 * @param name
-	 *            String
-	 * @param object
-	 *            Object
-	 */
-	public static void mustBeSerializable(final String name, final Object object) {
-		Checker.notNull(name, object);
-		if (false == (object instanceof java.io.Serializable)) {
-			Checker.fail(name, "The " + name + " is not serializable, object: "
-					+ object);
-		}
-	}
-
-	/**
-	 * Takes an object and returns its serialized form as a series of bytes. If
-	 * one wishes to possibly serialize null objects use
-	 * {@link #nullSafeSerialize}due to the inclusion of an assertion test when
-	 * entering the method.
-	 * 
-	 * This method takes care of the messy details such preparing a
-	 * ByteArrayOutputStream and ObjectOutputStream, cleanup etc.
-	 * 
-	 * @param object
-	 *            This object should or must implement Serializable.
-	 * @return The resulting bytes.
-	 * @throws UncheckedIOException
-	 *             if nything goes wrong when serializing (should pretty much
-	 *             always work)
-	 */
-	public static byte[] serialize(final Serializable object)
-			throws UncheckedIOException {
-		Checker.notNull("parameter:object", object);
-		return nullSafeSerialize(object);
-	}
-
-	/**
-	 * Takes an object and returns its serialized form as a series of bytes.
-	 * This method supports serializing of null object references.
-	 * 
-	 * This method takes care of the messy details such preparing a
-	 * ByteArrayOutputStream and ObjectOutputStream, cleanup etc.
-	 * 
-	 * @param object
-	 *            Serializable
-	 * @return byte[]
-	 * @throws IOException
-	 */
-	public static byte[] nullSafeSerialize(final Serializable object)
-			throws UncheckedIOException {
-		final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-		try {
-			final ObjectOutputStream objectOutput = new ObjectOutputStream(
-					bytes);
-			objectOutput.writeObject(object);
-			return bytes.toByteArray();
-		} catch (final IOException caught) {
-			throwIOException("A problem occured when attempting to serialize "
-					+ object, caught);
-			return null;
-		} finally {
-			InputOutput.closeIfNecessary(bytes);
-		}
-	}
-
-	/**
 	 * Reconstitutes an object given its serialized byte form.
 	 * 
 	 * @param bytes
@@ -239,6 +167,101 @@ public class InputOutput {
 	}
 
 	/**
+	 * Wraps the given reader with a BufferedReader if necessary
+	 * 
+	 * @param reader
+	 *            Reader
+	 * @return A guaranteed BufferedReader
+	 */
+	public static BufferedReader makeReaderBuffered(final Reader reader) {
+		Checker.notNull("parameter:reader", reader);
+		return reader instanceof BufferedReader ? (BufferedReader) reader
+				: new BufferedReader(reader);
+	}
+
+	/**
+	 * Wraps the given writer with a BufferedWriter if necessary
+	 * 
+	 * @param writer
+	 *            Writer
+	 * @return A guaranteed BufferedWriter
+	 */
+	public static BufferedWriter makeWriterBuffered(final Writer writer) {
+		Checker.notNull("parameter:writer", writer);
+		return writer instanceof BufferedWriter ? (BufferedWriter) writer
+				: new BufferedWriter(writer);
+	}
+
+	/**
+	 * Asserts that the given object is not null and is serializable.
+	 * 
+	 * @param name
+	 *            String
+	 * @param object
+	 *            Object
+	 */
+	public static void mustBeSerializable(final String name,
+			final Object object) {
+		Checker.notNull(name, object);
+		if (false == (object instanceof java.io.Serializable)) {
+			Checker.fail(name,
+					"The " + name + " is not serializable, object: " + object);
+		}
+	}
+
+	/**
+	 * Takes an object and returns its serialized form as a series of bytes.
+	 * This method supports serializing of null object references.
+	 * 
+	 * This method takes care of the messy details such preparing a
+	 * ByteArrayOutputStream and ObjectOutputStream, cleanup etc.
+	 * 
+	 * @param object
+	 *            Serializable
+	 * @return byte[]
+	 * @throws IOException
+	 */
+	public static byte[] nullSafeSerialize(final Serializable object)
+			throws UncheckedIOException {
+		final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+		try {
+			final ObjectOutputStream objectOutput = new ObjectOutputStream(
+					bytes);
+			objectOutput.writeObject(object);
+			return bytes.toByteArray();
+		} catch (final IOException caught) {
+			throwIOException(
+					"A problem occured when attempting to serialize " + object,
+					caught);
+			return null;
+		} finally {
+			InputOutput.closeIfNecessary(bytes);
+		}
+	}
+
+	/**
+	 * Takes an object and returns its serialized form as a series of bytes. If
+	 * one wishes to possibly serialize null objects use
+	 * {@link #nullSafeSerialize}due to the inclusion of an assertion test when
+	 * entering the method.
+	 * 
+	 * This method takes care of the messy details such preparing a
+	 * ByteArrayOutputStream and ObjectOutputStream, cleanup etc.
+	 * 
+	 * @param object
+	 *            This object should or must implement Serializable.
+	 * @return The resulting bytes.
+	 * @throws UncheckedIOException
+	 *             if nything goes wrong when serializing (should pretty much
+	 *             always work)
+	 */
+	public static byte[] serialize(final Serializable object)
+			throws UncheckedIOException {
+		Checker.notNull("parameter:object", object);
+		return nullSafeSerialize(object);
+	}
+
+	/**
 	 * May be used to report any IO related Exceptions converting them into an
 	 * equivalent unchecked exception.
 	 * 
@@ -264,27 +287,6 @@ public class InputOutput {
 	public static void throwIOException(final Throwable cause) {
 		Checker.notNull("assert:cause", cause);
 		throw new UncheckedIOException(cause);
-	}
-
-	/**
-	 * Closes a previously open PrintWriter if necessary
-	 * 
-	 * @param printWriter
-	 *            The PrintWriter which may be null
-	 */
-	public static void closeIfNecessary(final PrintWriter printWriter) {
-		if (printWriter != null) {
-			try {
-				printWriter.flush();
-			} catch (final Exception flushProblem) {
-				flushProblem.printStackTrace();
-			}
-			try {
-				printWriter.close();
-			} catch (final Exception closing) {
-				closing.printStackTrace();
-			}
-		}
 	}
 
 	/**

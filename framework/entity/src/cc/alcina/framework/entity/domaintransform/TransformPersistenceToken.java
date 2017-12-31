@@ -61,7 +61,8 @@ public class TransformPersistenceToken {
 		this.forOfflineTransforms = forOfflineTransforms;
 		this.logger = logger;
 		this.blockUntilAllListenersNotified = blockUntilAllListenersNotified;
-		this.transformExceptionPolicy = Registry.impl(PersistenceLayerTransformExceptionPolicyFactory.class)
+		this.transformExceptionPolicy = Registry
+				.impl(PersistenceLayerTransformExceptionPolicyFactory.class)
 				.getPolicy(this, forOfflineTransforms);
 	}
 
@@ -93,7 +94,8 @@ public class TransformPersistenceToken {
 		return this.request;
 	}
 
-	public PersistenceLayerTransformExceptionPolicy getTransformExceptionPolicy() {
+	public PersistenceLayerTransformExceptionPolicy
+			getTransformExceptionPolicy() {
 		return transformExceptionPolicy;
 	}
 

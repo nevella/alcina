@@ -6,9 +6,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 
-public class IgnoreMissingPersistenceLayerTransformExceptionPolicy extends
-		AbstractPersistenceLayerTransformExceptionPolicy {
-
+public class IgnoreMissingPersistenceLayerTransformExceptionPolicy
+		extends AbstractPersistenceLayerTransformExceptionPolicy {
 	private static final int TOO_MANY_EXCEPTIONS = 30;
 
 	public TransformExceptionAction getActionForException(
@@ -22,15 +21,19 @@ public class IgnoreMissingPersistenceLayerTransformExceptionPolicy extends
 		default:
 			break;
 		}
-		if (persistenceToken.getTransformExceptions().size() < tooManyExceptions()) {
+		if (persistenceToken.getTransformExceptions()
+				.size() < tooManyExceptions()) {
 			return TransformExceptionAction.RESOLVE;
 		}
 		exception.setType(DomainTransformExceptionType.TOO_MANY_EXCEPTIONS);
 		return TransformExceptionAction.THROW;
 	}
 
-	public int tooManyExceptions() {
-		return TOO_MANY_EXCEPTIONS;
+	@Override
+	public boolean ignoreClientAuthMismatch(
+			ClientInstance persistentClientInstance,
+			DomainTransformRequest request) {
+		return false;
 	}
 
 	@Override
@@ -38,9 +41,7 @@ public class IgnoreMissingPersistenceLayerTransformExceptionPolicy extends
 		return false;
 	}
 
-	@Override
-	public boolean ignoreClientAuthMismatch(
-			ClientInstance persistentClientInstance, DomainTransformRequest request) {
-		return false;
+	public int tooManyExceptions() {
+		return TOO_MANY_EXCEPTIONS;
 	}
 }

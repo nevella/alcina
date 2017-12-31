@@ -5,15 +5,17 @@ import java.util.Map.Entry;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 
-class AlwaysIgnorePropertyFilter implements
-		CollectionFilter<Map.Entry<String, RProperty>> {
+class AlwaysIgnorePropertyFilter
+		implements CollectionFilter<Map.Entry<String, RProperty>> {
 	@Override
 	public boolean allow(Entry<String, RProperty> o) {
-		int readMethodParamCount = o.getValue().getReadMethod() != null ? o
-				.getValue().getReadMethod().getBaseMethod().getParameters().length
+		int readMethodParamCount = o.getValue().getReadMethod() != null
+				? o.getValue().getReadMethod().getBaseMethod()
+						.getParameters().length
 				: 0;
-		int writeMethodParamCount = o.getValue().getWriteMethod() != null ? o
-				.getValue().getWriteMethod().getBaseMethod().getParameters().length
+		int writeMethodParamCount = o.getValue().getWriteMethod() != null
+				? o.getValue().getWriteMethod().getBaseMethod()
+						.getParameters().length
 				: 0;
 		return o.getValue().getReadMethod() != null
 				&& !o.getKey().equals("class")

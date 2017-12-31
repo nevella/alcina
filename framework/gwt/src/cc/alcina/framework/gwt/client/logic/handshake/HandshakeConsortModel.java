@@ -39,17 +39,8 @@ import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDel
 @RegistryLocation(registryPoint = HandshakeConsortModel.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
 public class HandshakeConsortModel {
-	public class TransportToDeltaConverter implements
-			Converter<DomainModelDeltaTransport, DeltaApplicationRecord> {
-		@Override
-		public DeltaApplicationRecord convert(
-				DomainModelDeltaTransport transport) {
-			return new DeltaApplicationRecord(0, transport.getSignature(),
-					new Date().getTime(), PermissionsManager.get().getUserId(),
-					clientInstance.getId(), 0, clientInstance.getAuth(),
-					DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
-					DomainTrancheProtocolHandler.VERSION, null);
-		}
+	public static HandshakeConsortModel get() {
+		return Registry.impl(HandshakeConsortModel.class);
 	}
 
 	private LoginResponse loginResponse;
@@ -60,20 +51,6 @@ public class HandshakeConsortModel {
 
 	private LoadObjectsResponse loadObjectsResponse;
 
-	public void clearLoadObjectsNotifier() {
-		if (loadObjectsNotifier != null) {
-			loadObjectsNotifier.modalOff();
-		}
-	}
-
-	public static HandshakeConsortModel get() {
-		return Registry.impl(HandshakeConsortModel.class);
-	}
-
-	public void clearObjects() {
-		deltasToApply = null;
-	}
-
 	private IteratorWithCurrent<DomainModelDelta> deltasToApply = null;
 
 	private List<String> existingSignatures = new ArrayList<String>();
@@ -83,6 +60,16 @@ public class HandshakeConsortModel {
 	private long maxPersistedTransformIdWhenGenerated;
 
 	private boolean loadedWithLocalOnlyTransforms;
+
+	public void clearLoadObjectsNotifier() {
+		if (loadObjectsNotifier != null) {
+			loadObjectsNotifier.modalOff();
+		}
+	}
+
+	public void clearObjects() {
+		deltasToApply = null;
+	}
 
 	public void ensureClientInstanceFromModelDeltas() {
 		if (getClientInstance() == null) {
@@ -109,14 +96,27 @@ public class HandshakeConsortModel {
 		return this.clientInstance;
 	}
 
+	public IteratorWithCurrent<DomainModelDelta> getDeltasToApply() {
+		return this.deltasToApply;
+	}
+
+	public List<String> getExistingSignatures() {
+		return this.existingSignatures;
+	}
+
 	public LoadObjectsRequest getLoadObjectsRequest() {
 		LoadObjectsRequest request = new LoadObjectsRequest();
-		request.setClientPersistedDomainObjectsMetadata(getDomainObjectsMetadata());
+		request.setClientPersistedDomainObjectsMetadata(
+				getDomainObjectsMetadata());
 		request.setModuleTypeSignature(GWT.getPermutationStrongName());
 		request.setUserId(getLastUserId());
-		request.setClientDeltaSignatures(DeltaStore.get()
-				.getExistingDeltaSignatures());
+		request.setClientDeltaSignatures(
+				DeltaStore.get().getExistingDeltaSignatures());
 		return request;
+	}
+
+	public LoadObjectsResponse getLoadObjectsResponse() {
+		return this.loadObjectsResponse;
 	}
 
 	public LoginResponse getLoginResponse() {
@@ -127,8 +127,16 @@ public class HandshakeConsortModel {
 		if (clientInstance == null) {
 			return LoginState.NOT_LOGGED_IN;
 		}
-		return PermissionsManager.get().isAnonymousUser() ? LoginState.NOT_LOGGED_IN
-				: LoginState.LOGGED_IN;
+		return PermissionsManager.get().isAnonymousUser()
+				? LoginState.NOT_LOGGED_IN : LoginState.LOGGED_IN;
+	}
+
+	public long getMaxPersistedTransformIdWhenGenerated() {
+		return this.maxPersistedTransformIdWhenGenerated;
+	}
+
+	public List<DeltaApplicationRecord> getPersistableApplicationRecords() {
+		return this.persistableApplicationRecords;
 	}
 
 	public boolean haveAllChunksNeededForOptimalObjectLoad() {
@@ -136,67 +144,8 @@ public class HandshakeConsortModel {
 				&& deltasToApply.current() != null;
 	}
 
-	public void setClientInstance(ClientInstance clientInstance) {
-		this.clientInstance = clientInstance;
-	}
-
-	public void setLoginResponse(LoginResponse loginResponse) {
-		this.loginResponse = loginResponse;
-		if (loginResponse != null) {
-			setClientInstance(loginResponse.getClientInstance());
-		}
-	}
-
-	private DomainModelDeltaMetadata getDomainObjectsMetadata() {
-		return DeltaStore.get().getDomainObjectsMetadata();
-	}
-
-	private Long getLastUserId() {
-		return DeltaStore.get().getUserId();
-	}
-
-	public List<String> getExistingSignatures() {
-		return this.existingSignatures;
-	}
-
-	public void setExistingSignatures(List<String> existingSignatures) {
-		this.existingSignatures = existingSignatures;
-	}
-
-	public long getMaxPersistedTransformIdWhenGenerated() {
-		return this.maxPersistedTransformIdWhenGenerated;
-	}
-
-	public void setMaxPersistedTransformIdWhenGenerated(
-			long maxPersistedTransformIdWhenGenerated) {
-		this.maxPersistedTransformIdWhenGenerated = maxPersistedTransformIdWhenGenerated;
-	}
-
-	public LoadObjectsResponse getLoadObjectsResponse() {
-		return this.loadObjectsResponse;
-	}
-
-	public void setLoadObjectsResponse(LoadObjectsResponse loadObjectsResponse) {
-		this.loadObjectsResponse = loadObjectsResponse;
-	}
-
-	public IteratorWithCurrent<DomainModelDelta> getDeltasToApply() {
-		return this.deltasToApply;
-	}
-
-	public void setFromPersistenceDeltas(
-			Iterator<DomainModelDelta> fromPersistenceDeltas) {
-		deltasToApply = new IteratorWithCurrent<DomainModelDelta>(
-				fromPersistenceDeltas);
-	}
-
-	public List<DeltaApplicationRecord> getPersistableApplicationRecords() {
-		return this.persistableApplicationRecords;
-	}
-
-	public void setPersistableApplicationRecords(
-			List<DeltaApplicationRecord> persistableApplicationRecords) {
-		this.persistableApplicationRecords = persistableApplicationRecords;
+	public boolean isLoadedWithLocalOnlyTransforms() {
+		return this.loadedWithLocalOnlyTransforms;
 	}
 
 	public void prepareInitialPlaySequence() {
@@ -216,24 +165,14 @@ public class HandshakeConsortModel {
 						.convert(
 								loadObjectsResponse.getLoadSequenceTransports(),
 								new TransportToDeltaConverter());
-				List<DomainModelDelta> deltas = CollectionFilters
-						.convert(
-								persistable,
-								new DeltaApplicationRecordToDomainModelDeltaConverter());
+				List<DomainModelDelta> deltas = CollectionFilters.convert(
+						persistable,
+						new DeltaApplicationRecordToDomainModelDeltaConverter());
 				deltasToApply = new IteratorWithCurrent<DomainModelDelta>(
 						deltas.iterator());
 				persistableApplicationRecords = persistable;
 			}
 		}
-	}
-
-	public boolean isLoadedWithLocalOnlyTransforms() {
-		return this.loadedWithLocalOnlyTransforms;
-	}
-
-	public void setLoadedWithLocalOnlyTransforms(
-			boolean loadedWithLocalOnlyTransforms) {
-		this.loadedWithLocalOnlyTransforms = loadedWithLocalOnlyTransforms;
 	}
 
 	public void registerInitialObjects(GeneralProperties generalProperties,
@@ -244,11 +183,73 @@ public class HandshakeConsortModel {
 		}
 		if (currentUser != null) {
 			PermissionsManager.get().setUser(currentUser);
-			PermissionsManager.get().setLoginState(
-					HandshakeConsortModel.get().getLoginState());
+			PermissionsManager.get()
+					.setLoginState(HandshakeConsortModel.get().getLoginState());
 			Registry.impl(ClientNotifications.class).log(
 					CommonUtils.formatJ("User: %s", currentUser == null ? null
 							: currentUser.getUserName()));
+		}
+	}
+
+	public void setClientInstance(ClientInstance clientInstance) {
+		this.clientInstance = clientInstance;
+	}
+
+	public void setExistingSignatures(List<String> existingSignatures) {
+		this.existingSignatures = existingSignatures;
+	}
+
+	public void setFromPersistenceDeltas(
+			Iterator<DomainModelDelta> fromPersistenceDeltas) {
+		deltasToApply = new IteratorWithCurrent<DomainModelDelta>(
+				fromPersistenceDeltas);
+	}
+
+	public void setLoadedWithLocalOnlyTransforms(
+			boolean loadedWithLocalOnlyTransforms) {
+		this.loadedWithLocalOnlyTransforms = loadedWithLocalOnlyTransforms;
+	}
+
+	public void
+			setLoadObjectsResponse(LoadObjectsResponse loadObjectsResponse) {
+		this.loadObjectsResponse = loadObjectsResponse;
+	}
+
+	public void setLoginResponse(LoginResponse loginResponse) {
+		this.loginResponse = loginResponse;
+		if (loginResponse != null) {
+			setClientInstance(loginResponse.getClientInstance());
+		}
+	}
+
+	public void setMaxPersistedTransformIdWhenGenerated(
+			long maxPersistedTransformIdWhenGenerated) {
+		this.maxPersistedTransformIdWhenGenerated = maxPersistedTransformIdWhenGenerated;
+	}
+
+	public void setPersistableApplicationRecords(
+			List<DeltaApplicationRecord> persistableApplicationRecords) {
+		this.persistableApplicationRecords = persistableApplicationRecords;
+	}
+
+	private DomainModelDeltaMetadata getDomainObjectsMetadata() {
+		return DeltaStore.get().getDomainObjectsMetadata();
+	}
+
+	private Long getLastUserId() {
+		return DeltaStore.get().getUserId();
+	}
+
+	public class TransportToDeltaConverter implements
+			Converter<DomainModelDeltaTransport, DeltaApplicationRecord> {
+		@Override
+		public DeltaApplicationRecord
+				convert(DomainModelDeltaTransport transport) {
+			return new DeltaApplicationRecord(0, transport.getSignature(),
+					new Date().getTime(), PermissionsManager.get().getUserId(),
+					clientInstance.getId(), 0, clientInstance.getAuth(),
+					DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
+					DomainTrancheProtocolHandler.VERSION, null);
 		}
 	}
 }

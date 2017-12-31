@@ -13,8 +13,6 @@ public abstract class MemcacheCriterionHandler<SC extends SearchCriterion> {
 
 	protected Class<? extends SearchDefinition> searchDefinitionClass;
 
-	
-
 	public abstract CacheFilter getFilter(SC sc);
 
 	public Class<SC> handlesSearchCriterion() {

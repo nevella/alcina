@@ -24,8 +24,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.ListAddItemHandler;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox.DomainListBox;
 
-public  class ListBoxCollectionProvider implements
-		BoundWidgetProvider {
+public class ListBoxCollectionProvider implements BoundWidgetProvider {
 	private final Class clazz;
 
 	private final boolean propertyIsCollection;
@@ -36,7 +35,7 @@ public  class ListBoxCollectionProvider implements
 
 	private Renderer renderer;
 
-	private  Comparator comparator;
+	private Comparator comparator;
 
 	private final ListAddItemHandler addHandler;
 
@@ -44,18 +43,21 @@ public  class ListBoxCollectionProvider implements
 			boolean propertyIsCollection) {
 		this(clazz, propertyIsCollection, false);
 	}
-	public ListBoxCollectionProvider(Class clazz,
-			boolean propertyIsCollection, boolean noNullOption){
-		this(clazz, propertyIsCollection, noNullOption, null,null,null);
+
+	public ListBoxCollectionProvider(Class clazz, boolean propertyIsCollection,
+			boolean noNullOption) {
+		this(clazz, propertyIsCollection, noNullOption, null, null, null);
 	}
-	public ListBoxCollectionProvider(Class clazz,
-			boolean propertyIsCollection, boolean noNullOption,
-			Renderer renderer, Comparator comparator){
-		this(clazz, propertyIsCollection, noNullOption, renderer, comparator, null);
+
+	public ListBoxCollectionProvider(Class clazz, boolean propertyIsCollection,
+			boolean noNullOption, Renderer renderer, Comparator comparator) {
+		this(clazz, propertyIsCollection, noNullOption, renderer, comparator,
+				null);
 	}
-	public ListBoxCollectionProvider(Class clazz,
-			boolean propertyIsCollection, boolean noNullOption,
-			Renderer renderer, Comparator comparator, ListAddItemHandler addHandler) {
+
+	public ListBoxCollectionProvider(Class clazz, boolean propertyIsCollection,
+			boolean noNullOption, Renderer renderer, Comparator comparator,
+			ListAddItemHandler addHandler) {
 		this.clazz = clazz;
 		this.propertyIsCollection = propertyIsCollection;
 		this.noNullOption = noNullOption;
@@ -66,20 +68,21 @@ public  class ListBoxCollectionProvider implements
 
 	public DomainListBox get() {
 		DomainListBox listBox = new DomainListBox(clazz, filter,
-				!propertyIsCollection && !noNullOption,addHandler);
-		listBox.setRenderer(renderer == null ? DisplayNameRenderer.INSTANCE
-				: renderer);
-		listBox.setComparator(comparator==null?Comparators.EqualsComparator.INSTANCE:comparator);
-		listBox.setSortOptionsByToString(comparator==null);
+				!propertyIsCollection && !noNullOption, addHandler);
+		listBox.setRenderer(
+				renderer == null ? DisplayNameRenderer.INSTANCE : renderer);
+		listBox.setComparator(comparator == null
+				? Comparators.EqualsComparator.INSTANCE : comparator);
+		listBox.setSortOptionsByToString(comparator == null);
 		listBox.setMultipleSelect(propertyIsCollection);
 		return listBox;
 	}
 
-	public void setFilter(CollectionFilter filter) {
-		this.filter = filter;
-	}
-
 	public CollectionFilter getFilter() {
 		return filter;
+	}
+
+	public void setFilter(CollectionFilter filter) {
+		this.filter = filter;
 	}
 }

@@ -4,11 +4,10 @@ import java.util.Collection;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
-public class MapObjectLookupJvm extends MapObjectLookup{
+public class MapObjectLookupJvm extends MapObjectLookup {
 	@Override
 	public void mapObject(HasIdAndLocalId obj) {
-		if ((obj.getId() == 0 && obj.getLocalId() == 0)
-				) {
+		if ((obj.getId() == 0 && obj.getLocalId() == 0)) {
 			return;
 		}
 		Class<? extends HasIdAndLocalId> clazz = obj.getClass();

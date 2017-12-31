@@ -23,88 +23,88 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.UIObject;
 
 /**
- * Static helper methods used by UiBinder. These methods are likely to move,
- * so please don't use them for non-UiBinder code.
+ * Static helper methods used by UiBinder. These methods are likely to move, so
+ * please don't use them for non-UiBinder code.
  */
 public class UiBinderUtil {
+	private static Element hiddenDiv;
 
-  /**
-   * Temporary attachment record that keeps track of where an element was
-   * before attachment.  Use the detach method to put things back.
-   *
-   */
-  public static class TempAttachment {
-    private final Element element;
-    private final Element origParent;
-    private final Element origSibling;
+	/**
+	 * Attaches the element to the dom temporarily. Keeps track of where it is
+	 * attached so that things can be put back latter.
+	 *
+	 * @return attachment record which can be used for reverting back to
+	 *         previous DOM state
+	 */
+	public static TempAttachment attachToDom(Element element) {
+		// TODO(rjrjr) This is copied from HTMLPanel. Reconcile
+		ensureHiddenDiv();
+		// Hang on to the panel's original parent and sibling elements so that
+		// it
+		// can be replaced.
+		Element origParent = element.getParentElement();
+		Element origSibling = element.getNextSiblingElement();
+		// Attach the panel's element to the hidden div.
+		hiddenDiv.appendChild(element);
+		return new TempAttachment(origParent, origSibling, element);
+	}
 
-    private TempAttachment(Element origParent, Element origSibling,
-        Element element) {
-      this.origParent = origParent;
-      this.origSibling = origSibling;
-      this.element = element;
-    }
+	public static Element fromHtml(@IsSafeHtml String html) {
+		ensureHiddenDiv();
+		hiddenDiv.setInnerHTML(html);
+		Element newbie = hiddenDiv.getFirstChildElement();
+		orphan(newbie);
+		return newbie;
+	}
 
-    /**
-     * Restore to previous DOM state before attachment.
-     */
-    public void detach() {
-      // Put the panel's element back where it was.
-      if (origParent != null) {
-        origParent.insertBefore(element, origSibling);
-      } else {
-        orphan(element);
-      }
-    }
-  }
+	private static void ensureHiddenDiv() {
+		// If the hidden DIV has not been created, create it.
+		if (hiddenDiv == null) {
+			hiddenDiv = Document.get().createDivElement();
+			UIObject.setVisible(hiddenDiv, false);
+			RootPanel.getBodyElement().appendChild(hiddenDiv);
+		}
+	}
 
-  private static Element hiddenDiv;
+	private static void orphan(Node node) {
+		node.getParentNode().removeChild(node);
+	}
 
-  /**
-   * Attaches the element to the dom temporarily.  Keeps track of where it is
-   * attached so that things can be put back latter.
-   *
-   * @return attachment record which can be used for reverting back to previous
-   *         DOM state
-   */
-  public static TempAttachment attachToDom(Element element) {
-    // TODO(rjrjr) This is copied from HTMLPanel. Reconcile
-    ensureHiddenDiv();
+	/**
+	 * Not to be instantiated.
+	 */
+	private UiBinderUtil() {
+	}
 
-    // Hang on to the panel's original parent and sibling elements so that it
-    // can be replaced.
-    Element origParent = element.getParentElement();
-    Element origSibling = element.getNextSiblingElement();
+	/**
+	 * Temporary attachment record that keeps track of where an element was
+	 * before attachment. Use the detach method to put things back.
+	 *
+	 */
+	public static class TempAttachment {
+		private final Element element;
 
-    // Attach the panel's element to the hidden div.
-    hiddenDiv.appendChild(element);
+		private final Element origParent;
 
-    return new TempAttachment(origParent, origSibling, element);
-  }
+		private final Element origSibling;
 
-  public static Element fromHtml(@IsSafeHtml String html) {
-    ensureHiddenDiv();
-    hiddenDiv.setInnerHTML(html);
-    Element newbie = hiddenDiv.getFirstChildElement();
-    orphan(newbie);
-    return newbie;
-  }
+		private TempAttachment(Element origParent, Element origSibling,
+				Element element) {
+			this.origParent = origParent;
+			this.origSibling = origSibling;
+			this.element = element;
+		}
 
-  private static void ensureHiddenDiv() {
-    // If the hidden DIV has not been created, create it.
-    if (hiddenDiv == null) {
-      hiddenDiv = Document.get().createDivElement();
-      UIObject.setVisible(hiddenDiv, false);
-      RootPanel.getBodyElement().appendChild(hiddenDiv);
-    }
-  }
-
-  private static void orphan(Node node) {
-    node.getParentNode().removeChild(node);
-  }
-
-  /**
-   * Not to be instantiated.
-   */
-  private UiBinderUtil() { }
+		/**
+		 * Restore to previous DOM state before attachment.
+		 */
+		public void detach() {
+			// Put the panel's element back where it was.
+			if (origParent != null) {
+				origParent.insertBefore(element, origSibling);
+			} else {
+				orphan(element);
+			}
+		}
+	}
 }

@@ -5,6 +5,6 @@ import cc.alcina.framework.gwt.persistence.client.ClientSession.ClientSessionSin
 public class ClientSessionJvm extends ClientSessionSingleAccess {
 	@Override
 	protected void init() {
-		//no GWT calls, natch
+		// no GWT calls, natch
 	}
 }

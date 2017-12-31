@@ -13,6 +13,10 @@ public class SynchronizedDateFormat extends SimpleDateFormat {
 		super();
 	}
 
+	public SynchronizedDateFormat(String pattern) {
+		super(pattern);
+	}
+
 	public SynchronizedDateFormat(String pattern,
 			DateFormatSymbols formatSymbols) {
 		super(pattern, formatSymbols);
@@ -22,8 +26,10 @@ public class SynchronizedDateFormat extends SimpleDateFormat {
 		super(pattern, locale);
 	}
 
-	public SynchronizedDateFormat(String pattern) {
-		super(pattern);
+	@Override
+	public synchronized StringBuffer format(Date date, StringBuffer toAppendTo,
+			FieldPosition pos) {
+		return super.format(date, toAppendTo, pos);
 	}
 
 	@Override
@@ -34,11 +40,5 @@ public class SynchronizedDateFormat extends SimpleDateFormat {
 	@Override
 	public synchronized Date parse(String text, ParsePosition pos) {
 		return super.parse(text, pos);
-	}
-
-	@Override
-	public synchronized StringBuffer format(Date date, StringBuffer toAppendTo,
-			FieldPosition pos) {
-		return super.format(date, toAppendTo, pos);
 	}
 }

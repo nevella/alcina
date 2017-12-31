@@ -13,11 +13,6 @@ public class StackPanel100pcHeight extends DivStackPanel
 	public LayoutInfo getLayoutInfo() {
 		return new LayoutInfo() {
 			@Override
-			public boolean to100percentOfAvailableHeight() {
-				return true;
-			}
-
-			@Override
 			public int getClientAdjustHeight() {
 				// int captionHeight = getElement().getFirstChildElement()
 				// .getFirstChildElement().getOffsetHeight();
@@ -30,6 +25,11 @@ public class StackPanel100pcHeight extends DivStackPanel
 			@Override
 			public Iterator<Widget> getLayoutWidgets() {
 				return iterator();
+			}
+
+			@Override
+			public boolean to100percentOfAvailableHeight() {
+				return true;
 			}
 
 			@Override

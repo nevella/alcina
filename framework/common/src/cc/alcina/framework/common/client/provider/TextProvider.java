@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.provider;
-
 
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
@@ -51,8 +49,8 @@ public class TextProvider {
 		return instance;
 	}
 
-	protected TextProvider getT() {
-		return null;
+	public static void registerTextProvider(TextProvider theInstance) {
+		TextProvider.instance = theInstance;
 	}
 
 	private boolean decorated = false;
@@ -81,12 +79,12 @@ public class TextProvider {
 				.beanInfoForClass(c);
 		ClientPropertyReflector propertyReflector = beanReflector
 				.getPropertyReflectors().get(propertyName);
-		return propertyReflector == null ? propertyName : getLabelText(c,
-				propertyReflector);
+		return propertyReflector == null ? propertyName
+				: getLabelText(c, propertyReflector);
 	}
 
 	public String getObjectName(Object o) {
-		if(o==null){
+		if (o == null) {
 			return "null";
 		}
 		ClientBeanReflector beanReflector = ClientReflector.get()
@@ -100,11 +98,13 @@ public class TextProvider {
 		}
 		String dnpn = beanReflector.getDisplayNamePropertyName();
 		Object pv = GwittirBridge.get().getPropertyValue(o, dnpn);
-		return (pv == null) ? "---" : CommonUtils.trimToWsChars(pv.toString(),
-				trimmed ? TRIMMED_LENGTH : 999, true);
+		return (pv == null) ? "---"
+				: CommonUtils.trimToWsChars(pv.toString(),
+						trimmed ? TRIMMED_LENGTH : 999, true);
 	}
 
-	public String getUiObjectText(Class clazz, String key, String defaultValue) {
+	public String getUiObjectText(Class clazz, String key,
+			String defaultValue) {
 		return defaultValue;
 	}
 
@@ -116,10 +116,6 @@ public class TextProvider {
 		return this.trimmed;
 	}
 
-	public static  void registerTextProvider(TextProvider theInstance) {
-		TextProvider.instance = theInstance;
-	}
-
 	public void setDecorated(boolean decorated) {
 		this.decorated = decorated;
 	}
@@ -128,16 +124,19 @@ public class TextProvider {
 		if (newObj instanceof HasGeneratedDisplayName) {
 			return;
 		}
-		String dnpn = ClientReflector.get().beanInfoForClass(
-				newObj.getClass()).getDisplayNamePropertyName();
-		if(dnpn.equals("id")){
+		String dnpn = ClientReflector.get().beanInfoForClass(newObj.getClass())
+				.getDisplayNamePropertyName();
+		if (dnpn.equals("id")) {
 			return;
 		}
-		Reflections.propertyAccessor().setPropertyValue(newObj, dnpn,
-				name);
+		Reflections.propertyAccessor().setPropertyValue(newObj, dnpn, name);
 	}
 
 	public void setTrimmed(boolean trimmed) {
 		this.trimmed = trimmed;
+	}
+
+	protected TextProvider getT() {
+		return null;
 	}
 }

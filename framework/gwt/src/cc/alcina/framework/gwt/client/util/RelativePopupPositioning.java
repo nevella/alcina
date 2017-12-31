@@ -42,6 +42,28 @@ public class RelativePopupPositioning {
 					AxisCoordinate.V_CENTER, AxisCoordinate.V_BOTTOM },
 			AxisCoordinate.H_LEFT);
 
+	public static final transient String TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED = RelativePopupPanel.class
+			.getName() + ".TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED";
+
+	public static void ensurePopupWithin(RelativePopupPanel rpp,
+			Widget boundingWidget) {
+		int rw = rpp.getOffsetWidth();
+		int rh = rpp.getOffsetHeight();
+		int rl = rpp.getAbsoluteLeft();
+		int x = boundingWidget.getAbsoluteLeft();
+		int y = boundingWidget.getAbsoluteTop();
+		int bwW = boundingWidget.getOffsetWidth();
+		int bwH = boundingWidget.getOffsetHeight();
+		if (rl + rw > x + bwW) {
+			String pxl = rpp.getElement().getStyle().getLeft();
+			if (pxl.endsWith("px")) {
+				rpp.getElement().getStyle()
+						.setLeft(Double.parseDouble(pxl.replace("px", ""))
+								- (rl + rw - x - bwW), Unit.PX);
+			}
+		}
+	}
+
 	public static RelativePopupPositioningParams
 			forAxes(RelativePopupAxis[] axes) {
 		RelativePopupPositioningParams params = new RelativePopupPositioningParams();
@@ -63,8 +85,47 @@ public class RelativePopupPositioning {
 		return RenderContext.get().get(RENDER_CONTEXT_BOUNDING_PARENT);
 	}
 
+	public static int getRelativeX(Element target, NativeEvent e) {
+		return e.getClientX() - target.getAbsoluteLeft()
+				+ target.getScrollLeft()
+				+ target.getOwnerDocument().getScrollLeft();
+	}
+
+	/**
+	 * Gets the mouse y-position relative to a given element.
+	 *
+	 * @param target
+	 *            the element whose coordinate system is to be used
+	 * @return the relative y-position
+	 */
+	public static int getRelativeY(Element target, NativeEvent e) {
+		int clientY = e.getClientY();
+		int absoluteTop = target.getAbsoluteTop();
+		int scrollTop = target.getScrollTop();
+		int scrollTop2 = target.getOwnerDocument().getScrollTop();
+		return clientY - absoluteTop + scrollTop + scrollTop2;
+	}
+
+	public static void notifyPopupDisplayed(PopupWrapper rpp) {
+		GlobalTopicPublisher.get()
+				.publishTopic(TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED, rpp);
+	}
+
+	public static void notifyPopupDisplayedListenerDelta(
+			TopicListener<PopupWrapper> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(
+				TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED, listener, add);
+	}
+
 	public static void setCurrentBoundingParent(Widget boundingParent) {
 		RenderContext.get().set(RENDER_CONTEXT_BOUNDING_PARENT, boundingParent);
+	}
+
+	public static RelativePopupPanel showPopup(
+			RelativePopupPositioningParams params, RelativePopupPanel rpp) {
+		return showPopup(params.relativeToElement, params.widgetToShow,
+				params.boundingWidget, params, params.relativeContainer, rpp, 0,
+				0);
 	}
 
 	public static RelativePopupPanel showPopup(Widget relativeToWidget,
@@ -135,53 +196,6 @@ public class RelativePopupPositioning {
 				shiftX, shiftY);
 	}
 
-	public static int getRelativeX(Element target, NativeEvent e) {
-		return e.getClientX() - target.getAbsoluteLeft()
-				+ target.getScrollLeft()
-				+ target.getOwnerDocument().getScrollLeft();
-	}
-
-	/**
-	 * Gets the mouse y-position relative to a given element.
-	 *
-	 * @param target
-	 *            the element whose coordinate system is to be used
-	 * @return the relative y-position
-	 */
-	public static int getRelativeY(Element target, NativeEvent e) {
-		int clientY = e.getClientY();
-		int absoluteTop = target.getAbsoluteTop();
-		int scrollTop = target.getScrollTop();
-		int scrollTop2 = target.getOwnerDocument().getScrollTop();
-		return clientY - absoluteTop + scrollTop + scrollTop2;
-	}
-
-	public static void ensurePopupWithin(RelativePopupPanel rpp,
-			Widget boundingWidget) {
-		int rw = rpp.getOffsetWidth();
-		int rh = rpp.getOffsetHeight();
-		int rl = rpp.getAbsoluteLeft();
-		int x = boundingWidget.getAbsoluteLeft();
-		int y = boundingWidget.getAbsoluteTop();
-		int bwW = boundingWidget.getOffsetWidth();
-		int bwH = boundingWidget.getOffsetHeight();
-		if (rl + rw > x + bwW) {
-			String pxl = rpp.getElement().getStyle().getLeft();
-			if (pxl.endsWith("px")) {
-				rpp.getElement().getStyle()
-						.setLeft(Double.parseDouble(pxl.replace("px", ""))
-								- (rl + rw - x - bwW), Unit.PX);
-			}
-		}
-	}
-
-	public static RelativePopupPanel showPopup(
-			RelativePopupPositioningParams params, RelativePopupPanel rpp) {
-		return showPopup(params.relativeToElement, params.widgetToShow,
-				params.boundingWidget, params, params.relativeContainer, rpp, 0,
-				0);
-	}
-
 	private static RelativePopupPanel showPopup(
 			final Element relativeToElement0, final Widget widgetToShow,
 			final Widget boundingWidget,
@@ -207,6 +221,229 @@ public class RelativePopupPositioning {
 				relativeToElement, shiftX, shiftY, boundingWidget,
 				positioningParams, positioningWidget));
 		return rpp;
+	}
+
+	public enum AxisCoordinate {
+		H_LEFT {
+			@Override
+			public AxisType axisType() {
+				return AxisType.NEG;
+			}
+
+			@Override
+			public boolean isVertical() {
+				return false;
+			}
+		},
+		H_CENTER {
+			@Override
+			public AxisType axisType() {
+				return AxisType.CENTER;
+			}
+
+			@Override
+			public boolean isVertical() {
+				return false;
+			}
+		},
+		H_RIGHT {
+			@Override
+			public AxisType axisType() {
+				return AxisType.POS;
+			}
+
+			@Override
+			public boolean isVertical() {
+				return false;
+			}
+		},
+		V_TOP {
+			@Override
+			public AxisType axisType() {
+				return AxisType.NEG;
+			}
+
+			@Override
+			public boolean isVertical() {
+				return true;
+			}
+		},
+		V_CENTER {
+			@Override
+			public AxisType axisType() {
+				return AxisType.CENTER;
+			}
+
+			@Override
+			public boolean isVertical() {
+				return true;
+			}
+		},
+		V_BOTTOM {
+			@Override
+			public AxisType axisType() {
+				return AxisType.POS;
+			}
+
+			@Override
+			public boolean isVertical() {
+				return true;
+			}
+		};
+		abstract AxisType axisType();
+
+		/**
+		 * The logic's doesn't quite seem to map here - but it does really. If
+		 * "wrapping relative to" - e.g. free axis of BOTTOM_LTR then left is
+		 * popup-left aligned to relative-to-widget-left right same. If not
+		 * (fixed axis), in example bottom == popup-top aligned to
+		 * relative-bottom
+		 *
+		 */
+		int fit(int relX, int relY, int bw, int bh, int relW, int relH, int ppW,
+				int ppH, int bx, int by, AxisCoordinate favour,
+				boolean wrappingRelativeTo, boolean force) {
+			int relC = relX;
+			int bDim = bw;
+			int relDim = relW;
+			int ppDim = ppW;
+			int boDim = bx;
+			int rDim = RootPanel.get().getOffsetWidth();
+			if (isVertical()) {
+				relC = relY;
+				bDim = bh;
+				relDim = relH;
+				ppDim = ppH;
+				boDim = by;
+				rDim = RootPanel.get().getOffsetHeight();
+			}
+			int result = 0;
+			switch (axisType()) {
+			case NEG:
+				result = wrappingRelativeTo ? relC : relC - ppDim;
+				break;
+			case POS:
+				result = wrappingRelativeTo ? relC + relDim - ppDim
+						: relC + relDim;
+				break;
+			case CENTER: // wrappingRelativeTo == true
+				if (favour.axisType() != null) {
+					switch (favour.axisType()) {
+					case NEG:
+						result = bDim - ppDim;
+						result = Math.max(result, -boDim);
+						// make as close to "left-align"
+						// as poss
+						break;
+					case POS:
+						result = Math.min(0, rDim - ppDim - bDim);
+						// as close to 'right-align' as poss
+						break;
+					default:
+						break;
+					}
+				} else {
+					result = INVALID;
+				}
+			}
+			if (result < 0 || result + ppDim > bDim) {
+				result = INVALID;
+			}
+			if (force && result == INVALID) {
+				result = relC + (wrappingRelativeTo ? 0 : relDim);
+			}
+			return result;
+		}
+
+		abstract boolean isVertical();
+	}
+
+	public enum OtherPositioningStrategy {
+		BELOW_WITH_PREFERRED_LEFT, RIGHT_OR_LEFT_WITH_PREFERRED_TOP,
+		BELOW_CENTER, ABOVE_CENTER, BELOW_RIGHT, ABOVE_RIGHT, TOP_CENTER
+	}
+
+	public static class PopupWrapper {
+		PopupPanel popupPanel;
+
+		RelativePopupPanel relativePopupPanel;
+
+		public PopupWrapper(PopupPanel popup) {
+			this.popupPanel = popup;
+		}
+
+		public PopupWrapper(RelativePopupPanel rpp) {
+			this.relativePopupPanel = rpp;
+		}
+
+		public void hide() {
+			if (popupPanel != null) {
+				popupPanel.hide();
+			} else {
+				relativePopupPanel.hide();
+			}
+		}
+
+		public boolean isShowing() {
+			return popupPanel != null ? popupPanel.isShowing()
+					: relativePopupPanel.isShowing();
+		}
+	}
+
+	public static class RelativePopupAxis {
+		public final AxisCoordinate[] freeAxis;
+
+		public final AxisCoordinate fixedAxis;
+
+		private RelativePopupAxis(AxisCoordinate[] freeAxis,
+				AxisCoordinate fixedAxis) {
+			this.freeAxis = freeAxis;
+			this.fixedAxis = fixedAxis;
+		}
+	}
+
+	public static class RelativePopupPositioningParams {
+		public boolean ignoreRelativeToCoordinates;
+
+		public boolean addRelativeWidgetHeight;
+
+		public Widget relativeContainer;
+
+		public Widget boundingWidget;
+
+		public Widget widgetToShow;
+
+		public Element relativeToElement;
+
+		public NativeEvent nativeEvent;
+
+		public int preferredFromBottom;
+
+		public RelativePopupAxis[] axes;
+
+		public OtherPositioningStrategy positioningStrategy;
+
+		public boolean shiftToEventXY = false;
+
+		public int shiftY;
+
+		public int preferredLeft;
+
+		public int preferredTop;
+
+		public int shiftX;
+
+		public boolean ignoreBoundingWidgetPopupConstraint;
+
+		public boolean decorated = false;
+
+		public void show(RelativePopupPanel panel) {
+			RelativePopupPositioning.showPopup(this, panel);
+		}
+	}
+
+	enum AxisType {
+		NEG, CENTER, POS
 	}
 
 	static class RelativePositioningCallback implements PositionCallback {
@@ -415,242 +652,5 @@ public class RelativePopupPositioning {
 			rpp.setPopupPosition(x, y);
 			notifyPopupDisplayed(new PopupWrapper(rpp));
 		}
-	}
-
-	public static class PopupWrapper {
-		PopupPanel popupPanel;
-
-		RelativePopupPanel relativePopupPanel;
-
-		public PopupWrapper(RelativePopupPanel rpp) {
-			this.relativePopupPanel = rpp;
-		}
-
-		public PopupWrapper(PopupPanel popup) {
-			this.popupPanel = popup;
-		}
-
-		public boolean isShowing() {
-			return popupPanel != null ? popupPanel.isShowing()
-					: relativePopupPanel.isShowing();
-		}
-
-		public void hide() {
-			if (popupPanel != null) {
-				popupPanel.hide();
-			} else {
-				relativePopupPanel.hide();
-			}
-		}
-	}
-
-	public static final transient String TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED = RelativePopupPanel.class
-			.getName() + ".TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED";
-
-	public static void notifyPopupDisplayed(PopupWrapper rpp) {
-		GlobalTopicPublisher.get()
-				.publishTopic(TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED, rpp);
-	}
-
-	public static void notifyPopupDisplayedListenerDelta(
-			TopicListener<PopupWrapper> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(
-				TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED, listener, add);
-	}
-
-	public enum OtherPositioningStrategy {
-		BELOW_WITH_PREFERRED_LEFT, RIGHT_OR_LEFT_WITH_PREFERRED_TOP,
-		BELOW_CENTER, ABOVE_CENTER, BELOW_RIGHT, ABOVE_RIGHT, TOP_CENTER
-	}
-
-	public static class RelativePopupAxis {
-		public final AxisCoordinate[] freeAxis;
-
-		public final AxisCoordinate fixedAxis;
-
-		private RelativePopupAxis(AxisCoordinate[] freeAxis,
-				AxisCoordinate fixedAxis) {
-			this.freeAxis = freeAxis;
-			this.fixedAxis = fixedAxis;
-		}
-	}
-
-	public static class RelativePopupPositioningParams {
-		public boolean ignoreRelativeToCoordinates;
-
-		public boolean addRelativeWidgetHeight;
-
-		public Widget relativeContainer;
-
-		public Widget boundingWidget;
-
-		public Widget widgetToShow;
-
-		public Element relativeToElement;
-
-		public NativeEvent nativeEvent;
-
-		public int preferredFromBottom;
-
-		public RelativePopupAxis[] axes;
-
-		public OtherPositioningStrategy positioningStrategy;
-
-		public boolean shiftToEventXY = false;
-
-		public int shiftY;
-
-		public int preferredLeft;
-
-		public int preferredTop;
-
-		public int shiftX;
-
-		public boolean ignoreBoundingWidgetPopupConstraint;
-
-		public boolean decorated = false;
-
-		public void show(RelativePopupPanel panel) {
-			RelativePopupPositioning.showPopup(this, panel);
-		}
-	}
-
-	public enum AxisCoordinate {
-		H_LEFT {
-			@Override
-			public AxisType axisType() {
-				return AxisType.NEG;
-			}
-
-			@Override
-			public boolean isVertical() {
-				return false;
-			}
-		},
-		H_CENTER {
-			@Override
-			public AxisType axisType() {
-				return AxisType.CENTER;
-			}
-
-			@Override
-			public boolean isVertical() {
-				return false;
-			}
-		},
-		H_RIGHT {
-			@Override
-			public AxisType axisType() {
-				return AxisType.POS;
-			}
-
-			@Override
-			public boolean isVertical() {
-				return false;
-			}
-		},
-		V_TOP {
-			@Override
-			public AxisType axisType() {
-				return AxisType.NEG;
-			}
-
-			@Override
-			public boolean isVertical() {
-				return true;
-			}
-		},
-		V_CENTER {
-			@Override
-			public AxisType axisType() {
-				return AxisType.CENTER;
-			}
-
-			@Override
-			public boolean isVertical() {
-				return true;
-			}
-		},
-		V_BOTTOM {
-			@Override
-			public AxisType axisType() {
-				return AxisType.POS;
-			}
-
-			@Override
-			public boolean isVertical() {
-				return true;
-			}
-		};
-		abstract AxisType axisType();
-
-		/**
-		 * The logic's doesn't quite seem to map here - but it does really. If
-		 * "wrapping relative to" - e.g. free axis of BOTTOM_LTR then left is
-		 * popup-left aligned to relative-to-widget-left right same. If not
-		 * (fixed axis), in example bottom == popup-top aligned to
-		 * relative-bottom
-		 *
-		 */
-		int fit(int relX, int relY, int bw, int bh, int relW, int relH, int ppW,
-				int ppH, int bx, int by, AxisCoordinate favour,
-				boolean wrappingRelativeTo, boolean force) {
-			int relC = relX;
-			int bDim = bw;
-			int relDim = relW;
-			int ppDim = ppW;
-			int boDim = bx;
-			int rDim = RootPanel.get().getOffsetWidth();
-			if (isVertical()) {
-				relC = relY;
-				bDim = bh;
-				relDim = relH;
-				ppDim = ppH;
-				boDim = by;
-				rDim = RootPanel.get().getOffsetHeight();
-			}
-			int result = 0;
-			switch (axisType()) {
-			case NEG:
-				result = wrappingRelativeTo ? relC : relC - ppDim;
-				break;
-			case POS:
-				result = wrappingRelativeTo ? relC + relDim - ppDim
-						: relC + relDim;
-				break;
-			case CENTER: // wrappingRelativeTo == true
-				if (favour.axisType() != null) {
-					switch (favour.axisType()) {
-					case NEG:
-						result = bDim - ppDim;
-						result = Math.max(result, -boDim);
-						// make as close to "left-align"
-						// as poss
-						break;
-					case POS:
-						result = Math.min(0, rDim - ppDim - bDim);
-						// as close to 'right-align' as poss
-						break;
-					default:
-						break;
-					}
-				} else {
-					result = INVALID;
-				}
-			}
-			if (result < 0 || result + ppDim > bDim) {
-				result = INVALID;
-			}
-			if (force && result == INVALID) {
-				result = relC + (wrappingRelativeTo ? 0 : relDim);
-			}
-			return result;
-		}
-
-		abstract boolean isVertical();
-	}
-
-	enum AxisType {
-		NEG, CENTER, POS
 	}
 }

@@ -52,144 +52,33 @@ import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.SqlUtils.ColumnFormatter;
 
 public class DevConsoleCommandTransforms {
-	public static class RsrowToDteConverter {
-		private boolean modColNames;
+	static boolean classRefsEnsured;
 
-		public RsrowToDteConverter(boolean modColNames) {
-			this.modColNames = modColNames;
+	public static void ensureClassRefs(Connection conn) throws Exception {
+		if (classRefsEnsured) {
+			return;
 		}
-
-		public List<DomainTransformEvent> convert(ResultSet rs)
-				throws Exception {
-			List<DomainTransformEvent> dtes = new ArrayList<DomainTransformEvent>();
-			while (rs.next()) {
-				DomainTransformEvent dte = new DomainTransformEvent();
-				dtes.add(dte);
-				dte.setNewStringValue(rs.getString("newStringValue"));
-				dte.setObjectClassRef(ClassRef.forId(rs.getLong(
-						modColNames ? "dte_objref" : "objectclassref_id")));
-				dte.setPropertyName(rs.getString("propertyname"));
-				dte.setUtcDate(rs.getTimestamp("utcdate"));
-				dte.setObjectId(
-						rs.getLong(modColNames ? "object_id" : "objectId"));
-				dte.setObjectLocalId(rs.getLong("objectlocalid"));
-				dte.setValueId(rs.getLong("valueid"));
-				dte.setValueClassRef(
-						ClassRef.forId(rs.getLong("valueclassref_id")));
-				int i = rs.getInt("transformtype");
-				TransformType tt = rs.wasNull() ? null
-						: TransformType.class.getEnumConstants()[i];
-				dte.setTransformType(tt);
+		System.out.println("getting classrefs...");
+		Statement ps = conn.createStatement();
+		ResultSet rs = ps.executeQuery("select * from classref");
+		while (rs.next()) {
+			long id = rs.getLong("id");
+			String cn = rs.getString("refclassname");
+			Class clazz = Registry.get().lookupSingle(
+					AlcinaPersistentEntityImpl.class, ClassRef.class);
+			ClassRef cr = (ClassRef) clazz.newInstance();
+			cr.setId(id);
+			cr.setRefClassName(cn);
+			try {
+				cr.setRefClass(Class.forName(cn));
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-			return dtes;
+			ClassRef.add(Collections.singleton(cr));
 		}
-	}
-
-	public static class LogsToDtrs {
-		public LogsToDtrs() {
-		}
-
-		public Multimap<Long, List<DomainTransformEvent>>
-				logsToDtrs(String logFile, boolean removeDuplicates) {
-			Pattern lfPat = Pattern.compile(
-					"\\s*(\\d{4}.+?)\\s+\\| transform\\s+\\| (\\d+)\\s+\\|(.+)");
-			Multimap<Long, List<DomainTransformEvent>> result = new Multimap<Long, List<DomainTransformEvent>>();
-			List<String> strs = CommonUtils.split(logFile, "\n");
-			Collections.reverse(strs);
-			for (int i = 0; i < strs.size(); i++) {
-				String line = strs.get(i);
-				if (line.contains("kXZ3")) {
-					int j = 3;
-				}
-				int idx = line.length() - 1;// ignore terminating "|"
-				if (idx < 1) {
-					continue;
-				}
-				for (; idx > 0 && line.charAt(idx - 1) == ' '; idx--)
-					;
-				line = line.substring(0, idx);
-				Matcher m = lfPat.matcher(line);
-				if (m.matches()) {
-					long clId = Long.parseLong(m.group(2));
-					String transforms = m.group(3);
-					transforms = transforms.replace("\\nlc7x--", "\n");
-					int shortCheck = transforms.indexOf("str:");
-					if (shortCheck == 0 || shortCheck == 1) {
-						List<DomainTransformEvent> dtes = new PlaintextProtocolHandlerShort()
-								.deserialize(transforms);
-						result.addCollection(clId, dtes);
-					} else {
-						List<DomainTransformEvent> dtes = new PlaintextProtocolHandler()
-								.deserialize(transforms);
-						result.addCollection(clId, dtes);
-					}
-				}
-			}
-			for (List<DomainTransformEvent> dtes : result.values()) {
-				Collections.sort(dtes,
-						DomainTransformEvent.UTC_DATE_COMPARATOR);
-				DomainTransformEvent last = null;
-				for (Iterator<DomainTransformEvent> itr = dtes.iterator(); itr
-						.hasNext();) {
-					DomainTransformEvent current = itr.next();
-					if (last != null
-							&& last.toString().equals(current.toString())
-							&& removeDuplicates) {
-						itr.remove();
-					}
-					last = current;
-				}
-			}
-			return result;
-		}
-
-		public Multimap<Long, List<DomainTransformEvent>>
-				dtrExpsToCliDteMap(String folderPath) throws Exception {
-			List<File> files = new ArrayList<File>(Arrays
-					.asList(new File(folderPath).listFiles(new FileFilter() {
-						@Override
-						public boolean accept(File pathname) {
-							return NUMERIC_FN_PATTERN
-									.matcher(pathname.getName()).matches();
-						}
-					})));
-			return dtrExpsToCliDteMap(files);
-		}
-
-		public Multimap<Long, List<DomainTransformEvent>>
-				dtrExpsToCliDteMap(List<File> files) throws Exception {
-			Multimap<Long, List<DomainTransformEvent>> result = new Multimap<Long, List<DomainTransformEvent>>();
-			List<DeltaApplicationRecord> wrappers = new ArrayList<DeltaApplicationRecord>();
-			Collections.sort(files, new LongFnComparator());
-			int processedIndex = 0;
-			for (; processedIndex < files.size();) {
-				File f = files.get(processedIndex++);
-				String ser = ResourceUtilities.readFileToStringGz(f);
-				DeltaApplicationRecord wrapper = new DeltaApplicationRecordSerializerImpl()
-						.read(ser);
-				DomainTransformRequest rq = new DomainTransformRequest();
-				rq.fromString(wrapper.getText());
-				result.addCollection(wrapper.getClientInstanceId(),
-						rq.getEvents());
-			}
-			return result;
-		}
-
-		private static final Pattern NUMERIC_FN_PATTERN = Pattern
-				.compile("(\\d+)\\.(?:txt\\.gz|txt)");
-
-		private static class LongFnComparator implements Comparator<File> {
-			@Override
-			public int compare(File o1, File o2) {
-				Matcher m1 = NUMERIC_FN_PATTERN.matcher(o1.getName());
-				m1.find();
-				long l1 = Long.parseLong(m1.group(1));
-				Matcher m2 = NUMERIC_FN_PATTERN.matcher(o2.getName());
-				m2.find();
-				long l2 = Long.parseLong(m2.group(1));
-				return CommonUtils.compareLongs(l1, l2);
-			}
-		}
+		ps.close();
+		System.out.println("getting classrefs...got");
+		classRefsEnsured = true;
 	}
 
 	public static class CmdListClientInstances extends DevConsoleCommand {
@@ -265,6 +154,36 @@ public class DevConsoleCommandTransforms {
 			return "trl {params or none for usage}";
 		}
 
+		@Override
+		public String run(String[] argv) throws Exception {
+			if (argv.length == 0) {
+				return "Usage: trl {-t: trim message}{-l: single-line message}{-m: message only} ({ci|top|mes|us|days} value)+ - top is topic {!}{s|m|c|t}";
+			}
+			FilterArgvFlag f = new FilterArgvFlag(argv, "-t");
+			FilterArgvFlag f2 = new FilterArgvFlag(f.argv, "-l");
+			FilterArgvFlag f3 = new FilterArgvFlag(f2.argv, "-m");
+			String sql = "select %s%s from " + "clientlogrecord clr inner join "
+					+ " client_instance ci on clr.clientinstanceid = ci.id "
+					+ " inner join users u " + "on ci.user_id=u.id " + "where "
+					+ " %s order by clr.id desc";
+			String metaSelect = f3.contains ? ""
+					: "clr.time, clr.topic, ci.id, ";
+			String messageSelect = f.contains
+					? "substr(replace(clr.message,'\\n','\\\\n'),0,80)"
+					: f2.contains ? "replace(clr.message,'\\n','\\\\nlc7x--')"
+							: "clr.message";
+			argv = f3.argv;
+			String filter = DevConsoleFilter.getFilters(
+					CmdListClientLogRecordsFilter.class, argv, null);
+			Connection conn = getConn();
+			sql = String.format(sql, metaSelect, messageSelect, filter);
+			System.out.println(console.breakAndPad(1, 80, sql, 0));
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery();
+			SqlUtils.dumpResultSet(rs);
+			return "";
+		}
+
 		@RegistryLocation(registryPoint = CmdListClientLogRecordsFilter.class)
 		public abstract static class CmdListClientLogRecordsFilter
 				extends DevConsoleFilter {
@@ -283,27 +202,6 @@ public class DevConsoleCommandTransforms {
 			@Override
 			public String getKey() {
 				return "ci";
-			}
-
-			@Override
-			protected boolean hasDefault() {
-				return false;
-			}
-		}
-
-		public static class CmdListClientLogRecordsFilterUserId
-				extends CmdListClientLogRecordsFilter {
-			@Override
-			public String getFilter(String value) {
-				value = CommonUtils.isNullOrEmpty(value) ? "-1" : value;
-				return String.format(
-						value.contains(",") ? "u.id in (%s)" : "u.id=%s",
-						value);
-			}
-
-			@Override
-			public String getKey() {
-				return "us";
 			}
 
 			@Override
@@ -379,67 +277,31 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		@Override
-		public String run(String[] argv) throws Exception {
-			if (argv.length == 0) {
-				return "Usage: trl {-t: trim message}{-l: single-line message}{-m: message only} ({ci|top|mes|us|days} value)+ - top is topic {!}{s|m|c|t}";
+		public static class CmdListClientLogRecordsFilterUserId
+				extends CmdListClientLogRecordsFilter {
+			@Override
+			public String getFilter(String value) {
+				value = CommonUtils.isNullOrEmpty(value) ? "-1" : value;
+				return String.format(
+						value.contains(",") ? "u.id in (%s)" : "u.id=%s",
+						value);
 			}
-			FilterArgvFlag f = new FilterArgvFlag(argv, "-t");
-			FilterArgvFlag f2 = new FilterArgvFlag(f.argv, "-l");
-			FilterArgvFlag f3 = new FilterArgvFlag(f2.argv, "-m");
-			String sql = "select %s%s from " + "clientlogrecord clr inner join "
-					+ " client_instance ci on clr.clientinstanceid = ci.id "
-					+ " inner join users u " + "on ci.user_id=u.id " + "where "
-					+ " %s order by clr.id desc";
-			String metaSelect = f3.contains ? ""
-					: "clr.time, clr.topic, ci.id, ";
-			String messageSelect = f.contains
-					? "substr(replace(clr.message,'\\n','\\\\n'),0,80)"
-					: f2.contains ? "replace(clr.message,'\\n','\\\\nlc7x--')"
-							: "clr.message";
-			argv = f3.argv;
-			String filter = DevConsoleFilter.getFilters(
-					CmdListClientLogRecordsFilter.class, argv, null);
-			Connection conn = getConn();
-			sql = String.format(sql, metaSelect, messageSelect, filter);
-			System.out.println(console.breakAndPad(1, 80, sql, 0));
-			PreparedStatement ps = conn.prepareStatement(sql);
-			ResultSet rs = ps.executeQuery();
-			SqlUtils.dumpResultSet(rs);
-			return "";
-		}
-	}
 
-	static boolean classRefsEnsured;
-
-	public static void ensureClassRefs(Connection conn) throws Exception {
-		if (classRefsEnsured) {
-			return;
-		}
-		System.out.println("getting classrefs...");
-		Statement ps = conn.createStatement();
-		ResultSet rs = ps.executeQuery("select * from classref");
-		while (rs.next()) {
-			long id = rs.getLong("id");
-			String cn = rs.getString("refclassname");
-			Class clazz = Registry.get().lookupSingle(
-					AlcinaPersistentEntityImpl.class, ClassRef.class);
-			ClassRef cr = (ClassRef) clazz.newInstance();
-			cr.setId(id);
-			cr.setRefClassName(cn);
-			try {
-				cr.setRefClass(Class.forName(cn));
-			} catch (Exception e) {
-				e.printStackTrace();
+			@Override
+			public String getKey() {
+				return "us";
 			}
-			ClassRef.add(Collections.singleton(cr));
+
+			@Override
+			protected boolean hasDefault() {
+				return false;
+			}
 		}
-		ps.close();
-		System.out.println("getting classrefs...got");
-		classRefsEnsured = true;
 	}
 
 	public static class CmdListTransforms extends DevConsoleCommand {
+		boolean foundDteId;
+
 		@Override
 		public boolean canUseProductionConn() {
 			return true;
@@ -459,8 +321,6 @@ public class DevConsoleCommandTransforms {
 		public String getUsage() {
 			return "trt {params or none for usage}";
 		}
-
-		boolean foundDteId;
 
 		@Override
 		public String run(String[] argv) throws Exception {
@@ -519,7 +379,7 @@ public class DevConsoleCommandTransforms {
 					+ " inner join %s dte on dte.domaintransformrequestpersistent_id = dtr.id"
 					+ " where %s %s limit %s";
 			Set<Long> ids = null;
-			String orderClause = limit<100?"":"order by dte.id desc";
+			String orderClause = limit < 100 ? "" : "order by dte.id desc";
 			CollectionFilter<String> dteIdFilter = new CollectionFilter<String>() {
 				@Override
 				public boolean allow(String o) {
@@ -557,7 +417,8 @@ public class DevConsoleCommandTransforms {
 			} else {
 				filter = DevConsoleFilter
 						.getFilters(CmdListTransformsFilter.class, argv);
-				sql2 = String.format(sql2, dtrName, dteName, filter,orderClause, limit);
+				sql2 = String.format(sql2, dtrName, dteName, filter,
+						orderClause, limit);
 				PreparedStatement ps = conn.prepareStatement(sql2);
 				System.out.println(console.breakAndPad(1, 80, sql2, 0));
 				ResultSet rs = ps.executeQuery();
@@ -605,6 +466,32 @@ public class DevConsoleCommandTransforms {
 				extends DevConsoleFilter {
 		}
 
+		public static class CmdListTransformsFilterClass
+				extends CmdListTransformsFilter {
+			@Override
+			public String getFilter(final String arg1) {
+				Set<ClassRef> refs = ClassRef.all();
+				CollectionFilter<ClassRef> classNameFilter = new CollectionFilter<ClassRef>() {
+					Pattern namePattern = Pattern.compile(arg1,
+							Pattern.CASE_INSENSITIVE);
+
+					@Override
+					public boolean allow(ClassRef o) {
+						return namePattern.matcher(o.getRefClassName()).find();
+					}
+				};
+				List<ClassRef> filteredRefs = CollectionFilters.filter(refs,
+						classNameFilter);
+				return String.format("dte.objectclassref_id in %s",
+						EntityUtils.hasIdsToIdClause(filteredRefs));
+			}
+
+			@Override
+			public String getKey() {
+				return "class";
+			}
+		}
+
 		public static class CmdListTransformsFilterClientInstance
 				extends CmdListTransformsFilter {
 			@Override
@@ -639,46 +526,6 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListTransformsFilterClass
-				extends CmdListTransformsFilter {
-			@Override
-			public String getFilter(final String arg1) {
-				Set<ClassRef> refs = ClassRef.all();
-				CollectionFilter<ClassRef> classNameFilter = new CollectionFilter<ClassRef>() {
-					Pattern namePattern = Pattern.compile(arg1,
-							Pattern.CASE_INSENSITIVE);
-
-					@Override
-					public boolean allow(ClassRef o) {
-						return namePattern.matcher(o.getRefClassName()).find();
-					}
-				};
-				List<ClassRef> filteredRefs = CollectionFilters.filter(refs,
-						classNameFilter);
-				return String.format("dte.objectclassref_id in %s",
-						EntityUtils.hasIdsToIdClause(filteredRefs));
-			}
-
-			@Override
-			public String getKey() {
-				return "class";
-			}
-		}
-
-		public static class CmdListTransformsFilterTransformType
-				extends CmdListTransformsFilter {
-			@Override
-			public String getFilter(final String arg1) {
-				return String.format("dte.transformtype = %s",
-						TransformType.valueOf(arg1).ordinal());
-			}
-
-			@Override
-			public String getKey() {
-				return "tt";
-			}
-		}
-
 		public static class CmdListTransformsFilterDays
 				extends CmdListTransformsFilter {
 			@Override
@@ -694,40 +541,6 @@ public class DevConsoleCommandTransforms {
 
 			protected boolean hasDefault() {
 				return true;
-			}
-		}
-
-		public static class CmdListTransformsFilterMinDays
-				extends CmdListTransformsFilter {
-			@Override
-			public String getFilter(String value) {
-				return String.format("age(ci.hellodate)>'%s days'",
-						value == null ? "3" : value);
-			}
-
-			@Override
-			public String getKey() {
-				return "mindays";
-			}
-
-			protected boolean hasDefault() {
-				return false;
-			}
-		}
-
-		public static class CmdListTransformsFilterDtrId
-				extends CmdListTransformsFilter {
-			@Override
-			public String getFilter(String value) {
-				value = value.isEmpty() ? "-1" : value;
-				return String.format(
-						value.contains(",") ? "dtr.id in (%s)" : "dtr.id=%s",
-						value);
-			}
-
-			@Override
-			public String getKey() {
-				return "dtr";
 			}
 		}
 
@@ -750,17 +563,37 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
-		public static class CmdListTransformsFilterUser
+		public static class CmdListTransformsFilterDtrId
 				extends CmdListTransformsFilter {
 			@Override
-			public String getFilter(String arg1) {
-				return arg1.matches("\\d+") ? String.format("u.id=%s", arg1)
-						: String.format("u.username='%s'", arg1);
+			public String getFilter(String value) {
+				value = value.isEmpty() ? "-1" : value;
+				return String.format(
+						value.contains(",") ? "dtr.id in (%s)" : "dtr.id=%s",
+						value);
 			}
 
 			@Override
 			public String getKey() {
-				return "user";
+				return "dtr";
+			}
+		}
+
+		public static class CmdListTransformsFilterMinDays
+				extends CmdListTransformsFilter {
+			@Override
+			public String getFilter(String value) {
+				return String.format("age(ci.hellodate)>'%s days'",
+						value == null ? "3" : value);
+			}
+
+			@Override
+			public String getKey() {
+				return "mindays";
+			}
+
+			protected boolean hasDefault() {
+				return false;
 			}
 		}
 
@@ -774,6 +607,34 @@ public class DevConsoleCommandTransforms {
 			@Override
 			public String getKey() {
 				return "nsv";
+			}
+		}
+
+		public static class CmdListTransformsFilterTransformType
+				extends CmdListTransformsFilter {
+			@Override
+			public String getFilter(final String arg1) {
+				return String.format("dte.transformtype = %s",
+						TransformType.valueOf(arg1).ordinal());
+			}
+
+			@Override
+			public String getKey() {
+				return "tt";
+			}
+		}
+
+		public static class CmdListTransformsFilterUser
+				extends CmdListTransformsFilter {
+			@Override
+			public String getFilter(String arg1) {
+				return arg1.matches("\\d+") ? String.format("u.id=%s", arg1)
+						: String.format("u.username='%s'", arg1);
+			}
+
+			@Override
+			public String getKey() {
+				return "user";
 			}
 		}
 
@@ -860,18 +721,18 @@ public class DevConsoleCommandTransforms {
 	}
 
 	public abstract static class DevConsoleFilter {
-		public static String getFilters(
-				Class<? extends DevConsoleFilter> registryPoint,
-				String[] argv) {
-			return getFilters(registryPoint, argv, null);
-		}
-
 		public static String describeFilters(
 				Class<? extends DevConsoleFilter> registryPoint) {
 			return CommonUtils.join(CollectionFilters.convert(
 					Registry.impls(registryPoint),
 					new PropertyConverter<DevConsoleFilter, String>("key")),
 					"|");
+		}
+
+		public static String getFilters(
+				Class<? extends DevConsoleFilter> registryPoint,
+				String[] argv) {
+			return getFilters(registryPoint, argv, null);
 		}
 
 		public static String getFilters(
@@ -905,13 +766,153 @@ public class DevConsoleCommandTransforms {
 		}
 	}
 
+	public static class LogsToDtrs {
+		private static final Pattern NUMERIC_FN_PATTERN = Pattern
+				.compile("(\\d+)\\.(?:txt\\.gz|txt)");
+
+		public LogsToDtrs() {
+		}
+
+		public Multimap<Long, List<DomainTransformEvent>>
+				dtrExpsToCliDteMap(List<File> files) throws Exception {
+			Multimap<Long, List<DomainTransformEvent>> result = new Multimap<Long, List<DomainTransformEvent>>();
+			List<DeltaApplicationRecord> wrappers = new ArrayList<DeltaApplicationRecord>();
+			Collections.sort(files, new LongFnComparator());
+			int processedIndex = 0;
+			for (; processedIndex < files.size();) {
+				File f = files.get(processedIndex++);
+				String ser = ResourceUtilities.readFileToStringGz(f);
+				DeltaApplicationRecord wrapper = new DeltaApplicationRecordSerializerImpl()
+						.read(ser);
+				DomainTransformRequest rq = new DomainTransformRequest();
+				rq.fromString(wrapper.getText());
+				result.addCollection(wrapper.getClientInstanceId(),
+						rq.getEvents());
+			}
+			return result;
+		}
+
+		public Multimap<Long, List<DomainTransformEvent>>
+				dtrExpsToCliDteMap(String folderPath) throws Exception {
+			List<File> files = new ArrayList<File>(Arrays
+					.asList(new File(folderPath).listFiles(new FileFilter() {
+						@Override
+						public boolean accept(File pathname) {
+							return NUMERIC_FN_PATTERN
+									.matcher(pathname.getName()).matches();
+						}
+					})));
+			return dtrExpsToCliDteMap(files);
+		}
+
+		public Multimap<Long, List<DomainTransformEvent>>
+				logsToDtrs(String logFile, boolean removeDuplicates) {
+			Pattern lfPat = Pattern.compile(
+					"\\s*(\\d{4}.+?)\\s+\\| transform\\s+\\| (\\d+)\\s+\\|(.+)");
+			Multimap<Long, List<DomainTransformEvent>> result = new Multimap<Long, List<DomainTransformEvent>>();
+			List<String> strs = CommonUtils.split(logFile, "\n");
+			Collections.reverse(strs);
+			for (int i = 0; i < strs.size(); i++) {
+				String line = strs.get(i);
+				if (line.contains("kXZ3")) {
+					int j = 3;
+				}
+				int idx = line.length() - 1;// ignore terminating "|"
+				if (idx < 1) {
+					continue;
+				}
+				for (; idx > 0 && line.charAt(idx - 1) == ' '; idx--)
+					;
+				line = line.substring(0, idx);
+				Matcher m = lfPat.matcher(line);
+				if (m.matches()) {
+					long clId = Long.parseLong(m.group(2));
+					String transforms = m.group(3);
+					transforms = transforms.replace("\\nlc7x--", "\n");
+					int shortCheck = transforms.indexOf("str:");
+					if (shortCheck == 0 || shortCheck == 1) {
+						List<DomainTransformEvent> dtes = new PlaintextProtocolHandlerShort()
+								.deserialize(transforms);
+						result.addCollection(clId, dtes);
+					} else {
+						List<DomainTransformEvent> dtes = new PlaintextProtocolHandler()
+								.deserialize(transforms);
+						result.addCollection(clId, dtes);
+					}
+				}
+			}
+			for (List<DomainTransformEvent> dtes : result.values()) {
+				Collections.sort(dtes,
+						DomainTransformEvent.UTC_DATE_COMPARATOR);
+				DomainTransformEvent last = null;
+				for (Iterator<DomainTransformEvent> itr = dtes.iterator(); itr
+						.hasNext();) {
+					DomainTransformEvent current = itr.next();
+					if (last != null
+							&& last.toString().equals(current.toString())
+							&& removeDuplicates) {
+						itr.remove();
+					}
+					last = current;
+				}
+			}
+			return result;
+		}
+
+		private static class LongFnComparator implements Comparator<File> {
+			@Override
+			public int compare(File o1, File o2) {
+				Matcher m1 = NUMERIC_FN_PATTERN.matcher(o1.getName());
+				m1.find();
+				long l1 = Long.parseLong(m1.group(1));
+				Matcher m2 = NUMERIC_FN_PATTERN.matcher(o2.getName());
+				m2.find();
+				long l2 = Long.parseLong(m2.group(1));
+				return CommonUtils.compareLongs(l1, l2);
+			}
+		}
+	}
+
+	public static class RsrowToDteConverter {
+		private boolean modColNames;
+
+		public RsrowToDteConverter(boolean modColNames) {
+			this.modColNames = modColNames;
+		}
+
+		public List<DomainTransformEvent> convert(ResultSet rs)
+				throws Exception {
+			List<DomainTransformEvent> dtes = new ArrayList<DomainTransformEvent>();
+			while (rs.next()) {
+				DomainTransformEvent dte = new DomainTransformEvent();
+				dtes.add(dte);
+				dte.setNewStringValue(rs.getString("newStringValue"));
+				dte.setObjectClassRef(ClassRef.forId(rs.getLong(
+						modColNames ? "dte_objref" : "objectclassref_id")));
+				dte.setPropertyName(rs.getString("propertyname"));
+				dte.setUtcDate(rs.getTimestamp("utcdate"));
+				dte.setObjectId(
+						rs.getLong(modColNames ? "object_id" : "objectId"));
+				dte.setObjectLocalId(rs.getLong("objectlocalid"));
+				dte.setValueId(rs.getLong("valueid"));
+				dte.setValueClassRef(
+						ClassRef.forId(rs.getLong("valueclassref_id")));
+				int i = rs.getInt("transformtype");
+				TransformType tt = rs.wasNull() ? null
+						: TransformType.class.getEnumConstants()[i];
+				dte.setTransformType(tt);
+			}
+			return dtes;
+		}
+	}
+
 	static class ClassRefNameFormatter implements ColumnFormatter {
 		@Override
 		public String format(ResultSet rs, int columnIndex)
 				throws SQLException {
 			long objRefId = rs.getLong(columnIndex);
 			ClassRef forId = ClassRef.forId(objRefId);
-			if(forId==null){
+			if (forId == null) {
 				return "unknown";
 			}
 			return forId.getRefClass().getSimpleName();

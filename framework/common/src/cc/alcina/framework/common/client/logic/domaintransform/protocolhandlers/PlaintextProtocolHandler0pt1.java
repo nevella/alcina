@@ -8,11 +8,11 @@ public class PlaintextProtocolHandler0pt1 extends PlaintextProtocolHandler1pt0 {
 
 	public static final String DATA_TRANSFORM_EVENT_MARKER = "\nDataTransformEvent: ";
 
+	public String getDataTransformEventMarker() {
+		return DATA_TRANSFORM_EVENT_MARKER;
+	}
+
 	public String handlesVersion() {
 		return VERSION;
 	}
-	public  String getDataTransformEventMarker() {
-		return DATA_TRANSFORM_EVENT_MARKER;
-	}
 }
-

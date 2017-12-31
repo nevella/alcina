@@ -96,12 +96,12 @@ public class StringMap extends LinkedHashMap<String, String> {
 		}
 	}
 
-	public Map<String, String> asLinkedHashMap() {
-		return new LinkedHashMap<>(this);
-	}
-
 	public StringMap(Map<String, String> otherMap) {
 		super(otherMap);
+	}
+
+	public Map<String, String> asLinkedHashMap() {
+		return new LinkedHashMap<>(this);
 	}
 
 	@Override
@@ -144,6 +144,19 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return new StringMap(new TreeMap(this));
 	}
 
+	public String toKvStringList() {
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<String, String> entry : entrySet()) {
+			if (sb.length() != 0) {
+				sb.append("\n");
+			}
+			sb.append(entry.getKey());
+			sb.append("\n");
+			sb.append(escape(entry.getValue()));
+		}
+		return sb.toString();
+	}
+
 	public String toPropertyString() {
 		StringBuilder sb = new StringBuilder();
 		for (Map.Entry<String, String> entry : entrySet()) {
@@ -154,19 +167,6 @@ public class StringMap extends LinkedHashMap<String, String> {
 			sb.append('=');
 			sb.append(entry.getValue().replace("\\", "\\\\").replace("=", "\\=")
 					.replace("\n", "\\n"));
-		}
-		return sb.toString();
-	}
-
-	public String toKvStringList() {
-		StringBuilder sb = new StringBuilder();
-		for (Map.Entry<String, String> entry : entrySet()) {
-			if (sb.length() != 0) {
-				sb.append("\n");
-			}
-			sb.append(entry.getKey());
-			sb.append("\n");
-			sb.append(escape(entry.getValue()));
 		}
 		return sb.toString();
 	}

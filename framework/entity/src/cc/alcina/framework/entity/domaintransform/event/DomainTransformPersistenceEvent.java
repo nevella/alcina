@@ -26,11 +26,13 @@ public class DomainTransformPersistenceEvent {
 		this.localToVm = localToVm;
 		this.transformPersistenceToken = transformPersistenceToken;
 		this.domainTransformLayerWrapper = domainTransformLayerWrapper;
-		persistenceEventType = domainTransformLayerWrapper == null ? DomainTransformPersistenceEventType.PRE_COMMIT
-				: domainTransformLayerWrapper.response.getResult() == DomainTransformResponseResult.OK ? DomainTransformPersistenceEventType.COMMIT_OK
-						: DomainTransformPersistenceEventType.COMMIT_ERROR;
+		persistenceEventType = domainTransformLayerWrapper == null
+				? DomainTransformPersistenceEventType.PRE_COMMIT
+				: domainTransformLayerWrapper.response
+						.getResult() == DomainTransformResponseResult.OK
+								? DomainTransformPersistenceEventType.COMMIT_OK
+								: DomainTransformPersistenceEventType.COMMIT_ERROR;
 	}
-
 
 	public DomainTransformLayerWrapper getDomainTransformLayerWrapper() {
 		return this.domainTransformLayerWrapper;
@@ -43,9 +45,10 @@ public class DomainTransformPersistenceEvent {
 	@SuppressWarnings("unchecked")
 	public List<Long> getPersistedRequestIds() {
 		return domainTransformLayerWrapper == null
-				|| domainTransformLayerWrapper.persistentRequests == null ? Collections.EMPTY_LIST
-				: EntityUtils
-						.hasIdsToIdList(domainTransformLayerWrapper.persistentRequests);
+				|| domainTransformLayerWrapper.persistentRequests == null
+						? Collections.EMPTY_LIST
+						: EntityUtils.hasIdsToIdList(
+								domainTransformLayerWrapper.persistentRequests);
 	}
 
 	public DomainTransformPersistenceEventType getPersistenceEventType() {

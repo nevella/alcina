@@ -40,7 +40,8 @@ public abstract class ClientUIThreadWorker {
 	protected ClientUIThreadWorker() {
 	}
 
-	protected ClientUIThreadWorker(int iterationCount, int targetIterationTimeMs) {
+	protected ClientUIThreadWorker(int iterationCount,
+			int targetIterationTimeMs) {
 		this.iterationCount = iterationCount;
 		this.targetIterationTimeMs = targetIterationTimeMs;
 	}
@@ -49,6 +50,8 @@ public abstract class ClientUIThreadWorker {
 		startTime = System.currentTimeMillis();
 		iterate();
 	}
+
+	protected abstract boolean isComplete();
 
 	protected void iterate() {
 		if (isComplete()) {
@@ -78,19 +81,15 @@ public abstract class ClientUIThreadWorker {
 				.log(CommonUtils.formatJ("Itr [%s] [x%s] - %s ms",
 						CommonUtils.simpleClassName(getClass()),
 						lastPassIterationsPerformed, timeTaken));
-		Registry.impl(TimerWrapperProvider.class)
-				.getTimer(new Runnable() {
-					@Override
-					public void run() {
-						iterate();
-					}
-				})
-				.scheduleSingle((int) timeTaken * allocateToNonWorkerFactor + 1);
+		Registry.impl(TimerWrapperProvider.class).getTimer(new Runnable() {
+			@Override
+			public void run() {
+				iterate();
+			}
+		}).scheduleSingle((int) timeTaken * allocateToNonWorkerFactor + 1);
 	}
 
 	protected abstract void onComplete();
-
-	protected abstract boolean isComplete();
 
 	protected abstract void performIteration();
 }

@@ -23,51 +23,50 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 /**
  * Custom field serializer for {@link java.lang.StackTraceElement}.
  */
-public final class StackTraceElement_CustomFieldSerializer extends
-    CustomFieldSerializer<StackTraceElement> {
+public final class StackTraceElement_CustomFieldSerializer
+		extends CustomFieldSerializer<StackTraceElement> {
+	public static void deserialize(SerializationStreamReader streamReader,
+			StackTraceElement instance) {
+		// No fields
+	}
 
-  
-  public static void deserialize(SerializationStreamReader streamReader,
-      StackTraceElement instance) {
-    // No fields
-  }
+	public static StackTraceElement
+			instantiate(SerializationStreamReader streamReader)
+					throws SerializationException {
+		return new StackTraceElement(streamReader.readString(),
+				streamReader.readString(), streamReader.readString(),
+				streamReader.readInt());
+	}
 
-  public static StackTraceElement instantiate(
-      SerializationStreamReader streamReader) throws SerializationException {
-    return new StackTraceElement(streamReader.readString(),
-        streamReader.readString(),
-        streamReader.readString(),
-        streamReader.readInt());
-  }
+	public static void serialize(SerializationStreamWriter streamWriter,
+			StackTraceElement instance) throws SerializationException {
+		streamWriter.writeString(instance.getClassName());
+		streamWriter.writeString(instance.getMethodName());
+		streamWriter.writeString(instance.getFileName());
+		streamWriter.writeInt(instance.getLineNumber());
+	}
 
-  public static void serialize(SerializationStreamWriter streamWriter,
-      StackTraceElement instance) throws SerializationException {
-    streamWriter.writeString(instance.getClassName());
-    streamWriter.writeString(instance.getMethodName());
-    streamWriter.writeString(instance.getFileName());
-    streamWriter.writeInt(instance.getLineNumber());
-  }
+	@Override
+	public void deserializeInstance(SerializationStreamReader streamReader,
+			StackTraceElement instance) throws SerializationException {
+		deserialize(streamReader, instance);
+	}
 
-  @Override
-  public void deserializeInstance(SerializationStreamReader streamReader,
-      StackTraceElement instance) throws SerializationException {
-    deserialize(streamReader, instance);
-  }
+	@Override
+	public boolean hasCustomInstantiateInstance() {
+		return true;
+	}
 
-  @Override
-  public boolean hasCustomInstantiateInstance() {
-    return true;
-  }
+	@Override
+	public StackTraceElement
+			instantiateInstance(SerializationStreamReader streamReader)
+					throws SerializationException {
+		return instantiate(streamReader);
+	}
 
-  @Override
-  public StackTraceElement instantiateInstance(SerializationStreamReader
-      streamReader) throws SerializationException {
-    return instantiate(streamReader);
-  }
-
-  @Override
-  public void serializeInstance(SerializationStreamWriter streamWriter,
-      StackTraceElement instance) throws SerializationException {
-    serialize(streamWriter, instance);
-  }
+	@Override
+	public void serializeInstance(SerializationStreamWriter streamWriter,
+			StackTraceElement instance) throws SerializationException {
+		serialize(streamWriter, instance);
+	}
 }

@@ -37,7 +37,30 @@ public class ContentNode implements Serializable {
 
 	private List<String> labels = new ArrayList<String>();
 
+	private long id;
+
+	private Date lastModified;
+
 	public ContentNode() {
+	}
+
+	public ContentNode cloneWithFilter(CollectionFilter<ContentNode> filter) {
+		if (!filter.allow(this)) {
+			return null;
+		}
+		ContentNode copy = new ContentNode();
+		copy.setContent(getContent());
+		copy.setId(getId());
+		copy.setLastModified(getLastModified());
+		copy.setTitle(getTitle());
+		copy.setUrl(getUrl());
+		for (ContentNode child : getChildren()) {
+			ContentNode childCopy = child.cloneWithFilter(filter);
+			if (childCopy != null) {
+				copy.getChildren().add(childCopy);
+			}
+		}
+		return copy;
 	}
 
 	public Map<String, ContentNode> createTitleMap() {
@@ -60,82 +83,59 @@ public class ContentNode implements Serializable {
 		return currentList;
 	}
 
-	private long id;
-
-	private Date lastModified;
-
-	public String getTitle() {
-		return this.title;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
+	public List<ContentNode> getChildren() {
+		return children;
 	}
 
 	public String getContent() {
 		return this.content;
 	}
 
-	public void setContent(String content) {
-		this.content = content;
-	}
-
-	public String getUrl() {
-		return this.url;
-	}
-
-	public void setUrl(String url) {
-		this.url = url;
-	}
-
 	public long getId() {
 		return this.id;
 	}
 
-	public void setId(long id) {
-		this.id = id;
+	public List<String> getLabels() {
+		return labels;
 	}
 
 	public Date getLastModified() {
 		return this.lastModified;
 	}
 
-	public void setLastModified(Date lastModified) {
-		this.lastModified = lastModified;
+	public String getTitle() {
+		return this.title;
+	}
+
+	public String getUrl() {
+		return this.url;
 	}
 
 	public void setChildren(List<ContentNode> children) {
 		this.children = children;
 	}
 
-	public List<ContentNode> getChildren() {
-		return children;
+	public void setContent(String content) {
+		this.content = content;
 	}
 
-	public ContentNode cloneWithFilter(CollectionFilter<ContentNode> filter) {
-		if (!filter.allow(this)) {
-			return null;
-		}
-		ContentNode copy = new ContentNode();
-		copy.setContent(getContent());
-		copy.setId(getId());
-		copy.setLastModified(getLastModified());
-		copy.setTitle(getTitle());
-		copy.setUrl(getUrl());
-		for (ContentNode child : getChildren()) {
-			ContentNode childCopy = child.cloneWithFilter(filter);
-			if (childCopy != null) {
-				copy.getChildren().add(childCopy);
-			}
-		}
-		return copy;
+	public void setId(long id) {
+		this.id = id;
 	}
 
 	public void setLabels(List<String> labels) {
 		this.labels = labels;
 	}
 
-	public List<String> getLabels() {
-		return labels;
+	public void setLastModified(Date lastModified) {
+		this.lastModified = lastModified;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 }

@@ -35,7 +35,6 @@ import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
  */
 public class ObjectListCustomiser implements Customiser {
 	public static final String REGISTRY_POINT = "REGISTRY_POINT";
-	
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
@@ -44,11 +43,15 @@ public class ObjectListCustomiser implements Customiser {
 				.getParameter(info.parameters(), REGISTRY_POINT).classValue());
 	}
 
-	public static class ObjectListWidgetProvider implements BoundWidgetProvider {
+	public interface ObjectListProvider<T extends HasDisplayName> {
+		public List<T> get();
+	}
+
+	public static class ObjectListWidgetProvider
+			implements BoundWidgetProvider {
 		private final boolean editable;
 
 		private final Class registryPoint;
-
 
 		public ObjectListWidgetProvider(boolean editable, Class registryPoint) {
 			this.editable = editable;
@@ -61,7 +64,8 @@ public class ObjectListCustomiser implements Customiser {
 				label.setRenderer(new HasDisplayNameRenderer());
 				return label;
 			}
-			ObjectListProvider listProvider = (ObjectListProvider) Registry.impl(registryPoint);
+			ObjectListProvider listProvider = (ObjectListProvider) Registry
+					.impl(registryPoint);
 			List options = listProvider.get();
 			SetBasedListBox listBox = new SetBasedListBox();
 			listBox.setSortOptionsByToString(false);
@@ -69,9 +73,5 @@ public class ObjectListCustomiser implements Customiser {
 			listBox.setRenderer(new HasDisplayNameRenderer());
 			return listBox;
 		}
-	}
-
-	public interface ObjectListProvider<T extends HasDisplayName> {
-		public List<T> get();
 	}
 }

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.permissions;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
@@ -20,10 +19,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
  *
  * @author Nick Reddel
  */
-
- public interface Permissible {
+public interface Permissible {
 	public AccessLevel accessLevel();
 
 	public String rule();
-
 }

@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 import cc.alcina.framework.common.client.util.Callback;
 
 public class StreamBuffer extends Thread {
+	private static final int TIMEOUT = 1 * 1000;
+
 	InputStream is;
 
 	String type;
@@ -16,16 +18,24 @@ public class StreamBuffer extends Thread {
 
 	Callback<String> outputCallback;
 
-	public StreamBuffer(InputStream is, String type) {
-		this(is, new TabbedSysoutCallback(type));
-	}
+	boolean closed = false;
 
 	public StreamBuffer(InputStream is, Callback<String> outputCallback) {
 		this.is = is;
 		this.outputCallback = outputCallback;
 	}
 
-	boolean closed = false;
+	public StreamBuffer(InputStream is, String type) {
+		this(is, new TabbedSysoutCallback(type));
+	}
+
+	public StringBuilder getBuf() {
+		return this.buf;
+	}
+
+	public String getStreamResult() {
+		return getBuf().toString();
+	}
 
 	public synchronized void run() {
 		try {
@@ -45,16 +55,6 @@ public class StreamBuffer extends Thread {
 			ioe.printStackTrace();
 		}
 	}
-
-	public StringBuilder getBuf() {
-		return this.buf;
-	}
-
-	public String getStreamResult() {
-		return getBuf().toString();
-	}
-
-	private static final int TIMEOUT = 1 * 1000;
 
 	public void waitFor() {
 		while (!closed) {

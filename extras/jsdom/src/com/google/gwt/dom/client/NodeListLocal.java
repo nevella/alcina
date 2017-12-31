@@ -23,6 +23,7 @@ class NodeListLocal<T extends Node> implements DomNodeList<T> {
 	public int getLength() {
 		return nodes.size();
 	}
+
 	@Override
 	public Stream<T> stream() {
 		return DomNodeListStatic.stream0(this);

@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.gwittir.validator;
-
 
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
@@ -22,21 +20,22 @@ import com.totsp.gwittir.client.validator.Validator;
  *
  * @author Nick Reddel
  */
-
- public class CallbackValidator implements Validator {
+public class CallbackValidator implements Validator {
 	private final ValidationCallback callback;
+
 	public CallbackValidator(ValidationCallback callback) {
 		this.callback = callback;
 	}
+
 	public Object validate(Object value) throws ValidationException {
 		String message = callback.validate(value);
-		if (message!=null) {
-			throw new ValidationException(message,
-					CallbackValidator.class);
+		if (message != null) {
+			throw new ValidationException(message, CallbackValidator.class);
 		}
 		return value;
 	}
-	public interface ValidationCallback{
+
+	public interface ValidationCallback {
 		public String validate(Object value);
 	}
 }

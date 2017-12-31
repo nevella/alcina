@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.dom.client.Document;
@@ -22,8 +21,7 @@ import com.google.gwt.user.client.ui.Widget;
  *
  * @author Nick Reddel
  */
-
- public class HeadingPanel extends ComplexPanel {
+public class HeadingPanel extends ComplexPanel {
 	/**
 	 * Creates an empty span panel.
 	 */

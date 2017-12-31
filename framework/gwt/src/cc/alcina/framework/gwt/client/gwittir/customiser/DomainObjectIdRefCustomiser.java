@@ -28,11 +28,10 @@ import cc.alcina.framework.gwt.client.gwittir.provider.DomainObjectIdRefProvider
 public class DomainObjectIdRefCustomiser implements Customiser {
 	public static final String TARGET_CLASS = "targetClass";
 
-
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		Class classValue = NamedParameter.Support
-						.getParameter(info.parameters(), TARGET_CLASS).classValue();
+				.getParameter(info.parameters(), TARGET_CLASS).classValue();
 		return new DomainObjectIdRefProvider(classValue);
 	}
 }

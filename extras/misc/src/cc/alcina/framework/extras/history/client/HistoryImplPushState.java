@@ -33,6 +33,20 @@ import com.google.gwt.user.client.Window;
  * 
  */
 public class HistoryImplPushState extends HistoryImpl {
+	/**
+	 * Add the given token to the history using pushState.
+	 */
+	private static native void pushState(final String token) /*-{
+																var state = {
+																historyToken : token
+																};
+																$wnd.history.pushState(state, $doc.title, token);
+																}-*/;
+
+	public native String decodeFragment(String encodedFragment) /*-{
+																return decodeURI(encodedFragment.replace("%23", "#"));
+																}-*/;
+
 	@Override
 	public boolean init() {
 		// initialize HistoryImpl with the current path
@@ -69,6 +83,30 @@ public class HistoryImplPushState extends HistoryImpl {
 	}
 
 	/**
+	 * Initialize an event handler that gets executed when the token changes.
+	 */
+	private native void initPopStateHandler() /*-{
+												var that = this;
+												var oldHandler = $wnd.onpopstate;
+												$wnd.onpopstate = $entry(function(e) {
+												if (e.state && e.state.historyToken) {
+												that.@cc.alcina.framework.extras.history.client.HistoryImplPushState::onPopState(Ljava/lang/String;)(e.state.historyToken);
+												}
+												if (oldHandler) {
+												oldHandler(e);
+												}
+												});
+												}-*/;
+
+	/**
+	 * Called from native JavaScript when an old history state was popped.
+	 */
+	private void onPopState(final String historyToken) {
+		updateHistoryToken(historyToken);
+		fireHistoryChangedImpl(getToken());
+	}
+
+	/**
 	 * Set the current path as GWT History token which can later retrieved with
 	 * {@link History#getToken()}.
 	 */
@@ -84,42 +122,4 @@ public class HistoryImplPushState extends HistoryImpl {
 		}
 		setToken(token);
 	}
-
-	public native String decodeFragment(String encodedFragment) /*-{
-        return decodeURI(encodedFragment.replace("%23", "#"));
-	}-*/;
-
-	/**
-	 * Initialize an event handler that gets executed when the token changes.
-	 */
-	private native void initPopStateHandler() /*-{
-        var that = this;
-        var oldHandler = $wnd.onpopstate;
-        $wnd.onpopstate = $entry(function(e) {
-            if (e.state && e.state.historyToken) {
-                that.@cc.alcina.framework.extras.history.client.HistoryImplPushState::onPopState(Ljava/lang/String;)(e.state.historyToken);
-            }
-            if (oldHandler) {
-                oldHandler(e);
-            }
-        });
-	}-*/;
-
-	/**
-	 * Called from native JavaScript when an old history state was popped.
-	 */
-	private void onPopState(final String historyToken) {
-		updateHistoryToken(historyToken);
-		fireHistoryChangedImpl(getToken());
-	}
-
-	/**
-	 * Add the given token to the history using pushState.
-	 */
-	private static native void pushState(final String token) /*-{
-        var state = {
-            historyToken : token
-        };
-        $wnd.history.pushState(state, $doc.title, token);
-	}-*/;
 }

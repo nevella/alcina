@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions;
 
 import java.util.List;
@@ -22,10 +21,9 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  *
  * @author Nick Reddel
  */
-
- public interface ActionLogProvider {
-	public void getLogsForAction(
-			RemoteAction action, int count,AsyncCallback<List<ActionLogItem>> outerCallback, boolean refresh) ;
+public interface ActionLogProvider {
+	public void getLogsForAction(RemoteAction action, int count,
+			AsyncCallback<List<ActionLogItem>> outerCallback, boolean refresh);
 
 	public void insertLogForAction(RemoteAction action, ActionLogItem item);
 }

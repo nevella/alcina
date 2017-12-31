@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.entityaccess;
 
 import java.beans.PropertyDescriptor;
@@ -23,20 +22,20 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.entity.SEUtilities;
 
-
 /**
  *
  * @author Nick Reddel
  */
-
- public class UnwrapInfoItem {
+public class UnwrapInfoItem {
 	private String propertyName;
 
 	private WrappedObject<WrapperPersistable> wrappedObject;
 
 	public UnwrapInfoItem() {
 	}
-	public UnwrapInfoItem(String propertyName, WrappedObject<WrapperPersistable> wrappedObject) {
+
+	public UnwrapInfoItem(String propertyName,
+			WrappedObject<WrapperPersistable> wrappedObject) {
 		this.propertyName = propertyName;
 		this.wrappedObject = wrappedObject;
 	}
@@ -73,8 +72,9 @@ import cc.alcina.framework.entity.SEUtilities;
 		public HasId unwrap(ClassLoader classLoader) {
 			for (UnwrapInfoItem item : getItems()) {
 				try {
-					PropertyDescriptor pd = SEUtilities.getPropertyDescriptorByName(
-							hasId.getClass(), item.getPropertyName());
+					PropertyDescriptor pd = SEUtilities
+							.getPropertyDescriptorByName(hasId.getClass(),
+									item.getPropertyName());
 					pd.getWriteMethod().invoke(hasId,
 							item.getWrappedObject().getObject(classLoader));
 				} catch (Exception e) {

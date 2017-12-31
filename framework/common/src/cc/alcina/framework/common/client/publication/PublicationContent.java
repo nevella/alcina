@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.publication;
 
 import java.io.Serializable;
@@ -19,15 +18,18 @@ import java.util.List;
 
 /**
  * Marker interface for second stage of the publication process
+ * 
  * @author nick@alcina.cc
  *
- *Note - these will want to be xmlroot elt, jaxb registered, because they will be jaxb-serialised for transform
+ *         Note - these will want to be xmlroot elt, jaxb registered, because
+ *         they will be jaxb-serialised for transform
  */
-public interface PublicationContent extends Serializable{
-	default List getGridRows(){
-		return null;
-	}
-	default String getCss(){
+public interface PublicationContent extends Serializable {
+	default String getCss() {
 		return "";
+	}
+
+	default List getGridRows() {
+		return null;
 	}
 }

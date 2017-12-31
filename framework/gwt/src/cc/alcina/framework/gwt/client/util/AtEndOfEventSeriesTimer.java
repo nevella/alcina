@@ -36,9 +36,11 @@ public class AtEndOfEventSeriesTimer {
 
 	private long maxDelayFromFirstAction;
 
+	private TimerWrapper timer = null;
+
 	public AtEndOfEventSeriesTimer(long waitToPerformAction, Runnable action) {
-		this(waitToPerformAction, action, Registry
-				.impl(TimerWrapperProvider.class));
+		this(waitToPerformAction, action,
+				Registry.impl(TimerWrapperProvider.class));
 	}
 
 	public AtEndOfEventSeriesTimer(long waitToPerformAction, Runnable action,
@@ -48,13 +50,18 @@ public class AtEndOfEventSeriesTimer {
 		this.timerWrapperProvider = timerWrapperProvider;
 	}
 
-	public AtEndOfEventSeriesTimer maxDelayFromFirstAction(
-			long maxDelayFromFirstAction) {
+	public void cancel() {
+		if (timer != null) {
+			timer.cancel();
+			timer = null;
+		}
+	}
+
+	public AtEndOfEventSeriesTimer
+			maxDelayFromFirstAction(long maxDelayFromFirstAction) {
 		this.maxDelayFromFirstAction = maxDelayFromFirstAction;
 		return this;
 	}
-
-	private TimerWrapper timer = null;
 
 	public void triggerEventOccurred() {
 		synchronized (this) {
@@ -66,13 +73,6 @@ public class AtEndOfEventSeriesTimer {
 				timer = timerWrapperProvider.getTimer(checkCallback);
 				timer.scheduleRepeating(waitToPerformAction / 2);
 			}
-		}
-	}
-
-	public void cancel() {
-		if (timer != null) {
-			timer.cancel();
-			timer = null;
 		}
 	}
 }

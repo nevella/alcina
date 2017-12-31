@@ -11,14 +11,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.publication.request;
 
 /**
  *
  * @author Nick Reddel
  */
-
- public enum PublicationRange {
-	ALL,SELECTED,SPECIFIED_RANGE
+public enum PublicationRange {
+	ALL, SELECTED, SPECIFIED_RANGE
 }

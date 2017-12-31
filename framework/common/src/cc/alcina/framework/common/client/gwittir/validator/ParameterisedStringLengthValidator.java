@@ -11,50 +11,52 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.gwittir.validator;
-
 
 import com.totsp.gwittir.client.validator.StringLengthValidator;
 import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
+
 @ClientInstantiable
 /**
  *
  * @author Nick Reddel
  */
-
- public class ParameterisedStringLengthValidator implements ParameterisedValidator{
+public class ParameterisedStringLengthValidator
+		implements ParameterisedValidator {
 	public static final String MAX_CHARS = "maxChars";
+
 	public static final String MIN_CHARS = "minChars";
-	int max=9999;
-    int min;
 
-    /** Creates a new instance of StringLengthValidator */
-    public ParameterisedStringLengthValidator() {
-       
-    }
+	int max = 9999;
 
-    public Object validate(Object value) throws ValidationException {
-        if((value == null) || (value.toString().length() < min)) {
-            throw new ValidationException("Value must be at least " + min +
-                " and no more than " + max + " characters.",
-                StringLengthValidator.class);
-        }
+	int min;
 
-        return value;
-    }
+	/** Creates a new instance of StringLengthValidator */
+	public ParameterisedStringLengthValidator() {
+	}
 
 	public void setParameters(NamedParameter[] params) {
-		NamedParameter minP = NamedParameter.Support.getParameter(params, MIN_CHARS);
-		if (minP!=null){
-			min=minP.intValue();
+		NamedParameter minP = NamedParameter.Support.getParameter(params,
+				MIN_CHARS);
+		if (minP != null) {
+			min = minP.intValue();
 		}
-		NamedParameter maxP = NamedParameter.Support.getParameter(params, MAX_CHARS);
-		if (maxP!=null){
-			max=maxP.intValue();
+		NamedParameter maxP = NamedParameter.Support.getParameter(params,
+				MAX_CHARS);
+		if (maxP != null) {
+			max = maxP.intValue();
 		}
+	}
+
+	public Object validate(Object value) throws ValidationException {
+		if ((value == null) || (value.toString().length() < min)) {
+			throw new ValidationException("Value must be at least " + min
+					+ " and no more than " + max + " characters.",
+					StringLengthValidator.class);
+		}
+		return value;
 	}
 }

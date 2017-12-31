@@ -32,11 +32,8 @@ import java.util.Set;
 @SuppressWarnings("unchecked")
 public class Multiset<K, V extends Set> implements Serializable {
 	static final transient long serialVersionUID = -1L;
-	protected Map<K, V> map;
 
-	protected void createTopMap() {
-		map = new LinkedHashMap<K, V>();
-	}
+	protected Map<K, V> map;
 
 	public Multiset() {
 		createTopMap();
@@ -49,68 +46,10 @@ public class Multiset<K, V extends Set> implements Serializable {
 		return map.get(key).add(item);
 	}
 
-	protected Set createSet() {
-		return new LinkedHashSet();
-	}
-
-	public void remove(K key, Object item) {
-		if (map.containsKey(key)) {
-			map.get(key).remove(item);
+	public void addAll(Multimap<K, List> other) {
+		for (Entry<K, List> entry : other.entrySet()) {
+			addCollection(entry.getKey(), entry.getValue());
 		}
-	}
-
-	public V getAndEnsure(K key) {
-		if (!map.containsKey(key)) {
-			map.put(key, (V) createSet());
-		}
-		return map.get(key);
-	}
-
-	public void addCollection(K key, Collection collection) {
-		if (!map.containsKey(key)) {
-			map.put(key, (V) createSet());
-		}
-		map.get(key).addAll(collection);
-	}
-
-	public V get(Object key) {
-		return this.map.get(key);
-	}
-
-	public void clear() {
-		this.map.clear();
-	}
-
-	public boolean containsKey(Object key) {
-		return this.map.containsKey(key);
-	}
-
-	public V put(K key, V value) {
-		return this.map.put(key, value);
-	}
-
-	public Set<K> keySet() {
-		return this.map.keySet();
-	}
-
-	public Collection<V> values() {
-		return this.map.values();
-	}
-
-	public int size() {
-		return this.map.size();
-	}
-
-	public boolean isEmpty() {
-		return this.map.isEmpty();
-	}
-
-	public V remove(Object key) {
-		return this.map.remove(key);
-	}
-
-	public Set<Entry<K, V>> entrySet() {
-		return this.map.entrySet();
 	}
 
 	public void addAll(Multiset<K, V> other) {
@@ -119,10 +58,11 @@ public class Multiset<K, V extends Set> implements Serializable {
 		}
 	}
 
-	public void addAll(Multimap<K, List> other) {
-		for (Entry<K, List> entry : other.entrySet()) {
-			addCollection(entry.getKey(), entry.getValue());
+	public void addCollection(K key, Collection collection) {
+		if (!map.containsKey(key)) {
+			map.put(key, (V) createSet());
 		}
+		map.get(key).addAll(collection);
 	}
 
 	public V allItems() {
@@ -133,9 +73,8 @@ public class Multiset<K, V extends Set> implements Serializable {
 		return (V) set;
 	}
 
-	@Override
-	public String toString() {
-		return isEmpty() ? "{}" : CommonUtils.join(entrySet(), "\n");
+	public void clear() {
+		this.map.clear();
 	}
 
 	public boolean contains(K key, Object value) {
@@ -143,5 +82,67 @@ public class Multiset<K, V extends Set> implements Serializable {
 			return map.get(key).contains(value);
 		}
 		return false;
+	}
+
+	public boolean containsKey(Object key) {
+		return this.map.containsKey(key);
+	}
+
+	public Set<Entry<K, V>> entrySet() {
+		return this.map.entrySet();
+	}
+
+	public V get(Object key) {
+		return this.map.get(key);
+	}
+
+	public V getAndEnsure(K key) {
+		if (!map.containsKey(key)) {
+			map.put(key, (V) createSet());
+		}
+		return map.get(key);
+	}
+
+	public boolean isEmpty() {
+		return this.map.isEmpty();
+	}
+
+	public Set<K> keySet() {
+		return this.map.keySet();
+	}
+
+	public V put(K key, V value) {
+		return this.map.put(key, value);
+	}
+
+	public void remove(K key, Object item) {
+		if (map.containsKey(key)) {
+			map.get(key).remove(item);
+		}
+	}
+
+	public V remove(Object key) {
+		return this.map.remove(key);
+	}
+
+	public int size() {
+		return this.map.size();
+	}
+
+	@Override
+	public String toString() {
+		return isEmpty() ? "{}" : CommonUtils.join(entrySet(), "\n");
+	}
+
+	public Collection<V> values() {
+		return this.map.values();
+	}
+
+	protected Set createSet() {
+		return new LinkedHashSet();
+	}
+
+	protected void createTopMap() {
+		map = new LinkedHashMap<K, V>();
 	}
 }

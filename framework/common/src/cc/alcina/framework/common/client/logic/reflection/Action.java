@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
@@ -21,7 +20,6 @@ import java.lang.annotation.RetentionPolicy;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 
-
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @ClientVisible
@@ -29,9 +27,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
  *
  * @author Nick Reddel
  */
+public @interface Action {
+	public Class<? extends PermissibleAction> actionClass();
 
- public @interface Action {
-	public Class<? extends PermissibleAction> actionClass() ;
-	public Permission permission() default @Permission(access=AccessLevel.ADMIN);
-	
+	public Permission permission() default @Permission(access = AccessLevel.ADMIN);
 }

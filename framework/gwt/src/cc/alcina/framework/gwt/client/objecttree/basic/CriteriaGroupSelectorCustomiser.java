@@ -42,38 +42,13 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 		}
 	};
 
-	/**
-	 * note must allow obj==null
-	 */
-	protected abstract SC newCriterion(O obj);
-
 	public CriteriaGroupSelectorCustomiser(Class selectionObjectClass,
 			CollectionFilter filter) {
 		super();
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;
-		this.showUnselectedOnPopupClose=true;
+		this.showUnselectedOnPopupClose = true;
 	}
-
-	@Override
-	protected void customiseLeftWidget() {
-		super.customiseLeftWidget();
-		search.setSortGroups(true);
-		search.setSortGroupContents(true);
-	}
-
-	protected void customiseRightWidget() {
-		super.customiseRightWidget();
-		results.setItemsHaveLinefeeds(true);
-		results.setSortGroups(true);
-		results.setSortGroupContents(true);
-		
-	}
-
-	@Override
-	protected abstract Map createObjectMap();
-
-	protected abstract O getSearchCriterionDisplayObject(SC searchCriterion);
 
 	@SuppressWarnings("unchecked")
 	public void setModel(Object model) {
@@ -91,4 +66,28 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 		setValue(values);
 		redrawGrid();
 	}
+
+	@Override
+	protected abstract Map createObjectMap();
+
+	@Override
+	protected void customiseLeftWidget() {
+		super.customiseLeftWidget();
+		search.setSortGroups(true);
+		search.setSortGroupContents(true);
+	}
+
+	protected void customiseRightWidget() {
+		super.customiseRightWidget();
+		results.setItemsHaveLinefeeds(true);
+		results.setSortGroups(true);
+		results.setSortGroupContents(true);
+	}
+
+	protected abstract O getSearchCriterionDisplayObject(SC searchCriterion);
+
+	/**
+	 * note must allow obj==null
+	 */
+	protected abstract SC newCriterion(O obj);
 }

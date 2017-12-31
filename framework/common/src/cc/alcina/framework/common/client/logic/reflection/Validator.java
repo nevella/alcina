@@ -32,9 +32,9 @@ import java.lang.annotation.Target;
 public @interface Validator {
 	public static final String FEEDBACK_MESSAGE = "feedbackMessage";
 
-	Class<? extends com.totsp.gwittir.client.validator.Validator> validator();
-
 	NamedParameter[] parameters() default {};
-	
+
 	boolean validateBeanOnly() default false;
+
+	Class<? extends com.totsp.gwittir.client.validator.Validator> validator();
 }

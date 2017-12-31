@@ -28,42 +28,19 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 	public ConverterMapper() {
 	}
 
+	public void apply(A a, B b) {
+		try {
+			mapper.map(a, b);
+			if (leftAuxiliary != null) {
+				leftAuxiliary.map(a, b);
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public BidiConverterAdapter bidiAdapter() {
 		return new BidiConverterAdapter();
-	}
-
-	public class BidiConverterAdapter extends BidiConverter<A, B> {
-		@Override
-		public B leftToRight(A a) {
-			return convert(a);
-		}
-
-		@Override
-		public A rightToLeft(B b) {
-			return invert().convert(b);
-		}
-	}
-
-	public ConverterMapper<B, A> invert() {
-		ConverterMapper result = new ConverterMapper();
-		result.leftClass = rightClass;
-		result.rightClass = leftClass;
-		result.leftAuxiliary = rightAuxiliary;
-		result.rightAuxiliary = leftAuxiliary;
-		result.leftSupplier = rightSupplier;
-		result.rightSupplier = leftSupplier;
-		result.mapper = mapper.reverseMapper();
-		return result;
-	}
-
-	public List<String> getLeftPropertyNames() {
-		return mapper.getMappings().stream().map(m -> m.getLeftName())
-				.collect(Collectors.toList());
-	}
-
-	public List<String> getRightPropertyNames() {
-		return mapper.getMappings().stream().map(m -> m.getRightName())
-				.collect(Collectors.toList());
 	}
 
 	@Override
@@ -79,20 +56,26 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 		}
 	}
 
-	public void apply(A a, B b) {
-		try {
-			mapper.map(a, b);
-			if (leftAuxiliary != null) {
-				leftAuxiliary.map(a, b);
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+	public List<String> getLeftPropertyNames() {
+		return mapper.getMappings().stream().map(m -> m.getLeftName())
+				.collect(Collectors.toList());
 	}
 
-	protected PropertyMapping define(String leftPropertyName,
-			String rightPropertyName) {
-		return mapper.define(leftPropertyName, rightPropertyName);
+	public List<String> getRightPropertyNames() {
+		return mapper.getMappings().stream().map(m -> m.getRightName())
+				.collect(Collectors.toList());
+	}
+
+	public ConverterMapper<B, A> invert() {
+		ConverterMapper result = new ConverterMapper();
+		result.leftClass = rightClass;
+		result.rightClass = leftClass;
+		result.leftAuxiliary = rightAuxiliary;
+		result.rightAuxiliary = leftAuxiliary;
+		result.leftSupplier = rightSupplier;
+		result.rightSupplier = leftSupplier;
+		result.mapper = mapper.reverseMapper();
+		return result;
 	}
 
 	protected PropertyMapping define(PropertyMapping mapping) {
@@ -101,5 +84,22 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 
 	protected PropertyMapping define(String both) {
 		return define(both, both);
+	}
+
+	protected PropertyMapping define(String leftPropertyName,
+			String rightPropertyName) {
+		return mapper.define(leftPropertyName, rightPropertyName);
+	}
+
+	public class BidiConverterAdapter extends BidiConverter<A, B> {
+		@Override
+		public B leftToRight(A a) {
+			return convert(a);
+		}
+
+		@Override
+		public A rightToLeft(B b) {
+			return invert().convert(b);
+		}
 	}
 }

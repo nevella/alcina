@@ -20,6 +20,10 @@ import cc.alcina.framework.entity.ResourceUtilities;
 public class MemCacheEntityManager implements EntityManager {
 	private EntityManager delegate;
 
+	public MemCacheEntityManager(EntityManager delegate) {
+		this.delegate = delegate;
+	}
+
 	public void clear() {
 		this.delegate.clear();
 	}
@@ -32,12 +36,16 @@ public class MemCacheEntityManager implements EntityManager {
 		return this.delegate.contains(arg0);
 	}
 
+	public Query createNamedQuery(String arg0) {
+		return this.delegate.createNamedQuery(arg0);
+	}
+
 	public <T> TypedQuery<T> createNamedQuery(String arg0, Class<T> arg1) {
 		return this.delegate.createNamedQuery(arg0, arg1);
 	}
 
-	public Query createNamedQuery(String arg0) {
-		return this.delegate.createNamedQuery(arg0);
+	public Query createNativeQuery(String arg0) {
+		return this.delegate.createNativeQuery(arg0);
 	}
 
 	public Query createNativeQuery(String arg0, Class arg1) {
@@ -48,11 +56,11 @@ public class MemCacheEntityManager implements EntityManager {
 		return this.delegate.createNativeQuery(arg0, arg1);
 	}
 
-	public Query createNativeQuery(String arg0) {
-		return this.delegate.createNativeQuery(arg0);
+	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> arg0) {
+		return this.delegate.createQuery(arg0);
 	}
 
-	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> arg0) {
+	public Query createQuery(String arg0) {
 		return this.delegate.createQuery(arg0);
 	}
 
@@ -60,12 +68,16 @@ public class MemCacheEntityManager implements EntityManager {
 		return this.delegate.createQuery(arg0, arg1);
 	}
 
-	public Query createQuery(String arg0) {
-		return this.delegate.createQuery(arg0);
-	}
-
 	public void detach(Object arg0) {
 		this.delegate.detach(arg0);
+	}
+
+	public <T> T find(Class<T> arg0, Object arg1) {
+		return this.delegate.find(arg0, arg1);
+	}
+
+	public <T> T find(Class<T> arg0, Object arg1, LockModeType arg2) {
+		return this.delegate.find(arg0, arg1, arg2);
 	}
 
 	public <T> T find(Class<T> arg0, Object arg1, LockModeType arg2,
@@ -73,16 +85,8 @@ public class MemCacheEntityManager implements EntityManager {
 		return this.delegate.find(arg0, arg1, arg2, arg3);
 	}
 
-	public <T> T find(Class<T> arg0, Object arg1, LockModeType arg2) {
-		return this.delegate.find(arg0, arg1, arg2);
-	}
-
 	public <T> T find(Class<T> arg0, Object arg1, Map<String, Object> arg2) {
 		return this.delegate.find(arg0, arg1, arg2);
-	}
-
-	public <T> T find(Class<T> arg0, Object arg1) {
-		return this.delegate.find(arg0, arg1);
 	}
 
 	public void flush() {
@@ -94,8 +98,8 @@ public class MemCacheEntityManager implements EntityManager {
 	}
 
 	public Object getDelegate() {
-		Object subDelegate = this.delegate == null ? null : this.delegate
-				.getDelegate();
+		Object subDelegate = this.delegate == null ? null
+				: this.delegate.getDelegate();
 		if (ResourceUtilities.is(MemCacheEntityManager.class, "useMemCache")) {
 			return new MemCacheSession((Session) subDelegate);
 		} else {
@@ -139,12 +143,12 @@ public class MemCacheEntityManager implements EntityManager {
 		this.delegate.joinTransaction();
 	}
 
-	public void lock(Object arg0, LockModeType arg1, Map<String, Object> arg2) {
-		this.delegate.lock(arg0, arg1, arg2);
-	}
-
 	public void lock(Object arg0, LockModeType arg1) {
 		this.delegate.lock(arg0, arg1);
+	}
+
+	public void lock(Object arg0, LockModeType arg1, Map<String, Object> arg2) {
+		this.delegate.lock(arg0, arg1, arg2);
 	}
 
 	public <T> T merge(T arg0) {
@@ -155,20 +159,21 @@ public class MemCacheEntityManager implements EntityManager {
 		this.delegate.persist(arg0);
 	}
 
-	public void refresh(Object arg0, LockModeType arg1, Map<String, Object> arg2) {
-		this.delegate.refresh(arg0, arg1, arg2);
+	public void refresh(Object arg0) {
+		this.delegate.refresh(arg0);
 	}
 
 	public void refresh(Object arg0, LockModeType arg1) {
 		this.delegate.refresh(arg0, arg1);
 	}
 
-	public void refresh(Object arg0, Map<String, Object> arg1) {
-		this.delegate.refresh(arg0, arg1);
+	public void refresh(Object arg0, LockModeType arg1,
+			Map<String, Object> arg2) {
+		this.delegate.refresh(arg0, arg1, arg2);
 	}
 
-	public void refresh(Object arg0) {
-		this.delegate.refresh(arg0);
+	public void refresh(Object arg0, Map<String, Object> arg1) {
+		this.delegate.refresh(arg0, arg1);
 	}
 
 	public void remove(Object arg0) {
@@ -185,9 +190,5 @@ public class MemCacheEntityManager implements EntityManager {
 
 	public <T> T unwrap(Class<T> arg0) {
 		return this.delegate.unwrap(arg0);
-	}
-
-	public MemCacheEntityManager(EntityManager delegate) {
-		this.delegate = delegate;
 	}
 }

@@ -23,61 +23,58 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
  */
 @PermissibleChildClasses({ TxtCriterion.class })
 public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
+	static final transient long serialVersionUID = -1L;
 
-    static final transient long serialVersionUID = -1L;
+	private String displayName = "Text";
 
-    private String displayName = "Text";
+	public TxtCriteriaGroup() {
+		super();
+	}
 
-    public String getDisplayName() {
-        return this.displayName;
-    }
+	public TxtCriteriaGroup(String displayName) {
+		this();
+		TxtCriterion tc = new TxtCriterion();
+		tc.setDisplayName(displayName);
+		setDisplayName(displayName);
+		getCriteria().add(tc);
+	}
 
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
+	public String getDisplayName() {
+		return this.displayName;
+	}
 
-    public TxtCriteriaGroup() {
-        super();
-    }
+	@Override
+	public Class getEntityClass() {
+		return null;
+	}
 
-    public TxtCriteriaGroup(String displayName) {
-        this();
-        TxtCriterion tc = new TxtCriterion();
-        tc.setDisplayName(displayName);
-        setDisplayName(displayName);
-        getCriteria().add(tc);
-    }
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
+	}
 
-    @Override
-    public Class getEntityClass() {
-        return null;
-    }
-
-    /**
+	/**
 	 * for multiple tcgs, mapping to different properties
 	 *
 	 * @author nick@alcina.cc
 	 *
 	 */
-    public static class TxtCriteriaGroup2 extends TxtCriteriaGroup {
+	public static class TxtCriteriaGroup2 extends TxtCriteriaGroup {
+		public TxtCriteriaGroup2() {
+			super();
+		}
 
-        public TxtCriteriaGroup2() {
-            super();
-        }
+		public TxtCriteriaGroup2(String displayName) {
+			super(displayName);
+		}
+	}
 
-        public TxtCriteriaGroup2(String displayName) {
-            super(displayName);
-        }
-    }
+	public static class TxtCriteriaGroup3 extends TxtCriteriaGroup {
+		public TxtCriteriaGroup3() {
+			super();
+		}
 
-    public static class TxtCriteriaGroup3 extends TxtCriteriaGroup {
-
-        public TxtCriteriaGroup3() {
-            super();
-        }
-
-        public TxtCriteriaGroup3(String displayName) {
-            super(displayName);
-        }
-    }
+		public TxtCriteriaGroup3(String displayName) {
+			super(displayName);
+		}
+	}
 }

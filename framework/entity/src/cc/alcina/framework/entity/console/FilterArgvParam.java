@@ -11,6 +11,11 @@ public class FilterArgvParam {
 
 	public String value;
 
+	public FilterArgvParam(String[] argv) {
+		this.argv = argv;
+		next();
+	}
+
 	public FilterArgvParam(String[] argv, String key) {
 		List<String> strs = new ArrayList<String>(Arrays.asList(argv));
 		int i = strs.indexOf(key);
@@ -21,14 +26,8 @@ public class FilterArgvParam {
 		this.argv = (String[]) strs.toArray(new String[strs.size()]);
 	}
 
-	public FilterArgvParam(String[] argv) {
-		this.argv = argv;
-		next();
-	}
-
-	public String next() {
-		moveNext();
-		return this.value;
+	public long getLong() {
+		return Long.parseLong(valueOrDefault("0"));
 	}
 
 	public boolean moveNext() {
@@ -42,11 +41,12 @@ public class FilterArgvParam {
 		return true;
 	}
 
-	public String valueOrDefault(String defaultValue) {
-		return value != null ? value : defaultValue;
+	public String next() {
+		moveNext();
+		return this.value;
 	}
 
-	public long getLong() {
-		return Long.parseLong(valueOrDefault("0"));
+	public String valueOrDefault(String defaultValue) {
+		return value != null ? value : defaultValue;
 	}
 }

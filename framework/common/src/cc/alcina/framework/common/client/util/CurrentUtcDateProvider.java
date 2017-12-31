@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.util;
 
 import java.util.Date;
@@ -20,7 +19,6 @@ import java.util.Date;
  *
  * @author Nick Reddel
  */
-
- public interface CurrentUtcDateProvider {
+public interface CurrentUtcDateProvider {
 	public Date currentUtcDate();
 }

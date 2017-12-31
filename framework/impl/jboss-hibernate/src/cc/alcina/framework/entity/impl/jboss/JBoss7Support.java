@@ -33,15 +33,15 @@ public class JBoss7Support {
 	}
 
 	public static class VFSClasspathVisitor extends ClasspathVisitor {
-		public VFSClasspathVisitor(ClasspathScanner scanner) {
-			super(scanner);
-		}
-
 		protected static final Object PROTOCOL_VFS = "vfs";
 
 		protected static final Object PROTOCOL_VFSZIP = "vfszip";
 
 		protected static final Object PROTOCOL_VFSFILE = "vfsfile";
+
+		public VFSClasspathVisitor(ClasspathScanner scanner) {
+			super(scanner);
+		}
 
 		@Override
 		// no ignore-packages, unlike other visitors (unused on the server)
@@ -54,8 +54,8 @@ public class JBoss7Support {
 						}
 					});
 			for (VirtualFile file : children) {
-				String pathName = file.getPathName().substring(
-						root.getPathName().length() + 1);
+				String pathName = file.getPathName()
+						.substring(root.getPathName().length() + 1);
 				if (pathName.endsWith(".class")) {
 					add(pathName, file.getLastModified(), file.toURL(), null);
 				}

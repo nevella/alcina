@@ -67,6 +67,14 @@ public class RunningActionsViewProvider implements ViewProvider {
 		return wrapper;
 	}
 
+	private Widget createCaption() {
+		List<SimpleHistoryEventInfo> history = Arrays
+				.asList(new SimpleHistoryEventInfo[] {
+						new SimpleHistoryEventInfo("Running actions") });
+		return new BreadcrumbBar(null, history,
+				BreadcrumbBar.maxButton(wrapper));
+	}
+
 	protected void refreshActions() {
 		AsyncCallback<List<String>> callback = new AsyncCallback<List<String>>() {
 			public void onFailure(Throwable caught) {
@@ -83,7 +91,8 @@ public class RunningActionsViewProvider implements ViewProvider {
 						progressPanels.get(id).ensureRunning();
 					}
 				}
-				for (String id : new ArrayList<String>(progressPanels.keySet())) {
+				for (String id : new ArrayList<String>(
+						progressPanels.keySet())) {
 					if (!actionIds.contains(id)) {
 						actionViewPanel.remove(progressPanels.get(id));
 						progressPanels.remove(id);
@@ -92,19 +101,12 @@ public class RunningActionsViewProvider implements ViewProvider {
 				refreshTimer.schedule(10000);
 			}
 		};
-		ClientBase.getCommonRemoteServiceAsyncInstance().listRunningJobs(
-				callback);
+		ClientBase.getCommonRemoteServiceAsyncInstance()
+				.listRunningJobs(callback);
 	}
 
-	private Widget createCaption() {
-		List<SimpleHistoryEventInfo> history = Arrays
-				.asList(new SimpleHistoryEventInfo[] { new SimpleHistoryEventInfo(
-						"Running actions") });
-		return new BreadcrumbBar(null, history,
-				BreadcrumbBar.maxButton(wrapper));
-	}
-
-	public static class ShowActionsViewProviderAction extends PermissibleAction {
+	public static class ShowActionsViewProviderAction
+			extends PermissibleAction {
 		@Override
 		public String getDisplayName() {
 			return "Show running jobs";

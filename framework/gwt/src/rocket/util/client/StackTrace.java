@@ -63,8 +63,8 @@ public class StackTrace {
 			}
 			buf.append(fileName);
 			final int lineNumber = element.getLineNumber();
-			if (false == (fileName.equals("unknown") || fileName
-					.equals("native"))) {
+			if (false == (fileName.equals("unknown")
+					|| fileName.equals("native"))) {
 				if (-1 != lineNumber) {
 					buf.append(':').append(lineNumber);
 				}
@@ -75,96 +75,6 @@ public class StackTrace {
 	}
 
 	/**
-	 * Returns as an array the names of all the functions that make up the
-	 * current callstack.
-	 * 
-	 * @return
-	 */
-	public static String[] getCallStackFunctionNames(
-			final JavaScriptObject callStackFunctions) {
-		Checker.notNull("parameter:callStackFunctions", callStackFunctions);
-		final String functionNames = getCallStackFunctionNames0(callStackFunctions);
-		return Utilities.split(functionNames, ",", true);
-	}
-
-	native private static String getCallStackFunctionNames0(
-			final JavaScriptObject functions)/*-{
-												var names = "";
-
-												for( var i = 0; i < functions.length; i++ ){
-												var s = functions[ i ];
-												var n = null;
-
-												while( true ){
-												if( s.name ){
-												n = s.name;
-												break;
-												}
-
-												n = s.toString().match(/function ([$\w]*)/);
-												if( ! n ){
-												n = "anonymous";
-												break;
-												}
-
-												n = n[ 1 ];
-												if( ! n ){
-												n = "anonymous";
-												break;
-												}
-
-												break;
-												}
-												if( names.length > 0 ){
-												names = names + ",";
-												}
-												names = names + n;
-												}
-												return names;
-												}-*/;
-
-	/**
-	 * Builds and returns an array of function objects for each level of the
-	 * callstack.
-	 * 
-	 * If the javascript host is within some sort of nested recursive stack
-	 * parts below the repeated stack will be lost.
-	 * 
-	 * @return
-	 */
-	native public static JavaScriptObject getCallStackFunctions() /*-{
-																	var elements = [];
-																	var i =  0;
-																	var context = @rocket.util.client.StackTrace::getCallStackFunctions();
-
-																	while( true ){
-																	elements[ i++] = context;
-
-																	var parent = context.caller;
-																	if( ! parent ){
-																	break;
-																	}
-																	// special check to determine if in some sort of nested recursive function.
-																	//for( var j = 0; j < elements.length; j++ ){
-
-																	// search the array backwards - if we are stuck in a recursive loop then the same function will the last element in the array
-																	var j = elements.length;
-																	while( j >= 0 ){
-																	j--;
-																	if( parent == elements[ j ]){
-																	parent = null;
-																	break;
-																	}
-																	}
-																	if( ! parent ){
-																	break;
-																	}
-																	context = parent;            
-																	}
-																	return elements;        
-																	}-*/;
-
-	/**
 	 * Builds an array of StackTraceElements with each individual element
 	 * containing the converted functionNames.
 	 * 
@@ -173,8 +83,8 @@ public class StackTrace {
 	 * @param functionNames
 	 * @return
 	 */
-	public static StackTraceElement[] buildStackTraceElements(
-			final String[] functionNames) {
+	public static StackTraceElement[]
+			buildStackTraceElements(final String[] functionNames) {
 		Checker.notNull("parameter:functionNames", functionNames);
 		final int count = functionNames.length;
 		final StackTraceElement[] elements = new StackTraceElement[count];
@@ -208,7 +118,8 @@ public class StackTrace {
 					// check that the className begins with a Capital letter.
 					final char firstLetterOfClassName = functionName
 							.charAt(classNameStart + 1);
-					if (Character.toUpperCase(firstLetterOfClassName) != firstLetterOfClassName) {
+					if (Character.toUpperCase(
+							firstLetterOfClassName) != firstLetterOfClassName) {
 						break;
 					}
 					// convert _ into <dots>
@@ -274,8 +185,8 @@ public class StackTrace {
 						}
 						if (c == 'L') {
 							// Ljava_lang_Object_2
-							int endOfTypeName = unconvertedArguments.indexOf(
-									".2", j + 1);
+							int endOfTypeName = unconvertedArguments
+									.indexOf(".2", j + 1);
 							if (-1 == endOfTypeName) {
 								endOfTypeName = unconvertedArguments.length();
 							}
@@ -345,11 +256,96 @@ public class StackTrace {
 		return elements;
 	}
 
-	protected static String[] getFunctionNames(final JavaScriptObject context) {
-		Checker.notNull("parameter:context", context);
-		final String functionNames = StackTrace.getFunctionNames0(context);
+	/**
+	 * Returns as an array the names of all the functions that make up the
+	 * current callstack.
+	 * 
+	 * @return
+	 */
+	public static String[] getCallStackFunctionNames(
+			final JavaScriptObject callStackFunctions) {
+		Checker.notNull("parameter:callStackFunctions", callStackFunctions);
+		final String functionNames = getCallStackFunctionNames0(
+				callStackFunctions);
 		return Utilities.split(functionNames, ",", true);
 	}
+
+	/**
+	 * Builds and returns an array of function objects for each level of the
+	 * callstack.
+	 * 
+	 * If the javascript host is within some sort of nested recursive stack
+	 * parts below the repeated stack will be lost.
+	 * 
+	 * @return
+	 */
+	native public static JavaScriptObject getCallStackFunctions() /*-{
+																	var elements = [];
+																	var i =  0;
+																	var context = @rocket.util.client.StackTrace::getCallStackFunctions();
+																	
+																	while( true ){
+																	elements[ i++] = context;
+																	
+																	var parent = context.caller;
+																	if( ! parent ){
+																	break;
+																	}
+																	// special check to determine if in some sort of nested recursive function.
+																	//for( var j = 0; j < elements.length; j++ ){
+																	
+																	// search the array backwards - if we are stuck in a recursive loop then the same function will the last element in the array
+																	var j = elements.length;
+																	while( j >= 0 ){
+																	j--;
+																	if( parent == elements[ j ]){
+																	parent = null;
+																	break;
+																	}
+																	}
+																	if( ! parent ){
+																	break;
+																	}
+																	context = parent;            
+																	}
+																	return elements;        
+																	}-*/;
+
+	native private static String
+			getCallStackFunctionNames0(final JavaScriptObject functions)/*-{
+																		var names = "";
+																		
+																		for( var i = 0; i < functions.length; i++ ){
+																		var s = functions[ i ];
+																		var n = null;
+																		
+																		while( true ){
+																		if( s.name ){
+																		n = s.name;
+																		break;
+																		}
+																		
+																		n = s.toString().match(/function ([$\w]*)/);
+																		if( ! n ){
+																		n = "anonymous";
+																		break;
+																		}
+																		
+																		n = n[ 1 ];
+																		if( ! n ){
+																		n = "anonymous";
+																		break;
+																		}
+																		
+																		break;
+																		}
+																		if( names.length > 0 ){
+																		names = names + ",";
+																		}
+																		names = names + n;
+																		}
+																		return names;
+																		}-*/;
 
 	/**
 	 * This method visits the stacktrace within the given context object.
@@ -358,33 +354,39 @@ public class StackTrace {
 	 *            The context object that contains the stacktrace.
 	 * @return A string containing the function names each separated by commas
 	 */
-	native private static String getFunctionNames0(
-			final JavaScriptObject context)/*-{
-											// this array will be filled with the names of each level of the stack trace...
-											var names = "";
-											var addSeparator = false;
+	native private static String
+			getFunctionNames0(final JavaScriptObject context)/*-{
+																// this array will be filled with the names of each level of the stack trace...
+																var names = "";
+																var addSeparator = false;
+																
+																while( context ){
+																var name = context.name | context.callee;
+																// is name is missing assign "anonymous"
+																if( ! name ){
+																name = "anonymous";
+																}                
+																if( addSeparator ){
+																names = names + ",";
+																}
+																
+																names = names + name;
+																addSeparator = true;
+																
+																// if function call is the result of a recursive call stop looping. 
+																var parent = context.caller;
+																if( context == parent ){
+																break;
+																}
+																context = parent; 
+																}
+																
+																return names;
+																}-*/;
 
-											while( context ){
-											var name = context.name | context.callee;
-											// is name is missing assign "anonymous"
-											if( ! name ){
-											name = "anonymous";
-											}                
-											if( addSeparator ){
-											names = names + ",";
-											}
-
-											names = names + name;
-											addSeparator = true;
-
-											// if function call is the result of a recursive call stop looping. 
-											var parent = context.caller;
-											if( context == parent ){
-											break;
-											}
-											context = parent; 
-											}
-
-											return names;
-											}-*/;
+	protected static String[] getFunctionNames(final JavaScriptObject context) {
+		Checker.notNull("parameter:context", context);
+		final String functionNames = StackTrace.getFunctionNames0(context);
+		return Utilities.split(functionNames, ",", true);
+	}
 }

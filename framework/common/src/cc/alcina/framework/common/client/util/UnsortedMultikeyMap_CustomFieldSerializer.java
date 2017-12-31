@@ -27,28 +27,25 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 public final class UnsortedMultikeyMap_CustomFieldSerializer
 		extends CustomFieldSerializer<UnsortedMultikeyMap> {
 	public static void deserialize(SerializationStreamReader streamReader,
-			UnsortedMultikeyMap instance)
-			throws SerializationException {
-		MultikeyMapBase_CustomFieldSerializer.deserialize(streamReader, instance);
+			UnsortedMultikeyMap instance) throws SerializationException {
+		MultikeyMapBase_CustomFieldSerializer.deserialize(streamReader,
+				instance);
 	}
 
 	public static void serialize(SerializationStreamWriter streamWriter,
-			UnsortedMultikeyMap instance)
-			throws SerializationException {
+			UnsortedMultikeyMap instance) throws SerializationException {
 		MultikeyMapBase_CustomFieldSerializer.serialize(streamWriter, instance);
 	}
 
 	@Override
 	public void deserializeInstance(SerializationStreamReader streamReader,
-			UnsortedMultikeyMap instance)
-			throws SerializationException {
+			UnsortedMultikeyMap instance) throws SerializationException {
 		deserialize(streamReader, instance);
 	}
 
 	@Override
 	public void serializeInstance(SerializationStreamWriter streamWriter,
-			UnsortedMultikeyMap instance)
-			throws SerializationException {
+			UnsortedMultikeyMap instance) throws SerializationException {
 		serialize(streamWriter, instance);
 	}
 }

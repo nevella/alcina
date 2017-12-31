@@ -11,20 +11,18 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.provider;
-
 
 /**
  *
  * @author Nick Reddel
  */
-
- public interface LooseActionHandler {
-	public void performAction();
+public interface LooseActionHandler {
 	public String getName();
-	public interface LooseTargetedActionHandler<T> extends LooseActionHandler{
+
+	public void performAction();
+
+	public interface LooseTargetedActionHandler<T> extends LooseActionHandler {
 		public void performAction(T targetObject);
-		
 	}
 }

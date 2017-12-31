@@ -32,6 +32,15 @@ public class CallManager {
 	public static final String TOPIC_CALL_MADE = CallManager.class.getName()
 			+ ".TOPIC_CALL_MADE";
 
+	public static CallManager get() {
+		CallManager singleton = Registry.checkSingleton(CallManager.class);
+		if (singleton == null) {
+			singleton = new CallManager();
+			Registry.registerSingleton(CallManager.class, singleton);
+		}
+		return singleton;
+	}
+
 	private ArrayList<AsyncCallback> cancelled;
 
 	private Map<AsyncCallback, String> displayTexts;
@@ -40,23 +49,12 @@ public class CallManager {
 
 	private ArrayList<AsyncCallback> running;
 
-
-	public static CallManager get() {
-		CallManager singleton = Registry.checkSingleton(CallManager.class);
-		if(singleton==null){
-			singleton=new CallManager();
-			Registry.registerSingleton(CallManager.class, singleton);
-		}
-		return singleton;
-	}
-
 	private CallManager() {
 		cancelled = new ArrayList<AsyncCallback>();
 		displayTexts = new HashMap<AsyncCallback, String>();
 		topicListeners = new HashMap<AsyncCallback, TopicPublisher.TopicListener>();
 		running = new ArrayList<AsyncCallback>();
 	}
-
 
 	public void cancel(AsyncCallback runningSearch) {
 		cancelled.add(runningSearch);

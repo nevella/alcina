@@ -11,26 +11,26 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions;
 
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
-
 /**
  *
  * @author Nick Reddel
  */
-
- public interface PermissibleActionHandler {
-	public void handleAction(Widget sourceWidget,PermissibleAction action, Object target);
+public interface PermissibleActionHandler {
+	public void handleAction(Widget sourceWidget, PermissibleAction action,
+			Object target);
 
 	public static class DefaultPermissibleActionHandler {
-		public static void handleAction(Widget sourceWidget, PermissibleAction action, Object target) {
-			PermissibleActionHandler handler = (PermissibleActionHandler)Registry.get().instantiateSingle(PermissibleActionHandler.class,
-					action.getClass());
+		public static void handleAction(Widget sourceWidget,
+				PermissibleAction action, Object target) {
+			PermissibleActionHandler handler = (PermissibleActionHandler) Registry
+					.get().instantiateSingle(PermissibleActionHandler.class,
+							action.getClass());
 			handler.handleAction(sourceWidget, action, target);
 		}
 	}

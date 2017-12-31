@@ -24,12 +24,9 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * @author Nick Reddel
  */
 public class ServletLayerObjects {
-	private ServletLayerObjects() {
-		super();
-	}
-
 	public static ServletLayerObjects get() {
-		ServletLayerObjects singleton = Registry.checkSingleton(ServletLayerObjects.class);
+		ServletLayerObjects singleton = Registry
+				.checkSingleton(ServletLayerObjects.class);
 		if (singleton == null) {
 			singleton = new ServletLayerObjects();
 			Registry.registerSingleton(ServletLayerObjects.class, singleton);
@@ -39,32 +36,35 @@ public class ServletLayerObjects {
 
 	private File dataFolder;
 
-	public void setDataFolder(File dataFolder) {
-		this.dataFolder = dataFolder;
-	}
-
-	public File getDataFolder() {
-		return dataFolder;
-	}
-	
 	private File clusterDataFolder;
-
 
 	private Logger metricLogger;
 
-	public void setMetricLogger(Logger metricLogger) {
-		this.metricLogger = metricLogger;
-	}
-
-	public Logger getMetricLogger() {
-		return metricLogger;
+	private ServletLayerObjects() {
+		super();
 	}
 
 	public File getClusterDataFolder() {
 		return this.clusterDataFolder;
 	}
 
+	public File getDataFolder() {
+		return dataFolder;
+	}
+
+	public Logger getMetricLogger() {
+		return metricLogger;
+	}
+
 	public void setClusterDataFolder(File clusterDataFolder) {
 		this.clusterDataFolder = clusterDataFolder;
+	}
+
+	public void setDataFolder(File dataFolder) {
+		this.dataFolder = dataFolder;
+	}
+
+	public void setMetricLogger(Logger metricLogger) {
+		this.metricLogger = metricLogger;
 	}
 }

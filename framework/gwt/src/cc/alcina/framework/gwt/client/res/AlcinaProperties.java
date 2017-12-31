@@ -14,26 +14,6 @@ public class AlcinaProperties {
 
 	public static final String NON_BROWSER = "NON_BROWSER";
 
-	public static boolean is(Class clazz, String key) {
-		String value = get().getString(clazz, key);
-		return Boolean.valueOf(value);
-	}
-
-	private StringMap properties;
-
-	private String getString(Class clazz, String key) {
-		String cKey = clazz == null ? key : CommonUtils.simpleClassName(clazz)
-				+ "." + key;
-		return properties.get(cKey);
-	}
-
-	public AlcinaProperties() {
-		super();
-		properties = AlcinaResources.INSTANCE == null ? new StringMap()
-				: StringMap.fromPropertyString(AlcinaResources.INSTANCE
-						.appProperties().getText());
-	}
-
 	public static AlcinaProperties get() {
 		AlcinaProperties singleton = Registry
 				.checkSingleton(AlcinaProperties.class);
@@ -48,9 +28,29 @@ public class AlcinaProperties {
 		return get().getString(clazz, key);
 	}
 
+	public static boolean is(Class clazz, String key) {
+		String value = get().getString(clazz, key);
+		return Boolean.valueOf(value);
+	}
+
 	public static void put(Class<?> clazz, String key, String value) {
-		String cKey = clazz == null ? key : CommonUtils.simpleClassName(clazz)
-				+ "." + key;
+		String cKey = clazz == null ? key
+				: CommonUtils.simpleClassName(clazz) + "." + key;
 		get().properties.put(cKey, value);
+	}
+
+	private StringMap properties;
+
+	public AlcinaProperties() {
+		super();
+		properties = AlcinaResources.INSTANCE == null ? new StringMap()
+				: StringMap.fromPropertyString(
+						AlcinaResources.INSTANCE.appProperties().getText());
+	}
+
+	private String getString(Class clazz, String key) {
+		String cKey = clazz == null ? key
+				: CommonUtils.simpleClassName(clazz) + "." + key;
+		return properties.get(cKey);
 	}
 }

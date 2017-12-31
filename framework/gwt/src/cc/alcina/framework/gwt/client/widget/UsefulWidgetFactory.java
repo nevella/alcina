@@ -33,13 +33,36 @@ public class UsefulWidgetFactory {
 
 	public static final String WIDE_BULLET_SEPARATOR_HTML = "\u00A0\u00A0\u00A0\u00A0\u2022\u00A0\u00A0\u00A0\u00A0";
 
-	public static FlowPanel mediumTitleWidget(String title) {
-		FlowPanel fp = new FlowPanel();
-		fp.setStyleName("medium-title");
-		Label l = new HTML(title);
-		l.setStyleName("");
-		fp.add(l);
-		return fp;
+	public static Widget boldInline(String text) {
+		return new InlineHTML("<b>" + text + "</b>");
+	}
+
+	public static Widget createBulletSeparator() {
+		return new InlineHTML(BULLET_SEPARATOR_HTML);
+	}
+
+	public static HTML createEmptyLabel() {
+		return new HTML("&nbsp;");
+	}
+
+	public static Widget createNarrowBulletSeparator() {
+		return new InlineHTML(NARROW_BULLET_SEPARATOR_HTML);
+	}
+
+	public static InlineHTML createSpacer(int spaces) {
+		String s = "";
+		for (; spaces > 0; spaces--) {
+			s += "&nbsp;";
+		}
+		return new InlineHTML(s);
+	}
+
+	public static Label formatLabel(String template, Object... params) {
+		return new Label(CommonUtils.formatJ(template, params));
+	}
+
+	public static Widget italicInline(String text) {
+		return new InlineHTML("<i>" + text + "</i>");
 	}
 
 	public static FlowPanel lowTitleWidget(String title) {
@@ -51,36 +74,19 @@ public class UsefulWidgetFactory {
 		return fp;
 	}
 
-	public static Widget boldInline(String text) {
-		return new InlineHTML("<b>" + text + "</b>");
+	public static FlowPanel mediumTitleWidget(String title) {
+		FlowPanel fp = new FlowPanel();
+		fp.setStyleName("medium-title");
+		Label l = new HTML(title);
+		l.setStyleName("");
+		fp.add(l);
+		return fp;
 	}
 
-	public static Widget italicInline(String text) {
-		return new InlineHTML("<i>" + text + "</i>");
-	}
-
-	public static HTML createEmptyLabel() {
-		return new HTML("&nbsp;");
-	}
-
-	public static InlineHTML createSpacer(int spaces) {
-		String s = "";
-		for (; spaces > 0; spaces--) {
-			s += "&nbsp;";
-		}
-		return new InlineHTML(s);
-	}
-
-	public static Widget createBulletSeparator() {
-		return new InlineHTML(BULLET_SEPARATOR_HTML);
-	}
-
-	public static Widget createNarrowBulletSeparator() {
-		return new InlineHTML(NARROW_BULLET_SEPARATOR_HTML);
-	}
-
-	public static Label formatLabel(String template, Object... params) {
-		return new Label(CommonUtils.formatJ(template, params));
+	public static Label styledLabel(String text, String cssClassName) {
+		Label label = new Label(text);
+		label.setStyleName(cssClassName);
+		return label;
 	}
 
 	public static FlowPanel styledPanel(String cssClassName) {
@@ -94,11 +100,5 @@ public class UsefulWidgetFactory {
 		SimplePanel panel = new SimplePanel(child);
 		panel.setStyleName(cssClassName);
 		return panel;
-	}
-
-	public static Label styledLabel(String text, String cssClassName) {
-		Label label = new Label(text);
-		label.setStyleName(cssClassName);
-		return label;
 	}
 }

@@ -6,23 +6,21 @@ import com.google.gwt.user.client.ui.TreeItem;
 public interface TreeOrItem {
 	public void addItem(TreeItem item);
 
-	public void removeItem(TreeItem item);
-
-	public void removeItems();
-
 	public TreeItem getChild(int index);
 
 	public int getChildCount();
 
-	public Tree getTree();
+	public int getChildIndex(TreeItem item);
+
+	public NodeFactory getNodeFactory();
+
+	public TreeOrItem getParent();
 
 	public boolean getState();
 
-	public NodeFactory getNodeFactory();
-	
-	public TreeOrItem getParent();
+	public Tree getTree();
 
-	public int getChildIndex(TreeItem item);
-	
-	
+	public void removeItem(TreeItem item);
+
+	public void removeItems();
 }

@@ -6,7 +6,8 @@ import cc.alcina.framework.gwt.client.ClientConfiguration;
 public class InitSynchronousServicesPlayer extends RunnablePlayer {
 	private ClientConfiguration clientConfiguration;
 
-	public InitSynchronousServicesPlayer(ClientConfiguration clientConfiguration) {
+	public InitSynchronousServicesPlayer(
+			ClientConfiguration clientConfiguration) {
 		this.clientConfiguration = clientConfiguration;
 		addProvides(HandshakeState.SYNCHRONOUS_SERVICES_INITIALISED);
 	}

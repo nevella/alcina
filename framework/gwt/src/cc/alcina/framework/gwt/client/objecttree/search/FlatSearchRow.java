@@ -56,6 +56,10 @@ public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 		setAction(rowAction);
 	}
 
+	public void bind() {
+		rowAction.bind(this);
+	}
+
 	public void disableMinus(boolean b) {
 		addRemoveButtons.minus.setEnabled(!b);
 	}
@@ -215,9 +219,5 @@ public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 				binding.bind();
 			}
 		}
-	}
-
-	public void bind() {
-		rowAction.bind(this);
 	}
 }

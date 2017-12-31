@@ -11,11 +11,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 
 public class RepeatingSequentialCommand implements RepeatingCommand {
+	public static boolean DEBUG = false;
+
 	protected List<RepeatingCommand> tasks = new ArrayList<RepeatingCommand>();
 
-	public void cancel() {
-		tasks.clear();
-	}
+	private boolean flushing = false;
+
+	private boolean synchronous = false;
 
 	public void add(RepeatingCommand task) {
 		if (tasks.isEmpty()) {
@@ -25,6 +27,43 @@ public class RepeatingSequentialCommand implements RepeatingCommand {
 		if (isSynchronous()) {
 			flushSynchronous();
 		}
+	}
+
+	public void cancel() {
+		tasks.clear();
+	}
+
+	@Override
+	public boolean execute() {
+		if (isSynchronous()) {
+			flushSynchronous();
+		}
+		if (tasks.isEmpty()) {
+			return false;
+		}
+		boolean ok = false;
+		try {
+			long t1 = System.currentTimeMillis();
+			boolean result = tasks.get(0).execute();
+			if (DEBUG) {
+				long t2 = System.currentTimeMillis();
+				if (t2 - t1 > 100) {
+					Registry.impl(ClientNotifications.class)
+							.log(CommonUtils.formatJ("Long task: %s - %sms",
+									tasks.get(0).getClass().getName(),
+									t2 - t1));
+				}
+			}
+			if (!result) {
+				tasks.remove(0);
+			}
+			ok = true;
+		} finally {
+			if (!ok) {
+				cancel();
+			}
+		}
+		return !tasks.isEmpty();
 	}
 
 	public void flushSynchronous() {
@@ -44,42 +83,8 @@ public class RepeatingSequentialCommand implements RepeatingCommand {
 		}
 	}
 
-	private boolean flushing = false;
-
-	private boolean synchronous = false;
-
-	public static boolean DEBUG = false;
-
-	@Override
-	public boolean execute() {
-		if (isSynchronous()) {
-			flushSynchronous();
-		}
-		if (tasks.isEmpty()) {
-			return false;
-		}
-		boolean ok=false;
-		try {
-			long t1 = System.currentTimeMillis();
-			boolean result = tasks.get(0).execute();
-			if (DEBUG) {
-				long t2 = System.currentTimeMillis();
-				if (t2 - t1 > 100) {
-					Registry.impl(ClientNotifications.class)
-							.log(CommonUtils.formatJ("Long task: %s - %sms",
-									tasks.get(0).getClass().getName(), t2 - t1));
-				}
-			}
-			if (!result) {
-				tasks.remove(0);
-			}
-			ok=true;
-		} finally{
-			if(!ok){
-				cancel();
-			}
-		}
-		return !tasks.isEmpty();
+	public boolean isSynchronous() {
+		return synchronous;
 	}
 
 	public void setSynchronous(boolean synchronous) {
@@ -87,9 +92,5 @@ public class RepeatingSequentialCommand implements RepeatingCommand {
 		if (synchronous) {
 			flushSynchronous();
 		}
-	}
-
-	public boolean isSynchronous() {
-		return synchronous;
 	}
 }

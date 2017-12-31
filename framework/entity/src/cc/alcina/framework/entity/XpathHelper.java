@@ -16,6 +16,9 @@ import org.w3c.dom.NodeList;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 public class XpathHelper {
+	public static XpathHelperExt ext = new XpathHelperExt() {
+	};
+
 	private Document primaryDoc;
 
 	private Map<Document, XpathAndExpressionCache> docXpathMap = new LinkedHashMap<Document, XpathAndExpressionCache>();
@@ -27,8 +30,19 @@ public class XpathHelper {
 		registerPrimary(ownerDoc(node));
 	}
 
-	public Document ownerDoc(Node node) {
-		return XmlUtils.ownerDocumentOrSelf(node);
+	public OptimizingXpathEvaluator createOptimisedEvaluator(Node node) {
+		OptimizingXpathEvaluator evaluator = new OptimizingXpathEvaluator(
+				docXpathMap.get(ownerDoc(node)));
+		evaluator.setOptimiseXpathEvaluationSpeed(true);
+		return evaluator;
+	}
+
+	public Element element(String xpathStr) {
+		return getElementByXpathDoc(primaryDoc, xpathStr, primaryDoc);
+	}
+
+	public List<Element> elements(String xpathStr) {
+		return getElementsByXpathDoc(primaryDoc, xpathStr, primaryDoc);
 	}
 
 	public Element getElementByXpath(String xpathStr, Node node) {
@@ -52,14 +66,6 @@ public class XpathHelper {
 		return getElementsByXpathDoc(primaryDoc, xpathStr, node);
 	}
 
-	public List<Element> elements(String xpathStr) {
-		return getElementsByXpathDoc(primaryDoc, xpathStr, primaryDoc);
-	}
-
-	public Element element(String xpathStr) {
-		return getElementByXpathDoc(primaryDoc, xpathStr, primaryDoc);
-	}
-
 	public List<Element> getElementsByXpathDoc(Document doc, String xpathStr,
 			Node node) {
 		if (ownerDoc(node) != doc) {
@@ -77,15 +83,6 @@ public class XpathHelper {
 		return getNodeByXpathDoc(primaryDoc, xpathStr, node);
 	}
 
-	public List<Node> getNodesByXpath(String xpathStr, Node node)
-			throws Exception {
-		if (ownerDoc(node) != primaryDoc) {
-			throw new RuntimeException("reusing xpath for different documen");
-		}
-		return XmlUtils.nodeListToList((NodeList) getXpath(primaryDoc)
-				.evaluate(xpathStr, node, XPathConstants.NODESET));
-	}
-
 	public Node getNodeByXpathDoc(Document doc, String xpathStr, Node node) {
 		if (ownerDoc(node) != doc) {
 			throw new RuntimeException("reusing xpath for different documen");
@@ -98,20 +95,51 @@ public class XpathHelper {
 		}
 	}
 
+	public List<Node> getNodesByXpath(String xpathStr, Node node)
+			throws Exception {
+		if (ownerDoc(node) != primaryDoc) {
+			throw new RuntimeException("reusing xpath for different documen");
+		}
+		return XmlUtils.nodeListToList((NodeList) getXpath(primaryDoc)
+				.evaluate(xpathStr, node, XPathConstants.NODESET));
+	}
+
+	public String getTextContentOrEmpty(String xpath, Node from) {
+		try {
+			Node node = getNodeByXpath(xpath, from);
+			return node == null ? "" : node.getTextContent();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public boolean isFor(Document ownerDocument) {
+		return primaryDoc == ownerDocument;
+	}
+
+	public <T extends Node> List<T> nodes(String xpathStr) {
+		try {
+			return (List<T>) (List) getNodesByXpath(xpathStr, primaryDoc);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public Document ownerDoc(Node node) {
+		return XmlUtils.ownerDocumentOrSelf(node);
+	}
+
 	public void registerPrimary(Document doc) {
 		this.primaryDoc = doc;
 		register(doc);
 	}
 
-	public static interface XpathHelperExt {
-		default void configureXpath(XPath xpath) {
-			synchronized (this) {
-			}
+	public void removeMatches(String xpath) throws Exception {
+		List<Node> nodes = getNodesByXpath(xpath, primaryDoc);
+		for (Node node : nodes) {
+			XmlUtils.removeNode(node);
 		}
 	}
-
-	public static XpathHelperExt ext = new XpathHelperExt() {
-	};
 
 	private XPath createXpath() {
 		XPathFactory factory = XPathFactory.newInstance();
@@ -131,38 +159,10 @@ public class XpathHelper {
 		docXpathMap.put(doc, new XpathAndExpressionCache(createXpath()));
 	}
 
-	public OptimizingXpathEvaluator createOptimisedEvaluator(Node node) {
-		OptimizingXpathEvaluator evaluator = new OptimizingXpathEvaluator(
-				docXpathMap.get(ownerDoc(node)));
-		evaluator.setOptimiseXpathEvaluationSpeed(true);
-		return evaluator;
-	}
-
-	public boolean isFor(Document ownerDocument) {
-		return primaryDoc == ownerDocument;
-	}
-
-	public String getTextContentOrEmpty(String xpath, Node from) {
-		try {
-			Node node = getNodeByXpath(xpath, from);
-			return node == null ? "" : node.getTextContent();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public void removeMatches(String xpath) throws Exception {
-		List<Node> nodes = getNodesByXpath(xpath, primaryDoc);
-		for (Node node : nodes) {
-			XmlUtils.removeNode(node);
-		}
-	}
-
-	public <T extends Node> List<T> nodes(String xpathStr) {
-		try {
-			return (List<T>) (List) getNodesByXpath(xpathStr, primaryDoc);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+	public static interface XpathHelperExt {
+		default void configureXpath(XPath xpath) {
+			synchronized (this) {
+			}
 		}
 	}
 }

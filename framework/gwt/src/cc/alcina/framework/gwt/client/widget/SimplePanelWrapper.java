@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -21,8 +20,7 @@ import com.google.gwt.user.client.ui.Widget;
  *
  * @author Nick Reddel
  */
-
- public class SimplePanelWrapper extends SimplePanel {
+public class SimplePanelWrapper extends SimplePanel {
 	public SimplePanelWrapper(Widget w) {
 		super();
 		setWidget(w);

@@ -8,15 +8,19 @@ public class D3Utils {
 
 	public static native D3Visualisation createVisualisation(
 			String visualisationName, JavaScriptObject data)/*-{
-        try {
-            var visualisation = $wnd.jdm.graphs[visualisationName](data);
-            return visualisation;
-        } catch (e) {
-            debugger;
-            throw e;
-        }
+															try {
+															var visualisation = $wnd.jdm.graphs[visualisationName](data);
+															return visualisation;
+															} catch (e) {
+															debugger;
+															throw e;
+															}
+															
+															}-*/;
 
-	}-*/;
+	public static String nextContainerId() {
+		return "d3-svg-container-" + svgIdCounter++;
+	}
 
 	public final static class D3Visualisation extends JavaScriptObject {
 		protected D3Visualisation() {
@@ -24,16 +28,12 @@ public class D3Utils {
 
 		public native void renderGraph(ElementRemote element, int ctrWidth,
 				int ctrHeight)/*-{
-            try {
-                this.render(element, ctrWidth, ctrHeight);
-            } catch (e) {
-                debugger;
-                throw e;
-            }
-		}-*/;
-	}
-
-	public static String nextContainerId() {
-		return "d3-svg-container-" + svgIdCounter++;
+								try {
+								this.render(element, ctrWidth, ctrHeight);
+								} catch (e) {
+								debugger;
+								throw e;
+								}
+								}-*/;
 	}
 }

@@ -33,37 +33,9 @@ import cc.alcina.framework.entity.util.ClasspathScanner;
  * @author Nick Reddel
  */
 public abstract class CachingScanner {
-	protected void putIgnoreMap(ClassDataCache dataCache, String cachePath) {
-		try {
-			File cacheFile = new File(cachePath);
-			cacheFile.getParentFile().mkdirs();
-			cacheFile.createNewFile();
-			ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(cacheFile)));
-			oos.writeObject(dataCache);
-			oos.close();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	protected ClassDataCache getIgnoreMap(String cachePath) {
-		try {
-			ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(cachePath)));
-			ClassDataCache value = (ClassDataCache) ois.readObject();
-			ois.close();
-			return value;
-		} catch (Exception e) {
-			return new ClassDataCache();
-		}
-	}
-
-	protected File getHomeDir() {
-		return EntityLayerObjects.get().getDataFolder();
-	}
-
 	public void scan(ClassDataCache found, String cachePath) throws Exception {
-		List<ClassLoader> classLoaders = ClasspathScanner.getScannerClassLoadersToTry();
+		List<ClassLoader> classLoaders = ClasspathScanner
+				.getScannerClassLoadersToTry();
 		int cc = 0;
 		long loadClassNanos = 0;
 		long loadClassErrNanos = 0;
@@ -75,14 +47,16 @@ public abstract class CachingScanner {
 		for (ClassDataItem foundItem : found.classData.values()) {
 			String className = foundItem.className;
 			Class c = null;
-			ClassDataItem ignore = ignoreCache.classData.get(foundItem.className);	
+			ClassDataItem ignore = ignoreCache.classData
+					.get(foundItem.className);
 			if (ignore != null) {
 				if (ignore.date.getTime() >= foundItem.date.getTime()) {
 					outgoing.add(ignore);
 					ignoreCount++;
 					continue;
 				}
-				if (ignore.md5 != null && ignore.md5.equals(foundItem.ensureMd5())) {
+				if (ignore.md5 != null
+						&& ignore.md5.equals(foundItem.ensureMd5())) {
 					outgoing.add(foundItem);
 					ignoreCount++;
 					continue;
@@ -131,8 +105,8 @@ public abstract class CachingScanner {
 		if (debug) {
 			System.out.format(
 					"Classes: %s -- checked: %s, loadClass: %sms, loadClassErr: %sms, ignoreCount: %s, total: %sms\n",
-					found.classData.size(), cc, loadClassNanos / 1000 / 1000, loadClassErrNanos / 1000 / 1000,
-					ignoreCount, time);
+					found.classData.size(), cc, loadClassNanos / 1000 / 1000,
+					loadClassErrNanos / 1000 / 1000, ignoreCount, time);
 		}
 		for (ClassDataItem item : outgoing.classData.values()) {
 			item.ensureMd5();
@@ -142,5 +116,37 @@ public abstract class CachingScanner {
 		}
 	}
 
-	protected abstract void process(Class c, String className, ClassDataItem foundItem, ClassDataCache outgoing);
+	protected File getHomeDir() {
+		return EntityLayerObjects.get().getDataFolder();
+	}
+
+	@SuppressWarnings("unchecked")
+	protected ClassDataCache getIgnoreMap(String cachePath) {
+		try {
+			ObjectInputStream ois = new ObjectInputStream(
+					new BufferedInputStream(new FileInputStream(cachePath)));
+			ClassDataCache value = (ClassDataCache) ois.readObject();
+			ois.close();
+			return value;
+		} catch (Exception e) {
+			return new ClassDataCache();
+		}
+	}
+
+	protected abstract void process(Class c, String className,
+			ClassDataItem foundItem, ClassDataCache outgoing);
+
+	protected void putIgnoreMap(ClassDataCache dataCache, String cachePath) {
+		try {
+			File cacheFile = new File(cachePath);
+			cacheFile.getParentFile().mkdirs();
+			cacheFile.createNewFile();
+			ObjectOutputStream oos = new ObjectOutputStream(
+					new BufferedOutputStream(new FileOutputStream(cacheFile)));
+			oos.writeObject(dataCache);
+			oos.close();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 }

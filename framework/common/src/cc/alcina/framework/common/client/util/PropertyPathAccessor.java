@@ -12,10 +12,6 @@ public class PropertyPathAccessor {
 
 	private String[] paths;
 
-	public String[] getPaths() {
-		return this.paths;
-	}
-
 	private IndividualPropertyAccessor[] accessors = new IndividualPropertyAccessor[0];
 
 	public PropertyPathAccessor(String propertyPath) {
@@ -25,6 +21,61 @@ public class PropertyPathAccessor {
 
 	public Object getChainedProperty(Object obj) {
 		return get(obj, false);
+	}
+
+	public Class getChainedPropertyType(Object obj) {
+		return (Class) get(obj, true);
+	}
+
+	public String[] getPaths() {
+		return this.paths;
+	}
+
+	public String getPropertyPath() {
+		return this.propertyPath;
+	}
+
+	public void setChainedProperty(Object obj, Object value) {
+		if (paths.length == 1) {
+			ensureAccessors(obj, 0);
+			accessors[0].setPropertyValue(obj, value);
+		}
+		int idx = 0;
+		for (; idx < paths.length - 1;) {
+			if (obj == null) {
+				throw new RuntimeException("property path set hit a null");
+			}
+			if (obj instanceof Collection) {
+				throw new RuntimeException(
+						"set with property path does not support collection properties");
+			} else {
+				ensureAccessors(obj, idx);
+				obj = accessors[idx].getPropertyValue(obj);
+			}
+			idx++;
+		}
+		assert idx == paths.length - 1;
+		ensureAccessors(obj, idx);
+		accessors[idx].setPropertyValue(obj, value);
+	}
+
+	@Override
+	public String toString() {
+		return "PropertyPathAccesor: " + propertyPath;
+	}
+
+	private void ensureAccessors(Object obj, int idx) {
+		if (accessors.length > idx || obj == null) {
+			return;
+		}
+		String path = paths[idx];
+		IndividualPropertyAccessor[] accessors = new IndividualPropertyAccessor[idx
+				+ 1];
+		System.arraycopy(this.accessors, 0, accessors, 0,
+				this.accessors.length);
+		this.accessors = accessors;
+		this.accessors[idx] = Reflections.propertyAccessor()
+				.cachedAccessor(obj.getClass(), path);
 	}
 
 	private Object get(Object obj, boolean type) {
@@ -64,56 +115,5 @@ public class PropertyPathAccessor {
 			idx++;
 		}
 		return obj;
-	}
-
-	public Class getChainedPropertyType(Object obj) {
-		return (Class) get(obj, true);
-	}
-
-	private void ensureAccessors(Object obj, int idx) {
-		if (accessors.length > idx || obj == null) {
-			return;
-		}
-		String path = paths[idx];
-		IndividualPropertyAccessor[] accessors = new IndividualPropertyAccessor[idx
-				+ 1];
-		System.arraycopy(this.accessors, 0, accessors, 0,
-				this.accessors.length);
-		this.accessors = accessors;
-		this.accessors[idx] = Reflections.propertyAccessor()
-				.cachedAccessor(obj.getClass(), path);
-	}
-
-	@Override
-	public String toString() {
-		return "PropertyPathAccesor: " + propertyPath;
-	}
-
-	public void setChainedProperty(Object obj, Object value) {
-		if (paths.length == 1) {
-			ensureAccessors(obj, 0);
-			accessors[0].setPropertyValue(obj, value);
-		}
-		int idx = 0;
-		for (; idx < paths.length - 1;) {
-			if (obj == null) {
-				throw new RuntimeException("property path set hit a null");
-			}
-			if (obj instanceof Collection) {
-				throw new RuntimeException(
-						"set with property path does not support collection properties");
-			} else {
-				ensureAccessors(obj, idx);
-				obj = accessors[idx].getPropertyValue(obj);
-			}
-			idx++;
-		}
-		assert idx == paths.length - 1;
-		ensureAccessors(obj, idx);
-		accessors[idx].setPropertyValue(obj, value);
-	}
-
-	public String getPropertyPath() {
-		return this.propertyPath;
 	}
 }

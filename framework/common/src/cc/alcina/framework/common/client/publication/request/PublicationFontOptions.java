@@ -30,23 +30,23 @@ public abstract class PublicationFontOptions extends ExtensibleEnum {
 
 	public static final PublicationFontOptions ATHELAS = new PublicationFontOptions_ATHELAS();
 
-	public static class PublicationFontOptions_ARIAL extends
-			PublicationFontOptions {
+	public static class PublicationFontOptions_ARIAL
+			extends PublicationFontOptions {
 	}
 
-	public static class PublicationFontOptions_TIMES_NEW_ROMAN extends
-			PublicationFontOptions {
+	public static class PublicationFontOptions_ATHELAS
+			extends PublicationFontOptions {
 	}
 
-	public static class PublicationFontOptions_COURIER extends
-			PublicationFontOptions {
+	public static class PublicationFontOptions_COURIER
+			extends PublicationFontOptions {
 	}
 
-	public static class PublicationFontOptions_GEORGIA extends
-			PublicationFontOptions {
+	public static class PublicationFontOptions_GEORGIA
+			extends PublicationFontOptions {
 	}
 
-	public static class PublicationFontOptions_ATHELAS extends
-			PublicationFontOptions {
+	public static class PublicationFontOptions_TIMES_NEW_ROMAN
+			extends PublicationFontOptions {
 	}
 }

@@ -43,12 +43,15 @@ public class ULPanel extends ComplexPanel {
 	 */
 	@Override
 	public void add(Widget w) {
-		assert w instanceof LiWidget || w instanceof LiPanel : "Added widget is not a list element";
+		assert w instanceof LiWidget
+				|| w instanceof LiPanel : "Added widget is not a list element";
 		add(w, getElement());
 	}
+
 	public void add(Widget w, boolean compositeLiPanel) {
 		add(w, getElement());
 	}
+
 	/**
 	 * Inserts a widget before the specified index.
 	 * 

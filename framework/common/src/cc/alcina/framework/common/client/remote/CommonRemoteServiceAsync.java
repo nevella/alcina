@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationR
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
@@ -49,6 +50,9 @@ public interface CommonRemoteServiceAsync {
 	public void login(LoginBean loginBean, AsyncCallback callback);
 
 	public void logout(AsyncCallback callback);
+
+	public void suggest(BoundSuggestOracleRequest request,
+			AsyncCallback<Response> asyncCallback);
 
 	public void transform(DomainTransformRequest request,
 			AsyncCallback<DomainTransformResponse> callback);
@@ -77,9 +81,6 @@ public interface CommonRemoteServiceAsync {
 	void uploadOfflineTransforms(PartialDtrUploadRequest request,
 			AsyncCallback<PartialDtrUploadResponse> callback);
 
-	void waitForTransforms(long lastTransformRequestId,
+	void waitForTransforms(DomainTransformCommitPosition position,
 			AsyncCallback<DomainUpdate> callback);
-
-	public void suggest(BoundSuggestOracleRequest request,
-			 AsyncCallback<Response> asyncCallback);
 }

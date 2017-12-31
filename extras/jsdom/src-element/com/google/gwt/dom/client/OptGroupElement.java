@@ -20,111 +20,124 @@ import com.google.gwt.core.client.JavaScriptObject;
 /**
  * Group options together in logical subdivisions.
  * 
- * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#edef-OPTGROUP">W3C HTML Specification</a>
+ * @see <a href=
+ *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#edef-OPTGROUP">
+ *      W3C HTML Specification</a>
  */
 @TagName(OptGroupElement.TAG)
 public class OptGroupElement extends Element {
+	public static final String TAG = "optgroup";
 
-  public static final String TAG = "optgroup";
+	/**
+	 * Assert that the given {@link Element} is compatible with this class and
+	 * automatically typecast it.
+	 */
+	public static OptGroupElement as(Element elem) {
+		assert is(elem);
+		return (OptGroupElement) elem;
+	}
 
-  /**
-   * Assert that the given {@link Element} is compatible with this class and
-   * automatically typecast it.
-   */
-  public static OptGroupElement as(Element elem) {
-    assert is(elem);
-    return (OptGroupElement) elem;
-  }
+	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
 
-  /**
-   * Determines whether the given {@link JavaScriptObject} can be cast to
-   * this class. A <code>null</code> object will cause this method to
-   * return <code>false</code>.
-   */
-  public static boolean is(JavaScriptObject o) {
-    if (Element.is(o)) {
-      return is(Element.as(o));
-    }
-    return false;
-  }
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to this
+	 * class. A <code>null</code> object will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(JavaScriptObject o) {
+		if (Element.is(o)) {
+			return is(Element.as(o));
+		}
+		return false;
+	}
 
-  /**
-   * Determine whether the given {@link Node} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Node node) {
-    if (Element.is(node)) {
-      return is((Element) node);
-    }
-    return false;
-  }
-  
-  /**
-   * Determine whether the given {@link Element} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Element elem) {
-    return elem != null && elem.hasTagName(TAG);
-  }
+	/**
+	 * Determine whether the given {@link Node} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		if (Element.is(node)) {
+			return is((Element) node);
+		}
+		return false;
+	}
 
-  protected OptGroupElement() {
-  }
+	protected OptGroupElement() {
+	}
 
-  /**
-   * The control is unavailable in this context.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-disabled">W3C HTML Specification</a>
-   * @deprecated use {@link #isDisabled()} instead.
-   */
-  @Deprecated  public  String getDisabled(){
-  return this.getPropertyString("disabled");
-}
+	/**
+	 * The control is unavailable in this context.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-disabled">
+	 *      W3C HTML Specification</a>
+	 * @deprecated use {@link #isDisabled()} instead.
+	 */
+	@Deprecated
+	public String getDisabled() {
+		return this.getPropertyString("disabled");
+	}
 
+	/**
+	 * Assigns a label to this option group.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-label-OPTGROUP">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getLabel() {
+		return this.getPropertyString("label");
+	}
 
-  /**
-   * Assigns a label to this option group.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-label-OPTGROUP">W3C HTML Specification</a>
-   */  public  String getLabel(){
-  return this.getPropertyString("label");
-}
+	/**
+	 * The control is unavailable in this context.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-disabled">
+	 *      W3C HTML Specification</a>
+	 */
+	public boolean isDisabled() {
+		return this.getPropertyBoolean("disabled");
+	}
 
+	/**
+	 * The control is unavailable in this context.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-disabled">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setDisabled(boolean disabled) {
+		this.setPropertyBoolean("disabled", disabled);
+	}
 
-  /**
-   * The control is unavailable in this context.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-disabled">W3C HTML Specification</a>
-   */  public  boolean isDisabled(){
-  return this.getPropertyBoolean("disabled");
-}
+	/**
+	 * The control is unavailable in this context.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-disabled">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setDisabled(String disabled) {
+		this.setPropertyString("disabled", disabled);
+	}
 
-
-  /**
-   * The control is unavailable in this context.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-disabled">W3C HTML Specification</a>
-   */  public  void setDisabled(boolean disabled){
-   this.setPropertyBoolean("disabled",disabled);
-}
-
-
-  /**
-   * The control is unavailable in this context.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-disabled">W3C HTML Specification</a>
-   */  public  void setDisabled(String disabled){
-   this.setPropertyString("disabled",disabled);
-}
-
-
-  /**
-   * Assigns a label to this option group.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-label-OPTGROUP">W3C HTML Specification</a>
-   */  public  void setLabel(String label){
-   this.setPropertyString("label",label);
-}
-
+	/**
+	 * Assigns a label to this option group.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-label-OPTGROUP">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setLabel(String label) {
+		this.setPropertyString("label", label);
+	}
 }

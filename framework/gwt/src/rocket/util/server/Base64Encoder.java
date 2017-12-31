@@ -24,6 +24,29 @@ import rocket.util.client.Checker;
  */
 public class Base64Encoder {
 	/**
+	 * A lookup table containing the encoded value for a given set of 6 bits.
+	 * This is used as an array of bytes for convenience and because the
+	 * getBytes() method doesnt exist in GWT java.lang.String.
+	 */
+	private static char[] lookup = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
+			.toCharArray();
+	/*
+	 * private static byte lookup[] = {(byte) 'A', (byte) 'B', (byte) 'C',
+	 * (byte) 'D', (byte) 'E', (byte) 'F', (byte) 'G', (byte) 'H', // 0-7 (byte)
+	 * 'I', (byte) 'J', (byte) 'K', (byte) 'L', (byte) 'M', (byte) 'N', (byte)
+	 * 'O', (byte) 'P', // 8-15 (byte) 'Q', (byte) 'R', (byte) 'S', (byte) 'T',
+	 * (byte) 'U', (byte) 'V', (byte) 'W', (byte) 'X', // 16-23 (byte) 'Y',
+	 * (byte) 'Z', (byte) 'a', (byte) 'b', (byte) 'c', (byte) 'd', (byte) 'e',
+	 * (byte) 'f', // 24-31 (byte) 'g', (byte) 'h', (byte) 'i', (byte) 'j',
+	 * (byte) 'k', (byte) 'l', (byte) 'm', (byte) 'n', // 32-39 (byte) 'o',
+	 * (byte) 'p', (byte) 'q', (byte) 'r', (byte) 's', (byte) 't', (byte) 'u',
+	 * (byte) 'v', // 40-47 (byte) 'w', (byte) 'x', (byte) 'y', (byte) 'z',
+	 * (byte) '0', (byte) '1', (byte) '2', (byte) '3', // 48-55 (byte) '4',
+	 * (byte) '5', (byte) '6', (byte) '7', (byte) '8', (byte) '9', (byte) '+',
+	 * (byte) '/', // 56-63 (byte) '=' // 64
+	 */
+
+	/**
 	 * Takes an array of bytes and builds a string that is base 64 encoded.
 	 * 
 	 * @param bytes
@@ -85,27 +108,4 @@ public class Base64Encoder {
 	private static char translateByte(final byte in) {
 		return (char) lookup[(in & 0xff)];
 	}
-
-	/**
-	 * A lookup table containing the encoded value for a given set of 6 bits.
-	 * This is used as an array of bytes for convenience and because the
-	 * getBytes() method doesnt exist in GWT java.lang.String.
-	 */
-	private static char[] lookup = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
-			.toCharArray();
-	/*
-	 * private static byte lookup[] = {(byte) 'A', (byte) 'B', (byte) 'C',
-	 * (byte) 'D', (byte) 'E', (byte) 'F', (byte) 'G', (byte) 'H', // 0-7 (byte)
-	 * 'I', (byte) 'J', (byte) 'K', (byte) 'L', (byte) 'M', (byte) 'N', (byte)
-	 * 'O', (byte) 'P', // 8-15 (byte) 'Q', (byte) 'R', (byte) 'S', (byte) 'T',
-	 * (byte) 'U', (byte) 'V', (byte) 'W', (byte) 'X', // 16-23 (byte) 'Y',
-	 * (byte) 'Z', (byte) 'a', (byte) 'b', (byte) 'c', (byte) 'd', (byte) 'e',
-	 * (byte) 'f', // 24-31 (byte) 'g', (byte) 'h', (byte) 'i', (byte) 'j',
-	 * (byte) 'k', (byte) 'l', (byte) 'm', (byte) 'n', // 32-39 (byte) 'o',
-	 * (byte) 'p', (byte) 'q', (byte) 'r', (byte) 's', (byte) 't', (byte) 'u',
-	 * (byte) 'v', // 40-47 (byte) 'w', (byte) 'x', (byte) 'y', (byte) 'z',
-	 * (byte) '0', (byte) '1', (byte) '2', (byte) '3', // 48-55 (byte) '4',
-	 * (byte) '5', (byte) '6', (byte) '7', (byte) '8', (byte) '9', (byte) '+',
-	 * (byte) '/', // 56-63 (byte) '=' // 64
-	 */
 }

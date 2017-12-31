@@ -127,13 +127,13 @@ public class StatsFilter extends CollectionProjectionFilter {
 		}
 	}
 
-	public StatsFilter noPathToString() {
-		noPathToString = true;
+	public StatsFilter noPath() {
+		noPath = true;
 		return this;
 	}
 
-	public StatsFilter noPath() {
-		noPath = true;
+	public StatsFilter noPathToString() {
+		noPathToString = true;
 		return this;
 	}
 
@@ -451,6 +451,12 @@ public class StatsFilter extends CollectionProjectionFilter {
 	}
 
 	static class GraphProjectionNoLisetNulls extends GraphProjection {
+		Set<Class> constructorExceptions = new LinkedHashSet<>();
+
+		Map<Class, ObjectInstantiator> instantiators = new LinkedHashMap<>();
+
+		Objenesis objenesis = new ObjenesisStd(); // or ObjenesisSerializer
+
 		public GraphProjectionNoLisetNulls() {
 			super();
 		}
@@ -459,33 +465,6 @@ public class StatsFilter extends CollectionProjectionFilter {
 				GraphProjectionFieldFilter fieldFilter,
 				GraphProjectionDataFilter dataFilter) {
 			super(fieldFilter, dataFilter);
-		}
-
-		Set<Class> constructorExceptions = new LinkedHashSet<>();
-
-		@Override
-		protected <T> T newInstance(Class sourceClass) throws Exception {
-			try {
-				return super.newInstance(sourceClass);
-			} catch (Exception e) {
-				try {
-					return tryWithObjenesis(sourceClass);
-				} catch (Throwable e1) {
-					constructorExceptions.add(sourceClass);
-					return null;
-				}
-			}
-		}
-
-		Map<Class, ObjectInstantiator> instantiators = new LinkedHashMap<>();
-
-		Objenesis objenesis = new ObjenesisStd(); // or ObjenesisSerializer
-
-		private <T> T tryWithObjenesis(Class sourceClass) {
-			ObjectInstantiator objectInstantiator = instantiators
-					.computeIfAbsent(sourceClass,
-							sc -> objenesis.getInstantiatorOf(sc));
-			return (T) objectInstantiator.newInstance();
 		}
 
 		// TODO - shouldn't this be package-private?
@@ -522,6 +501,27 @@ public class StatsFilter extends CollectionProjectionFilter {
 				}
 			}
 			return c;
+		}
+
+		private <T> T tryWithObjenesis(Class sourceClass) {
+			ObjectInstantiator objectInstantiator = instantiators
+					.computeIfAbsent(sourceClass,
+							sc -> objenesis.getInstantiatorOf(sc));
+			return (T) objectInstantiator.newInstance();
+		}
+
+		@Override
+		protected <T> T newInstance(Class sourceClass) throws Exception {
+			try {
+				return super.newInstance(sourceClass);
+			} catch (Exception e) {
+				try {
+					return tryWithObjenesis(sourceClass);
+				} catch (Throwable e1) {
+					constructorExceptions.add(sourceClass);
+					return null;
+				}
+			}
 		}
 	}
 

@@ -16,6 +16,12 @@ import cc.alcina.framework.servlet.servlet.DownloadServlet.DownloadItem;
 
 @RegistryLocation(registryPoint = ContentDeliveryType.class, targetClass = ContentDeliveryType_DOWNLOAD_PREVIEW.class)
 public class ContentDeliveryDownloadInline implements ContentDelivery {
+	public String deliver(PublicationContext ctx, InputStream convertedContent,
+			DeliveryModel deliveryModel, FormatConverter hfc) throws Exception {
+		return deliverViaServlet(convertedContent, hfc.getMimeType(),
+				deliveryModel.getSuggestedFileName(), hfc.getFileExtension());
+	}
+
 	protected String deliverViaServlet(InputStream stream, String mimeType,
 			String suggestedFileName, String suffix) throws Exception {
 		if (suggestedFileName.isEmpty()) {
@@ -29,11 +35,5 @@ public class ContentDeliveryDownloadInline implements ContentDelivery {
 		DownloadItem item = new DownloadServlet.DownloadItem(mimeType, null,
 				file.getPath());
 		return DownloadServlet.add(item);
-	}
-
-	public String deliver(PublicationContext ctx, InputStream convertedContent,
-			DeliveryModel deliveryModel, FormatConverter hfc) throws Exception {
-		return deliverViaServlet(convertedContent, hfc.getMimeType(),
-				deliveryModel.getSuggestedFileName(), hfc.getFileExtension());
 	}
 }

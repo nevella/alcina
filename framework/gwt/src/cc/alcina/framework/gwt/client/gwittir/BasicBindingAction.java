@@ -21,20 +21,21 @@ import com.totsp.gwittir.client.ui.BoundWidget;
  * 
  * @author Nick Reddel
  */
-public abstract class BasicBindingAction<T extends BoundWidget<?>> implements BindingAction<T>, HasBinding {
+public abstract class BasicBindingAction<T extends BoundWidget<?>>
+		implements BindingAction<T>, HasBinding {
 	protected Binding binding = new Binding();
 
-	public Binding getBinding() {
-		return this.binding;
-	}
+	protected boolean wasSet = false;
 
 	public void bind(T widget) {
 		binding.bind();
 	}
 
-	protected boolean wasSet = false;
-
 	public void execute(T model) {
+	}
+
+	public Binding getBinding() {
+		return this.binding;
 	}
 
 	public void set(BoundWidget widget) {
@@ -48,14 +49,13 @@ public abstract class BasicBindingAction<T extends BoundWidget<?>> implements Bi
 		wasSet = true;
 	}
 
+	public void unbind(T widget) {
+		binding.unbind();
+	}
+
 	protected boolean isSetLeftOnLaterSets() {
 		return false;
 	}
 
-
 	protected abstract void set0(BoundWidget widget);
-
-	public void unbind(T widget) {
-		binding.unbind();
-	}
 }

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
@@ -22,13 +21,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * marker interface - ignore introspection checks (server version of ok client class) 
+ * marker interface - ignore introspection checks (server version of ok client
+ * class)
+ * 
  * @author nick@alcina.cc
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target( { ElementType.TYPE })
+@Target({ ElementType.TYPE })
 public @interface IgnoreIntrospectionChecks {
 }

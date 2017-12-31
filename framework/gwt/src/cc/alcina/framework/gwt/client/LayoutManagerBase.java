@@ -9,15 +9,11 @@ import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventListener;
 
-public abstract class LayoutManagerBase implements LayoutEventListener,
-		ResizeHandler {
-	public void setDisplayInitialised(boolean displayInitialised) {
-		this.displayInitialised = displayInitialised;
-	}
+public abstract class LayoutManagerBase
+		implements LayoutEventListener, ResizeHandler {
+	private boolean displayInitialised = false;
 
-	public boolean isDisplayInitialised() {
-		return displayInitialised;
-	}
+	private int lastWidth, lastHeight;
 
 	public LayoutManagerBase() {
 		Window.addResizeHandler(this);
@@ -25,15 +21,32 @@ public abstract class LayoutManagerBase implements LayoutEventListener,
 		Registry.registerSingleton(LayoutManagerBase.class, this);
 	}
 
-	private boolean displayInitialised = false;
+	public boolean isDisplayInitialised() {
+		return displayInitialised;
+	}
+
+	public boolean isLayoutInitialising() {
+		return !displayInitialised;
+	}
+
+	public void onLayoutEvent(LayoutEvent event) {
+		if (isLayoutInitialising()) {
+			return;
+		}
+		onWindowResized(Window.getClientWidth(), Window.getClientHeight(),
+				false);
+	}
 
 	public void onResize(ResizeEvent event) {
-		onWindowResized(Window.getClientWidth(), Window.getClientHeight(), true);
+		onWindowResized(Window.getClientWidth(), Window.getClientHeight(),
+				true);
 	}
 
 	public abstract void redrawLayout();
 
-	private int lastWidth, lastHeight;
+	public void setDisplayInitialised(boolean displayInitialised) {
+		this.displayInitialised = displayInitialised;
+	}
 
 	// prevents old IE resize infinite loop
 	protected boolean onWindowResized(int clientWidth, int clientHeight,
@@ -45,17 +58,5 @@ public abstract class LayoutManagerBase implements LayoutEventListener,
 		lastWidth = clientWidth;
 		lastHeight = clientHeight;
 		return !isLayoutInitialising();
-	}
-
-	public void onLayoutEvent(LayoutEvent event) {
-		if (isLayoutInitialising()) {
-			return;
-		}
-		onWindowResized(Window.getClientWidth(), Window.getClientHeight(),
-				false);
-	}
-
-	public boolean isLayoutInitialising() {
-		return !displayInitialised;
 	}
 }

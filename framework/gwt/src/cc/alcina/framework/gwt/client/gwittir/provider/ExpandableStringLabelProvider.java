@@ -56,19 +56,19 @@ public class ExpandableStringLabelProvider
 		label.setShowAsPopup(showAsPopup);
 		label.setEscapeHtml(escapeHtml);
 		if (rendererClass != null) {
-			label.setRenderer(
-					(Renderer) Reflections.classLookup()
-							.newInstance(rendererClass));
+			label.setRenderer((Renderer) Reflections.classLookup()
+					.newInstance(rendererClass));
 		}
 		return label;
 	}
 
-	public int getMaxWidth() {
-		return maxWidth;
+	@Override
+	public String getColumnWidthString() {
+		return null;
 	}
 
-	public boolean isForceColumnWidth() {
-		return forceColumnWidth;
+	public int getMaxWidth() {
+		return maxWidth;
 	}
 
 	@Override
@@ -76,8 +76,7 @@ public class ExpandableStringLabelProvider
 		return 0;
 	}
 
-	@Override
-	public String getColumnWidthString() {
-		return null;
+	public boolean isForceColumnWidth() {
+		return forceColumnWidth;
 	}
 }

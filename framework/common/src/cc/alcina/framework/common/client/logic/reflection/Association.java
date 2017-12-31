@@ -21,20 +21,16 @@ import java.lang.annotation.RetentionPolicy;
 @Documented
 @ClientVisible
 /**
- * Provides information about both ends of an association.
- * If an association is reflected in the UI (e.g. in a dataobject tree), 
- * this annotation is required (for listener creation)
+ * Provides information about both ends of an association. If an association is
+ * reflected in the UI (e.g. in a dataobject tree), this annotation is required
+ * (for listener creation)
+ * 
  * @author Nick Reddel
  */
 public @interface Association {
-	/**
-	 * The property name of the <i>other end</i> of this association - e.g. for:<br>
-	 * <blockquote> <code>Bookstore Book.getBookstore() and<br>
-	 * Set&lt;Book&gt; Bookstore.getBooks()
-	 * </code> </blockquote> the getBookstore method would have association with
-	 * propertyName "books"
-	 */
-	String propertyName() default "";
+	boolean cascadeDeletes() default false;
+
+	boolean dereferenceOnDelete() default false;
 
 	/**
 	 * The type name of the implementation class (component type for a
@@ -50,15 +46,19 @@ public @interface Association {
 	Class implementationClass() default void.class;
 
 	/**
+	 * The property name of the <i>other end</i> of this association - e.g. for:
+	 * <br>
+	 * <blockquote> <code>Bookstore Book.getBookstore() and<br>
+	 * Set&lt;Book&gt; Bookstore.getBooks()
+	 * </code> </blockquote> the getBookstore method would have association with
+	 * propertyName "books"
+	 */
+	String propertyName() default "";
+
+	/**
 	 * Do not update the other end of this association when consuming a
 	 * DomainTransformEvent - this is useful for performance reasons
 	 * (parent-child associations with 1000s of kids spring to mind)
 	 */
 	boolean silentUpdates() default false;
-
-
-	boolean cascadeDeletes() default false;
-
-
-	boolean dereferenceOnDelete() default false;
 }

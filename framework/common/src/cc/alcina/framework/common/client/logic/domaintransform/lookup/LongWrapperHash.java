@@ -4,6 +4,24 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.UnsafeNativeLong;
 
 public class LongWrapperHash {
+	public static final int BITS = 22;
+
+	public static final int BITS_M = 8;
+
+	public static final int MASK = (1 << BITS) - 1;
+
+	public static final int MAX = (1 << (BITS + BITS_M)) - 1;
+
+	public static final int MASK_M = (1 << BITS_M) - 1;
+
+	@UnsafeNativeLong
+	public static native int fastHash(long value)/*-{
+													if (value.l === undefined) {
+													return value;
+													}
+													return value.l ^ value.m ^ value.h;
+													}-*/;
+
 	/* assumes >0 */
 	@UnsafeNativeLong
 	public static int fastIntValue(long value) {
@@ -18,42 +36,48 @@ public class LongWrapperHash {
 		}
 	}
 
-	public static final int BITS = 22;
+	public static long fastLongValue(int value) {
+		if (GWT.isScript()) {
+			return longFromInt(value);
+		} else {
+			if (value < 0) {
+				throw new RuntimeException("no negative values: " + value);
+			}
+			return (long) value;
+		}
+	}
 
-	public static final int BITS_M = 8;
+	public static native void logAndThrowTooLarge(Object value)/*-{
+																debugger;
+																var message = "losing higher bits from long: " + value.h + ","
+																+ value.m + "," + value.l;
+																($wnd['console']) && console.log(message);
+																throw message;
+																}-*/;
 
-	public static final int MASK = (1 << BITS) - 1;
-
-	public static final int MAX = (1 << (BITS + BITS_M)) - 1;
-
-	public static final int MASK_M = (1 << BITS_M) - 1;
+	@UnsafeNativeLong
+	public static native long longFromInt(int value)/*-{
+													return @com.google.gwt.lang.LongLib::fromInt(I)(value);
+													}-*/;
 
 	@UnsafeNativeLong
 	public static native int lowBitsValue(long value)/*-{
-        if (value.h === undefined) {
-            return value;
-        }
-        if (value.h != 0) {
-            @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::logAndThrowTooLarge(Ljava/lang/Object;)(value);
-        }
-        if (value.m != 0) {
-            if (value.m > @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::MASK_M) {
-                @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::logAndThrowTooLarge(Ljava/lang/Object;)(value);
-            }
-            // << precedence < +/- !!
-            return (value.m << @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::BITS)
-                    | value.l;
-        }
-        return value.l;
-	}-*/;
-
-	public static native void logAndThrowTooLarge(Object value)/*-{
-        debugger;
-        var message = "losing higher bits from long: " + value.h + ","
-                + value.m + "," + value.l;
-        ($wnd['console']) && console.log(message);
-        throw message;
-	}-*/;
+														if (value.h === undefined) {
+														return value;
+														}
+														if (value.h != 0) {
+														@cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::logAndThrowTooLarge(Ljava/lang/Object;)(value);
+														}
+														if (value.m != 0) {
+														if (value.m > @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::MASK_M) {
+														@cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::logAndThrowTooLarge(Ljava/lang/Object;)(value);
+														}
+														// << precedence < +/- !!
+														return (value.m << @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::BITS)
+														| value.l;
+														}
+														return value.l;
+														}-*/;
 
 	private final long value;
 
@@ -82,28 +106,4 @@ public class LongWrapperHash {
 		}
 		return hash;
 	}
-
-	@UnsafeNativeLong
-	public static native int fastHash(long value)/*-{
-        if (value.l === undefined) {
-            return value;
-        }
-        return value.l ^ value.m ^ value.h;
-	}-*/;
-
-	public static long fastLongValue(int value) {
-		if (GWT.isScript()) {
-			return longFromInt(value);
-		} else {
-			if (value < 0) {
-				throw new RuntimeException("no negative values: " + value);
-			}
-			return (long) value;
-		}
-	}
-
-	@UnsafeNativeLong
-	public static native long longFromInt(int value)/*-{
-        return @com.google.gwt.lang.LongLib::fromInt(I)(value);
-	}-*/;
 }

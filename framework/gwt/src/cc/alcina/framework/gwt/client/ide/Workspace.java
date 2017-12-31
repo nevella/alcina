@@ -69,27 +69,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 
 	protected SimpleWorkspaceVisualiser visualiser;
 
-	public SimpleWorkspaceVisualiser getVisualiser() {
-		return this.visualiser;
-	}
-
 	private PermissibleActionEvent.PermissibleActionSupport vetoableActionSupport = new PermissibleActionEvent.PermissibleActionSupport();
-
-	public void addVetoableActionListener(PermissibleActionListener listener) {
-		this.vetoableActionSupport.addVetoableActionListener(listener);
-	}
-
-	public void fireVetoableActionEvent(PermissibleActionEvent event) {
-		this.vetoableActionSupport.fireVetoableActionEvent(event);
-	}
-
-	public void removeAllListeners() {
-		this.vetoableActionSupport.removeAllListeners();
-	}
-
-	public void removeVetoableActionListener(PermissibleActionListener listener) {
-		this.vetoableActionSupport.removeVetoableActionListener(listener);
-	}
 
 	private Map<Class<? extends PermissibleAction>, ViewProvider> viewProviderMap = new HashMap<Class<? extends PermissibleAction>, ViewProvider>();
 
@@ -97,6 +77,35 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 
 	public Workspace() {
 		this.visualModel = new WSVisualModel();
+	}
+
+	public void addVetoableActionListener(PermissibleActionListener listener) {
+		this.vetoableActionSupport.addVetoableActionListener(listener);
+	}
+
+	public Widget createMultipleBeanView(Collection beans, Class beanClass,
+			boolean editable, PermissibleActionListener actionListener,
+			boolean autoSave, boolean doNotClone) {
+		return getContentViewFactory().createMultipleBeanView(beans, beanClass,
+				editable, actionListener, autoSave, false);
+	}
+
+	public void fireVetoableActionEvent(PermissibleActionEvent event) {
+		this.vetoableActionSupport.fireVetoableActionEvent(event);
+	}
+
+	public void focusVisibleView() {
+		visualiser.focusVisibleView();
+	}
+
+	public ContentViewFactory getContentViewFactory() {
+		ContentViewFactory viewFactory = new ContentViewFactory();
+		viewFactory.setCancelButton(true);
+		return viewFactory;
+	}
+
+	public PermissibleActionEvent getLastEvent() {
+		return this.lastEvent;
 	}
 
 	public LayoutInfo getLayoutInfo() {
@@ -125,12 +134,53 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		};
 	}
 
-	public void focusVisibleView() {
-		visualiser.focusVisibleView();
+	public SourcesPropertyChangeEvents getParentDomainObject(Object node) {
+		if (node instanceof DomainNode
+				&& !(node instanceof ProvidesParenting)) {
+			DomainNode dn = (DomainNode) node;
+			node = dn.getParentItem();
+		}
+		if (node instanceof ProvidesParenting) {
+			PropertyCollectionProvider pcp = ((ProvidesParenting) node)
+					.getPropertyCollectionProvider();
+			if (pcp != null) {
+				return pcp.getDomainObject();
+			}
+		}
+		return null;
+	}
+
+	public Widget getViewForAction(PermissibleAction action) {
+		return viewProviderMap.get(action.getClass()).getViewForObject(action);
+	}
+
+	public SimpleWorkspaceVisualiser getVisualiser() {
+		return this.visualiser;
 	}
 
 	public WSVisualModel getVisualModel() {
 		return this.visualModel;
+	}
+
+	public void handleParentLinks(Object node, HasIdAndLocalId newObj) {
+		if (node instanceof DomainNode
+				&& !(node instanceof ProvidesParenting)) {
+			DomainNode dn = (DomainNode) node;
+			node = dn.getParentItem();
+		}
+		if (node instanceof ProvidesParenting) {
+			PropertyCollectionProvider pcp = ((ProvidesParenting) node)
+					.getPropertyCollectionProvider();
+			if (pcp != null) {
+				ClientPropertyReflector propertyReflector = pcp
+						.getPropertyReflector();
+				String propertyName = propertyReflector
+						.getAnnotation(Association.class).propertyName();
+				Reflections.propertyAccessor().setPropertyValue(newObj,
+						propertyName, pcp.getDomainObject());
+			}
+		}
+		handleHasOrderValue(node, newObj);
 	}
 
 	public void redraw() {
@@ -147,6 +197,15 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		viewProviderMap.put(actionClass, v);
 	}
 
+	public void removeAllListeners() {
+		this.vetoableActionSupport.removeAllListeners();
+	}
+
+	public void
+			removeVetoableActionListener(PermissibleActionListener listener) {
+		this.vetoableActionSupport.removeVetoableActionListener(listener);
+	}
+
 	public void setVisualModel(WSVisualModel visualModel) {
 		this.visualModel = visualModel;
 	}
@@ -158,7 +217,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 
 	@SuppressWarnings("unchecked")
 	public void vetoableAction(final PermissibleActionEvent evt) {
-		lastEvent=evt;
+		lastEvent = evt;
 		if (evt.getAction().getClass() == CancelAction.class) {
 			visualiser.setContentWidget(new Label("Action cancelled"));
 			fireVetoableActionEvent(evt);
@@ -195,8 +254,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		if (colln != null && colln.size() == 1) {
 			singleObj = colln.iterator().next();
 		}
-		boolean autoSave = ClientBase.getGeneralProperties()
-				.isAutoSave();
+		boolean autoSave = ClientBase.getGeneralProperties().isAutoSave();
 		if (singleObj instanceof PermissibleAction) {
 			Widget view = getViewForAction((PermissibleAction) singleObj);
 			visualiser.setContentWidget(view);
@@ -229,51 +287,12 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 				handlerClass = CreateActionHandler.class;
 			}
 		}
-		WorkspaceActionHandler handler = (WorkspaceActionHandler) Registry
-				.get().instantiateSingleOrNull(
-						handlerClass,
-						singleObj == null ? clazz == null ? Object.class
-								: clazz : singleObj.getClass());
+		WorkspaceActionHandler handler = (WorkspaceActionHandler) Registry.get()
+				.instantiateSingleOrNull(handlerClass,
+						singleObj == null ? clazz == null ? Object.class : clazz
+								: singleObj.getClass());
 		handler.performAction(evt, obj, singleObj != null ? singleObj : colln,
 				this, clazz);
-	}
-	public SourcesPropertyChangeEvents getParentDomainObject(Object node){
-		if (node instanceof DomainNode && !(node instanceof ProvidesParenting)) {
-			DomainNode dn = (DomainNode) node;
-			node = dn.getParentItem();
-		}
-		if (node instanceof ProvidesParenting) {
-			PropertyCollectionProvider pcp = ((ProvidesParenting) node)
-					.getPropertyCollectionProvider();
-			if (pcp != null) {
-				return pcp.getDomainObject();
-			}
-		}
-		return null;
-	}
-	public void handleParentLinks(Object node, HasIdAndLocalId newObj) {
-		if (node instanceof DomainNode && !(node instanceof ProvidesParenting)) {
-			DomainNode dn = (DomainNode) node;
-			node = dn.getParentItem();
-		}
-		if (node instanceof ProvidesParenting) {
-			PropertyCollectionProvider pcp = ((ProvidesParenting) node)
-					.getPropertyCollectionProvider();
-			if (pcp != null) {
-				ClientPropertyReflector propertyReflector = pcp
-						.getPropertyReflector();
-				String propertyName = propertyReflector.getAnnotation(
-						Association.class).propertyName();
-				Reflections.propertyAccessor()
-						.setPropertyValue(newObj, propertyName,
-								pcp.getDomainObject());
-			}
-		}
-		handleHasOrderValue(node, newObj);
-	}
-
-	protected SimpleWorkspaceVisualiser createVisualiser() {
-		return new SimpleWorkspaceVisualiser(visualModel, this);
 	}
 
 	public void visualise(ComplexPanel container) {
@@ -284,12 +303,13 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		container.add(visualiser);
 	}
 
-	public Widget getViewForAction(PermissibleAction action) {
-		return viewProviderMap.get(action.getClass()).getViewForObject(action);
+	protected SimpleWorkspaceVisualiser createVisualiser() {
+		return new SimpleWorkspaceVisualiser(visualModel, this);
 	}
 
 	protected void handleHasOrderValue(Object node, HasIdAndLocalId newObj) {
-		if (node instanceof DomainNode && !(node instanceof ProvidesParenting)) {
+		if (node instanceof DomainNode
+				&& !(node instanceof ProvidesParenting)) {
 			DomainNode dn = (DomainNode) node;
 			node = dn.getParentItem();
 		}
@@ -314,8 +334,8 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 				}
 			}
 			if (siblings != null) {
-				int maxOrderValue = HasOrderValueHelper.maxValue(siblings, newObj);
-				
+				int maxOrderValue = HasOrderValueHelper.maxValue(siblings,
+						newObj);
 				((HasOrderValue) newObj).setOrderValue(maxOrderValue + 10);
 			}
 		}
@@ -371,23 +391,5 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		public void setViews(List<WorkspaceView> views) {
 			this.views = views;
 		}
-	}
-
-	public ContentViewFactory getContentViewFactory() {
-		ContentViewFactory viewFactory = new ContentViewFactory();
-		viewFactory.setCancelButton(true);
-		return viewFactory;
-	}
-
-	public Widget createMultipleBeanView(Collection beans,
-			Class beanClass, boolean editable,
-			PermissibleActionListener actionListener, boolean autoSave,
-			boolean doNotClone) {
-		return getContentViewFactory().createMultipleBeanView(beans, beanClass,
-				editable, actionListener, autoSave, false);
-	}
-
-	public PermissibleActionEvent getLastEvent() {
-		return this.lastEvent;
 	}
 }

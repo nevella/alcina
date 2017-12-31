@@ -20,165 +20,191 @@ import com.google.gwt.core.client.JavaScriptObject;
 /**
  * Regroups the COL and COLGROUP elements.
  * 
- * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#edef-COL">W3C HTML Specification</a>
+ * @see <a href=
+ *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#edef-COL">
+ *      W3C HTML Specification</a>
  */
-@TagName({TableColElement.TAG_COL, TableColElement.TAG_COLGROUP})
+@TagName({ TableColElement.TAG_COL, TableColElement.TAG_COLGROUP })
 public class TableColElement extends Element {
+	public static final String TAG_COL = "col";
 
-  public static final String TAG_COL = "col";
-  public static final String TAG_COLGROUP = "colgroup";
+	public static final String TAG_COLGROUP = "colgroup";
 
-  /**
-   * Assert that the given {@link Element} is compatible with this class and
-   * automatically typecast it.
-   */
-  public static TableColElement as(Element elem) {
-    assert is(elem);
-    return (TableColElement) elem;
-  }
-  
-  /**
-   * Determines whether the given {@link JavaScriptObject} can be cast to
-   * this class. A <code>null</code> object will cause this method to
-   * return <code>false</code>.
-   */
-  public static boolean is(JavaScriptObject o) {
-    if (Element.is(o)) {
-      return is(Element.as(o));
-    }
-    return false;
-  }
+	/**
+	 * Assert that the given {@link Element} is compatible with this class and
+	 * automatically typecast it.
+	 */
+	public static TableColElement as(Element elem) {
+		assert is(elem);
+		return (TableColElement) elem;
+	}
 
-  /**
-   * Determine whether the given {@link Node} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Node node) {
-    if (Element.is(node)) {
-      return is((Element) node);
-    }
-    return false;
-  }
-  
-  /**
-   * Determine whether the given {@link Element} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Element elem) {
-    return elem != null && 
-        (elem.getTagName().equalsIgnoreCase(TAG_COL) || elem.getTagName().equalsIgnoreCase(TAG_COLGROUP));
-  }
+	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && (elem.getTagName().equalsIgnoreCase(TAG_COL)
+				|| elem.getTagName().equalsIgnoreCase(TAG_COLGROUP));
+	}
 
-  protected TableColElement() {
-  }
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to this
+	 * class. A <code>null</code> object will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(JavaScriptObject o) {
+		if (Element.is(o)) {
+			return is(Element.as(o));
+		}
+		return false;
+	}
 
-  /**
-   * Horizontal alignment of cell data in column.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-align-TD">W3C HTML Specification</a>
-   */  public  String getAlign(){
-  return this.getPropertyString("align");
-}
+	/**
+	 * Determine whether the given {@link Node} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		if (Element.is(node)) {
+			return is((Element) node);
+		}
+		return false;
+	}
 
+	protected TableColElement() {
+	}
 
-  /**
-   * Alignment character for cells in a column.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-char">W3C HTML Specification</a>
-   */  public  String getCh(){
-  return this.getPropertyString("ch");
-}
+	/**
+	 * Horizontal alignment of cell data in column.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-align-TD">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getAlign() {
+		return this.getPropertyString("align");
+	}
 
+	/**
+	 * Alignment character for cells in a column.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-char">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getCh() {
+		return this.getPropertyString("ch");
+	}
 
-  /**
-   * Offset of alignment character.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-charoff">W3C HTML Specification</a>
-   */  public  String getChOff(){
-  return this.getPropertyString("chOff");
-}
+	/**
+	 * Offset of alignment character.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-charoff">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getChOff() {
+		return this.getPropertyString("chOff");
+	}
 
+	/**
+	 * Indicates the number of columns in a group or affected by a grouping.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-span-COL">
+	 *      W3C HTML Specification</a>
+	 */
+	public int getSpan() {
+		return this.getPropertyInt("span");
+	}
 
-  /**
-   * Indicates the number of columns in a group or affected by a grouping.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-span-COL">W3C HTML Specification</a>
-   */  public  int getSpan(){
-  return this.getPropertyInt("span");
-}
+	/**
+	 * Vertical alignment of cell data in column.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-valign">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getVAlign() {
+		return this.getPropertyString("vAlign");
+	}
 
+	/**
+	 * Default column width.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-width-COL">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getWidth() {
+		return this.getPropertyString("width");
+	}
 
-  /**
-   * Vertical alignment of cell data in column.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-valign">W3C HTML Specification</a>
-   */  public  String getVAlign(){
-  return this.getPropertyString("vAlign");
-}
+	/**
+	 * Horizontal alignment of cell data in column.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-align-TD">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setAlign(String align) {
+		this.setPropertyString("align", align);
+	}
 
+	/**
+	 * Alignment character for cells in a column.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-char">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setCh(String ch) {
+		this.setPropertyString("ch", ch);
+	}
 
-  /**
-   * Default column width.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-width-COL">W3C HTML Specification</a>
-   */  public  String getWidth(){
-  return this.getPropertyString("width");
-}
+	/**
+	 * Offset of alignment character.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-charoff">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setChOff(String chOff) {
+		this.setPropertyString("chOff", chOff);
+	}
 
+	/**
+	 * Indicates the number of columns in a group or affected by a grouping.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-span-COL">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setSpan(int span) {
+		this.setPropertyInt("span", span);
+	}
 
-  /**
-   * Horizontal alignment of cell data in column.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-align-TD">W3C HTML Specification</a>
-   */  public  void setAlign(String align){
-   this.setPropertyString("align",align);
-}
+	/**
+	 * Vertical alignment of cell data in column.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-valign">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setVAlign(String vAlign) {
+		this.setPropertyString("vAlign", vAlign);
+	}
 
-
-  /**
-   * Alignment character for cells in a column.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-char">W3C HTML Specification</a>
-   */  public  void setCh(String ch){
-   this.setPropertyString("ch",ch);
-}
-
-
-  /**
-   * Offset of alignment character.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-charoff">W3C HTML Specification</a>
-   */  public  void setChOff(String chOff){
-   this.setPropertyString("chOff",chOff);
-}
-
-
-  /**
-   * Indicates the number of columns in a group or affected by a grouping.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-span-COL">W3C HTML Specification</a>
-   */  public  void setSpan(int span){
-   this.setPropertyInt("span",span);
-}
-
-
-  /**
-   * Vertical alignment of cell data in column.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-valign">W3C HTML Specification</a>
-   */  public  void setVAlign(String vAlign){
-   this.setPropertyString("vAlign",vAlign);
-}
-
-
-  /**
-   * Default column width.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-width-COL">W3C HTML Specification</a>
-   */  public  void setWidth(String width){
-   this.setPropertyString("width",width);
-}
-
+	/**
+	 * Default column width.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-width-COL">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setWidth(String width) {
+		this.setPropertyString("width", width);
+	}
 }

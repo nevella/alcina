@@ -18,7 +18,10 @@ import cc.alcina.framework.entity.SEUtilities;
 
 public class PersistedTransformUndo {
 	private List<DomainTransformEvent> undoTransforms = new ArrayList<DomainTransformEvent>();
-	private String log="";
+
+	private String log = "";
+
+	String checkMe = "";
 
 	public void generateUndoTransforms(Connection conn,
 			List<DomainTransformEvent> events,
@@ -30,8 +33,8 @@ public class PersistedTransformUndo {
 					maxPersistentTransformIdForPriorValue);
 			counter.tick();
 			if (mostRecent == null) {
-				System.out.format(
-						"Unable to find prior transform for:\n%s\n\n", dte);
+				System.out.format("Unable to find prior transform for:\n%s\n\n",
+						dte);
 			} else {
 				undoTransforms.add(mostRecent);
 			}
@@ -47,10 +50,11 @@ public class PersistedTransformUndo {
 		String tpl = "select * from data_transform_event where id<=%s"
 				+ " and objectclassref_id=%s and objectid=%s " + ""
 				+ " %s order by id desc limit 1";
-		String propNameOrTypeClause = evt.getPropertyName() == null ? String
-				.format(" and transformtype =%s ", evt.getTransformType()
-						.ordinal()) : String.format(" and propertyname='%s' ",
-				evt.getPropertyName());
+		String propNameOrTypeClause = evt.getPropertyName() == null
+				? String.format(" and transformtype =%s ",
+						evt.getTransformType().ordinal())
+				: String.format(" and propertyname='%s' ",
+						evt.getPropertyName());
 		String sql = String.format(tpl, maxPersistentTransformIdForPriorValue,
 				evt.getObjectClassRef().getId(), evt.getObjectId(),
 				propNameOrTypeClause);
@@ -71,7 +75,7 @@ public class PersistedTransformUndo {
 		}
 		case DELETE_OBJECT: {
 			if (exists) {
-//				checkMe += evt + "\n";
+				// checkMe += evt + "\n";
 			}
 			dte = new DomainTransformEvent();
 			dte.setObjectId(evt.getObjectId());
@@ -85,9 +89,9 @@ public class PersistedTransformUndo {
 		case CHANGE_PROPERTY_SIMPLE_VALUE: {
 			if (!exists) {
 				// ignore default values for the moment -- TODO
-				System.out.format("generating from default - %s.%s ", evt
-						.getObjectClass().getSimpleName(), evt
-						.getPropertyName());
+				System.out.format("generating from default - %s.%s ",
+						evt.getObjectClass().getSimpleName(),
+						evt.getPropertyName());
 				switch (evt.getTransformType()) {
 				case NULL_PROPERTY_REF:
 					break;
@@ -111,17 +115,19 @@ public class PersistedTransformUndo {
 							new Object[0]);
 					dte.setNewValue(value);
 					TransformManager.get().convertToTargetObject(dte);
-					dte.setTransformType(value == null ? TransformType.NULL_PROPERTY_REF
+					dte.setTransformType(value == null
+							? TransformType.NULL_PROPERTY_REF
 							: TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 					break;
 				}
 			} else {
-				log+=String.format("using persisted transform #%s - %s - %s.%s\n",
-						rs.getLong("id"), rs.getTimestamp("servercommitdate"), evt
-								.getObjectClass().getSimpleName(), evt
-								.getPropertyName());
+				log += String.format(
+						"using persisted transform #%s - %s - %s.%s\n",
+						rs.getLong("id"), rs.getTimestamp("servercommitdate"),
+						evt.getObjectClass().getSimpleName(),
+						evt.getPropertyName());
 				dte = transformFromRow(rs);
-//				checkMe += dte + "\n\n";
+				// checkMe += dte + "\n\n";
 			}
 			break;
 		}
@@ -134,15 +140,19 @@ public class PersistedTransformUndo {
 		return dte;
 	}
 
-	String checkMe = "";
+	public List<DomainTransformEvent> getUndoTransforms() {
+		return this.undoTransforms;
+	}
 
-	public DomainTransformEvent transformFromRow(ResultSet rs) throws Exception {
+	public DomainTransformEvent transformFromRow(ResultSet rs)
+			throws Exception {
 		DomainTransformEvent dte = new DomainTransformEvent();
 		dte.setNewStringValue(rs.getString("newstringvalue"));
 		dte.setObjectId(rs.getLong("objectid"));
 		dte.setObjectClassRef(ClassRef.forId(rs.getLong("objectclassref_id")));
 		dte.setPropertyName(rs.getString("propertyName"));
-		dte.setTransformType(TransformType.values()[rs.getInt("transformtype")]);
+		dte.setTransformType(
+				TransformType.values()[rs.getInt("transformtype")]);
 		long vcrid = rs.getLong("valueclassref_id");
 		if (vcrid != 0) {
 			dte.setValueClassRef(ClassRef.forId(vcrid));
@@ -152,9 +162,5 @@ public class PersistedTransformUndo {
 			dte.setValueId(rs.getLong("valueid"));
 		}
 		return dte;
-	}
-
-	public List<DomainTransformEvent> getUndoTransforms() {
-		return this.undoTransforms;
 	}
 }

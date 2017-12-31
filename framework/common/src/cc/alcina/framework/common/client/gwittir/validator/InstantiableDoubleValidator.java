@@ -23,8 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  *
  * @author Nick Reddel
  */
-
- public class InstantiableDoubleValidator implements Validator {
+public class InstantiableDoubleValidator implements Validator {
 	public InstantiableDoubleValidator() {
 	}
 

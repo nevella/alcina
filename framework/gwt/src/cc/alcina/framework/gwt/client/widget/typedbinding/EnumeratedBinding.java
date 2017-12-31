@@ -5,17 +5,17 @@ public interface EnumeratedBinding {
 		return (T) source.getEnumeratedBindingSupport().get(this);
 	}
 
-	default void set(HasEnumeratedBindings source, Object o) {
-		source.getEnumeratedBindingSupport().set(this, o);
-	}
+	Class getBoundClass();
+
+	String getBoundPath();
+
+	Class getBoundPropertyType();
 
 	default String getPath() {
 		return toString();
 	}
 
-	Class getBoundClass();
-
-	Class getBoundPropertyType();
-
-	String getBoundPath();
+	default void set(HasEnumeratedBindings source, Object o) {
+		source.getEnumeratedBindingSupport().set(this, o);
+	}
 }

@@ -4,5 +4,5 @@ import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersisten
 
 public interface PreApplyPersistListener {
 	public void loadLazyPreApplyPersist(
-			DomainTransformPersistenceEvent persistenceEvent) throws Exception ;
+			DomainTransformPersistenceEvent persistenceEvent) throws Exception;
 }

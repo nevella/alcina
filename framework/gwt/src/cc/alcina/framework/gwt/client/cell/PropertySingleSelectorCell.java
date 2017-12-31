@@ -65,6 +65,10 @@ public class PropertySingleSelectorCell<T> extends AbstractEditableCell<T, T> {
 
 	private Function<T, String> toStringMapper;
 
+	String lastFilter = "";
+
+	private String lastFilterText;
+
 	public PropertySingleSelectorCell(Class<T> selectionObjectClass,
 			Function<T, String> toStringMapper, FlatSearchSelector selector) {
 		super(CLICK, KEYDOWN);
@@ -118,10 +122,6 @@ public class PropertySingleSelectorCell<T> extends AbstractEditableCell<T, T> {
 			lastFilterText = selector.getLastFilterText();
 		});
 	}
-
-	String lastFilter = "";
-
-	private String lastFilterText;
 
 	@Override
 	public boolean isEditing(Context context, Element parent, T value) {

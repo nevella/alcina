@@ -37,8 +37,8 @@ public class StringPair implements Serializable {
 		return CommonUtils.formatJ("s1:%s\ns2:%s", s1, s2);
 	}
 
-	public static class StringPairFlattener implements
-			Converter<StringPair, String> {
+	public static class StringPairFlattener
+			implements Converter<StringPair, String> {
 		private boolean second;
 
 		public StringPairFlattener(boolean second) {

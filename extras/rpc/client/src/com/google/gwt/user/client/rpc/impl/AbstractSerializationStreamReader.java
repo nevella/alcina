@@ -26,127 +26,130 @@ import com.google.gwt.user.client.rpc.SerializationStreamReader;
  * types since these are common between the client and the server.
  */
 public abstract class AbstractSerializationStreamReader extends
-    AbstractSerializationStream implements SerializationStreamReader {
-  
-  private static final double TWO_PWR_15_DBL = 0x8000;
-  private static final double TWO_PWR_16_DBL = 0x10000;
-  private static final double TWO_PWR_22_DBL = 0x400000;
-  private static final double TWO_PWR_31_DBL = TWO_PWR_16_DBL * TWO_PWR_15_DBL;
-  private static final double TWO_PWR_32_DBL = TWO_PWR_16_DBL * TWO_PWR_16_DBL;
-  private static final double TWO_PWR_44_DBL = TWO_PWR_22_DBL * TWO_PWR_22_DBL;
-  private static final double TWO_PWR_63_DBL = TWO_PWR_32_DBL * TWO_PWR_31_DBL;
+		AbstractSerializationStream implements SerializationStreamReader {
+	private static final double TWO_PWR_15_DBL = 0x8000;
 
-  /**
-   * Return a long from a pair of doubles { low, high } such that the
-   * actual value is equal to high + low.
-   */
-  public static long fromDoubles(double lowDouble, double highDouble) {
-    long high = fromDouble(highDouble);
-    long low = fromDouble(lowDouble);
-    return high + low;
-  }
+	private static final double TWO_PWR_16_DBL = 0x10000;
 
-  private static long fromDouble(double value) {
-    if (Double.isNaN(value)) {
-      return 0L;
-    }
-    if (value < -TWO_PWR_63_DBL) {
-      return Long.MIN_VALUE;
-    }
-    if (value >= TWO_PWR_63_DBL) {
-      return Long.MAX_VALUE;
-    }
-  
-    boolean negative = false;
-    if (value < 0) {
-      negative = true;
-      value = -value;
-    }
-    int a2 = 0;
-    if (value >= TWO_PWR_44_DBL) {
-      a2 = (int) (value / TWO_PWR_44_DBL);
-      value -= a2 * TWO_PWR_44_DBL;
-    }
-    int a1 = 0;
-    if (value >= TWO_PWR_22_DBL) {
-      a1 = (int) (value / TWO_PWR_22_DBL);
-      value -= a1 * TWO_PWR_22_DBL;
-    }
-    int a0 = (int) value;
-    
-    long result = ((long) a2 << 44) | ((long) a1 << 22) | a0;
-    if (negative) {
-      result = -result;
-    }
-    return result;
-  }
+	private static final double TWO_PWR_22_DBL = 0x400000;
 
-  protected ArrayList<Object> seenArray = new ArrayList<Object>();
+	private static final double TWO_PWR_31_DBL = TWO_PWR_16_DBL
+			* TWO_PWR_15_DBL;
 
- /**
-  * Prepare to read the stream.
-  *
-  * @param encoded unused true if the stream is encoded
-  */
-  public void prepareToRead(String encoded) throws SerializationException {
-    seenArray.clear();
+	private static final double TWO_PWR_32_DBL = TWO_PWR_16_DBL
+			* TWO_PWR_16_DBL;
 
-    // Read the stream version number
-    //
-    setVersion(readInt());
+	private static final double TWO_PWR_44_DBL = TWO_PWR_22_DBL
+			* TWO_PWR_22_DBL;
 
-    // Read the flags from the stream
-    //
-    setFlags(readInt());
-  }
+	private static final double TWO_PWR_63_DBL = TWO_PWR_32_DBL
+			* TWO_PWR_31_DBL;
 
-  public  Object readObject() throws SerializationException {
-    int token = readInt();
+	/**
+	 * Return a long from a pair of doubles { low, high } such that the actual
+	 * value is equal to high + low.
+	 */
+	public static long fromDoubles(double lowDouble, double highDouble) {
+		long high = fromDouble(highDouble);
+		long low = fromDouble(lowDouble);
+		return high + low;
+	}
 
-    if (token < 0) {
-      // Negative means a previous object
-      // Transform negative 1-based to 0-based.
-      return seenArray.get(-(token + 1));
-    }
+	private static long fromDouble(double value) {
+		if (Double.isNaN(value)) {
+			return 0L;
+		}
+		if (value < -TWO_PWR_63_DBL) {
+			return Long.MIN_VALUE;
+		}
+		if (value >= TWO_PWR_63_DBL) {
+			return Long.MAX_VALUE;
+		}
+		boolean negative = false;
+		if (value < 0) {
+			negative = true;
+			value = -value;
+		}
+		int a2 = 0;
+		if (value >= TWO_PWR_44_DBL) {
+			a2 = (int) (value / TWO_PWR_44_DBL);
+			value -= a2 * TWO_PWR_44_DBL;
+		}
+		int a1 = 0;
+		if (value >= TWO_PWR_22_DBL) {
+			a1 = (int) (value / TWO_PWR_22_DBL);
+			value -= a1 * TWO_PWR_22_DBL;
+		}
+		int a0 = (int) value;
+		long result = ((long) a2 << 44) | ((long) a1 << 22) | a0;
+		if (negative) {
+			result = -result;
+		}
+		return result;
+	}
 
-    // Positive means a new object
-    String typeSignature = getString(token);
-    if (typeSignature == null) {
-      // a null string means a null instance
-      return null;
-    }
+	protected ArrayList<Object> seenArray = new ArrayList<Object>();
 
-    return deserialize(typeSignature);
-  }
+	/**
+	 * Prepare to read the stream.
+	 *
+	 * @param encoded
+	 *            unused true if the stream is encoded
+	 */
+	public void prepareToRead(String encoded) throws SerializationException {
+		seenArray.clear();
+		// Read the stream version number
+		//
+		setVersion(readInt());
+		// Read the flags from the stream
+		//
+		setFlags(readInt());
+	}
 
-  /**
-   * Deserialize an object with the given type signature.
-   * 
-   * @param typeSignature the type signature to deserialize
-   * @return the deserialized object
-   * @throws SerializationException
-   */
-  protected abstract Object deserialize(String typeSignature)
-      throws SerializationException;
+	public Object readObject() throws SerializationException {
+		int token = readInt();
+		if (token < 0) {
+			// Negative means a previous object
+			// Transform negative 1-based to 0-based.
+			return seenArray.get(-(token + 1));
+		}
+		// Positive means a new object
+		String typeSignature = getString(token);
+		if (typeSignature == null) {
+			// a null string means a null instance
+			return null;
+		}
+		return deserialize(typeSignature);
+	}
 
-  /**
-   * Gets a string out of the string table.
-   * 
-   * @param index the index of the string to get
-   * @return the string
-   */
-  protected abstract String getString(int index);
+	/**
+	 * Deserialize an object with the given type signature.
+	 * 
+	 * @param typeSignature
+	 *            the type signature to deserialize
+	 * @return the deserialized object
+	 * @throws SerializationException
+	 */
+	protected abstract Object deserialize(String typeSignature)
+			throws SerializationException;
 
-  protected  void rememberDecodedObject(int index, Object o) {
+	/**
+	 * Gets a string out of the string table.
+	 * 
+	 * @param index
+	 *            the index of the string to get
+	 * @return the string
+	 */
+	protected abstract String getString(int index);
 
-    // index is 1-based
-    seenArray.set(index - 1, o);
-  }
+	protected void rememberDecodedObject(int index, Object o) {
+		// index is 1-based
+		seenArray.set(index - 1, o);
+	}
 
-  protected  int reserveDecodedObjectIndex() {
-    seenArray.add(null);
-
-    // index is 1-based
-    return seenArray.size();
-  }
+	protected int reserveDecodedObjectIndex() {
+		seenArray.add(null);
+		// index is 1-based
+		return seenArray.size();
+	}
 }

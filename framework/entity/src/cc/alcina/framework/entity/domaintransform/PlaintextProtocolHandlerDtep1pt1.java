@@ -19,14 +19,6 @@ public class PlaintextProtocolHandlerDtep1pt1 {
 
 	private static final String PERSISTENT = "persistent: ";
 
-	Class<? extends DomainTransformEventPersistent> dtrEvtImpl;
-
-	public PlaintextProtocolHandlerDtep1pt1() {
-		dtrEvtImpl = Registry.impl(CommonPersistenceProvider.class)
-				.getCommonPersistenceExTransaction()
-				.getImplementation(DomainTransformEventPersistent.class);
-	}
-
 	private static final String STRING_VALUE = "string value: ";
 
 	private static final String PARAMS = "params: ";
@@ -38,7 +30,7 @@ public class PlaintextProtocolHandlerDtep1pt1 {
 	public static String escape(String str) {
 		return str == null
 				|| (str.indexOf("\n") == -1 && str.indexOf("\\") == -1) ? str
-				: str.replace("\\", "\\\\").replace("\n", "\\n");
+						: str.replace("\\", "\\\\").replace("\n", "\\n");
 	}
 
 	public static String unescape(String str) {
@@ -64,7 +56,15 @@ public class PlaintextProtocolHandlerDtep1pt1 {
 		return sb.toString();
 	}
 
+	Class<? extends DomainTransformEventPersistent> dtrEvtImpl;
+
 	private SimpleStringParser asyncParser = null;
+
+	public PlaintextProtocolHandlerDtep1pt1() {
+		dtrEvtImpl = Registry.impl(CommonPersistenceProvider.class)
+				.getCommonPersistenceExTransaction()
+				.getImplementation(DomainTransformEventPersistent.class);
+	}
 
 	public void appendTo(DomainTransformEventPersistent dtep, StringBuffer sb) {
 		String newStringValue = dtep.getNewStringValue();
@@ -87,8 +87,8 @@ public class PlaintextProtocolHandlerDtep1pt1 {
 		sb.append(",");
 		sb.append(dtep.getTransformType());
 		sb.append(",");
-		sb.append(SimpleStringParser.toString(dtep.getUtcDate() == null ? System
-				.currentTimeMillis() : dtep.getUtcDate().getTime()));
+		sb.append(SimpleStringParser.toString(dtep.getUtcDate() == null
+				? System.currentTimeMillis() : dtep.getUtcDate().getTime()));
 		sb.append(newlineTab);
 		sb.append(STRING_VALUE);
 		sb.append(ns);
@@ -104,15 +104,14 @@ public class PlaintextProtocolHandlerDtep1pt1 {
 		sb.append(PERSISTENT);
 		sb.append(SimpleStringParser.toString(dtep.getId()));
 		sb.append(",");
-		sb.append(SimpleStringParser
-				.toString(dtep.getServerCommitDate() == null ? System
-						.currentTimeMillis() : dtep.getServerCommitDate()
-						.getTime()));
+		sb.append(SimpleStringParser.toString(
+				dtep.getServerCommitDate() == null ? System.currentTimeMillis()
+						: dtep.getServerCommitDate().getTime()));
 		sb.append("\n");
 	}
 
-	public List<DomainTransformEventPersistent> deserialize(
-			String serializedEvents) {
+	public List<DomainTransformEventPersistent>
+			deserialize(String serializedEvents) {
 		List<DomainTransformEventPersistent> events = new ArrayList<DomainTransformEventPersistent>();
 		asyncParser = null;
 		deserialize(serializedEvents, events, Integer.MAX_VALUE);

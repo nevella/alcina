@@ -36,22 +36,11 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
  * @author Nick Reddel
  */
 public class EntityUtils {
-	static class MultiIdentityMap
-			extends IdentityHashMap<Object, IdentityHashMap<Object, Object>> {
-		public void add(Object o1, Object o2) {
-			ensureKey(o1);
-			get(o1).put(o2, o2);
+	public static void checkDbIdentifier(String s) {
+		String regex = "\\w+";
+		if (!s.matches(regex)) {
+			throw new RuntimeException("Injection exception");
 		}
-
-		public void ensureKey(Object o1) {
-			if (!containsKey(o1)) {
-				put(o1, new IdentityHashMap<Object, Object>());
-			}
-		}
-	}
-
-	public static String longArrayToIdClause(Long[] longs) {
-		return longsToIdClause(Arrays.asList(longs));
 	}
 
 	public static String hasIdsToIdClause(Collection<? extends HasId> hasIds) {
@@ -75,6 +64,10 @@ public class EntityUtils {
 		return ids;
 	}
 
+	public static String longArrayToIdClause(Long[] longs) {
+		return longsToIdClause(Arrays.asList(longs));
+	}
+
 	public static String longsToIdClause(Collection<Long> longs) {
 		StringBuffer sb = new StringBuffer();
 		sb.append(" (-1");
@@ -84,6 +77,22 @@ public class EntityUtils {
 		}
 		sb.append(") ");
 		return sb.toString();
+	}
+
+	public static <T extends HasId> void order(List<T> incoming,
+			List<Long> orderValues) {
+		final TreeMap<Long, Integer> orderPositions = new TreeMap<Long, Integer>();
+		for (int i = 0; i < orderValues.size(); i++) {
+			Long l = orderValues.get(i);
+			orderPositions.put(l, i);
+		}
+		Comparator<T> cmp = new Comparator<T>() {
+			public int compare(T o1, T o2) {
+				return orderPositions.get(o1.getId())
+						.compareTo(orderPositions.get(o2.getId()));
+			}
+		};
+		Collections.sort(incoming, cmp);
 	}
 
 	public static String stringListToClause(Collection<String> strs) {
@@ -101,22 +110,6 @@ public class EntityUtils {
 		return sb.toString();
 	}
 
-	public static void checkDbIdentifier(String s) {
-		String regex = "\\w+";
-		if (!s.matches(regex)) {
-			throw new RuntimeException("Injection exception");
-		}
-	}
-
-	public <T> T detachedClone(T source, InstantiateImplCallback callback) {
-		return detachedClone(source, false, callback);
-	}
-
-	public <T> T detachedCloneWithMemCache(T source,
-			InstantiateImplCallback callback) {
-		return detachedClone(source, callback, new DetachedEntityCache(), true);
-	}
-
 	public <T> T detachedClone(T source) {
 		return detachedClone(source, false, null);
 	}
@@ -131,19 +124,13 @@ public class EntityUtils {
 		return detachedClone(source, callback, cache);
 	}
 
+	public <T> T detachedClone(T source, InstantiateImplCallback callback) {
+		return detachedClone(source, false, callback);
+	}
+
 	public <T> T detachedClone(T source, InstantiateImplCallback callback,
 			DetachedEntityCache cache) {
 		return detachedClone(source, callback, cache, false);
-	}
-
-	public GraphProjections projections(InstantiateImplCallback callback,
-			DetachedEntityCache cache, boolean useMemCache) {
-		GraphProjectionDataFilter dataFilter = Registry
-				.impl(JPAImplementation.class)
-				.getResolvingFilter(callback, cache, useMemCache);
-		return GraphProjections.defaultProjections()
-				.fieldFilter(Registry.impl(PermissibleFieldFilter.class))
-				.dataFilter(dataFilter);
 	}
 
 	public <T> T detachedClone(T source, InstantiateImplCallback callback,
@@ -168,19 +155,32 @@ public class EntityUtils {
 		}
 	}
 
-	public static <T extends HasId> void order(List<T> incoming,
-			List<Long> orderValues) {
-		final TreeMap<Long, Integer> orderPositions = new TreeMap<Long, Integer>();
-		for (int i = 0; i < orderValues.size(); i++) {
-			Long l = orderValues.get(i);
-			orderPositions.put(l, i);
+	public <T> T detachedCloneWithMemCache(T source,
+			InstantiateImplCallback callback) {
+		return detachedClone(source, callback, new DetachedEntityCache(), true);
+	}
+
+	public GraphProjections projections(InstantiateImplCallback callback,
+			DetachedEntityCache cache, boolean useMemCache) {
+		GraphProjectionDataFilter dataFilter = Registry
+				.impl(JPAImplementation.class)
+				.getResolvingFilter(callback, cache, useMemCache);
+		return GraphProjections.defaultProjections()
+				.fieldFilter(Registry.impl(PermissibleFieldFilter.class))
+				.dataFilter(dataFilter);
+	}
+
+	static class MultiIdentityMap
+			extends IdentityHashMap<Object, IdentityHashMap<Object, Object>> {
+		public void add(Object o1, Object o2) {
+			ensureKey(o1);
+			get(o1).put(o2, o2);
 		}
-		Comparator<T> cmp = new Comparator<T>() {
-			public int compare(T o1, T o2) {
-				return orderPositions.get(o1.getId())
-						.compareTo(orderPositions.get(o2.getId()));
+
+		public void ensureKey(Object o1) {
+			if (!containsKey(o1)) {
+				put(o1, new IdentityHashMap<Object, Object>());
 			}
-		};
-		Collections.sort(incoming, cmp);
+		}
 	}
 }

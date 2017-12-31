@@ -7,7 +7,8 @@ import java.sql.Statement;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
-public class EmbeddedDerbyTransformPersistence extends JdbcTransformPersistence {
+public class EmbeddedDerbyTransformPersistence
+		extends JdbcTransformPersistence {
 	public EmbeddedDerbyTransformPersistence(String derbyHomePath) {
 		this(derbyHomePath, null, "org.apache.derby.jdbc.EmbeddedDriver");
 	}
@@ -33,8 +34,8 @@ public class EmbeddedDerbyTransformPersistence extends JdbcTransformPersistence 
 				try {
 					DriverManager.getConnection("jdbc:derby:;shutdown=true");
 				} catch (SQLException e) {
-//					e.printStackTrace();
-					//will always throw an exception
+					// e.printStackTrace();
+					// will always throw an exception
 				}
 			}
 		});
@@ -54,16 +55,9 @@ public class EmbeddedDerbyTransformPersistence extends JdbcTransformPersistence 
 		}
 	}
 
-	private String getCreateStatement() {
-		return "CREATE TABLE TransformRequests (\n"
-				+ "id INT NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1,\n"
-				+ " INCREMENT BY 1) ,\n" + " transform CLOB,\n"
-				+ " timestamp BIGINT,\n" + " user_id BIGINT,\n"
-				+ " clientInstance_id BIGINT,\n" + " request_id BIGINT,\n"
-				+ " clientInstance_auth INTEGER,\n"
-				+ "   transform_request_type varchar(50),\n"
-				+ "  transform_event_protocol varchar(50),\n"
-				+ "  tag varchar(50) ,\n" + "  PRIMARY KEY (id)\n" + ") \n";
+	@Override
+	public String getPersistenceStoreName() {
+		return "Apache Derby";
 	}
 
 	private boolean checkDbVersionOK() {
@@ -85,8 +79,15 @@ public class EmbeddedDerbyTransformPersistence extends JdbcTransformPersistence 
 		}
 	}
 
-	@Override
-	public String getPersistenceStoreName() {
-		return "Apache Derby";
+	private String getCreateStatement() {
+		return "CREATE TABLE TransformRequests (\n"
+				+ "id INT NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1,\n"
+				+ " INCREMENT BY 1) ,\n" + " transform CLOB,\n"
+				+ " timestamp BIGINT,\n" + " user_id BIGINT,\n"
+				+ " clientInstance_id BIGINT,\n" + " request_id BIGINT,\n"
+				+ " clientInstance_auth INTEGER,\n"
+				+ "   transform_request_type varchar(50),\n"
+				+ "  transform_event_protocol varchar(50),\n"
+				+ "  tag varchar(50) ,\n" + "  PRIMARY KEY (id)\n" + ") \n";
 	}
 }

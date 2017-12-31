@@ -12,10 +12,6 @@ public class TopicPublisher {
 	private MutablePropertyChangeSupport support = new MutablePropertyChangeSupport(
 			this);
 
-	public void publishTopic(String key, Object message) {
-		support.firePropertyChange(key, message == null ? "" : null, message);
-	}
-
 	// listener, key - there may be multiple refs
 	private UnsortedMultikeyMap<TopicListenerAdapter> lookup = new UnsortedMultikeyMap<TopicListenerAdapter>();
 
@@ -29,6 +25,18 @@ public class TopicPublisher {
 		lookup.put(listener, key, adapter);
 	}
 
+	public void listenerDelta(String key, TopicListener listener, boolean add) {
+		if (add) {
+			addTopicListener(key, listener);
+		} else {
+			removeTopicListener(key, listener);
+		}
+	}
+
+	public void publishTopic(String key, Object message) {
+		support.firePropertyChange(key, message == null ? "" : null, message);
+	}
+
 	public void removeTopicListener(String key, TopicListener listener) {
 		TopicListenerAdapter adapter = lookup.get(listener, key);
 		if (key == null) {
@@ -39,46 +47,9 @@ public class TopicPublisher {
 		lookup.remove(listener, key);
 	}
 
-	private static class TopicListenerAdapter<T>
-			implements PropertyChangeListener {
-		private final TopicListener listener;
-
-		@Override
-		public boolean equals(Object obj) {
-			return obj instanceof TopicListenerAdapter
-					&& listener.equals(((TopicListenerAdapter) obj).listener);
-		}
-
-		public TopicListenerAdapter(TopicListener listener) {
-			this.listener = listener;
-		}
-
-		@Override
-		public int hashCode() {
-			return listener.hashCode();
-		}
-
-		@Override
-		public void propertyChange(PropertyChangeEvent evt) {
-			listener.topicPublished(evt.getPropertyName(), evt.getNewValue());
-		}
-	}
-
-	public void listenerDelta(String key, TopicListener listener, boolean add) {
-		if (add) {
-			addTopicListener(key, listener);
-		} else {
-			removeTopicListener(key, listener);
-		}
-	}
-
 	@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 	public static class GlobalTopicPublisher extends TopicPublisher {
 		private static volatile GlobalTopicPublisher singleton;
-
-		private GlobalTopicPublisher() {
-			super();
-		}
 
 		public static GlobalTopicPublisher get() {
 			if (singleton == null) {
@@ -90,10 +61,39 @@ public class TopicPublisher {
 			}
 			return singleton;
 		}
+
+		private GlobalTopicPublisher() {
+			super();
+		}
 	}
 
 	@FunctionalInterface
 	public interface TopicListener<T> {
 		void topicPublished(String key, T message);
+	}
+
+	private static class TopicListenerAdapter<T>
+			implements PropertyChangeListener {
+		private final TopicListener listener;
+
+		public TopicListenerAdapter(TopicListener listener) {
+			this.listener = listener;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			return obj instanceof TopicListenerAdapter
+					&& listener.equals(((TopicListenerAdapter) obj).listener);
+		}
+
+		@Override
+		public int hashCode() {
+			return listener.hashCode();
+		}
+
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			listener.topicPublished(evt.getPropertyName(), evt.getNewValue());
+		}
 	}
 }

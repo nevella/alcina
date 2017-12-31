@@ -20,15 +20,6 @@ package cc.alcina.framework.gwt.client.widget;
 public interface VisualFilterable {
 	public boolean filter(String filterText);
 
-	public interface VisualFilterableWithFirst extends VisualFilterable {
-		public void moveToFirst();
-	}
-
-	public interface VisualFilterableWithParentEnforcesChildVisibility extends
-			VisualFilterable {
-		public boolean filter(String filterText, boolean enforceVisible);
-	}
-
 	// this is at a per-node, rather than tree level
 	public interface HasSatisfiesFilter<T> {
 		boolean satisfiesFilter(T t, String filterText);
@@ -38,5 +29,14 @@ public interface VisualFilterable {
 		public boolean allow(T item, String itemToLcString, String filterText) {
 			return itemToLcString.contains(filterText);
 		}
+	}
+
+	public interface VisualFilterableWithFirst extends VisualFilterable {
+		public void moveToFirst();
+	}
+
+	public interface VisualFilterableWithParentEnforcesChildVisibility
+			extends VisualFilterable {
+		public boolean filter(String filterText, boolean enforceVisible);
 	}
 }

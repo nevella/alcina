@@ -30,19 +30,12 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterServlet;
+
 /**
- * org.apache.http.client is in gwt-dev - so we don't require it in eclipse 
+ * org.apache.http.client is in gwt-dev - so we don't require it in eclipse
  */
 public class DevRemoter {
 	private Object interceptionResult;
-
-	class PostAndClient {
-		public HttpPost post;
-
-		public HttpGet get;
-
-		public DefaultHttpClient client;
-	}
 
 	public PostAndClient getHttpPost(URI uri) throws Exception {
 		int timeoutSecs = 120;
@@ -54,6 +47,18 @@ public class DevRemoter {
 		postAndClient.client = new DefaultHttpClient(params);
 		postAndClient.post = new HttpPost(uri);
 		return postAndClient;
+	}
+
+	public Object getInterceptionResult() {
+		return interceptionResult;
+	}
+
+	public void hookParams(String methodName, Object[] args,
+			DevRemoterParams params) {
+		for (DevProxyInterceptor interceptor : Registry
+				.impls(DevProxyInterceptor.class)) {
+			interceptor.hookParams(methodName, args, params);
+		}
 	}
 
 	public Object invoke(String methodName, Object[] args,
@@ -71,9 +76,8 @@ public class DevRemoter {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		new ObjectOutputStream(baos).writeObject(params);
 		List<NameValuePair> qparams = new ArrayList<NameValuePair>();
-		qparams.add(new BasicNameValuePair(
-				DevRemoterServlet.DEV_REMOTER_PARAMS, Base64Utils.toBase64(baos
-						.toByteArray())));
+		qparams.add(new BasicNameValuePair(DevRemoterServlet.DEV_REMOTER_PARAMS,
+				Base64Utils.toBase64(baos.toByteArray())));
 		UrlEncodedFormEntity entity = new UrlEncodedFormEntity(qparams);
 		png.post.setEntity(entity);
 		HttpParams httpParams = png.client.getParams();
@@ -92,7 +96,6 @@ public class DevRemoter {
 		return obj;
 	}
 
-
 	public boolean tryInterception(Object proxy, Method method, Object[] args)
 			throws Throwable {
 		for (DevProxyInterceptor interceptor : Registry
@@ -104,16 +107,12 @@ public class DevRemoter {
 		}
 		return false;
 	}
-	public void hookParams(String methodName, Object[] args,
-			DevRemoterParams params)
-			 {
-		for (DevProxyInterceptor interceptor : Registry
-				.impls(DevProxyInterceptor.class)) {
-			interceptor.hookParams(methodName,args,params);
-		}
-	}
 
-	public Object getInterceptionResult() {
-		return interceptionResult;
+	class PostAndClient {
+		public HttpPost post;
+
+		public HttpGet get;
+
+		public DefaultHttpClient client;
 	}
 }

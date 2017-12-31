@@ -8,6 +8,8 @@ import cc.alcina.framework.common.client.collections.CompositeFilter;
 public class CompositeCacheFilter extends CacheFilter {
 	boolean or = false;
 
+	private List<CacheFilter> filters = new ArrayList<CacheFilter>();
+
 	public CompositeCacheFilter() {
 		this(false);
 	}
@@ -16,12 +18,6 @@ public class CompositeCacheFilter extends CacheFilter {
 		super(null);
 		this.or = or;
 		this.predicate = new CompositeFilter(or);
-	}
-
-	private List<CacheFilter> filters = new ArrayList<CacheFilter>();
-
-	public List<CacheFilter> getFilters() {
-		return filters;
 	}
 
 	public void add(CacheFilter filter) {
@@ -40,5 +36,9 @@ public class CompositeCacheFilter extends CacheFilter {
 			}
 		}
 		return true;
+	}
+
+	public List<CacheFilter> getFilters() {
+		return filters;
 	}
 }

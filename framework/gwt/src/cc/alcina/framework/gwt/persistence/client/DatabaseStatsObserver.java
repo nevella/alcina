@@ -26,9 +26,6 @@ public class DatabaseStatsObserver {
 
 	private static final int PERSISTENCE_VERSION = 2;
 
-	public DatabaseStatsObserver() {
-	}
-
 	DatabaseStatsInfo max;
 
 	DatabaseStatsInfo current = new DatabaseStatsInfo();
@@ -98,9 +95,40 @@ public class DatabaseStatsObserver {
 
 	private boolean refreshing;
 
+	public DatabaseStatsObserver() {
+	}
+
+	public String getReport() {
+		if (max == null) {
+			max = current;
+		}
+		return CommonUtils.formatJ("Database usage report:\nCurrent:\n"
+				+ "********\n%s\n\nMax:\n*****\n%s\n", current, max);
+	}
+
 	public void init(AsyncCallback<String> notifyOnInitCallback) {
 		initCallback.wrapped = notifyOnInitCallback;
 		KeyValueStore.get().get(SERIALIZED_MAX_KEY, initCallback);
+	}
+
+	public void installPersistenceListeners() {
+		LocalTransformPersistence
+				.notifyPersistingListenerDelta(transformDeltaListener, true);
+		LogStore.notifyPersistedListenerDelta(logStorePersistedListener, true);
+		LogStore.notifyDeletedListenerDelta(logStoreDeletedListener, true);
+	}
+
+	public void recalcWithListener(AsyncCallback postRecalcCallback) {
+		currentCallback.wrapped = postRecalcCallback;
+		refreshCurrent();
+	}
+
+	public void refreshCurrent() {
+		if (!refreshing) {
+			current = null;
+			refreshing = true;
+			new DatabaseStatsCollector().run(currentCallback);
+		}
 	}
 
 	protected void checkMax() {
@@ -115,33 +143,5 @@ public class DatabaseStatsObserver {
 	protected void persistMax() {
 		String ser = new AlcinaBeanSerializerC().serialize(max);
 		KeyValueStore.get().put(SERIALIZED_MAX_KEY, ser, persistedCallback);
-	}
-
-	public void refreshCurrent() {
-		if (!refreshing) {
-			current = null;
-			refreshing = true;
-			new DatabaseStatsCollector().run(currentCallback);
-		}
-	}
-
-	public String getReport() {
-		if (max == null) {
-			max = current;
-		}
-		return CommonUtils.formatJ("Database usage report:\nCurrent:\n"
-				+ "********\n%s\n\nMax:\n*****\n%s\n", current, max);
-	}
-
-	public void recalcWithListener(AsyncCallback postRecalcCallback) {
-		currentCallback.wrapped = postRecalcCallback;
-		refreshCurrent();
-	}
-
-	public void installPersistenceListeners() {
-		LocalTransformPersistence.notifyPersistingListenerDelta(
-				transformDeltaListener, true);
-		LogStore.notifyPersistedListenerDelta(logStorePersistedListener, true);
-		LogStore.notifyDeletedListenerDelta(logStoreDeletedListener, true);
 	}
 }

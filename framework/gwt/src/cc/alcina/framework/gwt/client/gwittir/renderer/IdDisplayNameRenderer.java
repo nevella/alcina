@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
  * @author Nick Reddel
  */
 @ClientInstantiable
- public class IdDisplayNameRenderer extends FlexibleToStringRenderer<HasId> {
+public class IdDisplayNameRenderer extends FlexibleToStringRenderer<HasId> {
 	public static final IdDisplayNameRenderer INSTANCE = new IdDisplayNameRenderer();
 
 	public String render(HasId hasId) {
@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 			return "(Undefined)";
 		}
 		String dn = ClientReflector.get().displayNameForObject(hasId);
-		return hasId.getId()+" : "+((dn == null) ? super.render(hasId) : dn);
+		return hasId.getId() + " : "
+				+ ((dn == null) ? super.render(hasId) : dn);
 	}
 }

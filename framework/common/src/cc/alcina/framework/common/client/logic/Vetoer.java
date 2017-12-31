@@ -11,14 +11,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic;
 
 /**
  *
  * @author Nick Reddel
  */
-
- public interface Vetoer {
-	boolean veto( Object object);
+public interface Vetoer {
+	boolean veto(Object object);
 }

@@ -45,6 +45,28 @@ public class GWTBridgeImpl extends GWTBridge {
 		}
 	};
 
+	public static void appendStringToFile(String s, File f) throws IOException {
+		writeStringToOutputStream(s, new FileOutputStream(f, true));
+	}
+
+	public static String getFullExceptionMessage(Throwable t) {
+		if (t == null) {
+			return "";
+		}
+		StringWriter sw = new StringWriter();
+		sw.write(t.getMessage() + "\n");
+		t.printStackTrace(new PrintWriter(sw));
+		return sw.toString() + "\n";
+	}
+
+	public static void writeStringToOutputStream(String s, OutputStream os)
+			throws IOException {
+		OutputStreamWriter fw = new OutputStreamWriter(os, "UTF-8");
+		BufferedWriter bw = new BufferedWriter(fw);
+		bw.write(s);
+		bw.close();
+	}
+
 	private final ShellJavaScriptHost host;
 
 	public GWTBridgeImpl(ShellJavaScriptHost host) {
@@ -104,27 +126,5 @@ public class GWTBridgeImpl extends GWTBridge {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-	}
-
-	public static void appendStringToFile(String s, File f) throws IOException {
-		writeStringToOutputStream(s, new FileOutputStream(f, true));
-	}
-
-	public static void writeStringToOutputStream(String s, OutputStream os)
-			throws IOException {
-		OutputStreamWriter fw = new OutputStreamWriter(os, "UTF-8");
-		BufferedWriter bw = new BufferedWriter(fw);
-		bw.write(s);
-		bw.close();
-	}
-
-	public static String getFullExceptionMessage(Throwable t) {
-		if (t == null) {
-			return "";
-		}
-		StringWriter sw = new StringWriter();
-		sw.write(t.getMessage() + "\n");
-		t.printStackTrace(new PrintWriter(sw));
-		return sw.toString() + "\n";
 	}
 }

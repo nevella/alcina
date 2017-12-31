@@ -35,32 +35,6 @@ import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 	private static UncaughtExceptionHandler handler;
 
-	public void registerUncaughtExceptionHandler(
-			UncaughtExceptionHandler handler) {
-		if (GWT.isScript() && BrowserMod.isInternetExplorer()
-				&& !BrowserMod.isIE10Plus()) {
-			AugmentedUncaughtExceptionHandler.handler = handler;
-			registerIEWindowErrorListener();
-			Window.addCloseHandler(this);
-			disableEventBusExceptionCatch();
-		} else {
-			GWT.setUncaughtExceptionHandler(handler);
-		}
-	}
-
-	private native void disableEventBusExceptionCatch() /*-{
-		$wnd.__com_google_web_bindery_event_shared_SimpleEventBus_disableEventBusExceptionCatch = true;
-	}-*/;
-
-	private native void registerIEWindowErrorListener() /*-{
-		function AugmentedUncaughtExceptionHandler_windowErrorHandler(sMsg, sUrl, sLine) {
-			var message = "\n\nMessage: " + sMsg + "\nLine: " + sLine + "\nUrl: " + sUrl;
-			@cc.alcina.extras.misc.ie.client.AugmentedUncaughtExceptionHandler::throwToHandler(Ljava/lang/String;)(message);
-		}
-		$wnd.onerror = AugmentedUncaughtExceptionHandler_windowErrorHandler;
-		window.onerror = AugmentedUncaughtExceptionHandler_windowErrorHandler;
-	}-*/;
-
 	public static void throwToHandler(String message) {
 		List<Throwable> lastGwtThrowables = getLastThrowables();
 		String gwtExceptionMessage = "";
@@ -77,25 +51,51 @@ public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 			}
 			gwtExceptionMessage = "\n\n-------\n(gwt)\n\n" + builder.toString();
 		}
-		handler.onUncaughtException(new WrappedRuntimeException(CommonUtils
-				.formatJ("%s%s", message, gwtExceptionMessage),
+		handler.onUncaughtException(new WrappedRuntimeException(
+				CommonUtils.formatJ("%s%s", message, gwtExceptionMessage),
 				SuggestedAction.NOTIFY_WARNING));
 	}
 
 	private static native List<Throwable> getLastThrowables() /*-{
-		return $wnd.__com_google_gwt_core_client_impl_Impl_ieThrowables;
-	}-*/;
+																return $wnd.__com_google_gwt_core_client_impl_Impl_ieThrowables;
+																}-*/;
+
+	public void onClose(CloseEvent<Window> event) {
+		deregisterWindowErrorListener();
+	}
 
 	public void onWindowClosed() {
 		deregisterWindowErrorListener();
 	}
 
-	private native void deregisterWindowErrorListener() /*-{
-		$wnd.onerror = null;
-		window.onerror = null;
-	}-*/;
-
-	public void onClose(CloseEvent<Window> event) {
-		deregisterWindowErrorListener();
+	public void
+			registerUncaughtExceptionHandler(UncaughtExceptionHandler handler) {
+		if (GWT.isScript() && BrowserMod.isInternetExplorer()
+				&& !BrowserMod.isIE10Plus()) {
+			AugmentedUncaughtExceptionHandler.handler = handler;
+			registerIEWindowErrorListener();
+			Window.addCloseHandler(this);
+			disableEventBusExceptionCatch();
+		} else {
+			GWT.setUncaughtExceptionHandler(handler);
+		}
 	}
+
+	private native void deregisterWindowErrorListener() /*-{
+														$wnd.onerror = null;
+														window.onerror = null;
+														}-*/;
+
+	private native void disableEventBusExceptionCatch() /*-{
+														$wnd.__com_google_web_bindery_event_shared_SimpleEventBus_disableEventBusExceptionCatch = true;
+														}-*/;
+
+	private native void registerIEWindowErrorListener() /*-{
+														function AugmentedUncaughtExceptionHandler_windowErrorHandler(sMsg, sUrl, sLine) {
+														var message = "\n\nMessage: " + sMsg + "\nLine: " + sLine + "\nUrl: " + sUrl;
+														@cc.alcina.extras.misc.ie.client.AugmentedUncaughtExceptionHandler::throwToHandler(Ljava/lang/String;)(message);
+														}
+														$wnd.onerror = AugmentedUncaughtExceptionHandler_windowErrorHandler;
+														window.onerror = AugmentedUncaughtExceptionHandler_windowErrorHandler;
+														}-*/;
 }

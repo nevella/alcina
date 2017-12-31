@@ -2,7 +2,13 @@ package com.google.gwt.dom.client;
 
 public class TextNull extends NodeLocalNull implements DomText {
 	static final TextNull INSTANCE = new TextNull();
+
 	TextNull() {
+	}
+
+	@Override
+	public Node cloneNode(boolean deep) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -22,11 +28,6 @@ public class TextNull extends NodeLocalNull implements DomText {
 
 	@Override
 	public String getNodeName() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Node cloneNode(boolean deep) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -71,12 +72,12 @@ public class TextNull extends NodeLocalNull implements DomText {
 		throw new UnsupportedOperationException();
 	}
 
-	void appendUnescaped(UnsafeHtmlBuilder builder) {
+	@Override
+	void appendTextContent(StringBuilder builder) {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	void appendTextContent(StringBuilder builder) {
+	void appendUnescaped(UnsafeHtmlBuilder builder) {
 		throw new UnsupportedOperationException();
 	}
 }

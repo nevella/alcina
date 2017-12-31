@@ -59,47 +59,34 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 
 	protected Toolbar toolbar;
 
-	protected PermissibleAction nextPage = new PermissibleAction("Next >", NEXT);
+	protected PermissibleAction nextPage = new PermissibleAction("Next >",
+			NEXT);
 
 	protected PermissibleAction previousPage = new PermissibleAction("< Back",
 			PREVIOUS);
 
-	protected PermissibleAction finish = new PermissibleAction("Finish", FINISH);
+	protected PermissibleAction finish = new PermissibleAction("Finish",
+			FINISH);
 
-	protected PermissibleAction cancel = new PermissibleAction("Cancel", CANCEL);
+	protected PermissibleAction cancel = new PermissibleAction("Cancel",
+			CANCEL);
 
 	protected ArrayList<PermissibleAction> actions;
 
-	protected boolean canCancel() {
-		return true;
-	}
+	private boolean allButtonsEnabled = false;
 
-	// for subclasses
-	protected void getExtraActions() {
-	}
+	private boolean toolbarAsNativeButtons = true;
 
-	protected abstract boolean canFinishOnThisPage();
+	private Widget currentWidget;
 
-	protected abstract void onFinished();
+	private String styleName = "";
 
-	protected abstract void onCancel();
+	private boolean renderInScrollPanel = true;
 
-	protected abstract boolean isPageValid();
+	private int contentScrollPanelHeight = 0;
 
-	protected abstract boolean beforeMoveToPage(int newPageIndex);
-
-	protected boolean canMoveBack() {
-		return pageIndex != 0;
-	}
-
-	protected boolean canMoveForward() {
-		return pageIndex != pages.size() - 1;
-	}
-
-	public void gotoPage(int pageNumber) {
-		if (pageNumber < pages.size()) {
-			pageIndex = pageNumber;
-		}
+	public int getContentScrollPanelHeight() {
+		return this.contentScrollPanelHeight;
 	}
 
 	public M getModel() {
@@ -110,27 +97,128 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		return pages;
 	}
 
+	public String getStyleName() {
+		return styleName;
+	}
+
 	public String getTitle() {
 		return title;
+	}
+
+	public void gotoPage(int pageNumber) {
+		if (pageNumber < pages.size()) {
+			pageIndex = pageNumber;
+		}
+	}
+
+	public boolean isAllButtonsEnabled() {
+		return allButtonsEnabled;
+	}
+
+	public boolean isRenderInScrollPanel() {
+		return this.renderInScrollPanel;
 	}
 
 	public boolean isTitleIsBreadcrumbBar() {
 		return titleIsBreadcrumbBar;
 	}
 
-	private boolean allButtonsEnabled = false;
+	public boolean isToolbarAsNativeButtons() {
+		return this.toolbarAsNativeButtons;
+	}
 
-	protected void refreshButtonActivation() {
-		if (allButtonsEnabled) {
-			return;
+	public Widget renderPage() {
+		FlowPanel fp = new FlowPanel();
+		fp.addAttachHandler(
+				evt -> System.out.println(fp.getElement().getInnerHTML()));
+		currentWidget = fp;
+		fp.setStyleName(FRAME_STYLE_NAME);
+		fp.addStyleName(getStyleName());
+		renderHeader(fp);
+		if (usePageTabs) {
+			renderTabPane(fp);
+			return fp;
 		}
-		for (PermissibleAction action : actions) {
-			ToolbarButton tb = toolbar.getButtonForAction(action);
-			if (tb != null) {
-				if (action == nextPage || action == finish) {
-					tb.setEnabled(isPageValid());
-				}
-			}
+		WizardPage page = pages.get(pageIndex);
+		Widget w = page.getPageWidget();
+		w.addStyleName("wizard-form");
+		if (contentScrollPanelHeight != 0) {
+			ScrollPanel sp = new ScrollPanel();
+			sp.setHeight(contentScrollPanelHeight + "px");
+			sp.add(w);
+			fp.add(sp);
+		} else {
+			fp.add(w);
+		}
+		renderButtonsPane(fp);
+		PermissibleAction highlighted = page.getHighlightedAction();
+		highlighted = highlighted == null
+				? CommonUtils.first(toolbar.getActions()) : highlighted;
+		if (highlighted != null) {
+			toolbar.getButtonForAction(highlighted).addStyleName("highlighted");
+		}
+		toolbar.addVetoableActionListener(this);
+		if (renderInScrollPanel) {
+			ScrollPanel sp = new ScrollPanel();
+			sp.getElement().getStyle().setPropertyPx("maxHeight",
+					Window.getClientHeight() * 70 / 100);
+			fp.getElement().getStyle().setMargin(0.8, Unit.EM);
+			sp.add(fp);
+			currentWidget = sp;
+			return sp;
+		} else {
+			return fp;
+		}
+	}
+
+	public void setAllButtonsEnabled(boolean allButtonsEnabled) {
+		this.allButtonsEnabled = allButtonsEnabled;
+	}
+
+	public void setContentScrollPanelHeight(int contentScrollPanelHeight) {
+		this.contentScrollPanelHeight = contentScrollPanelHeight;
+	}
+
+	public void setModel(M model) {
+		this.model = model;
+	}
+
+	public void setPages(List<WizardPage> pages) {
+		this.pages = pages;
+	}
+
+	public void setRenderInScrollPanel(boolean renderInScrollPanel) {
+		this.renderInScrollPanel = renderInScrollPanel;
+	}
+
+	public void setStyleName(String styleName) {
+		this.styleName = styleName;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public void setTitleIsBreadcrumbBar(boolean titleIsBreadcrumbBar) {
+		this.titleIsBreadcrumbBar = titleIsBreadcrumbBar;
+	}
+
+	public void setToolbarAsNativeButtons(boolean toolbarAsNativeButtons) {
+		this.toolbarAsNativeButtons = toolbarAsNativeButtons;
+	}
+
+	public void vetoableAction(PermissibleActionEvent evt) {
+		if (evt.getAction() == nextPage) {
+			moveNext();
+		}
+		if (evt.getAction() == previousPage) {
+			movePrevious();
+		}
+		if (evt.getAction() == cancel) {
+			onCancel();
+		}
+		if (evt.getAction() == finish) {
+			onFinished();
 		}
 	}
 
@@ -168,64 +256,9 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		fp.add(holder);
 	}
 
-	private boolean toolbarAsNativeButtons = true;
-
 	private void renderHeader(FlowPanel fp) {
 		if (titleIsBreadcrumbBar) {
 			fp.add(new BreadcrumbBar(getTitle()));
-		}
-	}
-
-	private Widget currentWidget;
-
-	private String styleName = "";
-
-	private boolean renderInScrollPanel = true;
-
-	private int contentScrollPanelHeight = 0;
-
-	public Widget renderPage() {
-		FlowPanel fp = new FlowPanel();
-		fp.addAttachHandler(evt->System.out.println(fp.getElement().getInnerHTML()));
-		currentWidget = fp;
-		fp.setStyleName(FRAME_STYLE_NAME);
-		fp.addStyleName(getStyleName());
-		renderHeader(fp);
-		if (usePageTabs) {
-			renderTabPane(fp);
-			return fp;
-		}
-		WizardPage page = pages.get(pageIndex);
-		Widget w = page.getPageWidget();
-		w.addStyleName("wizard-form");
-		if (contentScrollPanelHeight != 0) {
-			ScrollPanel sp = new ScrollPanel();
-			sp.setHeight(contentScrollPanelHeight + "px");
-			sp.add(w);
-			fp.add(sp);
-		} else {
-			fp.add(w);
-		}
-		renderButtonsPane(fp);
-		PermissibleAction highlighted = page.getHighlightedAction();
-		highlighted = highlighted == null ? CommonUtils.first(toolbar
-				.getActions()) : highlighted;
-		if (highlighted != null) {
-			toolbar.getButtonForAction(highlighted).addStyleName("highlighted");
-		}
-		toolbar.addVetoableActionListener(this);
-		if (renderInScrollPanel) {
-			ScrollPanel sp = new ScrollPanel();
-			sp.getElement()
-					.getStyle()
-					.setPropertyPx("maxHeight",
-							Window.getClientHeight() * 70 / 100);
-			fp.getElement().getStyle().setMargin(0.8, Unit.EM);
-			sp.add(fp);
-			currentWidget = sp;
-			return sp;
-		} else {
-			return fp;
 		}
 	}
 
@@ -233,34 +266,33 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		// TODO Auto-generated method stub
 	}
 
-	public void setModel(M model) {
-		this.model = model;
+	protected abstract boolean beforeMoveToPage(int newPageIndex);
+
+	protected boolean canCancel() {
+		return true;
 	}
 
-	public void setPages(List<WizardPage> pages) {
-		this.pages = pages;
+	protected abstract boolean canFinishOnThisPage();
+
+	protected boolean canMoveBack() {
+		return pageIndex != 0;
 	}
 
-	public void setTitle(String title) {
-		this.title = title;
+	protected boolean canMoveForward() {
+		return pageIndex != pages.size() - 1;
 	}
 
-	public void setTitleIsBreadcrumbBar(boolean titleIsBreadcrumbBar) {
-		this.titleIsBreadcrumbBar = titleIsBreadcrumbBar;
+	// for subclasses
+	protected void getExtraActions() {
 	}
 
-	public void vetoableAction(PermissibleActionEvent evt) {
-		if (evt.getAction() == nextPage) {
-			moveNext();
-		}
-		if (evt.getAction() == previousPage) {
-			movePrevious();
-		}
-		if (evt.getAction() == cancel) {
-			onCancel();
-		}
-		if (evt.getAction() == finish) {
-			onFinished();
+	protected abstract boolean isPageValid();
+
+	protected void moveNext() {
+		if (beforeMoveToPage(pageIndex + 1)) {
+			pageIndex++;
+			WidgetUtils.replace(currentWidget, renderPage());
+			refreshButtonActivation();
 		}
 	}
 
@@ -272,57 +304,27 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		}
 	}
 
-	protected void moveNext() {
-		if (beforeMoveToPage(pageIndex + 1)) {
-			pageIndex++;
-			WidgetUtils.replace(currentWidget, renderPage());
-			refreshButtonActivation();
+	protected abstract void onCancel();
+
+	protected abstract void onFinished();
+
+	protected void refreshButtonActivation() {
+		if (allButtonsEnabled) {
+			return;
+		}
+		for (PermissibleAction action : actions) {
+			ToolbarButton tb = toolbar.getButtonForAction(action);
+			if (tb != null) {
+				if (action == nextPage || action == finish) {
+					tb.setEnabled(isPageValid());
+				}
+			}
 		}
 	}
 
-	public void setStyleName(String styleName) {
-		this.styleName = styleName;
-	}
-
-	public String getStyleName() {
-		return styleName;
-	}
-
-	public void setAllButtonsEnabled(boolean allButtonsEnabled) {
-		this.allButtonsEnabled = allButtonsEnabled;
-	}
-
-	public boolean isAllButtonsEnabled() {
-		return allButtonsEnabled;
-	}
-
 	public static interface WizardPage {
-		public Widget getPageWidget();
-
 		public PermissibleAction getHighlightedAction();
-	}
 
-	public boolean isRenderInScrollPanel() {
-		return this.renderInScrollPanel;
-	}
-
-	public void setRenderInScrollPanel(boolean renderInScrollPanel) {
-		this.renderInScrollPanel = renderInScrollPanel;
-	}
-
-	public int getContentScrollPanelHeight() {
-		return this.contentScrollPanelHeight;
-	}
-
-	public void setContentScrollPanelHeight(int contentScrollPanelHeight) {
-		this.contentScrollPanelHeight = contentScrollPanelHeight;
-	}
-
-	public boolean isToolbarAsNativeButtons() {
-		return this.toolbarAsNativeButtons;
-	}
-
-	public void setToolbarAsNativeButtons(boolean toolbarAsNativeButtons) {
-		this.toolbarAsNativeButtons = toolbarAsNativeButtons;
+		public Widget getPageWidget();
 	}
 }

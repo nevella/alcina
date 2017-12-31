@@ -20,15 +20,13 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 		addEndpointPlayer(endpointCallback, true);
 	}
 
-	public abstract void runPlayer(AllStatesPlayer allStatesPlayer, E next);
-
 	public void retry(final AllStatesPlayer allStatesPlayer, final E state,
 			int delay) {
 		Runnable replayer = new Runnable() {
 			@Override
 			public void run() {
 				if (System.currentTimeMillis() - startTime > timeout) {
-					timedOut(allStatesPlayer,state);
+					timedOut(allStatesPlayer, state);
 					cancel();
 				} else {
 					runPlayer(allStatesPlayer, state);
@@ -39,9 +37,7 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 				.scheduleSingle(delay);
 	}
 
-	protected void timedOut(AllStatesPlayer allStatesPlayer, E state) {
-		
-	}
+	public abstract void runPlayer(AllStatesPlayer allStatesPlayer, E next);
 
 	@Override
 	public void start() {
@@ -49,8 +45,11 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 		super.start();
 	}
 
-	public class AllStatesPlayer extends EnumPlayer<E> implements
-			ConsortPlayer, AsyncCallback, Runnable {
+	protected void timedOut(AllStatesPlayer allStatesPlayer, E state) {
+	}
+
+	public class AllStatesPlayer extends EnumPlayer<E>
+			implements ConsortPlayer, AsyncCallback, Runnable {
 		public Consort stateConsort;
 
 		public AllStatesPlayer(E to) {

@@ -52,40 +52,23 @@ public class MainTabPanel extends TabPanel {
 
 	private FlowPanel toolbarHolder = new FlowPanel();
 
-	public FlowPanel getToolbarHolder() {
-		return this.toolbarHolder;
-	}
-
-	public void setToolbarHolder(FlowPanel toolbarHolder) {
-		this.toolbarHolder = toolbarHolder;
-	}
-
-	public static class SimplePanel100pcHeight extends SimplePanel implements
-			HasLayoutInfo {
-		public LayoutInfo getLayoutInfo() {
-			return new LayoutInfo() {
-				@Override
-				public Iterator<Widget> getLayoutWidgets() {
-					return SimplePanel100pcHeight.this.iterator();
-				}
-
-				public boolean to100percentOfAvailableHeight() {
-					return true;
-				}
-			};
-		}
-	}
-
 	private SimplePanel noTabContentHolder = new SimplePanel();
 
-	public SimplePanel setNotabContent(Widget w) {
-		noTabContentHolder.setWidget(w);
-		return noTabContentHolder;
-	}
+	private TopicListener<LoginState> visListener = new TopicListener<LoginState>() {
+		public void topicPublished(String key, LoginState message) {
+			refreshButtonPanelVis();
+		}
+	};
 
-	public SimplePanel getNoTabContentHolder() {
-		return this.noTabContentHolder;
-	}
+	private List<LoginStateVisibleWithWidget> buttons;
+
+	protected DockPanel dockPanel;
+
+	protected FlowPanel mainMenuContainer;
+
+	protected SpanPanel centerContainer;
+
+	protected TabBar tabBarProt;
 
 	public MainTabPanel(ArrayList<LoginStateVisibleWithWidget> buttons) {
 		super();
@@ -128,89 +111,6 @@ public class MainTabPanel extends TabPanel {
 		});
 	}
 
-	protected boolean isWrapCenterContainer() {
-		return false;
-	}
-
-	protected void customizeDock() {
-		// subclassing
-	}
-
-	private TopicListener<LoginState> visListener = new TopicListener<LoginState>() {
-		public void topicPublished(String key, LoginState message) {
-			refreshButtonPanelVis();
-		}
-	};
-
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-		PermissionsManager.notifyLoginStateListenerDelta(visListener, true);
-	};
-
-	@Override
-	protected void onDetach() {
-		PermissionsManager.notifyLoginStateListenerDelta(visListener, false);
-		super.onDetach();
-	}
-
-	private void refreshButtonPanelVis() {
-		int index = 0;
-		boolean visBefore = false;
-		LoginState state = PermissionsManager.get().getLoginState();
-		for (LoginStateVisibleWithWidget button : buttons) {
-			boolean curVis = button.visibleForLoginState(state);
-			if (button instanceof Permissible) {
-				curVis &= PermissionsManager.get().isPermissible(
-						(Permissible) button);
-			}
-			bp.getWidget(index++).setVisible(curVis);
-			if (index > 1) {
-				Widget sep = bp.getWidget(index - 2);
-				// sep.setVisible(curVis && visBefore);
-			}
-			visBefore = curVis || visBefore;
-			index++;
-		}
-	}
-
-	private List<LoginStateVisibleWithWidget> buttons;
-
-	protected DockPanel dockPanel;
-
-	protected FlowPanel mainMenuContainer;
-
-	protected SpanPanel centerContainer;
-
-	protected TabBar tabBarProt;
-
-	class BarSep extends Label {
-		BarSep() {
-			super();
-			setText(" | ");
-			setVisible(false);
-		}
-	}
-
-	private HorizontalPanel createButtonsPanel() {
-		HorizontalPanel hp = new HorizontalPanel();
-		hp.setStyleName("alcina-MainMenuRight");
-		hp.setHorizontalAlignment(HorizontalPanel.ALIGN_RIGHT);
-		for (LoginStateVisibleWithWidget button : buttons) {
-			Widget w = button.getWidget();
-			w.ensureDebugId(button.getDebugId());
-			hp.add(w);
-			hp.add(new BarSep());
-		}
-		return hp;
-	}
-
-	public int getTabBarHeight() {
-		VerticalPanel vp = (VerticalPanel) getWidget();
-		Widget w = vp.getWidget(0);
-		return w.getOffsetHeight();
-	}
-
 	public int adjustClientSize(int availableWidth, int availableHeight) {
 		availableHeight -= getTabBarHeight();
 		if (getToolbarHolder().isVisible()) {
@@ -243,8 +143,108 @@ public class MainTabPanel extends TabPanel {
 
 	public int getAdjustHeight() {
 		int selectedTab = getTabBar().getSelectedTab();
-		boolean fullTab = selectedTab != -1
-				&& getDeckPanel().getWidget(selectedTab) instanceof TabDisplaysAsFullHeight;
+		boolean fullTab = selectedTab != -1 && getDeckPanel()
+				.getWidget(selectedTab) instanceof TabDisplaysAsFullHeight;
 		return fullTab ? 0 : 50;
+	}
+
+	public SimplePanel getNoTabContentHolder() {
+		return this.noTabContentHolder;
+	};
+
+	public int getTabBarHeight() {
+		VerticalPanel vp = (VerticalPanel) getWidget();
+		Widget w = vp.getWidget(0);
+		return w.getOffsetHeight();
+	}
+
+	public FlowPanel getToolbarHolder() {
+		return this.toolbarHolder;
+	}
+
+	public SimplePanel setNotabContent(Widget w) {
+		noTabContentHolder.setWidget(w);
+		return noTabContentHolder;
+	}
+
+	public void setToolbarHolder(FlowPanel toolbarHolder) {
+		this.toolbarHolder = toolbarHolder;
+	}
+
+	private HorizontalPanel createButtonsPanel() {
+		HorizontalPanel hp = new HorizontalPanel();
+		hp.setStyleName("alcina-MainMenuRight");
+		hp.setHorizontalAlignment(HorizontalPanel.ALIGN_RIGHT);
+		for (LoginStateVisibleWithWidget button : buttons) {
+			Widget w = button.getWidget();
+			w.ensureDebugId(button.getDebugId());
+			hp.add(w);
+			hp.add(new BarSep());
+		}
+		return hp;
+	}
+
+	private void refreshButtonPanelVis() {
+		int index = 0;
+		boolean visBefore = false;
+		LoginState state = PermissionsManager.get().getLoginState();
+		for (LoginStateVisibleWithWidget button : buttons) {
+			boolean curVis = button.visibleForLoginState(state);
+			if (button instanceof Permissible) {
+				curVis &= PermissionsManager.get()
+						.isPermissible((Permissible) button);
+			}
+			bp.getWidget(index++).setVisible(curVis);
+			if (index > 1) {
+				Widget sep = bp.getWidget(index - 2);
+				// sep.setVisible(curVis && visBefore);
+			}
+			visBefore = curVis || visBefore;
+			index++;
+		}
+	}
+
+	protected void customizeDock() {
+		// subclassing
+	}
+
+	protected boolean isWrapCenterContainer() {
+		return false;
+	}
+
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		PermissionsManager.notifyLoginStateListenerDelta(visListener, true);
+	}
+
+	@Override
+	protected void onDetach() {
+		PermissionsManager.notifyLoginStateListenerDelta(visListener, false);
+		super.onDetach();
+	}
+
+	public static class SimplePanel100pcHeight extends SimplePanel
+			implements HasLayoutInfo {
+		public LayoutInfo getLayoutInfo() {
+			return new LayoutInfo() {
+				@Override
+				public Iterator<Widget> getLayoutWidgets() {
+					return SimplePanel100pcHeight.this.iterator();
+				}
+
+				public boolean to100percentOfAvailableHeight() {
+					return true;
+				}
+			};
+		}
+	}
+
+	class BarSep extends Label {
+		BarSep() {
+			super();
+			setText(" | ");
+			setVisible(false);
+		}
 	}
 }

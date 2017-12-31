@@ -10,12 +10,6 @@ public class RangeParser {
 
 	private RangeParserCallback callback;
 
-	public interface RangeParserCallback {
-		public String processRangelet(List<Integer> points, String objectName);
-
-		public String rangeWithoutNumbersErrMessage();
-	}
-
 	int startOfName = -1;
 
 	public String parse(RangeParserCallback callback, String text) {
@@ -32,7 +26,8 @@ public class RangeParser {
 			char c = text.charAt(idx);
 			switch (c) {
 			case '-':
-				if (startOfName == -1 && startOfInt != -1 && !lastDelimWasDash) {
+				if (startOfName == -1 && startOfInt != -1
+						&& !lastDelimWasDash) {
 					int i = Integer.parseInt(text.substring(startOfInt, idx));
 					ints.add(i);
 					startOfInt = -1;
@@ -56,10 +51,9 @@ public class RangeParser {
 					}
 					startOfInt = -1;
 				} else {
-					if (idx > 0
-							&& text.substring(idx - 1).matches(
-									"[a-zA-Z] [a-zA-Z].*")) {
-						//Qd R or similar
+					if (idx > 0 && text.substring(idx - 1)
+							.matches("[a-zA-Z] [a-zA-Z].*")) {
+						// Qd R or similar
 					} else {
 						String err = maybeHandleDelim(idx);
 						if (err != null) {
@@ -72,8 +66,8 @@ public class RangeParser {
 			if (startOfName == -1 && (c >= '0' && c <= '9')) {
 				startOfInt = startOfInt == -1 ? idx : startOfInt;
 			} else {
-				startOfName = startOfName == -1 ? startOfInt == -1 ? idx
-						: startOfInt : startOfName;
+				startOfName = startOfName == -1
+						? startOfInt == -1 ? idx : startOfInt : startOfName;
 			}
 		}
 		String err = maybeHandleDelim(idx);
@@ -81,6 +75,12 @@ public class RangeParser {
 			return err;
 		}
 		return null;
+	}
+
+	private String err(int errStart, int errEnd, String message) {
+		return CommonUtils.formatJ("%s >>> %s <<< >>> (%s) <<< %s",
+				text.substring(0, errStart), text.substring(errStart, errEnd),
+				message, text.substring(errEnd));
 	}
 
 	private String maybeHandleDelim(int idx) {
@@ -103,9 +103,9 @@ public class RangeParser {
 		return msg;
 	}
 
-	private String err(int errStart, int errEnd, String message) {
-		return CommonUtils.formatJ("%s >>> %s <<< >>> (%s) <<< %s",
-				text.substring(0, errStart), text.substring(errStart, errEnd),
-				message, text.substring(errEnd));
+	public interface RangeParserCallback {
+		public String processRangelet(List<Integer> points, String objectName);
+
+		public String rangeWithoutNumbersErrMessage();
 	}
 }

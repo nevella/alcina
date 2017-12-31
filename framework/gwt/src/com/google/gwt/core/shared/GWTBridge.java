@@ -20,16 +20,15 @@ package com.google.gwt.core.shared;
  * Development Mode environment.
  */
 public abstract class GWTBridge {
+	public abstract <T> T create(Class<?> classLiteral);
 
-  public abstract <T> T create(Class<?> classLiteral);
+	public String getThreadUniqueID() {
+		return "";
+	}
 
-  public String getThreadUniqueID() {
-    return "";
-  }
+	public abstract String getVersion();
 
-  public abstract String getVersion();
+	public abstract boolean isClient();
 
-  public abstract boolean isClient();
-
-  public abstract void log(String message, Throwable e);
+	public abstract void log(String message, Throwable e);
 }

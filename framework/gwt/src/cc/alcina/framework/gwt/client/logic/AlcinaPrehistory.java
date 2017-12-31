@@ -36,8 +36,8 @@ public class AlcinaPrehistory {
 			if (handler != null) {
 				handler.handle(event, item);
 			} else {
-				System.out.println("Prehistory handler not found: "
-						+ preHistory);
+				System.out
+						.println("Prehistory handler not found: " + preHistory);
 			}
 			event.stopPropagation();
 			event.preventDefault();
@@ -47,12 +47,12 @@ public class AlcinaPrehistory {
 	@ClientInstantiable
 	@RegistryLocation(registryPoint = PreHistoryHandler.class)
 	public abstract static class PreHistoryHandler<I extends AlcinaHistoryItem> {
+		public abstract void handle(NativeEvent event, I item);
+
 		public abstract String key();
 
 		public void register(Map<String, PreHistoryHandler> toMap) {
 			toMap.put(key(), this);
 		}
-
-		public abstract void handle(NativeEvent event, I item);
 	}
 }

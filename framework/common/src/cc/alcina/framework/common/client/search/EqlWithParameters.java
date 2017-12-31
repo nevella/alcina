@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.search;
 
 import java.util.ArrayList;
@@ -21,8 +20,8 @@ import java.util.List;
  *
  * @author Nick Reddel
  */
-
- public class EqlWithParameters{
+public class EqlWithParameters {
 	public List parameters = new ArrayList();
-	public String eql="";
+
+	public String eql = "";
 }

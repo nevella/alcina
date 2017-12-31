@@ -11,27 +11,30 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.servlet.authentication;
 
 /**
  *
  * @author Nick Reddel
  */
-
- public class AuthenticationResponse {
+public class AuthenticationResponse {
 	private boolean success;
+
 	private String message;
-	public boolean isSuccess() {
-		return this.success;
-	}
-	public void setSuccess(boolean success) {
-		this.success = success;
-	}
+
 	public String getMessage() {
 		return this.message;
 	}
+
+	public boolean isSuccess() {
+		return this.success;
+	}
+
 	public void setMessage(String message) {
 		this.message = message;
+	}
+
+	public void setSuccess(boolean success) {
+		this.success = success;
 	}
 }

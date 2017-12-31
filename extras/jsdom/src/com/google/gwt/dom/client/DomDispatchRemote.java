@@ -9,6 +9,10 @@ public class DomDispatchRemote implements IDomDispatch {
 		domImpl.buttonClick(button.implAccess().ensureRemote());
 	}
 
+	public ElementRemote createElement(String tagName) {
+		return domImpl.createElement(Document.get().typedRemote(), tagName);
+	}
+
 	@Override
 	public void cssClearOpacity(Style style) {
 		if (style.linkedToRemote()) {
@@ -42,8 +46,7 @@ public class DomDispatchRemote implements IDomDispatch {
 	public void selectAdd(SelectElement select, OptionElement option,
 			OptionElement before) {
 		if (select.linkedToRemote()) {
-			domImpl.selectAdd(select.typedRemote(),
-					option.typedRemote(),
+			domImpl.selectAdd(select.typedRemote(), option.typedRemote(),
 					before == null ? null : before.typedRemote());
 		}
 	}
@@ -60,9 +63,5 @@ public class DomDispatchRemote implements IDomDispatch {
 		if (select.linkedToRemote()) {
 			domImpl.selectRemoveOption(select.typedRemote(), index);
 		}
-	}
-
-	public ElementRemote createElement(String tagName) {
-		return domImpl.createElement(Document.get().typedRemote(), tagName);
 	}
 }

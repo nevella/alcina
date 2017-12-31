@@ -20,55 +20,56 @@ import com.google.gwt.core.client.JavaScriptObject;
 /**
  * Preformatted text.
  * 
- * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/text.html#edef-PRE">W3C HTML Specification</a>
+ * @see <a href=
+ *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/text.html#edef-PRE">
+ *      W3C HTML Specification</a>
  */
 @TagName(PreElement.TAG)
 public class PreElement extends Element {
+	public static final String TAG = "pre";
 
-  public static final String TAG = "pre";
+	/**
+	 * Assert that the given {@link Element} is compatible with this class and
+	 * automatically typecast it.
+	 */
+	public static PreElement as(Element elem) {
+		assert is(elem);
+		return (PreElement) elem;
+	}
 
-  /**
-   * Assert that the given {@link Element} is compatible with this class and
-   * automatically typecast it.
-   */
-  public static PreElement as(Element elem) {
-    assert is(elem);
-    return (PreElement) elem;
-  }
+	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
 
-  /**
-   * Determines whether the given {@link JavaScriptObject} can be cast to
-   * this class. A <code>null</code> object will cause this method to
-   * return <code>false</code>.
-   */
-  public static boolean is(JavaScriptObject o) {
-    if (Element.is(o)) {
-      return is(Element.as(o));
-    }
-    return false;
-  }
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to this
+	 * class. A <code>null</code> object will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(JavaScriptObject o) {
+		if (Element.is(o)) {
+			return is(Element.as(o));
+		}
+		return false;
+	}
 
-  /**
-   * Determine whether the given {@link Node} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Node node) {
-    if (Element.is(node)) {
-      return is((Element) node);
-    }
-    return false;
-  }
-  
-  /**
-   * Determine whether the given {@link Element} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Element elem) {
-    return elem != null && elem.hasTagName(TAG);
-  }
+	/**
+	 * Determine whether the given {@link Node} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		if (Element.is(node)) {
+			return is((Element) node);
+		}
+		return false;
+	}
 
-  protected PreElement() {
-  }
+	protected PreElement() {
+	}
 }

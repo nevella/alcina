@@ -11,8 +11,8 @@ import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 @XmlRootElement
-public class BasicExcelContentDefinition extends WrapperPersistable implements
-		ContentDefinition, GwtMultiplePersistable {
+public class BasicExcelContentDefinition extends WrapperPersistable
+		implements ContentDefinition, GwtMultiplePersistable {
 	private SingleTableSearchDefinition searchDefinition;
 
 	public String getPublicationType() {
@@ -23,7 +23,8 @@ public class BasicExcelContentDefinition extends WrapperPersistable implements
 		return this.searchDefinition;
 	}
 
-	public void setSearchDefinition(SingleTableSearchDefinition searchDefinition) {
+	public void
+			setSearchDefinition(SingleTableSearchDefinition searchDefinition) {
 		this.searchDefinition = searchDefinition;
 	}
 }

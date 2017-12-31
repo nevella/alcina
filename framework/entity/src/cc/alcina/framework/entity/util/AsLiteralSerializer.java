@@ -40,6 +40,9 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionCont
  * @author Nick Reddel
  */
 public class AsLiteralSerializer {
+	public static void main(String[] args) {
+	}
+
 	private ClassSourceFileComposerFactory composerFactory;
 
 	@SuppressWarnings("unused")
@@ -47,29 +50,26 @@ public class AsLiteralSerializer {
 
 	private int methodLengthCounter;
 
+	private int callCounter = 0;
+
+	private IdentityHashMap<Object, OutputInstantiation> reached = new IdentityHashMap<Object, OutputInstantiation>();
+
+	private List<OutputAssignment> assignments = new ArrayList<OutputAssignment>();
+
+	private Map<OutputInstantiation, List<OutputInstantiation>> addToCollnMap = new HashMap<OutputInstantiation, List<OutputInstantiation>>();
+
+	private Map<OutputInstantiation, List<OutputInstantiation>> addToMapMap = new HashMap<OutputInstantiation, List<OutputInstantiation>>();
+
+	private Set<Class> reachedClasses = new LinkedHashSet<Class>();
+
+	private int idCounter = 1;
+
+	Map<Class, PropertyDescriptor[]> propertyDescriptorsPerClass = new HashMap<Class, PropertyDescriptor[]>();
+
 	public AsLiteralSerializer(String packageName, String className) {
 		this.className = className;
 		composerFactory = new ClassSourceFileComposerFactory(packageName,
 				className);
-	}
-
-	private boolean isEnumExt(Class c) {
-		return c.getSuperclass() == java.lang.Enum.class
-				|| (c.getSuperclass() != null && c.getSuperclass()
-						.getSuperclass() == java.lang.Enum.class);
-	}
-
-	private boolean isEnumSubClass(Class c) {
-		return (c.getSuperclass() != null && !c.isEnum() && c.getSuperclass()
-				.getSuperclass() == java.lang.Enum.class);
-	}
-
-	private Class getEnumExt(Class c) {
-		if (c.getSuperclass() != null
-				&& c.getSuperclass().getSuperclass() == java.lang.Enum.class) {
-			return c.getSuperclass();
-		}
-		return null;
 	}
 
 	public String generate(Object source) throws Exception {
@@ -83,8 +83,8 @@ public class AsLiteralSerializer {
 			composerFactory.addImport(c.getName().replace("$", "."));
 		}
 		StringWriter stringWriter = new StringWriter();
-		SourceWriter sw = composerFactory.createSourceWriter(new PrintWriter(
-				stringWriter));
+		SourceWriter sw = composerFactory
+				.createSourceWriter(new PrintWriter(stringWriter));
 		sw.indent();
 		ArrayList<OutputInstantiation> insts = new ArrayList<OutputInstantiation>(
 				reached.values());
@@ -96,9 +96,9 @@ public class AsLiteralSerializer {
 				sw.println(String.format("%s %s;", className,
 						getObjLitRef(inst), getLiteralValue(inst.value)));
 			} else {
-				sw.println(String.format("%s %s;", className,
-						getObjLitRef(inst), className,
-						getLiteralValue(inst.value)));
+				sw.println(
+						String.format("%s %s;", className, getObjLitRef(inst),
+								className, getLiteralValue(inst.value)));
 			}
 		}
 		StringBuffer mainCall = new StringBuffer();
@@ -122,8 +122,9 @@ public class AsLiteralSerializer {
 		}
 		for (OutputAssignment assign : assignments) {
 			String assignLit = String.format("%s.%s(%s);",
-					getObjLitRef(assign.src), assign.pd.getWriteMethod()
-							.getName(), getObjLitRef(assign.target));
+					getObjLitRef(assign.src),
+					assign.pd.getWriteMethod().getName(),
+					getObjLitRef(assign.target));
 			sw.println(assignLit);
 			methodLengthCounter += assignLit.length() + 1;
 			if (methodLengthCounter > 20000) {
@@ -148,9 +149,8 @@ public class AsLiteralSerializer {
 			for (; itr.hasNext();) {
 				OutputInstantiation key = itr.next();
 				OutputInstantiation value = itr.next();
-				String add = String.format("%s.put(%s,%s);",
-						getObjLitRef(inst), getObjLitRef(key),
-						getObjLitRef(value));
+				String add = String.format("%s.put(%s,%s);", getObjLitRef(inst),
+						getObjLitRef(key), getObjLitRef(value));
 				sw.println(add);
 				methodLengthCounter += add.length() + 1;
 				if (methodLengthCounter > 20000) {
@@ -162,8 +162,8 @@ public class AsLiteralSerializer {
 		sw.println("}");
 		sw.outdent();
 		sw.println("}");
-		sw.println(String.format("public %s generate() {", source.getClass()
-				.getSimpleName()));
+		sw.println(String.format("public %s generate() {",
+				source.getClass().getSimpleName()));
 		sw.indent();
 		sw.println(mainCall.toString());
 		sw.println("return obj_1;");
@@ -174,123 +174,8 @@ public class AsLiteralSerializer {
 		return stringWriter.toString();
 	}
 
-	private int callCounter = 0;
-
-	private void newCall(StringBuffer mainCall, SourceWriter sw, boolean close) {
-		if (close) {
-			sw.outdent();
-			sw.println("}");
-			sw.outdent();
-			sw.println("}");
-		}
-		sw.println(String.format("private class Generate_%s {", ++callCounter));
-		sw.indent();
-		sw.println("private void run() {");
-		sw.indent();
-		mainCall.append(String.format("new Generate_%s().run();", callCounter));
-		methodLengthCounter = 0;
-	}
-
-	private String getObjLitRef(OutputInstantiation inst) {
-		if (inst == null) {
-			return "null";
-		}
-		return "obj_" + inst.id;
-	}
-
-	private Object getLiteralValue(Object value) {
-		if (value == null || !isSimple(value)) {
-			return "";
-		}
-		if (value instanceof Enum) {
-			return getClassName(value.getClass()) + "." + value;
-		}
-		if (value instanceof Date) {
-			Date d = (Date) value;
-			return d.getTime() + "L";
-		}
-		if (value instanceof String) {
-			return "\""
-					+ ((String) value).replace("\\", "\\\\")
-							.replace("\"", "\\\"").replace("\n", "\\n")
-							.replace("\r", "\\r").replace("\t", "\\t") + "\"";
-		}
-		if (value instanceof Character) {
-			return "'" + value + "'";
-		}
-		if (value instanceof Class) {
-			return ((Class) value).getSimpleName() + "." + "class";
-		}
-		if (value instanceof Long || value.getClass() == long.class) {
-			return value + "L";
-		}
-		return value;
-	}
-
-	public static void main(String[] args) {
-	}
-
-	private String getClassName(Class<? extends Object> clazz) {
-		if (isEnumSubClass(clazz)) {
-			clazz = clazz.getSuperclass();
-		}
-		return clazz.getSimpleName();
-	}
-
-	private IdentityHashMap<Object, OutputInstantiation> reached = new IdentityHashMap<Object, OutputInstantiation>();
-
-	private List<OutputAssignment> assignments = new ArrayList<OutputAssignment>();
-
-	private Map<OutputInstantiation, List<OutputInstantiation>> addToCollnMap = new HashMap<OutputInstantiation, List<OutputInstantiation>>();
-
-	private Map<OutputInstantiation, List<OutputInstantiation>> addToMapMap = new HashMap<OutputInstantiation, List<OutputInstantiation>>();
-
-	private Set<Class> reachedClasses = new LinkedHashSet<Class>();
-
-	private static class OutputAssignment {
-		OutputInstantiation src;
-
-		PropertyDescriptor pd;
-
-		OutputInstantiation target;
-
-		public OutputAssignment(OutputInstantiation src,
-				PropertyDescriptor setPropertyDescriptor,
-				OutputInstantiation target) {
-			super();
-			this.src = src;
-			this.pd = setPropertyDescriptor;
-			this.target = target;
-		}
-	}
-
-	static class OutputInstantiation implements Comparable<OutputInstantiation> {
-		Integer id;
-
-		Object value;
-
-		public OutputInstantiation(Integer id, Object value) {
-			super();
-			this.id = id;
-			this.value = value;
-		}
-
-		public int compareTo(OutputInstantiation o) {
-			return id.compareTo(o.id);
-		}
-	}
-
-	private int idCounter = 1;
-
-	private boolean isSimple(Object source) {
-		Class c = source.getClass();
-		return (c.isPrimitive() || c == String.class || c == Boolean.class
-				|| c == Character.class || isEnumExt(c) || c == Class.class
-				|| (source instanceof Number) || (source instanceof Date));
-	}
-
-	public OutputInstantiation traverse(Object source, GraphProjectionContext context)
-			throws Exception {
+	public OutputInstantiation traverse(Object source,
+			GraphProjectionContext context) throws Exception {
 		if (source == null) {
 			return null;
 		}
@@ -310,7 +195,8 @@ public class AsLiteralSerializer {
 		if (isSimple(source)) {
 			return instance;
 		}
-		PropertyDescriptor[] propertyDescriptors = getPropertyDescriptorsForClassProperties(source);
+		PropertyDescriptor[] propertyDescriptors = getPropertyDescriptorsForClassProperties(
+				source);
 		Object template = source.getClass().newInstance();
 		for (PropertyDescriptor pd : propertyDescriptors) {
 			Object tgt = pd.getReadMethod().invoke(source,
@@ -318,8 +204,8 @@ public class AsLiteralSerializer {
 			Object templateTgt = pd.getReadMethod().invoke(template,
 					CommonUtils.EMPTY_OBJECT_ARRAY);
 			if (tgt != templateTgt) {
-				assignments.add(new OutputAssignment(instance, pd, traverse(
-						tgt, null)));
+				assignments.add(new OutputAssignment(instance, pd,
+						traverse(tgt, null)));
 			}
 		}
 		if (source instanceof Collection) {
@@ -342,7 +228,55 @@ public class AsLiteralSerializer {
 		return instance;
 	}
 
-	Map<Class, PropertyDescriptor[]> propertyDescriptorsPerClass = new HashMap<Class, PropertyDescriptor[]>();
+	private String getClassName(Class<? extends Object> clazz) {
+		if (isEnumSubClass(clazz)) {
+			clazz = clazz.getSuperclass();
+		}
+		return clazz.getSimpleName();
+	}
+
+	private Class getEnumExt(Class c) {
+		if (c.getSuperclass() != null
+				&& c.getSuperclass().getSuperclass() == java.lang.Enum.class) {
+			return c.getSuperclass();
+		}
+		return null;
+	}
+
+	private Object getLiteralValue(Object value) {
+		if (value == null || !isSimple(value)) {
+			return "";
+		}
+		if (value instanceof Enum) {
+			return getClassName(value.getClass()) + "." + value;
+		}
+		if (value instanceof Date) {
+			Date d = (Date) value;
+			return d.getTime() + "L";
+		}
+		if (value instanceof String) {
+			return "\"" + ((String) value).replace("\\", "\\\\")
+					.replace("\"", "\\\"").replace("\n", "\\n")
+					.replace("\r", "\\r").replace("\t", "\\t") + "\"";
+		}
+		if (value instanceof Character) {
+			return "'" + value + "'";
+		}
+		if (value instanceof Class) {
+			return ((Class) value).getSimpleName() + "." + "class";
+		}
+		if (value instanceof Long || value.getClass() == long.class) {
+			return value + "L";
+		}
+		return value;
+	}
+
+	private String getObjLitRef(OutputInstantiation inst) {
+		if (inst == null) {
+			return "null";
+		}
+		return "obj_" + inst.id;
+	}
 
 	private PropertyDescriptor[] getPropertyDescriptorsForClassProperties(
 			Object cloned) throws Exception {
@@ -356,12 +290,79 @@ public class AsLiteralSerializer {
 					allPropertyDescriptors.add(pd);
 				}
 			}
-			propertyDescriptorsPerClass
-					.put(clazz,
-							(PropertyDescriptor[]) allPropertyDescriptors
-									.toArray(new PropertyDescriptor[allPropertyDescriptors
-											.size()]));
+			propertyDescriptorsPerClass.put(clazz,
+					(PropertyDescriptor[]) allPropertyDescriptors.toArray(
+							new PropertyDescriptor[allPropertyDescriptors
+									.size()]));
 		}
 		return propertyDescriptorsPerClass.get(clazz);
+	}
+
+	private boolean isEnumExt(Class c) {
+		return c.getSuperclass() == java.lang.Enum.class
+				|| (c.getSuperclass() != null && c.getSuperclass()
+						.getSuperclass() == java.lang.Enum.class);
+	}
+
+	private boolean isEnumSubClass(Class c) {
+		return (c.getSuperclass() != null && !c.isEnum()
+				&& c.getSuperclass().getSuperclass() == java.lang.Enum.class);
+	}
+
+	private boolean isSimple(Object source) {
+		Class c = source.getClass();
+		return (c.isPrimitive() || c == String.class || c == Boolean.class
+				|| c == Character.class || isEnumExt(c) || c == Class.class
+				|| (source instanceof Number) || (source instanceof Date));
+	}
+
+	private void newCall(StringBuffer mainCall, SourceWriter sw,
+			boolean close) {
+		if (close) {
+			sw.outdent();
+			sw.println("}");
+			sw.outdent();
+			sw.println("}");
+		}
+		sw.println(String.format("private class Generate_%s {", ++callCounter));
+		sw.indent();
+		sw.println("private void run() {");
+		sw.indent();
+		mainCall.append(String.format("new Generate_%s().run();", callCounter));
+		methodLengthCounter = 0;
+	}
+
+	private static class OutputAssignment {
+		OutputInstantiation src;
+
+		PropertyDescriptor pd;
+
+		OutputInstantiation target;
+
+		public OutputAssignment(OutputInstantiation src,
+				PropertyDescriptor setPropertyDescriptor,
+				OutputInstantiation target) {
+			super();
+			this.src = src;
+			this.pd = setPropertyDescriptor;
+			this.target = target;
+		}
+	}
+
+	static class OutputInstantiation
+			implements Comparable<OutputInstantiation> {
+		Integer id;
+
+		Object value;
+
+		public OutputInstantiation(Integer id, Object value) {
+			super();
+			this.id = id;
+			this.value = value;
+		}
+
+		public int compareTo(OutputInstantiation o) {
+			return id.compareTo(o.id);
+		}
 	}
 }

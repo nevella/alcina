@@ -17,7 +17,9 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import javax.xml.bind.annotation.XmlTransient;
+
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
@@ -29,53 +31,54 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
  * 
  * 
  */
-public abstract class IdMultipleCriterion<E extends HasIdAndLocalId> extends SearchCriterion implements HasValue<Set<E>> {
+public abstract class IdMultipleCriterion<E extends HasIdAndLocalId>
+		extends SearchCriterion implements HasValue<Set<E>> {
+	static final transient long serialVersionUID = -1L;
 
-    static final transient long serialVersionUID = -1L;
+	private Set<Long> ids = new LinkedHashSet<>();
 
-    private Set<Long> ids = new LinkedHashSet<>();
+	private transient Set<E> value;
 
-    public Set<Long> getIds() {
-        return this.ids;
-    }
+	public IdMultipleCriterion() {
+	}
 
-    public void setIds(Set<Long> ids) {
-        this.ids = ids;
-    }
+	public IdMultipleCriterion(String criteriaDisplayName) {
+		super(criteriaDisplayName);
+	}
 
-    private transient Set<E> value;
+	public Set<Long> getIds() {
+		return this.ids;
+	}
 
-    public IdMultipleCriterion() {
-    }
+	@AlcinaTransient
+	@XmlTransient
+	public Set<E> getValue() {
+		if (value == null) {
+			Function<Long, E> supplier = objectSupplier();
+			value = ids.stream().map(id -> supplier.apply(id))
+					.collect(Collectors.toSet());
+		}
+		return value;
+	}
 
-    public abstract Function<Long, E> objectSupplier();
+	public abstract Function<Long, E> objectSupplier();
 
-    public IdMultipleCriterion(String criteriaDisplayName) {
-        super(criteriaDisplayName);
-    }
+	public void setIds(Set<Long> ids) {
+		this.ids = ids;
+	}
 
-    @AlcinaTransient
-    @XmlTransient
-    public Set<E> getValue() {
-        if (value == null) {
-            Function<Long, E> supplier = objectSupplier();
-            value = ids.stream().map(id -> supplier.apply(id)).collect(Collectors.toSet());
-        }
-        return value;
-    }
-
-    /**
+	/**
 	 * add property change firing to the subclass implementation, if you care
 	 */
-    public void setValue(Set<E> value) {
-        setIds(HiliHelper.toIdSet(value));
-        Set<E> old_value = this.value;
-        this.value = value;
-        propertyChangeSupport().firePropertyChange("value", old_value, value);
-    }
+	public void setValue(Set<E> value) {
+		setIds(HiliHelper.toIdSet(value));
+		Set<E> old_value = this.value;
+		this.value = value;
+		propertyChangeSupport().firePropertyChange("value", old_value, value);
+	}
 
-    @Override
-    public String toString() {
-        return String.valueOf(getValue());
-    }
+	@Override
+	public String toString() {
+		return String.valueOf(getValue());
+	}
 }

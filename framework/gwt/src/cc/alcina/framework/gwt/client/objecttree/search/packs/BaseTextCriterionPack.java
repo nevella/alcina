@@ -14,6 +14,24 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.util.TextUtils;
 
 public class BaseTextCriterionPack {
+	public interface BaseTextCriterionHandler<T> {
+		public boolean test(T t, String text);
+
+		default CacheFilter getFilter0(TxtCriterion sc) {
+			String text = TextUtils.normalisedLcKey(sc.getText());
+			if (text.isEmpty()) {
+				return null;
+			}
+			return new CacheFilter(new CollectionFilter<T>() {
+				@Override
+				public boolean allow(T o) {
+					return BaseTextCriterionHandler.this.test(o, text);
+				}
+			}).invertIf(sc
+					.getOperator() == StandardSearchOperator.DOES_NOT_CONTAIN);
+		}
+	}
+
 	public static abstract class BaseTextCriterionSearchable
 			extends FlatSearchable<TxtCriterion> {
 		public BaseTextCriterionSearchable(String objectName) {
@@ -23,8 +41,8 @@ public class BaseTextCriterionPack {
 		}
 
 		@Override
-		public boolean hasValue(TxtCriterion sc) {
-			return CommonUtils.isNotNullOrEmpty(sc.getText());
+		public AbstractBoundWidget createEditor() {
+			return new TextBox();
 		}
 
 		@Override
@@ -33,26 +51,8 @@ public class BaseTextCriterionPack {
 		}
 
 		@Override
-		public AbstractBoundWidget createEditor() {
-			return new TextBox();
+		public boolean hasValue(TxtCriterion sc) {
+			return CommonUtils.isNotNullOrEmpty(sc.getText());
 		}
-	}
-
-	public interface BaseTextCriterionHandler<T>  {
-		default CacheFilter getFilter0(TxtCriterion sc) {
-			String text = TextUtils.normalisedLcKey(sc.getText());
-			if (text.isEmpty()) {
-				return null;
-			}
-			return new CacheFilter(new CollectionFilter<T>() {
-				@Override
-				public boolean allow(T o) {
-					return BaseTextCriterionHandler.this.test(o,text);
-				}
-			}).invertIf(sc
-					.getOperator() == StandardSearchOperator.DOES_NOT_CONTAIN);
-		}
-
-		public boolean test(T t, String text);
 	}
 }

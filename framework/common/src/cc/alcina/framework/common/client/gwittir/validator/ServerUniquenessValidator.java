@@ -51,23 +51,14 @@ public class ServerUniquenessValidator extends ServerValidator {
 
 	private Long okId;
 
-	@Override
-	protected void handleServerValidationException(ServerValidator sv) {
-		super.handleServerValidationException(sv);
-		if (sv instanceof ServerUniquenessValidator) {
-			ServerUniquenessValidator suv = (ServerUniquenessValidator) sv;
-			setSuggestedValue(suv.getSuggestedValue());
-		}
-	}
-
 	public ServerUniquenessValidator() {
 		initProperties();
 	}
 
 	public Class getObjectClass() {
 		if (objectClass == null && objectClassName != null) {
-			objectClass = Reflections.classLookup().getClassForName(
-					objectClassName);
+			objectClass = Reflections.classLookup()
+					.getClassForName(objectClassName);
 		}
 		return objectClass;
 	}
@@ -113,8 +104,8 @@ public class ServerUniquenessValidator extends ServerValidator {
 
 	@Override
 	public void setParameters(NamedParameter[] parameters) {
-		NamedParameter parameter = NamedParameter.Support.getParameter(
-				parameters, OBJECT_CLASS);
+		NamedParameter parameter = NamedParameter.Support
+				.getParameter(parameters, OBJECT_CLASS);
 		if (parameter != null) {
 			setObjectClass(parameter.classValue());
 		}
@@ -151,10 +142,6 @@ public class ServerUniquenessValidator extends ServerValidator {
 		this.valueTemplate = valueTemplate;
 	}
 
-	protected boolean nullAlwaysValid() {
-		return true;
-	}
-
 	@Override
 	public Object validate(Object value) throws ValidationException {
 		if (value == null && nullAlwaysValid()) {
@@ -165,7 +152,20 @@ public class ServerUniquenessValidator extends ServerValidator {
 		return super.validate(value);
 	}
 
+	@Override
+	protected void handleServerValidationException(ServerValidator sv) {
+		super.handleServerValidationException(sv);
+		if (sv instanceof ServerUniquenessValidator) {
+			ServerUniquenessValidator suv = (ServerUniquenessValidator) sv;
+			setSuggestedValue(suv.getSuggestedValue());
+		}
+	}
+
 	// this is for hard-coded property-defined subclasses
 	protected void initProperties() {
+	}
+
+	protected boolean nullAlwaysValid() {
+		return true;
 	}
 }

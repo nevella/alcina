@@ -285,11 +285,6 @@ public class StyleLocal implements DomStyle {
 		DomStyleStatic.clearZIndex(this);
 	}
 
-	 void cloneStyleFrom(DomStyle other,Style to) {
-		StyleLocal clone = new StyleLocal(to);
-		clone.properties = new StringMap(((StyleLocal) other).properties);
-	}
-
 	@Override
 	public String getBackgroundColor() {
 		return DomStyleStatic.getBackgroundColor(this);
@@ -815,11 +810,16 @@ public class StyleLocal implements DomStyle {
 		return styleObject;
 	}
 
-	 void removeProperty(String key) {
-		properties.remove(key);
+	void cloneStyleFrom(DomStyle other, Style to) {
+		StyleLocal clone = new StyleLocal(to);
+		clone.properties = new StringMap(((StyleLocal) other).properties);
 	}
 
-	 boolean isEmpty() {
+	boolean isEmpty() {
 		return properties.isEmpty();
+	}
+
+	void removeProperty(String key) {
+		properties.remove(key);
 	}
 }

@@ -28,9 +28,8 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  * constructor due to differences in implementations when using the single-arg
  * constructor (is the day Jan 1 1970, what are the millis).
  */
-public final class Time_CustomFieldSerializer extends
-		CustomFieldSerializer<Time> {
-	
+public final class Time_CustomFieldSerializer
+		extends CustomFieldSerializer<Time> {
 	public static void deserialize(SerializationStreamReader streamReader,
 			Time instance) {
 		// No fields
@@ -43,15 +42,9 @@ public final class Time_CustomFieldSerializer extends
 
 	public static void serialize(SerializationStreamWriter streamWriter,
 			Time instance) throws SerializationException {
-		if(GWT.isClient()){
+		if (GWT.isClient()) {
 			streamWriter.writeLong(instance.getTime());
 		}
-	}
-
-	@Override
-	public void serializeConstructor(SerializationStreamWriter streamWriter,
-			Time instance) throws SerializationException {
-		streamWriter.writeLong(instance.getTime());
 	}
 
 	@Override
@@ -69,6 +62,12 @@ public final class Time_CustomFieldSerializer extends
 	public Time instantiateInstance(SerializationStreamReader streamReader)
 			throws SerializationException {
 		return instantiate(streamReader);
+	}
+
+	@Override
+	public void serializeConstructor(SerializationStreamWriter streamWriter,
+			Time instance) throws SerializationException {
+		streamWriter.writeLong(instance.getTime());
 	}
 
 	@Override

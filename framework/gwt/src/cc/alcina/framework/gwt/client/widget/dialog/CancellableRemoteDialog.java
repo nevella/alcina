@@ -31,8 +31,8 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
  * 
  * @author Nick Reddel
  */
-public class CancellableRemoteDialog extends GlassDialogBox implements
-		ModalNotifier {
+public class CancellableRemoteDialog extends GlassDialogBox
+		implements ModalNotifier {
 	public static final String CANCEL_ACTION = "cancel";
 
 	private Label statusLabel;
@@ -44,10 +44,6 @@ public class CancellableRemoteDialog extends GlassDialogBox implements
 	private String status = "";
 
 	private Double progress;
-
-	protected boolean initialAnimationEnabled() {
-		return true;
-	}
 
 	public CancellableRemoteDialog(String msg, PermissibleActionListener l) {
 		this(msg, l, true);
@@ -66,7 +62,7 @@ public class CancellableRemoteDialog extends GlassDialogBox implements
 		setText("Please wait...");
 		setAnimationEnabled(initialAnimationEnabled());
 		Grid grr = new Grid(2, 1);
-		status=msg;
+		status = msg;
 		statusLabel = new Label(msg);
 		grr.getCellFormatter().setHorizontalAlignment(0, 0,
 				HasHorizontalAlignment.ALIGN_CENTER);
@@ -100,34 +96,18 @@ public class CancellableRemoteDialog extends GlassDialogBox implements
 		show();
 	}
 
-	public void setStatus(String status) {
-		this.status = CommonUtils.nullToEmpty(status);
-		updateStatusLabel();
-	}
-
-	private void updateStatusLabel() {
-		statusLabel.setText(progress == null ? status : CommonUtils.formatJ(
-				"%s - %s% complete", status,
-				CommonUtils.padTwo((int) Math.round(progress * 100))));
-		center();
-	}
-
-	public void setRetryButton(Button retryButton) {
-		this.retryButton = retryButton;
-	}
-
 	public Button getRetryButton() {
 		return retryButton;
 	}
 
 	@Override
-	public void modalOn() {
-		centerAndShow();
+	public void modalOff() {
+		hide();
 	}
 
 	@Override
-	public void modalOff() {
-		hide();
+	public void modalOn() {
+		centerAndShow();
 	}
 
 	@Override
@@ -141,5 +121,25 @@ public class CancellableRemoteDialog extends GlassDialogBox implements
 	public void setProgress(double progress) {
 		this.progress = progress;
 		updateStatusLabel();
+	}
+
+	public void setRetryButton(Button retryButton) {
+		this.retryButton = retryButton;
+	}
+
+	public void setStatus(String status) {
+		this.status = CommonUtils.nullToEmpty(status);
+		updateStatusLabel();
+	}
+
+	private void updateStatusLabel() {
+		statusLabel.setText(progress == null ? status
+				: CommonUtils.formatJ("%s - %s% complete", status,
+						CommonUtils.padTwo((int) Math.round(progress * 100))));
+		center();
+	}
+
+	protected boolean initialAnimationEnabled() {
+		return true;
 	}
 }

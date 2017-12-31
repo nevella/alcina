@@ -38,23 +38,12 @@ public class ApplicationCacheManifestServlet extends HttpServlet {
 	private static final long serialVersionUID = 6970120146736639472L;
 
 	@Override
-	protected void service(HttpServletRequest req, HttpServletResponse resp)
-			throws ServletException, IOException {
-		resp.setContentType("text/cache-manifest");
-		PrintWriter out = resp.getWriter();
-		out.print(getCacheManifest(req,resp));
-		out.flush();
-		resp.flushBuffer();
-		log("Hitting a cache manifest: " + req.getRequestURI());
-	}
-
-	@Override
 	public void log(String msg) {
 		// super.log(msg);
 	}
 
-	protected String getCacheManifest(HttpServletRequest req, HttpServletResponse resp)
-			throws ServletException {
+	protected String getCacheManifest(HttpServletRequest req,
+			HttpServletResponse resp) throws ServletException {
 		String cacheManifest = null;
 		String cacheManifestName = req.getRequestURI();
 		try {
@@ -77,8 +66,20 @@ public class ApplicationCacheManifestServlet extends HttpServlet {
 		} catch (IOException e) {
 			throw new ServletException(
 					"Exception while reading cache-manifest named '"
-							+ cacheManifestName + "'", e);
+							+ cacheManifestName + "'",
+					e);
 		}
 		return cacheManifest;
+	}
+
+	@Override
+	protected void service(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
+		resp.setContentType("text/cache-manifest");
+		PrintWriter out = resp.getWriter();
+		out.print(getCacheManifest(req, resp));
+		out.flush();
+		resp.flushBuffer();
+		log("Hitting a cache manifest: " + req.getRequestURI());
 	}
 }

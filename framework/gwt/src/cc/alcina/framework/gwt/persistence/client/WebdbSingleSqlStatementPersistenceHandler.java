@@ -9,8 +9,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public abstract class WebdbSingleSqlStatementPersistenceHandler<T> implements
-		StatementCallback<GenericRow>, TransactionCallback {
+public abstract class WebdbSingleSqlStatementPersistenceHandler<T>
+		implements StatementCallback<GenericRow>, TransactionCallback {
 	protected String sql;
 
 	protected AsyncCallback<T> postTransactionCallback;
@@ -18,8 +18,6 @@ public abstract class WebdbSingleSqlStatementPersistenceHandler<T> implements
 	protected Object[] arguments;
 
 	protected SQLError statementError;
-
-	protected abstract T getResult();
 
 	public WebdbSingleSqlStatementPersistenceHandler(String sql,
 			AsyncCallback<T> postTransactionCallback) {
@@ -33,23 +31,27 @@ public abstract class WebdbSingleSqlStatementPersistenceHandler<T> implements
 		this.arguments = arguments;
 	}
 
-	public void onTransactionStart(SQLTransaction tx) {
-		tx.executeSql(sql, arguments, this);
+	@Override
+	public boolean onFailure(SQLTransaction transaction, SQLError error) {
+		statementError = error;
+		return true;
 	}
 
 	public void onTransactionFailure(SQLError error) {
-		postTransactionCallback.onFailure(new Exception(CommonUtils.formatJ(
-				"%s :: %s", (statementError == null ? "<no statement error>"
-						: statementError.getMessage()), error.getMessage())));
+		postTransactionCallback
+				.onFailure(new Exception(CommonUtils.formatJ("%s :: %s",
+						(statementError == null ? "<no statement error>"
+								: statementError.getMessage()),
+						error.getMessage())));
+	}
+
+	public void onTransactionStart(SQLTransaction tx) {
+		tx.executeSql(sql, arguments, this);
 	}
 
 	public void onTransactionSuccess() {
 		postTransactionCallback.onSuccess(getResult());
 	}
 
-	@Override
-	public boolean onFailure(SQLTransaction transaction, SQLError error) {
-		statementError = error;
-		return true;
-	}
+	protected abstract T getResult();
 }

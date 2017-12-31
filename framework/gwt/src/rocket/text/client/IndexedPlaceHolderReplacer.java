@@ -24,9 +24,19 @@ import rocket.util.client.Checker;
  * @author Miroslav Pokorny
  */
 public class IndexedPlaceHolderReplacer extends PlaceHolderReplacer {
+	/**
+	 * A String array that contains the values for each of the placeholders
+	 */
+	private Object[] values;
+
 	@Override
 	public String execute(final String text) {
 		return super.execute(text);
+	}
+
+	public void setValues(final Object[] values) {
+		Checker.notNull("parameter:values", values);
+		this.values = values;
 	}
 
 	@Override
@@ -41,18 +51,8 @@ public class IndexedPlaceHolderReplacer extends PlaceHolderReplacer {
 		}
 	}
 
-	/**
-	 * A String array that contains the values for each of the placeholders
-	 */
-	private Object[] values;
-
 	protected Object[] getValues() {
 		Checker.notNull("field:values", values);
 		return this.values;
-	}
-
-	public void setValues(final Object[] values) {
-		Checker.notNull("parameter:values", values);
-		this.values = values;
 	}
 }

@@ -11,28 +11,28 @@ import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableSe
  *         All implementations must also have a per-class singleton location ::
  * 
  *         <pre>
- * @RegistryLocation(registryPoint=Bruce.class,implementationType=ImplementationType.SINGLETON)
+ * &#64;RegistryLocation(registryPoint=Bruce.class,implementationType=ImplementationType.SINGLETON)
  * public class Bruce
- * </pre>
+ *         </pre>
  */
 @RegistryLocation(registryPoint = WriterService.class)
 public abstract class WriterService implements RegistrableService {
-	public void onApplicationStartup() {
-		startService();
-	}
-
-	public void onApplicationShutdown() {
-		stopService();
-	}
-
-	public abstract void startService();
-
-	public abstract void stopService();
-
 	@Override
 	public void appShutdown() {
 		// this should be called earlier than the general service shutdown - for
 		// the mo' at least
 		// shutdown();
 	}
+
+	public void onApplicationShutdown() {
+		stopService();
+	}
+
+	public void onApplicationStartup() {
+		startService();
+	}
+
+	public abstract void startService();
+
+	public abstract void stopService();
 }

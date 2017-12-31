@@ -6,8 +6,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 
 @SuppressWarnings("unchecked")
-public class ThreadedClientTransformManager extends
-		ClientTransformManagerCommon {
+public class ThreadedClientTransformManager
+		extends ClientTransformManagerCommon {
 	private static ThreadLocal<Boolean> ignorePropertyChanges = new ThreadLocal() {
 		protected synchronized Boolean initialValue() {
 			return false;
@@ -20,24 +20,11 @@ public class ThreadedClientTransformManager extends
 		}
 	};
 
-	@Override
-	public boolean isIgnorePropertyChanges() {
-		return ignorePropertyChanges.get();
-	}
+	HiliLocatorMap userSessionHiliMap = new HiliLocatorMap();
 
-	@Override
-	public boolean isReplayingRemoteEvent() {
-		return replayingRemoteEvent.get();
-	}
-
-	@Override
-	public void setIgnorePropertyChanges(boolean _ignorePropertyChanges) {
-		ignorePropertyChanges.set(_ignorePropertyChanges);
-	}
-
-	@Override
-	public void setReplayingRemoteEvent(boolean _replayingRemoteEvent) {
-		replayingRemoteEvent.set(_replayingRemoteEvent);
+	public synchronized <H extends HasIdAndLocalId> long
+			getLocalIdForClientInstance(H hili) {
+		return userSessionHiliMap.getLocalIdForClientInstance(hili);
 	}
 
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
@@ -50,21 +37,35 @@ public class ThreadedClientTransformManager extends
 					return getDomainObjects().getObject(c, hiliLocator.getId(),
 							0L);
 				}
-			}else{
+			} else {
 				return object;
 			}
 		}
 		return null;
 	}
 
-	HiliLocatorMap userSessionHiliMap = new HiliLocatorMap();
-
-	public synchronized <H extends HasIdAndLocalId> long getLocalIdForClientInstance(H hili) {
-		return userSessionHiliMap.getLocalIdForClientInstance(hili);
+	@Override
+	public boolean isIgnorePropertyChanges() {
+		return ignorePropertyChanges.get();
 	}
 
-	public synchronized void registerHiliMappingPriorToLocalIdDeletion(Class clazz, long id,
-			long localId) {
+	@Override
+	public boolean isReplayingRemoteEvent() {
+		return replayingRemoteEvent.get();
+	}
+
+	public synchronized void registerHiliMappingPriorToLocalIdDeletion(
+			Class clazz, long id, long localId) {
 		userSessionHiliMap.putToLookups(new HiliLocator(clazz, id, localId));
+	}
+
+	@Override
+	public void setIgnorePropertyChanges(boolean _ignorePropertyChanges) {
+		ignorePropertyChanges.set(_ignorePropertyChanges);
+	}
+
+	@Override
+	public void setReplayingRemoteEvent(boolean _replayingRemoteEvent) {
+		replayingRemoteEvent.set(_replayingRemoteEvent);
 	}
 }

@@ -17,6 +17,60 @@ import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 
 public class RemoteActionLogger extends Logger {
+	private WriterAccessWriterAppender writerAppender;
+
+	protected RemoteActionLogger(String name) {
+		super(name);
+		try {
+			injectBlankHierarchy();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		writerAppender = new WriterAccessWriterAppender();
+		writerAppender.setWriter(new StringWriter());
+		writerAppender.setLayout(RemoteActionLoggerProvider.layout);
+		writerAppender
+				.setName(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY);
+		addAppender(writerAppender);
+		setLevel(Level.DEBUG);
+		SafeConsoleAppender consoleAppender = new SafeConsoleAppender(
+				RemoteActionLoggerProvider.layout);
+		addAppender(consoleAppender);
+	}
+
+	public String flushLogger() {
+		return resetLogBuffer();
+	}
+
+	public String getLoggerBufferContents() {
+		return writerAppender.getWriterAccess().toString();
+	}
+
+	public int getLoggerBufferLength() {
+		return writerAppender.getWriterAccess().getBuffer().length();
+	}
+
+	public String getLoggerBufferSubstring(int from, int to) {
+		return writerAppender.getWriterAccess().getBuffer().substring(from, to);
+	}
+
+	public String resetLogBuffer() {
+		String result = writerAppender.getWriterAccess().toString();
+		try {
+			writerAppender.resetWriter();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		return result;
+	}
+
+	private void injectBlankHierarchy() throws Exception {
+		Method method = Category.class.getDeclaredMethod("setHierarchy",
+				new Class[] { LoggerRepository.class });
+		method.setAccessible(true);
+		method.invoke(this, new Object[] { new BlankHierarchy() });
+	}
+
 	static class BlankHierarchy implements LoggerRepository {
 		@Override
 		public void addHierarchyEventListener(HierarchyEventListener arg0) {
@@ -86,59 +140,5 @@ public class RemoteActionLogger extends Logger {
 		@Override
 		public void shutdown() {
 		}
-	}
-
-	private WriterAccessWriterAppender writerAppender;
-
-	protected RemoteActionLogger(String name) {
-		super(name);
-		try {
-			injectBlankHierarchy();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-		writerAppender = new WriterAccessWriterAppender();
-		writerAppender.setWriter(new StringWriter());
-		writerAppender.setLayout(RemoteActionLoggerProvider.layout);
-		writerAppender
-				.setName(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY);
-		addAppender(writerAppender);
-		setLevel(Level.DEBUG);
-		SafeConsoleAppender consoleAppender = new SafeConsoleAppender(
-				RemoteActionLoggerProvider.layout);
-		addAppender(consoleAppender);
-	}
-
-	private void injectBlankHierarchy() throws Exception {
-		Method method = Category.class.getDeclaredMethod("setHierarchy",
-				new Class[] { LoggerRepository.class });
-		method.setAccessible(true);
-		method.invoke(this, new Object[] { new BlankHierarchy() });
-	}
-
-	public String resetLogBuffer() {
-		String result = writerAppender.getWriterAccess().toString();
-		try {
-			writerAppender.resetWriter();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-		return result;
-	}
-
-	public String flushLogger() {
-		return resetLogBuffer();
-	}
-
-	public int getLoggerBufferLength() {
-		return writerAppender.getWriterAccess().getBuffer().length();
-	}
-
-	public String getLoggerBufferSubstring(int from, int to) {
-		return writerAppender.getWriterAccess().getBuffer().substring(from, to);
-	}
-
-	public String getLoggerBufferContents() {
-		return writerAppender.getWriterAccess().toString();
 	}
 }

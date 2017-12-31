@@ -38,6 +38,15 @@ public class TextAreaElement extends Element {
 	}
 
 	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
+
+	/**
 	 * Determines whether the given {@link JavaScriptObject} can be cast to this
 	 * class. A <code>null</code> object will cause this method to return
 	 * <code>false</code>.
@@ -59,15 +68,6 @@ public class TextAreaElement extends Element {
 			return is((Element) node);
 		}
 		return false;
-	}
-
-	/**
-	 * Determine whether the given {@link Element} can be cast to this class. A
-	 * <code>null</code> node will cause this method to return
-	 * <code>false</code>.
-	 */
-	public static boolean is(Element elem) {
-		return elem != null && elem.hasTagName(TAG);
 	}
 
 	protected TextAreaElement() {
@@ -131,6 +131,19 @@ public class TextAreaElement extends Element {
 		return this.getPropertyString("name");
 	}
 
+	@Override
+	public String getPropertyString(String name) {
+		ensureRemoteCheck();
+		if ("value".equals(name)) {
+			if (linkedToRemote()) {
+				return typedRemote().getPropertyString(name);
+			} else {
+				return getInnerText();
+			}
+		}
+		return super.getPropertyString(name);
+	}
+
 	/**
 	 * @deprecated use {@link #isReadOnly()} instead.
 	 */
@@ -190,13 +203,6 @@ public class TextAreaElement extends Element {
 		return this.getPropertyBoolean("readOnly");
 	}
 
-	/**
-	 * Select the contents of the TEXTAREA.
-	 */
-	native void select0(ElementRemote elt) /*-{
-        this.select();
-	}-*/;
-
 	public final void select() {
 		select0(ensureRemote());
 	}
@@ -254,6 +260,28 @@ public class TextAreaElement extends Element {
 		this.setPropertyString("name", name);
 	}
 
+	@Override
+	public void setPropertyBoolean(String name, boolean value) {
+		ensureRemoteCheck();
+		if ((name.equals("readOnly") || name.equals("disabled")) && !value) {
+			local().removeAttribute(name);
+		} else {
+			local().setPropertyBoolean(name, value);
+		}
+		remote().setPropertyBoolean(name, value);
+	}
+
+	@Override
+	public void setPropertyString(String name, String value) {
+		ensureRemoteCheck();
+		if ("value".equals(name)) {
+			local().setInnerText(value);
+		} else {
+			local().setPropertyString(name, value);
+		}
+		remote().setPropertyString(name, value);
+	}
+
 	/**
 	 * This control is read-only.
 	 * 
@@ -276,41 +304,6 @@ public class TextAreaElement extends Element {
 		this.setPropertyInt("rows", rows);
 	}
 
-	@Override
-	public void setPropertyBoolean(String name, boolean value) {
-		ensureRemoteCheck();
-		if ((name.equals("readOnly") || name.equals("disabled")) && !value) {
-			local().removeAttribute(name);
-		}else{
-			local().setPropertyBoolean(name, value);
-		}
-		remote().setPropertyBoolean(name, value);
-	}
-
-	@Override
-	public String getPropertyString(String name) {
-		ensureRemoteCheck();
-		if ("value".equals(name)) {
-			if (linkedToRemote()) {
-				return typedRemote().getPropertyString(name);
-			} else {
-				return getInnerText();
-			}
-		}
-		return super.getPropertyString(name);
-	}
-
-	@Override
-	public void setPropertyString(String name, String value) {
-		ensureRemoteCheck();
-		if ("value".equals(name)) {
-			local().setInnerText(value);
-		} else {
-			local().setPropertyString(name, value);
-		}
-		remote().setPropertyString(name, value);
-	}
-
 	/**
 	 * Represents the current contents of the corresponding form control, in an
 	 * interactive user agent. Changing this attribute changes the contents of
@@ -321,4 +314,11 @@ public class TextAreaElement extends Element {
 	public void setValue(String value) {
 		this.setPropertyString("value", value);
 	}
+
+	/**
+	 * Select the contents of the TEXTAREA.
+	 */
+	native void select0(ElementRemote elt) /*-{
+											this.select();
+											}-*/;
 }

@@ -51,218 +51,6 @@ public class TreeItem extends UIObject
 	 */
 	private static final double CHILD_MARGIN = 16.0;
 
-	enum PotentialState {
-		POTENTIAL, POTENTIAL_CHILDREN, INSTANTIATED
-	}
-
-	PotentialState potentialState = PotentialState.POTENTIAL;
-
-	/**
-	 * Implementation class for {@link TreeItem}.
-	 */
-	public static class TreeItemImpl {
-		public TreeItemImpl() {
-			initializeClonableElements();
-		}
-
-		void ensureState(TreeItem item, PotentialState state) {
-			if (item.potentialState.ordinal() >= state.ordinal()) {
-				return;
-			}
-			if (item.imageHolder == null) {
-//				item.contentElem = item.resolve(item.contentElem);
-				item.contentElem.setClassName("gwt-TreeItem");
-//				item.setElement(item.resolve(item.getElement()));
-				convertToFullNode(item);
-			}
-			if (state == PotentialState.INSTANTIATED) {
-				item.initChildSpanElement();
-			}
-			TreeItem parentItem = item.getParentItem();
-			item.potentialState = state;
-			if (!item.isRoot && parentItem != null
-					&& item.getElement().getParentElement() == null) {
-				ensureState(parentItem, PotentialState.INSTANTIATED);
-				ensureMargin(item, parentItem);
-				Element childContainer = parentItem.isRoot
-						? item.getTree().getElement()
-						: parentItem.childSpanElem;
-				childContainer.appendChild(item.getElement());
-				item.updateState(false, false);
-			}
-		}
-
-		void convertToFullNode(TreeItem item) {
-			if (item.imageHolder == null) {
-				// Extract the Elements from the object
-				Element itemDiv = DOM.clone(BASE_INTERNAL_ELEM, true);
-				DOM.appendChild(item.getElement(), itemDiv);
-				Element imgHolder = DOM.getFirstChild(itemDiv);
-				Element contentHolder = DOM.getNextSibling(imgHolder);
-				// Undoes padding from table element.
-				DOM.setStyleAttribute(item.getElement(), "padding", "0px");
-				DOM.appendChild(contentHolder, item.contentElem);
-				item.imageHolder = imgHolder;
-			}
-		}
-
-		/**
-		 * Setup clonable elements.
-		 */
-		void initializeClonableElements() {
-			if (GWT.isClient()) {
-				// Create the base table element that will be cloned.
-				BASE_INTERNAL_ELEM = DOM.createDiv();
-				Element contentElem = DOM.createDiv();
-				Element imageHolder = DOM.createDiv();
-				DOM.appendChild(BASE_INTERNAL_ELEM, imageHolder);
-				// note, error in original GWT code here used contentElem (which
-				// is subsequently removed by later .append)
-				DOM.appendChild(BASE_INTERNAL_ELEM, DOM.createDiv());
-				setStyleName(contentElem, "gwt-TreeItem");
-				setStyleName(imageHolder, "gwt-TreeItem-ImageHolder");
-				setStyleName(BASE_INTERNAL_ELEM, "gwt-TreeItem-Holder");
-				// Create the base element that will be cloned
-				BASE_BARE_ELEM = DOM.createDiv();
-				// Simulates padding from table element.
-				DOM.setStyleAttribute(BASE_BARE_ELEM, "padding", "3px");
-				DOM.appendChild(BASE_BARE_ELEM, contentElem);
-				Accessibility.setRole(contentElem, Accessibility.ROLE_TREEITEM);
-			}
-		}
-
-		public void ensureMargin(TreeItem item, TreeItem parent) {
-			// Set the margin.
-			// Use no margin on top-most items.
-			double margin = parent.isRoot ? 0.0 : CHILD_MARGIN;
-			if (LocaleInfo.getCurrentLocale().isRTL()) {
-				item.getElement().getStyle().setMarginRight(margin, Unit.PX);
-			} else {
-				item.getElement().getStyle().setMarginLeft(margin, Unit.PX);
-			}
-		}
-	}
-
-	/**
-	 * IE specific implementation class for {@link TreeItem}.
-	 */
-	public static class TreeItemImplIE8ToIE10 extends TreeItemImpl {
-		@Override
-		void convertToFullNode(TreeItem item) {
-			super.convertToFullNode(item);
-			item.getElement().getStyle().setProperty("marginBottom", "0px");
-		}
-	}
-
-	/**
-	 * An {@link Animation} used to open the child elements. If a
-	 * {@link TreeItem} is in the process of opening, it will immediately be
-	 * opened and the new {@link TreeItem} will use this animation.
-	 */
-	private static class TreeItemAnimation extends Animation {
-		/**
-		 * The {@link TreeItem} currently being affected.
-		 */
-		private TreeItem curItem = null;
-
-		/**
-		 * Whether the item is being opened or closed.
-		 */
-		private boolean opening = true;
-
-		/**
-		 * The target height of the child items.
-		 */
-		private int scrollHeight = 0;
-
-		/**
-		 * Open the specified {@link TreeItem}.
-		 * 
-		 * @param item
-		 *            the {@link TreeItem} to open
-		 * @param animate
-		 *            true to animate, false to open instantly
-		 */
-		public void setItemState(TreeItem item, boolean animate) {
-			// Immediately complete previous open
-			cancel();
-			// Open the new item
-			if (animate) {
-				curItem = item;
-				opening = item.open;
-				run(Math.min(ANIMATION_DURATION,
-						ANIMATION_DURATION_PER_ITEM * curItem.getChildCount()));
-			} else {
-				if (item.potentialState == PotentialState.INSTANTIATED) {
-					UIObject.setVisible(item.childSpanElem, item.open);
-				}
-			}
-		}
-
-		@Override
-		protected void onComplete() {
-			if (curItem != null) {
-				if (opening) {
-					UIObject.setVisible(curItem.childSpanElem, true);
-					onUpdate(1.0);
-					DOM.setStyleAttribute(curItem.childSpanElem, "height",
-							"auto");
-				} else {
-					UIObject.setVisible(curItem.childSpanElem, false);
-				}
-				DOM.setStyleAttribute(curItem.childSpanElem, "overflow",
-						"visible");
-				DOM.setStyleAttribute(curItem.childSpanElem, "width", "auto");
-				curItem = null;
-			}
-		}
-
-		@Override
-		protected void onStart() {
-			scrollHeight = 0;
-			// If the TreeItem is already open, we can get its scrollHeight
-			// immediately.
-			if (!opening) {
-				scrollHeight = curItem.childSpanElem.getScrollHeight();
-			}
-			DOM.setStyleAttribute(curItem.childSpanElem, "overflow", "hidden");
-			// If the TreeItem is already open, onStart will set its height to
-			// its
-			// natural height. If the TreeItem is currently closed, onStart will
-			// set
-			// its height to 1px (see onUpdate below), and then we make the
-			// TreeItem
-			// visible so we can get its correct scrollHeight.
-			super.onStart();
-			// If the TreeItem is currently closed, we need to make it visible
-			// before
-			// we can get its height.
-			if (opening) {
-				UIObject.setVisible(curItem.childSpanElem, true);
-				scrollHeight = curItem.childSpanElem.getScrollHeight();
-			}
-		}
-
-		@Override
-		protected void onUpdate(double progress) {
-			int height = (int) (progress * scrollHeight);
-			if (!opening) {
-				height = scrollHeight - height;
-			}
-			// Issue 2338: If the height is 0px, IE7 will display all of the
-			// children
-			// instead of hiding them completely.
-			height = Math.max(height, 1);
-			DOM.setStyleAttribute(curItem.childSpanElem, "height",
-					height + "px");
-			// We need to set the width explicitly of the item might be cropped
-			int scrollWidth = DOM.getElementPropertyInt(curItem.childSpanElem,
-					"scrollWidth");
-			DOM.setStyleAttribute(curItem.childSpanElem, "width",
-					scrollWidth + "px");
-		}
-	}
-
 	// By not overwriting the default tree padding and spacing, we traditionally
 	// added 7 pixels between our image and content.
 	// <2>|<1>image<1>|<2>|<1>content
@@ -300,6 +88,8 @@ public class TreeItem extends UIObject
 
 	private static TreeItemImpl impl = GWT.create(TreeItemImpl.class);
 
+	PotentialState potentialState = PotentialState.POTENTIAL;
+
 	private ArrayList<TreeItem> children;
 
 	private Element contentElem, childSpanElem, imageHolder;
@@ -334,9 +124,8 @@ public class TreeItem extends UIObject
 	 * @param html
 	 *            the item's HTML
 	 */
-	public TreeItem(String html) {
-		this();
-		setHTML(html);
+	public TreeItem(SafeHtml html) {
+		this(html.asString());
 	}
 
 	/**
@@ -345,8 +134,9 @@ public class TreeItem extends UIObject
 	 * @param html
 	 *            the item's HTML
 	 */
-	public TreeItem(SafeHtml html) {
-		this(html.asString());
+	public TreeItem(String html) {
+		this();
+		setHTML(html);
 	}
 
 	/**
@@ -369,11 +159,12 @@ public class TreeItem extends UIObject
 	TreeItem(boolean isRoot) {
 		this.isRoot = isRoot;
 		// Element elem = DOM.clone(BASE_BARE_ELEM, true);
-//		Element elem = PotentialElement.build(this).cast();
+		// Element elem = PotentialElement.build(this).cast();
 		Element elem = Document.get().createDivElement();
-		elem.ensureId();;
+		elem.ensureId();
+		;
 		setElement(elem);
-		//contentElem = PotentialElement.build(this).cast();
+		// contentElem = PotentialElement.build(this).cast();
 		contentElem = Document.get().createDivElement();
 		contentElem.ensureId();
 		// DOM.setElementAttribute(contentElem, "id", DOM.createUniqueId());
@@ -385,16 +176,14 @@ public class TreeItem extends UIObject
 	}
 
 	/**
-	 * Adds a child tree item containing the specified html.
+	 * Adds another item as a child to this one.
 	 * 
-	 * @param itemHtml
-	 *            the text to be added
-	 * @return the item that was added
+	 * @param isItem
+	 *            the wrapper of item to be added
 	 */
-	public TreeItem addItem(String itemHtml) {
-		TreeItem ret = new TreeItem(itemHtml);
-		addItem(ret);
-		return ret;
+	public void addItem(IsTreeItem isItem) {
+		TreeItem item = isItem.asTreeItem();
+		addItem(item);
 	}
 
 	/**
@@ -411,6 +200,19 @@ public class TreeItem extends UIObject
 	}
 
 	/**
+	 * Adds a child tree item containing the specified html.
+	 * 
+	 * @param itemHtml
+	 *            the text to be added
+	 * @return the item that was added
+	 */
+	public TreeItem addItem(String itemHtml) {
+		TreeItem ret = new TreeItem(itemHtml);
+		addItem(ret);
+		return ret;
+	}
+
+	/**
 	 * Adds another item as a child to this one.
 	 * 
 	 * @param item
@@ -421,17 +223,6 @@ public class TreeItem extends UIObject
 		// count.
 		maybeRemoveItemFromParent(item);
 		insertItem(getChildCount(), item);
-	}
-
-	/**
-	 * Adds another item as a child to this one.
-	 * 
-	 * @param isItem
-	 *            the wrapper of item to be added
-	 */
-	public void addItem(IsTreeItem isItem) {
-		TreeItem item = isItem.asTreeItem();
-		addItem(item);
 	}
 
 	/**
@@ -568,15 +359,15 @@ public class TreeItem extends UIObject
 	 * 
 	 * @param beforeIndex
 	 *            the index where the item will be inserted
-	 * @param itemText
-	 *            the text to be added
+	 * @param itemHtml
+	 *            the item's HTML
 	 * @return the item that was added
 	 * @throws IndexOutOfBoundsException
 	 *             if the index is out of range
 	 */
-	public TreeItem insertItem(int beforeIndex, String itemText)
+	public TreeItem insertItem(int beforeIndex, SafeHtml itemHtml)
 			throws IndexOutOfBoundsException {
-		TreeItem ret = new TreeItem(itemText);
+		TreeItem ret = new TreeItem(itemHtml);
 		insertItem(beforeIndex, ret);
 		return ret;
 	}
@@ -587,15 +378,15 @@ public class TreeItem extends UIObject
 	 * 
 	 * @param beforeIndex
 	 *            the index where the item will be inserted
-	 * @param itemHtml
-	 *            the item's HTML
+	 * @param itemText
+	 *            the text to be added
 	 * @return the item that was added
 	 * @throws IndexOutOfBoundsException
 	 *             if the index is out of range
 	 */
-	public TreeItem insertItem(int beforeIndex, SafeHtml itemHtml)
+	public TreeItem insertItem(int beforeIndex, String itemText)
 			throws IndexOutOfBoundsException {
-		TreeItem ret = new TreeItem(itemHtml);
+		TreeItem ret = new TreeItem(itemText);
 		insertItem(beforeIndex, ret);
 		return ret;
 	}
@@ -692,6 +483,19 @@ public class TreeItem extends UIObject
 	/**
 	 * Removes one of this item's children.
 	 * 
+	 * @param isItem
+	 *            the wrapper of item to be removed
+	 */
+	public void removeItem(IsTreeItem isItem) {
+		if (isItem != null) {
+			TreeItem item = isItem.asTreeItem();
+			removeItem(item);
+		}
+	}
+
+	/**
+	 * Removes one of this item's children.
+	 * 
 	 * @param item
 	 *            the item to be removed
 	 */
@@ -720,19 +524,6 @@ public class TreeItem extends UIObject
 	}
 
 	/**
-	 * Removes one of this item's children.
-	 * 
-	 * @param isItem
-	 *            the wrapper of item to be removed
-	 */
-	public void removeItem(IsTreeItem isItem) {
-		if (isItem != null) {
-			TreeItem item = isItem.asTreeItem();
-			removeItem(item);
-		}
-	}
-
-	/**
 	 * Removes all of this item's children.
 	 */
 	public void removeItems() {
@@ -741,13 +532,13 @@ public class TreeItem extends UIObject
 		}
 	}
 
+	public void setHTML(SafeHtml html) {
+		setHTML(html.asString());
+	}
+
 	public void setHTML(String html) {
 		setWidget(null);
 		DOM.setInnerHTML(contentElem, html);
-	}
-
-	public void setHTML(SafeHtml html) {
-		setHTML(html.asString());
 	}
 
 	/**
@@ -863,6 +654,28 @@ public class TreeItem extends UIObject
 			if (Tree.shouldTreeDelegateFocusToElement(widget.getElement())) {
 				DOM.setElementAttribute(widget.getElement(), "tabIndex", "-1");
 			}
+		}
+	}
+
+	private void convertToFullNode() {
+		impl.convertToFullNode(this);
+	}
+
+	@SuppressWarnings("unused")
+	private Element resolve(Element elem) {
+		if (PotentialElement.isPotential(elem)) {
+			Element replacer = Document.get().createElement(elem.getTagName())
+					.cast();
+			replacer.setInnerHTML(elem.getInnerHTML());
+			return replacer;
+		}
+		return elem;
+	}
+
+	private void updateStateRecursiveHelper() {
+		updateState(false, false);
+		for (int i = 0, n = getChildCount(); i < n; ++i) {
+			children.get(i).updateStateRecursiveHelper();
 		}
 	}
 
@@ -1065,25 +878,213 @@ public class TreeItem extends UIObject
 		tree.maybeUpdateSelection(this, this.open);
 	}
 
-	private void convertToFullNode() {
-		impl.convertToFullNode(this);
-	}
+	/**
+	 * Implementation class for {@link TreeItem}.
+	 */
+	public static class TreeItemImpl {
+		public TreeItemImpl() {
+			initializeClonableElements();
+		}
 
-	private void updateStateRecursiveHelper() {
-		updateState(false, false);
-		for (int i = 0, n = getChildCount(); i < n; ++i) {
-			children.get(i).updateStateRecursiveHelper();
+		public void ensureMargin(TreeItem item, TreeItem parent) {
+			// Set the margin.
+			// Use no margin on top-most items.
+			double margin = parent.isRoot ? 0.0 : CHILD_MARGIN;
+			if (LocaleInfo.getCurrentLocale().isRTL()) {
+				item.getElement().getStyle().setMarginRight(margin, Unit.PX);
+			} else {
+				item.getElement().getStyle().setMarginLeft(margin, Unit.PX);
+			}
+		}
+
+		void convertToFullNode(TreeItem item) {
+			if (item.imageHolder == null) {
+				// Extract the Elements from the object
+				Element itemDiv = DOM.clone(BASE_INTERNAL_ELEM, true);
+				DOM.appendChild(item.getElement(), itemDiv);
+				Element imgHolder = DOM.getFirstChild(itemDiv);
+				Element contentHolder = DOM.getNextSibling(imgHolder);
+				// Undoes padding from table element.
+				DOM.setStyleAttribute(item.getElement(), "padding", "0px");
+				DOM.appendChild(contentHolder, item.contentElem);
+				item.imageHolder = imgHolder;
+			}
+		}
+
+		void ensureState(TreeItem item, PotentialState state) {
+			if (item.potentialState.ordinal() >= state.ordinal()) {
+				return;
+			}
+			if (item.imageHolder == null) {
+				// item.contentElem = item.resolve(item.contentElem);
+				item.contentElem.setClassName("gwt-TreeItem");
+				// item.setElement(item.resolve(item.getElement()));
+				convertToFullNode(item);
+			}
+			if (state == PotentialState.INSTANTIATED) {
+				item.initChildSpanElement();
+			}
+			TreeItem parentItem = item.getParentItem();
+			item.potentialState = state;
+			if (!item.isRoot && parentItem != null
+					&& item.getElement().getParentElement() == null) {
+				ensureState(parentItem, PotentialState.INSTANTIATED);
+				ensureMargin(item, parentItem);
+				Element childContainer = parentItem.isRoot
+						? item.getTree().getElement()
+						: parentItem.childSpanElem;
+				childContainer.appendChild(item.getElement());
+				item.updateState(false, false);
+			}
+		}
+
+		/**
+		 * Setup clonable elements.
+		 */
+		void initializeClonableElements() {
+			if (GWT.isClient()) {
+				// Create the base table element that will be cloned.
+				BASE_INTERNAL_ELEM = DOM.createDiv();
+				Element contentElem = DOM.createDiv();
+				Element imageHolder = DOM.createDiv();
+				DOM.appendChild(BASE_INTERNAL_ELEM, imageHolder);
+				// note, error in original GWT code here used contentElem (which
+				// is subsequently removed by later .append)
+				DOM.appendChild(BASE_INTERNAL_ELEM, DOM.createDiv());
+				setStyleName(contentElem, "gwt-TreeItem");
+				setStyleName(imageHolder, "gwt-TreeItem-ImageHolder");
+				setStyleName(BASE_INTERNAL_ELEM, "gwt-TreeItem-Holder");
+				// Create the base element that will be cloned
+				BASE_BARE_ELEM = DOM.createDiv();
+				// Simulates padding from table element.
+				DOM.setStyleAttribute(BASE_BARE_ELEM, "padding", "3px");
+				DOM.appendChild(BASE_BARE_ELEM, contentElem);
+				Accessibility.setRole(contentElem, Accessibility.ROLE_TREEITEM);
+			}
 		}
 	}
 
-	@SuppressWarnings("unused")
-	private Element resolve(Element elem) {
-		if (PotentialElement.isPotential(elem)) {
-			Element replacer = Document.get().createElement(elem.getTagName())
-					.cast();
-			replacer.setInnerHTML(elem.getInnerHTML());
-			return replacer;
+	/**
+	 * IE specific implementation class for {@link TreeItem}.
+	 */
+	public static class TreeItemImplIE8ToIE10 extends TreeItemImpl {
+		@Override
+		void convertToFullNode(TreeItem item) {
+			super.convertToFullNode(item);
+			item.getElement().getStyle().setProperty("marginBottom", "0px");
 		}
-		return elem;
+	}
+
+	/**
+	 * An {@link Animation} used to open the child elements. If a
+	 * {@link TreeItem} is in the process of opening, it will immediately be
+	 * opened and the new {@link TreeItem} will use this animation.
+	 */
+	private static class TreeItemAnimation extends Animation {
+		/**
+		 * The {@link TreeItem} currently being affected.
+		 */
+		private TreeItem curItem = null;
+
+		/**
+		 * Whether the item is being opened or closed.
+		 */
+		private boolean opening = true;
+
+		/**
+		 * The target height of the child items.
+		 */
+		private int scrollHeight = 0;
+
+		/**
+		 * Open the specified {@link TreeItem}.
+		 * 
+		 * @param item
+		 *            the {@link TreeItem} to open
+		 * @param animate
+		 *            true to animate, false to open instantly
+		 */
+		public void setItemState(TreeItem item, boolean animate) {
+			// Immediately complete previous open
+			cancel();
+			// Open the new item
+			if (animate) {
+				curItem = item;
+				opening = item.open;
+				run(Math.min(ANIMATION_DURATION,
+						ANIMATION_DURATION_PER_ITEM * curItem.getChildCount()));
+			} else {
+				if (item.potentialState == PotentialState.INSTANTIATED) {
+					UIObject.setVisible(item.childSpanElem, item.open);
+				}
+			}
+		}
+
+		@Override
+		protected void onComplete() {
+			if (curItem != null) {
+				if (opening) {
+					UIObject.setVisible(curItem.childSpanElem, true);
+					onUpdate(1.0);
+					DOM.setStyleAttribute(curItem.childSpanElem, "height",
+							"auto");
+				} else {
+					UIObject.setVisible(curItem.childSpanElem, false);
+				}
+				DOM.setStyleAttribute(curItem.childSpanElem, "overflow",
+						"visible");
+				DOM.setStyleAttribute(curItem.childSpanElem, "width", "auto");
+				curItem = null;
+			}
+		}
+
+		@Override
+		protected void onStart() {
+			scrollHeight = 0;
+			// If the TreeItem is already open, we can get its scrollHeight
+			// immediately.
+			if (!opening) {
+				scrollHeight = curItem.childSpanElem.getScrollHeight();
+			}
+			DOM.setStyleAttribute(curItem.childSpanElem, "overflow", "hidden");
+			// If the TreeItem is already open, onStart will set its height to
+			// its
+			// natural height. If the TreeItem is currently closed, onStart will
+			// set
+			// its height to 1px (see onUpdate below), and then we make the
+			// TreeItem
+			// visible so we can get its correct scrollHeight.
+			super.onStart();
+			// If the TreeItem is currently closed, we need to make it visible
+			// before
+			// we can get its height.
+			if (opening) {
+				UIObject.setVisible(curItem.childSpanElem, true);
+				scrollHeight = curItem.childSpanElem.getScrollHeight();
+			}
+		}
+
+		@Override
+		protected void onUpdate(double progress) {
+			int height = (int) (progress * scrollHeight);
+			if (!opening) {
+				height = scrollHeight - height;
+			}
+			// Issue 2338: If the height is 0px, IE7 will display all of the
+			// children
+			// instead of hiding them completely.
+			height = Math.max(height, 1);
+			DOM.setStyleAttribute(curItem.childSpanElem, "height",
+					height + "px");
+			// We need to set the width explicitly of the item might be cropped
+			int scrollWidth = DOM.getElementPropertyInt(curItem.childSpanElem,
+					"scrollWidth");
+			DOM.setStyleAttribute(curItem.childSpanElem, "width",
+					scrollWidth + "px");
+		}
+	}
+
+	enum PotentialState {
+		POTENTIAL, POTENTIAL_CHILDREN, INSTANTIATED
 	}
 }

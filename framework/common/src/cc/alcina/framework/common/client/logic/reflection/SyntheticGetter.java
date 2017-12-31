@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
@@ -24,12 +23,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target( { ElementType.METHOD })
+@Target({ ElementType.METHOD })
 @ClientVisible
 /**
- * Totally ignore this assocation (e.g. when clearing an object's associations pre-delete)
- * - the getter is probably not bound to a field
+ * Totally ignore this assocation (e.g. when clearing an object's associations
+ * pre-delete) - the getter is probably not bound to a field
  */
 public @interface SyntheticGetter {
-	
 }

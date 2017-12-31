@@ -14,22 +14,10 @@ public class UrlCustomiser implements Customiser {
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom params) {
-		NamedParameter parameter = NamedParameter.Support.getParameter(params
-				.parameters(), TARGET);
+		NamedParameter parameter = NamedParameter.Support
+				.getParameter(params.parameters(), TARGET);
 		String target = parameter == null ? null : parameter.stringValue();
 		return new UrlProvider(target);
-	}
-
-	public static class UrlProvider implements BoundWidgetProvider {
-		private final String target;
-
-		public UrlProvider(String target) {
-			this.target = target;
-		}
-
-		public BoundWidget get() {
-			return new BoundValueLink(target);
-		}
 	}
 
 	public static class BoundValueLink extends BoundLink<String> {
@@ -45,6 +33,18 @@ public class UrlCustomiser implements Customiser {
 			if (url != null) {
 				super.setHref(url);
 			}
+		}
+	}
+
+	public static class UrlProvider implements BoundWidgetProvider {
+		private final String target;
+
+		public UrlProvider(String target) {
+			this.target = target;
+		}
+
+		public BoundWidget get() {
+			return new BoundValueLink(target);
 		}
 	}
 }

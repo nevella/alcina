@@ -15,9 +15,6 @@
  */
 package com.google.gwt.regexp.shared;
 
-import com.google.gwt.core.client.GwtScriptOnly;
-import com.google.gwt.core.client.JavaScriptObject;
-
 /**
  * GWT wrapper for Javascript RegExp matching results.
  */

@@ -39,17 +39,9 @@ public class DataTree extends FilterableTree
 
 	private ExtraTreeEventSupport extraTreeEventSupport;
 
-	public void addExtraTreeEventListener(ExtraTreeEventListener listener) {
-		this.extraTreeEventSupport.addExtraTreeEventListener(listener);
-	}
+	private TreeItem result;
 
-	public void fireActionsAvailbleChange(ExtraTreeEventEvent event) {
-		this.extraTreeEventSupport.fireActionsAvailbleChange(event);
-	}
-
-	public void removeExtraTreeEventListener(ExtraTreeEventListener listener) {
-		this.extraTreeEventSupport.removeExtraTreeEventListener(listener);
-	}
+	protected boolean initialised;
 
 	public DataTree() {
 		super();
@@ -58,14 +50,31 @@ public class DataTree extends FilterableTree
 		this.extraTreeEventSupport = new ExtraTreeEventSupport();
 	}
 
-	@Override
-	protected void onDetach() {
-		super.onDetach();
-		for (int i = 0; i < getItemCount(); i++) {
-			TreeItem child = getItem(i);
-			if (child instanceof DetachListener)
-				((DetachListener) child).onDetach();
-		}
+	public void addExtraTreeEventListener(ExtraTreeEventListener listener) {
+		this.extraTreeEventSupport.addExtraTreeEventListener(listener);
+	}
+
+	public void fireActionsAvailbleChange(ExtraTreeEventEvent event) {
+		this.extraTreeEventSupport.fireActionsAvailbleChange(event);
+	}
+
+	public TreeItem getNodeForObject(final Object obj) {
+		result = null;
+		final boolean classNameTest = (obj instanceof String);
+		Callback<TreeItem> callback = new Callback<TreeItem>() {
+			public void apply(TreeItem target) {
+				Object userObject = target.getUserObject();
+				if (userObject != null) {
+					if ((classNameTest && userObject.getClass().getName()
+							.replace("$", ".").equals(obj))
+							|| Objects.equals(obj, userObject)) {
+						result = target;
+					}
+				}
+			}
+		};
+		new TreeNodeWalker().walk(this, callback);
+		return result;
 	}
 
 	@Override
@@ -93,9 +102,9 @@ public class DataTree extends FilterableTree
 		}
 	}
 
-	private TreeItem result;
-
-	protected boolean initialised;
+	public void removeExtraTreeEventListener(ExtraTreeEventListener listener) {
+		this.extraTreeEventSupport.removeExtraTreeEventListener(listener);
+	}
 
 	public TreeItem selectNodeForObject(Object obj) {
 		getNodeForObject(obj);
@@ -108,22 +117,13 @@ public class DataTree extends FilterableTree
 		return result;
 	}
 
-	public TreeItem getNodeForObject(final Object obj) {
-		result = null;
-		final boolean classNameTest = (obj instanceof String);
-		Callback<TreeItem> callback = new Callback<TreeItem>() {
-			public void apply(TreeItem target) {
-				Object userObject = target.getUserObject();
-				if (userObject != null) {
-					if ((classNameTest && userObject.getClass().getName()
-							.replace("$", ".").equals(obj))
-							|| Objects.equals(obj, userObject)) {
-						result = target;
-					}
-				}
-			}
-		};
-		new TreeNodeWalker().walk(this, callback);
-		return result;
+	@Override
+	protected void onDetach() {
+		super.onDetach();
+		for (int i = 0; i < getItemCount(); i++) {
+			TreeItem child = getItem(i);
+			if (child instanceof DetachListener)
+				((DetachListener) child).onDetach();
+		}
 	}
 }

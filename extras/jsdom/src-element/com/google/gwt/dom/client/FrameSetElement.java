@@ -20,91 +20,100 @@ import com.google.gwt.core.client.JavaScriptObject;
 /**
  * Create a grid of frames.
  * 
- * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#edef-FRAMESET">W3C HTML Specification</a>
+ * @see <a href=
+ *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#edef-FRAMESET">
+ *      W3C HTML Specification</a>
  */
 @TagName(FrameSetElement.TAG)
 public class FrameSetElement extends Element {
+	public static final String TAG = "frameset";
 
-  public static final String TAG = "frameset";
+	/**
+	 * Assert that the given {@link Element} is compatible with this class and
+	 * automatically typecast it.
+	 */
+	public static FrameSetElement as(Element elem) {
+		assert is(elem);
+		return (FrameSetElement) elem;
+	}
 
-  /**
-   * Assert that the given {@link Element} is compatible with this class and
-   * automatically typecast it.
-   */
-  public static FrameSetElement as(Element elem) {
-    assert is(elem);
-    return (FrameSetElement) elem;
-  }
+	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
 
-  /**
-   * Determines whether the given {@link JavaScriptObject} can be cast to
-   * this class. A <code>null</code> object will cause this method to
-   * return <code>false</code>.
-   */
-  public static boolean is(JavaScriptObject o) {
-    if (Element.is(o)) {
-      return is(Element.as(o));
-    }
-    return false;
-  }
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to this
+	 * class. A <code>null</code> object will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(JavaScriptObject o) {
+		if (Element.is(o)) {
+			return is(Element.as(o));
+		}
+		return false;
+	}
 
-  /**
-   * Determine whether the given {@link Node} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Node node) {
-    if (Element.is(node)) {
-      return is((Element) node);
-    }
-    return false;
-  }
-  
-  /**
-   * Determine whether the given {@link Element} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Element elem) {
-    return elem != null && elem.hasTagName(TAG);
-  }
+	/**
+	 * Determine whether the given {@link Node} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		if (Element.is(node)) {
+			return is((Element) node);
+		}
+		return false;
+	}
 
-  protected FrameSetElement() {
-  }
+	protected FrameSetElement() {
+	}
 
-  /**
-   * The number of columns of frames in the frameset.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-cols-FRAMESET">W3C HTML Specification</a>
-   */  public  String getCols(){
-  return this.getPropertyString("cols");
-}
+	/**
+	 * The number of columns of frames in the frameset.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-cols-FRAMESET">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getCols() {
+		return this.getPropertyString("cols");
+	}
 
+	/**
+	 * The number of rows of frames in the frameset.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-rows-FRAMESET">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getRows() {
+		return this.getPropertyString("rows");
+	}
 
-  /**
-   * The number of rows of frames in the frameset.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-rows-FRAMESET">W3C HTML Specification</a>
-   */  public  String getRows(){
-  return this.getPropertyString("rows");
-}
+	/**
+	 * The number of columns of frames in the frameset.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-cols-FRAMESET">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setCols(String cols) {
+		this.setPropertyString("cols", cols);
+	}
 
-
-  /**
-   * The number of columns of frames in the frameset.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-cols-FRAMESET">W3C HTML Specification</a>
-   */  public  void setCols(String cols){
-   this.setPropertyString("cols",cols);
-}
-
-
-  /**
-   * The number of rows of frames in the frameset.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-rows-FRAMESET">W3C HTML Specification</a>
-   */  public  void setRows(String rows){
-   this.setPropertyString("rows",rows);
-}
-
+	/**
+	 * The number of rows of frames in the frameset.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-rows-FRAMESET">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setRows(String rows) {
+		this.setPropertyString("rows", rows);
+	}
 }

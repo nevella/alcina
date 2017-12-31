@@ -4,8 +4,8 @@ import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlaye
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 
-public class UploadOfflineTransformsPlayer extends
-		RunnableAsyncCallbackPlayer<Void, HandshakeState> {
+public class UploadOfflineTransformsPlayer
+		extends RunnableAsyncCallbackPlayer<Void, HandshakeState> {
 	public static final HandshakeState OFFLINE_TRANSFORMS_UPLOADED = new HandshakeState(
 			"OFFLINE_TRANSFORMS_UPLOADED");
 

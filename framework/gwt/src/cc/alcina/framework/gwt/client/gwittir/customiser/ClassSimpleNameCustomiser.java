@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.customiser;
-
 
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
@@ -28,13 +26,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
  *
  * @author Nick Reddel
  */
-
- public class ClassSimpleNameCustomiser implements Customiser {
-	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, Custom info) {
-		return CLASS_SIMPLE_NAME_PROVIDER;
-	}
-
+public class ClassSimpleNameCustomiser implements Customiser {
 	public static final BoundWidgetProvider CLASS_SIMPLE_NAME_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
 			RenderingLabel label = new RenderingLabel();
@@ -43,4 +35,9 @@ import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 			return label;
 		}
 	};
+
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
+			boolean multiple, Custom info) {
+		return CLASS_SIMPLE_NAME_PROVIDER;
+	}
 }

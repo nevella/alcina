@@ -23,8 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
  *
  * @author Nick Reddel
  */
-
- public class CollectionDisplayNameRenderer extends FlexibleToStringRenderer {
+public class CollectionDisplayNameRenderer extends FlexibleToStringRenderer {
 	public static final CollectionDisplayNameRenderer INSTANCE = new CollectionDisplayNameRenderer();
 
 	public String render(Object o) {

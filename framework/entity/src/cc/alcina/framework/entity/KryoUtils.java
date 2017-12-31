@@ -26,14 +26,15 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.LooseContext;
 
 public class KryoUtils {
+	public static final String CONTEXT_OVERRIDE_CLASSLOADER = KryoUtils.class
+			.getName() + ".CONTEXT_OVERRIDE_CLASSLOADER";
+
+	public static final String CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER = KryoUtils.class
+			.getName() + ".CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER";
+
 	public static <T> T clone(T t) {
 		Kryo kryo = newKryo();
 		return kryo.copy(t);
-	}
-
-	public static <T> T serialClone(T t) {
-		Class clazz = t.getClass();
-		return (T) deserializeFromByteArray(serializeToByteArray(t), clazz);
 	}
 
 	public static <T> T deserializeFromBase64(String value,
@@ -41,24 +42,28 @@ public class KryoUtils {
 		return deserializeFromBase64(value, knownType, false);
 	}
 
+	public static <T> T deserializeFromBase64(String string, Class<T> knownType,
+			boolean unsafe) {
+		return deserializeFromByteArray(
+				Base64.getDecoder().decode(string.trim()), knownType, unsafe);
+	}
+
 	public static <T> T deserializeFromByteArray(byte[] bytes, Class<T> clazz) {
 		return deserializeFromByteArray(bytes, clazz, false);
 	}
 
-	private static <T> T resolve(Class<T> clazz, T someObject)
-			throws IllegalAccessException, InvocationTargetException {
-		try {
-			Method readResolve = clazz.getDeclaredMethod("readResolve",
-					new Class[0]);
-			readResolve.setAccessible(true);
-			someObject = (T) readResolve.invoke(someObject);
-		} catch (NoSuchMethodException e) {
-		}
-		return someObject;
-	}
-
 	public static <T> T deserializeFromFile(File file, Class<T> clazz) {
 		return deserializeFromFile(file, clazz, false);
+	}
+
+	public static <T> T deserializeFromFile(File file, Class<T> knownType,
+			boolean unsafe) {
+		try {
+			return deserializeFromStream(new FileInputStream(file), knownType,
+					unsafe);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public static <T> T deserializeFromStream(InputStream stream,
@@ -85,8 +90,22 @@ public class KryoUtils {
 		}
 	}
 
+	public static void onlyErrorLogging() {
+		Log.set(Log.LEVEL_ERROR);
+	}
+
+	public static <T> T serialClone(T t) {
+		Class clazz = t.getClass();
+		return (T) deserializeFromByteArray(serializeToByteArray(t), clazz);
+	}
+
 	public static String serializeToBase64(Object object) {
 		return serializeToBase64(object, false);
+	}
+
+	public static String serializeToBase64(Object object, boolean unsafe) {
+		return Base64.getEncoder()
+				.encodeToString(serializeToByteArray(object, unsafe));
 	}
 
 	public static byte[] serializeToByteArray(Object object) {
@@ -125,6 +144,32 @@ public class KryoUtils {
 		}
 	}
 
+	private static <T> T deserializeFromByteArray(byte[] bytes,
+			Class<T> knownType, boolean unsafe) {
+		try {
+			Kryo kryo = newKryo();
+			Input input = unsafe ? new UnsafeInput(bytes) : new Input(bytes);
+			T someObject = kryo.readObject(input, knownType);
+			input.close();
+			someObject = resolve(knownType, someObject);
+			return someObject;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	private static <T> T resolve(Class<T> clazz, T someObject)
+			throws IllegalAccessException, InvocationTargetException {
+		try {
+			Method readResolve = clazz.getDeclaredMethod("readResolve",
+					new Class[0]);
+			readResolve.setAccessible(true);
+			someObject = (T) readResolve.invoke(someObject);
+		} catch (NoSuchMethodException e) {
+		}
+		return someObject;
+	}
+
 	private static Object writeReplace(Object object) throws Exception {
 		try {
 			Class<? extends Object> clazz = object.getClass();
@@ -136,12 +181,6 @@ public class KryoUtils {
 		}
 		return object;
 	}
-
-	public static final String CONTEXT_OVERRIDE_CLASSLOADER = KryoUtils.class
-			.getName() + ".CONTEXT_OVERRIDE_CLASSLOADER";
-
-	public static final String CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER = KryoUtils.class
-			.getName() + ".CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER";
 
 	protected static Kryo newKryo() {
 		Kryo kryo = new Kryo();
@@ -159,43 +198,5 @@ public class KryoUtils {
 		kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(
 				new SerializingInstantiatorStrategy()));
 		return kryo;
-	}
-
-	public static String serializeToBase64(Object object, boolean unsafe) {
-		return Base64.getEncoder()
-				.encodeToString(serializeToByteArray(object, unsafe));
-	}
-
-	public static <T> T deserializeFromBase64(String string, Class<T> knownType,
-			boolean unsafe) {
-		return deserializeFromByteArray(
-				Base64.getDecoder().decode(string.trim()), knownType, unsafe);
-	}
-
-	private static <T> T deserializeFromByteArray(byte[] bytes,
-			Class<T> knownType, boolean unsafe) {
-		try {
-			Kryo kryo = newKryo();
-			Input input = unsafe ? new UnsafeInput(bytes) : new Input(bytes);
-			T someObject = kryo.readObject(input, knownType);
-			input.close();
-			someObject = resolve(knownType, someObject);
-			return someObject;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static <T> T deserializeFromFile(File file, Class<T> knownType,
-			boolean unsafe) {
-		try {
-			return deserializeFromStream(new FileInputStream(file), knownType,
-					unsafe);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-	public static void onlyErrorLogging(){
-		Log.set(Log.LEVEL_ERROR);
 	}
 }

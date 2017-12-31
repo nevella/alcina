@@ -37,15 +37,15 @@ public class ObjectDeltaResult implements Serializable {
 		return this.deltaSpec;
 	}
 
+	public List<DomainTransformEvent> getTransforms() {
+		return transforms;
+	}
+
 	public void setDeltaSpec(ObjectDeltaSpec deltaSpec) {
 		this.deltaSpec = deltaSpec;
 	}
 
 	public void setTransforms(List<DomainTransformEvent> transforms) {
 		this.transforms = transforms;
-	}
-
-	public List<DomainTransformEvent> getTransforms() {
-		return transforms;
 	}
 }

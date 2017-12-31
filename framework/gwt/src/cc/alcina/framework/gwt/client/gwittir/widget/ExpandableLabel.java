@@ -66,14 +66,6 @@ public class ExpandableLabel extends AbstractBoundWidget {
 
 	private boolean escapeHtml;
 
-	public boolean isEscapeHtml() {
-		return this.escapeHtml;
-	}
-
-	public void setEscapeHtml(boolean escapeHtml) {
-		this.escapeHtml = escapeHtml;
-	}
-
 	ClickHandler showHideListener = new ClickHandler() {
 		public void onClick(ClickEvent event) {
 			Widget sender = (Widget) event.getSource();
@@ -123,6 +115,10 @@ public class ExpandableLabel extends AbstractBoundWidget {
 		return null;
 	}
 
+	public boolean isEscapeHtml() {
+		return this.escapeHtml;
+	}
+
 	public boolean isShowAsPopup() {
 		return this.showAsPopup;
 	}
@@ -133,6 +129,10 @@ public class ExpandableLabel extends AbstractBoundWidget {
 
 	public boolean isShowNewlinesAsBreaks() {
 		return this.showNewlinesAsBreaks;
+	}
+
+	public void setEscapeHtml(boolean escapeHtml) {
+		this.escapeHtml = escapeHtml;
 	}
 
 	public void setRenderer(Renderer renderer) {

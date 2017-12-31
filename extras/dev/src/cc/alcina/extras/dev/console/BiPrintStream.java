@@ -9,22 +9,33 @@ import cc.alcina.framework.common.client.util.AlcinaConstants;
 import cc.alcina.framework.common.client.util.LooseContext;
 
 class BiPrintStream extends PrintStream {
-	public BiPrintStream(OutputStream ignore) {
-		super(ignore);
-	}
-
 	public PrintStream s1;
 
 	public PrintStream s2;
 
-	private void debugPrint(){
-		int debug=3;
+	public BiPrintStream(OutputStream ignore) {
+		super(ignore);
 	}
-	
+
 	@Override
-	public void flush() {
-		s1.flush();
-		s2.flush();
+	public PrintStream append(char c) {
+		debugPrint();
+		s2.append(c);
+		return s1.append(c);
+	}
+
+	@Override
+	public PrintStream append(CharSequence csq) {
+		debugPrint();
+		s2.append(csq);
+		return s1.append(csq);
+	}
+
+	@Override
+	public PrintStream append(CharSequence csq, int start, int end) {
+		debugPrint();
+		s2.append(csq, start, end);
+		return s1.append(csq, start, end);
 	}
 
 	@Override
@@ -34,17 +45,23 @@ class BiPrintStream extends PrintStream {
 	}
 
 	@Override
-	public void write(int b) {
-		debugPrint();
-		s1.write(b);
-		s2.write(b);
+	public void flush() {
+		s1.flush();
+		s2.flush();
 	}
 
 	@Override
-	public void write(byte[] buf, int off, int len) {
+	public PrintStream format(Locale l, String format, Object... args) {
 		debugPrint();
-		s1.write(buf, off, len);
-		s2.write(buf, off, len);
+		s2.format(l, format, args);
+		return s1.format(l, format, args);
+	}
+
+	@Override
+	public PrintStream format(String format, Object... args) {
+		debugPrint();
+		s2.format(format, args);
+		return s1.format(format, args);
 	}
 
 	@Override
@@ -62,6 +79,27 @@ class BiPrintStream extends PrintStream {
 	}
 
 	@Override
+	public void print(char[] s) {
+		debugPrint();
+		s1.print(s);
+		s2.print(s);
+	}
+
+	@Override
+	public void print(double d) {
+		debugPrint();
+		s1.print(d);
+		s2.print(d);
+	}
+
+	@Override
+	public void print(float f) {
+		debugPrint();
+		s1.print(f);
+		s2.print(f);
+	}
+
+	@Override
 	public void print(int i) {
 		debugPrint();
 		s1.print(i);
@@ -76,24 +114,10 @@ class BiPrintStream extends PrintStream {
 	}
 
 	@Override
-	public void print(float f) {
+	public void print(Object obj) {
 		debugPrint();
-		s1.print(f);
-		s2.print(f);
-	}
-
-	@Override
-	public void print(double d) {
-		debugPrint();
-		s1.print(d);
-		s2.print(d);
-	}
-
-	@Override
-	public void print(char[] s) {
-		debugPrint();
-		s1.print(s);
-		s2.print(s);
+		s1.print(obj);
+		s2.print(obj);
 	}
 
 	@Override
@@ -107,10 +131,17 @@ class BiPrintStream extends PrintStream {
 	}
 
 	@Override
-	public void print(Object obj) {
+	public PrintStream printf(Locale l, String format, Object... args) {
 		debugPrint();
-		s1.print(obj);
-		s2.print(obj);
+		s2.printf(l, format, args);
+		return s1.printf(l, format, args);
+	}
+
+	@Override
+	public PrintStream printf(String format, Object... args) {
+		debugPrint();
+		s2.printf(format, args);
+		return s1.printf(format, args);
 	}
 
 	@Override
@@ -135,21 +166,7 @@ class BiPrintStream extends PrintStream {
 	}
 
 	@Override
-	public void println(int x) {
-		debugPrint();
-		s1.println(x);
-		s2.println(x);
-	}
-
-	@Override
-	public void println(long x) {
-		debugPrint();
-		s1.println(x);
-		s2.println(x);
-	}
-
-	@Override
-	public void println(float x) {
+	public void println(char[] x) {
 		debugPrint();
 		s1.println(x);
 		s2.println(x);
@@ -163,14 +180,21 @@ class BiPrintStream extends PrintStream {
 	}
 
 	@Override
-	public void println(char[] x) {
+	public void println(float x) {
 		debugPrint();
 		s1.println(x);
 		s2.println(x);
 	}
 
 	@Override
-	public void println(String x) {
+	public void println(int x) {
+		debugPrint();
+		s1.println(x);
+		s2.println(x);
+	}
+
+	@Override
+	public void println(long x) {
 		debugPrint();
 		s1.println(x);
 		s2.println(x);
@@ -187,52 +211,10 @@ class BiPrintStream extends PrintStream {
 	}
 
 	@Override
-	public PrintStream printf(String format, Object... args) {
+	public void println(String x) {
 		debugPrint();
-		s2.printf(format, args);
-		return s1.printf(format, args);
-	}
-
-	@Override
-	public PrintStream printf(Locale l, String format, Object... args) {
-		debugPrint();
-		s2.printf(l, format, args);
-		return s1.printf(l, format, args);
-	}
-
-	@Override
-	public PrintStream format(String format, Object... args) {
-		debugPrint();
-		s2.format(format, args);
-		return s1.format(format, args);
-	}
-
-	@Override
-	public PrintStream format(Locale l, String format, Object... args) {
-		debugPrint();
-		s2.format(l, format, args);
-		return s1.format(l, format, args);
-	}
-
-	@Override
-	public PrintStream append(CharSequence csq) {
-		debugPrint();
-		s2.append(csq);
-		return s1.append(csq);
-	}
-
-	@Override
-	public PrintStream append(CharSequence csq, int start, int end) {
-		debugPrint();
-		s2.append(csq, start, end);
-		return s1.append(csq, start, end);
-	}
-
-	@Override
-	public PrintStream append(char c) {
-		debugPrint();
-		s2.append(c);
-		return s1.append(c);
+		s1.println(x);
+		s2.println(x);
 	}
 
 	@Override
@@ -240,5 +222,23 @@ class BiPrintStream extends PrintStream {
 		debugPrint();
 		s1.write(b);
 		s2.write(b);
+	}
+
+	@Override
+	public void write(byte[] buf, int off, int len) {
+		debugPrint();
+		s1.write(buf, off, len);
+		s2.write(buf, off, len);
+	}
+
+	@Override
+	public void write(int b) {
+		debugPrint();
+		s1.write(b);
+		s2.write(b);
+	}
+
+	private void debugPrint() {
+		int debug = 3;
 	}
 }

@@ -23,6 +23,11 @@ public class ClientNotificationsJvmImpl implements ClientNotifications {
 	}
 
 	@Override
+	public ModalNotifier getModalNotifier(String message) {
+		return new ModalNotifierConsole();
+	}
+
+	@Override
 	public void hideDialog() {
 		// TODO Auto-generated method stub
 	}
@@ -48,20 +53,23 @@ public class ClientNotificationsJvmImpl implements ClientNotifications {
 		// TODO Auto-generated method stub
 	}
 
+	public void notifyOfCompletedSaveFromOffline() {
+	}
+
 	@Override
 	public void setDialogAnimationEnabled(boolean dialogAnimationEnabled) {
 		// TODO Auto-generated method stub
 	}
 
 	@Override
-	public void showDialog(String captionHTML, Widget captionWidget,
-			String msg, MessageType messageType, List<Button> extraButtons) {
+	public void showDialog(String captionHTML, Widget captionWidget, String msg,
+			MessageType messageType, List<Button> extraButtons) {
 		// TODO Auto-generated method stub
 	}
 
 	@Override
-	public void showDialog(String captionHTML, Widget captionWidget,
-			String msg, MessageType messageType, List<Button> extraButtons,
+	public void showDialog(String captionHTML, Widget captionWidget, String msg,
+			MessageType messageType, List<Button> extraButtons,
 			String containerStyle) {
 		// TODO Auto-generated method stub
 	}
@@ -103,23 +111,15 @@ public class ClientNotificationsJvmImpl implements ClientNotifications {
 		System.out.println(detail);
 	}
 
-	public void notifyOfCompletedSaveFromOffline() {
-	}
-
-	@Override
-	public ModalNotifier getModalNotifier(String message) {
-		return new ModalNotifierConsole();
-	}
-
 	static class ModalNotifierConsole implements ModalNotifier {
-		@Override
-		public void modalOn() {
-			System.out.println("modalnotifier::modal-on");
-		}
-
 		@Override
 		public void modalOff() {
 			System.out.println("modalnotifier::modal-off");
+		}
+
+		@Override
+		public void modalOn() {
+			System.out.println("modalnotifier::modal-on");
 		}
 
 		@Override
@@ -128,13 +128,13 @@ public class ClientNotificationsJvmImpl implements ClientNotifications {
 		}
 
 		@Override
-		public void setStatus(String status) {
-			System.out.println("modalnotifier::status:" + status);
+		public void setProgress(double progress) {
+			System.out.println("modalnotifier::progress:" + progress);
 		}
 
 		@Override
-		public void setProgress(double progress) {
-			System.out.println("modalnotifier::progress:" + progress);
+		public void setStatus(String status) {
+			System.out.println("modalnotifier::status:" + status);
 		}
 	}
 }

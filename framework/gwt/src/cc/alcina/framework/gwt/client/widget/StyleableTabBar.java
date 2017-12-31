@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -21,8 +20,7 @@ import com.google.gwt.user.client.ui.TabBar;
  *
  * @author Nick Reddel
  */
-
- public class StyleableTabBar extends TabBar {
+public class StyleableTabBar extends TabBar {
 	private HorizontalPanel panel;
 
 	public StyleableTabBar() {
@@ -38,8 +36,8 @@ import com.google.gwt.user.client.ui.TabBar;
 	public void updateLRStyles() {
 		if (panel.getWidgetCount() > 3) {
 			panel.getWidget(1).addStyleName("tabBarLeft");
-			panel.getWidget(panel.getWidgetCount() - 2).addStyleName(
-					"tabBarRight");
+			panel.getWidget(panel.getWidgetCount() - 2)
+					.addStyleName("tabBarRight");
 		}
 	}
 }

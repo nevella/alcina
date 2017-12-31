@@ -29,22 +29,6 @@ public abstract class MultilineGridEditor<H extends HasIdAndLocalId>
 		extends AbstractBoundWidget<Set<H>> implements MultilineWidget {
 	private FlowPanel holder;
 
-	public static class CreateGridAction extends CreateAction {
-		private String name;
-
-		public CreateGridAction() {
-		}
-
-		public CreateGridAction(String name) {
-			this.name = name;
-		}
-
-		@Override
-		public String getDisplayName() {
-			return name;
-		}
-	}
-
 	private PermissibleActionListener toolbarListener = new PermissibleActionListener() {
 		@Override
 		public void vetoableAction(PermissibleActionEvent evt) {
@@ -60,13 +44,15 @@ public abstract class MultilineGridEditor<H extends HasIdAndLocalId>
 		}
 	};
 
-	private Toolbar toolbar;;
+	private Toolbar toolbar;
 
-	BoundTableExt table;
+	BoundTableExt table;;
 
 	private Set<H> value;
 
 	private boolean editable;
+
+	List<GridForm> grids;
 
 	public MultilineGridEditor() {
 		holder = UsefulWidgetFactory.styledPanel("multi-line-editor grid");
@@ -102,7 +88,12 @@ public abstract class MultilineGridEditor<H extends HasIdAndLocalId>
 		setStyleName("empty", value.isEmpty());
 	}
 
-	List<GridForm> grids;
+	private void createPerObjectActions(FlowPanel gridAndActions, H rowValue) {
+		List<Link> links = createPerRowEditActions(rowValue);
+		FlowPanel panel = UsefulWidgetFactory.styledPanel("per-object-links");
+		links.stream().forEach(link -> panel.add(link));
+		gridAndActions.add(panel);
+	}
 
 	private void renderTable() {
 		holder.clear();
@@ -141,22 +132,11 @@ public abstract class MultilineGridEditor<H extends HasIdAndLocalId>
 		toolbar.addVetoableActionListener(toolbarListener);
 	}
 
-	private void createPerObjectActions(FlowPanel gridAndActions, H rowValue) {
-		List<Link> links = createPerRowEditActions(rowValue);
-		FlowPanel panel = UsefulWidgetFactory.styledPanel("per-object-links");
-		links.stream().forEach(link -> panel.add(link));
-		gridAndActions.add(panel);
-	}
-
 	protected List<Link> createPerRowEditActions(H rowValue) {
 		Link link = Link.createNoUnderline("Delete", evt -> {
 			doDeleteRow(rowValue);
 		});
 		return Collections.singletonList(link);
-	}
-
-	protected List<H> filterVisibleValues(List<H> values) {
-		return values;
 	}
 
 	protected void customiseActions(List<PermissibleAction> actions) {
@@ -166,6 +146,10 @@ public abstract class MultilineGridEditor<H extends HasIdAndLocalId>
 
 	protected abstract void doDeleteRow(H item);
 
+	protected List<H> filterVisibleValues(List<H> values) {
+		return values;
+	}
+
 	/**
 	 * @param multilineRowEditor
 	 * @return true if the table should be refreshed
@@ -173,5 +157,21 @@ public abstract class MultilineGridEditor<H extends HasIdAndLocalId>
 	protected boolean handleCustomAction(MultilineGridEditor multilineRowEditor,
 			PermissibleAction action) {
 		return false;
+	}
+
+	public static class CreateGridAction extends CreateAction {
+		private String name;
+
+		public CreateGridAction() {
+		}
+
+		public CreateGridAction(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public String getDisplayName() {
+			return name;
+		}
 	}
 }

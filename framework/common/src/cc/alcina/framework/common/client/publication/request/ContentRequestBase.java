@@ -101,25 +101,9 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	public transient List<MailInlineImage> images = new ArrayList<>();
 
-	@Override
-	public List<MailInlineImage> provideImages() {
-		if (images == null) {
-			images = new ArrayList<>();
-		}
-		return images;
-	}
-
 	private String opaqueRequestXml;
 
 	private String opaqueRequestClassname;
-
-	public String getOpaqueRequestClassname() {
-		return this.opaqueRequestClassname;
-	}
-
-	public void setOpaqueRequestClassname(String opaqueRequestClassname) {
-		this.opaqueRequestClassname = opaqueRequestClassname;
-	}
 
 	public String getAttachmentMessage() {
 		return attachmentMessage;
@@ -173,6 +157,10 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	public String getNote() {
 		return note;
+	}
+
+	public String getOpaqueRequestClassname() {
+		return this.opaqueRequestClassname;
 	}
 
 	/**
@@ -269,6 +257,14 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	@Override
 	public ContentDeliveryType provideContentDeliveryType() {
 		return ExtensibleEnum.valueOf(ContentDeliveryType.class, deliveryMode);
+	}
+
+	@Override
+	public List<MailInlineImage> provideImages() {
+		if (images == null) {
+			images = new ArrayList<>();
+		}
+		return images;
 	}
 
 	public PublicationFontOptions providePublicationFontOptions() {
@@ -377,6 +373,10 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		String old_note = this.note;
 		this.note = note;
 		propertyChangeSupport().firePropertyChange("note", old_note, note);
+	}
+
+	public void setOpaqueRequestClassname(String opaqueRequestClassname) {
+		this.opaqueRequestClassname = opaqueRequestClassname;
 	}
 
 	public void setOpaqueRequestXml(String opaqueRequestXml) {

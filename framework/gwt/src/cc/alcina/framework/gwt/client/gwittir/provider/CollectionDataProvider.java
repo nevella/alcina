@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gwt.user.client.Timer;
 import com.totsp.gwittir.client.beans.Property;
 import com.totsp.gwittir.client.ui.table.HasChunks;
 import com.totsp.gwittir.client.ui.table.SortableDataProvider;
@@ -40,15 +39,28 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 public class CollectionDataProvider implements SortableDataProvider {
 	private int pageSize = 50;
 
+	ArrayList sort;
+
 	public CollectionDataProvider(Collection c) {
 		sort = new ArrayList(c);
 	}
 
-	public void putCollection(Collection c, HasChunks table) {
-		sort = new ArrayList(c);
-		if (table != null) {
-			init(table);
+	public void getChunk(final HasChunks table, final int chunkNumber) {
+		table.setChunk(getChunk(chunkNumber));
+	}
+
+	public <V> Collection<? extends V> getChunk(int chunkNumber) {
+		ArrayList result = new ArrayList();
+		int maxSize = Math.min(getPageSize(),
+				sort.size() - chunkNumber * getPageSize());
+		for (int i = 0; i < maxSize; i++) {
+			result.add(sort.get(i + chunkNumber * getPageSize()));
 		}
+		return result;
+	}
+
+	public int getPageSize() {
+		return pageSize;
 	}
 
 	public String[] getSortableProperties() {
@@ -78,7 +90,25 @@ public class CollectionDataProvider implements SortableDataProvider {
 		return (String[]) fieldNames.toArray(new String[fieldNames.size()]);
 	}
 
-	ArrayList sort;
+	public void init(final HasChunks table) {
+		table.init(getChunk(0),
+				(sort.size() - 1) / Math.max(getPageSize(), 1) + 1);
+	}
+
+	public void putCollection(Collection c, HasChunks table) {
+		sort = new ArrayList(c);
+		if (table != null) {
+			init(table);
+		}
+	}
+
+	public void setPageSize(int pageSize) {
+		this.pageSize = pageSize;
+	}
+
+	public void showAllObjectsInCollection() {
+		setPageSize(sort.size());
+	}
 
 	public void sortOnProperty(final HasChunks table, String propertyName,
 			boolean ascending) {
@@ -134,36 +164,5 @@ public class CollectionDataProvider implements SortableDataProvider {
 			}
 		}
 		return null;
-	}
-
-	public <V> Collection<? extends V> getChunk(int chunkNumber) {
-		ArrayList result = new ArrayList();
-		int maxSize = Math.min(getPageSize(),
-				sort.size() - chunkNumber * getPageSize());
-		for (int i = 0; i < maxSize; i++) {
-			result.add(sort.get(i + chunkNumber * getPageSize()));
-		}
-		return result;
-	}
-
-	public void getChunk(final HasChunks table, final int chunkNumber) {
-		table.setChunk(getChunk(chunkNumber));
-	}
-
-	public void init(final HasChunks table) {
-		table.init(getChunk(0),
-				(sort.size() - 1) / Math.max(getPageSize(), 1) + 1);
-	}
-
-	public void setPageSize(int pageSize) {
-		this.pageSize = pageSize;
-	}
-
-	public int getPageSize() {
-		return pageSize;
-	}
-
-	public void showAllObjectsInCollection() {
-		setPageSize(sort.size());
 	}
 }

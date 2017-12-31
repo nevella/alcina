@@ -21,20 +21,18 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  * @author Nick Reddel
  */
 public class AnnotatedPermissible implements Permissible {
-	
-
 	public final Permission permission;
 
 	public AnnotatedPermissible(Permission permission) {
 		this.permission = permission;
 	}
 
-	public String rule() {
-		return permission.rule();
-	}
-
 	public AccessLevel accessLevel() {
 		return permission.access();
+	}
+
+	public String rule() {
+		return permission.rule();
 	}
 
 	@Override

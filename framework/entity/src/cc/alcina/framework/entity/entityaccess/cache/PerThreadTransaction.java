@@ -24,7 +24,8 @@ public class PerThreadTransaction {
 		@Override
 		public void domainTransform(DomainTransformEvent evt)
 				throws DomainTransformException {
-			if (!AlcinaMemCache.get().isCachedTransactional(evt.getObjectClass())) {
+			if (!AlcinaMemCache.get()
+					.isCachedTransactional(evt.getObjectClass())) {
 				return;
 			}
 			beforeConsume(evt);
@@ -38,16 +39,8 @@ public class PerThreadTransaction {
 	public PerThreadTransaction() {
 	}
 
-	protected void afterConsume(DomainTransformEvent evt) {
-	}
-
-	protected void beforeConsume(DomainTransformEvent evt) {
-	}
-
-	public void start() {
-		running = true;
-		transactionTransformManager = new TransactionalSubgraphTransformManager();
-		TransformManager.get().addDomainTransformListener(transformListener);
+	public void committing() {
+		TransformManager.get().removeDomainTransformListener(transformListener);
 	}
 
 	public void end() {
@@ -55,8 +48,12 @@ public class PerThreadTransaction {
 		TransformManager.get().removeDomainTransformListener(transformListener);
 	}
 
-	public <V extends HasIdAndLocalId> V getListenerValue(
-			CacheListener listener, V value, Object[] path) {
+	public <V extends HasIdAndLocalId> V ensureTransactional(V v) {
+		return transactionTransformManager.getObject(v);
+	}
+
+	public <V extends HasIdAndLocalId> V
+			getListenerValue(CacheListener listener, V value, Object[] path) {
 		Collection<? extends HasIdAndLocalId> perClassTransactional = (Collection<? extends HasIdAndLocalId>) transactionTransformManager.modified
 				.getCollection(listener.getListenedClass());
 		// FIXME - n^2 performance - use a per-listener threaded projection
@@ -86,24 +83,28 @@ public class PerThreadTransaction {
 		return transactionTransformManager.getObject(value);
 	}
 
-	public <V extends HasIdAndLocalId> V ensureTransactional(V v) {
-		return transactionTransformManager.getObject(v);
-	}
-
-	public boolean isRunning() {
-		return this.running;
-	}
-
-	public void committing() {
-		TransformManager.get().removeDomainTransformListener(transformListener);
-	}
-
 	public Set<? extends Object> immutableRawValues(Class clazz,
 			DetachedEntityCache cache) {
 		Set values = cache.values(clazz);
 		Collection<? extends HasIdAndLocalId> perClassTransactional = (Collection<? extends HasIdAndLocalId>) transactionTransformManager.modified
 				.getCollection(clazz);
 		return new OptimisedBiSet(values, perClassTransactional);
+	}
+
+	public boolean isRunning() {
+		return this.running;
+	}
+
+	public void start() {
+		running = true;
+		transactionTransformManager = new TransactionalSubgraphTransformManager();
+		TransformManager.get().addDomainTransformListener(transformListener);
+	}
+
+	protected void afterConsume(DomainTransformEvent evt) {
+	}
+
+	protected void beforeConsume(DomainTransformEvent evt) {
 	}
 
 	static class OptimisedBiSet implements Set {
@@ -118,44 +119,23 @@ public class PerThreadTransaction {
 		}
 
 		@Override
-		public int size() {
-			return a.size() + bNotA.size();
-		}
-
-		@Override
-		public boolean isEmpty() {
-			return size() == 0;
-		}
-
-		@Override
-		public boolean contains(Object o) {
-			return a.contains(o) || bNotA.contains(o);
-		}
-
-		@Override
-		public Iterator iterator() {
-			return new MultiIterator(false, a.iterator(), bNotA.iterator());
-		}
-
-		@Override
-		public Object[] toArray() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public Object[] toArray(Object[] a) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
 		public boolean add(Object e) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public boolean remove(Object o) {
-			// TODO Auto-generated method stub
-			return false;
+		public boolean addAll(Collection c) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void clear() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean contains(Object o) {
+			return a.contains(o) || bNotA.contains(o);
 		}
 
 		@Override
@@ -169,7 +149,23 @@ public class PerThreadTransaction {
 		}
 
 		@Override
-		public boolean addAll(Collection c) {
+		public boolean isEmpty() {
+			return size() == 0;
+		}
+
+		@Override
+		public Iterator iterator() {
+			return new MultiIterator(false, a.iterator(), bNotA.iterator());
+		}
+
+		@Override
+		public boolean remove(Object o) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public boolean removeAll(Collection c) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -179,12 +175,17 @@ public class PerThreadTransaction {
 		}
 
 		@Override
-		public boolean removeAll(Collection c) {
+		public int size() {
+			return a.size() + bNotA.size();
+		}
+
+		@Override
+		public Object[] toArray() {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public void clear() {
+		public Object[] toArray(Object[] a) {
 			throw new UnsupportedOperationException();
 		}
 	}

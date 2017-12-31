@@ -12,12 +12,9 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 public class WidgetByElementTracker implements Handler {
-	private WidgetByElementTracker() {
-		super();
-	}
-
 	public static WidgetByElementTracker get() {
-		WidgetByElementTracker singleton = Registry.checkSingleton(WidgetByElementTracker.class);
+		WidgetByElementTracker singleton = Registry
+				.checkSingleton(WidgetByElementTracker.class);
 		if (singleton == null) {
 			singleton = new WidgetByElementTracker();
 			Registry.registerSingleton(WidgetByElementTracker.class, singleton);
@@ -27,23 +24,18 @@ public class WidgetByElementTracker implements Handler {
 
 	Map<Element, Widget> perElementWidgets = new LinkedHashMap<Element, Widget>();
 
-	private static class WidgetAttachHandler implements Handler {
-		private final WidgetByElementTracker tracker;
-
-		public WidgetAttachHandler(
-				WidgetByElementTracker widgetByElementTracker, Widget w) {
-			this.tracker = widgetByElementTracker;
-			w.addAttachHandler(this);
-		}
-
-		@Override
-		public void onAttachOrDetach(AttachEvent event) {
-			tracker.onAttachOrDetach(event);
-		}
+	private WidgetByElementTracker() {
+		super();
 	}
 
-	public void register(Widget w) {
-		new WidgetAttachHandler(this, w);
+	public Widget findBestWidgetForElement(ForIsWidget fiw, Element elt) {
+		for (int i = 0; i < fiw.getWidgetCount(); i++) {
+			Widget w = fiw.getWidget(i);
+			if (elt == w.getElement()) {
+				return w;
+			}
+		}
+		return (Widget) fiw;
 	}
 
 	public Widget getWidget(Element e) {
@@ -68,13 +60,22 @@ public class WidgetByElementTracker implements Handler {
 		}
 	}
 
-	public Widget findBestWidgetForElement(ForIsWidget fiw, Element elt) {
-		for (int i = 0; i < fiw.getWidgetCount(); i++) {
-			Widget w = fiw.getWidget(i);
-			if (elt == w.getElement()) {
-				return w;
-			}
+	public void register(Widget w) {
+		new WidgetAttachHandler(this, w);
+	}
+
+	private static class WidgetAttachHandler implements Handler {
+		private final WidgetByElementTracker tracker;
+
+		public WidgetAttachHandler(
+				WidgetByElementTracker widgetByElementTracker, Widget w) {
+			this.tracker = widgetByElementTracker;
+			w.addAttachHandler(this);
 		}
-		return (Widget) fiw;
+
+		@Override
+		public void onAttachOrDetach(AttachEvent event) {
+			tracker.onAttachOrDetach(event);
+		}
 	}
 }

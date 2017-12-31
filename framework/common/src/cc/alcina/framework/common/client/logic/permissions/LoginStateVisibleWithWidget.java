@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.permissions;
 
 import com.google.gwt.user.client.ui.Widget;
@@ -20,8 +19,8 @@ import com.google.gwt.user.client.ui.Widget;
  *
  * @author Nick Reddel
  */
-
- public interface LoginStateVisibleWithWidget extends LoginStateVisible{
-	public Widget getWidget();
+public interface LoginStateVisibleWithWidget extends LoginStateVisible {
 	public String getDebugId();
+
+	public Widget getWidget();
 }

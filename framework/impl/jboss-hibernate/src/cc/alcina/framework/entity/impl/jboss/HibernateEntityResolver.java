@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.impl.jboss;
 
 import org.hibernate.proxy.HibernateProxy;
@@ -20,7 +19,6 @@ import org.hibernate.proxy.HibernateProxy;
  *
  * @author Nick Reddel
  */
-
- public interface HibernateEntityResolver {
+public interface HibernateEntityResolver {
 	public Object resolve(HibernateProxy proxy);
 }

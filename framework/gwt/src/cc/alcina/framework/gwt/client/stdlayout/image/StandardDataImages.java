@@ -24,17 +24,29 @@ import com.google.gwt.user.client.ui.Tree.Resources;
 public interface StandardDataImages extends ClientBundle, Resources {
 	ImageResource backupRoot();
 
-	ImageResource folder();
+	ImageResource bubbleArrow();
+
+	ImageResource collapse();
+
+	ImageResource deleteItem();
+
+	ImageResource downGrey();
+
+	ImageResource error();
+
+	ImageResource errorSmall();
 
 	ImageResource file();
 
-	ImageResource treeLeaf();
+	ImageResource folder();
 
-	ImageResource transparent();
+	ImageResource info();
 
 	ImageResource maximise();
 
-	ImageResource collapse();
+	ImageResource maximise2();
+
+	ImageResource maximise2over();
 
 	ImageResource minimise();
 
@@ -42,21 +54,9 @@ public interface StandardDataImages extends ClientBundle, Resources {
 
 	ImageResource minimise2over();
 
-	ImageResource maximise2();
+	ImageResource transparent();
 
-	ImageResource maximise2over();
-
-	ImageResource error();
-
-	ImageResource errorSmall();
+	ImageResource treeLeaf();
 
 	ImageResource warning();
-
-	ImageResource info();
-
-	ImageResource deleteItem();
-
-	ImageResource downGrey();
-
-	ImageResource bubbleArrow();
 }

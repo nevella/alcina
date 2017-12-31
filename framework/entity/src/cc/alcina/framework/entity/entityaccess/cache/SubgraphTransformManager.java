@@ -22,6 +22,46 @@ import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.ServerTransformManagerSupport;
 
 public class SubgraphTransformManager extends TransformManager {
+	public static <T extends HasIdAndLocalId> T generateSynthetic(
+			HiliLocatorMap locatorMap, Stream<DomainTransformEvent> stream) {
+		try {
+			SubgraphTransformManagerRecord tm = new SubgraphTransformManagerRecord();
+			List<DomainTransformEvent> dtes = stream.map(dte -> {
+				try {
+					// cheap hack to let local transforms work with
+					// DetachedEntityCache
+					DomainTransformEvent copy = ResourceUtilities
+							.fieldwiseClone(dte, true);
+					long objectLocalId = copy.getObjectLocalId();
+					if (objectLocalId != 0) {
+						if (locatorMap.containsKey(objectLocalId)) {
+							copy.setObjectId(locatorMap.get(objectLocalId).id);
+							copy.setObjectLocalId(0);
+						} else {
+							copy.setObjectId(-objectLocalId);
+							copy.setObjectLocalId(0L);
+						}
+					}
+					return copy;
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}).collect(Collectors.toList());
+			for (DomainTransformEvent dte : dtes) {
+				tm.consume(dte);
+			}
+			HasIdAndLocalId firstReferenced = tm.firstReferenced;
+			long id = firstReferenced.getId();
+			if (id < 0) {
+				firstReferenced.setLocalId(-id);
+				firstReferenced.setId(0);
+			}
+			return (T) firstReferenced;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	protected DetachedCacheObjectStore store;
 
 	SubgraphClassLookup classLookup = new SubgraphClassLookup();
@@ -35,20 +75,13 @@ public class SubgraphTransformManager extends TransformManager {
 		return store.getCache();
 	}
 
+	public DetachedCacheObjectStore getStore() {
+		return this.store;
+	}
+
 	@Override
 	protected ClassLookup classLookup() {
 		return classLookup;
-	}
-
-	@Override
-	protected boolean updateAssociationsWithoutNoChangeCheck() {
-		return true;
-	}
-
-	@Override
-	protected void doCascadeDeletes(HasIdAndLocalId hili) {
-		// rely on the client for this...
-		// or the servletlayer aspect of tltm
 	}
 
 	@Override
@@ -59,11 +92,21 @@ public class SubgraphTransformManager extends TransformManager {
 	}
 
 	@Override
+	protected void doCascadeDeletes(HasIdAndLocalId hili) {
+		// rely on the client for this...
+		// or the servletlayer aspect of tltm
+	}
+
+	@Override
 	protected Object ensureEndpointInTransformGraph(Object object) {
 		if (object instanceof HasIdAndLocalId) {
 			return getObject((HasIdAndLocalId) object);
 		}
 		return object;
+	}
+
+	protected HasIdAndLocalId getObjectForCreate(DomainTransformEvent event) {
+		return null;
 	}
 
 	@Override
@@ -82,6 +125,11 @@ public class SubgraphTransformManager extends TransformManager {
 			boolean collectionPropertyChange) {
 		super.updateAssociation(evt, obj, tgt, remove,
 				collectionPropertyChange);
+	}
+
+	@Override
+	protected boolean updateAssociationsWithoutNoChangeCheck() {
+		return true;
 	}
 
 	static class SubgraphClassLookup implements ClassLookup {
@@ -143,24 +191,9 @@ public class SubgraphTransformManager extends TransformManager {
 		}
 	}
 
-	public DetachedCacheObjectStore getStore() {
-		return this.store;
-	}
-
-	protected HasIdAndLocalId getObjectForCreate(DomainTransformEvent event) {
-		return null;
-	}
-
 	static class SubgraphTransformManagerRecord extends SubgraphTransformManager
 			implements LazyObjectLoader {
 		private HasIdAndLocalId firstReferenced = null;
-
-		@Override
-		protected void createObjectLookup() {
-			store = new DetachedCacheObjectStore(new DetachedEntityCache());
-			store.setLazyObjectLoader(this);
-			setDomainObjects(store);
-		}
 
 		@Override
 		public void consume(DomainTransformEvent event)
@@ -178,45 +211,12 @@ public class SubgraphTransformManager extends TransformManager {
 				loadObject(Class<? extends T> clazz, long id, long localId) {
 			store.mapObject(AlcinaMemCache.get().find(clazz, id));
 		}
-	}
 
-	public static <T extends HasIdAndLocalId> T generateSynthetic(
-			HiliLocatorMap locatorMap, Stream<DomainTransformEvent> stream) {
-		try {
-			SubgraphTransformManagerRecord tm = new SubgraphTransformManagerRecord();
-			List<DomainTransformEvent> dtes = stream.map(dte -> {
-				try {
-					// cheap hack to let local transforms work with
-					// DetachedEntityCache
-					DomainTransformEvent copy = ResourceUtilities
-							.fieldwiseClone(dte, true);
-					long objectLocalId = copy.getObjectLocalId();
-					if (objectLocalId != 0) {
-						if (locatorMap.containsKey(objectLocalId)) {
-							copy.setObjectId(locatorMap.get(objectLocalId).id);
-							copy.setObjectLocalId(0);
-						} else {
-							copy.setObjectId(-objectLocalId);
-							copy.setObjectLocalId(0L);
-						}
-					}
-					return copy;
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}).collect(Collectors.toList());
-			for (DomainTransformEvent dte : dtes) {
-				tm.consume(dte);
-			}
-			HasIdAndLocalId firstReferenced = tm.firstReferenced;
-			long id = firstReferenced.getId();
-			if (id < 0) {
-				firstReferenced.setLocalId(-id);
-				firstReferenced.setId(0);
-			}
-			return (T) firstReferenced;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+		@Override
+		protected void createObjectLookup() {
+			store = new DetachedCacheObjectStore(new DetachedEntityCache());
+			store.setLazyObjectLoader(this);
+			setDomainObjects(store);
 		}
 	}
 }

@@ -43,7 +43,7 @@ import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
  * 
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint=FromOfflineConflictResolver.class,implementationType=ImplementationType.INSTANCE)
+@RegistryLocation(registryPoint = FromOfflineConflictResolver.class, implementationType = ImplementationType.INSTANCE)
 @ClientInstantiable
 public class FromOfflineConflictResolver {
 	@SuppressWarnings("unused")
@@ -56,6 +56,11 @@ public class FromOfflineConflictResolver {
 	private LocalTransformPersistence localTransformPersistence;
 
 	private AsyncCallback<Void> completionCallback;
+
+	public void notResolved() {
+		Window.alert(getText(TextItem.OFFLINE_NO_DISCARD_WARNING));
+		Window.Location.reload();
+	}
 
 	public void resolve(List<DeltaApplicationRecord> uncommitted,
 			Throwable caught,
@@ -73,15 +78,101 @@ public class FromOfflineConflictResolver {
 		dialog.show();
 	}
 
-	public void notResolved() {
-		Window.alert(getText(TextItem.OFFLINE_NO_DISCARD_WARNING));
-		Window.Location.reload();
-	}
-
 	private String getText(TextItem key) {
 		return TextProvider.get().getUiObjectText(
 				FromOfflineConflictResolver.class, key.toString(),
 				key.getText());
+	}
+
+	private class ResolutionOptions extends Composite implements ClickHandler {
+		private FlowPanel fp;
+
+		private BlockLink discardLink;
+
+		private BlockLink exitLink;
+
+		public ResolutionOptions() {
+			this.fp = new FlowPanel();
+			discardLink = new BlockLink(
+					getText(TextItem.OFFLINE_DISCARD_CHANGES), this);
+			exitLink = new BlockLink(getText(TextItem.OFFLINE_EXIT_NO_DISCARD),
+					this);
+			discardLink.removeStyleName("gwt-Hyperlink");
+			exitLink.removeStyleName("gwt-Hyperlink");
+			boolean uploadSucceeded = LooseContext.getContext().getBoolean(
+					LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED);
+			String uploadFailedText = getText(TextItem.OFFLINE_UPLOAD_FAILED);
+			String uploadSucceededText = getText(
+					TextItem.OFFLINE_UPLOAD_SUCCEEDED4);
+			if (uploadSucceeded) {
+				uploadSucceededText = CommonUtils.formatJ(uploadSucceededText,
+						"clientinstance_ids: " + LooseContext.getContext().get(
+								LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS));
+			}
+			HTML html = new HTML(
+					uploadSucceeded ? uploadSucceededText : uploadFailedText);
+			fp.add(html);
+			FlowPanel p = new FlowPanel();
+			p.setStyleName("pad-15");
+			fp.add(p);
+			if (uploadSucceeded) {
+				p.add(discardLink);
+			} else {
+				p.add(exitLink);
+			}
+			initWidget(fp);
+		}
+
+		@SuppressWarnings("unchecked")
+		public void onClick(ClickEvent event) {
+			Widget sender = (Widget) event.getSource();
+			if (sender == discardLink) {
+				Registry.impl(ClientNotifications.class).log("pre-clear-db");
+				localTransformPersistence
+						.clearAllPersisted(new AsyncCallback() {
+							@Override
+							public void onFailure(Throwable caught) {
+								Window.alert(caught.getMessage());
+								Window.Location.reload();
+							}
+
+							@Override
+							public void onSuccess(Object result) {
+								Window.alert(getText(
+										TextItem.OFFLINE_DISCARD_PERFORMED));
+								dialog.hide();
+								completionCallback.onSuccess(null);
+								Registry.impl(ClientNotifications.class)
+										.log("post-clear-db");
+							}
+						});
+			}
+			if (sender == exitLink) {
+				dialog.hide();
+				notResolved();
+			}
+		}
+
+		public void showLog() {
+			FlowPanel fp = new FlowPanel();
+			TextArea ta = new TextArea();
+			ta.setSize("600px", "300px");
+			String text = CommonUtils.formatJ("Unsaved transforms\n\n" + "%s",
+					uncommitted.toString());
+			ta.setText(text);
+			fp.add(ta);
+			ClientNotifications cn = Registry.impl(ClientNotifications.class);
+			cn.setDialogAnimationEnabled(false);
+			cn.showMessage(fp);
+			cn.setDialogAnimationEnabled(true);
+			// ta.setSelectionRange(0, text.length());
+			// copy();
+			// no browser permits this
+		}
+
+		protected native void copy() /*-{
+										$doc.execCommand("Copy");
+										}-*/;
 	}
 
 	enum TextItem {
@@ -150,100 +241,5 @@ public class FromOfflineConflictResolver {
 			}
 		};
 		public abstract String getText();
-	}
-
-	private class ResolutionOptions extends Composite implements ClickHandler {
-		private FlowPanel fp;
-
-		private BlockLink discardLink;
-
-		private BlockLink exitLink;
-
-		public ResolutionOptions() {
-			this.fp = new FlowPanel();
-			discardLink = new BlockLink(
-					getText(TextItem.OFFLINE_DISCARD_CHANGES), this);
-			exitLink = new BlockLink(getText(TextItem.OFFLINE_EXIT_NO_DISCARD),
-					this);
-			discardLink.removeStyleName("gwt-Hyperlink");
-			exitLink.removeStyleName("gwt-Hyperlink");
-			boolean uploadSucceeded = LooseContext
-					.getContext()
-					.getBoolean(
-							LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED);
-			String uploadFailedText = getText(TextItem.OFFLINE_UPLOAD_FAILED);
-			String uploadSucceededText = getText(TextItem.OFFLINE_UPLOAD_SUCCEEDED4);
-			if (uploadSucceeded) {
-				uploadSucceededText = CommonUtils
-						.formatJ(
-								uploadSucceededText,
-								"clientinstance_ids: "
-										+ LooseContext
-												.getContext()
-												.get(LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS));
-			}
-			HTML html = new HTML(uploadSucceeded ? uploadSucceededText
-					: uploadFailedText);
-			fp.add(html);
-			FlowPanel p = new FlowPanel();
-			p.setStyleName("pad-15");
-			fp.add(p);
-			if (uploadSucceeded) {
-				p.add(discardLink);
-			} else {
-				p.add(exitLink);
-			}
-			initWidget(fp);
-		}
-
-		public void showLog() {
-			FlowPanel fp = new FlowPanel();
-			TextArea ta = new TextArea();
-			ta.setSize("600px", "300px");
-			String text = CommonUtils.formatJ("Unsaved transforms\n\n" + "%s",
-					uncommitted.toString());
-			ta.setText(text);
-			fp.add(ta);
-			ClientNotifications cn = Registry.impl(ClientNotifications.class);
-			cn.setDialogAnimationEnabled(false);
-			cn.showMessage(fp);
-			cn.setDialogAnimationEnabled(true);
-			// ta.setSelectionRange(0, text.length());
-			// copy();
-			// no browser permits this
-		}
-
-		protected native void copy() /*-{
-			$doc.execCommand("Copy");
-		}-*/;
-
-		@SuppressWarnings("unchecked")
-		public void onClick(ClickEvent event) {
-			Widget sender = (Widget) event.getSource();
-			if (sender == discardLink) {
-				Registry.impl(ClientNotifications.class).log("pre-clear-db");
-				localTransformPersistence
-						.clearAllPersisted(new AsyncCallback() {
-							@Override
-							public void onSuccess(Object result) {
-								Window.alert(getText(TextItem.OFFLINE_DISCARD_PERFORMED));
-								dialog.hide();
-								completionCallback.onSuccess(null);
-								Registry.impl(ClientNotifications.class).log(
-										"post-clear-db");
-							}
-
-							@Override
-							public void onFailure(Throwable caught) {
-								Window.alert(caught.getMessage());
-								Window.Location.reload();
-							}
-						});
-			}
-			if (sender == exitLink) {
-				dialog.hide();
-				notResolved();
-			}
-		}
 	}
 }

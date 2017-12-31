@@ -11,16 +11,10 @@ public class DistinctPropertyExtractor<T, V> implements ConverterFilter<T, V> {
 
 	private boolean allowNull = false;
 
-	public DistinctPropertyExtractor(String propertyName) {
-		this.propertyName = propertyName;
-	}
-
 	Set<V> returned = new LinkedHashSet<V>();
 
-	@Override
-	public V convert(T original) {
-		return (V) Reflections.propertyAccessor()
-				.getPropertyValue(original, propertyName);
+	public DistinctPropertyExtractor(String propertyName) {
+		this.propertyName = propertyName;
 	}
 
 	@Override
@@ -35,6 +29,12 @@ public class DistinctPropertyExtractor<T, V> implements ConverterFilter<T, V> {
 	@Override
 	public boolean allowPreConvert(T t) {
 		return true;
+	}
+
+	@Override
+	public V convert(T original) {
+		return (V) Reflections.propertyAccessor().getPropertyValue(original,
+				propertyName);
 	}
 
 	public boolean isAllowNull() {

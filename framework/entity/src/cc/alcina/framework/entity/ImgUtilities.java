@@ -55,23 +55,17 @@ public class ImgUtilities {
 	public static final String CONTEXT_JPEG_COMPRESSION_RATIO = ImgUtilities.class
 			.getName() + "." + "CONTEXT_PDF_JPEG_COMPRESSION_RATIO";
 
-	public ImgUtilities() {
-	}
-
-	public static Icon scaleImage(File inputFile, int width, int height) {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		Icon icon = null;
-		try {
-			scaleImage(inputFile, width, height, out);
-			icon = new ImageIcon(out.toByteArray());
-		} catch (Exception e) {
+	public static void checkMonochrome(BufferedImage cc) {
+		int first = cc.getRGB(0, 0);
+		for (int y = 0; y < cc.getHeight(); y++) {
+			for (int x = 0; x < cc.getWidth(); x++) {
+				if (cc.getRGB(x, y) != first) {
+					return;
+				}
+			}
 		}
-		return icon;
-	}
-
-	public static void compressJpegFile(File infile, File outfile,
-			float compressionQuality) throws Exception {
-		compressJpeg(ImageIO.read(infile), outfile, compressionQuality);
+		LooseContext.getContext().publishTopic(
+				ImgUtilities.CONTEXT_PDF2HTML_TOPIC_MONOCHROME_IMAGES, true);
 	}
 
 	public static void compressJpeg(BufferedImage img, File outfile,
@@ -97,44 +91,36 @@ public class ImgUtilities {
 		ios.close();
 	}
 
-	public static void writeJpeg(BufferedImage img, OutputStream os,
-			Float compressionQuality) throws Exception {
-		Iterator iter = ImageIO.getImageWritersByFormatName("jpeg");
-		ImageWriter writer = (ImageWriter) iter.next();
-		ImageWriteParam iwp = writer.getDefaultWriteParam();
-		iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-		compressionQuality = compressionQuality != null ? compressionQuality
-				: LooseContext.getContext()
-						.getFloat(ImgUtilities.CONTEXT_JPEG_COMPRESSION_RATIO);
-		iwp.setCompressionQuality(
-				compressionQuality == null ? 0.8f : compressionQuality);
-		ImageOutputStream ios = new MemoryCacheImageOutputStream(os);
-		writer.setOutput(ios);
-		IIOImage image = new IIOImage(img, null, null);
-		writer.write(null, image, iwp);
-		ios.flush();
-		writer.dispose();
+	public static void compressJpegFile(File infile, File outfile,
+			float compressionQuality) throws Exception {
+		compressJpeg(ImageIO.read(infile), outfile, compressionQuality);
 	}
 
-	public static void toJpegThumbnail(File src, File tgt, int maxWidth)
+	public static OutputStream convertToJpeg(File inputFile, OutputStream out)
 			throws Exception {
-		BufferedImage img = ImageIO.read(src);
-		img = resizeToMaxWidth(img, maxWidth);
-		writeJpeg(img, new FileOutputStream(tgt), 0.8f);
+		return convertToJpeg(inputFile, out, 0.8f);
 	}
 
-	public static void toJpegThumbnail(InputStream src, OutputStream tgt,
-			int maxWidth) throws Exception {
-		BufferedImage img = ImageIO.read(src);
-		img = resizeToMaxWidth(img, maxWidth);
-		writeJpeg(img, tgt, 0.8f);
-	}
-
-	public static void toPngThumbnail(File src, File tgt, int maxWidth)
-			throws Exception {
-		BufferedImage img = ImageIO.read(src);
-		img = resizeToMaxWidth(img, maxWidth);
-		writePng(img, new FileOutputStream(tgt));
+	public static OutputStream convertToJpeg(File inputFile, OutputStream out,
+			float compressionQuality) throws Exception {
+		Image image = Toolkit.getDefaultToolkit()
+				.getImage(inputFile.getAbsolutePath());
+		MediaTracker mediaTracker = new MediaTracker(new Container());
+		mediaTracker.addImage(image, 0);
+		mediaTracker.waitForID(0);
+		if (out == null) {
+			out = new ByteArrayOutputStream();
+		}
+		int thumbWidth = image.getWidth(null);
+		int thumbHeight = image.getHeight(null);
+		BufferedImage thumbImage = new BufferedImage(thumbWidth, thumbHeight,
+				BufferedImage.TYPE_INT_RGB);
+		Graphics2D graphics2D = thumbImage.createGraphics();
+		graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+				RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		graphics2D.drawImage(image, 0, 0, thumbWidth, thumbHeight, null);
+		writeJpeg(thumbImage, out, compressionQuality);
+		return out;
 	}
 
 	public static BufferedImage resizeToMaxWidth(BufferedImage src,
@@ -179,76 +165,15 @@ public class ImgUtilities {
 		return src;
 	}
 
-	public static void checkMonochrome(BufferedImage cc) {
-		int first = cc.getRGB(0, 0);
-		for (int y = 0; y < cc.getHeight(); y++) {
-			for (int x = 0; x < cc.getWidth(); x++) {
-				if (cc.getRGB(x, y) != first) {
-					return;
-				}
-			}
+	public static Icon scaleImage(File inputFile, int width, int height) {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		Icon icon = null;
+		try {
+			scaleImage(inputFile, width, height, out);
+			icon = new ImageIcon(out.toByteArray());
+		} catch (Exception e) {
 		}
-		LooseContext.getContext().publishTopic(
-				ImgUtilities.CONTEXT_PDF2HTML_TOPIC_MONOCHROME_IMAGES, true);
-	}
-
-	private static IndexColorModel getBlackAndWhiteColorModel() {
-		return new IndexColorModel(1, 2, new byte[] { 0, -1 },
-				new byte[] { 0, -1 }, new byte[] { 0, -1 }, 1);
-	}
-
-	public static void writePng(BufferedImage img, OutputStream os)
-			throws IOException {
-		ImageIO.write(img, "png", os);
-		os.close();
-	}
-
-	// This class overrides the setCompressionQuality() method to workaround
-	// a problem in compressing JPEG images using the javax.imageio package.
-	public static class MyImageWriteParam extends JPEGImageWriteParam {
-		public MyImageWriteParam() {
-			super(Locale.getDefault());
-		}
-
-		// This method accepts quality levels between 0 (lowest) and 1 (highest)
-		// and simply converts
-		// it to a range between 0 and 256; this is not a correct conversion
-		// algorithm.
-		// However, a proper alternative is a lot more complicated.
-		// This should do until the bug is fixed.
-		public void setCompressionQuality(float quality) {
-			if (quality < 0.0F || quality > 1.0F) {
-				throw new IllegalArgumentException("Quality out-of-bounds!");
-			}
-			this.compressionQuality = quality * 256;
-		}
-	}
-
-	public static OutputStream convertToJpeg(File inputFile, OutputStream out)
-			throws Exception {
-		return convertToJpeg(inputFile, out, 0.8f);
-	}
-
-	public static OutputStream convertToJpeg(File inputFile, OutputStream out,
-			float compressionQuality) throws Exception {
-		Image image = Toolkit.getDefaultToolkit()
-				.getImage(inputFile.getAbsolutePath());
-		MediaTracker mediaTracker = new MediaTracker(new Container());
-		mediaTracker.addImage(image, 0);
-		mediaTracker.waitForID(0);
-		if (out == null) {
-			out = new ByteArrayOutputStream();
-		}
-		int thumbWidth = image.getWidth(null);
-		int thumbHeight = image.getHeight(null);
-		BufferedImage thumbImage = new BufferedImage(thumbWidth, thumbHeight,
-				BufferedImage.TYPE_INT_RGB);
-		Graphics2D graphics2D = thumbImage.createGraphics();
-		graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-				RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-		graphics2D.drawImage(image, 0, 0, thumbWidth, thumbHeight, null);
-		writeJpeg(thumbImage, out, compressionQuality);
-		return out;
+		return icon;
 	}
 
 	public static OutputStream scaleImage(File inputFile, int width, int height,
@@ -304,5 +229,80 @@ public class ImgUtilities {
 				RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		graphics2D.drawImage(image, 0, 0, thumbWidth, thumbHeight, null);
 		return thumbImage;
+	}
+
+	public static void toJpegThumbnail(File src, File tgt, int maxWidth)
+			throws Exception {
+		BufferedImage img = ImageIO.read(src);
+		img = resizeToMaxWidth(img, maxWidth);
+		writeJpeg(img, new FileOutputStream(tgt), 0.8f);
+	}
+
+	public static void toJpegThumbnail(InputStream src, OutputStream tgt,
+			int maxWidth) throws Exception {
+		BufferedImage img = ImageIO.read(src);
+		img = resizeToMaxWidth(img, maxWidth);
+		writeJpeg(img, tgt, 0.8f);
+	}
+
+	public static void toPngThumbnail(File src, File tgt, int maxWidth)
+			throws Exception {
+		BufferedImage img = ImageIO.read(src);
+		img = resizeToMaxWidth(img, maxWidth);
+		writePng(img, new FileOutputStream(tgt));
+	}
+
+	public static void writeJpeg(BufferedImage img, OutputStream os,
+			Float compressionQuality) throws Exception {
+		Iterator iter = ImageIO.getImageWritersByFormatName("jpeg");
+		ImageWriter writer = (ImageWriter) iter.next();
+		ImageWriteParam iwp = writer.getDefaultWriteParam();
+		iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+		compressionQuality = compressionQuality != null ? compressionQuality
+				: LooseContext.getContext()
+						.getFloat(ImgUtilities.CONTEXT_JPEG_COMPRESSION_RATIO);
+		iwp.setCompressionQuality(
+				compressionQuality == null ? 0.8f : compressionQuality);
+		ImageOutputStream ios = new MemoryCacheImageOutputStream(os);
+		writer.setOutput(ios);
+		IIOImage image = new IIOImage(img, null, null);
+		writer.write(null, image, iwp);
+		ios.flush();
+		writer.dispose();
+	}
+
+	public static void writePng(BufferedImage img, OutputStream os)
+			throws IOException {
+		ImageIO.write(img, "png", os);
+		os.close();
+	}
+
+	private static IndexColorModel getBlackAndWhiteColorModel() {
+		return new IndexColorModel(1, 2, new byte[] { 0, -1 },
+				new byte[] { 0, -1 }, new byte[] { 0, -1 }, 1);
+	}
+
+	public ImgUtilities() {
+	}
+
+	// This class overrides the setCompressionQuality() method to workaround
+	// a problem in compressing JPEG images using the javax.imageio package.
+	public static class MyImageWriteParam extends JPEGImageWriteParam {
+		public MyImageWriteParam() {
+			super(Locale.getDefault());
+		}
+
+		// This method accepts quality levels between 0 (lowest) and 1 (highest)
+		// and simply converts
+		// it to a range between 0 and 256; this is not a correct conversion
+		// algorithm.
+		// However, a proper alternative is a lot more complicated.
+		// This should do until the bug is fixed.
+		public void setCompressionQuality(float quality) {
+			if (quality < 0.0F || quality > 1.0F) {
+				throw new IllegalArgumentException("Quality out-of-bounds!");
+			}
+			this.compressionQuality = quality * 256;
+		}
 	}
 }

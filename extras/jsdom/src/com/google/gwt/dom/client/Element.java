@@ -428,7 +428,6 @@ public class Element extends Node implements DomElement {
 		this.pendingResolution = true;
 	}
 
-
 	public void removeAttribute(String name) {
 		ensureRemoteCheck();
 		local().removeAttribute(name);
@@ -799,6 +798,4 @@ public class Element extends Node implements DomElement {
 			return Element.this.wasResolved();
 		}
 	}
-
-	
 }

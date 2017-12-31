@@ -11,9 +11,18 @@ public abstract class SyncDispatcher<E extends SyncEndpointModel, I extends Sync
 
 	protected FlatDeltaPersister<D> deltaApplicator;
 
-	protected void prepareInterchangeModel() {
-		syncDispatchToken.setInterchangeModel(transformer
-				.transform(syncDispatchToken.getSyncEndpointModel()));
+	public void run() throws Exception {
+		prepareInterchangeModel();
+		getDelta();
+		applyDelta();
+	}
+
+	public void setInitialEndpointModel(E endpointModel) {
+		syncDispatchToken.setSyncEndpointModel(endpointModel);
+	}
+
+	protected void applyDelta() throws Exception {
+		deltaApplicator.apply(syncDispatchToken.getObjectSetDeltaModel());
 	}
 
 	protected void getDelta() throws Exception {
@@ -21,17 +30,8 @@ public abstract class SyncDispatcher<E extends SyncEndpointModel, I extends Sync
 				.dispatch(syncDispatchToken.getInterchangeModel()));
 	}
 
-	protected void applyDelta() throws Exception {
-		deltaApplicator.apply(syncDispatchToken.getObjectSetDeltaModel());
-	}
-
-	public void setInitialEndpointModel(E endpointModel) {
-		syncDispatchToken.setSyncEndpointModel(endpointModel);
-	}
-
-	public void run() throws Exception {
-		prepareInterchangeModel();
-		getDelta();
-		applyDelta();
+	protected void prepareInterchangeModel() {
+		syncDispatchToken.setInterchangeModel(transformer
+				.transform(syncDispatchToken.getSyncEndpointModel()));
 	}
 }

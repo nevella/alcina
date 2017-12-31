@@ -76,9 +76,8 @@ public class MemCacheQueryTranslator {
 		ResultTransformer resultTransformer = criteria.getResultTransformer();
 		List results = groupedRows.asTuples();
 		if (resultTransformer != null) {
-			Stream stream = results.stream()
-					.map(tp -> resultTransformer.transformTuple((Object[]) tp,
-							null));
+			Stream stream = results.stream().map(tp -> resultTransformer
+					.transformTuple((Object[]) tp, null));
 			results = (List) stream.collect(Collectors.toList());
 		}
 		return results;
@@ -112,7 +111,8 @@ public class MemCacheQueryTranslator {
 		}
 	}
 
-	private void addJoinFilter(MemCacheCriteria criteria, MemCacheCriteria sub) {
+	private void addJoinFilter(MemCacheCriteria criteria,
+			MemCacheCriteria sub) {
 		switch (sub.joinType) {
 		case INNER_JOIN:
 		case LEFT_OUTER_JOIN:
@@ -144,8 +144,8 @@ public class MemCacheQueryTranslator {
 
 	private void checkHandlesClass(Class clazz) throws NotHandledException {
 		if (!AlcinaMemCache.get().isCached(clazz)) {
-			throw new NotHandledException("Not handled class - "
-					+ clazz.getSimpleName());
+			throw new NotHandledException(
+					"Not handled class - " + clazz.getSimpleName());
 		}
 	}
 
@@ -194,8 +194,8 @@ public class MemCacheQueryTranslator {
 		}
 	}
 
-	public static class ConjunctionTranslator extends
-			CriterionTranslator<Conjunction> {
+	public static class ConjunctionTranslator
+			extends CriterionTranslator<Conjunction> {
 		@Override
 		protected Class<Conjunction> getHandledClass() {
 			return Conjunction.class;
@@ -223,7 +223,8 @@ public class MemCacheQueryTranslator {
 	public abstract static class CriterionTranslator<C extends Criterion> {
 		FieldHelper fieldHelper = new FieldHelper();
 
-		public String getStringFieldValue(Criterion criterion, String fieldName) {
+		public String getStringFieldValue(Criterion criterion,
+				String fieldName) {
 			return fieldHelper.getValue(criterion, fieldName);
 		}
 
@@ -242,8 +243,8 @@ public class MemCacheQueryTranslator {
 				MemCacheQueryTranslator translator) throws NotHandledException;
 	}
 
-	public static class DisjunctionTranslator extends
-			CriterionTranslator<Disjunction> {
+	public static class DisjunctionTranslator
+			extends CriterionTranslator<Disjunction> {
 		@Override
 		protected Class<Disjunction> getHandledClass() {
 			return Disjunction.class;
@@ -267,8 +268,8 @@ public class MemCacheQueryTranslator {
 		}
 	}
 
-	public static class InExpressionTranslator extends
-			CriterionTranslator<InExpression> {
+	public static class InExpressionTranslator
+			extends CriterionTranslator<InExpression> {
 		@Override
 		protected Class<InExpression> getHandledClass() {
 			return InExpression.class;
@@ -289,15 +290,16 @@ public class MemCacheQueryTranslator {
 			} else {
 				collection = new LinkedHashSet((Collection) value);
 			}
-			return new CacheFilter(translator.translatePropertyPath(criterion,
-					memCacheCriteria,
-					getStringFieldValue(criterion, "propertyName")),
+			return new CacheFilter(
+					translator.translatePropertyPath(criterion,
+							memCacheCriteria,
+							getStringFieldValue(criterion, "propertyName")),
 					collection, FilterOperator.IN);
 		}
 	}
 
-	public static class NotTranslator extends
-			CriterionTranslator<NotExpression> {
+	public static class NotTranslator
+			extends CriterionTranslator<NotExpression> {
 		@Override
 		protected Class<NotExpression> getHandledClass() {
 			return NotExpression.class;
@@ -314,8 +316,8 @@ public class MemCacheQueryTranslator {
 		}
 	}
 
-	public static class NullTranslator extends
-			CriterionTranslator<NullExpression> {
+	public static class NullTranslator
+			extends CriterionTranslator<NullExpression> {
 		@Override
 		protected Class<NullExpression> getHandledClass() {
 			return NullExpression.class;
@@ -332,8 +334,8 @@ public class MemCacheQueryTranslator {
 		}
 	}
 
-	public static class SimpleExpressionTranslator extends
-			CriterionTranslator<SimpleExpression> {
+	public static class SimpleExpressionTranslator
+			extends CriterionTranslator<SimpleExpression> {
 		@Override
 		protected Class<SimpleExpression> getHandledClass() {
 			return SimpleExpression.class;
@@ -532,15 +534,13 @@ public class MemCacheQueryTranslator {
 
 		@Override
 		public String toString() {
-			return CommonUtils.join(CollectionFilters.convert(
-					projectionHelpers,
+			return CommonUtils.join(CollectionFilters.convert(projectionHelpers,
 					new Converter<ProjectionHelper, String>() {
 						@Override
 						public String convert(ProjectionHelper original) {
 							return original.toString();
 						}
-					}), "\n")
-					+ "==============\n"
+					}), "\n") + "==============\n"
 					+ CommonUtils.join(CollectionFilters.convert(rows,
 							new Converter<GroupedRow, String>() {
 								@Override

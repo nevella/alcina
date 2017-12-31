@@ -320,6 +320,11 @@ public class XmlNode {
 		node.getParentNode().removeChild(node);
 	}
 
+	public void removeWhitespaceNodes() {
+		children.flat().filter(n -> n.isText() && n.isWhitespaceTextContent())
+				.forEach(XmlNode::removeFromParent);
+	}
+
 	public void replaceWith(XmlNode other) {
 		relative().insertBeforeThis(other);
 		removeFromParent();
@@ -341,6 +346,21 @@ public class XmlNode {
 			}
 		}
 		invalidate();
+	}
+
+	/*
+	 * only sort if element-only children
+	 * 
+	 */
+	public void sort() {
+		List<XmlNode> nodes = children.nodes();
+		if (nodes.stream().allMatch(XmlNode::isElement)) {
+			nodes.forEach(XmlNode::removeFromParent);
+			nodes = nodes.stream().sorted(Comparator.comparing(XmlNode::name))
+					.collect(Collectors.toList());
+			children.append(nodes);
+			nodes.forEach(XmlNode::sort);
+		}
 	}
 
 	public void strip() {
@@ -401,14 +421,16 @@ public class XmlNode {
 	public XmlNodeTree tree() {
 		return new XmlNodeTree();
 	}
+
 	public XmlNodeXpath xpath(String query) {
-		return xpath(query,new Object[]{});
+		return xpath(query, new Object[] {});
 	}
-	public XmlNodeXpath xpath(String query,Object...args) {
+
+	public XmlNodeXpath xpath(String query, Object... args) {
 		if (xpath == null) {
 			xpath = new XmlNodeXpath();
 		}
-		xpath.query = Ax.format(query,args);
+		xpath.query = Ax.format(query, args);
 		return xpath;
 	}
 
@@ -721,6 +743,13 @@ public class XmlNode {
 			return isElement() && XmlUtils.isBlockTag(name());
 		}
 
+		public boolean isOrContainsBlock(BlockResolver blockResolver) {
+			if (blockResolver.isBlock(XmlNode.this)) {
+				return true;
+			}
+			return children.flat().anyMatch(blockResolver::isBlock);
+		}
+
 		public void setStyleProperty(String key, String value) {
 			StringMap styles = new StringMap();
 			// t0tes naive
@@ -749,13 +778,6 @@ public class XmlNode {
 				trs = xpath("./TBODY/TR").nodes();
 			}
 			return trs;
-		}
-
-		public boolean isOrContainsBlock(BlockResolver blockResolver) {
-			if (blockResolver.isBlock(XmlNode.this)) {
-				return true;
-			}
-			return children.flat().anyMatch(blockResolver::isBlock);
 		}
 	}
 
@@ -799,8 +821,33 @@ public class XmlNode {
 			return null;
 		}
 
+		public XmlNode nextSibOrParentSibNode() {
+			if (hasNextSibling()) {
+				return nextSibling();
+			}
+			XmlNode parent = parent();
+			if (parent != null) {
+				return parent.relative().nextSibOrParentSibNode();
+			}
+			return null;
+		}
+
 		public XmlNode previousSibling() {
 			return doc.nodeFor(node.getPreviousSibling());
+		}
+
+		public XmlNode previousSiblingExcludingWhitespace() {
+			XmlNode cursor = XmlNode.this;
+			while (true) {
+				cursor = cursor.relative().previousSibling();
+				if (cursor == null) {
+					return null;
+				}
+				if (cursor.isText() && cursor.isWhitespaceTextContent()) {
+				} else {
+					return cursor;
+				}
+			}
 		}
 
 		public XmlNode previousSibOrParentSibNode() {
@@ -825,31 +872,6 @@ public class XmlNode {
 			wrapper.children.append(XmlNode.this);
 			wrapper.copyAttributesFrom(XmlNode.this);
 			return wrapper;
-		}
-
-		public XmlNode nextSibOrParentSibNode() {
-			if (hasNextSibling()) {
-				return nextSibling();
-			}
-			XmlNode parent = parent();
-			if (parent != null) {
-				return parent.relative().nextSibOrParentSibNode();
-			}
-			return null;
-		}
-
-		public XmlNode previousSiblingExcludingWhitespace() {
-			XmlNode cursor = XmlNode.this;
-			while (true) {
-				cursor = cursor.relative().previousSibling();
-				if (cursor == null) {
-					return null;
-				}
-				if (cursor.isText() && cursor.isWhitespaceTextContent()) {
-				} else {
-					return cursor;
-				}
-			}
 		}
 	}
 
@@ -991,23 +1013,5 @@ public class XmlNode {
 			range.setEndAfter(end == null ? node : end.node);
 			return range;
 		}
-	}
-
-	/*
-	 * only sort if element-only children
-	 * 
-	 */
-	public void sort() { 
-		List<XmlNode> nodes = children.nodes();
-		if (nodes.stream().allMatch(XmlNode::isElement)) {
-			nodes.forEach(XmlNode::removeFromParent);
-			nodes = nodes.stream().sorted(Comparator.comparing(XmlNode::name))
-					.collect(Collectors.toList());
-			children.append(nodes);
-			nodes.forEach(XmlNode::sort);
-		}
-	}
-	public void removeWhitespaceNodes(){
-		children.flat().filter(n->n.isText()&&n.isWhitespaceTextContent()).forEach(XmlNode::removeFromParent);
 	}
 }

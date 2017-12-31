@@ -40,44 +40,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class ClientBeanReflector {
 	private final Class beanClass;
 
-	public Class getBeanClass() {
-		return this.beanClass;
-	}
-
-	public List<Class<? extends PermissibleAction>> getActions(Object userObject) {
-		List<Class<? extends PermissibleAction>> result = new ArrayList<Class<? extends PermissibleAction>>();
-		ObjectActions actions = getGwBeanInfo().actions();
-		if (actions != null) {
-			for (Action action : actions.value()) {
-				Class<? extends PermissibleAction> actionClass = action
-						.actionClass();
-				boolean noPermissionsCheck = actionClass == CreateAction.class
-						|| actionClass == EditAction.class
-						|| actionClass == ViewAction.class
-						|| actionClass == DeleteAction.class;
-				if (noPermissionsCheck
-						|| PermissionsManager.get().isPermissible(userObject,
-								new AnnotatedPermissible(action.permission()))) {
-					result.add(actionClass);
-				}
-			}
-		}
-		return result;
-	}
-
-	public Bean getGwBeanInfo() {
-		return (Bean) annotations.get(Bean.class);
-	}
-
-	@SuppressWarnings("unchecked")
-	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
-		return (A) annotations.get(annotationClass);
-	}
-
-	public Map<String, ClientPropertyReflector> getPropertyReflectors() {
-		return this.propertyReflectors;
-	}
-
 	private final Map<String, ClientPropertyReflector> propertyReflectors;
 
 	private Map<Class, Object> annotations;
@@ -92,14 +54,44 @@ public class ClientBeanReflector {
 		this.propertyReflectors = propertyReflectors;
 	}
 
-	public String getTypeDisplayName() {
-		String tn = getGwBeanInfo().displayInfo().name();
-		if (CommonUtils.isNullOrEmpty(tn)) {
-			tn = CommonUtils.capitaliseFirst(CommonUtils
-					.classSimpleName(beanClass));
+	public List<Class<? extends PermissibleAction>>
+			getActions(Object userObject) {
+		List<Class<? extends PermissibleAction>> result = new ArrayList<Class<? extends PermissibleAction>>();
+		ObjectActions actions = getGwBeanInfo().actions();
+		if (actions != null) {
+			for (Action action : actions.value()) {
+				Class<? extends PermissibleAction> actionClass = action
+						.actionClass();
+				boolean noPermissionsCheck = actionClass == CreateAction.class
+						|| actionClass == EditAction.class
+						|| actionClass == ViewAction.class
+						|| actionClass == DeleteAction.class;
+				if (noPermissionsCheck || PermissionsManager.get()
+						.isPermissible(userObject, new AnnotatedPermissible(
+								action.permission()))) {
+					result.add(actionClass);
+				}
+			}
 		}
-		return TextProvider.get().getUiObjectText(beanClass,
-				TextProvider.DISPLAY_NAME, tn);
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
+		return (A) annotations.get(annotationClass);
+	}
+
+	public Class getBeanClass() {
+		return this.beanClass;
+	}
+
+	public String getDisplayNamePropertyName() {
+		String dnpn = getGwBeanInfo().displayNamePropertyName();
+		return (dnpn == null) ? "id" : dnpn;
+	}
+
+	public Bean getGwBeanInfo() {
+		return (Bean) annotations.get(Bean.class);
 	}
 
 	public String getObjectName(Object o) {
@@ -109,14 +101,24 @@ public class ClientBeanReflector {
 					CommonUtils.formatJ(
 							"Object not of correct class for reflector - %s, %s",
 							clazz != null ? clazz.getName() : null,
-							beanClass.getName()), SuggestedAction.NOTIFY_ERROR);
+							beanClass.getName()),
+					SuggestedAction.NOTIFY_ERROR);
 		}
 		return TextProvider.get().getObjectName(o, this);
 	}
 
-	public String getDisplayNamePropertyName() {
-		String dnpn = getGwBeanInfo().displayNamePropertyName();
-		return (dnpn == null) ? "id" : dnpn;
+	public Map<String, ClientPropertyReflector> getPropertyReflectors() {
+		return this.propertyReflectors;
+	}
+
+	public String getTypeDisplayName() {
+		String tn = getGwBeanInfo().displayInfo().name();
+		if (CommonUtils.isNullOrEmpty(tn)) {
+			tn = CommonUtils
+					.capitaliseFirst(CommonUtils.classSimpleName(beanClass));
+		}
+		return TextProvider.get().getUiObjectText(beanClass,
+				TextProvider.DISPLAY_NAME, tn);
 	}
 
 	/**

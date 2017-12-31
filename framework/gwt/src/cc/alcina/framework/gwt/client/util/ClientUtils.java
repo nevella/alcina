@@ -69,214 +69,6 @@ public class ClientUtils {
 
 	private static final String CSS_TEXT_PROPERTY = "cssText";
 
-	public static boolean maybeOffline(Throwable t) {
-		while (t instanceof WrappedRuntimeException) {
-			if (t == t.getCause() || t.getCause() == null) {
-				break;
-			}
-			t = t.getCause();
-		}
-		if (t.getMessage() != null && t.getMessage()
-				.contains("IOException while sending RPC request")) {
-			return true;
-		}
-		if (t.getMessage() != null && t.getMessage()
-				.contains("IOException while receiving RPC response")) {
-			return true;
-		}
-		if (t instanceof StatusCodeException) {
-			if (AlcinaDebugIds.hasFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE)) {
-				return true;
-			}
-			StatusCodeException sce = (StatusCodeException) t;
-			Registry.impl(ClientNotifications.class)
-					.log("** Status code exception: " + sce.getStatusCode());
-			if (sce.getStatusCode() == 0) {
-				return true;
-			}
-			boolean internetExplorerErrOffline = BrowserMod.isInternetExplorer()
-					&& sce.getStatusCode() > 600;
-			if (internetExplorerErrOffline) {
-				return true;
-			}
-			// DNS error in Africa
-			if (t.toString().contains("was not able to resolve the hostname")) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public static Element updateCss(Element styleElement, String css) {
-		if (styleElement == null) {
-			styleElement = Document.get().createStyleElement();
-			NodeList<Element> headList = Document.get()
-					.getElementsByTagName(HEAD);
-			if (headList == null || headList.getLength() == 0) {
-				// something wrong with the client here -- bail
-				AlcinaTopics.notifyDevWarning(
-						new Exception("headList - " + headList == null ? "null"
-								: "length 0"));
-				return null;
-			}
-			headList.getItem(0).appendChild(styleElement);
-			LocalDom.flush();
-		}
-		if (css.length() != 0) {
-			try {
-				if (!setCssTextViaCssTextProperty(styleElement, css)) {
-					styleElement.setInnerText(css);
-				}
-			} catch (Exception e) {
-				// squelch
-			}
-		}
-		return styleElement;
-	}
-
-	public static native String stringify(JavaScriptObject jso) /*-{
-        return JSON.stringify(jso);
-	}-*/;
-
-	public static native JavaScriptObject jsonParse(String json) /*-{
-        var dateTimeReviver = function(key, value) {
-            var a;
-            if (typeof value === 'string') {
-                a = /__JsDate\((\d*)\)/.exec(value);
-                if (a) {
-                    return new Date(+a[1]);
-                }
-            }
-            return value;
-        }
-        return JSON.parse(json, dateTimeReviver);
-	}-*/;
-
-	public static native boolean setCssTextViaCssTextProperty(Element elem,
-			String css) /*-{
-        var styleTag = elem.@com.google.gwt.dom.client.Element::typedRemote()();
-        var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
-
-        if ('cssText' in sheet) { // Internet Explorer
-            sheet.cssText = css;
-            return true;
-        }
-
-        return false;//do innerText
-	}-*/;
-
-	private static void addHidden(Panel p, String key, String value) {
-		p.add(new Hidden(key, value));
-	}
-
-	public static void submitForm(Map<String, String> params, String url) {
-		FormPanel p = new FormPanel("_self");
-		p.setAction(url);
-		p.setMethod(FormPanel.METHOD_POST);
-		FlowPanel fp = new FlowPanel();
-		p.add(fp);
-		for (String key : params.keySet()) {
-			addHidden(fp, key, params.get(key));
-		}
-		RootPanel.get().add(p);
-		p.submit();
-		p.removeFromParent();
-	}
-
-	public static void notImplemented() {
-		Registry.impl(ClientNotifications.class)
-				.showWarning("Not yet implemented");
-	}
-
-	public static UrlBuilder getBaseUrlBuilder() {
-		UrlBuilder builder = new UrlBuilder();
-		builder.setProtocol(Window.Location.getProtocol());
-		builder.setHost(Window.Location.getHostName());
-		String port = Window.Location.getPort();
-		if (port != null && port.length() > 0) {
-			builder.setPort(Integer.parseInt(port));
-		}
-		return builder;
-	}
-
-	public static native void invokeJsDebugger() /*-{
-        debugger;
-	}-*/;
-
-	public static native void invokeJsDebugger(JavaScriptObject jso) /*-{
-        debugger;
-        var v = jso;
-	}-*/;
-
-	public static void fireHistoryToken(String token) {
-		if (token == null) {
-			return;
-		}
-		if (token.equals(History.getToken())) {
-			History.fireCurrentHistoryState();
-		}
-		History.newItem(token);
-	}
-
-	public static EditContentViewWidgets editContentView(final Object model,
-			final PermissibleActionListener pal, String caption,
-			String messageHtml) {
-		return popupContentView(model, pal, caption, messageHtml, true, true);
-	}
-
-	public static EditContentViewWidgets showContentView(final Object model,
-			final PermissibleActionListener pal, String caption,
-			String messageHtml) {
-		return popupContentView(model, pal, caption, messageHtml, true, false);
-	}
-
-	public static EditContentViewWidgets makeContentView(final Object model,
-			boolean editable) {
-		return makeContentView(model, null, null, null, false, editable, false,
-				true, null, null);
-	}
-
-	public static EditContentViewWidgets makeContentViewWithButtons(
-			final Object model, boolean editable,
-			PermissibleActionListener pal) {
-		return makeContentView(model, pal, null, null, false, editable, false,
-				false, null, null);
-	}
-
-	public static EditContentViewWidgets makeContentViewWithButtons(
-			final Object model, boolean editable, PermissibleActionListener pal,
-			Predicate<String> fieldFilter, String okButtonName) {
-		return makeContentView(model, pal, null, null, false, editable, false,
-				false, fieldFilter, okButtonName);
-	}
-
-	public static EditContentViewWidgets popupContentView(final Object model,
-			final PermissibleActionListener pal, String caption,
-			String messageHtml, final boolean hideOnClick, boolean editable) {
-		return makeContentView(model, pal, caption, messageHtml, hideOnClick,
-				editable, true, false, null, null);
-	}
-
-	private static EditContentViewWidgets makeContentView(final Object model,
-			final PermissibleActionListener pal, String caption,
-			String messageHtml, final boolean hideOnClick, boolean editable,
-			boolean inDialog, boolean noButtons, Predicate<String> fieldFilter,
-			String okButtonName) {
-		ContentViewFactory cvf = new ContentViewFactory();
-		cvf.setNoCaption(true);
-		cvf.setNoButtons(noButtons);
-		cvf.setCancelButton(true);
-		cvf.okButtonName(okButtonName);
-		if (fieldFilter != null) {
-			cvf.fieldFilter(f -> fieldFilter.test(f.getPropertyName()));
-		}
-		PaneWrapperWithObjects view = cvf.createBeanView(model, editable, null,
-				false, true);
-		return createEditContentViewWidgets(pal, caption, messageHtml, view,
-				false, hideOnClick, inDialog, !editable && inDialog, false,
-				"OK", "Cancel");
-	}
-
 	public static EditContentViewWidgets createEditContentViewWidgets(
 			final PermissibleActionListener pal, String caption,
 			String messageHtml, PaneWrapperWithObjects view, boolean noGlass,
@@ -334,16 +126,198 @@ public class ClientUtils {
 		return new EditContentViewWidgets(view, inDialog ? gdb : null);
 	}
 
-	public static class EditContentViewWidgets {
-		public PaneWrapperWithObjects wrapper;
-
-		public GlassDialogBox gdb;
-
-		public EditContentViewWidgets(PaneWrapperWithObjects wrapper,
-				GlassDialogBox gdb) {
-			this.wrapper = wrapper;
-			this.gdb = gdb;
+	public static void dumpElementTree(Element elt) {
+		NodeRemote jso = elt.implAccess().ensureRemote();
+		while (jso != null) {
+			System.out
+					.println(Ax.format("dump - %s - %s", jso.hashCode(), jso));
+			jso = jso.getParentNode0();
 		}
+	}
+
+	public static EditContentViewWidgets editContentView(final Object model,
+			final PermissibleActionListener pal, String caption,
+			String messageHtml) {
+		return popupContentView(model, pal, caption, messageHtml, true, true);
+	}
+
+	public static void fireHistoryToken(String token) {
+		if (token == null) {
+			return;
+		}
+		if (token.equals(History.getToken())) {
+			History.fireCurrentHistoryState();
+		}
+		History.newItem(token);
+	}
+
+	public static UrlBuilder getBaseUrlBuilder() {
+		UrlBuilder builder = new UrlBuilder();
+		builder.setProtocol(Window.Location.getProtocol());
+		builder.setHost(Window.Location.getHostName());
+		String port = Window.Location.getPort();
+		if (port != null && port.length() > 0) {
+			builder.setPort(Integer.parseInt(port));
+		}
+		return builder;
+	}
+
+	public static String getHashIfSelfrefUrl(Element anchor) {
+		String href = anchor.getAttribute("href");
+		String selfHref = Window.Location.getHref();
+		int idx = selfHref.indexOf("#");
+		selfHref = idx == -1 ? selfHref : selfHref.substring(0, idx);
+		if (href.startsWith(selfHref)) {
+			href = href.substring(selfHref.length());
+		}
+		return href.startsWith("#") && href.length() > 1 ? href.substring(1)
+				: null;
+	}
+
+	public static native void invokeJsDebugger() /*-{
+													debugger;
+													}-*/;
+
+	public static native void invokeJsDebugger(Element e) /*-{
+															var v = e;
+															var jso = e.@com.google.gwt.dom.client.Element::typedRemote()();
+															debugger;
+															}-*/;
+
+	public static native void invokeJsDebugger(JavaScriptObject jso) /*-{
+																		debugger;
+																		var v = jso;
+																		}-*/;
+
+	public static <T extends JavaScriptObject> List<T>
+			jsArrayToTypedArray(JsArray<T> typedArray) {
+		List<T> result = new ArrayList<T>();
+		for (int i = 0; i < typedArray.length(); i++) {
+			result.add(typedArray.get(i));
+		}
+		return result;
+	}
+
+	public static native JavaScriptObject jsonParse(String json) /*-{
+																	var dateTimeReviver = function(key, value) {
+																	var a;
+																	if (typeof value === 'string') {
+																	a = /__JsDate\((\d*)\)/.exec(value);
+																	if (a) {
+																	return new Date(+a[1]);
+																	}
+																	}
+																	return value;
+																	}
+																	return JSON.parse(json, dateTimeReviver);
+																	}-*/;
+
+	public static List<String>
+			jsStringArrayAsStringList(JsArrayString arrayString) {
+		List<String> result = new ArrayList<String>();
+		for (int i = 0; i < arrayString.length(); i++) {
+			result.add(arrayString.get(i));
+		}
+		return result;
+	}
+
+	public static EditContentViewWidgets makeContentView(final Object model,
+			boolean editable) {
+		return makeContentView(model, null, null, null, false, editable, false,
+				true, null, null);
+	}
+
+	public static EditContentViewWidgets makeContentViewWithButtons(
+			final Object model, boolean editable,
+			PermissibleActionListener pal) {
+		return makeContentView(model, pal, null, null, false, editable, false,
+				false, null, null);
+	}
+
+	public static EditContentViewWidgets makeContentViewWithButtons(
+			final Object model, boolean editable, PermissibleActionListener pal,
+			Predicate<String> fieldFilter, String okButtonName) {
+		return makeContentView(model, pal, null, null, false, editable, false,
+				false, fieldFilter, okButtonName);
+	}
+
+	public static boolean maybeOffline(Throwable t) {
+		while (t instanceof WrappedRuntimeException) {
+			if (t == t.getCause() || t.getCause() == null) {
+				break;
+			}
+			t = t.getCause();
+		}
+		if (t.getMessage() != null && t.getMessage()
+				.contains("IOException while sending RPC request")) {
+			return true;
+		}
+		if (t.getMessage() != null && t.getMessage()
+				.contains("IOException while receiving RPC response")) {
+			return true;
+		}
+		if (t instanceof StatusCodeException) {
+			if (AlcinaDebugIds.hasFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE)) {
+				return true;
+			}
+			StatusCodeException sce = (StatusCodeException) t;
+			Registry.impl(ClientNotifications.class)
+					.log("** Status code exception: " + sce.getStatusCode());
+			if (sce.getStatusCode() == 0) {
+				return true;
+			}
+			boolean internetExplorerErrOffline = BrowserMod.isInternetExplorer()
+					&& sce.getStatusCode() > 600;
+			if (internetExplorerErrOffline) {
+				return true;
+			}
+			// DNS error in Africa
+			if (t.toString().contains("was not able to resolve the hostname")) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static void notImplemented() {
+		Registry.impl(ClientNotifications.class)
+				.showWarning("Not yet implemented");
+	}
+
+	public static EditContentViewWidgets popupContentView(final Object model,
+			final PermissibleActionListener pal, String caption,
+			String messageHtml, final boolean hideOnClick, boolean editable) {
+		return makeContentView(model, pal, caption, messageHtml, hideOnClick,
+				editable, true, false, null, null);
+	}
+
+	public static void refireHistoryTokenIfSame(String token) {
+		if (token == null) {
+			return;
+		}
+		if (token.equals(History.getToken())) {
+			History.fireCurrentHistoryState();
+		}
+		// do nothing if we've moved on
+	}
+
+	public static native boolean setCssTextViaCssTextProperty(Element elem,
+			String css) /*-{
+						var styleTag = elem.@com.google.gwt.dom.client.Element::typedRemote()();
+						var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
+						
+						if ('cssText' in sheet) { // Internet Explorer
+						sheet.cssText = css;
+						return true;
+						}
+						
+						return false;//do innerText
+						}-*/;
+
+	public static EditContentViewWidgets showContentView(final Object model,
+			final PermissibleActionListener pal, String caption,
+			String messageHtml) {
+		return popupContentView(model, pal, caption, messageHtml, true, false);
 	}
 
 	public static String simpleInnerText(String innerHTML) {
@@ -394,50 +368,22 @@ public class ClientUtils {
 		return result.toString();
 	}
 
-	public static void refireHistoryTokenIfSame(String token) {
-		if (token == null) {
-			return;
-		}
-		if (token.equals(History.getToken())) {
-			History.fireCurrentHistoryState();
-		}
-		// do nothing if we've moved on
-	}
+	public static native String stringify(JavaScriptObject jso) /*-{
+																return JSON.stringify(jso);
+																}-*/;
 
-	public static native void invokeJsDebugger(Element e) /*-{
-        var v = e;
-        var jso = e.@com.google.gwt.dom.client.Element::typedRemote()();
-        debugger;
-	}-*/;
-
-	public static String getHashIfSelfrefUrl(Element anchor) {
-		String href = anchor.getAttribute("href");
-		String selfHref = Window.Location.getHref();
-		int idx = selfHref.indexOf("#");
-		selfHref = idx == -1 ? selfHref : selfHref.substring(0, idx);
-		if (href.startsWith(selfHref)) {
-			href = href.substring(selfHref.length());
+	public static void submitForm(Map<String, String> params, String url) {
+		FormPanel p = new FormPanel("_self");
+		p.setAction(url);
+		p.setMethod(FormPanel.METHOD_POST);
+		FlowPanel fp = new FlowPanel();
+		p.add(fp);
+		for (String key : params.keySet()) {
+			addHidden(fp, key, params.get(key));
 		}
-		return href.startsWith("#") && href.length() > 1 ? href.substring(1)
-				: null;
-	}
-
-	public static List<String>
-			jsStringArrayAsStringList(JsArrayString arrayString) {
-		List<String> result = new ArrayList<String>();
-		for (int i = 0; i < arrayString.length(); i++) {
-			result.add(arrayString.get(i));
-		}
-		return result;
-	}
-
-	public static <T extends JavaScriptObject> List<T>
-			jsArrayToTypedArray(JsArray<T> typedArray) {
-		List<T> result = new ArrayList<T>();
-		for (int i = 0; i < typedArray.length(); i++) {
-			result.add(typedArray.get(i));
-		}
-		return result;
+		RootPanel.get().add(p);
+		p.submit();
+		p.removeFromParent();
 	}
 
 	public static <T extends JavaScriptObject> JsArray<T>
@@ -449,12 +395,66 @@ public class ClientUtils {
 		return array;
 	}
 
-	public static void dumpElementTree(Element elt) {
-		NodeRemote jso = elt.implAccess().ensureRemote();
-		while (jso != null) {
-			System.out
-					.println(Ax.format("dump - %s - %s", jso.hashCode(), jso));
-			jso = jso.getParentNode0();
+	public static Element updateCss(Element styleElement, String css) {
+		if (styleElement == null) {
+			styleElement = Document.get().createStyleElement();
+			NodeList<Element> headList = Document.get()
+					.getElementsByTagName(HEAD);
+			if (headList == null || headList.getLength() == 0) {
+				// something wrong with the client here -- bail
+				AlcinaTopics.notifyDevWarning(
+						new Exception("headList - " + headList == null ? "null"
+								: "length 0"));
+				return null;
+			}
+			headList.getItem(0).appendChild(styleElement);
+			LocalDom.flush();
+		}
+		if (css.length() != 0) {
+			try {
+				if (!setCssTextViaCssTextProperty(styleElement, css)) {
+					styleElement.setInnerText(css);
+				}
+			} catch (Exception e) {
+				// squelch
+			}
+		}
+		return styleElement;
+	}
+
+	private static void addHidden(Panel p, String key, String value) {
+		p.add(new Hidden(key, value));
+	}
+
+	private static EditContentViewWidgets makeContentView(final Object model,
+			final PermissibleActionListener pal, String caption,
+			String messageHtml, final boolean hideOnClick, boolean editable,
+			boolean inDialog, boolean noButtons, Predicate<String> fieldFilter,
+			String okButtonName) {
+		ContentViewFactory cvf = new ContentViewFactory();
+		cvf.setNoCaption(true);
+		cvf.setNoButtons(noButtons);
+		cvf.setCancelButton(true);
+		cvf.okButtonName(okButtonName);
+		if (fieldFilter != null) {
+			cvf.fieldFilter(f -> fieldFilter.test(f.getPropertyName()));
+		}
+		PaneWrapperWithObjects view = cvf.createBeanView(model, editable, null,
+				false, true);
+		return createEditContentViewWidgets(pal, caption, messageHtml, view,
+				false, hideOnClick, inDialog, !editable && inDialog, false,
+				"OK", "Cancel");
+	}
+
+	public static class EditContentViewWidgets {
+		public PaneWrapperWithObjects wrapper;
+
+		public GlassDialogBox gdb;
+
+		public EditContentViewWidgets(PaneWrapperWithObjects wrapper,
+				GlassDialogBox gdb) {
+			this.wrapper = wrapper;
+			this.gdb = gdb;
 		}
 	}
 }

@@ -24,14 +24,14 @@ import cc.alcina.framework.entity.SEUtilities;
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = UrlEncoder.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-//only used in hosted mode
+// only used in hosted mode
 @ClientInstantiable
 public class ServerURLComponentEncoder implements UrlEncoder {
-	public String encode(String text) {
-		return SEUtilities.encUtf8(text);
-	}
-
 	public String decode(String componentText) {
 		return SEUtilities.decUtf8(componentText);
+	}
+
+	public String encode(String text) {
+		return SEUtilities.encUtf8(text);
 	}
 }

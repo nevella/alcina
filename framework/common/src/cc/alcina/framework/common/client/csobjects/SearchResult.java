@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.csobjects;
-
 
 /**
  * Marker interface for, among other things, SearchResultsBase subGWT RPC

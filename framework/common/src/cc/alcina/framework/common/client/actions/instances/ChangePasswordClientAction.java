@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions.instances;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -21,8 +20,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
  *
  * @author Nick Reddel
  */
-
- public class ChangePasswordClientAction extends NonstandardObjectAction {
+public class ChangePasswordClientAction extends NonstandardObjectAction {
 	@Override
 	public String getDisplayName() {
 		return TextProvider.get().getUiObjectText(getClass(),

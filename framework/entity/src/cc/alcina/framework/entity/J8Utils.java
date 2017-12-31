@@ -22,9 +22,12 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 public class J8Utils {
-	public static <T, K> Collector<T, ?, Map<K, T>>
-			toKeyMap(Function<? super T, ? extends K> keyMapper) {
-		return new ToMapCollector(keyMapper, LinkedHashMap::new);
+	public static <T> Comparator<T>
+			comparingCaseInsensitive(Function<? super T, String> keyExtractor) {
+		Objects.requireNonNull(keyExtractor);
+		return (Comparator<T> & Serializable) (c1,
+				c2) -> String.CASE_INSENSITIVE_ORDER.compare(
+						keyExtractor.apply(c1), keyExtractor.apply(c2));
 	}
 
 	public static <T> Collector<Collection<T>, ?, List<T>> toItemList() {
@@ -33,6 +36,16 @@ public class J8Utils {
 
 	public static <T> Collector<Collection<T>, ?, Stream<T>> toItemStream() {
 		return new ToItemStreamCollector();
+	}
+
+	public static <T, K> Collector<T, ?, Map<K, T>>
+			toKeyMap(Function<? super T, ? extends K> keyMapper) {
+		return new ToMapCollector(keyMapper, LinkedHashMap::new);
+	}
+
+	public static <T, K, U> Collector<T, ?, Multimap<K, List<U>>>
+			toKeyMultimap(Function<? super T, ? extends K> keyMapper) {
+		return new ToMultimapCollector(keyMapper, t -> t, Multimap::new);
 	}
 
 	public static <T> Collector<T, ?, Set<T>> toLinkedHashSet() {
@@ -45,15 +58,115 @@ public class J8Utils {
 		return new ToMultimapCollector(keyMapper, valueMapper, Multimap::new);
 	}
 
-	public static <T, K, U> Collector<T, ?, Multimap<K, List<U>>>
-			toKeyMultimap(Function<? super T, ? extends K> keyMapper) {
-		return new ToMultimapCollector(keyMapper, t -> t, Multimap::new);
-	}
-
 	public static <T, V> Collector<T, ?, UnsortedMultikeyMap<V>>
 			toUnsortedMultikeyMapCollector(Function<? super T, Object[]> mapper,
 					int depth) {
 		return new ToUnsortedMultikeyMapCollector(mapper, depth);
+	}
+
+	private static class ToItemListCollector<T>
+			implements Collector<Collection<T>, List<T>, List<T>> {
+		public ToItemListCollector() {
+		}
+
+		@Override
+		public BiConsumer<List<T>, Collection<T>> accumulator() {
+			return (list, coll) -> list.addAll(coll);
+		}
+
+		@Override
+		public Set<java.util.stream.Collector.Characteristics>
+				characteristics() {
+			return EnumSet.of(Characteristics.IDENTITY_FINISH);
+		}
+
+		@Override
+		public BinaryOperator<List<T>> combiner() {
+			return (left, right) -> {
+				left.addAll(right);
+				return left;
+			};
+		}
+
+		@Override
+		public Function<List<T>, List<T>> finisher() {
+			return null;
+		}
+
+		@Override
+		public Supplier<List<T>> supplier() {
+			return ArrayList::new;
+		}
+	}
+
+	private static class ToItemStreamCollector<T>
+			implements Collector<Collection<T>, List<T>, Stream<T>> {
+		public ToItemStreamCollector() {
+		}
+
+		@Override
+		public BiConsumer<List<T>, Collection<T>> accumulator() {
+			return (list, coll) -> list.addAll(coll);
+		}
+
+		@Override
+		public Set<java.util.stream.Collector.Characteristics>
+				characteristics() {
+			return EnumSet.noneOf(Characteristics.class);
+		}
+
+		@Override
+		public BinaryOperator<List<T>> combiner() {
+			return (left, right) -> {
+				left.addAll(right);
+				return left;
+			};
+		}
+
+		@Override
+		public Function<List<T>, Stream<T>> finisher() {
+			return List::stream;
+		}
+
+		@Override
+		public Supplier<List<T>> supplier() {
+			return ArrayList::new;
+		}
+	}
+
+	private static class ToLinkedHashSetCollector<T>
+			implements java.util.stream.Collector<T, Set<T>, Set<T>> {
+		public ToLinkedHashSetCollector() {
+		}
+
+		@Override
+		public BiConsumer<Set<T>, T> accumulator() {
+			return (set, t) -> set.add(t);
+		}
+
+		@Override
+		public Set<java.util.stream.Collector.Characteristics>
+				characteristics() {
+			return EnumSet.of(Characteristics.IDENTITY_FINISH);
+		}
+
+		@Override
+		public BinaryOperator<Set<T>> combiner() {
+			return (left, right) -> {
+				left.addAll(right);
+				return left;
+			};
+		}
+
+		@Override
+		public Function<Set<T>, Set<T>> finisher() {
+			return null;
+		}
+
+		@Override
+		public Supplier<Set<T>> supplier() {
+			return () -> new LinkedHashSet<>();
+		}
 	}
 
 	private static class ToMapCollector<T, K>
@@ -89,118 +202,13 @@ public class J8Utils {
 		}
 
 		@Override
-		public Supplier<Map<K, T>> supplier() {
-			return supplier;
-		}
-
-		@Override
 		public Function<Map<K, T>, Map<K, T>> finisher() {
 			return null;
 		}
-	}
-
-	private static class ToLinkedHashSetCollector<T>
-			implements java.util.stream.Collector<T, Set<T>, Set<T>> {
-		public ToLinkedHashSetCollector() {
-		}
 
 		@Override
-		public Set<java.util.stream.Collector.Characteristics>
-				characteristics() {
-			return EnumSet.of(Characteristics.IDENTITY_FINISH);
-		}
-
-		@Override
-		public Supplier<Set<T>> supplier() {
-			return () -> new LinkedHashSet<>();
-		}
-
-		@Override
-		public BiConsumer<Set<T>, T> accumulator() {
-			return (set, t) -> set.add(t);
-		}
-
-		@Override
-		public BinaryOperator<Set<T>> combiner() {
-			return (left, right) -> {
-				left.addAll(right);
-				return left;
-			};
-		}
-
-		@Override
-		public Function<Set<T>, Set<T>> finisher() {
-			return null;
-		}
-	}
-
-	private static class ToItemListCollector<T>
-			implements Collector<Collection<T>, List<T>, List<T>> {
-		public ToItemListCollector() {
-		}
-
-		@Override
-		public Set<java.util.stream.Collector.Characteristics>
-				characteristics() {
-			return EnumSet.of(Characteristics.IDENTITY_FINISH);
-		}
-
-		@Override
-		public Supplier<List<T>> supplier() {
-			return ArrayList::new;
-		}
-
-		@Override
-		public BiConsumer<List<T>, Collection<T>> accumulator() {
-			return (list, coll) -> list.addAll(coll);
-		}
-
-		@Override
-		public BinaryOperator<List<T>> combiner() {
-			return (left, right) -> {
-				left.addAll(right);
-				return left;
-			};
-		}
-
-		@Override
-		public Function<List<T>, List<T>> finisher() {
-			return null;
-		}
-	}
-
-	private static class ToItemStreamCollector<T>
-			implements Collector<Collection<T>, List<T>, Stream<T>> {
-		public ToItemStreamCollector() {
-		}
-
-		@Override
-		public Set<java.util.stream.Collector.Characteristics>
-				characteristics() {
-			return EnumSet.noneOf(Characteristics.class);
-		}
-
-		@Override
-		public Supplier<List<T>> supplier() {
-			return ArrayList::new;
-		}
-
-		@Override
-		public BiConsumer<List<T>, Collection<T>> accumulator() {
-			return (list, coll) -> list.addAll(coll);
-		}
-
-		@Override
-		public BinaryOperator<List<T>> combiner() {
-			return (left, right) -> {
-				left.addAll(right);
-				return left;
-			};
-		}
-
-		@Override
-		public Function<List<T>, Stream<T>> finisher() {
-			return List::stream;
+		public Supplier<Map<K, T>> supplier() {
+			return supplier;
 		}
 	}
 
@@ -299,13 +307,5 @@ public class J8Utils {
 		public Supplier<UnsortedMultikeyMap<V>> supplier() {
 			return supplier;
 		}
-	}
-
-	public static <T> Comparator<T>
-			comparingCaseInsensitive(Function<? super T, String> keyExtractor) {
-		Objects.requireNonNull(keyExtractor);
-		return (Comparator<T> & Serializable) (c1,
-				c2) -> String.CASE_INSENSITIVE_ORDER.compare(
-						keyExtractor.apply(c1), keyExtractor.apply(c2));
 	}
 }

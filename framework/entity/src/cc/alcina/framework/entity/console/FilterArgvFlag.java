@@ -14,5 +14,4 @@ public class FilterArgvFlag {
 		this.contains = strs.remove(flag);
 		this.argv = (String[]) strs.toArray(new String[strs.size()]);
 	}
-	
 }

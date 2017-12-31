@@ -19,8 +19,8 @@ import cc.alcina.framework.servlet.CommonRemoteServletProvider;
 import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
 
 @RegistryLocation(registryPoint = RemoteActionPerformer.class, targetClass = DtrSimpleAdminPersistenceAction.class)
-public class DtrSimpleAdminPersistenceHandler extends
-		BaseRemoteActionPerformer<DtrSimpleAdminPersistenceAction> {
+public class DtrSimpleAdminPersistenceHandler
+		extends BaseRemoteActionPerformer<DtrSimpleAdminPersistenceAction> {
 	public void commit(DeltaApplicationRecord dar) {
 		int chunkSize = ResourceUtilities.getInteger(
 				DtrSimpleAdminPersistenceHandler.class, "chunkSize", 5000);
@@ -37,13 +37,9 @@ public class DtrSimpleAdminPersistenceHandler extends
 				getJobTracker().setItemCount(size / chunkSize + 1);
 				int rqIdCounter = dar.getRequestId();
 				for (int idx = 0; idx < size;) {
-					DeltaApplicationRecord chunk = new DeltaApplicationRecord(
-							0,
-							"",
-							dar.getTimestamp(),
-							dar.getUserId(),
-							dar.getClientInstanceId(),
-							rqIdCounter++,
+					DeltaApplicationRecord chunk = new DeltaApplicationRecord(0,
+							"", dar.getTimestamp(), dar.getUserId(),
+							dar.getClientInstanceId(), rqIdCounter++,
 							dar.getClientInstanceAuth(),
 							DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
 							dar.getProtocolVersion(), dar.getTag());
@@ -54,9 +50,10 @@ public class DtrSimpleAdminPersistenceHandler extends
 					} else {
 						int createSearchIdx = idx + chunkSize;
 						int maxCreateIdxDelta = size / 2;
-						for (; createSearchIdx < size && maxCreateIdxDelta > 0;) {
-							DomainTransformEvent evt = fullRq.getEvents().get(
-									createSearchIdx);
+						for (; createSearchIdx < size
+								&& maxCreateIdxDelta > 0;) {
+							DomainTransformEvent evt = fullRq.getEvents()
+									.get(createSearchIdx);
 							if (evt.getTransformType() == TransformType.CREATE_OBJECT
 									|| evt.getTransformType() == TransformType.DELETE_OBJECT) {
 								range = new IntPair(idx, createSearchIdx);
@@ -76,8 +73,8 @@ public class DtrSimpleAdminPersistenceHandler extends
 					chunk.setText(rq.toString());
 					Registry.impl(CommonRemoteServletProvider.class)
 							.getCommonRemoteServiceServlet()
-							.persistOfflineTransforms(
-									Arrays.asList(new DeltaApplicationRecord[] { chunk }),
+							.persistOfflineTransforms(Arrays.asList(
+									new DeltaApplicationRecord[] { chunk }),
 									logger, false, true);
 					String message = String.format(
 							"written chunk - writing chunk %s of %s", range,
@@ -87,11 +84,13 @@ public class DtrSimpleAdminPersistenceHandler extends
 					idx = range.i2;
 				}
 			} else {
-				dar.setType(DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED);
+				dar.setType(
+						DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED);
 				Registry.impl(CommonRemoteServletProvider.class)
 						.getCommonRemoteServiceServlet()
 						.persistOfflineTransforms(
-								Arrays.asList(new DeltaApplicationRecord[] { dar }),
+								Arrays.asList(
+										new DeltaApplicationRecord[] { dar }),
 								logger);
 			}
 			jobOk("OK");

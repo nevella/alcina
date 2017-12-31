@@ -1,12 +1,11 @@
 package com.google.gwt.regexp.shared;
 
 public interface IMatchResult {
-
-	String getInput();
-
-	int getIndex();
+	String getGroup(int index);
 
 	int getGroupCount();
 
-	String getGroup(int index);
+	int getIndex();
+
+	String getInput();
 }

@@ -23,231 +23,269 @@ import com.google.gwt.safehtml.shared.annotations.SuppressIsTrustedResourceUriCa
 /**
  * Create a frame.
  * 
- * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#edef-FRAME">W3C HTML Specification</a>
+ * @see <a href=
+ *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#edef-FRAME">
+ *      W3C HTML Specification</a>
  */
 @TagName(FrameElement.TAG)
 public class FrameElement extends Element {
+	public static final String TAG = "frame";
 
-  public static final String TAG = "frame";
+	/**
+	 * Assert that the given {@link Element} is compatible with this class and
+	 * automatically typecast it.
+	 */
+	public static FrameElement as(Element elem) {
+		assert is(elem);
+		return (FrameElement) elem;
+	}
 
-  /**
-   * Assert that the given {@link Element} is compatible with this class and
-   * automatically typecast it.
-   */
-  public static FrameElement as(Element elem) {
-    assert is(elem);
-    return (FrameElement) elem;
-  }
+	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
 
-  /**
-   * Determines whether the given {@link JavaScriptObject} can be cast to
-   * this class. A <code>null</code> object will cause this method to
-   * return <code>false</code>.
-   */
-  public static boolean is(JavaScriptObject o) {
-    if (Element.is(o)) {
-      return is(Element.as(o));
-    }
-    return false;
-  }
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to this
+	 * class. A <code>null</code> object will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(JavaScriptObject o) {
+		if (Element.is(o)) {
+			return is(Element.as(o));
+		}
+		return false;
+	}
 
-  /**
-   * Determine whether the given {@link Node} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Node node) {
-    if (Element.is(node)) {
-      return is((Element) node);
-    }
-    return false;
-  }
-  
-  /**
-   * Determine whether the given {@link Element} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Element elem) {
-    return elem != null && elem.hasTagName(TAG);
-  }
+	/**
+	 * Determine whether the given {@link Node} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		if (Element.is(node)) {
+			return is((Element) node);
+		}
+		return false;
+	}
 
-  protected FrameElement() {
-  }
+	protected FrameElement() {
+	}
 
-  
-  public final  Document getContentDocument() {
-	  return LocalDom.nodeFor(getContentDocument0(typedRemote()));
-  }
-  /**
-   * The document this frame contains, if there is any and it is available, or
-   * null otherwise.
-   */
-  private final native DocumentRemote getContentDocument0(ElementRemote element) /*-{
-     // This is known to work on all modern browsers.
-     return this.contentWindow.document;
-   }-*/;
+	public final Document getContentDocument() {
+		return LocalDom.nodeFor(getContentDocument0(typedRemote()));
+	}
 
-  /**
-   * Request frame borders.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-frameborder">W3C HTML Specification</a>
-   */  public  int getFrameBorder(){
-  return this.getPropertyInt("frameBorder");
-}
+	/**
+	 * Request frame borders.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-frameborder">
+	 *      W3C HTML Specification</a>
+	 */
+	public int getFrameBorder() {
+		return this.getPropertyInt("frameBorder");
+	}
 
+	/**
+	 * URI designating a long description of this image or frame.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-longdesc-FRAME">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getLongDesc() {
+		return this.getPropertyString("longDesc");
+	}
 
-  /**
-   * URI designating a long description of this image or frame.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-longdesc-FRAME">W3C HTML Specification</a>
-   */  public  String getLongDesc(){
-  return this.getPropertyString("longDesc");
-}
+	/**
+	 * Frame margin height, in pixels.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-marginheight">
+	 *      W3C HTML Specification</a>
+	 */
+	public int getMarginHeight() {
+		return this.getPropertyInt("marginHeight");
+	}
 
+	/**
+	 * Frame margin width, in pixels.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-marginwidth">
+	 *      W3C HTML Specification</a>
+	 */
+	public int getMarginWidth() {
+		return this.getPropertyInt("marginWidth");
+	}
 
-  /**
-   * Frame margin height, in pixels.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-marginheight">W3C HTML Specification</a>
-   */  public  int getMarginHeight(){
-  return this.getPropertyInt("marginHeight");
-}
+	/**
+	 * The frame name (object of the target attribute).
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-name-FRAME">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getName() {
+		return this.getPropertyString("name");
+	}
 
+	/**
+	 * Specify whether or not the frame should have scrollbars.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-scrolling">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getScrolling() {
+		return this.getPropertyString("scrolling");
+	}
 
-  /**
-   * Frame margin width, in pixels.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-marginwidth">W3C HTML Specification</a>
-   */  public  int getMarginWidth(){
-  return this.getPropertyInt("marginWidth");
-}
+	/**
+	 * A URI designating the initial frame contents.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-src-FRAME">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getSrc() {
+		return this.getPropertyString("src");
+	}
 
+	/**
+	 * When true, forbid user from resizing frame.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-noresize">
+	 *      W3C HTML Specification</a>
+	 */
+	public boolean isNoResize() {
+		return this.getPropertyBoolean("noResize");
+	}
 
-  /**
-   * The frame name (object of the target attribute).
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-name-FRAME">W3C HTML Specification</a>
-   */  public  String getName(){
-  return this.getPropertyString("name");
-}
+	/**
+	 * Request frame borders.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-frameborder">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setFrameBorder(int frameBorder) {
+		this.setPropertyInt("frameBorder", frameBorder);
+	}
 
+	/**
+	 * URI designating a long description of this image or frame.
+	 *
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-longdesc-FRAME">
+	 *      W3C HTML Specification</a>
+	 */
+	public final void setLongDesc(SafeUri longDesc) {
+		setLongDesc(longDesc.asString());
+	}
 
-  /**
-   * Specify whether or not the frame should have scrollbars.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-scrolling">W3C HTML Specification</a>
-   */  public  String getScrolling(){
-  return this.getPropertyString("scrolling");
-}
+	/**
+	 * URI designating a long description of this image or frame.
+	 *
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-longdesc-FRAME">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setLongDesc(String longDesc) {
+		this.setPropertyString("longDesc", longDesc);
+	}
 
+	/**
+	 * Frame margin height, in pixels.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-marginheight">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setMarginHeight(int marginHeight) {
+		this.setPropertyInt("marginHeight", marginHeight);
+	}
 
-  /**
-   * A URI designating the initial frame contents.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-src-FRAME">W3C HTML Specification</a>
-   */  public  String getSrc(){
-  return this.getPropertyString("src");
-}
+	/**
+	 * Frame margin width, in pixels.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-marginwidth">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setMarginWidth(int marginWidth) {
+		this.setPropertyInt("marginWidth", marginWidth);
+	}
 
+	/**
+	 * The frame name (object of the target attribute).
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-name-FRAME">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setName(String name) {
+		this.setPropertyString("name", name);
+	}
 
-  /**
-   * When true, forbid user from resizing frame.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-noresize">W3C HTML Specification</a>
-   */  public  boolean isNoResize(){
-  return this.getPropertyBoolean("noResize");
-}
+	/**
+	 * When true, forbid user from resizing frame.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-noresize">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setNoResize(boolean noResize) {
+		this.setPropertyBoolean("noResize", noResize);
+	}
 
+	/**
+	 * Specify whether or not the frame should have scrollbars.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-scrolling">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setScrolling(String scrolling) {
+		this.setPropertyString("scrolling", scrolling);
+	}
 
-  /**
-   * Request frame borders.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-frameborder">W3C HTML Specification</a>
-   */  public  void setFrameBorder(int frameBorder){
-   this.setPropertyInt("frameBorder",frameBorder);
-}
+	/**
+	 * A URI designating the initial frame contents.
+	 *
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-src-FRAME">
+	 *      W3C HTML Specification</a>
+	 */
+	@SuppressIsTrustedResourceUriCastCheck
+	public final void setSrc(@IsTrustedResourceUri SafeUri src) {
+		setSrc(src.asString());
+	}
 
+	/**
+	 * A URI designating the initial frame contents.
+	 *
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-src-FRAME">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setSrc(@IsTrustedResourceUri String src) {
+		this.setPropertyString("src", src);
+	}
 
-  /**
-   * URI designating a long description of this image or frame.
-   *
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-longdesc-FRAME">W3C HTML Specification</a>
-   */
-  public final void setLongDesc(SafeUri longDesc) {
-    setLongDesc(longDesc.asString());
-  }
-
-  /**
-   * URI designating a long description of this image or frame.
-   *
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-longdesc-FRAME">W3C HTML Specification</a>
-   */  public  void setLongDesc(String longDesc){
-   this.setPropertyString("longDesc",longDesc);
-}
-
-
-  /**
-   * Frame margin height, in pixels.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-marginheight">W3C HTML Specification</a>
-   */  public  void setMarginHeight(int marginHeight){
-   this.setPropertyInt("marginHeight",marginHeight);
-}
-
-
-  /**
-   * Frame margin width, in pixels.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-marginwidth">W3C HTML Specification</a>
-   */  public  void setMarginWidth(int marginWidth){
-   this.setPropertyInt("marginWidth",marginWidth);
-}
-
-
-  /**
-   * The frame name (object of the target attribute).
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-name-FRAME">W3C HTML Specification</a>
-   */  public  void setName(String name){
-   this.setPropertyString("name",name);
-}
-
-
-  /**
-   * When true, forbid user from resizing frame.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-noresize">W3C HTML Specification</a>
-   */  public  void setNoResize(boolean noResize){
-   this.setPropertyBoolean("noResize",noResize);
-}
-
-
-  /**
-   * Specify whether or not the frame should have scrollbars.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-scrolling">W3C HTML Specification</a>
-   */  public  void setScrolling(String scrolling){
-   this.setPropertyString("scrolling",scrolling);
-}
-
-
-  /**
-   * A URI designating the initial frame contents.
-   *
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-src-FRAME">W3C HTML Specification</a>
-   */
-  @SuppressIsTrustedResourceUriCastCheck
-  public final void setSrc(@IsTrustedResourceUri SafeUri src) {
-    setSrc(src.asString());
-  }
-
-  /**
-   * A URI designating the initial frame contents.
-   *
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-src-FRAME">W3C HTML Specification</a>
-   */  public  void setSrc(@IsTrustedResourceUri String src){
-   this.setPropertyString("src",src);
-}
-
+	/**
+	 * The document this frame contains, if there is any and it is available, or
+	 * null otherwise.
+	 */
+	private final native DocumentRemote
+			getContentDocument0(ElementRemote element) /*-{
+														// This is known to work on all modern browsers.
+														return this.contentWindow.document;
+														}-*/;
 }

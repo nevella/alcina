@@ -25,7 +25,6 @@ import com.google.gwt.user.client.ui.HasHTML;
  * Uses an input-button element, rather than a button
  */
 public class InputButton extends FocusWidget implements HasHTML {
-
 	/**
 	 * Creates a button with no caption.
 	 */
@@ -65,16 +64,16 @@ public class InputButton extends FocusWidget implements HasHTML {
 		InputElement.as(getElement()).click();
 	}
 
-	public void setHTML(String html) {
-		setText(html);
-	}
-
 	public String getHTML() {
 		return getText();
 	}
 
 	public String getText() {
 		return getElement().getPropertyString("value");
+	}
+
+	public void setHTML(String html) {
+		setText(html);
 	}
 
 	public void setText(String text) {

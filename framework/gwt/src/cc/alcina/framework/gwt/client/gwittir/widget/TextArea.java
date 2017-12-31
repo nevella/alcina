@@ -142,16 +142,16 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		this.base.addKeyboardListener(listener);
 	}
 
-	public HandlerRegistration addKeyUpHandler(KeyUpHandler handler) {
-		return this.base.addKeyUpHandler(handler);
-	}
-
 	public HandlerRegistration addKeyDownHandler(KeyDownHandler handler) {
 		return this.base.addKeyDownHandler(handler);
 	}
 
 	public HandlerRegistration addKeyPressHandler(KeyPressHandler handler) {
 		return this.base.addKeyPressHandler(handler);
+	}
+
+	public HandlerRegistration addKeyUpHandler(KeyUpHandler handler) {
+		return this.base.addKeyUpHandler(handler);
 	}
 
 	public void cancelKey() {
@@ -178,6 +178,10 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		int retValue;
 		retValue = this.base.getCursorPos();
 		return retValue;
+	}
+
+	public String getHint() {
+		return this.hint;
 	}
 
 	public Object getModel() {
@@ -244,16 +248,16 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		}
 	}
 
-	protected boolean provideIsHinted() {
-		return hint != null && hint.equals(this.base.getText());
-	}
-
 	public int getVisibleLines() {
 		return this.base.getVisibleLines();
 	}
 
 	public boolean isEnabled() {
 		return this.base.isEnabled();
+	}
+
+	public boolean isEnsureAllLinesVisible() {
+		return this.ensureAllLinesVisible;
 	}
 
 	public boolean isMultiline() {
@@ -308,12 +312,44 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		this.base.setEnabled(enabled);
 	}
 
+	public void setEnsureAllLinesVisible(boolean ensureAllLinesVisible) {
+		this.ensureAllLinesVisible = ensureAllLinesVisible;
+	}
+
 	public void setFocus(boolean focused) {
 		this.base.setFocus(focused);
 	}
 
 	public void setHeight(String height) {
 		this.base.setHeight(height);
+	}
+
+	public void setHint(String hint) {
+		if (hint != null && (provideIsHinted()
+				|| CommonUtils.isNullOrEmpty(getValue()))) {
+			base.setText(hint);
+			base.addStyleName("hint");
+			keydownHandlerRegistration = base
+					.addKeyDownHandler(new KeyDownHandler() {
+						@Override
+						public void onKeyDown(KeyDownEvent event) {
+							clearHint();
+						}
+					});
+			focusHandlerRegistration = base.addFocusHandler(new FocusHandler() {
+				@Override
+				public void onFocus(FocusEvent event) {
+					Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+						@Override
+						public void execute() {
+							clearHint();
+							base.setCursorPos(0);
+						}
+					});
+				};
+			});
+		}
+		this.hint = hint;
 	}
 
 	public void setKey(char key) {
@@ -408,18 +444,6 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		this.base.unsinkEvents(eventBitsToRemove);
 	}
 
-	public boolean isEnsureAllLinesVisible() {
-		return this.ensureAllLinesVisible;
-	}
-
-	public void setEnsureAllLinesVisible(boolean ensureAllLinesVisible) {
-		this.ensureAllLinesVisible = ensureAllLinesVisible;
-	}
-
-	public String getHint() {
-		return this.hint;
-	}
-
 	private void clearHint() {
 		base.setText(getValue());
 		base.removeStyleName("hint");
@@ -431,31 +455,7 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		}
 	}
 
-	public void setHint(String hint) {
-		if (hint != null && (provideIsHinted()
-				|| CommonUtils.isNullOrEmpty(getValue()))) {
-			base.setText(hint);
-			base.addStyleName("hint");
-			keydownHandlerRegistration = base
-					.addKeyDownHandler(new KeyDownHandler() {
-						@Override
-						public void onKeyDown(KeyDownEvent event) {
-							clearHint();
-						}
-					});
-			focusHandlerRegistration = base.addFocusHandler(new FocusHandler() {
-				@Override
-				public void onFocus(FocusEvent event) {
-					Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-						@Override
-						public void execute() {
-							clearHint();
-							base.setCursorPos(0);
-						}
-					});
-				};
-			});
-		}
-		this.hint = hint;
+	protected boolean provideIsHinted() {
+		return hint != null && hint.equals(this.base.getText());
 	}
 }

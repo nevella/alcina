@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity;
 
 import java.beans.PropertyChangeListener;
@@ -21,8 +20,7 @@ import java.beans.PropertyChangeListener;
  * 
  */
 public interface ListenableProperties {
-	public  void addPropertyChangeListener(
-			PropertyChangeListener listener);
-	public  void removePropertyChangeListener(
-			PropertyChangeListener listener);
+	public void addPropertyChangeListener(PropertyChangeListener listener);
+
+	public void removePropertyChangeListener(PropertyChangeListener listener);
 }

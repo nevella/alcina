@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.util;
 
 import java.util.Comparator;
@@ -19,13 +18,11 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
 
-
 /**
  *
  * @author Nick Reddel
  */
-
- public class IdOrderingComparator implements Comparator<HasId> {
+public class IdOrderingComparator implements Comparator<HasId> {
 	private final List<Long> idsToOrderBy;
 
 	public IdOrderingComparator(List<Long> idsToOrderBy) {

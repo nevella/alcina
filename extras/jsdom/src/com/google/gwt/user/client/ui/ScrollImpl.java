@@ -25,138 +25,145 @@ import com.google.gwt.dom.client.ElementRemote;
  * Implementation of scrolling behavior.
  */
 class ScrollImpl {
+	private static ScrollImpl impl;
 
-  /**
-   * IE does not fire a scroll event when the scrollable element or the
-   * container is resized, so we synthesize one as needed. IE scrolls in the
-   * positive direction, even in RTL mode.
-   */
-  static class ScrollImplTrident extends ScrollImpl {
+	/**
+	 * Get the singleton instance of {@link ScrollImpl}.
+	 */
+	static ScrollImpl get() {
+		if (impl == null) {
+			impl = GWT.create(ScrollImpl.class);
+		}
+		return impl;
+	}
 
-    private static JavaScriptObject scrollHandler;
+	/**
+	 * Get the maximum horizontal scroll position.
+	 * 
+	 * @param scrollable
+	 *            the scrollable element
+	 * @return the maximum scroll position
+	 */
+	public int getMaximumHorizontalScrollPosition(Element scrollable) {
+		return isRtl(scrollable) ? 0
+				: scrollable.getScrollWidth() - scrollable.getClientWidth();
+	}
 
-    private static JavaScriptObject resizeHandler;
+	/**
+	 * Get the minimum horizontal scroll position.
+	 * 
+	 * @param scrollable
+	 *            the scrollable element
+	 * @return the minimum scroll position
+	 */
+	public int getMinimumHorizontalScrollPosition(Element scrollable) {
+		return isRtl(scrollable)
+				? scrollable.getClientWidth() - scrollable.getScrollWidth() : 0;
+	}
 
-    /**
-     * Creates static, leak-safe scroll/resize handlers.
-     */
-    private static native void initStaticHandlers() /*-{
-      // caches last scroll position
-      @com.google.gwt.user.client.ui.ScrollImpl.ScrollImplTrident::scrollHandler = function() {
-        var scrollableElem = $wnd.event.srcElement;
-        scrollableElem.__lastScrollTop = scrollableElem.scrollTop;
-        scrollableElem.__lastScrollLeft = scrollableElem.scrollLeft;
-      };
-      // watches for resizes that should fire a fake scroll event
-      @com.google.gwt.user.client.ui.ScrollImpl.ScrollImplTrident::resizeHandler = function() {
-        var scrollableElem = $wnd.event.srcElement;
-        if (scrollableElem.__isScrollContainer) {
-          scrollableElem = scrollableElem.parentNode;
-        }
-        // Give the browser a chance to fire a native scroll event before synthesizing one.
-        setTimeout($entry(function() {
-          // Trigger a synthetic scroll event if the scroll position changes.
-          if (scrollableElem.scrollTop != scrollableElem.__lastScrollTop ||
-              scrollableElem.scrollLeft != scrollableElem.__lastScrollLeft) {
-            // Update scroll positions.
-            scrollableElem.__lastScrollTop = scrollableElem.scrollTop;
-            scrollableElem.__lastScrollLeft = scrollableElem.scrollLeft;
-            @com.google.gwt.user.client.ui.ScrollImpl.ScrollImplTrident::triggerScrollEvent(Lcom/google/gwt/dom/client/Element;)
-              (scrollableElem);
-          }
-        }), 1);
-      };
-    }-*/;
+	/**
+	 * Initialize a scrollable element.
+	 * 
+	 * @param scrollable
+	 *            the scrollable element
+	 * @param container
+	 *            the container
+	 */
+	public void initialize(Element scrollable, Element container) {
+		// Overridden by ScrollImplTrident.
+	}
 
-    private static void triggerScrollEvent(Element elem) {
-      elem.dispatchEvent(Document.get().createScrollEvent());
-    }
+	/**
+	 * Check if the specified element has an RTL direction. We can't base this
+	 * on the current locale because the user can modify the direction at the
+	 * DOM level.
+	 * 
+	 * @param scrollable
+	 *            the scrollable element
+	 * @return true if the direction is RTL, false if LTR
+	 */
+	public boolean isRtl(Element scrollable) {
+		return isRtl0(scrollable.implAccess().ensureRemote());
+	}
 
-    ScrollImplTrident() {
-      initStaticHandlers();
-    }
+	private native boolean isRtl0(ElementRemote scrollable) /*-{
+															var computedStyle = $doc.defaultView.getComputedStyle(scrollable, null);
+															return computedStyle.getPropertyValue('direction') == 'rtl';
+															}-*/;
 
-    @Override
-    public native void initialize(Element scrollable, Element container) /*-{
-    	var scrollableRemote = scrollable.@com.google.gwt.dom.client.Element::typedRemote()();
-    	var containerRemote = container.@com.google.gwt.dom.client.Element::typedRemote()();
-      // Remember the last scroll position.
-      scrollableRemote.__lastScrollTop = scrollableRemote.__lastScrollLeft = 0;
-      scrollableRemote.attachEvent('onscroll',
-        @com.google.gwt.user.client.ui.ScrollImpl.ScrollImplTrident::scrollHandler);
+	/**
+	 * IE does not fire a scroll event when the scrollable element or the
+	 * container is resized, so we synthesize one as needed. IE scrolls in the
+	 * positive direction, even in RTL mode.
+	 */
+	static class ScrollImplTrident extends ScrollImpl {
+		private static JavaScriptObject scrollHandler;
 
-      // Detect if the scrollableRemote element or the containerRemote within it changes
-      // size, either of which could affect the scroll position.
-      scrollableRemote.attachEvent('onresize',
-        @com.google.gwt.user.client.ui.ScrollImpl.ScrollImplTrident::resizeHandler);
-      containerRemote.attachEvent('onresize',
-        @com.google.gwt.user.client.ui.ScrollImpl.ScrollImplTrident::resizeHandler);
-      // use boolean (primitive, won't leak) hint to resizeHandler that its the containerRemote
-      containerRemote.__isScrollContainer = true;
-    }-*/;
+		private static JavaScriptObject resizeHandler;
 
-    @Override
-    public native boolean isRtl(Element scrollable) /*-{
-    	var scrollableRemote = scrollable.@com.google.gwt.dom.client.Element::typedRemote()();
-      return scrollableRemote.currentStyle.direction == 'rtl';
-    }-*/;
-  }
+		/**
+		 * Creates static, leak-safe scroll/resize handlers.
+		 */
+		private static native void initStaticHandlers() /*-{
+														// caches last scroll position
+														@com.google.gwt.user.client.ui.ScrollImpl.ScrollImplTrident::scrollHandler = function() {
+														var scrollableElem = $wnd.event.srcElement;
+														scrollableElem.__lastScrollTop = scrollableElem.scrollTop;
+														scrollableElem.__lastScrollLeft = scrollableElem.scrollLeft;
+														};
+														// watches for resizes that should fire a fake scroll event
+														@com.google.gwt.user.client.ui.ScrollImpl.ScrollImplTrident::resizeHandler = function() {
+														var scrollableElem = $wnd.event.srcElement;
+														if (scrollableElem.__isScrollContainer) {
+														scrollableElem = scrollableElem.parentNode;
+														}
+														// Give the browser a chance to fire a native scroll event before synthesizing one.
+														setTimeout($entry(function() {
+														// Trigger a synthetic scroll event if the scroll position changes.
+														if (scrollableElem.scrollTop != scrollableElem.__lastScrollTop ||
+														scrollableElem.scrollLeft != scrollableElem.__lastScrollLeft) {
+														// Update scroll positions.
+														scrollableElem.__lastScrollTop = scrollableElem.scrollTop;
+														scrollableElem.__lastScrollLeft = scrollableElem.scrollLeft;
+														@com.google.gwt.user.client.ui.ScrollImpl.ScrollImplTrident::triggerScrollEvent(Lcom/google/gwt/dom/client/Element;)
+														(scrollableElem);
+														}
+														}), 1);
+														};
+														}-*/;
 
-  private static ScrollImpl impl;
+		private static void triggerScrollEvent(Element elem) {
+			elem.dispatchEvent(Document.get().createScrollEvent());
+		}
 
-  /**
-   * Get the singleton instance of {@link ScrollImpl}.
-   */
-  static ScrollImpl get() {
-    if (impl == null) {
-      impl = GWT.create(ScrollImpl.class);
-    }
-    return impl;
-  }
+		ScrollImplTrident() {
+			initStaticHandlers();
+		}
 
-  /**
-   * Get the maximum horizontal scroll position.
-   * 
-   * @param scrollable the scrollable element
-   * @return the maximum scroll position
-   */
-  public int getMaximumHorizontalScrollPosition(Element scrollable) {
-    return isRtl(scrollable) ? 0 : scrollable.getScrollWidth() - scrollable.getClientWidth();
-  }
+		@Override
+		public native void initialize(Element scrollable,
+				Element container) /*-{
+									var scrollableRemote = scrollable.@com.google.gwt.dom.client.Element::typedRemote()();
+									var containerRemote = container.@com.google.gwt.dom.client.Element::typedRemote()();
+									// Remember the last scroll position.
+									scrollableRemote.__lastScrollTop = scrollableRemote.__lastScrollLeft = 0;
+									scrollableRemote.attachEvent('onscroll',
+									@com.google.gwt.user.client.ui.ScrollImpl.ScrollImplTrident::scrollHandler);
+									
+									// Detect if the scrollableRemote element or the containerRemote within it changes
+									// size, either of which could affect the scroll position.
+									scrollableRemote.attachEvent('onresize',
+									@com.google.gwt.user.client.ui.ScrollImpl.ScrollImplTrident::resizeHandler);
+									containerRemote.attachEvent('onresize',
+									@com.google.gwt.user.client.ui.ScrollImpl.ScrollImplTrident::resizeHandler);
+									// use boolean (primitive, won't leak) hint to resizeHandler that its the containerRemote
+									containerRemote.__isScrollContainer = true;
+									}-*/;
 
-  /**
-   * Get the minimum horizontal scroll position.
-   * 
-   * @param scrollable the scrollable element
-   * @return the minimum scroll position
-   */
-  public int getMinimumHorizontalScrollPosition(Element scrollable) {
-    return isRtl(scrollable) ? scrollable.getClientWidth() - scrollable.getScrollWidth() : 0;
-  }
-
-  /**
-   * Initialize a scrollable element.
-   * 
-   * @param scrollable the scrollable element
-   * @param container the container
-   */
-  public void initialize(Element scrollable, Element container) {
-    // Overridden by ScrollImplTrident.
-  }
-
-  /**
-   * Check if the specified element has an RTL direction. We can't base this on
-   * the current locale because the user can modify the direction at the DOM
-   * level.
-   * 
-   * @param scrollable the scrollable element
-   * @return true if the direction is RTL, false if LTR
-   */
-  public  boolean isRtl(Element scrollable) {
-	  return isRtl0(scrollable.implAccess().ensureRemote());
-  }
-  private native boolean isRtl0(ElementRemote scrollable) /*-{
-    var computedStyle = $doc.defaultView.getComputedStyle(scrollable, null);
-    return computedStyle.getPropertyValue('direction') == 'rtl';
-  }-*/;
+		@Override
+		public native boolean isRtl(Element scrollable) /*-{
+														var scrollableRemote = scrollable.@com.google.gwt.dom.client.Element::typedRemote()();
+														return scrollableRemote.currentStyle.direction == 'rtl';
+														}-*/;
+	}
 }

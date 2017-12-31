@@ -37,16 +37,28 @@ import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
  */
 public class ClassLookupCustomiser implements Customiser {
 	public static final String REGISTRY_POINT = "REGISTRY_POINT";
+
 	public static final String RENDERER_CLASS = "rendererClass";
-	
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		NamedParameter[] parameters = info.parameters();
-		Renderer renderer = NamedParameter.Support.instantiateClass(
-				parameters, RENDERER_CLASS);
-		return new RendererClassProvider(editable, NamedParameter.Support
-				.getParameter(info.parameters(), REGISTRY_POINT).classValue(),renderer);
+		Renderer renderer = NamedParameter.Support.instantiateClass(parameters,
+				RENDERER_CLASS);
+		return new RendererClassProvider(editable,
+				NamedParameter.Support
+						.getParameter(info.parameters(), REGISTRY_POINT)
+						.classValue(),
+				renderer);
+	}
+
+	public static class ClassShortnameRenderer
+			implements Renderer<Class, String> {
+		public static final ClassShortnameRenderer INSTANCE = new ClassShortnameRenderer();
+
+		public String render(Class clazz) {
+			return clazz == null ? "----" : CommonUtils.simpleClassName(clazz);
+		}
 	}
 
 	public static class RendererClassProvider implements BoundWidgetProvider {
@@ -56,10 +68,12 @@ public class ClassLookupCustomiser implements Customiser {
 
 		private final Renderer renderer;
 
-		public RendererClassProvider(boolean editable, Class registryPoint, Renderer renderer) {
+		public RendererClassProvider(boolean editable, Class registryPoint,
+				Renderer renderer) {
 			this.editable = editable;
 			this.registryPoint = registryPoint;
-			this.renderer = renderer==null?ClassShortnameRenderer.INSTANCE:renderer;
+			this.renderer = renderer == null ? ClassShortnameRenderer.INSTANCE
+					: renderer;
 		}
 
 		public BoundWidget get() {
@@ -76,14 +90,6 @@ public class ClassLookupCustomiser implements Customiser {
 			listBox.setOptions(lookup);
 			listBox.setRenderer(renderer);
 			return listBox;
-		}
-	}
-
-	public static class ClassShortnameRenderer implements
-			Renderer<Class, String> {
-		public static final ClassShortnameRenderer INSTANCE = new ClassShortnameRenderer();
-		public String render(Class clazz) {
-			return clazz == null ? "----" : CommonUtils.simpleClassName(clazz);
 		}
 	}
 }

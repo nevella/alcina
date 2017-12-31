@@ -50,22 +50,9 @@ public class TransformConflicts {
 	private TransformPersistenceToken transformPersistenceToken;
 
 	public TransformConflicts() {
-		ignoreConflicts = ResourceUtilities.getBoolean(
-				TransformConflicts.class, "ignoreConflicts")
-				|| LooseContext
-						.getBoolean(CONTEXT_IGNORE_TRANSFORM_CONFLICTS);
-	}
-
-	public static class TransformConflictsFromOfflineSupport {
-		private Set<HiliLocator> checked = new LinkedHashSet<HiliLocator>();
-
-		public boolean wasChecked(HasIdAndLocalId obj) {
-			return checked.contains(new HiliLocator(obj));
-		}
-
-		public void checking(HasIdAndLocalId obj) {
-			checked.add(new HiliLocator(obj));
-		}
+		ignoreConflicts = ResourceUtilities.getBoolean(TransformConflicts.class,
+				"ignoreConflicts")
+				|| LooseContext.getBoolean(CONTEXT_IGNORE_TRANSFORM_CONFLICTS);
 	}
 
 	/*
@@ -110,17 +97,19 @@ public class TransformConflicts {
 		}
 		// sigh
 		EntityManager em = ThreadlocalTransformManager.get().getEntityManager();
-		CommonPersistenceLocal cpb = Registry.impl(CommonPersistenceProvider.class)
+		CommonPersistenceLocal cpb = Registry
+				.impl(CommonPersistenceProvider.class)
 				.getCommonPersistenceExTransaction();
-		String eql = String
-				.format("select dtep from %s dtep inner join fetch dtep.domainTransformRequestPersistent dtrp"
+		String eql = String.format(
+				"select dtep from %s dtep inner join fetch dtep.domainTransformRequestPersistent dtrp"
 						+ " inner join fetch dtrp.clientInstance "
 						+ "where  dtep.objectId= %s and dtep.objectClassRef.id = %s "
 						+ " and dtep.objectVersionNumber >= %s and dtep.propertyName='%s'",
-						cpb.getImplementationSimpleClassName(DomainTransformEventPersistent.class),
-						obj.getId(), ClassRef.forClass(obj.getClass()).getId(),
-						Math.min(dteVersionNumber, persistentVersionNumber),
-						event.getPropertyName());
+				cpb.getImplementationSimpleClassName(
+						DomainTransformEventPersistent.class),
+				obj.getId(), ClassRef.forClass(obj.getClass()).getId(),
+				Math.min(dteVersionNumber, persistentVersionNumber),
+				event.getPropertyName());
 		MetricLogging.get().start(CHECK_TRANSFORM_CONFLICTS_QUERY);
 		List<DomainTransformEventPersistent> dteps = em.createQuery(eql)
 				.getResultList();
@@ -130,8 +119,10 @@ public class TransformConflicts {
 					@Override
 					public boolean allow(DomainTransformEventPersistent o) {
 						return o.getDomainTransformRequestPersistent()
-								.getClientInstance().getId() != transformPersistenceToken
-								.getRequest().getClientInstance().getId();
+								.getClientInstance()
+								.getId() != transformPersistenceToken
+										.getRequest().getClientInstance()
+										.getId();
 					}
 				});
 		if (!dteps.isEmpty()) {
@@ -140,18 +131,71 @@ public class TransformConflicts {
 			conflictEvent.members.add(new TransformConflictEventMember(event,
 					transformPersistenceToken.getRequest()));
 			for (DomainTransformEventPersistent dtep : dteps) {
-				conflictEvent.members.add(new TransformConflictEventMember(
-						dtep, dtep.getDomainTransformRequestPersistent()));
+				conflictEvent.members.add(new TransformConflictEventMember(dtep,
+						dtep.getDomainTransformRequestPersistent()));
 			}
 			GlobalTopicPublisher.get().publishTopic(
 					TransformConflicts.TOPIC_CONFLICT_EVENT, conflictEvent);
 		}
 	}
 
+	public TransformPersistenceToken getTransformPersistenceToken() {
+		return this.transformPersistenceToken;
+	}
+
+	public void setTransformPersistenceToken(
+			TransformPersistenceToken transformPersistenceToken) {
+		this.transformPersistenceToken = transformPersistenceToken;
+	}
+
 	public static class TransformConflictEvent {
 		public List<TransformConflictEventMember> members = new ArrayList<TransformConflictEventMember>();
 
 		public TransformPersistenceToken token;
+	}
+
+	public static class TransformConflictEventLogger
+			implements TopicListener<TransformConflictEvent> {
+		StringBuilder builder = new StringBuilder();
+
+		@Override
+		public void topicPublished(String key, TransformConflictEvent event) {
+			builder.append(
+					">>> Transform conflict <<<\n\nThe transforms below (first is most recent) "
+							+ " have conflicts - same object and field, but changes were made "
+							+ "when the field value visible to the client was stale.  The most recent has been applied"
+							+ " (simple conflict resolution - latest commit wins) - the notification is strictly informational.\n\n"
+							+ " See the Alcina TransformConflicts java class if you need automatic resolution interceptors.\n\n"
+							+ "");
+			for (TransformConflictEventMember member : event.members) {
+				add(member);
+			}
+			String message = builder.toString();
+			event.token.getLogger().warn(message);
+			CommonPersistenceLocal cpl = Registry
+					.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence();
+			cpl.log(message, LogMessageType.TRANSFORM_CONFLICT.toString());
+		}
+
+		private void add(TransformConflictEventMember member) {
+			Object persistentRequestId = member.request instanceof DomainTransformRequestPersistent
+					? ((DomainTransformRequestPersistent) member.request)
+							.getId()
+					: "--";
+			Date date = member.event instanceof DomainTransformEventPersistent
+					? ((DomainTransformEventPersistent) member.event)
+							.getServerCommitDate()
+					: member.event.getUtcDate();
+			builder.append(String.format(
+					"Client instance: %s\n" + "Request: %s [%s]\n"
+							+ "Date: %s\n" + "Object version: %s\n\n"
+							+ "%s\n\n",
+					member.request.getClientInstance().getId(),
+					member.request.getRequestId(), persistentRequestId, date,
+					member.event.getObjectVersionNumber(),
+					member.event.toString()));
+		}
 	}
 
 	public static class TransformConflictEventMember {
@@ -166,48 +210,15 @@ public class TransformConflicts {
 		}
 	}
 
-	public static class TransformConflictEventLogger implements
-			TopicListener<TransformConflictEvent> {
-		StringBuilder builder = new StringBuilder();
+	public static class TransformConflictsFromOfflineSupport {
+		private Set<HiliLocator> checked = new LinkedHashSet<HiliLocator>();
 
-		@Override
-		public void topicPublished(String key, TransformConflictEvent event) {
-			builder.append(">>> Transform conflict <<<\n\nThe transforms below (first is most recent) "
-					+ " have conflicts - same object and field, but changes were made "
-					+ "when the field value visible to the client was stale.  The most recent has been applied"
-					+ " (simple conflict resolution - latest commit wins) - the notification is strictly informational.\n\n"
-					+ " See the Alcina TransformConflicts java class if you need automatic resolution interceptors.\n\n"
-					+ "");
-			for (TransformConflictEventMember member : event.members) {
-				add(member);
-			}
-			String message = builder.toString();
-			event.token.getLogger().warn(message);
-			CommonPersistenceLocal cpl = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
-			cpl.log(message, LogMessageType.TRANSFORM_CONFLICT.toString());
+		public void checking(HasIdAndLocalId obj) {
+			checked.add(new HiliLocator(obj));
 		}
 
-		private void add(TransformConflictEventMember member) {
-			Object persistentRequestId = member.request instanceof DomainTransformRequestPersistent ? ((DomainTransformRequestPersistent) member.request)
-					.getId() : "--";
-			Date date = member.event instanceof DomainTransformEventPersistent ? ((DomainTransformEventPersistent) member.event)
-					.getServerCommitDate() : member.event.getUtcDate();
-			builder.append(String.format("Client instance: %s\n"
-					+ "Request: %s [%s]\n" + "Date: %s\n"
-					+ "Object version: %s\n\n" + "%s\n\n", member.request
-					.getClientInstance().getId(),
-					member.request.getRequestId(), persistentRequestId, date,
-					member.event.getObjectVersionNumber(), member.event
-							.toString()));
+		public boolean wasChecked(HasIdAndLocalId obj) {
+			return checked.contains(new HiliLocator(obj));
 		}
-	}
-
-	public TransformPersistenceToken getTransformPersistenceToken() {
-		return this.transformPersistenceToken;
-	}
-
-	public void setTransformPersistenceToken(
-			TransformPersistenceToken transformPersistenceToken) {
-		this.transformPersistenceToken = transformPersistenceToken;
 	}
 }

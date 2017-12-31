@@ -92,12 +92,16 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 
 	private BreadcrumbBarEditableWidgetsButton editableToggleButton;
 
-	public SearchPanel getSearchPanel() {
-		return this.searchPanel;
+	public LocalActionWithParameters<SingleTableSearchDefinition> getAction() {
+		return this.action;
 	}
 
 	public List<String> getIgnoreProperties() {
 		return ignoreProperties;
+	}
+
+	public SearchPanel getSearchPanel() {
+		return this.searchPanel;
 	}
 
 	public Widget getViewForObject(Object obj) {
@@ -123,6 +127,26 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 		return vp;
 	}
 
+	public boolean isEditableToggle() {
+		return this.editableToggle;
+	}
+
+	public boolean isEditableWidgets() {
+		return this.editableWidgets;
+	}
+
+	public boolean isInitialSearch() {
+		return initialSearch;
+	}
+
+	public boolean isWithLinkedChanges() {
+		return this.withLinkedChanges;
+	}
+
+	public boolean isWithMaximise() {
+		return this.withMaximise;
+	}
+
 	public boolean isWithoutCaption() {
 		return withoutCaption;
 	}
@@ -131,8 +155,28 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 		return withoutParameters;
 	}
 
+	public void setEditableToggle(boolean editableToggle) {
+		this.editableToggle = editableToggle;
+	}
+
+	public void setEditableWidgets(boolean editableWidgets) {
+		this.editableWidgets = editableWidgets;
+	}
+
 	public void setIgnoreProperties(List<String> ignoreProperties) {
 		this.ignoreProperties = ignoreProperties;
+	}
+
+	public void setInitialSearch(boolean initialSearch) {
+		this.initialSearch = initialSearch;
+	}
+
+	public void setWithLinkedChanges(boolean withLinkedChanges) {
+		this.withLinkedChanges = withLinkedChanges;
+	}
+
+	public void setWithMaximise(boolean withMaximise) {
+		this.withMaximise = withMaximise;
 	}
 
 	public void setWithoutCaption(boolean withoutCaption) {
@@ -162,28 +206,16 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 		return bar;
 	}
 
-	class BreadcrumbBarEditableWidgetsButton extends BreadcrumbBarButton
-			implements ClickHandler {
-		public BreadcrumbBarEditableWidgetsButton() {
-			super();
-			addClickHandler(this);
-			updateText();
-		}
-
-		private void updateText() {
-			setText(editableWidgets ? "View" : "Edit");
-		}
-
-		@Override
-		public void onClick(ClickEvent event) {
-			editableWidgets = !editableWidgets;
-			searchPanel.search();
-		}
-	}
-
 	// for subclasses
 	protected int addTableMasks(int mask) {
 		return mask;
+	}
+
+	protected abstract SearchDataProvider createSearchDataProvider(
+			AsyncCallback completionCallback, SingleTableSearchDefinition def);
+
+	protected List<PermissibleAction> getTableActions() {
+		return null;
 	}
 
 	public class SearchPanel extends FlowPanel implements ClickHandler {
@@ -197,20 +229,16 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 
 		private BoundTableExt table;
 
-		public SearchViewProviderBase getSearchViewProvider() {
-			return SearchViewProviderBase.this;
-		}
-
 		public SearchPanel() {
 			try {
-				HTML description = new HTML("<i>" + action.getDescription()
-						+ "</i><br />");
+				HTML description = new HTML(
+						"<i>" + action.getDescription() + "</i><br />");
 				this.resultsHolder = new FlowPanel();
 				RenderContext renderContext = RenderContext.branch();
-				beanView = new ObjectTreeGridRenderer().render(
-						action.getParameters(), renderContext);
-				beanView.addStyleName(CommonUtils.simpleClassName(action
-						.getParameters().getClass()));
+				beanView = new ObjectTreeGridRenderer()
+						.render(action.getParameters(), renderContext);
+				beanView.addStyleName(CommonUtils
+						.simpleClassName(action.getParameters().getClass()));
 				add(beanView);
 				this.button = new InputButton(searchButtonTitle);
 				button.setStyleName("button-submit");
@@ -228,13 +256,32 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 					beanView.setVisible(false);
 				}
 				add(resultsHolder);
-				if (isInitialSearch()
-						&& !LooseContext.getBoolean(CONTEXT_NO_INITIAL_SEARCH)) {
+				if (isInitialSearch() && !LooseContext
+						.getBoolean(CONTEXT_NO_INITIAL_SEARCH)) {
 					search();
 				}
 			} finally {
 				RenderContext.merge();
 			}
+		}
+
+		public BoundTableExt createTableWidget(BoundWidgetTypeFactory factory,
+				Field[] fields, int mask, SearchDataProvider dp) {
+			List<PermissibleAction> actions = getTableActions();
+			if (actions != null && !isEditableWidgets()) {
+				Toolbar tb = new Toolbar();
+				tb.setAsButton(true);
+				tb.setActions(actions);
+				tb.setStyleName("table-toolbar alcina-ToolbarSmall clearfix");
+				resultsHolder.add(tb);
+			}
+			return isEditableWidgets()
+					? new BoundTableExt(mask, factory, fields, dp)
+					: new NiceWidthBoundTable(mask, factory, fields, dp);
+		}
+
+		public SearchViewProviderBase getSearchViewProvider() {
+			return SearchViewProviderBase.this;
 		}
 
 		public void onClick(ClickEvent event) {
@@ -265,8 +312,8 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			runningLabel.setVisible(true);
 			button.setEnabled(false);
 			SingleTableSearchDefinition def = action.getParameters();
-			Object bean = ClientReflector.get().getTemplateInstance(
-					def.getResultClass());
+			Object bean = ClientReflector.get()
+					.getTemplateInstance(def.getResultClass());
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 			GwittirBridge.get().setIgnoreProperties(ignoreProperties);
 			Field[] fields = null;
@@ -287,8 +334,8 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			if (isEditableWidgets() && converter == null) {
 				converter = new RegisterObjectsConverter();
 			}
-			SearchDataProvider dp = createSearchDataProvider(
-					completionCallback, def);
+			SearchDataProvider dp = createSearchDataProvider(completionCallback,
+					def);
 			this.table = createTableWidget(factory, fields, mask, dp);
 			table.addStyleName("results-table");
 			if (linkButton != null) {
@@ -296,61 +343,7 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			}
 			resultsHolder.add(table);
 		}
-
-		public BoundTableExt createTableWidget(BoundWidgetTypeFactory factory,
-				Field[] fields, int mask, SearchDataProvider dp) {
-			List<PermissibleAction> actions = getTableActions();
-			if (actions != null && !isEditableWidgets()) {
-				Toolbar tb = new Toolbar();
-				tb.setAsButton(true);
-				tb.setActions(actions);
-				tb.setStyleName("table-toolbar alcina-ToolbarSmall clearfix");
-				resultsHolder.add(tb);
-			}
-			return isEditableWidgets() ? new BoundTableExt(mask, factory,
-					fields, dp) : new NiceWidthBoundTable(mask, factory,
-					fields, dp);
-		}
 	}
-
-	protected List<PermissibleAction> getTableActions() {
-		return null;
-	}
-
-	public void setInitialSearch(boolean initialSearch) {
-		this.initialSearch = initialSearch;
-	}
-
-	public boolean isInitialSearch() {
-		return initialSearch;
-	}
-
-	public boolean isEditableWidgets() {
-		return this.editableWidgets;
-	}
-
-	public void setEditableWidgets(boolean editableWidgets) {
-		this.editableWidgets = editableWidgets;
-	}
-
-	public boolean isWithMaximise() {
-		return this.withMaximise;
-	}
-
-	public void setWithMaximise(boolean withMaximise) {
-		this.withMaximise = withMaximise;
-	}
-
-	public boolean isWithLinkedChanges() {
-		return this.withLinkedChanges;
-	}
-
-	public void setWithLinkedChanges(boolean withLinkedChanges) {
-		this.withLinkedChanges = withLinkedChanges;
-	}
-
-	protected abstract SearchDataProvider createSearchDataProvider(
-			AsyncCallback completionCallback, SingleTableSearchDefinition def);
 
 	public static class SearchViewProvider extends SearchViewProviderBase {
 		protected SearchDataProvider createSearchDataProvider(
@@ -361,15 +354,22 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 		}
 	}
 
-	public LocalActionWithParameters<SingleTableSearchDefinition> getAction() {
-		return this.action;
-	}
+	class BreadcrumbBarEditableWidgetsButton extends BreadcrumbBarButton
+			implements ClickHandler {
+		public BreadcrumbBarEditableWidgetsButton() {
+			super();
+			addClickHandler(this);
+			updateText();
+		}
 
-	public boolean isEditableToggle() {
-		return this.editableToggle;
-	}
+		@Override
+		public void onClick(ClickEvent event) {
+			editableWidgets = !editableWidgets;
+			searchPanel.search();
+		}
 
-	public void setEditableToggle(boolean editableToggle) {
-		this.editableToggle = editableToggle;
+		private void updateText() {
+			setText(editableWidgets ? "View" : "Edit");
+		}
 	}
 }

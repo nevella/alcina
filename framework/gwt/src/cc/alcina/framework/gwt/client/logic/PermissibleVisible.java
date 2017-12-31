@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.logic;
-
 
 import com.google.gwt.user.client.ui.Widget;
 
@@ -23,7 +21,6 @@ import cc.alcina.framework.common.client.logic.permissions.Permissible;
  *
  * @author Nick Reddel
  */
-
- public interface PermissibleVisible extends Permissible{
+public interface PermissibleVisible extends Permissible {
 	public Widget getWidget();
 }

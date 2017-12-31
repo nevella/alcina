@@ -29,13 +29,13 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 public class ShortDateValidator implements Validator {
 	public static final ShortDateValidator INSTANCE = new ShortDateValidator();
 
-	public ShortDateValidator() {
-	}
-
 	public static final transient String ERR_FMT = "Dates must be "
 			+ "entered in the following format: dd/mm/yyyy";
 
 	public static final transient String ERR_INVALID = "The date entered does not exist";
+
+	public ShortDateValidator() {
+	}
 
 	@SuppressWarnings("deprecation")
 	public Object validate(Object value) throws ValidationException {

@@ -51,22 +51,15 @@ public class OkCancelDialogBox extends GlassDialogBox {
 
 	private HorizontalPanel buttonsPanel;
 
+	private boolean isCentering = false;
+
+	private Timer checkReCenterTimer;
+
+	private HandlerRegistration nativePreviewHandlerRegistration;
+
 	public OkCancelDialogBox(String title, Widget widget,
 			final PermissibleActionListener l) {
 		this(title, widget, l, HasHorizontalAlignment.ALIGN_CENTER);
-	}
-
-	protected String getOKButtonName() {
-		return "OK";
-	}
-
-	protected boolean showAnimated() {
-		return true;
-	}
-
-	// makes sure richtextareas get a focuslost()
-	public void focusOK() {
-		okButton.setFocus(true);
 	}
 
 	public OkCancelDialogBox(String title, Widget widget,
@@ -101,39 +94,20 @@ public class OkCancelDialogBox extends GlassDialogBox {
 		center();
 	}
 
-	private void cancel() {
-		OkCancelDialogBox.this.hide();
-		if (vetoableActionListener != null) {
-			vetoableActionListener.vetoableAction(new PermissibleActionEvent(
-					this, CancelAction.INSTANCE));
-		}
-	}
-
-	protected void onOkButtonClicked() {
-		if (!checkValid()) {
-			return;
-		}
-		okButton.setEnabled(false);
-		OkCancelDialogBox.this.hide();
-		if (vetoableActionListener != null) {
-			vetoableActionListener.vetoableAction(new PermissibleActionEvent(
-					this, OkAction.INSTANCE));
-		}
-	}
-
-	// for subclasses
-	protected void adjustDisplay() {
-	}
-
-	private boolean isCentering = false;
-
-	private Timer checkReCenterTimer;
-
 	@Override
 	public void center() {
 		isCentering = true;
 		super.center();
 		isCentering = false;
+	}
+
+	// makes sure richtextareas get a focuslost()
+	public void focusOK() {
+		okButton.setFocus(true);
+	}
+
+	public HorizontalPanel getButtonsPanel() {
+		return this.buttonsPanel;
 	}
 
 	@Override
@@ -147,6 +121,26 @@ public class OkCancelDialogBox extends GlassDialogBox {
 		if (!isCentering) {
 			okButton.setFocus(true);
 		}
+	}
+
+	private void cancel() {
+		OkCancelDialogBox.this.hide();
+		if (vetoableActionListener != null) {
+			vetoableActionListener.vetoableAction(
+					new PermissibleActionEvent(this, CancelAction.INSTANCE));
+		}
+	}
+
+	// for subclasses
+	protected void adjustDisplay() {
+	}
+
+	protected boolean checkValid() {
+		return true;
+	}
+
+	protected String getOKButtonName() {
+		return "OK";
 	}
 
 	@Override
@@ -172,15 +166,14 @@ public class OkCancelDialogBox extends GlassDialogBox {
 				cancel();
 			}
 			if (evtCode == Event.ONKEYDOWN
-					&& e.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER && e.getNativeEvent().getCtrlKey()) {
+					&& e.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER
+					&& e.getNativeEvent().getCtrlKey()) {
 				e.cancel();
 				okButton.setFocus(true);
 				onOkButtonClicked();
 			}
 		});
 	}
-
-	private HandlerRegistration nativePreviewHandlerRegistration;
 
 	@Override
 	protected void onDetach() {
@@ -189,7 +182,19 @@ public class OkCancelDialogBox extends GlassDialogBox {
 		nativePreviewHandlerRegistration.removeHandler();
 	}
 
-	protected boolean checkValid() {
+	protected void onOkButtonClicked() {
+		if (!checkValid()) {
+			return;
+		}
+		okButton.setEnabled(false);
+		OkCancelDialogBox.this.hide();
+		if (vetoableActionListener != null) {
+			vetoableActionListener.vetoableAction(
+					new PermissibleActionEvent(this, OkAction.INSTANCE));
+		}
+	}
+
+	protected boolean showAnimated() {
 		return true;
 	}
 
@@ -222,18 +227,14 @@ public class OkCancelDialogBox extends GlassDialogBox {
 			return false;
 		}
 
-		protected void notifyProblem() {
-			Registry.impl(ClientNotifications.class).showWarning(
-					"Please correct the problems in the form");
-		}
-
 		@Override
 		protected String getOKButtonName() {
 			return "Save";
 		}
-	}
 
-	public HorizontalPanel getButtonsPanel() {
-		return this.buttonsPanel;
+		protected void notifyProblem() {
+			Registry.impl(ClientNotifications.class)
+					.showWarning("Please correct the problems in the form");
+		}
 	}
 }

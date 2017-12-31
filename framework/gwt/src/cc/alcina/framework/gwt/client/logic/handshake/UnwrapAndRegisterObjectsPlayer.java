@@ -30,17 +30,20 @@ import cc.alcina.framework.gwt.persistence.client.DteReplayWorker;
  * @author nreddel@barnet.com.au
  * 
  */
-public class UnwrapAndRegisterObjectsPlayer extends RunnableAsyncCallbackPlayer<Void, HandshakeState>
+public class UnwrapAndRegisterObjectsPlayer
+		extends RunnableAsyncCallbackPlayer<Void, HandshakeState>
 		implements LoopingPlayer {
-	public static final String TOPIC_DELTA_PROGRESS = UnwrapAndRegisterObjectsPlayer.class.getName()
-			+ ".TOPIC_DELTA_PROGRESS";
+	public static final String TOPIC_DELTA_PROGRESS = UnwrapAndRegisterObjectsPlayer.class
+			.getName() + ".TOPIC_DELTA_PROGRESS";
 
 	public static void deltaProgress(IntPair intPair) {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_DELTA_PROGRESS, intPair);
 	}
 
-	public static void deltaProgressListenerDelta(TopicListener<IntPair> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_DELTA_PROGRESS, listener, add);
+	public static void deltaProgressListenerDelta(
+			TopicListener<IntPair> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_DELTA_PROGRESS, listener,
+				add);
 	}
 
 	protected DomainModelDelta currentDelta = null;
@@ -68,7 +71,8 @@ public class UnwrapAndRegisterObjectsPlayer extends RunnableAsyncCallbackPlayer<
 	@Override
 	public String describeLoop() {
 		return CommonUtils.formatJ(
-				"Chews through deltas in the handshakeConsortModel" + " - for each in sequence [%s] - see javadoc ",
+				"Chews through deltas in the handshakeConsortModel"
+						+ " - for each in sequence [%s] - see javadoc ",
 				CommonUtils.join(Phase.values(), ", "));
 	}
 
@@ -81,6 +85,29 @@ public class UnwrapAndRegisterObjectsPlayer extends RunnableAsyncCallbackPlayer<
 		}
 	}
 
+	@Override
+	public void onFailure(Throwable caught) {
+		caught.printStackTrace();
+		if (consort.containsState(HandshakeState.OBJECT_DATA_LOADED)) {
+			// code failure in post-ok handler
+			consort.onFailure(caught);
+		} else {
+			consort.wasPlayed(this, Collections.singletonList(
+					HandshakeState.OBJECTS_FATAL_DESERIALIZATION_EXCEPTION));
+		}
+	}
+
+	@Override
+	public void onSuccess(Void result) {
+		consort.replay(this);
+	}
+
+	@Override
+	public void run() {
+		HandshakeConsortModel.get().prepareInitialPlaySequence();
+		loop();
+	}
+
 	private void loop0() {
 		if (phase == null || phase == Phase.REPLAYING_TRANSFORMS) {
 			currentDelta = null;
@@ -88,19 +115,23 @@ public class UnwrapAndRegisterObjectsPlayer extends RunnableAsyncCallbackPlayer<
 			phase = Phase.values()[phase.ordinal() + 1];
 		}
 		if (currentDelta == null) {
-			IteratorWithCurrent<DomainModelDelta> deltasToApply = HandshakeConsortModel.get().getDeltasToApply();
+			IteratorWithCurrent<DomainModelDelta> deltasToApply = HandshakeConsortModel
+					.get().getDeltasToApply();
 			currentDelta = deltasToApply.current();
 			deltasToApply.moveNext();
 			if (currentDelta != null) {
 				deltaOrdinal++;
 				Iterator<DomainModelDelta> itr = deltasToApply.getItr();
 				if (itr instanceof HasSize) {
-					deltaProgress(new IntPair(deltaOrdinal, ((HasSize) itr).getSize()));
+					deltaProgress(new IntPair(deltaOrdinal,
+							((HasSize) itr).getSize()));
 				}
 				phase = Phase.UNWRAPPING;
 			} else {
-				HandshakeConsortModel.get().ensureLoadObjectsNotifier("").modalOff();
-				consort.wasPlayed(this, Collections.singletonList(HandshakeState.OBJECTS_UNWRAPPED_AND_REGISTERED));
+				HandshakeConsortModel.get().ensureLoadObjectsNotifier("")
+						.modalOff();
+				consort.wasPlayed(this, Collections.singletonList(
+						HandshakeState.OBJECTS_UNWRAPPED_AND_REGISTERED));
 				return;
 			}
 		}
@@ -121,7 +152,8 @@ public class UnwrapAndRegisterObjectsPlayer extends RunnableAsyncCallbackPlayer<
 			}
 			break;
 		case REGISTERING_UNLINKED:
-			if (CommonUtils.isNotNullOrEmpty(currentDelta.getUnlinkedObjects())) {
+			if (CommonUtils
+					.isNotNullOrEmpty(currentDelta.getUnlinkedObjects())) {
 				registerUnlinked();
 				return;
 			}
@@ -136,38 +168,18 @@ public class UnwrapAndRegisterObjectsPlayer extends RunnableAsyncCallbackPlayer<
 		consort.replay(this);
 	}
 
-	@Override
-	public void onFailure(Throwable caught) {
-		caught.printStackTrace();
-		if (consort.containsState(HandshakeState.OBJECT_DATA_LOADED)) {
-			// code failure in post-ok handler
-			consort.onFailure(caught);
-		} else {
-			consort.wasPlayed(this, Collections.singletonList(HandshakeState.OBJECTS_FATAL_DESERIALIZATION_EXCEPTION));
-		}
-	}
-
-	@Override
-	public void onSuccess(Void result) {
-		consort.replay(this);
-	}
-
-	@Override
-	public void run() {
-		HandshakeConsortModel.get().prepareInitialPlaySequence();
-		loop();
-	}
-
 	private boolean maybeRegisterDomainModelObjects() {
 		if (currentDelta.getDomainModelObject() != null) {
-			Registry.impl(DomainModelObjectsRegistrar.class).registerAsync(currentDelta.getDomainModelObject(), this);
+			Registry.impl(DomainModelObjectsRegistrar.class)
+					.registerAsync(currentDelta.getDomainModelObject(), this);
 			return true;
 		}
 		return false;
 	}
 
 	private void registerUnlinked() {
-		TransformManager.get().registerDomainObjectsAsync((Collection) currentDelta.getUnlinkedObjects(), this);
+		TransformManager.get().registerDomainObjectsAsync(
+				(Collection) currentDelta.getUnlinkedObjects(), this);
 	}
 
 	protected boolean maybeRegisterDomainModelHolder() {
@@ -181,12 +193,16 @@ public class UnwrapAndRegisterObjectsPlayer extends RunnableAsyncCallbackPlayer<
 		return false;
 	}
 
-	protected void registerDomainModelHolder(DomainModelHolder domainModelHolder) {
+	protected void
+			registerDomainModelHolder(DomainModelHolder domainModelHolder) {
 		domainModelHolder.registerSelfAsProvider();
-		GeneralProperties generalProperties = domainModelHolder.getGeneralProperties();
-		HandshakeConsortModel.get().registerInitialObjects(domainModelHolder.getGeneralProperties(),
+		GeneralProperties generalProperties = domainModelHolder
+				.getGeneralProperties();
+		HandshakeConsortModel.get().registerInitialObjects(
+				domainModelHolder.getGeneralProperties(),
 				domainModelHolder.getCurrentUser());
-		TransformManager.get().registerDomainObjectsInHolderAsync(domainModelHolder, this);
+		TransformManager.get()
+				.registerDomainObjectsInHolderAsync(domainModelHolder, this);
 	}
 
 	protected void replayTransforms() {
@@ -196,15 +212,20 @@ public class UnwrapAndRegisterObjectsPlayer extends RunnableAsyncCallbackPlayer<
 			HandshakeConsortModel.get().setLoadedWithLocalOnlyTransforms(true);
 		}
 		Integer requestId = (currentDelta instanceof HasRequestReplayId)
-				? ((HasRequestReplayId) currentDelta).getDomainTransformRequestReplayId() : null;
+				? ((HasRequestReplayId) currentDelta)
+						.getDomainTransformRequestReplayId()
+				: null;
 		if (requestId != null) {
-			CommitToStorageTransformListener tl = Registry.impl(CommitToStorageTransformListener.class);
-			tl.setLocalRequestId(Math.max(requestId + 1, (int) tl.getLocalRequestId()));
+			CommitToStorageTransformListener tl = Registry
+					.impl(CommitToStorageTransformListener.class);
+			tl.setLocalRequestId(
+					Math.max(requestId + 1, (int) tl.getLocalRequestId()));
 		}
 		Scheduler.get().scheduleIncremental(replayer);
 	}
 
 	enum Phase {
-		UNWRAPPING, REGISTERING_GRAPH, REGISTERING_UNLINKED, REPLAYING_TRANSFORMS
+		UNWRAPPING, REGISTERING_GRAPH, REGISTERING_UNLINKED,
+		REPLAYING_TRANSFORMS
 	}
 }

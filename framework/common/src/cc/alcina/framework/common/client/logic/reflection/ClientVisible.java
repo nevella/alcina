@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Retention;
@@ -22,6 +21,5 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @author Nick Reddel
  */
-
- public @interface ClientVisible {
+public @interface ClientVisible {
 }

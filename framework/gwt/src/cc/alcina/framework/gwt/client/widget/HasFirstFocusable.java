@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.user.client.ui.Focusable;
@@ -20,7 +19,6 @@ import com.google.gwt.user.client.ui.Focusable;
  *
  * @author Nick Reddel
  */
-
- public interface HasFirstFocusable {
+public interface HasFirstFocusable {
 	public Focusable firstFocusable();
 }

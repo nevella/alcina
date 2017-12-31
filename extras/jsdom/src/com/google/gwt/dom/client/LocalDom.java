@@ -3,11 +3,9 @@ package com.google.gwt.dom.client;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
@@ -21,7 +19,6 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.LocalDomDebug;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsNativeMapWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -39,6 +36,14 @@ public class LocalDom {
 	private static boolean useRemoteDom = GWT.isClient();
 
 	private static boolean disableRemoteWrite;
+
+	static boolean ie9;
+
+	static boolean emitCommentPisAsText;
+
+	public static void debug(ElementRemote elementRemote) {
+		get().debug0(elementRemote);
+	}
 
 	public static void detach(Node node) {
 		// see "removereference"
@@ -152,7 +157,9 @@ public class LocalDom {
 		return get().remoteLookup.containsKey(remote);
 	}
 
-	static boolean ie9;
+	static void wasResolved(Element elem) {
+		get().wasResolved0(elem);
+	}
 
 	LocalDomDebugImpl debugImpl = new LocalDomDebugImpl();
 
@@ -171,8 +178,6 @@ public class LocalDom {
 	private boolean resolutionEventIdDirty;
 
 	private boolean resolving;
-
-	static boolean emitCommentPisAsText;
 
 	public LocalDom() {
 		if (GWT.isScript() && JsUniqueMap.supportsJsWeakMap()) {
@@ -204,6 +209,10 @@ public class LocalDom {
 		} else {
 			return creator.get();
 		}
+	}
+
+	private void debug0(ElementRemote elementRemote) {
+		int debug = 3;
 	}
 
 	private void ensureFlush() {
@@ -517,10 +526,6 @@ public class LocalDom {
 		// get().remoteLookup.remove(typedRemote);
 	}
 
-	static void wasResolved(Element elem) {
-		get().wasResolved0(elem);
-	}
-
 	private void wasResolved0(Element elem) {
 		elem.local().walk(nl -> nl.node.resolved(resolutionEventId));
 		resolutionEventIdDirty = true;
@@ -599,13 +604,5 @@ public class LocalDom {
 				return super.createIdentityEqualsMap(keyClass);
 			}
 		}
-	}
-
-	public static void debug(ElementRemote elementRemote) {
-		get().debug0(elementRemote);
-	}
-
-	private void debug0(ElementRemote elementRemote) {
-		int debug = 3;
 	}
 }

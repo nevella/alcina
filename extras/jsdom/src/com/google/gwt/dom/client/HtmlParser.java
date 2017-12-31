@@ -11,10 +11,32 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class HtmlParser {
-	enum TokenState {
-		EXPECTING_NODE, EXPECTING_TAG, TEXT, EXPECTING_COMMENT,
-		EXPECTING_ATTRIBUTES, EXPECTING_ATTR_SEP, EXPECTING_ATTR_VALUE_DELIM,
-		EXPECTING_ATTR_VALUE
+	static String decodeEntities(String text) {
+		return EntityDecoder.decode(text);
+	}
+
+	// https://www.thoughtco.com/html-singleton-tags-3468620
+	static boolean isSelfClosingTag(String tag) {
+		switch (tag) {
+		case "area":
+		case "base":
+		case "br":
+		case "col":
+		case "command":
+		case "embed":
+		case "hr":
+		case "img":
+		case "input":
+		case "keygen":
+		case "link":
+		case "meta":
+		case "param":
+		case "source":
+		case "track":
+		case "wbr":
+			return true;
+		}
+		return false;
 	}
 
 	StringBuilder builder = new StringBuilder();
@@ -24,10 +46,6 @@ public class HtmlParser {
 	boolean selfCloseTag = false;
 
 	TokenState tokenState;
-
-	void resetBuilder() {
-		builder.setLength(0);
-	}
 
 	int idx = 0;
 
@@ -51,6 +69,12 @@ public class HtmlParser {
 	private Element replaceContents;
 
 	private boolean emitHtmlHeadBodyTags;
+
+	private List<Element> syntheticElements = new ArrayList<>();
+
+	boolean debugCursor = true;
+
+	int debugCursorDepth = 0;
 
 	public Element parse(DomElement root, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
@@ -222,8 +246,15 @@ public class HtmlParser {
 		attributes.put(attrName, decodeEntities(attrValue));
 	}
 
-	static String decodeEntities(String text) {
-		return EntityDecoder.decode(text);
+	private void emitComment(String string) {
+		tag = null;
+		if (string.matches("\\?.+\\?") || true) {
+			// FIXME - make this a real PI
+			// hmm...now chromium seems to want comments preserved. weird. but
+			// wonderful
+			emitText(string);
+		}
+		// FIXME - if ie<=9, hmm....panic?
 	}
 
 	private void emitElement() {
@@ -270,28 +301,20 @@ public class HtmlParser {
 		selfCloseTag = false;
 	}
 
-	// https://www.thoughtco.com/html-singleton-tags-3468620
-	static boolean isSelfClosingTag(String tag) {
-		switch (tag) {
-		case "area":
-		case "base":
-		case "br":
-		case "col":
-		case "command":
-		case "embed":
-		case "hr":
-		case "img":
-		case "input":
-		case "keygen":
-		case "link":
-		case "meta":
-		case "param":
-		case "source":
-		case "track":
-		case "wbr":
-			return true;
+	private void emitEndElement(String tag) {
+		if (!emitHtmlHeadBodyTags) {
+			switch (tag) {
+			case "html":
+			case "head":
+			case "body":
+				return;
+			}
 		}
-		return false;
+		setCursor(cursor.getParentElement(), tag, -1);
+	}
+
+	private void emitEscapedText(String string) {
+		emitText(decodeEntities(string));
 	}
 
 	private void emitStartElement(String tag) {
@@ -328,11 +351,16 @@ public class HtmlParser {
 		}
 	}
 
-	private List<Element> syntheticElements = new ArrayList<>();
-
-	boolean debugCursor = true;
-
-	int debugCursorDepth = 0;
+	private void emitText(String string) {
+		if (string.isEmpty()) {
+			return;
+		}
+		Text text = Document.get().createTextNode(string);
+		cursor.appendChild(text);
+		if (debugCursor) {
+			Ax.out("  tx: %s", CommonUtils.trimToWsChars(string, 50, true));
+		}
+	}
 
 	private void setCursor(Element element, String tag, int delta) {
 		if (syntheticElements.contains(cursor) && delta == -1) {
@@ -361,41 +389,13 @@ public class HtmlParser {
 		cursor = element;
 	}
 
-	private void emitEndElement(String tag) {
-		if (!emitHtmlHeadBodyTags) {
-			switch (tag) {
-			case "html":
-			case "head":
-			case "body":
-				return;
-			}
-		}
-		setCursor(cursor.getParentElement(), tag, -1);
+	void resetBuilder() {
+		builder.setLength(0);
 	}
 
-	private void emitComment(String string) {
-		tag = null;
-		if (string.matches("\\?.+\\?") || true) {
-			// FIXME - make this a real PI
-			// hmm...now chromium seems to want comments preserved. weird. but
-			// wonderful
-			emitText(string);
-		}
-		// FIXME - if ie<=9, hmm....panic?
-	}
-
-	private void emitEscapedText(String string) {
-		emitText(decodeEntities(string));
-	}
-
-	private void emitText(String string) {
-		if (string.isEmpty()) {
-			return;
-		}
-		Text text = Document.get().createTextNode(string);
-		cursor.appendChild(text);
-		if (debugCursor) {
-			Ax.out("  tx: %s", CommonUtils.trimToWsChars(string, 50, true));
-		}
+	enum TokenState {
+		EXPECTING_NODE, EXPECTING_TAG, TEXT, EXPECTING_COMMENT,
+		EXPECTING_ATTRIBUTES, EXPECTING_ATTR_SEP, EXPECTING_ATTR_VALUE_DELIM,
+		EXPECTING_ATTR_VALUE
 	}
 }

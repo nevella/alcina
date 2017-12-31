@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget.layout;
-
 
 import com.google.gwt.user.client.ui.Frame;
 
@@ -21,17 +19,8 @@ import com.google.gwt.user.client.ui.Frame;
  *
  * @author Nick Reddel
  */
-
- public class FrameWithLayoutInfo extends Frame implements HasLayoutInfo {
+public class FrameWithLayoutInfo extends Frame implements HasLayoutInfo {
 	private LayoutInfo layoutInfo;
-
-	public void setLayoutInfo(LayoutInfo layoutInfo) {
-		this.layoutInfo = layoutInfo;
-	}
-
-	public LayoutInfo getLayoutInfo() {
-		return layoutInfo;
-	}
 
 	public FrameWithLayoutInfo() {
 		super();
@@ -40,5 +29,12 @@ import com.google.gwt.user.client.ui.Frame;
 	public FrameWithLayoutInfo(String url) {
 		super(url);
 	}
-	
+
+	public LayoutInfo getLayoutInfo() {
+		return layoutInfo;
+	}
+
+	public void setLayoutInfo(LayoutInfo layoutInfo) {
+		this.layoutInfo = layoutInfo;
+	}
 }

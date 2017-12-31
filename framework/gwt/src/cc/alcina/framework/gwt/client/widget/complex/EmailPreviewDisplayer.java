@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget.complex;
-
 
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -29,13 +27,8 @@ import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
  *
  * @author Nick Reddel
  */
-
- public class EmailPreviewDisplayer extends Composite {
+public class EmailPreviewDisplayer extends Composite {
 	private Frame frame;
-
-	public Frame getFrame() {
-		return this.frame;
-	}
 
 	public EmailPreviewDisplayer(EmailPreview model) {
 		FlowPanel fp = new FlowPanel();
@@ -46,9 +39,13 @@ import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
 		g.setWidget(1, 1, new Label(model.getSubject()));
 		fp.add(g);
 		fp.add(new HTML("<hr />"));
-		 frame = new Frame();
+		frame = new Frame();
 		frame.setUrl(model.getBody());
 		fp.add(frame);
 		initWidget(fp);
+	}
+
+	public Frame getFrame() {
+		return this.frame;
 	}
 }

@@ -11,12 +11,73 @@ import com.google.gwt.user.client.ui.HasEnabled;
 import com.google.gwt.user.client.ui.HasName;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.gwt.client.util.ClientUtils;
+public class FileInput extends Widget
+		implements HasName, HasChangeHandlers, HasEnabled {
+	private FileInputImpl impl;
 
-public class FileInput extends Widget implements HasName, HasChangeHandlers,
-		HasEnabled {
+	private InputElement inputElement;
+
+	public FileInput() {
+		inputElement = Document.get().createFileInputElement();
+		setElement(inputElement);
+		setStyleName("gwt-FileUpload");
+		impl = new FileInputImplHtml5();
+	}
+
+	@Override
+	public HandlerRegistration addChangeHandler(ChangeHandler handler) {
+		return addDomHandler(handler, ChangeEvent.getType());
+	}
+
+	public Html5File[] getFiles() {
+		JsArray<Html5File> files = impl.getFiles(inputElement);
+		Html5File[] result = new Html5File[files.length()];
+		for (int i = 0; i < files.length(); ++i) {
+			result[i] = files.get(i);
+		}
+		return result;
+	}
+
+	public String getName() {
+		return inputElement.getName();
+	}
+
+	public boolean isAllowedMultipleFiles() {
+		return impl.isAllowMultipleFiles(inputElement);
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return !inputElement.isDisabled();
+	}
+
+	public void setAllowMultipleFiles(boolean allow) {
+		impl.setAllowMultipleFiles(inputElement, allow);
+	}
+
+	@Override
+	public void setEnabled(boolean enabled) {
+		inputElement.setDisabled(!enabled);
+	}
+
+	public void setName(String name) {
+		inputElement.setName(name);
+	}
+
+	public boolean supportsFileAPI() {
+		return impl.supportsFileAPI();
+	}
+
 	private static class FileInputImpl {
-		public boolean supportsFileAPI() {
+		public native JsArray<Html5File>
+				getFiles(InputElement inputElement) /*-{
+													var remote = inputElement.@com.google.gwt.dom.client.Element::typedRemote()();
+													return remote.value && remote.value!=""?
+													[{fileName: remote.value, fileSize: -1}]:
+													[];
+													}-*/;
+
+		public boolean isAllowMultipleFiles(InputElement inputElement) {
 			return false;
 		}
 
@@ -24,23 +85,18 @@ public class FileInput extends Widget implements HasName, HasChangeHandlers,
 				boolean allow) {
 		}
 
-		public boolean isAllowMultipleFiles(InputElement inputElement) {
+		public boolean supportsFileAPI() {
 			return false;
 		}
-
-		public native JsArray<Html5File> getFiles(InputElement inputElement) /*-{
-			var remote = inputElement.@com.google.gwt.dom.client.Element::typedRemote()();
-			return remote.value && remote.value!=""?
-				[{fileName: remote.value, fileSize: -1}]:
-				[];
-		}-*/;
 	}
-	
+
 	private static class FileInputImplHtml5 extends FileInputImpl {
 		@Override
-		public boolean supportsFileAPI() {
-			return true;
-		}
+		public native JsArray<Html5File>
+				getFiles(InputElement inputElement) /*-{
+													var remote = inputElement.@com.google.gwt.dom.client.Element::typedRemote()();
+													return remote.files;
+													}-*/;
 
 		@Override
 		public boolean isAllowMultipleFiles(InputElement inputElement) {
@@ -58,64 +114,8 @@ public class FileInput extends Widget implements HasName, HasChangeHandlers,
 		}
 
 		@Override
-		public native JsArray<Html5File> getFiles(InputElement inputElement) /*-{
-			var remote = inputElement.@com.google.gwt.dom.client.Element::typedRemote()();
-			return remote.files;
-		}-*/;
-	}
-
-	private FileInputImpl impl;
-
-	private InputElement inputElement;
-
-	public FileInput() {
-		inputElement = Document.get().createFileInputElement();
-		setElement(inputElement);
-		setStyleName("gwt-FileUpload");
-		impl = new FileInputImplHtml5();
-	}
-
-	public boolean supportsFileAPI() {
-		return impl.supportsFileAPI();
-	}
-
-	public void setAllowMultipleFiles(boolean allow) {
-		impl.setAllowMultipleFiles(inputElement, allow);
-	}
-
-	public boolean isAllowedMultipleFiles() {
-		return impl.isAllowMultipleFiles(inputElement);
-	}
-
-	public void setName(String name) {
-		inputElement.setName(name);
-	}
-
-	public String getName() {
-		return inputElement.getName();
-	}
-
-	public Html5File[] getFiles() {
-		JsArray<Html5File> files = impl.getFiles(inputElement);
-		Html5File[] result = new Html5File[files.length()];
-		for (int i = 0; i < files.length(); ++i) {
-			result[i] = files.get(i);
+		public boolean supportsFileAPI() {
+			return true;
 		}
-		return result;
-	}
-
-	@Override
-	public HandlerRegistration addChangeHandler(ChangeHandler handler) {
-		return addDomHandler(handler, ChangeEvent.getType());
-	}
-
-	@Override
-	public boolean isEnabled() {
-		return !inputElement.isDisabled();
-	}
-
-	@Override
-	public void setEnabled(boolean enabled) {
-		inputElement.setDisabled(!enabled);
 	}
 }

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.logic;
 
 import java.util.ArrayList;
@@ -23,21 +22,11 @@ import com.google.gwt.user.client.ui.TreeItem;
  *
  * @author Nick Reddel
  */
-
- public class ExtraTreeEvent {
-	public interface ExtraTreeEventListener {
-		public void onExtraTreeEvent(ExtraTreeEventEvent evt);
-	}
-	public enum ExtraTreeEventType{
-		DBL_CLICK, RIGHT_CLICK
-	}
+public class ExtraTreeEvent {
 	public static class ExtraTreeEventEvent {
 		private TreeItem source;
-		private final ExtraTreeEventType type;
 
-		public ExtraTreeEventType getType() {
-			return this.type;
-		}
+		private final ExtraTreeEventType type;
 
 		public ExtraTreeEventEvent(TreeItem source, ExtraTreeEventType type) {
 			this.source = source;
@@ -47,24 +36,28 @@ import com.google.gwt.user.client.ui.TreeItem;
 		public TreeItem getSource() {
 			return this.source;
 		}
+
+		public ExtraTreeEventType getType() {
+			return this.type;
+		}
+	}
+
+	public interface ExtraTreeEventListener {
+		public void onExtraTreeEvent(ExtraTreeEventEvent evt);
 	}
 
 	public interface ExtraTreeEventSource {
 		public void addExtraTreeEventListener(ExtraTreeEventListener listener);
 
-		public void removeExtraTreeEventListener(ExtraTreeEventListener listener);
+		public void
+				removeExtraTreeEventListener(ExtraTreeEventListener listener);
 	}
 
 	public static class ExtraTreeEventSupport implements ExtraTreeEventSource {
 		private List<ExtraTreeEventListener> listenerList = new ArrayList<ExtraTreeEventListener>();;
 
-
 		public void addExtraTreeEventListener(ExtraTreeEventListener listener) {
 			listenerList.add(listener);
-		}
-
-		public void removeExtraTreeEventListener(ExtraTreeEventListener listener) {
-			listenerList.remove(listener);
 		}
 
 		public void fireActionsAvailbleChange(ExtraTreeEventEvent event) {
@@ -72,5 +65,14 @@ import com.google.gwt.user.client.ui.TreeItem;
 				listener.onExtraTreeEvent(event);
 			}
 		}
+
+		public void
+				removeExtraTreeEventListener(ExtraTreeEventListener listener) {
+			listenerList.remove(listener);
+		}
+	}
+
+	public enum ExtraTreeEventType {
+		DBL_CLICK, RIGHT_CLICK
 	}
 }

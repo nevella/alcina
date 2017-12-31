@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.ArrayList;
@@ -49,7 +48,8 @@ public class ObjectActionLinkCustomiser implements Customiser {
 		for (NamedParameter p : info.parameters()) {
 			if (p.name().equals(ACTION_CLASS)) {
 				Class c = p.classValue();
-				actions.add((PermissibleAction) Reflections.classLookup().newInstance(c));
+				actions.add((PermissibleAction) Reflections.classLookup()
+						.newInstance(c));
 			}
 		}
 		return new ObjectActionLinkProvider(actions);
@@ -57,36 +57,6 @@ public class ObjectActionLinkCustomiser implements Customiser {
 
 	public static class ObjectActionLink extends AbstractBoundWidget {
 		private FlowPanel fp;
-
-		public ObjectActionLink() {
-			this.fp = new FlowPanel();
-			initWidget(fp);
-		}
-		public ObjectActionLink(List<PermissibleAction> vetoableActions,Object value) {
-			this();
-			setModel(value);
-			setVetoableActions(vetoableActions);
-			setValue(value);
-		}
-		public void setValue(Object value) {
-			setVisible(value!=null);
-		}
-
-		public Object getValue() {
-			return null;
-		}
-
-		public void setVetoableActions(List<PermissibleAction> vetoableActions) {
-			this.vetoableActions = vetoableActions;
-			for (PermissibleAction a : vetoableActions) {
-				Link<PermissibleAction> hl = new Link<PermissibleAction>(a
-						.getDisplayName(), actionCl);
-				hl.setWordWrap(false);
-				hl.setUserObject(a);
-				fp.add(hl);
-				fp.add(UsefulWidgetFactory.createSpacer(2));
-			}
-		}
 
 		private ClickHandler actionCl = new ClickHandler() {
 			public void onClick(ClickEvent event) {
@@ -98,14 +68,49 @@ public class ObjectActionLinkCustomiser implements Customiser {
 			}
 		};
 
+		private List<PermissibleAction> vetoableActions;
+
+		public ObjectActionLink() {
+			this.fp = new FlowPanel();
+			initWidget(fp);
+		}
+
+		public ObjectActionLink(List<PermissibleAction> vetoableActions,
+				Object value) {
+			this();
+			setModel(value);
+			setVetoableActions(vetoableActions);
+			setValue(value);
+		}
+
+		public Object getValue() {
+			return null;
+		}
+
 		public List<PermissibleAction> getVetoableActions() {
 			return vetoableActions;
 		}
 
-		private List<PermissibleAction> vetoableActions;
+		public void setValue(Object value) {
+			setVisible(value != null);
+		}
+
+		public void
+				setVetoableActions(List<PermissibleAction> vetoableActions) {
+			this.vetoableActions = vetoableActions;
+			for (PermissibleAction a : vetoableActions) {
+				Link<PermissibleAction> hl = new Link<PermissibleAction>(
+						a.getDisplayName(), actionCl);
+				hl.setWordWrap(false);
+				hl.setUserObject(a);
+				fp.add(hl);
+				fp.add(UsefulWidgetFactory.createSpacer(2));
+			}
+		}
 	}
 
-	public static class ObjectActionLinkProvider implements BoundWidgetProvider {
+	public static class ObjectActionLinkProvider
+			implements BoundWidgetProvider {
 		private final List<PermissibleAction> actions;
 
 		public ObjectActionLinkProvider(List<PermissibleAction> actions) {

@@ -51,18 +51,6 @@ public abstract class TourManager implements NativePreviewHandler {
 
 	protected Step step;
 
-	protected void refreshTourView() {
-		if (consort != null) {
-			consort.cancel();
-		}
-		consort = new DisplayStepConsort(null);
-		consort.start();
-	}
-
-	public static enum DisplayStepPhase {
-		SETUP, WAIT_FOR, IGNORE_IF, PERFORM_ACTION, SHOW_POPUP
-	}
-
 	public TopicListener<StepPopupView.Action> stepListener = new TopicListener<StepPopupView.Action>() {
 		@Override
 		public void topicPublished(String key, Action message) {
@@ -108,29 +96,6 @@ public abstract class TourManager implements NativePreviewHandler {
 		}
 	}
 
-	protected void exitTour(String string) {
-		Registry.impl(ClientNotifications.class).showMessage(string);
-	}
-
-	protected void setPopupsModal(boolean modal) {
-		for (DecoratedRelativePopupPanel popupPanel : popups) {
-			popupPanel.setModal(modal);
-		}
-	}
-
-	protected void clearPopups() {
-		for (DecoratedRelativePopupPanel popupPanel : popups) {
-			StepPopupView stepView = (StepPopupView) popupPanel.getWidget();
-			stepView.topicPublisher.removeTopicListener(null, stepListener);
-			popupPanel.hide();
-		}
-		popups.clear();
-		if (nativePreviewHandlerRegistration != null) {
-			nativePreviewHandlerRegistration.removeHandler();
-			nativePreviewHandlerRegistration = null;
-		}
-	}
-
 	public void startTourWithJson(String tourJson, boolean autoplay,
 			AsyncCallback completionCallback) {
 		this.completionCallback = completionCallback;
@@ -148,6 +113,41 @@ public abstract class TourManager implements NativePreviewHandler {
 		this.tourJson = tourJson.replaceFirst("var sample = ", "");
 		currentTour = TourModel.fromJson(this.tourJson);
 		refreshTourView();
+	}
+
+	protected void clearPopups() {
+		for (DecoratedRelativePopupPanel popupPanel : popups) {
+			StepPopupView stepView = (StepPopupView) popupPanel.getWidget();
+			stepView.topicPublisher.removeTopicListener(null, stepListener);
+			popupPanel.hide();
+		}
+		popups.clear();
+		if (nativePreviewHandlerRegistration != null) {
+			nativePreviewHandlerRegistration.removeHandler();
+			nativePreviewHandlerRegistration = null;
+		}
+	}
+
+	protected void exitTour(String string) {
+		Registry.impl(ClientNotifications.class).showMessage(string);
+	}
+
+	protected void refreshTourView() {
+		if (consort != null) {
+			consort.cancel();
+		}
+		consort = new DisplayStepConsort(null);
+		consort.start();
+	}
+
+	protected void setPopupsModal(boolean modal) {
+		for (DecoratedRelativePopupPanel popupPanel : popups) {
+			popupPanel.setModal(modal);
+		}
+	}
+
+	public static enum DisplayStepPhase {
+		SETUP, WAIT_FOR, IGNORE_IF, PERFORM_ACTION, SHOW_POPUP
 	}
 
 	class DisplayStepConsort extends AllStatesConsort<DisplayStepPhase> {
@@ -192,6 +192,123 @@ public abstract class TourManager implements NativePreviewHandler {
 			}
 		}
 
+		@Override
+		public void runPlayer(AllStatesPlayer player, DisplayStepPhase next) {
+			if (!isRunning()) {
+				return;
+			}
+			switch (next) {
+			case SETUP:
+				render();
+				wasPlayed(player);
+				break;
+			case WAIT_FOR:
+				if (waitFor()) {
+					wasPlayed(player);
+				} else {
+					retry(player, next, 200);
+				}
+				break;
+			case IGNORE_IF:
+				if (checkIgnore()) {
+					finished();
+					if (currentTour.hasNext()) {
+						stepListener.topicPublished(null, Action.NEXT);
+					}
+				} else {
+					wasPlayed(player);
+				}
+				break;
+			case PERFORM_ACTION:
+				if (checkIgnoreAction() || performAction()) {
+					wasPlayed(player);
+				} else {
+					retry(player, next, 200);
+				}
+				break;
+			case SHOW_POPUP:
+				if (showStepPopups()) {
+					wasPlayed(player);
+				} else {
+					retry(player, next, 200);
+				}
+				break;
+			}
+		}
+
+		/*
+		 * return true if we should ignore this step
+		 */
+		private boolean checkIgnore() {
+			Condition ignoreIf = step.getIgnoreIf();
+			if (ignoreIf != null) {
+				return evaluateCondition(ignoreIf);
+			}
+			return false;
+		}
+
+		private boolean checkIgnoreAction() {
+			Condition ignoreActionIf = step.getIgnoreActionIf();
+			if (ignoreActionIf != null) {
+				return evaluateCondition(ignoreActionIf);
+			}
+			return false;
+		}
+
+		private boolean evaluateCondition(Condition condition) {
+			Operator operator = condition.getOperator();
+			int conditionCount = 0;
+			int passCount = 0;
+			for (String selector : condition.getSelectors()) {
+				conditionCount++;
+				passCount += getElement(
+						Collections.singletonList(selector)) != null ? 1 : 0;
+			}
+			for (Condition child : condition.getConditions()) {
+				conditionCount++;
+				passCount += evaluateCondition(child) ? 1 : 0;
+			}
+			switch (operator) {
+			case AND:
+				return conditionCount == passCount;
+			case OR:
+				return passCount > 0;
+			case NOT:
+				return passCount == 0;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+
+		private boolean performAction() {
+			Condition targetCondition = step.getTarget();
+			if (targetCondition == null) {
+				return true;
+			}
+			final Element target = getElement(targetCondition.getSelectors());
+			if (target == null) {
+				return false;
+			}
+			switch (step.getAction()) {
+			case NONE:
+				break;
+			case CLICK:
+				setPopupsModal(false);
+				WidgetUtils.click(target);
+				setPopupsModal(true);
+				break;
+			case SET_TEXT:
+				setPopupsModal(false);
+				WidgetUtils.click(target);
+				target.setPropertyString("value", step.getActionValue());
+				setPopupsModal(false);
+				WidgetUtils.click(target);
+				setPopupsModal(true);
+				break;
+			}
+			return true;
+		}
+
 		private void render() {
 			clearPopups();
 			step = currentTour.getCurrentStep();
@@ -227,15 +344,28 @@ public abstract class TourManager implements NativePreviewHandler {
 				if (pointerRightMargin != 0) {
 					WidgetUtils
 							.getElementForSelector(popup.getElement(),
-									".popupBottomCenterInner").getStyle()
+									".popupBottomCenterInner")
+							.getStyle()
 							.setMarginRight(pointerRightMargin, Unit.PX);
 					WidgetUtils
 							.getElementForSelector(popup.getElement(),
-									".popupTopCenterInner").getStyle()
+									".popupTopCenterInner")
+							.getStyle()
 							.setMarginRight(pointerRightMargin, Unit.PX);
 				}
 				popups.add(popup);
 			}
+		}
+
+		/*
+		 * return false if we need to keep waiting
+		 */
+		private boolean waitFor() {
+			Condition waitFor = step.getWaitFor();
+			if (waitFor != null) {
+				return evaluateCondition(waitFor);
+			}
+			return true;
 		}
 
 		protected boolean showStepPopups() {
@@ -244,8 +374,8 @@ public abstract class TourManager implements NativePreviewHandler {
 				PopupInfo popupInfo = view.popupInfo;
 				RelativePopupPositioningParams params = new RelativePopupPositioningParams();
 				RelativeTo relativeTo = popupInfo.getRelativeTo();
-				params.relativeToElement = WidgetUtils.getElementForSelector(
-						null, relativeTo.getElement());
+				params.relativeToElement = WidgetUtils
+						.getElementForSelector(null, relativeTo.getElement());
 				if (params.relativeToElement != null) {
 					params.boundingWidget = RootPanel.get();
 					params.relativeContainer = RootPanel.get();
@@ -293,105 +423,6 @@ public abstract class TourManager implements NativePreviewHandler {
 			super.timedOut(allStatesPlayer, state);
 		}
 
-		@Override
-		public void runPlayer(AllStatesPlayer player, DisplayStepPhase next) {
-			if (!isRunning()) {
-				return;
-			}
-			switch (next) {
-			case SETUP:
-				render();
-				wasPlayed(player);
-				break;
-			case WAIT_FOR:
-				if (waitFor()) {
-					wasPlayed(player);
-				} else {
-					retry(player, next, 200);
-				}
-				break;
-			case IGNORE_IF:
-				if (checkIgnore()) {
-					finished();
-					if (currentTour.hasNext()) {
-						stepListener.topicPublished(null, Action.NEXT);
-					}
-				} else {
-					wasPlayed(player);
-				}
-				break;
-			case PERFORM_ACTION:
-				if (checkIgnoreAction() || performAction()) {
-					wasPlayed(player);
-				} else {
-					retry(player, next, 200);
-				}
-				break;
-			case SHOW_POPUP:
-				if (showStepPopups()) {
-					wasPlayed(player);
-				} else {
-					retry(player, next, 200);
-				}
-				break;
-			}
-		}
-
-		private boolean checkIgnoreAction() {
-			Condition ignoreActionIf = step.getIgnoreActionIf();
-			if (ignoreActionIf != null) {
-				return evaluateCondition(ignoreActionIf);
-			}
-			return false;
-		}
-
-		/*
-		 * return false if we need to keep waiting
-		 */
-		private boolean waitFor() {
-			Condition waitFor = step.getWaitFor();
-			if (waitFor != null) {
-				return evaluateCondition(waitFor);
-			}
-			return true;
-		}
-
-		/*
-		 * return true if we should ignore this step
-		 */
-		private boolean checkIgnore() {
-			Condition ignoreIf = step.getIgnoreIf();
-			if (ignoreIf != null) {
-				return evaluateCondition(ignoreIf);
-			}
-			return false;
-		}
-
-		private boolean evaluateCondition(Condition condition) {
-			Operator operator = condition.getOperator();
-			int conditionCount = 0;
-			int passCount = 0;
-			for (String selector : condition.getSelectors()) {
-				conditionCount++;
-				passCount += getElement(Collections.singletonList(selector)) != null ? 1
-						: 0;
-			}
-			for (Condition child : condition.getConditions()) {
-				conditionCount++;
-				passCount += evaluateCondition(child) ? 1 : 0;
-			}
-			switch (operator) {
-			case AND:
-				return conditionCount == passCount;
-			case OR:
-				return passCount > 0;
-			case NOT:
-				return passCount == 0;
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
-
 		Element getElement(List<String> selectors) {
 			Element selected = null;
 			for (String selector : selectors) {
@@ -402,35 +433,6 @@ public abstract class TourManager implements NativePreviewHandler {
 				}
 			}
 			return null;
-		}
-
-		private boolean performAction() {
-			Condition targetCondition = step.getTarget();
-			if (targetCondition == null) {
-				return true;
-			}
-			final Element target = getElement(targetCondition.getSelectors());
-			if (target == null) {
-				return false;
-			}
-			switch (step.getAction()) {
-			case NONE:
-				break;
-			case CLICK:
-				setPopupsModal(false);
-				WidgetUtils.click(target);
-				setPopupsModal(true);
-				break;
-			case SET_TEXT:
-				setPopupsModal(false);
-				WidgetUtils.click(target);
-				target.setPropertyString("value", step.getActionValue());
-				setPopupsModal(false);
-				WidgetUtils.click(target);
-				setPopupsModal(true);
-				break;
-			}
-			return true;
 		}
 	}
 }

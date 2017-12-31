@@ -11,10 +11,11 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions;
+
 /**
  * Marker interface, asks the client to call synchronous server performer
+ * 
  * @author nick@alcina.cc
  *
  */

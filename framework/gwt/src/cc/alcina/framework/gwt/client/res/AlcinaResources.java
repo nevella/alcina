@@ -10,14 +10,14 @@ public interface AlcinaResources extends ClientBundle {
 	public static final AlcinaResources INSTANCE = GWT
 			.create(AlcinaResources.class);
 
+	@Source("app-properties.txt")
+	public TextResource appProperties();
+
 	@Source("Alcina.css")
 	public SimpleCssResource css();
 
 	@Source("Alcina-iepre9.css")
 	public TextResource cssIePre9();
-
-	@Source("app-properties.txt")
-	public TextResource appProperties();
 
 	@Source("gwt-standard.css")
 	public SimpleCssResource gwtStandardCss();

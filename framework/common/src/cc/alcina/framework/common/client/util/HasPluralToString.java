@@ -11,10 +11,11 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.util;
+
 /**
  * When a collection needs a string representation as "All of me"
+ * 
  * @author nick@alcina.cc
  *
  */

@@ -26,28 +26,28 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  * Custom field serializer for {@link java.util.HashSet}.
  */
 @SuppressWarnings("rawtypes")
-public final class HashSet_CustomFieldSerializer extends
-    CustomFieldSerializer<HashSet> {
+public final class HashSet_CustomFieldSerializer
+		extends CustomFieldSerializer<HashSet> {
+	public static void deserialize(SerializationStreamReader streamReader,
+			HashSet instance) throws SerializationException {
+		Collection_CustomFieldSerializerBase.deserialize(streamReader,
+				instance);
+	}
 
-  public static void deserialize(SerializationStreamReader streamReader,
-      HashSet instance) throws SerializationException {
-    Collection_CustomFieldSerializerBase.deserialize(streamReader, instance);
-  }
+	public static void serialize(SerializationStreamWriter streamWriter,
+			HashSet instance) throws SerializationException {
+		Collection_CustomFieldSerializerBase.serialize(streamWriter, instance);
+	}
 
-  public static void serialize(SerializationStreamWriter streamWriter,
-      HashSet instance) throws SerializationException {
-    Collection_CustomFieldSerializerBase.serialize(streamWriter, instance);
-  }
+	@Override
+	public void deserializeInstance(SerializationStreamReader streamReader,
+			HashSet instance) throws SerializationException {
+		deserialize(streamReader, instance);
+	}
 
-  @Override
-  public void deserializeInstance(SerializationStreamReader streamReader,
-      HashSet instance) throws SerializationException {
-    deserialize(streamReader, instance);
-  }
-
-  @Override
-  public void serializeInstance(SerializationStreamWriter streamWriter,
-      HashSet instance) throws SerializationException {
-    serialize(streamWriter, instance);
-  }
+	@Override
+	public void serializeInstance(SerializationStreamWriter streamWriter,
+			HashSet instance) throws SerializationException {
+		serialize(streamWriter, instance);
+	}
 }

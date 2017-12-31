@@ -20,63 +20,64 @@ import com.google.gwt.core.client.JavaScriptObject;
 /**
  * Organizes form controls into logical groups.
  * 
- * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#edef-FIELDSET">W3C HTML Specification</a>
+ * @see <a href=
+ *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#edef-FIELDSET">
+ *      W3C HTML Specification</a>
  */
 @TagName(FieldSetElement.TAG)
 public class FieldSetElement extends Element {
+	public static final String TAG = "fieldset";
 
-  public static final String TAG = "fieldset";
+	/**
+	 * Assert that the given {@link Element} is compatible with this class and
+	 * automatically typecast it.
+	 */
+	public static FieldSetElement as(Element elem) {
+		assert is(elem);
+		return (FieldSetElement) elem;
+	}
 
-  /**
-   * Assert that the given {@link Element} is compatible with this class and
-   * automatically typecast it.
-   */
-  public static FieldSetElement as(Element elem) {
-    assert is(elem);
-    return (FieldSetElement) elem;
-  }
+	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
 
-  /**
-   * Determines whether the given {@link JavaScriptObject} can be cast to
-   * this class. A <code>null</code> object will cause this method to
-   * return <code>false</code>.
-   */
-  public static boolean is(JavaScriptObject o) {
-    if (Element.is(o)) {
-      return is(Element.as(o));
-    }
-    return false;
-  }
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to this
+	 * class. A <code>null</code> object will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(JavaScriptObject o) {
+		if (Element.is(o)) {
+			return is(Element.as(o));
+		}
+		return false;
+	}
 
-  /**
-   * Determine whether the given {@link Node} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Node node) {
-    if (Element.is(node)) {
-      return is((Element) node);
-    }
-    return false;
-  }
-  
-  /**
-   * Determine whether the given {@link Element} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Element elem) {
-    return elem != null && elem.hasTagName(TAG);
-  }
+	/**
+	 * Determine whether the given {@link Node} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		if (Element.is(node)) {
+			return is((Element) node);
+		}
+		return false;
+	}
 
-  protected FieldSetElement() {
-  }
+	protected FieldSetElement() {
+	}
 
-  /**
-   * Returns the FORM element containing this control. Returns null if this
-   * control is not within the context of a form.
-   */  public  FormElement getForm(){
-  throw new FixmeUnsupportedOperationException();
-}
-
+	/**
+	 * Returns the FORM element containing this control. Returns null if this
+	 * control is not within the context of a form.
+	 */
+	public FormElement getForm() {
+		throw new FixmeUnsupportedOperationException();
+	}
 }

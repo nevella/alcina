@@ -20,15 +20,20 @@ import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
-@RegistryLocation( registryPoint = TreeRenderer.class, targetClass = CriteriaGroup.class)
+@RegistryLocation(registryPoint = TreeRenderer.class, targetClass = CriteriaGroup.class)
 /**
  *
  * @author Nick Reddel
  */
-public class CriteriaGroupRenderer<T extends CriteriaGroup> extends
-		AbstractRenderer<T> {
+public class CriteriaGroupRenderer<T extends CriteriaGroup>
+		extends AbstractRenderer<T> {
 	public Collection<? extends TreeRenderable> renderableChildren() {
 		return getRenderable().getCriteria();
+	}
+
+	@Override
+	public String renderableText() {
+		return getRenderable().asString(false, false);
 	}
 
 	@Override
@@ -41,13 +46,7 @@ public class CriteriaGroupRenderer<T extends CriteriaGroup> extends
 		return "sub-head";
 	}
 
-
 	public RenderInstruction renderInstruction() {
 		return RenderInstruction.AS_TITLE;
-	}
-
-	@Override
-	public String renderableText() {
-		return getRenderable().asString(false, false);
 	}
 }

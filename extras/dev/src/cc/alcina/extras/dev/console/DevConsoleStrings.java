@@ -22,60 +22,21 @@ public class DevConsoleStrings {
 
 	public List<DevConsoleString> strings = new ArrayList<DevConsoleString>();
 
-	public static class DevConsoleString {
-		public List<String> tags = new ArrayList<String>();
-
-		public String content;
-
-		public String name;
-
-		public DevConsoleString(String name, List<String> tags, String content) {
-			this.tags = tags;
-			this.content = content;
-			this.name = name;
-		}
-
-		public DevConsoleString() {
-		}
-
-		public boolean hasTags(List<String> test) {
-			test.remove("");
-			tag_loop: for (String tag : test) {
-				for (String existing : tags) {
-					if (existing.toLowerCase().equals(tag.toLowerCase())) {
-						continue tag_loop;
-					}
-				}
-				// not matched
-				return false;
-			}
-			return true;
-		}
-	}
-
 	public void add(String name, List<String> tags, String content) {
 		DevConsoleString dcs = new DevConsoleString(name, tags, content);
 		strings.add(dcs);
 		remap();
 	}
 
-	public void remove(final String name) {
+	public DevConsoleString get(final String name) {
 		CollectionFilter<DevConsoleString> hasNameFilter = new CollectionFilter<DevConsoleStrings.DevConsoleString>() {
 			@Override
 			public boolean allow(DevConsoleString o) {
-				return o.name.toLowerCase().startsWith(name);
+				return o.name.equals(name);
 			}
 		};
-		CollectionFilters.filterInPlace(strings, new InverseFilter(
-				hasNameFilter));
-		remap();
-	}
-
-	private void remap() {
-		tags.clear();
-		for (DevConsoleString s : strings) {
-			tags.addAll(s.tags);
-		}
+		return CommonUtils
+				.last(CollectionFilters.filter(strings, hasNameFilter));
 	}
 
 	public List<DevConsoleString> list(final List<String> tags) {
@@ -92,13 +53,54 @@ public class DevConsoleStrings {
 		return tags;
 	}
 
-	public DevConsoleString get(final String name) {
+	public void remove(final String name) {
 		CollectionFilter<DevConsoleString> hasNameFilter = new CollectionFilter<DevConsoleStrings.DevConsoleString>() {
 			@Override
 			public boolean allow(DevConsoleString o) {
-				return o.name.equals(name);
+				return o.name.toLowerCase().startsWith(name);
 			}
 		};
-		return CommonUtils.last( CollectionFilters.filter(strings, hasNameFilter));
+		CollectionFilters.filterInPlace(strings,
+				new InverseFilter(hasNameFilter));
+		remap();
+	}
+
+	private void remap() {
+		tags.clear();
+		for (DevConsoleString s : strings) {
+			tags.addAll(s.tags);
+		}
+	}
+
+	public static class DevConsoleString {
+		public List<String> tags = new ArrayList<String>();
+
+		public String content;
+
+		public String name;
+
+		public DevConsoleString() {
+		}
+
+		public DevConsoleString(String name, List<String> tags,
+				String content) {
+			this.tags = tags;
+			this.content = content;
+			this.name = name;
+		}
+
+		public boolean hasTags(List<String> test) {
+			test.remove("");
+			tag_loop: for (String tag : test) {
+				for (String existing : tags) {
+					if (existing.toLowerCase().equals(tag.toLowerCase())) {
+						continue tag_loop;
+					}
+				}
+				// not matched
+				return false;
+			}
+			return true;
+		}
 	}
 }

@@ -59,12 +59,15 @@ public class DomainObjectSuggestCustomiser
 
 	private Class suggestionRendererClassValue;
 
-	public boolean isShowOnFocus() {
-		return this.showOnFocus;
-	}
-
-	public void setShowOnFocus(boolean showOnFocus) {
-		this.showOnFocus = showOnFocus;
+	@Override
+	public BoundWidget get() {
+		BoundSuggestBox boundSuggestBox = new BoundSuggestBox<>();
+		boundSuggestBox.setRenderer(getRenderer());
+		boundSuggestBox.setWithPlaceholder(withPlaceholder);
+		boundSuggestBox.suggestOracle(
+				new BoundSuggestOracle().clazz(classValue).hint(hintValue));
+		boundSuggestBox.setShowOnFocus(showOnFocus);
+		return boundSuggestBox;
 	}
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
@@ -91,6 +94,19 @@ public class DomainObjectSuggestCustomiser
 												multiple, info);
 	}
 
+	public Renderer getRenderer() {
+		return (Renderer) Reflections.classLookup()
+				.newInstance(rendererClassValue);
+	}
+
+	public boolean isShowOnFocus() {
+		return this.showOnFocus;
+	}
+
+	public void setShowOnFocus(boolean showOnFocus) {
+		this.showOnFocus = showOnFocus;
+	}
+
 	@ClientInstantiable
 	public static class BoundSuggestOracleResponseTypeRenderer
 			implements Renderer<BoundSuggestOracleResponseType, String> {
@@ -99,6 +115,7 @@ public class DomainObjectSuggestCustomiser
 			return o == null ? null : o.toSuggestionResultString();
 		}
 	}
+
 	@ClientInstantiable
 	public static class BoundSuggestOracleResponseTypeSuggestionRenderer
 			implements Renderer<BoundSuggestOracleResponseType, String> {
@@ -106,21 +123,5 @@ public class DomainObjectSuggestCustomiser
 		public String render(BoundSuggestOracleResponseType o) {
 			return o == null ? null : o.toSuggestionString();
 		}
-	}
-
-	@Override
-	public BoundWidget get() {
-		BoundSuggestBox boundSuggestBox = new BoundSuggestBox<>();
-		boundSuggestBox.setRenderer(getRenderer());
-		boundSuggestBox.setWithPlaceholder(withPlaceholder);
-		boundSuggestBox.suggestOracle(
-				new BoundSuggestOracle().clazz(classValue).hint(hintValue));
-		boundSuggestBox.setShowOnFocus(showOnFocus);
-		return boundSuggestBox;
-	}
-
-	public Renderer getRenderer() {
-		return (Renderer) Reflections.classLookup()
-				.newInstance(rendererClassValue);
 	}
 }

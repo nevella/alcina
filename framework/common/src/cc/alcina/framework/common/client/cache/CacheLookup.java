@@ -166,14 +166,6 @@ public class CacheLookup<T, H extends HasIdAndLocalId>
 		}
 	}
 
-	private void remove(T k1, Long value) {
-		checkModification("remove");
-		Set<Long> set = get(k1);
-		if (set != null) {
-			set.remove(value);
-		}
-	}
-
 	public void removeExisting(H hili) {
 		H existing = (H) privateCache.getExisting(hili);
 		if (existing != null) {
@@ -218,6 +210,14 @@ public class CacheLookup<T, H extends HasIdAndLocalId>
 
 	private T normalise(T k1) {
 		return normaliser == null || k1 == null ? k1 : normaliser.convert(k1);
+	}
+
+	private void remove(T k1, Long value) {
+		checkModification("remove");
+		Set<Long> set = get(k1);
+		if (set != null) {
+			set.remove(value);
+		}
 	}
 
 	private <V> Set<V> wrapWithModificationChecker(Set<V> set) {

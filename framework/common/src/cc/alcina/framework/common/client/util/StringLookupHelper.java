@@ -22,10 +22,13 @@ public class StringLookupHelper {
 				"\n");
 	}
 
-	public static String
-			nullSafeEqString(HasEquivalenceString hasEquivalenceString) {
-		return hasEquivalenceString == null ? NULL
-				: hasEquivalenceString.equivalenceString();
+	public static String equivalenceString(Object... args) {
+		StringBuilder sb = new StringBuilder();
+		for (Object object : args) {
+			sb.append(object == null ? NULL : object.toString());
+			sb.append("\n");
+		}
+		return sb.toString();
 	}
 
 	public static <T> Multimap<String, List<T>> generateLookup(
@@ -43,20 +46,17 @@ public class StringLookupHelper {
 		return l1.allItems();
 	}
 
+	public static String
+			nullSafeEqString(HasEquivalenceString hasEquivalenceString) {
+		return hasEquivalenceString == null ? NULL
+				: hasEquivalenceString.equivalenceString();
+	}
+
 	public static <T> Collection<T> removeAll(Collection<T> o1,
 			Collection<T> o2, Converter<T, String> converter) {
 		Multimap<String, List<T>> l1 = generateLookup(o1, converter);
 		Multimap<String, List<T>> l2 = generateLookup(o2, converter);
 		l1.keySet().removeAll(l2.keySet());
 		return l1.allItems();
-	}
-
-	public static String equivalenceString(Object... args) {
-		StringBuilder sb = new StringBuilder();
-		for (Object object : args) {
-			sb.append(object == null ? NULL : object.toString());
-			sb.append("\n");
-		}
-		return sb.toString();
 	}
 }

@@ -25,12 +25,15 @@ public class FilterableTreeItem extends TreeItem implements
 		VisualFilterableWithParentEnforcesChildVisibility, NodeFactoryProvider {
 	private NodeFactory nodeFactory;
 
-	public boolean filter(String filterText) {
-		return filter(filterText, false);
+	public FilterableTreeItem() {
 	}
 
-	protected boolean satisfiesFilter(String filterText) {
-		return getText().toLowerCase().contains(filterText);
+	public FilterableTreeItem(NodeFactory nodeFactory) {
+		this.nodeFactory = nodeFactory;
+	}
+
+	public boolean filter(String filterText) {
+		return filter(filterText, false);
 	}
 
 	public boolean filter(String filterText, boolean enforceVisible) {
@@ -52,11 +55,8 @@ public class FilterableTreeItem extends TreeItem implements
 		return satisfiesFilterThisNode;
 	}
 
-	public FilterableTreeItem() {
-	}
-
-	public FilterableTreeItem(NodeFactory nodeFactory) {
-		this.nodeFactory = nodeFactory;
+	public NodeFactory getNodeFactory() {
+		return this.nodeFactory;
 	}
 
 	@Override
@@ -65,7 +65,7 @@ public class FilterableTreeItem extends TreeItem implements
 		return text == null ? "" : text;
 	}
 
-	public NodeFactory getNodeFactory() {
-		return this.nodeFactory;
+	protected boolean satisfiesFilter(String filterText) {
+		return getText().toLowerCase().contains(filterText);
 	}
 }

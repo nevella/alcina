@@ -11,14 +11,16 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.publication;
+
 /**
  * Marker interface for publication content
+ * 
  * @author nick@alcina.cc
  *
  */
 public interface ContentDefinition {
-	public String toString();
 	public String getPublicationType();
+
+	public String toString();
 }

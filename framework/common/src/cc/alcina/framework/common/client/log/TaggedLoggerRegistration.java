@@ -27,7 +27,7 @@ public class TaggedLoggerRegistration {
 		if (clazz != null && clazz != this.clazz) {
 			return false;
 		}
-		if(this.tags.isEmpty()||tags.length==0){
+		if (this.tags.isEmpty() || tags.length == 0) {
 			return true;
 		}
 		for (Object tag : tags) {

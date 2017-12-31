@@ -13,7 +13,7 @@ public class DurationCounter {
 		} else {
 			Object[] t = new Object[args.length + 1];
 			System.arraycopy(args, 0, t, 0, args.length);
-			t[t.length-1] = iArgs[0];
+			t[t.length - 1] = iArgs[0];
 			iArgs = t;
 		}
 		System.out.println(CommonUtils.formatJ(message, iArgs));

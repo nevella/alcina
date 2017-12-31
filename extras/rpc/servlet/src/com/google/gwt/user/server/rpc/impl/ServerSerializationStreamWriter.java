@@ -52,335 +52,10 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
  * collection deser data (collections differently cos hashcodes are important )
  *
  */
-public final class ServerSerializationStreamWriter extends
-		AbstractSerializationStreamWriter {
+public final class ServerSerializationStreamWriter
+		extends AbstractSerializationStreamWriter {
 	public static final String CONTEXT_CALLING_UA_IE = ServerSerializationStreamWriter.class
 			.getName() + ".CONTEXT_CALLING_UA_IE";
-
-	/**
-	 * Builds a string that evaluates into an array containing the given
-	 * elements. This class exists to work around a bug in IE6/7 that limits the
-	 * size of array literals. NR - in fact, slightly better implementation used
-	 * (LengthConstrainedArrayIE) for IE but there are still issues with >100000
-	 * objects
-	 */
-	public static class LengthConstrainedArray {
-		public static final int MAXIMUM_ARRAY_LENGTH = 1 << 15;
-
-		private static final String POSTLUDE = "])";
-
-		private static final String PRELUDE = "].concat([";
-
-		private final StringBuffer buffer;
-
-		private int count = 0;
-
-		private boolean needsComma = false;
-
-		private int total = 0;
-
-		private boolean javascript = false;
-
-		public LengthConstrainedArray() {
-			buffer = new StringBuffer();
-		}
-
-		public LengthConstrainedArray(int capacityGuess) {
-			buffer = new StringBuffer(capacityGuess);
-		}
-
-		public void addEscapedToken(String token) {
-			addToken(escapeString(token, true, this));
-		}
-
-		public void addToken(CharSequence token) {
-			total++;
-			if (count++ == MAXIMUM_ARRAY_LENGTH) {
-				if (total == MAXIMUM_ARRAY_LENGTH + 1) {
-					buffer.append(PRELUDE);
-					javascript = true;
-				} else {
-					buffer.append("],[");
-				}
-				count = 0;
-				needsComma = false;
-			}
-			if (needsComma) {
-				buffer.append(",");
-			} else {
-				needsComma = true;
-			}
-			buffer.append(token);
-		}
-
-		public void addToken(int i) {
-			addToken(String.valueOf(i));
-		}
-
-		public boolean isJavaScript() {
-			return javascript;
-		}
-
-		public void setJavaScript(boolean javascript) {
-			this.javascript = javascript;
-		}
-
-		@Override
-		public String toString() {
-			if (total > MAXIMUM_ARRAY_LENGTH) {
-				return "[" + buffer.toString() + POSTLUDE;
-			} else {
-				return "[" + buffer.toString() + "]";
-			}
-		}
-	}
-
-	/**
-	 * Builds a string that evaluates into an array containing the given
-	 * elements. This class exists to work around a bug in IE6/7 that limits the
-	 * size of array literals.
-	 */
-	public static class LengthConstrainedArrayIE extends LengthConstrainedArray {
-		public static final int MAXIMUM_ARRAY_LENGTH = 1 << 15;
-
-		private StringBuffer buffer;
-
-		private int count = 0;
-
-		private int totalCount = 0;
-
-		List<StringBuffer> buffers = new ArrayList<StringBuffer>();
-
-		public LengthConstrainedArrayIE() {
-			buffer = new StringBuffer();
-			buffers.add(buffer);
-		}
-
-		public LengthConstrainedArrayIE(int capacityGuess) {
-			buffer = new StringBuffer(capacityGuess);
-			buffers.add(buffer);
-		}
-
-		public void addToken(CharSequence token) {
-			totalCount++;
-			if (count++ == MAXIMUM_ARRAY_LENGTH) {
-				buffer = new StringBuffer();
-				buffers.add(buffer);
-				count = 0;
-			}
-			if (buffer.length() > 0) {
-				buffer.append(",");
-			}
-			buffer.append(token);
-		}
-
-		public void addToken(int i) {
-			addToken(String.valueOf(i));
-		}
-
-		@Override
-		public String toString() {
-			if (totalCount > 100000) {
-				AlcinaTopics.notifyDevWarning(new Exception(
-						"IE - writing large blob"));
-			}
-			if (buffers.size() > 1) {
-				StringBuilder b2 = new StringBuilder();
-				b2.append("(function(){");
-				List<String> arrIds = new ArrayList<String>();
-				int idx = 1;
-				for (StringBuffer buffer : buffers) {
-					String arrId = String.format("arr%s", idx++);
-					arrIds.add(arrId);
-					b2.append(String.format("var %s=[%s];", arrId,
-							buffer.toString()));
-				}
-				b2.append(String.format("return [].concat(%s);})()",
-						CommonUtils.join(arrIds, ",")));
-				return b2.toString();
-			} else {
-				return "[" + buffer.toString() + "]";
-			}
-		}
-	}
-
-	/**
-	 * Enumeration used to provided typed instance writers.
-	 */
-	private enum ValueWriter {
-		BOOLEAN {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				stream.writeBoolean(((Boolean) instance).booleanValue());
-			}
-		},
-		BYTE {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				stream.writeByte(((Byte) instance).byteValue());
-			}
-		},
-		CHAR {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				stream.writeChar(((Character) instance).charValue());
-			}
-		},
-		DOUBLE {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				stream.writeDouble(((Double) instance).doubleValue());
-			}
-		},
-		FLOAT {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				stream.writeFloat(((Float) instance).floatValue());
-			}
-		},
-		INT {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				stream.writeInt(((Integer) instance).intValue());
-			}
-		},
-		LONG {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				stream.writeLong(((Long) instance).longValue());
-			}
-		},
-		OBJECT {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance)
-					throws SerializationException {
-				stream.writeObject(instance);
-			}
-		},
-		SHORT {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				stream.writeShort(((Short) instance).shortValue());
-			}
-		},
-		STRING {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				stream.writeString((String) instance);
-			}
-		};
-		abstract void write(ServerSerializationStreamWriter stream,
-				Object instance) throws SerializationException;
-	}
-
-	/**
-	 * Enumeration used to provided typed vector writers.
-	 */
-	private enum VectorWriter {
-		BOOLEAN_VECTOR {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				boolean[] vector = (boolean[]) instance;
-				stream.writeInt(vector.length);
-				for (int i = 0, n = vector.length; i < n; ++i) {
-					stream.writeBoolean(vector[i]);
-				}
-			}
-		},
-		BYTE_VECTOR {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				byte[] vector = (byte[]) instance;
-				stream.writeInt(vector.length);
-				for (int i = 0, n = vector.length; i < n; ++i) {
-					stream.writeByte(vector[i]);
-				}
-			}
-		},
-		CHAR_VECTOR {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				char[] vector = (char[]) instance;
-				stream.writeInt(vector.length);
-				for (int i = 0, n = vector.length; i < n; ++i) {
-					stream.writeChar(vector[i]);
-				}
-			}
-		},
-		DOUBLE_VECTOR {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				double[] vector = (double[]) instance;
-				stream.writeInt(vector.length);
-				for (int i = 0, n = vector.length; i < n; ++i) {
-					stream.writeDouble(vector[i]);
-				}
-			}
-		},
-		FLOAT_VECTOR {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				float[] vector = (float[]) instance;
-				stream.writeInt(vector.length);
-				for (int i = 0, n = vector.length; i < n; ++i) {
-					stream.writeFloat(vector[i]);
-				}
-			}
-		},
-		INT_VECTOR {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				int[] vector = (int[]) instance;
-				stream.writeInt(vector.length);
-				for (int i = 0, n = vector.length; i < n; ++i) {
-					stream.writeInt(vector[i]);
-				}
-			}
-		},
-		LONG_VECTOR {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				long[] vector = (long[]) instance;
-				stream.writeInt(vector.length);
-				for (int i = 0, n = vector.length; i < n; ++i) {
-					stream.writeLong(vector[i]);
-				}
-			}
-		},
-		OBJECT_VECTOR {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance)
-					throws SerializationException {
-				Object[] vector = (Object[]) instance;
-				stream.writeInt(vector.length);
-				for (int i = 0, n = vector.length; i < n; ++i) {
-					stream.writeObject(vector[i]);
-				}
-			}
-		},
-		SHORT_VECTOR {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				short[] vector = (short[]) instance;
-				stream.writeInt(vector.length);
-				for (int i = 0, n = vector.length; i < n; ++i) {
-					stream.writeShort(vector[i]);
-				}
-			}
-		},
-		STRING_VECTOR {
-			@Override
-			void write(ServerSerializationStreamWriter stream, Object instance) {
-				String[] vector = (String[]) instance;
-				stream.writeInt(vector.length);
-				for (int i = 0, n = vector.length; i < n; ++i) {
-					stream.writeString(vector[i]);
-				}
-			}
-		};
-		abstract void write(ServerSerializationStreamWriter stream,
-				Object instance) throws SerializationException;
-	}
 
 	/**
 	 * Map of {@link Class} objects to {@link ValueWriter}s.
@@ -445,8 +120,8 @@ public final class ServerSerializationStreamWriter extends
 		JS_CHARS_ESCAPED['\r'] = 'r';
 		JS_CHARS_ESCAPED[JS_ESCAPE_CHAR] = JS_ESCAPE_CHAR;
 		JS_CHARS_ESCAPED[JS_QUOTE_CHAR] = JS_QUOTE_CHAR;
-		CLASS_TO_VECTOR_WRITER
-				.put(boolean[].class, VectorWriter.BOOLEAN_VECTOR);
+		CLASS_TO_VECTOR_WRITER.put(boolean[].class,
+				VectorWriter.BOOLEAN_VECTOR);
 		CLASS_TO_VECTOR_WRITER.put(byte[].class, VectorWriter.BYTE_VECTOR);
 		CLASS_TO_VECTOR_WRITER.put(char[].class, VectorWriter.CHAR_VECTOR);
 		CLASS_TO_VECTOR_WRITER.put(double[].class, VectorWriter.DOUBLE_VECTOR);
@@ -504,8 +179,9 @@ public final class ServerSerializationStreamWriter extends
 			// this always leave room
 			// for at least 6 characters at the end (maximum unicode escaped
 			// character size).
-			int maxSegmentVectorSize = splitNodes ? (charVector.getSize()
-					+ MAX_STRING_NODE_LENGTH - 5) : Integer.MAX_VALUE;
+			int maxSegmentVectorSize = splitNodes
+					? (charVector.getSize() + MAX_STRING_NODE_LENGTH - 5)
+					: Integer.MAX_VALUE;
 			while (i < length && charVector.getSize() < maxSegmentVectorSize) {
 				char c = toEscape.charAt(i++);
 				if (needsUnicodeEscape(c)) {
@@ -576,7 +252,8 @@ public final class ServerSerializationStreamWriter extends
 	 * <li>FORMAT - 32</li>
 	 * <li>SURROGATE - 2048</li>
 	 * <li>Total Characters Escaped: 2082</li></li>
-	 * </ul> </li>
+	 * </ul>
+	 * </li>
 	 * </ol>
 	 *
 	 * @param ch
@@ -663,15 +340,17 @@ public final class ServerSerializationStreamWriter extends
 
 	Stack<Integer> writeObjectStack = new Stack<Integer>();
 
-	private enum SerializationCatgory {
-		CONSTRUCTOR_ARGS, NON_CONSTRUCTOR_ARGS
-	}
-
 	private SerializationCatgory serializationCategory = SerializationCatgory.NON_CONSTRUCTOR_ARGS;
 
 	private int tokenListCharCount;
 
 	private Object root;
+
+	private List<Integer> typeTable = new ArrayList<Integer>();
+
+	private List<Integer> constructorTypeTable = new ArrayList<Integer>();
+
+	private Map<Integer, Object> objectReverseMap = new LinkedHashMap<Integer, Object>();
 
 	public ServerSerializationStreamWriter(
 			SerializationPolicy serializationPolicy) {
@@ -725,8 +404,8 @@ public final class ServerSerializationStreamWriter extends
 		// We take a guess at how big to make to buffer to avoid numerous
 		// resizes.
 		//
-		int capacityGuess = 2 * tokenListCharCount + 2
-				* nonCollectionSerializationArgList.size();
+		int capacityGuess = 2 * tokenListCharCount
+				+ 2 * nonCollectionSerializationArgList.size();
 		LengthConstrainedArray stream = new LengthConstrainedArray(
 				capacityGuess);
 		writePayload(stream);
@@ -734,6 +413,17 @@ public final class ServerSerializationStreamWriter extends
 		writeStringTable(stream);
 		writeHeader(stream);
 		return stream.toString();
+	}
+
+	@Override
+	public void writeDouble(double fieldValue) {
+		if (getVersion() >= SERIALIZATION_STREAM_JSON_VERSION
+				&& (Double.isNaN(fieldValue)
+						|| Double.isInfinite(fieldValue))) {
+			append('"' + String.valueOf(fieldValue) + '"');
+		} else {
+			super.writeDouble(fieldValue);
+		}
 	}
 
 	@Override
@@ -753,66 +443,63 @@ public final class ServerSerializationStreamWriter extends
 		}
 	}
 
-	@Override
-	public void writeDouble(double fieldValue) {
-		if (getVersion() >= SERIALIZATION_STREAM_JSON_VERSION
-				&& (Double.isNaN(fieldValue) || Double.isInfinite(fieldValue))) {
-			append('"' + String.valueOf(fieldValue) + '"');
-		} else {
-			super.writeDouble(fieldValue);
+	// since some java classes need primitives for the constructor, some dudes
+	// will jump the gun
+	@SuppressWarnings("unchecked")
+	public void writeObject(Object instance) throws SerializationException {
+		if (instance == null) {
+			// write a null string
+			writeString(null);
+			return;
 		}
-	}
-
-	@Override
-	protected void append(String token) {
-		switch (serializationCategory) {
-		case CONSTRUCTOR_ARGS:
-			constructorArgList.add(token);
-			break;
-		case NON_CONSTRUCTOR_ARGS:
-			nonCollectionSerializationArgList.add(writeObjectStack.peek(),
-					token);
-			break;
-		}
-		if (token != null) {
-			tokenListCharCount += token.length();
-		}
-	}
-
-	@Override
-	protected String getObjectTypeSignature(Object instance)
-			throws SerializationException {
-		assert (instance != null);
-		Class<?> clazz = getClassForSerialization(instance);
-		if (hasFlags(FLAG_ELIDE_TYPE_NAMES)) {
-			if (serializationPolicy instanceof TypeNameObfuscator) {
-				return ((TypeNameObfuscator) serializationPolicy)
-						.getTypeIdForClass(clazz);
+		int objIndex = getIndexForObject(instance);
+		boolean instantiate = false;
+		if (objIndex < 0) {
+			String typeSignature = getObjectTypeSignature(instance);
+			typeTable.add(addString(typeSignature));
+			saveIndexForObject(instance);
+			objIndex = getIndexForObject(instance);
+			objectReverseMap.put(objIndex, instance);
+			writeInt(-(objIndex + 1));
+			Class<?> clazz = getClassForSerialization(instance);
+			Class<?> customSerializer = SerializabilityUtil
+					.hasCustomFieldSerializer(clazz);
+			boolean inInstantiate = false;
+			if (customSerializer != null) {
+				CustomFieldSerializer customFieldSerializer = SerializabilityUtil
+						.loadCustomFieldSerializer(customSerializer);
+				if (customFieldSerializer.hasCustomInstantiateInstance()) {
+					serializationCategory = SerializationCatgory.CONSTRUCTOR_ARGS;
+					customFieldSerializer.serializeConstructor(this, instance);
+					serializationCategory = SerializationCatgory.NON_CONSTRUCTOR_ARGS;
+				}
+			} else if (clazz.isEnum()) {
+				serializationCategory = SerializationCatgory.CONSTRUCTOR_ARGS;
+				writeInt(((Enum<?>) instance).ordinal());
+				serializationCategory = SerializationCatgory.NON_CONSTRUCTOR_ARGS;
+				return;
 			}
-			throw new SerializationException(
-					"The GWT module was compiled with RPC "
-							+ "type name elision enabled, but "
-							+ serializationPolicy.getClass().getName()
-							+ " does not implement "
-							+ TypeNameObfuscator.class.getName());
+			// write collections last, to ensure hashcodes are
+			// reason-a-bubble
+			// everything except enums
+			ValueWriter valueWriter = CLASS_TO_VALUE_WRITER
+					.get(instance.getClass());
+			writeObjectStack.push(objIndex);
+			if (valueWriter != null) {
+				// string - don't write field
+				// valueWriter.write(this, instance);
+			} else {
+				serialize(instance, typeSignature);
+			}
+			writeObjectStack.pop();
 		} else {
-			return SerializabilityUtil.encodeSerializedInstanceReference(clazz,
-					serializationPolicy);
+			writeInt(-(objIndex + 1));
 		}
 	}
 
-	@Override
-	protected void serialize(Object instance, String typeSignature)
-			throws SerializationException {
-		assert (instance != null);
-		Class<?> clazz = getClassForSerialization(instance);
-		try {
-			serializationPolicy.validateSerialize(clazz);
-		} catch (SerializationException e) {
-			throw new SerializationException(e.getMessage() + ": instance = "
-					+ instance);
-		}
-		serializeImpl(instance, clazz);
+	private LengthConstrainedArray createLengthConstrainedArray() {
+		return LooseContext.is(CONTEXT_CALLING_UA_IE)
+				? new LengthConstrainedArrayIE() : new LengthConstrainedArray();
 	}
 
 	/**
@@ -975,7 +662,7 @@ public final class ServerSerializationStreamWriter extends
 			stream.addToken(SERIALIZATION_STREAM_JSON_VERSION - 1);
 		} else {
 			stream.addToken(getVersion());
-		} 
+		}
 	}
 
 	private void writePayload(LengthConstrainedArray stream) {
@@ -1012,13 +699,8 @@ public final class ServerSerializationStreamWriter extends
 			tableStream.addEscapedToken(s);
 		}
 		stream.addToken(tableStream.toString());
-		stream.setJavaScript(stream.isJavaScript()
-				|| tableStream.isJavaScript());
-	}
-
-	private LengthConstrainedArray createLengthConstrainedArray() {
-		return LooseContext.is(CONTEXT_CALLING_UA_IE) ? new LengthConstrainedArrayIE()
-				: new LengthConstrainedArray();
+		stream.setJavaScript(
+				stream.isJavaScript() || tableStream.isJavaScript());
 	}
 
 	private void writeTypeTable(LengthConstrainedArray stream) {
@@ -1032,64 +714,404 @@ public final class ServerSerializationStreamWriter extends
 		stream.addToken(tableStream.toString());
 	}
 
-	private List<Integer> typeTable = new ArrayList<Integer>();
-
-	private List<Integer> constructorTypeTable = new ArrayList<Integer>();
-
-	private Map<Integer, Object> objectReverseMap = new LinkedHashMap<Integer, Object>();
-
-	// since some java classes need primitives for the constructor, some dudes
-	// will jump the gun
-	@SuppressWarnings("unchecked")
-	public void writeObject(Object instance) throws SerializationException {
-		if (instance == null) {
-			// write a null string
-			writeString(null);
-			return;
+	@Override
+	protected void append(String token) {
+		switch (serializationCategory) {
+		case CONSTRUCTOR_ARGS:
+			constructorArgList.add(token);
+			break;
+		case NON_CONSTRUCTOR_ARGS:
+			nonCollectionSerializationArgList.add(writeObjectStack.peek(),
+					token);
+			break;
 		}
-		int objIndex = getIndexForObject(instance);
-		boolean instantiate = false;
-		if (objIndex < 0) {
-			String typeSignature = getObjectTypeSignature(instance);
-			typeTable.add(addString(typeSignature));
-			saveIndexForObject(instance);
-			objIndex = getIndexForObject(instance);
-			objectReverseMap.put(objIndex, instance);
-			writeInt(-(objIndex + 1));
-			Class<?> clazz = getClassForSerialization(instance);
-			Class<?> customSerializer = SerializabilityUtil
-					.hasCustomFieldSerializer(clazz);
-			boolean inInstantiate = false;
-			if (customSerializer != null) {
-				CustomFieldSerializer customFieldSerializer = SerializabilityUtil
-						.loadCustomFieldSerializer(customSerializer);
-				if (customFieldSerializer.hasCustomInstantiateInstance()) {
-					serializationCategory = SerializationCatgory.CONSTRUCTOR_ARGS;
-					customFieldSerializer.serializeConstructor(this, instance);
-					serializationCategory = SerializationCatgory.NON_CONSTRUCTOR_ARGS;
-				}
-			} else if (clazz.isEnum()) {
-				serializationCategory = SerializationCatgory.CONSTRUCTOR_ARGS;
-				writeInt(((Enum<?>) instance).ordinal());
-				serializationCategory = SerializationCatgory.NON_CONSTRUCTOR_ARGS;
-				return;
+		if (token != null) {
+			tokenListCharCount += token.length();
+		}
+	}
+
+	@Override
+	protected String getObjectTypeSignature(Object instance)
+			throws SerializationException {
+		assert (instance != null);
+		Class<?> clazz = getClassForSerialization(instance);
+		if (hasFlags(FLAG_ELIDE_TYPE_NAMES)) {
+			if (serializationPolicy instanceof TypeNameObfuscator) {
+				return ((TypeNameObfuscator) serializationPolicy)
+						.getTypeIdForClass(clazz);
 			}
-			// write collections last, to ensure hashcodes are
-			// reason-a-bubble
-			// everything except enums
-			ValueWriter valueWriter = CLASS_TO_VALUE_WRITER.get(instance
-					.getClass());
-			writeObjectStack.push(objIndex);
-			if (valueWriter != null) {
-				// string - don't write field
-				// valueWriter.write(this, instance);
-			} else {
-				serialize(instance, typeSignature);
-			}
-			writeObjectStack.pop();
+			throw new SerializationException(
+					"The GWT module was compiled with RPC "
+							+ "type name elision enabled, but "
+							+ serializationPolicy.getClass().getName()
+							+ " does not implement "
+							+ TypeNameObfuscator.class.getName());
 		} else {
-			writeInt(-(objIndex + 1));
+			return SerializabilityUtil.encodeSerializedInstanceReference(clazz,
+					serializationPolicy);
 		}
+	}
+
+	@Override
+	protected void serialize(Object instance, String typeSignature)
+			throws SerializationException {
+		assert (instance != null);
+		Class<?> clazz = getClassForSerialization(instance);
+		try {
+			serializationPolicy.validateSerialize(clazz);
+		} catch (SerializationException e) {
+			throw new SerializationException(
+					e.getMessage() + ": instance = " + instance);
+		}
+		serializeImpl(instance, clazz);
+	}
+
+	/**
+	 * Builds a string that evaluates into an array containing the given
+	 * elements. This class exists to work around a bug in IE6/7 that limits the
+	 * size of array literals. NR - in fact, slightly better implementation used
+	 * (LengthConstrainedArrayIE) for IE but there are still issues with >100000
+	 * objects
+	 */
+	public static class LengthConstrainedArray {
+		public static final int MAXIMUM_ARRAY_LENGTH = 1 << 15;
+
+		private static final String POSTLUDE = "])";
+
+		private static final String PRELUDE = "].concat([";
+
+		private final StringBuffer buffer;
+
+		private int count = 0;
+
+		private boolean needsComma = false;
+
+		private int total = 0;
+
+		private boolean javascript = false;
+
+		public LengthConstrainedArray() {
+			buffer = new StringBuffer();
+		}
+
+		public LengthConstrainedArray(int capacityGuess) {
+			buffer = new StringBuffer(capacityGuess);
+		}
+
+		public void addEscapedToken(String token) {
+			addToken(escapeString(token, true, this));
+		}
+
+		public void addToken(CharSequence token) {
+			total++;
+			if (count++ == MAXIMUM_ARRAY_LENGTH) {
+				if (total == MAXIMUM_ARRAY_LENGTH + 1) {
+					buffer.append(PRELUDE);
+					javascript = true;
+				} else {
+					buffer.append("],[");
+				}
+				count = 0;
+				needsComma = false;
+			}
+			if (needsComma) {
+				buffer.append(",");
+			} else {
+				needsComma = true;
+			}
+			buffer.append(token);
+		}
+
+		public void addToken(int i) {
+			addToken(String.valueOf(i));
+		}
+
+		public boolean isJavaScript() {
+			return javascript;
+		}
+
+		public void setJavaScript(boolean javascript) {
+			this.javascript = javascript;
+		}
+
+		@Override
+		public String toString() {
+			if (total > MAXIMUM_ARRAY_LENGTH) {
+				return "[" + buffer.toString() + POSTLUDE;
+			} else {
+				return "[" + buffer.toString() + "]";
+			}
+		}
+	}
+
+	/**
+	 * Builds a string that evaluates into an array containing the given
+	 * elements. This class exists to work around a bug in IE6/7 that limits the
+	 * size of array literals.
+	 */
+	public static class LengthConstrainedArrayIE
+			extends LengthConstrainedArray {
+		public static final int MAXIMUM_ARRAY_LENGTH = 1 << 15;
+
+		private StringBuffer buffer;
+
+		private int count = 0;
+
+		private int totalCount = 0;
+
+		List<StringBuffer> buffers = new ArrayList<StringBuffer>();
+
+		public LengthConstrainedArrayIE() {
+			buffer = new StringBuffer();
+			buffers.add(buffer);
+		}
+
+		public LengthConstrainedArrayIE(int capacityGuess) {
+			buffer = new StringBuffer(capacityGuess);
+			buffers.add(buffer);
+		}
+
+		public void addToken(CharSequence token) {
+			totalCount++;
+			if (count++ == MAXIMUM_ARRAY_LENGTH) {
+				buffer = new StringBuffer();
+				buffers.add(buffer);
+				count = 0;
+			}
+			if (buffer.length() > 0) {
+				buffer.append(",");
+			}
+			buffer.append(token);
+		}
+
+		public void addToken(int i) {
+			addToken(String.valueOf(i));
+		}
+
+		@Override
+		public String toString() {
+			if (totalCount > 100000) {
+				AlcinaTopics.notifyDevWarning(
+						new Exception("IE - writing large blob"));
+			}
+			if (buffers.size() > 1) {
+				StringBuilder b2 = new StringBuilder();
+				b2.append("(function(){");
+				List<String> arrIds = new ArrayList<String>();
+				int idx = 1;
+				for (StringBuffer buffer : buffers) {
+					String arrId = String.format("arr%s", idx++);
+					arrIds.add(arrId);
+					b2.append(String.format("var %s=[%s];", arrId,
+							buffer.toString()));
+				}
+				b2.append(String.format("return [].concat(%s);})()",
+						CommonUtils.join(arrIds, ",")));
+				return b2.toString();
+			} else {
+				return "[" + buffer.toString() + "]";
+			}
+		}
+	}
+
+	private enum SerializationCatgory {
+		CONSTRUCTOR_ARGS, NON_CONSTRUCTOR_ARGS
+	}
+
+	/**
+	 * Enumeration used to provided typed instance writers.
+	 */
+	private enum ValueWriter {
+		BOOLEAN {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				stream.writeBoolean(((Boolean) instance).booleanValue());
+			}
+		},
+		BYTE {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				stream.writeByte(((Byte) instance).byteValue());
+			}
+		},
+		CHAR {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				stream.writeChar(((Character) instance).charValue());
+			}
+		},
+		DOUBLE {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				stream.writeDouble(((Double) instance).doubleValue());
+			}
+		},
+		FLOAT {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				stream.writeFloat(((Float) instance).floatValue());
+			}
+		},
+		INT {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				stream.writeInt(((Integer) instance).intValue());
+			}
+		},
+		LONG {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				stream.writeLong(((Long) instance).longValue());
+			}
+		},
+		OBJECT {
+			@Override
+			void write(ServerSerializationStreamWriter stream, Object instance)
+					throws SerializationException {
+				stream.writeObject(instance);
+			}
+		},
+		SHORT {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				stream.writeShort(((Short) instance).shortValue());
+			}
+		},
+		STRING {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				stream.writeString((String) instance);
+			}
+		};
+		abstract void write(ServerSerializationStreamWriter stream,
+				Object instance) throws SerializationException;
+	}
+
+	/**
+	 * Enumeration used to provided typed vector writers.
+	 */
+	private enum VectorWriter {
+		BOOLEAN_VECTOR {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				boolean[] vector = (boolean[]) instance;
+				stream.writeInt(vector.length);
+				for (int i = 0, n = vector.length; i < n; ++i) {
+					stream.writeBoolean(vector[i]);
+				}
+			}
+		},
+		BYTE_VECTOR {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				byte[] vector = (byte[]) instance;
+				stream.writeInt(vector.length);
+				for (int i = 0, n = vector.length; i < n; ++i) {
+					stream.writeByte(vector[i]);
+				}
+			}
+		},
+		CHAR_VECTOR {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				char[] vector = (char[]) instance;
+				stream.writeInt(vector.length);
+				for (int i = 0, n = vector.length; i < n; ++i) {
+					stream.writeChar(vector[i]);
+				}
+			}
+		},
+		DOUBLE_VECTOR {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				double[] vector = (double[]) instance;
+				stream.writeInt(vector.length);
+				for (int i = 0, n = vector.length; i < n; ++i) {
+					stream.writeDouble(vector[i]);
+				}
+			}
+		},
+		FLOAT_VECTOR {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				float[] vector = (float[]) instance;
+				stream.writeInt(vector.length);
+				for (int i = 0, n = vector.length; i < n; ++i) {
+					stream.writeFloat(vector[i]);
+				}
+			}
+		},
+		INT_VECTOR {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				int[] vector = (int[]) instance;
+				stream.writeInt(vector.length);
+				for (int i = 0, n = vector.length; i < n; ++i) {
+					stream.writeInt(vector[i]);
+				}
+			}
+		},
+		LONG_VECTOR {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				long[] vector = (long[]) instance;
+				stream.writeInt(vector.length);
+				for (int i = 0, n = vector.length; i < n; ++i) {
+					stream.writeLong(vector[i]);
+				}
+			}
+		},
+		OBJECT_VECTOR {
+			@Override
+			void write(ServerSerializationStreamWriter stream, Object instance)
+					throws SerializationException {
+				Object[] vector = (Object[]) instance;
+				stream.writeInt(vector.length);
+				for (int i = 0, n = vector.length; i < n; ++i) {
+					stream.writeObject(vector[i]);
+				}
+			}
+		},
+		SHORT_VECTOR {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				short[] vector = (short[]) instance;
+				stream.writeInt(vector.length);
+				for (int i = 0, n = vector.length; i < n; ++i) {
+					stream.writeShort(vector[i]);
+				}
+			}
+		},
+		STRING_VECTOR {
+			@Override
+			void write(ServerSerializationStreamWriter stream,
+					Object instance) {
+				String[] vector = (String[]) instance;
+				stream.writeInt(vector.length);
+				for (int i = 0, n = vector.length; i < n; ++i) {
+					stream.writeString(vector[i]);
+				}
+			}
+		};
+		abstract void write(ServerSerializationStreamWriter stream,
+				Object instance) throws SerializationException;
 	}
 
 	static class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
@@ -1101,26 +1123,17 @@ public final class ServerSerializationStreamWriter extends
 			super(initialCapacity);
 		}
 
-		public V allItems() {
-			List list = new ArrayList();
-			for (V v : values()) {
-				list.addAll(v);
-			}
-			return (V) list;
-		}
-
-		public V getAndEnsure(K key) {
-			if (!containsKey(key)) {
-				put(key, (V) new ArrayList());
-			}
-			return get(key);
-		}
-
 		public void add(K key, Object item) {
 			if (!containsKey(key)) {
 				put(key, (V) new ArrayList());
 			}
 			get(key).add(item);
+		}
+
+		public void addAll(Multimap<K, V> otherMultimap) {
+			for (K k : otherMultimap.keySet()) {
+				getAndEnsure(k).addAll(otherMultimap.get(k));
+			}
 		}
 
 		public void addCollection(K key, Collection collection) {
@@ -1140,15 +1153,24 @@ public final class ServerSerializationStreamWriter extends
 			}
 		}
 
+		public V allItems() {
+			List list = new ArrayList();
+			for (V v : values()) {
+				list.addAll(v);
+			}
+			return (V) list;
+		}
+
+		public V getAndEnsure(K key) {
+			if (!containsKey(key)) {
+				put(key, (V) new ArrayList());
+			}
+			return get(key);
+		}
+
 		public void subtract(K key, Object item) {
 			if (containsKey(key)) {
 				get(key).remove(item);
-			}
-		}
-
-		public void addAll(Multimap<K, V> otherMultimap) {
-			for (K k : otherMultimap.keySet()) {
-				getAndEnsure(k).addAll(otherMultimap.get(k));
 			}
 		}
 	}

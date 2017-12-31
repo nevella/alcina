@@ -21,165 +21,190 @@ import com.google.gwt.user.client.ui.AbstractImagePrototype.ImagePrototypeElemen
 /**
  * Embedded image.
  * 
- * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#edef-IMG">W3C HTML Specification</a>
+ * @see <a href=
+ *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#edef-IMG">
+ *      W3C HTML Specification</a>
  */
 @TagName(ImageElement.TAG)
 public class ImageElement extends ImagePrototypeElement {
+	public static final String TAG = "img";
 
-  public static final String TAG = "img";
+	/**
+	 * Assert that the given {@link Element} is compatible with this class and
+	 * automatically typecast it.
+	 */
+	public static ImageElement as(Element elem) {
+		assert is(elem);
+		return (ImageElement) elem;
+	}
 
-  /**
-   * Assert that the given {@link Element} is compatible with this class and
-   * automatically typecast it.
-   */
-  public static ImageElement as(Element elem) {
-    assert is(elem);
-    return (ImageElement) elem;
-  }
+	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
 
-  /**
-   * Determines whether the given {@link JavaScriptObject} can be cast to
-   * this class. A <code>null</code> object will cause this method to
-   * return <code>false</code>.
-   */
-  public static boolean is(JavaScriptObject o) {
-    if (Element.is(o)) {
-      return is(Element.as(o));
-    }
-    return false;
-  }
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to this
+	 * class. A <code>null</code> object will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(JavaScriptObject o) {
+		if (Element.is(o)) {
+			return is(Element.as(o));
+		}
+		return false;
+	}
 
-  /**
-   * Determine whether the given {@link Node} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Node node) {
-    if (Element.is(node)) {
-      return is((Element) node);
-    }
-    return false;
-  }
-  
-  /**
-   * Determine whether the given {@link Element} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Element elem) {
-    return elem != null && elem.hasTagName(TAG);
-  }
+	/**
+	 * Determine whether the given {@link Node} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		if (Element.is(node)) {
+			return is((Element) node);
+		}
+		return false;
+	}
 
-  protected ImageElement() {
-  }
+	protected ImageElement() {
+	}
 
-  /**
-   * Alternate text for user agents not rendering the normal content of this
-   * element.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-alt">W3C HTML Specification</a>
-   */  public  String getAlt(){
-  return this.getPropertyString("alt");
-}
+	/**
+	 * Alternate text for user agents not rendering the normal content of this
+	 * element.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-alt">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getAlt() {
+		return this.getPropertyString("alt");
+	}
 
+	/**
+	 * Height of the image in pixels.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-height-IMG">
+	 *      W3C HTML Specification</a>
+	 */
+	public int getHeight() {
+		return this.getPropertyInt("height");
+	}
 
-  /**
-   * Height of the image in pixels.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-height-IMG">W3C HTML Specification</a>
-   */  public  int getHeight(){
-  return this.getPropertyInt("height");
-}
+	/**
+	 * URI designating the source of this image.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-src-IMG">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getSrc() {
+		return this.getPropertyString("src");
+	}
 
+	/**
+	 * The width of the image in pixels.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-width-IMG">
+	 *      W3C HTML Specification</a>
+	 */
+	public int getWidth() {
+		return this.getPropertyInt("width");
+	}
 
-  /**
-   * URI designating the source of this image.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-src-IMG">W3C HTML Specification</a>
-   */  public  String getSrc(){
-  return this.getPropertyString("src");
-}
+	/**
+	 * Use server-side image map.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-ismap">
+	 *      W3C HTML Specification</a>
+	 */
+	public boolean isMap() {
+		return this.getPropertyBoolean("isMap");
+	}
 
+	/**
+	 * Alternate text for user agents not rendering the normal content of this
+	 * element.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-alt">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setAlt(String alt) {
+		this.setPropertyString("alt", alt);
+	}
 
-  /**
-   * The width of the image in pixels.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-width-IMG">W3C HTML Specification</a>
-   */  public  int getWidth(){
-  return this.getPropertyInt("width");
-}
+	/**
+	 * Height of the image in pixels.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-height-IMG">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setHeight(int height) {
+		this.setPropertyInt("height", height);
+	}
 
+	/**
+	 * Use server-side image map.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-ismap">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setIsMap(boolean isMap) {
+		this.setPropertyBoolean("isMap", isMap);
+	}
 
-  /**
-   * Use server-side image map.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-ismap">W3C HTML Specification</a>
-   */  public  boolean isMap(){
-  return this.getPropertyBoolean("isMap");
-}
+	/**
+	 * URI designating the source of this image.
+	 *
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-src-IMG">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setSrc(String src) {
+		this.setPropertyString("src", src);
+	}
 
-  
-  /**
-   * Alternate text for user agents not rendering the normal content of this
-   * element.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-alt">W3C HTML Specification</a>
-   */  public  void setAlt(String alt){
-   this.setPropertyString("alt",alt);
-}
+	/**
+	 * Use client-side image map.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-usemap">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setUseMap(boolean useMap) {
+		this.setPropertyBoolean("useMap", useMap);
+	}
 
+	/**
+	 * The width of the image in pixels.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-width-IMG">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setWidth(int width) {
+		this.setPropertyInt("width", width);
+	}
 
-  /**
-   * Height of the image in pixels.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-height-IMG">W3C HTML Specification</a>
-   */  public  void setHeight(int height){
-   this.setPropertyInt("height",height);
-}
-
-
-  /**
-   * Use server-side image map.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-ismap">W3C HTML Specification</a>
-   */  public  void setIsMap(boolean isMap){
-   this.setPropertyBoolean("isMap",isMap);
-}
-
-
-  /**
-   * URI designating the source of this image.
-   *
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-src-IMG">W3C HTML Specification</a>
-   */  public  void setSrc(String src){
-   this.setPropertyString("src",src);
-}
-
-
-  /**
-   * Use client-side image map.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-usemap">W3C HTML Specification</a>
-   */  public  void setUseMap(boolean useMap){
-   this.setPropertyBoolean("useMap",useMap);
-}
-
-
-  /**
-   * The width of the image in pixels.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-width-IMG">W3C HTML Specification</a>
-   */  public  void setWidth(int width){
-   this.setPropertyInt("width",width);
-}
-
-
-  /**
-   * Use client-side image map.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-usemap">W3C HTML Specification</a>
-   */
-  public final  boolean useMap() {
-	  return getPropertyBoolean("useMap");
-			  } 
+	/**
+	 * Use client-side image map.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-usemap">
+	 *      W3C HTML Specification</a>
+	 */
+	public final boolean useMap() {
+		return getPropertyBoolean("useMap");
+	}
 }

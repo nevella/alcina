@@ -7,10 +7,10 @@ public class TransformPersisterViaServletLayerPersistenceStd
 		implements TransformPersisterViaServletLayerPersistence {
 	@Override
 	public void persistTransforms(boolean currentUser) {
-		if(currentUser){
+		if (currentUser) {
 			ServletLayerUtils.pushTransformsAsCurrentUser();
-		}else{
-		ServletLayerUtils.pushTransformsAsRoot();
+		} else {
+			ServletLayerUtils.pushTransformsAsRoot();
 		}
 	}
 }

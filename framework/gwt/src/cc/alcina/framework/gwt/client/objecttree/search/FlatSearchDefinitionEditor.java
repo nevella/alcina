@@ -45,6 +45,23 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 		return def;
 	}
 
+	public boolean isNotTextOnly(SearchDefinition def) {
+		if (def == null) {
+			return false;
+		}
+		for (SearchCriterion sc : def.allCriteria()) {
+			if (sc.getClass() == TxtCriterion.class) {
+				continue;
+			}
+			Optional<FlatSearchable> searchable = searchableForCriterion(sc);
+			if (searchable.isPresent()
+					&& searchable.get().isNonDefaultValue(sc)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public void refreshRows() {
 		if (!isAttached() || def == null) {
 			return;
@@ -128,6 +145,16 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 		this.searchables = searchables;
 	}
 
+	public void setupForNewCriterion(FlatSearchRow row, boolean hadValue) {
+		def.removeCriterion(row.getValue(), !hadValue);
+		row.setValue(null);
+		row.setOperator(null);
+		SearchCriterion sc = row.getSearchable().createCriterionInstance();
+		def.addCriterionToSoleCriteriaGroup(sc);
+		row.setValue(sc);
+		row.bind();
+	}
+
 	@Override
 	public void setValue(Object value) {
 	}
@@ -170,33 +197,4 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 			refreshRows();
 		}
 	}
-
-	public void setupForNewCriterion(FlatSearchRow row, boolean hadValue) {
-		def.removeCriterion(row.getValue(), !hadValue);
-		row.setValue(null);
-		row.setOperator(null);
-		SearchCriterion sc = row.getSearchable().createCriterionInstance();
-		def.addCriterionToSoleCriteriaGroup(sc);
-		row.setValue(sc);
-		row.bind();
-	}
-
-	public boolean isNotTextOnly(SearchDefinition def) {
-		if (def == null) {
-			return false;
-		}
-		for (SearchCriterion sc : def.allCriteria()) {
-			if (sc.getClass()==TxtCriterion.class) {
-				continue;
-			}
-			Optional<FlatSearchable> searchable = searchableForCriterion(sc);
-			if (searchable.isPresent()
-					&& searchable.get().isNonDefaultValue(sc)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	
 }

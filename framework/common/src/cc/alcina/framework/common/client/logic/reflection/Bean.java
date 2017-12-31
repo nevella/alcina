@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
@@ -31,19 +30,18 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target( { ElementType.TYPE })
+@Target({ ElementType.TYPE })
 @ClientVisible
 public @interface Bean {
-	ObjectActions actions() default @ObjectActions( {});
+	ObjectActions actions() default @ObjectActions({});
 
-	Display displayInfo() default @Display(name = "");
+	boolean allPropertiesVisualisable() default false;
 
 	Class customizerClass() default void.class;
 
 	String description() default "";
 
+	Display displayInfo() default @Display(name = "");
+
 	String displayNamePropertyName() default "";
-
-
-	boolean allPropertiesVisualisable() default false;
 }

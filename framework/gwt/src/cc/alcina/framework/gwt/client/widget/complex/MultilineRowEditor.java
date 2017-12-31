@@ -14,7 +14,6 @@ import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.CreateAction;
 import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliComparatorLocalsHigh;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
@@ -110,11 +109,12 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 		values = filterVisibleValues(values);
 		sortValues(values);
 		values.forEach(v -> TransformManager.get().registerDomainObject(v));
-		ContentViewFactory contentViewFactory = new ContentViewFactory().noCaption()
-				.setBeanClass(getItemClass()).editable(editable).autoSave(true)
-				.doNotClone(true).setTableMask(tableMask);
-		customiseContentViewFactory(contentViewFactory,getModel());
-		PaneWrapperWithObjects view = contentViewFactory.createMultipleBeanView(values);
+		ContentViewFactory contentViewFactory = new ContentViewFactory()
+				.noCaption().setBeanClass(getItemClass()).editable(editable)
+				.autoSave(true).doNotClone(true).setTableMask(tableMask);
+		customiseContentViewFactory(contentViewFactory, getModel());
+		PaneWrapperWithObjects view = contentViewFactory
+				.createMultipleBeanView(values);
 		table = (BoundTableExt) view.getBoundWidget();
 		table.setNoContentMessage("0 items");
 		table.setModel(getModel());
@@ -124,26 +124,20 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 		toolbar.addVetoableActionListener(toolbarListener);
 	}
 
-	
-
-	protected abstract void sortValues(List<H> values);
-
-	protected void
-			customiseContentViewFactory(ContentViewFactory contentViewFactory, Object model) {
-	}
-
-	
-
-	protected List<H> filterVisibleValues(List<H> values) {
-		return values;
-	}
-
 	protected void customiseActions(List<PermissibleAction> actions) {
+	}
+
+	protected void customiseContentViewFactory(
+			ContentViewFactory contentViewFactory, Object model) {
 	}
 
 	protected abstract void doCreateRow();
 
 	protected abstract void doDeleteRows();
+
+	protected List<H> filterVisibleValues(List<H> values) {
+		return values;
+	}
 
 	protected abstract Class<H> getItemClass();
 
@@ -155,4 +149,6 @@ public abstract class MultilineRowEditor<H extends HasIdAndLocalId>
 			PermissibleAction action) {
 		return false;
 	}
+
+	protected abstract void sortValues(List<H> values);
 }

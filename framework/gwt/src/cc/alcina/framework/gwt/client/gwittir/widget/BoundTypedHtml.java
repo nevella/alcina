@@ -28,8 +28,8 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 /**
  *
  */
-public abstract class BoundTypedHtml<T> extends AbstractBoundWidget<T> implements
-		MultilineWidget {
+public abstract class BoundTypedHtml<T> extends AbstractBoundWidget<T>
+		implements MultilineWidget {
 	private com.google.gwt.user.client.ui.HTML base;
 
 	private T value;
@@ -62,7 +62,8 @@ public abstract class BoundTypedHtml<T> extends AbstractBoundWidget<T> implement
 		return retValue;
 	}
 
-	public HasHorizontalAlignment.HorizontalAlignmentConstant getHorizontalAlignment() {
+	public HasHorizontalAlignment.HorizontalAlignmentConstant
+			getHorizontalAlignment() {
 		HorizontalAlignmentConstant retValue;
 		retValue = this.base.getHorizontalAlignment();
 		return retValue;
@@ -114,6 +115,11 @@ public abstract class BoundTypedHtml<T> extends AbstractBoundWidget<T> implement
 		boolean retValue;
 		retValue = this.base.getWordWrap();
 		return retValue;
+	}
+
+	@Override
+	public boolean isMultiline() {
+		return true;
 	}
 
 	@Override
@@ -176,8 +182,6 @@ public abstract class BoundTypedHtml<T> extends AbstractBoundWidget<T> implement
 		}
 	}
 
-	protected abstract String toHtml();
-
 	@Override
 	public void setVisible(boolean visible) {
 		this.base.setVisible(visible);
@@ -208,8 +212,5 @@ public abstract class BoundTypedHtml<T> extends AbstractBoundWidget<T> implement
 		super.initWidget(base);
 	}
 
-	@Override
-	public boolean isMultiline() {
-		return true;
-	}
+	protected abstract String toHtml();
 }

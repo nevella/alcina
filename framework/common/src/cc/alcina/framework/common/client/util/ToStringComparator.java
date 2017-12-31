@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.util;
 
 import java.util.Comparator;
@@ -20,8 +19,7 @@ import java.util.Comparator;
  *
  * @author Nick Reddel
  */
-
- public class ToStringComparator implements Comparator {
+public class ToStringComparator implements Comparator {
 	public static final ToStringComparator INSTANCE = new ToStringComparator();
 
 	public int compare(Object o1, Object o2) {

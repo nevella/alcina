@@ -25,12 +25,12 @@ public class StandardJdbcAysncServicesPlayer extends InitAysncServicesPlayer
 	}
 
 	@Override
-	public void run() {
-		new SubconsortSupport().run(consort, asyncConfigConsort, this);
+	public Consort getStateConsort() {
+		return asyncConfigConsort;
 	}
 
 	@Override
-	public Consort getStateConsort() {
-		return asyncConfigConsort;
+	public void run() {
+		new SubconsortSupport().run(consort, asyncConfigConsort, this);
 	}
 }

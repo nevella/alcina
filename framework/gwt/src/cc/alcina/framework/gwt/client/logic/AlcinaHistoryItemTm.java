@@ -24,11 +24,9 @@ public class AlcinaHistoryItemTm extends AlcinaHistoryItem {
 		if (getId() == 0 && getLocalId() == 0) {
 			return getClassName();
 		}
-		return TransformManager.get()
-				.getObject(
-						Reflections.classLookup()
-								.getClassForName(getClassName()), getId(),
-						getLocalId());
+		return TransformManager.get().getObject(
+				Reflections.classLookup().getClassForName(getClassName()),
+				getId(), getLocalId());
 	}
 
 	public void setReferencedObject(HasIdAndLocalId hili) {

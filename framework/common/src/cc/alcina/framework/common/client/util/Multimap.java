@@ -29,18 +29,14 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
  *
  * @author Nick Reddel
  */
-public class Multimap<K, V extends List> implements Map<K, V>, Serializable,
-		Cloneable {
-	private Map<K, V> map;
-
+public class Multimap<K, V extends List>
+		implements Map<K, V>, Serializable, Cloneable {
 	private static final long serialVersionUID = 1L;
+
+	private Map<K, V> map;
 
 	public Multimap() {
 		map = createMap();
-	}
-
-	private Map<K, V> createMap() {
-		return new LinkedHashMap<K, V>();
 	}
 
 	public void add(K key, Object item) {
@@ -95,20 +91,21 @@ public class Multimap<K, V extends List> implements Map<K, V>, Serializable,
 		this.map.clear();
 	}
 
-	public Multimap<K, V> copy() {
-		Multimap<K, V> copy = new Multimap<K, V>();
-		for (Entry<K, V> entry : entrySet()) {
-			copy.put(entry.getKey(), (V) new ArrayList((List) entry.getValue()));
-		}
-		return copy;
-	}
-
 	public boolean containsKey(Object key) {
 		return this.map.containsKey(key);
 	}
 
 	public boolean containsValue(Object value) {
 		return this.map.containsValue(value);
+	}
+
+	public Multimap<K, V> copy() {
+		Multimap<K, V> copy = new Multimap<K, V>();
+		for (Entry<K, V> entry : entrySet()) {
+			copy.put(entry.getKey(),
+					(V) new ArrayList((List) entry.getValue()));
+		}
+		return copy;
 	}
 
 	public Set<java.util.Map.Entry<K, V>> entrySet() {
@@ -256,5 +253,9 @@ public class Multimap<K, V extends List> implements Map<K, V>, Serializable,
 
 	public Collection<V> values() {
 		return this.map.values();
+	}
+
+	private Map<K, V> createMap() {
+		return new LinkedHashMap<K, V>();
 	}
 }

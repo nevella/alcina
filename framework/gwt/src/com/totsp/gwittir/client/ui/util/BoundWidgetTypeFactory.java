@@ -52,6 +52,11 @@ public class BoundWidgetTypeFactory {
 
 	HashMap<Object, BoundWidgetProvider<?>> registry = new HashMap<Object, BoundWidgetProvider<?>>();
 
+	/** Creates a new instance of BoundWidgetTypeFactory */
+	public BoundWidgetTypeFactory() {
+		super();
+	}
+
 	public BoundWidgetTypeFactory(boolean defaults) {
 		super();
 		if (defaults) {
@@ -60,7 +65,8 @@ public class BoundWidgetTypeFactory {
 			registry.put(boolean.class,
 					BoundWidgetTypeFactory.CHECKBOX_PROVIDER);
 			registry.put(String.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
-			registry.put(Integer.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
+			registry.put(Integer.class,
+					BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
 			registry.put(int.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
 			registry.put(Long.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
 			registry.put(long.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
@@ -69,11 +75,6 @@ public class BoundWidgetTypeFactory {
 			registry.put(Double.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
 			registry.put(double.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
 		}
-	}
-
-	/** Creates a new instance of BoundWidgetTypeFactory */
-	public BoundWidgetTypeFactory() {
-		super();
 	}
 
 	public void add(Class<?> type, BoundWidgetProvider<?> provider) {
@@ -90,8 +91,8 @@ public class BoundWidgetTypeFactory {
 
 	public BoundWidgetProvider<?> getWidgetProvider(String propertyName,
 			Class<?> type) {
-		BoundWidgetProvider<?> val = registry.containsKey(propertyName) ? registry
-				.get(propertyName) : registry.get(type);
+		BoundWidgetProvider<?> val = registry.containsKey(propertyName)
+				? registry.get(propertyName) : registry.get(type);
 		return val;
 	}
 }

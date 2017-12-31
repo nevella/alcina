@@ -408,15 +408,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return holder;
 	}
 
-	private DecoratedRelativePopupPanel ensurePanelForPopup() {
-		if (panelForPopup == null) {
-			panelForPopup = new DecoratedRelativePopupPanel(true);
-			setPanelForPopupUI(panelForPopup);
-			panelForPopup.add(scroller);
-		}
-		return panelForPopup;
-	}
-
 	public boolean filter(String filterText) {
 		selectableNavigation.clear();
 		if (filterText == null) {
@@ -889,6 +880,15 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			}
 		}
 		afterUpdateItems(emptyItems);
+	}
+
+	private DecoratedRelativePopupPanel ensurePanelForPopup() {
+		if (panelForPopup == null) {
+			panelForPopup = new DecoratedRelativePopupPanel(true);
+			setPanelForPopupUI(panelForPopup);
+			panelForPopup.add(scroller);
+		}
+		return panelForPopup;
 	}
 
 	private void updateItemsCellList(String filterText, HasWidgets itemHolder) {

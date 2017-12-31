@@ -72,843 +72,6 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment.VerticalAlignmentConst
 @SuppressWarnings("deprecation")
 public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		HasAllDragAndDropHandlers, HasClickHandlers, HasDoubleClickHandlers {
-	static class ElementArray<T extends Node> {
-		private JsArray<ElementRemote> jsArray;
-
-		private NodeList<? extends Element> nodeList;
-
-		private List<? extends Element> jvmList;
-
-		public ElementArray(JsArray<ElementRemote> elements) {
-			this.jsArray = elements;
-		}
-
-		public ElementArray(NodeList<? extends Element> nodeList) {
-			this.nodeList = nodeList;
-		}
-
-		public ElementArray(List<? extends Element> jvmList) {
-			this.jvmList = jvmList;
-		}
-
-		public Element get(int idx) {
-			if (jvmList != null) {
-				return jvmList.get(idx);
-			}
-			return nodeList != null ? nodeList.getItem(idx)
-					: LocalDom.nodeFor(jsArray.get(idx));
-		}
-
-		public int length() {
-			if (jvmList != null) {
-				return jvmList.size();
-			}
-			return nodeList != null ? nodeList.getLength() : jsArray.length();
-		}
-	}
-
-	/**
-	 * Interface to access {@link HTMLTable}'s DOM.
-	 */
-	private interface HTMLTableImpl {
-		ElementArray<Element> getRows(Element tbody);
-
-		ElementArray<Element> getCells(Element row);
-	}
-
-	/**
-	 * Standard implementation for accessing the Table DOM.
-	 */
-	private static class HTMLTableStandardImpl implements HTMLTableImpl {
-		native JsArray<ElementRemote> getRows0(ElementRemote tbody) /*-{
-            return tbody.rows;
-		}-*/;
-
-		native JsArray<ElementRemote> getCells0(ElementRemote row) /*-{
-            return row.cells;
-		}-*/;
-
-		@Override
-		public ElementArray<Element> getRows(Element tbody) {
-			return new ElementArray<Element>((List)
-					((TableSectionElement) tbody).provideChildNodeList());
-		}
-
-		@Override
-		public ElementArray<Element> getCells(Element row) {
-			return new ElementArray<Element>((List)
-					((TableRowElement) row).provideChildNodeList());
-		}
-	}
-
-	/**
-	 * IE specific implementation for accessing the Table DOM. see: issue 6938
-	 */
-	@SuppressWarnings("unused") // used due to rebinding
-	private static class HTMLTableIEImpl extends HTMLTableStandardImpl {
-		native JsArray<ElementRemote> getRows0(ElementRemote tbody) /*-{
-            return tbody.children;
-		}-*/;
-
-		native JsArray<ElementRemote> getCells0(ElementRemote row) /*-{
-            return row.children;
-		}-*/;
-	}
-
-	/**
-	 * Return value for {@link HTMLTable#getCellForEvent}.
-	 */
-	public class Cell {
-		private final int rowIndex;
-
-		private final int cellIndex;
-
-		/**
-		 * Creates a cell.
-		 * 
-		 * @param rowIndex
-		 *            the cell's row
-		 * @param cellIndex
-		 *            the cell's index
-		 */
-		protected Cell(int rowIndex, int cellIndex) {
-			this.cellIndex = cellIndex;
-			this.rowIndex = rowIndex;
-		}
-
-		/**
-		 * Gets the cell index.
-		 * 
-		 * @return the cell index
-		 */
-		public int getCellIndex() {
-			return cellIndex;
-		}
-
-		/**
-		 * Gets the cell's element.
-		 * 
-		 * @return the cell's element.
-		 */
-		public Element getElement() {
-			return DOM
-					.asOld(getCellFormatter().getElement(rowIndex, cellIndex));
-		}
-
-		/**
-		 * Get row index.
-		 * 
-		 * @return the row index
-		 */
-		public int getRowIndex() {
-			return rowIndex;
-		}
-	}
-
-	/**
-	 * This class contains methods used to format a table's cells.
-	 */
-	public class CellFormatter {
-		/**
-		 * Adds a style to the specified cell.
-		 * 
-		 * @param row
-		 *            the cell's row
-		 * @param column
-		 *            the cell's column
-		 * @param styleName
-		 *            the style name to be added
-		 * @see UIObject#addStyleName(String)
-		 */
-		public void addStyleName(int row, int column, String styleName) {
-			prepareCell(row, column);
-			Element td = getCellElement(bodyElem, row, column);
-			UIObject.setStyleName(td, styleName, true);
-		}
-
-		/**
-		 * Gets the TD element representing the specified cell.
-		 * 
-		 * @param row
-		 *            the row of the cell to be retrieved
-		 * @param column
-		 *            the column of the cell to be retrieved
-		 * @return the column's TD element
-		 * @throws IndexOutOfBoundsException
-		 */
-		public Element getElement(int row, int column) {
-			checkCellBounds(row, column);
-			return DOM.asOld(getCellElement(bodyElem, row, column));
-		}
-
-		/**
-		 * Gets the style of a specified cell.
-		 * 
-		 * @param row
-		 *            the cell's row
-		 * @param column
-		 *            the cell's column
-		 * @see UIObject#getStyleName()
-		 * @return returns the style name
-		 * @throws IndexOutOfBoundsException
-		 */
-		public String getStyleName(int row, int column) {
-			return UIObject.getStyleName(getElement(row, column));
-		}
-
-		/**
-		 * Gets the primary style of a specified cell.
-		 * 
-		 * @param row
-		 *            the cell's row
-		 * @param column
-		 *            the cell's column
-		 * @see UIObject#getStylePrimaryName()
-		 * @return returns the style name
-		 * @throws IndexOutOfBoundsException
-		 */
-		public String getStylePrimaryName(int row, int column) {
-			return UIObject.getStylePrimaryName(getElement(row, column));
-		}
-
-		/**
-		 * Determines whether or not this cell is visible.
-		 * 
-		 * @param row
-		 *            the row of the cell whose visibility is to be set
-		 * @param column
-		 *            the column of the cell whose visibility is to be set
-		 * @return <code>true</code> if the object is visible
-		 */
-		public boolean isVisible(int row, int column) {
-			Element e = getElement(row, column);
-			return UIObject.isVisible(e);
-		}
-
-		/**
-		 * Removes a style from the specified cell.
-		 * 
-		 * @param row
-		 *            the cell's row
-		 * @param column
-		 *            the cell's column
-		 * @param styleName
-		 *            the style name to be removed
-		 * @see UIObject#removeStyleName(String)
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void removeStyleName(int row, int column, String styleName) {
-			checkCellBounds(row, column);
-			Element td = getCellElement(bodyElem, row, column);
-			UIObject.setStyleName(td, styleName, false);
-		}
-
-		/**
-		 * Sets the horizontal and vertical alignment of the specified cell's
-		 * contents.
-		 * 
-		 * @param row
-		 *            the row of the cell whose alignment is to be set
-		 * @param column
-		 *            the column of the cell whose alignment is to be set
-		 * @param hAlign
-		 *            the cell's new horizontal alignment as specified in
-		 *            {@link HasHorizontalAlignment}
-		 * @param vAlign
-		 *            the cell's new vertical alignment as specified in
-		 *            {@link HasVerticalAlignment}
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setAlignment(int row, int column,
-				HorizontalAlignmentConstant hAlign,
-				VerticalAlignmentConstant vAlign) {
-			setHorizontalAlignment(row, column, hAlign);
-			setVerticalAlignment(row, column, vAlign);
-		}
-
-		/**
-		 * Sets the height of the specified cell.
-		 * 
-		 * @param row
-		 *            the row of the cell whose height is to be set
-		 * @param column
-		 *            the column of the cell whose height is to be set
-		 * @param height
-		 *            the cell's new height, in CSS units
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setHeight(int row, int column, String height) {
-			prepareCell(row, column);
-			Element elem = getCellElement(bodyElem, row, column);
-			elem.setPropertyString("height", height);
-		}
-
-		/**
-		 * Sets the horizontal alignment of the specified cell.
-		 * 
-		 * @param row
-		 *            the row of the cell whose alignment is to be set
-		 * @param column
-		 *            the column of the cell whose alignment is to be set
-		 * @param align
-		 *            the cell's new horizontal alignment as specified in
-		 *            {@link HasHorizontalAlignment}.
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setHorizontalAlignment(int row, int column,
-				HorizontalAlignmentConstant align) {
-			prepareCell(row, column);
-			Element elem = getCellElement(bodyElem, row, column);
-			elem.setPropertyString("align", align.getTextAlignString());
-		}
-
-		/**
-		 * Sets the style name associated with the specified cell.
-		 *
-		 * @param row
-		 *            the row of the cell whose style name is to be set
-		 * @param column
-		 *            the column of the cell whose style name is to be set
-		 * @param styleName
-		 *            the new style name
-		 * @see UIObject#setStyleName(String)
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setStyleName(int row, int column, String styleName) {
-			prepareCell(row, column);
-			UIObject.setStyleName(getCellElement(bodyElem, row, column),
-					styleName);
-		}
-
-		/**
-		 * Sets the primary style name associated with the specified cell.
-		 * 
-		 * @param row
-		 *            the row of the cell whose style name is to be set
-		 * @param column
-		 *            the column of the cell whose style name is to be set
-		 * @param styleName
-		 *            the new style name
-		 * @see UIObject#setStylePrimaryName(String)
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setStylePrimaryName(int row, int column, String styleName) {
-			UIObject.setStylePrimaryName(getCellElement(bodyElem, row, column),
-					styleName);
-		}
-
-		/**
-		 * Sets the vertical alignment of the specified cell.
-		 * 
-		 * @param row
-		 *            the row of the cell whose alignment is to be set
-		 * @param column
-		 *            the column of the cell whose alignment is to be set
-		 * @param align
-		 *            the cell's new vertical alignment as specified in
-		 *            {@link HasVerticalAlignment}.
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setVerticalAlignment(int row, int column,
-				VerticalAlignmentConstant align) {
-			prepareCell(row, column);
-			getCellElement(bodyElem, row, column).getStyle().setProperty(
-					"verticalAlign", align.getVerticalAlignString());
-		}
-
-		/**
-		 * Sets whether this cell is visible via the display style property. The
-		 * other cells in the row will all shift left to fill the cell's space.
-		 * So, for example a table with (0,1,2) will become (1,2) if cell 1 is
-		 * hidden.
-		 * 
-		 * @param row
-		 *            the row of the cell whose visibility is to be set
-		 * @param column
-		 *            the column of the cell whose visibility is to be set
-		 * @param visible
-		 *            <code>true</code> to show the cell, <code>false</code> to
-		 *            hide it
-		 */
-		public void setVisible(int row, int column, boolean visible) {
-			Element e = ensureElement(row, column);
-			UIObject.setVisible(e, visible);
-		}
-
-		/**
-		 * Sets the width of the specified cell.
-		 * 
-		 * @param row
-		 *            the row of the cell whose width is to be set
-		 * @param column
-		 *            the column of the cell whose width is to be set
-		 * @param width
-		 *            the cell's new width, in CSS units
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setWidth(int row, int column, String width) {
-			// Give the subclass a chance to prepare the cell.
-			prepareCell(row, column);
-			getCellElement(bodyElem, row, column).setPropertyString("width",
-					width);
-		}
-
-		/**
-		 * Sets whether the specified cell will allow word wrapping of its
-		 * contents.
-		 * 
-		 * @param row
-		 *            the row of the cell whose word-wrap is to be set
-		 * @param column
-		 *            the column of the cell whose word-wrap is to be set
-		 * @param wrap
-		 *            <code>false </code> to disable word wrapping in this cell
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setWordWrap(int row, int column, boolean wrap) {
-			prepareCell(row, column);
-			String wrapValue = wrap ? "" : "nowrap";
-			getElement(row, column).getStyle().setProperty("whiteSpace",
-					wrapValue);
-		}
-
-		/**
-		 * Gets the element associated with a cell. If it does not exist and the
-		 * subtype allows creation of elements, creates it.
-		 * 
-		 * @param row
-		 *            the cell's row
-		 * @param column
-		 *            the cell's column
-		 * @return the cell's element
-		 * @throws IndexOutOfBoundsException
-		 */
-		protected Element ensureElement(int row, int column) {
-			prepareCell(row, column);
-			return DOM.asOld(getCellElement(bodyElem, row, column));
-		}
-
-		/**
-		 * Convenience methods to get an attribute on a cell.
-		 * 
-		 * @param row
-		 *            cell's row
-		 * @param column
-		 *            cell's column
-		 * @param attr
-		 *            attribute to get
-		 * @return the attribute's value
-		 * @throws IndexOutOfBoundsException
-		 */
-		protected String getAttr(int row, int column, String attr) {
-			Element elem = getElement(row, column);
-			return elem.getAttribute(attr);
-		}
-
-		/**
-		 * Convenience methods to set an attribute on a cell.
-		 * 
-		 * @param row
-		 *            cell's row
-		 * @param column
-		 *            cell's column
-		 * @param attrName
-		 *            attribute to set
-		 * @param value
-		 *            value to set
-		 * @throws IndexOutOfBoundsException
-		 */
-		protected void setAttr(int row, int column, String attrName,
-				String value) {
-			Element elem = ensureElement(row, column);
-			elem.setAttribute(attrName, value);
-		}
-
-		/**
-		 * Get a cell's element.
-		 * 
-		 * @param tbody
-		 *            the table element
-		 * @param row
-		 *            the row of the cell
-		 * @param col
-		 *            the column of the cell
-		 * @return the element
-		 */
-		private Element getCellElement(Element tbody, int row, int col) {
-			Element rowObj = impl.getRows(tbody).get(row);
-			ElementArray<Element> cells = impl.getCells(rowObj);
-			return cells.get(col);
-		}
-
-		/**
-		 * Gets the TD element representing the specified cell unsafely (meaning
-		 * that it doesn't ensure that <code>row</code> and <code>column</code>
-		 * are valid).
-		 * 
-		 * @param row
-		 *            the row of the cell to be retrieved
-		 * @param column
-		 *            the column of the cell to be retrieved
-		 * @return the cell's TD element
-		 */
-		private Element getRawElement(int row, int column) {
-			return getCellElement(bodyElem, row, column);
-		}
-	}
-
-	/**
-	 * This class contains methods used to format a table's columns. It is
-	 * limited by the support cross-browser HTML support for column formatting.
-	 */
-	public class ColumnFormatter {
-		protected Element columnGroup;
-
-		/**
-		 * Adds a style to the specified column.
-		 * 
-		 * @param col
-		 *            the col to which the style will be added
-		 * @param styleName
-		 *            the style name to be added
-		 * @see UIObject#addStyleName(String)
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void addStyleName(int col, String styleName) {
-			UIObject.setStyleName(ensureColumn(col), styleName, true);
-		}
-
-		/**
-		 * Get the col element for the column.
-		 * 
-		 * @param column
-		 *            the column index
-		 * @return the col element
-		 */
-		public Element getElement(int column) {
-			return DOM.asOld(ensureColumn(column));
-		}
-
-		/**
-		 * Gets the style of the specified column.
-		 * 
-		 * @param column
-		 *            the column to be queried
-		 * @return the style name
-		 * @see UIObject#getStyleName()
-		 * @throws IndexOutOfBoundsException
-		 */
-		public String getStyleName(int column) {
-			return UIObject.getStyleName(ensureColumn(column));
-		}
-
-		/**
-		 * Gets the primary style of the specified column.
-		 * 
-		 * @param column
-		 *            the column to be queried
-		 * @return the style name
-		 * @see UIObject#getStylePrimaryName()
-		 * @throws IndexOutOfBoundsException
-		 */
-		public String getStylePrimaryName(int column) {
-			return UIObject.getStylePrimaryName(ensureColumn(column));
-		}
-
-		/**
-		 * Removes a style from the specified column.
-		 * 
-		 * @param column
-		 *            the column from which the style will be removed
-		 * @param styleName
-		 *            the style name to be removed
-		 * @see UIObject#removeStyleName(String)
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void removeStyleName(int column, String styleName) {
-			UIObject.setStyleName(ensureColumn(column), styleName, false);
-		}
-
-		/**
-		 * Sets the style name associated with the specified column.
-		 * 
-		 * @param column
-		 *            the column whose style name is to be set
-		 * @param styleName
-		 *            the new style name
-		 * @see UIObject#setStyleName(String)
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setStyleName(int column, String styleName) {
-			UIObject.setStyleName(ensureColumn(column), styleName);
-		}
-
-		/**
-		 * Sets the primary style name associated with the specified column.
-		 * 
-		 * @param column
-		 *            the column whose style name is to be set
-		 * @param styleName
-		 *            the new style name
-		 * @see UIObject#setStylePrimaryName(String)
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setStylePrimaryName(int column, String styleName) {
-			UIObject.setStylePrimaryName(ensureColumn(column), styleName);
-		}
-
-		/**
-		 * Sets the width of the specified column.
-		 * 
-		 * @param column
-		 *            the column of the cell whose width is to be set
-		 * @param width
-		 *            the cell's new width, in percentage or pixel units
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setWidth(int column, String width) {
-			ensureColumn(column).setPropertyString("width", width);
-		}
-
-		/**
-		 * Sets whether this row is visible.
-		 * 
-		 * @param row
-		 *            the row whose visibility is to be set
-		 * @param visible
-		 *            <code>true</code> to show the row, <code>false</code> to
-		 *            hide it
-		 */
-		public void setVisible(int column, boolean visible) {
-			Element e = ensureColumn(column);
-			UIObject.setVisible(e, visible);
-		}
-
-		/**
-		 * Resize the column group element.
-		 * 
-		 * @param columns
-		 *            the number of columns
-		 * @param growOnly
-		 *            true to only grow, false to shrink if needed
-		 */
-		void resizeColumnGroup(int columns, boolean growOnly) {
-			// The colgroup should always have at least one element. See
-			// prepareColumnGroup() for more details.
-			columns = Math.max(columns, 1);
-			int num = columnGroup.getChildCount();
-			if (num < columns) {
-				for (int i = num; i < columns; i++) {
-					columnGroup.appendChild(Document.get().createColElement());
-				}
-			} else if (!growOnly && num > columns) {
-				for (int i = num; i > columns; i--) {
-					columnGroup.removeChild(columnGroup.getLastChild());
-				}
-			}
-		}
-
-		private Element ensureColumn(int col) {
-			prepareColumn(col);
-			prepareColumnGroup();
-			resizeColumnGroup(col + 1, true);
-			return columnGroup.getChild(col).cast();
-		}
-
-		/**
-		 * Prepare the colgroup tag for the first time, guaranteeing that it
-		 * exists and has at least one col tag in it. This method corrects a
-		 * Mozilla issue where the col tag will affect the wrong column if a col
-		 * tag doesn't exist when the element is attached to the page.
-		 */
-		private void prepareColumnGroup() {
-			if (columnGroup == null) {
-				columnGroup = DOM.createElement("colgroup");
-				DOM.insertChild(tableElem, columnGroup, 0);
-				DOM.appendChild(columnGroup, DOM.createElement("col"));
-			}
-		}
-	}
-
-	/**
-	 * This class contains methods used to format a table's rows.
-	 */
-	public class RowFormatter {
-		/**
-		 * Adds a style to the specified row.
-		 * 
-		 * @param row
-		 *            the row to which the style will be added
-		 * @param styleName
-		 *            the style name to be added
-		 * @see UIObject#addStyleName(String)
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void addStyleName(int row, String styleName) {
-			UIObject.setStyleName(ensureElement(row), styleName, true);
-		}
-
-		/**
-		 * Gets the TR element representing the specified row.
-		 * 
-		 * @param row
-		 *            the row whose TR element is to be retrieved
-		 * @return the row's TR element
-		 * @throws IndexOutOfBoundsException
-		 */
-		public Element getElement(int row) {
-			checkRowBounds(row);
-			return DOM.asOld(getRow(bodyElem, row));
-		}
-
-		/**
-		 * Gets the style of the specified row.
-		 * 
-		 * @param row
-		 *            the row to be queried
-		 * @return the style name
-		 * @see UIObject#getStyleName()
-		 * @throws IndexOutOfBoundsException
-		 */
-		public String getStyleName(int row) {
-			return UIObject.getStyleName(getElement(row));
-		}
-
-		/**
-		 * Gets the primary style of the specified row.
-		 * 
-		 * @param row
-		 *            the row to be queried
-		 * @return the style name
-		 * @see UIObject#getStylePrimaryName()
-		 * @throws IndexOutOfBoundsException
-		 */
-		public String getStylePrimaryName(int row) {
-			return UIObject.getStylePrimaryName(getElement(row));
-		}
-
-		/**
-		 * Determines whether or not this row is visible via the display style
-		 * attribute.
-		 * 
-		 * @param row
-		 *            the row whose visibility is to be set
-		 * @return <code>true</code> if the row is visible
-		 */
-		public boolean isVisible(int row) {
-			Element e = getElement(row);
-			return UIObject.isVisible(e);
-		}
-
-		/**
-		 * Removes a style from the specified row.
-		 * 
-		 * @param row
-		 *            the row from which the style will be removed
-		 * @param styleName
-		 *            the style name to be removed
-		 * @see UIObject#removeStyleName(String)
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void removeStyleName(int row, String styleName) {
-			UIObject.setStyleName(ensureElement(row), styleName, false);
-		}
-
-		/**
-		 * Sets the style name associated with the specified row.
-		 * 
-		 * @param row
-		 *            the row whose style name is to be set
-		 * @param styleName
-		 *            the new style name
-		 * @see UIObject#setStyleName(String)
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setStyleName(int row, String styleName) {
-			UIObject.setStyleName(ensureElement(row), styleName);
-		}
-
-		/**
-		 * Sets the primary style name associated with the specified row.
-		 * 
-		 * @param row
-		 *            the row whose style name is to be set
-		 * @param styleName
-		 *            the new style name
-		 * @see UIObject#setStylePrimaryName(String)
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setStylePrimaryName(int row, String styleName) {
-			UIObject.setStylePrimaryName(ensureElement(row), styleName);
-		}
-
-		/**
-		 * Sets the vertical alignment of the specified row.
-		 * 
-		 * @param row
-		 *            the row whose alignment is to be set
-		 * @param align
-		 *            the row's new vertical alignment as specified in
-		 *            {@link HasVerticalAlignment}
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setVerticalAlign(int row, VerticalAlignmentConstant align) {
-			ensureElement(row).getStyle().setProperty("verticalAlign",
-					align.getVerticalAlignString());
-		}
-
-		/**
-		 * Sets whether this row is visible.
-		 * 
-		 * @param row
-		 *            the row whose visibility is to be set
-		 * @param visible
-		 *            <code>true</code> to show the row, <code>false</code> to
-		 *            hide it
-		 */
-		public void setVisible(int row, boolean visible) {
-			Element e = ensureElement(row);
-			UIObject.setVisible(e, visible);
-		}
-
-		/**
-		 * Ensure the TR element representing the specified row exists for
-		 * subclasses that allow dynamic addition of elements.
-		 * 
-		 * @param row
-		 *            the row whose TR element is to be retrieved
-		 * @return the row's TR element
-		 * @throws IndexOutOfBoundsException
-		 */
-		protected Element ensureElement(int row) {
-			prepareRow(row);
-			return DOM.asOld(getRow(bodyElem, row));
-		}
-
-		/**
-		 * @deprecated Call and override {@link #getRow(Element, int)} instead.
-		 */
-		protected Element getRow(Element tbody, int row) {
-			return DOM.asOld(impl.getRows(tbody).get(row));
-		}
-
-		/**
-		 * Convenience methods to set an attribute on a row.
-		 * 
-		 * @param row
-		 *            cell's row
-		 * @param attrName
-		 *            attribute to set
-		 * @param value
-		 *            value to set
-		 * @throws IndexOutOfBoundsException
-		 */
-		protected void setAttr(int row, String attrName, String value) {
-			Element elem = ensureElement(row);
-			elem.setAttribute(attrName, value);
-		}
-	}
-
 	private static final HTMLTableImpl impl = GWT.create(HTMLTableImpl.class);
 
 	/**
@@ -1317,15 +480,11 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 * @param column
 	 *            the cell's column
 	 * @param html
-	 *            the cell's HTML contents
+	 *            the cell's safe html contents
 	 * @throws IndexOutOfBoundsException
 	 */
-	public void setHTML(int row, int column, @IsSafeHtml String html) {
-		prepareCell(row, column);
-		Element td = cleanCell(row, column, html == null);
-		if (html != null) {
-			td.setInnerHTML(html);
-		}
+	public void setHTML(int row, int column, SafeHtml html) {
+		setHTML(row, column, html.asString());
 	}
 
 	/**
@@ -1336,11 +495,15 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 * @param column
 	 *            the cell's column
 	 * @param html
-	 *            the cell's safe html contents
+	 *            the cell's HTML contents
 	 * @throws IndexOutOfBoundsException
 	 */
-	public void setHTML(int row, int column, SafeHtml html) {
-		setHTML(row, column, html.asString());
+	public void setHTML(int row, int column, @IsSafeHtml String html) {
+		prepareCell(row, column);
+		Element td = cleanCell(row, column, html == null);
+		if (html != null) {
+			td.setInnerHTML(html);
+		}
 	}
 
 	/**
@@ -1361,6 +524,15 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		if (text != null) {
 			td.setInnerText(text);
 		}
+	}
+
+	/**
+	 * Overloaded version for IsWidget.
+	 * 
+	 * @see #setWidget(int,int,Widget)
+	 */
+	public void setWidget(int row, int column, IsWidget widget) {
+		this.setWidget(row, column, asWidgetOrNull(widget));
 	}
 
 	/**
@@ -1398,12 +570,41 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	}
 
 	/**
-	 * Overloaded version for IsWidget.
+	 * Removes any widgets, text, and HTML within the cell. This method assumes
+	 * that the requested cell already exists.
 	 * 
-	 * @see #setWidget(int,int,Widget)
+	 * @param row
+	 *            the cell's row
+	 * @param column
+	 *            the cell's column
+	 * @param clearInnerHTML
+	 *            should the cell's inner html be cleared?
+	 * @return element that has been cleaned
 	 */
-	public void setWidget(int row, int column, IsWidget widget) {
-		this.setWidget(row, column, asWidgetOrNull(widget));
+	private Element cleanCell(int row, int column, boolean clearInnerHTML) {
+		// Clear whatever is in the cell.
+		Element td = getCellFormatter().getRawElement(row, column);
+		internalClearCell(td, clearInnerHTML);
+		return td;
+	}
+
+	/**
+	 * Gets the Widget associated with the given cell.
+	 * 
+	 * @param row
+	 *            the cell's row
+	 * @param column
+	 *            the cell's column
+	 * @return the widget
+	 */
+	private Widget getWidgetImpl(int row, int column) {
+		Element e = cellFormatter.getRawElement(row, column);
+		Element child = DOM.getFirstChild(e);
+		if (child == null) {
+			return null;
+		} else {
+			return widgetMap.get(child);
+		}
 	}
 
 	/**
@@ -1746,40 +947,840 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	}
 
 	/**
-	 * Removes any widgets, text, and HTML within the cell. This method assumes
-	 * that the requested cell already exists.
-	 * 
-	 * @param row
-	 *            the cell's row
-	 * @param column
-	 *            the cell's column
-	 * @param clearInnerHTML
-	 *            should the cell's inner html be cleared?
-	 * @return element that has been cleaned
+	 * Return value for {@link HTMLTable#getCellForEvent}.
 	 */
-	private Element cleanCell(int row, int column, boolean clearInnerHTML) {
-		// Clear whatever is in the cell.
-		Element td = getCellFormatter().getRawElement(row, column);
-		internalClearCell(td, clearInnerHTML);
-		return td;
+	public class Cell {
+		private final int rowIndex;
+
+		private final int cellIndex;
+
+		/**
+		 * Creates a cell.
+		 * 
+		 * @param rowIndex
+		 *            the cell's row
+		 * @param cellIndex
+		 *            the cell's index
+		 */
+		protected Cell(int rowIndex, int cellIndex) {
+			this.cellIndex = cellIndex;
+			this.rowIndex = rowIndex;
+		}
+
+		/**
+		 * Gets the cell index.
+		 * 
+		 * @return the cell index
+		 */
+		public int getCellIndex() {
+			return cellIndex;
+		}
+
+		/**
+		 * Gets the cell's element.
+		 * 
+		 * @return the cell's element.
+		 */
+		public Element getElement() {
+			return DOM
+					.asOld(getCellFormatter().getElement(rowIndex, cellIndex));
+		}
+
+		/**
+		 * Get row index.
+		 * 
+		 * @return the row index
+		 */
+		public int getRowIndex() {
+			return rowIndex;
+		}
 	}
 
 	/**
-	 * Gets the Widget associated with the given cell.
-	 * 
-	 * @param row
-	 *            the cell's row
-	 * @param column
-	 *            the cell's column
-	 * @return the widget
+	 * This class contains methods used to format a table's cells.
 	 */
-	private Widget getWidgetImpl(int row, int column) {
-		Element e = cellFormatter.getRawElement(row, column);
-		Element child = DOM.getFirstChild(e);
-		if (child == null) {
-			return null;
-		} else {
-			return widgetMap.get(child);
+	public class CellFormatter {
+		/**
+		 * Adds a style to the specified cell.
+		 * 
+		 * @param row
+		 *            the cell's row
+		 * @param column
+		 *            the cell's column
+		 * @param styleName
+		 *            the style name to be added
+		 * @see UIObject#addStyleName(String)
+		 */
+		public void addStyleName(int row, int column, String styleName) {
+			prepareCell(row, column);
+			Element td = getCellElement(bodyElem, row, column);
+			UIObject.setStyleName(td, styleName, true);
+		}
+
+		/**
+		 * Gets the TD element representing the specified cell.
+		 * 
+		 * @param row
+		 *            the row of the cell to be retrieved
+		 * @param column
+		 *            the column of the cell to be retrieved
+		 * @return the column's TD element
+		 * @throws IndexOutOfBoundsException
+		 */
+		public Element getElement(int row, int column) {
+			checkCellBounds(row, column);
+			return DOM.asOld(getCellElement(bodyElem, row, column));
+		}
+
+		/**
+		 * Gets the style of a specified cell.
+		 * 
+		 * @param row
+		 *            the cell's row
+		 * @param column
+		 *            the cell's column
+		 * @see UIObject#getStyleName()
+		 * @return returns the style name
+		 * @throws IndexOutOfBoundsException
+		 */
+		public String getStyleName(int row, int column) {
+			return UIObject.getStyleName(getElement(row, column));
+		}
+
+		/**
+		 * Gets the primary style of a specified cell.
+		 * 
+		 * @param row
+		 *            the cell's row
+		 * @param column
+		 *            the cell's column
+		 * @see UIObject#getStylePrimaryName()
+		 * @return returns the style name
+		 * @throws IndexOutOfBoundsException
+		 */
+		public String getStylePrimaryName(int row, int column) {
+			return UIObject.getStylePrimaryName(getElement(row, column));
+		}
+
+		/**
+		 * Determines whether or not this cell is visible.
+		 * 
+		 * @param row
+		 *            the row of the cell whose visibility is to be set
+		 * @param column
+		 *            the column of the cell whose visibility is to be set
+		 * @return <code>true</code> if the object is visible
+		 */
+		public boolean isVisible(int row, int column) {
+			Element e = getElement(row, column);
+			return UIObject.isVisible(e);
+		}
+
+		/**
+		 * Removes a style from the specified cell.
+		 * 
+		 * @param row
+		 *            the cell's row
+		 * @param column
+		 *            the cell's column
+		 * @param styleName
+		 *            the style name to be removed
+		 * @see UIObject#removeStyleName(String)
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void removeStyleName(int row, int column, String styleName) {
+			checkCellBounds(row, column);
+			Element td = getCellElement(bodyElem, row, column);
+			UIObject.setStyleName(td, styleName, false);
+		}
+
+		/**
+		 * Sets the horizontal and vertical alignment of the specified cell's
+		 * contents.
+		 * 
+		 * @param row
+		 *            the row of the cell whose alignment is to be set
+		 * @param column
+		 *            the column of the cell whose alignment is to be set
+		 * @param hAlign
+		 *            the cell's new horizontal alignment as specified in
+		 *            {@link HasHorizontalAlignment}
+		 * @param vAlign
+		 *            the cell's new vertical alignment as specified in
+		 *            {@link HasVerticalAlignment}
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setAlignment(int row, int column,
+				HorizontalAlignmentConstant hAlign,
+				VerticalAlignmentConstant vAlign) {
+			setHorizontalAlignment(row, column, hAlign);
+			setVerticalAlignment(row, column, vAlign);
+		}
+
+		/**
+		 * Sets the height of the specified cell.
+		 * 
+		 * @param row
+		 *            the row of the cell whose height is to be set
+		 * @param column
+		 *            the column of the cell whose height is to be set
+		 * @param height
+		 *            the cell's new height, in CSS units
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setHeight(int row, int column, String height) {
+			prepareCell(row, column);
+			Element elem = getCellElement(bodyElem, row, column);
+			elem.setPropertyString("height", height);
+		}
+
+		/**
+		 * Sets the horizontal alignment of the specified cell.
+		 * 
+		 * @param row
+		 *            the row of the cell whose alignment is to be set
+		 * @param column
+		 *            the column of the cell whose alignment is to be set
+		 * @param align
+		 *            the cell's new horizontal alignment as specified in
+		 *            {@link HasHorizontalAlignment}.
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setHorizontalAlignment(int row, int column,
+				HorizontalAlignmentConstant align) {
+			prepareCell(row, column);
+			Element elem = getCellElement(bodyElem, row, column);
+			elem.setPropertyString("align", align.getTextAlignString());
+		}
+
+		/**
+		 * Sets the style name associated with the specified cell.
+		 *
+		 * @param row
+		 *            the row of the cell whose style name is to be set
+		 * @param column
+		 *            the column of the cell whose style name is to be set
+		 * @param styleName
+		 *            the new style name
+		 * @see UIObject#setStyleName(String)
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setStyleName(int row, int column, String styleName) {
+			prepareCell(row, column);
+			UIObject.setStyleName(getCellElement(bodyElem, row, column),
+					styleName);
+		}
+
+		/**
+		 * Sets the primary style name associated with the specified cell.
+		 * 
+		 * @param row
+		 *            the row of the cell whose style name is to be set
+		 * @param column
+		 *            the column of the cell whose style name is to be set
+		 * @param styleName
+		 *            the new style name
+		 * @see UIObject#setStylePrimaryName(String)
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setStylePrimaryName(int row, int column, String styleName) {
+			UIObject.setStylePrimaryName(getCellElement(bodyElem, row, column),
+					styleName);
+		}
+
+		/**
+		 * Sets the vertical alignment of the specified cell.
+		 * 
+		 * @param row
+		 *            the row of the cell whose alignment is to be set
+		 * @param column
+		 *            the column of the cell whose alignment is to be set
+		 * @param align
+		 *            the cell's new vertical alignment as specified in
+		 *            {@link HasVerticalAlignment}.
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setVerticalAlignment(int row, int column,
+				VerticalAlignmentConstant align) {
+			prepareCell(row, column);
+			getCellElement(bodyElem, row, column).getStyle().setProperty(
+					"verticalAlign", align.getVerticalAlignString());
+		}
+
+		/**
+		 * Sets whether this cell is visible via the display style property. The
+		 * other cells in the row will all shift left to fill the cell's space.
+		 * So, for example a table with (0,1,2) will become (1,2) if cell 1 is
+		 * hidden.
+		 * 
+		 * @param row
+		 *            the row of the cell whose visibility is to be set
+		 * @param column
+		 *            the column of the cell whose visibility is to be set
+		 * @param visible
+		 *            <code>true</code> to show the cell, <code>false</code> to
+		 *            hide it
+		 */
+		public void setVisible(int row, int column, boolean visible) {
+			Element e = ensureElement(row, column);
+			UIObject.setVisible(e, visible);
+		}
+
+		/**
+		 * Sets the width of the specified cell.
+		 * 
+		 * @param row
+		 *            the row of the cell whose width is to be set
+		 * @param column
+		 *            the column of the cell whose width is to be set
+		 * @param width
+		 *            the cell's new width, in CSS units
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setWidth(int row, int column, String width) {
+			// Give the subclass a chance to prepare the cell.
+			prepareCell(row, column);
+			getCellElement(bodyElem, row, column).setPropertyString("width",
+					width);
+		}
+
+		/**
+		 * Sets whether the specified cell will allow word wrapping of its
+		 * contents.
+		 * 
+		 * @param row
+		 *            the row of the cell whose word-wrap is to be set
+		 * @param column
+		 *            the column of the cell whose word-wrap is to be set
+		 * @param wrap
+		 *            <code>false </code> to disable word wrapping in this cell
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setWordWrap(int row, int column, boolean wrap) {
+			prepareCell(row, column);
+			String wrapValue = wrap ? "" : "nowrap";
+			getElement(row, column).getStyle().setProperty("whiteSpace",
+					wrapValue);
+		}
+
+		/**
+		 * Get a cell's element.
+		 * 
+		 * @param tbody
+		 *            the table element
+		 * @param row
+		 *            the row of the cell
+		 * @param col
+		 *            the column of the cell
+		 * @return the element
+		 */
+		private Element getCellElement(Element tbody, int row, int col) {
+			Element rowObj = impl.getRows(tbody).get(row);
+			ElementArray<Element> cells = impl.getCells(rowObj);
+			return cells.get(col);
+		}
+
+		/**
+		 * Gets the TD element representing the specified cell unsafely (meaning
+		 * that it doesn't ensure that <code>row</code> and <code>column</code>
+		 * are valid).
+		 * 
+		 * @param row
+		 *            the row of the cell to be retrieved
+		 * @param column
+		 *            the column of the cell to be retrieved
+		 * @return the cell's TD element
+		 */
+		private Element getRawElement(int row, int column) {
+			return getCellElement(bodyElem, row, column);
+		}
+
+		/**
+		 * Gets the element associated with a cell. If it does not exist and the
+		 * subtype allows creation of elements, creates it.
+		 * 
+		 * @param row
+		 *            the cell's row
+		 * @param column
+		 *            the cell's column
+		 * @return the cell's element
+		 * @throws IndexOutOfBoundsException
+		 */
+		protected Element ensureElement(int row, int column) {
+			prepareCell(row, column);
+			return DOM.asOld(getCellElement(bodyElem, row, column));
+		}
+
+		/**
+		 * Convenience methods to get an attribute on a cell.
+		 * 
+		 * @param row
+		 *            cell's row
+		 * @param column
+		 *            cell's column
+		 * @param attr
+		 *            attribute to get
+		 * @return the attribute's value
+		 * @throws IndexOutOfBoundsException
+		 */
+		protected String getAttr(int row, int column, String attr) {
+			Element elem = getElement(row, column);
+			return elem.getAttribute(attr);
+		}
+
+		/**
+		 * Convenience methods to set an attribute on a cell.
+		 * 
+		 * @param row
+		 *            cell's row
+		 * @param column
+		 *            cell's column
+		 * @param attrName
+		 *            attribute to set
+		 * @param value
+		 *            value to set
+		 * @throws IndexOutOfBoundsException
+		 */
+		protected void setAttr(int row, int column, String attrName,
+				String value) {
+			Element elem = ensureElement(row, column);
+			elem.setAttribute(attrName, value);
+		}
+	}
+
+	/**
+	 * This class contains methods used to format a table's columns. It is
+	 * limited by the support cross-browser HTML support for column formatting.
+	 */
+	public class ColumnFormatter {
+		protected Element columnGroup;
+
+		/**
+		 * Adds a style to the specified column.
+		 * 
+		 * @param col
+		 *            the col to which the style will be added
+		 * @param styleName
+		 *            the style name to be added
+		 * @see UIObject#addStyleName(String)
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void addStyleName(int col, String styleName) {
+			UIObject.setStyleName(ensureColumn(col), styleName, true);
+		}
+
+		/**
+		 * Get the col element for the column.
+		 * 
+		 * @param column
+		 *            the column index
+		 * @return the col element
+		 */
+		public Element getElement(int column) {
+			return DOM.asOld(ensureColumn(column));
+		}
+
+		/**
+		 * Gets the style of the specified column.
+		 * 
+		 * @param column
+		 *            the column to be queried
+		 * @return the style name
+		 * @see UIObject#getStyleName()
+		 * @throws IndexOutOfBoundsException
+		 */
+		public String getStyleName(int column) {
+			return UIObject.getStyleName(ensureColumn(column));
+		}
+
+		/**
+		 * Gets the primary style of the specified column.
+		 * 
+		 * @param column
+		 *            the column to be queried
+		 * @return the style name
+		 * @see UIObject#getStylePrimaryName()
+		 * @throws IndexOutOfBoundsException
+		 */
+		public String getStylePrimaryName(int column) {
+			return UIObject.getStylePrimaryName(ensureColumn(column));
+		}
+
+		/**
+		 * Removes a style from the specified column.
+		 * 
+		 * @param column
+		 *            the column from which the style will be removed
+		 * @param styleName
+		 *            the style name to be removed
+		 * @see UIObject#removeStyleName(String)
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void removeStyleName(int column, String styleName) {
+			UIObject.setStyleName(ensureColumn(column), styleName, false);
+		}
+
+		/**
+		 * Sets the style name associated with the specified column.
+		 * 
+		 * @param column
+		 *            the column whose style name is to be set
+		 * @param styleName
+		 *            the new style name
+		 * @see UIObject#setStyleName(String)
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setStyleName(int column, String styleName) {
+			UIObject.setStyleName(ensureColumn(column), styleName);
+		}
+
+		/**
+		 * Sets the primary style name associated with the specified column.
+		 * 
+		 * @param column
+		 *            the column whose style name is to be set
+		 * @param styleName
+		 *            the new style name
+		 * @see UIObject#setStylePrimaryName(String)
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setStylePrimaryName(int column, String styleName) {
+			UIObject.setStylePrimaryName(ensureColumn(column), styleName);
+		}
+
+		/**
+		 * Sets whether this row is visible.
+		 * 
+		 * @param row
+		 *            the row whose visibility is to be set
+		 * @param visible
+		 *            <code>true</code> to show the row, <code>false</code> to
+		 *            hide it
+		 */
+		public void setVisible(int column, boolean visible) {
+			Element e = ensureColumn(column);
+			UIObject.setVisible(e, visible);
+		}
+
+		/**
+		 * Sets the width of the specified column.
+		 * 
+		 * @param column
+		 *            the column of the cell whose width is to be set
+		 * @param width
+		 *            the cell's new width, in percentage or pixel units
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setWidth(int column, String width) {
+			ensureColumn(column).setPropertyString("width", width);
+		}
+
+		private Element ensureColumn(int col) {
+			prepareColumn(col);
+			prepareColumnGroup();
+			resizeColumnGroup(col + 1, true);
+			return columnGroup.getChild(col).cast();
+		}
+
+		/**
+		 * Prepare the colgroup tag for the first time, guaranteeing that it
+		 * exists and has at least one col tag in it. This method corrects a
+		 * Mozilla issue where the col tag will affect the wrong column if a col
+		 * tag doesn't exist when the element is attached to the page.
+		 */
+		private void prepareColumnGroup() {
+			if (columnGroup == null) {
+				columnGroup = DOM.createElement("colgroup");
+				DOM.insertChild(tableElem, columnGroup, 0);
+				DOM.appendChild(columnGroup, DOM.createElement("col"));
+			}
+		}
+
+		/**
+		 * Resize the column group element.
+		 * 
+		 * @param columns
+		 *            the number of columns
+		 * @param growOnly
+		 *            true to only grow, false to shrink if needed
+		 */
+		void resizeColumnGroup(int columns, boolean growOnly) {
+			// The colgroup should always have at least one element. See
+			// prepareColumnGroup() for more details.
+			columns = Math.max(columns, 1);
+			int num = columnGroup.getChildCount();
+			if (num < columns) {
+				for (int i = num; i < columns; i++) {
+					columnGroup.appendChild(Document.get().createColElement());
+				}
+			} else if (!growOnly && num > columns) {
+				for (int i = num; i > columns; i--) {
+					columnGroup.removeChild(columnGroup.getLastChild());
+				}
+			}
+		}
+	}
+
+	/**
+	 * This class contains methods used to format a table's rows.
+	 */
+	public class RowFormatter {
+		/**
+		 * Adds a style to the specified row.
+		 * 
+		 * @param row
+		 *            the row to which the style will be added
+		 * @param styleName
+		 *            the style name to be added
+		 * @see UIObject#addStyleName(String)
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void addStyleName(int row, String styleName) {
+			UIObject.setStyleName(ensureElement(row), styleName, true);
+		}
+
+		/**
+		 * Gets the TR element representing the specified row.
+		 * 
+		 * @param row
+		 *            the row whose TR element is to be retrieved
+		 * @return the row's TR element
+		 * @throws IndexOutOfBoundsException
+		 */
+		public Element getElement(int row) {
+			checkRowBounds(row);
+			return DOM.asOld(getRow(bodyElem, row));
+		}
+
+		/**
+		 * Gets the style of the specified row.
+		 * 
+		 * @param row
+		 *            the row to be queried
+		 * @return the style name
+		 * @see UIObject#getStyleName()
+		 * @throws IndexOutOfBoundsException
+		 */
+		public String getStyleName(int row) {
+			return UIObject.getStyleName(getElement(row));
+		}
+
+		/**
+		 * Gets the primary style of the specified row.
+		 * 
+		 * @param row
+		 *            the row to be queried
+		 * @return the style name
+		 * @see UIObject#getStylePrimaryName()
+		 * @throws IndexOutOfBoundsException
+		 */
+		public String getStylePrimaryName(int row) {
+			return UIObject.getStylePrimaryName(getElement(row));
+		}
+
+		/**
+		 * Determines whether or not this row is visible via the display style
+		 * attribute.
+		 * 
+		 * @param row
+		 *            the row whose visibility is to be set
+		 * @return <code>true</code> if the row is visible
+		 */
+		public boolean isVisible(int row) {
+			Element e = getElement(row);
+			return UIObject.isVisible(e);
+		}
+
+		/**
+		 * Removes a style from the specified row.
+		 * 
+		 * @param row
+		 *            the row from which the style will be removed
+		 * @param styleName
+		 *            the style name to be removed
+		 * @see UIObject#removeStyleName(String)
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void removeStyleName(int row, String styleName) {
+			UIObject.setStyleName(ensureElement(row), styleName, false);
+		}
+
+		/**
+		 * Sets the style name associated with the specified row.
+		 * 
+		 * @param row
+		 *            the row whose style name is to be set
+		 * @param styleName
+		 *            the new style name
+		 * @see UIObject#setStyleName(String)
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setStyleName(int row, String styleName) {
+			UIObject.setStyleName(ensureElement(row), styleName);
+		}
+
+		/**
+		 * Sets the primary style name associated with the specified row.
+		 * 
+		 * @param row
+		 *            the row whose style name is to be set
+		 * @param styleName
+		 *            the new style name
+		 * @see UIObject#setStylePrimaryName(String)
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setStylePrimaryName(int row, String styleName) {
+			UIObject.setStylePrimaryName(ensureElement(row), styleName);
+		}
+
+		/**
+		 * Sets the vertical alignment of the specified row.
+		 * 
+		 * @param row
+		 *            the row whose alignment is to be set
+		 * @param align
+		 *            the row's new vertical alignment as specified in
+		 *            {@link HasVerticalAlignment}
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setVerticalAlign(int row, VerticalAlignmentConstant align) {
+			ensureElement(row).getStyle().setProperty("verticalAlign",
+					align.getVerticalAlignString());
+		}
+
+		/**
+		 * Sets whether this row is visible.
+		 * 
+		 * @param row
+		 *            the row whose visibility is to be set
+		 * @param visible
+		 *            <code>true</code> to show the row, <code>false</code> to
+		 *            hide it
+		 */
+		public void setVisible(int row, boolean visible) {
+			Element e = ensureElement(row);
+			UIObject.setVisible(e, visible);
+		}
+
+		/**
+		 * Ensure the TR element representing the specified row exists for
+		 * subclasses that allow dynamic addition of elements.
+		 * 
+		 * @param row
+		 *            the row whose TR element is to be retrieved
+		 * @return the row's TR element
+		 * @throws IndexOutOfBoundsException
+		 */
+		protected Element ensureElement(int row) {
+			prepareRow(row);
+			return DOM.asOld(getRow(bodyElem, row));
+		}
+
+		/**
+		 * @deprecated Call and override {@link #getRow(Element, int)} instead.
+		 */
+		protected Element getRow(Element tbody, int row) {
+			return DOM.asOld(impl.getRows(tbody).get(row));
+		}
+
+		/**
+		 * Convenience methods to set an attribute on a row.
+		 * 
+		 * @param row
+		 *            cell's row
+		 * @param attrName
+		 *            attribute to set
+		 * @param value
+		 *            value to set
+		 * @throws IndexOutOfBoundsException
+		 */
+		protected void setAttr(int row, String attrName, String value) {
+			Element elem = ensureElement(row);
+			elem.setAttribute(attrName, value);
+		}
+	}
+
+	/**
+	 * IE specific implementation for accessing the Table DOM. see: issue 6938
+	 */
+	@SuppressWarnings("unused") // used due to rebinding
+	private static class HTMLTableIEImpl extends HTMLTableStandardImpl {
+		native JsArray<ElementRemote> getCells0(ElementRemote row) /*-{
+																	return row.children;
+																	}-*/;
+
+		native JsArray<ElementRemote> getRows0(ElementRemote tbody) /*-{
+																	return tbody.children;
+																	}-*/;
+	}
+
+	/**
+	 * Interface to access {@link HTMLTable}'s DOM.
+	 */
+	private interface HTMLTableImpl {
+		ElementArray<Element> getCells(Element row);
+
+		ElementArray<Element> getRows(Element tbody);
+	}
+
+	/**
+	 * Standard implementation for accessing the Table DOM.
+	 */
+	private static class HTMLTableStandardImpl implements HTMLTableImpl {
+		@Override
+		public ElementArray<Element> getCells(Element row) {
+			return new ElementArray<Element>(
+					(List) ((TableRowElement) row).provideChildNodeList());
+		}
+
+		@Override
+		public ElementArray<Element> getRows(Element tbody) {
+			return new ElementArray<Element>(
+					(List) ((TableSectionElement) tbody)
+							.provideChildNodeList());
+		}
+
+		native JsArray<ElementRemote> getCells0(ElementRemote row) /*-{
+																	return row.cells;
+																	}-*/;
+
+		native JsArray<ElementRemote> getRows0(ElementRemote tbody) /*-{
+																	return tbody.rows;
+																	}-*/;
+	}
+
+	static class ElementArray<T extends Node> {
+		private JsArray<ElementRemote> jsArray;
+
+		private NodeList<? extends Element> nodeList;
+
+		private List<? extends Element> jvmList;
+
+		public ElementArray(JsArray<ElementRemote> elements) {
+			this.jsArray = elements;
+		}
+
+		public ElementArray(List<? extends Element> jvmList) {
+			this.jvmList = jvmList;
+		}
+
+		public ElementArray(NodeList<? extends Element> nodeList) {
+			this.nodeList = nodeList;
+		}
+
+		public Element get(int idx) {
+			if (jvmList != null) {
+				return jvmList.get(idx);
+			}
+			return nodeList != null ? nodeList.getItem(idx)
+					: LocalDom.nodeFor(jsArray.get(idx));
+		}
+
+		public int length() {
+			if (jvmList != null) {
+				return jvmList.size();
+			}
+			return nodeList != null ? nodeList.getLength() : jsArray.length();
 		}
 	}
 }

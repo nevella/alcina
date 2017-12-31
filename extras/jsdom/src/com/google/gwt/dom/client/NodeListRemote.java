@@ -35,19 +35,6 @@ public class NodeListRemote<T extends Node> extends JavaScriptObject
 	protected NodeListRemote() {
 	}
 
-	/**
-	 * Returns the indexth item in the collection. If index is greater than or
-	 * equal to the number of nodes in the list, this returns null.
-	 * 
-	 * @param index
-	 *            Index into the collection
-	 * @return the node at the indexth position in the NodeList, or null if that
-	 *         is not a valid index.
-	 */
-	 final native NodeRemote getItem0(int index) /*-{
-        return this[index];
-	}-*/;
-
 	@Override
 	public final T getItem(int index) {
 		return LocalDom.nodeFor(getItem0(index));
@@ -59,11 +46,24 @@ public class NodeListRemote<T extends Node> extends JavaScriptObject
 	 */
 	@Override
 	public final native int getLength() /*-{
-        return this.length;
-	}-*/;
-	
+										return this.length;
+										}-*/;
+
 	@Override
 	public final Stream<T> stream() {
 		return DomNodeListStatic.stream0(this);
 	}
+
+	/**
+	 * Returns the indexth item in the collection. If index is greater than or
+	 * equal to the number of nodes in the list, this returns null.
+	 * 
+	 * @param index
+	 *            Index into the collection
+	 * @return the node at the indexth position in the NodeList, or null if that
+	 *         is not a valid index.
+	 */
+	final native NodeRemote getItem0(int index) /*-{
+												return this[index];
+												}-*/;
 }

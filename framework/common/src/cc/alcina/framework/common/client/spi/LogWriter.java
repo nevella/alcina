@@ -11,14 +11,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.spi;
 
 /**
  *
  * @author Nick Reddel
  */
-
- public interface LogWriter {
-	public void log(String s) ;
+public interface LogWriter {
+	public void log(String s);
 }

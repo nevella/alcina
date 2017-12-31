@@ -21,13 +21,13 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	}
 
 	@Override
-	public boolean contains(HasIdAndLocalId obj) {
-		return getObject(obj) != null;
+	public boolean contains(Class<? extends HasIdAndLocalId> clazz, long id) {
+		return cache.contains(clazz, id);
 	}
 
 	@Override
-	public boolean contains(Class<? extends HasIdAndLocalId> clazz, long id) {
-		return cache.contains(clazz, id);
+	public boolean contains(HasIdAndLocalId obj) {
+		return getObject(obj) != null;
 	}
 
 	@Override
@@ -83,6 +83,11 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	}
 
 	@Override
+	public void invalidate(Class<? extends HasIdAndLocalId> clazz) {
+		cache.invalidate(clazz);
+	}
+
+	@Override
 	public void mapObject(HasIdAndLocalId obj) {
 		cache.put(obj);
 	}
@@ -99,10 +104,5 @@ public class DetachedCacheObjectStore implements ObjectStore {
 
 	public void setLazyObjectLoader(LazyObjectLoader lazyObjectLoader) {
 		this.lazyObjectLoader = lazyObjectLoader;
-	}
-
-	@Override
-	public void invalidate(Class<? extends HasIdAndLocalId> clazz) {
-		cache.invalidate(clazz);
 	}
 }

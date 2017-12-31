@@ -6,8 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-
 public @interface Documentation {
-	public String value();
 	public boolean html() default false;
+
+	public String value();
 }

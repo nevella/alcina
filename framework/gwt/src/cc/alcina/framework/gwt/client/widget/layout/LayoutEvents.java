@@ -84,8 +84,8 @@ public class LayoutEvents {
 	}
 
 	public void fireRequiresGlobalRelayout() {
-		fireLayoutEvent(new LayoutEvent(
-				LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
+		fireLayoutEvent(
+				new LayoutEvent(LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
 	}
 
 	public void removeLayoutEventListener(LayoutEventListener l) {

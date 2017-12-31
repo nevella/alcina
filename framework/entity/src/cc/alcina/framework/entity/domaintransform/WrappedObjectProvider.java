@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.domaintransform;
 
 import java.util.List;
@@ -21,22 +20,20 @@ import javax.persistence.EntityManager;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 
-
 /**
  *
  * @author Nick Reddel
  */
-
- public interface WrappedObjectProvider {
-
-	public <T extends WrapperPersistable> T getWrappedObjectForUser(Class<T> c, EntityManager em)
-			throws Exception;
-
-	public <T extends WrapperPersistable> T getWrappedObjectForUser(Class<T> c, long id, EntityManager em)
-			throws Exception;
-
-	public <T extends WrapperPersistable> WrappedObject<T> getObjectWrapperForUser(Class<T> c, long id, EntityManager em)
-			throws Exception;
-	
+public interface WrappedObjectProvider {
 	public List<Class> getJaxbSubclasses();
+
+	public <T extends WrapperPersistable> WrappedObject<T>
+			getObjectWrapperForUser(Class<T> c, long id, EntityManager em)
+					throws Exception;
+
+	public <T extends WrapperPersistable> T getWrappedObjectForUser(Class<T> c,
+			EntityManager em) throws Exception;
+
+	public <T extends WrapperPersistable> T getWrappedObjectForUser(Class<T> c,
+			long id, EntityManager em) throws Exception;
 }

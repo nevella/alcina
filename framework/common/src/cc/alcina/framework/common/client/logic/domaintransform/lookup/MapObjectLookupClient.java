@@ -41,15 +41,21 @@ public class MapObjectLookupClient extends MapObjectLookup {
 		this.listener = listener;
 	}
 
-	public static class AsyncRegistrationException extends RuntimeException {
-		public AsyncRegistrationException(Exception e1) {
-			super(e1);
-		}
-	}
-
 	public void clearReflectionCache() {
 		// because different code modules may have different reflection data
 		registerChildren.clear();
+	}
+
+	@Override
+	public synchronized void mapObject(HasIdAndLocalId obj) {
+		mappedObjects = new PerClassLookup();
+		addObjectOrCollectionToEndOfQueue(obj);
+		iterateRegistration();
+		// assert toRegister.isEmpty();
+		// it'd be nice, but not always possible to assert this (counterexample:
+		// using a
+		// complicated handshake, say, where code can map objects while a big
+		// block is still being registered)
 	}
 
 	public synchronized void registerAsync(Collection registerableDomainObjects,
@@ -82,26 +88,13 @@ public class MapObjectLookupClient extends MapObjectLookup {
 		});
 	}
 
-	synchronized void addObjectOrCollectionToEndOfQueue(Object o) {
-		if (o == null) {
-			return;
+	@Override
+	public synchronized void registerObjects(Collection objects) {
+		mappedObjects = new PerClassLookup();
+		for (Object o : objects) {
+			addObjectOrCollectionToEndOfQueue(o);
 		}
-		if (o instanceof Collection) {
-			for (HasIdAndLocalId child : (Collection<HasIdAndLocalId>) o) {
-				toRegister.add(child);
-			}
-		} else {
-			toRegister.add((HasIdAndLocalId) o);
-		}
-	}
-
-	synchronized boolean iterateRegistration() {
-		registerCounter = 0;
-		while (!toRegister.isEmpty()
-				&& (postRegisterCommand == null || registerCounter++ < 500)) {
-			mapObjectFromFrontOfQueue();
-		}
-		return !toRegister.isEmpty();
+		iterateRegistration();
 	}
 
 	private synchronized void mapObjectFromFrontOfQueue() {
@@ -146,24 +139,31 @@ public class MapObjectLookupClient extends MapObjectLookup {
 		mappedObjects.put(obj);
 	}
 
-	@Override
-	public synchronized void registerObjects(Collection objects) {
-		mappedObjects = new PerClassLookup();
-		for (Object o : objects) {
-			addObjectOrCollectionToEndOfQueue(o);
+	synchronized void addObjectOrCollectionToEndOfQueue(Object o) {
+		if (o == null) {
+			return;
 		}
-		iterateRegistration();
+		if (o instanceof Collection) {
+			for (HasIdAndLocalId child : (Collection<HasIdAndLocalId>) o) {
+				toRegister.add(child);
+			}
+		} else {
+			toRegister.add((HasIdAndLocalId) o);
+		}
 	}
 
-	@Override
-	public synchronized void mapObject(HasIdAndLocalId obj) {
-		mappedObjects = new PerClassLookup();
-		addObjectOrCollectionToEndOfQueue(obj);
-		iterateRegistration();
-		// assert toRegister.isEmpty();
-		// it'd be nice, but not always possible to assert this (counterexample:
-		// using a
-		// complicated handshake, say, where code can map objects while a big
-		// block is still being registered)
+	synchronized boolean iterateRegistration() {
+		registerCounter = 0;
+		while (!toRegister.isEmpty()
+				&& (postRegisterCommand == null || registerCounter++ < 500)) {
+			mapObjectFromFrontOfQueue();
+		}
+		return !toRegister.isEmpty();
+	}
+
+	public static class AsyncRegistrationException extends RuntimeException {
+		public AsyncRegistrationException(Exception e1) {
+			super(e1);
+		}
 	}
 }

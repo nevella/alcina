@@ -17,6 +17,18 @@ public class TaggedLoggers {
 
 	private int registrationCounter = 0;
 
+	public TaggedLogger getLogger(final Class clazz, final Object... tags) {
+		return new TaggedLogger(this, clazz, tags);
+	}
+
+	public int getRegistrationCounter() {
+		return this.registrationCounter;
+	}
+
+	public void log(String message, final Class clazz, final Object... tags) {
+		new TaggedLogger(this, clazz, tags).log(message);
+	}
+
 	public TaggedLoggerRegistration registerInterest(Class clazz,
 			TaggedLoggerHandler handler, Object... tags) {
 		synchronized (this) {
@@ -34,18 +46,6 @@ public class TaggedLoggers {
 		registrations.remove(taggedLoggerRegistration);
 	}
 
-	public TaggedLogger getLogger(final Class clazz, final Object... tags) {
-		return new TaggedLogger(this, clazz, tags);
-	}
-	
-	public void log(String message,final Class clazz, final Object... tags) {
-		new TaggedLogger(this, clazz, tags).log(message);
-	}
-
-	public int getRegistrationCounter() {
-		return this.registrationCounter;
-	}
-
 	void updateRegistrations(final TaggedLogger taggedLogger) {
 		if (taggedLogger.registrationCounter == registrationCounter) {
 			return;
@@ -56,11 +56,12 @@ public class TaggedLoggers {
 			CollectionFilter<TaggedLoggerRegistration> subscribesToFilter = new CollectionFilter<TaggedLoggerRegistration>() {
 				@Override
 				public boolean allow(TaggedLoggerRegistration o) {
-					return o.subscribesTo(taggedLogger.clazz, taggedLogger.tags);
+					return o.subscribesTo(taggedLogger.clazz,
+							taggedLogger.tags);
 				}
 			};
-			taggedLogger.registrations.addAll(CollectionFilters.filter(
-					registrations, subscribesToFilter));
+			taggedLogger.registrations.addAll(CollectionFilters
+					.filter(registrations, subscribesToFilter));
 		}
 	}
 }

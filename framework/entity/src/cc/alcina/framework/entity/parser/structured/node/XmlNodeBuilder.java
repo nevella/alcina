@@ -17,7 +17,7 @@ public class XmlNodeBuilder {
 	private boolean processingInstruction;
 
 	private StringMap attrs = new StringMap();
-	
+
 	protected boolean built;
 
 	private XmlNode builtNode;
@@ -103,7 +103,6 @@ public class XmlNodeBuilder {
 
 	public XmlNode insertBeforeThis() {
 		return insertBefore(relativeTo);
-		
 	}
 
 	public XmlNodeBuilder processingInstruction() {
@@ -148,17 +147,18 @@ public class XmlNodeBuilder {
 		XmlNode node = build();
 		appendTo.node.appendChild(node.node);
 		appendTo.children.invalidate();
-		return node;		
+		return node;
 	}
+
 	private XmlDoc doc() {
 		return relativeTo.doc;
 	}
+
 	private XmlNode insertBefore(XmlNode insertBefore) {
 		XmlNode node = build();
 		insertBefore.node.getParentNode().insertBefore(node.node,
 				insertBefore.node);
 		insertBefore.parent().invalidate();
-		return node;		
+		return node;
 	}
-	
 }

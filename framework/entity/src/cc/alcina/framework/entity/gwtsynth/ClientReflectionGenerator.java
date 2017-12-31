@@ -64,7 +64,6 @@ import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -81,6 +80,40 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  * @author Nick Reddel
  */
 public class ClientReflectionGenerator extends Generator {
+	public static final CollectionFilter<RegistryLocation> CLIENT_VISIBLE_ANNOTATION_FILTER = new CollectionFilter<RegistryLocation>() {
+		@Override
+		public boolean allow(RegistryLocation o) {
+			return o.registryPoint()
+					.getAnnotation(NonClientRegistryPointType.class) == null;
+		}
+	};
+
+	// Annotation utils for gwt
+	// presence class, annotation simple name
+	private static UnsortedMultikeyMap<Annotation> classNameAnnotationMap = new UnsortedMultikeyMap<>(
+			2);
+
+	public static boolean hasAnnotationNamed(JClassType clazz,
+			Class<? extends Annotation> ann) {
+		String annClazzName = ann.getSimpleName();
+		if (!classNameAnnotationMap.containsKey(clazz, annClazzName)) {
+			JClassType c = clazz;
+			Annotation found = null;
+			while (c != null && found == null) {
+				for (Annotation a : c.getAnnotations()) {
+					if (a.annotationType().getSimpleName()
+							.equals(annClazzName)) {
+						found = a;
+						break;
+					}
+				}
+				c = c.getSuperclass();
+			}
+			classNameAnnotationMap.put(clazz, annClazzName, found);
+		}
+		return classNameAnnotationMap.get(clazz, annClazzName) != null;
+	}
+
 	private String packageName = ClientReflector.class.getCanonicalName()
 			.substring(0,
 					ClientReflector.class.getCanonicalName().lastIndexOf("."));
@@ -93,17 +126,16 @@ public class ClientReflectionGenerator extends Generator {
 
 	private ArrayList<Class<? extends Annotation>> visibleAnnotationClasses;
 
-	public SourceWriter getSw() {
-		return this.sw;
-	}
+	Map<Class, JClassType> ctLookup = new HashMap<Class, JClassType>();
 
-	public static final CollectionFilter<RegistryLocation> CLIENT_VISIBLE_ANNOTATION_FILTER = new CollectionFilter<RegistryLocation>() {
-		@Override
-		public boolean allow(RegistryLocation o) {
-			return o.registryPoint()
-					.getAnnotation(NonClientRegistryPointType.class) == null;
-		}
-	};
+	private Map<PrintWriter, BiWriter> wrappedWriters = new HashMap<PrintWriter, BiWriter>();
+
+	private HashMap<JMethod, Set<Annotation>> superMethodAnnotationMap = new HashMap<JMethod, Set<Annotation>>();
+
+	private UnsortedMultikeyMap<Set<Annotation>> superAnnotationMap = new UnsortedMultikeyMap<Set<Annotation>>(
+			2);
+
+	private IntrospectorFilter filter;
 
 	public String generate(TreeLogger logger, GeneratorContext context,
 			String typeName) throws UnableToCompleteException {
@@ -186,232 +218,73 @@ public class ClientReflectionGenerator extends Generator {
 		}
 	}
 
-	Map<Class, JClassType> ctLookup = new HashMap<Class, JClassType>();
-
-	/**
-	 * Since overridden parent annotations are potentially useful, we don't use
-	 * standard overriding behaviour
-	 *
-	 * @throws ClassNotFoundException
-	 */
-	private Map<JClassType, Set<RegistryLocation>> getRegistryAnnotations(
-			TypeOracle typeOracle) throws ClassNotFoundException {
-		HashMap<JClassType, Set<RegistryLocation>> results = new HashMap<JClassType, Set<RegistryLocation>>();
-		JClassType[] types = typeOracle.getTypes();
-		for (JClassType jct : types) {
-			if ((jct.isAnnotationPresent(RegistryLocation.class)
-					|| jct.isAnnotationPresent(RegistryLocations.class))
-					&& !jct.isAbstract()) {
-				Set<RegistryLocation> rls = getClassAnnotations(jct,
-						RegistryLocation.class, true);
-				Set<RegistryLocations> rlsSet = getClassAnnotations(jct,
-						RegistryLocations.class, true);
-				for (RegistryLocations rlcs : rlsSet) {
-					for (RegistryLocation rl : rlcs.value()) {
-						rls.add(rl);
+	public Set<Annotation> getClassAnnotations(JClassType clazz,
+			List<Class<? extends Annotation>> annotationClasses,
+			boolean allowMultiple) {
+		if (superAnnotationMap.containsKey(clazz, annotationClasses)) {
+			return superAnnotationMap.get(clazz, annotationClasses);
+		}
+		Map<Class, Annotation> uniqueMap = new HashMap<Class, Annotation>();
+		Set<? extends JClassType> flattenedSupertypeHierarchy = clazz
+				.getFlattenedSupertypeHierarchy();
+		// uhoh-nono
+		// List<? extends JClassType> nonGeneric = flattenedSupertypeHierarchy
+		// .stream().map(cl -> {
+		// if (cl instanceof JParameterizedType) {
+		// return ((JParameterizedType) cl).getBaseType();
+		// } else {
+		// return cl;
+		// }
+		// }).collect(Collectors.toList());
+		Set values = new LinkedHashSet();// order important - lowest ordinal,
+											// highest priority
+		for (JClassType jct : flattenedSupertypeHierarchy) {
+			try {
+				List<Annotation> visibleAnnotations = getVisibleAnnotations(jct,
+						annotationClasses);
+				values.addAll(visibleAnnotations);
+				for (Annotation a : visibleAnnotations) {
+					if (!uniqueMap.containsKey(a.annotationType())) {
+						uniqueMap.put(a.annotationType(), a);
 					}
 				}
-				rls = new LinkedHashSet<RegistryLocation>(rls);
-				CollectionFilters.filterInPlace(rls,
-						CLIENT_VISIBLE_ANNOTATION_FILTER);
-				rls = Registry.filterForRegistryPointUniqueness(rls);
-				if (!rls.isEmpty() && !ignore(jct)) {
-					results.put(jct, rls);
-				}
+			} catch (Exception e) {
 			}
 		}
-		return results;
-	}
-
-	private <T> Set<T> getClassAnnotations(JClassType jct,
-			Class<T> annotationType, boolean allowMultiple) {
-		return (Set) getClassAnnotations(jct,
-				(List) Collections.singletonList(annotationType),
-				allowMultiple);
-	}
-
-	private boolean ignore(JClassType jClassType) {
-		return ignore(jClassType, null);
-	}
-
-	private boolean ignore(JClassType jClassType,
-			ReflectionAction reflectionAction) {
-		return (jClassType.isAbstract() && jClassType.isEnum() == null)
-				|| (jClassType.isInterface() != null) || !jClassType.isPublic()
-				|| filter.omitForModule(jClassType, reflectionAction);
-	}
-
-	private List<JClassType> getInstantiableTypes(TreeLogger logger,
-			TypeOracle typeOracle, ClassSourceFileComposerFactory crf) {
-		List<JClassType> results = new ArrayList<JClassType>();
-		JClassType[] types = typeOracle.getTypes();
-		for (JClassType jClassType : types) {
-			if ((hasAnnotationNamed(jClassType, ClientInstantiable.class)
-					|| jClassType.isAnnotationPresent(
-							cc.alcina.framework.common.client.logic.reflection.Bean.class))
-					&& !ignore(jClassType, ReflectionAction.NEW_INSTANCE)) {
-				results.add(jClassType);
-				crf.addImport(jClassType.getQualifiedSourceName());
-			}
+		if (!allowMultiple) {
+			values = uniqueMap.values().stream().collect(Collectors.toSet());
 		}
-		return results;
+		superAnnotationMap.put(clazz, annotationClasses, values);
+		return values;
 	}
 
-	// Annotation utils for gwt
-	// presence class, annotation simple name
-	private static UnsortedMultikeyMap<Annotation> classNameAnnotationMap = new UnsortedMultikeyMap<>(
-			2);
-
-	public static boolean hasAnnotationNamed(JClassType clazz,
-			Class<? extends Annotation> ann) {
-		String annClazzName = ann.getSimpleName();
-		if (!classNameAnnotationMap.containsKey(clazz, annClazzName)) {
-			JClassType c = clazz;
-			Annotation found = null;
-			while (c != null && found == null) {
-				for (Annotation a : c.getAnnotations()) {
-					if (a.annotationType().getSimpleName()
-							.equals(annClazzName)) {
-						found = a;
-						break;
+	public Set<Annotation> getSuperclassAnnotationsForMethod(JMethod m) {
+		if (superMethodAnnotationMap.containsKey(m)) {
+			return superMethodAnnotationMap.get(m);
+		}
+		Map<Class, Annotation> uniqueMap = new HashMap<Class, Annotation>();
+		JClassType c = m.getEnclosingType();
+		Set<? extends JClassType> flattenedSupertypeHierarchy = c
+				.getFlattenedSupertypeHierarchy();
+		for (JClassType jct : flattenedSupertypeHierarchy) {
+			try {
+				JMethod m2 = jct.getMethod(m.getName(), m.getParameterTypes());
+				for (Annotation a : getVisibleAnnotations(m2,
+						visibleAnnotationClasses)) {
+					if (!uniqueMap.containsKey(a.annotationType())) {
+						uniqueMap.put(a.annotationType(), a);
 					}
 				}
-				c = c.getSuperclass();
-			}
-			classNameAnnotationMap.put(clazz, annClazzName, found);
-		}
-		return classNameAnnotationMap.get(clazz, annClazzName) != null;
-	}
-
-	private List<JClassType> getBeanInfoTypes(TreeLogger logger,
-			TypeOracle typeOracle, ClassSourceFileComposerFactory crf) {
-		List<JClassType> results = new ArrayList<JClassType>();
-		JClassType[] types = typeOracle.getTypes();
-		for (JClassType jClassType : types) {
-			if (jClassType.isAnnotationPresent(
-					cc.alcina.framework.common.client.logic.reflection.Bean.class)
-					&& !ignore(jClassType,
-							ReflectionAction.BEAN_INFO_DESCRIPTOR)) {
-				results.add(jClassType);
-				crf.addImport(jClassType.getQualifiedSourceName());
+			} catch (Exception e) {
 			}
 		}
-		return results;
+		HashSet values = new HashSet(uniqueMap.values());
+		superMethodAnnotationMap.put(m, values);
+		return values;
 	}
 
-	private void addImport(ClassSourceFileComposerFactory factory,
-			Class<?> type) {
-		if (!type.isPrimitive()) {
-			factory.addImport(type.getCanonicalName().replace("[]", ""));
-		}
-	}
-
-	private void writeAnnotations(TreeLogger logger, GeneratorContext context,
-			List<JAnnotationType> jAnns, ClassSourceFileComposerFactory crf,
-			boolean initial) throws Exception {
-		for (JAnnotationType type : jAnns) {
-			Class<? extends Annotation> annClass = forName(type);
-			String implementationName = type.getName() + "_Impl";
-			ann2impl.put(annClass,
-					type.getPackage().getName() + "." + implementationName);
-		}
-		for (JAnnotationType type : jAnns) {
-			Class<? extends Annotation> annClass = forName(type);
-			String implementationName = type.getName() + "_Impl";
-			String implFQN = type.getPackage().getName() + "."
-					+ implementationName;
-			crf.addImport(implFQN);
-			ClassSourceFileComposerFactory annf = new ClassSourceFileComposerFactory(
-					type.getPackage().getName(), implementationName);
-			annf.addImport(Annotation.class.getCanonicalName());
-			annf.addImport(type.getQualifiedSourceName());
-			annf.addImplementedInterface(type.getName());
-			List<Method> declaredMethods = new ArrayList<Method>(
-					Arrays.asList(annClass.getDeclaredMethods()));
-			Collections.sort(declaredMethods, ToStringComparator.INSTANCE);
-			StringBuffer constrParams = new StringBuffer();
-			boolean first = true;
-			for (Method method : declaredMethods) {
-				Class<?> returnType = method.getReturnType();
-				addImport(annf, returnType);
-				addImport(crf, returnType);
-			}
-			PrintWriter printWriter = context.tryCreate(logger, packageName,
-					implementationName);
-			// if calling from a non-initial module, we just want to add imports
-			// without rewriting (indeed, we can't...) the annotation impls
-			if (printWriter != null) {
-				SourceWriter sw = createWriter(annf, printWriter);
-				for (Method method : declaredMethods) {
-					Class returnType = method.getReturnType();
-					String rn = returnType.getSimpleName();
-					String mn = method.getName();
-					StringBuffer sb = new StringBuffer();
-					writeLiteral(method.getDefaultValue(), returnType, sb,
-							true);
-					sw.println(String.format("private %s %s = %s;", rn, mn,
-							sb.toString()));
-					sw.println(String.format("public %s %s(){return %s;}", rn,
-							mn, mn));
-					sw.println(String.format(
-							"public %s _set%s(%s %s){this.%s = %s;return this;}",
-							implementationName, mn, rn, mn, mn, mn));
-					sw.println();
-				}
-				sw.println();
-				sw.println(
-						"public Class<? extends Annotation> annotationType() {");
-				sw.indentln(String.format("return %s.class;",
-						annClass.getSimpleName()));
-				sw.println("}");
-				sw.println();
-				sw.println(String.format("public %s (){}", implementationName));
-				sw.outdent();
-				sw.println("}");
-				commit(context, logger, printWriter);
-			}
-		}
-	}
-
-	private Class forName(JType type) throws ClassNotFoundException {
-		String name = type.getQualifiedBinaryName();
-		return Class.forName(name);
-	}
-
-	private Map<PrintWriter, BiWriter> wrappedWriters = new HashMap<PrintWriter, BiWriter>();
-
-	private SourceWriter createWriter(ClassSourceFileComposerFactory factory,
-			PrintWriter contextWriter) {
-		PrintWriter writer = contextWriter;
-		if (debug) {
-			writer = new BiWriter(writer);
-			wrappedWriters.put(contextWriter, (BiWriter) writer);
-		}
-		return factory.createSourceWriter(writer);
-	}
-
-	private void commit(GeneratorContext context, TreeLogger logger,
-			PrintWriter printWriter) {
-		context.commit(logger, printWriter);
-		if (wrappedWriters.containsKey(printWriter)) {
-			System.out.println(wrappedWriters.get(printWriter).getStringWriter()
-					.toString());
-		}
-	}
-
-	private List<JAnnotationType> getClientVisibleAnnotations(TreeLogger logger,
-			TypeOracle oracle) {
-		List<JAnnotationType> results = new ArrayList<JAnnotationType>();
-		JClassType[] types = oracle.getTypes();
-		for (JClassType jClassType : types) {
-			if (jClassType.isAnnotationPresent(ClientVisible.class)) {
-				JAnnotationType annotation = jClassType.isAnnotation();
-				if (annotation != null) {
-					results.add(annotation);
-				}
-			}
-		}
-		return results;
+	public SourceWriter getSw() {
+		return this.sw;
 	}
 
 	public void writeIt(List<JClassType> beanInfoTypes,
@@ -644,11 +517,96 @@ public class ClientReflectionGenerator extends Generator {
 		sw.println("}");
 	}
 
-	private String getPropertyNameForReadMethod(JMethod method) {
-		String name = method.getName();
-		int offset = name.startsWith("is") ? 2 : 3;
-		return name.substring(offset, offset + 1).toLowerCase()
-				+ name.substring(offset + 1);
+	private void addImport(ClassSourceFileComposerFactory factory,
+			Class<?> type) {
+		if (!type.isPrimitive()) {
+			factory.addImport(type.getCanonicalName().replace("[]", ""));
+		}
+	}
+
+	private void commit(GeneratorContext context, TreeLogger logger,
+			PrintWriter printWriter) {
+		context.commit(logger, printWriter);
+		if (wrappedWriters.containsKey(printWriter)) {
+			System.out.println(wrappedWriters.get(printWriter).getStringWriter()
+					.toString());
+		}
+	}
+
+	private SourceWriter createWriter(ClassSourceFileComposerFactory factory,
+			PrintWriter contextWriter) {
+		PrintWriter writer = contextWriter;
+		if (debug) {
+			writer = new BiWriter(writer);
+			wrappedWriters.put(contextWriter, (BiWriter) writer);
+		}
+		return factory.createSourceWriter(writer);
+	}
+
+	private Class forName(JType type) throws ClassNotFoundException {
+		String name = type.getQualifiedBinaryName();
+		return Class.forName(name);
+	}
+
+	private String getAnnImpl(Annotation a, Map<Class, String> ann2impl,
+			int count) throws Exception {
+		StringBuffer sb = new StringBuffer();
+		writeAnnImpl(a, ann2impl, count, true, sb, false);
+		return sb.toString();
+	}
+
+	private List<JClassType> getBeanInfoTypes(TreeLogger logger,
+			TypeOracle typeOracle, ClassSourceFileComposerFactory crf) {
+		List<JClassType> results = new ArrayList<JClassType>();
+		JClassType[] types = typeOracle.getTypes();
+		for (JClassType jClassType : types) {
+			if (jClassType.isAnnotationPresent(
+					cc.alcina.framework.common.client.logic.reflection.Bean.class)
+					&& !ignore(jClassType,
+							ReflectionAction.BEAN_INFO_DESCRIPTOR)) {
+				results.add(jClassType);
+				crf.addImport(jClassType.getQualifiedSourceName());
+			}
+		}
+		return results;
+	}
+
+	private <T> Set<T> getClassAnnotations(JClassType jct,
+			Class<T> annotationType, boolean allowMultiple) {
+		return (Set) getClassAnnotations(jct,
+				(List) Collections.singletonList(annotationType),
+				allowMultiple);
+	}
+
+	private List<JAnnotationType> getClientVisibleAnnotations(TreeLogger logger,
+			TypeOracle oracle) {
+		List<JAnnotationType> results = new ArrayList<JAnnotationType>();
+		JClassType[] types = oracle.getTypes();
+		for (JClassType jClassType : types) {
+			if (jClassType.isAnnotationPresent(ClientVisible.class)) {
+				JAnnotationType annotation = jClassType.isAnnotation();
+				if (annotation != null) {
+					results.add(annotation);
+				}
+			}
+		}
+		return results;
+	}
+
+	private List<JClassType> getInstantiableTypes(TreeLogger logger,
+			TypeOracle typeOracle, ClassSourceFileComposerFactory crf) {
+		List<JClassType> results = new ArrayList<JClassType>();
+		JClassType[] types = typeOracle.getTypes();
+		for (JClassType jClassType : types) {
+			if ((hasAnnotationNamed(jClassType, ClientInstantiable.class)
+					|| jClassType.isAnnotationPresent(
+							cc.alcina.framework.common.client.logic.reflection.Bean.class))
+					&& !ignore(jClassType, ReflectionAction.NEW_INSTANCE)) {
+				results.add(jClassType);
+				crf.addImport(jClassType.getQualifiedSourceName());
+			}
+		}
+		return results;
 	}
 
 	private List<JMethod> getPropertyGetters(JClassType jct) {
@@ -666,11 +624,68 @@ public class ClientReflectionGenerator extends Generator {
 		return methods;
 	}
 
-	private String getAnnImpl(Annotation a, Map<Class, String> ann2impl,
-			int count) throws Exception {
-		StringBuffer sb = new StringBuffer();
-		writeAnnImpl(a, ann2impl, count, true, sb, false);
-		return sb.toString();
+	private String getPropertyNameForReadMethod(JMethod method) {
+		String name = method.getName();
+		int offset = name.startsWith("is") ? 2 : 3;
+		return name.substring(offset, offset + 1).toLowerCase()
+				+ name.substring(offset + 1);
+	}
+
+	/**
+	 * Since overridden parent annotations are potentially useful, we don't use
+	 * standard overriding behaviour
+	 *
+	 * @throws ClassNotFoundException
+	 */
+	private Map<JClassType, Set<RegistryLocation>> getRegistryAnnotations(
+			TypeOracle typeOracle) throws ClassNotFoundException {
+		HashMap<JClassType, Set<RegistryLocation>> results = new HashMap<JClassType, Set<RegistryLocation>>();
+		JClassType[] types = typeOracle.getTypes();
+		for (JClassType jct : types) {
+			if ((jct.isAnnotationPresent(RegistryLocation.class)
+					|| jct.isAnnotationPresent(RegistryLocations.class))
+					&& !jct.isAbstract()) {
+				Set<RegistryLocation> rls = getClassAnnotations(jct,
+						RegistryLocation.class, true);
+				Set<RegistryLocations> rlsSet = getClassAnnotations(jct,
+						RegistryLocations.class, true);
+				for (RegistryLocations rlcs : rlsSet) {
+					for (RegistryLocation rl : rlcs.value()) {
+						rls.add(rl);
+					}
+				}
+				rls = new LinkedHashSet<RegistryLocation>(rls);
+				CollectionFilters.filterInPlace(rls,
+						CLIENT_VISIBLE_ANNOTATION_FILTER);
+				rls = Registry.filterForRegistryPointUniqueness(rls);
+				if (!rls.isEmpty() && !ignore(jct)) {
+					results.put(jct, rls);
+				}
+			}
+		}
+		return results;
+	}
+
+	private List<Annotation> getVisibleAnnotations(HasAnnotations ha,
+			List<Class<? extends Annotation>> annotationClasses) {
+		List<Annotation> result = new ArrayList<Annotation>();
+		for (Class<? extends Annotation> a : annotationClasses) {
+			if (ha.isAnnotationPresent(a)) {
+				result.add(ha.getAnnotation(a));
+			}
+		}
+		return result;
+	}
+
+	private boolean ignore(JClassType jClassType) {
+		return ignore(jClassType, null);
+	}
+
+	private boolean ignore(JClassType jClassType,
+			ReflectionAction reflectionAction) {
+		return (jClassType.isAbstract() && jClassType.isEnum() == null)
+				|| (jClassType.isInterface() != null) || !jClassType.isPublic()
+				|| filter.omitForModule(jClassType, reflectionAction);
 	}
 
 	private void writeAnnImpl(Annotation a, Map<Class, String> ann2impl,
@@ -709,6 +724,73 @@ public class ClientReflectionGenerator extends Generator {
 		}
 		if (assignment) {
 			sb.append(";");
+		}
+	}
+
+	private void writeAnnotations(TreeLogger logger, GeneratorContext context,
+			List<JAnnotationType> jAnns, ClassSourceFileComposerFactory crf,
+			boolean initial) throws Exception {
+		for (JAnnotationType type : jAnns) {
+			Class<? extends Annotation> annClass = forName(type);
+			String implementationName = type.getName() + "_Impl";
+			ann2impl.put(annClass,
+					type.getPackage().getName() + "." + implementationName);
+		}
+		for (JAnnotationType type : jAnns) {
+			Class<? extends Annotation> annClass = forName(type);
+			String implementationName = type.getName() + "_Impl";
+			String implFQN = type.getPackage().getName() + "."
+					+ implementationName;
+			crf.addImport(implFQN);
+			ClassSourceFileComposerFactory annf = new ClassSourceFileComposerFactory(
+					type.getPackage().getName(), implementationName);
+			annf.addImport(Annotation.class.getCanonicalName());
+			annf.addImport(type.getQualifiedSourceName());
+			annf.addImplementedInterface(type.getName());
+			List<Method> declaredMethods = new ArrayList<Method>(
+					Arrays.asList(annClass.getDeclaredMethods()));
+			Collections.sort(declaredMethods, ToStringComparator.INSTANCE);
+			StringBuffer constrParams = new StringBuffer();
+			boolean first = true;
+			for (Method method : declaredMethods) {
+				Class<?> returnType = method.getReturnType();
+				addImport(annf, returnType);
+				addImport(crf, returnType);
+			}
+			PrintWriter printWriter = context.tryCreate(logger, packageName,
+					implementationName);
+			// if calling from a non-initial module, we just want to add imports
+			// without rewriting (indeed, we can't...) the annotation impls
+			if (printWriter != null) {
+				SourceWriter sw = createWriter(annf, printWriter);
+				for (Method method : declaredMethods) {
+					Class returnType = method.getReturnType();
+					String rn = returnType.getSimpleName();
+					String mn = method.getName();
+					StringBuffer sb = new StringBuffer();
+					writeLiteral(method.getDefaultValue(), returnType, sb,
+							true);
+					sw.println(String.format("private %s %s = %s;", rn, mn,
+							sb.toString()));
+					sw.println(String.format("public %s %s(){return %s;}", rn,
+							mn, mn));
+					sw.println(String.format(
+							"public %s _set%s(%s %s){this.%s = %s;return this;}",
+							implementationName, mn, rn, mn, mn, mn));
+					sw.println();
+				}
+				sw.println();
+				sw.println(
+						"public Class<? extends Annotation> annotationType() {");
+				sw.indentln(String.format("return %s.class;",
+						annClass.getSimpleName()));
+				sw.println("}");
+				sw.println();
+				sw.println(String.format("public %s (){}", implementationName));
+				sw.outdent();
+				sw.println("}");
+				commit(context, logger, printWriter);
+			}
 		}
 	}
 
@@ -766,88 +848,5 @@ public class ClientReflectionGenerator extends Generator {
 			return pbm.get(c.getName());
 		}
 		return c;
-	}
-
-	private HashMap<JMethod, Set<Annotation>> superMethodAnnotationMap = new HashMap<JMethod, Set<Annotation>>();
-
-	public Set<Annotation> getSuperclassAnnotationsForMethod(JMethod m) {
-		if (superMethodAnnotationMap.containsKey(m)) {
-			return superMethodAnnotationMap.get(m);
-		}
-		Map<Class, Annotation> uniqueMap = new HashMap<Class, Annotation>();
-		JClassType c = m.getEnclosingType();
-		Set<? extends JClassType> flattenedSupertypeHierarchy = c
-				.getFlattenedSupertypeHierarchy();
-		for (JClassType jct : flattenedSupertypeHierarchy) {
-			try {
-				JMethod m2 = jct.getMethod(m.getName(), m.getParameterTypes());
-				for (Annotation a : getVisibleAnnotations(m2,
-						visibleAnnotationClasses)) {
-					if (!uniqueMap.containsKey(a.annotationType())) {
-						uniqueMap.put(a.annotationType(), a);
-					}
-				}
-			} catch (Exception e) {
-			}
-		}
-		HashSet values = new HashSet(uniqueMap.values());
-		superMethodAnnotationMap.put(m, values);
-		return values;
-	}
-
-	private List<Annotation> getVisibleAnnotations(HasAnnotations ha,
-			List<Class<? extends Annotation>> annotationClasses) {
-		List<Annotation> result = new ArrayList<Annotation>();
-		for (Class<? extends Annotation> a : annotationClasses) {
-			if (ha.isAnnotationPresent(a)) {
-				result.add(ha.getAnnotation(a));
-			}
-		}
-		return result;
-	}
-
-	private UnsortedMultikeyMap<Set<Annotation>> superAnnotationMap = new UnsortedMultikeyMap<Set<Annotation>>(
-			2);
-
-	private IntrospectorFilter filter;
-
-	public Set<Annotation> getClassAnnotations(JClassType clazz,
-			List<Class<? extends Annotation>> annotationClasses,
-			boolean allowMultiple) {
-		if (superAnnotationMap.containsKey(clazz, annotationClasses)) {
-			return superAnnotationMap.get(clazz, annotationClasses);
-		}
-		Map<Class, Annotation> uniqueMap = new HashMap<Class, Annotation>();
-		Set<? extends JClassType> flattenedSupertypeHierarchy = clazz
-				.getFlattenedSupertypeHierarchy();
-		// uhoh-nono
-		// List<? extends JClassType> nonGeneric = flattenedSupertypeHierarchy
-		// .stream().map(cl -> {
-		// if (cl instanceof JParameterizedType) {
-		// return ((JParameterizedType) cl).getBaseType();
-		// } else {
-		// return cl;
-		// }
-		// }).collect(Collectors.toList());
-		Set values = new LinkedHashSet();// order important - lowest ordinal,
-											// highest priority
-		for (JClassType jct : flattenedSupertypeHierarchy) {
-			try {
-				List<Annotation> visibleAnnotations = getVisibleAnnotations(jct,
-						annotationClasses);
-				values.addAll(visibleAnnotations);
-				for (Annotation a : visibleAnnotations) {
-					if (!uniqueMap.containsKey(a.annotationType())) {
-						uniqueMap.put(a.annotationType(), a);
-					}
-				}
-			} catch (Exception e) {
-			}
-		}
-		if (!allowMultiple) {
-			values = uniqueMap.values().stream().collect(Collectors.toSet());
-		}
-		superAnnotationMap.put(clazz, annotationClasses, values);
-		return values;
 	}
 }

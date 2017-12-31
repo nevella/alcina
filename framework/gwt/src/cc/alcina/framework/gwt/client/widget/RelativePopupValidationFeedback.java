@@ -40,7 +40,8 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * 
  * @author Nick Reddel
  */
-public class RelativePopupValidationFeedback extends AbstractValidationFeedback {
+public class RelativePopupValidationFeedback
+		extends AbstractValidationFeedback {
 	public static final String CONTEXT_FEEDBACK_POSITION = RelativePopupValidationFeedback.class
 			.getName() + ".CONTEXT_FEEDBACK_POSITION";
 
@@ -62,10 +63,6 @@ public class RelativePopupValidationFeedback extends AbstractValidationFeedback 
 
 	private boolean asHtml;
 
-	public void addCssBackground() {
-		css = (css == null ? "" : css + " ") + "withBkg";
-	}
-
 	/** Creates a new instance of PopupValidationFeedback */
 	public RelativePopupValidationFeedback(int position) {
 		this.position = position;
@@ -80,17 +77,16 @@ public class RelativePopupValidationFeedback extends AbstractValidationFeedback 
 		}
 	}
 
-	class RelativePopup extends FlowPanel {
-		@Override
-		protected void onDetach() {
-			super.onDetach();
-		}
+	public void addCssBackground() {
+		css = (css == null ? "" : css + " ") + "withBkg";
 	}
 
-	@SuppressWarnings("unchecked")
-	protected Widget renderExceptionWidget(ValidationException exception) {
-		return asHtml ? new HTML(this.getMessage(exception)) : new Label(
-				this.getMessage(exception));
+	public String getCss() {
+		return css;
+	}
+
+	public int getPosition() {
+		return this.position;
 	}
 
 	public void handleException(Object source, ValidationException exception) {
@@ -155,11 +151,15 @@ public class RelativePopupValidationFeedback extends AbstractValidationFeedback 
 				}
 			};
 			listeners.put(w, attachListener);
-			((SourcesPropertyChangeEvents) w).addPropertyChangeListener(
-					"attached", attachListener);
-			((SourcesPropertyChangeEvents) w).addPropertyChangeListener(
-					"visible", attachListener);
+			((SourcesPropertyChangeEvents) w)
+					.addPropertyChangeListener("attached", attachListener);
+			((SourcesPropertyChangeEvents) w)
+					.addPropertyChangeListener("visible", attachListener);
 		}
+	}
+
+	public boolean isAsHtml() {
+		return this.asHtml;
 	}
 
 	public void resolve(Object source) {
@@ -184,27 +184,28 @@ public class RelativePopupValidationFeedback extends AbstractValidationFeedback 
 		}
 	}
 
-	public void setCss(String css) {
-		this.css = css;
-	}
-
-	public String getCss() {
-		return css;
-	}
-
-	public boolean isAsHtml() {
-		return this.asHtml;
-	}
-
 	public void setAsHtml(boolean asHtml) {
 		this.asHtml = asHtml;
 	}
 
-	public int getPosition() {
-		return this.position;
+	public void setCss(String css) {
+		this.css = css;
 	}
 
 	public void setPosition(int position) {
 		this.position = position;
+	}
+
+	@SuppressWarnings("unchecked")
+	protected Widget renderExceptionWidget(ValidationException exception) {
+		return asHtml ? new HTML(this.getMessage(exception))
+				: new Label(this.getMessage(exception));
+	}
+
+	class RelativePopup extends FlowPanel {
+		@Override
+		protected void onDetach() {
+			super.onDetach();
+		}
 	}
 }

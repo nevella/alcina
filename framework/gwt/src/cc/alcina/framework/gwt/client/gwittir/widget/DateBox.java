@@ -22,7 +22,6 @@ import com.google.gwt.user.datepicker.client.DateBox.DefaultFormat;
 import com.google.gwt.user.datepicker.client.DateBox.Format;
 import com.google.gwt.user.datepicker.client.DatePicker;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
@@ -41,20 +40,9 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  */
 public class DateBox extends AbstractBoundWidget<Date>
 		implements ValueChangeHandler {
-	public static class DateBoxProvider
-			implements BoundWidgetProvider<DateBox> {
-		public DateBox get() {
-			return new DateBox();
-		}
-	};
-
-	private com.google.gwt.user.datepicker.client.DateBox base;
+	private com.google.gwt.user.datepicker.client.DateBox base;;
 
 	private DateTimeFormat unAmerican = DateTimeFormat.getFormat("dd/MM/yyyy");
-
-	protected DateTimeFormat getDateTimeFormat() {
-		return unAmerican;
-	}
 
 	private String text;
 
@@ -76,6 +64,17 @@ public class DateBox extends AbstractBoundWidget<Date>
 		return base.getValue();
 	}
 
+	public void onValueChange(ValueChangeEvent event) {
+		fireChangesFromBase();
+	}
+
+	public void setValue(Date value) {
+		Date oldDate = this.value;
+		this.value = value;
+		base.setValue(value, false);
+		changes.firePropertyChange("value", oldDate, this.value);
+	}
+
 	private void fireChangesFromBase() {
 		String oldText = this.text;
 		this.text = base.getTextBox().getText();
@@ -86,14 +85,14 @@ public class DateBox extends AbstractBoundWidget<Date>
 		setValue(base.getValue());
 	}
 
-	public void onValueChange(ValueChangeEvent event) {
-		fireChangesFromBase();
+	protected DateTimeFormat getDateTimeFormat() {
+		return unAmerican;
 	}
 
-	public void setValue(Date value) {
-		Date oldDate = this.value;
-		this.value = value;
-		base.setValue(value, false);
-		changes.firePropertyChange("value", oldDate, this.value);
+	public static class DateBoxProvider
+			implements BoundWidgetProvider<DateBox> {
+		public DateBox get() {
+			return new DateBox();
+		}
 	}
 }

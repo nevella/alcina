@@ -4,8 +4,8 @@ import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
-public class BoundToggleLink extends AbstractBoundWidget<Boolean> implements
-		SelectionHandler<Integer> {
+public class BoundToggleLink extends AbstractBoundWidget<Boolean>
+		implements SelectionHandler<Integer> {
 	protected ToggleLink base;
 
 	public BoundToggleLink() {
@@ -16,9 +16,21 @@ public class BoundToggleLink extends AbstractBoundWidget<Boolean> implements
 		initWidget(base);
 	}
 
+	public void addButtonStyleName(String style) {
+		base.addButtonStyleName(style);
+	}
+
 	@Override
 	public Boolean getValue() {
 		return base.getSelectedIndex() != 0;
+	}
+
+	@Override
+	public void onSelection(SelectionEvent<Integer> event) {
+		setValue(event.getSelectedItem() != 0);
+		this.changes.firePropertyChange("value",
+				!this.getValue().booleanValue(),
+				this.getValue().booleanValue());
 	}
 
 	@Override
@@ -28,16 +40,5 @@ public class BoundToggleLink extends AbstractBoundWidget<Boolean> implements
 		if ((old != this.getValue()) && !old.equals(this.getValue())) {
 			this.changes.firePropertyChange("value", old, this.getValue());
 		}
-	}
-
-	@Override
-	public void onSelection(SelectionEvent<Integer> event) {
-		setValue(event.getSelectedItem() != 0);
-		this.changes.firePropertyChange("value", !this.getValue()
-				.booleanValue(), this.getValue().booleanValue());
-	}
-
-	public void addButtonStyleName(String style) {
-		base.addButtonStyleName(style);
 	}
 }

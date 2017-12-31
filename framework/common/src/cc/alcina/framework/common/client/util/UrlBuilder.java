@@ -1,8 +1,5 @@
 package cc.alcina.framework.common.client.util;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
@@ -13,21 +10,6 @@ public class UrlBuilder {
 	private String path;
 
 	StringMap qsParams = new StringMap();
-
-	public UrlBuilder host(String host) {
-		this.host = host;
-		return this;
-	}
-
-	public UrlBuilder path(String path) {
-		this.path = path;
-		return this;
-	}
-
-	public UrlBuilder qsParam(String key, String value) {
-		qsParams.put(key, value);
-		return this;
-	}
 
 	public String build() {
 		StringBuilder sb = new StringBuilder();
@@ -42,14 +24,27 @@ public class UrlBuilder {
 				sb.append(k);
 				sb.append("=");
 				try {
-					sb.append(
-							
-							Registry.impl(UrlEncoder.class).encode(v));
+					sb.append(Registry.impl(UrlEncoder.class).encode(v));
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
 			});
 		}
 		return sb.toString();
+	}
+
+	public UrlBuilder host(String host) {
+		this.host = host;
+		return this;
+	}
+
+	public UrlBuilder path(String path) {
+		this.path = path;
+		return this;
+	}
+
+	public UrlBuilder qsParam(String key, String value) {
+		qsParams.put(key, value);
+		return this;
 	}
 }

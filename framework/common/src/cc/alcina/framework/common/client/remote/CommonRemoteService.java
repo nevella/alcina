@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
@@ -42,6 +43,10 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSugges
  * @author Nick Reddel
  */
 public interface CommonRemoteService extends RemoteService {
+	// for dumping dbs
+	@WebMethod
+	public void dumpData(String data);
+
 	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
 			throws WebException;
 
@@ -49,6 +54,9 @@ public interface CommonRemoteService extends RemoteService {
 
 	@WebMethod()
 	public List<String> listRunningJobs();
+
+	@WebMethod
+	public String loadData(String key);
 
 	public Long logClientError(String exceptionToString);
 
@@ -59,15 +67,12 @@ public interface CommonRemoteService extends RemoteService {
 
 	public LoginResponse login(LoginBean loginBean);
 
-	public void ping();
-
 	public void logout();
 
 	public void persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted) throws WebException;
 
-	public PartialDtrUploadResponse uploadOfflineTransforms(
-			PartialDtrUploadRequest request) throws WebException;
+	public void ping();
 
 	@WebMethod()
 	public JobTracker pollJobStatus(String id, boolean cancel);
@@ -76,19 +81,15 @@ public interface CommonRemoteService extends RemoteService {
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformException, DomainTransformRequestException;
 
-	@WebMethod
-	public DomainUpdate waitForTransforms(long lastTransformRequestId)
-			throws PermissionsException;
+	public PartialDtrUploadResponse uploadOfflineTransforms(
+			PartialDtrUploadRequest request) throws WebException;
 
 	public List<ServerValidator> validateOnServer(
 			List<ServerValidator> validators) throws WebException;
 
-	// for dumping dbs
 	@WebMethod
-	public void dumpData(String data);
-
-	@WebMethod
-	public String loadData(String key);
+	public DomainUpdate waitForTransforms(
+			DomainTransformCommitPosition position) throws PermissionsException;
 
 	Response suggest(BoundSuggestOracleRequest request);
 }

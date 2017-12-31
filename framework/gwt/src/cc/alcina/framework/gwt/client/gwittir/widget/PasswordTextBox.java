@@ -58,21 +58,24 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		this.setComparator(SimpleComparator.INSTANCE);
 		if (updateOnKeypress) {
 			this.addKeyboardListener(new KeyboardListener() {
+				public void onKeyDown(Widget sender, char keyCode,
+						int modifiers) {
+				}
+
 				public void onKeyPress(Widget sender, char keyCode,
 						int modifiers) {
 					changes.firePropertyChange("value", old, getValue());
 					old = (String) getValue();
 				}
 
-				public void onKeyDown(Widget sender, char keyCode, int modifiers) {
-				}
-
-				public void onKeyUp(Widget sender, char keyCode, int modifiers) {
+				public void onKeyUp(Widget sender, char keyCode,
+						int modifiers) {
 				}
 			});
 		} else {
 			this.addKeyboardListener(new KeyboardListener() {
-				public void onKeyUp(Widget sender, char keyCode, int modifiers) {
+				public void onKeyDown(Widget sender, char keyCode,
+						int modifiers) {
 				}
 
 				public void onKeyPress(Widget sender, char keyCode,
@@ -83,7 +86,8 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 					}
 				}
 
-				public void onKeyDown(Widget sender, char keyCode, int modifiers) {
+				public void onKeyUp(Widget sender, char keyCode,
+						int modifiers) {
 				}
 			});
 		}
@@ -117,6 +121,18 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		this.base.cancelKey();
 	}
 
+	public Action getAction() {
+		Action retValue;
+		retValue = super.getAction();
+		return retValue;
+	}
+
+	public Comparator getComparator() {
+		Comparator retValue;
+		retValue = super.getComparator();
+		return retValue;
+	}
+
 	public int getCursorPos() {
 		int retValue;
 		retValue = this.base.getCursorPos();
@@ -126,6 +142,12 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 	public int getMaxLength() {
 		int retValue;
 		retValue = this.base.getMaxLength();
+		return retValue;
+	}
+
+	public Object getModel() {
+		Object retValue;
+		retValue = super.getModel();
 		return retValue;
 	}
 
@@ -179,8 +201,8 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 
 	public String getValue() {
 		try {
-			return this.base.getText().length() == 0 ? null : this.base
-					.getText();
+			return this.base.getText().length() == 0 ? null
+					: this.base.getText();
 		} catch (RuntimeException re) {
 			GWT.log("" + this.base, re);
 			return null;
@@ -189,6 +211,10 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 
 	public int getVisibleLength() {
 		return this.base.getVisibleLength();
+	}
+
+	public boolean isEnabled() {
+		return this.base.isEnabled();
 	}
 
 	public void removeChangeListener(ChangeListener listener) {
@@ -219,6 +245,10 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		this.base.setAccessKey(key);
 	}
 
+	public void setAction(Action action) {
+		super.setAction(action);
+	}
+
 	public void setCursorPos(int pos) {
 		this.base.setCursorPos(pos);
 	}
@@ -241,6 +271,10 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 
 	public void setMaxLength(int length) {
 		this.base.setMaxLength(length);
+	}
+
+	public void setModel(Object model) {
+		super.setModel(model);
 	}
 
 	public void setName(String name) {
@@ -285,9 +319,8 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 	public void setValue(String value) {
 		String old = this.getValue();
 		this.setText(CommonUtils.nullToEmpty(value));
-		if (this.getValue() != old
-				&& (this.getValue() == null || (this.getValue() != null && !this
-						.getValue().equals(old)))) {
+		if (this.getValue() != old && (this.getValue() == null
+				|| (this.getValue() != null && !this.getValue().equals(old)))) {
 			this.changes.firePropertyChange("value", old, this.getValue());
 		}
 	}
@@ -306,35 +339,5 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
-	}
-
-	public void setModel(Object model) {
-		super.setModel(model);
-	}
-
-	public void setAction(Action action) {
-		super.setAction(action);
-	}
-
-	public Comparator getComparator() {
-		Comparator retValue;
-		retValue = super.getComparator();
-		return retValue;
-	}
-
-	public Object getModel() {
-		Object retValue;
-		retValue = super.getModel();
-		return retValue;
-	}
-
-	public Action getAction() {
-		Action retValue;
-		retValue = super.getAction();
-		return retValue;
-	}
-
-	public boolean isEnabled() {
-		return this.base.isEnabled();
 	}
 }

@@ -17,15 +17,15 @@ package com.google.gwt.user.client;
 
 /**
  * An opaque handle to a native DOM Element. An <code>Element</code> cannot be
- * created directly. Instead, use the <code>Element</code> type when returning
- * a native DOM element from JSNI methods. An <code>Element</code> passed back
+ * created directly. Instead, use the <code>Element</code> type when returning a
+ * native DOM element from JSNI methods. An <code>Element</code> passed back
  * into JSNI becomes the original DOM element the <code>Element</code> was
  * created from, and can be accessed in JavaScript code as expected. This is
  * typically done by calling methods in the
  * {@link com.google.gwt.user.client.DOM} class.
  * <p>
  * As of GWT 2.6, users should use {@link com.google.gwt.dom.client.Element}
- * instead.  As an exception, some methods still return a <code>Element</code>
+ * instead. As an exception, some methods still return a <code>Element</code>
  * object for backwards compatibility (though this will change in a future
  * release), so overriding them will require returning an <code>Element</code>
  * object too.
@@ -34,13 +34,11 @@ package com.google.gwt.user.client;
  */
 @Deprecated
 public class Element extends com.google.gwt.dom.client.Element {
-
-  /**
-   * Not directly instantiable. Subclasses should also define a protected no-arg
-   * constructor to prevent client code from directly instantiating the class.
-   */
-  protected Element() {
-  }
-  
-  
+	/**
+	 * Not directly instantiable. Subclasses should also define a protected
+	 * no-arg constructor to prevent client code from directly instantiating the
+	 * class.
+	 */
+	protected Element() {
+	}
 }

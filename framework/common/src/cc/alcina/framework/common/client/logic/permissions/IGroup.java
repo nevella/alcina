@@ -28,11 +28,11 @@ public interface IGroup extends IVersionable {
 
 	public Set<? extends IUser> getMemberUsers();
 
-	public void setMemberUsers(Set<? extends IUser> memberUsers);
-
 	public String getName();
 
 	public Set<IGroup> listMemberGroups();
 
 	public Set<IUser> listMemberUsers();
+
+	public void setMemberUsers(Set<? extends IUser> memberUsers);
 }

@@ -16,28 +16,32 @@ public class FieldEquivalenceValidator
 	private String otherFieldName;
 
 	private SourcesPropertyChangeEvents bindable;
-	@Override
-	public Object validate(Object value) throws ValidationException {
-		if(value==null){
-			return value;
-		}
-		Object otherValue = Reflections.propertyAccessor().getPropertyValue(bindable, otherFieldName);
-		if(otherValue==null){
-			return value;
-		}
-		if(!value.equals(otherValue)){
-			throw new ValidationException("Values not equal",FieldEquivalenceValidator.class);
-		}
-		return value;
-	}
-
-	@Override
-	public void setParameters(NamedParameter[] params) {
-		otherFieldName=NamedParameter.Support.stringValue(params, FIELD_NAME, "");
-	}
 
 	@Override
 	public void setBindable(SourcesPropertyChangeEvents bindable) {
 		this.bindable = bindable;
+	}
+
+	@Override
+	public void setParameters(NamedParameter[] params) {
+		otherFieldName = NamedParameter.Support.stringValue(params, FIELD_NAME,
+				"");
+	}
+
+	@Override
+	public Object validate(Object value) throws ValidationException {
+		if (value == null) {
+			return value;
+		}
+		Object otherValue = Reflections.propertyAccessor()
+				.getPropertyValue(bindable, otherFieldName);
+		if (otherValue == null) {
+			return value;
+		}
+		if (!value.equals(otherValue)) {
+			throw new ValidationException("Values not equal",
+					FieldEquivalenceValidator.class);
+		}
+		return value;
 	}
 }

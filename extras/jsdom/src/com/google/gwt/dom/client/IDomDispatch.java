@@ -1,6 +1,11 @@
 package com.google.gwt.dom.client;
 
 public interface IDomDispatch {
+	public void selectAdd(SelectElement select, OptionElement option,
+			OptionElement before);
+
+	public void selectClear(SelectElement select);
+
 	void buttonClick(ButtonElement button);
 
 	void cssClearOpacity(Style style);
@@ -14,11 +19,6 @@ public interface IDomDispatch {
 	void eventPreventDefault(NativeEvent evt);
 
 	void eventStopPropagation(NativeEvent evt);
-
-	public void selectAdd(SelectElement select, OptionElement option,
-			OptionElement before);
-
-	public void selectClear(SelectElement select);
 
 	void selectRemoveOption(SelectElement select, int index);
 }

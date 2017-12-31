@@ -18,15 +18,14 @@ public class CachingPropertyLookup<K, V> {
 		this.key = key;
 	}
 
-	public void setCollection(Collection<V> values) {
-		for (V v : values) {
-			
-			propertyLookup.put((K) propertyAccessor
-					.getPropertyValue(v, key), v);
-		}
-	}
-
 	public V get(K k) {
 		return propertyLookup.get(k);
+	}
+
+	public void setCollection(Collection<V> values) {
+		for (V v : values) {
+			propertyLookup.put((K) propertyAccessor.getPropertyValue(v, key),
+					v);
+		}
 	}
 }

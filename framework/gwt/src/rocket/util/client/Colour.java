@@ -27,114 +27,18 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  */
 public class Colour implements java.io.Serializable, IsSerializable {
 	/**
-	 * Accepts a colour value as a string and attempts to convert it into an
-	 * integer value. Currently supported formats include
-	 * <ul>
-	 * <li>#rgb</li>
-	 * <li>#rrggbb</li>
-	 * <li>rgb(r,g,b)</li>
-	 * <li>named colours</li>
-	 * </ul>
-	 * 
-	 * @param value
-	 * @return
-	 */
-	static public Colour parse(final String value) {
-		Checker.notEmpty("parameter:value", value);
-		Colour colourValue = null;
-		while (true) {
-			// test if a #rrggbb or #rgb value...
-			if (value.startsWith("#")) {
-				// handles #rgb values.
-				if (value.length() == 1 + 3) {
-					colourValue = parseHashRgb(value);
-					break;
-				}
-				// handles #rrggbb values.
-				if (value.length() == 1 + 6) {
-					colourValue = parseHashRrggbb(value);
-					break;
-				}
-			}
-			// test if rgb(rr,gg,bb)
-			if (value.startsWith("rgb(") & value.endsWith(")")) {
-				colourValue = parseRgbTriplet(value);
-				break;
-			}
-			// assume that value contains the name of a colour...
-			colourValue = Colour.getColour(value);
-			if (null != colourValue) {
-				break;
-			}
-			// unknown colour value/ format etc.
-			throw new IllegalArgumentException(
-					"Unable to read rgb value from property value\"" + value
-							+ "\".");
-		}
-		return colourValue;
-	}
-
-	/**
-	 * Handles the parsing and conversion of rgb(rr,gg,bbb) triplets into a
-	 * single integer value.
-	 * 
-	 * @param value
-	 * @return
-	 */
-	static Colour parseRgbTriplet(final String value) {
-		final String[] triplets = Utilities.split(
-				value.substring(4, value.length() - 1), ",", true);
-		final int red = Integer.parseInt(triplets[0].trim());
-		final int green = Integer.parseInt(triplets[1].trim());
-		final int blue = Integer.parseInt(triplets[2].trim());
-		return new Colour(red, green, blue);
-	}
-
-	/**
-	 * Handles the parsing and conversion of #rrggbb formatted colour values
-	 * into an integer
-	 * 
-	 * @param value
-	 * @return
-	 */
-	static Colour parseHashRrggbb(final String value) {
-		Checker.notEmpty("parameter:value", value);
-		final int redGreenBlue = Integer
-				.parseInt(value.substring(1, 1 + 6), 16);
-		return new Colour(redGreenBlue);
-	}
-
-	/**
-	 * Handles the parsing and conversion of #rgb formatted colour values into
-	 * an integer
-	 * 
-	 * @param value
-	 * @return
-	 */
-	static Colour parseHashRgb(final String value) {
-		Checker.notEmpty("parameter:value", value);
-		int red = Character.digit(value.charAt(1), 16);
-		red = red * 17;
-		int green = Character.digit(value.charAt(2), 16);
-		green = green * 17;
-		int blue = Character.digit(value.charAt(3), 16);
-		blue = blue * 17;
-		return new Colour(red, green, blue);
-	}
-
-	/**
 	 * THis map is used to lookup rgb values for a colour using its name. THe
 	 * key is the lowercased form of the colour name.
 	 */
 	private static Map namedColours;
 	static {
 		final Map named = new HashMap() {
-			public Object put(final Object key, final Object value) {
-				return super.put(fixKey(key), value);
-			}
-
 			public Object get(final Object key) {
 				return super.get(fixKey(key));
+			}
+
+			public Object put(final Object key, final Object value) {
+				return super.put(fixKey(key), value);
 			}
 
 			protected String fixKey(final Object key) {
@@ -299,12 +203,114 @@ public class Colour implements java.io.Serializable, IsSerializable {
 		return (Colour) Colour.namedColours.get(namedColour.toLowerCase());
 	}
 
-	public Colour(final int colour) {
-		this((colour >> 16) & 0xff, (colour >> 8) & 0xff, colour & 0x0ff);
+	/**
+	 * Accepts a colour value as a string and attempts to convert it into an
+	 * integer value. Currently supported formats include
+	 * <ul>
+	 * <li>#rgb</li>
+	 * <li>#rrggbb</li>
+	 * <li>rgb(r,g,b)</li>
+	 * <li>named colours</li>
+	 * </ul>
+	 * 
+	 * @param value
+	 * @return
+	 */
+	static public Colour parse(final String value) {
+		Checker.notEmpty("parameter:value", value);
+		Colour colourValue = null;
+		while (true) {
+			// test if a #rrggbb or #rgb value...
+			if (value.startsWith("#")) {
+				// handles #rgb values.
+				if (value.length() == 1 + 3) {
+					colourValue = parseHashRgb(value);
+					break;
+				}
+				// handles #rrggbb values.
+				if (value.length() == 1 + 6) {
+					colourValue = parseHashRrggbb(value);
+					break;
+				}
+			}
+			// test if rgb(rr,gg,bb)
+			if (value.startsWith("rgb(") & value.endsWith(")")) {
+				colourValue = parseRgbTriplet(value);
+				break;
+			}
+			// assume that value contains the name of a colour...
+			colourValue = Colour.getColour(value);
+			if (null != colourValue) {
+				break;
+			}
+			// unknown colour value/ format etc.
+			throw new IllegalArgumentException(
+					"Unable to read rgb value from property value\"" + value
+							+ "\".");
+		}
+		return colourValue;
 	}
+
+	/**
+	 * Handles the parsing and conversion of #rgb formatted colour values into
+	 * an integer
+	 * 
+	 * @param value
+	 * @return
+	 */
+	static Colour parseHashRgb(final String value) {
+		Checker.notEmpty("parameter:value", value);
+		int red = Character.digit(value.charAt(1), 16);
+		red = red * 17;
+		int green = Character.digit(value.charAt(2), 16);
+		green = green * 17;
+		int blue = Character.digit(value.charAt(3), 16);
+		blue = blue * 17;
+		return new Colour(red, green, blue);
+	}
+
+	/**
+	 * Handles the parsing and conversion of #rrggbb formatted colour values
+	 * into an integer
+	 * 
+	 * @param value
+	 * @return
+	 */
+	static Colour parseHashRrggbb(final String value) {
+		Checker.notEmpty("parameter:value", value);
+		final int redGreenBlue = Integer.parseInt(value.substring(1, 1 + 6),
+				16);
+		return new Colour(redGreenBlue);
+	}
+
+	/**
+	 * Handles the parsing and conversion of rgb(rr,gg,bbb) triplets into a
+	 * single integer value.
+	 * 
+	 * @param value
+	 * @return
+	 */
+	static Colour parseRgbTriplet(final String value) {
+		final String[] triplets = Utilities
+				.split(value.substring(4, value.length() - 1), ",", true);
+		final int red = Integer.parseInt(triplets[0].trim());
+		final int green = Integer.parseInt(triplets[1].trim());
+		final int blue = Integer.parseInt(triplets[2].trim());
+		return new Colour(red, green, blue);
+	}
+
+	private int red;
+
+	private int green;
+
+	private int blue;
 
 	public Colour() {
 		this(0);
+	}
+
+	public Colour(final int colour) {
+		this((colour >> 16) & 0xff, (colour >> 8) & 0xff, colour & 0x0ff);
 	}
 
 	public Colour(final int red, final int green, final int blue) {
@@ -312,96 +318,6 @@ public class Colour implements java.io.Serializable, IsSerializable {
 		this.setRed(red);
 		this.setGreen(green);
 		this.setBlue(blue);
-	}
-
-	public String toCssColour() {
-		final int rgb = this.getRed() * 0x10000 + this.getGreen() * 0x100
-				+ this.getBlue();
-		final String rgbHexString = Integer.toHexString(rgb);
-		final String string = '#' + Utilities.padLeft(rgbHexString, 6, '0');
-		return string;
-	}
-
-	public Colour makeLighter(final float whiteness) {
-		final int red = getRed();
-		final int green = getGreen();
-		final int blue = getBlue();
-		final int lighterRed0 = (int) ((0xff - red) * whiteness);
-		final int lighterGreen0 = (int) ((0xff - green) * whiteness);
-		final int lighterBlue0 = (int) ((0xff - blue) * whiteness);
-		final int lighterRed1 = Math.min(red + lighterRed0, 0xff);
-		final int lighterGreen1 = Math.min(green + lighterGreen0, 0xff);
-		final int lighterBlue1 = Math.min(blue + lighterBlue0, 0xff);
-		return new Colour(lighterRed1, lighterGreen1, lighterBlue1);
-	}
-
-	public Colour makeDarker(final float darkness) {
-		final int red = getRed();
-		final int green = getGreen();
-		final int blue = getBlue();
-		final int darkerRed0 = (int) (red * darkness);
-		final int darkerGreen0 = (int) (green * darkness);
-		final int darkerBlue0 = (int) (blue * darkness);
-		final int darkerRed1 = Math.max(red - darkerRed0, 0x0);
-		final int darkerGreen1 = Math.max(green - darkerGreen0, 0x0);
-		final int darkerBlue1 = Math.max(blue - darkerBlue0, 0x0);
-		return new Colour(darkerRed1, darkerGreen1, darkerBlue1);
-	}
-
-	public Colour mix(final Colour otherColour, final float mixRatio) {
-		Checker.notNull("parameter:otherColour", otherColour);
-		final int red = getRed();
-		final int green = getGreen();
-		final int blue = getBlue();
-		final int otherRed = otherColour.getRed();
-		final int otherGreen = otherColour.getGreen();
-		final int otherBlue = otherColour.getBlue();
-		final float otherRatio = 1.0f - mixRatio;
-		final int mixedRed = (int) (red * mixRatio + otherRed * otherRatio);
-		final int mixedGreen = (int) (green * mixRatio + otherGreen
-				* otherRatio);
-		final int mixedBlue = (int) (blue * mixRatio + otherBlue * otherRatio);
-		return new Colour(mixedRed, mixedGreen, mixedBlue);
-	}
-
-	private int red;
-
-	public int getRed() {
-		return this.red;
-	}
-
-	void setRed(final int red) {
-		Checker.between("parameter:red", red, 0,
-				Constants.COLOUR_COMPONENT_VALUE + 1);
-		this.red = red;
-	}
-
-	private int green;
-
-	public int getGreen() {
-		return this.green;
-	}
-
-	void setGreen(final int green) {
-		Checker.between("parameter:green", green, 0,
-				Constants.COLOUR_COMPONENT_VALUE + 1);
-		this.green = green;
-	}
-
-	private int blue;
-
-	public int getBlue() {
-		return this.blue;
-	}
-
-	void setBlue(final int blue) {
-		Checker.between("parameter:blue", blue, 0,
-				Constants.COLOUR_COMPONENT_VALUE + 1);
-		this.blue = blue;
-	}
-
-	public int getRgb() {
-		return this.getRed() << 16 | this.getGreen() << 8 | this.getBlue();
 	}
 
 	/**
@@ -449,6 +365,88 @@ public class Colour implements java.io.Serializable, IsSerializable {
 		return new HueSaturationValue(hue / 360f, saturation, value / 256f);
 	}
 
+	public boolean equals(final Colour otherColour) {
+		return otherColour == null ? false
+				: this.getRed() == otherColour.getRed()
+						&& this.getGreen() == otherColour.getGreen()
+						&& this.getBlue() == otherColour.getBlue();
+	}
+
+	public boolean equals(final Object otherObject) {
+		return otherObject instanceof Colour ? this.equals((Colour) otherObject)
+				: false;
+	}
+
+	public int getBlue() {
+		return this.blue;
+	}
+
+	public int getGreen() {
+		return this.green;
+	}
+
+	public int getRed() {
+		return this.red;
+	}
+
+	public int getRgb() {
+		return this.getRed() << 16 | this.getGreen() << 8 | this.getBlue();
+	}
+
+	public int hashCode() {
+		return this.getRed() << 16 | this.getGreen() << 8 | this.getBlue();
+	}
+
+	public Colour makeDarker(final float darkness) {
+		final int red = getRed();
+		final int green = getGreen();
+		final int blue = getBlue();
+		final int darkerRed0 = (int) (red * darkness);
+		final int darkerGreen0 = (int) (green * darkness);
+		final int darkerBlue0 = (int) (blue * darkness);
+		final int darkerRed1 = Math.max(red - darkerRed0, 0x0);
+		final int darkerGreen1 = Math.max(green - darkerGreen0, 0x0);
+		final int darkerBlue1 = Math.max(blue - darkerBlue0, 0x0);
+		return new Colour(darkerRed1, darkerGreen1, darkerBlue1);
+	}
+
+	public Colour makeLighter(final float whiteness) {
+		final int red = getRed();
+		final int green = getGreen();
+		final int blue = getBlue();
+		final int lighterRed0 = (int) ((0xff - red) * whiteness);
+		final int lighterGreen0 = (int) ((0xff - green) * whiteness);
+		final int lighterBlue0 = (int) ((0xff - blue) * whiteness);
+		final int lighterRed1 = Math.min(red + lighterRed0, 0xff);
+		final int lighterGreen1 = Math.min(green + lighterGreen0, 0xff);
+		final int lighterBlue1 = Math.min(blue + lighterBlue0, 0xff);
+		return new Colour(lighterRed1, lighterGreen1, lighterBlue1);
+	}
+
+	public Colour mix(final Colour otherColour, final float mixRatio) {
+		Checker.notNull("parameter:otherColour", otherColour);
+		final int red = getRed();
+		final int green = getGreen();
+		final int blue = getBlue();
+		final int otherRed = otherColour.getRed();
+		final int otherGreen = otherColour.getGreen();
+		final int otherBlue = otherColour.getBlue();
+		final float otherRatio = 1.0f - mixRatio;
+		final int mixedRed = (int) (red * mixRatio + otherRed * otherRatio);
+		final int mixedGreen = (int) (green * mixRatio
+				+ otherGreen * otherRatio);
+		final int mixedBlue = (int) (blue * mixRatio + otherBlue * otherRatio);
+		return new Colour(mixedRed, mixedGreen, mixedBlue);
+	}
+
+	public String toCssColour() {
+		final int rgb = this.getRed() * 0x10000 + this.getGreen() * 0x100
+				+ this.getBlue();
+		final String rgbHexString = Integer.toHexString(rgb);
+		final String string = '#' + Utilities.padLeft(rgbHexString, 6, '0');
+		return string;
+	}
+
 	public String toString() {
 		return // super.toString() + ", colour:
 		"0x" + Utilities.padLeft(Integer.toHexString(red), 2, '0')
@@ -456,19 +454,21 @@ public class Colour implements java.io.Serializable, IsSerializable {
 				+ Utilities.padLeft(Integer.toHexString(blue), 2, '0');
 	}
 
-	public boolean equals(final Object otherObject) {
-		return otherObject instanceof Colour ? this
-				.equals((Colour) otherObject) : false;
+	void setBlue(final int blue) {
+		Checker.between("parameter:blue", blue, 0,
+				Constants.COLOUR_COMPONENT_VALUE + 1);
+		this.blue = blue;
 	}
 
-	public boolean equals(final Colour otherColour) {
-		return otherColour == null ? false : this.getRed() == otherColour
-				.getRed()
-				&& this.getGreen() == otherColour.getGreen()
-				&& this.getBlue() == otherColour.getBlue();
+	void setGreen(final int green) {
+		Checker.between("parameter:green", green, 0,
+				Constants.COLOUR_COMPONENT_VALUE + 1);
+		this.green = green;
 	}
 
-	public int hashCode() {
-		return this.getRed() << 16 | this.getGreen() << 8 | this.getBlue();
+	void setRed(final int red) {
+		Checker.between("parameter:red", red, 0,
+				Constants.COLOUR_COMPONENT_VALUE + 1);
+		this.red = red;
 	}
 }

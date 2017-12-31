@@ -10,8 +10,8 @@ import cc.alcina.framework.gwt.persistence.client.LogStore;
 import cc.alcina.framework.gwt.persistence.client.PersistencePropAndLogInitState;
 import cc.alcina.framework.gwt.persistence.client.RemoteLogPersister;
 
-public class PersistencePropAndLogJdbcConsort extends
-		Consort<PersistencePropAndLogInitState> {
+public class PersistencePropAndLogJdbcConsort
+		extends Consort<PersistencePropAndLogInitState> {
 	private RemoteLogPersister remoteLogPersister;
 
 	private ObjectStoreJdbcImpl logImpl;
@@ -20,46 +20,18 @@ public class PersistencePropAndLogJdbcConsort extends
 
 	private Connection conn;
 
-	class Player_PRE_PROPERTY_IMPL
-			extends
-			EnumRunnableAsyncCallbackPlayer<Void, PersistencePropAndLogInitState> {
-		public Player_PRE_PROPERTY_IMPL() {
-			super(PersistencePropAndLogInitState.PRE_PROPERTY_IMPL);
-		}
-
-		@Override
-		public void run() {
-			propImpl = new ObjectStoreJdbcImpl(conn, "PropertyStore", this);
-		}
+	public PersistencePropAndLogJdbcConsort(Connection conn,
+			RemoteLogPersister remoteLogPersister) {
+		this.conn = conn;
+		this.remoteLogPersister = remoteLogPersister;
+		addPlayer(new Player_PRE_PROPERTY_IMPL());
+		addPlayer(new Player_POST_PROPERTY_IMPL());
+		addPlayer(new Player_PRE_LOG_IMPL());
+		addPlayer(new Player_POST_LOG_IMPL());
+		addEndpointPlayer();
 	}
 
-	class Player_POST_PROPERTY_IMPL extends
-			EnumPlayer<PersistencePropAndLogInitState> {
-		public Player_POST_PROPERTY_IMPL() {
-			super(PersistencePropAndLogInitState.POST_PROPERTY_IMPL);
-		}
-
-		@Override
-		public void run() {
-			KeyValueStore.get().registerDelegate(propImpl);
-		}
-	}
-
-	class Player_PRE_LOG_IMPL
-			extends
-			EnumRunnableAsyncCallbackPlayer<Void, PersistencePropAndLogInitState> {
-		public Player_PRE_LOG_IMPL() {
-			super(PersistencePropAndLogInitState.PRE_LOG_IMPL);
-		}
-
-		@Override
-		public void run() {
-			logImpl = new ObjectStoreJdbcImpl(conn, "LogStore", this);
-		}
-	}
-
-	class Player_POST_LOG_IMPL
-			extends
+	class Player_POST_LOG_IMPL extends
 			EnumRunnableAsyncCallbackPlayer<Void, PersistencePropAndLogInitState> {
 		public Player_POST_LOG_IMPL() {
 			super(PersistencePropAndLogInitState.POST_LOG_IMPL);
@@ -76,14 +48,39 @@ public class PersistencePropAndLogJdbcConsort extends
 		}
 	}
 
-	public PersistencePropAndLogJdbcConsort(Connection conn,
-			RemoteLogPersister remoteLogPersister) {
-		this.conn = conn;
-		this.remoteLogPersister = remoteLogPersister;
-		addPlayer(new Player_PRE_PROPERTY_IMPL());
-		addPlayer(new Player_POST_PROPERTY_IMPL());
-		addPlayer(new Player_PRE_LOG_IMPL());
-		addPlayer(new Player_POST_LOG_IMPL());
-		addEndpointPlayer();
+	class Player_POST_PROPERTY_IMPL
+			extends EnumPlayer<PersistencePropAndLogInitState> {
+		public Player_POST_PROPERTY_IMPL() {
+			super(PersistencePropAndLogInitState.POST_PROPERTY_IMPL);
+		}
+
+		@Override
+		public void run() {
+			KeyValueStore.get().registerDelegate(propImpl);
+		}
+	}
+
+	class Player_PRE_LOG_IMPL extends
+			EnumRunnableAsyncCallbackPlayer<Void, PersistencePropAndLogInitState> {
+		public Player_PRE_LOG_IMPL() {
+			super(PersistencePropAndLogInitState.PRE_LOG_IMPL);
+		}
+
+		@Override
+		public void run() {
+			logImpl = new ObjectStoreJdbcImpl(conn, "LogStore", this);
+		}
+	}
+
+	class Player_PRE_PROPERTY_IMPL extends
+			EnumRunnableAsyncCallbackPlayer<Void, PersistencePropAndLogInitState> {
+		public Player_PRE_PROPERTY_IMPL() {
+			super(PersistencePropAndLogInitState.PRE_PROPERTY_IMPL);
+		}
+
+		@Override
+		public void run() {
+			propImpl = new ObjectStoreJdbcImpl(conn, "PropertyStore", this);
+		}
 	}
 }

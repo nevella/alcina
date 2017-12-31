@@ -46,6 +46,10 @@ import com.google.gwt.safehtml.shared.annotations.SuppressIsSafeHtmlCastCheck;
  * This class is not thread-safe.
  */
 public final class UnsafeHtmlBuilder {
+	static RegExp unsafeTest = RegExp.compile("[&<>'\"]");
+
+	static RegExp unsafeTestNoQuotes = RegExp.compile("[&<>]");
+
 	private final StringBuilder sb = new StringBuilder();
 
 	/**
@@ -175,22 +179,6 @@ public final class UnsafeHtmlBuilder {
 		return this;
 	}
 
-	public UnsafeHtmlBuilder appendEscapedNoQuotes(String text) {
-		if (text != null) {
-			if (unsafeTestNoQuotes.exec(text) == null) {
-				sb.append(text);
-			} else {
-				sb.append(SafeHtmlUtils.htmlEscapeNoQuotes(text));
-			}
-		}
-		return this;
-	}
-	
-	
-
-	static RegExp unsafeTest = RegExp.compile("[&<>'\"]");
-	static RegExp unsafeTestNoQuotes = RegExp.compile("[&<>]");
-
 	/**
 	 * Appends a string consisting of several newline-separated lines after
 	 * HTML-escaping it. Newlines in the original string are converted to {@code
@@ -204,6 +192,17 @@ public final class UnsafeHtmlBuilder {
 	 */
 	public UnsafeHtmlBuilder appendEscapedLines(String text) {
 		sb.append(SafeHtmlUtils.htmlEscape(text).replaceAll("\n", "<br>"));
+		return this;
+	}
+
+	public UnsafeHtmlBuilder appendEscapedNoQuotes(String text) {
+		if (text != null) {
+			if (unsafeTestNoQuotes.exec(text) == null) {
+				sb.append(text);
+			} else {
+				sb.append(SafeHtmlUtils.htmlEscapeNoQuotes(text));
+			}
+		}
 		return this;
 	}
 
@@ -281,6 +280,13 @@ public final class UnsafeHtmlBuilder {
 		private String html;
 
 		/**
+		 * No-arg constructor for compatibility with GWT serialization.
+		 */
+		@SuppressWarnings("unused")
+		private SafeHtmlString() {
+		}
+
+		/**
 		 * Constructs a {@link SafeHtmlString} from a string. Callers are
 		 * responsible for ensuring that the string passed as the argument to
 		 * this constructor satisfies the constraints of the contract imposed by
@@ -294,13 +300,6 @@ public final class UnsafeHtmlBuilder {
 				throw new NullPointerException("html is null");
 			}
 			this.html = html;
-		}
-
-		/**
-		 * No-arg constructor for compatibility with GWT serialization.
-		 */
-		@SuppressWarnings("unused")
-		private SafeHtmlString() {
 		}
 
 		/**

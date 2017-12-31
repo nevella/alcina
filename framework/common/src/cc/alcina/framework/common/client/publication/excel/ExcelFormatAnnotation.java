@@ -28,13 +28,13 @@ import java.lang.annotation.RetentionPolicy;
 public @interface ExcelFormatAnnotation {
 	public static final int DEFAULT_ORDER_POS = 100;
 
-	ExcelDatatype type() default ExcelDatatype.String;
-
-	int order() default DEFAULT_ORDER_POS;
-
 	String displayName() default "";
 
 	boolean omit() default false;
 
+	int order() default DEFAULT_ORDER_POS;
+
 	String styleId() default "";
+
+	ExcelDatatype type() default ExcelDatatype.String;
 }

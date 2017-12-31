@@ -23,11 +23,11 @@ public class DomainTransformRuntimeException extends RuntimeException
 		super(message);
 	}
 
-	public void setEvent(DomainTransformEvent event) {
-		this.event = event;
-	}
-
 	public DomainTransformEvent getEvent() {
 		return event;
+	}
+
+	public void setEvent(DomainTransformEvent event) {
+		this.event = event;
 	}
 }

@@ -43,33 +43,14 @@ public class CompositeValidationFeedback extends AbstractValidationFeedback {
 		addAll(feedback);
 	}
 
-	private void addAll(ValidationFeedback[] feedbackToAdd) {
-		this.feedbacks.addAll(Arrays.asList(feedbackToAdd));
-		for (ValidationFeedback validationFeedback : feedbackToAdd) {
-			if (validationFeedback instanceof AbstractValidationFeedback) {
-				getMappings().putAll(
-						((AbstractValidationFeedback) validationFeedback)
-								.getMappings());
-			}
-		}
-		pushMappings();
-	}
-
-	protected void pushMappings() {
-		for (ValidationFeedback validationFeedback : feedbacks) {
-			if (validationFeedback instanceof AbstractValidationFeedback) {
-				Set<Entry<Class, String>> entrySet = getMappings().entrySet();
-				for (Entry<Class, String> entry : entrySet) {
-					((AbstractValidationFeedback) validationFeedback)
-							.addMessage(entry.getKey(), entry.getValue());
-				}
-			}
-		}
+	public CompositeValidationFeedback add(ValidationFeedback feedback) {
+		addAll(new ValidationFeedback[] { feedback });
+		return this;
 	}
 
 	@Override
-	public AbstractValidationFeedback addMessage(
-			Class validationExceptionClass, String message) {
+	public AbstractValidationFeedback addMessage(Class validationExceptionClass,
+			String message) {
 		getMappings().put(validationExceptionClass, message);
 		pushMappings();
 		return this;
@@ -87,8 +68,27 @@ public class CompositeValidationFeedback extends AbstractValidationFeedback {
 		}
 	}
 
-	public CompositeValidationFeedback add(ValidationFeedback feedback) {
-		addAll(new ValidationFeedback[] { feedback });
-		return this;
+	private void addAll(ValidationFeedback[] feedbackToAdd) {
+		this.feedbacks.addAll(Arrays.asList(feedbackToAdd));
+		for (ValidationFeedback validationFeedback : feedbackToAdd) {
+			if (validationFeedback instanceof AbstractValidationFeedback) {
+				getMappings()
+						.putAll(((AbstractValidationFeedback) validationFeedback)
+								.getMappings());
+			}
+		}
+		pushMappings();
+	}
+
+	protected void pushMappings() {
+		for (ValidationFeedback validationFeedback : feedbacks) {
+			if (validationFeedback instanceof AbstractValidationFeedback) {
+				Set<Entry<Class, String>> entrySet = getMappings().entrySet();
+				for (Entry<Class, String> entry : entrySet) {
+					((AbstractValidationFeedback) validationFeedback)
+							.addMessage(entry.getKey(), entry.getValue());
+				}
+			}
+		}
 	}
 }

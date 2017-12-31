@@ -4,7 +4,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
-import org.w3c.dom.html.HTMLAnchorElement;
 import org.w3c.dom.ranges.Range;
 import org.w3c.dom.traversal.DocumentTraversal;
 import org.w3c.dom.traversal.NodeFilter;
@@ -28,31 +27,14 @@ public class AbstractParserSlice<T extends ParserToken> {
 
 	public int startOffsetInRun;
 
-
 	private String cachedContents = null;
 
 	private String overrideText;
 
-	@Override
-	public boolean equals(Object obj) {
-		if (useObjectHashAndEquality()) {
-			return super.equals(obj);
-		}
-		if (obj instanceof AbstractParserSlice) {
-			AbstractParserSlice slice = (AbstractParserSlice) obj;
-			return start.equals(slice.start) && end.equals(slice.end);
-		}
-		return super.equals(obj);
-	}
-
-	protected boolean useObjectHashAndEquality() {
-		return true;
-	}
-
-	@Override
-	public int hashCode() {
-		return useObjectHashAndEquality() ? super.hashCode()
-				: start.hashCode() ^ end.hashCode();
+	public AbstractParserSlice(Node node, T token) {
+		this.start = new XmlUtils.DOMLocation(node, 0, 0);
+		this.end = new XmlUtils.DOMLocation(node, 0, 0);
+		this.token = token;
 	}
 
 	public AbstractParserSlice(XmlUtils.DOMLocation start,
@@ -62,35 +44,6 @@ public class AbstractParserSlice<T extends ParserToken> {
 		this.end = end;
 		this.token = token;
 		this.startOffsetInRun = startOffsetInRun;
-	}
-
-	public void trimTo(int length) {
-		Document ownerDocument = start.node.getOwnerDocument();
-		TreeWalker itr = ((DocumentTraversal) ownerDocument).createTreeWalker(
-				ownerDocument.getDocumentElement(), NodeFilter.SHOW_TEXT, null,
-				true);
-		itr.setCurrentNode(getFirstText());
-		StringBuilder content = new StringBuilder();
-		Node n;
-		while ((n = itr.getCurrentNode()) != null) {
-			content.append(n.getNodeValue());
-			if (content.length() >= length) {
-				end = new DOMLocation(n, start.characterOffset
-						+ n.getNodeValue().length() + length - content.length(),
-						end.nodeIndex);
-				// note - looks like DOMLocation.nodeIndex ain't that crucial
-				// (since that info's implicit in the node)
-				// may want to drop it?
-				break;
-			}
-			itr.nextNode();
-		}
-	}
-
-	public AbstractParserSlice(Node node, T token) {
-		this.start = new XmlUtils.DOMLocation(node, 0, 0);
-		this.end = new XmlUtils.DOMLocation(node, 0, 0);
-		this.token = token;
 	}
 
 	public String cleanedContents() {
@@ -108,6 +61,18 @@ public class AbstractParserSlice<T extends ParserToken> {
 		String s = r.toString();
 		r.detach();
 		return s;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (useObjectHashAndEquality()) {
+			return super.equals(obj);
+		}
+		if (obj instanceof AbstractParserSlice) {
+			AbstractParserSlice slice = (AbstractParserSlice) obj;
+			return start.equals(slice.start) && end.equals(slice.end);
+		}
+		return super.equals(obj);
 	}
 
 	public void extend(Node n) {
@@ -159,6 +124,12 @@ public class AbstractParserSlice<T extends ParserToken> {
 		return this.token;
 	}
 
+	@Override
+	public int hashCode() {
+		return useObjectHashAndEquality() ? super.hashCode()
+				: start.hashCode() ^ end.hashCode();
+	}
+
 	public String normalisedContents() {
 		return TokenParserUtils.quickNormalisePunctuation(
 				SEUtilities.normalizeWhitespaceAndTrim(contents()));
@@ -171,6 +142,29 @@ public class AbstractParserSlice<T extends ParserToken> {
 	@Override
 	public String toString() {
 		return token + ":" + contents();
+	}
+
+	public void trimTo(int length) {
+		Document ownerDocument = start.node.getOwnerDocument();
+		TreeWalker itr = ((DocumentTraversal) ownerDocument).createTreeWalker(
+				ownerDocument.getDocumentElement(), NodeFilter.SHOW_TEXT, null,
+				true);
+		itr.setCurrentNode(getFirstText());
+		StringBuilder content = new StringBuilder();
+		Node n;
+		while ((n = itr.getCurrentNode()) != null) {
+			content.append(n.getNodeValue());
+			if (content.length() >= length) {
+				end = new DOMLocation(n, start.characterOffset
+						+ n.getNodeValue().length() + length - content.length(),
+						end.nodeIndex);
+				// note - looks like DOMLocation.nodeIndex ain't that crucial
+				// (since that info's implicit in the node)
+				// may want to drop it?
+				break;
+			}
+			itr.nextNode();
+		}
 	}
 
 	public void walkToHighestNodeAtOffset() {
@@ -194,5 +188,9 @@ public class AbstractParserSlice<T extends ParserToken> {
 			}
 			start = new DOMLocation(n, start.characterOffset, start.nodeIndex);
 		}
+	}
+
+	protected boolean useObjectHashAndEquality() {
+		return true;
 	}
 }

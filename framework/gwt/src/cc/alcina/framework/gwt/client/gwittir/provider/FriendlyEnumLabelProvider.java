@@ -23,9 +23,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
  *
  * @author Nick Reddel
  */
-
- public class FriendlyEnumLabelProvider implements
-		BoundWidgetProvider {
+public class FriendlyEnumLabelProvider implements BoundWidgetProvider {
 	public BoundWidget get() {
 		RenderingLabel label = new RenderingLabel();
 		label.setRenderer(FriendlyEnumRenderer.INSTANCE);

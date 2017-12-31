@@ -15,13 +15,10 @@ package cc.alcina.framework.servlet;
 
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
-
-
 /**
  *
  * @author Nick Reddel
  */
-
- public interface CommonRemoteServletProvider {
+public interface CommonRemoteServletProvider {
 	public CommonRemoteServiceServlet getCommonRemoteServiceServlet();
 }

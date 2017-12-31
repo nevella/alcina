@@ -10,8 +10,13 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.ConsortSignalHandler;
 
-public class HandleReloadUserObjectsSignalHandler implements
-		ConsortSignalHandler<HandshakeSignal> {
+public class HandleReloadUserObjectsSignalHandler
+		implements ConsortSignalHandler<HandshakeSignal> {
+	@Override
+	public HandshakeSignal handlesSignal() {
+		return HandshakeSignal.OBJECTS_INVALIDATED;
+	}
+
 	@Override
 	public void signal(Consort consort, AsyncCallback signalHandledCallback) {
 		consort.addOneTimeFinishedCallback(signalHandledCallback);
@@ -24,10 +29,5 @@ public class HandleReloadUserObjectsSignalHandler implements
 		consort.removeStates(statesToRemove);
 		consort.addIfNotMember(Registry.impl(StartAppPlayer.class));
 		consort.nudge();
-	}
-
-	@Override
-	public HandshakeSignal handlesSignal() {
-		return HandshakeSignal.OBJECTS_INVALIDATED;
 	}
 }

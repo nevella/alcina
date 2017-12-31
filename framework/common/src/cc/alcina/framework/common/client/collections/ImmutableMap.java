@@ -24,7 +24,7 @@ public class ImmutableMap<K, V> implements Map<K, V> {
 	}
 
 	public Set<java.util.Map.Entry<K, V>> entrySet() {
-		return new ImmutableSet<Map.Entry<K,V>>(delegate.entrySet());
+		return new ImmutableSet<Map.Entry<K, V>>(delegate.entrySet());
 	}
 
 	public boolean equals(Object o) {
@@ -66,5 +66,4 @@ public class ImmutableMap<K, V> implements Map<K, V> {
 	public Collection<V> values() {
 		return this.delegate.values();
 	}
-
 }

@@ -17,22 +17,17 @@ import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy.MemcacheProxy
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
+	protected PropertyStore propertyStore;
+
+	protected DetachedEntityCache cache;
+
 	public PropertyStoreItemDescriptor(Class clazz) {
 		super(clazz);
 		createPropertyStore();
 	}
 
-	protected PropertyStore propertyStore;
-
-	protected DetachedEntityCache cache;
-
-	protected void createPropertyStore() {
-		this.propertyStore = new PropertyStore();
-	}
-
-	@Override
-	public void index(HasIdAndLocalId obj, boolean add) {
-		propertyStore.index(obj, add);
+	public void addRow(ResultSet rs) throws SQLException {
+		propertyStore.addRow(rs);
 	}
 
 	@Override
@@ -53,19 +48,6 @@ public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
 		return CollectionFilters.filterAsSet(existing, withIdFilter);
 	}
 
-	public String getSqlFilter() {
-		return null;
-	}
-
-	public void init(DetachedEntityCache cache, List<PdOperator> pds) {
-		this.cache = cache;
-		propertyStore.init(pds);
-	}
-
-	public void addRow(ResultSet rs) throws SQLException {
-		propertyStore.addRow(rs);
-	}
-
 	@Override
 	public <T> List<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
 		ArrayList<T> raw = new ArrayList<T>(ids.size());
@@ -77,6 +59,41 @@ public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
 		}
 		return raw;
 	}
+
+	public String getSqlFilter() {
+		return null;
+	}
+
+	@Override
+	public void index(HasIdAndLocalId obj, boolean add) {
+		propertyStore.index(obj, add);
+	}
+
+	public void init(DetachedEntityCache cache, List<PdOperator> pds) {
+		this.cache = cache;
+		propertyStore.init(pds);
+	}
+
+	@Override
+	public boolean isTransactional() {
+		return false;
+	}
+
+	public void remove(long id) {
+		propertyStore.remove(id);
+	}
+
+	protected void createPropertyStore() {
+		this.propertyStore = new PropertyStore();
+	}
+
+	protected abstract Object createProxy(int rowOffset,
+			DetachedEntityCache cache, Long id);
+
+	protected void ensureProxyModificationChecker(MemCacheProxy memCacheProxy) {
+	}
+
+	protected abstract int getRoughCount();
 
 	<T> T getProxy(DetachedEntityCache cache, Long id, boolean create) {
 		int rowOffset = propertyStore.getRowOffset(id);
@@ -101,22 +118,5 @@ public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
 		} else {
 			return null;
 		}
-	}
-
-	protected abstract Object createProxy(int rowOffset,
-			DetachedEntityCache cache, Long id);
-
-	protected abstract int getRoughCount();
-
-	@Override
-	public boolean isTransactional() {
-		return false;
-	}
-
-	public void remove(long id) {
-		propertyStore.remove(id);
-	}
-
-	protected void ensureProxyModificationChecker(MemCacheProxy memCacheProxy) {
 	}
 }

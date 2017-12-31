@@ -1,9 +1,11 @@
 package com.google.gwt.dom.client;
 
 public interface DomNode {
+	public Node cloneNode(boolean deep);
+
 	<T extends Node> T appendChild(T newChild);
 
-	public Node cloneNode(boolean deep);
+	void callMethod(String methodName);
 
 	/**
 	 * Gets the child node at the given index.
@@ -35,16 +37,14 @@ public interface DomNode {
 
 	String getNodeValue();
 
+	Document getOwnerDocument();
+
 	/**
 	 * Gets the parent element of this node.
 	 * 
 	 * @return this node's parent element, or <code>null</code> if none exists
 	 */
 	Element getParentElement();
-
-	Node nodeFor();
-
-	Document getOwnerDocument();
 
 	Node getParentNode();
 
@@ -58,6 +58,8 @@ public interface DomNode {
 	 * @return true if the node has a parent element
 	 */
 	boolean hasParentElement();
+
+	int indexInParentChildren();
 
 	/**
 	 * Inserts the node newChild after the existing child node refChild. If
@@ -86,6 +88,12 @@ public interface DomNode {
 
 	boolean isOrHasChild(Node child);
 
+	Node nodeFor();
+
+	Node removeAllChildren();
+
+	Node removeChild(Node oldChild);
+
 	/**
 	 * Removes this node from its parent node if it is attached to one.
 	 */
@@ -94,12 +102,4 @@ public interface DomNode {
 	Node replaceChild(Node newChild, Node oldChild);
 
 	void setNodeValue(String nodeValue);
-
-	Node removeChild(Node oldChild);
-
-	void callMethod(String methodName);
-
-	Node removeAllChildren();
-
-	int indexInParentChildren();
 }

@@ -29,7 +29,7 @@ package cc.alcina.framework.common.client.logic.permissions;
  * 	public void setOwner(IUser owner){setUser((MyUser)owner);}
  * 	....
  * }
- * </pre>
+ *         </pre>
  */
 public interface IVersionableOwnable extends IVersionable, HasOwner {
 	public IGroup getOwnerGroup();

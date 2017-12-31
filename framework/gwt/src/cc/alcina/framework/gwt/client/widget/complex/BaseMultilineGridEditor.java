@@ -26,6 +26,14 @@ public class BaseMultilineGridEditor<T extends HasIdAndLocalId>
 	}
 
 	@Override
+	protected List<Link> createPerRowEditActions(T rowValue) {
+		List<Link> actions = super.createPerRowEditActions(rowValue);
+		actions = customiser.customisePerRowEditActions(actions, rowValue,
+				this);
+		return actions;
+	}
+
+	@Override
 	protected void customiseActions(List<PermissibleAction> actions) {
 		customiser.customiseActions(actions);
 	}
@@ -37,12 +45,6 @@ public class BaseMultilineGridEditor<T extends HasIdAndLocalId>
 
 	protected void doDeleteRow(T t) {
 		customiser.doDeleteRows(Collections.singletonList(t), this);
-	}
-	@Override
-	protected List<Link> createPerRowEditActions(T rowValue) {
-		List<Link> actions = super.createPerRowEditActions(rowValue);
-		actions=customiser.customisePerRowEditActions(actions,rowValue,this);
-		return actions;
 	}
 
 	@Override

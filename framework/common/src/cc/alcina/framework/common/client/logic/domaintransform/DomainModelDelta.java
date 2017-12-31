@@ -5,21 +5,21 @@ import java.util.Collection;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface DomainModelDelta {
+	public String getAppInstruction();
+
 	public DomainModelHolder getDomainModelHolder();
 
 	public DomainModelObject getDomainModelObject();
 
-	public Collection<DomainModelDeltaHili> getUnlinkedObjects();
+	public abstract DomainModelDeltaMetadata getMetadata();
 
 	public Collection<DomainTransformEvent> getReplayEvents();
 
-	public String getAppInstruction();
-
-	void unwrap(AsyncCallback<Void> completionCallback);
-
 	public abstract DomainModelDeltaSignature getSignature();
 
-	public abstract DomainModelDeltaMetadata getMetadata();
+	public Collection<DomainModelDeltaHili> getUnlinkedObjects();
 
 	public boolean hasLocalOnlyTransforms();
+
+	void unwrap(AsyncCallback<Void> completionCallback);
 }

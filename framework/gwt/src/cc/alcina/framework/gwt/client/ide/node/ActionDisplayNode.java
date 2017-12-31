@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.node;
-
 
 import com.google.gwt.resources.client.ImageResource;
 
@@ -24,22 +22,23 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  *
  * @author Nick Reddel
  */
-
- public class ActionDisplayNode extends ContainerNode {
+public class ActionDisplayNode extends ContainerNode {
 	public ActionDisplayNode(String title, ImageResource imageResource) {
 		super(title, imageResource);
 	}
-	
+
 	public ActionDisplayNode(String title, ImageResource imageResource,
 			NodeFactory nodeFactory) {
 		super(title, imageResource, nodeFactory);
 	}
 
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		ensureDebugId(getElement(),CommonUtils.simpleClassName(getAction().getClass()));
-	}
 	public PermissibleAction getAction() {
 		return (PermissibleAction) getUserObject();
+	}
+
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		ensureDebugId(getElement(),
+				CommonUtils.simpleClassName(getAction().getClass()));
 	}
 }

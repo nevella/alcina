@@ -15,11 +15,9 @@
  */
 package com.google.gwt.user.client.impl;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementRemote;
-import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
 
@@ -27,74 +25,81 @@ import com.google.gwt.user.client.EventListener;
  * Native implementation associated with {@link com.google.gwt.user.client.DOM}.
  */
 public abstract class DOMImpl {
-
-  protected static boolean eventSystemIsInitialized;
+	protected static boolean eventSystemIsInitialized;
 
 	public static EventListener getEventListener(Element elem) {
-		return elem.implAccess().linkedToRemote()?getEventListener0(elem.implAccess().typedRemote()): null;
+		return elem.implAccess().linkedToRemote()
+				? getEventListener0(elem.implAccess().typedRemote()) : null;
 	}
-  private static native EventListener getEventListener0(ElementRemote elem) /*-{
-    // Return elem.__listener if and only if it was assigned from our module
-    var maybeListener = elem.__listener;
-    return @com.google.gwt.user.client.impl.DOMImpl::isMyListener(*)(maybeListener) ? maybeListener : null;
-  }-*/;
-  public static  void setEventListener(Element elem, EventListener listener){
-	  ElementRemote remote = elem.implAccess().typedRemoteOrNull();
-	  if(remote!=null){
-		  setEventListener0(remote, listener);
-	  }else{
-		  elem.uiObjectListener = listener;
-	  }
-  }
-  private static native void setEventListener0(ElementRemote elem, EventListener listener) /*-{
-    elem.__listener = listener;
-  }-*/;
 
-  /**
-   * Returns <code>true</code>if the object is an instance of EventListener and
-   * the object belongs to this module.
-   * <p>
-   * Note that this method should only be called from JSNI, otherwise it can be inlined and compiler
-   * can remove instanceOf checks. E.g.
-   * <pre>
-   * EventListener listener = getEventListenerFromSomeJsniCode();
-   * if (isMyListener(listener)) {
-   *   // This block will always be executed because the compiler proves that the instance of checks
-   *   // are not required after inlining isMyListener.
-   * }
-   * </pre>
-   */
-  private static boolean isMyListener(Object object) {
-    /*
-     * The first test ensures the Object belongs to this module in Production
-     * Mode by ensuring this is not a JavaScriptObject. In Production Mode,
-     * foreign Java objects appear to be JavaScriptObject. See
-     * Cast.isJavaScriptObject().
-     * 
-     * The second test then checks the exact type.
-     * 
-     * TODO: make the generated code smaller!
-     */
-    return !(object instanceof JavaScriptObject)
-        && (object instanceof com.google.gwt.user.client.EventListener);
-  }
+	public static void setEventListener(Element elem, EventListener listener) {
+		ElementRemote remote = elem.implAccess().typedRemoteOrNull();
+		if (remote != null) {
+			setEventListener0(remote, listener);
+		} else {
+			elem.uiObjectListener = listener;
+		}
+	}
 
-  public native void eventCancelBubble(Event evt, boolean cancel) /*-{
-    evt.cancelBubble = cancel;
-  }-*/;
+	private static native EventListener
+			getEventListener0(ElementRemote elem) /*-{
+													// Return elem.__listener if and only if it was assigned from our module
+													var maybeListener = elem.__listener;
+													return @com.google.gwt.user.client.impl.DOMImpl::isMyListener(*)(maybeListener) ? maybeListener : null;
+													}-*/;
 
-  public abstract Element eventGetFromElement(Event evt);
-  
-  public native boolean eventGetRepeat(Event evt) /*-{
-    return !!evt.repeat;
-  }-*/; 
- 
-  public abstract Element eventGetToElement(Event evt);
+	/**
+	 * Returns <code>true</code>if the object is an instance of EventListener
+	 * and the object belongs to this module.
+	 * <p>
+	 * Note that this method should only be called from JSNI, otherwise it can
+	 * be inlined and compiler can remove instanceOf checks. E.g.
+	 * 
+	 * <pre>
+	 * EventListener listener = getEventListenerFromSomeJsniCode();
+	 * if (isMyListener(listener)) {
+	 * 	// This block will always be executed because the compiler proves
+	 * 	// that the instance of checks
+	 * 	// are not required after inlining isMyListener.
+	 * }
+	 * </pre>
+	 */
+	private static boolean isMyListener(Object object) {
+		/*
+		 * The first test ensures the Object belongs to this module in
+		 * Production Mode by ensuring this is not a JavaScriptObject. In
+		 * Production Mode, foreign Java objects appear to be JavaScriptObject.
+		 * See Cast.isJavaScriptObject().
+		 * 
+		 * The second test then checks the exact type.
+		 * 
+		 * TODO: make the generated code smaller!
+		 */
+		return !(object instanceof JavaScriptObject)
+				&& (object instanceof com.google.gwt.user.client.EventListener);
+	}
 
-  public final int eventGetTypeInt(Event evt) {
-    return eventGetTypeInt(evt.getType());
-  }
-  
+	private static native void setEventListener0(ElementRemote elem,
+			EventListener listener) /*-{
+									elem.__listener = listener;
+									}-*/;
+
+	public native void eventCancelBubble(Event evt, boolean cancel) /*-{
+																	evt.cancelBubble = cancel;
+																	}-*/;
+
+	public abstract Element eventGetFromElement(Event evt);
+
+	public native boolean eventGetRepeat(Event evt) /*-{
+													return !!evt.repeat;
+													}-*/;
+
+	public abstract Element eventGetToElement(Event evt);
+
+	public final int eventGetTypeInt(Event evt) {
+		return eventGetTypeInt(evt.getType());
+	}
+
 	public int eventGetTypeInt(String eventType) {
 		switch (eventType) {
 		case "blur":
@@ -157,47 +162,49 @@ public abstract class DOMImpl {
 			return -1;
 		}
 	}
-  
-  public native void eventSetKeyCode(Event evt, char key) /*-{
-    evt.keyCode = key;
-  }-*/;
- 
-  public abstract Element getChild(Element elem, int index);
 
-  public abstract int getChildCount(Element elem);
+	public native void eventSetKeyCode(Event evt, char key) /*-{
+															evt.keyCode = key;
+															}-*/;
 
-  public abstract int getChildIndex(Element parent, Element child);
-  public  int getEventsSunk(Element elem) {
-	  if(elem.implAccess().linkedToRemote()){
-		  ElementRemote remote = elem.implAccess().typedRemote();
-		  return getEventsSunk0(remote);
-	  }else{
-		  return elem.localEventBitsSunk();
-	  }
-  }
-  native int getEventsSunk0(ElementRemote elem) /*-{
-    return elem.__eventBits || 0;
-  }-*/;
+	public abstract Element getChild(Element elem, int index);
 
-  public abstract void insertChild(Element parent, Element child, int index);
+	public abstract int getChildCount(Element elem);
 
-  public void maybeInitializeEventSystem() {
-    if (!eventSystemIsInitialized) {
-      initEventSystem();
-      eventSystemIsInitialized = true;
-    }
-  }
+	public abstract int getChildIndex(Element parent, Element child);
 
-  public abstract void releaseCapture(Element elem);
+	public int getEventsSunk(Element elem) {
+		if (elem.implAccess().linkedToRemote()) {
+			ElementRemote remote = elem.implAccess().typedRemote();
+			return getEventsSunk0(remote);
+		} else {
+			return elem.localEventBitsSunk();
+		}
+	}
 
-  public abstract void setCapture(Element elem);
+	public abstract void insertChild(Element parent, Element child, int index);
 
-  public abstract void sinkBitlessEvent(Element elem, String eventTypeName);
+	public void maybeInitializeEventSystem() {
+		if (!eventSystemIsInitialized) {
+			initEventSystem();
+			eventSystemIsInitialized = true;
+		}
+	}
 
-  public abstract void sinkEvents(Element elem, int eventBits);
+	public abstract void releaseCapture(Element elem);
 
-  /**
-   * Initializes the event dispatch system.
-   */
-  protected abstract void initEventSystem();
+	public abstract void setCapture(Element elem);
+
+	public abstract void sinkBitlessEvent(Element elem, String eventTypeName);
+
+	public abstract void sinkEvents(Element elem, int eventBits);
+
+	/**
+	 * Initializes the event dispatch system.
+	 */
+	protected abstract void initEventSystem();
+
+	native int getEventsSunk0(ElementRemote elem) /*-{
+													return elem.__eventBits || 0;
+													}-*/;
 }

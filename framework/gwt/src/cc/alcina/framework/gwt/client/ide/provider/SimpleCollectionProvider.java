@@ -27,8 +27,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
  *
  * @author Nick Reddel
  */
-public class SimpleCollectionProvider<E> implements CollectionProvider<E>,
-		CollectionModificationListener {
+public class SimpleCollectionProvider<E>
+		implements CollectionProvider<E>, CollectionModificationListener {
 	private final Collection<E> colln;
 
 	private final Class<? extends E> baseClass;

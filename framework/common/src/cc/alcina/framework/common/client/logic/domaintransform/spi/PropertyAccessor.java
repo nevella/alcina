@@ -20,11 +20,6 @@ import java.lang.annotation.Annotation;
  * @author Nick Reddel
  */
 public interface PropertyAccessor {
-	public void setPropertyValue(Object bean, String propertyName,
-			Object value);
-
-	public Object getPropertyValue(Object bean, String propertyName);
-
 	public IndividualPropertyAccessor cachedAccessor(Class clazz,
 			String propertyName);
 
@@ -33,15 +28,20 @@ public interface PropertyAccessor {
 
 	public Class getPropertyType(Class objectClass, String propertyName);
 
+	public Object getPropertyValue(Object bean, String propertyName);
+
+	public void setPropertyValue(Object bean, String propertyName,
+			Object value);
+
+	default boolean hasPropertyKey(Object left, String leftName) {
+		return true;
+	}
+
 	public interface IndividualPropertyAccessor {
 		public Object getPropertyValue(Object value);
 
 		public void setPropertyValue(Object bean, Object value);
 
 		Class getPropertyType(Object bean);
-	}
-
-	default boolean hasPropertyKey(Object left, String leftName){
-		return true;
 	}
 }

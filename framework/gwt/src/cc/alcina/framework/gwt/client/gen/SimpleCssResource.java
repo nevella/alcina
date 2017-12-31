@@ -25,8 +25,8 @@ import cc.alcina.framework.entity.gen.SimpleCssResourceGenerator;
  * A resource that contains text that should be incorporated into the compiled
  * output.
  */
-@DefaultExtensions(value = {".txt"})
+@DefaultExtensions(value = { ".txt" })
 @ResourceGeneratorType(SimpleCssResourceGenerator.class)
 public interface SimpleCssResource extends ResourcePrototype {
-  String getText();
+	String getText();
 }

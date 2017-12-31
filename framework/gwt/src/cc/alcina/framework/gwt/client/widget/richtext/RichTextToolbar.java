@@ -44,6 +44,241 @@ import com.google.gwt.user.client.ui.Widget;
  */
 @SuppressWarnings("deprecation")
 public class RichTextToolbar extends Composite {
+	private static final RichTextArea.FontSize[] fontSizesConstants = new RichTextArea.FontSize[] {
+			RichTextArea.FontSize.XX_SMALL, RichTextArea.FontSize.X_SMALL,
+			RichTextArea.FontSize.SMALL, RichTextArea.FontSize.MEDIUM,
+			RichTextArea.FontSize.LARGE, RichTextArea.FontSize.X_LARGE,
+			RichTextArea.FontSize.XX_LARGE };
+
+	private Images images = (Images) GWT.create(Images.class);
+
+	private Strings strings = (Strings) GWT.create(Strings.class);
+
+	private EventListener listener;
+
+	private RichTextAreaWrapper richText;
+
+	private RichTextArea.BasicFormatter basic;
+
+	protected RichTextArea.ExtendedFormatter extended;
+
+	private VerticalPanel outer = new VerticalPanel();
+
+	protected HorizontalPanel topPanel = new HorizontalPanel();
+
+	private HorizontalPanel bottomPanel = new HorizontalPanel();
+
+	private ToggleButton bold;
+
+	private ToggleButton italic;
+
+	private ToggleButton underline;
+
+	private ToggleButton subscript;
+
+	private ToggleButton superscript;
+
+	private ToggleButton strikethrough;
+
+	private PushButton indent;
+
+	private PushButton outdent;
+
+	private PushButton justifyLeft;
+
+	private PushButton justifyCenter;
+
+	private PushButton justifyRight;
+
+	private PushButton hr;
+
+	private PushButton ol;
+
+	private PushButton ul;
+
+	private PushButton insertImage;
+
+	private PushButton createLink;
+
+	private PushButton removeLink;
+
+	private PushButton removeFormat;
+
+	private ListBox backColors;
+
+	private ListBox foreColors;
+
+	private ListBox fonts;
+
+	private ListBox fontSizes;
+
+	/**
+	 * Creates a new toolbar that drives the given rich text area.
+	 * 
+	 * @param area
+	 *            the rich text area to be controlled
+	 */
+	public RichTextToolbar(RichTextArea area) {
+		this(new RichTextAreaWrapperStd(area));
+	}
+
+	public RichTextToolbar(RichTextAreaWrapper wrapper) {
+		this.richText = wrapper;
+		init();
+	}
+
+	public void stylesAndIndentsOnly() {
+		List<Widget> toHide = (List) Arrays.asList(subscript, superscript,
+				strikethrough, hr, ol, ul, insertImage, createLink,
+				removeFormat, removeLink, backColors, foreColors, fonts,
+				fontSizes, justifyCenter, justifyLeft, justifyRight);
+		for (Widget widget : toHide) {
+			widget.setVisible(false);
+		}
+	}
+
+	/**
+	 * Updates the status of all the stateful buttons.
+	 */
+	public void updateStatus() {
+		if (basic != null) {
+			bold.setDown(basic.isBold());
+			italic.setDown(basic.isItalic());
+			underline.setDown(basic.isUnderlined());
+			subscript.setDown(basic.isSubscript());
+			superscript.setDown(basic.isSuperscript());
+		}
+		if (extended != null) {
+			strikethrough.setDown(extended.isStrikethrough());
+		}
+	}
+
+	private ListBox createColorList(String caption) {
+		ListBox lb = new ListBox();
+		lb.addChangeListener(listener);
+		lb.setVisibleItemCount(1);
+		lb.addItem(caption);
+		lb.addItem(strings.white(), "white");
+		lb.addItem(strings.black(), "black");
+		lb.addItem(strings.red(), "red");
+		lb.addItem(strings.green(), "green");
+		lb.addItem(strings.yellow(), "yellow");
+		lb.addItem(strings.blue(), "blue");
+		return lb;
+	}
+
+	private ListBox createFontList() {
+		ListBox lb = new ListBox();
+		lb.addChangeListener(listener);
+		lb.setVisibleItemCount(1);
+		lb.addItem(strings.font(), "");
+		lb.addItem(strings.normal(), "");
+		lb.addItem("Times New Roman", "Times New Roman");
+		lb.addItem("Arial", "Arial");
+		lb.addItem("Courier New", "Courier New");
+		lb.addItem("Georgia", "Georgia");
+		lb.addItem("Trebuchet", "Trebuchet");
+		lb.addItem("Verdana", "Verdana");
+		return lb;
+	}
+
+	private ListBox createFontSizes() {
+		ListBox lb = new ListBox();
+		lb.addChangeListener(listener);
+		lb.setVisibleItemCount(1);
+		lb.addItem(strings.size());
+		lb.addItem(strings.xxsmall());
+		lb.addItem(strings.xsmall());
+		lb.addItem(strings.small());
+		lb.addItem(strings.medium());
+		lb.addItem(strings.large());
+		lb.addItem(strings.xlarge());
+		lb.addItem(strings.xxlarge());
+		return lb;
+	}
+
+	private ToggleButton createToggleButton(AbstractImagePrototype img,
+			String tip) {
+		ToggleButton tb = new ToggleButton(img.createImage());
+		tb.addClickListener(listener);
+		tb.setTitle(tip);
+		return tb;
+	}
+
+	private void init() {
+		this.listener = createEventListener();
+		this.basic = richText.getBasicFormatter();
+		this.extended = richText.getExtendedFormatter();
+		outer.add(topPanel);
+		outer.add(bottomPanel);
+		topPanel.setWidth("100%");
+		bottomPanel.setWidth("100%");
+		initWidget(outer);
+		setStyleName("gwt-RichTextToolbar");
+		richText.addStyleName("hasRichTextToolbar");
+		if (basic != null) {
+			topPanel.add(
+					bold = createToggleButton(images.bold(), strings.bold()));
+			topPanel.add(italic = createToggleButton(images.italic(),
+					strings.italic()));
+			topPanel.add(underline = createToggleButton(images.underline(),
+					strings.underline()));
+			topPanel.add(subscript = createToggleButton(images.subscript(),
+					strings.subscript()));
+			topPanel.add(superscript = createToggleButton(images.superscript(),
+					strings.superscript()));
+			topPanel.add(justifyLeft = createPushButton(images.justifyLeft(),
+					strings.justifyLeft()));
+			topPanel.add(justifyCenter = createPushButton(
+					images.justifyCenter(), strings.justifyCenter()));
+			topPanel.add(justifyRight = createPushButton(images.justifyRight(),
+					strings.justifyRight()));
+		}
+		if (extended != null) {
+			topPanel.add(strikethrough = createToggleButton(
+					images.strikeThrough(), strings.strikeThrough()));
+			topPanel.add(indent = createPushButton(images.indent(),
+					strings.indent()));
+			topPanel.add(outdent = createPushButton(images.outdent(),
+					strings.outdent()));
+			topPanel.add(hr = createPushButton(images.hr(), strings.hr()));
+			topPanel.add(ol = createPushButton(images.ol(), strings.ol()));
+			topPanel.add(ul = createPushButton(images.ul(), strings.ul()));
+			topPanel.add(insertImage = createPushButton(images.insertImage(),
+					strings.insertImage()));
+			topPanel.add(createLink = createPushButton(images.createLink(),
+					strings.createLink()));
+			topPanel.add(removeLink = createPushButton(images.removeLink(),
+					strings.removeLink()));
+			topPanel.add(removeFormat = createPushButton(images.removeFormat(),
+					strings.removeFormat()));
+		}
+		if (basic != null) {
+			bottomPanel.add(backColors = createColorList("Background"));
+			bottomPanel.add(foreColors = createColorList("Foreground"));
+			bottomPanel.add(fonts = createFontList());
+			bottomPanel.add(fontSizes = createFontSizes());
+			// We only use these listeners for updating status, so don't hook
+			// them up
+			// unless at least basic editing is supported.
+			richText.addKeyboardListener(listener);
+			richText.addClickListener(listener);
+		}
+		// TODO Auto-generated method stub
+	}
+
+	protected EventListener createEventListener() {
+		return new EventListener();
+	}
+
+	protected PushButton createPushButton(AbstractImagePrototype img,
+			String tip) {
+		PushButton pb = new PushButton(img.createImage());
+		pb.addClickListener(listener);
+		pb.setTitle(tip);
+		return pb;
+	}
+
 	/**
 	 * This {@link ImageBundle} is used for all the button icons. Using an image
 	 * bundle allows all of these images to be packed into a single image, which
@@ -85,6 +320,51 @@ public class RichTextToolbar extends Composite {
 		AbstractImagePrototype ul();
 
 		AbstractImagePrototype underline();
+	}
+
+	public interface RichTextAreaWrapper {
+		void addClickListener(ClickListener listener);
+
+		void addKeyboardListener(KeyboardListener listener);
+
+		void addStyleName(String string);
+
+		BasicFormatter getBasicFormatter();
+
+		ExtendedFormatter getExtendedFormatter();
+	}
+
+	public static class RichTextAreaWrapperStd implements RichTextAreaWrapper {
+		private RichTextArea area;
+
+		public RichTextAreaWrapperStd(RichTextArea area) {
+			this.area = area;
+		}
+
+		@Override
+		public void addClickListener(ClickListener listener) {
+			area.addClickListener(listener);
+		}
+
+		@Override
+		public void addKeyboardListener(KeyboardListener listener) {
+			area.addKeyboardListener(listener);
+		}
+
+		@Override
+		public void addStyleName(String style) {
+			area.addStyleName(style);
+		}
+
+		@Override
+		public BasicFormatter getBasicFormatter() {
+			return area.getBasicFormatter();
+		}
+
+		@Override
+		public ExtendedFormatter getExtendedFormatter() {
+			return area.getExtendedFormatter();
+		}
 	}
 
 	/**
@@ -167,23 +447,23 @@ public class RichTextToolbar extends Composite {
 	 * We use an inner EventListener class to avoid exposing event methods on
 	 * the RichTextToolbar itself.
 	 */
-	protected class EventListener implements ClickListener, ChangeListener,
-			KeyboardListener {
+	protected class EventListener
+			implements ClickListener, ChangeListener, KeyboardListener {
 		public void onChange(Widget sender) {
 			if (sender == backColors) {
-				basic.setBackColor(backColors.getValue(backColors
-						.getSelectedIndex()));
+				basic.setBackColor(
+						backColors.getValue(backColors.getSelectedIndex()));
 				backColors.setSelectedIndex(0);
 			} else if (sender == foreColors) {
-				basic.setForeColor(foreColors.getValue(foreColors
-						.getSelectedIndex()));
+				basic.setForeColor(
+						foreColors.getValue(foreColors.getSelectedIndex()));
 				foreColors.setSelectedIndex(0);
 			} else if (sender == fonts) {
 				basic.setFontName(fonts.getValue(fonts.getSelectedIndex()));
 				fonts.setSelectedIndex(0);
 			} else if (sender == fontSizes) {
-				basic.setFontSize(fontSizesConstants[fontSizes
-						.getSelectedIndex() - 1]);
+				basic.setFontSize(
+						fontSizesConstants[fontSizes.getSelectedIndex() - 1]);
 				fontSizes.setSelectedIndex(0);
 			}
 		}
@@ -258,285 +538,6 @@ public class RichTextToolbar extends Composite {
 				// shortcuts.
 				updateStatus();
 			}
-		}
-	}
-
-	private static final RichTextArea.FontSize[] fontSizesConstants = new RichTextArea.FontSize[] {
-			RichTextArea.FontSize.XX_SMALL, RichTextArea.FontSize.X_SMALL,
-			RichTextArea.FontSize.SMALL, RichTextArea.FontSize.MEDIUM,
-			RichTextArea.FontSize.LARGE, RichTextArea.FontSize.X_LARGE,
-			RichTextArea.FontSize.XX_LARGE };
-
-	private Images images = (Images) GWT.create(Images.class);
-
-	private Strings strings = (Strings) GWT.create(Strings.class);
-
-	private EventListener listener;
-
-	private RichTextAreaWrapper richText;
-
-	public interface RichTextAreaWrapper {
-		BasicFormatter getBasicFormatter();
-
-		ExtendedFormatter getExtendedFormatter();
-
-		void addStyleName(String string);
-
-		void addKeyboardListener(KeyboardListener listener);
-
-		void addClickListener(ClickListener listener);
-	}
-
-	public static class RichTextAreaWrapperStd implements RichTextAreaWrapper {
-		private RichTextArea area;
-
-		public RichTextAreaWrapperStd(RichTextArea area) {
-			this.area = area;
-		}
-
-		@Override
-		public BasicFormatter getBasicFormatter() {
-			return area.getBasicFormatter();
-		}
-
-		@Override
-		public ExtendedFormatter getExtendedFormatter() {
-			return area.getExtendedFormatter();
-		}
-
-		@Override
-		public void addStyleName(String style) {
-			area.addStyleName(style);
-		}
-
-		@Override
-		public void addKeyboardListener(KeyboardListener listener) {
-			area.addKeyboardListener(listener);
-		}
-
-		@Override
-		public void addClickListener(ClickListener listener) {
-			area.addClickListener(listener);
-		}
-	}
-
-	private RichTextArea.BasicFormatter basic;
-
-	protected RichTextArea.ExtendedFormatter extended;
-
-	private VerticalPanel outer = new VerticalPanel();
-
-	protected HorizontalPanel topPanel = new HorizontalPanel();
-
-	private HorizontalPanel bottomPanel = new HorizontalPanel();
-
-	private ToggleButton bold;
-
-	private ToggleButton italic;
-
-	private ToggleButton underline;
-
-	private ToggleButton subscript;
-
-	private ToggleButton superscript;
-
-	private ToggleButton strikethrough;
-
-	private PushButton indent;
-
-	private PushButton outdent;
-
-	private PushButton justifyLeft;
-
-	private PushButton justifyCenter;
-
-	private PushButton justifyRight;
-
-	private PushButton hr;
-
-	private PushButton ol;
-
-	private PushButton ul;
-
-	private PushButton insertImage;
-
-	private PushButton createLink;
-
-	private PushButton removeLink;
-
-	private PushButton removeFormat;
-
-	private ListBox backColors;
-
-	private ListBox foreColors;
-
-	private ListBox fonts;
-
-	private ListBox fontSizes;
-
-	/**
-	 * Creates a new toolbar that drives the given rich text area.
-	 * 
-	 * @param area
-	 *            the rich text area to be controlled
-	 */
-	public RichTextToolbar(RichTextArea area) {
-		this(new RichTextAreaWrapperStd(area));
-	}
-
-	public RichTextToolbar(RichTextAreaWrapper wrapper) {
-		this.richText = wrapper;
-		init();
-	}
-
-	private void init() {
-		this.listener = createEventListener();
-		this.basic = richText.getBasicFormatter();
-		this.extended = richText.getExtendedFormatter();
-		outer.add(topPanel);
-		outer.add(bottomPanel);
-		topPanel.setWidth("100%");
-		bottomPanel.setWidth("100%");
-		initWidget(outer);
-		setStyleName("gwt-RichTextToolbar");
-		richText.addStyleName("hasRichTextToolbar");
-		if (basic != null) {
-			topPanel.add(bold = createToggleButton(images.bold(),
-					strings.bold()));
-			topPanel.add(italic = createToggleButton(images.italic(),
-					strings.italic()));
-			topPanel.add(underline = createToggleButton(images.underline(),
-					strings.underline()));
-			topPanel.add(subscript = createToggleButton(images.subscript(),
-					strings.subscript()));
-			topPanel.add(superscript = createToggleButton(images.superscript(),
-					strings.superscript()));
-			topPanel.add(justifyLeft = createPushButton(images.justifyLeft(),
-					strings.justifyLeft()));
-			topPanel.add(justifyCenter = createPushButton(
-					images.justifyCenter(), strings.justifyCenter()));
-			topPanel.add(justifyRight = createPushButton(images.justifyRight(),
-					strings.justifyRight()));
-		}
-		if (extended != null) {
-			topPanel.add(strikethrough = createToggleButton(
-					images.strikeThrough(), strings.strikeThrough()));
-			topPanel.add(indent = createPushButton(images.indent(),
-					strings.indent()));
-			topPanel.add(outdent = createPushButton(images.outdent(),
-					strings.outdent()));
-			topPanel.add(hr = createPushButton(images.hr(), strings.hr()));
-			topPanel.add(ol = createPushButton(images.ol(), strings.ol()));
-			topPanel.add(ul = createPushButton(images.ul(), strings.ul()));
-			topPanel.add(insertImage = createPushButton(images.insertImage(),
-					strings.insertImage()));
-			topPanel.add(createLink = createPushButton(images.createLink(),
-					strings.createLink()));
-			topPanel.add(removeLink = createPushButton(images.removeLink(),
-					strings.removeLink()));
-			topPanel.add(removeFormat = createPushButton(images.removeFormat(),
-					strings.removeFormat()));
-		}
-		if (basic != null) {
-			bottomPanel.add(backColors = createColorList("Background"));
-			bottomPanel.add(foreColors = createColorList("Foreground"));
-			bottomPanel.add(fonts = createFontList());
-			bottomPanel.add(fontSizes = createFontSizes());
-			// We only use these listeners for updating status, so don't hook
-			// them up
-			// unless at least basic editing is supported.
-			richText.addKeyboardListener(listener);
-			richText.addClickListener(listener);
-		}
-		// TODO Auto-generated method stub
-	}
-
-	protected EventListener createEventListener() {
-		return new EventListener();
-	}
-
-	private ListBox createColorList(String caption) {
-		ListBox lb = new ListBox();
-		lb.addChangeListener(listener);
-		lb.setVisibleItemCount(1);
-		lb.addItem(caption);
-		lb.addItem(strings.white(), "white");
-		lb.addItem(strings.black(), "black");
-		lb.addItem(strings.red(), "red");
-		lb.addItem(strings.green(), "green");
-		lb.addItem(strings.yellow(), "yellow");
-		lb.addItem(strings.blue(), "blue");
-		return lb;
-	}
-
-	private ListBox createFontList() {
-		ListBox lb = new ListBox();
-		lb.addChangeListener(listener);
-		lb.setVisibleItemCount(1);
-		lb.addItem(strings.font(), "");
-		lb.addItem(strings.normal(), "");
-		lb.addItem("Times New Roman", "Times New Roman");
-		lb.addItem("Arial", "Arial");
-		lb.addItem("Courier New", "Courier New");
-		lb.addItem("Georgia", "Georgia");
-		lb.addItem("Trebuchet", "Trebuchet");
-		lb.addItem("Verdana", "Verdana");
-		return lb;
-	}
-
-	private ListBox createFontSizes() {
-		ListBox lb = new ListBox();
-		lb.addChangeListener(listener);
-		lb.setVisibleItemCount(1);
-		lb.addItem(strings.size());
-		lb.addItem(strings.xxsmall());
-		lb.addItem(strings.xsmall());
-		lb.addItem(strings.small());
-		lb.addItem(strings.medium());
-		lb.addItem(strings.large());
-		lb.addItem(strings.xlarge());
-		lb.addItem(strings.xxlarge());
-		return lb;
-	}
-
-	protected PushButton createPushButton(AbstractImagePrototype img, String tip) {
-		PushButton pb = new PushButton(img.createImage());
-		pb.addClickListener(listener);
-		pb.setTitle(tip);
-		return pb;
-	}
-
-	private ToggleButton createToggleButton(AbstractImagePrototype img,
-			String tip) {
-		ToggleButton tb = new ToggleButton(img.createImage());
-		tb.addClickListener(listener);
-		tb.setTitle(tip);
-		return tb;
-	}
-
-	/**
-	 * Updates the status of all the stateful buttons.
-	 */
-	public void updateStatus() {
-		if (basic != null) {
-			bold.setDown(basic.isBold());
-			italic.setDown(basic.isItalic());
-			underline.setDown(basic.isUnderlined());
-			subscript.setDown(basic.isSubscript());
-			superscript.setDown(basic.isSuperscript());
-		}
-		if (extended != null) {
-			strikethrough.setDown(extended.isStrikethrough());
-		}
-	}
-
-	public void stylesAndIndentsOnly() {
-		List<Widget> toHide = (List) Arrays.asList(subscript, superscript,
-				strikethrough, hr, ol, ul, insertImage, createLink,
-				removeFormat, removeLink, backColors, foreColors, fonts,
-				fontSizes, justifyCenter, justifyLeft, justifyRight);
-		for (Widget widget : toHide) {
-			widget.setVisible(false);
 		}
 	}
 }

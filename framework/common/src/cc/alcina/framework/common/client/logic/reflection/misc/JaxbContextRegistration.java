@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection.misc;
 
 import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
@@ -21,5 +20,5 @@ import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPoint
  * @author Nick Reddel
  */
 @NonClientRegistryPointType
- public interface JaxbContextRegistration {
+public interface JaxbContextRegistration {
 }

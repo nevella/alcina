@@ -73,12 +73,12 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	 * error: "Permission denied to access property 'nodeType'"
 	 */
 	private static native boolean isJso(JavaScriptObject o) /*-{
-        try {
-            return (!!o) && (!!o.nodeType);
-        } catch (e) {
-            return false;
-        }
-	}-*/;
+															try {
+															return (!!o) && (!!o.nodeType);
+															} catch (e) {
+															return false;
+															}
+															}-*/;
 
 	private int resolvedEventId;
 
@@ -117,22 +117,6 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	public NodeList<Node> getChildNodes() {
 		return local().getChildNodes();
-	}
-
-	public List<Node> provideChildNodeList() {
-		return new ChildNodeList();
-	}
-
-	class ChildNodeList extends AbstractList<Node> {
-		@Override
-		public Node get(int index) {
-			return local().children.get(index).node;
-		}
-
-		@Override
-		public int size() {
-			return local().children.size();
-		}
 	}
 
 	public Node getFirstChild() {
@@ -214,6 +198,10 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	@Override
 	public abstract Node nodeFor();
+
+	public List<Node> provideChildNodeList() {
+		return new ChildNodeList();
+	}
 
 	public boolean provideIsElement() {
 		return getNodeType() == ELEMENT_NODE;
@@ -344,5 +332,17 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	boolean wasResolved() {
 		return resolvedEventId > 0;
+	}
+
+	class ChildNodeList extends AbstractList<Node> {
+		@Override
+		public Node get(int index) {
+			return local().children.get(index).node;
+		}
+
+		@Override
+		public int size() {
+			return local().children.size();
+		}
 	}
 }

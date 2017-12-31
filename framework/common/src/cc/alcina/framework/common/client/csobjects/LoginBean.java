@@ -27,8 +27,8 @@ public class LoginBean implements Serializable {
 	private String password;
 
 	private boolean rememberMe;
-	
-	private Map<String,String> properties = new LinkedHashMap<>();
+
+	private Map<String, String> properties = new LinkedHashMap<>();
 
 	public LoginBean() {
 	}

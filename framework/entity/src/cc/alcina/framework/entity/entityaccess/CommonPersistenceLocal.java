@@ -47,9 +47,13 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
 public interface CommonPersistenceLocal {
 	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl);
 
+	public void changeWrappedObjectOwner(long parseLong, IUser fromUser,
+			IUser toUser);
+
 	public abstract void connectPermissionsManagerToLiveObjects();
 
-	public abstract ClientInstance createClientInstance(String userAgent, String iid);
+	public abstract ClientInstance createClientInstance(String userAgent,
+			String iid);
 
 	public <T> T ensureObject(T t, String key, String value) throws Exception;
 
@@ -107,12 +111,13 @@ public interface CommonPersistenceLocal {
 	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
 			throws Exception;
 
-	public <T extends WrapperPersistable> WrappedObject<T> getObjectWrapperForUser(
-			Class<T> c, long id) throws Exception;
+	public <T extends WrapperPersistable> WrappedObject<T>
+			getObjectWrapperForUser(Class<T> c, long id) throws Exception;
 
-	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
-			long fromId, long toId, Collection<Long> specificIds,
-			boolean mostRecentOnly, boolean populateTransformSourceObjects);
+	public List<DomainTransformRequestPersistent>
+			getPersistentTransformRequests(long fromId, long toId,
+					Collection<Long> specificIds, boolean mostRecentOnly,
+					boolean populateTransformSourceObjects);
 
 	public String getRememberMeUserName(String iid);
 
@@ -124,14 +129,16 @@ public interface CommonPersistenceLocal {
 
 	public abstract IUser getUserByName(String userName, boolean clean);
 
-	public String getUserNameForClientInstanceId(long validatedClientInstanceId);
+	public String
+			getUserNameForClientInstanceId(long validatedClientInstanceId);
 
 	public <T extends WrapperPersistable> T getWrappedObjectForUser(
 			Class<? extends T> c, long wrappedObjectId) throws Exception;
 
 	public abstract boolean isValidIid(String iidKey);
 
-	public List<ActionLogItem> listLogItemsForClass(String className, int count);
+	public List<ActionLogItem> listLogItemsForClass(String className,
+			int count);
 
 	public long log(String message, String componentKey);
 
@@ -151,6 +158,8 @@ public interface CommonPersistenceLocal {
 			Long id, GraphProjectionFieldFilter fieldFilter,
 			GraphProjectionDataFilter dataFilter);
 
+	public HiliLocatorMap reconstituteHiliMap(long l2);
+
 	public void remove(Object o);
 
 	public SearchResultsBase search(SearchDefinition def, int pageNumber);
@@ -169,6 +178,9 @@ public interface CommonPersistenceLocal {
 	public abstract void updateIid(String iidKey, String userName,
 			boolean rememberMe);
 
+	public void updatePublicationMimeMessageId(Long publicationId,
+			String mimeMessageId);
+
 	public <T extends ServerValidator> List<T> validate(List<T> validators);
 
 	public boolean validateClientInstance(long id, int auth);
@@ -179,15 +191,7 @@ public interface CommonPersistenceLocal {
 	 */
 	public TransformCache warmupTransformCache();
 
-	public HiliLocatorMap reconstituteHiliMap(long l2);
-
-	public void updatePublicationMimeMessageId(Long publicationId,
-			String mimeMessageId);
+	long getMaxPublicationIdForUser(IUser user);
 
 	List<Long> listRecentClientInstanceIds(String iidKey);
-
-	public void changeWrappedObjectOwner(long parseLong, IUser fromUser,
-			IUser toUser);
-
-	long getMaxPublicationIdForUser(IUser user);
 }

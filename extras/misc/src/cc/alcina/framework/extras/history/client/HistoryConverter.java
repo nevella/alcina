@@ -11,25 +11,22 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.extras.history.client;
 
 /**
- * Class which helps to convert the history token to a format which is suitable for the current
- * browser.
+ * Class which helps to convert the history token to a format which is suitable
+ * for the current browser.
  * 
  * @author <a href="mailto:jb@barop.de">Johannes Barop</a>
  * 
  */
 public interface HistoryConverter {
-
-  /**
-   * If needed convert the current history token to a suitable format.
-   * 
-   * <p>
-   * Does nothing if no converting is needed.
-   * <p>
-   */
-  void convertHistoryToken();
-
+	/**
+	 * If needed convert the current history token to a suitable format.
+	 * 
+	 * <p>
+	 * Does nothing if no converting is needed.
+	 * <p>
+	 */
+	void convertHistoryToken();
 }

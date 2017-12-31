@@ -22,7 +22,40 @@ package rocket.util.client;
  * @author Miroslav Pokorny (mP)
  */
 public class Tester {
-	public static boolean nullSafeEquals(final Object first, final Object second) {
+	static public boolean equals(final double value, final double otherValue,
+			final double epsilon) {
+		return (value - epsilon <= otherValue)
+				&& (value + epsilon >= otherValue);
+	}
+
+	static public boolean equals(final long value, final long otherValue,
+			final long epsilon) {
+		return (value - epsilon <= otherValue)
+				&& (value + epsilon >= otherValue);
+	}
+
+	public static boolean isGet(final String method) {
+		return Constants.GET.equals(method);
+	}
+
+	public static boolean isHttp(final String protocol) {
+		return Constants.HTTP.equals(protocol);
+	}
+
+	public static boolean isHttps(final String protocol) {
+		return Constants.HTTPS.equals(protocol);
+	}
+
+	public static boolean isNullOrEmpty(final String string) {
+		return string == null || string.length() == 0;
+	}
+
+	public static boolean isPost(final String method) {
+		return Constants.POST.equals(method);
+	}
+
+	public static boolean nullSafeEquals(final Object first,
+			final Object second) {
 		boolean result = false;
 		while (true) {
 			if (null == first && null == second) {
@@ -46,37 +79,5 @@ public class Tester {
 	public static boolean nullSafeIdentity(final Object first,
 			final Object second) {
 		return null == first && null == second ? true : first == second;
-	}
-
-	public static boolean isNullOrEmpty(final String string) {
-		return string == null || string.length() == 0;
-	}
-
-	static public boolean equals(final double value, final double otherValue,
-			final double epsilon) {
-		return (value - epsilon <= otherValue)
-				&& (value + epsilon >= otherValue);
-	}
-
-	static public boolean equals(final long value, final long otherValue,
-			final long epsilon) {
-		return (value - epsilon <= otherValue)
-				&& (value + epsilon >= otherValue);
-	}
-
-	public static boolean isHttp(final String protocol) {
-		return Constants.HTTP.equals(protocol);
-	}
-
-	public static boolean isHttps(final String protocol) {
-		return Constants.HTTPS.equals(protocol);
-	}
-
-	public static boolean isGet(final String method) {
-		return Constants.GET.equals(method);
-	}
-
-	public static boolean isPost(final String method) {
-		return Constants.POST.equals(method);
 	}
 }

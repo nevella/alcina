@@ -28,15 +28,15 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
  */
 @RegistryLocation(registryPoint = RemoteActionLoggerProvider.class, implementationType = ImplementationType.SINGLETON)
 public class RemoteActionLoggerProvider {
+	static Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
+
 	private AtomicInteger counter = new AtomicInteger();
 
 	public synchronized Logger createLogger(Class performerClass) {
-		Logger l = makeNewLoggerInstance(performerClass.getName() + "-"
-				+ counter.addAndGet(1));
+		Logger l = makeNewLoggerInstance(
+				performerClass.getName() + "-" + counter.addAndGet(1));
 		return l;
 	}
-
-	static Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
 
 	/*
 	 * note - this is never registered with log4j.Logger - so no leakys

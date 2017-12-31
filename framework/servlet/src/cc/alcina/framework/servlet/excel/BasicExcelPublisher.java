@@ -39,30 +39,6 @@ public class BasicExcelPublisher {
 	public static final String CONTEXT_WRITE_HTML_TABLE = BasicExcelPublisher.class
 			.getName() + ".CONTEXT_WRITE_HTML_TABLE";
 
-	@RegistryLocation(registryPoint = ContentModelHandler.class, targetClass = BasicExcelContentDefinition.class)
-	public static class BasicExcelPublisherContentHandler
-			extends
-			ContentModelHandler<BasicExcelContentDefinition, BasicExcelPublicationModel, BasicExcelRequest> {
-		@Override
-		protected void prepareContent() throws Exception {
-			publicationContent = new BasicExcelPublicationModel();
-			deliveryModel.putFormatConversionTarget(FormatConversionTarget.XLS);
-			deliveryModel.setNoPersistence(true);
-			deliveryModel.setFooter(false);
-			deliveryModel.setCoverPage(false);
-			SingleTableSearchDefinition def = contentDefinition
-					.getSearchDefinition();
-			def.setResultsPerPage(PUB_MAX_RESULTS);
-			deliveryModel.setSuggestedFileName(SEUtilities.sanitiseFileName(def
-					.toString().replace(" ", "_")));
-			SearchResultsBase results = Registry
-					.impl(CommonRemoteServletProvider.class)
-					.getCommonRemoteServiceServlet().search(def, 0);
-			publicationContent.searchResults = results;
-			hasResults = true;
-		}
-	}
-
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
@@ -83,8 +59,8 @@ public class BasicExcelPublisher {
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
 	// Unused
-	public static class BasicExcelPublicationModel implements
-			PublicationContent {
+	public static class BasicExcelPublicationModel
+			implements PublicationContent {
 		@XmlTransient
 		public SearchResultsBase searchResults;
 
@@ -93,8 +69,7 @@ public class BasicExcelPublisher {
 	}
 
 	@RegistryLocation(registryPoint = ContentRenderer.class, targetClass = BasicExcelPublicationModel.class)
-	public static class BasicExcelPublicationModelRenderer
-			extends
+	public static class BasicExcelPublicationModelRenderer extends
 			ContentRenderer<BasicExcelContentDefinition, BasicExcelPublicationModel, ContentRequestBase> {
 		public BasicExcelPublicationModelRenderer() {
 		}
@@ -139,6 +114,29 @@ public class BasicExcelPublisher {
 			} else {
 				results.bytes = baos.toByteArray();
 			}
+		}
+	}
+
+	@RegistryLocation(registryPoint = ContentModelHandler.class, targetClass = BasicExcelContentDefinition.class)
+	public static class BasicExcelPublisherContentHandler extends
+			ContentModelHandler<BasicExcelContentDefinition, BasicExcelPublicationModel, BasicExcelRequest> {
+		@Override
+		protected void prepareContent() throws Exception {
+			publicationContent = new BasicExcelPublicationModel();
+			deliveryModel.putFormatConversionTarget(FormatConversionTarget.XLS);
+			deliveryModel.setNoPersistence(true);
+			deliveryModel.setFooter(false);
+			deliveryModel.setCoverPage(false);
+			SingleTableSearchDefinition def = contentDefinition
+					.getSearchDefinition();
+			def.setResultsPerPage(PUB_MAX_RESULTS);
+			deliveryModel.setSuggestedFileName(SEUtilities
+					.sanitiseFileName(def.toString().replace(" ", "_")));
+			SearchResultsBase results = Registry
+					.impl(CommonRemoteServletProvider.class)
+					.getCommonRemoteServiceServlet().search(def, 0);
+			publicationContent.searchResults = results;
+			hasResults = true;
 		}
 	}
 }

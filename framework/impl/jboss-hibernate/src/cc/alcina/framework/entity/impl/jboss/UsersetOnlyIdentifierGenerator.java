@@ -14,9 +14,8 @@ public class UsersetOnlyIdentifierGenerator implements IdentifierGenerator {
 			// the identifier has been set manually => use it
 			return myEntity.getId();
 		} else {
-			throw new RuntimeException(
-					"Objects using this identity generator" +
-					" must have id manually set prior to invocation");
+			throw new RuntimeException("Objects using this identity generator"
+					+ " must have id manually set prior to invocation");
 		}
 	}
 }

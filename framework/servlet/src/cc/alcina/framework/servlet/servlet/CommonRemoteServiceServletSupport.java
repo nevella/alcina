@@ -28,27 +28,10 @@ public class CommonRemoteServiceServletSupport {
 
 	private int transformRequestCounter = 1;
 
-	synchronized int nextTransformRequestId() {
-		return transformRequestCounter++;
-	}
-
-	public ClientInstance getServerAsClientInstance() {
-		return this.serverAsClientInstance;
-	}
-
-	public void
-			setServerAsClientInstance(ClientInstance serverAsClientInstance) {
-		this.serverAsClientInstance = serverAsClientInstance;
-	}
-
-	Map<Long, HiliLocatorMap> getClientInstanceLocatorMap() {
-		return this.clientInstanceLocatorMap;
-	}
-
 	private MetricTracker<RPCRequest> metricTracker = new MetricTracker<>();
 
-	public MetricTracker<RPCRequest> getMetricTracker() {
-		return this.metricTracker;
+	public void appShutdown() {
+		metricTracker.stop();
 	}
 
 	public HiliLocatorMap
@@ -66,11 +49,28 @@ public class CommonRemoteServiceServletSupport {
 		return locatorMap;
 	}
 
+	public MetricTracker<RPCRequest> getMetricTracker() {
+		return this.metricTracker;
+	}
+
+	public ClientInstance getServerAsClientInstance() {
+		return this.serverAsClientInstance;
+	}
+
+	public void
+			setServerAsClientInstance(ClientInstance serverAsClientInstance) {
+		this.serverAsClientInstance = serverAsClientInstance;
+	}
+
+	Map<Long, HiliLocatorMap> getClientInstanceLocatorMap() {
+		return this.clientInstanceLocatorMap;
+	}
+
 	int getTransformRequestCounter() {
 		return this.transformRequestCounter;
 	}
 
-	public void appShutdown() {
-		metricTracker.stop();
+	synchronized int nextTransformRequestId() {
+		return transformRequestCounter++;
 	}
 }

@@ -32,30 +32,9 @@ import cc.alcina.framework.common.client.collections.PublicCloneable;
  * 
  */
 @SuppressWarnings("unchecked")
-public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V> implements
-		PublicCloneable<UnsortedMultikeyMap> {
-	public static class UnsortedMapCreator extends DelegateMapCreator {
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public Map createDelegateMap(int depthFromRoot, int depth) {
-			return new LinkedHashMap<>();
-		}
-	}
-
+public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V>
+		implements PublicCloneable<UnsortedMultikeyMap> {
 	private static final long serialVersionUID = 1L;
-
-	@Override
-	public UnsortedMultikeyMap clone() {
-		try {
-			UnsortedMultikeyMap clone = new UnsortedMultikeyMap();
-			clone.delegate = createDelegateMap();
-			clone.delegate.putAll(delegate);
-			return clone;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
 
 	/**
 	 * Ensures that RPC will consider type parameter V to be exposed. It will be
@@ -82,11 +61,21 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V> implements
 	}
 
 	@Override
-	protected DelegateMapCreator ensureDelegateMapCreator() {
-		if (this.delegateMapCreator == null) {
-			this.delegateMapCreator = new UnsortedMapCreator();
+	public UnsortedMultikeyMap clone() {
+		try {
+			UnsortedMultikeyMap clone = new UnsortedMultikeyMap();
+			clone.delegate = createDelegateMap();
+			clone.delegate.putAll(delegate);
+			return clone;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
-		return delegateMapCreator;
+	}
+
+	@Override
+	public MultikeyMap createMap(int childDepth) {
+		return new UnsortedMultikeyMap<V>(childDepth, depthFromRoot + 1,
+				delegateMapCreator);
 	}
 
 	@Override
@@ -101,15 +90,27 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V> implements
 				"Use a sorted multikey map, or reverse yourself");
 	}
 
-	@Override
-	public MultikeyMap createMap(int childDepth) {
-		return new UnsortedMultikeyMap<V>(childDepth, depthFromRoot + 1,
-				delegateMapCreator);
-	}
 	@GwtIncompatible
-	private void readObject(ObjectInputStream in) throws IOException,
-			ClassNotFoundException {
+	private void readObject(ObjectInputStream in)
+			throws IOException, ClassNotFoundException {
 		in.defaultReadObject();
 		ensureDelegateMapCreator();
+	}
+
+	@Override
+	protected DelegateMapCreator ensureDelegateMapCreator() {
+		if (this.delegateMapCreator == null) {
+			this.delegateMapCreator = new UnsortedMapCreator();
+		}
+		return delegateMapCreator;
+	}
+
+	public static class UnsortedMapCreator extends DelegateMapCreator {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Map createDelegateMap(int depthFromRoot, int depth) {
+			return new LinkedHashMap<>();
+		}
 	}
 }

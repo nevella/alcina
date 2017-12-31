@@ -105,6 +105,18 @@ public class SEUtilities {
 
 	private static Map<Class, List<Field>> allFieldsPerClass = new LinkedHashMap<>();
 
+	private static Pattern sq_1 = Pattern.compile("(?<=\\s|^)\"");
+
+	private static Pattern sq_2 = Pattern.compile("(?<=\\S)\"");
+
+	private static Pattern sq_3 = Pattern.compile("(?<=\\s|^)[`'´]");
+
+	private static Pattern sq_4 = Pattern.compile("(?<=\\S|^)[`'´]");
+
+	private static Pattern sq_5 = Pattern.compile("[`'´]+");
+
+	private static Pattern sq_6 = Pattern.compile("[`'´]{2,}");
+
 	public static List<Field> allFields(Class clazz0) {
 		return allFieldsPerClass.computeIfAbsent(clazz0, clazz -> {
 			List<Field> result = new ArrayList<>();
@@ -123,13 +135,26 @@ public class SEUtilities {
 		});
 	}
 
-	public static Field getFieldByName(Class clazz, String name) {
-		return allFields(clazz).stream().filter(f -> f.getName().equals(name))
-				.findFirst().orElse(null);
-	}
-
 	public static void appShutdown() {
 		pdLookup = null;
+	}
+
+	public static void clearAllFields(Object object) {
+		try {
+			List<Field> fields = allFields(object.getClass());
+			Object template = object.getClass().newInstance();
+			for (Field field : fields) {
+				int modifiers = field.getModifiers();
+				if (Modifier.isFinal(modifiers)
+						|| Modifier.isStatic(modifiers)) {
+					continue;
+				} else {
+					field.set(object, field.get(template));
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -416,6 +441,10 @@ public class SEUtilities {
 		}
 	}
 
+	public static void ensureLogFolder() {
+		new File("/tmp/log").mkdirs();
+	}
+
 	public static Map<String, String> enumToMap(Enum e) {
 		Map<String, String> m = new HashMap<String, String>();
 		try {
@@ -540,43 +569,6 @@ public class SEUtilities {
 		return sb.toString();
 	}
 
-	public static String normaliseEnglishTitle(String name) {
-		if (name == null) {
-			return null;
-		}
-		Matcher m = Pattern.compile("\\w+").matcher(name);
-		Pattern nonTitle = Pattern.compile(
-				"(?i)(?:a|an|the|and|but|o|nor|for|yet|so|as|at|by|for|in|of|on|to|from|vs|v|etc)");
-		int idx2 = 0;
-		StringBuilder out = new StringBuilder();
-		while (m.find()) {
-			String priorDelim = name.substring(idx2, m.start());
-			out.append(priorDelim);
-			idx2 = m.end();
-			String part = m.group();
-			if (m.start() == 0 || m.end() == name.length()) {
-				// always capitalise
-			} else {
-				if (nonTitle.matcher(part).matches()) {
-					part = part.toLowerCase();
-				} else {
-					part = CommonUtils.titleCaseKeepAcronyms(part);
-				}
-			}
-			out.append(part);
-		}
-		out.append(name.substring(idx2));
-		return out.toString();
-	}
-
-	@RegistryLocation(registryPoint = IidGenerator.class)
-	public static class IidGeneratorJ2SE implements IidGenerator {
-		@Override
-		public String generate() {
-			return generateId();
-		}
-	}
-
 	public static String generateId() {
 		char[][] ranges = { { 'a', 'z' }, { 'A', 'Z' }, { '0', '9' },
 				{ '_', '_' } };
@@ -653,6 +645,11 @@ public class SEUtilities {
 		default:
 			return null;
 		}
+	}
+
+	public static Field getFieldByName(Class clazz, String name) {
+		return allFields(clazz).stream().filter(f -> f.getName().equals(name))
+				.findFirst().orElse(null);
 	}
 
 	public static String getFullExceptionMessage(Throwable t) {
@@ -796,6 +793,21 @@ public class SEUtilities {
 		};
 		Collections.sort(result, pdNameComparator);
 		return result;
+	}
+
+	public static String getStacktraceSlice(Thread t) {
+		return getStacktraceSlice(t, 20, 0);
+	}
+
+	public static String getStacktraceSlice(Thread t, int size,
+			int omitLowCount) {
+		String log = "";
+		StackTraceElement[] trace = t.getStackTrace();
+		for (int i = omitLowCount; i < trace.length && i < size; i++) {
+			log += trace[i] + "\n";
+		}
+		log += "\n\n";
+		return log;
 	}
 
 	public static int getUniqueInt(List<Integer> ints) {
@@ -991,6 +1003,55 @@ public class SEUtilities {
 		return m;
 	}
 
+	public static Iterable<String> matchIterable(String text, String regex) {
+		return matchIterable(text, regex, 0);
+	}
+
+	public static Iterable<String> matchIterable(String text, String regex,
+			int group) {
+		Pattern pattern = Pattern.compile(regex);
+		return new PatternIterable(pattern, text, group);
+	}
+
+	public static Stream<String> matchStream(String text, String regex) {
+		return matchStream(text, regex, 0);
+	}
+
+	public static Stream<String> matchStream(String text, String regex,
+			int group) {
+		Iterable<String> matchIterable = matchIterable(text, regex, group);
+		return StreamSupport.stream(matchIterable.spliterator(), false);
+	}
+
+	public static String normaliseEnglishTitle(String name) {
+		if (name == null) {
+			return null;
+		}
+		Matcher m = Pattern.compile("\\w+").matcher(name);
+		Pattern nonTitle = Pattern.compile(
+				"(?i)(?:a|an|the|and|but|o|nor|for|yet|so|as|at|by|for|in|of|on|to|from|vs|v|etc)");
+		int idx2 = 0;
+		StringBuilder out = new StringBuilder();
+		while (m.find()) {
+			String priorDelim = name.substring(idx2, m.start());
+			out.append(priorDelim);
+			idx2 = m.end();
+			String part = m.group();
+			if (m.start() == 0 || m.end() == name.length()) {
+				// always capitalise
+			} else {
+				if (nonTitle.matcher(part).matches()) {
+					part = part.toLowerCase();
+				} else {
+					part = CommonUtils.titleCaseKeepAcronyms(part);
+				}
+			}
+			out.append(part);
+		}
+		out.append(name.substring(idx2));
+		return out.toString();
+	}
+
 	public static String normalizeWhitespace(String input) {
 		return doWhitespace(input, false, ' ');
 	}
@@ -1055,6 +1116,31 @@ public class SEUtilities {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public static String smartQuotes(String text, boolean priorNonWhitespace) {
+		if (sq_5.matcher(text).find()) {
+			if (priorNonWhitespace) {
+				text = "z" + text;
+			}
+			Matcher m = sq_6.matcher(text);
+			text = m.replaceAll("\"");
+			m = sq_1.matcher(text);
+			text = m.replaceAll("“");
+			m = sq_2.matcher(text);
+			text = m.replaceAll("”");
+			m = sq_3.matcher(text);
+			text = m.replaceAll("‘");
+			m = sq_4.matcher(text);
+			text = m.replaceAll("’");
+			if (priorNonWhitespace) {
+				text = text.substring(1);
+			}
+			if (text.equals("‘. ")) {
+				int debug = 3;
+			}
+		}
+		return text;
 	}
 
 	public static Map<String, String> splitQuery(URL url)
@@ -1151,6 +1237,14 @@ public class SEUtilities {
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
+	}
+
+	public static String trimTrailingSlash(String string) {
+		if (string.endsWith("/")) {
+			return string.substring(0, string.length() - 1);
+		} else {
+			return string;
+		}
 	}
 
 	public static String usToAuDate(String s) {
@@ -1281,21 +1375,6 @@ public class SEUtilities {
 		}
 	}
 
-	public static String getStacktraceSlice(Thread t) {
-		return getStacktraceSlice(t, 20, 0);
-	}
-
-	public static String getStacktraceSlice(Thread t, int size,
-			int omitLowCount) {
-		String log = "";
-		StackTraceElement[] trace = t.getStackTrace();
-		for (int i = omitLowCount; i < trace.length && i < size; i++) {
-			log += trace[i] + "\n";
-		}
-		log += "\n\n";
-		return log;
-	}
-
 	public static class Bytes {
 		public static int indexOf(byte[] src, byte[] toFind) {
 			return indexOf(src, toFind, 0);
@@ -1349,6 +1428,14 @@ public class SEUtilities {
 		}
 	}
 
+	@RegistryLocation(registryPoint = IidGenerator.class)
+	public static class IidGeneratorJ2SE implements IidGenerator {
+		@Override
+		public String generate() {
+			return generateId();
+		}
+	}
+
 	public static interface ObjectFilter<T> {
 		public boolean include(T obj);
 	}
@@ -1357,112 +1444,7 @@ public class SEUtilities {
 		Windows, MacOS, Unix
 	}
 
-	private static Pattern sq_1 = Pattern.compile("(?<=\\s|^)\"");
-
-	private static Pattern sq_2 = Pattern.compile("(?<=\\S)\"");
-
-	private static Pattern sq_3 = Pattern.compile("(?<=\\s|^)[`'´]");
-
-	private static Pattern sq_4 = Pattern.compile("(?<=\\S|^)[`'´]");
-
-	private static Pattern sq_5 = Pattern.compile("[`'´]+");
-
-	private static Pattern sq_6 = Pattern.compile("[`'´]{2,}");
-
-	public static String smartQuotes(String text, boolean priorNonWhitespace) {
-		if (sq_5.matcher(text).find()) {
-			if (priorNonWhitespace) {
-				text = "z" + text;
-			}
-			Matcher m = sq_6.matcher(text);
-			text = m.replaceAll("\"");
-			m = sq_1.matcher(text);
-			text = m.replaceAll("“");
-			m = sq_2.matcher(text);
-			text = m.replaceAll("”");
-			m = sq_3.matcher(text);
-			text = m.replaceAll("‘");
-			m = sq_4.matcher(text);
-			text = m.replaceAll("’");
-			if (priorNonWhitespace) {
-				text = text.substring(1);
-			}
-			if (text.equals("‘. ")) {
-				int debug = 3;
-			}
-		}
-		return text;
-	}
-
-	public static String trimTrailingSlash(String string) {
-		if (string.endsWith("/")) {
-			return string.substring(0, string.length() - 1);
-		} else {
-			return string;
-		}
-	}
-
-	public static Iterable<String> matchIterable(String text, String regex) {
-		return matchIterable(text, regex, 0);
-	}
-
-	public static Stream<String> matchStream(String text, String regex) {
-		return matchStream(text, regex, 0);
-	}
-
-	public static Iterable<String> matchIterable(String text, String regex,
-			int group) {
-		Pattern pattern = Pattern.compile(regex);
-		return new PatternIterable(pattern, text, group);
-	}
-
-	public static Stream<String> matchStream(String text, String regex,
-			int group) {
-		Iterable<String> matchIterable = matchIterable(text, regex, group);
-		return StreamSupport.stream(matchIterable.spliterator(), false);
-	}
-
 	public static class PatternIterable implements Iterable<String> {
-		private final class MatcherIterator implements Iterator<String> {
-			private Matcher matcher;
-
-			public MatcherIterator(Matcher matcher) {
-				this.matcher = matcher;
-			}
-
-			boolean peeked = false;
-
-			String nextMatch;
-
-			boolean finished = false;
-
-			@Override
-			public String next() {
-				ensurePeeked();
-				if (finished) {
-					throw new NoSuchElementException();
-				}
-				peeked = false;
-				return nextMatch;
-			}
-
-			@Override
-			public boolean hasNext() {
-				ensurePeeked();
-				return !finished;
-			}
-
-			private void ensurePeeked() {
-				if (!peeked) {
-					peeked = true;
-					finished = !matcher.find();
-					if (!finished) {
-						nextMatch = matcher.group(group);
-					}
-				}
-			}
-		}
-
 		private Pattern pattern;
 
 		private String text;
@@ -1480,28 +1462,45 @@ public class SEUtilities {
 			Matcher matcher = pattern.matcher(text);
 			return new MatcherIterator(matcher);
 		}
-	}
 
-	public static void ensureLogFolder() {
-		new File("/tmp/log").mkdirs();
-	}
+		private final class MatcherIterator implements Iterator<String> {
+			private Matcher matcher;
 
-	public static void clearAllFields(Object object) {
-		try {
-			List<Field> fields = allFields(object.getClass());
-			Object template = object.getClass().newInstance();
-			for (Field field : fields) {
-				int modifiers = field.getModifiers();
-				if (Modifier.isFinal(modifiers)
-						|| Modifier.isStatic(modifiers)) {
-					continue;
-				} else {
-					field.set(object, field.get(template));
+			boolean peeked = false;
+
+			String nextMatch;
+
+			boolean finished = false;
+
+			public MatcherIterator(Matcher matcher) {
+				this.matcher = matcher;
+			}
+
+			@Override
+			public boolean hasNext() {
+				ensurePeeked();
+				return !finished;
+			}
+
+			@Override
+			public String next() {
+				ensurePeeked();
+				if (finished) {
+					throw new NoSuchElementException();
+				}
+				peeked = false;
+				return nextMatch;
+			}
+
+			private void ensurePeeked() {
+				if (!peeked) {
+					peeked = true;
+					finished = !matcher.find();
+					if (!finished) {
+						nextMatch = matcher.group(group);
+					}
 				}
 			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
 		}
 	}
-	
 }

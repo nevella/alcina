@@ -27,202 +27,229 @@ import com.google.gwt.safehtml.shared.annotations.SuppressIsTrustedResourceUriCa
  * in some environments some properties may be read-only once the underlying
  * object is instantiated.
  * 
- * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#edef-OBJECT">W3C HTML Specification</a>
+ * @see <a href=
+ *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#edef-OBJECT">
+ *      W3C HTML Specification</a>
  */
 @TagName(ObjectElement.TAG)
 public class ObjectElement extends Element {
+	public static final String TAG = "object";
 
-  public static final String TAG = "object";
+	/**
+	 * Assert that the given {@link Element} is compatible with this class and
+	 * automatically typecast it.
+	 */
+	public static ObjectElement as(Element elem) {
+		assert is(elem);
+		return (ObjectElement) elem;
+	}
 
-  /**
-   * Assert that the given {@link Element} is compatible with this class and
-   * automatically typecast it.
-   */
-  public static ObjectElement as(Element elem) {
-    assert is(elem);
-    return (ObjectElement) elem;
-  }
+	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
 
-  /**
-   * Determines whether the given {@link JavaScriptObject} can be cast to
-   * this class. A <code>null</code> object will cause this method to
-   * return <code>false</code>.
-   */
-  public static boolean is(JavaScriptObject o) {
-    if (Element.is(o)) {
-      return is(Element.as(o));
-    }
-    return false;
-  }
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to this
+	 * class. A <code>null</code> object will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(JavaScriptObject o) {
+		if (Element.is(o)) {
+			return is(Element.as(o));
+		}
+		return false;
+	}
 
-  /**
-   * Determine whether the given {@link Node} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Node node) {
-    if (Element.is(node)) {
-      return is((Element) node);
-    }
-    return false;
-  }
-  
-  /**
-   * Determine whether the given {@link Element} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Element elem) {
-    return elem != null && elem.hasTagName(TAG);
-  }
+	/**
+	 * Determine whether the given {@link Node} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		if (Element.is(node)) {
+			return is((Element) node);
+		}
+		return false;
+	}
 
-  protected ObjectElement() {
-  }
+	protected ObjectElement() {
+	}
 
-  /**
-   * Applet class file.
-   */  public  String getCode(){
-  return this.getPropertyString("code");
-}
+	/**
+	 * Applet class file.
+	 */
+	public String getCode() {
+		return this.getPropertyString("code");
+	}
 
+	/**
+	 * The document this object contains, if there is any and it is available,
+	 * or null otherwise.
+	 */
+	public Document getContentDocument() {
+		throw new FixmeUnsupportedOperationException();
+	}
 
-  /**
-   * The document this object contains, if there is any and it is available, or
-   * null otherwise.
-   */  public  Document getContentDocument(){
-  throw new FixmeUnsupportedOperationException();
-}
+	/**
+	 * A URI specifying the location of the object's data.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-data">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getData() {
+		return this.getPropertyString("data");
+	}
 
+	/**
+	 * Returns the FORM element containing this control. Returns null if this
+	 * control is not within the context of a form.
+	 */
+	public FormElement getForm() {
+		throw new FixmeUnsupportedOperationException();
+	}
 
-  /**
-   * A URI specifying the location of the object's data.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-data">W3C HTML Specification</a>
-   */  public  String getData(){
-  return this.getPropertyString("data");
-}
+	/**
+	 * Override height.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-height-IMG">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getHeight() {
+		return this.getPropertyString("height");
+	}
 
+	/**
+	 * Form control or object name when submitted with a form.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-name-INPUT">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getName() {
+		return this.getPropertyString("name");
+	}
 
-  /**
-   * Returns the FORM element containing this control. Returns null if this
-   * control is not within the context of a form.
-   */  public  FormElement getForm(){
-  throw new FixmeUnsupportedOperationException();
-}
+	/**
+	 * Content type for data downloaded via data attribute.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-type-OBJECT">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getType() {
+		return this.getPropertyString("type");
+	}
 
+	/**
+	 * Override width.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-width-IMG">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getWidth() {
+		return this.getPropertyString("width");
+	}
 
-  /**
-   * Override height.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-height-IMG">W3C HTML Specification</a>
-   */  public  String getHeight(){
-  return this.getPropertyString("height");
-}
+	/**
+	 * Applet class file.
+	 */
+	public void setCode(String code) {
+		this.setPropertyString("code", code);
+	}
 
+	/**
+	 * A URI specifying the location of the object's data.
+	 *
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-data">
+	 *      W3C HTML Specification</a>
+	 */
+	@SuppressIsTrustedResourceUriCastCheck
+	public final void setData(@IsTrustedResourceUri SafeUri data) {
+		setData(data.asString());
+	}
 
-  /**
-   * Form control or object name when submitted with a form.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-name-INPUT">W3C HTML Specification</a>
-   */  public  String getName(){
-  return this.getPropertyString("name");
-}
+	/**
+	 * A URI specifying the location of the object's data.
+	 *
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-data">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setData(@IsTrustedResourceUri String data) {
+		this.setPropertyString("data", data);
+	}
 
+	/**
+	 * Override height.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-height-IMG">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setHeight(String height) {
+		this.setPropertyString("height", height);
+	}
 
-  /**
-   * Content type for data downloaded via data attribute.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-type-OBJECT">W3C HTML Specification</a>
-   */  public  String getType(){
-  return this.getPropertyString("type");
-}
+	/**
+	 * Form control or object name when submitted with a form.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-name-INPUT">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setName(String name) {
+		this.setPropertyString("name", name);
+	}
 
+	/**
+	 * Content type for data downloaded via data attribute.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-type-OBJECT">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setType(String type) {
+		this.setPropertyString("type", type);
+	}
 
-  /**
-   * Override width.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-width-IMG">W3C HTML Specification</a>
-   */  public  String getWidth(){
-  return this.getPropertyString("width");
-}
+	/**
+	 * Use client-side image map.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-usemap">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setUseMap(boolean useMap) {
+		this.setPropertyBoolean("useMap", useMap);
+	}
 
+	/**
+	 * Override width.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-width-IMG">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setWidth(String width) {
+		this.setPropertyString("width", width);
+	}
 
-  /**
-   * Applet class file.
-   */  public  void setCode(String code){
-   this.setPropertyString("code",code);
-}
-
-
-  /**
-   * A URI specifying the location of the object's data.
-   *
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-data">W3C HTML Specification</a>
-   */
-  @SuppressIsTrustedResourceUriCastCheck
-  public final void setData(@IsTrustedResourceUri SafeUri data) {
-    setData(data.asString());
-  }
-
-  /**
-   * A URI specifying the location of the object's data.
-   *
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-data">W3C HTML Specification</a>
-   */  public  void setData(@IsTrustedResourceUri String data){
-   this.setPropertyString("data",data);
-}
-
-
-  /**
-   * Override height.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-height-IMG">W3C HTML Specification</a>
-   */  public  void setHeight(String height){
-   this.setPropertyString("height",height);
-}
-
-
-  /**
-   * Form control or object name when submitted with a form.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-name-INPUT">W3C HTML Specification</a>
-   */  public  void setName(String name){
-   this.setPropertyString("name",name);
-}
-
-
-  /**
-   * Content type for data downloaded via data attribute.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-type-OBJECT">W3C HTML Specification</a>
-   */  public  void setType(String type){
-   this.setPropertyString("type",type);
-}
-
-
-  /**
-   * Use client-side image map.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-usemap">W3C HTML Specification</a>
-   */  public  void setUseMap(boolean useMap){
-   this.setPropertyBoolean("useMap",useMap);
-}
-
-
-  /**
-   * Override width.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-width-IMG">W3C HTML Specification</a>
-   */  public  void setWidth(String width){
-   this.setPropertyString("width",width);
-}
-
-
-  /**
-   * Use client-side image map.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-usemap">W3C HTML Specification</a>
-   */
+	/**
+	 * Use client-side image map.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-usemap">
+	 *      W3C HTML Specification</a>
+	 */
 	public final boolean useMap() {
 		return getPropertyBoolean("useMap");
 	}

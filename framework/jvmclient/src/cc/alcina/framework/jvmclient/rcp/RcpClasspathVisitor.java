@@ -15,19 +15,27 @@ import cc.alcina.framework.entity.util.ClasspathScanner.ClasspathVisitor;
  */
 @SuppressWarnings("unchecked")
 public class RcpClasspathVisitor extends ClasspathVisitor {
-	public RcpClasspathVisitor(ClasspathScanner scanner) {
-		super(scanner);
-	}
-
 	protected static final Object PROTOCOL_BUNDLE_RESOURCE = "bundleresource";
 
 	protected static final Object PROTOCOL_VFSZIP = "vfszip";
 
 	protected static final Object PROTOCOL_VFSFILE = "vfsfile";
 
+	public RcpClasspathVisitor(ClasspathScanner scanner) {
+		super(scanner);
+	}
+
 	@Override
 	public void enumerateClasses(URL url) throws Exception {
 		assert false;
+	}
+
+	@Override
+	public boolean handles(URL url) {
+		if (url.getProtocol().equals(PROTOCOL_BUNDLE_RESOURCE)) {
+			assert false;
+		}
+		return false;
 	}
 
 	@Override
@@ -42,13 +50,5 @@ public class RcpClasspathVisitor extends ClasspathVisitor {
 			return (URL) resolvedUrl;
 		}
 		return super.resolve(url);
-	}
-
-	@Override
-	public boolean handles(URL url) {
-		if (url.getProtocol().equals(PROTOCOL_BUNDLE_RESOURCE)) {
-			assert false;
-		}
-		return false;
 	}
 }

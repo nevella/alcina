@@ -34,6 +34,11 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 
 	private boolean asHtml;
 
+	private T value;
+
+	@SuppressWarnings("unchecked")
+	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
+
 	/** Creates a new instance of Label */
 	public BoundHyperlink() {
 		base = new Hyperlink() {
@@ -45,7 +50,7 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 			}
 		};
 		super.initWidget(base);
-		anchorElem =  (Element) getElement().getFirstChild();
+		anchorElem = (Element) getElement().getFirstChild();
 	}
 
 	public void addClickListener(ClickListener listener) {
@@ -80,6 +85,15 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 		return retValue;
 	}
 
+	/**
+	 * Get the value of renderer
+	 * 
+	 * @return the value of renderer
+	 */
+	public Renderer<T, String> getRenderer() {
+		return this.renderer;
+	}
+
 	public String getStyleName() {
 		String retValue;
 		retValue = this.base.getStyleName();
@@ -110,6 +124,10 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 		return value;
 	}
 
+	public boolean isAsHtml() {
+		return asHtml;
+	}
+
 	public boolean isVisible() {
 		boolean retValue;
 		retValue = this.base.isVisible();
@@ -124,12 +142,30 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 		this.base.removeStyleName(style);
 	}
 
+	public void setAsHtml(boolean isHtml) {
+		this.asHtml = isHtml;
+	}
+
 	public void setHeight(String height) {
 		this.base.setHeight(height);
 	}
 
+	public void setHref(String href) {
+		this.base.setHref(href);
+	}
+
 	public void setPixelSize(int width, int height) {
 		this.base.setPixelSize(width, height);
+	}
+
+	/**
+	 * Set the value of renderer
+	 * 
+	 * @param newrenderer
+	 *            new value of renderer
+	 */
+	public void setRenderer(Renderer<T, String> newrenderer) {
+		this.renderer = newrenderer;
 	}
 
 	public void setSize(String width, String height) {
@@ -148,10 +184,6 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 		this.base.setTargetHistoryToken(targetHistoryToken);
 	}
 
-	public void setHref(String href) {
-		this.base.setHref(href);
-	}
-
 	public void setText(String text) {
 		this.base.setText(text);
 	}
@@ -160,16 +192,14 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 		this.base.setTitle(title);
 	}
 
-	private T value;
-
 	@SuppressWarnings("unchecked")
 	public void setValue(T value) {
 		// ("Setting value "+ value, null );
 		Object old = this.getValue();
 		this.value = value;
-		String renderedString = this.getRenderer() != null ? (String) this
-				.getRenderer().render(value) : value == null ? "" : value
-				.toString();
+		String renderedString = this.getRenderer() != null
+				? (String) this.getRenderer().render(value)
+				: value == null ? "" : value.toString();
 		if (isAsHtml()) {
 			this.base.setHTML(renderedString);
 		} else {
@@ -195,35 +225,5 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
-	}
-
-	public void setAsHtml(boolean isHtml) {
-		this.asHtml = isHtml;
-	}
-
-	public boolean isAsHtml() {
-		return asHtml;
-	}
-
-	@SuppressWarnings("unchecked")
-	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
-
-	/**
-	 * Get the value of renderer
-	 * 
-	 * @return the value of renderer
-	 */
-	public Renderer<T, String> getRenderer() {
-		return this.renderer;
-	}
-
-	/**
-	 * Set the value of renderer
-	 * 
-	 * @param newrenderer
-	 *            new value of renderer
-	 */
-	public void setRenderer(Renderer<T, String> newrenderer) {
-		this.renderer = newrenderer;
 	}
 }

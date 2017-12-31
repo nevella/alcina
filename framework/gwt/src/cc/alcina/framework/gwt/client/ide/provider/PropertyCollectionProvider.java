@@ -32,22 +32,15 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
  * 
  * @author Nick Reddel
  */
-public class PropertyCollectionProvider<E> implements CollectionProvider<E>,
-		PropertyChangeListener {
+public class PropertyCollectionProvider<E>
+		implements CollectionProvider<E>, PropertyChangeListener {
 	private CollectionFilter<E> filter;
 
 	private final SourcesPropertyChangeEvents domainObject;
 
 	private final ClientPropertyReflector propertyReflector;
 
-	public void setFilter(CollectionFilter<E> filter) {
-		this.filter = filter;
-	}
-
-	@Override
-	public int getCollectionSize() {
-		return getCollection().size();
-	}
+	private CollectionModificationSupport collectionModificationSupport = new CollectionModificationSupport();
 
 	public PropertyCollectionProvider(SourcesPropertyChangeEvents domainObject,
 			ClientPropertyReflector propertyReflector) {
@@ -62,15 +55,16 @@ public class PropertyCollectionProvider<E> implements CollectionProvider<E>,
 		}
 	}
 
-	public CollectionFilter<E> getFilter() {
-		return this.filter;
+	public void addCollectionModificationListener(
+			CollectionModificationListener listener) {
+		this.collectionModificationSupport
+				.addCollectionModificationListener(listener);
 	}
 
 	@SuppressWarnings("unchecked")
 	public Collection<E> getCollection() {
-		Collection<E> colln = (Collection) GwittirBridge.get()
-				.getPropertyValue(getDomainObject(),
-						getPropertyReflector().getPropertyName());
+		Collection<E> colln = (Collection) GwittirBridge.get().getPropertyValue(
+				getDomainObject(), getPropertyReflector().getPropertyName());
 		if (filter == null) {
 			return colln;
 		}
@@ -83,24 +77,27 @@ public class PropertyCollectionProvider<E> implements CollectionProvider<E>,
 		return l;
 	}
 
-	private CollectionModificationSupport collectionModificationSupport = new CollectionModificationSupport();
-
 	@SuppressWarnings("unchecked")
 	public Class<? extends E> getCollectionMemberClass() {
 		return getPropertyReflector().getAnnotation(Association.class)
 				.implementationClass();
 	}
 
-	public void addCollectionModificationListener(
-			CollectionModificationListener listener) {
-		this.collectionModificationSupport
-				.addCollectionModificationListener(listener);
+	@Override
+	public int getCollectionSize() {
+		return getCollection().size();
 	}
 
-	public void removeCollectionModificationListener(
-			CollectionModificationListener listener) {
-		this.collectionModificationSupport
-				.removeCollectionModificationListener(listener);
+	public SourcesPropertyChangeEvents getDomainObject() {
+		return domainObject;
+	}
+
+	public CollectionFilter<E> getFilter() {
+		return this.filter;
+	}
+
+	public ClientPropertyReflector getPropertyReflector() {
+		return propertyReflector;
 	}
 
 	public void onDetach() {
@@ -109,16 +106,17 @@ public class PropertyCollectionProvider<E> implements CollectionProvider<E>,
 	}
 
 	public void propertyChange(PropertyChangeEvent evt) {
+		this.collectionModificationSupport.fireCollectionModificationEvent(
+				new CollectionModificationEvent(getDomainObject()));
+	}
+
+	public void removeCollectionModificationListener(
+			CollectionModificationListener listener) {
 		this.collectionModificationSupport
-				.fireCollectionModificationEvent(new CollectionModificationEvent(
-						getDomainObject()));
+				.removeCollectionModificationListener(listener);
 	}
 
-	public SourcesPropertyChangeEvents getDomainObject() {
-		return domainObject;
-	}
-
-	public ClientPropertyReflector getPropertyReflector() {
-		return propertyReflector;
+	public void setFilter(CollectionFilter<E> filter) {
+		this.filter = filter;
 	}
 }

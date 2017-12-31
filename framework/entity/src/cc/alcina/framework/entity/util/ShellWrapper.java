@@ -26,6 +26,11 @@ public class ShellWrapper {
 
 	public boolean logToStdOut = true;
 
+	public ShellWrapper noLogging() {
+		logToStdOut = false;
+		return this;
+	}
+
 	public ShellOutputTuple runBashScript(String script) throws Exception {
 		File tmp = File.createTempFile("shell", ".sh");
 		tmp.deleteOnExit();
@@ -35,30 +40,14 @@ public class ShellWrapper {
 		return outputTuple;
 	}
 
-	public ShellWrapper noLogging(){
-		logToStdOut=false;
-		return this;
-	}
 	public ShellOutputTuple runProcessCatchOutputAndWait(String... cmdAndArgs)
 			throws Exception {
 		return runProcessCatchOutputAndWaitPrompt("", cmdAndArgs);
 	}
 
-	public ShellOutputTuple runProcessCatchOutputAndWaitPrompt(String prompt,
-			String... cmdAndArgs) throws Exception {
-		if (logToStdOut) {
-			return runProcessCatchOutputAndWait(cmdAndArgs,
-					new TabbedSysoutCallback(prompt + OUTPUT_MARKER),
-					new TabbedSysoutCallback(prompt + ERROR_MARKER));
-		} else {
-			return runProcessCatchOutputAndWait(cmdAndArgs, s -> s.length(),
-					s -> s.length());
-		}
-	}
-
 	public ShellOutputTuple runProcessCatchOutputAndWait(String[] cmdAndArgs,
 			Callback<String> outputCallback, Callback<String> errorCallback)
-					throws Exception {
+			throws Exception {
 		if (logToStdOut) {
 			System.out.format("launching process: %s\n",
 					CommonUtils.join(cmdAndArgs, " "));
@@ -92,6 +81,18 @@ public class ShellWrapper {
 		}
 		return new ShellOutputTuple(outputGobbler.getStreamResult(),
 				errorGobbler.getStreamResult(), timedOut, proc.exitValue());
+	}
+
+	public ShellOutputTuple runProcessCatchOutputAndWaitPrompt(String prompt,
+			String... cmdAndArgs) throws Exception {
+		if (logToStdOut) {
+			return runProcessCatchOutputAndWait(cmdAndArgs,
+					new TabbedSysoutCallback(prompt + OUTPUT_MARKER),
+					new TabbedSysoutCallback(prompt + ERROR_MARKER));
+		} else {
+			return runProcessCatchOutputAndWait(cmdAndArgs, s -> s.length(),
+					s -> s.length());
+		}
 	}
 
 	public ShellOutputTuple runShell(String argString) throws Exception {

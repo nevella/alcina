@@ -20,109 +20,122 @@ import com.google.gwt.core.client.JavaScriptObject;
 /**
  * This contains generic meta-information about the document.
  * 
- * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#edef-META">W3C HTML Specification</a>
+ * @see <a href=
+ *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#edef-META">
+ *      W3C HTML Specification</a>
  */
 @TagName(MetaElement.TAG)
 public class MetaElement extends Element {
+	public static final String TAG = "meta";
 
-  public static final String TAG = "meta";
+	/**
+	 * Assert that the given {@link Element} is compatible with this class and
+	 * automatically typecast it.
+	 */
+	public static MetaElement as(Element elem) {
+		assert is(elem);
+		return (MetaElement) elem;
+	}
 
-  /**
-   * Assert that the given {@link Element} is compatible with this class and
-   * automatically typecast it.
-   */
-  public static MetaElement as(Element elem) {
-    assert is(elem);
-    return (MetaElement) elem;
-  }
+	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
 
-  /**
-   * Determines whether the given {@link JavaScriptObject} can be cast to
-   * this class. A <code>null</code> object will cause this method to
-   * return <code>false</code>.
-   */
-  public static boolean is(JavaScriptObject o) {
-    if (Element.is(o)) {
-      return is(Element.as(o));
-    }
-    return false;
-  }
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to this
+	 * class. A <code>null</code> object will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(JavaScriptObject o) {
+		if (Element.is(o)) {
+			return is(Element.as(o));
+		}
+		return false;
+	}
 
-  /**
-   * Determine whether the given {@link Node} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Node node) {
-    if (Element.is(node)) {
-      return is((Element) node);
-    }
-    return false;
-  }
-  
-  /**
-   * Determine whether the given {@link Element} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Element elem) {
-    return elem != null && elem.hasTagName(TAG);
-  }
+	/**
+	 * Determine whether the given {@link Node} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		if (Element.is(node)) {
+			return is((Element) node);
+		}
+		return false;
+	}
 
-  protected MetaElement() {
-  }
+	protected MetaElement() {
+	}
 
-  /**
-   * Associated information.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-content">W3C HTML Specification</a>
-   */  public  String getContent(){
-  return this.getPropertyString("content");
-}
+	/**
+	 * Associated information.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-content">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getContent() {
+		return this.getPropertyString("content");
+	}
 
+	/**
+	 * HTTP response header name [IETF RFC 2616].
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-http-equiv">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getHttpEquiv() {
+		return this.getPropertyString("httpEquiv");
+	}
 
-  /**
-   * HTTP response header name [IETF RFC 2616].
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-http-equiv">W3C HTML Specification</a>
-   */  public  String getHttpEquiv(){
-  return this.getPropertyString("httpEquiv");
-}
+	/**
+	 * Meta information name.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-name-META">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getName() {
+		return this.getPropertyString("name");
+	}
 
+	/**
+	 * Associated information.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-content">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setContent(String content) {
+		this.setPropertyString("content", content);
+	}
 
-  /**
-   * Meta information name.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-name-META">W3C HTML Specification</a>
-   */  public  String getName(){
-  return this.getPropertyString("name");
-}
+	/**
+	 * HTTP response header name [IETF RFC 2616].
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-http-equiv">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setHttpEquiv(String httpEquiv) {
+		this.setPropertyString("httpEquiv", httpEquiv);
+	}
 
-
-  /**
-   * Associated information.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-content">W3C HTML Specification</a>
-   */  public  void setContent(String content){
-   this.setPropertyString("content",content);
-}
-
-
-  /**
-   * HTTP response header name [IETF RFC 2616].
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-http-equiv">W3C HTML Specification</a>
-   */  public  void setHttpEquiv(String httpEquiv){
-   this.setPropertyString("httpEquiv",httpEquiv);
-}
-
-
-  /**
-   * Meta information name.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-name-META">W3C HTML Specification</a>
-   */  public  void setName(String name){
-   this.setPropertyString("name",name);
-}
-
+	/**
+	 * Meta information name.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-name-META">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setName(String name) {
+		this.setPropertyString("name", name);
+	}
 }

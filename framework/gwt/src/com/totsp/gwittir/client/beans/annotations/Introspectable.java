@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.totsp.gwittir.client.beans.annotations;
 
 import java.lang.annotation.Inherited;
@@ -16,5 +15,4 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 public @interface Introspectable {
-
 }

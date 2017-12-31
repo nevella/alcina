@@ -17,9 +17,11 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
  * 
  * @param <H>
  */
-public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
-		Cloneable, Serializable {
+public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
+		implements Cloneable, Serializable {
 	static final transient long serialVersionUID = 1;
+
+	static final transient int DEGENERATE_THRESHOLD = 30;
 
 	private transient HasIdAndLocalId[] elementData;
 
@@ -28,8 +30,6 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 	transient int modCount = 0;
 
 	private transient Set<H> degenerate;
-
-	static final transient int DEGENERATE_THRESHOLD = 30;
 
 	public LiSet() {
 	}
@@ -43,7 +43,6 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		if (e == null) {
 			throw new IllegalArgumentException();
 		}
-		
 		if (degenerate != null) {
 			return degenerate.add(e);
 		}
@@ -71,7 +70,8 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 			HasIdAndLocalId[] newData = new HasIdAndLocalId[size];
 			System.arraycopy(elementData, 0, newData, 0, idx);
 			newData[idx] = e;
-			System.arraycopy(elementData, idx, newData, idx + 1, size - idx - 1);
+			System.arraycopy(elementData, idx, newData, idx + 1,
+					size - idx - 1);
 			elementData = newData;
 			return true;
 		}
@@ -212,6 +212,30 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		}
 	}
 
+	private void readObject(java.io.ObjectInputStream s)
+			throws java.io.IOException, ClassNotFoundException {
+		s.defaultReadObject();
+		int arrayLength = s.readInt();
+		if (arrayLength != 0) {
+			// use add, to handle degenerate case
+			for (int i = 0; i < arrayLength; i++) {
+				add((H) s.readObject());
+			}
+		}
+	}
+
+	private void writeObject(java.io.ObjectOutputStream s)
+			throws java.io.IOException {
+		// Write out element count, and any hidden stuff
+		s.defaultWriteObject();
+		// Write out array length
+		s.writeInt(size());
+		// Write out all elements in the proper order.
+		for (Iterator<H> itr = iterator(); itr.hasNext();) {
+			s.writeObject(itr.next());
+		}
+	}
+
 	class LiSetIterator implements Iterator<H> {
 		int idx = 0;
 
@@ -247,30 +271,6 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 			LiSet.this.remove(elementData[--idx]);
 			itrModCount++;
 			nextCalled = false;
-		}
-	}
-
-	private void writeObject(java.io.ObjectOutputStream s)
-			throws java.io.IOException {
-		// Write out element count, and any hidden stuff
-		s.defaultWriteObject();
-		// Write out array length
-		s.writeInt(size());
-		// Write out all elements in the proper order.
-		for (Iterator<H> itr = iterator(); itr.hasNext();) {
-			s.writeObject(itr.next());
-		}
-	}
-
-	private void readObject(java.io.ObjectInputStream s)
-			throws java.io.IOException, ClassNotFoundException {
-		s.defaultReadObject();
-		int arrayLength = s.readInt();
-		if (arrayLength != 0) {
-			// use add, to handle degenerate case
-			for (int i = 0; i < arrayLength; i++) {
-				add((H) s.readObject());
-			}
 		}
 	}
 }

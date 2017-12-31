@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -26,8 +25,7 @@ import com.google.gwt.user.client.ui.Widget;
  *
  * @author Nick Reddel
  */
-
- public class SpanPanel extends ComplexPanel implements HasClickHandlers {
+public class SpanPanel extends ComplexPanel implements HasClickHandlers {
 	/**
 	 * Creates an empty span panel.
 	 */
@@ -51,6 +49,10 @@ import com.google.gwt.user.client.ui.Widget;
 		add(w, getElement());
 	}
 
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addDomHandler(handler, ClickEvent.getType());
+	}
+
 	/**
 	 * Inserts a widget before the specified index.
 	 * 
@@ -64,7 +66,4 @@ import com.google.gwt.user.client.ui.Widget;
 	public void insert(Widget w, int beforeIndex) {
 		insert(w, getElement(), beforeIndex, true);
 	}
-	public HandlerRegistration addClickHandler(ClickHandler handler) {
-	    return addDomHandler(handler, ClickEvent.getType());
-	  }
 }

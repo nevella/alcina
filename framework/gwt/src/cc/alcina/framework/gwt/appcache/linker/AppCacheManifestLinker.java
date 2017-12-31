@@ -175,7 +175,8 @@ public class AppCacheManifestLinker extends AbstractLinker {
 			} catch (PatternSyntaxException e) {
 				logger.log(TreeLogger.ERROR,
 						"Could not compile filter pattern at character offset "
-								+ filterMatcher.start(), e);
+								+ filterMatcher.start(),
+						e);
 				filterError = true;
 			}
 		}
@@ -191,8 +192,8 @@ public class AppCacheManifestLinker extends AbstractLinker {
 	private String generateEntries(TreeLogger logger, LinkerContext context,
 			Set<Pattern> filters, SortedSet<EmittedArtifact> artifacts)
 			throws UnableToCompleteException {
-		logger = logger.branch(TreeLogger.DEBUG,
-				"Generating manifest contents", null);
+		logger = logger.branch(TreeLogger.DEBUG, "Generating manifest contents",
+				null);
 		StringBuffer entries = new StringBuffer();
 		paths: for (EmittedArtifact artifact : artifacts) {
 			if (artifact.getVisibility() != Visibility.Public) {
@@ -218,8 +219,9 @@ public class AppCacheManifestLinker extends AbstractLinker {
 					digester.update(buffer, 0, read);
 				}
 			} catch (IOException e) {
-				logger.log(TreeLogger.ERROR, "Unable to read artifact "
-						+ artifact.getPartialPath(), e);
+				logger.log(TreeLogger.ERROR,
+						"Unable to read artifact " + artifact.getPartialPath(),
+						e);
 				throw new UnableToCompleteException();
 			}
 		}
@@ -243,7 +245,8 @@ public class AppCacheManifestLinker extends AbstractLinker {
 		InputStream in;
 		// See if we have a user-provided manifest to work with
 		if (userManifest != null) {
-			logger.log(TreeLogger.DEBUG, "Reading user-provided manifest", null);
+			logger.log(TreeLogger.DEBUG, "Reading user-provided manifest",
+					null);
 			in = userManifest.getContents(logger);
 			if (in == null) {
 				logger.log(TreeLogger.ERROR,
@@ -252,13 +255,12 @@ public class AppCacheManifestLinker extends AbstractLinker {
 			}
 		} else {
 			// Fall back to the built-in manifest
-			String packagePath = getClass().getPackage().getName()
-					.replace('.', '/');
+			String packagePath = getClass().getPackage().getName().replace('.',
+					'/');
 			String resourceName = packagePath + "/" + APPCACHE_MANIFEST;
 			in = getClass().getClassLoader().getResourceAsStream(resourceName);
 			if (in == null) {
-				logger.log(
-						TreeLogger.ERROR,
+				logger.log(TreeLogger.ERROR,
 						"Could not load built-in manifest from " + resourceName,
 						null);
 				throw new UnableToCompleteException();

@@ -20,28 +20,14 @@ public class LoadObjectsNoOfflinePlayer extends RunnablePlayer<HandshakeState>
 		loadObjectsConsort = new LoadObjectsNoOfflineConsort();
 	}
 
-	public static class LoadObjectsNoOfflineConsort extends
-			Consort<LoadObjectDataState> {
-		public LoadObjectsNoOfflineConsort() {
-			LoadObjectsHelloPlayer loadObjectsHelloPlayer = addPlayer(Registry
-					.impl(LoadObjectsHelloPlayer.class));
-			LoadObjectsFromRemotePlayer loadObjectsFromRemotePlayer = Registry
-					.implOrNull(LoadObjectsFromRemotePlayer.class);
-			if (loadObjectsFromRemotePlayer != null) {
-				addPlayer(loadObjectsFromRemotePlayer);
-			}
-			addPlayer(new EndpointPlayer(
-					LoadObjectDataState.OBJECT_DATA_LOADED, null, true));
-			addPlayer(new EndpointPlayer(
-					LoadObjectDataState.OBJECT_DATA_LOAD_FAILED, null, true));
-		}
+	@Override
+	public Consort getStateConsort() {
+		return loadObjectsConsort;
+	}
 
-		@Override
-		public void finished() {
-			Registry.impl(HandshakeConsortModel.class)
-					.clearLoadObjectsNotifier();
-			super.finished();
-		}
+	@Override
+	public void run() {
+		new SubconsortSupport().run(consort, loadObjectsConsort, this);
 	}
 
 	@Override
@@ -52,13 +38,27 @@ public class LoadObjectsNoOfflinePlayer extends RunnablePlayer<HandshakeState>
 				: HandshakeState.OBJECT_DATA_LOAD_FAILED);
 	}
 
-	@Override
-	public void run() {
-		new SubconsortSupport().run(consort, loadObjectsConsort, this);
-	}
+	public static class LoadObjectsNoOfflineConsort
+			extends Consort<LoadObjectDataState> {
+		public LoadObjectsNoOfflineConsort() {
+			LoadObjectsHelloPlayer loadObjectsHelloPlayer = addPlayer(
+					Registry.impl(LoadObjectsHelloPlayer.class));
+			LoadObjectsFromRemotePlayer loadObjectsFromRemotePlayer = Registry
+					.implOrNull(LoadObjectsFromRemotePlayer.class);
+			if (loadObjectsFromRemotePlayer != null) {
+				addPlayer(loadObjectsFromRemotePlayer);
+			}
+			addPlayer(new EndpointPlayer(LoadObjectDataState.OBJECT_DATA_LOADED,
+					null, true));
+			addPlayer(new EndpointPlayer(
+					LoadObjectDataState.OBJECT_DATA_LOAD_FAILED, null, true));
+		}
 
-	@Override
-	public Consort getStateConsort() {
-		return loadObjectsConsort;
+		@Override
+		public void finished() {
+			Registry.impl(HandshakeConsortModel.class)
+					.clearLoadObjectsNotifier();
+			super.finished();
+		}
 	}
 }

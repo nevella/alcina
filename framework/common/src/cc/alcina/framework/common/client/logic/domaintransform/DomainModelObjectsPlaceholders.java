@@ -10,26 +10,8 @@ import cc.alcina.framework.gwt.client.data.GeneralProperties;
 
 //ensure that domainmodeldelta will serialize
 public class DomainModelObjectsPlaceholders {
-	public static class DomainModelObjectsPlaceholder implements
-			DomainModelObject {
-		@Override
-		public Collection registrableObjects() {
-			return null;
-		}
-
-		@Override
-		public void ensureLookups() {
-			
-		}
-	}
-
-	public static class DomainModelHolderPlaceholder implements
-			DomainModelHolder {
-		@Override
-		public List registerableDomainObjects() {
-			return Collections.EMPTY_LIST;
-		}
-
+	public static class DomainModelHolderPlaceholder
+			implements DomainModelHolder {
 		@Override
 		public Set<ClassRef> getClassRefs() {
 			return Collections.EMPTY_SET;
@@ -46,7 +28,24 @@ public class DomainModelObjectsPlaceholders {
 		}
 
 		@Override
+		public List registerableDomainObjects() {
+			return Collections.EMPTY_LIST;
+		}
+
+		@Override
 		public void registerSelfAsProvider() {
+		}
+	}
+
+	public static class DomainModelObjectsPlaceholder
+			implements DomainModelObject {
+		@Override
+		public void ensureLookups() {
+		}
+
+		@Override
+		public Collection registrableObjects() {
+			return null;
 		}
 	}
 }

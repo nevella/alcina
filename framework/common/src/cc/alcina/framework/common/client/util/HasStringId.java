@@ -5,7 +5,15 @@ import com.totsp.gwittir.client.ui.Renderer;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 public interface HasStringId {
+	static String nullSafeId0(HasStringId hasStringId) {
+		return hasStringId == null ? null : hasStringId.stringId();
+	}
+
 	public String stringId();
+
+	default String nullSafeId(HasStringId hasStringId) {
+		return hasStringId == null ? null : hasStringId.stringId();
+	}
 
 	@ClientInstantiable
 	public static class HasStringIdRenderer
@@ -16,12 +24,5 @@ public interface HasStringId {
 		public String render(HasStringId o) {
 			return o == null ? "" : o.stringId();
 		}
-	}
-
-	default String nullSafeId(HasStringId hasStringId) {
-		return hasStringId == null ? null : hasStringId.stringId();
-	}
-	static String nullSafeId0(HasStringId hasStringId) {
-		return hasStringId == null ? null : hasStringId.stringId();
 	}
 }

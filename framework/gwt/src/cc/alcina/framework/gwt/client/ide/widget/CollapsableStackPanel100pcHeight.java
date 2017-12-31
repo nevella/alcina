@@ -10,15 +10,10 @@ import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType;
 
-public class CollapsableStackPanel100pcHeight extends
-		CollapsableDivStackPanel implements HasLayoutInfo {
+public class CollapsableStackPanel100pcHeight extends CollapsableDivStackPanel
+		implements HasLayoutInfo {
 	public LayoutInfo getLayoutInfo() {
 		return new LayoutInfo() {
-			@Override
-			public boolean to100percentOfAvailableHeight() {
-				return true;
-			}
-
 			@Override
 			public int getClientAdjustHeight() {
 				// int captionHeight = getElement().getFirstChildElement()
@@ -35,6 +30,11 @@ public class CollapsableStackPanel100pcHeight extends
 			}
 
 			@Override
+			public boolean to100percentOfAvailableHeight() {
+				return true;
+			}
+
+			@Override
 			public boolean useBestOffsetForParentHeight() {
 				return false;
 			}
@@ -47,8 +47,7 @@ public class CollapsableStackPanel100pcHeight extends
 		super.showStack(index);
 		if (oldIndex != index) {
 			LayoutEvents.get().fireLayoutEvent(
-					new LayoutEvent(
-							LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
+					new LayoutEvent(LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
 		}
 	}
 }

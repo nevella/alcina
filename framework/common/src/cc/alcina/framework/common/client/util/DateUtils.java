@@ -23,21 +23,15 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 public class DateUtils implements RegistrableService {
 	private static DateUtils singleton;
 
+	public static int ageInDays(Date date) {
+		return get().ageInDays0(date);
+	}
+
 	public static DateUtils get() {
 		if (singleton == null) {
 			singleton = Registry.impl(DateUtils.class);
 		}
 		return singleton;
-	}
-
-	public static int ageInDays(Date date) {
-		return get().ageInDays0(date);
-	}
-
-	protected int ageInDays0(Date date) {
-		return (int) (date == null ? 0
-				: (System.currentTimeMillis() - date.getTime())
-						/ TimeConstants.ONE_DAY_MS);
 	}
 
 	@Override
@@ -61,5 +55,11 @@ public class DateUtils implements RegistrableService {
 		d.setMonth(month);
 		CalendarUtil.setToFirstDayOfMonth(d);
 		CommonUtils.roundDate(d, false);
+	}
+
+	protected int ageInDays0(Date date) {
+		return (int) (date == null ? 0
+				: (System.currentTimeMillis() - date.getTime())
+						/ TimeConstants.ONE_DAY_MS);
 	}
 }

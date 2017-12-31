@@ -49,8 +49,7 @@ public class Constants {
 	final static String STRICT_DOCTYPE = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">";
 
 	final static String QUIRKS_MODE_WARNING = "This page does not have a strict doctype such as \""
-			+ STRICT_DOCTYPE
-			+ "\". "
+			+ STRICT_DOCTYPE + "\". "
 			+ "This is especially important as InternetExplorer in quirks mode has a broken box model (http://css.maxdesign.com.au/listamatic/about-boxmodel.htm).";
 
 	public static final String INTERNET_EXPLORER_8_USER_AGENT_ALT = "MSIE 8.";

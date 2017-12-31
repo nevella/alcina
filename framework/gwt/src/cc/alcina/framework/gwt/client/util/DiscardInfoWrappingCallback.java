@@ -2,8 +2,7 @@ package cc.alcina.framework.gwt.client.util;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class DiscardInfoWrappingCallback<T> implements
-		AsyncCallback<T> {
+public class DiscardInfoWrappingCallback<T> implements AsyncCallback<T> {
 	private AsyncCallback<Void> wrapped;
 
 	public DiscardInfoWrappingCallback(AsyncCallback<Void> wrapped) {

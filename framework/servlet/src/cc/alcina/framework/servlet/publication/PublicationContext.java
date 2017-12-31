@@ -24,6 +24,30 @@ public class PublicationContext {
 	public static final String CONTEXT_PUBLICATION_CONTEXT = PublicationContext.class
 			.getName() + ".CONTEXT_PUBLICATION_CONTEXT";
 
+	public static PublicationContext get() {
+		return LooseContext.get(CONTEXT_PUBLICATION_CONTEXT);
+	}
+
+	public static String getContextInfoForPublicationExceptionT() {
+		PublicationContext ctx = get();
+		return ctx == null ? "--no publication context--"
+				: ctx.getContextInfoForPublicationException();
+	}
+
+	public static PublicationContext setupForExternalToPublisher(
+			ContentDefinition contentDefinition, DeliveryModel deliveryModel) {
+		return setupContext(contentDefinition, deliveryModel);
+	}
+
+	static PublicationContext setupContext(ContentDefinition contentDefinition,
+			DeliveryModel deliveryModel) {
+		PublicationContext ctx = new PublicationContext();
+		ctx.logger = Logger.getLogger(Publisher.class);
+		ctx.contentDefinition = contentDefinition;
+		ctx.deliveryModel = deliveryModel;
+		return ctx;
+	}
+
 	public ContentDefinition contentDefinition;
 
 	public PublicationContent publicationContent;
@@ -63,45 +87,21 @@ public class PublicationContext {
 		return message;
 	}
 
-	protected void logPublicationException(Exception e) {
-		String message = getContextInfoForPublicationException();
-		logger.warn(message, e);
-		EntityLayerUtils.log(LogMessageType.PUBLICATION_EXCEPTION, message, e);
-	}
-
-	public static String getContextInfoForPublicationExceptionT() {
-		PublicationContext ctx = get();
-		return ctx == null ? "--no publication context--"
-				: ctx.getContextInfoForPublicationException();
-	}
-
-	public static PublicationContext get() {
-		return LooseContext.get(CONTEXT_PUBLICATION_CONTEXT);
-	}
-
-	public static PublicationContext setupForExternalToPublisher(
-			ContentDefinition contentDefinition, DeliveryModel deliveryModel) {
-		return setupContext(contentDefinition, deliveryModel);
-	}
-
 	public PublicationVisitor getVisitor() {
 		return this.visitor;
-	}
-
-	public void setVisitor(PublicationVisitor visitor) {
-		this.visitor = visitor;
 	}
 
 	public PublicationVisitor getVisitorOrNoop() {
 		return this.visitor == null ? new PublicationVisitor() : this.visitor;
 	}
 
-	static PublicationContext setupContext(ContentDefinition contentDefinition,
-			DeliveryModel deliveryModel) {
-		PublicationContext ctx = new PublicationContext();
-		ctx.logger = Logger.getLogger(Publisher.class);
-		ctx.contentDefinition = contentDefinition;
-		ctx.deliveryModel = deliveryModel;
-		return ctx;
+	public void setVisitor(PublicationVisitor visitor) {
+		this.visitor = visitor;
+	}
+
+	protected void logPublicationException(Exception e) {
+		String message = getContextInfoForPublicationException();
+		logger.warn(message, e);
+		EntityLayerUtils.log(LogMessageType.PUBLICATION_EXCEPTION, message, e);
 	}
 }

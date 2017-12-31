@@ -66,8 +66,119 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 
 	public static final String PRE_HISTORY_KEY = "ph";
 
+	static UrlEncoder encoder;
+
+	public static String encode(String string) {
+		if (encoder == null) {
+			encoder = Registry.impl(UrlEncoder.class);
+		}
+		string = string.replace("&", "&&");
+		String encoded = encoder.encode(string);
+		return encoded;
+	}
+
+	public static StringMap fromHash(String s) {
+		s = maybeUnencode(s);
+		StringMap map = new StringMap();
+		String key = null;
+		String value = null;
+		boolean forKey = true;
+		for (int idx = 0; idx < s.length();) {
+			if (forKey) {
+				int idx1 = s.indexOf("=", idx);
+				if (idx1 == -1) {
+					break;
+				} else {
+					key = s.substring(idx, idx1);
+					idx = idx1 + 1;
+					forKey = false;
+				}
+			} else {
+				// terminator index
+				int idx0 = -1;
+				int idxStart = idx;
+				while (true) {
+					int idx1 = s.indexOf("&", idx);
+					// url encoding of '&'
+					int idx2 = s.indexOf("%26", idx);
+					// double-enc of '&' - i.e. part of a value, not a separator
+					int idx3 = s.indexOf(DOUBLE_AMP, idx);
+					// do we have a terminator?
+					if (idx1 == -1 && idx2 == -1) {
+						idx0 = s.length();
+						break;//
+					} else {
+						idx0 = idx1 == -1 ? idx2
+								: idx2 == -1 ? idx1 : Math.min(idx1, idx2);
+						if (idx0 < idx3 || idx3 == -1) {
+							break;// found terminator
+						}
+						idx = idx3 + DOUBLE_AMP.length();
+					}
+				}
+				map.put(key,
+						Registry.impl(UrlEncoder.class)
+								.decode(s.substring(idxStart, idx0))
+								.replace("&&", "&"));
+				forKey = true;
+				idx = idx0;
+				idx += s.indexOf("&", idx) == idx ? 1 : 3;// advance past setp
+			}
+		}
+		return map;
+	}
+
 	public static AlcinaHistory get() {
 		return Registry.impl(AlcinaHistory.class);
+	}
+
+	public static void initialiseDebugIds() {
+		String token = History.getToken();
+		if (token != null) {
+			AlcinaHistoryItem currentEvent = AlcinaHistory.get()
+					.parseToken(token);
+			if (currentEvent != null) {
+				for (String dbgId : AlcinaDebugIds.DEBUG_IDS) {
+					if (currentEvent.hasParameter(dbgId)) {
+						AlcinaDebugIds.setFlag(dbgId);
+					}
+				}
+			}
+		}
+	}
+
+	public static String maybeUnencode(String s) {
+		if (s.startsWith(BASE64_PREFIX)) {
+			try {
+				s = new String(Base64Utils.fromBase64(
+						s.substring(BASE64_PREFIX.length())), "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+		}
+		return s;
+	}
+
+	/**
+	 * '&' in values is encoded as &&, to allow for hotmail escaping '&' in the
+	 * hash as a whole - see fromHash
+	 */
+	public static String toHash(Map<String, String> params) {
+		StringBuffer sb = new StringBuffer();
+		ArrayList<String> keys = new ArrayList<String>(params.keySet());
+		Collections.sort(keys);
+		for (String k : keys) {
+			if (params.get(k) == null) {
+				continue;
+			}
+			if (sb.length() != 0) {
+				sb.append("&");
+			}
+			sb.append(k);
+			sb.append("=");
+			sb.append(encode(params.get(k).toString()));
+		}
+		return sb.toString();
 	}
 
 	private boolean noHistoryDisabled = false;
@@ -80,8 +191,15 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 
 	protected Map<String, String> tokenDisplayNames = new HashMap<String, String>();
 
+	private int eventIndex = 0;
+
 	public I createHistoryInfo() {
 		return (I) new AlcinaHistoryItem();
+	}
+
+	public I ensureEventFromCurrentToken() {
+		onHistoryChanged(History.getToken());
+		return getCurrentEvent();
 	}
 
 	public String getContentLink(String contentKey) {
@@ -94,13 +212,13 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 		return copyCurrent();
 	}
 
-	private I copyCurrent() {
-		return this.currentEvent == null ? null : (I) this.currentEvent.copy();
-	}
-
 	public I getCurrentEventOrEmpty() {
 		return this.currentEvent != null ? copyCurrent()
 				: parseToken(History.getToken());
+	}
+
+	public int getEventIndex() {
+		return this.eventIndex;
 	}
 
 	public I getLastEvent() {
@@ -156,21 +274,21 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	public boolean isNoHistoryDisabled() {
 		return this.noHistoryDisabled;
 	}
-	private int eventIndex=0;
 
-	public int getEventIndex() {
-		return this.eventIndex;
+	public void maybeRemove(String key) {
+		I current = getCurrentEventOrEmpty();
+		String s1 = current.toTokenString();
+		current.removeParameter(key);
+		String s2 = current.toTokenString();
+		if (!s2.equals(s1)) {
+			History.newItem(s2);
+		}
 	}
 
 	public void onHistoryChanged(String historyToken) {
 		lastEvent = currentEvent;
 		currentEvent = parseToken(historyToken);
 		eventIndex++;
-	}
-
-	public I ensureEventFromCurrentToken() {
-		onHistoryChanged(History.getToken());
-		return getCurrentEvent();
 	}
 
 	public I parseToken(String historyToken) {
@@ -205,102 +323,6 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 		this.noHistoryDisabled = noHistoryDisabled;
 	}
 
-	static UrlEncoder encoder;
-
-	/**
-	 * '&' in values is encoded as &&, to allow for hotmail escaping '&' in the
-	 * hash as a whole - see fromHash
-	 */
-	public static String toHash(Map<String, String> params) {
-		StringBuffer sb = new StringBuffer();
-		ArrayList<String> keys = new ArrayList<String>(params.keySet());
-		Collections.sort(keys);
-		for (String k : keys) {
-			if (params.get(k) == null) {
-				continue;
-			}
-			if (sb.length() != 0) {
-				sb.append("&");
-			}
-			sb.append(k);
-			sb.append("=");
-			sb.append(encode(params.get(k).toString()));
-		}
-		return sb.toString();
-	}
-
-	public static String encode(String string) {
-		if (encoder == null) {
-			encoder = Registry.impl(UrlEncoder.class);
-		}
-		string = string.replace("&", "&&");
-		String encoded = encoder.encode(string);
-		return encoded;
-	}
-
-	public static String maybeUnencode(String s) {
-		if (s.startsWith(BASE64_PREFIX)) {
-			try {
-				s = new String(Base64Utils.fromBase64(
-						s.substring(BASE64_PREFIX.length())), "UTF-8");
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-		}
-		return s;
-	}
-
-	public static StringMap fromHash(String s) {
-		s = maybeUnencode(s);
-		StringMap map = new StringMap();
-		String key = null;
-		String value = null;
-		boolean forKey = true;
-		for (int idx = 0; idx < s.length();) {
-			if (forKey) {
-				int idx1 = s.indexOf("=", idx);
-				if (idx1 == -1) {
-					break;
-				} else {
-					key = s.substring(idx, idx1);
-					idx = idx1 + 1;
-					forKey = false;
-				}
-			} else {
-				// terminator index
-				int idx0 = -1;
-				int idxStart = idx;
-				while (true) {
-					int idx1 = s.indexOf("&", idx);
-					// url encoding of '&'
-					int idx2 = s.indexOf("%26", idx);
-					// double-enc of '&' - i.e. part of a value, not a separator
-					int idx3 = s.indexOf(DOUBLE_AMP, idx);
-					// do we have a terminator?
-					if (idx1 == -1 && idx2 == -1) {
-						idx0 = s.length();
-						break;//
-					} else {
-						idx0 = idx1 == -1 ? idx2
-								: idx2 == -1 ? idx1 : Math.min(idx1, idx2);
-						if (idx0 < idx3 || idx3 == -1) {
-							break;// found terminator
-						}
-						idx = idx3 + DOUBLE_AMP.length();
-					}
-				}
-				map.put(key,
-						Registry.impl(UrlEncoder.class)
-								.decode(s.substring(idxStart, idx0))
-								.replace("&&", "&"));
-				forKey = true;
-				idx = idx0;
-				idx += s.indexOf("&", idx) == idx ? 1 : 3;// advance past setp
-			}
-		}
-		return map;
-	}
-
 	public String tokenForSearch(SearchDefinition def, int pageNumber) {
 		return tokenForSearch(def, pageNumber, null);
 	}
@@ -314,22 +336,11 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 		return hib.toTokenString();
 	}
 
-	protected void initTokenDisplayNames() {
+	private I copyCurrent() {
+		return this.currentEvent == null ? null : (I) this.currentEvent.copy();
 	}
 
-	public static void initialiseDebugIds() {
-		String token = History.getToken();
-		if (token != null) {
-			AlcinaHistoryItem currentEvent = AlcinaHistory.get()
-					.parseToken(token);
-			if (currentEvent != null) {
-				for (String dbgId : AlcinaDebugIds.DEBUG_IDS) {
-					if (currentEvent.hasParameter(dbgId)) {
-						AlcinaDebugIds.setFlag(dbgId);
-					}
-				}
-			}
-		}
+	protected void initTokenDisplayNames() {
 	}
 
 	public enum HistoryEventType {
@@ -366,16 +377,6 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 		public SimpleHistoryEventInfo(String displayName, String historyToken) {
 			this.displayName = displayName;
 			this.historyToken = historyToken;
-		}
-	}
-
-	public void maybeRemove(String key) {
-		I current = getCurrentEventOrEmpty();
-		String s1 = current.toTokenString();
-		current.removeParameter(key);
-		String s2 = current.toTokenString();
-		if (!s2.equals(s1)) {
-			History.newItem(s2);
 		}
 	}
 }

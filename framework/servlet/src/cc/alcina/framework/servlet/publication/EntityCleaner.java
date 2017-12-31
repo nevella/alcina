@@ -16,16 +16,25 @@ import cc.alcina.framework.entity.ResourceUtilities;
  * 
  */
 public class EntityCleaner {
+	public static EntityCleaner get() {
+		EntityCleaner singleton = Registry.checkSingleton(EntityCleaner.class);
+		if (singleton == null) {
+			singleton = new EntityCleaner();
+			Registry.registerSingleton(EntityCleaner.class, singleton);
+		}
+		return singleton;
+	}
+
+	public static void main(String[] args) {
+		System.err.println(EntityCleaner.get()
+				.htmlToUnicodeEntities("bruce &nbsp;&euro;yep;&#8364;"));
+	}
+
 	private Map<String, String> htmlToNumericEntities = new LinkedHashMap<String, String>();
 
 	private EntityCleaner() {
 		super();
 		readEntityFile();
-	}
-
-	public static void main(String[] args) {
-		System.err.println(EntityCleaner.get().htmlToUnicodeEntities(
-				"bruce &nbsp;&euro;yep;&#8364;"));
 	}
 
 	public String htmlToUnicodeEntities(String html) {
@@ -57,8 +66,8 @@ public class EntityCleaner {
 					htmlEntity = "amp";
 				}
 				buf.append("&");
-				buf.append(htmlEntity.equals("amp") ? "amp" : "#"
-						+ htmlToNumericEntities.get(htmlEntity));
+				buf.append(htmlEntity.equals("amp") ? "amp"
+						: "#" + htmlToNumericEntities.get(htmlEntity));
 				buf.append(';');
 				i = j;
 			}
@@ -98,14 +107,5 @@ public class EntityCleaner {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	public static EntityCleaner get() {
-		EntityCleaner singleton = Registry.checkSingleton(EntityCleaner.class);
-		if (singleton == null) {
-			singleton = new EntityCleaner();
-			Registry.registerSingleton(EntityCleaner.class, singleton);
-		}
-		return singleton;
 	}
 }

@@ -5,29 +5,8 @@ import java.util.List;
 import cc.alcina.framework.common.client.util.Ax;
 
 public abstract class NodeLocalNull extends NodeLocal {
-	@Override
-	protected void registerNode(Node node) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Node nodeFor() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public List<LocalDomNode> localDomChildren() {
-		throw new UnsupportedOperationException();
-	}
-
 	protected NodeLocalNull() {
 	}
-
-	@Override
-	public abstract String getNodeName();
-
-	@Override
-	public abstract short getNodeType();
 
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
@@ -35,7 +14,22 @@ public abstract class NodeLocalNull extends NodeLocal {
 	}
 
 	@Override
+	public void callMethod(String methodName) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public Node cloneNode(boolean deep) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Node getChild(int index) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int getChildCount() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -63,7 +57,18 @@ public abstract class NodeLocalNull extends NodeLocal {
 	}
 
 	@Override
+	public abstract String getNodeName();
+
+	@Override
+	public abstract short getNodeType();
+
+	@Override
 	public Document getOwnerDocument() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Element getParentElement() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -83,44 +88,6 @@ public abstract class NodeLocalNull extends NodeLocal {
 	}
 
 	@Override
-	public Node insertBefore(Node newChild, Node refChild) {
-		return null;
-	}
-
-	void setParentNode(NodeLocalNull local) {
-	}
-
-	@Override
-	public boolean isOrHasChild(Node child) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Node replaceChild(Node newChild, Node oldChild) {
-		return null;
-	}
-
-	@Override
-	public Node removeChild(Node oldChild) {
-		return null;
-	}
-
-	@Override
-	public Node getChild(int index) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public int getChildCount() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Element getParentElement() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public boolean hasParentElement() {
 		throw new UnsupportedOperationException();
 	}
@@ -131,16 +98,27 @@ public abstract class NodeLocalNull extends NodeLocal {
 	}
 
 	@Override
+	public Node insertBefore(Node newChild, Node refChild) {
+		return null;
+	}
+
+	@Override
 	public Node insertFirst(Node child) {
 		return null;
 	}
 
 	@Override
-	public void removeFromParent() {
+	public boolean isOrHasChild(Node child) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void callMethod(String methodName) {
+	public List<LocalDomNode> localDomChildren() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Node nodeFor() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -149,13 +127,35 @@ public abstract class NodeLocalNull extends NodeLocal {
 		return null;
 	}
 
-	abstract void appendOuterHtml(UnsafeHtmlBuilder builder);
+	@Override
+	public Node removeChild(Node oldChild) {
+		return null;
+	}
 
-	abstract void appendTextContent(StringBuilder builder);
+	@Override
+	public void removeFromParent() {
+	}
+
+	@Override
+	public Node replaceChild(Node newChild, Node oldChild) {
+		return null;
+	}
 
 	@Override
 	public String toString() {
 		return Ax.format("%s: null::remote-placeholder",
 				getClass().getSimpleName());
+	}
+
+	@Override
+	protected void registerNode(Node node) {
+		throw new UnsupportedOperationException();
+	}
+
+	abstract void appendOuterHtml(UnsafeHtmlBuilder builder);
+
+	abstract void appendTextContent(StringBuilder builder);
+
+	void setParentNode(NodeLocalNull local) {
 	}
 }

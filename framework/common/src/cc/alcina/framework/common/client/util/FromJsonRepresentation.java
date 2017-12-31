@@ -23,26 +23,30 @@ public interface FromJsonRepresentation {
 	static public final DateFormat CONVERSION_DATE_FORMAT = new SynchronizedDateFormat(
 			"yyyy/MM/dd HH:mm:ss +0000");
 
-	public static class JsoToFromJsonRep implements Function<Object, Object> {
-		private Class<? extends FromJsonRepresentation> clazz;
-
-		public JsoToFromJsonRep(Class<? extends FromJsonRepresentation> clazz) {
-			this.clazz = clazz;
-		}
-
-		@Override
-		public Object apply(Object value) {
-			try {
-				if (value != null) {
-					FromJsonRepresentation rep = clazz.newInstance();
-					rep.fromJson((JSONObject) value);
-					return rep;
-				} else {
-					return null;
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
+	public static <V> List<V> jsArrayToList(JSONArray array,
+			Function function) {
+		try {
+			List<V> list = new ArrayList<>();
+			for (int idx = 0; idx < array.length(); idx++) {
+				list.add((V) function.apply(array.get(idx)));
 			}
+			return list;
+		} catch (JSONException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static <V> Map<String, V> jsMapToMap(JSONObject jMap) {
+		try {
+			Map<String, V> map = new LinkedHashMap<>();
+			Iterator<String> itr = jMap.keys();
+			for (; itr.hasNext();) {
+				String k = itr.next();
+				map.put(k, (V) jMap.get(k));
+			}
+			return map;
+		} catch (JSONException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -92,32 +96,28 @@ public interface FromJsonRepresentation {
 		}
 	}
 
-	public static <V> List<V> jsArrayToList(JSONArray array,
-			Function function) {
-		try {
-			List<V> list = new ArrayList<>();
-			for (int idx = 0; idx < array.length(); idx++) {
-				list.add((V) function.apply(array.get(idx)));
-			}
-			return list;
-		} catch (JSONException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public static <V> Map<String, V> jsMapToMap(JSONObject jMap) {
-		try {
-			Map<String, V> map = new LinkedHashMap<>();
-			Iterator<String> itr = jMap.keys();
-			for (; itr.hasNext();) {
-				String k = itr.next();
-				map.put(k, (V) jMap.get(k));
-			}
-			return map;
-		} catch (JSONException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	void fromJson(JSONObject jso);
+
+	public static class JsoToFromJsonRep implements Function<Object, Object> {
+		private Class<? extends FromJsonRepresentation> clazz;
+
+		public JsoToFromJsonRep(Class<? extends FromJsonRepresentation> clazz) {
+			this.clazz = clazz;
+		}
+
+		@Override
+		public Object apply(Object value) {
+			try {
+				if (value != null) {
+					FromJsonRepresentation rep = clazz.newInstance();
+					rep.fromJson((JSONObject) value);
+					return rep;
+				} else {
+					return null;
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
 }

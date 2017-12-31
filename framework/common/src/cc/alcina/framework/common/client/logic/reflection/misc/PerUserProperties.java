@@ -11,15 +11,13 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection.misc;
-
 
 /**
  * Marker for server-side preloading
+ * 
  * @author nick@alcina.cc
  *
  */
-
 public interface PerUserProperties {
 }

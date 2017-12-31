@@ -66,19 +66,16 @@ public class CollectionFilters {
 		}
 	};
 
-	public static class ToLongConverter implements Converter<String, Long> {
-		@Override
-		public Long convert(String o) {
-			return o == null ? null : Long.parseLong(o);
-		}
-	}
-
 	public static <V> void apply(Collection<? extends V> collection,
 			Callback<V> callback) {
 		for (Iterator<V> itr = (Iterator<V>) collection.iterator(); itr
 				.hasNext();) {
 			callback.apply(itr.next());
 		}
+	}
+
+	public static <T extends PublicCloneable<T>> List<T> clone(List<T> source) {
+		return convert(source, new CloneProjector<T>());
 	}
 
 	public static <V> boolean contains(Collection<? extends V> collection,
@@ -98,11 +95,6 @@ public class CollectionFilters {
 			result.add(converter.convert(t));
 		}
 		return result;
-	}
-
-	public static <T, C> Set<C> distinct(Collection<? extends T> collection,
-			Converter<T, C> converter) {
-		return new LinkedHashSet<C>(convert(collection, converter));
 	}
 
 	public static <T, C> List<C> convertAndFilter(
@@ -130,6 +122,11 @@ public class CollectionFilters {
 		return result;
 	}
 
+	public static <T, C> Set<C> distinct(Collection<? extends T> collection,
+			Converter<T, C> converter) {
+		return new LinkedHashSet<C>(convert(collection, converter));
+	}
+
 	public static <V> List<V> filter(Collection<? extends V> collection,
 			CollectionFilter<V> filter) {
 		ArrayList<V> result = new ArrayList<V>();
@@ -153,7 +150,8 @@ public class CollectionFilters {
 	}
 
 	public static <I, O> List<O> filterByClass(
-			Collection<? extends I> collection, Class<? extends O> filterClass) {
+			Collection<? extends I> collection,
+			Class<? extends O> filterClass) {
 		ArrayList<O> result = new ArrayList<O>();
 		for (I i : collection) {
 			if (i.getClass() == filterClass) {
@@ -202,7 +200,8 @@ public class CollectionFilters {
 		return collection;
 	}
 
-	public static <V> V first(Collection<V> values, CollectionFilter<V> filter) {
+	public static <V> V first(Collection<V> values,
+			CollectionFilter<V> filter) {
 		for (Iterator<V> itr = values.iterator(); itr.hasNext();) {
 			V v = itr.next();
 			if (filter.allow(v)) {
@@ -217,7 +216,8 @@ public class CollectionFilters {
 		return first(values, filter);
 	}
 
-	public static <V> V firstOfClass(Collection values, Class<? extends V> clazz) {
+	public static <V> V firstOfClass(Collection values,
+			Class<? extends V> clazz) {
 		IsClassFilter filter = new IsClassFilter(clazz);
 		return (V) first(values, filter);
 	}
@@ -234,7 +234,8 @@ public class CollectionFilters {
 		return -1;
 	}
 
-	public static final <CF extends CollectionFilter> CF inverse(final CF filter) {
+	public static final <CF extends CollectionFilter> CF
+			inverse(final CF filter) {
 		return (CF) new CollectionFilter() {
 			@Override
 			public boolean allow(Object o) {
@@ -280,12 +281,12 @@ public class CollectionFilters {
 		return max(collection, null);
 	}
 
-	public static <T> T max(Collection<T> collection, Comparator<T> comparator) {
+	public static <T> T max(Collection<T> collection,
+			Comparator<T> comparator) {
 		T max = null;
 		for (T t : collection) {
-			if (max == null
-					|| (comparator != null ? comparator.compare(max, t)
-							: ((Comparable) max).compareTo((Comparable) t)) < 0) {
+			if (max == null || (comparator != null ? comparator.compare(max, t)
+					: ((Comparable) max).compareTo((Comparable) t)) < 0) {
 				max = t;
 			}
 		}
@@ -296,12 +297,12 @@ public class CollectionFilters {
 		return min(collection, null);
 	}
 
-	public static <T> T min(Collection<T> collection, Comparator<T> comparator) {
+	public static <T> T min(Collection<T> collection,
+			Comparator<T> comparator) {
 		T min = null;
 		for (T t : collection) {
-			if (min == null
-					|| (comparator != null ? comparator.compare(min, t)
-							: ((Comparable) min).compareTo((Comparable) t)) > 0) {
+			if (min == null || (comparator != null ? comparator.compare(min, t)
+					: ((Comparable) min).compareTo((Comparable) t)) > 0) {
 				min = t;
 			}
 		}
@@ -355,6 +356,29 @@ public class CollectionFilters {
 		return result;
 	}
 
+	public static <K, V1, V2> Map<K, V2> transformMap(Map<K, V1> mapIn,
+			Converter<V1, V2> converter) {
+		Map<K, V2> result = new LinkedHashMap<K, V2>();
+		Set<Entry<K, V1>> entrySet = mapIn.entrySet();
+		for (Entry<K, V1> entry : entrySet) {
+			result.put(entry.getKey(), converter.convert(entry.getValue()));
+		}
+		return result;
+	}
+
+	public static class ContainsFilter<T> implements CollectionFilter<T> {
+		private Collection<T> collection;
+
+		public ContainsFilter(Collection<T> collection) {
+			this.collection = collection;
+		}
+
+		@Override
+		public boolean allow(T t) {
+			return collection.contains(t);
+		}
+	}
+
 	public static interface ConverterFilter<T, C> extends Converter<T, C> {
 		public boolean allowPostConvert(C c);
 
@@ -374,13 +398,13 @@ public class CollectionFilters {
 		}
 
 		@Override
-		public String toString() {
-			return "NOT (" + invert + ")";
+		public void setContext(FilterContext context) {
+			invert.setContext(context);
 		}
 
 		@Override
-		public void setContext(FilterContext context) {
-			invert.setContext(context);
+		public String toString() {
+			return "NOT (" + invert + ")";
 		}
 	}
 
@@ -398,30 +422,10 @@ public class CollectionFilters {
 		}
 	}
 
-	public static class ContainsFilter<T> implements CollectionFilter<T> {
-		private Collection<T> collection;
-
-		public ContainsFilter(Collection<T> collection) {
-			this.collection = collection;
-		}
-
+	public static class ToLongConverter implements Converter<String, Long> {
 		@Override
-		public boolean allow(T t) {
-			return collection.contains(t);
+		public Long convert(String o) {
+			return o == null ? null : Long.parseLong(o);
 		}
-	}
-
-	public static <T extends PublicCloneable<T>> List<T> clone(List<T> source) {
-		return convert(source, new CloneProjector<T>());
-	}
-
-	public static <K, V1, V2> Map<K, V2> transformMap(Map<K, V1> mapIn,
-			Converter<V1, V2> converter) {
-		Map<K, V2> result = new LinkedHashMap<K, V2>();
-		Set<Entry<K, V1>> entrySet = mapIn.entrySet();
-		for (Entry<K, V1> entry : entrySet) {
-			result.put(entry.getKey(), converter.convert(entry.getValue()));
-		}
-		return result;
 	}
 }

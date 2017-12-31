@@ -47,8 +47,8 @@ public class PotentialElement extends Element {
 
 	public static PotentialElement as(Element e) {
 		throw new UnsupportedOperationException();
-//		assert isPotential(e);
-//		return (PotentialElement) e;
+		// assert isPotential(e);
+		// return (PotentialElement) e;
 	}
 
 	/**
@@ -59,7 +59,8 @@ public class PotentialElement extends Element {
 	public static PotentialElement build(UIObject o) {
 		return build(o, "div");
 	}
-	public static  PotentialElement build(UIObject o, String tagName) {
+
+	public static PotentialElement build(UIObject o, String tagName) {
 		throw new UnsupportedOperationException();
 	}
 	/**
@@ -68,12 +69,15 @@ public class PotentialElement extends Element {
 	 * {@link UIObject#resolvePotentialElement} to get a real element when that
 	 * is needed.
 	 */
-//	public static native PotentialElement build(UIObject o, String tagName) /*-{
-//		var el = new $wnd.GwtPotentialElementShim();
-//		el.tagName = tagName;
-//		el.__gwt_resolve = @com.google.gwt.user.client.ui.PotentialElement::buildResolveCallback(Lcom/google/gwt/user/client/ui/UIObject;)(o);
-//		return @com.google.gwt.dom.client.Element::as(Lcom/google/gwt/core/client/JavaScriptObject;)(el);
-//	}-*/;
+	// public static native PotentialElement build(UIObject o, String tagName)
+	// /*-{
+	// var el = new $wnd.GwtPotentialElementShim();
+	// el.tagName = tagName;
+	// el.__gwt_resolve =
+	// @com.google.gwt.user.client.ui.PotentialElement::buildResolveCallback(Lcom/google/gwt/user/client/ui/UIObject;)(o);
+	// return
+	// @com.google.gwt.dom.client.Element::as(Lcom/google/gwt/core/client/JavaScriptObject;)(el);
+	// }-*/;
 
 	/**
 	 * Creates an {@link HtmlElementBuilder} instance inheriting all attributes
@@ -84,29 +88,18 @@ public class PotentialElement extends Element {
 	 *            builder
 	 * @return a propertly configured {@link HtmlElementBuilder} instance
 	 */
-	public static HtmlElementBuilder createBuilderFor(Element potentialElement) {
+	public static HtmlElementBuilder
+			createBuilderFor(Element potentialElement) {
 		PotentialElement el = PotentialElement.as(potentialElement);
-		HtmlElementBuilder builder = HtmlBuilderFactory.get().trustedCreate(
-				el.getTagName());
+		HtmlElementBuilder builder = HtmlBuilderFactory.get()
+				.trustedCreate(el.getTagName());
 		el.mergeInto(builder);
 		return builder;
 	}
 
-	/**
-	 * Tests whether a given {@link JavaScriptObject} represents a
-	 * PotentialElement.
-	 * 
-	 * @param o
-	 *            the {@link JavaScriptObject} to be tested
-	 * @return true if the given object is a PotentialElement instance
-	 */
-	private static native boolean isPotential0(JavaScriptObject o) /*-{
-		try {
-			return (!!o) && (!!o.__gwt_resolve);
-		} catch (e) {
-			return false;
-		}
-	}-*/;
+	public static boolean isPotential(com.google.gwt.dom.client.Element elem) {
+		return false;
+	}
 
 	/**
 	 * If given a PotentialElement, returns the real Element to be built from
@@ -117,58 +110,74 @@ public class PotentialElement extends Element {
 	 */
 	public static Element resolve(Element maybePotential) {
 		throw new UnsupportedOperationException();
-//		return maybePotential.<PotentialElement> cast().resolve();
+		// return maybePotential.<PotentialElement> cast().resolve();
 	}
 
-	private static native JavaScriptObject buildResolveCallback(
-			UIObject resolver) /*-{
-		return function() {
-			this.__gwt_resolve = @com.google.gwt.user.client.ui.PotentialElement::cannotResolveTwice();
-			return resolver.@com.google.gwt.user.client.ui.UIObject::resolvePotentialElement()();
-		};
-	}-*/;
+	private static native JavaScriptObject
+			buildResolveCallback(UIObject resolver) /*-{
+													return function() {
+													this.__gwt_resolve = @com.google.gwt.user.client.ui.PotentialElement::cannotResolveTwice();
+													return resolver.@com.google.gwt.user.client.ui.UIObject::resolvePotentialElement()();
+													};
+													}-*/;
 
 	private static final native void cannotResolveTwice() /*-{
-		throw "A PotentialElement cannot be resolved twice.";
-	}-*/;
+															throw "A PotentialElement cannot be resolved twice.";
+															}-*/;
 
 	private static final native void declareShim() /*-{
-		var shim = function() {
-		};
-		shim.prototype = {
-			className : '',
-			clientHeight : 0,
-			clientWidth : 0,
-			dir : '',
-			getAttribute : function(name, value) {
-				return this[name];
-			},
-			href : '',
-			id : '',
-			innerHTML : '',
-			lang : '',
-			// should be @com.google.gwt.dom.client.Node.ELEMENT_MODE, but the compiler
-			// doesn't like that.
-			nodeType : 1,
-			removeAttribute : function(name, value) {
-				this[name] = undefined;
-			},
-			setAttribute : function(name, value) {
-				this[name] = value;
-			},
-			src : '',
-			style : {},
-			title : ''
-		};
-		$wnd.GwtPotentialElementShim = shim;
-	}-*/;
+													var shim = function() {
+													};
+													shim.prototype = {
+													className : '',
+													clientHeight : 0,
+													clientWidth : 0,
+													dir : '',
+													getAttribute : function(name, value) {
+													return this[name];
+													},
+													href : '',
+													id : '',
+													innerHTML : '',
+													lang : '',
+													// should be @com.google.gwt.dom.client.Node.ELEMENT_MODE, but the compiler
+													// doesn't like that.
+													nodeType : 1,
+													removeAttribute : function(name, value) {
+													this[name] = undefined;
+													},
+													setAttribute : function(name, value) {
+													this[name] = value;
+													},
+													src : '',
+													style : {},
+													title : ''
+													};
+													$wnd.GwtPotentialElementShim = shim;
+													}-*/;
+
+	/**
+	 * Tests whether a given {@link JavaScriptObject} represents a
+	 * PotentialElement.
+	 * 
+	 * @param o
+	 *            the {@link JavaScriptObject} to be tested
+	 * @return true if the given object is a PotentialElement instance
+	 */
+	private static native boolean isPotential0(JavaScriptObject o) /*-{
+																	try {
+																	return (!!o) && (!!o.__gwt_resolve);
+																	} catch (e) {
+																	return false;
+																	}
+																	}-*/;
 
 	protected PotentialElement() {
 	}
 
-	final native Element setResolver(UIObject resolver) /*-{
-		this.__gwt_resolve = @com.google.gwt.user.client.ui.PotentialElement::buildResolveCallback(Lcom/google/gwt/user/client/ui/UIObject;)(resolver);
-	}-*/;
+	public final String getInnerText0() {
+		return ClientUtils.simpleInnerText(getInnerHTML());
+	}
 
 	/**
 	 * Copy only the fields that have actually changed from the values in the
@@ -176,49 +185,49 @@ public class PotentialElement extends Element {
 	 * iterate only on the fields set in this specific instance.
 	 */
 	private native void mergeInto(HtmlElementBuilder builder) /*-{
-    var savedProto = this.__proto__;
-    var tagName = this.tagName;
-    var gwtResolve = this.__gwt_resolve;
-    var className = this.className;
-    var innerHTML = this.innerHTML;
-    this.innerHTML=null;
-
-    try {
-      this.__proto__ = null;
-      this.tagName = null;
-      this.__gwt_resolve = null;
-
-      // className needs special treatment because the actual HTML attribute is
-      // called "class" and not "className".
-      if (this.className) {
-        builder.@com.google.gwt.dom.builder.shared.ElementBuilder::className(Ljava/lang/String;)(
-            this.className);
-        this.className = null;
-      }
-
-      // Iterate over all attributes, and copy them to the ElementBuilder.
-      // TODO(rdcastro): Deal with the "style" attribute.
-      for (attr in this) {
-        if (!this[attr]) {
-          continue;
-        }
-        if (typeof this[attr] == 'number') {
-          builder.@com.google.gwt.dom.builder.shared.ElementBuilder::attribute(Ljava/lang/String;I)(
-              attr, this[attr]);
-        } else if (typeof this[attr] == 'string') {
-          builder.@com.google.gwt.dom.builder.shared.ElementBuilder::attribute(Ljava/lang/String;Ljava/lang/String;)(
-              attr, this[attr]);
-        }
-      }
-    } finally {
-      this.__proto__ = savedProto;
-      if (className) {
-        this.className = className;
-      }
-      this.__gwt_resolve = gwtResolve;
-      this.tagName = tagName;
-    }
-  }-*/;
+																var savedProto = this.__proto__;
+																var tagName = this.tagName;
+																var gwtResolve = this.__gwt_resolve;
+																var className = this.className;
+																var innerHTML = this.innerHTML;
+																this.innerHTML=null;
+																
+																try {
+																this.__proto__ = null;
+																this.tagName = null;
+																this.__gwt_resolve = null;
+																
+																// className needs special treatment because the actual HTML attribute is
+																// called "class" and not "className".
+																if (this.className) {
+																builder.@com.google.gwt.dom.builder.shared.ElementBuilder::className(Ljava/lang/String;)(
+																this.className);
+																this.className = null;
+																}
+																
+																// Iterate over all attributes, and copy them to the ElementBuilder.
+																// TODO(rdcastro): Deal with the "style" attribute.
+																for (attr in this) {
+																if (!this[attr]) {
+																continue;
+																}
+																if (typeof this[attr] == 'number') {
+																builder.@com.google.gwt.dom.builder.shared.ElementBuilder::attribute(Ljava/lang/String;I)(
+																attr, this[attr]);
+																} else if (typeof this[attr] == 'string') {
+																builder.@com.google.gwt.dom.builder.shared.ElementBuilder::attribute(Ljava/lang/String;Ljava/lang/String;)(
+																attr, this[attr]);
+																}
+																}
+																} finally {
+																this.__proto__ = savedProto;
+																if (className) {
+																this.className = className;
+																}
+																this.__gwt_resolve = gwtResolve;
+																this.tagName = tagName;
+																}
+																}-*/;
 
 	/**
 	 * Calls the <code>__gwt_resolve</code> method on the underlying JavaScript
@@ -227,14 +236,10 @@ public class PotentialElement extends Element {
 	 * associated UIObject.
 	 */
 	private native Element resolve() /*-{
-		return this.__gwt_resolve ? this.__gwt_resolve() : this;
-	}-*/;
+										return this.__gwt_resolve ? this.__gwt_resolve() : this;
+										}-*/;
 
-	public final String getInnerText0() {
-		return ClientUtils.simpleInnerText(getInnerHTML());
-	}
-
-	public static boolean isPotential(com.google.gwt.dom.client.Element elem) {
-		return false;
-	}
+	final native Element setResolver(UIObject resolver) /*-{
+														this.__gwt_resolve = @com.google.gwt.user.client.ui.PotentialElement::buildResolveCallback(Lcom/google/gwt/user/client/ui/UIObject;)(resolver);
+														}-*/;
 }

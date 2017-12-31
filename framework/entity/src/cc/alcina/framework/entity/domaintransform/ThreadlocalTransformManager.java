@@ -566,6 +566,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		return createdObjectLocators.contains(new HiliLocator(hili));
 	}
 
+	public boolean isListeningTo(SourcesPropertyChangeEvents spce) {
+		return listeningTo.contains(spce);
+	}
+
 	public boolean isListenToFoundObjects() {
 		return listenToFoundObjects;
 	}
@@ -579,6 +583,12 @@ public class ThreadlocalTransformManager extends TransformManager
 	 */
 	public boolean isUseObjectCreationId() {
 		return useObjectCreationId;
+	}
+
+	public void listenTo(SourcesPropertyChangeEvents spce) {
+		listeningTo.add(spce);
+		spce.removePropertyChangeListener(this);
+		spce.addPropertyChangeListener(this);
 	}
 
 	public void markFlushTransforms() {
@@ -851,6 +861,24 @@ public class ThreadlocalTransformManager extends TransformManager
 		this.useObjectCreationId = useObjectCreationId;
 	}
 
+	public boolean testPermissions(HasIdAndLocalId hili,
+			DomainTransformEvent evt, String propertyName, Object change,
+			boolean read) {
+		if (!LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
+			throw new RuntimeException("test property not set");
+		}
+		if (read) {
+			try {
+				checkPropertyReadAccessAndThrow(hili, propertyName, evt);
+				return true;
+			} catch (Exception e) {
+				return false;
+			}
+		} else {
+			return checkPermissions(hili, evt, propertyName, change, true);
+		}
+	}
+
 	public void useGlobalLocalIdCounter() {
 		useTlIdGenerator = false;
 	}
@@ -886,89 +914,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		String template = "select %s from %s t where t.%s.id=%s";
 		return CommonUtils.formatJ(template, CommonUtils.join(projections, ","),
 				assocClass.getSimpleName(), specProperty, ref.getId());
-	}
-
-	private void checkPropertyReadAccessAndThrow(HasIdAndLocalId hili,
-			String propertyName, DomainTransformEvent evt)
-			throws DomainTransformException, IntrospectionException {
-		if (!checkPropertyAccess(hili, propertyName, true)) {
-			throw new DomainTransformException(new PermissionsException(
-					"Permission denied : write - object/property " + evt));
-		}
-	}
-
-	private boolean checkPropertyWriteAccessAndThrow(HasIdAndLocalId hili,
-			String propertyName, DomainTransformEvent evt)
-			throws DomainTransformException, IntrospectionException {
-		if (!checkPropertyAccess(hili, propertyName, false)) {
-			DomainProperty ann = getAnnotationForProperty(hili.getClass(),
-					DomainProperty.class, propertyName);
-			if (ann != null && ann.silentFailOnIllegalWrites()) {
-				return false;
-			}
-			throw new DomainTransformException(new PermissionsException(
-					"Permission denied : write - object/property " + evt));
-		}
-		return true;
-	}
-
-	private void checkTargetReadAndAssignmentAccessAndThrow(
-			HasIdAndLocalId assigningTo, HasIdAndLocalId assigning,
-			ObjectPermissions oph, AssignmentPermission aph,
-			DomainTransformEvent evt) throws DomainTransformException {
-		if (assigning == null) {
-			return;
-		}
-		if (!PermissionsManager.get().isPermissible(assigning, oph.read())) {
-			throw new DomainTransformException(new PermissionsException(
-					"Permission denied : read - target object " + evt));
-		}
-		if (aph != null && !PermissionsManager.get().isPermissible(assigning,
-				assigningTo, new AnnotatedPermissible(aph.value()), false)) {
-			throw new DomainTransformException(new PermissionsException(
-					"Permission denied : assign - target object " + evt));
-		}
-	}
-
-	private boolean explicitlyPermitted(DomainTransformEvent evt) {
-		return explicitlyPermittedTransforms.contains(evt);
-	}
-
-	private void listenTo(SourcesPropertyChangeEvents spce) {
-		listeningTo.add(spce);
-		spce.removePropertyChangeListener(this);
-		spce.addPropertyChangeListener(this);
-	}
-
-	protected boolean
-			checkHasSufficientInfoForPropertyPersist(HasIdAndLocalId hili) {
-		return hili.getId() != 0
-				|| (localIdToEntityMap.get(hili.getLocalId()) != null
-						&& getEntityManager() == null);
-	}
-
-	public boolean testPermissions(HasIdAndLocalId hili,
-			DomainTransformEvent evt, String propertyName, Object change,
-			boolean read) {
-		if (!LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
-			throw new RuntimeException("test property not set");
-		}
-		if (read) {
-			try {
-				checkPropertyReadAccessAndThrow(hili, propertyName, evt);
-				return true;
-			} catch (Exception e) {
-				return false;
-			}
-		} else {
-			return checkPermissions(hili, evt, propertyName, change, true);
-		}
-	}
-
-	@Override
-	protected boolean checkPermissions(HasIdAndLocalId hili,
-			DomainTransformEvent evt, String propertyName, Object change) {
-		return checkPermissions(hili, evt, propertyName, change, false);
 	}
 
 	private boolean checkPermissions(HasIdAndLocalId hili,
@@ -1055,9 +1000,63 @@ public class ThreadlocalTransformManager extends TransformManager
 		return true;
 	}
 
-	protected HasIdAndLocalId
-			resolveForPermissionsChecks(HasIdAndLocalId hili) {
-		return hili;
+	private void checkPropertyReadAccessAndThrow(HasIdAndLocalId hili,
+			String propertyName, DomainTransformEvent evt)
+			throws DomainTransformException, IntrospectionException {
+		if (!checkPropertyAccess(hili, propertyName, true)) {
+			throw new DomainTransformException(new PermissionsException(
+					"Permission denied : write - object/property " + evt));
+		}
+	}
+
+	private boolean checkPropertyWriteAccessAndThrow(HasIdAndLocalId hili,
+			String propertyName, DomainTransformEvent evt)
+			throws DomainTransformException, IntrospectionException {
+		if (!checkPropertyAccess(hili, propertyName, false)) {
+			DomainProperty ann = getAnnotationForProperty(hili.getClass(),
+					DomainProperty.class, propertyName);
+			if (ann != null && ann.silentFailOnIllegalWrites()) {
+				return false;
+			}
+			throw new DomainTransformException(new PermissionsException(
+					"Permission denied : write - object/property " + evt));
+		}
+		return true;
+	}
+
+	private void checkTargetReadAndAssignmentAccessAndThrow(
+			HasIdAndLocalId assigningTo, HasIdAndLocalId assigning,
+			ObjectPermissions oph, AssignmentPermission aph,
+			DomainTransformEvent evt) throws DomainTransformException {
+		if (assigning == null) {
+			return;
+		}
+		if (!PermissionsManager.get().isPermissible(assigning, oph.read())) {
+			throw new DomainTransformException(new PermissionsException(
+					"Permission denied : read - target object " + evt));
+		}
+		if (aph != null && !PermissionsManager.get().isPermissible(assigning,
+				assigningTo, new AnnotatedPermissible(aph.value()), false)) {
+			throw new DomainTransformException(new PermissionsException(
+					"Permission denied : assign - target object " + evt));
+		}
+	}
+
+	private boolean explicitlyPermitted(DomainTransformEvent evt) {
+		return explicitlyPermittedTransforms.contains(evt);
+	}
+
+	protected boolean
+			checkHasSufficientInfoForPropertyPersist(HasIdAndLocalId hili) {
+		return hili.getId() != 0
+				|| (localIdToEntityMap.get(hili.getLocalId()) != null
+						&& getEntityManager() == null);
+	}
+
+	@Override
+	protected boolean checkPermissions(HasIdAndLocalId hili,
+			DomainTransformEvent evt, String propertyName, Object change) {
+		return checkPermissions(hili, evt, propertyName, change, false);
 	}
 
 	@Override
@@ -1172,6 +1171,11 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	protected void removeAssociations(HasIdAndLocalId hili) {
 		new ServerTransformManagerSupport().removeAssociations(hili);
+	}
+
+	protected HasIdAndLocalId
+			resolveForPermissionsChecks(HasIdAndLocalId hili) {
+		return hili;
 	}
 
 	@Override

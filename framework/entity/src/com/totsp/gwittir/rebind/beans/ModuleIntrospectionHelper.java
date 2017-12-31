@@ -35,6 +35,8 @@ public class ModuleIntrospectionHelper {
 
 	private String dataFilePath;
 
+	private ModuleIntrospectionHelper.ModuleIntrospectionInfo info = new ModuleIntrospectionHelper.ModuleIntrospectionInfo();
+
 	public ModuleIntrospectionHelper(IntrospectorFilterBase filter,
 			String dataFilePath) {
 		this.filter = filter;
@@ -42,7 +44,116 @@ public class ModuleIntrospectionHelper {
 		initInfo();
 	}
 
-	private ModuleIntrospectionHelper.ModuleIntrospectionInfo info = new ModuleIntrospectionHelper.ModuleIntrospectionInfo();
+	public void generationComplete() {
+		try {
+			saveInfoFile();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public ModuleIntrospectionHelper.ModuleIntrospectionClassInfo
+			getClassInfo(String className) {
+		return info.getInfo(className, false);
+	}
+
+	public IntrospectorFilterBase getFilter() {
+		return this.filter;
+	}
+
+	public ModuleIntrospectionHelper.ModuleIntrospectionInfo getInfo() {
+		return this.info;
+	}
+
+	public boolean omit(JClassType type, ReflectionAction reflectionAction) {
+		switch (info.mode) {
+		case INITIAL_ONLY:
+			return !filter.getModuleName().equals(ReflectionModule.INITIAL);
+		case DISALLOW_ALL:
+			return true;
+		case PER_CLASS_STRICT:
+		case PER_CLASS_FORGIVING:
+		case PER_CLASS_FORGIVING_LEFTOVER:
+			ModuleIntrospectionHelper.ModuleIntrospectionClassInfo classInfo = info
+					.getInfo(type.getQualifiedSourceName(), true);
+			if (classInfo.provenance == ModuleIntrospectionClassInfoProvenance.OMIT) {
+				return true;
+			}
+			Set<String> modules = classInfo.modules;
+			if (modules.isEmpty()) {
+				switch (info.mode) {
+				case PER_CLASS_FORGIVING:
+					return !filter.getModuleName()
+							.equals(ReflectionModule.INITIAL);
+				case PER_CLASS_FORGIVING_LEFTOVER:
+					return !filter.getModuleName()
+							.equals(ReflectionModule.LEFTOVER);
+				}
+			} else {
+				if (modules.contains(ReflectionModule.INITIAL)) {
+					if (reflectionAction == ReflectionAction.BEAN_INFO_DESCRIPTOR) {
+						return !filter.getModuleName()
+								.equals(ReflectionModule.LEFTOVER);
+					} else {
+						return !filter.getModuleName()
+								.equals(ReflectionModule.INITIAL);
+					}
+				}
+				if (modules.size() > 1) {
+					return !filter.getModuleName()
+							.equals(ReflectionModule.LEFTOVER);
+				}
+				return !modules.contains(filter.getModuleName());
+			}
+		}
+		return true;
+	}
+
+	public void reset(boolean soft) throws Exception {
+		if (soft) {
+			Callback<ModuleIntrospectionClassInfo> removeModulesCallback = new Callback<ModuleIntrospectionHelper.ModuleIntrospectionClassInfo>() {
+				@Override
+				public void apply(ModuleIntrospectionClassInfo value) {
+					if (value.provenance == ModuleIntrospectionClassInfoProvenance.AUTO) {
+						value.modules.clear();
+					}
+				}
+			};
+			CollectionFilters.apply(info.classInfo, removeModulesCallback);
+		} else {
+			info.mode = ModuleIntrospectionHelper.ModuleIntrospectionMode.DISALLOW_ALL;
+			filterForHumans();
+		}
+		saveInfoFile();
+	}
+
+	public void saveInfoFile() throws Exception {
+		Map<String, String> emptyProps = new HashMap<String, String>();
+		JAXBContext jc = JAXBContext.newInstance(
+				new Class[] {
+						ModuleIntrospectionHelper.ModuleIntrospectionInfo.class },
+				emptyProps);
+		Marshaller m = jc.createMarshaller();
+		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+		StringWriter s = new StringWriter();
+		m.marshal(info, s);
+		ResourceUtilities.writeStringToFile(s.toString(), getInfoFile());
+	}
+
+	private File getInfoFile() {
+		try {
+			String path = dataFilePath != null ? dataFilePath
+					: filter.getContext().getPropertyOracle()
+							.getConfigurationProperty(
+									IntrospectorFilter.ALCINA_INTROSPECTOR_FILTER_DATA_FILE)
+							.getValues().get(0);
+			File file = new File(path);
+			file.getParentFile().mkdirs();
+			return file;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
 	private void initInfo() {
 		File infoFile = getInfoFile();
@@ -52,10 +163,10 @@ public class ModuleIntrospectionHelper {
 				String content = ResourceUtilities.readFileToString(infoFile);
 				if (!content.isEmpty()) {
 					Map<String, String> emptyProps = new HashMap<String, String>();
-					JAXBContext jc = JAXBContext
-							.newInstance(
-									new Class[] { ModuleIntrospectionHelper.ModuleIntrospectionInfo.class },
-									emptyProps);
+					JAXBContext jc = JAXBContext.newInstance(
+							new Class[] {
+									ModuleIntrospectionHelper.ModuleIntrospectionInfo.class },
+							emptyProps);
 					Unmarshaller um = jc.createUnmarshaller();
 					StringReader sr = new StringReader(content);
 					info = (ModuleIntrospectionHelper.ModuleIntrospectionInfo) um
@@ -79,154 +190,6 @@ public class ModuleIntrospectionHelper {
 			}
 		};
 		CollectionFilters.filterInPlace(info.classInfo, autoFilter);
-	}
-
-	public void saveInfoFile() throws Exception {
-		Map<String, String> emptyProps = new HashMap<String, String>();
-		JAXBContext jc = JAXBContext
-				.newInstance(
-						new Class[] { ModuleIntrospectionHelper.ModuleIntrospectionInfo.class },
-						emptyProps);
-		Marshaller m = jc.createMarshaller();
-		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-		StringWriter s = new StringWriter();
-		m.marshal(info, s);
-		ResourceUtilities.writeStringToFile(s.toString(), getInfoFile());
-	}
-
-	private File getInfoFile() {
-		try {
-			String path = dataFilePath != null ? dataFilePath
-					: filter.getContext()
-							.getPropertyOracle()
-							.getConfigurationProperty(
-									IntrospectorFilter.ALCINA_INTROSPECTOR_FILTER_DATA_FILE)
-							.getValues().get(0);
-			File file = new File(path);
-			file.getParentFile().mkdirs();
-			return file;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public ModuleIntrospectionHelper.ModuleIntrospectionClassInfo getClassInfo(
-			String className) {
-		return info.getInfo(className, false);
-	}
-
-	public boolean omit(JClassType type, ReflectionAction reflectionAction) {
-		switch (info.mode) {
-		case INITIAL_ONLY:
-			return !filter.getModuleName().equals(ReflectionModule.INITIAL);
-		case DISALLOW_ALL:
-			return true;
-		case PER_CLASS_STRICT:
-		case PER_CLASS_FORGIVING:
-		case PER_CLASS_FORGIVING_LEFTOVER:
-			ModuleIntrospectionHelper.ModuleIntrospectionClassInfo classInfo = info
-					.getInfo(type.getQualifiedSourceName(), true);
-			if (classInfo.provenance == ModuleIntrospectionClassInfoProvenance.OMIT) {
-				return true;
-			}
-			Set<String> modules = classInfo.modules;
-			if (modules.isEmpty()) {
-				switch (info.mode) {
-				case PER_CLASS_FORGIVING:
-					return !filter.getModuleName().equals(
-							ReflectionModule.INITIAL);
-				case PER_CLASS_FORGIVING_LEFTOVER:
-					return !filter.getModuleName().equals(
-							ReflectionModule.LEFTOVER);
-				}
-			} else {
-				if (modules.contains(ReflectionModule.INITIAL)) {
-					if (reflectionAction == ReflectionAction.BEAN_INFO_DESCRIPTOR) {
-						return !filter.getModuleName().equals(
-								ReflectionModule.LEFTOVER);
-					} else {
-						return !filter.getModuleName().equals(
-								ReflectionModule.INITIAL);
-					}
-				}
-				if (modules.size() > 1) {
-					return !filter.getModuleName().equals(
-							ReflectionModule.LEFTOVER);
-				}
-				return !modules.contains(filter.getModuleName());
-			}
-		}
-		return true;
-	}
-
-	public ModuleIntrospectionHelper.ModuleIntrospectionInfo getInfo() {
-		return this.info;
-	}
-
-	public void reset(boolean soft) throws Exception {
-		if (soft) {
-			Callback<ModuleIntrospectionClassInfo> removeModulesCallback = new Callback<ModuleIntrospectionHelper.ModuleIntrospectionClassInfo>() {
-				@Override
-				public void apply(ModuleIntrospectionClassInfo value) {
-					if (value.provenance == ModuleIntrospectionClassInfoProvenance.AUTO) {
-						value.modules.clear();
-					}
-				}
-			};
-			CollectionFilters.apply(info.classInfo, removeModulesCallback);
-		} else {
-			info.mode = ModuleIntrospectionHelper.ModuleIntrospectionMode.DISALLOW_ALL;
-			filterForHumans();
-		}
-		saveInfoFile();
-	}
-
-	public void generationComplete() {
-		try {
-			saveInfoFile();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class ModuleIntrospectionInfo {
-		public String filterName;
-
-		public ModuleIntrospectionHelper.ModuleIntrospectionMode mode = null;
-
-		public List<ModuleIntrospectionHelper.ModuleIntrospectionClassInfo> classInfo = new ArrayList<ModuleIntrospectionHelper.ModuleIntrospectionClassInfo>();
-
-		ModuleIntrospectionHelper.ModuleIntrospectionClassInfo getInfo(
-				String sourceName, boolean ensure) {
-			if (infoLookup == null) {
-				infoLookup = new LinkedHashMap<String, ModuleIntrospectionHelper.ModuleIntrospectionClassInfo>();
-				for (ModuleIntrospectionHelper.ModuleIntrospectionClassInfo info : classInfo) {
-					infoLookup.put(info.classSourceName, info);
-				}
-			}
-			if (!infoLookup.containsKey(sourceName) && ensure) {
-				ModuleIntrospectionHelper.ModuleIntrospectionClassInfo info = new ModuleIntrospectionHelper.ModuleIntrospectionClassInfo();
-				info.provenance = ModuleIntrospectionHelper.ModuleIntrospectionClassInfoProvenance.AUTO;
-				info.classSourceName = sourceName;
-				classInfo.add(info);
-				infoLookup.put(sourceName, info);
-			}
-			return infoLookup.get(sourceName);
-		}
-
-		@XmlTransient
-		Map<String, ModuleIntrospectionHelper.ModuleIntrospectionClassInfo> infoLookup;
-	}
-
-	public static enum ModuleIntrospectionMode {
-		INITIAL_ONLY, DISALLOW_ALL, PER_CLASS_STRICT, PER_CLASS_FORGIVING,
-		PER_CLASS_FORGIVING_LEFTOVER
-	}
-
-	public static enum ModuleIntrospectionClassInfoProvenance {
-		AUTO, HUMAN, OMIT
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -253,7 +216,43 @@ public class ModuleIntrospectionHelper {
 		}
 	}
 
-	public IntrospectorFilterBase getFilter() {
-		return this.filter;
+	public static enum ModuleIntrospectionClassInfoProvenance {
+		AUTO, HUMAN, OMIT
+	}
+
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
+	public static class ModuleIntrospectionInfo {
+		public String filterName;
+
+		public ModuleIntrospectionHelper.ModuleIntrospectionMode mode = null;
+
+		public List<ModuleIntrospectionHelper.ModuleIntrospectionClassInfo> classInfo = new ArrayList<ModuleIntrospectionHelper.ModuleIntrospectionClassInfo>();
+
+		@XmlTransient
+		Map<String, ModuleIntrospectionHelper.ModuleIntrospectionClassInfo> infoLookup;
+
+		ModuleIntrospectionHelper.ModuleIntrospectionClassInfo
+				getInfo(String sourceName, boolean ensure) {
+			if (infoLookup == null) {
+				infoLookup = new LinkedHashMap<String, ModuleIntrospectionHelper.ModuleIntrospectionClassInfo>();
+				for (ModuleIntrospectionHelper.ModuleIntrospectionClassInfo info : classInfo) {
+					infoLookup.put(info.classSourceName, info);
+				}
+			}
+			if (!infoLookup.containsKey(sourceName) && ensure) {
+				ModuleIntrospectionHelper.ModuleIntrospectionClassInfo info = new ModuleIntrospectionHelper.ModuleIntrospectionClassInfo();
+				info.provenance = ModuleIntrospectionHelper.ModuleIntrospectionClassInfoProvenance.AUTO;
+				info.classSourceName = sourceName;
+				classInfo.add(info);
+				infoLookup.put(sourceName, info);
+			}
+			return infoLookup.get(sourceName);
+		}
+	}
+
+	public static enum ModuleIntrospectionMode {
+		INITIAL_ONLY, DISALLOW_ALL, PER_CLASS_STRICT, PER_CLASS_FORGIVING,
+		PER_CLASS_FORGIVING_LEFTOVER
 	}
 }

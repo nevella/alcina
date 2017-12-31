@@ -29,8 +29,8 @@ import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
  * @author Nick Reddel
  */
 @ClientInstantiable
-public class UniqueInLocalDomainValidator implements ParameterisedValidator,
-		RequiresSourceValidator {
+public class UniqueInLocalDomainValidator
+		implements ParameterisedValidator, RequiresSourceValidator {
 	public static final String OBJECT_CLASS = "object_class";
 
 	public static final String PROPERTY_NAME = "property_name";
@@ -44,26 +44,6 @@ public class UniqueInLocalDomainValidator implements ParameterisedValidator,
 	public UniqueInLocalDomainValidator() {
 	}
 
-	public Object validate(Object value) throws ValidationException {
-		if (value == null) {
-			return value;
-		}
-		Collection<HasIdAndLocalId> c = TransformManager.get().getCollection(
-				domainClass);
-		for (HasIdAndLocalId hili : c) {
-			if (HiliHelper.equals(sourceObject, hili)) {
-				continue;
-			}
-			if (!(value.equals(hili))
-					&& value.equals(Reflections.propertyAccessor()
-							.getPropertyValue(hili, propertyName))) {
-				throw new ValidationException("Value must be unique",
-						UniqueInLocalDomainValidator.class);
-			}
-		}
-		return value;
-	}
-
 	public void setParameters(NamedParameter[] params) {
 		NamedParameter p = NamedParameter.Support.getParameter(params,
 				OBJECT_CLASS);
@@ -74,5 +54,24 @@ public class UniqueInLocalDomainValidator implements ParameterisedValidator,
 
 	public void setSourceObject(HasIdAndLocalId sourceObject) {
 		this.sourceObject = sourceObject;
+	}
+
+	public Object validate(Object value) throws ValidationException {
+		if (value == null) {
+			return value;
+		}
+		Collection<HasIdAndLocalId> c = TransformManager.get()
+				.getCollection(domainClass);
+		for (HasIdAndLocalId hili : c) {
+			if (HiliHelper.equals(sourceObject, hili)) {
+				continue;
+			}
+			if (!(value.equals(hili)) && value.equals(Reflections
+					.propertyAccessor().getPropertyValue(hili, propertyName))) {
+				throw new ValidationException("Value must be unique",
+						UniqueInLocalDomainValidator.class);
+			}
+		}
+		return value;
 	}
 }

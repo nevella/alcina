@@ -4,5 +4,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 
 public interface TransformHistoryManager {
 	public void prepareUndo(DomainTransformEvent event);
+
 	public void undo(DomainTransformEvent event);
 }

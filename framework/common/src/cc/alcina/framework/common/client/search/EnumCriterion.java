@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.search;
 
 import javax.xml.bind.annotation.XmlTransient;
+
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -33,75 +34,78 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  *         getMyEnum()<br>
  *         setMyEnum()<br>
  *         </p>
- *         <p>Also - there seems to be something dodgy wrt HasValue<E> in serialization -
- *         best to have an explicit serialverisionUID</p>
- *         
+ *         <p>
+ *         Also - there seems to be something dodgy wrt HasValue<E> in
+ *         serialization - best to have an explicit serialverisionUID
+ *         </p>
+ * 
  */
-public abstract class EnumCriterion<E extends Enum> extends SearchCriterion implements HasWithNull, HasValue<E> {
+public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
+		implements HasWithNull, HasValue<E> {
+	static final transient long serialVersionUID = -1L;
 
-    private boolean withNull = true;
+	private boolean withNull = true;
 
-    static final transient long serialVersionUID = -1L;
+	public EnumCriterion() {
+	}
 
-    public EnumCriterion() {
-    }
+	public EnumCriterion(String criteriaDisplayName, boolean withNull) {
+		super(criteriaDisplayName);
+		this.withNull = withNull;
+	}
 
-    /**
-	 * If the enum is serialised in the db as a string, set to true
-	 */
-    protected boolean valueAsString() {
-        return false;
-    }
+	@Override
+	@SuppressWarnings("unchecked")
+	public EqlWithParameters eql() {
+		EqlWithParameters result = new EqlWithParameters();
+		E value = getValue();
+		if (value != null
+				&& !CommonUtils.isNullOrEmpty(getTargetPropertyName())) {
+			result.eql = targetPropertyNameWithTable() + " = ? ";
+			result.parameters.add(valueAsString() ? value.toString() : value);
+		}
+		return result;
+	}
 
-    public EnumCriterion(String criteriaDisplayName, boolean withNull) {
-        super(criteriaDisplayName);
-        this.withNull = withNull;
-    }
+	// @Override
+	// public boolean equals(Object obj) {
+	// if (obj instanceof EnumCriterion) {
+	// EnumCriterion ec = (EnumCriterion) obj;
+	// return getClass() == ec.getClass() && ec.getValue() == getValue();
+	// }
+	// return super.equals(obj);
+	// }
+	//
+	// @Override
+	// public int hashCode() {
+	// E value = getValue();
+	// return getClass().hashCode() ^ (value == null ? 0 : value.hashCode());
+	// }
+	@XmlTransient
+	public abstract E getValue();
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public EqlWithParameters eql() {
-        EqlWithParameters result = new EqlWithParameters();
-        E value = getValue();
-        if (value != null && !CommonUtils.isNullOrEmpty(getTargetPropertyName())) {
-            result.eql = targetPropertyNameWithTable() + " = ? ";
-            result.parameters.add(valueAsString() ? value.toString() : value);
-        }
-        return result;
-    }
+	public boolean isWithNull() {
+		return withNull;
+	}
 
-    // @Override
-    // public boolean equals(Object obj) {
-    // if (obj instanceof EnumCriterion) {
-    // EnumCriterion ec = (EnumCriterion) obj;
-    // return getClass() == ec.getClass() && ec.getValue() == getValue();
-    // }
-    // return super.equals(obj);
-    // }
-    //
-    // @Override
-    // public int hashCode() {
-    // E value = getValue();
-    // return getClass().hashCode() ^ (value == null ? 0 : value.hashCode());
-    // }
-    @XmlTransient
-    public abstract E getValue();
-
-    /**
+	/**
 	 * add property change firing to the subclass implementation, if you care
 	 */
-    public abstract void setValue(E value);
+	public abstract void setValue(E value);
 
-    public void setWithNull(boolean withNull) {
-        this.withNull = withNull;
-    }
+	public void setWithNull(boolean withNull) {
+		this.withNull = withNull;
+	}
 
-    public boolean isWithNull() {
-        return withNull;
-    }
+	@Override
+	public String toString() {
+		return String.valueOf(getValue());
+	}
 
-    @Override
-    public String toString() {
-        return String.valueOf(getValue());
-    }
+	/**
+	 * If the enum is serialised in the db as a string, set to true
+	 */
+	protected boolean valueAsString() {
+		return false;
+	}
 }

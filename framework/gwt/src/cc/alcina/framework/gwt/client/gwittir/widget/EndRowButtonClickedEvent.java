@@ -55,14 +55,6 @@ public class EndRowButtonClickedEvent
 
 	private final Object rowObject;
 
-	public Object getRowObject() {
-		return this.rowObject;
-	}
-
-	public int getRowIndex() {
-		return this.rowIndex;
-	}
-
 	/**
 	 * Creates a new close event.
 	 * 
@@ -86,21 +78,17 @@ public class EndRowButtonClickedEvent
 		return (Type) TYPE;
 	}
 
+	public int getRowIndex() {
+		return this.rowIndex;
+	}
+
+	public Object getRowObject() {
+		return this.rowObject;
+	}
+
 	@Override
 	protected void dispatch(EndRowButtonClickedHandler handler) {
 		handler.onCollapse(this);
-	}
-
-	public interface HasEndRowClickedHandlers extends HasHandlers {
-		/**
-		 * Adds a {@link EndRowButtonClickedEvent} handler.
-		 * 
-		 * @param handler
-		 *            the handler
-		 * @return the registration for the event
-		 */
-		HandlerRegistration
-				addEndRowClickedHandler(EndRowButtonClickedHandler handler);
 	}
 
 	/**
@@ -115,5 +103,17 @@ public class EndRowButtonClickedEvent
 		 *            the {@link EndRowButtonClickedEvent} that was fired
 		 */
 		void onCollapse(EndRowButtonClickedEvent event);
+	}
+
+	public interface HasEndRowClickedHandlers extends HasHandlers {
+		/**
+		 * Adds a {@link EndRowButtonClickedEvent} handler.
+		 * 
+		 * @param handler
+		 *            the handler
+		 * @return the registration for the event
+		 */
+		HandlerRegistration
+				addEndRowClickedHandler(EndRowButtonClickedHandler handler);
 	}
 }

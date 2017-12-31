@@ -49,6 +49,17 @@ import cc.alcina.framework.gwt.client.util.Lzw;
  * 
  */
 public class LogStore {
+	public static final String STORAGE_COOKIE_KEY = LogStore.class.getName()
+			+ ".CookieStorage";
+
+	public static final String DEFAULT_TABLE_NAME = "LogStore";
+
+	public static final String TOPIC_PERSISTED = LogStore.class.getName() + "."
+			+ "TOPIC_PERSISTED";
+
+	public static final String TOPIC_DELETED = LogStore.class.getName() + "."
+			+ "TOPIC_DELETED";
+
 	public static LogStore get() {
 		LogStore singleton = Registry.checkSingleton(LogStore.class);
 		if (singleton == null) {
@@ -135,22 +146,11 @@ public class LogStore {
 
 	public boolean useCookieMsgBackup = true;
 
-	public static final String STORAGE_COOKIE_KEY = LogStore.class.getName()
-			+ ".CookieStorage";
-
-	public static final String DEFAULT_TABLE_NAME = "LogStore";
-
 	private int lastCookieId;
 
 	protected PersistenceObjectStore objectStore;
 
 	private boolean localPersistencePaused;
-
-	public static final String TOPIC_PERSISTED = LogStore.class.getName() + "."
-			+ "TOPIC_PERSISTED";
-
-	public static final String TOPIC_DELETED = LogStore.class.getName() + "."
-			+ "TOPIC_DELETED";
 
 	protected LogStore() {
 		if (!AlcinaProperties.is(AlcinaProperties.class,
@@ -268,48 +268,6 @@ public class LogStore {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
-	private void log0(String topic, String message) {
-		if (CommonUtils.equalsWithNullEquality(message, lastMessage) || muted) {
-			return;
-		}
-		if (Reflections.classLookup() == null) {
-			Ax.out("Before reflection: \n%s\n%s\n", topic, message);
-			return;
-		}
-		if (topic.equals(AlcinaTopics.LOG_CATEGORY_TRANSFORM)) {
-			String protocol = LocalTransformPersistence.get()
-					.getSerializationPolicy().getTransformPersistenceProtocol();
-			if (protocol.equals(PlaintextProtocolHandler.VERSION)) {
-				List<DomainTransformEvent> events = new PlaintextProtocolHandler()
-						.deserialize(message);
-				message = new PlaintextProtocolHandlerShort().serialize(events);
-			}
-		}
-		this.lastMessage = message;
-		this.lastTopic = topic;
-		ClientInstance cli = ClientBase.getClientInstance();
-		String clientInstanceAuth = cli == null ? "(before cli)"
-				: String.valueOf(cli.getAuth());
-		ClientLogRecord logRecord = new ClientLogRecord(++localSeriesIdCounter,
-				clientInstanceAuth, HiliHelper.getIdOrZero(cli), new Date(),
-				topic, message, null);
-		logs.addLogRecord(logRecord);
-		if (useCookieMsgBackup) {
-			String value = logs.buf
-					.substring(Math.max(logs.buf.length() - 1000, 0));
-			Date d = new Date();
-			d.setYear(d.getYear() + 5);
-			Cookies.setCookie(STORAGE_COOKIE_KEY, value, d);
-			lastCookieId = localSeriesIdCounter;
-		}
-		if (logs.size > RemoteLogPersister.PREFERRED_MAX_PUSH_SIZE) {
-			flushToLocalPersistence();
-		} else {
-			localPersistenceTimer.triggerEventOccurred();
-		}
-	}
-
 	public void pushLogsToRemote() {
 		if (remoteLogPersister != null) {
 			remoteLogPersister.push();
@@ -350,6 +308,48 @@ public class LogStore {
 
 	public void setUsesLzw(boolean usesLzw) {
 		this.usesLzw = usesLzw;
+	}
+
+	@SuppressWarnings("deprecation")
+	private void log0(String topic, String message) {
+		if (CommonUtils.equalsWithNullEquality(message, lastMessage) || muted) {
+			return;
+		}
+		if (Reflections.classLookup() == null) {
+			Ax.out("Before reflection: \n%s\n%s\n", topic, message);
+			return;
+		}
+		if (topic.equals(AlcinaTopics.LOG_CATEGORY_TRANSFORM)) {
+			String protocol = LocalTransformPersistence.get()
+					.getSerializationPolicy().getTransformPersistenceProtocol();
+			if (protocol.equals(PlaintextProtocolHandler.VERSION)) {
+				List<DomainTransformEvent> events = new PlaintextProtocolHandler()
+						.deserialize(message);
+				message = new PlaintextProtocolHandlerShort().serialize(events);
+			}
+		}
+		this.lastMessage = message;
+		this.lastTopic = topic;
+		ClientInstance cli = ClientBase.getClientInstance();
+		String clientInstanceAuth = cli == null ? "(before cli)"
+				: String.valueOf(cli.getAuth());
+		ClientLogRecord logRecord = new ClientLogRecord(++localSeriesIdCounter,
+				clientInstanceAuth, HiliHelper.getIdOrZero(cli), new Date(),
+				topic, message, null);
+		logs.addLogRecord(logRecord);
+		if (useCookieMsgBackup) {
+			String value = logs.buf
+					.substring(Math.max(logs.buf.length() - 1000, 0));
+			Date d = new Date();
+			d.setYear(d.getYear() + 5);
+			Cookies.setCookie(STORAGE_COOKIE_KEY, value, d);
+			lastCookieId = localSeriesIdCounter;
+		}
+		if (logs.size > RemoteLogPersister.PREFERRED_MAX_PUSH_SIZE) {
+			flushToLocalPersistence();
+		} else {
+			localPersistenceTimer.triggerEventOccurred();
+		}
 	}
 
 	int getLocalSeriesIdCounter() {

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
@@ -24,13 +23,12 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target( { ElementType.TYPE })
+@Target({ ElementType.TYPE })
 @ClientVisible
 /**
  *
  * @author Nick Reddel
  */
-
- public @interface ObjectActions {
+public @interface ObjectActions {
 	public Action[] value();
 }

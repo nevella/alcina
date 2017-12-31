@@ -69,15 +69,15 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 		return detached.get(clazz).containsKey(id);
 	}
 
-	public <T extends HasIdAndLocalId> boolean containsMap(Class<T> clazz) {
-		return detached.containsKey(clazz);
-	}
-
 	public boolean contains(HasIdAndLocalId hili) {
 		Class<? extends HasIdAndLocalId> clazz = hili.getClass();
 		ensureMaps(clazz);
 		long id = hili.getId();
 		return detached.get(clazz).containsKey(id);
+	}
+
+	public <T extends HasIdAndLocalId> boolean containsMap(Class<T> clazz) {
+		return detached.containsKey(clazz);
 	}
 
 	public Map<Long, HasIdAndLocalId> createMap() {

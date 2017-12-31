@@ -42,26 +42,7 @@ import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class DomainDeltaSequencer {
-	private List<String> incomingSignatures;
-
-	private DomainModelDeltaLookup lookup = new DomainModelDeltaLookup();
-
-	private RPCRequest rpcRequest;
-
-	private LoadObjectsResponse response = new LoadObjectsResponse();
-
-	private boolean asGwtStreams;
-
 	private static Map<Class, Method> rpcReflectiveMethods = new LinkedHashMap<>();
-
-	public static LoadObjectsResponse _loadMethod() {
-		return null;
-	}
-
-	public static DomainTranche _trancheMethod() {
-		return null;
-	}
-
 	static {
 		try {
 			rpcReflectiveMethods.put(LoadObjectsResponse.class,
@@ -75,6 +56,57 @@ public class DomainDeltaSequencer {
 		}
 	}
 
+	public static LoadObjectsResponse _loadMethod() {
+		return null;
+	}
+
+	public static DomainTranche _trancheMethod() {
+		return null;
+	}
+
+	public static <T extends DomainModelObject> DomainTranche<T>
+			modelObjectToTranche(T modelObject, Class signatureClass)
+					throws Exception {
+		DomainTranche tranche = new DomainTranche();
+		tranche.setDomainModelObject(modelObject);
+		tranche.setSignature(new DomainModelDeltaSignature()
+				.clazz(signatureClass).requiresHash());
+		return tranche;
+	}
+
+	public static DomainTranche objectsToTranche(
+			final DetachedEntityCache reachableCache, Long id,
+			Collection<HasIdAndLocalId> hilis, Class clazz,
+			Class signatureClass, GraphProjectionDualFilter flattenFilter)
+			throws Exception {
+		hilis = new ArrayList<HasIdAndLocalId>(hilis);
+		List<DomainTransformEvent> dtes = TransformManager.get()
+				.objectsToDtes(hilis, clazz, false);
+		// flatten
+		CollectionFilter<DomainTransformEvent> changePropertyRefAndNonDvUserFilter = new ReachableAndTrimmedFilter(
+				reachableCache);
+		CollectionFilters.filterInPlace(dtes,
+				changePropertyRefAndNonDvUserFilter);
+		DomainTranche tranche = new DomainTranche();
+		tranche.setReplayEvents(dtes);
+		tranche.setUnlinkedObjects(
+				new GraphProjection(flattenFilter, flattenFilter).project(hilis,
+						null));
+		tranche.setSignature(new DomainModelDeltaSignature()
+				.clazz(signatureClass).requiresHash().id(id));
+		return tranche;
+	}
+
+	private List<String> incomingSignatures;
+
+	private DomainModelDeltaLookup lookup = new DomainModelDeltaLookup();
+
+	private RPCRequest rpcRequest;
+
+	private LoadObjectsResponse response = new LoadObjectsResponse();
+
+	private boolean asGwtStreams;
+
 	public DomainDeltaSequencer(List<String> clientDeltaSignatures,
 			RPCRequest threadRpcRequest, LoadObjectsRequest request,
 			boolean asGwtStreams) {
@@ -85,27 +117,6 @@ public class DomainDeltaSequencer {
 				? new ArrayList<String>() : clientDeltaSignatures;
 		for (String sig : this.incomingSignatures) {
 			lookup.addSignature(sig);
-		}
-	}
-
-	public List<String> getIncomingSignatures() {
-		return this.incomingSignatures;
-	}
-
-	public DomainModelDeltaSignature signatureFor(Class<?> clazz, long id) {
-		DomainModelDeltaSignature signature = lookup.nonVersionedSignatures
-				.get(new DomainModelDeltaSignature().clazz(clazz).id(id)
-						.nonVersionedSignature());
-		return signature != null ? signature.checkValidUser() : null;
-	}
-
-	public String rpcSignature(Class clazz) {
-		try {
-			return rpcRequest == null ? "non-rpc"
-					: ((StandardSerializationPolicy) rpcRequest
-							.getSerializationPolicy()).getTypeIdForClass(clazz);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
 		}
 	}
 
@@ -140,6 +151,32 @@ public class DomainDeltaSequencer {
 		addTransport(signature, inLoadSequence, transport);
 	}
 
+	public void addTransport(DomainModelDeltaSignature signature,
+			boolean inLoadSequence, DomainModelDeltaTransport transport) {
+		response.getDeltaTransports().add(transport);
+		response.getPreserveClientDeltaSignatures().add(signature.toString());
+		if (inLoadSequence) {
+			response.getLoadSequenceTransports().add(transport);
+		}
+	}
+
+	public boolean canReuse(DomainModelDeltaMetadata metadata) {
+		try {
+			if (metadata == null) {
+				return false;
+			}
+			Class<?> clazz = Class
+					.forName(metadata.getContentObjectClassName());
+			return PermissionsManager.get().getUserId() == CommonUtils
+					.lv(metadata.getUserId())
+					&& rpcSignature(clazz).equals(
+							metadata.getContentObjectRpcTypeSignature());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	public DomainModelDeltaTransport createTransport(DomainTranche tranche,
 			DomainModelDeltaSignature signature, Long maxTransformId,
 			boolean logCache) throws Exception {
@@ -172,13 +209,18 @@ public class DomainDeltaSequencer {
 		return transport;
 	}
 
-	public void addTransport(DomainModelDeltaSignature signature,
-			boolean inLoadSequence, DomainModelDeltaTransport transport) {
-		response.getDeltaTransports().add(transport);
-		response.getPreserveClientDeltaSignatures().add(signature.toString());
-		if (inLoadSequence) {
-			response.getLoadSequenceTransports().add(transport);
-		}
+	public LoadObjectsResponse finishAndReturnResult() {
+		return response;
+	}
+
+	public List<String> getIncomingSignatures() {
+		return this.incomingSignatures;
+	}
+
+	public long getReuseId(DomainModelDeltaMetadata metadata) {
+		return metadata == null ? 0
+				: CommonUtils
+						.lv(metadata.getMaxPersistedTransformIdWhenGenerated());
 	}
 
 	public String gwtSerialize(Object object) throws Exception {
@@ -199,6 +241,23 @@ public class DomainDeltaSequencer {
 		}
 	}
 
+	public String rpcSignature(Class clazz) {
+		try {
+			return rpcRequest == null ? "non-rpc"
+					: ((StandardSerializationPolicy) rpcRequest
+							.getSerializationPolicy()).getTypeIdForClass(clazz);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public DomainModelDeltaSignature signatureFor(Class<?> clazz, long id) {
+		DomainModelDeltaSignature signature = lookup.nonVersionedSignatures
+				.get(new DomainModelDeltaSignature().clazz(clazz).id(id)
+						.nonVersionedSignature());
+		return signature != null ? signature.checkValidUser() : null;
+	}
+
 	private DomainModelDeltaMetadata createMetadata(DomainTranche tranche,
 			Long maxId) {
 		DomainModelDeltaMetadata metadata = new DomainModelDeltaMetadata();
@@ -211,66 +270,6 @@ public class DomainDeltaSequencer {
 		metadata.setDomainObjectsFieldSet(
 				tranche.getDomainModelHolder() != null);
 		return metadata;
-	}
-
-	public LoadObjectsResponse finishAndReturnResult() {
-		return response;
-	}
-
-	public boolean canReuse(DomainModelDeltaMetadata metadata) {
-		try {
-			if (metadata == null) {
-				return false;
-			}
-			Class<?> clazz = Class
-					.forName(metadata.getContentObjectClassName());
-			return PermissionsManager.get().getUserId() == CommonUtils
-					.lv(metadata.getUserId())
-					&& rpcSignature(clazz).equals(
-							metadata.getContentObjectRpcTypeSignature());
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-
-	public long getReuseId(DomainModelDeltaMetadata metadata) {
-		return metadata == null ? 0
-				: CommonUtils
-						.lv(metadata.getMaxPersistedTransformIdWhenGenerated());
-	}
-
-	public static <T extends DomainModelObject> DomainTranche<T>
-			modelObjectToTranche(T modelObject, Class signatureClass)
-					throws Exception {
-		DomainTranche tranche = new DomainTranche();
-		tranche.setDomainModelObject(modelObject);
-		tranche.setSignature(new DomainModelDeltaSignature()
-				.clazz(signatureClass).requiresHash());
-		return tranche;
-	}
-
-	public static DomainTranche objectsToTranche(
-			final DetachedEntityCache reachableCache, Long id,
-			Collection<HasIdAndLocalId> hilis, Class clazz,
-			Class signatureClass, GraphProjectionDualFilter flattenFilter)
-			throws Exception {
-		hilis = new ArrayList<HasIdAndLocalId>(hilis);
-		List<DomainTransformEvent> dtes = TransformManager.get()
-				.objectsToDtes(hilis, clazz, false);
-		// flatten
-		CollectionFilter<DomainTransformEvent> changePropertyRefAndNonDvUserFilter = new ReachableAndTrimmedFilter(
-				reachableCache);
-		CollectionFilters.filterInPlace(dtes,
-				changePropertyRefAndNonDvUserFilter);
-		DomainTranche tranche = new DomainTranche();
-		tranche.setReplayEvents(dtes);
-		tranche.setUnlinkedObjects(
-				new GraphProjection(flattenFilter, flattenFilter).project(hilis,
-						null));
-		tranche.setSignature(new DomainModelDeltaSignature()
-				.clazz(signatureClass).requiresHash().id(id));
-		return tranche;
 	}
 
 	public static class ReachableAndTrimmedFilter

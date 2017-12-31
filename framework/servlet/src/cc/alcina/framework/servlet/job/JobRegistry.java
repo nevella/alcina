@@ -164,14 +164,7 @@ public class JobRegistry implements RegistrableService {
 		}
 		return running;
 	}
-	public boolean isCancelled() {
-		JobTracker jobTracker = getContextTracker();
-		if (jobTracker == null) {
-			return true;
-		} else {
-			return jobTracker.isCancelled();
-		}
-	}
+
 	public void checkCancelled() {
 		JobTracker jobTracker = getContextTracker();
 		if (jobTracker == null) {
@@ -202,10 +195,6 @@ public class JobRegistry implements RegistrableService {
 		}
 		Logger contextLogger = (Logger) tracker.getLogger();
 		return flushLogger(contextLogger);
-	}
-	
-	public boolean hasTracker(){
-	    return getContextTracker()!=null;
 	}
 
 	public Logger getContextLogger() {
@@ -243,6 +232,19 @@ public class JobRegistry implements RegistrableService {
 
 	public JobTracker getTracker(String jobId) {
 		return trackerMap.get(jobId);
+	}
+
+	public boolean hasTracker() {
+		return getContextTracker() != null;
+	}
+
+	public boolean isCancelled() {
+		JobTracker jobTracker = getContextTracker();
+		if (jobTracker == null) {
+			return true;
+		} else {
+			return jobTracker.isCancelled();
+		}
 	}
 
 	public void jobError(Exception ex) {
@@ -361,6 +363,15 @@ public class JobRegistry implements RegistrableService {
 		}
 	}
 
+	public void warn(String message) {
+		Logger logger = getContextLogger();
+		if (logger == null) {
+			System.err.println(message);
+		} else {
+			logger.warn(message);
+		}
+	}
+
 	private void flushTracker(JobTracker tracker) {
 		tracker.setLog(tracker.getLog() + getContextLogBuffer(tracker));
 	}
@@ -392,21 +403,6 @@ public class JobRegistry implements RegistrableService {
 			}
 		}
 		popContextTracker(tracker);
-	}
-
-	protected void jobError(JobTracker tracker, Exception ex,
-			boolean logException) {
-		if (logException) {
-			warn(ex);
-			if (tracker == null) {
-				return;
-			}
-			ex.printStackTrace();
-		}
-		String jobResult = "Job failed: " + ex.toString();
-		tracker.setJobException(ex);
-		jobComplete(tracker, JobResultType.FAIL, jobResult);
-		notifyJobFailure(tracker);
 	}
 
 	private void logComplete(JobTracker tracker, String message) {
@@ -474,12 +470,18 @@ public class JobRegistry implements RegistrableService {
 		return null;
 	}
 
-	public void warn(String message) {
-		Logger logger = getContextLogger();
-		if (logger == null) {
-			System.err.println(message);
-		} else {
-			logger.warn(message);
-		}		
+	protected void jobError(JobTracker tracker, Exception ex,
+			boolean logException) {
+		if (logException) {
+			warn(ex);
+			if (tracker == null) {
+				return;
+			}
+			ex.printStackTrace();
+		}
+		String jobResult = "Job failed: " + ex.toString();
+		tracker.setJobException(ex);
+		jobComplete(tracker, JobResultType.FAIL, jobResult);
+		notifyJobFailure(tracker);
 	}
 }

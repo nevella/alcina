@@ -67,18 +67,12 @@ import java.util.Map;
  *         02139, USA.
  */
 public class Diff {
-	/**
-	 * Prepare to find differences between two arrays. Each element of the
-	 * arrays is translated to an "equivalence number" based on the result of
-	 * <code>equals</code>. The original Object arrays are no longer needed for
-	 * computing the differences. They will be needed again later to print the
-	 * results of the comparison as an edit script, if desired.
-	 */
-	public Diff(Object[] a, Object[] b) {
-		HashMap h = new HashMap(a.length + b.length);
-		filevec[0] = new FileData(a, h);
-		filevec[1] = new FileData(b, h);
-	}
+	/** Snakes bigger than this are considered "big". */
+	private static final int SNAKE_LIMIT = 20;
+
+	/** Standard ScriptBuilders. */
+	public final static ScriptBuilder forwardScript = new ForwardScript(),
+			reverseScript = new ReverseScript();
 
 	/**
 	 * 1 more than the maximum equivalence value used for this or its sibling
@@ -102,16 +96,18 @@ public class Diff {
 	private int[] xvec, yvec; /* Vectors being compared. */
 
 	private int[] fdiag; /*
-						 * Vector, indexed by diagonal, containing the X
-						 * coordinate of the point furthest along the given
-						 * diagonal in the forward search of the edit matrix.
-						 */
+							 * Vector, indexed by diagonal, containing the X
+							 * coordinate of the point furthest along the given
+							 * diagonal in the forward search of the edit
+							 * matrix.
+							 */
 
 	private int[] bdiag; /*
-						 * Vector, indexed by diagonal, containing the X
-						 * coordinate of the point furthest along the given
-						 * diagonal in the backward search of the edit matrix.
-						 */
+							 * Vector, indexed by diagonal, containing the X
+							 * coordinate of the point furthest along the given
+							 * diagonal in the backward search of the edit
+							 * matrix.
+							 */
 
 	private int fdiagoff, bdiagoff;
 
@@ -119,8 +115,136 @@ public class Diff {
 
 	private int cost;
 
-	/** Snakes bigger than this are considered "big". */
-	private static final int SNAKE_LIMIT = 20;
+	private boolean inhibit = false;
+
+	private Map<Object, Object> revLookup = new HashMap<Object, Object>();
+
+	/**
+	 * Prepare to find differences between two arrays. Each element of the
+	 * arrays is translated to an "equivalence number" based on the result of
+	 * <code>equals</code>. The original Object arrays are no longer needed for
+	 * computing the differences. They will be needed again later to print the
+	 * results of the comparison as an edit script, if desired.
+	 */
+	public Diff(Object[] a, Object[] b) {
+		HashMap h = new HashMap(a.length + b.length);
+		filevec[0] = new FileData(a, h);
+		filevec[1] = new FileData(b, h);
+	}
+
+	/**
+	 * Get the results of comparison as an edit script. The script is described
+	 * by a list of changes. The standard ScriptBuilder implementations provide
+	 * for forward and reverse edit scripts. Alternate implementations could,
+	 * for instance, list common elements instead of differences.
+	 *
+	 * @param bld
+	 *            an object to build the script from change flags
+	 * @return the head of a list of changes
+	 */
+	public Change diff(final ScriptBuilder bld) {
+		/*
+		 * Some lines are obviously insertions or deletions because they don't
+		 * match anything. Detect them now, and avoid even thinking about them
+		 * in the main comparison algorithm.
+		 */
+		discard_confusing_lines();
+		/*
+		 * Now do the main comparison algorithm, considering just the
+		 * undiscarded lines.
+		 */
+		xvec = filevec[0].undiscarded;
+		yvec = filevec[1].undiscarded;
+		int diags = filevec[0].nondiscarded_lines
+				+ filevec[1].nondiscarded_lines + 3;
+		fdiag = new int[diags];
+		fdiagoff = filevec[1].nondiscarded_lines + 1;
+		bdiag = new int[diags];
+		bdiagoff = filevec[1].nondiscarded_lines + 1;
+		compareseq(0, filevec[0].nondiscarded_lines, 0,
+				filevec[1].nondiscarded_lines);
+		fdiag = null;
+		bdiag = null;
+		/*
+		 * Modify the results slightly to make them prettier in cases where that
+		 * can validly be done.
+		 */
+		shift_boundaries();
+		/*
+		 * Get the results of comparison in the form of a chain of `struct
+		 * change's -- an edit script.
+		 */
+		return bld.build_script(filevec[0].changed_flag,
+				filevec[0].buffered_lines, filevec[1].changed_flag,
+				filevec[1].buffered_lines);
+	}
+
+	/*
+	 * Report the differences of two files. DEPTH is the current directory
+	 * depth.
+	 */
+	public final Change diff_2(final boolean reverse) {
+		return diff(reverse ? reverseScript : forwardScript);
+	}
+
+	/**
+	 * Compare in detail contiguous subsequences of the two files which are
+	 * known, as a whole, to match each other.
+	 *
+	 * The results are recorded in the vectors filevec[N].changed_flag, by
+	 * storing a 1 in the element for each line that is an insertion or
+	 * deletion.
+	 *
+	 * The subsequence of file 0 is [XOFF, XLIM) and likewise for file 1.
+	 *
+	 * Note that XLIM, YLIM are exclusive bounds. All line numbers are origin-0
+	 * and discarded lines are not counted.
+	 */
+	private void compareseq(int xoff, int xlim, int yoff, int ylim) {
+		/* Slide down the bottom initial diagonal. */
+		while (xoff < xlim && yoff < ylim && xvec[xoff] == yvec[yoff]) {
+			++xoff;
+			++yoff;
+		}
+		/* Slide up the top initial diagonal. */
+		while (xlim > xoff && ylim > yoff && xvec[xlim - 1] == yvec[ylim - 1]) {
+			--xlim;
+			--ylim;
+		}
+		/* Handle simple cases. */
+		if (xoff == xlim)
+			while (yoff < ylim)
+				filevec[1].changed_flag[1
+						+ filevec[1].realindexes[yoff++]] = true;
+		else if (yoff == ylim)
+			while (xoff < xlim)
+				filevec[0].changed_flag[1
+						+ filevec[0].realindexes[xoff++]] = true;
+		else {
+			/* Find a point of correspondence in the middle of the files. */
+			int d = diag(xoff, xlim, yoff, ylim);
+			int c = cost;
+			int f = fdiag[fdiagoff + d];
+			int b = bdiag[bdiagoff + d];
+			if (c == 1) {
+				/*
+				 * This should be impossible, because it implies that one of the
+				 * two subsequences is empty, and that case was handled above
+				 * without calling `diag'. Let's verify that this is true.
+				 */
+				throw new IllegalArgumentException("Empty subsequence");
+			} else {
+				/* Use that point to split this problem into two subproblems. */
+				compareseq(xoff, b, yoff, b - d);
+				/*
+				 * This used to use f instead of b, but that is incorrect! It is
+				 * not necessarily the case that diagonal d has a snake from b
+				 * to f.
+				 */
+				compareseq(b, xlim, b - d, ylim);
+			}
+		}
+	}
 
 	/**
 	 * Find the midpoint of the shortest edit script for a specified portion of
@@ -177,8 +301,8 @@ public class Diff {
 			else
 				--fmax;
 			for (d = fmax; d >= fmin; d -= 2) {
-				int x, y, oldx, tlo = fd[fdiagoff + d - 1], thi = fd[fdiagoff
-						+ d + 1];
+				int x, y, oldx, tlo = fd[fdiagoff + d - 1],
+						thi = fd[fdiagoff + d + 1];
 				if (tlo >= thi)
 					x = tlo + 1;
 				else
@@ -208,8 +332,8 @@ public class Diff {
 			else
 				--bmax;
 			for (d = bmax; d >= bmin; d -= 2) {
-				int x, y, oldx, tlo = bd[bdiagoff + d - 1], thi = bd[bdiagoff
-						+ d + 1];
+				int x, y, oldx, tlo = bd[bdiagoff + d - 1],
+						thi = bd[bdiagoff + d + 1];
 				if (tlo < thi)
 					x = tlo;
 				else
@@ -299,71 +423,12 @@ public class Diff {
 	}
 
 	/**
-	 * Compare in detail contiguous subsequences of the two files which are
-	 * known, as a whole, to match each other.
-	 *
-	 * The results are recorded in the vectors filevec[N].changed_flag, by
-	 * storing a 1 in the element for each line that is an insertion or
-	 * deletion.
-	 *
-	 * The subsequence of file 0 is [XOFF, XLIM) and likewise for file 1.
-	 *
-	 * Note that XLIM, YLIM are exclusive bounds. All line numbers are origin-0
-	 * and discarded lines are not counted.
-	 */
-	private void compareseq(int xoff, int xlim, int yoff, int ylim) {
-		/* Slide down the bottom initial diagonal. */
-		while (xoff < xlim && yoff < ylim && xvec[xoff] == yvec[yoff]) {
-			++xoff;
-			++yoff;
-		}
-		/* Slide up the top initial diagonal. */
-		while (xlim > xoff && ylim > yoff && xvec[xlim - 1] == yvec[ylim - 1]) {
-			--xlim;
-			--ylim;
-		}
-		/* Handle simple cases. */
-		if (xoff == xlim)
-			while (yoff < ylim)
-				filevec[1].changed_flag[1 + filevec[1].realindexes[yoff++]] = true;
-		else if (yoff == ylim)
-			while (xoff < xlim)
-				filevec[0].changed_flag[1 + filevec[0].realindexes[xoff++]] = true;
-		else {
-			/* Find a point of correspondence in the middle of the files. */
-			int d = diag(xoff, xlim, yoff, ylim);
-			int c = cost;
-			int f = fdiag[fdiagoff + d];
-			int b = bdiag[bdiagoff + d];
-			if (c == 1) {
-				/*
-				 * This should be impossible, because it implies that one of the
-				 * two subsequences is empty, and that case was handled above
-				 * without calling `diag'. Let's verify that this is true.
-				 */
-				throw new IllegalArgumentException("Empty subsequence");
-			} else {
-				/* Use that point to split this problem into two subproblems. */
-				compareseq(xoff, b, yoff, b - d);
-				/*
-				 * This used to use f instead of b, but that is incorrect! It is
-				 * not necessarily the case that diagonal d has a snake from b
-				 * to f.
-				 */
-				compareseq(b, xlim, b - d, ylim);
-			}
-		}
-	}
-
-	/**
 	 * Discard lines from one file that have no matches in the other file.
 	 */
 	private void discard_confusing_lines() {
 		filevec[0].discard_confusing_lines(filevec[1]);
 		filevec[1].discard_confusing_lines(filevec[0]);
 	}
-
-	private boolean inhibit = false;
 
 	/**
 	 * Adjust inserts/deletes of blank lines to join changes as much as
@@ -374,141 +439,6 @@ public class Diff {
 			return;
 		filevec[0].shift_boundaries(filevec[1]);
 		filevec[1].shift_boundaries(filevec[0]);
-	}
-
-	public interface ScriptBuilder {
-		/**
-		 * Scan the tables of which lines are inserted and deleted, producing an
-		 * edit script.
-		 *
-		 * @param changed0
-		 *            true for lines in first file which do not match 2nd
-		 * @param len0
-		 *            number of lines in first file
-		 * @param changed1
-		 *            true for lines in 2nd file which do not match 1st
-		 * @param len1
-		 *            number of lines in 2nd file
-		 * @return a linked list of changes - or null
-		 */
-		public Change build_script(boolean[] changed0, int len0,
-				boolean[] changed1, int len1);
-	}
-
-	/**
-	 * Scan the tables of which lines are inserted and deleted, producing an
-	 * edit script in reverse order.
-	 */
-	static class ReverseScript implements ScriptBuilder {
-		public Change build_script(final boolean[] changed0, int len0,
-				final boolean[] changed1, int len1) {
-			Change script = null;
-			int i0 = 0, i1 = 0;
-			while (i0 < len0 || i1 < len1) {
-				if (changed0[1 + i0] || changed1[1 + i1]) {
-					int line0 = i0, line1 = i1;
-					/* Find # lines changed here in each file. */
-					while (changed0[1 + i0])
-						++i0;
-					while (changed1[1 + i1])
-						++i1;
-					/* Record this change. */
-					script = new Change(line0, line1, i0 - line0, i1 - line1,
-							script);
-				}
-				/* We have reached lines in the two files that match each other. */
-				i0++;
-				i1++;
-			}
-			return script;
-		}
-	}
-
-	static class ForwardScript implements ScriptBuilder {
-		/**
-		 * Scan the tables of which lines are inserted and deleted, producing an
-		 * edit script in forward order.
-		 */
-		public Change build_script(final boolean[] changed0, int len0,
-				final boolean[] changed1, int len1) {
-			Change script = null;
-			int i0 = len0, i1 = len1;
-			while (i0 >= 0 || i1 >= 0) {
-				if (changed0[i0] || changed1[i1]) {
-					int line0 = i0, line1 = i1;
-					/* Find # lines changed here in each file. */
-					while (changed0[i0])
-						--i0;
-					while (changed1[i1])
-						--i1;
-					/* Record this change. */
-					script = new Change(i0, i1, line0 - i0, line1 - i1, script);
-				}
-				/* We have reached lines in the two files that match each other. */
-				i0--;
-				i1--;
-			}
-			return script;
-		}
-	}
-
-	/** Standard ScriptBuilders. */
-	public final static ScriptBuilder forwardScript = new ForwardScript(),
-			reverseScript = new ReverseScript();
-
-	/*
-	 * Report the differences of two files. DEPTH is the current directory
-	 * depth.
-	 */
-	public final Change diff_2(final boolean reverse) {
-		return diff(reverse ? reverseScript : forwardScript);
-	}
-
-	/**
-	 * Get the results of comparison as an edit script. The script is described
-	 * by a list of changes. The standard ScriptBuilder implementations provide
-	 * for forward and reverse edit scripts. Alternate implementations could,
-	 * for instance, list common elements instead of differences.
-	 *
-	 * @param bld
-	 *            an object to build the script from change flags
-	 * @return the head of a list of changes
-	 */
-	public Change diff(final ScriptBuilder bld) {
-		/*
-		 * Some lines are obviously insertions or deletions because they don't
-		 * match anything. Detect them now, and avoid even thinking about them
-		 * in the main comparison algorithm.
-		 */
-		discard_confusing_lines();
-		/*
-		 * Now do the main comparison algorithm, considering just the
-		 * undiscarded lines.
-		 */
-		xvec = filevec[0].undiscarded;
-		yvec = filevec[1].undiscarded;
-		int diags = filevec[0].nondiscarded_lines
-				+ filevec[1].nondiscarded_lines + 3;
-		fdiag = new int[diags];
-		fdiagoff = filevec[1].nondiscarded_lines + 1;
-		bdiag = new int[diags];
-		bdiagoff = filevec[1].nondiscarded_lines + 1;
-		compareseq(0, filevec[0].nondiscarded_lines, 0,
-				filevec[1].nondiscarded_lines);
-		fdiag = null;
-		bdiag = null;
-		/*
-		 * Modify the results slightly to make them prettier in cases where that
-		 * can validly be done.
-		 */
-		shift_boundaries();
-		/*
-		 * Get the results of comparison in the form of a chain of `struct
-		 * change's -- an edit script.
-		 */
-		return bld.build_script(filevec[0].changed_flag,
-				filevec[0].buffered_lines, filevec[1].changed_flag,
-				filevec[1].buffered_lines);
 	}
 
 	/**
@@ -528,7 +458,7 @@ public class Diff {
 		public Change link;
 
 		/** # lines of file 1 changed here. */
-		public  int inserted;
+		public int inserted;
 
 		/** # lines of file 0 changed here. */
 		public int deleted;
@@ -558,62 +488,94 @@ public class Diff {
 			// System.err.println(line0+","+line1+","+inserted+","+deleted);
 		}
 	}
-	private Map<Object,Object> revLookup = new HashMap<Object, Object>();
+
+	public interface ScriptBuilder {
+		/**
+		 * Scan the tables of which lines are inserted and deleted, producing an
+		 * edit script.
+		 *
+		 * @param changed0
+		 *            true for lines in first file which do not match 2nd
+		 * @param len0
+		 *            number of lines in first file
+		 * @param changed1
+		 *            true for lines in 2nd file which do not match 1st
+		 * @param len1
+		 *            number of lines in 2nd file
+		 * @return a linked list of changes - or null
+		 */
+		public Change build_script(boolean[] changed0, int len0,
+				boolean[] changed1, int len1);
+	}
+
 	/**
 	 * Data on one input file being compared.
 	 */
 	class FileData {
-		/** Allocate changed array for the results of comparison. */
-		void clear() {
-			/*
-			 * Allocate a flag for each line of each file, saying whether that
-			 * line is an insertion or deletion. Allocate an extra element,
-			 * always zero, at each end of each vector.
-			 */
-			changed_flag = new boolean[buffered_lines + 2];
+		/** Number of elements (lines) in this file. */
+		final int buffered_lines;
+
+		/**
+		 * Vector, indexed by line number, containing an equivalence code for
+		 * each line. It is this vector that is actually compared with that of
+		 * another file to generate differences.
+		 */
+		private final int[] equivs;
+
+		/**
+		 * Vector, like the previous one except that the elements for discarded
+		 * lines have been squeezed out.
+		 */
+		final int[] undiscarded;
+
+		/**
+		 * Vector mapping virtual line numbers (not counting discarded lines) to
+		 * real ones (counting those lines). Both are origin-0.
+		 */
+		final int[] realindexes;
+
+		/** Total number of nondiscarded lines. */
+		int nondiscarded_lines;
+
+		/**
+		 * Array, indexed by real origin-1 line number, containing true for a
+		 * line that is an insertion or a deletion. The results of comparison
+		 * are stored here.
+		 */
+		boolean[] changed_flag;
+
+		FileData(Object[] data, HashMap h) {
+			buffered_lines = data.length;
+			equivs = new int[buffered_lines];
+			undiscarded = new int[buffered_lines];
+			realindexes = new int[buffered_lines];
+			for (int i = 0; i < data.length; ++i) {
+				Integer ir = (Integer) h.get(data[i]);
+				if (ir == null) {
+					h.put(data[i], new Integer(equivs[i] = equiv_max++));
+					revLookup.put(data[i], data[i]);
+				} else {
+					equivs[i] = ir.intValue();
+				}
+			}
 		}
 
 		/**
-		 * Return equiv_count[I] as the number of lines in this file that fall
-		 * in equivalence class I.
+		 * Actually discard the lines.
 		 *
-		 * @return the array of equivalence class counts.
+		 * @param discards
+		 *            flags lines to be discarded
 		 */
-		int[] equivCount() {
-			int[] equiv_count = new int[equiv_max];
-			for (int i = 0; i < buffered_lines; ++i)
-				++equiv_count[equivs[i]];
-			return equiv_count;
-		}
-
-		/**
-		 * Discard lines that have no matches in another file.
-		 *
-		 * A line which is discarded will not be considered by the actual
-		 * comparison algorithm; it will be as if that line were not in the
-		 * file. The file's `realindexes' table maps virtual line numbers (which
-		 * don't count the discarded lines) into real line numbers; this is how
-		 * the actual comparison algorithm produces results that are
-		 * comprehensible when the discarded lines are counted.
-		 * <p>
-		 * When we discard a line, we also mark it as a deletion or insertion so
-		 * that it will be printed in the output.
-		 *
-		 * @param f
-		 *            the other file
-		 */
-		void discard_confusing_lines(FileData f) {
-			clear();
-			/* Set up table of which lines are going to be discarded. */
-			final byte[] discarded = discardable(f.equivCount());
-			/*
-			 * Don't really discard the provisional lines except when they occur
-			 * in a run of discardables, with nonprovisionals at the beginning
-			 * and end.
-			 */
-			filterDiscards(discarded);
-			/* Actually discard the lines. */
-			discard(discarded);
+		private void discard(final byte[] discards) {
+			final int end = buffered_lines;
+			int j = 0;
+			for (int i = 0; i < end; ++i)
+				if (no_discards || discards[i] == 0) {
+					undiscarded[j] = equivs[i];
+					realindexes[j++] = i;
+				} else
+					changed_flag[1 + i] = true;
+			nondiscarded_lines = j;
 		}
 
 		/**
@@ -658,7 +620,9 @@ public class Diff {
 		private void filterDiscards(final byte[] discards) {
 			final int end = buffered_lines;
 			for (int i = 0; i < end; i++) {
-				/* Cancel provisional discards not in middle of run of discards. */
+				/*
+				 * Cancel provisional discards not in middle of run of discards.
+				 */
 				if (discards[i] == 2)
 					discards[i] = 0;
 				else if (discards[i] != 0) {
@@ -676,7 +640,9 @@ public class Diff {
 						if (discards[j] == 2)
 							++provisional;
 					}
-					/* Cancel provisional discards at end, and shrink the run. */
+					/*
+					 * Cancel provisional discards at end, and shrink the run.
+					 */
 					while (j > i && discards[j - 1] == 2) {
 						discards[--j] = 0;
 						--provisional;
@@ -715,7 +681,9 @@ public class Diff {
 							if (discards[i + j] != 2)
 								consec = 0;
 							else if (minimum == ++consec)
-								/* Back up to start of subrun, to cancel it all. */
+								/*
+								 * Back up to start of subrun, to cancel it all.
+								 */
 								j -= consec;
 							else if (minimum < consec)
 								discards[i + j] = 0;
@@ -759,39 +727,57 @@ public class Diff {
 			}
 		}
 
-		/**
-		 * Actually discard the lines.
-		 *
-		 * @param discards
-		 *            flags lines to be discarded
-		 */
-		private void discard(final byte[] discards) {
-			final int end = buffered_lines;
-			int j = 0;
-			for (int i = 0; i < end; ++i)
-				if (no_discards || discards[i] == 0) {
-					undiscarded[j] = equivs[i];
-					realindexes[j++] = i;
-				} else
-					changed_flag[1 + i] = true;
-			nondiscarded_lines = j;
+		/** Allocate changed array for the results of comparison. */
+		void clear() {
+			/*
+			 * Allocate a flag for each line of each file, saying whether that
+			 * line is an insertion or deletion. Allocate an extra element,
+			 * always zero, at each end of each vector.
+			 */
+			changed_flag = new boolean[buffered_lines + 2];
 		}
 
-		FileData(Object[] data, HashMap h) {
-			buffered_lines = data.length;
-			equivs = new int[buffered_lines];
-			undiscarded = new int[buffered_lines];
-			realindexes = new int[buffered_lines];
-			for (int i = 0; i < data.length; ++i) {
-				Integer ir = (Integer) h.get(data[i]);
-				if (ir == null){
-					h.put(data[i], new Integer(equivs[i] = equiv_max++));
-				revLookup.put(data[i], data[i]);
-				}
-				else{
-					equivs[i] = ir.intValue();
-				}
-			}
+		/**
+		 * Discard lines that have no matches in another file.
+		 *
+		 * A line which is discarded will not be considered by the actual
+		 * comparison algorithm; it will be as if that line were not in the
+		 * file. The file's `realindexes' table maps virtual line numbers (which
+		 * don't count the discarded lines) into real line numbers; this is how
+		 * the actual comparison algorithm produces results that are
+		 * comprehensible when the discarded lines are counted.
+		 * <p>
+		 * When we discard a line, we also mark it as a deletion or insertion so
+		 * that it will be printed in the output.
+		 *
+		 * @param f
+		 *            the other file
+		 */
+		void discard_confusing_lines(FileData f) {
+			clear();
+			/* Set up table of which lines are going to be discarded. */
+			final byte[] discarded = discardable(f.equivCount());
+			/*
+			 * Don't really discard the provisional lines except when they occur
+			 * in a run of discardables, with nonprovisionals at the beginning
+			 * and end.
+			 */
+			filterDiscards(discarded);
+			/* Actually discard the lines. */
+			discard(discarded);
+		}
+
+		/**
+		 * Return equiv_count[I] as the number of lines in this file that fall
+		 * in equivalence class I.
+		 *
+		 * @return the array of equivalence class counts.
+		 */
+		int[] equivCount() {
+			int[] equiv_count = new int[equiv_max];
+			for (int i = 0; i < buffered_lines; ++i)
+				++equiv_count[equivs[i]];
+			return equiv_count;
 		}
 
 		/**
@@ -851,11 +837,11 @@ public class Diff {
 					 * You might ask, how could this run follow right after
 					 * another? Only because the previous run was shifted here.
 					 */
-					if (end != i_end
-							&& equivs[start] == equivs[end]
-							&& !other_changed[1 + j]
-							&& end != i_end
-							&& !((preceding >= 0 && start == preceding) || (other_preceding >= 0 && other_start == other_preceding))) {
+					if (end != i_end && equivs[start] == equivs[end]
+							&& !other_changed[1 + j] && end != i_end
+							&& !((preceding >= 0 && start == preceding)
+									|| (other_preceding >= 0
+											&& other_start == other_preceding))) {
 						changed[1 + end++] = true;
 						changed[1 + start++] = false;
 						++i;
@@ -872,37 +858,66 @@ public class Diff {
 				other_preceding = j;
 			}
 		}
+	}
 
-		/** Number of elements (lines) in this file. */
-		final int buffered_lines;
-
+	static class ForwardScript implements ScriptBuilder {
 		/**
-		 * Vector, indexed by line number, containing an equivalence code for
-		 * each line. It is this vector that is actually compared with that of
-		 * another file to generate differences.
+		 * Scan the tables of which lines are inserted and deleted, producing an
+		 * edit script in forward order.
 		 */
-		private final int[] equivs;
+		public Change build_script(final boolean[] changed0, int len0,
+				final boolean[] changed1, int len1) {
+			Change script = null;
+			int i0 = len0, i1 = len1;
+			while (i0 >= 0 || i1 >= 0) {
+				if (changed0[i0] || changed1[i1]) {
+					int line0 = i0, line1 = i1;
+					/* Find # lines changed here in each file. */
+					while (changed0[i0])
+						--i0;
+					while (changed1[i1])
+						--i1;
+					/* Record this change. */
+					script = new Change(i0, i1, line0 - i0, line1 - i1, script);
+				}
+				/*
+				 * We have reached lines in the two files that match each other.
+				 */
+				i0--;
+				i1--;
+			}
+			return script;
+		}
+	}
 
-		/**
-		 * Vector, like the previous one except that the elements for discarded
-		 * lines have been squeezed out.
-		 */
-		final int[] undiscarded;
-
-		/**
-		 * Vector mapping virtual line numbers (not counting discarded lines) to
-		 * real ones (counting those lines). Both are origin-0.
-		 */
-		final int[] realindexes;
-
-		/** Total number of nondiscarded lines. */
-		int nondiscarded_lines;
-
-		/**
-		 * Array, indexed by real origin-1 line number, containing true for a
-		 * line that is an insertion or a deletion. The results of comparison
-		 * are stored here.
-		 */
-		boolean[] changed_flag;
+	/**
+	 * Scan the tables of which lines are inserted and deleted, producing an
+	 * edit script in reverse order.
+	 */
+	static class ReverseScript implements ScriptBuilder {
+		public Change build_script(final boolean[] changed0, int len0,
+				final boolean[] changed1, int len1) {
+			Change script = null;
+			int i0 = 0, i1 = 0;
+			while (i0 < len0 || i1 < len1) {
+				if (changed0[1 + i0] || changed1[1 + i1]) {
+					int line0 = i0, line1 = i1;
+					/* Find # lines changed here in each file. */
+					while (changed0[1 + i0])
+						++i0;
+					while (changed1[1 + i1])
+						++i1;
+					/* Record this change. */
+					script = new Change(line0, line1, i0 - line0, i1 - line1,
+							script);
+				}
+				/*
+				 * We have reached lines in the two files that match each other.
+				 */
+				i0++;
+				i1++;
+			}
+			return script;
+		}
 	}
 }

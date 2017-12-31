@@ -21,23 +21,19 @@ package cc.alcina.framework.common.client;
  * 
  */
 public class WrappedRuntimeException extends RuntimeException {
-	public enum SuggestedAction {
-		CANCEL_STARTUP, NOTIFY_WARNING, NOTIFY_ERROR, EXPECTED_EXCEPTION,
-		NOTIFY_AND_SHUTDOWN, HANDLE_INTERRUPTED_ACTION_SILENT,
-		HTTP_RETRY_WAIT_LONG, HTTP_RETRY_WAIT_SHORT,
-		NO_NOTIFICATION_AND_CONTINUE, RELOAD
-	}
-
 	private static final transient long serialVersionUID = 89976002L;
 
-	public WrappedRuntimeException(Throwable cause) {
-		this(cause, SuggestedAction.NOTIFY_WARNING);
+	public static RuntimeException wrapIfNotRuntime(Exception e) {
+		if (e instanceof RuntimeException) {
+			throw (RuntimeException) e;
+		} else {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
-	public WrappedRuntimeException(Throwable cause, SuggestedAction sa) {
-		super(cause);
-		setSuggestedAction(sa);
-	}
+	/**
+	 */
+	private SuggestedAction suggestedAction;
 
 	public WrappedRuntimeException(String cause, SuggestedAction sa) {
 		super(cause);
@@ -54,9 +50,14 @@ public class WrappedRuntimeException extends RuntimeException {
 		setSuggestedAction(sa);
 	}
 
-	/**
-	 */
-	private SuggestedAction suggestedAction;
+	public WrappedRuntimeException(Throwable cause) {
+		this(cause, SuggestedAction.NOTIFY_WARNING);
+	}
+
+	public WrappedRuntimeException(Throwable cause, SuggestedAction sa) {
+		super(cause);
+		setSuggestedAction(sa);
+	}
 
 	/**
 	 * Getter of the property <tt>suggestedAction</tt>
@@ -77,11 +78,10 @@ public class WrappedRuntimeException extends RuntimeException {
 		this.suggestedAction = suggestedAction;
 	}
 
-	public static RuntimeException wrapIfNotRuntime(Exception e) {
-		if (e instanceof RuntimeException) {
-			throw (RuntimeException) e;
-		} else {
-			throw new WrappedRuntimeException(e);
-		}
+	public enum SuggestedAction {
+		CANCEL_STARTUP, NOTIFY_WARNING, NOTIFY_ERROR, EXPECTED_EXCEPTION,
+		NOTIFY_AND_SHUTDOWN, HANDLE_INTERRUPTED_ACTION_SILENT,
+		HTTP_RETRY_WAIT_LONG, HTTP_RETRY_WAIT_SHORT,
+		NO_NOTIFICATION_AND_CONTINUE, RELOAD
 	}
 }

@@ -19,7 +19,6 @@ import static com.google.gwt.dom.client.BrowserEvents.*;
 
 import com.google.gwt.cell.client.AbstractCell;
 import com.google.gwt.cell.client.ValueUpdater;
-import com.google.gwt.dom.builder.client.DomAnchorBuilder;
 import com.google.gwt.dom.builder.shared.HtmlAnchorBuilder;
 import com.google.gwt.dom.builder.shared.HtmlBuilderFactory;
 import com.google.gwt.dom.client.Element;
@@ -37,8 +36,6 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  *            the type that this Cell represents
  */
 public class PlaceLinkCell extends AbstractCell<TextPlaceTuple> {
-	
-
 	/**
 	 * Construct a new {@link PlaceLinkCell}.
 	 *
@@ -49,40 +46,41 @@ public class PlaceLinkCell extends AbstractCell<TextPlaceTuple> {
 	 */
 	public PlaceLinkCell() {
 		super(CLICK, KEYDOWN);
-		
 	}
 
-	
 	@Override
-	public void onBrowserEvent(Context context, Element parent, TextPlaceTuple value,
-			NativeEvent event, ValueUpdater<TextPlaceTuple> valueUpdater) {
+	public void onBrowserEvent(Context context, Element parent,
+			TextPlaceTuple value, NativeEvent event,
+			ValueUpdater<TextPlaceTuple> valueUpdater) {
 		super.onBrowserEvent(context, parent, value, event, valueUpdater);
 		if (CLICK.equals(event.getType())) {
 			EventTarget eventTarget = event.getEventTarget();
 			if (!Element.is(eventTarget)) {
 				return;
 			}
-			if (parent.getFirstChildElement().isOrHasChild(
-					Element.as(eventTarget))) {
+			if (parent.getFirstChildElement()
+					.isOrHasChild(Element.as(eventTarget))) {
 				event.stopPropagation();
-//				// Ignore clicks that occur outside of the main element.
-//				onEnterKeyDown(context, parent, value, event, valueUpdater);
+				// // Ignore clicks that occur outside of the main element.
+				// onEnterKeyDown(context, parent, value, event, valueUpdater);
 			}
 		}
 	}
 
 	@Override
-	public void render(Context context, TextPlaceTuple value, SafeHtmlBuilder sb) {
-		HtmlBuilderFactory factory = 	HtmlBuilderFactory.get();
+	public void render(Context context, TextPlaceTuple value,
+			SafeHtmlBuilder sb) {
+		HtmlBuilderFactory factory = HtmlBuilderFactory.get();
 		HtmlAnchorBuilder builder = factory.createAnchorBuilder();
-		builder.href("#"+RegistryHistoryMapper.get().getToken(value.place));
+		builder.href("#" + RegistryHistoryMapper.get().getToken(value.place));
 		builder.text(value.text);
 		sb.append(builder.asSafeHtml());
 	}
 
 	@Override
-	protected void onEnterKeyDown(Context context, Element parent, TextPlaceTuple value,
-			NativeEvent event, ValueUpdater<TextPlaceTuple> valueUpdater) {
-//		delegate.execute(value);
+	protected void onEnterKeyDown(Context context, Element parent,
+			TextPlaceTuple value, NativeEvent event,
+			ValueUpdater<TextPlaceTuple> valueUpdater) {
+		// delegate.execute(value);
 	}
 }

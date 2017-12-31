@@ -29,85 +29,6 @@ import com.google.gwt.core.client.Scheduler;
  */
 public class SchedulerImpl extends Scheduler {
 	/**
-	 * Metadata bag for command objects. It's a JSO so that a lightweight
-	 * List can be used instead of a Collections type.
-	 * 
-	 * NR - doesn't play nice with hosted mode, and is fairly...not that
-	 * efficient. jsarr compared to arrayList??
-	 */
-	static final class Task {
-		private boolean repeating;
-
-		public static Task create(RepeatingCommand cmd) {
-			Task task = new Task();
-			task.repeatingCommand = cmd;
-			task.repeating = true;
-			return task;
-		}
-
-		public boolean isRepeating() {
-			return this.repeating;
-		}
-
-		public static Task create(ScheduledCommand cmd) {
-			Task task = new Task();
-			task.scheduledCommand = cmd;
-			task.repeating = false;
-			return task;
-		}
-
-		private RepeatingCommand repeatingCommand;
-
-		private ScheduledCommand scheduledCommand;
-
-		protected Task() {
-		}
-
-		public boolean executeRepeating() {
-			return repeatingCommand.execute();
-		}
-
-		public void executeScheduled() {
-			scheduledCommand.execute();
-		}
-	}
-
-	/**
-	 * Calls {@link SchedulerImpl#flushPostEventPumpCommands()}.
-	 */
-	private final class Flusher implements RepeatingCommand {
-		public boolean execute() {
-			flushRunning = true;
-			flushPostEventPumpCommands();
-			/*
-			 * No finally here, we want this to be clear only on a normal exit.
-			 * An abnormal exit would indicate that an exception isn't being
-			 * caught correctly or that a slow script warning canceled the
-			 * timer.
-			 */
-			flushRunning = false;
-			return shouldBeRunning = isWorkQueued();
-		}
-	}
-
-	/**
-	 * Keeps {@link Flusher} running.
-	 */
-	private final class Rescuer implements RepeatingCommand {
-		public boolean execute() {
-			if (flushRunning) {
-				/*
-				 * Since JS is single-threaded, if we're here, then than means
-				 * that FLUSHER.execute() started, but did not finish.
-				 * Reschedule FLUSHER.
-				 */
-				scheduleFixedDelay(flusher, FLUSHER_DELAY);
-			}
-			return shouldBeRunning;
-		}
-	}
-
-	/**
 	 * Use a GWT.create() here to make it simple to hijack the default
 	 * implementation.
 	 */
@@ -331,35 +252,6 @@ public class SchedulerImpl extends Scheduler {
 		maybeSchedulePostEventPumpCommands();
 	}
 
-	/**
-	 * there for testing
-	 */
-	Duration createDuration() {
-		return new Duration();
-	}
-
-	/**
-	 * Called by Flusher.
-	 */
-	void flushPostEventPumpCommands() {
-		if (deferredCommands != null) {
-			List<Task> oldDeferred = deferredCommands;
-			deferredCommands = null;
-			/* We might not have any incremental commands queued. */
-			if (incrementalCommands == null) {
-				incrementalCommands = createQueue();
-			}
-			runScheduledTasks(oldDeferred, incrementalCommands);
-		}
-		if (incrementalCommands != null) {
-			incrementalCommands = runRepeatingTasks(incrementalCommands);
-		}
-	}
-
-	boolean isWorkQueued() {
-		return deferredCommands != null || incrementalCommands != null;
-	}
-
 	private void maybeSchedulePostEventPumpCommands() {
 		if (!shouldBeRunning) {
 			shouldBeRunning = true;
@@ -391,9 +283,8 @@ public class SchedulerImpl extends Scheduler {
 		while (duration.elapsedMillis() < TIME_SLICE) {
 			boolean executedSomeTask = false;
 			for (int i = 0; i < length; i++) {
-				assert tasks
-						.size() == length : "Working array length changed "
-								+ tasks.size() + " != " + length;
+				assert tasks.size() == length : "Working array length changed "
+						+ tasks.size() + " != " + length;
 				Task t = tasks.get(i);
 				if (t == null) {
 					continue;
@@ -423,6 +314,114 @@ public class SchedulerImpl extends Scheduler {
 			return newTasks.size() == 0 ? null : newTasks;
 		} else {
 			return tasks;
+		}
+	}
+
+	/**
+	 * there for testing
+	 */
+	Duration createDuration() {
+		return new Duration();
+	}
+
+	/**
+	 * Called by Flusher.
+	 */
+	void flushPostEventPumpCommands() {
+		if (deferredCommands != null) {
+			List<Task> oldDeferred = deferredCommands;
+			deferredCommands = null;
+			/* We might not have any incremental commands queued. */
+			if (incrementalCommands == null) {
+				incrementalCommands = createQueue();
+			}
+			runScheduledTasks(oldDeferred, incrementalCommands);
+		}
+		if (incrementalCommands != null) {
+			incrementalCommands = runRepeatingTasks(incrementalCommands);
+		}
+	}
+
+	boolean isWorkQueued() {
+		return deferredCommands != null || incrementalCommands != null;
+	}
+
+	/**
+	 * Calls {@link SchedulerImpl#flushPostEventPumpCommands()}.
+	 */
+	private final class Flusher implements RepeatingCommand {
+		public boolean execute() {
+			flushRunning = true;
+			flushPostEventPumpCommands();
+			/*
+			 * No finally here, we want this to be clear only on a normal exit.
+			 * An abnormal exit would indicate that an exception isn't being
+			 * caught correctly or that a slow script warning canceled the
+			 * timer.
+			 */
+			flushRunning = false;
+			return shouldBeRunning = isWorkQueued();
+		}
+	}
+
+	/**
+	 * Keeps {@link Flusher} running.
+	 */
+	private final class Rescuer implements RepeatingCommand {
+		public boolean execute() {
+			if (flushRunning) {
+				/*
+				 * Since JS is single-threaded, if we're here, then than means
+				 * that FLUSHER.execute() started, but did not finish.
+				 * Reschedule FLUSHER.
+				 */
+				scheduleFixedDelay(flusher, FLUSHER_DELAY);
+			}
+			return shouldBeRunning;
+		}
+	}
+
+	/**
+	 * Metadata bag for command objects. It's a JSO so that a lightweight List
+	 * can be used instead of a Collections type.
+	 * 
+	 * NR - doesn't play nice with hosted mode, and is fairly...not that
+	 * efficient. jsarr compared to arrayList??
+	 */
+	static final class Task {
+		public static Task create(RepeatingCommand cmd) {
+			Task task = new Task();
+			task.repeatingCommand = cmd;
+			task.repeating = true;
+			return task;
+		}
+
+		public static Task create(ScheduledCommand cmd) {
+			Task task = new Task();
+			task.scheduledCommand = cmd;
+			task.repeating = false;
+			return task;
+		}
+
+		private boolean repeating;
+
+		private RepeatingCommand repeatingCommand;
+
+		private ScheduledCommand scheduledCommand;
+
+		protected Task() {
+		}
+
+		public boolean executeRepeating() {
+			return repeatingCommand.execute();
+		}
+
+		public void executeScheduled() {
+			scheduledCommand.execute();
+		}
+
+		public boolean isRepeating() {
+			return this.repeating;
 		}
 	}
 }

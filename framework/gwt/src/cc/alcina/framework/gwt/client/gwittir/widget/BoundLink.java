@@ -42,14 +42,6 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		super.initWidget(base);
 	}
 
-	public boolean isEnabled() {
-		return this.base.isEnabled();
-	}
-
-	public void setEnabled(boolean enabled) {
-		this.base.setEnabled(enabled);
-	}
-
 	public HandlerRegistration addClickHandler(ClickHandler handler) {
 		return this.base.addClickHandler(handler);
 	}
@@ -129,6 +121,10 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		return asHtml;
 	}
 
+	public boolean isEnabled() {
+		return this.base.isEnabled();
+	}
+
 	public boolean isVisible() {
 		boolean retValue;
 		retValue = this.base.isVisible();
@@ -141,6 +137,10 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 
 	public void setAsHtml(boolean isHtml) {
 		this.asHtml = isHtml;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.base.setEnabled(enabled);
 	}
 
 	public void setHeight(String height) {
@@ -190,9 +190,9 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		// ("Setting value "+ value, null );
 		Object old = this.getValue();
 		this.value = value;
-		String renderedString = this.getRenderer() != null ? (String) this
-				.getRenderer().render(value) : value == null ? "" : value
-				.toString();
+		String renderedString = this.getRenderer() != null
+				? (String) this.getRenderer().render(value)
+				: value == null ? "" : value.toString();
 		if (isAsHtml()) {
 			this.base.setHTML(renderedString);
 		} else {

@@ -68,10 +68,10 @@ public interface Publication extends HasId {
 
 	public void setUserPublicationId(Long userPublicationId);
 
+	String getPublicationUid();
+
 	default void setMimeMessageId(String messageId) {
 	}
 
 	void setPublicationUid(String publicationUid);
-
-	String getPublicationUid();
 }

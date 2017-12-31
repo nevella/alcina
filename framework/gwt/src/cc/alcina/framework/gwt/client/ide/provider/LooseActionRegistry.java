@@ -26,14 +26,9 @@ import cc.alcina.framework.gwt.client.ide.provider.LooseActionHandler.LooseTarge
  * @author Nick Reddel
  */
 public class LooseActionRegistry {
-	private LooseActionRegistry() {
-		super();
-		actionHandlers = new HashMap<String, LooseActionHandler>();
-		loadFromRegistry();
-	}
-
 	public static LooseActionRegistry get() {
-		LooseActionRegistry singleton = Registry.checkSingleton(LooseActionRegistry.class);
+		LooseActionRegistry singleton = Registry
+				.checkSingleton(LooseActionRegistry.class);
 		if (singleton == null) {
 			singleton = new LooseActionRegistry();
 			Registry.registerSingleton(LooseActionRegistry.class, singleton);
@@ -43,14 +38,16 @@ public class LooseActionRegistry {
 
 	private Map<String, LooseActionHandler> actionHandlers;
 
-	public void registerHandler(LooseActionHandler wp) {
-		actionHandlers.put(wp.getName(), wp);
+	private LooseActionRegistry() {
+		super();
+		actionHandlers = new HashMap<String, LooseActionHandler>();
+		loadFromRegistry();
 	}
 
 	public LooseActionHandler getHandler(String name) {
 		LooseActionHandler handler = actionHandlers.get(name);
-		if(handler==null){
-			//handle reflection/code splitting
+		if (handler == null) {
+			// handle reflection/code splitting
 			loadFromRegistry();
 		}
 		return handler;
@@ -62,6 +59,10 @@ public class LooseActionRegistry {
 		LooseTargetedActionHandler handler = (LooseTargetedActionHandler) Registry
 				.get().instantiateSingle(action.getClass(), target.getClass());
 		handler.performAction(target);
+	}
+
+	public void registerHandler(LooseActionHandler wp) {
+		actionHandlers.put(wp.getName(), wp);
 	}
 
 	@SuppressWarnings("unchecked")

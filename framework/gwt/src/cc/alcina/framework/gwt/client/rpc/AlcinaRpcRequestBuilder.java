@@ -17,6 +17,17 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 	public static final String TOPIC_ALCINA_RPC_REQUEST_BUILDER_CREATED = AlcinaTopics.class
 			.getName() + ".TOPIC_ALCINA_RPC_REQUEST_BUILDER_CREATED";
 
+	public static final String CLIENT_INSTANCE_ID_KEY = "X-ALCINA-CLIENT-INSTANCE-ID";
+
+	public static final String CLIENT_INSTANCE_AUTH_KEY = "X-ALCINA-CLIENT-INSTANCE-AUTH";
+
+	public static AlcinaRpcRequestBuilderCreationOneOffReplayableListener
+			addOneoffReplayableCreationListener() {
+		AlcinaRpcRequestBuilderCreationOneOffReplayableListener listener = new AlcinaRpcRequestBuilderCreationOneOffReplayableListener();
+		alcinaRpcRequestBuilderCreatedListenerDelta(listener, true);
+		return listener;
+	}
+
 	public static void alcinaRpcRequestBuilderCreated(
 			AlcinaRpcRequestBuilder createdBuilder) {
 		GlobalTopicPublisher.get().publishTopic(
@@ -29,22 +40,6 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 				TOPIC_ALCINA_RPC_REQUEST_BUILDER_CREATED, listener, add);
 	}
 
-	public static class AlcinaRpcRequestBuilderCreationOneOffReplayableListener
-			implements TopicListener<AlcinaRpcRequestBuilder> {
-		public AlcinaRpcRequestBuilder builder;
-
-		@Override
-		public void topicPublished(String key, AlcinaRpcRequestBuilder builder) {
-			this.builder = builder;
-			builder.setRecordResult(true);
-			alcinaRpcRequestBuilderCreatedListenerDelta(this, false);
-		}
-	}
-
-	public static final String CLIENT_INSTANCE_ID_KEY = "X-ALCINA-CLIENT-INSTANCE-ID";
-
-	public static final String CLIENT_INSTANCE_AUTH_KEY = "X-ALCINA-CLIENT-INSTANCE-AUTH";
-
 	protected boolean recordResult;
 
 	protected Response response;
@@ -53,6 +48,35 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 
 	public AlcinaRpcRequestBuilder() {
 		alcinaRpcRequestBuilderCreated(this);
+	}
+
+	public void addAlcinaHeaders(RequestBuilder rb) {
+		addAlcinaHeaders(rb, true);
+	}
+
+	public void addAlcinaHeaders(RequestBuilder rb, boolean noCache) {
+		// iOS 6
+		if (noCache) {
+			rb.setHeader("Cache-Control", "no-cache");
+		}
+		if (ClientBase.getClientInstance() != null) {
+			rb.setHeader(CLIENT_INSTANCE_ID_KEY,
+					String.valueOf(ClientBase.getClientInstance().getId()));
+			rb.setHeader(CLIENT_INSTANCE_AUTH_KEY,
+					ClientBase.getClientInstance().getAuth().toString());
+		}
+	}
+
+	public String getRpcResult() {
+		return response == null ? null : response.getText();
+	}
+
+	public boolean isRecordResult() {
+		return recordResult;
+	}
+
+	public void setRecordResult(boolean recordResult) {
+		this.recordResult = recordResult;
 	}
 
 	public AlcinaRpcRequestBuilder setResponsePayload(String payload) {
@@ -69,6 +93,39 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 		return super.doCreate(serviceEntryPoint);
 	}
 
+	@Override
+	protected void doFinish(RequestBuilder rb) {
+		super.doFinish(rb);
+		addAlcinaHeaders(rb);
+	}
+
+	@Override
+	protected void doSetCallback(RequestBuilder rb, RequestCallback callback) {
+		if (recordResult) {
+			callback = new WrappingCallback(callback);
+		}
+		super.doSetCallback(rb, callback);
+	}
+
+	public static class AlcinaRpcRequestBuilderCreationOneOffReplayableListener
+			implements TopicListener<AlcinaRpcRequestBuilder> {
+		public AlcinaRpcRequestBuilder builder;
+
+		@Override
+		public void topicPublished(String key,
+				AlcinaRpcRequestBuilder builder) {
+			this.builder = builder;
+			builder.setRecordResult(true);
+			alcinaRpcRequestBuilderCreatedListenerDelta(this, false);
+		}
+	}
+
+	class SyncRequest extends Request {
+		public SyncRequest() {
+			super();
+		}
+	}
+
 	class SyncRequestBuilder extends RequestBuilder {
 		public SyncRequestBuilder(Method httpMethod, String url) {
 			super(httpMethod, url);
@@ -82,23 +139,8 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 		public Request send() throws RequestException {
 			Response response = new Response() {
 				@Override
-				public String getText() {
-					return payload;
-				}
-
-				@Override
-				public String getStatusText() {
-					return "OK";
-				}
-
-				@Override
-				public int getStatusCode() {
-					return 200;
-				}
-
-				@Override
-				public String getHeadersAsString() {
-					return "";
+				public String getHeader(String header) {
+					return null;
 				}
 
 				@Override
@@ -107,28 +149,29 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 				}
 
 				@Override
-				public String getHeader(String header) {
-					return null;
+				public String getHeadersAsString() {
+					return "";
+				}
+
+				@Override
+				public int getStatusCode() {
+					return 200;
+				}
+
+				@Override
+				public String getStatusText() {
+					return "OK";
+				}
+
+				@Override
+				public String getText() {
+					return payload;
 				}
 			};
 			Request syncRequest = new SyncRequest();
 			getCallback().onResponseReceived(syncRequest, response);
 			return syncRequest;
 		}
-	}
-
-	class SyncRequest extends Request {
-		public SyncRequest() {
-			super();
-		}
-	}
-
-	@Override
-	protected void doSetCallback(RequestBuilder rb, RequestCallback callback) {
-		if (recordResult) {
-			callback = new WrappingCallback(callback);
-		}
-		super.doSetCallback(rb, callback);
 	}
 
 	class WrappingCallback implements RequestCallback {
@@ -146,46 +189,5 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 			AlcinaRpcRequestBuilder.this.response = response;
 			originalCallback.onResponseReceived(request, response);
 		}
-	}
-
-	@Override
-	protected void doFinish(RequestBuilder rb) {
-		super.doFinish(rb);
-		addAlcinaHeaders(rb);
-	}
-
-	public void addAlcinaHeaders(RequestBuilder rb) {
-		addAlcinaHeaders(rb, true);
-	}
-
-	public void addAlcinaHeaders(RequestBuilder rb, boolean noCache) {
-		// iOS 6
-		if (noCache) {
-			rb.setHeader("Cache-Control", "no-cache");
-		}
-		if (ClientBase.getClientInstance() != null) {
-			rb.setHeader(CLIENT_INSTANCE_ID_KEY,
-					String.valueOf(ClientBase.getClientInstance().getId()));
-			rb.setHeader(CLIENT_INSTANCE_AUTH_KEY, ClientBase
-					.getClientInstance().getAuth().toString());
-		}
-	}
-
-	public void setRecordResult(boolean recordResult) {
-		this.recordResult = recordResult;
-	}
-
-	public boolean isRecordResult() {
-		return recordResult;
-	}
-
-	public String getRpcResult() {
-		return response == null ? null : response.getText();
-	}
-
-	public static AlcinaRpcRequestBuilderCreationOneOffReplayableListener addOneoffReplayableCreationListener() {
-		AlcinaRpcRequestBuilderCreationOneOffReplayableListener listener = new AlcinaRpcRequestBuilderCreationOneOffReplayableListener();
-		alcinaRpcRequestBuilderCreatedListenerDelta(listener, true);
-		return listener;
 	}
 }

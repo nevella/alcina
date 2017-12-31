@@ -23,29 +23,27 @@ import com.google.gwt.dom.client.Element;
  * element that has zero width and height.
  */
 public class FocusImplSafari extends FocusImplStandard {
+	@Override
+	public native void blur(Element elem) /*-{
+											// Attempts to blur elements from within an event callback will generally
+											// be unsuccessful, so we invoke blur() from outside of the callback.
+											$wnd.setTimeout(function() {
+											var remote=elem.@com.google.gwt.dom.client.Element::typedRemote()();
+											if(remote.nodeType){
+											remote.blur();
+											}
+											}, 0);
+											}-*/;
 
-  @Override
-  public native void blur(Element elem) /*-{
-    // Attempts to blur elements from within an event callback will generally
-    // be unsuccessful, so we invoke blur() from outside of the callback.
-    $wnd.setTimeout(function() {
-    	var remote=elem.@com.google.gwt.dom.client.Element::typedRemote()();
-    	if(remote.nodeType){
-	      	remote.blur();
-    	}
-    }, 0);
-  }-*/;
-
-  @Override
-  public native void focus(Element elem) /*-{
-    // Attempts to focus elements from within an event callback will generally
-    // be unsuccessful, so we invoke focus() from outside of the callback.
-    $wnd.setTimeout(function() {
-    	var remote=elem.@com.google.gwt.dom.client.Element::typedRemote()();
-    	if(remote.nodeType){
-      		remote.focus();
-    	}
-    }, 0);
-  }-*/;
-
+	@Override
+	public native void focus(Element elem) /*-{
+											// Attempts to focus elements from within an event callback will generally
+											// be unsuccessful, so we invoke focus() from outside of the callback.
+											$wnd.setTimeout(function() {
+											var remote=elem.@com.google.gwt.dom.client.Element::typedRemote()();
+											if(remote.nodeType){
+											remote.focus();
+											}
+											}, 0);
+											}-*/;
 }

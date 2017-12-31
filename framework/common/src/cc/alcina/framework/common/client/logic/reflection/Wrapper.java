@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
@@ -21,21 +20,22 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target( { ElementType.METHOD })
+@Target({ ElementType.METHOD })
 @ClientVisible
 /**
  *
  * @author Nick Reddel
  */
+public @interface Wrapper {
+	// TODO - currently not implemented. Question is: should it be?
+	boolean cascadeDelete() default true;
 
- public @interface Wrapper {
-	 String idPropertyName();
-	 String toStringPropertyName() default "";
-	 //TODO - currently not implemented. Question is: should it be?
-	 boolean cascadeDelete() default true;
-	 Class defaultImplementationType() default Void.class;
+	Class defaultImplementationType() default Void.class;
+
+	String idPropertyName();
+
+	String toStringPropertyName() default "";
 }

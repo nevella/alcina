@@ -19,6 +19,8 @@ import java.util.List;
 import com.totsp.gwittir.client.beans.Method;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -28,28 +30,32 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public interface ClassLookup {
-	public Class getClassForName(String fqn);
-
-	default <T> T newInstance(String fqn) {
-		return (T) newInstance(getClassForName(fqn));
-	}
-
-	public <T> T newInstance(Class<T> clazz);
-
-	public <T> T newInstance(Class<T> clazz, long objectId, long localId);
-
 	public String displayNameForObject(Object o);
+
+	public List<String> getAnnotatedPropertyNames(Class clazz);
 
 	public <A extends Annotation> A getAnnotationForClass(Class targetClass,
 			Class<A> annotationClass);
 
-	public List<String> getAnnotatedPropertyNames(Class clazz);
+	public Class getClassForName(String fqn);
 
 	public Class getPropertyType(Class clazz, String propertyName);
 
 	public <T> T getTemplateInstance(Class<T> clazz);
 
 	public List<PropertyInfoLite> getWritableProperties(Class clazz);
+
+	public <T> T newInstance(Class<T> clazz);
+
+	public <T> T newInstance(Class<T> clazz, long objectId, long localId);
+
+	default boolean isPrimitive(Class<?> clazz) {
+		return clazz.isPrimitive();
+	}
+
+	default <T> T newInstance(String fqn) {
+		return (T) newInstance(getClassForName(fqn));
+	}
 
 	public static class PropertyInfoLite {
 		private Class propertyType;
@@ -64,14 +70,17 @@ public interface ClassLookup {
 
 		private boolean serializeWithBeanSerialization;
 
+		private Method writeMethod;
+
 		public PropertyInfoLite(Class beanType, String propertyName) {
 			this.propertyName = propertyName;
 			this.beanType = beanType;
 		}
 
 		public PropertyInfoLite(Class propertyType, String propertyName,
-				Method readMethod, Class beanType) {
+				Method readMethod, Method writeMethod, Class beanType) {
 			this.readMethod = readMethod;
+			this.writeMethod = writeMethod;
 			this.beanType = beanType;
 			this.propertyType = CommonUtils.getWrapperType(propertyType);
 			this.propertyName = propertyName;
@@ -84,24 +93,13 @@ public interface ClassLookup {
 					&& ann.serializeWithBeanSerialization();
 		}
 
-		public boolean isSerializeWithBeanSerialization() {
-			return this.serializeWithBeanSerialization;
-		}
-
-		public Class getPropertyType() {
-			return propertyType;
-		}
-
-		public String getPropertyName() {
-			return propertyName;
-		}
-
-		public Method getReadMethod() {
-			return readMethod;
-		}
-
-		public boolean isSerializableCollection() {
-			return serializeCollectionOnClient;
+		public void copy(HasIdAndLocalId hili, HasIdAndLocalId writeable) {
+			try {
+				Object value = getReadMethod().invoke(hili, new Object[0]);
+				writeMethod.invoke(writeable, new Object[] { value });
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 
 		@Override
@@ -114,9 +112,29 @@ public interface ClassLookup {
 			return false;
 		}
 
+		public String getPropertyName() {
+			return propertyName;
+		}
+
+		public Class getPropertyType() {
+			return propertyType;
+		}
+
+		public Method getReadMethod() {
+			return readMethod;
+		}
+
 		@Override
 		public int hashCode() {
 			return beanType.hashCode() ^ propertyName.hashCode();
+		}
+
+		public boolean isSerializableCollection() {
+			return serializeCollectionOnClient;
+		}
+
+		public boolean isSerializeWithBeanSerialization() {
+			return this.serializeWithBeanSerialization;
 		}
 
 		@Override
@@ -124,9 +142,5 @@ public interface ClassLookup {
 			return Ax.format("Property: %s.%s :: %s", beanType.getSimpleName(),
 					propertyName, propertyType.getSimpleName());
 		}
-	}
-
-	default boolean isPrimitive(Class<?> clazz) {
-		return clazz.isPrimitive();
 	}
 }

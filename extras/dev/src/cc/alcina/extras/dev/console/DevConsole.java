@@ -94,6 +94,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		System.setOut(out);
 	}
 
+	static final Color RED = new Color(210, 20, 20);
+
+	static final Color GREEN = new Color(0, 174, 127);
+
 	public static void stdSysOut() {
 		System.setErr(err.s1);
 		System.setOut(out.s1);
@@ -137,10 +141,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	private String lastCommand;
 
-	static final Color RED = new Color(210, 20, 20);
-
-	static final Color GREEN = new Color(0, 174, 127);
-
 	boolean secondHelperInitted = false;
 
 	public S state;
@@ -159,6 +159,35 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	public boolean runningLastCommand;
 
+	List<DevConsoleCommand> runningJobs = new ArrayList<DevConsoleCommand>();
+
+	public Logger logger;
+
+	ByteArrayOutputStream recordOut;
+
+	PrintStream oldS2;
+
+	String outDumpFileName = null;
+
+	public String breakAndPad(int tabCount, int width, String text,
+			int padLeftCharCount) {
+		StringBuilder sb = new StringBuilder();
+		int idx0 = 0;
+		for (int idx1 = width; idx1 < text.length(); idx1 += width) {
+			for (; idx1 < text.length(); idx1 += 1) {
+				char c = text.charAt(idx1);
+				if (c == ' ' || c == ',') {
+					sb.append(text.substring(idx0, idx1 + 1));
+					sb.append("\n");
+					idx0 = idx1 + 1;
+					break;
+				}
+			}
+		}
+		sb.append(text.substring(idx0));
+		return padLeft(sb.toString(), tabCount, padLeftCharCount);
+	}
+
 	public void clear() {
 		consoleLeft.invoke(new Runnable() {
 			@Override
@@ -168,8 +197,283 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		});
 	}
 
+	public void closePipeHtml() {
+		try {
+			String val = endRecordingSysout();
+			val = val.replaceAll("(https?://\\S+)", "<a href='$1'>$1</a>");
+			val = Ax.format("<pre>%s</pre>", val);
+			ResourceUtilities.writeStringToFile(val, this.outDumpFileName);
+			this.outDumpFileName = null;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public void dumpTransforms() {
+		System.out.println("\n\n");
+		Set<DomainTransformEvent> transforms = devHelper.dumpTransforms();
+		System.out.println("\n\n");
+		setClipboardContents(transforms.toString());
+		File dumpFile = getDevFile("dumpTransforms.txt");
+		try {
+			ResourceUtilities.writeStringToFile(transforms.toString(),
+					dumpFile);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public String endRecordingSysout() {
+		out.s2.flush();
+		String result = new String(recordOut.toByteArray());
+		out.s2 = oldS2;
+		return result;
+	}
+
+	public void find(String text) {
+		consoleLeft.find(text);
+	}
+
+	/**
+	 * Get the String residing on the clipboard.
+	 * 
+	 * @return any text found on the Clipboard; if none found, return an empty
+	 *         String.
+	 */
+	public String getClipboardContents() {
+		String result = "";
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		// odd: the Object param of getContents is not currently used
+		Transferable contents = clipboard.getContents(null);
+		boolean hasTransferableText = (contents != null)
+				&& contents.isDataFlavorSupported(DataFlavor.stringFlavor);
+		if (hasTransferableText) {
+			try {
+				result = (String) contents
+						.getTransferData(DataFlavor.stringFlavor);
+			} catch (UnsupportedFlavorException ex) {
+				// highly unlikely since we are using a standard DataFlavor
+				System.out.println(ex);
+				ex.printStackTrace();
+			} catch (IOException ex) {
+				System.out.println(ex);
+				ex.printStackTrace();
+			}
+		}
+		return result;
+	}
+
+	public JConsole getConsoleLeft() {
+		return this.consoleLeft;
+	}
+
+	public File getDevFile(String path) {
+		return new File(String.format("%s/%s", devFolder.getPath(), path));
+	}
+
+	public String getMultilineInput(String prompt) {
+		return getMultilineInput(prompt, 10, 40);
+	}
+
+	public String getMultilineInput(String prompt, int rows, int cols) {
+		final JTextArea textArea = new JTextArea(rows, cols);
+		textArea.addAncestorListener(new AncestorListener() {
+			@Override
+			public void ancestorAdded(AncestorEvent event) {
+				textArea.requestFocusInWindow();
+			}
+
+			@Override
+			public void ancestorMoved(AncestorEvent event) {
+			}
+
+			@Override
+			public void ancestorRemoved(AncestorEvent event) {
+			}
+		});
+		textArea.setText(getClipboardContents().replace("\r", "\n"));
+		JScrollPane jsp = new JScrollPane(textArea);
+		int result = JOptionPane.showConfirmDialog(null, jsp, prompt,
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		if (result == JOptionPane.OK_OPTION) {
+			return textArea.getText();
+		} else {
+			return null;
+		}
+	}
+
+	public String getSingleLineInput(String prompt, String defaultValue) {
+		final JTextField textArea = new JTextField(40);
+		textArea.addAncestorListener(new AncestorListener() {
+			@Override
+			public void ancestorAdded(AncestorEvent event) {
+				textArea.requestFocusInWindow();
+			}
+
+			@Override
+			public void ancestorMoved(AncestorEvent event) {
+			}
+
+			@Override
+			public void ancestorRemoved(AncestorEvent event) {
+			}
+		});
+		textArea.setText(defaultValue);
+		int result = JOptionPane.showConfirmDialog(null, textArea, prompt,
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		if (result == JOptionPane.OK_OPTION) {
+			return textArea.getText();
+		} else {
+			return null;
+		}
+	}
+
+	public void loadConfig() throws Exception {
+		// eclipse may be caching - read directly
+		if (consolePropertiesFile.exists()) {
+			props = (P) deserializeProperties(newConsoleProperties().getClass(),
+					consolePropertiesFile);
+		} else {
+			props = newConsoleProperties();
+		}
+		if (consoleHistoryFile.exists()) {
+			history = deserializeProperties(DevConsoleHistory.class,
+					consoleHistoryFile);
+		} else {
+			history = new DevConsoleHistory();
+		}
+		if (consoleStringsFile.exists()) {
+			strings = deserializeProperties(DevConsoleStrings.class,
+					consoleStringsFile);
+		} else {
+			strings = new DevConsoleStrings();
+		}
+		saveConfig();
+		if (props.useMountSshfsFs) {
+			devHelper.useMountSshfsFs();
+		}
+	}
+
+	@Override
+	public void lostOwnership(Clipboard clipboard, Transferable contents) {
+		// TODO Auto-generated method stub
+	}
+
+	public String padLeft(String str, int tabCount, int charCount) {
+		if (tabCount != 0) {
+			String pad = CommonUtils.padStringLeft("", charCount, "\t");
+			return pad + str.replace("\n", "\n" + pad);
+		} else {
+			String pad = "\n" + CommonUtils.padStringLeft("", charCount, " ");
+			return str.replace("\n", pad);
+		}
+	}
+
+	public void pipeOutput(String outDumpFileName) {
+		pipeOutput(outDumpFileName, true);
+	}
+
+	public void pipeOutput(String outDumpFileName, boolean mute) {
+		if (outDumpFileName != null) {
+			startRecordingSysout(mute);
+			this.outDumpFileName = outDumpFileName;
+		} else {
+			try {
+				ResourceUtilities.writeStringToFile(endRecordingSysout(),
+						this.outDumpFileName);
+				this.outDumpFileName = null;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
+	public void prepareCommand(DevConsoleCommand cmd) {
+		cmd.setEnvironment(this);
+	}
+
+	public void resetObjects() {
+		devHelper.configLoaded = false;
+		devHelper.loadJbossConfig();
+		devHelper.readAppObjectGraph();
+		devHelper.initPostObjectServices();
+	}
+
+	public void saveConfig() throws Exception {
+		serializeObject(props, consolePropertiesFile);
+		serializeObject(history, consoleHistoryFile);
+		serializeObject(strings, consoleStringsFile);
+		// ResourceUtilities.writeStringToFile(
+		// WrappedObjectHelper.xmlSerialize(props), consolePropertiesFile);
+		// ResourceUtilities.writeStringToFile(
+		// WrappedObjectHelper.xmlSerialize(history), consoleHistoryFile);
+		// ResourceUtilities.writeStringToFile(
+		// WrappedObjectHelper.xmlSerialize(strings), consoleStringsFile);
+	}
+
+	public void serializeState() {
+		devHelper.writeObject(state);
+	}
+
+	/**
+	 * Place a String on the clipboard, and make this class the owner of the
+	 * Clipboard's contents.
+	 */
+	public void setClipboardContents(String aString) {
+		StringSelection stringSelection = new StringSelection(aString);
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		clipboard.setContents(stringSelection, this);
+	}
+
 	public void setCommandLineText(String text) {
 		commandLine.setTextWithPrompt(text);
+	}
+
+	public void startRecordingSysout(boolean mute) {
+		oldS2 = out.s2;
+		PrintStream s2 = out.s2;
+		recordOut = new ByteArrayOutputStream();
+		PrintStream outStream = new PrintStream(recordOut);
+		if (mute) {
+			out.s2 = outStream;
+			ByteArrayOutputStream nullOut = new ByteArrayOutputStream();
+			out.s1 = new PrintStream(nullOut);
+		} else {
+			BiPrintStream s2repl = new BiPrintStream(
+					new ByteArrayOutputStream());
+			s2repl.s1 = s2;
+			s2repl.s2 = outStream;
+			out.s2 = s2repl;
+		}
+	}
+
+	private <T> T deserializeProperties(Class<T> clazz, File file)
+			throws Exception {
+		try {
+			return KryoUtils.deserializeFromFile(file, clazz);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return WrappedObjectHelper.xmlDeserialize(clazz,
+				ResourceUtilities.readFileToString(file));
+	}
+
+	private void loadFontMetrics() {
+		new Thread(() -> {
+			new BufferedImage(1, 1, BufferedImage.TYPE_BYTE_GRAY)
+					.createGraphics().getFontMetrics();
+		}).start();
+	}
+
+	private void serializeObject(Object object, File file) {
+		KryoUtils.serializeToFile(object, file);
+	}
+
+	protected abstract void createDevHelper();
+
+	protected List<Class> getInitClasses() {
+		return new ArrayList<>(Arrays.asList(DevConsoleProperties.class,
+				DevConsoleStrings.class, DevConsoleHistory.class));
 	}
 
 	protected void init() throws Exception {
@@ -240,80 +544,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
-	private void loadFontMetrics() {
-		new Thread(() -> {
-			new BufferedImage(1, 1, BufferedImage.TYPE_BYTE_GRAY)
-					.createGraphics().getFontMetrics();
-		}).start();
-	}
-
-	protected List<Class> getInitClasses() {
-		return new ArrayList<>(Arrays.asList(DevConsoleProperties.class,
-				DevConsoleStrings.class, DevConsoleHistory.class));
-	}
-
-	class SwingPrompter implements StringPrompter {
-		@Override
-		public String getValue(String prompt) {
-			return JOptionPane.showInputDialog(prompt);
-		}
-	}
-
 	protected abstract void initState();
-
-	protected abstract void createDevHelper();
-
-	void initFiles() {
-		devFolder = devHelper.getDevFolder();
-		setsFolder = getDevFile("sets");
-		setsFolder.mkdirs();
-		profileFolder = getDevFile("profiles");
-		profileFolder.mkdir();
-		consolePropertiesFile = getDevFile("console-properties.xml");
-		consoleHistoryFile = getDevFile("console-history.xml");
-		consoleStringsFile = getDevFile("console-strings.xml");
-	}
-
-	public File getDevFile(String path) {
-		return new File(String.format("%s/%s", devFolder.getPath(), path));
-	}
-
-	public void loadConfig() throws Exception {
-		// eclipse may be caching - read directly
-		if (consolePropertiesFile.exists()) {
-			props = (P) deserializeProperties(newConsoleProperties().getClass(),
-					consolePropertiesFile);
-		} else {
-			props = newConsoleProperties();
-		}
-		if (consoleHistoryFile.exists()) {
-			history = deserializeProperties(DevConsoleHistory.class,
-					consoleHistoryFile);
-		} else {
-			history = new DevConsoleHistory();
-		}
-		if (consoleStringsFile.exists()) {
-			strings = deserializeProperties(DevConsoleStrings.class,
-					consoleStringsFile);
-		} else {
-			strings = new DevConsoleStrings();
-		}
-		saveConfig();
-		if (props.useMountSshfsFs) {
-			devHelper.useMountSshfsFs();
-		}
-	}
-
-	private <T> T deserializeProperties(Class<T> clazz, File file)
-			throws Exception {
-		try {
-			return KryoUtils.deserializeFromFile(file, clazz);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return WrappedObjectHelper.xmlDeserialize(clazz,
-				ResourceUtilities.readFileToString(file));
-	}
 
 	protected abstract P newConsoleProperties();
 
@@ -419,7 +650,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				try {
 					saveConfig();
 				} catch (Exception e) {
-					throw new  WrappedRuntimeException(e);
+					throw new WrappedRuntimeException(e);
 				}
 			}
 		} catch (Exception e) {
@@ -433,93 +664,15 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
-	List<DevConsoleCommand> runningJobs = new ArrayList<DevConsoleCommand>();
-
-	public Logger logger;
-
-	public void saveConfig() throws Exception {
-		serializeObject(props, consolePropertiesFile);
-		serializeObject(history, consoleHistoryFile);
-		serializeObject(strings, consoleStringsFile);
-		// ResourceUtilities.writeStringToFile(
-		// WrappedObjectHelper.xmlSerialize(props), consolePropertiesFile);
-		// ResourceUtilities.writeStringToFile(
-		// WrappedObjectHelper.xmlSerialize(history), consoleHistoryFile);
-		// ResourceUtilities.writeStringToFile(
-		// WrappedObjectHelper.xmlSerialize(strings), consoleStringsFile);
-	}
-
-	private void serializeObject(Object object, File file) {
-		KryoUtils.serializeToFile(object, file);
-	}
-
-	private class JCommandLine extends JTextField {
-		private KeyListener arrowListener = new KeyListener() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-				int code = e.getKeyCode();
-				int delta = 0;
-				switch (code) {
-				case KeyEvent.VK_DOWN:
-					delta = 1;
-					break;
-				case KeyEvent.VK_UP:
-					delta = -1;
-					break;
-				}
-				if (delta != 0) {
-					String cmd = history.getCommand(delta);
-					if (!cmd.isEmpty()) {
-						setTextWithPrompt(cmd);
-					}
-				}
-				if(e.isMetaDown()&&e.getKeyChar()=='k'){
-					clear();
-				}
-			}
-
-			@Override
-			public void keyTyped(KeyEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void keyPressed(KeyEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-		};
-
-		public JCommandLine() {
-			addKeyListener(arrowListener);
-		}
-
-		public void setTextWithPrompt(final String text) {
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					setText(">" + text);
-					setCaretPosition(getText().length());
-				}
-			});
-		}
-
-		public String getTrimmedText() {
-			return getText().substring(1);
-		}
-
-		@Override
-		public void setCaretPosition(int position) {
-			super.setCaretPosition(
-					position == 0 ? getText().length() == 0 ? 0 : 1 : position);
-		}
-
-		private void reset() {
-			requestFocusInWindow();
-			setTextWithPrompt("");
-			select(1, 1);
-		}
+	void initFiles() {
+		devFolder = devHelper.getDevFolder();
+		setsFolder = getDevFile("sets");
+		setsFolder.mkdirs();
+		profileFolder = getDevFile("profiles");
+		profileFolder.mkdir();
+		consolePropertiesFile = getDevFile("console-properties.xml");
+		consoleHistoryFile = getDevFile("console-history.xml");
+		consoleStringsFile = getDevFile("console-strings.xml");
 	}
 
 	public static class JConsole extends JTextPane {
@@ -530,6 +683,40 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		private SimpleAttributeSet highlightRange;
 
 		private SimpleAttributeSet normalRange;
+
+		// @Override
+		// public boolean getScrollableTracksViewportWidth() {
+		// return false;
+		// }
+		//
+		// public Dimension getPreferredSize() {
+		// Dimension dim = super.getPreferredSize();
+		// return new Dimension(Integer.MAX_VALUE, dim.height);
+		// };
+		//
+		// public Dimension getMinimumSize() {
+		// Dimension dim = super.getMinimumSize();
+		// return new Dimension(Integer.MAX_VALUE, dim.height);
+		// };
+		Runnable appendRunnable = null;
+
+		List<Runnable> runnableBuffer = new ArrayList();
+
+		private Timer commitThread = new Timer();
+		{
+			commitThread.scheduleAtFixedRate(new TimerTask() {
+				@Override
+				public void run() {
+					commit();
+				}
+			}, 0, 20);
+		}
+
+		String lastText = null;
+
+		private int docIndex;
+
+		private Element lastHighlight;
 
 		public JConsole() {
 			setCaretPosition(0);
@@ -547,6 +734,41 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY,
 					StyleConstants.TabSet, tabset);
 			setParagraphAttributes(aset, false);
+		}
+
+		public void append(final String str) {
+			StyledDocument doc = getStyledDocument();
+			try {
+				doc.insertString(doc.getLength(), str, current);
+				docIndex = 0;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		public synchronized void commit() {
+			SwingUtilities.invokeLater(new RunnableGroup());
+		}
+
+		public void err(final String msg) {
+			Runnable apRun = new Runnable() {
+				public void run() {
+					setStyle(ConsoleStyle.ERR);
+					append(msg);
+					setStyle(ConsoleStyle.NORMAL);
+					maybeScroll(this);
+				}
+			};
+			invoke(apRun);
+		}
+
+		public void find(final String text) {
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					find0(text);
+				}
+			});
 		}
 
 		public void initAttrs(String fontName) {
@@ -567,91 +789,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 					new Color(190, 210, 250));
 			// StyleConstants.setForeground(highlightRange, Color.PINK);
 			StyleConstants.setBackground(normalRange, Color.WHITE);
-		}
-
-		public void append(final String str) {
-			StyledDocument doc = getStyledDocument();
-			try {
-				doc.insertString(doc.getLength(), str, current);
-				docIndex = 0;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		// @Override
-		// public boolean getScrollableTracksViewportWidth() {
-		// return false;
-		// }
-		//
-		// public Dimension getPreferredSize() {
-		// Dimension dim = super.getPreferredSize();
-		// return new Dimension(Integer.MAX_VALUE, dim.height);
-		// };
-		//
-		// public Dimension getMinimumSize() {
-		// Dimension dim = super.getMinimumSize();
-		// return new Dimension(Integer.MAX_VALUE, dim.height);
-		// };
-		Runnable appendRunnable = null;
-
-		public void err(final String msg) {
-			Runnable apRun = new Runnable() {
-				public void run() {
-					setStyle(ConsoleStyle.ERR);
-					append(msg);
-					setStyle(ConsoleStyle.NORMAL);
-					maybeScroll(this);
-				}
-			};
-			invoke(apRun);
-		}
-
-		protected void maybeScroll(Runnable runnable) {
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					JViewport pane = (JViewport) getParent().getParent();
-					pane.scrollRectToVisible(
-							new Rectangle(0, getHeight() - 12, 12, 12));
-				}
-			});
-		}
-
-		List<Runnable> runnableBuffer = new ArrayList();
-
-		private Timer commitThread = new Timer();
-		{
-			commitThread.scheduleAtFixedRate(new TimerTask() {
-				@Override
-				public void run() {
-					commit();
-				}
-			}, 0, 20);
-		}
-
-		protected synchronized void invoke(Runnable apRun) {
-			runnableBuffer.add(apRun);
-		}
-
-		class RunnableGroup implements Runnable {
-			List<Runnable> buffer;
-
-			public RunnableGroup() {
-				buffer = new ArrayList<Runnable>(runnableBuffer);
-				runnableBuffer.clear();
-			}
-
-			@Override
-			public void run() {
-				for (Runnable r : buffer) {
-					r.run();
-				}
-			}
-		}
-
-		public synchronized void commit() {
-			SwingUtilities.invokeLater(new RunnableGroup());
 		}
 
 		public void ok(final String msg) {
@@ -677,21 +814,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				current = attrs[0];
 			}
 		}
-
-		public void find(final String text) {
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					find0(text);
-				}
-			});
-		}
-
-		String lastText = null;
-
-		private int docIndex;
-
-		private Element lastHighlight;
 
 		protected void find0(String text) {
 			if (text == null) {
@@ -722,6 +844,104 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			} catch (BadLocationException e) {
 				e.printStackTrace();
 			}
+		}
+
+		protected synchronized void invoke(Runnable apRun) {
+			runnableBuffer.add(apRun);
+		}
+
+		protected void maybeScroll(Runnable runnable) {
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					JViewport pane = (JViewport) getParent().getParent();
+					pane.scrollRectToVisible(
+							new Rectangle(0, getHeight() - 12, 12, 12));
+				}
+			});
+		}
+
+		class RunnableGroup implements Runnable {
+			List<Runnable> buffer;
+
+			public RunnableGroup() {
+				buffer = new ArrayList<Runnable>(runnableBuffer);
+				runnableBuffer.clear();
+			}
+
+			@Override
+			public void run() {
+				for (Runnable r : buffer) {
+					r.run();
+				}
+			}
+		}
+	}
+
+	private class JCommandLine extends JTextField {
+		private KeyListener arrowListener = new KeyListener() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				// TODO Auto-generated method stub
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				int code = e.getKeyCode();
+				int delta = 0;
+				switch (code) {
+				case KeyEvent.VK_DOWN:
+					delta = 1;
+					break;
+				case KeyEvent.VK_UP:
+					delta = -1;
+					break;
+				}
+				if (delta != 0) {
+					String cmd = history.getCommand(delta);
+					if (!cmd.isEmpty()) {
+						setTextWithPrompt(cmd);
+					}
+				}
+				if (e.isMetaDown() && e.getKeyChar() == 'k') {
+					clear();
+				}
+			}
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+				// TODO Auto-generated method stub
+			}
+		};
+
+		public JCommandLine() {
+			addKeyListener(arrowListener);
+		}
+
+		public String getTrimmedText() {
+			return getText().substring(1);
+		}
+
+		@Override
+		public void setCaretPosition(int position) {
+			super.setCaretPosition(
+					position == 0 ? getText().length() == 0 ? 0 : 1 : position);
+		}
+
+		public void setTextWithPrompt(final String text) {
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					setText(">" + text);
+					setCaretPosition(getText().length());
+				}
+			});
+		}
+
+		private void reset() {
+			requestFocusInWindow();
+			setTextWithPrompt("");
+			select(1, 1);
 		}
 	}
 
@@ -806,230 +1026,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		NORMAL, OK, ERR
 	}
 
-	public void prepareCommand(DevConsoleCommand cmd) {
-		cmd.setEnvironment(this);
-	}
-
-	public void serializeState() {
-		devHelper.writeObject(state);
-	}
-
-	/**
-	 * Place a String on the clipboard, and make this class the owner of the
-	 * Clipboard's contents.
-	 */
-	public void setClipboardContents(String aString) {
-		StringSelection stringSelection = new StringSelection(aString);
-		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		clipboard.setContents(stringSelection, this);
-	}
-
-	/**
-	 * Get the String residing on the clipboard.
-	 * 
-	 * @return any text found on the Clipboard; if none found, return an empty
-	 *         String.
-	 */
-	public String getClipboardContents() {
-		String result = "";
-		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		// odd: the Object param of getContents is not currently used
-		Transferable contents = clipboard.getContents(null);
-		boolean hasTransferableText = (contents != null)
-				&& contents.isDataFlavorSupported(DataFlavor.stringFlavor);
-		if (hasTransferableText) {
-			try {
-				result = (String) contents
-						.getTransferData(DataFlavor.stringFlavor);
-			} catch (UnsupportedFlavorException ex) {
-				// highly unlikely since we are using a standard DataFlavor
-				System.out.println(ex);
-				ex.printStackTrace();
-			} catch (IOException ex) {
-				System.out.println(ex);
-				ex.printStackTrace();
-			}
-		}
-		return result;
-	}
-
-	@Override
-	public void lostOwnership(Clipboard clipboard, Transferable contents) {
-		// TODO Auto-generated method stub
-	}
-
-	public String getMultilineInput(String prompt) {
-		return getMultilineInput(prompt, 10, 40);
-	}
-
-	public String getMultilineInput(String prompt, int rows, int cols) {
-		final JTextArea textArea = new JTextArea(rows, cols);
-		textArea.addAncestorListener(new AncestorListener() {
-			@Override
-			public void ancestorRemoved(AncestorEvent event) {
-			}
-
-			@Override
-			public void ancestorMoved(AncestorEvent event) {
-			}
-
-			@Override
-			public void ancestorAdded(AncestorEvent event) {
-				textArea.requestFocusInWindow();
-			}
-		});
-		textArea.setText(getClipboardContents().replace("\r", "\n"));
-		JScrollPane jsp = new JScrollPane(textArea);
-		int result = JOptionPane.showConfirmDialog(null, jsp, prompt,
-				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-		if (result == JOptionPane.OK_OPTION) {
-			return textArea.getText();
-		} else {
-			return null;
-		}
-	}
-
-	public String getSingleLineInput(String prompt, String defaultValue) {
-		final JTextField textArea = new JTextField(40);
-		textArea.addAncestorListener(new AncestorListener() {
-			@Override
-			public void ancestorRemoved(AncestorEvent event) {
-			}
-
-			@Override
-			public void ancestorMoved(AncestorEvent event) {
-			}
-
-			@Override
-			public void ancestorAdded(AncestorEvent event) {
-				textArea.requestFocusInWindow();
-			}
-		});
-		textArea.setText(defaultValue);
-		int result = JOptionPane.showConfirmDialog(null, textArea, prompt,
-				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-		if (result == JOptionPane.OK_OPTION) {
-			return textArea.getText();
-		} else {
-			return null;
-		}
-	}
-
-	public String padLeft(String str, int tabCount, int charCount) {
-		if (tabCount != 0) {
-			String pad = CommonUtils.padStringLeft("", charCount, "\t");
-			return pad + str.replace("\n", "\n" + pad);
-		} else {
-			String pad = "\n" + CommonUtils.padStringLeft("", charCount, " ");
-			return str.replace("\n", pad);
-		}
-	}
-
-	public String breakAndPad(int tabCount, int width, String text,
-			int padLeftCharCount) {
-		StringBuilder sb = new StringBuilder();
-		int idx0 = 0;
-		for (int idx1 = width; idx1 < text.length(); idx1 += width) {
-			for (; idx1 < text.length(); idx1 += 1) {
-				char c = text.charAt(idx1);
-				if (c == ' ' || c == ',') {
-					sb.append(text.substring(idx0, idx1 + 1));
-					sb.append("\n");
-					idx0 = idx1 + 1;
-					break;
-				}
-			}
-		}
-		sb.append(text.substring(idx0));
-		return padLeft(sb.toString(), tabCount, padLeftCharCount);
-	}
-
-	public void resetObjects() {
-		devHelper.configLoaded = false;
-		devHelper.loadJbossConfig();
-		devHelper.readAppObjectGraph();
-		devHelper.initPostObjectServices();
-	}
-
-	public void find(String text) {
-		consoleLeft.find(text);
-	}
-
-	public JConsole getConsoleLeft() {
-		return this.consoleLeft;
-	}
-
-	ByteArrayOutputStream recordOut;
-
-	PrintStream oldS2;
-
-	public void startRecordingSysout(boolean mute) {
-		oldS2 = out.s2;
-		PrintStream s2 = out.s2;
-		recordOut = new ByteArrayOutputStream();
-		PrintStream outStream = new PrintStream(recordOut);
-		if (mute) {
-			out.s2 = outStream;
-			ByteArrayOutputStream nullOut = new ByteArrayOutputStream();
-			out.s1 = new PrintStream(nullOut);
-		} else {
-			BiPrintStream s2repl = new BiPrintStream(
-					new ByteArrayOutputStream());
-			s2repl.s1 = s2;
-			s2repl.s2 = outStream;
-			out.s2 = s2repl;
-		}
-	}
-
-	public String endRecordingSysout() {
-		out.s2.flush();
-		String result = new String(recordOut.toByteArray());
-		out.s2 = oldS2;
-		return result;
-	}
-
-	public void dumpTransforms() {
-		System.out.println("\n\n");
-		Set<DomainTransformEvent> transforms = devHelper.dumpTransforms();
-		System.out.println("\n\n");
-		setClipboardContents(transforms.toString());
-		File dumpFile = getDevFile("dumpTransforms.txt");
-		try {
-			ResourceUtilities.writeStringToFile(transforms.toString(),
-					dumpFile);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	String outDumpFileName = null;
-
-	public void closePipeHtml() {
-		try {
-			String val = endRecordingSysout();
-			val = val.replaceAll("(https?://\\S+)", "<a href='$1'>$1</a>");
-			val = Ax.format("<pre>%s</pre>", val);
-			ResourceUtilities.writeStringToFile(val, this.outDumpFileName);
-			this.outDumpFileName = null;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-	public void pipeOutput(String outDumpFileName) {
-		pipeOutput(outDumpFileName, true);
-	}
-	public void pipeOutput(String outDumpFileName, boolean mute) {
-		if (outDumpFileName != null) {
-			startRecordingSysout(mute);
-			this.outDumpFileName = outDumpFileName;
-		} else {
-			try {
-				ResourceUtilities.writeStringToFile(endRecordingSysout(),
-						this.outDumpFileName);
-				this.outDumpFileName = null;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
+	class SwingPrompter implements StringPrompter {
+		@Override
+		public String getValue(String prompt) {
+			return JOptionPane.showInputDialog(prompt);
 		}
 	}
 }

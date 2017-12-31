@@ -1,7 +1,6 @@
 package com.google.gwt.regexp.shared;
 
 public interface IRegExp {
-
 	MatchResult exec(String input);
 
 	boolean getGlobal();

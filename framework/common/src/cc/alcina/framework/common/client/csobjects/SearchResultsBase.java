@@ -59,6 +59,10 @@ public class SearchResultsBase<B extends SearchResult> implements Serializable {
 		return this.pageResultCount;
 	}
 
+	public List<B> getResults() {
+		return results;
+	}
+
 	public String getResultsDescriptionHtml() {
 		SearchDefinition def = getSearchDefinition();
 		String template = "You are on page %s of %s with %s results for: %s. "
@@ -105,19 +109,15 @@ public class SearchResultsBase<B extends SearchResult> implements Serializable {
 		this.pageResultCount = pageResultCount;
 	}
 
+	public void setResults(List<B> results) {
+		this.results = new GArrayList<B>(results);
+	}
+
 	public void setSearchDefinition(SearchDefinition searchDefinition) {
 		this.searchDefinition = searchDefinition;
 	}
 
 	public void setTotalResultCount(int totalResultCount) {
 		this.totalResultCount = totalResultCount;
-	}
-
-	public void setResults(List<B> results) {
-		this.results = new GArrayList<B>(results);
-	}
-
-	public List<B> getResults() {
-		return results;
 	}
 }

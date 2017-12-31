@@ -21,9 +21,11 @@ import com.google.gwt.user.client.ui.Frame;
  * @author Nick Reddel
  */
 public class FrameX extends Frame {
+	private String html;
+
 	public native Document getDocument()/*-{
-	return null;
-	}-*/;
+										return null;
+										}-*/;
 
 	/**
 	 * Should not include '<html>', '</html>' tags
@@ -35,7 +37,21 @@ public class FrameX extends Frame {
 		}
 	}
 
-	private String html;
+	private native void _setDocumentHtml(String html)/*-{
+														var elem = this.@cc.alcina.framework.gwt.client.widget.complex.FrameX::getElement()();
+														var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
+														var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
+														var oDoc = remote.contentWindow || remote.contentDocument;
+														if (oDoc.document) {
+														oDoc = oDoc.document;
+														}
+														
+														//Trigger a page "load" (ff issue)
+														oDoc.open();
+														oDoc.close();
+														oDoc.documentElement.innerHTML = html;
+														
+														}-*/;
 
 	@Override
 	protected void onAttach() {
@@ -44,20 +60,4 @@ public class FrameX extends Frame {
 			_setDocumentHtml(html);
 		}
 	}
-
-	private native void _setDocumentHtml(String html)/*-{
-	var elem = this.@cc.alcina.framework.gwt.client.widget.complex.FrameX::getElement()();
-	var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
-    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
-	var oDoc = remote.contentWindow || remote.contentDocument;
-	if (oDoc.document) {
-		oDoc = oDoc.document;
-	}
-
-	//Trigger a page "load" (ff issue)
-	oDoc.open();
-	oDoc.close();
-	oDoc.documentElement.innerHTML = html;
-
-	}-*/;
 }

@@ -3,8 +3,6 @@ package cc.alcina.framework.gwt.client.logic.handshake;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 
 public class HandshakeState extends ExtensibleEnum {
-	
-
 	public static final String TAG_POST_OBJECT_DATA_LOAD = "TAG_POST_OBJECT_DATA_LOAD";
 
 	public static final HandshakeState SERVICES_INITIALISED = new HandshakeState(
@@ -24,9 +22,10 @@ public class HandshakeState extends ExtensibleEnum {
 
 	public static final HandshakeState OBJECTS_UNWRAPPED_AND_REGISTERED = new HandshakeState(
 			"OBJECTS_UNWRAPPED_AND_REGISTERED", TAG_POST_OBJECT_DATA_LOAD);
-	
+
 	public static final HandshakeState OBJECTS_FATAL_DESERIALIZATION_EXCEPTION = new HandshakeState(
-			"OBJECTS_FATAL_DESERIALIZATION_EXCEPTION", TAG_POST_OBJECT_DATA_LOAD);
+			"OBJECTS_FATAL_DESERIALIZATION_EXCEPTION",
+			TAG_POST_OBJECT_DATA_LOAD);
 
 	public static final HandshakeState MAIN_LAYOUT_INITIALISED = new HandshakeState(
 			"MAIN_LAYOUT_INITIALISED", TAG_POST_OBJECT_DATA_LOAD);

@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 @ClientInstantiable
- public class FriendlyEnumRenderer extends FlexibleToStringRenderer {
+public class FriendlyEnumRenderer extends FlexibleToStringRenderer {
 	public static final FriendlyEnumRenderer INSTANCE = new FriendlyEnumRenderer();
 
 	@Override

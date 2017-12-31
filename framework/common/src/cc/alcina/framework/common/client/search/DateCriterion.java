@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.search;
 
 import java.util.Date;
+
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
@@ -23,39 +24,44 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  * @author Nick Reddel
  */
 public class DateCriterion extends AbstractDateCriterion {
+	static final transient long serialVersionUID = -1L;
 
-    static final transient long serialVersionUID = -1L;
+	public DateCriterion() {
+		setOperator(StandardSearchOperator.EQUALS);
+	}
 
-    public DateCriterion() {
-        setOperator(StandardSearchOperator.EQUALS);
-    }
+	public DateCriterion(String displayName, Direction direction) {
+		super(displayName);
+		setDirection(direction);
+		setOperator(StandardSearchOperator.EQUALS);
+	}
 
-    public DateCriterion(String displayName, Direction direction) {
-        super(displayName);
-        setDirection(direction);
-        setOperator(StandardSearchOperator.EQUALS);
-    }
+	@Override
+	@SuppressWarnings("unchecked")
+	public EqlWithParameters eql() {
+		EqlWithParameters result = new EqlWithParameters();
+		if (getDate() == null) {
+			return result;
+		}
+		result.eql = targetPropertyNameWithTable()
+				+ (getDirection() == Direction.ASCENDING ? ">=" : "<") + " ? ";
+		// round up if it's to...assume we're talking whole days here
+		Date d = new Date(getDate().getTime()
+				+ (long) (getDirection() == Direction.ASCENDING ? 0
+						: 86400 * 1000));
+		result.parameters.add(d);
+		return result;
+	}
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public EqlWithParameters eql() {
-        EqlWithParameters result = new EqlWithParameters();
-        if (getDate() == null) {
-            return result;
-        }
-        result.eql = targetPropertyNameWithTable() + (getDirection() == Direction.ASCENDING ? ">=" : "<") + " ? ";
-        // round up if it's to...assume we're talking whole days here
-        Date d = new Date(getDate().getTime() + (long) (getDirection() == Direction.ASCENDING ? 0 : 86400 * 1000));
-        result.parameters.add(d);
-        return result;
-    }
+	public boolean rangeControlledByDirection() {
+		return false;
+	}
 
-    public boolean rangeControlledByDirection() {
-        return false;
-    }
-
-    @Override
-    public String toString() {
-        return getDate() == null ? null : (getDirection() == Direction.ASCENDING ? " from " : " to ") + CommonUtils.formatDate(getDate(), DateStyle.AU_DATE_SLASH);
-    }
+	@Override
+	public String toString() {
+		return getDate() == null ? null
+				: (getDirection() == Direction.ASCENDING ? " from " : " to ")
+						+ CommonUtils.formatDate(getDate(),
+								DateStyle.AU_DATE_SLASH);
+	}
 }

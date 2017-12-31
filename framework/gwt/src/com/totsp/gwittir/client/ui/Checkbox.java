@@ -104,16 +104,6 @@ public class Checkbox extends AbstractBoundWidget<Boolean> implements
 		return this.isChecked() ? Boolean.TRUE : Boolean.FALSE;
 	}
 
-	private void init(String label) {
-		this.base = new com.google.gwt.user.client.ui.CheckBox(label);
-		super.initWidget(this.base);
-		this.base.addValueChangeHandler(s -> {
-			Boolean checked = s.getValue();
-			Boolean old = !checked;
-			changes.firePropertyChange("value", old, checked);
-		});
-	}
-
 	public boolean isChecked() {
 		return this.base.isChecked();
 	}
@@ -154,12 +144,12 @@ public class Checkbox extends AbstractBoundWidget<Boolean> implements
 		this.base.setFocus(focused);
 	}
 
-	public void setHTML(String html) {
-		this.base.setHTML(html);
-	}
-
 	public void setHeight(String height) {
 		this.base.setHeight(height);
+	}
+
+	public void setHTML(String html) {
+		this.base.setHTML(html);
 	}
 
 	public void setName(String name) {
@@ -201,5 +191,15 @@ public class Checkbox extends AbstractBoundWidget<Boolean> implements
 
 	public void setWidth(String width) {
 		this.base.setWidth(width);
+	}
+
+	private void init(String label) {
+		this.base = new com.google.gwt.user.client.ui.CheckBox(label);
+		super.initWidget(this.base);
+		this.base.addValueChangeHandler(s -> {
+			Boolean checked = s.getValue();
+			Boolean old = !checked;
+			changes.firePropertyChange("value", old, checked);
+		});
 	}
 }

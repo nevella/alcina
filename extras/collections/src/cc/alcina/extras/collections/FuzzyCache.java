@@ -12,25 +12,6 @@ import cc.alcina.framework.common.client.util.FloatPair;
 
 @SuppressWarnings("unchecked")
 public class FuzzyCache<I, O> {
-	private final SortedMap<Float, I> map;
-
-	private final Float fuzz;
-
-	private final ResultConvertor<I, O> converter;
-
-	private List<FloatPairWithWeight> sortedRanges;
-
-	public FuzzyCache(SortedMap<Float, I> map, Float fuzz,
-			ResultConvertor<I, O> converter) {
-		this.map = map;
-		this.fuzz = fuzz;
-		this.converter = converter;
-	}
-
-	public interface ResultConvertor<I, O> {
-		O convert(SortedMap<Float, I> map);
-	}
-
 	public static ResultConvertor<List, List> LIST_CONVERTER = new ResultConvertor<List, List>() {
 		@Override
 		public List convert(SortedMap<Float, List> map) {
@@ -55,8 +36,8 @@ public class FuzzyCache<I, O> {
 
 	public static ResultConvertor<SortedMap<Object, Integer>, SortedMap<Object, Integer>> SORTED_MAP_CONVERTER_INT = new ResultConvertor<SortedMap<Object, Integer>, SortedMap<Object, Integer>>() {
 		@Override
-		public SortedMap<Object, Integer> convert(
-				SortedMap<Float, SortedMap<Object, Integer>> map) {
+		public SortedMap<Object, Integer>
+				convert(SortedMap<Float, SortedMap<Object, Integer>> map) {
 			SortedMap<Object, Integer> result = new TreeMap();
 			for (SortedMap<Object, Integer> m : map.values()) {
 				for (Object key : m.keySet()) {
@@ -71,9 +52,15 @@ public class FuzzyCache<I, O> {
 		}
 	};
 
-	public O getFuzzy(Float around) {
-		SortedMap<Float, I> subMap = map.subMap(around - fuzz, around + fuzz);
-		return converter.convert(subMap);
+	public static Integer countNear(SortedMap<Float, Integer> map, float around,
+			float fuzz) {
+		SortedMap<Float, Integer> subMap = map.subMap(around - fuzz,
+				around + fuzz);
+		int result = 0;
+		for (Integer v : subMap.values()) {
+			result += v;
+		}
+		return result;
 	}
 
 	public static Float weightedMean(SortedMap<Float, List> map) {
@@ -87,15 +74,28 @@ public class FuzzyCache<I, O> {
 		return total / count;
 	}
 
-	public static Integer countNear(SortedMap<Float, Integer> map,
-			float around, float fuzz) {
-		SortedMap<Float, Integer> subMap = map.subMap(around - fuzz, around
-				+ fuzz);
-		int result = 0;
-		for (Integer v : subMap.values()) {
-			result += v;
-		}
-		return result;
+	private final SortedMap<Float, I> map;
+
+	private final Float fuzz;
+
+	private final ResultConvertor<I, O> converter;
+
+	private List<FloatPairWithWeight> sortedRanges;
+
+	public FuzzyCache(SortedMap<Float, I> map, Float fuzz,
+			ResultConvertor<I, O> converter) {
+		this.map = map;
+		this.fuzz = fuzz;
+		this.converter = converter;
+	}
+
+	public O getFuzzy(Float around) {
+		SortedMap<Float, I> subMap = map.subMap(around - fuzz, around + fuzz);
+		return converter.convert(subMap);
+	}
+
+	public List<FloatPairWithWeight> getSortedRanges() {
+		return this.sortedRanges;
 	}
 
 	public int indexInRanges(float f) {
@@ -107,36 +107,6 @@ public class FuzzyCache<I, O> {
 			index++;
 		}
 		return index;
-	}
-
-	public static class FloatPairWithWeight implements
-			Comparable<FloatPairWithWeight> {
-		public FloatPairWithWeight(int count, FloatPair range) {
-			this.count = count;
-			this.range = range;
-		}
-
-		public int count;
-
-		public FloatPair range;
-
-		@Override
-		public int compareTo(FloatPairWithWeight o) {
-			return -CommonUtils.compareInts(count, o.count);
-		}
-
-		@Override
-		public String toString() {
-			return range + ":" + count;
-		}
-
-		public int getCount() {
-			return this.count;
-		}
-
-		public void setCount(int count) {
-			this.count = count;
-		}
 	}
 
 	public void sortRanges(int steps) {
@@ -170,8 +140,8 @@ public class FuzzyCache<I, O> {
 			}
 			if (firstMatched != Float.MIN_VALUE
 					&& (count == 0 || f + step > last)) {
-				FloatPair pair = new FloatPair(firstMatched, lastMatched
-						+ (count == 0 ? 0 : step));
+				FloatPair pair = new FloatPair(firstMatched,
+						lastMatched + (count == 0 ? 0 : step));
 				sortedRanges.add(new FloatPairWithWeight(total, pair));
 			}
 			if (count == 0) {
@@ -183,7 +153,37 @@ public class FuzzyCache<I, O> {
 		Collections.sort(sortedRanges);
 	}
 
-	public List<FloatPairWithWeight> getSortedRanges() {
-		return this.sortedRanges;
+	public static class FloatPairWithWeight
+			implements Comparable<FloatPairWithWeight> {
+		public int count;
+
+		public FloatPair range;
+
+		public FloatPairWithWeight(int count, FloatPair range) {
+			this.count = count;
+			this.range = range;
+		}
+
+		@Override
+		public int compareTo(FloatPairWithWeight o) {
+			return -CommonUtils.compareInts(count, o.count);
+		}
+
+		public int getCount() {
+			return this.count;
+		}
+
+		public void setCount(int count) {
+			this.count = count;
+		}
+
+		@Override
+		public String toString() {
+			return range + ":" + count;
+		}
+	}
+
+	public interface ResultConvertor<I, O> {
+		O convert(SortedMap<Float, I> map);
 	}
 }

@@ -11,16 +11,14 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.domaintransform;
 
 /**
  *
  * @author Nick Reddel
  */
-
- public class EsqlUtils {
-	public static String idArrToIn(Long[] ids){
+public class EsqlUtils {
+	public static String idArrToIn(Long[] ids) {
 		StringBuffer result = new StringBuffer("(-1");
 		for (Long long1 : ids) {
 			result.append(", ");

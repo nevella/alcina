@@ -20,6 +20,20 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
 public class BackupFile extends Task {
+	public static void writeStreamToStream(InputStream is, OutputStream os)
+			throws IOException {
+		BufferedOutputStream fos = new BufferedOutputStream(os);
+		InputStream in = new BufferedInputStream(is);
+		int bufLength = 8192;
+		byte[] buffer = new byte[bufLength];
+		int result;
+		while ((result = in.read(buffer)) != -1) {
+			fos.write(buffer, 0, result);
+		}
+		fos.flush();
+		fos.close();
+	}
+
 	private String filePath;
 
 	private String backupPath;
@@ -37,8 +51,8 @@ public class BackupFile extends Task {
 			log("no change in backup files");
 		}
 		final Pattern np = Pattern.compile("(.+)(\\.\\d+)");
-		ArrayList<File> backups = new ArrayList<File>(Arrays.asList(file
-				.listFiles(new FilenameFilter() {
+		ArrayList<File> backups = new ArrayList<File>(
+				Arrays.asList(file.listFiles(new FilenameFilter() {
 					@Override
 					public boolean accept(File dir, String name) {
 						return np.matcher(name).matches();
@@ -47,9 +61,9 @@ public class BackupFile extends Task {
 		Collections.sort(backups, new Comparator<File>() {
 			@Override
 			public int compare(File o1, File o2) {
-				return o1.lastModified() < o2.lastModified() ? -1 : o1
-						.lastModified() == o2.lastModified() ? -o1.getName()
-						.compareTo(o2.getName()) : 1;
+				return o1.lastModified() < o2.lastModified() ? -1
+						: o1.lastModified() == o2.lastModified()
+								? -o1.getName().compareTo(o2.getName()) : 1;
 			}
 		});
 		Collections.reverse(backups);
@@ -78,38 +92,24 @@ public class BackupFile extends Task {
 		}
 	}
 
-	public static void writeStreamToStream(InputStream is, OutputStream os)
-			throws IOException {
-		BufferedOutputStream fos = new BufferedOutputStream(os);
-		InputStream in = new BufferedInputStream(is);
-		int bufLength = 8192;
-		byte[] buffer = new byte[bufLength];
-		int result;
-		while ((result = in.read(buffer)) != -1) {
-			fos.write(buffer, 0, result);
-		}
-		fos.flush();
-		fos.close();
+	public String getBackupPath() {
+		return this.backupPath;
 	}
 
 	public String getFilePath() {
 		return this.filePath;
 	}
 
-	public void setFilePath(String earPath) {
-		this.filePath = earPath;
-	}
-
-	public String getBackupPath() {
-		return this.backupPath;
+	public int getMaxBackups() {
+		return this.maxBackups;
 	}
 
 	public void setBackupPath(String backupPath) {
 		this.backupPath = backupPath;
 	}
 
-	public int getMaxBackups() {
-		return this.maxBackups;
+	public void setFilePath(String earPath) {
+		this.filePath = earPath;
 	}
 
 	public void setMaxBackups(int maxBackups) {

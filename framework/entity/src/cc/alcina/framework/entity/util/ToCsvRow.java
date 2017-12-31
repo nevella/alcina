@@ -34,13 +34,6 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 		return this.prefix;
 	}
 
-	protected void loadFromColumnMappings(
-			List<ColumnMapper<T>.ColumnMapping> mappings) {
-		for (ColumnMapping mapping : mappings) {
-			define(mapping.name, null, mapping.mapping);
-		}
-	}
-
 	@Override
 	public List<String> headers() {
 		return mappings.stream().map(m -> prefix + (m.getName()))
@@ -60,12 +53,6 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 			idx++;
 		}
 		return -1;
-	}
-
-	protected void setTotalValue(List list, String headerName, String value) {
-		int index = getHeaderIndex(headerName);
-		List<String> row = (List<String>) list.get(list.size() - 1);
-		row.set(index, value);
 	}
 
 	protected Mapping define(String propertyPath) {
@@ -120,6 +107,19 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 		list.add(totalRow);
 	}
 
+	protected void loadFromColumnMappings(
+			List<ColumnMapper<T>.ColumnMapping> mappings) {
+		for (ColumnMapping mapping : mappings) {
+			define(mapping.name, null, mapping.mapping);
+		}
+	}
+
+	protected void setTotalValue(List list, String headerName, String value) {
+		int index = getHeaderIndex(headerName);
+		List<String> row = (List<String>) list.get(list.size() - 1);
+		row.set(index, value);
+	}
+
 	public static class FieldAccessor {
 		private String fieldName;
 
@@ -157,6 +157,30 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 			accessor = new PropertyPathAccessor(propertyPath);
 		}
 
+		public Mapping auDate() {
+			mapper = d -> d == null ? null : Ax.dateSlash((Date) d);
+			return this;
+		}
+
+		public Mapping field() {
+			accessor = null;
+			fieldAccessor = new FieldAccessor(propertyPath);
+			return this;
+		}
+
+		public Mapping friendly() {
+			mapper = o -> o == null ? null : Ax.friendly(o);
+			return this;
+		}
+
+		public String getName() {
+			return alias != null ? alias : propertyPath;
+		}
+
+		public boolean nameIs(String headerName) {
+			return getName().equals(headerName);
+		}
+
 		public String stringValue(T t) {
 			Object value = null;
 			if (function != null) {
@@ -172,34 +196,10 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 			return CommonUtils.nullSafeToString(value);
 		}
 
-		public Mapping field() {
-			accessor = null;
-			fieldAccessor = new FieldAccessor(propertyPath);
-			return this;
-		}
-
-		public Mapping auDate() {
-			mapper = d -> d == null ? null : Ax.dateSlash((Date) d);
-			return this;
-		}
-
-		public String getName() {
-			return alias != null ? alias : propertyPath;
-		}
-
-		public boolean nameIs(String headerName) {
-			return getName().equals(headerName);
-		}
-
 		@Override
 		public String toString() {
 			return CommonUtils.formatJ("Path: %s - alias: %s - function: %s",
 					propertyPath, alias, function);
-		}
-
-		public Mapping friendly() {
-			mapper = o -> o == null ? null : Ax.friendly(o);
-			return this;
 		}
 	}
 }

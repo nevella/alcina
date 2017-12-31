@@ -15,19 +15,17 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 public abstract class FlatSearchable<SC extends SearchCriterion>
 		implements Comparable<FlatSearchable> {
+	private static transient Comparator<FlatSearchable> comparator;
+	static {
+		comparator = Comparator.comparing(FlatSearchable::getCategory);
+		comparator = comparator.thenComparing(FlatSearchable::getName);
+	}
+
 	private Class<SC> clazz;
 
 	private String category;
 
-	public String getCategory() {
-		return this.category;
-	}
-
 	private String name;
-
-	public String getName() {
-		return this.name;
-	}
 
 	@SuppressWarnings("unused")
 	private SearchDefinition def;
@@ -44,23 +42,20 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 		this.operators = operators;
 	}
 
-	public SC createCriterionInstance() {
-		return Reflections.classLookup().newInstance(clazz);
-	}
-
-	private static transient Comparator<FlatSearchable> comparator;
-
-	static {
-		comparator = Comparator.comparing(FlatSearchable::getCategory);
-		comparator = comparator.thenComparing(FlatSearchable::getName);
-	}
-
 	@Override
 	public int compareTo(FlatSearchable o) {
 		return comparator.compare(this, o);
 	}
 
+	public SC createCriterionInstance() {
+		return Reflections.classLookup().newInstance(clazz);
+	}
+
 	public abstract AbstractBoundWidget createEditor();
+
+	public String getCategory() {
+		return this.category;
+	}
 
 	public SC getCriterion() {
 		return this.criterion;
@@ -72,12 +67,20 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 
 	public abstract String getCriterionPropertyName();
 
+	public String getName() {
+		return this.name;
+	}
+
 	public SearchOperator getOperator(SC value) {
 		return listOperators().get(0);
 	}
 
 	public Optional<String> getOperatorPropertyName() {
 		return Optional.of("operator");
+	}
+
+	public Validator getValidator() {
+		return null;
 	}
 
 	public abstract boolean hasValue(SC sc);
@@ -107,9 +110,5 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 	@Override
 	public String toString() {
 		return CommonUtils.formatJ("%s : %s", category, name);
-	}
-
-	public Validator getValidator() {
-		return null;
 	}
 }

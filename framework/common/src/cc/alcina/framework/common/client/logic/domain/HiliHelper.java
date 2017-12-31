@@ -11,6 +11,29 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class HiliHelper {
+	public static String asDomainPoint(HasId hi) {
+		if (hi == null) {
+			return null;
+		}
+		if (hi instanceof HasIdAndLocalId) {
+			HasIdAndLocalId hili = (HasIdAndLocalId) hi;
+			return CommonUtils.formatJ("%s : %s / %s",
+					CommonUtils.simpleClassName(hili.getClass()), hili.getId(),
+					hili.getLocalId());
+		}
+		return CommonUtils.formatJ("%s : %s ",
+				CommonUtils.simpleClassName(hi.getClass()), hi.getId());
+	}
+
+	public static <T extends HasIdAndLocalId> SortedSet<T>
+			combineAndOrderById(boolean reverse, Collection<T>... collections) {
+		TreeSet<T> join = new TreeSet<T>();
+		for (Collection<T> collection : collections) {
+			join.addAll(collection);
+		}
+		return reverse ? join.descendingSet() : join;
+	}
+
 	public static int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
 		int i = o1.getClass().getName().compareTo(o2.getClass().getName());
 		if (i != 0) {
@@ -26,7 +49,9 @@ public class HiliHelper {
 		}
 		return CommonUtils.compareInts(o1.hashCode(), o2.hashCode());
 	}
-	public static int compareLocalsHigh(HasIdAndLocalId o1, HasIdAndLocalId o2) {
+
+	public static int compareLocalsHigh(HasIdAndLocalId o1,
+			HasIdAndLocalId o2) {
 		int i = o1.getClass().getName().compareTo(o2.getClass().getName());
 		if (i != 0) {
 			return i;
@@ -40,17 +65,6 @@ public class HiliHelper {
 			return i;
 		}
 		return CommonUtils.compareInts(o1.hashCode(), o2.hashCode());
-	}
-
-	public static String toIdString(Collection<? extends HasIdAndLocalId> hilis) {
-		StringBuffer sb = new StringBuffer();
-		for (HasIdAndLocalId hili : hilis) {
-			if (sb.length() != 0) {
-				sb.append(",");
-			}
-			sb.append(hili.getId());
-		}
-		return sb.toString();
 	}
 
 	public static int compareNoLocals(HasIdAndLocalId o1, HasIdAndLocalId o2) {
@@ -82,6 +96,33 @@ public class HiliHelper {
 				&& hili.getLocalId() == o1.getLocalId());
 	}
 
+	public static <T extends HasId> T getById(Collection<T> values, long id) {
+		for (T value : values) {
+			if (value.getId() == id) {
+				return value;
+			}
+		}
+		return null;
+	}
+
+	public static Long getIdOrNull(HasId hi) {
+		return hi == null ? null : hi.getId();
+	}
+
+	public static long getIdOrZero(HasId hi) {
+		return hi == null ? 0 : hi.getId();
+	}
+
+	public static String strGetIdOrZero(HasId hasId) {
+		return String.valueOf(getIdOrZero(hasId));
+	}
+
+	public static <T extends HasIdAndLocalId> Map<Long, T>
+			toIdMap(Collection<T> hilis) {
+		return (Map<Long, T>) CollectionFilters
+				.map((Collection<HasIdAndLocalId>) hilis, new HiliToIdMapper());
+	}
+
 	public static Set<Long>
 			toIdSet(Collection<? extends HasIdAndLocalId> hilis) {
 		return toIdSet(hilis, new LinkedHashSet<Long>());
@@ -95,53 +136,15 @@ public class HiliHelper {
 		return set;
 	}
 
-	public static <T extends HasIdAndLocalId> Map<Long, T>
-			toIdMap(Collection<T> hilis) {
-		return (Map<Long, T>) CollectionFilters
-				.map((Collection<HasIdAndLocalId>) hilis, new HiliToIdMapper());
-	}
-
-	public static String asDomainPoint(HasId hi) {
-		if (hi == null) {
-			return null;
-		}
-		if (hi instanceof HasIdAndLocalId) {
-			HasIdAndLocalId hili = (HasIdAndLocalId) hi;
-			return CommonUtils.formatJ("%s : %s / %s",
-					CommonUtils.simpleClassName(hili.getClass()), hili.getId(),
-					hili.getLocalId());
-		}
-		return CommonUtils.formatJ("%s : %s ",
-				CommonUtils.simpleClassName(hi.getClass()), hi.getId());
-	}
-
-	public static Long getIdOrNull(HasId hi) {
-		return hi == null ? null : hi.getId();
-	}
-
-	public static long getIdOrZero(HasId hi) {
-		return hi == null ? 0 : hi.getId();
-	}
-
-	public static <T extends HasId> T getById(Collection<T> values, long id) {
-		for (T value : values) {
-			if (value.getId() == id) {
-				return value;
+	public static String
+			toIdString(Collection<? extends HasIdAndLocalId> hilis) {
+		StringBuffer sb = new StringBuffer();
+		for (HasIdAndLocalId hili : hilis) {
+			if (sb.length() != 0) {
+				sb.append(",");
 			}
+			sb.append(hili.getId());
 		}
-		return null;
-	}
-
-	public static <T extends HasIdAndLocalId> SortedSet<T>
-			combineAndOrderById(boolean reverse, Collection<T>... collections) {
-		TreeSet<T> join = new TreeSet<T>();
-		for (Collection<T> collection : collections) {
-			join.addAll(collection);
-		}
-		return reverse ? join.descendingSet() : join;
-	}
-
-	public static String strGetIdOrZero(HasId hasId) {
-		return String.valueOf(getIdOrZero(hasId));
+		return sb.toString();
 	}
 }

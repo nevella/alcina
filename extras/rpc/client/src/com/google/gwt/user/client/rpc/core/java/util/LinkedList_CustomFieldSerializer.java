@@ -26,28 +26,28 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  * Custom field serializer for {@link java.util.ArrayList}.
  */
 @SuppressWarnings("rawtypes")
-public final class LinkedList_CustomFieldSerializer extends
-    CustomFieldSerializer<LinkedList> {
+public final class LinkedList_CustomFieldSerializer
+		extends CustomFieldSerializer<LinkedList> {
+	public static void deserialize(SerializationStreamReader streamReader,
+			LinkedList instance) throws SerializationException {
+		Collection_CustomFieldSerializerBase.deserialize(streamReader,
+				instance);
+	}
 
-  public static void deserialize(SerializationStreamReader streamReader,
-      LinkedList instance) throws SerializationException {
-    Collection_CustomFieldSerializerBase.deserialize(streamReader, instance);
-  }
+	public static void serialize(SerializationStreamWriter streamWriter,
+			LinkedList instance) throws SerializationException {
+		Collection_CustomFieldSerializerBase.serialize(streamWriter, instance);
+	}
 
-  public static void serialize(SerializationStreamWriter streamWriter,
-      LinkedList instance) throws SerializationException {
-    Collection_CustomFieldSerializerBase.serialize(streamWriter, instance);
-  }
+	@Override
+	public void deserializeInstance(SerializationStreamReader streamReader,
+			LinkedList instance) throws SerializationException {
+		deserialize(streamReader, instance);
+	}
 
-  @Override
-  public void deserializeInstance(SerializationStreamReader streamReader,
-      LinkedList instance) throws SerializationException {
-    deserialize(streamReader, instance);
-  }
-
-  @Override
-  public void serializeInstance(SerializationStreamWriter streamWriter,
-      LinkedList instance) throws SerializationException {
-    serialize(streamWriter, instance);
-  }
+	@Override
+	public void serializeInstance(SerializationStreamWriter streamWriter,
+			LinkedList instance) throws SerializationException {
+		serialize(streamWriter, instance);
+	}
 }

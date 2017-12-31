@@ -24,9 +24,8 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 /**
  * Custom field serializer for {@link java.lang.Double}.
  */
-public final class Double_CustomFieldSerializer extends
-		CustomFieldSerializer<Double> {
-	
+public final class Double_CustomFieldSerializer
+		extends CustomFieldSerializer<Double> {
 	public static void deserialize(SerializationStreamReader streamReader,
 			Double instance) {
 		// No fields
@@ -39,15 +38,9 @@ public final class Double_CustomFieldSerializer extends
 
 	public static void serialize(SerializationStreamWriter streamWriter,
 			Double instance) throws SerializationException {
-		if(GWT.isClient()){
-		    streamWriter.writeDouble(instance.doubleValue());
+		if (GWT.isClient()) {
+			streamWriter.writeDouble(instance.doubleValue());
 		}
-	}
-
-	@Override
-	public void serializeConstructor(SerializationStreamWriter streamWriter,
-			Double instance) throws SerializationException {
-		streamWriter.writeDouble(instance.doubleValue());
 	}
 
 	@Override
@@ -65,6 +58,12 @@ public final class Double_CustomFieldSerializer extends
 	public Double instantiateInstance(SerializationStreamReader streamReader)
 			throws SerializationException {
 		return instantiate(streamReader);
+	}
+
+	@Override
+	public void serializeConstructor(SerializationStreamWriter streamWriter,
+			Double instance) throws SerializationException {
+		streamWriter.writeDouble(instance.doubleValue());
 	}
 
 	@Override

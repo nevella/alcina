@@ -7,38 +7,39 @@ import cc.alcina.framework.servlet.publication.ContentWrapper.WrapperModel;
 
 /**
  * To allow custom behaviour/composition in the publication pipeline
+ * 
  * @author nick@alcina.cc
  *
  */
 public class PublicationVisitor {
-	public void customCss(WrapperModel wrapper) throws Exception {
+	public void adjustWrapper(ContentWrapper mainWrapper,
+			WrapperModel wrapper) {
 	}
-
-	public void adjustWrapper(ContentWrapper mainWrapper, WrapperModel wrapper) { }
 
 	public String adjustWrapperXslPath(String suggested) {
 		return suggested;
 	}
 
-	public void publicationFinished(PublicationResult result){
+	public void afterPublicationPersistence(long publicationId)
+			throws Exception {
+	}
 
+	public void afterWrapContent(ContentWrapper cw) {
 	}
 
 	public void beforeDelivery() {
 	}
 
 	public void beforeWrapContent() {
-
 	}
 
-	public void afterWrapContent(ContentWrapper cw) {
-		
+	public void customCss(WrapperModel wrapper) throws Exception {
+	}
+
+	public void publicationFinished(PublicationResult result) {
 	}
 
 	public InputStream transformConvertedContent(InputStream convertedContent) {
 		return convertedContent;
-	}
-
-	public void afterPublicationPersistence(long publicationId) throws Exception {
 	}
 }

@@ -22,14 +22,6 @@ import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 public class PartialDtrUploader {
-	private List<DeltaApplicationRecord> uncommitted;
-
-	private ModalNotifier modalNotifier;
-
-	private AsyncCallback<Void> postPersistOfflineTransformsCallback;
-
-	private Map<DeltaApplicationRecord, List<DomainTransformEvent>> deserTransforms = new LinkedHashMap<DeltaApplicationRecord, List<DomainTransformEvent>>();
-
 	protected static int MIN_SLICE_SIZE = 500;
 
 	protected static int MAX_SLICE_SIZE = 10000;
@@ -39,6 +31,14 @@ public class PartialDtrUploader {
 	protected static int MAX_COMFORTABLE_ROUNDTRIP_MS_DEFAULT = 10000;
 
 	protected static int MAX_ERRORS_PER_REQUEST = 5;
+
+	private List<DeltaApplicationRecord> uncommitted;
+
+	private ModalNotifier modalNotifier;
+
+	private AsyncCallback<Void> postPersistOfflineTransformsCallback;
+
+	private Map<DeltaApplicationRecord, List<DomainTransformEvent>> deserTransforms = new LinkedHashMap<DeltaApplicationRecord, List<DomainTransformEvent>>();
 
 	private int errorCountCurrentRequest;
 
@@ -57,6 +57,23 @@ public class PartialDtrUploader {
 
 	private AsyncCallback<PartialDtrUploadResponse> responseHandler = new AsyncCallback<PartialDtrUploadResponse>() {
 		@Override
+		public void onFailure(Throwable caught) {
+			if (caught instanceof StatusCodeException) {
+				errorCountCurrentRequest++;
+				errorCountCurrentTotal++;
+				if (errorCountCurrentRequest < MAX_ERRORS_PER_REQUEST) {
+					if (currentRequest.hasTransforms()) {
+						modifySliceSize(0.5);
+						generateRequest();
+					}
+					submit0();
+					return;
+				}
+			}
+			fatal(caught);
+		}
+
+		@Override
 		public void onSuccess(PartialDtrUploadResponse response) {
 			// don't turn on until first response - may be offline
 			modalNotifier.modalOn();
@@ -72,29 +89,13 @@ public class PartialDtrUploader {
 				long roundtripTime = System.currentTimeMillis() - submitTime;
 				if (roundtripTime > MAX_COMFORTABLE_ROUNDTRIP_MS_DEFAULT) {
 					modifySliceSize(0.5);
-				} else if (roundtripTime < MAX_COMFORTABLE_ROUNDTRIP_MS_DEFAULT * 2) {
+				} else if (roundtripTime < MAX_COMFORTABLE_ROUNDTRIP_MS_DEFAULT
+						* 2) {
 					modifySliceSize(2);
 				}
 			}
 			generateRequest();
 			submit(currentRequest);
-		}
-
-		@Override
-		public void onFailure(Throwable caught) {
-			if (caught instanceof StatusCodeException) {
-				errorCountCurrentRequest++;
-				errorCountCurrentTotal++;
-				if (errorCountCurrentRequest < MAX_ERRORS_PER_REQUEST) {
-					if (currentRequest.hasTransforms()) {
-						modifySliceSize(0.5);
-						generateRequest();
-					}
-					submit0();
-					return;
-				}
-			}
-			fatal(caught);
 		}
 	};
 
@@ -124,6 +125,18 @@ public class PartialDtrUploader {
 		submit(request);
 	}
 
+	private void submit(PartialDtrUploadRequest request) {
+		errorCountCurrentRequest = 0;
+		currentRequest = request;
+		submit0();
+	}
+
+	private void submit0() {
+		submitTime = System.currentTimeMillis();
+		ClientBase.getCommonRemoteServiceAsyncInstance()
+				.uploadOfflineTransforms(currentRequest, responseHandler);
+	}
+
 	protected void fatal(Throwable caught) {
 		postPersistOfflineTransformsCallback.onFailure(caught);
 	}
@@ -134,7 +147,8 @@ public class PartialDtrUploader {
 		currentRequest = request;
 		int transformsInRequest = 0;
 		boolean foundStart = false;
-		//we've used a dummy request - make sure we don't miss the first request
+		// we've used a dummy request - make sure we don't miss the first
+		// request
 		if (currentResponse.lastUploadedRequestTransformUploadCount == 0) {
 			currentResponse.lastUploadedRequestId = 0;
 		}
@@ -142,7 +156,8 @@ public class PartialDtrUploader {
 		// for the moment...
 		for (int i = 0; i < uncommitted.size(); i++) {
 			DeltaApplicationRecord wrapper = uncommitted.get(i);
-			if (wrapper.getRequestId() <= currentResponse.lastUploadedRequestId) {
+			if (wrapper
+					.getRequestId() <= currentResponse.lastUploadedRequestId) {
 				continue;
 			}
 			// int startIndex = wrapper.getRequestId() ==
@@ -162,8 +177,8 @@ public class PartialDtrUploader {
 			// transforms.subList(startIndex, startIndex + length)));
 			List<DomainTransformEvent> transforms = deserTransforms
 					.get(wrapper);
-			addToRequest(request, wrapper, new ArrayList<DomainTransformEvent>(
-					transforms));
+			addToRequest(request, wrapper,
+					new ArrayList<DomainTransformEvent>(transforms));
 			transformsInRequest += transforms.size();
 			if (transformsInRequest >= currentSliceSize) {
 				break;
@@ -173,14 +188,11 @@ public class PartialDtrUploader {
 			// add a blank request (no transforms) for auth
 			addToRequest(currentRequest, uncommitted.get(0),
 					new ArrayList<DomainTransformEvent>());
-			LooseContext
-					.getContext()
-					.setBoolean(
-							LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED);
-			LooseContext
-					.getContext()
-					.set(LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS,
-							CommonUtils.join(clientInstanceIds, ","));
+			LooseContext.getContext().setBoolean(
+					LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED);
+			LooseContext.getContext().set(
+					LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS,
+					CommonUtils.join(clientInstanceIds, ","));
 			request.commitOnReceipt = true;
 			String message = TextProvider.get().getUiObjectText(
 					PartialDtrUploader.class, "committing",
@@ -193,18 +205,6 @@ public class PartialDtrUploader {
 		currentSliceSize = (int) Math.round(currentSliceSize * d);
 		currentSliceSize = Math.min(currentSliceSize, MAX_SLICE_SIZE);
 		currentSliceSize = Math.max(currentSliceSize, MIN_SLICE_SIZE);
-	}
-
-	private void submit(PartialDtrUploadRequest request) {
-		errorCountCurrentRequest = 0;
-		currentRequest = request;
-		submit0();
-	}
-
-	private void submit0() {
-		submitTime = System.currentTimeMillis();
-		ClientBase.getCommonRemoteServiceAsyncInstance()
-				.uploadOfflineTransforms(currentRequest, responseHandler);
 	}
 
 	void addToRequest(PartialDtrUploadRequest request,

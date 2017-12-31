@@ -31,52 +31,6 @@ public class ListCollectorJvm extends ListCollector {
 				}, SpinyBuffer::toArrayList, CHARACTERLESS);
 	}
 
-	static class SpinyBuffer<T> {
-		ConcurrentLinkedQueue<T> queue = new ConcurrentLinkedQueue<>();
-
-		ConcurrentLinkedQueue<SpinyBuffer<T>> buffers = new ConcurrentLinkedQueue<>();
-
-		boolean addedOther = false;
-
-		private AtomicInteger elementSize = new AtomicInteger(0);
-
-		public SpinyBuffer() {
-		}
-
-		public void add(T t) {
-			if (addedOther) {
-				int debug = 3;
-			}
-			elementSize.incrementAndGet();
-			queue.add(t);
-		}
-
-		public void addAll(SpinyBuffer<T> other) {
-			addedOther = true;
-			buffers.add(other);
-		}
-
-		int size() {
-			return elementSize.get()
-					+ buffers.stream().mapToInt(SpinyBuffer::size).sum();
-		}
-
-		int size = elementSize.get();
-
-		List<T> toArrayList() {
-			List<T> result = new ArrayList<>(size());
-			addToList(result);
-			return result;
-		}
-
-		private void addToList(List<T> result) {
-			result.addAll(queue);
-			for (SpinyBuffer<T> buffer : buffers) {
-				buffer.addToList(result);
-			}
-		}
-	}
-
 	/**
 	 * Simple implementation class for {@code Collector}.
 	 *
@@ -112,8 +66,8 @@ public class ListCollectorJvm extends ListCollector {
 		}
 
 		@Override
-		public Supplier<A> supplier() {
-			return supplier;
+		public Set<Characteristics> characteristics() {
+			return characteristics;
 		}
 
 		@Override
@@ -127,8 +81,54 @@ public class ListCollectorJvm extends ListCollector {
 		}
 
 		@Override
-		public Set<Characteristics> characteristics() {
-			return characteristics;
+		public Supplier<A> supplier() {
+			return supplier;
+		}
+	}
+
+	static class SpinyBuffer<T> {
+		ConcurrentLinkedQueue<T> queue = new ConcurrentLinkedQueue<>();
+
+		ConcurrentLinkedQueue<SpinyBuffer<T>> buffers = new ConcurrentLinkedQueue<>();
+
+		boolean addedOther = false;
+
+		private AtomicInteger elementSize = new AtomicInteger(0);
+
+		int size = elementSize.get();
+
+		public SpinyBuffer() {
+		}
+
+		public void add(T t) {
+			if (addedOther) {
+				int debug = 3;
+			}
+			elementSize.incrementAndGet();
+			queue.add(t);
+		}
+
+		public void addAll(SpinyBuffer<T> other) {
+			addedOther = true;
+			buffers.add(other);
+		}
+
+		private void addToList(List<T> result) {
+			result.addAll(queue);
+			for (SpinyBuffer<T> buffer : buffers) {
+				buffer.addToList(result);
+			}
+		}
+
+		int size() {
+			return elementSize.get()
+					+ buffers.stream().mapToInt(SpinyBuffer::size).sum();
+		}
+
+		List<T> toArrayList() {
+			List<T> result = new ArrayList<>(size());
+			addToList(result);
+			return result;
 		}
 	}
 }

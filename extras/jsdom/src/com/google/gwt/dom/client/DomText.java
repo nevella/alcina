@@ -1,7 +1,6 @@
 package com.google.gwt.dom.client;
 
 public interface DomText extends DomNode {
-
 	void deleteData(int offset, int length);
 
 	String getData();

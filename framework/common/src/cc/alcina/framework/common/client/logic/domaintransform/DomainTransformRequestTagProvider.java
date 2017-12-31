@@ -9,11 +9,6 @@ public class DomainTransformRequestTagProvider {
 	public static final transient String CONTEXT_COMMIT_REQUEST_TAG = DomainTransformRequestTagProvider.class
 			.getName() + ".CONTEXT_COMMIT_REQUEST_TAG";
 
-	protected DomainTransformRequestTagProvider() {
-	}
-
-	private String tag;
-
 	public static DomainTransformRequestTagProvider get() {
 		DomainTransformRequestTagProvider singleton = Registry
 				.checkSingleton(DomainTransformRequestTagProvider.class);
@@ -25,8 +20,9 @@ public class DomainTransformRequestTagProvider {
 		return singleton;
 	}
 
-	public void setTag(String tag) {
-		this.tag = tag;
+	private String tag;
+
+	protected DomainTransformRequestTagProvider() {
 	}
 
 	public String getTag() {
@@ -35,5 +31,9 @@ public class DomainTransformRequestTagProvider {
 		} else {
 			return tag;
 		}
+	}
+
+	public void setTag(String tag) {
+		this.tag = tag;
 	}
 }

@@ -26,28 +26,28 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  * Custom field serializer for {@link java.util.Vector}.
  */
 @SuppressWarnings("rawtypes")
-public final class Vector_CustomFieldSerializer extends
-    CustomFieldSerializer<Vector> {
+public final class Vector_CustomFieldSerializer
+		extends CustomFieldSerializer<Vector> {
+	public static void deserialize(SerializationStreamReader streamReader,
+			Vector instance) throws SerializationException {
+		Collection_CustomFieldSerializerBase.deserialize(streamReader,
+				instance);
+	}
 
-  public static void deserialize(SerializationStreamReader streamReader,
-      Vector instance) throws SerializationException {
-    Collection_CustomFieldSerializerBase.deserialize(streamReader, instance);
-  }
+	public static void serialize(SerializationStreamWriter streamWriter,
+			Vector instance) throws SerializationException {
+		Collection_CustomFieldSerializerBase.serialize(streamWriter, instance);
+	}
 
-  public static void serialize(SerializationStreamWriter streamWriter,
-      Vector instance) throws SerializationException {
-    Collection_CustomFieldSerializerBase.serialize(streamWriter, instance);
-  }
+	@Override
+	public void deserializeInstance(SerializationStreamReader streamReader,
+			Vector instance) throws SerializationException {
+		deserialize(streamReader, instance);
+	}
 
-  @Override
-  public void deserializeInstance(SerializationStreamReader streamReader,
-      Vector instance) throws SerializationException {
-    deserialize(streamReader, instance);
-  }
-
-  @Override
-  public void serializeInstance(SerializationStreamWriter streamWriter,
-      Vector instance) throws SerializationException {
-    serialize(streamWriter, instance);
-  }
+	@Override
+	public void serializeInstance(SerializationStreamWriter streamWriter,
+			Vector instance) throws SerializationException {
+		serialize(streamWriter, instance);
+	}
 }

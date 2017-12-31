@@ -42,7 +42,8 @@ abstract public class PlaceHolderReplacer {
 			if (-1 != escapeIndex) {
 				final int characterAfterIndex = escapeIndex + 1;
 				if (escapeIndex == messageLength) {
-					Checker.fail("Broken message, trailing escape character found.");
+					Checker.fail(
+							"Broken message, trailing escape character found.");
 				}
 				buf.append(text.substring(i, escapeIndex));
 				final char characterAfter = text.charAt(characterAfterIndex);
@@ -51,8 +52,9 @@ abstract public class PlaceHolderReplacer {
 					i = characterAfterIndex + 1;
 					continue;
 				}
-				Checker.fail("Invalid escape character found in format string \""
-						+ text + "\" at " + characterAfterIndex);
+				Checker.fail(
+						"Invalid escape character found in format string \""
+								+ text + "\" at " + characterAfterIndex);
 			}
 			// find the start placeholder
 			final int placeHolderStartIndex = text.indexOf("${", i);
@@ -65,12 +67,13 @@ abstract public class PlaceHolderReplacer {
 			final int placeHolderEndIndex = text.indexOf('}',
 					placeHolderStartIndex + 2);
 			if (-1 == placeHolderEndIndex) {
-				Checker.fail("Unable to find placeholder end after finding start, \""
-						+ text.substring(i, messageLength - i) + "\".");
+				Checker.fail(
+						"Unable to find placeholder end after finding start, \""
+								+ text.substring(i, messageLength - i) + "\".");
 			}
 			// extract the index in between...
-			final String placeHolder = text.substring(
-					2 + placeHolderStartIndex, placeHolderEndIndex);
+			final String placeHolder = text.substring(2 + placeHolderStartIndex,
+					placeHolderEndIndex);
 			buf.append(this.getValue(placeHolder));
 			// advance past placeholder
 			i = placeHolderEndIndex + 1;

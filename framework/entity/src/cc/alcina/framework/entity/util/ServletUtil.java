@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.util;
 
 import java.io.IOException;
@@ -20,17 +19,18 @@ import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-
 /**
  *
  * @author Nick Reddel
  */
-
- public class ServletUtil {
-	public static void writeClientSideRedirect(String targetUrl, HttpServletResponse resp) throws IOException {
+public class ServletUtil {
+	public static void writeClientSideRedirect(String targetUrl,
+			HttpServletResponse resp) throws IOException {
 		resp.setContentType("text/html");
-		resp.getWriter().write(CommonUtils.formatJ(
-				"<html><head>  <meta http-equiv=\"Refresh\" "
-						+ "content=\"0; URL=%s\"></head></html>", targetUrl));
+		resp.getWriter()
+				.write(CommonUtils.formatJ(
+						"<html><head>  <meta http-equiv=\"Refresh\" "
+								+ "content=\"0; URL=%s\"></head></html>",
+						targetUrl));
 	}
 }

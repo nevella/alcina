@@ -12,30 +12,10 @@ import org.apache.commons.lang.StringEscapeUtils;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.control.ClusterStateProvider;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
 public class ControlServlet extends HttpServlet {
-	public class InformException extends Exception {
-		public InformException(String message) {
-			super(message);
-		}
-	}
-
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-			throws ServletException, IOException {
-		try {
-			doGet0(req, resp);
-		} catch (Exception e) {
-			if (e instanceof InformException) {
-				writeAndClose(e.getMessage(), resp);
-			}
-			throw new ServletException(e);
-		}
-	}
-
 	public void writeAndClose(String s, HttpServletResponse resp)
 			throws IOException {
 		resp.setContentType("text/plain");
@@ -55,43 +35,22 @@ public class ControlServlet extends HttpServlet {
 		resp.getWriter().close();
 	}
 
+	private void authenticate(HttpServletRequest req, String reqApiKey,
+			String appApiKey) throws Exception {
+		if (appApiKey.isEmpty()) {
+			throw new InformException("Api key not set");
+		}
+		if (!appApiKey.equals(reqApiKey)) {
+			throw new InformException("Invalid api key");
+		}
+	}
+
 	private void doGet0(HttpServletRequest req, HttpServletResponse resp)
 			throws Exception {
 		String apiKey = getApiKey();
 		authenticate(req, req.getParameter("apiKey"), apiKey);
 		ControlServletRequest csr = parseRequest(req, resp);
 		handleRequest(csr, req, resp);
-	}
-
-	private ControlServletRequest parseRequest(HttpServletRequest req,
-			HttpServletResponse resp) throws Exception {
-		String jsonPayload = req.getParameter("json");
-		if (jsonPayload != null) {
-			ControlServletRequest csr = new AlcinaBeanSerializerS()
-					.deserialize(jsonPayload);
-			csr.setJson(true);
-			return csr;
-		}
-		String cmd = CommonUtils.nullToEmpty(req.getParameter("cmd"));
-		ControlServletRequest csr = new ControlServletRequest();
-		if (cmd.equals("refresh-config")) {
-			csr.setCommand(ControlServletRequestCommand.REFRESH_CONFIG);
-			return csr;
-		} else if (cmd.equals("get-status")) {
-			csr.setCommand(ControlServletRequestCommand.GET_STATUS);
-			return csr;
-		} else if (cmd.equals("cluster-status")) {
-			csr.setCommand(ControlServletRequestCommand.CLUSTER_STATUS);
-			return csr;
-		} else if (cmd.equals("vm-health")) {
-			csr.setCommand(ControlServletRequestCommand.VM_HEALTH);
-			return csr;
-		}
-		writeAndClose(
-				"Usage:\n" + "control.do?apiKey=xxx&"
-						+ "{json=yyy|cmd=[refresh-config|to-reader|to-writer|get-status|vm-health]}",
-				resp);
-		return null;
 	}
 
 	private void handleRequest(ControlServletRequest csr,
@@ -132,17 +91,57 @@ public class ControlServlet extends HttpServlet {
 		}
 	}
 
-	private void authenticate(HttpServletRequest req, String reqApiKey,
-			String appApiKey) throws Exception {
-		if (appApiKey.isEmpty()) {
-			throw new InformException("Api key not set");
+	private ControlServletRequest parseRequest(HttpServletRequest req,
+			HttpServletResponse resp) throws Exception {
+		String jsonPayload = req.getParameter("json");
+		if (jsonPayload != null) {
+			ControlServletRequest csr = new AlcinaBeanSerializerS()
+					.deserialize(jsonPayload);
+			csr.setJson(true);
+			return csr;
 		}
-		if (!appApiKey.equals(reqApiKey)) {
-			throw new InformException("Invalid api key");
+		String cmd = CommonUtils.nullToEmpty(req.getParameter("cmd"));
+		ControlServletRequest csr = new ControlServletRequest();
+		if (cmd.equals("refresh-config")) {
+			csr.setCommand(ControlServletRequestCommand.REFRESH_CONFIG);
+			return csr;
+		} else if (cmd.equals("get-status")) {
+			csr.setCommand(ControlServletRequestCommand.GET_STATUS);
+			return csr;
+		} else if (cmd.equals("cluster-status")) {
+			csr.setCommand(ControlServletRequestCommand.CLUSTER_STATUS);
+			return csr;
+		} else if (cmd.equals("vm-health")) {
+			csr.setCommand(ControlServletRequestCommand.VM_HEALTH);
+			return csr;
+		}
+		writeAndClose(
+				"Usage:\n" + "control.do?apiKey=xxx&"
+						+ "{json=yyy|cmd=[refresh-config|to-reader|to-writer|get-status|vm-health]}",
+				resp);
+		return null;
+	}
+
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
+		try {
+			doGet0(req, resp);
+		} catch (Exception e) {
+			if (e instanceof InformException) {
+				writeAndClose(e.getMessage(), resp);
+			}
+			throw new ServletException(e);
 		}
 	}
 
 	protected String getApiKey() {
 		return Registry.impl(AppLifecycleManager.class).getState().getApiKey();
+	}
+
+	public class InformException extends Exception {
+		public InformException(String message) {
+			super(message);
+		}
 	}
 }

@@ -15,20 +15,9 @@
  */
 package cc.alcina.framework.gwt.client.cell;
 
-import static com.google.gwt.dom.client.BrowserEvents.*;
-
 import com.google.gwt.cell.client.AbstractCell;
-import com.google.gwt.cell.client.ValueUpdater;
-import com.google.gwt.dom.builder.client.DomAnchorBuilder;
-import com.google.gwt.dom.builder.shared.HtmlAnchorBuilder;
-import com.google.gwt.dom.builder.shared.HtmlBuilderFactory;
-import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.EventTarget;
-import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-
-import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 /**
  * A cell that renders a button and takes a delegate to perform actions on

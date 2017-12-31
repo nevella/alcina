@@ -28,34 +28,44 @@ import cc.alcina.framework.common.client.util.LooseContext;
  *
  * @author Nick Reddel
  */
-public class EnterAsClickKeyboardListener implements KeyPressHandler,
-		KeyDownHandler {
-	public static final String CONTEXT_ENTER_EVENT_ACTIVE = EnterAsClickKeyboardListener.class.getName()+".CONTEXT_ENTER_EVENT_ACTIVE";
+public class EnterAsClickKeyboardListener
+		implements KeyPressHandler, KeyDownHandler {
+	public static final String CONTEXT_ENTER_EVENT_ACTIVE = EnterAsClickKeyboardListener.class
+			.getName() + ".CONTEXT_ENTER_EVENT_ACTIVE";
+
 	private Button button;
 
 	private InputButton inputButton;
 
 	private final TextBoxBase tb;
 
-	public EnterAsClickKeyboardListener(TextBoxBase tb, InputButton inputButton) {
-		this.tb = tb;
-		this.inputButton = inputButton;
-	}
+	public boolean listenToDown = false;
 
 	public EnterAsClickKeyboardListener(TextBoxBase tb, Button button) {
 		this.tb = tb;
 		this.button = button;
 	}
 
-	public boolean listenToDown = false;
+	public EnterAsClickKeyboardListener(TextBoxBase tb,
+			InputButton inputButton) {
+		this.tb = tb;
+		this.inputButton = inputButton;
+	}
+
+	@Override
+	public void onKeyDown(KeyDownEvent event) {
+		if (listenToDown) {
+			handleEvent(event);
+		}
+	}
 
 	public void onKeyPress(KeyPressEvent event) {
 		handleEvent(event);
 	}
 
 	private void handleEvent(KeyEvent event) {
-		char charCode = event instanceof KeyPressEvent ? ((KeyPressEvent) event)
-				.getCharCode() : '0';
+		char charCode = event instanceof KeyPressEvent
+				? ((KeyPressEvent) event).getCharCode() : '0';
 		int keyCode = event.getNativeEvent().getKeyCode();
 		if ((charCode == KeyCodes.KEY_ENTER || keyCode == KeyCodes.KEY_ENTER)
 				&& checkCanClick()) {
@@ -66,7 +76,7 @@ public class EnterAsClickKeyboardListener implements KeyPressHandler,
 				}
 				if (inputButton != null) {
 					inputButton.click();
-				} 
+				}
 			} finally {
 				LooseContext.pop();
 			}
@@ -75,12 +85,5 @@ public class EnterAsClickKeyboardListener implements KeyPressHandler,
 
 	protected boolean checkCanClick() {
 		return tb.getText().length() != 0;
-	}
-
-	@Override
-	public void onKeyDown(KeyDownEvent event) {
-		if (listenToDown) {
-			handleEvent(event);
-		}
 	}
 }

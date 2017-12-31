@@ -35,6 +35,28 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
  * @author Nick Reddel
  */
 public class DomainObjectCloner extends CloneHelper {
+	public static final Set<String> IGNORE_FOR_DOMAIN_OBJECT_CLONING = new HashSet<String>(
+			Arrays.asList(new String[] { "id", "localId",
+					"lastModificationDate", "lastModificationUser",
+					"creationDate", "creationUser", "versionNumber",
+					"propertyChangeListeners" }));
+
+	private List provisionalObjects = new ArrayList();
+
+	private boolean createProvisionalObjects;
+
+	public List getProvisionalObjects() {
+		return this.provisionalObjects;
+	}
+
+	public boolean isCreateProvisionalObjects() {
+		return this.createProvisionalObjects;
+	}
+
+	public void setCreateProvisionalObjects(boolean createProvisionalObjects) {
+		this.createProvisionalObjects = createProvisionalObjects;
+	}
+
 	@Override
 	protected boolean deepProperty(Object o, String propertyName) {
 		Class c = o.getClass();
@@ -42,19 +64,14 @@ public class DomainObjectCloner extends CloneHelper {
 		if (bi == null) {
 			return false;
 		}
-		ClientPropertyReflector pr = bi.getPropertyReflectors().get(
-				propertyName);
+		ClientPropertyReflector pr = bi.getPropertyReflectors()
+				.get(propertyName);
 		if (pr == null) {
 			return false;
 		}
 		DomainProperty dpi = pr.getAnnotation(DomainProperty.class);
 		return dpi == null ? false : dpi.cloneForDuplication();
 	}
-
-	public static final Set<String> IGNORE_FOR_DOMAIN_OBJECT_CLONING = new HashSet<String>(
-			Arrays.asList(new String[] { "id", "localId",
-					"lastModificationDate", "lastModificationUser",
-					"creationDate", "creationUser", "versionNumber","propertyChangeListeners" }));
 
 	protected boolean ignore(Class clazz, String propertyName, Object obj) {
 		if (IGNORE_FOR_DOMAIN_OBJECT_CLONING.contains(propertyName)) {
@@ -64,8 +81,8 @@ public class DomainObjectCloner extends CloneHelper {
 		if (bi == null) {
 			return true;
 		}
-		ClientPropertyReflector pr = bi.getPropertyReflectors().get(
-				propertyName);
+		ClientPropertyReflector pr = bi.getPropertyReflectors()
+				.get(propertyName);
 		if (pr == null) {
 			return true;
 		}
@@ -74,14 +91,6 @@ public class DomainObjectCloner extends CloneHelper {
 		return !PermissionsManager.get().checkEffectivePropertyPermission(op,
 				pp, obj, false);
 	}
-
-	private List provisionalObjects = new ArrayList();
-
-	public List getProvisionalObjects() {
-		return this.provisionalObjects;
-	}
-
-	private boolean createProvisionalObjects;
 
 	protected <T> T newInstance(T o) {
 		Class clazz = o.getClass();
@@ -99,13 +108,5 @@ public class DomainObjectCloner extends CloneHelper {
 		} else {
 			return super.newInstance(o);
 		}
-	}
-
-	public boolean isCreateProvisionalObjects() {
-		return this.createProvisionalObjects;
-	}
-
-	public void setCreateProvisionalObjects(boolean createProvisionalObjects) {
-		this.createProvisionalObjects = createProvisionalObjects;
 	}
 }

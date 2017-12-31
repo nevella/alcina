@@ -34,24 +34,6 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 
 public class WorkspaceDefaultActionHandlers {
-	@ClientInstantiable
-	public abstract static class WorkspaceDefaultActionHandlerBase {
-		protected ContentViewFactory getContentViewFactory() {
-			ContentViewFactory viewFactory = new ContentViewFactory();
-			viewFactory.setCancelButton(true);
-			return viewFactory;
-		}
-
-		protected boolean isAutoSave() {
-			return ClientBase.getGeneralProperties().isAutoSave();
-		}
-
-		protected void handleParentLinks(Workspace workspace, Object node,
-				HasIdAndLocalId newObj) {
-			workspace.handleParentLinks(node, newObj);
-		}
-	}
-
 	public static abstract class BaseViewActionHandler
 			extends WorkspaceDefaultActionHandlerBase {
 		public void performAction(PermissibleActionEvent event, Object node,
@@ -79,11 +61,50 @@ public class WorkspaceDefaultActionHandlers {
 		protected abstract boolean editView();
 	}
 
-	@RegistryLocation(registryPoint = ViewActionHandler.class)
-	public static class DefaultViewActionHandler extends BaseViewActionHandler
-			implements ViewActionHandler {
-		protected boolean editView() {
-			return false;
+	@RegistryLocation(registryPoint = CloneActionHandler.class)
+	public static class DefaultCloneActionHandler extends
+			WorkspaceDefaultActionHandlerBase implements CloneActionHandler {
+		public void performAction(final PermissibleActionEvent event,
+				Object node, Object object, final Workspace workspace,
+				Class nodeObjectClass) {
+			final HasIdAndLocalId hili = (HasIdAndLocalId) object;
+			HasIdAndLocalId newObj = null;
+			List<Object> provisionals = new ArrayList<Object>();
+			try {
+				CollectionModificationSupport.queue(true);
+				DomainObjectCloner cloner = new DomainObjectCloner();
+				newObj = cloner.deepBeanClone(hili);
+				if (isAutoSave()) {
+					ClientTransformManager.cast().promoteToDomainObject(
+							cloner.getProvisionalObjects());
+					newObj = ClientTransformManager.cast().getObject(newObj);
+				} else {
+					provisionals.addAll(cloner.getProvisionalObjects());
+				}
+				handleParentLinks(workspace, node, newObj);
+				provisionals.addAll(ClientTransformManager.cast()
+						.prepareObject(newObj, isAutoSave(), true, false));
+				TextProvider.get().setDecorated(true);
+				String newName = TextProvider.get().getObjectName(newObj)
+						+ " (copy)";
+				TextProvider.get().setDecorated(false);
+				TextProvider.get().setObjectName(newObj, newName);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			} finally {
+				CollectionModificationSupport.queue(false);
+			}
+			if (isAutoSave()) {
+				workspace.getVisualiser().selectNodeForObject(newObj, true);
+			}
+			Widget view = getContentViewFactory().editable(true)
+					.actionListener(workspace).autoSave(isAutoSave())
+					.doNotClone(false).additionalProvisional(provisionals)
+					.doNotPrepare(true).createBeanView(newObj);
+			workspace.getVisualiser().setContentWidget(view);
+			workspace.fireVetoableActionEvent(
+					new PermissibleActionEvent(newObj, event.getAction()));
+			return;
 		}
 	}
 
@@ -128,15 +149,6 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	@RegistryLocation(registryPoint = EditActionHandler.class)
-	public static class DefaultEditActionHandler extends BaseViewActionHandler
-			implements EditActionHandler {
-		@Override
-		protected boolean editView() {
-			return true;
-		}
-	}
-
 	@RegistryLocation(registryPoint = DeleteActionHandler.class)
 	/*
 	 * TODO - Alcina - the separation of 'deletion of reffing' and 'deletion'
@@ -147,6 +159,23 @@ public class WorkspaceDefaultActionHandlers {
 	 */
 	public static class DefaultDeleteActionHandler extends
 			WorkspaceDefaultActionHandlerBase implements DeleteActionHandler {
+		public void performAction(final PermissibleActionEvent event,
+				Object node, Object object, final Workspace workspace,
+				Class nodeObjectClass) {
+			final HasIdAndLocalId hili = (HasIdAndLocalId) object;
+			final WorkspaceDeletionChecker workspaceDeletionChecker = new WorkspaceDeletionChecker();
+			if (WorkspaceDeletionChecker.enabled) {
+				if (!workspaceDeletionChecker.checkPropertyRefs(hili)) {
+					return;
+				} else {
+				}
+			}
+			Registry.impl(ClientNotifications.class).confirm(
+					"Are you sure you want to delete the selected object",
+					new DoDeleteCallback(event, workspace, hili,
+							workspaceDeletionChecker));
+		}
+
 		private class DoDeleteCallback implements OkCallback {
 			private final PermissibleActionEvent event;
 
@@ -200,69 +229,40 @@ public class WorkspaceDefaultActionHandlers {
 				}
 			}
 		}
+	}
 
-		public void performAction(final PermissibleActionEvent event,
-				Object node, Object object, final Workspace workspace,
-				Class nodeObjectClass) {
-			final HasIdAndLocalId hili = (HasIdAndLocalId) object;
-			final WorkspaceDeletionChecker workspaceDeletionChecker = new WorkspaceDeletionChecker();
-			if (WorkspaceDeletionChecker.enabled) {
-				if (!workspaceDeletionChecker.checkPropertyRefs(hili)) {
-					return;
-				} else {
-				}
-			}
-			Registry.impl(ClientNotifications.class).confirm(
-					"Are you sure you want to delete the selected object",
-					new DoDeleteCallback(event, workspace, hili,
-							workspaceDeletionChecker));
+	@RegistryLocation(registryPoint = EditActionHandler.class)
+	public static class DefaultEditActionHandler extends BaseViewActionHandler
+			implements EditActionHandler {
+		@Override
+		protected boolean editView() {
+			return true;
 		}
 	}
 
-	@RegistryLocation(registryPoint = CloneActionHandler.class)
-	public static class DefaultCloneActionHandler extends
-			WorkspaceDefaultActionHandlerBase implements CloneActionHandler {
-		public void performAction(final PermissibleActionEvent event,
-				Object node, Object object, final Workspace workspace,
-				Class nodeObjectClass) {
-			final HasIdAndLocalId hili = (HasIdAndLocalId) object;
-			HasIdAndLocalId newObj = null;
-			List<Object> provisionals = new ArrayList<Object>();
-			try {
-				CollectionModificationSupport.queue(true);
-				DomainObjectCloner cloner = new DomainObjectCloner();
-				newObj = cloner.deepBeanClone(hili);
-				if (isAutoSave()) {
-					ClientTransformManager.cast().promoteToDomainObject(
-							cloner.getProvisionalObjects());
-					newObj = ClientTransformManager.cast().getObject(newObj);
-				} else {
-					provisionals.addAll(cloner.getProvisionalObjects());
-				}
-				handleParentLinks(workspace, node, newObj);
-				provisionals.addAll(ClientTransformManager.cast()
-						.prepareObject(newObj, isAutoSave(), true, false));
-				TextProvider.get().setDecorated(true);
-				String newName = TextProvider.get().getObjectName(newObj)
-						+ " (copy)";
-				TextProvider.get().setDecorated(false);
-				TextProvider.get().setObjectName(newObj, newName);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			} finally {
-				CollectionModificationSupport.queue(false);
-			}
-			if (isAutoSave()) {
-				workspace.getVisualiser().selectNodeForObject(newObj, true);
-			}
-			Widget view = getContentViewFactory().editable(true)
-					.actionListener(workspace).autoSave(isAutoSave())
-					.doNotClone(false).additionalProvisional(provisionals)
-					.doNotPrepare(true).createBeanView(newObj);
-			workspace.getVisualiser().setContentWidget(view);
-			workspace.fireVetoableActionEvent(
-					new PermissibleActionEvent(newObj, event.getAction()));
-			return;
+	@RegistryLocation(registryPoint = ViewActionHandler.class)
+	public static class DefaultViewActionHandler extends BaseViewActionHandler
+			implements ViewActionHandler {
+		protected boolean editView() {
+			return false;
+		}
+	}
+
+	@ClientInstantiable
+	public abstract static class WorkspaceDefaultActionHandlerBase {
+		protected ContentViewFactory getContentViewFactory() {
+			ContentViewFactory viewFactory = new ContentViewFactory();
+			viewFactory.setCancelButton(true);
+			return viewFactory;
+		}
+
+		protected void handleParentLinks(Workspace workspace, Object node,
+				HasIdAndLocalId newObj) {
+			workspace.handleParentLinks(node, newObj);
+		}
+
+		protected boolean isAutoSave() {
+			return ClientBase.getGeneralProperties().isAutoSave();
 		}
 	}
 }

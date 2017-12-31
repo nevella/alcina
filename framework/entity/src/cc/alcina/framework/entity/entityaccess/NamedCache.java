@@ -30,12 +30,32 @@ public class NamedCache {
 
 	private static Map<String, Map> caches = new LinkedHashMap<String, Map>();
 
+	public static boolean containsKey(String mapName, Object key) {
+		return get(mapName, key) != null;
+	}
+
 	public static <T> T get(String mapName, Object key) {
 		checkMap(mapName);
 		return (T) caches.get(mapName).get(key);
 	}
 
-	public static synchronized void put(String mapName, Object key, Object value) {
+	public static synchronized void invalidate(String mapName) {
+		checkMap(mapName);
+		caches.get(mapName).clear();
+	}
+
+	public static synchronized void invalidate(String mapName, Object key) {
+		checkMap(mapName);
+		caches.get(mapName).remove(key);
+	}
+
+	public static boolean isEmpty(String mapName) {
+		checkMap(mapName);
+		return caches.get(mapName).isEmpty();
+	}
+
+	public static synchronized void put(String mapName, Object key,
+			Object value) {
 		checkMap(mapName);
 		synchronized (caches) {
 			try {
@@ -50,28 +70,9 @@ public class NamedCache {
 		}
 	}
 
-	public static boolean containsKey(String mapName, Object key) {
-		return get(mapName, key) != null;
-	}
-
-	public static boolean isEmpty(String mapName) {
-		checkMap(mapName);
-		return caches.get(mapName).isEmpty();
-	}
-
 	private static synchronized void checkMap(String mapName) {
 		if (!caches.containsKey(mapName)) {
 			caches.put(mapName, new LRUMap(cacheSize));
 		}
-	}
-
-	public static synchronized void invalidate(String mapName) {
-		checkMap(mapName);
-		caches.get(mapName).clear();
-	}
-
-	public static synchronized void invalidate(String mapName, Object key) {
-		checkMap(mapName);
-		caches.get(mapName).remove(key);
 	}
 }

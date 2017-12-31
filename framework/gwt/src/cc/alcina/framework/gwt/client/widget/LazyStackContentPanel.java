@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import java.util.List;
@@ -25,21 +24,30 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo
  *
  * @author Nick Reddel
  */
-
- public abstract class LazyStackContentPanel extends LazyPanel<Widget> {
+public abstract class LazyStackContentPanel extends LazyPanel<Widget> {
 	private boolean initalisingLayout;
-
-	public abstract List<SimpleHistoryEventInfo> getHistoryEventInfo() ;
-	public abstract String getHistoryToken();
 
 	public abstract String getDisplayName();
 
-	public void setInitalisingLayout(boolean initalisingLayout) {
-		this.initalisingLayout = initalisingLayout;
-	}
+	public abstract List<SimpleHistoryEventInfo> getHistoryEventInfo();
+
+	public abstract String getHistoryToken();
+
+	public abstract String getSubTabName();
 
 	public boolean isInitalisingLayout() {
 		return initalisingLayout;
+	}
+
+	public void refreshAfterHistoryChange() {
+	}
+
+	public void setContentHeight(String height) {
+		ensureWidget().setHeight(height);
+	}
+
+	public void setInitalisingLayout(boolean initalisingLayout) {
+		this.initalisingLayout = initalisingLayout;
 	}
 
 	public void setVisible(boolean visible) {
@@ -50,18 +58,8 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo
 		super.setVisible(visible);
 	}
 
-	public abstract String getSubTabName() ;
-
 	public static class LazyStackPanel extends StackPanel {
 		private boolean initalisingLayout;
-
-		public boolean isInitalisingLayout() {
-			return this.initalisingLayout;
-		}
-
-		public void setInitalisingLayout(boolean initalisingLayout) {
-			this.initalisingLayout = initalisingLayout;
-		}
 
 		@Override
 		public void insert(Widget w, int beforeIndex) {
@@ -70,11 +68,13 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo
 			}
 			super.insert(w, beforeIndex);
 		}
-	}
-	public void setContentHeight(String height){
-		ensureWidget().setHeight(height);
-	}
-	public void refreshAfterHistoryChange() {
-		
+
+		public boolean isInitalisingLayout() {
+			return this.initalisingLayout;
+		}
+
+		public void setInitalisingLayout(boolean initalisingLayout) {
+			this.initalisingLayout = initalisingLayout;
+		}
 	}
 }

@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 
 /**
  * Only used in entity-layer code
+ * 
  * @author Nick Reddel
  */
 public class VersioningEntityListener {
@@ -33,7 +34,7 @@ public class VersioningEntityListener {
 	@PrePersist
 	@PreUpdate
 	public void setVersioningInfo(Object obj) {
-		if (obj instanceof IVersionable &&!disabled.get()) {
+		if (obj instanceof IVersionable && !disabled.get()) {
 			IVersionable iv = (IVersionable) obj;
 			PermissionsManager.get().prepareVersionable(iv);
 		}

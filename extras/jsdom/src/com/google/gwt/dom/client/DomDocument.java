@@ -1,31 +1,13 @@
 package com.google.gwt.dom.client;
 
 /**
- * all default methods should actually call through to domdocument_static ... when i get the time
+ * all default methods should actually call through to domdocument_static ...
+ * when i get the time
+ * 
  * @author nick@alcina.cc
  *
  */
 public interface DomDocument extends DomNode {
-	@Override
-	default String getNodeName() {
-		return "#document";
-	}
-
-	@Override
-	default short getNodeType() {
-		return Node.DOCUMENT_NODE;
-	}
-
-	@Override
-	default String getNodeValue() {
-		return null;
-	}
-
-	@Override
-	default void setNodeValue(String nodeValue) {
-		throw new UnsupportedOperationException();
-	}
-
 	/**
 	 * Creates an &lt;a&gt; element.
 	 * 
@@ -89,7 +71,8 @@ public interface DomDocument extends DomNode {
 	 * @return the newly created element
 	 */
 	default BRElement createBRElement() {
-		return (BRElement) DOMImpl.impl.createElement(documentFor(), BRElement.TAG);
+		return (BRElement) DOMImpl.impl.createElement(documentFor(),
+				BRElement.TAG);
 	}
 
 	/**
@@ -394,7 +377,8 @@ public interface DomDocument extends DomNode {
 	 */
 	default HeadingElement createHElement(int n) {
 		assert (n >= 1) && (n <= 6);
-		return (HeadingElement) DOMImpl.impl.createElement(documentFor(), "h" + n);
+		return (HeadingElement) DOMImpl.impl.createElement(documentFor(),
+				"h" + n);
 	}
 
 	/**
@@ -412,7 +396,8 @@ public interface DomDocument extends DomNode {
 	 * @return the newly created element
 	 */
 	default HRElement createHRElement() {
-		return (HRElement) DOMImpl.impl.createElement(documentFor(), HRElement.TAG);
+		return (HRElement) DOMImpl.impl.createElement(documentFor(),
+				HRElement.TAG);
 	}
 
 	/**
@@ -518,8 +503,8 @@ public interface DomDocument extends DomNode {
 	 */
 	default NativeEvent createKeyCodeEvent(String type, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode) {
-		return DOMImpl.impl.createKeyCodeEvent(documentFor(), type, ctrlKey, altKey,
-				shiftKey, metaKey, keyCode);
+		return DOMImpl.impl.createKeyCodeEvent(documentFor(), type, ctrlKey,
+				altKey, shiftKey, metaKey, keyCode);
 	}
 
 	/**
@@ -743,7 +728,8 @@ public interface DomDocument extends DomNode {
 	 * @return the newly created element
 	 */
 	default LIElement createLIElement() {
-		return (LIElement) DOMImpl.impl.createElement(documentFor(), LIElement.TAG);
+		return (LIElement) DOMImpl.impl.createElement(documentFor(),
+				LIElement.TAG);
 	}
 
 	/**
@@ -1373,7 +1359,7 @@ public interface DomDocument extends DomNode {
 				UListElement.TAG);
 	}
 
-	Document documentFor();
+	String createUniqueId();
 
 	/**
 	 * Creates a &lt;video&gt; element.
@@ -1385,7 +1371,7 @@ public interface DomDocument extends DomNode {
 				VideoElement.TAG);
 	}
 
-	String createUniqueId();
+	Document documentFor();
 
 	default void enableScrolling(boolean enable) {
 		throw new UnsupportedOperationException();
@@ -1433,6 +1419,21 @@ public interface DomDocument extends DomNode {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	default String getNodeName() {
+		return "#document";
+	}
+
+	@Override
+	default short getNodeType() {
+		return Node.DOCUMENT_NODE;
+	}
+
+	@Override
+	default String getNodeValue() {
+		return null;
+	}
+
 	default String getReferrer() {
 		throw new UnsupportedOperationException();
 	}
@@ -1461,11 +1462,20 @@ public interface DomDocument extends DomNode {
 		throw new UnsupportedOperationException();
 	}
 
+	default Element getViewportElement() {
+		throw new UnsupportedOperationException();
+	}
+
 	default void importNode(Node node, boolean deep) {
 		throw new UnsupportedOperationException();
 	}
 
 	default boolean isCSS1Compat() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	default void setNodeValue(String nodeValue) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -1478,10 +1488,6 @@ public interface DomDocument extends DomNode {
 	}
 
 	default void setTitle(String title) {
-		throw new UnsupportedOperationException();
-	}
-
-	default Element getViewportElement() {
 		throw new UnsupportedOperationException();
 	}
 }

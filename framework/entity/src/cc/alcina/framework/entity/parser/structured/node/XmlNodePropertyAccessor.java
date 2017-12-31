@@ -12,11 +12,6 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 	}
 
 	@Override
-	public boolean hasPropertyKey(Object bean, String propertyName) {
-		return getPropertyValue(bean, propertyName) != null;
-	}
-
-	@Override
 	public IndividualPropertyAccessor cachedAccessor(Class clazz,
 			String propertyName) {
 		return new MethodIndividualPropertyAccessor(clazz, propertyName);
@@ -46,6 +41,11 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 		} else {
 			return resolved.textContent();
 		}
+	}
+
+	@Override
+	public boolean hasPropertyKey(Object bean, String propertyName) {
+		return getPropertyValue(bean, propertyName) != null;
 	}
 
 	public void setPropertyValue(Object bean, String propertyName,

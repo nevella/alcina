@@ -1,7 +1,5 @@
 package cc.alcina.framework.entity.parser.structured.node;
 
-import cc.alcina.framework.entity.parser.structured.node.XmlNodeHtmlTableBuilder.XmlNodeHtmlTableCellBuilder;
-
 public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 	public XmlNodeHtmlTableBuilder(XmlNode xmlNode) {
 		relativeTo = xmlNode;
@@ -27,21 +25,29 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			tag("td");
 		}
 
+		public XmlNodeHtmlTableCellBuilder blank() {
+			text("\u00A0");
+			return this;
+		}
+
 		public XmlNodeHtmlTableCellBuilder cell() {
 			ensureBuilt();
 			return new XmlNodeHtmlTableCellBuilder(relativeTo);
 		}
 
+		public XmlNodeHtmlTableCellBuilder cell(String text) {
+			text(text);
+			return cell();
+		}
+
+		public XmlNodeHtmlTableCellBuilder colSpan(int colSpan) {
+			attr("colSpan", String.valueOf(colSpan));
+			return this;
+		}
+
 		public XmlNodeHtmlTableRowBuilder row() {
 			ensureBuilt();
 			return new XmlNodeHtmlTableRowBuilder(relativeTo.parent());
-		}
-
-		private void ensureBuilt() {
-			if (built) {
-			} else {
-				append();
-			}
 		}
 
 		@Override
@@ -50,19 +56,11 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			return this;
 		}
 
-		public XmlNodeHtmlTableCellBuilder colSpan(int colSpan) {
-			attr("colSpan", String.valueOf(colSpan));
-			return this;
-		}
-
-		public XmlNodeHtmlTableCellBuilder blank() {
-			text("\u00A0");
-			return this;
-		}
-
-		public XmlNodeHtmlTableCellBuilder cell(String text) {
-			text(text);
-			return cell();
+		private void ensureBuilt() {
+			if (built) {
+			} else {
+				append();
+			}
 		}
 	}
 
@@ -77,15 +75,15 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			return new XmlNodeHtmlTableCellBuilder(builtNode());
 		}
 
+		public XmlNodeHtmlTableCellBuilder cell(String text) {
+			return cell().text(text).cell();
+		}
+
 		private void ensureBuilt() {
 			if (built) {
 			} else {
 				append();
 			}
-		}
-
-		public XmlNodeHtmlTableCellBuilder cell(String text) {
-			return cell().text(text).cell();
 		}
 	}
 }

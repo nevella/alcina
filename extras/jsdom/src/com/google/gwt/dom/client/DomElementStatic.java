@@ -3,7 +3,6 @@ package com.google.gwt.dom.client;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
 public class DomElementStatic {
-	
 	/**
 	 * Adds a name to this element's class property. If the name is already
 	 * present, this method has no effect.
@@ -59,7 +58,6 @@ public class DomElementStatic {
 		throw new UnsupportedOperationException();
 	}
 
-
 	static int getClientHeight(DomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
@@ -76,7 +74,6 @@ public class DomElementStatic {
 		throw new UnsupportedOperationException();
 	}
 
-
 	/**
 	 * The first child of element this element. If there is no such element,
 	 * this returns null.
@@ -84,7 +81,6 @@ public class DomElementStatic {
 	static Element getFirstChildElement(DomElement domElement) {
 		return DOMImpl.impl.getFirstChildElement(domElement.elementFor());
 	}
-
 
 	/**
 	 * All of the markup and content within a given element.
@@ -116,7 +112,6 @@ public class DomElementStatic {
 		throw new UnsupportedOperationException();
 	}
 
-
 	/**
 	 * The element immediately preceding this element. If there is no such
 	 * element, this returns null.
@@ -124,8 +119,6 @@ public class DomElementStatic {
 	static Element getPreviousSiblingElement(DomElement domElement) {
 		return DOMImpl.impl.getPreviousSiblingElement(domElement.elementFor());
 	}
-
-
 
 	static int getScrollHeight(DomElement domElement) {
 		throw new UnsupportedOperationException();
@@ -163,7 +156,6 @@ public class DomElementStatic {
 		return DOMImpl.impl.toString(domElement.elementFor());
 	}
 
-
 	/**
 	 * The index that represents the element's position in the tabbing order.
 	 * 
@@ -184,7 +176,6 @@ public class DomElementStatic {
 	static String getTagName(DomElement domElement) {
 		return DOMImpl.impl.getTagName(domElement.elementFor());
 	}
-
 
 	/**
 	 * Determines whether an element has an attribute with a given name.
@@ -227,6 +218,31 @@ public class DomElementStatic {
 		return tagName.equalsIgnoreCase(domElement.getTagName());
 	}
 
+	/**
+	 * Returns the index of the first occurrence of name in a space-separated
+	 * list of names, or -1 if not found.
+	 *
+	 * @param nameList
+	 *            list of space delimited names
+	 * @param name
+	 *            a non-empty string. Should be already trimmed.
+	 */
+	static int indexOfName(String nameList, String name) {
+		int idx = nameList.indexOf(name);
+		// Calculate matching index.
+		while (idx != -1) {
+			if (idx == 0 || nameList.charAt(idx - 1) == ' ') {
+				int last = idx + name.length();
+				int lastPos = nameList.length();
+				if ((last == lastPos) || ((last < lastPos)
+						&& (nameList.charAt(last) == ' '))) {
+					break;
+				}
+			}
+			idx = nameList.indexOf(name, idx + 1);
+		}
+		return idx;
+	}
 
 	/**
 	 * Removes a name from this element's class property. If the name is not
@@ -263,52 +279,6 @@ public class DomElementStatic {
 	}
 
 	/**
-	 * Returns the index of the first occurrence of name in a space-separated
-	 * list of names, or -1 if not found.
-	 *
-	 * @param nameList
-	 *            list of space delimited names
-	 * @param name
-	 *            a non-empty string. Should be already trimmed.
-	 */
-	static int indexOfName(String nameList, String name) {
-		int idx = nameList.indexOf(name);
-		// Calculate matching index.
-		while (idx != -1) {
-			if (idx == 0 || nameList.charAt(idx - 1) == ' ') {
-				int last = idx + name.length();
-				int lastPos = nameList.length();
-				if ((last == lastPos) || ((last < lastPos)
-						&& (nameList.charAt(last) == ' '))) {
-					break;
-				}
-			}
-			idx = nameList.indexOf(name, idx + 1);
-		}
-		return idx;
-	}
-
-	static String trimClassName(String className) {
-		assert (className != null) : "Unexpectedly null class name";
-		className = className.trim();
-		assert !className.isEmpty() : "Unexpectedly empty class name";
-		return className;
-	}
-
-	/**
-	 * Add the class name if it doesn't exist or removes it if does.
-	 *
-	 * @param className
-	 *            the class name to be toggled
-	 */
-	static void toggleClassName(DomElement domElement, String className) {
-		boolean added = domElement.addClassName(className);
-		if (!added) {
-			domElement.removeClassName(className);
-		}
-	}
-
-	/**
 	 * Replace one class name with another.
 	 *
 	 * @param oldClassName
@@ -316,7 +286,8 @@ public class DomElementStatic {
 	 * @param newClassName
 	 *            the class name to replace it
 	 */
-	static void replaceClassName(DomElement domElement, String oldClassName, String newClassName) {
+	static void replaceClassName(DomElement domElement, String oldClassName,
+			String newClassName) {
 		domElement.removeClassName(oldClassName);
 		domElement.addClassName(newClassName);
 	}
@@ -335,7 +306,6 @@ public class DomElementStatic {
 		DOMImpl.impl.scrollIntoView(domElement.elementFor());
 	}
 
-
 	static void setDir(DomElement domElement, String dir) {
 		throw new UnsupportedOperationException();
 	}
@@ -350,7 +320,6 @@ public class DomElementStatic {
 	static void setDraggable(DomElement domElement, String draggable) {
 		DOMImpl.impl.setDraggable(domElement.elementFor(), draggable);
 	}
-
 
 	/**
 	 * All of the markup and content within a given element.
@@ -370,7 +339,6 @@ public class DomElementStatic {
 		domElement.setPropertyString("lang", lang);
 	}
 
-
 	static void setScrollLeft(DomElement domElement, int scrollLeft) {
 		DOMImpl.impl.setScrollLeft(domElement.elementFor(), scrollLeft);
 	}
@@ -379,4 +347,23 @@ public class DomElementStatic {
 		domElement.setPropertyInt("scrollTop", scrollTop);
 	}
 
+	/**
+	 * Add the class name if it doesn't exist or removes it if does.
+	 *
+	 * @param className
+	 *            the class name to be toggled
+	 */
+	static void toggleClassName(DomElement domElement, String className) {
+		boolean added = domElement.addClassName(className);
+		if (!added) {
+			domElement.removeClassName(className);
+		}
+	}
+
+	static String trimClassName(String className) {
+		assert (className != null) : "Unexpectedly null class name";
+		className = className.trim();
+		assert !className.isEmpty() : "Unexpectedly empty class name";
+		return className;
+	}
 }

@@ -55,6 +55,65 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class EncryptionUtils {
+	/**
+	 * Don't use for SHA1
+	 * 
+	 */
+	public static EncryptionUtils get() {
+		EncryptionUtils singleton = Registry
+				.checkSingleton(EncryptionUtils.class);
+		if (singleton == null) {
+			singleton = new EncryptionUtils();
+			Registry.registerSingleton(EncryptionUtils.class, singleton);
+		}
+		return singleton;
+	}
+
+	public static final byte[] intToByteArray(int value) {
+		return new byte[] { (byte) (value >>> 24), (byte) (value >>> 16),
+				(byte) (value >>> 8), (byte) value };
+	}
+
+	public static final byte[] longToByteArray(long value) {
+		return new byte[] { (byte) (value >>> 56), (byte) (value >>> 48),
+				(byte) (value >>> 40), (byte) (value >>> 32),
+				(byte) (value >>> 24), (byte) (value >>> 16),
+				(byte) (value >>> 8), (byte) value };
+	}
+
+	public static String MD5(byte[] bytes)
+			throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		MessageDigest md;
+		md = MessageDigest.getInstance("MD5");
+		byte[] md5hash = new byte[32];
+		md.update(bytes, 0, bytes.length);
+		md5hash = md.digest();
+		return convertToHex(md5hash);
+	}
+
+	public static String MD5(List<byte[]> byties)
+			throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		MessageDigest md;
+		md = MessageDigest.getInstance("MD5");
+		for (byte[] bytes : byties) {
+			md.update(bytes, 0, bytes.length);
+		}
+		byte[] md5hash = new byte[32];
+		md5hash = md.digest();
+		return convertToHex(md5hash);
+	}
+
+	public static String MD5(String text)
+			throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		MessageDigest md;
+		md = MessageDigest.getInstance("MD5");
+		byte[] md5hash = new byte[32];
+		// iso-8859 not that good an idea, but keep it...
+		md.update(text.getBytes("iso-8859-1"), 0, text.length());
+		md5hash = md.digest();
+		return convertToHex(md5hash);
+	}
+
 	public static void showProviders() {
 		try {
 			Provider[] providers = Security.getProviders();
@@ -73,6 +132,22 @@ public class EncryptionUtils {
 		}
 	}
 
+	private static String convertToHex(byte[] data) {
+		StringBuffer buf = new StringBuffer();
+		for (int i = 0; i < data.length; i++) {
+			int halfbyte = (data[i] >>> 4) & 0x0F;
+			int two_halfs = 0;
+			do {
+				if ((0 <= halfbyte) && (halfbyte <= 9))
+					buf.append((char) ('0' + halfbyte));
+				else
+					buf.append((char) ('a' + (halfbyte - 10)));
+				halfbyte = data[i] & 0x0F;
+			} while (two_halfs++ < 1);
+		}
+		return buf.toString();
+	}
+
 	private byte[] passphrase;
 
 	private byte[] publicKeyBytes;
@@ -83,19 +158,7 @@ public class EncryptionUtils {
 
 	private PublicKey publicKey;
 
-	/**
-	 * Don't use for SHA1
-	 * 
-	 */
-	public static EncryptionUtils get() {
-		EncryptionUtils singleton = Registry
-				.checkSingleton(EncryptionUtils.class);
-		if (singleton == null) {
-			singleton = new EncryptionUtils();
-			Registry.registerSingleton(EncryptionUtils.class, singleton);
-		}
-		return singleton;
-	}
+	private MessageDigest sha1Digest;
 
 	// will decrypt then gunzip
 	public byte[] asymDecryptLarge(byte[] source) {
@@ -268,6 +331,18 @@ public class EncryptionUtils {
 		this.publicKeyBytes = publicKey;
 	}
 
+	public String SHA1(String text) {
+		try {
+			MessageDigest md = ensureSha1Digest();
+			byte[] sha1hash = new byte[32];
+			md.update(text.getBytes("utf-8"), 0, text.length());
+			sha1hash = md.digest();
+			return convertToHex(sha1hash);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public byte[] symmetricDecrypt(byte[] source, Key key) {
 		try {
 			Cipher desCipher = Cipher.getInstance("DESede");
@@ -286,6 +361,13 @@ public class EncryptionUtils {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	private MessageDigest ensureSha1Digest() throws Exception {
+		if (sha1Digest == null) {
+			sha1Digest = MessageDigest.getInstance("SHA1");
+		}
+		return sha1Digest;
 	}
 
 	private Key getSymmetricKey(byte[] encodedInfo) {
@@ -327,87 +409,5 @@ public class EncryptionUtils {
 		gzos.flush();
 		gzos.close();
 		return baos.toByteArray();
-	}
-
-	private static String convertToHex(byte[] data) {
-		StringBuffer buf = new StringBuffer();
-		for (int i = 0; i < data.length; i++) {
-			int halfbyte = (data[i] >>> 4) & 0x0F;
-			int two_halfs = 0;
-			do {
-				if ((0 <= halfbyte) && (halfbyte <= 9))
-					buf.append((char) ('0' + halfbyte));
-				else
-					buf.append((char) ('a' + (halfbyte - 10)));
-				halfbyte = data[i] & 0x0F;
-			} while (two_halfs++ < 1);
-		}
-		return buf.toString();
-	}
-
-	public static String MD5(String text) throws NoSuchAlgorithmException,
-			UnsupportedEncodingException {
-		MessageDigest md;
-		md = MessageDigest.getInstance("MD5");
-		byte[] md5hash = new byte[32];
-		// iso-8859 not that good an idea, but keep it...
-		md.update(text.getBytes("iso-8859-1"), 0, text.length());
-		md5hash = md.digest();
-		return convertToHex(md5hash);
-	}
-
-	private MessageDigest sha1Digest;
-
-	public String SHA1(String text) {
-		try {
-			MessageDigest md = ensureSha1Digest();
-			byte[] sha1hash = new byte[32];
-			md.update(text.getBytes("utf-8"), 0, text.length());
-			sha1hash = md.digest();
-			return convertToHex(sha1hash);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	private MessageDigest ensureSha1Digest() throws Exception {
-		if (sha1Digest == null) {
-			sha1Digest = MessageDigest.getInstance("SHA1");
-		}
-		return sha1Digest;
-	}
-
-	public static String MD5(byte[] bytes) throws NoSuchAlgorithmException,
-			UnsupportedEncodingException {
-		MessageDigest md;
-		md = MessageDigest.getInstance("MD5");
-		byte[] md5hash = new byte[32];
-		md.update(bytes, 0, bytes.length);
-		md5hash = md.digest();
-		return convertToHex(md5hash);
-	}
-
-	public static String MD5(List<byte[]> byties)
-			throws NoSuchAlgorithmException, UnsupportedEncodingException {
-		MessageDigest md;
-		md = MessageDigest.getInstance("MD5");
-		for (byte[] bytes : byties) {
-			md.update(bytes, 0, bytes.length);
-		}
-		byte[] md5hash = new byte[32];
-		md5hash = md.digest();
-		return convertToHex(md5hash);
-	}
-
-	public static final byte[] intToByteArray(int value) {
-		return new byte[] { (byte) (value >>> 24), (byte) (value >>> 16),
-				(byte) (value >>> 8), (byte) value };
-	}
-
-	public static final byte[] longToByteArray(long value) {
-		return new byte[] { (byte) (value >>> 56), (byte) (value >>> 48),
-				(byte) (value >>> 40), (byte) (value >>> 32),
-				(byte) (value >>> 24), (byte) (value >>> 16),
-				(byte) (value >>> 8), (byte) value };
 	}
 }

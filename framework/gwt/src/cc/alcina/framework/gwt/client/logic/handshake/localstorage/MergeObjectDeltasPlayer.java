@@ -5,8 +5,8 @@ import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.logic.handshake.objectdata.LoadObjectDataState;
 import cc.alcina.framework.gwt.persistence.client.DeltaStore;
 
-public class MergeObjectDeltasPlayer extends
-		RunnableAsyncCallbackPlayer<Void, LoadObjectDataState> {
+public class MergeObjectDeltasPlayer
+		extends RunnableAsyncCallbackPlayer<Void, LoadObjectDataState> {
 	public MergeObjectDeltasPlayer() {
 		addRequires(LoadObjectDataState.OBJECT_DATA_LOADED);
 		addProvides(LoadObjectDataState.DELTA_STORE_MERGED_IF_NECESSARY);

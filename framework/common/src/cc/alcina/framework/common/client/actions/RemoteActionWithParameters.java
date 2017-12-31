@@ -23,16 +23,16 @@ import java.io.Serializable;
  */
 public class RemoteActionWithParameters<T extends RemoteParameters>
 		extends RemoteAction implements Serializable {
-	public RemoteActionWithParameters() {
-	}
+	private T parameters;
 
-	public void setParameters(T parameters) {
-		this.parameters = parameters;
+	public RemoteActionWithParameters() {
 	}
 
 	public T getParameters() {
 		return parameters;
 	}
 
-	private T parameters;
+	public void setParameters(T parameters) {
+		this.parameters = parameters;
+	}
 }

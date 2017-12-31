@@ -23,45 +23,41 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 /**
  * Custom field serializer for {@link java.lang.Void}.
  */
-public final class Void_CustomFieldSerializer extends
-    CustomFieldSerializer<Void> {
+public final class Void_CustomFieldSerializer
+		extends CustomFieldSerializer<Void> {
+	public static void deserialize(SerializationStreamReader streamReader,
+			Void instance) {
+	}
 
-  
-  public static void deserialize(SerializationStreamReader streamReader,
-      Void instance) {
-  }
+	public static Void instantiate(SerializationStreamReader streamReader)
+			throws SerializationException {
+		return null;
+	}
 
-  
-  public static Void instantiate(SerializationStreamReader streamReader)
-      throws SerializationException {
-    return null;
-  }
+	public static void serialize(SerializationStreamWriter streamWriter,
+			Void instance) throws SerializationException {
+	}
 
-  
-  public static void serialize(SerializationStreamWriter streamWriter,
-      Void instance) throws SerializationException {
-  }
+	@Override
+	public void deserializeInstance(SerializationStreamReader streamReader,
+			Void instance) throws SerializationException {
+		deserialize(streamReader, instance);
+	}
 
-  @Override
-  public void deserializeInstance(SerializationStreamReader streamReader,
-      Void instance) throws SerializationException {
-    deserialize(streamReader, instance);
-  }
+	@Override
+	public boolean hasCustomInstantiateInstance() {
+		return true;
+	}
 
-  @Override
-  public boolean hasCustomInstantiateInstance() {
-    return true;
-  }
+	@Override
+	public Void instantiateInstance(SerializationStreamReader streamReader)
+			throws SerializationException {
+		return instantiate(streamReader);
+	}
 
-  @Override
-  public Void instantiateInstance(SerializationStreamReader streamReader)
-      throws SerializationException {
-    return instantiate(streamReader);
-  }
-
-  @Override
-  public void serializeInstance(SerializationStreamWriter streamWriter,
-      Void instance) throws SerializationException {
-    serialize(streamWriter, instance);
-  }
+	@Override
+	public void serializeInstance(SerializationStreamWriter streamWriter,
+			Void instance) throws SerializationException {
+		serialize(streamWriter, instance);
+	}
 }

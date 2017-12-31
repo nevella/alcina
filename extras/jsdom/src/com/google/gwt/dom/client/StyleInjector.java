@@ -38,197 +38,6 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
  * up until, and excluding, IE10).
  */
 public class StyleInjector {
-	/**
-	 * The DOM-compatible way of adding stylesheets. This implementation
-	 * requires the host HTML page to have a head element defined.
-	 */
-	public static class StyleInjectorImpl {
-		private static final StyleInjectorImpl IMPL = GWT
-				.create(StyleInjectorImpl.class);
-
-		private HeadElement head;
-
-		public StyleElement injectStyleSheet(String contents) {
-			StyleElement style = createElement(contents);
-			getHead().appendChild(style);
-			return style;
-		}
-
-		public StyleElement injectStyleSheetAtEnd(String contents) {
-			return injectStyleSheet(contents);
-		}
-
-		public StyleElement injectStyleSheetAtStart(String contents) {
-			StyleElement style = createElement(contents);
-			getHead().insertBefore(style, head.getFirstChild());
-			return style;
-		}
-
-		public void setContents(StyleElement style, String contents) {
-			style.setInnerText(contents);
-		}
-
-		private StyleElement createElement(String contents) {
-			StyleElement style = Document.get().createStyleElement();
-			style.setPropertyString("language", "text/css");
-			setContents(style, contents);
-			return style;
-		}
-
-		private HeadElement getHead() {
-			if (head == null) {
-				Element elt = Document.get().getElementsByTagName("head")
-						.getItem(0);
-				assert elt != null : "The host HTML page does not have a <head> element"
-						+ " which is required by StyleInjector";
-				head = HeadElement.as(elt);
-			}
-			return head;
-		}
-	}
-
-	/**
-	 * IE doesn't allow manipulation of a style element through DOM methods.
-	 * There is also a hard-coded limit on the number of times that
-	 * createStyleSheet can be called before IE8-9 starts throwing exceptions.
-	 */
-	public static class StyleInjectorImplIE extends StyleInjectorImpl {
-		/**
-		 * The maximum number of style tags that can be handled by IE.
-		 */
-		private static final int MAX_STYLE_SHEETS = 31;
-
-		private boolean injectedOnce = false;
-
-		/**
-		 * A cache of the lengths of the current style sheets. A value of 0
-		 * indicates that the length has not yet been retrieved.
-		 */
-		private static int[] styleSheetLengths = new int[MAX_STYLE_SHEETS];
-
-		private static native int getDocumentStyleCount() /*-{
-            var count = 0;
-            for (var idx = 0; idx < $doc.styleSheets.length; idx++) {
-                var sheet = $doc.styleSheets[idx];
-                if (sheet.owningElement.tagName.toLowerCase() == 'style') {
-                    count++;
-                }
-            }
-            return count;
-		}-*/;
-
-		static native StyleElement getDocumentStyleSheet(int index) /*-{
-            for (var idx = 0; idx < $doc.styleSheets.length; idx++) {
-                var sheet = $doc.styleSheets[idx];
-                if (sheet.owningElement.tagName.toLowerCase() == 'style') {
-                    if (index-- == 0) {
-                        var remote = sheet.owningElement;
-                        return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
-                    }
-                }
-            }
-            return null;
-		}-*/;
-
-		private static native int getDocumentStyleSheetLength(int index) /*-{
-            var remote = @com.google.gwt.dom.client.StyleInjector.StyleInjectorImplIE::getDocumentStyleSheet(I)(index);
-            return remote.sheet.cssText.length;
-		}-*/;
-
-		public native void appendContents(StyleElement style,
-				String contents) /*-{
-            style.@com.google.gwt.dom.client.Element::ensureRemote()().sheet.cssText += contents;
-		}-*/;
-
-		@Override
-		public StyleElement injectStyleSheet(String contents) {
-			int numStyles = getDocumentStyleCount();
-			if (numStyles < MAX_STYLE_SHEETS) {
-				// Just create a new style element and add it to the list
-				return createNewStyleSheet(contents);
-			} else {
-				/*
-				 * Find shortest style element to minimize re-parse time in the
-				 * general case.
-				 * 
-				 * We cache the lengths of the style sheets in order to avoid
-				 * expensive calls to retrieve their actual contents. Note that
-				 * if another module or script makes changes to the style sheets
-				 * that we are unaware of, the worst that will happen is that we
-				 * will choose a style sheet to append to that is not actually
-				 * of minimum size.
-				 *
-				 * We also play safe by counting only the MAX_STYLE_SHEETS first
-				 * style sheets, just in case the limits are raised somehow
-				 * (e.g. if this implementation is used in IE10 which removes
-				 * --or significantly raises-- the limits.)
-				 */
-				int shortestLen = Integer.MAX_VALUE;
-				int shortestIdx = -1;
-				for (int i = 0; i < MAX_STYLE_SHEETS; i++) {
-					int len = styleSheetLengths[i];
-					if (len == 0) {
-						// Cache the length
-						len = styleSheetLengths[i] = getDocumentStyleSheetLength(
-								i);
-					}
-					if (len <= shortestLen) {
-						shortestLen = len;
-						shortestIdx = i;
-					}
-				}
-				styleSheetLengths[shortestIdx] += contents.length();
-				return appendToStyleSheet(shortestIdx, contents, true);
-			}
-		}
-
-		@Override
-		public StyleElement injectStyleSheetAtEnd(String contents) {
-			int documentStyleCount = getDocumentStyleCount();
-			if (documentStyleCount == 0) {
-				return createNewStyleSheet(contents);
-			}
-			return appendToStyleSheet(documentStyleCount - 1, contents, true);
-		}
-
-		@Override
-		public StyleElement injectStyleSheetAtStart(String contents) {
-			if (getDocumentStyleCount() == 0) {
-				return createNewStyleSheet(contents);
-			}
-			return appendToStyleSheet(0, contents, false); // prepend
-		}
-
-		public native void prependContents(StyleElement style,
-				String contents) /*-{
-            style.sheet.cssText = contents + style.sheet.cssText;
-		}-*/;
-
-		private StyleElement appendToStyleSheet(int idx, String contents,
-				boolean append) {
-			StyleElement style = getDocumentStyleSheet(idx);
-			if (append) {
-				appendContents(style, contents);
-			} else {
-				prependContents(style, contents);
-			}
-			return style;
-		}
-
-		private native StyleElement createElement() /*-{
-            var sheet = $doc.createStyleSheet();
-            var remote = sheet.owningElement;
-            return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
-		}-*/;
-
-		private native StyleElement createNewStyleSheet(String contents) /*-{
-            var element = this.@com.google.gwt.dom.client.StyleInjector.StyleInjectorImplIE::createElement()();
-            var remote = element.@com.google.gwt.dom.client.Element::typedRemote()();
-            remote.sheet.cssText = contents;
-            return element;
-		}-*/;
-	}
-
 	private static final JsArrayString toInject = JavaScriptObject.createArray()
 			.cast();
 
@@ -471,5 +280,196 @@ public class StyleInjector {
 	 * Utility class.
 	 */
 	private StyleInjector() {
+	}
+
+	/**
+	 * The DOM-compatible way of adding stylesheets. This implementation
+	 * requires the host HTML page to have a head element defined.
+	 */
+	public static class StyleInjectorImpl {
+		private static final StyleInjectorImpl IMPL = GWT
+				.create(StyleInjectorImpl.class);
+
+		private HeadElement head;
+
+		public StyleElement injectStyleSheet(String contents) {
+			StyleElement style = createElement(contents);
+			getHead().appendChild(style);
+			return style;
+		}
+
+		public StyleElement injectStyleSheetAtEnd(String contents) {
+			return injectStyleSheet(contents);
+		}
+
+		public StyleElement injectStyleSheetAtStart(String contents) {
+			StyleElement style = createElement(contents);
+			getHead().insertBefore(style, head.getFirstChild());
+			return style;
+		}
+
+		public void setContents(StyleElement style, String contents) {
+			style.setInnerText(contents);
+		}
+
+		private StyleElement createElement(String contents) {
+			StyleElement style = Document.get().createStyleElement();
+			style.setPropertyString("language", "text/css");
+			setContents(style, contents);
+			return style;
+		}
+
+		private HeadElement getHead() {
+			if (head == null) {
+				Element elt = Document.get().getElementsByTagName("head")
+						.getItem(0);
+				assert elt != null : "The host HTML page does not have a <head> element"
+						+ " which is required by StyleInjector";
+				head = HeadElement.as(elt);
+			}
+			return head;
+		}
+	}
+
+	/**
+	 * IE doesn't allow manipulation of a style element through DOM methods.
+	 * There is also a hard-coded limit on the number of times that
+	 * createStyleSheet can be called before IE8-9 starts throwing exceptions.
+	 */
+	public static class StyleInjectorImplIE extends StyleInjectorImpl {
+		/**
+		 * The maximum number of style tags that can be handled by IE.
+		 */
+		private static final int MAX_STYLE_SHEETS = 31;
+
+		/**
+		 * A cache of the lengths of the current style sheets. A value of 0
+		 * indicates that the length has not yet been retrieved.
+		 */
+		private static int[] styleSheetLengths = new int[MAX_STYLE_SHEETS];
+
+		private static native int getDocumentStyleCount() /*-{
+															var count = 0;
+															for (var idx = 0; idx < $doc.styleSheets.length; idx++) {
+															var sheet = $doc.styleSheets[idx];
+															if (sheet.owningElement.tagName.toLowerCase() == 'style') {
+															count++;
+															}
+															}
+															return count;
+															}-*/;
+
+		private static native int getDocumentStyleSheetLength(int index) /*-{
+																			var remote = @com.google.gwt.dom.client.StyleInjector.StyleInjectorImplIE::getDocumentStyleSheet(I)(index);
+																			return remote.sheet.cssText.length;
+																			}-*/;
+
+		static native StyleElement getDocumentStyleSheet(int index) /*-{
+																	for (var idx = 0; idx < $doc.styleSheets.length; idx++) {
+																	var sheet = $doc.styleSheets[idx];
+																	if (sheet.owningElement.tagName.toLowerCase() == 'style') {
+																	if (index-- == 0) {
+																	var remote = sheet.owningElement;
+																	return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
+																	}
+																	}
+																	}
+																	return null;
+																	}-*/;
+
+		private boolean injectedOnce = false;
+
+		public native void appendContents(StyleElement style,
+				String contents) /*-{
+									style.@com.google.gwt.dom.client.Element::ensureRemote()().sheet.cssText += contents;
+									}-*/;
+
+		@Override
+		public StyleElement injectStyleSheet(String contents) {
+			int numStyles = getDocumentStyleCount();
+			if (numStyles < MAX_STYLE_SHEETS) {
+				// Just create a new style element and add it to the list
+				return createNewStyleSheet(contents);
+			} else {
+				/*
+				 * Find shortest style element to minimize re-parse time in the
+				 * general case.
+				 * 
+				 * We cache the lengths of the style sheets in order to avoid
+				 * expensive calls to retrieve their actual contents. Note that
+				 * if another module or script makes changes to the style sheets
+				 * that we are unaware of, the worst that will happen is that we
+				 * will choose a style sheet to append to that is not actually
+				 * of minimum size.
+				 *
+				 * We also play safe by counting only the MAX_STYLE_SHEETS first
+				 * style sheets, just in case the limits are raised somehow
+				 * (e.g. if this implementation is used in IE10 which removes
+				 * --or significantly raises-- the limits.)
+				 */
+				int shortestLen = Integer.MAX_VALUE;
+				int shortestIdx = -1;
+				for (int i = 0; i < MAX_STYLE_SHEETS; i++) {
+					int len = styleSheetLengths[i];
+					if (len == 0) {
+						// Cache the length
+						len = styleSheetLengths[i] = getDocumentStyleSheetLength(
+								i);
+					}
+					if (len <= shortestLen) {
+						shortestLen = len;
+						shortestIdx = i;
+					}
+				}
+				styleSheetLengths[shortestIdx] += contents.length();
+				return appendToStyleSheet(shortestIdx, contents, true);
+			}
+		}
+
+		@Override
+		public StyleElement injectStyleSheetAtEnd(String contents) {
+			int documentStyleCount = getDocumentStyleCount();
+			if (documentStyleCount == 0) {
+				return createNewStyleSheet(contents);
+			}
+			return appendToStyleSheet(documentStyleCount - 1, contents, true);
+		}
+
+		@Override
+		public StyleElement injectStyleSheetAtStart(String contents) {
+			if (getDocumentStyleCount() == 0) {
+				return createNewStyleSheet(contents);
+			}
+			return appendToStyleSheet(0, contents, false); // prepend
+		}
+
+		public native void prependContents(StyleElement style,
+				String contents) /*-{
+									style.sheet.cssText = contents + style.sheet.cssText;
+									}-*/;
+
+		private StyleElement appendToStyleSheet(int idx, String contents,
+				boolean append) {
+			StyleElement style = getDocumentStyleSheet(idx);
+			if (append) {
+				appendContents(style, contents);
+			} else {
+				prependContents(style, contents);
+			}
+			return style;
+		}
+
+		private native StyleElement createElement() /*-{
+													var sheet = $doc.createStyleSheet();
+													var remote = sheet.owningElement;
+													return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
+													}-*/;
+
+		private native StyleElement createNewStyleSheet(String contents) /*-{
+																			var element = this.@com.google.gwt.dom.client.StyleInjector.StyleInjectorImplIE::createElement()();
+																			var remote = element.@com.google.gwt.dom.client.Element::typedRemote()();
+																			remote.sheet.cssText = contents;
+																			return element;
+																			}-*/;
 	}
 }

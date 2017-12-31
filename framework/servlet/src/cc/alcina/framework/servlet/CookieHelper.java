@@ -39,6 +39,14 @@ public class CookieHelper {
 
 	public static final String IID = "IID";
 
+	public void clearRemembermeCookie(HttpServletRequest request,
+			HttpServletResponse response) {
+		CommonPersistenceLocal up = Registry
+				.impl(CommonPersistenceProvider.class).getCommonPersistence();
+		up.updateIid(getIid(request, response),
+				PermissionsManager.get().getUserName(), false);
+	}
+
 	@SuppressWarnings("unchecked")
 	public List<Cookie> getAddedCookies(HttpServletRequest req) {
 		List<Cookie> addedCookies = (List<Cookie>) req
@@ -90,10 +98,17 @@ public class CookieHelper {
 		return iid;
 	}
 
-	void addToRqAndRsp(HttpServletRequest request, HttpServletResponse response,
-			Cookie cookie) {
-		getAddedCookies(request).add(cookie);
-		response.addCookie(cookie);
+	public String getRememberedUserName(HttpServletRequest request,
+			HttpServletResponse response) {
+		String rem = getCookieValueByName(request, REMEMBER_ME);
+		boolean b = Boolean.valueOf(rem);
+		if (b) {
+			CommonPersistenceLocal up = Registry
+					.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence();
+			return up.getRememberMeUserName(getIid(request, response));
+		}
+		return null;
 	}
 
 	public void setRememberMeCookie(HttpServletRequest request,
@@ -111,24 +126,9 @@ public class CookieHelper {
 		addToRqAndRsp(request, response, cookie);
 	}
 
-	public String getRememberedUserName(HttpServletRequest request,
-			HttpServletResponse response) {
-		String rem = getCookieValueByName(request, REMEMBER_ME);
-		boolean b = Boolean.valueOf(rem);
-		if (b) {
-			CommonPersistenceLocal up = Registry
-					.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence();
-			return up.getRememberMeUserName(getIid(request, response));
-		}
-		return null;
-	}
-
-	public void clearRemembermeCookie(HttpServletRequest request,
-			HttpServletResponse response) {
-		CommonPersistenceLocal up = Registry
-				.impl(CommonPersistenceProvider.class).getCommonPersistence();
-		up.updateIid(getIid(request, response),
-				PermissionsManager.get().getUserName(), false);
+	void addToRqAndRsp(HttpServletRequest request, HttpServletResponse response,
+			Cookie cookie) {
+		getAddedCookies(request).add(cookie);
+		response.addCookie(cookie);
 	}
 }

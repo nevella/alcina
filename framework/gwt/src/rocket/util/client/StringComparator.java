@@ -31,6 +31,8 @@ public class StringComparator implements Comparator {
 	public final static StringComparator IGNORE_CASE_COMPARATOR = new StringComparator(
 			true);
 
+	private boolean ignoreCase;
+
 	protected StringComparator(final boolean ignoreCase) {
 		super();
 		this.setIgnoreCase(ignoreCase);
@@ -41,18 +43,17 @@ public class StringComparator implements Comparator {
 	}
 
 	public int compare(final String string, final String otherString) {
-		return this.isIgnoreCase() ? string.toLowerCase().compareTo(
-				otherString.toLowerCase()) : string.compareTo(otherString);
-	}
-
-	private boolean ignoreCase;
-
-	public void setIgnoreCase(final boolean ignoreCase) {
-		this.ignoreCase = ignoreCase;
+		return this.isIgnoreCase()
+				? string.toLowerCase().compareTo(otherString.toLowerCase())
+				: string.compareTo(otherString);
 	}
 
 	public boolean isIgnoreCase() {
 		return this.ignoreCase;
+	}
+
+	public void setIgnoreCase(final boolean ignoreCase) {
+		this.ignoreCase = ignoreCase;
 	}
 
 	public String toString() {

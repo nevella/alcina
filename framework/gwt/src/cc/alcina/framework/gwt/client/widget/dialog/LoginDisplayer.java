@@ -46,15 +46,7 @@ public class LoginDisplayer {
 
 	private DialogBox dialogBox;
 
-	public DialogBox getDialogBox() {
-		return this.dialogBox;
-	}
-
 	private Label statusLabel;
-
-	public Label getStatusLabel() {
-		return this.statusLabel;
-	}
 
 	private Button cancelButton;
 
@@ -66,34 +58,21 @@ public class LoginDisplayer {
 
 	private FlowPanel introWidget;
 
-	public FlowPanel getIntroWidget() {
-		return this.introWidget;
-	}
-
 	private Label usernameLabel;
 
 	private CheckBox rememberMeBox;
 
 	private TextBox nameBox;
 
-	public TextBox getNameBox() {
-		return this.nameBox;
-	}
-
 	private PasswordTextBox pwdBox;
 
 	private FlowPanel mainPanel;
-
-
-	public Label getUsernameLabel() {
-		return this.usernameLabel;
-	}
 
 	public LoginDisplayer() {
 		dialogBox = new GlassDialogBox();
 		dialogBox.setText("Login");
 		dialogBox.setAnimationEnabled(true);
-		 mainPanel = new FlowPanel();
+		mainPanel = new FlowPanel();
 		mainPanel.setStyleName("alcina-Login");
 		mainPanel.ensureDebugId(AlcinaDebugIds.LOGIN_FORM);
 		this.introWidget = new FlowPanel();
@@ -117,10 +96,10 @@ public class LoginDisplayer {
 		WidgetUtils.disableTextBoxHelpers(pwdBox);
 		pwdBox.ensureDebugId(AlcinaDebugIds.LOGIN_PASSWORD);
 		table.setWidget(1, 1, pwdBox);
-		pwdBox.addKeyPressHandler(new EnterAsClickKeyboardListener(pwdBox,
-				okButton));
-		nameBox.addKeyPressHandler(new EnterAsClickKeyboardListener(nameBox,
-				okButton));
+		pwdBox.addKeyPressHandler(
+				new EnterAsClickKeyboardListener(pwdBox, okButton));
+		nameBox.addKeyPressHandler(
+				new EnterAsClickKeyboardListener(nameBox, okButton));
 		rememberMeBox = new CheckBox();
 		rememberMeBox.setValue(true);
 		table.setWidget(2, 0, rememberMeBox);
@@ -145,6 +124,59 @@ public class LoginDisplayer {
 		dialogBox.setWidget(mainPanel);
 	}
 
+	public void addAlternateAuthWidget(Widget alternateAuthWidget) {
+		table.setWidget(6, 0, alternateAuthWidget);
+		table.getFlexCellFormatter().setHorizontalAlignment(6, 0,
+				HasHorizontalAlignment.ALIGN_CENTER);
+		table.getFlexCellFormatter().setColSpan(6, 0, 2);
+	}
+
+	public void enableLoginButtons(boolean enable) {
+		okButton.setEnabled(enable);
+		cancelButton.setEnabled(enable);
+	}
+
+	public DialogBox getDialogBox() {
+		return this.dialogBox;
+	}
+
+	public FlowPanel getIntroWidget() {
+		return this.introWidget;
+	}
+
+	public FlowPanel getMainPanel() {
+		return this.mainPanel;
+	}
+
+	public TextBox getNameBox() {
+		return this.nameBox;
+	}
+
+	public Label getStatusLabel() {
+		return this.statusLabel;
+	}
+
+	public Label getUsernameLabel() {
+		return this.usernameLabel;
+	}
+
+	public void hideLoginDialog() {
+		dialogBox.hide();
+	}
+
+	public void setProblemHandlerWidget(Widget onProblemWidget) {
+		this.onProblemWidget = onProblemWidget;
+		table.setWidget(5, 0, onProblemWidget);
+		table.getFlexCellFormatter().setHorizontalAlignment(5, 0,
+				HasHorizontalAlignment.ALIGN_CENTER);
+		table.getFlexCellFormatter().setColSpan(5, 0, 2);
+	}
+
+	public void setStatus(String s) {
+		statusLabel.setVisible(true);
+		statusLabel.setText(s);
+	}
+
 	public void showLoginDialog(final PermissibleActionListener listener) {
 		okButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
@@ -167,45 +199,13 @@ public class LoginDisplayer {
 			public void onClick(ClickEvent event) {
 				PermissibleAction action = new PermissibleAction();
 				action.setActionName(CANCEL_ACTION);
-				listener
-						.vetoableAction(new PermissibleActionEvent(this, action));
+				listener.vetoableAction(
+						new PermissibleActionEvent(this, action));
 			}
 		});
 		// Set the contents of the Widget
 		dialogBox.center();
 		dialogBox.show();
 		nameBox.setFocus(true);
-	}
-
-	public void setStatus(String s) {
-		statusLabel.setVisible(true);
-		statusLabel.setText(s);
-	}
-
-	public void enableLoginButtons(boolean enable) {
-		okButton.setEnabled(enable);
-		cancelButton.setEnabled(enable);
-	}
-
-	public void hideLoginDialog() {
-		dialogBox.hide();
-	}
-
-	public void setProblemHandlerWidget(Widget onProblemWidget) {
-		this.onProblemWidget = onProblemWidget;
-		table.setWidget(5, 0, onProblemWidget);
-		table.getFlexCellFormatter().setHorizontalAlignment(5, 0,
-				HasHorizontalAlignment.ALIGN_CENTER);
-		table.getFlexCellFormatter().setColSpan(5, 0, 2);
-	}
-	public void addAlternateAuthWidget(Widget alternateAuthWidget) {
-		table.setWidget(6, 0, alternateAuthWidget);
-		table.getFlexCellFormatter().setHorizontalAlignment(6, 0,
-				HasHorizontalAlignment.ALIGN_CENTER);
-		table.getFlexCellFormatter().setColSpan(6, 0, 2);
-	}
-
-	public FlowPanel getMainPanel() {
-		return this.mainPanel;
 	}
 }

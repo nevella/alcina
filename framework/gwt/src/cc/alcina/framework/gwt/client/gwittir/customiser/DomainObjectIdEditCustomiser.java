@@ -32,8 +32,8 @@ public class DomainObjectIdEditCustomiser implements Customiser {
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
-		Class classValue = NamedParameter.Support.getParameter(
-				info.parameters(), TARGET_CLASS).classValue();
+		Class classValue = NamedParameter.Support
+				.getParameter(info.parameters(), TARGET_CLASS).classValue();
 		return editable ? new DomainObjectIdEditorProvider(classValue)
 				: new RenderedLabelProvider(IdToStringRenderer.class, null);
 	}

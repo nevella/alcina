@@ -6,8 +6,7 @@ import java.util.Date;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
 public class JaxbShortDateAdapter extends XmlAdapter<String, Date> {
-	private SimpleDateFormat dateFormat = new SimpleDateFormat(
-			"dd-MM-yyyy");
+	private SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
 
 	@Override
 	public String marshal(Date v) throws Exception {

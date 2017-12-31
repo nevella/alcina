@@ -20,93 +20,100 @@ import com.google.gwt.core.client.JavaScriptObject;
 /**
  * Document base URI.
  * 
- * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/links.html#edef-BASE">W3C HTML Specification</a>
+ * @see <a href=
+ *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/links.html#edef-BASE">
+ *      W3C HTML Specification</a>
  */
 @TagName(BaseElement.TAG)
 public class BaseElement extends Element {
+	public static final String TAG = "base";
 
-  public static final String TAG = "base";
+	/**
+	 * Assert that the given {@link Element} is compatible with this class and
+	 * automatically typecast it.
+	 */
+	public static BaseElement as(Element elem) {
+		assert is(elem);
+		return (BaseElement) elem;
+	}
 
-  /**
-   * Assert that the given {@link Element} is compatible with this class and
-   * automatically typecast it.
-   */
-  public static BaseElement as(Element elem) {
-    assert is(elem);
-    return (BaseElement) elem;
-  }
+	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
 
-  /**
-   * Determines whether the given {@link JavaScriptObject} can be cast to
-   * this class. A <code>null</code> object will cause this method to
-   * return <code>false</code>.
-   */
-  public static boolean is(JavaScriptObject o) {
-    if (Element.is(o)) {
-      return is(Element.as(o));
-    }
-    return false;
-  }
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to this
+	 * class. A <code>null</code> object will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(JavaScriptObject o) {
+		if (Element.is(o)) {
+			return is(Element.as(o));
+		}
+		return false;
+	}
 
-  /**
-   * Determine whether the given {@link Node} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Node node) {
-    if (Element.is(node)) {
-      return is((Element) node);
-    }
-    return false;
-  }
-  
-  /**
-   * Determine whether the given {@link Element} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Element elem) {
-    return elem != null && elem.hasTagName(TAG);
-  }
+	/**
+	 * Determine whether the given {@link Node} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		if (Element.is(node)) {
+			return is((Element) node);
+		}
+		return false;
+	}
 
-  protected BaseElement() {
-  }
+	protected BaseElement() {
+	}
 
-  /**
-   * The base URI See the href attribute definition in HTML
-   * 4.01.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/links.html#adef-href-BASE">W3C HTML Specification</a>
-   */  public  String getHref(){
-  return this.getPropertyString("href");
-}
+	/**
+	 * The base URI See the href attribute definition in HTML 4.01.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/links.html#adef-href-BASE">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getHref() {
+		return this.getPropertyString("href");
+	}
 
+	/**
+	 * The default target frame.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-target">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getTarget() {
+		return this.getPropertyString("target");
+	}
 
-  /**
-   * The default target frame.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-target">W3C HTML Specification</a>
-   */  public  String getTarget(){
-  return this.getPropertyString("target");
-}
+	/**
+	 * The base URI See the href attribute definition in HTML 4.01.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/links.html#adef-href-BASE">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setHref(String href) {
+		this.setPropertyString("href", href);
+	}
 
-
-  /**
-   * The base URI See the href attribute definition in HTML
-   * 4.01.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/links.html#adef-href-BASE">W3C HTML Specification</a>
-   */  public  void setHref(String href){
-   this.setPropertyString("href",href);
-}
-
-
-  /**
-   * The default target frame.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-target">W3C HTML Specification</a>
-   */  public  void setTarget(String target){
-   this.setPropertyString("target",target);
-}
-
+	/**
+	 * The default target frame.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-target">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setTarget(String target) {
+		this.setPropertyString("target", target);
+	}
 }

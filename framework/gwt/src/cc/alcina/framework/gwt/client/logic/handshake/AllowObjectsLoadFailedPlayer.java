@@ -10,6 +10,6 @@ public class AllowObjectsLoadFailedPlayer extends RunnablePlayer {
 
 	@Override
 	public void run() {
-		//joinpoint, do nothing
+		// joinpoint, do nothing
 	}
 }

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.actions;
 
 import javax.servlet.http.HttpSession;
@@ -20,7 +19,6 @@ import javax.servlet.http.HttpSession;
  *
  * @author Nick Reddel
  */
-
- public interface RequiresHttpSession {
+public interface RequiresHttpSession {
 	public void setHttpSession(HttpSession session);
 }

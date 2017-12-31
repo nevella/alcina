@@ -17,7 +17,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 package cc.alcina.framework.common.client.gwittir.validator;
 
 import com.totsp.gwittir.client.log.Level;
@@ -29,33 +28,32 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 /**
  *
- * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet" Cooper</a>
+ * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
+ *         Cooper</a>
  */
 @ClientInstantiable
 public class DoubleValidator implements Validator {
-    private static final Logger LOG = Logger.getLogger( "com.totsp.gwittir.client.validator");
-    public static final DoubleValidator INSTANCE = new DoubleValidator();
-    
-    /** Creates a new instance of DoubleValidator */
-    public DoubleValidator() {
-    }
+	private static final Logger LOG = Logger
+			.getLogger("com.totsp.gwittir.client.validator");
 
-    public Object validate(Object value) throws ValidationException {
-        if(value == null) {
-            return value;
-        }
+	public static final DoubleValidator INSTANCE = new DoubleValidator();
 
-        Double i;
+	/** Creates a new instance of DoubleValidator */
+	public DoubleValidator() {
+	}
 
-        try {
-            i = new Double(value.toString());
-        } catch(NumberFormatException nfe) {
-            DoubleValidator.LOG.log( Level.SPAM, null, nfe);
-            throw new ValidationException("Must be an decimal value.",
-                DoubleValidator.class);
-        }
-
-        return i;
-    }
-    
+	public Object validate(Object value) throws ValidationException {
+		if (value == null) {
+			return value;
+		}
+		Double i;
+		try {
+			i = new Double(value.toString());
+		} catch (NumberFormatException nfe) {
+			DoubleValidator.LOG.log(Level.SPAM, null, nfe);
+			throw new ValidationException("Must be an decimal value.",
+					DoubleValidator.class);
+		}
+		return i;
+	}
 }

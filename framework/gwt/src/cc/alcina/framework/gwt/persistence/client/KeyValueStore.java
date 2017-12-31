@@ -7,8 +7,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 public class KeyValueStore {
-	public static KeyValueStore createNonStandardKeyValueStore(
-			PersistenceObjectStore delegate) {
+	public static KeyValueStore
+			createNonStandardKeyValueStore(PersistenceObjectStore delegate) {
 		KeyValueStore store = new KeyValueStore();
 		store.registerDelegate(delegate);
 		return store;
@@ -42,7 +42,8 @@ public class KeyValueStore {
 		return this.objectStore;
 	}
 
-	public void put(String key, String value, AsyncCallback<Integer> idCallback) {
+	public void put(String key, String value,
+			AsyncCallback<Integer> idCallback) {
 		this.objectStore.put(key, value, idCallback);
 	}
 

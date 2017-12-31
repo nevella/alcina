@@ -53,116 +53,6 @@ public class ClientSession implements ClosingHandler, RegistrableService {
 
 	public static final long EXPIRES_TIME = 2500;
 
-	static class CrossTabCookie {
-		private String cookieName;
-
-		public CrossTabCookie(String cookieName) {
-			this.cookieName = cookieName;
-		}
-
-		boolean active;
-
-		private Long tabId;
-
-		public boolean isActive() {
-			return parseCookie().containsKey(tabId);
-		}
-
-		public boolean isSoleTab() {
-			Map<Long, Long> idTimeMap = parseCookie();
-			removeExpiredTabs(idTimeMap);
-			idTimeMap = parseCookie();
-			if (idTimeMap.size() == 0
-					|| (tabId != null && idTimeMap.size() == 1 && idTimeMap
-							.keySet().iterator().next() == tabId)) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		private Timer refreshTimer;
-
-		public void setActive(boolean active) {
-			if (active) {
-				if (refreshTimer == null) {
-					refreshTimer = new Timer() {
-						@Override
-						public void run() {
-							setActive(true);
-						}
-					};
-					refreshTimer.scheduleRepeating(KEEP_ALIVE_TIMER);
-				}
-			} else {
-				if (refreshTimer != null) {
-					refreshTimer.cancel();
-					refreshTimer = null;
-				}
-			}
-			if (tabId == null) {
-				if (active) {
-					Map<Long, Long> m = parseCookie();
-					Long maxTabId = m.isEmpty() ? 0l : CommonUtils.last(m
-							.keySet().iterator());
-					tabId = maxTabId + 1;
-				} else {
-					return;
-				}
-			}
-			Map<Long, Long> m = parseCookie();
-			if (active) {
-				if (!m.containsKey(tabId)) {
-				}
-				m.put(tabId, System.currentTimeMillis());
-			} else {
-				m.remove(tabId);
-				tabId = null;
-			}
-			removeExpiredTabs(m);
-		}
-
-		protected void removeExpiredTabs(Map<Long, Long> m) {
-			StringBuilder sb = new StringBuilder();
-			for (Entry<Long, Long> entry : m.entrySet()) {
-				long ckTabId = entry.getKey();
-				long ckUpdateTime = entry.getValue();
-				if (ckUpdateTime >= (System.currentTimeMillis() - EXPIRES_TIME)) {
-					sb.append(ckTabId);
-					sb.append(",");
-					sb.append(ckUpdateTime);
-					sb.append(",");
-				} else {
-				}
-			}
-			Cookies.setCookie(cookieName, sb.toString());
-		}
-
-		protected Map<Long, Long> parseCookie() {
-			Map<Long, Long> result = new LinkedHashMap<Long, Long>();
-			String s = Cookies.getCookie(cookieName);
-			try {
-				if (s != null && !s.isEmpty()) {
-					String[] split = s.split(",");
-					for (int i = 0; i < split.length; i += 2) {
-						result.put(Long.parseLong(split[i]),
-								Long.parseLong(split[i + 1]));
-					}
-				}
-			} catch (NumberFormatException e) {
-				e.printStackTrace();
-				Cookies.removeCookie(cookieName);
-			}
-			return result;
-		}
-	}
-
-	private String storageSessionCookieName;
-
-	private String hasPersistedInitialObjectsCookieName;
-
-	private String persistingChunkCookieName;
-
 	public static ClientSession get() {
 		ClientSession singleton = Registry.checkSingleton(ClientSession.class);
 		if (singleton == null) {
@@ -171,6 +61,12 @@ public class ClientSession implements ClosingHandler, RegistrableService {
 		}
 		return singleton;
 	}
+
+	private String storageSessionCookieName;
+
+	private String hasPersistedInitialObjectsCookieName;
+
+	private String persistingChunkCookieName;
 
 	private CrossTabCookie storageCookie;
 
@@ -181,27 +77,19 @@ public class ClientSession implements ClosingHandler, RegistrableService {
 		init();
 	}
 
-	protected void init() {
-		Window.addWindowClosingHandler((ClosingHandler) this);
-		setAppId("alcina");
-	}
-
-	private void createCookies() {
-		storageCookie = new CrossTabCookie(storageSessionCookieName);
-		storageCookie.setActive(true);
-		persistingChunkCookie = new CrossTabCookie(persistingChunkCookieName);
-	}
-
-	private void deactivateCookies() {
-		if (storageCookie != null) {
-			storageCookie.setActive(false);
-			persistingChunkCookie.setActive(false);
+	public void
+			acquireCrossTabPersistenceLock(final AsyncCallback<Void> callback) {
+		if (persistingChunkCookie.isSoleTab()) {
+			persistingChunkCookie.setActive(true);
+			callback.onSuccess(null);
+			return;
 		}
-	}
-
-	public void resetCookies() {
-		deactivateCookies();
-		createCookies();
+		new Timer() {
+			@Override
+			public void run() {
+				acquireCrossTabPersistenceLock(callback);
+			}
+		}.schedule(1000);
 	}
 
 	public void appShutdown() {
@@ -255,6 +143,15 @@ public class ClientSession implements ClosingHandler, RegistrableService {
 		ClientSession.get().appShutdown();
 	}
 
+	public void releaseCrossTabPersistenceLock() {
+		persistingChunkCookie.setActive(false);
+	}
+
+	public void resetCookies() {
+		deactivateCookies();
+		createCookies();
+	}
+
 	public void setAppId(String appId) {
 		hasPersistedInitialObjectsCookieName = CommonUtils.formatJ("%s.%s.%s",
 				ClientSession.class.getName(), appId,
@@ -271,8 +168,32 @@ public class ClientSession implements ClosingHandler, RegistrableService {
 				String.valueOf(initialObjectsPersisted));
 	}
 
+	private void createCookies() {
+		storageCookie = new CrossTabCookie(storageSessionCookieName);
+		storageCookie.setActive(true);
+		persistingChunkCookie = new CrossTabCookie(persistingChunkCookieName);
+	}
+
+	private void deactivateCookies() {
+		if (storageCookie != null) {
+			storageCookie.setActive(false);
+			persistingChunkCookie.setActive(false);
+		}
+	}
+
+	protected void init() {
+		Window.addWindowClosingHandler((ClosingHandler) this);
+		setAppId("alcina");
+	}
+
 	public static class ClientSessionSingleAccess extends ClientSession {
 		private boolean initialObjectsPersisted;
+
+		@Override
+		public void
+				acquireCrossTabPersistenceLock(AsyncCallback<Void> callback) {
+			callback.onSuccess(null);
+		}
 
 		public boolean isInitialObjectsPersisted() {
 			return this.initialObjectsPersisted;
@@ -283,39 +204,121 @@ public class ClientSession implements ClosingHandler, RegistrableService {
 			return true;
 		}
 
-		public void setInitialObjectsPersisted(boolean initialObjectsPersisted) {
-			this.initialObjectsPersisted = initialObjectsPersisted;
-		}
-
-		@Override
-		public void resetCookies() {
-		}
 		@Override
 		public void releaseCrossTabPersistenceLock() {
 		}
 
 		@Override
-		public void acquireCrossTabPersistenceLock(AsyncCallback<Void> callback) {
-			callback.onSuccess(null);
+		public void resetCookies() {
+		}
+
+		public void
+				setInitialObjectsPersisted(boolean initialObjectsPersisted) {
+			this.initialObjectsPersisted = initialObjectsPersisted;
 		}
 	}
 
-	public void acquireCrossTabPersistenceLock(
-			final AsyncCallback<Void> callback) {
-		if (persistingChunkCookie.isSoleTab()) {
-			persistingChunkCookie.setActive(true);
-			callback.onSuccess(null);
-			return;
+	static class CrossTabCookie {
+		private String cookieName;
+
+		boolean active;
+
+		private Long tabId;
+
+		private Timer refreshTimer;
+
+		public CrossTabCookie(String cookieName) {
+			this.cookieName = cookieName;
 		}
-		new Timer() {
-			@Override
-			public void run() {
-				acquireCrossTabPersistenceLock(callback);
+
+		public boolean isActive() {
+			return parseCookie().containsKey(tabId);
+		}
+
+		public boolean isSoleTab() {
+			Map<Long, Long> idTimeMap = parseCookie();
+			removeExpiredTabs(idTimeMap);
+			idTimeMap = parseCookie();
+			if (idTimeMap.size() == 0 || (tabId != null && idTimeMap.size() == 1
+					&& idTimeMap.keySet().iterator().next() == tabId)) {
+				return true;
+			} else {
+				return false;
 			}
-		}.schedule(1000);
-	}
+		}
 
-	public void releaseCrossTabPersistenceLock() {
-		persistingChunkCookie.setActive(false);
+		public void setActive(boolean active) {
+			if (active) {
+				if (refreshTimer == null) {
+					refreshTimer = new Timer() {
+						@Override
+						public void run() {
+							setActive(true);
+						}
+					};
+					refreshTimer.scheduleRepeating(KEEP_ALIVE_TIMER);
+				}
+			} else {
+				if (refreshTimer != null) {
+					refreshTimer.cancel();
+					refreshTimer = null;
+				}
+			}
+			if (tabId == null) {
+				if (active) {
+					Map<Long, Long> m = parseCookie();
+					Long maxTabId = m.isEmpty() ? 0l
+							: CommonUtils.last(m.keySet().iterator());
+					tabId = maxTabId + 1;
+				} else {
+					return;
+				}
+			}
+			Map<Long, Long> m = parseCookie();
+			if (active) {
+				if (!m.containsKey(tabId)) {
+				}
+				m.put(tabId, System.currentTimeMillis());
+			} else {
+				m.remove(tabId);
+				tabId = null;
+			}
+			removeExpiredTabs(m);
+		}
+
+		protected Map<Long, Long> parseCookie() {
+			Map<Long, Long> result = new LinkedHashMap<Long, Long>();
+			String s = Cookies.getCookie(cookieName);
+			try {
+				if (s != null && !s.isEmpty()) {
+					String[] split = s.split(",");
+					for (int i = 0; i < split.length; i += 2) {
+						result.put(Long.parseLong(split[i]),
+								Long.parseLong(split[i + 1]));
+					}
+				}
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+				Cookies.removeCookie(cookieName);
+			}
+			return result;
+		}
+
+		protected void removeExpiredTabs(Map<Long, Long> m) {
+			StringBuilder sb = new StringBuilder();
+			for (Entry<Long, Long> entry : m.entrySet()) {
+				long ckTabId = entry.getKey();
+				long ckUpdateTime = entry.getValue();
+				if (ckUpdateTime >= (System.currentTimeMillis()
+						- EXPIRES_TIME)) {
+					sb.append(ckTabId);
+					sb.append(",");
+					sb.append(ckUpdateTime);
+					sb.append(",");
+				} else {
+				}
+			}
+			Cookies.setCookie(cookieName, sb.toString());
+		}
 	}
 }

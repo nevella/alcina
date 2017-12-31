@@ -28,8 +28,17 @@ import cc.alcina.framework.common.client.util.IntPair;
 public class IntRangeValidator implements ParameterisedValidator {
 	public static final String PARAM_RANGE = "PARAM_RANGE";
 
+	IntPair range;
+
 	/** Creates a new instance of IntegerValidator */
 	public IntRangeValidator() {
+	}
+
+	@Override
+	public void setParameters(NamedParameter[] params) {
+		NamedParameter p = NamedParameter.Support.getParameter(params,
+				PARAM_RANGE);
+		range = IntPair.parseIntPair(p.stringValue());
 	}
 
 	public Object validate(Object value) throws ValidationException {
@@ -53,14 +62,5 @@ public class IntRangeValidator implements ParameterisedValidator {
 					IntRangeValidator.class);
 		}
 		return i;
-	}
-
-	IntPair range;
-
-	@Override
-	public void setParameters(NamedParameter[] params) {
-		NamedParameter p = NamedParameter.Support.getParameter(params,
-				PARAM_RANGE);
-		range = IntPair.parseIntPair(p.stringValue());
 	}
 }

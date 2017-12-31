@@ -10,13 +10,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class HiliLocator implements Serializable {
 	static final transient long serialVersionUID = 1L;
 
+	public static HiliLocator objectLocalLocator(DomainTransformEvent dte) {
+		return new HiliLocator(dte.getObjectClass(), 0, dte.getObjectLocalId());
+	}
+
 	public static HiliLocator objectLocator(DomainTransformEvent dte) {
 		return new HiliLocator(dte.getObjectClass(), dte.getObjectId(),
 				dte.getObjectLocalId());
-	}
-
-	public static HiliLocator objectLocalLocator(DomainTransformEvent dte) {
-		return new HiliLocator(dte.getObjectClass(), 0, dte.getObjectLocalId());
 	}
 
 	public static HiliLocator valueLocator(DomainTransformEvent dte) {
@@ -91,12 +91,6 @@ public class HiliLocator implements Serializable {
 		this.id = id;
 	}
 
-	@Override
-	public String toString() {
-		return CommonUtils.formatJ("%s - %s",
-				clazz == null ? "??" : CommonUtils.simpleClassName(clazz), id);
-	}
-
 	public String toRecoverableString(long clientInstanceId) {
 		if (id != 0) {
 			return toString();
@@ -104,5 +98,11 @@ public class HiliLocator implements Serializable {
 		return CommonUtils.formatJ("%s - %s/%s",
 				clazz == null ? "??" : CommonUtils.simpleClassName(clazz),
 				localId, clientInstanceId);
+	}
+
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ("%s - %s",
+				clazz == null ? "??" : CommonUtils.simpleClassName(clazz), id);
 	}
 }

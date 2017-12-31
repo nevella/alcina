@@ -26,12 +26,16 @@ public class DumpLocalDbAction implements LooseActionHandler {
 	private ModalNotifier modalNotifier;
 
 	@Override
+	public String getName() {
+		return ALCINA_DUMP_LOCAL_DB;
+	}
+
+	@Override
 	public void performAction() {
 		this.modalNotifier = Registry.impl(ClientNotifications.class)
 				.getModalNotifier("Uploading local database dump");
 		this.modalNotifier.modalOn();
 		final AsyncCallbackStd postClearCallback = new AsyncCallbackStd() {
-
 			@Override
 			public void onSuccess(Object result) {
 				modalNotifier.modalOff();
@@ -40,13 +44,14 @@ public class DumpLocalDbAction implements LooseActionHandler {
 		};
 		final AsyncCallback<Void> asyncCallback = new AsyncCallback<Void>() {
 			@Override
-			public void onSuccess(Void result) {
-				LocalTransformPersistence.get().clearAllPersisted(postClearCallback);
+			public void onFailure(Throwable caught) {
+				throw new WrappedRuntimeException(caught);
 			}
 
 			@Override
-			public void onFailure(Throwable caught) {
-				throw new WrappedRuntimeException(caught);
+			public void onSuccess(Void result) {
+				LocalTransformPersistence.get()
+						.clearAllPersisted(postClearCallback);
 			}
 		};
 		Callback<String> sendRpcCallback = new Callback<String>() {
@@ -54,15 +59,10 @@ public class DumpLocalDbAction implements LooseActionHandler {
 			public void apply(String value) {
 				((RemoteServiceProvider<? extends CommonRemoteServiceAsync>) Registry
 						.impl(CommonRemoteServiceAsyncProvider.class))
-						.getServiceInstance().dumpData(value, asyncCallback);
+								.getServiceInstance()
+								.dumpData(value, asyncCallback);
 			}
 		};
-		
 		LocalTransformPersistence.get().dumpDatabase(sendRpcCallback);
-	}
-
-	@Override
-	public String getName() {
-		return ALCINA_DUMP_LOCAL_DB;
 	}
 }

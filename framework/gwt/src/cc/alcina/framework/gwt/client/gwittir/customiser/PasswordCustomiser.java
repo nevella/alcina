@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.customiser;
-
 
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
@@ -28,14 +26,12 @@ import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
  *
  * @author Nick Reddel
  */
-
- public class PasswordCustomiser implements Customiser {
+public class PasswordCustomiser implements Customiser {
 	public static final BoundWidgetProvider EDITABLE_PASSWORD_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
 			return new PasswordTextBox();
 		}
 	};
-
 
 	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
 			boolean multiple, Custom info) {

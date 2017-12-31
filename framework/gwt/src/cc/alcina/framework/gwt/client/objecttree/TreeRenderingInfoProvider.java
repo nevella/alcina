@@ -22,20 +22,6 @@ import cc.alcina.framework.gwt.client.logic.RenderContext;
  * 
  */
 public class TreeRenderingInfoProvider {
-	public TreeRenderer getForRenderable(TreeRenderable renderable,RenderContext context) {
-		Class rendererClass = Registry.get().lookupSingle(TreeRenderer.class,
-				renderable.getClass(),true);
-		TreeRenderer renderer = (TreeRenderer)Reflections.classLookup().newInstance(
-				rendererClass);
-		renderer.setRenderable(renderable);
-		renderer.setContext(context);
-		return renderer;
-	}
-
-	private TreeRenderingInfoProvider() {
-		super();
-	}
-
 	private static TreeRenderingInfoProvider provider;
 
 	public static TreeRenderingInfoProvider get() {
@@ -48,5 +34,20 @@ public class TreeRenderingInfoProvider {
 	public static void registerTreeRenderingInfoProvider(
 			TreeRenderingInfoProvider provider) {
 		TreeRenderingInfoProvider.provider = provider;
+	}
+
+	private TreeRenderingInfoProvider() {
+		super();
+	}
+
+	public TreeRenderer getForRenderable(TreeRenderable renderable,
+			RenderContext context) {
+		Class rendererClass = Registry.get().lookupSingle(TreeRenderer.class,
+				renderable.getClass(), true);
+		TreeRenderer renderer = (TreeRenderer) Reflections.classLookup()
+				.newInstance(rendererClass);
+		renderer.setRenderable(renderable);
+		renderer.setContext(context);
+		return renderer;
 	}
 }

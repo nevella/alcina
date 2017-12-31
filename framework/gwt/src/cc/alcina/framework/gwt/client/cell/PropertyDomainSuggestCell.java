@@ -34,7 +34,6 @@ import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.PopupPanel.PositionCallback;
 
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox;
-import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
 
 /**
  *
@@ -65,6 +64,10 @@ public class PropertyDomainSuggestCell<T> extends AbstractEditableCell<T, T> {
 	private BoundSuggestBox suggestor;
 
 	private Function<T, String> toStringMapper;
+
+	String lastFilter = "";
+
+	private String lastFilterText;
 
 	public PropertyDomainSuggestCell(Function<T, String> toStringMapper,
 			BoundSuggestBox suggestor) {
@@ -119,10 +122,6 @@ public class PropertyDomainSuggestCell<T> extends AbstractEditableCell<T, T> {
 			lastFilterText = suggestor.getLastFilterText();
 		});
 	}
-
-	String lastFilter = "";
-
-	private String lastFilterText;
 
 	@Override
 	public boolean isEditing(Context context, Element parent, T value) {

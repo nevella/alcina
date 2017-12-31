@@ -25,38 +25,35 @@ import java.util.Iterator;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
-
 /**
  *
- * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet" Cooper</a>
+ * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
+ *         Cooper</a>
  * 
- * Modified - Nick Reddel, added getValidators() for framework support
+ *         Modified - Nick Reddel, added getValidators() for framework support
  */
 @SuppressWarnings("unchecked")
 public class CompositeValidator implements Validator {
-    private ArrayList<Validator> validators = new ArrayList();
+	private ArrayList<Validator> validators = new ArrayList();
 
-    public ArrayList<Validator> getValidators() {
+	/** Creates a new instance of CompositeValidator */
+	public CompositeValidator() {
+	}
+
+	public CompositeValidator add(Validator v) {
+		validators.add(v);
+		return this;
+	}
+
+	public ArrayList<Validator> getValidators() {
 		return this.validators;
 	}
 
-	/** Creates a new instance of CompositeValidator */
-    public CompositeValidator() {
-    }
-
-    public CompositeValidator add(Validator v) {
-        validators.add(v);
-
-        return this;
-    }
-
-    public Object validate(Object value) throws ValidationException {
-        Object retValue = value;
-
-        for(Iterator it = validators.iterator(); it.hasNext();) {
-            retValue = ((Validator) it.next()).validate(retValue);
-        }
-
-        return retValue;
-    }
+	public Object validate(Object value) throws ValidationException {
+		Object retValue = value;
+		for (Iterator it = validators.iterator(); it.hasNext();) {
+			retValue = ((Validator) it.next()).validate(retValue);
+		}
+		return retValue;
+	}
 }

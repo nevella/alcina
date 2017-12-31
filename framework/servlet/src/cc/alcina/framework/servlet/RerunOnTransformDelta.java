@@ -15,7 +15,8 @@ public abstract class RerunOnTransformDelta {
 			try {
 				Thread.sleep(10);
 				run0();
-				//TODO - concurrency issue with transforms hitting in a different thread??
+				// TODO - concurrency issue with transforms hitting in a
+				// different thread??
 			} catch (ConcurrentModificationException e) {
 				Thread.sleep(500);
 				run0();

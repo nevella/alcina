@@ -101,10 +101,10 @@ public interface Converter<T, C> extends Function<T, C> {
 		}
 	};
 
-	C convert(T original);
-
 	@Override
 	default C apply(T t) {
 		return convert(t);
-	};
+	}
+
+	C convert(T original);;
 }

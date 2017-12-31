@@ -16,6 +16,8 @@ import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
  * will always be a singleton
  */
 public class TimerWrapperProviderJvm implements TimerWrapperProvider {
+	private Timer timer = new Timer(true);
+
 	@Override
 	public TimerWrapper getTimer(Runnable runnable) {
 		return new TimerWrapperJvm(runnable);
@@ -26,7 +28,11 @@ public class TimerWrapperProviderJvm implements TimerWrapperProvider {
 		getTimer(runnable).scheduleSingle(1);
 	}
 
-	private Timer timer = new Timer(true);
+	@Override
+	public void scheduleDeferredIfOnUIThread(Runnable runnable) {
+		// assume we're not
+		runnable.run();
+	}
 
 	public class TimerWrapperJvm implements TimerWrapper {
 		private TimerTask task;
@@ -54,11 +60,5 @@ public class TimerWrapperProviderJvm implements TimerWrapperProvider {
 		public void scheduleSingle(long delayMillis) {
 			timer.schedule(task, delayMillis);
 		}
-	}
-
-	@Override
-	public void scheduleDeferredIfOnUIThread(Runnable runnable) {
-		//assume we're not
-		runnable.run();
 	}
 }

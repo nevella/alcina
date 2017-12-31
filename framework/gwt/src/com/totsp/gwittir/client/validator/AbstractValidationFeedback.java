@@ -22,37 +22,34 @@ package com.totsp.gwittir.client.validator;
 
 import java.util.HashMap;
 
-
 /**
  *
- * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet" Cooper</a>
+ * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
+ *         Cooper</a>
  */
 public abstract class AbstractValidationFeedback implements ValidationFeedback {
-    private HashMap<Class,String> mappings = new HashMap<Class, String>();
+	private HashMap<Class, String> mappings = new HashMap<Class, String>();
 
-    public AbstractValidationFeedback() {
-        super();
-    }
+	public AbstractValidationFeedback() {
+		super();
+	}
 
-    public AbstractValidationFeedback addMessage(
-        Class validatorClass, String message) {
-        mappings.put(validatorClass, message);
+	public AbstractValidationFeedback addMessage(Class validatorClass,
+			String message) {
+		mappings.put(validatorClass, message);
+		return this;
+	}
 
-        return this;
-    }
-
-    protected String getMessage(ValidationException validationException) {
-        Class clazz = validationException.getValidatorClass();
-        String message = null;
-
-        if(validationException.getValidatorClass() != null) {
-            message = mappings.get(clazz);
-        }
-
-        return (message == null) ? validationException.getMessage() : message;
-    }
-
-	public  HashMap<Class,String> getMappings() {
+	public HashMap<Class, String> getMappings() {
 		return this.mappings;
+	}
+
+	protected String getMessage(ValidationException validationException) {
+		Class clazz = validationException.getValidatorClass();
+		String message = null;
+		if (validationException.getValidatorClass() != null) {
+			message = mappings.get(clazz);
+		}
+		return (message == null) ? validationException.getMessage() : message;
 	}
 }

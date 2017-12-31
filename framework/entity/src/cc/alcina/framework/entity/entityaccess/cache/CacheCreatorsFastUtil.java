@@ -21,6 +21,14 @@ import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class CacheCreatorsFastUtil {
+	@RegistryLocation(registryPoint = CacheIdMapCreator.class, implementationType = ImplementationType.SINGLETON)
+	public static class CacheIdMapCreatorJ2SE implements CacheIdMapCreator {
+		@Override
+		public Map<Long, HasIdAndLocalId> get() {
+			return new ConcurrentSkipListMap<Long, HasIdAndLocalId>();
+		}
+	}
+
 	@RegistryLocation(registryPoint = CacheLongSetCreator.class, implementationType = ImplementationType.SINGLETON)
 	public static class CacheLongSetCreatorFastutil
 			implements CacheLongSetCreator {
@@ -60,14 +68,6 @@ public class CacheCreatorsFastUtil {
 					}
 				};
 			}
-		}
-	}
-
-	@RegistryLocation(registryPoint = CacheIdMapCreator.class, implementationType = ImplementationType.SINGLETON)
-	public static class CacheIdMapCreatorJ2SE implements CacheIdMapCreator {
-		@Override
-		public Map<Long, HasIdAndLocalId> get() {
-			return new ConcurrentSkipListMap<Long, HasIdAndLocalId>();
 		}
 	}
 

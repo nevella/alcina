@@ -23,12 +23,12 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 public class CancelAction extends PermissibleAction {
 	public static final CancelAction INSTANCE = new CancelAction();
 
+	private CancelAction() {
+	}
+
 	@Override
 	public String getDisplayName() {
 		return TextProvider.get().getUiObjectText(getClass(),
 				TextProvider.DISPLAY_NAME, "Cancel");
-	}
-
-	private CancelAction() {
 	}
 }

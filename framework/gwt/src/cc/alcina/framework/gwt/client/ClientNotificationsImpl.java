@@ -59,6 +59,8 @@ import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
 
 public class ClientNotificationsImpl implements ClientNotifications {
+	private static final String LT_NOTIFY_COMPLETED_SAVE = "LT_NOTIFY_COMPLETED_SAVE";
+
 	private DialogBox dialogBox;
 
 	private HTML dialogHtml;
@@ -67,11 +69,27 @@ public class ClientNotificationsImpl implements ClientNotifications {
 
 	protected StandardDataImages images;
 
-	private static final String LT_NOTIFY_COMPLETED_SAVE = "LT_NOTIFY_COMPLETED_SAVE";
-
 	private boolean dialogAnimationEnabled = true;
 
 	private boolean logToSysOut;
+
+	private Map<String, Long> metricStartTimes = new HashMap<String, Long>();
+
+	Map<String, String> localisedMessages;
+
+	private TopicListener<String> logListener = new TopicListener<String>() {
+		@Override
+		public void topicPublished(String key, String message) {
+			log(message);
+			System.out.println(message);
+		}
+	};
+
+	NonCancellableRemoteDialog notifier = null;
+
+	public ClientNotificationsImpl() {
+		AlcinaTopics.logListenerDelta(logListener, true);
+	}
 
 	public void confirm(String msg, final OkCallback callback) {
 		new OkCancelDialogBox("Confirmation", new Label(msg),
@@ -84,8 +102,33 @@ public class ClientNotificationsImpl implements ClientNotifications {
 				}).show();
 	}
 
+	public void ensureLocalisedMessages() {
+		if (localisedMessages == null) {
+			localisedMessages = new HashMap<String, String>();
+			localisedMessages.put(LT_NOTIFY_COMPLETED_SAVE,
+					TextProvider.get().getUiObjectText(
+							ClientNotificationsImpl.class,
+							LT_NOTIFY_COMPLETED_SAVE,
+							"Your offline work has been saved to the server"));
+		}
+	}
+
 	public String getLogString() {
 		return this.logString;
+	}
+
+	@Override
+	public ModalNotifier getModalNotifier(String message) {
+		if (notifier == null || !notifier.isAttached()) {
+			notifier = new NonCancellableRemoteDialog(message, null, false) {
+				@Override
+				protected boolean initialAnimationEnabled() {
+					return false;
+				}
+			};
+		}
+		notifier.setText(message);
+		return notifier;
 	}
 
 	public void hideDialog() {
@@ -96,6 +139,10 @@ public class ClientNotificationsImpl implements ClientNotifications {
 
 	public boolean isDialogAnimationEnabled() {
 		return dialogAnimationEnabled;
+	}
+
+	public boolean isLogToSysOut() {
+		return this.logToSysOut;
 	}
 
 	public void log(String s) {
@@ -114,16 +161,6 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		AlcinaTopics.logCategorisedMessage(new StringPair(category, s));
 	}
 
-	protected native void consoleLog(String s) /*-{
-        try {
-            $wnd.console.log(s);
-        } catch (e) {
-
-        }
-	}-*/;
-
-	private Map<String, Long> metricStartTimes = new HashMap<String, Long>();
-
 	public void metricLogEnd(String key) {
 		if (metricStartTimes.containsKey(key)) {
 			log(CommonUtils.formatJ("Metric: %s - %s ms", key,
@@ -137,8 +174,23 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		metricStartTimes.put(key, System.currentTimeMillis());
 	}
 
+	@Override
+	public void notifyOfCompletedSaveFromOffline() {
+		ensureLocalisedMessages();
+		Window.alert(localisedMessages.get(LT_NOTIFY_COMPLETED_SAVE));
+	}
+
 	public void setDialogAnimationEnabled(boolean dialogAnimationEnabled) {
 		this.dialogAnimationEnabled = dialogAnimationEnabled;
+	}
+
+	public void setLogToSysOut(boolean logToSysOut) {
+		this.logToSysOut = logToSysOut;
+	}
+
+	@Override
+	public void showDevError(Throwable e) {
+		MessageManager.get().icyMessage("GWT exception - " + e.getMessage());
 	}
 
 	public void showDialog(String captionHTML, Widget captionWidget, String msg,
@@ -242,12 +294,6 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		Scheduler.get().scheduleDeferred(() -> closeButton.setFocus(true));
 	}
 
-	private void ensureImages() {
-		if (images == null) {
-			images = GWT.create(StandardDataImages.class);
-		}
-	}
-
 	public void showError(String msg, Throwable throwable) {
 		log("error: " + msg.replace("<br>", "\n") + "\n"
 				+ throwable.toString());
@@ -262,38 +308,6 @@ public class ClientNotificationsImpl implements ClientNotifications {
 	public void showError(Throwable caught) {
 		this.showError("", caught);
 	}
-
-	public native String statsString() /*-{
-        if (!($wnd.__stats)) {
-            return "";
-        }
-        var result = "";
-        var lastEvtGroup = -1;
-        var lastMillis = 0;
-        for ( var k in $wnd.__stats) {
-            var stat = $wnd.__stats[k];
-            var deltaStr = '';
-            for ( var j in stat) {
-                var v = stat[j];
-                result += j + ": " + v + "  ";
-
-            }
-
-            var v = stat.evtGroup;
-            if (lastEvtGroup == v) {
-                if (lastMillis != 0) {
-                    result += "\ndelta - " + v + " - " + stat.type + ' - '
-                            + (stat.millis - lastMillis) + 'ms\n';
-                }
-                lastMillis = stat.millis;
-            } else {
-                lastMillis = 0;
-                lastEvtGroup = v;
-            }
-            result += "\n\n";
-        }
-        return result;
-	}-*/;
 
 	public void showLog() {
 		showDialog(
@@ -325,73 +339,59 @@ public class ClientNotificationsImpl implements ClientNotifications {
 				MessageType.WARN, null);
 	}
 
+	public native String statsString() /*-{
+										if (!($wnd.__stats)) {
+										return "";
+										}
+										var result = "";
+										var lastEvtGroup = -1;
+										var lastMillis = 0;
+										for ( var k in $wnd.__stats) {
+										var stat = $wnd.__stats[k];
+										var deltaStr = '';
+										for ( var j in stat) {
+										var v = stat[j];
+										result += j + ": " + v + "  ";
+										
+										}
+										
+										var v = stat.evtGroup;
+										if (lastEvtGroup == v) {
+										if (lastMillis != 0) {
+										result += "\ndelta - " + v + " - " + stat.type + ' - '
+										+ (stat.millis - lastMillis) + 'ms\n';
+										}
+										lastMillis = stat.millis;
+										} else {
+										lastMillis = 0;
+										lastEvtGroup = v;
+										}
+										result += "\n\n";
+										}
+										return result;
+										}-*/;
+
+	private void ensureImages() {
+		if (images == null) {
+			images = GWT.create(StandardDataImages.class);
+		}
+	}
+
+	protected native void consoleLog(String s) /*-{
+												try {
+												$wnd.console.log(s);
+												} catch (e) {
+												
+												}
+												}-*/;
+
 	protected String getStandardErrorText() {
 		return "Sorry for the inconvenience, and we'll fix this problem as soon as possible."
 				+ ""
 				+ " If the problem recurs, please try refreshing your browser";
 	}
 
-	Map<String, String> localisedMessages;
-
-	private TopicListener<String> logListener = new TopicListener<String>() {
-		@Override
-		public void topicPublished(String key, String message) {
-			log(message);
-			System.out.println(message);
-		}
-	};
-
-	public void ensureLocalisedMessages() {
-		if (localisedMessages == null) {
-			localisedMessages = new HashMap<String, String>();
-			localisedMessages.put(LT_NOTIFY_COMPLETED_SAVE,
-					TextProvider.get().getUiObjectText(
-							ClientNotificationsImpl.class,
-							LT_NOTIFY_COMPLETED_SAVE,
-							"Your offline work has been saved to the server"));
-		}
-	}
-
-	@Override
-	public void notifyOfCompletedSaveFromOffline() {
-		ensureLocalisedMessages();
-		Window.alert(localisedMessages.get(LT_NOTIFY_COMPLETED_SAVE));
-	}
-
 	public enum MessageType {
 		INFO, WARN, ERROR
-	}
-
-	NonCancellableRemoteDialog notifier = null;
-
-	@Override
-	public ModalNotifier getModalNotifier(String message) {
-		if (notifier == null || !notifier.isAttached()) {
-			notifier = new NonCancellableRemoteDialog(message, null, false) {
-				@Override
-				protected boolean initialAnimationEnabled() {
-					return false;
-				}
-			};
-		}
-		notifier.setText(message);
-		return notifier;
-	}
-
-	public boolean isLogToSysOut() {
-		return this.logToSysOut;
-	}
-
-	public void setLogToSysOut(boolean logToSysOut) {
-		this.logToSysOut = logToSysOut;
-	}
-
-	public ClientNotificationsImpl() {
-		AlcinaTopics.logListenerDelta(logListener, true);
-	}
-
-	@Override
-	public void showDevError(Throwable e) {
-		MessageManager.get().icyMessage("GWT exception - " + e.getMessage());
 	}
 }

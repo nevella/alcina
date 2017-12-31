@@ -26,7 +26,6 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Hyperlink;
 import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.ToggleButton;
@@ -44,9 +43,20 @@ import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType
  * @author Nick Reddel
  */
 public class BreadcrumbBar extends Composite {
-	private String title;
-
 	public static boolean asHTML = false;
+
+	protected static final StandardDataImages images = GWT
+			.create(StandardDataImages.class);
+
+	public static ArrayList<Widget> maxButton(Widget widgetToMaximise) {
+		ArrayList<Widget> l = new ArrayList<Widget>();
+		BreadcrumbBarMaximiseButton max = new BreadcrumbBarMaximiseButton();
+		max.setWidgetToMaximise(widgetToMaximise);
+		l.add(max);
+		return l;
+	}
+
+	private String title;
 
 	private final List<Widget> buttons;
 
@@ -86,6 +96,17 @@ public class BreadcrumbBar extends Composite {
 		initWidget(fp);
 	}
 
+	public String getTitle() {
+		return this.title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+		if (titleLabel != null) {
+			titleLabel.setHTML(title);
+		}
+	}
+
 	private void addButtons() {
 		if (buttons == null) {
 			return;
@@ -98,26 +119,54 @@ public class BreadcrumbBar extends Composite {
 		}
 	}
 
-	public String getTitle() {
-		return this.title;
-	}
+	public static class BreadcrumbBarButton extends Composite
+			implements HasClickHandlers {
+		protected APanel panel;
 
-	public void setTitle(String title) {
-		this.title = title;
-		if (titleLabel != null) {
-			titleLabel.setHTML(title);
+		private boolean asHtml;
+
+		public BreadcrumbBarButton() {
+			this.panel = new APanel();
+			initWidget(panel);
+			this.panel.setStyleName("button");
+		}
+
+		public BreadcrumbBarButton(String text) {
+			this();
+			setText(text);
+		}
+
+		public BreadcrumbBarButton(String text, boolean asHtml) {
+			this();
+			this.asHtml = asHtml;
+			setText(text);
+		}
+
+		public HandlerRegistration addClickHandler(ClickHandler handler) {
+			return panel.addClickHandler(handler);
+		}
+
+		public void setText(String text) {
+			panel.clear();
+			panel.add(BreadcrumbBar.asHTML || this.asHtml ? new InlineHTML(text)
+					: new InlineLabel(text));
 		}
 	}
 
-	protected static final StandardDataImages images = GWT
-			.create(StandardDataImages.class);
+	public static class BreadcrumbBarDropdown extends BreadcrumbBarButton {
+		public BreadcrumbBarDropdown() {
+			this.panel.setStyleName("dropdown");
+		}
 
-	public static ArrayList<Widget> maxButton(Widget widgetToMaximise) {
-		ArrayList<Widget> l = new ArrayList<Widget>();
-		BreadcrumbBarMaximiseButton max = new BreadcrumbBarMaximiseButton();
-		max.setWidgetToMaximise(widgetToMaximise);
-		l.add(max);
-		return l;
+		public BreadcrumbBarDropdown(String text) {
+			this();
+			setText(text);
+		}
+
+		public BreadcrumbBarDropdown(String text, boolean asHtml) {
+			super(text, asHtml);
+			this.panel.setStyleName("dropdown");
+		}
 	}
 
 	public static class BreadcrumbBarMaximiseButton extends Composite
@@ -137,28 +186,12 @@ public class BreadcrumbBar extends Composite {
 			initWidget(toggleButton);
 		}
 
-		public void setWidgetToMaximise(Widget widgetToMaximise) {
-			this.widgetToMaximise = widgetToMaximise;
+		public ToggleButton getToggleButton() {
+			return this.toggleButton;
 		}
 
 		public Widget getWidgetToMaximise() {
 			return widgetToMaximise;
-		}
-
-		public void setDown(boolean down) {
-			boolean wasDown = toggleButton.isDown();
-			if (wasDown != down) {
-				toggleButton.setDown(down);
-				onClick(null);
-			}
-		}
-
-		public void toggle() {
-			setDown(!toggleButton.isDown());
-		}
-
-		public void setTitle(String title) {
-			toggleButton.setTitle(title);
 		}
 
 		public void onClick(ClickEvent event) {
@@ -173,8 +206,24 @@ public class BreadcrumbBar extends Composite {
 			}
 		}
 
-		public ToggleButton getToggleButton() {
-			return this.toggleButton;
+		public void setDown(boolean down) {
+			boolean wasDown = toggleButton.isDown();
+			if (wasDown != down) {
+				toggleButton.setDown(down);
+				onClick(null);
+			}
+		}
+
+		public void setTitle(String title) {
+			toggleButton.setTitle(title);
+		}
+
+		public void setWidgetToMaximise(Widget widgetToMaximise) {
+			this.widgetToMaximise = widgetToMaximise;
+		}
+
+		public void toggle() {
+			setDown(!toggleButton.isDown());
 		}
 	}
 
@@ -202,21 +251,20 @@ public class BreadcrumbBar extends Composite {
 			initWidget(toggleButton);
 		}
 
-		public void setWidgetToMaximise(Widget widgetToMaximise) {
-			this.widgetToMaximise = widgetToMaximise;
+		public HandlerRegistration addClickHandler(ClickHandler handler) {
+			return this.toggleButton.addClickHandler(handler);
+		}
+
+		public ToggleButton getToggleButton() {
+			return this.toggleButton;
 		}
 
 		public Widget getWidgetToMaximise() {
 			return widgetToMaximise;
 		}
 
-		public void toggle() {
-			toggleButton.setDown(!toggleButton.isDown());
-			onClick(null);
-		}
-
-		public void setTitle(String title) {
-			toggleButton.setTitle(title);
+		public boolean isDown() {
+			return this.toggleButton.isDown();
 		}
 
 		public void onClick(ClickEvent event) {
@@ -237,66 +285,17 @@ public class BreadcrumbBar extends Composite {
 			}
 		}
 
-		public ToggleButton getToggleButton() {
-			return this.toggleButton;
+		public void setTitle(String title) {
+			toggleButton.setTitle(title);
 		}
 
-		public boolean isDown() {
-			return this.toggleButton.isDown();
+		public void setWidgetToMaximise(Widget widgetToMaximise) {
+			this.widgetToMaximise = widgetToMaximise;
 		}
 
-		public HandlerRegistration addClickHandler(ClickHandler handler) {
-			return this.toggleButton.addClickHandler(handler);
-		}
-	}
-
-	public static class BreadcrumbBarButton extends Composite
-			implements HasClickHandlers {
-		protected APanel panel;
-
-		private boolean asHtml;
-
-		public BreadcrumbBarButton() {
-			this.panel = new APanel();
-			initWidget(panel);
-			this.panel.setStyleName("button");
-		}
-
-		public BreadcrumbBarButton(String text) {
-			this();
-			setText(text);
-		}
-
-		public BreadcrumbBarButton(String text, boolean asHtml) {
-			this();
-			this.asHtml = asHtml;
-			setText(text);
-		}
-
-		public void setText(String text) {
-			panel.clear();
-			panel.add(BreadcrumbBar.asHTML || this.asHtml ? new InlineHTML(text)
-					: new InlineLabel(text));
-		}
-
-		public HandlerRegistration addClickHandler(ClickHandler handler) {
-			return panel.addClickHandler(handler);
-		}
-	}
-
-	public static class BreadcrumbBarDropdown extends BreadcrumbBarButton {
-		public BreadcrumbBarDropdown() {
-			this.panel.setStyleName("dropdown");
-		}
-
-		public BreadcrumbBarDropdown(String text) {
-			this();
-			setText(text);
-		}
-
-		public BreadcrumbBarDropdown(String text, boolean asHtml) {
-			super(text, asHtml);
-			this.panel.setStyleName("dropdown");
+		public void toggle() {
+			toggleButton.setDown(!toggleButton.isDown());
+			onClick(null);
 		}
 	}
 }

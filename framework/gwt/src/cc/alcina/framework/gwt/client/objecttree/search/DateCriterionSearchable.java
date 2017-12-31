@@ -19,7 +19,6 @@ public class DateCriterionSearchable<DC extends DateCriterion>
 		super(clazz, category, name, operators);
 	}
 
-	
 	@Override
 	public AbstractBoundWidget createEditor() {
 		return new DateBox();
@@ -31,12 +30,12 @@ public class DateCriterionSearchable<DC extends DateCriterion>
 	}
 
 	@Override
-	public boolean hasValue(DC sc) {
-		return sc.getDate() != null;
+	public SearchOperator getOperator(DC value) {
+		return value.getOperator();
 	}
 
 	@Override
-	public SearchOperator getOperator(DC value) {
-		return value.getOperator();
+	public boolean hasValue(DC sc) {
+		return sc.getDate() != null;
 	}
 }

@@ -33,35 +33,15 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
  * 
  */
 @ClientInstantiable
-public abstract class AbstractRenderer<T extends TreeRenderable> implements
-		TreeRenderer<T> {
+public abstract class AbstractRenderer<T extends TreeRenderable>
+		implements TreeRenderer<T> {
 	private T renderable;
 
 	private AbstractBoundWidget boundWidget;
 
-	public AbstractBoundWidget getBoundWidget() {
-		return this.boundWidget;
-	}
-
-	public void setBoundWidget(AbstractBoundWidget boundWidget) {
-		this.boundWidget = boundWidget;
-	}
-
 	private RenderContext context;
 
 	private List<TreeRenderer> childRenderers = new ArrayList<TreeRenderer>();
-
-	public CollectionFilter collectionFilter() {
-		return null;
-	}
-
-	public CollectionProvider collectionProvider() {
-		return null;
-	}
-
-	public Collection<? extends TreeRenderer> childRenderers() {
-		return childRenderers;
-	}
 
 	public TreeRenderer childRendererForRenderableClass(
 			Class<? extends TreeRenderable> clazz) {
@@ -77,8 +57,24 @@ public abstract class AbstractRenderer<T extends TreeRenderable> implements
 		return null;
 	}
 
+	public Collection<? extends TreeRenderer> childRenderers() {
+		return childRenderers;
+	}
+
+	public CollectionFilter collectionFilter() {
+		return null;
+	}
+
+	public CollectionProvider collectionProvider() {
+		return null;
+	}
+
 	public String emptyChildText() {
 		return "(Not set)";
+	}
+
+	public AbstractBoundWidget getBoundWidget() {
+		return this.boundWidget;
 	}
 
 	public RenderContext getContext() {
@@ -102,8 +98,8 @@ public abstract class AbstractRenderer<T extends TreeRenderable> implements
 	}
 
 	public String renderablePropertyName() {
-		return getRenderable() != null && (getRenderable() instanceof HasValue) ? "value"
-				: null;
+		return getRenderable() != null && (getRenderable() instanceof HasValue)
+				? "value" : null;
 	}
 
 	public String renderableText() {
@@ -130,6 +126,10 @@ public abstract class AbstractRenderer<T extends TreeRenderable> implements
 		return null;
 	}
 
+	public void setBoundWidget(AbstractBoundWidget boundWidget) {
+		this.boundWidget = boundWidget;
+	}
+
 	public void setContext(RenderContext context) {
 		this.context = context;
 	}
@@ -137,10 +137,9 @@ public abstract class AbstractRenderer<T extends TreeRenderable> implements
 	public void setRenderable(T renderable) {
 		this.renderable = renderable;
 	}
+
 	@Override
 	public String title() {
 		return null;
 	}
-	
-	
 }

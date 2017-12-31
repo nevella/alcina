@@ -30,9 +30,8 @@ public abstract class RollingDataItem extends AbstractDomainBase {
 	private String maxKey;
 
 	private Date date;
-	
-	private String typeKey;
 
+	private String typeKey;
 
 	@Lob
 	@Transient
@@ -67,8 +66,8 @@ public abstract class RollingDataItem extends AbstractDomainBase {
 	public void setMaxKey(String maxKey) {
 		String old_maxKey = this.maxKey;
 		this.maxKey = maxKey;
-		propertyChangeSupport()
-				.firePropertyChange("maxKey", old_maxKey, maxKey);
+		propertyChangeSupport().firePropertyChange("maxKey", old_maxKey,
+				maxKey);
 	}
 
 	public void setTypeKey(String typeKey) {

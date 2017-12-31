@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir;
 
 import com.totsp.gwittir.client.beans.Binding;
@@ -20,7 +19,6 @@ import com.totsp.gwittir.client.beans.Binding;
  *
  * @author Nick Reddel
  */
-
- public interface HasBinding {
+public interface HasBinding {
 	public Binding getBinding();
 }

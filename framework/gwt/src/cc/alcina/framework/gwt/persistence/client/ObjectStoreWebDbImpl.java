@@ -40,10 +40,12 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 	}
 
 	@Override
-	public void add(String key, String value, AsyncCallback<Integer> idCallback) {
+	public void add(String key, String value,
+			AsyncCallback<Integer> idCallback) {
 		new PutHandler().put(StringMap.property(key, value), idCallback, true,
 				null);
 	}
+
 	@Override
 	public void clear(final AsyncCallback<Void> AsyncCallback) {
 		TransactionCallback clearCallback = new TransactionCallback() {
@@ -91,7 +93,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 	public void executeSql(final String sql, final AsyncCallback callback) {
 		final StatementCallback<GenericRow> cb = new StatementCallback<GenericRow>() {
 			@Override
-			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+			public boolean onFailure(SQLTransaction transaction,
+					SQLError error) {
 				String message = "Problem initalising webdb - "
 						+ error.getMessage() + " - " + error.getCode();
 				System.out.println(message);
@@ -132,8 +135,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 		AsyncCallback<StringMap> toSingleStringCallback = new AsyncCallbackStd<StringMap>() {
 			@Override
 			public void onSuccess(StringMap result) {
-				valueCallback.onSuccess(result.isEmpty() ? null : result
-						.values().iterator().next());
+				valueCallback.onSuccess(result.isEmpty() ? null
+						: result.values().iterator().next());
 			}
 		};
 		new GetHandler().get(Collections.singletonList(key),
@@ -157,16 +160,20 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 		new GetRangeHandler().getRange(fromId, toId, valueCallback);
 	}
 
-	@Override
-	public void put(int id, String value, AsyncCallback<Void> idCallback) {
-		new PutHandler()
-				.put(StringMap.property(null, value),
-						new DiscardInfoWrappingCallback<Integer>(idCallback),
-						false, id);
+	public String getTableName() {
+		return this.tableName;
 	}
 
 	@Override
-	public void put(String key, String value, AsyncCallback<Integer> idCallback) {
+	public void put(int id, String value, AsyncCallback<Void> idCallback) {
+		new PutHandler().put(StringMap.property(null, value),
+				new DiscardInfoWrappingCallback<Integer>(idCallback), false,
+				id);
+	}
+
+	@Override
+	public void put(String key, String value,
+			AsyncCallback<Integer> idCallback) {
 		new PutHandler().put(StringMap.property(key, value), idCallback, false,
 				null);
 	}
@@ -233,7 +240,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 		StatementCallback<GenericRow> okCallback = new StatementCallback<GenericRow>() {
 			@Override
-			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+			public boolean onFailure(SQLTransaction transaction,
+					SQLError error) {
 				ObjectStoreWebDbImpl.this.onFailure(valueCallback, error);
 				return true;
 			}
@@ -244,8 +252,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 				SQLResultSetRowList<GenericRow> rs = resultSet.getRows();
 				getResult = new StringMap();
 				for (int i = 0; i < rs.getLength(); i++) {
-					getResult.put(rs.getItem(i).getString("key_"), rs
-							.getItem(i).getString("value_"));
+					getResult.put(rs.getItem(i).getString("key_"),
+							rs.getItem(i).getString("value_"));
 				}
 			}
 		};
@@ -286,7 +294,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 		StatementCallback<GenericRow> okCallback = new StatementCallback<GenericRow>() {
 			@Override
-			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+			public boolean onFailure(SQLTransaction transaction,
+					SQLError error) {
 				return true;
 			}
 
@@ -336,7 +345,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 		StatementCallback<GenericRow> okCallback = new StatementCallback<GenericRow>() {
 			@Override
-			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+			public boolean onFailure(SQLTransaction transaction,
+					SQLError error) {
 				return true;
 			}
 
@@ -386,7 +396,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 		StatementCallback<GenericRow> okCallback = new StatementCallback<GenericRow>() {
 			@Override
-			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+			public boolean onFailure(SQLTransaction transaction,
+					SQLError error) {
 				return true;
 			}
 
@@ -445,7 +456,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 		StatementCallback<GenericRow> afterInsertCallback = new StatementCallback<GenericRow>() {
 			@Override
-			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+			public boolean onFailure(SQLTransaction transaction,
+					SQLError error) {
 				return true;
 			}
 
@@ -461,7 +473,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 		StatementCallback<GenericRow> getIdCallback = new StatementCallback<GenericRow>() {
 			@Override
-			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+			public boolean onFailure(SQLTransaction transaction,
+					SQLError error) {
 				return true;
 			}
 
@@ -517,8 +530,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 		}
 
 		private void update() {
-			String sql = CommonUtils.formatJ(
-					"update %s set  value_=? where id=?", tableName);
+			String sql = CommonUtils
+					.formatJ("update %s set  value_=? where id=?", tableName);
 			tx.executeSql(sql, new String[] { kv.getValue(), id.toString() },
 					afterInsertCallback);
 		}
@@ -556,7 +569,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 		StatementCallback<GenericRow> doneCallback = new StatementCallback<GenericRow>() {
 			@Override
-			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+			public boolean onFailure(SQLTransaction transaction,
+					SQLError error) {
 				return true;
 			}
 
@@ -568,7 +582,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 		StatementCallback<GenericRow> getIdCallback = new StatementCallback<GenericRow>() {
 			@Override
-			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+			public boolean onFailure(SQLTransaction transaction,
+					SQLError error) {
 				return true;
 			}
 
@@ -609,16 +624,16 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 		private List<String> keys;
 
-		public void remove(List<String> keys, AsyncCallback<Integer> idCallback) {
+		public void remove(List<String> keys,
+				AsyncCallback<Integer> idCallback) {
 			this.keys = keys;
 			this.idCallback = idCallback;
 			db.transaction(getCallback);
 		}
 
 		private void remove() {
-			String sql = CommonUtils.formatJ(
-					"delete from %s  where id in (%s)", tableName,
-					CommonUtils.join(ids, ", "));
+			String sql = CommonUtils.formatJ("delete from %s  where id in (%s)",
+					tableName, CommonUtils.join(ids, ", "));
 			tx.executeSql(sql, new String[0], doneCallback);
 		}
 	}
@@ -626,7 +641,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 	class RemoveRangeHandler {
 		StatementCallback<GenericRow> okCallback = new StatementCallback<GenericRow>() {
 			@Override
-			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+			public boolean onFailure(SQLTransaction transaction,
+					SQLError error) {
 				return true;
 			}
 
@@ -669,9 +685,5 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 			this.valueCallback = valueCallback;
 			db.transaction(removeCallback);
 		}
-	}
-
-	public String getTableName() {
-		return this.tableName;
 	}
 }

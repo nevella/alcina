@@ -24,8 +24,8 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  * Custom field serializer for {@link java.util.ArrayList}.
  */
 @SuppressWarnings("rawtypes")
-public final class SortedMultikeyMap_CustomFieldSerializer extends
-		CustomFieldSerializer<SortedMultikeyMap> {
+public final class SortedMultikeyMap_CustomFieldSerializer
+		extends CustomFieldSerializer<SortedMultikeyMap> {
 	public static void deserialize(SerializationStreamReader streamReader,
 			SortedMultikeyMap instance) throws SerializationException {
 		MultikeyMapBase_CustomFieldSerializer.deserialize(streamReader,

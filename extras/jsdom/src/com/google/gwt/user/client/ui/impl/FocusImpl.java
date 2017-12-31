@@ -24,67 +24,67 @@ import com.google.gwt.dom.client.Element;
  * that aren't naturally focusable in all browsers, such as DIVs.
  */
 public class FocusImpl {
+	private static FocusImpl implPanel = GWT.create(FocusImpl.class);
 
-  private static FocusImpl implPanel = GWT.create(FocusImpl.class);
+	/**
+	 * This instance may not be a {@link FocusImplStandard}, because that
+	 * special case is only needed for things that aren't naturally focusable on
+	 * some browsers, such as DIVs. This exact class works for truly focusable
+	 * widgets on those browsers.
+	 * 
+	 * The compiler will optimize out the conditional.
+	 */
+	private static FocusImpl implWidget = (implPanel instanceof FocusImplStandard)
+			? new FocusImpl() : implPanel;
 
-  /**
-   * This instance may not be a {@link FocusImplStandard}, because that special
-   * case is only needed for things that aren't naturally focusable on some
-   * browsers, such as DIVs. This exact class works for truly focusable widgets
-   * on those browsers.
-   * 
-   * The compiler will optimize out the conditional.
-   */
-  private static FocusImpl implWidget = (implPanel instanceof FocusImplStandard)
-      ? new FocusImpl() : implPanel;
+	/**
+	 * Returns the focus implementation class for creating and manipulating
+	 * focusable elements that aren't naturally focusable in all browsers, such
+	 * as DIVs.
+	 */
+	public static FocusImpl getFocusImplForPanel() {
+		return implPanel;
+	}
 
-  /**
-   * Returns the focus implementation class for creating and manipulating
-   * focusable elements that aren't naturally focusable in all browsers, such as
-   * DIVs.
-   */
-  public static FocusImpl getFocusImplForPanel() {
-    return implPanel;
-  }
+	/**
+	 * Returns the focus implementation class for manipulating focusable
+	 * elements that are naturally focusable in all browsers, such as text
+	 * boxes.
+	 */
+	public static FocusImpl getFocusImplForWidget() {
+		return implWidget;
+	}
 
-  /**
-   * Returns the focus implementation class for manipulating focusable elements
-   * that are naturally focusable in all browsers, such as text boxes.
-   */
-  public static FocusImpl getFocusImplForWidget() {
-    return implWidget;
-  }
+	/**
+	 * Not externally instantiable or extensible.
+	 */
+	FocusImpl() {
+	}
 
-  /**
-   * Not externally instantiable or extensible.
-   */
-  FocusImpl() {
-  }
+	public void blur(Element elem) {
+		elem.blur();
+	}
 
-  public void blur(Element elem) {
-    elem.blur();
-  }
+	public Element createFocusable() {
+		Element e = Document.get().createDivElement().cast();
+		e.setTabIndex(0);
+		return e;
+	}
 
-  public Element createFocusable() {
-    Element e = Document.get().createDivElement().cast();
-    e.setTabIndex(0);
-    return e;
-  }
+	public void focus(Element elem) {
+		elem.focus();
+	}
 
-  public void focus(Element elem) {
-    elem.focus();
-  }
+	public int getTabIndex(Element elem) {
+		return elem.getTabIndex();
+	}
 
-  public int getTabIndex(Element elem) {
-    return elem.getTabIndex();
-  }
+	public native void setAccessKey(Element elem, char key) /*-{
+															var remote=elem.@com.google.gwt.dom.client.Element::typedRemote()();
+															remote.accessKey = String.fromCharCode(key);
+															}-*/;
 
-  public native void setAccessKey(Element elem, char key) /*-{
-  	var remote=elem.@com.google.gwt.dom.client.Element::typedRemote()();
-    remote.accessKey = String.fromCharCode(key);
-  }-*/;
-
-  public void setTabIndex(Element elem, int index) {
-    elem.setTabIndex(index);
-  }
+	public void setTabIndex(Element elem, int index) {
+		elem.setTabIndex(index);
+	}
 }

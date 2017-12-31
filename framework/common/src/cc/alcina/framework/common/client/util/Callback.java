@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.util;
 
 /**
@@ -19,6 +18,6 @@ package cc.alcina.framework.common.client.util;
  * @author Nick Reddel
  */
 @FunctionalInterface
- public interface Callback<V> {
+public interface Callback<V> {
 	public void apply(V value);
 }

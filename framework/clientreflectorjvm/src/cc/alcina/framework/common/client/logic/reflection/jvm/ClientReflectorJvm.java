@@ -31,7 +31,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.IgnoreIntrospectionChecks;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector.BeaninfoClassResolver;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -41,19 +40,78 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.AnnotationUtils;
-import cc.alcina.framework.entity.util.MethodWrapper;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
+import cc.alcina.framework.entity.util.MethodWrapper;
 
 /**
  *
  */
 public class ClientReflectorJvm extends ClientReflector {
-	Map<Class, ClientBeanReflector> reflectors = new HashMap<Class, ClientBeanReflector>();
-
 	public static final String CONTEXT_MODULE_NAME = ClientReflectorJvm.class
 			+ ".CONTEXT_MODULE_NAME";
 
 	public static final String PROP_FILTER_CLASSNAME = "ClientReflectorJvm.filterClassName";
+
+	static Set<Class> checkedClassAnnotationsForInstantiation = new LinkedHashSet<Class>();
+
+	static Set<Class> checkedClassAnnotations = new LinkedHashSet<Class>();
+
+	public static void checkClassAnnotations(Class clazz) {
+		if (checkedClassAnnotations.contains(clazz)) {
+			return;
+		}
+		int mod = clazz.getModifiers();
+		if (Modifier.isAbstract(mod) || clazz.isAnonymousClass()
+				|| (clazz.isMemberClass() && !Modifier.isStatic(mod))) {
+			throw new IntrospectionException(
+					"not reflectable class - abstract or non-static", clazz);
+		}
+		boolean introspectable = AnnotationUtils.hasAnnotationNamed(clazz,
+				ClientInstantiable.class)
+				|| clazz.getAnnotation(
+						cc.alcina.framework.common.client.logic.reflection.Bean.class) != null
+				|| clazz.getAnnotation(Introspectable.class) != null;
+		for (Class iface : getAllImplementedInterfaces(clazz)) {
+			introspectable |= iface.getAnnotation(Introspectable.class) != null;
+		}
+		if (!introspectable && clazz
+				.getAnnotation(IgnoreIntrospectionChecks.class) == null) {
+			throw new IntrospectionException(
+					"not reflectable class - no clientinstantiable/beandescriptor/introspectable annotation",
+					clazz);
+		}
+		checkedClassAnnotations.add(clazz);
+	}
+
+	public static void checkClassAnnotationsForInstantiation(Class clazz) {
+		if (checkedClassAnnotationsForInstantiation.contains(clazz)) {
+			return;
+		}
+		checkClassAnnotations(clazz);
+		if (!AnnotationUtils.hasAnnotationNamed(clazz, ClientInstantiable.class)
+				&& clazz.getAnnotation(IgnoreIntrospectionChecks.class) == null
+				&& clazz.getAnnotation(
+						cc.alcina.framework.common.client.logic.reflection.Bean.class) == null) {
+			throw new IntrospectionException(
+					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation",
+					clazz);
+		}
+		checkedClassAnnotationsForInstantiation.add(clazz);
+	}
+
+	private static List<Class> getAllImplementedInterfaces(Class clazz) {
+		List<Class> result = new ArrayList<Class>();
+		while (clazz != null) {
+			result.addAll(Arrays.asList(clazz.getInterfaces()));
+			clazz = clazz.getSuperclass();
+		}
+		return result;
+	}
+
+	Map<Class, ClientBeanReflector> reflectors = new HashMap<Class, ClientBeanReflector>();
+
+	UnsortedMultikeyMap<Annotation> annotationLookup = new UnsortedMultikeyMap<Annotation>(
+			2);
 
 	public ClientReflectorJvm() {
 		try {
@@ -207,47 +265,9 @@ public class ClientReflectorJvm extends ClientReflector {
 		return reflectors.get(clazz);
 	}
 
-	private boolean hasBeanInfo(Class clazz) {
-		return (clazz.getModifiers() & Modifier.ABSTRACT) == 0
-				&& (clazz.getModifiers() & Modifier.PUBLIC) > 0
-				&& !clazz.isInterface() && !clazz.isEnum()
-				&& getAnnotation(clazz,
-						cc.alcina.framework.common.client.logic.reflection.Bean.class) != null;
-	}
-
-	// we use annotation classnames because the annotation and class may be from
-	// different classloaders (gwt compiling classloader)
-	private <A extends Annotation> A getAnnotation(Class from,
-			Class<A> annotationClass) {
-		if (!annotationLookup.containsKey(from)) {
-			for (Annotation a : from.getAnnotations()) {
-				annotationLookup.put(from, a.annotationType().getName(), a);
-			}
-		}
-		return (A) annotationLookup.get(from, annotationClass.getName());
-	}
-
-	UnsortedMultikeyMap<Annotation> annotationLookup = new UnsortedMultikeyMap<Annotation>(
-			2);
-
 	public Class getClassForName(String fqn) {
 		try {
 			return Class.forName(fqn);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	@Override
-	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
-		try {
-			checkClassAnnotationsForInstantiation(clazz);
-			T newInstance = clazz.newInstance();
-			if (localId != 0) {
-				HasIdAndLocalId hili = (HasIdAndLocalId) newInstance;
-				hili.setLocalId(localId);
-			}
-			return newInstance;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -269,9 +289,50 @@ public class ClientReflectorJvm extends ClientReflector {
 				continue;
 			}
 			infos.add(new PropertyInfoLite(pd.getPropertyType(), pd.getName(),
-					new MethodWrapper(pd.getReadMethod()), clazz));
+					new MethodWrapper(pd.getReadMethod()),
+					new MethodWrapper(pd.getWriteMethod()), clazz));
 		}
 		return infos;
+	}
+
+	@Override
+	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
+		try {
+			checkClassAnnotationsForInstantiation(clazz);
+			T newInstance = clazz.newInstance();
+			if (localId != 0) {
+				HasIdAndLocalId hili = (HasIdAndLocalId) newInstance;
+				hili.setLocalId(localId);
+			}
+			return newInstance;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	// we use annotation classnames because the annotation and class may be from
+	// different classloaders (gwt compiling classloader)
+	private <A extends Annotation> A getAnnotation(Class from,
+			Class<A> annotationClass) {
+		if (!annotationLookup.containsKey(from)) {
+			for (Annotation a : from.getAnnotations()) {
+				annotationLookup.put(from, a.annotationType().getName(), a);
+			}
+		}
+		return (A) annotationLookup.get(from, annotationClass.getName());
+	}
+
+	private boolean hasBeanInfo(Class clazz) {
+		return (clazz.getModifiers() & Modifier.ABSTRACT) == 0
+				&& (clazz.getModifiers() & Modifier.PUBLIC) > 0
+				&& !clazz.isInterface() && !clazz.isEnum()
+				&& getAnnotation(clazz,
+						cc.alcina.framework.common.client.logic.reflection.Bean.class) != null;
+	}
+
+	@Override
+	protected void initialiseNewInstance(Class clazz) {
+		// could log, i guess
 	}
 
 	@Override
@@ -279,71 +340,10 @@ public class ClientReflectorJvm extends ClientReflector {
 		return null;
 	}
 
-	static Set<Class> checkedClassAnnotationsForInstantiation = new LinkedHashSet<Class>();
-
-	static Set<Class> checkedClassAnnotations = new LinkedHashSet<Class>();
-
-	public static void checkClassAnnotationsForInstantiation(Class clazz) {
-		if (checkedClassAnnotationsForInstantiation.contains(clazz)) {
-			return;
-		}
-		checkClassAnnotations(clazz);
-		if (!AnnotationUtils.hasAnnotationNamed(clazz, ClientInstantiable.class)
-				&& clazz.getAnnotation(IgnoreIntrospectionChecks.class) == null
-				&& clazz.getAnnotation(
-						cc.alcina.framework.common.client.logic.reflection.Bean.class) == null) {
-			throw new IntrospectionException(
-					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation",
-					clazz);
-		}
-		checkedClassAnnotationsForInstantiation.add(clazz);
-	}
-
-	public static void checkClassAnnotations(Class clazz) {
-		if (checkedClassAnnotations.contains(clazz)) {
-			return;
-		}
-		int mod = clazz.getModifiers();
-		if (Modifier.isAbstract(mod) || clazz.isAnonymousClass()
-				|| (clazz.isMemberClass() && !Modifier.isStatic(mod))) {
-			throw new IntrospectionException(
-					"not reflectable class - abstract or non-static", clazz);
-		}
-		boolean introspectable = AnnotationUtils.hasAnnotationNamed(clazz,
-				ClientInstantiable.class)
-				|| clazz.getAnnotation(
-						cc.alcina.framework.common.client.logic.reflection.Bean.class) != null
-				|| clazz.getAnnotation(Introspectable.class) != null;
-		for (Class iface : getAllImplementedInterfaces(clazz)) {
-			introspectable |= iface.getAnnotation(Introspectable.class) != null;
-		}
-		if (!introspectable && clazz
-				.getAnnotation(IgnoreIntrospectionChecks.class) == null) {
-			throw new IntrospectionException(
-					"not reflectable class - no clientinstantiable/beandescriptor/introspectable annotation",
-					clazz);
-		}
-		checkedClassAnnotations.add(clazz);
-	}
-
 	public static class IntrospectionException extends RuntimeException {
 		public IntrospectionException(String message, Class clazz) {
 			super(CommonUtils.highlightForLog("reason: %s\nclass:%s", message,
 					clazz));
 		}
-	}
-
-	private static List<Class> getAllImplementedInterfaces(Class clazz) {
-		List<Class> result = new ArrayList<Class>();
-		while (clazz != null) {
-			result.addAll(Arrays.asList(clazz.getInterfaces()));
-			clazz = clazz.getSuperclass();
-		}
-		return result;
-	}
-
-	@Override
-	protected void initialiseNewInstance(Class clazz) {
-		// could log, i guess
 	}
 }

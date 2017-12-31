@@ -23,6 +23,16 @@ import cc.alcina.framework.common.client.util.StringPair;
 @MappedSuperclass
 public class ClientLogRecord implements Serializable {
 	static final transient long serialVersionUID = -3L;
+
+	public static final String VALUE_SEPARATOR = "\tvalue :: ";
+
+	public static StringPair parseLocationValue(String str) {
+		int idx = str.indexOf(VALUE_SEPARATOR);
+		return idx == -1 ? new StringPair(str, null)
+				: new StringPair(str.substring(0, idx),
+						str.substring(idx + VALUE_SEPARATOR.length()));
+	}
+
 	private int localSeriesId;
 
 	private String clientInstanceAuth;
@@ -36,33 +46,6 @@ public class ClientLogRecord implements Serializable {
 	private String message;
 
 	private String ipAddress;
-
-	public static final String VALUE_SEPARATOR = "\tvalue :: ";
-
-	public static class ClientLogRecordIsNonCriticalFilter implements
-			CollectionFilter<ClientLogRecord> {
-		@Override
-		public boolean allow(ClientLogRecord o) {
-			if (o.topic == null || o.message == null) {
-				return false;
-			}
-			return o.topic.equals(AlcinaTopics.LOG_CATEGORY_HISTORY)
-					|| o.topic.equals(AlcinaTopics.LOG_CATEGORY_CLICK)
-					|| o.topic.equals(AlcinaTopics.LOG_CATEGORY_STAT)
-					|| o.topic.equals(AlcinaTopics.LOG_CATEGORY_METRIC);
-		}
-	}
-
-	public static class ClientLogRecordKeepNonCriticalPrecedingContextFilter
-			implements CollectionFilter<ClientLogRecord> {
-		@Override
-		public boolean allow(ClientLogRecord o) {
-			if (o.topic == null || o.message == null) {
-				return false;
-			}
-			return o.topic.equals(AlcinaTopics.LOG_CATEGORY_EXCEPTION);
-		}
-	}
 
 	public ClientLogRecord() {
 	}
@@ -85,6 +68,10 @@ public class ClientLogRecord implements Serializable {
 
 	public long getClientInstanceId() {
 		return this.clientInstanceId;
+	}
+
+	public String getIpAddress() {
+		return this.ipAddress;
 	}
 
 	public int getLocalSeriesId() {
@@ -113,6 +100,10 @@ public class ClientLogRecord implements Serializable {
 		this.clientInstanceId = clientInstanceId;
 	}
 
+	public void setIpAddress(String ipAddress) {
+		this.ipAddress = ipAddress;
+	}
+
 	public void setLocalSeriesId(int id) {
 		this.localSeriesId = id;
 	}
@@ -129,10 +120,43 @@ public class ClientLogRecord implements Serializable {
 		this.topic = topic;
 	}
 
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ("%s :: %s :: %s :: %s -- %s",
+				getLocalSeriesId(), getTime(), getClientInstanceId(),
+				getTopic(), CommonUtils.trimToWsChars(getMessage(), 40));
+	}
+
+	public static class ClientLogRecordIsNonCriticalFilter
+			implements CollectionFilter<ClientLogRecord> {
+		@Override
+		public boolean allow(ClientLogRecord o) {
+			if (o.topic == null || o.message == null) {
+				return false;
+			}
+			return o.topic.equals(AlcinaTopics.LOG_CATEGORY_HISTORY)
+					|| o.topic.equals(AlcinaTopics.LOG_CATEGORY_CLICK)
+					|| o.topic.equals(AlcinaTopics.LOG_CATEGORY_STAT)
+					|| o.topic.equals(AlcinaTopics.LOG_CATEGORY_METRIC);
+		}
+	}
+
+	public static class ClientLogRecordKeepNonCriticalPrecedingContextFilter
+			implements CollectionFilter<ClientLogRecord> {
+		@Override
+		public boolean allow(ClientLogRecord o) {
+			if (o.topic == null || o.message == null) {
+				return false;
+			}
+			return o.topic.equals(AlcinaTopics.LOG_CATEGORY_EXCEPTION);
+		}
+	}
+
 	@Bean(displayNamePropertyName = "size")
 	@Introspectable
 	public static class ClientLogRecords implements Serializable {
 		static final transient long serialVersionUID = -3L;
+
 		private List<ClientLogRecord> logRecords = new ArrayList<ClientLogRecord>();
 
 		public int size = 0;
@@ -145,19 +169,15 @@ public class ClientLogRecord implements Serializable {
 			incrementSize(logRecord);
 		}
 
+		public List<ClientLogRecord> getLogRecords() {
+			return this.logRecords;
+		}
+
 		public void recalcSize() {
 			size = 0;
 			for (ClientLogRecord logRecord : logRecords) {
 				incrementSize(logRecord);
 			}
-		}
-
-		private void incrementSize(ClientLogRecord logRecord) {
-			size += 70 + logRecord.message.length();
-		}
-
-		public List<ClientLogRecord> getLogRecords() {
-			return this.logRecords;
 		}
 
 		public void setLogRecords(List<ClientLogRecord> logRecords) {
@@ -170,27 +190,9 @@ public class ClientLogRecord implements Serializable {
 					"ClientLogRecords: size - %s\t records - %s\n%s", size,
 					logRecords.size(), CommonUtils.join(logRecords, "\n"));
 		}
-	}
 
-	public String getIpAddress() {
-		return this.ipAddress;
-	}
-
-	public void setIpAddress(String ipAddress) {
-		this.ipAddress = ipAddress;
-	}
-
-	public static StringPair parseLocationValue(String str) {
-		int idx = str.indexOf(VALUE_SEPARATOR);
-		return idx == -1 ? new StringPair(str, null) : new StringPair(
-				str.substring(0, idx), str.substring(idx
-						+ VALUE_SEPARATOR.length()));
-	}
-
-	@Override
-	public String toString() {
-		return CommonUtils.formatJ("%s :: %s :: %s :: %s -- %s",
-				getLocalSeriesId(), getTime(), getClientInstanceId(),
-				getTopic(), CommonUtils.trimToWsChars(getMessage(), 40));
+		private void incrementSize(ClientLogRecord logRecord) {
+			size += 70 + logRecord.message.length();
+		}
 	}
 }

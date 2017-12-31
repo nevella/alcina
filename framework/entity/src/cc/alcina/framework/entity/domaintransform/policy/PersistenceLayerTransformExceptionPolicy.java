@@ -8,10 +8,19 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 
 public interface PersistenceLayerTransformExceptionPolicy {
+	public void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
+			throws DomainTransformException;
+
 	public TransformExceptionAction getActionForException(
 			DomainTransformException exception,
 			TransformPersistenceToken persistenceToken);
-	
+
+	public boolean ignoreClientAuthMismatch(
+			ClientInstance persistentClientInstance,
+			DomainTransformRequest request);
+
+	public boolean precreateMissingEntities();
+
 	public enum TransformExceptionAction {
 		THROW, RESOLVE, IGNORE_AND_WARN {
 			@Override
@@ -29,14 +38,4 @@ public interface PersistenceLayerTransformExceptionPolicy {
 			return false;
 		}
 	}
-
-	public boolean precreateMissingEntities();
-	
-	public void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
-			throws DomainTransformException;
-
-	public boolean ignoreClientAuthMismatch(
-			ClientInstance persistentClientInstance, DomainTransformRequest request);
-	
-	
 }

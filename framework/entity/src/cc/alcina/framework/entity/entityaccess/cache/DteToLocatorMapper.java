@@ -11,13 +11,15 @@ public class DteToLocatorMapper implements
 	public DteToLocatorMapper() {
 		this(false);
 	}
+
 	public DteToLocatorMapper(boolean valueLocator) {
 		this.valueLocator = valueLocator;
-		
 	}
+
 	@Override
 	public HiliLocator getKey(DomainTransformEvent dte) {
-		return valueLocator?HiliLocator.valueLocator(dte):HiliLocator.objectLocator(dte);
+		return valueLocator ? HiliLocator.valueLocator(dte)
+				: HiliLocator.objectLocator(dte);
 	}
 
 	@Override

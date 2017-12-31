@@ -46,11 +46,12 @@ public abstract class CacheQuery<Q extends CacheQuery> {
 		return (Q) this;
 	}
 
-	public Q filter(String key, Object value) {
-		return filter(new CacheFilter(key, value));
-	}
 	public Q filter(Predicate p) {
 		return filter(new CacheFilter(p));
+	}
+
+	public Q filter(String key, Object value) {
+		return filter(new CacheFilter(key, value));
 	}
 
 	public Q filter(String key, Object value, FilterOperator operator) {
@@ -92,7 +93,7 @@ public abstract class CacheQuery<Q extends CacheQuery> {
 		return this.raw;
 	}
 
-	public abstract <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) ;
+	public abstract <T extends HasIdAndLocalId> List<T> list(Class<T> clazz);
 
 	public Q nonTransactional() {
 		this.nonTransactional = true;

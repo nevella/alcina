@@ -64,6 +64,8 @@ public class BoundSelector extends AbstractBoundWidget
 
 	private String noResultsMessage;
 
+	private String hint;
+
 	/*
 	 * Allows for subclasses which need a model before rendering
 	 */
@@ -89,12 +91,13 @@ public class BoundSelector extends AbstractBoundWidget
 		this(selectionObjectClass, filter, maxSelectedItems, renderer,
 				useCellList, () -> TransformManager.get()
 						.getCollection(selectionObjectClass),
-				null,null);
+				null, null);
 	}
 
 	public BoundSelector(Class selectionObjectClass, Predicate filter,
 			int maxSelectedItems, Function renderer, boolean useCellList,
-			Supplier<Collection> supplier, String noResultsMessage,String hint) {
+			Supplier<Collection> supplier, String noResultsMessage,
+			String hint) {
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;
 		this.maxSelectedItems = maxSelectedItems;
@@ -110,14 +113,8 @@ public class BoundSelector extends AbstractBoundWidget
 		redrawGrid();
 	}
 
-	private String hint;
-
 	public String getHint() {
 		return this.hint;
-	}
-
-	public void setHint(String hint) {
-		this.hint = hint;
 	}
 
 	public Object getValue() {
@@ -200,6 +197,10 @@ public class BoundSelector extends AbstractBoundWidget
 		resultsWidget.setStyleName("alcina-Selector selected");
 	}
 
+	public void setHint(String hint) {
+		this.hint = hint;
+	}
+
 	@Override
 	public void setModel(Object model) {
 		super.setModel(model);
@@ -263,23 +264,6 @@ public class BoundSelector extends AbstractBoundWidget
 		initWidget(container);
 	}
 
-	protected void itemSelected(Object item) {
-		if (maxSelectedItems != 0
-				&& search.getSelectedItems().size() >= maxSelectedItems) {
-			removeItem(search.getSelectedItems().iterator().next());
-		}
-		Set old = new HashSet(search.getSelectedItems());
-		addItem(item);
-		update(old);
-	}
-
-	protected void resultItemSelected(Object item) {
-		Set old = new HashSet(search.getSelectedItems());
-		removeItem(item);
-		update(old);
-		search.filter(null);
-	}
-
 	protected void addItem(Object item) {
 		if (search.getSelectedItems().add(item)) {
 			((List) results.getItemMap().get("")).add(item);
@@ -334,11 +318,28 @@ public class BoundSelector extends AbstractBoundWidget
 		return maxSelectedItems != 1;
 	}
 
+	protected void itemSelected(Object item) {
+		if (maxSelectedItems != 0
+				&& search.getSelectedItems().size() >= maxSelectedItems) {
+			removeItem(search.getSelectedItems().iterator().next());
+		}
+		Set old = new HashSet(search.getSelectedItems());
+		addItem(item);
+		update(old);
+	}
+
 	protected void removeItem(Object item) {
 		if (search.getSelectedItems().remove(item)) {
 			((List) results.getItemMap().get("")).remove(item);
 			results.setItemMap(results.getItemMap());
 		}
+	}
+
+	protected void resultItemSelected(Object item) {
+		Set old = new HashSet(search.getSelectedItems());
+		removeItem(item);
+		update(old);
+		search.filter(null);
 	}
 
 	protected boolean shouldHideResultFilter() {

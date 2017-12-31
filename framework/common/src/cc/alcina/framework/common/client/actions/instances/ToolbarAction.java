@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions.instances;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
@@ -22,6 +21,5 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  *
  * @author Nick Reddel
  */
-
- public abstract class ToolbarAction extends PermissibleAction {
+public abstract class ToolbarAction extends PermissibleAction {
 }

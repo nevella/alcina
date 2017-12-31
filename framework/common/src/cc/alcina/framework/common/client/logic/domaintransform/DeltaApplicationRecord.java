@@ -35,13 +35,14 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 @Bean(displayNamePropertyName = "id")
 @XmlRootElement
 /**
- *TODO - this can either be a wrapper for a DomainTransformRequest, *or* a gwt-rpc payload
- *a lot of refactoring should be done to make that meaningful
+ * TODO - this can either be a wrapper for a DomainTransformRequest, *or* a
+ * gwt-rpc payload a lot of refactoring should be done to make that meaningful
+ * 
  * @author Nick Reddel
  */
 @ReflectionModule("Admin")
-public class DeltaApplicationRecord extends BaseBindable implements
-		RemoteParameters {
+public class DeltaApplicationRecord extends BaseBindable
+		implements RemoteParameters {
 	private int id;
 
 	private String text;
@@ -65,8 +66,8 @@ public class DeltaApplicationRecord extends BaseBindable implements
 	public DeltaApplicationRecord() {
 	}
 
-
-	public DeltaApplicationRecord(DomainTransformRequest request,DeltaApplicationRecordType type, boolean async) {
+	public DeltaApplicationRecord(DomainTransformRequest request,
+			DeltaApplicationRecordType type, boolean async) {
 		this.timestamp = new Date().getTime();
 		this.userId = PermissionsManager.get().getUserId();
 		if (!async) {
@@ -86,15 +87,14 @@ public class DeltaApplicationRecord extends BaseBindable implements
 		this.requestId = request.getRequestId();
 		Integer auth = request.getClientInstance().getAuth();
 		this.clientInstanceAuth = auth == null ? 0 : auth;
-		this.type=type;
+		this.type = type;
 		this.protocolVersion = request.getProtocolVersion();
 		this.setTag(request.getTag());
 	}
 
 	public DeltaApplicationRecord(int id, String text, long timestamp,
 			long userId, long clientInstanceId, int requestId,
-			int clientInstanceAuth,
-			DeltaApplicationRecordType type,
+			int clientInstanceAuth, DeltaApplicationRecordType type,
 			String protocolVersion, String tag) {
 		this.id = id;
 		this.text = text;
@@ -110,8 +110,8 @@ public class DeltaApplicationRecord extends BaseBindable implements
 
 	public DeltaApplicationRecord clone() {
 		return new DeltaApplicationRecord(id, text, timestamp, userId,
-				clientInstanceId, requestId, clientInstanceAuth,
-				type, protocolVersion, tag);
+				clientInstanceId, requestId, clientInstanceAuth, type,
+				protocolVersion, tag);
 	}
 
 	@Display(name = "Client instance auth", orderingHint = 30)
@@ -152,6 +152,10 @@ public class DeltaApplicationRecord extends BaseBindable implements
 
 	public long getTimestamp() {
 		return this.timestamp;
+	}
+
+	public DeltaApplicationRecordType getType() {
+		return this.type;
 	}
 
 	public long getUserId() {
@@ -209,30 +213,27 @@ public class DeltaApplicationRecord extends BaseBindable implements
 				timestamp);
 	}
 
-	public void setUserId(long userId) {
-		long old_userId = this.userId;
-		this.userId = userId;
-		propertyChangeSupport()
-				.firePropertyChange("userId", old_userId, userId);
-	}
-
-	@Override
-	public String toString() {
-		return CommonUtils.formatJ(" clientInstanceAuth: %s\n"
-				+ "clientInstanceId: %s\n" + "id: %s\n" + "requestId: %s\n"
-				+ "timestamp: %s\n" + "userId: %s\n"
-				+ "DeltaApplicationRecordType: %s\n" + "tag:\n%s\n"
-				+ "text:\n%s\n", clientInstanceAuth, clientInstanceId, id,
-				requestId, timestamp, userId, type, getTag(), text);
-	}
-
-	public DeltaApplicationRecordType getType() {
-		return this.type;
-	}
-
 	public void setType(DeltaApplicationRecordType type) {
 		DeltaApplicationRecordType old_type = this.type;
 		this.type = type;
 		propertyChangeSupport().firePropertyChange("type", old_type, type);
+	}
+
+	public void setUserId(long userId) {
+		long old_userId = this.userId;
+		this.userId = userId;
+		propertyChangeSupport().firePropertyChange("userId", old_userId,
+				userId);
+	}
+
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ(
+				" clientInstanceAuth: %s\n" + "clientInstanceId: %s\n"
+						+ "id: %s\n" + "requestId: %s\n" + "timestamp: %s\n"
+						+ "userId: %s\n" + "DeltaApplicationRecordType: %s\n"
+						+ "tag:\n%s\n" + "text:\n%s\n",
+				clientInstanceAuth, clientInstanceId, id, requestId, timestamp,
+				userId, type, getTag(), text);
 	}
 }

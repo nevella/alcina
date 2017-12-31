@@ -12,9 +12,10 @@ import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
-public class IntBackedPropertyStoreLookup<T, H extends HasIdAndLocalId> extends
-		PropertyStoreLookup<T, H> {
-	public static Set<Long> intCollectionToLongSet(IntCollection intCollection) {
+public class IntBackedPropertyStoreLookup<T, H extends HasIdAndLocalId>
+		extends PropertyStoreLookup<T, H> {
+	public static Set<Long>
+			intCollectionToLongSet(IntCollection intCollection) {
 		LongOpenHashSet res = new LongOpenHashSet();
 		IntIterator itr = intCollection.iterator();
 		while (itr.hasNext()) {

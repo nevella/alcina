@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.provider;
 
 import com.google.gwt.user.client.ui.Widget;
@@ -20,7 +19,6 @@ import com.google.gwt.user.client.ui.Widget;
  *
  * @author Nick Reddel
  */
-
- public interface ViewProvider {
+public interface ViewProvider {
 	public Widget getViewForObject(Object obj);
 }

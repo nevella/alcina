@@ -26,22 +26,21 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  */
 @SuppressWarnings("unchecked")
 public final class Collection_CustomFieldSerializerBase {
+	public static void deserialize(SerializationStreamReader streamReader,
+			Collection instance) throws SerializationException {
+		int size = streamReader.readInt();
+		for (int i = 0; i < size; ++i) {
+			Object obj = streamReader.readObject();
+			instance.add(obj);
+		}
+	}
 
-  public static void deserialize(SerializationStreamReader streamReader,
-      Collection instance) throws SerializationException {
-    int size = streamReader.readInt();
-    for (int i = 0; i < size; ++i) {
-      Object obj = streamReader.readObject();
-      instance.add(obj);
-    }
-  }
-
-  public static void serialize(SerializationStreamWriter streamWriter,
-      Collection instance) throws SerializationException {
-    int size = instance.size();
-    streamWriter.writeInt(size);
-    for (Object obj : instance) {
-      streamWriter.writeObject(obj);
-    }
-  }
+	public static void serialize(SerializationStreamWriter streamWriter,
+			Collection instance) throws SerializationException {
+		int size = instance.size();
+		streamWriter.writeInt(size);
+		for (Object obj : instance) {
+			streamWriter.writeObject(obj);
+		}
+	}
 }

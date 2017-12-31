@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -30,6 +29,10 @@ public class BlockLink<T> extends Link<T> {
 		super();
 	}
 
+	public BlockLink(String text) {
+		super(text);
+	}
+
 	public BlockLink(String text, boolean asHTML) {
 		super(text, asHTML);
 	}
@@ -40,10 +43,6 @@ public class BlockLink<T> extends Link<T> {
 
 	public BlockLink(String string, ClickHandler handler) {
 		super(string, handler);
-	}
-
-	public BlockLink(String text) {
-		super(text);
 	}
 
 	@Override

@@ -43,7 +43,8 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 	}
 
 	@Override
-	public void add(String key, String value, AsyncCallback<Integer> idCallback) {
+	public void add(String key, String value,
+			AsyncCallback<Integer> idCallback) {
 		new PutHandler().put(StringMap.property(key, value), idCallback, true,
 				null);
 	}
@@ -69,14 +70,6 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		}
 	}
 
-	private void close(Statement stmt) {
-		try {
-			stmt.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 	@Override
 	public void get(List<String> keys, AsyncCallback<StringMap> valueCallback) {
 		new GetHandler().get(keys, valueCallback);
@@ -87,8 +80,8 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		AsyncCallback<StringMap> toSingleStringCallback = new AsyncCallbackStd<StringMap>() {
 			@Override
 			public void onSuccess(StringMap result) {
-				valueCallback.onSuccess(result.isEmpty() ? null : result
-						.values().iterator().next());
+				valueCallback.onSuccess(result.isEmpty() ? null
+						: result.values().iterator().next());
 			}
 		};
 		new GetHandler().get(Collections.singletonList(key),
@@ -112,16 +105,20 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		new GetRangeHandler().getRange(fromId, toId, valueCallback);
 	}
 
-	@Override
-	public void put(int id, String value, AsyncCallback<Void> idCallback) {
-		new PutHandler()
-				.put(StringMap.property(null, value),
-						new DiscardInfoWrappingCallback<Integer>(idCallback),
-						false, id);
+	public String getTableName() {
+		return this.tableName;
 	}
 
 	@Override
-	public void put(String key, String value, AsyncCallback<Integer> idCallback) {
+	public void put(int id, String value, AsyncCallback<Void> idCallback) {
+		new PutHandler().put(StringMap.property(null, value),
+				new DiscardInfoWrappingCallback<Integer>(idCallback), false,
+				id);
+	}
+
+	@Override
+	public void put(String key, String value,
+			AsyncCallback<Integer> idCallback) {
 		new PutHandler().put(StringMap.property(key, value), idCallback, false,
 				null);
 	}
@@ -151,21 +148,49 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 				completedCallback);
 	}
 
+	private void close(Statement stmt) {
+		try {
+			stmt.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	private void ensureTable() {
 		try {
 			Statement stmt = conn.createStatement();
-			stmt.executeQuery(CommonUtils.formatJ("select min(id) from %s",
-					tableName));
+			stmt.executeQuery(
+					CommonUtils.formatJ("select min(id) from %s", tableName));
 			postInitCallback.onSuccess(null);
 		} catch (Exception e) {
-			String createSql = "CREATE TABLE  "
-					+ "%s"
+			String createSql = "CREATE TABLE  " + "%s"
 					+ " (id INT NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1,\n"
 					+ " INCREMENT BY 1) ,\n"
 					+ " key_ varchar(255), value_ CLOB)  ";
 			String sql = CommonUtils.formatJ(createSql, tableName);
 			executeSql(sql, postInitCallback);
 		}
+	}
+
+	protected String getValueClob(ResultSet rs)
+			throws SQLException, IOException {
+		String value = null;
+		Clob clob = rs.getClob("value_");
+		if (clob != null) {
+			Reader reader = clob.getCharacterStream();
+			char[] cbuf = new char[8192];
+			StringBuilder sb = new StringBuilder((int) clob.length());
+			while (true) {
+				int read = reader.read(cbuf);
+				if (read == -1) {
+					break;
+				}
+				sb.append(new String(cbuf, 0, read));
+			}
+			reader.close();
+			value = sb.toString();
+		}
+		return value;
 	}
 
 	class GetHandler {
@@ -191,32 +216,12 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		}
 	}
 
-	protected String getValueClob(ResultSet rs) throws SQLException,
-			IOException {
-		String value = null;
-		Clob clob = rs.getClob("value_");
-		if (clob != null) {
-			Reader reader = clob.getCharacterStream();
-			char[] cbuf = new char[8192];
-			StringBuilder sb = new StringBuilder((int) clob.length());
-			while (true) {
-				int read = reader.read(cbuf);
-				if (read == -1) {
-					break;
-				}
-				sb.append(new String(cbuf, 0, read));
-			}
-			reader.close();
-			value = sb.toString();
-		}
-		return value;
-	}
-
 	class GetIdRageHandler {
 		public void get(AsyncCallback<IntPair> valueCallback) {
 			try {
-				String sql = CommonUtils.formatJ("select min(id) as min_, "
-						+ "max(id) as max_ from %s", tableName);
+				String sql = CommonUtils.formatJ(
+						"select min(id) as min_, " + "max(id) as max_ from %s",
+						tableName);
 				Statement stmt = conn.createStatement();
 				ResultSet rs = stmt.executeQuery(sql);
 				StringMap getResult = new StringMap();
@@ -335,7 +340,8 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 	}
 
 	class RemoveHandler {
-		public void remove(List<String> keys, AsyncCallback<Integer> idCallback) {
+		public void remove(List<String> keys,
+				AsyncCallback<Integer> idCallback) {
 			try {
 				String sql = CommonUtils.formatJ(
 						"select id from %s where key_ in %s ", tableName,
@@ -374,9 +380,5 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 				valueCallback.onFailure(e);
 			}
 		}
-	}
-
-	public String getTableName() {
-		return this.tableName;
 	}
 }

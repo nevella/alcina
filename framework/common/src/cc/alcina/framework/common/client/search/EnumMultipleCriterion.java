@@ -15,7 +15,9 @@ package cc.alcina.framework.common.client.search;
 
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import javax.xml.bind.annotation.XmlTransient;
+
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -25,52 +27,54 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * 
  * 
  */
-public abstract class EnumMultipleCriterion<E extends Enum> extends SearchCriterion implements HasValue<Set<E>> {
+public abstract class EnumMultipleCriterion<E extends Enum>
+		extends SearchCriterion implements HasValue<Set<E>> {
+	static final transient long serialVersionUID = -1L;
 
-    static final transient long serialVersionUID = -1L;
+	public EnumMultipleCriterion() {
+	}
 
-    public EnumMultipleCriterion() {
-    }
+	public EnumMultipleCriterion(String criteriaDisplayName) {
+		super(criteriaDisplayName);
+	}
 
-    public abstract Class<E> enumClass();
+	public abstract Class<E> enumClass();
 
-    /**
-	 * If the enum is serialised in the db as a string, set to true
-	 */
-    protected boolean valueAsString() {
-        return false;
-    }
+	@Override
+	@SuppressWarnings("unchecked")
+	public EqlWithParameters eql() {
+		EqlWithParameters result = new EqlWithParameters();
+		Set<E> value = getValue();
+		if (value.size() > 0
+				&& !CommonUtils.isNullOrEmpty(getTargetPropertyName())) {
+			result.eql = targetPropertyNameWithTable() + " in ? ";
+			Set params = value;
+			if (valueAsString()) {
+				params = value.stream().map(Object::toString)
+						.collect(Collectors.toSet());
+			}
+			result.parameters.add(params);
+		}
+		return result;
+	}
 
-    public EnumMultipleCriterion(String criteriaDisplayName) {
-        super(criteriaDisplayName);
-    }
+	@XmlTransient
+	public abstract Set<E> getValue();
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public EqlWithParameters eql() {
-        EqlWithParameters result = new EqlWithParameters();
-        Set<E> value = getValue();
-        if (value.size() > 0 && !CommonUtils.isNullOrEmpty(getTargetPropertyName())) {
-            result.eql = targetPropertyNameWithTable() + " in ? ";
-            Set params = value;
-            if (valueAsString()) {
-                params = value.stream().map(Object::toString).collect(Collectors.toSet());
-            }
-            result.parameters.add(params);
-        }
-        return result;
-    }
-
-    @XmlTransient
-    public abstract Set<E> getValue();
-
-    /**
+	/**
 	 * add property change firing to the subclass implementation, if you care
 	 */
-    public abstract void setValue(Set<E> value);
+	public abstract void setValue(Set<E> value);
 
-    @Override
-    public String toString() {
-        return String.valueOf(getValue());
-    }
+	@Override
+	public String toString() {
+		return String.valueOf(getValue());
+	}
+
+	/**
+	 * If the enum is serialised in the db as a string, set to true
+	 */
+	protected boolean valueAsString() {
+		return false;
+	}
 }

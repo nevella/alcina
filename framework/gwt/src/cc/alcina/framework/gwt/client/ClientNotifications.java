@@ -15,9 +15,15 @@ public interface ClientNotifications extends LogWriter {
 	public static final String CONTEXT_AUTOSHOW_DIALOG_DETAIL = ClientNotifications.class
 			.getName() + ".CONTEXT_AUTOSHOW_DIALOG_DETAIL";
 
+	static ClientNotifications get() {
+		return Registry.impl(ClientNotifications.class);
+	}
+
 	public abstract void confirm(String msg, final OkCallback callback);
 
 	public abstract String getLogString();
+
+	public abstract ModalNotifier getModalNotifier(String message);
 
 	public abstract void hideDialog();
 
@@ -28,6 +34,8 @@ public interface ClientNotifications extends LogWriter {
 	public abstract void metricLogEnd(String key);
 
 	public abstract void metricLogStart(String key);
+
+	public abstract void notifyOfCompletedSaveFromOffline();
 
 	public abstract void
 			setDialogAnimationEnabled(boolean dialogAnimationEnabled);
@@ -52,14 +60,6 @@ public interface ClientNotifications extends LogWriter {
 	public abstract void showWarning(String msg);
 
 	public abstract void showWarning(String msg, String detail);
-
-	public abstract void notifyOfCompletedSaveFromOffline();
-
-	public abstract ModalNotifier getModalNotifier(String message);
-
-	static ClientNotifications get() {
-		return Registry.impl(ClientNotifications.class);
-	}
 
 	default void showDevError(Throwable e) {
 	}

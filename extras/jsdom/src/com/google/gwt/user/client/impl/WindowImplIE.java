@@ -27,129 +27,132 @@ import com.google.gwt.resources.client.TextResource;
  * IE implementation of {@link com.google.gwt.user.client.impl.WindowImpl}.
  */
 public class WindowImplIE extends WindowImpl {
+	/**
+	 * For IE6, reading from $wnd.location.hash drops part of the fragment if
+	 * the fragment contains a '?'. To avoid this bug, we use location.href
+	 * instead.
+	 */
+	@Override
+	public native String getHash() /*-{
+									var href = $wnd.location.href;
+									var hashLoc = href.indexOf("#");
+									return (hashLoc > 0) ? href.substring(hashLoc) : "";
+									}-*/;
 
-  /**
-   * The resources for this implementation.
-   */
-  public interface Resources extends ClientBundle {
-    Resources INSTANCE = GWT.create(Resources.class);
+	/**
+	 * For IE6, reading from $wnd.location.search gets confused if hash contains
+	 * a '?'. To avoid this bug, we use location.href instead.
+	 */
+	@Override
+	public native String getQueryString() /*-{
+											var href = $wnd.location.href;
+											var hashLoc = href.indexOf("#");
+											if (hashLoc >= 0) {
+											// strip off any hash first
+											href = href.substring(0, hashLoc);
+											}
+											var questionLoc = href.indexOf("?");
+											return (questionLoc > 0) ? href.substring(questionLoc) : "";
+											}-*/;
 
-    /**
-     * Contains the function body used to initialize the window close handler.
-     */
-    @Source("initWindowCloseHandler.js")
-    TextResource initWindowCloseHandler();
+	@Override
+	public void initWindowCloseHandler() {
+		initHandler(Resources.INSTANCE.initWindowCloseHandler().getText(),
+				new ScheduledCommand() {
+					public void execute() {
+						initWindowCloseHandlerImpl();
+					}
+				});
+	}
 
-    /**
-     * Contains the function body used to initialize the window resize handler.
-     */
-    @Source("initWindowResizeHandler.js")
-    TextResource initWindowResizeHandler();
+	@Override
+	public void initWindowResizeHandler() {
+		initHandler(Resources.INSTANCE.initWindowResizeHandler().getText(),
+				new ScheduledCommand() {
+					public void execute() {
+						initWindowResizeHandlerImpl();
+					}
+				});
+	}
 
-    /**
-     * Contains the function body used to initialize the window scroll handler.
-     */
-    @Source("initWindowScrollHandler.js")
-    TextResource initWindowScrollHandler();
-  }
+	@Override
+	public void initWindowScrollHandler() {
+		initHandler(Resources.INSTANCE.initWindowScrollHandler().getText(),
+				new ScheduledCommand() {
+					public void execute() {
+						initWindowScrollHandlerImpl();
+					}
+				});
+	}
 
-  /**
-   * For IE6, reading from $wnd.location.hash drops part of the fragment if the
-   * fragment contains a '?'. To avoid this bug, we use location.href instead.
-   */
-  @Override
-  public native String getHash() /*-{
-    var href = $wnd.location.href;
-    var hashLoc = href.indexOf("#");
-    return (hashLoc > 0) ? href.substring(hashLoc) : "";
-  }-*/;
+	/**
+	 * IE6 does not allow direct access to event handlers on the parent window,
+	 * so we must embed a script in the parent window that will set the event
+	 * handlers in the correct context.
+	 * 
+	 * @param initFunc
+	 *            the string representation of the init function
+	 * @param cmd
+	 *            the command to execute the init function
+	 */
+	private void initHandler(String initFunc, ScheduledCommand cmd) {
+		if (GWT.isClient()) {
+			// Embed the init script on the page
+			ScriptElement scriptElem = Document.get()
+					.createScriptElement(initFunc);
+			Document.get().getBody().appendChild(scriptElem);
+			LocalDom.flush();
+			// Initialize the handler
+			cmd.execute();
+			// Remove the script element
+			Document.get().getBody().removeChild(scriptElem);
+		}
+	}
 
-  /**
-   * For IE6, reading from $wnd.location.search gets confused if hash contains
-   * a '?'. To avoid this bug, we use location.href instead.
-   */
-  @Override
-  public native String getQueryString() /*-{
-    var href = $wnd.location.href;
-    var hashLoc = href.indexOf("#");
-    if (hashLoc >= 0) {
-      // strip off any hash first
-      href = href.substring(0, hashLoc);
-    }
-    var questionLoc = href.indexOf("?");
-    return (questionLoc > 0) ? href.substring(questionLoc) : "";
-  }-*/;
+	private native void initWindowCloseHandlerImpl() /*-{
+														$wnd.__gwt_initWindowCloseHandler(
+														$entry(@com.google.gwt.user.client.Window::onClosing()),
+														$entry(@com.google.gwt.user.client.Window::onClosed())
+														);
+														}-*/;
 
-  @Override
-  public void initWindowCloseHandler() {
-    initHandler(Resources.INSTANCE.initWindowCloseHandler().getText(),
-        new ScheduledCommand() {
-          public void execute() {
-            initWindowCloseHandlerImpl();
-          }
-        });
-  }
+	private native void initWindowResizeHandlerImpl() /*-{
+														$wnd.__gwt_initWindowResizeHandler(
+														$entry(@com.google.gwt.user.client.Window::onResize())
+														);
+														}-*/;
 
-  @Override
-  public void initWindowResizeHandler() {
-    initHandler(Resources.INSTANCE.initWindowResizeHandler().getText(),
-        new ScheduledCommand() {
-          public void execute() {
-            initWindowResizeHandlerImpl();
-          }
-        });
-  }
+	private native void initWindowScrollHandlerImpl() /*-{
+														$wnd.__gwt_initWindowScrollHandler(
+														$entry(@com.google.gwt.user.client.Window::onScroll())
+														);
+														}-*/;
 
-  @Override
-  public void initWindowScrollHandler() {
-    initHandler(Resources.INSTANCE.initWindowScrollHandler().getText(),
-        new ScheduledCommand() {
-          public void execute() {
-            initWindowScrollHandlerImpl();
-          }
-        });
-  }
+	/**
+	 * The resources for this implementation.
+	 */
+	public interface Resources extends ClientBundle {
+		Resources INSTANCE = GWT.create(Resources.class);
 
-  /**
-   * IE6 does not allow direct access to event handlers on the parent window,
-   * so we must embed a script in the parent window that will set the event
-   * handlers in the correct context.
-   * 
-   * @param initFunc the string representation of the init function
-   * @param cmd the command to execute the init function
-   */
-  private void initHandler(String initFunc, ScheduledCommand cmd) {
-    if (GWT.isClient()) {
-      // Embed the init script on the page
-      ScriptElement scriptElem = Document.get().createScriptElement(initFunc);
-      Document.get().getBody().appendChild(scriptElem);
-      LocalDom.flush();
-  
-      // Initialize the handler
-      cmd.execute();
-  
-      // Remove the script element
-      Document.get().getBody().removeChild(scriptElem);
-    }
-  }
+		/**
+		 * Contains the function body used to initialize the window close
+		 * handler.
+		 */
+		@Source("initWindowCloseHandler.js")
+		TextResource initWindowCloseHandler();
 
-  private native void initWindowCloseHandlerImpl() /*-{
-    $wnd.__gwt_initWindowCloseHandler(
-      $entry(@com.google.gwt.user.client.Window::onClosing()),
-      $entry(@com.google.gwt.user.client.Window::onClosed())
-    );
-  }-*/;
+		/**
+		 * Contains the function body used to initialize the window resize
+		 * handler.
+		 */
+		@Source("initWindowResizeHandler.js")
+		TextResource initWindowResizeHandler();
 
-  private native void initWindowResizeHandlerImpl() /*-{
-    $wnd.__gwt_initWindowResizeHandler(
-      $entry(@com.google.gwt.user.client.Window::onResize())
-    );
-  }-*/;
-
-  private native void initWindowScrollHandlerImpl() /*-{
-    $wnd.__gwt_initWindowScrollHandler(
-      $entry(@com.google.gwt.user.client.Window::onScroll())
-    );
-  }-*/;
-
+		/**
+		 * Contains the function body used to initialize the window scroll
+		 * handler.
+		 */
+		@Source("initWindowScrollHandler.js")
+		TextResource initWindowScrollHandler();
+	}
 }

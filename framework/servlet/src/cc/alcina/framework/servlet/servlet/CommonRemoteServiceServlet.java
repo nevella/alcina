@@ -78,6 +78,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
@@ -175,6 +176,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_REQUEST";
 
 	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
+
+	public static HttpServletRequest getCrossServletThreadLocalRequest() {
+		return LooseContext.get(
+				CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_REQUEST);
+	}
 
 	public static void unexpectedExceptionBeforePostTransform(
 			TransformPersistenceToken persistenceToken) {
@@ -762,8 +768,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
-	public DomainUpdate waitForTransforms(long lastTransformRequestId)
-			throws PermissionsException {
+	public DomainUpdate
+			waitForTransforms(DomainTransformCommitPosition position)
+					throws PermissionsException {
 		if (!waitForTransformsEnabled()) {
 			throw new PermissionsException();
 		}
@@ -772,8 +779,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		if (clientInstanceId == null) {
 			throw new PermissionsException();
 		}
-		return new TransformCollector().waitForTransforms(
-				lastTransformRequestId, (long) clientInstanceId);
+		return new TransformCollector().waitForTransforms(position,
+				(long) clientInstanceId);
 	}
 
 	private File getDataDumpsFolder() {
@@ -1071,11 +1078,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return msg;
 	}
 
-	public static HttpServletRequest getCrossServletThreadLocalRequest() {
-		return LooseContext.get(
-				CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_REQUEST);
-	}
-
 	public class ActionLauncher<T> {
 		private JobTracker actionTracker;
 
@@ -1189,16 +1191,16 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return GraphProjections.defaultProjections().project(response);
 		}
 
-		protected boolean offerNullSuggestion() {
-			return true;
-		}
+		protected abstract List<T> getResponses(String query,
+				BoundSuggestOracleModel model, String hint);
 
 		protected long getSuggestionLimit() {
 			return 50;
 		}
 
-		protected abstract List<T> getResponses(String query,
-				BoundSuggestOracleModel model, String hint);
+		protected boolean offerNullSuggestion() {
+			return true;
+		}
 	}
 
 	public static class ReuseIUserHolder {

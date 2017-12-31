@@ -80,10 +80,6 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 
 	protected String wrappedContent;
 
-	public void setWrappedContent(String wrappedContent) {
-		this.wrappedContent = wrappedContent;
-	}
-
 	protected String wrappedFooter;
 
 	protected byte[] wrappedBytes;
@@ -96,10 +92,6 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 
 	protected WrapperModel wrapper = createWrapperModel();
 
-	protected WrapperModel createWrapperModel() {
-		return new WrapperModel();
-	}
-
 	protected String xslPath;
 
 	public Object custom;
@@ -111,6 +103,10 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 	// normally xml
 	public String getWrappedContent() {
 		return this.wrappedContent;
+	}
+
+	public void setWrappedContent(String wrappedContent) {
+		this.wrappedContent = wrappedContent;
 	}
 
 	public void wrapContent(D contentDefinition, M publicationContent,
@@ -130,6 +126,14 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		boolean formatRequiresXml = deliveryModel.provideTargetFormat()
 				.requiresXml();
 		transform(xslPath, formatRequiresXml);
+	}
+
+	protected WrapperModel createWrapperModel() {
+		return new WrapperModel();
+	}
+
+	protected Class getWrapperTransformClass() {
+		return getClass();
 	}
 
 	protected void marshallToDoc() throws Exception {
@@ -155,11 +159,7 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		}
 		wrappedContent = transform(trans, wrappingDoc, marker,
 				formatRequiresXml);
-		int debug=3;
-	}
-
-	protected Class getWrapperTransformClass() {
-		return getClass();
+		int debug = 3;
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)

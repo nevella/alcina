@@ -15,9 +15,6 @@
  */
 package com.google.gwt.dom.client;
 
-import com.google.common.base.Preconditions;
-import com.google.gwt.core.client.JavascriptObjectEquivalent;
-
 /**
  * A Document is the root of the HTML hierarchy and holds the entire content.
  * Besides providing access to the hierarchy, it also provides some convenience
@@ -55,6 +52,8 @@ public class Document extends Node implements DomDocument {
 	DocumentLocal local;
 
 	DomDocument remote;
+
+	Element documentElement;
 
 	protected Document() {
 	}
@@ -508,6 +507,11 @@ public class Document extends Node implements DomDocument {
 		return local.createVideoElement();
 	}
 
+	@Override
+	public Document documentFor() {
+		return this;
+	}
+
 	public void enableScrolling(boolean enable) {
 		remote.enableScrolling(enable);
 	}
@@ -547,8 +551,6 @@ public class Document extends Node implements DomDocument {
 	public String getCompatMode() {
 		return remote.getCompatMode();
 	}
-
-	Element documentElement;
 
 	public Element getDocumentElement() {
 		if (documentElement == null) {
@@ -666,8 +668,8 @@ public class Document extends Node implements DomDocument {
 	}
 
 	@Override
-	protected void putRemote(NodeRemote remote,boolean resolved) {
-		throw new UnsupportedOperationException();
+	public Node nodeFor() {
+		return this;
 	}
 
 	public void removeFromParent() {
@@ -690,14 +692,13 @@ public class Document extends Node implements DomDocument {
 		remote.setTitle(title);
 	}
 
-	@Override
-	public Node nodeFor() {
-		return this;
+	public DocumentRemote typedRemote() {
+		return (DocumentRemote) remote;
 	}
 
 	@Override
-	public Document documentFor() {
-		return this;
+	protected boolean linkedToRemote() {
+		return true;
 	}
 
 	@Override
@@ -706,17 +707,12 @@ public class Document extends Node implements DomDocument {
 	}
 
 	@Override
-	protected DomDocument remote() {
-		return remote;
+	protected void putRemote(NodeRemote remote, boolean resolved) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	protected boolean linkedToRemote() {
-		return true;
+	protected DomDocument remote() {
+		return remote;
 	}
-
-	public DocumentRemote typedRemote() {
-		return (DocumentRemote) remote;
-	}
-
 }

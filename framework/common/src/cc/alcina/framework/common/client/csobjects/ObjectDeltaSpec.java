@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
@@ -19,13 +18,11 @@ import java.io.Serializable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ObjectRef;
 
-
 /**
  *
  * @author Nick Reddel
  */
-
- public class ObjectDeltaSpec implements Serializable {
+public class ObjectDeltaSpec implements Serializable {
 	private ObjectRef objectRef;
 
 	private String propertyName;
@@ -42,12 +39,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.ObjectRef;
 		return this.objectRef;
 	}
 
-	public void setObjectRef(ObjectRef objectRef) {
-		this.objectRef = objectRef;
-	}
-
 	public String getPropertyName() {
 		return this.propertyName;
+	}
+
+	public void setObjectRef(ObjectRef objectRef) {
+		this.objectRef = objectRef;
 	}
 
 	public void setPropertyName(String propertyName) {

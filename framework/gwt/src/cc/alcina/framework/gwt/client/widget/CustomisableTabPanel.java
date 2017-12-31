@@ -46,10 +46,9 @@ import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
  */
 @SuppressWarnings("deprecation")
 public class CustomisableTabPanel extends Composite implements TabListener,
-		SourcesTabEvents, HasWidgets, HasAnimation, IndexedPanel,
-		HasLayoutInfo, HasBeforeSelectionHandlers<Integer>,
-		HasSelectionHandlers<Integer>, BeforeSelectionHandler<Integer>,
-		SelectionHandler<Integer> {
+		SourcesTabEvents, HasWidgets, HasAnimation, IndexedPanel, HasLayoutInfo,
+		HasBeforeSelectionHandlers<Integer>, HasSelectionHandlers<Integer>,
+		BeforeSelectionHandler<Integer>, SelectionHandler<Integer> {
 	private UnmodifiableTabBar tabBar = new UnmodifiableTabBar();
 
 	private TabbedDeckPanel deck = new TabbedDeckPanel(tabBar);
@@ -122,13 +121,13 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 		insert(w, tabWidget, getWidgetCount());
 	}
 
-	public HandlerRegistration addBeforeSelectionHandler(
-			BeforeSelectionHandler<Integer> handler) {
+	public HandlerRegistration
+			addBeforeSelectionHandler(BeforeSelectionHandler<Integer> handler) {
 		return addHandler(handler, BeforeSelectionEvent.getType());
 	}
 
-	public HandlerRegistration addSelectionHandler(
-			SelectionHandler<Integer> handler) {
+	public HandlerRegistration
+			addSelectionHandler(SelectionHandler<Integer> handler) {
 		return addHandler(handler, SelectionEvent.getType());
 	}
 
@@ -150,17 +149,6 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 	}
 
 	/**
-	 * Create a {@link SimplePanel} that will wrap the contents in a tab.
-	 * Subclasses can use this method to wrap tabs in decorator panels.
-	 * 
-	 * @return a {@link SimplePanel} to wrap the tab contents, or null to leave
-	 *         tabs unwrapped
-	 */
-	protected SimplePanel createTabTextWrapper() {
-		return null;
-	}
-
-	/**
 	 * Gets the deck panel within this tab panel. Adding or removing Widgets
 	 * from the DeckPanel is not supported and will throw
 	 * UnsupportedOperationExceptions.
@@ -169,6 +157,15 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 	 */
 	public DeckPanel getDeckPanel() {
 		return deck;
+	}
+
+	public LayoutInfo getLayoutInfo() {
+		return new LayoutInfo() {
+			@Override
+			public Iterator<Widget> getLayoutWidgets() {
+				return panel.iterator();
+			}
+		};
 	}
 
 	/**
@@ -254,6 +251,10 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 		return deck.iterator();
 	}
 
+	public void onBeforeSelection(BeforeSelectionEvent<Integer> event) {
+		fireEvent(event);
+	}
+
 	/**
 	 * @deprecated Use {@link BeforeSelectionHandler#onBeforeSelection} instead
 	 */
@@ -264,6 +265,12 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 		return event == null || !event.isCanceled();
 	}
 
+	public void onSelection(SelectionEvent<Integer> event) {
+		int tabIndex = event.getSelectedItem();
+		deck.showWidget(tabIndex);
+		fireEvent(event);
+	}
+
 	/**
 	 * @deprecated Use {@link SelectionHandler#onSelection} instead
 	 */
@@ -271,24 +278,6 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 	public void onTabSelected(SourcesTabEvents sender, int tabIndex) {
 		deck.showWidget(tabIndex);
 		SelectionEvent.fire(this, tabIndex);
-	}
-
-	/**
-	 * <b>Affected Elements:</b>
-	 * <ul>
-	 * <li>-bar = The tab bar.</li>
-	 * <li>-bar-tab# = The element containing the content of the tab itself.</li>
-	 * <li>-bar-tab-wrapper# = The cell containing the tab at the index.</li>
-	 * <li>-bottom = The panel beneath the tab bar.</li>
-	 * </ul>
-	 * 
-	 * @see UIObject#onEnsureDebugId(String)
-	 */
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		super.onEnsureDebugId(baseID);
-		tabBar.ensureDebugId(baseID + "-bar");
-		deck.ensureDebugId(baseID + "-bottom");
 	}
 
 	public boolean remove(int index) {
@@ -338,6 +327,51 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 	}
 
 	/**
+	 * Create a {@link SimplePanel} that will wrap the contents in a tab.
+	 * Subclasses can use this method to wrap tabs in decorator panels.
+	 * 
+	 * @return a {@link SimplePanel} to wrap the tab contents, or null to leave
+	 *         tabs unwrapped
+	 */
+	protected SimplePanel createTabTextWrapper() {
+		return null;
+	}
+
+	/**
+	 * <b>Affected Elements:</b>
+	 * <ul>
+	 * <li>-bar = The tab bar.</li>
+	 * <li>-bar-tab# = The element containing the content of the tab itself.
+	 * </li>
+	 * <li>-bar-tab-wrapper# = The cell containing the tab at the index.</li>
+	 * <li>-bottom = The panel beneath the tab bar.</li>
+	 * </ul>
+	 * 
+	 * @see UIObject#onEnsureDebugId(String)
+	 */
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		super.onEnsureDebugId(baseID);
+		tabBar.ensureDebugId(baseID + "-bar");
+		deck.ensureDebugId(baseID + "-bottom");
+	}
+
+	public static class ResizableDeckPanel extends DeckPanel
+			implements HasLayoutInfo {
+		public LayoutInfo getLayoutInfo() {
+			return new LayoutInfo() {
+				public Iterator<Widget> getLayoutWidgets() {
+					return ResizableDeckPanel.this.iterator();
+				}
+
+				public boolean to100percentOfAvailableHeight() {
+					return true;
+				}
+			};
+		}
+	}
+
+	/**
 	 * This extension of DeckPanel overrides the public mutator methods to
 	 * prevent external callers from adding to the state of the DeckPanel.
 	 * <p>
@@ -375,8 +409,20 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 					"Use TabPanel.insert() to alter the DeckPanel");
 		}
 
-		protected void insertProtected(Widget w, String tabText,
-				boolean asHTML, int beforeIndex) {
+		@Override
+		public boolean remove(Widget w) {
+			// Removal of items from the TabBar is delegated to the DeckPanel
+			// to ensure consistency
+			int idx = getWidgetIndex(w);
+			if (idx != -1) {
+				tabBar.removeTabProtected(idx);
+				return super.remove(w);
+			}
+			return false;
+		}
+
+		protected void insertProtected(Widget w, String tabText, boolean asHTML,
+				int beforeIndex) {
 			// Check to see if the TabPanel already contains the Widget. If so,
 			// remove it and see if we need to shift the position to the left.
 			int idx = getWidgetIndex(w);
@@ -404,18 +450,6 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 			tabBar.insertTabProtected(tabWidget, beforeIndex);
 			super.insert(w, beforeIndex);
 		}
-
-		@Override
-		public boolean remove(Widget w) {
-			// Removal of items from the TabBar is delegated to the DeckPanel
-			// to ensure consistency
-			int idx = getWidgetIndex(w);
-			if (idx != -1) {
-				tabBar.removeTabProtected(idx);
-				return super.remove(w);
-			}
-			return false;
-		}
 	}
 
 	/**
@@ -425,11 +459,6 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 	private class UnmodifiableTabBar extends FlowTabBar {
 		public UnmodifiableTabBar() {
 			super();
-		}
-
-		@Override
-		protected SimplePanel createTabTextWrapper() {
-			return CustomisableTabPanel.this.createTabTextWrapper();
 		}
 
 		@Override
@@ -466,39 +495,10 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 		public void removeTabProtected(int index) {
 			super.removeTab(index);
 		}
-	}
 
-	public static class ResizableDeckPanel extends DeckPanel implements
-			HasLayoutInfo {
-		public LayoutInfo getLayoutInfo() {
-			return new LayoutInfo() {
-				public boolean to100percentOfAvailableHeight() {
-					return true;
-				}
-
-				public Iterator<Widget> getLayoutWidgets() {
-					return ResizableDeckPanel.this.iterator();
-				}
-			};
+		@Override
+		protected SimplePanel createTabTextWrapper() {
+			return CustomisableTabPanel.this.createTabTextWrapper();
 		}
-	}
-
-	public LayoutInfo getLayoutInfo() {
-		return new LayoutInfo() {
-			@Override
-			public Iterator<Widget> getLayoutWidgets() {
-				return panel.iterator();
-			}
-		};
-	}
-
-	public void onBeforeSelection(BeforeSelectionEvent<Integer> event) {
-		fireEvent(event);
-	}
-
-	public void onSelection(SelectionEvent<Integer> event) {
-		int tabIndex = event.getSelectedItem();
-		deck.showWidget(tabIndex);
-		fireEvent(event);
 	}
 }

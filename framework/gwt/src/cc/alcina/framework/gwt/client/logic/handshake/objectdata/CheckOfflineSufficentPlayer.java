@@ -18,17 +18,18 @@ import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
  */
 @RegistryLocation(registryPoint = CheckOfflineSufficentPlayer.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
-public class CheckOfflineSufficentPlayer extends
-		RunnablePlayer<LoadObjectDataState> {
+public class CheckOfflineSufficentPlayer
+		extends RunnablePlayer<LoadObjectDataState> {
+	HandshakeConsortModel handshakeConsortModel = Registry
+			.impl(HandshakeConsortModel.class);
+
 	public CheckOfflineSufficentPlayer() {
-		addRequires(LoadObjectDataState.LOADED_DELTA_APPLICATIONS_FROM_LOCAL_STORAGE);
+		addRequires(
+				LoadObjectDataState.LOADED_DELTA_APPLICATIONS_FROM_LOCAL_STORAGE);
 		addProvides(LoadObjectDataState.DELTA_STORE_MERGED_IF_NECESSARY);
 		addProvides(LoadObjectDataState.OBJECT_DATA_LOADED);
 		addProvides(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
 	}
-
-	HandshakeConsortModel handshakeConsortModel = Registry
-			.impl(HandshakeConsortModel.class);
 
 	@Override
 	public void run() {

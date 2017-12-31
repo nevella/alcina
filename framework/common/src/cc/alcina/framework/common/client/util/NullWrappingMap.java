@@ -5,26 +5,14 @@ import java.util.Map;
 import java.util.Set;
 
 public class NullWrappingMap<K, V> implements Map<K, V> {
-	private static class NullWrapper<V> {
-		private V value;
-
-		public NullWrapper(V value) {
-			this.value = value;
-		}
-	}
-
 	private Map<K, NullWrapper<V>> delegate;
 
 	public NullWrappingMap(Map<K, NullWrapper<V>> delegate) {
 		this.delegate = delegate;
 	}
 
-	public int size() {
-		return this.delegate.size();
-	}
-
-	public boolean isEmpty() {
-		return this.delegate.isEmpty();
+	public void clear() {
+		this.delegate.clear();
 	}
 
 	public boolean containsKey(Object key) {
@@ -35,26 +23,31 @@ public class NullWrappingMap<K, V> implements Map<K, V> {
 		throw new UnsupportedOperationException();
 	}
 
-	public void clear() {
-		this.delegate.clear();
-	}
-
-	public Set<K> keySet() {
-		return this.delegate.keySet();
+	@Override
+	public Set<java.util.Map.Entry<K, V>> entrySet() {
+		throw new UnsupportedOperationException();
 	}
 
 	public boolean equals(Object o) {
 		return this.delegate.equals(o);
 	}
 
-	public int hashCode() {
-		return this.delegate.hashCode();
-	}
-
 	@Override
 	public V get(Object key) {
 		NullWrapper<V> wrapper = delegate.get(key);
 		return wrapper.value;
+	}
+
+	public int hashCode() {
+		return this.delegate.hashCode();
+	}
+
+	public boolean isEmpty() {
+		return this.delegate.isEmpty();
+	}
+
+	public Set<K> keySet() {
+		return this.delegate.keySet();
 	}
 
 	@Override
@@ -64,14 +57,18 @@ public class NullWrappingMap<K, V> implements Map<K, V> {
 	}
 
 	@Override
+	public void putAll(Map<? extends K, ? extends V> m) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public V remove(Object key) {
 		delegate.remove(key);
 		return null;
 	}
 
-	@Override
-	public void putAll(Map<? extends K, ? extends V> m) {
-		throw new UnsupportedOperationException();
+	public int size() {
+		return this.delegate.size();
 	}
 
 	@Override
@@ -79,8 +76,11 @@ public class NullWrappingMap<K, V> implements Map<K, V> {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public Set<java.util.Map.Entry<K, V>> entrySet() {
-		throw new UnsupportedOperationException();
+	private static class NullWrapper<V> {
+		private V value;
+
+		public NullWrapper(V value) {
+			this.value = value;
+		}
 	}
 }

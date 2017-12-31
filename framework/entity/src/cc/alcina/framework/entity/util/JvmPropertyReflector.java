@@ -16,20 +16,19 @@ public class JvmPropertyReflector implements PropertyReflector {
 	public JvmPropertyReflector(PropertyDescriptor pd) {
 		propertyName = pd.getName();
 		propertyType = pd.getPropertyType();
-		readMethodDeclaringClass = pd.getReadMethod() == null ? null : pd
-				.getReadMethod().getDeclaringClass();
+		readMethodDeclaringClass = pd.getReadMethod() == null ? null
+				: pd.getReadMethod().getDeclaringClass();
 	}
 
 	@Override
-	public Object getPropertyValue(Object bean) {
-		return Reflections.propertyAccessor()
-				.getPropertyValue(bean, getPropertyName());
+	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
+		return Reflections.propertyAccessor().getAnnotationForProperty(
+				readMethodDeclaringClass, annotationClass, getPropertyName());
 	}
 
 	@Override
-	public void setPropertyValue(Object bean, Object newValue) {
-		Reflections.propertyAccessor()
-				.setPropertyValue(bean, getPropertyName(), newValue);
+	public String getPropertyName() {
+		return propertyName;
 	}
 
 	@Override
@@ -38,14 +37,14 @@ public class JvmPropertyReflector implements PropertyReflector {
 	}
 
 	@Override
-	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
-		return Reflections.propertyAccessor()
-				.getAnnotationForProperty(readMethodDeclaringClass,
-						annotationClass, getPropertyName());
+	public Object getPropertyValue(Object bean) {
+		return Reflections.propertyAccessor().getPropertyValue(bean,
+				getPropertyName());
 	}
 
 	@Override
-	public String getPropertyName() {
-		return propertyName;
+	public void setPropertyValue(Object bean, Object newValue) {
+		Reflections.propertyAccessor().setPropertyValue(bean, getPropertyName(),
+				newValue);
 	}
 }

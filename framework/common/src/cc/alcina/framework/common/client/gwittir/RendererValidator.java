@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.gwittir;
 
 import com.totsp.gwittir.client.ui.Renderer;
@@ -22,14 +21,12 @@ import com.totsp.gwittir.client.validator.Validator;
  *
  * @author Nick Reddel
  */
-
- public class RendererValidator implements Validator {
+public class RendererValidator implements Validator {
 	private final Renderer renderer;
 
 	public RendererValidator(Renderer renderer) {
 		this.renderer = renderer;
 	}
-
 
 	public Object validate(Object value) throws ValidationException {
 		return renderer.render(value);

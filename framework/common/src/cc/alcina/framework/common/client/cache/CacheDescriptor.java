@@ -20,6 +20,12 @@ public abstract class CacheDescriptor {
 
 	public List<ComplexFilter> complexFilters = new ArrayList<>();
 
+	private CachingMap<Class, List<PreProvideTask>> perClassTasks = new CachingMap<Class, List<PreProvideTask>>(
+			clazz -> preProvideTasks.stream()
+					.filter(task -> task.forClazz() == null
+							|| task.forClazz() == clazz)
+					.collect(Collectors.toList()));
+
 	public CacheDescriptor() {
 	}
 
@@ -49,6 +55,11 @@ public abstract class CacheDescriptor {
 
 	public abstract Class<? extends IUser> getIUserClass();
 
+	public synchronized <T> List<PreProvideTask<T>>
+			getPreProvideTasks(Class<T> clazz) {
+		return (List) perClassTasks.get(clazz);
+	}
+
 	public boolean joinPropertyCached(Class clazz) {
 		return perClass.containsKey(clazz);
 	}
@@ -70,16 +81,5 @@ public abstract class CacheDescriptor {
 		public void writeLockedCleanup();
 
 		Class<T> forClazz();
-	}
-
-	private CachingMap<Class, List<PreProvideTask>> perClassTasks = new CachingMap<Class, List<PreProvideTask>>(
-			clazz -> preProvideTasks.stream()
-					.filter(task -> task.forClazz() == null
-							|| task.forClazz() == clazz)
-					.collect(Collectors.toList()));
-
-	public synchronized <T> List<PreProvideTask<T>>
-			getPreProvideTasks(Class<T> clazz) {
-		return (List) perClassTasks.get(clazz);
 	}
 }

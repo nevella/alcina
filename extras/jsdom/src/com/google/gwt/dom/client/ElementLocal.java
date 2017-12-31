@@ -1,6 +1,5 @@
 package com.google.gwt.dom.client;
 
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 
@@ -9,10 +8,8 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
-import com.google.gwt.user.client.LocalDomDebug;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class ElementLocal extends NodeLocal
@@ -27,6 +24,8 @@ public class ElementLocal extends NodeLocal
 
 	protected Map<String, String> attributes = LocalDom.collections()
 			.createStringMap();
+
+	boolean requiresSync;
 
 	ElementLocal(DocumentLocal document_Jvm, String tagName) {
 		ownerDocument = document_Jvm;
@@ -244,6 +243,13 @@ public class ElementLocal extends NodeLocal
 	}
 
 	@Override
+	public String getOuterHtml() {
+		UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder();
+		appendOuterHtml(builder);
+		return builder.toSafeHtml().asString();
+	}
+
+	@Override
 	public final Element getPreviousSiblingElement() {
 		boolean seen = false;
 		for (int idx = parentNode.children.size() - 1; idx >= 0; idx--) {
@@ -415,8 +421,6 @@ public class ElementLocal extends NodeLocal
 			}
 		}
 	}
-
-	boolean requiresSync;
 
 	@Override
 	public final void setInnerSafeHtml(SafeHtml html) {
@@ -651,12 +655,5 @@ public class ElementLocal extends NodeLocal
 
 	enum AttrParseState {
 		START, NAME, EQ, VALUE
-	}
-
-	@Override
-	public String getOuterHtml() {
-		UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder();
-		appendOuterHtml(builder);
-		return builder.toSafeHtml().asString();
 	}
 }

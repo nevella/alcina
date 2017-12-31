@@ -38,8 +38,60 @@ import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 
 /**
  */
-public abstract class ClientBase implements EntryPoint, ClosingHandler,
-		CloseHandler<Window> {
+public abstract class ClientBase
+		implements EntryPoint, ClosingHandler, CloseHandler<Window> {
+	private static boolean isFirstHistoryToken = true;
+
+	private static String initialHistoryToken = "";
+
+	public static ClientInstance getClientInstance() {
+		HandshakeConsortModel consortModel = Registry
+				.implOrNull(HandshakeConsortModel.class);
+		return consortModel == null ? null : consortModel.getClientInstance();
+	}
+
+	public static CommonRemoteServiceAsync
+			getCommonRemoteServiceAsyncInstance() {
+		return Registry.impl(CommonRemoteServiceAsync.class);
+	}
+
+	public static RemoteServiceProvider<? extends CommonRemoteServiceAsync>
+			getCommonRemoteServiceAsyncProvider() {
+		return Registry.impl(CommonRemoteServiceAsyncProvider.class);
+	}
+
+	public static GeneralProperties getGeneralProperties() {
+		return Registry.implOrNull(GeneralProperties.class);
+	}
+
+	public static boolean isFirstHistoryToken() {
+		return isFirstHistoryToken;
+	}
+
+	private boolean windowClosing;
+
+	private HandlerRegistration isFirstHistoryTokenHandlerRegistration;
+
+	public ClientBase() {
+		// GWT.log("client base const.");
+		if (GWT.isClient()) {
+			initInitialTokenHandler();
+			Window.addCloseHandler(this);
+		}
+	}
+
+	public boolean isUsesRootLayoutPanel() {
+		return false;
+	}
+
+	public boolean isWindowClosing() {
+		return this.windowClosing;
+	}
+
+	public void onClose(CloseEvent<Window> event) {
+		// GWT.log("window closing");
+	}
+
 	public void onWindowClosing(ClosingEvent event) {
 		windowClosing = true;
 		CommitToStorageTransformListener storage = Registry
@@ -49,27 +101,18 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 				"commit-on-close-saving-final-changes-warning",
 				"Please press 'cancel' to save recent changes");
 		storage.flush();
-		if (storage.getCurrentState() == CommitToStorageTransformListener.COMMITTING
+		if (storage
+				.getCurrentState() == CommitToStorageTransformListener.COMMITTING
 				&& PermissionsManager.isOnline()) {
 			event.setMessage(msg);
 		}
 		windowClosing = false;
 	}
 
-	private static boolean isFirstHistoryToken = true;
-
-	private static String initialHistoryToken = "";
-
-	public ClientBase() {
-//		GWT.log("client base const.");
-		if (GWT.isClient()) {
-			initInitialTokenHandler();
-			Window.addCloseHandler(this);
-		}
-	}
 	protected void initInitialTokenHandler() {
 		initInitialTokenHandler0();
 	}
+
 	protected void initInitialTokenHandler0() {
 		initialHistoryToken = History.getToken();
 		isFirstHistoryTokenHandlerRegistration = History
@@ -87,43 +130,5 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 						}
 					}
 				});
-	}
-
-	private boolean windowClosing;
-
-	private HandlerRegistration isFirstHistoryTokenHandlerRegistration;
-
-	public void onClose(CloseEvent<Window> event) {
-//		GWT.log("window closing");
-	}
-
-	public boolean isWindowClosing() {
-		return this.windowClosing;
-	}
-
-	public boolean isUsesRootLayoutPanel() {
-		return false;
-	}
-
-	public static CommonRemoteServiceAsync getCommonRemoteServiceAsyncInstance() {
-		return Registry.impl(CommonRemoteServiceAsync.class);
-	}
-
-	public static RemoteServiceProvider<? extends CommonRemoteServiceAsync> getCommonRemoteServiceAsyncProvider() {
-		return Registry.impl(CommonRemoteServiceAsyncProvider.class);
-	}
-
-	public static ClientInstance getClientInstance() {
-		HandshakeConsortModel consortModel = Registry
-				.implOrNull(HandshakeConsortModel.class);
-		return consortModel == null ? null : consortModel.getClientInstance();
-	}
-
-	public static GeneralProperties getGeneralProperties() {
-		return Registry.implOrNull(GeneralProperties.class);
-	}
-
-	public static boolean isFirstHistoryToken() {
-		return isFirstHistoryToken;
 	}
 }

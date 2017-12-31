@@ -16,8 +16,8 @@ import cc.alcina.framework.gwt.client.logic.handshake.SetupAfterObjectsPlayer;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.persistence.client.DatabaseStatsObserver;
 
-public abstract class StandardWithPersistenceSetupAfterObjectsPlayer extends
-		SetupAfterObjectsPlayer {
+public abstract class StandardWithPersistenceSetupAfterObjectsPlayer
+		extends SetupAfterObjectsPlayer {
 	private SaveToLocalStorageConsort saveConsort;
 
 	DatabaseStatsObserver statsObserver = Registry
@@ -26,9 +26,8 @@ public abstract class StandardWithPersistenceSetupAfterObjectsPlayer extends
 	protected AsyncCallback reportListener = new AsyncCallbackStd() {
 		@Override
 		public void onSuccess(Object result) {
-			AlcinaTopics
-					.logCategorisedMessage(new StringPair(
-							AlcinaTopics.LOG_CATEGORY_MESSAGE,
+			AlcinaTopics.logCategorisedMessage(
+					new StringPair(AlcinaTopics.LOG_CATEGORY_MESSAGE,
 							"After object serialization:\n"
 									+ statsObserver.getReport()));
 			statsObserver.installPersistenceListeners();

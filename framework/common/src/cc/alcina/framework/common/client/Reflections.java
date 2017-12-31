@@ -11,7 +11,41 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 public class Reflections {
 	private static Reflections theInstance;
 
-	private BeanDescriptorProvider beanDescriptorProvider;
+	public static BeanDescriptorProvider beanDescriptorProvider() {
+		return get().beanDescriptorProvider;
+	}
+
+	public static ClassLookup classLookup() {
+		return get().classLookup;
+	}
+
+	public static ObjectLookup objectLookup() {
+		return get().objectLookup;
+	}
+
+	public static PropertyAccessor propertyAccessor() {
+		return get().propertyAccessor;
+	}
+
+	public static void registerBeanDescriptorProvider(
+			BeanDescriptorProvider beanDescriptorProvider) {
+		if (beanDescriptorProvider != null) {
+			int debug = 3;
+		}
+		get().beanDescriptorProvider = beanDescriptorProvider;
+	}
+
+	public static void registerClassLookup(ClassLookup cl) {
+		get().classLookup = cl;
+	}
+
+	public static void registerObjectLookup(ObjectLookup ol) {
+		get().objectLookup = ol;
+	}
+
+	public static void registerPropertyAccessor(PropertyAccessor accessor) {
+		get().propertyAccessor = accessor;
+	}
 
 	private static Reflections get() {
 		if (theInstance == null) {
@@ -20,49 +54,15 @@ public class Reflections {
 		return theInstance;
 	}
 
-	public void appShutdown() {
-		theInstance = null;
-	}
+	private BeanDescriptorProvider beanDescriptorProvider;
 
 	private PropertyAccessor propertyAccessor;
 
-	public static void registerPropertyAccessor(PropertyAccessor accessor) {
-		get().propertyAccessor = accessor;
-	}
-
-	public static void registerBeanDescriptorProvider(
-			BeanDescriptorProvider beanDescriptorProvider) {
-		if(beanDescriptorProvider!=null){
-			int debug = 3;
-		}
-		get().beanDescriptorProvider = beanDescriptorProvider;
-	}
-
-	public static PropertyAccessor propertyAccessor() {
-		return get().propertyAccessor;
-	}
-
 	private ObjectLookup objectLookup;
-
-	public static void registerObjectLookup(ObjectLookup ol) {
-		get().objectLookup = ol;
-	}
-
-	public static ObjectLookup objectLookup() {
-		return get().objectLookup;
-	}
 
 	private ClassLookup classLookup;
 
-	public static void registerClassLookup(ClassLookup cl) {
-		get().classLookup = cl;
-	}
-
-	public static ClassLookup classLookup() {
-		return get().classLookup;
-	}
-
-	public static BeanDescriptorProvider beanDescriptorProvider() {
-		return get().beanDescriptorProvider;
+	public void appShutdown() {
+		theInstance = null;
 	}
 }

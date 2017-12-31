@@ -34,49 +34,50 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
  * @see GWTMockUtilities
  */
 public class GWTDummyClientBridge extends GWTBridge {
-  private static final Logger logger = Logger.getLogger(GWTDummyClientBridge.class.getName());
+	private static final Logger logger = Logger
+			.getLogger(GWTDummyClientBridge.class.getName());
 
-  /**
-   * Returns null.
-   */
-  @Override
-  public <T> T create(Class<?> classLiteral) {
-    return null;
-  }
-
-  /**
-   * Returns the current version of GWT ({@link About#getGwtVersionNum()}).
-   */
-  @Override
-  public String getVersion() {
-    return About.getGwtVersionNum();
-  }
-
-  /**
-   * Returns true.
-   */
-  @Override
-  public boolean isClient() {
-    return true;
-  }
-
-  /**
-   * Logs the message and throwable to the standard logger, with level {@link
-   * Level#SEVERE}.
-   */
-  @Override
-  public void log(String message, Throwable e) {
-    logger.log(Level.SEVERE, message, e);
-  }
-  public void install(){
-	  try {
-		Method m = GWT.class.getDeclaredMethod("setBridge", GWTBridge.class);
-		m.setAccessible(true);
-		m.invoke(null, this);
-	} catch (Exception e) {
-		throw new WrappedRuntimeException(e);
+	/**
+	 * Returns null.
+	 */
+	@Override
+	public <T> T create(Class<?> classLiteral) {
+		return null;
 	}
-	
-  }
-  
+
+	/**
+	 * Returns the current version of GWT ({@link About#getGwtVersionNum()}).
+	 */
+	@Override
+	public String getVersion() {
+		return About.getGwtVersionNum();
+	}
+
+	public void install() {
+		try {
+			Method m = GWT.class.getDeclaredMethod("setBridge",
+					GWTBridge.class);
+			m.setAccessible(true);
+			m.invoke(null, this);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	/**
+	 * Returns true.
+	 */
+	@Override
+	public boolean isClient() {
+		return true;
+	}
+
+	/**
+	 * Logs the message and throwable to the standard logger, with level
+	 * {@link Level#SEVERE}.
+	 */
+	@Override
+	public void log(String message, Throwable e) {
+		logger.log(Level.SEVERE, message, e);
+	}
 }

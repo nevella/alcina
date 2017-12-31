@@ -117,6 +117,12 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 		return sw.toString();
 	}
 
+	private String[] getAllPublicFiles(ModuleDef module) {
+		module.refresh();
+		return module.getPublicResourceOracle().getPathNames()
+				.toArray(Empty.STRINGS);
+	}
+
 	private String replaceWithDataUrls(ResourceContext context, String toWrite)
 			throws Exception {
 		Pattern urlPat = Pattern
@@ -193,12 +199,6 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 			}
 		}
 		return toWrite;
-	}
-
-	private String[] getAllPublicFiles(ModuleDef module) {
-		module.refresh();
-		return module.getPublicResourceOracle().getPathNames()
-				.toArray(Empty.STRINGS);
 	}
 
 	/**

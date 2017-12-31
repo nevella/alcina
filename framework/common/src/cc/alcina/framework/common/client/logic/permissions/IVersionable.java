@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.permissions;
 
 import java.util.Date;
@@ -22,23 +21,20 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
  *
  * @author Nick Reddel
  */
-
- public interface IVersionable extends HasIdAndLocalId{
-	
-
-	public Date getLastModificationDate();
-
-	public void setLastModificationDate(Date lastModificationDate);
-
-	public IUser getLastModificationUser();
-
-	public void setLastModificationUser(IUser lastModificationUser);
-
+public interface IVersionable extends HasIdAndLocalId {
 	public Date getCreationDate();
-
-	public void setCreationDate(Date creationDate);
 
 	public IUser getCreationUser();
 
+	public Date getLastModificationDate();
+
+	public IUser getLastModificationUser();
+
+	public void setCreationDate(Date creationDate);
+
 	public void setCreationUser(IUser creationUser);
+
+	public void setLastModificationDate(Date lastModificationDate);
+
+	public void setLastModificationUser(IUser lastModificationUser);
 }

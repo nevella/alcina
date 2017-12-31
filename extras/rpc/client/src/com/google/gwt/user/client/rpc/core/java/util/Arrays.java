@@ -27,71 +27,69 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  * Dummy class for nesting the custom serializer.
  */
 public final class Arrays {
+	/**
+	 * Custom field serializer for {@link java.util.Arrays.ArrayList}.
+	 */
+	@SuppressWarnings("rawtypes")
+	public static final class ArrayList_CustomFieldSerializer
+			extends CustomFieldSerializer<List> {
+		public static String concreteType() {
+			return java.util.Arrays.asList().getClass().getName();
+		}
 
-  /**
-   * Custom field serializer for {@link java.util.Arrays.ArrayList}.
-   */
-  @SuppressWarnings("rawtypes")
-  public static final class ArrayList_CustomFieldSerializer extends
-      CustomFieldSerializer<List> {
+		/*
+		 * Note: the reason this implementation differs from that of a standard
+		 * List (which serializes a number and then each element) is the
+		 * requirement that the underlying array retain its correct type across
+		 * the wire. This gives toArray() results the correct type, and can
+		 * generate internal ArrayStoreExceptions.
+		 */
+		public static void deserialize(SerializationStreamReader streamReader,
+				List<?> instance) throws SerializationException {
+			// Handled in instantiate.
+		}
 
-    public static String concreteType() {
-      return java.util.Arrays.asList().getClass().getName();
-    }
+		public static List<?>
+				instantiate(SerializationStreamReader streamReader)
+						throws SerializationException {
+			Object[] array = (Object[]) streamReader.readObject();
+			return java.util.Arrays.asList(array);
+		}
 
-    /*
-     * Note: the reason this implementation differs from that of a standard List
-     * (which serializes a number and then each element) is the requirement that
-     * the underlying array retain its correct type across the wire. This gives
-     * toArray() results the correct type, and can generate internal
-     * ArrayStoreExceptions.
-     */
-    
-    public static void deserialize(SerializationStreamReader streamReader,
-        List<?> instance) throws SerializationException {
-      // Handled in instantiate.
-    }
+		public static void serialize(SerializationStreamWriter streamWriter,
+				List<?> instance) throws SerializationException {
+			Object[] array;
+			if (GWT.isScript()) {
+				// Violator pattern.
+				array = ArraysViolator.getArray0(instance);
+			} else {
+				// Clone the underlying array.
+				array = instance.toArray();
+			}
+			streamWriter.writeObject(array);
+		}
 
-    public static List<?> instantiate(SerializationStreamReader streamReader)
-        throws SerializationException {
-      Object[] array = (Object[]) streamReader.readObject();
-      return java.util.Arrays.asList(array);
-    }
+		@Override
+		public void deserializeInstance(SerializationStreamReader streamReader,
+				List instance) throws SerializationException {
+			deserialize(streamReader, instance);
+		}
 
-    public static void serialize(SerializationStreamWriter streamWriter,
-        List<?> instance) throws SerializationException {
-      Object[] array;
-      if (GWT.isScript()) {
-        // Violator pattern.
-        array = ArraysViolator.getArray0(instance);
-      } else {
-        // Clone the underlying array.
-        array = instance.toArray();
-      }
-      streamWriter.writeObject(array);
-    }
+		@Override
+		public boolean hasCustomInstantiateInstance() {
+			return true;
+		}
 
-    @Override
-    public void deserializeInstance(SerializationStreamReader streamReader,
-        List instance) throws SerializationException {
-      deserialize(streamReader, instance);
-    }
+		@Override
+		public List instantiateInstance(SerializationStreamReader streamReader)
+				throws SerializationException {
+			return instantiate(streamReader);
+		}
 
-    @Override
-    public boolean hasCustomInstantiateInstance() {
-      return true;
-    }
-
-    @Override
-    public List instantiateInstance(SerializationStreamReader streamReader)
-        throws SerializationException {
-      return instantiate(streamReader);
-    }
-
-    @Override
-    public void serializeInstance(SerializationStreamWriter streamWriter,
-        List instance) throws SerializationException {
-      serialize(streamWriter, instance);
-    }
-  }
+		@Override
+		public void serializeInstance(SerializationStreamWriter streamWriter,
+				List instance) throws SerializationException {
+			serialize(streamWriter, instance);
+		}
+	}
 }

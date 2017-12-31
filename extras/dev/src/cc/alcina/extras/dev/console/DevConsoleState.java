@@ -12,15 +12,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 public class DevConsoleState implements Serializable {
 	public List<ILogRecord> logRecords;
 
-	public ILogRecord logRecordById(long id) {
-		for (ILogRecord l : logRecords) {
-			if (l.getId() == id) {
-				return l;
-			}
-		}
-		return null;
-	}
-
 	private Map<Long, IUser> users = new LinkedHashMap<Long, IUser>();
 
 	public IUser ensureUser(long id, String username) {
@@ -35,5 +26,14 @@ public class DevConsoleState implements Serializable {
 
 	public IUser getUser(Long userId) {
 		return users.get(userId);
+	}
+
+	public ILogRecord logRecordById(long id) {
+		for (ILogRecord l : logRecords) {
+			if (l.getId() == id) {
+				return l;
+			}
+		}
+		return null;
 	}
 }

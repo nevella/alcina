@@ -43,24 +43,45 @@ public class AnnotationUtils {
 	private static UnsortedMultikeyMap<Annotation> classNameAnnotationMap = new UnsortedMultikeyMap<>(
 			2);
 
-	public static boolean hasAnnotationNamed(Class clazz,
-			Class<? extends Annotation> ann) {
-		String annClazzName = ann.getSimpleName();
-		if (!classNameAnnotationMap.containsKey(clazz, annClazzName)) {
-			Class c = clazz;
-			Annotation found = null;
-			while (c != Object.class && found == null) {
-				for (Annotation a : c.getAnnotations()) {
-					if (a.annotationType().getSimpleName().equals(annClazzName)) {
-						found = a;
-						break;
-					}
-				}
-				c = c.getSuperclass();
+	private static Map<Class, Multimap<Class, List<Annotation>>> superAnnotationMap = new ConcurrentHashMap<Class, Multimap<Class, List<Annotation>>>();
+
+	public static <A extends Annotation> Collection<A> filterAnnotations(
+			Collection<Annotation> ann, Class<? extends A>... filterClasses) {
+		Set<A> result = new LinkedHashSet<A>();
+		List<Class<? extends A>> filterList = Arrays.asList(filterClasses);
+		for (Annotation a : ann) {
+			if (filterList.contains(a.annotationType())) {
+				result.add((A) a);
 			}
-			classNameAnnotationMap.put(clazz, annClazzName, found);
 		}
-		return classNameAnnotationMap.get(clazz, annClazzName) != null;
+		return result;
+	}
+
+	public static <A extends Annotation> void filterAnnotations(
+			Multimap<Class, List<Annotation>> ann,
+			Class<? extends A>... filterClasses) {
+		for (List<Annotation> anns : ann.values()) {
+			anns.retainAll(filterAnnotations(anns, filterClasses));
+		}
+	}
+
+	public static Multimap<Class, List<Annotation>>
+			getSuperclassAnnotations(Class clazz) {
+		Class forClass = clazz;
+		if (clazz.isInterface()) {
+			throw new RuntimeException(
+					"Should only check for classes, not interfaces");
+		}
+		if (superAnnotationMap.containsKey(clazz)) {
+			return superAnnotationMap.get(clazz);
+		}
+		Multimap<Class, List<Annotation>> values = new Multimap<Class, List<Annotation>>();
+		while (clazz != Object.class) {
+			values.addCollection(clazz, Arrays.asList(clazz.getAnnotations()));
+			clazz = clazz.getSuperclass();
+		}
+		superAnnotationMap.put(forClass, values);
+		return values;
 	}
 
 	public static Set<Annotation> getSuperclassAnnotationsForMethod(Method m) {
@@ -86,44 +107,24 @@ public class AnnotationUtils {
 		return values;
 	}
 
-	private static Map<Class, Multimap<Class, List<Annotation>>> superAnnotationMap = new ConcurrentHashMap<Class, Multimap<Class, List<Annotation>>>();
-
-	public static Multimap<Class, List<Annotation>> getSuperclassAnnotations(
-			Class clazz) {
-		Class forClass = clazz;
-		if (clazz.isInterface()) {
-			throw new RuntimeException(
-					"Should only check for classes, not interfaces");
-		}
-		if (superAnnotationMap.containsKey(clazz)) {
-			return superAnnotationMap.get(clazz);
-		}
-		Multimap<Class, List<Annotation>> values = new Multimap<Class, List<Annotation>>();
-		while (clazz != Object.class) {
-			values.addCollection(clazz, Arrays.asList(clazz.getAnnotations()));
-			clazz = clazz.getSuperclass();
-		}
-		superAnnotationMap.put(forClass, values);
-		return values;
-	}
-
-	public static <A extends Annotation> void filterAnnotations(
-			Multimap<Class, List<Annotation>> ann,
-			Class<? extends A>... filterClasses) {
-		for (List<Annotation> anns : ann.values()) {
-			anns.retainAll(filterAnnotations(anns, filterClasses));
-		}
-	}
-
-	public static <A extends Annotation> Collection<A> filterAnnotations(
-			Collection<Annotation> ann, Class<? extends A>... filterClasses) {
-		Set<A> result = new LinkedHashSet<A>();
-		List<Class<? extends A>> filterList = Arrays.asList(filterClasses);
-		for (Annotation a : ann) {
-			if (filterList.contains(a.annotationType())) {
-				result.add((A) a);
+	public static boolean hasAnnotationNamed(Class clazz,
+			Class<? extends Annotation> ann) {
+		String annClazzName = ann.getSimpleName();
+		if (!classNameAnnotationMap.containsKey(clazz, annClazzName)) {
+			Class c = clazz;
+			Annotation found = null;
+			while (c != Object.class && found == null) {
+				for (Annotation a : c.getAnnotations()) {
+					if (a.annotationType().getSimpleName()
+							.equals(annClazzName)) {
+						found = a;
+						break;
+					}
+				}
+				c = c.getSuperclass();
 			}
+			classNameAnnotationMap.put(clazz, annClazzName, found);
 		}
-		return result;
+		return classNameAnnotationMap.get(clazz, annClazzName) != null;
 	}
 }

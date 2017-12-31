@@ -55,7 +55,6 @@ public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
 			consort.onFailure(caught);
 		}
 
-
 		@Override
 		public void onSuccess(C result) {
 			wasPlayed();

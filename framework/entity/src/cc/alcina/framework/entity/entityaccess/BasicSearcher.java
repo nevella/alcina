@@ -42,6 +42,24 @@ public class BasicSearcher implements Searcher {
 		return searchWithTemp(def, pageNumber, entityManager, null);
 	}
 
+	private Query searchStub(SingleTableSearchDefinition sdef, String prefix,
+			String postfix, boolean withOrderClause) {
+		EqlWithParameters ewp = getEqlWithParameters(sdef, withOrderClause);
+		Query query = getEntityManager()
+				.createQuery(prefix + " " + ewp.eql + postfix);
+		int i = 1;
+		for (Object o : ewp.parameters) {
+			query.setParameter(i++, o);
+		}
+		return query;
+	}
+
+	protected EqlWithParameters getEqlWithParameters(
+			SingleTableSearchDefinition sdef, boolean withOrderClause) {
+		EqlWithParameters ewp = sdef.eql(withOrderClause);
+		return ewp;
+	}
+
 	/*
 	 * Like this because of...gwt serialization. See SearchResultsBase usage of
 	 * searchresult (which the db type may not implement - only required the
@@ -57,16 +75,17 @@ public class BasicSearcher implements Searcher {
 		SingleTableSearchDefinition sdef = (SingleTableSearchDefinition) def;
 		Long resultCount = 0L;
 		List resultList = searchStub(sdef, sdef.resultEqlPrefix(), "", true)
-				.setMaxResults(def.getResultsPerPage()).setFirstResult(
-						pageNumber * def.getResultsPerPage()).getResultList();
+				.setMaxResults(def.getResultsPerPage())
+				.setFirstResult(pageNumber * def.getResultsPerPage())
+				.getResultList();
 		if (def.getResultsPerPage() < SearchDefinition.LARGE_SEARCH) {
 			Query idQuery = searchStub(sdef, sdef.idEqlPrefix(), "", false);
 			resultCount = (Long) idQuery.getSingleResult();
 		} else {
 			resultCount = new Long(resultList.size());
 		}
-		result.setTotalResultCount(resultCount == null ? 0 : resultCount
-				.intValue());
+		result.setTotalResultCount(
+				resultCount == null ? 0 : resultCount.intValue());
 		result.setPageNumber(pageNumber);
 		result.setPageResultCount(resultList.size());
 		result.setSearchDefinition(def);
@@ -76,23 +95,5 @@ public class BasicSearcher implements Searcher {
 			result.setResults(resultList);
 		}
 		return result;
-	}
-
-	private Query searchStub(SingleTableSearchDefinition sdef, String prefix,
-			String postfix, boolean withOrderClause) {
-		EqlWithParameters ewp = getEqlWithParameters(sdef, withOrderClause);
-		Query query = getEntityManager().createQuery(
-				prefix + " " + ewp.eql + postfix);
-		int i = 1;
-		for (Object o : ewp.parameters) {
-			query.setParameter(i++, o);
-		}
-		return query;
-	}
-
-	protected EqlWithParameters getEqlWithParameters(
-			SingleTableSearchDefinition sdef, boolean withOrderClause) {
-		EqlWithParameters ewp = sdef.eql(withOrderClause);
-		return ewp;
 	}
 }

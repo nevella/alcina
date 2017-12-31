@@ -27,7 +27,8 @@ public class RendererComparator implements Comparator {
 	}
 
 	public int compare(Object o1, Object o2) {
-		return CommonUtils.compareWithNullMinusOne((Comparable) renderer
-				.render(o1), (Comparable) renderer.render(o2));
+		return CommonUtils.compareWithNullMinusOne(
+				(Comparable) renderer.render(o1),
+				(Comparable) renderer.render(o2));
 	}
 }

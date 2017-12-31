@@ -15,9 +15,9 @@
  */
 package rocket.selection.client.support;
 
-import rocket.selection.client.Selection;
-
 import com.google.gwt.core.client.JavaScriptObject;
+
+import rocket.selection.client.Selection;
 
 /**
  * A specialised SelectionSupport class that is adapted to handle Opera
@@ -28,6 +28,6 @@ import com.google.gwt.core.client.JavaScriptObject;
 public class OperaSelectionSupport extends SelectionSupport {
 	@Override
 	native public Selection getSelection(final JavaScriptObject window)/*-{
-        return window.getSelection();
-	}-*/;
+																		return window.getSelection();
+																		}-*/;
 }

@@ -19,13 +19,13 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  * unbelievably, even less elegant)
  * </ul>
  * <h3>Example</h3> <br>
- * <div><h4>Before</h4>
+ * <div>
+ * <h4>Before</h4>
  * 
  * <pre>
  * public enum PublicationFontOptions {
  * 	ARIAL, TIMES_NEW_ROMAN, COURIER, GEORGIA, ATHELAS
  * }
- * 
  * </pre>
  * 
  * <h4>After</h4>
@@ -108,18 +108,24 @@ public abstract class ExtensibleEnum {
 	private static UnsortedMultikeyMap<ExtensibleEnum> tagLookup = new UnsortedMultikeyMap<ExtensibleEnum>(
 			3);
 
-	private String key;
-
-	private String[] tags;
+	public static Collection<ExtensibleEnum>
+			forClassAndTag(Class<? extends ExtensibleEnum> clazz, String tag) {
+		return tagLookup.asMap(clazz, tag).keySet();
+	}
 
 	public static <E extends ExtensibleEnum> E valueOf(Class<E> enumClass,
 			String name) {
 		return (E) valueLookup.get(enumClass, name);
 	}
 
-	public static <E extends ExtensibleEnum> List<E> values(Class<E> enumClass) {
+	public static <E extends ExtensibleEnum> List<E>
+			values(Class<E> enumClass) {
 		return (List<E>) superLookup.get(enumClass);
 	}
+
+	private String key;
+
+	private String[] tags;
 
 	public ExtensibleEnum(String key) {
 		synchronized (ExtensibleEnum.class) {
@@ -128,21 +134,12 @@ public abstract class ExtensibleEnum {
 			ExtensibleEnum existing = valueLookup.get(registryPoint,
 					serializedForm());
 			if (existing != null) {
-				throw new RuntimeException("Duplicate xtensible enum - "
-						+ serializedForm());
+				throw new RuntimeException(
+						"Duplicate xtensible enum - " + serializedForm());
 			}
 			valueLookup.put(registryPoint, serializedForm(), this);
 			superLookup.add(registryPoint, this);
 		}
-	}
-
-	private Class<? extends ExtensibleEnum> getRegistryPoint() {
-		Class<? extends ExtensibleEnum> registryPoint = getClass();
-		if (registryPoint.getSuperclass() != ExtensibleEnum.class) {
-			registryPoint = (Class<? extends ExtensibleEnum>) registryPoint
-					.getSuperclass();
-		}
-		return registryPoint;
 	}
 
 	public ExtensibleEnum(String key, String... tags) {
@@ -153,13 +150,12 @@ public abstract class ExtensibleEnum {
 		}
 	}
 
-	public static Collection<ExtensibleEnum> forClassAndTag(
-			Class<? extends ExtensibleEnum> clazz, String tag) {
-		return tagLookup.asMap(clazz, tag).keySet();
-	}
-
 	protected ExtensibleEnum() {
 		this(null);
+	}
+
+	public String[] getTags() {
+		return this.tags;
 	}
 
 	public String name() {
@@ -179,21 +175,17 @@ public abstract class ExtensibleEnum {
 		return serializedForm();
 	}
 
-	// due to double-triple conversions, be lenient
-	public static class ToSerializedFormConverter implements
-			Converter<Object, String> {
-		public static final ToSerializedFormConverter INSTANCE = new ToSerializedFormConverter();
-
-		@Override
-		public String convert(Object original) {
-			return original == null ? null
-					: original instanceof ExtensibleEnum ? ((ExtensibleEnum) original)
-							.serializedForm() : (String) original;
+	private Class<? extends ExtensibleEnum> getRegistryPoint() {
+		Class<? extends ExtensibleEnum> registryPoint = getClass();
+		if (registryPoint.getSuperclass() != ExtensibleEnum.class) {
+			registryPoint = (Class<? extends ExtensibleEnum>) registryPoint
+					.getSuperclass();
 		}
+		return registryPoint;
 	}
 
-	public static class FromSerializedFormConverter implements
-			Converter<String, ExtensibleEnum> {
+	public static class FromSerializedFormConverter
+			implements Converter<String, ExtensibleEnum> {
 		private final Class<? extends ExtensibleEnum> enumClass;
 
 		public FromSerializedFormConverter(
@@ -207,7 +199,17 @@ public abstract class ExtensibleEnum {
 		}
 	}
 
-	public String[] getTags() {
-		return this.tags;
+	// due to double-triple conversions, be lenient
+	public static class ToSerializedFormConverter
+			implements Converter<Object, String> {
+		public static final ToSerializedFormConverter INSTANCE = new ToSerializedFormConverter();
+
+		@Override
+		public String convert(Object original) {
+			return original == null ? null
+					: original instanceof ExtensibleEnum
+							? ((ExtensibleEnum) original).serializedForm()
+							: (String) original;
+		}
 	}
 }

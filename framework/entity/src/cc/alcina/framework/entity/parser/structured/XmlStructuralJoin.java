@@ -8,11 +8,6 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 
 public class XmlStructuralJoin {
-	public XmlStructuralJoin(XmlNode node, XmlToken token) {
-		this.sourceNode = node;
-		this.token = token;
-	}
-
 	public List<XmlStructuralJoin> additionalSources = new ArrayList<>();
 
 	public XmlNode sourceNode;
@@ -20,28 +15,27 @@ public class XmlStructuralJoin {
 	public XmlNode targetNode;
 
 	public XmlToken token;
-	
+
 	private XmlTokenContext nodeContext;
-	
-	public <T extends XmlTokenContext> T nodeContext(Supplier<T> supplier){
-		if(nodeContext==null){
-			nodeContext=supplier.get();
+
+	public XmlStructuralJoin(XmlNode node, XmlToken token) {
+		this.sourceNode = node;
+		this.token = token;
+	}
+
+	public XmlStructuralJoin copy() {
+		return new XmlStructuralJoin(sourceNode, token);
+	}
+
+	public <T extends XmlTokenContext> T nodeContext(Supplier<T> supplier) {
+		if (nodeContext == null) {
+			nodeContext = supplier.get();
 		}
 		return (T) nodeContext;
 	}
-	
-	@Override
-	public String toString() {
-		return String.format("%s:\ni:%s\no:%s", token, sourceNode,
-				targetNode == null ? "" : targetNode);
-	}
 
-	public String sourceTextContent() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(selfSourceTextContent());
-		additionalSources.stream()
-				.forEach(add -> sb.append(add.selfSourceTextContent()));
-		return sb.toString();
+	public String normalisedAndTrimmed() {
+		return SEUtilities.normalizeWhitespaceAndTrim(sourceTextContent());
 	}
 
 	public String selfSourceTextContent() {
@@ -55,11 +49,17 @@ public class XmlStructuralJoin {
 		return sourceNode.textContent();
 	}
 
-	public String normalisedAndTrimmed() {
-		return SEUtilities.normalizeWhitespaceAndTrim(sourceTextContent());
+	public String sourceTextContent() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(selfSourceTextContent());
+		additionalSources.stream()
+				.forEach(add -> sb.append(add.selfSourceTextContent()));
+		return sb.toString();
 	}
 
-	public XmlStructuralJoin copy() {
-		return new XmlStructuralJoin(sourceNode, token);
+	@Override
+	public String toString() {
+		return String.format("%s:\ni:%s\no:%s", token, sourceNode,
+				targetNode == null ? "" : targetNode);
 	}
 }

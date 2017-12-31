@@ -184,6 +184,17 @@ public class IntrospectorGenerator extends Generator {
 		return packageName + "." + implementationName;
 	}
 
+	private String boxPrefix(JType type) {
+		JPrimitiveType primitive = type.isPrimitive();
+		if (primitive != null && !ignorePrimitiveGwt28(primitive)) {
+			return String.format("@%s::new(%s)(",
+					primitive.getQualifiedBoxedSourceName(),
+					primitive.getJNISignature());
+		} else {
+			return "";
+		}
+	}
+
 	private MethodWrapper[] findMethods(TreeLogger logger,
 			List introspectables) {
 		// declaring class _NAME_ (GWT outputs multiple types for different
@@ -255,6 +266,40 @@ public class IntrospectorGenerator extends Generator {
 		return results;
 	}
 
+	private String
+			getNonParameterisedJsniSignature(MethodWrapper methodWrapper) {
+		JMethod method = methodWrapper.getBaseMethod();
+		StringBuilder sb = new StringBuilder("@");
+		sb.append(methodWrapper.getDeclaringType().getQualifiedSourceName());
+		sb.append("::");
+		sb.append(method.getName());
+		sb.append("(");
+		for (JParameter param : method.getParameters()) {
+			String jniSignature = param.getType().getJNISignature();
+			JParameterizedType declarerParameterizedType = methodWrapper
+					.getDeclaringType().isParameterized();
+			if (declarerParameterizedType != null) {
+				JMethod[] methods = declarerParameterizedType.getBaseType()
+						.getMethods();
+				for (JMethod jMethod : methods) {
+					if (jMethod.getName().equals(method.getName())) {
+						assert jMethod.getParameters().length == 1;
+						JParameter superParam = jMethod.getParameters()[0];
+						jniSignature = superParam.getType().getJNISignature();
+						break;
+					}
+				}
+			}
+			sb.append(jniSignature);
+		}
+		sb.append(")");
+		String result = sb.toString();
+		if (result.contains("BoundWidget")) {
+			int j = 3;
+		}
+		return result;
+	}
+
 	private boolean isIntrospectable(TreeLogger logger, JType type) {
 		if (type == null)
 			return false;
@@ -286,6 +331,17 @@ public class IntrospectorGenerator extends Generator {
 			ret = tp.getBaseType();
 		}
 		return ret;
+	}
+
+	private String unbox(JType param0type) {
+		String arg = "arg";
+		JPrimitiveType primitive = param0type.isPrimitive();
+		if (primitive != null && !ignorePrimitiveGwt28(primitive)) {
+			String extractMethod = primitive.toString().toLowerCase();
+			return String.format("arg.@%s::%sValue()()",
+					primitive.getQualifiedBoxedSourceName(), extractMethod);
+		}
+		return "arg";
 	}
 
 	private void writeBeanDescriptor(TreeLogger logger, BeanResolver info,
@@ -343,40 +399,6 @@ public class IntrospectorGenerator extends Generator {
 			writer.outdent();
 			writer.println("}");
 		}
-	}
-
-	private String
-			getNonParameterisedJsniSignature(MethodWrapper methodWrapper) {
-		JMethod method = methodWrapper.getBaseMethod();
-		StringBuilder sb = new StringBuilder("@");
-		sb.append(methodWrapper.getDeclaringType().getQualifiedSourceName());
-		sb.append("::");
-		sb.append(method.getName());
-		sb.append("(");
-		for (JParameter param : method.getParameters()) {
-			String jniSignature = param.getType().getJNISignature();
-			JParameterizedType declarerParameterizedType = methodWrapper
-					.getDeclaringType().isParameterized();
-			if (declarerParameterizedType != null) {
-				JMethod[] methods = declarerParameterizedType.getBaseType()
-						.getMethods();
-				for (JMethod jMethod : methods) {
-					if (jMethod.getName().equals(method.getName())) {
-						assert jMethod.getParameters().length == 1;
-						JParameter superParam = jMethod.getParameters()[0];
-						jniSignature = superParam.getType().getJNISignature();
-						break;
-					}
-				}
-			}
-			sb.append(jniSignature);
-		}
-		sb.append(")");
-		String result = sb.toString();
-		if (result.contains("BoundWidget")) {
-			int j = 3;
-		}
-		return result;
 	}
 
 	private void writeMethods(TreeLogger logger, MethodWrapper[] methods,
@@ -444,40 +466,6 @@ public class IntrospectorGenerator extends Generator {
 		writer.println("}");
 	}
 
-	boolean ignorePrimitiveGwt28(JPrimitiveType primitive) {
-		if (!GWT.isClient()) {// i.e. not compiling for devmode - compiling to
-								// js
-			switch (primitive) {
-			case BOOLEAN:
-			case DOUBLE:
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private String unbox(JType param0type) {
-		String arg = "arg";
-		JPrimitiveType primitive = param0type.isPrimitive();
-		if (primitive != null && !ignorePrimitiveGwt28(primitive)) {
-			String extractMethod = primitive.toString().toLowerCase();
-			return String.format("arg.@%s::%sValue()()",
-					primitive.getQualifiedBoxedSourceName(), extractMethod);
-		}
-		return "arg";
-	}
-
-	private String boxPrefix(JType type) {
-		JPrimitiveType primitive = type.isPrimitive();
-		if (primitive != null && !ignorePrimitiveGwt28(primitive)) {
-			return String.format("@%s::new(%s)(",
-					primitive.getQualifiedBoxedSourceName(),
-					primitive.getJNISignature());
-		} else {
-			return "";
-		}
-	}
-
 	protected List<BeanResolver> getIntrospectableTypes(TreeLogger logger,
 			TypeOracle oracle) {
 		ArrayList<BeanResolver> results = new ArrayList<BeanResolver>();
@@ -529,5 +517,17 @@ public class IntrospectorGenerator extends Generator {
 		}
 		filter.filterIntrospectorResults(results);
 		return results;
+	}
+
+	boolean ignorePrimitiveGwt28(JPrimitiveType primitive) {
+		if (!GWT.isClient()) {// i.e. not compiling for devmode - compiling to
+								// js
+			switch (primitive) {
+			case BOOLEAN:
+			case DOUBLE:
+				return true;
+			}
+		}
+		return false;
 	}
 }

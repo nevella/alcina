@@ -11,11 +11,11 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions.instances;
 
 /**
  * Specific to an object. E.g. "change password" for a user object
+ * 
  * @author nick@alcina.cc
  *
  */

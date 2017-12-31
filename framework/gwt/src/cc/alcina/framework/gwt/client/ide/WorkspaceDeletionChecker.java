@@ -89,16 +89,15 @@ public class WorkspaceDeletionChecker {
 						if (pValue != null && pValue.equals(singleObj)) {
 							DomainProperty dpi = Reflections.propertyAccessor()
 									.getAnnotationForProperty(c,
-											DomainProperty.class,
-											p.getName());
+											DomainProperty.class, p.getName());
 							if (dpi != null && dpi.cascadeDeletionFromRef()) {
 								cascadedDeletions.add(o);
 							} else {
 								message += CommonUtils.formatJ(template,
-										CommonUtils.simpleClassName(o
-												.getClass()), TextProvider
-												.get().getObjectName(o), o
-												.getId(), TextProvider.get()
+										CommonUtils
+												.simpleClassName(o.getClass()),
+										TextProvider.get().getObjectName(o),
+										o.getId(), TextProvider.get()
 												.getLabelText(c, p.getName()))
 										+ "\n";
 							}
@@ -115,8 +114,8 @@ public class WorkspaceDeletionChecker {
 		if (message.length() > 0) {
 			LooseContext.getContext().pushWithKey(
 					ClientNotifications.CONTEXT_AUTOSHOW_DIALOG_DETAIL, true);
-			Registry.impl(ClientNotifications.class)
-					.showWarning(msgtitle, message.replace("\n", "<br>\n"));
+			Registry.impl(ClientNotifications.class).showWarning(msgtitle,
+					message.replace("\n", "<br>\n"));
 			LooseContext.getContext().pop();
 		}
 		return message.length() == 0;

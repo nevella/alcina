@@ -13,8 +13,8 @@ import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
 import com.google.gwt.user.client.ui.Widget;
 
-public class BetterMouseEntrySupport implements Handler, NativePreviewHandler,
-		MouseMoveHandler {
+public class BetterMouseEntrySupport
+		implements Handler, NativePreviewHandler, MouseMoveHandler {
 	private HandlerRegistration nativePreviewHandlerRegistration;
 
 	private Widget widget;
@@ -25,11 +25,8 @@ public class BetterMouseEntrySupport implements Handler, NativePreviewHandler,
 		((HasMouseMoveHandlers) widget).addMouseMoveHandler(this);
 	}
 
-	private void ensurePreview() {
-		if (this.nativePreviewHandlerRegistration == null) {
-			this.nativePreviewHandlerRegistration = Event
-					.addNativePreviewHandler(this);
-		}
+	public boolean isOver() {
+		return nativePreviewHandlerRegistration != null;
 	}
 
 	@Override
@@ -39,11 +36,9 @@ public class BetterMouseEntrySupport implements Handler, NativePreviewHandler,
 		}
 	}
 
-	private void removePreviewHandler() {
-		if (this.nativePreviewHandlerRegistration != null) {
-			this.nativePreviewHandlerRegistration.removeHandler();
-			this.nativePreviewHandlerRegistration = null;
-		}
+	@Override
+	public void onMouseMove(MouseMoveEvent event) {
+		ensurePreview();
 	}
 
 	@Override
@@ -57,12 +52,17 @@ public class BetterMouseEntrySupport implements Handler, NativePreviewHandler,
 		}
 	}
 
-	public boolean isOver() {
-		return nativePreviewHandlerRegistration != null;
+	private void ensurePreview() {
+		if (this.nativePreviewHandlerRegistration == null) {
+			this.nativePreviewHandlerRegistration = Event
+					.addNativePreviewHandler(this);
+		}
 	}
 
-	@Override
-	public void onMouseMove(MouseMoveEvent event) {
-		ensurePreview();
+	private void removePreviewHandler() {
+		if (this.nativePreviewHandlerRegistration != null) {
+			this.nativePreviewHandlerRegistration.removeHandler();
+			this.nativePreviewHandlerRegistration = null;
+		}
 	}
 }

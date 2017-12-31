@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic;
 
 import java.util.ArrayList;
@@ -20,25 +19,30 @@ import java.util.ArrayList;
  *
  * @author Nick Reddel
  */
-
- public abstract class StateListenable {
+public abstract class StateListenable {
 	ArrayList<StateChangeListener> listeners;
+
 	public StateListenable() {
 		super();
 		listeners = new ArrayList<StateChangeListener>();
 	}
-	public void addStateChangeListener(StateChangeListener l){
+
+	public void addStateChangeListener(StateChangeListener l) {
 		listeners.add(l);
 	}
-	public void removeStateChangeListener(StateChangeListener l){
-		listeners.remove(l);
-	}
-	public void clearListeners(){
+
+	public void clearListeners() {
 		listeners.clear();
 	}
+
+	public void removeStateChangeListener(StateChangeListener l) {
+		listeners.remove(l);
+	}
+
 	@SuppressWarnings("unchecked")
-	protected void fireStateChanged(String newState){
-		ArrayList<StateChangeListener> listenersCopy = (ArrayList<StateChangeListener>) listeners.clone();
+	protected void fireStateChanged(String newState) {
+		ArrayList<StateChangeListener> listenersCopy = (ArrayList<StateChangeListener>) listeners
+				.clone();
 		for (StateChangeListener l : listenersCopy) {
 			l.stateChanged(this, newState);
 		}

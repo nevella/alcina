@@ -5,8 +5,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupJvm;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 
-public class CollectionProjectionFilterWithCache extends
-		CollectionProjectionFilter {
+public class CollectionProjectionFilterWithCache
+		extends CollectionProjectionFilter {
 	protected DetachedEntityCache cache = new DetachedEntityCache();
 
 	// just used for reachability usages
@@ -40,11 +40,11 @@ public class CollectionProjectionFilterWithCache extends
 		return this.cache;
 	}
 
-	public void setCache(DetachedEntityCache cache) {
-		this.cache = cache;
-	}
-
 	public MapObjectLookupJvm getObjectLookup() {
 		return this.objectLookup;
+	}
+
+	public void setCache(DetachedEntityCache cache) {
+		this.cache = cache;
 	}
 }

@@ -30,7 +30,7 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 	public static String escape(String str) {
 		return str == null
 				|| (str.indexOf("\n") == -1 && str.indexOf("\\") == -1) ? str
-				: str.replace("\\", "\\\\").replace("\n", "\\n");
+						: str.replace("\\", "\\\\").replace("\n", "\\n");
 	}
 
 	public static String unescape(String str) {
@@ -66,18 +66,18 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		String newlineTab = "\n\t";
 		sb.append(newlineTab);
 		sb.append(SRC);
-		sb.append(domainTransformEvent.getObjectClass() == null ? domainTransformEvent
-				.getObjectClassName() : domainTransformEvent.getObjectClass()
-				.getName());
+		sb.append(domainTransformEvent.getObjectClass() == null
+				? domainTransformEvent.getObjectClassName()
+				: domainTransformEvent.getObjectClass().getName());
 		sb.append(",");
-		sb.append(SimpleStringParser.toString(domainTransformEvent
-				.getObjectId()));
+		sb.append(SimpleStringParser
+				.toString(domainTransformEvent.getObjectId()));
 		sb.append(",");
-		sb.append(SimpleStringParser.toString(domainTransformEvent
-				.getObjectLocalId()));
+		sb.append(SimpleStringParser
+				.toString(domainTransformEvent.getObjectLocalId()));
 		sb.append(",");
-		sb.append(SimpleStringParser.toStringOrNullNonNegativeInteger(domainTransformEvent
-				.getObjectVersionNumber()));
+		sb.append(SimpleStringParser.toStringOrNullNonNegativeInteger(
+				domainTransformEvent.getObjectVersionNumber()));
 		sb.append(newlineTab);
 		sb.append(PARAMS);
 		sb.append(domainTransformEvent.getPropertyName());
@@ -87,25 +87,26 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		sb.append(domainTransformEvent.getTransformType());
 		sb.append(",");
 		sb.append(SimpleStringParser
-				.toString(domainTransformEvent.getUtcDate() == null ? System
-						.currentTimeMillis() : domainTransformEvent
-						.getUtcDate().getTime()));
+				.toString(domainTransformEvent.getUtcDate() == null
+						? System.currentTimeMillis()
+						: domainTransformEvent.getUtcDate().getTime()));
 		sb.append(newlineTab);
 		sb.append(STRING_VALUE);
 		sb.append(ns);
 		sb.append(newlineTab);
 		sb.append(TGT);
-		sb.append(domainTransformEvent.getValueClass() == null ? domainTransformEvent
-				.getValueClassName() : domainTransformEvent.getValueClass()
-				.getName());
+		sb.append(domainTransformEvent.getValueClass() == null
+				? domainTransformEvent.getValueClassName()
+				: domainTransformEvent.getValueClass().getName());
 		sb.append(",");
-		sb.append(SimpleStringParser.toString(domainTransformEvent.getValueId()));
+		sb.append(
+				SimpleStringParser.toString(domainTransformEvent.getValueId()));
 		sb.append(",");
-		sb.append(SimpleStringParser.toString(domainTransformEvent
-				.getValueLocalId()));
+		sb.append(SimpleStringParser
+				.toString(domainTransformEvent.getValueLocalId()));
 		sb.append(",");
-		sb.append(SimpleStringParser.toStringOrNullNonNegativeInteger(domainTransformEvent
-				.getValueVersionNumber()));
+		sb.append(SimpleStringParser.toStringOrNullNonNegativeInteger(
+				domainTransformEvent.getValueVersionNumber()));
 		sb.append("\n");
 	}
 

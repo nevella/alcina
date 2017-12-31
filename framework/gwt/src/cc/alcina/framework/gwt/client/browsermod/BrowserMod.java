@@ -29,27 +29,43 @@ import com.google.gwt.user.client.Window;
  *         avoid jar dependency) fixed a few incorrectly-ordered arguments
  */
 public class BrowserMod {
+	private static Boolean isIe9 = null;
+
+	private static String userAgent = null;
 	/**
-	 * Retrieves the window object for the current page.
-	 * 
-	 * @return The window
+	 * Only warn the user if in hosted mode and the browser host page causes the
+	 * document to be rendered in quirks mode.
 	 */
-	public static native JavaScriptObject getWindow() /*-{
-        return $wnd;
-	}-*/;
+	static {
+		if (false == GWT.isScript() && BrowserMod.isQuirksMode()) {
+			GWT.log(Constants.QUIRKS_MODE_WARNING, null);
+		}
+	}
+
+	public static String getAnimationPrefix() {
+		if (getUserAgent().contains("WebKit")) {
+			return "-webkit-animation";
+		}
+		return "animation";
+	}
 
 	/**
-	 * Scrolls the top left of the window to the position denoted by the given
-	 * x/y coordinates
+	 * Returns the available screen area within the browser
 	 * 
-	 * @param x
-	 *            The horizontal offset in pixels
-	 * @param y
-	 *            The vertical offset in pixels
+	 * @return The height in pixels.
 	 */
-	public static native void scrollTo(final int x, final int y)/*-{
-        $wnd.scroll(x, y);
-	}-*/;
+	public native static int getAvailableScreenHeight()/*-{
+														return $wnd.screen.availHeight;
+														}-*/;
+
+	/**
+	 * Returns the available screen area within the browser
+	 * 
+	 * @return The width in pixels
+	 */
+	public native static int getAvailableScreenWidth()/*-{
+														return $wnd.screen.availWidth;
+														}-*/;
 
 	/**
 	 * Returns the contextPath of this web application, this concept is
@@ -72,118 +88,6 @@ public class BrowserMod {
 	}
 
 	/**
-	 * Returns the available screen area within the browser
-	 * 
-	 * @return The width in pixels
-	 */
-	public native static int getAvailableScreenWidth()/*-{
-        return $wnd.screen.availWidth;
-	}-*/;
-
-	/**
-	 * Returns the available screen area within the browser
-	 * 
-	 * @return The height in pixels.
-	 */
-	public native static int getAvailableScreenHeight()/*-{
-        return $wnd.screen.availHeight;
-	}-*/;
-
-	public static boolean isIE8() {
-		return BrowserMod.isInternetExplorer()
-				&& (getUserAgent().indexOf(
-						Constants.INTERNET_EXPLORER_8_USER_AGENT) != -1
-						
-||getUserAgent().indexOf(
-		Constants.INTERNET_EXPLORER_8_USER_AGENT_ALT) != -1
-				);
-	}
-
-	private static Boolean isIe9 = null;
-
-	public static boolean isIE9() {
-		if (isIe9 == null) {
-			isIe9 = BrowserMod.isInternetExplorer()
-					&& (getUserAgent().indexOf(
-							Constants.INTERNET_EXPLORER_9_USER_AGENT) != -1 || getUserAgent()
-							.indexOf(
-									Constants.INTERNET_EXPLORER_9_USER_AGENT_ALT) != -1);
-		}
-		return isIe9;
-	}
-
-	public static boolean isIE10() {
-		return BrowserMod.isInternetExplorer()
-				&& (getUserAgent().matches(".*MSIE ?[1-9][0-9].*"));
-	}
-
-	public static boolean isIE11plus() {
-		return getUserAgent().matches(".*Trident/[7-9]\\..+");
-	}
-
-	public static boolean isIE10Plus() {
-		return isIE10() || isIE11plus();
-	}
-
-	public static boolean isIEpre9() {
-		return BrowserMod.isInternetExplorer() && !isIE9() && !isIE10Plus();
-	}
-
-	public static boolean isIEpre10() {
-		return BrowserMod.isInternetExplorer() && !isIE10Plus();
-	}
-
-	public static boolean isFireFox() {
-		return getUserAgent().indexOf(Constants.FIREFOX_USER_AGENT) != -1
-				&& !isOpera();
-	}
-
-	public static boolean isOpera8() {
-		return getUserAgent().indexOf(Constants.OPERA8_USER_AGENT) != -1;
-	}
-
-	public static boolean isOpera9() {
-		return getUserAgent().indexOf(Constants.OPERA9_USER_AGENT) != -1;
-	}
-
-	public static boolean isOpera() {
-		return getUserAgent().indexOf(Constants.OPERA_USER_AGENT) != -1;
-	}
-
-	public static boolean isSafari() {
-		return getUserAgent().indexOf(Constants.SAFARI_USER_AGENT) != -1
-				&& !isOpera() && !isChrome() && !isChromeIos();
-	}
-
-	public static boolean isChrome() {
-		return getUserAgent().indexOf(Constants.CHROME_USER_AGENT) != -1
-				&& !isOpera();
-	}
-
-	public static boolean isChromeIos() {
-		return getUserAgent().indexOf(Constants.CHROME_IOS_USER_AGENT) != -1
-				&& !isOpera();
-	}
-
-	/**
-	 * Retrieves the userAgent of the browser
-	 * 
-	 * @return the reported user agent
-	 */
-	public static String getUserAgent() {
-		if (userAgent == null) {
-			userAgent = getUserAgent0();
-		}
-		return userAgent;
-	}
-
-	public static native String getUserAgent0()/*-{
-        return @com.google.gwt.user.client.Window.Navigator::getUserAgent()();
-	}-*/;
-
-	private static String userAgent = null;
-
-	/**
 	 * Returns the host operating system that the browser is running under.
 	 * 
 	 * @return The host operating system.
@@ -200,13 +104,135 @@ public class BrowserMod {
 	}
 
 	/**
-	 * Only warn the user if in hosted mode and the browser host page causes the
-	 * document to be rendered in quirks mode.
+	 * Retrieves the userAgent of the browser
+	 * 
+	 * @return the reported user agent
 	 */
-	static {
-		if (false == GWT.isScript() && BrowserMod.isQuirksMode()) {
-			GWT.log(Constants.QUIRKS_MODE_WARNING, null);
+	public static String getUserAgent() {
+		if (userAgent == null) {
+			userAgent = getUserAgent0();
 		}
+		return userAgent;
+	}
+
+	public static native String getUserAgent0()/*-{
+												return @com.google.gwt.user.client.Window.Navigator::getUserAgent()();
+												}-*/;
+
+	/**
+	 * Retrieves the window object for the current page.
+	 * 
+	 * @return The window
+	 */
+	public static native JavaScriptObject getWindow() /*-{
+														return $wnd;
+														}-*/;
+
+	public static boolean isChrome() {
+		return getUserAgent().indexOf(Constants.CHROME_USER_AGENT) != -1
+				&& !isOpera();
+	}
+
+	public static boolean isChromeIos() {
+		return getUserAgent().indexOf(Constants.CHROME_IOS_USER_AGENT) != -1
+				&& !isOpera();
+	}
+
+	public static boolean isFireFox() {
+		return getUserAgent().indexOf(Constants.FIREFOX_USER_AGENT) != -1
+				&& !isOpera();
+	}
+
+	public static boolean isIE10() {
+		return BrowserMod.isInternetExplorer()
+				&& (getUserAgent().matches(".*MSIE ?[1-9][0-9].*"));
+	}
+
+	public static boolean isIE10Plus() {
+		return isIE10() || isIE11plus();
+	}
+
+	public static boolean isIE11plus() {
+		return getUserAgent().matches(".*Trident/[7-9]\\..+");
+	}
+
+	public static boolean isIE8() {
+		return BrowserMod.isInternetExplorer() && (getUserAgent()
+				.indexOf(Constants.INTERNET_EXPLORER_8_USER_AGENT) != -1
+				|| getUserAgent().indexOf(
+						Constants.INTERNET_EXPLORER_8_USER_AGENT_ALT) != -1);
+	}
+
+	public static boolean isIE9() {
+		if (isIe9 == null) {
+			isIe9 = BrowserMod.isInternetExplorer() && (getUserAgent()
+					.indexOf(Constants.INTERNET_EXPLORER_9_USER_AGENT) != -1
+					|| getUserAgent().indexOf(
+							Constants.INTERNET_EXPLORER_9_USER_AGENT_ALT) != -1);
+		}
+		return isIe9;
+	}
+
+	public static boolean isIEpre10() {
+		return BrowserMod.isInternetExplorer() && !isIE10Plus();
+	}
+
+	public static boolean isIEpre8() {
+		return BrowserMod.isInternetExplorer() && !isIE9() && !isIE10Plus()
+				&& !isIE8();
+	}
+
+	public static boolean isIEpre9() {
+		return BrowserMod.isInternetExplorer() && !isIE9() && !isIE10Plus();
+	}
+
+	public static boolean isInternetExplorer() {
+		return (getUserAgent()
+				.indexOf(Constants.INTERNET_EXPLORER_USER_AGENT) != -1
+				|| getUserAgent().indexOf(Constants.TRIDENT) != -1)
+				&& !isOpera() && !isSafari() && !isChrome();
+	}
+
+	public static native boolean isIPad()/*-{
+											var navigator = $wnd.navigator;
+											return navigator.userAgent.match(/iPad/i) ? true : false;
+											}-*/;
+
+	public static native boolean isMobile()/*-{
+											var navigator = $wnd.navigator;
+											//will be closer in the closure than window.navigator - not that it matters
+											var isMobile = {
+											Android : function() {
+											return navigator.userAgent.match(/Android/i) ? true : false;
+											},
+											BlackBerry : function() {
+											return navigator.userAgent.match(/BlackBerry/i) ? true : false;
+											},
+											iOS : function() {
+											return navigator.userAgent.match(/iPhone|iPad|iPod/i) ? true
+											: false;
+											},
+											Windows : function() {
+											return navigator.userAgent.match(/IEMobile/i) ? true : false;
+											},
+											any : function() {
+											return (isMobile.Android() || isMobile.BlackBerry()
+											|| isMobile.iOS() || isMobile.Windows());
+											}
+											};
+											return isMobile.any();
+											}-*/;
+
+	public static boolean isOpera() {
+		return getUserAgent().indexOf(Constants.OPERA_USER_AGENT) != -1;
+	}
+
+	public static boolean isOpera8() {
+		return getUserAgent().indexOf(Constants.OPERA8_USER_AGENT) != -1;
+	}
+
+	public static boolean isOpera9() {
+		return getUserAgent().indexOf(Constants.OPERA9_USER_AGENT) != -1;
 	}
 
 	/**
@@ -216,67 +242,36 @@ public class BrowserMod {
 	 *         false
 	 */
 	native static public boolean isQuirksMode()/*-{
-        return "BackCompat" == $doc.compatMode;
-	}-*/;
+												return "BackCompat" == $doc.compatMode;
+												}-*/;
 
-	public static native boolean isMobile()/*-{
-        var navigator = $wnd.navigator;
-        //will be closer in the closure than window.navigator - not that it matters
-        var isMobile = {
-            Android : function() {
-                return navigator.userAgent.match(/Android/i) ? true : false;
-            },
-            BlackBerry : function() {
-                return navigator.userAgent.match(/BlackBerry/i) ? true : false;
-            },
-            iOS : function() {
-                return navigator.userAgent.match(/iPhone|iPad|iPod/i) ? true
-                        : false;
-            },
-            Windows : function() {
-                return navigator.userAgent.match(/IEMobile/i) ? true : false;
-            },
-            any : function() {
-                return (isMobile.Android() || isMobile.BlackBerry()
-                        || isMobile.iOS() || isMobile.Windows());
-            }
-        };
-        return isMobile.any();
-	}-*/;
-
-	public static native boolean isIPad()/*-{
-        var navigator = $wnd.navigator;
-        return navigator.userAgent.match(/iPad/i) ? true : false;
-	}-*/;
-
-	public static boolean requiresExplicitClickForAsyncDownload() {
-		return BrowserMod.isInternetExplorer();// ||isFireFox();
+	public static boolean isSafari() {
+		return getUserAgent().indexOf(Constants.SAFARI_USER_AGENT) != -1
+				&& !isOpera() && !isChrome() && !isChromeIos();
 	}
 
-	public static boolean isIEpre8() {
-		return BrowserMod.isInternetExplorer() && !isIE9() && !isIE10Plus()
-				&& !isIE8();
+	public static boolean isWebKit() {
+		return getUserAgent().toLowerCase().matches(".*(webkit|blink).*");
 	}
 
 	public static boolean mightSupportFlash() {
 		return !isMobile();
 	}
 
-	public static boolean isInternetExplorer() {
-		return (getUserAgent().indexOf(Constants.INTERNET_EXPLORER_USER_AGENT) != -1 || getUserAgent()
-				.indexOf(Constants.TRIDENT) != -1)
-				&& !isOpera()
-				&& !isSafari()
-				&& !isChrome();
-	}
-	public static boolean isWebKit() {
-		return getUserAgent().toLowerCase().matches(".*(webkit|blink).*");
+	public static boolean requiresExplicitClickForAsyncDownload() {
+		return BrowserMod.isInternetExplorer();// ||isFireFox();
 	}
 
-	public static String getAnimationPrefix() {
-		if(getUserAgent().contains("WebKit")){
-			return "-webkit-animation";
-		}
-		return "animation";
-	}
+	/**
+	 * Scrolls the top left of the window to the position denoted by the given
+	 * x/y coordinates
+	 * 
+	 * @param x
+	 *            The horizontal offset in pixels
+	 * @param y
+	 *            The vertical offset in pixels
+	 */
+	public static native void scrollTo(final int x, final int y)/*-{
+																$wnd.scroll(x, y);
+																}-*/;
 }

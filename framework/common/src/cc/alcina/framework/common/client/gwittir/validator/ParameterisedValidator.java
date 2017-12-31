@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.gwittir.validator;
-
 
 import com.totsp.gwittir.client.validator.Validator;
 
@@ -23,7 +21,6 @@ import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
  *
  * @author Nick Reddel
  */
-
- public interface ParameterisedValidator extends Validator{
+public interface ParameterisedValidator extends Validator {
 	public void setParameters(NamedParameter[] params);
 }

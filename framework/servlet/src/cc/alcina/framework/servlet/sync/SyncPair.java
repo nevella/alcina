@@ -108,7 +108,7 @@ public class SyncPair<T> {
 		IGNORE {
 			@Override
 			public SyncAction getDirectedAction(boolean left) {
-				return  null;
+				return null;
 			}
 		};
 		public abstract SyncAction getDirectedAction(boolean left);

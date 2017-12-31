@@ -51,6 +51,7 @@ public abstract class ClientInstance
 	private Integer auth;
 
 	private String userAgent;
+
 	@GwtTransient
 	private Boolean botUserAgent;
 

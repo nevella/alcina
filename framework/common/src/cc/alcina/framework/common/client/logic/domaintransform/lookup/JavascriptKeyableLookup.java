@@ -8,71 +8,71 @@ import com.google.gwt.core.client.JavaScriptObject;
 
 public final class JavascriptKeyableLookup extends JavaScriptObject {
 	public static native JavascriptKeyableLookup create(boolean intLookup)/*-{
-        return new $wnd.AlcJsKeyableMap(intLookup);
-	}-*/;
+																			return new $wnd.AlcJsKeyableMap(intLookup);
+																			}-*/;
 
 	public static native void initJs()/*-{
-		if($wnd.AlcJsKeyableMap){
-			return;
-		}
-        function AlcJsKeyableMap(intLookup) {
-            this.length = 0;
-            this.modCount = 0;
-            this.values = {};
-            this.keys = {};
-            this.intLookup = intLookup;
-
-        }
-        AlcJsKeyableMap.prototype.get = function(key) {
-            return this.values[key];
-        }
-        AlcJsKeyableMap.prototype.put = function(key, value) {
-            var old = null;
-            if (this.values[key] === undefined) {
-                this.length++;
-                this.modCount++;
-            } else {
-                old = this.values[key];
-            }
-            this.values[key] = value;
-            this.keys[key] = key;
-            return old;
-        }
-        AlcJsKeyableMap.prototype.remove = function(key) {
-            if (this.values[key] === undefined) {
-                return null;
-            } else {
-                var old = this.values[key];
-                delete this.values[key];
-                delete this.keys[key];
-                this.modCount++;
-                this.length--;
-                return old;
-            }
-        }
-        AlcJsKeyableMap.prototype.containsKey = function(key) {
-            if (this.values[key] === undefined) {
-                return false;
-            } else {
-                return true;
-            }
-        }
-        AlcJsKeyableMap.prototype.clear = function(key) {
-            this.values = {};
-            this.keys = {};
-            this.length = 0;
-            this.modCount++;
-        }
-        $wnd.AlcJsKeyableMap = AlcJsKeyableMap;
-
-	}-*/;
+										if($wnd.AlcJsKeyableMap){
+										return;
+										}
+										function AlcJsKeyableMap(intLookup) {
+										this.length = 0;
+										this.modCount = 0;
+										this.values = {};
+										this.keys = {};
+										this.intLookup = intLookup;
+										
+										}
+										AlcJsKeyableMap.prototype.get = function(key) {
+										return this.values[key];
+										}
+										AlcJsKeyableMap.prototype.put = function(key, value) {
+										var old = null;
+										if (this.values[key] === undefined) {
+										this.length++;
+										this.modCount++;
+										} else {
+										old = this.values[key];
+										}
+										this.values[key] = value;
+										this.keys[key] = key;
+										return old;
+										}
+										AlcJsKeyableMap.prototype.remove = function(key) {
+										if (this.values[key] === undefined) {
+										return null;
+										} else {
+										var old = this.values[key];
+										delete this.values[key];
+										delete this.keys[key];
+										this.modCount++;
+										this.length--;
+										return old;
+										}
+										}
+										AlcJsKeyableMap.prototype.containsKey = function(key) {
+										if (this.values[key] === undefined) {
+										return false;
+										} else {
+										return true;
+										}
+										}
+										AlcJsKeyableMap.prototype.clear = function(key) {
+										this.values = {};
+										this.keys = {};
+										this.length = 0;
+										this.modCount++;
+										}
+										$wnd.AlcJsKeyableMap = AlcJsKeyableMap;
+										
+										}-*/;
 
 	protected JavascriptKeyableLookup() {
 	}
 
 	public native void clear() /*-{
-        this.clear();
-	}-*/;
+								this.clear();
+								}-*/;
 
 	public boolean containsKey(Object key) {
 		return intLookup() ? containsKey0(key2int(key)) : containsKey0(key);
@@ -87,19 +87,19 @@ public final class JavascriptKeyableLookup extends JavaScriptObject {
 	}
 
 	public native JavascriptJavaObjectArray keys()/*-{
-        var v = [];
-        for ( var k in this.keys) {
-            if (this.keys.hasOwnProperty(k)) {
-                var key = this.keys[k];
-                if (this.intLookup && typeof (key) != "Number") {
-                    v.push(parseInt(key));
-                } else {
-                    v.push(key);
-                }
-            }
-        }
-        return v;
-	}-*/;
+													var v = [];
+													for ( var k in this.keys) {
+													if (this.keys.hasOwnProperty(k)) {
+													var key = this.keys[k];
+													if (this.intLookup && typeof (key) != "Number") {
+													v.push(parseInt(key));
+													} else {
+													v.push(key);
+													}
+													}
+													}
+													return v;
+													}-*/;
 
 	public Object put(Object key, Object value) {
 		return intLookup() ? put0(key2int(key), value) : put0(key, value);
@@ -110,53 +110,53 @@ public final class JavascriptKeyableLookup extends JavaScriptObject {
 	}
 
 	public native int size()/*-{
-        //should really be an assert here...
-        return this.length >= 0 ? this.length : 0;
-	}-*/;
+							//should really be an assert here...
+							return this.length >= 0 ? this.length : 0;
+							}-*/;
 
 	private native boolean containsKey0(int key)/*-{
-        return this.containsKey(key);
-	}-*/;
+												return this.containsKey(key);
+												}-*/;
 
 	private native boolean containsKey0(Object key)/*-{
-        return this.containsKey(key);
-	}-*/;
+													return this.containsKey(key);
+													}-*/;
 
 	private native <V> V get0(int key)/*-{
-        return this.get(key);
-	}-*/;
+										return this.get(key);
+										}-*/;
 
 	private native <V> V get0(Object key)/*-{
-        return this.get(key);
-	}-*/;
+											return this.get(key);
+											}-*/;
 
 	private native boolean intLookup()/*-{
-        return this.intLookup;
-	}-*/;
+										return this.intLookup;
+										}-*/;
 
 	private int key2int(Object key) {
 		return ((Integer) key).intValue();
 	}
 
 	private native Object put0(int key, Object value)/*-{
-        return this.put(key, value);
-	}-*/;
+														return this.put(key, value);
+														}-*/;
 
 	private native Object put0(Object key, Object value)/*-{
-        return this.put(key, value);
-	}-*/;
+														return this.put(key, value);
+														}-*/;
 
 	private native Object remove0(int key)/*-{
-        return this.remove(key);
-	}-*/;
+											return this.remove(key);
+											}-*/;
 
 	private native Object remove0(Object key)/*-{
-        return this.remove(key);
-	}-*/;
+												return this.remove(key);
+												}-*/;
 
 	native int modCount()/*-{
-        return this.modCount;
-	}-*/;
+							return this.modCount;
+							}-*/;
 
 	class EntryIterator implements Iterator {
 		JavascriptJavaObjectArray keysSnapshot;

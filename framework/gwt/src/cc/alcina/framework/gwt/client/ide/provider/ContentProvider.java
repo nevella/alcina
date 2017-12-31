@@ -25,16 +25,20 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 public class ContentProvider {
 	private static ContentProviderSource provider;
 
+	public static String getContent(String key) {
+		if (provider != null) {
+			return provider.getContent(key);
+		}
+		throw new WrappedRuntimeException("No content provider registered",
+				SuggestedAction.NOTIFY_ERROR);
+	}
+
 	public static ContentProviderSource getProvider() {
 		if (provider != null) {
 			return provider;
 		}
 		throw new WrappedRuntimeException("No content provider registered",
 				SuggestedAction.NOTIFY_ERROR);
-	}
-
-	public static void registerProvider(ContentProviderSource p) {
-		provider = p;
 	}
 
 	public static HTML getWidget(String key) {
@@ -60,14 +64,6 @@ public class ContentProvider {
 				SuggestedAction.NOTIFY_ERROR);
 	}
 
-	public static String getContent(String key) {
-		if (provider != null) {
-			return provider.getContent(key);
-		}
-		throw new WrappedRuntimeException("No content provider registered",
-				SuggestedAction.NOTIFY_ERROR);
-	}
-
 	public static boolean hasContent(String key) {
 		if (provider != null) {
 			String trim = getContent(key).trim();
@@ -75,6 +71,10 @@ public class ContentProvider {
 		}
 		throw new WrappedRuntimeException("No content provider registered",
 				SuggestedAction.NOTIFY_ERROR);
+	}
+
+	public static void registerProvider(ContentProviderSource p) {
+		provider = p;
 	}
 
 	public interface ContentProviderSource {

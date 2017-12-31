@@ -23,8 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  *
  * @author Nick Reddel
  */
-
- public class InstantiableIntegerValidator implements Validator {
+public class InstantiableIntegerValidator implements Validator {
 	/** Creates a new instance of IntegerValidator */
 	public InstantiableIntegerValidator() {
 	}

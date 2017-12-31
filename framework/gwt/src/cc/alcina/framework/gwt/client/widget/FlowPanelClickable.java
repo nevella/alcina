@@ -18,9 +18,9 @@ import com.google.gwt.event.dom.client.MouseMoveHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.FlowPanel;
 
-public class FlowPanelClickable extends FlowPanel implements HasClickHandlers,
-		HasMouseMoveHandlers, HasMouseDownHandlers, HasKeyUpHandlers,
-		HasKeyPressHandlers {
+public class FlowPanelClickable extends FlowPanel
+		implements HasClickHandlers, HasMouseMoveHandlers, HasMouseDownHandlers,
+		HasKeyUpHandlers, HasKeyPressHandlers {
 	public FlowPanelClickable() {
 	}
 
@@ -30,13 +30,8 @@ public class FlowPanelClickable extends FlowPanel implements HasClickHandlers,
 	}
 
 	@Override
-	public HandlerRegistration addMouseMoveHandler(MouseMoveHandler handler) {
-		return addDomHandler(handler, MouseMoveEvent.getType());
-	}
-
-	@Override
-	public HandlerRegistration addMouseDownHandler(MouseDownHandler handler) {
-		return addDomHandler(handler, MouseDownEvent.getType());
+	public HandlerRegistration addKeyPressHandler(KeyPressHandler handler) {
+		return addDomHandler(handler, KeyPressEvent.getType());
 	}
 
 	@Override
@@ -45,7 +40,12 @@ public class FlowPanelClickable extends FlowPanel implements HasClickHandlers,
 	}
 
 	@Override
-	public HandlerRegistration addKeyPressHandler(KeyPressHandler handler) {
-		return addDomHandler(handler, KeyPressEvent.getType());
+	public HandlerRegistration addMouseDownHandler(MouseDownHandler handler) {
+		return addDomHandler(handler, MouseDownEvent.getType());
+	}
+
+	@Override
+	public HandlerRegistration addMouseMoveHandler(MouseMoveHandler handler) {
+		return addDomHandler(handler, MouseMoveEvent.getType());
 	}
 }

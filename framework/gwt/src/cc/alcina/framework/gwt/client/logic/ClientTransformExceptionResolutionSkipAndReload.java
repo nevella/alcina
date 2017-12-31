@@ -49,8 +49,8 @@ import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
 
 @RegistryLocation(registryPoint = ClientTransformExceptionResolver.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
-public class ClientTransformExceptionResolutionSkipAndReload implements
-		ClientTransformExceptionResolver, StateChangeListener,
+public class ClientTransformExceptionResolutionSkipAndReload
+		implements ClientTransformExceptionResolver, StateChangeListener,
 		PermissibleActionListener {
 	private FlowPanel fp;
 
@@ -67,7 +67,8 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 
 	public void resolve(DomainTransformRequestException dtre,
 			Callback<ClientTransformExceptionResolutionToken> callback) {
-		final CommitToStorageTransformListener storage = Registry.impl(CommitToStorageTransformListener.class);
+		final CommitToStorageTransformListener storage = Registry
+				.impl(CommitToStorageTransformListener.class);
 		if (dialog != null) {
 			dialog.hide();
 		}
@@ -75,12 +76,14 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 			@Override
 			protected void onAttach() {
 				super.onAttach();
-				storage.addStateChangeListener(ClientTransformExceptionResolutionSkipAndReload.this);
+				storage.addStateChangeListener(
+						ClientTransformExceptionResolutionSkipAndReload.this);
 			}
 
 			@Override
 			protected void onDetach() {
-				storage.removeStateChangeListener(ClientTransformExceptionResolutionSkipAndReload.this);
+				storage.removeStateChangeListener(
+						ClientTransformExceptionResolutionSkipAndReload.this);
 				super.onDetach();
 			}
 		};
@@ -109,15 +112,15 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 		}
 		if (adapters.isEmpty() && irresolvable == null) {
 			// unknown exception - throw
-			token.setResolverAction(ClientTransformExceptionResolverAction.THROW);
+			token.setResolverAction(
+					ClientTransformExceptionResolverAction.THROW);
 			callback.apply(token);
 			return;
 		}
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 		Field[] fields = GwittirBridge.get()
-				.fieldsForReflectedObjectAndSetupWidgetFactory(
-						ClientReflector.get()
-								.getTemplateInstance(DTEView.class), factory,
+				.fieldsForReflectedObjectAndSetupWidgetFactory(ClientReflector
+						.get().getTemplateInstance(DTEView.class), factory,
 						false, true);
 		int mask = BoundTableExt.HEADER_MASK | BoundTableExt.NO_NAV_ROW_MASK;
 		CollectionDataProvider cp = new CollectionDataProvider(adapters);
@@ -173,9 +176,11 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 					Window.Location.reload();
 				}
 			}.schedule(2000);
-		} else if (newState.equals(CommitToStorageTransformListener.COMMITTED)) {
+		} else if (newState
+				.equals(CommitToStorageTransformListener.COMMITTED)) {
 			dialog.hide();
-		} else if (newState.equals(CommitToStorageTransformListener.COMMITTING)) {
+		} else if (newState
+				.equals(CommitToStorageTransformListener.COMMITTING)) {
 			status.committing();
 		}
 	}
@@ -184,7 +189,8 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 		if (status.isIrresolvable()) {
 			Window.Location.reload();
 		} else {
-			token.setResolverAction(ClientTransformExceptionResolverAction.RESUBMIT);
+			token.setResolverAction(
+					ClientTransformExceptionResolverAction.RESUBMIT);
 			callback.apply(token);
 		}
 	}
@@ -220,7 +226,8 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 				break;
 			case SOURCE_ENTITY_NOT_FOUND:
 				recommendedAction = RecommendedAction.SKIP;
-				reloadRequired = exception.getEvent().getTransformType() != TransformType.DELETE_OBJECT;
+				reloadRequired = exception.getEvent()
+						.getTransformType() != TransformType.DELETE_OBJECT;
 				break;
 			case TOO_MANY_EXCEPTIONS:
 			case INVALID_AUTHENTICATION:
@@ -280,14 +287,14 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 			return this.recommendedAction;
 		}
 
-		@Display(name = "Transform", orderingHint = 25)
-		public TransformType getTransformType() {
-			return event.getTransformType();
-		}
-
 		@Display(name = "Problem", orderingHint = 40)
 		public DomainTransformExceptionType getTransformExceptionType() {
 			return exception.getType();
+		}
+
+		@Display(name = "Transform", orderingHint = 25)
+		public TransformType getTransformType() {
+			return event.getTransformType();
 		}
 	}
 
@@ -304,21 +311,20 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 
 		private Label blurb;
 
-		public boolean isIrresolvable() {
-			return this.irresolvable;
-		}
-
 		public StatusWidget() {
 			this.html = new HTML();
 			this.fp = new FlowPanel();
-			blurb = new Label(
-					"Problems occurred saving changes. "
-							+ "The changes you made will be altered to allow your work to be saved.");
+			blurb = new Label("Problems occurred saving changes. "
+					+ "The changes you made will be altered to allow your work to be saved.");
 			blurb.setStyleName("pad-15 italic");
 			fp.add(blurb);
 			fp.add(html);
 			initWidget(fp);
 			html.setStyleName("pad-15");
+		}
+
+		public void committing() {
+			html.setText("Committing changes...");
 		}
 
 		public void irresolvable(DomainTransformException dte) {
@@ -334,8 +340,8 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 			irresolvable = true;
 		}
 
-		public void committing() {
-			html.setText("Committing changes...");
+		public boolean isIrresolvable() {
+			return this.irresolvable;
 		}
 
 		public void reloading() {
@@ -343,7 +349,8 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 		}
 
 		public void reloadRequired() {
-			html.setText("The application will need to be reloaded after the problems are resolved.");
+			html.setText(
+					"The application will need to be reloaded after the problems are resolved.");
 		}
 	}
 }

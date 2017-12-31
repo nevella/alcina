@@ -22,6 +22,21 @@ package rocket.util.client;
  * @author Miroslav Pokorny
  */
 public class HueSaturationValue {
+	/**
+	 * The hue component
+	 */
+	private float hue;
+
+	/**
+	 * The saturation component of this colour expression
+	 */
+	private float saturation;
+
+	/**
+	 * The value or brightness of this colour expression.
+	 */
+	private float value;
+
 	public HueSaturationValue(final float hue, final float saturation,
 			final float value) {
 		super();
@@ -97,63 +112,30 @@ public class HueSaturationValue {
 		return new Colour(red, green, blue);
 	}
 
-	protected int toInteger(final float floatValue) {
-		return (int) (floatValue * Constants.COLOUR_COMPONENT_VALUE);
+	public boolean equals(final HueSaturationValue otherHsv) {
+		return otherHsv == null ? false
+				: Tester.equals(this.getHue(), otherHsv.getHue(), 0.05f)
+						&& Tester.equals(this.getSaturation(),
+								otherHsv.getSaturation(), 0.05f)
+						&& Tester.equals(this.getValue(), otherHsv.getValue(),
+								0.05f);
 	}
 
-	/**
-	 * The hue component
-	 */
-	private float hue;
+	public boolean equals(final Object otherObject) {
+		return otherObject instanceof Colour ? this.equals((Colour) otherObject)
+				: false;
+	}
 
 	public float getHue() {
 		return hue;
 	}
 
-	void setHue(final float hue) {
-		Checker.between("parameter:hue", hue, 0, 1.01f);
-		this.hue = hue;
-	}
-
-	/**
-	 * The saturation component of this colour expression
-	 */
-	private float saturation;
-
 	public float getSaturation() {
 		return saturation;
 	}
 
-	void setSaturation(final float saturation) {
-		Checker.between("parameter:saturation", saturation, 0, 1.01f);
-		this.saturation = saturation;
-	}
-
-	/**
-	 * The value or brightness of this colour expression.
-	 */
-	private float value;
-
 	public float getValue() {
 		return value;
-	}
-
-	void setValue(final float value) {
-		Checker.between("parameter:value", value, 0, 1.01f);
-		this.value = value;
-	}
-
-	public boolean equals(final Object otherObject) {
-		return otherObject instanceof Colour ? this
-				.equals((Colour) otherObject) : false;
-	}
-
-	public boolean equals(final HueSaturationValue otherHsv) {
-		return otherHsv == null ? false : Tester.equals(this.getHue(),
-				otherHsv.getHue(), 0.05f)
-				&& Tester.equals(this.getSaturation(),
-						otherHsv.getSaturation(), 0.05f)
-				&& Tester.equals(this.getValue(), otherHsv.getValue(), 0.05f);
 	}
 
 	public int hashCode() {
@@ -164,5 +146,24 @@ public class HueSaturationValue {
 
 	public String toString() {
 		return "hsv: " + this.hue + ", " + this.saturation + ", " + this.value;
+	}
+
+	protected int toInteger(final float floatValue) {
+		return (int) (floatValue * Constants.COLOUR_COMPONENT_VALUE);
+	}
+
+	void setHue(final float hue) {
+		Checker.between("parameter:hue", hue, 0, 1.01f);
+		this.hue = hue;
+	}
+
+	void setSaturation(final float saturation) {
+		Checker.between("parameter:saturation", saturation, 0, 1.01f);
+		this.saturation = saturation;
+	}
+
+	void setValue(final float value) {
+		Checker.between("parameter:value", value, 0, 1.01f);
+		this.value = value;
 	}
 }

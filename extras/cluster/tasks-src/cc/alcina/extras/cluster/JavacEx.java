@@ -21,6 +21,20 @@ public class JavacEx extends Javac {
 		excludes.add(fileset);
 	}
 
+	private void maybeRemove(String path) {
+		boolean debug = Boolean.getBoolean("JavacEx.debug");
+		if (nameLookup.containsKey(path)) {
+			if (debug) {
+				System.out.println("Removed duplicate: " + path);
+			}
+			nameLookup.remove(path);
+		} else {
+			if (debug) {
+				System.out.println("Not removed: " + path);
+			}
+		}
+	}
+
 	protected void compile() {
 		nameLookup = Arrays.asList(compileList).stream()
 				.collect(Collectors.toMap(f -> f.getPath(), f -> f));
@@ -36,19 +50,5 @@ public class JavacEx extends Javac {
 		ArrayList<File> list2 = new ArrayList<File>(nameLookup.values());
 		compileList = (File[]) list2.toArray(new File[list2.size()]);
 		super.compile();
-	}
-
-	private void maybeRemove(String path) {
-		boolean debug = Boolean.getBoolean("JavacEx.debug");
-		if (nameLookup.containsKey(path)) {
-			if (debug) {
-				System.out.println("Removed duplicate: " + path);
-			}
-			nameLookup.remove(path);
-		} else {
-			if (debug) {
-				System.out.println("Not removed: " + path);
-			}
-		}
 	}
 }

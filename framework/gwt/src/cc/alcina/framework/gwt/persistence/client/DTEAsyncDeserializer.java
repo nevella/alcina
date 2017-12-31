@@ -19,15 +19,14 @@ public class DTEAsyncDeserializer implements RepeatingCommand {
 
 	public DTEAsyncDeserializer(DeltaApplicationRecord wrapper) {
 		this.wrapper = wrapper;
-		protocolHandler = new DTRProtocolSerializer().getHandler(wrapper
-				.getProtocolVersion());
+		protocolHandler = new DTRProtocolSerializer()
+				.getHandler(wrapper.getProtocolVersion());
 	}
 
 	@Override
 	public boolean execute() {
 		List<DomainTransformEvent> events = new ArrayList<DomainTransformEvent>();
-		String s = protocolHandler.deserialize(wrapper.getText(), events,
-				100);
+		String s = protocolHandler.deserialize(wrapper.getText(), events, 100);
 		items.addAll(events);
 		return s != null;
 	}

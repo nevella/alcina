@@ -5,6 +5,12 @@ import com.totsp.gwittir.client.ui.Renderer;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 public interface HasDisplayName {
+	public static String displayName(Object o) {
+		return (o instanceof HasDisplayName)
+				? ((HasDisplayName) o).displayName()
+				: (o instanceof Enum) ? Ax.friendly(o) : o.toString();
+	}
+
 	public String displayName();
 
 	@ClientInstantiable
@@ -16,11 +22,5 @@ public interface HasDisplayName {
 		public String render(HasDisplayName o) {
 			return o == null ? "" : o.displayName();
 		}
-	}
-
-	public static String displayName(Object o) {
-		return (o instanceof HasDisplayName)
-				? ((HasDisplayName) o).displayName()
-				: (o instanceof Enum) ? Ax.friendly(o) : o.toString();
 	}
 }

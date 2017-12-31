@@ -53,18 +53,30 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 	}
 
 	public static class CombiningValidationFeedbackCollector {
+		public static boolean forceHtmlValidationMessages = false;
+
 		protected Map<Object, ValidationException> exceptions = new LinkedHashMap<Object, ValidationException>();
 
 		private String caption = "Please correct the following";
-
-		public static boolean forceHtmlValidationMessages = false;
 
 		public void clear() {
 			exceptions.clear();
 		}
 
+		public String getCaption() {
+			return caption;
+		}
+
+		public Collection<ValidationException> getExceptions() {
+			return exceptions.values();
+		}
+
 		public void resolve(Object source) {
 			exceptions.remove(source);
+		}
+
+		public void setCaption(String caption) {
+			this.caption = caption;
 		}
 
 		public void show() {
@@ -90,10 +102,6 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 			showFeedbackPanel(fp);
 		}
 
-		public String getCaption() {
-			return caption;
-		}
-
 		protected void showFeedbackPanel(FlowPanel fp) {
 			Registry.impl(ClientNotifications.class).showMessage(fp);
 		}
@@ -101,24 +109,13 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 		void addException(Object source, ValidationException exception) {
 			exceptions.put(source, exception);
 		}
-
-		public Collection<ValidationException> getExceptions() {
-			return exceptions.values();
-		}
-
-		public void setCaption(String caption) {
-			this.caption = caption;
-		}
 	}
 
 	public static class ValidationExceptionWithHtmlMessage
 			extends ValidationException {
 		private ValidationException source;
 
-		public ValidationExceptionWithHtmlMessage(ValidationException source) {
-			super(source.getMessage());
-			this.source = source;
-		}
+		private SafeHtml safeHtml;
 
 		public ValidationExceptionWithHtmlMessage(String htmlMessage,
 				Class validatorClass) {
@@ -127,18 +124,21 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 			this.source = this;
 		}
 
-		private SafeHtml safeHtml;
+		public ValidationExceptionWithHtmlMessage(ValidationException source) {
+			super(source.getMessage());
+			this.source = source;
+		}
 
 		public SafeHtml getSafeHtml() {
 			return this.safeHtml;
 		}
 
-		public void setSafeHtml(SafeHtml safeHtml) {
-			this.safeHtml = safeHtml;
-		}
-
 		public ValidationException getSource() {
 			return this.source;
+		}
+
+		public void setSafeHtml(SafeHtml safeHtml) {
+			this.safeHtml = safeHtml;
 		}
 	}
 }

@@ -26,11 +26,17 @@ public class TaggedLogger {
 
 	Object[] tags;
 
+	Map<String, Long> starts;
+
 	public TaggedLogger(TaggedLoggers taggedLoggers, Class clazz,
 			Object[] tags) {
 		this.taggedLoggers = taggedLoggers;
 		this.clazz = clazz;
 		this.tags = tags;
+	}
+
+	public void format(String string, Object... args) {
+		log(CommonUtils.formatJ(string, args));
 	}
 
 	public boolean hasRegistrations() {
@@ -44,16 +50,6 @@ public class TaggedLogger {
 			registration.handler.log(message);
 		}
 	}
-
-	public static interface TaggedLoggerHandler {
-		void log(String message);
-	}
-
-	public void format(String string, Object... args) {
-		log(CommonUtils.formatJ(string, args));
-	}
-
-	Map<String, Long> starts;
 
 	public synchronized void metric(String key) {
 		if (starts == null) {
@@ -69,5 +65,9 @@ public class TaggedLogger {
 		long duration = System.currentTimeMillis() - starts.get(key);
 		log(CommonUtils.formatJ("Metric - %s - %s: %s ms",
 				clazz.getSimpleName(), key, duration));
+	}
+
+	public static interface TaggedLoggerHandler {
+		void log(String message);
 	}
 }

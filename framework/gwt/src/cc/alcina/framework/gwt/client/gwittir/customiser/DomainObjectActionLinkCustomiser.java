@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.customiser;
-
 
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -35,8 +33,7 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
  *
  * @author Nick Reddel
  */
-
- public class DomainObjectActionLinkCustomiser implements Customiser {
+public class DomainObjectActionLinkCustomiser implements Customiser {
 	public static final String ACTION_NAME = "actionName";
 
 	public static final String TARGET_CLASS = "targetClass";
@@ -49,8 +46,8 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
-		NamedParameter param = NamedParameter.Support.getParameter(info
-				.parameters(), TARGET_CLASS);
+		NamedParameter param = NamedParameter.Support
+				.getParameter(info.parameters(), TARGET_CLASS);
 		Class targetClass = param == null ? null : param.classValue();
 		param = NamedParameter.Support.getParameter(info.parameters(),
 				RENDERER_CLASS);
@@ -65,8 +62,77 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
 				targetClass, rendererClass, displayName, asHtml);
 	}
 
-	public static class DomainObjectActionLinkProvider implements
-			BoundWidgetProvider {
+	public static class DomainObjectActionLink extends BoundHyperlink {
+		private String actionName;
+
+		private Class targetClass;
+
+		private String displayName;
+
+		public DomainObjectActionLink() {
+			setRenderer(DisplayNameRenderer.INSTANCE);
+			addStyleName("nowrap");
+		}
+
+		public String getActionName() {
+			return this.actionName;
+		}
+
+		public String getDisplayName() {
+			return this.displayName;
+		}
+
+		public Class getTargetClass() {
+			return targetClass;
+		}
+
+		public void setActionName(String actionName) {
+			this.actionName = actionName;
+		}
+
+		public void setDisplayName(String displayName) {
+			this.displayName = displayName;
+		}
+
+		@Override
+		public void setModel(Object model) {
+			super.setModel(model);
+			if (model instanceof HasIdAndLocalId) {
+				HasIdAndLocalId hili = (HasIdAndLocalId) model;
+				AlcinaHistoryItem info = AlcinaHistory.get()
+						.createHistoryInfo();
+				info.setActionName(actionName);
+				info.setClassName(targetClass == null
+						? hili.getClass().getName() : targetClass.getName());
+				info.setId(hili.getId());
+				info.setLocalId(hili.getLocalId());
+				setTargetHistoryToken(info.toTokenString());
+				String renderedString = this.getRenderer() != null
+						? (String) this.getRenderer().render(model)
+						: model == null ? "" : model.toString();
+				if (getDisplayName() != null) {
+					renderedString = getDisplayName();
+				}
+				if (isAsHtml()) {
+					this.base.setHTML(renderedString);
+				} else {
+					this.setText(renderedString);
+				}
+			}
+		}
+
+		public void setTargetClass(Class targetClass) {
+			this.targetClass = targetClass;
+		}
+
+		@Override
+		public void setValue(Object value) {
+			return;
+		}
+	}
+
+	public static class DomainObjectActionLinkProvider
+			implements BoundWidgetProvider {
 		private final String actionName;
 
 		private final Class targetClass;
@@ -94,78 +160,10 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
 			link.setDisplayName(displayName);
 			link.setAsHtml(asHtml);
 			if (rendererClass != null) {
-				link.setRenderer(Reflections.classLookup()
-						.newInstance(rendererClass));
+				link.setRenderer(
+						Reflections.classLookup().newInstance(rendererClass));
 			}
 			return link;
-		}
-	}
-
-	public static class DomainObjectActionLink extends BoundHyperlink {
-		private String actionName;
-
-		private Class targetClass;
-
-		private String displayName;
-
-		public String getDisplayName() {
-			return this.displayName;
-		}
-
-		public void setDisplayName(String displayName) {
-			this.displayName = displayName;
-		}
-
-		public String getActionName() {
-			return this.actionName;
-		}
-
-		public void setActionName(String actionName) {
-			this.actionName = actionName;
-		}
-
-		public DomainObjectActionLink() {
-			setRenderer(DisplayNameRenderer.INSTANCE);
-			addStyleName("nowrap");
-		}
-
-		@Override
-		public void setValue(Object value) {
-			return;
-		}
-
-		@Override
-		public void setModel(Object model) {
-			super.setModel(model);
-			if (model instanceof HasIdAndLocalId) {
-				HasIdAndLocalId hili = (HasIdAndLocalId) model;
-				AlcinaHistoryItem info = AlcinaHistory.get().createHistoryInfo();
-				info.setActionName(actionName);
-				info.setClassName(targetClass == null ? hili.getClass()
-						.getName() : targetClass.getName());
-				info.setId(hili.getId());
-				info.setLocalId(hili.getLocalId());
-				setTargetHistoryToken(info.toTokenString());
-				String renderedString = this.getRenderer() != null ? (String) this
-						.getRenderer().render(model)
-						: model == null ? "" : model.toString();
-				if (getDisplayName() != null) {
-					renderedString = getDisplayName();
-				}
-				if (isAsHtml()) {
-					this.base.setHTML(renderedString);
-				} else {
-					this.setText(renderedString);
-				}
-			}
-		}
-
-		public void setTargetClass(Class targetClass) {
-			this.targetClass = targetClass;
-		}
-
-		public Class getTargetClass() {
-			return targetClass;
 		}
 	}
 }

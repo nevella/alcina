@@ -21,9 +21,18 @@ public class ShallowObjectFilter implements GraphProjectionFieldFilter {
 		this.allowOwningTypes = new LinkedHashSet<Class>(allowOwningTypes);
 	}
 
+	public boolean isPermitCollectionsAndMaps() {
+		return this.permitCollectionsAndMaps;
+	}
+
 	@Override
 	public Boolean permitClass(Class clazz) {
 		return true;
+	}
+
+	public ShallowObjectFilter permitCollectionsAndMaps() {
+		this.permitCollectionsAndMaps = true;
+		return this;
 	}
 
 	@Override
@@ -42,18 +51,9 @@ public class ShallowObjectFilter implements GraphProjectionFieldFilter {
 		return GraphProjection.isPrimitiveOrDataClass(type);
 	}
 
-	public ShallowObjectFilter permitCollectionsAndMaps() {
-		this.permitCollectionsAndMaps = true;
-		return this;
-	}
-
 	@Override
 	public boolean permitTransient(Field field) {
 		return false;
-	}
-
-	public boolean isPermitCollectionsAndMaps() {
-		return this.permitCollectionsAndMaps;
 	}
 
 	public void setPermitCollectionsAndMaps(boolean permitCollectionsAndMaps) {

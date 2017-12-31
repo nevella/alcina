@@ -11,6 +11,8 @@ public class LockUtils {
 
 	private static Map<ClassIdLock, WeakReference<ClassIdLock>> classIdLocks = new WeakHashMap<ClassIdLock, WeakReference<ClassIdLock>>();
 
+	private static Map<ClassStringKeyLock, ClassStringKeyLock> classStringKeyLocks = new HashMap<ClassStringKeyLock, ClassStringKeyLock>();
+
 	public static synchronized ClassIdLock obtainClassIdLock(Class clazz,
 			long id) {
 		ClassIdLock key = new ClassIdLock(clazz, id);
@@ -20,17 +22,31 @@ public class LockUtils {
 		return classIdLocks.get(key).get();
 	}
 
+	public static synchronized ClassStringKeyLock
+			obtainClassStringKeyLock(Class clazz, String key) {
+		ClassStringKeyLock lock = new ClassStringKeyLock(clazz, key);
+		if (!classStringKeyLocks.containsKey(lock)) {
+			classStringKeyLocks.put(lock, lock);
+		}
+		return classStringKeyLocks.get(lock);
+	}
+
+	public static synchronized ClassStringKeyLock
+			obtainStringKeyLock(String key) {
+		return obtainClassStringKeyLock(LockUtils.class, key);
+	}
+
 	public static class ClassStringKeyLock {
 		Class clazz;
 
 		String key;
-		
+
 		private ReentrantLock lock;
 
 		public ClassStringKeyLock(Class clazz, String key) {
 			this.clazz = clazz;
 			this.key = key;
-			this.lock=new ReentrantLock();
+			this.lock = new ReentrantLock();
 		}
 
 		@Override
@@ -54,20 +70,5 @@ public class LockUtils {
 		public void unlock() {
 			this.lock.unlock();
 		}
-	}
-
-	private static Map<ClassStringKeyLock, ClassStringKeyLock> classStringKeyLocks = new HashMap<ClassStringKeyLock, ClassStringKeyLock>();
-
-	public static synchronized ClassStringKeyLock obtainStringKeyLock(String key) {
-		return obtainClassStringKeyLock(LockUtils.class, key);
-	}
-
-	public static synchronized ClassStringKeyLock obtainClassStringKeyLock(
-			Class clazz, String key) {
-		ClassStringKeyLock lock = new ClassStringKeyLock(clazz, key);
-		if (!classStringKeyLocks.containsKey(lock)) {
-			classStringKeyLocks.put(lock, lock);
-		}
-		return classStringKeyLocks.get(lock);
 	}
 }

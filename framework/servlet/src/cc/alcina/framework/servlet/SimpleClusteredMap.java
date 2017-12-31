@@ -9,8 +9,22 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class SimpleClusteredMap<K, V> {
 	public Map<K, V> data;
 
+	List<Instruction> instructions = new ArrayList<Instruction>();
+
 	public SimpleClusteredMap(Map<K, V> data) {
 		this.data = data;
+	}
+
+	public void clearInstructions() {
+		instructions.clear();
+	}
+
+	public boolean delete(K key) {
+		if (data.containsKey(key)) {
+			addAndPlay(new Instruction(null, key, InstructionType.DELETE));
+			return true;
+		}
+		return false;
 	}
 
 	public boolean put(K key, V value) {
@@ -21,25 +35,15 @@ public class SimpleClusteredMap<K, V> {
 		return true;
 	}
 
-	List<Instruction> instructions = new ArrayList<Instruction>();
-
 	public void replayInstructions() {
 		for (Instruction instruction : instructions) {
 			instruction.play();
 		}
 	}
 
-	public void clearInstructions() {
-		instructions.clear();
-	}
-
 	private synchronized void addAndPlay(Instruction instruction) {
 		instructions.add(instruction);
 		instruction.play();
-	}
-
-	static enum InstructionType {
-		PUT, DELETE
 	}
 
 	class Instruction {
@@ -55,6 +59,11 @@ public class SimpleClusteredMap<K, V> {
 			this.type = type;
 		}
 
+		@Override
+		public String toString() {
+			return String.format("Instruction: %s %s\n", type, key);
+		}
+
 		void play() {
 			switch (type) {
 			case DELETE:
@@ -65,18 +74,9 @@ public class SimpleClusteredMap<K, V> {
 				break;
 			}
 		}
-
-		@Override
-		public String toString() {
-			return String.format("Instruction: %s %s\n", type, key);
-		}
 	}
 
-	public boolean delete(K key) {
-		if (data.containsKey(key)) {
-			addAndPlay(new Instruction(null, key, InstructionType.DELETE));
-			return true;
-		}
-		return false;
+	static enum InstructionType {
+		PUT, DELETE
 	}
 }

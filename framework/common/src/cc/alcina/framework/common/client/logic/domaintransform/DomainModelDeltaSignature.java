@@ -4,8 +4,11 @@ import java.io.Serializable;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
+
 /**
- * Important! Don't allow a signature part to contain a comma - that's the delimiter character
+ * Important! Don't allow a signature part to contain a comma - that's the
+ * delimiter character
+ * 
  * @author nick@alcina.cc
  *
  */
@@ -33,10 +36,6 @@ public class DomainModelDeltaSignature implements Serializable {
 
 	private String sid = "0";
 
-	public String getSid() {
-		return this.sid;
-	}
-
 	private String contentHash = "";
 
 	private String rpcSignature = "";
@@ -47,6 +46,10 @@ public class DomainModelDeltaSignature implements Serializable {
 
 	public DomainModelDeltaSignature() {
 		userId = PermissionsManager.get().getUserId();
+	}
+
+	public DomainModelDeltaSignature checkValidUser() {
+		return userId == PermissionsManager.get().getUserId() ? this : null;
 	}
 
 	public DomainModelDeltaSignature classSimpleName(String classSimpleName) {
@@ -66,6 +69,14 @@ public class DomainModelDeltaSignature implements Serializable {
 	public DomainModelDeltaSignature contentLength(long contentLength) {
 		this.contentLength = contentLength;
 		return this;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof DomainModelDeltaSignature) {
+			return toString().equals(obj.toString());
+		}
+		return false;
 	}
 
 	public String getClassSimpleName() {
@@ -88,18 +99,42 @@ public class DomainModelDeltaSignature implements Serializable {
 		return this.rpcSignature;
 	}
 
+	public String getSid() {
+		return this.sid;
+	}
+
+	public long getUserId() {
+		return this.userId;
+	}
+
+	public int hashCode() {
+		return toString().hashCode();
+	}
+
 	public DomainModelDeltaSignature id(long id) {
 		this.id = id;
 		return this;
 	}
 
-	public DomainModelDeltaSignature sid(String sid) {
-		this.sid = sid;
-		return this;
-	}
-
 	public String nonVersionedSignature() {
 		return CommonUtils.formatJ("%s,%s,%s", classSimpleName, id, sid);
+	}
+
+	public DomainModelDeltaSignature nonVersionedSignatureObject() {
+		DomainModelDeltaSignature sig = new DomainModelDeltaSignature();
+		sig.classSimpleName = classSimpleName;
+		sig.id = id;
+		sig.sid = sid;
+		return sig;
+	}
+
+	public boolean provideRequiresHash() {
+		return this.requiresHash;
+	}
+
+	public DomainModelDeltaSignature requiresHash() {
+		requiresHash = true;
+		return this;
 	}
 
 	public DomainModelDeltaSignature rpcSignature(String rpcSignature) {
@@ -127,6 +162,15 @@ public class DomainModelDeltaSignature implements Serializable {
 		this.rpcSignature = rpcSignature;
 	}
 
+	public void setUserId(long userId) {
+		this.userId = userId;
+	}
+
+	public DomainModelDeltaSignature sid(String sid) {
+		this.sid = sid;
+		return this;
+	}
+
 	@Override
 	public String toString() {
 		return CommonUtils.formatJ("ds:%s,%s,%s,%s,%s,%s,%s", classSimpleName,
@@ -136,46 +180,5 @@ public class DomainModelDeltaSignature implements Serializable {
 	public DomainModelDeltaSignature userId(long userId) {
 		this.userId = userId;
 		return this;
-	}
-
-	public long getUserId() {
-		return this.userId;
-	}
-
-	public void setUserId(long userId) {
-		this.userId = userId;
-	}
-
-	public DomainModelDeltaSignature checkValidUser() {
-		return userId == PermissionsManager.get().getUserId() ? this : null;
-	}
-
-	public DomainModelDeltaSignature requiresHash() {
-		requiresHash = true;
-		return this;
-	}
-
-	public boolean provideRequiresHash() {
-		return this.requiresHash;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof DomainModelDeltaSignature) {
-			return toString().equals(obj.toString());
-		}
-		return false;
-	}
-
-	public int hashCode() {
-		return toString().hashCode();
-	}
-
-	public DomainModelDeltaSignature nonVersionedSignatureObject() {
-		DomainModelDeltaSignature sig = new DomainModelDeltaSignature();
-		sig.classSimpleName = classSimpleName;
-		sig.id = id;
-		sig.sid = sid;
-		return sig;
 	}
 }

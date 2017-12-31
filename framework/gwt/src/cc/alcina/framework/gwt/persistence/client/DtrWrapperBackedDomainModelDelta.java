@@ -22,8 +22,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.HasRequestReplayI
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DomainTrancheProtocolHandler;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 
-public class DtrWrapperBackedDomainModelDelta implements DomainModelDelta,
-		HasRequestReplayId {
+public class DtrWrapperBackedDomainModelDelta
+		implements DomainModelDelta, HasRequestReplayId {
 	private DeltaApplicationRecord wrapper;
 
 	DomainModelDelta referencedDelta;
@@ -39,48 +39,21 @@ public class DtrWrapperBackedDomainModelDelta implements DomainModelDelta,
 	}
 
 	@Override
-	public DomainModelHolder getDomainModelHolder() {
-		return referencedDelta == null ? null : referencedDelta
-				.getDomainModelHolder();
-	}
-
-	@Override
-	public Collection<DomainModelDeltaHili> getUnlinkedObjects() {
-		return referencedDelta == null ? null : referencedDelta
-				.getUnlinkedObjects();
-	}
-
-	@Override
-	public Collection<DomainTransformEvent> getReplayEvents() {
-		return transforms != null ? transforms
-				: referencedDelta != null ? referencedDelta.getReplayEvents()
-						: null;
-	}
-
-	@Override
 	public String getAppInstruction() {
-		return referencedDelta == null ? null : referencedDelta
-				.getAppInstruction();
+		return referencedDelta == null ? null
+				: referencedDelta.getAppInstruction();
 	}
 
-	public static class DeltaApplicationRecordToDomainModelDeltaConverter
-			implements Converter<DeltaApplicationRecord, DomainModelDelta> {
-		@Override
-		public DomainModelDelta convert(DeltaApplicationRecord wrapper) {
-			return new DtrWrapperBackedDomainModelDelta(wrapper);
-		}
+	@Override
+	public DomainModelHolder getDomainModelHolder() {
+		return referencedDelta == null ? null
+				: referencedDelta.getDomainModelHolder();
 	}
 
-	public DomainTransformRequest getUncomittedDomainTransformRequest() {
-		if (uncomittedDomainTransformRequest == null
-				&& wrapper.getType() == DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED) {
-			uncomittedDomainTransformRequest = new DomainTransformRequest();
-			uncomittedDomainTransformRequest.setRequestId(wrapper
-					.getRequestId());
-			uncomittedDomainTransformRequest.setClientInstance(null);
-			uncomittedDomainTransformRequest.setTag(wrapper.getTag());
-		}
-		return uncomittedDomainTransformRequest;
+	@Override
+	public DomainModelObject getDomainModelObject() {
+		return referencedDelta == null ? null
+				: referencedDelta.getDomainModelObject();
 	}
 
 	public Integer getDomainTransformRequestReplayId() {
@@ -95,14 +68,59 @@ public class DtrWrapperBackedDomainModelDelta implements DomainModelDelta,
 	}
 
 	@Override
+	public DomainModelDeltaMetadata getMetadata() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Collection<DomainTransformEvent> getReplayEvents() {
+		return transforms != null ? transforms
+				: referencedDelta != null ? referencedDelta.getReplayEvents()
+						: null;
+	}
+
+	@Override
+	public DomainModelDeltaSignature getSignature() {
+		return DomainModelDeltaSignature.parseSignature(wrapper.getText());
+	}
+
+	public DomainTransformRequest getUncomittedDomainTransformRequest() {
+		if (uncomittedDomainTransformRequest == null && wrapper
+				.getType() == DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED) {
+			uncomittedDomainTransformRequest = new DomainTransformRequest();
+			uncomittedDomainTransformRequest
+					.setRequestId(wrapper.getRequestId());
+			uncomittedDomainTransformRequest.setClientInstance(null);
+			uncomittedDomainTransformRequest.setTag(wrapper.getTag());
+		}
+		return uncomittedDomainTransformRequest;
+	}
+
+	@Override
+	public Collection<DomainModelDeltaHili> getUnlinkedObjects() {
+		return referencedDelta == null ? null
+				: referencedDelta.getUnlinkedObjects();
+	}
+
+	public DeltaApplicationRecord getWrapper() {
+		return this.wrapper;
+	}
+
+	@Override
+	public boolean hasLocalOnlyTransforms() {
+		return wrapper
+				.getType() == DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED;
+	}
+
+	@Override
 	public void unwrap(final AsyncCallback<Void> completionCallback) {
 		if (unwrapped) {
 			completionCallback.onSuccess(null);
 			return;
 		}
 		unwrapped = true;
-		if (wrapper.getProtocolVersion().equals(
-				DomainTrancheProtocolHandler.VERSION)) {
+		if (wrapper.getProtocolVersion()
+				.equals(DomainTrancheProtocolHandler.VERSION)) {
 			AsyncCallback<DomainModelDelta> trancheCallback = new AsyncCallbackStd<DomainModelDelta>() {
 				@Override
 				public void onSuccess(DomainModelDelta result) {
@@ -122,28 +140,11 @@ public class DtrWrapperBackedDomainModelDelta implements DomainModelDelta,
 		}
 	}
 
-	public DeltaApplicationRecord getWrapper() {
-		return this.wrapper;
-	}
-
-	@Override
-	public DomainModelDeltaSignature getSignature() {
-		return DomainModelDeltaSignature.parseSignature(wrapper.getText());
-	}
-
-	@Override
-	public DomainModelDeltaMetadata getMetadata() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public boolean hasLocalOnlyTransforms() {
-		return wrapper.getType() == DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED;
-	}
-
-	@Override
-	public DomainModelObject getDomainModelObject() {
-		return referencedDelta == null ? null : referencedDelta
-				.getDomainModelObject();
+	public static class DeltaApplicationRecordToDomainModelDeltaConverter
+			implements Converter<DeltaApplicationRecord, DomainModelDelta> {
+		@Override
+		public DomainModelDelta convert(DeltaApplicationRecord wrapper) {
+			return new DtrWrapperBackedDomainModelDelta(wrapper);
+		}
 	}
 }

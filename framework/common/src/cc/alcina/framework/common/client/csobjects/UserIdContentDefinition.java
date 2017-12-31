@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.csobjects;
 
 import javax.xml.bind.annotation.XmlTransient;
@@ -21,33 +20,31 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 
-
 /**
  *
  * @author Nick Reddel
  */
-
- public abstract class UserIdContentDefinition extends WrapperPersistable implements
-		ContentDefinition, GwtMultiplePersistable {
+public abstract class UserIdContentDefinition extends WrapperPersistable
+		implements ContentDefinition, GwtMultiplePersistable {
 	private long userId;
 
 	private transient IUser user;
-
-	public long getUserId() {
-		return this.userId;
-	}
-
-	public void setUserId(long userId) {
-		this.userId = userId;
-	}
 
 	@XmlTransient
 	public IUser getUser() {
 		return this.user;
 	}
 
+	public long getUserId() {
+		return this.userId;
+	}
+
 	public void setUser(IUser user) {
 		this.user = user;
+	}
+
+	public void setUserId(long userId) {
+		this.userId = userId;
 	}
 
 	@Override
@@ -55,6 +52,4 @@ import cc.alcina.framework.common.client.publication.ContentDefinition;
 		String s = getUser() == null ? "" : getUser().getUserName();
 		return s + "(" + getUserId() + ")";
 	}
-
-	
 }

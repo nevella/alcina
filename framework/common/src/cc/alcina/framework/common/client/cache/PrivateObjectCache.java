@@ -13,26 +13,21 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  *
  */
 public interface PrivateObjectCache {
-	void putForSuperClass(Class clazz, HasIdAndLocalId hili);
-
-	void put(HasIdAndLocalId hili);
+	public <T> T get(Class<T> clazz, Long id);
 
 	public <T extends HasIdAndLocalId> T getExisting(T hili);
 
-	public <T> T get(Class<T> clazz, Long id);
+	void put(HasIdAndLocalId hili);
+
+	void putForSuperClass(Class clazz, HasIdAndLocalId hili);
 
 	public static class PrivateObjectCacheSingleClass
 			implements PrivateObjectCache {
 		Map map = Registry.impl(CacheIdMapCreator.class).get();
 
 		@Override
-		public void putForSuperClass(Class clazz, HasIdAndLocalId hili) {
-			put(hili);
-		}
-
-		@Override
-		public void put(HasIdAndLocalId hili) {
-			map.put(hili.getId(), hili);
+		public <T> T get(Class<T> clazz, Long id) {
+			return (T) map.get(id);
 		}
 
 		@Override
@@ -41,8 +36,13 @@ public interface PrivateObjectCache {
 		}
 
 		@Override
-		public <T> T get(Class<T> clazz, Long id) {
-			return (T) map.get(id);
+		public void put(HasIdAndLocalId hili) {
+			map.put(hili.getId(), hili);
+		}
+
+		@Override
+		public void putForSuperClass(Class clazz, HasIdAndLocalId hili) {
+			put(hili);
 		}
 	}
 }

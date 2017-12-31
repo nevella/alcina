@@ -26,110 +26,111 @@ import com.google.gwt.core.client.JavaScriptObject;
  */
 @TagName(SourceElement.TAG)
 public class SourceElement extends Element {
+	public static final String TAG = "source";
 
-  public static final String TAG = "source";
+	/**
+	 * Assert that the given {@link Element} is compatible with this class and
+	 * automatically typecast it.
+	 */
+	public static SourceElement as(Element elem) {
+		assert is(elem);
+		return (SourceElement) elem;
+	}
 
-  /**
-   * Assert that the given {@link Element} is compatible with this class and
-   * automatically typecast it.
-   */
-  public static SourceElement as(Element elem) {
-    assert is(elem);
-    return (SourceElement) elem;
-  }
+	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
 
-  /**
-   * Determines whether the given {@link JavaScriptObject} can be cast to
-   * this class. A <code>null</code> object will cause this method to
-   * return <code>false</code>.
-   */
-  public static boolean is(JavaScriptObject o) {
-    if (Element.is(o)) {
-      return is(Element.as(o));
-    }
-    return false;
-  }
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to this
+	 * class. A <code>null</code> object will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(JavaScriptObject o) {
+		if (Element.is(o)) {
+			return is(Element.as(o));
+		}
+		return false;
+	}
 
-  /**
-   * Determine whether the given {@link Node} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Node node) {
-    if (Element.is(node)) {
-      return is((Element) node);
-    }
-    return false;
-  }
-  
-  /**
-   * Determine whether the given {@link Element} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Element elem) {
-    return elem != null && elem.hasTagName(TAG);
-  }
+	/**
+	 * Determine whether the given {@link Node} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		if (Element.is(node)) {
+			return is((Element) node);
+		}
+		return false;
+	}
 
-  protected SourceElement() {
-  }
+	protected SourceElement() {
+	}
 
-  /**
-   * Returns the source URL for the media, or {@code null} if none is set.
-   * 
-   * @return a String URL or {@code null}
-   * 
-   * @see #setSrc(String)
-   */  public  String getSrc(){
-  return this.getPropertyString("src");
-}
+	/**
+	 * Returns the source URL for the media, or {@code null} if none is set.
+	 * 
+	 * @return a String URL or {@code null}
+	 * 
+	 * @see #setSrc(String)
+	 */
+	public String getSrc() {
+		return this.getPropertyString("src");
+	}
 
+	/**
+	 * Returns the type of media represented by the src, or {@code null} if none
+	 * is set.
+	 * 
+	 * @return a String type, or {@code null}
+	 * 
+	 * @see #setType(String)
+	 */
+	public String getType() {
+		return this.getPropertyString("type");
+	}
 
-  /**
-   * Returns the type of media represented by the src, or {@code null} if none
-   * is set.
-   * 
-   * @return a String type, or {@code null}
-   * 
-   * @see #setType(String)
-   */  public  String getType(){
-  return this.getPropertyString("type");
-}
+	/**
+	 * Sets the source URL for the media.
+	 * 
+	 * @param url
+	 *            a String URL
+	 * 
+	 * @see #getSrc()
+	 */
+	public void setSrc(String url) {
+		this.setPropertyString("src", url);
+	}
 
-
-  /**
-   * Sets the source URL for the media.
-   * 
-   * @param url a String URL
-   * 
-   * @see #getSrc()
-   */  public  void setSrc(String url){
-   this.setPropertyString("src",url);
-}
-
-
-  /**
-   * Sets the type of media represented by the src. The browser will look at the
-   * type when deciding which source files to request from the server.
-   * 
-   * <p>
-   * The type is the format or encoding of the media represented by the source
-   * element. For example, the type of an {@link AudioElement} could be one of
-   * {@value AudioElement#TYPE_OGG}, {@link AudioElement#TYPE_MP3}, or
-   * {@link AudioElement#TYPE_WAV}.
-   * </p>
-   * 
-   * <p>
-   * You can also add the codec information to the type, giving the browser even
-   * more information about whether or not it can play the file (Example: "
-   * <code>audio/ogg; codec=vorbis</code>");
-   * </p>
-   * 
-   * @param type the media type
-   * 
-   * @see #getType()
-   */  public  void setType(String type){
-   this.setPropertyString("type",type);
-}
-
+	/**
+	 * Sets the type of media represented by the src. The browser will look at
+	 * the type when deciding which source files to request from the server.
+	 * 
+	 * <p>
+	 * The type is the format or encoding of the media represented by the source
+	 * element. For example, the type of an {@link AudioElement} could be one of
+	 * {@value AudioElement#TYPE_OGG}, {@link AudioElement#TYPE_MP3}, or
+	 * {@link AudioElement#TYPE_WAV}.
+	 * </p>
+	 * 
+	 * <p>
+	 * You can also add the codec information to the type, giving the browser
+	 * even more information about whether or not it can play the file (Example:
+	 * " <code>audio/ogg; codec=vorbis</code>");
+	 * </p>
+	 * 
+	 * @param type
+	 *            the media type
+	 * 
+	 * @see #getType()
+	 */
+	public void setType(String type) {
+		this.setPropertyString("type", type);
+	}
 }

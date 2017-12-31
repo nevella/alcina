@@ -27,6 +27,10 @@ public class LoadObjectsResponse implements Serializable {
 		return this.deltaTransports;
 	}
 
+	public List<DomainModelDeltaTransport> getLoadSequenceTransports() {
+		return this.loadSequenceTransports;
+	}
+
 	public List<String> getPreserveClientDeltaSignatures() {
 		return this.preserveClientDeltaSignatures;
 	}
@@ -42,8 +46,8 @@ public class LoadObjectsResponse implements Serializable {
 		transport.setDelta(tranche);
 		deltaTransports.add(transport);
 		loadSequenceTransports.add(transport);
-		//for non-persistent systems, so no signature checks
-//		preserveClientDeltaSignatures.add(transport.getSignature());
+		// for non-persistent systems, so no signature checks
+		// preserveClientDeltaSignatures.add(transport.getSignature());
 	}
 
 	public void setAppInstruction(String appInstruction) {
@@ -55,6 +59,11 @@ public class LoadObjectsResponse implements Serializable {
 		this.deltaTransports = deltaTransports;
 	}
 
+	public void setLoadSequenceTransports(
+			List<DomainModelDeltaTransport> loadSequenceTransports) {
+		this.loadSequenceTransports = loadSequenceTransports;
+	}
+
 	public void setPreserveClientDeltaSignatures(
 			List<String> preserveClientDeltaSignatures) {
 		this.preserveClientDeltaSignatures = preserveClientDeltaSignatures;
@@ -62,14 +71,5 @@ public class LoadObjectsResponse implements Serializable {
 
 	public void setRequest(LoadObjectsRequest request) {
 		this.request = request;
-	}
-
-	public List<DomainModelDeltaTransport> getLoadSequenceTransports() {
-		return this.loadSequenceTransports;
-	}
-
-	public void setLoadSequenceTransports(
-			List<DomainModelDeltaTransport> loadSequenceTransports) {
-		this.loadSequenceTransports = loadSequenceTransports;
 	}
 }

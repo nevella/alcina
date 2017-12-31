@@ -20,11 +20,6 @@ import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
  * 
  */
 public class SaveToLocalStorageConsort extends AllStatesConsort<State> {
-	static enum State {
-		ACQUIRE_CROSS_TAB_PERSISTENCE_LOCK, CLEAR_UNNEEDED_PLAYBACK_DATA,
-		SAVE_CHUNKS, RELEASE_CROSS_TAB_PERSISTENCE_LOCK
-	}
-
 	public SaveToLocalStorageConsort() {
 		super(State.class, null);
 	}
@@ -37,16 +32,20 @@ public class SaveToLocalStorageConsort extends AllStatesConsort<State> {
 			break;
 		case CLEAR_UNNEEDED_PLAYBACK_DATA:
 			LocalTransformPersistence.get().clearPersistedClient(null, 0,
-					player,false);
+					player, false);
 			break;
 		case SAVE_CHUNKS:
-			LocalTransformPersistence.get().persist(
-					HandshakeConsortModel.get()
-							.getPersistableApplicationRecords(), player);
+			LocalTransformPersistence.get().persist(HandshakeConsortModel.get()
+					.getPersistableApplicationRecords(), player);
 			break;
 		case RELEASE_CROSS_TAB_PERSISTENCE_LOCK:
 			ClientSession.get().releaseCrossTabPersistenceLock();
 			break;
 		}
+	}
+
+	static enum State {
+		ACQUIRE_CROSS_TAB_PERSISTENCE_LOCK, CLEAR_UNNEEDED_PLAYBACK_DATA,
+		SAVE_CHUNKS, RELEASE_CROSS_TAB_PERSISTENCE_LOCK
 	}
 }

@@ -18,10 +18,9 @@ public interface ConsortPlayer {
 				} else {
 					if (fireEndState) {
 						try {
-							LooseContext
-									.pushWithKey(
-											Consort.IGNORE_PLAYED_STATES_IF_NOT_CONTAINED,
-											true);
+							LooseContext.pushWithKey(
+									Consort.IGNORE_PLAYED_STATES_IF_NOT_CONTAINED,
+									true);
 							if (stateToFireAfterConsortEnd != null) {
 								player.wasPlayed(stateToFireAfterConsortEnd);
 							} else {
@@ -43,6 +42,17 @@ public interface ConsortPlayer {
 
 		private boolean fireEndState = true;
 
+		public void maybeAttach(AsyncCallback callback,
+				Consort maybeChildConsort, boolean fireEndStateIfChild) {
+			if (callback instanceof Player) {
+				Player player = (Player) callback;
+				fireEndState = fireEndStateIfChild;
+				run(player.getConsort(), maybeChildConsort, player);
+			} else {
+				maybeChildConsort.start();
+			}
+		}
+
 		public void run(Consort consort, Consort subConsort, Player player) {
 			run(consort, subConsort, player, null);
 		}
@@ -57,17 +67,6 @@ public interface ConsortPlayer {
 			consort.passLoggersAndFlagsToChild(subConsort);
 			subConsort.exitListenerDelta(listener, false, true);
 			subConsort.restart();
-		}
-
-		public void maybeAttach(AsyncCallback callback,
-				Consort maybeChildConsort, boolean fireEndStateIfChild) {
-			if (callback instanceof Player) {
-				Player player = (Player) callback;
-				fireEndState = fireEndStateIfChild;
-				run(player.getConsort(), maybeChildConsort, player);
-			} else {
-				maybeChildConsort.start();
-			}
 		}
 	}
 }

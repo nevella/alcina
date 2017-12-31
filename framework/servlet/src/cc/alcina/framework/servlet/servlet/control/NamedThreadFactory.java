@@ -14,15 +14,15 @@ public class NamedThreadFactory implements ThreadFactory {
 
 	public NamedThreadFactory(String prefix) {
 		SecurityManager s = System.getSecurityManager();
-		group = (s != null) ? s.getThreadGroup() : Thread.currentThread()
-				.getThreadGroup();
+		group = (s != null) ? s.getThreadGroup()
+				: Thread.currentThread().getThreadGroup();
 		namePrefix = "pool-" + prefix + "-" + poolNumber.getAndIncrement()
 				+ "-thread-";
 	}
 
 	public Thread newThread(Runnable r) {
-		Thread t = new Thread(group, r, namePrefix
-				+ threadNumber.getAndIncrement(), 0);
+		Thread t = new Thread(group, r,
+				namePrefix + threadNumber.getAndIncrement(), 0);
 		if (t.isDaemon())
 			t.setDaemon(false);
 		if (t.getPriority() != Thread.NORM_PRIORITY)

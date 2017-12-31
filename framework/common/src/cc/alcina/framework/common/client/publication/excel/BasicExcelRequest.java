@@ -7,12 +7,12 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 
-
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 @XmlRootElement
-public class BasicExcelRequest extends
-		ContentRequestBase<BasicExcelContentDefinition> {
+public class BasicExcelRequest
+		extends ContentRequestBase<BasicExcelContentDefinition> {
 	static final long serialVersionUID = -1L;
+
 	public BasicExcelRequest() {
 		putContentDeliveryType(ContentDeliveryType.DOWNLOAD);
 	}
@@ -27,5 +27,4 @@ public class BasicExcelRequest extends
 			BasicExcelContentDefinition contentDefinition) {
 		this.contentDefinition = contentDefinition;
 	}
-	
 }

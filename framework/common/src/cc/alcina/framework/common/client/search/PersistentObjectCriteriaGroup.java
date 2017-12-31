@@ -6,21 +6,21 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 
 @Bean(displayNamePropertyName = "displayName")
 @PermissibleChildClasses({ PersistentObjectCriterion.class })
-public class PersistentObjectCriteriaGroup extends CriteriaGroup<PersistentObjectCriterion> {
+public class PersistentObjectCriteriaGroup
+		extends CriteriaGroup<PersistentObjectCriterion> {
+	static final transient long serialVersionUID = -1L;
 
-    static final transient long serialVersionUID = -1L;
+	public PersistentObjectCriteriaGroup() {
+		super();
+	}
 
-    public PersistentObjectCriteriaGroup() {
-        super();
-    }
+	@Override
+	public String getDisplayName() {
+		return "Object type";
+	}
 
-    @Override
-    public Class getEntityClass() {
-        return ClassRef.class;
-    }
-
-    @Override
-    public String getDisplayName() {
-        return "Object type";
-    }
+	@Override
+	public Class getEntityClass() {
+		return ClassRef.class;
+	}
 }

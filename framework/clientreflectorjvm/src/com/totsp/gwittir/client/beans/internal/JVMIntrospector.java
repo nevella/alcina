@@ -18,7 +18,6 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
@@ -30,6 +29,10 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 @ClientInstantiable
 public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
+
+	public JVMIntrospector() {
+		Reflections.registerBeanDescriptorProvider(this);
+	}
 
 	public BeanDescriptor getDescriptor(Object object) {
 		if (cache.containsKey(object.getClass())) {
@@ -52,8 +55,30 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 		return instance.getClass();
 	}
 
-	public JVMIntrospector() {
-		Reflections.registerBeanDescriptorProvider(this);
+	public static class MethodWrapper implements Method {
+		private final java.lang.reflect.Method inner;
+
+		public MethodWrapper(java.lang.reflect.Method inner) {
+			assert inner != null;
+			this.inner = inner;
+		}
+
+		// @Override
+		// For JDK1.5 compatibility, don't override methods inherited from an
+		// interface
+		public String getName() {
+			return ((java.lang.reflect.Method) inner).toString();
+		}
+
+		// @Override
+		public Object invoke(Object target, Object[] args) throws Exception {
+			return inner.invoke(target, args);
+		}
+
+		@Override
+		public String toString() {
+			return inner.toString();
+		}
 	}
 
 	public static class ReflectionBeanDescriptor implements BeanDescriptor {
@@ -116,32 +141,6 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 			}
 			throw new NoSuchPropertyException(
 					"Unknown property: " + name + " on class " + className);
-		}
-	}
-
-	public static class MethodWrapper implements Method {
-		private final java.lang.reflect.Method inner;
-
-		public MethodWrapper(java.lang.reflect.Method inner) {
-			assert inner != null;
-			this.inner = inner;
-		}
-
-		// @Override
-		// For JDK1.5 compatibility, don't override methods inherited from an
-		// interface
-		public String getName() {
-			return ((java.lang.reflect.Method) inner).toString();
-		}
-
-		// @Override
-		public Object invoke(Object target, Object[] args) throws Exception {
-			return inner.invoke(target, args);
-		}
-
-		@Override
-		public String toString() {
-			return inner.toString();
 		}
 	}
 }

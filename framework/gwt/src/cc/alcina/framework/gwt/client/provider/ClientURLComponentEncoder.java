@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.provider;
 
 import com.google.gwt.http.client.URL;
@@ -21,14 +20,13 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.UrlEncoder;
 
-
 /**
  *
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint=UrlEncoder.class,implementationType=ImplementationType.SINGLETON)
+@RegistryLocation(registryPoint = UrlEncoder.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
- public class ClientURLComponentEncoder implements UrlEncoder {
+public class ClientURLComponentEncoder implements UrlEncoder {
 	public String decode(String componentText) {
 		return URL.decodeQueryString(componentText);
 	}
@@ -36,6 +34,4 @@ import cc.alcina.framework.common.client.util.UrlEncoder;
 	public String encode(String text) {
 		return URL.encodeQueryString(text);
 	}
-
-	
 }

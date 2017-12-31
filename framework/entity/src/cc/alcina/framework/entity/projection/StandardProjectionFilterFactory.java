@@ -8,7 +8,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry.Regi
 @RegistryLocations({
 		@RegistryLocation(registryPoint = PermissibleFieldFilter.class, implementationType = ImplementationType.FACTORY),
 		@RegistryLocation(registryPoint = CollectionProjectionFilter.class, implementationType = ImplementationType.FACTORY) })
-public class StandardProjectionFilterFactory implements RegistryFactory<Object> {
+public class StandardProjectionFilterFactory
+		implements RegistryFactory<Object> {
 	@Override
 	public Object create(Class registryPoint, Class targetObjectClass) {
 		if (registryPoint == PermissibleFieldFilter.class) {

@@ -23,30 +23,30 @@ import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
  * 
  * @author Nick Reddel
  */
-public interface CollectionProvider<T> extends CollectionModificationSource,
-		DetachListener {
+public interface CollectionProvider<T>
+		extends CollectionModificationSource, DetachListener {
 	public Collection<T> getCollection();
 
 	public Class<? extends T> getCollectionMemberClass();
 
-	public abstract static class SilentCollectionProvider<T> implements
-			CollectionProvider<T> {
+	public int getCollectionSize();
+
+	public abstract static class SilentCollectionProvider<T>
+			implements CollectionProvider<T> {
 		public void addCollectionModificationListener(
 				CollectionModificationListener listener) {
-		}
-
-		public void removeCollectionModificationListener(
-				CollectionModificationListener listener) {
-		}
-
-		public void onDetach() {
 		}
 
 		@Override
 		public int getCollectionSize() {
 			return 0;
 		}
-	}
 
-	public int getCollectionSize();
+		public void onDetach() {
+		}
+
+		public void removeCollectionModificationListener(
+				CollectionModificationListener listener) {
+		}
+	}
 }

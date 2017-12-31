@@ -44,8 +44,8 @@ public class CrxServlet extends HttpServlet {
 		resp.setContentType("application/x-chrome-extension");
 		ServletOutputStream out = resp.getOutputStream();
 		String realPath = getServletContext().getRealPath(req.getRequestURI());
-		ResourceUtilities.writeStreamToStream(new BufferedInputStream(
-				new FileInputStream(realPath)), out);
+		ResourceUtilities.writeStreamToStream(
+				new BufferedInputStream(new FileInputStream(realPath)), out);
 		resp.flushBuffer();
 	}
 }

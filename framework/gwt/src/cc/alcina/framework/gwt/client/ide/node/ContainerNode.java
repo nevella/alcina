@@ -24,11 +24,11 @@ import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
  * 
  * @author Nick Reddel
  */
-public class ContainerNode extends FilterableTreeItem implements DetachListener {
+public class ContainerNode extends FilterableTreeItem
+		implements DetachListener {
 	private String title;
 
 	private AbstractImagePrototype imagePrototype;
-
 
 	public ContainerNode(String title, ImageResource imageResource) {
 		this(title, imageResource, null);
@@ -52,16 +52,16 @@ public class ContainerNode extends FilterableTreeItem implements DetachListener 
 		return this.title;
 	}
 
-	protected String imageItemHTML(AbstractImagePrototype imageProto,
-			String title) {
-		return imageProto.getHTML() + " " + title;
-	}
-
 	public void onDetach() {
 		for (int i = 0; i < getChildCount(); i++) {
 			TreeItem child = getChild(i);
 			if (child instanceof DetachListener)
 				((DetachListener) child).onDetach();
 		}
+	}
+
+	protected String imageItemHTML(AbstractImagePrototype imageProto,
+			String title) {
+		return imageProto.getHTML() + " " + title;
 	}
 }

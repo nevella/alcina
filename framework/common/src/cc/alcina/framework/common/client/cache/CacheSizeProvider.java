@@ -9,14 +9,13 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 @RegistryLocation(registryPoint = CacheSizeProvider.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
 public class CacheSizeProvider {
-	public int size(String descriptorId) {
-		return 100;
+	public void finished() {
 	}
 
 	public void registerMap(String descriptorId, Map map) {
 	}
-	
-	public void finished(){
-		
+
+	public int size(String descriptorId) {
+		return 100;
 	}
 }

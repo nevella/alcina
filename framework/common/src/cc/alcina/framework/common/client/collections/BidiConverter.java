@@ -5,8 +5,6 @@ import com.totsp.gwittir.client.beans.Converter;
 public abstract class BidiConverter<A, B> {
 	public abstract B leftToRight(A a);
 
-	public abstract A rightToLeft(B b);
-
 	public Converter<A, B> leftToRightConverter() {
 		return new Converter<A, B>() {
 			@Override
@@ -16,6 +14,8 @@ public abstract class BidiConverter<A, B> {
 		};
 	}
 
+	public abstract A rightToLeft(B b);
+
 	public Converter<B, A> rightToLeftConverter() {
 		return new Converter<B, A>() {
 			@Override
@@ -24,8 +24,8 @@ public abstract class BidiConverter<A, B> {
 			}
 		};
 	}
-	public static class BidiIdentityConverter<A> extends BidiConverter<A, A>{
 
+	public static class BidiIdentityConverter<A> extends BidiConverter<A, A> {
 		@Override
 		public A leftToRight(A a) {
 			return a;
@@ -35,6 +35,5 @@ public abstract class BidiConverter<A, B> {
 		public A rightToLeft(A b) {
 			return b;
 		}
-		
 	}
 }

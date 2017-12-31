@@ -4,9 +4,10 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 
-public abstract class AbstractUserCriterion extends SearchCriterion implements
-		HasValue<Long> {
+public abstract class AbstractUserCriterion extends SearchCriterion
+		implements HasValue<Long> {
 	static final transient long serialVersionUID = -1L;
+
 	public AbstractUserCriterion() {
 	}
 
@@ -16,12 +17,12 @@ public abstract class AbstractUserCriterion extends SearchCriterion implements
 
 	public abstract Long getUserId();
 
-	public abstract void setUserId(Long value);
-
 	@XmlTransient
 	public Long getValue() {
 		return getUserId();
 	}
+
+	public abstract void setUserId(Long value);
 
 	public void setValue(Long value) {
 		setUserId(value);

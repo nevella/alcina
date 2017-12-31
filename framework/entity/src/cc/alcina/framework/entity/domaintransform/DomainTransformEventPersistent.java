@@ -44,62 +44,6 @@ public abstract class DomainTransformEventPersistent
 
 	private Date serverCommitDate;
 
-	// persistence in app subclass
-	@Transient
-	public DomainTransformRequestPersistent
-			getDomainTransformRequestPersistent() {
-		return domainTransformRequestPersistent;
-	}
-
-	@Transient
-	public long getId() {
-		return this.id;
-	}
-
-	public Date getServerCommitDate() {
-		return serverCommitDate;
-	}
-
-	@Transient
-	public abstract IUser getUser();
-
-	public void setDomainTransformRequestPersistent(
-			DomainTransformRequestPersistent domainTransformRequestPersistent) {
-		this.domainTransformRequestPersistent = domainTransformRequestPersistent;
-	}
-
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	public void setServerCommitDate(Date serverCommitDate) {
-		this.serverCommitDate = serverCommitDate;
-	}
-
-	public abstract void setUser(IUser user);
-
-	public abstract void wrap(DomainTransformEvent evt);
-
-	/**
-	 * Important: if the non-persistent event is to be used, make sure the
-	 * object/value localIds are set to 0 or else all hell may break loose
-	 */
-	public DomainTransformEvent toNonPersistentEvent(boolean clearLocalIds) {
-		DomainTransformEvent event = new DomainTransformEvent();
-		ResourceUtilities.copyBeanProperties(this, event, null, true);
-		if (clearLocalIds) {
-			event.setObjectLocalId(0);
-			event.setValueLocalId(0);
-		}
-		// this is purely decorative, so client reflection can show the server
-		// id of the transform (since raw DTE has no id field)
-		event.setEventId(getId());
-		if (event.getUtcDate() == null) {
-			event.setUtcDate(serverCommitDate);
-		}
-		return event;
-	}
-
 	public void clearForSimplePersistence() {
 		setDomainTransformRequestPersistent(
 				Registry.impl(JPAImplementation.class).getInstantiatedObject(
@@ -111,10 +55,6 @@ public abstract class DomainTransformEventPersistent
 		getValueClass();
 		setObjectClassRef(null);
 		setValueClassRef(null);
-	}
-
-	public Date provideBestDate() {
-		return serverCommitDate != null ? serverCommitDate : getUtcDate();
 	}
 
 	public void copyFromNonPersistentEvent(DomainTransformEvent event) {
@@ -149,6 +89,66 @@ public abstract class DomainTransformEventPersistent
 				: CommitType.class.getEnumConstants()[i];
 		setCommitType(ct);
 	}
+
+	// persistence in app subclass
+	@Transient
+	public DomainTransformRequestPersistent
+			getDomainTransformRequestPersistent() {
+		return domainTransformRequestPersistent;
+	}
+
+	@Transient
+	public long getId() {
+		return this.id;
+	}
+
+	public Date getServerCommitDate() {
+		return serverCommitDate;
+	}
+
+	@Transient
+	public abstract IUser getUser();
+
+	public Date provideBestDate() {
+		return serverCommitDate != null ? serverCommitDate : getUtcDate();
+	}
+
+	public void setDomainTransformRequestPersistent(
+			DomainTransformRequestPersistent domainTransformRequestPersistent) {
+		this.domainTransformRequestPersistent = domainTransformRequestPersistent;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public void setServerCommitDate(Date serverCommitDate) {
+		this.serverCommitDate = serverCommitDate;
+	}
+
+	public abstract void setUser(IUser user);
+
+	/**
+	 * Important: if the non-persistent event is to be used, make sure the
+	 * object/value localIds are set to 0 or else all hell may break loose
+	 */
+	public DomainTransformEvent toNonPersistentEvent(boolean clearLocalIds) {
+		DomainTransformEvent event = new DomainTransformEvent();
+		ResourceUtilities.copyBeanProperties(this, event, null, true);
+		if (clearLocalIds) {
+			event.setObjectLocalId(0);
+			event.setValueLocalId(0);
+		}
+		// this is purely decorative, so client reflection can show the server
+		// id of the transform (since raw DTE has no id field)
+		event.setEventId(getId());
+		if (event.getUtcDate() == null) {
+			event.setUtcDate(serverCommitDate);
+		}
+		return event;
+	}
+
+	public abstract void wrap(DomainTransformEvent evt);
 
 	public static class DomainTransformFromPersistentConverter implements
 			Converter<DomainTransformEventPersistent, DomainTransformEvent> {

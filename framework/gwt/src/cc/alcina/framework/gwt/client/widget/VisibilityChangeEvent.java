@@ -23,8 +23,8 @@ import com.google.gwt.event.shared.HasHandlers;
 /**
  * Event thrown when the widget's visibility changes
  */
-public class VisibilityChangeEvent extends
-		GwtEvent<VisibilityChangeEvent.Handler> {
+public class VisibilityChangeEvent
+		extends GwtEvent<VisibilityChangeEvent.Handler> {
 	/**
 	 * A singleton instance of Type&lt;Handler&gt;.
 	 */

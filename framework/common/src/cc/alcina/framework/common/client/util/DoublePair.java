@@ -7,25 +7,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class DoublePair implements Comparable<DoublePair> {
+	public static String coordinateString(List<DoublePair> pairs) {
+		return pairs.stream().map(DoublePair::toStringComma)
+				.collect(Collectors.joining(" "));
+	}
+
 	public double d1;
 
 	public double d2;
 
 	public DoublePair() {
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof DoublePair) {
-			DoublePair dp = (DoublePair) obj;
-			return d1 == dp.d1 && d2 == dp.d2;
-		}
-		return false;
-	}
-
-	@Override
-	public int hashCode() {
-		return new Double(d1).hashCode() ^ new Double(d2).hashCode();
 	}
 
 	public DoublePair(double i1, double i2) {
@@ -38,19 +29,8 @@ public class DoublePair implements Comparable<DoublePair> {
 		d2 += dp.d2;
 	}
 
-	public void subtract(DoublePair dp) {
-		d1 -= dp.d1;
-		d2 -= dp.d2;
-	}
-
-	public void max(DoublePair dp) {
-		d1 = d1 == 0 ? dp.d1 : Math.min(d1, dp.d1);
-		d2 = d2 == 0 ? dp.d2 : Math.max(d1, dp.d2);
-	}
-
-	public void expand(double value) {
-		d1 = d1 == 0 ? value : Math.min(d1, value);
-		d2 = d2 == 0 ? value : Math.max(d2, value);
+	public double average() {
+		return (d1 + d2) / 2;
 	}
 
 	public int compareTo(DoublePair dp) {
@@ -58,38 +38,32 @@ public class DoublePair implements Comparable<DoublePair> {
 				: d1 > dp.d1 ? 1 : d2 < dp.d2 ? -1 : d2 > dp.d2 ? 1 : 0;
 	}
 
-	@Override
-	public String toString() {
-		return "[" + d1 + "," + d2 + "]";
-	}
-
-	public String toStringComma() {
-		return d1 + "," + d2;
-	}
-
-	public static String coordinateString(List<DoublePair> pairs) {
-		return pairs.stream().map(DoublePair::toStringComma)
-				.collect(Collectors.joining(" "));
-	}
-
-	public boolean isZero() {
-		return d1 == 0 && d2 == 0;
-	}
-
 	// top exclusive
 	public boolean contains(double d) {
 		return d1 == d2 ? d1 == d : ordered().d1 <= d && ordered().d2 > d;
 	}
 
-	public double average() {
-		return (d1 + d2) / 2;
+	public double distance() {
+		return Math.abs(d1 - d2);
 	}
 
-	public DoublePair ordered() {
-		if (d1 <= d2) {
-			return this;
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof DoublePair) {
+			DoublePair dp = (DoublePair) obj;
+			return d1 == dp.d1 && d2 == dp.d2;
 		}
-		return new DoublePair(d2, d1);
+		return false;
+	}
+
+	public void expand(double value) {
+		d1 = d1 == 0 ? value : Math.min(d1, value);
+		d2 = d2 == 0 ? value : Math.max(d2, value);
+	}
+
+	@Override
+	public int hashCode() {
+		return new Double(d1).hashCode() ^ new Double(d2).hashCode();
 	}
 
 	public DoublePair intersection(DoublePair other) {
@@ -105,8 +79,20 @@ public class DoublePair implements Comparable<DoublePair> {
 		return intersection(other) != null;
 	}
 
-	public double distance() {
-		return Math.abs(d1 - d2);
+	public boolean isZero() {
+		return d1 == 0 && d2 == 0;
+	}
+
+	public void max(DoublePair dp) {
+		d1 = d1 == 0 ? dp.d1 : Math.min(d1, dp.d1);
+		d2 = d2 == 0 ? dp.d2 : Math.max(d1, dp.d2);
+	}
+
+	public DoublePair ordered() {
+		if (d1 <= d2) {
+			return this;
+		}
+		return new DoublePair(d2, d1);
 	}
 
 	public double overlap(DoublePair fp2) {
@@ -115,5 +101,19 @@ public class DoublePair implements Comparable<DoublePair> {
 			return 0.0F;
 		}
 		return intersection.distance() * 2 / (distance() + fp2.distance());
+	}
+
+	public void subtract(DoublePair dp) {
+		d1 -= dp.d1;
+		d2 -= dp.d2;
+	}
+
+	@Override
+	public String toString() {
+		return "[" + d1 + "," + d2 + "]";
+	}
+
+	public String toStringComma() {
+		return d1 + "," + d2;
 	}
 }

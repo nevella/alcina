@@ -1,8 +1,7 @@
 package cc.alcina.framework.gwt.client.util;
 
-public abstract class OnetimeWrappingAsyncCallback<T> extends
-		WrappingAsyncCallback<T> {
-	
+public abstract class OnetimeWrappingAsyncCallback<T>
+		extends WrappingAsyncCallback<T> {
 	@Override
 	public void onFailure(Throwable caught) {
 		super.onFailure(caught);

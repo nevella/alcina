@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.node;
 
 import java.util.Collection;
@@ -28,30 +27,17 @@ import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
  *
  * @author Nick Reddel
  */
-
- public class DomainCollectionProviderNode<T extends SourcesPropertyChangeEvents> extends
-		DomainNode<T> implements CollectionModificationListener,
-		ProvidesParenting {
+public class DomainCollectionProviderNode<T extends SourcesPropertyChangeEvents>
+		extends DomainNode<T>
+		implements CollectionModificationListener, ProvidesParenting {
 	protected CollectionRenderingSupport support = null;
 
 	public DomainCollectionProviderNode(T object) {
-		this(object,null);
-	}
-	public DomainCollectionProviderNode(T object,NodeFactory factory) {
-		super(object,factory);
+		this(object, null);
 	}
 
-	public void removeItem(TreeItem item) {
-		super.removeItem(item);
-		support.removeItem(item);
-	}
-
-	@Override
-	public void onDetach() {
-		if (support!=null){
-			support.onDetach();
-		}
-		super.onDetach();
+	public DomainCollectionProviderNode(T object, NodeFactory factory) {
+		super(object, factory);
 	}
 
 	public void collectionModification(CollectionModificationEvent evt) {
@@ -74,8 +60,21 @@ import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 		return this.support.getVisibleItemObjects();
 	}
 
+	@Override
+	public void onDetach() {
+		if (support != null) {
+			support.onDetach();
+		}
+		super.onDetach();
+	}
+
 	public void refreshChildren() {
 		this.support.refreshChildren(false);
+	}
+
+	public void removeItem(TreeItem item) {
+		super.removeItem(item);
+		support.removeItem(item);
 	}
 
 	public void setCollectionProvider(CollectionProvider collectionProvider) {

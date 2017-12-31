@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -16,6 +15,22 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 
 public abstract class AlcinaChildRunnable implements Runnable {
+	public static <T> void parallelStream(String name, List<T> items,
+			Consumer<T> consumer) {
+		CountDownLatch latch = new CountDownLatch(items.size());
+		items.stream().forEach(i -> {
+			Runnable itemRunnable = () -> consumer.accept(i);
+			new AlcinaChildContextRunner(
+					Ax.format("%s-%s", name, items.indexOf(i)))
+							.callNewThread(itemRunnable, latch);
+		});
+		try {
+			latch.await();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	private PermissionsManagerState permissionsManagerState;
 
 	private String threadName;
@@ -24,13 +39,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 
 	protected RunContext runContext = new RunContext();
 
-	class RunContext {
-		private int tLooseContextDepth;
-
-		private boolean logExceptions = false;
-
-		private Runnable runnable;
-	}
+	Map<String, Object> copyContext = new LinkedHashMap<>();
 
 	public AlcinaChildRunnable(String name) {
 		this.threadName = name;
@@ -45,78 +54,15 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		}
 	}
 
-	public static class AlcinaChildContextRunner extends AlcinaChildRunnable {
-		public AlcinaChildContextRunner(String name) {
-			super(name);
-			launcherThreadId = Thread.currentThread().getId();
-		}
-
-		ThreadLocal<RunContext> contexts = new ThreadLocal<AlcinaChildRunnable.RunContext>() {
-			protected RunContext initialValue() {
-				return new RunContext();
-			}
-		};
-
-		private long launcherThreadId;
-
-		public Throwable thrown;
-
-		@Override
-		protected void run0() throws Exception {
-			getRunContext().runnable.run();
-		}
-
-		public Object callNewThread(Runnable runnable) {
-			return callNewThread(runnable, null);
-		}
-
-		public Object callNewThread(Runnable runnable, CountDownLatch latch) {
-			new Thread() {
-				@Override
-				public void run() {
-					getRunContext().runnable = runnable;
-					try {
-						AlcinaChildContextRunner.this.run();
-					} finally {
-						if (latch != null) {
-							latch.countDown();
-						}
-					}
-				}
-			}.start();
-			return null;
-		}
-
-		public Object call(Runnable runnable) {
-			if (Thread.currentThread().getId() == launcherThreadId) {
-				// don't do anything fancy to the context (e.g. fork/join pool)
-				runnable.run();
-				return null;
-			} else {
-				getRunContext().runnable = runnable;
-				run();
-				return null;
-			}
-		}
-	}
-
-	protected RunContext getRunContext() {
-		return runContext;
+	public AlcinaChildRunnable copyContext(String key) {
+		copyContext.put(key, LooseContext.get(key));
+		return this;
 	}
 
 	public AlcinaChildRunnable logExceptions() {
 		getRunContext().logExceptions = true;
 		return this;
 	}
-
-	Map<String, Object> copyContext = new LinkedHashMap<>();
-
-	public AlcinaChildRunnable copyContext(String key) {
-		copyContext.put(key, LooseContext.get(key));
-		return this;
-	}
-
-	protected abstract void run0() throws Exception;
 
 	@Override
 	public void run() {
@@ -148,19 +94,72 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		}
 	}
 
-	public static <T> void parallelStream(String name, List<T> items,
-			Consumer<T> consumer) {
-		CountDownLatch latch = new CountDownLatch(items.size());
-		items.stream().forEach(i -> {
-			Runnable itemRunnable = () -> consumer.accept(i);
-			new AlcinaChildContextRunner(
-					Ax.format("%s-%s", name, items.indexOf(i)))
-							.callNewThread(itemRunnable, latch);
-		});
-		try {
-			latch.await();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+	protected RunContext getRunContext() {
+		return runContext;
+	}
+
+	protected abstract void run0() throws Exception;
+
+	public static class AlcinaChildContextRunner extends AlcinaChildRunnable {
+		ThreadLocal<RunContext> contexts = new ThreadLocal<AlcinaChildRunnable.RunContext>() {
+			protected RunContext initialValue() {
+				return new RunContext();
+			}
+		};
+
+		private long launcherThreadId;
+
+		public Throwable thrown;
+
+		public AlcinaChildContextRunner(String name) {
+			super(name);
+			launcherThreadId = Thread.currentThread().getId();
 		}
+
+		public Object call(Runnable runnable) {
+			if (Thread.currentThread().getId() == launcherThreadId) {
+				// don't do anything fancy to the context (e.g. fork/join pool)
+				runnable.run();
+				return null;
+			} else {
+				getRunContext().runnable = runnable;
+				run();
+				return null;
+			}
+		}
+
+		public Object callNewThread(Runnable runnable) {
+			return callNewThread(runnable, null);
+		}
+
+		public Object callNewThread(Runnable runnable, CountDownLatch latch) {
+			new Thread() {
+				@Override
+				public void run() {
+					getRunContext().runnable = runnable;
+					try {
+						AlcinaChildContextRunner.this.run();
+					} finally {
+						if (latch != null) {
+							latch.countDown();
+						}
+					}
+				}
+			}.start();
+			return null;
+		}
+
+		@Override
+		protected void run0() throws Exception {
+			getRunContext().runnable.run();
+		}
+	}
+
+	class RunContext {
+		private int tLooseContextDepth;
+
+		private boolean logExceptions = false;
+
+		private Runnable runnable;
 	}
 }

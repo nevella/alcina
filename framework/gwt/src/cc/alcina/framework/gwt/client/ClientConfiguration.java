@@ -33,22 +33,7 @@ public class ClientConfiguration {
 		extraConfiguration();
 	}
 
-	protected void prepareDebugFromHistory() {
-		AlcinaHistory.initialiseDebugIds();
-		if (AlcinaProperties.is(AlcinaProperties.class,
-				AlcinaProperties.SIMULATE_OFFLINE)) {
-			AlcinaDebugIds.setFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE);
-		}
-	}
-
-	protected void initCss() {
-		StyleInjector.inject(AlcinaResources.INSTANCE.css().getText());
-	}
-
 	protected void afterConfiguration() {
-	}
-
-	protected void extraConfiguration() {
 	}
 
 	protected CommitToStorageTransformListener
@@ -56,10 +41,11 @@ public class ClientConfiguration {
 		return new CommitToStorageTransformListener();
 	}
 
-	protected void initImageProvider() {
+	protected ClientTransformManager createTransformManager() {
+		return new ClientTransformManagerCommon();
 	}
 
-	protected void initContentProvider() {
+	protected void extraConfiguration() {
 	}
 
 	protected void initCommonClient() {
@@ -82,14 +68,11 @@ public class ClientConfiguration {
 		Reflections.registerObjectLookup(TransformManager.get());
 	}
 
-	protected void registerExtraTransformListenersPreStorage() {
+	protected void initContentProvider() {
 	}
 
-	protected void registerExtraTransformListenersPostStorage() {
-	}
-
-	protected ClientTransformManager createTransformManager() {
-		return new ClientTransformManagerCommon();
+	protected void initCss() {
+		StyleInjector.inject(AlcinaResources.INSTANCE.css().getText());
 	}
 
 	protected void initExceptionHandling() {
@@ -97,8 +80,25 @@ public class ClientConfiguration {
 				new ClientExceptionHandler());
 	}
 
+	protected void initImageProvider() {
+	}
+
 	protected void initNotifications() {
 		Registry.registerSingleton(ClientNotifications.class,
 				new ClientNotificationsImpl());
+	}
+
+	protected void prepareDebugFromHistory() {
+		AlcinaHistory.initialiseDebugIds();
+		if (AlcinaProperties.is(AlcinaProperties.class,
+				AlcinaProperties.SIMULATE_OFFLINE)) {
+			AlcinaDebugIds.setFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE);
+		}
+	}
+
+	protected void registerExtraTransformListenersPostStorage() {
+	}
+
+	protected void registerExtraTransformListenersPreStorage() {
 	}
 }

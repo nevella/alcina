@@ -38,27 +38,6 @@ import com.google.gwt.user.client.ui.Widget;
  * Standard implementation used by most cell based widgets.
  */
 class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
-	private class SinkHandler implements Handler {
-		public HandlerRegistration registration;
-
-		private Element elem;
-
-		private String typeName;
-
-		public SinkHandler(Element elem, String typeName) {
-			this.elem = elem;
-			this.typeName = typeName;
-		}
-
-		@Override
-		public void onAttachOrDetach(AttachEvent event) {
-			Preconditions.checkArgument(event.isAttached());
-			Scheduler.get().scheduleFinally(() -> sinkEventImpl(
-					elem.implAccess().ensureRemote(), typeName));
-			registration.removeHandler();
-		}
-	}
-
 	/**
 	 * The method used to dispatch non-bubbling events.
 	 */
@@ -126,6 +105,39 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 	}
 
 	@Override
+	public void resetFocus(ScheduledCommand command) {
+		// Some browsers will not focus an element that was created in this
+		// event loop.
+		Scheduler.get().scheduleDeferred(command);
+	}
+
+	/**
+	 * Initialize the event system.
+	 */
+	private native void initEventSystem() /*-{
+											@com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent = $entry(function(
+											evt) {
+											@com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::handleNonBubblingEvent(Lcom/google/gwt/user/client/Event;)(evt);
+											});
+											}-*/;
+
+	/**
+	 * Sink an event on the element.
+	 *
+	 * @param elem
+	 *            the element to sink the event on
+	 * @param typeName
+	 *            the name of the event to sink
+	 */
+	private native void sinkEventImpl(ElementRemote elem, String typeName) /*-{
+																			elem
+																			.addEventListener(
+																			typeName,
+																			@com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent,
+																			true);
+																			}-*/;
+
+	@Override
 	protected int sinkEvent(Widget widget, String typeName) {
 		if (nonBubblingEvents.contains(typeName)) {
 			// Initialize the event system.
@@ -149,36 +161,24 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 		}
 	}
 
-	@Override
-	public void resetFocus(ScheduledCommand command) {
-		// Some browsers will not focus an element that was created in this
-		// event loop.
-		Scheduler.get().scheduleDeferred(command);
+	private class SinkHandler implements Handler {
+		public HandlerRegistration registration;
+
+		private Element elem;
+
+		private String typeName;
+
+		public SinkHandler(Element elem, String typeName) {
+			this.elem = elem;
+			this.typeName = typeName;
+		}
+
+		@Override
+		public void onAttachOrDetach(AttachEvent event) {
+			Preconditions.checkArgument(event.isAttached());
+			Scheduler.get().scheduleFinally(() -> sinkEventImpl(
+					elem.implAccess().ensureRemote(), typeName));
+			registration.removeHandler();
+		}
 	}
-
-	/**
-	 * Initialize the event system.
-	 */
-	private native void initEventSystem() /*-{
-        @com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent = $entry(function(
-                evt) {
-            @com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::handleNonBubblingEvent(Lcom/google/gwt/user/client/Event;)(evt);
-        });
-	}-*/;
-
-	/**
-	 * Sink an event on the element.
-	 *
-	 * @param elem
-	 *            the element to sink the event on
-	 * @param typeName
-	 *            the name of the event to sink
-	 */
-	private native void sinkEventImpl(ElementRemote elem, String typeName) /*-{
-        elem
-                .addEventListener(
-                        typeName,
-                        @com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent,
-                        true);
-	}-*/;
 }

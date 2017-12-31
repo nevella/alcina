@@ -29,6 +29,19 @@ import com.google.gwt.user.client.ui.Widget;
  *            widget type
  */
 public abstract class LazyPanel<T extends Widget> extends SimplePanel {
+	public static void
+			addBeforeSelectionHandler(final CustomisableTabPanel panel) {
+		panel.addBeforeSelectionHandler(new BeforeSelectionHandler<Integer>() {
+			public void onBeforeSelection(BeforeSelectionEvent<Integer> event) {
+				Integer tabIndex = event.getItem();
+				Widget widget = panel.getWidget(tabIndex);
+				if (widget instanceof LazyPanel) {
+					((LazyPanel) widget).ensureWidget();
+				}
+			}
+		});
+	}
+
 	/**
 	 * Adds a tab listener to ensure that any {@link LazyPanel} instances are
 	 * loaded when a tab panel selects the lazy panel's tab.
@@ -45,24 +58,8 @@ public abstract class LazyPanel<T extends Widget> extends SimplePanel {
 					((LazyPanel) widget).ensureWidget();
 				}
 			}
-
 		});
 	}
-
-	public static void addBeforeSelectionHandler(
-			final CustomisableTabPanel panel) {
-		panel.addBeforeSelectionHandler(new BeforeSelectionHandler<Integer>() {
-			public void onBeforeSelection(BeforeSelectionEvent<Integer> event) {
-				Integer tabIndex = event.getItem();
-				Widget widget = panel.getWidget(tabIndex);
-				if (widget instanceof LazyPanel) {
-					((LazyPanel) widget).ensureWidget();
-				}
-			}
-
-		});
-	}
-
 
 	public LazyPanel() {
 	}
@@ -103,8 +100,9 @@ public abstract class LazyPanel<T extends Widget> extends SimplePanel {
 	/**
 	 * Sets whether this object is visible. Creates the widget if necessary.
 	 * 
-	 * @param visible <code>true</code> to show the object, <code>false</code>
-	 *          to hide it
+	 * @param visible
+	 *            <code>true</code> to show the object, <code>false</code> to
+	 *            hide it
 	 */
 	public void setVisible(boolean visible) {
 		if (visible) {

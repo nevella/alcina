@@ -36,17 +36,9 @@ public class DomDispatch implements IDomDispatch {
 		}
 	}
 
-	private DomDispatchRemote dispatchRemote() {
-		return (DomDispatchRemote) remote;
-	}
-
 	@Override
 	public void buttonClick(ButtonElement button) {
 		remote.buttonClick(button);
-	}
-
-	void flush() {
-		// FIXME - needed here?
 	}
 
 	public ButtonElement createButtonElement(Document doc, String type) {
@@ -69,10 +61,6 @@ public class DomDispatch implements IDomDispatch {
 			boolean canBubble, boolean cancelable) {
 		return remoteImpl().createHtmlEvent(doc.typedRemote(), type, canBubble,
 				cancelable);
-	}
-
-	private DOMImpl remoteImpl() {
-		return dispatchRemote().domImpl;
 	}
 
 	public InputElement createInputElement(Document doc, String type) {
@@ -251,12 +239,6 @@ public class DomDispatch implements IDomDispatch {
 		throw new RemoteOnlyException();
 	}
 
-	public static class RemoteOnlyException
-			extends UnsupportedOperationException {
-		// leave this on element, only element_browser shd call that (on remote
-		// dom dispatch)
-	}
-
 	public int getBodyOffsetLeft(Document doc) {
 		return remoteImpl().getBodyOffsetLeft(doc.typedRemote());
 	}
@@ -367,7 +349,7 @@ public class DomDispatch implements IDomDispatch {
 				before.ensureRemote();
 			}
 		}
-		//remote before local - otherwise the indicies will be out
+		// remote before local - otherwise the indicies will be out
 		remote.selectAdd(select, option, before);
 		local.selectAdd(select, option, before);
 	}
@@ -454,7 +436,25 @@ public class DomDispatch implements IDomDispatch {
 		return remoteImpl().touchGetTarget(touch);
 	}
 
+	private DomDispatchRemote dispatchRemote() {
+		return (DomDispatchRemote) remote;
+	}
+
+	private DOMImpl remoteImpl() {
+		return dispatchRemote().domImpl;
+	}
+
 	private void resolveAllPending() {
 		LocalDom.flush();
+	}
+
+	void flush() {
+		// FIXME - needed here?
+	}
+
+	public static class RemoteOnlyException
+			extends UnsupportedOperationException {
+		// leave this on element, only element_browser shd call that (on remote
+		// dom dispatch)
 	}
 }

@@ -19,7 +19,6 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
-import cc.alcina.framework.common.client.actions.instances.CreateAction;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -121,7 +120,7 @@ public class ContentViewSections {
 			contentViewFactory.setTableStyleName(tableStyleName);
 			PaneWrapperWithObjects beanView = contentViewFactory
 					.createBeanView(bean);
-			if(cancelButton){
+			if (cancelButton) {
 				beanView.setFireOkButtonClickAsOkActionEvent(true);
 			}
 			beanViews.add(beanView);
@@ -130,18 +129,9 @@ public class ContentViewSections {
 		return fp;
 	}
 
-	class MultiListener implements PermissibleActionListener {
-		@Override
-		public void vetoableAction(PermissibleActionEvent evt) {
-			if (evt.getAction().getClass() == OkAction.class || !cancelButton) {
-				if (createListener != null) {
-					createListener.vetoableAction(evt);
-				}
-			}
-			if (actionListener != null) {
-				actionListener.vetoableAction(evt);
-			}
-		}
+	public ContentViewSections cancelButton(boolean cancelButton) {
+		this.cancelButton = cancelButton;
+		return this;
 	}
 
 	public ContentViewSectionsDialogBuilder dialog() {
@@ -296,8 +286,17 @@ public class ContentViewSections {
 		}
 	}
 
-	public ContentViewSections cancelButton(boolean cancelButton) {
-		this.cancelButton = cancelButton;
-		return this;
+	class MultiListener implements PermissibleActionListener {
+		@Override
+		public void vetoableAction(PermissibleActionEvent evt) {
+			if (evt.getAction().getClass() == OkAction.class || !cancelButton) {
+				if (createListener != null) {
+					createListener.vetoableAction(evt);
+				}
+			}
+			if (actionListener != null) {
+				actionListener.vetoableAction(evt);
+			}
+		}
 	}
 }

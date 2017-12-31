@@ -82,22 +82,19 @@ public class FastROBoundTable extends BoundTableExt {
 
 	private EditOverlayHandler editOverlayHandler;
 
+	private int lastSelectedIndex = -1;
+
+	private Object selectedObject = null;
+
 	public FastROBoundTable(int mask, BoundWidgetTypeFactory factory,
 			Field[] fields, DataProvider provider) {
 		super(mask, factory, fields, provider);
 	}
 
-	/**
-	 * Note - you may well want to make the parent of this table relative
-	 */
-	public void editOverlay(Class tableObjectClass) {
-		ROFlexTable t = (ROFlexTable) table;
-		editOverlayHandler = new EditOverlayHandler(tableObjectClass);
-		t.addClickHandler(editOverlayHandler);
-		t.addMouseOutHandler(editOverlayHandler);
-		t.addMouseMoveHandler(editOverlayHandler);
-		t.addMouseOverHandler(editOverlayHandler);
-		table.addStyleName("editable");
+	public boolean checkEditable(SourcesPropertyChangeEvents target,
+			Field editableField) {
+		return checkEditableFilter == null || checkEditableFilter
+				.allow(new CheckEditableTuple(target, editableField));
 	}
 
 	public void edit(Object target, final String fieldName) {
@@ -118,12 +115,25 @@ public class FastROBoundTable extends BoundTableExt {
 		editOverlayHandler.edit(new RowCol(row, col));
 	}
 
-	public List getSelectedObjects() {
-		return this.selectedObjects;
+	/**
+	 * Note - you may well want to make the parent of this table relative
+	 */
+	public void editOverlay(Class tableObjectClass) {
+		ROFlexTable t = (ROFlexTable) table;
+		editOverlayHandler = new EditOverlayHandler(tableObjectClass);
+		t.addClickHandler(editOverlayHandler);
+		t.addMouseOutHandler(editOverlayHandler);
+		t.addMouseMoveHandler(editOverlayHandler);
+		t.addMouseOverHandler(editOverlayHandler);
+		table.addStyleName("editable");
 	}
 
-	public void setSelectedObjects(List selectedObjects) {
-		this.selectedObjects = selectedObjects;
+	public CollectionFilter<CheckEditableTuple> getCheckEditableFilter() {
+		return this.checkEditableFilter;
+	}
+
+	public List getSelectedObjects() {
+		return this.selectedObjects;
 	}
 
 	public void redrawRowForObject(Object o) {
@@ -165,9 +175,42 @@ public class FastROBoundTable extends BoundTableExt {
 			return;
 		}
 		int row = calculateObjectToRowOffset(i);
-		table.removeRow(i
-				+ ((this.masks & BoundTableExt.HEADER_MASK) > 0 ? 1 : 0));
+		table.removeRow(
+				i + ((this.masks & BoundTableExt.HEADER_MASK) > 0 ? 1 : 0));
 		((Collection) getValue()).remove(o);
+	}
+
+	public void setCheckEditableFilter(
+			CollectionFilter<CheckEditableTuple> checkEditableFilter) {
+		this.checkEditableFilter = checkEditableFilter;
+	}
+
+	public void setSelectedObject(Object object) {
+		selectedObject = object;
+		Iterator itr = ((Collection) getValue()).iterator();
+		int rowIndex = 0;
+		while (itr.hasNext()) {
+			Object value = itr.next();
+			if (value == object) {
+				break;
+			}
+			rowIndex++;
+		}
+		int headerOffset = ((this.masks & BoundTableExt.HEADER_MASK) > 0) ? 1
+				: 0;
+		rowIndex += headerOffset;
+		if (lastSelectedIndex != -1) {
+			table.getRowFormatter().removeStyleName(lastSelectedIndex,
+					"selected");
+		}
+		if (table.getRowCount() > rowIndex) {
+			table.getRowFormatter().addStyleName(rowIndex, "selected");
+			lastSelectedIndex = rowIndex;
+		}
+	}
+
+	public void setSelectedObjects(List selectedObjects) {
+		this.selectedObjects = selectedObjects;
 	}
 
 	@Override
@@ -236,14 +279,14 @@ public class FastROBoundTable extends BoundTableExt {
 		if (!wpMap.containsKey(col.getPropertyName())) {
 			Property p = GwittirBridge.get().getProperty(target,
 					col.getPropertyName());
-			BoundWidgetProvider wp = this.factory.getWidgetProvider(
-					col.getPropertyName(), p.getType());
+			BoundWidgetProvider wp = this.factory
+					.getWidgetProvider(col.getPropertyName(), p.getType());
 			pMap.put(col.getPropertyName(), p);
 			wpMap.put(col.getPropertyName(), wp);
 		}
 		Property p = pMap.get(col.getPropertyName());
-		BoundWidgetProvider wp = col.getCellProvider() != null ? col
-				.getCellProvider() : wpMap.get(col.getPropertyName());
+		BoundWidgetProvider wp = col.getCellProvider() != null
+				? col.getCellProvider() : wpMap.get(col.getPropertyName());
 		if (wp instanceof RequiresContextBindable) {
 			((RequiresContextBindable) wp).setBindable(target);
 		}
@@ -258,9 +301,11 @@ public class FastROBoundTable extends BoundTableExt {
 		return widget;
 	}
 
-	private int lastSelectedIndex = -1;
-
-	private Object selectedObject = null;
+	@Override
+	protected FlexTable createTableImpl() {
+		ROFlexTable table = new ROFlexTable();
+		return table;
+	}
 
 	@Override
 	protected void renderAll() {
@@ -268,33 +313,16 @@ public class FastROBoundTable extends BoundTableExt {
 		setSelectedObject(selectedObject);
 	}
 
-	public void setSelectedObject(Object object) {
-		selectedObject = object;
-		Iterator itr = ((Collection) getValue()).iterator();
-		int rowIndex = 0;
-		while (itr.hasNext()) {
-			Object value = itr.next();
-			if (value == object) {
-				break;
-			}
-			rowIndex++;
-		}
-		int headerOffset= ((this.masks & BoundTableExt.HEADER_MASK) > 0) ? 1 : 0;
-		rowIndex+=headerOffset;
-		if (lastSelectedIndex != -1) {
-			table.getRowFormatter().removeStyleName(lastSelectedIndex,
-					"selected");
-		}
-		if (table.getRowCount() > rowIndex) {
-			table.getRowFormatter().addStyleName(rowIndex, "selected");
-			lastSelectedIndex = rowIndex;
-		}
-	}
+	public static class CheckEditableTuple {
+		public SourcesPropertyChangeEvents target;
 
-	@Override
-	protected FlexTable createTableImpl() {
-		ROFlexTable table = new ROFlexTable();
-		return table;
+		public Field field;
+
+		public CheckEditableTuple(SourcesPropertyChangeEvents target,
+				Field editableField) {
+			this.target = target;
+			this.field = editableField;
+		}
 	}
 
 	// this actually duplicates a lot of stuff in HTMLTable -
@@ -313,82 +341,14 @@ public class FastROBoundTable extends BoundTableExt {
 				editableColumns.put(i++, false);
 			}
 			for (Field f : columns) {
-				editableColumns.put(
-						i++,
-						GwittirBridge.get().isFieldEditable(tableObjectClass,
-								f.getPropertyName()));
+				editableColumns.put(i++, GwittirBridge.get().isFieldEditable(
+						tableObjectClass, f.getPropertyName()));
 			}
 		}
 
 		public void onClick(ClickEvent event) {
 			RowCol rowCol = getRowCol(event);
 			edit(rowCol);
-		}
-
-		protected void edit(RowCol rowCol) {
-			if (rowCol.row == 0 || !editableColumns.get(rowCol.col)) {
-				return;
-			}
-			showEditable(rowCol);
-			Iterator itr = ((Collection) getValue()).iterator();
-			final SourcesPropertyChangeEvents target = (SourcesPropertyChangeEvents) CommonUtils
-					.get(itr, rowCol.row - 1);
-			int startColumn = 0;
-			if ((masks & BoundTableExt.ROW_HANDLE_MASK) > 0) {
-				startColumn++;
-			}
-			Field col = columns[rowCol.col - startColumn];
-			final Field field = GwittirBridge.get().getField(target.getClass(),
-					col.getPropertyName(), true, false);
-			if (!checkEditable(target, field)) {
-				return;
-			}
-			BoundWidgetProvider wp = field.getCellProvider();
-			if (wp instanceof RequiresContextBindable) {
-				((RequiresContextBindable) wp).setBindable(target);
-			}
-			final BoundWidget editableWidget = wp.get();
-			Property p = GwittirBridge.get().getProperty(target,
-					field.getPropertyName());
-			try {
-				editableWidget.setModel(target);
-				action = new BasicBindingAction() {
-					@Override
-					protected void set0(BoundWidget widget) {
-						binding.getChildren().add(
-								new Binding(widget, "value", field
-										.getValidator(), field.getFeedback(),
-										target, field.getPropertyName(), null,
-										null));
-						binding.setLeft();
-					}
-				};
-				editableWidget.setAction(action);
-				final BoundWidget tableWidget = (BoundWidget) table.getWidget(
-						rowCol.row, rowCol.col);
-				RelativePopupPanel rpp = new RelativePopupPanel(true);
-				rpp.setAnimationEnabled(true);
-				rpp.addStyleName("edit-overlay");
-				Widget relativeToWidget = (Widget) tableWidget;
-				int tdh = table.getCellFormatter()
-						.getElement(rowCol.row, rowCol.col).getOffsetHeight();
-				RelativePopupPanel relativePopupPanel = RelativePopupPositioning
-						.showPopup(
-								relativeToWidget,
-								(Widget) editableWidget,
-								table,
-								new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
-								null, rpp, -4, -tdh + 4);
-				relativePopupPanel
-						.addCloseHandler(new CloseHandler<RelativePopupPanel>() {
-							public void onClose(
-									CloseEvent<RelativePopupPanel> event) {
-								tableWidget.setValue(editableWidget.getValue());
-							}
-						});
-			} catch (Exception e) {
-				GWT.log("Exception creating cell widget", e);
-			}
 		}
 
 		public void onMouseMove(MouseMoveEvent event) {
@@ -401,15 +361,6 @@ public class FastROBoundTable extends BoundTableExt {
 			}
 		}
 
-		protected void showEditable(RowCol rowCol) {
-			styleDelta(lastRowCol, null, "editableOver");
-			lastRowCol = null;
-			if (rowCol != null) {
-				lastRowCol = rowCol;
-				styleDelta(lastRowCol, "editableOver", null);
-			}
-		}
-
 		public void onMouseOut(MouseOutEvent event) {
 			showEditable(null);
 		}
@@ -419,8 +370,8 @@ public class FastROBoundTable extends BoundTableExt {
 
 		private RowCol getRowCol(DomEvent event) {
 			try {
-				com.google.gwt.dom.client.Element elt = Element.as(event
-						.getNativeEvent().getEventTarget());
+				com.google.gwt.dom.client.Element elt = Element
+						.as(event.getNativeEvent().getEventTarget());
 				Element tableElt = table.getElement();
 				com.google.gwt.dom.client.Element tr = null;
 				com.google.gwt.dom.client.Element td = null;
@@ -468,15 +419,88 @@ public class FastROBoundTable extends BoundTableExt {
 						styleToAdd);
 			}
 			if (styleToRemove != null) {
-				table.getCellFormatter().removeStyleName(rowCol.row,
-						rowCol.col, styleToRemove);
+				table.getCellFormatter().removeStyleName(rowCol.row, rowCol.col,
+						styleToRemove);
+			}
+		}
+
+		protected void edit(RowCol rowCol) {
+			if (rowCol.row == 0 || !editableColumns.get(rowCol.col)) {
+				return;
+			}
+			showEditable(rowCol);
+			Iterator itr = ((Collection) getValue()).iterator();
+			final SourcesPropertyChangeEvents target = (SourcesPropertyChangeEvents) CommonUtils
+					.get(itr, rowCol.row - 1);
+			int startColumn = 0;
+			if ((masks & BoundTableExt.ROW_HANDLE_MASK) > 0) {
+				startColumn++;
+			}
+			Field col = columns[rowCol.col - startColumn];
+			final Field field = GwittirBridge.get().getField(target.getClass(),
+					col.getPropertyName(), true, false);
+			if (!checkEditable(target, field)) {
+				return;
+			}
+			BoundWidgetProvider wp = field.getCellProvider();
+			if (wp instanceof RequiresContextBindable) {
+				((RequiresContextBindable) wp).setBindable(target);
+			}
+			final BoundWidget editableWidget = wp.get();
+			Property p = GwittirBridge.get().getProperty(target,
+					field.getPropertyName());
+			try {
+				editableWidget.setModel(target);
+				action = new BasicBindingAction() {
+					@Override
+					protected void set0(BoundWidget widget) {
+						binding.getChildren().add(new Binding(widget, "value",
+								field.getValidator(), field.getFeedback(),
+								target, field.getPropertyName(), null, null));
+						binding.setLeft();
+					}
+				};
+				editableWidget.setAction(action);
+				final BoundWidget tableWidget = (BoundWidget) table
+						.getWidget(rowCol.row, rowCol.col);
+				RelativePopupPanel rpp = new RelativePopupPanel(true);
+				rpp.setAnimationEnabled(true);
+				rpp.addStyleName("edit-overlay");
+				Widget relativeToWidget = (Widget) tableWidget;
+				int tdh = table.getCellFormatter()
+						.getElement(rowCol.row, rowCol.col).getOffsetHeight();
+				RelativePopupPanel relativePopupPanel = RelativePopupPositioning
+						.showPopup(relativeToWidget, (Widget) editableWidget,
+								table,
+								new RelativePopupAxis[] {
+										RelativePopupPositioning.BOTTOM_LTR },
+								null, rpp, -4, -tdh + 4);
+				relativePopupPanel.addCloseHandler(
+						new CloseHandler<RelativePopupPanel>() {
+							public void onClose(
+									CloseEvent<RelativePopupPanel> event) {
+								tableWidget.setValue(editableWidget.getValue());
+							}
+						});
+			} catch (Exception e) {
+				GWT.log("Exception creating cell widget", e);
+			}
+		}
+
+		protected void showEditable(RowCol rowCol) {
+			styleDelta(lastRowCol, null, "editableOver");
+			lastRowCol = null;
+			if (rowCol != null) {
+				lastRowCol = rowCol;
+				styleDelta(lastRowCol, "editableOver", null);
 			}
 		}
 	}
 
-	private class ROFlexTable extends FlexTable implements
-			HasMouseOverHandlers, HasMouseOutHandlers, HasMouseMoveHandlers {
-		public HandlerRegistration addMouseMoveHandler(MouseMoveHandler handler) {
+	private class ROFlexTable extends FlexTable implements HasMouseOverHandlers,
+			HasMouseOutHandlers, HasMouseMoveHandlers {
+		public HandlerRegistration
+				addMouseMoveHandler(MouseMoveHandler handler) {
 			return addDomHandler(handler, MouseMoveEvent.getType());
 		}
 
@@ -484,21 +508,23 @@ public class FastROBoundTable extends BoundTableExt {
 			return addDomHandler(handler, MouseOutEvent.getType());
 		}
 
-		public HandlerRegistration addMouseOverHandler(MouseOverHandler handler) {
+		public HandlerRegistration
+				addMouseOverHandler(MouseOverHandler handler) {
 			return addDomHandler(handler, MouseOverEvent.getType());
-		}
-
-		protected boolean internalClearCell(Element td, boolean clearInnerHTML) {
-			if (!reallyClear) {
-				return false;
-			} else {
-				return super.internalClearCell(td, clearInnerHTML);
-			}
 		}
 
 		@Override
 		public Element getEventTargetCell(Event event) {
 			return super.getEventTargetCell(event);
+		}
+
+		protected boolean internalClearCell(Element td,
+				boolean clearInnerHTML) {
+			if (!reallyClear) {
+				return false;
+			} else {
+				return super.internalClearCell(td, clearInnerHTML);
+			}
 		}
 	}
 
@@ -521,33 +547,5 @@ public class FastROBoundTable extends BoundTableExt {
 			}
 			return false;
 		}
-	}
-
-	public boolean checkEditable(SourcesPropertyChangeEvents target,
-			Field editableField) {
-		return checkEditableFilter == null
-				|| checkEditableFilter.allow(new CheckEditableTuple(target,
-						editableField));
-	}
-
-	public static class CheckEditableTuple {
-		public SourcesPropertyChangeEvents target;
-
-		public Field field;
-
-		public CheckEditableTuple(SourcesPropertyChangeEvents target,
-				Field editableField) {
-			this.target = target;
-			this.field = editableField;
-		}
-	}
-
-	public CollectionFilter<CheckEditableTuple> getCheckEditableFilter() {
-		return this.checkEditableFilter;
-	}
-
-	public void setCheckEditableFilter(
-			CollectionFilter<CheckEditableTuple> checkEditableFilter) {
-		this.checkEditableFilter = checkEditableFilter;
 	}
 }

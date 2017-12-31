@@ -9,8 +9,6 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionCont
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 
 public class CollectionProjectionFilter implements GraphProjectionDataFilter {
-	
-
 	@SuppressWarnings("unchecked")
 	public <T> T filterData(T original, T projected,
 			GraphProjectionContext context, GraphProjection graphProjection)
@@ -30,11 +28,14 @@ public class CollectionProjectionFilter implements GraphProjectionDataFilter {
 		if (original instanceof Map) {
 			return (T) projectMap((Map) original, context, graphProjection);
 		}
-		
 		return projected;
 	}
 
-	
+	@Override
+	public <T> boolean projectIntoCollection(T value, T projected,
+			GraphProjectionContext context) {
+		return true;
+	}
 
 	private Object projectMap(Map map, GraphProjectionContext context,
 			GraphProjection graphProjection) throws Exception {
@@ -50,13 +51,5 @@ public class CollectionProjectionFilter implements GraphProjectionDataFilter {
 			}
 		}
 		return m;
-	}
-
-
-
-	@Override
-	public <T> boolean projectIntoCollection(T value, T projected,
-			GraphProjectionContext context) {
-		return true;
 	}
 }

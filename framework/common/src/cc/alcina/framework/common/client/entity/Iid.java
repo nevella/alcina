@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.entity;
 
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -20,20 +19,16 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
  *
  * @author Nick Reddel
  */
-
 public interface Iid {
-	public abstract IUser getRememberMeUser();
-
-	public abstract void setRememberMeUser(IUser rememberMeUser);
-
 	public abstract long getId();
-
-	public abstract void setId(long id);
 
 	public abstract String getInstanceId();
 
+	public abstract IUser getRememberMeUser();
+
+	public abstract void setId(long id);
+
 	public abstract void setInstanceId(String instanceId);
 
-
-
+	public abstract void setRememberMeUser(IUser rememberMeUser);
 }

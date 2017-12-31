@@ -1,11 +1,8 @@
 package cc.alcina.framework.gwt.client.widget.complex;
 
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
@@ -20,11 +17,16 @@ public abstract class BaseMultilineEditorCustomiser<T extends HasIdAndLocalId>
 		implements Customiser, BoundWidgetProvider {
 	private boolean editable;
 
-	@Override
-	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, Custom params) {
-		this.editable = editable;
-		return this;
+	public void customiseActions(List<PermissibleAction> actions) {
+	}
+
+	public void customiseContentViewFactory(
+			ContentViewFactory contentViewFactory, Object model) {
+	}
+
+	public List<Link> customisePerRowEditActions(List<Link> actions, T rowValue,
+			BaseMultilineEditor editor) {
+		return actions;
 	}
 
 	public abstract void doCreateRow(Object model,
@@ -38,9 +40,9 @@ public abstract class BaseMultilineEditorCustomiser<T extends HasIdAndLocalId>
 		editor.redraw();
 	}
 
-	protected abstract void deleteItem(T t);
-
-	public abstract Class<T> getItemClass();
+	public List<T> filterVisibleValues(List<T> values) {
+		return values;
+	}
 
 	@Override
 	public BoundWidget get() {
@@ -51,11 +53,15 @@ public abstract class BaseMultilineEditorCustomiser<T extends HasIdAndLocalId>
 		return (BoundWidget) editor;
 	}
 
-	protected boolean asMultipleGrids() {
-		return false;
-	}
+	public abstract String getCreateActionDisplayName();
 
-	public void customiseActions(List<PermissibleAction> actions) {
+	public abstract Class<T> getItemClass();
+
+	@Override
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
+			boolean multiple, Custom params) {
+		this.editable = editable;
+		return this;
 	}
 
 	public boolean handleCustomAction(BaseMultilineEditor<T> editor,
@@ -63,22 +69,13 @@ public abstract class BaseMultilineEditorCustomiser<T extends HasIdAndLocalId>
 		return false;
 	}
 
-	public abstract String getCreateActionDisplayName();
-
-	public List<T> filterVisibleValues(List<T> values) {
-		return values;
-	}
-
-	public List<Link> customisePerRowEditActions(List<Link> actions, T rowValue,
-			BaseMultilineEditor editor) {
-		return actions;
-	}
-
-	public void
-			customiseContentViewFactory(ContentViewFactory contentViewFactory, Object model) {
-	}
-
 	public void sortValues(List<T> values) {
 		values.sort(HiliComparatorLocalsHigh.INSTANCE);
 	}
+
+	protected boolean asMultipleGrids() {
+		return false;
+	}
+
+	protected abstract void deleteItem(T t);
 }

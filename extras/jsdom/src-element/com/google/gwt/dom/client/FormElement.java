@@ -42,6 +42,15 @@ public class FormElement extends Element {
 	}
 
 	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
+
+	/**
 	 * Determines whether the given {@link JavaScriptObject} can be cast to this
 	 * class. A <code>null</code> object will cause this method to return
 	 * <code>false</code>.
@@ -63,15 +72,6 @@ public class FormElement extends Element {
 			return is((Element) node);
 		}
 		return false;
-	}
-
-	/**
-	 * Determine whether the given {@link Element} can be cast to this class. A
-	 * <code>null</code> node will cause this method to return
-	 * <code>false</code>.
-	 */
-	public static boolean is(Element elem) {
-		return elem != null && elem.hasTagName(TAG);
 	}
 
 	protected FormElement() {
@@ -155,8 +155,6 @@ public class FormElement extends Element {
 		callMethod("reset");
 	}
 
-	
-
 	/**
 	 * List of character sets supported by the server.
 	 * 
@@ -164,7 +162,7 @@ public class FormElement extends Element {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-accept-charset">
 	 *      W3C HTML Specification</a>
 	 */
-	public final  void setAcceptCharset(String acceptCharset) {
+	public final void setAcceptCharset(String acceptCharset) {
 		setPropertyString("acceptCharset", acceptCharset);
 	}
 
@@ -186,8 +184,8 @@ public class FormElement extends Element {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-action">
 	 *      W3C HTML Specification</a>
 	 */
-	public final  void setAction(@IsSafeUri String action) {
-        setPropertyString("action", action);
+	public final void setAction(@IsSafeUri String action) {
+		setPropertyString("action", action);
 	}
 
 	/**
@@ -202,7 +200,7 @@ public class FormElement extends Element {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-enctype">
 	 *      W3C HTML Specification</a>
 	 */
-	public final  void setEnctype(String enctype) {
+	public final void setEnctype(String enctype) {
 		setPropertyString("enctype", enctype);
 	}
 
@@ -213,14 +211,14 @@ public class FormElement extends Element {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-method">
 	 *      W3C HTML Specification</a>
 	 */
-	public final  void setMethod(String method) {
+	public final void setMethod(String method) {
 		setPropertyString("method", method);
 	}
 
 	/**
 	 * Names the form.
 	 */
-	public final  void setName(String name) {
+	public final void setName(String name) {
 		setPropertyString("name", name);
 	}
 
@@ -231,14 +229,14 @@ public class FormElement extends Element {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-target">
 	 *      W3C HTML Specification</a>
 	 */
-	public final  void setTarget(String target) {
+	public final void setTarget(String target) {
 		setPropertyString("target", target);
 	}
 
 	/**
 	 * Submits the form. It performs the same action as a submit button.
 	 */
-	public final  void submit() {
+	public final void submit() {
 		callMethod("submit");
 	}
 }

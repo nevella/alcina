@@ -43,6 +43,8 @@ public class DivStackPanel extends ComplexPanel {
 
 	private Element body;
 
+	Map<Integer, StackTextRow> rowTexts = new HashMap<Integer, DivStackPanel.StackTextRow>();
+
 	/**
 	 * Creates an empty stack panel.
 	 */
@@ -147,6 +149,14 @@ public class DivStackPanel extends ComplexPanel {
 		}
 	}
 
+	public void moveChildrenTo(DivStackPanel other) {
+		int i = 0;
+		while (getWidgetCount() != 0) {
+			StackTextRow rt = rowTexts.get(i++);
+			other.add(getWidget(0), rt.text, rt.asHTML);
+		}
+	}
+
 	@Override
 	public void onBrowserEvent(Event event) {
 		if (DOM.eventGetType(event) == Event.ONCLICK) {
@@ -208,19 +218,6 @@ public class DivStackPanel extends ComplexPanel {
 		}
 	}
 
-	static class StackTextRow {
-		String text;
-
-		boolean asHTML;
-
-		public StackTextRow(String text, boolean asHTML) {
-			this.text = text;
-			this.asHTML = asHTML;
-		}
-	}
-
-	Map<Integer, StackTextRow> rowTexts = new HashMap<Integer, DivStackPanel.StackTextRow>();
-
 	/**
 	 * Shows the widget at the specified child index.
 	 * 
@@ -240,48 +237,15 @@ public class DivStackPanel extends ComplexPanel {
 		setStackVisible(visibleStack, true);
 	}
 
-	/**
-	 * <b>Affected Elements:</b>
-	 * <ul>
-	 * <li>-text# = The element around the header at the specified index.</li>
-	 * <li>-text-wrapper# = The element around the header at the specified
-	 * index.</li>
-	 * <li>-content# = The element around the body at the specified index.</li>
-	 * </ul>
-	 * 
-	 * @see UIObject#onEnsureDebugId(String)
-	 */
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		super.onEnsureDebugId(baseID);
-	}
-
-	/**
-	 * @return a header element
-	 */
-	Element createHeaderElem() {
-		return DOM.createDiv();
-	}
-
-	/**
-	 * Get the element that holds the header text given the header element
-	 * created by #createHeaderElement.
-	 * 
-	 * @param headerElem
-	 *            the header element
-	 * @return the element around the header text
-	 */
-	Element getHeaderTextElem(Element headerElem) {
-		return headerElem;
-	}
-
 	private int findDividerIndex(Element elem) {
 		while (elem != getElement()) {
 			String expando = DOM.getElementPropertyOrAttribute(elem, "__index");
 			if (expando != null) {
 				// Make sure it belongs to me!
-				String hashString = DOM.getElementPropertyOrAttribute(elem, "__owner");
-				int ownerHash = hashString.length()>0?Integer.parseInt(hashString):-1;
+				String hashString = DOM.getElementPropertyOrAttribute(elem,
+						"__owner");
+				int ownerHash = hashString.length() > 0
+						? Integer.parseInt(hashString) : -1;
 				if (ownerHash == hashCode()) {
 					// Yes, it's mine.
 					return Integer.parseInt(expando);
@@ -356,9 +320,50 @@ public class DivStackPanel extends ComplexPanel {
 		}
 	}
 
+	/**
+	 * <b>Affected Elements:</b>
+	 * <ul>
+	 * <li>-text# = The element around the header at the specified index.</li>
+	 * <li>-text-wrapper# = The element around the header at the specified
+	 * index.</li>
+	 * <li>-content# = The element around the body at the specified index.</li>
+	 * </ul>
+	 * 
+	 * @see UIObject#onEnsureDebugId(String)
+	 */
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		super.onEnsureDebugId(baseID);
+	}
+
+	/**
+	 * @return a header element
+	 */
+	Element createHeaderElem() {
+		return DOM.createDiv();
+	}
+
+	/**
+	 * Get the element that holds the header text given the header element
+	 * created by #createHeaderElement.
+	 * 
+	 * @param headerElem
+	 *            the header element
+	 * @return the element around the header text
+	 */
+	Element getHeaderTextElem(Element headerElem) {
+		return headerElem;
+	}
+
 	public static class CollapsableDivStackPanel extends DivStackPanel
 			implements HasCollapseHandlers<CollapsableDivStackPanel> {
 		private boolean inClick;
+
+		@Override
+		public HandlerRegistration addCollapseHandler(
+				CollapseHandler<CollapsableDivStackPanel> handler) {
+			return addHandler(handler, CollapseEvent.getType());
+		}
 
 		@Override
 		public void onBrowserEvent(Event event) {
@@ -380,19 +385,16 @@ public class DivStackPanel extends ComplexPanel {
 			}
 			super.showStack(index);
 		}
-
-		@Override
-		public HandlerRegistration addCollapseHandler(
-				CollapseHandler<CollapsableDivStackPanel> handler) {
-			return addHandler(handler, CollapseEvent.getType());
-		}
 	}
 
-	public void moveChildrenTo(DivStackPanel other) {
-		int i = 0;
-		while (getWidgetCount() != 0) {
-			StackTextRow rt = rowTexts.get(i++);
-			other.add(getWidget(0), rt.text, rt.asHTML);
+	static class StackTextRow {
+		String text;
+
+		boolean asHTML;
+
+		public StackTextRow(String text, boolean asHTML) {
+			this.text = text;
+			this.asHTML = asHTML;
 		}
 	}
 }

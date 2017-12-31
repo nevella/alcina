@@ -19,9 +19,10 @@ public class RegistryLookupCustomiser implements Customiser {
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom params) {
-		Class markerClass = NamedParameter.Support.classValue(params.parameters(), MARKER_CLASS,
-				null);
-		return ((Customiser) Registry.get().instantiateSingle(
-				RegistryLookupCustomiser.class, markerClass)).getProvider(editable, objectClass, multiple, params);
+		Class markerClass = NamedParameter.Support
+				.classValue(params.parameters(), MARKER_CLASS, null);
+		return ((Customiser) Registry.get()
+				.instantiateSingle(RegistryLookupCustomiser.class, markerClass))
+						.getProvider(editable, objectClass, multiple, params);
 	}
 }

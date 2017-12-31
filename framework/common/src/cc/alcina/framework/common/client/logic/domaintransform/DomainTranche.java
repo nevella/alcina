@@ -6,8 +6,8 @@ import java.util.Collection;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class DomainTranche<T extends DomainModelObject> implements
-		DomainModelDelta, Serializable {
+public class DomainTranche<T extends DomainModelObject>
+		implements DomainModelDelta, Serializable {
 	private DomainModelHolder domainModelHolder;
 
 	private Collection<DomainModelDeltaHili> unlinkedObjects = new ArrayList<DomainModelDeltaHili>();
@@ -30,6 +30,10 @@ public class DomainTranche<T extends DomainModelObject> implements
 		return this.domainModelHolder;
 	}
 
+	public T getDomainModelObject() {
+		return this.domainModelObject;
+	}
+
 	@Override
 	public DomainModelDeltaMetadata getMetadata() {
 		return metadata;
@@ -48,12 +52,27 @@ public class DomainTranche<T extends DomainModelObject> implements
 		return this.unlinkedObjects;
 	}
 
+	@Override
+	public boolean hasLocalOnlyTransforms() {
+		return false;
+	}
+
+	public void merge(DomainTranche other) {
+		unlinkedObjects.addAll(other.getUnlinkedObjects());
+		replayEvents.addAll(other.getReplayEvents());
+		signature = other.signature;
+	}
+
 	public void setAppInstruction(String appInstruction) {
 		this.appInstruction = appInstruction;
 	}
 
 	public void setDomainModelHolder(DomainModelHolder domainModelHolder) {
 		this.domainModelHolder = domainModelHolder;
+	}
+
+	public void setDomainModelObject(T domainModelObject) {
+		this.domainModelObject = domainModelObject;
 	}
 
 	public void setMetadata(DomainModelDeltaMetadata metadata) {
@@ -68,7 +87,8 @@ public class DomainTranche<T extends DomainModelObject> implements
 		this.signature = signature;
 	}
 
-	public void setUnlinkedObjects(Collection<DomainModelDeltaHili> unlinkedObjects) {
+	public void setUnlinkedObjects(
+			Collection<DomainModelDeltaHili> unlinkedObjects) {
 		this.unlinkedObjects = unlinkedObjects;
 	}
 
@@ -76,24 +96,5 @@ public class DomainTranche<T extends DomainModelObject> implements
 	public void unwrap(AsyncCallback<Void> completionCallback) {
 		// already unwrapped
 		completionCallback.onSuccess(null);
-	}
-
-	public void merge(DomainTranche other) {
-		unlinkedObjects.addAll(other.getUnlinkedObjects());
-		replayEvents.addAll(other.getReplayEvents());
-		signature = other.signature;
-	}
-
-	@Override
-	public boolean hasLocalOnlyTransforms() {
-		return false;
-	}
-
-	public T getDomainModelObject() {
-		return this.domainModelObject;
-	}
-
-	public void setDomainModelObject(T domainModelObject) {
-		this.domainModelObject = domainModelObject;
 	}
 }

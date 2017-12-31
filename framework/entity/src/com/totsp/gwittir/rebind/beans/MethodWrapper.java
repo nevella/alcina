@@ -46,11 +46,11 @@ public class MethodWrapper {
 		this.baseMethod = baseMethod;
 	}
 
-	public JType getDeclaringType() {
-		return declaringType;
-	}
-
 	public JMethod getBaseMethod() {
 		return baseMethod;
+	}
+
+	public JType getDeclaringType() {
+		return declaringType;
 	}
 }

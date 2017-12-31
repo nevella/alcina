@@ -21,10 +21,11 @@ import java.util.List;
  * @author Nick Reddel
  */
 public interface IsRenderableFilter {
-	public boolean isRenderable(TreeRenderable renderable, TreeRenderer renderer);
+	public boolean isRenderable(TreeRenderable renderable,
+			TreeRenderer renderer);
 
-	public static class CompositeIsRenderableFilter implements
-			IsRenderableFilter {
+	public static class CompositeIsRenderableFilter
+			implements IsRenderableFilter {
 		private List<IsRenderableFilter> filters = new ArrayList<IsRenderableFilter>();
 
 		public CompositeIsRenderableFilter add(IsRenderableFilter filter) {

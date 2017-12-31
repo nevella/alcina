@@ -73,21 +73,6 @@ public class Prompter implements PermissibleActionListener, KeyDownHandler {
 	}
 
 	@Override
-	public void vetoableAction(PermissibleActionEvent evt) {
-		if (evt.getAction().equals(OkAction.INSTANCE)) {
-			if (requiredMessage != null
-					&& CommonUtils.isNullOrEmpty(text.getValue())) {
-				box.show();
-				Window.alert(requiredMessage);
-				box.okButton.setEnabled(true);
-			} else {
-				callback.apply(text.getValue());
-			}
-		} else {
-		}
-	}
-
-	@Override
 	public void onKeyDown(KeyDownEvent event) {
 		int nativeKeyCode = event.getNativeKeyCode();
 		if (nativeKeyCode == KeyCodes.KEY_ESCAPE) {
@@ -99,6 +84,21 @@ public class Prompter implements PermissibleActionListener, KeyDownHandler {
 			event.stopPropagation();
 			box.hide();
 			callback.apply(text.getValue());
+		}
+	}
+
+	@Override
+	public void vetoableAction(PermissibleActionEvent evt) {
+		if (evt.getAction().equals(OkAction.INSTANCE)) {
+			if (requiredMessage != null
+					&& CommonUtils.isNullOrEmpty(text.getValue())) {
+				box.show();
+				Window.alert(requiredMessage);
+				box.okButton.setEnabled(true);
+			} else {
+				callback.apply(text.getValue());
+			}
+		} else {
 		}
 	}
 }

@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.widget.Link;
 
 public class SelectionPrompter<T> implements PermissibleActionListener {
-
 	private OkCancelDialogBox box;
 
 	private final Callback<T> callback;
@@ -24,8 +23,7 @@ public class SelectionPrompter<T> implements PermissibleActionListener {
 		@Override
 		public void onClick(ClickEvent event) {
 			box.hide();
-			callback.apply((T) ((Link)event.getSource()).getUserObject());
-					
+			callback.apply((T) ((Link) event.getSource()).getUserObject());
 		}
 	};
 

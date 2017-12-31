@@ -9,6 +9,6 @@ package cc.alcina.framework.common.client.state;
  */
 public interface LoopingPlayer {
 	public String describeLoop();
-	
+
 	public void loop();
 }

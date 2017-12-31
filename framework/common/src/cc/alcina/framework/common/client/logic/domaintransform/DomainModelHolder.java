@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
@@ -25,12 +24,14 @@ import cc.alcina.framework.gwt.client.data.GeneralProperties;
  *
  * @author Nick Reddel
  */
-
- public interface DomainModelHolder extends Serializable{
-	public List registerableDomainObjects();
+public interface DomainModelHolder extends Serializable {
 	public Set<ClassRef> getClassRefs();
+
 	public IUser getCurrentUser();
+
 	public GeneralProperties getGeneralProperties();
+
+	public List registerableDomainObjects();
+
 	public void registerSelfAsProvider();
-	
 }

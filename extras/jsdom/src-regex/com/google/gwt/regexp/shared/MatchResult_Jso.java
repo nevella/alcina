@@ -20,45 +20,45 @@ import com.google.gwt.core.client.JavaScriptObject;
 /**
  * GWT wrapper for Javascript RegExp matching results.
  */
-public class MatchResult_Jso extends JavaScriptObject implements IMatchResult{
+public class MatchResult_Jso extends JavaScriptObject implements IMatchResult {
+	protected MatchResult_Jso() {
+	}
 
-  protected MatchResult_Jso() {
-  }
+	/**
+	 * Retrieves the matched string or the given matched group.
+	 *
+	 * @param index
+	 *            the index of the group to return, 0 to return the whole
+	 *            matched string; must be between 0 and
+	 *            {@code getGroupCount() - 1} included
+	 * @return The matched string if {@code index} is zero, else the given
+	 *         matched group. If the given group was optional and did not match,
+	 *         the behavior is browser-dependent: this method will return
+	 *         {@code null} or an empty string.
+	 */
+	public final native String getGroup(int index) /*-{
+													return this[index];
+													}-*/;
 
-  /**
-   * Retrieves the matched string or the given matched group.
-   *
-   * @param index the index of the group to return, 0 to return the whole
-   *          matched string; must be between 0 and {@code getGroupCount() - 1}
-   *          included
-   * @return The matched string if {@code index} is zero, else the given matched
-   *         group. If the given group was optional and did not match, the
-   *         behavior is browser-dependent: this method will return {@code null}
-   *         or an empty string.
-   */
-  public final native String getGroup(int index) /*-{
-     return this[index];
-   }-*/;
+	/**
+	 * Returns the number of groups, including the matched string hence greater
+	 * or equal than 1.
+	 */
+	public final native int getGroupCount() /*-{
+											return this.length;
+											}-*/;
 
-  /**
-   * Returns the number of groups, including the matched string hence greater or
-   * equal than 1.
-   */
-  public final native int getGroupCount() /*-{
-     return this.length;
-   }-*/;
+	/**
+	 * Returns the zero-based index of the match in the input string.
+	 */
+	public final native int getIndex() /*-{
+										return this.index;
+										}-*/;
 
-  /**
-   * Returns the zero-based index of the match in the input string.
-   */
-  public final native int getIndex() /*-{
-     return this.index;
-   }-*/;
-
-  /**
-   * Returns the original input string.
-   */
-  public final native String getInput() /*-{
-     return this.input;
-   }-*/;
+	/**
+	 * Returns the original input string.
+	 */
+	public final native String getInput() /*-{
+											return this.input;
+											}-*/;
 }

@@ -22,11 +22,8 @@ public class InitLayoutPlayer extends RunnablePlayer {
 
 	@Override
 	public void run() {
-		
-		
 		if (PermissionsManager.get().getOnlineState() == OnlineState.ONLINE) {
-			Registry.impl(CommitToStorageTransformListener.class)
-					.flush();
+			Registry.impl(CommitToStorageTransformListener.class).flush();
 		}
 		Registry.impl(LayoutManagerBase.class).redrawLayout();
 		if (!CommonUtils.isNullOrEmpty(History.getToken())) {
@@ -34,7 +31,8 @@ public class InitLayoutPlayer extends RunnablePlayer {
 			fireCurrentHistoryState();
 			AlcinaHistory.get().setNoHistoryDisabled(false);
 		}
-		ClientNotifications notifications = Registry.impl(ClientNotifications.class);
+		ClientNotifications notifications = Registry
+				.impl(ClientNotifications.class);
 		if (notifications instanceof ClientNotificationsImpl) {
 			ClientNotificationsImpl nImpl = (ClientNotificationsImpl) notifications;
 			nImpl.setLogToSysOut(true);

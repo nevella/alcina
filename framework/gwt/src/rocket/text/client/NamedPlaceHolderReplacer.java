@@ -25,9 +25,16 @@ import rocket.util.client.Checker;
  * @author Miroslav Pokorny
  */
 public class NamedPlaceHolderReplacer<V> extends PlaceHolderReplacer {
+	private Map<String, V> values;
+
 	@Override
 	public String execute(final String text) {
 		return super.execute(text);
+	}
+
+	public void setValues(final Map<String, V> values) {
+		Checker.notNull("parameter:values", values);
+		this.values = values;
 	}
 
 	@Override
@@ -39,15 +46,8 @@ public class NamedPlaceHolderReplacer<V> extends PlaceHolderReplacer {
 		return value;
 	}
 
-	private Map<String, V> values;
-
 	protected Map<String, V> getValues() {
 		Checker.notNull("field:values", values);
 		return this.values;
-	}
-
-	public void setValues(final Map<String, V> values) {
-		Checker.notNull("parameter:values", values);
-		this.values = values;
 	}
 }

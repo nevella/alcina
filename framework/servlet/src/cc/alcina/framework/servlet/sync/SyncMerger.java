@@ -114,6 +114,10 @@ public class SyncMerger<T> {
 		return this.mergedClass;
 	}
 
+	public void maybeRegister(Object left, Object right) {
+		// if you'd like to TM-record object modifications
+	}
+
 	public void merge(Collection<T> leftItems, Collection<T> rightItems,
 			SyncDeltaModel deltaModel, Logger logger) {
 		this.deltaModel = deltaModel;
@@ -229,6 +233,19 @@ public class SyncMerger<T> {
 		return this.define(propertyName).mergeFilter(LEFT_IS_DEFINITIVE);
 	}
 
+	protected void defineLeftExcluding(String... ignores) {
+		List<String> list = new ArrayList<>(Arrays.asList(ignores));
+		list.addAll(Arrays.asList("id", "localId", "propertyChangeListeners",
+				"class"));
+		List<PropertyDescriptor> sortedPropertyDescriptors = SEUtilities
+				.getSortedPropertyDescriptors(mergedClass);
+		Stream<PropertyDescriptor> stream = sortedPropertyDescriptors.stream()
+				.filter(pd -> !list.contains(pd.getName()))
+				.filter(pd -> pd.getReadMethod()
+						.getAnnotation(AlcinaTransient.class) == null);
+		stream.forEach(pd -> defineLeft(pd.getName()));
+	}
+
 	protected SyncMapping defineRight(String propertyName) {
 		return this.define(propertyName).mergeFilter(RIGHT_IS_DEFINITIVE);
 	}
@@ -244,19 +261,6 @@ public class SyncMerger<T> {
 				.filter(pd -> pd.getReadMethod()
 						.getAnnotation(AlcinaTransient.class) == null);
 		stream.forEach(pd -> defineRight(pd.getName()));
-	}
-
-	protected void defineLeftExcluding(String... ignores) {
-		List<String> list = new ArrayList<>(Arrays.asList(ignores));
-		list.addAll(Arrays.asList("id", "localId", "propertyChangeListeners",
-				"class"));
-		List<PropertyDescriptor> sortedPropertyDescriptors = SEUtilities
-				.getSortedPropertyDescriptors(mergedClass);
-		Stream<PropertyDescriptor> stream = sortedPropertyDescriptors.stream()
-				.filter(pd -> !list.contains(pd.getName()))
-				.filter(pd -> pd.getReadMethod()
-						.getAnnotation(AlcinaTransient.class) == null);
-		stream.forEach(pd -> defineLeft(pd.getName()));
 	}
 
 	protected SyncMappingWithLog defineWithLog(String propertyName,
@@ -367,57 +371,13 @@ public class SyncMerger<T> {
 	public class SyncMappingWithLog extends SyncMapping {
 		private Function<T, Object[]> propertyKeyProvider;
 
+		public List<MergeHistory> history = new ArrayList<>();
+
 		public SyncMappingWithLog(String propertyName,
 				Function<T, Object[]> propertyKeyProvider) {
 			super(propertyName);
 			this.propertyKeyProvider = propertyKeyProvider;
 			MergeFilter filter = NO_OVERWRITE_FILTER;
-		}
-
-		public List<MergeHistory> history = new ArrayList<>();
-
-		@SuppressWarnings("unused")
-		public class MergeHistory {
-			private Object left;
-
-			private Object right;
-
-			private Object leftValue;
-
-			private Object rightValue;
-
-			private Object value;
-
-			private List<PropertyModificationLogItem> items;
-
-			public MergeHistory(Object left, Object right, Object leftValue,
-					Object rightValue, Object value,
-					List<PropertyModificationLogItem> items) {
-				this.left = left;
-				this.right = right;
-				this.leftValue = leftValue;
-				this.rightValue = rightValue;
-				this.value = value;
-				this.items = items;
-			}
-
-			public void log() {
-				String message = getMessage();
-				// System.out.println(message);
-			}
-
-			private String getMessage() {
-				String message = CommonUtils.formatJ(
-						"Property merge (left,right) %s %s -> %s", leftValue,
-						rightValue, value);
-				return message;
-			}
-
-			@Override
-			public String toString() {
-				return String.format("%s\n%s", getMessage(),
-						CommonUtils.joinWithNewlineTab(items));
-			}
 		}
 
 		public void merge(Object left, Object right) {
@@ -488,6 +448,50 @@ public class SyncMerger<T> {
 						rightProp);
 			}
 		}
+
+		@SuppressWarnings("unused")
+		public class MergeHistory {
+			private Object left;
+
+			private Object right;
+
+			private Object leftValue;
+
+			private Object rightValue;
+
+			private Object value;
+
+			private List<PropertyModificationLogItem> items;
+
+			public MergeHistory(Object left, Object right, Object leftValue,
+					Object rightValue, Object value,
+					List<PropertyModificationLogItem> items) {
+				this.left = left;
+				this.right = right;
+				this.leftValue = leftValue;
+				this.rightValue = rightValue;
+				this.value = value;
+				this.items = items;
+			}
+
+			public void log() {
+				String message = getMessage();
+				// System.out.println(message);
+			}
+
+			@Override
+			public String toString() {
+				return String.format("%s\n%s", getMessage(),
+						CommonUtils.joinWithNewlineTab(items));
+			}
+
+			private String getMessage() {
+				String message = CommonUtils.formatJ(
+						"Property merge (left,right) %s %s -> %s", leftValue,
+						rightValue, value);
+				return message;
+			}
+		}
 	}
 
 	class FirstAndAllLookup {
@@ -521,9 +525,5 @@ public class SyncMerger<T> {
 		public boolean isMultipleFirst(String key) {
 			return firstKeyLookup.getAndEnsure(key).size() > 1;
 		}
-	}
-
-	public void maybeRegister(Object left, Object right) {
-		// if you'd like to TM-record object modifications
 	}
 }

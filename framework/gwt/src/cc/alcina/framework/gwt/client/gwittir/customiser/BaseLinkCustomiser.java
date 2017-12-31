@@ -6,11 +6,30 @@ import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.logic.reflection.Custom;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundLink;
 
 public abstract class BaseLinkCustomiser<T>
 		implements Customiser, BoundWidgetProvider {
+	@Override
+	public BoundWidget get() {
+		BaseLink baseLink = new BaseLink();
+		baseLink.customiser = this;
+		return baseLink;
+	}
+
+	@Override
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
+			boolean multiple, Custom params) {
+		return this;
+	}
+
+	public void postSetValue(BaseLink<T> baseLink) {
+	}
+
+	protected abstract Function<T, String> getTextFunction();
+
+	protected abstract Function<T, String> getTokenFunction();
+
 	public static class BaseLink<T> extends BoundLink<T> {
 		private BaseLinkCustomiser<T> customiser;
 
@@ -25,25 +44,5 @@ public abstract class BaseLinkCustomiser<T>
 			}
 			customiser.postSetValue(this);
 		}
-	}
-
-	@Override
-	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, Custom params) {
-		return this;
-	}
-
-	public void postSetValue(BaseLink<T> baseLink) {
-	}
-
-	protected abstract Function<T, String> getTokenFunction();
-
-	protected abstract Function<T, String> getTextFunction();
-
-	@Override
-	public BoundWidget get() {
-		BaseLink baseLink = new BaseLink();
-		baseLink.customiser = this;
-		return baseLink;
 	}
 }

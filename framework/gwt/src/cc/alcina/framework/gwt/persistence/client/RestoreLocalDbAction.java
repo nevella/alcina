@@ -28,6 +28,11 @@ public class RestoreLocalDbAction implements LooseActionHandler {
 	private ModalNotifier modalNotifier;
 
 	@Override
+	public String getName() {
+		return ALCINA_RESTORE_LOCAL_DB;
+	}
+
+	@Override
 	public void performAction() {
 		this.modalNotifier = Registry.impl(ClientNotifications.class)
 				.getModalNotifier("Restoring local database dump");
@@ -37,29 +42,24 @@ public class RestoreLocalDbAction implements LooseActionHandler {
 			@Override
 			public void apply(Object value) {
 				modalNotifier.modalOff();
-				MessageManager.get().centerMessage(
-						"Local database dump restored");
+				MessageManager.get()
+						.centerMessage("Local database dump restored");
 			}
 		};
 		final AsyncCallback<String> loadCallback = new AsyncCallback<String>() {
+			@Override
+			public void onFailure(Throwable caught) {
+				throw new WrappedRuntimeException(caught);
+			}
+
 			@Override
 			public void onSuccess(String result) {
 				LocalTransformPersistence.get().restoreDatabase(result,
 						afterRestoreCallback);
 			}
-
-			@Override
-			public void onFailure(Throwable caught) {
-				throw new WrappedRuntimeException(caught);
-			}
 		};
 		((RemoteServiceProvider<? extends CommonRemoteServiceAsync>) Registry
 				.impl(CommonRemoteServiceAsyncProvider.class))
-				.getServiceInstance().loadData(key, loadCallback);
-	}
-
-	@Override
-	public String getName() {
-		return ALCINA_RESTORE_LOCAL_DB;
+						.getServiceInstance().loadData(key, loadCallback);
 	}
 }

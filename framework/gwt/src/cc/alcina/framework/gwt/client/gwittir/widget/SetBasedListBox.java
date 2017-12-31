@@ -89,8 +89,8 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		HasFocus, SourcesFocusEvents, SourcesChangeEvents, HasEnabled {
 	public static final String VALUE_PROPERTY_NAME = "value";
 
-	private static final Logger LOGGER = Logger.getLogger(SetBasedListBox.class
-			.toString());
+	private static final Logger LOGGER = Logger
+			.getLogger(SetBasedListBox.class.toString());
 
 	private ArrayList selected = new ArrayList();
 
@@ -111,23 +111,13 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		init0();
 	}
 
-	@Override
-	protected void onDetach() {
-		super.onDetach();
-	}
 	/** Creates a new instance of ListBox */
 	public SetBasedListBox(ListAddItemHandler listAddItemHandler) {
 		super();
 		this.listAddItemHandler = listAddItemHandler;
 		init0();
 	}
-	public HandlerRegistration addFocusHandler(FocusHandler handler) {
-	    return addDomHandler(handler, FocusEvent.getType());
-	  }
-	
-	public HandlerRegistration addMouseDownHandler(MouseDownHandler handler) {
-	    return addDomHandler(handler, MouseDownEvent.getType());
-	  }
+
 	public void addChangeListener(final ChangeListener listener) {
 		this.changeListeners.add(listener);
 	}
@@ -138,6 +128,10 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 
 	public void addClickListener(final ClickListener listener) {
 		this.base.addClickListener(listener);
+	}
+
+	public HandlerRegistration addFocusHandler(FocusHandler handler) {
+		return addDomHandler(handler, FocusEvent.getType());
 	}
 
 	public void addFocusListener(final FocusListener listener) {
@@ -153,6 +147,10 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		this.base.addKeyboardListener(listener);
 	}
 
+	public HandlerRegistration addMouseDownHandler(MouseDownHandler handler) {
+		return addDomHandler(handler, MouseDownEvent.getType());
+	}
+
 	public void addStyleName(final String style) {
 		this.base.addStyleName(style);
 	}
@@ -162,9 +160,8 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			return false;
 		}
 		final SetBasedListBox other = (SetBasedListBox) obj;
-		if ((this.options != other.options)
-				&& ((this.options == null) || !this.options
-						.equals(other.options))) {
+		if ((this.options != other.options) && ((this.options == null)
+				|| !this.options.equals(other.options))) {
 			return false;
 		}
 		return true;
@@ -399,10 +396,10 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		if (this.isMultipleSelect()) {
 			fireAdaptedChange(VALUE_PROPERTY_NAME, old, selected);
 		} else {
-			Object prev = ((old == null) || (old.size() == 0)) ? null : old
-					.get(0);
-			Object curr = (this.selected.size() == 0) ? null : this.selected
-					.get(0);
+			Object prev = ((old == null) || (old.size() == 0)) ? null
+					: old.get(0);
+			Object curr = (this.selected.size() == 0) ? null
+					: this.selected.get(0);
 			// ignore null-null changes
 			if (prev != curr) {
 				changes.firePropertyChange(VALUE_PROPERTY_NAME, prev, curr);
@@ -469,10 +466,10 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		if (this.isMultipleSelect()) {
 			fireAdaptedChange(VALUE_PROPERTY_NAME, old, selected);
 		} else {
-			Object prev = ((old == null) || (old.size() == 0)) ? null : old
-					.get(0);
-			Object curr = (this.selected.size() == 0) ? null : this.selected
-					.get(0);
+			Object prev = ((old == null) || (old.size() == 0)) ? null
+					: old.get(0);
+			Object curr = (this.selected.size() == 0) ? null
+					: this.selected.get(0);
 			if (prev != curr) {
 				changes.firePropertyChange(VALUE_PROPERTY_NAME, prev, curr);
 			}
@@ -488,7 +485,8 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		this.base.setWidth(width);
 	}
 
-	private void fireAdaptedChange(String propertyName, List old, List selected) {
+	private void fireAdaptedChange(String propertyName, List old,
+			List selected) {
 		changes.firePropertyChange(VALUE_PROPERTY_NAME, new HashSet(old),
 				new HashSet(selected));
 	}
@@ -546,10 +544,10 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		if (this.isMultipleSelect()) {
 			fireAdaptedChange(VALUE_PROPERTY_NAME, old, selected);
 		} else {
-			Object prev = ((old == null) || (old.size() == 0)) ? null : old
-					.get(0);
-			Object curr = (this.selected.size() == 0) ? null : this.selected
-					.get(0);
+			Object prev = ((old == null) || (old.size() == 0)) ? null
+					: old.get(0);
+			Object curr = (this.selected.size() == 0) ? null
+					: this.selected.get(0);
 			if (prev == null && curr == null) {
 				return;// pcs is not MutablePropertyChangeLister
 			}
@@ -566,6 +564,11 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			}
 		}
 		return false;
+	}
+
+	@Override
+	protected void onDetach() {
+		super.onDetach();
 	}
 
 	public static class DomainListBox extends SetBasedListBox {
@@ -602,8 +605,8 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 				options.addAll(collection);
 			} else {
 				if (filter instanceof RequiresContextBindable) {
-					((RequiresContextBindable) filter)
-							.setBindable((SourcesPropertyChangeEvents) getModel());
+					((RequiresContextBindable) filter).setBindable(
+							(SourcesPropertyChangeEvents) getModel());
 				}
 				Iterator itr = collection.iterator();
 				while (itr.hasNext()) {
@@ -679,8 +682,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			Callback<OkCancelDialogBox> positioningCallback = new Callback<OkCancelDialogBox>() {
 				@Override
 				public void apply(OkCancelDialogBox box) {
-					box.setPopupPosition(
-							addButton.getAbsoluteLeft(),
+					box.setPopupPosition(addButton.getAbsoluteLeft(),
 							addButton.getAbsoluteTop()
 									+ addButton.getOffsetHeight());
 				}

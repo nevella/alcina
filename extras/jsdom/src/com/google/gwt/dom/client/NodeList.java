@@ -34,10 +34,30 @@ import java.util.stream.Stream;
  *            the type of contained node
  */
 public class NodeList<T extends Node> implements DomNodeList<T>, Iterable<T> {
+	public static DomNodeList<? extends Node>
+			gwtOnlySubList(DomNodeList<? extends Node> childNodes) {
+		return new NodeList<>(childNodes).filteredSubList(n -> {
+			switch (n.getNodeType()) {
+			case Node.DOCUMENT_NODE:
+			case Node.ELEMENT_NODE:
+			case Node.TEXT_NODE:
+				return true;
+			default:
+				return false;
+			}
+		});
+	}
+
 	DomNodeList<T> impl;
 
 	public NodeList(DomNodeList<T> impl) {
 		this.impl = impl;
+	}
+
+	public <V extends Node> NodeList<V>
+			filteredSubList(Predicate<T> predicate) {
+		return new NodeList<V>(new NodeListWrapped<V>((List) stream()
+				.filter(predicate).collect(Collectors.toList())));
 	}
 
 	public T getItem(int index) {
@@ -51,6 +71,11 @@ public class NodeList<T extends Node> implements DomNodeList<T>, Iterable<T> {
 	@Override
 	public Iterator<T> iterator() {
 		return new NodeListIterator();
+	}
+
+	@Override
+	public Stream<T> stream() {
+		return DomNodeListStatic.stream0(this);
 	}
 
 	private class NodeListIterator implements Iterator<T> {
@@ -68,30 +93,5 @@ public class NodeList<T extends Node> implements DomNodeList<T>, Iterable<T> {
 			}
 			return getItem(cursor++);
 		}
-	}
-
-	public <V extends Node> NodeList<V>
-			filteredSubList(Predicate<T> predicate) {
-		return new NodeList<V>(new NodeListWrapped<V>((List) stream()
-				.filter(predicate).collect(Collectors.toList())));
-	}
-
-	@Override
-	public Stream<T> stream() {
-		return DomNodeListStatic.stream0(this);
-	}
-
-	public static DomNodeList<? extends Node>
-			gwtOnlySubList(DomNodeList<? extends Node> childNodes) {
-		return new NodeList<>(childNodes).filteredSubList(n -> {
-			switch (n.getNodeType()) {
-			case Node.DOCUMENT_NODE:
-			case Node.ELEMENT_NODE:
-			case Node.TEXT_NODE:
-				return true;
-			default:
-				return false;
-			}
-		});
 	}
 }

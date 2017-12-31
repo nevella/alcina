@@ -8,9 +8,27 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 public abstract class AsyncCallbackStd<T> implements AsyncCallback<T> {
+	public static <T> AsyncCallbackStd<T> consumerForm(Consumer<T> consumer) {
+		return new AsyncCallbackStd<T>() {
+			@Override
+			public void onSuccess(T result) {
+				consumer.accept(result);
+			}
+		};
+	}
+
 	@Override
 	public void onFailure(Throwable caught) {
 		throw new WrappedRuntimeException(caught);
+	}
+
+	public static class AsyncCallbackValue<T> extends AsyncCallbackStd<T> {
+		public T value;
+
+		@Override
+		public void onSuccess(T result) {
+			value = result;
+		}
 	}
 
 	public static class ReloadOnSuccessCallback extends AsyncCallbackStd {
@@ -19,22 +37,4 @@ public abstract class AsyncCallbackStd<T> implements AsyncCallback<T> {
 			Window.Location.reload();
 		}
 	}
-	public static class AsyncCallbackValue<T> extends AsyncCallbackStd<T> {
-		public T value;
-		@Override
-		public void onSuccess(T result) {
-			value=result;
-		}
-	}
-	public static <T> AsyncCallbackStd<T> consumerForm(Consumer<T> consumer){
-		return new AsyncCallbackStd<T>(){
-
-			@Override
-			public void onSuccess(T result) {
-				consumer.accept(result);
-			}
-			
-		};
-	}
-	
 }

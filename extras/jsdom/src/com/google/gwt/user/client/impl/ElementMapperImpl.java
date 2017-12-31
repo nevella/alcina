@@ -13,113 +13,115 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package com.google.gwt.user.client.impl;
-
-import com.google.gwt.dom.client.Element;
-import com.google.gwt.user.client.ui.UIObject;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.user.client.ui.UIObject;
+
 /**
  * Creates a mapping from elements to their associated ui objects.
  * 
- * @param <T> the type that the element is mapped to
+ * @param <T>
+ *            the type that the element is mapped to
  */
 public class ElementMapperImpl<T extends UIObject> {
+	private static void clearIndex(Element elem) {
+		elem.setAttribute("__uiObjectID", null);
+	}
 
-  private static class FreeNode {
-    int index;
-    ElementMapperImpl.FreeNode next;
+	private static int getIndex(Element elem) {
+		String index = elem.getAttribute("__uiObjectID");
+		return (index.isEmpty()) ? -1 : Integer.parseInt(index);
+	}
 
-    public FreeNode(int index, ElementMapperImpl.FreeNode next) {
-      this.index = index;
-      this.next = next;
-    }
-  }
+	private static void setIndex(Element elem, int index) {
+		elem.setAttribute("__uiObjectID", String.valueOf(index));
+	}
 
-  private static  void clearIndex(Element elem){
-	  elem.setAttribute("__uiObjectID", null);
-  }
+	private ElementMapperImpl.FreeNode freeList = null;
 
-  private static  int getIndex(Element elem) {
-    String index = elem.getAttribute("__uiObjectID");
-    return (index.isEmpty()) ? -1 : Integer.parseInt(index);
-  }
+	private final ArrayList<T> uiObjectList = new ArrayList<T>();
 
-  private static void setIndex(Element elem, int index)
-  {
-	  elem.setAttribute("__uiObjectID", String.valueOf(index));
-  }
+	/**
+	 * Returns the uiObject associated with the given element.
+	 * 
+	 * @param elem
+	 *            uiObject's element
+	 * @return the uiObject
+	 */
+	public T get(Element elem) {
+		int index = getIndex(elem);
+		if (index < 0) {
+			return null;
+		}
+		return uiObjectList.get(index);
+	}
 
-  private ElementMapperImpl.FreeNode freeList = null;
+	/**
+	 * Gets the list of ui objects contained in this element mapper.
+	 * 
+	 * @return the list of ui objects
+	 */
+	public ArrayList<T> getObjectList() {
+		return uiObjectList;
+	}
 
-  private final ArrayList<T> uiObjectList = new ArrayList<T>();
+	/**
+	 * Creates an iterator from the ui objects stored within.
+	 * 
+	 * @return an iterator of the ui objects indexed by this element mapper.
+	 */
+	public Iterator<T> iterator() {
+		return uiObjectList.iterator();
+	}
 
-  /**
-   * Returns the uiObject associated with the given element.
-   * 
-   * @param elem uiObject's element
-   * @return the uiObject
-   */
-  public T get(Element elem) {
-    int index = getIndex(elem);
-    if (index < 0) {
-      return null;
-    }
-    return uiObjectList.get(index);
-  }
+	/**
+	 * Adds the MappedType.
+	 * 
+	 * @param uiObject
+	 *            uiObject to add
+	 */
+	public void put(T uiObject) {
+		int index;
+		if (freeList == null) {
+			index = uiObjectList.size();
+			uiObjectList.add(uiObject);
+		} else {
+			index = freeList.index;
+			uiObjectList.set(index, uiObject);
+			freeList = freeList.next;
+		}
+		setIndex(uiObject.getElement(), index);
+	}
 
-  /**
-   * Gets the list of ui objects contained in this element mapper.
-   * 
-   * @return the list of ui objects
-   */
-  public ArrayList<T> getObjectList() {
-    return uiObjectList;
-  }
+	/**
+	 * Remove the uiObject associated with the given element.
+	 * 
+	 * @param elem
+	 *            the uiObject's element
+	 */
+	public void removeByElement(Element elem) {
+		int index = getIndex(elem);
+		removeImpl(elem, index);
+	}
 
-  /**
-   * Creates an iterator from the ui objects stored within.
-   * 
-   * @return an iterator of the ui objects indexed by this element mapper.
-   */
-  public Iterator<T> iterator() {
-    return uiObjectList.iterator();
-  }
+	private void removeImpl(Element elem, int index) {
+		clearIndex(elem);
+		uiObjectList.set(index, null);
+		freeList = new FreeNode(index, freeList);
+	}
 
-  /**
-   * Adds the MappedType.
-   * 
-   * @param uiObject uiObject to add
-   */
-  public void put(T uiObject) {
-    int index;
-    if (freeList == null) {
-      index = uiObjectList.size();
-      uiObjectList.add(uiObject);
-    } else {
-      index = freeList.index;
-      uiObjectList.set(index, uiObject);
-      freeList = freeList.next;
-    }
-    setIndex(uiObject.getElement(), index);
-  }
+	private static class FreeNode {
+		int index;
 
-  /**
-   * Remove the uiObject associated with the given element.
-   * 
-   * @param elem the uiObject's element
-   */
-  public void removeByElement(Element elem) {
-    int index = getIndex(elem);
-    removeImpl(elem, index);
-  }
+		ElementMapperImpl.FreeNode next;
 
-  private void removeImpl(Element elem, int index) {
-    clearIndex(elem);
-    uiObjectList.set(index, null);
-    freeList = new FreeNode(index, freeList);
-  }
+		public FreeNode(int index, ElementMapperImpl.FreeNode next) {
+			this.index = index;
+			this.next = next;
+		}
+	}
 }

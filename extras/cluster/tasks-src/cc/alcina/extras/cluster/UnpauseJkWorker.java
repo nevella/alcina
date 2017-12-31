@@ -34,6 +34,46 @@ public class UnpauseJkWorker extends Task {
 		unpause();
 	}
 
+	public String getBalancedWorkerName() {
+		return balancedWorkerName;
+	}
+
+	public String getJkStatusUrl() {
+		return this.jkStatusUrl;
+	}
+
+	public String getRedeployedMarkerFile() {
+		return this.redeployedMarkerFile;
+	}
+
+	public int getTimeout() {
+		return this.timeout;
+	}
+
+	public String getWorkerName() {
+		return this.workerName;
+	}
+
+	public void setBalancedWorkerName(String balancedWorkerName) {
+		this.balancedWorkerName = balancedWorkerName;
+	}
+
+	public void setJkStatusUrl(String jkStatusUrl) {
+		this.jkStatusUrl = jkStatusUrl;
+	}
+
+	public void setRedeployedMarkerFile(String redeployedMarkerFile) {
+		this.redeployedMarkerFile = redeployedMarkerFile;
+	}
+
+	public void setTimeout(int timeout) {
+		this.timeout = timeout;
+	}
+
+	public void setWorkerName(String workerName) {
+		this.workerName = workerName;
+	}
+
 	protected void unpause() {
 		String url = String.format("%s?cmd=update&from=list&w=%s&sw=%s&vwa=0",
 				getJkStatusUrl(), getBalancedWorkerName(), getWorkerName());
@@ -43,45 +83,5 @@ public class UnpauseJkWorker extends Task {
 		} catch (Exception e) {
 			log(e.getMessage() + " reading " + url, Project.MSG_WARN);
 		}
-	}
-
-	public String getJkStatusUrl() {
-		return this.jkStatusUrl;
-	}
-
-	public void setJkStatusUrl(String jkStatusUrl) {
-		this.jkStatusUrl = jkStatusUrl;
-	}
-
-	public String getWorkerName() {
-		return this.workerName;
-	}
-
-	public void setWorkerName(String workerName) {
-		this.workerName = workerName;
-	}
-
-	public void setBalancedWorkerName(String balancedWorkerName) {
-		this.balancedWorkerName = balancedWorkerName;
-	}
-
-	public String getBalancedWorkerName() {
-		return balancedWorkerName;
-	}
-
-	public int getTimeout() {
-		return this.timeout;
-	}
-
-	public void setTimeout(int timeout) {
-		this.timeout = timeout;
-	}
-
-	public String getRedeployedMarkerFile() {
-		return this.redeployedMarkerFile;
-	}
-
-	public void setRedeployedMarkerFile(String redeployedMarkerFile) {
-		this.redeployedMarkerFile = redeployedMarkerFile;
 	}
 }

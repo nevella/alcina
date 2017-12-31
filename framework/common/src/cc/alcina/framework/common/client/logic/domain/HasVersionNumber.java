@@ -11,15 +11,14 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domain;
 
 /**
  *
  * @author Nick Reddel
  */
-
- public interface HasVersionNumber {
+public interface HasVersionNumber {
 	public int getVersionNumber();
+
 	public void setVersionNumber(int versionNumber);
 }

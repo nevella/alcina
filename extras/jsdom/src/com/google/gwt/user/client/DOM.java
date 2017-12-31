@@ -27,7 +27,6 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.LocalDom;
-import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.OptionElement;
@@ -47,40 +46,21 @@ import cc.alcina.framework.common.client.util.Ax;
  * events}.
  */
 public class DOM {
-	private static class NativePreview extends BaseListenerWrapper<EventPreview>
-			implements Event.NativePreviewHandler {
-		@Deprecated
-		public static void add(EventPreview listener) {
-			Event.addNativePreviewHandler(new NativePreview(listener));
-		}
-
-		public static void remove(EventPreview listener) {
-			baseRemove(Event.handlers, listener, NativePreviewEvent.getType());
-		}
-
-		private NativePreview(EventPreview listener) {
-			super(listener);
-		}
-
-		public void onPreviewNativeEvent(NativePreviewEvent event) {
-			// The legacy EventHandler should only fire if it is on the top of
-			// the
-			// stack (ie. the last one added).
-			if (event.isFirstHandler()) {
-				if (!listener
-						.onEventPreview(Event.as(event.getNativeEvent()))) {
-					event.cancel();
-				}
-			}
-		}
-	}
-
 	// The current event being fired
 	private static Event currentEvent = null;
 
 	static final DOMImpl impl = GWT.create(DOMImpl.class);
 
 	private static Element sCaptureElem;
+
+	private static Element eventCurrentTarget;
+
+	// chromium hosted mode double-dispatch checl
+	private static Event lastDispatchedEvent;
+
+	private static EventListener lastDispatchedMouseEventListener;
+
+	private static List<Element> dispatchedFor = new ArrayList<>();
 
 	/**
 	 * Adds an event preview to the preview stack. As long as this preview
@@ -115,6 +95,18 @@ public class DOM {
 	 */
 	public static void appendChild(Element parent, Element child) {
 		parent.appendChild(child);
+	}
+
+	/**
+	 * Provided as a convenient way to upcast values statically typed as
+	 * {@link Element} to {@link Element}. For easier upgrades in the future,
+	 * it's recommended that this function only be called within a
+	 * <code>return</code> statement.
+	 * <p>
+	 * Does <em>not</em> throw a {@link NullPointerException} if elem is null.
+	 */
+	public static Element asOld(Element elem) {
+		return (Element) elem;
 	}
 
 	/**
@@ -443,6 +435,47 @@ public class DOM {
 	}
 
 	/**
+	 * This method is a similar to
+	 * {@link #dispatchEvent(Event, Element, EventListener)} but only dispatches
+	 * if an event listener is set to element.
+	 *
+	 * @param evt
+	 *            the handle to the event being fired.
+	 * @param elem
+	 *            the handle to the element that received the event.
+	 * @return {@code true} if the event was dispatched
+	 */
+	public static boolean dispatchEvent(Event evt, Element elem) {
+		EventListener eventListener = getEventListener(elem);
+		if (eventListener == null) {
+			return false;
+		}
+		dispatchEvent(evt, elem, eventListener);
+		return true;
+	}
+
+	/**
+	 * This method is called directly by native code when any event is fired.
+	 * 
+	 * @param evt
+	 *            the handle to the event being fired.
+	 * @param elem
+	 *            the handle to the element that received the event.
+	 * @param listener
+	 *            the listener associated with the element that received the
+	 *            event.
+	 */
+	public static void dispatchEvent(Event evt, Element elem,
+			EventListener listener) {
+		// Preserve the current event in case we are in a reentrant event
+		// dispatch.
+		Event prevCurrentEvent = currentEvent;
+		currentEvent = evt;
+		dispatchEventImpl(evt, elem, listener);
+		currentEvent = prevCurrentEvent;
+	}
+
+	/**
 	 * Cancels bubbling for the given event. This will stop the event from being
 	 * propagated to parent elements.
 	 * 
@@ -547,8 +580,6 @@ public class DOM {
 		// return evt.getCurrentEventTarget().cast();
 		return eventCurrentTarget;
 	}
-
-	private static Element eventCurrentTarget;
 
 	/**
 	 * Gets the element from which the mouse pointer was moved (valid for
@@ -961,6 +992,18 @@ public class DOM {
 		return elem.getPropertyInt(prop);
 	}
 
+	public static String getElementPropertyOrAttribute(Element elem,
+			String name) {
+		String value = getElementProperty(elem, name);
+		if (value == null) {
+			value = getElementAttribute(elem, name);
+			if (value.isEmpty()) {
+				value = null;
+			}
+		}
+		return value;
+	}
+
 	/**
 	 * Gets the {@link EventListener} that will receive events for the given
 	 * element. Only one such listener may exist for a single element.
@@ -1193,6 +1236,27 @@ public class DOM {
 	@Deprecated
 	public static boolean isOrHasChild(Element parent, Element child) {
 		return parent.isOrHasChild(child);
+	}
+
+	/**
+	 * This method is called directly by native code when event preview is being
+	 * used.
+	 * 
+	 * @param evt
+	 *            a handle to the event being previewed
+	 * @return <code>false</code> to cancel the event
+	 */
+	public static boolean previewEvent(Event evt) {
+		// Fire a NativePreviewEvent to NativePreviewHandlers
+		boolean ret = Event.fireNativePreviewEvent(evt);
+		// If the preview cancels the event, stop it from bubbling and
+		// performing
+		// its default action. Check for a null evt to allow unit tests to run.
+		if (!ret && evt != null) {
+			evt.stopPropagation();
+			evt.preventDefault();
+		}
+		return ret;
 	}
 
 	/**
@@ -1592,82 +1656,6 @@ public class DOM {
 		return Window.getClientWidth();
 	}
 
-	/**
-	 * This method is called directly by native code when any event is fired.
-	 * 
-	 * @param evt
-	 *            the handle to the event being fired.
-	 * @param elem
-	 *            the handle to the element that received the event.
-	 * @param listener
-	 *            the listener associated with the element that received the
-	 *            event.
-	 */
-	public static void dispatchEvent(Event evt, Element elem,
-			EventListener listener) {
-		// Preserve the current event in case we are in a reentrant event
-		// dispatch.
-		Event prevCurrentEvent = currentEvent;
-		currentEvent = evt;
-		dispatchEventImpl(evt, elem, listener);
-		currentEvent = prevCurrentEvent;
-	}
-
-	/**
-	 * This method is a similar to
-	 * {@link #dispatchEvent(Event, Element, EventListener)} but only dispatches
-	 * if an event listener is set to element.
-	 *
-	 * @param evt
-	 *            the handle to the event being fired.
-	 * @param elem
-	 *            the handle to the element that received the event.
-	 * @return {@code true} if the event was dispatched
-	 */
-	public static boolean dispatchEvent(Event evt, Element elem) {
-		EventListener eventListener = getEventListener(elem);
-		if (eventListener == null) {
-			return false;
-		}
-		dispatchEvent(evt, elem, eventListener);
-		return true;
-	}
-
-	/**
-	 * Initialize the event system if it has not already been initialized.
-	 */
-	static void maybeInitializeEventSystem() {
-		impl.maybeInitializeEventSystem();
-	}
-
-	/**
-	 * This method is called directly by native code when event preview is being
-	 * used.
-	 * 
-	 * @param evt
-	 *            a handle to the event being previewed
-	 * @return <code>false</code> to cancel the event
-	 */
-	public static boolean previewEvent(Event evt) {
-		// Fire a NativePreviewEvent to NativePreviewHandlers
-		boolean ret = Event.fireNativePreviewEvent(evt);
-		// If the preview cancels the event, stop it from bubbling and
-		// performing
-		// its default action. Check for a null evt to allow unit tests to run.
-		if (!ret && evt != null) {
-			evt.stopPropagation();
-			evt.preventDefault();
-		}
-		return ret;
-	}
-
-	// chromium hosted mode double-dispatch checl
-	private static Event lastDispatchedEvent;
-
-	private static EventListener lastDispatchedMouseEventListener;
-
-	private static List<Element> dispatchedFor = new ArrayList<>();
-
 	private static void dispatchEventImpl(Event evt, Element elem,
 			EventListener listener) {
 		// If this element has capture...
@@ -1738,26 +1726,37 @@ public class DOM {
 	}
 
 	/**
-	 * Provided as a convenient way to upcast values statically typed as
-	 * {@link Element} to {@link Element}. For easier upgrades in the future,
-	 * it's recommended that this function only be called within a
-	 * <code>return</code> statement.
-	 * <p>
-	 * Does <em>not</em> throw a {@link NullPointerException} if elem is null.
+	 * Initialize the event system if it has not already been initialized.
 	 */
-	public static Element asOld(Element elem) {
-		return (Element) elem;
+	static void maybeInitializeEventSystem() {
+		impl.maybeInitializeEventSystem();
 	}
 
-	public static String getElementPropertyOrAttribute(Element elem,
-			String name) {
-		String value = getElementProperty(elem, name);
-		if (value == null) {
-			value = getElementAttribute(elem, name);
-			if (value.isEmpty()) {
-				value = null;
+	private static class NativePreview extends BaseListenerWrapper<EventPreview>
+			implements Event.NativePreviewHandler {
+		@Deprecated
+		public static void add(EventPreview listener) {
+			Event.addNativePreviewHandler(new NativePreview(listener));
+		}
+
+		public static void remove(EventPreview listener) {
+			baseRemove(Event.handlers, listener, NativePreviewEvent.getType());
+		}
+
+		private NativePreview(EventPreview listener) {
+			super(listener);
+		}
+
+		public void onPreviewNativeEvent(NativePreviewEvent event) {
+			// The legacy EventHandler should only fire if it is on the top of
+			// the
+			// stack (ie. the last one added).
+			if (event.isFirstHandler()) {
+				if (!listener
+						.onEventPreview(Event.as(event.getNativeEvent()))) {
+					event.cancel();
+				}
 			}
 		}
-		return value;
 	}
 }

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import java.util.ArrayList;
@@ -25,16 +24,17 @@ import com.google.gwt.user.client.ui.FlowPanel;
  *
  * @author Nick Reddel
  */
+public class FlowPanelWithSpaces extends FlowPanel {
+	List<Text> spaces = new ArrayList<Text>();
 
- public class FlowPanelWithSpaces extends FlowPanel {
-	List<Text> spaces=new ArrayList<Text>();
-	public void appendSpace(){
+	public void appendSpace() {
 		Text txt = Document.get().createTextNode(" ");
 		spaces.add(txt);
 		getElement().appendChild(txt);
 	}
-	public void clearSpaces(){
-		for(Text t:spaces){
+
+	public void clearSpaces() {
+		for (Text t : spaces) {
 			getElement().removeChild(t);
 		}
 		spaces.clear();

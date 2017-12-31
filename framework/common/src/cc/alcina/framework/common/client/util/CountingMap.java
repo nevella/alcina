@@ -7,6 +7,13 @@ import java.util.Map;
 import java.util.Set;
 
 public class CountingMap<K> extends LinkedHashMap<K, Integer> {
+	public CountingMap() {
+	}
+
+	public CountingMap(Multimap<K, List> mm) {
+		addMultimap(mm);
+	}
+
 	public int add(K key) {
 		return add(key, 1);
 	}
@@ -20,11 +27,28 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 		return nextValue;
 	}
 
+	public void addIntMap(Map<K, Integer> m) {
+		for (Map.Entry<K, Integer> entry : m.entrySet()) {
+			put(entry.getKey(), entry.getValue());
+		}
+	}
+
+	public void addMultimap(Multimap<K, List> mm) {
+		for (Map.Entry<K, List> entry : mm.entrySet()) {
+			add(entry.getKey(), entry.getValue().size());
+		}
+	}
+
 	public int countFor(K key) {
 		if (!containsKey(key)) {
 			return 0;
 		}
 		return get(key);
+	}
+
+	public void dumpReverseMap(boolean dir) {
+		reverseMap(dir).forEach((k, v) -> Ax.out("%s%s",
+				CommonUtils.padStringRight(k.toString(), 30, ' '), v));
 	}
 
 	public K max() {
@@ -61,24 +85,6 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 		return min;
 	}
 
-	public int sum() {
-		int result = 0;
-		for (Integer v : values()) {
-			result += v;
-		}
-		return result;
-	}
-
-	public int weightedAvg() {
-		Set<java.util.Map.Entry<K, Integer>> es = entrySet();
-		int weight = 0;
-		for (Map.Entry<K, Integer> e : es) {
-			weight += ((Number) e.getKey()).intValue() * e.getValue();
-		}
-		int sum = sum();
-		return sum == 0 ? 0 : weight / sum;
-	}
-
 	public SortedMultimap<Integer, List<K>> reverseMap(boolean descending) {
 		SortedMultimap<Integer, List<K>> result = descending
 				? new SortedMultimap<Integer, List<K>>(
@@ -86,6 +92,14 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 				: new SortedMultimap<Integer, List<K>>();
 		for (Map.Entry<K, Integer> entry : entrySet()) {
 			result.add(entry.getValue(), entry.getKey());
+		}
+		return result;
+	}
+
+	public int sum() {
+		int result = 0;
+		for (Integer v : values()) {
+			result += v;
 		}
 		return result;
 	}
@@ -100,32 +114,18 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 		return result;
 	}
 
-	public void addMultimap(Multimap<K, List> mm) {
-		for (Map.Entry<K, List> entry : mm.entrySet()) {
-			add(entry.getKey(), entry.getValue().size());
-		}
-	}
-
-	public void addIntMap(Map<K, Integer> m) {
-		for (Map.Entry<K, Integer> entry : m.entrySet()) {
-			put(entry.getKey(), entry.getValue());
-		}
-	}
-
-	public CountingMap() {
-	}
-
-	public CountingMap(Multimap<K, List> mm) {
-		addMultimap(mm);
-	}
-
 	@Override
 	public String toString() {
 		return CommonUtils.join(entrySet(), "\n");
 	}
 
-	public void dumpReverseMap(boolean dir) {
-		reverseMap(dir).forEach((k, v) -> Ax.out("%s%s",
-				CommonUtils.padStringRight(k.toString(), 30, ' '), v));
+	public int weightedAvg() {
+		Set<java.util.Map.Entry<K, Integer>> es = entrySet();
+		int weight = 0;
+		for (Map.Entry<K, Integer> e : es) {
+			weight += ((Number) e.getKey()).intValue() * e.getValue();
+		}
+		int sum = sum();
+		return sum == 0 ? 0 : weight / sum;
 	}
 }

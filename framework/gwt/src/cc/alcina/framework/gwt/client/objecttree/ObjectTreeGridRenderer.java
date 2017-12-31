@@ -38,14 +38,14 @@ public class ObjectTreeGridRenderer extends ObjectTreeRenderer {
 	protected FlexCellFormatter cellFormatter;
 
 	protected int colCountMax;
-	
-	 
 
 	// a fair bit of hackery here - but, heck, it works
 	@Override
 	protected void renderToPanel(TreeRenderable renderable, ComplexPanel cp,
-			int depth, boolean soleChild, RenderContext renderContext, TreeRenderer parent) {
-		super.renderToPanel(renderable, cp, depth, soleChild, renderContext,parent);
+			int depth, boolean soleChild, RenderContext renderContext,
+			TreeRenderer parent) {
+		super.renderToPanel(renderable, cp, depth, soleChild, renderContext,
+				parent);
 		if (depth == 0) {
 			cellFormatter = (FlexCellFormatter) ft.getCellFormatter();
 			int widgetCount = cp.getWidgetCount();
@@ -72,9 +72,8 @@ public class ObjectTreeGridRenderer extends ObjectTreeRenderer {
 				}
 				boolean isCustomiser = w.getStyleName().contains("customiser");
 				if (col == 1) {// && isCustomiser) {
-					if (isCustomiser
-							&& !level1RendererRows.get(row)
-									.isSingleLineCustomiser()) {
+					if (isCustomiser && !level1RendererRows.get(row)
+							.isSingleLineCustomiser()) {
 						cellFormatter.setVerticalAlignment(row, 0,
 								HasVerticalAlignment.ALIGN_TOP);
 						cellFormatter.addStyleName(row, 0, "multiline-caption");

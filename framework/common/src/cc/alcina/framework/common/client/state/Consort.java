@@ -51,7 +51,6 @@ public class Consort<D> {
 
 	protected static final String IGNORE_PLAYED_STATES_IF_NOT_CONTAINED = Consort.class
 			.getName() + ".IGNORE_PLAYED_STATES_IF_NOT_CONTAINED";
-	
 
 	private TopicPublisher topicPublisher = new TopicPublisher();
 
@@ -81,15 +80,6 @@ public class Consort<D> {
 
 	private boolean throwOnUnableToResolveDependencies;
 
-	public boolean isThrowOnUnableToResolveDependencies() {
-		return this.throwOnUnableToResolveDependencies;
-	}
-
-	public void setThrowOnUnableToResolveDependencies(
-			boolean throwOnUnableToResolveDependencies) {
-		this.throwOnUnableToResolveDependencies = throwOnUnableToResolveDependencies;
-	}
-
 	protected TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(getClass(), TaggedLogger.METRIC);
 
@@ -98,6 +88,8 @@ public class Consort<D> {
 
 	protected TaggedLogger debugLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(getClass(), TaggedLogger.DEBUG);
+
+	private String lastInfoLogMessage = null;
 
 	public void addEndpointPlayer() {
 		addEndpointPlayer(null, true);
@@ -206,6 +198,31 @@ public class Consort<D> {
 				});
 	}
 
+	public void doOrDefer(TopicListener topicListener, D state) {
+		if (containsState(state)) {
+			topicListener.topicPublished(null, state);
+		} else {
+			addStateListener(topicListener, state);
+		}
+	}
+
+	public void exitListenerDelta(TopicListener listener,
+			boolean includeNoActivePlayers, boolean add) {
+		if (add) {
+			listenerDelta(Consort.CANCELLED, listener, true);
+			listenerDelta(Consort.ERROR, listener, true);
+			listenerDelta(Consort.FINISHED, listener, true);
+			if (includeNoActivePlayers) {
+				listenerDelta(Consort.NO_ACTIVE_PLAYERS, listener, true);
+			}
+		} else {
+			deferredRemove(
+					Arrays.asList(Consort.CANCELLED, Consort.ERROR,
+							Consort.FINISHED, Consort.NO_ACTIVE_PLAYERS),
+					listener);
+		}
+	}
+
 	public void finished() {
 		running = false;
 		infoLogger.log(CommonUtils.formatJ("%s     [%s]",
@@ -235,6 +252,10 @@ public class Consort<D> {
 		return this.synchronous;
 	}
 
+	public boolean isThrowOnUnableToResolveDependencies() {
+		return this.throwOnUnableToResolveDependencies;
+	}
+
 	public void listenerDelta(String key, TopicListener listener, boolean add) {
 		topicPublisher.listenerDelta(key, listener, add);
 	}
@@ -250,16 +271,10 @@ public class Consort<D> {
 		throw new WrappedRuntimeException(throwable);
 	}
 
-	protected void addState(D state) {
-		//only do on startup - no logging
-		modifyStates(Collections.singletonList(state),true);
-	}
-
-	protected void addStates(Collection<D> states) {
-		infoLogger.log(CommonUtils.formatJ("%s add:[%s]",
-				CommonUtils.padStringLeft("", depth(), '\t'),
-				CommonUtils.join(states, ", ")));
-		modifyStates(states, true);
+	public void passLoggersAndFlagsToChild(Consort child) {
+		child.metricLogger = metricLogger;
+		child.infoLogger = infoLogger;
+		child.setSimulate(isSimulate());
 	}
 
 	public void removeStates(Collection<D> states) {
@@ -305,6 +320,11 @@ public class Consort<D> {
 
 	public void setSynchronous(boolean synchronous) {
 		this.synchronous = synchronous;
+	}
+
+	public void setThrowOnUnableToResolveDependencies(
+			boolean throwOnUnableToResolveDependencies) {
+		this.throwOnUnableToResolveDependencies = throwOnUnableToResolveDependencies;
 	}
 
 	public void start() {
@@ -355,27 +375,33 @@ public class Consort<D> {
 		}
 	}
 
-	private void modifyStates(Collection<D> states, boolean add) {
-		LightSet<D> reachedCopy = new LightSet<D>(reachedStates);
-		boolean mod = add ? reachedStates.addAll(states)
-				: reachedStates.removeAll(states);
-		if (mod) {
-			publishTopicWithBubble(STATES,
-					new StatesDelta(reachedCopy, reachedStates));
-			debugLogger.log(CommonUtils.formatJ("%s     [%s]",
-					CommonUtils.padStringLeft("", depth(), '\t'),
-					CommonUtils.join(states, ", ")));
+	private void consumeQueue0() {
+		if (!canAddPlayers() || consumingQueue || !running) {
+			return;
 		}
-	}
-
-	protected int depth() {
-		Consort cursor = this;
-		int depth = 0;
-		while (cursor.getParentConsort() != null) {
-			depth++;
-			cursor = cursor.getParentConsort();
+		consumingQueue = true;
+		// this means that synchronous players will be dispatched sequentially
+		// within the while loop, but async tasks will be dispatched by
+		// (non-recursive) consumeQueue/wasPlayed calls
+		// also allow shortcut for looping tasks
+		while (canAddPlayers() && running) {
+			boolean replaying = replayPlayer != null;
+			Player<D> player = replaying ? replayPlayer : nextPlayer();
+			replayPlayer = null;
+			if (player != null) {
+				maybeRemovePlayersFromQueue(player);
+				if (!playing.contains(player)) {
+					playing.add(player);
+				}
+				executePlayer(player, replaying);
+			} else {
+				break;
+			}
 		}
-		return depth;
+		consumingQueue = false;
+		if (playing.isEmpty() && running) {
+			topicPublisher.publishTopic(NO_ACTIVE_PLAYERS, null);
+		}
 	}
 
 	private boolean isActive(Player<D> player) {
@@ -394,6 +420,19 @@ public class Consort<D> {
 		if (player.isRemoveAfterPlay()) {
 			removed.add(player);
 			players.remove(player);
+		}
+	}
+
+	private void modifyStates(Collection<D> states, boolean add) {
+		LightSet<D> reachedCopy = new LightSet<D>(reachedStates);
+		boolean mod = add ? reachedStates.addAll(states)
+				: reachedStates.removeAll(states);
+		if (mod) {
+			publishTopicWithBubble(STATES,
+					new StatesDelta(reachedCopy, reachedStates));
+			debugLogger.log(CommonUtils.formatJ("%s     [%s]",
+					CommonUtils.padStringLeft("", depth(), '\t'),
+					CommonUtils.join(states, ", ")));
 		}
 	}
 
@@ -510,6 +549,18 @@ public class Consort<D> {
 						providerDependencies).size() > 0;
 	}
 
+	protected void addState(D state) {
+		// only do on startup - no logging
+		modifyStates(Collections.singletonList(state), true);
+	}
+
+	protected void addStates(Collection<D> states) {
+		infoLogger.log(CommonUtils.formatJ("%s add:[%s]",
+				CommonUtils.padStringLeft("", depth(), '\t'),
+				CommonUtils.join(states, ", ")));
+		modifyStates(states, true);
+	}
+
 	protected void consumeQueue() {
 		try {
 			consumeQueue0();
@@ -518,36 +569,15 @@ public class Consort<D> {
 		}
 	}
 
-	private void consumeQueue0() {
-		if (!canAddPlayers() || consumingQueue || !running) {
-			return;
+	protected int depth() {
+		Consort cursor = this;
+		int depth = 0;
+		while (cursor.getParentConsort() != null) {
+			depth++;
+			cursor = cursor.getParentConsort();
 		}
-		consumingQueue = true;
-		// this means that synchronous players will be dispatched sequentially
-		// within the while loop, but async tasks will be dispatched by
-		// (non-recursive) consumeQueue/wasPlayed calls
-		// also allow shortcut for looping tasks
-		while (canAddPlayers() && running) {
-			boolean replaying = replayPlayer != null;
-			Player<D> player = replaying ? replayPlayer : nextPlayer();
-			replayPlayer = null;
-			if (player != null) {
-				maybeRemovePlayersFromQueue(player);
-				if (!playing.contains(player)) {
-					playing.add(player);
-				}
-				executePlayer(player, replaying);
-			} else {
-				break;
-			}
-		}
-		consumingQueue = false;
-		if (playing.isEmpty() && running) {
-			topicPublisher.publishTopic(NO_ACTIVE_PLAYERS, null);
-		}
+		return depth;
 	}
-
-	private String lastInfoLogMessage = null;
 
 	protected void executePlayer(Player<D> player, boolean replaying) {
 		String message = CommonUtils.formatJ("%s%s%s -> %s",
@@ -582,6 +612,10 @@ public class Consort<D> {
 		}
 	}
 
+	protected Set<D> getReachedStates() {
+		return this.reachedStates;
+	}
+
 	protected int getRelativePriority(Player<D> player1, Player<D> player2) {
 		return player1.getPriority() - player2.getPriority();
 	}
@@ -595,10 +629,6 @@ public class Consort<D> {
 
 	boolean canAddPlayers() {
 		return playing.isEmpty() || parallelArbiter != null;
-	}
-
-	protected Set<D> getReachedStates() {
-		return this.reachedStates;
 	}
 
 	public class OneTimeFinishedAsyncCallbackAdapter implements TopicListener {
@@ -697,37 +727,6 @@ public class Consort<D> {
 			if (message.wasStateAdded(state)) {
 				delegate.topicPublished(STATES, state);
 			}
-		}
-	}
-
-	public void passLoggersAndFlagsToChild(Consort child) {
-		child.metricLogger = metricLogger;
-		child.infoLogger = infoLogger;
-		child.setSimulate(isSimulate());
-	}
-
-	public void exitListenerDelta(TopicListener listener,
-			boolean includeNoActivePlayers, boolean add) {
-		if (add) {
-			listenerDelta(Consort.CANCELLED, listener, true);
-			listenerDelta(Consort.ERROR, listener, true);
-			listenerDelta(Consort.FINISHED, listener, true);
-			if (includeNoActivePlayers) {
-				listenerDelta(Consort.NO_ACTIVE_PLAYERS, listener, true);
-			}
-		} else {
-			deferredRemove(
-					Arrays.asList(Consort.CANCELLED, Consort.ERROR,
-							Consort.FINISHED, Consort.NO_ACTIVE_PLAYERS),
-					listener);
-		}
-	}
-
-	public void doOrDefer(TopicListener topicListener, D state) {
-		if (containsState(state)) {
-			topicListener.topicPublished(null, state);
-		} else {
-			addStateListener(topicListener, state);
 		}
 	}
 }

@@ -22,18 +22,6 @@ public abstract class AbstractTaskPerformer implements Runnable {
 		return this;
 	}
 
-	public void runLogged() {
-		try {
-			MetricLogging.get().start(getClass().getSimpleName());
-			System.out.format("Starting task: %s\n",
-					getClass().getSimpleName());
-			run();
-		} finally {
-			System.out.format("Ended task: %s\n", getClass().getSimpleName());
-			MetricLogging.get().end(getClass().getSimpleName());
-		}
-	}
-
 	@Override
 	public void run() {
 		try {
@@ -43,6 +31,18 @@ public abstract class AbstractTaskPerformer implements Runnable {
 			throw new WrappedRuntimeException(e);
 		} finally {
 			LooseContext.pop();
+		}
+	}
+
+	public void runLogged() {
+		try {
+			MetricLogging.get().start(getClass().getSimpleName());
+			System.out.format("Starting task: %s\n",
+					getClass().getSimpleName());
+			run();
+		} finally {
+			System.out.format("Ended task: %s\n", getClass().getSimpleName());
+			MetricLogging.get().end(getClass().getSimpleName());
 		}
 	}
 

@@ -7,14 +7,14 @@ public class Html5File extends JavaScriptObject {
 	}
 
 	public final native String getFileName() /*-{
-	if (this.name) {
-	    return this.name;
-	} else {
-	    return this.fileName;
-	}
-	}-*/;
+												if (this.name) {
+												return this.name;
+												} else {
+												return this.fileName;
+												}
+												}-*/;
 
 	public final native int getFileSize() /*-{
-	return this.fileSize;
-	}-*/;
+											return this.fileSize;
+											}-*/;
 }

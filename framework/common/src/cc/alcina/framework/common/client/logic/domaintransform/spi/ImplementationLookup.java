@@ -11,14 +11,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform.spi;
 
 /**
  *
  * @author Nick Reddel
  */
-
- public interface ImplementationLookup {
+public interface ImplementationLookup {
 	public Class getImplementation(Class interfaceClass);
 }

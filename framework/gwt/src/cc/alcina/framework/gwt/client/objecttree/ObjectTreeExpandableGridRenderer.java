@@ -43,6 +43,14 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 
 	private boolean useExpandableWidgets = true;
 
+	public boolean isUseExpandableWidgets() {
+		return useExpandableWidgets;
+	}
+
+	public void setUseExpandableWidgets(boolean useExpandableWidgets) {
+		this.useExpandableWidgets = useExpandableWidgets;
+	}
+
 	@Override
 	protected void renderToPanel(TreeRenderable renderable, ComplexPanel cp,
 			int depth, boolean soleChild, RenderContext renderContext,
@@ -62,17 +70,18 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 					final ExpandableWidgetWithRendererWrapper expandableWidgetWrapper = new ExpandableWidgetWithRendererWrapper(
 							level1ContentWidget, renderer, renderContext);
 					ft.setWidget(level1Row, 1, expandableWidgetWrapper);
-					ft.setWidget(level1Row, colCountMax + 1, new ToggleLink(
-							"[Change]", "[Finished]",
-							new SelectionHandler<Integer>() {
-								public void onSelection(
-										SelectionEvent<Integer> event) {
-									expandableWidgetWrapper.showExpanded(event
-											.getSelectedItem() == 0);
-									LayoutEvents.get()
-											.fireDeferredGlobalRelayout();
-								}
-							}));
+					ft.setWidget(level1Row, colCountMax + 1,
+							new ToggleLink("[Change]", "[Finished]",
+									new SelectionHandler<Integer>() {
+										public void onSelection(
+												SelectionEvent<Integer> event) {
+											expandableWidgetWrapper
+													.showExpanded(event
+															.getSelectedItem() == 0);
+											LayoutEvents.get()
+													.fireDeferredGlobalRelayout();
+										}
+									}));
 					cellFormatter.setVerticalAlignment(level1Row,
 							colCountMax + 1, HasVerticalAlignment.ALIGN_TOP);
 				}
@@ -101,46 +110,8 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 		return;
 	}
 
-	public void setUseExpandableWidgets(boolean useExpandableWidgets) {
-		this.useExpandableWidgets = useExpandableWidgets;
-	}
-
-	public boolean isUseExpandableWidgets() {
-		return useExpandableWidgets;
-	}
-
-	class ExpandableWidgetWithRendererWrapper extends Composite {
-		private final Widget level1ContentWidget;
-
-		private FlowPanel fp;
-
-		private HalfBindableDisplayer bindableDisplayer;
-
-		public ExpandableWidgetWithRendererWrapper(Widget level1ContentWidget,
-				TreeRenderer renderer, LooseContextInstance renderContext) {
-			this.level1ContentWidget = level1ContentWidget;
-			this.fp = new FlowPanel();
-			this.bindableDisplayer = new HalfBindableDisplayer(renderer);
-			String minWidth = renderContext
-					.getString(ObjectTreeExpandableGridRenderer.MIN_CUSTOMISER_WIDTH);
-			if (minWidth != null) {
-				bindableDisplayer.setWidth(minWidth);
-			}
-			fp.add(bindableDisplayer);
-			fp.add(level1ContentWidget);
-			showExpanded(false);
-			initWidget(fp);
-		}
-
-		private void showExpanded(boolean b) {
-			level1ContentWidget.setVisible(b);
-			bindableDisplayer.setVisible(!b);
-			bindableDisplayer.updateText();
-		}
-	}
-
-	public static class HalfBindableDisplayer extends Composite implements
-			PropertyChangeListener {
+	public static class HalfBindableDisplayer extends Composite
+			implements PropertyChangeListener {
 		private Label label;
 
 		private final TreeRenderer renderer;
@@ -151,17 +122,8 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 			initWidget(label);
 		}
 
-		@Override
-		protected void onAttach() {
+		public void propertyChange(PropertyChangeEvent evt) {
 			updateText();
-			renderer.getRenderable().addPropertyChangeListener(this);
-			super.onAttach();
-		}
-
-		@Override
-		protected void onDetach() {
-			renderer.getRenderable().removePropertyChangeListener(this);
-			super.onDetach();
 		}
 
 		private void updateText() {
@@ -176,8 +138,47 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 			label.setText(text);
 		}
 
-		public void propertyChange(PropertyChangeEvent evt) {
+		@Override
+		protected void onAttach() {
 			updateText();
+			renderer.getRenderable().addPropertyChangeListener(this);
+			super.onAttach();
+		}
+
+		@Override
+		protected void onDetach() {
+			renderer.getRenderable().removePropertyChangeListener(this);
+			super.onDetach();
+		}
+	}
+
+	class ExpandableWidgetWithRendererWrapper extends Composite {
+		private final Widget level1ContentWidget;
+
+		private FlowPanel fp;
+
+		private HalfBindableDisplayer bindableDisplayer;
+
+		public ExpandableWidgetWithRendererWrapper(Widget level1ContentWidget,
+				TreeRenderer renderer, LooseContextInstance renderContext) {
+			this.level1ContentWidget = level1ContentWidget;
+			this.fp = new FlowPanel();
+			this.bindableDisplayer = new HalfBindableDisplayer(renderer);
+			String minWidth = renderContext.getString(
+					ObjectTreeExpandableGridRenderer.MIN_CUSTOMISER_WIDTH);
+			if (minWidth != null) {
+				bindableDisplayer.setWidth(minWidth);
+			}
+			fp.add(bindableDisplayer);
+			fp.add(level1ContentWidget);
+			showExpanded(false);
+			initWidget(fp);
+		}
+
+		private void showExpanded(boolean b) {
+			level1ContentWidget.setVisible(b);
+			bindableDisplayer.setVisible(!b);
+			bindableDisplayer.updateText();
 		}
 	}
 }

@@ -19,9 +19,9 @@ import com.totsp.gwittir.client.ui.Renderer;
  *
  * @author Nick Reddel
  */
-
- public class ClassSimpleNameRenderer implements Renderer {
+public class ClassSimpleNameRenderer implements Renderer {
 	public static final Renderer INSTANCE = new ClassSimpleNameRenderer();
+
 	public Object render(Object o) {
 		if (o == null) {
 			return null;

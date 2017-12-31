@@ -17,8 +17,8 @@ import com.google.gwt.core.shared.GwtIncompatible;
  * 
  * @param <H>
  */
-public class LightSet<H> extends AbstractSet<H> implements Cloneable,
-		Serializable {
+public class LightSet<H> extends AbstractSet<H>
+		implements Cloneable, Serializable {
 	static final transient long serialVersionUID = 1;
 
 	static final transient int DEGENERATE_THRESHOLD = 30;
@@ -71,7 +71,8 @@ public class LightSet<H> extends AbstractSet<H> implements Cloneable,
 			modCount++;
 			if (size > elementData.length) {
 				Object[] newData = new Object[size * 2];
-				System.arraycopy(elementData, 0, newData, 0, elementData.length);
+				System.arraycopy(elementData, 0, newData, 0,
+						elementData.length);
 				elementData = newData;
 			}
 			elementData[size - 1] = e;

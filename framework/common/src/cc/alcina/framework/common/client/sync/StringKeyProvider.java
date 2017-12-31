@@ -14,11 +14,12 @@ public interface StringKeyProvider<T> {
 		return Collections.singletonList(firstKey(object));
 	}
 
-	public static class StringKeyProviderAllKeysConverter<T> implements
-			Converter<T, String> {
+	public static class StringKeyProviderAllKeysConverter<T>
+			implements Converter<T, String> {
 		private StringKeyProvider<T> provider;
 
-		public StringKeyProviderAllKeysConverter(StringKeyProvider<T> provider) {
+		public StringKeyProviderAllKeysConverter(
+				StringKeyProvider<T> provider) {
 			this.provider = provider;
 		}
 

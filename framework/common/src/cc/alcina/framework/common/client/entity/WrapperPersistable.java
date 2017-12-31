@@ -27,28 +27,16 @@ import cc.alcina.framework.common.client.logic.permissions.Permissible;
  * 
  * @author Nick Reddel
  */
-public class WrapperPersistable extends BaseBindable implements
-		HasIdAndLocalId, Permissible, HasOwner {
+public class WrapperPersistable extends BaseBindable
+		implements HasIdAndLocalId, Permissible, HasOwner {
 	private long id;
 
 	private long localId;
 
 	private transient IUser owner;
 
-	public long getId() {
-		return this.id;
-	}
-
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	public long getLocalId() {
-		return this.localId;
-	}
-
-	public void setLocalId(long localId) {
-		this.localId = localId;
+	public AccessLevel accessLevel() {
+		return AccessLevel.ADMIN;
 	}
 
 	/**
@@ -56,19 +44,16 @@ public class WrapperPersistable extends BaseBindable implements
 	 * !not! be read. For listeners on collection properties
 	 */
 	public void fireNullPropertyChange(String name) {
-		((MutablePropertyChangeSupport)this.propertyChangeSupport()).fireNullPropertyChange(name);
+		((MutablePropertyChangeSupport) this.propertyChangeSupport())
+				.fireNullPropertyChange(name);
 	}
 
-	public AccessLevel accessLevel() {
-		return AccessLevel.ADMIN;
+	public long getId() {
+		return this.id;
 	}
 
-	public String rule() {
-		return null;
-	}
-
-	public void setOwner(IUser owner) {
-		this.owner = owner;
+	public long getLocalId() {
+		return this.localId;
 	}
 
 	/**
@@ -78,5 +63,21 @@ public class WrapperPersistable extends BaseBindable implements
 	@XmlTransient
 	public IUser getOwner() {
 		return owner;
+	}
+
+	public String rule() {
+		return null;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public void setLocalId(long localId) {
+		this.localId = localId;
+	}
+
+	public void setOwner(IUser owner) {
+		this.owner = owner;
 	}
 }

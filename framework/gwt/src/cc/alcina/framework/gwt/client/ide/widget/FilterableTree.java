@@ -40,12 +40,8 @@ import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWi
  * @author nick@alcina.cc
  * 
  */
-public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
-		VisualFilterableWithFirst {
-	private boolean lastWasKeyDown;
-
-	private TreeItem lastSelected;
-
+public class FilterableTree extends Tree
+		implements SelectionHandler<TreeItem>, VisualFilterableWithFirst {
 	private static final int OTHER_KEY_DOWN = 63233;
 
 	private static final int OTHER_KEY_LEFT = 63234;
@@ -79,9 +75,17 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 		return code;
 	}
 
+	private boolean lastWasKeyDown;
+
+	private TreeItem lastSelected;
+
 	boolean lastKeyWasUp = false;
 
 	boolean lastKeyWasDown = false;
+
+	private CollectionFilter shouldExpandCallback;
+
+	private String lastFilteredText = "";
 
 	public FilterableTree() {
 		super();
@@ -110,10 +114,6 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 		expandAll(99);
 	}
 
-	private CollectionFilter shouldExpandCallback;
-
-	private String lastFilteredText = "";
-
 	public void expandAll(int depth) {
 		for (int i = 0; i < getItemCount(); i++) {
 			expandAll(getItem(i), depth - 1);
@@ -122,59 +122,6 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 
 	public void expandAllAsync(Callback<Void> callback, int depth) {
 		Scheduler.get().scheduleIncremental(new ExpandCommand(callback, depth));
-	}
-
-	class ExpandCommand implements RepeatingCommand {
-		private final Callback<Void> callback;
-
-		private final int depth;
-
-		Stack<TreeItem> items = new Stack<TreeItem>();
-
-		int counter = 0;
-
-		public ExpandCommand(Callback<Void> callback, int depth) {
-			this.callback = callback;
-			this.depth = depth;
-			for (int i = 0; i < getItemCount(); i++) {
-				items.push(getItem(i));
-			}
-		}
-
-		public void walk() {
-			while (!items.isEmpty()) {
-				TreeItem pop = items.pop();
-				pop.setState(true);
-				int pDepth = getDepth(pop);
-				if (pDepth <= depth) {
-					for (int i = 0; i < pop.getChildCount(); i++) {
-						items.push(pop.getChild(i));
-					}
-				}
-				if (counter-- < 0) {
-					break;
-				}
-			}
-		}
-
-		private int getDepth(TreeItem item) {
-			int pDepth = 1;
-			while (((item = item.getParentItem())) != null) {
-				pDepth++;
-			}
-			return pDepth;
-		}
-
-		@Override
-		public boolean execute() {
-			counter = 200;
-			walk();
-			if (counter > 0) {
-				callback.apply(null);
-				return false;
-			}
-			return true;
-		}
 	}
 
 	public boolean filter(String filterText) {
@@ -210,6 +157,38 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 
 	public String getLastFilteredText() {
 		return this.lastFilteredText;
+	}
+
+	public TreeItem getNextNode(TreeItem item, boolean ignoreChildAxis,
+			int direction) {
+		if (item == null) {
+			return null;
+		}
+		TreeOrItem parent = TreeOrItemTree.create(item).getParent();
+		if (direction == 1) {
+			if (!ignoreChildAxis && item.getState()
+					&& item.getChildCount() > 0) {
+				return item.getChild(0);
+			}
+			int childIndex = parent.getChildIndex(item);
+			if (childIndex < parent.getChildCount() - 1) {
+				return parent.getChild(childIndex + 1);
+			}
+			if (item.getParentItem() == null) {
+				return null;
+			}
+			return getNextNode(item.getParentItem(), true, direction);
+		} else {
+			int childIndex = parent.getChildIndex(item);
+			if (childIndex > 0) {
+				return findDeepestOpenChild(parent.getChild(childIndex - 1));
+			}
+			return item.getParentItem();
+		}
+	}
+
+	public CollectionFilter getShouldExpandCallback() {
+		return this.shouldExpandCallback;
 	}
 
 	public void moveToFirst() {
@@ -282,6 +261,10 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 		}
 	}
 
+	public void setShouldExpandCallback(CollectionFilter shouldExpandCallback) {
+		this.shouldExpandCallback = shouldExpandCallback;
+	}
+
 	private void expandAll(TreeItem ti, int depth) {
 		if (shouldExpandCallback != null && !shouldExpandCallback.allow(ti)) {
 			return;
@@ -314,33 +297,6 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 			if (item.isVisible()) {
 				return item;
 			}
-		}
-	}
-
-	public TreeItem getNextNode(TreeItem item, boolean ignoreChildAxis,
-			int direction) {
-		if (item == null) {
-			return null;
-		}
-		TreeOrItem parent = TreeOrItemTree.create(item).getParent();
-		if (direction == 1) {
-			if (!ignoreChildAxis && item.getState() && item.getChildCount() > 0) {
-				return item.getChild(0);
-			}
-			int childIndex = parent.getChildIndex(item);
-			if (childIndex < parent.getChildCount() - 1) {
-				return parent.getChild(childIndex + 1);
-			}
-			if (item.getParentItem() == null) {
-				return null;
-			}
-			return getNextNode(item.getParentItem(), true, direction);
-		} else {
-			int childIndex = parent.getChildIndex(item);
-			if (childIndex > 0) {
-				return findDeepestOpenChild(parent.getChild(childIndex - 1));
-			}
-			return item.getParentItem();
 		}
 	}
 
@@ -383,11 +339,56 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 		return true;
 	}
 
-	public CollectionFilter getShouldExpandCallback() {
-		return this.shouldExpandCallback;
-	}
+	class ExpandCommand implements RepeatingCommand {
+		private final Callback<Void> callback;
 
-	public void setShouldExpandCallback(CollectionFilter shouldExpandCallback) {
-		this.shouldExpandCallback = shouldExpandCallback;
+		private final int depth;
+
+		Stack<TreeItem> items = new Stack<TreeItem>();
+
+		int counter = 0;
+
+		public ExpandCommand(Callback<Void> callback, int depth) {
+			this.callback = callback;
+			this.depth = depth;
+			for (int i = 0; i < getItemCount(); i++) {
+				items.push(getItem(i));
+			}
+		}
+
+		@Override
+		public boolean execute() {
+			counter = 200;
+			walk();
+			if (counter > 0) {
+				callback.apply(null);
+				return false;
+			}
+			return true;
+		}
+
+		public void walk() {
+			while (!items.isEmpty()) {
+				TreeItem pop = items.pop();
+				pop.setState(true);
+				int pDepth = getDepth(pop);
+				if (pDepth <= depth) {
+					for (int i = 0; i < pop.getChildCount(); i++) {
+						items.push(pop.getChild(i));
+					}
+				}
+				if (counter-- < 0) {
+					break;
+				}
+			}
+		}
+
+		private int getDepth(TreeItem item) {
+			int pDepth = 1;
+			while (((item = item.getParentItem())) != null) {
+				pDepth++;
+			}
+			return pDepth;
+		}
 	}
 }

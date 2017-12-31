@@ -11,21 +11,26 @@ import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 public class DevCSSHelper {
+	public static DevCSSHelper get() {
+		DevCSSHelper singleton = Registry.checkSingleton(DevCSSHelper.class);
+		if (singleton == null) {
+			singleton = new DevCSSHelper();
+			Registry.registerSingleton(DevCSSHelper.class, singleton);
+		}
+		return singleton;
+	}
+
 	private PropertyChangeListener cssPropertyListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
 			updateDeveloperCss();
 		}
 	};
 
-	public void updateDeveloperCss() {
-		String css = ClientBase.getGeneralProperties()
-				.getPersistentCss()
-				+ ClientBase.getGeneralProperties()
-						.getTransientCss();
-		this.styleElement = ClientUtils.updateCss(styleElement, css);
-	}
-
 	private Element styleElement;
+
+	private DevCSSHelper() {
+		super();
+	}
 
 	public void addCssListeners(GeneralProperties props) {
 		props.addPropertyChangeListener(
@@ -41,16 +46,9 @@ public class DevCSSHelper {
 				GeneralProperties.PROPERTY_TRANSIENT_CSS, cssPropertyListener);
 	}
 
-	private DevCSSHelper() {
-		super();
-	}
-
-	public static DevCSSHelper get() {
-		DevCSSHelper singleton = Registry.checkSingleton(DevCSSHelper.class);
-		if (singleton == null) {
-			singleton = new DevCSSHelper();
-			Registry.registerSingleton(DevCSSHelper.class, singleton);
-		}
-		return singleton;
+	public void updateDeveloperCss() {
+		String css = ClientBase.getGeneralProperties().getPersistentCss()
+				+ ClientBase.getGeneralProperties().getTransientCss();
+		this.styleElement = ClientUtils.updateCss(styleElement, css);
 	}
 }

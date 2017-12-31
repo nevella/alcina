@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget.layout;
 
 import java.util.Iterator;
@@ -27,10 +26,20 @@ import com.google.gwt.user.client.ui.Widget;
  *
  * @author Nick Reddel
  */
+public class FlowPanel100pcHeight extends FlowPanel
+		implements HasLayoutInfo, HasClickHandlers {
+	@Override
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addDomHandler(handler, ClickEvent.getType());
+	}
 
- public class FlowPanel100pcHeight extends FlowPanel implements HasLayoutInfo, HasClickHandlers {
 	public LayoutInfo getLayoutInfo() {
 		return new LayoutInfo() {
+			@Override
+			public int getClientAdjustHeight() {
+				return getClientAdjustHeightFp();
+			}
+
 			@Override
 			public Iterator<Widget> getLayoutWidgets() {
 				return FlowPanel100pcHeight.this.iterator();
@@ -39,17 +48,9 @@ import com.google.gwt.user.client.ui.Widget;
 			public boolean to100percentOfAvailableHeight() {
 				return true;
 			}
-			@Override
-			public int getClientAdjustHeight() {
-				return getClientAdjustHeightFp();
-			}
 		};
 	}
 
-	@Override
-	public HandlerRegistration addClickHandler(ClickHandler handler) {
-		return addDomHandler(handler, ClickEvent.getType());
-	}
 	protected int getClientAdjustHeightFp() {
 		return 0;
 	}

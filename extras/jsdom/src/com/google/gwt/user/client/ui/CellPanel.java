@@ -33,28 +33,31 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment.VerticalAlignmentConst
  * 
  * <h3>Use in UiBinder Templates</h3>
  * <P>
- * When working with CellPanel subclasses in 
+ * When working with CellPanel subclasses in
  * {@link com.google.gwt.uibinder.client.UiBinder UiBinder} templates, wrap
- * child widgets in <code>&lt;g:cell></code> elements. (Note the lower case
- * "c", meant to signal that the cell is not a runtime object, and so cannot
- * have a <code>ui:field</code> attribute.) Cell elements can have
- * attributes setting their height, width and alignment.
+ * child widgets in <code>&lt;g:cell></code> elements. (Note the lower case "c",
+ * meant to signal that the cell is not a runtime object, and so cannot have a
+ * <code>ui:field</code> attribute.) Cell elements can have attributes setting
+ * their height, width and alignment.
  * <h4>&lt;g:cell> attributes</h4>
  * <p>
  * <dl>
  * <dt>horizontalAlignment
- * <dd>Interpreted as a static member of {@link HorizontalAlignmentConstant}
- * and used as the <code>align</code> argument to {@link #setCellHorizontalAlignment}
+ * <dd>Interpreted as a static member of {@link HorizontalAlignmentConstant} and
+ * used as the <code>align</code> argument to
+ * {@link #setCellHorizontalAlignment}
  * <dt>verticalAlignment
- * <dd>Interpreted as a static member of {@link VerticalAlignmentConstant}
- * and used as the <code>align</code> argument to {@link #setCellVerticalAlignment}
+ * <dd>Interpreted as a static member of {@link VerticalAlignmentConstant} and
+ * used as the <code>align</code> argument to {@link #setCellVerticalAlignment}
  * <dt>width
- * <dd>Used as the <code>width</code> argument to {@link #setCellWidth} 
+ * <dd>Used as the <code>width</code> argument to {@link #setCellWidth}
  * <dt>height
- * <dd>Used as the <code>height</code> argument to {@link #setCellHeight} 
+ * <dd>Used as the <code>height</code> argument to {@link #setCellHeight}
  * </dl>
  * <p>
- * For example:<pre>
+ * For example:
+ * 
+ * <pre>
  * &lt;g:HorizontalPanel>
  *   &lt;g:cell width='5em' horizontalAlignment='ALIGN_RIGHT'>
  *     &lt;g:Label ui:field='leftSide' />
@@ -66,166 +69,176 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment.VerticalAlignmentConst
  * </pre>
  */
 public abstract class CellPanel extends ComplexPanel {
+	private int spacing;
 
-  private int spacing;
-  private Element table, body;
+	private Element table, body;
 
-  public CellPanel() {
-    table = DOM.createTable();
-    body = DOM.createTBody();
-    DOM.appendChild(table, body);
-    setElement(table);
-  }
+	public CellPanel() {
+		table = DOM.createTable();
+		body = DOM.createTBody();
+		DOM.appendChild(table, body);
+		setElement(table);
+	}
 
-  /**
-   * Gets the amount of spacing between this panel's cells.
-   * 
-   * @return the inter-cell spacing, in pixels
-   */
-  public int getSpacing() {
-    return spacing;
-  }
+	/**
+	 * Gets the amount of spacing between this panel's cells.
+	 * 
+	 * @return the inter-cell spacing, in pixels
+	 */
+	public int getSpacing() {
+		return spacing;
+	}
 
-  /**
-   * Sets the width of the border to be applied to all cells in this panel. This
-   * is particularly useful when debugging layouts, in that it allows you to see
-   * explicitly the cells that contain this panel's children.
-   * 
-   * @param width the width of the panel's cell borders, in pixels
-   */
-  public void setBorderWidth(int width) {
-    table.setPropertyString("border", "" + width);
-  }
+	/**
+	 * Sets the width of the border to be applied to all cells in this panel.
+	 * This is particularly useful when debugging layouts, in that it allows you
+	 * to see explicitly the cells that contain this panel's children.
+	 * 
+	 * @param width
+	 *            the width of the panel's cell borders, in pixels
+	 */
+	public void setBorderWidth(int width) {
+		table.setPropertyString("border", "" + width);
+	}
 
-  /**
-   * Sets the height of the cell associated with the given widget, related to
-   * the panel as a whole.
-   * 
-   * @param w the widget whose cell height is to be set
-   * @param height the cell's height, in CSS units
-   */
-  public void setCellHeight(Widget w, String height) {
-    Element td = getWidgetTd(w);
-    if (td != null) {
-      td.setPropertyString("height", height);
-    }
-  }
-  
-  /**
-   * Overloaded version for IsWidget.
-   * 
-   * @see #setCellHeight(Widget,String)
-   */
-  public void setCellHeight(IsWidget w, String height) {
-    this.setCellHeight(w.asWidget(), height);
-  }
+	/**
+	 * Overloaded version for IsWidget.
+	 * 
+	 * @see #setCellHeight(Widget,String)
+	 */
+	public void setCellHeight(IsWidget w, String height) {
+		this.setCellHeight(w.asWidget(), height);
+	}
 
-  /**
-   * Sets the horizontal alignment of the given widget within its cell.
-   * 
-   * @param w the widget whose horizontal alignment is to be set
-   * @param align the widget's horizontal alignment, as defined in
-   *          {@link HasHorizontalAlignment}.
-   */
-  public void setCellHorizontalAlignment(Widget w,
-      HorizontalAlignmentConstant align) {
-    Element td = getWidgetTd(w);
-    if (td != null) {
-      setCellHorizontalAlignment(td, align);
-    }
-  }
-  
-  /**
-   * Overloaded version for IsWidget.
-   * 
-   * @see #setCellHorizontalAlignment(Widget,HasHorizontalAlignment.HorizontalAlignmentConstant)
-   */
-  public void setCellHorizontalAlignment(IsWidget w,
-      HorizontalAlignmentConstant align) {
-    this.setCellHorizontalAlignment(w.asWidget(), align);
-  }
+	/**
+	 * Sets the height of the cell associated with the given widget, related to
+	 * the panel as a whole.
+	 * 
+	 * @param w
+	 *            the widget whose cell height is to be set
+	 * @param height
+	 *            the cell's height, in CSS units
+	 */
+	public void setCellHeight(Widget w, String height) {
+		Element td = getWidgetTd(w);
+		if (td != null) {
+			td.setPropertyString("height", height);
+		}
+	}
 
-  /**
-   * Sets the vertical alignment of the given widget within its cell.
-   * 
-   * @param w the widget whose vertical alignment is to be set
-   * @param align the widget's vertical alignment, as defined in
-   *          {@link HasVerticalAlignment}.
-   */
-  public void setCellVerticalAlignment(Widget w, HasVerticalAlignment.VerticalAlignmentConstant align) {
-    Element td = getWidgetTd(w);
-    if (td != null) {
-      setCellVerticalAlignment(td, align);
-    }
-  }
-  
-  /**
-   * Overloaded version for IsWidget.
-   * 
-   * @see #setCellVerticalAlignment(Widget,HasVerticalAlignment.VerticalAlignmentConstant)
-   */
-  public void setCellVerticalAlignment(IsWidget w, VerticalAlignmentConstant align) {
-    this.setCellVerticalAlignment(w.asWidget(),align);
-  }
+	/**
+	 * Overloaded version for IsWidget.
+	 * 
+	 * @see #setCellHorizontalAlignment(Widget,HasHorizontalAlignment.HorizontalAlignmentConstant)
+	 */
+	public void setCellHorizontalAlignment(IsWidget w,
+			HorizontalAlignmentConstant align) {
+		this.setCellHorizontalAlignment(w.asWidget(), align);
+	}
 
-  /**
-   * Sets the width of the cell associated with the given widget, related to the
-   * panel as a whole.
-   * 
-   * @param w the widget whose cell width is to be set
-   * @param width the cell's width, in CSS units
-   */
-  public void setCellWidth(Widget w, String width) {
-    Element td = getWidgetTd(w);
-    if (td != null) {
-      td.setPropertyString("width", width);
-    }
-  }
-  
-  /**
-   * Overloaded version for IsWidget.
-   * 
-   * @see #setCellWidth(Widget,String)
-   */
-  public void setCellWidth(IsWidget w, String width) {
-    this.setCellWidth(w.asWidget(), width);
-  }
+	/**
+	 * Sets the horizontal alignment of the given widget within its cell.
+	 * 
+	 * @param w
+	 *            the widget whose horizontal alignment is to be set
+	 * @param align
+	 *            the widget's horizontal alignment, as defined in
+	 *            {@link HasHorizontalAlignment}.
+	 */
+	public void setCellHorizontalAlignment(Widget w,
+			HorizontalAlignmentConstant align) {
+		Element td = getWidgetTd(w);
+		if (td != null) {
+			setCellHorizontalAlignment(td, align);
+		}
+	}
 
-  /**
-   * Sets the amount of spacing between this panel's cells.
-   * 
-   * @param spacing the inter-cell spacing, in pixels
-   */
-  public void setSpacing(int spacing) {
-    this.spacing = spacing;
-    table.setPropertyInt("cellSpacing", spacing);
-  }
+	/**
+	 * Overloaded version for IsWidget.
+	 * 
+	 * @see #setCellVerticalAlignment(Widget,HasVerticalAlignment.VerticalAlignmentConstant)
+	 */
+	public void setCellVerticalAlignment(IsWidget w,
+			VerticalAlignmentConstant align) {
+		this.setCellVerticalAlignment(w.asWidget(), align);
+	}
 
-  protected Element getBody() {
-    return DOM.asOld(body);
-  }
+	/**
+	 * Sets the vertical alignment of the given widget within its cell.
+	 * 
+	 * @param w
+	 *            the widget whose vertical alignment is to be set
+	 * @param align
+	 *            the widget's vertical alignment, as defined in
+	 *            {@link HasVerticalAlignment}.
+	 */
+	public void setCellVerticalAlignment(Widget w,
+			HasVerticalAlignment.VerticalAlignmentConstant align) {
+		Element td = getWidgetTd(w);
+		if (td != null) {
+			setCellVerticalAlignment(td, align);
+		}
+	}
 
-  protected Element getTable() {
-    return DOM.asOld(table);
-  }
+	/**
+	 * Overloaded version for IsWidget.
+	 * 
+	 * @see #setCellWidth(Widget,String)
+	 */
+	public void setCellWidth(IsWidget w, String width) {
+		this.setCellWidth(w.asWidget(), width);
+	}
 
-  protected void setCellHorizontalAlignment(Element td,
-      HorizontalAlignmentConstant align) {
-	  td.setPropertyString("align", align.getTextAlignString());
-  }
+	/**
+	 * Sets the width of the cell associated with the given widget, related to
+	 * the panel as a whole.
+	 * 
+	 * @param w
+	 *            the widget whose cell width is to be set
+	 * @param width
+	 *            the cell's width, in CSS units
+	 */
+	public void setCellWidth(Widget w, String width) {
+		Element td = getWidgetTd(w);
+		if (td != null) {
+			td.setPropertyString("width", width);
+		}
+	}
 
- 
+	/**
+	 * Sets the amount of spacing between this panel's cells.
+	 * 
+	 * @param spacing
+	 *            the inter-cell spacing, in pixels
+	 */
+	public void setSpacing(int spacing) {
+		this.spacing = spacing;
+		table.setPropertyInt("cellSpacing", spacing);
+	}
 
-  protected void setCellVerticalAlignment(Element td,
-      VerticalAlignmentConstant align) {
-	  td.getStyle().setProperty("verticalAlign", align.getVerticalAlignString());
-  }
+	protected Element getBody() {
+		return DOM.asOld(body);
+	}
 
+	protected Element getTable() {
+		return DOM.asOld(table);
+	}
 
-  Element getWidgetTd(Widget w) {
-    if (w.getParent() != this) {
-      return null;
-    }
-    return DOM.getParent(w.getElement());
-  }
+	protected void setCellHorizontalAlignment(Element td,
+			HorizontalAlignmentConstant align) {
+		td.setPropertyString("align", align.getTextAlignString());
+	}
+
+	protected void setCellVerticalAlignment(Element td,
+			VerticalAlignmentConstant align) {
+		td.getStyle().setProperty("verticalAlign",
+				align.getVerticalAlignString());
+	}
+
+	Element getWidgetTd(Widget w) {
+		if (w.getParent() != this) {
+			return null;
+		}
+		return DOM.getParent(w.getElement());
+	}
 }

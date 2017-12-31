@@ -8,6 +8,5 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 
 public interface ContentDelivery {
 	public String deliver(PublicationContext ctx, InputStream convertedContent,
-			DeliveryModel deliveryModel, FormatConverter hfc)
-			throws Exception;
+			DeliveryModel deliveryModel, FormatConverter hfc) throws Exception;
 }

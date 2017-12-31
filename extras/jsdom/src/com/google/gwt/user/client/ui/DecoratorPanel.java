@@ -15,7 +15,6 @@
  */
 package com.google.gwt.user.client.ui;
 
-import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.i18n.client.LocaleInfo;
 import com.google.gwt.user.client.DOM;
@@ -102,6 +101,22 @@ public class DecoratorPanel extends SimplePanel {
 			"bottom" };
 
 	/**
+	 * Create a new table cell with a specific style name.
+	 * 
+	 * @param styleName
+	 *            the style name
+	 * @return the new cell {@link Element}
+	 */
+	private static Element createTD(String styleName) {
+		Element tdElem = DOM.createTD();
+		Element inner = DOM.createDiv();
+		DOM.appendChild(tdElem, inner);
+		setStyleName(tdElem, styleName);
+		setStyleName(inner, styleName + "Inner");
+		return tdElem;
+	}
+
+	/**
 	 * Create a new row with a specific style name. The row will contain three
 	 * cells (Left, Center, and Right), each prefixed with the specified style
 	 * name.
@@ -126,22 +141,6 @@ public class DecoratorPanel extends SimplePanel {
 			DOM.appendChild(trElem, createTD(styleName + "Right"));
 		}
 		return trElem;
-	}
-
-	/**
-	 * Create a new table cell with a specific style name.
-	 * 
-	 * @param styleName
-	 *            the style name
-	 * @return the new cell {@link Element}
-	 */
-	private static Element createTD(String styleName) {
-		Element tdElem = DOM.createTD();
-		Element inner = DOM.createDiv();
-		DOM.appendChild(tdElem, inner);
-		setStyleName(tdElem, styleName);
-		setStyleName(inner, styleName + "Inner");
-		return tdElem;
 	}
 
 	/**

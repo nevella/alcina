@@ -6,6 +6,7 @@ import java.util.Date;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+
 @ClientInstantiable
 @Introspectable
 public class DomainModelDeltaMetadata implements Serializable {
@@ -21,6 +22,14 @@ public class DomainModelDeltaMetadata implements Serializable {
 
 	private boolean domainObjectsFieldSet;
 
+	public String getContentObjectClassName() {
+		return this.contentObjectClassName;
+	}
+
+	public String getContentObjectRpcTypeSignature() {
+		return this.contentObjectRpcTypeSignature;
+	}
+
 	public Date getGenerationDate() {
 		return this.generationDate;
 	}
@@ -29,16 +38,21 @@ public class DomainModelDeltaMetadata implements Serializable {
 		return this.maxPersistedTransformIdWhenGenerated;
 	}
 
-	public String getContentObjectRpcTypeSignature() {
-		return this.contentObjectRpcTypeSignature;
-	}
-
 	public Long getUserId() {
 		return this.userId;
 	}
 
 	public boolean isDomainObjectsFieldSet() {
 		return this.domainObjectsFieldSet;
+	}
+
+	public void setContentObjectClassName(String contentObjectClassName) {
+		this.contentObjectClassName = contentObjectClassName;
+	}
+
+	public void setContentObjectRpcTypeSignature(
+			String contentObjectRpcTypeSignature) {
+		this.contentObjectRpcTypeSignature = contentObjectRpcTypeSignature;
 	}
 
 	public void setDomainObjectsFieldSet(boolean domainObjectsFieldSet) {
@@ -54,20 +68,7 @@ public class DomainModelDeltaMetadata implements Serializable {
 		this.maxPersistedTransformIdWhenGenerated = maxPersistedTransformIdWhenGenerated;
 	}
 
-	public void setContentObjectRpcTypeSignature(
-			String contentObjectRpcTypeSignature) {
-		this.contentObjectRpcTypeSignature = contentObjectRpcTypeSignature;
-	}
-
 	public void setUserId(Long userId) {
 		this.userId = userId;
-	}
-
-	public String getContentObjectClassName() {
-		return this.contentObjectClassName;
-	}
-
-	public void setContentObjectClassName(String contentObjectClassName) {
-		this.contentObjectClassName = contentObjectClassName;
 	}
 }

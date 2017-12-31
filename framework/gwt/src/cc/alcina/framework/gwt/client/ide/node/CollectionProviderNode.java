@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.node;
 
 import java.util.Collection;
@@ -29,37 +28,32 @@ import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
  *
  * @author Nick Reddel
  */
-
- public class CollectionProviderNode extends ContainerNode implements
-		CollectionModificationListener, ProvidesParenting,HasVisibleCollection {
+public class CollectionProviderNode extends ContainerNode
+		implements CollectionModificationListener, ProvidesParenting,
+		HasVisibleCollection {
 	private CollectionRenderingSupport support = null;
 
 	public CollectionProviderNode(CollectionProvider collectionProvider,
 			String title, ImageResource imageResource) {
-		this(collectionProvider, title, imageResource, false,null);
+		this(collectionProvider, title, imageResource, false, null);
 	}
+
 	public CollectionProviderNode(CollectionProvider collectionProvider,
-			String title, ImageResource imageResource, boolean volatileOrder,NodeFactory nodeFactory) {
-		super(title, imageResource,nodeFactory);
+			String title, ImageResource imageResource, boolean volatileOrder,
+			NodeFactory nodeFactory) {
+		super(title, imageResource, nodeFactory);
 		setCollectionProvider(collectionProvider);
 		setHTML(imageItemHTML(getImagePrototype(), title));
 		this.support.setVolatileOrder(volatileOrder);
 	}
-	public void removeItem(TreeItem item) {
-		super.removeItem(item);
-		support.removeItem(item);
-	}
-
-	@Override
-	public void onDetach() {
-		if (support!=null){
-			support.onDetach();
-		}
-		super.onDetach();
-	}
 
 	public void collectionModification(CollectionModificationEvent evt) {
 		this.support.collectionModification(evt);
+	}
+
+	@Override
+	public Class getCollectionMemberClass() {
+		return getCollectionProvider().getCollectionMemberClass();
 	}
 
 	public CollectionProvider getCollectionProvider() {
@@ -78,9 +72,26 @@ import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 		return this.support.getUserObject();
 	}
 
+	@Override
+	public Collection getVisibleCollection() {
+		return this.support.getVisibleItemObjects();
+	}
+
+	@Override
+	public void onDetach() {
+		if (support != null) {
+			support.onDetach();
+		}
+		super.onDetach();
+	}
 
 	public void refreshChildren() {
 		this.support.refreshChildren(false);
+	}
+
+	public void removeItem(TreeItem item) {
+		super.removeItem(item);
+		support.removeItem(item);
 	}
 
 	public void setCollectionProvider(CollectionProvider collectionProvider) {
@@ -91,13 +102,5 @@ import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 	protected String imageItemHTML(AbstractImagePrototype imageProto,
 			String title) {
 		return imageProto.getHTML() + " " + title;
-	}
-	@Override
-	public Collection getVisibleCollection() {
-		return this.support.getVisibleItemObjects();
-	}
-	@Override
-	public Class getCollectionMemberClass() {
-		return getCollectionProvider().getCollectionMemberClass();
 	}
 }

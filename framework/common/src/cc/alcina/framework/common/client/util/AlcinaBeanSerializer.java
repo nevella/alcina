@@ -19,16 +19,13 @@ public abstract class AlcinaBeanSerializer {
 	protected Map<Class, String> reverseAbbrevLookup = new LinkedHashMap<>();
 
 	protected String propertyFieldName;
-	
-	private boolean  throwOnUnrecognisedProperty;
-	
+
+	private boolean throwOnUnrecognisedProperty;
+
+	public abstract <T> T deserialize(String jsonString);
+
 	public boolean isThrowOnUnrecognisedProperty() {
 		return this.throwOnUnrecognisedProperty;
-	}
-
-	public AlcinaBeanSerializer throwOnUnrecognisedProperty(){
-		throwOnUnrecognisedProperty=true;
-		return this;
 	}
 
 	public AlcinaBeanSerializer registerLookups(Map<String, Class> abbrevLookup,
@@ -39,16 +36,11 @@ public abstract class AlcinaBeanSerializer {
 		return this;
 	}
 
-	public abstract <T> T deserialize(String jsonString);
-
 	public abstract String serialize(Object bean);
 
-	protected String normaliseReverseAbbreviation(Class<? extends Object> type,
-			String typeName) {
-		if (reverseAbbrevLookup.containsKey(type)) {
-			typeName = reverseAbbrevLookup.get(type);
-		}
-		return typeName;
+	public AlcinaBeanSerializer throwOnUnrecognisedProperty() {
+		throwOnUnrecognisedProperty = true;
+		return this;
 	}
 
 	protected Class getClassMaybeAbbreviated(String cns) {
@@ -59,5 +51,13 @@ public abstract class AlcinaBeanSerializer {
 			clazz = Reflections.classLookup().getClassForName(cns);
 		}
 		return clazz;
+	}
+
+	protected String normaliseReverseAbbreviation(Class<? extends Object> type,
+			String typeName) {
+		if (reverseAbbrevLookup.containsKey(type)) {
+			typeName = reverseAbbrevLookup.get(type);
+		}
+		return typeName;
 	}
 }

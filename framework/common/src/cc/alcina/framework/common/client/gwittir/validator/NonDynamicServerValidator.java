@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.gwittir.validator;
 
 import com.totsp.gwittir.client.validator.ValidationException;
@@ -20,9 +19,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
  *
  * @author Nick Reddel
  */
-
- public class NonDynamicServerValidator extends ServerValidator {
-
+public class NonDynamicServerValidator extends ServerValidator {
 	public Object validate(Object value) throws ValidationException {
 		if (getMessage() != null) {
 			throw new ValidationException(getMessage(),
@@ -30,6 +27,4 @@ import com.totsp.gwittir.client.validator.ValidationException;
 		}
 		return value;
 	}
-
-	
 }

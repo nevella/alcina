@@ -33,6 +33,55 @@ public class SimpleStringParser {
 		return longVal;
 	}
 
+	public static long toLong(String str) {
+		int idx = str.indexOf("/");
+		if (idx == -1) {
+			return Long.parseLong(str);
+		} else {
+			if (str.substring(0, idx).contains(".")) {
+				return SimpleStringParser20.toLong(str);
+			}
+			return longFromBase64(str.substring(idx + 1));
+		}
+	}
+
+	public static String toString(long value) {
+		String serLong = GWT.isScript() ? fastMinSerialisedLong(value)
+				: String.valueOf(value);
+		return serLong + "/" + toBase64(value);
+	}
+
+	public static String toStringNoInfo(long value) {
+		return toBase64(value);
+	}
+
+	public static String toStringOrNullNonNegativeInteger(Integer value) {
+		return value == null ? "-1" : value.toString();
+	}
+
+	private static boolean base64Append(StringBuilder sb, int digit,
+			boolean haveNonZero) {
+		if (digit > 0) {
+			haveNonZero = true;
+		}
+		if (haveNonZero) {
+			int c;
+			if (digit < 26) {
+				c = 'A' + digit;
+			} else if (digit < 52) {
+				c = 'a' + digit - 26;
+			} else if (digit < 62) {
+				c = '0' + digit - 52;
+			} else if (digit == 62) {
+				c = '$';
+			} else {
+				c = '_';
+			}
+			sb.append((char) c);
+		}
+		return haveNonZero;
+	}
+
 	// Assume digit is one of [A-Za-z0-9$_]
 	private static int base64Value(char digit) {
 		if (digit >= 'A' && digit <= 'Z') {
@@ -51,6 +100,18 @@ public class SimpleStringParser {
 		// digit == '_'
 		return 63;
 	}
+
+	@UnsafeNativeLong
+	private static native String fastMinSerialisedLong(long value)/*-{
+																	if (value.l === undefined) {
+																	return value + "";
+																	}
+																	if (!value.m && !value.h) {
+																	return value.l.toString();
+																	} else {
+																	return value.l.toString() + "(lsbits)";
+																	}
+																	}-*/;
 
 	/**
 	 * Return an optionally single-quoted string containing a base-64 encoded
@@ -78,82 +139,25 @@ public class SimpleStringParser {
 		return sb.toString();
 	}
 
-	public static String toString(long value) {
-		String serLong = GWT.isScript() ? fastMinSerialisedLong(value)
-				: String.valueOf(value);
-		return serLong + "/" + toBase64(value);
-	}
-
-	public static String toStringOrNullNonNegativeInteger(Integer value) {
-		return value == null ? "-1" : value.toString();
-	}
-
-	public static String toStringNoInfo(long value) {
-		return toBase64(value);
-	}
-
-	private static boolean base64Append(StringBuilder sb, int digit,
-			boolean haveNonZero) {
-		if (digit > 0) {
-			haveNonZero = true;
-		}
-		if (haveNonZero) {
-			int c;
-			if (digit < 26) {
-				c = 'A' + digit;
-			} else if (digit < 52) {
-				c = 'a' + digit - 26;
-			} else if (digit < 62) {
-				c = '0' + digit - 52;
-			} else if (digit == 62) {
-				c = '$';
-			} else {
-				c = '_';
-			}
-			sb.append((char) c);
-		}
-		return haveNonZero;
-	}
-
-	public int percentComplete() {
-		return (offset * 100 + 1) / (s.length() + 1);
-	}
-
 	private final String s;
 
-	@UnsafeNativeLong
-	private static native String fastMinSerialisedLong(long value)/*-{
-        if (value.l === undefined) {
-            return value + "";
-        }
-        if (!value.m && !value.h) {
-            return value.l.toString();
-        } else {
-            return value.l.toString() + "(lsbits)";
-        }
-	}-*/;
-
-	public static long toLong(String str) {
-		int idx = str.indexOf("/");
-		if (idx == -1) {
-			return Long.parseLong(str);
-		} else {
-			if (str.substring(0, idx).contains(".")) {
-				return SimpleStringParser20.toLong(str);
-			}
-			return longFromBase64(str.substring(idx + 1));
-		}
-	}
-
 	private int offset;
+
+	public SimpleStringParser(String s) {
+		this.s = s;
+		offset = 0;
+	}
 
 	public int getOffset() {
 		return this.offset;
 	}
 
-	public SimpleStringParser(String s) {
-		this.s = s;
-		offset = 0;
+	public int indexOf(String of) {
+		return s.indexOf(of, offset);
+	}
+
+	public int percentComplete() {
+		return (offset * 100 + 1) / (s.length() + 1);
 	}
 
 	public String read(String start, String end) {
@@ -187,10 +191,9 @@ public class SimpleStringParser {
 		return toLong(str);
 	}
 
-	public Integer readNonNegativeIntegerOrNull(String start, String end) {
+	public long readLongShort(String start, String end) {
 		String str = read(start, end);
-		int i = Integer.parseInt(str);
-		return i < 0 ? null : i;
+		return longFromBase64(str);
 	}
 
 	public long readLongString(String start, String end) {
@@ -198,12 +201,9 @@ public class SimpleStringParser {
 		return Long.parseLong(str);
 	}
 
-	public int indexOf(String of) {
-		return s.indexOf(of, offset);
-	}
-
-	public long readLongShort(String start, String end) {
+	public Integer readNonNegativeIntegerOrNull(String start, String end) {
 		String str = read(start, end);
-		return longFromBase64(str);
+		int i = Integer.parseInt(str);
+		return i < 0 ? null : i;
 	}
 }

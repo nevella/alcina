@@ -31,8 +31,8 @@ public class AlcinaTopics {
 	public static final String TOPIC_MUTE_STAT_LOGGING = AlcinaTopics.class
 			.getName() + ".TOPIC_MUTE_STAT_LOGGING";
 
-	public static final String TOPIC_JOB_COMPLETE = AlcinaTopics.class
-			.getName() + ".TOPIC_JOB_COMPLETE";
+	public static final String TOPIC_JOB_COMPLETE = AlcinaTopics.class.getName()
+			+ ".TOPIC_JOB_COMPLETE";
 
 	public static final String TOPIC_DEV_WARNING = AlcinaTopics.class.getName()
 			+ ".TOPIC_DEV_WARNING";
@@ -43,16 +43,32 @@ public class AlcinaTopics {
 
 	public static final String LOG_CATEGORY_CONTAINER = "container";
 
+	public static void jobComplete(JobTracker info) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_COMPLETE, info);
+	}
+
+	public static void jobCompletionListenerDelta(
+			TopicListener<JobTracker> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(
+				TOPIC_LOCAL_PERSISTENCE_EXCEPTION, listener, add);
+	}
+
+	public static void
+			localPersistenceException(Throwable localPersistenceException) {
+		GlobalTopicPublisher.get().publishTopic(
+				TOPIC_LOCAL_PERSISTENCE_EXCEPTION, localPersistenceException);
+	}
+
+	public static void localPersistenceExceptionListenerDelta(
+			TopicListener<Throwable> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(
+				TOPIC_LOCAL_PERSISTENCE_EXCEPTION, listener, add);
+	}
+
 	// detach logging from presentation (normally ClientNotifications)
 	public static void log(Object message) {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_LOG_MESSAGE_PUBLISHED,
 				String.valueOf(message));
-	}
-
-	public static void logListenerDelta(TopicListener<String> listener,
-			boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_LOG_MESSAGE_PUBLISHED,
-				listener, add);
 	}
 
 	public static void logCategorisedMessage(StringPair categoryAndMessage) {
@@ -66,16 +82,10 @@ public class AlcinaTopics {
 				TOPIC_LOG_CATEGORISED_MESSAGE_PUBLISHED, listener, add);
 	}
 
-	public static void localPersistenceException(
-			Throwable localPersistenceException) {
-		GlobalTopicPublisher.get().publishTopic(
-				TOPIC_LOCAL_PERSISTENCE_EXCEPTION, localPersistenceException);
-	}
-
-	public static void localPersistenceExceptionListenerDelta(
-			TopicListener<Throwable> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(
-				TOPIC_LOCAL_PERSISTENCE_EXCEPTION, listener, add);
+	public static void logListenerDelta(TopicListener<String> listener,
+			boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_LOG_MESSAGE_PUBLISHED,
+				listener, add);
 	}
 
 	public static void muteStatisticsLogging(boolean mute) {
@@ -86,16 +96,6 @@ public class AlcinaTopics {
 			TopicListener<Boolean> listener, boolean add) {
 		GlobalTopicPublisher.get().listenerDelta(TOPIC_MUTE_STAT_LOGGING,
 				listener, add);
-	}
-
-	public static void jobComplete(JobTracker info) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_COMPLETE, info);
-	}
-
-	public static void jobCompletionListenerDelta(
-			TopicListener<JobTracker> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(
-				TOPIC_LOCAL_PERSISTENCE_EXCEPTION, listener, add);
 	}
 
 	public static void notifyDevWarning(Exception ex) {

@@ -7,6 +7,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class ClientNotificationsTaggedLogging implements TaggedLoggerHandler {
 	private String prefix;
 
+	ClientNotifications impl = null;
+
 	public ClientNotificationsTaggedLogging(String prefix) {
 		this.prefix = prefix;
 	}
@@ -20,10 +22,9 @@ public class ClientNotificationsTaggedLogging implements TaggedLoggerHandler {
 		}
 	}
 
-	ClientNotifications impl = null;
-
 	private void out(String message) {
-		message=message.replace("\t", "\u00a0\u00a0\u00a0\u00a0").replace("  ", "\u00a0\u00a0");
+		message = message.replace("\t", "\u00a0\u00a0\u00a0\u00a0")
+				.replace("  ", "\u00a0\u00a0");
 		if (impl == null) {
 			impl = Registry.impl(ClientNotifications.class, void.class, true);
 		}

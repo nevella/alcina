@@ -40,11 +40,6 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 	}
 
 	@Override
-	public String getNodeValue() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public Node getChild(int index) {
 		return DomNodeStatic.getChild(this, index);
 	}
@@ -90,6 +85,11 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 	public abstract short getNodeType();
 
 	@Override
+	public String getNodeValue() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public Document getOwnerDocument() {
 		return ownerDocument.documentFor();
 	}
@@ -118,6 +118,11 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 	@Override
 	public boolean hasParentElement() {
 		return DomNodeStatic.hasParentElement(this);
+	}
+
+	@Override
+	public final int indexInParentChildren() {
+		return parentNode.children.indexOf(this);
 	}
 
 	@Override
@@ -251,10 +256,5 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 			parentNode.children.remove(this);
 		}
 		parentNode = local;
-	}
-
-	@Override
-	public final int indexInParentChildren() {
-		return parentNode.children.indexOf(this);
 	}
 }

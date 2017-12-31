@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.customiser;
-
 
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
@@ -26,8 +24,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
  *
  * @author Nick Reddel
  */
-
- public class FriendlyEnumCustomiser implements Customiser {
+public class FriendlyEnumCustomiser implements Customiser {
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		return GwittirBridge.FRIENDLY_ENUM_LABEL_PROVIDER_INSTANCE;

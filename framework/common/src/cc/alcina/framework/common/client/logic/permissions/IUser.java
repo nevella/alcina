@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.permissions;
 
 import java.util.Set;
@@ -20,8 +19,7 @@ import java.util.Set;
  *
  * @author Nick Reddel
  */
-
- public interface IUser extends IVersionable {
+public interface IUser extends IVersionable {
 	public abstract String getEmail();
 
 	public abstract String getFirstName();
@@ -35,8 +33,6 @@ import java.util.Set;
 	public abstract Set<? extends IGroup> getSecondaryGroups();
 
 	public abstract String getUserName();
-	
-	public void setUserName(String userName);
 
-	
+	public void setUserName(String userName);
 }

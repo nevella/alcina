@@ -31,6 +31,13 @@ public class XmlTokenStream implements Iterator<XmlNode> {
 		next();
 	}
 
+	public void afterModification() {
+		if (last != null) {
+			tw.setCurrentNode(last);
+			next = tw.nextNode();
+		}
+	}
+
 	public void dumpAround() {
 		for (int idx = 0; idx < 100; idx++) {
 			tw.previousNode();
@@ -51,13 +58,6 @@ public class XmlTokenStream implements Iterator<XmlNode> {
 	@Override
 	public boolean hasNext() {
 		return next != null;
-	}
-
-	public void afterModification() {
-		if (last != null) {
-			tw.setCurrentNode(last);
-			next = tw.nextNode();
-		}
 	}
 
 	@Override

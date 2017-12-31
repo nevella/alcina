@@ -1,14 +1,9 @@
 package com.google.gwt.dom.client;
 
-import java.util.ArrayList;
 import java.util.Map;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.safehtml.shared.SafeHtml;
-
-import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.StringMap;
 
 public class ElementNull extends NodeLocalNull
 		implements DomElement, LocalDomElement {
@@ -175,6 +170,11 @@ public class ElementNull extends NodeLocalNull
 
 	@Override
 	public int getOffsetWidth() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String getOuterHtml() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -396,11 +396,6 @@ public class ElementNull extends NodeLocalNull
 	}
 
 	int orSunkEventsOfAllChildren(int sunk) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public String getOuterHtml() {
 		throw new UnsupportedOperationException();
 	}
 }

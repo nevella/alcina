@@ -41,10 +41,55 @@ public class WrappedObjectPersistence {
 	public static final String CONTEXT_IGNORE_MISSING_WRAPPED_OBJECT = WrappedObjectPersistence.class
 			.getName() + ".CONTEXT_IGNORE_MISSING_WRAPPED_OBJECT";
 
-	public static class MissingWrappedObjectException extends Exception {
+	static Map<Class, List<PropertyDescriptor>> wrapperDescriptors = new LinkedHashMap<Class, List<PropertyDescriptor>>();
+
+	public void checkWrappedObjectAccess(HasId wrapper, WrappedObject wrapped,
+			Class clazz) throws PermissionsException {
+		try {
+			checkWrappedObjectAccess0(wrapper, wrapped, clazz);
+		} catch (NullPointerException npe) {
+			System.out.format(
+					"Problem checking wrapped object access: %s %s %s\n",
+					wrapper, wrapped, clazz);
+		}
 	}
 
-	static Map<Class, List<PropertyDescriptor>> wrapperDescriptors = new LinkedHashMap<Class, List<PropertyDescriptor>>();
+	public <T extends HasId> List<Long> getWrapperIds(Collection<T> wrappers) {
+		List<Long> wrapperIds = new ArrayList<Long>();
+		try {
+			for (HasId wrapper : wrappers) {
+				PropertyDescriptor[] pds = Introspector
+						.getBeanInfo(wrapper.getClass())
+						.getPropertyDescriptors();
+				for (PropertyDescriptor pd : pds) {
+					if (pd.getReadMethod() != null) {
+						Wrapper info = pd.getReadMethod()
+								.getAnnotation(Wrapper.class);
+						if (info != null) {
+							PropertyDescriptor idpd = SEUtilities
+									.getPropertyDescriptorByName(
+											wrapper.getClass(),
+											info.idPropertyName());
+							Long wrapperId = (Long) idpd.getReadMethod().invoke(
+									wrapper, CommonUtils.EMPTY_OBJECT_ARRAY);
+							if (wrapperId != null) {
+								wrapperIds.add(wrapperId);
+							}
+						}
+					}
+				}
+			}
+			return wrapperIds;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public void unwrap(HasId wrapper, EntityManager entityManager,
+			WrappedObjectProvider wrappedObjectProvider) throws Exception {
+		unwrap(wrapper, entityManager, wrappedObjectProvider,
+				new LinkedHashSet<Long>());
+	}
 
 	public void unwrap(HasId wrapper, EntityManager entityManager,
 			WrappedObjectProvider wrappedObjectProvider,
@@ -106,41 +151,6 @@ public class WrappedObjectPersistence {
 		}
 	}
 
-	private List<PropertyDescriptor> ensureWrapperDescriptors(
-			Class<? extends HasId> clazz) throws Exception {
-		if (!wrapperDescriptors.containsKey(clazz)) {
-			List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getReadMethod() != null) {
-					Wrapper info = pd.getReadMethod()
-							.getAnnotation(Wrapper.class);
-					if (info != null) {
-						descriptors.add(pd);
-					}
-				}
-			}
-			synchronized (wrapperDescriptors) {
-				wrapperDescriptors.put(clazz, descriptors);
-			}
-		}
-		return wrapperDescriptors.get(clazz);
-	}
-
-	public void checkWrappedObjectAccess(HasId wrapper, WrappedObject wrapped,
-			Class clazz) throws PermissionsException {
-		try {
-			checkWrappedObjectAccess0(wrapper, wrapped, clazz);
-		} catch (NullPointerException npe) {
-			System.out.format(
-					"Problem checking wrapped object access: %s %s %s\n",
-					wrapper, wrapped, clazz);
-		}
-	}
-	public interface WrappedObjectPermissionsExtension{
-		boolean allow(HasId wrapper);
-	}
 	private void checkWrappedObjectAccess0(HasId wrapper, WrappedObject wrapped,
 			Class clazz) throws PermissionsException {
 		if (!PersistentSingleton.class.isAssignableFrom(clazz)
@@ -158,9 +168,10 @@ public class WrappedObjectPersistence {
 					}
 				}
 			}
-			Optional<WrappedObjectPermissionsExtension> extension = Registry.implOptional(WrappedObjectPermissionsExtension.class);
-			if(extension.isPresent()){
-				if(extension.get().allow(wrapper)){
+			Optional<WrappedObjectPermissionsExtension> extension = Registry
+					.implOptional(WrappedObjectPermissionsExtension.class);
+			if (extension.isPresent()) {
+				if (extension.get().allow(wrapper)) {
 					return;
 				}
 			}
@@ -183,40 +194,32 @@ public class WrappedObjectPersistence {
 		}
 	}
 
-	public <T extends HasId> List<Long> getWrapperIds(Collection<T> wrappers) {
-		List<Long> wrapperIds = new ArrayList<Long>();
-		try {
-			for (HasId wrapper : wrappers) {
-				PropertyDescriptor[] pds = Introspector
-						.getBeanInfo(wrapper.getClass())
-						.getPropertyDescriptors();
-				for (PropertyDescriptor pd : pds) {
-					if (pd.getReadMethod() != null) {
-						Wrapper info = pd.getReadMethod()
-								.getAnnotation(Wrapper.class);
-						if (info != null) {
-							PropertyDescriptor idpd = SEUtilities
-									.getPropertyDescriptorByName(
-											wrapper.getClass(),
-											info.idPropertyName());
-							Long wrapperId = (Long) idpd.getReadMethod().invoke(
-									wrapper, CommonUtils.EMPTY_OBJECT_ARRAY);
-							if (wrapperId != null) {
-								wrapperIds.add(wrapperId);
-							}
-						}
+	private List<PropertyDescriptor> ensureWrapperDescriptors(
+			Class<? extends HasId> clazz) throws Exception {
+		if (!wrapperDescriptors.containsKey(clazz)) {
+			List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
+					.getPropertyDescriptors();
+			for (PropertyDescriptor pd : pds) {
+				if (pd.getReadMethod() != null) {
+					Wrapper info = pd.getReadMethod()
+							.getAnnotation(Wrapper.class);
+					if (info != null) {
+						descriptors.add(pd);
 					}
 				}
 			}
-			return wrapperIds;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			synchronized (wrapperDescriptors) {
+				wrapperDescriptors.put(clazz, descriptors);
+			}
 		}
+		return wrapperDescriptors.get(clazz);
 	}
 
-	public void unwrap(HasId wrapper, EntityManager entityManager,
-			WrappedObjectProvider wrappedObjectProvider) throws Exception {
-		unwrap(wrapper, entityManager, wrappedObjectProvider,
-				new LinkedHashSet<Long>());
+	public static class MissingWrappedObjectException extends Exception {
+	}
+
+	public interface WrappedObjectPermissionsExtension {
+		boolean allow(HasId wrapper);
 	}
 }

@@ -70,15 +70,9 @@ public abstract class ClientReflector implements ClassLookup {
 
 	Set<Class> nullReflectors = new LinkedHashSet<>();
 
-	public void registerChild(ClientReflector child) {
-		reflectors.add(0, child);
-		child.gwbiMap = gwbiMap;
-		forNameMap.putAll(child.forNameMap);
-		gwbiMap.keySet().removeAll(nullReflectors);
-		nullReflectors.clear();
-	}
-
 	private Map<Class, Object> templateInstances = new HashMap<Class, Object>();
+
+	protected Map<String, Class> forNameMap = new HashMap<String, Class>();
 
 	public ClientReflector() {
 		{
@@ -87,12 +81,10 @@ public abstract class ClientReflector implements ClassLookup {
 		reflectors.add(this);
 	}
 
-	@RegistryLocation(registryPoint = BeaninfoClassResolver.class, implementationType = ImplementationType.SINGLETON)
-	@ClientInstantiable
-	public static class BeaninfoClassResolver {
-		public Class resolveForBeanInfo(Class clazz) {
-			return clazz;
-		}
+	public List<String> allInterestingAlcinaBeanProperties(Object bean) {
+		return getWritableProperties(bean.getClass()).stream()
+				.map(p -> p.getPropertyName()).sorted()
+				.collect(Collectors.toList());
 	}
 
 	public ClientBeanReflector beanInfoForClass(Class clazz) {
@@ -112,9 +104,6 @@ public abstract class ClientReflector implements ClassLookup {
 			}
 		}
 		return beanReflector;
-	}
-
-	protected void initReflector(Class clazz) {
 	}
 
 	public String displayNameForObject(Object o) {
@@ -158,10 +147,6 @@ public abstract class ClientReflector implements ClassLookup {
 				.getType();
 	}
 
-	private BeaninfoClassResolver getBeanInfoClassResolver() {
-		return Registry.impl(BeaninfoClassResolver.class);
-	}
-
 	@SuppressWarnings("unchecked")
 	public <T> T getTemplateInstance(Class<T> clazz) {
 		clazz = getBeanInfoClassResolver().resolveForBeanInfo(clazz);
@@ -170,6 +155,23 @@ public abstract class ClientReflector implements ClassLookup {
 					Reflections.classLookup().newInstance(clazz, 0, 0));
 		}
 		return (T) templateInstances.get(clazz);
+	}
+
+	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
+		List<PropertyInfoLite> infos = new ArrayList<PropertyInfoLite>();
+		BeanDescriptor descriptor = GwittirBridge.get()
+				.getDescriptorForClass(clazz);
+		if (descriptor == null) {
+			return infos;
+		}
+		for (Property p : descriptor.getProperties()) {
+			if (p.getMutatorMethod() == null) {
+				continue;
+			}
+			infos.add(new PropertyInfoLite(p.getType(), p.getName(),
+					p.getAccessorMethod(), p.getMutatorMethod(), clazz));
+		}
+		return infos;
 	}
 
 	public boolean isInstantiableClass(Class clazz) {
@@ -207,33 +209,31 @@ public abstract class ClientReflector implements ClassLookup {
 				"Class " + clazz + " not reflect-instantiable");
 	}
 
-	protected abstract <T> T newInstance0(Class<T> clazz, long objectId,
-			long localId);
+	public void registerChild(ClientReflector child) {
+		reflectors.add(0, child);
+		child.gwbiMap = gwbiMap;
+		forNameMap.putAll(child.forNameMap);
+		gwbiMap.keySet().removeAll(nullReflectors);
+		nullReflectors.clear();
+	}
+
+	private BeaninfoClassResolver getBeanInfoClassResolver() {
+		return Registry.impl(BeaninfoClassResolver.class);
+	}
 
 	protected abstract void initialiseNewInstance(Class clazz);
 
-	protected Map<String, Class> forNameMap = new HashMap<String, Class>();
-
-	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
-		List<PropertyInfoLite> infos = new ArrayList<PropertyInfoLite>();
-		BeanDescriptor descriptor = GwittirBridge.get()
-				.getDescriptorForClass(clazz);
-		if (descriptor == null) {
-			return infos;
-		}
-		for (Property p : descriptor.getProperties()) {
-			if (p.getMutatorMethod() == null) {
-				continue;
-			}
-			infos.add(new PropertyInfoLite(p.getType(), p.getName(),
-					p.getAccessorMethod(), clazz));
-		}
-		return infos;
+	protected void initReflector(Class clazz) {
 	}
 
-	public List<String> allInterestingAlcinaBeanProperties(Object bean) {
-		return getWritableProperties(bean.getClass()).stream()
-				.map(p -> p.getPropertyName()).sorted()
-				.collect(Collectors.toList());
+	protected abstract <T> T newInstance0(Class<T> clazz, long objectId,
+			long localId);
+
+	@RegistryLocation(registryPoint = BeaninfoClassResolver.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	public static class BeaninfoClassResolver {
+		public Class resolveForBeanInfo(Class clazz) {
+			return clazz;
+		}
 	}
 }

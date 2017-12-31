@@ -8,10 +8,10 @@ import cc.alcina.framework.common.client.util.Multimap;
 public class SyncDeltaModel {
 	private Multimap<Class, List<SyncPair>> deltas = new Multimap<Class, List<SyncPair>>();
 
-	private PropertyModificationLog propertyModificationLog=new PropertyModificationLog();
+	private PropertyModificationLog propertyModificationLog = new PropertyModificationLog();
 
-	private String generatorLog="";
-	
+	private String generatorLog = "";
+
 	public Multimap<Class, List<SyncPair>> getDeltas() {
 		return this.deltas;
 	}

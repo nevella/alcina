@@ -20,12 +20,13 @@ import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
-@RegistryLocation( registryPoint = TreeRenderer.class, targetClass = SearchCriterion.class)
+@RegistryLocation(registryPoint = TreeRenderer.class, targetClass = SearchCriterion.class)
 /**
  *
  * @author Nick Reddel
  */
-public class SearchCriterionRenderer<T extends SearchCriterion> extends AbstractRenderer<T> {
+public class SearchCriterionRenderer<T extends SearchCriterion>
+		extends AbstractRenderer<T> {
 	public Collection<? extends TreeRenderable> renderableChildren() {
 		return null;
 	}

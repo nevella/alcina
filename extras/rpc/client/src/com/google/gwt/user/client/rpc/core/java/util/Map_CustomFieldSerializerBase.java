@@ -28,29 +28,25 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  */
 @SuppressWarnings("rawtypes")
 public final class Map_CustomFieldSerializerBase {
+	@SuppressWarnings("unchecked")
+	public static void deserialize(SerializationStreamReader streamReader,
+			Map instance) throws SerializationException {
+		int size = streamReader.readInt();
+		for (int i = 0; i < size; ++i) {
+			Object key = streamReader.readObject();
+			Object value = streamReader.readObject();
+			instance.put(key, value);
+		}
+	}
 
-  @SuppressWarnings("unchecked")
-  public static void deserialize(SerializationStreamReader streamReader,
-      Map instance) throws SerializationException {
-    int size = streamReader.readInt();
-
-    for (int i = 0; i < size; ++i) {
-      Object key = streamReader.readObject();
-      Object value = streamReader.readObject();
-
-      instance.put(key, value);
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  public static void serialize(SerializationStreamWriter streamWriter,
-      Map instance) throws SerializationException {
-    int size = instance.size();
-    streamWriter.writeInt(size);
-
-    for (Entry entry : (Set<Entry>) instance.entrySet()) {
-      streamWriter.writeObject(entry.getKey());
-      streamWriter.writeObject(entry.getValue());
-    }
-  }
+	@SuppressWarnings("unchecked")
+	public static void serialize(SerializationStreamWriter streamWriter,
+			Map instance) throws SerializationException {
+		int size = instance.size();
+		streamWriter.writeInt(size);
+		for (Entry entry : (Set<Entry>) instance.entrySet()) {
+			streamWriter.writeObject(entry.getKey());
+			streamWriter.writeObject(entry.getValue());
+		}
+	}
 }

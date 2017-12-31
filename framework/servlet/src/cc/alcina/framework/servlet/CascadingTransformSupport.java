@@ -27,8 +27,7 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
  * <li>t1 finished firing
  * <li>only <b>now</b> does t2 fire
  * <li>l1 hears, l2
- * <li>
- * <b>now</b>, because of cascading support, td1 continues
+ * <li><b>now</b>, because of cascading support, td1 continues
  * </ul>
  * hwuh
  *
@@ -37,15 +36,15 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class CascadingTransformSupport {
-	public static CascadingTransformSupport get() {
-		return supports.get();
-	}
-
 	private static ThreadLocal<CascadingTransformSupport> supports = new ThreadLocal() {
 		protected synchronized CascadingTransformSupport initialValue() {
 			return new CascadingTransformSupport();
 		}
 	};
+
+	public static CascadingTransformSupport get() {
+		return supports.get();
+	}
 
 	private List<Thread> waitFor = new ArrayList<Thread>();
 

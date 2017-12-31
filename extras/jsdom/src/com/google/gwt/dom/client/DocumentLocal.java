@@ -9,90 +9,7 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	private int gwtLuid = 1;
 
-	@Override
-	public String getNodeName() {
-		return "#document";
-	}
-
 	public DocumentLocal() {
-	}
-
-	@Override
-	public short getNodeType() {
-		return Node.DOCUMENT_NODE;
-	}
-
-	@Override
-	public Element getDocumentElement() {
-		return null;
-	}
-
-	@Override
-	public String getNodeValue() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void setNodeValue(String nodeValue) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Text createTextNode(String data) {
-		TextLocal local = new TextLocal(data);
-		Text text = new Text(local);
-		local.registerNode(text);
-		return text;
-	}
-
-	@Override
-	public Document nodeFor() {
-		return document;
-	}
-
-	@Override
-	public String createUniqueId() {
-		return "gwt-luid-" + this.gwtLuid++;
-	}
-
-	@Override
-	public Document documentFor() {
-		return document;
-	}
-
-	@Override
-	public Element createElement(String tagName) {
-		ElementLocal local = new ElementLocal(this, tagName);
-		Element element = LocalDom.createElement(tagName).putLocal(local);
-		switch (element.getTagName()) {
-		case "head":
-			headElement = element;
-			break;
-		case "body":
-			bodyElement = element;
-			break;
-		}
-		return element;
-	}
-
-	@Override
-	public BodyElement getBody() {
-		return (BodyElement) this.bodyElement;
-	}
-
-	@Override
-	public HeadElement getHead() {
-		return (HeadElement) this.headElement;
-	}
-
-	@Override
-	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	void appendTextContent(StringBuilder builder) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -173,6 +90,21 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	@Override
 	public final DListElement createDLElement() {
 		return DomDocumentStatic.createDLElement(this);
+	}
+
+	@Override
+	public Element createElement(String tagName) {
+		ElementLocal local = new ElementLocal(this, tagName);
+		Element element = LocalDom.createElement(tagName).putLocal(local);
+		switch (element.getTagName()) {
+		case "head":
+			headElement = element;
+			break;
+		case "body":
+			bodyElement = element;
+			break;
+		}
+		return element;
 	}
 
 	@Override
@@ -411,6 +343,14 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	}
 
 	@Override
+	public Text createTextNode(String data) {
+		TextLocal local = new TextLocal(data);
+		Text text = new Text(local);
+		local.registerNode(text);
+		return text;
+	}
+
+	@Override
 	public final TableSectionElement createTFootElement() {
 		return DomDocumentStatic.createTFootElement(this);
 	}
@@ -441,7 +381,67 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	}
 
 	@Override
+	public String createUniqueId() {
+		return "gwt-luid-" + this.gwtLuid++;
+	}
+
+	@Override
 	public final VideoElement createVideoElement() {
 		return DomDocumentStatic.createVideoElement(this);
+	}
+
+	@Override
+	public Document documentFor() {
+		return document;
+	}
+
+	@Override
+	public BodyElement getBody() {
+		return (BodyElement) this.bodyElement;
+	}
+
+	@Override
+	public Element getDocumentElement() {
+		return null;
+	}
+
+	@Override
+	public HeadElement getHead() {
+		return (HeadElement) this.headElement;
+	}
+
+	@Override
+	public String getNodeName() {
+		return "#document";
+	}
+
+	@Override
+	public short getNodeType() {
+		return Node.DOCUMENT_NODE;
+	}
+
+	@Override
+	public String getNodeValue() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Document nodeFor() {
+		return document;
+	}
+
+	@Override
+	public void setNodeValue(String nodeValue) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	void appendOuterHtml(UnsafeHtmlBuilder builder) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	void appendTextContent(StringBuilder builder) {
+		throw new UnsupportedOperationException();
 	}
 }

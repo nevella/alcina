@@ -31,8 +31,8 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  * (uses reflection).
  */
 @SuppressWarnings("rawtypes")
-public  class LinkedHashMap_CustomFieldSerializer extends
-		CustomFieldSerializer<LinkedHashMap> {
+public class LinkedHashMap_CustomFieldSerializer
+		extends CustomFieldSerializer<LinkedHashMap> {
 	/**
 	 * We use an atomic reference to avoid having to synchronize. This is safe
 	 * because it's only used as a cache; it's okay to read a stale value.
@@ -90,25 +90,20 @@ public  class LinkedHashMap_CustomFieldSerializer extends
 		return instance.keySet().iterator().next() == KEY2;
 	}
 
-	public static LinkedHashMap instantiate(
-			SerializationStreamReader streamReader)
-			throws SerializationException {
+	public static LinkedHashMap
+			instantiate(SerializationStreamReader streamReader)
+					throws SerializationException {
 		boolean accessOrder = streamReader.readBoolean();
 		return new LinkedHashMap(16, .75f, accessOrder);
 	}
 
 	public static void serialize(SerializationStreamWriter streamWriter,
 			LinkedHashMap instance) throws SerializationException {
-		if(GWT.isClient()){
+		if (GWT.isClient()) {
 			streamWriter.writeBoolean(getAccessOrder(instance));
 		}
 		Map_CustomFieldSerializerBase.serialize(streamWriter, instance);
 	}
-
-	public void serializeConstructor(SerializationStreamWriter streamWriter,
-			LinkedHashMap instance) throws SerializationException {
-		streamWriter.writeBoolean(getAccessOrder(instance));
-	};
 
 	private static boolean getAccessOrder(LinkedHashMap instance) {
 		if (!reflectionHasFailed.get()) {
@@ -136,7 +131,7 @@ public  class LinkedHashMap_CustomFieldSerializer extends
 		}
 		// Use a (possibly slower) technique that does not require reflection.
 		return getAccessOrderNoReflection(instance);
-	}
+	};
 
 	@Override
 	public void deserializeInstance(SerializationStreamReader streamReader,
@@ -150,10 +145,15 @@ public  class LinkedHashMap_CustomFieldSerializer extends
 	}
 
 	@Override
-	public LinkedHashMap instantiateInstance(
-			SerializationStreamReader streamReader)
-			throws SerializationException {
+	public LinkedHashMap
+			instantiateInstance(SerializationStreamReader streamReader)
+					throws SerializationException {
 		return instantiate(streamReader);
+	}
+
+	public void serializeConstructor(SerializationStreamWriter streamWriter,
+			LinkedHashMap instance) throws SerializationException {
+		streamWriter.writeBoolean(getAccessOrder(instance));
 	}
 
 	@Override

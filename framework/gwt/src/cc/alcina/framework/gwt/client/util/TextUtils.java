@@ -15,12 +15,29 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 
 public class TextUtils {
-	public static String normaliseAndTrim(String text) {
-		return TextUtilsImpl.normalise(text).trim();
+	public static List<IntPair> findStringMatches(String text, String search) {
+		int idx0 = 0;
+		List<IntPair> result = new ArrayList<>();
+		while (true) {
+			int idx1 = text.indexOf(search, idx0);
+			if (idx1 == -1) {
+				break;
+			} else {
+				result.add(new IntPair(idx1, idx1 + search.length()));
+				idx0 = idx1 + search.length();
+			}
+		}
+		return result;
 	}
 
-	public static String normalise(String text) {
-		return TextUtilsImpl.normalise(text);
+	public static int getWordCount(String data) {
+		String normalised = normaliseAndTrim(data);
+		return normalised.length() == 0 ? 0 : normalised.split(" ").length;
+	}
+
+	public static boolean isWhitespaceOrEmpty(String text) {
+		return CommonUtils.isNullOrEmpty(text)
+				|| normaliseAndTrim(text).length() == 0;
 	}
 
 	public static List<IntPair> match(String text, String regex) {
@@ -30,26 +47,29 @@ public class TextUtils {
 		return TextUtilsImpl.match(text, regex);
 	}
 
-	public static boolean isWhitespaceOrEmpty(String text) {
-		return CommonUtils.isNullOrEmpty(text)
-				|| normaliseAndTrim(text).length() == 0;
+	public static String normalise(String text) {
+		return TextUtilsImpl.normalise(text);
+	}
+
+	public static String normaliseAndTrim(String text) {
+		return TextUtilsImpl.normalise(text).trim();
 	}
 
 	public static String normalisedLcKey(String key) {
 		return normaliseAndTrim(CommonUtils.nullToEmpty(key).toLowerCase());
 	}
 
+	public static native void setElementStyle(Element e, String css) /*-{
+																		if (e.style && typeof (e.style.cssText) == "string") {
+																		e.style.cssText = css;
+																		} else {
+																		e.style = css;
+																		}
+																		}-*/;
+
 	public static String trim(String key) {
 		return CommonUtils.nullToEmpty(key).trim();
 	}
-
-	public static native void setElementStyle(Element e, String css) /*-{
-        if (e.style && typeof (e.style.cssText) == "string") {
-            e.style.cssText = css;
-        } else {
-            e.style = css;
-        }
-	}-*/;
 
 	public static String trimToWidth(String s, String style, int pxWidth,
 			String ellipsis) {
@@ -88,25 +108,5 @@ public class TextUtils {
 				}
 			}
 		}
-	}
-
-	public static int getWordCount(String data) {
-		String normalised = normaliseAndTrim(data);
-		return normalised.length() == 0 ? 0 : normalised.split(" ").length;
-	}
-
-	public static List<IntPair> findStringMatches(String text, String search) {
-		int idx0 = 0;
-		List<IntPair> result = new ArrayList<>();
-		while (true) {
-			int idx1 = text.indexOf(search, idx0);
-			if (idx1 == -1) {
-				break;
-			} else {
-				result.add(new IntPair(idx1, idx1 + search.length()));
-				idx0 = idx1 + search.length();
-			}
-		}
-		return result;
 	}
 }

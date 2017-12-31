@@ -65,23 +65,11 @@ public class Toolbar extends Composite
 	public static final String CONTEXT_DO_NOT_REMOVE_LISTENERS_ON_DETACH = Toolbar.class
 			.getName() + ".CONTEXT_DO_NOT_REMOVE_LISTENERS_ON_DETACH";
 
-	public void addHandler(HandlerRegistration registration) {
-		this.hasChildHandlersSupport.addHandler(registration);
-	}
-
-	public void detachHandlers() {
-		this.hasChildHandlersSupport.detachHandlers();
-	}
-
 	private List<PermissibleAction> actions;
 
 	private Map<Class<? extends PermissibleAction>, ToolbarButton> actionButtons;
 
 	private FlowPanel panel;
-
-	public FlowPanel getPanel() {
-		return this.panel;
-	}
 
 	private PermissibleActionEvent.PermissibleActionSupport vetoableActionSupport;
 
@@ -95,6 +83,10 @@ public class Toolbar extends Composite
 
 	private HasChildHandlersSupport hasChildHandlersSupport;
 
+	private boolean removeListenersOnDetach = true;
+
+	private String buttonStyleName;
+
 	public Toolbar() {
 		this.hasChildHandlersSupport = new HasChildHandlersSupport();
 		this.panel = new FlowPanel();
@@ -106,8 +98,16 @@ public class Toolbar extends Composite
 		redraw();
 	}
 
+	public void addHandler(HandlerRegistration registration) {
+		this.hasChildHandlersSupport.addHandler(registration);
+	}
+
 	public void addVetoableActionListener(PermissibleActionListener listener) {
 		this.vetoableActionSupport.addVetoableActionListener(listener);
+	}
+
+	public void detachHandlers() {
+		this.hasChildHandlersSupport.detachHandlers();
 	}
 
 	public void enableAll(boolean enable) {
@@ -141,18 +141,32 @@ public class Toolbar extends Composite
 		return null;
 	}
 
+	public String getButtonStyleName() {
+		return this.buttonStyleName;
+	}
+
+	public FlowPanel getPanel() {
+		return this.panel;
+	}
+
+	public boolean isAsButton() {
+		return asButton;
+	}
+
 	public boolean isHideUnpermittedActions() {
 		return hideUnpermittedActions;
 	}
 
-	private boolean removeListenersOnDetach = true;
+	public boolean isRemoveListenersOnDetach() {
+		return removeListenersOnDetach;
+	}
 
-	@Override
-	protected void onDetach() {
-		super.onDetach();
-		if (removeListenersOnDetach && !LooseContext
-				.getBoolean(CONTEXT_DO_NOT_REMOVE_LISTENERS_ON_DETACH)) {
-			vetoableActionSupport.removeAllListeners();
+	public void onClick(ClickEvent event) {
+		Widget sender = (Widget) event.getSource();
+		if (sender.getParent() instanceof ToolbarButton) {
+			ToolbarButton tb = (ToolbarButton) sender.getParent();
+			vetoableActionSupport.fireVetoableActionEvent(
+					new PermissibleActionEvent(sender, tb.getAction()));
 		}
 	}
 
@@ -173,7 +187,49 @@ public class Toolbar extends Composite
 		}
 	}
 
-	private String buttonStyleName;
+	public void
+			removeVetoableActionListener(PermissibleActionListener listener) {
+		this.vetoableActionSupport.removeVetoableActionListener(listener);
+	}
+
+	public void setActionGroup(ActionGroup actionGroup) {
+		setActionGroups(Collections.singletonList(actionGroup));
+	}
+
+	public void setActionGroups(List<ActionGroup> actionGroups) {
+		this.actionGroups = actionGroups;
+		redraw();
+	}
+
+	public void setActions(List<PermissibleAction> actions) {
+		this.actions = actions;
+		redraw();
+	}
+
+	public void setAsButton(boolean asButton) {
+		this.asButton = asButton;
+	}
+
+	public void setButtonStyleName(String buttonStyleName) {
+		this.buttonStyleName = buttonStyleName;
+	}
+
+	public void setHideUnpermittedActions(boolean hideUnpermittedActions) {
+		this.hideUnpermittedActions = hideUnpermittedActions;
+	}
+
+	public void setRemoveListenersOnDetach(boolean removeListenersOnDetach) {
+		this.removeListenersOnDetach = removeListenersOnDetach;
+	}
+
+	@Override
+	protected void onDetach() {
+		super.onDetach();
+		if (removeListenersOnDetach && !LooseContext
+				.getBoolean(CONTEXT_DO_NOT_REMOVE_LISTENERS_ON_DETACH)) {
+			vetoableActionSupport.removeAllListeners();
+		}
+	}
 
 	protected void redraw() {
 		WidgetUtils.clearChildren(panel);
@@ -229,45 +285,6 @@ public class Toolbar extends Composite
 		}
 	}
 
-	public void
-			removeVetoableActionListener(PermissibleActionListener listener) {
-		this.vetoableActionSupport.removeVetoableActionListener(listener);
-	}
-
-	public void setActionGroup(ActionGroup actionGroup) {
-		setActionGroups(Collections.singletonList(actionGroup));
-	}
-
-	public void setActionGroups(List<ActionGroup> actionGroups) {
-		this.actionGroups = actionGroups;
-		redraw();
-	}
-
-	public void setActions(List<PermissibleAction> actions) {
-		this.actions = actions;
-		redraw();
-	}
-
-	public void setHideUnpermittedActions(boolean hideUnpermittedActions) {
-		this.hideUnpermittedActions = hideUnpermittedActions;
-	}
-
-	public void setAsButton(boolean asButton) {
-		this.asButton = asButton;
-	}
-
-	public boolean isAsButton() {
-		return asButton;
-	}
-
-	public void setRemoveListenersOnDetach(boolean removeListenersOnDetach) {
-		this.removeListenersOnDetach = removeListenersOnDetach;
-	}
-
-	public boolean isRemoveListenersOnDetach() {
-		return removeListenersOnDetach;
-	}
-
 	public static interface HasDropdownPresenter {
 		public Widget presentDropdown();
 
@@ -301,13 +318,6 @@ public class Toolbar extends Composite
 
 		public ToolbarButton(PermissibleAction action, boolean asButton) {
 			this(action, null, asButton);
-		}
-
-		public void refreshHref() {
-			if (action instanceof HasHref) {
-				setHref(((HasHref) action).getHref());
-				setTarget(((HasHref) action).getTarget());
-			}
 		}
 
 		public ToolbarButton(PermissibleAction action, String buttonStyleName,
@@ -370,6 +380,67 @@ public class Toolbar extends Composite
 			initWidget(w);
 		}
 
+		public HandlerRegistration addClickHandler(ClickHandler handler) {
+			if (asButton) {
+				return button.addClickHandler(handler);
+			} else {
+				return aWidget.addClickHandler(handler);
+			}
+		}
+
+		public PermissibleAction getAction() {
+			return this.action;
+		}
+
+		public String getHref() {
+			return this.aWidget.getHref();
+		}
+
+		public String getTarget() {
+			return this.aWidget.getTarget();
+		}
+
+		public void refreshHref() {
+			if (action instanceof HasHref) {
+				setHref(((HasHref) action).getHref());
+				setTarget(((HasHref) action).getTarget());
+			}
+		}
+
+		public void setEnabled(boolean enabled) {
+			if (asButton) {
+				button.setEnabled(enabled);
+			} else {
+				aWidget.setEnabled(enabled);
+			}
+		}
+
+		public void setHref(String href) {
+			if (CommonUtils.isNotNullOrEmpty(href)) {
+				this.aWidget.setHref(href);
+				this.aWidget.setPreventDefault(false);
+			}
+		}
+
+		public void setTarget(String target) {
+			this.aWidget.setTarget(target);
+		}
+
+		public void setText(String text) {
+			if (asButton) {
+				button.setText(text);
+			} else {
+				aWidget.setText(text);
+			}
+		}
+
+		public void setWordWrap(boolean wordWrap) {
+			if (asButton) {
+			} else {
+				aWidget.setWordWrap(wordWrap);
+			}
+		}
+
 		protected void showDropDown() {
 			Widget dropDown = null;
 			if (action instanceof HasDropdownPresenter) {
@@ -397,76 +468,5 @@ public class Toolbar extends Composite
 			}
 			rpp.addStyleName("toolbar-button-dropdown");
 		}
-
-		public String getTarget() {
-			return this.aWidget.getTarget();
-		}
-
-		public void setTarget(String target) {
-			this.aWidget.setTarget(target);
-		}
-
-		public String getHref() {
-			return this.aWidget.getHref();
-		}
-
-		public void setHref(String href) {
-			if (CommonUtils.isNotNullOrEmpty(href)) {
-				this.aWidget.setHref(href);
-				this.aWidget.setPreventDefault(false);
-			}
-		}
-
-		public void setEnabled(boolean enabled) {
-			if (asButton) {
-				button.setEnabled(enabled);
-			} else {
-				aWidget.setEnabled(enabled);
-			}
-		}
-
-		public void setText(String text) {
-			if (asButton) {
-				button.setText(text);
-			} else {
-				aWidget.setText(text);
-			}
-		}
-
-		public void setWordWrap(boolean wordWrap) {
-			if (asButton) {
-			} else {
-				aWidget.setWordWrap(wordWrap);
-			}
-		}
-
-		public PermissibleAction getAction() {
-			return this.action;
-		}
-
-		public HandlerRegistration addClickHandler(ClickHandler handler) {
-			if (asButton) {
-				return button.addClickHandler(handler);
-			} else {
-				return aWidget.addClickHandler(handler);
-			}
-		}
-	}
-
-	public void onClick(ClickEvent event) {
-		Widget sender = (Widget) event.getSource();
-		if (sender.getParent() instanceof ToolbarButton) {
-			ToolbarButton tb = (ToolbarButton) sender.getParent();
-			vetoableActionSupport.fireVetoableActionEvent(
-					new PermissibleActionEvent(sender, tb.getAction()));
-		}
-	}
-
-	public String getButtonStyleName() {
-		return this.buttonStyleName;
-	}
-
-	public void setButtonStyleName(String buttonStyleName) {
-		this.buttonStyleName = buttonStyleName;
 	}
 }

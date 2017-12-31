@@ -14,14 +14,12 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Annotation;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCreator;
@@ -35,17 +33,18 @@ public class ClientPropertyReflector
 	public static final String CONTEXT_NAME_TRANSLATOR = ClientPropertyReflector.class
 			.getName() + ".CONTEXT_NAME_TRANSLATOR";
 
+	private static DelegateMapCreator annotationLookupCreator = new UnsortedMapCreator();
+
+	public static void
+			setDelegateCreator(DelegateMapCreator annotationLookupCreator) {
+		ClientPropertyReflector.annotationLookupCreator = annotationLookupCreator;
+	}
+
 	private final Map<Class, Object> annotations;
 
 	private final String propertyName;
 
 	private Class propertyType;
-	
-	private static DelegateMapCreator annotationLookupCreator = new UnsortedMapCreator();
-
-	public static void setDelegateCreator(DelegateMapCreator annotationLookupCreator) {
-		ClientPropertyReflector.annotationLookupCreator = annotationLookupCreator;
-	}
 
 	public ClientPropertyReflector(String propertyName, Class propertyType,
 			Annotation[] anns) {

@@ -28,47 +28,49 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 /**
  * Custom field serializer for BigInteger.
  */
-public class BigInteger_CustomFieldSerializer extends
-    CustomFieldSerializer<BigInteger> {
+public class BigInteger_CustomFieldSerializer
+		extends CustomFieldSerializer<BigInteger> {
+	/**
+	 * @param streamReader
+	 *            a SerializationStreamReader instance
+	 * @param instance
+	 *            the instance to be deserialized
+	 */
+	public static void deserialize(SerializationStreamReader streamReader,
+			BigInteger instance) {
+	}
 
-  /**
-   * @param streamReader a SerializationStreamReader instance
-   * @param instance the instance to be deserialized
-   */
-  public static void deserialize(SerializationStreamReader streamReader,
-      BigInteger instance) {
-  }
+	public static BigInteger instantiate(SerializationStreamReader streamReader)
+			throws SerializationException {
+		return new BigInteger(streamReader.readString());
+	}
 
-  public static BigInteger instantiate(SerializationStreamReader streamReader)
-      throws SerializationException {
-    return new BigInteger(streamReader.readString());
-  }
+	public static void serialize(SerializationStreamWriter streamWriter,
+			BigInteger instance) throws SerializationException {
+		streamWriter.writeString(instance.toString());
+	}
 
-  public static void serialize(SerializationStreamWriter streamWriter,
-      BigInteger instance) throws SerializationException {
-    streamWriter.writeString(instance.toString());
-  }
+	@Override
+	public void deserializeInstance(SerializationStreamReader streamReader,
+			BigInteger instance) throws SerializationException {
+		deserialize(streamReader, instance);
+	}
 
-  @Override
-  public void deserializeInstance(SerializationStreamReader streamReader,
-      BigInteger instance) throws SerializationException {
-    deserialize(streamReader, instance);
-  }
+	@Override
+	public boolean hasCustomInstantiateInstance() {
+		return true;
+	}
 
-  @Override
-  public boolean hasCustomInstantiateInstance() {
-    return true;
-  }
+	@Override
+	public BigInteger
+			instantiateInstance(SerializationStreamReader streamReader)
+					throws SerializationException {
+		return instantiate(streamReader);
+	}
 
-  @Override
-  public BigInteger instantiateInstance(SerializationStreamReader streamReader)
-      throws SerializationException {
-    return instantiate(streamReader);
-  }
-
-  @Override
-  public void serializeInstance(SerializationStreamWriter streamWriter,
-      BigInteger instance) throws SerializationException {
-    serialize(streamWriter, instance);
-  }
+	@Override
+	public void serializeInstance(SerializationStreamWriter streamWriter,
+			BigInteger instance) throws SerializationException {
+		serialize(streamWriter, instance);
+	}
 }

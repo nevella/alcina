@@ -10,15 +10,16 @@ import javax.xml.transform.URIResolver;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.XmlUtils.TransformerFactoryConfigurator;
 
-public final class TransformerConfigurator implements
-		TransformerFactoryConfigurator, URIResolver {
+public final class TransformerConfigurator
+		implements TransformerFactoryConfigurator, URIResolver {
 	@Override
 	public void configure(TransformerFactory transformerFactory) {
 		transformerFactory.setURIResolver(this);
 	}
 
 	@Override
-	public Source resolve(String href, String base) throws TransformerException {
+	public Source resolve(String href, String base)
+			throws TransformerException {
 		if (href.startsWith("res://")) {
 			href = href.substring(5);
 			InputStream trans = getClass().getResourceAsStream(href);

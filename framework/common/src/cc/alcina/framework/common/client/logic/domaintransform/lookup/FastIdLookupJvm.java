@@ -22,41 +22,10 @@ public class FastIdLookupJvm implements FastIdLookup {
 		this.values = new FastIdLookupDevValues();
 	}
 
-	class FastIdLookupDevValues extends AbstractCollection<HasIdAndLocalId> {
-		@Override
-		public Iterator<HasIdAndLocalId> iterator() {
-			return new MultiIterator<HasIdAndLocalId>(false, localIdLookup
-					.values().iterator(), idLookup.values().iterator());
+	public void checkId(long id) {
+		if (GWT.isClient() && id > LongWrapperHash.MAX) {
+			throw new RuntimeException("losing higher bits from long");
 		}
-
-		@Override
-		public String toString() {
-			return "[" + CommonUtils.join(this, ", ") + "]";
-		}
-
-		@Override
-		public boolean contains(Object o) {
-			if (o instanceof HasIdAndLocalId) {
-				HasIdAndLocalId hili = (HasIdAndLocalId) o;
-				if (hili.getLocalId() == 0) {
-					return get(hili.getId(), false) != null;
-				} else {
-					return get(hili.getLocalId(), true) != null;
-				}
-			}
-			return false;
-		}
-
-		@Override
-		public int size() {
-			return localIdLookup.size() + idLookup.size();
-		}
-	}
-
-	@Override
-	public String toString() {
-		return CommonUtils.formatJ("Lkp  - [%s,%s]", idLookup.size(),
-				localIdLookup.size());
 	}
 
 	@Override
@@ -80,6 +49,13 @@ public class FastIdLookupJvm implements FastIdLookup {
 	}
 
 	@Override
+	public void putAll(Collection<HasIdAndLocalId> values, boolean local) {
+		for (HasIdAndLocalId value : values) {
+			put(value, local);
+		}
+	}
+
+	@Override
 	public void remove(long id, boolean local) {
 		checkId(id);
 		if (local) {
@@ -89,16 +65,10 @@ public class FastIdLookupJvm implements FastIdLookup {
 		}
 	}
 
-	long getApplicableId(HasIdAndLocalId hili, boolean local) {
-		long id = local ? hili.getLocalId() : hili.getId();
-		checkId(id);
-		return id;
-	}
-
-	public void checkId(long id) {
-		if (GWT.isClient() && id > LongWrapperHash.MAX) {
-			throw new RuntimeException("losing higher bits from long");
-		}
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ("Lkp  - [%s,%s]", idLookup.size(),
+				localIdLookup.size());
 	}
 
 	@Override
@@ -106,10 +76,41 @@ public class FastIdLookupJvm implements FastIdLookup {
 		return values;
 	}
 
-	@Override
-	public void putAll(Collection<HasIdAndLocalId> values, boolean local) {
-		for (HasIdAndLocalId value : values) {
-			put(value, local);
+	long getApplicableId(HasIdAndLocalId hili, boolean local) {
+		long id = local ? hili.getLocalId() : hili.getId();
+		checkId(id);
+		return id;
+	}
+
+	class FastIdLookupDevValues extends AbstractCollection<HasIdAndLocalId> {
+		@Override
+		public boolean contains(Object o) {
+			if (o instanceof HasIdAndLocalId) {
+				HasIdAndLocalId hili = (HasIdAndLocalId) o;
+				if (hili.getLocalId() == 0) {
+					return get(hili.getId(), false) != null;
+				} else {
+					return get(hili.getLocalId(), true) != null;
+				}
+			}
+			return false;
+		}
+
+		@Override
+		public Iterator<HasIdAndLocalId> iterator() {
+			return new MultiIterator<HasIdAndLocalId>(false,
+					localIdLookup.values().iterator(),
+					idLookup.values().iterator());
+		}
+
+		@Override
+		public int size() {
+			return localIdLookup.size() + idLookup.size();
+		}
+
+		@Override
+		public String toString() {
+			return "[" + CommonUtils.join(this, ", ") + "]";
 		}
 	}
 }

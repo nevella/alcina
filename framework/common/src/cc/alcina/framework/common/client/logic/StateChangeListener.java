@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic;
 
 import java.util.EventListener;
@@ -20,7 +19,6 @@ import java.util.EventListener;
  *
  * @author Nick Reddel
  */
-
- public interface StateChangeListener extends EventListener{
+public interface StateChangeListener extends EventListener {
 	public void stateChanged(Object source, String newState);
 }

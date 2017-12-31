@@ -11,8 +11,8 @@ public class SynchronizedSimpleDateFormat extends SimpleDateFormat {
 	}
 
 	@Override
-	public synchronized StringBuffer format(Date date,
-			StringBuffer toAppendTo, FieldPosition pos) {
+	public synchronized StringBuffer format(Date date, StringBuffer toAppendTo,
+			FieldPosition pos) {
 		return super.format(date, toAppendTo, pos);
 	}
 

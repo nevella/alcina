@@ -49,6 +49,11 @@ public abstract class SearchDefinition extends WrapperPersistable
 		ReflectCloneable<SearchDefinition> {
 	static final transient long serialVersionUID = -1L;
 
+	public static final transient int LARGE_SEARCH = 0xFF0000;
+
+	public static final transient String CONTEXT_CURRENT_SEARCH_DEFINITION = SearchDefinition.class
+			.getName() + ":" + "current-search-definition";
+
 	final transient String orderJoin = ", ";
 
 	private int resultsPerPage;
@@ -75,10 +80,21 @@ public abstract class SearchDefinition extends WrapperPersistable
 
 	protected transient Map<String, String> propertyColumnAliases;
 
-	public static final transient int LARGE_SEARCH = 0xFF0000;
+	private transient List<PropertyChangeListener> globalListeners = new ArrayList<>();
 
-	public static final transient String CONTEXT_CURRENT_SEARCH_DEFINITION = SearchDefinition.class
-			.getName() + ":" + "current-search-definition";
+	public void addCriterionToSoleCriteriaGroup(SearchCriterion sc) {
+		assert criteriaGroups.size() == 1;
+		criteriaGroups.iterator().next().addCriterion(sc);
+		PropertyChangeEvent event = new PropertyChangeEvent(this, null, null,
+				null);
+		for (PropertyChangeListener listener : new ArrayList<>(
+				globalListeners)) {
+			sc.addPropertyChangeListener(listener);
+			if (!sc.emptyCriterion()) {
+				listener.propertyChange(event);
+			}
+		}
+	}
 
 	public Set<SearchCriterion> allCriteria() {
 		LinkedHashSet<SearchCriterion> result = new LinkedHashSet<SearchCriterion>();
@@ -88,17 +104,17 @@ public abstract class SearchDefinition extends WrapperPersistable
 		return result;
 	}
 
+	public <SC extends SearchCriterion> List<SC> allCriteria(Class<SC> clazz) {
+		return (List) CollectionFilters.filter(allCriteria(),
+				new IsClassFilter(clazz));
+	}
+
 	public Set<OrderCriterion> allOrderCriteria() {
 		LinkedHashSet<OrderCriterion> result = new LinkedHashSet<OrderCriterion>();
 		for (OrderGroup cg : getOrderGroups()) {
 			result.addAll(cg.getCriteria());
 		}
 		return result;
-	}
-
-	public <SC extends SearchCriterion> List<SC> allCriteria(Class<SC> clazz) {
-		return (List) CollectionFilters.filter(allCriteria(),
-				new IsClassFilter(clazz));
 	}
 
 	public void clearOrderGroup(Class<? extends OrderGroup> clazz) {
@@ -260,6 +276,16 @@ public abstract class SearchDefinition extends WrapperPersistable
 		return this.resultsPerPage;
 	}
 
+	public void globalPropertyChangeListener(PropertyChangeListener listener,
+			boolean add) {
+		if (add) {
+			globalListeners.add(listener);
+		} else {
+			globalListeners.remove(listener);
+		}
+		allCriteria().forEach(c -> propertyChangeDelta(c, listener, add));
+	}
+
 	public String idEqlPrefix() {
 		return null;
 	}
@@ -274,6 +300,10 @@ public abstract class SearchDefinition extends WrapperPersistable
 						.map(mapping.criterionClass(), mapping.propertyName());
 			}
 		}
+	}
+
+	public void maxResultsPerPage() {
+		setResultsPerPage(Integer.MAX_VALUE);
 	}
 
 	public void onBeforeRunSearch() {
@@ -321,6 +351,22 @@ public abstract class SearchDefinition extends WrapperPersistable
 	 */
 	public Object provideResultsType() {
 		return null;
+	}
+
+	public void removeCriterion(SearchCriterion sc,
+			boolean doNotFireBecauseCriterionEmpty) {
+		for (CriteriaGroup cg : getCriteriaGroups()) {
+			cg.removeCriterion(sc);
+		}
+		PropertyChangeEvent event = new PropertyChangeEvent(this, null, null,
+				null);
+		for (PropertyChangeListener listener : new ArrayList<>(
+				globalListeners)) {
+			if (!sc.emptyCriterion() && !doNotFireBecauseCriterionEmpty) {
+				listener.propertyChange(event);
+			}
+			sc.removePropertyChangeListener(listener);
+		}
 	}
 
 	public void resetLookups() {
@@ -392,6 +438,15 @@ public abstract class SearchDefinition extends WrapperPersistable
 		return DefaultValidation.validatePermissions(this, children);
 	}
 
+	private void propertyChangeDelta(SourcesPropertyChangeEvents o,
+			PropertyChangeListener listener, boolean add) {
+		if (add) {
+			o.addPropertyChangeListener(listener);
+		} else {
+			o.removePropertyChangeListener(listener);
+		}
+	}
+
 	protected String orderEql() {
 		return "";
 	}
@@ -404,60 +459,5 @@ public abstract class SearchDefinition extends WrapperPersistable
 	protected void putOrderGroup(OrderGroup og) {
 		ogs.put(og.getClass(), og);
 		orderGroups.add(og);
-	}
-
-	public void globalPropertyChangeListener(PropertyChangeListener listener,
-			boolean add) {
-		if (add) {
-			globalListeners.add(listener);
-		} else {
-			globalListeners.remove(listener);
-		}
-		allCriteria().forEach(c -> propertyChangeDelta(c, listener, add));
-	}
-
-	private transient List<PropertyChangeListener> globalListeners = new ArrayList<>();
-
-	private void propertyChangeDelta(SourcesPropertyChangeEvents o,
-			PropertyChangeListener listener, boolean add) {
-		if (add) {
-			o.addPropertyChangeListener(listener);
-		} else {
-			o.removePropertyChangeListener(listener);
-		}
-	}
-
-	public void removeCriterion(SearchCriterion sc,
-			boolean doNotFireBecauseCriterionEmpty) {
-		for (CriteriaGroup cg : getCriteriaGroups()) {
-			cg.removeCriterion(sc);
-		}
-		PropertyChangeEvent event = new PropertyChangeEvent(this, null, null,
-				null);
-		for (PropertyChangeListener listener : new ArrayList<>(
-				globalListeners)) {
-			if (!sc.emptyCriterion() && !doNotFireBecauseCriterionEmpty) {
-				listener.propertyChange(event);
-			}
-			sc.removePropertyChangeListener(listener);
-		}
-	}
-
-	public void addCriterionToSoleCriteriaGroup(SearchCriterion sc) {
-		assert criteriaGroups.size() == 1;
-		criteriaGroups.iterator().next().addCriterion(sc);
-		PropertyChangeEvent event = new PropertyChangeEvent(this, null, null,
-				null);
-		for (PropertyChangeListener listener : new ArrayList<>(
-				globalListeners)) {
-			sc.addPropertyChangeListener(listener);
-			if (!sc.emptyCriterion()) {
-				listener.propertyChange(event);
-			}
-		}
-	}
-
-	public void maxResultsPerPage() {
-		setResultsPerPage(Integer.MAX_VALUE);
 	}
 }

@@ -25,10 +25,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class CompositeFilter<T> implements CollectionFilter<T> {
 	private List<CollectionFilter<T>> filters = new ArrayList<CollectionFilter<T>>();
 
-	public List<CollectionFilter<T>> getFilters() {
-		return this.filters;
-	}
-
 	private boolean or;
 
 	public CompositeFilter() {
@@ -39,9 +35,9 @@ public class CompositeFilter<T> implements CollectionFilter<T> {
 		this.or = or;
 	}
 
-	@Override
-	public void setContext(FilterContext context) {
-		filters.forEach(f -> f.setContext(context));
+	public CompositeFilter<T> add(CollectionFilter<T> filter) {
+		filters.add(filter);
+		return this;
 	}
 
 	public boolean allow(T o) {
@@ -57,13 +53,17 @@ public class CompositeFilter<T> implements CollectionFilter<T> {
 		return !or;
 	}
 
+	public List<CollectionFilter<T>> getFilters() {
+		return this.filters;
+	}
+
+	@Override
+	public void setContext(FilterContext context) {
+		filters.forEach(f -> f.setContext(context));
+	}
+
 	@Override
 	public String toString() {
 		return "(" + CommonUtils.join(filters, (or ? " OR " : " AND ")) + ")";
-	}
-
-	public CompositeFilter<T> add(CollectionFilter<T> filter) {
-		filters.add(filter);
-		return this;
 	}
 }

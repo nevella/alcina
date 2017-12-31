@@ -16,8 +16,8 @@ import it.unimi.dsi.fastutil.longs.LongListIterator;
 /*
  * Only indexes Longs!
  */
-public class PropertyStoreLookup<T, H extends HasIdAndLocalId> extends
-		CacheLookup<T, H> {
+public class PropertyStoreLookup<T, H extends HasIdAndLocalId>
+		extends CacheLookup<T, H> {
 	protected PropertyStore propertyStore;
 
 	private Long2ObjectOpenHashMap<LongArrayList> lookup = new Long2ObjectOpenHashMap<>();

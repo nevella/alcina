@@ -9,21 +9,6 @@ import java.util.Set;
 import java.util.function.Function;
 
 public class JsUniqueMap<K, V> implements Map<K, V> {
-	private Function keyUniquenessMapper = Function.identity();
-
-	private Function reverseKeyMapper = Function.identity();
-
-	private JavascriptKeyableLookup lookup;
-
-	private boolean intLookup = false;
-
-	public static native boolean supportsJsMap()/*-{
-        return !!(window.Map && window.Map.prototype.clear);
-	}-*/;
-	public static native boolean supportsJsWeakMap()/*-{
-    	return !!(window.WeakMap && window.WeakMap.prototype.get);
-	}-*/;
-
 	public static <K, V> Map<K, V> create(Class keyClass,
 			boolean allowNativePartialSupportMap) {
 		if (supportsJsMap() && allowNativePartialSupportMap) {
@@ -32,13 +17,30 @@ public class JsUniqueMap<K, V> implements Map<K, V> {
 			return new JsUniqueMap<>(keyClass);
 		}
 	}
+
 	public static <K, V> Map<K, V> createWeakMap() {
-		if (supportsJsWeakMap() ) {
+		if (supportsJsWeakMap()) {
 			return new JsNativeMapWrapper(true);
-		} else{
+		} else {
 			throw new UnsupportedOperationException();
 		}
 	}
+
+	public static native boolean supportsJsMap()/*-{
+												return !!(window.Map && window.Map.prototype.clear);
+												}-*/;
+
+	public static native boolean supportsJsWeakMap()/*-{
+													return !!(window.WeakMap && window.WeakMap.prototype.get);
+													}-*/;
+
+	private Function keyUniquenessMapper = Function.identity();
+
+	private Function reverseKeyMapper = Function.identity();
+
+	private JavascriptKeyableLookup lookup;
+
+	private boolean intLookup = false;
 
 	private JsUniqueMap(Class keyClass) {
 		setupMappers(keyClass);
@@ -174,6 +176,10 @@ public class JsUniqueMap<K, V> implements Map<K, V> {
 		};
 	}
 
+	private Object map(Object key) {
+		return keyUniquenessMapper.apply(key);
+	}
+
 	private void setupMappers(Class keyClass) {
 		if (keyClass == int.class) {
 			intLookup = true;
@@ -204,10 +210,6 @@ public class JsUniqueMap<K, V> implements Map<K, V> {
 			return;
 		}
 		throw new RuntimeException("Not js-unique keyable");
-	}
-
-	private Object map(Object key) {
-		return keyUniquenessMapper.apply(key);
 	}
 
 	public class TypedEntryIterator implements Iterator<Map.Entry<K, V>> {

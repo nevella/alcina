@@ -6,11 +6,48 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
 public interface DomElement extends DomNode {
+	/**
+	 * Returns the index of the first occurrence of name in a space-separated
+	 * list of names, or -1 if not found.
+	 *
+	 * @param nameList
+	 *            list of space delimited names
+	 * @param name
+	 *            a non-empty string. Should be already trimmed.
+	 */
+	static int indexOfName(String nameList, String name) {
+		int idx = nameList.indexOf(name);
+		// Calculate matching index.
+		while (idx != -1) {
+			if (idx == 0 || nameList.charAt(idx - 1) == ' ') {
+				int last = idx + name.length();
+				int lastPos = nameList.length();
+				if ((last == lastPos) || ((last < lastPos)
+						&& (nameList.charAt(last) == ' '))) {
+					break;
+				}
+			}
+			idx = nameList.indexOf(name, idx + 1);
+		}
+		return idx;
+	}
+
+	static String trimClassName(String className) {
+		assert (className != null) : "Unexpectedly null class name";
+		className = className.trim();
+		assert !className.isEmpty() : "Unexpectedly empty class name";
+		return className;
+	}
+
 	boolean addClassName(String className);
 
 	void blur();
 
 	void dispatchEvent(NativeEvent evt);
+
+	Element elementFor();
+
+	void ensureId();
 
 	void focus();
 
@@ -24,6 +61,8 @@ public interface DomElement extends DomNode {
 
 	String getAttribute(String name);
 
+	Map<String, String> getAttributes();
+
 	String getClassName();
 
 	int getClientHeight();
@@ -35,8 +74,6 @@ public interface DomElement extends DomNode {
 	String getDraggable();
 
 	NodeList<Element> getElementsByTagName(String name);
-	
-	Map<String,String> getAttributes();
 
 	/**
 	 * The first child of element this element. If there is no such element,
@@ -74,6 +111,8 @@ public interface DomElement extends DomNode {
 
 	int getOffsetWidth();
 
+	String getOuterHtml();
+
 	/**
 	 * The element immediately preceding this element. If there is no such
 	 * element, this returns null.
@@ -86,12 +125,12 @@ public interface DomElement extends DomNode {
 
 	int getPropertyInt(String name);
 
-	String getPropertyString(String name);
-
 	JavaScriptObject getPropertyJSO(String name);
 
 	Object getPropertyObject(String name);
-	
+
+	String getPropertyString(String name);
+
 	int getScrollHeight();
 
 	/**
@@ -184,14 +223,6 @@ public interface DomElement extends DomNode {
 	boolean removeClassName(String className);
 
 	/**
-	 * Add the class name if it doesn't exist or removes it if does.
-	 *
-	 * @param className
-	 *            the class name to be toggled
-	 */
-	void toggleClassName(String className);
-
-	/**
 	 * Replace one class name with another.
 	 *
 	 * @param oldClassName
@@ -200,39 +231,6 @@ public interface DomElement extends DomNode {
 	 *            the class name to replace it
 	 */
 	void replaceClassName(String oldClassName, String newClassName);
-
-	/**
-	 * Returns the index of the first occurrence of name in a space-separated
-	 * list of names, or -1 if not found.
-	 *
-	 * @param nameList
-	 *            list of space delimited names
-	 * @param name
-	 *            a non-empty string. Should be already trimmed.
-	 */
-	static int indexOfName(String nameList, String name) {
-		int idx = nameList.indexOf(name);
-		// Calculate matching index.
-		while (idx != -1) {
-			if (idx == 0 || nameList.charAt(idx - 1) == ' ') {
-				int last = idx + name.length();
-				int lastPos = nameList.length();
-				if ((last == lastPos) || ((last < lastPos)
-						&& (nameList.charAt(last) == ' '))) {
-					break;
-				}
-			}
-			idx = nameList.indexOf(name, idx + 1);
-		}
-		return idx;
-	}
-
-	static String trimClassName(String className) {
-		assert (className != null) : "Unexpectedly null class name";
-		className = className.trim();
-		assert !className.isEmpty() : "Unexpectedly empty class name";
-		return className;
-	}
 
 	/**
 	 * Scrolls this element into view.
@@ -299,13 +297,13 @@ public interface DomElement extends DomNode {
 
 	void setTitle(String title);
 
-	Element elementFor();
-
 	void sinkEvents(int eventBits);
 
-	void ensureId();
-
-	String getOuterHtml();
-
-	
+	/**
+	 * Add the class name if it doesn't exist or removes it if does.
+	 *
+	 * @param className
+	 *            the class name to be toggled
+	 */
+	void toggleClassName(String className);
 }

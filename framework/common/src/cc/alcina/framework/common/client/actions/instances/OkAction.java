@@ -11,25 +11,24 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions.instances;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.provider.TextProvider;
 
 /**
  *
  * @author Nick Reddel
  */
- public class OkAction extends PermissibleAction {
-	 public static final OkAction INSTANCE=new OkAction();
+public class OkAction extends PermissibleAction {
+	public static final OkAction INSTANCE = new OkAction();
+
+	private OkAction() {
+	}
+
 	@Override
 	public String getDisplayName() {
 		return TextProvider.get().getUiObjectText(getClass(),
 				TextProvider.DISPLAY_NAME, "OK");
-	}
-	private OkAction(){
-		
 	}
 }

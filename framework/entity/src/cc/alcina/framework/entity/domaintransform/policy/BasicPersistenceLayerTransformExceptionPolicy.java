@@ -6,15 +6,15 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 
-public class BasicPersistenceLayerTransformExceptionPolicy extends
-		AbstractPersistenceLayerTransformExceptionPolicy {
-
+public class BasicPersistenceLayerTransformExceptionPolicy
+		extends AbstractPersistenceLayerTransformExceptionPolicy {
 	private static final int TOO_MANY_EXCEPTIONS = 30;
 
 	public TransformExceptionAction getActionForException(
 			DomainTransformException exception,
 			TransformPersistenceToken persistenceToken) {
-		if (persistenceToken.getTransformExceptions().size() < TOO_MANY_EXCEPTIONS) {
+		if (persistenceToken.getTransformExceptions()
+				.size() < TOO_MANY_EXCEPTIONS) {
 			return TransformExceptionAction.RESOLVE;
 		}
 		exception.setType(DomainTransformExceptionType.TOO_MANY_EXCEPTIONS);
@@ -22,13 +22,14 @@ public class BasicPersistenceLayerTransformExceptionPolicy extends
 	}
 
 	@Override
-	public boolean precreateMissingEntities() {
+	public boolean ignoreClientAuthMismatch(
+			ClientInstance persistentClientInstance,
+			DomainTransformRequest request) {
 		return false;
 	}
 
 	@Override
-	public boolean ignoreClientAuthMismatch(
-			ClientInstance persistentClientInstance, DomainTransformRequest request) {
+	public boolean precreateMissingEntities() {
 		return false;
 	}
 }

@@ -57,76 +57,61 @@ public enum Browser {
 	/**
 	 * For some strange reason Opera uses 9.80 in the user-agent string.
 	 */
-	OPERA10(Manufacturer.OPERA, Browser.OPERA, 10, "Opera 10",
-			new String[] { "Opera/9.8" }, null, BrowserType.WEB_BROWSER,
-			RenderingEngine.PRESTO, "Version\\/(([\\d]+)\\.([\\w]+))"), OPERA9(
-			Manufacturer.OPERA, Browser.OPERA, 5, "Opera 9",
-			new String[] { "Opera/9" }, null, BrowserType.WEB_BROWSER,
-			RenderingEngine.PRESTO, null), KONQUEROR(Manufacturer.OTHER, null,
-			1, "Konqueror", new String[] { "Konqueror" }, null,
-			BrowserType.WEB_BROWSER, RenderingEngine.KHTML,
-			"Konqueror\\/(([0-9]+)\\.?([\\w]+)?(-[\\w]+)?)"),
+	OPERA10(Manufacturer.OPERA, Browser.OPERA, 10, "Opera 10", new String[] { "Opera/9.8" }, null, BrowserType.WEB_BROWSER, RenderingEngine.PRESTO, "Version\\/(([\\d]+)\\.([\\w]+))"), OPERA9(Manufacturer.OPERA, Browser.OPERA, 5, "Opera 9", new String[] { "Opera/9" }, null, BrowserType.WEB_BROWSER, RenderingEngine.PRESTO, null), KONQUEROR(Manufacturer.OTHER, null, 1, "Konqueror", new String[] { "Konqueror" }, null, BrowserType.WEB_BROWSER, RenderingEngine.KHTML, "Konqueror\\/(([0-9]+)\\.?([\\w]+)?(-[\\w]+)?)"),
 	/**
 	 * Outlook email client
 	 */
-	OUTLOOK(Manufacturer.MICROSOFT, null, 100, "Outlook",
-			new String[] { "MSOffice" }, null, BrowserType.EMAIL_CLIENT,
-			RenderingEngine.WORD, "MSOffice (([0-9]+))"), // before IE7
+	OUTLOOK(Manufacturer.MICROSOFT, null, 100, "Outlook", new String[] { "MSOffice" }, null, BrowserType.EMAIL_CLIENT, RenderingEngine.WORD, "MSOffice (([0-9]+))"), // before
+																																										// IE7
 	/**
 	 * Microsoft Outlook 2007 identifies itself as MSIE7 but uses the html
 	 * rendering engine of Word 2007. Example user agent: Mozilla/4.0
 	 * (compatible; MSIE 7.0; Windows NT 6.0; SLCC1; .NET CLR 2.0.50727; .NET
 	 * CLR 3.0.04506; .NET CLR 1.1.4322; MSOffice 12)
 	 */
-	OUTLOOK2007(Manufacturer.MICROSOFT, Browser.OUTLOOK, 107, "Outlook 2007",
-			new String[] { "MSOffice 12" }, null, BrowserType.EMAIL_CLIENT,
-			RenderingEngine.WORD, null), // before IE7
+	OUTLOOK2007(Manufacturer.MICROSOFT, Browser.OUTLOOK, 107, "Outlook 2007", new String[] { "MSOffice 12" }, null, BrowserType.EMAIL_CLIENT, RenderingEngine.WORD, null), // before
+																																											// IE7
 	/**
 	 * Outlook 2010 is still using the rendering engine of Word.
 	 * http://www.fixoutlook.org
 	 */
-	OUTLOOK2010(Manufacturer.MICROSOFT, Browser.OUTLOOK, 108, "Outlook 2010",
-			new String[] { "MSOffice 14" }, null, BrowserType.EMAIL_CLIENT,
-			RenderingEngine.WORD, null), // before IE7
+	OUTLOOK2010(Manufacturer.MICROSOFT, Browser.OUTLOOK, 108, "Outlook 2010", new String[] { "MSOffice 14" }, null, BrowserType.EMAIL_CLIENT, RenderingEngine.WORD, null), // before
+																																											// IE7
 	/**
 	 * Family of Internet Explorer browsers
 	 */
-	IE(Manufacturer.MICROSOFT, null, 1, "Internet Explorer", new String[] {
-			"MSIE", "Trident" }, null, BrowserType.WEB_BROWSER,
-			RenderingEngine.TRIDENT, "MSIE (([\\d]+)\\.([\\w]+))"), // before
-																	// Mozilla
+	IE(Manufacturer.MICROSOFT, null, 1, "Internet Explorer", new String[] { "MSIE", "Trident" }, null, BrowserType.WEB_BROWSER, RenderingEngine.TRIDENT, "MSIE (([\\d]+)\\.([\\w]+))"), // before
+																																														// Mozilla
 	/**
 	 * Since version 7 Outlook Express is identifying itself. By detecting
 	 * Outlook Express we can not identify the Internet Explorer version which
 	 * is probably used for the rendering. Obviously this product is now called
 	 * Windows Live Mail Desktop or just Windows Live Mail.
 	 */
-	OUTLOOK_EXPRESS7(Manufacturer.MICROSOFT, Browser.IE, 110,
-			"Windows Live Mail", new String[] { "Outlook-Express/7.0" }, null,
-			BrowserType.EMAIL_CLIENT, RenderingEngine.TRIDENT, null), // before
-																		// IE7,
-																		// previously
-																		// known
-																		// as
-																		// Outlook
-																		// Express.
-																		// First
-																		// released
-																		// in
-																		// 2006,
-																		// offered
-																		// with
-																		// different
-																		// name
-																		// later
+	OUTLOOK_EXPRESS7(Manufacturer.MICROSOFT, Browser.IE, 110, "Windows Live Mail", new String[] { "Outlook-Express/7.0" }, null, BrowserType.EMAIL_CLIENT, RenderingEngine.TRIDENT, null), // before
+																																															// IE7,
+																																															// previously
+																																															// known
+																																															// as
+																																															// Outlook
+																																															// Express.
+																																															// First
+																																															// released
+																																															// in
+																																															// 2006,
+																																															// offered
+																																															// with
+																																															// different
+																																															// name
+																																															// later
 	/**
 	 * Since 2007 the mobile edition of Internet Explorer identifies itself as
 	 * IEMobile in the user-agent. If previous versions have to be detected, use
 	 * the operating system information as well.
 	 */
-	IEMOBILE7(Manufacturer.MICROSOFT, Browser.IE, 121, "IE Mobile 7",
-			new String[] { "IEMobile 7" }, null, BrowserType.MOBILE_BROWSER,
-			RenderingEngine.TRIDENT, null), // before MSIE strings
+	IEMOBILE7(Manufacturer.MICROSOFT, Browser.IE, 121, "IE Mobile 7", new String[] { "IEMobile 7" }, null, BrowserType.MOBILE_BROWSER, RenderingEngine.TRIDENT, null), // before
+																																										// MSIE
+																																										// strings
 	IEMOBILE6(Manufacturer.MICROSOFT, Browser.IE, 120, "IE Mobile 6",
 			new String[] { "IEMobile 6" }, null, BrowserType.MOBILE_BROWSER,
 			RenderingEngine.TRIDENT, null), // before MSIE
@@ -158,10 +143,8 @@ public enum Browser {
 	/**
 	 * Google Chrome browser
 	 */
-	CHROME(Manufacturer.GOOGLE, null, 1, "Chrome", new String[] { "Chrome" },
-			null, BrowserType.WEB_BROWSER, RenderingEngine.WEBKIT,
-			"Chrome\\/(([0-9]+)\\.?([\\w]+)?(\\.[\\w]+)?(\\.[\\w]+)?)"), // before
-																			// Mozilla
+	CHROME(Manufacturer.GOOGLE, null, 1, "Chrome", new String[] { "Chrome" }, null, BrowserType.WEB_BROWSER, RenderingEngine.WEBKIT, "Chrome\\/(([0-9]+)\\.?([\\w]+)?(\\.[\\w]+)?(\\.[\\w]+)?)"), // before
+																																																	// Mozilla
 	CHROME10(Manufacturer.GOOGLE, Browser.CHROME, 15, "Chrome 10",
 			new String[] { "Chrome/10" }, null, BrowserType.WEB_BROWSER,
 			RenderingEngine.WEBKIT, null), // before Mozilla
@@ -257,19 +240,22 @@ public enum Browser {
 			RenderingEngine.GECKO,
 			"SeaMonkey\\/(([0-9]+)\\.?([\\w]+)?(\\.[\\w]+)?)"), // using Gecko
 																// Engine
-	BOT(Manufacturer.OTHER, null, 12, "Robot/Spider", new String[] {
-			"Googlebot", "bot", "spider", "crawler", "Feedfetcher", "Slurp",
-			"Twiceler", "Nutch", "BecomeBot" }, null, BrowserType.ROBOT,
-			RenderingEngine.OTHER, null),
-	MOZILLA(Manufacturer.MOZILLA, null, 1, "Mozilla", new String[] { "Mozilla",
-			"Moozilla" }, null, BrowserType.WEB_BROWSER, RenderingEngine.OTHER,
-			null), // rest of the mozilla browsers
+	BOT(Manufacturer.OTHER, null, 12, "Robot/Spider",
+			new String[] { "Googlebot", "bot", "spider", "crawler",
+					"Feedfetcher", "Slurp", "Twiceler", "Nutch", "BecomeBot" },
+			null, BrowserType.ROBOT, RenderingEngine.OTHER, null),
+	MOZILLA(Manufacturer.MOZILLA, null, 1, "Mozilla",
+			new String[] { "Mozilla", "Moozilla" }, null,
+			BrowserType.WEB_BROWSER, RenderingEngine.OTHER, null), // rest of
+																	// the
+																	// mozilla
+																	// browsers
 	CFNETWORK(Manufacturer.OTHER, null, 6, "CFNetwork",
 			new String[] { "CFNetwork" }, null, BrowserType.UNKNOWN,
 			RenderingEngine.OTHER, null), // Mac OS X cocoa library
-	EUDORA(Manufacturer.OTHER, null, 7, "Eudora", new String[] { "Eudora",
-			"EUDORA" }, null, BrowserType.EMAIL_CLIENT, RenderingEngine.OTHER,
-			null), // email client by Qualcomm
+	EUDORA(Manufacturer.OTHER, null, 7, "Eudora",
+			new String[] { "Eudora", "EUDORA" }, null, BrowserType.EMAIL_CLIENT,
+			RenderingEngine.OTHER, null), // email client by Qualcomm
 	POCOMAIL(Manufacturer.OTHER, null, 8, "PocoMail",
 			new String[] { "PocoMail" }, null, BrowserType.EMAIL_CLIENT,
 			RenderingEngine.OTHER, null),
@@ -285,11 +271,48 @@ public enum Browser {
 	LYNX(Manufacturer.OTHER, null, 13, "Lynx", new String[] { "Lynx" }, null,
 			BrowserType.TEXT_BROWSER, RenderingEngine.OTHER,
 			"Lynx\\/(([0-9]+)\\.([\\d]+)\\.?([\\w-+]+)?\\.?([\\w-+]+)?)"),
-	DOWNLOAD(Manufacturer.OTHER, null, 16, "Downloading Tool", new String[] {
-			"cURL", "wget" }, null, BrowserType.TEXT_BROWSER,
-			RenderingEngine.OTHER, null), UNKNOWN(Manufacturer.OTHER, null, 14,
-			"Unknown", new String[0], null, BrowserType.UNKNOWN,
-			RenderingEngine.OTHER, null);
+	DOWNLOAD(Manufacturer.OTHER, null, 16, "Downloading Tool",
+			new String[] { "cURL", "wget" }, null, BrowserType.TEXT_BROWSER,
+			RenderingEngine.OTHER, null),
+	UNKNOWN(Manufacturer.OTHER, null, 14, "Unknown", new String[0], null,
+			BrowserType.UNKNOWN, RenderingEngine.OTHER, null);
+	/**
+	 * Iterates over all Browsers to compare the browser signature with the user
+	 * agent string. If no match can be found Browser.UNKNOWN will be returned.
+	 * 
+	 * @param agentString
+	 * @return Browser
+	 */
+	public static Browser parseUserAgentString(String agentString) {
+		for (Browser browser : Browser.values()) {
+			// only check top level objects
+			if (browser.parent == null) {
+				Browser match = browser.checkUserAgent(agentString);
+				if (match != null) {
+					return match; // either current operatingSystem or a child
+									// object
+				}
+			}
+		}
+		return Browser.UNKNOWN;
+	}
+
+	/**
+	 * Returns the enum constant of this type with the specified id. Throws
+	 * IllegalArgumentException if the value does not exist.
+	 * 
+	 * @param id
+	 * @return
+	 */
+	public static Browser valueOf(short id) {
+		for (Browser browser : Browser.values()) {
+			if (browser.getId() == id)
+				return browser;
+		}
+		// same behavior as standard valueOf(string) method
+		throw new IllegalArgumentException("No enum const for id " + id);
+	}
+
 	private final short id;
 
 	private final String name;
@@ -332,22 +355,43 @@ public enum Browser {
 		}
 	}
 
+	/**
+	 * @return the browserType
+	 */
+	public BrowserType getBrowserType() {
+		return browserType;
+	}
+
+	/**
+	 * @return top level browser family
+	 */
+	public Browser getGroup() {
+		if (this.parent != null) {
+			return parent.getGroup();
+		}
+		return this;
+	}
+
 	public short getId() {
 		return id;
+	}
+
+	/**
+	 * @return the manufacturer
+	 */
+	public Manufacturer getManufacturer() {
+		return manufacturer;
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	private Pattern getVersionRegEx() {
-		if (this.versionRegEx == null) {
-			if (this.getGroup() != this)
-				return this.getGroup().getVersionRegEx();
-			else
-				return null;
-		}
-		return this.versionRegEx;
+	/**
+	 * @return the rendering engine
+	 */
+	public RenderingEngine getRenderingEngine() {
+		return renderingEngine;
 	}
 
 	/**
@@ -375,37 +419,6 @@ public enum Browser {
 		return null;
 	}
 
-	/**
-	 * @return the browserType
-	 */
-	public BrowserType getBrowserType() {
-		return browserType;
-	}
-
-	/**
-	 * @return the manufacturer
-	 */
-	public Manufacturer getManufacturer() {
-		return manufacturer;
-	}
-
-	/**
-	 * @return the rendering engine
-	 */
-	public RenderingEngine getRenderingEngine() {
-		return renderingEngine;
-	}
-
-	/**
-	 * @return top level browser family
-	 */
-	public Browser getGroup() {
-		if (this.parent != null) {
-			return parent.getGroup();
-		}
-		return this;
-	}
-
 	/*
 	 * Checks if the given user-agent string matches to the browser. Only checks
 	 * for one specific browser.
@@ -414,24 +427,6 @@ public enum Browser {
 		for (String alias : aliases) {
 			if (agentString.toLowerCase().indexOf(alias.toLowerCase()) != -1)
 				return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Checks if the given user-agent does not contain one of the tokens which
-	 * should not match. In most cases there are no excluding tokens, so the
-	 * impact should be small.
-	 * 
-	 * @param agentString
-	 * @return
-	 */
-	private boolean containsExcludeToken(String agentString) {
-		if (excludeList != null) {
-			for (String exclude : excludeList) {
-				if (agentString.toLowerCase().indexOf(exclude.toLowerCase()) != -1)
-					return true;
-			}
 		}
 		return false;
 	}
@@ -456,39 +451,31 @@ public enum Browser {
 	}
 
 	/**
-	 * Iterates over all Browsers to compare the browser signature with the user
-	 * agent string. If no match can be found Browser.UNKNOWN will be returned.
+	 * Checks if the given user-agent does not contain one of the tokens which
+	 * should not match. In most cases there are no excluding tokens, so the
+	 * impact should be small.
 	 * 
 	 * @param agentString
-	 * @return Browser
-	 */
-	public static Browser parseUserAgentString(String agentString) {
-		for (Browser browser : Browser.values()) {
-			// only check top level objects
-			if (browser.parent == null) {
-				Browser match = browser.checkUserAgent(agentString);
-				if (match != null) {
-					return match; // either current operatingSystem or a child
-									// object
-				}
-			}
-		}
-		return Browser.UNKNOWN;
-	}
-
-	/**
-	 * Returns the enum constant of this type with the specified id. Throws
-	 * IllegalArgumentException if the value does not exist.
-	 * 
-	 * @param id
 	 * @return
 	 */
-	public static Browser valueOf(short id) {
-		for (Browser browser : Browser.values()) {
-			if (browser.getId() == id)
-				return browser;
+	private boolean containsExcludeToken(String agentString) {
+		if (excludeList != null) {
+			for (String exclude : excludeList) {
+				if (agentString.toLowerCase()
+						.indexOf(exclude.toLowerCase()) != -1)
+					return true;
+			}
 		}
-		// same behavior as standard valueOf(string) method
-		throw new IllegalArgumentException("No enum const for id " + id);
+		return false;
+	}
+
+	private Pattern getVersionRegEx() {
+		if (this.versionRegEx == null) {
+			if (this.getGroup() != this)
+				return this.getGroup().getVersionRegEx();
+			else
+				return null;
+		}
+		return this.versionRegEx;
 	}
 }

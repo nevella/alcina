@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions.instances;
 
 import cc.alcina.framework.common.client.provider.TextProvider;
@@ -20,8 +19,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
  *
  * @author Nick Reddel
  */
-
- public class CloneAction extends ToolbarAction {
+public class CloneAction extends ToolbarAction {
 	@Override
 	public String getDisplayName() {
 		return TextProvider.get().getUiObjectText(getClass(),

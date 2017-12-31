@@ -25,8 +25,17 @@ public class AbstractBoundWidgetWrapper<T, C> extends AbstractBoundWidget<T>
 	}
 
 	@Override
+	public ComplexPanel getComplexPanel() {
+		return fp;
+	}
+
+	@Override
 	public Object getModel() {
 		return wrappee.getModel();
+	}
+
+	public T getValue() {
+		return this.value;
 	}
 
 	@Override
@@ -35,17 +44,8 @@ public class AbstractBoundWidgetWrapper<T, C> extends AbstractBoundWidget<T>
 		wrappee.setModel(model);
 	}
 
-	public T getValue() {
-		return this.value;
-	}
-
 	public void setValue(T value) {
 		this.value = value;
 		wrappee.setValue(converter.convert(value));
-	}
-
-	@Override
-	public ComplexPanel getComplexPanel() {
-		return fp;
 	}
 }

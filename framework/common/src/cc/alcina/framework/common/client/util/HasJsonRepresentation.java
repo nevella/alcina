@@ -17,22 +17,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 public interface HasJsonRepresentation {
-	JSONObject asJson() throws JSONException;
-
-	default JSONObject simpleMapping(Object... params) {
-		try {
-			JSONObject jso = new JSONObject();
-			for (int i = 0; i < params.length; i += 2) {
-				String key = (String) params[i];
-				Object value = params[i + 1];
-				jso.put(key, encode(value));
-			}
-			return jso;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 	static Object encode(Object value) {
 		if (value instanceof Date) {
 			return String.format("__JsDate(%s)", ((Date) value).getTime());
@@ -57,20 +41,16 @@ public interface HasJsonRepresentation {
 		return value;
 	}
 
-	static JSONObject toJsMap(Map<String, String> stringMap) {
+	static JSONArray stringListToJsArray(List<String> objects) {
 		try {
-			JSONObject result = new JSONObject();
-			for (Entry<String, String> entry : stringMap.entrySet()) {
-				result.put(entry.getKey(), entry.getValue());
+			JSONArray array = new JSONArray();
+			for (String string : objects) {
+				array.put(string);
 			}
-			return result;
+			return array;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	default JSONArray toJsArray(List<? extends HasJsonRepresentation> objects) {
-		return toJsArrayStatic(objects);
 	}
 
 	static JSONArray
@@ -86,17 +66,19 @@ public interface HasJsonRepresentation {
 		}
 	}
 
-	static JSONArray stringListToJsArray(List<String> objects) {
+	static JSONObject toJsMap(Map<String, String> stringMap) {
 		try {
-			JSONArray array = new JSONArray();
-			for (String string : objects) {
-				array.put(string);
+			JSONObject result = new JSONObject();
+			for (Entry<String, String> entry : stringMap.entrySet()) {
+				result.put(entry.getKey(), entry.getValue());
 			}
-			return array;
+			return result;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
+	JSONObject asJson() throws JSONException;
 
 	default JSONObject fieldMapping() {
 		return fieldMapping(null);
@@ -108,7 +90,7 @@ public interface HasJsonRepresentation {
 			JSONObject jso = new JSONObject();
 			Object templateInstance = getClass().newInstance();
 			for (Field field : fields) {
-				if(Modifier.isTransient(field.getModifiers())){
+				if (Modifier.isTransient(field.getModifiers())) {
 					continue;
 				}
 				String key = field.getName();
@@ -125,5 +107,23 @@ public interface HasJsonRepresentation {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	default JSONObject simpleMapping(Object... params) {
+		try {
+			JSONObject jso = new JSONObject();
+			for (int i = 0; i < params.length; i += 2) {
+				String key = (String) params[i];
+				Object value = params[i + 1];
+				jso.put(key, encode(value));
+			}
+			return jso;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	default JSONArray toJsArray(List<? extends HasJsonRepresentation> objects) {
+		return toJsArrayStatic(objects);
 	}
 }

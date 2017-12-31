@@ -20,8 +20,8 @@ public class MaskedColour extends Composite {
 		Style holderStyle = holder.getElement().getStyle();
 		margin.marginalise(holder);
 		holderStyle.setDisplay(Display.BLOCK);
-		holderStyle.setProperty("lineHeight", maskImage.getHeight()
-				+ margin.top + margin.bottom, Unit.PX);
+		holderStyle.setProperty("lineHeight",
+				maskImage.getHeight() + margin.top + margin.bottom, Unit.PX);
 		if (colorPixelWidth != 0) {
 			holder.add(maskImage);
 			FlowPanel cp = new FlowPanel();
@@ -34,9 +34,10 @@ public class MaskedColour extends Composite {
 			cStyle.setWidth(colorPixelWidth, Unit.PX);
 			cStyle.setHeight(maskImage.getHeight(), Unit.PX);
 			cStyle.setProperty("lineHeight", maskImage.getHeight(), Unit.PX);
-			Image spacer = AbstractImagePrototype.create(
-					((StandardDataImages) GWT.create(StandardDataImages.class))
-							.transparent()).createImage();
+			Image spacer = AbstractImagePrototype
+					.create(((StandardDataImages) GWT
+							.create(StandardDataImages.class)).transparent())
+					.createImage();
 			Style spacerStyle = spacer.getElement().getStyle();
 			spacerStyle.setWidth(colorPixelWidth, Unit.PX);
 			spacerStyle.setHeight(maskImage.getHeight(), Unit.PX);

@@ -56,35 +56,6 @@ public class Version {
 		this.minorVersion = minorVersion;
 	}
 
-	public String getVersion() {
-		return version;
-	}
-
-	public String getMajorVersion() {
-		return majorVersion;
-	}
-
-	public String getMinorVersion() {
-		return minorVersion;
-	}
-
-	@Override
-	public String toString() {
-		return version;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result
-				+ ((majorVersion == null) ? 0 : majorVersion.hashCode());
-		result = prime * result
-				+ ((minorVersion == null) ? 0 : minorVersion.hashCode());
-		result = prime * result + ((version == null) ? 0 : version.hashCode());
-		return result;
-	}
-
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -110,5 +81,34 @@ public class Version {
 		} else if (!version.equals(other.version))
 			return false;
 		return true;
+	}
+
+	public String getMajorVersion() {
+		return majorVersion;
+	}
+
+	public String getMinorVersion() {
+		return minorVersion;
+	}
+
+	public String getVersion() {
+		return version;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((majorVersion == null) ? 0 : majorVersion.hashCode());
+		result = prime * result
+				+ ((minorVersion == null) ? 0 : minorVersion.hashCode());
+		result = prime * result + ((version == null) ? 0 : version.hashCode());
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		return version;
 	}
 }

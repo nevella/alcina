@@ -15,8 +15,8 @@ import com.totsp.gwittir.client.beans.Converter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.ImmutableMap;
 
-public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
-		Serializable {
+public abstract class MultikeyMapBase<V>
+		implements MultikeyMap<V>, Serializable {
 	static final transient long serialVersionUID = -1L;
 
 	protected int depth;
@@ -84,7 +84,8 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 		return asMap(ensure, objects);
 	}
 
-	public <T> List<T> asTupleObjects(int maxDepth, Converter<List, T> converter) {
+	public <T> List<T> asTupleObjects(int maxDepth,
+			Converter<List, T> converter) {
 		List<List> tuples = asTuples(maxDepth);
 		return CollectionFilters.convert(tuples, converter);
 	}
@@ -207,8 +208,8 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 			writeableDelegate().putAll(other.writeableDelegate());
 		} else {
 			for (Object key : other.writeableDelegate().keySet()) {
-				((MultikeyMap<V>) asMap(key)).putMulti((MultikeyMap<V>) other
-						.asMap(key));
+				((MultikeyMap<V>) asMap(key))
+						.putMulti((MultikeyMap<V>) other.asMap(key));
 			}
 		}
 	}
@@ -274,7 +275,8 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 		return delegate;
 	}
 
-	private Map getMapForObjects(boolean ensure, int length, Object... objects) {
+	private Map getMapForObjects(boolean ensure, int length,
+			Object... objects) {
 		Object withKeys = getWithKeys(ensure, length, objects);
 		MultikeyMap mkm = (MultikeyMap) withKeys;
 		return mkm != null ? mkm.writeableDelegate() : null;
@@ -289,7 +291,8 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 			return null;
 		}
 		V result = (V) m.remove(objects[objects.length - 1 - trim]);
-		for (int keyIndex = objects.length - 2 - trim; keyIndex >= 0; keyIndex--) {
+		for (int keyIndex = objects.length - 2
+				- trim; keyIndex >= 0; keyIndex--) {
 			Map parent = getMapForObjects(false, objects.length - keyIndex,
 					objects);
 			if (m.isEmpty()) {
@@ -309,7 +312,7 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 	}
 
 	protected Map createDelegateMap() {
-		return delegateMapCreator.createDelegateMap(depthFromRoot,depth);
+		return delegateMapCreator.createDelegateMap(depthFromRoot, depth);
 	}
 
 	protected abstract DelegateMapCreator ensureDelegateMapCreator();

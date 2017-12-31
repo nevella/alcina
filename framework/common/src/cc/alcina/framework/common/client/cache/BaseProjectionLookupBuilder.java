@@ -20,27 +20,8 @@ public class BaseProjectionLookupBuilder {
 
 	private BaseProjection projection;
 
-
-	public BaseProjection getProjection() {
-		return this.projection;
-	}
-
-	public void setProjection(BaseProjection projection) {
-		this.projection = projection;
-	}
-
 	public BaseProjectionLookupBuilder(BaseProjection projection) {
 		this.projection = projection;
-	}
-
-	public BaseProjectionLookupBuilder sorted() {
-		sorted = true;
-		return this;
-	}
-
-	public BaseProjectionLookupBuilder unsorted() {
-		sorted = false;
-		return this;
 	}
 
 	public <T> MultikeyMap<T> createMultikeyMap() {
@@ -58,6 +39,22 @@ public class BaseProjectionLookupBuilder {
 		return map;
 	}
 
+	public MapCreator[] getCreators() {
+		return creators;
+	}
+
+	public BaseProjection getProjection() {
+		return this.projection;
+	}
+
+	public boolean isNavigable() {
+		return navigable;
+	}
+
+	public boolean isSorted() {
+		return sorted;
+	}
+
 	public BaseProjectionLookupBuilder mapCreators(MapCreator... creators) {
 		if (creators.length != projection.getDepth()) {
 			throw new RuntimeException(
@@ -67,7 +64,24 @@ public class BaseProjectionLookupBuilder {
 		return this;
 	}
 
-	public interface MapCreator extends Supplier<Map> {
+	public BaseProjectionLookupBuilder navigable() {
+		navigable = true;
+		sorted = true;
+		return this;
+	}
+
+	public void setProjection(BaseProjection projection) {
+		this.projection = projection;
+	}
+
+	public BaseProjectionLookupBuilder sorted() {
+		sorted = true;
+		return this;
+	}
+
+	public BaseProjectionLookupBuilder unsorted() {
+		sorted = false;
+		return this;
 	}
 
 	public static abstract class BplDelegateMapCreator
@@ -99,21 +113,6 @@ public class BaseProjectionLookupBuilder {
 		}
 	}
 
-	public BaseProjectionLookupBuilder navigable() {
-		navigable = true;
-		sorted = true;
-		return this;
-	}
-
-	public MapCreator[] getCreators() {
-		return creators;
-	}
-
-	public boolean isNavigable() {
-		return navigable;
-	}
-
-	public boolean isSorted() {
-		return sorted;
+	public interface MapCreator extends Supplier<Map> {
 	}
 }

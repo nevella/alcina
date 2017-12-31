@@ -23,13 +23,13 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
-@RegistryLocation( registryPoint = TreeRenderer.class, targetClass = SearchDefinition.class)
+@RegistryLocation(registryPoint = TreeRenderer.class, targetClass = SearchDefinition.class)
 /**
  *
  * @author Nick Reddel
  */
-public class SearchDefinitionRenderer<SD extends SearchDefinition> extends
-		AbstractRenderer<SD> {
+public class SearchDefinitionRenderer<SD extends SearchDefinition>
+		extends AbstractRenderer<SD> {
 	public static final String RENDER_ORDER_GROUPS = "RENDER_ORDER_GROUPS";
 
 	public Collection<? extends TreeRenderable> renderableChildren() {

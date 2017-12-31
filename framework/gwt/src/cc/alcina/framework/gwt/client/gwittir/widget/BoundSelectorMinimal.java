@@ -110,44 +110,23 @@ public class BoundSelectorMinimal extends BoundSelector {
 	}
 
 	@Override
-	protected boolean shouldHideResultFilter() {
-		return true;
-	}
-
-	@Override
-	protected void initValues() {
-		if (search.getLazyProvider() == null) {
-			search.setLazyProvider(new LazyDataMinimal());
-		}
-	}
-
-	private class LazyDataMinimal implements LazyDataProvider {
-		private boolean called = false;
-
-		private LazyData dataRequired() {
-			if (!called) {
-				LazyData lazyData = new LazyData();
-				Map map = createObjectMap();
-				lazyData.keys = new ArrayList(map.keySet());
-				lazyData.data = map;
-				called = true;
-				return lazyData;
-			}
-			return null;
-		}
-
-		@Override
-		public void getData(AsyncCallback callback) {
-			callback.onSuccess(dataRequired());
-		}
-	}
-
-	@Override
 	protected void addItem(Object item) {
 		super.addItem(item);
 		if (search.getFilter().isHintWasCleared()) {
 			search.getFilter().getTextBox().setText("");
 		}
+	}
+
+	@Override
+	protected void createResults() {
+		results = new SelectWithSearch() {
+			public HasClickHandlers createItem(Object item, boolean asHTML,
+					int charWidth, boolean itemsHaveLinefeeds, Label ownerLabel,
+					String sep) {
+				return new SelectWithSearchItemX(item, asHTML, charWidth,
+						itemsHaveLinefeeds, ownerLabel, sep);
+			};
+		};
 	}
 
 	@Override
@@ -160,6 +139,38 @@ public class BoundSelectorMinimal extends BoundSelector {
 				updateAfterPopdownChange(show);
 			}
 		};
+	}
+
+	@Override
+	protected void customiseLeftWidget() {
+		search.setPopdown(true);
+		search.setItemsHaveLinefeeds(true);
+		search.setFlowLayout(true);
+		search.setHolderHeight(Window.getClientHeight() / 2 + "px");
+		search.setPopupPanelCssClassName("minimal-popDown");
+	}
+
+	@Override
+	protected void customiseRightWidget() {
+		results.removeScroller();
+	}
+
+	@Override
+	protected void initValues() {
+		if (search.getLazyProvider() == null) {
+			search.setLazyProvider(new LazyDataMinimal());
+		}
+	}
+
+	@Override
+	protected boolean shouldHideResultFilter() {
+		return true;
+	}
+
+	@Override
+	protected void update(Set old) {
+		super.update(old);
+		search.maybeRepositionPopdown();
 	}
 
 	protected void updateAfterPopdownChange(boolean show) {
@@ -180,35 +191,24 @@ public class BoundSelectorMinimal extends BoundSelector {
 		}
 	}
 
-	@Override
-	protected void customiseLeftWidget() {
-		search.setPopdown(true);
-		search.setItemsHaveLinefeeds(true);
-		search.setFlowLayout(true);
-		search.setHolderHeight(Window.getClientHeight() / 2 + "px");
-		search.setPopupPanelCssClassName("minimal-popDown");
-	}
+	private class LazyDataMinimal implements LazyDataProvider {
+		private boolean called = false;
 
-	@Override
-	protected void createResults() {
-		results = new SelectWithSearch() {
-			public HasClickHandlers createItem(Object item, boolean asHTML,
-					int charWidth, boolean itemsHaveLinefeeds, Label ownerLabel,
-					String sep) {
-				return new SelectWithSearchItemX(item, asHTML, charWidth,
-						itemsHaveLinefeeds, ownerLabel, sep);
-			};
-		};
-	}
+		@Override
+		public void getData(AsyncCallback callback) {
+			callback.onSuccess(dataRequired());
+		}
 
-	@Override
-	protected void customiseRightWidget() {
-		results.removeScroller();
-	}
-
-	@Override
-	protected void update(Set old) {
-		super.update(old);
-		search.maybeRepositionPopdown();
+		private LazyData dataRequired() {
+			if (!called) {
+				LazyData lazyData = new LazyData();
+				Map map = createObjectMap();
+				lazyData.keys = new ArrayList(map.keySet());
+				lazyData.data = map;
+				called = true;
+				return lazyData;
+			}
+			return null;
+		}
 	}
 }

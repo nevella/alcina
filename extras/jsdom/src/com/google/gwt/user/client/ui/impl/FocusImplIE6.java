@@ -18,24 +18,22 @@ package com.google.gwt.user.client.ui.impl;
 import com.google.gwt.dom.client.Element;
 
 /**
- * Implementation of {@link com.google.gwt.user.client.ui.impl.FocusImpl}
- * for IE that traps invalid focus attempts to match other browsers.
+ * Implementation of {@link com.google.gwt.user.client.ui.impl.FocusImpl} for IE
+ * that traps invalid focus attempts to match other browsers.
  */
 public class FocusImplIE6 extends FocusImpl {
-
-  @Override
-  public native void focus(Element bi) /*-{
-  	@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(bi);
-  var elem = bi.@com.google.gwt.dom.client.Element::typedRemote()();
-    try {
-      elem.focus();
-    } catch (e) {
-      // Only trap the exception if the attempt was mostly legit
-      if (!elem || !elem.focus) {
-        // Rethrow the probable NPE or invalid type
-        throw e;
-      }
-    }
-  }-*/;
-
+	@Override
+	public native void focus(Element bi) /*-{
+											@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(bi);
+											var elem = bi.@com.google.gwt.dom.client.Element::typedRemote()();
+											try {
+											elem.focus();
+											} catch (e) {
+											// Only trap the exception if the attempt was mostly legit
+											if (!elem || !elem.focus) {
+											// Rethrow the probable NPE or invalid type
+											throw e;
+											}
+											}
+											}-*/;
 }

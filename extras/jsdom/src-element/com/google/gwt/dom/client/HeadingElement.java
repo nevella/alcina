@@ -15,97 +15,94 @@
  */
 package com.google.gwt.dom.client;
 
-import com.google.gwt.core.client.JavaScriptObject;
-
 import java.util.Locale;
+
+import com.google.gwt.core.client.JavaScriptObject;
 
 /**
  * For the H1 to H6 elements.
  * 
- * @see <a
- *      href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#edef-H1">W3C
- *      HTML Specification</a>
+ * @see <a href=
+ *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#edef-H1">
+ *      W3C HTML Specification</a>
  */
-@TagName({HeadingElement.TAG_H1, HeadingElement.TAG_H2, HeadingElement.TAG_H3,
-    HeadingElement.TAG_H4, HeadingElement.TAG_H5, HeadingElement.TAG_H6})
+@TagName({ HeadingElement.TAG_H1, HeadingElement.TAG_H2, HeadingElement.TAG_H3,
+		HeadingElement.TAG_H4, HeadingElement.TAG_H5, HeadingElement.TAG_H6 })
 public class HeadingElement extends Element {
+	static final String[] TAGS = { HeadingElement.TAG_H1, HeadingElement.TAG_H2,
+			HeadingElement.TAG_H3, HeadingElement.TAG_H4, HeadingElement.TAG_H5,
+			HeadingElement.TAG_H6 };
 
-  static final String[] TAGS = {
-      HeadingElement.TAG_H1, HeadingElement.TAG_H2, HeadingElement.TAG_H3,
-      HeadingElement.TAG_H4, HeadingElement.TAG_H5, HeadingElement.TAG_H6};
+	public static final String TAG_H1 = "h1";
 
-  public static final String TAG_H1 = "h1";
-  public static final String TAG_H2 = "h2";
-  public static final String TAG_H3 = "h3";
-  public static final String TAG_H4 = "h4";
-  public static final String TAG_H5 = "h5";
-  public static final String TAG_H6 = "h6";
+	public static final String TAG_H2 = "h2";
 
-  /**
-   * Assert that the given {@link Element} is compatible with this class and
-   * automatically typecast it.
-   */
-  public static HeadingElement as(Element elem) {
-    if (HeadingElement.class.desiredAssertionStatus()) {
-      assert is(elem);
-    }
+	public static final String TAG_H3 = "h3";
 
-    return (HeadingElement) elem;
-  }
-  
-  /**
-   * Determines whether the given {@link JavaScriptObject} can be cast to
-   * this class. A <code>null</code> object will cause this method to
-   * return <code>false</code>.
-   */
-  public static boolean is(JavaScriptObject o) {
-    if (Element.is(o)) {
-      return is(Element.as(o));
-    }
-    return false;
-  }
+	public static final String TAG_H4 = "h4";
 
-  /**
-   * Determine whether the given {@link Node} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Node node) {
-    if (Element.is(node)) {
-      return is((Element) node);
-    }
-    return false;
-  }
-  
-  /**
-   * Determine whether the given {@link Element} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Element elem) {
-    
-    if (elem == null) {
-      return false;
-    }
-    
-    String tag = elem.getTagName().toLowerCase(Locale.ROOT);
-    
-    if (tag.length() != 2) {
-      return false;
-    }
-    
-    if (tag.charAt(0) != 'h') {
-      return false;
-    }
+	public static final String TAG_H5 = "h5";
 
-    int n = Integer.parseInt(tag.substring(1, 2));
-    if (n < 1 || n > 6) {
-      return false;
-    }
-    
-    return true;
-  }
+	public static final String TAG_H6 = "h6";
 
-  protected HeadingElement() {
-  }
+	/**
+	 * Assert that the given {@link Element} is compatible with this class and
+	 * automatically typecast it.
+	 */
+	public static HeadingElement as(Element elem) {
+		if (HeadingElement.class.desiredAssertionStatus()) {
+			assert is(elem);
+		}
+		return (HeadingElement) elem;
+	}
+
+	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		if (elem == null) {
+			return false;
+		}
+		String tag = elem.getTagName().toLowerCase(Locale.ROOT);
+		if (tag.length() != 2) {
+			return false;
+		}
+		if (tag.charAt(0) != 'h') {
+			return false;
+		}
+		int n = Integer.parseInt(tag.substring(1, 2));
+		if (n < 1 || n > 6) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to this
+	 * class. A <code>null</code> object will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(JavaScriptObject o) {
+		if (Element.is(o)) {
+			return is(Element.as(o));
+		}
+		return false;
+	}
+
+	/**
+	 * Determine whether the given {@link Node} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		if (Element.is(node)) {
+			return is((Element) node);
+		}
+		return false;
+	}
+
+	protected HeadingElement() {
+	}
 }

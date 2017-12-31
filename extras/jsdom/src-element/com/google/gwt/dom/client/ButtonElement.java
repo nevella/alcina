@@ -38,6 +38,15 @@ public class ButtonElement extends Element {
 	}
 
 	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
+
+	/**
 	 * Determines whether the given {@link JavaScriptObject} can be cast to this
 	 * class. A <code>null</code> object will cause this method to return
 	 * <code>false</code>.
@@ -59,15 +68,6 @@ public class ButtonElement extends Element {
 			return is((Element) node);
 		}
 		return false;
-	}
-
-	/**
-	 * Determine whether the given {@link Element} can be cast to this class. A
-	 * <code>null</code> node will cause this method to return
-	 * <code>false</code>.
-	 */
-	public static boolean is(Element elem) {
-		return elem != null && elem.hasTagName(TAG);
 	}
 
 	protected ButtonElement() {
@@ -202,17 +202,6 @@ public class ButtonElement extends Element {
 		this.setPropertyString("name", name);
 	}
 
-	/**
-	 * The current form control value.
-	 * 
-	 * @see <a href=
-	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-value-BUTTON">
-	 *      W3C HTML Specification</a>
-	 */
-	public void setValue(String value) {
-		this.setPropertyString("value", value);
-	}
-
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
 		ensureRemoteCheck();
@@ -222,5 +211,16 @@ public class ButtonElement extends Element {
 			local().setPropertyBoolean(name, value);
 		}
 		remote().setPropertyBoolean(name, value);
+	}
+
+	/**
+	 * The current form control value.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-value-BUTTON">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setValue(String value) {
+		this.setPropertyString("value", value);
 	}
 }

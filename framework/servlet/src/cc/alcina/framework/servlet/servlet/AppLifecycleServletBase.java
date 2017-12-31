@@ -51,6 +51,74 @@ import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
+	protected ServletConfig initServletConfig;
+
+	private Date startupTime;
+
+	@Override
+	public void destroy() {
+		try {
+			new AppServletStatusFileNotifier().destroyed();
+			MetricLogging.get().appShutdown();
+			SEUtilities.appShutdown();
+			ResourceUtilities.appShutdown();
+			Registry.impl(CommonRemoteServiceServletSupport.class)
+					.appShutdown();
+			Registry.appShutdown();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public String dumpCustomProperties() {
+		Map<String, String> map = new TreeMap<String, String>();
+		map.putAll(ResourceUtilities.getCustomProperties());
+		return CommonUtils.join(map.entrySet(), "\n");
+	}
+
+	public Date getStartupTime() {
+		return this.startupTime;
+	}
+
+	public void init(ServletConfig servletConfig) throws ServletException {
+		MetricLogging.get().start("Web app startup");
+		startupTime = new Date();
+		try {
+			initServletConfig = servletConfig;
+			// push to registry
+			Registry.setProvider(new ClassLoaderAwareRegistryProvider());
+			initBootstrapRegistry();
+			new AppServletStatusFileNotifier().deploying();
+			initNames();
+			initLoggers();
+			initJPA();
+			loadCustomProperties();
+			initServices();
+			initEntityLayer();
+			createServletTransformClientInstance();
+			initCustom();
+			ServletLayerUtils.setAppServletInitialised(true);
+		} catch (Throwable e) {
+			throw new ServletException(e);
+		} finally {
+			initServletConfig = null;
+		}
+		MetricLogging.get().end("Web app startup");
+		new AppServletStatusFileNotifier().ready();
+	}
+
+	public void refreshProperties() {
+		loadCustomProperties();
+	}
+
+	public void service(ServletRequest arg0, ServletResponse arg1)
+			throws ServletException, IOException {
+	}
+
+	public void setStartupTime(Date startupTime) {
+		this.startupTime = startupTime;
+	}
+
 	protected void createServletTransformClientInstance() {
 		if (Registry.impl(CommonRemoteServiceServletSupport.class)
 				.getServerAsClientInstance() != null) {
@@ -70,37 +138,37 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 	}
 
-	protected abstract void initNames();
+	protected void initBootstrapRegistry() {
+		AlcinaServerConfig config = new AlcinaServerConfig();
+		config.setStartDate(new Date());
+		Registry.registerSingleton(AlcinaServerConfig.class, config);
+	}
+
+	/*
+	 * Commented services must/can all be initialised with appropriate app
+	 * equivalents
+	 */
+	protected abstract void initCommonImplServices();
+
+	protected void initCommonServices() {
+		PermissionsManager permissionsManager = PermissionsManager.get();
+		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
+		ObjectPersistenceHelper.get();
+		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
+		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
+		Registry.registerSingleton(TimerWrapperProvider.class,
+				new TimerWrapperProviderJvm());
+	}
+
+	protected abstract void initCustom();
+
+	protected abstract void initCustomServices();
+
+	protected abstract void initDataFolder();
 
 	protected abstract void initEntityLayer() throws Exception;
 
 	protected abstract void initJPA();
-
-	protected void loadCustomProperties() {
-		try {
-			File propertiesFile = new File(
-					AlcinaServerConfig.get().getCustomPropertiesFilePath());
-			if (propertiesFile.exists()) {
-				FileInputStream fis = new FileInputStream(propertiesFile);
-				ResourceUtilities.registerCustomProperties(fis);
-			} else {
-				File propertiesListFile = SEUtilities.getChildFile(
-						propertiesFile.getParentFile(),
-						"alcina-properties-files.txt");
-				if (propertiesListFile.exists()) {
-					String[] paths = ResourceUtilities
-							.readFileToString(propertiesListFile).split("\n");
-					for (String path : paths) {
-						FileInputStream fis = new FileInputStream(path);
-						ResourceUtilities.registerCustomProperties(fis);
-					}
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new WrappedRuntimeException(e);
-		}
-	}
 
 	protected void initLoggers() {
 		Logger logger = Logger
@@ -147,77 +215,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 	}
 
-	protected void initServices() {
-		Logger logger = Logger
-				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
-		String key = "server layer init";
-		MetricLogging.get().start(key);
-		initCommonServices();
-		initDataFolder();
-		initRegistry();
-		initCommonImplServices();
-		initCustomServices();
-		MetricLogging.get().end(key);
-	}
-
-	protected abstract void initDataFolder();
-
-	protected ServletConfig initServletConfig;
-
-	private Date startupTime;
-
-	public void init(ServletConfig servletConfig) throws ServletException {
-		MetricLogging.get().start("Web app startup");
-		startupTime = new Date();
-		try {
-			initServletConfig = servletConfig;
-			// push to registry
-			Registry.setProvider(new ClassLoaderAwareRegistryProvider());
-			initBootstrapRegistry();
-			new AppServletStatusFileNotifier().deploying();
-			initNames();
-			initLoggers();
-			initJPA();
-			loadCustomProperties();
-			initServices();
-			initEntityLayer();
-			createServletTransformClientInstance();
-			initCustom();
-			ServletLayerUtils.setAppServletInitialised(true);
-		} catch (Throwable e) {
-			throw new ServletException(e);
-		} finally {
-			initServletConfig = null;
-		}
-		MetricLogging.get().end("Web app startup");
-		new AppServletStatusFileNotifier().ready();
-	}
-
-	protected void initBootstrapRegistry() {
-		AlcinaServerConfig config = new AlcinaServerConfig();
-		config.setStartDate(new Date());
-		Registry.registerSingleton(AlcinaServerConfig.class, config);
-	}
-
-	protected abstract void initCustom();
-
-	protected abstract void initCustomServices();
-
-	/*
-	 * Commented services must/can all be initialised with appropriate app
-	 * equivalents
-	 */
-	protected abstract void initCommonImplServices();
-
-	protected void initCommonServices() {
-		PermissionsManager permissionsManager = PermissionsManager.get();
-		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
-		ObjectPersistenceHelper.get();
-		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
-		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
-		Registry.registerSingleton(TimerWrapperProvider.class,
-				new TimerWrapperProviderJvm());
-	}
+	protected abstract void initNames();
 
 	protected void initRegistry() {
 		Logger logger = Logger
@@ -242,40 +240,42 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 	}
 
-	public void service(ServletRequest arg0, ServletResponse arg1)
-			throws ServletException, IOException {
+	protected void initServices() {
+		Logger logger = Logger
+				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
+		String key = "server layer init";
+		MetricLogging.get().start(key);
+		initCommonServices();
+		initDataFolder();
+		initRegistry();
+		initCommonImplServices();
+		initCustomServices();
+		MetricLogging.get().end(key);
 	}
 
-	@Override
-	public void destroy() {
+	protected void loadCustomProperties() {
 		try {
-new			AppServletStatusFileNotifier().destroyed();
-			MetricLogging.get().appShutdown();
-			SEUtilities.appShutdown();
-			ResourceUtilities.appShutdown();
-			Registry.impl(CommonRemoteServiceServletSupport.class)
-					.appShutdown();
-			Registry.appShutdown();
+			File propertiesFile = new File(
+					AlcinaServerConfig.get().getCustomPropertiesFilePath());
+			if (propertiesFile.exists()) {
+				FileInputStream fis = new FileInputStream(propertiesFile);
+				ResourceUtilities.registerCustomProperties(fis);
+			} else {
+				File propertiesListFile = SEUtilities.getChildFile(
+						propertiesFile.getParentFile(),
+						"alcina-properties-files.txt");
+				if (propertiesListFile.exists()) {
+					String[] paths = ResourceUtilities
+							.readFileToString(propertiesListFile).split("\n");
+					for (String path : paths) {
+						FileInputStream fis = new FileInputStream(path);
+						ResourceUtilities.registerCustomProperties(fis);
+					}
+				}
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
+			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	public Date getStartupTime() {
-		return this.startupTime;
-	}
-
-	public void setStartupTime(Date startupTime) {
-		this.startupTime = startupTime;
-	}
-
-	public void refreshProperties() {
-		loadCustomProperties();
-	}
-
-	public String dumpCustomProperties() {
-		Map<String, String> map = new TreeMap<String, String>();
-		map.putAll(ResourceUtilities.getCustomProperties());
-		return CommonUtils.join(map.entrySet(), "\n");
 	}
 }

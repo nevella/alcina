@@ -78,10 +78,6 @@ public abstract class AbstractBoundWidget<T> extends Composite
 		changes.addPropertyChangeListener(propertyName, l);
 	}
 
-	protected void fireChange() {
-		changeListeners.fireChange(this);
-	}
-
 	public Action<BoundWidget<T>> getAction() {
 		return action;
 	}
@@ -90,77 +86,16 @@ public abstract class AbstractBoundWidget<T> extends Composite
 		return comparator;
 	}
 
+	public KeyBinding getKeyBinding() {
+		return this.binding;
+	}
+
 	public Object getModel() {
 		return model;
 	}
 
 	public PropertyChangeListener[] getPropertyChangeListeners() {
 		return changes.getPropertyChangeListeners();
-	}
-
-	@Override
-	protected void onAttach() {
-		// Call cleanup action to remove any bindings just in case there are
-		// other bindings.
-		this.cleanupAction();
-		if (!wasDetached) {
-			this.setupAction();
-		}
-		wasDetached = false;
-		super.onAttach();
-		this.changes.firePropertyChange("attached", false, true);
-	}
-
-	@Override
-	protected void onLoad() {
-		super.onLoad();
-		this.activateAction();
-	}
-
-	@Override
-	protected void onDetach() {
-		super.onDetach();
-		wasDetached = true;
-		this.cleanupAction();
-		this.changes.firePropertyChange("attached", true, false);
-	}
-
-	/*
-	 * Calls the associated action with this widget to set the bindings.
-	 */
-	private void setupAction() {
-		if (this.getAction() instanceof BindingAction) {
-			((BindingAction<BoundWidget<T>>) getAction()).set(this);
-		}
-	}
-
-	private void activateAction() {
-		if (this.getAction() instanceof BindingAction) {
-			((BindingAction<BoundWidget<T>>) getAction()).bind(this);
-		}
-		if (this.binding != null) {
-			try {
-				KeyboardController.INSTANCE.register(this.binding, this);
-				this.bindingRegistered = true;
-			} catch (KeyBindingException kbe) {
-				this.bindingRegistered = false;
-				AbstractBoundWidget.LOG.log(Level.SPAM,
-						"Exception adding default binding", kbe);
-			}
-		}
-	}
-
-	/*
-	 * Remove the bindings including the keybindings
-	 */
-	private void cleanupAction() {
-		if (this.getAction() instanceof BindingAction
-				&& (this.getModel() != null)) {
-			((BindingAction<BoundWidget<T>>) getAction()).unbind(this);
-		}
-		if (this.binding != null && this.bindingRegistered) {
-			KeyboardController.INSTANCE.unregister(this.binding);
-		}
 	}
 
 	public void removeChangeListener(ChangeListener listener) {
@@ -199,21 +134,6 @@ public abstract class AbstractBoundWidget<T> extends Composite
 		this.comparator = comparator;
 	}
 
-	public void setModel(Object model) {
-		Object old = this.getModel();
-		cleanupAction();
-		this.model = model;
-		setupAction();
-		if (this.isAttached() && (this.getModel() != null)) {
-			activateAction();
-		}
-		this.changes.firePropertyChange("model", old, model);
-	}
-
-	public KeyBinding getKeyBinding() {
-		return this.binding;
-	}
-
 	public void setKeyBinding(final KeyBinding binding) {
 		this.binding = binding;
 		if (this.binding != null && this.isAttached()) {
@@ -226,5 +146,85 @@ public abstract class AbstractBoundWidget<T> extends Composite
 						"Exception adding default binding", kbe);
 			}
 		}
+	}
+
+	public void setModel(Object model) {
+		Object old = this.getModel();
+		cleanupAction();
+		this.model = model;
+		setupAction();
+		if (this.isAttached() && (this.getModel() != null)) {
+			activateAction();
+		}
+		this.changes.firePropertyChange("model", old, model);
+	}
+
+	private void activateAction() {
+		if (this.getAction() instanceof BindingAction) {
+			((BindingAction<BoundWidget<T>>) getAction()).bind(this);
+		}
+		if (this.binding != null) {
+			try {
+				KeyboardController.INSTANCE.register(this.binding, this);
+				this.bindingRegistered = true;
+			} catch (KeyBindingException kbe) {
+				this.bindingRegistered = false;
+				AbstractBoundWidget.LOG.log(Level.SPAM,
+						"Exception adding default binding", kbe);
+			}
+		}
+	}
+
+	/*
+	 * Remove the bindings including the keybindings
+	 */
+	private void cleanupAction() {
+		if (this.getAction() instanceof BindingAction
+				&& (this.getModel() != null)) {
+			((BindingAction<BoundWidget<T>>) getAction()).unbind(this);
+		}
+		if (this.binding != null && this.bindingRegistered) {
+			KeyboardController.INSTANCE.unregister(this.binding);
+		}
+	}
+
+	/*
+	 * Calls the associated action with this widget to set the bindings.
+	 */
+	private void setupAction() {
+		if (this.getAction() instanceof BindingAction) {
+			((BindingAction<BoundWidget<T>>) getAction()).set(this);
+		}
+	}
+
+	protected void fireChange() {
+		changeListeners.fireChange(this);
+	}
+
+	@Override
+	protected void onAttach() {
+		// Call cleanup action to remove any bindings just in case there are
+		// other bindings.
+		this.cleanupAction();
+		if (!wasDetached) {
+			this.setupAction();
+		}
+		wasDetached = false;
+		super.onAttach();
+		this.changes.firePropertyChange("attached", false, true);
+	}
+
+	@Override
+	protected void onDetach() {
+		super.onDetach();
+		wasDetached = true;
+		this.cleanupAction();
+		this.changes.firePropertyChange("attached", true, false);
+	}
+
+	@Override
+	protected void onLoad() {
+		super.onLoad();
+		this.activateAction();
 	}
 }

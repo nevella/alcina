@@ -25,12 +25,12 @@ import com.google.gwt.user.client.rpc.core.java.util.Collection_CustomFieldSeria
  * Custom field serializer for LiSet
  */
 @SuppressWarnings("unchecked")
-public final class LightSet_CustomFieldSerializer extends
-		CustomFieldSerializer<LightSet> {
+public final class LightSet_CustomFieldSerializer
+		extends CustomFieldSerializer<LightSet> {
 	public static void deserialize(SerializationStreamReader streamReader,
 			LightSet instance) throws SerializationException {
-		Collection_CustomFieldSerializerBase
-				.deserialize(streamReader, instance);
+		Collection_CustomFieldSerializerBase.deserialize(streamReader,
+				instance);
 	}
 
 	public static void serialize(SerializationStreamWriter streamWriter,

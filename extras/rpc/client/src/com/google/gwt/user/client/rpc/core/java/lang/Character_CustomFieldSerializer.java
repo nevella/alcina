@@ -24,9 +24,8 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 /**
  * Custom field serializer for {@link java.lang.Character}.
  */
-public final class Character_CustomFieldSerializer extends
-		CustomFieldSerializer<Character> {
-	
+public final class Character_CustomFieldSerializer
+		extends CustomFieldSerializer<Character> {
 	public static void deserialize(SerializationStreamReader streamReader,
 			Character instance) {
 		// No fields
@@ -39,15 +38,9 @@ public final class Character_CustomFieldSerializer extends
 
 	public static void serialize(SerializationStreamWriter streamWriter,
 			Character instance) throws SerializationException {
-		if(GWT.isClient()){
-		    streamWriter.writeChar(instance.charValue());
+		if (GWT.isClient()) {
+			streamWriter.writeChar(instance.charValue());
 		}
-	}
-
-	@Override
-	public void serializeConstructor(SerializationStreamWriter streamWriter,
-			Character instance) throws SerializationException {
-		streamWriter.writeChar(instance.charValue());
 	}
 
 	@Override
@@ -65,6 +58,12 @@ public final class Character_CustomFieldSerializer extends
 	public Character instantiateInstance(SerializationStreamReader streamReader)
 			throws SerializationException {
 		return instantiate(streamReader);
+	}
+
+	@Override
+	public void serializeConstructor(SerializationStreamWriter streamWriter,
+			Character instance) throws SerializationException {
+		streamWriter.writeChar(instance.charValue());
 	}
 
 	@Override

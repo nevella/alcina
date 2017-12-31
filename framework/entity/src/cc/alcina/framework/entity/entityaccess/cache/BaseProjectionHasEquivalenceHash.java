@@ -29,8 +29,8 @@ public abstract class BaseProjectionHasEquivalenceHash<T extends HasIdAndLocalId
 		Collection<T> coll = perClassTransactional;
 		if (AlcinaMemCache.get().transactional
 				.transactionActiveInCurrentThread()) {
-			List list = perThreadEquivalenceMap.get().get(
-					equivalenceHashFromPath(path));
+			List list = perThreadEquivalenceMap.get()
+					.get(equivalenceHashFromPath(path));
 			if (list == null) {
 				return null;
 			}
@@ -44,14 +44,14 @@ public abstract class BaseProjectionHasEquivalenceHash<T extends HasIdAndLocalId
 		return null;
 	}
 
-	protected abstract int equivalenceHashFromPath(Object[] path);
+	public void onTransactionEnd() {
+		perThreadEquivalenceMap.get().clear();
+	}
 
 	public void projectHash(HasIdAndLocalId obj) {
 		HasEquivalenceHash heh = (HasEquivalenceHash) obj;
 		perThreadEquivalenceMap.get().add(heh);
 	}
 
-	public void onTransactionEnd() {
-		perThreadEquivalenceMap.get().clear();
-	}
+	protected abstract int equivalenceHashFromPath(Object[] path);
 }

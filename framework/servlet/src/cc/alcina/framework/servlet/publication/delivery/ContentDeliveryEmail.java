@@ -54,17 +54,6 @@ public class ContentDeliveryEmail implements ContentDelivery {
 	public static final String CONTEXT_SMTP_FROM_EMAIL = ContentDeliveryEmail.class
 			.getName() + ".CONTEXT_SMTP_FROM_EMAIL";
 
-	public String deliver(PublicationContext ctx,
-			final InputStream convertedContent,
-			final DeliveryModel deliveryModel, final FormatConverter hfc)
-			throws Exception {
-		byte[] msgBytes = ResourceUtilities
-				.readStreamToByteArray(convertedContent);
-		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, false);
-		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, true);
-		return "OK";
-	}
-
 	public String deliver(final InputStream convertedContent,
 			final DeliveryModel deliveryModel, final FormatConverter hfc,
 			boolean requestorPass) throws Exception {
@@ -216,6 +205,17 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		transport.sendMessage(msg, msg.getAllRecipients());
 		PublicationContext.get().mimeMessageId = msg.getMessageID();
 		transport.close();
+		return "OK";
+	}
+
+	public String deliver(PublicationContext ctx,
+			final InputStream convertedContent,
+			final DeliveryModel deliveryModel, final FormatConverter hfc)
+			throws Exception {
+		byte[] msgBytes = ResourceUtilities
+				.readStreamToByteArray(convertedContent);
+		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, false);
+		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, true);
 		return "OK";
 	}
 

@@ -48,8 +48,8 @@ public class StandardActionLogProvider implements ActionLogProvider {
 				}
 			};
 			((CommonRemoteServiceExtAsync) ClientBase
-					.getCommonRemoteServiceAsyncInstance()).getLogsForAction(
-					action, count, callback);
+					.getCommonRemoteServiceAsyncInstance())
+							.getLogsForAction(action, count, callback);
 		} else {
 			outerCallback.onSuccess(logs.get(action.getClass()));
 		}

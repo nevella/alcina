@@ -41,6 +41,15 @@ public class TableRowElement extends Element {
 	}
 
 	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
+
+	/**
 	 * Determines whether the given {@link JavaScriptObject} can be cast to this
 	 * class. A <code>null</code> object will cause this method to return
 	 * <code>false</code>.
@@ -64,28 +73,8 @@ public class TableRowElement extends Element {
 		return false;
 	}
 
-	/**
-	 * Determine whether the given {@link Element} can be cast to this class. A
-	 * <code>null</code> node will cause this method to return
-	 * <code>false</code>.
-	 */
-	public static boolean is(Element elem) {
-		return elem != null && elem.hasTagName(TAG);
-	}
-
 	protected TableRowElement() {
 	}
-
-	/**
-	 * Delete a cell from the current row.
-	 * 
-	 * @see <a href=
-	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-align-TD">
-	 *      W3C HTML Specification</a>
-	 */
-	native void deleteCell0(ElementRemote elt, int index) /*-{
-        elt.deleteCell(index);
-	}-*/;
 
 	public void deleteCell(int index) {
 		// deleteCell0(domImpl, index);
@@ -119,10 +108,6 @@ public class TableRowElement extends Element {
 		return new NodeList<TableCellElement>(
 				(NodeListWrapped) new NodeListWrapped<>(nodes));
 	}
-
-	private final native NodeListRemote getCells0(ElementRemote elem) /*-{
-        return elem.cells;
-	}-*/;
 
 	/**
 	 * Alignment character for cells in a column.
@@ -184,15 +169,16 @@ public class TableRowElement extends Element {
 	 *      W3C HTML Specification</a>
 	 */
 	public final native TableCellElement insertCell(int index) /*-{
-        var remote = this.@com.google.gwt.dom.client.Element::typedRemote()();
-        var cell = remote.insertCell(index);
-        return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(cell);
-	}-*/;
+																var remote = this.@com.google.gwt.dom.client.Element::typedRemote()();
+																var cell = remote.insertCell(index);
+																return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(cell);
+																}-*/;
+
 	public final native ElementRemote insertCellRemote(int index) /*-{
-	    var remote = this.@com.google.gwt.dom.client.Element::typedRemote()();
-	    var cell = remote.insertCell(index);
-	    return cell;
-	}-*/;
+																	var remote = this.@com.google.gwt.dom.client.Element::typedRemote()();
+																	var cell = remote.insertCell(index);
+																	return cell;
+																	}-*/;
 
 	/**
 	 * Horizontal alignment of data within cells of this row.
@@ -237,4 +223,19 @@ public class TableRowElement extends Element {
 	public void setVAlign(String vAlign) {
 		this.setPropertyString("vAlign", vAlign);
 	}
+
+	private final native NodeListRemote getCells0(ElementRemote elem) /*-{
+																		return elem.cells;
+																		}-*/;
+
+	/**
+	 * Delete a cell from the current row.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-align-TD">
+	 *      W3C HTML Specification</a>
+	 */
+	native void deleteCell0(ElementRemote elt, int index) /*-{
+															elt.deleteCell(index);
+															}-*/;
 }

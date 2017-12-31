@@ -24,16 +24,6 @@ public abstract class RollingData<K extends Comparable, V> {
 		this.typeKey = typeKey;
 	}
 
-	protected abstract Function<String, List<V>> deserializer();
-
-	protected abstract Function<List<V>, String> serializer();
-
-	protected abstract List<V> getData(K from);
-
-	protected abstract Function<V, K> keyMaker();
-
-	protected abstract Function<String, K> keyDeserializer();
-
 	public SortedMap<K, V> getValues(K earliestKey) {
 		synchronized (getClass()) {
 			return getValues0(earliestKey);
@@ -82,11 +72,22 @@ public abstract class RollingData<K extends Comparable, V> {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.out.println("Exception with list deserialization - deleting");
+			System.out
+					.println("Exception with list deserialization - deleting");
 			TransformManager.get().deleteMultiple(list);
 			ServletLayerUtils.pushTransformsAsRoot();
 			return getValues0(earliestKey);
 		}
 		return map;
 	}
+
+	protected abstract Function<String, List<V>> deserializer();
+
+	protected abstract List<V> getData(K from);
+
+	protected abstract Function<String, K> keyDeserializer();
+
+	protected abstract Function<V, K> keyMaker();
+
+	protected abstract Function<List<V>, String> serializer();
 }

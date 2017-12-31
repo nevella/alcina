@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
@@ -20,7 +19,6 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  *
  * @author Nick Reddel
  */
-
- public interface RequiresContextBindable<V extends SourcesPropertyChangeEvents> {
+public interface RequiresContextBindable<V extends SourcesPropertyChangeEvents> {
 	public void setBindable(V bindable);
 }

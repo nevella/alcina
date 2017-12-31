@@ -16,8 +16,8 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackNull;
 import cc.alcina.framework.gwt.client.util.DiscardInfoWrappingCallback;
 
-public class ObjectStoreMemoryImpl implements PersistenceObjectStore,
-		SyncObjectStore {
+public class ObjectStoreMemoryImpl
+		implements PersistenceObjectStore, SyncObjectStore {
 	private TreeMap<Integer, String> values = new TreeMap<Integer, String>();
 
 	private Multimap<String, List<Integer>> reverseKeys = new Multimap<String, List<Integer>>();
@@ -27,9 +27,18 @@ public class ObjectStoreMemoryImpl implements PersistenceObjectStore,
 	int idCtr = 0;
 
 	@Override
-	public void add(String key, String value, AsyncCallback<Integer> idCallback) {
+	public void add(String key, String value,
+			AsyncCallback<Integer> idCallback) {
 		int id = nextId();
 		_put(key, value, idCallback, id);
+	}
+
+	@Override
+	public void clear(AsyncCallback<Void> AsyncCallback) {
+		values.clear();
+		keys.clear();
+		reverseKeys.clear();
+		idCtr = 0;
 	}
 
 	@Override
@@ -45,21 +54,24 @@ public class ObjectStoreMemoryImpl implements PersistenceObjectStore,
 	}
 
 	@Override
+	public void get(List<String> keys, AsyncCallback<StringMap> valueCallback) {
+		StringMap values = new StringMap();
+		for (String key : keys) {
+			values.put(key, valueForKey(key));
+		}
+		valueCallback.onSuccess(values);
+	}
+
+	@Override
 	public void get(String key, AsyncCallback<String> valueCallback) {
 		String value = valueForKey(key);
 		valueCallback.onSuccess(value);
 	}
 
-	protected String valueForKey(String key) {
-		int id = getFirstId(key);
-		String value = id == 0 ? null : values.get(id);
-		return value;
-	}
-
 	@Override
 	public void getIdRange(AsyncCallback<IntPair> completedCallback) {
-		IntPair range = keys.isEmpty() ? new IntPair() : new IntPair(
-				keys.firstKey(), keys.lastKey());
+		IntPair range = keys.isEmpty() ? new IntPair()
+				: new IntPair(keys.firstKey(), keys.lastKey());
 		completedCallback.onSuccess(range);
 	}
 
@@ -78,16 +90,38 @@ public class ObjectStoreMemoryImpl implements PersistenceObjectStore,
 	}
 
 	@Override
-	public void put(int id, String value, AsyncCallback<Void> idCallback) {
-		_put(keys.get(id), value, new DiscardInfoWrappingCallback<Integer>(
-				idCallback), id);
+	public String getTableName() {
+		return null;
 	}
 
 	@Override
-	public void put(String key, String value, AsyncCallback<Integer> idCallback) {
+	public void put(int id, String value, AsyncCallback<Void> idCallback) {
+		_put(keys.get(id), value,
+				new DiscardInfoWrappingCallback<Integer>(idCallback), id);
+	}
+
+	@Override
+	public void put(String key, String value,
+			AsyncCallback<Integer> idCallback) {
 		int id = getFirstId(key);
 		id = id == 0 ? nextId() : id;
 		_put(key, value, idCallback, id);
+	}
+
+	@Override
+	public void put(StringMap kvs, AsyncCallback callback) {
+		for (Entry<String, String> e : kvs.entrySet()) {
+			put(e.getKey(), e.getValue(), new AsyncCallbackNull());
+		}
+		callback.onSuccess(null);
+	}
+
+	@Override
+	public void remove(List<String> keys, AsyncCallback completedCallback) {
+		for (String key : keys) {
+			remove(key, new AsyncCallbackNull());
+		}
+		completedCallback.onSuccess(null);
 	}
 
 	@Override
@@ -143,41 +177,9 @@ public class ObjectStoreMemoryImpl implements PersistenceObjectStore,
 		}
 	}
 
-	@Override
-	public void put(StringMap kvs, AsyncCallback callback) {
-		for (Entry<String, String> e : kvs.entrySet()) {
-			put(e.getKey(), e.getValue(), new AsyncCallbackNull());
-		}
-		callback.onSuccess(null);
-	}
-
-	@Override
-	public void get(List<String> keys, AsyncCallback<StringMap> valueCallback) {
-		StringMap values = new StringMap();
-		for (String key : keys) {
-			values.put(key, valueForKey(key));
-		}
-		valueCallback.onSuccess(values);
-	}
-
-	@Override
-	public void remove(List<String> keys, AsyncCallback completedCallback) {
-		for (String key : keys) {
-			remove(key, new AsyncCallbackNull());
-		}
-		completedCallback.onSuccess(null);
-	}
-
-	@Override
-	public void clear(AsyncCallback<Void> AsyncCallback) {
-		values.clear();
-		keys.clear();
-		reverseKeys.clear();
-		idCtr = 0;
-	}
-
-	@Override
-	public String getTableName() {
-		return null;
+	protected String valueForKey(String key) {
+		int id = getFirstId(key);
+		String value = id == 0 ? null : values.get(id);
+		return value;
 	}
 }

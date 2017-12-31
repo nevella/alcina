@@ -18,35 +18,15 @@ public class EnumeratedBindingSupport {
 
 	private HasEnumeratedBindings source;
 
+	Multimap<String, List<PropertyChangeListener>> listeners = new Multimap<>();
+
+	Map<EnumeratedBinding, PropertyChangeListener> linkedListeners = new LinkedHashMap<>();
+
 	public EnumeratedBindingSupport(HasEnumeratedBindings source,
 			Class<? extends EnumeratedBinding> clazz) {
 		this.source = source;
 		bindings = clazz.getEnumConstants();
 	}
-
-	public <T> T get(EnumeratedBinding enumeratedBinding) {
-		Object related = source
-				.provideRelatedObject(enumeratedBinding.getBoundClass());
-		if(related == null){
-			return null;
-		}
-		return (T) Reflections.propertyAccessor().getPropertyValue(related,
-				enumeratedBinding.getBoundPath());
-	}
-
-	public void set(EnumeratedBinding enumeratedBinding, Object value) {
-		Object related = source
-				.provideRelatedObject(enumeratedBinding.getBoundClass());
-		if(related == null){
-			throw new IllegalStateException("binding should not be exposed for null object");
-		}
-		Reflections.propertyAccessor().setPropertyValue(related,
-				enumeratedBinding.getBoundPath(), value);
-	}
-
-	Multimap<String, List<PropertyChangeListener>> listeners = new Multimap<>();
-
-	Map<EnumeratedBinding, PropertyChangeListener> linkedListeners = new LinkedHashMap<>();
 
 	public void addPropertyChangeListener(String propertyName,
 			PropertyChangeListener listener) {
@@ -64,28 +44,14 @@ public class EnumeratedBindingSupport {
 		}
 	}
 
-	class LinkedListener implements PropertyChangeListener {
-		private EnumeratedBinding enumeratedBinding;
-
-		public LinkedListener(EnumeratedBinding enumeratedBinding) {
-			this.enumeratedBinding = enumeratedBinding;
+	public <T> T get(EnumeratedBinding enumeratedBinding) {
+		Object related = source
+				.provideRelatedObject(enumeratedBinding.getBoundClass());
+		if (related == null) {
+			return null;
 		}
-
-		@Override
-		public void propertyChange(PropertyChangeEvent evt) {
-			PropertyChangeEvent chainedEvent = new PropertyChangeEvent(source,
-					enumeratedBinding.getPath(), evt.getOldValue(),
-					evt.getNewValue());
-			for (PropertyChangeListener pcl : listeners
-					.getAndEnsure(enumeratedBinding.getPath())) {
-				pcl.propertyChange(chainedEvent);
-			}
-		}
-	}
-
-	private Optional<EnumeratedBinding> bindingForPath(String propertyName) {
-		return Arrays.asList(bindings).stream()
-				.filter(eb -> eb.getPath().equals(propertyName)).findFirst();
+		return (T) Reflections.propertyAccessor().getPropertyValue(related,
+				enumeratedBinding.getBoundPath());
 	}
 
 	public void removePropertyChangeListener(String propertyName,
@@ -103,6 +69,41 @@ public class EnumeratedBindingSupport {
 				related.removePropertyChangeListener(propertyName,
 						linkedListener);
 				linkedListeners.remove(binding);
+			}
+		}
+	}
+
+	public void set(EnumeratedBinding enumeratedBinding, Object value) {
+		Object related = source
+				.provideRelatedObject(enumeratedBinding.getBoundClass());
+		if (related == null) {
+			throw new IllegalStateException(
+					"binding should not be exposed for null object");
+		}
+		Reflections.propertyAccessor().setPropertyValue(related,
+				enumeratedBinding.getBoundPath(), value);
+	}
+
+	private Optional<EnumeratedBinding> bindingForPath(String propertyName) {
+		return Arrays.asList(bindings).stream()
+				.filter(eb -> eb.getPath().equals(propertyName)).findFirst();
+	}
+
+	class LinkedListener implements PropertyChangeListener {
+		private EnumeratedBinding enumeratedBinding;
+
+		public LinkedListener(EnumeratedBinding enumeratedBinding) {
+			this.enumeratedBinding = enumeratedBinding;
+		}
+
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			PropertyChangeEvent chainedEvent = new PropertyChangeEvent(source,
+					enumeratedBinding.getPath(), evt.getOldValue(),
+					evt.getNewValue());
+			for (PropertyChangeListener pcl : listeners
+					.getAndEnsure(enumeratedBinding.getPath())) {
+				pcl.propertyChange(chainedEvent);
 			}
 		}
 	}

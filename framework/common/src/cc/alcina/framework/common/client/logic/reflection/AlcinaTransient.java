@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target( { ElementType.METHOD })
+@Target({ ElementType.METHOD })
 @ClientVisible
 public @interface AlcinaTransient {
 }

@@ -97,38 +97,6 @@ public class PropertySelectorCell<T extends HasIdAndLocalId>
 		});
 	}
 
-	private PopupPanel ensurePopup() {
-		this.panel = new PopupPanel(true, true) {
-			@Override
-			protected void onPreviewNativeEvent(NativePreviewEvent event) {
-				if (Event.ONKEYUP == event.getTypeInt()) {
-					if (event.getNativeEvent().getKeyCode() == ESCAPE) {
-						// Dismiss when escape is pressed
-						panel.hide();
-					}
-				}
-			}
-		};
-		panel.addStyleName("property-selector");
-		panel.addCloseHandler(new CloseHandler<PopupPanel>() {
-			public void onClose(CloseEvent<PopupPanel> event) {
-				lastKey = null;
-				lastValue = null;
-				lastIndex = -1;
-				lastColumn = -1;
-				if (lastParent != null && !event.isAutoClosed()) {
-					// Refocus on the containing cell after the user selects a
-					// value, but
-					// not if the popup is auto closed.
-					lastParent.focus();
-				}
-				lastParent = null;
-			}
-		});
-		panel.add(selector);
-		return panel;
-	}
-
 	@Override
 	public boolean isEditing(Context context, Element parent, Set<T> value) {
 		return lastKey != null && lastKey.equals(context.getKey());
@@ -164,6 +132,38 @@ public class PropertySelectorCell<T extends HasIdAndLocalId>
 			}
 			sb.append(renderer.render(s));
 		}
+	}
+
+	private PopupPanel ensurePopup() {
+		this.panel = new PopupPanel(true, true) {
+			@Override
+			protected void onPreviewNativeEvent(NativePreviewEvent event) {
+				if (Event.ONKEYUP == event.getTypeInt()) {
+					if (event.getNativeEvent().getKeyCode() == ESCAPE) {
+						// Dismiss when escape is pressed
+						panel.hide();
+					}
+				}
+			}
+		};
+		panel.addStyleName("property-selector");
+		panel.addCloseHandler(new CloseHandler<PopupPanel>() {
+			public void onClose(CloseEvent<PopupPanel> event) {
+				lastKey = null;
+				lastValue = null;
+				lastIndex = -1;
+				lastColumn = -1;
+				if (lastParent != null && !event.isAutoClosed()) {
+					// Refocus on the containing cell after the user selects a
+					// value, but
+					// not if the popup is auto closed.
+					lastParent.focus();
+				}
+				lastParent = null;
+			}
+		});
+		panel.add(selector);
+		return panel;
 	}
 
 	@Override

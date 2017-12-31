@@ -131,6 +131,10 @@ public class CommonUtils {
 		return c.getName().substring(c.getName().lastIndexOf('.') + 1);
 	}
 
+	public static Date cloneDate(Date date) {
+		return date == null ? null : new Date(date.getTime());
+	}
+
 	public static boolean closeDates(Date d1, Date d2, long ms) {
 		if (d1 == null || d2 == null) {
 			return d1 == d2;
@@ -195,6 +199,19 @@ public class CommonUtils {
 		return i;
 	}
 
+	public static ComparatorResult compareNullCheck(Object o1, Object o2) {
+		if (o1 == null && o2 == null) {
+			return ComparatorResult.BOTH_NULL;
+		}
+		if (o1 == null) {
+			return ComparatorResult.FIRST_NULL;
+		}
+		if (o2 == null) {
+			return ComparatorResult.SECOND_NULL;
+		}
+		return ComparatorResult.BOTH_NON_NULL;
+	}
+
 	public static int compareWithNullMinusOne(Comparable o1, Comparable o2) {
 		if (o1 == null) {
 			return o2 == null ? 0 : -1;
@@ -247,6 +264,12 @@ public class CommonUtils {
 		return new ArrayList(new LinkedHashSet(objects));
 	}
 
+	public static void dedupeInPlace(List list) {
+		List mod = dedupe(list);
+		list.clear();
+		list.addAll(mod);
+	}
+
 	public static String deInfix(String s) {
 		if (isNullOrEmpty(s)) {
 			return s;
@@ -258,6 +281,18 @@ public class CommonUtils {
 			buf.append(i == 0 ? c.toUpperCase() : c.toLowerCase());
 		}
 		return buf.toString();
+	}
+
+	public static void dumpAround(String text, String subString) {
+		int idx = text.indexOf(subString);
+		if (idx != -1) {
+			System.out.println(
+					"before:" + text.substring(Math.max(0, idx - 100), idx));
+			System.out.println(subString);
+			System.out.println("after: " + text.substring(
+					idx + subString.length(),
+					Math.min(idx + subString.length() + 100, text.length())));
+		}
 	}
 
 	public static double dv(Double d) {
@@ -407,6 +442,16 @@ public class CommonUtils {
 			return coll.iterator().next();
 		}
 		return null;
+	}
+
+	public static <T> T first(Iterator<T> itr) {
+		return itr.hasNext() ? itr.next() : null;
+	}
+
+	public static String firstNonEmpty(String... strings) {
+		return Arrays.asList(strings).stream()
+				.filter(s -> CommonUtils.isNotNullOrEmpty(s)).findFirst()
+				.orElse(null);
 	}
 
 	public static List flattenMap(Map m) {
@@ -713,6 +758,26 @@ public class CommonUtils {
 		}
 	}
 
+	public static String highlightForLog(String template, Object... args) {
+		String inner = Ax.format(template, args);
+		String star = padStringLeft("", 40, "*");
+		return Ax.format("\n\n%s%s\n%s\n%s%s\n\n", star, star, inner, star,
+				star);
+	}
+
+	public static <T> T indexedOrNullWithDelta(List<T> list, T item,
+			int delta) {
+		int idx = list.indexOf(item);
+		if (idx == -1) {
+			return null;
+		}
+		idx += delta;
+		if (idx < 0 || idx >= list.size()) {
+			return null;
+		}
+		return list.get(idx);
+	}
+
 	public static int indexOf(Iterator iterator, Object obj) {
 		int i = 0;
 		while (iterator.hasNext()) {
@@ -818,6 +883,14 @@ public class CommonUtils {
 		return d % 1 == 0.0;
 	}
 
+	public static <T> List<T> iteratorToList(Iterator<T> itr) {
+		List<T> result = new ArrayList<>();
+		while (itr.hasNext()) {
+			result.add(itr.next());
+		}
+		return result;
+	}
+
 	public static int iv(Integer i) {
 		return i == null ? 0 : i;
 	}
@@ -894,6 +967,10 @@ public class CommonUtils {
 		return list.get(list.size() - 1);
 	}
 
+	public static Object last(Object[] array) {
+		return array.length == 0 ? null : array[array.length - 1];
+	}
+
 	public static String lcFirst(String s) {
 		if (isNullOrEmpty(s)) {
 			return s;
@@ -934,6 +1011,37 @@ public class CommonUtils {
 			source = source.replace("%" + s + "%", args.get(s).toString());
 		}
 		return source;
+	}
+
+	public static Set nonNullSet(Set value) {
+		return value == null ? new LinkedHashSet<>() : value;
+	}
+
+	public static String normalisedNumericOrdering(String string) {
+		if (string == null) {
+			return "";
+		}
+		String[] parts = string.split(" ");
+		StringBuffer out = new StringBuffer();
+		for (String part : parts) {
+			if (out.length() != 0) {
+				out.append(" ");
+			}
+			if (part.matches("\\d+")) {
+				out.append(CommonUtils.padStringLeft(part, 10, "0"));
+			} else {
+				out.append(part);
+			}
+		}
+		return out.toString();
+	}
+
+	public static <T> Stream<T> nullableStream(T t) {
+		List<T> list = new ArrayList<>();
+		if (t != null) {
+			list.add(t);
+		}
+		return list.stream();
 	}
 
 	public static String nullSafeToString(Object o) {
@@ -1089,6 +1197,16 @@ public class CommonUtils {
 		return s.substring(0, len - places) + "." + s.substring(len - places);
 	}
 
+	// to 00.00:00 or 23:59.59
+	@SuppressWarnings("deprecation")
+	public static Date roundDate(Date d, boolean up) {
+		d.setHours(up ? 23 : 0);
+		d.setMinutes(up ? 59 : 0);
+		d.setSeconds(up ? 59 : 0);
+		d.setTime(d.getTime() - d.getTime() % 1000);
+		return d;
+	}
+
 	public static double roundNumeric(double d, int places) {
 		int multiplier = 1;
 		// cos Math.round((1.005 ) * 100) / 100 = 1, not 1.01
@@ -1107,16 +1225,6 @@ public class CommonUtils {
 			val *= -1;
 		}
 		return val;
-	}
-
-	// to 00.00:00 or 23:59.59
-	@SuppressWarnings("deprecation")
-	public static Date roundDate(Date d, boolean up) {
-		d.setHours(up ? 23 : 0);
-		d.setMinutes(up ? 59 : 0);
-		d.setSeconds(up ? 59 : 0);
-		d.setTime(d.getTime() - d.getTime() % 1000);
-		return d;
 	}
 
 	public static String safeToString(Object obj) {
@@ -1280,6 +1388,28 @@ public class CommonUtils {
 		return sb.toString();
 	}
 
+	@SuppressWarnings("deprecation")
+	public static String toFinancialYear(Date date) {
+		int year = date.getYear() + 1900;
+		if (date.getMonth() < 6) {
+			year -= 1;
+		}
+		return formatJ("FY%s%s", year, year + 1);
+	}
+
+	@SuppressWarnings("deprecation")
+	public static String toYearMonth(Date date) {
+		return date == null ? null
+				: Ax.format("%sM%s", padFour(1900 + date.getYear()),
+						padTwo(date.getMonth() + 1));
+	}
+
+	public static String trimLinesToChars(String string, int i) {
+		return Arrays.asList(string.split("\n")).stream()
+				.map(s -> trimToWsChars(s, 100))
+				.collect(Collectors.joining("\n"));
+	}
+
 	public static String trimToWsChars(String s, int maxChars) {
 		return trimToWsChars(s, maxChars, "");
 	}
@@ -1440,18 +1570,27 @@ public class CommonUtils {
 		return false;
 	}
 
-	public static String highlightForLog(String template, Object... args) {
-		String inner = Ax.format(template, args);
-		String star = padStringLeft("", 40, "*");
-		return Ax.format("\n\n%s%s\n%s\n%s%s\n\n", star, star, inner, star,
-				star);
-	}
+	public enum ComparatorResult {
+		BOTH_NON_NULL, BOTH_NULL, FIRST_NULL, SECOND_NULL;
+		public int direction() {
+			switch (this) {
+			case FIRST_NULL:
+				return -1;
+			case SECOND_NULL:
+				return 1;
+			default:
+				return 0;
+			}
+		}
 
-	@SuppressWarnings("deprecation")
-	public static String toYearMonth(Date date) {
-		return date == null ? null
-				: Ax.format("%sM%s", padFour(1900 + date.getYear()),
-						padTwo(date.getMonth() + 1));
+		public boolean hadNull() {
+			switch (this) {
+			case BOTH_NON_NULL:
+				return false;
+			default:
+				return true;
+			}
+		}
 	}
 
 	public enum DateStyle {
@@ -1461,6 +1600,10 @@ public class CommonUtils {
 		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH,
 		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, US_DATE_SLASH, TIMESTAMP_NO_DAY,
 		AU_DATE_MONTH_NO_PAD_DAY
+	}
+
+	public static interface IidGenerator {
+		String generate();
 	}
 
 	public static class ThreeWaySetResult<T> {
@@ -1485,148 +1628,5 @@ public class CommonUtils {
 			return CommonUtils.formatJ("First: %s\nBoth: %s\nSecond: %s",
 					firstOnly, intersection, secondOnly);
 		}
-	}
-
-	public static void dedupeInPlace(List list) {
-		List mod = dedupe(list);
-		list.clear();
-		list.addAll(mod);
-	}
-
-	public static String firstNonEmpty(String... strings) {
-		return Arrays.asList(strings).stream()
-				.filter(s -> CommonUtils.isNotNullOrEmpty(s)).findFirst()
-				.orElse(null);
-	}
-
-	public static Set nonNullSet(Set value) {
-		return value == null ? new LinkedHashSet<>() : value;
-	}
-
-	public static <T> Stream<T> nullableStream(T t) {
-		List<T> list = new ArrayList<>();
-		if (t != null) {
-			list.add(t);
-		}
-		return list.stream();
-	}
-
-	public static <T> T indexedOrNullWithDelta(List<T> list, T item,
-			int delta) {
-		int idx = list.indexOf(item);
-		if (idx == -1) {
-			return null;
-		}
-		idx += delta;
-		if (idx < 0 || idx >= list.size()) {
-			return null;
-		}
-		return list.get(idx);
-	}
-
-	public static interface IidGenerator {
-		String generate();
-	}
-
-	public static String normalisedNumericOrdering(String string) {
-		if (string == null) {
-			return "";
-		}
-		String[] parts = string.split(" ");
-		StringBuffer out = new StringBuffer();
-		for (String part : parts) {
-			if (out.length() != 0) {
-				out.append(" ");
-			}
-			if (part.matches("\\d+")) {
-				out.append(CommonUtils.padStringLeft(part, 10, "0"));
-			} else {
-				out.append(part);
-			}
-		}
-		return out.toString();
-	}
-
-	public static void dumpAround(String text, String subString) {
-		int idx = text.indexOf(subString);
-		if (idx != -1) {
-			System.out.println(
-					"before:" + text.substring(Math.max(0, idx - 100), idx));
-			System.out.println(subString);
-			System.out.println("after: " + text.substring(
-					idx + subString.length(),
-					Math.min(idx + subString.length() + 100, text.length())));
-		}
-	}
-
-	public static Object last(Object[] array) {
-		return array.length == 0 ? null : array[array.length - 1];
-	}
-
-	public static Date cloneDate(Date date) {
-		return date == null ? null : new Date(date.getTime());
-	}
-
-	public static <T> List<T> iteratorToList(Iterator<T> itr) {
-		List<T> result = new ArrayList<>();
-		while (itr.hasNext()) {
-			result.add(itr.next());
-		}
-		return result;
-	}
-
-	public static <T> T first(Iterator<T> itr) {
-		return itr.hasNext() ? itr.next() : null;
-	}
-
-	public enum ComparatorResult {
-		BOTH_NON_NULL, BOTH_NULL, FIRST_NULL, SECOND_NULL;
-		public int direction() {
-			switch (this) {
-			case FIRST_NULL:
-				return -1;
-			case SECOND_NULL:
-				return 1;
-			default:
-				return 0;
-			}
-		}
-
-		public boolean hadNull() {
-			switch (this) {
-			case BOTH_NON_NULL:
-				return false;
-			default:
-				return true;
-			}
-		}
-	}
-
-	public static ComparatorResult compareNullCheck(Object o1, Object o2) {
-		if (o1 == null && o2 == null) {
-			return ComparatorResult.BOTH_NULL;
-		}
-		if (o1 == null) {
-			return ComparatorResult.FIRST_NULL;
-		}
-		if (o2 == null) {
-			return ComparatorResult.SECOND_NULL;
-		}
-		return ComparatorResult.BOTH_NON_NULL;
-	}
-
-	public static String trimLinesToChars(String string, int i) {
-		return Arrays.asList(string.split("\n")).stream()
-				.map(s -> trimToWsChars(s, 100))
-				.collect(Collectors.joining("\n"));
-	}
-
-	@SuppressWarnings("deprecation")
-	public static String toFinancialYear(Date date) {
-		int year = date.getYear() + 1900;
-		if (date.getMonth() < 6) {
-			year -= 1;
-		}
-		return formatJ("FY%s%s", year, year + 1);
 	}
 }

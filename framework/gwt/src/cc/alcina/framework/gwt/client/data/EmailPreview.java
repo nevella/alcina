@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.data;
 
 import java.io.Serializable;
@@ -20,27 +19,34 @@ import java.io.Serializable;
  *
  * @author Nick Reddel
  */
-
- public class EmailPreview implements Serializable{
+public class EmailPreview implements Serializable {
 	private String toAddresses;
+
 	private String subject;
+
 	private String body;
-	public String getToAddresses() {
-		return this.toAddresses;
-	}
-	public void setToAddresses(String toAddresses) {
-		this.toAddresses = toAddresses;
-	}
-	public String getSubject() {
-		return this.subject;
-	}
-	public void setSubject(String subject) {
-		this.subject = subject;
-	}
+
 	public String getBody() {
 		return this.body;
 	}
+
+	public String getSubject() {
+		return this.subject;
+	}
+
+	public String getToAddresses() {
+		return this.toAddresses;
+	}
+
 	public void setBody(String body) {
 		this.body = body;
+	}
+
+	public void setSubject(String subject) {
+		this.subject = subject;
+	}
+
+	public void setToAddresses(String toAddresses) {
+		this.toAddresses = toAddresses;
 	}
 }

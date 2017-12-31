@@ -15,12 +15,16 @@ import cc.alcina.framework.entity.util.SynchronizedDateFormat;
 public class JobId implements Serializable, Comparable<JobId> {
 	static final transient long serialVersionUID = -3L;
 
-	public String id;
-
 	private static transient AtomicInteger counter = new AtomicInteger();
 
 	static transient SimpleDateFormat NUMERICAL_DATE_FORMAT = new SynchronizedDateFormat(
 			"yyyyMMdd_HHmmss_SSS");
+
+	static transient Pattern parentPattern = Pattern.compile("(.+)::(.+)");
+
+	static transient Pattern subJobPattern = Pattern.compile("(.+)::(\\d+)");
+
+	public String id;
 
 	public JobId(Class performerClass, String jobLauncher) {
 		this.id = String.format("%s:%s:%s:%s", jobLauncher,
@@ -32,35 +36,8 @@ public class JobId implements Serializable, Comparable<JobId> {
 		this.id = CommonUtils.join(Arrays.asList(parent.toString(), id), "::");
 	}
 
-	static transient Pattern parentPattern = Pattern.compile("(.+)::(.+)");
-
-	static transient Pattern subJobPattern = Pattern.compile("(.+)::(\\d+)");
-
-	public JobId getParent() {
-		Matcher m = parentPattern.matcher(id);
-		if (m.matches()) {
-			return new JobId(m.group(1));
-		}
-		return null;
-	}
-
 	public JobId(String path) {
 		this.id = path;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		return obj instanceof JobId && toString().equals(obj.toString());
-	}
-
-	@Override
-	public int hashCode() {
-		return id.hashCode();
-	}
-
-	@Override
-	public String toString() {
-		return id;
 	}
 
 	@Override
@@ -78,8 +55,9 @@ public class JobId implements Serializable, Comparable<JobId> {
 		return id.compareTo(o.id);
 	}
 
-	public boolean isChildOf(JobId other) {
-		return Objects.equals(getParent(), other);
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof JobId && toString().equals(obj.toString());
 	}
 
 	public int getLastSegmentAsInt() {
@@ -88,5 +66,27 @@ public class JobId implements Serializable, Comparable<JobId> {
 			return Integer.parseInt(m.group(2));
 		}
 		return -1;
+	}
+
+	public JobId getParent() {
+		Matcher m = parentPattern.matcher(id);
+		if (m.matches()) {
+			return new JobId(m.group(1));
+		}
+		return null;
+	}
+
+	@Override
+	public int hashCode() {
+		return id.hashCode();
+	}
+
+	public boolean isChildOf(JobId other) {
+		return Objects.equals(getParent(), other);
+	}
+
+	@Override
+	public String toString() {
+		return id;
 	}
 }

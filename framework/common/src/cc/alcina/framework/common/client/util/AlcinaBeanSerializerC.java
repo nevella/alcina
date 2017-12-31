@@ -36,6 +36,10 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE)
 @ClientInstantiable
 public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
+	CachingMap<Class, AlcinaBeanSerializerCCustom> customSerializers = new CachingMap<Class, AlcinaBeanSerializerCCustom>(
+			clazz -> Registry.implOrNull(AlcinaBeanSerializerCCustom.class,
+					clazz));
+
 	public AlcinaBeanSerializerC() {
 		propertyFieldName = PROPERTIES;
 	}
@@ -45,47 +49,8 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		return (T) deserializeObject(obj);
 	}
 
-	private Object deserializeValue(JSONValue jv) {
-		if (jv.isNull() != null) {
-			return null;
-		} else {
-			return deserializeObject((JSONObject) jv);
-		}
-	}
-
-	private Object deserializeObject(JSONObject jsonObj) {
-		if (jsonObj == null) {
-			return null;
-		}
-		JSONString cn = (JSONString) jsonObj.get(CLASS_NAME);
-		String cns = cn.stringValue();
-		Class clazz = getClassMaybeAbbreviated(cns);
-		AlcinaBeanSerializerCCustom customSerializer = customSerializers
-				.get(clazz);
-		if (customSerializer != null) {
-			return customSerializer.fromJson(jsonObj);
-		}
-		JSONObject props = (JSONObject) jsonObj.get(propertyFieldName);
-		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
-			return deserializeField(jsonObj.get(LITERAL), clazz);
-		}
-		Object obj = Reflections.classLookup().newInstance(clazz);
-		GwittirBridge gb = GwittirBridge.get();
-		for (String propertyName : props.keySet()) {
-			try {
-				Class type = gb.getPropertyType(clazz, propertyName);
-				JSONValue jsonValue = props.get(propertyName);
-				Object value = deserializeField(jsonValue, type);
-				gb.setPropertyValue(obj, propertyName, value);
-			} catch (NoSuchPropertyException e) {
-				if (isThrowOnUnrecognisedProperty()) {
-					throw new RuntimeException(
-							CommonUtils.formatJ("property not found - %s.%s",
-									clazz.getSimpleName(), propertyName));
-				}
-			}
-		}
-		return obj;
+	public String serialize(Object bean) {
+		return serializeObject(bean).toString();
 	}
 
 	private Object deserializeField(JSONValue jsonValue, Class type) {
@@ -155,8 +120,47 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		return deserializeObject(jsonValue.isObject());
 	}
 
-	public String serialize(Object bean) {
-		return serializeObject(bean).toString();
+	private Object deserializeObject(JSONObject jsonObj) {
+		if (jsonObj == null) {
+			return null;
+		}
+		JSONString cn = (JSONString) jsonObj.get(CLASS_NAME);
+		String cns = cn.stringValue();
+		Class clazz = getClassMaybeAbbreviated(cns);
+		AlcinaBeanSerializerCCustom customSerializer = customSerializers
+				.get(clazz);
+		if (customSerializer != null) {
+			return customSerializer.fromJson(jsonObj);
+		}
+		JSONObject props = (JSONObject) jsonObj.get(propertyFieldName);
+		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
+			return deserializeField(jsonObj.get(LITERAL), clazz);
+		}
+		Object obj = Reflections.classLookup().newInstance(clazz);
+		GwittirBridge gb = GwittirBridge.get();
+		for (String propertyName : props.keySet()) {
+			try {
+				Class type = gb.getPropertyType(clazz, propertyName);
+				JSONValue jsonValue = props.get(propertyName);
+				Object value = deserializeField(jsonValue, type);
+				gb.setPropertyValue(obj, propertyName, value);
+			} catch (NoSuchPropertyException e) {
+				if (isThrowOnUnrecognisedProperty()) {
+					throw new RuntimeException(
+							CommonUtils.formatJ("property not found - %s.%s",
+									clazz.getSimpleName(), propertyName));
+				}
+			}
+		}
+		return obj;
+	}
+
+	private Object deserializeValue(JSONValue jv) {
+		if (jv.isNull() != null) {
+			return null;
+		} else {
+			return deserializeObject((JSONObject) jv);
+		}
 	}
 
 	/**
@@ -210,10 +214,6 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		}
 		return serializeObject(value);
 	}
-
-	CachingMap<Class, AlcinaBeanSerializerCCustom> customSerializers = new CachingMap<Class, AlcinaBeanSerializerCCustom>(
-			clazz -> Registry.implOrNull(AlcinaBeanSerializerCCustom.class,
-					clazz));
 
 	private JSONObject serializeObject(Object object) {
 		if (object == null) {

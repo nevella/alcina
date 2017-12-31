@@ -9,5 +9,4 @@ public abstract class SetupAfterObjectsPlayer extends RunnablePlayer {
 		addRequires(HandshakeState.OBJECTS_UNWRAPPED_AND_REGISTERED);
 		addProvides(HandshakeState.SETUP_AFTER_OBJECTS_LOADED);
 	}
-	
 }

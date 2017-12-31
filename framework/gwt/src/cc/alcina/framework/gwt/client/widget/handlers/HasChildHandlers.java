@@ -11,17 +11,17 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget.handlers;
 
 import com.google.gwt.event.shared.HandlerRegistration;
+
 /**
  * Convenience interface for long-running widgets which listen to their children
+ * 
  * @author nick@alcina.cc
  *
  */
 public interface HasChildHandlers {
-
 	public void addHandler(HandlerRegistration registration);
 
 	public void detachHandlers();

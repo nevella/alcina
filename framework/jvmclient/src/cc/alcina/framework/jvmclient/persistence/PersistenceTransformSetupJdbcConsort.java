@@ -8,8 +8,8 @@ import cc.alcina.framework.gwt.persistence.client.DeltaStore;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 import cc.alcina.framework.gwt.persistence.client.PersistenceTransformSetupState;
 
-public class PersistenceTransformSetupJdbcConsort extends
-		AllStatesConsort<PersistenceTransformSetupState> {
+public class PersistenceTransformSetupJdbcConsort
+		extends AllStatesConsort<PersistenceTransformSetupState> {
 	private ObjectStoreJdbcImpl deltaImpl;
 
 	private JdbcTransformPersistence transformPersistence;

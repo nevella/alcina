@@ -12,6 +12,7 @@
  * the License.
  */
 package cc.alcina.framework.common.client.actions;
+
 @FunctionalInterface
 public interface PermissibleActionListener {
 	public void vetoableAction(PermissibleActionEvent evt);

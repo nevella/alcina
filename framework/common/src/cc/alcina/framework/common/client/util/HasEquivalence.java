@@ -21,21 +21,6 @@ import cc.alcina.framework.common.client.util.CommonUtils.ThreeWaySetResult;
 public interface HasEquivalence<T> {
 	public boolean equivalentTo(T other);
 
-	public static interface HasEquivalenceHash<T> extends HasEquivalence<T> {
-		public int equivalenceHash();
-	}
-
-	public static class HasEquivalenceTuple<T> {
-		public T left;
-
-		public T right;
-
-		public HasEquivalenceTuple(T left, T right) {
-			this.left = left;
-			this.right = right;
-		}
-	}
-
 	public abstract static class HasEquivalenceAdapter<T, E extends HasEquivalenceAdapter>
 			implements HasEquivalenceHash<E> {
 		public T o;
@@ -49,26 +34,11 @@ public interface HasEquivalence<T> {
 		}
 	}
 
+	public static interface HasEquivalenceHash<T> extends HasEquivalence<T> {
+		public int equivalenceHash();
+	}
+
 	public static class HasEquivalenceHelper {
-		public static <T, V extends HasEquivalenceAdapter<T, ?>> T
-				getEquivalent(Collection<T> o1, T o2, Function<T, V> mapper) {
-			List<V> l1 = o1.stream().map(mapper).collect(Collectors.toList());
-			List<V> l2 = Collections.singletonList(o2).stream().map(mapper)
-					.collect(Collectors.toList());
-			List<V> intersection = (List) HasEquivalenceHelper.intersection(l1,
-					l2);
-			return intersection.isEmpty() ? null
-					: CommonUtils.first(intersection).o;
-		}
-
-		public static <T, V extends HasEquivalenceAdapter<T, ?>> List<T>
-				deDuplicate(Collection<T> o1, Function<T, V> mapper) {
-			List<V> l1 = o1.stream().map(mapper).collect(Collectors.toList());
-			List<V> duplicates = listDuplicates(l1);
-			l1.removeAll(duplicates);
-			return l1.stream().map(l -> l.o).collect(Collectors.toList());
-		}
-
 		public static <T, V extends HasEquivalenceAdapter<T, ?>> boolean
 				allEquivalent(Collection<T> o1, Function<T, V> mapper) {
 			if (o1.isEmpty()) {
@@ -82,27 +52,47 @@ public interface HasEquivalence<T> {
 			return intersection.size() == l1.size();
 		}
 
-		public static <T, V extends HasEquivalenceAdapter<T, ?>>
-				ThreeWaySetResult<V> threeWaySplit(Collection<T> c1,
-						Collection<T> c2, Function<T, V> mapper,
-						BiFunction<T, Collection<T>, T> correspondenceMapper) {
-			List<V> l1 = c1.stream().map(mapper).collect(Collectors.toList());
-			List<V> l2 = c2.stream().map(mapper).collect(Collectors.toList());
-			ThreeWaySetResult<V> result = threeWaySplit(l1, l2);
-			result.firstOnly
-					.forEach(v -> v.left = correspondenceMapper.apply(v.o, c1));
-			result.intersection
-					.forEach(v -> v.left = correspondenceMapper.apply(v.o, c1));
-			result.intersection.forEach(
-					v -> v.right = correspondenceMapper.apply(v.o, c2));
-			result.secondOnly.forEach(
-					v -> v.right = correspondenceMapper.apply(v.o, c2));
-			return result;
+		public static boolean argwiseEquivalent(Object... args) {
+			if (args.length % 2 != 0) {
+				throw new RuntimeException(
+						"Array length must be divisible by two");
+			}
+			for (int i = 0; i < args.length; i += 2) {
+				Object o1 = args[i];
+				Object o2 = args[i + 1];
+				if (o1 instanceof HasEquivalence
+						&& o2 instanceof HasEquivalence) {
+					if (!((HasEquivalence) o1)
+							.equivalentTo((HasEquivalence) o2)) {
+						return false;
+					}
+				} else {
+					if (!Objects.equals(o1, o2)) {
+						return false;
+					}
+				}
+			}
+			return true;
 		}
 
 		public static <T extends HasEquivalence> boolean
 				contains(Collection<T> o1, T o2) {
 			return !intersection(o1, Collections.singletonList(o2)).isEmpty();
+		}
+
+		public static <T, V extends HasEquivalenceAdapter<T, ?>> List<T>
+				deDuplicate(Collection<T> o1, Function<T, V> mapper) {
+			List<V> l1 = o1.stream().map(mapper).collect(Collectors.toList());
+			List<V> duplicates = listDuplicates(l1);
+			l1.removeAll(duplicates);
+			return l1.stream().map(l -> l.o).collect(Collectors.toList());
+		}
+
+		public static <C extends HasEquivalence> Predicate<C>
+				deDuplicateFilter(Collection<C> values) {
+			Set<C> duplicates = listDuplicates(values).stream()
+					.collect(Collectors.toSet());
+			return v -> !duplicates.contains(v);
 		}
 
 		public static <T extends HasEquivalence> boolean
@@ -120,34 +110,15 @@ public interface HasEquivalence<T> {
 					.first(intersection(o1, Collections.singletonList(o2)));
 		}
 
-		public static <T extends HasEquivalenceHash> ThreeWaySetResult<T>
-				threeWaySplit(Collection<T> c1, Collection<T> c2) {
-			ThreeWaySetResult<T> result = new ThreeWaySetResult<>();
-			Set intersection = new LinkedHashSet<>((List) intersection(c1, c2));
-			result.intersection = intersection;
-			result.firstOnly = new LinkedHashSet<>(
-					(List) removeAll(c1, intersection));
-			result.secondOnly = new LinkedHashSet<>(
-					(List) removeAll(c2, intersection));
-			return result;
-		}
-
-		public static <T extends HasEquivalence> HasEquivalenceHashMap<T>
-				getHashed(Collection<T> coll) {
-			if (coll == null || coll.isEmpty() || (!(coll.iterator()
-					.next() instanceof HasEquivalenceHash))) {
-				return null;
-			}
-			HasEquivalenceHashMap<T> result = new HasEquivalenceHashMap<T>();
-			result.putAll(CollectionFilters.multimap(coll,
-					new FromObjectKeyValueMapper<Integer, T>() {
-						@Override
-						public Integer getKey(T o) {
-							return ((HasEquivalenceHash<T>) o)
-									.equivalenceHash();
-						}
-					}));
-			return result;
+		public static <T, V extends HasEquivalenceAdapter<T, ?>> T
+				getEquivalent(Collection<T> o1, T o2, Function<T, V> mapper) {
+			List<V> l1 = o1.stream().map(mapper).collect(Collectors.toList());
+			List<V> l2 = Collections.singletonList(o2).stream().map(mapper)
+					.collect(Collectors.toList());
+			List<V> intersection = (List) HasEquivalenceHelper.intersection(l1,
+					l2);
+			return intersection.isEmpty() ? null
+					: CommonUtils.first(intersection).o;
 		}
 
 		public static <T extends HasEquivalenceHash>
@@ -171,6 +142,24 @@ public interface HasEquivalence<T> {
 					}
 				}
 			}
+			return result;
+		}
+
+		public static <T extends HasEquivalence> HasEquivalenceHashMap<T>
+				getHashed(Collection<T> coll) {
+			if (coll == null || coll.isEmpty() || (!(coll.iterator()
+					.next() instanceof HasEquivalenceHash))) {
+				return null;
+			}
+			HasEquivalenceHashMap<T> result = new HasEquivalenceHashMap<T>();
+			result.putAll(CollectionFilters.multimap(coll,
+					new FromObjectKeyValueMapper<Integer, T>() {
+						@Override
+						public Integer getKey(T o) {
+							return ((HasEquivalenceHash<T>) o)
+									.equivalenceHash();
+						}
+					}));
 			return result;
 		}
 
@@ -216,6 +205,26 @@ public interface HasEquivalence<T> {
 			return duplicates;
 		}
 
+		public static <T extends HasEquivalenceHash> List<T>
+				listDuplicatesHashed(Collection<T> o1) {
+			HasEquivalenceHashMap<T> passed = new HasEquivalenceHashMap<T>();
+			List<T> duplicates = new ArrayList<T>();
+			for (T t : o1) {
+				boolean duplicate = false;
+				for (T pass : passed.getAndEnsure(t.equivalenceHash())) {
+					if (pass.equivalentTo(t)) {
+						duplicates.add(t);
+						duplicate = true;
+						break;
+					}
+				}
+				if (!duplicate) {
+					passed.add(t);
+				}
+			}
+			return duplicates;
+		}
+
 		public static <T extends HasEquivalence> Multimap<T, List<T>>
 				mapDuplicates(Collection<T> o1) {
 			List<T> passed = new ArrayList<T>();
@@ -237,26 +246,6 @@ public interface HasEquivalence<T> {
 				}
 			}
 			return result;
-		}
-
-		public static <T extends HasEquivalenceHash> List<T>
-				listDuplicatesHashed(Collection<T> o1) {
-			HasEquivalenceHashMap<T> passed = new HasEquivalenceHashMap<T>();
-			List<T> duplicates = new ArrayList<T>();
-			for (T t : o1) {
-				boolean duplicate = false;
-				for (T pass : passed.getAndEnsure(t.equivalenceHash())) {
-					if (pass.equivalentTo(t)) {
-						duplicates.add(t);
-						duplicate = true;
-						break;
-					}
-				}
-				if (!duplicate) {
-					passed.add(t);
-				}
-			}
-			return duplicates;
 		}
 
 		public static <T extends HasEquivalence> Collection<T>
@@ -298,34 +287,45 @@ public interface HasEquivalence<T> {
 			return result;
 		}
 
-		public static boolean argwiseEquivalent(Object... args) {
-			if (args.length % 2 != 0) {
-				throw new RuntimeException(
-						"Array length must be divisible by two");
-			}
-			for (int i = 0; i < args.length; i += 2) {
-				Object o1 = args[i];
-				Object o2 = args[i + 1];
-				if (o1 instanceof HasEquivalence
-						&& o2 instanceof HasEquivalence) {
-					if (!((HasEquivalence) o1)
-							.equivalentTo((HasEquivalence) o2)) {
-						return false;
-					}
-				} else {
-					if (!Objects.equals(o1, o2)) {
-						return false;
-					}
-				}
-			}
-			return true;
+		public static <T extends HasEquivalenceHash> ThreeWaySetResult<T>
+				threeWaySplit(Collection<T> c1, Collection<T> c2) {
+			ThreeWaySetResult<T> result = new ThreeWaySetResult<>();
+			Set intersection = new LinkedHashSet<>((List) intersection(c1, c2));
+			result.intersection = intersection;
+			result.firstOnly = new LinkedHashSet<>(
+					(List) removeAll(c1, intersection));
+			result.secondOnly = new LinkedHashSet<>(
+					(List) removeAll(c2, intersection));
+			return result;
 		}
 
-		public static <C extends HasEquivalence> Predicate<C>
-				deDuplicateFilter(Collection<C> values) {
-			Set<C> duplicates = listDuplicates(values).stream()
-					.collect(Collectors.toSet());
-			return v -> !duplicates.contains(v);
+		public static <T, V extends HasEquivalenceAdapter<T, ?>>
+				ThreeWaySetResult<V> threeWaySplit(Collection<T> c1,
+						Collection<T> c2, Function<T, V> mapper,
+						BiFunction<T, Collection<T>, T> correspondenceMapper) {
+			List<V> l1 = c1.stream().map(mapper).collect(Collectors.toList());
+			List<V> l2 = c2.stream().map(mapper).collect(Collectors.toList());
+			ThreeWaySetResult<V> result = threeWaySplit(l1, l2);
+			result.firstOnly
+					.forEach(v -> v.left = correspondenceMapper.apply(v.o, c1));
+			result.intersection
+					.forEach(v -> v.left = correspondenceMapper.apply(v.o, c1));
+			result.intersection.forEach(
+					v -> v.right = correspondenceMapper.apply(v.o, c2));
+			result.secondOnly.forEach(
+					v -> v.right = correspondenceMapper.apply(v.o, c2));
+			return result;
+		}
+	}
+
+	public static class HasEquivalenceTuple<T> {
+		public T left;
+
+		public T right;
+
+		public HasEquivalenceTuple(T left, T right) {
+			this.left = left;
+			this.right = right;
 		}
 	}
 }

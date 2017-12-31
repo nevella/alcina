@@ -39,14 +39,14 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 	}
 
 	@Override
-	public boolean contains(HasIdAndLocalId hili) {
-		return main.contains(hili);
-	}
-
-	@Override
 	public <T extends HasIdAndLocalId> boolean contains(Class<T> clazz,
 			long id) {
 		return main.contains(clazz, id);
+	}
+
+	@Override
+	public boolean contains(HasIdAndLocalId hili) {
+		return main.contains(hili);
 	}
 
 	@Override

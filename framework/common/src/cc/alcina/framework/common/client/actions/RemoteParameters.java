@@ -11,15 +11,15 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
 /**
- * Limits serialization options for gwt serialization generator 
+ * Limits serialization options for gwt serialization generator
+ * 
  * @author nick@alcina.cc
  *
  */
-
 public interface RemoteParameters extends SourcesPropertyChangeEvents {
 }

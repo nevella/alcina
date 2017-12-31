@@ -18,81 +18,9 @@ import java.util.Set;
  * @param <H>
  */
 public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
-	public class EntryIterator implements Iterator<Map.Entry<K, V>> {
-		public final class LightMapEntry implements Map.Entry<K, V> {
-			private int entryIdx;
-
-			public LightMapEntry(int idx) {
-				this.entryIdx = idx;
-			}
-
-			@Override
-			public K getKey() {
-				return (K) elementData[entryIdx * 2];
-			}
-
-			@Override
-			public V getValue() {
-				return (V) elementData[entryIdx * 2 + 1];
-			}
-
-			@Override
-			public V setValue(V value) {
-				elementData[entryIdx * 2 + 1] = value;
-				return value;
-			}
-		}
-
-		int idx = 0;
-
-		int itrModCount = modCount;
-
-		@Override
-		public boolean hasNext() {
-			return idx < size;
-		}
-
-		@Override
-		public java.util.Map.Entry<K, V> next() {
-			if (modCount != itrModCount) {
-				throw new ConcurrentModificationException();
-			}
-			LightMapEntry entry = new LightMapEntry(idx);
-			return entry;
-		}
-
-		public void reset() {
-			idx = 0;
-			itrModCount = modCount;
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException("remove");
-		}
-	}
-
-	class EntrySet extends AbstractSet<Map.Entry<K, V>> {
-		@Override
-		public Iterator<java.util.Map.Entry<K, V>> iterator() {
-			return new EntryIterator();
-		}
-
-		@Override
-		public int size() {
-			return size;
-		}
-
-		@Override
-		public void clear() {
-			elementData = new Object[0];
-			size = 0;
-			modCount = 0;
-			degenerate = null;
-		}
-	}
-
 	static final transient long serialVersionUID = 1;
+
+	static final transient int DEGENERATE_THRESHOLD = 12;
 
 	// key-value sequence
 	private transient Object[] elementData = new Object[0];
@@ -103,9 +31,25 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 
 	private transient Map<K, V> degenerate;
 
-	static final transient int DEGENERATE_THRESHOLD = 12;
-
 	public LightMap() {
+	}
+
+	@Override
+	public void clear() {
+		entrySet().clear();
+	}
+
+	@Override
+	public boolean containsKey(Object key) {
+		if (degenerate != null) {
+			return degenerate.containsKey(key);
+		}
+		return getIndex(key) != -1;
+	}
+
+	@Override
+	public boolean containsValue(Object value) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -117,11 +61,12 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 	}
 
 	@Override
-	public int size() {
+	public V get(Object key) {
 		if (degenerate != null) {
-			return degenerate.size();
+			return degenerate.get(key);
 		}
-		return size;
+		int idx = getIndex(key);
+		return idx == -1 ? null : (V) elementData[idx * 2 + 1];
 	}
 
 	@Override
@@ -130,34 +75,42 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 	}
 
 	@Override
-	public boolean containsKey(Object key) {
-		if (degenerate != null) {
-			return degenerate.containsKey(key);
-		}
-		return getIndex(key) != -1;
-	}
-
-	private int getIndex(Object key) {
-		for (int idx = 0; idx < size; idx++) {
-			if (Objects.equals(key, elementData[idx * 2])) {
-				return idx;
+	public Set<K> keySet() {
+		return new AbstractSet<K>() {
+			public void clear() {
+				LightMap.this.clear();
 			}
-		}
-		return -1;
-	}
 
-	@Override
-	public boolean containsValue(Object value) {
-		throw new UnsupportedOperationException();
-	}
+			public boolean contains(Object k) {
+				return LightMap.this.containsKey(k);
+			}
 
-	@Override
-	public V get(Object key) {
-		if (degenerate != null) {
-			return degenerate.get(key);
-		}
-		int idx = getIndex(key);
-		return idx == -1 ? null : (V) elementData[idx * 2 + 1];
+			public boolean isEmpty() {
+				return LightMap.this.isEmpty();
+			}
+
+			public Iterator<K> iterator() {
+				return new Iterator<K>() {
+					private Iterator<Entry<K, V>> i = entrySet().iterator();
+
+					public boolean hasNext() {
+						return i.hasNext();
+					}
+
+					public K next() {
+						return i.next().getKey();
+					}
+
+					public void remove() {
+						i.remove();
+					}
+				};
+			}
+
+			public int size() {
+				return LightMap.this.size();
+			}
+		};
 	}
 
 	@Override
@@ -189,6 +142,12 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 	}
 
 	@Override
+	public void putAll(Map<? extends K, ? extends V> m) {
+		for (Map.Entry<? extends K, ? extends V> e : m.entrySet())
+			put(e.getKey(), e.getValue());
+	}
+
+	@Override
 	public V remove(Object key) {
 		if (degenerate != null) {
 			return degenerate.remove(key);
@@ -210,58 +169,28 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 	}
 
 	@Override
-	public void putAll(Map<? extends K, ? extends V> m) {
-		for (Map.Entry<? extends K, ? extends V> e : m.entrySet())
-			put(e.getKey(), e.getValue());
+	public int size() {
+		if (degenerate != null) {
+			return degenerate.size();
+		}
+		return size;
 	}
 
 	@Override
-	public void clear() {
-		entrySet().clear();
-	}
-
-	@Override
-	public Set<K> keySet() {
-		return new AbstractSet<K>() {
-			public Iterator<K> iterator() {
-				return new Iterator<K>() {
-					private Iterator<Entry<K, V>> i = entrySet().iterator();
-
-					public boolean hasNext() {
-						return i.hasNext();
-					}
-
-					public K next() {
-						return i.next().getKey();
-					}
-
-					public void remove() {
-						i.remove();
-					}
-				};
+	public Collection<V> values() {
+		return new AbstractCollection<V>() {
+			public void clear() {
+				LightMap.this.clear();
 			}
 
-			public int size() {
-				return LightMap.this.size();
+			public boolean contains(Object v) {
+				return LightMap.this.containsValue(v);
 			}
 
 			public boolean isEmpty() {
 				return LightMap.this.isEmpty();
 			}
 
-			public void clear() {
-				LightMap.this.clear();
-			}
-
-			public boolean contains(Object k) {
-				return LightMap.this.containsKey(k);
-			}
-		};
-	}
-
-	@Override
-	public Collection<V> values() {
-		return new AbstractCollection<V>() {
 			public Iterator<V> iterator() {
 				return new Iterator<V>() {
 					private Iterator<Entry<K, V>> i = entrySet().iterator();
@@ -283,18 +212,89 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 			public int size() {
 				return LightMap.this.size();
 			}
-
-			public boolean isEmpty() {
-				return LightMap.this.isEmpty();
-			}
-
-			public void clear() {
-				LightMap.this.clear();
-			}
-
-			public boolean contains(Object v) {
-				return LightMap.this.containsValue(v);
-			}
 		};
+	}
+
+	private int getIndex(Object key) {
+		for (int idx = 0; idx < size; idx++) {
+			if (Objects.equals(key, elementData[idx * 2])) {
+				return idx;
+			}
+		}
+		return -1;
+	}
+
+	public class EntryIterator implements Iterator<Map.Entry<K, V>> {
+		int idx = 0;
+
+		int itrModCount = modCount;
+
+		@Override
+		public boolean hasNext() {
+			return idx < size;
+		}
+
+		@Override
+		public java.util.Map.Entry<K, V> next() {
+			if (modCount != itrModCount) {
+				throw new ConcurrentModificationException();
+			}
+			LightMapEntry entry = new LightMapEntry(idx);
+			return entry;
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException("remove");
+		}
+
+		public void reset() {
+			idx = 0;
+			itrModCount = modCount;
+		}
+
+		public final class LightMapEntry implements Map.Entry<K, V> {
+			private int entryIdx;
+
+			public LightMapEntry(int idx) {
+				this.entryIdx = idx;
+			}
+
+			@Override
+			public K getKey() {
+				return (K) elementData[entryIdx * 2];
+			}
+
+			@Override
+			public V getValue() {
+				return (V) elementData[entryIdx * 2 + 1];
+			}
+
+			@Override
+			public V setValue(V value) {
+				elementData[entryIdx * 2 + 1] = value;
+				return value;
+			}
+		}
+	}
+
+	class EntrySet extends AbstractSet<Map.Entry<K, V>> {
+		@Override
+		public void clear() {
+			elementData = new Object[0];
+			size = 0;
+			modCount = 0;
+			degenerate = null;
+		}
+
+		@Override
+		public Iterator<java.util.Map.Entry<K, V>> iterator() {
+			return new EntryIterator();
+		}
+
+		@Override
+		public int size() {
+			return size;
+		}
 	}
 }

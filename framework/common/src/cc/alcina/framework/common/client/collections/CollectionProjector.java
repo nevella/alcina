@@ -20,9 +20,17 @@ import com.totsp.gwittir.client.beans.Converter;
  * @author Nick Reddel
  */
 public abstract class CollectionProjector<T, V> implements Converter<T, V> {
-	private V bestValue=null;
+	private V bestValue = null;
 
-	private T bestSource=null;
+	private T bestSource = null;
+
+	public T getBestSource() {
+		return this.bestSource;
+	}
+
+	public V getBestValue() {
+		return this.bestValue;
+	}
 
 	public void tryProject(T t) {
 		V value = convert(t);
@@ -33,12 +41,4 @@ public abstract class CollectionProjector<T, V> implements Converter<T, V> {
 	}
 
 	protected abstract boolean isMoreDesirable(V value, V bestValue);
-
-	public V getBestValue() {
-		return this.bestValue;
-	}
-
-	public T getBestSource() {
-		return this.bestSource;
-	}
 }

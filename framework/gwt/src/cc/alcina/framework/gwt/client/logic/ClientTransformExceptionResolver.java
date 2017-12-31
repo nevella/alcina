@@ -20,10 +20,6 @@ public interface ClientTransformExceptionResolver {
 	public void resolve(DomainTransformRequestException dtre,
 			Callback<ClientTransformExceptionResolutionToken> callback);
 
-	public enum ClientTransformExceptionResolverAction {
-		THROW, RESUBMIT
-	}
-
 	public static class ClientTransformExceptionResolutionToken {
 		private ClientTransformExceptionResolverAction resolverAction = ClientTransformExceptionResolverAction.THROW;
 
@@ -31,17 +27,16 @@ public interface ClientTransformExceptionResolver {
 
 		private boolean reloadRequired = false;
 
+		public Set<Long> getEventIdsToIgnore() {
+			return this.eventIdsToIgnore;
+		}
+
 		public ClientTransformExceptionResolverAction getResolverAction() {
 			return this.resolverAction;
 		}
 
-		public void setResolverAction(
-				ClientTransformExceptionResolverAction resolverAction) {
-			this.resolverAction = resolverAction;
-		}
-
-		public Set<Long> getEventIdsToIgnore() {
-			return this.eventIdsToIgnore;
+		public boolean isReloadRequired() {
+			return reloadRequired;
 		}
 
 		public void setEventIdsToIgnore(Set<Long> eventIdsToIgnore) {
@@ -52,13 +47,18 @@ public interface ClientTransformExceptionResolver {
 			this.reloadRequired = reloadRequired;
 		}
 
-		public boolean isReloadRequired() {
-			return reloadRequired;
+		public void setResolverAction(
+				ClientTransformExceptionResolverAction resolverAction) {
+			this.resolverAction = resolverAction;
 		}
 	}
 
-	public static class ClientTransformExceptionResolverThrow implements
-			ClientTransformExceptionResolver {
+	public enum ClientTransformExceptionResolverAction {
+		THROW, RESUBMIT
+	}
+
+	public static class ClientTransformExceptionResolverThrow
+			implements ClientTransformExceptionResolver {
 		public void resolve(DomainTransformRequestException dtre,
 				Callback<ClientTransformExceptionResolutionToken> callback) {
 			callback.apply(new ClientTransformExceptionResolutionToken());

@@ -65,11 +65,6 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 		}
 	};
 
-	/**
-	 * note must allow obj==null
-	 */
-	protected abstract SC newCriterion(O obj);
-
 	public CriteriaGroupMultipleSelectCustomiser(Class selectionObjectClass,
 			CollectionFilter filter) {
 		super();
@@ -78,8 +73,6 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 		setMultipleSelect(true);
 	}
 
-	protected abstract O getSearchCriterionDisplayObject(SC searchCriterion);
-
 	public void setModel(Object model) {
 		this.criteriaGroup = (C) model;
 		addPropertyChangeListener("value", pcl);
@@ -87,17 +80,12 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 		updateValues();
 	}
 
-	protected void updateValues() {
-		Set values = new HashSet();
-		SC templateCriterion = newCriterion(null);
-		for (Object sc : criteriaGroup.getCriteria()) {
-			// allows for potentially multiple criteria types in the cg
-			if (sc.getClass() == templateCriterion.getClass()) {
-				values.add(getSearchCriterionDisplayObject((SC) sc));
-			}
-		}
-		setValue(values);
-	}
+	protected abstract O getSearchCriterionDisplayObject(SC searchCriterion);
+
+	/**
+	 * note must allow obj==null
+	 */
+	protected abstract SC newCriterion(O obj);
 
 	@Override
 	protected void onLoad() {
@@ -113,5 +101,17 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 
 	protected void setOptions() {
 		setOptions(Arrays.asList(selectionObjectClass.getEnumConstants()));
+	}
+
+	protected void updateValues() {
+		Set values = new HashSet();
+		SC templateCriterion = newCriterion(null);
+		for (Object sc : criteriaGroup.getCriteria()) {
+			// allows for potentially multiple criteria types in the cg
+			if (sc.getClass() == templateCriterion.getClass()) {
+				values.add(getSearchCriterionDisplayObject((SC) sc));
+			}
+		}
+		setValue(values);
 	}
 }

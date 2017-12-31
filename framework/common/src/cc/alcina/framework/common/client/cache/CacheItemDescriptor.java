@@ -25,10 +25,6 @@ public class CacheItemDescriptor {
 
 	public boolean lazy = false;
 
-	public void addPropertyAlias(String from, String to) {
-		propertyAlia.put(from, to);
-	}
-
 	public CacheItemDescriptor(Class clazz) {
 		this.clazz = clazz;
 	}
@@ -53,6 +49,10 @@ public class CacheItemDescriptor {
 		return this;
 	}
 
+	public void addPropertyAlias(String from, String to) {
+		propertyAlia.put(from, to);
+	}
+
 	public Set<Long> evaluateFilter(DetachedEntityCache cache,
 			Set<Long> existing, CollectionFilter filter) {
 		if (existing == null) {
@@ -72,21 +72,6 @@ public class CacheItemDescriptor {
 		}
 	}
 
-	public boolean ignoreField(String name) {
-		return false;
-	}
-
-	public <T> List<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
-		ArrayList<T> raw = new ArrayList<T>(ids.size());
-		for (Long id : ids) {
-			T value = (T) cache.get(clazz, id);
-			if (value != null) {
-				raw.add(value);
-			}
-		}
-		return raw;
-	}
-
 	public String getCanonicalPropertyPath(String propertyPath) {
 		for (CacheLookupDescriptor desc : lookupDescriptors) {
 			String path = desc.getCanonicalPropertyPath(propertyPath);
@@ -100,8 +85,24 @@ public class CacheItemDescriptor {
 		return propertyPath;
 	}
 
-	public boolean isTransactional() {
-		return true;
+	public Collection<HasIdAndLocalId>
+			getDependentObjectsWithDerivedProjections(HasIdAndLocalId obj) {
+		return new ArrayList<>();
+	}
+
+	public <T> List<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
+		ArrayList<T> raw = new ArrayList<T>(ids.size());
+		for (Long id : ids) {
+			T value = (T) cache.get(clazz, id);
+			if (value != null) {
+				raw.add(value);
+			}
+		}
+		return raw;
+	}
+
+	public boolean ignoreField(String name) {
+		return false;
 	}
 
 	public void index(HasIdAndLocalId obj, boolean add) {
@@ -122,8 +123,7 @@ public class CacheItemDescriptor {
 		}
 	}
 
-	public Collection<HasIdAndLocalId>
-			getDependentObjectsWithDerivedProjections(HasIdAndLocalId obj) {
-		return new ArrayList<>();
+	public boolean isTransactional() {
+		return true;
 	}
 }

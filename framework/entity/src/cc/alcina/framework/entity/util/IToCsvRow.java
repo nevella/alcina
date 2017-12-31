@@ -8,11 +8,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public interface IToCsvRow<T> extends Function<T, List<String>> {
-	List<String> headers();
-
-	default void setCustom(Object custom) {
-	}
-
 	default List<ArrayList<String>> doConvert(List<T> objects,
 			boolean withTotals) {
 		List list = (List) objects.stream().map(r -> apply(r))
@@ -24,6 +19,11 @@ public interface IToCsvRow<T> extends Function<T, List<String>> {
 	}
 
 	default void doTotal(List<T> objects, List list) {
+	}
+
+	List<String> headers();
+
+	default void setCustom(Object custom) {
 	}
 
 	default String suggestFileName(String prefix) {

@@ -83,15 +83,15 @@ public class ResourceUtilities {
 		customProperties.clear();
 	}
 
-	public static StringMap classPathStringMap(Class clazz, String path) {
-		return StringMap
-				.fromPropertyString(readClassPathResourceAsString(clazz, path));
-	}
-
 	public static StringMap classPathStringExistenceMap(Class clazz,
 			String path) {
 		return StringMap
 				.fromStringList(readClassPathResourceAsString(clazz, path));
+	}
+
+	public static StringMap classPathStringMap(Class clazz, String path) {
+		return StringMap
+				.fromPropertyString(readClassPathResourceAsString(clazz, path));
 	}
 
 	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
@@ -303,6 +303,21 @@ public class ResourceUtilities {
 
 	public static boolean isNumericPrimitive(Class c) {
 		return (c.isPrimitive() && c != char.class && c != boolean.class);
+	}
+
+	public static void logToFile(String content) {
+		logToFile(content, "log.txt");
+		logToFile(content, "log.html");
+		logToFile(content, "log.xml");
+	}
+
+	public static void logToFile(String content, String fileName) {
+		try {
+			new File("/tmp/log").mkdirs();
+			writeStringToFile(content, "/tmp/log/" + fileName);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public static String objectOrPrimitiveToString(Object object) {
@@ -704,20 +719,5 @@ public class ResourceUtilities {
 
 	public static interface BeanInfoHelper {
 		BeanInfo postProcessBeanInfo(BeanInfo beanInfo);
-	}
-
-	public static void logToFile(String content, String fileName) {
-		try {
-			new File("/tmp/log").mkdirs();
-			writeStringToFile(content, "/tmp/log/" + fileName);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static void logToFile(String content) {
-		logToFile(content, "log.txt");
-		logToFile(content, "log.html");
-		logToFile(content, "log.xml");
 	}
 }

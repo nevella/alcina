@@ -26,10 +26,6 @@ public class ActionGroup {
 
 	private final boolean rightAligned;
 
-	public ActionGroup(PermissibleAction[] actions) {
-		this(actions, false);
-	}
-
 	public ActionGroup(List<PermissibleAction> actions) {
 		this.actions = actions;
 		this.rightAligned = false;
@@ -38,6 +34,10 @@ public class ActionGroup {
 	public ActionGroup(List<PermissibleAction> actions, boolean rightAligned) {
 		this.actions = actions;
 		this.rightAligned = rightAligned;
+	}
+
+	public ActionGroup(PermissibleAction[] actions) {
+		this(actions, false);
 	}
 
 	public ActionGroup(PermissibleAction[] actions, boolean rightAligned) {

@@ -37,12 +37,11 @@ public class ValueListPopdown<T> {
 		popupPanel.add(select);
 		popupPanel.setPopupPosition(-5000, -5000);
 		popupPanel.show();
-		popupPanel.setPopupPosition(
-				eventSource.getAbsoluteLeft() - 2,
+		popupPanel.setPopupPosition(eventSource.getAbsoluteLeft() - 2,
 				eventSource.getAbsoluteTop() + 2
 						+ eventSource.getOffsetHeight());
-		select.getElement().getStyle()
-				.setPropertyPx("minWidth", eventSource.getOffsetWidth() - 14);
+		select.getElement().getStyle().setPropertyPx("minWidth",
+				eventSource.getOffsetWidth() - 14);
 	}
 
 	class PopdownSelect extends Composite implements ClickHandler {

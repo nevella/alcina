@@ -25,74 +25,75 @@ import com.google.gwt.dom.client.Element;
  * only supported on form elements in most browsers.
  */
 public class FocusImplStandard extends FocusImpl {
+	/**
+	 * Single focusHandler shared by all focusable.
+	 */
+	static JavaScriptObject focusHandler;
 
-  /**
-   * Single focusHandler shared by all focusable.
-   */
-  static JavaScriptObject focusHandler;
+	private static native Element
+			createFocusable0(JavaScriptObject focusHandler) /*-{
+															// Divs are focusable in all browsers, but only IE supports the accessKey
+															// property on divs. We use the infamous 'hidden input' trick to add an
+															// accessKey to the focusable div. Note that the input is only used to
+															// capture focus when the accessKey is pressed. Focus is forwarded to the
+															// div immediately.
+															var div = $doc.createElement('div');
+															div.tabIndex = 0;
+															
+															var input = $doc.createElement('input');
+															input.type = 'text';
+															input.tabIndex = -1;
+															input.setAttribute('role', 'presentation');
+															var style = input.style;
+															style.opacity = 0;
+															style.height = '1px';
+															style.width = '1px';
+															style.zIndex = -1;
+															style.overflow = 'hidden';
+															style.position = 'absolute';
+															
+															// Note that we're using isolated lambda methods as the event listeners
+															// to avoid creating a memory leaks. (Lambdas here would create cycles
+															// involving the div and input).  This also allows us to share a single
+															// set of handlers among every focusable item.
+															input.addEventListener('focus', focusHandler, false);
+															
+															div.appendChild(input);
+															return div;
+															}-*/;
 
-  private static native Element createFocusable0(JavaScriptObject focusHandler) /*-{
-    // Divs are focusable in all browsers, but only IE supports the accessKey
-    // property on divs. We use the infamous 'hidden input' trick to add an
-    // accessKey to the focusable div. Note that the input is only used to
-    // capture focus when the accessKey is pressed. Focus is forwarded to the
-    // div immediately.
-    var div = $doc.createElement('div');
-    div.tabIndex = 0;
+	@Override
+	public Element createFocusable() {
+		return Document.get().createDivElement();
+		// return createFocusable0(ensureFocusHandler());
+	}
 
-    var input = $doc.createElement('input');
-    input.type = 'text';
-    input.tabIndex = -1;
-    input.setAttribute('role', 'presentation');
-    var style = input.style;
-    style.opacity = 0;
-    style.height = '1px';
-    style.width = '1px';
-    style.zIndex = -1;
-    style.overflow = 'hidden';
-    style.position = 'absolute';
+	@Override
+	public native void setAccessKey(Element elem, char key) /*-{
+															elem.firstChild.accessKey = String.fromCharCode(key);
+															}-*/;
 
-    // Note that we're using isolated lambda methods as the event listeners
-    // to avoid creating a memory leaks. (Lambdas here would create cycles
-    // involving the div and input).  This also allows us to share a single
-    // set of handlers among every focusable item.
-    input.addEventListener('focus', focusHandler, false);
+	/**
+	 * Use an isolated method call to create the handler to avoid creating
+	 * memory leaks via handler-closures-element.
+	 */
+	private native JavaScriptObject createFocusHandler() /*-{
+															return function(evt) {
+															// This function is called directly as an event handler, so 'this' is
+															// set up by the browser to be the input on which the event is fired. We
+															// call focus() in a timeout or the element may be blurred when this event
+															// ends.
+															var div = this.parentNode;
+															if (div.onfocus) {
+															$wnd.setTimeout(function() {
+															div.focus();
+															}, 0);
+															} 
+															};
+															}-*/;
 
-    div.appendChild(input);
-    return div;
-  }-*/;
-
-  @Override
-  public Element createFocusable() {
-	  return Document.get().createDivElement();
-//    return createFocusable0(ensureFocusHandler());
-  }
-
-  @Override
-  public native void setAccessKey(Element elem, char key) /*-{
-    elem.firstChild.accessKey = String.fromCharCode(key);
-  }-*/;
-
-  /**
-   * Use an isolated method call to create the handler to avoid creating memory
-   * leaks via handler-closures-element.
-   */
-  private native JavaScriptObject createFocusHandler() /*-{
-    return function(evt) {
-      // This function is called directly as an event handler, so 'this' is
-      // set up by the browser to be the input on which the event is fired. We
-      // call focus() in a timeout or the element may be blurred when this event
-      // ends.
-      var div = this.parentNode;
-      if (div.onfocus) {
-        $wnd.setTimeout(function() {
-          div.focus();
-        }, 0);
-      } 
-    };
-  }-*/;
-
-  private JavaScriptObject ensureFocusHandler() {
-    return focusHandler != null ? focusHandler : (focusHandler = createFocusHandler());
-  }
+	private JavaScriptObject ensureFocusHandler() {
+		return focusHandler != null ? focusHandler
+				: (focusHandler = createFocusHandler());
+	}
 }

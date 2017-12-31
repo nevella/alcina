@@ -23,34 +23,33 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 /**
  * Custom Serializer for arrays of {@link java.lang.Object}.
  */
-public class Object_Array_CustomFieldSerializer extends
-    CustomFieldSerializer<Object[]> {
+public class Object_Array_CustomFieldSerializer
+		extends CustomFieldSerializer<Object[]> {
+	public static void deserialize(SerializationStreamReader streamReader,
+			Object[] instance) throws SerializationException {
+		for (int itemIndex = 0; itemIndex < instance.length; ++itemIndex) {
+			instance[itemIndex] = streamReader.readObject();
+		}
+	}
 
-  public static void deserialize(SerializationStreamReader streamReader,
-      Object[] instance) throws SerializationException {
-    for (int itemIndex = 0; itemIndex < instance.length; ++itemIndex) {
-      instance[itemIndex] = streamReader.readObject();
-    }
-  }
+	public static void serialize(SerializationStreamWriter streamWriter,
+			Object[] instance) throws SerializationException {
+		int itemCount = instance.length;
+		streamWriter.writeInt(itemCount);
+		for (int itemIndex = 0; itemIndex < itemCount; ++itemIndex) {
+			streamWriter.writeObject(instance[itemIndex]);
+		}
+	}
 
-  public static void serialize(SerializationStreamWriter streamWriter,
-      Object[] instance) throws SerializationException {
-    int itemCount = instance.length;
-    streamWriter.writeInt(itemCount);
-    for (int itemIndex = 0; itemIndex < itemCount; ++itemIndex) {
-      streamWriter.writeObject(instance[itemIndex]);
-    }
-  }
+	@Override
+	public void deserializeInstance(SerializationStreamReader streamReader,
+			Object[] instance) throws SerializationException {
+		deserialize(streamReader, instance);
+	}
 
-  @Override
-  public void deserializeInstance(SerializationStreamReader streamReader,
-      Object[] instance) throws SerializationException {
-    deserialize(streamReader, instance);
-  }
-
-  @Override
-  public void serializeInstance(SerializationStreamWriter streamWriter,
-      Object[] instance) throws SerializationException {
-    serialize(streamWriter, instance);
-  }
+	@Override
+	public void serializeInstance(SerializationStreamWriter streamWriter,
+			Object[] instance) throws SerializationException {
+		serialize(streamWriter, instance);
+	}
 }

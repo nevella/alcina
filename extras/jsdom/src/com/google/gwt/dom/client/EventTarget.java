@@ -48,7 +48,6 @@ public class EventTarget implements JavascriptObjectEquivalent {
 		throw new FixmeUnsupportedOperationException();
 	}
 
-	
 	public boolean is(Class<? extends JavascriptObjectEquivalent> clazz) {
 		if (clazz == Element.class && ElementRemote.is(nativeTarget)) {
 			return true;

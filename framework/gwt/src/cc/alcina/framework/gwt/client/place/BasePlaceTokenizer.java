@@ -100,6 +100,10 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		return true;
 	}
 
+	public void register(
+			Map<Class<? extends HasIdAndLocalId>, BasePlaceTokenizer> tokenizersByModelClass) {
+	}
+
 	public void setParameter(String key, Object value) {
 		if (value instanceof Number) {
 			if (((Number) value).longValue() == 0) {
@@ -163,10 +167,5 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	protected SearchDefinitionSerializer searchDefinitionSerializer() {
 		return Registry.impl(SearchDefinitionSerializer.class);
-	}
-
-	public void register(
-			Map<Class<? extends HasIdAndLocalId>, BasePlaceTokenizer> tokenizersByModelClass) {
-		
 	}
 }

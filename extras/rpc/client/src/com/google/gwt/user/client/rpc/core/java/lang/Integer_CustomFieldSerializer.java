@@ -24,9 +24,8 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 /**
  * Custom field serializer for {@link java.lang.Integer}.
  */
-public final class Integer_CustomFieldSerializer extends
-		CustomFieldSerializer<Integer> {
-	
+public final class Integer_CustomFieldSerializer
+		extends CustomFieldSerializer<Integer> {
 	public static void deserialize(SerializationStreamReader streamReader,
 			Integer instance) {
 		// No fields
@@ -51,12 +50,6 @@ public final class Integer_CustomFieldSerializer extends
 	}
 
 	@Override
-	public void serializeConstructor(SerializationStreamWriter streamWriter,
-			Integer instance) throws SerializationException {
-		streamWriter.writeInt(instance.intValue());
-	}
-
-	@Override
 	public boolean hasCustomInstantiateInstance() {
 		return true;
 	}
@@ -65,6 +58,12 @@ public final class Integer_CustomFieldSerializer extends
 	public Integer instantiateInstance(SerializationStreamReader streamReader)
 			throws SerializationException {
 		return instantiate(streamReader);
+	}
+
+	@Override
+	public void serializeConstructor(SerializationStreamWriter streamWriter,
+			Integer instance) throws SerializationException {
+		streamWriter.writeInt(instance.intValue());
 	}
 
 	@Override

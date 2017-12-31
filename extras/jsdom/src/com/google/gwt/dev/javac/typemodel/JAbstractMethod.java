@@ -15,299 +15,301 @@
  */
 package com.google.gwt.dev.javac.typemodel;
 
-import com.google.gwt.core.ext.typeinfo.JType;
-import com.google.gwt.dev.util.StringInterner;
-import com.google.gwt.dev.util.collect.Lists;
-
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gwt.core.ext.typeinfo.JType;
+import com.google.gwt.dev.util.StringInterner;
+import com.google.gwt.dev.util.collect.Lists;
+
 /**
  * Common superclass for {@link JMethod} and {@link JConstructor}.
  */
-public abstract class JAbstractMethod implements
-    com.google.gwt.core.ext.typeinfo.JAbstractMethod {
+public abstract class JAbstractMethod
+		implements com.google.gwt.core.ext.typeinfo.JAbstractMethod {
+	private final ImmutableAnnotations annotations;
 
-  private final ImmutableAnnotations annotations;
+	private boolean isVarArgs = false;
 
-  private boolean isVarArgs = false;
+	private int modifierBits;
 
-  private int modifierBits;
+	private final String name;
 
-  private final String name;
+	private List<JParameter> params = Lists.create();
 
-  private List<JParameter> params = Lists.create();
+	private String[] realParameterNames = null;
 
-  private String[] realParameterNames = null;
+	private List<JClassType> thrownTypes = Lists.create();
 
-  private List<JClassType> thrownTypes = Lists.create();
+	private List<JTypeParameter> typeParams = Lists.create();
 
-  private List<JTypeParameter> typeParams = Lists.create();
+	JAbstractMethod(JAbstractMethod srcMethod) {
+		this.annotations = srcMethod.annotations;
+		this.isVarArgs = srcMethod.isVarArgs;
+		this.modifierBits = srcMethod.modifierBits;
+		this.name = srcMethod.name;
+	}
 
-  JAbstractMethod(JAbstractMethod srcMethod) {
-    this.annotations = srcMethod.annotations;
-    this.isVarArgs = srcMethod.isVarArgs;
-    this.modifierBits = srcMethod.modifierBits;
-    this.name = srcMethod.name;
-  }
+	// Only the builder can construct
+	JAbstractMethod(String name,
+			Map<Class<? extends Annotation>, Annotation> declaredAnnotations,
+			JTypeParameter[] jtypeParameters) {
+		this.name = StringInterner.get().intern(name);
+		annotations = ImmutableAnnotations.EMPTY.plus(declaredAnnotations);
+		if (jtypeParameters != null) {
+			typeParams = Lists.create(jtypeParameters);
+		}
+	}
 
-  // Only the builder can construct
-  JAbstractMethod(String name,
-      Map<Class<? extends Annotation>, Annotation> declaredAnnotations,
-      JTypeParameter[] jtypeParameters) {
-    this.name = StringInterner.get().intern(name);
-    annotations = ImmutableAnnotations.EMPTY.plus(declaredAnnotations);
+	@Override
+	public JParameter findParameter(String name) {
+		for (JParameter param : params) {
+			if (param.getName().equals(name)) {
+				return param;
+			}
+		}
+		return null;
+	}
 
-    if (jtypeParameters != null) {
-      typeParams = Lists.create(jtypeParameters);
-    }
-  }
+	@Override
+	public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+		return annotations.getAnnotation(annotationClass);
+	}
 
-  @Override
-  public JParameter findParameter(String name) {
-    for (JParameter param : params) {
-      if (param.getName().equals(name)) {
-        return param;
-      }
-    }
-    return null;
-  }
+	@Override
+	public Annotation[] getAnnotations() {
+		return annotations.getAnnotations();
+	}
 
-  @Override
-  public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-    return annotations.getAnnotation(annotationClass);
-  }
+	@Override
+	public Annotation[] getDeclaredAnnotations() {
+		return annotations.getDeclaredAnnotations();
+	}
 
-  @Override
-  public Annotation[] getAnnotations() {
-    return annotations.getAnnotations();
-  }
+	/**
+	 * Gets the type in which this method or constructor was declared.
+	 */
+	@Override
+	public abstract JClassType getEnclosingType();
 
-  @Override
-  public Annotation[] getDeclaredAnnotations() {
-    return annotations.getDeclaredAnnotations();
-  }
+	@Override
+	public JType[] getErasedParameterTypes() {
+		JType[] types = new JType[params.size()];
+		for (int i = 0; i < types.length; ++i) {
+			types[i] = params.get(i).getType().getErasedType();
+		}
+		return types;
+	}
 
-  /**
-   * Gets the type in which this method or constructor was declared.
-   */
-  @Override
-  public abstract JClassType getEnclosingType();
+	/**
+	 * Returns a string contating a JSNI reference to the method.
+	 *
+	 * @return <code>@package.Class::method(Lpackage/Param;...)</code>
+	 */
+	@Override
+	public abstract String getJsniSignature();
 
-  @Override
-  public JType[] getErasedParameterTypes() {
-    JType[] types = new JType[params.size()];
-    for (int i = 0; i < types.length; ++i) {
-      types[i] = params.get(i).getType().getErasedType();
-    }
-    return types;
-  }
+	@Override
+	public String getName() {
+		return name;
+	}
 
-  /**
-   * Returns a string contating a JSNI reference to the method.
-   *
-   * @return <code>@package.Class::method(Lpackage/Param;...)</code>
-   */
-  @Override
-  public abstract String getJsniSignature();
+	@Override
+	public JParameter[] getParameters() {
+		// TODO(jat): where do we handle fake arg names?
+		return params.toArray(TypeOracle.NO_JPARAMS);
+	}
 
-  @Override
-  public String getName() {
-    return name;
-  }
+	@Override
+	public JType[] getParameterTypes() {
+		final JType[] paramTypes = new JType[params.size()];
+		for (int i = 0; i < paramTypes.length; ++i) {
+			paramTypes[i] = params.get(i).getType();
+		}
+		return paramTypes;
+	}
 
-  @Override
-  public JParameter[] getParameters() {
-    // TODO(jat): where do we handle fake arg names?
-    return params.toArray(TypeOracle.NO_JPARAMS);
-  }
+	@Override
+	public abstract String getReadableDeclaration();
 
-  @Override
-  public JType[] getParameterTypes() {
-    final JType[] paramTypes = new JType[params.size()];
-    for (int i = 0; i < paramTypes.length; ++i) {
-      paramTypes[i] = params.get(i).getType();
-    }
-    return paramTypes;
-  }
+	@Override
+	public JClassType[] getThrows() {
+		return thrownTypes.toArray(TypeOracle.NO_JCLASSES);
+	}
 
-  @Override
-  public abstract String getReadableDeclaration();
+	@Override
+	public JTypeParameter[] getTypeParameters() {
+		return typeParams.toArray(new JTypeParameter[typeParams.size()]);
+	}
 
-  @Override
-  public JClassType[] getThrows() {
-    return thrownTypes.toArray(TypeOracle.NO_JCLASSES);
-  }
+	@Override
+	public JAnnotationMethod isAnnotationMethod() {
+		return null;
+	}
 
-  @Override
-  public JTypeParameter[] getTypeParameters() {
-    return typeParams.toArray(new JTypeParameter[typeParams.size()]);
-  }
+	@Override
+	public boolean
+			isAnnotationPresent(Class<? extends Annotation> annotationClass) {
+		return annotations.isAnnotationPresent(annotationClass);
+	}
 
-  @Override
-  public JAnnotationMethod isAnnotationMethod() {
-    return null;
-  }
+	@Override
+	public abstract JConstructor isConstructor();
 
-  @Override
-  public boolean isAnnotationPresent(Class<? extends Annotation> annotationClass) {
-    return annotations.isAnnotationPresent(annotationClass);
-  }
+	@Override
+	public boolean isDefaultAccess() {
+		return 0 == (modifierBits & (TypeOracle.MOD_PUBLIC
+				| TypeOracle.MOD_PRIVATE | TypeOracle.MOD_PROTECTED));
+	}
 
-  @Override
-  public abstract JConstructor isConstructor();
+	@Override
+	public abstract JMethod isMethod();
 
-  @Override
-  public boolean isDefaultAccess() {
-    return 0 == (modifierBits & (TypeOracle.MOD_PUBLIC | TypeOracle.MOD_PRIVATE | TypeOracle.MOD_PROTECTED));
-  }
+	@Override
+	public boolean isPrivate() {
+		return 0 != (modifierBits & TypeOracle.MOD_PRIVATE);
+	}
 
-  @Override
-  public abstract JMethod isMethod();
+	@Override
+	public boolean isProtected() {
+		return 0 != (modifierBits & TypeOracle.MOD_PROTECTED);
+	}
 
-  @Override
-  public boolean isPrivate() {
-    return 0 != (modifierBits & TypeOracle.MOD_PRIVATE);
-  }
+	@Override
+	public boolean isPublic() {
+		return 0 != (modifierBits & TypeOracle.MOD_PUBLIC);
+	}
 
-  @Override
-  public boolean isProtected() {
-    return 0 != (modifierBits & TypeOracle.MOD_PROTECTED);
-  }
+	@Override
+	public boolean isVarArgs() {
+		return isVarArgs;
+	}
 
-  @Override
-  public boolean isPublic() {
-    return 0 != (modifierBits & TypeOracle.MOD_PUBLIC);
-  }
+	private void fetchRealParameterNames() {
+		realParameterNames = getEnclosingType().getOracle()
+				.getJavaSourceParser().getArguments(this);
+	}
 
-  @Override
-  public boolean isVarArgs() {
-    return isVarArgs;
-  }
+	protected int getModifierBits() {
+		return modifierBits;
+	}
 
-  protected int getModifierBits() {
-    return modifierBits;
-  }
+	protected void toStringParamsAndThrows(StringBuilder sb) {
+		sb.append("(");
+		boolean needComma = false;
+		for (int i = 0, c = params.size(); i < c; ++i) {
+			JParameter param = params.get(i);
+			if (needComma) {
+				sb.append(", ");
+			} else {
+				needComma = true;
+			}
+			if (isVarArgs() && i == c - 1) {
+				JArrayType arrayType = (JArrayType) param.getType().isArray();
+				assert (arrayType != null);
+				sb.append(arrayType.getComponentType()
+						.getParameterizedQualifiedSourceName());
+				sb.append("...");
+			} else {
+				sb.append(
+						param.getType().getParameterizedQualifiedSourceName());
+			}
+			sb.append(" ");
+			sb.append(param.getName());
+		}
+		sb.append(")");
+		if (!thrownTypes.isEmpty()) {
+			sb.append(" throws ");
+			needComma = false;
+			for (JClassType thrownType : thrownTypes) {
+				if (needComma) {
+					sb.append(", ");
+				} else {
+					needComma = true;
+				}
+				sb.append(thrownType.getParameterizedQualifiedSourceName());
+			}
+		}
+	}
 
-  protected void toStringParamsAndThrows(StringBuilder sb) {
-    sb.append("(");
-    boolean needComma = false;
-    for (int i = 0, c = params.size(); i < c; ++i) {
-      JParameter param = params.get(i);
-      if (needComma) {
-        sb.append(", ");
-      } else {
-        needComma = true;
-      }
-      if (isVarArgs() && i == c - 1) {
-        JArrayType arrayType = (JArrayType) param.getType().isArray();
-        assert (arrayType != null);
-        sb.append(arrayType.getComponentType().getParameterizedQualifiedSourceName());
-        sb.append("...");
-      } else {
-        sb.append(param.getType().getParameterizedQualifiedSourceName());
-      }
-      sb.append(" ");
-      sb.append(param.getName());
-    }
-    sb.append(")");
+	protected void toStringTypeParams(StringBuilder sb) {
+		sb.append("<");
+		boolean needComma = false;
+		for (JTypeParameter typeParam : typeParams) {
+			if (needComma) {
+				sb.append(", ");
+			} else {
+				needComma = true;
+			}
+			sb.append(typeParam.getQualifiedSourceName());
+		}
+		sb.append(">");
+	}
 
-    if (!thrownTypes.isEmpty()) {
-      sb.append(" throws ");
-      needComma = false;
-      for (JClassType thrownType : thrownTypes) {
-        if (needComma) {
-          sb.append(", ");
-        } else {
-          needComma = true;
-        }
-        sb.append(thrownType.getParameterizedQualifiedSourceName());
-      }
-    }
-  }
+	void addModifierBits(int bits) {
+		modifierBits |= bits;
+	}
 
-  protected void toStringTypeParams(StringBuilder sb) {
-    sb.append("<");
-    boolean needComma = false;
-    for (JTypeParameter typeParam : typeParams) {
-      if (needComma) {
-        sb.append(", ");
-      } else {
-        needComma = true;
-      }
-      sb.append(typeParam.getQualifiedSourceName());
-    }
-    sb.append(">");
-  }
+	void addParameter(JParameter param) {
+		params = Lists.add(params, param);
+	}
 
-  void addModifierBits(int bits) {
-    modifierBits |= bits;
-  }
+	void addThrows(JClassType type) {
+		thrownTypes = Lists.add(thrownTypes, type);
+	}
 
-  void addParameter(JParameter param) {
-    params = Lists.add(params, param);
-  }
+	// Called only by a JParameter, passing itself as a reference for lookup.
+	String getRealParameterName(JParameter parameter) {
+		if (realParameterNames == null) {
+			fetchRealParameterNames();
+		}
+		int n = params.size();
+		for (int i = 0; i < n; ++i) {
+			// Identity tests are ok since identity is durable within an oracle.
+			if (params.get(i) == parameter) {
+				String realParameterName;
+				if (realParameterNames == null) {
+					realParameterName = StringInterner.get().intern("arg" + i);
+				} else {
+					realParameterName = StringInterner.get()
+							.intern(realParameterNames[i]);
+				}
+				return realParameterName;
+			}
+		}
+		// TODO: report error if we are asked for an unknown JParameter?
+		return null;
+	}
 
-  void addThrows(JClassType type) {
-    thrownTypes = Lists.add(thrownTypes, type);
-  }
-
-  // Called only by a JParameter, passing itself as a reference for lookup.
-  String getRealParameterName(JParameter parameter) {
-    if (realParameterNames == null) {
-      fetchRealParameterNames();
-    }
-    int n = params.size();
-    for (int i = 0; i < n; ++i) {
-      // Identity tests are ok since identity is durable within an oracle.
-      if (params.get(i) == parameter) {
-        String realParameterName;
-        if (realParameterNames == null) {
-          realParameterName = StringInterner.get().intern("arg" + i);
-        } else {
-          realParameterName = StringInterner.get().intern(realParameterNames[i]);
-        }
-        return realParameterName;
-      }
-    }
-    // TODO: report error if we are asked for an unknown JParameter?
-    return null;
-  }
-
-  boolean hasParamTypes(JType[] paramTypes) {
-    if (params.size() != paramTypes.length) {
-      return false;
-    }
-
-    for (int i = 0; i < paramTypes.length; i++) {
-      JParameter candidate = params.get(i);
-      // Identity tests are ok since identity is durable within an oracle.
-      //
-      //nick - ah...maybe not
+	boolean hasParamTypes(JType[] paramTypes) {
+		if (params.size() != paramTypes.length) {
+			return false;
+		}
+		for (int i = 0; i < paramTypes.length; i++) {
+			JParameter candidate = params.get(i);
+			// Identity tests are ok since identity is durable within an oracle.
+			//
+			// nick - ah...maybe not
 			if (candidate.getType() != paramTypes[i]) {
 				boolean baseMatch = false;
-				if(candidate.getType() instanceof JTypeParameter
-						&& paramTypes[i] instanceof JTypeParameter){
-					if(((JTypeParameter)candidate.getType()).getBaseType()==
-							((JTypeParameter)paramTypes[i]).getBaseType()){
-						baseMatch=true;
+				if (candidate.getType() instanceof JTypeParameter
+						&& paramTypes[i] instanceof JTypeParameter) {
+					if (((JTypeParameter) candidate.getType())
+							.getBaseType() == ((JTypeParameter) paramTypes[i])
+									.getBaseType()) {
+						baseMatch = true;
 					}
 				}
 				if (!baseMatch) {
 					return false;
 				}
 			}
-    }
-    return true;
-  }
+		}
+		return true;
+	}
 
-  void setVarArgs() {
-    isVarArgs = true;
-  }
-
-  private void fetchRealParameterNames() {
-    realParameterNames = getEnclosingType().getOracle().getJavaSourceParser().getArguments(
-        this);
-  }
+	void setVarArgs() {
+		isVarArgs = true;
+	}
 }

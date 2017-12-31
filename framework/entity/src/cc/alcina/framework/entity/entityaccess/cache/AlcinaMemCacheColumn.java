@@ -10,16 +10,16 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target( { ElementType.METHOD })
+@Target({ ElementType.METHOD })
 /**
- * Retrieve from db - workaround for 
+ * Retrieve from db - workaround for
+ * 
  * @author nick@alcina.cc
  *
  */
 public @interface AlcinaMemCacheColumn {
-	  public abstract java.lang.Class targetEntity() ;
-	  
-	  
-	  // Method descriptor #18 ()Ljava/lang/String;
-	  public abstract java.lang.String mappedBy() ;
+	// Method descriptor #18 ()Ljava/lang/String;
+	public abstract java.lang.String mappedBy();
+
+	public abstract java.lang.Class targetEntity();
 }

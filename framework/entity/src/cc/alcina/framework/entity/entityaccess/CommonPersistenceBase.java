@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -177,6 +176,22 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			for (Object object : resultList) {
 				getEntityManager().remove(object);
 			}
+		}
+	}
+
+	@Override
+	public void changeWrappedObjectOwner(long id, IUser fromUser,
+			IUser toUser) {
+		List<WrappedObject> wrapped = getEntityManager()
+				.createQuery(Ax.format("from %s where id = %s",
+						getImplementation(WrappedObject.class).getSimpleName(),
+						id))
+				.getResultList();
+		if (wrapped.size() == 1) {
+			wrapped.get(0).setUser(
+					getEntityManager().find(toUser.getClass(), toUser.getId()));
+			Ax.out("changed wrapped object owner - %s - %s -> %s", id, fromUser,
+					toUser);
 		}
 	}
 
@@ -432,6 +447,18 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						DomainTransformEventPersistent.class));
 		Long l = (Long) getEntityManager().createQuery(eql).getSingleResult();
 		return CommonUtils.lv(l);
+	}
+
+	@Override
+	public long getMaxPublicationIdForUser(IUser user) {
+		List<Long> longs = getEntityManager()
+				.createQuery(Ax.format(
+						"select userPublicationId from %s j where user = ?"
+								+ " order by id desc",
+						getImplementationSimpleClassName(Publication.class)))
+				.setParameter(1, user).setMaxResults(1).getResultList();
+		long maxId = longs.isEmpty() ? 0 : longs.get(0);
+		return maxId;
 	}
 
 	@Override
@@ -708,6 +735,17 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return new EntityUtils().detachedClone(list);
 	}
 
+	@Override
+	public List<Long> listRecentClientInstanceIds(String iidKey) {
+		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(
+				ClientInstance.class);
+		return getEntityManager()
+				.createQuery(String.format(
+						"select ci.id from %s ci where ci.iid = ?1 order by id desc",
+						clientInstanceImpl.getSimpleName()))
+				.setParameter(1, iidKey).setMaxResults(99).getResultList();
+	}
+
 	public long log(String message, String componentKey) {
 		// not required...useful but
 		return 0;
@@ -830,6 +868,22 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
+	@Override
+	public HiliLocatorMap reconstituteHiliMap(long clientInstanceId) {
+		ThreadlocalTransformManager tm = new ThreadlocalTransformManager();
+		tm.resetTltm(new HiliLocatorMap());
+		tm.setEntityManager(getEntityManager());
+		ClientInstance clientInstance = getNewImplementationInstance(
+				ClientInstance.class);
+		clientInstance.setId(clientInstanceId);
+		// don't use the real client instance, requires
+		// permissionsmanager>>liveobjects
+		tm.setClientInstance(clientInstance);
+		HiliLocatorMap result = tm.reconstituteHiliMap();
+		tm.resetTltm(null);
+		return result;
+	}
+
 	public void remove(Object o) {
 		AppPersistenceBase.checkNotReadOnly();
 		if (o instanceof HasIdAndLocalId) {
@@ -924,6 +978,18 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		getHandshakeObjectProvider().updateIid(iidKey, userName, rememberMe);
 	}
 
+	@Override
+	public void updatePublicationMimeMessageId(Long publicationId,
+			String mimeMessageId) {
+		getEntityManager()
+				.createQuery(
+						Ax.format("update %s set mimeMessageId=? where id=?",
+								getImplementationSimpleClassName(
+										Publication.class)))
+				.setParameter(1, mimeMessageId).setParameter(2, publicationId)
+				.executeUpdate();
+	}
+
 	public <T extends ServerValidator> List<T> validate(List<T> validators) {
 		try {
 			PermissionsManager.get().pushCurrentUser();
@@ -996,17 +1062,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					.cacheAuthentication(ci);
 		}
 		return authorised;
-	}
-
-	@Override
-	public List<Long> listRecentClientInstanceIds(String iidKey) {
-		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(
-				ClientInstance.class);
-		return getEntityManager()
-				.createQuery(String.format(
-						"select ci.id from %s ci where ci.iid = ?1 order by id desc",
-						clientInstanceImpl.getSimpleName()))
-				.setParameter(1, iidKey).setMaxResults(99).getResultList();
 	}
 
 	/**
@@ -1444,62 +1499,5 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					.cacheIid(iid);
 			cp.getEntityManager().merge(iid);
 		}
-	}
-
-	@Override
-	public HiliLocatorMap reconstituteHiliMap(long clientInstanceId) {
-		ThreadlocalTransformManager tm = new ThreadlocalTransformManager();
-		tm.resetTltm(new HiliLocatorMap());
-		tm.setEntityManager(getEntityManager());
-		ClientInstance clientInstance = getNewImplementationInstance(
-				ClientInstance.class);
-		clientInstance.setId(clientInstanceId);
-		// don't use the real client instance, requires
-		// permissionsmanager>>liveobjects
-		tm.setClientInstance(clientInstance);
-		HiliLocatorMap result = tm.reconstituteHiliMap();
-		tm.resetTltm(null);
-		return result;
-	}
-
-	@Override
-	public void updatePublicationMimeMessageId(Long publicationId,
-			String mimeMessageId) {
-		getEntityManager()
-				.createQuery(
-						Ax.format("update %s set mimeMessageId=? where id=?",
-								getImplementationSimpleClassName(
-										Publication.class)))
-				.setParameter(1, mimeMessageId).setParameter(2, publicationId)
-				.executeUpdate();
-	}
-
-	@Override
-	public void changeWrappedObjectOwner(long id, IUser fromUser,
-			IUser toUser) {
-		List<WrappedObject> wrapped = getEntityManager()
-				.createQuery(Ax.format("from %s where id = %s",
-						getImplementation(WrappedObject.class).getSimpleName(),
-						id))
-				.getResultList();
-		if (wrapped.size() == 1) {
-			wrapped.get(0).setUser(
-					getEntityManager().find(toUser.getClass(), toUser.getId()));
-			Ax.out("changed wrapped object owner - %s - %s -> %s", id, fromUser,
-					toUser);
-		}
-	}
-
-	@Override
-	public long getMaxPublicationIdForUser(IUser user) {
-		List<Long> longs = getEntityManager()
-				.createQuery(
-						Ax.format(
-								"select userPublicationId from %s j where user = ?"
-										+ " order by id desc",
-						getImplementationSimpleClassName(Publication.class)))
-				.setParameter(1, user).setMaxResults(1).getResultList();
-		long maxId = longs.isEmpty() ? 0 : longs.get(0);
-		return maxId;
 	}
 }

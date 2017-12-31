@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.dom.client.Document;
@@ -31,14 +30,9 @@ import com.google.gwt.user.client.ui.Widget;
  *
  * @author Nick Reddel
  */
-
- public class Para extends Widget implements HasClickHandlers,
-		 HasHorizontalAlignment,
-		HasText, HasWordWrap, HasDirection, HasHTML {
-
+public class Para extends Widget implements HasClickHandlers,
+		HasHorizontalAlignment, HasText, HasWordWrap, HasDirection, HasHTML {
 	private HorizontalAlignmentConstant horzAlign;
-
-
 
 	public Para() {
 	}
@@ -53,18 +47,9 @@ import com.google.gwt.user.client.ui.Widget;
 		setWordWrap(wordWrap);
 	}
 
-	public String getHTML() {
-		return getElement().getInnerHTML();
-	}
-
-	public void setHTML(String html) {
-		getElement().setInnerHTML(html);
-	}
-
 	public HandlerRegistration addClickHandler(ClickHandler handler) {
-	    return addDomHandler(handler, ClickEvent.getType());
-	  }
-
+		return addDomHandler(handler, ClickEvent.getType());
+	}
 
 	public Direction getDirection() {
 		return BidiUtils.getDirectionOnElement(getElement());
@@ -74,16 +59,18 @@ import com.google.gwt.user.client.ui.Widget;
 		return horzAlign;
 	}
 
+	public String getHTML() {
+		return getElement().getInnerHTML();
+	}
+
 	public String getText() {
 		return getElement().getInnerText();
 	}
 
 	public boolean getWordWrap() {
-		return !getElement().getStyle().getProperty("whiteSpace").equals(
-				"nowrap");
+		return !getElement().getStyle().getProperty("whiteSpace")
+				.equals("nowrap");
 	}
-
-	
 
 	public void setDirection(Direction direction) {
 		BidiUtils.setDirectionOnElement(getElement(), direction);
@@ -93,6 +80,10 @@ import com.google.gwt.user.client.ui.Widget;
 		horzAlign = align;
 		getElement().getStyle().setProperty("textAlign",
 				align.getTextAlignString());
+	}
+
+	public void setHTML(String html) {
+		getElement().setInnerHTML(html);
 	}
 
 	public void setText(String text) {

@@ -9,7 +9,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 
 @RegistryLocation(registryPoint = SessionProvider.class, implementationType = ImplementationType.SINGLETON)
 public class SessionProvider {
-	public HttpSession getSession(HttpServletRequest request,HttpServletResponse response){
+	public HttpSession getSession(HttpServletRequest request,
+			HttpServletResponse response) {
 		return request.getSession();
 	}
 }

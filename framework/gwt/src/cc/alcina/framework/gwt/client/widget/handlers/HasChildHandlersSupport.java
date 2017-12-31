@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget.handlers;
 
 import java.util.ArrayList;
@@ -23,8 +22,7 @@ import com.google.gwt.event.shared.HandlerRegistration;
  *
  * @author Nick Reddel
  */
-
- public class HasChildHandlersSupport implements HasChildHandlers {
+public class HasChildHandlersSupport implements HasChildHandlers {
 	List<HandlerRegistration> childHandlers = new ArrayList<HandlerRegistration>();
 
 	public void addHandler(HandlerRegistration registration) {

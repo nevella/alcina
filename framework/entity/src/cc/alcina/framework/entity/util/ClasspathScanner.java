@@ -54,6 +54,123 @@ public class ClasspathScanner {
 	public static final String CONTEXT_EXTRA_CLASSLOADERS = ClasspathScanner.class
 			+ ".CONTEXT_EXTRA_CLASSLOADERS";
 
+	protected static List<Class<? extends ClasspathVisitor>> visitors = new ArrayList<Class<? extends ClasspathVisitor>>();
+	static {
+		visitors.add(DirectoryVisitorNio.class);
+		visitors.add(JarVisitor.class);
+	}
+
+	public static List<ClassLoader> getScannerClassLoadersToTry() {
+		List<ClassLoader> classLoaders = new ArrayList<ClassLoader>();
+		classLoaders.add(Thread.currentThread().getContextClassLoader());
+		List<ClassLoader> extraClassLoaders = LooseContext
+				.get(CONTEXT_EXTRA_CLASSLOADERS);
+		if (extraClassLoaders != null) {
+			classLoaders.addAll(extraClassLoaders);
+		}
+		return classLoaders;
+	}
+
+	public static void
+			installVisitor(Class<? extends ClasspathVisitor> visitor) {
+		visitors.add(visitor);
+	};
+
+	private String pkg;
+
+	private boolean recur = false;
+
+	private boolean ignoreJars;
+
+	public ClassDataCache classDataCache = new ClassDataCache();
+
+	public ClasspathScanner(String pkg) {
+		this(pkg, false, false);
+	}
+
+	public ClasspathScanner(String pkg, boolean subpackages,
+			boolean ignoreJars) {
+		recur = subpackages;
+		this.ignoreJars = ignoreJars;
+		sanitizePackage(pkg);
+	}
+
+	public ClassDataCache getClasses() throws Exception {
+		getClassNames();
+		return classDataCache;
+	}
+
+	public Set<String> getClassNames() throws IOException {
+		String[] cpElts = System.getProperty("java.class.path").split(":");
+		for (String pathElt : cpElts) {
+			String path = pathElt;
+			if ((path != null) && (path.trim().length() > 0)) {
+				URL url = new URL("file", null, path);
+				invokeHandler(url);
+			}
+		}
+		return classDataCache.classData.keySet();
+	}
+
+	public String getPkg() {
+		return pkg;
+	}
+
+	public boolean isIgnoreJars() {
+		return ignoreJars;
+	}
+
+	public boolean isRecur() {
+		return recur;
+	}
+
+	private void sanitizePackage(String pkgName) {
+		if ((pkgName == null) || (pkgName.trim().length() == 0))
+			throw new IllegalArgumentException("Base package cannot be null");
+		pkg = pkgName.replace('.', '/');
+		if (getPkg().endsWith("*"))
+			pkg = getPkg().substring(0, getPkg().length() - 1);
+		if (getPkg().endsWith("/"))
+			pkg = getPkg().substring(0, getPkg().length() - 1);
+	}
+
+	protected String getPackage() {
+		return getPkg();
+	}
+
+	protected void invokeHandler(URL url) {
+		try {
+			for (Class<? extends ClasspathVisitor> visitorClass : visitors) {
+				ClasspathVisitor visitor = visitorClass
+						.getConstructor(ClasspathScanner.class)
+						.newInstance(this);
+				if (visitor.handles(url)) {
+					visitor.enumerateClasses(url);
+					break;
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	protected URL invokeResolver(URL url) {
+		try {
+			for (Class<? extends ClasspathVisitor> visitorClass : visitors) {
+				ClasspathVisitor visitor = visitorClass
+						.getConstructor(ClasspathScanner.class)
+						.newInstance(this);
+				URL resolved = visitor.resolve(url);
+				if (resolved != null) {
+					return resolved;
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		return url;
+	}
+
 	public abstract static class ClasspathVisitor {
 		protected static final Object PROTOCOL_FILE = "file";
 
@@ -61,6 +178,14 @@ public class ClasspathScanner {
 
 		public ClasspathVisitor(ClasspathScanner scanner) {
 			this.scanner = scanner;
+		}
+
+		public abstract void enumerateClasses(URL url) throws Exception;
+
+		public abstract boolean handles(URL url);
+
+		public URL resolve(URL url) throws Exception {
+			return null;
 		}
 
 		protected synchronized void add(String fileName, long modificationDate,
@@ -87,6 +212,10 @@ public class ClasspathScanner {
 			}
 		}
 
+		protected String sanitizeFileURL(URL url) {
+			return sanitizeFileURLForWindows(url.getFile());
+		}
+
 		protected String sanitizeFileURLForWindows(String path) {
 			String tmp = path;
 			if (tmp.indexOf("%20") > 0)
@@ -96,33 +225,17 @@ public class ClasspathScanner {
 			// /c:/...
 			return tmp;
 		}
-
-		protected String sanitizeFileURL(URL url) {
-			return sanitizeFileURLForWindows(url.getFile());
-		}
-
-		public abstract boolean handles(URL url);
-
-		public abstract void enumerateClasses(URL url) throws Exception;
-
-		public URL resolve(URL url) throws Exception {
-			return null;
-		}
 	}
 
 	public static class DirectoryVisitor extends ClasspathVisitor {
 		private ThreadPoolExecutor executor;
 
+		AtomicInteger submitted = new AtomicInteger(0);
+
 		public DirectoryVisitor(ClasspathScanner scanner) {
 			super(scanner);
 			executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(
 					Runtime.getRuntime().availableProcessors());
-		}
-
-		@Override
-		public boolean handles(URL url) {
-			return url.getProtocol().equals(PROTOCOL_FILE)
-					&& new File(url.getFile()).isDirectory();
 		}
 
 		@Override
@@ -133,7 +246,11 @@ public class ClasspathScanner {
 			executor.awaitTermination(100, TimeUnit.SECONDS);
 		}
 
-		AtomicInteger submitted = new AtomicInteger(0);
+		@Override
+		public boolean handles(URL url) {
+			return url.getProtocol().equals(PROTOCOL_FILE)
+					&& new File(url.getFile()).isDirectory();
+		}
 
 		private void getClassesFromDirectory(String path, String root) {
 			File directory = new File(path);
@@ -169,17 +286,17 @@ public class ClasspathScanner {
 		}
 
 		@Override
-		public boolean handles(URL url) {
-			return url.getProtocol().equals(PROTOCOL_FILE)
-					&& new File(url.getFile()).isDirectory();
-		}
-
-		@Override
 		public void enumerateClasses(URL url) throws Exception {
 			String fileUrl = sanitizeFileURL(url);
 			Path startingDir = Paths.get(fileUrl);
 			ScanFiles scanFiles = new ScanFiles(fileUrl);
 			Files.walkFileTree(startingDir, scanFiles);
+		}
+
+		@Override
+		public boolean handles(URL url) {
+			return url.getProtocol().equals(PROTOCOL_FILE)
+					&& new File(url.getFile()).isDirectory();
 		}
 
 		public class ScanFiles extends SimpleFileVisitor<Path> {
@@ -236,126 +353,43 @@ public class ClasspathScanner {
 					&& url.getProtocol().equals(PROTOCOL_FILE)
 					&& url.getFile().endsWith(".jar");
 		}
-	};
-
-	protected static List<Class<? extends ClasspathVisitor>> visitors = new ArrayList<Class<? extends ClasspathVisitor>>();
-	static {
-		visitors.add(DirectoryVisitorNio.class);
-		visitors.add(JarVisitor.class);
-	}
-
-	public static void
-			installVisitor(Class<? extends ClasspathVisitor> visitor) {
-		visitors.add(visitor);
-	}
-
-	public static List<ClassLoader> getScannerClassLoadersToTry() {
-		List<ClassLoader> classLoaders = new ArrayList<ClassLoader>();
-		classLoaders.add(Thread.currentThread().getContextClassLoader());
-		List<ClassLoader> extraClassLoaders = LooseContext
-				.get(CONTEXT_EXTRA_CLASSLOADERS);
-		if (extraClassLoaders != null) {
-			classLoaders.addAll(extraClassLoaders);
-		}
-		return classLoaders;
-	}
-
-	private String pkg;
-
-	private boolean recur = false;
-
-	private boolean ignoreJars;
-
-	protected String getPackage() {
-		return getPkg();
-	}
-
-	public ClasspathScanner(String pkg, boolean subpackages,
-			boolean ignoreJars) {
-		recur = subpackages;
-		this.ignoreJars = ignoreJars;
-		sanitizePackage(pkg);
-	}
-
-	public ClasspathScanner(String pkg) {
-		this(pkg, false, false);
-	}
-
-	private void sanitizePackage(String pkgName) {
-		if ((pkgName == null) || (pkgName.trim().length() == 0))
-			throw new IllegalArgumentException("Base package cannot be null");
-		pkg = pkgName.replace('.', '/');
-		if (getPkg().endsWith("*"))
-			pkg = getPkg().substring(0, getPkg().length() - 1);
-		if (getPkg().endsWith("/"))
-			pkg = getPkg().substring(0, getPkg().length() - 1);
-	}
-
-	public ClassDataCache classDataCache = new ClassDataCache();
-
-	public ClassDataCache getClasses() throws Exception {
-		getClassNames();
-		return classDataCache;
-	}
-
-	public Set<String> getClassNames() throws IOException {
-		String[] cpElts = System.getProperty("java.class.path").split(":");
-		for (String pathElt : cpElts) {
-			String path = pathElt;
-			if ((path != null) && (path.trim().length() > 0)) {
-				URL url = new URL("file", null, path);
-				invokeHandler(url);
-			}
-		}
-		return classDataCache.classData.keySet();
-	}
-
-	protected void invokeHandler(URL url) {
-		try {
-			for (Class<? extends ClasspathVisitor> visitorClass : visitors) {
-				ClasspathVisitor visitor = visitorClass
-						.getConstructor(ClasspathScanner.class)
-						.newInstance(this);
-				if (visitor.handles(url)) {
-					visitor.enumerateClasses(url);
-					break;
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	protected URL invokeResolver(URL url) {
-		try {
-			for (Class<? extends ClasspathVisitor> visitorClass : visitors) {
-				ClasspathVisitor visitor = visitorClass
-						.getConstructor(ClasspathScanner.class)
-						.newInstance(this);
-				URL resolved = visitor.resolve(url);
-				if (resolved != null) {
-					return resolved;
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-		return url;
-	}
-
-	public String getPkg() {
-		return pkg;
-	}
-
-	public boolean isRecur() {
-		return recur;
-	}
-
-	public boolean isIgnoreJars() {
-		return ignoreJars;
 	}
 
 	public static class ServletClasspathScanner extends ClasspathScanner {
+		protected static URL cleanUrl(String resourceName, URL url)
+				throws UnsupportedEncodingException, MalformedURLException {
+			String urlPath = url.getFile();
+			String protocol = url.getProtocol();
+			urlPath = URLDecoder.decode(urlPath, "UTF-8");
+			if (urlPath.startsWith("file:")) {
+				// On windows urlpath looks like file:/C: on Linux
+				// file:/home
+				// substring(5) works for both
+				urlPath = urlPath.substring(5);
+				if (protocol.equals("jar")) {
+					protocol = "file";
+				}
+			}
+			if (urlPath.indexOf('!') > 0) {
+				urlPath = urlPath.substring(0, urlPath.indexOf('!'));
+			} else {
+				File dirOrArchive = new File(urlPath);
+				if (resourceName != null && resourceName.lastIndexOf('/') > 0) {
+					// for META-INF/components.xml
+					dirOrArchive = dirOrArchive.getParentFile();
+				}
+				urlPath = dirOrArchive.getParent();
+			}
+			if (urlPath.contains("\\")) {
+				urlPath = urlPath.replace('\\', '/');
+				if (!urlPath.startsWith("/")) {
+					urlPath = "/" + urlPath;
+				}
+			}
+			URL newUrl = new URL(protocol, url.getHost(), urlPath);
+			return newUrl;
+		}
+
 		private final Object logger;
 
 		private final String resourceName;
@@ -390,6 +424,15 @@ public class ClasspathScanner {
 						visitedUrls);
 			}
 			return classDataCache;
+		}
+
+		@SuppressWarnings("unused")
+		private void info(String message) {
+			if (logger instanceof Logger) {
+				((Logger) logger).info(message);
+			} else {
+				System.out.println(message);
+			}
 		}
 
 		// lifted from seam 1.21
@@ -449,15 +492,6 @@ public class ClasspathScanner {
 			}
 		}
 
-		@SuppressWarnings("unused")
-		private void info(String message) {
-			if (logger instanceof Logger) {
-				((Logger) logger).info(message);
-			} else {
-				System.out.println(message);
-			}
-		}
-
 		private void warn(String message, Exception t) {
 			if (logger instanceof Logger) {
 				((Logger) logger).warn(message, t);
@@ -465,40 +499,6 @@ public class ClasspathScanner {
 				System.out.println(message);
 				t.printStackTrace();
 			}
-		}
-
-		protected static URL cleanUrl(String resourceName, URL url)
-				throws UnsupportedEncodingException, MalformedURLException {
-			String urlPath = url.getFile();
-			String protocol = url.getProtocol();
-			urlPath = URLDecoder.decode(urlPath, "UTF-8");
-			if (urlPath.startsWith("file:")) {
-				// On windows urlpath looks like file:/C: on Linux
-				// file:/home
-				// substring(5) works for both
-				urlPath = urlPath.substring(5);
-				if (protocol.equals("jar")) {
-					protocol = "file";
-				}
-			}
-			if (urlPath.indexOf('!') > 0) {
-				urlPath = urlPath.substring(0, urlPath.indexOf('!'));
-			} else {
-				File dirOrArchive = new File(urlPath);
-				if (resourceName != null && resourceName.lastIndexOf('/') > 0) {
-					// for META-INF/components.xml
-					dirOrArchive = dirOrArchive.getParentFile();
-				}
-				urlPath = dirOrArchive.getParent();
-			}
-			if (urlPath.contains("\\")) {
-				urlPath = urlPath.replace('\\', '/');
-				if (!urlPath.startsWith("/")) {
-					urlPath = "/" + urlPath;
-				}
-			}
-			URL newUrl = new URL(protocol, url.getHost(), urlPath);
-			return newUrl;
 		}
 	}
 }

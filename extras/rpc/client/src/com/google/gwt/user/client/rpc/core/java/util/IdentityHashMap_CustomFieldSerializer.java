@@ -26,28 +26,27 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  * Custom field serializer for {@link java.util.HashMap}.
  */
 @SuppressWarnings("rawtypes")
-public final class IdentityHashMap_CustomFieldSerializer extends
-    CustomFieldSerializer<IdentityHashMap> {
+public final class IdentityHashMap_CustomFieldSerializer
+		extends CustomFieldSerializer<IdentityHashMap> {
+	public static void deserialize(SerializationStreamReader streamReader,
+			IdentityHashMap instance) throws SerializationException {
+		Map_CustomFieldSerializerBase.deserialize(streamReader, instance);
+	}
 
-  public static void deserialize(SerializationStreamReader streamReader,
-      IdentityHashMap instance) throws SerializationException {
-    Map_CustomFieldSerializerBase.deserialize(streamReader, instance);
-  }
+	public static void serialize(SerializationStreamWriter streamWriter,
+			IdentityHashMap instance) throws SerializationException {
+		Map_CustomFieldSerializerBase.serialize(streamWriter, instance);
+	}
 
-  public static void serialize(SerializationStreamWriter streamWriter,
-      IdentityHashMap instance) throws SerializationException {
-    Map_CustomFieldSerializerBase.serialize(streamWriter, instance);
-  }
+	@Override
+	public void deserializeInstance(SerializationStreamReader streamReader,
+			IdentityHashMap instance) throws SerializationException {
+		deserialize(streamReader, instance);
+	}
 
-  @Override
-  public void deserializeInstance(SerializationStreamReader streamReader,
-      IdentityHashMap instance) throws SerializationException {
-    deserialize(streamReader, instance);
-  }
-
-  @Override
-  public void serializeInstance(SerializationStreamWriter streamWriter,
-      IdentityHashMap instance) throws SerializationException {
-    serialize(streamWriter, instance);
-  }
+	@Override
+	public void serializeInstance(SerializationStreamWriter streamWriter,
+			IdentityHashMap instance) throws SerializationException {
+		serialize(streamWriter, instance);
+	}
 }

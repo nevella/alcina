@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.xml.namespace.QName;
-import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 
@@ -36,15 +35,44 @@ public class OptimizingXpathEvaluator {
 		this.expressionCache = xexc.expressionCache;
 	}
 
+	public Element getElementByXpath(String xpathStr, Node node) {
+		return (Element) evaluate(xpathStr, node, XPathConstants.NODE, n -> {
+			return (Element) n;
+		});
+	}
+
+	public List<Element> getElementsByXpath(String xpathStr, Node node) {
+		return (List<Element>) evaluate(xpathStr, node, XPathConstants.NODESET,
+				o -> {
+					return XmlUtils.nodeListToElementList((NodeList) o);
+				});
+	}
+
+	public Node getNodeByXpath(String xpathStr, Node node) {
+		return (Node) evaluate(xpathStr, node, XPathConstants.NODE, n -> {
+			return (Node) n;
+		});
+	}
+
+	public List<Node> getNodesByXpath(String xpathStr, Node node) {
+		return (List<Node>) evaluate(xpathStr, node, XPathConstants.NODESET,
+				o -> {
+					return XmlUtils.nodeListToList((NodeList) o);
+				});
+	}
+
 	public String getTextContentOrEmpty(String xpath, Node from) {
 		Node node = getNodeByXpath(xpath, from);
 		return node == null ? "" : node.getTextContent();
 	}
 
-	public Element getElementByXpath(String xpathStr, Node node) {
-		return (Element) evaluate(xpathStr, node, XPathConstants.NODE, n -> {
-			return (Element) n;
-		});
+	public boolean isOptimiseXpathEvaluationSpeed() {
+		return optimiseXpathEvaluationSpeed;
+	}
+
+	public void setOptimiseXpathEvaluationSpeed(
+			boolean optimiseXpathEvaluationSpeed) {
+		this.optimiseXpathEvaluationSpeed = optimiseXpathEvaluationSpeed;
 	}
 
 	private <T> T evaluate(String xpathStr, Node node, QName qName,
@@ -58,26 +86,6 @@ public class OptimizingXpathEvaluator {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	public List<Element> getElementsByXpath(String xpathStr, Node node) {
-		return (List<Element>) evaluate(xpathStr, node, XPathConstants.NODESET,
-				o -> {
-					return XmlUtils.nodeListToElementList((NodeList) o);
-				});
-	}
-
-	public List<Node> getNodesByXpath(String xpathStr, Node node) {
-		return (List<Node>) evaluate(xpathStr, node, XPathConstants.NODESET,
-				o -> {
-					return XmlUtils.nodeListToList((NodeList) o);
-				});
-	}
-
-	public Node getNodeByXpath(String xpathStr, Node node) {
-		return (Node) evaluate(xpathStr, node, XPathConstants.NODE, n -> {
-			return (Node) n;
-		});
 	}
 
 	private void maybeReinsert() {
@@ -110,14 +118,5 @@ public class OptimizingXpathEvaluator {
 			removedParent.removeChild(node);
 		}
 		return xpathStr;
-	}
-
-	public boolean isOptimiseXpathEvaluationSpeed() {
-		return optimiseXpathEvaluationSpeed;
-	}
-
-	public void setOptimiseXpathEvaluationSpeed(
-			boolean optimiseXpathEvaluationSpeed) {
-		this.optimiseXpathEvaluationSpeed = optimiseXpathEvaluationSpeed;
 	}
 }

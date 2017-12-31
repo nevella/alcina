@@ -51,7 +51,8 @@ public class LogStoreCompactor extends Consort<Phase> {
 
 	public LogStoreCompactor() {
 		addPlayer(new Compactor_GET_ID_RANGE());
-		addPlayer(new Compactor_GET_RECORDS_AFTER_MERGE_SOURCE_TO_CHECK_FOR_EXCEPTION());
+		addPlayer(
+				new Compactor_GET_RECORDS_AFTER_MERGE_SOURCE_TO_CHECK_FOR_EXCEPTION());
 		addPlayer(new Compactor_GET_UNCOMPACTED_MERGE_SOURCE());
 		addPlayer(new Compactor_GET_UNCOMPACTED_MERGE_TARGET());
 		addPlayer(new Compactor_MERGE_AND_PERSIST_FROM());
@@ -76,8 +77,13 @@ public class LogStoreCompactor extends Consort<Phase> {
 				&& records.size > RemoteLogPersister.PREFERRED_MAX_PUSH_SIZE;
 	}
 
-	class Compactor_GET_ID_RANGE extends
-			EnumRunnableAsyncCallbackPlayer<IntPair, Phase> {
+	void finished(String cause) {
+		System.out.println(cause);
+		finished();
+	}
+
+	class Compactor_GET_ID_RANGE
+			extends EnumRunnableAsyncCallbackPlayer<IntPair, Phase> {
 		public Compactor_GET_ID_RANGE() {
 			super(Phase.GOT_ID_RANGE);
 		}
@@ -122,21 +128,26 @@ public class LogStoreCompactor extends Consort<Phase> {
 		}
 
 		@Override
+		protected int getInitialMinimumRecordId() {
+			return mergeFromId + 1;
+		}
+
+		@Override
 		void foundUnMerged(ClientLogRecords records) {
 			mergeCheck = records;
 			mergeCheckId = recordId;
 		}
+	}
+
+	class Compactor_GET_UNCOMPACTED_MERGE_SOURCE
+			extends Compactor_GET_UNCOMPACTED_RECORD {
+		public Compactor_GET_UNCOMPACTED_MERGE_SOURCE() {
+			super(Phase.GOT_UNCOMPACTED_MERGE_SOURCE);
+		}
 
 		@Override
 		protected int getInitialMinimumRecordId() {
-			return mergeFromId + 1;
-		}
-	}
-
-	class Compactor_GET_UNCOMPACTED_MERGE_SOURCE extends
-			Compactor_GET_UNCOMPACTED_RECORD {
-		public Compactor_GET_UNCOMPACTED_MERGE_SOURCE() {
-			super(Phase.GOT_UNCOMPACTED_MERGE_SOURCE);
+			return minNonCompactedLogRecordId + 1;
 		}
 
 		@Override
@@ -144,17 +155,17 @@ public class LogStoreCompactor extends Consort<Phase> {
 			mergeFrom = records;
 			mergeFromId = recordId;
 		}
+	}
+
+	class Compactor_GET_UNCOMPACTED_MERGE_TARGET
+			extends Compactor_GET_UNCOMPACTED_RECORD {
+		public Compactor_GET_UNCOMPACTED_MERGE_TARGET() {
+			super(Phase.GOT_UNCOMPACTED_MERGE_TARGET);
+		}
 
 		@Override
 		protected int getInitialMinimumRecordId() {
-			return minNonCompactedLogRecordId + 1;
-		}
-	}
-
-	class Compactor_GET_UNCOMPACTED_MERGE_TARGET extends
-			Compactor_GET_UNCOMPACTED_RECORD {
-		public Compactor_GET_UNCOMPACTED_MERGE_TARGET() {
-			super(Phase.GOT_UNCOMPACTED_MERGE_TARGET);
+			return minNonCompactedLogRecordId;
 		}
 
 		@Override
@@ -162,26 +173,12 @@ public class LogStoreCompactor extends Consort<Phase> {
 			mergeTo = records;
 			minNonCompactedLogRecordId = recordId;
 		}
-
-		@Override
-		protected int getInitialMinimumRecordId() {
-			return minNonCompactedLogRecordId;
-		}
 	}
 
-	abstract class Compactor_GET_UNCOMPACTED_RECORD extends
-			EnumRunnableAsyncCallbackPlayer<Map<Integer, String>, Phase>
+	abstract class Compactor_GET_UNCOMPACTED_RECORD
+			extends EnumRunnableAsyncCallbackPlayer<Map<Integer, String>, Phase>
 			implements LoopingPlayer {
 		int recordId = -1;
-
-		public void loop() {
-			LogStore.get().getRange(recordId, recordId, this);
-		}
-
-		@Override
-		public void setConsort(Consort<Phase> consort) {
-			super.setConsort(consort);
-		}
 
 		public Compactor_GET_UNCOMPACTED_RECORD(Phase phase) {
 			super(phase);
@@ -192,7 +189,9 @@ public class LogStoreCompactor extends Consort<Phase> {
 			return "increment until we find a compactable or otherwise worthwhile record chunk";
 		}
 
-		protected abstract int getInitialMinimumRecordId();
+		public void loop() {
+			LogStore.get().getRange(recordId, recordId, this);
+		}
 
 		@Override
 		public void onSuccess(Map<Integer, String> result) {
@@ -207,7 +206,8 @@ public class LogStoreCompactor extends Consort<Phase> {
 				}
 			}
 			try {
-				ClientLogRecords records = Registry.impl(AlcinaBeanSerializer.class)
+				ClientLogRecords records = Registry
+						.impl(AlcinaBeanSerializer.class)
 						.deserialize(result.values().iterator().next());
 				if (isCompacted(records) && continueIfCompacted()) {
 					recordId++;
@@ -225,30 +225,32 @@ public class LogStoreCompactor extends Consort<Phase> {
 			}
 		}
 
-		protected boolean continueIfCompacted() {
-			return true;
-		}
-
 		@Override
 		public void run() {
 			recordId = getInitialMinimumRecordId();
 			loop();
 		}
 
+		@Override
+		public void setConsort(Consort<Phase> consort) {
+			super.setConsort(consort);
+		}
+
+		protected boolean continueIfCompacted() {
+			return true;
+		}
+
 		protected void eof() {
 			finished("eof");
 		}
 
+		protected abstract int getInitialMinimumRecordId();
+
 		abstract void foundUnMerged(ClientLogRecords records);
 	}
 
-	void finished(String cause) {
-		System.out.println(cause);
-		finished();
-	}
-
-	class Compactor_MERGE_AND_PERSIST_FROM extends
-			EnumRunnableAsyncCallbackPlayer<Void, Phase> {
+	class Compactor_MERGE_AND_PERSIST_FROM
+			extends EnumRunnableAsyncCallbackPlayer<Void, Phase> {
 		public Compactor_MERGE_AND_PERSIST_FROM() {
 			super(Phase.MERGED_AND_PERSISTED_FROM);
 		}
@@ -259,9 +261,9 @@ public class LogStoreCompactor extends Consort<Phase> {
 				finished("nothing to merge");
 			}
 			if (mergeCheck != null) {
-				boolean hasExceptionKeepContext = CollectionFilters
-						.first(mergeCheck.getLogRecords(),
-								new ClientLogRecordKeepNonCriticalPrecedingContextFilter()) != null;
+				boolean hasExceptionKeepContext = CollectionFilters.first(
+						mergeCheck.getLogRecords(),
+						new ClientLogRecordKeepNonCriticalPrecedingContextFilter()) != null;
 				if (hasExceptionKeepContext) {
 					minNonCompactedLogRecordId = mergeCheckId + 1;
 					restart();
@@ -284,8 +286,8 @@ public class LogStoreCompactor extends Consort<Phase> {
 		}
 	}
 
-	class Compactor_MERGE_AND_PERSIST_TO extends
-			EnumRunnableAsyncCallbackPlayer<Void, Phase> {
+	class Compactor_MERGE_AND_PERSIST_TO
+			extends EnumRunnableAsyncCallbackPlayer<Void, Phase> {
 		public Compactor_MERGE_AND_PERSIST_TO() {
 			super(Phase.MERGED_AND_PERSISTED_TO);
 		}
@@ -293,8 +295,8 @@ public class LogStoreCompactor extends Consort<Phase> {
 		@Override
 		public void run() {
 			if (mergeFrom.getLogRecords().isEmpty()) {
-				LogStore.get().objectStore.removeIdRange(
-						IntPair.point(mergeFromId), this);
+				LogStore.get().objectStore
+						.removeIdRange(IntPair.point(mergeFromId), this);
 			} else {
 				String serialized = new AlcinaBeanSerializerC()
 						.serialize(mergeFrom);

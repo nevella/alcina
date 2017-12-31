@@ -22,10 +22,21 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
  * and should be a state machine. in fact, izz a mess!
  * 
  * refactor-consort
+ * 
  * @author nick@alcina.cc
  * 
  */
 public class OfflineManager {
+	public static OfflineManager get() {
+		OfflineManager singleton = Registry
+				.checkSingleton(OfflineManager.class);
+		if (singleton == null) {
+			singleton = new OfflineManager();
+			Registry.registerSingleton(OfflineManager.class, singleton);
+		}
+		return singleton;
+	}
+
 	private final String APPLICATION_CHANGED_ON_THE_SERVER_PLEASE_WAIT = "Application changed on the server - please wait";
 
 	private boolean hostPageCacheReturned = true;
@@ -34,37 +45,43 @@ public class OfflineManager {
 
 	private int updateCount;
 
-	private OfflineManager() {
-		super();
-	}
-
-	public static OfflineManager get() {
-		OfflineManager singleton = Registry.checkSingleton(OfflineManager.class);
-		if (singleton == null) {
-			singleton = new OfflineManager();
-			Registry.registerSingleton(OfflineManager.class, singleton);
-		}
-		return singleton;
-	}
-
 	private Callback<Void> updatingCallback;
 
 	private Timer appCacheResolutionTimer;
 
-	public boolean resourceStoresCaptured() {
-		return hostPageCacheReturned;
+	private OfflineManager() {
+		super();
 	}
 
-	public void registerUpdatingCallback(Callback<Void> callback) {
-		updatingCallback = callback;
+	public boolean checkCacheLoading(AsyncCallback completionCallback) {
+		Registry.impl(ClientNotifications.class)
+				.log("OfflineUtils.checkCacheLoading");
+		AppCache appCache = AppCache.getApplicationCache();
+		AppCacheEventHandler handler = new AppCacheEventHandler(true,
+				completionCallback);
+		registerHandler(appCache, handler);
+		handler.onBrowserEvent(null);
+		if (appCache.getStatus() == AppCache.UPDATEREADY) {
+			waitAndReload();
+		}
+		return isUpdating();
+	}
+
+	public boolean isInvalidModule(Throwable caught) {
+		String s = caught.getMessage();
+		return s.equals(new IncompatibleRemoteServiceException().getMessage());
 	}
 
 	public boolean isUpdating() {
 		return cd != null;
 	}
 
-	public enum FromRequiresCurrentCachePerspsectiveReccAction {
-		WAIT, CONTINUE, DOWNLOADING
+	public void registerUpdatingCallback(Callback<Void> callback) {
+		updatingCallback = callback;
+	}
+
+	public boolean resourceStoresCaptured() {
+		return hostPageCacheReturned;
 	}
 
 	public FromRequiresCurrentCachePerspsectiveReccAction shouldIWait() {
@@ -84,22 +101,8 @@ public class OfflineManager {
 		return FromRequiresCurrentCachePerspsectiveReccAction.CONTINUE;// unknown
 	}
 
-	public boolean checkCacheLoading(AsyncCallback completionCallback) {
-		Registry.impl(ClientNotifications.class)
-				.log("OfflineUtils.checkCacheLoading");
-		AppCache appCache = AppCache.getApplicationCache();
-		AppCacheEventHandler handler = new AppCacheEventHandler(true,
-				completionCallback);
-		registerHandler(appCache, handler);
-		handler.onBrowserEvent(null);
-		if (appCache.getStatus() == AppCache.UPDATEREADY) {
-			waitAndReload();
-		}
-		return isUpdating();
-	}
-
 	public void waitAndReload() {
-		if(isUpdating()){
+		if (isUpdating()) {
 			return;
 		}
 		if (updatingCallback != null) {
@@ -114,6 +117,62 @@ public class OfflineManager {
 		update();
 	}
 
+	public void waitUntilAppCacheResolved(final Callback callback) {
+		if (shouldIWait() == FromRequiresCurrentCachePerspsectiveReccAction.CONTINUE) {
+			callback.apply(null);
+			return;
+		}
+		appCacheResolutionTimer = new Timer() {
+			@Override
+			public void run() {
+				FromRequiresCurrentCachePerspsectiveReccAction siw = shouldIWait();
+				switch (siw) {
+				case CONTINUE:
+					appCacheResolutionTimer.cancel();
+					callback.apply(null);
+					return;
+				case DOWNLOADING:
+					waitAndReload();
+					cancel();
+					return;
+				default:
+					break;
+				}
+			}
+		};
+		appCacheResolutionTimer.scheduleRepeating(100);
+	}
+
+	private void complete() {
+		cd.setStatus("Complete");
+		new Timer() {
+			@Override
+			public void run() {
+				Window.Location.reload();
+			}
+		}.schedule(1000);
+	}
+
+	private void error(String err) {
+		Window.alert(CommonUtils.formatJ(
+				"The application reload failed " + "- \n Reason: %s. \n\n"
+						+ " Please press 'ok' to reload the application",
+				err));
+		Window.Location.reload();
+	}
+
+	private void update() {
+		int updateStatus = AppCache.getApplicationCache().getStatus();
+		if (updateStatus == AppCache.CHECKING
+				|| updateStatus == AppCache.DOWNLOADING) {
+		} else {
+			complete();
+			return;
+		}
+		cd.setStatus(CommonUtils.formatJ("%s - %s files downloaded",
+				APPLICATION_CHANGED_ON_THE_SERVER_PLEASE_WAIT, updateCount));
+	}
+
 	protected void registerHandler(AppCache appCache,
 			AppCacheEventHandler handler) {
 		appCache.addEventListener(AppCache.ONCACHED, handler, true);
@@ -123,6 +182,10 @@ public class OfflineManager {
 		appCache.addEventListener(AppCache.ONNOUPDATE, handler, true);
 		appCache.addEventListener(AppCache.ONPROGRESS, handler, true);
 		appCache.addEventListener(AppCache.ONUPDATEREADY, handler, true);
+	}
+
+	public enum FromRequiresCurrentCachePerspsectiveReccAction {
+		WAIT, CONTINUE, DOWNLOADING
 	}
 
 	class AppCacheEventHandler implements EventListener {
@@ -141,9 +204,8 @@ public class OfflineManager {
 		@Override
 		public void onBrowserEvent(Event event) {
 			Registry.impl(ClientNotifications.class)
-					.log(CommonUtils.formatJ(
-							"OfflineUtils.event - %s,%s,%s,%s", cancelled,
-							headless,
+					.log(CommonUtils.formatJ("OfflineUtils.event - %s,%s,%s,%s",
+							cancelled, headless,
 							(event == null ? "null" : event.getType()),
 							AppCache.getApplicationCache().getStatus()));
 			if (cancelled) {
@@ -174,65 +236,5 @@ public class OfflineManager {
 				update();
 			}
 		}
-	}
-
-	private void error(String err) {
-		Window.alert(CommonUtils.formatJ("The application reload failed "
-				+ "- \n Reason: %s. \n\n"
-				+ " Please press 'ok' to reload the application", err));
-		Window.Location.reload();
-	}
-
-	private void update() {
-		int updateStatus = AppCache.getApplicationCache().getStatus();
-		if (updateStatus == AppCache.CHECKING
-				|| updateStatus == AppCache.DOWNLOADING) {
-		} else {
-			complete();
-			return;
-		}
-		cd.setStatus(CommonUtils.formatJ("%s - %s files downloaded",
-				APPLICATION_CHANGED_ON_THE_SERVER_PLEASE_WAIT, updateCount));
-	}
-
-	private void complete() {
-		cd.setStatus("Complete");
-		new Timer() {
-			@Override
-			public void run() {
-				Window.Location.reload();
-			}
-		}.schedule(1000);
-	}
-
-	public boolean isInvalidModule(Throwable caught) {
-		String s = caught.getMessage();
-		return s.equals(new IncompatibleRemoteServiceException().getMessage());
-	}
-
-	public void waitUntilAppCacheResolved(final Callback callback) {
-		if (shouldIWait() == FromRequiresCurrentCachePerspsectiveReccAction.CONTINUE) {
-			callback.apply(null);
-			return;
-		}
-		appCacheResolutionTimer = new Timer() {
-			@Override
-			public void run() {
-				FromRequiresCurrentCachePerspsectiveReccAction siw = shouldIWait();
-				switch(siw){
-				case CONTINUE:
-					appCacheResolutionTimer.cancel();
-					callback.apply(null);
-					return;
-				case DOWNLOADING:
-					waitAndReload();
-					cancel();
-					return;
-				default:
-					break;
-				}
-			}
-		};
-		appCacheResolutionTimer.scheduleRepeating(100);
 	}
 }

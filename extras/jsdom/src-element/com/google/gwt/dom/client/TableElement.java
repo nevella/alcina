@@ -45,6 +45,15 @@ public class TableElement extends Element {
 	}
 
 	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
+
+	/**
 	 * Determines whether the given {@link JavaScriptObject} can be cast to this
 	 * class. A <code>null</code> object will cause this method to return
 	 * <code>false</code>.
@@ -68,54 +77,18 @@ public class TableElement extends Element {
 		return false;
 	}
 
-	/**
-	 * Determine whether the given {@link Element} can be cast to this class. A
-	 * <code>null</code> node will cause this method to return
-	 * <code>false</code>.
-	 */
-	public static boolean is(Element elem) {
-		return elem != null && elem.hasTagName(TAG);
-	}
-
 	protected TableElement() {
 	}
-
-	/**
-	 * Create a new table caption object or return an existing one.
-	 * 
-	 * @return A CAPTION element.
-	 */
-	private native ElementRemote createCaption0(ElementRemote elt) /*-{
-        return elt.createCaption();
-	}-*/;
 
 	public TableCaptionElement createCaption() {
 		throw new UnsupportedOperationException();
 		// return LocalDom.nodeFor(createCaption0(domImpl));
 	}
 
-	/**
-	 * Create a table footer row or return an existing one.
-	 * 
-	 * @return A footer element (TFOOT)
-	 */
-	private native ElementRemote createTFoot0(ElementRemote elt) /*-{
-        return elt.createTFoot();
-	}-*/;
-
 	public TableSectionElement createTFoot() {
 		Preconditions.checkState(!linkedToRemote());
 		return (TableSectionElement) local().createOrReturnChild("tfoot");
 	}
-
-	/**
-	 * Create a table header row or return an existing one.
-	 * 
-	 * @return A new table header element (THEAD)
-	 */
-	native ElementRemote createTHead0(ElementRemote elt) /*-{
-        return elt.createTHead();
-	}-*/;
 
 	public TableSectionElement createTHead() {
 		Preconditions.checkState(!linkedToRemote());
@@ -123,54 +96,20 @@ public class TableElement extends Element {
 		// else case remote to TableElementRemote, write there
 	}
 
-	/**
-	 * Delete the table caption, if one exists.
-	 */
-	native void deleteCaption0(ElementRemote elt) /*-{
-        elt.deleteCaption();
-	}-*/;
-
 	public void deleteCaption() {
 		throw new UnsupportedOperationException();
 		// deleteCaption0(domImpl);
 	}
-
-	/**
-	 * Delete a table row.
-	 * 
-	 * @param index
-	 *            The index of the row to be deleted. This index starts from 0
-	 *            and is relative to the logical order (not document order) of
-	 *            all the rows contained inside the table. If the index is -1
-	 *            the last row in the table is deleted
-	 */
-	native void deleteRow0(ElementRemote elt, int index) /*-{
-        elt.deleteRow(index);
-	}-*/;
 
 	public void deleteRow(int index) {
 		throw new UnsupportedOperationException();
 		// deleteRow0(domImpl, index);
 	}
 
-	/**
-	 * Delete the header from the table, if one exists.
-	 */
-	native void deleteTFoot0(ElementRemote elt) /*-{
-        elt.deleteTFoot();
-	}-*/;
-
 	public void deleteTFoot() {
 		throw new UnsupportedOperationException();
 		// deleteTFoot0(domImpl);
 	}
-
-	/**
-	 * Delete the header from the table, if one exists.
-	 */
-	native void deleteTHead0(ElementRemote elt) /*-{
-        elt.deleteTHead();
-	}-*/;
 
 	public void deleteTHead() {
 		throw new UnsupportedOperationException();
@@ -270,27 +209,6 @@ public class TableElement extends Element {
 	}
 
 	/**
-	 * Returns a collection of the table bodies (including implicit ones).
-	 */
-	private final native NodeListRemote getTBodies0(ElementRemote elem) /*-{
-        return elem.tBodies;
-	}-*/;
-
-	/**
-	 * The table's TFOOT, or null if none exists.
-	 */
-	final native ElementRemote getTFoot0(ElementRemote elem) /*-{
-        return elem.tFoot;
-	}-*/;
-
-	/**
-	 * The table's THEAD, or null if none exists.
-	 */
-	final native ElementRemote getTHead0(ElementRemote elem) /*-{
-        return elem.tHead;
-	}-*/;
-
-	/**
 	 * The table's TFOOT, or null if none exists.
 	 */
 	public TableSectionElement getTFoot() {
@@ -333,8 +251,8 @@ public class TableElement extends Element {
 	 * @return The newly created row
 	 */
 	public final native TableRowElement insertRow(int index) /*-{
-        return this.insertRow(index);
-	}-*/;
+																return this.insertRow(index);
+																}-*/;
 
 	/**
 	 * The width of the border around the table.
@@ -351,8 +269,8 @@ public class TableElement extends Element {
 	 * The table's CAPTION, or null if none exists.
 	 */
 	public final native void setCaption(TableCaptionElement caption) /*-{
-        this.caption = caption;
-	}-*/;
+																		this.caption = caption;
+																		}-*/;
 
 	/**
 	 * Specifies the horizontal and vertical space between cell content and cell
@@ -403,15 +321,15 @@ public class TableElement extends Element {
 	 * The table's TFOOT, or null if none exists.
 	 */
 	public final native void setTFoot(TableSectionElement tFoot) /*-{
-        this.tFoot = tFoot;
-	}-*/;
+																	this.tFoot = tFoot;
+																	}-*/;
 
 	/**
 	 * The table's THEAD, or null if none exists.
 	 */
 	public final native void setTHead(TableSectionElement tHead) /*-{
-        this.tHead = tHead;
-	}-*/;
+																	this.tHead = tHead;
+																	}-*/;
 
 	/**
 	 * Specifies the desired table width.
@@ -423,4 +341,86 @@ public class TableElement extends Element {
 	public void setWidth(String width) {
 		this.setPropertyString("width", width);
 	}
+
+	/**
+	 * Create a new table caption object or return an existing one.
+	 * 
+	 * @return A CAPTION element.
+	 */
+	private native ElementRemote createCaption0(ElementRemote elt) /*-{
+																	return elt.createCaption();
+																	}-*/;
+
+	/**
+	 * Create a table footer row or return an existing one.
+	 * 
+	 * @return A footer element (TFOOT)
+	 */
+	private native ElementRemote createTFoot0(ElementRemote elt) /*-{
+																	return elt.createTFoot();
+																	}-*/;
+
+	/**
+	 * Returns a collection of the table bodies (including implicit ones).
+	 */
+	private final native NodeListRemote getTBodies0(ElementRemote elem) /*-{
+																		return elem.tBodies;
+																		}-*/;
+
+	/**
+	 * Create a table header row or return an existing one.
+	 * 
+	 * @return A new table header element (THEAD)
+	 */
+	native ElementRemote createTHead0(ElementRemote elt) /*-{
+															return elt.createTHead();
+															}-*/;
+
+	/**
+	 * Delete the table caption, if one exists.
+	 */
+	native void deleteCaption0(ElementRemote elt) /*-{
+													elt.deleteCaption();
+													}-*/;
+
+	/**
+	 * Delete a table row.
+	 * 
+	 * @param index
+	 *            The index of the row to be deleted. This index starts from 0
+	 *            and is relative to the logical order (not document order) of
+	 *            all the rows contained inside the table. If the index is -1
+	 *            the last row in the table is deleted
+	 */
+	native void deleteRow0(ElementRemote elt, int index) /*-{
+															elt.deleteRow(index);
+															}-*/;
+
+	/**
+	 * Delete the header from the table, if one exists.
+	 */
+	native void deleteTFoot0(ElementRemote elt) /*-{
+												elt.deleteTFoot();
+												}-*/;
+
+	/**
+	 * Delete the header from the table, if one exists.
+	 */
+	native void deleteTHead0(ElementRemote elt) /*-{
+												elt.deleteTHead();
+												}-*/;
+
+	/**
+	 * The table's TFOOT, or null if none exists.
+	 */
+	final native ElementRemote getTFoot0(ElementRemote elem) /*-{
+																return elem.tFoot;
+																}-*/;
+
+	/**
+	 * The table's THEAD, or null if none exists.
+	 */
+	final native ElementRemote getTHead0(ElementRemote elem) /*-{
+																return elem.tHead;
+																}-*/;
 }

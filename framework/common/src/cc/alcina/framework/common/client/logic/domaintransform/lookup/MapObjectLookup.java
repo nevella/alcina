@@ -26,6 +26,15 @@ public abstract class MapObjectLookup implements ObjectStore {
 		this.perClassLookups = new PerClassLookup();
 	}
 
+	public Set<HasIdAndLocalId> allValues() {
+		Set<HasIdAndLocalId> result = new LinkedHashSet<HasIdAndLocalId>();
+		for (Collection<HasIdAndLocalId> collection : getCollectionMap()
+				.values()) {
+			result.addAll(collection);
+		}
+		return result;
+	}
+
 	@Override
 	public void changeMapping(HasIdAndLocalId obj, long id, long localId) {
 		Class<? extends HasIdAndLocalId> clazz = obj.getClass();
@@ -41,14 +50,19 @@ public abstract class MapObjectLookup implements ObjectStore {
 		mapObject(obj);
 	}
 
-	public FastIdLookup createIdLookup(Class c) {
-		return GWT.isScript() ? new FastIdLookupScript()
-				: new FastIdLookupJvm();
+	@Override
+	public boolean contains(Class<? extends HasIdAndLocalId> clazz, long id) {
+		return getObject(clazz, id, 0L) != null;
 	}
 
 	@Override
 	public boolean contains(HasIdAndLocalId obj) {
 		return getObject(obj) != null;
+	}
+
+	public FastIdLookup createIdLookup(Class c) {
+		return GWT.isScript() ? new FastIdLookupScript()
+				: new FastIdLookupJvm();
 	}
 
 	@Override
@@ -78,10 +92,6 @@ public abstract class MapObjectLookup implements ObjectStore {
 
 	@Override
 	public <T> Collection<T> getCollection(Class<T> clazz) {
-		return (Collection<T>) ensureLookup(clazz).values();
-	}
-
-	public <T> Collection<T> values(Class<T> clazz) {
 		return (Collection<T>) ensureLookup(clazz).values();
 	}
 
@@ -115,6 +125,12 @@ public abstract class MapObjectLookup implements ObjectStore {
 	}
 
 	@Override
+	public void invalidate(Class<? extends HasIdAndLocalId> clazz) {
+		perClassLookups.lookups.remove(clazz);
+		perClassLookups.ensureLookup(clazz);
+	}
+
+	@Override
 	public void removeListeners() {
 		for (FastIdLookup lookup : perClassLookups.lookups.values()) {
 			for (HasIdAndLocalId o : lookup.values()) {
@@ -124,6 +140,10 @@ public abstract class MapObjectLookup implements ObjectStore {
 				}
 			}
 		}
+	}
+
+	public <T> Collection<T> values(Class<T> clazz) {
+		return (Collection<T>) ensureLookup(clazz).values();
 	}
 
 	protected FastIdLookup ensureLookup(Class c) {
@@ -166,25 +186,5 @@ public abstract class MapObjectLookup implements ObjectStore {
 		FastIdLookup getLookup(Class c) {
 			return lookups.get(c);
 		}
-	}
-
-	public Set<HasIdAndLocalId> allValues() {
-		Set<HasIdAndLocalId> result = new LinkedHashSet<HasIdAndLocalId>();
-		for (Collection<HasIdAndLocalId> collection : getCollectionMap()
-				.values()) {
-			result.addAll(collection);
-		}
-		return result;
-	}
-
-	@Override
-	public void invalidate(Class<? extends HasIdAndLocalId> clazz) {
-		perClassLookups.lookups.remove(clazz);
-		perClassLookups.ensureLookup(clazz);
-	}
-
-	@Override
-	public boolean contains(Class<? extends HasIdAndLocalId> clazz, long id) {
-		return getObject(clazz, id, 0L) != null;
 	}
 }

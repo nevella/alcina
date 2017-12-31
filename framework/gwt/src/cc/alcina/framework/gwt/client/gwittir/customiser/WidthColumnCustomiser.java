@@ -32,14 +32,14 @@ public class WidthColumnCustomiser implements Customiser {
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
-		String columnWidth = NamedParameter.Support.getParameter(
-				info.parameters(), COLUMN_WIDTH).stringValue();
+		String columnWidth = NamedParameter.Support
+				.getParameter(info.parameters(), COLUMN_WIDTH).stringValue();
 		return new StringLabelProvider(columnWidth);
 	}
 
 	@ClientInstantiable
-	public static class StringLabelProvider implements BoundWidgetProvider,
-			HasMaxWidth {
+	public static class StringLabelProvider
+			implements BoundWidgetProvider, HasMaxWidth {
 		private String columnWidth;
 
 		public StringLabelProvider() {
@@ -53,12 +53,13 @@ public class WidthColumnCustomiser implements Customiser {
 			return BoundWidgetTypeFactory.LABEL_PROVIDER.get();
 		}
 
-		public int getMaxWidth() {
-			return 0;
+		@Override
+		public String getColumnWidthString() {
+			return columnWidth;
 		}
 
-		public boolean isForceColumnWidth() {
-			return false;
+		public int getMaxWidth() {
+			return 0;
 		}
 
 		@Override
@@ -66,9 +67,8 @@ public class WidthColumnCustomiser implements Customiser {
 			return 0;
 		}
 
-		@Override
-		public String getColumnWidthString() {
-			return columnWidth;
+		public boolean isForceColumnWidth() {
+			return false;
 		}
 	}
 }

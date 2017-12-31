@@ -21,11 +21,6 @@ public class LiSetScript<H extends HasIdAndLocalId> extends AbstractSet<H>
 	private transient Collection<H> values = (Collection<H>) new FastIdLookupScript()
 			.values();
 
-	@Override
-	public Iterator<H> iterator() {
-		return values.iterator();
-	}
-
 	public LiSetScript() {
 	}
 
@@ -34,13 +29,22 @@ public class LiSetScript<H extends HasIdAndLocalId> extends AbstractSet<H>
 	}
 
 	@Override
-	public int size() {
-		return values.size();
+	public boolean add(H obj) {
+		return values.add(obj);
+	}
+
+	public Object clone() {
+		return new LiSetScript<H>(this);
 	}
 
 	@Override
-	public boolean add(H obj) {
-		return values.add(obj);
+	public boolean contains(Object o) {
+		return values.contains(o);
+	}
+
+	@Override
+	public Iterator<H> iterator() {
+		return values.iterator();
 	}
 
 	@Override
@@ -49,11 +53,7 @@ public class LiSetScript<H extends HasIdAndLocalId> extends AbstractSet<H>
 	}
 
 	@Override
-	public boolean contains(Object o) {
-		return values.contains(o);
-	}
-
-	public Object clone() {
-		return new LiSetScript<H>(this);
+	public int size() {
+		return values.size();
 	}
 }

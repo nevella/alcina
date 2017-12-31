@@ -26,28 +26,28 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  * Custom field serializer for {@link java.util.ArrayList}.
  */
 @SuppressWarnings("rawtypes")
-public final class ArrayList_CustomFieldSerializer extends
-    CustomFieldSerializer<ArrayList> {
+public final class ArrayList_CustomFieldSerializer
+		extends CustomFieldSerializer<ArrayList> {
+	public static void deserialize(SerializationStreamReader streamReader,
+			ArrayList instance) throws SerializationException {
+		Collection_CustomFieldSerializerBase.deserialize(streamReader,
+				instance);
+	}
 
-  public static void deserialize(SerializationStreamReader streamReader,
-      ArrayList instance) throws SerializationException {
-    Collection_CustomFieldSerializerBase.deserialize(streamReader, instance);
-  }
+	public static void serialize(SerializationStreamWriter streamWriter,
+			ArrayList instance) throws SerializationException {
+		Collection_CustomFieldSerializerBase.serialize(streamWriter, instance);
+	}
 
-  public static void serialize(SerializationStreamWriter streamWriter,
-      ArrayList instance) throws SerializationException {
-    Collection_CustomFieldSerializerBase.serialize(streamWriter, instance);
-  }
+	@Override
+	public void deserializeInstance(SerializationStreamReader streamReader,
+			ArrayList instance) throws SerializationException {
+		deserialize(streamReader, instance);
+	}
 
-  @Override
-  public void deserializeInstance(SerializationStreamReader streamReader,
-      ArrayList instance) throws SerializationException {
-    deserialize(streamReader, instance);
-  }
-
-  @Override
-  public void serializeInstance(SerializationStreamWriter streamWriter,
-      ArrayList instance) throws SerializationException {
-    serialize(streamWriter, instance);
-  }
+	@Override
+	public void serializeInstance(SerializationStreamWriter streamWriter,
+			ArrayList instance) throws SerializationException {
+		serialize(streamWriter, instance);
+	}
 }

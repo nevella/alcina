@@ -33,8 +33,23 @@ public class GlassDisplayer {
 	private PopupPanel glass;
 
 	private FlowPanelClickable fp;
-	
-	
+
+	public FlowPanelClickable getFp() {
+		return this.fp;
+	}
+
+	public int getOpacity() {
+		return opacity;
+	}
+
+	public void setModal(boolean modal) {
+		this.glass.setModal(modal);
+	}
+
+	public void setOpacity(int opacity) {
+		this.opacity = opacity;
+		updateOpacity();
+	}
 
 	public void show(boolean show) {
 		RootPanel.get().setStyleName("glass-showing", show);
@@ -65,22 +80,5 @@ public class GlassDisplayer {
 		if (fp != null) {
 			WidgetUtils.setOpacity(fp, opacity);
 		}
-	}
-
-	public void setOpacity(int opacity) {
-		this.opacity = opacity;
-		updateOpacity();
-	}
-
-	public int getOpacity() {
-		return opacity;
-	}
-
-	public void setModal(boolean modal) {
-		this.glass.setModal(modal);
-	}
-
-	public FlowPanelClickable getFp() {
-		return this.fp;
 	}
 }

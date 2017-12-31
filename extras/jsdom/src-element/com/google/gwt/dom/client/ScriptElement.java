@@ -21,123 +21,136 @@ import com.google.gwt.safehtml.shared.annotations.IsTrustedResourceUri;
 /**
  * Script statements.
  * 
- * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/scripts.html#edef-SCRIPT">W3C HTML Specification</a>
+ * @see <a href=
+ *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/scripts.html#edef-SCRIPT">
+ *      W3C HTML Specification</a>
  */
 @TagName(ScriptElement.TAG)
 public class ScriptElement extends Element {
+	public static final String TAG = "script";
 
-  public static final String TAG = "script";
+	/**
+	 * Assert that the given {@link Element} is compatible with this class and
+	 * automatically typecast it.
+	 */
+	public static ScriptElement as(Element elem) {
+		assert is(elem);
+		return (ScriptElement) elem;
+	}
 
-  /**
-   * Assert that the given {@link Element} is compatible with this class and
-   * automatically typecast it.
-   */
-  public static ScriptElement as(Element elem) {
-    assert is(elem);
-    return (ScriptElement) elem;
-  }
+	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
 
-  /**
-   * Determines whether the given {@link JavaScriptObject} can be cast to
-   * this class. A <code>null</code> object will cause this method to
-   * return <code>false</code>.
-   */
-  public static boolean is(JavaScriptObject o) {
-    if (Element.is(o)) {
-      return is(Element.as(o));
-    }
-    return false;
-  }
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to this
+	 * class. A <code>null</code> object will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(JavaScriptObject o) {
+		if (Element.is(o)) {
+			return is(Element.as(o));
+		}
+		return false;
+	}
 
-  /**
-   * Determine whether the given {@link Node} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Node node) {
-    if (Element.is(node)) {
-      return is((Element) node);
-    }
-    return false;
-  }
-  
-  /**
-   * Determine whether the given {@link Element} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Element elem) {
-    return elem != null && elem.hasTagName(TAG);
-  }
+	/**
+	 * Determine whether the given {@link Node} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		if (Element.is(node)) {
+			return is((Element) node);
+		}
+		return false;
+	}
 
-  protected ScriptElement() {
-  }
+	protected ScriptElement() {
+	}
 
-  /**
-   * Indicates that the user agent can defer processing of the script.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/scripts.html#adef-defer">W3C HTML Specification</a>
-   */  public  String getDefer(){
-  return this.getPropertyString("defer");
-}
+	/**
+	 * Indicates that the user agent can defer processing of the script.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/scripts.html#adef-defer">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getDefer() {
+		return this.getPropertyString("defer");
+	}
 
+	/**
+	 * URI designating an external script.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/scripts.html#adef-src-SCRIPT">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getSrc() {
+		return this.getPropertyString("src");
+	}
 
-  /**
-   * URI designating an external script.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/scripts.html#adef-src-SCRIPT">W3C HTML Specification</a>
-   */  public  String getSrc(){
-  return this.getPropertyString("src");
-}
+	/**
+	 * The script content of the element.
+	 */
+	public String getText() {
+		return this.getPropertyString("text");
+	}
 
+	/**
+	 * The content type of the script language.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/scripts.html#adef-type-SCRIPT">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getType() {
+		return this.getPropertyString("type");
+	}
 
-  /**
-   * The script content of the element.
-   */  public  String getText(){
-  return this.getPropertyString("text");
-}
+	/**
+	 * Indicates that the user agent can defer processing of the script.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/scripts.html#adef-defer">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setDefer(String defer) {
+		this.setPropertyString("defer", defer);
+	}
 
+	/**
+	 * URI designating an external script.
+	 *
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/scripts.html#adef-src-SCRIPT">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setSrc(@IsTrustedResourceUri String src) {
+		this.setPropertyString("src", src);
+	}
 
-  /**
-   * The content type of the script language.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/scripts.html#adef-type-SCRIPT">W3C HTML Specification</a>
-   */  public  String getType(){
-  return this.getPropertyString("type");
-}
+	/**
+	 * The script content of the element.
+	 */
+	public void setText(String text) {
+		this.setPropertyString("text", text);
+	}
 
-
-  /**
-   * Indicates that the user agent can defer processing of the script.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/scripts.html#adef-defer">W3C HTML Specification</a>
-   */  public  void setDefer(String defer){
-   this.setPropertyString("defer",defer);
-}
-
-
-  /**
-   * URI designating an external script.
-   *
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/scripts.html#adef-src-SCRIPT">W3C HTML Specification</a>
-   */  public  void setSrc(@IsTrustedResourceUri String src){
-   this.setPropertyString("src",src);
-}
-
-
-  /**
-   * The script content of the element.
-   */  public  void setText(String text){
-   this.setPropertyString("text",text);
-}
-
-
-  /**
-   * The content type of the script language.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/interact/scripts.html#adef-type-SCRIPT">W3C HTML Specification</a>
-   */  public  void setType(String type){
-   this.setPropertyString("type",type);
-}
-
+	/**
+	 * The content type of the script language.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/scripts.html#adef-type-SCRIPT">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setType(String type) {
+		this.setPropertyString("type", type);
+	}
 }

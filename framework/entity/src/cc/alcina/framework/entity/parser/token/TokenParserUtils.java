@@ -8,5 +8,4 @@ public class TokenParserUtils {
 		return s.replace('\u00A0', ' ').replace('\u2013', '-')
 				.replace('\u2011', '-').replace('\u2019', '\'');
 	}
-
 }

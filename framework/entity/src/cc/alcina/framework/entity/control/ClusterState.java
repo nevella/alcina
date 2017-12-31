@@ -14,7 +14,7 @@ public class ClusterState {
 	private String httpProxyBalancerUrl;
 
 	private String httpsProxyBalancerUrl;
-	
+
 	private String httpsProxyBalancerUrl2;
 
 	private String proxyToHttpPort;
@@ -22,16 +22,8 @@ public class ClusterState {
 	private String proxyToHttpsPort;
 
 	private String testUrl;
-	
+
 	private String zkHostPortUrl;
-
-	public String getZkHostPortUrl() {
-		return this.zkHostPortUrl;
-	}
-
-	public void setZkHostPortUrl(String zkHostPortUrl) {
-		this.zkHostPortUrl = zkHostPortUrl;
-	}
 
 	public List<String> getAllHosts() {
 		return this.allHosts;
@@ -53,6 +45,10 @@ public class ClusterState {
 		return this.httpsProxyBalancerUrl;
 	}
 
+	public String getHttpsProxyBalancerUrl2() {
+		return this.httpsProxyBalancerUrl2;
+	}
+
 	public String getPreferredWriterHost() {
 		return this.preferredWriterHost;
 	}
@@ -67,6 +63,10 @@ public class ClusterState {
 
 	public String getTestUrl() {
 		return this.testUrl;
+	}
+
+	public String getZkHostPortUrl() {
+		return this.zkHostPortUrl;
 	}
 
 	public void setAllHosts(List<String> allHosts) {
@@ -89,6 +89,10 @@ public class ClusterState {
 		this.httpsProxyBalancerUrl = httpsProxyBalancerUrl;
 	}
 
+	public void setHttpsProxyBalancerUrl2(String httpsProxyBalancerUrl2) {
+		this.httpsProxyBalancerUrl2 = httpsProxyBalancerUrl2;
+	}
+
 	public void setPreferredWriterHost(String preferredWriterHost) {
 		this.preferredWriterHost = preferredWriterHost;
 	}
@@ -105,11 +109,7 @@ public class ClusterState {
 		this.testUrl = testUrl;
 	}
 
-	public String getHttpsProxyBalancerUrl2() {
-		return this.httpsProxyBalancerUrl2;
-	}
-
-	public void setHttpsProxyBalancerUrl2(String httpsProxyBalancerUrl2) {
-		this.httpsProxyBalancerUrl2 = httpsProxyBalancerUrl2;
+	public void setZkHostPortUrl(String zkHostPortUrl) {
+		this.zkHostPortUrl = zkHostPortUrl;
 	}
 }

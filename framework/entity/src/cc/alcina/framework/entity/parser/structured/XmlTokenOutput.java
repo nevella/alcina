@@ -20,15 +20,19 @@ public class XmlTokenOutput {
 		this.outDoc = outDoc;
 		writeCursor = outDoc.root();
 	}
-	public void close(XmlStructuralJoin outNode, String tag){
-		close(outNode,tag,null);
+
+	public void close(XmlStructuralJoin outNode, String tag) {
+		close(outNode, tag, null);
 	}
-	public void close(XmlStructuralJoin outNode, String tag,ClosedPatchHandler closedPatchHandler) {
+
+	public void close(XmlStructuralJoin outNode, String tag,
+			ClosedPatchHandler closedPatchHandler) {
 		if (debug) {
 			System.out.format("close - %s\n", tag);
 		}
 		if (!writeCursor.tagIs(tag)) {
-			if(closedPatchHandler !=null && closedPatchHandler.permitInvalidClose(outNode,tag)){
+			if (closedPatchHandler != null
+					&& closedPatchHandler.permitInvalidClose(outNode, tag)) {
 				return;
 			}
 			outDoc.logToFile();

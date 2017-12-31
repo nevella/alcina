@@ -10,6 +10,8 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 public class PropertyModificationLog {
 	private List<PropertyModificationLogItem> items = new ArrayList<>();
 
+	UnsortedMultikeyMap<PropertyModificationLogItem> keyLookup;
+
 	public PropertyModificationLog() {
 	}
 
@@ -19,22 +21,6 @@ public class PropertyModificationLog {
 
 	public List<PropertyModificationLogItem> getItems() {
 		return this.items;
-	}
-
-	public void setItems(List<PropertyModificationLogItem> items) {
-		this.items = items;
-	}
-
-	public PropertyModificationLog merge(PropertyModificationLog otherLog) {
-		items.addAll(otherLog.items);
-		resetLookups();
-		return this;
-	}
-
-	UnsortedMultikeyMap<PropertyModificationLogItem> keyLookup;
-
-	private void resetLookups() {
-		keyLookup = null;
 	}
 
 	public List<PropertyModificationLogItem> itemsFor(Object[] keys) {
@@ -50,6 +36,16 @@ public class PropertyModificationLog {
 		return list;
 	}
 
+	public PropertyModificationLog merge(PropertyModificationLog otherLog) {
+		items.addAll(otherLog.items);
+		resetLookups();
+		return this;
+	}
+
+	public void setItems(List<PropertyModificationLogItem> items) {
+		this.items = items;
+	}
+
 	private void ensureLookups() {
 		if (keyLookup == null) {
 			keyLookup = new UnsortedMultikeyMap<>(4);
@@ -59,5 +55,9 @@ public class PropertyModificationLog {
 						item });
 			}
 		}
+	}
+
+	private void resetLookups() {
+		keyLookup = null;
 	}
 }

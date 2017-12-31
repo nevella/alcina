@@ -12,10 +12,6 @@ public abstract class PropertyStoreProjection<T extends HasIdAndLocalId>
 		propertyStore.addProjection(this);
 	}
 
-	public abstract void insert(ResultSet rs, long id) throws SQLException;
-
-	public abstract void initPropertyDescriptors();
-
 	public void index(T t, boolean add) {
 		if (add) {
 			insert(t);
@@ -23,4 +19,8 @@ public abstract class PropertyStoreProjection<T extends HasIdAndLocalId>
 			remove(t);
 		}
 	}
+
+	public abstract void initPropertyDescriptors();
+
+	public abstract void insert(ResultSet rs, long id) throws SQLException;
 }

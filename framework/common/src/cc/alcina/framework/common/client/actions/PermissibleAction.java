@@ -25,17 +25,11 @@ import cc.alcina.framework.common.client.logic.permissions.Permissible;
  * @author Nick Reddel
  */
 public class PermissibleAction implements Permissible {
-	public interface HasPermissibleActionDelegate {
-
-		public abstract PermissibleAction getDelegate();
-	}
-	public interface HasPermissibleActionChildren{
-
-		public abstract List<PermissibleAction> getChildren();
-	}
 	private String displayName;
 
 	private String cssClassName;
+
+	private String actionName;
 
 	public PermissibleAction() {
 	}
@@ -51,98 +45,107 @@ public class PermissibleAction implements Permissible {
 		this.cssClassName = cssClassName;
 	}
 
-	private String actionName;
-
-	public String getActionName() {
-		return this.actionName;
-	}
-
-	public void setActionName(String actionName) {
-		this.actionName = actionName;
-	}
-
-	public String getDisplayName() {
-		return displayName != null ? displayName : getActionName();
-	}
-
-	public String getCssClassName() {
-		return cssClassName;
+	public AccessLevel accessLevel() {
+		return AccessLevel.LOGGED_IN;
 	}
 
 	public String getActionGroupName() {
 		return null;
 	}
 
+	public String getActionName() {
+		return this.actionName;
+	}
+
+	public String getCssClassName() {
+		return cssClassName;
+	}
+
 	public List<Vetoer> getDefaultVetoers() {
 		return null;
 	}
 
-	public AccessLevel accessLevel() {
-		return AccessLevel.LOGGED_IN;
+	public String getDisplayName() {
+		return displayName != null ? displayName : getActionName();
 	}
 
 	public String rule() {
 		return null;
 	}
 
-	public static class PermissibleActionWithChildrenAndDelegate extends PermissibleActionWithDelegate implements HasPermissibleActionChildren{
+	public void setActionName(String actionName) {
+		this.actionName = actionName;
+	}
+
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
+	}
+
+	public interface HasPermissibleActionChildren {
+		public abstract List<PermissibleAction> getChildren();
+	}
+
+	public interface HasPermissibleActionDelegate {
+		public abstract PermissibleAction getDelegate();
+	}
+
+	public static class PermissibleActionEveryone extends PermissibleAction {
+		@Override
+		public AccessLevel accessLevel() {
+			return AccessLevel.EVERYONE;
+		}
+	}
+
+	public static class PermissibleActionWithChildrenAndDelegate
+			extends PermissibleActionWithDelegate
+			implements HasPermissibleActionChildren {
+		private List<PermissibleAction> children = new ArrayList<PermissibleAction>();
+
 		public PermissibleActionWithChildrenAndDelegate(
 				PermissibleAction delegate) {
 			super(delegate);
 		}
 
-		private List<PermissibleAction> children = new ArrayList<PermissibleAction>();
-
 		public List<PermissibleAction> getChildren() {
 			return this.children;
 		}
 	}
-	public static class PermissibleActionWithDelegate extends
-			PermissibleAction implements HasPermissibleActionDelegate{
+
+	public static class PermissibleActionWithDelegate extends PermissibleAction
+			implements HasPermissibleActionDelegate {
 		private final PermissibleAction delegate;
 
-		public PermissibleActionWithDelegate(
-				PermissibleAction delegate) {
+		public PermissibleActionWithDelegate(PermissibleAction delegate) {
 			this.delegate = delegate;
+		}
+
+		public AccessLevel accessLevel() {
+			return this.delegate.accessLevel();
 		}
 
 		public String getActionName() {
 			return this.delegate.getActionName();
 		}
 
-		public void setActionName(String actionName) {
-			this.delegate.setActionName(actionName);
-		}
-
-		public String getDisplayName() {
-			return this.delegate.getDisplayName();
-		}
-
 		public String getCssClassName() {
 			return this.delegate.getCssClassName();
-		}
-
-
-		public AccessLevel accessLevel() {
-			return this.delegate.accessLevel();
-		}
-
-		public String rule() {
-			return this.delegate.rule();
 		}
 
 		@Override
 		public PermissibleAction getDelegate() {
 			return this.delegate;
 		}
-	}
-	public static class PermissibleActionEveryone extends PermissibleAction{
-		@Override
-		public AccessLevel accessLevel() {
-			return AccessLevel.EVERYONE;
+
+		public String getDisplayName() {
+			return this.delegate.getDisplayName();
 		}
-	}
-	public void setDisplayName(String displayName) {
-		this.displayName = displayName;
+
+		public String rule() {
+			return this.delegate.rule();
+		}
+
+		public void setActionName(String actionName) {
+			this.delegate.setActionName(actionName);
+		}
 	}
 }

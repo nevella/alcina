@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
 import com.totsp.gwittir.client.ui.Renderer;
@@ -20,16 +19,17 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 /**
  * To allow subclassing
+ * 
  * @author nick@alcina.cc
  *
  * @param <T>
  */
 @ClientInstantiable
-public class ReflectInstantiableToStringRenderer<T> implements Renderer<T,String> {
+public class ReflectInstantiableToStringRenderer<T>
+		implements Renderer<T, String> {
+	public static final ReflectInstantiableToStringRenderer<Object> INSTANCE = new ReflectInstantiableToStringRenderer<Object>();
 
-    public static final ReflectInstantiableToStringRenderer<Object> INSTANCE = new ReflectInstantiableToStringRenderer<Object>();
-
-    public String render(T o) {
-        return (o == null) ? "" : o.toString();
-    }
+	public String render(T o) {
+		return (o == null) ? "" : o.toString();
+	}
 }

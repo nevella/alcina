@@ -41,6 +41,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,6 +59,7 @@ import javax.persistence.Transient;
 import javax.sql.DataSource;
 
 import com.google.gwt.event.shared.UmbrellaException;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -123,6 +125,8 @@ import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.projection.GraphProjections;
+import cc.alcina.framework.servlet.Sx;
 
 /**
  * <h3>Locking notes:</h3>
@@ -187,6 +191,10 @@ public class AlcinaMemCache implements RegistrableService {
 		return isRawValue(t) ? get().find(t) : t;
 	}
 
+	public static <T extends HasIdAndLocalId> T ensureNonRawAndRegister(T t) {
+		return TransformManager.get().registerDomainObject(ensureNonRaw(t));
+	}
+
 	public static void ensureReferredPropertyIsTransactional(
 			HasIdAndLocalId hili, String propertyName) {
 		// target, even if new object, will still be equals() to old, so no
@@ -217,6 +225,18 @@ public class AlcinaMemCache implements RegistrableService {
 	public static <V extends HasIdAndLocalId> boolean isRawValue(V v) {
 		V existing = (V) get().cache.get(v.getClass(), v.getId());
 		return existing == v;
+	}
+
+	public static <T extends HasIdAndLocalId> T raw(Class<T> clazz, long id) {
+		return (T) get().findRaw(clazz, id);
+	}
+
+	public static <T extends HasIdAndLocalId> T raw(HiliLocator objectLocator) {
+		return (T) get().findRaw(objectLocator.clazz, objectLocator.id);
+	}
+
+	public static <T extends HasIdAndLocalId> T raw(T t) {
+		return get().findRaw(t);
 	}
 
 	private Map<PropertyDescriptor, JoinTable> joinTables;
@@ -369,6 +389,8 @@ public class AlcinaMemCache implements RegistrableService {
 
 	private volatile Connection postInitConn;
 
+	private AtomicInteger connectionsReopened = new AtomicInteger();
+
 	public AlcinaMemCache() {
 		ThreadlocalTransformManager.threadTransformManagerWasResetListenerDelta(
 				resetListener, true);
@@ -448,15 +470,15 @@ public class AlcinaMemCache implements RegistrableService {
 		return (T) find(locator.clazz, locator.id);
 	}
 
-	public <T extends HasIdAndLocalId> T find(T t) {
-		return find(new HiliLocator(t));
-	}
-
 	public <T extends HasIdAndLocalId> Optional<T> find(Optional<T> t) {
 		if (!t.isPresent()) {
 			return t;
 		}
 		return Optional.of(find(new HiliLocator(t.get())));
+	}
+
+	public <T extends HasIdAndLocalId> T find(T t) {
+		return find(new HiliLocator(t));
 	}
 
 	public <T extends HasIdAndLocalId> T findOrCreate(Class<T> clazz,
@@ -734,6 +756,11 @@ public class AlcinaMemCache implements RegistrableService {
 		return cache.notContained(ids, clazz);
 	}
 
+	public <T extends HasIdAndLocalId> void preLoad(Class<T> clazz,
+			Collection<Long> ids) {
+		new AlcinaMemCacheQuery().ids(ids).raw().list(clazz);
+	}
+
 	public void readLockExpectLongRunning(boolean lock) {
 		expectLongRunning = lock;
 		if (lock) {
@@ -749,6 +776,9 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 		cache.put(hili);
 		index(hili, true);
+	}
+
+	public <T extends HasIdAndLocalId> void reindex(Class<T> clazz) {
 	}
 
 	public <T> T replaceWithRawValues(T t) {
@@ -877,6 +907,11 @@ public class AlcinaMemCache implements RegistrableService {
 			}
 			warmupConnections.put(conn, 0);
 		}
+	}
+
+	private void doEvictions() {
+		cacheDescriptor.preProvideTasks
+				.forEach(PreProvideTask::writeLockedCleanup);
 	}
 
 	private void ensureModificationChecker(HasIdAndLocalId hili)
@@ -1919,22 +1954,6 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 	}
 
-	private void doEvictions() {
-		cacheDescriptor.preProvideTasks
-				.forEach(PreProvideTask::writeLockedCleanup);
-	}
-
-	public static class MemcacheUpdateException extends Exception {
-		public UmbrellaException umby;
-
-		public MemcacheUpdateException(UmbrellaException umby) {
-			super("Memcache update exception - ignoreable", umby);
-			this.umby = umby;
-		}
-
-		public boolean ignoreForMemcacheExceptionCount;
-	}
-
 	synchronized LaterLookup warmupLaterLookup() {
 		LaterLookup result = new LaterLookup();
 		warmupLaterLookups.add(result);
@@ -2123,29 +2142,18 @@ public class AlcinaMemCache implements RegistrableService {
 		public void injectValue(ResultSet rs, HasIdAndLocalId source);
 	}
 
-	public class PdOperator {
-		class ResolveHelper {
-			public PropertyDescriptor memCachePdRev;
+	public static class MemcacheUpdateException extends Exception {
+		public UmbrellaException umby;
 
-			public PropertyDescriptor oneToOnePd;
+		public boolean ignoreForMemcacheExceptionCount;
 
-			public PropertyDescriptor targetPd;
-
-			public boolean inJoinTables;
-
-			boolean ensured = false;
-
-			public void ensure(Class<? extends HasIdAndLocalId> sourceClass) {
-				if (!ensured) {
-					inJoinTables = joinTables.containsKey(PdOperator.this.pd);
-					targetPd = manyToOneRev.get(sourceClass, name);
-					oneToOnePd = oneToOneRev.get(sourceClass, name);
-					memCachePdRev = memCacheColumnRev.get(sourceClass, name);
-					ensured = true;
-				}
-			}
+		public MemcacheUpdateException(UmbrellaException umby) {
+			super("Memcache update exception - ignoreable", umby);
+			this.umby = umby;
 		}
+	}
 
+	public class PdOperator {
 		ResolveHelper resolveHelper = new ResolveHelper();
 
 		Method readMethod;
@@ -2197,6 +2205,28 @@ public class AlcinaMemCache implements RegistrableService {
 				return field.get(obj);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		class ResolveHelper {
+			public PropertyDescriptor memCachePdRev;
+
+			public PropertyDescriptor oneToOnePd;
+
+			public PropertyDescriptor targetPd;
+
+			public boolean inJoinTables;
+
+			boolean ensured = false;
+
+			public void ensure(Class<? extends HasIdAndLocalId> sourceClass) {
+				if (!ensured) {
+					inJoinTables = joinTables.containsKey(PdOperator.this.pd);
+					targetPd = manyToOneRev.get(sourceClass, name);
+					oneToOnePd = oneToOneRev.get(sourceClass, name);
+					memCachePdRev = memCacheColumnRev.get(sourceClass, name);
+					ensured = true;
+				}
 			}
 		}
 	}
@@ -2359,9 +2389,35 @@ public class AlcinaMemCache implements RegistrableService {
 
 	class AlcinaMemCacheDomainHandler implements DomainHandler {
 		@Override
+		public <V extends HasIdAndLocalId> void async(Class<V> clazz,
+				long objectId, boolean create, Consumer<V> resultConsumer) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> V find(Class clazz, long id) {
+			return (V) findRaw(clazz, id);
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> V find(V v) {
+			return (V) cache.get(v.getClass(), v.getId());
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> Collection<V> list(Class<V> clazz) {
+			return cache.immutableRawValues(clazz);
+		}
+
+		@Override
 		public <V extends HasIdAndLocalId> V resolveTransactional(
 				CacheListener listener, V value, Object[] path) {
 			return transactional.resolveTransactional(listener, value, path);
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> Stream<V> stream(Class<V> clazz) {
+			return list(clazz).stream();
 		}
 
 		@Override
@@ -2371,27 +2427,26 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V find(Class clazz, long id) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public <V extends HasIdAndLocalId> Collection<V> list(Class<V> clazz) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public <V extends HasIdAndLocalId> Stream<V> stream(Class<V> clazz) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
 		public <V extends HasIdAndLocalId> V writeable(V v) {
-			// TODO Auto-generated method stub
-			return null;
+			if (v == null) {
+				return null;
+			}
+			if (ThreadlocalTransformManager.get()
+					.isListeningTo((SourcesPropertyChangeEvents) v)) {
+				return v;
+			}
+			if (v.provideWasPersisted()) {
+				v = project(v);
+			} else {
+				v = Domain.detachedToDomain(v);
+			}
+			ThreadlocalTransformManager.get()
+					.listenTo((SourcesPropertyChangeEvents) v);
+			return v;
+		}
+
+		private <V extends HasIdAndLocalId> V project(V v) {
+			return GraphProjections.defaultProjections().project(v);
 		}
 	}
 
@@ -2546,8 +2601,6 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 	}
 
-	private AtomicInteger connectionsReopened = new AtomicInteger();
-
 	class ConnResults implements Iterable<Object[]> {
 		ConnResultsIterator itr = new ConnResultsIterator();
 
@@ -2571,6 +2624,11 @@ public class AlcinaMemCache implements RegistrableService {
 
 		public ResultSet ensureRs() {
 			return ensureRs(0);
+		}
+
+		@Override
+		public Iterator<Object[]> iterator() {
+			return itr;
 		}
 
 		private ResultSet ensureRs(int pass) {
@@ -2609,11 +2667,6 @@ public class AlcinaMemCache implements RegistrableService {
 				}
 				throw new WrappedRuntimeException(e);
 			}
-		}
-
-		@Override
-		public Iterator<Object[]> iterator() {
-			return itr;
 		}
 
 		class ConnResultsIterator implements Iterator<Object[]> {
@@ -2825,29 +2878,5 @@ public class AlcinaMemCache implements RegistrableService {
 		void startCommit() {
 			((PsAwareMultiplexingObjectCache) store.getCache()).startCommit();
 		}
-	}
-
-	public static <T extends HasIdAndLocalId> T ensureNonRawAndRegister(T t) {
-		return TransformManager.get().registerDomainObject(ensureNonRaw(t));
-	}
-
-	public <T extends HasIdAndLocalId> void reindex(Class<T> clazz) {
-	}
-
-	public <T extends HasIdAndLocalId> void preLoad(Class<T> clazz,
-			Collection<Long> ids) {
-		new AlcinaMemCacheQuery().ids(ids).raw().list(clazz);
-	}
-
-	public static <T extends HasIdAndLocalId> T raw(T t) {
-		return get().findRaw(t);
-	}
-
-	public static <T extends HasIdAndLocalId> T raw(Class<T> clazz, long id) {
-		return (T) get().findRaw(clazz, id);
-	}
-
-	public static <T extends HasIdAndLocalId> T raw(HiliLocator objectLocator) {
-		return (T) get().findRaw(objectLocator.clazz, objectLocator.id);
 	}
 }

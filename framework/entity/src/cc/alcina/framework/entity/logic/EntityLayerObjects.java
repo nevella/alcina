@@ -27,10 +27,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * 
  */
 public class EntityLayerObjects {
-	private EntityLayerObjects() {
-		super();
-	}
-
 	public static EntityLayerObjects get() {
 		EntityLayerObjects singleton = Registry
 				.checkSingleton(EntityLayerObjects.class);
@@ -43,37 +39,42 @@ public class EntityLayerObjects {
 
 	private Logger metricLogger;
 
-	public Logger getMetricLogger() {
-		return this.metricLogger;
-	}
-
-	public void setMetricLogger(Logger metricLogger) {
-		this.metricLogger = metricLogger;
-	}
-
 	private Logger persistentLogger;
 
-	public void setPersistentLogger(Logger persistentLogger) {
-		this.persistentLogger = persistentLogger;
+	private File dataFolder;
+
+	private Registry servletLayerRegistry;
+
+	private EntityLayerObjects() {
+		super();
+	}
+
+	public File getDataFolder() {
+		return dataFolder;
+	}
+
+	public Logger getMetricLogger() {
+		return this.metricLogger;
 	}
 
 	public Logger getPersistentLogger() {
 		return persistentLogger;
 	}
 
-	private File dataFolder;
+	public Registry getServletLayerRegistry() {
+		return this.servletLayerRegistry;
+	}
 
 	public void setDataFolder(File dataFolder) {
 		this.dataFolder = dataFolder;
 	}
 
-	public File getDataFolder() {
-		return dataFolder;
+	public void setMetricLogger(Logger metricLogger) {
+		this.metricLogger = metricLogger;
 	}
-	private Registry servletLayerRegistry;
 
-	public Registry getServletLayerRegistry() {
-		return this.servletLayerRegistry;
+	public void setPersistentLogger(Logger persistentLogger) {
+		this.persistentLogger = persistentLogger;
 	}
 
 	public void setServletLayerRegistry(Registry servletLayerRegistry) {

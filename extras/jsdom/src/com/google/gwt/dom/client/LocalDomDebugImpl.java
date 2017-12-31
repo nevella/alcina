@@ -14,31 +14,44 @@ public class LocalDomDebugImpl {
 
 	static boolean debugAll = false;
 
-	public void log(LocalDomDebug channel, String message, Object... args) {
-		if (!debug) {
+	public void debugNodeFor0(ElementRemote elementRemote, Element hasNode,
+			ElementRemoteIndex remoteIndex, boolean firstPass) {
+		if (remoteIndex.hasRemoteDefined() && firstPass) {
 			return;
 		}
-		if (!debugAll) {
-			switch (channel) {
-			case RESOLVE:
-			case DOM_EVENT:
-			case REQUIRES_SYNC:
-			case CREATED_PENDING_RESOLUTION:
-			case DISPATCH_DETAILS:
-			case DOM_MOUSE_EVENT:
-			case STYLE:
-			case EVENT_MOD:
-				return;
+		List<Integer> sizes = remoteIndex.sizes();
+		List<Integer> indicies = remoteIndex.indicies();
+		boolean sizesMatch = true;
+		Element cursor = hasNode;
+		for (int idx = sizes.size() - 1; idx >= 0; idx--) {
+			int size = sizes.get(idx);
+			if (cursor.getChildCount() != size) {
+				sizesMatch = false;
+				break;
 			}
+			int nodeIndex = indicies.get(idx);
+			cursor = (Element) cursor.getChild(nodeIndex);
 		}
-		if (args.length > 0) {
-			message = Ax.format(message, args);
+		if (sizesMatch) {
+			return;
 		}
-		Ax.out("%s: %s", channel, message);
-		if (channel == LocalDomDebug.DEBUG_ISSUE
-				&& Window.Location.getPort().contains("8080")) {
-			throw new RuntimeException();
-		}
+		remoteIndex = elementRemote.provideRemoteIndex(false);
+		String remoteDebug = null;
+		String remoteDomHasNode = hasNode.typedRemote().provideRemoteDomTree();
+		String remoteDom = elementRemote.provideRemoteDomTree();
+		String localDomHasNode = hasNode.local().provideLocalDomTree();
+		String remoteDomHasNode2 = CommonUtils
+				.trimLinesToChars(remoteDomHasNode, 50);
+		String localDomHasNode2 = CommonUtils.trimLinesToChars(localDomHasNode,
+				50);
+		ElementRemote parentRemote = elementRemote.getParentElement0();
+		remoteDebug = remoteIndex.getString();
+		String hashes = Ax.format("%s: %s %s %s", hasNode.getTagName(),
+				hasNode.hashCode(), hasNode.local().hashCode(),
+				hasNode.remote().hashCode());
+		LocalDom.debug(hasNode.typedRemote());
+		log(LocalDomDebug.DEBUG_ISSUE, "mismatched sizes");
+		int debug = 3;
 	}
 
 	public void debugPutRemote(Element needsRemote, int idx,
@@ -72,6 +85,33 @@ public class LocalDomDebugImpl {
 		}
 	}
 
+	public void log(LocalDomDebug channel, String message, Object... args) {
+		if (!debug) {
+			return;
+		}
+		if (!debugAll) {
+			switch (channel) {
+			case RESOLVE:
+			case DOM_EVENT:
+			case REQUIRES_SYNC:
+			case CREATED_PENDING_RESOLUTION:
+			case DISPATCH_DETAILS:
+			case DOM_MOUSE_EVENT:
+			case STYLE:
+			case EVENT_MOD:
+				return;
+			}
+		}
+		if (args.length > 0) {
+			message = Ax.format(message, args);
+		}
+		Ax.out("%s: %s", channel, message);
+		if (channel == LocalDomDebug.DEBUG_ISSUE
+				&& Window.Location.getPort().contains("8080")) {
+			throw new RuntimeException();
+		}
+	}
+
 	private void debugElement(Element element, Element withRemote,
 			ElementRemote elementRemote, NodeRemote remoteChild,
 			Node localChild, String issue) {
@@ -83,44 +123,6 @@ public class LocalDomDebugImpl {
 		ElementRemoteIndex remoteIndex = elementRemote.provideRemoteIndex(true);
 		remoteDebug = remoteIndex.getString();
 		log(LocalDomDebug.DEBUG_ISSUE, issue);
-		int debug = 3;
-	}
-
-	public void debugNodeFor0(ElementRemote elementRemote, Element hasNode,
-			ElementRemoteIndex remoteIndex, boolean firstPass) {
-		if (remoteIndex.hasRemoteDefined() && firstPass) {
-			return;
-		}
-		List<Integer> sizes = remoteIndex.sizes();
-		List<Integer> indicies = remoteIndex.indicies();
-		boolean sizesMatch = true;
-		Element cursor = hasNode;
-		for (int idx = sizes.size() - 1; idx >= 0; idx--) {
-			int size = sizes.get(idx);
-			if (cursor.getChildCount() != size) {
-				sizesMatch = false;
-				break;
-			}
-			int nodeIndex = indicies.get(idx);
-			cursor = (Element) cursor.getChild(nodeIndex);
-		}
-		if (sizesMatch) {
-			return;
-		}
-		remoteIndex = elementRemote.provideRemoteIndex(false);
-		String remoteDebug = null;
-		String remoteDomHasNode = hasNode.typedRemote().provideRemoteDomTree();
-		String remoteDom = elementRemote.provideRemoteDomTree();
-		String localDomHasNode = hasNode.local().provideLocalDomTree();
-		String remoteDomHasNode2 = CommonUtils.trimLinesToChars(remoteDomHasNode,50);
-		String localDomHasNode2 = CommonUtils.trimLinesToChars(localDomHasNode,50);
-		ElementRemote parentRemote = elementRemote.getParentElement0();
-		remoteDebug = remoteIndex.getString();
-		String hashes = Ax.format("%s: %s %s %s", hasNode.getTagName(),
-				hasNode.hashCode(), hasNode.local().hashCode(),
-				hasNode.remote().hashCode());
-		LocalDom.debug(hasNode.typedRemote());
-		log(LocalDomDebug.DEBUG_ISSUE, "mismatched sizes");
 		int debug = 3;
 	}
 }

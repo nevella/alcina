@@ -47,7 +47,8 @@ public class ServerTransformManagerSupport {
 								assocSet.remove(hili);
 							}
 							if (info.dereferenceOnDelete()) {
-								if (!ThreadlocalTransformManager.isInEntityManagerTransaction()) {
+								if (!ThreadlocalTransformManager
+										.isInEntityManagerTransaction()) {
 									TransformManager.get().registerDomainObject(
 											(HasIdAndLocalId) o2);
 									Reflections.propertyAccessor()

@@ -194,9 +194,9 @@ public class BiWriter extends PrintWriter {
 		this.printWriter.println(x);
 	}
 
-
-
-	
+	public void setPrintWriter2(PrintWriter printWriter2) {
+		this.printWriter2 = printWriter2;
+	}
 
 	public void write(char[] buf) {
 		this.printWriter2.write(buf);
@@ -221,9 +221,5 @@ public class BiWriter extends PrintWriter {
 	public void write(String s, int off, int len) {
 		this.printWriter2.write(s, off, len);
 		this.printWriter.write(s, off, len);
-	}
-
-	public void setPrintWriter2(PrintWriter printWriter2) {
-		this.printWriter2 = printWriter2;
 	}
 }

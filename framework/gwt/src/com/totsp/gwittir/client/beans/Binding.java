@@ -76,6 +76,64 @@ public class Binding {
 	}
 
 	/**
+	 * Creates a Binding with two populated binding instances.
+	 * 
+	 * @param left
+	 *            The left binding instance.
+	 * @param right
+	 *            The right binding instance
+	 */
+	public Binding(BindingInstance left, BindingInstance right) {
+		this.left = left;
+		this.right = right;
+	}
+
+	/**
+	 * Creates a new binding. This method is a shorthand for working with
+	 * BoundWidgets. The bound widget provided will become the left-hand
+	 * binding, and the "value" property of the bound widget will be bound to
+	 * the property specified by modelProperty of the object on the
+	 * BoundWidget's "model" property.
+	 * 
+	 * @param widget
+	 *            BoundWidget containing the model.
+	 * @param validator
+	 *            A validator for the BouldWidget's value property.
+	 * @param feedback
+	 *            A feedback implementation for validation errors.
+	 * @param modelProperty
+	 *            The property on the Widgets model object to bind to.
+	 */
+	public <T> Binding(BoundWidget<T> widget, Validator validator,
+			ValidationFeedback feedback, String modelProperty) {
+		this(widget, "value", validator, feedback,
+				(SourcesPropertyChangeEvents) widget.getModel(),
+				"modelProperty", null, null);
+	}
+
+	/**
+	 * 
+	 * @param left
+	 * @param leftProperty
+	 * @param leftConverter
+	 * @param right
+	 * @param rightProperty
+	 * @param rightConverter
+	 */
+	public Binding(SourcesPropertyChangeEvents left, String leftProperty,
+			Converter leftConverter, SourcesPropertyChangeEvents right,
+			String rightProperty, Converter rightConverter) {
+		this.left = this.createBindingInstance(left, leftProperty);
+		this.left.converter = leftConverter;
+		this.right = this.createBindingInstance(right, rightProperty);
+		this.right.converter = rightConverter;
+		this.left.listener = new DefaultPropertyChangeListener(this.left,
+				this.right);
+		this.right.listener = new DefaultPropertyChangeListener(this.right,
+				this.left);
+	}
+
+	/**
 	 * Creates a new instance of Binding
 	 * 
 	 * @param left
@@ -141,171 +199,6 @@ public class Binding {
 	}
 
 	/**
-	 * 
-	 * @param left
-	 * @param leftProperty
-	 * @param leftConverter
-	 * @param right
-	 * @param rightProperty
-	 * @param rightConverter
-	 */
-	public Binding(SourcesPropertyChangeEvents left, String leftProperty,
-			Converter leftConverter, SourcesPropertyChangeEvents right,
-			String rightProperty, Converter rightConverter) {
-		this.left = this.createBindingInstance(left, leftProperty);
-		this.left.converter = leftConverter;
-		this.right = this.createBindingInstance(right, rightProperty);
-		this.right.converter = rightConverter;
-		this.left.listener = new DefaultPropertyChangeListener(this.left,
-				this.right);
-		this.right.listener = new DefaultPropertyChangeListener(this.right,
-				this.left);
-	}
-
-	/**
-	 * Creates a Binding with two populated binding instances.
-	 * 
-	 * @param left
-	 *            The left binding instance.
-	 * @param right
-	 *            The right binding instance
-	 */
-	public Binding(BindingInstance left, BindingInstance right) {
-		this.left = left;
-		this.right = right;
-	}
-
-	/**
-	 * Creates a new binding. This method is a shorthand for working with
-	 * BoundWidgets. The bound widget provided will become the left-hand
-	 * binding, and the "value" property of the bound widget will be bound to
-	 * the property specified by modelProperty of the object on the
-	 * BoundWidget's "model" property.
-	 * 
-	 * @param widget
-	 *            BoundWidget containing the model.
-	 * @param validator
-	 *            A validator for the BouldWidget's value property.
-	 * @param feedback
-	 *            A feedback implementation for validation errors.
-	 * @param modelProperty
-	 *            The property on the Widgets model object to bind to.
-	 */
-	public <T> Binding(BoundWidget<T> widget, Validator validator,
-			ValidationFeedback feedback, String modelProperty) {
-		this(widget, "value", validator, feedback,
-				(SourcesPropertyChangeEvents) widget.getModel(),
-				"modelProperty", null, null);
-	}
-
-	/**
-	 * Returns a list of child Bindings.
-	 * 
-	 * @return List of child bindings.
-	 */
-	public List<Binding> getChildren() {
-		return children = (children == null) ? new ArrayList<Binding>()
-				: children;
-	}
-
-	/**
-	 * Sets the left hand property to the current value of the right.
-	 */
-	public void setLeft() {
-		if ((left != null) && (right != null)) {
-			try {
-				right.listener.propertyChange(new PropertyChangeEvent(
-						right.object, right.property.getName(), null,
-						right.property.getAccessorMethod().invoke(right.object,
-								null)));
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-		for (int i = 0; (children != null) && (i < children.size()); i++) {
-			Binding child = children.get(i);
-			child.setLeft();
-		}
-		this.lastSet = Boolean.TRUE;
-	}
-
-	/**
-	 * Returns the left hand BindingInstance.
-	 * 
-	 * @return Returns the left hand BindingInstance.
-	 */
-	public BindingInstance getLeft() {
-		return this.left;
-	}
-
-	/**
-	 * Sets the right objects property to the current value of the left.
-	 */
-	public void setRight() {
-		if ((left != null) && (right != null)) {
-			try {
-				left.listener.propertyChange(new PropertyChangeEvent(
-						left.object, left.property.getName(), null,
-						left.property.getAccessorMethod().invoke(left.object,
-								null)));
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-		for (int i = 0; (children != null) && (i < children.size()); i++) {
-			Binding child = children.get(i);
-			child.setRight();
-		}
-		this.lastSet = Boolean.FALSE;
-	}
-
-	/**
-	 * Returns the right hand BindingInstance.
-	 * 
-	 * @return Returns the left hand BindingInstance.
-	 */
-	public BindingInstance getRight() {
-		return this.right;
-	}
-
-	/**
-	 * Performs a quick validation on the Binding to determine if it is valid.
-	 * 
-	 * @return boolean indicating all values are valid.
-	 */
-	public boolean isValid() {
-		if (!bound) {
-			return true;
-		}
-		try {
-			if ((left != null) && (right != null)) {
-				if (leftObjectIsHiddenWidget()) {
-					return true;
-				}
-				if (left.validator != null) {
-					left.validator.validate(left.property.getAccessorMethod()
-							.invoke(left.object, null));
-				}
-				if (right.validator != null) {
-					right.validator.validate(right.property.getAccessorMethod()
-							.invoke(right.object, null));
-				}
-			}
-			boolean valid = true;
-			for (int i = 0; (children != null) && (i < children.size()); i++) {
-				Binding child = children.get(i);
-				valid = valid & child.isValid();
-			}
-			return valid;
-		} catch (ValidationException ve) {
-			Binding.LOGGER.log(Level.INFO, "Invalid", ve);
-			return false;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	/**
 	 * Establishes a two-way binding between the objects.
 	 */
 	public void bind() {
@@ -352,6 +245,34 @@ public class Binding {
 	}
 
 	/**
+	 * Returns a list of child Bindings.
+	 * 
+	 * @return List of child bindings.
+	 */
+	public List<Binding> getChildren() {
+		return children = (children == null) ? new ArrayList<Binding>()
+				: children;
+	}
+
+	/**
+	 * Returns the left hand BindingInstance.
+	 * 
+	 * @return Returns the left hand BindingInstance.
+	 */
+	public BindingInstance getLeft() {
+		return this.left;
+	}
+
+	/**
+	 * Returns the right hand BindingInstance.
+	 * 
+	 * @return Returns the left hand BindingInstance.
+	 */
+	public BindingInstance getRight() {
+		return this.right;
+	}
+
+	/**
 	 * 
 	 * @return int based on hash of the two objects being bound.
 	 */
@@ -361,6 +282,124 @@ public class Binding {
 			return System.identityHashCode(this);
 		}
 		return this.right.object.hashCode() ^ this.left.object.hashCode();
+	}
+
+	public boolean isBound() {
+		return bound;
+	}
+
+	/**
+	 * Performs a quick validation on the Binding to determine if it is valid.
+	 * 
+	 * @return boolean indicating all values are valid.
+	 */
+	public boolean isValid() {
+		if (!bound) {
+			return true;
+		}
+		try {
+			if ((left != null) && (right != null)) {
+				if (leftObjectIsHiddenWidget()) {
+					return true;
+				}
+				if (left.validator != null) {
+					left.validator.validate(left.property.getAccessorMethod()
+							.invoke(left.object, null));
+				}
+				if (right.validator != null) {
+					right.validator.validate(right.property.getAccessorMethod()
+							.invoke(right.object, null));
+				}
+			}
+			boolean valid = true;
+			for (int i = 0; (children != null) && (i < children.size()); i++) {
+				Binding child = children.get(i);
+				valid = valid & child.isValid();
+			}
+			return valid;
+		} catch (ValidationException ve) {
+			Binding.LOGGER.log(Level.INFO, "Invalid", ve);
+			return false;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public List<Binding> provideAllBindings(List<Binding> list) {
+		list = list == null ? new ArrayList<Binding>() : list;
+		list.add(this);
+		if (children != null) {
+			for (Binding b : children) {
+				b.provideAllBindings(list);
+			}
+		}
+		return list;
+	}
+
+	public Binding provideBindingByLeftObject(Object left) {
+		List<Binding> bindings = provideAllBindings(null);
+		for (Binding binding : bindings) {
+			if (binding.getLeft() != null && binding.getLeft().object == left) {
+				return binding;
+			}
+		}
+		return null;
+	}
+
+	public void resolveAllFeedbacks() {
+		List<Binding> bindings = provideAllBindings(null);
+		for (Binding binding : bindings) {
+			if (binding.getLeft() != null
+					&& binding.getLeft().feedback != null) {
+				binding.getLeft().feedback.resolve(binding.getLeft().object);
+			}
+			if (binding.getRight() != null
+					&& binding.getRight().feedback != null) {
+				binding.getRight().feedback.resolve(binding.getRight().object);
+			}
+		}
+	}
+
+	/**
+	 * Sets the left hand property to the current value of the right.
+	 */
+	public void setLeft() {
+		if ((left != null) && (right != null)) {
+			try {
+				right.listener.propertyChange(new PropertyChangeEvent(
+						right.object, right.property.getName(), null,
+						right.property.getAccessorMethod().invoke(right.object,
+								null)));
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+		for (int i = 0; (children != null) && (i < children.size()); i++) {
+			Binding child = children.get(i);
+			child.setLeft();
+		}
+		this.lastSet = Boolean.TRUE;
+	}
+
+	/**
+	 * Sets the right objects property to the current value of the left.
+	 */
+	public void setRight() {
+		if ((left != null) && (right != null)) {
+			try {
+				left.listener.propertyChange(new PropertyChangeEvent(
+						left.object, left.property.getName(), null,
+						left.property.getAccessorMethod().invoke(left.object,
+								null)));
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+		for (int i = 0; (children != null) && (i < children.size()); i++) {
+			Binding child = children.get(i);
+			child.setRight();
+		}
+		this.lastSet = Boolean.FALSE;
 	}
 
 	@Override
@@ -468,81 +507,6 @@ public class Binding {
 		return valid;
 	}
 
-	protected boolean leftObjectIsHiddenWidget() {
-		if (left.object instanceof Widget) {
-			if (!DomUtils.isVisibleAncestorChain(
-					((Widget) left.object).getElement())) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	BindingInstance createBindingInstance(SourcesPropertyChangeEvents object,
-			String propertyName) {
-		int dotIndex = propertyName.indexOf(".");
-		BindingInstance instance = new BindingInstance();
-		NestedPropertyChangeListener rtpcl = (dotIndex == -1) ? null
-				: new NestedPropertyChangeListener(instance, object,
-						propertyName);
-		ArrayList parents = new ArrayList();
-		ArrayList propertyNames = new ArrayList();
-		while (dotIndex != -1) {
-			String pname = propertyName.substring(0, dotIndex);
-			propertyName = propertyName.substring(dotIndex + 1);
-			parents.add(object);
-			try {
-				String descriminator = null;
-				int descIndex = pname.indexOf("[");
-				if (descIndex != -1) {
-					descriminator = pname.substring(descIndex + 1,
-							pname.indexOf("]", descIndex));
-					pname = pname.substring(0, descIndex);
-				}
-				propertyNames.add(pname);
-				if (descriminator != null) {
-					// TODO Need a loop here to handle
-					// multi-dimensional/collections of collections
-					Object collectionOrArray = INTROSPECTOR
-							.getDescriptor(object).getProperty(pname)
-							.getAccessorMethod().invoke(object, null);
-					object = this.getDiscriminatedObject(collectionOrArray,
-							descriminator);
-				} else {
-					object = (SourcesPropertyChangeEvents) INTROSPECTOR
-							.getDescriptor(object).getProperty(pname)
-							.getAccessorMethod().invoke(object, null);
-				}
-			} catch (ClassCastException cce) {
-				throw new RuntimeException(
-						"Nonbindable sub property: " + object + " . " + pname,
-						cce);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-			dotIndex = propertyName.indexOf(".");
-		}
-		if (rtpcl != null) {
-			rtpcl.parents = new SourcesPropertyChangeEvents[parents.size()];
-			parents.toArray(rtpcl.parents);
-			rtpcl.propertyNames = new String[propertyNames.size()];
-			propertyNames.toArray(rtpcl.propertyNames);
-		}
-		instance.object = object;
-		try {
-			instance.property = INTROSPECTOR.getDescriptor(object)
-					.getProperty(propertyName);
-			if (instance.property == null) {
-				throw new NullPointerException("Property Not Found.");
-			}
-		} catch (NullPointerException e) {
-			throw new RuntimeException(
-					"Exception getting property " + propertyName, e);
-		}
-		instance.nestedListener = rtpcl;
-		return instance;
-	}
-
 	private SourcesPropertyChangeEvents
 			getBindableAtCollectionIndex(Collection collection, int index) {
 		int i = 0;
@@ -640,15 +604,79 @@ public class Binding {
 		}
 	}
 
-	public List<Binding> provideAllBindings(List<Binding> list) {
-		list = list == null ? new ArrayList<Binding>() : list;
-		list.add(this);
-		if (children != null) {
-			for (Binding b : children) {
-				b.provideAllBindings(list);
+	protected boolean leftObjectIsHiddenWidget() {
+		if (left.object instanceof Widget) {
+			if (!DomUtils.isVisibleAncestorChain(
+					((Widget) left.object).getElement())) {
+				return true;
 			}
 		}
-		return list;
+		return false;
+	}
+
+	BindingInstance createBindingInstance(SourcesPropertyChangeEvents object,
+			String propertyName) {
+		int dotIndex = propertyName.indexOf(".");
+		BindingInstance instance = new BindingInstance();
+		NestedPropertyChangeListener rtpcl = (dotIndex == -1) ? null
+				: new NestedPropertyChangeListener(instance, object,
+						propertyName);
+		ArrayList parents = new ArrayList();
+		ArrayList propertyNames = new ArrayList();
+		while (dotIndex != -1) {
+			String pname = propertyName.substring(0, dotIndex);
+			propertyName = propertyName.substring(dotIndex + 1);
+			parents.add(object);
+			try {
+				String descriminator = null;
+				int descIndex = pname.indexOf("[");
+				if (descIndex != -1) {
+					descriminator = pname.substring(descIndex + 1,
+							pname.indexOf("]", descIndex));
+					pname = pname.substring(0, descIndex);
+				}
+				propertyNames.add(pname);
+				if (descriminator != null) {
+					// TODO Need a loop here to handle
+					// multi-dimensional/collections of collections
+					Object collectionOrArray = INTROSPECTOR
+							.getDescriptor(object).getProperty(pname)
+							.getAccessorMethod().invoke(object, null);
+					object = this.getDiscriminatedObject(collectionOrArray,
+							descriminator);
+				} else {
+					object = (SourcesPropertyChangeEvents) INTROSPECTOR
+							.getDescriptor(object).getProperty(pname)
+							.getAccessorMethod().invoke(object, null);
+				}
+			} catch (ClassCastException cce) {
+				throw new RuntimeException(
+						"Nonbindable sub property: " + object + " . " + pname,
+						cce);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			dotIndex = propertyName.indexOf(".");
+		}
+		if (rtpcl != null) {
+			rtpcl.parents = new SourcesPropertyChangeEvents[parents.size()];
+			parents.toArray(rtpcl.parents);
+			rtpcl.propertyNames = new String[propertyNames.size()];
+			propertyNames.toArray(rtpcl.propertyNames);
+		}
+		instance.object = object;
+		try {
+			instance.property = INTROSPECTOR.getDescriptor(object)
+					.getProperty(propertyName);
+			if (instance.property == null) {
+				throw new NullPointerException("Property Not Found.");
+			}
+		} catch (NullPointerException e) {
+			throw new RuntimeException(
+					"Exception getting property " + propertyName, e);
+		}
+		instance.nestedListener = rtpcl;
+		return instance;
 	}
 
 	/**
@@ -687,6 +715,61 @@ public class Binding {
 
 		private BindingInstance() {
 			super();
+		}
+	}
+
+	private class NestedPropertyChangeListener
+			implements PropertyChangeListener {
+		SourcesPropertyChangeEvents sourceObject;
+
+		BindingInstance target;
+
+		String propertyName;
+
+		SourcesPropertyChangeEvents[] parents;
+
+		String[] propertyNames;
+
+		NestedPropertyChangeListener(BindingInstance target,
+				SourcesPropertyChangeEvents sourceObject, String propertyName) {
+			this.target = target;
+			this.sourceObject = sourceObject;
+			this.propertyName = propertyName;
+		}
+
+		public void cleanup() {
+			for (int i = 0; i < parents.length; i++) {
+				parents[i].removePropertyChangeListener(this.propertyNames[i],
+						this);
+			}
+		}
+
+		public void propertyChange(PropertyChangeEvent evt) {
+			if (bound) {
+				unbind();
+				bound = true;
+			}
+			BindingInstance newInstance = createBindingInstance(sourceObject,
+					propertyName);
+			target.object = newInstance.object;
+			target.nestedListener = newInstance.nestedListener;
+			target.nestedListener.target = target;
+			target.property = newInstance.property;
+			if (lastSet == Boolean.TRUE) {
+				setLeft();
+			} else if (lastSet == Boolean.FALSE) {
+				setRight();
+			}
+			if (bound) {
+				bind();
+			}
+		}
+
+		public void setup() {
+			for (int i = 0; i < parents.length; i++) {
+				parents[i].addPropertyChangeListener(this.propertyNames[i],
+						this);
+			}
 		}
 	}
 
@@ -756,89 +839,6 @@ public class Binding {
 		@Override
 		public String toString() {
 			return "[Listener on : " + this.instance.object + " ] ";
-		}
-	}
-
-	private class NestedPropertyChangeListener
-			implements PropertyChangeListener {
-		SourcesPropertyChangeEvents sourceObject;
-
-		BindingInstance target;
-
-		String propertyName;
-
-		SourcesPropertyChangeEvents[] parents;
-
-		String[] propertyNames;
-
-		NestedPropertyChangeListener(BindingInstance target,
-				SourcesPropertyChangeEvents sourceObject, String propertyName) {
-			this.target = target;
-			this.sourceObject = sourceObject;
-			this.propertyName = propertyName;
-		}
-
-		public void cleanup() {
-			for (int i = 0; i < parents.length; i++) {
-				parents[i].removePropertyChangeListener(this.propertyNames[i],
-						this);
-			}
-		}
-
-		public void propertyChange(PropertyChangeEvent evt) {
-			if (bound) {
-				unbind();
-				bound = true;
-			}
-			BindingInstance newInstance = createBindingInstance(sourceObject,
-					propertyName);
-			target.object = newInstance.object;
-			target.nestedListener = newInstance.nestedListener;
-			target.nestedListener.target = target;
-			target.property = newInstance.property;
-			if (lastSet == Boolean.TRUE) {
-				setLeft();
-			} else if (lastSet == Boolean.FALSE) {
-				setRight();
-			}
-			if (bound) {
-				bind();
-			}
-		}
-
-		public void setup() {
-			for (int i = 0; i < parents.length; i++) {
-				parents[i].addPropertyChangeListener(this.propertyNames[i],
-						this);
-			}
-		}
-	}
-
-	public boolean isBound() {
-		return bound;
-	}
-
-	public Binding provideBindingByLeftObject(Object left) {
-		List<Binding> bindings = provideAllBindings(null);
-		for (Binding binding : bindings) {
-			if (binding.getLeft() != null && binding.getLeft().object == left) {
-				return binding;
-			}
-		}
-		return null;
-	}
-
-	public void resolveAllFeedbacks() {
-		List<Binding> bindings = provideAllBindings(null);
-		for (Binding binding : bindings) {
-			if (binding.getLeft() != null
-					&& binding.getLeft().feedback != null) {
-				binding.getLeft().feedback.resolve(binding.getLeft().object);
-			}
-			if (binding.getRight() != null
-					&& binding.getRight().feedback != null) {
-				binding.getRight().feedback.resolve(binding.getRight().object);
-			}
 		}
 	}
 }

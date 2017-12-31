@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.servlet.servlet;
 
 import java.io.File;
@@ -29,13 +28,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 
-
 /**
  *
  * @author Nick Reddel
  */
-
- public abstract class FsServlet extends HttpServlet {
+public abstract class FsServlet extends HttpServlet {
 	private static final int WRITE_PACKET_SIZE = 100000;
 
 	protected Logger logger;
@@ -43,22 +40,11 @@ import org.apache.log4j.Logger;
 	public FsServlet() {
 	}
 
-	protected abstract String getBasePath(ServletConfig servletConfig);
-	protected String getFileRequestPath(HttpServletRequest request, HttpServletResponse response) throws IOException{
-		String id = request.getParameter("id");
-		if (id == null) {
-			response.sendError(HttpServletResponse.SC_NOT_FOUND);
-			return null;
-		}
-		String path = getBasePath(getServletConfig()) + "/" + id;
-		return path;
-	}
 	public void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		try {
-			
 			String path = getFileRequestPath(request, response);
-			if (path==null){
+			if (path == null) {
 				return;
 			}
 			File resource = new File(path);
@@ -68,8 +54,8 @@ import org.apache.log4j.Logger;
 				return;
 			}
 			// does the client already have this file? if so, then 304
-			Date ifModDate = new Date(request
-					.getDateHeader("If-Modified-Since"));
+			Date ifModDate = new Date(
+					request.getDateHeader("If-Modified-Since"));
 			Date lastMod = new Date(resource.lastModified());
 			if (lastMod.compareTo(ifModDate) <= 0) {
 				response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
@@ -80,8 +66,8 @@ import org.apache.log4j.Logger;
 			// set the content type based on whatever is in our web.xml mime
 			// defs
 			response.addDateHeader("Last-Modified", (new Date()).getTime());
-			response.setContentType(this.getServletContext().getMimeType(
-					resource.getAbsolutePath()));
+			response.setContentType(this.getServletContext()
+					.getMimeType(resource.getAbsolutePath()));
 			response.setContentLength((int) resource.length());
 			// ok, lets serve up the file
 			byte[] buf = new byte[WRITE_PACKET_SIZE];
@@ -103,5 +89,18 @@ import org.apache.log4j.Logger;
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 		doGet(req, resp);
+	}
+
+	protected abstract String getBasePath(ServletConfig servletConfig);
+
+	protected String getFileRequestPath(HttpServletRequest request,
+			HttpServletResponse response) throws IOException {
+		String id = request.getParameter("id");
+		if (id == null) {
+			response.sendError(HttpServletResponse.SC_NOT_FOUND);
+			return null;
+		}
+		String path = getBasePath(getServletConfig()) + "/" + id;
+		return path;
 	}
 }

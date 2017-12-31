@@ -6,9 +6,9 @@ import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlaye
 import cc.alcina.framework.gwt.persistence.client.PersistencePropAndLogWebDbConsort;
 import cc.alcina.framework.gwt.persistence.client.RemoteLogPersister;
 
-public class InitPropAndLogDbPlayer extends
-RunnableAsyncCallbackPlayer<Void, AsyncConfigConsortState> implements
-		ConsortPlayer {
+public class InitPropAndLogDbPlayer
+		extends RunnableAsyncCallbackPlayer<Void, AsyncConfigConsortState>
+		implements ConsortPlayer {
 	private PersistencePropAndLogWebDbConsort subConsort;
 
 	public InitPropAndLogDbPlayer(String dbName,
@@ -20,12 +20,12 @@ RunnableAsyncCallbackPlayer<Void, AsyncConfigConsortState> implements
 	}
 
 	@Override
-	public void run() {
-		new SubconsortSupport().run(consort, subConsort, this);
+	public Consort getStateConsort() {
+		return subConsort;
 	}
 
 	@Override
-	public Consort getStateConsort() {
-		return subConsort;
+	public void run() {
+		new SubconsortSupport().run(consort, subConsort, this);
 	}
 }

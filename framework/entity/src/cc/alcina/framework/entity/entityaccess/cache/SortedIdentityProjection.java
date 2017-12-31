@@ -7,17 +7,11 @@ import java.util.TreeMap;
 import cc.alcina.framework.common.client.cache.CacheProjection;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
-public abstract class SortedIdentityProjection<T extends HasIdAndLocalId> implements
-		CacheProjection<T> {
+public abstract class SortedIdentityProjection<T extends HasIdAndLocalId>
+		implements CacheProjection<T> {
 	private Class<T> listenedClass;
 
 	TreeMap<T, T> sorted = new TreeMap<>(getComparator());
-
-	public SortedMap<T, T> getSorted() {
-		return this.sorted;
-	}
-
-	protected abstract Comparator<T> getComparator() ;
 
 	private boolean enabled;
 
@@ -28,6 +22,10 @@ public abstract class SortedIdentityProjection<T extends HasIdAndLocalId> implem
 	@Override
 	public Class<T> getListenedClass() {
 		return listenedClass;
+	}
+
+	public SortedMap<T, T> getSorted() {
+		return this.sorted;
 	}
 
 	@Override
@@ -52,6 +50,8 @@ public abstract class SortedIdentityProjection<T extends HasIdAndLocalId> implem
 
 	@Override
 	public void setEnabled(boolean enabled) {
-		this.enabled=enabled;
+		this.enabled = enabled;
 	}
+
+	protected abstract Comparator<T> getComparator();
 }

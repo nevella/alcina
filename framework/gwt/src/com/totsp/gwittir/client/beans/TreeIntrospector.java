@@ -29,8 +29,8 @@ public abstract class TreeIntrospector implements Introspector {
 		if (descriptor != null) {
 			return descriptor;
 		} else {
-			throw new IllegalArgumentException("Unknown type (introspector): "
-					+ object.getClass());
+			throw new IllegalArgumentException(
+					"Unknown type (introspector): " + object.getClass());
 		}
 	}
 
@@ -56,33 +56,31 @@ public abstract class TreeIntrospector implements Introspector {
 
 	public native JavaScriptObject getNativeMethod(Class declaringClass,
 			String methodName) /*-{
-		return this.@com.totsp.gwittir.client.beans.TreeIntrospector::methodLookup[declaringClass][methodName];
-	}-*/;
+								return this.@com.totsp.gwittir.client.beans.TreeIntrospector::methodLookup[declaringClass][methodName];
+								}-*/;
 
 	public void registerChild(TreeIntrospector child) {
 		introspectors.add(0, child);
 	}
 
-	public native JavaScriptObject registerMethodDeclaringType(
-			Class declaringClass) /*-{
-		return this.@com.totsp.gwittir.client.beans.TreeIntrospector::methodLookup[declaringClass] = [];
-	}-*/;
+	public native JavaScriptObject
+			registerMethodDeclaringType(Class declaringClass) /*-{
+																return this.@com.totsp.gwittir.client.beans.TreeIntrospector::methodLookup[declaringClass] = [];
+																}-*/;
 
 	@Override
 	public Class resolveClass(Object instance) {
-		throw new UnsupportedOperationException(
-				"Not implemented - but "
-						+ "if it were, better to add resolved class to beandescriptor type ");
+		throw new UnsupportedOperationException("Not implemented - but "
+				+ "if it were, better to add resolved class to beandescriptor type ");
 	}
 
 	private native void initMethodLookup()/*-{
-		this.@com.totsp.gwittir.client.beans.TreeIntrospector::methodLookup = [];
-	}-*/;
+											this.@com.totsp.gwittir.client.beans.TreeIntrospector::methodLookup = [];
+											}-*/;
 
 	protected abstract BeanDescriptor getDescriptor0(Object object);
 
 	protected abstract void registerBeanDescriptors();
 
 	protected abstract void registerMethods();
-	
 }

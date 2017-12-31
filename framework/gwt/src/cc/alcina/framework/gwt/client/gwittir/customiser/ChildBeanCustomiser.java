@@ -132,8 +132,18 @@ public class ChildBeanCustomiser implements Customiser {
 			initWidget(fp);
 		}
 
+		@Override
+		public Binding getBinding() {
+			return gridForm.getBinding();
+		}
+
 		public Object getValue() {
 			return gridForm.getValue();
+		}
+
+		@Override
+		public boolean isMultiline() {
+			return true;
 		}
 
 		public void setValue(Object value) {
@@ -149,16 +159,6 @@ public class ChildBeanCustomiser implements Customiser {
 							&& !this.getValue().equals(old)))) {
 				this.changes.firePropertyChange("value", old, this.getValue());
 			}
-		}
-
-		@Override
-		public boolean isMultiline() {
-			return true;
-		}
-
-		@Override
-		public Binding getBinding() {
-			return gridForm.getBinding();
 		}
 	}
 }

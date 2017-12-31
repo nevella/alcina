@@ -24,9 +24,8 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 /**
  * Custom field serializer for {@link java.lang.Float}.
  */
-public final class Float_CustomFieldSerializer extends
-		CustomFieldSerializer<Float> {
-	
+public final class Float_CustomFieldSerializer
+		extends CustomFieldSerializer<Float> {
 	public static void deserialize(SerializationStreamReader streamReader,
 			Float instance) {
 		// No fields.
@@ -39,15 +38,9 @@ public final class Float_CustomFieldSerializer extends
 
 	public static void serialize(SerializationStreamWriter streamWriter,
 			Float instance) throws SerializationException {
-		if(GWT.isClient()){
-		    streamWriter.writeFloat(instance.floatValue());
+		if (GWT.isClient()) {
+			streamWriter.writeFloat(instance.floatValue());
 		}
-	}
-
-	@Override
-	public void serializeConstructor(SerializationStreamWriter streamWriter,
-			Float instance) throws SerializationException {
-		streamWriter.writeFloat(instance.floatValue());
 	}
 
 	@Override
@@ -65,6 +58,12 @@ public final class Float_CustomFieldSerializer extends
 	public Float instantiateInstance(SerializationStreamReader streamReader)
 			throws SerializationException {
 		return instantiate(streamReader);
+	}
+
+	@Override
+	public void serializeConstructor(SerializationStreamWriter streamWriter,
+			Float instance) throws SerializationException {
+		streamWriter.writeFloat(instance.floatValue());
 	}
 
 	@Override

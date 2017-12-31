@@ -23,9 +23,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
  *
  * @author Nick Reddel
  */
-
- public class DomainObjectIdRefProvider implements
-		BoundWidgetProvider {
+public class DomainObjectIdRefProvider implements BoundWidgetProvider {
 	private final Class targetObjectClass;
 
 	public DomainObjectIdRefProvider(Class targetObjectClass) {

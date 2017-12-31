@@ -11,7 +11,16 @@ import com.totsp.gwittir.client.beans.Converter;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
 
 public interface HasEquivalenceString<T> extends HasEquivalenceHash<T> {
+	default public int equivalenceHash() {
+		return equivalenceString().hashCode();
+	}
+
 	public String equivalenceString();
+
+	default public boolean equivalentTo(T other) {
+		return equivalenceString()
+				.equals(((HasEquivalenceString<T>) other).equivalenceString());
+	}
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
@@ -20,17 +29,8 @@ public interface HasEquivalenceString<T> extends HasEquivalenceHash<T> {
 		String value();
 	}
 
-	default public int equivalenceHash() {
-		return equivalenceString().hashCode();
-	}
-
-	default public boolean equivalentTo(T other) {
-		return equivalenceString().equals(
-				((HasEquivalenceString<T>) other).equivalenceString());
-	}
-
-	public static final class HasEquivalenceStringConverter implements
-			Converter<HasEquivalenceString, String> {
+	public static final class HasEquivalenceStringConverter
+			implements Converter<HasEquivalenceString, String> {
 		@Override
 		public String convert(HasEquivalenceString original) {
 			return original.equivalenceString();

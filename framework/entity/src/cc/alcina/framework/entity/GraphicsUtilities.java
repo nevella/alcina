@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity;
 
 import java.awt.Color;
@@ -27,8 +26,29 @@ import javax.swing.SwingConstants;
  *
  * @author Nick Reddel
  */
+public class GraphicsUtilities implements SwingConstants {
+	public static void debugLayout(Component c, int indent) {
+		if (c instanceof JComponent) {
+			JComponent jc = (JComponent) c;
+			if (jc.isVisible() == false) {
+				return;
+			}
+		}
+		for (int i = 0; i < indent; i++) {
+			System.err.print(' ');
+		}
+		System.err.println(String.format("-%s : min=%s, max=%s, pref=%s",
+				c.getClass().getSimpleName(), shortDim(c.getMinimumSize()),
+				shortDim(c.getMaximumSize()), shortDim(c.getPreferredSize())));
+		if (c instanceof Container) {
+			Container ct = (Container) c;
+			Component[] components = ct.getComponents();
+			for (Component component : components) {
+				debugLayout(component, indent + 4);
+			}
+		}
+	}
 
- public class GraphicsUtilities implements SwingConstants {
 	public static void paintTriangle(Graphics g, int x, int y, int size,
 			int direction, Color color) {
 		Color oldColor = g.getColor();
@@ -68,30 +88,8 @@ import javax.swing.SwingConstants;
 		g.setColor(oldColor);
 	}
 
-	public static void debugLayout(Component c, int indent) {
-		if (c instanceof JComponent) {
-			JComponent jc = (JComponent) c;
-			if (jc.isVisible()==false){
-				return;
-			}
-		}
-		for (int i = 0; i < indent; i++) {
-			System.err.print(' ');
-		}
-		System.err.println(String.format("-%s : min=%s, max=%s, pref=%s", c.getClass().getSimpleName(),
-				shortDim(c.getMinimumSize()), shortDim(c.getMaximumSize()),
-				shortDim(c.getPreferredSize())));
-		if (c instanceof Container) {
-			Container ct = (Container) c;
-			Component[] components = ct.getComponents();
-			for (Component component : components) {
-				debugLayout(component, indent + 4);
-			}
-		}
-	}
-
 	public static String shortDim(Dimension d) {
-		if (d.width>2000 || d.height >2000){
+		if (d.width > 2000 || d.height > 2000) {
 			return "";
 		}
 		return "[" + d.width + "," + d.height + "]";

@@ -39,8 +39,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  *
  */
-public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
-		ClickHandler {
+public class RadioButtonList<T> extends AbstractBoundCollectionWidget
+		implements ClickHandler {
 	Map<String, T> labelMap = new HashMap<String, T>();
 
 	Map<T, CheckBox> checkMap = new HashMap<T, CheckBox>();
@@ -91,8 +91,12 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 		return columnCount;
 	}
 
-	protected boolean singleResult() {
-		return true;
+	public Renderer<T, ImageResource> getIconRenderer() {
+		return this.iconRenderer;
+	}
+
+	public FlexTable getTable() {
+		return this.table;
 	}
 
 	public Object getValue() {
@@ -129,8 +133,30 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 		return false;
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
+	public void onClick(ClickEvent event) {
+		Set<T> keySet = checkMap.keySet();
+		for (T object : keySet) {
+			if (checkMap.get(object).equals(event.getSource())) {
+				if (singleResult()) {
+					setValue((T) object);
+				} else {
+					Collection c = (Collection) getValue();
+					setValue(c);
+				}
+				break;
+			}
+		}
+	}
+
 	public void setColumnCount(int width) {
 		this.columnCount = width;
+		render();
+	}
+
+	public void setIconRenderer(Renderer<T, ImageResource> iconRenderer) {
+		this.iconRenderer = iconRenderer;
 		render();
 	}
 
@@ -154,9 +180,9 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 		 * value for // getValue (rather than null)
 		 */
 		if (!CommonUtils.equalsWithNullEmptyEquality(value, lastValues)) {
-			this.changes.firePropertyChange("value",
-					singleResult() ? singleValue((Collection<T>) lastValues)
-							: lastValues, getValue());
+			this.changes.firePropertyChange("value", singleResult()
+					? singleValue((Collection<T>) lastValues) : lastValues,
+					getValue());
 		}
 		lastValues = values;
 	}
@@ -169,6 +195,11 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 		}
 	}
 
+	public T singleValue() {
+		return (T) (getValue() instanceof Collection
+				? singleValue((Collection<T>) getValue()) : getValue());
+	}
+
 	private void render() {
 		fp.clear();
 		checkMap.clear();
@@ -178,12 +209,11 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 			String displayText = renderer.render(o);
 			labelMap.put(displayText, o);
 			if (iconRenderer != null) {
-				String imgHtml = AbstractImagePrototype.create(
-						iconRenderer.render(o)).getHTML();
-				displayText = CommonUtils
-						.formatJ(
-								"<span class='radio-button-icon'>%s</span><span class='radio-button-icon-label'>%s</span>",
-								imgHtml, displayText);
+				String imgHtml = AbstractImagePrototype
+						.create(iconRenderer.render(o)).getHTML();
+				displayText = CommonUtils.formatJ(
+						"<span class='radio-button-icon'>%s</span><span class='radio-button-icon-label'>%s</span>",
+						imgHtml, displayText);
 			}
 			CheckBox rb = createCheckBox(displayText);
 			checkMap.put(o, rb);
@@ -197,47 +227,16 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 		fp.add(table);
 	}
 
+	private T singleValue(Collection<T> values) {
+		return CommonUtils.isNullOrEmpty(values) ? null
+				: values.iterator().next();
+	}
+
 	protected CheckBox createCheckBox(String displayText) {
 		return new RadioButton(groupName, displayText, true);
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public void onClick(ClickEvent event) {
-		Set<T> keySet = checkMap.keySet();
-		for (T object : keySet) {
-			if (checkMap.get(object).equals(event.getSource())) {
-				if (singleResult()) {
-					setValue((T) object);
-				} else {
-					Collection c = (Collection) getValue();
-					setValue(c);
-				}
-				break;
-			}
-		}
-	}
-
-	public FlexTable getTable() {
-		return this.table;
-	}
-
-	public Renderer<T, ImageResource> getIconRenderer() {
-		return this.iconRenderer;
-	}
-
-	public void setIconRenderer(Renderer<T, ImageResource> iconRenderer) {
-		this.iconRenderer = iconRenderer;
-		render();
-	}
-
-	private T singleValue(Collection<T> values) {
-		return CommonUtils.isNullOrEmpty(values) ? null : values.iterator()
-				.next();
-	}
-
-	public T singleValue() {
-		return (T) (getValue() instanceof Collection ? singleValue((Collection<T>) getValue())
-				: getValue());
+	protected boolean singleResult() {
+		return true;
 	}
 }

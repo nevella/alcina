@@ -44,14 +44,6 @@ public class DownloadServlet extends HttpServlet {
 		return id;
 	}
 
-	public File getFile(String id) {
-		DownloadItem item = items.get(id);
-		if (item != null) {
-			return new File(item.tmpFileName);
-		}
-		return null;
-	}
-
 	public void doGet(HttpServletRequest request, HttpServletResponse res) {
 		doPost(request, res);
 	}
@@ -71,13 +63,14 @@ public class DownloadServlet extends HttpServlet {
 			res.setContentType(item.mimeType);
 			res.setContentLength((int) f.length());
 			if (item.fileName != null) {
-				res.setHeader("Content-Disposition", "attachment; filename=\""
-						+ item.fileName + '"');
+				res.setHeader("Content-Disposition",
+						"attachment; filename=\"" + item.fileName + '"');
 			}
 		}
 		try {
-			ResourceUtilities.writeStreamToStream(new BufferedInputStream(
-					new FileInputStream(f)), res.getOutputStream());
+			ResourceUtilities.writeStreamToStream(
+					new BufferedInputStream(new FileInputStream(f)),
+					res.getOutputStream());
 			new Timer().schedule(new TimerTask() {
 				@Override
 				public void run() {
@@ -94,6 +87,14 @@ public class DownloadServlet extends HttpServlet {
 		}
 	}
 
+	public File getFile(String id) {
+		DownloadItem item = items.get(id);
+		if (item != null) {
+			return new File(item.tmpFileName);
+		}
+		return null;
+	}
+
 	public static class DownloadItem {
 		private final String mimeType;
 
@@ -101,7 +102,8 @@ public class DownloadServlet extends HttpServlet {
 
 		private final String tmpFileName;
 
-		public DownloadItem(String mimeType, String fileName, String tmpFileName) {
+		public DownloadItem(String mimeType, String fileName,
+				String tmpFileName) {
 			this.mimeType = mimeType;
 			this.fileName = fileName;
 			this.tmpFileName = tmpFileName;

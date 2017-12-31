@@ -42,41 +42,36 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 public class CloneHelper {
 	private Map createdMap = new IdentityHashMap();
 
-	public <T extends Collection> T deepCollectionClone(T coll)
-			throws Exception {
-		T c = null;
-		if (coll instanceof ArrayList) {
-			c = (T) new ArrayList();
-		} else if (coll instanceof LinkedHashSet) {
-			c = (T) new LinkedHashSet();
-		} else if (coll instanceof HashSet) {
-			c = (T) new HashSet();
-		} else if (coll instanceof LiSet) {
-			c = (T) new LiSet();
-		} else if (coll instanceof LightSet) {
-			c = (T) new LightSet();
-		} else {
-			throw new RuntimeException(
-					"Can't clone - " + coll.getClass().getName());
-		}
-		for (Object o2 : coll) {
-			c.add(deepObjectClone(o2));
-		}
-		return c;
-	}
+	// optimisation, part. for GWT
+	private Object[] args = new Object[1];
 
-	private Object deepObjectClone(Object o) throws Exception {
-		if (o instanceof Date) {
-			return ((Date) o).clone();
-		} else if (CommonUtils.isStandardJavaClass(o.getClass())
-				|| o instanceof Enum) {
-			return o;
-		} else if (o instanceof Collection) {
-			return deepCollectionClone((Collection) o);
-		} else if (GwittirUtils.isIntrospectable(o.getClass())) {
-			return deepBeanClone(o);
-		} else {
-			return o;
+	/*
+	 * note, there won't be any property change listeners on the cloned object,
+	 * so invoking the mutator won't cause args to be reused (i.e. this to be
+	 * called)
+	 */
+	public void copyBeanProperties(Object source, Object target,
+			Set<String> excludeProperties) throws Exception {
+		Property[] prs = Reflections.beanDescriptorProvider()
+				.getDescriptor(target).getProperties();
+		for (Property pr : prs) {
+			if (pr.getMutatorMethod() == null
+					|| pr.getAccessorMethod() == null) {
+				continue;
+			}
+			Object val = pr.getAccessorMethod().invoke(source,
+					CommonUtils.EMPTY_OBJECT_ARRAY);
+			if (val != null) {
+				if (excludeProperties != null
+						&& excludeProperties.contains(pr.getName())) {
+					continue;
+				}
+				if (val instanceof Collection) {
+					val = CommonUtils.shallowCollectionClone((Collection) val);
+				}
+				args[0] = val;
+				pr.getMutatorMethod().invoke(target, args);
+			}
 		}
 	}
 
@@ -117,57 +112,27 @@ public class CloneHelper {
 		return ret;
 	}
 
-	protected boolean ignore(Class clazz, String name, Object obj) {
-		return false;
-	}
-
-	protected <T> T newInstance(T o) {
-		Class<? extends Object> clazz = o.getClass();
-		return (T) Reflections.classLookup().newInstance(clazz);
-	}
-
-	protected boolean deepProperty(Object o, String propertyName) {
-		return true;
-	}
-
-	protected Object shallowishObjectClone(Object o) {
-		if (o instanceof Collection) {
-			return CommonUtils.shallowCollectionClone((Collection) o);
+	public <T extends Collection> T deepCollectionClone(T coll)
+			throws Exception {
+		T c = null;
+		if (coll instanceof ArrayList) {
+			c = (T) new ArrayList();
+		} else if (coll instanceof LinkedHashSet) {
+			c = (T) new LinkedHashSet();
+		} else if (coll instanceof HashSet) {
+			c = (T) new HashSet();
+		} else if (coll instanceof LiSet) {
+			c = (T) new LiSet();
+		} else if (coll instanceof LightSet) {
+			c = (T) new LightSet();
+		} else {
+			throw new RuntimeException(
+					"Can't clone - " + coll.getClass().getName());
 		}
-		return o;
-	}
-
-	// optimisation, part. for GWT
-	private Object[] args = new Object[1];
-
-	/*
-	 * note, there won't be any property change listeners on the cloned object,
-	 * so invoking the mutator won't cause args to be reused (i.e. this to be
-	 * called)
-	 */
-	public void copyBeanProperties(Object source, Object target,
-			Set<String> excludeProperties) throws Exception {
-		Property[] prs = Reflections.beanDescriptorProvider()
-				.getDescriptor(target).getProperties();
-		for (Property pr : prs) {
-			if (pr.getMutatorMethod() == null
-					|| pr.getAccessorMethod() == null) {
-				continue;
-			}
-			Object val = pr.getAccessorMethod().invoke(source,
-					CommonUtils.EMPTY_OBJECT_ARRAY);
-			if (val != null) {
-				if (excludeProperties != null
-						&& excludeProperties.contains(pr.getName())) {
-					continue;
-				}
-				if (val instanceof Collection) {
-					val = CommonUtils.shallowCollectionClone((Collection) val);
-				}
-				args[0] = val;
-				pr.getMutatorMethod().invoke(target, args);
-			}
+		for (Object o2 : coll) {
+			c.add(deepObjectClone(o2));
 		}
+		return c;
 	}
 
 	public <T> T shallowishBeanClone(T o) {
@@ -180,5 +145,40 @@ public class CloneHelper {
 					"Unable to clone: " + o.getClass(), e,
 					SuggestedAction.NOTIFY_WARNING);
 		}
+	}
+
+	private Object deepObjectClone(Object o) throws Exception {
+		if (o instanceof Date) {
+			return ((Date) o).clone();
+		} else if (CommonUtils.isStandardJavaClass(o.getClass())
+				|| o instanceof Enum) {
+			return o;
+		} else if (o instanceof Collection) {
+			return deepCollectionClone((Collection) o);
+		} else if (GwittirUtils.isIntrospectable(o.getClass())) {
+			return deepBeanClone(o);
+		} else {
+			return o;
+		}
+	}
+
+	protected boolean deepProperty(Object o, String propertyName) {
+		return true;
+	}
+
+	protected boolean ignore(Class clazz, String name, Object obj) {
+		return false;
+	}
+
+	protected <T> T newInstance(T o) {
+		Class<? extends Object> clazz = o.getClass();
+		return (T) Reflections.classLookup().newInstance(clazz);
+	}
+
+	protected Object shallowishObjectClone(Object o) {
+		if (o instanceof Collection) {
+			return CommonUtils.shallowCollectionClone((Collection) o);
+		}
+		return o;
 	}
 }

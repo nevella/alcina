@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.permissions;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
@@ -20,8 +19,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
  *
  * @author Nick Reddel
  */
-
- public class PermissibleAdapter implements Permissible {
+public class PermissibleAdapter implements Permissible {
 	public AccessLevel accessLevel() {
 		return AccessLevel.DEVELOPER;
 	}
@@ -29,7 +27,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 	public String rule() {
 		return "";
 	}
-	public static class GroupPermissibleAdapter extends PermissibleAdapter{
+
+	public static class GroupPermissibleAdapter extends PermissibleAdapter {
 		@Override
 		public AccessLevel accessLevel() {
 			return AccessLevel.GROUP;

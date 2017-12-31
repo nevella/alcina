@@ -54,7 +54,6 @@ import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.StreamBuffer;
-import cc.alcina.framework.gwt.client.gwittir.renderer.ToStringConverter;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import nl.bitwalker.useragentutils.Browser;
 import nl.bitwalker.useragentutils.RenderingEngine;
@@ -63,30 +62,34 @@ import nl.bitwalker.useragentutils.UserAgent;
 public class DevConsoleDebugCommands {
 	public static final String USER_AGENT = "User agent: ";
 
-
 	public static final Pattern UA_PATTERN = Pattern
 			.compile(USER_AGENT + "(.+)");
 
-	@RegistryLocation(registryPoint = DevConsoleDebugPeer.class, implementationType = ImplementationType.INSTANCE)
-	public static abstract class DevConsoleDebugPeer {
-
-		public abstract List<ILogRecord> filterByComponent(List<ILogRecord> logRecords,
-				String componentKey);
-
-		public abstract DevConsoleDebugPaths getPaths(DevConsoleProperties props);
-
-		public abstract String getExceptionIgnoreClause();
+	static DevConsoleDebugPeer getPeer() {
+		return Registry.impl(DevConsoleDebugPeer.class);
 	}
 
 	public static class CmdCountClientExceptions extends DevConsoleCommand {
+		@Override
+		public boolean clsBeforeRun() {
+			return true;
+		}
+
 		@Override
 		public String[] getCommandIds() {
 			return new String[] { "dxc" };
 		}
 
 		@Override
-		public boolean clsBeforeRun() {
-			return true;
+		public String getDescription() {
+			return "Count and format exceptions\n(filter"
+					+ " by {key:=key|all|pub,d,c,r,parser,t,m,j} and/or {user_id} ";
+		}
+
+		@Override
+		public String getUsage() {
+			return "dxc  {-c key} {-u userid} {-d days}"
+					+ " {-i min-id} {-r regex} {-fu id - list(client)users with similar exceptions to id}";
 		}
 
 		@Override
@@ -280,30 +283,63 @@ public class DevConsoleDebugCommands {
 
 		private List<ILogRecord> filterByComponent(List<ILogRecord> logRecords,
 				String componentKey) {
-			
-			return getPeer().filterByComponent( logRecords,
-					 componentKey);
+			return getPeer().filterByComponent(logRecords, componentKey);
+		}
+	}
+
+	public static class CmdCountExceptionsByUser extends DevConsoleCommand {
+		private static final int DEFAULT_COUNT_EXCEPTIONS_IN_LAST_X_DAYS = 30;
+
+		@Override
+		public boolean canUseProductionConn() {
+			return true;
 		}
 
-		
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "dxu" };
+		}
+
 		@Override
 		public String getDescription() {
-			return "Count and format exceptions\n(filter"
-					+ " by {key:=key|all|pub,d,c,r,parser,t,m,j} and/or {user_id} ";
+			return "Count exceptions by user, last x days";
 		}
 
 		@Override
 		public String getUsage() {
-			return "dxc  {-c key} {-u userid} {-d days}"
-					+ " {-i min-id} {-r regex} {-fu id - list(client)users with similar exceptions to id}";
+			return "dxu {x}:";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			Connection conn = getConn();
+			int days = getIntArg(argv, 0,
+					DEFAULT_COUNT_EXCEPTIONS_IN_LAST_X_DAYS);
+			String ckFilter = new CmdGetExceptionLogs()
+					.getExceptionIgnoreClause();
+			String sql = String.format(
+					"select u.username,u.id, count(l.id) as errct from logging l inner join users u on l.user_id=u.id"
+							+ " where age(created_on)<'%s days' and "
+							+ " not (l.component_key in %s)"
+							+ "group by u.username,u.id order by count(l.id) desc;",
+					days, ckFilter);
+			System.out.format(
+					"Exceptions in last %s days, by user\n---------------------\n\n",
+					days);
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery();
+			SqlUtils.dumpResultSet(rs);
+			return String.format(
+					"Counted exceptions for last %s days - \n"
+							+ " remember to cache all exceptions for that period  "
+							+ "before drilldown/count by running \n\tdxg %s\n\n ",
+					days, days);
 		}
 	}
-	static  DevConsoleDebugPeer getPeer() {
-		return Registry.impl(DevConsoleDebugPeer.class);
-	}
-
 
 	public static class CmdDrillClientException extends DevConsoleCommand {
+		static ILogRecord lastRecord;
+
 		private File module;
 
 		private File symbol;
@@ -314,9 +350,11 @@ public class DevConsoleDebugCommands {
 
 		private String fnOverride;
 
+		List<File> jsFiles = new ArrayList<File>();
+
 		@Override
-		public String[] getCommandIds() {
-			return new String[] { "dxd" };
+		public boolean canUseProductionConn() {
+			return true;
 		}
 
 		@Override
@@ -325,11 +363,59 @@ public class DevConsoleDebugCommands {
 		}
 
 		@Override
-		public boolean canUseProductionConn() {
-			return true;
+		public String[] getCommandIds() {
+			return new String[] { "dxd" };
 		}
 
-		static ILogRecord lastRecord;
+		@Override
+		public String getDescription() {
+			return "Drill down to exception - run with zero params for usage";
+		}
+
+		@Override
+		public String getUsage() {
+			return "dxd  {id} <-js> <-fn fname> <-o outputformat>";
+		}
+
+		public List<ClientLogRecord>
+				parseSerializedLogRecords(String serializedLogRecords) {
+			Converter<String, ClientLogRecords> converter = new Converter<String, ClientLogRecord.ClientLogRecords>() {
+				@Override
+				public ClientLogRecords convert(String original) {
+					try {
+						return new AlcinaBeanSerializerS()
+								.deserialize(original);
+					} catch (Exception e) {
+						System.out.format(
+								"problem deserializing clientlogrecord:\n%s\n",
+								original);
+						e.printStackTrace();
+						if (ResourceUtilities.getBoolean(
+								CommonRemoteServiceServlet.class,
+								"throwLogClientRecordExceptions")) {
+							throw new WrappedRuntimeException(e);
+						}
+						return null;
+					}
+				}
+			};
+			List<String> lines = Arrays
+					.asList(serializedLogRecords.split("\n"));
+			List<ClientLogRecords> records = CollectionFilters.convert(lines,
+					converter);
+			while (records.remove(null)) {
+			}
+			List<ClientLogRecord> clrs = new ArrayList<ClientLogRecord>();
+			for (ClientLogRecords clientLogRecords : records) {
+				clrs.addAll(clientLogRecords.getLogRecords());
+			}
+			return clrs;
+		}
+
+		@Override
+		public void printUsage() {
+			System.out.println(getUsage());
+		}
 
 		@Override
 		public String run(String[] argv) throws Exception {
@@ -438,83 +524,6 @@ public class DevConsoleDebugCommands {
 			return String.format("Drilldown - %s", recId);
 		}
 
-		private String extractReplay(String serializedLogRecords) {
-			List<ClientLogRecord> clrs = parseSerializedLogRecords(
-					serializedLogRecords);
-			ConverterFilter<ClientLogRecord, ReplayInstruction> converterFilter = new ConverterFilter<ClientLogRecord, ReplayInstruction>() {
-				@Override
-				public ReplayInstruction convert(ClientLogRecord original) {
-					return ReplayInstruction.fromClientLogRecord(original);
-				}
-
-				@Override
-				public boolean allowPreConvert(ClientLogRecord t) {
-					return true;
-				}
-
-				@Override
-				public boolean allowPostConvert(ReplayInstruction c) {
-					return c != null;
-				}
-			};
-			List<ReplayInstruction> ris = CollectionFilters
-					.convertAndFilter(clrs, converterFilter);
-			return CommonUtils.join(ris, "\n");
-		}
-
-		private void dumpHistory(String serializedLogRecords) {
-			List<ClientLogRecord> clrs = parseSerializedLogRecords(
-					serializedLogRecords);
-			Converter<ClientLogRecord, String> recordsConverter = new Converter<ClientLogRecord, String>() {
-				@Override
-				public String convert(ClientLogRecord record) {
-					return String.format("%-30s | %-30s | %s", record.getTime(),
-							record.getTopic(), console.breakAndPad(0, 100,
-									record.getMessage(), 66));
-				}
-			};
-			System.out.println(String.format("%-30s | %-30s | %s", "Time",
-					"Topic", "Event"));
-			Collections.reverse(clrs);
-			System.out.println(CommonUtils.join(
-					CollectionFilters.convert(clrs, recordsConverter), "\n"));
-		}
-
-		public List<ClientLogRecord>
-				parseSerializedLogRecords(String serializedLogRecords) {
-			Converter<String, ClientLogRecords> converter = new Converter<String, ClientLogRecord.ClientLogRecords>() {
-				@Override
-				public ClientLogRecords convert(String original) {
-					try {
-						return new AlcinaBeanSerializerS()
-								.deserialize(original);
-					} catch (Exception e) {
-						System.out.format(
-								"problem deserializing clientlogrecord:\n%s\n",
-								original);
-						e.printStackTrace();
-						if (ResourceUtilities.getBoolean(
-								CommonRemoteServiceServlet.class,
-								"throwLogClientRecordExceptions")) {
-							throw new WrappedRuntimeException(e);
-						}
-						return null;
-					}
-				}
-			};
-			List<String> lines = Arrays
-					.asList(serializedLogRecords.split("\n"));
-			List<ClientLogRecords> records = CollectionFilters.convert(lines,
-					converter);
-			while (records.remove(null)) {
-			}
-			List<ClientLogRecord> clrs = new ArrayList<ClientLogRecord>();
-			for (ClientLogRecords clientLogRecords : records) {
-				clrs.addAll(clientLogRecords.getLogRecords());
-			}
-			return clrs;
-		}
-
 		private void deObfStacktrace(String text, String mn, Browser browser)
 				throws Exception {
 			Pattern symbolMapPattern = Pattern.compile("(.+?),(.+)");
@@ -547,10 +556,8 @@ public class DevConsoleDebugCommands {
 			String regex = ffStack && text.contains("stack:")
 					? "stack:(.+)-----\n"
 					: text.contains("compatible; MSIE 10.0")
-							? String.format("%s(.+)%s", "",
-									USER_AGENT)
-							: String.format("%s(.+)%s", "-----\n",
-									USER_AGENT);
+							? String.format("%s(.+)%s", "", USER_AGENT)
+							: String.format("%s(.+)%s", "-----\n", USER_AGENT);
 			Pattern stackTraceExtract = Pattern.compile(regex,
 					Pattern.MULTILINE | Pattern.DOTALL);
 			Matcher stem = stackTraceExtract.matcher(text);
@@ -685,6 +692,80 @@ public class DevConsoleDebugCommands {
 					firstFrame.replace("\\n", "\n").replace("\n", "\n\t"));
 		}
 
+		private void dumpHistory(String serializedLogRecords) {
+			List<ClientLogRecord> clrs = parseSerializedLogRecords(
+					serializedLogRecords);
+			Converter<ClientLogRecord, String> recordsConverter = new Converter<ClientLogRecord, String>() {
+				@Override
+				public String convert(ClientLogRecord record) {
+					return String.format("%-30s | %-30s | %s", record.getTime(),
+							record.getTopic(), console.breakAndPad(0, 100,
+									record.getMessage(), 66));
+				}
+			};
+			System.out.println(String.format("%-30s | %-30s | %s", "Time",
+					"Topic", "Event"));
+			Collections.reverse(clrs);
+			System.out.println(CommonUtils.join(
+					CollectionFilters.convert(clrs, recordsConverter), "\n"));
+		}
+
+		private boolean ensureModuleAndSymbolMap(String mn) throws Exception {
+			DevConsoleDebugPaths paths = getPeer().getPaths(console.props);
+			File devFolder = console.devHelper.getDevFolder();
+			File gwtSymbols = SEUtilities.getChildFile(devFolder,
+					"gwt-symbols");
+			gwtSymbols.mkdir();
+			module = new File(
+					String.format("%s/%s.cache.js", gwtSymbols.getPath(), mn));
+			symbol = new File(
+					String.format("%s/%s.symbolMap", gwtSymbols.getPath(), mn));
+			if (!module.exists()) {
+				importViaRsync(String.format("%s%s/%s.cache.js",
+						paths.remoteRoot, paths.modPath, mn), module);
+			}
+			if (getJs) {
+				jsfDir = new File(String.format("%s/deferredjs/%s",
+						gwtSymbols.getPath(), mn));
+				jsfDir.mkdirs();
+				if (jsfDir.listFiles().length != 9) {
+					importViaRsync(
+							String.format("%s%s/deferredjs/%s/*",
+									paths.remoteRoot, paths.modPath, mn),
+							jsfDir);
+				}
+			}
+			if (!symbol.exists()) {
+				importViaRsync(String.format("%s%s/%s.symbolMap",
+						paths.remoteRoot, paths.symPath, mn), symbol);
+			}
+			return module.exists() && symbol.exists();
+		}
+
+		private String extractReplay(String serializedLogRecords) {
+			List<ClientLogRecord> clrs = parseSerializedLogRecords(
+					serializedLogRecords);
+			ConverterFilter<ClientLogRecord, ReplayInstruction> converterFilter = new ConverterFilter<ClientLogRecord, ReplayInstruction>() {
+				@Override
+				public boolean allowPostConvert(ReplayInstruction c) {
+					return c != null;
+				}
+
+				@Override
+				public boolean allowPreConvert(ClientLogRecord t) {
+					return true;
+				}
+
+				@Override
+				public ReplayInstruction convert(ClientLogRecord original) {
+					return ReplayInstruction.fromClientLogRecord(original);
+				}
+			};
+			List<ReplayInstruction> ris = CollectionFilters
+					.convertAndFilter(clrs, converterFilter);
+			return CommonUtils.join(ris, "\n");
+		}
+
 		private StringMap getDefJsFunctionLines(String fn) throws Exception {
 			StringMap jsLines = new StringMap();
 			String rgxfn = fn.replace("$", "\\$");
@@ -714,44 +795,6 @@ public class DevConsoleDebugCommands {
 			return jsLines;
 		}
 
-		public static class DevConsoleDebugPaths{
-			public String symPath;
-			public String modPath;
-			public String remoteRoot;
-		}
-		private boolean ensureModuleAndSymbolMap(String mn) throws Exception {
-			DevConsoleDebugPaths paths=getPeer().getPaths(console.props);
-			
-			File devFolder = console.devHelper.getDevFolder();
-			File gwtSymbols = SEUtilities.getChildFile(devFolder,
-					"gwt-symbols");
-			gwtSymbols.mkdir();
-			module = new File(
-					String.format("%s/%s.cache.js", gwtSymbols.getPath(), mn));
-			symbol = new File(
-					String.format("%s/%s.symbolMap", gwtSymbols.getPath(), mn));
-			if (!module.exists()) {
-				importViaRsync(String.format("%s%s/%s.cache.js", paths.remoteRoot,
-						paths.modPath, mn), module);
-			}
-			if (getJs) {
-				jsfDir = new File(String.format("%s/deferredjs/%s",
-						gwtSymbols.getPath(), mn));
-				jsfDir.mkdirs();
-				if (jsfDir.listFiles().length != 9) {
-					importViaRsync(String.format("%s%s/deferredjs/%s/*",
-							paths.remoteRoot,paths. modPath, mn), jsfDir);
-				}
-			}
-			if (!symbol.exists()) {
-				importViaRsync(String.format("%s%s/%s.symbolMap", paths.remoteRoot,
-						paths.symPath, mn), symbol);
-			}
-			return module.exists() && symbol.exists();
-		}
-
-		List<File> jsFiles = new ArrayList<File>();
-
 		private void importViaRsync(String from, File to) throws Exception {
 			System.out.format("rsync %s -> %s\n", from, to.getPath());
 			ProcessBuilder pb = new ProcessBuilder("/usr/bin/rsync", "-avz",
@@ -766,24 +809,39 @@ public class DevConsoleDebugCommands {
 			proc.waitFor();
 		}
 
-		@Override
-		public String getDescription() {
-			return "Drill down to exception - run with zero params for usage";
-		}
+		public static class DevConsoleDebugPaths {
+			public String symPath;
 
-		@Override
-		public void printUsage() {
-			System.out.println(getUsage());
-		}
+			public String modPath;
 
-		@Override
-		public String getUsage() {
-			return "dxd  {id} <-js> <-fn fname> <-o outputformat>";
+			public String remoteRoot;
 		}
 	}
 
 	public static class CmdGetExceptionLogs extends DevConsoleCommand {
 		private static final int DEFAULT_GET_EXCEPTIONS_IN_LAST_X_DAYS = 2;
+
+		public void addLogRecords(ResultSet rs, List<ILogRecord> logRecords)
+				throws SQLException {
+			while (rs.next()) {
+				IUser u = console.state.ensureUser(rs.getLong("user_id"),
+						rs.getString("username"));
+				ILogRecord l = Registry.impl(ILogRecord.class);
+				l.setId(rs.getLong("id"));
+				l.setComponentKey(rs.getString("component_key"));
+				l.setUserId(rs.getLong("user_id"));
+				l.setText(rs.getString("text"));
+				l.setHost(rs.getString("host"));
+				l.setCreatedOn(
+						new Date(rs.getTimestamp("created_on").getTime()));
+				logRecords.add(l);
+			}
+		}
+
+		@Override
+		public boolean canUseProductionConn() {
+			return true;
+		}
 
 		@Override
 		public String[] getCommandIds() {
@@ -791,8 +849,13 @@ public class DevConsoleDebugCommands {
 		}
 
 		@Override
-		public boolean canUseProductionConn() {
-			return true;
+		public String getDescription() {
+			return "Download meaningful Jade exceptions for the last x days";
+		}
+
+		@Override
+		public String getUsage() {
+			return "dxg {days} <-a --all types> <-gtid id : log record id gt specified>";
 		}
 
 		@Override
@@ -840,86 +903,19 @@ public class DevConsoleDebugCommands {
 			return String.format("retrieved %s log records", logRecords.size());
 		}
 
-		public void addLogRecords(ResultSet rs, List<ILogRecord> logRecords)
-				throws SQLException {
-			while (rs.next()) {
-				IUser u = console.state.ensureUser(rs.getLong("user_id"),
-						rs.getString("username"));
-				ILogRecord l = Registry.impl(ILogRecord.class);
-				l.setId(rs.getLong("id"));
-				l.setComponentKey(rs.getString("component_key"));
-				l.setUserId(rs.getLong("user_id"));
-				l.setText(rs.getString("text"));
-				l.setHost(rs.getString("host"));
-				l.setCreatedOn(
-						new Date(rs.getTimestamp("created_on").getTime()));
-				logRecords.add(l);
-			}
-		}
-
 		protected String getExceptionIgnoreClause() {
 			return getPeer().getExceptionIgnoreClause();
-			
-		}
-
-		@Override
-		public String getDescription() {
-			return "Download meaningful Jade exceptions for the last x days";
-		}
-
-		@Override
-		public String getUsage() {
-			return "dxg {days} <-a --all types> <-gtid id : log record id gt specified>";
 		}
 	}
 
-	public static class CmdCountExceptionsByUser extends DevConsoleCommand {
-		private static final int DEFAULT_COUNT_EXCEPTIONS_IN_LAST_X_DAYS = 30;
+	@RegistryLocation(registryPoint = DevConsoleDebugPeer.class, implementationType = ImplementationType.INSTANCE)
+	public static abstract class DevConsoleDebugPeer {
+		public abstract List<ILogRecord> filterByComponent(
+				List<ILogRecord> logRecords, String componentKey);
 
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "dxu" };
-		}
+		public abstract String getExceptionIgnoreClause();
 
-		@Override
-		public boolean canUseProductionConn() {
-			return true;
-		}
-
-		@Override
-		public String run(String[] argv) throws Exception {
-			Connection conn = getConn();
-			int days = getIntArg(argv, 0,
-					DEFAULT_COUNT_EXCEPTIONS_IN_LAST_X_DAYS);
-			String ckFilter = new CmdGetExceptionLogs()
-					.getExceptionIgnoreClause();
-			String sql = String.format(
-					"select u.username,u.id, count(l.id) as errct from logging l inner join users u on l.user_id=u.id"
-							+ " where age(created_on)<'%s days' and "
-							+ " not (l.component_key in %s)"
-							+ "group by u.username,u.id order by count(l.id) desc;",
-					days, ckFilter);
-			System.out.format(
-					"Exceptions in last %s days, by user\n---------------------\n\n",
-					days);
-			PreparedStatement ps = conn.prepareStatement(sql);
-			ResultSet rs = ps.executeQuery();
-			SqlUtils.dumpResultSet(rs);
-			return String.format(
-					"Counted exceptions for last %s days - \n"
-							+ " remember to cache all exceptions for that period  "
-							+ "before drilldown/count by running \n\tdxg %s\n\n ",
-					days, days);
-		}
-
-		@Override
-		public String getDescription() {
-			return "Count exceptions by user, last x days";
-		}
-
-		@Override
-		public String getUsage() {
-			return "dxu {x}:";
-		}
+		public abstract DevConsoleDebugPaths
+				getPaths(DevConsoleProperties props);
 	}
 }

@@ -27,7 +27,11 @@ import org.hibernate.stat.SessionStatistics;
 
 @SuppressWarnings("deprecation")
 public class MemCacheSession implements Session {
-	 Session delegate;
+	Session delegate;
+
+	public MemCacheSession(Session delegate) {
+		this.delegate = delegate;
+	}
 
 	public Transaction beginTransaction() {
 		return this.delegate.beginTransaction();
@@ -53,22 +57,22 @@ public class MemCacheSession implements Session {
 		return this.delegate.contains(arg0);
 	}
 
-	public Criteria createCriteria(Class arg0, String arg1) {
-		Criteria subCriteria = this.delegate == null ? null : this.delegate
-				.createCriteria(arg0, arg1);
-		return new MemCacheCriteria(arg0,arg1,subCriteria,this);
+	public Criteria createCriteria(Class arg0) {
+		return this.delegate.createCriteria(arg0);
 	}
 
-	public Criteria createCriteria(Class arg0) {
+	public Criteria createCriteria(Class arg0, String arg1) {
+		Criteria subCriteria = this.delegate == null ? null
+				: this.delegate.createCriteria(arg0, arg1);
+		return new MemCacheCriteria(arg0, arg1, subCriteria, this);
+	}
+
+	public Criteria createCriteria(String arg0) {
 		return this.delegate.createCriteria(arg0);
 	}
 
 	public Criteria createCriteria(String arg0, String arg1) {
 		return this.delegate.createCriteria(arg0, arg1);
-	}
-
-	public Criteria createCriteria(String arg0) {
-		return this.delegate.createCriteria(arg0);
 	}
 
 	public Query createFilter(Object arg0, String arg1) {
@@ -91,7 +95,8 @@ public class MemCacheSession implements Session {
 		this.delegate.delete(arg0, arg1);
 	}
 
-	public void disableFetchProfile(String arg0) throws UnknownProfileException {
+	public void disableFetchProfile(String arg0)
+			throws UnknownProfileException {
 		this.delegate.disableFetchProfile(arg0);
 	}
 
@@ -128,6 +133,10 @@ public class MemCacheSession implements Session {
 		this.delegate.flush();
 	}
 
+	public Object get(Class arg0, Serializable arg1) throws HibernateException {
+		return this.delegate.get(arg0, arg1);
+	}
+
 	public Object get(Class arg0, Serializable arg1, LockMode arg2)
 			throws HibernateException {
 		return this.delegate.get(arg0, arg1, arg2);
@@ -138,7 +147,8 @@ public class MemCacheSession implements Session {
 		return this.delegate.get(arg0, arg1, arg2);
 	}
 
-	public Object get(Class arg0, Serializable arg1) throws HibernateException {
+	public Object get(String arg0, Serializable arg1)
+			throws HibernateException {
 		return this.delegate.get(arg0, arg1);
 	}
 
@@ -150,10 +160,6 @@ public class MemCacheSession implements Session {
 	public Object get(String arg0, Serializable arg1, LockOptions arg2)
 			throws HibernateException {
 		return this.delegate.get(arg0, arg1, arg2);
-	}
-
-	public Object get(String arg0, Serializable arg1) throws HibernateException {
-		return this.delegate.get(arg0, arg1);
 	}
 
 	public CacheMode getCacheMode() {
@@ -241,6 +247,11 @@ public class MemCacheSession implements Session {
 		return this.delegate.isReadOnly(arg0);
 	}
 
+	public Object load(Class arg0, Serializable arg1)
+			throws HibernateException {
+		return this.delegate.load(arg0, arg1);
+	}
+
 	public Object load(Class arg0, Serializable arg1, LockMode arg2)
 			throws HibernateException {
 		return this.delegate.load(arg0, arg1, arg2);
@@ -251,12 +262,13 @@ public class MemCacheSession implements Session {
 		return this.delegate.load(arg0, arg1, arg2);
 	}
 
-	public Object load(Class arg0, Serializable arg1) throws HibernateException {
-		return this.delegate.load(arg0, arg1);
-	}
-
 	public void load(Object arg0, Serializable arg1) throws HibernateException {
 		this.delegate.load(arg0, arg1);
+	}
+
+	public Object load(String arg0, Serializable arg1)
+			throws HibernateException {
+		return this.delegate.load(arg0, arg1);
 	}
 
 	public Object load(String arg0, Serializable arg1, LockMode arg2)
@@ -267,11 +279,6 @@ public class MemCacheSession implements Session {
 	public Object load(String arg0, Serializable arg1, LockOptions arg2)
 			throws HibernateException {
 		return this.delegate.load(arg0, arg1, arg2);
-	}
-
-	public Object load(String arg0, Serializable arg1)
-			throws HibernateException {
-		return this.delegate.load(arg0, arg1);
 	}
 
 	public void lock(Object arg0, LockMode arg1) throws HibernateException {
@@ -303,6 +310,10 @@ public class MemCacheSession implements Session {
 		this.delegate.reconnect(arg0);
 	}
 
+	public void refresh(Object arg0) throws HibernateException {
+		this.delegate.refresh(arg0);
+	}
+
 	public void refresh(Object arg0, LockMode arg1) throws HibernateException {
 		this.delegate.refresh(arg0, arg1);
 	}
@@ -312,17 +323,13 @@ public class MemCacheSession implements Session {
 		this.delegate.refresh(arg0, arg1);
 	}
 
-	public void refresh(Object arg0) throws HibernateException {
-		this.delegate.refresh(arg0);
+	public void refresh(String arg0, Object arg1) throws HibernateException {
+		this.delegate.refresh(arg0, arg1);
 	}
 
 	public void refresh(String arg0, Object arg1, LockOptions arg2)
 			throws HibernateException {
 		this.delegate.refresh(arg0, arg1, arg2);
-	}
-
-	public void refresh(String arg0, Object arg1) throws HibernateException {
-		this.delegate.refresh(arg0, arg1);
 	}
 
 	public void replicate(Object arg0, ReplicationMode arg1)
@@ -379,9 +386,5 @@ public class MemCacheSession implements Session {
 
 	public void update(String arg0, Object arg1) throws HibernateException {
 		this.delegate.update(arg0, arg1);
-	}
-
-	public MemCacheSession(Session delegate) {
-		this.delegate = delegate;
 	}
 }

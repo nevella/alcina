@@ -27,10 +27,10 @@ public class LoadObjectsRequest implements Serializable {
 	private List<String> clientDeltaSignatures = new ArrayList<String>();
 
 	private List<DomainModelDeltaSignature> requestedModels = new ArrayList<DomainModelDeltaSignature>();
-	
+
 	private List<DomainModelDeltaSignature> requestedExactSignatures = new ArrayList<DomainModelDeltaSignature>();
-	
-	private Map<String,String> contextProperties=new LinkedHashMap<String, String>();
+
+	private Map<String, String> contextProperties = new LinkedHashMap<String, String>();
 
 	public List<String> getClientDeltaSignatures() {
 		return this.clientDeltaSignatures;
@@ -40,8 +40,20 @@ public class LoadObjectsRequest implements Serializable {
 		return this.clientPersistedDomainObjectsMetadata;
 	}
 
+	public Map<String, String> getContextProperties() {
+		return this.contextProperties;
+	}
+
 	public String getModuleTypeSignature() {
 		return this.moduleTypeSignature;
+	}
+
+	public List<DomainModelDeltaSignature> getRequestedExactSignatures() {
+		return this.requestedExactSignatures;
+	}
+
+	public List<DomainModelDeltaSignature> getRequestedModels() {
+		return this.requestedModels;
 	}
 
 	public Long getUserId() {
@@ -57,16 +69,17 @@ public class LoadObjectsRequest implements Serializable {
 		this.clientPersistedDomainObjectsMetadata = domainObjectsMetadata;
 	}
 
+	public void setContextProperties(Map<String, String> contextProperties) {
+		this.contextProperties = contextProperties;
+	}
+
 	public void setModuleTypeSignature(String modelDeltaRpcTypeSignature) {
 		this.moduleTypeSignature = modelDeltaRpcTypeSignature;
 	}
 
-	public void setUserId(Long userId) {
-		this.userId = userId;
-	}
-
-	public List<DomainModelDeltaSignature> getRequestedModels() {
-		return this.requestedModels;
+	public void setRequestedExactSignatures(
+			List<DomainModelDeltaSignature> requestedExactSignatures) {
+		this.requestedExactSignatures = requestedExactSignatures;
 	}
 
 	public void setRequestedModels(
@@ -74,25 +87,12 @@ public class LoadObjectsRequest implements Serializable {
 		this.requestedModels = requestedModels;
 	}
 
+	public void setUserId(Long userId) {
+		this.userId = userId;
+	}
+
 	@Override
 	public String toString() {
 		return CommonUtils.formatJ("Load models request - %s", requestedModels);
-	}
-
-	public Map<String, String> getContextProperties() {
-		return this.contextProperties;
-	}
-
-	public void setContextProperties(Map<String, String> contextProperties) {
-		this.contextProperties = contextProperties;
-	}
-
-	public List<DomainModelDeltaSignature> getRequestedExactSignatures() {
-		return this.requestedExactSignatures;
-	}
-
-	public void setRequestedExactSignatures(
-			List<DomainModelDeltaSignature> requestedExactSignatures) {
-		this.requestedExactSignatures = requestedExactSignatures;
 	}
 }

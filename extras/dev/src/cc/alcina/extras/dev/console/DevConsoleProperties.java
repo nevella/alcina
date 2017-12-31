@@ -37,16 +37,6 @@ public class DevConsoleProperties {
 	@SetPropInfo(key = "diff-file-2", description = "Second file for a regression test diff")
 	public String diffFile2 = "";
 
-	@Retention(RetentionPolicy.RUNTIME)
-	@Inherited
-	@Documented
-	@Target({ ElementType.FIELD })
-	public static @interface SetPropInfo {
-		String key();
-
-		String description() default "";
-	}
-
 	@SetPropInfo(key = "last-command")
 	public String lastCommand = "";
 
@@ -86,4 +76,14 @@ public class DevConsoleProperties {
 	 * </pre>
 	 */
 	public String productionListUploadedRequests = "";
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Inherited
+	@Documented
+	@Target({ ElementType.FIELD })
+	public static @interface SetPropInfo {
+		String description() default "";
+
+		String key();
+	}
 }

@@ -69,17 +69,13 @@ import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlersSupport;
  *
  * @author Nick Reddel
  */
-public abstract class ActionViewProviderBase implements ViewProvider,
-		PermissibleActionListener {
+public abstract class ActionViewProviderBase
+		implements ViewProvider, PermissibleActionListener {
 	private PaneWrapper wrapper;
 
 	private BreadcrumbBarMaximiseButton maxButton;
 
 	protected RemoteAction action;
-
-	protected boolean alwaysExpandFirst() {
-		return false;
-	}
 
 	public Widget getViewForObject(Object obj) {
 		action = (RemoteAction) obj;
@@ -107,29 +103,19 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 		return new BreadcrumbBar(null, history, maxButtonArr);
 	}
 
+	protected boolean alwaysExpandFirst() {
+		return false;
+	}
+
 	protected void getActionLogs(
-			AsyncCallback<List<ActionLogItem>> outerCallback, int logItemCount) {
+			AsyncCallback<List<ActionLogItem>> outerCallback,
+			int logItemCount) {
 		Registry.impl(ActionLogProvider.class).getLogsForAction(action,
 				logItemCount, outerCallback, true);
 	}
 
 	protected abstract void performAction(AsyncCallback<String> asyncCallback,
 			AsyncCallback<ActionLogItem> syncCallback);
-
-	public static class ActionViewProvider extends ActionViewProviderBase {
-		protected void performAction(AsyncCallback<String> asyncCallback,
-				AsyncCallback<ActionLogItem> syncCallback) {
-			if (action instanceof SynchronousAction) {
-				((CommonRemoteServiceExtAsync) ClientBase
-						.getCommonRemoteServiceAsyncInstance())
-						.performActionAndWait(action, syncCallback);
-			} else {
-				((CommonRemoteServiceExtAsync) ClientBase
-						.getCommonRemoteServiceAsyncInstance()).performAction(
-						action, asyncCallback);
-			}
-		}
-	}
 
 	public class ActionLogPanel extends VerticalPanel implements ClickHandler {
 		private static final String RUNNING = "...running";
@@ -161,11 +147,11 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 		int logItemCount = 5;
 
 		public ActionLogPanel() {
-			this.handler = LooseActionRegistry.get().getHandler(
-					action.getClass().getName());
+			this.handler = LooseActionRegistry.get()
+					.getHandler(action.getClass().getName());
 			this.hasChildHandlersSupport = new HasChildHandlersSupport();
-			HTML description = new HTML("<i>" + action.getDescription()
-					+ "</i><br />");
+			HTML description = new HTML(
+					"<i>" + action.getDescription() + "</i><br />");
 			this.fp = new FlowPanel();
 			add(description);
 			if (action instanceof RemoteActionWithParameters) {
@@ -192,11 +178,9 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 			progressHolder.setVisible(false);
 			add(progressHolder);
 			if (handler == null) {
-				add(new HTML(
-						CommonUtils
-								.formatJ(
-										"<br /><hr /><div class='recent'>Last %s action logs</div><br />",
-										logItemCount)));
+				add(new HTML(CommonUtils.formatJ(
+						"<br /><hr /><div class='recent'>Last %s action logs</div><br />",
+						logItemCount)));
 			}
 			add(fp);
 			setWidth("80%");
@@ -262,11 +246,11 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 					}
 				}
 			};
-			GwittirUtils.refreshEmptyTextBoxes(beanView.getBoundWidget()
-					.getBinding());
+			GwittirUtils.refreshEmptyTextBoxes(
+					beanView.getBoundWidget().getBinding());
 			if (!beanView.getBoundWidget().getBinding().validate()) {
-				Registry.impl(ClientNotifications.class).showWarning(
-						"Please correct the problems in the form");
+				Registry.impl(ClientNotifications.class)
+						.showWarning("Please correct the problems in the form");
 				return;
 			}
 			running(true);
@@ -304,8 +288,8 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 					int[] counts = { 10, 20, 40, 80, 160, 320 };
 					for (int c : counts) {
 						final int fc = c;
-						more.add(new Link(String.valueOf(c),
-								new ClickHandler() {
+						more.add(
+								new Link(String.valueOf(c), new ClickHandler() {
 									public void onClick(ClickEvent event) {
 										logItemCount = fc;
 										redraw();
@@ -334,6 +318,21 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 		}
 	}
 
+	public static class ActionViewProvider extends ActionViewProviderBase {
+		protected void performAction(AsyncCallback<String> asyncCallback,
+				AsyncCallback<ActionLogItem> syncCallback) {
+			if (action instanceof SynchronousAction) {
+				((CommonRemoteServiceExtAsync) ClientBase
+						.getCommonRemoteServiceAsyncInstance())
+								.performActionAndWait(action, syncCallback);
+			} else {
+				((CommonRemoteServiceExtAsync) ClientBase
+						.getCommonRemoteServiceAsyncInstance())
+								.performAction(action, asyncCallback);
+			}
+		}
+	}
+
 	class ActionLogItemVisualiser extends Composite implements ClickHandler {
 		private Link link;
 
@@ -344,17 +343,17 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 		ActionLogItemVisualiser(ActionLogItem item, boolean first) {
 			this.vp = new VerticalPanel();
 			this.link = new Link(CommonUtils.formatDate(item.getActionDate(),
-					DateStyle.AU_DATE_TIME)
-					+ " - "
+					DateStyle.AU_DATE_TIME) + " - "
 					+ item.getShortDescription());
 			link.addClickHandler(this);
 			String actionLog = item.getActionLog();
-			if(actionLog==null){
-				actionLog="{no log}";
+			if (actionLog == null) {
+				actionLog = "{no log}";
 			}
 			boolean customHtml = actionLog.contains("div");
-			this.html = new HTML(customHtml ? actionLog : "<pre>" + actionLog
-					+ "</pre>", true);
+			this.html = new HTML(
+					customHtml ? actionLog : "<pre>" + actionLog + "</pre>",
+					true);
 			html.setVisible(first
 					&& (actionLog.length() < 2000 || alwaysExpandFirst()));
 			if (!customHtml) {
@@ -379,7 +378,8 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 		@SuppressWarnings("unused")
 		private Button saveButton;
 
-		public void addVetoableActionListener(PermissibleActionListener listener) {
+		public void
+				addVetoableActionListener(PermissibleActionListener listener) {
 			this.support.addVetoableActionListener(listener);
 		}
 
@@ -393,8 +393,8 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 
 		public void onClick(ClickEvent event) {
 			PermissibleActionEvent action = new PermissibleActionEvent(
-					this.action, ClientReflector.get().newInstance(
-							ViewAction.class));
+					this.action,
+					ClientReflector.get().newInstance(ViewAction.class));
 			fireVetoableActionEvent(action);
 		}
 

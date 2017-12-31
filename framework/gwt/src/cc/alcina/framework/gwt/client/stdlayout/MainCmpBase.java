@@ -32,20 +32,10 @@ import cc.alcina.framework.gwt.client.widget.BaseTab;
  * 
  * @author Nick Reddel
  */
-public abstract class MainCmpBase extends Composite implements
-		BeforeSelectionHandler<Integer>, SelectionHandler<Integer>,
+public abstract class MainCmpBase extends Composite
+		implements BeforeSelectionHandler<Integer>, SelectionHandler<Integer>,
 		ValueChangeHandler<String> {
-	protected abstract void initButtons();
-
 	protected MainTabPanel tabPanel;
-
-	public MainTabPanel getTabPanel() {
-		return this.tabPanel;
-	}
-
-	public List<BaseTab> getTabs() {
-		return this.tabs;
-	}
 
 	protected ArrayList<LoginStateVisibleWithWidget> buttons;
 
@@ -66,9 +56,27 @@ public abstract class MainCmpBase extends Composite implements
 		initWidget(tabPanel);
 	}
 
-	protected MainTabPanel createTabPanel() {
-		return new MainTabPanel(buttons);
+	public MainTabPanel getTabPanel() {
+		return this.tabPanel;
 	}
+
+	public List<BaseTab> getTabs() {
+		return this.tabs;
+	}
+
+	public void onBeforeSelection(BeforeSelectionEvent<Integer> event) {
+		// no cancel
+	}
+
+	@SuppressWarnings("unchecked")
+	public void onSelection(SelectionEvent<Integer> event) {
+		Integer tabIndex = event.getSelectedItem();
+		this.currentTabClass = (Class<BaseTab>) tabPanel.getWidget(tabIndex)
+				.getClass();
+		afterTabSelect(tabIndex);
+	}
+
+	public abstract void resetTabs();
 
 	public boolean showTab(String tabToken) {
 		for (BaseTab tab : tabs) {
@@ -85,7 +93,13 @@ public abstract class MainCmpBase extends Composite implements
 		return false;
 	}
 
-	public abstract void resetTabs();
+	protected abstract void afterTabSelect(int tabIndex);
+
+	protected MainTabPanel createTabPanel() {
+		return new MainTabPanel(buttons);
+	}
+
+	protected abstract void initButtons();
 
 	@Override
 	protected void onAttach() {
@@ -97,19 +111,5 @@ public abstract class MainCmpBase extends Composite implements
 	protected void onDetach() {
 		historyHandlerRegistration.removeHandler();
 		super.onDetach();
-	}
-
-	protected abstract void afterTabSelect(int tabIndex);
-
-	public void onBeforeSelection(BeforeSelectionEvent<Integer> event) {
-		// no cancel
-	}
-
-	@SuppressWarnings("unchecked")
-	public void onSelection(SelectionEvent<Integer> event) {
-		Integer tabIndex = event.getSelectedItem();
-		this.currentTabClass = (Class<BaseTab>) tabPanel.getWidget(tabIndex)
-				.getClass();
-		afterTabSelect(tabIndex);
 	}
 }

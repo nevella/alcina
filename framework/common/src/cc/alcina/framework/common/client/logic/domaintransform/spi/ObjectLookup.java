@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform.spi;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -20,12 +19,9 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
  *
  * @author Nick Reddel
  */
-
- public interface ObjectLookup {
+public interface ObjectLookup {
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
-			long id, long localId) ;
-	
+			long id, long localId);
 
-	public <T extends HasIdAndLocalId> T  getObject(T bean);
-	
+	public <T extends HasIdAndLocalId> T getObject(T bean);
 }

@@ -39,6 +39,10 @@ public class APanel<O> extends ComplexPanel implements HasClickHandlers {
 
 	private O userObject;
 
+	private boolean bubbling = true;
+
+	private boolean preventDefault = false;
+
 	public APanel() {
 		setElement(DOM.createAnchor());
 		getElement().setPropertyString("href", "#");
@@ -59,6 +63,10 @@ public class APanel<O> extends ComplexPanel implements HasClickHandlers {
 	@Override
 	public void add(Widget w) {
 		add(w, getElement());
+	}
+
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addDomHandler(handler, ClickEvent.getType());
 	}
 
 	public String getHref() {
@@ -91,13 +99,17 @@ public class APanel<O> extends ComplexPanel implements HasClickHandlers {
 		insert(w, getElement(), beforeIndex, true);
 	}
 
+	public boolean isBubbling() {
+		return bubbling;
+	}
+
 	public boolean isEnabled() {
 		return enabled;
 	}
 
-	private boolean bubbling = true;
-
-	private boolean preventDefault = false;
+	public boolean isPreventDefault() {
+		return preventDefault;
+	}
 
 	@Override
 	public void onBrowserEvent(Event event) {
@@ -114,6 +126,10 @@ public class APanel<O> extends ComplexPanel implements HasClickHandlers {
 		}
 	}
 
+	public void setBubbling(boolean bubbling) {
+		this.bubbling = bubbling;
+	}
+
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 		if (enabled) {
@@ -125,6 +141,10 @@ public class APanel<O> extends ComplexPanel implements HasClickHandlers {
 
 	public void setHref(String href) {
 		getElement().setPropertyString("href", href);
+	}
+
+	public void setPreventDefault(boolean preventDefault) {
+		this.preventDefault = preventDefault;
 	}
 
 	public void setTarget(String target) {
@@ -139,24 +159,20 @@ public class APanel<O> extends ComplexPanel implements HasClickHandlers {
 		this.userObject = userObject;
 	}
 
-	public void setBubbling(boolean bubbling) {
-		this.bubbling = bubbling;
-	}
-
-	public boolean isBubbling() {
-		return bubbling;
-	}
-
-	public void setPreventDefault(boolean preventDefault) {
-		this.preventDefault = preventDefault;
-	}
-
-	public boolean isPreventDefault() {
-		return preventDefault;
-	}
-
 	public static class AAnchor extends APanel {
 		private Label label = null;
+
+		public AAnchor(String text, boolean html, String token) {
+			super();
+			setLabel(html ? new InlineHTML(text) : new InlineLabel(text));
+			setHref(token);
+		}
+
+		public AAnchor(String text, String token) {
+			super();
+			setLabel(new InlineLabel(text));
+			setHref(token);
+		}
 
 		public Label getLabel() {
 			return this.label;
@@ -166,18 +182,6 @@ public class APanel<O> extends ComplexPanel implements HasClickHandlers {
 			this.label = label;
 			clear();
 			add(label);
-		}
-
-		public AAnchor(String text, String token) {
-			super();
-			setLabel(new InlineLabel(text));
-			setHref(token);
-		}
-
-		public AAnchor(String text, boolean html, String token) {
-			super();
-			setLabel(html ? new InlineHTML(text) : new InlineLabel(text));
-			setHref(token);
 		}
 	}
 
@@ -196,12 +200,12 @@ public class APanel<O> extends ComplexPanel implements HasClickHandlers {
 		 * @param elem
 		 */
 		public native void blur(Element elem) /*-{
-            // Attempts to blur elements from within an event callback will generally
-            // be unsuccessful, so we invoke blur() from outside of the callback.
-            $wnd.setTimeout(function() {
-                elem.blur();
-            }, 0);
-		}-*/;
+												// Attempts to blur elements from within an event callback will generally
+												// be unsuccessful, so we invoke blur() from outside of the callback.
+												$wnd.setTimeout(function() {
+												elem.blur();
+												}, 0);
+												}-*/;
 
 		@Override
 		public void onBrowserEvent(Event event) {
@@ -210,9 +214,5 @@ public class APanel<O> extends ComplexPanel implements HasClickHandlers {
 				blur(getElement());
 			}
 		}
-	}
-
-	public HandlerRegistration addClickHandler(ClickHandler handler) {
-		return addDomHandler(handler, ClickEvent.getType());
 	}
 }

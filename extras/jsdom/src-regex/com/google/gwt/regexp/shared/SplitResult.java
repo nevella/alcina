@@ -15,9 +15,6 @@
  */
 package com.google.gwt.regexp.shared;
 
-import com.google.gwt.core.client.GwtScriptOnly;
-import com.google.gwt.core.client.JsArrayString;
-
 /**
  * GWT wrapper for Javascript string.split results.
  */
@@ -32,14 +29,11 @@ public class SplitResult {
 		return this.impl.get(index);
 	}
 
-
 	public final int length() {
 		return this.impl.length();
 	}
 
-
 	public final void set(int index, String value) {
 		this.impl.set(index, value);
 	}
-	
 }

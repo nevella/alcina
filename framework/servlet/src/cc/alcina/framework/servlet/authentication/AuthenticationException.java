@@ -11,16 +11,13 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.servlet.authentication;
 
 /**
  *
  * @author Nick Reddel
  */
-
- public class AuthenticationException extends Exception {
-
+public class AuthenticationException extends Exception {
 	public AuthenticationException(Exception e) {
 		super(e);
 	}

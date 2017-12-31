@@ -29,19 +29,6 @@ public final class StyleRemote extends JavaScriptObject implements DomStyle {
 	protected StyleRemote() {
 	}
 
-	/**
-	 * Sets the value of a named property.
-	 */
-	@Override
-	public final native void setPropertyImpl(String name, String value) /*-{
-        this[name] = value;
-	}-*/;
-
-	@Override
-	public final Style styleObject() {
-		throw new UnsupportedOperationException();
-	}
-
 	@Override
 	public final void clearBackgroundColor() {
 		DomStyleStatic.clearBackgroundColor(this);
@@ -453,8 +440,19 @@ public final class StyleRemote extends JavaScriptObject implements DomStyle {
 	}
 
 	@Override
+	public Map<String, String> getProperties() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public final String getProperty(String name) {
 		return DomStyleStatic.getProperty(this, name);
+	}
+
+	@Override
+	// LD2 - never called
+	public final String getPropertyImpl(String name) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -708,14 +706,22 @@ public final class StyleRemote extends JavaScriptObject implements DomStyle {
 	}
 
 	@Override
+	public final void setProperty(String name, double value, Unit unit) {
+		DomStyleStatic.setProperty(this, name, value, unit);
+	}
+
+	@Override
 	public final void setProperty(String name, String value) {
 		DomStyleStatic.setProperty(this, name, value);
 	}
 
+	/**
+	 * Sets the value of a named property.
+	 */
 	@Override
-	public final void setProperty(String name, double value, Unit unit) {
-		DomStyleStatic.setProperty(this, name, value, unit);
-	}
+	public final native void setPropertyImpl(String name, String value) /*-{
+																		this[name] = value;
+																		}-*/;
 
 	@Override
 	public final void setPropertyPx(String name, int value) {
@@ -768,13 +774,13 @@ public final class StyleRemote extends JavaScriptObject implements DomStyle {
 	}
 
 	@Override
-	public final void setVerticalAlign(VerticalAlign value) {
-		DomStyleStatic.setVerticalAlign(this, value);
+	public final void setVerticalAlign(double value, Unit unit) {
+		DomStyleStatic.setVerticalAlign(this, value, unit);
 	}
 
 	@Override
-	public final void setVerticalAlign(double value, Unit unit) {
-		DomStyleStatic.setVerticalAlign(this, value, unit);
+	public final void setVerticalAlign(VerticalAlign value) {
+		DomStyleStatic.setVerticalAlign(this, value);
 	}
 
 	@Override
@@ -798,14 +804,7 @@ public final class StyleRemote extends JavaScriptObject implements DomStyle {
 	}
 
 	@Override
-	// LD2 - never called
-	public final String getPropertyImpl(String name) {
+	public final Style styleObject() {
 		throw new UnsupportedOperationException();
 	}
-
-	@Override
-	public Map<String, String> getProperties() {
-		throw new UnsupportedOperationException();
-	}
-
 }

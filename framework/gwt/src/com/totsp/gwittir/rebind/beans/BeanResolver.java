@@ -45,19 +45,13 @@ public class BeanResolver {
 
 	private String[] filterProperties;
 
-	public BeanResolver(TreeLogger logger, JClassType type,
-			String[] filterProperties) {
-		this(logger, type);
-		this.filterProperties = filterProperties;
-	}
-
 	/** Creates a new instance of BeanResolver */
 	public BeanResolver(TreeLogger logger, JClassType type) {
 		this.type = type;
 		this.logger = logger;
 		// System.out.println("Inspecting type: "+type);
-		this.logger = logger.branch(TreeLogger.DEBUG, "Inspecting type: "
-				+ type.getQualifiedSourceName(), null);
+		this.logger = logger.branch(TreeLogger.DEBUG,
+				"Inspecting type: " + type.getQualifiedSourceName(), null);
 		buildMethods(type);
 		examineGetters();
 		examineSetters();
@@ -67,107 +61,26 @@ public class BeanResolver {
 		}
 		for (Iterator it = methodSet.iterator(); it.hasNext();) {
 			MethodWrapper w = (MethodWrapper) it.next();
-			logger.log(TreeLogger.DEBUG, w.getDeclaringType()
-					.getQualifiedSourceName() + " " + w.toString(), null);
-		}
-	}
-
-	private void buildMethods(JClassType type) {
-		JMethod[] methods = type.getMethods();
-		logger = logger.branch(TreeLogger.DEBUG, type.getQualifiedSourceName()
-				+ " " + type.getMethods().length, null);
-		for (int i = 0; i < methods.length; i++) {
-			if (!methods[i].isPublic()) {
-				continue;
-			}
-			if (methods[i].isStatic()) {
-				continue;
-			}
-			MethodWrapper w = new MethodWrapper(type, methods[i]);
-			if (methods[i].getAnnotation(Omit.class) != null) {
-				methodSet.remove(w);
-			} else {
-				logger.log(TreeLogger.DEBUG, w.getBaseMethod()
-						.getReadableDeclaration(), null);
-				methodSet.add(w);
-			}
-		}
-		JClassType[] interfaces = type.getImplementedInterfaces();
-		for (int i = 0; i < interfaces.length; i++) {
-			buildMethods(interfaces[i]);
-		}
-		if (type.getSuperclass() != null) {
-			buildMethods(type.getSuperclass());
-		} else {
-			logger.log(TreeLogger.DEBUG, "no supertype", null);
-		}
-	}
-
-	private void examineGetters() {
-		for (Iterator it = methodSet.iterator(); it.hasNext();) {
-			MethodWrapper w = (MethodWrapper) it.next();
-			String methodName = w.getBaseMethod().getName();
-			RProperty p = null;
-			if (methodName.startsWith("get")
-					&& (methodName.length() >= 4)
-					&& (methodName.charAt(3) == methodName.toUpperCase()
-							.charAt(3))) {
-				p = new RProperty();
-				p.setReadMethod(w);
-				p.setName(methodName.substring(3, 4).toLowerCase()
-						+ ((methodName.length() > 4) ? methodName.substring(4,
-								methodName.length()) : ""));
-			} else if (methodName.startsWith("is")
-					&& (methodName.length() >= 3)
-					&& (methodName.charAt(2) == methodName.toUpperCase()
-							.charAt(2))) {
-				p = new RProperty();
-				p.setReadMethod(w);
-				p.setName(methodName.substring(2, 3).toLowerCase()
-						+ ((methodName.length() > 3) ? methodName.substring(3,
-								methodName.length()) : ""));
-			}
-			if (p == null) {
-				continue;
-			}
-			p.setType(w.getBaseMethod().getReturnType());
-			logger.log(TreeLogger.DEBUG, "Found new property: " + p.getName(),
+			logger.log(TreeLogger.DEBUG,
+					w.getDeclaringType().getQualifiedSourceName() + " "
+							+ w.toString(),
 					null);
-			properties.put(p.getName(), p);
 		}
 	}
 
-	private void examineSetters() {
-		for (Iterator it = methodSet.iterator(); it.hasNext();) {
-			MethodWrapper w = (MethodWrapper) it.next();
-			String methodName = w.getBaseMethod().getName();
-			if (methodName.startsWith("set")
-					&& (methodName.length() >= 4)
-					&& (methodName.charAt(3) == methodName.toUpperCase()
-							.charAt(3))) {
-				String name = methodName.substring(3, 4).toLowerCase()
-						+ ((methodName.length() > 4) ? methodName.substring(4,
-								methodName.length()) : "");
-				RProperty p = (properties.containsKey(name) ? (RProperty) properties
-						.get(name) : new RProperty());
-				p.setName(name);
-				p.setWriteMethod(w);
-				if ((p.getType() == null)
-						&& (w.getBaseMethod().getParameters() != null)
-						&& (w.getBaseMethod().getParameters().length > 0)) {
-					p.setType(w.getBaseMethod().getParameters()[w
-							.getBaseMethod().getParameters().length - 1]
-							.getType());
-				}
-				if (logger.isLoggable(TreeLogger.DEBUG)) {
-					if (properties.get(p.getName()) == null) {
-						logger.log(TreeLogger.DEBUG,
-								"Found new property on setter: " + p.getName(),
-								null);
-					}
-				}
-				properties.put(p.getName(), p);
-			}
+	public BeanResolver(TreeLogger logger, JClassType type,
+			String[] filterProperties) {
+		this(logger, type);
+		this.filterProperties = filterProperties;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if (object instanceof BeanResolver) {
+			return ((BeanResolver) object).getType().getQualifiedSourceName()
+					.equals(this.getType().getQualifiedSourceName());
+		} else {
+			return false;
 		}
 	}
 
@@ -190,16 +103,6 @@ public class BeanResolver {
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		if (object instanceof BeanResolver) {
-			return ((BeanResolver) object).getType().getQualifiedSourceName()
-					.equals(this.getType().getQualifiedSourceName());
-		} else {
-			return false;
-		}
-	}
-
-	@Override
 	public int hashCode() {
 		return this.getType().getQualifiedSourceName().hashCode();
 	}
@@ -207,5 +110,107 @@ public class BeanResolver {
 	@Override
 	public String toString() {
 		return this.getType().getQualifiedSourceName();
+	}
+
+	private void buildMethods(JClassType type) {
+		JMethod[] methods = type.getMethods();
+		logger = logger.branch(TreeLogger.DEBUG,
+				type.getQualifiedSourceName() + " " + type.getMethods().length,
+				null);
+		for (int i = 0; i < methods.length; i++) {
+			if (!methods[i].isPublic()) {
+				continue;
+			}
+			if (methods[i].isStatic()) {
+				continue;
+			}
+			MethodWrapper w = new MethodWrapper(type, methods[i]);
+			if (methods[i].getAnnotation(Omit.class) != null) {
+				methodSet.remove(w);
+			} else {
+				logger.log(TreeLogger.DEBUG,
+						w.getBaseMethod().getReadableDeclaration(), null);
+				methodSet.add(w);
+			}
+		}
+		JClassType[] interfaces = type.getImplementedInterfaces();
+		for (int i = 0; i < interfaces.length; i++) {
+			buildMethods(interfaces[i]);
+		}
+		if (type.getSuperclass() != null) {
+			buildMethods(type.getSuperclass());
+		} else {
+			logger.log(TreeLogger.DEBUG, "no supertype", null);
+		}
+	}
+
+	private void examineGetters() {
+		for (Iterator it = methodSet.iterator(); it.hasNext();) {
+			MethodWrapper w = (MethodWrapper) it.next();
+			String methodName = w.getBaseMethod().getName();
+			RProperty p = null;
+			if (methodName.startsWith("get") && (methodName.length() >= 4)
+					&& (methodName.charAt(3) == methodName.toUpperCase()
+							.charAt(3))) {
+				p = new RProperty();
+				p.setReadMethod(w);
+				p.setName(methodName.substring(3, 4).toLowerCase()
+						+ ((methodName.length() > 4)
+								? methodName.substring(4, methodName.length())
+								: ""));
+			} else if (methodName.startsWith("is") && (methodName.length() >= 3)
+					&& (methodName.charAt(2) == methodName.toUpperCase()
+							.charAt(2))) {
+				p = new RProperty();
+				p.setReadMethod(w);
+				p.setName(methodName.substring(2, 3).toLowerCase()
+						+ ((methodName.length() > 3)
+								? methodName.substring(3, methodName.length())
+								: ""));
+			}
+			if (p == null) {
+				continue;
+			}
+			p.setType(w.getBaseMethod().getReturnType());
+			logger.log(TreeLogger.DEBUG, "Found new property: " + p.getName(),
+					null);
+			properties.put(p.getName(), p);
+		}
+	}
+
+	private void examineSetters() {
+		for (Iterator it = methodSet.iterator(); it.hasNext();) {
+			MethodWrapper w = (MethodWrapper) it.next();
+			String methodName = w.getBaseMethod().getName();
+			if (methodName.startsWith("set") && (methodName.length() >= 4)
+					&& (methodName.charAt(3) == methodName.toUpperCase()
+							.charAt(3))) {
+				String name = methodName.substring(3, 4).toLowerCase()
+						+ ((methodName.length() > 4)
+								? methodName.substring(4, methodName.length())
+								: "");
+				RProperty p = (properties.containsKey(name)
+						? (RProperty) properties.get(name) : new RProperty());
+				p.setName(name);
+				p.setWriteMethod(w);
+				if ((p.getType() == null)
+						&& (w.getBaseMethod().getParameters() != null)
+						&& (w.getBaseMethod().getParameters().length > 0)) {
+					p.setType(
+							w.getBaseMethod()
+									.getParameters()[w.getBaseMethod()
+											.getParameters().length - 1]
+													.getType());
+				}
+				if (logger.isLoggable(TreeLogger.DEBUG)) {
+					if (properties.get(p.getName()) == null) {
+						logger.log(TreeLogger.DEBUG,
+								"Found new property on setter: " + p.getName(),
+								null);
+					}
+				}
+				properties.put(p.getName(), p);
+			}
+		}
 	}
 }

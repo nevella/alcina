@@ -10,15 +10,16 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 
 @RegistryLocation(registryPoint = FormatConverter.class, targetClass = FormatConversionTarget_XLSX.class)
 public class FormatConverterXlsx implements FormatConverter {
-	public InputStream convert(PublicationContext ctx,FormatConversionModel fcm) throws Exception {
+	public InputStream convert(PublicationContext ctx,
+			FormatConversionModel fcm) throws Exception {
 		return new ByteArrayInputStream(fcm.bytes);
-	}
-
-	public String getMimeType() {
-		return "application/msexcel";
 	}
 
 	public String getFileExtension() {
 		return "xlsx";
+	}
+
+	public String getMimeType() {
+		return "application/msexcel";
 	}
 }

@@ -65,25 +65,6 @@ public abstract class ClientTransformManager extends TransformManager {
 
 	private boolean firePropertyChangesOnConsumedCollectionMods;
 
-	public boolean isFirePropertyChangesOnConsumedCollectionMods() {
-		return this.firePropertyChangesOnConsumedCollectionMods;
-	}
-
-	public void setFirePropertyChangesOnConsumedCollectionMods(
-			boolean firePropertyChangesOnConsumedCollectionMods) {
-		this.firePropertyChangesOnConsumedCollectionMods = firePropertyChangesOnConsumedCollectionMods;
-	}
-
-	@Override
-	protected void maybeModifyAsPropertyChange(HasIdAndLocalId obj,
-			String propertyName, Object value,
-			CollectionModificationType collectionModificationType) {
-		if (isFirePropertyChangesOnConsumedCollectionMods()) {
-			modifyCollectionProperty(obj, propertyName,
-					Collections.singleton(value), collectionModificationType);
-		}
-	}
-
 	public ClientTransformManager() {
 		super();
 		cache = new ClientDomainSync();
@@ -104,8 +85,13 @@ public abstract class ClientTransformManager extends TransformManager {
 		return this.domainTransformExceptionFilter;
 	}
 
-	public ClientTransformManager.PersistableTransformListener getPersistableTransformListener() {
+	public ClientTransformManager.PersistableTransformListener
+			getPersistableTransformListener() {
 		return persistableTransformListener;
+	}
+
+	public boolean isFirePropertyChangesOnConsumedCollectionMods() {
+		return this.firePropertyChangesOnConsumedCollectionMods;
 	}
 
 	/**
@@ -146,8 +132,8 @@ public abstract class ClientTransformManager extends TransformManager {
 								propertyReflector.getPropertyValue(referrer));
 					}
 				};
-				beanReflector.iterateForPropertyWithAnnotation(
-						Wrapper.class, callback);
+				beanReflector.iterateForPropertyWithAnnotation(Wrapper.class,
+						callback);
 			} finally {
 				CollectionModificationSupport.queue(false);
 			}
@@ -179,13 +165,11 @@ public abstract class ClientTransformManager extends TransformManager {
 		return target;
 	}
 
-	
-
 	public Collection prepareObject(HasIdAndLocalId domainObject,
 			boolean autoSave, boolean afterCreation, boolean forEditing) {
 		List children = new ArrayList();
-		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
-				domainObject.getClass());
+		ClientBeanReflector bi = ClientReflector.get()
+				.beanInfoForClass(domainObject.getClass());
 		if (bi == null) {
 			return children;
 		}
@@ -216,17 +200,17 @@ public abstract class ClientTransformManager extends TransformManager {
 					.getPropertyValue(domainObject, propertyName);
 			boolean create = instructions != null
 					&& instructions.eagerCreation() && currentValue == null;
-			if (requiresPrep == null
-					&& instructions != null
-					&& (instructions.eagerCreation() || instructions
-							.cloneForProvisionalEditing())) {
+			if (requiresPrep == null && instructions != null
+					&& (instructions.eagerCreation()
+							|| instructions.cloneForProvisionalEditing())) {
 				requiresEditPrep.put(c, true);
 			}
 			if (create && afterCreation) {
-				HasIdAndLocalId newObj = autoSave ? TransformManager.get()
-						.createDomainObject(pr.getPropertyType())
-						: TransformManager.get().createProvisionalObject(
-								pr.getPropertyType());
+				HasIdAndLocalId newObj = autoSave
+						? TransformManager.get()
+								.createDomainObject(pr.getPropertyType())
+						: TransformManager.get()
+								.createProvisionalObject(pr.getPropertyType());
 				Reflections.propertyAccessor().setPropertyValue(domainObject,
 						propertyName, newObj);
 				children.add(newObj);
@@ -246,8 +230,8 @@ public abstract class ClientTransformManager extends TransformManager {
 							HasIdAndLocalId clonedValue = (HasIdAndLocalId) new CloneHelper()
 									.shallowishBeanClone(hili);
 							children.add(clonedValue);
-							children.addAll(prepareObject(clonedValue,
-									autoSave, afterCreation, forEditing));
+							children.addAll(prepareObject(clonedValue, autoSave,
+									afterCreation, forEditing));
 							cl.add(clonedValue);
 						}
 					} else {
@@ -319,6 +303,11 @@ public abstract class ClientTransformManager extends TransformManager {
 		this.domainTransformExceptionFilter = domainTransformExceptionFilter;
 	}
 
+	public void setFirePropertyChangesOnConsumedCollectionMods(
+			boolean firePropertyChangesOnConsumedCollectionMods) {
+		this.firePropertyChangesOnConsumedCollectionMods = firePropertyChangesOnConsumedCollectionMods;
+	}
+
 	public void setPersistableTransformListener(
 			ClientTransformManager.PersistableTransformListener persistableTransformListener) {
 		this.persistableTransformListener = persistableTransformListener;
@@ -329,24 +318,76 @@ public abstract class ClientTransformManager extends TransformManager {
 		return true;
 	}
 
+	@Override
+	protected boolean alwaysFireObjectOwnerCollectionModifications() {
+		return true;
+	}
+
 	protected abstract void callRemotePersistence(
 			WrapperPersistable persistableObject,
 			AsyncCallback<Long> savedCallback);
+
+	protected boolean checkRemoveAssociation(HasIdAndLocalId hili,
+			HasIdAndLocalId target, String propertyName) {
+		return !(target instanceof IUser || target instanceof IGroup);
+	}
 
 	@Override
 	protected void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
 			throws DomainTransformException {
 		if (isReplayingRemoteEvent() && obj instanceof HasVersionNumber
 				&& CommonUtils.iv(event.getObjectVersionNumber()) > 0) {
-			((HasVersionNumber) obj).setVersionNumber(event
-					.getObjectVersionNumber());
+			((HasVersionNumber) obj)
+					.setVersionNumber(event.getObjectVersionNumber());
+		}
+	}
+
+	@Override
+	protected void doCascadeDeletes(final HasIdAndLocalId hili) {
+		final ClientBeanReflector beanReflector = ClientReflector.get()
+				.beanInfoForClass(hili.getClass());
+		PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
+		beanReflector.iterateForPropertyWithAnnotation(Association.class,
+				new HasAnnotationCallback<Association>() {
+					public void apply(Association association,
+							PropertyReflector propertyReflector) {
+						if (association.cascadeDeletes()) {
+							Object object = propertyReflector
+									.getPropertyValue(hili);
+							if (object instanceof Set) {
+								for (HasIdAndLocalId target : (Set<HasIdAndLocalId>) object) {
+									deleteObject(target);
+								}
+							}
+						}
+					}
+				});
+	}
+
+	@Override
+	protected void maybeFireCollectionModificationEvent(
+			Class<? extends Object> collectionClass,
+			boolean fromPropertyChange) {
+		fireCollectionModificationEvent(
+				new CollectionModificationEvent(this, collectionClass,
+						getDomainObjects().getCollection(collectionClass),
+						fromPropertyChange));
+	}
+
+	@Override
+	protected void maybeModifyAsPropertyChange(HasIdAndLocalId obj,
+			String propertyName, Object value,
+			CollectionModificationType collectionModificationType) {
+		if (isFirePropertyChangesOnConsumedCollectionMods()) {
+			modifyCollectionProperty(obj, propertyName,
+					Collections.singleton(value), collectionModificationType);
 		}
 	}
 
 	@Override
 	protected void removeAssociations(HasIdAndLocalId hili) {
-		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
-				hili.getClass());
+		ClientBeanReflector bi = ClientReflector.get()
+				.beanInfoForClass(hili.getClass());
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
 		for (ClientPropertyReflector pr : prs) {
@@ -363,7 +404,8 @@ public abstract class ClientTransformManager extends TransformManager {
 					// required for deletion permission checks, and should never
 					// be the collection owner of non-userland objects
 					HasIdAndLocalId target = (HasIdAndLocalId) object;
-					if (!checkRemoveAssociation(hili, target,pr.getPropertyName())) {
+					if (!checkRemoveAssociation(hili, target,
+							pr.getPropertyName())) {
 						continue;
 					}
 					boolean wasRegistered = getObject(target) != null;
@@ -377,11 +419,6 @@ public abstract class ClientTransformManager extends TransformManager {
 				}
 			}
 		}
-	}
-
-	protected boolean checkRemoveAssociation(HasIdAndLocalId hili,
-			HasIdAndLocalId target, String propertyName) {
-		return !(target instanceof IUser || target instanceof IGroup);
 	}
 
 	public class ClientDomainSync {
@@ -403,7 +440,8 @@ public abstract class ClientTransformManager extends TransformManager {
 				callback.onSuccess(null);
 				return;
 			}
-			final Object[] spec = { hili.getClass(), hili.getId(), propertyName };
+			final Object[] spec = { hili.getClass(), hili.getId(),
+					propertyName };
 			if (lkp.containsKey(spec)) {
 				callback.onSuccess(null);
 				return;
@@ -431,8 +469,8 @@ public abstract class ClientTransformManager extends TransformManager {
 
 				public void onSuccess(List<ObjectDeltaResult> result) {
 					long t2 = System.currentTimeMillis();
-					Registry.impl(ClientNotifications.class).log(
-							"Cache load/deser.: " + (t2 - t1));
+					Registry.impl(ClientNotifications.class)
+							.log("Cache load/deser.: " + (t2 - t1));
 					notifier.modalOff();
 					MutablePropertyChangeSupport.setMuteAll(true);
 					ClientTransformManager.PersistableTransformListener pl = getPersistableTransformListener();
@@ -442,7 +480,8 @@ public abstract class ClientTransformManager extends TransformManager {
 						dtr.setClientInstance(ClientBase.getClientInstance());
 					}
 					for (ObjectDeltaResult item : result) {
-						replayRemoteEvents(item.getTransforms(), fireTransforms);
+						replayRemoteEvents(item.getTransforms(),
+								fireTransforms);
 						if (pl != null) {
 							dtr.getEvents().addAll(item.getTransforms());
 						}
@@ -458,8 +497,8 @@ public abstract class ClientTransformManager extends TransformManager {
 					System.arraycopy(spec, 0, spec2, 0, 3);
 					spec2[3] = true;
 					lkp.put(spec2);
-					Registry.impl(ClientNotifications.class).log(
-							"Cache dte replay: "
+					Registry.impl(ClientNotifications.class)
+							.log("Cache dte replay: "
 									+ (System.currentTimeMillis() - t2));
 					callback.onSuccess(result);
 				}
@@ -471,41 +510,19 @@ public abstract class ClientTransformManager extends TransformManager {
 			List<ObjectDeltaSpec> specs = new ArrayList<ObjectDeltaSpec>();
 			specs.add(new ObjectDeltaSpec(hili, propertyName));
 			notifier.modalOn();
-			ClientBase.getCommonRemoteServiceAsyncInstance().getObjectDelta(
-					specs, innerCallback);
+			ClientBase.getCommonRemoteServiceAsyncInstance()
+					.getObjectDelta(specs, innerCallback);
 		}
 	}
 
-	@Override
-	protected void doCascadeDeletes(final HasIdAndLocalId hili) {
-		final ClientBeanReflector beanReflector = ClientReflector.get()
-				.beanInfoForClass(hili.getClass());
-		PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
-		beanReflector.iterateForPropertyWithAnnotation(Association.class,
-				new HasAnnotationCallback<Association>() {
-					public void apply(Association association,
-							PropertyReflector propertyReflector) {
-						if (association.cascadeDeletes()) {
-							Object object = propertyReflector
-									.getPropertyValue(hili);
-							if (object instanceof Set) {
-								for (HasIdAndLocalId target : (Set<HasIdAndLocalId>) object) {
-									deleteObject(target);
-								}
-							}
-						}
-					}
-				});
-	}
-
-	public static class ClientTransformManagerCommon extends
-			ClientTransformManager {
+	public static class ClientTransformManagerCommon
+			extends ClientTransformManager {
 		protected void callRemotePersistence(
 				WrapperPersistable persistableObject,
 				AsyncCallback<Long> savedCallback) {
 			((CommonRemoteServiceExtAsync) ClientBase
-					.getCommonRemoteServiceAsyncInstance()).persist(
-					persistableObject, savedCallback);
+					.getCommonRemoteServiceAsyncInstance())
+							.persist(persistableObject, savedCallback);
 		}
 	}
 
@@ -525,7 +542,8 @@ public abstract class ClientTransformManager extends TransformManager {
 
 		private final ClientInstance clientInstance;
 
-		ClientDteWorker(Map<Class, List> objCopy, ClientInstance clientInstance) {
+		ClientDteWorker(Map<Class, List> objCopy,
+				ClientInstance clientInstance) {
 			this.objCopy = objCopy;
 			this.clientInstance = clientInstance;
 		}
@@ -578,18 +596,5 @@ public abstract class ClientTransformManager extends TransformManager {
 				throw new WrappedRuntimeException(e);
 			}
 		}
-	}
-
-	@Override
-	protected void maybeFireCollectionModificationEvent(
-			Class<? extends Object> collectionClass, boolean fromPropertyChange) {
-		fireCollectionModificationEvent(new CollectionModificationEvent(this,
-				collectionClass, getDomainObjects().getCollection(
-						collectionClass), fromPropertyChange));
-	}
-
-	@Override
-	protected boolean alwaysFireObjectOwnerCollectionModifications() {
-		return true;
 	}
 }

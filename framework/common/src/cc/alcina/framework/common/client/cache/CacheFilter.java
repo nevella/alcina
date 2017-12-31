@@ -10,28 +10,6 @@ import cc.alcina.framework.common.client.collections.PropertyPathFilter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class CacheFilter {
-	public String propertyPath;
-
-	public Object propertyValue;
-
-	public Predicate predicate;
-
-	public FilterOperator filterOperator;
-
-	public CacheFilter(String propertyPath, Object propertyValue) {
-		this(propertyPath, propertyValue, FilterOperator.EQ);
-	}
-
-	public CacheFilter(Predicate predicate) {
-		this.predicate = predicate;
-	}
-
-	public CacheFilter(String key, Object value, FilterOperator operator) {
-		this.propertyPath = key;
-		this.propertyValue = value;
-		this.filterOperator = operator;
-	}
-
 	public static List<CacheFilter> fromKvs(Object... objects) {
 		List<CacheFilter> result = new ArrayList<CacheFilter>();
 		for (int i = 0; i < objects.length; i += 2) {
@@ -40,14 +18,26 @@ public class CacheFilter {
 		return result;
 	}
 
-	@Override
-	public String toString() {
-		if (predicate != null) {
-			return CommonUtils.formatJ("CacheFilter: %s - %s",
-					predicate.getClass().getSimpleName(), predicate);
-		}
-		return CommonUtils.formatJ("CacheFilter: %s %s %s", propertyPath,
-				filterOperator.operationText(), propertyValue);
+	public String propertyPath;
+
+	public Object propertyValue;
+
+	public Predicate predicate;
+
+	public FilterOperator filterOperator;
+
+	public CacheFilter(Predicate predicate) {
+		this.predicate = predicate;
+	}
+
+	public CacheFilter(String propertyPath, Object propertyValue) {
+		this(propertyPath, propertyValue, FilterOperator.EQ);
+	}
+
+	public CacheFilter(String key, Object value, FilterOperator operator) {
+		this.propertyPath = key;
+		this.propertyValue = value;
+		this.filterOperator = operator;
 	}
 
 	public CollectionFilter asCollectionFilter() {
@@ -67,5 +57,15 @@ public class CacheFilter {
 			predicate = predicate.negate();
 		}
 		return this;
+	}
+
+	@Override
+	public String toString() {
+		if (predicate != null) {
+			return CommonUtils.formatJ("CacheFilter: %s - %s",
+					predicate.getClass().getSimpleName(), predicate);
+		}
+		return CommonUtils.formatJ("CacheFilter: %s %s %s", propertyPath,
+				filterOperator.operationText(), propertyValue);
 	}
 }

@@ -146,8 +146,6 @@ public interface DomStyle {
 	 */
 	void clearOpacity();
 
-	Style styleObject();
-
 	/**
 	 * Clear the outline-color css property.
 	 */
@@ -439,10 +437,17 @@ public interface DomStyle {
 	 */
 	String getPosition();
 
+	Map<String, String> getProperties();
+
 	/**
 	 * Gets the value of a named property.
 	 */
 	String getProperty(String name);
+
+	/**
+	 * Gets the value of a named property.
+	 */
+	String getPropertyImpl(String name);
 
 	/**
 	 * Get the right css property.
@@ -695,14 +700,16 @@ public interface DomStyle {
 	void setPosition(Position value);
 
 	/**
+	 * Sets the value of a named property in the specified units.
+	 */
+	void setProperty(String name, double value, Unit unit);
+
+	/**
 	 * Sets the value of a named property.
 	 */
 	void setProperty(String name, String value);
 
-	/**
-	 * Sets the value of a named property in the specified units.
-	 */
-	void setProperty(String name, double value, Unit unit);
+	void setPropertyImpl(String name, String value);
 
 	/**
 	 * Sets the value of a named property, in pixels.
@@ -759,12 +766,12 @@ public interface DomStyle {
 	/**
 	 * Sets the vertical-align CSS property.
 	 */
-	void setVerticalAlign(VerticalAlign value);
+	void setVerticalAlign(double value, Unit unit);
 
 	/**
 	 * Sets the vertical-align CSS property.
 	 */
-	void setVerticalAlign(double value, Unit unit);
+	void setVerticalAlign(VerticalAlign value);
 
 	/**
 	 * Sets the visibility CSS property.
@@ -786,16 +793,5 @@ public interface DomStyle {
 	 */
 	void setZIndex(int value);
 
-	/**
-	 * Gets the value of a named property.
-	 */
-	String getPropertyImpl(String name);
-
-	void setPropertyImpl(String name, String value);
-
-	Map<String, String> getProperties();
-
-
-	
-
+	Style styleObject();
 }

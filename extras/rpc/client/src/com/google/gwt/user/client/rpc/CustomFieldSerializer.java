@@ -78,6 +78,10 @@ public abstract class CustomFieldSerializer<T> {
 						+ getClass().getName());
 	}
 
+	public void serializeConstructor(SerializationStreamWriter streamWriter,
+			T instance) throws SerializationException {
+	}
+
 	/**
 	 * Serializes the content of the object into the
 	 * {@link SerializationStreamWriter}.
@@ -94,8 +98,4 @@ public abstract class CustomFieldSerializer<T> {
 	public abstract void serializeInstance(
 			SerializationStreamWriter streamWriter, T instance)
 			throws SerializationException;
-
-	public void serializeConstructor(SerializationStreamWriter streamWriter,
-			T instance) throws SerializationException {
-	}
 }

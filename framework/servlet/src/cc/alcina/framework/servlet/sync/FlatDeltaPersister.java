@@ -15,20 +15,6 @@ import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
  * @param <D>
  */
 public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
-	public static interface DeltaItemPersister<C> {
-		FlatDeltaPersisterResultType performSyncAction(SyncAction syncAction,
-				C object) throws Exception;
-	}
-	public static class DeltaItemPersisterNull<C> implements DeltaItemPersister<C>{
-
-		@Override
-		public FlatDeltaPersisterResultType performSyncAction(
-				SyncAction syncAction, C object) throws Exception {
-			return FlatDeltaPersisterResultType.UNMODIFIED;
-		}
-		
-	}
-
 	protected Map<Class, DeltaItemPersister> persisters = new LinkedHashMap<Class, DeltaItemPersister>();
 
 	protected final boolean applyToLeft;
@@ -36,8 +22,6 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 	protected FlatDeltaPersister(boolean applyToLeft) {
 		this.applyToLeft = applyToLeft;
 	}
-
-	protected abstract Class[] perClassDeltaOrder();
 
 	public FlatDeltaPersisterResult apply(D delta) throws Exception {
 		FlatDeltaPersisterResult result = new FlatDeltaPersisterResult();
@@ -57,7 +41,8 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 					result.noModificationCount++;
 					continue;
 				}
-				KeyedObject obj = applyToLeft ? pair.getLeft() : pair.getRight();
+				KeyedObject obj = applyToLeft ? pair.getLeft()
+						: pair.getRight();
 				FlatDeltaPersisterResultType resultType = persister
 						.performSyncAction(syncAction,
 								obj == null ? null : obj.getObject());
@@ -73,7 +58,6 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 	}
 
 	protected void classDeltasPersisted() {
-		
 	}
 
 	protected void logAction(FlatDeltaPersisterResultType resultType,
@@ -91,8 +75,24 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 		}
 	}
 
+	protected abstract Class[] perClassDeltaOrder();
+
 	protected abstract boolean shouldApply(Class interchangeClass,
 			SyncPair pair, SyncAction syncAction);
+
+	public static interface DeltaItemPersister<C> {
+		FlatDeltaPersisterResultType performSyncAction(SyncAction syncAction,
+				C object) throws Exception;
+	}
+
+	public static class DeltaItemPersisterNull<C>
+			implements DeltaItemPersister<C> {
+		@Override
+		public FlatDeltaPersisterResultType performSyncAction(
+				SyncAction syncAction, C object) throws Exception {
+			return FlatDeltaPersisterResultType.UNMODIFIED;
+		}
+	}
 
 	public static class NullDeltaPersister extends FlatDeltaPersister {
 		public NullDeltaPersister(boolean applyLeft) {

@@ -31,15 +31,17 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 
 	public void run(Logger logger) throws Exception {
 		for (SyncMerger merger : syncMergers) {
-			merger.merge(leftInterchangeModel.getCollectionFor(merger
-					.getMergedClass()), rightInterchangeModel
-					.getCollectionFor(merger.getMergedClass()), deltaModel,logger);
+			merger.merge(
+					leftInterchangeModel
+							.getCollectionFor(merger.getMergedClass()),
+					rightInterchangeModel.getCollectionFor(
+							merger.getMergedClass()),
+					deltaModel, logger);
 		}
 		beforePersistence();
 		this.persisterResult = localDeltaPersister.apply(deltaModel);
 	}
 
 	protected void beforePersistence() {
-		
 	}
 }

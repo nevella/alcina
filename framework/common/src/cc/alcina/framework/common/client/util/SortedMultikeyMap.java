@@ -31,15 +31,6 @@ import com.google.gwt.core.shared.GwtIncompatible;
  */
 @SuppressWarnings("unchecked")
 public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
-	public static class SortedMapCreator extends DelegateMapCreator {
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public Map createDelegateMap(int depthFromRoot, int depth) {
-			return new TreeMap();
-		}
-	}
-
 	static final transient long serialVersionUID = -1L;
 
 	/**
@@ -97,8 +88,8 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 	}
 
 	@GwtIncompatible
-	private void readObject(ObjectInputStream in) throws IOException,
-			ClassNotFoundException {
+	private void readObject(ObjectInputStream in)
+			throws IOException, ClassNotFoundException {
 		in.defaultReadObject();
 		ensureDelegateMapCreator();
 	}
@@ -109,5 +100,14 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 			this.delegateMapCreator = new SortedMapCreator();
 		}
 		return this.delegateMapCreator;
+	}
+
+	public static class SortedMapCreator extends DelegateMapCreator {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Map createDelegateMap(int depthFromRoot, int depth) {
+			return new TreeMap();
+		}
 	}
 }

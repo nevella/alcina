@@ -9,19 +9,11 @@ import cc.alcina.framework.common.client.state.ConsortSignalHandler;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.logic.CallManager;
 
-public class LogoutWithReloadSignalHandler implements
-		ConsortSignalHandler<HandshakeSignal>, AsyncCallback {
+public class LogoutWithReloadSignalHandler
+		implements ConsortSignalHandler<HandshakeSignal>, AsyncCallback {
 	@Override
-	public void signal(Consort consort, AsyncCallback signalHandledCallback) {
-		consort.addOneTimeFinishedCallback(signalHandledCallback);
-		ClientBase.getCommonRemoteServiceAsyncInstance().logout(this);
-		CallManager.get().register(this, "Logging out");
-	}
-
-	@Override
-	public void onSuccess(Object result) {
-		CallManager.get().completed(this);
-		Window.Location.reload();
+	public HandshakeSignal handlesSignal() {
+		return HandshakeSignal.LOGGED_OUT;
 	}
 
 	@Override
@@ -31,7 +23,15 @@ public class LogoutWithReloadSignalHandler implements
 	}
 
 	@Override
-	public HandshakeSignal handlesSignal() {
-		return HandshakeSignal.LOGGED_OUT;
+	public void onSuccess(Object result) {
+		CallManager.get().completed(this);
+		Window.Location.reload();
+	}
+
+	@Override
+	public void signal(Consort consort, AsyncCallback signalHandledCallback) {
+		consort.addOneTimeFinishedCallback(signalHandledCallback);
+		ClientBase.getCommonRemoteServiceAsyncInstance().logout(this);
+		CallManager.get().register(this, "Logging out");
 	}
 }

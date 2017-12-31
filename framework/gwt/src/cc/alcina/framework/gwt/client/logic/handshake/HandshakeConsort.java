@@ -43,29 +43,23 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
  */
 @RegistryLocation(registryPoint = HandshakeConsort.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
-public class HandshakeConsort extends
-		ConsortWithSignals<HandshakeState, HandshakeSignal> {
-	public static final String TOPIC_STARTUP_PROGRESS = HandshakeConsort.class.getName()
-	+ ".TOPIC_STARTUP_PROGRESS";
+public class HandshakeConsort
+		extends ConsortWithSignals<HandshakeState, HandshakeSignal> {
+	public static final String TOPIC_STARTUP_PROGRESS = HandshakeConsort.class
+			.getName() + ".TOPIC_STARTUP_PROGRESS";
+
+	public static void startupProgress(String message) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_STARTUP_PROGRESS,
+				message);
+	}
+
+	public static void startupProgressListenerDelta(
+			TopicListener<String> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_STARTUP_PROGRESS,
+				listener, add);
+	}
 
 	public HandshakeConsort() {
-	}
-
-	public boolean isAfterDomainModelLoaded() {
-		return containsState(HandshakeState.SETUP_AFTER_OBJECTS_LOADED);
-	}
-
-	public void restartFromServices() {
-		HandshakeConsortModel.get().clearObjects();
-		Registry.impl(HandshakeConsortModel.class).setLoginResponse(null);
-		removeStates(Collections.singleton(UploadOfflineTransformsPlayer.OFFLINE_TRANSFORMS_UPLOADED));
-		signal(HandshakeSignal.OBJECTS_INVALIDATED);
-	}
-
-	public void logout() {
-		HandshakeConsortModel.get().clearObjects();
-		Registry.impl(HandshakeConsortModel.class).setLoginResponse(null);
-		signal(HandshakeSignal.LOGGED_OUT);
 	}
 
 	public void handleLoggedIn(LoginResponse loginResponse) {
@@ -75,16 +69,26 @@ public class HandshakeConsort extends
 	public void handleLoggedIn(LoginResponse loginResponse,
 			AsyncCallback handshakeFinishedCallback) {
 		HandshakeConsortModel.get().clearObjects();
-		Registry.impl(HandshakeConsortModel.class).setLoginResponse(
-				loginResponse);
+		Registry.impl(HandshakeConsortModel.class)
+				.setLoginResponse(loginResponse);
 		signal(HandshakeSignal.LOGGED_IN, handshakeFinishedCallback);
 	}
 
-	public static void startupProgress(String message) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_STARTUP_PROGRESS, message);
+	public boolean isAfterDomainModelLoaded() {
+		return containsState(HandshakeState.SETUP_AFTER_OBJECTS_LOADED);
 	}
 
-	public static void startupProgressListenerDelta(TopicListener<String> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_STARTUP_PROGRESS, listener, add);
+	public void logout() {
+		HandshakeConsortModel.get().clearObjects();
+		Registry.impl(HandshakeConsortModel.class).setLoginResponse(null);
+		signal(HandshakeSignal.LOGGED_OUT);
+	}
+
+	public void restartFromServices() {
+		HandshakeConsortModel.get().clearObjects();
+		Registry.impl(HandshakeConsortModel.class).setLoginResponse(null);
+		removeStates(Collections.singleton(
+				UploadOfflineTransformsPlayer.OFFLINE_TRANSFORMS_UPLOADED));
+		signal(HandshakeSignal.OBJECTS_INVALIDATED);
 	}
 }

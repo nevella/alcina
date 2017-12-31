@@ -57,31 +57,21 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
  */
 @SuppressWarnings("unchecked")
 public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
-		PropertyAccessor, RegistrableService,BeanDescriptorProvider {
-	// Initialises this. Note - not a thread-specific singleton,
-	// any thread (client) specific work delegated to tltm
-	public ObjectPersistenceHelper() {
-		super();
-		init();
+		PropertyAccessor, RegistrableService, BeanDescriptorProvider {
+	static volatile ObjectPersistenceHelper singleton;
+
+	public static ObjectPersistenceHelper get() {
+		if (singleton == null) {
+			singleton = new ObjectPersistenceHelper();
+		}
+		return singleton;
 	}
 
-	protected void init() {
-		TransformManager.register(ThreadlocalTransformManager.ttmInstance());
-		Reflections.registerClassLookup(this);
-		Reflections.registerObjectLookup(this);
-		Reflections.registerPropertyAccessor(this);
+	public static void register(ObjectPersistenceHelper singleton) {
+		ObjectPersistenceHelper.singleton = singleton;
 	}
 
 	private ClassLoader servletLayerClassloader;
-
-	public ClassLoader getServletLayerClassloader() {
-		return this.servletLayerClassloader;
-	}
-
-	public void
-			setServletLayerClassloader(ClassLoader servletLayerClassloader) {
-		this.servletLayerClassloader = servletLayerClassloader;
-	}
 
 	private CachingConcurrentMap<String, Class> classNameLookup = new CachingConcurrentMap<String, Class>(
 			cn -> {
@@ -92,17 +82,13 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 				}
 			}, 100);
 
-	static volatile ObjectPersistenceHelper singleton;
+	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
 
-	public static void register(ObjectPersistenceHelper singleton) {
-		ObjectPersistenceHelper.singleton = singleton;
-	}
-
-	public static ObjectPersistenceHelper get() {
-		if (singleton == null) {
-			singleton = new ObjectPersistenceHelper();
-		}
-		return singleton;
+	// Initialises this. Note - not a thread-specific singleton,
+	// any thread (client) specific work delegated to tltm
+	public ObjectPersistenceHelper() {
+		super();
+		init();
 	}
 
 	public void appShutdown() {
@@ -170,6 +156,23 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		return classNameLookup.get(fqn);
 	}
 
+	public BeanDescriptor getDescriptor(Object object) {
+		if (cache.containsKey(object.getClass())) {
+			return cache.get(object.getClass());
+		}
+		BeanDescriptor result = null;
+		if (object instanceof SelfDescribed) {
+			// System.out.println("SelfDescribed\t"+
+			// object.getClass().getName());
+			result = ((SelfDescribed) object).__descriptor();
+		} else {
+			// System.out.println("Reflection\t"+ object.getClass().getName());
+			result = new ReflectionBeanDescriptor(object.getClass());
+			cache.put(object.getClass(), result);
+		}
+		return result;
+	}
+
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
 			long id, long localId) {
 		// uses thread-local instance
@@ -196,6 +199,10 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 				propertyName);
 	}
 
+	public ClassLoader getServletLayerClassloader() {
+		return this.servletLayerClassloader;
+	}
+
 	public <T> T getTemplateInstance(Class<T> clazz) {
 		return newInstance(clazz);
 	}
@@ -207,7 +214,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				Class<?> propertyType = pd.getPropertyType();
-				if (pd.getWriteMethod() == null||pd.getReadMethod()==null) {
+				if (pd.getWriteMethod() == null || pd.getReadMethod() == null) {
 					continue;
 				}
 				if (propertyType.isInterface() && propertyType != Set.class
@@ -222,8 +229,9 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 						propertyType = implementation;
 					}
 				}
-				infos.add(new PropertyInfoLite(propertyType, pd.getName(), new MethodWrapper(pd.getReadMethod()),
-						clazz));
+				infos.add(new PropertyInfoLite(propertyType, pd.getName(),
+						new MethodWrapper(pd.getReadMethod()),
+						new MethodWrapper(pd.getWriteMethod()), clazz));
 			}
 			return infos;
 		} catch (Exception e) {
@@ -250,11 +258,23 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 				propertyName, value);
 	}
 
+	public void
+			setServletLayerClassloader(ClassLoader servletLayerClassloader) {
+		this.servletLayerClassloader = servletLayerClassloader;
+	}
+
 	protected Enum getTargetEnumValue(DomainTransformEvent evt) {
 		if (Enum.class.isAssignableFrom(evt.getValueClass())) {
 			return Enum.valueOf(evt.getValueClass(), evt.getNewStringValue());
 		}
 		return null;
+	}
+
+	protected void init() {
+		TransformManager.register(ThreadlocalTransformManager.ttmInstance());
+		Reflections.registerClassLookup(this);
+		Reflections.registerObjectLookup(this);
+		Reflections.registerPropertyAccessor(this);
 	}
 
 	@RegistryLocation(registryPoint = CurrentUtcDateProvider.class, implementationType = ImplementationType.SINGLETON)
@@ -266,23 +286,5 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 			Date d = new Date();
 			return new Date(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
 		}
-	}
-	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
-
-	public BeanDescriptor getDescriptor(Object object) {
-		if (cache.containsKey(object.getClass())) {
-			return cache.get(object.getClass());
-		}
-		BeanDescriptor result = null;
-		if (object instanceof SelfDescribed) {
-			// System.out.println("SelfDescribed\t"+
-			// object.getClass().getName());
-			result = ((SelfDescribed) object).__descriptor();
-		} else {
-			// System.out.println("Reflection\t"+ object.getClass().getName());
-			result = new ReflectionBeanDescriptor(object.getClass());
-			cache.put(object.getClass(), result);
-		}
-		return result;
 	}
 }

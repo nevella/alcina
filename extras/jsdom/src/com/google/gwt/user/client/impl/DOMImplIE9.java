@@ -19,20 +19,20 @@ import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.ElementRemote;
 
 /**
- * IE9 implementation of {@link com.google.gwt.user.client.impl.DOMImplStandardBase}.
+ * IE9 implementation of
+ * {@link com.google.gwt.user.client.impl.DOMImplStandardBase}.
  */
 class DOMImplIE9 extends DOMImplStandardBase {
-
-  @Override
-  protected void sinkBitlessEventImpl(ElementRemote elem, String eventTypeName) {
-    super.sinkBitlessEventImpl(elem, eventTypeName);
-
-    if (BrowserEvents.DRAGOVER.equals(eventTypeName)) {
-      /*
-       * In IE, we have to sink dragenter with dragover in order to make an
-       * element a drop target.
-       */
-      super.sinkBitlessEventImpl(elem, BrowserEvents.DRAGENTER);
-    }
-  }
+	@Override
+	protected void sinkBitlessEventImpl(ElementRemote elem,
+			String eventTypeName) {
+		super.sinkBitlessEventImpl(elem, eventTypeName);
+		if (BrowserEvents.DRAGOVER.equals(eventTypeName)) {
+			/*
+			 * In IE, we have to sink dragenter with dragover in order to make
+			 * an element a drop target.
+			 */
+			super.sinkBitlessEventImpl(elem, BrowserEvents.DRAGENTER);
+		}
+	}
 }

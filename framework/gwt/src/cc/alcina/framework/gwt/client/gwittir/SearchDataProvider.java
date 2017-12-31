@@ -43,6 +43,8 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 
 	private final Converter converter;
 
+	private SearchCallback runningCallback;
+
 	public SearchDataProvider(SingleTableSearchDefinition def,
 			AsyncCallback completionCallback, Converter converter) {
 		this.def = def;
@@ -54,13 +56,9 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 		runSort(false, chunkNumber, table);
 	}
 
-	public void init(HasChunks table) {
-		runSort(true, 0, table);
-	}
-
 	public String[] getSortableProperties() {
-		BeanDescriptor descriptor = GwittirBridge.get().getDescriptorForClass(
-				def.getResultClass());
+		BeanDescriptor descriptor = GwittirBridge.get()
+				.getDescriptorForClass(def.getResultClass());
 		List<String> pNames = new ArrayList<String>();
 		for (Property p : descriptor.getProperties()) {
 			if (p.getType().isPrimitive() || p.getType().isEnum()
@@ -71,20 +69,17 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 		return (String[]) pNames.toArray(new String[pNames.size()]);
 	}
 
-	public abstract static class SearchCallback extends
-			CancellableAsyncCallback<SearchResultsBase> {
-		private final boolean callBackInit;
-
-		public SearchCallback(boolean callBackInit) {
-			this.callBackInit = callBackInit;
-		}
-
-		public boolean isCallBackInit() {
-			return callBackInit;
-		}
+	public void init(HasChunks table) {
+		runSort(true, 0, table);
 	}
 
-	private SearchCallback runningCallback;
+	public void sortOnProperty(HasChunks table, String propertyName,
+			boolean ascending) {
+		def.setOrderDirection(
+				ascending ? Direction.ASCENDING : Direction.DESCENDING);
+		def.setOrderPropertyName(propertyName);
+		runSort(true, 0, table);
+	}
 
 	@SuppressWarnings("unchecked")
 	protected void runSort(final boolean callBackInit, int pageNumber,
@@ -97,6 +92,14 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 			}
 		}
 		SearchCallback callback = new SearchCallback(callBackInit) {
+			public void onFailure(Throwable caught) {
+				if (isCancelled()) {
+					return;
+				}
+				completionCallback.onFailure(caught);
+				runningCallback = null;
+			}
+
 			public void onSuccess(SearchResultsBase result) {
 				if (isCancelled()) {
 					return;
@@ -113,16 +116,23 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 				completionCallback.onSuccess(result);
 				runningCallback = null;
 			}
-
-			public void onFailure(Throwable caught) {
-				if (isCancelled()) {
-					return;
-				}
-				completionCallback.onFailure(caught);
-				runningCallback = null;
-			}
 		};
 		search(pageNumber, callback);
+	}
+
+	protected abstract void search(int pageNumber, SearchCallback callback);
+
+	public abstract static class SearchCallback
+			extends CancellableAsyncCallback<SearchResultsBase> {
+		private final boolean callBackInit;
+
+		public SearchCallback(boolean callBackInit) {
+			this.callBackInit = callBackInit;
+		}
+
+		public boolean isCallBackInit() {
+			return callBackInit;
+		}
 	}
 
 	public static class SearchDataProviderCommon extends SearchDataProvider {
@@ -133,18 +143,9 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 
 		@Override
 		protected void search(int pageNumber, SearchCallback callback) {
-			((CommonRemoteServiceExtAsync) ClientBase.getCommonRemoteServiceAsyncInstance()).search(def,
-					pageNumber, callback);
+			((CommonRemoteServiceExtAsync) ClientBase
+					.getCommonRemoteServiceAsyncInstance()).search(def,
+							pageNumber, callback);
 		}
-	}
-
-	protected abstract void search(int pageNumber, SearchCallback callback);
-
-	public void sortOnProperty(HasChunks table, String propertyName,
-			boolean ascending) {
-		def.setOrderDirection(ascending ? Direction.ASCENDING
-				: Direction.DESCENDING);
-		def.setOrderPropertyName(propertyName);
-		runSort(true, 0, table);
 	}
 }

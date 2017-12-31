@@ -70,7 +70,16 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 			this.addKeyboardListener(new KeyboardListener() {
 				boolean scheduled = false;
 
+				public void onKeyDown(Widget sender, char keyCode,
+						int modifiers) {
+				}
+
 				public void onKeyPress(Widget sender, char keyCode,
+						int modifiers) {
+					refresh();
+				}
+
+				public void onKeyUp(Widget sender, char keyCode,
 						int modifiers) {
 					refresh();
 				}
@@ -90,19 +99,10 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 						scheduled = true;
 					}
 				}
-
-				public void onKeyDown(Widget sender, char keyCode,
-						int modifiers) {
-				}
-
-				public void onKeyUp(Widget sender, char keyCode,
-						int modifiers) {
-					refresh();
-				}
 			});
 		} else {
 			this.addKeyboardListener(new KeyboardListener() {
-				public void onKeyUp(Widget sender, char keyCode,
+				public void onKeyDown(Widget sender, char keyCode,
 						int modifiers) {
 				}
 
@@ -114,7 +114,7 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 					}
 				}
 
-				public void onKeyDown(Widget sender, char keyCode,
+				public void onKeyUp(Widget sender, char keyCode,
 						int modifiers) {
 				}
 			});
@@ -154,12 +154,12 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 		this.base.addChangeListener(listener);
 	}
 
-	public void addClickListener(ClickListener listener) {
-		this.base.addClickListener(listener);
-	}
-
 	public HandlerRegistration addClickHandler(ClickHandler handler) {
 		return this.base.addClickHandler(handler);
+	}
+
+	public void addClickListener(ClickListener listener) {
+		this.base.addClickListener(listener);
 	}
 
 	public void addFocusListener(FocusListener listener) {
@@ -174,6 +174,18 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 		this.base.cancelKey();
 	}
 
+	public Action getAction() {
+		Action retValue;
+		retValue = super.getAction();
+		return retValue;
+	}
+
+	public Comparator getComparator() {
+		Comparator retValue;
+		retValue = super.getComparator();
+		return retValue;
+	}
+
 	public int getCursorPos() {
 		int retValue;
 		retValue = this.base.getCursorPos();
@@ -183,6 +195,12 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 	public int getMaxLength() {
 		int retValue;
 		retValue = this.base.getMaxLength();
+		return retValue;
+	}
+
+	public Object getModel() {
+		Object retValue;
+		retValue = super.getModel();
 		return retValue;
 	}
 
@@ -248,6 +266,10 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 		return this.base.getVisibleLength();
 	}
 
+	public boolean isEnabled() {
+		return this.base.isEnabled();
+	}
+
 	public void removeChangeListener(ChangeListener listener) {
 		this.base.removeChangeListener(listener);
 	}
@@ -276,6 +298,10 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 		this.base.setAccessKey(key);
 	}
 
+	public void setAction(Action action) {
+		super.setAction(action);
+	}
+
 	public void setCursorPos(int pos) {
 		this.base.setCursorPos(pos);
 	}
@@ -298,6 +324,10 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 
 	public void setMaxLength(int length) {
 		this.base.setMaxLength(length);
+	}
+
+	public void setModel(Object model) {
+		super.setModel(model);
 	}
 
 	public void setName(String name) {
@@ -366,35 +396,5 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
-	}
-
-	public void setModel(Object model) {
-		super.setModel(model);
-	}
-
-	public void setAction(Action action) {
-		super.setAction(action);
-	}
-
-	public Comparator getComparator() {
-		Comparator retValue;
-		retValue = super.getComparator();
-		return retValue;
-	}
-
-	public Object getModel() {
-		Object retValue;
-		retValue = super.getModel();
-		return retValue;
-	}
-
-	public Action getAction() {
-		Action retValue;
-		retValue = super.getAction();
-		return retValue;
-	}
-
-	public boolean isEnabled() {
-		return this.base.isEnabled();
 	}
 }

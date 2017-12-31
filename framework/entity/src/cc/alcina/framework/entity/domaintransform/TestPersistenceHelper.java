@@ -74,6 +74,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		}
 	});
 
+	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
+
 	private TestPersistenceHelper() {
 		super();
 		reflectiveClassLoader = getClass().getClassLoader();
@@ -150,6 +152,23 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		return fqnLookup.get(fqn);
 	}
 
+	public BeanDescriptor getDescriptor(Object object) {
+		if (cache.containsKey(object.getClass())) {
+			return cache.get(object.getClass());
+		}
+		BeanDescriptor result = null;
+		if (object instanceof SelfDescribed) {
+			// System.out.println("SelfDescribed\t"+
+			// object.getClass().getName());
+			result = ((SelfDescribed) object).__descriptor();
+		} else {
+			// System.out.println("Reflection\t"+ object.getClass().getName());
+			result = new ReflectionBeanDescriptor(object.getClass());
+			cache.put(object.getClass(), result);
+		}
+		return result;
+	}
+
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
 			long id, long localId) {
 		// uses thread-local instance
@@ -207,7 +226,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 							.getImplementation(propertyType);
 				}
 				infos.add(new PropertyInfoLite(propertyType, pd.getName(),
-						new MethodWrapper(pd.getReadMethod()), clazz));
+						new MethodWrapper(pd.getReadMethod()),
+						new MethodWrapper(pd.getWriteMethod()), clazz));
 			}
 			return infos;
 		} catch (Exception e) {
@@ -247,24 +267,5 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 			return Enum.valueOf(evt.getValueClass(), evt.getNewStringValue());
 		}
 		return null;
-	}
-
-	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
-
-	public BeanDescriptor getDescriptor(Object object) {
-		if (cache.containsKey(object.getClass())) {
-			return cache.get(object.getClass());
-		}
-		BeanDescriptor result = null;
-		if (object instanceof SelfDescribed) {
-			// System.out.println("SelfDescribed\t"+
-			// object.getClass().getName());
-			result = ((SelfDescribed) object).__descriptor();
-		} else {
-			// System.out.println("Reflection\t"+ object.getClass().getName());
-			result = new ReflectionBeanDescriptor(object.getClass());
-			cache.put(object.getClass(), result);
-		}
-		return result;
 	}
 }

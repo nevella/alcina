@@ -47,9 +47,9 @@ import com.google.gwt.core.linker.CrossSiteIframeLinker;
 @LinkerOrder(Order.POST)
 @Shardable
 public class PermutationInfoLinker extends AbstractLinker {
-	EmittedArtifact permutationInfo = null;
-
 	protected static PermutationsUtil permutationsUtil = new PermutationsUtil();
+
+	EmittedArtifact permutationInfo = null;
 
 	public PermutationInfoLinker() {
 	}
@@ -82,38 +82,6 @@ public class PermutationInfoLinker extends AbstractLinker {
 		}
 	}
 
-	// Output compilation-mappings.txt
-	protected void maybeOutputPropertyMap(TreeLogger logger,
-			LinkerContext context, ArtifactSet toReturn) {
-		if (permutationsUtil.getPermutationsMap() == null
-				|| permutationsUtil.getPermutationsMap().isEmpty()) {
-			return;
-		}
-		PropertiesMappingArtifact mappingArtifact = new PropertiesMappingArtifact(
-				CrossSiteIframeLinker.class,
-				permutationsUtil.getPermutationsMap());
-		toReturn.add(mappingArtifact);
-		EmittedArtifact serializedMap;
-		try {
-			String mappings = mappingArtifact.getSerialized();
-			serializedMap = emitString(logger, mappings,
-					"compilation-mappings.txt");
-			// TODO(unnurg): make this Deploy
-			serializedMap.setVisibility(Visibility.Public);
-			toReturn.add(serializedMap);
-		} catch (UnableToCompleteException e) {
-			e.printStackTrace();
-		}
-	}
-
-	protected Collection<Artifact<?>> doEmitCompilation(TreeLogger logger,
-			LinkerContext context, CompilationResult result,
-			ArtifactSet artifacts) throws UnableToCompleteException {
-		Collection<Artifact<?>> toReturn = new ArrayList<Artifact<?>>();
-		toReturn.addAll(emitSelectionInformation(result.getStrongName(), result));
-		return toReturn;
-	}
-
 	private List<Artifact<?>> emitSelectionInformation(String strongName,
 			CompilationResult result) {
 		List<Artifact<?>> emitted = new ArrayList<Artifact<?>>();
@@ -140,5 +108,38 @@ public class PermutationInfoLinker extends AbstractLinker {
 			}
 		}
 		return emitted;
+	}
+
+	protected Collection<Artifact<?>> doEmitCompilation(TreeLogger logger,
+			LinkerContext context, CompilationResult result,
+			ArtifactSet artifacts) throws UnableToCompleteException {
+		Collection<Artifact<?>> toReturn = new ArrayList<Artifact<?>>();
+		toReturn.addAll(
+				emitSelectionInformation(result.getStrongName(), result));
+		return toReturn;
+	}
+
+	// Output compilation-mappings.txt
+	protected void maybeOutputPropertyMap(TreeLogger logger,
+			LinkerContext context, ArtifactSet toReturn) {
+		if (permutationsUtil.getPermutationsMap() == null
+				|| permutationsUtil.getPermutationsMap().isEmpty()) {
+			return;
+		}
+		PropertiesMappingArtifact mappingArtifact = new PropertiesMappingArtifact(
+				CrossSiteIframeLinker.class,
+				permutationsUtil.getPermutationsMap());
+		toReturn.add(mappingArtifact);
+		EmittedArtifact serializedMap;
+		try {
+			String mappings = mappingArtifact.getSerialized();
+			serializedMap = emitString(logger, mappings,
+					"compilation-mappings.txt");
+			// TODO(unnurg): make this Deploy
+			serializedMap.setVisibility(Visibility.Public);
+			toReturn.add(serializedMap);
+		} catch (UnableToCompleteException e) {
+			e.printStackTrace();
+		}
 	}
 }

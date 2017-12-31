@@ -14,55 +14,53 @@
 package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
-import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * 
  * @author Nick Reddel
  */
 public class LongCriterion extends SearchCriterion implements HasValue<Long> {
+	static final transient long serialVersionUID = -1L;
 
-    static final transient long serialVersionUID = -1L;
+	private Long value;
 
-    private Long value;
+	public LongCriterion() {
+	}
 
-    public LongCriterion() {
-    }
+	public LongCriterion(Long value) {
+		setValue(value);
+	}
 
-    public LongCriterion(Long value) {
-        setValue(value);
-    }
+	@Override
+	@SuppressWarnings("unchecked")
+	public EqlWithParameters eql() {
+		EqlWithParameters result = new EqlWithParameters();
+		if (value == null) {
+			return result;
+		}
+		result.eql = targetPropertyNameWithTable() + " =  ? ";
+		result.parameters.add(value);
+		return result;
+	}
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public EqlWithParameters eql() {
-        EqlWithParameters result = new EqlWithParameters();
-        if (value == null) {
-            return result;
-        }
-        result.eql = targetPropertyNameWithTable() + " =  ? ";
-        result.parameters.add(value);
-        return result;
-    }
+	public Long getLong() {
+		return value;
+	}
 
-    @Override
-    public String toString() {
-        return value == null ? "" : value.toString();
-    }
+	public Long getValue() {
+		return getLong();
+	}
 
-    public Long getLong() {
-        return value;
-    }
+	public void setLong(Long value) {
+		this.value = value;
+	}
 
-    public void setLong(Long value) {
-        this.value = value;
-    }
+	public void setValue(Long value) {
+		setLong(value);
+	}
 
-    public void setValue(Long value) {
-        setLong(value);
-    }
-
-    public Long getValue() {
-        return getLong();
-    }
+	@Override
+	public String toString() {
+		return value == null ? "" : value.toString();
+	}
 }

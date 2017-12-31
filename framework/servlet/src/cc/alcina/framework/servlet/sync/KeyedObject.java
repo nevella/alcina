@@ -5,6 +5,10 @@ import java.io.Serializable;
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
 
 public class KeyedObject<T> implements Serializable {
+	private StringKeyProvider<T> keyProvider;
+
+	private T object;
+
 	public KeyedObject() {
 	}
 
@@ -13,32 +17,28 @@ public class KeyedObject<T> implements Serializable {
 		this.keyProvider = keyProvider;
 	}
 
-	private StringKeyProvider<T> keyProvider;
-
-	private T object;
+	public String getKey() {
+		return keyProvider.firstKey(object);
+	}
 
 	public StringKeyProvider<T> getKeyProvider() {
 		return this.keyProvider;
-	}
-
-	public void setKeyProvider(StringKeyProvider<T> keyProvider) {
-		this.keyProvider = keyProvider;
 	}
 
 	public T getObject() {
 		return this.object;
 	}
 
-	public void setObject(T object) {
-		this.object = object;
-	}
-
-	public String getKey() {
-		return keyProvider.firstKey(object);
-	}
-
 	public Class<? extends Object> getType() {
 		return object.getClass();
+	}
+
+	public void setKeyProvider(StringKeyProvider<T> keyProvider) {
+		this.keyProvider = keyProvider;
+	}
+
+	public void setObject(T object) {
+		this.object = object;
 	}
 
 	@Override

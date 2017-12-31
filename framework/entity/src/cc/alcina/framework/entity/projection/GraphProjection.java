@@ -114,6 +114,109 @@ public class GraphProjection {
 	public static final String TOPIC_PROJECTION_COUNT_DELTA = GraphProjection.class
 			.getName() + ".TOPIC_PROJECTION_COUNT_DELTA";
 
+	public static Supplier<Map> reachedSupplier = () -> new IdentityHashMap(
+			10 * LOOKUP_SIZE);
+
+	protected static final Object NULL_MARKER = new Object();
+
+	public static String fieldwiseToString(Object obj) {
+		return fieldwiseToString(obj, true, 999);
+	}
+
+	public static String fieldwiseToString(Object obj, boolean withTypes,
+			int maxLen, String... excludeFields) {
+		try {
+			List<String> fieldNames = new ArrayList<>();
+			GraphProjection graphProjection = new GraphProjection(
+					new AllFieldsFilter(), null);
+			StringBuilder sb = new StringBuilder();
+			List<String> excludeList = Arrays.asList(excludeFields);
+			for (Field field : graphProjection
+					.getFieldsForClass(obj.getClass())) {
+				String name = field.getName();
+				if (excludeList.contains(name)) {
+					continue;
+				}
+				if (withTypes) {
+					sb.append(field.getType().getSimpleName());
+					sb.append("/");
+				}
+				sb.append(name);
+				if (maxLen < 100 && !withTypes) {
+					sb.append(CommonUtils.padStringLeft("", 18 - name.length(),
+							" "));
+				}
+				sb.append(": ");
+				String str = CommonUtils.nullSafeToString(field.get(obj));
+				str = CommonUtils.trimToWsChars(str, maxLen, true);
+				sb.append(str);
+				sb.append("\n");
+			}
+			return sb.toString();
+		} catch (Exception e) {
+			return "Exception: " + e.getMessage();
+		}
+	}
+
+	public static String generateFieldwiseEqualString(Class clazz)
+			throws Exception {
+		List<String> fieldNames = new ArrayList<>();
+		GraphProjection graphProjection = new GraphProjection(
+				new AllFieldsFilter(), null);
+		for (Field field : graphProjection.getFieldsForClass(clazz)) {
+			String name = field.getName();
+			if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
+					.contains(name)) {
+				continue;
+			}
+			fieldNames.add(name);
+		}
+		String template = "@Override\npublic boolean equivalentTo(%s o) {\nreturn CommonUtils.equals(%s);\n}";
+		return String.format(template, clazz.getSimpleName(),
+				fieldNames.stream().map(n -> String.format("%s, o.%s ", n, n))
+						.collect(Collectors.joining(", ")));
+	}
+
+	public static String generateFieldwiseEquivalenceHash(Class clazz)
+			throws Exception {
+		List<String> fieldNames = new ArrayList<>();
+		GraphProjection graphProjection = new GraphProjection(
+				new AllFieldsFilter(), null);
+		for (Field field : graphProjection.getFieldsForClass(clazz)) {
+			String name = field.getName();
+			if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
+					.contains(name)) {
+				continue;
+			}
+			fieldNames.add(name);
+		}
+		String template = "@Override\npublic int equivalenceHash() {\nreturn Objects.hash(%s);\n}";
+		return String.format(template,
+				fieldNames.stream().collect(Collectors.joining(", ")));
+	}
+
+	public static String generateFieldwiseToString(Class clazz)
+			throws Exception {
+		GraphProjection graphProjection = new GraphProjection(
+				new AllFieldsFilter(), null);
+		StringBuilder lineParts = new StringBuilder();
+		for (Field field : graphProjection.getFieldsForClass(clazz)) {
+			String name = field.getName();
+			if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
+					.contains(name)) {
+				continue;
+			}
+			lineParts.append(String.format("sb.append(\"%s\");\n", name));
+			lineParts.append("sb.append(\":\");\n");
+			lineParts.append(String.format("sb.append(%s);\n", name));
+			lineParts.append("sb.append(\"\\n\");\n");
+		}
+		String template = "@Override\npublic String toString() {\n"
+				+ "StringBuilder sb = new StringBuilder();\n%s\n"
+				+ "return sb.toString();\n}";
+		return String.format(template, lineParts);
+	}
+
 	public static <T> T getContextObject(String key, Supplier<T> supplier) {
 		Map ctx = LooseContext.get(CONTEXT_PROJECTION_CONTEXT);
 		if (ctx == null) {
@@ -135,12 +238,12 @@ public class GraphProjection {
 		return genericTypeLookup.get(field);
 	}
 
-	public static boolean isEnumSubclass(Class c) {
-		return c.getSuperclass() != null && c.getSuperclass().isEnum();
-	}
-
 	public static boolean isEnumOrEnumSubclass(Class c) {
 		return c.isEnum() || isEnumSubclass(c);
+	}
+
+	public static boolean isEnumSubclass(Class c) {
+		return c.getSuperclass() != null && c.getSuperclass().isEnum();
 	}
 
 	public static boolean isGenericHiliType(Field field) {
@@ -205,9 +308,6 @@ public class GraphProjection {
 
 	private String contextDebugPath;
 
-	public static Supplier<Map> reachedSupplier = () -> new IdentityHashMap(
-			10 * LOOKUP_SIZE);
-
 	protected Map reached = reachedSupplier.get();
 
 	Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>(
@@ -229,14 +329,6 @@ public class GraphProjection {
 
 	private boolean collectionReachedCheck = true;
 
-	public boolean isCollectionReachedCheck() {
-		return this.collectionReachedCheck;
-	}
-
-	public void setCollectionReachedCheck(boolean collectionReachedCheck) {
-		this.collectionReachedCheck = collectionReachedCheck;
-	}
-
 	private LinkedHashMap<HasIdAndLocalId, HasIdAndLocalId> replaceMap = null;
 
 	private List<GraphProjectionContext> contexts = new ArrayList<GraphProjectionContext>();
@@ -246,6 +338,12 @@ public class GraphProjection {
 	private CountingMap<String> contextStats = new CountingMap<String>();
 
 	private boolean disablePerObjectPermissions;
+
+	private int traversalCount = 0;
+
+	private int creationCount = 0;
+
+	private long start = 0;
 
 	public GraphProjection() {
 		this.dumpProjectionStats = LooseContext
@@ -324,6 +422,10 @@ public class GraphProjection {
 		return this.replaceMap;
 	}
 
+	public boolean isCollectionReachedCheck() {
+		return this.collectionReachedCheck;
+	}
+
 	public <T> T project(T source, GraphProjectionContext context)
 			throws Exception {
 		if (context != null) {
@@ -363,24 +465,6 @@ public class GraphProjection {
 			}
 		}
 	}
-
-	protected static final Object NULL_MARKER = new Object();
-
-	boolean reachableBySinglePath(Class clazz) {
-		if (clazz == Set.class || clazz == List.class
-				|| clazz == ArrayList.class || clazz == Multimap.class
-				|| clazz == UnsortedMultikeyMap.class) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	private int traversalCount = 0;
-
-	private int creationCount = 0;
-
-	private long start = 0;
 
 	public <T> T project(T source, Object alsoMapTo,
 			GraphProjectionContext context, boolean easysChecked)
@@ -542,14 +626,6 @@ public class GraphProjection {
 		return projected;
 	}
 
-	private boolean checkReachable(Object source) {
-		if (!collectionReachedCheck
-				&& (source instanceof Collection || source instanceof Map)) {
-			return false;
-		}
-		return true;
-	}
-
 	// TODO - shouldn't this be package-private?
 	public Collection projectCollection(Collection coll,
 			GraphProjectionContext context) throws Exception {
@@ -600,6 +676,10 @@ public class GraphProjection {
 		return c;
 	}
 
+	public void setCollectionReachedCheck(boolean collectionReachedCheck) {
+		this.collectionReachedCheck = collectionReachedCheck;
+	}
+
 	public void setFilters(GraphProjectionFieldFilter fieldFilter,
 			GraphProjectionDataFilter dataFilter) {
 		this.fieldFilter = fieldFilter;
@@ -617,6 +697,14 @@ public class GraphProjection {
 	public void setReplaceMap(
 			LinkedHashMap<HasIdAndLocalId, HasIdAndLocalId> replaceMap) {
 		this.replaceMap = replaceMap;
+	}
+
+	private boolean checkReachable(Object source) {
+		if (!collectionReachedCheck
+				&& (source instanceof Collection || source instanceof Map)) {
+			return false;
+		}
+		return true;
 	}
 
 	private List<Field> ensureDeclaredNonStaticFields(Class c) {
@@ -699,6 +787,16 @@ public class GraphProjection {
 		return valid;
 	}
 
+	boolean reachableBySinglePath(Class clazz) {
+		if (clazz == Set.class || clazz == List.class
+				|| clazz == ArrayList.class || clazz == Multimap.class
+				|| clazz == UnsortedMultikeyMap.class) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	public static interface ConstructorMethod<T> {
 		Class<T> getReturnClass();
 
@@ -758,19 +856,6 @@ public class GraphProjection {
 			return clazz.hashCode() ^ fieldName.hashCode();
 		}
 
-		public String toPoint() {
-			String point = field == null ? clazz.getSimpleName()
-					: field.getType().getSimpleName() + ": "
-							+ clazz.getSimpleName() + "." + fieldName;
-			return point;
-		}
-
-		@Override
-		public String toString() {
-			return (parent == null ? "" : parent.toString() + "::")
-					+ clazz.getSimpleName() + "." + fieldName;
-		}
-
 		public String toPath(boolean withToString) {
 			String string = "?";
 			if (withToString) {
@@ -782,6 +867,19 @@ public class GraphProjection {
 			}
 			return (parent == null ? "" : parent.toPath(withToString) + "::")
 					+ clazz.getSimpleName() + "/" + string + "." + fieldName;
+		}
+
+		public String toPoint() {
+			String point = field == null ? clazz.getSimpleName()
+					: field.getType().getSimpleName() + ": "
+							+ clazz.getSimpleName() + "." + fieldName;
+			return point;
+		}
+
+		@Override
+		public String toString() {
+			return (parent == null ? "" : parent.toString() + "::")
+					+ clazz.getSimpleName() + "." + fieldName;
 		}
 	}
 
@@ -828,103 +926,5 @@ public class GraphProjection {
 
 		Object instantiateShellObject(T initializer,
 				GraphProjectionContext context);
-	}
-
-	public static String generateFieldwiseEqualString(Class clazz)
-			throws Exception {
-		List<String> fieldNames = new ArrayList<>();
-		GraphProjection graphProjection = new GraphProjection(
-				new AllFieldsFilter(), null);
-		for (Field field : graphProjection.getFieldsForClass(clazz)) {
-			String name = field.getName();
-			if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
-					.contains(name)) {
-				continue;
-			}
-			fieldNames.add(name);
-		}
-		String template = "@Override\npublic boolean equivalentTo(%s o) {\nreturn CommonUtils.equals(%s);\n}";
-		return String.format(template, clazz.getSimpleName(),
-				fieldNames.stream().map(n -> String.format("%s, o.%s ", n, n))
-						.collect(Collectors.joining(", ")));
-	}
-
-	public static String generateFieldwiseEquivalenceHash(Class clazz)
-			throws Exception {
-		List<String> fieldNames = new ArrayList<>();
-		GraphProjection graphProjection = new GraphProjection(
-				new AllFieldsFilter(), null);
-		for (Field field : graphProjection.getFieldsForClass(clazz)) {
-			String name = field.getName();
-			if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
-					.contains(name)) {
-				continue;
-			}
-			fieldNames.add(name);
-		}
-		String template = "@Override\npublic int equivalenceHash() {\nreturn Objects.hash(%s);\n}";
-		return String.format(template,
-				fieldNames.stream().collect(Collectors.joining(", ")));
-	}
-
-	public static String generateFieldwiseToString(Class clazz)
-			throws Exception {
-		GraphProjection graphProjection = new GraphProjection(
-				new AllFieldsFilter(), null);
-		StringBuilder lineParts = new StringBuilder();
-		for (Field field : graphProjection.getFieldsForClass(clazz)) {
-			String name = field.getName();
-			if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
-					.contains(name)) {
-				continue;
-			}
-			lineParts.append(String.format("sb.append(\"%s\");\n", name));
-			lineParts.append("sb.append(\":\");\n");
-			lineParts.append(String.format("sb.append(%s);\n", name));
-			lineParts.append("sb.append(\"\\n\");\n");
-		}
-		String template = "@Override\npublic String toString() {\n"
-				+ "StringBuilder sb = new StringBuilder();\n%s\n"
-				+ "return sb.toString();\n}";
-		return String.format(template, lineParts);
-	}
-
-	public static String fieldwiseToString(Object obj) {
-		return fieldwiseToString(obj, true, 999);
-	}
-
-	public static String fieldwiseToString(Object obj, boolean withTypes,
-			int maxLen, String... excludeFields) {
-		try {
-			List<String> fieldNames = new ArrayList<>();
-			GraphProjection graphProjection = new GraphProjection(
-					new AllFieldsFilter(), null);
-			StringBuilder sb = new StringBuilder();
-			List<String> excludeList = Arrays.asList(excludeFields);
-			for (Field field : graphProjection
-					.getFieldsForClass(obj.getClass())) {
-				String name = field.getName();
-				if (excludeList.contains(name)) {
-					continue;
-				}
-				if (withTypes) {
-					sb.append(field.getType().getSimpleName());
-					sb.append("/");
-				}
-				sb.append(name);
-				if (maxLen < 100 && !withTypes) {
-					sb.append(CommonUtils.padStringLeft("", 18 - name.length(),
-							" "));
-				}
-				sb.append(": ");
-				String str = CommonUtils.nullSafeToString(field.get(obj));
-				str = CommonUtils.trimToWsChars(str, maxLen, true);
-				sb.append(str);
-				sb.append("\n");
-			}
-			return sb.toString();
-		} catch (Exception e) {
-			return "Exception: " + e.getMessage();
-		}
 	}
 }

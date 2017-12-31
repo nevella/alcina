@@ -34,13 +34,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 public class JaxbUtils {
 	private static JaxbUtils singleton;
 
-	private JAXBContext jc = null;
-
-	private JaxbUtils() {
-	}
-
-	private Set<Class> jcClasses = new HashSet<Class>();
-
 	public static JaxbUtils get() {
 		if (singleton == null) {
 			singleton = new JaxbUtils();
@@ -52,6 +45,13 @@ public class JaxbUtils {
 	public static JAXBContext getContext(Collection<Class> classes)
 			throws JAXBException {
 		return get().getContext0(classes);
+	}
+
+	private JAXBContext jc = null;
+
+	private Set<Class> jcClasses = new HashSet<Class>();
+
+	private JaxbUtils() {
 	}
 
 	private JAXBContext getContext0(Collection<Class> classes)

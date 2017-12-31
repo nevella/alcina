@@ -20,7 +20,6 @@ import static com.google.gwt.dom.client.BrowserEvents.*;
 import java.util.Locale;
 
 import com.google.gwt.cell.client.AbstractEditableCell;
-import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.cell.client.ValueUpdater;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
@@ -172,11 +171,11 @@ public class EditTextCell
 	 *            the input element
 	 */
 	private native void clearInput(Element input) /*-{
-        if (input.selectionEnd)
-            input.selectionEnd = input.selectionStart;
-        else if ($doc.selection)
-            $doc.selection.clear();
-	}-*/;
+													if (input.selectionEnd)
+													input.selectionEnd = input.selectionStart;
+													else if ($doc.selection)
+													$doc.selection.clear();
+													}-*/;
 
 	/**
 	 * Commit the current value.

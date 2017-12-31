@@ -34,6 +34,7 @@ public class LiPanel extends ComplexPanel {
 	public LiPanel() {
 		setElement(DOM.createElement("LI"));
 	}
+
 	public LiPanel(Widget child) {
 		this();
 		add(child);

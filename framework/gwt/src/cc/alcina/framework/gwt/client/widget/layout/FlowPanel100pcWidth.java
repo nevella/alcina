@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget.layout;
 
 import java.util.Iterator;
@@ -23,9 +22,7 @@ import com.google.gwt.user.client.ui.Widget;
  *
  * @author Nick Reddel
  */
-
- public class FlowPanel100pcWidth extends FlowPanel implements
-		HasLayoutInfo {
+public class FlowPanel100pcWidth extends FlowPanel implements HasLayoutInfo {
 	public LayoutInfo getLayoutInfo() {
 		return new LayoutInfo() {
 			@Override

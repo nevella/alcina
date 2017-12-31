@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.permissions;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
@@ -20,7 +19,6 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.Lo
  *
  * @author Nick Reddel
  */
-
- public interface LoginStateVisible {
+public interface LoginStateVisible {
 	public boolean visibleForLoginState(LoginState state);
 }

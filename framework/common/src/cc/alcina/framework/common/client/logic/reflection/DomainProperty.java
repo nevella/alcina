@@ -29,11 +29,15 @@ import java.lang.annotation.Target;
  * Specifies runtime creation type for child properties
  */
 public @interface DomainProperty {
-	boolean eagerCreation() default false;
+	boolean cascadeDeletionFromRef() default false;
+
+	boolean cloneForDuplication() default false;
 
 	boolean cloneForProvisionalEditing() default false;
 
-	boolean cloneForDuplication() default false;
+	boolean eagerCreation() default false;
+
+	boolean ignoreForDeletionChecking() default false;
 
 	boolean registerChildren() default false;
 
@@ -45,11 +49,7 @@ public @interface DomainProperty {
 	 */
 	boolean serializeOnClient() default false;
 
-	boolean silentFailOnIllegalWrites() default false;
-	
-	boolean ignoreForDeletionChecking() default false;
-	
-	boolean cascadeDeletionFromRef() default false;
-	
 	boolean serializeWithBeanSerialization() default false;
+
+	boolean silentFailOnIllegalWrites() default false;
 }

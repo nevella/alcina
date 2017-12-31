@@ -10,12 +10,10 @@ import com.google.gwt.core.client.UnsafeNativeLong;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Display;
@@ -141,8 +139,8 @@ public abstract class AbstractDomainBase extends BaseBindable
 
 	@UnsafeNativeLong
 	private native int fastHash(long id, long localId, int classHashCode)/*-{
-       
-	}-*/;
+																			
+																			}-*/;
 
 	protected int _compareTo(AbstractDomainBase o) {
 		String s1 = comparisonString();
@@ -167,5 +165,4 @@ public abstract class AbstractDomainBase extends BaseBindable
 		throw new RuntimeException(
 				"no display name available, and using comparator");
 	}
-	
 }

@@ -43,16 +43,6 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 		FilterableTreeItem implements PropertyChangeListener, DetachListener {
 	private String displayName;
 
-	public String getDisplayName() {
-		return this.displayName;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public T getUserObject() {
-		return (T) super.getUserObject();
-	}
-
 	public DomainNode(T object) {
 		this(object, null);
 	}
@@ -60,8 +50,8 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 	public DomainNode(T object, NodeFactory nodeFactory) {
 		super();
 		setUserObject(object);
-		ClientBeanReflector info = ClientReflector.get().beanInfoForClass(
-				getUserObject().getClass());
+		ClientBeanReflector info = ClientReflector.get()
+				.beanInfoForClass(getUserObject().getClass());
 		if (object instanceof HasGeneratedDisplayName) {
 			object.addPropertyChangeListener(this);
 		} else {
@@ -79,32 +69,42 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 		refreshFromObject();
 	}
 
-	@Override
-	protected boolean satisfiesFilter(String filterText) {
-		T userObject = getUserObject();
-		return Registry.impl(HasSatisfiesFilter.class, userObject.getClass())
-				.satisfiesFilter(userObject, filterText);
+	public String getDisplayName() {
+		return this.displayName;
 	}
 
-	@RegistryLocation(registryPoint = HasSatisfiesFilter.class, implementationType = ImplementationType.SINGLETON)
-	@ClientInstantiable
-	public static class DefaultHasSatisfiesFilter<T> implements
-			HasSatisfiesFilter<T> {
-		@Override
-		public boolean satisfiesFilter(T t, String filterText) {
-			if (CommonUtils.nullToEmpty(TextProvider.get().getObjectName(t))
-					.toLowerCase().contains(filterText)) {
-				return true;
-			}
-			if (t instanceof HasId) {
-				if (filterText.startsWith("id:")) {
-					return String.valueOf(((HasId) t).getId()).equals(
-							filterText.substring(3));
-				}
-				return String.valueOf(((HasId) t).getId()).equals(filterText);
-			}
-			return false;
+	@Override
+	@SuppressWarnings("unchecked")
+	public T getUserObject() {
+		return (T) super.getUserObject();
+	}
+
+	public void onDetach() {
+		removeListeners();
+	}
+
+	public void propertyChange(PropertyChangeEvent evt) {
+		refreshFromObject();
+	}
+
+	public void refreshFromObject() {
+		ClientBeanReflector info = ClientReflector.get()
+				.beanInfoForClass(getUserObject().getClass());
+		displayName = info.getObjectName(getUserObject());
+		if (displayName != null) {
+			displayName = SafeHtmlUtils.htmlEscape(displayName);
+		} else {
+			displayName = "[null]";
 		}
+		AbstractImagePrototype img = StandardDataImageProvider.get()
+				.getByName(info.getGwBeanInfo().displayInfo().iconName());
+		setHTML(imageItemHTML(img, displayName));
+	}
+
+	@Override
+	public void removeItem(TreeItem item) {
+		super.removeItem(item);
+		removeListeners();
 	}
 
 	public void removeListeners() {
@@ -112,8 +112,8 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 		if (object instanceof HasGeneratedDisplayName) {
 			return;
 		}
-		ClientBeanReflector info = ClientReflector.get().beanInfoForClass(
-				getUserObject().getClass());
+		ClientBeanReflector info = ClientReflector.get()
+				.beanInfoForClass(getUserObject().getClass());
 		String displayNamePropertyName = info.getGwBeanInfo()
 				.displayNamePropertyName();
 		Object pv = GwittirBridge.get().getPropertyValue(object,
@@ -126,36 +126,36 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 		}
 	}
 
-	@Override
-	public void removeItem(TreeItem item) {
-		super.removeItem(item);
-		removeListeners();
-	}
-
-	public void refreshFromObject() {
-		ClientBeanReflector info = ClientReflector.get().beanInfoForClass(
-				getUserObject().getClass());
-		displayName = info.getObjectName(getUserObject());
-		if (displayName != null) {
-			displayName = SafeHtmlUtils.htmlEscape(displayName);
-		} else {
-			displayName = "[null]";
-		}
-		AbstractImagePrototype img = StandardDataImageProvider.get().getByName(
-				info.getGwBeanInfo().displayInfo().iconName());
-		setHTML(imageItemHTML(img, displayName));
-	}
-
 	protected String imageItemHTML(AbstractImagePrototype imageProto,
 			String title) {
 		return imageProto.getHTML() + " " + title;
 	}
 
-	public void propertyChange(PropertyChangeEvent evt) {
-		refreshFromObject();
+	@Override
+	protected boolean satisfiesFilter(String filterText) {
+		T userObject = getUserObject();
+		return Registry.impl(HasSatisfiesFilter.class, userObject.getClass())
+				.satisfiesFilter(userObject, filterText);
 	}
 
-	public void onDetach() {
-		removeListeners();
+	@RegistryLocation(registryPoint = HasSatisfiesFilter.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	public static class DefaultHasSatisfiesFilter<T>
+			implements HasSatisfiesFilter<T> {
+		@Override
+		public boolean satisfiesFilter(T t, String filterText) {
+			if (CommonUtils.nullToEmpty(TextProvider.get().getObjectName(t))
+					.toLowerCase().contains(filterText)) {
+				return true;
+			}
+			if (t instanceof HasId) {
+				if (filterText.startsWith("id:")) {
+					return String.valueOf(((HasId) t).getId())
+							.equals(filterText.substring(3));
+				}
+				return String.valueOf(((HasId) t).getId()).equals(filterText);
+			}
+			return false;
+		}
 	}
 }

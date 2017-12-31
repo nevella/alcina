@@ -16,7 +16,7 @@ public class AlcinaServerConfig {
 	private String applicationName;
 
 	private String customPropertiesFilePath;
-	
+
 	private String metricLoggerName;
 
 	private String databaseEventLoggerName;

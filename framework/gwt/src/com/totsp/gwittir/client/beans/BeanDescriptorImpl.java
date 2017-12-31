@@ -6,10 +6,6 @@ import java.util.HashMap;
 public class BeanDescriptorImpl implements BeanDescriptor {
 	private HashMap<String, Property> properties = new HashMap<String, Property>();
 
-	public void registerProperty(Property property) {
-		properties.put(property.getName(), property);
-	}
-
 	@Override
 	public Property[] getProperties() {
 		Collection<Property> values = properties.values();
@@ -19,5 +15,9 @@ public class BeanDescriptorImpl implements BeanDescriptor {
 	@Override
 	public Property getProperty(String name) {
 		return properties.get(name);
+	}
+
+	public void registerProperty(Property property) {
+		properties.put(property.getName(), property);
 	}
 }

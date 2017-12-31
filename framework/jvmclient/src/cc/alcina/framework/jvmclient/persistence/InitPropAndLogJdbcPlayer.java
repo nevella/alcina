@@ -8,9 +8,9 @@ import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlaye
 import cc.alcina.framework.gwt.client.logic.handshake.AsyncConfigConsortState;
 import cc.alcina.framework.gwt.persistence.client.RemoteLogPersister;
 
-public class InitPropAndLogJdbcPlayer extends
-RunnableAsyncCallbackPlayer<Void, AsyncConfigConsortState> implements
-		ConsortPlayer {
+public class InitPropAndLogJdbcPlayer
+		extends RunnableAsyncCallbackPlayer<Void, AsyncConfigConsortState>
+		implements ConsortPlayer {
 	private PersistencePropAndLogJdbcConsort subConsort;
 
 	public InitPropAndLogJdbcPlayer(Connection connection,
@@ -22,12 +22,12 @@ RunnableAsyncCallbackPlayer<Void, AsyncConfigConsortState> implements
 	}
 
 	@Override
-	public void run() {
-		new SubconsortSupport().run(consort, subConsort, this);
+	public Consort getStateConsort() {
+		return subConsort;
 	}
 
 	@Override
-	public Consort getStateConsort() {
-		return subConsort;
+	public void run() {
+		new SubconsortSupport().run(consort, subConsort, this);
 	}
 }

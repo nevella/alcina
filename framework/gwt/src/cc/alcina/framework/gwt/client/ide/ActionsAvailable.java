@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide;
 
 import java.util.ArrayList;
@@ -19,66 +18,65 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 
-
 /**
  *
  * @author Nick Reddel
  */
-
- public class ActionsAvailable {
-	public interface ActionsAvailableListener {
-		public void actionsAvailable(ActionsAvailableEvent evt);
-	}
-
+public class ActionsAvailable {
 	public static class ActionsAvailableEvent {
 		private final Object source;
 
 		private final List<PermissibleAction> actions;
 
-		public ActionsAvailableEvent(Object source, List<PermissibleAction> actions) {
+		public ActionsAvailableEvent(Object source,
+				List<PermissibleAction> actions) {
 			this.source = source;
 			this.actions = actions;
-		}
-
-		public Object getSource() {
-			return this.source;
 		}
 
 		public List<PermissibleAction> getActions() {
 			return this.actions;
 		}
+
+		public Object getSource() {
+			return this.source;
+		}
+	}
+
+	public interface ActionsAvailableListener {
+		public void actionsAvailable(ActionsAvailableEvent evt);
 	}
 
 	public interface ActionsAvailableSource {
-		public void addActionsAvailableListener(
-				ActionsAvailableListener listener);
+		public void
+				addActionsAvailableListener(ActionsAvailableListener listener);
 
 		public void removeActionsAvailableListener(
 				ActionsAvailableListener listener);
 	}
-	public static class ActionsAvailableSupport implements ActionsAvailableSource{
 
+	public static class ActionsAvailableSupport
+			implements ActionsAvailableSource {
 		private List<ActionsAvailableListener> listenerList;
 
-		public ActionsAvailableSupport(){
+		public ActionsAvailableSupport() {
 			this.listenerList = new ArrayList<ActionsAvailableListener>();
 		}
-		public void addActionsAvailableListener(
-				ActionsAvailableListener listener) {
+
+		public void
+				addActionsAvailableListener(ActionsAvailableListener listener) {
 			listenerList.add(listener);
-			
+		}
+
+		public void fireActionsAvailbleChange(ActionsAvailableEvent event) {
+			for (ActionsAvailableListener listener : listenerList) {
+				listener.actionsAvailable(event);
+			}
 		}
 
 		public void removeActionsAvailableListener(
 				ActionsAvailableListener listener) {
 			listenerList.remove(listener);
-			
 		}
-		public void fireActionsAvailbleChange(ActionsAvailableEvent event){
-			for (ActionsAvailableListener listener : listenerList) {
-				listener.actionsAvailable(event);
-			}
-		}
-		
 	}
 }

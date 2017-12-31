@@ -28,8 +28,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
  *
  * @author Nick Reddel
  */
-
- public class ListBoxEnumProvider implements BoundWidgetProvider {
+public class ListBoxEnumProvider implements BoundWidgetProvider {
 	private final Class<? extends Enum> clazz;
 
 	private List<Enum> hiddenValues = new ArrayList<Enum>();
@@ -37,8 +36,8 @@ import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 	private boolean withNull;
 
 	private boolean multiple;
-	
-	private int visibleItemCount=4;
+
+	private int visibleItemCount = 4;
 
 	private Renderer renderer = FriendlyEnumRenderer.INSTANCE;
 
@@ -66,7 +65,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 		listBox.setSortOptionsByToString(false);
 		listBox.setOptions(options);
 		listBox.setMultipleSelect(multiple);
-		if(multiple){
+		if (multiple) {
 			listBox.setVisibleItemCount(visibleItemCount);
 		}
 		return listBox;

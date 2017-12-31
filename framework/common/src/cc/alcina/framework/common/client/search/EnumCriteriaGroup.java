@@ -17,36 +17,35 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 
 @Bean(displayNamePropertyName = "displayName")
 public class EnumCriteriaGroup extends CriteriaGroup<EnumCriterion> {
+	static final transient long serialVersionUID = -1L;
 
-    static final transient long serialVersionUID = -1L;
+	public EnumCriteriaGroup() {
+		super();
+	}
 
-    public EnumCriteriaGroup() {
-        super();
-    }
+	@Override
+	public String getDisplayName() {
+		if (getCriteria().isEmpty()) {
+			return "";
+		}
+		return getCriteria().iterator().next().getDisplayName();
+	}
 
-    @Override
-    public Class getEntityClass() {
-        return null;
-    }
+	@Override
+	public Class getEntityClass() {
+		return null;
+	}
 
-    @Override
-    public String getDisplayName() {
-        if (getCriteria().isEmpty()) {
-            return "";
-        }
-        return getCriteria().iterator().next().getDisplayName();
-    }
-
-    @Override
-    public String validatePermissions() {
-        try {
-            for (EnumCriterion ec : getCriteria()) {
-                ec.toString();
-            }
-        } catch (Exception e) {
-            return "Access not permitted: (not enum criterion)";
-        }
-        // either subclass, or rely on property mappings
-        return null;
-    }
+	@Override
+	public String validatePermissions() {
+		try {
+			for (EnumCriterion ec : getCriteria()) {
+				ec.toString();
+			}
+		} catch (Exception e) {
+			return "Access not permitted: (not enum criterion)";
+		}
+		// either subclass, or rely on property mappings
+		return null;
+	}
 }

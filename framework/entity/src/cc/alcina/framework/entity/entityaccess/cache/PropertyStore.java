@@ -74,8 +74,7 @@ public class PropertyStore {
 	}
 
 	public PdOperator getDescriptor(String propertyPath) {
-		return pds
-				.stream()
+		return pds.stream()
 				.filter(pd -> pd.pd.getName().equals(propertyPath)
 						|| pd.pd.getName().equals(propertyPath + "Id"))
 				.findFirst().orElse(null);
@@ -117,6 +116,15 @@ public class PropertyStore {
 		return null;
 	}
 
+	public void index(HasIdAndLocalId obj, boolean add) {
+		for (PropertyStoreLookup lookup : lookups) {
+			lookup.index(obj, add);
+		}
+		for (PropertyStoreProjection projection : projections) {
+			projection.index(obj, add);
+		}
+	}
+
 	public void init(List<PdOperator> pds) {
 		this.pds = pds;
 		stores = new ArrayList();
@@ -129,6 +137,18 @@ public class PropertyStore {
 			stores.add(getFieldStoreFor(pd.pd.getPropertyType()));
 		});
 		lookups.forEach(lkp -> lkp.initPds());
+	}
+
+	public void remove(long id) {
+		rowLookup.remove(id);
+	}
+
+	public void setLongValue(PdOperator pd, int rowIdx, Long value) {
+		((LongStore) stores.get(pd.idx)).put(value, rowIdx);
+	}
+
+	public void setStringValue(PdOperator pd, int rowIdx, String value) {
+		((StringStore) stores.get(pd.idx)).put(value, rowIdx);
 	}
 
 	protected int ensureRow(long id) {
@@ -193,6 +213,13 @@ public class PropertyStore {
 		}
 
 		@Override
+		public void ensureCapacity(int capacity) {
+			if (list.size() < capacity) {
+				list.add(false);
+			}
+		}
+
+		@Override
 		public void putRsField(ResultSet rs, int colIdx, int rowIdx)
 				throws SQLException {
 			put(rs.getBoolean(colIdx), rowIdx);
@@ -214,13 +241,6 @@ public class PropertyStore {
 				list.set(rowIdx, value);
 			}
 		}
-
-		@Override
-		public void ensureCapacity(int capacity) {
-			if (list.size() < capacity) {
-				list.add(false);
-			}
-		}
 	}
 
 	static class DuplicateStringStore extends StringStore {
@@ -235,6 +255,11 @@ public class PropertyStore {
 			stringIdLookup = new Object2IntOpenHashMap<String>(size / 10);
 			idStringLookup = new Int2ObjectOpenHashMap<String>(size / 10);
 			rowIdLookup = new Int2IntOpenHashMap(size);
+		}
+
+		@Override
+		public void ensureCapacity(int size) {
+			// noop
 		}
 
 		@Override
@@ -267,11 +292,6 @@ public class PropertyStore {
 			int stringId = stringIdLookup.getInt(string);
 			rowIdLookup.put(rowIdx, stringId);
 		}
-
-		@Override
-		public void ensureCapacity(int size) {
-			// noop
-		}
 	}
 
 	abstract static class FieldStore<T> {
@@ -295,6 +315,13 @@ public class PropertyStore {
 		}
 
 		@Override
+		public void ensureCapacity(int capacity) {
+			if (list.size() < capacity) {
+				list.add(0);
+			}
+		}
+
+		@Override
 		public void putRsField(ResultSet rs, int colIdx, int rowIdx)
 				throws SQLException {
 			put(rs.getLong(colIdx), rowIdx);
@@ -314,13 +341,6 @@ public class PropertyStore {
 				list.add(value);
 			} else {
 				list.set(rowIdx, value);
-			}
-		}
-
-		@Override
-		public void ensureCapacity(int capacity) {
-			if (list.size() < capacity) {
-				list.add(0);
 			}
 		}
 	}
@@ -382,29 +402,8 @@ public class PropertyStore {
 			super(size);
 		}
 
-		abstract void put(String string, int rowIdx);
-
 		abstract String get(int rowIdx);
-	}
 
-	public void remove(long id) {
-		rowLookup.remove(id);
-	}
-
-	public void setLongValue(PdOperator pd, int rowIdx, Long value) {
-		((LongStore) stores.get(pd.idx)).put(value, rowIdx);
-	}
-
-	public void setStringValue(PdOperator pd, int rowIdx, String value) {
-		((StringStore) stores.get(pd.idx)).put(value, rowIdx);
-	}
-
-	public void index(HasIdAndLocalId obj, boolean add) {
-		for (PropertyStoreLookup lookup : lookups) {
-			lookup.index(obj, add);
-		}
-		for (PropertyStoreProjection projection : projections) {
-			projection.index(obj, add);
-		}
+		abstract void put(String string, int rowIdx);
 	}
 }

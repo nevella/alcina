@@ -16,51 +16,13 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
 @ClientInstantiable
 public class LoadObjectsHelloPlayer extends
 		RunnableAsyncCallbackPlayer<LoginResponse, LoadObjectDataState> {
+	protected HandshakeConsortModel handshakeConsortModel = Registry
+			.impl(HandshakeConsortModel.class);
+
 	public LoadObjectsHelloPlayer() {
 		addProvides(helloOkState());
 		addProvides(LoadObjectDataState.HELLO_OFFLINE);
 		addProvides(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
-	}
-
-	protected HandshakeConsortModel handshakeConsortModel = Registry
-			.impl(HandshakeConsortModel.class);
-
-	@Override
-	public void run() {
-		if (PermissionsManager.isOffline()) {
-			signal(false);
-			return;
-		}
-		LoginResponse existingLoginResponse = handshakeConsortModel
-				.getLoginResponse();
-		if (existingLoginResponse == null) {
-			hello();
-		} else {
-			handleLoginResponse(existingLoginResponse);
-		}
-	}
-
-	protected void hello() {
-		Registry.impl(CommonRemoteServiceAsync.class).hello(this);
-	}
-
-	/*
-	 * call logic is a bit fraught here - it works, but ain't pretty
-	 */
-	protected void signal(boolean continueObjectLoad) {
-		if (PermissionsManager.isOffline()) {
-			wasPlayed(LoadObjectDataState.HELLO_OFFLINE);
-		} else {
-			if (continueObjectLoad) {
-				wasPlayed(helloOkState());
-			} else {
-				wasPlayed(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
-			}
-		}
-	}
-
-	protected LoadObjectDataState helloOkState() {
-		return LoadObjectDataState.HELLO_OK_REQUIRES_OBJECT_DATA_UPDATE;
 	}
 
 	@Override
@@ -79,11 +41,49 @@ public class LoadObjectsHelloPlayer extends
 		handleLoginResponse(loginResponse);
 	}
 
-	protected void handleLoginResponse(LoginResponse loginResponse) {
-		signal(loginResponse.isOk()||allowAnonymousObjectLoad());
+	@Override
+	public void run() {
+		if (PermissionsManager.isOffline()) {
+			signal(false);
+			return;
+		}
+		LoginResponse existingLoginResponse = handshakeConsortModel
+				.getLoginResponse();
+		if (existingLoginResponse == null) {
+			hello();
+		} else {
+			handleLoginResponse(existingLoginResponse);
+		}
 	}
 
 	protected boolean allowAnonymousObjectLoad() {
 		return true;
+	}
+
+	protected void handleLoginResponse(LoginResponse loginResponse) {
+		signal(loginResponse.isOk() || allowAnonymousObjectLoad());
+	}
+
+	protected void hello() {
+		Registry.impl(CommonRemoteServiceAsync.class).hello(this);
+	}
+
+	protected LoadObjectDataState helloOkState() {
+		return LoadObjectDataState.HELLO_OK_REQUIRES_OBJECT_DATA_UPDATE;
+	}
+
+	/*
+	 * call logic is a bit fraught here - it works, but ain't pretty
+	 */
+	protected void signal(boolean continueObjectLoad) {
+		if (PermissionsManager.isOffline()) {
+			wasPlayed(LoadObjectDataState.HELLO_OFFLINE);
+		} else {
+			if (continueObjectLoad) {
+				wasPlayed(helloOkState());
+			} else {
+				wasPlayed(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
+			}
+		}
 	}
 }

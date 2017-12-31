@@ -26,28 +26,27 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  * Custom field serializer for {@link java.util.HashMap}.
  */
 @SuppressWarnings("rawtypes")
-public final class HashMap_CustomFieldSerializer extends
-    CustomFieldSerializer<HashMap> {
+public final class HashMap_CustomFieldSerializer
+		extends CustomFieldSerializer<HashMap> {
+	public static void deserialize(SerializationStreamReader streamReader,
+			HashMap instance) throws SerializationException {
+		Map_CustomFieldSerializerBase.deserialize(streamReader, instance);
+	}
 
-  public static void deserialize(SerializationStreamReader streamReader,
-      HashMap instance) throws SerializationException {
-    Map_CustomFieldSerializerBase.deserialize(streamReader, instance);
-  }
+	public static void serialize(SerializationStreamWriter streamWriter,
+			HashMap instance) throws SerializationException {
+		Map_CustomFieldSerializerBase.serialize(streamWriter, instance);
+	}
 
-  public static void serialize(SerializationStreamWriter streamWriter,
-      HashMap instance) throws SerializationException {
-    Map_CustomFieldSerializerBase.serialize(streamWriter, instance);
-  }
+	@Override
+	public void deserializeInstance(SerializationStreamReader streamReader,
+			HashMap instance) throws SerializationException {
+		deserialize(streamReader, instance);
+	}
 
-  @Override
-  public void deserializeInstance(SerializationStreamReader streamReader,
-      HashMap instance) throws SerializationException {
-    deserialize(streamReader, instance);
-  }
-
-  @Override
-  public void serializeInstance(SerializationStreamWriter streamWriter,
-      HashMap instance) throws SerializationException {
-    serialize(streamWriter, instance);
-  }
+	@Override
+	public void serializeInstance(SerializationStreamWriter streamWriter,
+			HashMap instance) throws SerializationException {
+		serialize(streamWriter, instance);
+	}
 }

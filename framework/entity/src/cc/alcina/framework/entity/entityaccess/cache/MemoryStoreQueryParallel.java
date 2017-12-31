@@ -14,23 +14,6 @@ import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
 @RegistryLocation(registryPoint = MemoryStoreQuery.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 public class MemoryStoreQueryParallel extends MemoryStoreQuery {
-	static class MemoryStoreQueryThread {
-		public MemoryStoreQueryThread(Thread thread) {
-		}
-
-		void cleanup() {
-			LooseContext.pop();
-		}
-
-		public void snapshot(LooseContextInstance snapshot) {
-			if (snapshot != null) {
-				return;
-			}
-			LooseContext.push();
-			LooseContext.putContext(snapshot);
-		}
-	}
-
 	@Override
 	protected <T extends HasIdAndLocalId> Stream<T>
 			getStream(Collection<T> values) {
@@ -50,6 +33,23 @@ public class MemoryStoreQueryParallel extends MemoryStoreQuery {
 			return stream;
 		} finally {
 			contexts.getMap().values().forEach(MemoryStoreQueryThread::cleanup);
+		}
+	}
+
+	static class MemoryStoreQueryThread {
+		public MemoryStoreQueryThread(Thread thread) {
+		}
+
+		public void snapshot(LooseContextInstance snapshot) {
+			if (snapshot != null) {
+				return;
+			}
+			LooseContext.push();
+			LooseContext.putContext(snapshot);
+		}
+
+		void cleanup() {
+			LooseContext.pop();
 		}
 	}
 }

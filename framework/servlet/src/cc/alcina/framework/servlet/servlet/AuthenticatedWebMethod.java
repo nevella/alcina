@@ -11,11 +11,9 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.servlet.servlet;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-
 
 /**
  * Marker interface for registry
@@ -28,5 +26,4 @@ public class AuthenticatedWebMethod extends PermissibleAction {
 	public String getDisplayName() {
 		return "AuthenticatedWebMethod";
 	}
-
 }

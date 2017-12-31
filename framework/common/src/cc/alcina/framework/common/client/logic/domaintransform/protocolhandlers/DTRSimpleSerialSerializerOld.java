@@ -10,7 +10,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.EnumSerializer;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 
-public class DTRSimpleSerialSerializerOld implements DeltaApplicationSerializer{
+public class DTRSimpleSerialSerializerOld
+		implements DeltaApplicationSerializer {
 	private static final String TEXT = "text:\n";
 
 	private static final String TAG2 = "tag:\n";
@@ -27,9 +28,31 @@ public class DTRSimpleSerialSerializerOld implements DeltaApplicationSerializer{
 
 	private static final String CLIENT_INSTANCE_AUTH = "clientInstanceAuth:";
 
-	 static final String DTR_SIMPLE_SERIAL_SERIALIZER_VERSION_1_0 = "DTRSimpleSerialSerializer-version:1.0";
+	static final String DTR_SIMPLE_SERIAL_SERIALIZER_VERSION_1_0 = "DTRSimpleSerialSerializer-version:1.0";
 
 	private static final String TRANSFORM_PROTOCOL_VERSION = "Transform-protocol-version:";
+
+	public DeltaApplicationRecord read(String data) {
+		SimpleStringParser parser = new SimpleStringParser(data);
+		String nl = "\n";
+		parser.read(DTR_SIMPLE_SERIAL_SERIALIZER_VERSION_1_0, nl);
+		int clientInstanceAuth = (int) parser
+				.readLongString(CLIENT_INSTANCE_AUTH, nl);
+		long clientInstanceId = parser.readLongString(CLIENT_INSTANCE_ID, nl);
+		int requestId = (int) parser.readLongString(REQUEST_ID, nl);
+		long timestamp = parser.readLongString(TIMESTAMP, nl);
+		long userId = parser.readLongString(USER_ID, nl);
+		DeltaApplicationRecordType type = Registry.impl(EnumSerializer.class)
+				.deserialize(DeltaApplicationRecordType.class,
+						parser.read(DOMAIN_TRANSFORM_REQUEST_TYPE, nl));
+		String tag = parser.read(TAG2, nl);
+		String protocolVersion = parser.read(TRANSFORM_PROTOCOL_VERSION, nl);
+		String transformText = parser.read(TEXT, "");
+		int id = 0;
+		return new DeltaApplicationRecord(id, transformText, timestamp, userId,
+				clientInstanceId, requestId, clientInstanceAuth, type,
+				protocolVersion, tag);
+	}
 
 	public List<DeltaApplicationRecord> readMultiple(String data) {
 		List<DeltaApplicationRecord> wrappers = new ArrayList<DeltaApplicationRecord>();
@@ -45,28 +68,6 @@ public class DTRSimpleSerialSerializerOld implements DeltaApplicationSerializer{
 			wrappers.add(read(data.substring(idx, idy)));
 		}
 		return wrappers;
-	}
-
-	public DeltaApplicationRecord read(String data) {
-		SimpleStringParser parser = new SimpleStringParser(data);
-		String nl = "\n";
-		parser.read(DTR_SIMPLE_SERIAL_SERIALIZER_VERSION_1_0, nl);
-		int clientInstanceAuth = (int) parser.readLongString(
-				CLIENT_INSTANCE_AUTH, nl);
-		long clientInstanceId = parser.readLongString(CLIENT_INSTANCE_ID, nl);
-		int requestId = (int) parser.readLongString(REQUEST_ID, nl);
-		long timestamp = parser.readLongString(TIMESTAMP, nl);
-		long userId = parser.readLongString(USER_ID, nl);
-		DeltaApplicationRecordType type = Registry.impl(EnumSerializer.class)
-				.deserialize(DeltaApplicationRecordType.class,
-						parser.read(DOMAIN_TRANSFORM_REQUEST_TYPE, nl));
-		String tag = parser.read(TAG2, nl);
-		String protocolVersion = parser.read(TRANSFORM_PROTOCOL_VERSION, nl);
-		String transformText = parser.read(TEXT, "");
-		int id = 0;
-		return new DeltaApplicationRecord(id, transformText, timestamp, userId,
-				clientInstanceId, requestId, clientInstanceAuth, type,
-				protocolVersion, tag);
 	}
 
 	public String write(DeltaApplicationRecord wrapper) {

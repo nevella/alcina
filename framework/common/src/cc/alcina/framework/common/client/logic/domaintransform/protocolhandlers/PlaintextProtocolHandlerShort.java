@@ -22,13 +22,6 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 
 	private static final String DOMAIN_TRANSFORM_EVENT_MARKER = "\ndte:";
 
-	private static String escape(String str) {
-		return str == null
-		|| (str.indexOf("\n") == -1 && str
-				.indexOf("\\") == -1) ? str : str
-						.replace("\\", "\\\\").replace("\n", "\\n");
-	}
-
 	public static String unescape(String str) {
 		if (str == null) {
 			return null;
@@ -52,6 +45,12 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		return sb.toString();
 	}
 
+	private static String escape(String str) {
+		return str == null
+				|| (str.indexOf("\n") == -1 && str.indexOf("\\") == -1) ? str
+						: str.replace("\\", "\\\\").replace("\n", "\\n");
+	}
+
 	private SimpleStringParser asyncParser = null;
 
 	private StringBuilder stringLookupBuilder;
@@ -66,18 +65,18 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		String ns = escape(newStringValue);
 		sb.append(getDomainTransformEventMarker());
 		sb.append("\n");
-		appendString(
-				(domainTransformEvent.getObjectClass() == null ? domainTransformEvent.getObjectClassName()
-						: domainTransformEvent.getObjectClass().getName()), sb);
+		appendString((domainTransformEvent.getObjectClass() == null
+				? domainTransformEvent.getObjectClassName()
+				: domainTransformEvent.getObjectClass().getName()), sb);
 		sb.append(",");
-		sb.append(SimpleStringParser.toStringNoInfo(domainTransformEvent
-				.getObjectId()));
+		sb.append(SimpleStringParser
+				.toStringNoInfo(domainTransformEvent.getObjectId()));
 		sb.append(",");
-		sb.append(SimpleStringParser.toStringNoInfo(domainTransformEvent
-				.getObjectLocalId()));
+		sb.append(SimpleStringParser
+				.toStringNoInfo(domainTransformEvent.getObjectLocalId()));
 		sb.append(",");
-		sb.append(SimpleStringParser.toStringOrNullNonNegativeInteger(domainTransformEvent
-				.getObjectVersionNumber()));
+		sb.append(SimpleStringParser.toStringOrNullNonNegativeInteger(
+				domainTransformEvent.getObjectVersionNumber()));
 		sb.append("\n");
 		appendString(domainTransformEvent.getPropertyName(), sb);
 		sb.append(",");
@@ -87,18 +86,18 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		sb.append("\n");
 		appendString(ns, sb);
 		sb.append("\n");
-		appendString(
-				domainTransformEvent.getValueClass() == null ? domainTransformEvent.getValueClassName()
-						: domainTransformEvent.getValueClass().getName(), sb);
+		appendString(domainTransformEvent.getValueClass() == null
+				? domainTransformEvent.getValueClassName()
+				: domainTransformEvent.getValueClass().getName(), sb);
 		sb.append(",");
-		sb.append(SimpleStringParser.toStringNoInfo(domainTransformEvent
-				.getValueId()));
+		sb.append(SimpleStringParser
+				.toStringNoInfo(domainTransformEvent.getValueId()));
 		sb.append(",");
-		sb.append(SimpleStringParser.toStringNoInfo(domainTransformEvent
-				.getValueLocalId()));
+		sb.append(SimpleStringParser
+				.toStringNoInfo(domainTransformEvent.getValueLocalId()));
 		sb.append(",");
-		sb.append(SimpleStringParser.toStringOrNullNonNegativeInteger(domainTransformEvent
-				.getValueVersionNumber()));
+		sb.append(SimpleStringParser.toStringOrNullNonNegativeInteger(
+				domainTransformEvent.getValueVersionNumber()));
 		sb.append("\n");
 	}
 
@@ -107,21 +106,6 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		asyncParser = null;
 		deserialize(serializedEvents, events, Integer.MAX_VALUE);
 		return events;
-	}
-
-	public void maybeDeserializeStringLookup(SimpleStringParser p) {
-		String s;
-		if (reverseStringLookup == null) {
-			s = p.read(START_OF_STRING_TABLE, "\n\n");
-			reverseStringLookup = new LinkedHashMap<String, String>();
-			int idx = 0;
-			reverseStringLookup.put(String.valueOf(idx++), null);
-			reverseStringLookup.put(String.valueOf(idx++), "");
-			for (String value : s.split("\n")) {
-				reverseStringLookup.put(
-						String.valueOf(reverseStringLookup.size()), value);
-			}
-		}
 	}
 
 	public String deserialize(String serializedEvents,
@@ -142,6 +126,22 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		return s;
 	}
 
+	@Override
+	public StringBuffer finishSerialization(StringBuffer sb) {
+		StringBuffer sb1 = new StringBuffer();// table
+		sb1.append(START_OF_STRING_TABLE);
+		Iterator<String> itr = ensureStringLookup().keySet().iterator();
+		itr.next();
+		itr.next();
+		while (itr.hasNext()) {
+			sb1.append(itr.next());
+			sb1.append("\n");
+		}
+		sb1.append("\n");
+		sb1.append(sb);
+		return sb1;
+	}
+
 	public String getDomainTransformEventMarker() {
 		return DOMAIN_TRANSFORM_EVENT_MARKER;
 	}
@@ -152,6 +152,21 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 
 	public String handlesVersion() {
 		return VERSION;
+	}
+
+	public void maybeDeserializeStringLookup(SimpleStringParser p) {
+		String s;
+		if (reverseStringLookup == null) {
+			s = p.read(START_OF_STRING_TABLE, "\n\n");
+			reverseStringLookup = new LinkedHashMap<String, String>();
+			int idx = 0;
+			reverseStringLookup.put(String.valueOf(idx++), null);
+			reverseStringLookup.put(String.valueOf(idx++), "");
+			for (String value : s.split("\n")) {
+				reverseStringLookup
+						.put(String.valueOf(reverseStringLookup.size()), value);
+			}
+		}
 	}
 
 	public String serialize(List<DomainTransformEvent> events) {
@@ -167,22 +182,6 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		}
 		sb2.append(sb1.toString());
 		return finishSerialization(sb2).toString();
-	}
-
-	@Override
-	public StringBuffer finishSerialization(StringBuffer sb) {
-		StringBuffer sb1 = new StringBuffer();// table
-		sb1.append(START_OF_STRING_TABLE);
-		Iterator<String> itr = ensureStringLookup().keySet().iterator();
-		itr.next();
-		itr.next();
-		while (itr.hasNext()) {
-			sb1.append(itr.next());
-			sb1.append("\n");
-		}
-		sb1.append("\n");
-		sb1.append(sb);
-		return sb1;
 	}
 
 	private void appendString(String string, StringBuffer sb) {
@@ -202,7 +201,6 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 			stringLookup0.put("", String.valueOf(1));
 		}
 		return stringLookup0;
-				
 	}
 
 	/*
@@ -230,7 +228,8 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		dte.setPropertyName(pName);
 		String commitTypeStr = getString(p.read("", ","));
 		dte.setCommitType(CommitType.valueOf(commitTypeStr));
-		dte.setTransformType(TransformType.valueOf(getString(p.read("", "\n"))));
+		dte.setTransformType(
+				TransformType.valueOf(getString(p.read("", "\n"))));
 		i = getString(p.read("", "\n"));
 		dte.setNewStringValue(unescape(i));
 		i = getString(p.read("", ","));

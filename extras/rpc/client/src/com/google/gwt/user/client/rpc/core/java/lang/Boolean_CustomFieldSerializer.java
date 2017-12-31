@@ -24,53 +24,51 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 /**
  * Custom field serializer for {@link java.lang.Boolean}.
  */
-public final class Boolean_CustomFieldSerializer extends
-    CustomFieldSerializer<Boolean> {
+public final class Boolean_CustomFieldSerializer
+		extends CustomFieldSerializer<Boolean> {
+	public static void deserialize(SerializationStreamReader streamReader,
+			Boolean instance) {
+		// No fields
+	}
 
-  
-  public static void deserialize(SerializationStreamReader streamReader,
-      Boolean instance) {
-    // No fields
-  }
+	public static Boolean instantiate(SerializationStreamReader streamReader)
+			throws SerializationException {
+		return Boolean.valueOf(streamReader.readBoolean());
+	}
 
-  public static Boolean instantiate(SerializationStreamReader streamReader)
-      throws SerializationException {
-    return Boolean.valueOf(streamReader.readBoolean());
-  }
+	public static void serialize(SerializationStreamWriter streamWriter,
+			Boolean instance) throws SerializationException {
+		if (GWT.isClient()) {
+			streamWriter.writeBoolean(instance.booleanValue());
+		}
+	}
 
-  public static void serialize(SerializationStreamWriter streamWriter,
-      Boolean instance) throws SerializationException {
-	  if(GWT.isClient()){
-    streamWriter.writeBoolean(instance.booleanValue());
-	  }
-  }
-  
-  @Override
-  public void deserializeInstance(SerializationStreamReader streamReader,
-      Boolean instance) throws SerializationException {
-    deserialize(streamReader, instance);
-  }
+	@Override
+	public void deserializeInstance(SerializationStreamReader streamReader,
+			Boolean instance) throws SerializationException {
+		deserialize(streamReader, instance);
+	}
 
-  @Override
-  public boolean hasCustomInstantiateInstance() {
-    return true;
-  }
-  
+	@Override
+	public boolean hasCustomInstantiateInstance() {
+		return true;
+	}
 
-  @Override
-  public Boolean instantiateInstance(SerializationStreamReader streamReader)
-      throws SerializationException {
-    return instantiate(streamReader);
-  }
-  
-  @Override
-  public void serializeInstance(SerializationStreamWriter streamWriter,
-      Boolean instance) throws SerializationException {
-    serialize(streamWriter, instance);
-  }
-  @Override
+	@Override
+	public Boolean instantiateInstance(SerializationStreamReader streamReader)
+			throws SerializationException {
+		return instantiate(streamReader);
+	}
+
+	@Override
 	public void serializeConstructor(SerializationStreamWriter streamWriter,
 			Boolean instance) throws SerializationException {
-	  streamWriter.writeBoolean(instance.booleanValue());
+		streamWriter.writeBoolean(instance.booleanValue());
+	}
+
+	@Override
+	public void serializeInstance(SerializationStreamWriter streamWriter,
+			Boolean instance) throws SerializationException {
+		serialize(streamWriter, instance);
 	}
 }

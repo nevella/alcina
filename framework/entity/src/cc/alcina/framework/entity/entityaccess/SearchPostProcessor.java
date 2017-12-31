@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.entityaccess;
 
 import java.util.List;
@@ -22,7 +21,6 @@ import javax.persistence.EntityManager;
  *
  * @author Nick Reddel
  */
-
- public interface SearchPostProcessor {
+public interface SearchPostProcessor {
 	public List postProcess(List results, EntityManager entityManager);
 }

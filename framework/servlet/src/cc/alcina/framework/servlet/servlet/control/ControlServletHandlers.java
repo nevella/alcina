@@ -10,32 +10,6 @@ import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ToLowerCaseTrimmedConverter;
 
 public class ControlServletHandlers {
-	public enum ModeEnum {
-		WRITER_MODE {
-			@Override
-			public ModeDeltaHandlerWriterMode getDeltaHandler(
-					AppLifecycleManager appLifecycleManager) {
-				return new ModeDeltaHandlerWriterMode(appLifecycleManager);
-			}
-		},
-		WRITER_RELAY_MODE {
-			@Override
-			public ModeDeltaHandlerRelayMode getDeltaHandler(
-					AppLifecycleManager appLifecycleManager) {
-				return new ModeDeltaHandlerRelayMode(appLifecycleManager);
-			}
-		},
-		WRITER_SERVICE_MODE {
-			@Override
-			public ModeDeltaHandlerServiceMode getDeltaHandler(
-					AppLifecycleManager appLifecycleManager) {
-				return new ModeDeltaHandlerServiceMode(appLifecycleManager);
-			}
-		};
-		public abstract ModeDeltaHandler getDeltaHandler(
-				AppLifecycleManager appLifecycleManager);
-	}
-
 	public abstract static class ModeDeltaHandler<T> {
 		protected AppLifecycleManager appLifecycleManager;
 
@@ -44,16 +18,6 @@ public class ControlServletHandlers {
 		}
 
 		public abstract String getModesPropertyName();
-
-		public void handleDeltas(T[] fromStates, T[] toState) {
-			for (T from : fromStates) {
-				for (T to : toState) {
-					if (from != to) {
-						handleDelta(from, to);
-					}
-				}
-			}
-		}
 
 		public void handleDelta(T fromState, T toState) {
 			Object currentValue = SEUtilities.getPropertyValue(
@@ -70,81 +34,70 @@ public class ControlServletHandlers {
 						new ToLowerCaseTrimmedConverter().convert(targetValue));
 				appLifecycleManager.log(message);
 				handleDelta0(fromState, toState);
-				SEUtilities.setPropertyValue(appLifecycleManager.getState()
-						.getModes(), getModesPropertyName(), toState);
+				SEUtilities.setPropertyValue(
+						appLifecycleManager.getState().getModes(),
+						getModesPropertyName(), toState);
 			}
 		}
 
-		protected abstract void handleDelta0(T fromState, T toState);
+		public void handleDeltas(T[] fromStates, T[] toState) {
+			for (T from : fromStates) {
+				for (T to : toState) {
+					if (from != to) {
+						handleDelta(from, to);
+					}
+				}
+			}
+		}
 
 		public void init() {
 		}
+
+		protected abstract void handleDelta0(T fromState, T toState);
 	}
 
-	public static class ModeDeltaHandlerWriterMode extends
-			ModeDeltaHandler<WriterMode> {
-		public ModeDeltaHandlerWriterMode(
+	public static class ModeDeltaHandlerRelayMode
+			extends ModeDeltaHandler<WriterRelayMode> {
+		public ModeDeltaHandlerRelayMode(
 				AppLifecycleManager appLifecycleManager) {
 			super(appLifecycleManager);
-		}
-
-		public void init() {
-			updateReadonly(WriterMode.READ_ONLY);
-		}
-
-		@Override
-		public void handleDelta0(WriterMode fromState, WriterMode toState) {
-			updateReadonly(toState);
-		}
-
-		private void updateReadonly(WriterMode toState) {
-			AppPersistenceBase
-					.setInstanceReadOnly(toState == WriterMode.READ_ONLY);
-		}
-
-		@Override
-		public String getModesPropertyName() {
-			return "writerMode";
-		}
-	}
-
-	public static class ModeDeltaHandlerRelayMode extends
-			ModeDeltaHandler<WriterRelayMode> {
-		public ModeDeltaHandlerRelayMode(AppLifecycleManager appLifecycleManager) {
-			super(appLifecycleManager);
-		}
-
-		@Override
-		public void handleDelta0(WriterRelayMode fromState,
-				WriterRelayMode toState) {
 		}
 
 		@Override
 		public String getModesPropertyName() {
 			return "writerRelayMode";
 		}
+
+		@Override
+		public void handleDelta0(WriterRelayMode fromState,
+				WriterRelayMode toState) {
+		}
 	}
 
-	public static class ModeDeltaHandlerServiceMode extends
-			ModeDeltaHandler<WriterServiceMode> {
+	public static class ModeDeltaHandlerServiceMode
+			extends ModeDeltaHandler<WriterServiceMode> {
 		public ModeDeltaHandlerServiceMode(
 				AppLifecycleManager appLifecycleManager) {
 			super(appLifecycleManager);
 		}
 
 		@Override
+		public String getModesPropertyName() {
+			return "writerServiceMode";
+		}
+
+		@Override
 		public void handleDelta0(WriterServiceMode fromState,
 				WriterServiceMode toState) {
-			List<WriterService> services = Registry.singletons(
-					WriterService.class, Void.class);
-			TaggedLogger logger = Registry.impl(TaggedLoggers.class).getLogger(
-					ControlServlet.class);
+			List<WriterService> services = Registry
+					.singletons(WriterService.class, Void.class);
+			TaggedLogger logger = Registry.impl(TaggedLoggers.class)
+					.getLogger(ControlServlet.class);
 			for (WriterService service : services) {
-				logger.log(String
-						.format("%s -> %s\n",
-								service.getClass().getSimpleName(),
-								toState == WriterServiceMode.NOT_CONTROLLER ? "shutdown"
-										: "startup"));
+				logger.log(String.format("%s -> %s\n",
+						service.getClass().getSimpleName(),
+						toState == WriterServiceMode.NOT_CONTROLLER ? "shutdown"
+								: "startup"));
 				if (toState == WriterServiceMode.NOT_CONTROLLER) {
 					try {
 						service.onApplicationShutdown();
@@ -158,17 +111,64 @@ public class ControlServletHandlers {
 						e.printStackTrace();
 					}
 				}
-				logger.log(String
-						.format("%s -> %s [Complete]\n",
-								service.getClass().getSimpleName(),
-								toState == WriterServiceMode.NOT_CONTROLLER ? "shutdown"
-										: "startup"));
+				logger.log(String.format("%s -> %s [Complete]\n",
+						service.getClass().getSimpleName(),
+						toState == WriterServiceMode.NOT_CONTROLLER ? "shutdown"
+								: "startup"));
 			}
+		}
+	}
+
+	public static class ModeDeltaHandlerWriterMode
+			extends ModeDeltaHandler<WriterMode> {
+		public ModeDeltaHandlerWriterMode(
+				AppLifecycleManager appLifecycleManager) {
+			super(appLifecycleManager);
 		}
 
 		@Override
 		public String getModesPropertyName() {
-			return "writerServiceMode";
+			return "writerMode";
 		}
+
+		@Override
+		public void handleDelta0(WriterMode fromState, WriterMode toState) {
+			updateReadonly(toState);
+		}
+
+		public void init() {
+			updateReadonly(WriterMode.READ_ONLY);
+		}
+
+		private void updateReadonly(WriterMode toState) {
+			AppPersistenceBase
+					.setInstanceReadOnly(toState == WriterMode.READ_ONLY);
+		}
+	}
+
+	public enum ModeEnum {
+		WRITER_MODE {
+			@Override
+			public ModeDeltaHandlerWriterMode
+					getDeltaHandler(AppLifecycleManager appLifecycleManager) {
+				return new ModeDeltaHandlerWriterMode(appLifecycleManager);
+			}
+		},
+		WRITER_RELAY_MODE {
+			@Override
+			public ModeDeltaHandlerRelayMode
+					getDeltaHandler(AppLifecycleManager appLifecycleManager) {
+				return new ModeDeltaHandlerRelayMode(appLifecycleManager);
+			}
+		},
+		WRITER_SERVICE_MODE {
+			@Override
+			public ModeDeltaHandlerServiceMode
+					getDeltaHandler(AppLifecycleManager appLifecycleManager) {
+				return new ModeDeltaHandlerServiceMode(appLifecycleManager);
+			}
+		};
+		public abstract ModeDeltaHandler
+				getDeltaHandler(AppLifecycleManager appLifecycleManager);
 	}
 }

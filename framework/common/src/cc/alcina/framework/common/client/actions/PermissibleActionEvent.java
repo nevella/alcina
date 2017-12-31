@@ -16,8 +16,6 @@ package cc.alcina.framework.common.client.actions;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.actions.instances.OkAction;
-
 /**
  *
  * @author Nick Reddel

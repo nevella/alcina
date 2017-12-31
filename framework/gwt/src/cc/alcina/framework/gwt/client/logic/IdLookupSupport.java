@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.logic;
 
 import java.util.Collection;
@@ -20,21 +19,20 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
 
-
 /**
  *
  * @author Nick Reddel
  */
-
- public class IdLookupSupport<V extends HasId> {
+public class IdLookupSupport<V extends HasId> {
 	private Map<Long, V> lookup;
 
 	private Collection<V> colln;
 
 	private boolean alwaysRefresh;
+
 	public IdLookupSupport() {
 	}
-	
+
 	public IdLookupSupport(boolean alwaysRefresh) {
 		super();
 		this.alwaysRefresh = alwaysRefresh;

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
@@ -26,15 +25,14 @@ import cc.alcina.framework.gwt.client.gwittir.ValidationProvider;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target( { ElementType.METHOD, ElementType.TYPE })
+@Target({ ElementType.METHOD, ElementType.TYPE })
 @ClientVisible
 /**
  *
  * @author Nick Reddel
  */
-
- public @interface Validators {
-	Validator[] validators();
-
+public @interface Validators {
 	Class<? extends ValidationProvider> provider() default ValidationProvider.class;
+
+	Validator[] validators();
 }

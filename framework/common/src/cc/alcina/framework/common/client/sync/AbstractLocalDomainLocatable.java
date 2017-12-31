@@ -12,26 +12,6 @@ public abstract class AbstractLocalDomainLocatable<T extends LocalDomainLocatabl
 	public static final String CONTEXT_HINT_ALLOW_CACHED_FIND = AbstractLocalDomainLocatable.class
 			.getName() + ".CONTEXT_HINT_ALLOW_CACHED_FIND";
 
-	public T findLocalEquivalent() {
-		return (T) Registry.impl(LocalDomainPersistence.class, getClass())
-				.findLocalEquivalent(this);
-	}
-
-	public T ensureLocalEquivalent() {
-		return (T) Registry.impl(LocalDomainPersistence.class, getClass())
-				.ensureLocalEquivalent(this);
-	}
-
-	public T localEquivalentOrSelf() {
-		try {
-			LooseContext.pushWithKey(CONTEXT_HINT_ALLOW_CACHED_FIND, true);
-			T local = findLocalEquivalent();
-			return (T) (local != null ? local : this);
-		} finally {
-			LooseContext.pop();
-		}
-	}
-
 	public T createOrReturnLocal() {
 		return createOrReturnLocal(false);
 	}
@@ -59,6 +39,35 @@ public abstract class AbstractLocalDomainLocatable<T extends LocalDomainLocatabl
 		}
 	}
 
+	public void deleteLocalEquivalent() {
+		if (GWT.isClient() && this instanceof HasIdAndLocalId) {
+			TransformManager.get().deleteObject((HasIdAndLocalId) this, true);
+		} else {
+			Registry.impl(LocalDomainPersistence.class, getClass())
+					.deleteLocalEquivalent(this);
+		}
+	}
+
+	public T ensureLocalEquivalent() {
+		return (T) Registry.impl(LocalDomainPersistence.class, getClass())
+				.ensureLocalEquivalent(this);
+	}
+
+	public T findLocalEquivalent() {
+		return (T) Registry.impl(LocalDomainPersistence.class, getClass())
+				.findLocalEquivalent(this);
+	}
+
+	public T localEquivalentOrSelf() {
+		try {
+			LooseContext.pushWithKey(CONTEXT_HINT_ALLOW_CACHED_FIND, true);
+			T local = findLocalEquivalent();
+			return (T) (local != null ? local : this);
+		} finally {
+			LooseContext.pop();
+		}
+	}
+
 	public T updateLocalEquivalent() {
 		try {
 			LooseContext.pushWithKey(CONTEXT_HINT_ALLOW_CACHED_FIND, true);
@@ -81,15 +90,6 @@ public abstract class AbstractLocalDomainLocatable<T extends LocalDomainLocatabl
 			return ensureLocalEquivalent();
 		} finally {
 			LooseContext.pop();
-		}
-	}
-
-	public void deleteLocalEquivalent() {
-		if (GWT.isClient() && this instanceof HasIdAndLocalId) {
-			TransformManager.get().deleteObject((HasIdAndLocalId) this, true);
-		} else {
-			Registry.impl(LocalDomainPersistence.class, getClass())
-					.deleteLocalEquivalent(this);
 		}
 	}
 }

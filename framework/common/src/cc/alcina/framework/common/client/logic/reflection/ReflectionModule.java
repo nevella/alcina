@@ -30,6 +30,8 @@ import java.lang.annotation.Target;
  */
 public @interface ReflectionModule {
 	public static final String INITIAL = "Initial";
+
 	public static final String LEFTOVER = "Leftover";
+
 	public String value();
 }

@@ -29,49 +29,52 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 /**
  * Custom field serializer for MathContext.
  */
-public class MathContext_CustomFieldSerializer extends
-    CustomFieldSerializer<MathContext> {
+public class MathContext_CustomFieldSerializer
+		extends CustomFieldSerializer<MathContext> {
+	/**
+	 * @param streamReader
+	 *            a SerializationStreamReader instance
+	 * @param instance
+	 *            the instance to be deserialized
+	 */
+	public static void deserialize(SerializationStreamReader streamReader,
+			MathContext instance) {
+	}
 
-  /**
-   * @param streamReader a SerializationStreamReader instance
-   * @param instance the instance to be deserialized
-   */
-  public static void deserialize(SerializationStreamReader streamReader,
-      MathContext instance) {
-  }
+	public static MathContext
+			instantiate(SerializationStreamReader streamReader)
+					throws SerializationException {
+		return new MathContext(streamReader.readInt(),
+				RoundingMode.values()[streamReader.readInt()]);
+	}
 
-  public static MathContext instantiate(SerializationStreamReader streamReader)
-      throws SerializationException {
-    return new MathContext(streamReader.readInt(),
-        RoundingMode.values()[streamReader.readInt()]);
-  }
+	public static void serialize(SerializationStreamWriter streamWriter,
+			MathContext instance) throws SerializationException {
+		streamWriter.writeInt(instance.getPrecision());
+		streamWriter.writeInt(instance.getRoundingMode().ordinal());
+	}
 
-  public static void serialize(SerializationStreamWriter streamWriter,
-      MathContext instance) throws SerializationException {
-    streamWriter.writeInt(instance.getPrecision());
-    streamWriter.writeInt(instance.getRoundingMode().ordinal());
-  }
+	@Override
+	public void deserializeInstance(SerializationStreamReader streamReader,
+			MathContext instance) throws SerializationException {
+		deserialize(streamReader, instance);
+	}
 
-  @Override
-  public void deserializeInstance(SerializationStreamReader streamReader,
-      MathContext instance) throws SerializationException {
-    deserialize(streamReader, instance);
-  }
+	@Override
+	public boolean hasCustomInstantiateInstance() {
+		return true;
+	}
 
-  @Override
-  public boolean hasCustomInstantiateInstance() {
-    return true;
-  }
+	@Override
+	public MathContext
+			instantiateInstance(SerializationStreamReader streamReader)
+					throws SerializationException {
+		return instantiate(streamReader);
+	}
 
-  @Override
-  public MathContext instantiateInstance(SerializationStreamReader streamReader)
-      throws SerializationException {
-    return instantiate(streamReader);
-  }
-
-  @Override
-  public void serializeInstance(SerializationStreamWriter streamWriter,
-      MathContext instance) throws SerializationException {
-    serialize(streamWriter, instance);
-  }
+	@Override
+	public void serializeInstance(SerializationStreamWriter streamWriter,
+			MathContext instance) throws SerializationException {
+		serialize(streamWriter, instance);
+	}
 }

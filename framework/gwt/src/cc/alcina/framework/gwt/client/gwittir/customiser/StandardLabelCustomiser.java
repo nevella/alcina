@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.customiser;
-
 
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
@@ -26,8 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.Custom;
  *
  * @author Nick Reddel
  */
-
- public class StandardLabelCustomiser implements Customiser {
+public class StandardLabelCustomiser implements Customiser {
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		return BoundWidgetTypeFactory.LABEL_PROVIDER;

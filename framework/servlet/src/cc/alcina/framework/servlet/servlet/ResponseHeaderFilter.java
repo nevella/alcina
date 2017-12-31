@@ -33,13 +33,17 @@ import javax.servlet.http.HttpServletResponse;
  * @author Nick Reddel
  */
 public class ResponseHeaderFilter implements Filter {
-	FilterConfig fc;
-
 	public static final String URL_REGEX = "Url-Regex";
+
+	FilterConfig fc;
 
 	private Pattern filterRegex;
 
 	private Map<String, String> headerKvs;
+
+	public void destroy() {
+		this.fc = null;
+	}
 
 	public void doFilter(ServletRequest req, ServletResponse res,
 			FilterChain chain) throws IOException, ServletException {
@@ -70,9 +74,5 @@ public class ResponseHeaderFilter implements Filter {
 				headerKvs.put(k, v);
 			}
 		}
-	}
-
-	public void destroy() {
-		this.fc = null;
 	}
 }

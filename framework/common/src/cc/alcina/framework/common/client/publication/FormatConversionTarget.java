@@ -21,8 +21,8 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
  *
  * @author Nick Reddel
  */
-public abstract class FormatConversionTarget extends ExtensibleEnum implements
-		HasDisplayName {
+public abstract class FormatConversionTarget extends ExtensibleEnum
+		implements HasDisplayName {
 	public static final FormatConversionTarget DOCX = new FormatConversionTarget_DOCX();
 
 	public static final FormatConversionTarget DOC = new FormatConversionTarget_DOC();
@@ -45,100 +45,101 @@ public abstract class FormatConversionTarget extends ExtensibleEnum implements
 
 	public static final FormatConversionTarget XML = new FormatConversionTarget_XML();
 
-	public static class FormatConversionTarget_DOCX extends
-			FormatConversionTarget {
-		@Override
-		public String displayName() {
-			return "Microsoft Word 2007+ (.docx)";
-		}
-	}
-
-	public static class FormatConversionTarget_DOC extends
-			FormatConversionTarget {
-		@Override
-		public String displayName() {
-			return "Microsoft Word (.doc)";
-		}
-	}
-
-	public static class FormatConversionTarget_XLSX extends
-			FormatConversionTarget {
-		@Override
-		public boolean gridResult() {
-			return true;
-		}
-	}
-
-	public static class FormatConversionTarget_XLS extends
-			FormatConversionTarget {
-		@Override
-		public boolean gridResult() {
-			return true;
-		}
-		@Override
-		public String displayName() {
-			return "Microsoft Excel (.xls)";
-		}
-	}
-
-	public static class FormatConversionTarget_CSV extends
-			FormatConversionTarget {
-		@Override
-		public boolean gridResult() {
-			return true;
-		}
-	}
-
-	public static class FormatConversionTarget_ZIP extends
-			FormatConversionTarget {
-	}
-
-	public static class FormatConversionTarget_EPUB extends
-			FormatConversionTarget {
-		@Override
-		public boolean requiresXml() {
-			return true;
-		}
-	}
-
-	public static class FormatConversionTarget_HTML extends
-			FormatConversionTarget {
-	}
-
-	public static class FormatConversionTarget_PDF extends
-			FormatConversionTarget {
-		@Override
-		public boolean requiresXml() {
-			return true;
-		}
-
-		@Override
-		public String displayName() {
-			return "PDF";
-		}
-	}
-
-	public static class FormatConversionTarget_XML extends
-			FormatConversionTarget {
-		@Override
-		public boolean requiresXml() {
-			return true;
-		}
-	}
-
-	public static class FormatConversionTarget_TEXT extends
-			FormatConversionTarget {
-	}
-
-	public boolean requiresXml() {
-		return false;
+	public String displayName() {
+		return CommonUtils.friendlyConstant(serializedForm());
 	}
 
 	public boolean gridResult() {
 		return false;
 	}
 
-	public String displayName() {
-		return CommonUtils.friendlyConstant(serializedForm());
+	public boolean requiresXml() {
+		return false;
+	}
+
+	public static class FormatConversionTarget_CSV
+			extends FormatConversionTarget {
+		@Override
+		public boolean gridResult() {
+			return true;
+		}
+	}
+
+	public static class FormatConversionTarget_DOC
+			extends FormatConversionTarget {
+		@Override
+		public String displayName() {
+			return "Microsoft Word (.doc)";
+		}
+	}
+
+	public static class FormatConversionTarget_DOCX
+			extends FormatConversionTarget {
+		@Override
+		public String displayName() {
+			return "Microsoft Word 2007+ (.docx)";
+		}
+	}
+
+	public static class FormatConversionTarget_EPUB
+			extends FormatConversionTarget {
+		@Override
+		public boolean requiresXml() {
+			return true;
+		}
+	}
+
+	public static class FormatConversionTarget_HTML
+			extends FormatConversionTarget {
+	}
+
+	public static class FormatConversionTarget_PDF
+			extends FormatConversionTarget {
+		@Override
+		public String displayName() {
+			return "PDF";
+		}
+
+		@Override
+		public boolean requiresXml() {
+			return true;
+		}
+	}
+
+	public static class FormatConversionTarget_TEXT
+			extends FormatConversionTarget {
+	}
+
+	public static class FormatConversionTarget_XLS
+			extends FormatConversionTarget {
+		@Override
+		public String displayName() {
+			return "Microsoft Excel (.xls)";
+		}
+
+		@Override
+		public boolean gridResult() {
+			return true;
+		}
+	}
+
+	public static class FormatConversionTarget_XLSX
+			extends FormatConversionTarget {
+		@Override
+		public boolean gridResult() {
+			return true;
+		}
+	}
+
+	public static class FormatConversionTarget_XML
+			extends FormatConversionTarget {
+		@Override
+		public boolean requiresXml() {
+			return true;
+		}
+	}
+
+	public static class FormatConversionTarget_ZIP
+			extends FormatConversionTarget {
 	}
 }

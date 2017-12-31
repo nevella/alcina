@@ -161,7 +161,7 @@ public class GridForm extends AbstractTableWidget
 		this.horizontalGrid = horizontalGrid;
 		super.initWidget(this.base);
 		this.setStyleName(GridForm.STYLE_NAME);
-		if(horizontalGrid){
+		if (horizontalGrid) {
 			this.addStyleName("horizontal-grid");
 		}
 		this.setAction(GridForm.DEFAULT_ACTION);
@@ -170,14 +170,6 @@ public class GridForm extends AbstractTableWidget
 	public void addButtonWidget(Widget widget) {
 		base.setWidget(row(base.getRowCount(), 1), col(base.getRowCount(), 1),
 				widget);
-	}
-
-	private int col(int vRow, int vCol) {
-		return horizontalGrid ? vRow : vCol;
-	}
-
-	private int row(int vRow, int vCol) {
-		return horizontalGrid ? vCol : vRow;
 	}
 
 	public void bind() {
@@ -262,6 +254,10 @@ public class GridForm extends AbstractTableWidget
 		this.binding.unbind();
 	}
 
+	private int col(int vRow, int vCol) {
+		return horizontalGrid ? vRow : vCol;
+	}
+
 	private void render() {
 		if (this.binding.getChildren().size() > 0) {
 			this.binding.unbind();
@@ -334,6 +330,10 @@ public class GridForm extends AbstractTableWidget
 			}
 			row++;
 		}
+	}
+
+	private int row(int vRow, int vCol) {
+		return horizontalGrid ? vCol : vRow;
 	}
 
 	private void setModel(Object model, boolean direct) {

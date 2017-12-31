@@ -9,28 +9,28 @@ public class ControlServletResponse {
 
 	private String message;
 
-	public ControlServletRequest getRequest() {
-		return this.request;
+	public String getMessage() {
+		return this.message;
 	}
 
-	public void setRequest(ControlServletRequest request) {
-		this.request = request;
+	public ControlServletRequest getRequest() {
+		return this.request;
 	}
 
 	public ControlServletState getStatus() {
 		return this.status;
 	}
 
-	public void setStatus(ControlServletState status) {
-		this.status = status;
-	}
-
-	public String getMessage() {
-		return this.message;
-	}
-
 	public void setMessage(String message) {
 		this.message = message;
+	}
+
+	public void setRequest(ControlServletRequest request) {
+		this.request = request;
+	}
+
+	public void setStatus(ControlServletState status) {
+		this.status = status;
 	}
 
 	@Override

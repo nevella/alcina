@@ -5,9 +5,9 @@ import cc.alcina.framework.common.client.state.ConsortPlayer;
 import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.persistence.client.PersistenceTransformSetupWebDbConsort;
 
-public class InitWebDbPlayer extends
-		RunnableAsyncCallbackPlayer<Void, AsyncConfigConsortState> implements
-		ConsortPlayer {
+public class InitWebDbPlayer
+		extends RunnableAsyncCallbackPlayer<Void, AsyncConfigConsortState>
+		implements ConsortPlayer {
 	private PersistenceTransformSetupWebDbConsort subConsort;
 
 	public InitWebDbPlayer(String dbName) {
@@ -16,12 +16,12 @@ public class InitWebDbPlayer extends
 	}
 
 	@Override
-	public void run() {
-		new SubconsortSupport().run(consort, subConsort, this);
+	public Consort getStateConsort() {
+		return subConsort;
 	}
 
 	@Override
-	public Consort getStateConsort() {
-		return subConsort;
+	public void run() {
+		new SubconsortSupport().run(consort, subConsort, this);
 	}
 }

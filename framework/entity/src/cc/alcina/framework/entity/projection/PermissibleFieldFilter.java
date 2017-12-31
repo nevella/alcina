@@ -18,28 +18,11 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 
 public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
-	public static class AllFieldsFilter extends PermissibleFieldFilter {
-		@Override
-		public Boolean permitClass(Class clazz) {
-			return true;
-		}
-
-		@Override
-		public boolean permitField(Field field,
-				Set<Field> perObjectPermissionFields, Class forClass) {
-			return true;
-		}
-
-		@Override
-		public boolean permitTransient(Field field) {
-			return false;
-		}
-	}
-
 	public static boolean disablePerObjectPermissions;
 
 	CachingMap<Class, ObjectPermissions> objectPermissionLookup = new CachingMap<Class, ObjectPermissions>(
-			clazz -> (ObjectPermissions)clazz.getAnnotation(ObjectPermissions.class));
+			clazz -> (ObjectPermissions) clazz
+					.getAnnotation(ObjectPermissions.class));
 
 	@Override
 	public Boolean permitClass(Class clazz) {
@@ -89,7 +72,8 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 		}
 	}
 
-	protected boolean shallow(Class<?> type) {
+	@Override
+	public boolean permitTransient(Field field) {
 		return false;
 	}
 
@@ -129,8 +113,25 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 		// that'll catch find-object stuff as well
 	}
 
-	@Override
-	public boolean permitTransient(Field field) {
+	protected boolean shallow(Class<?> type) {
 		return false;
+	}
+
+	public static class AllFieldsFilter extends PermissibleFieldFilter {
+		@Override
+		public Boolean permitClass(Class clazz) {
+			return true;
+		}
+
+		@Override
+		public boolean permitField(Field field,
+				Set<Field> perObjectPermissionFields, Class forClass) {
+			return true;
+		}
+
+		@Override
+		public boolean permitTransient(Field field) {
+			return false;
+		}
 	}
 }

@@ -38,6 +38,15 @@ public class OptionElement extends Element {
 	}
 
 	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
+
+	/**
 	 * Determines whether the given {@link JavaScriptObject} can be cast to this
 	 * class. A <code>null</code> object will cause this method to return
 	 * <code>false</code>.
@@ -59,15 +68,6 @@ public class OptionElement extends Element {
 			return is((Element) node);
 		}
 		return false;
-	}
-
-	/**
-	 * Determine whether the given {@link Element} can be cast to this class. A
-	 * <code>null</code> node will cause this method to return
-	 * <code>false</code>.
-	 */
-	public static boolean is(Element elem) {
-		return elem != null && elem.hasTagName(TAG);
 	}
 
 	protected OptionElement() {
@@ -186,6 +186,17 @@ public class OptionElement extends Element {
 		this.setPropertyString("label", label);
 	}
 
+	@Override
+	public void setPropertyBoolean(String name, boolean value) {
+		ensureRemoteCheck();
+		if (name.equals("selected") && !Boolean.valueOf(value)) {
+			local().removeAttribute(name);
+		} else {
+			local().setPropertyBoolean(name, value);
+		}
+		remote().setPropertyBoolean(name, value);
+	}
+
 	/**
 	 * Represents the current state of the corresponding form control, in an
 	 * interactive user agent. Changing this attribute changes the state of the
@@ -213,16 +224,5 @@ public class OptionElement extends Element {
 	 */
 	public void setValue(String value) {
 		this.setPropertyString("value", value);
-	}
-
-	@Override
-	public void setPropertyBoolean(String name, boolean value) {
-		ensureRemoteCheck();
-		if (name.equals("selected") && !Boolean.valueOf(value)) {
-			local().removeAttribute(name);
-		} else {
-			local().setPropertyBoolean(name, value);
-		}
-		remote().setPropertyBoolean(name, value);
 	}
 }

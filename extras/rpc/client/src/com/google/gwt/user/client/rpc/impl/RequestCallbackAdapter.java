@@ -39,6 +39,133 @@ import com.google.gwt.user.client.rpc.StatusCodeException;
  */
 public class RequestCallbackAdapter<T> implements RequestCallback {
 	/**
+	 * {@link AsyncCallback} to notify or success or failure.
+	 */
+	private final AsyncCallback<T> callback;
+
+	/**
+	 * Used for stats recording.
+	 */
+	private final String methodName;
+
+	/**
+	 * Used for stats recording.
+	 */
+	private final RpcStatsContext statsContext;
+
+	/**
+	 * Instance which will read the expected return type out of the
+	 * {@link SerializationStreamReader}.
+	 */
+	private final ResponseReader responseReader;
+
+	/**
+	 * {@link RpcTokenExceptionHandler} to notify of token exceptions.
+	 */
+	private final RpcTokenExceptionHandler tokenExceptionHandler;
+
+	/**
+	 * {@link SerializationStreamFactory} for creating
+	 * {@link SerializationStreamReader}s.
+	 */
+	private final SerializationStreamFactory streamFactory;
+
+	public RequestCallbackAdapter(SerializationStreamFactory streamFactory,
+			String methodName, RpcStatsContext statsContext,
+			AsyncCallback<T> callback, ResponseReader responseReader) {
+		this(streamFactory, methodName, statsContext, callback, null,
+				responseReader);
+	}
+
+	public RequestCallbackAdapter(SerializationStreamFactory streamFactory,
+			String methodName, RpcStatsContext statsContext,
+			AsyncCallback<T> callback,
+			RpcTokenExceptionHandler tokenExceptionHandler,
+			ResponseReader responseReader) {
+		assert (streamFactory != null);
+		assert (callback != null);
+		assert (responseReader != null);
+		this.streamFactory = streamFactory;
+		this.callback = callback;
+		this.methodName = methodName;
+		this.statsContext = statsContext;
+		this.responseReader = responseReader;
+		this.tokenExceptionHandler = tokenExceptionHandler;
+	}
+
+	public void onError(Request request, Throwable exception) {
+		callback.onFailure(exception);
+	}
+
+	@SuppressWarnings(value = { "unchecked" })
+	public void onResponseReceived(Request request, Response response) {
+		T result = null;
+		Throwable caught = null;
+		final PostDeserializationCallback postDeserializationCallback = new PostDeserializationCallback();
+		try {
+			String encodedResponse = response.getText();
+			int statusCode = response.getStatusCode();
+			boolean toss = statsContext.isStatsAvailable()
+					&& statsContext.stats(statsContext.bytesStat(methodName,
+							encodedResponse.length(), "responseReceived"));
+			if (statusCode != Response.SC_OK) {
+				caught = new StatusCodeException(statusCode, encodedResponse);
+			} else if (encodedResponse == null) {
+				// This can happen if the XHR is interrupted by the server dying
+				caught = new InvocationException(
+						"No response payload from " + methodName);
+			} else if (RemoteServiceProxy.isThrownException(encodedResponse)) {
+				final ClientSerializationStreamReader exceptionReader = (ClientSerializationStreamReader) streamFactory
+						.createStreamReader(encodedResponse);
+				postDeserializationCallback.streamReader = exceptionReader;
+				AsyncCallback exceptionCallback = new AsyncCallback() {
+					@Override
+					public void onFailure(Throwable caught) {
+						postDeserializationCallback.onFailure(caught);
+					}
+
+					@Override
+					public void onSuccess(Object toss) {
+						try {
+							Object object = exceptionReader.readObject();
+							onFailure((Throwable) object);
+						} catch (Throwable e) {
+							onFailure(e);
+						}
+					}
+				};
+				exceptionReader.doDeserialize(exceptionCallback);
+				return;
+			} else if (RemoteServiceProxy.isReturnValue(encodedResponse)) {
+				// next clause
+			} else {
+				caught = new InvocationException(
+						encodedResponse + " from " + methodName);
+			}
+			if (caught != null) {
+			} else {
+				if (RemoteServiceProxy.isReturnValue(encodedResponse)) {
+					ClientSerializationStreamReader reader = (ClientSerializationStreamReader) streamFactory
+							.createStreamReader(encodedResponse);
+					postDeserializationCallback.streamReader = reader;
+					reader.doDeserialize(postDeserializationCallback);
+					return;
+				}
+			}
+		} catch (com.google.gwt.user.client.rpc.SerializationException e) {
+			caught = new IncompatibleRemoteServiceException(
+					"The response could not be deserialized", e);
+		} catch (Throwable e) {
+			caught = e;
+		}
+		if (caught != null) {
+			postDeserializationCallback.onFailure(caught);
+		} else {
+			postDeserializationCallback.onSuccess(null);
+		}
+	}
+
+	/**
 	 * Enumeration used to read specific return types out of a
 	 * {@link SerializationStreamReader}.
 	 */
@@ -123,133 +250,6 @@ public class RequestCallbackAdapter<T> implements RequestCallback {
 				throws SerializationException;
 	}
 
-	/**
-	 * {@link AsyncCallback} to notify or success or failure.
-	 */
-	private final AsyncCallback<T> callback;
-
-	/**
-	 * Used for stats recording.
-	 */
-	private final String methodName;
-
-	/**
-	 * Used for stats recording.
-	 */
-	private final RpcStatsContext statsContext;
-
-	/**
-	 * Instance which will read the expected return type out of the
-	 * {@link SerializationStreamReader}.
-	 */
-	private final ResponseReader responseReader;
-
-	/**
-	 * {@link RpcTokenExceptionHandler} to notify of token exceptions.
-	 */
-	private final RpcTokenExceptionHandler tokenExceptionHandler;
-
-	/**
-	 * {@link SerializationStreamFactory} for creating
-	 * {@link SerializationStreamReader}s.
-	 */
-	private final SerializationStreamFactory streamFactory;
-
-	public RequestCallbackAdapter(SerializationStreamFactory streamFactory,
-			String methodName, RpcStatsContext statsContext,
-			AsyncCallback<T> callback, ResponseReader responseReader) {
-		this(streamFactory, methodName, statsContext, callback, null,
-				responseReader);
-	}
-
-	public RequestCallbackAdapter(SerializationStreamFactory streamFactory,
-			String methodName, RpcStatsContext statsContext,
-			AsyncCallback<T> callback,
-			RpcTokenExceptionHandler tokenExceptionHandler,
-			ResponseReader responseReader) {
-		assert (streamFactory != null);
-		assert (callback != null);
-		assert (responseReader != null);
-		this.streamFactory = streamFactory;
-		this.callback = callback;
-		this.methodName = methodName;
-		this.statsContext = statsContext;
-		this.responseReader = responseReader;
-		this.tokenExceptionHandler = tokenExceptionHandler;
-	}
-
-	public void onError(Request request, Throwable exception) {
-		callback.onFailure(exception);
-	}
-
-	@SuppressWarnings(value = { "unchecked" })
-	public void onResponseReceived(Request request, Response response) {
-		T result = null;
-		Throwable caught = null;
-		final PostDeserializationCallback postDeserializationCallback = new PostDeserializationCallback();
-		try {
-			String encodedResponse = response.getText();
-			int statusCode = response.getStatusCode();
-			boolean toss = statsContext.isStatsAvailable()
-					&& statsContext.stats(statsContext.bytesStat(methodName,
-							encodedResponse.length(), "responseReceived"));
-			if (statusCode != Response.SC_OK) {
-				caught = new StatusCodeException(statusCode, encodedResponse);
-			} else if (encodedResponse == null) {
-				// This can happen if the XHR is interrupted by the server dying
-				caught = new InvocationException("No response payload from "
-						+ methodName);
-			} else if (RemoteServiceProxy.isThrownException(encodedResponse)) {
-				final ClientSerializationStreamReader exceptionReader = (ClientSerializationStreamReader) streamFactory
-						.createStreamReader(encodedResponse);
-				postDeserializationCallback.streamReader = exceptionReader;
-				AsyncCallback exceptionCallback = new AsyncCallback() {
-					@Override
-					public void onFailure(Throwable caught) {
-						postDeserializationCallback.onFailure(caught);
-					}
-
-					@Override
-					public void onSuccess(Object toss) {
-						try {
-							Object object= exceptionReader.readObject();
-							onFailure((Throwable) object);
-						} catch (Throwable e) {
-							onFailure(e);
-						}
-					}
-				};
-				exceptionReader.doDeserialize(exceptionCallback);
-				return;
-			} else if (RemoteServiceProxy.isReturnValue(encodedResponse)) {
-				// next clause
-			} else {
-				caught = new InvocationException(encodedResponse + " from "
-						+ methodName);
-			}
-			if (caught != null) {
-			} else {
-				if (RemoteServiceProxy.isReturnValue(encodedResponse)) {
-					ClientSerializationStreamReader reader = (ClientSerializationStreamReader) streamFactory
-							.createStreamReader(encodedResponse);
-					postDeserializationCallback.streamReader = reader;
-					reader.doDeserialize(postDeserializationCallback);
-					return;
-				}
-			}
-		} catch (com.google.gwt.user.client.rpc.SerializationException e) {
-			caught = new IncompatibleRemoteServiceException(
-					"The response could not be deserialized", e);
-		} catch (Throwable e) {
-			caught = e;
-		}
-		if (caught != null) {
-			postDeserializationCallback.onFailure(caught);
-		} else {
-			postDeserializationCallback.onSuccess(null);
-		}
-	}
-
 	class PostDeserializationCallback implements AsyncCallback {
 		public ClientSerializationStreamReader streamReader;
 
@@ -274,19 +274,6 @@ public class RequestCallbackAdapter<T> implements RequestCallback {
 			postCallbackStats();
 		}
 
-		private void postCallbackStats() {
-			Object returned = (caught == null) ? result : caught;
-			boolean toss = statsContext.isStatsAvailable()
-					&& statsContext.stats(statsContext.timeStat(methodName,
-							returned, "end"));
-		}
-
-		private void postDeserializeStats() {
-			boolean toss = statsContext.isStatsAvailable()
-					&& statsContext.stats(statsContext.timeStat(methodName,
-							"responseDeserialized"));
-		}
-
 		@Override
 		public void onSuccess(Object toss) {
 			result = null;
@@ -303,6 +290,18 @@ public class RequestCallbackAdapter<T> implements RequestCallback {
 			} finally {
 				postCallbackStats();
 			}
+		}
+
+		private void postCallbackStats() {
+			Object returned = (caught == null) ? result : caught;
+			boolean toss = statsContext.isStatsAvailable() && statsContext
+					.stats(statsContext.timeStat(methodName, returned, "end"));
+		}
+
+		private void postDeserializeStats() {
+			boolean toss = statsContext.isStatsAvailable()
+					&& statsContext.stats(statsContext.timeStat(methodName,
+							"responseDeserialized"));
 		}
 	}
 }

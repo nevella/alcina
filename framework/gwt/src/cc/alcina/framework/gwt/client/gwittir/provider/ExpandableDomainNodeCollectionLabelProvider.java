@@ -23,9 +23,8 @@ import cc.alcina.framework.gwt.client.gwittir.widget.ExpandableLabel;
  *
  * @author Nick Reddel
  */
-
- public class ExpandableDomainNodeCollectionLabelProvider implements
-		BoundWidgetProvider, HasMaxWidth {
+public class ExpandableDomainNodeCollectionLabelProvider
+		implements BoundWidgetProvider, HasMaxWidth {
 	private final int maxWidth;
 
 	private final boolean forceColumnWidth;
@@ -40,12 +39,13 @@ import cc.alcina.framework.gwt.client.gwittir.widget.ExpandableLabel;
 		return new ExpandableLabel(maxWidth);
 	}
 
-	public int getMaxWidth() {
-		return maxWidth;
+	@Override
+	public String getColumnWidthString() {
+		return null;
 	}
 
-	public boolean isForceColumnWidth() {
-		return forceColumnWidth;
+	public int getMaxWidth() {
+		return maxWidth;
 	}
 
 	@Override
@@ -53,8 +53,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.ExpandableLabel;
 		return 0;
 	}
 
-	@Override
-	public String getColumnWidthString() {
-		return null;
+	public boolean isForceColumnWidth() {
+		return forceColumnWidth;
 	}
 }

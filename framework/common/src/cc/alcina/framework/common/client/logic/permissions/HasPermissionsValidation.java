@@ -16,7 +16,7 @@ public interface HasPermissionsValidation {
 				Collection children) {
 			if (hpv instanceof Permissible) {
 				Permissible permissible = (Permissible) hpv;
-				if (!PermissionsManager.get().isPermissible(hpv,permissible)) {
+				if (!PermissionsManager.get().isPermissible(hpv, permissible)) {
 					return "Access not permitted to "
 							+ CommonUtils.simpleClassName(hpv.getClass());
 				}
@@ -26,8 +26,7 @@ public interface HasPermissionsValidation {
 					.getAnnotationForClass(hpv.getClass(),
 							PermissibleChildClasses.class);
 			if (pcc != null) {
-				permissibleChildClasses = Arrays.asList(pcc
-						.value());
+				permissibleChildClasses = Arrays.asList(pcc.value());
 			}
 			for (Object o : children) {
 				if (!permissibleChildClasses.contains(o.getClass())) {

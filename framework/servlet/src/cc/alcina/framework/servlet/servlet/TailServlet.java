@@ -61,6 +61,10 @@ public class TailServlet extends HttpServlet {
 		}
 	}
 
+	private byte[] bytes(String string) {
+		return string.getBytes(StandardCharsets.UTF_8);
+	}
+
 	protected void checkAuthenticated(HttpServletRequest request,
 			HttpServletResponse response) {
 		Registry.impl(CommonRemoteServiceServlet.class)
@@ -68,9 +72,5 @@ public class TailServlet extends HttpServlet {
 		if (!PermissionsManager.get().isAdmin()) {
 			throw new RuntimeException("Access not permitted");
 		}
-	}
-
-	private byte[] bytes(String string) {
-		return string.getBytes(StandardCharsets.UTF_8);
 	}
 }

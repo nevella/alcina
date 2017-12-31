@@ -31,17 +31,18 @@ import cc.alcina.framework.gwt.client.widget.VisualFilterable;
  * 
  * @author Nick Reddel
  */
-public class UmbrellaProviderNode extends ContainerNode implements
-		CollectionModificationListener, ProvidesParenting, HasVisibleCollection {
+public class UmbrellaProviderNode extends ContainerNode
+		implements CollectionModificationListener, ProvidesParenting,
+		HasVisibleCollection {
 	private TreeItem dummy = new TreeItem("loading...");
 
 	private CollectionRenderingSupport support = null;
 
 	private final LazyCollectionProvider provider;
 
-	public UmbrellaProviderNode(LazyCollectionProvider provider,
-			String title, ImageResource imageResource,NodeFactory nodeFactory) {
-		super(title, imageResource,nodeFactory);
+	public UmbrellaProviderNode(LazyCollectionProvider provider, String title,
+			ImageResource imageResource, NodeFactory nodeFactory) {
+		super(title, imageResource, nodeFactory);
 		this.provider = provider;
 		setCollectionProvider(provider);
 		title = title == null ? provider.getTitle() : title;
@@ -50,16 +51,16 @@ public class UmbrellaProviderNode extends ContainerNode implements
 		dummy();
 	}
 
-	public boolean hasChildren() {
-		return provider.getCollectionSize() != 0;
+	public void collectionModification(CollectionModificationEvent evt) {
+		this.support.collectionModification(evt);
 	}
 
 	public boolean filter(String filterText, boolean enforceVisible) {
 		boolean top = getParentItem() == null;
 		if (filterText.length() < provider.getMinFilterableLength()) {
 			TreeItem selectedItem = getTree().getSelectedItem();
-			Object selectedObject = selectedItem == null ? null : selectedItem
-					.getUserObject();
+			Object selectedObject = selectedItem == null ? null
+					: selectedItem.getUserObject();
 			provider.filter("");
 			removeItems();
 			support.setDirty(true);
@@ -88,6 +89,97 @@ public class UmbrellaProviderNode extends ContainerNode implements
 		return show;
 	}
 
+	@Override
+	public Class getCollectionMemberClass() {
+		return provider.getCollectionMemberClass();
+	}
+
+	public CollectionProvider getCollectionProvider() {
+		return this.support.getCollectionProvider();
+	}
+
+	public Class getListenedClass() {
+		return this.support.getListenedClass();
+	}
+
+	public PropertyCollectionProvider getPropertyCollectionProvider() {
+		return this.support.getPropertyCollectionProvider();
+	}
+
+	public Object getUserObject() {
+		return this.support.getUserObject();
+	}
+
+	@Override
+	public Collection getVisibleCollection() {
+		return provider.getObjectsRecursive(null);
+	}
+
+	public Collection getVisibleItemObjects() {
+		return this.support.getVisibleItemObjects();
+	}
+
+	public boolean hasChildren() {
+		return provider.getCollectionSize() != 0;
+	}
+
+	@Override
+	public void onDetach() {
+		if (support != null) {
+			support.onDetach();
+		}
+		super.onDetach();
+	}
+
+	public void refreshChildren() {
+		this.support.refreshChildren(false);
+	}
+
+	public void removeItem(TreeItem item) {
+		super.removeItem(item);
+		support.removeItem(item);
+	}
+
+	public void setCollectionProvider(CollectionProvider collectionProvider) {
+		support = new CollectionRenderingSupport(this);
+		support.setLazyRefresh(true);
+		support.setCollectionProvider(collectionProvider);
+	}
+
+	@Override
+	public void setState(boolean open, boolean fireEvents) {
+		if (open) {
+			if (dummy.getParentItem() == this) {
+				support.setDirty(true);
+				removeItem(dummy);
+			}
+			support.refreshChildrenIfDirty();
+		}
+		super.setState(open, fireEvents);
+	}
+
+	private void dummy() {
+		if (provider.getChildProviders().isEmpty()) {
+			removeItems();
+			addItem(dummy);
+		}
+	}
+
+	protected void filterChildren(String filterText) {
+		for (int i = 0; i < getChildCount(); i++) {
+			TreeItem child = getChild(i);
+			if (child instanceof VisualFilterable) {
+				VisualFilterable vf = (VisualFilterable) child;
+				vf.filter(filterText);
+			}
+		}
+	}
+
+	protected String imageItemHTML(AbstractImagePrototype imageProto,
+			String title) {
+		return imageProto.getHTML() + " " + title;
+	}
+
 	// true == finished
 	protected boolean openToObject(Object userObject) {
 		setState(true, false);
@@ -108,96 +200,5 @@ public class UmbrellaProviderNode extends ContainerNode implements
 			}
 		}
 		return false;
-	}
-
-	protected void filterChildren(String filterText) {
-		for (int i = 0; i < getChildCount(); i++) {
-			TreeItem child = getChild(i);
-			if (child instanceof VisualFilterable) {
-				VisualFilterable vf = (VisualFilterable) child;
-				vf.filter(filterText);
-			}
-		}
-	}
-
-	private void dummy() {
-		if (provider.getChildProviders().isEmpty()) {
-			removeItems();
-			addItem(dummy);
-		}
-	}
-
-	@Override
-	public void setState(boolean open, boolean fireEvents) {
-		if (open) {
-			if (dummy.getParentItem() == this) {
-				support.setDirty(true);
-				removeItem(dummy);
-			}
-			support.refreshChildrenIfDirty();
-		}
-		super.setState(open, fireEvents);
-	}
-
-	public void removeItem(TreeItem item) {
-		super.removeItem(item);
-		support.removeItem(item);
-	}
-
-	@Override
-	public void onDetach() {
-		if (support != null) {
-			support.onDetach();
-		}
-		super.onDetach();
-	}
-
-	public void collectionModification(CollectionModificationEvent evt) {
-		this.support.collectionModification(evt);
-	}
-
-	public CollectionProvider getCollectionProvider() {
-		return this.support.getCollectionProvider();
-	}
-
-	public Class getListenedClass() {
-		return this.support.getListenedClass();
-	}
-
-	public PropertyCollectionProvider getPropertyCollectionProvider() {
-		return this.support.getPropertyCollectionProvider();
-	}
-
-	public Object getUserObject() {
-		return this.support.getUserObject();
-	}
-
-	public Collection getVisibleItemObjects() {
-		return this.support.getVisibleItemObjects();
-	}
-
-	public void refreshChildren() {
-		this.support.refreshChildren(false);
-	}
-
-	public void setCollectionProvider(CollectionProvider collectionProvider) {
-		support = new CollectionRenderingSupport(this);
-		support.setLazyRefresh(true);
-		support.setCollectionProvider(collectionProvider);
-	}
-
-	protected String imageItemHTML(AbstractImagePrototype imageProto,
-			String title) {
-		return imageProto.getHTML() + " " + title;
-	}
-
-	@Override
-	public Collection getVisibleCollection() {
-		return provider.getObjectsRecursive(null);
-	}
-
-	@Override
-	public Class getCollectionMemberClass() {
-		return provider.getCollectionMemberClass();
 	}
 }

@@ -11,30 +11,26 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.permissions;
 
 /**
  *
  * @author Nick Reddel
  */
-
- public class PermissionsException extends Exception {
-
+public class PermissionsException extends Exception {
 	public PermissionsException() {
 		super();
-	}
-
-	public PermissionsException(String message, Throwable cause) {
-		super(message, cause);
 	}
 
 	public PermissionsException(String message) {
 		super(message);
 	}
 
+	public PermissionsException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
 	public PermissionsException(Throwable cause) {
 		super(cause);
 	}
-	
 }

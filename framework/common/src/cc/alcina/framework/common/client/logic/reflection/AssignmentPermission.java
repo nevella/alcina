@@ -25,8 +25,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 @Documented
 @Target({ ElementType.METHOD })
 /**
- * Use to control access to the 'target object' (that which is being assigned to the field)
- * Not needed on the client. 
+ * Use to control access to the 'target object' (that which is being assigned to
+ * the field) Not needed on the client.
  */
 public @interface AssignmentPermission {
 	Permission value() default @Permission(access = AccessLevel.ADMIN);

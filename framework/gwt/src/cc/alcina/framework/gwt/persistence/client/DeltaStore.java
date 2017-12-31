@@ -60,14 +60,58 @@ public class DeltaStore {
 
 	protected PersistenceObjectStore objectStore;
 
+	public void clear(final AsyncCallback callback) {
+		AsyncCallback removeCallback = new AsyncCallback() {
+			@Override
+			public void onFailure(Throwable caught) {
+				callback.onFailure(caught);
+			}
+
+			@Override
+			public void onSuccess(Object result) {
+				removeUnusedTranches(new ArrayList<String>(), callback);
+			}
+		};
+		cache = null;
+		refreshCache(removeCallback);
+	}
+
+	public void deserializeTranches(final AsyncCallback playerCallback,
+			final List<DomainModelDeltaTransport> transports) {
+		for (DomainModelDeltaTransport transport : transports) {
+			DomainModelDeltaSignature sig = DomainModelDeltaSignature
+					.parseSignature(transport.getSignature());
+			String nvs = sig.nonVersionedSignature();
+			DomainModelDeltaSignature versioned = cache.nonVersionedSignatures
+					.get(nvs);
+			if (cache.deltaCache.get(nvs) == null
+					&& !hasNoSerializedContent(nvs)) {
+				AsyncCallback<DomainModelDelta> loopCallback = new AsyncCallback<DomainModelDelta>() {
+					@Override
+					public void onFailure(Throwable caught) {
+						playerCallback.onFailure(caught);
+					}
+
+					@Override
+					public void onSuccess(DomainModelDelta result) {
+						deserializeTranches(playerCallback, transports);
+					}
+				};
+				getDelta(versioned, loopCallback);
+				return;
+			}
+		}
+		playerCallback.onSuccess(null);
+	}
+
 	public void getDelta(DomainModelDeltaSignature sig,
 			final AsyncCallback<DomainModelDelta> callback) {
 		final String key = getKey(sig, true);
 		final AsyncCallback<DomainModelDelta> assignCallback = new AsyncCallbackStd<DomainModelDelta>() {
 			@Override
 			public void onSuccess(DomainModelDelta result) {
-				cache.deltaCache.put(result.getSignature()
-						.nonVersionedSignature(), result);
+				cache.deltaCache.put(
+						result.getSignature().nonVersionedSignature(), result);
 				callback.onSuccess(result);
 			}
 		};
@@ -76,8 +120,8 @@ public class DeltaStore {
 			public void onSuccess(String result) {
 				try {
 					if (result == null) {
-						throw new RuntimeException("Null content for key "
-								+ key);
+						throw new RuntimeException(
+								"Null content for key " + key);
 					}
 					Registry.impl(RpcDeserialiser.class).deserialize(
 							DomainModelDelta.class, result, assignCallback);
@@ -95,9 +139,14 @@ public class DeltaStore {
 		DomainModelDeltaSignature versioned = cache.nonVersionedSignatures
 				.get(sig.nonVersionedSignature());
 		if (versioned == null) {
-			callback.onFailure(new RuntimeException("No cache entry for " + sig));
+			callback.onFailure(
+					new RuntimeException("No cache entry for " + sig));
 		}
 		getDelta(versioned, callback);
+	}
+
+	public DomainModelDelta getDeltaSync(DomainModelDeltaSignature sig) {
+		return cache.deltaCache.get(sig.nonVersionedSignature());
 	}
 
 	public DomainModelDeltaMetadata getDomainObjectsMetadata() {
@@ -118,6 +167,11 @@ public class DeltaStore {
 		return cache == null ? null : cache.versionedSignatures;
 	}
 
+	public DomainModelDeltaSignature
+			getExistingVersionedSignature(DomainModelDeltaSignature sig) {
+		return cache.nonVersionedSignatures.get(sig.nonVersionedSignature());
+	}
+
 	public String getKey(DomainModelDeltaSignature sig, boolean content) {
 		return (content ? CONTENT : META) + sig.toString();
 	}
@@ -134,9 +188,25 @@ public class DeltaStore {
 		if (cache == null) {
 			return null;
 		}
-		DomainModelDeltaSignature sig = CommonUtils.first(cache.metadataCache
-				.keySet());
+		DomainModelDeltaSignature sig = CommonUtils
+				.first(cache.metadataCache.keySet());
 		return sig == null ? null : (Long) sig.getUserId();
+	}
+
+	public boolean hasInstantiatedContentFor(DomainModelDeltaSignature sig) {
+		return getExistingVersionedSignature(sig) != null && cache.contentCache
+				.get(getExistingVersionedSignature(sig)) != null;
+	}
+
+	public boolean hasLoadedContentFor(DomainModelDeltaSignature sig) {
+		return getExistingVersionedSignature(sig) != null || cache.contentCache
+				.get(getExistingVersionedSignature(sig)) != null;
+	}
+
+	public void invalidate(Class<?> clazz) {
+		DomainModelDeltaSignature sig = new DomainModelDeltaSignature()
+				.clazz(clazz);
+		cache.invalidate(sig);
 	}
 
 	public void mergeResponse(final LoadObjectsResponse response,
@@ -149,11 +219,12 @@ public class DeltaStore {
 	}
 
 	public void refreshCache(AsyncCallback callback) {
-		EnsureCacheConsort ensureCacheConsort = new EnsureCacheConsort(callback);
+		EnsureCacheConsort ensureCacheConsort = new EnsureCacheConsort(
+				callback);
 		if (callback instanceof Player) {
 			Player player = (Player) callback;
-			new SubconsortSupport().run(player.getConsort(),
-					ensureCacheConsort, player);
+			new SubconsortSupport().run(player.getConsort(), ensureCacheConsort,
+					player);
 		} else {
 			ensureCacheConsort.start();
 		}
@@ -161,6 +232,10 @@ public class DeltaStore {
 
 	public void registerDelegate(PersistenceObjectStore objectStore) {
 		this.objectStore = objectStore;
+	}
+
+	private boolean hasNoSerializedContent(String nonVersionedKey) {
+		return cache.hasNoSerializedContent(nonVersionedKey);
 	}
 
 	private void persistTranches(
@@ -190,9 +265,8 @@ public class DeltaStore {
 		for (String signature : preserveClientDeltaSignatures) {
 			preserveKeys.add(getKey(
 					DomainModelDeltaSignature.parseSignature(signature), true));
-			preserveKeys
-					.add(getKey(
-							DomainModelDeltaSignature.parseSignature(signature),
+			preserveKeys.add(
+					getKey(DomainModelDeltaSignature.parseSignature(signature),
 							false));
 		}
 		AsyncCallback refreshAfterRemoveCallback = new AsyncCallback() {
@@ -224,7 +298,8 @@ public class DeltaStore {
 		@Override
 		public void runPlayer(AllStatesPlayer player, EnsureCachePhase next) {
 			if (cache != null) {
-				wasPlayed(player, Collections.singleton(EnsureCachePhase.MERGE));
+				wasPlayed(player,
+						Collections.singleton(EnsureCachePhase.MERGE));
 				return;
 			}
 			switch (next) {
@@ -236,8 +311,8 @@ public class DeltaStore {
 				newCache.existingKeys = (List<String>) lastCallbackResult;
 				for (String sigWithMarker : newCache.existingKeys) {
 					if (sigWithMarker.startsWith(META)) {
-						String signatureString = sigWithMarker.substring(META
-								.length());
+						String signatureString = sigWithMarker
+								.substring(META.length());
 						newCache.addSignature(signatureString);
 						queryKeys.add(sigWithMarker);
 					}
@@ -249,19 +324,18 @@ public class DeltaStore {
 				try {
 					for (Entry<String, String> e : mdKvs.entrySet()) {
 						DomainModelDeltaSignature signature = DomainModelDeltaSignature
-								.parseSignature(e.getKey().substring(
-										META.length()));
-						newCache.metadataCache.put(
-								signature,
-								(DomainModelDeltaMetadata) Registry.impl(
-										AlcinaBeanSerializer.class)
+								.parseSignature(
+										e.getKey().substring(META.length()));
+						newCache.metadataCache.put(signature,
+								(DomainModelDeltaMetadata) Registry
+										.impl(AlcinaBeanSerializer.class)
 										.deserialize(e.getValue()));
 					}
 					cache = newCache;
 					wasPlayed(player);
 				} catch (Exception e) {
-					Registry.impl(ClientNotifications.class).log(
-							"Problem deserialising delta store - "
+					Registry.impl(ClientNotifications.class)
+							.log("Problem deserialising delta store - "
 									+ e.getMessage());
 					GWT.log("Problem deserialising delta store - ", e);
 					objectStore.clear(player);
@@ -303,7 +377,8 @@ public class DeltaStore {
 			case REMOVE_UNUSED:
 				if (removeUnusedTranches) {
 					removeUnusedTranches(
-							response.getPreserveClientDeltaSignatures(), player);
+							response.getPreserveClientDeltaSignatures(),
+							player);
 				} else {
 					player.onSuccess(null);
 				}
@@ -331,78 +406,5 @@ public class DeltaStore {
 	enum MergeResponsePhase {
 		ENSURE_CACHE, REMOVE_UNUSED, PERSIST_TRANCHES, DESERIALIZE_TRANCHES,
 		RELOAD_CACHE
-	}
-
-	public void clear(final AsyncCallback callback) {
-		AsyncCallback removeCallback = new AsyncCallback() {
-			@Override
-			public void onFailure(Throwable caught) {
-				callback.onFailure(caught);
-			}
-
-			@Override
-			public void onSuccess(Object result) {
-				removeUnusedTranches(new ArrayList<String>(), callback);
-			}
-		};
-		cache = null;
-		refreshCache(removeCallback);
-	}
-
-	public void deserializeTranches(final AsyncCallback playerCallback,
-			final List<DomainModelDeltaTransport> transports) {
-		for (DomainModelDeltaTransport transport : transports) {
-			DomainModelDeltaSignature sig = DomainModelDeltaSignature
-					.parseSignature(transport.getSignature());
-			String nvs = sig.nonVersionedSignature();
-			DomainModelDeltaSignature versioned = cache.nonVersionedSignatures
-					.get(nvs);
-			if (cache.deltaCache.get(nvs) == null
-					&& !hasNoSerializedContent(nvs)) {
-				AsyncCallback<DomainModelDelta> loopCallback = new AsyncCallback<DomainModelDelta>() {
-					@Override
-					public void onSuccess(DomainModelDelta result) {
-						deserializeTranches(playerCallback, transports);
-					}
-
-					@Override
-					public void onFailure(Throwable caught) {
-						playerCallback.onFailure(caught);
-					}
-				};
-				getDelta(versioned, loopCallback);
-				return;
-			}
-		}
-		playerCallback.onSuccess(null);
-	}
-
-	private boolean hasNoSerializedContent(String nonVersionedKey) {
-		return cache.hasNoSerializedContent(nonVersionedKey);
-	}
-
-	public DomainModelDelta getDeltaSync(DomainModelDeltaSignature sig) {
-		return cache.deltaCache.get(sig.nonVersionedSignature());
-	}
-
-	public DomainModelDeltaSignature getExistingVersionedSignature(
-			DomainModelDeltaSignature sig) {
-		return cache.nonVersionedSignatures.get(sig.nonVersionedSignature());
-	}
-
-	public boolean hasInstantiatedContentFor(DomainModelDeltaSignature sig) {
-		return getExistingVersionedSignature(sig) != null
-				&& cache.contentCache.get(getExistingVersionedSignature(sig)) != null;
-	}
-
-	public boolean hasLoadedContentFor(DomainModelDeltaSignature sig) {
-		return getExistingVersionedSignature(sig) != null
-				|| cache.contentCache.get(getExistingVersionedSignature(sig)) != null;
-	}
-
-	public void invalidate(Class<?> clazz) {
-		DomainModelDeltaSignature sig = new DomainModelDeltaSignature()
-				.clazz(clazz);
-		cache.invalidate(sig);
 	}
 }

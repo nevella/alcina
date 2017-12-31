@@ -43,6 +43,12 @@ public class StatusDisplayer {
 
 	private FaderTuple exceptionTuple;
 
+	private StringMap stylePrefixes;
+
+	FaderTuple statusTuple;
+
+	FaderTuple centerTuple;
+
 	public StatusDisplayer() {
 		stylePrefixes = new StringMap();
 		stylePrefixes.put(MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, "icy");
@@ -96,46 +102,12 @@ public class StatusDisplayer {
 				topicListener);
 	}
 
-	private StringMap stylePrefixes;
-
-	class FaderTuple {
-		final String defaultStyle;
-
-		private SimplePanelWClick holder;
-
-		public FaderTuple(Label label, String defaultStyle) {
-			this.label = label;
-			this.holder = new SimplePanelWClick(label);
-			holder.setStyleName("alcina-Status-Holder");
-			if (defaultStyle != null) {
-				holder.addStyleName(defaultStyle);
-			}
-			holder.setVisible(false);
-			this.defaultStyle = defaultStyle;
-		}
-
-		FaderAnimation fader;
-
-		Label label;
+	public void removeWidget() {
+		appTuple.label.removeFromParent();
+		statusTuple.label.removeFromParent();
+		centerTuple.label.removeFromParent();
+		exceptionTuple.label.removeFromParent();
 	}
-
-	static class SimplePanelWClick extends SimplePanel {
-		private ClickHandler hideHandler = new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				setVisible(false);
-			}
-		};
-
-		public SimplePanelWClick(Label label) {
-			super(label);
-			addDomHandler(hideHandler, ClickEvent.getType());
-		}
-	}
-
-	FaderTuple statusTuple;
-
-	FaderTuple centerTuple;
 
 	private void showMessage(String message, String channel) {
 		boolean center = false;
@@ -192,6 +164,8 @@ public class StatusDisplayer {
 	private class FaderAnimation extends Animation {
 		private final SimplePanel holder;
 
+		double preFade = 0.7;
+
 		public FaderAnimation(SimplePanel holder) {
 			this.holder = holder;
 		}
@@ -200,8 +174,6 @@ public class StatusDisplayer {
 		protected void onComplete() {
 			holder.setVisible(false);
 		}
-
-		double preFade = 0.7;
 
 		@Override
 		protected void onUpdate(double progress) {
@@ -213,10 +185,38 @@ public class StatusDisplayer {
 		}
 	}
 
-	public void removeWidget() {
-		appTuple.label.removeFromParent();
-		statusTuple.label.removeFromParent();
-		centerTuple.label.removeFromParent();
-		exceptionTuple.label.removeFromParent();
+	class FaderTuple {
+		final String defaultStyle;
+
+		private SimplePanelWClick holder;
+
+		FaderAnimation fader;
+
+		Label label;
+
+		public FaderTuple(Label label, String defaultStyle) {
+			this.label = label;
+			this.holder = new SimplePanelWClick(label);
+			holder.setStyleName("alcina-Status-Holder");
+			if (defaultStyle != null) {
+				holder.addStyleName(defaultStyle);
+			}
+			holder.setVisible(false);
+			this.defaultStyle = defaultStyle;
+		}
+	}
+
+	static class SimplePanelWClick extends SimplePanel {
+		private ClickHandler hideHandler = new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				setVisible(false);
+			}
+		};
+
+		public SimplePanelWClick(Label label) {
+			super(label);
+			addDomHandler(hideHandler, ClickEvent.getType());
+		}
 	}
 }

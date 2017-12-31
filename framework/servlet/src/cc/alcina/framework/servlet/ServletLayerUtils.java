@@ -42,39 +42,24 @@ public class ServletLayerUtils {
 	public static final transient String CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK = ServletLayerUtils.class
 			.getName() + ".CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK";
 
-	public static int pushTransformsAsRoot() {
-		return pushTransforms(true);
-	}
-
-	public static int pushTransformsAsCurrentUser() {
-		return pushTransforms(false);
-	}
-
-	private static int pushTransforms(boolean asRoot) {
-		int pendingTransformCount = TransformManager.get()
-				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
-		if (AppPersistenceBase.isTest() && !ResourceUtilities
-				.is(ServletLayerUtils.class, "testTransformCascade")) {
-			if (!LooseContext.is(CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH)) {
-				TransformManager.get().clearTransforms();
-			}
-			return pendingTransformCount;
-		}
-		pushTransforms(null, asRoot, true);
-		return pendingTransformCount;
-	}
-
 	private static boolean appServletInitialised;
+
+	public static String defaultTag;
+
+	public static boolean checkForBrokenClientPipe(Exception e) {
+		return SEUtilities.getFullExceptionMessage(e).contains("Broken pipe");
+	}
 
 	public static boolean isAppServletInitialised() {
 		return appServletInitialised;
 	}
 
-	public static void setAppServletInitialised(boolean appServletInitialised) {
-		ServletLayerUtils.appServletInitialised = appServletInitialised;
+	public static void logRequest(HttpServletRequest req, String remoteAddr) {
+		System.out.format(
+				"\nRequest: %s\t Querystring: %s\t Referer: %s\t Ip: %s\n",
+				req.getRequestURI(), req.getQueryString(),
+				req.getHeader("referer"), remoteAddr);
 	}
-
-	public static String defaultTag;
 
 	public static DomainTransformLayerWrapper pushTransforms(String tag,
 			boolean asRoot, boolean returnResponse) {
@@ -141,6 +126,51 @@ public class ServletLayerUtils {
 		}
 	}
 
+	public static long pushTransformsAndGetFirstCreationId(boolean asRoot) {
+		DomainTransformResponse transformResponse = pushTransforms(null, asRoot,
+				true).response;
+		DomainTransformEvent first = CommonUtils
+				.first(transformResponse.getEventsToUseForClientUpdate());
+		return first == null ? 0 : first.getGeneratedServerId();
+	}
+
+	public static long pushTransformsAndReturnId(boolean asRoot,
+			HasIdAndLocalId returnIdFor) {
+		DomainTransformResponse transformResponse = pushTransforms(null, asRoot,
+				true).response;
+		for (DomainTransformEvent dte : transformResponse
+				.getEventsToUseForClientUpdate()) {
+			if (dte.getObjectLocalId() == returnIdFor.getLocalId()
+					&& dte.getObjectClass() == returnIdFor.getClass()
+					&& dte.getTransformType() == TransformType.CREATE_OBJECT) {
+				return dte.getGeneratedServerId();
+			}
+		}
+		throw new RuntimeException(
+				"Generated object not found - " + returnIdFor);
+	}
+
+	public static int pushTransformsAsCurrentUser() {
+		return pushTransforms(false);
+	}
+
+	public static int pushTransformsAsRoot() {
+		return pushTransforms(true);
+	}
+
+	public static String robustGetRemoteAddr(HttpServletRequest request) {
+		if (request == null) {
+			return null;
+		}
+		String forwarded = request.getHeader("X-Forwarded-For");
+		return CommonUtils.isNotNullOrEmpty(forwarded) ? forwarded
+				: request.getRemoteAddr();
+	}
+
+	public static void setAppServletInitialised(boolean appServletInitialised) {
+		ServletLayerUtils.appServletInitialised = appServletInitialised;
+	}
+
 	private static void
 			commitLocalTransformsInChunks(final int maxTransformChunkSize) {
 		try {
@@ -183,47 +213,17 @@ public class ServletLayerUtils {
 		}
 	}
 
-	public static long pushTransformsAndGetFirstCreationId(boolean asRoot) {
-		DomainTransformResponse transformResponse = pushTransforms(null, asRoot,
-				true).response;
-		DomainTransformEvent first = CommonUtils
-				.first(transformResponse.getEventsToUseForClientUpdate());
-		return first == null ? 0 : first.getGeneratedServerId();
-	}
-
-	public static long pushTransformsAndReturnId(boolean asRoot,
-			HasIdAndLocalId returnIdFor) {
-		DomainTransformResponse transformResponse = pushTransforms(null, asRoot,
-				true).response;
-		for (DomainTransformEvent dte : transformResponse
-				.getEventsToUseForClientUpdate()) {
-			if (dte.getObjectLocalId() == returnIdFor.getLocalId()
-					&& dte.getObjectClass() == returnIdFor.getClass()
-					&& dte.getTransformType() == TransformType.CREATE_OBJECT) {
-				return dte.getGeneratedServerId();
+	private static int pushTransforms(boolean asRoot) {
+		int pendingTransformCount = TransformManager.get()
+				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
+		if (AppPersistenceBase.isTest() && !ResourceUtilities
+				.is(ServletLayerUtils.class, "testTransformCascade")) {
+			if (!LooseContext.is(CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH)) {
+				TransformManager.get().clearTransforms();
 			}
+			return pendingTransformCount;
 		}
-		throw new RuntimeException(
-				"Generated object not found - " + returnIdFor);
-	}
-
-	public static void logRequest(HttpServletRequest req, String remoteAddr) {
-		System.out.format(
-				"\nRequest: %s\t Querystring: %s\t Referer: %s\t Ip: %s\n",
-				req.getRequestURI(), req.getQueryString(),
-				req.getHeader("referer"), remoteAddr);
-	}
-
-	public static boolean checkForBrokenClientPipe(Exception e) {
-		return SEUtilities.getFullExceptionMessage(e).contains("Broken pipe");
-	}
-
-	public static String robustGetRemoteAddr(HttpServletRequest request) {
-		if (request == null) {
-			return null;
-		}
-		String forwarded = request.getHeader("X-Forwarded-For");
-		return CommonUtils.isNotNullOrEmpty(forwarded) ? forwarded
-				: request.getRemoteAddr();
+		pushTransforms(null, asRoot, true);
+		return pendingTransformCount;
 	}
 }

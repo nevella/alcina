@@ -86,10 +86,6 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		}
 	}
 
-	public boolean had(T token) {
-		return tokenCounts.containsKey(token);
-	}
-
 	public void addText(Text t, boolean emphasised, boolean bold) {
 		String textContent = t.getTextContent();
 		if (emphasised) {
@@ -118,6 +114,34 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 			aTagContents.put(pair, a);
 		}
 		content += qnText;
+	}
+
+	public boolean allBold() {
+		ArrayList<Text> list = new ArrayList<Text>(allTexts);
+		list.removeAll(boldTexts);
+		for (Text text : list) {
+			if (SEUtilities.normalizeWhitespaceAndTrim(text.getTextContent())
+					.length() > 0) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public boolean allEmphasised() {
+		ArrayList<Text> list = new ArrayList<Text>(allTexts);
+		list.removeAll(emphasisedTexts);
+		for (Text text : list) {
+			if (SEUtilities.normalizeWhitespaceAndTrim(text.getTextContent())
+					.length() > 0) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public ParserContextChecker checker() {
+		return new ParserContextChecker();
 	}
 
 	public void clearNodes() {
@@ -223,6 +247,24 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		return commonContainer;
 	}
 
+	public Optional<XmlNode> getContainingNode(IntPair containingRange) {
+		containingRange = containingRange.shiftRight(startOffset);
+		int offset = 0;
+		for (Text text : allTexts) {
+			int length = text.getLength();
+			IntPair textRange = new IntPair(offset, offset + length);
+			if (containingRange.contains(textRange)) {
+				return Optional.of(XmlNode.from(text));
+			}
+			offset += length;
+		}
+		return Optional.empty();
+	}
+
+	public Optional<XmlNode> getContainingNode(Matcher matcher) {
+		return getContainingNode(new IntPair(matcher.start(), matcher.end()));
+	}
+
 	public String getCurrentBlocklikeContent() {
 		if (currentBlocklikeContent == null) {
 			if (!allTexts.isEmpty()) {
@@ -320,8 +362,16 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		return substring;
 	}
 
-	protected boolean checkLongBlankString() {
-		return true;
+	public boolean had(T token) {
+		return tokenCounts.containsKey(token);
+	}
+
+	public boolean isStrictCategoryChecking() {
+		return false;
+	}
+
+	public S lastMatched() {
+		return CommonUtils.last(matched);
 	}
 
 	public boolean lastTextWasEmphasis() {
@@ -334,8 +384,8 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		return last == null ? null : last.getToken();
 	}
 
-	public S lastMatched() {
-		return CommonUtils.last(matched);
+	public <V extends T> V lastTokenOfType(Class<? extends T> clazz) {
+		return (V) CommonUtils.last(matchedByType.getAndEnsure(clazz));
 	}
 
 	public boolean matches(T[] tokens) {
@@ -447,66 +497,8 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 				content);
 	}
 
-	public boolean allEmphasised() {
-		ArrayList<Text> list = new ArrayList<Text>(allTexts);
-		list.removeAll(emphasisedTexts);
-		for (Text text : list) {
-			if (SEUtilities.normalizeWhitespaceAndTrim(text.getTextContent())
-					.length() > 0) {
-				return false;
-			}
-		}
+	protected boolean checkLongBlankString() {
 		return true;
-	}
-
-	public boolean allBold() {
-		ArrayList<Text> list = new ArrayList<Text>(allTexts);
-		list.removeAll(boldTexts);
-		for (Text text : list) {
-			if (SEUtilities.normalizeWhitespaceAndTrim(text.getTextContent())
-					.length() > 0) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	// a group of emphasised (or not) texts
-	public class TextRange {
-		public boolean emphasised;
-
-		public List<Text> texts = new ArrayList<Text>();
-
-		public String textContent = "";
-
-		public int offset;
-
-		@Override
-		public String toString() {
-			return String.format("(%s) (%s) %s", offset,
-					(emphasised ? "emph" : "not-emph"), textContent);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof ParserContext.TextRange) {
-				return texts.equals(((TextRange) obj).texts);
-			}
-			return false;
-		}
-
-		@Override
-		public int hashCode() {
-			return texts.hashCode();
-		}
-	}
-
-	public <V extends T> V lastTokenOfType(Class<? extends T> clazz) {
-		return (V) CommonUtils.last(matchedByType.getAndEnsure(clazz));
-	}
-
-	public ParserContextChecker checker() {
-		return new ParserContextChecker();
 	}
 
 	public class ParserContextChecker {
@@ -518,13 +510,8 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 
 		private Class<? extends T> tokenCategory;
 
-		public ParserContextChecker tags(String... tags) {
-			this.tags = tags;
-			return this;
-		}
-
-		public ParserContextChecker tokens(T... tokens) {
-			this.tokens = tokens;
+		public ParserContextChecker attribute(String key, String value) {
+			attributes.add(new StringPair(key, value));
 			return this;
 		}
 
@@ -588,6 +575,21 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 			return true;
 		}
 
+		public ParserContextChecker tags(String... tags) {
+			this.tags = tags;
+			return this;
+		}
+
+		public ParserContextChecker tokenCategory(Class<? extends T> clazz) {
+			tokenCategory = clazz;
+			return this;
+		}
+
+		public ParserContextChecker tokens(T... tokens) {
+			this.tokens = tokens;
+			return this;
+		}
+
 		private T lastTokenWithCategory() {
 			for (int idx = matched.size() - 1; idx >= 0; idx--) {
 				S slice = matched.get(idx);
@@ -598,37 +600,35 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 			}
 			return null;
 		}
-
-		public ParserContextChecker attribute(String key, String value) {
-			attributes.add(new StringPair(key, value));
-			return this;
-		}
-
-		public ParserContextChecker tokenCategory(Class<? extends T> clazz) {
-			tokenCategory = clazz;
-			return this;
-		}
 	}
 
-	public boolean isStrictCategoryChecking() {
-		return false;
-	}
+	// a group of emphasised (or not) texts
+	public class TextRange {
+		public boolean emphasised;
 
-	public Optional<XmlNode> getContainingNode(Matcher matcher) {
-		return getContainingNode(new IntPair(matcher.start(), matcher.end()));
-	}
+		public List<Text> texts = new ArrayList<Text>();
 
-	public Optional<XmlNode> getContainingNode(IntPair containingRange) {
-		containingRange = containingRange.shiftRight(startOffset);
-		int offset = 0;
-		for (Text text : allTexts) {
-			int length = text.getLength();
-			IntPair textRange = new IntPair(offset, offset + length);
-			if (containingRange.contains(textRange)) {
-				return Optional.of(XmlNode.from(text));
+		public String textContent = "";
+
+		public int offset;
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof ParserContext.TextRange) {
+				return texts.equals(((TextRange) obj).texts);
 			}
-			offset += length;
+			return false;
 		}
-		return Optional.empty();
+
+		@Override
+		public int hashCode() {
+			return texts.hashCode();
+		}
+
+		@Override
+		public String toString() {
+			return String.format("(%s) (%s) %s", offset,
+					(emphasised ? "emph" : "not-emph"), textContent);
+		}
 	}
 }

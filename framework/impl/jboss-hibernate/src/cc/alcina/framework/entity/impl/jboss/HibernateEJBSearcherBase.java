@@ -139,7 +139,7 @@ public abstract class HibernateEJBSearcherBase {
 						.containsKey(getEntityClass(cg));
 				Junction junction = cg.getCombinator() == FilterCombinator.OR
 						|| countingVt ? Restrictions.disjunction()
-						: Restrictions.conjunction();
+								: Restrictions.conjunction();
 				boolean added = false;
 				for (SearchCriterion sc : (Set<SearchCriterion>) cg
 						.getCriteria()) {
@@ -148,8 +148,8 @@ public abstract class HibernateEJBSearcherBase {
 						continue;
 					}
 					if (handler == null) {
-						System.err.println("No handler for class "
-								+ sc.getClass());
+						System.err.println(
+								"No handler for class " + sc.getClass());
 					}
 					Criterion criterion = handler.handle(sc);
 					if (criterion != null) {
@@ -173,8 +173,4 @@ public abstract class HibernateEJBSearcherBase {
 			SearchCriterionHandler criterionHandler) {
 		handlerMap.put(clazz, criterionHandler);
 	}
-
-
-
-
 }

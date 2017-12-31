@@ -10,11 +10,25 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class IdLookup<T, H extends HasIdAndLocalId> extends CacheLookup<T, H> {
+	private Set<T> duplicateKeys = new LinkedHashSet<T>();
+
 	public IdLookup(CacheLookupDescriptor descriptor, boolean concurrent) {
 		super(descriptor, concurrent);
 	}
 
-	private Set<T> duplicateKeys = new LinkedHashSet<T>();
+	public H getObject(T key) {
+		H value = null;
+		Set<Long> ids = get(key);
+		if (CommonUtils.isNotNullOrEmpty(ids)) {
+			Long id = CommonUtils.first(ids);
+			value = getForResolvedId(id);
+		}
+		return Domain.resolveTransactional(this, value, new Object[] { key });
+	}
+
+	public boolean isUnique(T key) {
+		return !duplicateKeys.contains(key);
+	}
 
 	protected void add(T k1, Long value) {
 		if (k1 == null) {
@@ -30,19 +44,5 @@ public class IdLookup<T, H extends HasIdAndLocalId> extends CacheLookup<T, H> {
 							this, k1, set), Domain.class, TaggedLogger.WARN);
 			duplicateKeys.add(k1);
 		}
-	}
-
-	public boolean isUnique(T key) {
-		return !duplicateKeys.contains(key);
-	}
-
-	public H getObject(T key) {
-		H value = null;
-		Set<Long> ids = get(key);
-		if (CommonUtils.isNotNullOrEmpty(ids)) {
-			Long id = CommonUtils.first(ids);
-			value = getForResolvedId(id);
-		}
-		return Domain.resolveTransactional(this, value, new Object[] { key });
 	}
 }

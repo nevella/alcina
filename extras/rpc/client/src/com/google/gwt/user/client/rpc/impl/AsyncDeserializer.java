@@ -15,6 +15,14 @@ class AsyncDeserializer implements RepeatingCommand {
 
 	private final ClientSerializationStreamReader reader;
 
+	private int sliceSize = 500;
+
+	private int idx2;
+
+	private Phase phase = Phase.INSTATIATE_EMPTY_SETUP;
+
+	private int size;
+
 	public AsyncDeserializer(ClientSerializationStreamReader reader) {
 		this.reader = reader;
 	}
@@ -22,10 +30,10 @@ class AsyncDeserializer implements RepeatingCommand {
 	@Override
 	public boolean execute() {
 		try {
-//			String msg = phase + " - " + idx2 + " - "
-//					+ System.currentTimeMillis();
-//			consoleLog(msg);
-//			System.out.println(msg);
+			// String msg = phase + " - " + idx2 + " - "
+			// + System.currentTimeMillis();
+			// consoleLog(msg);
+			// System.out.println(msg);
 			switch (phase) {
 			case INSTATIATE_EMPTY_SETUP:
 				typeTableLength = reader.getTypeTableLength();
@@ -82,27 +90,19 @@ class AsyncDeserializer implements RepeatingCommand {
 	}
 
 	private native void consoleLogOld(String s) /*-{
-		$wnd.console.log(s);
-	}-*/;
-
-	private int sliceSize = 500;
-
-	private int idx2;
-
-	private Phase phase = Phase.INSTATIATE_EMPTY_SETUP;
-
-	private int size;
+												$wnd.console.log(s);
+												}-*/;
 
 	private boolean deserializeProperties() throws SerializationException {
 		int sliceCount = sliceSize;
 		for (; sliceCount != 0 && idx2 < size; idx2++) {
 			Object instance = reader.seenArray.get(idx2);
-			//keep in sync with asyncdeserializer, clientserreader, serverserwriter
+			// keep in sync with asyncdeserializer, clientserreader,
+			// serverserwriter
 			boolean collectionOrMap = instance instanceof Collection
 					|| instance instanceof Map
 					|| instance instanceof MultikeyMap;
-			if (collectionOrMap
-					^ (phase == Phase.DESERIALIZE_COLLECTION_RUN)) {
+			if (collectionOrMap ^ (phase == Phase.DESERIALIZE_COLLECTION_RUN)) {
 				continue;
 			}
 			if (idx2 == 0) {

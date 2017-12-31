@@ -7,8 +7,8 @@ import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.EnumPlayer;
 import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
 
-public class PersistencePropAndLogWebDbConsort extends
-		Consort<PersistencePropAndLogInitState> {
+public class PersistencePropAndLogWebDbConsort
+		extends Consort<PersistencePropAndLogInitState> {
 	String dbName;
 
 	private RemoteLogPersister remoteLogPersister;
@@ -17,30 +17,36 @@ public class PersistencePropAndLogWebDbConsort extends
 
 	public ObjectStoreWebDbImpl propImpl;
 
-	class Player_PRE_PROPERTY_IMPL extends
+	public PersistencePropAndLogWebDbConsort(String dbName,
+			RemoteLogPersister remoteLogPersister) {
+		this.dbName = dbName;
+		this.remoteLogPersister = remoteLogPersister;
+		addPlayer(new Player_PRE_PROPERTY_IMPL());
+		addPlayer(new Player_POST_PROPERTY_IMPL());
+		addPlayer(new Player_PRE_LOG_IMPL());
+		addPlayer(new Player_POST_LOG_IMPL());
+		addEndpointPlayer();
+	}
+
+	class Player_POST_LOG_IMPL extends
 			EnumRunnableAsyncCallbackPlayer<Void, PersistencePropAndLogInitState> {
-		public Player_PRE_PROPERTY_IMPL() {
-			super(PersistencePropAndLogInitState.PRE_PROPERTY_IMPL);
+		public Player_POST_LOG_IMPL() {
+			super(PersistencePropAndLogInitState.POST_LOG_IMPL);
 		}
 
 		@Override
 		public void run() {
-			Database db;
-			try {
-				db = Database.openDatabase(dbName, "1.0", "Property store",
-						5000000);
-			} catch (DatabaseException e) {
-				// no db access
-				consort.finished();
-				return;
+			LogStore.get().registerDelegate(logImpl);
+			if (remoteLogPersister != null) {
+				LogStore.get().setRemoteLogPersister(remoteLogPersister);
+				remoteLogPersister.push();
 			}
-			propImpl = new ObjectStoreWebDbImpl(db,
-					"PropertyStore", this);
+			wasPlayed();
 		}
 	}
 
-	class Player_POST_PROPERTY_IMPL extends
-			EnumPlayer<PersistencePropAndLogInitState> {
+	class Player_POST_PROPERTY_IMPL
+			extends EnumPlayer<PersistencePropAndLogInitState> {
 		public Player_POST_PROPERTY_IMPL() {
 			super(PersistencePropAndLogInitState.POST_PROPERTY_IMPL);
 		}
@@ -65,32 +71,24 @@ public class PersistencePropAndLogWebDbConsort extends
 		}
 	}
 
-	class Player_POST_LOG_IMPL extends
+	class Player_PRE_PROPERTY_IMPL extends
 			EnumRunnableAsyncCallbackPlayer<Void, PersistencePropAndLogInitState> {
-		public Player_POST_LOG_IMPL() {
-			super(PersistencePropAndLogInitState.POST_LOG_IMPL);
+		public Player_PRE_PROPERTY_IMPL() {
+			super(PersistencePropAndLogInitState.PRE_PROPERTY_IMPL);
 		}
 
 		@Override
 		public void run() {
-			LogStore.get().registerDelegate(logImpl);
-			if (remoteLogPersister != null) {
-				LogStore.get().setRemoteLogPersister(remoteLogPersister);
-				remoteLogPersister.push();
+			Database db;
+			try {
+				db = Database.openDatabase(dbName, "1.0", "Property store",
+						5000000);
+			} catch (DatabaseException e) {
+				// no db access
+				consort.finished();
+				return;
 			}
-			wasPlayed();
+			propImpl = new ObjectStoreWebDbImpl(db, "PropertyStore", this);
 		}
 	}
-
-	public PersistencePropAndLogWebDbConsort(String dbName,
-			RemoteLogPersister remoteLogPersister) {
-		this.dbName = dbName;
-		this.remoteLogPersister = remoteLogPersister;
-		addPlayer(new Player_PRE_PROPERTY_IMPL());
-		addPlayer(new Player_POST_PROPERTY_IMPL());
-		addPlayer(new Player_PRE_LOG_IMPL());
-		addPlayer(new Player_POST_LOG_IMPL());
-		addEndpointPlayer();
-	}
-	
 }

@@ -56,6 +56,14 @@ public class ColumnsBuilder<T> {
 		table.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.DISABLED);
 	}
 
+	public void buildFromColumnMappings(ColumnMapper<T> mapper) {
+		List<ColumnMapper<T>.ColumnMapping> mappings = mapper.getMappings();
+		for (ColumnMapping columnMapping : mappings) {
+			col(columnMapping.name).function(columnMapping.mapping)
+					.asUnsafeHtml(columnMapping.asHtml).build();
+		}
+	}
+
 	public ColumnBuilder col(Enum enumValue) {
 		return new ColumnBuilder(enumValue,
 				HasDisplayName.displayName(enumValue));
@@ -149,6 +157,11 @@ public class ColumnsBuilder<T> {
 			this.name = name;
 		}
 
+		public ColumnBuilder asUnsafeHtml(boolean asUnsafeHtml) {
+			this.asUnsafeHtml = asUnsafeHtml;
+			return this;
+		}
+
 		public SortableColumn<T> build() {
 			EditInfo editInfo = new EditInfo();
 			editInfo.propertyName = editablePropertyName;
@@ -205,41 +218,6 @@ public class ColumnsBuilder<T> {
 			return col;
 		}
 
-		protected void setupEditInfo(EditInfo editInfo) {
-			Field field = null;
-			if (editableCell != null) {
-				editInfo.cell = editableCell;
-			} else {
-				field = GwittirBridge.get().getField(clazz,
-						editInfo.propertyName, true, true,
-						GwittirBridge.SIMPLE_FACTORY_NO_NULLS, null);
-				BoundWidgetProvider cellProvider = field.getCellProvider();
-				if (cellProvider instanceof ListBoxEnumProvider) {
-					ListBoxEnumProvider listBoxEnumProvider = (ListBoxEnumProvider) cellProvider;
-					Class<? extends Enum> enumClass = listBoxEnumProvider
-							.getEnumClass();
-					Renderer renderer = listBoxEnumProvider.getRenderer();
-					editInfo.cell = new PropertySingleSelectorCell(enumClass,
-							renderer, new FlatSearchSelector(enumClass, 1,
-									renderer, new EnumSupplier(enumClass)));
-				} else if (cellProvider instanceof DomainObjectSuggestCustomiser) {
-					DomainObjectSuggestCustomiser suggestCustomiser = (DomainObjectSuggestCustomiser) cellProvider;
-					Renderer renderer = suggestCustomiser.getRenderer();
-					editInfo.cell = new PropertyDomainSuggestCell(renderer,
-							(BoundSuggestBox) suggestCustomiser.get());
-				} else if (cellProvider instanceof DateBoxProvider) {
-					editInfo.cell = new PropertyDateCell();
-				} else if (cellProvider instanceof BoundWidgetProviderTextBox) {
-					editInfo.cell = new PropertyTextCell();
-				} else {
-					throw new UnsupportedOperationException();
-				}
-			}
-			editInfo.fieldUpdater = fieldUpdater != null ? fieldUpdater
-					: new PropertyFieldUpdater(editablePropertyName, field);
-			function = new PropertyFieldGetter(editablePropertyName, clazz);
-		}
-
 		public ColumnBuilder cell(Cell cell) {
 			this.cell = cell;
 			return this;
@@ -281,6 +259,11 @@ public class ColumnsBuilder<T> {
 			return this.style("numeric");
 		}
 
+		public ColumnBuilder place(Function<T, Place> placeFunction) {
+			this.placeFunction = placeFunction;
+			return this;
+		}
+
 		public ColumnBuilder reversed() {
 			this.reversed = true;
 			return this;
@@ -309,14 +292,39 @@ public class ColumnsBuilder<T> {
 			return this;
 		}
 
-		public ColumnBuilder place(Function<T, Place> placeFunction) {
-			this.placeFunction = placeFunction;
-			return this;
-		}
-
-		public ColumnBuilder asUnsafeHtml(boolean asUnsafeHtml) {
-			this.asUnsafeHtml = asUnsafeHtml;
-			return this;
+		protected void setupEditInfo(EditInfo editInfo) {
+			Field field = null;
+			if (editableCell != null) {
+				editInfo.cell = editableCell;
+			} else {
+				field = GwittirBridge.get().getField(clazz,
+						editInfo.propertyName, true, true,
+						GwittirBridge.SIMPLE_FACTORY_NO_NULLS, null);
+				BoundWidgetProvider cellProvider = field.getCellProvider();
+				if (cellProvider instanceof ListBoxEnumProvider) {
+					ListBoxEnumProvider listBoxEnumProvider = (ListBoxEnumProvider) cellProvider;
+					Class<? extends Enum> enumClass = listBoxEnumProvider
+							.getEnumClass();
+					Renderer renderer = listBoxEnumProvider.getRenderer();
+					editInfo.cell = new PropertySingleSelectorCell(enumClass,
+							renderer, new FlatSearchSelector(enumClass, 1,
+									renderer, new EnumSupplier(enumClass)));
+				} else if (cellProvider instanceof DomainObjectSuggestCustomiser) {
+					DomainObjectSuggestCustomiser suggestCustomiser = (DomainObjectSuggestCustomiser) cellProvider;
+					Renderer renderer = suggestCustomiser.getRenderer();
+					editInfo.cell = new PropertyDomainSuggestCell(renderer,
+							(BoundSuggestBox) suggestCustomiser.get());
+				} else if (cellProvider instanceof DateBoxProvider) {
+					editInfo.cell = new PropertyDateCell();
+				} else if (cellProvider instanceof BoundWidgetProviderTextBox) {
+					editInfo.cell = new PropertyTextCell();
+				} else {
+					throw new UnsupportedOperationException();
+				}
+			}
+			editInfo.fieldUpdater = fieldUpdater != null ? fieldUpdater
+					: new PropertyFieldUpdater(editablePropertyName, field);
+			function = new PropertyFieldGetter(editablePropertyName, clazz);
 		}
 	}
 
@@ -444,14 +452,6 @@ public class ColumnsBuilder<T> {
 
 		public boolean isEditable() {
 			return propertyName != null;
-		}
-	}
-
-	public void buildFromColumnMappings(ColumnMapper<T> mapper) {
-		List<ColumnMapper<T>.ColumnMapping> mappings = mapper.getMappings();
-		for (ColumnMapping columnMapping : mappings) {
-			col(columnMapping.name).function(columnMapping.mapping)
-					.asUnsafeHtml(columnMapping.asHtml).build();
 		}
 	}
 }

@@ -9,9 +9,11 @@ public class CachingConcurrentMap<I, O> extends CachingMap<I, O> {
 	public CachingConcurrentMap(ThrowingFunction<I, O> converter, int size) {
 		super(converter, new ConcurrentHashMap<I, O>(size));
 	}
-	public static class CachingConcurrentLcMap extends CachingConcurrentMap<String, String> {
+
+	public static class CachingConcurrentLcMap
+			extends CachingConcurrentMap<String, String> {
 		public CachingConcurrentLcMap() {
-			super(s -> s == null ? null : s.toLowerCase(),999);
+			super(s -> s == null ? null : s.toLowerCase(), 999);
 		}
 	}
 }

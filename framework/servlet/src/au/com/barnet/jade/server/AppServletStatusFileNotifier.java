@@ -14,13 +14,13 @@ public class AppServletStatusFileNotifier {
 
 	File destroyed = new File(dataFolder.getPath() + "/" + "webapp.destroyed");
 
-	public void ready() {
+	public void deploying() {
 		try {
+			ready.delete();
 			destroyed.delete();
-			deploying.delete();
-			ready.createNewFile();
+			deploying.createNewFile();
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			e.printStackTrace();
 		}
 	}
 
@@ -34,13 +34,13 @@ public class AppServletStatusFileNotifier {
 		}
 	}
 
-	public void deploying() {
+	public void ready() {
 		try {
-			ready.delete();
 			destroyed.delete();
-			deploying.createNewFile();
+			deploying.delete();
+			ready.createNewFile();
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new WrappedRuntimeException(e);
 		}
 	}
 }

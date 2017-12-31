@@ -51,6 +51,8 @@ public class ActionProgress extends Composite
 		implements SourcesPropertyChangeEvents {
 	private static final String CANCELLED = " - Cancelled";
 
+	public static int REFRESH_DELAY_MS = 3500;
+
 	protected transient MutablePropertyChangeSupport propertyChangeSupport = new MutablePropertyChangeSupport(
 			this);
 
@@ -69,8 +71,6 @@ public class ActionProgress extends Composite
 	private HTML times;
 
 	private FlowPanel bar;
-
-	public static int REFRESH_DELAY_MS = 3500;
 
 	private Link cancelLink;
 

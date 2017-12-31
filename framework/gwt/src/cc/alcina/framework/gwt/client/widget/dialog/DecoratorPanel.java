@@ -64,23 +64,30 @@ import com.google.gwt.user.client.ui.Widget;
  * <li>.gwt-DecoratorPanel .topLeft { the top left cell }</li>
  * <li>.gwt-DecoratorPanel .topLeftInner { the inner element of the cell }</li>
  * <li>.gwt-DecoratorPanel .topCenter { the top center cell }</li>
- * <li>.gwt-DecoratorPanel .topCenterInner { the inner element of the cell }</li>
+ * <li>.gwt-DecoratorPanel .topCenterInner { the inner element of the cell }
+ * </li>
  * <li>.gwt-DecoratorPanel .topRight { the top right cell }</li>
  * <li>.gwt-DecoratorPanel .topRightInner { the inner element of the cell }</li>
  * <li>.gwt-DecoratorPanel .middle { the middle row }</li>
  * <li>.gwt-DecoratorPanel .middleLeft { the middle left cell }</li>
- * <li>.gwt-DecoratorPanel .middleLeftInner { the inner element of the cell }</li>
+ * <li>.gwt-DecoratorPanel .middleLeftInner { the inner element of the cell }
+ * </li>
  * <li>.gwt-DecoratorPanel .middleCenter { the middle center cell }</li>
- * <li>.gwt-DecoratorPanel .middleCenterInner { the inner element of the cell }</li>
+ * <li>.gwt-DecoratorPanel .middleCenterInner { the inner element of the cell }
+ * </li>
  * <li>.gwt-DecoratorPanel .middleRight { the middle right cell }</li>
- * <li>.gwt-DecoratorPanel .middleRightInner { the inner element of the cell }</li>
+ * <li>.gwt-DecoratorPanel .middleRightInner { the inner element of the cell }
+ * </li>
  * <li>.gwt-DecoratorPanel .bottom { the bottom row }</li>
  * <li>.gwt-DecoratorPanel .bottomLeft { the bottom left cell }</li>
- * <li>.gwt-DecoratorPanel .bottomLeftInner { the inner element of the cell }</li>
+ * <li>.gwt-DecoratorPanel .bottomLeftInner { the inner element of the cell }
+ * </li>
  * <li>.gwt-DecoratorPanel .bottomCenter { the bottom center cell }</li>
- * <li>.gwt-DecoratorPanel .bottomCenterInner { the inner element of the cell }</li>
+ * <li>.gwt-DecoratorPanel .bottomCenterInner { the inner element of the cell }
+ * </li>
  * <li>.gwt-DecoratorPanel .bottomRight { the bottom right cell }</li>
- * <li>.gwt-DecoratorPanel .bottomRightInner { the inner element of the cell }</li>
+ * <li>.gwt-DecoratorPanel .bottomRightInner { the inner element of the cell }
+ * </li>
  * </ul>
  */
 public class DecoratorPanel extends SimplePanel {
@@ -94,6 +101,22 @@ public class DecoratorPanel extends SimplePanel {
 	 */
 	private static final String[] DEFAULT_ROW_STYLENAMES = { "top", "middle",
 			"bottom" };
+
+	/**
+	 * Create a new table cell with a specific style name.
+	 * 
+	 * @param styleName
+	 *            the style name
+	 * @return the new cell {@link Element}
+	 */
+	private static Element createTD(String styleName) {
+		Element tdElem = DOM.createTD();
+		Element inner = DOM.createDiv();
+		DOM.appendChild(tdElem, inner);
+		setStyleName(tdElem, styleName);
+		setStyleName(inner, styleName + "Inner");
+		return tdElem;
+	}
 
 	/**
 	 * Create a new row with a specific style name. The row will contain three
@@ -120,22 +143,6 @@ public class DecoratorPanel extends SimplePanel {
 			DOM.appendChild(trElem, createTD(styleName + "Right"));
 		}
 		return trElem;
-	}
-
-	/**
-	 * Create a new table cell with a specific style name.
-	 * 
-	 * @param styleName
-	 *            the style name
-	 * @return the new cell {@link Element}
-	 */
-	private static Element createTD(String styleName) {
-		Element tdElem = DOM.createTD();
-		Element inner = DOM.createDiv();
-		DOM.appendChild(tdElem, inner);
-		setStyleName(tdElem, styleName);
-		setStyleName(inner, styleName + "Inner");
-		return tdElem;
 	}
 
 	/**

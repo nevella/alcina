@@ -33,6 +33,29 @@ import com.google.gwt.dev.js.ast.JsTry;
  */
 public class JsWrapIos6Body {
 	/**
+	 * If this permutation may be executed on WebKit, rewrite a >> b as ~~a >>
+	 * b.
+	 * 
+	 * @param program
+	 * @param logger
+	 * @param permutationProperties
+	 * @return true if any changes were made
+	 */
+	public static boolean exec(JsProgram program, TreeLogger logger,
+			PermutationProperties permutationProperties) {
+		boolean seenWebKit = false;
+		BindingProperties softProperties = permutationProperties
+				.getSoftProperties().get(0);
+		String propValue = softProperties.getString("mobile.user.agent", "--");
+		if (!propValue.equals("ios6")) {
+			return false;
+		}
+		MyVisitor v = new MyVisitor();
+		v.accept(program);
+		return v.didChange();
+	}
+
+	/**
 	 * wrap method body in try/catch
 	 */
 	private static class MyVisitor extends JsModVisitor {
@@ -59,28 +82,5 @@ public class JsWrapIos6Body {
 			x.setBody(functionBody);
 			didChange = true;
 		}
-	}
-
-	/**
-	 * If this permutation may be executed on WebKit, rewrite a >> b as ~~a >>
-	 * b.
-	 * 
-	 * @param program
-	 * @param logger
-	 * @param permutationProperties
-	 * @return true if any changes were made
-	 */
-	public static boolean exec(JsProgram program, TreeLogger logger,
-			PermutationProperties permutationProperties) {
-		boolean seenWebKit = false;
-		BindingProperties softProperties = permutationProperties
-				.getSoftProperties().get(0);
-		String propValue = softProperties.getString("mobile.user.agent", "--");
-		if (!propValue.equals("ios6")) {
-			return false;
-		}
-		MyVisitor v = new MyVisitor();
-		v.accept(program);
-		return v.didChange();
 	}
 }

@@ -36,6 +36,63 @@ public class NodeChain {
 		return chain;
 	}
 
+	public static SplitResult splitAlong(NodeChainContext context,
+			NodeChain chain, boolean after) {
+		SplitResult result = new SplitResult();
+		result.splitIncluding = new NodeChain(context);
+		result.splitNotIncluding = new NodeChain(context);
+		for (int idx = chain.length() - 1; idx >= 0; idx--) {
+			Node current = chain.get(idx);
+			result.splitIncluding.chain.add(0, current);
+			Node parent = current.getParentNode();
+			List<Node> kids = XmlUtils.nodeListToList(parent.getChildNodes());
+			int kidIndex = kids.indexOf(current);
+			boolean atEdgeClosestToDirection = after
+					? kidIndex == kids.size() - 1 : kidIndex == 0;
+			boolean cloneParent = result.splitNotIncluding.length() > 0
+					|| !atEdgeClosestToDirection;
+			if (cloneParent) {
+				// splitNotIncluding is always a node ahead of the iteration
+				// (we need the parent)
+				if (idx > 0) {
+					Node clonedParent = parent.cloneNode(false);
+					// implies !atEdgeClosestToDirection
+					if (after) {
+						if (result.splitNotIncluding.length() > 0) {
+							clonedParent.appendChild(
+									result.splitNotIncluding.get(0));
+						}
+						for (int idx2 = kidIndex + 1; idx2 < kids
+								.size(); idx2++) {
+							clonedParent.appendChild(kids.get(idx2));
+						}
+					} else {
+						for (int idx2 = 0; idx2 < kidIndex; idx2++) {
+							clonedParent.appendChild(kids.get(idx2));
+						}
+						if (result.splitNotIncluding.length() > 0) {
+							clonedParent.appendChild(
+									result.splitNotIncluding.get(0));
+						}
+					}
+					result.splitNotIncluding.chain.add(0, clonedParent);
+				}
+			}
+		}
+		if (result.splitNotIncluding.length() > 0) {
+			Node incRoot = result.splitIncluding.get(0);
+			if (after) {
+				incRoot.getParentNode().insertBefore(
+						result.splitNotIncluding.get(0),
+						incRoot.getNextSibling());
+			} else {
+				incRoot.getParentNode()
+						.insertBefore(result.splitNotIncluding.get(0), incRoot);
+			}
+		}
+		return result;
+	}
+
 	Node fromChild;
 
 	public List<Node> chain = new ArrayList<Node>();
@@ -150,63 +207,6 @@ public class NodeChain {
 			return ((Element) n).getTagName();
 		}
 		return null;
-	}
-
-	public static SplitResult splitAlong(NodeChainContext context,
-			NodeChain chain, boolean after) {
-		SplitResult result = new SplitResult();
-		result.splitIncluding = new NodeChain(context);
-		result.splitNotIncluding = new NodeChain(context);
-		for (int idx = chain.length() - 1; idx >= 0; idx--) {
-			Node current = chain.get(idx);
-			result.splitIncluding.chain.add(0, current);
-			Node parent = current.getParentNode();
-			List<Node> kids = XmlUtils.nodeListToList(parent.getChildNodes());
-			int kidIndex = kids.indexOf(current);
-			boolean atEdgeClosestToDirection = after
-					? kidIndex == kids.size() - 1 : kidIndex == 0;
-			boolean cloneParent = result.splitNotIncluding.length() > 0
-					|| !atEdgeClosestToDirection;
-			if (cloneParent) {
-				// splitNotIncluding is always a node ahead of the iteration
-				// (we need the parent)
-				if (idx > 0) {
-					Node clonedParent = parent.cloneNode(false);
-					// implies !atEdgeClosestToDirection
-					if (after) {
-						if (result.splitNotIncluding.length() > 0) {
-							clonedParent.appendChild(
-									result.splitNotIncluding.get(0));
-						}
-						for (int idx2 = kidIndex + 1; idx2 < kids
-								.size(); idx2++) {
-							clonedParent.appendChild(kids.get(idx2));
-						}
-					} else {
-						for (int idx2 = 0; idx2 < kidIndex; idx2++) {
-							clonedParent.appendChild(kids.get(idx2));
-						}
-						if (result.splitNotIncluding.length() > 0) {
-							clonedParent.appendChild(
-									result.splitNotIncluding.get(0));
-						}
-					}
-					result.splitNotIncluding.chain.add(0, clonedParent);
-				}
-			}
-		}
-		if (result.splitNotIncluding.length() > 0) {
-			Node incRoot = result.splitIncluding.get(0);
-			if (after) {
-				incRoot.getParentNode().insertBefore(
-						result.splitNotIncluding.get(0),
-						incRoot.getNextSibling());
-			} else {
-				incRoot.getParentNode()
-						.insertBefore(result.splitNotIncluding.get(0), incRoot);
-			}
-		}
-		return result;
 	}
 
 	public static class NodeChainContext {

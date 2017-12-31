@@ -23,11 +23,21 @@ import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.resources.FileResource;
 
 public class BackupFiles extends Task {
-	private Vector filesets = new Vector();
-
-	public void addFileset(FileSet fileset) {
-		filesets.add(fileset);
+	public static void writeStreamToStream(InputStream is, OutputStream os)
+			throws IOException {
+		BufferedOutputStream fos = new BufferedOutputStream(os);
+		InputStream in = new BufferedInputStream(is);
+		int bufLength = 8192;
+		byte[] buffer = new byte[bufLength];
+		int result;
+		while ((result = in.read(buffer)) != -1) {
+			fos.write(buffer, 0, result);
+		}
+		fos.flush();
+		fos.close();
 	}
+
+	private Vector filesets = new Vector();
 
 	private String backupPath;
 
@@ -36,6 +46,10 @@ public class BackupFiles extends Task {
 	private boolean flatten;
 
 	private int maxDays;
+
+	public void addFileset(FileSet fileset) {
+		filesets.add(fileset);
+	}
 
 	@Override
 	public void execute() throws BuildException {
@@ -91,10 +105,42 @@ public class BackupFiles extends Task {
 		}
 	}
 
+	public String getBackupPath() {
+		return this.backupPath;
+	}
+
+	public int getMaxBackups() {
+		return this.maxBackups;
+	}
+
+	public int getMaxDays() {
+		return maxDays;
+	}
+
+	public boolean isFlatten() {
+		return this.flatten;
+	}
+
+	public void setBackupPath(String backupPath) {
+		this.backupPath = backupPath;
+	}
+
+	public void setFlatten(boolean flatten) {
+		this.flatten = flatten;
+	}
+
+	public void setMaxBackups(int maxBackups) {
+		this.maxBackups = maxBackups;
+	}
+
+	public void setMaxDays(int maxDays) {
+		this.maxDays = maxDays;
+	}
+
 	protected void rotate(File folder) {
 		final Pattern np = Pattern.compile("(.+)(\\.\\d+)");
-		ArrayList<File> backups = new ArrayList<File>(Arrays.asList(folder
-				.listFiles(new FilenameFilter() {
+		ArrayList<File> backups = new ArrayList<File>(
+				Arrays.asList(folder.listFiles(new FilenameFilter() {
 					@Override
 					public boolean accept(File dir, String name) {
 						return np.matcher(name).matches();
@@ -103,9 +149,9 @@ public class BackupFiles extends Task {
 		Collections.sort(backups, new Comparator<File>() {
 			@Override
 			public int compare(File o1, File o2) {
-				return o1.lastModified() < o2.lastModified() ? -1 : o1
-						.lastModified() == o2.lastModified() ? -o1.getName()
-						.compareTo(o2.getName()) : 1;
+				return o1.lastModified() < o2.lastModified() ? -1
+						: o1.lastModified() == o2.lastModified()
+								? -o1.getName().compareTo(o2.getName()) : 1;
 			}
 		});
 		for (int i = backups.size() - 1; i >= 0; i--) {
@@ -120,51 +166,5 @@ public class BackupFiles extends Task {
 						+ "." + (i + 2)));
 			}
 		}
-	}
-
-	public static void writeStreamToStream(InputStream is, OutputStream os)
-			throws IOException {
-		BufferedOutputStream fos = new BufferedOutputStream(os);
-		InputStream in = new BufferedInputStream(is);
-		int bufLength = 8192;
-		byte[] buffer = new byte[bufLength];
-		int result;
-		while ((result = in.read(buffer)) != -1) {
-			fos.write(buffer, 0, result);
-		}
-		fos.flush();
-		fos.close();
-	}
-
-	public String getBackupPath() {
-		return this.backupPath;
-	}
-
-	public void setBackupPath(String backupPath) {
-		this.backupPath = backupPath;
-	}
-
-	public int getMaxBackups() {
-		return this.maxBackups;
-	}
-
-	public void setMaxBackups(int maxBackups) {
-		this.maxBackups = maxBackups;
-	}
-
-	public boolean isFlatten() {
-		return this.flatten;
-	}
-
-	public void setFlatten(boolean flatten) {
-		this.flatten = flatten;
-	}
-
-	public int getMaxDays() {
-		return maxDays;
-	}
-
-	public void setMaxDays(int maxDays) {
-		this.maxDays = maxDays;
 	}
 }

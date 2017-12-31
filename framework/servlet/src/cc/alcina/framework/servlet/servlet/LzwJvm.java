@@ -9,6 +9,16 @@ import java.util.Map;
 public class LzwJvm {
 	static int maxDictSize = 4096;
 
+	public static String compressToUtf16Str(String uncompressed) {
+		List<Integer> arr = new LZWRosetta().compress(uncompressed);
+		return intArrToUtf16Str(arr);
+	}
+
+	public static String decompressUtf16Str(String compressed) {
+		List<Integer> arr = utf16StrToIntArr(compressed);
+		return new LZWRosetta().decompress(arr);
+	}
+
 	public static String intArrToUtf16Str(List<Integer> arr) {
 		StringBuilder result = new StringBuilder();
 		for (Integer i : arr) {
@@ -25,16 +35,6 @@ public class LzwJvm {
 		return result;
 	}
 
-	public static String compressToUtf16Str(String uncompressed) {
-		List<Integer> arr = new LZWRosetta().compress(uncompressed);
-		return intArrToUtf16Str(arr);
-	}
-
-	public static String decompressUtf16Str(String compressed) {
-		List<Integer> arr = utf16StrToIntArr(compressed);
-		return new LZWRosetta().decompress(arr);
-	}
-
 	static class LZWRosetta {
 		/** Compress a string to a list of output symbols. */
 		public List<Integer> compress(String uncompressed) {
@@ -48,7 +48,7 @@ public class LzwJvm {
 				boolean reset = (dictSize == maxDictSize);
 				if (dictionary == null || reset) {
 					dictionary = new LinkedHashMap<String, Integer>();
-					dictSize=256;
+					dictSize = 256;
 					for (int i = 0; i < 256; i++) {
 						dictionary.put("" + (char) i, i);
 					}
@@ -79,7 +79,7 @@ public class LzwJvm {
 				String entry;
 				boolean reset = (dictSize == maxDictSize);
 				if (dictionary == null || reset) {
-					dictSize=256;
+					dictSize = 256;
 					dictionary = new HashMap<Integer, String>();
 					for (int i = 0; i < 256; i++) {
 						dictionary.put(i, "" + (char) i);
@@ -90,7 +90,8 @@ public class LzwJvm {
 				else if (k == dictSize)
 					entry = w + w.charAt(0);
 				else
-					throw new IllegalArgumentException("Bad compressed k: " + k);
+					throw new IllegalArgumentException(
+							"Bad compressed k: " + k);
 				result += entry;
 				// Add w+entry[0] to the dictionary.
 				dictionary.put(dictSize++, w + entry.charAt(0));

@@ -5,7 +5,14 @@ import com.google.gwt.regexp.shared.RegExp;
 
 public abstract class BasePlaceRegexTokenizer<P extends Place>
 		extends BasePlaceTokenizer<P> {
-	protected abstract RegExp getRegExpInstance();
+	@Override
+	public abstract P getPlace(String token);
+
+	@Override
+	public abstract String getPrefix();
+
+	@Override
+	public abstract String getToken(P place);
 
 	@Override
 	public boolean handles(String token) {
@@ -13,21 +20,14 @@ public abstract class BasePlaceRegexTokenizer<P extends Place>
 	}
 
 	@Override
-	public abstract String getPrefix();
-
-	@Override
 	protected P getPlace0(String token) {
 		throw new UnsupportedOperationException();
 	}
+
+	protected abstract RegExp getRegExpInstance();
 
 	@Override
 	protected void getToken0(P place) {
 		throw new UnsupportedOperationException();
 	}
-
-	@Override
-	public abstract String getToken(P place);
-
-	@Override
-	public abstract P getPlace(String token);
 }

@@ -22,6 +22,8 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 	public static final String CONTEXT_IGNORE_MISSING_JSON_VALUES = JsonPropertyAccessor.class
 			.getName() + ".CONTEXT_IGNORE_MISSING_JSON_VALUES";
 
+	private static transient Object nullKeyMarker = new Object();
+
 	private boolean ignoreNullWrites;
 
 	private String defaultObjectPrefix;
@@ -32,11 +34,6 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 
 	public JsonPropertyAccessor() {
 		this(true);
-	}
-
-	@Override
-	public boolean hasPropertyKey(Object bean, String propertyName) {
-		return getPropertyValue0(bean, propertyName, true) != nullKeyMarker;
 	}
 
 	public JsonPropertyAccessor(boolean ignoreNullWrites) {
@@ -70,7 +67,38 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 		return getPropertyValue0(bean, propertyName, false);
 	}
 
-	private static transient Object nullKeyMarker = new Object();
+	@Override
+	public boolean hasPropertyKey(Object bean, String propertyName) {
+		return getPropertyValue0(bean, propertyName, true) != nullKeyMarker;
+	}
+
+	public JsonPropertyAccessor returnJsonArray() {
+		this.returnJsonArray = true;
+		return this;
+	}
+
+	public JsonPropertyAccessor returnNullIfNotFound() {
+		this.returnNullIfNotFound = true;
+		return this;
+	}
+
+	public void setPropertyValue(Object bean, String propertyName,
+			Object value) {
+		try {
+			ResolvedJson resolved = new ResolvedJson(bean, propertyName, true);
+			if (resolved.invalid) {
+				throw new NoSuchVariantPropertyException(propertyName);
+			}
+			JSONObject jsonObject = resolved.leaf;
+			propertyName = resolved.resolvedPropertyName;
+			if (ignoreNullWrites && value == null) {
+				return;
+			}
+			jsonObject.put(propertyName, value);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
 	private Object getPropertyValue0(Object bean, String propertyName,
 			boolean returnNullKeyMarker) {
@@ -116,34 +144,6 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 		} else {
 			throw new NoSuchVariantPropertyException(propertyName);
 		}
-	}
-
-	public void setPropertyValue(Object bean, String propertyName,
-			Object value) {
-		try {
-			ResolvedJson resolved = new ResolvedJson(bean, propertyName, true);
-			if (resolved.invalid) {
-				throw new NoSuchVariantPropertyException(propertyName);
-			}
-			JSONObject jsonObject = resolved.leaf;
-			propertyName = resolved.resolvedPropertyName;
-			if (ignoreNullWrites && value == null) {
-				return;
-			}
-			jsonObject.put(propertyName, value);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public JsonPropertyAccessor returnNullIfNotFound() {
-		this.returnNullIfNotFound = true;
-		return this;
-	}
-
-	public JsonPropertyAccessor returnJsonArray() {
-		this.returnJsonArray = true;
-		return this;
 	}
 
 	class ResolvedJson {

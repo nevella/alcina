@@ -45,33 +45,15 @@ import cc.alcina.framework.gwt.client.widget.richtext.RichTextToolbar;
  */
 public class RichTextArea extends AbstractBoundWidget<String> implements
 		Focusable, HasAllKeyHandlers, HasAllFocusHandlers, HasClickHandlers {
-	public void setFocus(boolean focused) {
-		this.base.setFocus(focused);
-	}
-
 	private com.google.gwt.user.client.ui.RichTextArea base = new com.google.gwt.user.client.ui.RichTextArea();
 
-	public com.google.gwt.user.client.ui.RichTextArea getBase() {
-		return this.base;
-	}
-
 	private RichTextToolbar toolbar = createToolbar();
-
-	protected RichTextToolbar createToolbar() {
-		return new RichTextToolbar(base);
-	}
-
-	public String getTitle() {
-		return this.base.getTitle();
-	}
-
-	public void setTitle(String title) {
-		this.base.setTitle(title);
-	}
 
 	private String old;
 
 	private final String defaultFontSize;
+
+	private boolean maximised = false;
 
 	@SuppressWarnings("unchecked")
 	public RichTextArea() {
@@ -128,47 +110,6 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 		super.initWidget(fp);
 	}
 
-	private boolean maximised = false;
-
-	public String getValue() {
-		return base.getHTML();
-	}
-
-	public void setValue(String value) {
-		old = this.getValue();
-		if (value != old && value != null && !value.equals(old)) {
-			base.setHTML(value);
-			this.changes.firePropertyChange("value", old, this.getValue());
-		}
-	}
-
-	@Override
-	protected void onDetach() {
-		changes.firePropertyChange("value", old, getValue());
-		super.onDetach();
-	}
-
-	protected native void styleBody(Element elem, String defaultFontSize) /*-{
-	if (elem.contentWindow && elem.contentWindow.document
-		&& elem.contentWindow.document.documentElement) {
-		elem.contentWindow.document.documentElement.setAttribute("style",
-			"font-family: Arial; margin: 2px;font-size:"
-				+ defaultFontSize);
-	}
-	}-*/;
-
-	public int getTabIndex() {
-		return this.base.getTabIndex();
-	}
-
-	public void setAccessKey(char key) {
-		this.base.setAccessKey(key);
-	}
-
-	public void setTabIndex(int index) {
-		this.base.setTabIndex(index);
-	}
-
 	public HandlerRegistration addBlurHandler(BlurHandler handler) {
 		return this.base.addBlurHandler(handler);
 	}
@@ -192,4 +133,63 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 	public HandlerRegistration addKeyUpHandler(KeyUpHandler handler) {
 		return this.base.addKeyUpHandler(handler);
 	}
+
+	public com.google.gwt.user.client.ui.RichTextArea getBase() {
+		return this.base;
+	}
+
+	public int getTabIndex() {
+		return this.base.getTabIndex();
+	}
+
+	public String getTitle() {
+		return this.base.getTitle();
+	}
+
+	public String getValue() {
+		return base.getHTML();
+	}
+
+	public void setAccessKey(char key) {
+		this.base.setAccessKey(key);
+	}
+
+	public void setFocus(boolean focused) {
+		this.base.setFocus(focused);
+	}
+
+	public void setTabIndex(int index) {
+		this.base.setTabIndex(index);
+	}
+
+	public void setTitle(String title) {
+		this.base.setTitle(title);
+	}
+
+	public void setValue(String value) {
+		old = this.getValue();
+		if (value != old && value != null && !value.equals(old)) {
+			base.setHTML(value);
+			this.changes.firePropertyChange("value", old, this.getValue());
+		}
+	}
+
+	protected RichTextToolbar createToolbar() {
+		return new RichTextToolbar(base);
+	}
+
+	@Override
+	protected void onDetach() {
+		changes.firePropertyChange("value", old, getValue());
+		super.onDetach();
+	}
+
+	protected native void styleBody(Element elem, String defaultFontSize) /*-{
+																			if (elem.contentWindow && elem.contentWindow.document
+																			&& elem.contentWindow.document.documentElement) {
+																			elem.contentWindow.document.documentElement.setAttribute("style",
+																			"font-family: Arial; margin: 2px;font-size:"
+																			+ defaultFontSize);
+																			}
+																			}-*/;
 }

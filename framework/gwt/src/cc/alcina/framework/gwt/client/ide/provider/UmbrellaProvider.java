@@ -21,8 +21,8 @@ public interface UmbrellaProvider<T> {
 
 	public List<T> getUmbrellaObjects(String prefix);
 
-	public static class UmbrellaProviderLetterSecondLetter<T> implements
-			UmbrellaProvider<T> {
+	public static class UmbrellaProviderLetterSecondLetter<T>
+			implements UmbrellaProvider<T> {
 		private final boolean withSecondLetter;
 
 		private Set<String> childPrefixLkp;
@@ -68,10 +68,10 @@ public interface UmbrellaProvider<T> {
 				}
 				String objectName = textProvider.getObjectName(t, reflector)
 						.toLowerCase();
-				String s1 = objectName.length() > 0 ? objectName
-						.substring(0, 1) : "-";
-				String s2 = objectName.length() > 1 ? objectName
-						.substring(0, 2) : "-";
+				String s1 = objectName.length() > 0 ? objectName.substring(0, 1)
+						: "-";
+				String s2 = objectName.length() > 1 ? objectName.substring(0, 2)
+						: "-";
 				if (!childPrefixLkp.contains(s1)) {
 					childPrefixes.add("", s1);
 					childPrefixLkp.add(s1);
@@ -89,15 +89,15 @@ public interface UmbrellaProvider<T> {
 		}
 	}
 
-	public static class UmbrellaProviderPassthrough<T> implements
-			UmbrellaProvider<T> {
+	public static class UmbrellaProviderPassthrough<T>
+			implements UmbrellaProvider<T> {
+		private List<T> objects;
+
 		@Override
 		public void forCollection(Collection<T> collection,
 				CollectionFilter<T> collectionFilter) {
 			objects = CollectionFilters.filter(collection, collectionFilter);
 		}
-
-		private List<T> objects;
 
 		@Override
 		public List<String> getUmbrellaNames(String prefix) {

@@ -8,39 +8,39 @@ import org.w3c.dom.Text;
 import cc.alcina.framework.entity.XmlUtils.SurroundingBlockTuple;
 
 public interface TokenParserPeer<T extends ParserToken, S extends AbstractParserSlice<T>> {
-	ParserContext getContext();
-
-	boolean ignoreCitationsInBlock(String content);
-
-	void resetContext(boolean clearMatched);
-
-	boolean processMatch() throws TokenParserException;
-
-	List<T> getTokens();
-
-	S validateMatch(S bestMatch);
-
-	boolean ignoreNode(Node n);
-
-	boolean reverseItalicsForBlocklikeAround(Text txt,
+	boolean continueBlock(SurroundingBlockTuple lastSurroundingTuple,
 			SurroundingBlockTuple surroundingTuple);
 
 	void flushRunContextAndCatch(boolean end);
 
-	boolean isEmphasised(Text t);
-
-	boolean isBold(Node n);
-
-	boolean isMultiLine();
-
-	boolean continueBlock(SurroundingBlockTuple lastSurroundingTuple,
-			SurroundingBlockTuple surroundingTuple);
+	ParserContext getContext();
 
 	default SurroundingBlockTuple getSurroundingBlockTuple(Node n) {
 		return null;
 	}
 
-	default boolean ignorePrecedingExceptions(){
+	List<T> getTokens();
+
+	boolean ignoreCitationsInBlock(String content);
+
+	boolean ignoreNode(Node n);
+
+	default boolean ignorePrecedingExceptions() {
 		return false;
 	}
+
+	boolean isBold(Node n);
+
+	boolean isEmphasised(Text t);
+
+	boolean isMultiLine();
+
+	boolean processMatch() throws TokenParserException;
+
+	void resetContext(boolean clearMatched);
+
+	boolean reverseItalicsForBlocklikeAround(Text txt,
+			SurroundingBlockTuple surroundingTuple);
+
+	S validateMatch(S bestMatch);
 }

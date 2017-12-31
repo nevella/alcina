@@ -11,16 +11,18 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
-public class DtrSimpleAdminPersistenceAction extends
-		RemoteActionWithParameters<DeltaApplicationRecord> implements
-		Serializable {
+public class DtrSimpleAdminPersistenceAction
+		extends RemoteActionWithParameters<DeltaApplicationRecord>
+		implements Serializable {
 	public DtrSimpleAdminPersistenceAction() {
 		DeltaApplicationRecord wrapper = new DeltaApplicationRecord();
 		if (GWT.isClient()) {
 			ClientInstance clientInstance = ClientBase.getClientInstance();
 			wrapper.setClientInstanceAuth(clientInstance.getAuth());
 			wrapper.setClientInstanceId(clientInstance.getId());
-			wrapper.setRequestId(Registry.impl(CommitToStorageTransformListener.class).getLocalRequestId());
+			wrapper.setRequestId(
+					Registry.impl(CommitToStorageTransformListener.class)
+							.getLocalRequestId());
 		}
 		setParameters(wrapper);
 	}

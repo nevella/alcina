@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Annotation;
@@ -21,7 +20,6 @@ import java.lang.annotation.RetentionPolicy;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 
-
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @ClientVisible
@@ -29,8 +27,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
  *
  * @author Nick Reddel
  */
-
- public @interface Permission {
+public @interface Permission {
 	AccessLevel access() default AccessLevel.DEVELOPER;
 
 	String rule() default "";
@@ -44,12 +41,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 						return AccessLevel.ROOT;
 					}
 
-					public String rule() {
-						return null;
-					}
-
 					public Class<? extends Annotation> annotationType() {
 						return Permission.class;
+					}
+
+					public String rule() {
+						return null;
 					}
 				};
 			case EVERYONE:
@@ -58,12 +55,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 						return AccessLevel.EVERYONE;
 					}
 
-					public String rule() {
-						return null;
-					}
-
 					public Class<? extends Annotation> annotationType() {
 						return Permission.class;
+					}
+
+					public String rule() {
+						return null;
 					}
 				};
 			case ADMIN:
@@ -72,12 +69,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 						return AccessLevel.ADMIN;
 					}
 
-					public String rule() {
-						return null;
-					}
-
 					public Class<? extends Annotation> annotationType() {
 						return Permission.class;
+					}
+
+					public String rule() {
+						return null;
 					}
 				};
 			case ADMIN_OR_OWNER:
@@ -86,12 +83,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 						return AccessLevel.ADMIN_OR_OWNER;
 					}
 
-					public String rule() {
-						return null;
-					}
-
 					public Class<? extends Annotation> annotationType() {
 						return Permission.class;
+					}
+
+					public String rule() {
+						return null;
 					}
 				};
 			case LOGGED_IN:
@@ -100,12 +97,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 						return AccessLevel.LOGGED_IN;
 					}
 
-					public String rule() {
-						return null;
-					}
-
 					public Class<? extends Annotation> annotationType() {
 						return Permission.class;
+					}
+
+					public String rule() {
+						return null;
 					}
 				};
 			default:

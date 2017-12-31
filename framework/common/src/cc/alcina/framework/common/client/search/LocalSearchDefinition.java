@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.search;
 
 import java.util.Collection;
@@ -19,28 +18,30 @@ import java.util.Collection;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 
-
 /**
  *
  * @author Nick Reddel
  */
-
- public class LocalSearchDefinition extends SearchDefinition {
+public class LocalSearchDefinition extends SearchDefinition {
 	static final transient long serialVersionUID = -1L;
 
-	protected CollectionFilter buildFilter(){
-		return null;
-	}
-	@SuppressWarnings("unchecked")
-	public Collection search(){
-		CollectionFilter filter = buildFilter();
-		return TransformManager.get().filter(getResultClass(), filter);
-	}
-	public void setResultClass(Class resultClass) {
-		this.resultClass = resultClass;
-	}
+	private Class resultClass;
+
 	public Class getResultClass() {
 		return resultClass;
 	}
-	private Class resultClass;
+
+	@SuppressWarnings("unchecked")
+	public Collection search() {
+		CollectionFilter filter = buildFilter();
+		return TransformManager.get().filter(getResultClass(), filter);
+	}
+
+	public void setResultClass(Class resultClass) {
+		this.resultClass = resultClass;
+	}
+
+	protected CollectionFilter buildFilter() {
+		return null;
+	}
 }

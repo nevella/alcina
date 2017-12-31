@@ -13,12 +13,10 @@
  */
 package cc.alcina.framework.common.client.remote;
 
-
 /**
  * 
  * @author Nick Reddel
  */
-public abstract class CommonRemoteServiceAsyncProvider<CRSA extends CommonRemoteServiceAsync> extends RemoteServiceProvider<CRSA> {
-	
-	
+public abstract class CommonRemoteServiceAsyncProvider<CRSA extends CommonRemoteServiceAsync>
+		extends RemoteServiceProvider<CRSA> {
 }

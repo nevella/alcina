@@ -11,10 +11,11 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.entity;
+
 /**
  * Indicates there should only be one persistent instance, shared for all users
+ * 
  * @author nick@alcina.cc
  *
  */

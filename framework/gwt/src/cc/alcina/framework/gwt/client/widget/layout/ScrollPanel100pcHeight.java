@@ -22,15 +22,8 @@ import com.google.gwt.user.client.ui.Widget;
  *
  * @author Nick Reddel
  */
-public class ScrollPanel100pcHeight extends ScrollPanel implements
-		HasLayoutInfo {
-	public static class ScrollPanel100pcHeight300px extends ScrollPanel100pcHeight {
-		public ScrollPanel100pcHeight300px(Widget child) {
-			super(child);
-			setHeight("300px");
-		}
-	}
-
+public class ScrollPanel100pcHeight extends ScrollPanel
+		implements HasLayoutInfo {
 	public ScrollPanel100pcHeight(Widget child) {
 		super(child);
 		// setHeight("300px");
@@ -55,5 +48,13 @@ public class ScrollPanel100pcHeight extends ScrollPanel implements
 				return true;
 			}
 		};
+	}
+
+	public static class ScrollPanel100pcHeight300px
+			extends ScrollPanel100pcHeight {
+		public ScrollPanel100pcHeight300px(Widget child) {
+			super(child);
+			setHeight("300px");
+		}
 	}
 }

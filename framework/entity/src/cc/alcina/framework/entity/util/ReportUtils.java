@@ -11,6 +11,21 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 public class ReportUtils {
+	public static void dumpFlattenedTable(MultikeyMap depth3plusMap,
+			List<String> columnNames) {
+		List<List> tuples = depth3plusMap.asTuples(
+				Math.min(columnNames.size(), depth3plusMap.getDepth()));
+		UnsortedMultikeyMap transform = new UnsortedMultikeyMap();
+		int row = 0;
+		for (List list : tuples) {
+			for (int i = 0; i < list.size(); i++) {
+				transform.put(row, columnNames.get(i), list.get(i));
+			}
+			row++;
+		}
+		dumpTable(transform, columnNames, true, false);
+	}
+
 	public static void dumpTable(MultikeyMap values, List<String> columnNames) {
 		dumpTable(values, columnNames, false, false);
 	}
@@ -72,6 +87,13 @@ public class ReportUtils {
 		}
 	}
 
+	private static String getValue(MultikeyMap values, Object row, int col,
+			List<String> columnNames, boolean stringKeyedColumns) {
+		Object key2 = stringKeyedColumns ? columnNames.get(col) : col;
+		String value = CommonUtils.nullSafeToString(values.get(row, key2));
+		return value == null ? "(null)" : value;
+	}
+
 	private static UnsortedMultikeyMap transformValues(
 			MultikeyMap<String> values, List<String> columnNames,
 			boolean stringKeyedColumns) {
@@ -86,31 +108,10 @@ public class ReportUtils {
 			int transColIdx = 0;
 			result.put(colIndex, transColIdx++, colName);
 			for (Object rowKey : values.keySet()) {
-				result.put(colIndex, transColIdx++, values.get(rowKey, colName));
+				result.put(colIndex, transColIdx++,
+						values.get(rowKey, colName));
 			}
 		}
 		return result;
-	}
-
-	private static String getValue(MultikeyMap values, Object row, int col,
-			List<String> columnNames, boolean stringKeyedColumns) {
-		Object key2 = stringKeyedColumns ? columnNames.get(col) : col;
-		String value = CommonUtils.nullSafeToString(values.get(row, key2));
-		return value == null ? "(null)" : value;
-	}
-
-	public static void dumpFlattenedTable(MultikeyMap depth3plusMap,
-			List<String> columnNames) {
-		List<List> tuples = depth3plusMap.asTuples(Math.min(columnNames.size(),
-				depth3plusMap.getDepth()));
-		UnsortedMultikeyMap transform = new UnsortedMultikeyMap();
-		int row = 0;
-		for (List list : tuples) {
-			for (int i = 0; i < list.size(); i++) {
-				transform.put(row, columnNames.get(i), list.get(i));
-			}
-			row++;
-		}
-		dumpTable(transform, columnNames, true, false);
 	}
 }

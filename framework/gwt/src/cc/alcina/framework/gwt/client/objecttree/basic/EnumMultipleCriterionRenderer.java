@@ -34,19 +34,19 @@ public class EnumMultipleCriterionRenderer<T extends EnumMultipleCriterion>
 	private Binding parentBinding;
 
 	@Override
-	public String renderablePropertyName() {
-		return "value";
-	}
-
-	@Override
 	public void parentBinding(Binding parentBinding) {
 		this.parentBinding = parentBinding;
 	}
 
 	@Override
+	public String renderablePropertyName() {
+		return "value";
+	}
+
+	@Override
 	public BoundWidgetProvider renderCustomiser() {
-		ListBoxEnumProvider provider = new ListBoxEnumProvider(getRenderable()
-				.enumClass()) {
+		ListBoxEnumProvider provider = new ListBoxEnumProvider(
+				getRenderable().enumClass()) {
 			@Override
 			public SetBasedListBox get() {
 				SetBasedListBox widget = super.get();

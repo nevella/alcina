@@ -32,18 +32,19 @@ public class FileSelector extends AbstractBoundWidget<FileSelectorInfo>
 
 	private FileSelectorInfo value;
 
-	public FileSelectorInfo getValue() {
-		return this.value;
-	}
-
-	public void setValue(FileSelectorInfo value) {
-		this.value = value;
-	}
-
 	public FileSelector() {
 		this.base = new FileInput();
 		initWidget(base);
 		base.addChangeHandler(this);
+	}
+
+	public FileSelectorInfo getValue() {
+		return this.value;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return base.isEnabled();
 	}
 
 	@Override
@@ -75,23 +76,22 @@ public class FileSelector extends AbstractBoundWidget<FileSelectorInfo>
 		}
 	}
 
-	private native void readAsBinaryString(Html5File file,
-			AsyncCallback<String> callback)/*-{
-		var reader=new FileReader();
-		reader.onloadend=function(){
-			callback.@com.google.gwt.user.client.rpc.AsyncCallback::onSuccess(Ljava/lang/Object;)(reader.result);
-
-		};
-		reader.readAsBinaryString(file);
-	}-*/;
-
-	@Override
-	public boolean isEnabled() {
-		return base.isEnabled();
-	}
-
 	@Override
 	public void setEnabled(boolean enabled) {
 		base.setEnabled(enabled);
 	}
+
+	public void setValue(FileSelectorInfo value) {
+		this.value = value;
+	}
+
+	private native void readAsBinaryString(Html5File file,
+			AsyncCallback<String> callback)/*-{
+											var reader=new FileReader();
+											reader.onloadend=function(){
+											callback.@com.google.gwt.user.client.rpc.AsyncCallback::onSuccess(Ljava/lang/Object;)(reader.result);
+											
+											};
+											reader.readAsBinaryString(file);
+											}-*/;
 }

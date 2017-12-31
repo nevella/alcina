@@ -35,203 +35,6 @@ import com.google.gwt.event.shared.HandlerRegistration;
  */
 public class Event extends NativeEvent {
 	/**
-	 * Represents a preview of a native {@link Event}.
-	 */
-	public static class NativePreviewEvent
-			extends GwtEvent<NativePreviewHandler> implements HasNativeEvent {
-		/**
-		 * Handler type.
-		 */
-		private static Type<NativePreviewHandler> TYPE;
-
-		/**
-		 * The singleton instance of {@link NativePreviewEvent}.
-		 */
-		private static NativePreviewEvent singleton;
-
-		/**
-		 * Gets the type associated with this event.
-		 * 
-		 * @return returns the handler type
-		 */
-		public static Type<NativePreviewHandler> getType() {
-			if (TYPE == null) {
-				TYPE = new Type<NativePreviewHandler>();
-			}
-			return TYPE;
-		}
-
-		/**
-		 * Fire a {@link NativePreviewEvent} for the native event.
-		 * 
-		 * @param handlers
-		 *            the {@link HandlerManager}
-		 * @param nativeEvent
-		 *            the native event
-		 * @return true to fire the event normally, false to cancel the event
-		 */
-		private static boolean fire(HandlerManager handlers,
-				NativeEvent nativeEvent) {
-			if (TYPE != null && handlers != null
-					&& handlers.isEventHandled(TYPE)) {
-				// Cache the current values in the singleton in case we are in
-				// the
-				// middle of handling another event.
-				boolean lastIsCanceled = singleton.isCanceled;
-				boolean lastIsConsumed = singleton.isConsumed;
-				boolean lastIsFirstHandler = singleton.isFirstHandler;
-				NativeEvent lastNativeEvent = singleton.nativeEvent;
-				// Revive the event
-				singleton.revive();
-				singleton.setNativeEvent(nativeEvent);
-				// Fire the event
-				handlers.fireEvent(singleton);
-				boolean ret = !(singleton.isCanceled()
-						&& !singleton.isConsumed());
-				// Restore the state of the singleton.
-				singleton.isCanceled = lastIsCanceled;
-				singleton.isConsumed = lastIsConsumed;
-				singleton.isFirstHandler = lastIsFirstHandler;
-				singleton.nativeEvent = lastNativeEvent;
-				return ret;
-			}
-			return true;
-		}
-
-		/**
-		 * A boolean indicating that the native event should be canceled.
-		 */
-		private boolean isCanceled = false;
-
-		/**
-		 * A boolean indicating whether or not canceling the native event should
-		 * be prevented. This supercedes {@link #isCanceled}.
-		 */
-		private boolean isConsumed = false;
-
-		/**
-		 * A boolean indicating that the current handler is at the top of the
-		 * event preview stack.
-		 */
-		private boolean isFirstHandler = false;
-
-		/**
-		 * The event being previewed.
-		 */
-		private NativeEvent nativeEvent;
-
-		/**
-		 * Cancel the native event and prevent it from firing. Note that the
-		 * event can still fire if another handler calls {@link #consume()}.
-		 * 
-		 * Classes overriding this method should still call super.cancel().
-		 */
-		public void cancel() {
-			String type = nativeEvent.getType();
-			isCanceled = true;
-		}
-
-		/**
-		 * Consume the native event and prevent it from being canceled, even if
-		 * it has already been canceled by another handler.
-		 * {@link NativePreviewHandler} that fire first have priority over later
-		 * handlers, so all handlers should check if the event has already been
-		 * canceled before calling this method.
-		 */
-		public void consume() {
-			isConsumed = true;
-		}
-
-		@Override
-		public final Type<NativePreviewHandler> getAssociatedType() {
-			return TYPE;
-		}
-
-		public NativeEvent getNativeEvent() {
-			return nativeEvent;
-		}
-
-		/**
-		 * Gets the type int corresponding to the native event that triggered
-		 * this preview.
-		 * 
-		 * @return the type int associated with this native event
-		 */
-		public final int getTypeInt() {
-			return Event.as(getNativeEvent()).getTypeInt();
-		}
-
-		/**
-		 * Has the event already been canceled? Note that {@link #isConsumed()}
-		 * will still return true if the native event has also been consumed.
-		 * 
-		 * @return true if the event has been canceled
-		 * @see #cancel()
-		 */
-		public boolean isCanceled() {
-			return isCanceled;
-		}
-
-		/**
-		 * Has the native event been consumed? Note that {@link #isCanceled()}
-		 * will still return true if the native event has also been canceled.
-		 * 
-		 * @return true if the event has been consumed
-		 * @see #consume()
-		 */
-		public boolean isConsumed() {
-			return isConsumed;
-		}
-
-		/**
-		 * Is the current handler the first to preview this event?
-		 * 
-		 * @return true if the current handler is the first to preview the event
-		 */
-		public boolean isFirstHandler() {
-			return isFirstHandler;
-		}
-
-		@Override
-		protected void dispatch(NativePreviewHandler handler) {
-			handler.onPreviewNativeEvent(this);
-			singleton.isFirstHandler = false;
-		}
-
-		@Override
-		protected void revive() {
-			super.revive();
-			isCanceled = false;
-			isConsumed = false;
-			isFirstHandler = true;
-			nativeEvent = null;
-		}
-
-		/**
-		 * Set the native event.
-		 * 
-		 * @param nativeEvent
-		 *            the native {@link Event} being previewed.
-		 */
-		private void setNativeEvent(NativeEvent nativeEvent) {
-			this.nativeEvent = nativeEvent;
-		}
-	}
-
-	/**
-	 * Handler interface for {@link NativePreviewEvent} events.
-	 */
-	public static interface NativePreviewHandler extends EventHandler {
-		/**
-		 * Called when {@link NativePreviewEvent} is fired.
-		 * 
-		 * @param event
-		 *            the {@link NativePreviewEvent} that was fired
-		 */
-		void onPreviewNativeEvent(NativePreviewEvent event);
-	}
-
-	/**
 	 * Fired when an element loses keyboard focus.
 	 */
 	public static final int ONBLUR = 0x01000;
@@ -701,5 +504,202 @@ public class Event extends NativeEvent {
 	 */
 	public final int getTypeInt() {
 		return DOM.eventGetType(this);
+	}
+
+	/**
+	 * Represents a preview of a native {@link Event}.
+	 */
+	public static class NativePreviewEvent
+			extends GwtEvent<NativePreviewHandler> implements HasNativeEvent {
+		/**
+		 * Handler type.
+		 */
+		private static Type<NativePreviewHandler> TYPE;
+
+		/**
+		 * The singleton instance of {@link NativePreviewEvent}.
+		 */
+		private static NativePreviewEvent singleton;
+
+		/**
+		 * Gets the type associated with this event.
+		 * 
+		 * @return returns the handler type
+		 */
+		public static Type<NativePreviewHandler> getType() {
+			if (TYPE == null) {
+				TYPE = new Type<NativePreviewHandler>();
+			}
+			return TYPE;
+		}
+
+		/**
+		 * Fire a {@link NativePreviewEvent} for the native event.
+		 * 
+		 * @param handlers
+		 *            the {@link HandlerManager}
+		 * @param nativeEvent
+		 *            the native event
+		 * @return true to fire the event normally, false to cancel the event
+		 */
+		private static boolean fire(HandlerManager handlers,
+				NativeEvent nativeEvent) {
+			if (TYPE != null && handlers != null
+					&& handlers.isEventHandled(TYPE)) {
+				// Cache the current values in the singleton in case we are in
+				// the
+				// middle of handling another event.
+				boolean lastIsCanceled = singleton.isCanceled;
+				boolean lastIsConsumed = singleton.isConsumed;
+				boolean lastIsFirstHandler = singleton.isFirstHandler;
+				NativeEvent lastNativeEvent = singleton.nativeEvent;
+				// Revive the event
+				singleton.revive();
+				singleton.setNativeEvent(nativeEvent);
+				// Fire the event
+				handlers.fireEvent(singleton);
+				boolean ret = !(singleton.isCanceled()
+						&& !singleton.isConsumed());
+				// Restore the state of the singleton.
+				singleton.isCanceled = lastIsCanceled;
+				singleton.isConsumed = lastIsConsumed;
+				singleton.isFirstHandler = lastIsFirstHandler;
+				singleton.nativeEvent = lastNativeEvent;
+				return ret;
+			}
+			return true;
+		}
+
+		/**
+		 * A boolean indicating that the native event should be canceled.
+		 */
+		private boolean isCanceled = false;
+
+		/**
+		 * A boolean indicating whether or not canceling the native event should
+		 * be prevented. This supercedes {@link #isCanceled}.
+		 */
+		private boolean isConsumed = false;
+
+		/**
+		 * A boolean indicating that the current handler is at the top of the
+		 * event preview stack.
+		 */
+		private boolean isFirstHandler = false;
+
+		/**
+		 * The event being previewed.
+		 */
+		private NativeEvent nativeEvent;
+
+		/**
+		 * Cancel the native event and prevent it from firing. Note that the
+		 * event can still fire if another handler calls {@link #consume()}.
+		 * 
+		 * Classes overriding this method should still call super.cancel().
+		 */
+		public void cancel() {
+			String type = nativeEvent.getType();
+			isCanceled = true;
+		}
+
+		/**
+		 * Consume the native event and prevent it from being canceled, even if
+		 * it has already been canceled by another handler.
+		 * {@link NativePreviewHandler} that fire first have priority over later
+		 * handlers, so all handlers should check if the event has already been
+		 * canceled before calling this method.
+		 */
+		public void consume() {
+			isConsumed = true;
+		}
+
+		@Override
+		public final Type<NativePreviewHandler> getAssociatedType() {
+			return TYPE;
+		}
+
+		public NativeEvent getNativeEvent() {
+			return nativeEvent;
+		}
+
+		/**
+		 * Gets the type int corresponding to the native event that triggered
+		 * this preview.
+		 * 
+		 * @return the type int associated with this native event
+		 */
+		public final int getTypeInt() {
+			return Event.as(getNativeEvent()).getTypeInt();
+		}
+
+		/**
+		 * Has the event already been canceled? Note that {@link #isConsumed()}
+		 * will still return true if the native event has also been consumed.
+		 * 
+		 * @return true if the event has been canceled
+		 * @see #cancel()
+		 */
+		public boolean isCanceled() {
+			return isCanceled;
+		}
+
+		/**
+		 * Has the native event been consumed? Note that {@link #isCanceled()}
+		 * will still return true if the native event has also been canceled.
+		 * 
+		 * @return true if the event has been consumed
+		 * @see #consume()
+		 */
+		public boolean isConsumed() {
+			return isConsumed;
+		}
+
+		/**
+		 * Is the current handler the first to preview this event?
+		 * 
+		 * @return true if the current handler is the first to preview the event
+		 */
+		public boolean isFirstHandler() {
+			return isFirstHandler;
+		}
+
+		/**
+		 * Set the native event.
+		 * 
+		 * @param nativeEvent
+		 *            the native {@link Event} being previewed.
+		 */
+		private void setNativeEvent(NativeEvent nativeEvent) {
+			this.nativeEvent = nativeEvent;
+		}
+
+		@Override
+		protected void dispatch(NativePreviewHandler handler) {
+			handler.onPreviewNativeEvent(this);
+			singleton.isFirstHandler = false;
+		}
+
+		@Override
+		protected void revive() {
+			super.revive();
+			isCanceled = false;
+			isConsumed = false;
+			isFirstHandler = true;
+			nativeEvent = null;
+		}
+	}
+
+	/**
+	 * Handler interface for {@link NativePreviewEvent} events.
+	 */
+	public static interface NativePreviewHandler extends EventHandler {
+		/**
+		 * Called when {@link NativePreviewEvent} is fired.
+		 * 
+		 * @param event
+		 *            the {@link NativePreviewEvent} that was fired
+		 */
+		void onPreviewNativeEvent(NativePreviewEvent event);
 	}
 }

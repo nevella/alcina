@@ -92,6 +92,146 @@ import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
  * @author Nick Reddel
  */
 public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
+	private static GwittirBridge INSTANCE = new GwittirBridge();
+
+	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY = new BoundWidgetTypeFactorySimpleGenerator();
+
+	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY_NO_NULLS = new BoundWidgetTypeFactorySimpleGenerator(
+			false);
+
+	public static final BoundWidgetProvider NOWRAP_LABEL_PROVIDER = new BoundWidgetProvider() {
+		public BoundWidget get() {
+			RenderingLabel label = new RenderingLabel();
+			label.setWordWrap(false);
+			return label;
+		}
+	};
+
+	public static final BoundWidgetProvider WRAP_LABEL_PROVIDER = new BoundWidgetProvider() {
+		public BoundWidget get() {
+			RenderingLabel label = new RenderingLabel();
+			return label;
+		}
+	};
+
+	public static final BoundWidgetProvider YES_NO_LABEL_PROVIDER = new BoundWidgetProvider() {
+		public BoundWidget get() {
+			RenderingLabel label = new RenderingLabel();
+			label.setWordWrap(false);
+			label.setRenderer(YES_NO_RENDERER);
+			return label;
+		}
+	};
+
+	public static final BoundWidgetProvider AU_DATE_PROVIDER = new BoundWidgetProvider() {
+		public BoundWidget get() {
+			RenderingLabel label = new RenderingLabel();
+			label.setWordWrap(false);
+			label.setRenderer(DATE_TIME_RENDERER);
+			return label;
+		}
+	};
+
+	public static final Renderer DATE_TIME_RENDERER = new Renderer() {
+		public Object render(Object o) {
+			Date d = (Date) o;
+			return d == null ? ""
+					: CommonUtils.formatDate(d, DateStyle.AU_DATE_TIME);
+		}
+	};
+
+	public static final Renderer DATE_SLASH_RENDERER_WITH_NULL = new Renderer() {
+		public Object render(Object o) {
+			Date d = (Date) o;
+			return d == null ? null
+					: CommonUtils.formatDate(d, DateStyle.AU_DATE_SLASH);
+		}
+	};
+
+	public static final Renderer YES_NO_RENDERER = new Renderer() {
+		public Object render(Object o) {
+			Boolean b = (Boolean) o;
+			return CommonUtils.bv(b) ? "Yes" : "No";
+		}
+	};
+
+	public static final int MAX_EXPANDABLE_LABEL_LENGTH = 50;
+
+	public static final BoundWidgetProvider DN_LABEL_PROVIDER = new BoundWidgetProvider() {
+		public BoundWidget get() {
+			RenderingLabel label = new RenderingLabel();
+			label.setRenderer(DisplayNameRenderer.INSTANCE);
+			return label;
+		}
+	};
+
+	public static final BoundWidgetProvider FRIENDLY_ENUM_LABEL_PROVIDER_INSTANCE = new FriendlyEnumLabelProvider();
+
+	public static BoundWidget createWidget(Binding parent, Field field,
+			SourcesPropertyChangeEvents target, Object model) {
+		final BoundWidget widget;
+		Binding binding;
+		if (field.getCellProvider() != null) {
+			widget = field.getCellProvider().get();
+		} else {
+			final Property p = Introspector.INSTANCE.getDescriptor(target)
+					.getProperty(field.getPropertyName());
+			widget = SIMPLE_FACTORY
+					.getWidgetProvider(field.getPropertyName(), p.getType())
+					.get();
+		}
+		binding = new Binding(widget, "value", field.getValidator(),
+				field.getFeedback(), target, field.getPropertyName(), null,
+				null);
+		widget.setModel(model);
+		if (field.getConverter() != null) {
+			binding.getRight().converter = field.getConverter();
+		}
+		Converter inverseConverter = getInverseConverter(field.getConverter());
+		if (inverseConverter != null) {
+			binding.getLeft().converter = inverseConverter;
+		}
+		if (field.getComparator() != null) {
+			widget.setComparator(field.getComparator());
+		}
+		parent.getChildren().add(binding);
+		return widget;
+	}
+
+	// will be compiled to a field ref
+	public static GwittirBridge get() {
+		return INSTANCE;
+	};
+
+	public static Converter getDefaultConverter(BoundWidgetProvider bwp,
+			Class propertyType) {
+		if (propertyType == Boolean.class) {
+			return BooleanEnsureNonNullCoverter.INSTANCE;
+		}
+		if (propertyType == Double.class) {
+			return Converter.DOUBLE_TO_STRING_CONVERTER;
+		}
+		if (bwp == BoundWidgetTypeFactory.TEXTBOX_PROVIDER
+				|| bwp.getClass() == BoundWidgetProviderTextBox.class) {
+			return Converter.TO_STRING_CONVERTER;
+			/*
+			 * these seem to be being introspected as value-type object, not
+			 * string - at least w JVMIntrospector
+			 */
+		}
+		return null;
+	}
+
+	public static Converter getInverseConverter(Converter c) {
+		if (c == null) {
+			return null;
+		}
+		if (c == Converter.DOUBLE_TO_STRING_CONVERTER) {
+			return Converter.STRING_TO_DOUBLE_CONVERTER;
+		}
+		return null;
+	}
+
 	private Map<Class, Validator> validatorMap = new HashMap<Class, Validator>();
 	{
 		validatorMap.put(Integer.class, IntegerValidator.INSTANCE);
@@ -105,17 +245,140 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 	private Map<Class, BeanDescriptor> descriptorClassLookup = new HashMap<Class, BeanDescriptor>();
 
-	public BeanDescriptor getDescriptorForClass(Class c) {
-		return getDescriptorForClass(c, true);
+	private List<String> ignoreProperties;
+
+	private GwittirBridge() {
+		super();
 	}
 
-	@RegistryLocation(registryPoint = BeanDescriptorProvider.class, implementationType = ImplementationType.FACTORY)
-	@ClientInstantiable
-	public static class GwittirBridgeBdpFactory implements RegistryFactory {
-		@Override
-		public Object create(Class registryPoint, Class targetObjectClass) {
-			return GwittirBridge.get();
+	@Override
+	public IndividualPropertyAccessor cachedAccessor(Class clazz,
+			String propertyName) {
+		Property property = getPropertyForClass(clazz, propertyName);
+		return new IndividualPropertyAccessor() {
+			@Override
+			public Class getPropertyType(Object bean) {
+				try {
+					return property.getType();
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+
+			@Override
+			public Object getPropertyValue(Object value) {
+				try {
+					return property.getAccessorMethod().invoke(value,
+							new Object[0]);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+
+			@Override
+			public void setPropertyValue(Object bean, Object value) {
+				try {
+					property.getMutatorMethod().invoke(bean,
+							new Object[] { value });
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		};
+	}
+
+	public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj,
+			BoundWidgetTypeFactory factory, boolean editableWidgets,
+			boolean multiple) {
+		return fieldsForReflectedObjectAndSetupWidgetFactory(obj, factory,
+				editableWidgets, multiple, null, null);
+	}
+
+	public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj,
+			BoundWidgetTypeFactory factory, boolean editableWidgets,
+			boolean multiple, String propertyName,
+			Predicate<String> editableFieldNameFilter) {
+		factory.add(Date.class, new DateBoxProvider());
+		List<Field> fields = new ArrayList<Field>();
+		ClientBeanReflector bi = ClientReflector.get()
+				.beanInfoForClass(obj.getClass());
+		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
+				.values();
+		Class<? extends Object> c = obj.getClass();
+		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
+		Bean beanInfo = bi.getAnnotation(Bean.class);
+		for (ClientPropertyReflector pr : prs) {
+			String pn = pr.getPropertyName();
+			if (propertyName != null && !(propertyName.equals(pn))) {
+				continue;
+			}
+			if (ignoreProperties != null && ignoreProperties.contains(pn)) {
+				continue;
+			}
+			boolean editableField = editableWidgets;
+			if (editableFieldNameFilter != null
+					&& !editableFieldNameFilter.test(pn)) {
+				editableField = false;
+			}
+			Field f = getField(c, pn, editableField, multiple, factory, obj);
+			if (f != null) {
+				fields.add(f);
+			}
 		}
+		Collections.sort(fields, new FieldDisplayNameComparator(bi));
+		return (Field[]) fields.toArray(new Field[fields.size()]);
+	}
+
+	public List<Field> fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
+			Object obj, BoundWidgetTypeFactory factory, boolean editableWidgets,
+			boolean multiple) {
+		return new ArrayList<Field>(
+				Arrays.asList(fieldsForReflectedObjectAndSetupWidgetFactory(obj,
+						factory, editableWidgets, multiple)));
+	}
+
+	public Object findObjectWithPropertyInCollection(Collection c,
+			String propertyName, Object value) {
+		for (Object o : c) {
+			Object pv = getPropertyValue(o, propertyName);
+			if (pv != null && pv.equals(value)) {
+				return o;
+			}
+		}
+		return null;
+	}
+
+	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
+			Class<A> annotationClass, String propertyName) {
+		ClientBeanReflector beanInfo = ClientReflector.get()
+				.beanInfoForClass(targetClass);
+		if (beanInfo == null) {
+			return null;
+		}
+		ClientPropertyReflector propertyReflector = beanInfo
+				.getPropertyReflectors().get(propertyName);
+		return propertyReflector == null ? null
+				: propertyReflector.getAnnotation(annotationClass);
+	}
+
+	// private Set<String> reffedDescriptor = new LinkedHashSet<String>();
+	public BeanDescriptor getDescriptor(Object o) {
+		Class c = o.getClass();
+		// if (reffedDescriptor!=null &&
+		// !reffedDescriptor.contains(c.getName())){
+		// reffedDescriptor.add(c.getName());
+		// System.out.println(c.getName());
+		// }
+		BeanDescriptor bd = descriptorClassLookup.get(c);
+		if (bd == null) {
+			bd = Introspector.INSTANCE.getDescriptor(o);
+			descriptorClassLookup.put(c, bd);
+		}
+		return bd;
+	}
+
+	public BeanDescriptor getDescriptorForClass(Class c) {
+		return getDescriptorForClass(c, true);
 	}
 
 	public BeanDescriptor getDescriptorForClass(Class c,
@@ -137,159 +400,10 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		}
 	}
 
-	// private Set<String> reffedDescriptor = new LinkedHashSet<String>();
-	public BeanDescriptor getDescriptor(Object o) {
-		Class c = o.getClass();
-		// if (reffedDescriptor!=null &&
-		// !reffedDescriptor.contains(c.getName())){
-		// reffedDescriptor.add(c.getName());
-		// System.out.println(c.getName());
-		// }
-		BeanDescriptor bd = descriptorClassLookup.get(c);
-		if (bd == null) {
-			bd = Introspector.INSTANCE.getDescriptor(o);
-			descriptorClassLookup.put(c, bd);
-		}
-		return bd;
-	}
-
-	public Property getProperty(Object o, String propertyName) {
-		return getDescriptor(o).getProperty(propertyName);
-	}
-
-	public Property getPropertyForClass(Class c, String propertyName) {
-		return getDescriptorForClass(c).getProperty(propertyName);
-	}
-
-	public Object getPropertyValue(Object o, String propertyName) {
-		try {
-			BeanDescriptor bd = getDescriptor(o);
-			return bd.getProperty(propertyName).getAccessorMethod().invoke(o,
-					null);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(
-					CommonUtils.formatJ(
-							"Unable to get property %s for object %s",
-							propertyName, o.getClass().getName()),
-					e, SuggestedAction.NOTIFY_WARNING);
-		}
-	}
-
-	public boolean hasDescriptor(Class clazz) {
-		try {
-			return ClientReflector.get().beanInfoForClass(clazz) != null;
-		} catch (RuntimeException re) {
-			return false;
-		}
-	}
-
-	private GwittirBridge() {
-		super();
-	}
-
-	private static GwittirBridge INSTANCE = new GwittirBridge();
-
-	// will be compiled to a field ref
-	public static GwittirBridge get() {
-		return INSTANCE;
-	}
-
-	public static class BoundWidgetProviderTextBox
-			implements BoundWidgetProvider<TextBox> {
-		public TextBox get() {
-			return new TextBox();
-		}
-	};
-
-	public static class BoundWidgetTypeFactorySimpleGenerator
-			extends BoundWidgetTypeFactory {
-		private boolean withNull;
-
-		public BoundWidgetTypeFactorySimpleGenerator(boolean withNull) {
-			this();
-			this.withNull = withNull;
-		}
-
-		public BoundWidgetTypeFactorySimpleGenerator() {
-			super(true);
-			add(Date.class, new DateBoxProvider());
-			add(String.class, new BoundWidgetProviderTextBox());
-			add(Integer.class, new BoundWidgetProviderTextBox());
-			add(int.class, new BoundWidgetProviderTextBox());
-			add(Long.class, new BoundWidgetProviderTextBox());
-			add(long.class, new BoundWidgetProviderTextBox());
-			add(Float.class, new BoundWidgetProviderTextBox());
-			add(float.class, new BoundWidgetProviderTextBox());
-			add(Double.class, new BoundWidgetProviderTextBox());
-			add(double.class, new BoundWidgetProviderTextBox());
-		}
-
-		public BoundWidgetProvider getWidgetProvider(Class type) {
-			if (type.isEnum()) {
-				return new ListBoxEnumProvider(type, withNull);
-			}
-			return super.getWidgetProvider(type);
-		}
-	}
-
-	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY = new BoundWidgetTypeFactorySimpleGenerator();
-
-	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY_NO_NULLS = new BoundWidgetTypeFactorySimpleGenerator(
-			false);
-
-	public List<Field> fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-			Object obj, BoundWidgetTypeFactory factory, boolean editableWidgets,
-			boolean multiple) {
-		return new ArrayList<Field>(
-				Arrays.asList(fieldsForReflectedObjectAndSetupWidgetFactory(obj,
-						factory, editableWidgets, multiple)));
-	}
-
-	public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj,
-			BoundWidgetTypeFactory factory, boolean editableWidgets,
-			boolean multiple) {
-		return fieldsForReflectedObjectAndSetupWidgetFactory(obj, factory,
-				editableWidgets, multiple, null, null);
-	}
-
-	private List<String> ignoreProperties;
-
 	public Field getField(Class c, String propertyName, boolean editableWidgets,
 			boolean multiple) {
 		return getField(c, propertyName, editableWidgets, multiple,
 				SIMPLE_FACTORY, null);
-	}
-
-	public boolean isFieldEditable(Class c, String propertyName) {
-		Object obj = ClientReflector.get().getTemplateInstance(c);
-		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(c);
-		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
-				.values();
-		Bean beanInfo = bi.getAnnotation(Bean.class);
-		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
-		ClientPropertyReflector pr = bi.getPropertyReflectors()
-				.get(propertyName);
-		Property p = getProperty(obj, pr.getPropertyName());
-		if (pr != null && pr.getDisplayInfo() != null) {
-			PropertyPermissions pp = pr
-					.getAnnotation(PropertyPermissions.class);
-			Display displayInfo = pr.getDisplayInfo();
-			boolean fieldVisible = PermissionsManager.get()
-					.checkEffectivePropertyPermission(op, pp, obj, true)
-					&& displayInfo != null
-					&& PermissionsManager.get().isPermissible(obj,
-							displayInfo.visible())
-					&& ((displayInfo.displayMask()
-							& Display.DISPLAY_AS_PROPERTY) != 0);
-			if (!fieldVisible) {
-				return false;
-			}
-			boolean propertyIsCollection = (p.getType() == Set.class);
-			return PermissionsManager.get().checkEffectivePropertyPermission(op,
-					pp, obj, false)
-					&& ((displayInfo.displayMask() & Display.DISPLAY_RO) == 0);
-		}
-		return false;
 	}
 
 	public Field getField(Class c, String propertyName, boolean editableWidgets,
@@ -443,58 +557,48 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		return null;
 	}
 
-	public static Converter getDefaultConverter(BoundWidgetProvider bwp,
-			Class propertyType) {
-		if (propertyType == Boolean.class) {
-			return BooleanEnsureNonNullCoverter.INSTANCE;
-		}
-		if (propertyType == Double.class) {
-			return Converter.DOUBLE_TO_STRING_CONVERTER;
-		}
-		if (bwp == BoundWidgetTypeFactory.TEXTBOX_PROVIDER
-				|| bwp.getClass() == BoundWidgetProviderTextBox.class) {
-			return Converter.TO_STRING_CONVERTER;
-			/*
-			 * these seem to be being introspected as value-type object, not
-			 * string - at least w JVMIntrospector
-			 */
+	public Field getFieldToFocus(Object bean, Field[] fields) {
+		ClientBeanReflector bi = ClientReflector.get()
+				.beanInfoForClass(bean.getClass());
+		Map<String, ClientPropertyReflector> prs = bi.getPropertyReflectors();
+		for (Field field : fields) {
+			ClientPropertyReflector pr = prs.get(field.getPropertyName());
+			if (pr != null && pr.getDisplayInfo() != null
+					&& pr.getDisplayInfo().focus()) {
+				return field;
+			}
 		}
 		return null;
 	}
 
-	public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj,
-			BoundWidgetTypeFactory factory, boolean editableWidgets,
-			boolean multiple, String propertyName,
-			Predicate<String> editableFieldNameFilter) {
-		factory.add(Date.class, new DateBoxProvider());
-		List<Field> fields = new ArrayList<Field>();
-		ClientBeanReflector bi = ClientReflector.get()
-				.beanInfoForClass(obj.getClass());
-		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
-				.values();
-		Class<? extends Object> c = obj.getClass();
-		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
-		Bean beanInfo = bi.getAnnotation(Bean.class);
-		for (ClientPropertyReflector pr : prs) {
-			String pn = pr.getPropertyName();
-			if (propertyName != null && !(propertyName.equals(pn))) {
-				continue;
-			}
-			if (ignoreProperties != null && ignoreProperties.contains(pn)) {
-				continue;
-			}
-			boolean editableField = editableWidgets;
-			if (editableFieldNameFilter != null
-					&& !editableFieldNameFilter.test(pn)) {
-				editableField = false;
-			}
-			Field f = getField(c, pn, editableField, multiple, factory, obj);
-			if (f != null) {
-				fields.add(f);
-			}
+	public List<String> getIgnoreProperties() {
+		return ignoreProperties;
+	}
+
+	public Property getProperty(Object o, String propertyName) {
+		return getDescriptor(o).getProperty(propertyName);
+	}
+
+	public Property getPropertyForClass(Class c, String propertyName) {
+		return getDescriptorForClass(c).getProperty(propertyName);
+	}
+
+	public Class getPropertyType(Class objectClass, String propertyName) {
+		return ClientReflector.get().getPropertyType(objectClass, propertyName);
+	}
+
+	public Object getPropertyValue(Object o, String propertyName) {
+		try {
+			BeanDescriptor bd = getDescriptor(o);
+			return bd.getProperty(propertyName).getAccessorMethod().invoke(o,
+					null);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(
+					CommonUtils.formatJ(
+							"Unable to get property %s for object %s",
+							propertyName, o.getClass().getName()),
+					e, SuggestedAction.NOTIFY_WARNING);
 		}
-		Collections.sort(fields, new FieldDisplayNameComparator(bi));
-		return (Field[]) fields.toArray(new Field[fields.size()]);
 	}
 
 	// TODO - abstract this, clean above function
@@ -563,86 +667,48 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		}
 	}
 
-	public static final BoundWidgetProvider NOWRAP_LABEL_PROVIDER = new BoundWidgetProvider() {
-		public BoundWidget get() {
-			RenderingLabel label = new RenderingLabel();
-			label.setWordWrap(false);
-			return label;
+	public boolean hasDescriptor(Class clazz) {
+		try {
+			return ClientReflector.get().beanInfoForClass(clazz) != null;
+		} catch (RuntimeException re) {
+			return false;
 		}
-	};
+	}
 
-	public static final BoundWidgetProvider WRAP_LABEL_PROVIDER = new BoundWidgetProvider() {
-		public BoundWidget get() {
-			RenderingLabel label = new RenderingLabel();
-			return label;
+	public boolean isFieldEditable(Class c, String propertyName) {
+		Object obj = ClientReflector.get().getTemplateInstance(c);
+		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(c);
+		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
+				.values();
+		Bean beanInfo = bi.getAnnotation(Bean.class);
+		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
+		ClientPropertyReflector pr = bi.getPropertyReflectors()
+				.get(propertyName);
+		Property p = getProperty(obj, pr.getPropertyName());
+		if (pr != null && pr.getDisplayInfo() != null) {
+			PropertyPermissions pp = pr
+					.getAnnotation(PropertyPermissions.class);
+			Display displayInfo = pr.getDisplayInfo();
+			boolean fieldVisible = PermissionsManager.get()
+					.checkEffectivePropertyPermission(op, pp, obj, true)
+					&& displayInfo != null
+					&& PermissionsManager.get().isPermissible(obj,
+							displayInfo.visible())
+					&& ((displayInfo.displayMask()
+							& Display.DISPLAY_AS_PROPERTY) != 0);
+			if (!fieldVisible) {
+				return false;
+			}
+			boolean propertyIsCollection = (p.getType() == Set.class);
+			return PermissionsManager.get().checkEffectivePropertyPermission(op,
+					pp, obj, false)
+					&& ((displayInfo.displayMask() & Display.DISPLAY_RO) == 0);
 		}
-	};
+		return false;
+	}
 
-	public static final BoundWidgetProvider YES_NO_LABEL_PROVIDER = new BoundWidgetProvider() {
-		public BoundWidget get() {
-			RenderingLabel label = new RenderingLabel();
-			label.setWordWrap(false);
-			label.setRenderer(YES_NO_RENDERER);
-			return label;
-		}
-	};
-
-	public static final BoundWidgetProvider AU_DATE_PROVIDER = new BoundWidgetProvider() {
-		public BoundWidget get() {
-			RenderingLabel label = new RenderingLabel();
-			label.setWordWrap(false);
-			label.setRenderer(DATE_TIME_RENDERER);
-			return label;
-		}
-	};
-
-	public static final Renderer DATE_TIME_RENDERER = new Renderer() {
-		public Object render(Object o) {
-			Date d = (Date) o;
-			return d == null ? ""
-					: CommonUtils.formatDate(d, DateStyle.AU_DATE_TIME);
-		}
-	};
-
-	public static final Renderer DATE_SLASH_RENDERER_WITH_NULL = new Renderer() {
-		public Object render(Object o) {
-			Date d = (Date) o;
-			return d == null ? null
-					: CommonUtils.formatDate(d, DateStyle.AU_DATE_SLASH);
-		}
-	};
-
-	public static final Renderer YES_NO_RENDERER = new Renderer() {
-		public Object render(Object o) {
-			Boolean b = (Boolean) o;
-			return CommonUtils.bv(b) ? "Yes" : "No";
-		}
-	};
-
-	public static final int MAX_EXPANDABLE_LABEL_LENGTH = 50;
-
-	public static final BoundWidgetProvider DN_LABEL_PROVIDER = new BoundWidgetProvider() {
-		public BoundWidget get() {
-			RenderingLabel label = new RenderingLabel();
-			label.setRenderer(DisplayNameRenderer.INSTANCE);
-			return label;
-		}
-	};
-
-	public static final BoundWidgetProvider FRIENDLY_ENUM_LABEL_PROVIDER_INSTANCE = new FriendlyEnumLabelProvider();
-
-	class FieldDisplayNameComparator implements Comparator<Field> {
-		private final ClientBeanReflector bi;
-
-		FieldDisplayNameComparator(ClientBeanReflector bi) {
-			this.bi = bi;
-		}
-
-		public int compare(Field o1, Field o2) {
-			return bi.getPropertyReflectors().get(o1.getPropertyName())
-					.compareTo(bi.getPropertyReflectors()
-							.get(o2.getPropertyName()));
-		}
+	public void setIgnoreProperties(List<String> ignoreProperties) {
+		this.ignoreProperties = ignoreProperties;
 	}
 
 	public void setPropertyValue(Object o, String propertyName, Object value) {
@@ -668,130 +734,64 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		}
 	}
 
-	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
-			Class<A> annotationClass, String propertyName) {
-		ClientBeanReflector beanInfo = ClientReflector.get()
-				.beanInfoForClass(targetClass);
-		if (beanInfo == null) {
-			return null;
+	public static class BoundWidgetProviderTextBox
+			implements BoundWidgetProvider<TextBox> {
+		public TextBox get() {
+			return new TextBox();
 		}
-		ClientPropertyReflector propertyReflector = beanInfo
-				.getPropertyReflectors().get(propertyName);
-		return propertyReflector == null ? null
-				: propertyReflector.getAnnotation(annotationClass);
 	}
 
-	public Object findObjectWithPropertyInCollection(Collection c,
-			String propertyName, Object value) {
-		for (Object o : c) {
-			Object pv = getPropertyValue(o, propertyName);
-			if (pv != null && pv.equals(value)) {
-				return o;
+	public static class BoundWidgetTypeFactorySimpleGenerator
+			extends BoundWidgetTypeFactory {
+		private boolean withNull;
+
+		public BoundWidgetTypeFactorySimpleGenerator() {
+			super(true);
+			add(Date.class, new DateBoxProvider());
+			add(String.class, new BoundWidgetProviderTextBox());
+			add(Integer.class, new BoundWidgetProviderTextBox());
+			add(int.class, new BoundWidgetProviderTextBox());
+			add(Long.class, new BoundWidgetProviderTextBox());
+			add(long.class, new BoundWidgetProviderTextBox());
+			add(Float.class, new BoundWidgetProviderTextBox());
+			add(float.class, new BoundWidgetProviderTextBox());
+			add(Double.class, new BoundWidgetProviderTextBox());
+			add(double.class, new BoundWidgetProviderTextBox());
+		}
+
+		public BoundWidgetTypeFactorySimpleGenerator(boolean withNull) {
+			this();
+			this.withNull = withNull;
+		}
+
+		public BoundWidgetProvider getWidgetProvider(Class type) {
+			if (type.isEnum()) {
+				return new ListBoxEnumProvider(type, withNull);
 			}
+			return super.getWidgetProvider(type);
 		}
-		return null;
 	}
 
-	public void setIgnoreProperties(List<String> ignoreProperties) {
-		this.ignoreProperties = ignoreProperties;
+	@RegistryLocation(registryPoint = BeanDescriptorProvider.class, implementationType = ImplementationType.FACTORY)
+	@ClientInstantiable
+	public static class GwittirBridgeBdpFactory implements RegistryFactory {
+		@Override
+		public Object create(Class registryPoint, Class targetObjectClass) {
+			return GwittirBridge.get();
+		}
 	}
 
-	public List<String> getIgnoreProperties() {
-		return ignoreProperties;
-	}
+	class FieldDisplayNameComparator implements Comparator<Field> {
+		private final ClientBeanReflector bi;
 
-	public Class getPropertyType(Class objectClass, String propertyName) {
-		return ClientReflector.get().getPropertyType(objectClass, propertyName);
-	}
+		FieldDisplayNameComparator(ClientBeanReflector bi) {
+			this.bi = bi;
+		}
 
-	public Field getFieldToFocus(Object bean, Field[] fields) {
-		ClientBeanReflector bi = ClientReflector.get()
-				.beanInfoForClass(bean.getClass());
-		Map<String, ClientPropertyReflector> prs = bi.getPropertyReflectors();
-		for (Field field : fields) {
-			ClientPropertyReflector pr = prs.get(field.getPropertyName());
-			if (pr != null && pr.getDisplayInfo() != null
-					&& pr.getDisplayInfo().focus()) {
-				return field;
-			}
+		public int compare(Field o1, Field o2) {
+			return bi.getPropertyReflectors().get(o1.getPropertyName())
+					.compareTo(bi.getPropertyReflectors()
+							.get(o2.getPropertyName()));
 		}
-		return null;
-	}
-
-	public static BoundWidget createWidget(Binding parent, Field field,
-			SourcesPropertyChangeEvents target, Object model) {
-		final BoundWidget widget;
-		Binding binding;
-		if (field.getCellProvider() != null) {
-			widget = field.getCellProvider().get();
-		} else {
-			final Property p = Introspector.INSTANCE.getDescriptor(target)
-					.getProperty(field.getPropertyName());
-			widget = SIMPLE_FACTORY
-					.getWidgetProvider(field.getPropertyName(), p.getType())
-					.get();
-		}
-		binding = new Binding(widget, "value", field.getValidator(),
-				field.getFeedback(), target, field.getPropertyName(), null,
-				null);
-		widget.setModel(model);
-		if (field.getConverter() != null) {
-			binding.getRight().converter = field.getConverter();
-		}
-		Converter inverseConverter = getInverseConverter(field.getConverter());
-		if (inverseConverter != null) {
-			binding.getLeft().converter = inverseConverter;
-		}
-		if (field.getComparator() != null) {
-			widget.setComparator(field.getComparator());
-		}
-		parent.getChildren().add(binding);
-		return widget;
-	}
-
-	public static Converter getInverseConverter(Converter c) {
-		if (c == null) {
-			return null;
-		}
-		if (c == Converter.DOUBLE_TO_STRING_CONVERTER) {
-			return Converter.STRING_TO_DOUBLE_CONVERTER;
-		}
-		return null;
-	}
-
-	@Override
-	public IndividualPropertyAccessor cachedAccessor(Class clazz,
-			String propertyName) {
-		Property property = getPropertyForClass(clazz, propertyName);
-		return new IndividualPropertyAccessor() {
-			@Override
-			public void setPropertyValue(Object bean, Object value) {
-				try {
-					property.getMutatorMethod().invoke(bean,
-							new Object[] { value });
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-
-			@Override
-			public Object getPropertyValue(Object value) {
-				try {
-					return property.getAccessorMethod().invoke(value,
-							new Object[0]);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-
-			@Override
-			public Class getPropertyType(Object bean) {
-				try {
-					return property.getType();
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		};
 	}
 }

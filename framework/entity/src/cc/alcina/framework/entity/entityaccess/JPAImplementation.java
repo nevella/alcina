@@ -33,12 +33,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
  * @author Nick Reddel
  */
 public interface JPAImplementation {
-	boolean isLazyInitialisationException(Exception e);
-
-	public <T> T getInstantiatedObject(T object);
-
-	public GraphProjectionDataFilter getResolvingFilter(InstantiateImplCallback callback,
-			DetachedEntityCache cache, boolean useMemCache);
+	public void afterSpecificSetId(Object fromBefore) throws Exception;
 
 	/**
 	 * return false if no optimisation
@@ -46,25 +41,28 @@ public interface JPAImplementation {
 	public boolean bulkDelete(EntityManager em, Class clazz,
 			Collection<Long> ids);
 
+	public void cache(Query query);
+
+	public abstract InstantiateImplCallback getClassrefInstantiator();
+
+	public File getConfigDirectory();
+
+	public <T> T getInstantiatedObject(T object);
+
+	public GraphProjectionDataFilter getResolvingFilter(
+			InstantiateImplCallback callback, DetachedEntityCache cache,
+			boolean useMemCache);
+
+	public void interpretException(DomainTransformException exception);
+
 	public boolean isCacheDisabled();
 
 	public void setCacheDisabled(boolean cacheDisabled);
 
-	public void cache(Query query);
-
-	public void interpretException(DomainTransformException exception);
-
-	public File getConfigDirectory();
-
-	public void afterSpecificSetId(Object fromBefore) throws Exception;
-
-	Object beforeSpecificSetId(EntityManager entityManager, Object toPersist) throws Exception;
-
-	void muteClassloaderLogging(boolean mute);
-
-	public abstract InstantiateImplCallback getClassrefInstantiator();
-
 	boolean areEquivalentIgnoreInstantiationState(Object o1, Object o2);
+
+	Object beforeSpecificSetId(EntityManager entityManager, Object toPersist)
+			throws Exception;
 
 	Set createPersistentSetProjection(GraphProjectionContext context);
 
@@ -72,4 +70,7 @@ public interface JPAImplementation {
 
 	MemcacheJoinHandler getMemcacheJoinHandler(PropertyDescriptor pd);
 
+	boolean isLazyInitialisationException(Exception e);
+
+	void muteClassloaderLogging(boolean mute);
 }

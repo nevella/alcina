@@ -8,8 +8,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 @RegistryLocation(registryPoint = MemcacheDefinitionHandler.class)
 @ClientInstantiable
 public abstract class MemcacheDefinitionHandler<SD extends SearchDefinition> {
-
 	public abstract CacheFilter getFilter(SD sc);
 
-	public abstract Class<SD> handlesSearchDefinition() ;
+	public abstract Class<SD> handlesSearchDefinition();
 }

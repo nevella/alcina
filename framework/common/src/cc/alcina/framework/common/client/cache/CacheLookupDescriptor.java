@@ -13,16 +13,12 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 
 	public String propertyPath;
 
-	public String getPropertyPath() {
-		return this.propertyPath;
-	}
-
 	public boolean idDescriptor;
 
 	protected CacheLookup lookup;
 
 	private boolean enabled = true;
-	
+
 	private boolean derived;
 
 	public List<String> propertyPathAlia = new ArrayList<String>();
@@ -83,6 +79,10 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 		return lookup;
 	}
 
+	public String getPropertyPath() {
+		return this.propertyPath;
+	}
+
 	public CollectionFilter<T> getRelevanceFilter() {
 		return this.relevanceFilter;
 	}
@@ -100,7 +100,6 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 	public boolean isEnabled() {
 		return this.enabled;
 	}
-
 
 	public void setDerived(boolean derived) {
 		this.derived = derived;

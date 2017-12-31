@@ -1,10 +1,9 @@
 package com.google.gwt.regexp.shared;
 
 public interface ISplitResult {
-
-	void set(int index, String value);
+	String get(int index);
 
 	int length();
 
-	String get(int index);
+	void set(int index, String value);
 }

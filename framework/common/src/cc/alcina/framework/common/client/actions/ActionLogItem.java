@@ -11,41 +11,33 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions;
 
 import java.io.Serializable;
 import java.util.Date;
 
-
 /**
  *
  * @author Nick Reddel
  */
-
- public interface ActionLogItem extends Serializable{
-
-	public Date getActionDate();
-
-	public void setActionDate(Date actionDate);
-
-	public String getActionLog();
-
-	public void setActionLog(String actionLog);
+public interface ActionLogItem extends Serializable {
+	public Class<? extends RemoteAction> getActionClass();
 
 	public String getActionClassName();
 
-	public void setActionClassName(String actionClassName);
+	public Date getActionDate();
 
-	public Class<? extends RemoteAction> getActionClass();
-
-	public void setActionClass(Class<? extends RemoteAction> actionClass);
+	public String getActionLog();
 
 	public String getShortDescription();
 
+	public void setActionClass(Class<? extends RemoteAction> actionClass);
+
+	public void setActionClassName(String actionClassName);
+
+	public void setActionDate(Date actionDate);
+
+	public void setActionLog(String actionLog);
+
 	public void setShortDescription(String shortDescription);
-	
-	
-	
-	
 }

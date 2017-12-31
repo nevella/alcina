@@ -9,10 +9,10 @@ public interface FastIdLookup {
 
 	public abstract void put(HasIdAndLocalId hili, boolean local);
 
+	public abstract void putAll(Collection<HasIdAndLocalId> values,
+			boolean local);
+
 	public abstract void remove(long id, boolean local);
 
 	public abstract Collection<HasIdAndLocalId> values();
-
-	public abstract void putAll(Collection<HasIdAndLocalId> values,
-			boolean local);
 }

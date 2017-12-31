@@ -15,7 +15,18 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 
-public class DomainTransformException extends Exception implements Serializable {
+public class DomainTransformException extends Exception
+		implements Serializable {
+	public static DomainTransformException wrap(Exception ex,
+			DomainTransformEvent event) {
+		if (ex instanceof DomainTransformException) {
+			return (DomainTransformException) ex;
+		}
+		DomainTransformException dte = new DomainTransformException(ex);
+		dte.setEvent(event);
+		return dte;
+	}
+
 	private DomainTransformEvent event;
 
 	private String detail;
@@ -31,6 +42,13 @@ public class DomainTransformException extends Exception implements Serializable 
 	public DomainTransformException() {
 	}
 
+	public DomainTransformException(DomainTransformEvent event,
+			DomainTransformExceptionType type) {
+		super(type.toString() + "\n" + event.toString());
+		this.event = event;
+		this.type = type;
+	}
+
 	public DomainTransformException(String message) {
 		super(message);
 	}
@@ -41,23 +59,6 @@ public class DomainTransformException extends Exception implements Serializable 
 
 	public DomainTransformException(Throwable t) {
 		super(t);
-	}
-
-	public DomainTransformException(DomainTransformEvent event,
-			DomainTransformExceptionType type) {
-		super(type.toString() + "\n" + event.toString());
-		this.event = event;
-		this.type = type;
-	}
-
-	public static DomainTransformException wrap(Exception ex,
-			DomainTransformEvent event) {
-		if (ex instanceof DomainTransformException) {
-			return (DomainTransformException) ex;
-		}
-		DomainTransformException dte = new DomainTransformException(ex);
-		dte.setEvent(event);
-		return dte;
 	}
 
 	public String getDetail() {
@@ -72,8 +73,21 @@ public class DomainTransformException extends Exception implements Serializable 
 		return this.request;
 	}
 
+	public String getSourceObjectName() {
+		return sourceObjectName;
+	}
+
 	public DomainTransformExceptionType getType() {
 		return type;
+	}
+
+	public boolean irresolvable() {
+		return type == DomainTransformExceptionType.INVALID_AUTHENTICATION
+				|| type == DomainTransformExceptionType.TOO_MANY_EXCEPTIONS;
+	}
+
+	public boolean isSilent() {
+		return silent;
 	}
 
 	public void setDetail(String detail) {
@@ -88,24 +102,16 @@ public class DomainTransformException extends Exception implements Serializable 
 		this.request = request;
 	}
 
-	public void setType(DomainTransformExceptionType type) {
-		this.type = type;
-	}
-
 	public void setSilent(boolean silent) {
 		this.silent = silent;
-	}
-
-	public boolean isSilent() {
-		return silent;
 	}
 
 	public void setSourceObjectName(String sourceObjectName) {
 		this.sourceObjectName = sourceObjectName;
 	}
 
-	public String getSourceObjectName() {
-		return sourceObjectName;
+	public void setType(DomainTransformExceptionType type) {
+		this.type = type;
 	}
 
 	public enum DomainTransformExceptionType {
@@ -121,10 +127,5 @@ public class DomainTransformException extends Exception implements Serializable 
 		public boolean isOnlyDiscoverableStepping() {
 			return false;
 		}
-	}
-
-	public boolean irresolvable() {
-		return type == DomainTransformExceptionType.INVALID_AUTHENTICATION
-				|| type == DomainTransformExceptionType.TOO_MANY_EXCEPTIONS;
 	}
 }

@@ -51,8 +51,9 @@ public abstract class AbstractTableWidget<T> extends AbstractBoundWidget<T> {
 		} else {
 			final Property p = Introspector.INSTANCE.getDescriptor(target)
 					.getProperty(field.getPropertyName());
-			widget = this.factory.getWidgetProvider(field.getPropertyName(),
-					p.getType()).get();
+			widget = this.factory
+					.getWidgetProvider(field.getPropertyName(), p.getType())
+					.get();
 			// TODO Figure out some way to make this read only.
 		}
 		binding = new Binding(widget, "value", field.getValidator(),
@@ -62,8 +63,8 @@ public abstract class AbstractTableWidget<T> extends AbstractBoundWidget<T> {
 		if (field.getConverter() != null) {
 			binding.getRight().converter = field.getConverter();
 		}
-		Converter inverseConverter = GwittirBridge.getInverseConverter(field
-				.getConverter());
+		Converter inverseConverter = GwittirBridge
+				.getInverseConverter(field.getConverter());
 		if (inverseConverter != null) {
 			binding.getLeft().converter = inverseConverter;
 		}

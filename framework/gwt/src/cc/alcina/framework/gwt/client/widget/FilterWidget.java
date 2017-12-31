@@ -34,7 +34,6 @@ import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
-import com.google.gwt.event.logical.shared.AttachEvent.Handler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
@@ -56,6 +55,10 @@ public class FilterWidget extends Composite
 		implements KeyUpHandler, KeyDownHandler, BlurHandler, ClickHandler {
 	private static final String ALCINA_FILTER_HINT = "alcina-FilterHint";
 
+	private static final int OTHER_KEY_DOWN = 63233;
+
+	public static int defaultFilterDelayMs = 500;
+
 	private static boolean isArrowDown(int code) {
 		switch (code) {
 		case OTHER_KEY_DOWN:
@@ -67,8 +70,6 @@ public class FilterWidget extends Composite
 	}
 
 	private TextBox textBox;
-
-	private static final int OTHER_KEY_DOWN = 63233;
 
 	private Timer queueingFinishedTimer;
 
@@ -86,8 +87,6 @@ public class FilterWidget extends Composite
 
 	private String lastQueuedText = "";
 
-	public static int defaultFilterDelayMs = 500;
-
 	private String hint;
 
 	private int filterDelayMs;
@@ -102,6 +101,10 @@ public class FilterWidget extends Composite
 	};
 
 	private int initialCursorPos;
+
+	List<HandlerRegistration> registrations = new ArrayList<>();
+
+	private String lastText = "";
 
 	public FilterWidget() {
 		this(null);
@@ -151,6 +154,10 @@ public class FilterWidget extends Composite
 		return this.initialCursorPos;
 	}
 
+	public String getLastText() {
+		return this.lastText;
+	}
+
 	public TextBox getTextBox() {
 		return this.textBox;
 	}
@@ -178,6 +185,13 @@ public class FilterWidget extends Composite
 	@Override
 	public void onBlur(BlurEvent event) {
 		changeListenerTimer.cancel();
+	}
+
+	@Override
+	public void onClick(ClickEvent event) {
+		clearHint();
+		onFocus(null);
+		textBox.setFocus(true);
 	}
 
 	/*
@@ -223,6 +237,10 @@ public class FilterWidget extends Composite
 
 	public void registerFilterable(VisualFilterable vf) {
 		this.vf = vf;
+	}
+
+	public void saveLastText() {
+		lastText = getTextBox().getText();
 	}
 
 	public void setEnterHandler(ClickHandler enterListener) {
@@ -296,8 +314,6 @@ public class FilterWidget extends Composite
 			queueCommit();
 		}
 	}
-
-	List<HandlerRegistration> registrations = new ArrayList<>();
 
 	@Override
 	protected void onAttach() {
@@ -390,22 +406,5 @@ public class FilterWidget extends Composite
 		public void onMouseDown(MouseDownEvent event) {
 			clearHint();
 		}
-	}
-
-	@Override
-	public void onClick(ClickEvent event) {
-		clearHint();
-		onFocus(null);
-		textBox.setFocus(true);
-	}
-
-	private String lastText = "";
-
-	public String getLastText() {
-		return this.lastText;
-	}
-
-	public void saveLastText() {
-		lastText = getTextBox().getText();
 	}
 }

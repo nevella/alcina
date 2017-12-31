@@ -11,12 +11,17 @@ public class FlatDeltaPersisterResult {
 
 	public int unMatchedCount = 0;
 
-	public boolean wasModified() {
-		return createCount + mergeCount + deletionCount > 0;
+	public String numbers() {
+		return String.format(
+				"created: %s - merged: %s - deleted:"
+						+ " %s - unmodified: %s - unmatched: %s",
+				createCount, mergeCount, deletionCount, noModificationCount,
+				unMatchedCount);
 	}
 
-	public enum FlatDeltaPersisterResultType {
-		CREATED, MERGED, DELETED, UNMODIFIED, UNMATCHED
+	@Override
+	public String toString() {
+		return numbers();
 	}
 
 	public void update(FlatDeltaPersisterResultType result) {
@@ -39,14 +44,11 @@ public class FlatDeltaPersisterResult {
 		}
 	}
 
-	@Override
-	public String toString() {
-		return numbers();
+	public boolean wasModified() {
+		return createCount + mergeCount + deletionCount > 0;
 	}
 
-	public String numbers() {
-		return String.format("created: %s - merged: %s - deleted:"
-				+ " %s - unmodified: %s - unmatched: %s", createCount,
-				mergeCount, deletionCount, noModificationCount, unMatchedCount);
+	public enum FlatDeltaPersisterResultType {
+		CREATED, MERGED, DELETED, UNMODIFIED, UNMATCHED
 	}
 }

@@ -22,32 +22,8 @@ import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyData;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyDataProvider;
 
 public class FlatSearchSelector extends BoundSelectorMinimal {
-	@Override
-	protected void customiseLeftWidget() {
-		super.customiseLeftWidget();
-		search.setShiftX(-3);
-		search.setShiftY(2);
-		search.setSortGroups(false);
-		search.setSortGroupContents(false);
-		search.setShowFilterInPopup(true);
-		search.setShowSelectedItemsInSearch(true);
-		search.setShowFilterRelativeTo(() -> resultsWidget);
-		search.setCloseOnPopdownFilterEmpty(false);
-		search.setRecreateItemHolderOnRefresh(true);
-		search.setMatchWidthToSource(true);
-	}
-
 	public FlatSearchSelector() {
 		super();
-	}
-
-	protected boolean allowsEmptySelection() {
-		return maxSelectedItems > 1;
-	}
-
-	@Override
-	public boolean isMultiline() {
-		return false;
 	}
 
 	public FlatSearchSelector(Class selectionObjectClass, int maxSelectedItems,
@@ -66,40 +42,41 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 		search.setLazyProvider(new LazyDataExclusive());
 	}
 
-	private class LazyDataExclusive implements LazyDataProvider {
-		private LazyData dataRequired() {
-			LazyData lazyData = new LazyData();
-			Map map = createObjectMap();
-			if (maxSelectedItems != 1) {
-				List resultValuesList = (List) results.getItemMap().values()
-						.iterator().next();
-				Set resultValues = new LinkedHashSet(resultValuesList);
-				List searchList = (List) map.values().iterator().next();
-				searchList.removeIf(v -> resultValues.contains(v));
-			}
-			lazyData.keys = new ArrayList(map.keySet());
-			lazyData.data = map;
-			return lazyData;
-		}
+	public void clearFilter() {
+		search.getFilter().clear();
+	}
 
-		@Override
-		public void getData(AsyncCallback callback) {
-			callback.onSuccess(dataRequired());
-		}
+	public String getFilterText() {
+		return search.getFilter().getTextBox().getText();
+	}
+
+	public String getLastFilterText() {
+		return search.getFilter().getLastText();
 	}
 
 	@Override
-	protected void customiseRightWidget() {
-		super.customiseRightWidget();
-		results.addWidgetClickHandler(c -> search.checkShowPopup(true));
+	public boolean isMultiline() {
+		return false;
 	}
 
 	@Override
-	protected void resultItemSelected(Object item) {
-		if (maxSelectedItems == 1) {
-			return;
-		}
-		super.resultItemSelected(item);
+	public void redrawGrid() {
+		super.redrawGrid();
+		grid.addStyleName("flat-search");
+		grid.getRowFormatter().getElement(1).getStyle()
+				.setDisplay(Display.NONE);
+	}
+
+	public void setFilterText(String lastFilterText) {
+		search.getFilter().getTextBox().setValue(lastFilterText);
+	}
+
+	public void showOptions() {
+		search.checkShowPopup(false);
+	}
+
+	protected boolean allowsEmptySelection() {
+		return maxSelectedItems > 1;
 	}
 
 	@Override
@@ -127,30 +104,53 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 	}
 
 	@Override
-	public void redrawGrid() {
-		super.redrawGrid();
-		grid.addStyleName("flat-search");
-		grid.getRowFormatter().getElement(1).getStyle()
-				.setDisplay(Display.NONE);
+	protected void customiseLeftWidget() {
+		super.customiseLeftWidget();
+		search.setShiftX(-3);
+		search.setShiftY(2);
+		search.setSortGroups(false);
+		search.setSortGroupContents(false);
+		search.setShowFilterInPopup(true);
+		search.setShowSelectedItemsInSearch(true);
+		search.setShowFilterRelativeTo(() -> resultsWidget);
+		search.setCloseOnPopdownFilterEmpty(false);
+		search.setRecreateItemHolderOnRefresh(true);
+		search.setMatchWidthToSource(true);
 	}
 
-	public void showOptions() {
-		search.checkShowPopup(false);
+	@Override
+	protected void customiseRightWidget() {
+		super.customiseRightWidget();
+		results.addWidgetClickHandler(c -> search.checkShowPopup(true));
 	}
 
-	public void clearFilter() {
-		search.getFilter().clear();
+	@Override
+	protected void resultItemSelected(Object item) {
+		if (maxSelectedItems == 1) {
+			return;
+		}
+		super.resultItemSelected(item);
 	}
 
-	public String getFilterText() {
-		return search.getFilter().getTextBox().getText();
-	}
+	private class LazyDataExclusive implements LazyDataProvider {
+		@Override
+		public void getData(AsyncCallback callback) {
+			callback.onSuccess(dataRequired());
+		}
 
-	public void setFilterText(String lastFilterText) {
-		search.getFilter().getTextBox().setValue(lastFilterText);
-	}
-
-	public String getLastFilterText() {
-		return search.getFilter().getLastText();
+		private LazyData dataRequired() {
+			LazyData lazyData = new LazyData();
+			Map map = createObjectMap();
+			if (maxSelectedItems != 1) {
+				List resultValuesList = (List) results.getItemMap().values()
+						.iterator().next();
+				Set resultValues = new LinkedHashSet(resultValuesList);
+				List searchList = (List) map.values().iterator().next();
+				searchList.removeIf(v -> resultValues.contains(v));
+			}
+			lazyData.keys = new ArrayList(map.keySet());
+			lazyData.data = map;
+			return lazyData;
+		}
 	}
 }

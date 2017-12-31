@@ -5,9 +5,7 @@ import java.util.Iterator;
 public class IteratorWithCurrent<T> {
 	private Iterator<T> itr;
 
-	public Iterator<T> getItr() {
-		return this.itr;
-	}
+	T current;
 
 	public IteratorWithCurrent(Iterator<T> itr) {
 		this.itr = itr;
@@ -16,10 +14,12 @@ public class IteratorWithCurrent<T> {
 		}
 	}
 
-	T current;
-
 	public T current() {
 		return current;
+	}
+
+	public Iterator<T> getItr() {
+		return this.itr;
 	}
 
 	public void moveNext() {

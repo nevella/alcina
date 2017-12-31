@@ -42,6 +42,10 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 		JobRegistry.get().jobError(message);
 	}
 
+	protected String jobName() {
+		return SEUtilities.friendlyClassName(getClass());
+	}
+
 	protected void jobOk(String message) {
 		JobRegistry.get().jobOk(message);
 	}
@@ -53,9 +57,5 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 		started = true;
 		jobTracker = JobRegistry.get().startJob(getClass(), jobName(), null);
 		logger = JobRegistry.get().getContextLogger();
-	}
-
-	protected String jobName() {
-		return SEUtilities.friendlyClassName(getClass());
 	}
 }

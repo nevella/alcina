@@ -48,11 +48,10 @@ import com.google.gwt.user.client.ui.impl.HyperlinkImpl;
  * </p>
  * 
  * <p>
- * <h3>Built-in Bidi Text Support</h3>
- * This widget is capable of automatically adjusting its direction according to
- * its content. This feature is controlled by {@link #setDirectionEstimator} or
- * passing a DirectionEstimator parameter to the constructor, and is off by
- * default.
+ * <h3>Built-in Bidi Text Support</h3> This widget is capable of automatically
+ * adjusting its direction according to its content. This feature is controlled
+ * by {@link #setDirectionEstimator} or passing a DirectionEstimator parameter
+ * to the constructor, and is off by default.
  * </p>
  *
  * <p>
@@ -70,311 +69,341 @@ import com.google.gwt.user.client.ui.impl.HyperlinkImpl;
  * 
  * @see Anchor
  */
-//Nick - just super-override so we can turn off history triggering
+// Nick - just super-override so we can turn off history triggering
 @SuppressWarnings("deprecation")
 public class Hyperlink extends Widget implements HasHTML, SourcesClickEvents,
-    HasClickHandlers, HasDirectionEstimator, HasDirectionalSafeHtml {
+		HasClickHandlers, HasDirectionEstimator, HasDirectionalSafeHtml {
+	public static final DirectionEstimator DEFAULT_DIRECTION_ESTIMATOR = DirectionalTextHelper.DEFAULT_DIRECTION_ESTIMATOR;
 
-  public static final DirectionEstimator DEFAULT_DIRECTION_ESTIMATOR =
-      DirectionalTextHelper.DEFAULT_DIRECTION_ESTIMATOR;
+	private static HyperlinkImpl impl = GWT.create(HyperlinkImpl.class);
 
-  private static HyperlinkImpl impl = GWT.create(HyperlinkImpl.class);
+	protected final DirectionalTextHelper directionalTextHelper;
 
-  protected final DirectionalTextHelper directionalTextHelper;
-  private final Element anchorElem = DOM.createAnchor();
-  private String targetHistoryToken;
+	private final Element anchorElem = DOM.createAnchor();
 
-  /**
-   * Creates an empty hyperlink.
-   */
-  public Hyperlink() {
-    this(DOM.createDiv());
-  }
+	private String targetHistoryToken;
 
-  /**
-   * Creates a hyperlink with its html and target history token specified.
-   *
-   * @param html the hyperlink's safe html
-   * @param targetHistoryToken the history token to which it will link
-   * @see #setTargetHistoryToken
-   */
-  public Hyperlink(SafeHtml html, String targetHistoryToken) {
-    this(html.asString(), true, targetHistoryToken);
-  }
+	/**
+	 * Creates an empty hyperlink.
+	 */
+	public Hyperlink() {
+		this(DOM.createDiv());
+	}
 
-  /**
-   * Creates a hyperlink with its html and target history token specified.
-   *
-   * @param html the hyperlink's safe html
-   * @param dir the html's direction
-   * @param targetHistoryToken the history token to which it will link
-   * @see #setTargetHistoryToken
-   */
-  public Hyperlink(SafeHtml html, Direction dir, String targetHistoryToken) {
-    this(html.asString(), true, dir, targetHistoryToken);
-  }
-  
-  /**
-   * Creates a hyperlink with its html and target history token specified.
-   *
-   * @param html the hyperlink's safe html
-   * @param directionEstimator A DirectionEstimator object used for automatic
-   *          direction adjustment. For convenience,
-   *          {@link #DEFAULT_DIRECTION_ESTIMATOR} can be used.
-   * @param targetHistoryToken the history token to which it will link
-   * @see #setTargetHistoryToken
-   */
-  public Hyperlink(SafeHtml html, DirectionEstimator directionEstimator,
-      String targetHistoryToken) {
-    this(html.asString(), true, directionEstimator, targetHistoryToken);
-  }
+	/**
+	 * Creates a hyperlink with its html and target history token specified.
+	 *
+	 * @param html
+	 *            the hyperlink's safe html
+	 * @param dir
+	 *            the html's direction
+	 * @param targetHistoryToken
+	 *            the history token to which it will link
+	 * @see #setTargetHistoryToken
+	 */
+	public Hyperlink(SafeHtml html, Direction dir, String targetHistoryToken) {
+		this(html.asString(), true, dir, targetHistoryToken);
+	}
 
-  /**
-   * Creates a hyperlink with its text and target history token specified.
-   *
-   * @param text the hyperlink's text
-   * @param targetHistoryToken the history token to which it will link, which
-   *          may not be null (use {@link Anchor} instead if you don't need
-   *          history processing)
-   */
-  public Hyperlink(String text, String targetHistoryToken) {
-    this(text, false, targetHistoryToken);
-  }
+	/**
+	 * Creates a hyperlink with its html and target history token specified.
+	 *
+	 * @param html
+	 *            the hyperlink's safe html
+	 * @param directionEstimator
+	 *            A DirectionEstimator object used for automatic direction
+	 *            adjustment. For convenience,
+	 *            {@link #DEFAULT_DIRECTION_ESTIMATOR} can be used.
+	 * @param targetHistoryToken
+	 *            the history token to which it will link
+	 * @see #setTargetHistoryToken
+	 */
+	public Hyperlink(SafeHtml html, DirectionEstimator directionEstimator,
+			String targetHistoryToken) {
+		this(html.asString(), true, directionEstimator, targetHistoryToken);
+	}
 
-  /**
-   * Creates a hyperlink with its text and target history token specified.
-   * 
-   * @param text the hyperlink's text
-   * @param dir the text's direction
-   * @param targetHistoryToken the history token to which it will link, which
-   *          may not be null (use {@link Anchor} instead if you don't need
-   *          history processing)
-   */
-  public Hyperlink(String text, Direction dir, String targetHistoryToken) {
-    this(text, false, dir, targetHistoryToken);
-  }
+	/**
+	 * Creates a hyperlink with its html and target history token specified.
+	 *
+	 * @param html
+	 *            the hyperlink's safe html
+	 * @param targetHistoryToken
+	 *            the history token to which it will link
+	 * @see #setTargetHistoryToken
+	 */
+	public Hyperlink(SafeHtml html, String targetHistoryToken) {
+		this(html.asString(), true, targetHistoryToken);
+	}
 
-  /**
-   * Creates a hyperlink with its text and target history token specified.
-   * 
-   * @param text the hyperlink's text
-   * @param directionEstimator A DirectionEstimator object used for automatic
-   *          direction adjustment. For convenience,
-   *          {@link #DEFAULT_DIRECTION_ESTIMATOR} can be used.
-   * @param targetHistoryToken the history token to which it will link, which
-   *          may not be null (use {@link Anchor} instead if you don't need
-   *          history processing)
-   */
-  public Hyperlink(String text, DirectionEstimator directionEstimator,
-      String targetHistoryToken) {
-    this(text, false, directionEstimator, targetHistoryToken);
-  }
+	/**
+	 * Creates a hyperlink with its text and target history token specified.
+	 *
+	 * @param text
+	 *            the hyperlink's text
+	 * @param asHTML
+	 *            <code>true</code> to treat the specified text as html
+	 * @param targetHistoryToken
+	 *            the history token to which it will link
+	 * @see #setTargetHistoryToken
+	 */
+	public Hyperlink(String text, boolean asHTML, String targetHistoryToken) {
+		this();
+		directionalTextHelper.setTextOrHtml(text, asHTML);
+		setTargetHistoryToken(targetHistoryToken);
+	}
 
-  /**
-   * Creates a hyperlink with its text and target history token specified.
-   *
-   * @param text the hyperlink's text
-   * @param asHTML <code>true</code> to treat the specified text as html
-   * @param targetHistoryToken the history token to which it will link
-   * @see #setTargetHistoryToken
-   */
-  public Hyperlink(String text, boolean asHTML, String targetHistoryToken) {
-    this();
-    directionalTextHelper.setTextOrHtml(text, asHTML);
-    setTargetHistoryToken(targetHistoryToken);
-  }
-  
-  protected Hyperlink(Element elem) {
-    if (elem == null) {
-      setElement(anchorElem);
-    } else {
-      setElement(elem);
-      DOM.appendChild(getElement(), anchorElem);
-    }
+	/**
+	 * Creates a hyperlink with its text and target history token specified.
+	 * 
+	 * @param text
+	 *            the hyperlink's text
+	 * @param dir
+	 *            the text's direction
+	 * @param targetHistoryToken
+	 *            the history token to which it will link, which may not be null
+	 *            (use {@link Anchor} instead if you don't need history
+	 *            processing)
+	 */
+	public Hyperlink(String text, Direction dir, String targetHistoryToken) {
+		this(text, false, dir, targetHistoryToken);
+	}
 
-    sinkEvents(Event.ONCLICK);
-    setStyleName("gwt-Hyperlink");
-    directionalTextHelper = new DirectionalTextHelper(anchorElem,
-        /* is inline */ true);
-  }
+	/**
+	 * Creates a hyperlink with its text and target history token specified.
+	 * 
+	 * @param text
+	 *            the hyperlink's text
+	 * @param directionEstimator
+	 *            A DirectionEstimator object used for automatic direction
+	 *            adjustment. For convenience,
+	 *            {@link #DEFAULT_DIRECTION_ESTIMATOR} can be used.
+	 * @param targetHistoryToken
+	 *            the history token to which it will link, which may not be null
+	 *            (use {@link Anchor} instead if you don't need history
+	 *            processing)
+	 */
+	public Hyperlink(String text, DirectionEstimator directionEstimator,
+			String targetHistoryToken) {
+		this(text, false, directionEstimator, targetHistoryToken);
+	}
 
-  /**
-   * Creates a hyperlink with its text target history token specified.
-   *
-   * @param text the hyperlink's text
-   * @param asHTML <code>true</code> to treat the specified text as html
-   * @param dir the text's direction
-   * @param targetHistoryToken the history token to which it will link
-   * @see #setTargetHistoryToken
-   */
-  private Hyperlink(String text, boolean asHTML, Direction dir,
-      String targetHistoryToken) {
-    this();
-    directionalTextHelper.setTextOrHtml(text, dir, asHTML);
-    setTargetHistoryToken(targetHistoryToken);
-  }
+	/**
+	 * Creates a hyperlink with its text and target history token specified.
+	 *
+	 * @param text
+	 *            the hyperlink's text
+	 * @param targetHistoryToken
+	 *            the history token to which it will link, which may not be null
+	 *            (use {@link Anchor} instead if you don't need history
+	 *            processing)
+	 */
+	public Hyperlink(String text, String targetHistoryToken) {
+		this(text, false, targetHistoryToken);
+	}
 
-  /**
-   * Creates a hyperlink with its text and target history token specified.
-   *
-   * @param text the hyperlink's text
-   * @param asHTML <code>true</code> to treat the specified text as html
-   * @param directionEstimator A DirectionEstimator object used for automatic
-   *          direction adjustment. For convenience,
-   *          {@link #DEFAULT_DIRECTION_ESTIMATOR} can be used.
-   * @param targetHistoryToken the history token to which it will link
-   * @see #setTargetHistoryToken
-   */
-  private Hyperlink(String text, boolean asHTML,
-      DirectionEstimator directionEstimator, String targetHistoryToken) {
-    this();
-    directionalTextHelper.setDirectionEstimator(directionEstimator);
-    directionalTextHelper.setTextOrHtml(text, asHTML);
-    setTargetHistoryToken(targetHistoryToken);
-  }
+	/**
+	 * Creates a hyperlink with its text target history token specified.
+	 *
+	 * @param text
+	 *            the hyperlink's text
+	 * @param asHTML
+	 *            <code>true</code> to treat the specified text as html
+	 * @param dir
+	 *            the text's direction
+	 * @param targetHistoryToken
+	 *            the history token to which it will link
+	 * @see #setTargetHistoryToken
+	 */
+	private Hyperlink(String text, boolean asHTML, Direction dir,
+			String targetHistoryToken) {
+		this();
+		directionalTextHelper.setTextOrHtml(text, dir, asHTML);
+		setTargetHistoryToken(targetHistoryToken);
+	}
 
-  /**
-   * @deprecated Use {@link Anchor#addClickHandler} instead and call
-   *     History.newItem from the handler if you need to process the
-   *     click before the history token is set.
-   */
-  @Deprecated
-  public HandlerRegistration addClickHandler(ClickHandler handler) {
-    return addHandler(handler, ClickEvent.getType());
-  }
+	/**
+	 * Creates a hyperlink with its text and target history token specified.
+	 *
+	 * @param text
+	 *            the hyperlink's text
+	 * @param asHTML
+	 *            <code>true</code> to treat the specified text as html
+	 * @param directionEstimator
+	 *            A DirectionEstimator object used for automatic direction
+	 *            adjustment. For convenience,
+	 *            {@link #DEFAULT_DIRECTION_ESTIMATOR} can be used.
+	 * @param targetHistoryToken
+	 *            the history token to which it will link
+	 * @see #setTargetHistoryToken
+	 */
+	private Hyperlink(String text, boolean asHTML,
+			DirectionEstimator directionEstimator, String targetHistoryToken) {
+		this();
+		directionalTextHelper.setDirectionEstimator(directionEstimator);
+		directionalTextHelper.setTextOrHtml(text, asHTML);
+		setTargetHistoryToken(targetHistoryToken);
+	}
 
-  /**
-   * @deprecated Use {@link Anchor#addClickHandler} instead and call
-   *     History.newItem from the handler if you need to process the
-   *     click before the history token is set.
-   */
-  @Deprecated
-  public void addClickListener(ClickListener listener) {
-    ListenerWrapper.WrappedClickListener.add(this, listener);
-  }
+	protected Hyperlink(Element elem) {
+		if (elem == null) {
+			setElement(anchorElem);
+		} else {
+			setElement(elem);
+			DOM.appendChild(getElement(), anchorElem);
+		}
+		sinkEvents(Event.ONCLICK);
+		setStyleName("gwt-Hyperlink");
+		directionalTextHelper = new DirectionalTextHelper(anchorElem,
+				/* is inline */ true);
+	}
 
-  public DirectionEstimator getDirectionEstimator() {
-    return directionalTextHelper.getDirectionEstimator();
-  }
+	/**
+	 * @deprecated Use {@link Anchor#addClickHandler} instead and call
+	 *             History.newItem from the handler if you need to process the
+	 *             click before the history token is set.
+	 */
+	@Deprecated
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addHandler(handler, ClickEvent.getType());
+	}
 
-  public String getHTML() {
-    return directionalTextHelper.getTextOrHtml(true);
-  }
+	/**
+	 * @deprecated Use {@link Anchor#addClickHandler} instead and call
+	 *             History.newItem from the handler if you need to process the
+	 *             click before the history token is set.
+	 */
+	@Deprecated
+	public void addClickListener(ClickListener listener) {
+		ListenerWrapper.WrappedClickListener.add(this, listener);
+	}
 
-  /**
-   * Gets the history token referenced by this hyperlink.
-   * 
-   * @return the target history token
-   * @see #setTargetHistoryToken
-   */
-  public String getTargetHistoryToken() {
-    return targetHistoryToken;
-  }
+	public DirectionEstimator getDirectionEstimator() {
+		return directionalTextHelper.getDirectionEstimator();
+	}
 
-  public String getText() {
-    return directionalTextHelper.getTextOrHtml(false);
-  }
+	public String getHTML() {
+		return directionalTextHelper.getTextOrHtml(true);
+	}
 
-  public Direction getTextDirection() {
-    return directionalTextHelper.getTextDirection();
-  }
+	/**
+	 * Gets the history token referenced by this hyperlink.
+	 * 
+	 * @return the target history token
+	 * @see #setTargetHistoryToken
+	 */
+	public String getTargetHistoryToken() {
+		return targetHistoryToken;
+	}
 
-  @Override
-  public void onBrowserEvent(Event event) {
-    super.onBrowserEvent(event);
-    if (DOM.eventGetType(event) == Event.ONCLICK && impl.handleAsClick(event)) {
-      History.newItem(getTargetHistoryToken());
-      event.preventDefault();
-    }
-  }
-  protected void superOnBrowserEvent(Event event){
-	  super.onBrowserEvent(event);
-  }
+	public String getText() {
+		return directionalTextHelper.getTextOrHtml(false);
+	}
 
-  /**
-   * @deprecated Use the {@link HandlerRegistration#removeHandler}
-   * method on the object returned by an add*Handler method instead
-   */
-  @Deprecated
-  public void removeClickListener(ClickListener listener) {
-    ListenerWrapper.WrappedClickListener.remove(this, listener);
-  }
+	public Direction getTextDirection() {
+		return directionalTextHelper.getTextDirection();
+	}
 
-  /**
-   * {@inheritDoc}
-   * <p>
-   * See note at {@link #setDirectionEstimator(DirectionEstimator)}.
-   */
-  public void setDirectionEstimator(boolean enabled) {
-    directionalTextHelper.setDirectionEstimator(enabled);
-  }
+	@Override
+	public void onBrowserEvent(Event event) {
+		super.onBrowserEvent(event);
+		if (DOM.eventGetType(event) == Event.ONCLICK
+				&& impl.handleAsClick(event)) {
+			History.newItem(getTargetHistoryToken());
+			event.preventDefault();
+		}
+	}
 
-  /**
-   * {@inheritDoc}
-   * <p>
-   * Note: DirectionEstimator should be set before the widget has any content;
-   * it's highly recommended to set it using a constructor. Reason: if the
-   * widget already has non-empty content, this will update its direction
-   * according to the new estimator's result. This may cause flicker, and thus
-   * should be avoided.
-   */
-  public void setDirectionEstimator(DirectionEstimator directionEstimator) {
-    directionalTextHelper.setDirectionEstimator(directionEstimator);
-  }
+	/**
+	 * @deprecated Use the {@link HandlerRegistration#removeHandler} method on
+	 *             the object returned by an add*Handler method instead
+	 */
+	@Deprecated
+	public void removeClickListener(ClickListener listener) {
+		ListenerWrapper.WrappedClickListener.remove(this, listener);
+	}
 
-  public void setHTML(SafeHtml html) {
-    setHTML(html.asString());
-  }
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * See note at {@link #setDirectionEstimator(DirectionEstimator)}.
+	 */
+	public void setDirectionEstimator(boolean enabled) {
+		directionalTextHelper.setDirectionEstimator(enabled);
+	}
 
-  public void setHTML(String html) {
-    directionalTextHelper.setTextOrHtml(html, true);
-  }
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * Note: DirectionEstimator should be set before the widget has any content;
+	 * it's highly recommended to set it using a constructor. Reason: if the
+	 * widget already has non-empty content, this will update its direction
+	 * according to the new estimator's result. This may cause flicker, and thus
+	 * should be avoided.
+	 */
+	public void setDirectionEstimator(DirectionEstimator directionEstimator) {
+		directionalTextHelper.setDirectionEstimator(directionEstimator);
+	}
 
-  public void setHTML(SafeHtml html, Direction dir) {
-    directionalTextHelper.setTextOrHtml(html.asString(), dir, true);
-  }
+	/**
+	 * For compatibility - if old code uses Hyperlink, but the refs are really
+	 * full links
+	 */
+	public void setHref(String href) {
+		anchorElem.setPropertyString("href", href);
+	}
 
-  /**
-   * Sets the history token referenced by this hyperlink. This is the history
-   * token that will be passed to {@link History#newItem} when this link is
-   * clicked.
-   *
-   * @param targetHistoryToken the new history token, which may not be null (use
-   *          {@link Anchor} instead if you don't need history processing)
-   */
-  public void setTargetHistoryToken(String targetHistoryToken) {
-    assert targetHistoryToken != null
-      : "targetHistoryToken must not be null, consider using Anchor instead";
-    this.targetHistoryToken = targetHistoryToken;
-    String hash = History.encodeHistoryTokenWithHash(targetHistoryToken);
-    anchorElem.setPropertyString("href",  hash);
-  }
-  /**
-   * For compatibility - if old code uses Hyperlink, but the refs are really full links
-   */
-  public void setHref(String href){
-	  anchorElem.setPropertyString("href",  href);  
-  }
+	public void setHTML(SafeHtml html) {
+		setHTML(html.asString());
+	}
 
-  public void setText(String text) {
-    directionalTextHelper.setTextOrHtml(text, false);
-  }
+	public void setHTML(SafeHtml html, Direction dir) {
+		directionalTextHelper.setTextOrHtml(html.asString(), dir, true);
+	}
 
-  public void setText(String text, Direction dir) {
-    directionalTextHelper.setTextOrHtml(text, dir, false);
-  }
+	public void setHTML(String html) {
+		directionalTextHelper.setTextOrHtml(html, true);
+	}
 
-  /**
-   * <b>Affected Elements:</b>
-   * <ul>
-   * <li>-wrapper = the div around the link.</li>
-   * </ul>
-   * 
-   * @see UIObject#onEnsureDebugId(String)
-   */
-  @Override
-  protected void onEnsureDebugId(String baseID) {
-    ensureDebugId(anchorElem, "", baseID);
-    ensureDebugId(getElement(), baseID, "wrapper");
-  }
+	/**
+	 * Sets the history token referenced by this hyperlink. This is the history
+	 * token that will be passed to {@link History#newItem} when this link is
+	 * clicked.
+	 *
+	 * @param targetHistoryToken
+	 *            the new history token, which may not be null (use
+	 *            {@link Anchor} instead if you don't need history processing)
+	 */
+	public void setTargetHistoryToken(String targetHistoryToken) {
+		assert targetHistoryToken != null : "targetHistoryToken must not be null, consider using Anchor instead";
+		this.targetHistoryToken = targetHistoryToken;
+		String hash = History.encodeHistoryTokenWithHash(targetHistoryToken);
+		anchorElem.setPropertyString("href", hash);
+	}
+
+	public void setText(String text) {
+		directionalTextHelper.setTextOrHtml(text, false);
+	}
+
+	public void setText(String text, Direction dir) {
+		directionalTextHelper.setTextOrHtml(text, dir, false);
+	}
+
+	/**
+	 * <b>Affected Elements:</b>
+	 * <ul>
+	 * <li>-wrapper = the div around the link.</li>
+	 * </ul>
+	 * 
+	 * @see UIObject#onEnsureDebugId(String)
+	 */
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		ensureDebugId(anchorElem, "", baseID);
+		ensureDebugId(getElement(), baseID, "wrapper");
+	}
+
+	protected void superOnBrowserEvent(Event event) {
+		super.onBrowserEvent(event);
+	}
 }

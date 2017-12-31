@@ -23,8 +23,22 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * @author Nick Reddel
  */
 public class StandardDataImageProvider {
+	public static StandardDataImageProvider get() {
+		StandardDataImageProvider singleton = Registry
+				.checkSingleton(StandardDataImageProvider.class);
+		if (singleton == null) {
+			singleton = new StandardDataImageProvider();
+			Registry.registerSingleton(StandardDataImageProvider.class,
+					singleton);
+		}
+		return singleton;
+	}
+
 	private StandardDataImages dataImages = GWT
 			.create(StandardDataImages.class);
+
+	private StandardDataImageProvider() {
+	}
 
 	public AbstractImagePrototype getByName(String s) {
 		s = (s == null) ? "" : s;
@@ -36,17 +50,5 @@ public class StandardDataImageProvider {
 
 	public StandardDataImages getDataImages() {
 		return dataImages;
-	}
-
-	private StandardDataImageProvider() {
-	}
-
-	public static StandardDataImageProvider get() {
-		StandardDataImageProvider singleton = Registry.checkSingleton(StandardDataImageProvider.class);
-		if (singleton == null) {
-			singleton = new StandardDataImageProvider();
-			Registry.registerSingleton(StandardDataImageProvider.class, singleton);
-		}
-		return singleton;
 	}
 }

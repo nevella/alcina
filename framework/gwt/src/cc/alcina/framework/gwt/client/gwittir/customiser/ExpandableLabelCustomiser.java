@@ -38,6 +38,7 @@ public class ExpandableLabelCustomiser implements Customiser {
 	public static final String ESCAPE_HTML = "ESCAPE_HTML";
 
 	public static final String RENDERER_CLASS = "RENDERER_CLASS";
+
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		Class rendererClass = NamedParameter.Support
@@ -58,6 +59,6 @@ public class ExpandableLabelCustomiser implements Customiser {
 		p = NamedParameter.Support.getParameter(info.parameters(), ESCAPE_HTML);
 		boolean escapeHtml = p == null ? true : p.booleanValue();
 		return new ExpandableStringLabelProvider(maxLength, forceColumnWidth,
-				showNewlinesAsBreaks, showAsPopup,escapeHtml,rendererClass);
+				showNewlinesAsBreaks, showAsPopup, escapeHtml, rendererClass);
 	}
 }

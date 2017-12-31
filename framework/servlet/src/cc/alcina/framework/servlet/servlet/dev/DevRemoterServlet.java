@@ -29,6 +29,22 @@ import cc.alcina.framework.gwt.client.util.Base64Utils;
 public abstract class DevRemoterServlet extends HttpServlet {
 	public static final String DEV_REMOTER_PARAMS = "devRemoterParams";
 
+	private Class normaliseClass(Class c1) {
+		if (c1.isPrimitive()) {
+			if (c1 == void.class) {
+				return Void.class;
+			}
+			if (c1 == boolean.class) {
+				return Boolean.class;
+			}
+			return Number.class;
+		}
+		if (Number.class.isAssignableFrom(c1)) {
+			return Number.class;
+		}
+		return c1;
+	}
+
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse res)
 			throws ServletException, IOException {
@@ -120,21 +136,5 @@ public abstract class DevRemoterServlet extends HttpServlet {
 		Class nc2 = normaliseClass(c2);
 		return nc1.isAssignableFrom(nc2)
 				|| (nc2 == Void.class && !c1.isPrimitive());
-	}
-
-	private Class normaliseClass(Class c1) {
-		if (c1.isPrimitive()) {
-			if (c1 == void.class) {
-				return Void.class;
-			}
-			if (c1 == boolean.class) {
-				return Boolean.class;
-			}
-			return Number.class;
-		}
-		if (Number.class.isAssignableFrom(c1)) {
-			return Number.class;
-		}
-		return c1;
 	}
 }

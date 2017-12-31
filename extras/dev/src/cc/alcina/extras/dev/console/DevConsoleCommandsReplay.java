@@ -13,34 +13,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
 
 public class DevConsoleCommandsReplay {
-	public static class CmdConvertCommandLogToReplays extends DevConsoleCommand {
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "rpi" };
-		}
-
-		@Override
-		public String getDescription() {
-			return "convert a client log to a series of replay instructions";
-		}
-
-		@Override
-		public String getUsage() {
-			return "rpi (will prompt for text, or copy from clipboard)";
-		}
-
-		@Override
-		public String run(String[] argv) throws Exception {
-			String rpi = console
-					.getMultilineInput("Enter the log text, or blank for clipboard: ");
-			rpi = rpi.isEmpty() ? console.getClipboardContents() : rpi;
-			String ser = extractReplayInstructions(rpi);
-			System.out.println(ser);
-			console.setClipboardContents(ser);
-			System.out.println("\n");
-			return "ok";
-		}
-
+	public static class CmdConvertCommandLogToReplays
+			extends DevConsoleCommand {
 		@Override
 		public boolean clsBeforeRun() {
 			return true;
@@ -49,10 +23,11 @@ public class DevConsoleCommandsReplay {
 		public String extractReplayInstructions(String rpi) {
 			List<ReplayInstruction> instructions = new ArrayList<ReplayInstruction>();
 			if (rpi.contains("Deobfuscated stacktrace:")) {
-				String enumStr = CommonUtils.join(
-						ReplayInstructionType.values(), "|").toLowerCase();
-				Pattern p1 = Pattern.compile(String.format(
-						".+?\\| (%s)\\s+\\| (.+)", enumStr));
+				String enumStr = CommonUtils
+						.join(ReplayInstructionType.values(), "|")
+						.toLowerCase();
+				Pattern p1 = Pattern.compile(
+						String.format(".+?\\| (%s)\\s+\\| (.+)", enumStr));
 				Pattern p2 = Pattern.compile(" {60,}(\\S.+)");
 				String type = null;
 				String txt = null;
@@ -86,13 +61,40 @@ public class DevConsoleCommandsReplay {
 			return CommonUtils.join(instructions, "\n");
 		}
 
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "rpi" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "convert a client log to a series of replay instructions";
+		}
+
+		@Override
+		public String getUsage() {
+			return "rpi (will prompt for text, or copy from clipboard)";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			String rpi = console.getMultilineInput(
+					"Enter the log text, or blank for clipboard: ");
+			rpi = rpi.isEmpty() ? console.getClipboardContents() : rpi;
+			String ser = extractReplayInstructions(rpi);
+			System.out.println(ser);
+			console.setClipboardContents(ser);
+			System.out.println("\n");
+			return "ok";
+		}
+
 		private void addInstruction(List<ReplayInstruction> instructions,
 				String group1, String group0, String g2) {
 			if (group0.contains("DIV.test-overlay")) {
 				return;
 			}
-			ReplayInstructionType type = CommonUtils.getEnumValueOrNull(
-					ReplayInstructionType.class, group1);
+			ReplayInstructionType type = CommonUtils
+					.getEnumValueOrNull(ReplayInstructionType.class, group1);
 			if (type != null) {
 				if (g2.contains("\\tvalue :: ")) {
 					g2 = ReplayInstruction.unescape(g2);

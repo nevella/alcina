@@ -21,12 +21,17 @@ public abstract class AbstractPersistenceLayerTransformExceptionPolicy
 	public void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
 			throws DomainTransformException {
 		if (checkVersion) {
-			if(transformConflicts==null){
-				transformConflicts=new TransformConflicts();
-				transformConflicts.setTransformPersistenceToken(transformPersistenceToken);
+			if (transformConflicts == null) {
+				transformConflicts = new TransformConflicts();
+				transformConflicts.setTransformPersistenceToken(
+						transformPersistenceToken);
 			}
 			transformConflicts.checkVersion(obj, event);
 		}
+	}
+
+	public TransformPersistenceToken getTransformPersistenceToken() {
+		return this.transformPersistenceToken;
 	}
 
 	public boolean isCheckVersion() {
@@ -35,10 +40,6 @@ public abstract class AbstractPersistenceLayerTransformExceptionPolicy
 
 	public void setCheckVersion(boolean checkVersion) {
 		this.checkVersion = checkVersion;
-	}
-
-	public TransformPersistenceToken getTransformPersistenceToken() {
-		return this.transformPersistenceToken;
 	}
 
 	public void setTransformPersistenceToken(

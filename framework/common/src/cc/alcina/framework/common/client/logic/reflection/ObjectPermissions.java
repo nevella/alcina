@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
@@ -26,16 +25,18 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target( { ElementType.TYPE })
+@Target({ ElementType.TYPE })
 @ClientVisible
 /**
  *
  * @author Nick Reddel
  */
+public @interface ObjectPermissions {
+	Permission create() default @Permission(access = AccessLevel.ROOT);
 
- public @interface ObjectPermissions {
-	Permission create() default  @Permission(access=AccessLevel.ROOT);
-	Permission delete() default  @Permission(access=AccessLevel.ROOT);
-	Permission read() default  @Permission(access=AccessLevel.ADMIN_OR_OWNER);
-	Permission write() default  @Permission(access=AccessLevel.ADMIN_OR_OWNER);
+	Permission delete() default @Permission(access = AccessLevel.ROOT);
+
+	Permission read() default @Permission(access = AccessLevel.ADMIN_OR_OWNER);
+
+	Permission write() default @Permission(access = AccessLevel.ADMIN_OR_OWNER);
 }

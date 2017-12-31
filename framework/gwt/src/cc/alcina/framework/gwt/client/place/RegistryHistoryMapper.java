@@ -18,6 +18,10 @@ import cc.alcina.framework.common.client.util.Multimap;
 @ClientInstantiable
 @RegistryLocation(registryPoint = RegistryHistoryMapper.class, implementationType = ImplementationType.SINGLETON)
 public class RegistryHistoryMapper implements PlaceHistoryMapper {
+	public static RegistryHistoryMapper get() {
+		return Registry.impl(RegistryHistoryMapper.class);
+	}
+
 	Multimap<String, List<BasePlaceTokenizer>> tokenizersByPrefix = new Multimap<>();
 
 	Map<Class, BasePlaceTokenizer> tokenizersByPlace = new LinkedHashMap<>();
@@ -28,37 +32,19 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	private Place lastPlace;
 
+	boolean initialised = false;
+
 	public RegistryHistoryMapper() {
 		ensurePlaceLookup();
 	}
 
-	public static RegistryHistoryMapper get() {
-		return Registry.impl(RegistryHistoryMapper.class);
+	public <T extends Place> T copyPlace(T place) {
+		String token = getToken(place);
+		return (T) getPlace(token);
 	}
 
-	boolean initialised = false;
-
-	private synchronized void ensurePlaceLookup() {
-		if (initialised) {
-			return;
-		}
-		initialised = true;
-		List<BasePlaceTokenizer> impls = Registry
-				.impls(BasePlaceTokenizer.class);
-		for (BasePlaceTokenizer tokenizer : impls) {
-			tokenizersByPrefix.add(tokenizer.getPrefix(), tokenizer);
-			tokenizersByPlace.put(tokenizer.getTokenizedClass(), tokenizer);
-			if(tokenizer.isCanonicalModelClassTokenizer()){
-			tokenizersByModelClass.put(tokenizer.getModelClass(), tokenizer);
-			}
-			tokenizer.register(tokenizersByModelClass);
-		}
-		List<BasePlace> places = Registry.impls(BasePlace.class);
-		for (BasePlace place : places) {
-			if (place instanceof SubPlace) {
-				placesBySubPlace.put(((SubPlace) place).getSub(), place);
-			}
-		}
+	public boolean equalPlaces(Place place1, Place place2) {
+		return getToken(place1).equals(getToken(place2));
 	}
 
 	@Override
@@ -84,6 +70,14 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		return place;
 	}
 
+	public synchronized Place getPlaceByModelClass(Class<?> clazz) {
+		return tokenizersByModelClass.get(clazz).createDefaultPlace();
+	}
+
+	public synchronized BasePlace getPlaceBySubPlace(Enum value) {
+		return placesBySubPlace.get(value).copy();
+	}
+
 	@Override
 	public synchronized String getToken(Place place) {
 		if (place == null) {
@@ -92,20 +86,27 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		return tokenizersByPlace.get(place.getClass()).getToken(place);
 	}
 
-	public <T extends Place> T copyPlace(T place) {
-		String token = getToken(place);
-		return (T) getPlace(token);
-	}
-
-	public boolean equalPlaces(Place place1, Place place2) {
-		return getToken(place1).equals(getToken(place2));
-	}
-
-	public synchronized  Place getPlaceByModelClass(Class<?> clazz) {
-		return tokenizersByModelClass.get(clazz).createDefaultPlace();
-	}
-
-	public synchronized BasePlace getPlaceBySubPlace(Enum value) {
-		return placesBySubPlace.get(value).copy();
+	private synchronized void ensurePlaceLookup() {
+		if (initialised) {
+			return;
+		}
+		initialised = true;
+		List<BasePlaceTokenizer> impls = Registry
+				.impls(BasePlaceTokenizer.class);
+		for (BasePlaceTokenizer tokenizer : impls) {
+			tokenizersByPrefix.add(tokenizer.getPrefix(), tokenizer);
+			tokenizersByPlace.put(tokenizer.getTokenizedClass(), tokenizer);
+			if (tokenizer.isCanonicalModelClassTokenizer()) {
+				tokenizersByModelClass.put(tokenizer.getModelClass(),
+						tokenizer);
+			}
+			tokenizer.register(tokenizersByModelClass);
+		}
+		List<BasePlace> places = Registry.impls(BasePlace.class);
+		for (BasePlace place : places) {
+			if (place instanceof SubPlace) {
+				placesBySubPlace.put(((SubPlace) place).getSub(), place);
+			}
+		}
 	}
 }

@@ -35,6 +35,7 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 		}
 		return Reflections.classLookup().getClassForName(className);
 	}
+
 	private static String unescape(String s) {
 		int idx = 0, x = 0;
 		StringBuffer sb = new StringBuffer();
@@ -54,18 +55,24 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 		sb.append(s.substring(x));
 		return s.toString();
 	}
+
 	private SimpleStringParser20 asyncParser = null;
 
-	private CurrentUtcDateProvider utcDateProvider = Registry.impl(CurrentUtcDateProvider.class);
+	private CurrentUtcDateProvider utcDateProvider = Registry
+			.impl(CurrentUtcDateProvider.class);
 
 	public void appendTo(DomainTransformEvent domainTransformEvent,
 			StringBuffer sb) {
 		String ns = domainTransformEvent.getNewStringValue() == null
-				|| (domainTransformEvent.getNewStringValue().indexOf("\n") == -1 && domainTransformEvent
-						.getNewStringValue().indexOf("\\") != -1) ? domainTransformEvent
-				.getNewStringValue()
-				: domainTransformEvent.getNewStringValue()
-						.replace("\\", "\\\\").replace("\n", "\\n");
+				|| (domainTransformEvent.getNewStringValue().indexOf("\n") == -1
+						&& domainTransformEvent.getNewStringValue()
+								.indexOf("\\") != -1)
+										? domainTransformEvent
+												.getNewStringValue()
+										: domainTransformEvent
+												.getNewStringValue()
+												.replace("\\", "\\\\")
+												.replace("\n", "\\n");
 		sb.append(getDomainTransformEventMarker());
 		String newlineTab = "\n\t";
 		sb.append(newlineTab);
@@ -75,9 +82,8 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 		sb.append(SimpleStringParser20
 				.longToGwtDoublesToString(domainTransformEvent.getObjectId()));
 		sb.append(",");
-		sb.append(SimpleStringParser20
-				.longToGwtDoublesToString(domainTransformEvent
-						.getObjectLocalId()));
+		sb.append(SimpleStringParser20.longToGwtDoublesToString(
+				domainTransformEvent.getObjectLocalId()));
 		sb.append(newlineTab);
 		sb.append(PARAMS);
 		sb.append(domainTransformEvent.getPropertyName());
@@ -86,9 +92,9 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 		sb.append(",");
 		sb.append(domainTransformEvent.getTransformType());
 		sb.append(",");
-		sb.append(domainTransformEvent.getUtcDate() == null ? System
-				.currentTimeMillis() : domainTransformEvent.getUtcDate()
-				.getTime());
+		sb.append(domainTransformEvent.getUtcDate() == null
+				? System.currentTimeMillis()
+				: domainTransformEvent.getUtcDate().getTime());
 		sb.append(newlineTab);
 		sb.append(STRING_VALUE);
 		sb.append(ns);
@@ -100,9 +106,8 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 		sb.append(SimpleStringParser20
 				.longToGwtDoublesToString(domainTransformEvent.getValueId()));
 		sb.append(",");
-		sb.append(SimpleStringParser20
-				.longToGwtDoublesToString(domainTransformEvent
-						.getValueLocalId()));
+		sb.append(SimpleStringParser20.longToGwtDoublesToString(
+				domainTransformEvent.getValueLocalId()));
 		sb.append("\n");
 	}
 
@@ -119,8 +124,8 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 
 	public String deserialize(String serializedEvents,
 			List<DomainTransformEvent> events, int maxCount) {
-		if (asyncParser==null){
-			asyncParser=new SimpleStringParser20(serializedEvents);
+		if (asyncParser == null) {
+			asyncParser = new SimpleStringParser20(serializedEvents);
 		}
 		int i = 0;
 		String s;
@@ -133,17 +138,18 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 		}
 		return s;
 	}
+
 	@Override
 	public StringBuffer finishSerialization(StringBuffer sb) {
 		return sb;
 	}
 
-	public  String getDomainTransformEventMarker() {
+	public String getDomainTransformEventMarker() {
 		return DOMAIN_TRANSFORM_EVENT_MARKER;
 	}
 
 	public int getOffset() {
-		return asyncParser==null?0:asyncParser.getOffset();
+		return asyncParser == null ? 0 : asyncParser.getOffset();
 	}
 
 	public String handlesVersion() {
@@ -185,9 +191,7 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 			dte.setUtcDate(new Date(utcTime));
 		} else {
 			dte.setTransformType(TransformType.valueOf(p.read("", "\n")));
-			
-			dte.setUtcDate(utcDateProvider
-					.currentUtcDate());
+			dte.setUtcDate(utcDateProvider.currentUtcDate());
 		}
 		i = p.read(STRING_VALUE, "\n");
 		dte.setNewStringValue(i.indexOf("\\") == -1 ? i : unescape(i));

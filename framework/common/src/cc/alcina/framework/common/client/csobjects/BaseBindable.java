@@ -31,34 +31,13 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  * @author Nick Reddel
  */
 @Introspectable
-public class BaseBindable extends BaseSourcesPropertyChangeEvents implements
-		Serializable {
-	@Bean(displayNamePropertyName = "id", actions = @ObjectActions({ @Action(actionClass = ViewAction.class) }))
+public class BaseBindable extends BaseSourcesPropertyChangeEvents
+		implements Serializable {
+	@Bean(displayNamePropertyName = "id", actions = @ObjectActions({
+			@Action(actionClass = ViewAction.class) }))
 	@ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT), delete = @Permission(access = AccessLevel.ROOT))
 	public static class BaseBindableAdapter extends BaseBindable {
 	}
-
-	public interface HasContext<T> {
-		public abstract void _setContext(T _context);
-
-		public abstract T _getContext();
-	}
-
-	@Bean
-	public static class BaseBindableWrapper<T> extends BaseBindable implements
-			ObjectWrapper<T> {
-		protected  T wrapee;
-		public BaseBindableWrapper() {
-		}
-		public BaseBindableWrapper(T wrapee) {
-			this.wrapee = wrapee;
-		}
-		@Override
-		public T provideWrappee() {
-			return wrapee;
-		}
-	}
-
 
 	public static class BaseBindableWithContext<T> extends BaseBindable
 			implements HasContext<T> {
@@ -73,5 +52,29 @@ public class BaseBindable extends BaseSourcesPropertyChangeEvents implements
 		public void _setContext(T _context) {
 			this._context = _context;
 		}
+	}
+
+	@Bean
+	public static class BaseBindableWrapper<T> extends BaseBindable
+			implements ObjectWrapper<T> {
+		protected T wrapee;
+
+		public BaseBindableWrapper() {
+		}
+
+		public BaseBindableWrapper(T wrapee) {
+			this.wrapee = wrapee;
+		}
+
+		@Override
+		public T provideWrappee() {
+			return wrapee;
+		}
+	}
+
+	public interface HasContext<T> {
+		public abstract T _getContext();
+
+		public abstract void _setContext(T _context);
 	}
 }

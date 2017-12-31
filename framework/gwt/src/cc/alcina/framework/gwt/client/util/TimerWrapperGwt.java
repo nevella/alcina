@@ -7,11 +7,6 @@ import cc.alcina.framework.common.client.util.TimerWrapper;
 public class TimerWrapperGwt extends Timer implements TimerWrapper {
 	private Runnable runnable;
 
-	@Override
-	public void scheduleRepeating(long periodMillis) {
-		scheduleRepeating((int) periodMillis);
-	}
-
 	private TimerWrapperGwt(Runnable runnable) {
 		this.runnable = runnable;
 	}
@@ -21,7 +16,18 @@ public class TimerWrapperGwt extends Timer implements TimerWrapper {
 		runnable.run();
 	}
 
-	public static class TimerWrapperProviderGwt implements TimerWrapperProvider {
+	@Override
+	public void scheduleRepeating(long periodMillis) {
+		scheduleRepeating((int) periodMillis);
+	}
+
+	@Override
+	public void scheduleSingle(long delayMillis) {
+		schedule((int) delayMillis);
+	}
+
+	public static class TimerWrapperProviderGwt
+			implements TimerWrapperProvider {
 		@Override
 		public TimerWrapper getTimer(Runnable runnable) {
 			return new TimerWrapperGwt(runnable);
@@ -36,11 +42,5 @@ public class TimerWrapperGwt extends Timer implements TimerWrapper {
 		public void scheduleDeferredIfOnUIThread(Runnable runnable) {
 			scheduleDeferred(runnable);
 		}
-	}
-
-	@Override
-	public void scheduleSingle(long delayMillis) {
-		schedule((int)delayMillis);
-		
 	}
 }

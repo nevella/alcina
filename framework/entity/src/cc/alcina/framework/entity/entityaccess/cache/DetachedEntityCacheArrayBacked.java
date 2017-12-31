@@ -3,7 +3,8 @@ package cc.alcina.framework.entity.entityaccess.cache;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 
-public class DetachedEntityCacheArrayBacked extends DetachedEntityCache implements MultiplexableCache {
+public class DetachedEntityCacheArrayBacked extends DetachedEntityCache
+		implements MultiplexableCache {
 	@Override
 	protected void ensureMaps(Class clazz) {
 		if (!detached.containsKey(clazz)) {

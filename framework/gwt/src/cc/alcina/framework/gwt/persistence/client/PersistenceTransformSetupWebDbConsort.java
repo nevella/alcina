@@ -6,8 +6,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.AllStatesConsort;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
-public class PersistenceTransformSetupWebDbConsort extends
-		AllStatesConsort<PersistenceTransformSetupState> {
+public class PersistenceTransformSetupWebDbConsort
+		extends AllStatesConsort<PersistenceTransformSetupState> {
 	String dbName;
 
 	private ObjectStoreWebDbImpl deltaImpl;
@@ -22,19 +22,16 @@ public class PersistenceTransformSetupWebDbConsort extends
 			PersistenceTransformSetupState next) {
 		switch (next) {
 		case TRANSFORM_TABLE_READY:
-			LocalTransformPersistence
-					.registerLocalTransformPersistence(new WebDatabaseTransformPersistence(
-							dbName));
-			LocalTransformPersistence.get().init(
-					new DTESerializationPolicy(),
+			LocalTransformPersistence.registerLocalTransformPersistence(
+					new WebDatabaseTransformPersistence(dbName));
+			LocalTransformPersistence.get().init(new DTESerializationPolicy(),
 					Registry.impl(CommitToStorageTransformListener.class),
-					 player);
+					player);
 			break;
 		case DELTA_OBJECT_STORE_READY:
 			Database db = Database.openDatabase(dbName, "1.0", "Delta store",
 					5000000);
-			deltaImpl = new ObjectStoreWebDbImpl(db, "DeltaStore",
-					 player);
+			deltaImpl = new ObjectStoreWebDbImpl(db, "DeltaStore", player);
 			break;
 		case DELTA_STORE_LINKED:
 			DeltaStore.get().registerDelegate(deltaImpl);

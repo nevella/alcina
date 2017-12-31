@@ -9,6 +9,18 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 @RegistryLocation(registryPoint = ControlServletState.class, implementationType = ImplementationType.INSTANCE)
 public class ControlServletState {
+	public static ControlServletState memberModes() {
+		ControlServletState state = Registry.impl(ControlServletState.class);
+		state.setModes(ControlServletModes.memberModes());
+		return state;
+	}
+
+	public static ControlServletState standaloneModes() {
+		ControlServletState state = Registry.impl(ControlServletState.class);
+		state.setModes(ControlServletModes.standaloneModes());
+		return state;
+	}
+
 	private Date startupTime;
 
 	private String appName;
@@ -64,23 +76,12 @@ public class ControlServletState {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("\tstartup:\t%s\n" + "\tapp name:\t%s\n"
-				+ "\tapi key:\t%s\n" + "\tstates:\t\t%s\n",
+		return CommonUtils.formatJ(
+				"\tstartup:\t%s\n" + "\tapp name:\t%s\n" + "\tapi key:\t%s\n"
+						+ "\tstates:\t\t%s\n",
 				CommonUtils.nullSafeToString(startupTime),
 				CommonUtils.nullSafeToString(appName),
 				CommonUtils.nullSafeToString(apiKey),
 				CommonUtils.nullSafeToString(modes));
-	}
-
-	public static ControlServletState standaloneModes() {
-		ControlServletState state = Registry.impl(ControlServletState.class);
-		state.setModes(ControlServletModes.standaloneModes());
-		return state;
-	}
-
-	public static ControlServletState memberModes() {
-		ControlServletState state = Registry.impl(ControlServletState.class);
-		state.setModes(ControlServletModes.memberModes());
-		return state;
 	}
 }

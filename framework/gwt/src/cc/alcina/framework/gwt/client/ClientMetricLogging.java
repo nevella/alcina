@@ -26,33 +26,27 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public class ClientMetricLogging {
-	private Map<String, Long> metricStartTimes;
-
 	private static ClientMetricLogging INSTANCE = new ClientMetricLogging();
 
 	public static ClientMetricLogging get() {
 		return INSTANCE;
 	}
 
+	private Map<String, Long> metricStartTimes;
+
 	private boolean muted;
-
-	public boolean isMuted() {
-		return this.muted;
-	}
-
-	public void setMuted(boolean muted) {
-		this.muted = muted;
-	}
-
-	private ClientMetricLogging() {
-		reset();
-	}
 
 	private Map<String, Long> sum;
 
 	private Map<String, Long> averageCount;
 
 	private HashSet<String> terminated;
+
+	private Map<String, String> keyToKeyWithParents;
+
+	private ClientMetricLogging() {
+		reset();
+	}
 
 	public void end(String key) {
 		end(key, "");
@@ -74,8 +68,8 @@ public class ClientMetricLogging {
 		}
 		long elapsed = System.currentTimeMillis() - metricStartTimes.get(key);
 		String message = CommonUtils.formatJ("[Metric] %s - %s ms%s", key,
-				elapsed, CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - "
-						+ extraInfo);
+				elapsed,
+				CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - " + extraInfo);
 		if (!isMuted()) {
 			Registry.impl(ClientNotifications.class).log(message);
 			System.out.println(message);
@@ -88,6 +82,19 @@ public class ClientMetricLogging {
 		sum.put(key, sum.get(key) + elapsed);
 	}
 
+	public void endAndStart(String keyToEnd, String keyToStart) {
+		end(keyToEnd);
+		start(keyToStart);
+	}
+
+	public void endIfRunning(String key) {
+		end(key, "", true);
+	}
+
+	public boolean isMuted() {
+		return this.muted;
+	}
+
 	public void reset() {
 		terminated = new HashSet<String>();
 		metricStartTimes = new LinkedHashMap<String, Long>();
@@ -96,13 +103,15 @@ public class ClientMetricLogging {
 		keyToKeyWithParents = new HashMap<String, String>();
 	}
 
+	public void setMuted(boolean muted) {
+		this.muted = muted;
+	}
+
 	public void start(String key) {
 		key = keyWithParents(key, false);
 		metricStartTimes.put(key, System.currentTimeMillis());
 		terminated.remove(key);
 	}
-
-	private Map<String, String> keyToKeyWithParents;
 
 	private String keyWithParents(String key, boolean end) {
 		if (end) {
@@ -117,14 +126,5 @@ public class ClientMetricLogging {
 		withParents += key;
 		keyToKeyWithParents.put(key, withParents);
 		return withParents;
-	}
-
-	public void endIfRunning(String key) {
-		end(key, "", true);
-	}
-
-	public void endAndStart(String keyToEnd, String keyToStart) {
-		end(keyToEnd);
-		start(keyToStart);
 	}
 }

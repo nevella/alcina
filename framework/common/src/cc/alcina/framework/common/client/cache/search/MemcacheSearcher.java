@@ -21,8 +21,6 @@ import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
@@ -109,14 +107,12 @@ public class MemcacheSearcher {
 
 	@RegistryLocation(registryPoint = MemoryStoreQuery.class, implementationType = ImplementationType.INSTANCE)
 	public static class MemoryStoreQuery extends CacheQuery<MemoryStoreQuery> {
-		
-		
 		protected SearchDefinition def;
 
 		@Override
 		public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
 			Collection<T> values = Registry.impl(SearcherCollectionSource.class)
-					.getCollectionFor(clazz,def);
+					.getCollectionFor(clazz, def);
 			Stream<T> stream = getStream(values);
 			return stream.collect(Registry.impl(ListCollector.class).toList());
 		}

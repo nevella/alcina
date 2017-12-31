@@ -1,9 +1,17 @@
 package cc.alcina.framework.common.client.search;
 
 public interface SearchDefinitionSerializer {
+	public <SD extends SearchDefinition> SD deserialize(String serializedDef);
+
 	public String serialize(SearchDefinition def);
 
-	public <SD extends SearchDefinition> SD deserialize(String serializedDef);
+	default boolean canSimpleDeserialize(String searchDefinitionSerialized) {
+		return simpleDeserialize(searchDefinitionSerialized) != null;
+	}
+
+	default boolean canSimpleSerialize(SearchDefinition def) {
+		return simpleSerialize(def) != null;
+	}
 
 	default String serializeSimplyIfPossible(SearchDefinition def) {
 		if (canSimpleSerialize(def)) {
@@ -13,19 +21,12 @@ public interface SearchDefinitionSerializer {
 		}
 	}
 
-	default boolean canSimpleSerialize(SearchDefinition def) {
-		return simpleSerialize(def) != null;
-	}
-
-	default String simpleSerialize(SearchDefinition def) {
+	default SearchDefinition
+			simpleDeserialize(String searchDefinitionSerialized) {
 		return null;
 	}
 
-	default boolean canSimpleDeserialize(String searchDefinitionSerialized) {
-		return simpleDeserialize(searchDefinitionSerialized) != null;
-	}
-
-	default SearchDefinition simpleDeserialize(String searchDefinitionSerialized) {
+	default String simpleSerialize(SearchDefinition def) {
 		return null;
 	}
 }

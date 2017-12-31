@@ -43,25 +43,21 @@ import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
  */
 public class SimpleWorkspaceVisualiser extends Composite
 		implements HasLayoutInfo {
+	public static double defaultSplitterPosition = 280;
+
+	public static int defaultSplitterSize = 8;
+
 	private final WSVisualModel model;
 
 	protected SplitLayoutPanel hsp;
 
 	private StackPanel100pcHeight viewHolder;
 
-	public StackPanel100pcHeight getViewHolder() {
-		return this.viewHolder;
-	}
-
 	protected Widget contentContainer;
 
 	private VerticalPanel verticalPanel;
 
 	private Toolbar toolbar;
-
-	public static double defaultSplitterPosition = 280;
-
-	public static int defaultSplitterSize = 8;
 
 	/**
 	 * Uses horizontal panels because they're tables - i.e. 100% height works
@@ -103,21 +99,32 @@ public class SimpleWorkspaceVisualiser extends Composite
 		resetHsbPos();
 	}
 
-	protected int getSplitterSize() {
-		return defaultSplitterSize;
+	public void focusVisibleView() {
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+			public void execute() {
+				int selectedIndex = viewHolder.getSelectedIndex();
+				if (selectedIndex != -1) {
+					Widget w = viewHolder.getWidget(selectedIndex);
+					if (w instanceof HasFirstFocusable) {
+						HasFirstFocusable hff = (HasFirstFocusable) w;
+						hff.firstFocusable().setFocus(true);
+					}
+				}
+			}
+		});
 	}
 
-	@Override
-	protected void onDetach() {
-		super.onDetach();
+	public Widget getContentWidget() {
+		return ((SimplePanel) contentContainer).getWidget();
 	}
 
-	protected void createContentContainer(SplitLayoutPanel hsp) {
-		this.contentContainer = new ScrollPanel();
-		contentContainer.setStyleName("alcina-WorkspaceContent");
-		setContentWidget(model.getContentWidget());
-		contentContainer.setHeight("100%");
-		hsp.add(contentContainer);
+	public LayoutInfo getLayoutInfo() {
+		return new LayoutInfo() {
+			@Override
+			public Iterator<Widget> getLayoutWidgets() {
+				return Arrays.asList(new Widget[] { verticalPanel }).iterator();
+			}
+		};
 	}
 
 	public WSVisualModel getModel() {
@@ -128,49 +135,8 @@ public class SimpleWorkspaceVisualiser extends Composite
 		return this.verticalPanel;
 	}
 
-	void resetHsbPos() {
-		hsp.setWidgetSize(viewHolder, defaultSplitterPosition);
-	}
-
-	public Widget getContentWidget() {
-		return ((SimplePanel) contentContainer).getWidget();
-	}
-
-	public void setContentWidget(Widget w) {
-		((SimplePanel) contentContainer).setWidget(w);
-	}
-
-	private class Resize100Vp extends VerticalPanel implements HasLayoutInfo {
-		public void setHeight(String height) {
-			super.setHeight(height);
-			int h = Integer.valueOf(height.replace("px", "")).intValue();
-			int hsph = h - toolbar.getOffsetHeight();
-			SimpleWorkspaceVisualiser.this.hsp.setHeight(hsph + "px");
-		};
-
-		public LayoutInfo getLayoutInfo() {
-			return new LayoutInfo() {
-				public boolean to100percentOfAvailableHeight() {
-					return true;
-				}
-
-				@Override
-				public Iterator<Widget> getLayoutWidgets() {
-					return Arrays.asList(
-							new Widget[] { viewHolder, contentContainer })
-							.iterator();
-				}
-			};
-		}
-	}
-
-	public LayoutInfo getLayoutInfo() {
-		return new LayoutInfo() {
-			@Override
-			public Iterator<Widget> getLayoutWidgets() {
-				return Arrays.asList(new Widget[] { verticalPanel }).iterator();
-			}
-		};
+	public StackPanel100pcHeight getViewHolder() {
+		return this.viewHolder;
 	}
 
 	public TreeItem selectNodeForObject(Object obj, boolean visibleViewOnly) {
@@ -196,18 +162,52 @@ public class SimpleWorkspaceVisualiser extends Composite
 		return null;
 	}
 
-	public void focusVisibleView() {
-		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-			public void execute() {
-				int selectedIndex = viewHolder.getSelectedIndex();
-				if (selectedIndex != -1) {
-					Widget w = viewHolder.getWidget(selectedIndex);
-					if (w instanceof HasFirstFocusable) {
-						HasFirstFocusable hff = (HasFirstFocusable) w;
-						hff.firstFocusable().setFocus(true);
-					}
+	public void setContentWidget(Widget w) {
+		((SimplePanel) contentContainer).setWidget(w);
+	}
+
+	protected void createContentContainer(SplitLayoutPanel hsp) {
+		this.contentContainer = new ScrollPanel();
+		contentContainer.setStyleName("alcina-WorkspaceContent");
+		setContentWidget(model.getContentWidget());
+		contentContainer.setHeight("100%");
+		hsp.add(contentContainer);
+	}
+
+	protected int getSplitterSize() {
+		return defaultSplitterSize;
+	}
+
+	@Override
+	protected void onDetach() {
+		super.onDetach();
+	}
+
+	void resetHsbPos() {
+		hsp.setWidgetSize(viewHolder, defaultSplitterPosition);
+	}
+
+	private class Resize100Vp extends VerticalPanel implements HasLayoutInfo {
+		public LayoutInfo getLayoutInfo() {
+			return new LayoutInfo() {
+				@Override
+				public Iterator<Widget> getLayoutWidgets() {
+					return Arrays.asList(
+							new Widget[] { viewHolder, contentContainer })
+							.iterator();
 				}
-			}
-		});
+
+				public boolean to100percentOfAvailableHeight() {
+					return true;
+				}
+			};
+		};
+
+		public void setHeight(String height) {
+			super.setHeight(height);
+			int h = Integer.valueOf(height.replace("px", "")).intValue();
+			int hsph = h - toolbar.getOffsetHeight();
+			SimpleWorkspaceVisualiser.this.hsp.setHeight(hsph + "px");
+		}
 	}
 }

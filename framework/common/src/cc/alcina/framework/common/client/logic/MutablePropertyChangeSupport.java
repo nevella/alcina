@@ -26,6 +26,23 @@ import com.google.gwt.core.client.GWT;
 public class MutablePropertyChangeSupport {
 	private static boolean muteAll = false;
 
+	public static boolean isMuteAll() {
+		return muteAll;
+	}
+
+	public static void setMuteAll(boolean muteAll) {
+		setMuteAll(muteAll, false);
+	}
+
+	public static void setMuteAll(boolean muteAll,
+			boolean initLifecycleThread) {
+		if (!GWT.isClient() && !initLifecycleThread) {
+			throw new RuntimeException(
+					"Mute all should only be set on a single-threaded VM");
+		}
+		MutablePropertyChangeSupport.muteAll = muteAll;
+	}
+
 	private PropertyChangeSupport delegate;
 
 	private Object sourceBean;
@@ -34,31 +51,16 @@ public class MutablePropertyChangeSupport {
 		this.sourceBean = sourceBean;
 	}
 
-	public synchronized void addPropertyChangeListener(
-			PropertyChangeListener listener) {
+	public synchronized void
+			addPropertyChangeListener(PropertyChangeListener listener) {
 		ensureDelegate();
 		delegate.addPropertyChangeListener(listener);
-	}
-
-	private void ensureDelegate() {
-		if (delegate == null) {
-			delegate = new PropertyChangeSupport(sourceBean);
-		}
 	}
 
 	public synchronized void addPropertyChangeListener(String propertyName,
 			PropertyChangeListener listener) {
 		ensureDelegate();
 		delegate.addPropertyChangeListener(propertyName, listener);
-	}
-
-	public void firePropertyChange(String propertyName, Object oldValue,
-			Object newValue) {
-		if (isMuteAll() || delegate == null
-				|| (oldValue == null && newValue == null)) {
-			return;
-		}
-		delegate.firePropertyChange(propertyName, oldValue, newValue);
 	}
 
 	/**
@@ -73,35 +75,20 @@ public class MutablePropertyChangeSupport {
 		delegate.firePropertyChange(name, null, null);
 	}
 
-	public static void setMuteAll(boolean muteAll) {
-		setMuteAll(muteAll, false);
-	}
-
-	public static void setMuteAll(boolean muteAll, boolean initLifecycleThread) {
-		if (!GWT.isClient() && !initLifecycleThread) {
-			throw new RuntimeException(
-					"Mute all should only be set on a single-threaded VM");
-		}
-		MutablePropertyChangeSupport.muteAll = muteAll;
-	}
-
-	public static boolean isMuteAll() {
-		return muteAll;
-	}
-
-	public void removePropertyChangeListener(PropertyChangeListener listener) {
-		if(delegate == null){
+	public void firePropertyChange(PropertyChangeEvent evt) {
+		if (isMuteAll() || delegate == null) {
 			return;
 		}
-		this.delegate.removePropertyChangeListener(listener);
+		this.delegate.firePropertyChange(evt);
 	}
 
-	public void removePropertyChangeListener(String propertyName,
-			PropertyChangeListener listener) {
-		if(delegate == null){
+	public void firePropertyChange(String propertyName, Object oldValue,
+			Object newValue) {
+		if (isMuteAll() || delegate == null
+				|| (oldValue == null && newValue == null)) {
 			return;
 		}
-		this.delegate.removePropertyChangeListener(propertyName, listener);
+		delegate.firePropertyChange(propertyName, oldValue, newValue);
 	}
 
 	public PropertyChangeListener[] getPropertyChangeListeners() {
@@ -109,10 +96,24 @@ public class MutablePropertyChangeSupport {
 		return this.delegate.getPropertyChangeListeners();
 	}
 
-	public void firePropertyChange(PropertyChangeEvent evt) {
-		if (isMuteAll() || delegate == null) {
+	public void removePropertyChangeListener(PropertyChangeListener listener) {
+		if (delegate == null) {
 			return;
 		}
-		this.delegate.firePropertyChange(evt);
+		this.delegate.removePropertyChangeListener(listener);
+	}
+
+	public void removePropertyChangeListener(String propertyName,
+			PropertyChangeListener listener) {
+		if (delegate == null) {
+			return;
+		}
+		this.delegate.removePropertyChangeListener(propertyName, listener);
+	}
+
+	private void ensureDelegate() {
+		if (delegate == null) {
+			delegate = new PropertyChangeSupport(sourceBean);
+		}
 	}
 }

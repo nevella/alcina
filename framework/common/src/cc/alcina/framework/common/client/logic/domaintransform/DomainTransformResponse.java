@@ -25,18 +25,8 @@ public class DomainTransformResponse implements Serializable {
 	private long requestId;
 
 	private int transformsProcessed;
+
 	private String message;
-	public String getMessage() {
-		return this.message;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
-	}
-
-	public enum DomainTransformResponseResult {
-		OK, FAILURE
-	}
 
 	private DomainTransformResponseResult result = DomainTransformResponseResult.OK;
 
@@ -44,39 +34,55 @@ public class DomainTransformResponse implements Serializable {
 
 	private List<DomainTransformException> transformExceptions = new ArrayList<DomainTransformException>();
 
-	public List<DomainTransformException> getTransformExceptions() {
-		return this.transformExceptions;
-	}
-
 	// only when error
 	private DomainTransformRequest request;
+
+	public List<DomainTransformEvent> getEventsToUseForClientUpdate() {
+		return eventsToUseForClientUpdate;
+	}
+
+	public String getMessage() {
+		return this.message;
+	}
 
 	public DomainTransformRequest getRequest() {
 		return this.request;
 	}
 
-	public void setRequest(DomainTransformRequest request) {
-		this.request = request;
+	public long getRequestId() {
+		return requestId;
 	}
 
 	public DomainTransformResponseResult getResult() {
 		return this.result;
 	}
 
-	public void setResult(DomainTransformResponseResult result) {
-		this.result = result;
+	public List<DomainTransformException> getTransformExceptions() {
+		return this.transformExceptions;
 	}
 
-	public List<DomainTransformEvent> getEventsToUseForClientUpdate() {
-		return eventsToUseForClientUpdate;
+	public int getTransformsProcessed() {
+		return this.transformsProcessed;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public void setRequest(DomainTransformRequest request) {
+		this.request = request;
 	}
 
 	public void setRequestId(long requestId) {
 		this.requestId = requestId;
 	}
 
-	public long getRequestId() {
-		return requestId;
+	public void setResult(DomainTransformResponseResult result) {
+		this.result = result;
+	}
+
+	public void setTransformsProcessed(int transformsProcessed) {
+		this.transformsProcessed = transformsProcessed;
 	}
 
 	public String toExceptionString() {
@@ -88,11 +94,7 @@ public class DomainTransformResponse implements Serializable {
 		return sb.toString();
 	}
 
-	public int getTransformsProcessed() {
-		return this.transformsProcessed;
-	}
-
-	public void setTransformsProcessed(int transformsProcessed) {
-		this.transformsProcessed = transformsProcessed;
+	public enum DomainTransformResponseResult {
+		OK, FAILURE
 	}
 }

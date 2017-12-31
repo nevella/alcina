@@ -16,6 +16,43 @@ import java.util.stream.StreamSupport;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class CsvUtils {
+	static Pattern wrapInQuotesPattern = Pattern.compile("[ ,a-zA-Z]");
+
+	public static String asCsvRow(Collection values) {
+		int i = 0;
+		StringBuilder sb = new StringBuilder();
+		for (Object object : values) {
+			String value = object.toString();
+			if (i++ > 0) {
+				sb.append(",");
+			}
+			sb.append(wrapInQuotesPattern.matcher(value).find()
+					? "\"" + value + "\"" : value);
+		}
+		return sb.toString();
+	}
+
+	public static StringBuilder headerValuesToCsv(List<String> headers,
+			List<List<String>> values) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < headers.size(); i++) {
+			String header = headers.get(i);
+			headers.set(i, header.replace(" ", "_"));
+		}
+		sb.append(asCsvRow(headers));
+		sb.append("\n");
+		for (int j = 0; j < values.size(); j++) {
+			List<String> row = values.get(j);
+			for (int i = 0; i < row.size(); i++) {
+				String cell = row.get(i);
+				row.set(i, cell == null ? "" : cell.replace("\n", "\\n"));
+			}
+			sb.append(asCsvRow(row));
+			sb.append("\n");
+		}
+		return sb;
+	}
+
 	public static List<List<String>> parseCsv(String txt) {
 		txt = txt.replaceAll("[\\r\\n]+[\\r\\n]*", "\n");
 		txt = txt.replaceAll("\t", ",");
@@ -76,128 +113,14 @@ public class CsvUtils {
 		return results;
 	}
 
-	static Pattern wrapInQuotesPattern = Pattern.compile("[ ,a-zA-Z]");
-
-	public static String asCsvRow(Collection values) {
-		int i = 0;
-		StringBuilder sb = new StringBuilder();
-		for (Object object : values) {
-			String value = object.toString();
-			if (i++ > 0) {
-				sb.append(",");
-			}
-			sb.append(wrapInQuotesPattern.matcher(value).find()
-					? "\"" + value + "\"" : value);
-		}
-		return sb.toString();
-	}
-
-	public static StringBuilder headerValuesToCsv(List<String> headers,
-			List<List<String>> values) {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < headers.size(); i++) {
-			String header = headers.get(i);
-			headers.set(i, header.replace(" ", "_"));
-		}
-		sb.append(asCsvRow(headers));
-		sb.append("\n");
-		for (int j = 0; j < values.size(); j++) {
-			List<String> row = values.get(j);
-			for (int i = 0; i < row.size(); i++) {
-				String cell = row.get(i);
-				row.set(i, cell == null ? "" : cell.replace("\n", "\\n"));
-			}
-			sb.append(asCsvRow(row));
-			sb.append("\n");
-		}
-		return sb;
-	}
-
-	public static class CsvRow {
-		private int rowIdx;
-
-		private CsvCols csvCols;
-
-		public CsvRow(CsvCols csvCols, int idx) {
-			this.csvCols = csvCols;
-			this.rowIdx = idx;
-		}
-
-		public String get(String key) {
-			return csvCols.grid.get(rowIdx).get(getColumnIndex(key));
-		}
-
-		public String set(String key, Object value) {
-			ArrayList<String> list = (ArrayList<String>) csvCols.grid
-					.get(rowIdx);
-			int columnIndex = getColumnIndex(key);
-			for (; list.size() <= columnIndex;) {
-				list.add("");
-			}
-			return list.set(columnIndex, String.valueOf(value));
-		}
-
-		private int getColumnIndex(String key) {
-			Integer index = csvCols.colLookup.get(key);
-			if (index != null) {
-				return index;
-			}
-			index = csvCols.colLcLookup.get(key.toLowerCase());
-			if (index != null) {
-				return index;
-			}
-			return -1;
-		}
-
-		public boolean has(String key) {
-			return get(key).length() > 0;
-		}
-
-		public Map<String, String> map() {
-			StringMap map = new StringMap();
-			for (String header : csvCols.headers()) {
-				map.put(header, get(header));
-			}
-			return map;
-		}
-
-		public boolean containsKey(String key) {
-			return getColumnIndex(key) != -1;
-		}
-
-		@Override
-		public String toString() {
-			return map().entrySet().stream().map(Object::toString)
-					.collect(Collectors.joining("\n"));
-		}
-	}
-
 	public static class CsvCols implements Iterable<CsvRow>, Iterator<CsvRow> {
 		Map<String, Integer> colLookup = new LinkedHashMap<>();
 
 		Map<String, Integer> colLcLookup = new LinkedHashMap<>();
 
-		public Map<String, CsvRow> rowLookup(String columnHeader) {
-			Map<String, CsvRow> result = new LinkedHashMap<>();
-			reset();
-			while (hasNext()) {
-				CsvRow row = next();
-				result.put(row.get(columnHeader), row);
-			}
-			return result;
-		}
-
 		int idx = 0;
 
 		private List<List<String>> grid;
-
-		public List<String> headers() {
-			return colLookup.keySet().stream().collect(Collectors.toList());
-		}
-
-		public CsvCols(String csv) {
-			this(parseCsv(csv));
-		}
 
 		public CsvCols(List<List<String>> grid) {
 			this.grid = grid;
@@ -209,12 +132,27 @@ public class CsvUtils {
 			reset();
 		}
 
-		public Stream<CsvRow> stream() {
-			return StreamSupport.stream(this.spliterator(), false);
+		public CsvCols(String csv) {
+			this(parseCsv(csv));
 		}
 
-		public void reset() {
-			idx = 1;
+		public void addColumn(String string) {
+			colLookup.put(string, colLookup.size());
+			colLookup.forEach((k, v) -> colLcLookup.put(k.toLowerCase(), v));
+		}
+
+		public CsvRow addRow() {
+			grid.add(new ArrayList<String>());
+			return next();
+		}
+
+		@Override
+		public boolean hasNext() {
+			return idx < grid.size();
+		}
+
+		public List<String> headers() {
+			return colLookup.keySet().stream().collect(Collectors.toList());
 		}
 
 		@Override
@@ -223,29 +161,8 @@ public class CsvUtils {
 		}
 
 		@Override
-		public boolean hasNext() {
-			return idx < grid.size();
-		}
-
-		@Override
 		public CsvRow next() {
 			return new CsvRow(this, idx++);
-		}
-
-		public CsvRow addRow() {
-			grid.add(new ArrayList<String>());
-			return next();
-		}
-
-		public void addColumn(String string) {
-			colLookup.put(string, colLookup.size());
-			colLookup.forEach((k, v) -> colLcLookup.put(k.toLowerCase(), v));
-		}
-
-		public String toCsv() {
-			return headerValuesToCsv(
-					colLookup.keySet().stream().collect(Collectors.toList()),
-					grid.subList(1, grid.size())).toString();
 		}
 
 		public void preserveColumns(String string) {
@@ -261,6 +178,89 @@ public class CsvUtils {
 				}
 			}
 			colLookup.keySet().removeIf(k -> !colNames.contains(k));
+		}
+
+		public void reset() {
+			idx = 1;
+		}
+
+		public Map<String, CsvRow> rowLookup(String columnHeader) {
+			Map<String, CsvRow> result = new LinkedHashMap<>();
+			reset();
+			while (hasNext()) {
+				CsvRow row = next();
+				result.put(row.get(columnHeader), row);
+			}
+			return result;
+		}
+
+		public Stream<CsvRow> stream() {
+			return StreamSupport.stream(this.spliterator(), false);
+		}
+
+		public String toCsv() {
+			return headerValuesToCsv(
+					colLookup.keySet().stream().collect(Collectors.toList()),
+					grid.subList(1, grid.size())).toString();
+		}
+	}
+
+	public static class CsvRow {
+		private int rowIdx;
+
+		private CsvCols csvCols;
+
+		public CsvRow(CsvCols csvCols, int idx) {
+			this.csvCols = csvCols;
+			this.rowIdx = idx;
+		}
+
+		public boolean containsKey(String key) {
+			return getColumnIndex(key) != -1;
+		}
+
+		public String get(String key) {
+			return csvCols.grid.get(rowIdx).get(getColumnIndex(key));
+		}
+
+		public boolean has(String key) {
+			return get(key).length() > 0;
+		}
+
+		public Map<String, String> map() {
+			StringMap map = new StringMap();
+			for (String header : csvCols.headers()) {
+				map.put(header, get(header));
+			}
+			return map;
+		}
+
+		public String set(String key, Object value) {
+			ArrayList<String> list = (ArrayList<String>) csvCols.grid
+					.get(rowIdx);
+			int columnIndex = getColumnIndex(key);
+			for (; list.size() <= columnIndex;) {
+				list.add("");
+			}
+			return list.set(columnIndex, String.valueOf(value));
+		}
+
+		@Override
+		public String toString() {
+			return map().entrySet().stream().map(Object::toString)
+					.collect(Collectors.joining("\n"));
+		}
+
+		private int getColumnIndex(String key) {
+			Integer index = csvCols.colLookup.get(key);
+			if (index != null) {
+				return index;
+			}
+			index = csvCols.colLcLookup.get(key.toLowerCase());
+			if (index != null) {
+				return index;
+			}
+			return -1;
 		}
 	}
 }

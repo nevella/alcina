@@ -22,7 +22,7 @@ import java.util.List;
  * are actually used.
  */
 public class ArraysViolator {
-  public static native Object[] getArray0(List<?> instance) /*-{
-    return instance.@java.util.Arrays$ArrayList::array;
-  }-*/;
+	public static native Object[] getArray0(List<?> instance) /*-{
+																return instance.@java.util.Arrays$ArrayList::array;
+																}-*/;
 }

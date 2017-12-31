@@ -31,9 +31,15 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionCont
  * @author Nick Reddel
  */
 public class Hibernate4CloneFilter extends CollectionProjectionFilter {
+	private static final String cn1 = "org.hibernate.collection.PersistentSet";
+
+	private static final String cn2 = "org.hibernate.collection.internal.PersistentSet";
+
 	private Set<GraphProjectionContext> instantiateProps = new HashSet<GraphProjectionContext>();
 
 	protected JPAImplementation jpaImplementation;
+
+	private Method wasInitialized = null;
 
 	public Hibernate4CloneFilter() {
 		this.jpaImplementation = Registry.impl(JPAImplementation.class);
@@ -42,10 +48,6 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 	public Hibernate4CloneFilter(Set<GraphProjectionContext> instantiateProps) {
 		this.instantiateProps = instantiateProps;
 	}
-
-	private static final String cn1 = "org.hibernate.collection.PersistentSet";
-
-	private static final String cn2 = "org.hibernate.collection.internal.PersistentSet";
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -61,15 +63,12 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 				return null;
 			}
 		}
-		if ((value instanceof Set)
-				&& (value.getClass().getName().equals(cn1) || value.getClass()
-						.getName().equals(cn2))) {
+		if ((value instanceof Set) && (value.getClass().getName().equals(cn1)
+				|| value.getClass().getName().equals(cn2))) {
 			return (T) clonePersistentSet((Set) value, context, graphCloner);
 		}
 		return super.filterData(value, cloned, context, graphCloner);
 	}
-
-	private Method wasInitialized = null;
 
 	@SuppressWarnings("unchecked")
 	protected Object clonePersistentSet(Set ps, GraphProjectionContext context,
@@ -89,14 +88,14 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 		return hs;
 	}
 
-	protected boolean shouldClone(Set ps) throws Exception {
-		return getWasInitialized(ps);
-	}
-
 	protected boolean getWasInitialized(Set ps) throws Exception {
 		if (wasInitialized == null) {
 			wasInitialized = ps.getClass().getMethod("wasInitialized");
 		}
 		return (Boolean) wasInitialized.invoke(ps);
+	}
+
+	protected boolean shouldClone(Set ps) throws Exception {
+		return getWasInitialized(ps);
 	}
 }

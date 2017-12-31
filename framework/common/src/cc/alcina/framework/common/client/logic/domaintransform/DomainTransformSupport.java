@@ -16,7 +16,6 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class DomainTransformSupport {
 	private List<DomainTransformListener> listenerList = new ArrayList<DomainTransformListener>();;
 
@@ -35,7 +34,8 @@ public class DomainTransformSupport {
 		}
 	}
 
-	public void removeDomainTransformListener(DomainTransformListener listener) {
+	public void
+			removeDomainTransformListener(DomainTransformListener listener) {
 		listenerList.remove(listener);
 	}
 }

@@ -14,17 +14,27 @@ import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
-public class IntrospectorFilterPassthrough implements
-		IntrospectorFilter {
+public class IntrospectorFilterPassthrough implements IntrospectorFilter {
 	@Override
-	public void filterIntrospectorResults(List<BeanResolver> results) {
-		// do nothing
+	public boolean emitBeanResolver(BeanResolver resolver) {
+		return true;
 	}
 
 	@Override
 	public void filterAnnotations(List<JAnnotationType> jAnns,
 			List<Class<? extends Annotation>> visibleAnnotationClasses) {
 		// do nothing
+	}
+
+	@Override
+	public void filterIntrospectorResults(List<BeanResolver> results) {
+		// do nothing
+	}
+
+	@Override
+	public void filterProperties(BeanResolver resolver) {
+		CollectionFilters.filterInPlace(resolver.getProperties().entrySet(),
+				new AlwaysIgnorePropertyFilter());
 	}
 
 	@Override
@@ -35,22 +45,17 @@ public class IntrospectorFilterPassthrough implements
 	}
 
 	@Override
-	public boolean emitBeanResolver(BeanResolver resolver) {
-		return true;
-	}
-	
-	@Override
-	public void filterProperties(BeanResolver resolver) {
-		CollectionFilters.filterInPlace(resolver.getProperties().entrySet(),
-				new AlwaysIgnorePropertyFilter());
+	public void generationComplete() {
 	}
 
 	@Override
-	public void setModuleName(String value) {
+	public String getModuleName() {
+		return ReflectionModule.INITIAL;
 	}
 
 	@Override
-	public boolean omitForModule(JClassType jClassType,ReflectionAction reflectionAction) {
+	public boolean omitForModule(JClassType jClassType,
+			ReflectionAction reflectionAction) {
 		return false;
 	}
 
@@ -59,11 +64,6 @@ public class IntrospectorFilterPassthrough implements
 	}
 
 	@Override
-	public void generationComplete() {
-	}
-
-	@Override
-	public String getModuleName() {
-		return ReflectionModule.INITIAL;
+	public void setModuleName(String value) {
 	}
 }

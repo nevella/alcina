@@ -30,8 +30,8 @@ import cc.alcina.framework.gwt.client.widget.VisibilityChangeEvent.HasVisibility
  *
  * @author Nick Reddel
  */
-public class BaseTab extends Composite implements Permissible,
-		LoginStateVisible, HasVisibilityChangeHandlers {
+public class BaseTab extends Composite
+		implements Permissible, LoginStateVisible, HasVisibilityChangeHandlers {
 	protected AccessLevel minimumAccessLevel = AccessLevel.EVERYONE;
 
 	protected ScrollPanel scroller;

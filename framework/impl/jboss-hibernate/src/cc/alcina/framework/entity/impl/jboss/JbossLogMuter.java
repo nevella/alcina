@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.impl.jboss;
 
 import org.apache.log4j.Level;
@@ -21,23 +20,20 @@ import org.apache.log4j.Logger;
  *
  * @author Nick Reddel
  */
-
- public class JbossLogMuter {
-	private String[] info = {
-			"org.jboss.seam",
-			"org.codehaus.xfire",
-			"org.jboss.ejb",
-			"org.ajax4jsf",
+public class JbossLogMuter {
+	private String[] info = { "org.jboss.seam", "org.codehaus.xfire",
+			"org.jboss.ejb", "org.ajax4jsf",
 			"org.jboss.ejb3.entity.ExtendedPersistenceContextPropagationInterceptor",
-			"org.hibernate",
-			"org.apache.commons.httpclient.HttpMethodDirector",
+			"org.hibernate", "org.apache.commons.httpclient.HttpMethodDirector",
 			"httpclient.wire.content",
-			 "org.jboss.resource.connectionmanager.IdleRemover",
-			"com.arjuna", "com.arjuna.ats" ,"org.jboss.ejb3.entity.ManagedEntityManagerFactory"};
-	private String[] warn={"org.apache.catalina.loader.WebappClassLoader"};
+			"org.jboss.resource.connectionmanager.IdleRemover", "com.arjuna",
+			"com.arjuna.ats",
+			"org.jboss.ejb3.entity.ManagedEntityManagerFactory" };
+
+	private String[] warn = { "org.apache.catalina.loader.WebappClassLoader" };
 
 	public void run() {
-		new Thread(){
+		new Thread() {
 			public void run() {
 				try {
 					Thread.sleep(5000);

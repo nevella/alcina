@@ -42,19 +42,11 @@ public @interface Display {
 
 	public static final int DISPLAY_LAZY_COLLECTION_NODE = 32;
 
-	public static final int DISPLAY_WRAP_PROPERTY = DISPLAY_WRAP | DISPLAY_AS_PROPERTY;
+	public static final int DISPLAY_WRAP_PROPERTY = DISPLAY_WRAP
+			| DISPLAY_AS_PROPERTY;
 
-	public static final int DISPLAY_RO_PROPERTY = DISPLAY_AS_PROPERTY | DISPLAY_RO;
-
-	String helpText() default "";
-
-	String styleName() default "";
-
-	String iconName() default "";// indicates no icon
-
-	String name();
-
-	int orderingHint() default 100;
+	public static final int DISPLAY_RO_PROPERTY = DISPLAY_AS_PROPERTY
+			| DISPLAY_RO;
 
 	// note, if you want a r-o property, don't use DISPLAY_RO, you need to set
 	// DISPLAY_AS_PROPERTY | DISPLAY_RO
@@ -64,8 +56,17 @@ public @interface Display {
 
 	boolean focus() default false;
 
-	Permission visible() default @Permission(access = AccessLevel.EVERYONE)
-	;
+	String helpText() default "";
+
+	String iconName() default "";// indicates no icon
+
+	String name();
+
+	int orderingHint() default 100;
+
+	String styleName() default "";
+
+	Permission visible() default @Permission(access = AccessLevel.EVERYONE);
 
 	String widgetStyleName() default "";
 }

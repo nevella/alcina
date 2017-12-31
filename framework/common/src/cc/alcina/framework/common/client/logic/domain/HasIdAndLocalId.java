@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.logic.domain;
 
 import java.util.Comparator;
 
+import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -36,23 +37,32 @@ public interface HasIdAndLocalId extends HasId {
 
 	public void setLocalId(long localId);
 
-	public static class HiliComparatorPreferLocals
-			implements Comparator<HasIdAndLocalId> {
+	default void delete() {
+		Domain.delete(this);
+	}
+
+	default String provideStringId() {
+		return getId() == 0 ? null : String.valueOf(getId());
+	}
+
+	default boolean provideWasPersisted() {
+		return getId() != 0;
+	}
+
+	public static class HiliByIdFilter
+			implements CollectionFilter<HasIdAndLocalId> {
+		private final boolean allowAllExceptId;
+
+		private final long id;
+
+		public HiliByIdFilter(long id, boolean allowAllExceptId) {
+			this.id = id;
+			this.allowAllExceptId = allowAllExceptId;
+		}
+
 		@Override
-		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
-			int i = o1.getClass().getName().compareTo(o2.getClass().getName());
-			if (i != 0) {
-				return i;
-			}
-			i = CommonUtils.compareLongs(o1.getLocalId(), o2.getLocalId());
-			if (i != 0) {
-				return i;
-			}
-			i = CommonUtils.compareLongs(o1.getId(), o2.getId());
-			if (i != 0) {
-				return i;
-			}
-			return CommonUtils.compareInts(o1.hashCode(), o2.hashCode());
+		public boolean allow(HasIdAndLocalId o) {
+			return o != null && (o.getId() == id ^ allowAllExceptId);
 		}
 	}
 
@@ -78,6 +88,26 @@ public interface HasIdAndLocalId extends HasId {
 		}
 	}
 
+	public static class HiliComparatorPreferLocals
+			implements Comparator<HasIdAndLocalId> {
+		@Override
+		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
+			int i = o1.getClass().getName().compareTo(o2.getClass().getName());
+			if (i != 0) {
+				return i;
+			}
+			i = CommonUtils.compareLongs(o1.getLocalId(), o2.getLocalId());
+			if (i != 0) {
+				return i;
+			}
+			i = CommonUtils.compareLongs(o1.getId(), o2.getId());
+			if (i != 0) {
+				return i;
+			}
+			return CommonUtils.compareInts(o1.hashCode(), o2.hashCode());
+		}
+	}
+
 	public static class HiliNoLocalComparator
 			implements Comparator<HasIdAndLocalId> {
 		public static final HiliNoLocalComparator INSTANCE = new HiliNoLocalComparator();
@@ -85,27 +115,6 @@ public interface HasIdAndLocalId extends HasId {
 		@Override
 		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
 			return HiliHelper.compareNoLocals(o1, o2);
-		}
-	}
-
-	default boolean provideWasPersisted() {
-		return getId() != 0;
-	}
-
-	public static class HiliByIdFilter
-			implements CollectionFilter<HasIdAndLocalId> {
-		private final boolean allowAllExceptId;
-
-		private final long id;
-
-		public HiliByIdFilter(long id, boolean allowAllExceptId) {
-			this.id = id;
-			this.allowAllExceptId = allowAllExceptId;
-		}
-
-		@Override
-		public boolean allow(HasIdAndLocalId o) {
-			return o != null && (o.getId() == id ^ allowAllExceptId);
 		}
 	}
 }

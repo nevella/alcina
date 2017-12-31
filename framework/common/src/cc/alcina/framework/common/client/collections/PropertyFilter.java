@@ -13,21 +13,6 @@ public class PropertyFilter<T> implements CollectionFilter<T> {
 	public PropertyFilter() {
 	}
 
-	static class PropertyFilterTuple {
-		String propertyName;
-
-		Object propertyValue;
-
-		FilterOperator operator;
-
-		public PropertyFilterTuple(String propertyName, Object propertyValue,
-				FilterOperator operator) {
-			this.propertyName = propertyName;
-			this.propertyValue = propertyValue;
-			this.operator = operator;
-		}
-	}
-
 	public PropertyFilter(String key, Object value) {
 		this(key, value, FilterOperator.EQ);
 	}
@@ -36,15 +21,16 @@ public class PropertyFilter<T> implements CollectionFilter<T> {
 		add(key, value, operator);
 	}
 
-	public PropertyFilter add(String key, Object value, FilterOperator operator) {
+	public PropertyFilter add(String key, Object value,
+			FilterOperator operator) {
 		tuple = new PropertyFilterTuple(key, value, operator);
 		return this;
 	}
 
 	@Override
 	public boolean allow(T o) {
-		Object propertyValue = Reflections.propertyAccessor().getPropertyValue(
-				o, tuple.propertyName);
+		Object propertyValue = Reflections.propertyAccessor()
+				.getPropertyValue(o, tuple.propertyName);
 		boolean match = matchesValue(propertyValue);
 		return match;
 	}
@@ -100,5 +86,20 @@ public class PropertyFilter<T> implements CollectionFilter<T> {
 		}
 		}
 		return match;
+	}
+
+	static class PropertyFilterTuple {
+		String propertyName;
+
+		Object propertyValue;
+
+		FilterOperator operator;
+
+		public PropertyFilterTuple(String propertyName, Object propertyValue,
+				FilterOperator operator) {
+			this.propertyName = propertyName;
+			this.propertyValue = propertyValue;
+			this.operator = operator;
+		}
 	}
 }

@@ -17,7 +17,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.FocusListener;
 import com.google.gwt.user.client.ui.SuggestBox;
 import com.google.gwt.user.client.ui.SuggestBox.DefaultSuggestionDisplay;
@@ -48,20 +47,19 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 
 	@SuppressWarnings("unchecked")
 	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
+
 	private BoundSuggestOracle suggestOracle;
 
 	private boolean withPlaceholder = true;
 
-	public boolean isWithPlaceholder() {
-		return this.withPlaceholder;
-	}
-
-	public void setWithPlaceholder(boolean withPlaceholder) {
-		this.withPlaceholder = withPlaceholder;
-	}
+	private boolean showOnFocus = false;
 
 	/** Creates a new instance of Label */
 	public BoundSuggestBox() {
+	}
+
+	public String getLastFilterText() {
+		return base.getText();
 	}
 
 	/**
@@ -77,8 +75,48 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 		return value;
 	}
 
+	public boolean isShowOnFocus() {
+		return this.showOnFocus;
+	}
+
+	public boolean isWithPlaceholder() {
+		return this.withPlaceholder;
+	}
+
+	public void setFilterText(String filterText) {
+		base.setText(filterText);
+		if (!Ax.isBlank(filterText)) {
+			base.showSuggestions(filterText);
+		}
+	}
+
+	@Override
+	public void setModel(Object model) {
+		super.setModel(model);
+		suggestOracle.model = model;
+	}
+
 	public void setRenderer(Renderer<T, String> newrenderer) {
 		this.renderer = newrenderer;
+	}
+
+	public void setShowOnFocus(boolean showOnFocus) {
+		this.showOnFocus = showOnFocus;
+	}
+
+	@SuppressWarnings("unchecked")
+	public void setValue(T value) {
+		T old = this.getValue();
+		this.value = value;
+		this.base.setText(renderer.apply(value));
+		if (this.getValue() != old && (this.getValue() == null
+				|| (this.getValue() != null && !this.getValue().equals(old)))) {
+			this.changes.firePropertyChange("value", old, this.getValue());
+		}
+	}
+
+	public void setWithPlaceholder(boolean withPlaceholder) {
+		this.withPlaceholder = withPlaceholder;
 	}
 
 	public void suggestOracle(BoundSuggestOracle suggestOracle) {
@@ -87,9 +125,9 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 		((DefaultSuggestionDisplay) base.getSuggestionDisplay())
 				.setPopupStyleName("bound-suggest-box-popup");
 		((DefaultSuggestionDisplay) base.getSuggestionDisplay())
-		.setMatchTextBoxWidth(true);
+				.setMatchTextBoxWidth(true);
 		((DefaultSuggestionDisplay) base.getSuggestionDisplay())
-		.setMatchTextBoxAdjust(-4);
+				.setMatchTextBoxAdjust(-4);
 		if (withPlaceholder) {
 			base.getValueBox().getElement().setPropertyString("placeholder",
 					"Type for suggestions");
@@ -101,13 +139,6 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 			}
 		});
 		base.addFocusListener(new FocusListener() {
-			@Override
-			public void onLostFocus(Widget sender) {
-				if (!Objects.equals(base.getText(), renderer.apply(value))) {
-					setValue(null);
-				}
-			}
-
 			@Override
 			public void onFocus(Widget sender) {
 				TextBoxBase baseBox = (TextBoxBase) base.getValueBox();
@@ -126,46 +157,62 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 					}
 				}
 			}
+
+			@Override
+			public void onLostFocus(Widget sender) {
+				if (!Objects.equals(base.getText(), renderer.apply(value))) {
+					setValue(null);
+				}
+			}
 		});
 		super.initWidget(base);
 	}
 
-	private boolean showOnFocus = false;
-
-	public boolean isShowOnFocus() {
-		return this.showOnFocus;
-	}
-
-	public void setShowOnFocus(boolean showOnFocus) {
-		this.showOnFocus = showOnFocus;
-	}
-
-	@Override
-	public void setModel(Object model) {
-		super.setModel(model);
-		suggestOracle.model = model;
-	}
-
-	@SuppressWarnings("unchecked")
-	public void setValue(T value) {
-		T old = this.getValue();
-		this.value = value;
-		this.base.setText(renderer.apply(value));
-		if (this.getValue() != old && (this.getValue() == null
-				|| (this.getValue() != null && !this.getValue().equals(old)))) {
-			this.changes.firePropertyChange("value", old, this.getValue());
-		}
-	}
-
-	public static class BoundSuggestOracleRequest extends Request {
-		public BoundSuggestOracleModel model;
-
-		public String targetClassName;
-
-		public String hint;
-	}
-
 	public static class BoundSuggestOracle extends SuggestOracle {
+		public Object model;
+
+		private Class clazz;
+
+		private String hint;
+
+		SuggestCallback runningCallback = null;
+
+		public BoundSuggestOracle() {
+		}
+
+		public BoundSuggestOracle clazz(Class clazz) {
+			this.clazz = clazz;
+			return this;
+		}
+
+		public BoundSuggestOracle hint(String hint) {
+			this.hint = hint;
+			return this;
+		}
+
+		@Override
+		public void requestDefaultSuggestions(Request request,
+				Callback callback) {
+			requestSuggestions(request, callback);
+		}
+
+		@Override
+		public void requestSuggestions(Request request, Callback callback) {
+			BoundSuggestOracleRequest boundRequest = new BoundSuggestOracleRequest();
+			boundRequest.setLimit(request.getLimit());
+			boundRequest.setQuery(request.getQuery());
+			boundRequest.targetClassName = clazz.getName();
+			boundRequest.hint = hint;
+			if (model instanceof BoundSuggestOracleModel) {
+				boundRequest.model = (BoundSuggestOracleModel) model;
+			}
+			Optional.ofNullable(runningCallback)
+					.ifPresent(sc -> sc.setCancelled(true));
+			runningCallback = new SuggestCallback(request, callback);
+			ClientBase.getCommonRemoteServiceAsyncInstance()
+					.suggest(boundRequest, runningCallback);
+		}
+
 		class SuggestCallback extends CancellableAsyncCallback<Response> {
 			private Callback callback;
 
@@ -188,60 +235,13 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 				}
 			}
 		}
-
-		public Object model;
-
-		private Class clazz;
-
-		private String hint;
-
-		public BoundSuggestOracle() {
-		}
-
-		public BoundSuggestOracle clazz(Class clazz) {
-			this.clazz = clazz;
-			return this;
-		}
-
-		public BoundSuggestOracle hint(String hint) {
-			this.hint = hint;
-			return this;
-		}
-
-		@Override
-		public void requestDefaultSuggestions(Request request,
-				Callback callback) {
-			requestSuggestions(request, callback);
-		}
-
-		SuggestCallback runningCallback = null;
-
-		@Override
-		public void requestSuggestions(Request request, Callback callback) {
-			BoundSuggestOracleRequest boundRequest = new BoundSuggestOracleRequest();
-			boundRequest.setLimit(request.getLimit());
-			boundRequest.setQuery(request.getQuery());
-			boundRequest.targetClassName = clazz.getName();
-			boundRequest.hint = hint;
-			if (model instanceof BoundSuggestOracleModel) {
-				boundRequest.model = (BoundSuggestOracleModel) model;
-			}
-			Optional.ofNullable(runningCallback)
-					.ifPresent(sc -> sc.setCancelled(true));
-			runningCallback = new SuggestCallback(request, callback);
-			ClientBase.getCommonRemoteServiceAsyncInstance()
-					.suggest(boundRequest, runningCallback);
-		}
 	}
 
-	public String getLastFilterText() {
-		return base.getText();
-	}
+	public static class BoundSuggestOracleRequest extends Request {
+		public BoundSuggestOracleModel model;
 
-	public void setFilterText(String filterText) {
-		base.setText(filterText);
-		if (!Ax.isBlank(filterText)) {
-			base.showSuggestions(filterText);
-		}
+		public String targetClassName;
+
+		public String hint;
 	}
 }

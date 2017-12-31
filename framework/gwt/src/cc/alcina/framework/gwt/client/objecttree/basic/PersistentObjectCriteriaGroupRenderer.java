@@ -40,9 +40,14 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
  * 
  * @author Nick Reddel
  */
-@RegistryLocation( registryPoint = TreeRenderer.class, targetClass = PersistentObjectCriteriaGroup.class)
-public class PersistentObjectCriteriaGroupRenderer extends
-		CriteriaGroupRenderer<PersistentObjectCriteriaGroup> {
+@RegistryLocation(registryPoint = TreeRenderer.class, targetClass = PersistentObjectCriteriaGroup.class)
+public class PersistentObjectCriteriaGroupRenderer
+		extends CriteriaGroupRenderer<PersistentObjectCriteriaGroup> {
+	@Override
+	public boolean isSingleLineCustomiser() {
+		return true;
+	}
+
 	@Override
 	public BoundWidgetProvider renderCustomiser() {
 		return new BoundWidgetProvider() {
@@ -52,22 +57,9 @@ public class PersistentObjectCriteriaGroupRenderer extends
 		};
 	}
 
-	@Override
-	public boolean isSingleLineCustomiser() {
-		return true;
-	}
-
-	public static class HiliSelectBox extends
-			AbstractBoundWidget<PersistentObjectCriteriaGroup> {
+	public static class HiliSelectBox
+			extends AbstractBoundWidget<PersistentObjectCriteriaGroup> {
 		private PersistentObjectCriteriaGroup value;
-
-		public PersistentObjectCriteriaGroup getValue() {
-			return this.value;
-		}
-
-		public void setValue(PersistentObjectCriteriaGroup value) {
-			this.value = value;
-		}
 
 		private FlowPanel fp;
 
@@ -90,7 +82,8 @@ public class PersistentObjectCriteriaGroupRenderer extends
 						}
 					});
 			list.add(0, null);
-			ArrayList sorted = GwittirUtils.sortByStringValue(list, ClassRefSimpleNameRenderer.INSTANCE);
+			ArrayList sorted = GwittirUtils.sortByStringValue(list,
+					ClassRefSimpleNameRenderer.INSTANCE);
 			box.setRenderer(ClassRefSimpleNameRenderer.INSTANCE);
 			box.setSortOptionsByToString(false);
 			box.setOptions(sorted);
@@ -98,17 +91,26 @@ public class PersistentObjectCriteriaGroupRenderer extends
 			initWidget(fp);
 			setAction(new HiliSelectBoxBindingAction());
 		}
+
+		public PersistentObjectCriteriaGroup getValue() {
+			return this.value;
+		}
+
+		public void setValue(PersistentObjectCriteriaGroup value) {
+			this.value = value;
+		}
 	}
 
 	private static class HiliSelectBoxBindingAction extends
 			BasicBindingAction<BoundWidget<PersistentObjectCriteriaGroup>> {
 		@Override
-		protected void set0(BoundWidget widget)  {
+		protected void set0(BoundWidget widget) {
 			HiliSelectBox hsb = (HiliSelectBox) widget;
-			binding.getChildren().add(
-					new Binding(hsb.box, "value",
+			binding.getChildren()
+					.add(new Binding(hsb.box, "value",
 							((PersistentObjectCriteriaGroup) hsb.getModel())
-									.soleCriterion(), "classRef"));
+									.soleCriterion(),
+							"classRef"));
 			binding.setLeft();
 		}
 	}

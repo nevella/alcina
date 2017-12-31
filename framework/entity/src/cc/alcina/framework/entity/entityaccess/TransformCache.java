@@ -21,8 +21,7 @@ import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersisten
  * @author nick@alcina.cc
  * 
  */
-public class TransformCache implements
-		DomainTransformPersistenceListener {
+public class TransformCache implements DomainTransformPersistenceListener {
 	public TransformIdLookup sharedLookup = new TransformIdLookup();
 
 	public Map<Long, TransformIdLookup> perUserLookup = new HashMap<Long, TransformIdLookup>();
@@ -35,22 +34,36 @@ public class TransformCache implements
 
 	public Collection<Class> perUserTransformClasses;
 
-	public void putSharedTransforms(List<DomainTransformEventPersistent> events) {
+	public void onDomainTransformRequestPersistence(
+			DomainTransformPersistenceEvent evt) {
+		DomainTransformLayerWrapper layerWrapper = evt
+				.getDomainTransformLayerWrapper();
+		if (layerWrapper != null && layerWrapper.response
+				.getResult() == DomainTransformResponseResult.OK) {
+			for (DomainTransformEventPersistent event : layerWrapper.persistentEvents) {
+				if (sharedTransformClasses.contains(event.getObjectClass())) {
+					putSharedEvent(event);
+				} else if (perUserTransformClasses
+						.contains(event.getObjectClass())) {
+					putPerUserEvent(event);
+				}
+			}
+		}
+	}
+
+	public void
+			putPerUserTransforms(List<DomainTransformEventPersistent> events) {
+		for (DomainTransformEventPersistent event : events) {
+			putPerUserEvent(event);
+		}
+	}
+
+	public void
+			putSharedTransforms(List<DomainTransformEventPersistent> events) {
 		for (DomainTransformEventPersistent event : events) {
 			putSharedEvent(event);
 		}
 		this.cacheValidFrom = CommonUtils.last(events).getId();
-	}
-
-	private void putSharedEvent(DomainTransformEventPersistent event) {
-		DomainTransformEvent nonPersistentEvent = event.toNonPersistentEvent(true);
-		sharedLookup.put(event.getId(), nonPersistentEvent);
-	}
-
-	public void putPerUserTransforms(List<DomainTransformEventPersistent> events) {
-		for (DomainTransformEventPersistent event : events) {
-			putPerUserEvent(event);
-		}
 	}
 
 	private void putPerUserEvent(DomainTransformEventPersistent event) {
@@ -58,24 +71,14 @@ public class TransformCache implements
 		if (!perUserLookup.containsKey(userId)) {
 			perUserLookup.put(userId, new TransformIdLookup());
 		}
-		DomainTransformEvent nonPersistentEvent = event.toNonPersistentEvent(true);
+		DomainTransformEvent nonPersistentEvent = event
+				.toNonPersistentEvent(true);
 		perUserLookup.get(userId).put(event.getId(), nonPersistentEvent);
 	}
 
-	public void onDomainTransformRequestPersistence(
-			DomainTransformPersistenceEvent evt) {
-		DomainTransformLayerWrapper layerWrapper = evt
-				.getDomainTransformLayerWrapper();
-		if (layerWrapper != null
-				&& layerWrapper.response.getResult() == DomainTransformResponseResult.OK) {
-			for (DomainTransformEventPersistent event : layerWrapper.persistentEvents) {
-				if (sharedTransformClasses.contains(event.getObjectClass())) {
-					putSharedEvent(event);
-				} else if (perUserTransformClasses.contains(event
-						.getObjectClass())) {
-					putPerUserEvent(event);
-				}
-			}
-		}
+	private void putSharedEvent(DomainTransformEventPersistent event) {
+		DomainTransformEvent nonPersistentEvent = event
+				.toNonPersistentEvent(true);
+		sharedLookup.put(event.getId(), nonPersistentEvent);
 	}
 }

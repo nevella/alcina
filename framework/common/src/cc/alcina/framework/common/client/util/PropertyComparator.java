@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.util;
 
 import java.util.Comparator;
@@ -19,36 +18,33 @@ import java.util.Comparator;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 
-
 /**
  *
  * @author Nick Reddel
  */
-
- public class PropertyComparator implements Comparator {
+public class PropertyComparator implements Comparator {
 	private final String propertyName;
 
 	public PropertyComparator(String propertyName) {
 		this.propertyName = propertyName;
-		
 	}
 
 	public int compare(Object o1, Object o2) {
-		if (o1==null && o2==null){
+		if (o1 == null && o2 == null) {
 			return 0;
 		}
-		if (o1==null){
+		if (o1 == null) {
 			return -1;
 		}
-		if (o2==null){
+		if (o2 == null) {
 			return 1;
 		}
 		try {
 			PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
 			Object pv1 = propertyAccessor.getPropertyValue(o1, propertyName);
 			Object pv2 = propertyAccessor.getPropertyValue(o2, propertyName);
-			
-			return CommonUtils.compareWithNullMinusOne((Comparable)pv1,(Comparable)pv2);
+			return CommonUtils.compareWithNullMinusOne((Comparable) pv1,
+					(Comparable) pv2);
 		} catch (Exception e) {
 			return 0;
 		}

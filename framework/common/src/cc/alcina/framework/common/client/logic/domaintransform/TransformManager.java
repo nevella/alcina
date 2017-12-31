@@ -795,7 +795,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public <T extends HasIdAndLocalId> T getObject(HiliLocator hiliLocator) {
-		return (T) getObject(hiliLocator.getClazz(),hiliLocator.getId(), 0L);
+		return (T) getObject(hiliLocator.getClazz(), hiliLocator.getId(), 0L);
 	}
 
 	public <T extends HasIdAndLocalId> T getObject(T hili) {
@@ -1384,6 +1384,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public void removeTransform(DomainTransformEvent evt) {
 		transforms.remove(evt);
 		getTransformsByCommitType(evt.getCommitType()).remove(evt);
+	}
+
+	public void removeTransformsFor(Object object) {
+		removeTransformsForObjects(Arrays.asList(object));
 	}
 
 	public void removeTransformsForObjects(Collection c) {

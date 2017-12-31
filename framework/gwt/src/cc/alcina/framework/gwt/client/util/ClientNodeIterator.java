@@ -6,21 +6,13 @@ package cc.alcina.framework.gwt.client.util;
 import com.google.gwt.dom.client.Node;
 
 public class ClientNodeIterator {
-	private Node current;
-
-	public Node getCurrentNode() {
-		return this.current;
-	}
-
-	public void setCurrentNode(Node current) {
-		this.current = current;
-	}
-
 	public static final int SHOW_ALL = -1;
 
 	public static final int SHOW_ELEMENT = 1;
 
 	public static final int SHOW_TEXT = 4;
+
+	private Node current;
 
 	private final int masks;
 
@@ -31,11 +23,47 @@ public class ClientNodeIterator {
 		this.masks = masks;
 	}
 
+	public Node getCurrentNode() {
+		return this.current;
+	}
+
+	public Node getRoot() {
+		return root;
+	}
+
+	public Node nextNode() {
+		boolean filterOk = false;
+		while (current != null && !filterOk) {
+			Node next = null, node = current, checkedKids = null;
+			while (node != null && next == null) {
+				if (node != checkedKids) {
+					next = node.getFirstChild();
+					if (next != null) {
+						break;
+					}
+				}
+				if (node == root) {
+					current = null;
+					return null;// end
+				}
+				next = node.getNextSibling();
+				if (next != null) {
+					break;
+				}
+				node = node.getParentNode();
+				checkedKids = node;
+			}
+			current = next;
+			filterOk = checkFilter();
+		}
+		return current;
+	}
+
 	public Node previousNode() {
 		boolean filterOk = false;
 		while (current != null && !filterOk) {
-			if(current==root){
-				current=null;
+			if (current == root) {
+				current = null;
 				break;
 			}
 			Node previous = current.getPreviousSibling();
@@ -49,41 +77,23 @@ public class ClientNodeIterator {
 		}
 		return current;
 	}
+
+	public void setCurrentNode(Node current) {
+		this.current = current;
+	}
+
+	public void setRoot(Node root) {
+		this.root = root;
+	}
+
 	public void skipChildren() {
 		Node next = current.getNextSibling();
 		if (next != null) {
-			current=next;
-		}else{
-			current=current.getParentNode();
+			current = next;
+		} else {
+			current = current.getParentNode();
 		}
 		previousNode();
-	}
-	public Node nextNode() {
-		boolean filterOk = false;
-		while (current != null && !filterOk) {
-			Node next = null, node = current, checkedKids = null;
-			while (node!=null&&next == null) {
-				if (node != checkedKids) {
-					next = node.getFirstChild();
-					if (next != null) {
-						break;
-					}
-				}
-				if(node==root){
-					current=null;
-					return null;//end
-				}
-				next = node.getNextSibling();
-				if (next != null) {
-					break;
-				}
-				node = node.getParentNode();
-				checkedKids = node;
-			}
-			current = next;
-			filterOk = checkFilter();
-		}
-		return current;
 	}
 
 	private boolean checkFilter() {
@@ -104,13 +114,5 @@ public class ClientNodeIterator {
 			return node;
 		}
 		return lastChildOf(node.getLastChild());
-	}
-
-	public void setRoot(Node root) {
-		this.root = root;
-	}
-
-	public Node getRoot() {
-		return root;
 	}
 }

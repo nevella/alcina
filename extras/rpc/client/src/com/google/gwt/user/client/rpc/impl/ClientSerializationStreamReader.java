@@ -55,8 +55,216 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 /**
  * For internal use only. Used for server call serialization.
  */
-public final class ClientSerializationStreamReader extends
-		AbstractSerializationStreamReader {
+public final class ClientSerializationStreamReader
+		extends AbstractSerializationStreamReader {
+	private static native JavaScriptObject eval(String encoded) /*-{
+																return eval(encoded);
+																}-*/;
+
+	private static native int getLength(JavaScriptObject array) /*-{
+																return array.length;
+																}-*/;
+
+	private RpcDecoder decoder;
+
+	int index;
+
+	private JavaScriptObject results;
+
+	Serializer serializer;
+
+	AsyncCallback postPrepareCallback;
+
+	public ClientSerializationStreamReader(Serializer serializer) {
+		this.serializer = serializer;
+	}
+
+	public void doDeserialize(AsyncCallback postPrepareCallback) {
+		this.postPrepareCallback = postPrepareCallback;
+		Scheduler.get().scheduleIncremental(new AsyncDeserializerDev(this));
+	}
+
+	public List<Object> getSeenArray() {
+		return seenArray;
+	}
+
+	public int getTypeId(int index) {
+		return decoder.typeTable.get(index);
+	}
+
+	public int getTypeTableLength() {
+		return decoder.typeTable.size();
+	}
+
+	@Override
+	public void prepareToRead(String encoded) throws SerializationException {
+		try {
+			List<JsStatement> stmts = JsParser.parse(SourceOrigin.UNKNOWN,
+					JsRootScope.INSTANCE, new StringReader(encoded));
+			ArrayConcatEvaler arrayConcatEvaler = new ArrayConcatEvaler();
+			arrayConcatEvaler.acceptList(stmts);
+			StringConcatEvaler stringConcatEvaler = new StringConcatEvaler();
+			stringConcatEvaler.acceptList(stmts);
+			decoder = new RpcDecoder();
+			decoder.acceptList(stmts);
+		} catch (Exception e) {
+			throw new SerializationException("Failed to parse RPC payload", e);
+		}
+		index = decoder.getValues().size();
+		super.prepareToRead(encoded);
+		if (getVersion() < SERIALIZATION_STREAM_MIN_VERSION
+				|| getVersion() > SERIALIZATION_STREAM_MAX_VERSION) {
+			throw new IncompatibleRemoteServiceException("Got version "
+					+ getVersion() + ", expected version between "
+					+ SERIALIZATION_STREAM_MIN_VERSION + " and "
+					+ SERIALIZATION_STREAM_MAX_VERSION);
+		}
+		if (((getFlags() & FLAG_INCREMENTAL_DESERIALIZABLE) == 0
+				|| getVersion() != SERIALIZATION_STREAM_VERSION)) {
+			throw new IncompatibleRemoteServiceException(
+					"requires incremental deserializable rpc");
+		}
+		if (!areFlagsValid()) {
+			throw new IncompatibleRemoteServiceException(
+					"Got an unknown flag from " + "server: " + getFlags());
+		}
+	}
+
+	@Override
+	public boolean readBoolean() {
+		JsValueLiteral literal = decoder.getValues().get(--index);
+		return literal.isBooleanTrue();
+	}
+
+	@Override
+	public byte readByte() {
+		JsNumberLiteral literal = (JsNumberLiteral) decoder.getValues()
+				.get(--index);
+		return (byte) literal.getValue();
+	}
+
+	@Override
+	public char readChar() {
+		JsNumberLiteral literal = (JsNumberLiteral) decoder.getValues()
+				.get(--index);
+		return (char) literal.getValue();
+	}
+
+	@Override
+	public double readDouble() {
+		JsValueLiteral valueLiteral = decoder.getValues().get(--index);
+		if (valueLiteral instanceof JsNumberLiteral) {
+			JsNumberLiteral literal = (JsNumberLiteral) valueLiteral;
+			return literal.getValue();
+		} else if (valueLiteral instanceof JsStringLiteral) {
+			JsStringLiteral literal = (JsStringLiteral) valueLiteral;
+			return Double.parseDouble(literal.getValue());
+		} else {
+			throw new RuntimeException("Can't read double from "
+					+ valueLiteral.getKind() + " literal");
+		}
+	}
+
+	@Override
+	public float readFloat() {
+		return (float) readDouble();
+	}
+
+	@Override
+	public int readInt() {
+		JsNumberLiteral literal = (JsNumberLiteral) decoder.getValues()
+				.get(--index);
+		return (int) literal.getValue();
+	}
+
+	@Override
+	public long readLong() {
+		return Base64Utils.longFromBase64(
+				((JsStringLiteral) decoder.getValues().get(--index))
+						.getValue());
+	}
+
+	@Override
+	public Object readObject() throws SerializationException {
+		// at the end of the deserialization, return root
+		if (index == 0) {
+			return seenArray.get(0);
+		}
+		return super.readObject();
+	}
+
+	@Override
+	public short readShort() {
+		JsNumberLiteral literal = (JsNumberLiteral) decoder.getValues()
+				.get(--index);
+		return (short) literal.getValue();
+	}
+
+	@Override
+	public String readString() {
+		return getString(readInt());
+	}
+
+	@Override
+	protected Object deserialize(String typeSignature)
+			throws SerializationException {
+		int id = reserveDecodedObjectIndex();
+		Object instance = serializer.instantiate(this, typeSignature);
+		rememberDecodedObject(id, instance);
+		serializer.deserialize(this, instance, typeSignature);
+		return instance;
+	}
+
+	@Override
+	protected String getString(int index) {
+		// index is 1-based
+		return index > 0 ? decoder.getStringTable().get(index - 1) : null;
+	}
+
+	protected void rememberDecodedObject(int index, Object o) {
+		super.rememberDecodedObject(index, o);
+	}
+
+	protected int reserveDecodedObjectIndex() {
+		return super.reserveDecodedObjectIndex();
+	}
+
+	/**
+	 * The server breaks up large arrays in the RPC payload into smaller arrays
+	 * using concat() expressions. For example, [1, 2, 3, 4, 5, 6, 7] can be
+	 * broken up into [1, 2].concat([3, 4], [5, 6], [7,8])
+	 * <p>
+	 * This visitor reverses that transform by reducing all concat invocations
+	 * into a single array literal.
+	 */
+	private static class ArrayConcatEvaler extends JsModVisitor {
+		private List<Object> added = new ArrayList<Object>();
+
+		@Override
+		public boolean visit(JsInvocation invoke, JsContext ctx) {
+			JsExpression expr = invoke.getQualifier();
+			if (!(expr instanceof JsNameRef)) {
+				return super.visit(invoke, ctx);
+			}
+			JsNameRef name = (JsNameRef) expr;
+			if (!name.getIdent().equals("concat")) {
+				return super.visit(invoke, ctx);
+			}
+			List<JsExpression> args = invoke.getArguments();
+			if (added.contains(args)) {
+				return super.visit(invoke, ctx);
+			}
+			added.add(args);
+			JsArrayLiteral headElements = (JsArrayLiteral) name.getQualifier();
+			for (JsExpression ex : args) {
+				JsArrayLiteral arg = (JsArrayLiteral) ex;
+				headElements.getExpressions().addAll(arg.getExpressions());
+			}
+			ctx.replaceMe(headElements);
+			return true;
+		}
+	}
+
 	/**
 	 * Decodes an RPC payload from a JS string. There is currently no design
 	 * document that describes the payload, instead you must infer it from
@@ -88,11 +296,6 @@ public final class ClientSerializationStreamReader extends
 		private static final String JS_INFINITY_LITERAL = "Infinity";
 
 		private static final String JS_NAN_LITERAL = "NaN";
-
-		enum State {
-			EXPECTING_PAYLOAD_BEGIN, EXPECTING_TYPE_TABLE, IN_TYPE_TABLE,
-			EXPECTING_STRING_TABLE, IN_STRING_TABLE, EXPECTING_END
-		}
 
 		State state = State.EXPECTING_PAYLOAD_BEGIN;
 
@@ -151,7 +354,8 @@ public final class ClientSerializationStreamReader extends
 		public boolean visit(JsNameRef x, JsContext ctx) {
 			String ident = x.getIdent();
 			if (ident.equals(JS_NAN_LITERAL)) {
-				values.add(new JsNumberLiteral(SourceOrigin.UNKNOWN, Double.NaN));
+				values.add(
+						new JsNumberLiteral(SourceOrigin.UNKNOWN, Double.NaN));
 			} else if (ident.equals(JS_INFINITY_LITERAL)) {
 				double val = negative ? Double.NEGATIVE_INFINITY
 						: Double.POSITIVE_INFINITY;
@@ -178,20 +382,20 @@ public final class ClientSerializationStreamReader extends
 		}
 
 		@Override
+		public boolean visit(JsPostfixOperation x, JsContext ctx) {
+			throw new RuntimeException(
+					"Unexpected postfix operator: " + x.toSource());
+		}
+
+		@Override
 		public boolean visit(JsPrefixOperation x, JsContext ctx) {
 			if (x.getOperator().equals(JsUnaryOperator.NEG)) {
 				negative = !negative;
 				return true;
 			}
 			// Lots of prefix operators, but we only see negatives for literals
-			throw new RuntimeException("Unexpected prefix operator: "
-					+ x.toSource());
-		}
-
-		@Override
-		public boolean visit(JsPostfixOperation x, JsContext ctx) {
-			throw new RuntimeException("Unexpected postfix operator: "
-					+ x.toSource());
+			throw new RuntimeException(
+					"Unexpected prefix operator: " + x.toSource());
 		}
 
 		@Override
@@ -203,43 +407,10 @@ public final class ClientSerializationStreamReader extends
 			}
 			return true;
 		}
-	}
 
-	private RpcDecoder decoder;
-
-	/**
-	 * The server breaks up large arrays in the RPC payload into smaller arrays
-	 * using concat() expressions. For example, [1, 2, 3, 4, 5, 6, 7] can be
-	 * broken up into [1, 2].concat([3, 4], [5, 6], [7,8])
-	 * <p>
-	 * This visitor reverses that transform by reducing all concat invocations
-	 * into a single array literal.
-	 */
-	private static class ArrayConcatEvaler extends JsModVisitor {
-		private List<Object> added = new ArrayList<Object>();
-
-		@Override
-		public boolean visit(JsInvocation invoke, JsContext ctx) {
-			JsExpression expr = invoke.getQualifier();
-			if (!(expr instanceof JsNameRef)) {
-				return super.visit(invoke, ctx);
-			}
-			JsNameRef name = (JsNameRef) expr;
-			if (!name.getIdent().equals("concat")) {
-				return super.visit(invoke, ctx);
-			}
-			List<JsExpression> args = invoke.getArguments();
-			if (added.contains(args)) {
-				return super.visit(invoke, ctx);
-			}
-			added.add(args);
-			JsArrayLiteral headElements = (JsArrayLiteral) name.getQualifier();
-			for (JsExpression ex : args) {
-				JsArrayLiteral arg = (JsArrayLiteral) ex;
-				headElements.getExpressions().addAll(arg.getExpressions());
-			}
-			ctx.replaceMe(headElements);
-			return true;
+		enum State {
+			EXPECTING_PAYLOAD_BEGIN, EXPECTING_TYPE_TABLE, IN_TYPE_TABLE,
+			EXPECTING_STRING_TABLE, IN_STRING_TABLE, EXPECTING_END
 		}
 	}
 
@@ -320,173 +491,25 @@ public final class ClientSerializationStreamReader extends
 				}
 				int arg1Length = getStringLength(operation.getArg1());
 				int arg2Length = getStringLength(operation.getArg2());
-				return (arg1Length >= 0 && arg2Length >= 0) ? (arg1Length + arg2Length)
-						: -1;
+				return (arg1Length >= 0 && arg2Length >= 0)
+						? (arg1Length + arg2Length) : -1;
 			}
 			return -1;
 		}
-	}
-
-	@Override
-	public void prepareToRead(String encoded) throws SerializationException {
-		try {
-			List<JsStatement> stmts = JsParser.parse(SourceOrigin.UNKNOWN,
-					JsRootScope.INSTANCE, new StringReader(encoded));
-			ArrayConcatEvaler arrayConcatEvaler = new ArrayConcatEvaler();
-			arrayConcatEvaler.acceptList(stmts);
-			StringConcatEvaler stringConcatEvaler = new StringConcatEvaler();
-			stringConcatEvaler.acceptList(stmts);
-			decoder = new RpcDecoder();
-			decoder.acceptList(stmts);
-		} catch (Exception e) {
-			throw new SerializationException("Failed to parse RPC payload", e);
-		}
-		index = decoder.getValues().size();
-		super.prepareToRead(encoded);
-		if (getVersion() < SERIALIZATION_STREAM_MIN_VERSION
-				|| getVersion() > SERIALIZATION_STREAM_MAX_VERSION) {
-			throw new IncompatibleRemoteServiceException("Got version "
-					+ getVersion() + ", expected version between "
-					+ SERIALIZATION_STREAM_MIN_VERSION + " and "
-					+ SERIALIZATION_STREAM_MAX_VERSION);
-		}
-		if (((getFlags() & FLAG_INCREMENTAL_DESERIALIZABLE) == 0 || getVersion() != SERIALIZATION_STREAM_VERSION)) {
-			throw new IncompatibleRemoteServiceException(
-					"requires incremental deserializable rpc");
-		}
-		if (!areFlagsValid()) {
-			throw new IncompatibleRemoteServiceException(
-					"Got an unknown flag from " + "server: " + getFlags());
-		}
-	}
-
-	@Override
-	public boolean readBoolean() {
-		JsValueLiteral literal = decoder.getValues().get(--index);
-		return literal.isBooleanTrue();
-	}
-
-	@Override
-	public byte readByte() {
-		JsNumberLiteral literal = (JsNumberLiteral) decoder.getValues().get(
-				--index);
-		return (byte) literal.getValue();
-	}
-
-	@Override
-	public char readChar() {
-		JsNumberLiteral literal = (JsNumberLiteral) decoder.getValues().get(
-				--index);
-		return (char) literal.getValue();
-	}
-
-	@Override
-	public double readDouble() {
-		JsValueLiteral valueLiteral = decoder.getValues().get(--index);
-		if (valueLiteral instanceof JsNumberLiteral) {
-			JsNumberLiteral literal = (JsNumberLiteral) valueLiteral;
-			return literal.getValue();
-		} else if (valueLiteral instanceof JsStringLiteral) {
-			JsStringLiteral literal = (JsStringLiteral) valueLiteral;
-			return Double.parseDouble(literal.getValue());
-		} else {
-			throw new RuntimeException("Can't read double from "
-					+ valueLiteral.getKind() + " literal");
-		}
-	}
-
-	@Override
-	public float readFloat() {
-		return (float) readDouble();
-	}
-
-	@Override
-	public int readInt() {
-		JsNumberLiteral literal = (JsNumberLiteral) decoder.getValues().get(
-				--index);
-		return (int) literal.getValue();
-	}
-
-	@Override
-	public long readLong() {
-		return Base64Utils.longFromBase64(
-		        ((JsStringLiteral) decoder.getValues().get(--index)).getValue());
-	}
-
-	@Override
-	public short readShort() {
-		JsNumberLiteral literal = (JsNumberLiteral) decoder.getValues().get(
-				--index);
-		return (short) literal.getValue();
-	}
-
-	@Override
-	public String readString() {
-		return getString(readInt());
-	}
-
-	@Override
-	protected Object deserialize(String typeSignature)
-			throws SerializationException {
-		int id = reserveDecodedObjectIndex();
-		Object instance = serializer.instantiate(this, typeSignature);
-		rememberDecodedObject(id, instance);
-		serializer.deserialize(this, instance, typeSignature);
-		return instance;
-	}
-
-	@Override
-	protected String getString(int index) {
-		// index is 1-based
-		return index > 0 ? decoder.getStringTable().get(index - 1) : null;
-	}
-
-	private static native JavaScriptObject eval(String encoded) /*-{
-	return eval(encoded);
-	}-*/;
-
-	private static native int getLength(JavaScriptObject array) /*-{
-	return array.length;
-	}-*/;
-
-	int index;
-
-	private JavaScriptObject results;
-
-	Serializer serializer;
-
-	public ClientSerializationStreamReader(Serializer serializer) {
-		this.serializer = serializer;
-	}
-
-	public void doDeserialize(AsyncCallback postPrepareCallback) {
-		this.postPrepareCallback = postPrepareCallback;
-		Scheduler.get().scheduleIncremental(new AsyncDeserializerDev(this));
-	}
-
-	AsyncCallback postPrepareCallback;
-
-	@Override
-	public Object readObject() throws SerializationException {
-		// at the end of the deserialization, return root
-		if (index == 0) {
-			return seenArray.get(0);
-		}
-		return super.readObject();
-	}
-
-	public int getTypeId(int index) {
-		return decoder.typeTable.get(index);
-	}
-
-	public int getTypeTableLength() {
-		return decoder.typeTable.size();
 	}
 
 	class AsyncDeserializerDev implements RepeatingCommand {
 		private int typeTableLength;
 
 		private final ClientSerializationStreamReader reader;
+
+		private int sliceSize = 500;
+
+		private int idx2;
+
+		private PhaseDev phase = PhaseDev.INSTATIATE_EMPTY_SETUP;
+
+		private int size;
 
 		public AsyncDeserializerDev(ClientSerializationStreamReader reader) {
 			this.reader = reader;
@@ -524,8 +547,8 @@ public final class ClientSerializationStreamReader extends
 					// deliberate fallthrough
 				case DESERIALIZE_COLLECTION_RUN:
 					if (deserializeProperties()) {
-						Scheduler.get().scheduleDeferred(
-								new ScheduledCommand() {
+						Scheduler.get()
+								.scheduleDeferred(new ScheduledCommand() {
 									@Override
 									public void execute() {
 										reader.postPrepareCallback
@@ -548,14 +571,6 @@ public final class ClientSerializationStreamReader extends
 			}
 			return true;
 		}
-
-		private int sliceSize = 500;
-
-		private int idx2;
-
-		private PhaseDev phase = PhaseDev.INSTATIATE_EMPTY_SETUP;
-
-		private int size;
 
 		private boolean deserializeProperties() throws SerializationException {
 			int sliceCount = sliceSize;
@@ -581,7 +596,8 @@ public final class ClientSerializationStreamReader extends
 			return idx2 == size;
 		}
 
-		private boolean instantiateEmptyObjects() throws SerializationException {
+		private boolean instantiateEmptyObjects()
+				throws SerializationException {
 			int sliceCount = sliceSize;
 			for (; sliceCount != 0 && idx2 < typeTableLength; idx2++) {
 				int strId = reader.getTypeId(idx2);
@@ -600,17 +616,5 @@ public final class ClientSerializationStreamReader extends
 		INSTATIATE_EMPTY_SETUP, INSTATIATE_EMPTY_RUN,
 		DESERIALIZE_NON_COLLECTION_PRE, DESERIALIZE_NON_COLLECTION_RUN,
 		DESERIALIZE_COLLECTION_PRE, DESERIALIZE_COLLECTION_RUN
-	}
-
-	protected int reserveDecodedObjectIndex() {
-		return super.reserveDecodedObjectIndex();
-	}
-
-	public List<Object> getSeenArray() {
-		return seenArray;
-	}
-
-	protected void rememberDecodedObject(int index, Object o) {
-		super.rememberDecodedObject(index, o);
 	}
 }

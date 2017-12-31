@@ -102,14 +102,14 @@ public class EmailAddressValidator implements ParameterisedValidator {
 		}
 		for (String s : strings) {
 			String replaceAll = s.replaceAll(EMAIL_REGEX, EMAIL_REGEX_REPLACE);
-			boolean overrideOk=false;
+			boolean overrideOk = false;
 			if (GWT.isClient()
 					&& Window.Navigator.getUserAgent().indexOf("Edge/") != -1) {
-				if(s.contains("@")&&s.contains(".")){
+				if (s.contains("@") && s.contains(".")) {
 					overrideOk = true;
 				}
 			}
-			if (!(overrideOk||replaceAll.equals(EMAIL_REGEX_REPLACE))) {
+			if (!(overrideOk || replaceAll.equals(EMAIL_REGEX_REPLACE))) {
 				throw new ValidationException(CommonUtils
 						.formatJ("'%s' is not a valid email address", s),
 						EmailAddressValidator.class);

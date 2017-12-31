@@ -29,12 +29,27 @@ import java.util.TreeMap;
  * @author Nick Reddel
  */
 public class SortedMultimap<K, V extends List> extends TreeMap<K, V> {
+	private transient KeysHelper keysHelper;
+
 	public SortedMultimap() {
 		super();
 	}
 
 	public SortedMultimap(Comparator<? super K> comparator) {
 		super(comparator);
+	}
+
+	public void add(K key, Object item) {
+		if (!containsKey(key)) {
+			put(key, (V) new ArrayList());
+		}
+		get(key).add(item);
+	}
+
+	public void addAll(Multimap<K, V> otherMultimap) {
+		for (K k : otherMultimap.keySet()) {
+			getAndEnsure(k).addAll(otherMultimap.get(k));
+		}
 	}
 
 	public V allItems() {
@@ -45,6 +60,12 @@ public class SortedMultimap<K, V extends List> extends TreeMap<K, V> {
 		return (V) list;
 	}
 
+	public Multimap<K, V> asMultimap() {
+		Multimap<K, V> result = new Multimap<K, V>();
+		result.putAll(this);
+		return result;
+	}
+
 	public V getAndEnsure(K key) {
 		if (!containsKey(key)) {
 			put(key, (V) new ArrayList());
@@ -52,11 +73,11 @@ public class SortedMultimap<K, V extends List> extends TreeMap<K, V> {
 		return get(key);
 	}
 
-	public void add(K key, Object item) {
-		if (!containsKey(key)) {
-			put(key, (V) new ArrayList());
+	public KeysHelper keysHelper() {
+		if (keysHelper == null) {
+			keysHelper = new KeysHelper();
 		}
-		get(key).add(item);
+		return keysHelper;
 	}
 
 	public void subtract(K key, Object item) {
@@ -65,30 +86,9 @@ public class SortedMultimap<K, V extends List> extends TreeMap<K, V> {
 		}
 	}
 
-	public void addAll(Multimap<K, V> otherMultimap) {
-		for (K k : otherMultimap.keySet()) {
-			getAndEnsure(k).addAll(otherMultimap.get(k));
-		}
-	}
-
 	@Override
 	public String toString() {
 		return CommonUtils.join(entrySet(), "\n");
-	}
-
-	public Multimap<K, V> asMultimap() {
-		Multimap<K, V> result = new Multimap<K, V>();
-		result.putAll(this);
-		return result;
-	}
-
-	private transient KeysHelper keysHelper;
-
-	public KeysHelper keysHelper() {
-		if (keysHelper == null) {
-			keysHelper = new KeysHelper();
-		}
-		return keysHelper;
 	}
 
 	public class KeysHelper {

@@ -45,6 +45,17 @@ public class TableSectionElement extends Element {
 	}
 
 	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && (elem.getTagName().equalsIgnoreCase(TAG_THEAD)
+				|| elem.getTagName().equalsIgnoreCase(TAG_TFOOT)
+				|| elem.getTagName().equalsIgnoreCase(TAG_TBODY));
+	}
+
+	/**
 	 * Determines whether the given {@link JavaScriptObject} can be cast to this
 	 * class. A <code>null</code> object will cause this method to return
 	 * <code>false</code>.
@@ -68,31 +79,8 @@ public class TableSectionElement extends Element {
 		return false;
 	}
 
-	/**
-	 * Determine whether the given {@link Element} can be cast to this class. A
-	 * <code>null</code> node will cause this method to return
-	 * <code>false</code>.
-	 */
-	public static boolean is(Element elem) {
-		return elem != null && (elem.getTagName().equalsIgnoreCase(TAG_THEAD)
-				|| elem.getTagName().equalsIgnoreCase(TAG_TFOOT)
-				|| elem.getTagName().equalsIgnoreCase(TAG_TBODY));
-	}
-
 	protected TableSectionElement() {
 	}
-
-	/**
-	 * Delete a row from this section.
-	 * 
-	 * @param index
-	 *            The index of the row to be deleted, or -1 to delete the last
-	 *            row. This index starts from 0 and is relative only to the rows
-	 *            contained inside this section, not all the rows in the table.
-	 */
-	native void deleteRow0(ElementRemote elt, int index) /*-{
-        elt.deleteRow(index);
-	}-*/;
 
 	public void deleteRow(int index) {
 		// deleteRow0(domImpl, index);
@@ -143,10 +131,6 @@ public class TableSectionElement extends Element {
 		return new NodeList<>((NodeListWrapped) new NodeListWrapped<>(nodes));
 	}
 
-	private final native NodeListRemote getRows0(ElementRemote elem) /*-{
-        return elem.rows;
-	}-*/;
-
 	/**
 	 * Vertical alignment of data in cells. See the valign attribute for
 	 * HTMLTheadElement for details.
@@ -167,8 +151,8 @@ public class TableSectionElement extends Element {
 	 * @return The newly created row.
 	 */
 	public final native TableRowElement insertRow(int index) /*-{
-        return this.insertRow(index);
-	}-*/;
+																return this.insertRow(index);
+																}-*/;
 
 	/**
 	 * Horizontal alignment of data in cells. See the align attribute for
@@ -207,4 +191,20 @@ public class TableSectionElement extends Element {
 	public void setVAlign(String vAlign) {
 		this.setPropertyString("vAlign", vAlign);
 	}
+
+	private final native NodeListRemote getRows0(ElementRemote elem) /*-{
+																		return elem.rows;
+																		}-*/;
+
+	/**
+	 * Delete a row from this section.
+	 * 
+	 * @param index
+	 *            The index of the row to be deleted, or -1 to delete the last
+	 *            row. This index starts from 0 and is relative only to the rows
+	 *            contained inside this section, not all the rows in the table.
+	 */
+	native void deleteRow0(ElementRemote elt, int index) /*-{
+															elt.deleteRow(index);
+															}-*/;
 }

@@ -83,6 +83,37 @@ public class ObjectTreeRenderer {
 		return op;
 	}
 
+	private void maybeSortChildRenderables(
+			List<? extends TreeRenderable> childRenderables,
+			final RenderContext renderContext) {
+		if (renderContext.get(SEARCH_SECTIONS) != null) {
+			final List<String> sectionOrder = renderContext
+					.get(SEARCH_SECTIONS);
+			Collections.sort(childRenderables,
+					new Comparator<TreeRenderable>() {
+						Map<TreeRenderable, Integer> lkp = new HashMap<TreeRenderable, Integer>();
+
+						@Override
+						public int compare(TreeRenderable o1,
+								TreeRenderable o2) {
+							return CommonUtils.compareInts(getIndex(o1),
+									getIndex(o2));
+						}
+
+						private int getIndex(TreeRenderable r) {
+							if (!lkp.containsKey(r)) {
+								TreeRenderer node1 = TreeRenderingInfoProvider
+										.get()
+										.getForRenderable(r, renderContext);
+								String s1 = node1.section();
+								lkp.put(r, sectionOrder.indexOf(s1));
+							}
+							return lkp.get(r);
+						}
+					});
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	protected void renderToPanel(TreeRenderable renderable, ComplexPanel cp,
 			int depth, boolean soleChild, RenderContext renderContext,
@@ -215,34 +246,57 @@ public class ObjectTreeRenderer {
 		return;
 	}
 
-	private void maybeSortChildRenderables(
-			List<? extends TreeRenderable> childRenderables,
-			final RenderContext renderContext) {
-		if (renderContext.get(SEARCH_SECTIONS) != null) {
-			final List<String> sectionOrder = renderContext
-					.get(SEARCH_SECTIONS);
-			Collections.sort(childRenderables,
-					new Comparator<TreeRenderable>() {
-						Map<TreeRenderable, Integer> lkp = new HashMap<TreeRenderable, Integer>();
+	public static class FlowPanelWithBinding extends FlowPanel
+			implements SupportsAttachDetachCallbacks {
+		private Binding binding = new Binding();
 
-						private int getIndex(TreeRenderable r) {
-							if (!lkp.containsKey(r)) {
-								TreeRenderer node1 = TreeRenderingInfoProvider
-										.get()
-										.getForRenderable(r, renderContext);
-								String s1 = node1.section();
-								lkp.put(r, sectionOrder.indexOf(s1));
-							}
-							return lkp.get(r);
-						}
+		private RenderContext renderContext;
 
-						@Override
-						public int compare(TreeRenderable o1,
-								TreeRenderable o2) {
-							return CommonUtils.compareInts(getIndex(o1),
-									getIndex(o2));
-						}
-					});
+		public Binding getBinding() {
+			return binding;
+		}
+
+		public void setBinding(Binding binding) {
+			this.binding = binding;
+		}
+
+		public void setRenderContext(RenderContext renderContext) {
+			this.renderContext = renderContext;
+		}
+
+		@Override
+		protected void onAttach() {
+			super.onAttach();
+			if (renderContext != null) {
+				renderContext.onAttach(this);
+			}
+		}
+
+		@Override
+		protected void onDetach() {
+			super.onDetach();
+			if (renderContext != null) {
+				renderContext.onDetach(this);
+			}
+			binding.unbind();
+		}
+	}
+
+	public static class HorizontalPanelWithBinding extends HorizontalPanel {
+		private Binding binding = new Binding();
+
+		public Binding getBinding() {
+			return binding;
+		}
+
+		public void setBinding(Binding binding) {
+			this.binding = binding;
+		}
+
+		@Override
+		protected void onDetach() {
+			super.onDetach();
+			binding.unbind();
 		}
 	}
 
@@ -303,59 +357,5 @@ public class ObjectTreeRenderer {
 
 	public interface SupportsAttachDetachCallbacks {
 		public void setRenderContext(RenderContext renderContext);
-	}
-
-	public static class FlowPanelWithBinding extends FlowPanel
-			implements SupportsAttachDetachCallbacks {
-		@Override
-		protected void onDetach() {
-			super.onDetach();
-			if (renderContext != null) {
-				renderContext.onDetach(this);
-			}
-			binding.unbind();
-		}
-
-		private Binding binding = new Binding();
-
-		private RenderContext renderContext;
-
-		public void setBinding(Binding binding) {
-			this.binding = binding;
-		}
-
-		public Binding getBinding() {
-			return binding;
-		}
-
-		@Override
-		protected void onAttach() {
-			super.onAttach();
-			if (renderContext != null) {
-				renderContext.onAttach(this);
-			}
-		}
-
-		public void setRenderContext(RenderContext renderContext) {
-			this.renderContext = renderContext;
-		}
-	}
-
-	public static class HorizontalPanelWithBinding extends HorizontalPanel {
-		@Override
-		protected void onDetach() {
-			super.onDetach();
-			binding.unbind();
-		}
-
-		private Binding binding = new Binding();
-
-		public void setBinding(Binding binding) {
-			this.binding = binding;
-		}
-
-		public Binding getBinding() {
-			return binding;
-		}
 	}
 }

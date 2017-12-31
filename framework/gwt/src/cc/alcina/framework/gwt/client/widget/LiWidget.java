@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.dom.client.Document;
@@ -20,8 +19,7 @@ import com.google.gwt.dom.client.Document;
  *
  * @author Nick Reddel
  */
-
- public class LiWidget extends Para{
+public class LiWidget extends Para {
 	public LiWidget(String html) {
 		setElement(Document.get().createLIElement());
 		setHTML(html);

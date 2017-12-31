@@ -27,12 +27,26 @@ import org.apache.log4j.spi.LoggingEvent;
 public class WriterAccessWriterAppender extends WriterAppender {
 	private static final int MAX_LENGTH = 5000000;
 
-	private StringWriter writerAccess;
-
 	public static final String STRING_WRITER_APPENDER_KEY = "stringWriterAppender";
+
+	private StringWriter writerAccess;
 
 	public StringWriter getWriterAccess() {
 		return this.writerAccess;
+	}
+
+	public void resetWriter() throws Exception {
+		Writer newWriter = writerAccess.getClass().newInstance();
+		setWriter(newWriter);
+	}
+
+	@Override
+	public synchronized void setWriter(Writer writer) {
+		if (!(writer instanceof StringWriter)) {
+			throw new RuntimeException("writer must be a StringWriter");
+		}
+		this.writerAccess = (StringWriter) writer;
+		super.setWriter(writer);
 	}
 
 	@Override
@@ -64,19 +78,5 @@ public class WriterAccessWriterAppender extends WriterAppender {
 		if (shouldFlush(event)) {
 			this.qw.flush();
 		}
-	}
-
-	public void resetWriter() throws Exception {
-		Writer newWriter = writerAccess.getClass().newInstance();
-		setWriter(newWriter);
-	}
-
-	@Override
-	public synchronized void setWriter(Writer writer) {
-		if (!(writer instanceof StringWriter)) {
-			throw new RuntimeException("writer must be a StringWriter");
-		}
-		this.writerAccess = (StringWriter) writer;
-		super.setWriter(writer);
 	}
 }

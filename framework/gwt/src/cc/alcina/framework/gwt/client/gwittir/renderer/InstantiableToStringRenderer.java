@@ -25,17 +25,17 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 /**
  *
- * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet" Cooper</a>
+ * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
+ *         Cooper</a>
  */
 @ClientInstantiable
-public class InstantiableToStringRenderer<T> implements Renderer<T,String> {
+public class InstantiableToStringRenderer<T> implements Renderer<T, String> {
+	/** Creates a new instance of ToStringRenderer */
+	public InstantiableToStringRenderer() {
+		super();
+	}
 
-    /** Creates a new instance of ToStringRenderer */
-    public  InstantiableToStringRenderer() {
-        super();
-    }
-
-    public String render(Object o) {
-        return (o == null) ? "" : o.toString();
-    }
+	public String render(Object o) {
+		return (o == null) ? "" : o.toString();
+	}
 }

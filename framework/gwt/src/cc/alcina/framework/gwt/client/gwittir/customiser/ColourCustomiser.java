@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.customiser;
-
 
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
@@ -29,34 +27,32 @@ import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
  *
  * @author Nick Reddel
  */
-
- public class ColourCustomiser implements Customiser {
+public class ColourCustomiser implements Customiser {
 	public static final String DEFAULT_COLOUR = "defaultColour";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
-		NamedParameter p = NamedParameter.Support.getParameter(
-				info.parameters(), DEFAULT_COLOUR);
-		return new ColourRenderer(p==null?null:p.stringValue());
+		NamedParameter p = NamedParameter.Support
+				.getParameter(info.parameters(), DEFAULT_COLOUR);
+		return new ColourRenderer(p == null ? null : p.stringValue());
 	}
 
 	public static class ColourRenderer implements BoundWidgetProvider {
-		private final String defaultColour;
-
 		private static final String DEFAULT_COLOUR = "#FFFFFF";
+
+		private final String defaultColour;
 
 		public ColourRenderer(String defaultColour) {
 			this.defaultColour = defaultColour;
 		}
 
 		public BoundWidget get() {
-			return new ColourWidget(defaultColour == null ? DEFAULT_COLOUR
-					: defaultColour);
+			return new ColourWidget(
+					defaultColour == null ? DEFAULT_COLOUR : defaultColour);
 		}
 	}
 
-	public static class ColourWidget extends
-			AbstractBoundWidget< String> {
+	public static class ColourWidget extends AbstractBoundWidget<String> {
 		private String colour;
 
 		private FlowPanel fp;
@@ -79,8 +75,8 @@ import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 			String old = this.getValue();
 			updateColour(value);
 			if (this.getValue() != old
-					&& (this.getValue() == null || (this.getValue() != null && !this
-							.getValue().equals(old)))) {
+					&& (this.getValue() == null || (this.getValue() != null
+							&& !this.getValue().equals(old)))) {
 				this.changes.firePropertyChange("value", old, this.getValue());
 			}
 		}

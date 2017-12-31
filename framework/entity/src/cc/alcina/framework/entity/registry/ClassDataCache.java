@@ -16,10 +16,20 @@ import cc.alcina.framework.entity.ResourceUtilities;
 public class ClassDataCache implements Serializable {
 	static final transient long serialVersionUID = -1L;
 
-	public static class ClassDataItem implements Serializable {
-		public ClassDataItem() {
-		}
+	public Map<String, ClassDataItem> classData = new LinkedHashMap<String, ClassDataItem>();
 
+	public List<String> ignorePackageSegments = new ArrayList<String>();
+
+	public void add(ClassDataItem item) {
+		for (String segment : ignorePackageSegments) {
+			if (item.className.startsWith(segment)) {
+				return;
+			}
+		}
+		classData.put(item.className, item);
+	}
+
+	public static class ClassDataItem implements Serializable {
 		static final transient long serialVersionUID = -1L;
 
 		public Date date;
@@ -29,6 +39,9 @@ public class ClassDataCache implements Serializable {
 		public transient URL url;
 
 		public String className;
+
+		public ClassDataItem() {
+		}
 
 		public String ensureMd5() {
 			if (md5 == null) {
@@ -54,18 +67,5 @@ public class ClassDataCache implements Serializable {
 				throw new WrappedRuntimeException(e);
 			}
 		}
-	}
-
-	public Map<String, ClassDataItem> classData = new LinkedHashMap<String, ClassDataItem>();
-
-	public List<String> ignorePackageSegments = new ArrayList<String>();
-
-	public void add(ClassDataItem item) {
-		for (String segment : ignorePackageSegments) {
-			if (item.className.startsWith(segment)) {
-				return;
-			}
-		}
-		classData.put(item.className, item);
 	}
 }

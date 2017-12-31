@@ -11,36 +11,34 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 
 /**
  *
- * @author Nick Reddel
- * An action to be run on the client
+ * @author Nick Reddel An action to be run on the client
  */
+public class LocalActionWithParameters<T> extends PermissibleAction {
+	private T parameters;
 
- public class LocalActionWithParameters<T> extends PermissibleAction {
 	public LocalActionWithParameters() {
 	}
 
-	public void setParameters(T parameters) {
-		this.parameters = parameters;
+	@Override
+	public AccessLevel accessLevel() {
+		return AccessLevel.ADMIN;
+	}
+
+	public String getDescription() {
+		return "";
 	}
 
 	public T getParameters() {
 		return parameters;
 	}
 
-	private T parameters;
-	public String getDescription() {
-		return "";
-	}
-
-	@Override
-	public AccessLevel accessLevel() {
-		return AccessLevel.ADMIN;
+	public void setParameters(T parameters) {
+		this.parameters = parameters;
 	}
 }

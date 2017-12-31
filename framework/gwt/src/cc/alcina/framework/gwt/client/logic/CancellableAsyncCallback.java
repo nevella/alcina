@@ -4,15 +4,17 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.IsCancellable;
 
-public abstract class CancellableAsyncCallback<T> implements AsyncCallback<T>, IsCancellable {
-	@Override
-	public void setCancelled(boolean cancelled) {
-		this.cancelled = cancelled;
-	}
+public abstract class CancellableAsyncCallback<T>
+		implements AsyncCallback<T>, IsCancellable {
+	private boolean cancelled;
 
 	@Override
 	public boolean isCancelled() {
 		return cancelled;
 	}
-	private boolean cancelled;
+
+	@Override
+	public void setCancelled(boolean cancelled) {
+		this.cancelled = cancelled;
+	}
 }

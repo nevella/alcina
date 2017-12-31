@@ -111,6 +111,11 @@ public class XmlUtils {
 
 	private static XPointerConverter xPointerConverter;
 
+	private static Set<String> selfClosingTags = Arrays.asList("area", "base",
+			"br", "col", "command", "embed", "hr", "img", "input", "keygen",
+			"link", "meta", "param", "source", "track", "wbr").stream()
+			.collect(Collectors.toSet());
+
 	public static List<Node> allChildren(Node node) {
 		Stack<Node> nodes = new Stack<Node>();
 		nodes.push(node);
@@ -189,6 +194,14 @@ public class XmlUtils {
 		Element element = doc.createElement(tag);
 		element.setTextContent(textContent);
 		return element;
+	}
+
+	public static String divWrapper(String content, boolean wrap) {
+		if (wrap) {
+			return String.format("<div>%s</div>", content);
+		} else {
+			return content.replaceFirst("(?is)^.*?<div>(.+)</div>$", "$1");
+		}
 	}
 
 	public static Element earliest(Element... elements) {
@@ -460,39 +473,6 @@ public class XmlUtils {
 		return getSurroundingBlockTuple(node, new BlockResolverHtml());
 	}
 
-	public static interface BlockResolver extends Predicate<XmlNode> {
-		default Optional<XmlNode> getContainingBlock(XmlNode cursor) {
-			return cursor.ancestors().orSelf().match(this);
-		}
-
-		boolean isBlock(XmlNode node);
-
-		default boolean test(XmlNode node) {
-			return isBlock(node);
-		}
-
-		default boolean isBlock(Element e) {
-			return isBlock(XmlNode.from(e));
-		}
-	}
-
-	public static class BlockResolverHtml implements BlockResolver {
-		@Override
-		public boolean isBlock(XmlNode node) {
-			return node.html().isBlock();
-		}
-
-		XmlDoc doc = null;
-
-		@Override
-		public boolean isBlock(Element e) {
-			if (doc == null) {
-				doc = XmlNode.from(e).doc;
-			}
-			return isBlock(doc.nodeFor(e));
-		}
-	}
-
 	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node,
 			BlockResolver blockResolver) {
 		XmlDoc xmlDoc = new XmlDoc(node.getOwnerDocument());
@@ -624,15 +604,6 @@ public class XmlUtils {
 					ResourceUtilities.writeStringToInputStream(out.toString()));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	private static String trimAndNormaliseWrappingNewlines(
-			boolean parentIsTextNode, String text) {
-		if (parentIsTextNode) {
-			return text.replaceFirst("(?s)^[\n]*(.+?)[\n]*$", "$1");
-		} else {
-			return text.replaceFirst("(?s)^[ \t\n]*(.+?)[ \t\n]*$", "$1");
 		}
 	}
 
@@ -1159,6 +1130,12 @@ public class XmlUtils {
 		}
 	}
 
+	public static String removeSelfClosingHtmlTags(String content) {
+		String regex = Ax.format("</(%s)>",
+				selfClosingTags.stream().collect(Collectors.joining("|")));
+		return content.replaceAll(regex, "");
+	}
+
 	public static String removeXmlDeclaration(String xml) {
 		return xml.replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "");
 	}
@@ -1342,6 +1319,48 @@ public class XmlUtils {
 		}
 	}
 
+	private static String trimAndNormaliseWrappingNewlines(
+			boolean parentIsTextNode, String text) {
+		if (parentIsTextNode) {
+			return text.replaceFirst("(?s)^[\n]*(.+?)[\n]*$", "$1");
+		} else {
+			return text.replaceFirst("(?s)^[ \t\n]*(.+?)[ \t\n]*$", "$1");
+		}
+	}
+
+	public static interface BlockResolver extends Predicate<XmlNode> {
+		default Optional<XmlNode> getContainingBlock(XmlNode cursor) {
+			return cursor.ancestors().orSelf().match(this);
+		}
+
+		default boolean isBlock(Element e) {
+			return isBlock(XmlNode.from(e));
+		}
+
+		boolean isBlock(XmlNode node);
+
+		default boolean test(XmlNode node) {
+			return isBlock(node);
+		}
+	}
+
+	public static class BlockResolverHtml implements BlockResolver {
+		XmlDoc doc = null;
+
+		@Override
+		public boolean isBlock(Element e) {
+			if (doc == null) {
+				doc = XmlNode.from(e).doc;
+			}
+			return isBlock(doc.nodeFor(e));
+		}
+
+		@Override
+		public boolean isBlock(XmlNode node) {
+			return node.html().isBlock();
+		}
+	}
+
 	public static class DOMLocation {
 		public static Range createRange(DOMLocation start, DOMLocation end) {
 			Range r = ((DocumentRange) start.node.getOwnerDocument())
@@ -1422,8 +1441,14 @@ public class XmlUtils {
 
 		public Node forNode;
 
+		boolean walkerFinished = false;
+
 		public SurroundingBlockTuple(Node forNode) {
 			this.forNode = forNode;
+		}
+
+		public void detach() {
+			range.detach();
 		}
 
 		@Override
@@ -1434,8 +1459,6 @@ public class XmlUtils {
 			}
 			return false;
 		}
-
-		boolean walkerFinished = false;
 
 		public Text getCurrentTextChildAndIncrement() {
 			Node n = null;
@@ -1453,16 +1476,11 @@ public class XmlUtils {
 			return null;
 		}
 
-		public void resetWalker() {
-			walkerFinished = false;
-			Document doc = firstNode.getOwnerDocument();
-			walker = ((DocumentTraversal) doc).createTreeWalker(doc,
-					NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, null, true);
-			walker.setCurrentNode(firstNode);
-		}
-
-		public void detach() {
-			range.detach();
+		public Text provideFirstText() {
+			resetWalker();
+			Text textChild = getCurrentTextChildAndIncrement();
+			resetWalker();
+			return textChild;
 		}
 
 		public boolean provideIsAnonymousTextBlock() {
@@ -1471,11 +1489,12 @@ public class XmlUtils {
 							&& XmlUtils.isAncestorOf(prevBlock, firstNode));
 		}
 
-		public Text provideFirstText() {
-			resetWalker();
-			Text textChild = getCurrentTextChildAndIncrement();
-			resetWalker();
-			return textChild;
+		public void resetWalker() {
+			walkerFinished = false;
+			Document doc = firstNode.getOwnerDocument();
+			walker = ((DocumentTraversal) doc).createTreeWalker(doc,
+					NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, null, true);
+			walker.setCurrentNode(firstNode);
 		}
 	}
 
@@ -1619,23 +1638,5 @@ public class XmlUtils {
 				exception.printStackTrace();
 			}
 		}
-	}
-
-	public static String divWrapper(String content, boolean wrap) {
-		if (wrap) {
-			return String.format("<div>%s</div>", content);
-		} else {
-			return content.replaceFirst("(?is)^.*?<div>(.+)</div>$", "$1");
-		}
-	}
-	private static Set<String> selfClosingTags = Arrays.asList("area", "base",
-			"br", "col", "command", "embed", "hr", "img", "input", "keygen",
-			"link", "meta", "param", "source", "track", "wbr").stream()
-			.collect(Collectors.toSet());
-
-	public static String removeSelfClosingHtmlTags(String content) {
-		String regex = Ax.format("</(%s)>",
-				selfClosingTags.stream().collect(Collectors.joining("|")));
-		return content.replaceAll(regex, "");
 	}
 }

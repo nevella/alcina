@@ -12,7 +12,7 @@ class NodeListWrapped<T extends Node> implements DomNodeList<T> {
 
 	@Override
 	public T getItem(int index) {
-		return (T)nodes.get(index);
+		return (T) nodes.get(index);
 	}
 
 	/**
@@ -23,6 +23,7 @@ class NodeListWrapped<T extends Node> implements DomNodeList<T> {
 	public int getLength() {
 		return nodes.size();
 	}
+
 	@Override
 	public Stream<T> stream() {
 		return nodes.stream();

@@ -59,19 +59,8 @@ import com.google.gwt.user.client.ui.Widget;
  * @param <T>
  *            the data type of each row
  */
-public class DataGridWithScrollAccess<T> extends DataGrid<T> implements HasDataWidget<T>{
-	public DataGridWithScrollAccess(int pageSize,
-			com.google.gwt.user.cellview.client.DataGrid.Resources resources) {
-		super(pageSize, resources, null,
-				createDefaultLoadingIndicator(resources));
-		addRedrawHandler(()->forceReflow());
-	}
-
-	private void forceReflow() {
-		//-webkit-transform: translate3d(0,0,0);
-		getElement().getStyle().setProperty("webkitTransform", "translate3d(0,0,0)");
-	}
-
+public class DataGridWithScrollAccess<T> extends DataGrid<T>
+		implements HasDataWidget<T> {
 	private static Widget createDefaultLoadingIndicator(Resources resources) {
 		ImageResource loadingImg = resources.dataGridLoading();
 		if (loadingImg == null) {
@@ -81,6 +70,13 @@ public class DataGridWithScrollAccess<T> extends DataGrid<T> implements HasDataW
 		image.getElement().getStyle().setMarginTop(30.0, Unit.PX);
 		image.setStyleName("dg-loading-image");
 		return image;
+	}
+
+	public DataGridWithScrollAccess(int pageSize,
+			com.google.gwt.user.cellview.client.DataGrid.Resources resources) {
+		super(pageSize, resources, null,
+				createDefaultLoadingIndicator(resources));
+		addRedrawHandler(() -> forceReflow());
 	}
 
 	public ScrollPanel getBodyScrollPanel() {
@@ -94,10 +90,16 @@ public class DataGridWithScrollAccess<T> extends DataGrid<T> implements HasDataW
 		}
 		super.onLoadingStateChanged(state);
 	}
+
+	private void forceReflow() {
+		// -webkit-transform: translate3d(0,0,0);
+		getElement().getStyle().setProperty("webkitTransform",
+				"translate3d(0,0,0)");
+	}
+
 	@Override
 	protected void onAttach() {
 		// TODO Auto-generated method stub
 		super.onAttach();
 	}
-	
 }

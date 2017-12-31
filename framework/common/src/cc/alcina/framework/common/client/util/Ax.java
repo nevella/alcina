@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.util;
 
-import java.beans.PropertyDescriptor;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -27,8 +26,16 @@ public class Ax {
 		return blankTo(string, "");
 	}
 
+	public static Date cloneDate(Date date) {
+		return date == null ? null : new Date(date.getTime());
+	}
+
 	public static String dateSlash(Date date) {
 		return CommonUtils.formatDate(date, DateStyle.AU_DATE_SLASH);
+	}
+
+	public static String dateTimeSlash(Date date) {
+		return CommonUtils.formatDate(date, DateStyle.AU_DATE_TIME_HUMAN);
 	}
 
 	public static void err(String template, Object... args) {
@@ -91,13 +98,5 @@ public class Ax {
 				return t;
 			};
 		}
-	}
-
-	public static String dateTimeSlash(Date date) {
-		return CommonUtils.formatDate(date, DateStyle.AU_DATE_TIME_HUMAN);
-	}
-
-	public static Date cloneDate(Date date) {
-		return date == null ? null : new Date(date.getTime());
 	}
 }

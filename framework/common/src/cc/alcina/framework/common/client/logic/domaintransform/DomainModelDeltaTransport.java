@@ -19,6 +19,14 @@ public class DomainModelDeltaTransport implements Serializable, Cloneable {
 	public DomainModelDeltaTransport() {
 	}
 
+	public DomainModelDeltaTransport(String signature, String metadataJson,
+			String trancheString, DomainModelDelta delta) {
+		this.signature = signature;
+		this.metadataJson = metadataJson;
+		this.serializedDelta = trancheString;
+		this.delta = delta;
+	}
+
 	public DomainModelDeltaTransport clone() {
 		DomainModelDeltaTransport o = new DomainModelDeltaTransport();
 		o.signature = signature;
@@ -28,47 +36,39 @@ public class DomainModelDeltaTransport implements Serializable, Cloneable {
 		return o;
 	}
 
-	public DomainModelDeltaTransport(String signature, String metadataJson,
-			String trancheString, DomainModelDelta delta) {
-		this.signature = signature;
-		this.metadataJson = metadataJson;
-		this.serializedDelta = trancheString;
-		this.delta = delta;
-	}
-
-	public String getSignature() {
-		return this.signature;
-	}
-
-	public void setSignature(String signature) {
-		this.signature = signature;
+	public DomainModelDelta getDelta() {
+		return this.delta;
 	}
 
 	public String getMetadataJson() {
 		return this.metadataJson;
 	}
 
-	public void setMetadataJson(String metadataJson) {
-		this.metadataJson = metadataJson;
-	}
-
 	public String getSerializedDelta() {
 		return this.serializedDelta;
 	}
 
-	public void setSerializedDelta(String serializedDelta) {
-		this.serializedDelta = serializedDelta;
+	public String getSignature() {
+		return this.signature;
 	}
 
-	public DomainModelDelta getDelta() {
-		return this.delta;
+	public boolean provideIsCacheReference() {
+		return metadataJson == null && serializedDelta == null;
 	}
 
 	public void setDelta(DomainModelDelta delta) {
 		this.delta = delta;
 	}
 
-	public boolean provideIsCacheReference() {
-		return metadataJson == null && serializedDelta == null;
+	public void setMetadataJson(String metadataJson) {
+		this.metadataJson = metadataJson;
+	}
+
+	public void setSerializedDelta(String serializedDelta) {
+		this.serializedDelta = serializedDelta;
+	}
+
+	public void setSignature(String signature) {
+		this.signature = signature;
 	}
 }

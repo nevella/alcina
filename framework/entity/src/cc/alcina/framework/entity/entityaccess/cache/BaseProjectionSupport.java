@@ -13,30 +13,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 public class BaseProjectionSupport {
-	public static class Object2ObjectOpenHashMapCreator
-			implements BaseProjectionLookupBuilder.MapCreator {
-		@Override
-		public Map get() {
-			return new Object2ObjectOpenHashMap();
-		}
-	}
-
-	public static class Int2IntOpenHashMapCreator
-			implements BaseProjectionLookupBuilder.MapCreator {
-		@Override
-		public Map get() {
-			return new Int2IntOpenHashMap();
-		}
-	}
-
-	public static class Int2ObjectOpenHashMapCreator
-			implements BaseProjectionLookupBuilder.MapCreator {
-		@Override
-		public Map get() {
-			return new Int2ObjectOpenHashMap();
-		}
-	}
-
 	public static class BplDelegateMapCreatorFastUnsorted
 			extends DelegateMapCreator {
 		@Override
@@ -72,6 +48,30 @@ public class BaseProjectionSupport {
 		public boolean isSorted(Map m) {
 			return !(m instanceof Object2ObjectLinkedOpenHashMap)
 					&& super.isSorted(m);
+		}
+	}
+
+	public static class Int2IntOpenHashMapCreator
+			implements BaseProjectionLookupBuilder.MapCreator {
+		@Override
+		public Map get() {
+			return new Int2IntOpenHashMap();
+		}
+	}
+
+	public static class Int2ObjectOpenHashMapCreator
+			implements BaseProjectionLookupBuilder.MapCreator {
+		@Override
+		public Map get() {
+			return new Int2ObjectOpenHashMap();
+		}
+	}
+
+	public static class Object2ObjectOpenHashMapCreator
+			implements BaseProjectionLookupBuilder.MapCreator {
+		@Override
+		public Map get() {
+			return new Object2ObjectOpenHashMap();
 		}
 	}
 }

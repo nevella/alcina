@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions;
 
 import java.io.Serializable;
@@ -19,7 +18,6 @@ import java.io.Serializable;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
-
 
 /**
  * Marker subclass, to be run on the server
@@ -32,12 +30,12 @@ public class RemoteAction extends PermissibleAction implements Serializable {
 	public RemoteAction() {
 	}
 
-	public String getDescription() {
-		return "";
-	}
-
 	@Override
 	public AccessLevel accessLevel() {
 		return AccessLevel.ADMIN;
+	}
+
+	public String getDescription() {
+		return "";
 	}
 }

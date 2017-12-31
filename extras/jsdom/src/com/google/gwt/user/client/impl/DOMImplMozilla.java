@@ -22,58 +22,57 @@ import com.google.gwt.dom.client.ElementRemote;
  * Mozilla implementation of StandardBrowser.
  */
 class DOMImplMozilla extends DOMImplStandard {
+	static {
+		addMozillaCaptureEventDispatchers();
+	}
 
-  static {
-    addMozillaCaptureEventDispatchers();
-  }
+	private static native void addMozillaCaptureEventDispatchers() /*-{
+																	@com.google.gwt.user.client.impl.DOMImplStandard::captureEventDispatchers['DOMMouseScroll'] =
+																	@com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*);
+																	}-*/;
 
-  private static native void addMozillaCaptureEventDispatchers() /*-{
-    @com.google.gwt.user.client.impl.DOMImplStandard::captureEventDispatchers['DOMMouseScroll'] =
-        @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*);
-  }-*/;
+	@Override
+	public void sinkEvents(Element elem, int bits) {
+		super.sinkEvents(elem, bits);
+		if (elem.implAccess().linkedToRemote()) {
+			sinkEventsMozilla(elem.implAccess().typedRemoteOrNull(), bits);
+		}
+	}
 
-  @Override
-  public void sinkEvents(Element elem, int bits) {
-    super.sinkEvents(elem, bits);
-    if(elem.implAccess().linkedToRemote()){
-    	sinkEventsMozilla(elem.implAccess().typedRemoteOrNull(), bits);
-    }
-  }
+	private native void initSyntheticMouseUpEvents() /*-{
+														$wnd.addEventListener(
+														'mouseout',
+														$entry(function(evt) {
+														var cap = @com.google.gwt.user.client.impl.DOMImplStandard::captureElem; 
+														if (cap && !evt.relatedTarget) {
+														// Mozilla has the interesting habit of sending a mouseout event
+														// with an 'html' element as the target when the mouse is released
+														// outside of the browser window.
+														if ('html' == evt.target.tagName.toLowerCase()) {
+														// When this occurs, we synthesize a mouseup event, which is
+														// useful for all sorts of dragging code (like in DialogBox).
+														var muEvent = $doc.createEvent('MouseEvents');
+														muEvent.initMouseEvent('mouseup', true, true, $wnd, 0,
+														evt.screenX, evt.screenY, evt.clientX, evt.clientY, evt.ctrlKey,
+														evt.altKey, evt.shiftKey, evt.metaKey, evt.button, null);
+														cap.dispatchEvent(muEvent);
+														}
+														}
+														}),
+														true
+														);
+														}-*/;
 
-  @SuppressWarnings("deprecation")
-   native void sinkEventsMozilla(ElementRemote elem, int bits) /*-{
-    if (bits & 0x20000) {
-      elem.addEventListener('DOMMouseScroll', @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent, false);
-    }
-  }-*/;
+	@Override
+	protected void initEventSystem() {
+		super.initEventSystem();
+		initSyntheticMouseUpEvents();
+	}
 
-  @Override
-  protected void initEventSystem() {
-    super.initEventSystem();
-    initSyntheticMouseUpEvents();
-  }
-
-  private native void initSyntheticMouseUpEvents() /*-{
-    $wnd.addEventListener(
-      'mouseout',
-      $entry(function(evt) {
-        var cap = @com.google.gwt.user.client.impl.DOMImplStandard::captureElem; 
-        if (cap && !evt.relatedTarget) {
-          // Mozilla has the interesting habit of sending a mouseout event
-          // with an 'html' element as the target when the mouse is released
-          // outside of the browser window.
-          if ('html' == evt.target.tagName.toLowerCase()) {
-            // When this occurs, we synthesize a mouseup event, which is
-            // useful for all sorts of dragging code (like in DialogBox).
-            var muEvent = $doc.createEvent('MouseEvents');
-            muEvent.initMouseEvent('mouseup', true, true, $wnd, 0,
-              evt.screenX, evt.screenY, evt.clientX, evt.clientY, evt.ctrlKey,
-              evt.altKey, evt.shiftKey, evt.metaKey, evt.button, null);
-            cap.dispatchEvent(muEvent);
-          }
-        }
-      }),
-      true
-    );
-  }-*/;
+	@SuppressWarnings("deprecation")
+	native void sinkEventsMozilla(ElementRemote elem, int bits) /*-{
+																if (bits & 0x20000) {
+																elem.addEventListener('DOMMouseScroll', @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent, false);
+																}
+																}-*/;
 }

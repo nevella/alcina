@@ -11,67 +11,61 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.actions.RemoteParameters;
 import cc.alcina.framework.common.client.csobjects.SearchResult;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 
-
 /**
  *
  * @author Nick Reddel
  */
-
- public abstract class SingleTableSearchDefinition<R extends SearchResult> extends SearchDefinition
-		implements RemoteParameters {
-	public SingleTableSearchDefinition() {
-		init();
-	}
-
-	public boolean isOrderable() {
-		return true;
-	}
-
+public abstract class SingleTableSearchDefinition<R extends SearchResult>
+		extends SearchDefinition implements RemoteParameters {
 	private Direction orderDirection;
 
 	private String orderPropertyName;
 
-	
 	private transient Class<? extends R> resultClass;
 
-	public void setResultClass(Class<? extends R> resultClass) {
-		this.resultClass = resultClass;
-	}
-
-	public Class<? extends R> getResultClass() {
-		return resultClass;
+	public SingleTableSearchDefinition() {
+		init();
 	}
 
 	// TODO: 3.2, check no indjection attack
 	public void checkFromClient() {
 	}
 
-	
+	public Direction getOrderDirection() {
+		return orderDirection;
+	}
 
-	protected abstract void init();
+	public String getOrderPropertyName() {
+		return orderPropertyName;
+	}
+
+	public Class<? extends R> getResultClass() {
+		return resultClass;
+	}
+
+	public boolean isOrderable() {
+		return true;
+	}
 
 	public void setOrderDirection(Direction orderDirection) {
 		this.orderDirection = orderDirection;
-	}
-
-	public Direction getOrderDirection() {
-		return orderDirection;
 	}
 
 	public void setOrderPropertyName(String orderPropertyName) {
 		this.orderPropertyName = orderPropertyName;
 	}
 
-	public String getOrderPropertyName() {
-		return orderPropertyName;
+	public void setResultClass(Class<? extends R> resultClass) {
+		this.resultClass = resultClass;
 	}
+
+	protected abstract void init();
 
 	@Override
 	protected String orderEql() {

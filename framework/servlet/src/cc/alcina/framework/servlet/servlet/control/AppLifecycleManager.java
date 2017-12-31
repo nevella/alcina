@@ -21,6 +21,17 @@ public class AppLifecycleManager implements RegistrableService {
 	public static final String TOPIC_APP_CONFIGURATION_RELOADED = AppLifecycleManager.class
 			.getName() + ".TOPIC_APP_CONFIGURATION_RELOADED";
 
+	public static void notifyAppConfigurationReloaded(Void v) {
+		GlobalTopicPublisher.get()
+				.publishTopic(TOPIC_APP_CONFIGURATION_RELOADED, v);
+	}
+
+	public static void notifyAppConfigurationReloadedDelta(
+			TopicListener<Void> listener, boolean add) {
+		GlobalTopicPublisher.get()
+				.listenerDelta(TOPIC_APP_CONFIGURATION_RELOADED, listener, add);
+	}
+
 	private AppLifecycleServletBase lifecycleServlet;
 
 	private ControlServletState state = ControlServletState.standaloneModes();
@@ -36,6 +47,10 @@ public class AppLifecycleManager implements RegistrableService {
 
 	@Override
 	public void appShutdown() {
+	}
+
+	public boolean canWriteOrRelay() {
+		return state.getModes().getWriterRelayMode() != WriterRelayMode.REJECT;
 	}
 
 	public void earlyShutdown() {
@@ -59,8 +74,27 @@ public class AppLifecycleManager implements RegistrableService {
 		return state;
 	}
 
+	public ControlServletModes getTargetModes() {
+		return this.targetModes;
+	}
+
+	public void initWriterServices() {
+		for (ModeEnum e : ModeEnum.values()) {
+			e.getDeltaHandler(this).init();
+		}
+	}
+
+	public boolean isClusterMember() {
+		return this.clusterMember;
+	}
+
 	public boolean isWriter() {
 		return state.getModes().getWriterMode() == WriterMode.CLUSTER_WRITER;
+	}
+
+	public String proxy(RPCRequest rpcRequest,
+			CommonRemoteServiceServlet remoteServlet) {
+		return new AppWriterProxy().proxy(this, rpcRequest, remoteServlet);
 	}
 
 	public void refreshClusterRoleFromConfigFile() throws Exception {
@@ -84,13 +118,13 @@ public class AppLifecycleManager implements RegistrableService {
 				WriterRelayMode.RELAY, WriterRelayMode.PAUSE };
 		ModeEnum.WRITER_SERVICE_MODE.getDeltaHandler(this).handleDelta(
 				WriterServiceMode.CONTROLLER, WriterServiceMode.NOT_CONTROLLER);
-		ModeEnum.WRITER_RELAY_MODE.getDeltaHandler(this).handleDeltas(
-				WriterRelayMode.values(), nonWriterStates);
-		ModeEnum.WRITER_MODE.getDeltaHandler(this).handleDelta(
-				WriterMode.CLUSTER_WRITER, WriterMode.READ_ONLY);
+		ModeEnum.WRITER_RELAY_MODE.getDeltaHandler(this)
+				.handleDeltas(WriterRelayMode.values(), nonWriterStates);
+		ModeEnum.WRITER_MODE.getDeltaHandler(this)
+				.handleDelta(WriterMode.CLUSTER_WRITER, WriterMode.READ_ONLY);
 		// midpoint
-		ModeEnum.WRITER_MODE.getDeltaHandler(this).handleDelta(
-				WriterMode.READ_ONLY, WriterMode.CLUSTER_WRITER);
+		ModeEnum.WRITER_MODE.getDeltaHandler(this)
+				.handleDelta(WriterMode.READ_ONLY, WriterMode.CLUSTER_WRITER);
 		ModeEnum.WRITER_RELAY_MODE.getDeltaHandler(this).handleDeltas(
 				nonWriterStates,
 				new WriterRelayMode[] { WriterRelayMode.WRITE });
@@ -98,9 +132,11 @@ public class AppLifecycleManager implements RegistrableService {
 				WriterServiceMode.NOT_CONTROLLER, WriterServiceMode.CONTROLLER);
 	}
 
-	void log(String message) {
-		Registry.impl(TaggedLoggers.class).log(message,
-				AppLifecycleManager.class, TaggedLogger.INFO);
+	public void setClusterMember(boolean clusterMember) {
+		this.clusterMember = clusterMember;
+		if (clusterMember) {
+			setState(ControlServletState.memberModes());
+		}
 	}
 
 	public void setClusterRoleConfigFilePath(String configFilePath) {
@@ -117,44 +153,8 @@ public class AppLifecycleManager implements RegistrableService {
 		this.state = state;
 	}
 
-	public ControlServletModes getTargetModes() {
-		return this.targetModes;
-	}
-
-	public String proxy(RPCRequest rpcRequest,
-			CommonRemoteServiceServlet remoteServlet) {
-		return new AppWriterProxy().proxy(this, rpcRequest, remoteServlet);
-	}
-
-	public boolean canWriteOrRelay() {
-		return state.getModes().getWriterRelayMode() != WriterRelayMode.REJECT;
-	}
-
-	public void setClusterMember(boolean clusterMember) {
-		this.clusterMember = clusterMember;
-		if (clusterMember) {
-			setState(ControlServletState.memberModes());
-		}
-	}
-
-	public boolean isClusterMember() {
-		return this.clusterMember;
-	}
-
-	public void initWriterServices() {
-		for (ModeEnum e : ModeEnum.values()) {
-			e.getDeltaHandler(this).init();
-		}
-	}
-
-	public static void notifyAppConfigurationReloaded(Void v) {
-		GlobalTopicPublisher.get().publishTopic(
-				TOPIC_APP_CONFIGURATION_RELOADED, v);
-	}
-
-	public static void notifyAppConfigurationReloadedDelta(
-			TopicListener<Void> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(
-				TOPIC_APP_CONFIGURATION_RELOADED, listener, add);
+	void log(String message) {
+		Registry.impl(TaggedLoggers.class).log(message,
+				AppLifecycleManager.class, TaggedLogger.INFO);
 	}
 }

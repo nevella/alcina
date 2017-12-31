@@ -29,8 +29,6 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
 
-import cc.alcina.framework.common.client.util.LooseContext;
-
 /**
  * The base class for the majority of user-interface objects. Widget adds
  * support for receiving events from the browser and being added directly to
@@ -154,6 +152,18 @@ public class Widget extends UIObject
 	 */
 	public Object getLayoutData() {
 		return layoutData;
+	}
+
+	@Override
+	public int getOffsetHeight() {
+		// FIXME - not efficient check
+		return isAttached() ? super.getOffsetHeight() : 0;
+	}
+
+	@Override
+	public int getOffsetWidth() {
+		// FIXME - not efficient check
+		return isAttached() ? super.getOffsetWidth() : 0;
 	}
 
 	/**
@@ -523,15 +533,5 @@ public class Widget extends UIObject
 						+ " to call super.onAttach()";
 			}
 		}
-	}
-	@Override
-	public int getOffsetHeight() {
-		// FIXME - not efficient check
-		return isAttached()?super.getOffsetHeight():0;
-	}
-	@Override
-	public int getOffsetWidth() {
-		// FIXME - not efficient check
-		return isAttached()?super.getOffsetWidth():0;
 	}
 }

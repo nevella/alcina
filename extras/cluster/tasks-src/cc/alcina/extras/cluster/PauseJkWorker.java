@@ -23,27 +23,27 @@ public class PauseJkWorker extends Task {
 		}
 	}
 
-	public String getJkStatusUrl() {
-		return this.jkStatusUrl;
+	public String getBalancedWorkerName() {
+		return balancedWorkerName;
 	}
 
-	public void setJkStatusUrl(String jkStatusUrl) {
-		this.jkStatusUrl = jkStatusUrl;
+	public String getJkStatusUrl() {
+		return this.jkStatusUrl;
 	}
 
 	public String getWorkerName() {
 		return this.workerName;
 	}
 
-	public void setWorkerName(String workerName) {
-		this.workerName = workerName;
-	}
-
 	public void setBalancedWorkerName(String balancedWorkerName) {
 		this.balancedWorkerName = balancedWorkerName;
 	}
 
-	public String getBalancedWorkerName() {
-		return balancedWorkerName;
+	public void setJkStatusUrl(String jkStatusUrl) {
+		this.jkStatusUrl = jkStatusUrl;
+	}
+
+	public void setWorkerName(String workerName) {
+		this.workerName = workerName;
 	}
 }

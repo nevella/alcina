@@ -13,33 +13,17 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
 public class DisabledTransformPersistence extends LocalTransformPersistence {
 	@Override
-	public void clearPersistedClient(ClientInstance exceptFor,int exceptForId,
-			AsyncCallback callback,boolean clearDeltaStore) {
+	public void clearPersistedClient(ClientInstance exceptFor, int exceptForId,
+			AsyncCallback callback, boolean clearDeltaStore) {
 	}
 
 	@Override
-	protected void clearAllPersisted(AsyncCallback callback) {
+	public void getClientInstanceIdOfDomainObjectDelta(AsyncCallback callback) {
 	}
 
 	@Override
-	protected void getTransforms(DeltaApplicationRecordType[] types,
-			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
-	}
-
-	@Override
-	protected void persistFromFrontOfQueue(DeltaApplicationRecord wrapper,
-			AsyncCallback callback) {
-	}
-
-	@Override
-	public void reparentToClientInstance(DeltaApplicationRecord wrapper,
-			ClientInstance clientInstance, AsyncCallback callback) {
-	}
-
-	@Override
-	protected void transformPersisted(
-			List<DeltaApplicationRecord> persistedWrappers,
-			AsyncCallback callback) {
+	public void getDomainModelDeltaIterator(DeltaApplicationFilters filters,
+			AsyncCallback<Iterator<DomainModelDelta>> callback) {
 	}
 
 	@Override
@@ -55,21 +39,33 @@ public class DisabledTransformPersistence extends LocalTransformPersistence {
 				callback);
 	}
 
-
 	@Override
-	public void getDomainModelDeltaIterator(DeltaApplicationFilters filters,
-			AsyncCallback<Iterator<DomainModelDelta>> callback) {
-		
+	public void reparentToClientInstance(DeltaApplicationRecord wrapper,
+			ClientInstance clientInstance, AsyncCallback callback) {
 	}
 
 	@Override
-	public void getClientInstanceIdOfDomainObjectDelta(AsyncCallback callback) {
-		
+	protected void clearAllPersisted(AsyncCallback callback) {
 	}
 
 	@Override
 	protected void getTransforms(DeltaApplicationFilters filters,
 			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
-		
+	}
+
+	@Override
+	protected void getTransforms(DeltaApplicationRecordType[] types,
+			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
+	}
+
+	@Override
+	protected void persistFromFrontOfQueue(DeltaApplicationRecord wrapper,
+			AsyncCallback callback) {
+	}
+
+	@Override
+	protected void transformPersisted(
+			List<DeltaApplicationRecord> persistedWrappers,
+			AsyncCallback callback) {
 	}
 }

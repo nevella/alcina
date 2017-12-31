@@ -33,13 +33,52 @@ import cc.alcina.framework.gwt.client.util.Lzw;
  * 
  */
 public class RemoteLogPersister {
-	private enum State {
-		CHECKED_ONLINE, GOT_LOG_RECORD_RANGE, ADDED_RECORDS, PUSHED, DELETED
-	}
-
 	public static int PREFERRED_MAX_PUSH_SIZE = 30000;// bytes
 
 	public boolean maybeOffline;
+
+	private RemoteLogPersisterConsort consort = null;
+
+	int pushCount = 0;
+
+	private TopicListener consortFinishedListener = new TopicListener() {
+		@Override
+		public void topicPublished(String key, Object message) {
+			boolean pushAgain = consort.lastAddedThisBuffer < consort.logRecordRange.i2;
+			long waitTime = (System.currentTimeMillis() - consortStart) / 2;
+			consort.clear();
+			consort = null;
+			if ((pushCount > 0 || pushAgain) && !maybeOffline) {
+				TimerWrapper timer = Registry.impl(TimerWrapperProvider.class)
+						.getTimer(new Runnable() {
+							@Override
+							public void run() {
+								push();
+							}
+						});
+				timer.scheduleSingle(waitTime);
+			}
+		}
+	};
+
+	private long consortStart;
+
+	// get last uploaded, get range, push(http), delete, update lastuploaded,
+	public synchronized void push() {
+		pushCount++;
+		if (consort == null) {
+			pushCount = 0;
+			consort = new RemoteLogPersisterConsort();
+			consortStart = System.currentTimeMillis();
+			consort.listenerDelta(Consort.FINISHED, consortFinishedListener,
+					true);
+			consort.start();
+		}
+	}
+
+	private enum State {
+		CHECKED_ONLINE, GOT_LOG_RECORD_RANGE, ADDED_RECORDS, PUSHED, DELETED
+	}
 
 	class RemoteLogPersisterConsort extends Consort<State> {
 		IntPair logRecordRange = null;
@@ -63,131 +102,6 @@ public class RemoteLogPersister {
 			addEndpointPlayer();
 		}
 
-		class LogRecordRangeGetter extends
-				EnumRunnableAsyncCallbackPlayer<IntPair, State> {
-			public LogRecordRangeGetter() {
-				super(State.GOT_LOG_RECORD_RANGE);
-			}
-
-			@Override
-			public void onSuccess(IntPair result) {
-				logRecordRange = result;
-				idCtr = logRecordRange.i1 - 1;
-				firstAddedThisBuffer = -1;
-				wasPlayed();
-			}
-
-			@Override
-			public void run() {
-				LogStore.get().getIdRange(this);
-			}
-		}
-
-		class LogRecordRangeDeleter extends
-				EnumRunnableAsyncCallbackPlayer<Void, State> {
-			public LogRecordRangeDeleter() {
-				super(State.DELETED);
-			}
-
-			@Override
-			public void run() {
-				IntPair range = new IntPair(firstAddedThisBuffer,
-						lastAddedThisBuffer);
-				if (range.isZero()) {
-					onSuccess(null);
-				} else {
-					LogStore.get().removeIdRange(range, this);
-				}
-			}
-		}
-
-		class LogRecordCheckOnline extends
-				EnumRunnableAsyncCallbackPlayer<Void, State> {
-			public LogRecordCheckOnline() {
-				super(State.CHECKED_ONLINE);
-			}
-
-			boolean rqRun = false;
-
-			@Override
-			public void onSuccess(Void result) {
-				maybeOffline = false;
-				maybeUnmute();
-				wasPlayed(State.CHECKED_ONLINE);
-			}
-
-			public void maybeUnmute() {
-				if (rqRun) {
-					deferredUnmute();
-				}
-			}
-
-			@Override
-			public void run() {
-				rqRun = false;
-				if (!maybeOffline) {
-					onSuccess(null);
-					return;
-				}
-				if (buffer.length() == 0) {
-					onSuccess(null);
-					return;
-				} else {
-					CommonRemoteServiceAsync async = ((RemoteServiceProvider<? extends CommonRemoteServiceAsync>) Registry
-							.impl(CommonRemoteServiceAsyncProvider.class))
-							.getServiceInstance();
-					rqRun = true;
-					AlcinaTopics.muteStatisticsLogging(true);
-					async.ping(this);
-				}
-			}
-
-			@Override
-			public void onFailure(Throwable caught) {
-				maybeUnmute();
-				handleExpectableMaybeOffline(caught, this);
-			}
-		}
-
-		class LogRecordRemotePusher extends
-				EnumRunnableAsyncCallbackPlayer<Void, State> {
-			private boolean rqRun;
-
-			public LogRecordRemotePusher() {
-				super(State.PUSHED);
-			}
-
-			@Override
-			public void onSuccess(Void result) {
-				if (rqRun) {
-					deferredUnmute();
-					maybeOffline = false;
-				}
-				wasPlayed(State.PUSHED);
-			}
-
-			@Override
-			public void run() {
-				if (buffer.length() == 0) {
-					rqRun = false;
-					onSuccess(null);
-				} else {
-					CommonRemoteServiceAsync async = ((RemoteServiceProvider<? extends CommonRemoteServiceAsync>) Registry
-							.impl(CommonRemoteServiceAsyncProvider.class))
-							.getServiceInstance();
-					rqRun = true;
-					AlcinaTopics.muteStatisticsLogging(true);
-					async.logClientRecords(buffer.toString(), this);
-				}
-			}
-
-			@Override
-			public void onFailure(Throwable caught) {
-				deferredUnmute();
-				handleExpectableMaybeOffline(caught, this);
-			}
-		}
-
 		public void deferredUnmute() {
 			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 				@Override
@@ -197,11 +111,32 @@ public class RemoteLogPersister {
 			});
 		}
 
+		public void handleExpectableMaybeOffline(Throwable caught,
+				Player player) {
+			if (ClientUtils.maybeOffline(caught)) {
+				maybeOffline = true;
+				consort.finished();
+			} else {
+				throw new WrappedRuntimeException(caught);
+			}
+		}
+
 		class LogRecordAdder extends
 				EnumRunnableAsyncCallbackPlayer<Map<Integer, String>, State>
 				implements LoopingPlayer {
 			public LogRecordAdder() {
 				super(State.ADDED_RECORDS);
+			}
+
+			@Override
+			public String describeLoop() {
+				return "keep adding until we have PREFERRED_MAX_PUSH_SIZE";
+			}
+
+			@Override
+			public void loop() {
+				++idCtr;
+				LogStore.get().getRange(idCtr, idCtr, this);
 			}
 
 			@Override
@@ -246,64 +181,131 @@ public class RemoteLogPersister {
 			public void run() {
 				loop();
 			}
+		}
+
+		class LogRecordCheckOnline
+				extends EnumRunnableAsyncCallbackPlayer<Void, State> {
+			boolean rqRun = false;
+
+			public LogRecordCheckOnline() {
+				super(State.CHECKED_ONLINE);
+			}
+
+			public void maybeUnmute() {
+				if (rqRun) {
+					deferredUnmute();
+				}
+			}
 
 			@Override
-			public void loop() {
-				++idCtr;
-				LogStore.get().getRange(idCtr, idCtr, this);
+			public void onFailure(Throwable caught) {
+				maybeUnmute();
+				handleExpectableMaybeOffline(caught, this);
 			}
 
 			@Override
-			public String describeLoop() {
-				return "keep adding until we have PREFERRED_MAX_PUSH_SIZE";
+			public void onSuccess(Void result) {
+				maybeOffline = false;
+				maybeUnmute();
+				wasPlayed(State.CHECKED_ONLINE);
+			}
+
+			@Override
+			public void run() {
+				rqRun = false;
+				if (!maybeOffline) {
+					onSuccess(null);
+					return;
+				}
+				if (buffer.length() == 0) {
+					onSuccess(null);
+					return;
+				} else {
+					CommonRemoteServiceAsync async = ((RemoteServiceProvider<? extends CommonRemoteServiceAsync>) Registry
+							.impl(CommonRemoteServiceAsyncProvider.class))
+									.getServiceInstance();
+					rqRun = true;
+					AlcinaTopics.muteStatisticsLogging(true);
+					async.ping(this);
+				}
 			}
 		}
 
-		public void handleExpectableMaybeOffline(Throwable caught, Player player) {
-			if (ClientUtils.maybeOffline(caught)) {
-				maybeOffline = true;
-				consort.finished();
-			} else {
-				throw new WrappedRuntimeException(caught);
+		class LogRecordRangeDeleter
+				extends EnumRunnableAsyncCallbackPlayer<Void, State> {
+			public LogRecordRangeDeleter() {
+				super(State.DELETED);
+			}
+
+			@Override
+			public void run() {
+				IntPair range = new IntPair(firstAddedThisBuffer,
+						lastAddedThisBuffer);
+				if (range.isZero()) {
+					onSuccess(null);
+				} else {
+					LogStore.get().removeIdRange(range, this);
+				}
 			}
 		}
-	}
 
-	private RemoteLogPersisterConsort consort = null;
+		class LogRecordRangeGetter
+				extends EnumRunnableAsyncCallbackPlayer<IntPair, State> {
+			public LogRecordRangeGetter() {
+				super(State.GOT_LOG_RECORD_RANGE);
+			}
 
-	int pushCount = 0;
+			@Override
+			public void onSuccess(IntPair result) {
+				logRecordRange = result;
+				idCtr = logRecordRange.i1 - 1;
+				firstAddedThisBuffer = -1;
+				wasPlayed();
+			}
 
-	private TopicListener consortFinishedListener = new TopicListener() {
-		@Override
-		public void topicPublished(String key, Object message) {
-			boolean pushAgain = consort.lastAddedThisBuffer < consort.logRecordRange.i2;
-			long waitTime = (System.currentTimeMillis() - consortStart) / 2;
-			consort.clear();
-			consort = null;
-			if ((pushCount > 0 || pushAgain) && !maybeOffline) {
-				TimerWrapper timer = Registry.impl(TimerWrapperProvider.class).getTimer(new Runnable() {
-							@Override
-							public void run() {
-								push();
-							}
-						});
-				timer.scheduleSingle(waitTime);
+			@Override
+			public void run() {
+				LogStore.get().getIdRange(this);
 			}
 		}
-	};
 
-	private long consortStart;
+		class LogRecordRemotePusher
+				extends EnumRunnableAsyncCallbackPlayer<Void, State> {
+			private boolean rqRun;
 
-	// get last uploaded, get range, push(http), delete, update lastuploaded,
-	public synchronized void push() {
-		pushCount++;
-		if (consort == null) {
-			pushCount = 0;
-			consort = new RemoteLogPersisterConsort();
-			consortStart = System.currentTimeMillis();
-			consort.listenerDelta(Consort.FINISHED, consortFinishedListener,
-					true);
-			consort.start();
+			public LogRecordRemotePusher() {
+				super(State.PUSHED);
+			}
+
+			@Override
+			public void onFailure(Throwable caught) {
+				deferredUnmute();
+				handleExpectableMaybeOffline(caught, this);
+			}
+
+			@Override
+			public void onSuccess(Void result) {
+				if (rqRun) {
+					deferredUnmute();
+					maybeOffline = false;
+				}
+				wasPlayed(State.PUSHED);
+			}
+
+			@Override
+			public void run() {
+				if (buffer.length() == 0) {
+					rqRun = false;
+					onSuccess(null);
+				} else {
+					CommonRemoteServiceAsync async = ((RemoteServiceProvider<? extends CommonRemoteServiceAsync>) Registry
+							.impl(CommonRemoteServiceAsyncProvider.class))
+									.getServiceInstance();
+					rqRun = true;
+					AlcinaTopics.muteStatisticsLogging(true);
+					async.logClientRecords(buffer.toString(), this);
+				}
+			}
 		}
 	}
 }

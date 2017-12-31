@@ -15,8 +15,6 @@
  */
 package com.google.gwt.regexp.shared;
 
-import com.google.gwt.core.client.GwtScriptOnly;
-import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.shared.GWT;
 
 /**
@@ -26,18 +24,9 @@ import com.google.gwt.core.shared.GWT;
 public class RegExp {
 	private static Boolean isScript;
 
-
 	public static RegExp compile(String pattern) {
 		return isScript() ? RegExp_Jso.compile(pattern)
 				: RegExp_Jvm.compile(pattern);
-	}
-
-	private static boolean isScript() {
-		if (isScript == null) {
-			// cache
-			isScript = GWT.isScript();
-		}
-		return isScript;
 	}
 
 	/**
@@ -55,8 +44,8 @@ public class RegExp {
 	 *             if the pattern or the flags are invalid
 	 */
 	public static RegExp compile(String pattern, String flags) {
-		return isScript() ? RegExp_Jso.compile(pattern,flags)
-				: RegExp_Jvm.compile(pattern,flags);
+		return isScript() ? RegExp_Jso.compile(pattern, flags)
+				: RegExp_Jvm.compile(pattern, flags);
 	}
 
 	/**
@@ -79,89 +68,98 @@ public class RegExp {
 		return RegExp_Jso.quote(input);
 	}
 
-	private IRegExp impl;
+	private static boolean isScript() {
+		if (isScript == null) {
+			// cache
+			isScript = GWT.isScript();
+		}
+		return isScript;
+	}
 
-	static RegExp construct(IRegExp impl){
+	static RegExp construct(IRegExp impl) {
 		return new RegExp(impl);
 	}
+
+	private IRegExp impl;
+
 	public RegExp(IRegExp impl) {
 		this.impl = impl;
 	}
 
 	public final MatchResult exec(String input) {
-		if(impl instanceof RegExp_Jvm){
-			return ((RegExp_Jvm)impl).exec(input);
+		if (impl instanceof RegExp_Jvm) {
+			return ((RegExp_Jvm) impl).exec(input);
 		}
 		return this.impl.exec(input);
 	}
 
 	public final boolean getGlobal() {
-		if(impl instanceof RegExp_Jvm){
-			return ((RegExp_Jvm)impl).getGlobal();
+		if (impl instanceof RegExp_Jvm) {
+			return ((RegExp_Jvm) impl).getGlobal();
 		}
 		return this.impl.getGlobal();
 	}
 
 	public final boolean getIgnoreCase() {
-		if(impl instanceof RegExp_Jvm){
-			return ((RegExp_Jvm)impl).getIgnoreCase();
+		if (impl instanceof RegExp_Jvm) {
+			return ((RegExp_Jvm) impl).getIgnoreCase();
 		}
 		return this.impl.getIgnoreCase();
 	}
 
 	public final int getLastIndex() {
-		if(impl instanceof RegExp_Jvm){
-			return ((RegExp_Jvm)impl).getLastIndex();
+		if (impl instanceof RegExp_Jvm) {
+			return ((RegExp_Jvm) impl).getLastIndex();
 		}
 		return this.impl.getLastIndex();
 	}
 
 	public final boolean getMultiline() {
-		if(impl instanceof RegExp_Jvm){
-			return ((RegExp_Jvm)impl).getMultiline();
+		if (impl instanceof RegExp_Jvm) {
+			return ((RegExp_Jvm) impl).getMultiline();
 		}
 		return this.impl.getMultiline();
 	}
 
 	public final String getSource() {
-		if(impl instanceof RegExp_Jvm){
-			return ((RegExp_Jvm)impl).getSource();
+		if (impl instanceof RegExp_Jvm) {
+			return ((RegExp_Jvm) impl).getSource();
 		}
 		return this.impl.getSource();
 	}
 
 	public final String replace(String input, String replacement) {
-		if(impl instanceof RegExp_Jvm){
-			return ((RegExp_Jvm)impl).replace(input, replacement);
+		if (impl instanceof RegExp_Jvm) {
+			return ((RegExp_Jvm) impl).replace(input, replacement);
 		}
 		return this.impl.replace(input, replacement);
 	}
 
 	public final void setLastIndex(int lastIndex) {
-		if(impl instanceof RegExp_Jvm){
-			((RegExp_Jvm)impl).setLastIndex(lastIndex);
+		if (impl instanceof RegExp_Jvm) {
+			((RegExp_Jvm) impl).setLastIndex(lastIndex);
 			return;
 		}
 		this.impl.setLastIndex(lastIndex);
 	}
 
 	public final SplitResult split(String input) {
-		if(impl instanceof RegExp_Jvm){
-			return ((RegExp_Jvm)impl).split(input);
+		if (impl instanceof RegExp_Jvm) {
+			return ((RegExp_Jvm) impl).split(input);
 		}
 		return impl.split(input);
 	}
 
 	public final SplitResult split(String input, int limit) {
-		if(impl instanceof RegExp_Jvm){
-			return ((RegExp_Jvm)impl).split(input,limit);
+		if (impl instanceof RegExp_Jvm) {
+			return ((RegExp_Jvm) impl).split(input, limit);
 		}
 		return this.impl.split(input, limit);
 	}
 
 	public final boolean test(String input) {
-		if(impl instanceof RegExp_Jvm){
-			return ((RegExp_Jvm)impl).test(input);
+		if (impl instanceof RegExp_Jvm) {
+			return ((RegExp_Jvm) impl).test(input);
 		}
 		return this.impl.test(input);
 	}

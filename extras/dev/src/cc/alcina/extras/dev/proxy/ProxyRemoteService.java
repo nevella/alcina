@@ -9,8 +9,17 @@ import com.google.gwt.user.client.rpc.RemoteService;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams.DevRemoterApi;
 
-public abstract class ProxyRemoteService<I extends RemoteService> implements
-		InvocationHandler {
+public abstract class ProxyRemoteService<I extends RemoteService>
+		implements InvocationHandler {
+	public I createProxy() {
+		Object proxy = Proxy.newProxyInstance(
+				Thread.currentThread().getContextClassLoader(),
+				new Class[] { getInterfaceClass() }, this);
+		return (I) proxy;
+	}
+
+	public abstract Class<I> getInterfaceClass();
+
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args)
 			throws Throwable {
@@ -22,12 +31,4 @@ public abstract class ProxyRemoteService<I extends RemoteService> implements
 		params.api = DevRemoterApi.GWT_REMOTE_SERVICE_IMPL;
 		return new DevRemoter().invoke(method.getName(), args, params);
 	}
-
-	public I createProxy() {
-		Object proxy = Proxy.newProxyInstance(Thread.currentThread()
-				.getContextClassLoader(), new Class[] { getInterfaceClass() }, this);
-		return (I) proxy;
-	}
-
-	public abstract Class<I> getInterfaceClass();
 }

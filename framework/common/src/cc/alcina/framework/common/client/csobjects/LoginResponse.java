@@ -32,14 +32,6 @@ public class LoginResponse implements Serializable {
 
 	private Map<String, String> properties = new LinkedHashMap<>();
 
-	public Map<String, String> getProperties() {
-		return this.properties;
-	}
-
-	public void setProperties(Map<String, String> properties) {
-		this.properties = properties;
-	}
-
 	public LoginResponse() {
 	}
 
@@ -49,6 +41,10 @@ public class LoginResponse implements Serializable {
 
 	public String getErrorMsg() {
 		return this.errorMsg;
+	}
+
+	public Map<String, String> getProperties() {
+		return this.properties;
 	}
 
 	public boolean isOk() {
@@ -65,5 +61,9 @@ public class LoginResponse implements Serializable {
 
 	public void setOk(boolean ok) {
 		this.ok = ok;
+	}
+
+	public void setProperties(Map<String, String> properties) {
+		this.properties = properties;
 	}
 }

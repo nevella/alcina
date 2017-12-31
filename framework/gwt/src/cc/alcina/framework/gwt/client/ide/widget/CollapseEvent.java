@@ -15,7 +15,6 @@
  */
 package cc.alcina.framework.gwt.client.ide.widget;
 
-
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -127,6 +126,22 @@ public class CollapseEvent<T> extends GwtEvent<CollapseHandler<T>> {
 	}
 
 	/**
+	 * Handler interface for {@link CollapseEvent} events.
+	 * 
+	 * @param <T>
+	 *            the type being closed
+	 */
+	public interface CollapseHandler<T> extends EventHandler {
+		/**
+		 * Called when {@link CollapseEvent} is fired.
+		 * 
+		 * @param event
+		 *            the {@link CollapseEvent} that was fired
+		 */
+		void onCollapse(CollapseEvent<T> event);
+	}
+
+	/**
 	 * A widget that implements this interface is a public source of
 	 * {@link CollapseEvent} events.
 	 * 
@@ -142,21 +157,5 @@ public class CollapseEvent<T> extends GwtEvent<CollapseHandler<T>> {
 		 * @return the registration for the event
 		 */
 		HandlerRegistration addCollapseHandler(CollapseHandler<T> handler);
-	}
-
-	/**
-	 * Handler interface for {@link CollapseEvent} events.
-	 * 
-	 * @param <T>
-	 *            the type being closed
-	 */
-	public interface CollapseHandler<T> extends EventHandler {
-		/**
-		 * Called when {@link CollapseEvent} is fired.
-		 * 
-		 * @param event
-		 *            the {@link CollapseEvent} that was fired
-		 */
-		void onCollapse(CollapseEvent<T> event);
 	}
 }

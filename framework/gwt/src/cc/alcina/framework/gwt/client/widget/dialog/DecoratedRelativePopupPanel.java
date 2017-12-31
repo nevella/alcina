@@ -20,7 +20,6 @@ import java.util.Iterator;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.LocalDomBridge;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -152,6 +151,35 @@ public class DecoratedRelativePopupPanel extends RelativePopupPanel {
 		setStyleName(decPanel.getContainerElement(), prefix + "Content", true);
 	}
 
+	public void arrowCenterDown() {
+		addStyleName("arrow-center-down");
+		insertDecoratorHtml("div.popupBottomCenterInner",
+				"popupBottomCenterInner1");
+		insertDecoratorHtml("div.popupBottomCenterInner",
+				"popupBottomCenterInner2");
+	}
+
+	public void arrowCenterUp() {
+		addStyleName("arrow-center-up");
+		insertDecoratorHtml("div.popupTopCenterInner", "popupTopCenterInner1");
+		insertDecoratorHtml("div.popupTopCenterInner", "popupTopCenterInner2");
+	}
+
+	public void arrowLeftUp() {
+		arrowCenterUp();
+		addStyleName("arrow-center-up arrow-left-up");
+	}
+
+	public void arrowRightDown() {
+		arrowCenterDown();
+		addStyleName("arrow-center-down arrow-right-down");
+	}
+
+	public void arrowRightUp() {
+		arrowCenterUp();
+		addStyleName("arrow-center-up arrow-right-up");
+	}
+
 	@Override
 	public void clear() {
 		decPanel.clear();
@@ -160,6 +188,16 @@ public class DecoratedRelativePopupPanel extends RelativePopupPanel {
 	@Override
 	public Widget getWidget() {
 		return decPanel.getWidget();
+	}
+
+	public void insertDecoratorHtml(String selector, String className) {
+		Element elt = (Element) WidgetUtils.getElementForSelector(getElement(),
+				selector);
+		if (elt != null) {
+			DivElement div = Document.get().createDivElement();
+			div.setClassName(className);
+			elt.appendChild(div);
+		}
 	}
 
 	@Override
@@ -211,44 +249,5 @@ public class DecoratedRelativePopupPanel extends RelativePopupPanel {
 	 */
 	protected Element getCellElement(int row, int cell) {
 		return decPanel.getCellElement(row, cell);
-	}
-
-	public void insertDecoratorHtml(String selector, String className) {
-		Element elt = (Element) WidgetUtils.getElementForSelector(getElement(),
-				selector);
-		if (elt != null) {
-			DivElement div = Document.get().createDivElement();
-			div.setClassName(className);
-			elt.appendChild(div);
-		}
-	}
-
-	public void arrowCenterUp() {
-		addStyleName("arrow-center-up");
-		insertDecoratorHtml("div.popupTopCenterInner", "popupTopCenterInner1");
-		insertDecoratorHtml("div.popupTopCenterInner", "popupTopCenterInner2");
-	}
-
-	public void arrowCenterDown() {
-		addStyleName("arrow-center-down");
-		insertDecoratorHtml("div.popupBottomCenterInner",
-				"popupBottomCenterInner1");
-		insertDecoratorHtml("div.popupBottomCenterInner",
-				"popupBottomCenterInner2");
-	}
-
-	public void arrowLeftUp() {
-		arrowCenterUp();
-		addStyleName("arrow-center-up arrow-left-up");
-	}
-
-	public void arrowRightUp() {
-		arrowCenterUp();
-		addStyleName("arrow-center-up arrow-right-up");
-	}
-
-	public void arrowRightDown() {
-		arrowCenterDown();
-		addStyleName("arrow-center-down arrow-right-down");
 	}
 }

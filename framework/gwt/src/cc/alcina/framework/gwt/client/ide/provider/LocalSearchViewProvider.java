@@ -139,8 +139,8 @@ public class LocalSearchViewProvider implements ViewProvider {
 		@SuppressWarnings("unchecked")
 		protected void search() {
 			resultsHolder.clear();
-			Object bean = ClientReflector.get().getTemplateInstance(
-					def.getResultClass());
+			Object bean = ClientReflector.get()
+					.getTemplateInstance(def.getResultClass());
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 			GwittirBridge.get().setIgnoreProperties(ignoreProperties);
 			Field[] fields = GwittirBridge.get()
@@ -150,7 +150,8 @@ public class LocalSearchViewProvider implements ViewProvider {
 			int mask = BoundTableExt.HEADER_MASK;
 			mask = mask | BoundTableExt.SORT_MASK;
 			mask = addTableMasks(mask);
-			CollectionDataProvider dp = new CollectionDataProvider(def.search());
+			CollectionDataProvider dp = new CollectionDataProvider(
+					def.search());
 			this.table = new NiceWidthBoundTable(mask, factory, fields, dp);
 			table.addStyleName("results-table");
 			table.setVisible(false);

@@ -10,15 +10,16 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 
 @RegistryLocation(registryPoint = FormatConverter.class, targetClass = FormatConversionTarget_ZIP.class)
 public class FormatConverterZip implements FormatConverter {
-	public InputStream convert(PublicationContext ctx,FormatConversionModel fcm) throws Exception {
+	public InputStream convert(PublicationContext ctx,
+			FormatConversionModel fcm) throws Exception {
 		return new ByteArrayInputStream(fcm.bytes);
-	}
-
-	public String getMimeType() {
-		return "application/zip";
 	}
 
 	public String getFileExtension() {
 		return "zip";
+	}
+
+	public String getMimeType() {
+		return "application/zip";
 	}
 }

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.annotation;
 
 import java.lang.annotation.Documented;
@@ -24,12 +23,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target( { ElementType.METHOD })
+@Target({ ElementType.METHOD })
 /**
  *
  * @author Nick Reddel
  */
-
- public @interface CheckInjection {
+public @interface CheckInjection {
 	String value() default "";
 }

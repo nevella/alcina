@@ -9,13 +9,13 @@ public class StringMapper implements Function<String, String> {
 
 	private boolean passthroughUnmapped;
 
-	public StringMapper(String... strings) {
-		this(false, strings);
-	}
-
 	public StringMapper(boolean passthroughUnmapped, String... strings) {
 		this.passthroughUnmapped = passthroughUnmapped;
 		this.list = Arrays.asList(strings);
+	}
+
+	public StringMapper(String... strings) {
+		this(false, strings);
 	}
 
 	@Override

@@ -19,36 +19,12 @@ public abstract class IntrospectorFilterBase implements IntrospectorFilter {
 
 	private Map<JClassType, Boolean> uiObjectMap = new LinkedHashMap<JClassType, Boolean>();
 
-	protected boolean isUiObject(BeanResolver resolver) {
-		return isUiObject(resolver.getType());
-	}
-
-	protected boolean isUiObject(JClassType t) {
-		if (!uiObjectMap.containsKey(t)) {
-			boolean implBoundWidget = false;
-			for (JClassType jClassType : t.getFlattenedSupertypeHierarchy()) {
-				if (jClassType.getQualifiedSourceName().contains("UIObject")) {
-					implBoundWidget = true;
-					break;
-				}
-			}
-			uiObjectMap.put(t, implBoundWidget);
-		}
-		return uiObjectMap.get(t);
-	}
-
 	protected CollectionFilter<Entry<String, RProperty>> valueOnlyFilter = new CollectionFilter<Map.Entry<String, RProperty>>() {
 		@Override
 		public boolean allow(Entry<String, RProperty> o) {
 			return o.getKey().equals("value");
 		}
 	};
-
-	protected void filterPropertiesCollection(BeanResolver resolver,
-			CollectionFilter<Entry<String, RProperty>> filter) {
-		Map<String, RProperty> properties = resolver.getProperties();
-		CollectionFilters.filterInPlace(properties.entrySet(), filter);
-	}
 
 	@Override
 	public void filterIntrospectorResults(List<BeanResolver> results) {
@@ -69,23 +45,47 @@ public abstract class IntrospectorFilterBase implements IntrospectorFilter {
 				new AlwaysIgnorePropertyFilter());
 	}
 
-	public String getModuleName() {
-		return this.moduleName;
-	}
-
-	public void setModuleName(String moduleName) {
-		this.moduleName = moduleName;
+	@Override
+	public void generationComplete() {
 	}
 
 	public GeneratorContext getContext() {
 		return this.context;
 	}
 
+	public String getModuleName() {
+		return this.moduleName;
+	}
+
 	public void setContext(GeneratorContext context) {
 		this.context = context;
 	}
 
-	@Override
-	public void generationComplete() {
+	public void setModuleName(String moduleName) {
+		this.moduleName = moduleName;
+	}
+
+	protected void filterPropertiesCollection(BeanResolver resolver,
+			CollectionFilter<Entry<String, RProperty>> filter) {
+		Map<String, RProperty> properties = resolver.getProperties();
+		CollectionFilters.filterInPlace(properties.entrySet(), filter);
+	}
+
+	protected boolean isUiObject(BeanResolver resolver) {
+		return isUiObject(resolver.getType());
+	}
+
+	protected boolean isUiObject(JClassType t) {
+		if (!uiObjectMap.containsKey(t)) {
+			boolean implBoundWidget = false;
+			for (JClassType jClassType : t.getFlattenedSupertypeHierarchy()) {
+				if (jClassType.getQualifiedSourceName().contains("UIObject")) {
+					implBoundWidget = true;
+					break;
+				}
+			}
+			uiObjectMap.put(t, implBoundWidget);
+		}
+		return uiObjectMap.get(t);
 	}
 }

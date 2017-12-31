@@ -7,7 +7,8 @@ public class NotHandledException extends Exception {
 	}
 
 	public NotHandledException(Criterion criterion) {
-		super(criterion.getClass().getSimpleName() + ":" + criterion.toString());
+		super(criterion.getClass().getSimpleName() + ":"
+				+ criterion.toString());
 	}
 
 	public NotHandledException(String message) {

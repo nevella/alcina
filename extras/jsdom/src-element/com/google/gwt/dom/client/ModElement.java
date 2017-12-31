@@ -21,104 +21,114 @@ import com.google.gwt.safehtml.shared.SafeUri;
 /**
  * Notice of modification to part of a document.
  * 
- * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/text.html#edef-ins">W3C HTML Specification</a>
- * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/text.html#edef-del">W3C HTML Specification</a>
+ * @see <a href=
+ *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/text.html#edef-ins">
+ *      W3C HTML Specification</a>
+ * @see <a href=
+ *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/text.html#edef-del">
+ *      W3C HTML Specification</a>
  */
-@TagName({ModElement.TAG_INS, ModElement.TAG_DEL})
+@TagName({ ModElement.TAG_INS, ModElement.TAG_DEL })
 public class ModElement extends Element {
+	public static final String TAG_INS = "ins";
 
-  public static final String TAG_INS = "ins";
-  public static final String TAG_DEL = "del";
+	public static final String TAG_DEL = "del";
 
-  /**
-   * Assert that the given {@link Element} is compatible with this class and
-   * automatically typecast it.
-   */
-  public static ModElement as(Element elem) {
-    assert is(elem);
-    return (ModElement) elem;
-  }
-  
-  /**
-   * Determines whether the given {@link JavaScriptObject} can be cast to
-   * this class. A <code>null</code> object will cause this method to
-   * return <code>false</code>.
-   */
-  public static boolean is(JavaScriptObject o) {
-    if (Element.is(o)) {
-      return is(Element.as(o));
-    }
-    return false;
-  }
+	/**
+	 * Assert that the given {@link Element} is compatible with this class and
+	 * automatically typecast it.
+	 */
+	public static ModElement as(Element elem) {
+		assert is(elem);
+		return (ModElement) elem;
+	}
 
-  /**
-   * Determine whether the given {@link Node} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Node node) {
-    if (Element.is(node)) {
-      return is((Element) node);
-    }
-    return false;
-  }
-  
-  /**
-   * Determine whether the given {@link Element} can be cast to this class.
-   * A <code>null</code> node will cause this method to return
-   * <code>false</code>.
-   */
-  public static boolean is(Element elem) {
-    return elem != null &&
-        ( elem.getTagName().equalsIgnoreCase(TAG_INS) ||
-          elem.getTagName().equalsIgnoreCase(TAG_DEL) );
-  }
+	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && (elem.getTagName().equalsIgnoreCase(TAG_INS)
+				|| elem.getTagName().equalsIgnoreCase(TAG_DEL));
+	}
 
-  protected ModElement() {
-  }
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to this
+	 * class. A <code>null</code> object will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(JavaScriptObject o) {
+		if (Element.is(o)) {
+			return is(Element.as(o));
+		}
+		return false;
+	}
 
-  /**
-   * A URI designating a document that describes the reason for the change.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/">W3C HTML Specification</a>
-   */  public  String getCite(){
-  return this.getPropertyString("cite");
-}
+	/**
+	 * Determine whether the given {@link Node} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		if (Element.is(node)) {
+			return is((Element) node);
+		}
+		return false;
+	}
 
+	protected ModElement() {
+	}
 
-  /**
-   * The date and time of the change.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/text.html#adef-datetime">W3C HTML Specification</a>
-   */  public  String getDateTime(){
-  return this.getPropertyString("dateTime");
-}
+	/**
+	 * A URI designating a document that describes the reason for the change.
+	 * 
+	 * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/">W3C HTML
+	 *      Specification</a>
+	 */
+	public String getCite() {
+		return this.getPropertyString("cite");
+	}
 
+	/**
+	 * The date and time of the change.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/text.html#adef-datetime">
+	 *      W3C HTML Specification</a>
+	 */
+	public String getDateTime() {
+		return this.getPropertyString("dateTime");
+	}
 
-  /**
-   * A URI designating a document that describes the reason for the change.
-   *
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/">W3C HTML Specification</a>
-   */
-  public final void setCite(SafeUri cite) {
-    setCite(cite.asString());
-  }
+	/**
+	 * A URI designating a document that describes the reason for the change.
+	 *
+	 * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/">W3C HTML
+	 *      Specification</a>
+	 */
+	public final void setCite(SafeUri cite) {
+		setCite(cite.asString());
+	}
 
-  /**
-   * A URI designating a document that describes the reason for the change.
-   *
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/">W3C HTML Specification</a>
-   */  public  void setCite(String cite){
-   this.setPropertyString("cite",cite);
-}
+	/**
+	 * A URI designating a document that describes the reason for the change.
+	 *
+	 * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/">W3C HTML
+	 *      Specification</a>
+	 */
+	public void setCite(String cite) {
+		this.setPropertyString("cite", cite);
+	}
 
-
-  /**
-   * The date and time of the change.
-   * 
-   * @see <a href="http://www.w3.org/TR/1999/REC-html401-19991224/struct/text.html#adef-datetime">W3C HTML Specification</a>
-   */  public  void setDateTime(String dateTime){
-   this.setPropertyString("dateTime",dateTime);
-}
-
+	/**
+	 * The date and time of the change.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/text.html#adef-datetime">
+	 *      W3C HTML Specification</a>
+	 */
+	public void setDateTime(String dateTime) {
+		this.setPropertyString("dateTime", dateTime);
+	}
 }

@@ -22,6 +22,13 @@ import java.io.Serializable;
 public class WebException extends Exception implements Serializable {
 	public static final String THE_APPLICATION_IS_OUT_OF_DATE = "The application is out of date";
 
+	public static WebException maybeWrap(Exception e) {
+		if (e instanceof WebException) {
+			return (WebException) e;
+		}
+		return new WebException(e);
+	}
+
 	public WebException() {
 	}
 
@@ -51,15 +58,8 @@ public class WebException extends Exception implements Serializable {
 
 		@Override
 		public String getMessage() {
-			return internalMessage != null ? internalMessage : super
-					.getMessage();
+			return internalMessage != null ? internalMessage
+					: super.getMessage();
 		}
-	}
-
-	public static WebException maybeWrap(Exception e) {
-		if(e instanceof WebException){
-			return (WebException) e;
-		}
-		return new WebException(e);
 	}
 }

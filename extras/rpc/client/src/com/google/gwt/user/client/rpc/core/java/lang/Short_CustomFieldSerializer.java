@@ -23,45 +23,43 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 /**
  * Custom field serializer for {@link java.lang.Short}.
  */
-public final class Short_CustomFieldSerializer extends
-    CustomFieldSerializer<Short> {
+public final class Short_CustomFieldSerializer
+		extends CustomFieldSerializer<Short> {
+	public static void deserialize(SerializationStreamReader streamReader,
+			Short instance) {
+		// No fields
+	}
 
-  
-  public static void deserialize(SerializationStreamReader streamReader,
-      Short instance) {
-    // No fields
-  }
+	public static Short instantiate(SerializationStreamReader streamReader)
+			throws SerializationException {
+		return Short.valueOf(streamReader.readShort());
+	}
 
-  public static Short instantiate(SerializationStreamReader streamReader)
-      throws SerializationException {
-    return Short.valueOf(streamReader.readShort());
-  }
+	public static void serialize(SerializationStreamWriter streamWriter,
+			Short instance) throws SerializationException {
+		streamWriter.writeShort(instance.shortValue());
+	}
 
-  public static void serialize(SerializationStreamWriter streamWriter,
-      Short instance) throws SerializationException {
-    streamWriter.writeShort(instance.shortValue());
-  }
+	@Override
+	public void deserializeInstance(SerializationStreamReader streamReader,
+			Short instance) throws SerializationException {
+		deserialize(streamReader, instance);
+	}
 
-  @Override
-  public void deserializeInstance(SerializationStreamReader streamReader,
-      Short instance) throws SerializationException {
-    deserialize(streamReader, instance);
-  }
+	@Override
+	public boolean hasCustomInstantiateInstance() {
+		return true;
+	}
 
-  @Override
-  public boolean hasCustomInstantiateInstance() {
-    return true;
-  }
+	@Override
+	public Short instantiateInstance(SerializationStreamReader streamReader)
+			throws SerializationException {
+		return instantiate(streamReader);
+	}
 
-  @Override
-  public Short instantiateInstance(SerializationStreamReader streamReader)
-      throws SerializationException {
-    return instantiate(streamReader);
-  }
-
-  @Override
-  public void serializeInstance(SerializationStreamWriter streamWriter,
-      Short instance) throws SerializationException {
-    serialize(streamWriter, instance);
-  }
+	@Override
+	public void serializeInstance(SerializationStreamWriter streamWriter,
+			Short instance) throws SerializationException {
+		serialize(streamWriter, instance);
+	}
 }

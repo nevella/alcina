@@ -24,6 +24,16 @@ public class StatusPanel extends Composite {
 
 	public static final String WAIT_LINE_TEMPLATE = "<div><img src='/img/wait.gif'>&#160;%s ...</div>";
 
+	public static StatusPanel current;
+
+	public static void showMessageOrAlert(String message) {
+		if (current != null) {
+			current.setContent(message);
+		} else {
+			Window.alert(message);
+		}
+	}
+
 	private HTML content;
 
 	private HandlerRegistration nativePreviewHandlerRegistration;
@@ -36,11 +46,17 @@ public class StatusPanel extends Composite {
 
 	private FlowPanel progressInner;
 
-	public static StatusPanel current;
-
 	private String runningTemplate = RUNNING_TEMPLATE;
 
 	private String problemStyleName = "problemito";
+
+	List<StatusPanelModalNotifier> notifiers = new ArrayList<StatusPanel.StatusPanelModalNotifier>();
+
+	List<StatusPanelModalNotifier> logNotifiers = new ArrayList<StatusPanel.StatusPanelModalNotifier>();
+
+	private boolean keepNotifiersAsLog;
+
+	boolean inresize = false;
 
 	public StatusPanel() {
 		fp = new FlowPanel();
@@ -57,93 +73,8 @@ public class StatusPanel extends Composite {
 		setVisible(false);
 	}
 
-	public void setShowingProblem(boolean b) {
-		setStyleName(problemStyleName, b);
-	}
-
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-		if (current == null) {
-			current = this;
-		} else {
-		}
-		updateHandlers(true);
-	}
-
 	public StatusPanelModalNotifier addModalNotifier() {
 		return new StatusPanelModalNotifier(this);
-	}
-
-	List<StatusPanelModalNotifier> notifiers = new ArrayList<StatusPanel.StatusPanelModalNotifier>();
-
-	List<StatusPanelModalNotifier> logNotifiers = new ArrayList<StatusPanel.StatusPanelModalNotifier>();
-
-	private boolean keepNotifiersAsLog;
-
-	public static class StatusPanelModalNotifier implements ModalNotifier {
-		StatusPanel panel;
-
-		public StatusPanelModalNotifier(StatusPanel panel) {
-			this.panel = panel;
-		}
-
-		private String message;
-
-		@Override
-		public void modalOn() {
-			panel.addNotifier(this);
-		}
-
-		@Override
-		public void modalOff() {
-			panel.removeNotifier(this);
-		}
-
-		@Override
-		public void setMasking(boolean masking) {
-			// noop
-		}
-
-		public void setMessage(String message) {
-			this.message = message;
-		}
-
-		@Override
-		public void setStatus(String status) {
-			this.message = status;
-			panel.notifiersChanged();
-		}
-
-		@Override
-		public void setProgress(double progress) {
-			panel.setProgress(progress);
-		}
-	}
-
-	private void updateHandlers(boolean show) {
-		// Remove any existing handlers.
-		if (nativePreviewHandlerRegistration != null) {
-			nativePreviewHandlerRegistration.removeHandler();
-			nativePreviewHandlerRegistration = null;
-		}
-		// Create handlers if showing.
-		if (show) {
-			nativePreviewHandlerRegistration = Event
-					.addNativePreviewHandler(new NativePreviewHandler() {
-						public void onPreviewNativeEvent(
-								NativePreviewEvent event) {
-							previewNativeEvent(event);
-						}
-					});
-		}
-	}
-
-	public void removeNotifier(StatusPanelModalNotifier notifier) {
-		if (notifiers.remove(notifier) && keepNotifiersAsLog) {
-			logNotifiers.add(notifier);
-		}
-		notifiersChanged();
 	}
 
 	public void addNotifier(StatusPanelModalNotifier notifier) {
@@ -153,11 +84,43 @@ public class StatusPanel extends Composite {
 		}
 	}
 
-	public void setProgress(double progress) {
-		progressPanel.setVisible(true);
-		int w = progressPanel.getOffsetWidth();
-		int h = progressPanel.getOffsetHeight();
-		progressInner.setPixelSize((int) Math.round(w * progress), h - 2);
+	public void clear() {
+		for (StatusPanelModalNotifier notifier : new ArrayList<StatusPanelModalNotifier>(
+				notifiers)) {
+			notifier.modalOff();
+		}
+		notifiers.clear();
+		logNotifiers.clear();
+		content.setHTML("");
+	}
+
+	public void ensureCurrent() {
+		if (isAttached()) {
+			updateHandlers(true);
+			adoptNotifiersFromCurrent();
+			current = this;
+			notifiersChanged();
+		}
+	}
+
+	public void ensureModalOff() {
+		updateHandlers(false);
+	}
+
+	public String getProblemStyleName() {
+		return this.problemStyleName;
+	}
+
+	public String getRunningTemplate() {
+		return this.runningTemplate;
+	}
+
+	public boolean isKeepNotifiersAsLog() {
+		return this.keepNotifiersAsLog;
+	}
+
+	public boolean isModal() {
+		return this.modal;
 	}
 
 	public void notifiersChanged() {
@@ -187,36 +150,55 @@ public class StatusPanel extends Composite {
 		}
 	}
 
-	protected void previewNativeEvent(NativePreviewEvent event) {
-		// if (modal) {
-		// event.cancel();
-		// return;
-		// }
+	public void removeNotifier(StatusPanelModalNotifier notifier) {
+		if (notifiers.remove(notifier) && keepNotifiersAsLog) {
+			logNotifiers.add(notifier);
+		}
+		notifiersChanged();
 	}
 
 	public void setContent(String html) {
 		setContent(html, true);
 	}
 
-	private void setContent(String html, boolean makeCurrent) {
-		setVisible(CommonUtils.isNotNullOrEmpty(html));
-		if (current != this && makeCurrent) {
-			if (current != null) {
-				current.updateHandlers(false);
-			}
-			adoptNotifiersFromCurrent();
-			current = this;
-		}
-		content.setHTML(html);
-		setShowingProblem(false);
-		if (!inresize
-				&& Registry.impl(LayoutManagerBase.class)
-						.isDisplayInitialised()
-				&& Registry.impl(ClientBase.class).isUsesRootLayoutPanel()) {
-			inresize = true;
-			RootLayoutPanel.get().onResize();
-			inresize = false;
-		}
+	public void setKeepNotifiersAsLog(boolean keepNotifiersAsLog) {
+		this.keepNotifiersAsLog = keepNotifiersAsLog;
+	}
+
+	public void setModal(boolean modal) {
+		this.modal = modal;
+	}
+
+	public void setProblemStyleName(String problemStyleName) {
+		this.problemStyleName = problemStyleName;
+	}
+
+	public void setProgress(double progress) {
+		progressPanel.setVisible(true);
+		int w = progressPanel.getOffsetWidth();
+		int h = progressPanel.getOffsetHeight();
+		progressInner.setPixelSize((int) Math.round(w * progress), h - 2);
+	}
+
+	public void setRunning(String html) {
+		setRunning(html, "");
+		setVisible(html != null);
+	}
+
+	public void setRunning(String runningHtml, String preRunningHtml) {
+		setVisible(runningHtml != null);
+		String pre = CommonUtils.isNotNullOrEmpty(preRunningHtml)
+				? preRunningHtml + "<br>" : "";
+		String running = CommonUtils.formatJ(runningTemplate, runningHtml);
+		setContent(pre + running);
+	}
+
+	public void setRunningTemplate(String runningTemplate) {
+		this.runningTemplate = runningTemplate;
+	}
+
+	public void setShowingProblem(boolean b) {
+		setStyleName(problemStyleName, b);
 	}
 
 	private void adoptNotifiersFromCurrent() {
@@ -232,7 +214,53 @@ public class StatusPanel extends Composite {
 		}
 	}
 
-	boolean inresize = false;
+	private void setContent(String html, boolean makeCurrent) {
+		setVisible(CommonUtils.isNotNullOrEmpty(html));
+		if (current != this && makeCurrent) {
+			if (current != null) {
+				current.updateHandlers(false);
+			}
+			adoptNotifiersFromCurrent();
+			current = this;
+		}
+		content.setHTML(html);
+		setShowingProblem(false);
+		if (!inresize
+				&& Registry.impl(LayoutManagerBase.class).isDisplayInitialised()
+				&& Registry.impl(ClientBase.class).isUsesRootLayoutPanel()) {
+			inresize = true;
+			RootLayoutPanel.get().onResize();
+			inresize = false;
+		}
+	}
+
+	private void updateHandlers(boolean show) {
+		// Remove any existing handlers.
+		if (nativePreviewHandlerRegistration != null) {
+			nativePreviewHandlerRegistration.removeHandler();
+			nativePreviewHandlerRegistration = null;
+		}
+		// Create handlers if showing.
+		if (show) {
+			nativePreviewHandlerRegistration = Event
+					.addNativePreviewHandler(new NativePreviewHandler() {
+						public void
+								onPreviewNativeEvent(NativePreviewEvent event) {
+							previewNativeEvent(event);
+						}
+					});
+		}
+	}
+
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		if (current == null) {
+			current = this;
+		} else {
+		}
+		updateHandlers(true);
+	}
 
 	@Override
 	protected void onDetach() {
@@ -243,80 +271,50 @@ public class StatusPanel extends Composite {
 		super.onDetach();
 	}
 
-	public void clear() {
-		for (StatusPanelModalNotifier notifier : new ArrayList<StatusPanelModalNotifier>(
-				notifiers)) {
-			notifier.modalOff();
+	protected void previewNativeEvent(NativePreviewEvent event) {
+		// if (modal) {
+		// event.cancel();
+		// return;
+		// }
+	}
+
+	public static class StatusPanelModalNotifier implements ModalNotifier {
+		StatusPanel panel;
+
+		private String message;
+
+		public StatusPanelModalNotifier(StatusPanel panel) {
+			this.panel = panel;
 		}
-		notifiers.clear();
-		logNotifiers.clear();
-		content.setHTML("");
-	}
 
-	public static void showMessageOrAlert(String message) {
-		if (current != null) {
-			current.setContent(message);
-		} else {
-			Window.alert(message);
+		@Override
+		public void modalOff() {
+			panel.removeNotifier(this);
 		}
-	}
 
-	public void setRunning(String html) {
-		setRunning(html, "");
-		setVisible(html != null);
-	}
-
-	public void setRunning(String runningHtml, String preRunningHtml) {
-		setVisible(runningHtml != null);
-		String pre = CommonUtils.isNotNullOrEmpty(preRunningHtml) ? preRunningHtml
-				+ "<br>"
-				: "";
-		String running = CommonUtils.formatJ(runningTemplate, runningHtml);
-		setContent(pre + running);
-	}
-
-	public void ensureModalOff() {
-		updateHandlers(false);
-	}
-
-	public void ensureCurrent() {
-		if (isAttached()) {
-			updateHandlers(true);
-			adoptNotifiersFromCurrent();
-			current = this;
-			notifiersChanged();
+		@Override
+		public void modalOn() {
+			panel.addNotifier(this);
 		}
-	}
 
-	public String getProblemStyleName() {
-		return this.problemStyleName;
-	}
+		@Override
+		public void setMasking(boolean masking) {
+			// noop
+		}
 
-	public void setProblemStyleName(String problemStyleName) {
-		this.problemStyleName = problemStyleName;
-	}
+		public void setMessage(String message) {
+			this.message = message;
+		}
 
-	public boolean isKeepNotifiersAsLog() {
-		return this.keepNotifiersAsLog;
-	}
+		@Override
+		public void setProgress(double progress) {
+			panel.setProgress(progress);
+		}
 
-	public void setKeepNotifiersAsLog(boolean keepNotifiersAsLog) {
-		this.keepNotifiersAsLog = keepNotifiersAsLog;
-	}
-
-	public String getRunningTemplate() {
-		return this.runningTemplate;
-	}
-
-	public void setRunningTemplate(String runningTemplate) {
-		this.runningTemplate = runningTemplate;
-	}
-
-	public boolean isModal() {
-		return this.modal;
-	}
-
-	public void setModal(boolean modal) {
-		this.modal = modal;
+		@Override
+		public void setStatus(String status) {
+			this.message = status;
+			panel.notifiersChanged();
+		}
 	}
 }

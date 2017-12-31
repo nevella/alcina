@@ -31,9 +31,23 @@ import java.lang.annotation.Target;
  */
 public @interface RegistryLocation {
 	public static final int DEFAULT_PRIORITY = 10;
+
 	public static final int PREFERRED_LIBRARY_PRIORITY = 20;
+
 	public static final int MANUAL_PRIORITY = 50;
+
 	public static final int IGNORE_PRIORITY = 0;
+
+	ImplementationType implementationType() default ImplementationType.MULTIPLE;
+
+	/**
+	 * Allows overriding of default registrees (higher values override)
+	 */
+	int priority() default DEFAULT_PRIORITY;
+
+	Class registryPoint();
+
+	Class targetClass() default void.class;
 
 	public enum ImplementationType {
 		// multiple implementation classes allowed
@@ -45,15 +59,4 @@ public @interface RegistryLocation {
 		// registree is the impl, should be instantiated as a singleton
 		SINGLETON
 	}
-
-	Class registryPoint();
-
-	Class targetClass() default void.class;
-
-	/**
-	 * Allows overriding of default registrees (higher values override)
-	 */
-	int priority() default DEFAULT_PRIORITY;
-
-	ImplementationType implementationType() default ImplementationType.MULTIPLE;
 }

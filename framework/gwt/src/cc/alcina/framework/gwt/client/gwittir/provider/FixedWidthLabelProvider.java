@@ -22,7 +22,7 @@ import com.totsp.gwittir.client.ui.Label;
  */
 public class FixedWidthLabelProvider extends ExpandableStringLabelProvider {
 	public FixedWidthLabelProvider(int maxWidth, boolean showNewlinesAsBreaks) {
-		super(maxWidth, true, showNewlinesAsBreaks, false, false,null);
+		super(maxWidth, true, showNewlinesAsBreaks, false, false, null);
 	}
 
 	@Override

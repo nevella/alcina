@@ -5,11 +5,11 @@ import java.io.Serializable;
 import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 
 public interface BoundSuggestOracleResponseType {
-	String toSuggestionString();
-	
-	default String toSuggestionResultString(){
+	default String toSuggestionResultString() {
 		return toSuggestionString();
 	}
+
+	String toSuggestionString();
 
 	public interface BoundSuggestOracleModel extends Serializable {
 	}
@@ -20,12 +20,15 @@ public interface BoundSuggestOracleResponseType {
 
 	public static class BoundSuggestOracleSuggestion
 			implements Suggestion, Serializable {
+		public static Object nullSuggestion() {
+			BoundSuggestOracleSuggestion suggestion = new BoundSuggestOracleSuggestion();
+			suggestion.displayString = "(empty)";
+			return suggestion;
+		}
+
 		private String displayString;
 
-		@Override
-		public String getDisplayString() {
-			return displayString;
-		}
+		public BoundSuggestOracleResponseType typedValue;
 
 		public BoundSuggestOracleSuggestion() {
 		}
@@ -37,16 +40,13 @@ public interface BoundSuggestOracleResponseType {
 		}
 
 		@Override
-		public String getReplacementString() {
-			return null;
+		public String getDisplayString() {
+			return displayString;
 		}
 
-		public BoundSuggestOracleResponseType typedValue;
-
-		public static Object nullSuggestion() {
-			BoundSuggestOracleSuggestion suggestion = new BoundSuggestOracleSuggestion();
-			suggestion.displayString = "(empty)";
-			return suggestion;
+		@Override
+		public String getReplacementString() {
+			return null;
 		}
 	}
 }

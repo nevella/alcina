@@ -2,11 +2,16 @@ package com.google.gwt.dom.client;
 
 /**
  * All 'static' classes are a workaround for jsos not allowing default methods
+ * 
  * @author nick@alcina.cc
  *
  */
 class DomNodeStatic {
-	 static Node getChild(DomNode domNode, int index) {
+	static void callMethod(DomNode domNode, String methodName) {
+		throw new UnsupportedOperationException();
+	}
+
+	static Node getChild(DomNode domNode, int index) {
 		assert (index >= 0) && (index < domNode
 				.getChildCount()) : "Child index out of bounds";
 		return domNode.getChildNodes().getItem(index);
@@ -39,23 +44,19 @@ class DomNodeStatic {
 		return domNode.insertBefore(child, domNode.getFirstChild());
 	}
 
-	static void removeFromParent(DomNode domNode) {
-		Element parent = domNode.getParentElement();
-		if (parent != null) {
-			DomNode parentDomNode = parent.sameTreeNodeFor(domNode);
-			parentDomNode.removeChild(domNode.nodeFor());
-		}
-	}
-
-	static void callMethod(DomNode domNode, String methodName) {
-		throw new UnsupportedOperationException();
-	}
-
 	static Node removeAllChildren(DomNode domNode) {
 		Node child = null;
 		while ((child = domNode.getLastChild()) != null) {
 			domNode.removeChild(child);
 		}
 		return null;// GWT impl returns null
+	}
+
+	static void removeFromParent(DomNode domNode) {
+		Element parent = domNode.getParentElement();
+		if (parent != null) {
+			DomNode parentDomNode = parent.sameTreeNodeFor(domNode);
+			parentDomNode.removeChild(domNode.nodeFor());
+		}
 	}
 }
