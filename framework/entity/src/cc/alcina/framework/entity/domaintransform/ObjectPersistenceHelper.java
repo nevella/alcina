@@ -275,6 +275,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		Reflections.registerClassLookup(this);
 		Reflections.registerObjectLookup(this);
 		Reflections.registerPropertyAccessor(this);
+		Reflections.registerBeanDescriptorProvider(this);
 	}
 
 	@RegistryLocation(registryPoint = CurrentUtcDateProvider.class, implementationType = ImplementationType.SINGLETON)

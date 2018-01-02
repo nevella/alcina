@@ -126,7 +126,6 @@ import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjections;
-import cc.alcina.framework.servlet.Sx;
 
 /**
  * <h3>Locking notes:</h3>
