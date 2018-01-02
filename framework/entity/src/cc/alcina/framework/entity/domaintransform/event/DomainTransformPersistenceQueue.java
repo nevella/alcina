@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.ThrowingSupplier;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
@@ -177,24 +178,31 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	}
 
 	public void waitUntilCurrentRequestsProcessed() {
-		new QueueWaiter().pauseUntilProcessed();
+		waitUntilCurrentRequestsProcessed(60 * TimeConstants.ONE_SECOND_MS);
+	}
+
+	public void waitUntilCurrentRequestsProcessed(long timeoutMs) {
+		new QueueWaiter().pauseUntilProcessed(timeoutMs);
 	}
 
 	class QueueWaiter {
 		private Set<Long> waiting;
 
-		public void pauseUntilProcessed() {
+		public void pauseUntilProcessed(long timeoutMs) {
 			synchronized (queueModificationLock) {
 				waiting = new LinkedHashSet<>(firing);
 			}
+			long startTime = System.currentTimeMillis();
 			while (true) {
-				if (waiting.isEmpty()) {
+				long timeRemaining = -System.currentTimeMillis() + startTime
+						+ timeoutMs;
+				if (waiting.isEmpty() || timeRemaining <= 0) {
 					break;
 				}
 				synchronized (queueModificationLock) {
 					try {
 						waiterCounter.incrementAndGet();
-						queueModificationLock.wait();
+						queueModificationLock.wait(timeRemaining);
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);
 					}
