@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -21,6 +22,7 @@ import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.gwt.client.ClientBase;
 
 @RegistryLocation(registryPoint = WaitForTransformsClient.class, implementationType = ImplementationType.SINGLETON)
+@ClientInstantiable
 public class WaitForTransformsClient implements AsyncCallback<DomainUpdate> {
 	public static WaitForTransformsClient get() {
 		return Registry.impl(WaitForTransformsClient.class);

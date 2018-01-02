@@ -41,6 +41,7 @@ import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersist
 import cc.alcina.framework.common.client.logic.reflection.NonDomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
@@ -176,6 +177,11 @@ public class ClassrefScanner extends CachingScanner {
 					}
 					PropertyDescriptor leftPd = SEUtilities
 							.getPropertyDescriptorByName(ref, field.getName());
+					String methodName = String.format("%s.%s",
+							ref.getSimpleName(), field.getName());
+					if (methodName.equals("Contact.activities")) {
+						int debug = 3;
+					}
 					if (leftPd != null && leftPd.getReadMethod() != null
 							&& leftPd.getReadMethod()
 									.getAnnotation(Association.class) != null) {
@@ -208,8 +214,7 @@ public class ClassrefScanner extends CachingScanner {
 							}
 						}
 						if (right == null && rightMcc == null) {
-							errAssociation.add(String.format("%s.%s",
-									ref.getSimpleName(), field.getName()));
+							errAssociation.add(methodName);
 						}
 					}
 				}
@@ -283,7 +288,10 @@ public class ClassrefScanner extends CachingScanner {
 					delta = true;
 					System.out.format("removing classref - %s %s\n",
 							ref.getId(), ref.getRefClassName());
-					cp.remove(ref);
+					if (ResourceUtilities.is(ClassrefScanner.class,
+							"removePersistentClassrefs")) {
+						cp.remove(ref);
+					}
 					ClassRef.remove(ref);
 				}
 			}

@@ -49,7 +49,7 @@ public @interface DomainProperty {
 	 */
 	boolean serializeOnClient() default false;
 
-	boolean serializeWithBeanSerialization() default false;
+	String serializeWithBeanSerialization() default "";
 
 	boolean silentFailOnIllegalWrites() default false;
 }

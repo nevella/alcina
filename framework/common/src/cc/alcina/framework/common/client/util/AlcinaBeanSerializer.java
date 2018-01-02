@@ -1,9 +1,11 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 public abstract class AlcinaBeanSerializer {
 	protected static final String PROPERTIES = "props";
@@ -59,5 +61,12 @@ public abstract class AlcinaBeanSerializer {
 			typeName = reverseAbbrevLookup.get(type);
 		}
 		return typeName;
+	}
+
+	public static String serialize1(Object o) {
+		return Registry.impl(AlcinaBeanSerializer.class).serialize(o);
+	}
+	public static <T> T deserialize1(String s) {
+		return Registry.impl(AlcinaBeanSerializer.class).deserialize(s);
 	}
 }

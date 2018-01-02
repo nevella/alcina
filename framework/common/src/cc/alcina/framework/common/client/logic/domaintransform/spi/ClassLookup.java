@@ -68,7 +68,16 @@ public interface ClassLookup {
 
 		private final Class beanType;
 
-		private boolean serializeWithBeanSerialization;
+		private String serializeWithBeanSerialization;
+
+		public String getSerializeWithBeanSerialization() {
+			return this.serializeWithBeanSerialization;
+		}
+
+		public void setSerializeWithBeanSerialization(
+				String serializeWithBeanSerialization) {
+			this.serializeWithBeanSerialization = serializeWithBeanSerialization;
+		}
 
 		private Method writeMethod;
 
@@ -87,10 +96,11 @@ public interface ClassLookup {
 			DomainProperty ann = Reflections.propertyAccessor()
 					.getAnnotationForProperty(beanType, DomainProperty.class,
 							propertyName);
-			serializeCollectionOnClient = ann != null
-					&& ann.serializeOnClient();
-			serializeWithBeanSerialization = ann != null
-					&& ann.serializeWithBeanSerialization();
+			if (ann != null) {
+				serializeCollectionOnClient = ann.serializeOnClient();
+				serializeWithBeanSerialization = ann
+						.serializeWithBeanSerialization();
+			}
 		}
 
 		public void copy(HasIdAndLocalId hili, HasIdAndLocalId writeable) {
@@ -133,8 +143,8 @@ public interface ClassLookup {
 			return serializeCollectionOnClient;
 		}
 
-		public boolean isSerializeWithBeanSerialization() {
-			return this.serializeWithBeanSerialization;
+		public boolean hasSerializeWithBeanSerialization() {
+			return Ax.notBlank(this.serializeWithBeanSerialization);
 		}
 
 		@Override

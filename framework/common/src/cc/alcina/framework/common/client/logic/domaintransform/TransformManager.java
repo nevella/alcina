@@ -63,6 +63,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -498,7 +499,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					.filter(pd1 -> pd1.getPropertyName()
 							.equals(evt.getPropertyName()))
 					.findFirst().get();
-			Preconditions.checkArgument(pd.isSerializeWithBeanSerialization());
+			Preconditions.checkArgument(pd.hasSerializeWithBeanSerialization());
 			evt.setNewStringValue(
 					Registry.impl(AlcinaBeanSerializer.class).serialize(value));
 			evt.setValueClass(String.class);
@@ -870,7 +871,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					.filter(pd1 -> pd1.getPropertyName()
 							.equals(evt.getPropertyName()))
 					.findFirst().get();
-			Preconditions.checkArgument(pd.isSerializeWithBeanSerialization());
+			Preconditions.checkArgument(pd.hasSerializeWithBeanSerialization());
 			return Registry.impl(AlcinaBeanSerializer.class)
 					.deserialize(evt.getNewStringValue());
 		}
@@ -1074,7 +1075,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 							}
 							dtes.add(dte);
 						}
-					} else if (pd.isSerializeWithBeanSerialization()) {
+					} else if (pd.hasSerializeWithBeanSerialization()) {
 						dte = new DomainTransformEvent();
 						dte.setUtcDate(new Date(0L));
 						dte.setObjectId(id);
@@ -1907,5 +1908,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 				return;
 			}
 		}
+	}
+
+	public static <V> V resolveMaybeDeserialize(V existing, String serialized,
+			V defaultValue) {
+		if (existing != null) {
+			return existing;
+		}
+		if (Ax.isBlank(serialized)) {
+			return defaultValue;
+		}
+		return AlcinaBeanSerializer.deserialize1(serialized);
 	}
 }
