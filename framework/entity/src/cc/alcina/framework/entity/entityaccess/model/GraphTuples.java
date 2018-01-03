@@ -11,6 +11,8 @@ import java.util.function.Predicate;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasEquivalence;
+import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TFieldRef;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 public class GraphTuples {
@@ -37,11 +39,11 @@ public class GraphTuples {
 
 	public List<TObjectRef> objects = new ArrayList<>();
 
-	public class TFieldRef {
-		public TFieldRef(TClassRef classRef, Field field) {
+	public static class TFieldRef implements HasEquivalence<TFieldRef> {
+		public TFieldRef(TClassRef classRef, Field field, GraphTuples tuples) {
 			this.classRef = classRef;
 			this.name = field.getName();
-			this.type = ensureClassRef(field.getType());
+			this.type = tuples.ensureClassRef(field.getType());
 			this.field = field;
 		}
 
@@ -60,9 +62,14 @@ public class GraphTuples {
 		public String toString() {
 			return name;
 		}
+
+		@Override
+		public boolean equivalentTo(TFieldRef o) {
+			return CommonUtils.equals(name, o.name, type.name, o.type.name);
+		}
 	}
 
-	public class TClassRef {
+	public static class TClassRef {
 		public String name;
 
 		public List<TFieldRef> fieldRefs = new ArrayList<>();
@@ -70,6 +77,24 @@ public class GraphTuples {
 		public String simpleName() {
 			return name.contains(".") ? name.replaceFirst(".+\\.(.+)", "$1")
 					: name;
+		}
+
+		public TFieldRef fieldRefByName(String name) {
+			return fieldRefs.stream().filter(tfr -> tfr.name.equals(name))
+					.findFirst().orElse(null);
+		}
+
+		transient Class clazz;
+
+		public Class getType() {
+			if (clazz == null) {
+				try {
+					clazz = Class.forName(name);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+			return clazz;
 		}
 	}
 
@@ -100,7 +125,7 @@ public class GraphTuples {
 			Field[] fields = new GraphProjection().getFieldsForClass(clazz);
 			for (Field field : fields) {
 				if (fieldFilter.test(field)) {
-					ref.fieldRefs.add(new TFieldRef(ref, field));
+					ref.fieldRefs.add(new TFieldRef(ref, field, this));
 				}
 			}
 		} catch (Exception e) {
