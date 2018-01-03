@@ -1,8 +1,8 @@
 package cc.alcina.framework.entity.entityaccess.model;
 
 import java.lang.reflect.Field;
-import java.sql.Date;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -60,8 +60,11 @@ public class GraphTuplizer {
 			if (clazz == long.class || clazz == Long.class) {
 				return oValue.toString();
 			}
-			if (clazz == Date.class) {
+			if (Date.class.isAssignableFrom(clazz)) {
 				return String.valueOf(((Date) oValue).getTime());
+			}
+			if(field.name.equals("activityDateTime")){
+				int debug=3;
 			}
 			DomainTransformEvent dte = new DomainTransformEvent();
 			dte.setNewValue(oValue);
