@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
@@ -22,6 +23,8 @@ public class GraphTuples {
 		public TObjectRef() {
 		}
 
+		public transient HasIdAndLocalId hili;
+
 		public TObjectRef(TClassRef classRef) {
 			this.classRef = classRef;
 		}
@@ -32,7 +35,7 @@ public class GraphTuples {
 
 		@Override
 		public String toString() {
-			return Ax.format("%s:\n%s", classRef,
+			return Ax.format("%s:\n\t%s", classRef,
 					CommonUtils.joinWithNewlineTab(values.entrySet()));
 		}
 	}
@@ -67,6 +70,10 @@ public class GraphTuples {
 		public boolean equivalentTo(TFieldRef o) {
 			return CommonUtils.equals(name, o.name, type.name, o.type.name);
 		}
+
+		public String path() {
+			return Ax.format("%s.%s", classRef.simpleName(), name);
+		}
 	}
 
 	public static class TClassRef {
@@ -84,17 +91,48 @@ public class GraphTuples {
 					.findFirst().orElse(null);
 		}
 
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof TClassRef) {
+				return ((TClassRef) obj).name.equals(name);
+			}
+			return super.equals(obj);
+		}
+
+		@Override
+		public int hashCode() {
+			return name.hashCode();
+		}
+
 		transient Class clazz;
 
 		public Class getType() {
 			if (clazz == null) {
 				try {
+					switch (name) {
+					case "boolean":
+						return boolean.class;
+					case "int":
+						return int.class;
+					case "long":
+						return long.class;
+					case "double":
+						return double.class;
+					case "float":
+						return float.class;
+					default:
+					}
 					clazz = Class.forName(name);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
 			}
 			return clazz;
+		}
+
+		@Override
+		public String toString() {
+			return simpleName();
 		}
 	}
 

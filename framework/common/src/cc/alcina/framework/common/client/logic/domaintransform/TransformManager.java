@@ -849,16 +849,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (valueClass == String.class) {
 			return evt.getNewStringValue();
 		}
-		if (valueClass == Long.class) {
+		if (valueClass == Long.class || valueClass == long.class) {
 			return SimpleStringParser.toLong(evt.getNewStringValue());
 		}
-		if (valueClass == Double.class) {
+		if (valueClass == Double.class || valueClass == double.class) {
 			return Double.valueOf(evt.getNewStringValue());
 		}
-		if (valueClass == Integer.class) {
+		if (valueClass == Integer.class || valueClass == int.class) {
 			return Integer.valueOf(evt.getNewStringValue());
 		}
-		if (valueClass == Boolean.class) {
+		if (valueClass == Boolean.class || valueClass == boolean.class) {
 			return Boolean.valueOf(evt.getNewStringValue());
 		}
 		if (valueClass == Date.class) {

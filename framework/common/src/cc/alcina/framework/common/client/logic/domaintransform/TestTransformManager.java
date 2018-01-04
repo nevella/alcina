@@ -6,6 +6,10 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
 public class TestTransformManager extends ClientTransformManager {
+	public TestTransformManager() {
+		createObjectLookup();
+	}
+
 	public void performDeleteObject(HasIdAndLocalId hili) {
 	}
 

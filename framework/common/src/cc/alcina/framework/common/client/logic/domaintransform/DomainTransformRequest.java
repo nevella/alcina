@@ -93,6 +93,9 @@ public class DomainTransformRequest implements Serializable {
 				.hasNext();) {
 			DomainTransformEvent event = itr.next();
 			if (event.getTransformType() == TransformType.CREATE_OBJECT) {
+				if(event.getObjectId()!=0){
+					continue;
+				}
 				if (!createIds.add(event.getObjectLocalId())) {
 					itr.remove();
 					duplicates = true;

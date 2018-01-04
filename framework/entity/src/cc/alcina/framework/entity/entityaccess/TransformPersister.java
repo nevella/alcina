@@ -54,6 +54,8 @@ public class TransformPersister {
 	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITHOUT_EXCEPTIONS = 40
 			* 1000;
 
+	public static final String CONTEXT_DO_NOT_PERSIST_DTES = TransformPersister.class.getName()+".CONTEXT_DO_NOT_PERSIST_DTES";
+
 	public static void persistingTransforms() {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_PERSISTING_TRANSFORMS,
 				Thread.currentThread());
@@ -346,7 +348,8 @@ public class TransformPersister {
 							return token.getTransformLoggingPolicy()
 									.shouldPersist(event)
 									&& !request.getEventIdsToIgnore()
-											.contains(event.getEventId());
+											.contains(event.getEventId())
+											&&!LooseContext.is(CONTEXT_DO_NOT_PERSIST_DTES);
 						}
 					};
 					eventsPersisted = CollectionFilters.filter(eventsPersisted,

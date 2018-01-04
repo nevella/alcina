@@ -1,20 +1,27 @@
 package cc.alcina.framework.entity.entityaccess.model;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
+
+import javax.xml.bind.annotation.XmlRootElement;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TClassRef;
 import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TFieldRef;
 import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TObjectRef;
@@ -28,6 +35,50 @@ public class GraphTuplizer {
 		Class classFor(TClassRef classRef);
 
 		Object resolve(Class clazz, String value);
+
+		void notifyUnmapped(TFieldRef inField, TFieldRef outField);
+
+		long getId(TObjectRef inObjRef);
+
+		boolean ignore(TObjectRef inObjRef);
+
+		void putRelational(TObjectRef inObjRef, HasIdAndLocalId t, TFieldRef inField);
+	}
+
+	public static enum DetupelizeInstructionType {
+		IGNORE, HILI, FUNCTION, ID, LONG, ID_COMPRESS
+	}
+
+	public static class DetupelizeInstruction {
+		public DetupelizeInstructionType type;
+
+		public String path;
+
+		public String outFieldName;
+
+		public DetupelizeInstruction() {
+		}
+
+		public DetupelizeInstruction(DetupelizeInstructionType type,
+				String path) {
+			this.type = type;
+			this.path = path;
+		}
+
+		public DetupelizeInstruction(DetupelizeInstructionType type,
+				String path, String outFieldName) {
+			this.type = type;
+			this.path = path;
+			this.outFieldName = outFieldName;
+		}
+
+		public String inFieldPart() {
+			return path.replaceFirst(".+\\.", "");
+		}
+
+		public String classSimplePart() {
+			return path.replaceFirst("\\..+", "");
+		}
 	}
 
 	public GraphTuples tupleize(Collection objects,
@@ -93,21 +144,40 @@ public class GraphTuplizer {
 			DetupleizeMapper detupelizeMapper) {
 		this.tuples = tuples;
 		this.mapper = detupelizeMapper;
-		tuples.objects.forEach(this::nonRelationalCreate);
-		tuples.objects.forEach(this::relationalCreate);
+		tuples.objects.forEach(this::create);
+		tuples.objects.forEach(this::nonRelational);
+		tuples.objects.forEach(this::relational);
 	}
 
-	private void nonRelationalCreate(TObjectRef inObjRef) {
-		if (mapper.ignore(inObjRef.classRef)) {
+	private void create(TObjectRef inObjRef) {
+		if (mapper.ignore(inObjRef)) {
 			return;
 		}
 		Class clazz = mapper.classFor(inObjRef.classRef);
-		HasIdAndLocalId t = Domain.create(clazz);
+		long id = mapper.getId(inObjRef);
+		HasIdAndLocalId t = (HasIdAndLocalId) Reflections.classLookup()
+				.newInstance(clazz, id, 0L);
+		t.setId(id);
+		DomainTransformEvent dte = new DomainTransformEvent();
+		dte.setObjectClass(clazz);
+		dte.setObjectId(id);
+		dte.setTransformType(TransformType.CREATE_OBJECT);
+		TransformManager.get().addTransform(dte);
+		TransformManager.get().registerDomainObject(t);
+		inObjRef.hili = t;
+	}
+
+	private void nonRelational(TObjectRef inObjRef) {
+		if (mapper.ignore(inObjRef)) {
+			return;
+		}
+		Class clazz = mapper.classFor(inObjRef.classRef);
+		HasIdAndLocalId t = inObjRef.hili;
 		TClassRef outRef = tuples.ensureClassRef(clazz);
 		for (TFieldRef inField : inObjRef.classRef.fieldRefs) {
 			TFieldRef outField = outRef.fieldRefByName(inField.name);
 			String value = inObjRef.values.get(inField);
-			if (inField.equivalentTo(outField)) {
+			if (outField != null && inField.equivalentTo(outField)) {
 				Object newValue = getNewValue(inField, value);
 				try {
 					Reflections.propertyAccessor().setPropertyValue(t,
@@ -115,6 +185,8 @@ public class GraphTuplizer {
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
+			} else {
+				mapper.notifyUnmapped(inField, outField);
 			}
 		}
 	}
@@ -127,7 +199,7 @@ public class GraphTuplizer {
 			return null;
 		}
 		Object out = null;
-		Class clazz = inField.classRef.getType();
+		Class clazz = mapper.classFor(inField.type);
 		if (HasIdAndLocalId.class.isAssignableFrom(clazz)) {
 			return mapper.resolve(clazz, in);
 		}
@@ -144,7 +216,8 @@ public class GraphTuplizer {
 		} else {
 			DomainTransformEvent dte = new DomainTransformEvent();
 			dte.setNewStringValue(in);
-			dte.setObjectClass(clazz);
+			dte.setValueClass(clazz);
+			dte.setObjectClass(mapper.classFor(inField.classRef));
 			dte.setPropertyName(inField.name);
 			try {
 				out = TransformManager.get().getTargetObject(dte, false);
@@ -155,9 +228,20 @@ public class GraphTuplizer {
 		return out;
 	}
 
-	private void relationalCreate(TObjectRef ref) {
-		if (mapper.ignore(ref.classRef)) {
+	private void relational(TObjectRef inObjRef) {
+		if (mapper.ignore(inObjRef)) {
 			return;
+		}
+		Class clazz = mapper.classFor(inObjRef.classRef);
+		HasIdAndLocalId t = inObjRef.hili;
+		TClassRef outRef = tuples.ensureClassRef(clazz);
+		for (TFieldRef inField : inObjRef.classRef.fieldRefs) {
+			TFieldRef outField = outRef.fieldRefByName(inField.name);
+			String value = inObjRef.values.get(inField);
+			if (outField != null && inField.equivalentTo(outField)) {
+			} else {
+				mapper.putRelational(inObjRef,t,inField);
+			}
 		}
 	}
 }
