@@ -43,6 +43,10 @@ public class GraphTuplizer {
 		boolean ignore(TObjectRef inObjRef);
 
 		void putRelational(TObjectRef inObjRef, HasIdAndLocalId t, TFieldRef inField);
+
+		void prepareCustom(TObjectRef inObjRef);
+
+		void doCustom(TObjectRef inObjRef);
 	}
 
 	public static enum DetupelizeInstructionType {
@@ -147,6 +151,8 @@ public class GraphTuplizer {
 		tuples.objects.forEach(this::create);
 		tuples.objects.forEach(this::nonRelational);
 		tuples.objects.forEach(this::relational);
+		tuples.objects.forEach(this::prepareCustom);
+		tuples.objects.forEach(this::doCustom);
 	}
 
 	private void create(TObjectRef inObjRef) {
@@ -243,5 +249,17 @@ public class GraphTuplizer {
 				mapper.putRelational(inObjRef,t,inField);
 			}
 		}
+	}
+	private void doCustom(TObjectRef inObjRef) {
+		if (mapper.ignore(inObjRef)) {
+			return;
+		}
+		mapper.doCustom(inObjRef);
+	}
+	private void prepareCustom(TObjectRef inObjRef) {
+		if (mapper.ignore(inObjRef)) {
+			return;
+		}
+		mapper.prepareCustom(inObjRef);
 	}
 }
