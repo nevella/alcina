@@ -8,12 +8,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
-import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TFieldRef;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 public class GraphTuples {
@@ -71,8 +73,23 @@ public class GraphTuples {
 			return CommonUtils.equals(name, o.name, type.name, o.type.name);
 		}
 
+		private transient String path;
+
 		public String path() {
-			return Ax.format("%s.%s", classRef.simpleName(), name);
+			if (path == null) {
+				path = Ax.format("%s.%s", classRef.simpleName(), name);
+			}
+			return path;
+		}
+
+		private transient IndividualPropertyAccessor accessor;
+
+		public IndividualPropertyAccessor accessor() {
+			if (accessor == null) {
+				accessor = Reflections.propertyAccessor()
+						.cachedAccessor(classRef.clazz, name);
+			}
+			return accessor;
 		}
 	}
 
@@ -81,14 +98,22 @@ public class GraphTuples {
 
 		public List<TFieldRef> fieldRefs = new ArrayList<>();
 
+		private transient String simpleName;
+
 		public String simpleName() {
-			return name.contains(".") ? name.replaceFirst(".+\\.(.+)", "$1")
-					: name;
+			if (simpleName == null) {
+				simpleName = name.contains(".")
+						? name.replaceFirst(".+\\.(.+)", "$1") : name;
+			}
+			return simpleName;
 		}
 
+		private transient CachingMap<String, TFieldRef> fieldRefByName = new CachingMap<>(
+				name -> fieldRefs.stream().filter(tfr -> tfr.name.equals(name))
+						.findFirst().orElse(null));
+
 		public TFieldRef fieldRefByName(String name) {
-			return fieldRefs.stream().filter(tfr -> tfr.name.equals(name))
-					.findFirst().orElse(null);
+			return fieldRefByName.get(name);
 		}
 
 		@Override

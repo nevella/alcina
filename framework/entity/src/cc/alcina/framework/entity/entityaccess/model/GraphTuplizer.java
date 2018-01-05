@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TClassRef;
@@ -42,11 +43,12 @@ public class GraphTuplizer {
 
 		boolean ignore(TObjectRef inObjRef);
 
-		void putRelational(TObjectRef inObjRef, HasIdAndLocalId t, TFieldRef inField);
+		void putRelational(TObjectRef inObjRef, HasIdAndLocalId t,
+				TFieldRef inField);
 
-		void prepareCustom(TObjectRef inObjRef);
+		void prepareCustom(HasIdAndLocalId t);
 
-		void doCustom(TObjectRef inObjRef);
+		void doCustom(TObjectRef inObjRef, HasIdAndLocalId t);
 	}
 
 	public static enum DetupelizeInstructionType {
@@ -76,12 +78,33 @@ public class GraphTuplizer {
 			this.outFieldName = outFieldName;
 		}
 
+		private transient String inFieldPart;
+
+		private transient String classSimplePart;
+
 		public String inFieldPart() {
-			return path.replaceFirst(".+\\.", "");
+			if (inFieldPart == null) {
+				inFieldPart = path.replaceFirst(".+\\.", "");
+			}
+			return inFieldPart;
 		}
 
 		public String classSimplePart() {
-			return path.replaceFirst("\\..+", "");
+			if (classSimplePart == null) {
+				classSimplePart = path.replaceFirst("\\..+", "");
+			}
+			return classSimplePart;
+		}
+
+		IndividualPropertyAccessor accessor = null;
+
+		public IndividualPropertyAccessor
+				outAccessor(Class<? extends HasIdAndLocalId> clazz) {
+			if (accessor == null) {
+				accessor = Reflections.propertyAccessor().cachedAccessor(clazz,
+						outFieldName);
+			}
+			return accessor;
 		}
 	}
 
@@ -186,8 +209,7 @@ public class GraphTuplizer {
 			if (outField != null && inField.equivalentTo(outField)) {
 				Object newValue = getNewValue(inField, value);
 				try {
-					Reflections.propertyAccessor().setPropertyValue(t,
-							inField.name, newValue);
+					outField.accessor().setPropertyValue(t, newValue);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
@@ -246,20 +268,24 @@ public class GraphTuplizer {
 			String value = inObjRef.values.get(inField);
 			if (outField != null && inField.equivalentTo(outField)) {
 			} else {
-				mapper.putRelational(inObjRef,t,inField);
+				mapper.putRelational(inObjRef, t, inField);
 			}
 		}
 	}
+
 	private void doCustom(TObjectRef inObjRef) {
 		if (mapper.ignore(inObjRef)) {
 			return;
 		}
-		mapper.doCustom(inObjRef);
+		HasIdAndLocalId t = inObjRef.hili;
+		mapper.doCustom(inObjRef, t);
 	}
+
 	private void prepareCustom(TObjectRef inObjRef) {
 		if (mapper.ignore(inObjRef)) {
 			return;
 		}
-		mapper.prepareCustom(inObjRef);
+		HasIdAndLocalId t = inObjRef.hili;
+		mapper.prepareCustom(t);
 	}
 }

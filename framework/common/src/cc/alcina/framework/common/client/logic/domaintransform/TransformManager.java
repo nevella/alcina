@@ -1253,7 +1253,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		Object hili = evt.getSource();
 		if (this.getDomainObjects() != null) {
-			if (!provisionalObjects.containsKey(hili)) {
+			if (provisionalObjects.isEmpty()
+					|| !provisionalObjects.containsKey(hili)) {
 				maybeFireCollectionModificationEvent(hili.getClass(), true);
 			}
 		}

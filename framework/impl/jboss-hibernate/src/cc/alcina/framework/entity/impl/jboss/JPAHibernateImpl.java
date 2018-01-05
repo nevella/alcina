@@ -29,9 +29,13 @@ import javax.persistence.ElementCollection;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.IdentifierGeneratorHelper;
+
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -87,7 +91,8 @@ public class JPAHibernateImpl implements JPAImplementation {
 	public void afterSpecificSetId(Object fromBefore) throws Exception {
 		// restore the backuped unsavedValue
 		SavedId savedId = (SavedId) fromBefore;
-		setUnsavedValue(savedId.ip, savedId.backupUnsavedValue);
+		setUnsavedValue(savedId.ip, savedId.backupUnsavedValue,
+				savedId.identifierGenerator);
 	}
 
 	@Override
@@ -107,11 +112,21 @@ public class JPAHibernateImpl implements JPAImplementation {
 				.getDelegate();
 		EntityPersister persister = session
 				.getEntityPersister(toPersist.getClass().getName(), toPersist);
+		IdentifierGenerator identifierGenerator = persister
+				.getIdentifierGenerator();
 		IdentifierProperty ip = persister.getEntityMetamodel()
 				.getIdentifierProperty();
 		IdentifierValue backupUnsavedValue = setUnsavedValue(ip,
-				IdentifierValue.ANY);
-		return new SavedId(ip, backupUnsavedValue);
+				IdentifierValue.ANY, new UseEntityIdGenerator());
+		return new SavedId(ip, backupUnsavedValue, identifierGenerator);
+	}
+
+	public static class UseEntityIdGenerator implements IdentifierGenerator {
+		@Override
+		public Serializable generate(SessionImplementor session, Object object)
+				throws HibernateException {
+			return ((HasIdAndLocalId) object).getId();
+		}
 	}
 
 	public boolean bulkDelete(EntityManager em, Class clazz,
@@ -279,11 +294,19 @@ public class JPAHibernateImpl implements JPAImplementation {
 	}
 
 	public IdentifierValue setUnsavedValue(IdentifierProperty ip,
-			IdentifierValue newUnsavedValue) throws Exception {
+			IdentifierValue value, IdentifierGenerator identifierGenerator)
+			throws Exception {
 		IdentifierValue backup = ip.getUnsavedValue();
-		Field f = ip.getClass().getDeclaredField("unsavedValue");
-		f.setAccessible(true);
-		f.set(ip, newUnsavedValue);
+		{
+			Field f = ip.getClass().getDeclaredField("unsavedValue");
+			f.setAccessible(true);
+			f.set(ip, value);
+		}
+		{
+			Field f = ip.getClass().getDeclaredField("identifierGenerator");
+			f.setAccessible(true);
+			f.set(ip, identifierGenerator);
+		}
 		return backup;
 	}
 
@@ -313,10 +336,14 @@ public class JPAHibernateImpl implements JPAImplementation {
 
 		private final IdentifierValue backupUnsavedValue;
 
+		private final IdentifierGenerator identifierGenerator;
+
 		public SavedId(IdentifierProperty ip,
-				IdentifierValue backupUnsavedValue) {
+				IdentifierValue backupUnsavedValue,
+				IdentifierGenerator identifierGenerator) {
 			this.ip = ip;
 			this.backupUnsavedValue = backupUnsavedValue;
+			this.identifierGenerator = identifierGenerator;
 		}
 	}
 }

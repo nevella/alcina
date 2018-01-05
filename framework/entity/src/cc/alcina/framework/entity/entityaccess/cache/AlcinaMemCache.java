@@ -1352,7 +1352,7 @@ public class AlcinaMemCache implements RegistrableService {
 				AlcinaMemCacheTransient transientAnn = rm
 						.getAnnotation(AlcinaMemCacheTransient.class);
 				if (transientAnn != null) {
-					Field field = clazz.getDeclaredField(pd.getName());
+					Field field = getField(clazz, pd.getName());
 					field.setAccessible(true);
 					memcacheTransientFields.put(clazz, field, field);
 					memcacheTransientProperties.put(clazz, field.getName(),
@@ -1366,13 +1366,17 @@ public class AlcinaMemCache implements RegistrableService {
 			OneToMany oneToMany = rm.getAnnotation(OneToMany.class);
 			if (oneToMany != null) {
 				if (Set.class.isAssignableFrom(pd.getPropertyType())) {
-					Field field = clazz.getDeclaredField(pd.getName());
-					field.setAccessible(true);
-					if (field != null) {
-						ParameterizedType pt = (ParameterizedType) field
-								.getGenericType();
-						manyToOneRev.put(pt.getActualTypeArguments()[0],
-								oneToMany.mappedBy(), pd);
+					try {
+						Field field = getField(clazz, pd.getName());
+						field.setAccessible(true);
+						if (field != null) {
+							ParameterizedType pt = (ParameterizedType) field
+									.getGenericType();
+							manyToOneRev.put(pt.getActualTypeArguments()[0],
+									oneToMany.mappedBy(), pd);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
 				}
 				continue;
@@ -1420,6 +1424,12 @@ public class AlcinaMemCache implements RegistrableService {
 			}
 			mapped.add(ensurePdOperator(pd, clazz));
 		}
+	}
+
+	private Field getField(Class clazz, String name) throws Exception {
+		Field[] fields = new GraphProjection().getFieldsForClass(clazz);
+		return Arrays.stream(fields)
+				.filter(f -> f.getName().equals(name)).findFirst().orElse(null);
 	}
 
 	private void releaseConn(Connection conn) {
