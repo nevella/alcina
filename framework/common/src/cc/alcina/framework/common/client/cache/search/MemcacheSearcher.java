@@ -58,7 +58,14 @@ public class MemcacheSearcher {
 		setupHandlers();
 		processDefinitionHandler();
 		processHandlers();
-		List<T> list = query.list(clazz);
+		
+		List<T> list;
+		try {
+			query.readLock(true);
+			list = query.list(clazz);
+		} finally {
+			query.readLock(false);
+		}
 		list.sort(order);
 		return list;
 	}
@@ -104,7 +111,14 @@ public class MemcacheSearcher {
 			}
 		}
 	}
+	@RegistryLocation(registryPoint = MemoryStoreLocker.class, implementationType = ImplementationType.SINGLETON)
+	public static class MemoryStoreLocker{
 
+		public void readLock(boolean lock) {
+			
+		}
+		
+	}
 	@RegistryLocation(registryPoint = MemoryStoreQuery.class, implementationType = ImplementationType.INSTANCE)
 	public static class MemoryStoreQuery extends CacheQuery<MemoryStoreQuery> {
 		protected SearchDefinition def;
@@ -117,6 +131,11 @@ public class MemcacheSearcher {
 			return stream.collect(Registry.impl(ListCollector.class).toList());
 		}
 
+		public void readLock(boolean lock) {
+			Registry.impl(MemoryStoreLocker.class).readLock(lock);
+		}
+
+		
 		protected <T extends HasIdAndLocalId> Stream<T>
 				getStream(Collection<T> values) {
 			Stream<T> stream = values.stream().filter(v -> {

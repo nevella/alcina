@@ -1112,7 +1112,7 @@ public class AlcinaMemCache implements RegistrableService {
 			ManyToMany m = entry2.getKey().getReadMethod()
 					.getAnnotation(ManyToMany.class);
 			if (m != null && entry2.getValue() == null
-					&& m.targetEntity() == declaringClass
+					&& declaringClass.isAssignableFrom(m.targetEntity())
 					&& pd.getName().equals(m.mappedBy())) {
 				rev = entry2.getKey();
 				break;
@@ -1428,8 +1428,8 @@ public class AlcinaMemCache implements RegistrableService {
 
 	private Field getField(Class clazz, String name) throws Exception {
 		Field[] fields = new GraphProjection().getFieldsForClass(clazz);
-		return Arrays.stream(fields)
-				.filter(f -> f.getName().equals(name)).findFirst().orElse(null);
+		return Arrays.stream(fields).filter(f -> f.getName().equals(name))
+				.findFirst().orElse(null);
 	}
 
 	private void releaseConn(Connection conn) {
