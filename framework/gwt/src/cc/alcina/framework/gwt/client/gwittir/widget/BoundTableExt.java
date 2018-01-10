@@ -987,9 +987,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		if ((this.masks & BoundTableExt.SORT_MASK) > 0) {
 			this.ascending = new boolean[this.columns.length];
 		}
-		if (this.topBinding != null) { // Used to check that init() has fired.
-			this.renderAll();
-		}
+		this.renderAll();
 	}
 
 	public void setDataProvider(DataProvider provider) {
@@ -1933,8 +1931,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	}
 
 	protected native Element getRow(Element elem, int row)/*-{
-        return elem.rows[row];
-	}-*/;
+															return elem.rows[row];
+															}-*/;
 
 	@Override
 	protected void onAttach() {
@@ -1964,6 +1962,12 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	protected void renderAll() {
 		if (value != null && value == lastRendered) {
+			return;
+		}
+		if (columns == null) {
+			return;
+		}
+		if (this.topBinding == null) { // Used to check that init() has fired.
 			return;
 		}
 		if (!renderCheck()) {

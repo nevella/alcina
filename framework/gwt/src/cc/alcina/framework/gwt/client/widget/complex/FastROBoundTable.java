@@ -309,6 +309,9 @@ public class FastROBoundTable extends BoundTableExt {
 
 	@Override
 	protected void renderAll() {
+		if (wpMap == null) {
+			return;
+		}
 		super.renderAll();
 		setSelectedObject(selectedObject);
 	}
