@@ -315,13 +315,9 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	private EventingSimplePanel esp;
 
-	private RepeatingSequentialCommand incrementalRenderContainer;
-
 	private String searchingMessage = "Searching...";
 
 	private String noContentMessage = "No matching results found";
-
-	private BoundTableExtIncrementalRenderer incrementalRenderer;
 
 	private Collection lastRendered;
 
@@ -680,10 +676,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		return this.table.getHTML(row, column);
 	}
 
-	public RepeatingSequentialCommand getIncrementalRenderContainer() {
-		return incrementalRenderContainer;
-	}
-
 	public String getNoContentMessage() {
 		return noContentMessage;
 	}
@@ -1011,21 +1003,9 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		this.base.setHeight(height);
 	}
 
-	public void setIncrementalRenderContainer(
-			RepeatingSequentialCommand incrementalRenderContainer) {
-		this.incrementalRenderContainer = incrementalRenderContainer;
-	}
-
-	@Override
-	public void setModel(Object model) {
-		System.out.println(CommonUtils.formatJ("set model - %s %s\n",
-				model.hashCode(), model));
-		super.setModel(model);
-	}
-
 	public void setNoContentMessage(String noContentMessage) {
 		this.noContentMessage = noContentMessage;
-		renderAll();
+		// TODO - searching indicator
 	}
 
 	@Override
@@ -1077,12 +1057,10 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		Collection old = this.value;
 		this.value = (Collection) value;
 		this.changes.firePropertyChange("value", old, this.value);
-		if (this.isAttached()) {
-			boolean active = this.getActive();
-			this.setActive(false);
-			this.renderAll();
-			this.setActive(active);
-		}
+		boolean active = this.getActive();
+		this.setActive(false);
+		this.renderAll();
+		this.setActive(active);
 	}
 
 	@Override
@@ -1564,33 +1542,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		this.table.removeRow(row + 1);
 	}
 
-	private void renderIncremental() {
-		if (incrementalRenderer != null) {
-			incrementalRenderer.cancel();
-		}
-		incrementalRenderer = new BoundTableExtIncrementalRenderer();
-		getIncrementalRenderContainer().add(incrementalRenderer);
-	}
-
-	private void renderNonIncremental() {
-		if (value != null
-				&& Objects.equals(lastRendered, new ArrayList(value))) {
-			return;
-		}
-		if (!renderCheck()) {
-			return;
-		}
-		try {
-			RenderContext.get().pushContext(renderContext);
-			renderTop();
-			renderRows(Integer.MAX_VALUE);
-			renderBottom();
-			lastRendered = new ArrayList(value);
-		} finally {
-			RenderContext.get().pop();
-		}
-	}
-
 	private void renderRows(int numberOfRows) {
 		for (; rowIterator != null && rowIterator.hasNext()
 				&& --numberOfRows != 0;) {
@@ -1888,10 +1839,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		boolean odd = (this.calculateRowToObjectOffset(new Integer(row))
 				.intValue() % 2) != 0;
 		this.table.getRowFormatter().setStyleName(row, odd ? "odd" : "even");
-		if (this.isAttached()) {
-			bindingRow.setLeft();
-			bindingRow.bind();
-		}
+		bindingRow.setLeft();
 	}
 
 	protected int calculateObjectToRowOffset(int row) {
@@ -1985,71 +1933,50 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	}
 
 	protected native Element getRow(Element elem, int row)/*-{
-															return elem.rows[row];
-															}-*/;
+        return elem.rows[row];
+	}-*/;
 
 	@Override
 	protected void onAttach() {
 		super.onAttach();
 		this.renderAll();
+		ensureBound(true);
+	}
+
+	private void ensureBound(boolean bound) {
+		if (bound) {
+			if (!topBinding.isBound()) {
+				topBinding.bind();
+			}
+		} else {
+			if (topBinding.isBound()) {
+				topBinding.unbind();
+			}
+		}
 	}
 
 	@Override
 	protected void onDetach() {
+		ensureBound(false);
 		super.onDetach();
-		if (incrementalRenderer != null) {
-			incrementalRenderer.cancel();
-		}
-		this.clear();
 		this.setActive(false);
 	}
 
 	protected void renderAll() {
-		if (getIncrementalRenderContainer() == null) {
-			renderNonIncremental();
-		} else {
-			renderIncremental();
+		if (value != null && value == lastRendered) {
+			return;
 		}
-	}
-
-	private class BoundTableExtIncrementalRenderer implements RepeatingCommand {
-		int state = 0;
-
-		protected boolean cancelled;
-
-		public void cancel() {
-			cancelled = true;
+		if (!renderCheck()) {
+			return;
 		}
-
-		@Override
-		public boolean execute() {
-			int rc = 0;
-			if (cancelled) {
-				return false;
-			}
-			try {
-				RenderContext.get().pushContext(renderContext);
-				if (state == 0) {
-					if (!renderCheck()) {
-						return false;
-					}
-					renderTop();
-					state = 1;
-				}
-				if (state == 1) {
-					renderRows(20);
-					rc += 20;
-					if (!rowIterator.hasNext()) {
-						state = 2;
-					}
-				}
-				if (state == 2) {
-					renderBottom();
-				}
-				return state != 2;
-			} finally {
-				RenderContext.get().pop();
-			}
+		try {
+			RenderContext.get().pushContext(renderContext);
+			renderTop();
+			renderRows(Integer.MAX_VALUE);
+			renderBottom();
+			lastRendered = value;
+		} finally {
+			RenderContext.get().pop();
 		}
 	}
 
