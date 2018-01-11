@@ -134,6 +134,7 @@ import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.SessionProvider;
+import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
 import cc.alcina.framework.servlet.job.JobRegistry;
 
@@ -174,6 +175,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static final String CONTEXT_THREAD_LOCAL_HTTP_REQUEST = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_REQUEST";
+
+	public static final String PUSH_TRANSFORMS_AT_END_OF_REUQEST = CommonRemoteServiceServlet.class
+			.getName() + ".PUSH_TRANSFORMS_AT_END_OF_REUQEST";
 
 	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
 
@@ -660,6 +664,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} finally {
 			metricTracker.end(rpcRequest);
 			if (TransformManager.hasInstance()) {
+				if (getThreadLocalRequest().getAttribute(
+						PUSH_TRANSFORMS_AT_END_OF_REUQEST) != null) {
+					Sx.commit();
+				}
 				ThreadlocalTransformManager.cast().resetTltm(null);
 				LooseContext.pop();
 			} else {

@@ -2457,6 +2457,11 @@ public class AlcinaMemCache implements RegistrableService {
 		private <V extends HasIdAndLocalId> V project(V v) {
 			return GraphProjections.defaultProjections().project(v);
 		}
+
+		@Override
+		public void commitPoint() {
+			//do nothing, assume explicit commit in servlet layer
+		}
 	}
 
 	class BackupLazyLoader implements LazyObjectLoader {

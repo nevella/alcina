@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.util.HasEquivalence;
+import cc.alcina.framework.gwt.client.widget.VisibilityChangeEvent.Handler;
 
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class Domain {
@@ -112,6 +112,8 @@ public class Domain {
 				long id);
 
 		public <V extends HasIdAndLocalId> V writeable(V v);
+
+		public void commitPoint();
 	}
 
 	public static class DomainHandlerNonTransactional implements DomainHandler {
@@ -158,14 +160,15 @@ public class Domain {
 
 		@Override
 		public <V extends HasIdAndLocalId> V writeable(V v) {
-			// TODO Auto-generated method stub
-			return null;
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void commitPoint() {
+			throw new UnsupportedOperationException();
 		}
 	}
 
-	public static <V extends HasIdAndLocalId & HasEquivalence> boolean ensure(V v) {
-		throw new UnsupportedOperationException();
-	}
 	public static <V extends HasIdAndLocalId> V detachedToDomain(V hili) {
 		Class<V> clazz = (Class<V>) hili.getClass();
 		Preconditions.checkState(!hili.provideWasPersisted());
@@ -176,5 +179,9 @@ public class Domain {
 			propertyInfo.copy(hili, writeable);
 		}
 		return writeable;
+	}
+
+	public static void commitPoint() {
+		handler.commitPoint();
 	}
 }
