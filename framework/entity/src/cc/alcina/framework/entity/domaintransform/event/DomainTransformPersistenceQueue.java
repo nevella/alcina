@@ -243,6 +243,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		synchronized (queueModificationLock) {
 			firedOrQueued.add(id);
 			fired.add(id);
+			firing.remove(id);
 		}
 	}
 
@@ -265,11 +266,11 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			while (true) {
 				long timeRemaining = -System.currentTimeMillis() + startTime
 						+ timeoutMs;
-				if (waiting.isEmpty() || timeRemaining <= 0) {
-					break;
-				}
 				synchronized (queueModificationLock) {
 					try {
+						if (waiting.isEmpty() || timeRemaining <= 0) {
+							break;
+						}
 						waiterCounter.incrementAndGet();
 						queueModificationLock.wait(timeRemaining);
 					} catch (Exception e) {

@@ -1471,11 +1471,16 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 		@Override
 		public ClientInstance getClientInstance(long clientInstanceId) {
-			cp.connectPermissionsManagerToLiveObjects(true);
-			ClientInstance instance = (ClientInstance) cp.getEntityManager()
-					.find(cp.getImplementation(ClientInstance.class),
-							clientInstanceId);
-			return new EntityUtils().detachedClone(instance, false);
+			try {
+				PermissionsManager.get().pushCurrentUser();
+				cp.connectPermissionsManagerToLiveObjects(true);
+				ClientInstance instance = (ClientInstance) cp.getEntityManager()
+						.find(cp.getImplementation(ClientInstance.class),
+								clientInstanceId);
+				return new EntityUtils().detachedClone(instance, false);
+			} finally {
+				PermissionsManager.get().popUser();
+			}
 		}
 
 		@Override

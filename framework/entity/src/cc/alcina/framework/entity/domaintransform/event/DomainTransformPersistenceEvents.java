@@ -37,10 +37,6 @@ public class DomainTransformPersistenceEvents {
 			DomainTransformPersistenceEvent event) {
 		try {
 			queue.logFiring(event);
-			if (event.isLocalToVm() && event.getPersistedRequestIds() != null) {
-				event.getPersistedRequestIds()
-						.forEach(queue::transformRequestPublishedLocal);
-			}
 			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
 					listenerList)) {
 				// only fire ex-machine transforms to certain general listeners
@@ -50,6 +46,10 @@ public class DomainTransformPersistenceEvents {
 				}
 			}
 		} finally {
+			if (event.getPersistedRequestIds() != null) {
+				event.getPersistedRequestIds()
+						.forEach(queue::transformRequestPublishedLocal);
+			}
 			queue.logFired(event);
 		}
 	}
