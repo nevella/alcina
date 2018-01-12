@@ -63,7 +63,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	Set<Long> firing = new LinkedHashSet<>();
 
 	// most recent event
-	Set<Long> fired = new LinkedHashSet<>();
+	Set<Long> lastFired = new LinkedHashSet<>();
 
 	Set<Long> firedOrQueued = new LinkedHashSet<>();
 
@@ -78,12 +78,6 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	CountDownLatch waiterLatch;
 
 	private Thread eventQueue;
-
-	void transformRequestPublishedLocal(long id) {
-		synchronized (queueModificationLock) {
-			firedOrQueued.add(id);
-		}
-	}
 
 	public void transformRequestPublished(long id) {
 		synchronized (queueModificationLock) {
@@ -155,7 +149,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				new LongPair(CollectionFilters.min(persistedRequestIds),
 						CollectionFilters.max(persistedRequestIds)));
 		synchronized (queueModificationLock) {
-			fired = new LinkedHashSet<>(event.getPersistedRequestIds());
+			lastFired = new LinkedHashSet<>(event.getPersistedRequestIds());
 			waiterLatch = new CountDownLatch(waiterCounter.get());
 			queueModificationLock.notifyAll();
 		}
@@ -177,6 +171,14 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 						CollectionFilters.max(persistedRequestIds)));
 	}
 
+	void transformRequestPublishedLocal(long id) {
+		synchronized (queueModificationLock) {
+			firedOrQueued.add(id);
+			lastFired.add(id);
+			firing.remove(id);
+		}
+	}
+
 	public void waitUntilCurrentRequestsProcessed() {
 		waitUntilCurrentRequestsProcessed(60 * TimeConstants.ONE_SECOND_MS);
 	}
@@ -196,18 +198,18 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			while (true) {
 				long timeRemaining = -System.currentTimeMillis() + startTime
 						+ timeoutMs;
-				if (waiting.isEmpty() || timeRemaining <= 0) {
-					break;
-				}
 				synchronized (queueModificationLock) {
 					try {
+						if (waiting.isEmpty() || timeRemaining <= 0) {
+							break;
+						}
 						waiterCounter.incrementAndGet();
 						queueModificationLock.wait(timeRemaining);
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);
 					}
 				}
-				waiting.removeAll(fired);
+				waiting.removeAll(lastFired);
 				waiterCounter.decrementAndGet();
 				waiterLatch.countDown();
 			}

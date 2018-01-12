@@ -6,7 +6,6 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 
 @RegistryLocation(registryPoint = DomainTransformPersistenceEvents.class, implementationType = ImplementationType.SINGLETON)
 public class DomainTransformPersistenceEvents {
@@ -44,9 +43,6 @@ public class DomainTransformPersistenceEvents {
 			DomainTransformPersistenceEvent event) {
 		try {
 			queue.logFiring(event);
-			if(event.isLocalToVm()&&event.getPersistedRequestIds()!=null){
-				event.getPersistedRequestIds().forEach(queue::transformRequestPublishedLocal);
-			}
 			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
 					listenerList)) {
 				// only fire ex-machine transforms to certain general listeners
@@ -56,6 +52,10 @@ public class DomainTransformPersistenceEvents {
 				}
 			}
 		} finally {
+			if (event.getPersistedRequestIds() != null) {
+				event.getPersistedRequestIds()
+						.forEach(queue::transformRequestPublishedLocal);
+			}
 			queue.logFired(event);
 		}
 	}
