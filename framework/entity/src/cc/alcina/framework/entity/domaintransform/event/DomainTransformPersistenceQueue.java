@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.log.TaggedLogger;
 import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
@@ -46,15 +47,8 @@ import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
  */
 @RegistryLocation(registryPoint = DomainTransformPersistenceQueue.class, implementationType = ImplementationType.SINGLETON)
 public class DomainTransformPersistenceQueue implements RegistrableService {
-	@Override
-	public void appShutdown() {
-		closed.set(true);
-		synchronized (queueModificationLock) {
-			queueModificationLock.notifyAll();
-		}
-		synchronized (toFire) {
-			toFire.notifyAll();
-		}
+	public static DomainTransformPersistenceQueue get() {
+		return Registry.impl(DomainTransformPersistenceQueue.class);
 	}
 
 	protected TaggedLogger logger = Registry.impl(TaggedLoggers.class)
@@ -79,140 +73,21 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 
 	private Thread eventQueue;
 
-	public void transformRequestPublished(long id) {
+	@Override
+	public void appShutdown() {
+		closed.set(true);
 		synchronized (queueModificationLock) {
-			if (firedOrQueued.contains(id)) {
-				return;
-			} else {
-				firedOrQueued.add(id);
-				synchronized (toFire) {
-					toFire.add(id);
-					toFire.notify();
-				}
-			}
-		}
-	}
-
-	protected CommonPersistenceLocal getCommonPersistence() {
-		return Registry.impl(CommonPersistenceProvider.class)
-				.getCommonPersistence();
-	}
-
-	private <T> T
-			runWithDisabledObjectPermissions(ThrowingSupplier<T> supplier) {
-		try {
-			// this prevents a deadlock where we might have a waiting write
-			// preventing us from getting the lock
-			LooseContext.pushWithTrue(AlcinaMemCache.CONTEXT_NO_LOCKS);
-			ThreadedPermissionsManager.cast().pushSystemUser();
-			PermissibleFieldFilter.disablePerObjectPermissions = true;
-			return supplier.get();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		} finally {
-			PermissibleFieldFilter.disablePerObjectPermissions = false;
-			ThreadedPermissionsManager.cast().popSystemUser();
-			LooseContext.pop();
-		}
-	}
-
-	private DomainTransformPersistenceEvent
-			createPersistenceEventFromPersistedRequest(
-					DomainTransformRequestPersistent dtrp) {
-		// create an "event" to publish in the queue
-		TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-				dtrp, null, Registry.impl(TransformLoggingPolicy.class), false,
-				false, false, null, true);
-		DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
-		List<DomainTransformEventPersistent> events = new ArrayList<DomainTransformEventPersistent>(
-				(List) dtrp.getEvents());
-		wrapper.persistentEvents = events;
-		wrapper.persistentRequests = new ArrayList<>(Arrays.asList(dtrp));
-		DomainTransformResponse dtr = new DomainTransformResponse();
-		dtr.setRequestId(persistenceToken.getRequest().getRequestId());
-		dtr.setTransformsProcessed(events.size());
-		dtr.setResult(DomainTransformResponseResult.OK);
-		dtr.setRequest(persistenceToken.getRequest());
-		wrapper.response = dtr;
-		DomainTransformPersistenceEvent persistenceEvent = new DomainTransformPersistenceEvent(
-				persistenceToken, wrapper, false);
-		return persistenceEvent;
-	}
-
-	void logFired(DomainTransformPersistenceEvent event) {
-		List<Long> persistedRequestIds = event.getPersistedRequestIds();
-		if (persistedRequestIds.isEmpty()) {
-			return;
-		}
-		logger.format("fired - %s - range %s",
-				event.getTransformPersistenceToken().getRequest().shortId(),
-				new LongPair(CollectionFilters.min(persistedRequestIds),
-						CollectionFilters.max(persistedRequestIds)));
-		synchronized (queueModificationLock) {
-			lastFired = new LinkedHashSet<>(event.getPersistedRequestIds());
-			waiterLatch = new CountDownLatch(waiterCounter.get());
 			queueModificationLock.notifyAll();
 		}
-		try {
-			waiterLatch.await();
-		} catch (Exception e) {
-			e.printStackTrace();
+		synchronized (toFire) {
+			toFire.notifyAll();
 		}
 	}
 
-	void logFiring(DomainTransformPersistenceEvent event) {
-		List<Long> persistedRequestIds = event.getPersistedRequestIds();
-		if (persistedRequestIds.isEmpty()) {
-			return;
-		}
-		logger.format("firing - %s - range %s",
-				event.getTransformPersistenceToken().getRequest().shortId(),
-				new LongPair(CollectionFilters.min(persistedRequestIds),
-						CollectionFilters.max(persistedRequestIds)));
-	}
-
-	void transformRequestPublishedLocal(long id) {
+	public DomainTransformCommitPosition getTransformLogPosition() {
 		synchronized (queueModificationLock) {
-			firedOrQueued.add(id);
-			lastFired.add(id);
-			firing.remove(id);
-		}
-	}
-
-	public void waitUntilCurrentRequestsProcessed() {
-		waitUntilCurrentRequestsProcessed(60 * TimeConstants.ONE_SECOND_MS);
-	}
-
-	public void waitUntilCurrentRequestsProcessed(long timeoutMs) {
-		new QueueWaiter().pauseUntilProcessed(timeoutMs);
-	}
-
-	class QueueWaiter {
-		private Set<Long> waiting;
-
-		public void pauseUntilProcessed(long timeoutMs) {
-			synchronized (queueModificationLock) {
-				waiting = new LinkedHashSet<>(firing);
-			}
-			long startTime = System.currentTimeMillis();
-			while (true) {
-				long timeRemaining = -System.currentTimeMillis() + startTime
-						+ timeoutMs;
-				synchronized (queueModificationLock) {
-					try {
-						if (waiting.isEmpty() || timeRemaining <= 0) {
-							break;
-						}
-						waiterCounter.incrementAndGet();
-						queueModificationLock.wait(timeRemaining);
-					} catch (Exception e) {
-						throw new WrappedRuntimeException(e);
-					}
-				}
-				waiting.removeAll(lastFired);
-				waiterCounter.decrementAndGet();
-				waiterLatch.countDown();
-			}
+			return new DomainTransformCommitPosition(CommonUtils.first(lastFired),
+					lastFired.size(), null);
 		}
 	}
 
@@ -268,5 +143,142 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			}
 		};
 		eventQueue.start();
+	}
+
+	public void transformRequestPublished(long id) {
+		synchronized (queueModificationLock) {
+			if (firedOrQueued.contains(id)) {
+				return;
+			} else {
+				firedOrQueued.add(id);
+				synchronized (toFire) {
+					toFire.add(id);
+					toFire.notify();
+				}
+			}
+		}
+	}
+
+	public void waitUntilCurrentRequestsProcessed() {
+		waitUntilCurrentRequestsProcessed(60 * TimeConstants.ONE_SECOND_MS);
+	}
+
+	public void waitUntilCurrentRequestsProcessed(long timeoutMs) {
+		new QueueWaiter().pauseUntilProcessed(timeoutMs);
+	}
+
+	private DomainTransformPersistenceEvent
+			createPersistenceEventFromPersistedRequest(
+					DomainTransformRequestPersistent dtrp) {
+		// create an "event" to publish in the queue
+		TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
+				dtrp, null, Registry.impl(TransformLoggingPolicy.class), false,
+				false, false, null, true);
+		DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
+		List<DomainTransformEventPersistent> events = new ArrayList<DomainTransformEventPersistent>(
+				(List) dtrp.getEvents());
+		wrapper.persistentEvents = events;
+		wrapper.persistentRequests = new ArrayList<>(Arrays.asList(dtrp));
+		DomainTransformResponse dtr = new DomainTransformResponse();
+		dtr.setRequestId(persistenceToken.getRequest().getRequestId());
+		dtr.setTransformsProcessed(events.size());
+		dtr.setResult(DomainTransformResponseResult.OK);
+		dtr.setRequest(persistenceToken.getRequest());
+		wrapper.response = dtr;
+		DomainTransformPersistenceEvent persistenceEvent = new DomainTransformPersistenceEvent(
+				persistenceToken, wrapper, false);
+		return persistenceEvent;
+	}
+
+	private <T> T
+			runWithDisabledObjectPermissions(ThrowingSupplier<T> supplier) {
+		try {
+			// this prevents a deadlock where we might have a waiting write
+			// preventing us from getting the lock
+			LooseContext.pushWithTrue(AlcinaMemCache.CONTEXT_NO_LOCKS);
+			ThreadedPermissionsManager.cast().pushSystemUser();
+			PermissibleFieldFilter.disablePerObjectPermissions = true;
+			return supplier.get();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		} finally {
+			PermissibleFieldFilter.disablePerObjectPermissions = false;
+			ThreadedPermissionsManager.cast().popSystemUser();
+			LooseContext.pop();
+		}
+	}
+
+	protected CommonPersistenceLocal getCommonPersistence() {
+		return Registry.impl(CommonPersistenceProvider.class)
+				.getCommonPersistence();
+	}
+
+	void logFired(DomainTransformPersistenceEvent event) {
+		List<Long> persistedRequestIds = event.getPersistedRequestIds();
+		if (persistedRequestIds.isEmpty()) {
+			return;
+		}
+		logger.format("fired - %s - range %s",
+				event.getTransformPersistenceToken().getRequest().shortId(),
+				new LongPair(CollectionFilters.min(persistedRequestIds),
+						CollectionFilters.max(persistedRequestIds)));
+		synchronized (queueModificationLock) {
+			lastFired = new LinkedHashSet<>(event.getPersistedRequestIds());
+			waiterLatch = new CountDownLatch(waiterCounter.get());
+			queueModificationLock.notifyAll();
+		}
+		try {
+			waiterLatch.await();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	void logFiring(DomainTransformPersistenceEvent event) {
+		List<Long> persistedRequestIds = event.getPersistedRequestIds();
+		if (persistedRequestIds.isEmpty()) {
+			return;
+		}
+		logger.format("firing - %s - range %s",
+				event.getTransformPersistenceToken().getRequest().shortId(),
+				new LongPair(CollectionFilters.min(persistedRequestIds),
+						CollectionFilters.max(persistedRequestIds)));
+	}
+
+	void transformRequestPublishedLocal(long id) {
+		synchronized (queueModificationLock) {
+			firedOrQueued.add(id);
+			lastFired.add(id);
+			firing.remove(id);
+		}
+	}
+
+	class QueueWaiter {
+		private Set<Long> waiting;
+
+		public void pauseUntilProcessed(long timeoutMs) {
+			synchronized (queueModificationLock) {
+				waiting = new LinkedHashSet<>(firing);
+			}
+			long startTime = System.currentTimeMillis();
+			while (true) {
+				long timeRemaining = -System.currentTimeMillis() + startTime
+						+ timeoutMs;
+				synchronized (queueModificationLock) {
+					try {
+						if (waiting.isEmpty() || timeRemaining <= 0) {
+							break;
+						}
+						waiterCounter.incrementAndGet();
+						queueModificationLock.wait(timeRemaining);
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				}
+				waiting.removeAll(lastFired);
+				waiterCounter.decrementAndGet();
+				waiterLatch.countDown();
+			}
+		}
 	}
 }
