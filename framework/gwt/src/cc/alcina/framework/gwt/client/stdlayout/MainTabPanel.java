@@ -22,6 +22,7 @@ import com.google.gwt.event.logical.shared.BeforeSelectionHandler;
 import com.google.gwt.user.client.ui.DockPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -60,7 +61,7 @@ public class MainTabPanel extends TabPanel {
 		}
 	};
 
-	private List<LoginStateVisibleWithWidget> buttons;
+	private List<IsWidget> buttons;
 
 	protected DockPanel dockPanel;
 
@@ -70,7 +71,7 @@ public class MainTabPanel extends TabPanel {
 
 	protected TabBar tabBarProt;
 
-	public MainTabPanel(ArrayList<LoginStateVisibleWithWidget> buttons) {
+	public MainTabPanel(ArrayList<IsWidget> buttons) {
 		super();
 		this.buttons = buttons;
 		VerticalPanel vp = (VerticalPanel) getWidget();
@@ -175,10 +176,12 @@ public class MainTabPanel extends TabPanel {
 		HorizontalPanel hp = new HorizontalPanel();
 		hp.setStyleName("alcina-MainMenuRight");
 		hp.setHorizontalAlignment(HorizontalPanel.ALIGN_RIGHT);
-		for (LoginStateVisibleWithWidget button : buttons) {
-			Widget w = button.getWidget();
-			w.ensureDebugId(button.getDebugId());
-			hp.add(w);
+		for (IsWidget button : buttons) {
+			if (button instanceof LoginStateVisibleWithWidget) {
+				button.asWidget().ensureDebugId(
+						((LoginStateVisibleWithWidget) button).getDebugId());
+			}
+			hp.add(button);
 			hp.add(new BarSep());
 		}
 		return hp;
@@ -188,8 +191,12 @@ public class MainTabPanel extends TabPanel {
 		int index = 0;
 		boolean visBefore = false;
 		LoginState state = PermissionsManager.get().getLoginState();
-		for (LoginStateVisibleWithWidget button : buttons) {
-			boolean curVis = button.visibleForLoginState(state);
+		for (IsWidget button : buttons) {
+			boolean curVis = true;
+			if (button instanceof LoginStateVisibleWithWidget) {
+				curVis = ((LoginStateVisibleWithWidget) button)
+						.visibleForLoginState(state);
+			}
 			if (button instanceof Permissible) {
 				curVis &= PermissionsManager.get()
 						.isPermissible((Permissible) button);

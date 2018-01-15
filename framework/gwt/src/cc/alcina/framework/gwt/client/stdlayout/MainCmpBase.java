@@ -24,8 +24,9 @@ import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.IsWidget;
+import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.logic.permissions.LoginStateVisibleWithWidget;
 import cc.alcina.framework.gwt.client.widget.BaseTab;
 
 /**
@@ -37,7 +38,7 @@ public abstract class MainCmpBase extends Composite
 		ValueChangeHandler<String> {
 	protected MainTabPanel tabPanel;
 
-	protected ArrayList<LoginStateVisibleWithWidget> buttons;
+	protected ArrayList<IsWidget> buttons;
 
 	protected Class<BaseTab> currentTabClass;
 

@@ -13,14 +13,21 @@
  */
 package cc.alcina.framework.common.client.logic.permissions;
 
+import com.google.gwt.user.client.ui.HasWidgets;
+import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
  *
  * @author Nick Reddel
  */
-public interface LoginStateVisibleWithWidget extends LoginStateVisible {
+public interface LoginStateVisibleWithWidget
+		extends LoginStateVisible, IsWidget {
 	public String getDebugId();
 
 	public Widget getWidget();
+
+	default Widget asWidget() {
+		return getWidget();
+	}
 }

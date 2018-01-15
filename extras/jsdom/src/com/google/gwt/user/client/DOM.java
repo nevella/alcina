@@ -1720,7 +1720,11 @@ public class DOM {
 				}
 			}
 		}
-		eventCurrentTarget = evt.getCurrentEventTarget().cast();
+		if (Element.is(evt.getCurrentEventTarget())) {
+			eventCurrentTarget = evt.getCurrentEventTarget().cast();
+		} else {
+			eventCurrentTarget = null;
+		}
 		// Pass the event to the listener.
 		listener.onBrowserEvent(evt);
 	}
