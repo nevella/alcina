@@ -19,10 +19,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
 @MappedSuperclass
+@RegistryLocation(registryPoint=AbstractDomainBase.class,implementationType=ImplementationType.MULTIPLE)
 public abstract class AbstractDomainBase extends BaseBindable
 		implements HasIdAndLocalId, HasVersionNumber {
 	static final transient long serialVersionUID = 1L;
