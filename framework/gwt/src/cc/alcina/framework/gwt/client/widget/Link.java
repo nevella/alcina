@@ -27,6 +27,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.HasEnabled;
 
 import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
+import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
 
@@ -233,5 +234,9 @@ public class Link<T> extends Widget
 	@Override
 	protected void onEnsureDebugId(String baseID) {
 		ensureDebugId(anchorElem, "", baseID);
+	}
+
+	public static Link createPlace(String text, BasePlace place) {
+		return createHashHref(text, place.toTokenString());
 	}
 }

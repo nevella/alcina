@@ -215,7 +215,12 @@ public class ContentViewSections {
 
 		public ContentViewSection
 				fields(EnumeratedBinding... enumeratedBindings) {
-			this.fieldNames = Arrays.asList(enumeratedBindings).stream()
+			return fieldBindings(Arrays.asList(enumeratedBindings));
+		}
+
+		public ContentViewSection
+				fieldBindings(List<EnumeratedBinding> enumeratedBindings) {
+			this.fieldNames = enumeratedBindings.stream()
 					.map(EnumeratedBinding::getPath)
 					.collect(Collectors.toList());
 			return this;
