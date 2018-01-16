@@ -175,7 +175,7 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 
 		private String hint;
 
-		SuggestCallback runningCallback = null;
+		protected CancellableAsyncCallback runningCallback = null;
 
 		public BoundSuggestOracle() {
 		}
@@ -243,5 +243,9 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 		public String targetClassName;
 
 		public String hint;
+	}
+
+	public void focusTextField() {
+		base.getValueBox().setFocus(true);
 	}
 }

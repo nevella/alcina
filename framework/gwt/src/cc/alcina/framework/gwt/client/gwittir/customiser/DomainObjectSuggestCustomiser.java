@@ -57,8 +57,6 @@ public class DomainObjectSuggestCustomiser
 
 	private boolean withPlaceholder;
 
-	private Class suggestionRendererClassValue;
-
 	@Override
 	public BoundWidget get() {
 		BoundSuggestBox boundSuggestBox = new BoundSuggestBox<>();
