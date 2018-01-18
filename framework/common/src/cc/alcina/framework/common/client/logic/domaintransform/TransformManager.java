@@ -1270,7 +1270,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public <T extends HasIdAndLocalId> T registerDomainObject(T hili) {
-		if (getDomainObjects() != null) {
+		if (getDomainObjects() != null && hili != null) {
 			if (hili.getId() == 0) {
 				HasIdAndLocalId createdObject = getDomainObjects()
 						.getObject(hili);
@@ -1924,7 +1924,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 			return defaultValue;
 		}
 		return AlcinaBeanSerializer.deserializeHolder(serialized);
-		
 	}
 
 	public boolean isIgnoreProperty(String propertyName) {

@@ -26,7 +26,7 @@ public class Sx {
 	// assumes non-critical deltas
 	public static void commitPoint() {
 		commitPoint(true);
-		// FIXME - dem3
+		// a better/more formal way would be to have some quick write-ahead (say kafka) and recover on restart
 	}
 
 	private static void commitPoint(boolean set) {

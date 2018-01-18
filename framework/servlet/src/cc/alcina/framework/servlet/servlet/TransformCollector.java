@@ -28,7 +28,9 @@ public class TransformCollector {
 				}
 			}
 		}
-		// FIXME - dem3 - for the mo, throw a reload exception if unmatched -
+		// This was working...just need to adjust for the more relaxed commit
+		// ordering in DomainTransformPersistenceQueue
+		// FIXME - for the mo, throw a reload exception if unmatched -
 		// otherwise get
 		throw new UnsupportedOperationException();
 		// List<DomainTransformRequestPersistent> requests = Registry

@@ -1,6 +1,8 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -14,6 +16,22 @@ public abstract class AlcinaBeanSerializer {
 	public static final String CLASS_NAME = "cn";
 
 	protected static final String LITERAL = "lit";
+
+	public static <V> V deserializeHolder(String serialized) {
+		Object object = Registry.impl(AlcinaBeanSerializer.class)
+				.deserialize(serialized);
+		if (object instanceof AlcinaBeanSerializer.SerializationHolder) {
+			return (V) ((AlcinaBeanSerializer.SerializationHolder) object)
+					.provideValue();
+		} else {
+			return (V) object;
+		}
+	}
+
+	public static String serializeHolder(Object value) {
+		return Registry.impl(AlcinaBeanSerializer.class)
+				.serialize(new SerializationHolder(value));
+	}
 
 	protected Map<String, Class> abbrevLookup = new LinkedHashMap<>();
 
@@ -63,38 +81,58 @@ public abstract class AlcinaBeanSerializer {
 	}
 
 	public static class SerializationHolder {
-		private Object value;
+		private List listValue;
+
+		private Map mapValue;
+
+		private List valueHolder = new ArrayList();
 
 		public SerializationHolder() {
 		}
 
 		public SerializationHolder(Object value) {
 			super();
-			this.value = value;
+			if (value instanceof List) {
+				listValue = (List) value;
+			} else if (value instanceof Map) {
+				mapValue = (Map) value;
+			} else {
+				valueHolder.add(value);
+			}
 		}
 
-		public Object getValue() {
-			return this.value;
+		public List getListValue() {
+			return this.listValue;
 		}
 
-		public void setValue(Object value) {
-			this.value = value;
+		public Map getMapValue() {
+			return this.mapValue;
 		}
-	}
 
-	public static <V> V deserializeHolder(String serialized) {
-		Object object = Registry.impl(AlcinaBeanSerializer.class)
-				.deserialize(serialized);
-		if (object instanceof AlcinaBeanSerializer.SerializationHolder) {
-			return (V) ((AlcinaBeanSerializer.SerializationHolder) object)
-					.getValue();
-		} else {
-			return (V) object;
+		public List getValueHolder() {
+			return this.valueHolder;
 		}
-	}
 
-	public static String serializeHolder(Object value) {
-		return Registry.impl(AlcinaBeanSerializer.class)
-				.serialize(new SerializationHolder(value));
+		public Object provideValue() {
+			if (mapValue != null) {
+				return mapValue;
+			}
+			if (listValue != null) {
+				return listValue;
+			}
+			return valueHolder.get(0);
+		}
+
+		public void setListValue(List listValue) {
+			this.listValue = listValue;
+		}
+
+		public void setMapValue(Map mapValue) {
+			this.mapValue = mapValue;
+		}
+
+		public void setValueHolder(List valueHolder) {
+			this.valueHolder = valueHolder;
+		}
 	}
 }
