@@ -285,7 +285,7 @@ public class ContentViewSections {
 		}
 
 		public void show() {
-			ClientUtils.createEditContentViewWidgets(actionListener, caption,
+			ClientUtils.createEditContentViewWidgets(null, caption,
 					"", beanViews.get(0), noGlass, true, true, true, true,
 					okButtonName, cancelButtonName);
 		}
