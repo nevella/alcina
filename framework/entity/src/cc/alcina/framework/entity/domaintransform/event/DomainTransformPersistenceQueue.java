@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -86,8 +87,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 
 	public DomainTransformCommitPosition getTransformLogPosition() {
 		synchronized (queueModificationLock) {
-			return new DomainTransformCommitPosition(CommonUtils.first(lastFired),
-					lastFired.size(), null);
+			return new DomainTransformCommitPosition(
+					CommonUtils.first(lastFired), lastFired.size(), null);
 		}
 	}
 
@@ -239,7 +240,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (persistedRequestIds.isEmpty()) {
 			return;
 		}
-		logger.format("firing - %s - range %s",
+		logger.format("firing - %s - %s - range %s",
+				Ax.friendly(event.getPersistenceEventType()),
 				event.getTransformPersistenceToken().getRequest().shortId(),
 				new LongPair(CollectionFilters.min(persistedRequestIds),
 						CollectionFilters.max(persistedRequestIds)));
@@ -250,6 +252,12 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			firedOrQueued.add(id);
 			lastFired.add(id);
 			firing.remove(id);
+		}
+	}
+
+	void transformRequestQueuedLocal(long id) {
+		synchronized (queueModificationLock) {
+			firedOrQueued.add(id);
 		}
 	}
 

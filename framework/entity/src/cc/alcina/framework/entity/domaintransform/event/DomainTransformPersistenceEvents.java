@@ -37,6 +37,10 @@ public class DomainTransformPersistenceEvents {
 			DomainTransformPersistenceEvent event) {
 		try {
 			queue.logFiring(event);
+			if (event.getPersistedRequestIds() != null) {
+				event.getPersistedRequestIds()
+						.forEach(queue::transformRequestQueuedLocal);
+			}
 			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
 					listenerList)) {
 				// only fire ex-machine transforms to certain general listeners
