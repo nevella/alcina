@@ -1,11 +1,7 @@
 package cc.alcina.extras.dev.proxy;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -26,8 +22,10 @@ import org.apache.http.params.HttpParams;
 
 import cc.alcina.extras.dev.proxy.DevProxySupport.DevProxyInterceptor;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.gwt.client.util.Base64Utils;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.PostTransactionEntityResolver;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterServlet;
 
@@ -73,11 +71,9 @@ public class DevRemoter {
 				"username");
 		params.methodName = methodName;
 		params.args = args == null ? new Object[0] : args;
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		new ObjectOutputStream(baos).writeObject(params);
 		List<NameValuePair> qparams = new ArrayList<NameValuePair>();
 		qparams.add(new BasicNameValuePair(DevRemoterServlet.DEV_REMOTER_PARAMS,
-				Base64Utils.toBase64(baos.toByteArray())));
+				KryoUtils.serializeToBase64(params)));
 		UrlEncodedFormEntity entity = new UrlEncodedFormEntity(qparams);
 		png.post.setEntity(entity);
 		HttpParams httpParams = png.client.getParams();
@@ -86,12 +82,16 @@ public class DevRemoter {
 		httpParams.setParameter("http.connection.timeout", timeoutMs);
 		HttpResponse response = png.client.execute(png.post);
 		InputStream content = response.getEntity().getContent();
-		byte[] bytes = ResourceUtilities.readStreamToByteArray(content);
-		Object obj = new ObjectInputStream(new ByteArrayInputStream(bytes))
-				.readObject();
+		ArrayList container = KryoUtils.deserializeFromStream(content,
+				ArrayList.class);
+		Object obj = container.get(0);
 		if (obj instanceof Exception) {
 			((Exception) obj).printStackTrace();
 			throw new Exception("Remote exception");
+		}
+		if (methodName.equals("transformInPersistenceContext")) {
+			ThreadlocalTransformManager.get().setPostTransactionEntityResolver(
+					(PostTransactionEntityResolver) container.get(1));
 		}
 		return obj;
 	}

@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.domaintransform;
 
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -95,7 +96,15 @@ public class ServerTransformManagerSupport {
 					if (hiliTarget != null && !(hiliTarget instanceof IUser)
 							&& !(hiliTarget instanceof IGroup)) {
 						TransformManager.get().registerDomainObject(hiliTarget);
-						pd.getWriteMethod().invoke(hili, new Object[] { null });
+						try {
+							pd.getWriteMethod().invoke(hili,
+									new Object[] { null });
+						} catch (InvocationTargetException e) {
+							if (e.getTargetException() instanceof UnsupportedOperationException) {
+							} else {
+								throw e;
+							}
+						}
 					}
 				}
 			}

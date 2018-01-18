@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
  * 
@@ -18,6 +19,10 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
  */
 @RegistryLocation(registryPoint = CommonRemoteServiceServletSupport.class, implementationType = ImplementationType.SINGLETON)
 public class CommonRemoteServiceServletSupport {
+	public static CommonRemoteServiceServletSupport get() {
+		return Registry.impl(CommonRemoteServiceServletSupport.class);
+	}
+
 	/**
 	 * the instance used by the server layer when acting as a client to the ejb
 	 * layer. Note - this must be set on webapp startup

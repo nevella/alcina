@@ -29,6 +29,8 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  * 
  */
 public class HiliLocatorMap implements Cloneable, Serializable {
+	static final transient long serialVersionUID = 1;
+
 	private HashMap<Long, HiliLocator> localToPersistent = new HashMap<>();
 
 	private UnsortedMultikeyMap<HiliLocator> persistentToLocal = new UnsortedMultikeyMap<>(

@@ -664,8 +664,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} finally {
 			metricTracker.end(rpcRequest);
 			if (TransformManager.hasInstance()) {
-				if (getThreadLocalRequest().getAttribute(
-						PUSH_TRANSFORMS_AT_END_OF_REUQEST) != null) {
+				if (CommonUtils.bv((Boolean) getThreadLocalRequest()
+						.getAttribute(PUSH_TRANSFORMS_AT_END_OF_REUQEST))) {
 					Sx.commit();
 				}
 				ThreadlocalTransformManager.cast().resetTltm(null);

@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.domaintransform.policy;
 
+import java.io.Serializable;
+
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -7,7 +9,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 
-public interface PersistenceLayerTransformExceptionPolicy {
+public interface PersistenceLayerTransformExceptionPolicy extends Serializable{
 	public void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
 			throws DomainTransformException;
 

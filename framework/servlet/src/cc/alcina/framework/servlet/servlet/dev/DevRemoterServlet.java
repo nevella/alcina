@@ -2,8 +2,6 @@ package cc.alcina.framework.servlet.servlet.dev;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
@@ -16,15 +14,23 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityUtils;
-import cc.alcina.framework.gwt.client.util.Base64Utils;
+import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServletSupport;
 
 public abstract class DevRemoterServlet extends HttpServlet {
 	public static final String DEV_REMOTER_PARAMS = "devRemoterParams";
@@ -79,9 +85,8 @@ public abstract class DevRemoterServlet extends HttpServlet {
 	protected void doPost0(HttpServletRequest req, HttpServletResponse res)
 			throws Exception {
 		String encodedParams = req.getParameter(DEV_REMOTER_PARAMS);
-		byte[] bytes = Base64Utils.fromBase64(encodedParams);
-		DevRemoterParams params = (DevRemoterParams) new ObjectInputStream(
-				new ByteArrayInputStream(bytes)).readObject();
+		DevRemoterParams params = KryoUtils.deserializeFromBase64(encodedParams,
+				DevRemoterParams.class);
 		CommonPersistenceLocal up = Registry
 				.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		IUser user = up.getUserByName(params.username, true);
@@ -107,18 +112,44 @@ public abstract class DevRemoterServlet extends HttpServlet {
 				}
 			}
 			Object out = null;
+			boolean transformMethod = method.getName()
+					.equals("transformInPersistenceContext");
 			try {
 				System.out.format("DevRemoter - %s.%s\n",
 						api.getClass().getSimpleName(), method.getName());
+				if (transformMethod) {
+					// assume as root
+					TransformPersistenceToken token = (TransformPersistenceToken) params.args[1];
+					ClientInstance clientInstance = CommonRemoteServiceServletSupport
+							.get().getServerAsClientInstance();
+					token.getRequest().setClientInstance(clientInstance);
+					ThreadedPermissionsManager tpm = ThreadedPermissionsManager
+							.cast();
+					tpm.pushSystemUser();
+					params.cleanEntities = true;
+				}
 				out = method.invoke(api, params.args);
 			} catch (Exception e) {
 				e.printStackTrace();
 				out = e;
+			} finally {
+				if (transformMethod) {
+					PermissionsManager.get().popUser();
+				}
 			}
 			if (params.cleanEntities) {
 				out = new EntityUtils().detachedClone(out);
 			}
-			new ObjectOutputStream(res.getOutputStream()).writeObject(out);
+			ArrayList resultHolder = new ArrayList();
+			resultHolder.add(out);
+			if (transformMethod) {
+				ThreadlocalTransformManager.get().resetTltm(null);
+				resultHolder.add(ThreadlocalTransformManager.get()
+						.getPostTransactionEntityResolver());
+			}
+			byte[] outBytes = KryoUtils.serializeToByteArray(resultHolder);
+			ResourceUtilities.writeStreamToStream(
+					new ByteArrayInputStream(outBytes), res.getOutputStream());
 			return;
 		} catch (Exception e) {
 			throw new ServletException(e);

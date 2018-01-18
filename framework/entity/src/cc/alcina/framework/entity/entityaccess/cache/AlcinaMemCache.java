@@ -2410,7 +2410,17 @@ public class AlcinaMemCache implements RegistrableService {
 
 		@Override
 		public <V extends HasIdAndLocalId> V find(V v) {
-			return (V) cache.get(v.getClass(), v.getId());
+			if (!v.provideWasPersisted()) {
+				HiliLocator locator = ThreadlocalTransformManager.get()
+						.resolvePersistedLocal(v);
+				if (locator == null) {
+					return null;
+				} else {
+					return (V) cache.get(v.getClass(), locator.id);
+				}
+			} else {
+				return (V) cache.get(v.getClass(), v.getId());
+			}
 		}
 
 		@Override
@@ -2460,7 +2470,7 @@ public class AlcinaMemCache implements RegistrableService {
 
 		@Override
 		public void commitPoint() {
-			//do nothing, assume explicit commit in servlet layer
+			// do nothing, assume explicit commit in servlet layer
 		}
 	}
 

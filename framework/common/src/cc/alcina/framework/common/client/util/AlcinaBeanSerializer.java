@@ -1,7 +1,6 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -63,10 +62,39 @@ public abstract class AlcinaBeanSerializer {
 		return typeName;
 	}
 
-	public static String serialize1(Object o) {
-		return Registry.impl(AlcinaBeanSerializer.class).serialize(o);
+	public static class SerializationHolder {
+		private Object value;
+
+		public SerializationHolder() {
+		}
+
+		public SerializationHolder(Object value) {
+			super();
+			this.value = value;
+		}
+
+		public Object getValue() {
+			return this.value;
+		}
+
+		public void setValue(Object value) {
+			this.value = value;
+		}
 	}
-	public static <T> T deserialize1(String s) {
-		return Registry.impl(AlcinaBeanSerializer.class).deserialize(s);
+
+	public static <V> V deserializeHolder(String serialized) {
+		Object object = Registry.impl(AlcinaBeanSerializer.class)
+				.deserialize(serialized);
+		if (object instanceof AlcinaBeanSerializer.SerializationHolder) {
+			return (V) ((AlcinaBeanSerializer.SerializationHolder) object)
+					.getValue();
+		} else {
+			return (V) object;
+		}
+	}
+
+	public static String serializeHolder(Object value) {
+		return Registry.impl(AlcinaBeanSerializer.class)
+				.serialize(new SerializationHolder(value));
 	}
 }

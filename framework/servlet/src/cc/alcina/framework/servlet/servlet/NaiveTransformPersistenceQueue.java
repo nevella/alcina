@@ -4,10 +4,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
+import cc.alcina.framework.servlet.ServletLayerUtils;
 
 /**
  * see http://code.google.com/p/alcina/issues/detail?id=14 for proposed
@@ -21,7 +23,8 @@ public class NaiveTransformPersistenceQueue
 		implements TransformPersistenceQueue {
 	public DomainTransformLayerWrapper
 			submit(TransformPersistenceToken persistenceToken) {
-		if (AppPersistenceBase.isTest()) {
+		if (AppPersistenceBase.isTest()&&!ResourceUtilities
+				.is(ServletLayerUtils.class, "commitTestTransforms")) {
 			DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
 			wrapper.response = new DomainTransformResponse();
 			wrapper.response.setResult(DomainTransformResponseResult.OK);

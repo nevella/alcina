@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,6 +33,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.ManyToMany;
 import javax.persistence.Query;
 
+import com.google.gwt.dev.util.collect.IdentityHashSet;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -178,7 +180,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private boolean listenToFoundObjects;
 
-	private Set<SourcesPropertyChangeEvents> listeningTo = new HashSet<SourcesPropertyChangeEvents>();
+	private IdentityHashMap<SourcesPropertyChangeEvents, SourcesPropertyChangeEvents> listeningTo = new IdentityHashMap<SourcesPropertyChangeEvents, SourcesPropertyChangeEvents>();
 
 	private DetachedEntityCache detachedEntityCache;
 
@@ -199,6 +201,18 @@ public class ThreadlocalTransformManager extends TransformManager
 	private boolean useTlIdGenerator = false;
 
 	private Set<DomainTransformEvent> flushAfterTransforms = new LinkedHashSet<>();
+
+	private PostTransactionEntityResolver postTransactionEntityResolver = new PostTransactionEntityResolver(
+			null);
+
+	public PostTransactionEntityResolver getPostTransactionEntityResolver() {
+		return this.postTransactionEntityResolver;
+	}
+
+	public void setPostTransactionEntityResolver(
+			PostTransactionEntityResolver postTransactionEntityResolver) {
+		this.postTransactionEntityResolver = postTransactionEntityResolver;
+	}
 
 	@Override
 	public void addTransform(DomainTransformEvent evt) {
@@ -567,7 +581,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public boolean isListeningTo(SourcesPropertyChangeEvents spce) {
-		return listeningTo.contains(spce);
+		return listeningTo.containsKey(spce);
 	}
 
 	public boolean isListenToFoundObjects() {
@@ -586,7 +600,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public void listenTo(SourcesPropertyChangeEvents spce) {
-		listeningTo.add(spce);
+		listeningTo.put(spce, spce);
 		spce.removePropertyChangeListener(this);
 		spce.addPropertyChangeListener(this);
 	}
@@ -759,6 +773,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		setEntityManager(null);
 		setDetachedEntityCache(null);
 		this.exceptionPolicy = exceptionPolicy;
+		if (this.userSessionHiliMap != null) {
+			this.postTransactionEntityResolver = new PostTransactionEntityResolver(
+					userSessionHiliMap);
+		}
 		this.userSessionHiliMap = locatorMap;
 		localIdToEntityMap = new HashMap<Long, HasIdAndLocalId>();
 		modifiedObjects = new HashSet<HasIdAndLocalId>();
@@ -771,10 +789,10 @@ public class ThreadlocalTransformManager extends TransformManager
 			flushAfterTransforms.clear();
 		}
 		this.lastEvent = null;
-		for (SourcesPropertyChangeEvents spce : listeningTo) {
+		for (SourcesPropertyChangeEvents spce : listeningTo.keySet()) {
 			spce.removePropertyChangeListener(this);
 		}
-		listeningTo = new LinkedHashSet<SourcesPropertyChangeEvents>();
+		listeningTo = new IdentityHashMap<>();
 		LinkedHashSet<DomainTransformEvent> pendingTransforms = getTransformsByCommitType(
 				CommitType.TO_LOCAL_BEAN);
 		if (!pendingTransforms.isEmpty() && !AppPersistenceBase.isTest()) {
@@ -794,6 +812,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		} else {
 			initialised = true;
 		}
+	}
+
+	public <V extends HasIdAndLocalId> HiliLocator resolvePersistedLocal(V v) {
+		return postTransactionEntityResolver.resolve(v);
 	}
 
 	public void setClientInstance(ClientInstance clientInstance) {
@@ -1208,5 +1230,30 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public static class UncomittedTransformsException extends Exception {
+	}
+
+	public static class PostTransactionEntityResolver {
+		private HiliLocatorMap locatorMap = new HiliLocatorMap();
+
+		private long userId;
+
+		public PostTransactionEntityResolver() {
+		}
+
+		public PostTransactionEntityResolver(HiliLocatorMap locatorMap) {
+			this.locatorMap = locatorMap;
+			if (!PermissionsManager.get().isLoggedIn()) {
+				this.locatorMap = new HiliLocatorMap();
+			}
+			this.userId = PermissionsManager.get().getUserId();
+		}
+
+		public HiliLocator resolve(HasIdAndLocalId v) {
+			if (PermissionsManager.get().getUserId() != this.userId
+					&& !AppPersistenceBase.isTest()) {
+				return null;
+			}
+			return locatorMap.get(v.getLocalId());
+		}
 	}
 }

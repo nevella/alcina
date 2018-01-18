@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.cache;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -13,11 +14,15 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.gwt.client.widget.VisibilityChangeEvent.Handler;
+import cc.alcina.framework.entity.SEUtilities;
 
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class Domain {
@@ -30,7 +35,12 @@ public class Domain {
 
 	public static <V extends HasIdAndLocalId> V byProperty(Class<V> clazz,
 			String propertyName, Object value) {
-		throw new UnsupportedOperationException();
+		// TODO - dem5 - index optimisations?
+		IndividualPropertyAccessor accessor = Reflections.propertyAccessor()
+				.cachedAccessor(clazz, propertyName);
+		return stream(clazz).filter(
+				o -> Objects.equals(accessor.getPropertyValue(o), value))
+				.findFirst().orElse(null);
 	}
 
 	public static <V extends HasIdAndLocalId> Supplier<Collection>
@@ -52,6 +62,10 @@ public class Domain {
 
 	public static <V extends HasIdAndLocalId> V find(V v) {
 		return handler.find(v);
+	}
+
+	public static <V extends HasIdAndLocalId> V find(HiliLocator locator) {
+		return handler.find(locator.clazz, locator.id);
 	}
 
 	public static <V extends HasIdAndLocalId> Collection<V>
@@ -176,6 +190,17 @@ public class Domain {
 		List<PropertyInfoLite> writableProperties = Reflections.classLookup()
 				.getWritableProperties(clazz);
 		for (PropertyInfoLite propertyInfo : writableProperties) {
+			if (TransformManager.get()
+					.isIgnoreProperty(propertyInfo.getPropertyName())) {
+				continue;
+			}
+			AlcinaTransient alcinaTransient = Reflections.propertyAccessor()
+					.getAnnotationForProperty(hili.getClass(),
+							AlcinaTransient.class,
+							propertyInfo.getPropertyName());
+			if (alcinaTransient != null) {
+				continue;
+			}
 			propertyInfo.copy(hili, writeable);
 		}
 		return writeable;
@@ -183,5 +208,9 @@ public class Domain {
 
 	public static void commitPoint() {
 		handler.commitPoint();
+	}
+
+	public static <V extends HasIdAndLocalId> V register(V v) {
+		return TransformManager.get().registerDomainObject(v);
 	}
 }

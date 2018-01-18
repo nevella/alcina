@@ -13,13 +13,19 @@
  */
 package cc.alcina.framework.entity.domaintransform;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.cache.Domain;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -28,7 +34,10 @@ import cc.alcina.framework.common.client.util.Multimap;
  * 
  * @author Nick Reddel
  */
-public class DomainTransformLayerWrapper {
+public class DomainTransformLayerWrapper implements Serializable
+{
+	static final transient long serialVersionUID = 1;
+
 	public DomainTransformResponse response;
 
 	public HiliLocatorMap locatorMap;
@@ -58,6 +67,12 @@ public class DomainTransformLayerWrapper {
 			}
 		}
 		return this.eventsByClass;
+	}
+
+	public <V extends HasIdAndLocalId> Set<V> getObjectsFor(Class<V> clazz) {
+		return (Set<V>) (Set) getTransformsFor(clazz).stream()
+				.map(HiliLocator::objectLocator).map(Domain::find).filter(Objects::nonNull)
+				.collect(Collectors.toSet());
 	}
 
 	public Set<Class> getTransformedClasses() {

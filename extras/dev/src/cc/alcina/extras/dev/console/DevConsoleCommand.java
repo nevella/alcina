@@ -34,10 +34,13 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.StringKeyValueMapper;
+import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -45,8 +48,13 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.UncomittedTransformsException;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.util.ReportUtils;
 import cc.alcina.framework.entity.util.ShellWrapper;
+import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.Sx;
 
 @RegistryLocation(registryPoint = DevConsoleCommand.class)
 public abstract class DevConsoleCommand<C extends DevConsole> {
@@ -446,6 +454,23 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 						r.run();
 						String msg = LooseContext.getString(
 								DevConsoleRunnable.CONTEXT_ACTION_RESULT);
+						if (ResourceUtilities.is(ServletLayerUtils.class,
+								"commitTestTransforms")) {
+							if (Sx.nonThreadedCommitPoint) {
+								Sx.commit();
+							}
+							// check for dangling transforms
+							LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager
+									.get().getTransformsByCommitType(
+											CommitType.TO_LOCAL_BEAN);
+							if (!pendingTransforms.isEmpty()) {
+								System.out.println(
+										"**WARNING ** TLTM - cleared (but still pending) transforms:\n "
+												+ pendingTransforms);
+								ThreadlocalTransformManager.cast()
+										.resetTltm(null);
+							}
+						}
 						msg = msg.isEmpty() ? msg : "\n\t" + msg;
 						return String.format("'%s' was run%s", runnableName,
 								msg);

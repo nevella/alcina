@@ -85,6 +85,7 @@ import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
+import cc.alcina.framework.entity.entityaccess.TransformPersister.TransformPersisterToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.projection.EntityUtils;
@@ -933,12 +934,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		getEntityManager().merge(inst);
 	}
 
-	public void transformInPersistenceContext(TransformPersister persister,
+	public DomainTransformLayerWrapper transformInPersistenceContext(
+			TransformPersisterToken transformPersisterToken,
 			TransformPersistenceToken token,
 			DomainTransformLayerWrapper wrapper) {
 		AppPersistenceBase.checkNotReadOnly();
-		persister.transformInPersistenceContext(token, this, getEntityManager(),
+		new TransformPersisterIn().transformInPersistenceContext(
+				transformPersisterToken, token, this, getEntityManager(),
 				wrapper);
+		return wrapper;
 	}
 
 	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers) {

@@ -10,26 +10,36 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
 public class Sx {
+	public static boolean nonThreadedCommitPoint;
+
 	public static void commit() {
 		ServletLayerUtils.pushTransformsAsRoot();
+		commitPoint(false);
 	}
 
 	// optimisation - defer push to the end of an rpc call, so as to only do
 	// once
 	// assumes non-critical deltas
 	public static void commitPoint() {
-		HttpServletRequest threadLocalRequest = CommonRemoteServiceServlet.getCrossServletThreadLocalRequest();
-		if(threadLocalRequest==null){
-			
-		}else{
-			threadLocalRequest.setAttribute(CommonRemoteServiceServlet.PUSH_TRANSFORMS_AT_END_OF_REUQEST, true);
-		}
+		commitPoint(true);
 		// FIXME - dem3
 	}
 
-	
-
+	private static void commitPoint(boolean set) {
+		HttpServletRequest threadLocalRequest = CommonRemoteServiceServlet
+				.getCrossServletThreadLocalRequest();
+		if (threadLocalRequest == null) {
+			if(AppPersistenceBase.isTest()){
+				Sx.nonThreadedCommitPoint = set;
+			}
+		} else {
+			threadLocalRequest.setAttribute(
+					CommonRemoteServiceServlet.PUSH_TRANSFORMS_AT_END_OF_REUQEST,
+					set);
+		}		
+	}
 }

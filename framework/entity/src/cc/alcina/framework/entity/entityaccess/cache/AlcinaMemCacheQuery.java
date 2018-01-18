@@ -68,4 +68,8 @@ public class AlcinaMemCacheQuery extends CacheQuery<AlcinaMemCacheQuery> {
 		list.forEach(t -> TransformManager.get().registerDomainObject(t));
 		return list.stream();
 	}
+
+	public <T extends HasIdAndLocalId> Stream<T> stream(Class<T> clazz) {
+		return list(clazz).stream();
+	}
 }

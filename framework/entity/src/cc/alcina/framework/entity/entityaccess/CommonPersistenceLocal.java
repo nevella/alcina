@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
+import cc.alcina.framework.entity.entityaccess.TransformPersister.TransformPersisterToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
@@ -167,7 +168,7 @@ public interface CommonPersistenceLocal {
 	public void setField(Class clazz, Long id, String key, Object value)
 			throws Exception;
 
-	public void transformInPersistenceContext(TransformPersister persister,
+	public DomainTransformLayerWrapper  transformInPersistenceContext(TransformPersisterToken persisterToken,
 			TransformPersistenceToken persistenceToken,
 			DomainTransformLayerWrapper wrapper);
 

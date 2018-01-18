@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.domaintransform;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -16,7 +17,7 @@ import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransfo
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicyFactory;
 import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 
-public class TransformPersistenceToken {
+public class TransformPersistenceToken implements Serializable {
 	private final DomainTransformRequest request;
 
 	private final HiliLocatorMap locatorMap;
@@ -41,7 +42,7 @@ public class TransformPersistenceToken {
 
 	private boolean forOfflineTransforms;
 
-	private Logger logger;
+	private transient Logger logger;
 
 	private TransformLoggingPolicy transformLoggingPolicy;
 

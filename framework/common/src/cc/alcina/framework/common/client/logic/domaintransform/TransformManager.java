@@ -1258,6 +1258,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 				maybeFireCollectionModificationEvent(hili.getClass(), true);
 			}
 		}
+		if (dte.getObjectId() == 0 && dte.getObjectLocalId() == 0) {
+			// normally a bug
+			int debugPoint = 7;
+		}
 	}
 
 	public void pushTransformsInCurrentThread(
@@ -1919,6 +1923,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (Ax.isBlank(serialized)) {
 			return defaultValue;
 		}
-		return AlcinaBeanSerializer.deserialize1(serialized);
+		return AlcinaBeanSerializer.deserializeHolder(serialized);
+		
+	}
+
+	public boolean isIgnoreProperty(String propertyName) {
+		return ignorePropertiesForCaching.contains(propertyName);
 	}
 }

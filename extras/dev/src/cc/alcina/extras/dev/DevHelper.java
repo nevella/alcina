@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
@@ -40,6 +41,9 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
+import cc.alcina.framework.common.client.logic.permissions.IGroup;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TestTransformManager;
@@ -59,8 +63,10 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.TestPersistenceHelper;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
@@ -74,6 +80,7 @@ import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 import cc.alcina.framework.servlet.ServletLayerObjects;
+import cc.alcina.framework.servlet.ServletLayerUtils;
 
 public abstract class DevHelper {
 	private static final String JBOSS_CONFIG_PATH = "jboss-config-path";
@@ -263,6 +270,28 @@ public abstract class DevHelper {
 
 	public abstract void initPostObjectServices();
 
+	protected void initPermissionsManager() {
+		IUser user = PermissionsManager.get().getUser();
+		PermissionsManager.register(new ThreadedPermissionsManager() {
+			@Override
+			public PermissionsManager getT() {
+				return null;// same behaviour as threaded (so compat with server
+							// code), but just one instance
+			}
+
+			public synchronized Map<String, ? extends IGroup>
+					getUserGroups(IUser user) {
+				return super.getUserGroups(user);
+			}
+
+			@Override
+			protected synchronized void nullGroupMap() {
+				super.nullGroupMap();
+			}
+		});
+		PermissionsManager.get().setUser(user);
+	}
+
 	public void loadJbossConfig() {
 		loadJbossConfig(new ConsolePrompter());
 	}
@@ -426,7 +455,9 @@ public abstract class DevHelper {
 	}
 
 	protected TransformManager createTransformManager() {
-		return new TestTransformManager();
+		return ResourceUtilities.is(ServletLayerUtils.class,
+				"testTransformCascade") ? new ThreadlocalTransformManager()
+						: new TestTransformManager();
 	}
 
 	protected String getAppConfigPath(Preferences prefs) {

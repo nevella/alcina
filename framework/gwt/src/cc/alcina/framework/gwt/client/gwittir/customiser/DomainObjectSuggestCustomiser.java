@@ -56,6 +56,8 @@ public class DomainObjectSuggestCustomiser
 	private boolean showOnFocus;
 
 	private boolean withPlaceholder;
+	
+	
 
 	@Override
 	public BoundWidget get() {
