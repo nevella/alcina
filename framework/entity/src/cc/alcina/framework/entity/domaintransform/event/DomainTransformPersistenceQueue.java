@@ -222,6 +222,12 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		}
 	}
 
+	void transformRequestQueuedLocal(long id) {
+		synchronized (queueModificationLock) {
+			firedOrQueued.add(id);
+		}
+	}
+
 	public void startEventQueue() {
 		eventQueue = new Thread() {
 			@Override
