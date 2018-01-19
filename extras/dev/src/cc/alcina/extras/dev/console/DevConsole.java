@@ -61,6 +61,7 @@ import org.apache.log4j.Logger;
 import cc.alcina.extras.dev.DevHelper;
 import cc.alcina.extras.dev.DevHelper.StringPrompter;
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
+import cc.alcina.extras.dev.console.DevConsoleCommand.CmdNextCommandCaches;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -218,6 +219,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		try {
 			ResourceUtilities.writeStringToFile(transforms.toString(),
 					dumpFile);
+			Ax.out("Transforms dumped to:\n\t%s", dumpFile.getPath());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -644,7 +646,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				consoleLeft
 						.ok(String.format("  %s - ok - %s ms\n", msg, l2 - l1));
 			}
-			if (topLevel) {
+			if (topLevel && !(c instanceof CmdNextCommandCaches)) {
 				props.lastCommand = c.rerunIfMostRecentOnRestart() ? lastCommand
 						: "";
 				try {
@@ -1030,6 +1032,15 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		@Override
 		public String getValue(String prompt) {
 			return JOptionPane.showInputDialog(prompt);
+		}
+	}
+
+	public void setNextCommand(String cmd) {
+		props.lastCommand = cmd;
+		try {
+			saveConfig();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 }

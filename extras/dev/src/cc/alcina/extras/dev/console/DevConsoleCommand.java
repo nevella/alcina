@@ -40,7 +40,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -49,8 +49,6 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.UncomittedTransformsException;
-import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.util.ReportUtils;
 import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.servlet.ServletLayerUtils;
@@ -310,6 +308,30 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		public String run(String[] argv) throws Exception {
 			console.devHelper.deleteClasspathCacheFiles();
 			return "files deleted";
+		}
+	}
+
+	public static class CmdNextCommandCaches extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "next" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "Set next command (for restart app dev cycle)";
+		}
+
+		@Override
+		public String getUsage() {
+			return "";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			String cmd = argv[0];
+			console.setNextCommand(cmd);
+			return Ax.format("next >> %s", cmd);
 		}
 	}
 
