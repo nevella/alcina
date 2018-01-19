@@ -16,6 +16,7 @@ package cc.alcina.framework.entity.entityaccess;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -119,6 +120,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public static Class<? extends HandshakeObjectProvider>
 			getHandshakeObjectProviderClass() {
 		return handshakeObjectProviderClass;
+	}
+
+	@RegistryLocation(registryPoint = CommonPersistenceConnectionProvider.class)
+	public abstract static class CommonPersistenceConnectionProvider {
+		public abstract Connection getConnection();
 	}
 
 	public static Boolean isBotExtraUserAgent(String userAgent) {
