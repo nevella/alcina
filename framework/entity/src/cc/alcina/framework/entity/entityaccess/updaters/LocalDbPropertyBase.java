@@ -2,8 +2,7 @@ package cc.alcina.framework.entity.entityaccess.updaters;
 
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
-
-import org.hibernate.annotations.Type;
+import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
@@ -35,17 +34,15 @@ public abstract class LocalDbPropertyBase extends AbstractDomainBase {
 
 	private String propertyKey;
 
-	private String propertyValue;
+	protected String propertyValue;
 
 	public String getPropertyKey() {
 		return this.propertyKey;
 	}
 
 	@Lob
-	@Type(type = "org.hibernate.type.StringClobType")
-	public String getPropertyValue() {
-		return this.propertyValue;
-	}
+	@Transient
+	public abstract String getPropertyValue() ;
 
 	public void setId(long id) {
 		this.id = id;

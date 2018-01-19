@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -823,6 +824,8 @@ public class DevConsoleDebugCommands {
 
 		public void addLogRecords(ResultSet rs, List<ILogRecord> logRecords)
 				throws SQLException {
+			Optional<Pattern> ignorePattern = Optional.ofNullable(
+					regexFilter != null ? Pattern.compile(regexFilter) : null);
 			while (rs.next()) {
 				IUser u = console.state.ensureUser(rs.getLong("user_id"),
 						rs.getString("username"));
@@ -834,7 +837,11 @@ public class DevConsoleDebugCommands {
 				l.setHost(rs.getString("host"));
 				l.setCreatedOn(
 						new Date(rs.getTimestamp("created_on").getTime()));
-				logRecords.add(l);
+				if (ignorePattern.isPresent()
+						&& ignorePattern.get().matcher(l.getText()).find()) {
+				} else {
+					logRecords.add(l);
+				}
 			}
 		}
 
@@ -858,6 +865,8 @@ public class DevConsoleDebugCommands {
 			return "dxg {days} <-a --all types> <-gtid id : log record id gt specified>";
 		}
 
+		String regexFilter = null;
+
 		@Override
 		public String run(String[] argv) throws Exception {
 			Connection conn = getConn();
@@ -870,6 +879,10 @@ public class DevConsoleDebugCommands {
 					: "and l.component_key ='CLIENT_EXCEPTION' ";
 			filterArgvResult = new FilterArgvFlag(argv, "-ex");
 			argv = filterArgvResult.argv;
+			FilterArgvParam filterArgvParam = new FilterArgvParam(argv,
+					"-ignore");
+			regexFilter = filterArgvParam.value;
+			argv = filterArgvParam.argv;
 			List<String> exceptions = Arrays.asList(
 					"UNEXPECTED_SERVLET_EXCEPTION", "ALERT_GENERATION_FAILURE",
 					"JOB_FAILURE_EXCEPTION", "CLUSTER_EXCEPTION",
@@ -880,8 +893,7 @@ public class DevConsoleDebugCommands {
 					? String.format("and l.component_key in %s",
 							EntityUtils.stringListToClause(exceptions))
 					: clientExOnlyFilter;
-			FilterArgvParam filterArgvParam = new FilterArgvParam(argv,
-					"-gtid");
+			filterArgvParam = new FilterArgvParam(argv, "-gtid");
 			argv = filterArgvParam.argv;
 			String gtOnlyFilter = filterArgvParam.value == null ? ""
 					: String.format("and l.id>=%s ", filterArgvParam.value);
