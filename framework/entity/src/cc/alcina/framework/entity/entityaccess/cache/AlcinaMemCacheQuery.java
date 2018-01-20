@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.cache.CacheQuery;
@@ -69,7 +70,5 @@ public class AlcinaMemCacheQuery extends CacheQuery<AlcinaMemCacheQuery> {
 		return list.stream();
 	}
 
-	public <T extends HasIdAndLocalId> Stream<T> stream(Class<T> clazz) {
-		return list(clazz).stream();
-	}
+	
 }

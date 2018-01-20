@@ -5,8 +5,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -59,7 +61,15 @@ public abstract class CacheQuery<Q extends CacheQuery> {
 	}
 
 	public <T extends HasIdAndLocalId> T find(Class<T> clazz) {
-		return CommonUtils.first(list(clazz));
+		return optional(clazz).orElse(null);
+	}
+
+	public <T extends HasIdAndLocalId> Optional<T> optional(Class<T> clazz) {
+		return stream(clazz).findFirst();
+	}
+
+	public <T extends HasIdAndLocalId> Stream<T> stream(Class<T> clazz) {
+		return list(clazz).stream();
 	}
 
 	public <T extends HasIdAndLocalId> T first(Class<T> clazz) {

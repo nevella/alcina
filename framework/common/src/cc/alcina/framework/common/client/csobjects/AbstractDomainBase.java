@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.csobjects;
 
+import java.util.Collection;
+
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
@@ -10,6 +12,7 @@ import com.google.gwt.core.client.UnsafeNativeLong;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
@@ -22,12 +25,14 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasEquivalence;
+import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
 @MappedSuperclass
-@RegistryLocation(registryPoint=AbstractDomainBase.class,implementationType=ImplementationType.MULTIPLE)
-public abstract class AbstractDomainBase extends BaseBindable
-		implements HasIdAndLocalId, HasVersionNumber {
+@RegistryLocation(registryPoint = AbstractDomainBase.class, implementationType = ImplementationType.MULTIPLE)
+public abstract class AbstractDomainBase<T extends AbstractDomainBase>
+		extends BaseBindable implements HasIdAndLocalId, HasVersionNumber {
 	static final transient long serialVersionUID = 1L;
 
 	protected transient int hash = 0;
@@ -167,5 +172,23 @@ public abstract class AbstractDomainBase extends BaseBindable
 	protected String comparisonString() {
 		throw new RuntimeException(
 				"no display name available, and using comparator");
+	}
+
+	public T writeable() {
+		return (T) Domain.writeable(this);
+	}
+
+	public T createOrReturnWriteable() {
+		HasEquivalence equivalent = HasEquivalenceHelper.getEquivalent(
+				(Collection) Domain.list(getClass()), (HasEquivalence) this);
+		if (equivalent != null) {
+			return (T) equivalent;
+		} else {
+			return writeable();
+		}
+	}
+
+	public T domainVersion() {
+		return (T) Domain.find(this);
 	}
 }
