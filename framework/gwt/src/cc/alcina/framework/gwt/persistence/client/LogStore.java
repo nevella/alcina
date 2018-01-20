@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.res.AlcinaProperties;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
@@ -56,6 +57,9 @@ public class LogStore {
 
 	public static final String TOPIC_PERSISTED = LogStore.class.getName() + "."
 			+ "TOPIC_PERSISTED";
+
+	public static final String TOPIC_EVENT_OCCURRED = LogStore.class.getName()
+			+ "." + "TOPIC_EVENT_OCCURRED";
 
 	public static final String TOPIC_DELETED = LogStore.class.getName() + "."
 			+ "TOPIC_DELETED";
@@ -350,6 +354,11 @@ public class LogStore {
 		} else {
 			localPersistenceTimer.triggerEventOccurred();
 		}
+		topicLogEvent().publish(logRecord);
+	}
+
+	public static TopicSupport<ClientLogRecord> topicLogEvent() {
+		return new TopicSupport<>(TOPIC_EVENT_OCCURRED);
 	}
 
 	int getLocalSeriesIdCounter() {

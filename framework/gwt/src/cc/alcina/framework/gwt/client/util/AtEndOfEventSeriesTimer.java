@@ -4,10 +4,16 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 
-public class AtEndOfEventSeriesTimer {
+public class AtEndOfEventSeriesTimer<T> {
 	private long lastEventOccurred = 0;
 
 	private long firstEventOccurred = 0;
+
+	private T firstObject;
+
+	public T getFirstObject() {
+		return this.firstObject;
+	}
 
 	private Runnable checkCallback = new Runnable() {
 		@Override
@@ -24,6 +30,7 @@ public class AtEndOfEventSeriesTimer {
 					firstEventOccurred = 0;
 				}
 				action.run();
+				firstObject = null;
 			}
 		}
 	};
@@ -74,5 +81,14 @@ public class AtEndOfEventSeriesTimer {
 				timer.scheduleRepeating(waitToPerformAction / 2);
 			}
 		}
+	}
+
+	public void triggerEventOccurred(T object) {
+		synchronized (this) {
+			if (firstObject == null) {
+				firstObject = object;
+			}
+		}
+		triggerEventOccurred();
 	}
 }

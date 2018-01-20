@@ -3,10 +3,13 @@ package cc.alcina.framework.common.client.util;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
 public class TopicPublisher {
 	private MutablePropertyChangeSupport support = new MutablePropertyChangeSupport(
@@ -64,6 +67,30 @@ public class TopicPublisher {
 
 		private GlobalTopicPublisher() {
 			super();
+		}
+	}
+
+	public static class TopicSupport<T> {
+		private String topic;
+
+		public TopicSupport(String topic) {
+			this.topic = topic;
+		}
+
+		public void publish(T t) {
+			GlobalTopicPublisher.get().publishTopic(topic, t);
+		}
+
+		public void add(TopicListener<T> listener) {
+			delta(listener, true);
+		}
+
+		public void remove(TopicListener<T> listener) {
+			delta(listener, false);
+		}
+
+		public void delta(TopicListener<T> listener, boolean add) {
+			GlobalTopicPublisher.get().listenerDelta(topic, listener, add);
 		}
 	}
 
