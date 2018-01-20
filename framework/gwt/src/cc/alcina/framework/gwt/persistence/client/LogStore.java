@@ -8,6 +8,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
@@ -19,11 +20,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.res.AlcinaProperties;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
@@ -34,8 +37,7 @@ import cc.alcina.framework.gwt.client.util.Lzw;
  * At the moment:
  * <ul>
  * <li>perist recent logs immediately (1K limit) to a cookie
- * <li>
- * persist in 1s/30kb chunks to webdb
+ * <li>persist in 1s/30kb chunks to webdb
  * <li>persist in 30s/30kb chunks to remote
  * </ul>
  * <p>
@@ -48,6 +50,20 @@ import cc.alcina.framework.gwt.client.util.Lzw;
  * 
  */
 public class LogStore {
+	public static final String STORAGE_COOKIE_KEY = LogStore.class.getName()
+			+ ".CookieStorage";
+
+	public static final String DEFAULT_TABLE_NAME = "LogStore";
+
+	public static final String TOPIC_PERSISTED = LogStore.class.getName() + "."
+			+ "TOPIC_PERSISTED";
+
+	public static final String TOPIC_EVENT_OCCURRED = LogStore.class.getName()
+			+ "." + "TOPIC_EVENT_OCCURRED";
+
+	public static final String TOPIC_DELETED = LogStore.class.getName() + "."
+			+ "TOPIC_DELETED";
+
 	public static LogStore get() {
 		LogStore singleton = Registry.checkSingleton(LogStore.class);
 		if (singleton == null) {
@@ -72,8 +88,8 @@ public class LogStore {
 
 	public static void notifyPersistedListenerDelta(
 			TopicListener<IntPair> listener, boolean add) {
-		GlobalTopicPublisher.get()
-				.listenerDelta(TOPIC_PERSISTED, listener, add);
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_PERSISTED, listener,
+				add);
 	}
 
 	private RemoteLogPersister remoteLogPersister;
@@ -134,29 +150,22 @@ public class LogStore {
 
 	public boolean useCookieMsgBackup = true;
 
-	public static final String STORAGE_COOKIE_KEY = LogStore.class.getName()
-			+ ".CookieStorage";
-
-	public static final String DEFAULT_TABLE_NAME = "LogStore";
-
 	private int lastCookieId;
 
 	protected PersistenceObjectStore objectStore;
 
 	private boolean localPersistencePaused;
 
-	public static final String TOPIC_PERSISTED = LogStore.class.getName() + "."
-			+ "TOPIC_PERSISTED";
-
-	public static final String TOPIC_DELETED = LogStore.class.getName() + "."
-			+ "TOPIC_DELETED";
-
 	protected LogStore() {
 		if (!AlcinaProperties.is(AlcinaProperties.class,
 				AlcinaProperties.NON_BROWSER)) {
 			String cookie = Cookies.getCookie(STORAGE_COOKIE_KEY);
 			if (cookie != null) {
-				log("restart", cookie);
+				try {
+					log("restart", cookie);
+				} catch (Exception e) {
+					// probably module system not initialised
+				}
 			}
 		}
 	}
@@ -195,9 +204,8 @@ public class LogStore {
 				try {
 					// unfortunately, have to encode to base64 here - unless we
 					// want to be trixy with SQLLite
-					String maybeShorter = "lzwb:"
-							+ Base64Utils.toBase64(new Lzw().compress(
-									serialized).getBytes("UTF-8"));
+					String maybeShorter = "lzwb:" + Base64Utils.toBase64(
+							new Lzw().compress(serialized).getBytes("UTF-8"));
 					if (maybeShorter.length() < serialized.length()) {
 						if (!GWT.isScript()) {
 							locallyPersistLogs(serialized);
@@ -257,39 +265,10 @@ public class LogStore {
 
 	@SuppressWarnings("deprecation")
 	public void log(String topic, String message) {
-		if (CommonUtils.equalsWithNullEquality(message, lastMessage) || muted) {
-			return;
-		}
-		if (topic.equals(AlcinaTopics.LOG_CATEGORY_TRANSFORM)) {
-			String protocol = LocalTransformPersistence.get()
-					.getSerializationPolicy().getTransformPersistenceProtocol();
-			if (protocol.equals(PlaintextProtocolHandler.VERSION)) {
-				List<DomainTransformEvent> events = new PlaintextProtocolHandler()
-						.deserialize(message);
-				message = new PlaintextProtocolHandlerShort().serialize(events);
-			}
-		}
-		this.lastMessage = message;
-		this.lastTopic = topic;
-		ClientInstance cli = ClientBase.getClientInstance();
-		String clientInstanceAuth = cli == null ? "(before cli)" : String
-				.valueOf(cli.getAuth());
-		ClientLogRecord logRecord = new ClientLogRecord(++localSeriesIdCounter,
-				clientInstanceAuth, HiliHelper.getIdOrZero(cli), new Date(),
-				topic, message, null);
-		logs.addLogRecord(logRecord);
-		if (useCookieMsgBackup) {
-			String value = logs.buf.substring(Math.max(
-					logs.buf.length() - 1000, 0));
-			Date d = new Date();
-			d.setYear(d.getYear() + 5);
-			Cookies.setCookie(STORAGE_COOKIE_KEY, value, d);
-			lastCookieId = localSeriesIdCounter;
-		}
-		if (logs.size > RemoteLogPersister.PREFERRED_MAX_PUSH_SIZE) {
-			flushToLocalPersistence();
-		} else {
-			localPersistenceTimer.triggerEventOccurred();
+		try {
+			log0(topic, message);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -333,6 +312,53 @@ public class LogStore {
 
 	public void setUsesLzw(boolean usesLzw) {
 		this.usesLzw = usesLzw;
+	}
+
+	@SuppressWarnings("deprecation")
+	private void log0(String topic, String message) {
+		if (CommonUtils.equalsWithNullEquality(message, lastMessage) || muted) {
+			return;
+		}
+		if (Reflections.classLookup() == null) {
+			Ax.out("Before reflection: \n%s\n%s\n", topic, message);
+			return;
+		}
+		if (topic.equals(AlcinaTopics.LOG_CATEGORY_TRANSFORM)) {
+			String protocol = LocalTransformPersistence.get()
+					.getSerializationPolicy().getTransformPersistenceProtocol();
+			if (protocol.equals(PlaintextProtocolHandler.VERSION)) {
+				List<DomainTransformEvent> events = new PlaintextProtocolHandler()
+						.deserialize(message);
+				message = new PlaintextProtocolHandlerShort().serialize(events);
+			}
+		}
+		this.lastMessage = message;
+		this.lastTopic = topic;
+		ClientInstance cli = ClientBase.getClientInstance();
+		String clientInstanceAuth = cli == null ? "(before cli)"
+				: String.valueOf(cli.getAuth());
+		ClientLogRecord logRecord = new ClientLogRecord(++localSeriesIdCounter,
+				clientInstanceAuth, HiliHelper.getIdOrZero(cli), new Date(),
+				topic, message, null);
+		logs.addLogRecord(logRecord);
+		if (useCookieMsgBackup) {
+			String value = logs.buf
+					.substring(Math.max(logs.buf.length() - 1000, 0));
+			Date d = new Date();
+			d.setYear(d.getYear() + 5);
+			Cookies.setCookie(STORAGE_COOKIE_KEY, value, d);
+			lastCookieId = localSeriesIdCounter;
+		}
+		if (logs.size > RemoteLogPersister.PREFERRED_MAX_PUSH_SIZE) {
+			flushToLocalPersistence();
+		} else {
+			localPersistenceTimer.triggerEventOccurred();
+		}
+		topicLogEvent().publish(logRecord);
+	}
+
+	public static TopicSupport<ClientLogRecord> topicLogEvent() {
+		return new TopicSupport<>(TOPIC_EVENT_OCCURRED);
 	}
 
 	int getLocalSeriesIdCounter() {
