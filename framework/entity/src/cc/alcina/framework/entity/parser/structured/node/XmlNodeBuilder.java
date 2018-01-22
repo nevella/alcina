@@ -95,6 +95,16 @@ public class XmlNodeBuilder {
 		return this;
 	}
 
+	public XmlNodeBuilder style(String style) {
+		String styleBuf = attrs.getOrDefault("style", "");
+		if (styleBuf.length() > 0) {
+			styleBuf += "; ";
+		}
+		styleBuf += style;
+		attrs("style", styleBuf);
+		return this;
+	}
+
 	public XmlNode insertAfter() {
 		XmlNode node = build();
 		relativeTo.relative().insertAfterThis(node);

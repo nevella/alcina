@@ -1,5 +1,8 @@
 package cc.alcina.framework.entity.parser.structured.node;
 
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 	public XmlNodeHtmlTableBuilder(XmlNode xmlNode) {
 		relativeTo = xmlNode;
@@ -35,8 +38,8 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			return new XmlNodeHtmlTableCellBuilder(relativeTo);
 		}
 
-		public XmlNodeHtmlTableCellBuilder cell(String text) {
-			text(text);
+		public XmlNodeHtmlTableCellBuilder cell(Object text) {
+			text(CommonUtils.nullSafeToString(text));
 			return cell();
 		}
 
@@ -62,12 +65,33 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 				append();
 			}
 		}
+
+		public XmlNodeHtmlTableCellBuilder nowrap() {
+			style("white-space: nowrap");
+			return this;
+		}
+		@Override
+		public XmlNodeHtmlTableCellBuilder style(String style) {
+			super.style(style);
+			return this;
+		}
 	}
 
 	public class XmlNodeHtmlTableRowBuilder extends XmlNodeBuilder {
+		private XmlNode node;
+
+		public XmlNode getNode() {
+			return this.node;
+		}
+
 		public XmlNodeHtmlTableRowBuilder(XmlNode tableNode) {
 			relativeTo = tableNode;
 			tag("tr");
+		}
+		@Override
+		public XmlNodeHtmlTableRowBuilder style(String style) {
+			super.style(style);
+			return this;
 		}
 
 		public XmlNodeHtmlTableCellBuilder cell() {
@@ -82,7 +106,7 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 		private void ensureBuilt() {
 			if (built) {
 			} else {
-				append();
+				node = append();
 			}
 		}
 	}

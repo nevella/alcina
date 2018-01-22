@@ -78,7 +78,11 @@ public class TopicPublisher {
 		}
 
 		public void publish(T t) {
-			GlobalTopicPublisher.get().publishTopic(topic, t);
+			try {
+				GlobalTopicPublisher.get().publishTopic(topic, t);
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
 		}
 
 		public void add(TopicListener<T> listener) {

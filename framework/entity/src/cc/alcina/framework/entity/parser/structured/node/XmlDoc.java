@@ -88,4 +88,8 @@ public class XmlDoc extends XmlNode {
 
 	void register(XmlNode xmlNode) {
 	}
+
+	public static XmlDoc basicHtmlDoc() {
+		return new XmlDoc("<html><head></head><body></body></html>");
+	}
 }

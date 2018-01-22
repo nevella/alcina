@@ -17,6 +17,7 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ReplayInstruction;
@@ -57,6 +58,8 @@ public class LogStoreInterceptors {
 	private String lastFocussedValueMessage;
 
 	private boolean numberedElements;
+
+	private HandlerRegistration windowClosingHandlerRegistration;
 
 	public void handleNativeEvent(Event nativeEvent, boolean click,
 			boolean blur, boolean focus) {
@@ -176,6 +179,9 @@ public class LogStoreInterceptors {
 	public void logHistoryEvents() {
 		this.historyHandlerRegistration = History
 				.addValueChangeHandler(historyListener);
+		windowClosingHandlerRegistration=Window.addWindowClosingHandler(evt -> AlcinaTopics.logCategorisedMessage(new StringPair(
+				AlcinaTopics.LOG_CATEGORY_HISTORY, "window closing")));
+		
 	}
 
 	public void logStat(String stat) {
@@ -211,6 +217,9 @@ public class LogStoreInterceptors {
 		if (nativePreviewHandlerRegistration != null) {
 			nativePreviewHandlerRegistration.removeHandler();
 		}
+		if (windowClosingHandlerRegistration != null) {
+			windowClosingHandlerRegistration.removeHandler();
+		}
 	}
 
 	protected void previewNativeEvent(NativePreviewEvent event) {
@@ -245,94 +254,94 @@ public class LogStoreInterceptors {
 	}
 
 	final native String getClassName0(Element elem_multi) /*-{
-															var elem = elem_multi.@com.google.gwt.dom.client.Element::typedRemote()();
-															var cn = elem.className;
-															//note - someone says IE DOM objects don't support - hence try/catch
-															try {
-															if (cn.hasOwnProperty("baseVal")) {
-															cn = cn.baseVal;
-															}
-															if ((typeof cn).toLowerCase() != "string") {
-															if (cn && cn.toString().toLowerCase().indexOf("svg") != -1) {
-															cn = 'svg-string';
-															} else {
-															debugger;
-															}
-															}
-															} catch (e) {
-															return "";
-															}
-															return cn;
-															}-*/;
+        var elem = elem_multi.@com.google.gwt.dom.client.Element::typedRemote()();
+        var cn = elem.className;
+        //note - someone says IE DOM objects don't support - hence try/catch
+        try {
+            if (cn.hasOwnProperty("baseVal")) {
+                cn = cn.baseVal;
+            }
+            if ((typeof cn).toLowerCase() != "string") {
+                if (cn && cn.toString().toLowerCase().indexOf("svg") != -1) {
+                    cn = 'svg-string';
+                } else {
+                    debugger;
+                }
+            }
+        } catch (e) {
+            return "";
+        }
+        return cn;
+	}-*/;
 
 	native void installStats0()/*-{
-								function format(out) {
-								var idx = 0;
-								var j = 1;
-								
-								while (true) {
-								idx = out.indexOf("%s", idx);
-								if (idx == -1) {
-								break;
-								}
-								var ins = arguments[j++];
-								if (ins === null) {
-								ins = "null";
-								} else if (ins === undefined) {
-								ins = "undefined";
-								} else {
-								ins = ins.toString();
-								}
-								out = out.substring(0, idx) + ins + out.substring(idx + 2);
-								idx += ins.length;
-								}
-								return out;
-								}
-								function pad0(s, len) {
-								return pad(s, "0", len);
-								}
-								function pad(s, sup, len) {
-								s = "" + s;
-								while (s.length < len) {
-								s = sup + s;
-								}
-								return s;
-								}
-								var lsi = this;
-								var running = [];
-								function eventToString(event) {
-								// return some string representation of this event
-								var d = new Date(event.millis);
-								var timeStr = format("%s:%s:%s,%s", pad0(d.getHours(), 2), pad0(d
-								.getMinutes(), 2), pad0(d.getSeconds(), 2), pad0(d
-								.getMilliseconds(), 3));
-								return event.evtGroup + " | " + event.moduleName + " | "
-								+ event.subSystem + " | " + event.method + " | "
-								+ pad(event.type, " ", 25) + " | " + timeStr;
-								}
-								window.$stats = function(evt) {
-								var muted = lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::areStatsMuted()();
-								if (!muted) {
-								var e2s = eventToString(evt);
-								lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(e2s);
-								}
-								return true;
-								};
-								//if there were stats collected prior to this install, flush 'em
-								if (window["stats_pre"]) {
-								for ( var k in window.stats_pre) {
-								var pre = window.stats_pre[k];
-								lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
-								}
-								window.$stats_pre = [];
-								}
-								if ($wnd["stats_pre"]) {
-								for ( var k in $wnd.stats_pre) {
-								var pre = $wnd.stats_pre[k];
-								lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
-								}
-								$wnd.$stats_pre = [];
-								}
-								
-								}-*/;
+        function format(out) {
+            var idx = 0;
+            var j = 1;
+
+            while (true) {
+                idx = out.indexOf("%s", idx);
+                if (idx == -1) {
+                    break;
+                }
+                var ins = arguments[j++];
+                if (ins === null) {
+                    ins = "null";
+                } else if (ins === undefined) {
+                    ins = "undefined";
+                } else {
+                    ins = ins.toString();
+                }
+                out = out.substring(0, idx) + ins + out.substring(idx + 2);
+                idx += ins.length;
+            }
+            return out;
+        }
+        function pad0(s, len) {
+            return pad(s, "0", len);
+        }
+        function pad(s, sup, len) {
+            s = "" + s;
+            while (s.length < len) {
+                s = sup + s;
+            }
+            return s;
+        }
+        var lsi = this;
+        var running = [];
+        function eventToString(event) {
+            // return some string representation of this event
+            var d = new Date(event.millis);
+            var timeStr = format("%s:%s:%s,%s", pad0(d.getHours(), 2), pad0(d
+                    .getMinutes(), 2), pad0(d.getSeconds(), 2), pad0(d
+                    .getMilliseconds(), 3));
+            return event.evtGroup + " | " + event.moduleName + " | "
+                    + event.subSystem + " | " + event.method + " | "
+                    + pad(event.type, " ", 25) + " | " + timeStr;
+        }
+        window.$stats = function(evt) {
+            var muted = lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::areStatsMuted()();
+            if (!muted) {
+                var e2s = eventToString(evt);
+                lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(e2s);
+            }
+            return true;
+        };
+        //if there were stats collected prior to this install, flush 'em
+        if (window["stats_pre"]) {
+            for ( var k in window.stats_pre) {
+                var pre = window.stats_pre[k];
+                lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
+            }
+            window.$stats_pre = [];
+        }
+        if ($wnd["stats_pre"]) {
+            for ( var k in $wnd.stats_pre) {
+                var pre = $wnd.stats_pre[k];
+                lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
+            }
+            $wnd.$stats_pre = [];
+        }
+
+	}-*/;
 }
