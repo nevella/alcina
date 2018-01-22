@@ -1503,5 +1503,9 @@ public class SEUtilities {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
+	public static String getCurrentThreadStacktraceSlice() {
+		return getStacktraceSlice(Thread.currentThread(),35,0);
+	}
 	
 }
