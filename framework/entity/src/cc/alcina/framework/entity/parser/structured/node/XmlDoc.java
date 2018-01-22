@@ -92,4 +92,8 @@ public class XmlDoc extends XmlNode {
 	public static XmlDoc basicHtmlDoc() {
 		return new XmlDoc("<html><head></head><body></body></html>");
 	}
+
+	public static XmlDoc basicHtmlDoc() {
+		return new XmlDoc("<html><head></head><body></body></html>");
+	}
 }

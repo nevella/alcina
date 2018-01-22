@@ -181,7 +181,6 @@ public class LogStoreInterceptors {
 				.addValueChangeHandler(historyListener);
 		windowClosingHandlerRegistration=Window.addWindowClosingHandler(evt -> AlcinaTopics.logCategorisedMessage(new StringPair(
 				AlcinaTopics.LOG_CATEGORY_HISTORY, "window closing")));
-		
 	}
 
 	public void logStat(String stat) {
