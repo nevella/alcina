@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
 @MappedSuperclass
-public abstract class AbstractDomainBase extends BaseBindable
+public abstract class AbstractDomainBase<T extends AbstractDomainBase> extends BaseBindable
 		implements HasIdAndLocalId, HasVersionNumber {
 	static final transient long serialVersionUID = 1L;
 
