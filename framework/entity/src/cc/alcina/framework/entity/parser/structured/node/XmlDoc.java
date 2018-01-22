@@ -93,4 +93,8 @@ public class XmlDoc extends XmlNode {
 		fullToString = m.replaceFirst("<$1>");
 		loadFromXml(fullToString);
 	}
+
+	public static XmlDoc basicHtmlDoc() {
+		return new XmlDoc("<html><head></head><body></body></html>");
+	}
 }

@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.parser.structured.node;
 
-import cc.alcina.framework.entity.parser.structured.node.XmlNodeHtmlTableBuilder.XmlNodeHtmlTableCellBuilder;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 	public XmlNodeHtmlTableBuilder(XmlNode xmlNode) {
@@ -27,21 +28,29 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			tag("td");
 		}
 
+		public XmlNodeHtmlTableCellBuilder blank() {
+			text("\u00A0");
+			return this;
+		}
+
 		public XmlNodeHtmlTableCellBuilder cell() {
 			ensureBuilt();
 			return new XmlNodeHtmlTableCellBuilder(relativeTo);
 		}
 
+		public XmlNodeHtmlTableCellBuilder cell(Object text) {
+			text(CommonUtils.nullSafeToString(text));
+			return cell();
+		}
+
+		public XmlNodeHtmlTableCellBuilder colSpan(int colSpan) {
+			attr("colSpan", String.valueOf(colSpan));
+			return this;
+		}
+
 		public XmlNodeHtmlTableRowBuilder row() {
 			ensureBuilt();
 			return new XmlNodeHtmlTableRowBuilder(relativeTo.parent());
-		}
-
-		private void ensureBuilt() {
-			if (built) {
-			} else {
-				append();
-			}
 		}
 
 		@Override
@@ -50,33 +59,6 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			return this;
 		}
 
-		public XmlNodeHtmlTableCellBuilder colSpan(int colSpan) {
-			attr("colSpan", String.valueOf(colSpan));
-			return this;
-		}
-
-		public XmlNodeHtmlTableCellBuilder blank() {
-			text("\u00A0");
-			return this;
-		}
-
-		public XmlNodeHtmlTableCellBuilder cell(String text) {
-			text(text);
-			return cell();
-		}
-	}
-
-	public class XmlNodeHtmlTableRowBuilder extends XmlNodeBuilder {
-		public XmlNodeHtmlTableRowBuilder(XmlNode tableNode) {
-			relativeTo = tableNode;
-			tag("tr");
-		}
-
-		public XmlNodeHtmlTableCellBuilder cell() {
-			ensureBuilt();
-			return new XmlNodeHtmlTableCellBuilder(builtNode());
-		}
-
 		private void ensureBuilt() {
 			if (built) {
 			} else {
@@ -84,8 +66,48 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			}
 		}
 
+		public XmlNodeHtmlTableCellBuilder nowrap() {
+			style("white-space: nowrap");
+			return this;
+		}
+		@Override
+		public XmlNodeHtmlTableCellBuilder style(String style) {
+			super.style(style);
+			return this;
+		}
+	}
+
+	public class XmlNodeHtmlTableRowBuilder extends XmlNodeBuilder {
+		private XmlNode node;
+
+		public XmlNode getNode() {
+			return this.node;
+		}
+
+		public XmlNodeHtmlTableRowBuilder(XmlNode tableNode) {
+			relativeTo = tableNode;
+			tag("tr");
+		}
+		@Override
+		public XmlNodeHtmlTableRowBuilder style(String style) {
+			super.style(style);
+			return this;
+		}
+
+		public XmlNodeHtmlTableCellBuilder cell() {
+			ensureBuilt();
+			return new XmlNodeHtmlTableCellBuilder(builtNode());
+		}
+
 		public XmlNodeHtmlTableCellBuilder cell(String text) {
 			return cell().text(text).cell();
+		}
+
+		private void ensureBuilt() {
+			if (built) {
+			} else {
+				node = append();
+			}
 		}
 	}
 }

@@ -1422,7 +1422,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				ClientInstance instance = (ClientInstance) cp.getEntityManager()
 						.find(cp.getImplementation(ClientInstance.class),
 								clientInstanceId);
-				return new EntityUtils().detachedClone(instance, false);
+				IUser user = Registry.impl(JPAImplementation.class).getInstantiatedObject(instance.getUser());
+				ClientInstance result = new EntityUtils().detachedClone(instance, false);
+				result.setUser(new EntityUtils().detachedClone(user));
+				return result;
 			} finally {
 				PermissionsManager.get().popUser();
 			}

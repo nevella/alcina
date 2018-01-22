@@ -17,6 +17,7 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ReplayInstruction;
@@ -57,6 +58,8 @@ public class LogStoreInterceptors {
 	private String lastFocussedValueMessage;
 
 	private boolean numberedElements;
+
+	private HandlerRegistration windowClosingHandlerRegistration;
 
 	public void handleNativeEvent(Event nativeEvent, boolean click,
 			boolean blur, boolean focus) {
@@ -176,6 +179,8 @@ public class LogStoreInterceptors {
 	public void logHistoryEvents() {
 		this.historyHandlerRegistration = History
 				.addValueChangeHandler(historyListener);
+		windowClosingHandlerRegistration=Window.addWindowClosingHandler(evt -> AlcinaTopics.logCategorisedMessage(new StringPair(
+				AlcinaTopics.LOG_CATEGORY_HISTORY, "window closing")));
 	}
 
 	public void logStat(String stat) {
@@ -210,6 +215,9 @@ public class LogStoreInterceptors {
 		}
 		if (nativePreviewHandlerRegistration != null) {
 			nativePreviewHandlerRegistration.removeHandler();
+		}
+		if (windowClosingHandlerRegistration != null) {
+			windowClosingHandlerRegistration.removeHandler();
 		}
 	}
 
