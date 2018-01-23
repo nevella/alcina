@@ -477,7 +477,8 @@ public abstract class ClientTransformManager extends TransformManager {
 					DomainTransformRequest dtr = null;
 					if (pl != null) {
 						dtr = new DomainTransformRequest();
-						dtr.setClientInstance(ClientBase.getClientInstance());
+						ClientInstance clientInstance = PermissionsManager.get().getClientInstance();
+						dtr.setClientInstance(clientInstance);
 					}
 					for (ObjectDeltaResult item : result) {
 						replayRemoteEvents(item.getTransforms(),

@@ -31,7 +31,7 @@ public class Sx {
 
 	private static void commitPoint(boolean set) {
 		HttpServletRequest threadLocalRequest = CommonRemoteServiceServlet
-				.getCrossServletThreadLocalRequest();
+				.getContextThreadLocalRequest();
 		if (threadLocalRequest == null) {
 			if(AppPersistenceBase.isTest()){
 				Sx.nonThreadedCommitPoint = set;

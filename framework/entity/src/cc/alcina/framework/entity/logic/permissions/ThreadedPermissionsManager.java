@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -31,124 +32,129 @@ import cc.alcina.framework.entity.entityaccess.JPAImplementation;
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class ThreadedPermissionsManager extends PermissionsManager {
-	private static ThreadLocal getTTL = new ThreadLocal() {
-		protected synchronized Object initialValue() {
-			return new ThreadedPermissionsManager();
-		}
-	};
+    private static ThreadLocal getTTL = new ThreadLocal() {
+        protected synchronized Object initialValue() {
+            return new ThreadedPermissionsManager();
+        }
+    };
 
-	public static ThreadedPermissionsManager cast() {
-		return (ThreadedPermissionsManager) PermissionsManager.get();
-	}
+    public static ThreadedPermissionsManager cast() {
+        return (ThreadedPermissionsManager) PermissionsManager.get();
+    }
 
-	public static void clearThreadLocal() {
-		getTTL.remove();
-	}
+    @Override
+    public ClientInstance getClientInstance() {
+        return ThreadedPmClientInstanceResolver.get().getClientInstance();
+    }
 
-	public static boolean is() {
-		return get() instanceof ThreadedPermissionsManager;
-	}
+    public static void clearThreadLocal() {
+        getTTL.remove();
+    }
 
-	public static ThreadedPermissionsManager tpmInstance() {
-		return new ThreadedPermissionsManager();
-	}
+    public static boolean is() {
+        return get() instanceof ThreadedPermissionsManager;
+    }
 
-	public <T> T callWithPushedSystemUserIfNeeded(Callable<T> callable)
-			throws Exception {
-		if (isRoot()) {
-			return callable.call();
-		} else {
-			try {
-				pushSystemUser();
-				return callable.call();
-			} finally {
-				popSystemUser();
-			}
-		}
-	}
+    public static ThreadedPermissionsManager tpmInstance() {
+        return new ThreadedPermissionsManager();
+    }
 
-	public <T> T callWithPushedSystemUserIfNeededNoThrow(Callable<T> callable) {
-		try {
-			if (isRoot()) {
-				return callable.call();
-			} else {
-				try {
-					pushSystemUser();
-					return callable.call();
-				} finally {
-					popSystemUser();
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
+    public <T> T callWithPushedSystemUserIfNeeded(Callable<T> callable)
+            throws Exception {
+        if (isRoot()) {
+            return callable.call();
+        } else {
+            try {
+                pushSystemUser();
+                return callable.call();
+            } finally {
+                popSystemUser();
+            }
+        }
+    }
 
-	@Override
-	public PermissionsManager getT() {
-		return (ThreadedPermissionsManager) getTTL.get();
-	}
+    public <T> T callWithPushedSystemUserIfNeededNoThrow(Callable<T> callable) {
+        try {
+            if (isRoot()) {
+                return callable.call();
+            } else {
+                try {
+                    pushSystemUser();
+                    return callable.call();
+                } finally {
+                    popSystemUser();
+                }
+            }
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
 
-	public void popSystemOrCurrentUser() {
-		popUser();
-	}
+    @Override
+    public PermissionsManager getT() {
+        return (ThreadedPermissionsManager) getTTL.get();
+    }
 
-	public void pushSystemOrCurrentUserAsRoot() {
-		if (isLoggedIn()) {
-			pushUser(getUser(), getLoginState(), true);
-		} else {
-			pushSystemUser();
-		}
-	}
+    public void popSystemOrCurrentUser() {
+        popUser();
+    }
 
-	// This should never be necessary, if the code always surrounds user
-	// push/pop in try/finally...but...
-	public void reset() {
-		userStack.clear();
-		stateStack.clear();
-		setRoot(false);
-	}
+    public void pushSystemOrCurrentUserAsRoot() {
+        if (isLoggedIn()) {
+            pushUser(getUser(), getLoginState(), true);
+        } else {
+            pushSystemUser();
+        }
+    }
 
-	public void runWithPushedSystemUserIfNeeded(Runnable runnable) {
-		try {
-			if (isRoot()) {
-				runnable.run();
-			} else {
-				try {
-					pushSystemUser();
-					runnable.run();
-				} finally {
-					popSystemUser();
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
+    // This should never be necessary, if the code always surrounds user
+    // push/pop in try/finally...but...
+    public void reset() {
+        userStack.clear();
+        stateStack.clear();
+        setRoot(false);
+    }
 
-	@Override
-	public void setUser(IUser user) {
-		super.setUser(user);
-		UserInstantiator userInstantiator = Registry
-				.implOrNull(UserInstantiator.class);
-		if (userInstantiator != null) {
-			try {
-				setInstantiatedUser(userInstantiator.instantiate(user));
-			} catch (Exception e) {
-				if (Registry.impl(JPAImplementation.class)
-						.isLazyInitialisationException(e)) {
-				} else {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}
-	}
+    public void runWithPushedSystemUserIfNeeded(Runnable runnable) {
+        try {
+            if (isRoot()) {
+                runnable.run();
+            } else {
+                try {
+                    pushSystemUser();
+                    runnable.run();
+                } finally {
+                    popSystemUser();
+                }
+            }
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
 
-	@Override
-	// TODO - jade - for people with large memberships, this could be cached
-	// (memcache) - hardly worthwhile tho
-	protected void recursivePopulateGroupMemberships(Set<IGroup> members,
-			Set<IGroup> processed) {
-		super.recursivePopulateGroupMemberships(members, processed);
-	}
+    @Override
+    public void setUser(IUser user) {
+        super.setUser(user);
+        UserInstantiator userInstantiator = Registry
+                .implOrNull(UserInstantiator.class);
+        if (userInstantiator != null) {
+            try {
+                setInstantiatedUser(userInstantiator.instantiate(user));
+            } catch (Exception e) {
+                if (Registry.impl(JPAImplementation.class)
+                        .isLazyInitialisationException(e)) {
+                } else {
+                    throw new WrappedRuntimeException(e);
+                }
+            }
+        }
+    }
+
+    @Override
+    // TODO - jade - for people with large memberships, this could be cached
+    // (memcache) - hardly worthwhile tho
+    protected void recursivePopulateGroupMemberships(Set<IGroup> members,
+            Set<IGroup> processed) {
+        super.recursivePopulateGroupMemberships(members, processed);
+    }
 }
