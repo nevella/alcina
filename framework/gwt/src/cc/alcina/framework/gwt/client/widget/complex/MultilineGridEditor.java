@@ -114,8 +114,12 @@ public abstract class MultilineGridEditor<H extends HasIdAndLocalId>
 		values.forEach(v -> TransformManager.get().registerDomainObject(v));
 		grids = new ArrayList<>();
 		for (H value : values) {
-			PaneWrapperWithObjects view = new ContentViewFactory().noCaption()
-					.createBeanView(value, editable, null, true, true);
+		    ContentViewFactory contentViewFactory = new ContentViewFactory()
+	                .noCaption().setBeanClass(value.getClass()).editable(editable)
+	                .autoSave(true).doNotClone(true);
+	        customiseContentViewFactory(contentViewFactory, getModel());
+	        PaneWrapperWithObjects view = contentViewFactory
+	                .createBeanView(value);
 			GridForm grid = (GridForm) view.getBoundWidget();
 			grid.setModel(value);
 			grid.setValue(value);
@@ -131,6 +135,9 @@ public abstract class MultilineGridEditor<H extends HasIdAndLocalId>
 		holder.add(tableToolbarHolder);
 		toolbar.addVetoableActionListener(toolbarListener);
 	}
+	protected void customiseContentViewFactory(
+            ContentViewFactory contentViewFactory, Object model) {
+    }
 
 	protected List<Link> createPerRowEditActions(H rowValue) {
 		Link link = Link.createNoUnderline("Delete", evt -> {
