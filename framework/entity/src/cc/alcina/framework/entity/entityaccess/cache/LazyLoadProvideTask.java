@@ -6,14 +6,27 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.MetricLogging;
 
 public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		implements PreProvideTask<T> {
+	private long minEvictionAge;
+
+	private int minEvictionSize;
+
+	protected Class<T> clazz;
+
+	protected void log(String template, Object... args) {
+		AlcinaMemCache.get().sqlLogger.format(template, args);
+	}
+
 	public static void metric(String key, boolean end) {
 		if (end) {
 			MetricLogging.get().end(key, AlcinaMemCache.get().metricLogger);
@@ -22,13 +35,10 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		}
 	}
 
-	private long minEvictionAge;
-
-	private int minEvictionSize;
-
-	protected Class<T> clazz;
-
-	private LinkedHashMap<Long, Long> idEvictionAge = new LinkedHashMap<Long, Long>();
+	@Override
+	public Class<T> forClazz() {
+		return this.clazz;
+	}
 
 	public LazyLoadProvideTask(long minEvictionAge, int minEvictionSize,
 			Class<T> clazz) {
@@ -37,9 +47,17 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		this.clazz = clazz;
 	}
 
-	@Override
-	public Class<T> forClazz() {
-		return this.clazz;
+	private LinkedHashMap<Long, Long> idEvictionAge = new LinkedHashMap<>();
+
+	private synchronized List<T> requireLazyLoad(Collection<T> objects) {
+		List<T> result = new ArrayList<T>();
+		for (T t : objects) {
+			Long evictionAge = idEvictionAge.get(t.getId());
+			if (evictionAge == null) {
+				result.add(t);
+			}
+		}
+		return result;
 	}
 
 	@Override
@@ -68,25 +86,12 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		}
 	}
 
-	@Override
-	public void writeLockedCleanup() {
-		if (evictionDisabled()) {
-			return;
-		}
-		Iterator<Entry<Long, Long>> itr = idEvictionAge.entrySet().iterator();
-		while (idEvictionAge.size() > minEvictionSize && itr.hasNext()) {
-			Entry<Long, Long> entry = itr.next();
-			if ((System.currentTimeMillis()
-					- entry.getValue()) > minEvictionAge) {
-				try {
-					evict(AlcinaMemCache.get(), entry.getKey());
-				} catch (Exception e) {
-					AlcinaTopics.notifyDevWarning(e);
-				}
-				itr.remove();
-			}
-		}
+	protected Object getLockObject() {
+		return this;
 	}
+
+	protected abstract void loadDependents(AlcinaMemCache alcinaMemCache,
+			List<T> requireLoad) throws Exception;
 
 	private void registerLoaded(AlcinaMemCache alcinaMemCache,
 			List<T> requireLoad) {
@@ -95,36 +100,98 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		}
 	}
 
-	private synchronized List<T> requireLazyLoad(Collection<T> objects) {
-		List<T> result = new ArrayList<T>();
-		for (T t : objects) {
-			Long evictionAge = idEvictionAge.get(t.getId());
-			if (evictionAge == null) {
-				result.add(t);
+	@Override
+	public void writeLockedCleanup() {
+		if (evictionDisabled()) {
+			return;
+		}
+		Iterator<Entry<Long, Long>> itr = idEvictionAge.entrySet().iterator();
+		EvictionToken evictionToken = new EvictionToken(AlcinaMemCache.get(),
+				this);
+		while (idEvictionAge.size() > (minEvictionSize+evictionToken.getTopLevelEvictedCount()) && itr.hasNext()) {
+			Entry<Long, Long> entry = itr.next();
+			if ((System.currentTimeMillis()
+					- entry.getValue()) > minEvictionAge) {
+				try {
+					Long key = entry.getKey();
+					if (!evictionToken.wasEvicted(key, this)) {
+						evict(evictionToken, key, true);
+					}
+				} catch (Exception e) {
+					AlcinaTopics.notifyDevWarning(e);
+				}
 			}
 		}
-		return result;
+		evictionToken.removeEvicted();
 	}
 
-	protected abstract boolean beforeLazyLoad(List<T> toLoad);
+	public static class EvictionToken {
+		public AlcinaMemCache cache;
 
-	protected abstract void evict(AlcinaMemCache alcinaMemCache, Long key);
+		private LazyLoadProvideTask topLevelTask;
+
+
+		public EvictionToken(AlcinaMemCache alcinaMemCache,
+				LazyLoadProvideTask lazyLoadProvideTask) {
+			this.cache = alcinaMemCache;
+			this.topLevelTask = lazyLoadProvideTask;
+		}
+
+		public int getTopLevelEvictedCount() {
+			return evicted.getAndEnsure(topLevelTask).size();
+		}
+
+		Multiset<LazyLoadProvideTask, Set<Long>> evicted=new Multiset<>();
+
+		public void removeEvicted() {
+			FormatBuilder fb = new FormatBuilder();
+			fb.line("Eviction stats:");
+			evicted.entrySet().forEach(e -> {
+				LazyLoadProvideTask task = e.getKey();
+				LinkedHashMap<Long, Long> idEvictionAge = task.idEvictionAge;
+				int s1 = idEvictionAge.size();
+				idEvictionAge.keySet().removeAll(e.getValue());
+				int s2 = idEvictionAge.size();
+				fb.line("\t%s: %s => %s (%s)", task.clazz, s1, s2, s1 - s2);
+			});
+			topLevelTask.log(fb.toString());
+		}
+
+		public boolean wasEvicted(Long key, LazyLoadProvideTask task) {
+			return evicted.contains(task, key);
+		}
+
+		public <T extends HasIdAndLocalId> T getObject(Long key,
+				Class<T> clazz) {
+			return cache.cache.get(clazz, key);
+		}
+
+		public void removeFromDomainCache(Set<? extends HasIdAndLocalId> set) {
+			for (HasIdAndLocalId hili : set) {
+				cache.cache.remove(hili);
+			}
+		}
+
+		public void setEvicted(Long key, LazyLoadProvideTask task) {
+			evicted.add(task, key);
+		}
+	}
 
 	protected boolean evictionDisabled() {
 		return true;
 	}
 
-	protected Object getLockObject() {
-		return this;
+	protected void evict(EvictionToken evictionToken, Long key, boolean top) {
+	}
+
+	public void evictDependents(EvictionToken evictionToken,
+			Collection<? extends HasIdAndLocalId> hilis) {
+		hilis.stream().forEach(
+				hili -> this.evict(evictionToken, hili.getId(), false));
 	}
 
 	protected abstract void lazyLoad(AlcinaMemCache alcinaMemCache,
 			Collection<T> objects) throws Exception;
 
-	protected abstract void loadDependents(AlcinaMemCache alcinaMemCache,
-			List<T> requireLoad) throws Exception;
-
-	protected void log(String template, Object... args) {
-		AlcinaMemCache.get().sqlLogger.format(template, args);
-	}
+	protected abstract boolean beforeLazyLoad(List<T> toLoad);
 }

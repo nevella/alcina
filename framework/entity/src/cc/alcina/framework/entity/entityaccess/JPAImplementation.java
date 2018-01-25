@@ -22,6 +22,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.MemcacheJoinHandler;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
@@ -73,4 +74,6 @@ public interface JPAImplementation {
 	boolean isLazyInitialisationException(Exception e);
 
 	void muteClassloaderLogging(boolean mute);
+
+	Set<HiliLocator> getSessionEntityLocators(EntityManager entityManager);
 }

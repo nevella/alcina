@@ -20,8 +20,12 @@ import java.io.Serializable;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -31,12 +35,14 @@ import javax.persistence.Query;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
+import org.hibernate.engine.internal.StatefulPersistenceContext;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.IdentifierValue;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.IdentifierGeneratorHelper;
-
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.IdentifierProperty;
@@ -345,5 +351,43 @@ public class JPAHibernateImpl implements JPAImplementation {
 			this.backupUnsavedValue = backupUnsavedValue;
 			this.identifierGenerator = identifierGenerator;
 		}
+	}
+
+	@Override
+	public Set<HiliLocator>
+			getSessionEntityLocators(EntityManager entityManager) {
+		Set<HiliLocator> result = new LinkedHashSet<>();
+		try {
+			SessionImplementor sessionImpl = (SessionImplementor) entityManager
+					.getDelegate();
+			PersistenceContext persistenceContext = sessionImpl
+					.getPersistenceContext();
+			Field entitiesField = StatefulPersistenceContext.class
+					.getDeclaredField("entitiesByKey");
+			Field proxiesField = StatefulPersistenceContext.class
+					.getDeclaredField("proxiesByKey");
+			Field entityPersisterField = EntityKey.class
+					.getDeclaredField("persister");
+			entitiesField.setAccessible(true);
+			entityPersisterField.setAccessible(true);
+			proxiesField.setAccessible(true);
+			List<Map> maps = Arrays.asList(
+					(Map) entitiesField.get(persistenceContext),
+					(Map) proxiesField.get(persistenceContext));
+			for (Map map : maps) {
+				for (Object obj : map.keySet()) {
+					EntityKey key = (EntityKey) obj;
+					long id = (long) key.getIdentifier();
+					SingleTableEntityPersister persister = (SingleTableEntityPersister) entityPersisterField
+							.get(key);
+					Class clazz = persister.getEntityMetamodel().getEntityType()
+							.getReturnedClass();
+					result.add(new HiliLocator(clazz, id, 0));
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
 	}
 }
