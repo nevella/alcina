@@ -123,4 +123,8 @@ public class HiliLocatorMap implements Cloneable, Serializable {
 					: null;
 		}
 	}
+
+	public void merge(HiliLocatorMap locatorMap) {
+		putAll(locatorMap);
+	}
 }
