@@ -20,8 +20,12 @@ import java.io.Serializable;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -30,9 +34,13 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.hibernate.LazyInitializationException;
+import org.hibernate.engine.internal.StatefulPersistenceContext;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.IdentifierValue;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.IdentifierProperty;
@@ -107,10 +115,9 @@ public class JPAHibernateImpl implements JPAImplementation {
 	public boolean bulkDelete(EntityManager em, Class clazz,
 			Collection<Long> ids) {
 		try {
-			em.createQuery(
-					String.format("delete %s where id in %s ",
-							clazz.getSimpleName(),
-							EntityUtils.longsToIdClause(ids))).executeUpdate();
+			em.createQuery(String.format("delete %s where id in %s ",
+					clazz.getSimpleName(), EntityUtils.longsToIdClause(ids)))
+					.executeUpdate();
 		} catch (Exception e) {
 			// probably a reference error, try with parent delete/cascade
 			return false;
@@ -137,7 +144,8 @@ public class JPAHibernateImpl implements JPAImplementation {
 		if (st.contains("OptimisticLockException")) {
 			return DomainTransformExceptionType.OPTIMISTIC_LOCK_EXCEPTION;
 		}
-		if (st.contains("org.hibernate.exception.ConstraintViolationException")) {
+		if (st.contains(
+				"org.hibernate.exception.ConstraintViolationException")) {
 			return DomainTransformExceptionType.FK_CONSTRAINT_EXCEPTION;
 		}
 		if (st.contains("java.beans.IntrospectionException")) {
@@ -165,8 +173,8 @@ public class JPAHibernateImpl implements JPAImplementation {
 			Object toPersist) throws Exception {
 		SessionImplementor session = (SessionImplementor) entityManager
 				.getDelegate();
-		EntityPersister persister = session.getEntityPersister(toPersist
-				.getClass().getName(), toPersist);
+		EntityPersister persister = session
+				.getEntityPersister(toPersist.getClass().getName(), toPersist);
 		IdentifierProperty ip = persister.getEntityMetamodel()
 				.getIdentifierProperty();
 		IdentifierValue backupUnsavedValue = setUnsavedValue(ip,
@@ -179,7 +187,8 @@ public class JPAHibernateImpl implements JPAImplementation {
 
 		private final IdentifierValue backupUnsavedValue;
 
-		public SavedId(IdentifierProperty ip, IdentifierValue backupUnsavedValue) {
+		public SavedId(IdentifierProperty ip,
+				IdentifierValue backupUnsavedValue) {
 			this.ip = ip;
 			this.backupUnsavedValue = backupUnsavedValue;
 		}
@@ -237,14 +246,15 @@ public class JPAHibernateImpl implements JPAImplementation {
 			LazyInitializer lazy = ((HibernateProxy) o)
 					.getHibernateLazyInitializer();
 			return new HiliLocator(lazy.getPersistentClass(),
-					(Long) lazy.getIdentifier(),0L);
+					(Long) lazy.getIdentifier(), 0L);
 		}
 		return new HiliLocator((HasIdAndLocalId) o);
 	}
 
 	@RegistryLocation(registryPoint = PersistenSetProjectionCreator.class, implementationType = ImplementationType.SINGLETON)
 	public static class PersistenSetProjectionCreator {
-		public Set createPersistentSetProjection(GraphProjectionContext context) {
+		public Set
+				createPersistentSetProjection(GraphProjectionContext context) {
 			return new HashSet();
 		}
 	}
@@ -279,7 +289,7 @@ public class JPAHibernateImpl implements JPAImplementation {
 				return object.toString();
 			}
 		} catch (Exception e) {
-			//stale transaction e.g.
+			// stale transaction e.g.
 			if (object instanceof HasIdAndLocalId) {
 				HiliHelper.asDomainPoint((HasId) object);
 			}
@@ -288,8 +298,8 @@ public class JPAHibernateImpl implements JPAImplementation {
 	}
 
 	@Override
-	public MemcacheJoinHandler getMemcacheJoinHandler(
-			final PropertyDescriptor pd) {
+	public MemcacheJoinHandler
+			getMemcacheJoinHandler(final PropertyDescriptor pd) {
 		final ElementCollection elementCollection = pd.getReadMethod()
 				.getAnnotation(ElementCollection.class);
 		final Column column = pd.getReadMethod().getAnnotation(Column.class);
@@ -309,12 +319,50 @@ public class JPAHibernateImpl implements JPAImplementation {
 					String string = rs.getString(getTargetSql());
 					Set enums = (Set) pd.getReadMethod().invoke(source,
 							new Object[0]);
-					enums.add(Enum.valueOf(
-							elementCollection.targetClass(), string));
+					enums.add(Enum.valueOf(elementCollection.targetClass(),
+							string));
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
 			}
 		};
+	}
+
+	@Override
+	public Set<HiliLocator>
+			getSessionEntityLocators(EntityManager entityManager) {
+		Set<HiliLocator> result = new LinkedHashSet<>();
+		try {
+			SessionImplementor sessionImpl = (SessionImplementor) entityManager
+					.getDelegate();
+			PersistenceContext persistenceContext = sessionImpl
+					.getPersistenceContext();
+			Field entitiesField = StatefulPersistenceContext.class
+					.getDeclaredField("entitiesByKey");
+			Field proxiesField = StatefulPersistenceContext.class
+					.getDeclaredField("proxiesByKey");
+			Field entityPersisterField = EntityKey.class
+					.getDeclaredField("persister");
+			entitiesField.setAccessible(true);
+			entityPersisterField.setAccessible(true);
+			proxiesField.setAccessible(true);
+			List<Map> maps = Arrays.asList(
+					(Map) entitiesField.get(persistenceContext),
+					(Map) proxiesField.get(persistenceContext));
+			for (Map map : maps) {
+				for (Object obj : map.keySet()) {
+					EntityKey key = (EntityKey) obj;
+					long id = (long) key.getIdentifier();
+					SingleTableEntityPersister persister = (SingleTableEntityPersister) entityPersisterField
+							.get(key);
+					Class clazz = persister.getEntityMetamodel().getEntityType()
+							.getReturnedClass();
+					result.add(new HiliLocator(clazz, id, 0));
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
 	}
 }

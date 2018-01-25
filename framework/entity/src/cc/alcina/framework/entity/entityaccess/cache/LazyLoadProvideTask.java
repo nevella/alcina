@@ -6,10 +6,13 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.MetricLogging;
 
 public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
@@ -44,7 +47,7 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		this.clazz = clazz;
 	}
 
-	private LinkedHashMap<Long, Long> idEvictionAge = new LinkedHashMap<Long, Long>();
+	private LinkedHashMap<Long, Long> idEvictionAge = new LinkedHashMap<>();
 
 	private synchronized List<T> requireLazyLoad(Collection<T> objects) {
 		List<T> result = new ArrayList<T>();
@@ -103,17 +106,74 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 			return;
 		}
 		Iterator<Entry<Long, Long>> itr = idEvictionAge.entrySet().iterator();
-		while (idEvictionAge.size() > minEvictionSize && itr.hasNext()) {
+		EvictionToken evictionToken = new EvictionToken(AlcinaMemCache.get(),
+				this);
+		while (idEvictionAge.size() > (minEvictionSize+evictionToken.getTopLevelEvictedCount()) && itr.hasNext()) {
 			Entry<Long, Long> entry = itr.next();
 			if ((System.currentTimeMillis()
 					- entry.getValue()) > minEvictionAge) {
 				try {
-					evict(AlcinaMemCache.get(), entry.getKey());
+					Long key = entry.getKey();
+					if (!evictionToken.wasEvicted(key, this)) {
+						evict(evictionToken, key, true);
+					}
 				} catch (Exception e) {
 					AlcinaTopics.notifyDevWarning(e);
 				}
-				itr.remove();
 			}
+		}
+		evictionToken.removeEvicted();
+	}
+
+	public static class EvictionToken {
+		public AlcinaMemCache cache;
+
+		private LazyLoadProvideTask topLevelTask;
+
+
+		public EvictionToken(AlcinaMemCache alcinaMemCache,
+				LazyLoadProvideTask lazyLoadProvideTask) {
+			this.cache = alcinaMemCache;
+			this.topLevelTask = lazyLoadProvideTask;
+		}
+
+		public int getTopLevelEvictedCount() {
+			return evicted.getAndEnsure(topLevelTask).size();
+		}
+
+		Multiset<LazyLoadProvideTask, Set<Long>> evicted=new Multiset<>();
+
+		public void removeEvicted() {
+			FormatBuilder fb = new FormatBuilder();
+			fb.line("Eviction stats:");
+			evicted.entrySet().forEach(e -> {
+				LazyLoadProvideTask task = e.getKey();
+				LinkedHashMap<Long, Long> idEvictionAge = task.idEvictionAge;
+				int s1 = idEvictionAge.size();
+				idEvictionAge.keySet().removeAll(e.getValue());
+				int s2 = idEvictionAge.size();
+				fb.line("\t%s: %s => %s (%s)", task.clazz, s1, s2, s1 - s2);
+			});
+			topLevelTask.log(fb.toString());
+		}
+
+		public boolean wasEvicted(Long key, LazyLoadProvideTask task) {
+			return evicted.contains(task, key);
+		}
+
+		public <T extends HasIdAndLocalId> T getObject(Long key,
+				Class<T> clazz) {
+			return cache.cache.get(clazz, key);
+		}
+
+		public void removeFromDomainCache(Set<? extends HasIdAndLocalId> set) {
+			for (HasIdAndLocalId hili : set) {
+				cache.cache.remove(hili);
+			}
+		}
+
+		public void setEvicted(Long key, LazyLoadProvideTask task) {
+			evicted.add(task, key);
 		}
 	}
 
@@ -121,7 +181,14 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		return true;
 	}
 
-	protected abstract void evict(AlcinaMemCache alcinaMemCache, Long key);
+	protected void evict(EvictionToken evictionToken, Long key, boolean top) {
+	}
+
+	public void evictDependents(EvictionToken evictionToken,
+			Collection<? extends HasIdAndLocalId> hilis) {
+		hilis.stream().forEach(
+				hili -> this.evict(evictionToken, hili.getId(), false));
+	}
 
 	protected abstract void lazyLoad(AlcinaMemCache alcinaMemCache,
 			Collection<T> objects) throws Exception;
