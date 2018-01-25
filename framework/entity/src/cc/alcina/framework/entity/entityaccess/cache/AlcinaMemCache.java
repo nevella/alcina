@@ -1755,6 +1755,7 @@ public class AlcinaMemCache implements RegistrableService {
 		try {
 			lock(false);
 			// we may lazy load - so need a read lock
+			// note that since method is synchronized, nothing will be evicted from hereonin
 			List<DomainTransformEvent> dtes = (List) persistenceEvent
 					.getDomainTransformLayerWrapper().persistentEvents;
 			List<DomainTransformEvent> filtered = filterInterestedTransforms(
