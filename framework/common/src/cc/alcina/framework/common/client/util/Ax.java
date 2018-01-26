@@ -99,4 +99,8 @@ public class Ax {
 			};
 		}
 	}
+
+	public static void err(Object object) {
+		System.err.println(object);
+	}
 }
