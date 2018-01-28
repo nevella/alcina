@@ -320,6 +320,10 @@ public class ResourceUtilities {
 		}
 	}
 
+	public static boolean not(Class clazz, String key) {
+		return !is(clazz, key);
+	}
+
 	public static String objectOrPrimitiveToString(Object object) {
 		if (object == null) {
 			return null;

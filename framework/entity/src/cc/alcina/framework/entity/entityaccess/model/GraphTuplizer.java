@@ -26,6 +26,7 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TClassRef;
 import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TFieldRef;
 import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TObjectRef;
+import cc.alcina.framework.entity.entityaccess.model.GraphTuplizer.DetupelizeInstruction;
 
 public class GraphTuplizer {
 	private GraphTuples tuples;
@@ -49,6 +50,8 @@ public class GraphTuplizer {
 		void prepareCustom(HasIdAndLocalId t);
 
 		void doCustom(TObjectRef inObjRef, HasIdAndLocalId t);
+
+		void prepare(TObjectRef inObjRef);
 	}
 
 	public static enum DetupelizeInstructionType {
@@ -171,19 +174,28 @@ public class GraphTuplizer {
 			DetupleizeMapper detupelizeMapper) {
 		this.tuples = tuples;
 		this.mapper = detupelizeMapper;
+		tuples.objects.forEach(this::prepare);
 		tuples.objects.forEach(this::create);
 		tuples.objects.forEach(this::nonRelational);
 		tuples.objects.forEach(this::relational);
 		tuples.objects.forEach(this::prepareCustom);
 		tuples.objects.forEach(this::doCustom);
 	}
-
+	private void prepare(TObjectRef inObjRef) {
+		if (mapper.ignore(inObjRef)) {
+			return;
+		}
+		mapper.prepare(inObjRef);
+	}
 	private void create(TObjectRef inObjRef) {
 		if (mapper.ignore(inObjRef)) {
 			return;
 		}
 		Class clazz = mapper.classFor(inObjRef.classRef);
 		long id = mapper.getId(inObjRef);
+		if(id==-1){
+			return;
+		}
 		HasIdAndLocalId t = (HasIdAndLocalId) Reflections.classLookup()
 				.newInstance(clazz, id, 0L);
 		t.setId(id);

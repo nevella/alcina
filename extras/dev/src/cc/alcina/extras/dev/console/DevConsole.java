@@ -72,8 +72,12 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.entity.registry.ClassDataCache;
+import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
+import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable.AlcinaChildContextRunner;
 
 public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>
@@ -1043,4 +1047,20 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
+	protected void initClassrefScanner() throws Exception {
+		ClassDataCache cache = new ServletClasspathScanner("*", true, false,
+				Logger.getLogger(getClass()), Registry.MARKER_RESOURCE,
+				Arrays.asList(
+						new String[] { "WEB-INF/classes", "WEB-INF/lib" }))
+								.getClasses();
+		ClassrefScanner classrefScanner = new ClassrefScanner();
+		if (ResourceUtilities.not(ServletLayerUtils.class,
+				"commitTestTransforms")) {
+			classrefScanner.noPersistence();
+		}
+		classrefScanner.scan(cache);
+	}
+
+	
 }

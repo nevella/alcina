@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
+import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TClassRef;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 public class GraphTuples {
@@ -90,6 +91,14 @@ public class GraphTuples {
 						.cachedAccessor(classRef.clazz, name);
 			}
 			return accessor;
+		}
+
+		// when to-class is different to from-class
+		public void moveTo(TClassRef to) {
+			accessor = null;
+			classRef = to;
+			field = null;
+			to.fieldRefs.add(this);
 		}
 	}
 
@@ -173,6 +182,7 @@ public class GraphTuples {
 		ref.name = clazz.getName();
 		classRefs.put(clazz, ref);
 		classRefList.add(ref);
+		ref.clazz = clazz;
 		if (GraphProjection.isPrimitiveOrDataClass(clazz)
 				|| Map.class.isAssignableFrom(clazz)
 				|| Collection.class.isAssignableFrom(clazz)
