@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.registry.ClassDataCache;
+import cc.alcina.framework.entity.registry.ClassDataCache.ClassDataItem;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
@@ -116,17 +117,28 @@ public class ClientReflectorJvm extends ClientReflector {
 	public ClientReflectorJvm() {
 		try {
 			ClassDataCache classes = null;
-			boolean cacheIt = !GWT.isClient() && ResourceUtilities
-					.is(ClientReflectorJvm.class, "cacheClasspathScan");
+			ResourceUtilities.ensureFromSystemProperties();
+			boolean cacheIt = false;
+			try {
+				cacheIt = !GWT.isClient() &&  ResourceUtilities
+						.is(ClientReflectorJvm.class, "cacheClasspathScan");
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
 			File cacheFile = cacheIt ? new File(ResourceUtilities
 					.get(ClientReflectorJvm.class, "cacheClasspathScanFile"))
 					: null;
 			if (cacheIt && cacheFile.exists()) {
 				try {
+					LooseContext.push();
+					LooseContext.set(KryoUtils.CONTEXT_OVERRIDE_CLASSLOADER,
+							ClassDataItem.class.getClassLoader());
 					classes = KryoUtils.deserializeFromFile(cacheFile,
 							ClassDataCache.class);
 				} catch (Exception e) {
 					e.printStackTrace();
+				} finally {
+					LooseContext.pop();
 				}
 			}
 			if (classes == null) {

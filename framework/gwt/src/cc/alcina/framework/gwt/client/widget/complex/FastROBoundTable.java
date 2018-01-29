@@ -60,6 +60,7 @@ import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
+import cc.alcina.framework.gwt.client.gwittir.widget.EndRowButtonClickedEvent;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
@@ -260,6 +261,15 @@ public class FastROBoundTable extends BoundTableExt {
 				table.getCellFormatter().setStyleName(row, col + startColumn,
 						this.columns[col].getStyleName());
 			}
+		}
+		if ((this.masks & BoundTableExt.END_ROW_BUTTON) > 0) {
+			EndRowButton endRowButton = new EndRowButton();
+			table.setWidget(row, this.columns.length + startColumn,
+					endRowButton);
+			int f_row = row;
+			endRowButton.addClickHandler(e -> {
+				EndRowButtonClickedEvent.fire(FastROBoundTable.this, f_row, o);
+			});
 		}
 		boolean odd = (this.calculateRowToObjectOffset(new Integer(row))
 				.intValue() % 2) != 0;

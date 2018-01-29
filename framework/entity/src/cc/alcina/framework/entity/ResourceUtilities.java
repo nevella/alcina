@@ -724,4 +724,15 @@ public class ResourceUtilities {
 	public static interface BeanInfoHelper {
 		BeanInfo postProcessBeanInfo(BeanInfo beanInfo);
 	}
+
+	public static void ensureFromSystemProperties() {
+		String property = System.getProperty("ResourceUtilities.propertyPath");
+		if (property != null) {
+			try {
+				registerCustomProperties(new FileInputStream(property));
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
 }

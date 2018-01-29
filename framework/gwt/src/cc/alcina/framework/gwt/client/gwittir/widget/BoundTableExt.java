@@ -2003,7 +2003,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		}
 	}
 
-	static class EndRowButton extends Composite implements HasClickHandlers {
+	protected static class EndRowButton extends Composite implements HasClickHandlers {
 		private FlowPanelClickable fpc;
 
 		public EndRowButton() {
