@@ -54,5 +54,12 @@
 	<classpathentry kind="lib" path="lib/framework/entity/jackson-core-2.7.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/jackson-databind-2.7.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev-patch.jar"/>
+	<classpathentry kind="lib" path="lib/extras/classmeta/javaparser-core-3.5.13-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/extras/classmeta/javaparser-core-generators-3.5.13-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/extras/classmeta/javaparser-metamodel-generator-3.5.13-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/extras/classmeta/javaparser-symbol-solver-core-3.5.13-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/extras/classmeta/javaparser-symbol-solver-logic-3.5.13-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/extras/classmeta/javaparser-symbol-solver-model-3.5.13-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/extras/jetty/jetty-all-uber.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
