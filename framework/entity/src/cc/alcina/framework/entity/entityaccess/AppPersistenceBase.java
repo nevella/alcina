@@ -30,6 +30,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
+import cc.alcina.framework.entity.entityaccess.updaters.DbUpdateRunner;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.registry.ClassDataCache;
@@ -239,6 +240,23 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 	protected void initDb() throws Exception {
 		createSystemGroupsAndUsers();
 		populateEntities();
+	}
+
+	public void runDbUpdaters(boolean preCacheWarmup) throws Exception {
+		try {
+			// NOTE - the order (cache, dbupdate, ensure objects) may need to be
+			// manually
+			// changed
+			// depends on whether the db update depends on some code which
+			// uses the cache...
+			// warmupCaches();
+			new DbUpdateRunner().run(getEntityManager(), preCacheWarmup);
+		} catch (Exception e) {
+			Logger.getLogger(AlcinaServerConfig.get().getMainLoggerName())
+					.warn("", e);
+			e.printStackTrace();
+			throw e;
+		}
 	}
 
 	protected void initLoggers() {
