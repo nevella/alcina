@@ -20,6 +20,7 @@ public class RegistryKeys {
 			key = new RegistryKey(clazz);
 			keys.put(name, key);
 		}
+		key.ensureClazz(clazz);
 		return key;
 	}
 

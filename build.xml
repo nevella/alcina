@@ -21,13 +21,14 @@
 		-->
 		<delete dir="${extras.collections.build.dir}" />
 		<delete dir="${extras.dev.build.dir}" />
-		<delete dir="${extras.dev.build.dir}" />
 		<delete dir="${framework.jvmclient.build.dir}" />
+		<delete dir="${framework.clientreflectorjvm.build.dir}" />
+		<delete dir="${framework.classmeta.build.dir}" />
 		<mkdir dir="${framework.dist.dir}" />
 	</target>
 	<target name="compile" description="Compiles all J2SE modules">
 		<mkdir dir="${framework.entity.build.dir}" />
-		<javac target="8" source="8"  includeantruntime="false" debug="on" srcdir="${framework.entity.src.dirs}" destdir="${framework.entity.build.dir}">
+		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${framework.entity.src.dirs}" destdir="${framework.entity.build.dir}">
 			<classpath>
 				<path refid="framework.common.lib.path" />
 			</classpath>
@@ -60,16 +61,7 @@
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
-		<mkdir dir="${extras.dev.build.dir}" />
-		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${extras.dev.src.dir}" destdir="${extras.dev.build.dir}">
-			<classpath>
-				<path refid="framework.common.lib.path" />
-				<path refid="framework.servlet.lib.path" />
-				<pathelement path="${framework.entity.build.dir}" />
-				<pathelement path="${framework.servlet.build.dir}" />
-			</classpath>
-			<compilerarg value="${alcina.compiler.args}" />
-		</javac>
+
 		<mkdir dir="${extras.misc.build.dir}" />
 		<javac target="8" source="8" includeantruntime="false" debug="on" destdir="${extras.misc.build.dir}">
 			<classpath>
@@ -95,7 +87,6 @@
 		<mkdir dir="${framework.jvmclient.build.dir}" />
 		<javac target="8" source="8" includeantruntime="false" debug="on" destdir="${framework.jvmclient.build.dir}">
 			<src path="${framework.jvmclient.src.dir}" />
-			<src path="${framework.jvmclient.src.dir.2}" />
 			<exclude name="cc/alcina/framework/common/translatable/**" />
 			<classpath>
 				<path refid="framework.common.lib.path" />
@@ -103,7 +94,41 @@
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
+		<mkdir dir="${framework.classmeta.build.dir}" />
+		<javac target="8" source="8" includeantruntime="false" debug="on" destdir="${framework.classmeta.build.dir}">
+			<src path="${framework.classmeta.src.dir}" />
+			<exclude name="cc/alcina/framework/common/translatable/**" />
+			<classpath>
+				<path refid="framework.common.lib.path" />
+				<pathelement path="${framework.entity.build.dir}" />
+			</classpath>
+			<compilerarg value="${alcina.compiler.args}" />
+		</javac>
+		<!-- depends on classmeta -->
+		<mkdir dir="${framework.clientreflectorjvm.build.dir}" />
+		<javac target="8" source="8" includeantruntime="false" debug="on" destdir="${framework.clientreflectorjvm.build.dir}">
+			<src path="${framework.clientreflectorjvm.src.dir}" />
+			<exclude name="cc/alcina/framework/common/translatable/**" />
+			<classpath>
+				<path refid="framework.common.lib.path" />
+				<pathelement path="${framework.classmeta.build.dir}" />
+				<pathelement path="${framework.entity.build.dir}" />
+			</classpath>
+			<compilerarg value="${alcina.compiler.args}" />
+		</javac>
 
+		<!-- depends on classmeta -->
+		<mkdir dir="${extras.dev.build.dir}" />
+		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${extras.dev.src.dir}" destdir="${extras.dev.build.dir}">
+			<classpath>
+				<path refid="framework.common.lib.path" />
+				<path refid="framework.servlet.lib.path" />
+				<pathelement path="${framework.classmeta.build.dir}" />
+				<pathelement path="${framework.entity.build.dir}" />
+				<pathelement path="${framework.servlet.build.dir}" />
+			</classpath>
+			<compilerarg value="${alcina.compiler.args}" />
+		</javac>
 	</target>
 	<target name="check-cluster-tasks-jar">
 		<available file="${extras.tasks.dist.dir}/${ant.project.name}-cluster-tasks.jar" property="cluster-tasks-jar.present" />
@@ -116,12 +141,12 @@
 		</jar>
 	</target>
 	<target name="make-gwittir-trunk-jar" description="make-gwittir-trunk-jar" depends="">
-			<jar destfile="${alcina.home}/dist-extras/gwittir-trunk-2.jar">
-				<fileset dir="${alcina.home}/lib/framework/gwt/gwittir-trunk/">
-					<include name="**/*.*" />
-				</fileset>
-			</jar>
-		</target>
+		<jar destfile="${alcina.home}/dist-extras/gwittir-trunk-2.jar">
+			<fileset dir="${alcina.home}/lib/framework/gwt/gwittir-trunk/">
+				<include name="**/*.*" />
+			</fileset>
+		</jar>
+	</target>
 	<target name="make-ant-jar" description="Make the build support jar" depends="compile,check-cluster-tasks-jar" unless="cluster-tasks-jar.present">
 		<mkdir dir="${extras.dist.dir}" />
 		<mkdir dir="${extras.tasks.dist.dir}" />
@@ -156,8 +181,8 @@
 				<include name="**/*.java" />
 			</fileset>
 			<fileset dir="${framework.dir}/gwt/src">
-							<include name="**/*.java" />
-						</fileset>
+				<include name="**/*.java" />
+			</fileset>
 			<fileset dir="${framework.entity.base.dir}/src">
 				<include name="**/*.java" />
 				<include name="**/*.properties" />
@@ -209,6 +234,20 @@
 				<include name="**/*.*" />
 			</fileset>
 			<fileset dir="${framework.jvmclient.src.dir}">
+				<include name="**/*.*" />
+				<exclude name="**/*.class" />
+			</fileset>
+			<fileset dir="${framework.classmeta.build.dir}">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${framework.classmeta.src.dir}">
+				<include name="**/*.*" />
+				<exclude name="**/*.class" />
+			</fileset>
+			<fileset dir="${framework.clientreflectorjvm.build.dir}">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${framework.clientreflectorjvm.src.dir}">
 				<include name="**/*.*" />
 				<exclude name="**/*.class" />
 			</fileset>

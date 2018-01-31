@@ -34,7 +34,7 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 
 	long loadClassErrNanos = 0;
 
-	boolean debug = true;
+	boolean debug = false;
 
 	int ignoreCount = 0;
 
@@ -54,6 +54,7 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 			T out = null;
 			T existing = incomingCache.classData.get(found.className);
 			if (existing != null && existing.isUnchangedFrom(found)) {
+				existing.copyMetaFrom(found);
 				out = existing;
 			} else {
 				try {

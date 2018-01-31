@@ -307,6 +307,7 @@ public class Registry {
 			if (!required) {
 				return new ArrayList<>(0);
 			}
+			System.out.println(registry.toString());
 			throw new RuntimeException(CommonUtils.formatJ(
 					"Unable to locate %s - %s", registryPoint, targetClass));
 		}

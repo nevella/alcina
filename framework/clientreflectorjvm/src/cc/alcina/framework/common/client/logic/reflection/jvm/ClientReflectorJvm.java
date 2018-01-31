@@ -36,7 +36,9 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.registry.ClassMetadata;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.AnnotationUtils;
@@ -114,20 +116,12 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	public ClientReflectorJvm() {
 		try {
-			ClassMetadataCache classes = null;
+			LooseContext.pushWithKey(KryoUtils.CONTEXT_OVERRIDE_CLASSLOADER,
+					ClassMetadata.class.getClassLoader());
 			ResourceUtilities.ensureFromSystemProperties();
-			boolean cacheIt = false;
-			try {
-				cacheIt = !GWT.isClient() && ResourceUtilities
-						.is(ClientReflectorJvm.class, "cacheClasspathScan");
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
-			if (classes == null) {
-				classes = new CachingClasspathScanner("*", true, false, null,
-						Registry.MARKER_RESOURCE,
-						Arrays.asList(new String[] {})).getClasses();
-			}
+			ClassMetadataCache classes = new CachingClasspathScanner("*", true,
+					false, null, Registry.MARKER_RESOURCE,
+					Arrays.asList(new String[] {})).getClasses();
 			String filterClassName = System.getProperty(PROP_FILTER_CLASSNAME);
 			/*
 			 * The reason for this is that gwt needs the compiled annotation
@@ -191,6 +185,8 @@ public class ClientReflectorJvm extends ClientReflector {
 					"client-reflector");
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		} finally {
+			LooseContext.pop();
 		}
 	}
 

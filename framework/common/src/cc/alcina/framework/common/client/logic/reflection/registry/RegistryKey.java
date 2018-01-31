@@ -22,7 +22,10 @@ public class RegistryKey {
 	}
 
 	public boolean equals(Object anObject) {
-		return this.name.equals(anObject);
+		if (anObject instanceof RegistryKey) {
+			return this.name.equals(((RegistryKey) anObject).name);
+		}
+		return false;
 	}
 
 	public int hashCode() {
@@ -45,5 +48,14 @@ public class RegistryKey {
 			simpleName = name.replaceFirst(".+\\.", "");
 		}
 		return simpleName;
+	}
+
+	public void ensureClazz(Class<?> clazz) {
+		this.clazz = clazz;
+	}
+
+	@Override
+	public String toString() {
+		return name + " (rk)";
 	}
 }

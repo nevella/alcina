@@ -10,6 +10,9 @@
 		<fileset dir="${framework.gwt.lib.dir}">
 			<include name="**/*.jar" />
 		</fileset>
+		<fileset dir="${framework.classmeta.lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
 	</path>
 	<fileset dir="${alcina.home}/dist" id="alcina.ear.exports">
 		<include name="alcina-entity.jar" />

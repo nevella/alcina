@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryProvider;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistryKey;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.SEUtilities;
 
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
@@ -104,10 +105,18 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 	public void forAllRegistries(Class<?> clazz) {
 		Registry sourceInstance = null;
 		for (Registry registryInstance : getPerClassLoader().values()) {
-			if (registryInstance.lookup(false, clazz, void.class,
-					false) != null) {
-				sourceInstance = registryInstance;
-				break;
+			try {
+				if (registryInstance.lookup(false, clazz, void.class,
+						false) != null) {
+					sourceInstance = registryInstance;
+					break;
+				}
+			} catch (RuntimeException e) {
+				if(CommonUtils.extractCauseOfClass(e, ClassNotFoundException.class)!=null){
+					//squelch - not in this module (i.e. this is an ejb classloader)
+				}else{
+					throw e;
+				}
 			}
 		}
 		for (Registry registryInstance : getPerClassLoader().values()) {

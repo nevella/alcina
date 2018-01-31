@@ -188,27 +188,18 @@ public class ClasspathScanner {
             return null;
         }
 
-        protected synchronized void add(String fileName, long modificationDate,
+        protected synchronized void add(String relativeClassPath, long modificationDate,
                 URL url, InputStream inputStream) {
-            fileName = fileName.replace("\\", "/");
-            if ((fileName.startsWith(scanner.getPkg()))
-                    && (fileName.endsWith(".class"))) {
+            relativeClassPath = relativeClassPath.replace("\\", "/");
+            if ((relativeClassPath.startsWith(scanner.getPkg()))
+                    && (relativeClassPath.endsWith(".class"))) {
                 boolean add = scanner.isRecur() ? true
-                        : fileName.substring(scanner.getPkg().length() + 1)
+                        : relativeClassPath.substring(scanner.getPkg().length() + 1)
                                 .indexOf("/") < 0;
                 if (add) {
-                    String cName = fileName.substring(0, fileName.length() - 6)
-                            .replace('/', '.');
-                    ClassMetadata item = new ClassMetadata();
-                    item.className = cName;
-                    item.date = new Date(modificationDate);
-                    if (url != null) {
-                        item.url = url;
-                        item.urlString = url.toString();
-                    } else {
-                        // ignore straight jars
-                        // item.evalMd5(inputStream);
-                    }
+                	ClassMetadata item = ClassMetadata.fromRelativeSourcePath(relativeClassPath,url,
+                			inputStream, modificationDate);
+                    
                     scanner.classDataCache.add(item);
                 }
             }

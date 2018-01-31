@@ -1279,4 +1279,8 @@ public class ThreadlocalTransformManager extends TransformManager
 			return locator;
 		}
 	}
+
+	public static boolean is() {
+		return TransformManager.get() instanceof ThreadlocalTransformManager;
+	}
 }
