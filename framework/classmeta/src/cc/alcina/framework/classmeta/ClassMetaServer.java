@@ -1,8 +1,9 @@
-package cc.alcina.framework.extras.classmeta;
+package cc.alcina.framework.classmeta;
 
 import org.eclipse.jetty.server.Server;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class ClassMetaServer {
 	public static void main(String[] args) {
@@ -11,13 +12,14 @@ public class ClassMetaServer {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-		
 	}
 
 	private void start() throws Exception {
-		Server server = new Server(10005);
-        server.start();
-        server.dumpStdErr();
-        server.join();
+		int port = 10005;
+		Server server = new Server(port);
+		server.setHandler(new ClassMetaHandler());
+		server.start();
+		server.dumpStdErr();
+		server.join();
 	}
 }

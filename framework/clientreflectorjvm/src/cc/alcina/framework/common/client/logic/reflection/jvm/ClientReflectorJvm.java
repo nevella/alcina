@@ -20,6 +20,7 @@ import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 
+import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -35,13 +36,10 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.registry.ClassDataCache;
-import cc.alcina.framework.entity.registry.ClassDataCache.ClassDataItem;
+import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.AnnotationUtils;
-import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.MethodWrapper;
 
 /**
@@ -116,38 +114,19 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	public ClientReflectorJvm() {
 		try {
-			ClassDataCache classes = null;
+			ClassMetadataCache classes = null;
 			ResourceUtilities.ensureFromSystemProperties();
 			boolean cacheIt = false;
 			try {
-				cacheIt = !GWT.isClient() &&  ResourceUtilities
+				cacheIt = !GWT.isClient() && ResourceUtilities
 						.is(ClientReflectorJvm.class, "cacheClasspathScan");
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
-			File cacheFile = cacheIt ? new File(ResourceUtilities
-					.get(ClientReflectorJvm.class, "cacheClasspathScanFile"))
-					: null;
-			if (cacheIt && cacheFile.exists()) {
-				try {
-					LooseContext.push();
-					LooseContext.set(KryoUtils.CONTEXT_OVERRIDE_CLASSLOADER,
-							ClassDataItem.class.getClassLoader());
-					classes = KryoUtils.deserializeFromFile(cacheFile,
-							ClassDataCache.class);
-				} catch (Exception e) {
-					e.printStackTrace();
-				} finally {
-					LooseContext.pop();
-				}
-			}
 			if (classes == null) {
-				classes = new ServletClasspathScanner("*", true, false, null,
+				classes = new CachingClasspathScanner("*", true, false, null,
 						Registry.MARKER_RESOURCE,
 						Arrays.asList(new String[] {})).getClasses();
-				if (cacheIt) {
-					KryoUtils.serializeToFile(classes, cacheFile);
-				}
 			}
 			String filterClassName = System.getProperty(PROP_FILTER_CLASSNAME);
 			/*

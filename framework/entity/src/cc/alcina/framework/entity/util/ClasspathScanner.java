@@ -43,8 +43,8 @@ import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.registry.ClassDataCache;
-import cc.alcina.framework.entity.registry.ClassDataCache.ClassDataItem;
+import cc.alcina.framework.entity.registry.ClassMetadata;
+import cc.alcina.framework.entity.registry.ClassMetadataCache;
 
 /**
  *
@@ -82,7 +82,7 @@ public class ClasspathScanner {
 
     private boolean ignoreJars;
 
-    public ClassDataCache classDataCache = new ClassDataCache();
+    public ClassMetadataCache classDataCache = new ClassMetadataCache();
 
     public ClasspathScanner(String pkg) {
         this(pkg, false, false);
@@ -95,7 +95,7 @@ public class ClasspathScanner {
         sanitizePackage(pkg);
     }
 
-    public ClassDataCache getClasses() throws Exception {
+    public ClassMetadataCache getClasses() throws Exception {
         getClassNames();
         return classDataCache;
     }
@@ -138,7 +138,7 @@ public class ClasspathScanner {
         return getPkg();
     }
 
-    protected void invokeHandler(URL url) {
+    public void invokeHandler(URL url) {
         try {
             for (Class<? extends ClasspathVisitor> visitorClass : visitors) {
                 ClasspathVisitor visitor = visitorClass
@@ -199,11 +199,12 @@ public class ClasspathScanner {
                 if (add) {
                     String cName = fileName.substring(0, fileName.length() - 6)
                             .replace('/', '.');
-                    ClassDataItem item = new ClassDataItem();
+                    ClassMetadata item = new ClassMetadata();
                     item.className = cName;
                     item.date = new Date(modificationDate);
                     if (url != null) {
                         item.url = url;
+                        item.urlString = url.toString();
                     } else {
                         // ignore straight jars
                         // item.evalMd5(inputStream);
@@ -308,8 +309,6 @@ public class ClasspathScanner {
                 this.root = root;
             }
 
-            // Print information about
-            // each type of file.
             @Override
             public FileVisitResult visitFile(Path path,
                     BasicFileAttributes attr) {
@@ -417,7 +416,7 @@ public class ClasspathScanner {
         }
 
         @Override
-        public ClassDataCache getClasses() throws Exception {
+        public ClassMetadataCache getClasses() throws Exception {
             List<URL> visitedUrls = new ArrayList<URL>();
             List<ClassLoader> classLoaders = getScannerClassLoadersToTry();
             for (ClassLoader classLoader : classLoaders) {

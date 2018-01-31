@@ -44,6 +44,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -512,6 +513,12 @@ public class ResourceUtilities {
 
 	public static String readUrlAsStringWithPost(String strUrl, String postBody,
 			StringMap headers) throws Exception {
+		byte[] bytes = readUrlAsBytesWithPost(strUrl, postBody, headers);
+		return new String(bytes, StandardCharsets.UTF_8);
+	}
+
+	public static byte[] readUrlAsBytesWithPost(String strUrl, String postBody,
+			StringMap headers) throws Exception {
 		InputStream in = null;
 		HttpURLConnection connection = null;
 		try {
@@ -530,7 +537,7 @@ public class ResourceUtilities {
 			wout.flush();
 			wout.close();
 			in = connection.getInputStream();
-			String input = readStreamToString(in);
+			byte[] input = readStreamToByteArray(in);
 			return input;
 		} catch (IOException ioe) {
 			if (connection != null) {

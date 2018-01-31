@@ -62,6 +62,7 @@ import cc.alcina.extras.dev.DevHelper;
 import cc.alcina.extras.dev.DevHelper.StringPrompter;
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdNextCommandCaches;
+import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -75,7 +76,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
-import cc.alcina.framework.entity.registry.ClassDataCache;
+import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable.AlcinaChildContextRunner;
@@ -1049,7 +1050,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	protected void initClassrefScanner() throws Exception {
-		ClassDataCache cache = new ServletClasspathScanner("*", true, false,
+		ClassMetadataCache cache = new CachingClasspathScanner("*", true, false,
 				Logger.getLogger(getClass()), Registry.MARKER_RESOURCE,
 				Arrays.asList(
 						new String[] { "WEB-INF/classes", "WEB-INF/lib" }))

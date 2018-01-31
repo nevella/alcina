@@ -10,6 +10,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Base64;
 
+import javax.servlet.ServletOutputStream;
+
 import org.objenesis.strategy.SerializingInstantiatorStrategy;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -22,6 +24,7 @@ import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.esotericsoftware.minlog.Log;
 
+import cc.alcina.framework.classmeta.ClassMetaResponse;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.LooseContext;
 
@@ -133,18 +136,13 @@ public class KryoUtils {
 	public static void serializeToFile(Object object, File file,
 			boolean unsafe) {
 		try (OutputStream os = new FileOutputStream(file)) {
-			Kryo kryo = newKryo();
-			Output output = unsafe ? new UnsafeOutput(os) : new Output(os);
-			object = writeReplace(object);
-			kryo.writeObject(output, object);
-			output.flush();
-			output.close();
+			serializeToStream(object, os, unsafe);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
 
-	private static <T> T deserializeFromByteArray(byte[] bytes,
+	public static <T> T deserializeFromByteArray(byte[] bytes,
 			Class<T> knownType, boolean unsafe) {
 		try {
 			Kryo kryo = newKryo();
@@ -198,5 +196,19 @@ public class KryoUtils {
 		kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(
 				new SerializingInstantiatorStrategy()));
 		return kryo;
+	}
+
+	public static void serializeToStream(Object object, OutputStream os,
+			boolean unsafe) {
+		try {
+			Kryo kryo = newKryo();
+			Output output = unsafe ? new UnsafeOutput(os) : new Output(os);
+			object = writeReplace(object);
+			kryo.writeObject(output, object);
+			output.flush();
+			output.close();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }

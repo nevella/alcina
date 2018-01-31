@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.PropertyKeyValueMapper;
@@ -32,6 +33,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.MultikeyMap;
@@ -54,6 +56,8 @@ public class Registry {
 	public static void appShutdown() {
 		provider.appShutdown();
 	}
+
+	private RegistryKeys keys;
 
 	public static <T> T checkSingleton(Class<T> clazz) {
 		return get().singleton0(clazz, true);
@@ -146,13 +150,13 @@ public class Registry {
 		return get().impl0(registryPoint, void.class, false);
 	}
 
-	public static <V> V impl(Class<V> registryPoint, Class targetObjectClass) {
-		return get().impl0(registryPoint, targetObjectClass, false);
+	public static <V> V impl(Class<V> registryPoint, Class targetClass) {
+		return get().impl0(registryPoint, targetClass, false);
 	}
 
-	public static <V> V impl(Class<V> registryPoint, Class targetObjectClass,
+	public static <V> V impl(Class<V> registryPoint, Class targetClass,
 			boolean allowNull) {
-		return get().impl0(registryPoint, targetObjectClass, allowNull);
+		return get().impl0(registryPoint, targetClass, allowNull);
 	}
 
 	public static <V> Optional<V> implOptional(Class<V> registryPoint) {
@@ -200,13 +204,13 @@ public class Registry {
 	private ClassLookup classLookup;
 
 	// registrypoint/targetClass/impl/impl
-	protected UnsortedMultikeyMap<Class> registry;
+	protected UnsortedMultikeyMap<RegistryKey> registry;
 
 	// registrypoint/targetClass/priority
 	protected UnsortedMultikeyMap<Integer> targetPriority;
 
 	// registrypoint/targetClass/exact-match-class
-	protected UnsortedMultikeyMap<Class> exactMap;
+	protected UnsortedMultikeyMap<RegistryKey> exactMap;
 
 	// registrypoint/targetClass/impl-type
 	protected UnsortedMultikeyMap<ImplementationType> implementationTypeMap;
@@ -217,28 +221,30 @@ public class Registry {
 	protected Map<String, Object> voidPointSingletons;
 
 	public Registry() {
-		registry = new UnsortedMultikeyMap<Class>(3, 0, delegateCreator);
+		keys = new RegistryKeys();
+		registry = new UnsortedMultikeyMap<RegistryKey>(3, 0, delegateCreator);
 		targetPriority = new UnsortedMultikeyMap<Integer>(2, 0,
 				delegateCreator);
 		singletons = new UnsortedMultikeyMap<Object>(2, 0, delegateCreator);
 		voidPointSingletons = new LinkedHashMap<String, Object>(1000);
-		exactMap = new UnsortedMultikeyMap<Class>(2, 0, delegateCreator);
+		exactMap = new UnsortedMultikeyMap<RegistryKey>(2, 0, delegateCreator);
 		implementationTypeMap = new UnsortedMultikeyMap<ImplementationType>(2,
 				0, delegateCreator);
 	}
 
 	public void copyFrom(Registry sourceInstance, Class<?> clazz) {
-		registry.asMap(clazz).putMulti(sourceInstance.registry.asMap(clazz));
-		targetPriority.asMap(clazz)
-				.putMulti(sourceInstance.targetPriority.asMap(clazz));
-		exactMap.asMap(clazz).putMulti(sourceInstance.exactMap.asMap(clazz));
-		exactMap.asMap(clazz).putMulti(sourceInstance.exactMap.asMap(clazz));
-		implementationTypeMap.asMap(clazz)
-				.putMulti(sourceInstance.implementationTypeMap.asMap(clazz));
-		if (sourceInstance.singletons.containsKey(clazz)) {
-			singletons.asMap(clazz)
-					.putMulti(sourceInstance.singletons.asMap(clazz));
-			String cn = clazz.getName();
+		RegistryKey key = keys.get(clazz);
+		registry.asMap(key).putMulti(sourceInstance.registry.asMap(key));
+		targetPriority.asMap(key)
+				.putMulti(sourceInstance.targetPriority.asMap(key));
+		exactMap.asMap(key).putMulti(sourceInstance.exactMap.asMap(key));
+		exactMap.asMap(key).putMulti(sourceInstance.exactMap.asMap(key));
+		implementationTypeMap.asMap(key)
+				.putMulti(sourceInstance.implementationTypeMap.asMap(key));
+		if (sourceInstance.singletons.containsKey(key)) {
+			singletons.asMap(key)
+					.putMulti(sourceInstance.singletons.asMap(key));
+			String cn = key.name();
 			if (voidPointSingletons.containsKey(cn)) {
 				voidPointSingletons.put(cn,
 						sourceInstance.voidPointSingletons.get(cn));
@@ -272,46 +278,50 @@ public class Registry {
 		return byKey;
 	}
 
-	public UnsortedMultikeyMap<Class> getRegistry() {
+	public UnsortedMultikeyMap<RegistryKey> getRegistry() {
 		return this.registry;
 	}
 
 	@SuppressWarnings("unchecked")
-	public Object instantiateSingle(Class registryPoint, Class targetObject) {
-		Class lookupSingle = lookupSingle(registryPoint, targetObject, true);
+	public Object instantiateSingle(Class registryPoint, Class targetClass) {
+		Class lookupSingle = lookupSingle(registryPoint, targetClass, true);
 		return classLookup.newInstance(lookupSingle);
 	}
 
 	public Object instantiateSingleOrNull(Class registryPoint,
-			Class targetObject) {
-		Class lookupSingle = lookupSingle(registryPoint, targetObject, false);
+			Class targetClass) {
+		Class lookupSingle = lookupSingle(registryPoint, targetClass, false);
 		return lookupSingle != Void.class && lookupSingle != null
-				? instantiateSingle(registryPoint, targetObject) : null;
+				? instantiateSingle(registryPoint, targetClass) : null;
 	}
 
 	public List<Class> lookup(boolean mostSpecificTarget, Class registryPoint,
-			Class targetObject, boolean required) {
+			Class targetClass, boolean required) {
+		RegistryKey registryPointKey = keys.get(registryPoint);
 		// superclasschain
-		List<Class> scChain = getSuperclassChain(targetObject);
-		List<Class> result = new ArrayList<Class>();
-		MultikeyMap<Class> pointLookup = registry.asMapEnsure(false,
-				registryPoint);
+		List<Class> scChain = getSuperclassChain(targetClass);
+		Set<RegistryKey> matched = new LinkedHashSet<>();
+		MultikeyMap<RegistryKey> pointLookup = registry.asMapEnsure(false,
+				registryPointKey);
 		if (pointLookup == null) {
 			if (!required) {
-				return new ArrayList<Class>(0);
+				return new ArrayList<>(0);
 			}
 			throw new RuntimeException(CommonUtils.formatJ(
-					"Unable to locate %s - %s", registryPoint, targetObject));
+					"Unable to locate %s - %s", registryPoint, targetClass));
 		}
 		for (Class sc : scChain) {
-			if (pointLookup.containsKey(sc)) {
-				result.addAll((Collection) pointLookup.keys(sc));
+			RegistryKey pointKey = keys.get(sc);
+			Collection<RegistryKey> targetKeys = pointLookup.keys(pointKey);
+			if (targetKeys != null) {
+				matched.addAll(targetKeys);
 				if (mostSpecificTarget && pointLookup.size() != 0) {
 					break;
 				}
 			}
 		}
-		return CommonUtils.dedupe(result);
+		return matched.stream().map(RegistryKey::clazz)
+				.collect(Collectors.toList());
 	}
 
 	public List<Class> lookup(Class registryPoint) {
@@ -337,28 +347,31 @@ public class Registry {
 		return t;
 	}
 
-	public Class lookupSingle(Class registryPoint, Class targetObject) {
-		return lookupSingle(registryPoint, targetObject, false);
+	public Class lookupSingle(Class registryPoint, Class targetClass) {
+		return lookupSingle(registryPoint, targetClass, false);
 	}
 
-	public Class lookupSingle(Class registryPoint, Class targetObject,
+	public Class lookupSingle(Class registryPoint, Class targetClass,
 			boolean errorOnNull) {
-		Class cached = exactMap.get(registryPoint, targetObject);
-		if (cached == null) {
-			List<Class> lookup = lookup(true, registryPoint, targetObject,
+		RegistryKey registryPointKey = keys.get(registryPoint);
+		RegistryKey targetClassKey = keys.get(targetClass);
+		RegistryKey cachedKey = exactMap.get(registryPointKey, targetClassKey);
+		if (cachedKey == null) {
+			List<Class> lookup = lookup(true, registryPoint, targetClass,
 					false);
-			cached = lookup.size() > 0 ? lookup.get(0) : Void.class;
+			cachedKey = lookup.size() > 0 ? keys.get(lookup.get(0))
+					: keys.emptyLookupKey();
 			synchronized (exactMap) {
-				exactMap.put(registryPoint, targetObject, cached);
+				exactMap.put(registryPoint, targetClass, cachedKey);
 			}
 		}
-		if (cached == Void.class && errorOnNull) {
+		if (cachedKey == keys.emptyLookupKey() && errorOnNull) {
 			throw new NoImplementationException(CommonUtils.formatJ(
 					"singleton/factory not registered - %s:%s",
 					CommonUtils.classSimpleName(registryPoint),
-					CommonUtils.classSimpleName(targetObject)));
+					CommonUtils.classSimpleName(targetClass)));
 		}
-		return cached;
+		return cachedKey.clazz();
 	}
 
 	public void register(Class registeringClass, Class registryPoint) {
@@ -366,34 +379,45 @@ public class Registry {
 				ImplementationType.MULTIPLE, 10);
 	}
 
-	public synchronized void register(Class registeringClass,
-			Class registryPoint, Class targetClass,
+	public void register(Class registeringClass, Class registryPoint,
+			Class targetClass, ImplementationType implementationType,
+			int infoPriority) {
+		RegistryKey registryPointKey = keys.get(registryPoint);
+		RegistryKey targetClassKey = keys.get(targetClass);
+		RegistryKey registeringClassKey = keys.get(registeringClass);
+		register(registeringClassKey, registryPointKey, targetClassKey,
+				implementationType, infoPriority);
+	}
+
+	public synchronized void register(RegistryKey registeringClassKey,
+			RegistryKey registryPointKey, RegistryKey targetClassKey,
 			ImplementationType implementationType, int infoPriority) {
-		MultikeyMap<Class> registered = registry.asMapEnsure(true,
-				registryPoint, targetClass);
-		UnsortedMultikeyMap<Class> pointMap = null;
+		MultikeyMap<RegistryKey> registered = registry.asMapEnsure(true,
+				registryPointKey, targetClassKey);
+		UnsortedMultikeyMap<RegistryKey> pointMap = null;
 		if (implementationType == ImplementationType.MULTIPLE
-				&& targetClass == void.class
+				&& targetClassKey == keys.undefinedTargetKey()
 				&& infoPriority != RegistryLocation.DEFAULT_PRIORITY) {
 			throw new RegistryException(CommonUtils.formatJ(
 					"Non-default priority " + "with Multiple impl type -"
 							+ " probably should be instance - %s",
-					registeringClass.getName()));
+					registeringClassKey.name()));
 		}
-		if (registered.size() == 1 && (targetClass != void.class
-				|| implementationType != ImplementationType.MULTIPLE)) {
-			Integer currentPriority = targetPriority.get(registryPoint,
-					targetClass);
+		if (registered.size() == 1
+				&& (targetClassKey != keys.undefinedTargetKey()
+						|| implementationType != ImplementationType.MULTIPLE)) {
+			Integer currentPriority = targetPriority.get(registryPointKey,
+					targetClassKey);
 			if (currentPriority > infoPriority) {
 				return;
 			} else {
 				registered.clear();
 			}
 		}
-		registered.put(registeringClass, registeringClass);
-		implementationTypeMap.put(registryPoint, targetClass,
+		registered.put(registeringClassKey, registeringClassKey);
+		implementationTypeMap.put(registryPointKey, targetClassKey,
 				implementationType);
-		targetPriority.put(registryPoint, targetClass, infoPriority);
+		targetPriority.put(registryPointKey, targetClassKey, infoPriority);
 	}
 
 	/*
@@ -438,19 +462,20 @@ public class Registry {
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("Class registry:\n");
-		for (Class c : ((Map<Class, ?>) registry).keySet()) {
+		for (RegistryKey c : ((Map<RegistryKey, ?>) registry).keySet()) {
 			sb.append(simpleName(c));
 			sb.append(": ");
 			int x = 0;
-			Map<Class, Map<Class, Class>> map = registry.asMap(c).delegate();
-			for (Class c1 : map.keySet()) {
+			Map<RegistryKey, Map<RegistryKey, RegistryKey>> map = registry
+					.asMap(c).delegate();
+			for (RegistryKey c1 : map.keySet()) {
 				if (x++ != 0) {
 					sb.append(", ");
 				}
 				sb.append(simpleName(c1));
 				sb.append("={");
 				int y = 0;
-				for (Class c2 : map.get(c1).keySet()) {
+				for (RegistryKey c2 : map.get(c1).keySet()) {
 					if (y++ != 0) {
 						sb.append(", ");
 					}
@@ -465,13 +490,14 @@ public class Registry {
 
 	public void unregister(Class registryPoint, Class targetClass,
 			Class registeringClass) {
-		registry.remove(registryPoint, targetClass, registeringClass);
+		registry.remove(keys.get(registryPoint), keys.get(targetClass),
+				keys.get(registeringClass));
 	}
 
 	private synchronized void registerSingletonInLookups(Class<?> registryPoint,
 			Class<?> targetClass, Object object) {
 		boolean voidTarget = targetClass == void.class;
-		singletons.put(registryPoint, targetClass, object);
+		singletons.put(keys.get(registryPoint), keys.get(targetClass), object);
 		if (voidTarget) {
 			// use className so we don't have to get class objects from
 			// different parts of memory - this did seem to help a jvm
@@ -480,15 +506,16 @@ public class Registry {
 		}
 	}
 
-	private String simpleName(Class c) {
+	private String simpleName(RegistryKey c) {
 		return c == null ? null
-				: c.getName().contains(".") ? c.getName().substring(
-						c.getName().lastIndexOf(".") + 1) : c.getName();
+				: c.name().contains(".")
+						? c.name().substring(c.name().lastIndexOf(".") + 1)
+						: c.name();
 	}
 
-	protected List<Class> getSuperclassChain(Class targetObject) {
+	protected List<Class> getSuperclassChain(Class targetClass) {
 		List<Class> scChain = new ArrayList<Class>();
-		Class c = targetObject;
+		Class c = targetClass;
 		while (c != null) {
 			scChain.add(c);
 			c = c.getSuperclass();
@@ -499,46 +526,46 @@ public class Registry {
 		return scChain;
 	}
 
-	protected <V> V impl0(Class<V> registryPoint, Class targetObjectClass,
+	protected <V> V impl0(Class<V> registryPoint, Class targetClass,
 			boolean allowNull) {
 		// optimisation
 		Object singleton = null;
-		boolean voidTarget = targetObjectClass == void.class;
+		RegistryKey registryPointKey = keys.get(registryPoint);
+		RegistryKey targetClassKey = keys.get(targetClass);
+		boolean voidTarget = keys.isUndefinedTargetKey(targetClassKey);
 		if (voidTarget) {
-			singleton = voidPointSingletons.get(registryPoint.getName());
+			singleton = voidPointSingletons.get(registryPointKey.name());
 		} else {
-			singleton = singletons.get(registryPoint, targetObjectClass);
+			singleton = singletons.get(registryPointKey, targetClassKey);
 		}
 		if (singleton != null && !(singleton instanceof RegistryFactory)) {
 			return (V) singleton;
 		}
-		ImplementationType type = resolveImplementationType(registryPoint,
-				targetObjectClass, allowNull);
+		ImplementationType type = resolveImplementationType(registryPointKey,
+				targetClassKey, allowNull);
 		Object obj = null;
 		if (singleton == null) {
 			if (allowNull) {
-				obj = instantiateSingleOrNull(registryPoint, targetObjectClass);
+				obj = instantiateSingleOrNull(registryPoint, targetClass);
 				if (obj == null) {
 					return null;
 				}
 			} else {
-				obj = instantiateSingle(registryPoint, targetObjectClass);
+				obj = instantiateSingle(registryPoint, targetClass);
 			}
 		}
 		type = type == null ? ImplementationType.MULTIPLE : type;
 		switch (type) {
 		case FACTORY:
 			if (singleton == null) {
-				registerSingletonInLookups(registryPoint, targetObjectClass,
-						obj);
+				registerSingletonInLookups(registryPoint, targetClass, obj);
 				singleton = obj;
 			}
 			return (V) ((RegistryFactory) singleton).create(registryPoint,
-					targetObjectClass);
+					targetClass);
 		case SINGLETON:
 			if (singleton == null) {
-				registerSingletonInLookups(registryPoint, targetObjectClass,
-						obj);
+				registerSingletonInLookups(registryPoint, targetClass, obj);
 				singleton = obj;
 			}
 			return (V) singleton;
@@ -558,29 +585,30 @@ public class Registry {
 	}
 
 	protected <V> ImplementationType resolveImplementationType(
-			Class<V> registryPoint, Class targetObjectClass,
+			RegistryKey registryPointKey, RegistryKey targetClassKey,
 			boolean allowNull) {
-		ImplementationType type = implementationTypeMap.get(registryPoint,
-				targetObjectClass);
-		if (type != null) {
-			return type;
+		ImplementationType implementationType = implementationTypeMap
+				.get(registryPointKey, targetClassKey);
+		if (implementationType != null) {
+			return implementationType;
 		}
-		List<Class> scChain = getSuperclassChain(targetObjectClass);
-		for (Class sc : scChain) {
-			type = implementationTypeMap.get(registryPoint, sc);
-			if (type != null) {
-				implementationTypeMap.put(registryPoint, targetObjectClass,
-						type);
-				return type;
+		List<Class> superclassChain = getSuperclassChain(
+				targetClassKey.clazz());
+		for (Class superclass : superclassChain) {
+			implementationType = implementationTypeMap.get(registryPointKey,
+					keys.get(superclass));
+			if (implementationType != null) {
+				implementationTypeMap.put(registryPointKey, targetClassKey,
+						implementationType);
+				return implementationType;
 			}
 		}
 		if (allowNull) {
 			return null;
 		}
-		throw new NoResolvedImplementationException(CommonUtils.formatJ(
+		throw new NoResolvedImplementationException(Ax.format(
 				"Registry: no resolved implementation type for %s :: %s",
-				CommonUtils.simpleClassName(registryPoint),
-				CommonUtils.simpleClassName(targetObjectClass)));
+				registryPointKey.simpleName(), targetClassKey.simpleName()));
 	}
 
 	protected <T> T singleton0(Class<T> clazz,
@@ -664,13 +692,16 @@ public class Registry {
 	}
 
 	public interface RegistryFactory<V> {
-		public V create(Class<? extends V> registryPoint,
-				Class targetObjectClass);
+		public V create(Class<? extends V> registryPoint, Class targetClass);
 	}
 
 	public static interface RegistryProvider {
 		void appShutdown();
 
 		Registry getRegistry();
+	}
+
+	public RegistryKey key(String className) {
+		return keys.get(className);
 	}
 }

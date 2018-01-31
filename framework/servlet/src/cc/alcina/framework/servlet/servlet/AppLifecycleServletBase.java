@@ -40,7 +40,7 @@ import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
-import cc.alcina.framework.entity.registry.ClassDataCache;
+import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
@@ -222,7 +222,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
 		try {
 			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
-			ClassDataCache classes = new ServletClasspathScanner("*", true,
+			ClassMetadataCache classes = new ServletClasspathScanner("*", true,
 					false, logger, Registry.MARKER_RESOURCE,
 					Arrays.asList(new String[] {})).getClasses();
 			Registry servletLayerRegistry = Registry.get();

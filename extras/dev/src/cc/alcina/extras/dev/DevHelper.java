@@ -38,16 +38,17 @@ import com.google.gwt.core.client.GWTBridge;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
-import cc.alcina.framework.common.client.logic.permissions.IGroup;
-import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TestTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.permissions.IGroup;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -67,9 +68,8 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
-import cc.alcina.framework.entity.registry.ClassDataCache;
+import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
-import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
@@ -366,22 +366,10 @@ public abstract class DevHelper {
 		try {
 			Logger logger = getTestLogger();
 			long t1 = System.currentTimeMillis();
-			ClassDataCache classes = null;
-			boolean cacheIt = ResourceUtilities.is(DevHelper.class,
-					"cacheClasspathScan");
-			File cacheFile = SEUtilities.getChildFile(getDataFolder(),
-					"servlet-classpath.ser");
-			if (cacheIt && cacheFile.exists()) {
-				classes = KryoUtils.deserializeFromFile(cacheFile,
-						ClassDataCache.class);
-			} else {
-				classes = new ServletClasspathScanner("*", true, true, null,
-						Registry.MARKER_RESOURCE,
-						Arrays.asList(new String[] {})).getClasses();
-				if (cacheIt) {
-					KryoUtils.serializeToFile(classes, cacheFile);
-				}
-			}
+			ClassMetadataCache classes = null;
+			classes = new CachingClasspathScanner("*", true, true, null,
+					Registry.MARKER_RESOURCE, Arrays.asList(new String[] {}))
+							.getClasses();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					Registry.get(), "dev-helper");
 			long t2 = System.currentTimeMillis();

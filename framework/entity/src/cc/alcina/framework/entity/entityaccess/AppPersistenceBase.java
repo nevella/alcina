@@ -33,7 +33,7 @@ import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.entityaccess.updaters.DbUpdateRunner;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.registry.ClassDataCache;
+import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
@@ -69,7 +69,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	protected CommonPersistenceLocal commonPersistence;
 
-	private ClassDataCache classInfo;
+	private ClassMetadataCache classInfo;
 
 	protected AppPersistenceBase() {
 	}
@@ -163,7 +163,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		initDb();
 	}
 
-	private ClassDataCache ensureClassInfo(Logger mainLogger) throws Exception {
+	private ClassMetadataCache ensureClassInfo(Logger mainLogger) throws Exception {
 		if (classInfo == null) {
 			classInfo = new ServletClasspathScanner("*", true, false,
 					mainLogger, Registry.MARKER_RESOURCE,

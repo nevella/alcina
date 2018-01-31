@@ -13,106 +13,88 @@
  */
 package cc.alcina.framework.entity.registry;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.util.Collection;
 import java.util.List;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryException;
+import cc.alcina.framework.entity.KryoUtils;
+import cc.alcina.framework.entity.domaintransform.ClassrefScanner.ClassrefScannerMetadata;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.registry.ClassDataCache.ClassDataItem;
 import cc.alcina.framework.entity.util.ClasspathScanner;
 
 /**
  *
  * @author Nick Reddel
  */
-public abstract class CachingScanner {
-	public void scan(ClassDataCache found, String cachePath) throws Exception {
+public abstract class CachingScanner<T extends ClassMetadata> {
+	int cc = 0;
+
+	long loadClassNanos = 0;
+
+	long loadClassErrNanos = 0;
+
+	boolean debug = true;
+
+	int ignoreCount = 0;
+
+	protected ClassMetadataCache<T> outgoingCache;
+
+	public void scan(ClassMetadataCache foundCache, String cachePath)
+			throws Exception {
 		List<ClassLoader> classLoaders = ClasspathScanner
 				.getScannerClassLoadersToTry();
-		int cc = 0;
-		long loadClassNanos = 0;
-		long loadClassErrNanos = 0;
-		boolean debug = false;
-		int ignoreCount = 0;
-		ClassDataCache ignoreCache = getIgnoreMap(cachePath);
-		ClassDataCache outgoing = new ClassDataCache();
+		File cacheFile = new File(cachePath);
+		ClassMetadataCache<T> incomingCache = getCached(cacheFile);
+		outgoingCache = new ClassMetadataCache();
 		long start = System.currentTimeMillis();
-		for (ClassDataItem foundItem : found.classData.values()) {
-			String className = foundItem.className;
-			Class c = null;
-			ClassDataItem ignore = ignoreCache.classData
-					.get(foundItem.className);
-			if (ignore != null) {
-				if (ignore.date.getTime() >= foundItem.date.getTime()) {
-					outgoing.add(ignore);
-					ignoreCount++;
-					continue;
-				}
-				if (ignore.md5 != null
-						&& ignore.md5.equals(foundItem.ensureMd5())) {
-					outgoing.add(foundItem);
-					ignoreCount++;
-					continue;
+		for (ClassMetadata found : (Collection<ClassMetadata>) (Collection) foundCache.classData
+				.values()) {
+			String className = found.className;
+			T out = null;
+			T existing = incomingCache.classData.get(found.className);
+			if (existing != null && existing.isUnchangedFrom(found)) {
+				out = existing;
+			} else {
+				try {
+					cc++;
+					Class clazz = loadClass(classLoaders, className);
+					out = process(clazz, className, found);
+					out.ensureMd5();
+				} catch (RegistryException rre) {
+					throw rre;
+				} catch (Error eiie) {
+					out = createMetadata(className, found);
+					out.invalid = true;
+				} catch (ClassNotFoundException e) {
+					out = createMetadata(className, found);
+					out.invalid = true;
+				} catch (Exception e) {
+					throw e;
 				}
 			}
-			try {
-				cc++;
-				int idx = 0;
-				for (int i = 0; i < classLoaders.size(); i++) {
-					long nt = System.nanoTime();
-					ClassLoader classLoader = classLoaders.get(i);
-					try {
-						c = classLoader.loadClass(className);
-						loadClassNanos += (System.nanoTime() - nt);
-						break;
-					} catch (ClassNotFoundException e) {
-						loadClassErrNanos += (System.nanoTime() - nt);
-						if (i < classLoaders.size() - 1) {
-							continue;
-						} else {
-							throw e;
-						}
-					} catch (Error eiie) {
-						loadClassErrNanos += (System.nanoTime() - nt);
-						if (i < classLoaders.size() - 1) {
-							continue;
-						} else {
-							throw eiie;
-						}
-					}
-				}
-				process(c, className, foundItem, outgoing);
-			} catch (RegistryException rre) {
-				throw rre;
-			} catch (Error eiie) {
-				outgoing.add(foundItem);
-				continue;
-			} catch (ClassNotFoundException e) {
-				outgoing.add(foundItem);
-				continue;
-			} catch (Exception e) {
-				throw e;
-			}
+			outgoingCache.add(out);
 		}
 		long time = System.currentTimeMillis() - start;
 		if (debug) {
 			System.out.format(
 					"Classes: %s -- checked: %s, loadClass: %sms, loadClassErr: %sms, ignoreCount: %s, total: %sms\n",
-					found.classData.size(), cc, loadClassNanos / 1000 / 1000,
+					foundCache.classData.size(), cc,
+					loadClassNanos / 1000 / 1000,
 					loadClassErrNanos / 1000 / 1000, ignoreCount, time);
 		}
-		for (ClassDataItem item : outgoing.classData.values()) {
-			item.ensureMd5();
-		}
-		if (found.classData.values().size() > 0) {
-			putIgnoreMap(outgoing, cachePath);
+		KryoUtils.serializeToFile(outgoingCache, cacheFile, true);
+	}
+
+	protected abstract T createMetadata(String className, ClassMetadata found);
+
+	protected ClassMetadataCache getCached(File cacheFile) {
+		try {
+			ClassMetadataCache value = KryoUtils.deserializeFromFile(cacheFile,
+					ClassMetadataCache.class, true);
+			return value;
+		} catch (Exception e) {
+			return new ClassMetadataCache();
 		}
 	}
 
@@ -120,33 +102,35 @@ public abstract class CachingScanner {
 		return EntityLayerObjects.get().getDataFolder();
 	}
 
-	@SuppressWarnings("unchecked")
-	protected ClassDataCache getIgnoreMap(String cachePath) {
-		try {
-			ObjectInputStream ois = new ObjectInputStream(
-					new BufferedInputStream(new FileInputStream(cachePath)));
-			ClassDataCache value = (ClassDataCache) ois.readObject();
-			ois.close();
-			return value;
-		} catch (Exception e) {
-			return new ClassDataCache();
+	protected Class loadClass(List<ClassLoader> classLoaders, String className)
+			throws ClassNotFoundException, Error {
+		Class c = null;
+		for (int idx = 0; idx < classLoaders.size(); idx++) {
+			long nt = System.nanoTime();
+			ClassLoader classLoader = classLoaders.get(idx);
+			try {
+				c = classLoader.loadClass(className);
+				loadClassNanos += (System.nanoTime() - nt);
+				break;
+			} catch (ClassNotFoundException e) {
+				loadClassErrNanos += (System.nanoTime() - nt);
+				if (idx < classLoaders.size() - 1) {
+					continue;
+				} else {
+					throw e;
+				}
+			} catch (Error eiie) {
+				loadClassErrNanos += (System.nanoTime() - nt);
+				if (idx < classLoaders.size() - 1) {
+					continue;
+				} else {
+					throw eiie;
+				}
+			}
 		}
+		return c;
 	}
 
-	protected abstract void process(Class c, String className,
-			ClassDataItem foundItem, ClassDataCache outgoing);
-
-	protected void putIgnoreMap(ClassDataCache dataCache, String cachePath) {
-		try {
-			File cacheFile = new File(cachePath);
-			cacheFile.getParentFile().mkdirs();
-			cacheFile.createNewFile();
-			ObjectOutputStream oos = new ObjectOutputStream(
-					new BufferedOutputStream(new FileOutputStream(cacheFile)));
-			oos.writeObject(dataCache);
-			oos.close();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
+	protected abstract T process(Class clazz, String className,
+			ClassMetadata found);
 }
