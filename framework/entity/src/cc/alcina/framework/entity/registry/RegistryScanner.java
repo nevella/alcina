@@ -81,7 +81,7 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 
 	private Registry toRegistry;
 
-	public void scan(ClassMetadataCache<RegistryScannerMetadata> classDataCache,
+	public void scan(ClassMetadataCache<ClassMetadata> classDataCache,
 			Collection<String> ignore, Registry toRegistry, String registryName)
 			throws Exception {
 		String cachePath = CommonUtils.formatJ("%s/%s-registry-cache.ser",

@@ -40,16 +40,15 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 
 	protected ClassMetadataCache<T> outgoingCache;
 
-	public void scan(ClassMetadataCache foundCache, String cachePath)
-			throws Exception {
+	public void scan(ClassMetadataCache<ClassMetadata> foundCache,
+			String cachePath) throws Exception {
 		List<ClassLoader> classLoaders = ClasspathScanner
 				.getScannerClassLoadersToTry();
 		File cacheFile = new File(cachePath);
 		ClassMetadataCache<T> incomingCache = getCached(cacheFile);
 		outgoingCache = new ClassMetadataCache();
 		long start = System.currentTimeMillis();
-		for (ClassMetadata found : (Collection<ClassMetadata>) (Collection) foundCache.classData
-				.values()) {
+		for (ClassMetadata found : foundCache.classData.values()) {
 			String className = found.className;
 			T out = null;
 			T existing = incomingCache.classData.get(found.className);
