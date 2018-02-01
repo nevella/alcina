@@ -29,6 +29,7 @@ import java.util.TreeSet;
 
 import javax.persistence.EntityManager;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
@@ -52,6 +53,7 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.CachingScanner;
 import cc.alcina.framework.entity.registry.ClassMetadata;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
+import cc.alcina.framework.entity.registry.RegistryScanner.RegistryScannerMetadata;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 
 @SuppressWarnings("unchecked")
@@ -249,6 +251,13 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 	}
 
 	private void commit() throws Exception {
+		for (ClassrefScannerMetadata metadata : outgoingCache.classData
+				.values()) {
+			if (metadata.isClassRef) {
+				persistableClasses.add(Reflections.classLookup()
+						.getClassForName(metadata.className));
+			}
+		}
 		if (!persistent) {
 			CommonPersistenceLocal cp = Registry
 					.impl(CommonPersistenceProvider.class)
@@ -336,7 +345,6 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 							&& (in || bi || dtp))
 					|| (clazz.isEnum() && (in || dtp))) {
 				out.isClassRef = true;
-				persistableClasses.add(clazz);
 			} else {
 			}
 		}

@@ -17,8 +17,6 @@ import cc.alcina.framework.entity.SEUtilities;
 
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
-	private static ClassLoader pushedContextClassLoader;
-
 	public static void clearThreadLocals(Class... clear) {
 		try {
 			for (Class clazz : clear) {
@@ -38,14 +36,6 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static void popServletLayerRegistry() {
-		if (Registry
-				.getProvider() instanceof ClassLoaderAwareRegistryProvider) {
-			Thread.currentThread()
-					.setContextClassLoader(pushedContextClassLoader);
 		}
 	}
 
@@ -112,9 +102,11 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 					break;
 				}
 			} catch (RuntimeException e) {
-				if(CommonUtils.extractCauseOfClass(e, ClassNotFoundException.class)!=null){
-					//squelch - not in this module (i.e. this is an ejb classloader)
-				}else{
+				if (CommonUtils.extractCauseOfClass(e,
+						ClassNotFoundException.class) != null) {
+					// squelch - not in this module (i.e. this is an ejb
+					// classloader)
+				} else {
 					throw e;
 				}
 			}

@@ -69,8 +69,6 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	protected CommonPersistenceLocal commonPersistence;
 
-	private ClassMetadataCache classInfo;
-
 	protected AppPersistenceBase() {
 	}
 
@@ -163,15 +161,13 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		initDb();
 	}
 
-	private ClassMetadataCache ensureClassInfo(Logger mainLogger) throws Exception {
-		if (classInfo == null) {
-			classInfo = new ServletClasspathScanner("*", true, false,
-					mainLogger, Registry.MARKER_RESOURCE,
-					Arrays.asList(
-							new String[] { "WEB-INF/classes", "WEB-INF/lib" }))
-									.getClasses();
-		}
-		return classInfo;
+	private ClassMetadataCache getClassInfo(Logger mainLogger)
+			throws Exception {
+		return new ServletClasspathScanner("*", true, false, mainLogger,
+				Registry.MARKER_RESOURCE,
+				Arrays.asList(
+						new String[] { "WEB-INF/classes", "WEB-INF/lib" }))
+								.getClasses();
 	}
 
 	protected void addCriteria(StringBuffer sb, String string,
@@ -314,7 +310,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
 		try {
 			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
-			new ClassrefScanner().scan(ensureClassInfo(mainLogger));
+			new ClassrefScanner().scan(getClassInfo(mainLogger));
 		} catch (Exception e) {
 			mainLogger.warn("", e);
 		} finally {
@@ -328,7 +324,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
 		try {
 			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
-			new RegistryScanner().scan(ensureClassInfo(mainLogger),
+			new RegistryScanner().scan(getClassInfo(mainLogger),
 					new ArrayList<String>(), Registry.get(), "entity-layer");
 			Registry.get()
 					.registerBootstrapServices(ObjectPersistenceHelper.get());

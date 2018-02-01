@@ -6,11 +6,8 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
-import java.util.Date;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
@@ -72,7 +69,8 @@ public class ClasspathScannerResolver {
 					try {
 						switch (SEUtilities.getOsType()) {
 						case MacOS:
-							new ClasspathWatchDirOsX(dir, true).processEvents();
+							//automagically recursive
+							new ClasspathWatchDirOsX(dir).processEvents();
 							break;
 						default:
 							new ClasspathWatchDir(dir, true).processEvents();
@@ -104,9 +102,9 @@ public class ClasspathScannerResolver {
 		}
 
 		class ClasspathWatchDirOsX extends WatchDirOsX {
-			ClasspathWatchDirOsX(Path dir, boolean recursive)
+			ClasspathWatchDirOsX(Path dir)
 					throws IOException {
-				super(dir, false);
+				super(dir);
 			}
 
 			@Override

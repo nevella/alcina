@@ -56,8 +56,6 @@ public abstract class WatchDirOsX {
 
 	private final Map<WatchableFile, Path> keys;
 
-	private final boolean recursive;
-
 	private boolean trace = false;
 
 	@SuppressWarnings("unchecked")
@@ -86,36 +84,12 @@ public abstract class WatchDirOsX {
 	}
 
 	/**
-	 * Register the given directory, and all its sub-directories, with the
-	 * WatchService.
-	 */
-	private void registerAll(final Path start) throws IOException {
-		// register directory and sub-directories
-		Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
-			@Override
-			public FileVisitResult preVisitDirectory(Path dir,
-					BasicFileAttributes attrs) throws IOException {
-				register(dir);
-				return FileVisitResult.CONTINUE;
-			}
-		});
-	}
-
-	/**
 	 * Creates a WatchService and registers the given directory
 	 */
-	WatchDirOsX(Path dir, boolean recursive) throws IOException {
+	WatchDirOsX(Path dir) throws IOException {
 		this.watcher = WatchService.newWatchService();
 		this.keys = new HashMap<WatchableFile, Path>();
-		this.recursive = recursive;
-		if (recursive) {
-			System.out.format("Scanning %s ...\n", dir);
-			registerAll(dir);
-			System.out.println("Done.");
-		} else {
-			register(dir);
-		}
-		// enable trace after initial registration
+		register(dir);
 		this.trace = true;
 	}
 
@@ -141,7 +115,7 @@ public abstract class WatchDirOsX {
 					// Context for directory entry event is the file name of
 					// entry
 					WatchEvent<File> ev = cast(event);
-					File file= ev.context();
+					File file = ev.context();
 					System.out.format("%s: %s\n", event.kind().name(), file);
 					handleEvent(event, file);
 				}
