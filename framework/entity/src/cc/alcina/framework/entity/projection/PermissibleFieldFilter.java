@@ -11,13 +11,23 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
+	private Boolean disabledPerThreadPerObjectPermissionsInstance;
+
+	public PermissibleFieldFilter() {
+		disabledPerThreadPerObjectPermissionsInstance = disabledPerThreadPerObjectPermissionsThreadLocal
+				.get();
+	}
+
 	public static class AllFieldsFilter extends PermissibleFieldFilter {
 		@Override
 		public Boolean permitClass(Class clazz) {
@@ -38,8 +48,19 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 
 	public static boolean disablePerObjectPermissions;
 
+	private static ThreadLocal<Boolean> disabledPerThreadPerObjectPermissionsThreadLocal = new ThreadLocal() {
+		protected synchronized Boolean initialValue() {
+			return false;
+		}
+	};
+
+	public static void setDisabledPerThreadPerObjectPermissions(boolean set) {
+		disabledPerThreadPerObjectPermissionsThreadLocal.set(set);
+	}
+
 	CachingMap<Class, ObjectPermissions> objectPermissionLookup = new CachingMap<Class, ObjectPermissions>(
-			clazz -> (ObjectPermissions)clazz.getAnnotation(ObjectPermissions.class));
+			clazz -> (ObjectPermissions) clazz
+					.getAnnotation(ObjectPermissions.class));
 
 	@Override
 	public Boolean permitClass(Class clazz) {
@@ -99,6 +120,9 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 			if (disablePerObjectPermissions) {
 				return true;
 				// only in app startup/warmup
+			}
+			if(disabledPerThreadPerObjectPermissionsInstance){
+				// optimisation for clustered transform commit
 			}
 			if (PermissionsManager.get().isPermissible(null, ap, true)) {
 				return true;

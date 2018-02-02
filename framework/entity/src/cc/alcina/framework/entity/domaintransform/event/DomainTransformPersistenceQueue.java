@@ -233,8 +233,6 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			@Override
 			public void run() {
 				setName("DomainTransformPersistenceQueue-fire");
-				ThreadedPermissionsManager.cast().pushSystemUser();
-				PermissibleFieldFilter.disablePerObjectPermissions = true;
 				while (!closed.get()) {
 					try {
 						Long id = null;
@@ -247,14 +245,25 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 							}
 						}
 						if (id != null) {
-							publishTransformEvent(id);
+							try {
+								ThreadedPermissionsManager.cast()
+										.pushSystemUser();
+								PermissibleFieldFilter
+										.setDisabledPerThreadPerObjectPermissions(
+												true);
+								publishTransformEvent(id);
+							} finally {
+								PermissibleFieldFilter
+										.setDisabledPerThreadPerObjectPermissions(
+												false);
+								ThreadedPermissionsManager.cast()
+										.popSystemUser();
+							}
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				}
-				PermissibleFieldFilter.disablePerObjectPermissions = false;
-				ThreadedPermissionsManager.cast().popSystemUser();
 			}
 
 			protected void publishTransformEvent(Long id) {
