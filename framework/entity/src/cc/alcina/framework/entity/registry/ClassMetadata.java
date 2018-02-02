@@ -49,7 +49,9 @@ public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 					evalMd5(stream);
 				}
 			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
+				md5 = String.valueOf(System.currentTimeMillis());
+				e.printStackTrace();
+//				throw new WrappedRuntimeException(e);
 			}
 		}
 		return md5;
