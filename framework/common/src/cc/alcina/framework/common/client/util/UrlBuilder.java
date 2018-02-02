@@ -19,14 +19,16 @@ public class UrlBuilder {
 		sb.append(path);
 		if (qsParams.size() > 0) {
 			String firstKey = qsParams.keySet().iterator().next();
-			qsParams.forEach((k, v) -> {
+			qsParams.entrySet().forEach(e -> {
+				String k = e.getKey();
+				String v = e.getValue();
 				sb.append(k == firstKey ? "?" : "&");
 				sb.append(k);
 				sb.append("=");
 				try {
 					sb.append(Registry.impl(UrlEncoder.class).encode(v));
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
+				} catch (Exception ex) {
+					throw new WrappedRuntimeException(ex);
 				}
 			});
 		}
