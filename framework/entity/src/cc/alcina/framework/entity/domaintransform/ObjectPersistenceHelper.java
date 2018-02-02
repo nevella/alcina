@@ -70,6 +70,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	public static void register(ObjectPersistenceHelper singleton) {
 		ObjectPersistenceHelper.singleton = singleton;
 	}
+	
 
 	private ClassLoader servletLayerClassloader;
 
