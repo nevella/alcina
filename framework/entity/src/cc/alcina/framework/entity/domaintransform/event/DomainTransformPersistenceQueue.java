@@ -198,12 +198,12 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			// preventing us from getting the lock
 			LooseContext.pushWithTrue(AlcinaMemCache.CONTEXT_NO_LOCKS);
 			ThreadedPermissionsManager.cast().pushSystemUser();
-			PermissibleFieldFilter.disablePerObjectPermissions = true;
+			PermissibleFieldFilter.setDisabledPerThreadPerObjectPermissions(true);
 			return supplier.get();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			PermissibleFieldFilter.disablePerObjectPermissions = false;
+			PermissibleFieldFilter.setDisabledPerThreadPerObjectPermissions(false);
 			ThreadedPermissionsManager.cast().popSystemUser();
 			LooseContext.pop();
 		}
