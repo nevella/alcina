@@ -33,13 +33,19 @@ public class CachingClasspathScanner extends ServletClasspathScanner {
 	@Override
 	public ClassMetadataCache getClasses() throws Exception {
 		if (usingRemoteScanner) {
-			super.getClasses();
-			ClassMetaRequest metaRequest = new ClassMetaRequest();
-			metaRequest.type = ClassMetaRequestType.Classes;
-			metaRequest.classPaths = urls;
-			ClassMetaResponse response = new ClassMetaInvoker()
-					.invoke(metaRequest);
-			return response.cache;
+			try {
+				super.getClasses();
+				ClassMetaRequest metaRequest = new ClassMetaRequest();
+				metaRequest.type = ClassMetaRequestType.Classes;
+				metaRequest.classPaths = urls;
+				ClassMetaResponse response = new ClassMetaInvoker()
+						.invoke(metaRequest);
+				return response.cache;
+			} catch (Exception e) {
+				e.printStackTrace();
+				usingRemoteScanner = false;
+				return super.getClasses();
+			}
 		} else {
 			return super.getClasses();
 		}
