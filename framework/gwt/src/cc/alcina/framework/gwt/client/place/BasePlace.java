@@ -55,4 +55,7 @@ public abstract class BasePlace extends Place implements Serializable {
 	public String toTokenString() {
 		return tokenFor(this);
 	}
+	public String toHrefString() {
+		return "#"+tokenFor(this);
+	}
 }

@@ -155,7 +155,7 @@ public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 				FriendlyEnumRenderer.INSTANCE,
 				() -> searchable.listOperators());
 		operatorSelector.addStyleName("operator");
-		valueEditor = searchable.createEditor();
+		valueEditor = searchable.createEditor(value);
 		valueEditor.addStyleName("editor");
 		fp.add(searchableSelector);
 		fp.add(operatorSelector);
