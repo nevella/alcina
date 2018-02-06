@@ -30,10 +30,11 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import com.google.gwt.regexp.shared.MatchResult;
+import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -1047,18 +1048,18 @@ public class CommonUtils {
 		static class NumericSuffix implements Comparable<NumericSuffix> {
 			static String regex = "([0-9]*)(.*)";
 
-			static Pattern pattern = Pattern.compile(regex);
+			static RegExp regExp = RegExp.compile(regex);
 
 			private int numeric;
 
 			private String text;
 
 			public NumericSuffix(String s) {
-				Matcher m = pattern.matcher(s);
-				m.matches();
-				numeric = Ax.isBlank(m.group(1)) ? 999999
-						: Integer.parseInt(m.group(1));
-				text = m.group(2) == null ? "" : m.group(2);
+				MatchResult matchResult = regExp.exec(s);
+				String g1 = matchResult.getGroup(1);
+				String g2 = matchResult.getGroup(2);
+				numeric = Ax.isBlank(g1) ? 999999 : Integer.parseInt(g1);
+				text = g2 == null ? "" : g2;
 			}
 
 			@Override
