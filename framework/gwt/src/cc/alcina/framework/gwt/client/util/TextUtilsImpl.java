@@ -23,7 +23,7 @@ public class TextUtilsImpl {
 		return result;
 	}
 
-	public static String normalise(String input) {
+	public static String normalizeWhitespace(String input) {
 		return WS_PATTERN.matcher(input).replaceAll(" ");
 	}
 }

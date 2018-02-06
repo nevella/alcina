@@ -669,7 +669,7 @@ public class Element extends Node implements DomElement {
 			switch (node.getNodeType()) {
 			case Node.TEXT_NODE:
 				message = indent + CommonUtils.trimToWsChars(
-						TextUtils.normalise(node.getNodeValue()), 50, true);
+						TextUtils.normalizeWhitespace(node.getNodeValue()), 50, true);
 				LocalDom.log(LocalDomDebug.DUMP_LOCAL, message);
 				break;
 			case ELEMENT_NODE:

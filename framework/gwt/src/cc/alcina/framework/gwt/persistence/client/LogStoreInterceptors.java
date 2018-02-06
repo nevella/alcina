@@ -84,7 +84,7 @@ public class LogStoreInterceptors {
 			itr.nextNode();
 			while (text.length() < 50 && itr.getCurrentNode() != null) {
 				Text t = (Text) itr.getCurrentNode();
-				text += TextUtils.normaliseAndTrim(t.getData());
+				text += TextUtils.normalizeWhitespaceAndTrim(t.getData());
 				itr.nextNode();
 			}
 			while (e != null) {

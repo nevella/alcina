@@ -44,9 +44,9 @@ public class EmailAddressValidator implements ParameterisedValidator {
 
 	public static List<String>
 			provideAddressesForDefaultSeparator(String addresses) {
-		addresses = TextUtils.normaliseAndTrim(addresses);
+		addresses = TextUtils.normalizeWhitespaceAndTrim(addresses);
 		return Arrays.asList(addresses.split(STANDARD_MULTIPLE_SEPARATOR))
-				.stream().map(s -> TextUtils.normaliseAndTrim(s))
+				.stream().map(s -> TextUtils.normalizeWhitespaceAndTrim(s))
 				.collect(Collectors.toList());
 	}
 

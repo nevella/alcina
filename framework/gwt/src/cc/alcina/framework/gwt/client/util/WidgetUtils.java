@@ -374,7 +374,7 @@ public class WidgetUtils {
 		while ((node = node.getPreviousSibling()) != null) {
 			if (node.getNodeType() == Node.TEXT_NODE) {
 				insertTextIfOffsetMoreThanXChars -= TextUtils
-						.normaliseAndTrim(node.getNodeValue()).length();
+						.normalizeWhitespaceAndTrim(node.getNodeValue()).length();
 				if (insertTextIfOffsetMoreThanXChars < 0) {
 					// this causes a relayout - so we try and avoid. most of the
 					// time, positioning elements will contain text (or be from

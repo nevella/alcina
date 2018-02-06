@@ -465,6 +465,12 @@ public class ThreadlocalTransformManager extends TransformManager
 				id = userSessionHiliMap.containsKey(localId)
 						? userSessionHiliMap.get(localId).id : 0;
 			}
+			if(id==0){
+				HiliLocator locator = postTransactionEntityResolver.resolve(localId);
+				if(locator!=null){
+					id=locator.id;
+				}
+			}
 		}
 		if (id != 0 && getEntityManager() != null) {
 			if (WrapperPersistable.class.isAssignableFrom(c)) {
@@ -1257,14 +1263,18 @@ public class ThreadlocalTransformManager extends TransformManager
 
 		public PostTransactionEntityResolver(HiliLocatorMap locatorMap) {
 		}
-
 		public HiliLocator resolve(HasIdAndLocalId v) {
+			long localId = v.getLocalId();
+			return resolve(localId);
+		}
+
+		protected HiliLocator resolve(long localId) {
 			if (PermissionsManager.get().getClientInstance()
 					.getId() != clientInstanceId
 					&& !AppPersistenceBase.isTest()) {
 				return null;
 			}
-			HiliLocator locator = locatorMap.get(v.getLocalId());
+			HiliLocator locator = locatorMap.get(localId);
 			if (locator != null) {
 				return locator;
 			}
@@ -1275,7 +1285,7 @@ public class ThreadlocalTransformManager extends TransformManager
 								.getClientInstance().getId());
 				reconstituted = true;
 			}
-			locator = locatorMap.get(v.getLocalId());
+			locator = locatorMap.get(localId);
 			return locator;
 		}
 	}

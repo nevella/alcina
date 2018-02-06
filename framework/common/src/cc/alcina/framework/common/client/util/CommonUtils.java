@@ -30,6 +30,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,6 +40,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.gwt.client.util.TextUtils;
 
 @SuppressWarnings("unchecked")
 /**
@@ -1017,23 +1020,84 @@ public class CommonUtils {
 		return value == null ? new LinkedHashSet<>() : value;
 	}
 
-	public static String normalisedNumericOrdering(String string) {
-		if (string == null) {
-			return "";
+	public static NormalisedNumericOrdering
+			normalisedNumericOrdering(String string) {
+		return new NormalisedNumericOrdering(string);
+	}
+
+	public static class NormalisedNumericOrdering
+			implements Comparable<NormalisedNumericOrdering> {
+		private String[] parts;
+
+		public NormalisedNumericOrdering(String string) {
+			parts = TextUtils.normalizeWhitespaceAndTrim(nullToEmpty(string)).split(" ");
 		}
-		String[] parts = string.split(" ");
-		StringBuffer out = new StringBuffer();
-		for (String part : parts) {
-			if (out.length() != 0) {
-				out.append(" ");
-			}
-			if (part.matches("\\d+")) {
-				out.append(CommonUtils.padStringLeft(part, 10, "0"));
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof NormalisedNumericOrdering) {
+				return Arrays.equals(parts,
+						((NormalisedNumericOrdering) obj).parts);
 			} else {
-				out.append(part);
+				return false;
 			}
 		}
-		return out.toString();
+
+		static class NumericSuffix implements Comparable<NumericSuffix> {
+			static String regex = "([0-9]*)(.*)";
+
+			static Pattern pattern = Pattern.compile(regex);
+
+			private int numeric;
+
+			private String text;
+
+			public NumericSuffix(String s) {
+				Matcher m = pattern.matcher(s);
+				m.matches();
+				numeric = m.group(1) == null ? 999999
+						: Integer.parseInt(m.group(1));
+				text = m.group(2) == null ? "" : m.group(2);
+			}
+
+			@Override
+			public boolean equals(Object obj) {
+				if (obj instanceof NumericSuffix) {
+					NumericSuffix o = (NumericSuffix) obj;
+					return CommonUtils.equals(numeric, o.numeric, text, o.text);
+				}
+				return false;
+			}
+
+			@Override
+			public int compareTo(NumericSuffix o) {
+				{
+					int i = numeric - o.numeric;
+					if (i != -1) {
+						return i;
+					}
+				}
+				return text.compareTo(o.text);
+			}
+		}
+
+		@Override
+		public int compareTo(NormalisedNumericOrdering o) {
+			for (int idx = 0; idx < parts.length; idx++) {
+				if (idx == o.parts.length) {
+					return 1;
+				}
+				String s1 = parts[idx];
+				String s2 = o.parts[idx];
+				NumericSuffix ns1 = new NumericSuffix(s1);
+				NumericSuffix ns2 = new NumericSuffix(s2);
+				int i = ns1.compareTo(ns2);
+				if (i != 0) {
+					return i;
+				}
+			}
+			return 0;
+		}
 	}
 
 	public static <T> Stream<T> nullableStream(T t) {
