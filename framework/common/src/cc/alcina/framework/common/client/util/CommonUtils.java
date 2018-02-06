@@ -1030,7 +1030,8 @@ public class CommonUtils {
 		private String[] parts;
 
 		public NormalisedNumericOrdering(String string) {
-			parts = TextUtils.normalizeWhitespaceAndTrim(nullToEmpty(string)).split(" ");
+			parts = TextUtils.normalizeWhitespaceAndTrim(nullToEmpty(string))
+					.split(" ");
 		}
 
 		@Override
@@ -1055,7 +1056,7 @@ public class CommonUtils {
 			public NumericSuffix(String s) {
 				Matcher m = pattern.matcher(s);
 				m.matches();
-				numeric = m.group(1) == null ? 999999
+				numeric = Ax.isBlank(m.group(1)) ? 999999
 						: Integer.parseInt(m.group(1));
 				text = m.group(2) == null ? "" : m.group(2);
 			}
@@ -1073,7 +1074,7 @@ public class CommonUtils {
 			public int compareTo(NumericSuffix o) {
 				{
 					int i = numeric - o.numeric;
-					if (i != -1) {
+					if (i != 0) {
 						return i;
 					}
 				}
