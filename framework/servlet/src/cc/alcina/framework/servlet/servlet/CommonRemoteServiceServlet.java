@@ -95,6 +95,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceExt;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -124,6 +125,7 @@ import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
+import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleModel;
@@ -1064,29 +1066,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	String describeRpcRequest(RPCRequest rpcRequest, String msg) {
 		msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
-		msg += "Parameters: \n";
+		msg += "Types: " + CommonUtils.joinWithNewlineTab(
+				Arrays.asList(rpcRequest.getMethod().getParameters()));
+		msg += "\nParameters: \n";
 		Object[] parameters = rpcRequest.getParameters();
-		int i = 0;
-		ByteArrayOutputStream os = new ByteArrayOutputStream();
-		XMLEncoder enc = new XMLEncoder(os);
-		for (Object object : parameters) {
-			String xml = "";
-			if (object != null
-					&& CommonUtils.isStandardJavaClass(object.getClass())) {
-				try {
-					enc.writeObject(object);
-					enc.flush();
-					xml = new String(os.toByteArray());
-					os.reset();
-				} catch (Exception e) {
-					xml = "Unable to write object - "
-							+ object.getClass().getName();
-				}
-			}
-			msg += CommonUtils.formatJ("\t [%s] - %s\n\t   - %s\n", i++, object,
-					xml);
-		}
-		enc.close();
+		msg += new JacksonJsonObjectSerializer().withIdRefs()
+				.serialize(parameters);
 		return msg;
 	}
 

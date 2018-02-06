@@ -42,7 +42,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 			if (withIdRefs) {
 				mapper.setVisibility(mapper.getSerializationConfig()
 						.getDefaultVisibilityChecker()
-						.withFieldVisibility(JsonAutoDetect.Visibility.NONE)
+						.withFieldVisibility(JsonAutoDetect.Visibility.ANY)
 						.withGetterVisibility(JsonAutoDetect.Visibility.ANY)
 						.withSetterVisibility(JsonAutoDetect.Visibility.NONE)
 						.withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
