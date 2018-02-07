@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project name="project-build" basedir="." default="make-jars">
+<project name="project-build" basedir="." default="make-jars" xmlns:if="ant:if">
 	<property name="project.src.dir.2" location="${project.src.dir}" />
 	<property name="project.src.dir.3" location="${project.src.dir}" />
 	<property name="project.src.dir.4" location="${project.src.dir}" />
+	<property name="project.src.dir.5" location="${project.src.dir}" />
+	<property name="project.src.dir.6" location="${project.src.dir}" />
+	<property name="project.src.dir.7" location="${project.src.dir}" />
+	<property name="project.src.dir.8" location="${project.src.dir}" />
 	<!-- should never be called directly, used by projects based on alcina-->
 	<fail unless="gwt.codestyle">
 			...
@@ -36,7 +40,7 @@
 
 	<target name="make-jars" description="Make ${project.module.description} jar" depends="compile">
 		<mkdir dir="${project.dist.dir}" />
-		<delete file="${project.dist.dir}/${ant.project.name}.jar" />
+		<delete file="${project.dist.dir}/${ant.project.name}.jar" if:true="${alcina.delete-before-jars}"/>
 		<copy todir="${project.build.dir}">
 			<fileset dir="${project.src.dir}">
 				<include name="**/*.*" />
@@ -58,8 +62,29 @@
 				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
+			<fileset dir="${project.src.dir.5}">
+				<include name="**/*.*" />
+								<exclude name="**/*.java" />
+				<exclude name="**/*.class" />
+			</fileset>
+			<fileset dir="${project.src.dir.6}">
+				<include name="**/*.*" />
+								<exclude name="**/*.java" />
+				<exclude name="**/*.class" />
+			</fileset>
+			<fileset dir="${project.src.dir.7}">
+				<include name="**/*.*" />
+								<exclude name="**/*.java" />
+				<exclude name="**/*.class" />
+			</fileset>
+			<fileset dir="${project.src.dir.8}">
+				<include name="**/*.*" />
+								<exclude name="**/*.java" />
+				<exclude name="**/*.class" />
+			</fileset>
+			
 		</copy>
-		<jar destfile="${project.dist.dir}/${ant.project.name}.jar" manifest="${project.meta-inf.dir}/MANIFEST.MF">
+		<jar update="${alcina.update-jars}" destfile="${project.dist.dir}/${ant.project.name}.jar" manifest="${project.meta-inf.dir}/MANIFEST.MF">
 			<metainf dir="${project.meta-inf.dir}" />
 			<fileset dir="${project.build.dir}">
 				<include name="**/*.*" />

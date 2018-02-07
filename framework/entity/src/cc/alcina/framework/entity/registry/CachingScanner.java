@@ -14,6 +14,8 @@
 package cc.alcina.framework.entity.registry;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
@@ -52,7 +54,7 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 			String className = found.className;
 			T out = null;
 			T existing = incomingCache.classData.get(found.className);
-			if (existing != null && existing.isUnchangedFrom(found)) {
+			if (existing != null && existing.isUnchangedFrom(found, this)) {
 				existing.copyMetaFrom(found);
 				out = existing;
 			} else {
@@ -60,7 +62,7 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 					cc++;
 					Class clazz = loadClass(classLoaders, className);
 					out = process(clazz, className, found);
-					out.ensureMd5();
+					out.ensureMd5(this);
 				} catch (RegistryException rre) {
 					throw rre;
 				} catch (Error eiie) {
@@ -133,4 +135,14 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 
 	protected abstract T process(Class clazz, String className,
 			ClassMetadata found);
+
+	public InputStream getStreamForMd5(ClassMetadata classMetadata)
+			throws Exception {
+		try {
+			return classMetadata.url().openStream();
+		} catch (Exception e) {
+			// jar changed under us
+			return new JarHelper().openStream(classMetadata.url());
+		}
+	}
 }

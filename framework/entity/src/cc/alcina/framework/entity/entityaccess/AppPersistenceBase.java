@@ -69,6 +69,8 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	protected CommonPersistenceLocal commonPersistence;
 
+	protected ServletClassMetadataCacheProvider classMetadataCacheProvider;
+
 	protected AppPersistenceBase() {
 	}
 
@@ -155,19 +157,35 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		return new ArrayList<G>(grps);
 	}
 
-	public void init() throws Exception {
+	public void
+			init(ServletClassMetadataCacheProvider classMetadataCacheProvider)
+					throws Exception {
+		this.classMetadataCacheProvider = classMetadataCacheProvider;
 		initNonDb();
 		scanClassRefs();
 		initDb();
 	}
 
+	public void runDbUpdaters(boolean preCacheWarmup) throws Exception {
+		try {
+			// NOTE - the order (cache, dbupdate, ensure objects) may need to be
+			// manually
+			// changed
+			// depends on whether the db update depends on some code which
+			// uses the cache...
+			// warmupCaches();
+			new DbUpdateRunner().run(getEntityManager(), preCacheWarmup);
+		} catch (Exception e) {
+			Logger.getLogger(AlcinaServerConfig.get().getMainLoggerName())
+					.warn("", e);
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
 	private ClassMetadataCache getClassInfo(Logger mainLogger)
 			throws Exception {
-		return new ServletClasspathScanner("*", true, false, mainLogger,
-				Registry.MARKER_RESOURCE,
-				Arrays.asList(
-						new String[] { "WEB-INF/classes", "WEB-INF/lib" }))
-								.getClasses();
+		return classMetadataCacheProvider.getClassInfo(mainLogger,true);
 	}
 
 	protected void addCriteria(StringBuffer sb, String string,
@@ -236,23 +254,6 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 	protected void initDb() throws Exception {
 		createSystemGroupsAndUsers();
 		populateEntities();
-	}
-
-	public void runDbUpdaters(boolean preCacheWarmup) throws Exception {
-		try {
-			// NOTE - the order (cache, dbupdate, ensure objects) may need to be
-			// manually
-			// changed
-			// depends on whether the db update depends on some code which
-			// uses the cache...
-			// warmupCaches();
-			new DbUpdateRunner().run(getEntityManager(), preCacheWarmup);
-		} catch (Exception e) {
-			Logger.getLogger(AlcinaServerConfig.get().getMainLoggerName())
-					.warn("", e);
-			e.printStackTrace();
-			throw e;
-		}
 	}
 
 	protected void initLoggers() {
@@ -333,6 +334,17 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		} finally {
 			Registry.impl(JPAImplementation.class)
 					.muteClassloaderLogging(false);
+		}
+	}
+
+	public static class ServletClassMetadataCacheProvider {
+		public ClassMetadataCache getClassInfo(Logger mainLogger,
+				boolean entityLayer) throws Exception {
+			return new ServletClasspathScanner("*", true, false, mainLogger,
+					Registry.MARKER_RESOURCE,
+					entityLayer ? Arrays.asList(new String[] {})
+							: Arrays.asList(new String[] { "WEB-INF/classes",
+									"WEB-INF/lib" })).getClasses();
 		}
 	}
 }

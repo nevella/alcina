@@ -3,6 +3,7 @@ package cc.alcina.framework.classmeta;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
@@ -30,6 +31,8 @@ public class CachingClasspathScanner extends ServletClasspathScanner {
 
 	private boolean usingRemoteScanner;
 
+	private static ClasspathUrlTranslator classpathUrlTranslator = url -> url;
+
 	@Override
 	public ClassMetadataCache getClasses() throws Exception {
 		if (usingRemoteScanner) {
@@ -37,7 +40,9 @@ public class CachingClasspathScanner extends ServletClasspathScanner {
 				super.getClasses();
 				ClassMetaRequest metaRequest = new ClassMetaRequest();
 				metaRequest.type = ClassMetaRequestType.Classes;
-				metaRequest.classPaths = urls;
+				metaRequest.classPaths = urls.stream()
+						.map(classpathUrlTranslator::translateClasspathUrl)
+						.collect(Collectors.toList());
 				ClassMetaResponse response = new ClassMetaInvoker()
 						.invoke(metaRequest);
 				return response.cache;
@@ -58,5 +63,10 @@ public class CachingClasspathScanner extends ServletClasspathScanner {
 		} else {
 			super.invokeHandler(url);
 		}
+	}
+
+	public static void installUrlTranslator(
+			ClasspathUrlTranslator classpathUrlTranslator) {
+		CachingClasspathScanner.classpathUrlTranslator = classpathUrlTranslator;
 	}
 }

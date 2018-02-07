@@ -32,6 +32,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -64,7 +65,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -1589,6 +1589,14 @@ public class SEUtilities {
 				return -1;
 			}
 			return 0;
+		}
+	}
+
+	public static URL toURL(String string) {
+		try {
+			return new URI(string).toURL();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 }

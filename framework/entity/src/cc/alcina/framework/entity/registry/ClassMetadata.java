@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.registry;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URL;
@@ -9,6 +11,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 
 public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 	static final transient long serialVersionUID = -1L;
@@ -39,19 +42,18 @@ public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 		}
 	}
 
-	public String ensureMd5() {
+	public String ensureMd5(CachingScanner scanner) {
 		if (md5 == null) {
 			try {
 				if (url() == null) {
 					md5 = String.valueOf(System.currentTimeMillis());
 				} else {
-					InputStream stream = url().openStream();
+					InputStream stream = scanner.getStreamForMd5(this);
 					evalMd5(stream);
 				}
 			} catch (Exception e) {
 				md5 = String.valueOf(System.currentTimeMillis());
 				e.printStackTrace();
-//				throw new WrappedRuntimeException(e);
 			}
 		}
 		return md5;
@@ -65,7 +67,7 @@ public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 		return (CM) this;
 	}
 
-	private URL url() {
+	public URL url() {
 		if (url == null && urlString != null) {
 			try {
 				url = new URL(urlString);
@@ -85,11 +87,12 @@ public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 		}
 	}
 
-	public boolean isUnchangedFrom(ClassMetadata found) {
+	public boolean isUnchangedFrom(ClassMetadata found,
+			CachingScanner scanner) {
 		if (date.getTime() >= found.date.getTime()) {
 			return true;
 		}
-		if (md5 != null && md5.equals(found.ensureMd5())) {
+		if (md5 != null && md5.equals(found.ensureMd5(scanner))) {
 			return true;
 		}
 		return false;
@@ -109,6 +112,7 @@ public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 			item.url = url;
 			item.urlString = url.toString();
 		} else {
+			int debug = 3;
 			// ignore straight jars
 			// item.evalMd5(inputStream);
 		}

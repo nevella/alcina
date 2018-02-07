@@ -463,12 +463,12 @@ public class Registry {
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("Class registry:\n");
-		for (RegistryKey c : ((Map<RegistryKey, ?>) registry).keySet()) {
+		for (RegistryKey c : ((Map<RegistryKey, ?>) registry.delegate())
+				.keySet()) {
 			sb.append(simpleName(c));
 			sb.append(": ");
 			int x = 0;
-			Map<RegistryKey, Map<RegistryKey, RegistryKey>> map = registry
-					.asMap(c).delegate();
+			Map<RegistryKey, MultikeyMap> map = registry.asMap(c).delegate();
 			for (RegistryKey c1 : map.keySet()) {
 				if (x++ != 0) {
 					sb.append(", ");
@@ -476,7 +476,9 @@ public class Registry {
 				sb.append(simpleName(c1));
 				sb.append("={");
 				int y = 0;
-				for (RegistryKey c2 : map.get(c1).keySet()) {
+				MultikeyMap multikeyMap = map.get(c1);
+				for (RegistryKey c2 : ((Map<RegistryKey, ?>) multikeyMap
+						.delegate()).keySet()) {
 					if (y++ != 0) {
 						sb.append(", ");
 					}
@@ -607,6 +609,7 @@ public class Registry {
 		if (allowNull) {
 			return null;
 		}
+		System.out.println(this);
 		throw new NoResolvedImplementationException(Ax.format(
 				"Registry: no resolved implementation type for %s :: %s",
 				registryPointKey.simpleName(), targetClassKey.simpleName()));

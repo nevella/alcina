@@ -180,6 +180,7 @@ public interface HasEquivalence<T> {
 			HasEquivalenceHashMap<T> hashed = getHashed(o2);
 			for (Iterator<T> itr1 = o1.iterator(); itr1.hasNext();) {
 				T t1 = itr1.next();
+				int t3 = ((HasEquivalenceHash)t1).equivalenceHash();
 				for (Iterator<T> itr2 = maybeHashedCorrespondents(t1, o2,
 						hashed).iterator(); itr2.hasNext();) {
 					T t2 = itr2.next();

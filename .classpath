@@ -65,5 +65,6 @@
 	<classpathentry kind="lib" path="lib/framework/classmeta/barbary-watchservice-2.0-SNAPSHOT.jar" sourcepath="/barbary_watch"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/jna-4.5.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/jna-platform-4.5.1.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javassist.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

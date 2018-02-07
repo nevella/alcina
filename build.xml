@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project name="alcina" basedir="." default="make-jars">
+<project name="alcina" basedir="." default="make-jars" xmlns:if="ant:if">
 	<property file="local.ant.properties" />
 	<property file="build.properties" />
 	<fail unless="gwt.codestyle">
@@ -35,24 +35,8 @@
 
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
-		<mkdir dir="${framework.impl.jboss-hibernate.build.dir}" />
-		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${framework.impl.jboss-hibernate.src.dirs}" destdir="${framework.impl.jboss-hibernate.build.dir}">
-			<classpath>
-				<path refid="framework.common.lib.path" />
-				<path refid="framework.impl.jboss-hibernate.lib.path" />
-				<pathelement path="${framework.entity.build.dir}" />
-			</classpath>
-			<compilerarg value="${alcina.compiler.args}" />
-		</javac>
-		<mkdir dir="${framework.servlet.build.dir}" />
-		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${framework.servlet.src.dirs}" destdir="${framework.servlet.build.dir}">
-			<classpath>
-				<path refid="framework.common.lib.path" />
-				<path refid="framework.servlet.lib.path" />
-				<pathelement path="${framework.entity.build.dir}" />
-			</classpath>
-			<compilerarg value="${alcina.compiler.args}" />
-		</javac>
+
+
 		<mkdir dir="${extras.collections.build.dir}" />
 		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${extras.collections.src.dir}" destdir="${extras.collections.build.dir}">
 			<classpath>
@@ -105,6 +89,16 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<!-- depends on classmeta -->
+		<mkdir dir="${framework.servlet.build.dir}" />
+		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${framework.servlet.src.dirs}" destdir="${framework.servlet.build.dir}">
+			<classpath>
+				<path refid="framework.common.lib.path" />
+				<path refid="framework.servlet.lib.path" />
+				<pathelement path="${framework.entity.build.dir}" />
+				<pathelement path="${framework.classmeta.build.dir}" />
+			</classpath>
+			<compilerarg value="${alcina.compiler.args}" />
+		</javac>
 		<mkdir dir="${framework.clientreflectorjvm.build.dir}" />
 		<javac target="8" source="8" includeantruntime="false" debug="on" destdir="${framework.clientreflectorjvm.build.dir}">
 			<src path="${framework.clientreflectorjvm.src.dir}" />
@@ -116,8 +110,6 @@
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
-
-		<!-- depends on classmeta -->
 		<mkdir dir="${extras.dev.build.dir}" />
 		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${extras.dev.src.dir}" destdir="${extras.dev.build.dir}">
 			<classpath>
@@ -129,19 +121,29 @@
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
+		<mkdir dir="${framework.impl.jboss-hibernate.build.dir}" />
+		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${framework.impl.jboss-hibernate.src.dirs}" destdir="${framework.impl.jboss-hibernate.build.dir}">
+			<classpath>
+				<pathelement path="${framework.classmeta.build.dir}" />
+				<path refid="framework.common.lib.path" />
+				<path refid="framework.impl.jboss-hibernate.lib.path" />
+				<pathelement path="${framework.entity.build.dir}" />
+			</classpath>
+			<compilerarg value="${alcina.compiler.args}" />
+		</javac>
 	</target>
 	<target name="check-cluster-tasks-jar">
 		<available file="${extras.tasks.dist.dir}/${ant.project.name}-cluster-tasks.jar" property="cluster-tasks-jar.present" />
 	</target>
 	<target name="make-gwt-dev-jar" description="gwt-dev-overrid" depends="">
-		<jar destfile="${alcina.home}/dist-extras/gwt-dev-patch.jar">
+		<jar update="${alcina.update-jars}" destfile="${alcina.home}/dist-extras/gwt-dev-patch.jar">
 			<fileset dir="${alcina.home}/extras/jsdom/build">
 				<include name="**/JAbstractMethod.class" />
 			</fileset>
 		</jar>
 	</target>
 	<target name="make-gwittir-trunk-jar" description="make-gwittir-trunk-jar" depends="">
-		<jar destfile="${alcina.home}/dist-extras/gwittir-trunk-2.jar">
+		<jar update="${alcina.update-jars}" destfile="${alcina.home}/dist-extras/gwittir-trunk-2.jar">
 			<fileset dir="${alcina.home}/lib/framework/gwt/gwittir-trunk/">
 				<include name="**/*.*" />
 			</fileset>
@@ -150,7 +152,7 @@
 	<target name="make-ant-jar" description="Make the build support jar" depends="compile,check-cluster-tasks-jar" unless="cluster-tasks-jar.present">
 		<mkdir dir="${extras.dist.dir}" />
 		<mkdir dir="${extras.tasks.dist.dir}" />
-		<jar destfile="${extras.tasks.dist.dir}/${ant.project.name}-cluster-tasks.jar">
+		<jar update="${alcina.update-jars}" destfile="${extras.tasks.dist.dir}/${ant.project.name}-cluster-tasks.jar">
 			<fileset dir="${extras.cluster.tasks.build.dir}">
 				<include name="**/*.*" />
 			</fileset>
@@ -163,8 +165,8 @@
 	<target name="make-jars" description="Make entity, entity-impl, servlet and extras jars " depends="compile,make-ant-jar">
 		<mkdir dir="${framework.dist.dir}" />
 		<mkdir dir="${extras.dist.dir}" />
-		<delete file="${framework.dist.dir}/${ant.project.name}-entity.jar" />
-		<jar destfile="${framework.dist.dir}/${ant.project.name}-entity.jar">
+		<delete file="${framework.dist.dir}/${ant.project.name}-entity.jar" if:true="${alcina.delete-before-jars}" />
+		<jar update="${alcina.update-jars}" destfile="${framework.dist.dir}/${ant.project.name}-entity.jar">
 			<metainf dir="${framework.entity.base.dir}/META-INF" />
 			<fileset dir="${framework.entity.build.dir}">
 				<include name="**/*.*" />
@@ -187,14 +189,25 @@
 				<include name="**/*.java" />
 				<include name="**/*.properties" />
 			</fileset>
+			<fileset dir="${framework.classmeta.build.dir}">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${framework.classmeta.src.dir}">
+				<include name="cc/**/*.*" />
 
+				<include name="**/*.java" />
+				<exclude name="**/*.class" />
+			</fileset>
+			<fileset dir="${framework.entity.build.dir}">
+				<include name="${framework.remote.interface.package}" />
+			</fileset>
 			<!-- give the server handy access to stylesheets for print, static serving etc -->
 			<fileset dir="${framework.gwt.src.dir}">
 				<include name="**/*.css" />
 			</fileset>
 		</jar>
 
-		<jar destfile="${framework.dist.dir}/${ant.project.name}-extras-collections.jar">
+		<jar update="${alcina.update-jars}" destfile="${framework.dist.dir}/${ant.project.name}-extras-collections.jar">
 			<fileset dir="${extras.collections.build.dir}">
 				<include name="**/*.*" />
 			</fileset>
@@ -203,7 +216,7 @@
 				<exclude name="**/*.class" />
 			</fileset>
 		</jar>
-		<jar destfile="${framework.dist.dir}/${ant.project.name}-extras-dev.jar">
+		<jar update="${alcina.update-jars}" destfile="${framework.dist.dir}/${ant.project.name}-extras-dev.jar">
 			<fileset dir="${extras.dev.build.dir}">
 				<include name="**/*.*" />
 			</fileset>
@@ -212,13 +225,13 @@
 				<exclude name="**/*.class" />
 			</fileset>
 		</jar>
-		<jar destfile="${extras.dist.dir}/${ant.project.name}-extras-rpc-client.jar">
+		<jar update="${alcina.update-jars}" destfile="${extras.dist.dir}/${ant.project.name}-extras-rpc-client.jar">
 			<fileset dir="${extras.rpc.client.src.dir}">
 				<include name="**/*.*" />
 				<exclude name="**/*.class" />
 			</fileset>
 		</jar>
-		<jar destfile="${extras.dist.dir}/${ant.project.name}-extras-misc.jar">
+		<jar update="${alcina.update-jars}" destfile="${extras.dist.dir}/${ant.project.name}-extras-misc.jar">
 			<fileset dir="${extras.misc.build.dir}">
 				<include name="**/*.*" />
 			</fileset>
@@ -228,7 +241,7 @@
 			</fileset>
 		</jar>
 
-		<jar destfile="${framework.dist.dir}/${ant.project.name}-jvmclient.jar">
+		<jar update="${alcina.update-jars}" destfile="${framework.dist.dir}/${ant.project.name}-jvmclient.jar">
 			<metainf dir="${framework.jvmclient.dir}/META-INF" />
 			<fileset dir="${framework.jvmclient.build.dir}">
 				<include name="**/*.*" />
@@ -261,10 +274,9 @@
 		...
 	You must set a valid JPA implementation value in local.ant.properties
 		</fail>
+		<delete file="${framework.dist.dir}/${ant.project.name}-entity-impl.jar" if:true="${alcina.delete-before-jars}" />
 
-		<delete file="${framework.dist.dir}/${ant.project.name}-entity-impl.jar" />
-
-		<jar destfile="${framework.dist.dir}/${ant.project.name}-entity-impl.jar">
+		<jar update="${alcina.update-jars}" destfile="${framework.dist.dir}/${ant.project.name}-entity-impl.jar">
 			<metainf dir="${framework.impl.base.dir}/META-INF" />
 			<fileset dir="${framework.impl.base.dir}/build">
 				<include name="**/*.*" />
@@ -277,9 +289,9 @@
 			</fileset>
 		</jar>
 
-		<delete file="${framework.dist.dir}/${ant.project.name}-servlet.jar" />
+		<delete file="${framework.dist.dir}/${ant.project.name}-servlet.jar" if:true="${alcina.delete-before-jars}" />
 
-		<jar destfile="${framework.dist.dir}/${ant.project.name}-servlet.jar">
+		<jar update="${alcina.update-jars}" destfile="${framework.dist.dir}/${ant.project.name}-servlet.jar">
 			<metainf dir="${framework.servlet.base.dir}/META-INF" />
 			<fileset dir="${framework.servlet.build.dir}">
 				<include name="**/*.*" />

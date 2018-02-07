@@ -48,6 +48,8 @@ import com.barbarysoftware.watchservice.WatchKey;
 import com.barbarysoftware.watchservice.WatchService;
 import com.barbarysoftware.watchservice.WatchableFile;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  * Example to watch a directory (or tree) for changes to files.
  */
@@ -56,7 +58,9 @@ public abstract class WatchDirOsX {
 
 	private final Map<WatchableFile, Path> keys;
 
-	private boolean trace = false;
+	private boolean trace = true;
+
+	private File filter;
 
 	@SuppressWarnings("unchecked")
 	static <T> WatchEvent<T> cast(WatchEvent<?> event) {
@@ -68,6 +72,11 @@ public abstract class WatchDirOsX {
 	 */
 	private void register(Path dir) throws IOException {
 		File file = dir.toFile();
+		if (file.isDirectory()) {
+		} else {
+			this.filter = file;
+			file = file.getParentFile();
+		}
 		WatchableFile key = new WatchableFile(file);
 		key.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
 		if (trace) {
@@ -117,7 +126,11 @@ public abstract class WatchDirOsX {
 					WatchEvent<File> ev = cast(event);
 					File file = ev.context();
 					System.out.format("%s: %s\n", event.kind().name(), file);
-					handleEvent(event, file);
+					if (filter != null && !filter.equals(file)) {
+						Ax.out("\t--> filtered (%s only)", filter.getName());
+					} else {
+						handleEvent(event, file);
+					}
 				}
 			} finally {
 				// reset key and remove from set if directory no longer

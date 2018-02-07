@@ -161,6 +161,17 @@ public class ResourceUtilities {
 		}
 	}
 
+	public static void ensureFromSystemProperties() {
+		String property = System.getProperty("ResourceUtilities.propertyPath");
+		if (property != null) {
+			try {
+				registerCustomProperties(new FileInputStream(property));
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
 	public static <T> T fieldwiseClone(T t) throws Exception {
 		return fieldwiseClone(t, false);
 	}
@@ -332,6 +343,18 @@ public class ResourceUtilities {
 		return object.toString();
 	}
 
+	public static String read(Class clazz, String path) {
+		return readClassPathResourceAsString(clazz, path);
+	}
+
+	public static String read(String path) {
+		try {
+			return readFileToString(path);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public static byte[] readClassPathResourceAsByteArray(Class clazz,
 			String path) {
 		try {
@@ -459,6 +482,46 @@ public class ResourceUtilities {
 		return readStreamToByteArray(is);
 	}
 
+	public static byte[] readUrlAsBytesWithPost(String strUrl, String postBody,
+			StringMap headers) throws Exception {
+		InputStream in = null;
+		HttpURLConnection connection = null;
+		try {
+			URL url = new URL(strUrl);
+			connection = (HttpURLConnection) (url.openConnection());
+			connection.setDoOutput(true);
+			connection.setDoInput(true);
+			connection.setUseCaches(false);
+			connection.setRequestMethod("POST");
+			for (Entry<String, String> e : headers.entrySet()) {
+				connection.setRequestProperty(e.getKey(), e.getValue());
+			}
+			OutputStream out = connection.getOutputStream();
+			Writer wout = new OutputStreamWriter(out, "UTF-8");
+			wout.write(postBody);
+			wout.flush();
+			wout.close();
+			in = connection.getInputStream();
+			byte[] input = readStreamToByteArray(in);
+			return input;
+		} catch (IOException ioe) {
+			if (connection != null) {
+				InputStream err = connection.getErrorStream();
+				String input = err == null ? null : readStreamToString(err);
+				throw new IOException(input, ioe);
+			} else {
+				throw ioe;
+			}
+		} finally {
+			if (in != null) {
+				in.close();
+			}
+			if (connection != null) {
+				connection.disconnect();
+			}
+		}
+	}
+
 	public static String readUrlAsString(String strUrl) throws Exception {
 		return readUrlAsString(strUrl, null);
 	}
@@ -515,46 +578,6 @@ public class ResourceUtilities {
 			StringMap headers) throws Exception {
 		byte[] bytes = readUrlAsBytesWithPost(strUrl, postBody, headers);
 		return new String(bytes, StandardCharsets.UTF_8);
-	}
-
-	public static byte[] readUrlAsBytesWithPost(String strUrl, String postBody,
-			StringMap headers) throws Exception {
-		InputStream in = null;
-		HttpURLConnection connection = null;
-		try {
-			URL url = new URL(strUrl);
-			connection = (HttpURLConnection) (url.openConnection());
-			connection.setDoOutput(true);
-			connection.setDoInput(true);
-			connection.setUseCaches(false);
-			connection.setRequestMethod("POST");
-			for (Entry<String, String> e : headers.entrySet()) {
-				connection.setRequestProperty(e.getKey(), e.getValue());
-			}
-			OutputStream out = connection.getOutputStream();
-			Writer wout = new OutputStreamWriter(out, "UTF-8");
-			wout.write(postBody);
-			wout.flush();
-			wout.close();
-			in = connection.getInputStream();
-			byte[] input = readStreamToByteArray(in);
-			return input;
-		} catch (IOException ioe) {
-			if (connection != null) {
-				InputStream err = connection.getErrorStream();
-				String input = err == null ? null : readStreamToString(err);
-				throw new IOException(input, ioe);
-			} else {
-				throw ioe;
-			}
-		} finally {
-			if (in != null) {
-				in.close();
-			}
-			if (connection != null) {
-				connection.disconnect();
-			}
-		}
 	}
 
 	public static void registerBeanInfoHelper(BeanInfoHelper theHelper) {
@@ -671,6 +694,11 @@ public class ResourceUtilities {
 
 	public static void writeStreamToStream(InputStream is, OutputStream os)
 			throws IOException {
+		writeStreamToStream(is, os, false);
+	}
+
+	public static void writeStreamToStream(InputStream is, OutputStream os,
+			boolean keepOutputOpen) throws IOException {
 		BufferedOutputStream bos = new BufferedOutputStream(os);
 		InputStream in = new BufferedInputStream(is);
 		int bufLength = 8192;
@@ -680,7 +708,9 @@ public class ResourceUtilities {
 			bos.write(buffer, 0, result);
 		}
 		bos.flush();
-		bos.close();
+		if (!keepOutputOpen) {
+			bos.close();
+		}
 		is.close();
 	}
 
@@ -730,16 +760,5 @@ public class ResourceUtilities {
 
 	public static interface BeanInfoHelper {
 		BeanInfo postProcessBeanInfo(BeanInfo beanInfo);
-	}
-
-	public static void ensureFromSystemProperties() {
-		String property = System.getProperty("ResourceUtilities.propertyPath");
-		if (property != null) {
-			try {
-				registerCustomProperties(new FileInputStream(property));
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
 	}
 }

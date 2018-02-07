@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -32,5 +33,10 @@ public class ClassMetadataCache<T extends ClassMetadata>
 
 	public void merge(ClassMetadataCache other) {
 		classData.putAll(other.classData);
+	}
+
+	public String dump() {
+		return toString() + "\n"
+				+ classData.keySet().stream().collect(Collectors.joining("\n"));
 	}
 }
