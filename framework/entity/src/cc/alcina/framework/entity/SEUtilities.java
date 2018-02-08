@@ -43,6 +43,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -91,6 +92,7 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.util.JvmPropertyReflector;
+import cc.alcina.framework.gwt.client.util.TextUtils;
 
 /**
  * @author nick@alcina.cc
@@ -1589,6 +1591,82 @@ public class SEUtilities {
 				return -1;
 			}
 			return 0;
+		}
+	}
+
+	public static class NormalisedNumericOrdering
+			implements Comparable<NormalisedNumericOrdering> {
+		private String[] parts;
+	
+		public NormalisedNumericOrdering(String string) {
+			parts = TextUtils.normalizeWhitespaceAndTrim(CommonUtils.nullToEmpty(string))
+					.split(" ");
+		}
+	
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof NormalisedNumericOrdering) {
+				return Arrays.equals(parts,
+						((NormalisedNumericOrdering) obj).parts);
+			} else {
+				return false;
+			}
+		}
+	
+		@Override
+		public int compareTo(NormalisedNumericOrdering o) {
+			for (int idx = 0; idx < parts.length; idx++) {
+				if (idx == o.parts.length) {
+					return 1;
+				}
+				String s1 = parts[idx];
+				String s2 = o.parts[idx];
+				NumericSuffix ns1 = new NumericSuffix(s1);
+				NumericSuffix ns2 = new NumericSuffix(s2);
+				int i = ns1.compareTo(ns2);
+				if (i != 0) {
+					return i;
+				}
+			}
+			return 0;
+		}
+		static class NumericSuffix implements Comparable<NumericSuffix> {
+			static String regex = "([0-9]*)(.*)";
+	
+			static Pattern pattern = Pattern.compile(regex);
+	
+			private int numeric;
+	
+			private String text;
+	
+			public NumericSuffix(String s) {
+				Matcher matcher = pattern.matcher(s);
+				matcher.matches();
+				String g1 = matcher.group(1);
+				String g2 = matcher.group(2);
+				numeric = Ax.isBlank(g1) ? 999999 : Integer.parseInt(g1);
+				text = g2 == null ? "" : g2;
+			}
+	
+			@Override
+			public boolean equals(Object obj) {
+				if (obj instanceof NumericSuffix) {
+					NumericSuffix o = (NumericSuffix) obj;
+					return CommonUtils.equals(numeric, o.numeric, text, o.text);
+				}
+				return false;
+			}
+	
+			@Override
+			public int compareTo(NumericSuffix o) {
+				{
+					int i = numeric - o.numeric;
+					if (i != 0) {
+						return i;
+					}
+				}
+				return text.compareTo(o.text);
+			}
 		}
 	}
 

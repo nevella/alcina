@@ -33,15 +33,12 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.gwt.regexp.shared.MatchResult;
-import com.google.gwt.regexp.shared.RegExp;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.gwt.client.util.TextUtils;
+import cc.alcina.framework.entity.SEUtilities;
 
 @SuppressWarnings("unchecked")
 /**
@@ -1021,85 +1018,9 @@ public class CommonUtils {
 		return value == null ? new LinkedHashSet<>() : value;
 	}
 
-	public static NormalisedNumericOrdering
+	public static SEUtilities.NormalisedNumericOrdering
 			normalisedNumericOrdering(String string) {
-		return new NormalisedNumericOrdering(string);
-	}
-
-	public static class NormalisedNumericOrdering
-			implements Comparable<NormalisedNumericOrdering> {
-		private String[] parts;
-
-		public NormalisedNumericOrdering(String string) {
-			parts = TextUtils.normalizeWhitespaceAndTrim(nullToEmpty(string))
-					.split(" ");
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof NormalisedNumericOrdering) {
-				return Arrays.equals(parts,
-						((NormalisedNumericOrdering) obj).parts);
-			} else {
-				return false;
-			}
-		}
-
-		static class NumericSuffix implements Comparable<NumericSuffix> {
-			static String regex = "([0-9]*)(.*)";
-
-			static RegExp regExp = RegExp.compile(regex);
-
-			private int numeric;
-
-			private String text;
-
-			public NumericSuffix(String s) {
-				MatchResult matchResult = regExp.exec(s);
-				String g1 = matchResult.getGroup(1);
-				String g2 = matchResult.getGroup(2);
-				numeric = Ax.isBlank(g1) ? 999999 : Integer.parseInt(g1);
-				text = g2 == null ? "" : g2;
-			}
-
-			@Override
-			public boolean equals(Object obj) {
-				if (obj instanceof NumericSuffix) {
-					NumericSuffix o = (NumericSuffix) obj;
-					return CommonUtils.equals(numeric, o.numeric, text, o.text);
-				}
-				return false;
-			}
-
-			@Override
-			public int compareTo(NumericSuffix o) {
-				{
-					int i = numeric - o.numeric;
-					if (i != 0) {
-						return i;
-					}
-				}
-				return text.compareTo(o.text);
-			}
-		}
-
-		@Override
-		public int compareTo(NormalisedNumericOrdering o) {
-			for (int idx = 0; idx < parts.length; idx++) {
-				if (idx == o.parts.length) {
-					return 1;
-				}
-				String s1 = parts[idx];
-				String s2 = o.parts[idx];
-				NumericSuffix ns1 = new NumericSuffix(s1);
-				NumericSuffix ns2 = new NumericSuffix(s2);
-				int i = ns1.compareTo(ns2);
-				if (i != 0) {
-					return i;
-				}
-			}
-			return 0;
-		}
+		return new SEUtilities.NormalisedNumericOrdering(string);
 	}
 
 	public static <T> Stream<T> nullableStream(T t) {
