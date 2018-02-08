@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 /**
@@ -31,46 +32,59 @@ import cc.alcina.framework.entity.ResourceUtilities;
  * @author Nick Reddel
  */
 public class TailServlet extends HttpServlet {
-	public void doGet(HttpServletRequest request,
-			HttpServletResponse response) {
-		checkAuthenticated(request, response);
-		File logFile = new File(ResourceUtilities.get(getClass(), "file"));
-		try (RandomAccessFile raf = new RandomAccessFile(logFile, "r")) {
-			raf.seek(raf.length());
-			response.setContentType("text/html");
-			response.getOutputStream().write(bytes(
-					"<html><head><style>body{white-space: pre; font-family:monospace;}</style></head><body>\n"));
-			response.getOutputStream().flush();
-			while (true) {
-				try {
-					int length = (int) (raf.length() - raf.getFilePointer());
-					if (length > 0) {
-						byte[] buf = new byte[length];
-						raf.readFully(buf);
-						response.getOutputStream().write(buf);
-						response.getOutputStream().flush();
-					}
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					break;
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
+    private boolean finished;
 
-	private byte[] bytes(String string) {
-		return string.getBytes(StandardCharsets.UTF_8);
-	}
+    public void doGet(HttpServletRequest request,
+            HttpServletResponse response) {
+        checkAuthenticated(request, response);
+        File logFile = new File(ResourceUtilities.get(getClass(), "file"));
+        String message = Ax.format("Starting tail servlet - %s", logFile);
+        try (RandomAccessFile raf = new RandomAccessFile(logFile, "r")) {
+            raf.seek(raf.length());
+            response.setContentType("text/html");
+            response.getOutputStream()
+                    .write(bytes(Ax.format(
+                            "<html><head><style>body{white-space: pre; font-family:monospace;}</style></head><body>%s<br><hr><br>\n",
+                            message)));
+            response.getOutputStream().flush();
+            while (!finished) {
+                try {
+                    int length = (int) (raf.length() - raf.getFilePointer());
+                    if (length > 0) {
+                        byte[] buf = new byte[length];
+                        raf.readFully(buf);
+                        response.getOutputStream().write(buf);
+                        response.getOutputStream().flush();
+                    }
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    break;
+                }
+            }
+            response.getOutputStream().write(bytes("<hr>Servlet destroyed<hr>"));
+            response.getOutputStream().close();
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
 
-	protected void checkAuthenticated(HttpServletRequest request,
-			HttpServletResponse response) {
-		Registry.impl(CommonRemoteServiceServlet.class)
-				.initUserStateWithCookie(request, response);
-		if (!PermissionsManager.get().isAdmin()) {
-			throw new RuntimeException("Access not permitted");
-		}
-	}
+    @Override
+    public void destroy() {
+        finished = true;
+        super.destroy();
+    }
+
+    private byte[] bytes(String string) {
+        return string.getBytes(StandardCharsets.UTF_8);
+    }
+
+    protected void checkAuthenticated(HttpServletRequest request,
+            HttpServletResponse response) {
+        Registry.impl(CommonRemoteServiceServlet.class)
+                .initUserStateWithCookie(request, response);
+        if (!PermissionsManager.get().isAdmin()) {
+            throw new RuntimeException("Access not permitted");
+        }
+    }
 }
