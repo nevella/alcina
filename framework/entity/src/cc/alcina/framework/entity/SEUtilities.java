@@ -1380,6 +1380,11 @@ public class SEUtilities {
 		}
 	}
 
+	public static NormalisedNumericOrdering
+			normalisedNumericOrdering(String string) {
+		return new NormalisedNumericOrdering(string);
+	}
+
 	public static class Bytes {
 		public static int indexOf(byte[] src, byte[] toFind) {
 			return indexOf(src, toFind, 0);

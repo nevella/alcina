@@ -38,7 +38,6 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.entity.SEUtilities;
 
 @SuppressWarnings("unchecked")
 /**
@@ -1016,11 +1015,6 @@ public class CommonUtils {
 
 	public static Set nonNullSet(Set value) {
 		return value == null ? new LinkedHashSet<>() : value;
-	}
-
-	public static SEUtilities.NormalisedNumericOrdering
-			normalisedNumericOrdering(String string) {
-		return new SEUtilities.NormalisedNumericOrdering(string);
 	}
 
 	public static <T> Stream<T> nullableStream(T t) {
