@@ -48,6 +48,8 @@ public class SelectorCustomiser implements Customiser {
 
 	public static final String RENDERER_CLASS = "rendererClass";
 
+	public static final String PROVIDER_CLASS = "providerClass";
+
 	public static final String SELECTED_OBJECT_CLASS = "selectedObjectClass";
 
 	public static final String USE_CELL_LIST = "useCellList";
@@ -97,11 +99,13 @@ public class SelectorCustomiser implements Customiser {
 					.booleanValue(info.parameters(), USE_FLAT_SELECTOR);
 			clazz = NamedParameter.Support.classValue(info.parameters(),
 					SELECTED_OBJECT_CLASS, clazz);
+			Class providerClass = NamedParameter.Support
+					.classValue(info.parameters(), PROVIDER_CLASS, null);
 			String hint = NamedParameter.Support.stringValue(info.parameters(),
 					HINT, null);
 			return new SelectorProvider(clazz, filter, maxSelectedItems,
 					renderer, useCellList, useMinimalSelector, useFlatSelector,
-					hint);
+					hint, providerClass);
 		} else {
 			if (multiple) {
 				NamedParameter p = NamedParameter.Support
