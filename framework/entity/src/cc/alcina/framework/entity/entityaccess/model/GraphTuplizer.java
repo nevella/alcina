@@ -1,32 +1,25 @@
 package cc.alcina.framework.entity.entityaccess.model;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TClassRef;
 import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TFieldRef;
 import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TObjectRef;
-import cc.alcina.framework.entity.entityaccess.model.GraphTuplizer.DetupelizeInstruction;
 
 public class GraphTuplizer {
 	private GraphTuples tuples;
@@ -52,6 +45,11 @@ public class GraphTuplizer {
 		void doCustom(TObjectRef inObjRef, HasIdAndLocalId t);
 
 		void prepare(TObjectRef inObjRef);
+
+		default void translateNonRelational(NonRelationalTranslateToken token){
+			token.fieldName = token.inField.name;
+			token.value = token.inValue;
+		}
 	}
 
 	public static enum DetupelizeInstructionType {
@@ -64,6 +62,8 @@ public class GraphTuplizer {
 		public String path;
 
 		public String outFieldName;
+
+		public Consumer<NonRelationalTranslateToken> consumer;
 
 		public DetupelizeInstruction() {
 		}
@@ -79,6 +79,13 @@ public class GraphTuplizer {
 			this.type = type;
 			this.path = path;
 			this.outFieldName = outFieldName;
+		}
+		public DetupelizeInstruction(DetupelizeInstructionType type,
+				String path, String outFieldName,Consumer<NonRelationalTranslateToken> consumer) {
+			this.type = type;
+			this.path = path;
+			this.outFieldName = outFieldName;
+			this.consumer = consumer;
 		}
 
 		private transient String inFieldPart;
@@ -181,19 +188,21 @@ public class GraphTuplizer {
 		tuples.objects.forEach(this::prepareCustom);
 		tuples.objects.forEach(this::doCustom);
 	}
+
 	private void prepare(TObjectRef inObjRef) {
 		if (mapper.ignore(inObjRef)) {
 			return;
 		}
 		mapper.prepare(inObjRef);
 	}
+
 	private void create(TObjectRef inObjRef) {
 		if (mapper.ignore(inObjRef)) {
 			return;
 		}
 		Class clazz = mapper.classFor(inObjRef.classRef);
 		long id = mapper.getId(inObjRef);
-		if(id==-1){
+		if (id == -1) {
 			return;
 		}
 		HasIdAndLocalId t = (HasIdAndLocalId) Reflections.classLookup()
@@ -208,6 +217,21 @@ public class GraphTuplizer {
 		inObjRef.hili = t;
 	}
 
+	public static class NonRelationalTranslateToken {
+		public String value;
+
+		public String fieldName;
+
+		public TFieldRef inField;
+
+		public String inValue;
+
+		public void in(TFieldRef inField, String inValue) {
+			this.inField = inField;
+			this.inValue = inValue;
+		}
+	}
+
 	private void nonRelational(TObjectRef inObjRef) {
 		if (mapper.ignore(inObjRef)) {
 			return;
@@ -215,11 +239,14 @@ public class GraphTuplizer {
 		Class clazz = mapper.classFor(inObjRef.classRef);
 		HasIdAndLocalId t = inObjRef.hili;
 		TClassRef outRef = tuples.ensureClassRef(clazz);
+		NonRelationalTranslateToken token = new NonRelationalTranslateToken();
 		for (TFieldRef inField : inObjRef.classRef.fieldRefs) {
-			TFieldRef outField = outRef.fieldRefByName(inField.name);
 			String value = inObjRef.values.get(inField);
+			token.in(inField, value);
+			mapper.translateNonRelational(token);
+			TFieldRef outField = outRef.fieldRefByName(token.fieldName);
 			if (outField != null && inField.equivalentTo(outField)) {
-				Object newValue = getNewValue(inField, value);
+				Object newValue = getNewValue(inField, token.value);
 				try {
 					outField.accessor().setPropertyValue(t, newValue);
 				} catch (Exception e) {
