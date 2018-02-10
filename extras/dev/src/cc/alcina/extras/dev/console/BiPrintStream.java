@@ -3,6 +3,7 @@ package cc.alcina.extras.dev.console;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.Locale;
 
 import cc.alcina.framework.common.client.util.AlcinaConstants;
@@ -26,7 +27,7 @@ class BiPrintStream extends PrintStream {
 
 	@Override
 	public PrintStream append(CharSequence csq) {
-		debugPrint();
+		debugPrint(csq);
 		s2.append(csq);
 		return s1.append(csq);
 	}
@@ -52,14 +53,14 @@ class BiPrintStream extends PrintStream {
 
 	@Override
 	public PrintStream format(Locale l, String format, Object... args) {
-		debugPrint();
+		debugPrint(String.format(format, args));
 		s2.format(l, format, args);
 		return s1.format(l, format, args);
 	}
 
 	@Override
 	public PrintStream format(String format, Object... args) {
-		debugPrint();
+		debugPrint(String.format(format, args));
 		s2.format(format, args);
 		return s1.format(format, args);
 	}
@@ -115,14 +116,14 @@ class BiPrintStream extends PrintStream {
 
 	@Override
 	public void print(Object obj) {
-		debugPrint();
+		debugPrint(obj);
 		s1.print(obj);
 		s2.print(obj);
 	}
 
 	@Override
 	public void print(String s) {
-		debugPrint();
+		debugPrint(s);
 		if (!LooseContext
 				.is(AlcinaConstants.CONTEXT_ALCINA_DEBUG_DEV_LOGGING)) {
 			s1.print(s);
@@ -132,14 +133,14 @@ class BiPrintStream extends PrintStream {
 
 	@Override
 	public PrintStream printf(Locale l, String format, Object... args) {
-		debugPrint();
+		debugPrint(String.format(format, args));
 		s2.printf(l, format, args);
 		return s1.printf(l, format, args);
 	}
 
 	@Override
 	public PrintStream printf(String format, Object... args) {
-		debugPrint();
+		debugPrint(String.format(format, args));
 		s2.printf(format, args);
 		return s1.printf(format, args);
 	}
@@ -202,7 +203,7 @@ class BiPrintStream extends PrintStream {
 
 	@Override
 	public void println(Object x) {
-		debugPrint();
+		debugPrint(x);
 		if (!LooseContext
 				.is(AlcinaConstants.CONTEXT_ALCINA_DEBUG_DEV_LOGGING)) {
 			s1.println(x);
@@ -212,7 +213,7 @@ class BiPrintStream extends PrintStream {
 
 	@Override
 	public void println(String x) {
-		debugPrint();
+		debugPrint(x);
 		s1.println(x);
 		s2.println(x);
 	}
@@ -226,7 +227,8 @@ class BiPrintStream extends PrintStream {
 
 	@Override
 	public void write(byte[] buf, int off, int len) {
-		debugPrint();
+		String string = new String(Arrays.copyOfRange(buf, off, off + len));
+		debugPrint(string);
 		s1.write(buf, off, len);
 		s2.write(buf, off, len);
 	}
@@ -240,5 +242,12 @@ class BiPrintStream extends PrintStream {
 
 	private void debugPrint() {
 		int debug = 3;
+	}
+
+	private void debugPrint(Object obj) {
+		String s = String.valueOf(obj);
+		if (s.contains("ConsumerConfig")) {
+			int debug = 3;
+		}
 	}
 }

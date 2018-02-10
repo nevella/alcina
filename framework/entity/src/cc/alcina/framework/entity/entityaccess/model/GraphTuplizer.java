@@ -46,7 +46,7 @@ public class GraphTuplizer {
 
 		void prepare(TObjectRef inObjRef);
 
-		default void translateNonRelational(NonRelationalTranslateToken token){
+		default void translateNonRelational(NonRelationalTranslateToken token) {
 			token.fieldName = token.inField.name;
 			token.value = token.inValue;
 		}
@@ -80,8 +80,10 @@ public class GraphTuplizer {
 			this.path = path;
 			this.outFieldName = outFieldName;
 		}
+
 		public DetupelizeInstruction(DetupelizeInstructionType type,
-				String path, String outFieldName,Consumer<NonRelationalTranslateToken> consumer) {
+				String path, String outFieldName,
+				Consumer<NonRelationalTranslateToken> consumer) {
 			this.type = type;
 			this.path = path;
 			this.outFieldName = outFieldName;
@@ -226,9 +228,12 @@ public class GraphTuplizer {
 
 		public String inValue;
 
+		public boolean fieldTranslated;
+
 		public void in(TFieldRef inField, String inValue) {
 			this.inField = inField;
 			this.inValue = inValue;
+			fieldTranslated = false;
 		}
 	}
 
@@ -245,7 +250,8 @@ public class GraphTuplizer {
 			token.in(inField, value);
 			mapper.translateNonRelational(token);
 			TFieldRef outField = outRef.fieldRefByName(token.fieldName);
-			if (outField != null && inField.equivalentTo(outField)) {
+			if (outField != null && (inField.equivalentTo(outField)
+					|| token.fieldTranslated)) {
 				Object newValue = getNewValue(inField, token.value);
 				try {
 					outField.accessor().setPropertyValue(t, newValue);
