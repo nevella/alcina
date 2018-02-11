@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -379,7 +380,7 @@ public class DevConsoleCommandTransforms {
 					+ " inner join %s dte on dte.domaintransformrequestpersistent_id = dtr.id"
 					+ " where %s %s limit %s";
 			Set<Long> ids = null;
-			String orderClause = limit < 100 ? "" : "order by dte.id desc";
+			String orderClause = limit < 100 ? "" : outputTransforms?"order by dte.id":"order by dte.id desc";
 			CollectionFilter<String> dteIdFilter = new CollectionFilter<String>() {
 				@Override
 				public boolean allow(String o) {
@@ -425,9 +426,10 @@ public class DevConsoleCommandTransforms {
 				if (outputTransforms) {
 					List<DomainTransformEvent> dtes = new RsrowToDteConverter(
 							true).convert(rs);
+					String outPath = "/tmp/transforms.txt";
 					ResourceUtilities.writeStringToFile(dtes.toString(),
-							"/tmp/transforms.txt");
-					System.out.println(dtes);
+							outPath);
+					Ax.out("wrote %s transforms to \n\t%s",dtes.size(),outPath);
 				} else if (valuesOnly) {
 					while (rs.next()) {
 						System.out.format("%s | %s\n", rs.getLong("object_id"),
@@ -656,8 +658,14 @@ public class DevConsoleCommandTransforms {
 				extends CmdListTransformsFilter {
 			@Override
 			public String getFilter(String value) {
-				return String.format(value.contains(",")
-						? "dte.objectid in (%s)" : "dte.objectid=%s", value);
+				String template = "dte.objectid=%s";
+				if(value.contains(",")){
+					template = "dte.objectid in (%s)";
+				}
+				if(value.matches("[<>]=.+")){
+					template = "dte.objectid %s";
+				}
+				return String.format(template, value);
 			}
 
 			@Override
