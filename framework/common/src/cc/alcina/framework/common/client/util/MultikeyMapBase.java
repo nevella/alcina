@@ -90,6 +90,12 @@ public abstract class MultikeyMapBase<V>
 		return CollectionFilters.convert(tuples, converter);
 	}
 
+	static class MissingObject {
+		public String toString() {
+			return "Missing object";
+		};
+	}
+
 	public List<List> asTuples(int maxDepth) {
 		List<List> result = new ArrayList<List>();
 		result.add(new ArrayList<Object>());// empty key, depth 0
@@ -98,6 +104,10 @@ public abstract class MultikeyMapBase<V>
 			for (List key : result) {
 				Object[] kArr = (Object[]) key.toArray(new Object[key.size()]);
 				Collection<Object> keys = keys(kArr);
+				if (keys == null) {
+//					throw new RuntimeException("mis-put, methinks");
+					keys = Arrays.asList(new MissingObject());
+				}
 				for (Object k2 : keys) {
 					List nextK = new ArrayList(key);
 					nextK.add(k2);

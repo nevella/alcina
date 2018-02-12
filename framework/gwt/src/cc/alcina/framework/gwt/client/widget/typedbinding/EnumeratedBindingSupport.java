@@ -40,6 +40,9 @@ public class EnumeratedBindingSupport {
 			PropertyChangeListener pcl = linkedListeners.get(binding);
 			SourcesPropertyChangeEvents related = (SourcesPropertyChangeEvents) source
 					.provideRelatedObject(binding.getBoundClass());
+			if(related.getClass().getName().contains("Editable")){
+				int debug=3;
+			}
 			related.addPropertyChangeListener(propertyName, pcl);
 		}
 	}

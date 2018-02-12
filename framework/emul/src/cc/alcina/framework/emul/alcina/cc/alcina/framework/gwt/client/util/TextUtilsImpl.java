@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.util.IntPair;
 import com.google.gwt.core.client.JavaScriptObject;
 
 public class TextUtilsImpl {
-	public static native String normalise(String text)/*-{
+	public static native String normalizeWhitespace(String text)/*-{
 		if ($wnd.global_ws_re == null) {
 			$wnd.global_ws_re = /[\u0009\n\u000B\u000C\r\u0020\u00A0]+/g;
 		}

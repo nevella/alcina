@@ -256,6 +256,8 @@ public class ContentViewSections {
 
 		private String cancelButtonName = "Cancel";
 
+		private boolean withCancel = true;
+
 		public ContentViewSectionsDialogBuilder
 				actionListener(PermissibleActionListener actionListener) {
 			ContentViewSections.this.actionListener = actionListener;
@@ -278,6 +280,11 @@ public class ContentViewSections {
 			return this;
 		}
 
+		public ContentViewSectionsDialogBuilder withCancel(boolean withCancel) {
+			this.withCancel = withCancel;
+			return this;
+		}
+
 		public ContentViewSectionsDialogBuilder
 				okButtonName(String okButtonName) {
 			this.okButtonName = okButtonName;
@@ -285,8 +292,8 @@ public class ContentViewSections {
 		}
 
 		public void show() {
-			ClientUtils.createEditContentViewWidgets(null, caption,
-					"", beanViews.get(0), noGlass, true, true, true, true,
+			ClientUtils.createEditContentViewWidgets(null, caption, "",
+					beanViews.get(0), noGlass, true, true, true, withCancel,
 					okButtonName, cancelButtonName);
 		}
 	}

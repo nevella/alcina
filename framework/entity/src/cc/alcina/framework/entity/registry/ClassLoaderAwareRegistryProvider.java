@@ -11,12 +11,12 @@ import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryProvider;
+import cc.alcina.framework.common.client.logic.reflection.registry.RegistryKey;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.SEUtilities;
 
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
-	private static ClassLoader pushedContextClassLoader;
-
 	public static void clearThreadLocals(Class... clear) {
 		try {
 			for (Class clazz : clear) {
@@ -39,63 +39,11 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 		}
 	}
 
-	public static void popServletLayerRegistry() {
-		if (Registry
-				.getProvider() instanceof ClassLoaderAwareRegistryProvider) {
-			Thread.currentThread()
-					.setContextClassLoader(pushedContextClassLoader);
-		}
-	}
-
-	public static void pushServletLayerRegistry() {
-		if (Registry
-				.getProvider() instanceof ClassLoaderAwareRegistryProvider) {
-			pushedContextClassLoader = Thread.currentThread()
-					.getContextClassLoader();
-			Thread.currentThread().setContextClassLoader(
-					((ClassLoaderAwareRegistryProvider) Registry
-							.getProvider()).servletLayerClassLoader);
-		}
-	}
-
-	public static <T> Class<T> servletLayerClass(Class<T> clazz) {
-		if (Registry
-				.getProvider() instanceof ClassLoaderAwareRegistryProvider) {
-			ClassLoaderAwareRegistryProvider clRegistry = (ClassLoaderAwareRegistryProvider) Registry
-					.getProvider();
-			if (clazz.getClassLoader() == clRegistry.servletLayerClassLoader) {
-				return clazz;
-			} else {
-				try {
-					return (Class<T>) clRegistry.servletLayerClassLoader
-							.loadClass(clazz.getName());
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}
-		return clazz;
-	}
-
-	public static Registry servletLayerRegistry() {
-		if (Registry
-				.getProvider() instanceof ClassLoaderAwareRegistryProvider) {
-			ClassLoaderAwareRegistryProvider clRegistry = (ClassLoaderAwareRegistryProvider) Registry
-					.getProvider();
-			return clRegistry.perClassLoader
-					.get(clRegistry.servletLayerClassLoader);
-		} else {
-			return Registry.get();
-		}
-	}
-
 	Map<ClassLoader, Registry> perClassLoader = new HashMap<ClassLoader, Registry>();
 
 	ClassLoader lastClassLoader;
 
 	Registry lastRegistry;
-
-	private ClassLoader servletLayerClassLoader;
 
 	@Override
 	public void appShutdown() {
@@ -138,24 +86,29 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 
 	public void dumpRegistries() {
 		perClassLoader.values().forEach(reg -> {
-			reg.getRegistry().keySet().forEach(k -> System.out
-					.format("%-12s %s\n", k.hashCode(), ((Class) k).getName()));
+			reg.getRegistry().keySet()
+					.forEach(k -> System.out.format("%-12s %s\n", k.hashCode(),
+							((RegistryKey) k).name()));
 		});
-	}
-
-	public <T> void ensureSingletonRegistered(Class<? super T> clazz, T t) {
-		for (Registry registryInstance : getPerClassLoader().values()) {
-			registryInstance.ensureSingletonRegistered(clazz, t);
-		}
 	}
 
 	public void forAllRegistries(Class<?> clazz) {
 		Registry sourceInstance = null;
 		for (Registry registryInstance : getPerClassLoader().values()) {
-			if (registryInstance.lookup(false, clazz, void.class,
-					false) != null) {
-				sourceInstance = registryInstance;
-				break;
+			try {
+				if (registryInstance.lookup(false, clazz, void.class,
+						false) != null) {
+					sourceInstance = registryInstance;
+					break;
+				}
+			} catch (RuntimeException e) {
+				if (CommonUtils.extractCauseOfClass(e,
+						ClassNotFoundException.class) != null) {
+					// squelch - not in this module (i.e. this is an ejb
+					// classloader)
+				} else {
+					throw e;
+				}
 			}
 		}
 		for (Registry registryInstance : getPerClassLoader().values()) {
@@ -198,9 +151,5 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 		lastClassLoader = contextClassLoader;
 		lastRegistry = registry;
 		return registry;
-	}
-
-	public void registerServletLayerClassloader(ClassLoader classLoader) {
-		this.servletLayerClassLoader = classLoader;
 	}
 }

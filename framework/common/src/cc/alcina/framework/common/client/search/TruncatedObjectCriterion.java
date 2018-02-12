@@ -2,8 +2,10 @@ package cc.alcina.framework.common.client.search;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public abstract class TruncatedObjectCriterion<E extends HasId>
 		extends SearchCriterion implements HasId {
@@ -16,6 +18,12 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	private transient E value;
 
 	protected E forClientTrimmed;
+
+	public abstract Class<E> getObjectClass();
+
+	public TruncatedObjectCriterion() {
+		setOperator(StandardSearchOperator.EQUALS);
+	}
 
 	public void depopulateValue() {
 		forClientTrimmed = null;
@@ -47,6 +55,14 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 		return getClass().hashCode() ^ (int) getId();
 	}
 
+	public E ensurePlaceholderObject() {
+		if (value == null && id != 0) {
+			value = Reflections.classLookup().newInstance(getObjectClass());
+			value.setId(id);
+		}
+		return value;
+	}
+
 	public void populateValue() {
 	}
 
@@ -59,13 +75,15 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	}
 
 	public void setValue(E value) {
-		this.value = value;
 		setDisplayText(getDisplayTextFor(value));
 		if (value != null) {
 			setId(value.getId());
 		} else {
 			setId(0);
 		}
+		E old_value = this.value;
+		this.value = value;
+		propertyChangeSupport().firePropertyChange("value", old_value, value);
 	}
 
 	@Override

@@ -25,7 +25,7 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 
 	private String category;
 
-	private String name;
+	protected String name;
 
 	@SuppressWarnings("unused")
 	private SearchDefinition def;
@@ -49,6 +49,10 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 
 	public SC createCriterionInstance() {
 		return Reflections.classLookup().newInstance(clazz);
+	}
+
+	public AbstractBoundWidget createEditor(SC criterion) {
+		return createEditor();
 	}
 
 	public abstract AbstractBoundWidget createEditor();

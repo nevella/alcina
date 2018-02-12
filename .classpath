@@ -5,18 +5,19 @@
 	<classpathentry kind="lib" path="lib/framework/entity/xalan-2.7.2.jar" sourcepath="/xalan-j"/>
 	<classpathentry exported="true" kind="lib" path="lib/framework/entity/commons-lang-2.5.jar"/>
 	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" path="framework/common/src"/>
+	<classpathentry kind="src" path="framework/classmeta/src"/>
 	<classpathentry kind="src" path="extras/jsdom/src-regex"/>
 	<classpathentry excluding="com/google/gwt/user/client/translatable/" kind="src" output="framework/extras/rpc/client/build" path="extras/rpc/client/src"/>
 	<classpathentry kind="src" output="framework/extras/rpc/servlet/build" path="extras/rpc/servlet/src"/>
+	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" output="framework/clientreflectorjvm/build" path="framework/clientreflectorjvm/src"/>
 	<classpathentry kind="src" output="framework/jvmclient/build" path="framework/jvmclient/src"/>
 	<classpathentry kind="src" path="extras/collections/src"/>
 	<classpathentry excluding="org/json/" kind="src" path="framework/entity/src"/>
 	<classpathentry kind="src" path="framework/impl/jboss-hibernate/src"/>
-	<classpathentry excluding="com/google/gwt/user/client/impl/*|com/google/gwt/user/client/ui/PopupPanel.java" kind="src" path="framework/gwt/src"/>
+	<classpathentry excluding="com/google/gwt/user/client/impl/*|com/google/gwt/user/client/ui/PopupPanel.java|registry.properties" kind="src" path="framework/gwt/src"/>
 	<classpathentry kind="src" path="framework/servlet/src"/>
 	<classpathentry kind="src" path="extras/cluster/tasks-src"/>
-	<classpathentry kind="src" path="extras/dev/src"/>
-	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" output="framework/clientreflectorjvm/build" path="framework/clientreflectorjvm/src"/>
+	<classpathentry excluding="registry.properties" kind="src" path="extras/dev/src"/>
 	<classpathentry excluding="cc/alcina/extras/misc/ie/override/" kind="src" path="extras/misc/src"/>
 	<classpathentry kind="src" path="extras/ios6/src"/>
 	<classpathentry excluding="com.google.gwt.regexp.super.com.google.gwt.regexp.shared/|com/google/gwt/core/client/impl/Impl.java" kind="src" output="extras/jsdom/build" path="extras/jsdom/src"/>
@@ -52,7 +53,18 @@
 	<classpathentry kind="lib" path="lib/framework/entity/kryo/reflectasm-1.10.1-shaded.jar"/>
 	<classpathentry kind="lib" path="lib/framework/common/jackson-annotations-2.7.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/jackson-core-2.7.1.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/jackson-databind-2.7.1.jar"/>
+	<classpathentry kind="lib" path="lib/framework/entity/jackson-databind-2.7.1.jar" sourcepath="/jackson-databind"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev-patch.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-3.5.13-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-generators-3.5.13-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-metamodel-generator-3.5.13-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-core-3.5.13-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-logic-3.5.13-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-model-3.5.13-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/extras/jetty/jetty-all-uber.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/barbary-watchservice-2.0-SNAPSHOT.jar" sourcepath="/barbary_watch"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/jna-4.5.1.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/jna-platform-4.5.1.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javassist.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

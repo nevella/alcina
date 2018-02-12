@@ -49,6 +49,10 @@ public interface HasIdAndLocalId extends HasId {
 		return getId() != 0;
 	}
 
+	default boolean provideIsNonDomain() {
+		return getId() == 0 && getLocalId() == 0;
+	}
+
 	public static class HiliByIdFilter
 			implements CollectionFilter<HasIdAndLocalId> {
 		private final boolean allowAllExceptId;

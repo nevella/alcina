@@ -31,7 +31,7 @@ public class CachingMap<I, O> {
 	}
 
 	public CachingMap(ThrowingFunction<I, O> function, Map<I, O> map) {
-		this.function = function;
+		this.setFunction(function);
 		this.map = map;
 	}
 
@@ -42,7 +42,7 @@ public class CachingMap<I, O> {
 	public O get(I key) {
 		if (!map.containsKey(key)) {
 			try {
-				map.put(key, function.apply(key));
+				map.put(key, getFunction().apply(key));
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -82,6 +82,14 @@ public class CachingMap<I, O> {
 
 	public Collection<O> values() {
 		return map.values();
+	}
+
+	public ThrowingFunction<I, O> getFunction() {
+		return function;
+	}
+
+	public void setFunction(ThrowingFunction<I, O> function) {
+		this.function = function;
 	}
 
 	public static class CachingLcMap extends CachingMap<String, String> {

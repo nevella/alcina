@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.servlet.http.HttpServletRequest;
@@ -83,6 +84,13 @@ public class ServletLayerUtils {
 			commitLocalTransformsInChunks(maxTransformChunkSize);
 			return new DomainTransformLayerWrapper();
 		}
+		return doPersistTransforms(tag, asRoot);
+	}
+
+	protected static DomainTransformLayerWrapper doPersistTransforms(String tag,
+			boolean asRoot) {
+		//for debugging
+		Set<DomainTransformEvent> transforms = TransformManager.get().getTransforms();
 		ThreadedPermissionsManager tpm = ThreadedPermissionsManager.cast();
 		boolean muted = MetricLogging.get().isMuted();
 		try {

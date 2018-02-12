@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelector;
@@ -48,9 +49,11 @@ public class SelectorProvider implements BoundWidgetProvider {
 
 	private String hint;
 
+	private Class providerClass;
+
 	public SelectorProvider(Class selectionObjectClass, CollectionFilter filter,
 			int maxSelectedItems, Renderer renderer, boolean useCellList,
-			boolean useMinimalSelector, boolean useFlatSelector, String hint) {
+			boolean useMinimalSelector, boolean useFlatSelector, String hint, Class providerClass) {
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;
 		this.maxSelectedItems = maxSelectedItems;
@@ -59,25 +62,31 @@ public class SelectorProvider implements BoundWidgetProvider {
 		this.useMinimalSelector = useMinimalSelector;
 		this.useFlatSelector = useFlatSelector;
 		this.hint = hint;
+		this.providerClass = providerClass;
 	}
 
 	public BoundSelector get() {
 		if (useFlatSelector) {
+			Supplier<Collection> provider = new Supplier<Collection>() {
+				@Override
+				public Collection get() {
+					if (selectionObjectClass.isEnum()) {
+						return Arrays
+								.asList(selectionObjectClass
+										.getEnumConstants())
+								.stream().collect(Collectors.toList());
+					} else {
+						return TransformManager.get()
+								.getCollection(selectionObjectClass);
+					}
+				}
+			};
+			if(providerClass!=null){
+				provider = (Supplier<Collection>) Reflections.classLookup()
+						.newInstance(providerClass);
+			}
 			return new FlatSearchSelector(selectionObjectClass,
-					maxSelectedItems, renderer, new Supplier<Collection>() {
-						@Override
-						public Collection get() {
-							if (selectionObjectClass.isEnum()) {
-								return Arrays
-										.asList(selectionObjectClass
-												.getEnumConstants())
-										.stream().collect(Collectors.toList());
-							} else {
-								return TransformManager.get()
-										.getCollection(selectionObjectClass);
-							}
-						}
-					});
+					maxSelectedItems, renderer, provider);
 		} else if (useMinimalSelector) {
 			BoundSelectorMinimal selectorMinimal = new BoundSelectorMinimal(
 					selectionObjectClass, filter, maxSelectedItems, renderer,

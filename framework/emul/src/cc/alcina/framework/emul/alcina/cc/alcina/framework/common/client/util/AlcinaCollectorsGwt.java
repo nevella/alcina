@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Multimap;
 
 @GwtScriptOnly
-public class AlcinaCollectors  {
+public class AlcinaCollectorsGwt extends AlcinaCollectors {
 	private static class ToItemStreamCollector<T>
 			implements java.util.stream.Collector<Collection<T>, T, Stream<T>> {
 		public Stream<T> collect(Stream<Collection<T>> stream) {
@@ -28,16 +28,16 @@ public class AlcinaCollectors  {
 		}
 	}
 
-	public static <T> Collector<Collection<T>, ?, Stream<T>> toItemStream() {
+	public <T> Collector<Collection<T>, ?, Stream<T>> toItemStream0() {
 		return new ToItemStreamCollector();
 	}
 
-	public static <T, K, U> Collector<T, ?, Multimap<K, List<U>>>
-			toKeyMultimap(Function<? super T, ? extends K> keyMapper) {
+	public <T, K, U> Collector<T, ?, Multimap<K, List<U>>>
+			toKeyMultimap0(Function<? super T, ? extends K> keyMapper) {
 		return (Collector) toMultimap(keyMapper, t -> t);
 	}
 
-	public static <T, K, U> Collector<T, ?, Multimap<K, List<U>>> toMultimap(
+	public <T, K, U> Collector<T, ?, Multimap<K, List<U>>> toMultimap0(
 			Function<? super T, ? extends K> keyMapper,
 			Function<? super T, ? extends U> valueMapper) {
 		return new ToMultimapCollector(keyMapper, valueMapper, Multimap::new);
@@ -58,12 +58,12 @@ public class AlcinaCollectors  {
 			this.valueMapper = valueMapper;
 			this.supplier = supplier;
 		}
+
 		public Multimap<K, List<U>> collect(Stream<T> stream) {
 			Multimap<K, List<U>> result = supplier.get();
-			for (Iterator<T> itr = stream.iterator(); itr
-					.hasNext();) {
+			for (Iterator<T> itr = stream.iterator(); itr.hasNext();) {
 				T next = itr.next();
-				result.add(keyMapper.apply(next),valueMapper.apply(next));
+				result.add(keyMapper.apply(next), valueMapper.apply(next));
 			}
 			return result;
 		}

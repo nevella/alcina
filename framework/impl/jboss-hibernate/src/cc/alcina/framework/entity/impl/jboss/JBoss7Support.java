@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.entity.impl.jboss;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.List;
 
@@ -20,6 +21,9 @@ import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
 
+import cc.alcina.framework.classmeta.CachingClasspathScanner;
+import cc.alcina.framework.classmeta.ClasspathUrlTranslator;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.util.ClasspathScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ClasspathVisitor;
 
@@ -30,15 +34,36 @@ import cc.alcina.framework.entity.util.ClasspathScanner.ClasspathVisitor;
 public class JBoss7Support {
 	public static void install() {
 		ClasspathScanner.installVisitor(VFSClasspathVisitor.class);
+		CachingClasspathScanner
+				.installUrlTranslator(new VFSClasspathUrlTranslator());
 	}
 
+	public static class VFSClasspathUrlTranslator
+			implements ClasspathUrlTranslator {
+		@Override
+		public URL translateClasspathUrl(URL in) {
+			try {
+				switch (in.getProtocol()) {
+				case PROTOCOL_VFS:
+					return new URI(in.toString().replaceFirst("vfs:", "file:"))
+							.toURL();
+				case PROTOCOL_VFSFILE:
+					throw new UnsupportedOperationException();
+				}
+				return in;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
+	protected static final String PROTOCOL_VFS = "vfs";
+
+	protected static final String PROTOCOL_VFSZIP = "vfszip";
+
+	protected static final String PROTOCOL_VFSFILE = "vfsfile";
+
 	public static class VFSClasspathVisitor extends ClasspathVisitor {
-		protected static final Object PROTOCOL_VFS = "vfs";
-
-		protected static final Object PROTOCOL_VFSZIP = "vfszip";
-
-		protected static final Object PROTOCOL_VFSFILE = "vfsfile";
-
 		public VFSClasspathVisitor(ClasspathScanner scanner) {
 			super(scanner);
 		}

@@ -14,6 +14,9 @@ public enum StandardSearchOperator implements SearchOperator {
 	public static transient List LINEAR = Arrays.asList(EQUALS, LESS_THAN,
 			GREATER_THAN);
 
+	public static transient List EQUAL_OR_NOT = Arrays.asList(EQUALS,
+			DOES_NOT_EQUAL);
+
 	public static transient List CONTAINS_AND_ALL_OF = Arrays.asList(CONTAINS,
 			ALL_OF);
 

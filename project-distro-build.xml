@@ -28,6 +28,18 @@
 			<zipfileset dir="${project.src.dir.4}" prefix="WEB-INF/classes">
 				<patternset refid="project.war.resource.exports" />
 			</zipfileset>
+			<zipfileset dir="${project.src.dir.5}" prefix="WEB-INF/classes">
+				<patternset refid="project.war.resource.exports" />
+			</zipfileset>
+			<zipfileset dir="${project.src.dir.6}" prefix="WEB-INF/classes">
+				<patternset refid="project.war.resource.exports" />
+			</zipfileset>
+			<zipfileset dir="${project.src.dir.7}" prefix="WEB-INF/classes">
+				<patternset refid="project.war.resource.exports" />
+			</zipfileset>
+			<zipfileset dir="${project.src.dir.8}" prefix="WEB-INF/classes">
+				<patternset refid="project.war.resource.exports" />
+			</zipfileset>
 			<zipfileset dir="${project.client.src.dir}" prefix="WEB-INF/classes">
 				<patternset refid="project.war.resource.client-src.exports" />
 			</zipfileset>

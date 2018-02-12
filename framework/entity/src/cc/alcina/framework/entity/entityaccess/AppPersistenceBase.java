@@ -30,9 +30,10 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
+import cc.alcina.framework.entity.entityaccess.updaters.DbUpdateRunner;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.registry.ClassDataCache;
+import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
@@ -68,7 +69,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	protected CommonPersistenceLocal commonPersistence;
 
-	private ClassDataCache classInfo;
+	protected ServletClassMetadataCacheProvider classMetadataCacheProvider;
 
 	protected AppPersistenceBase() {
 	}
@@ -156,21 +157,35 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		return new ArrayList<G>(grps);
 	}
 
-	public void init() throws Exception {
+	public void
+			init(ServletClassMetadataCacheProvider classMetadataCacheProvider)
+					throws Exception {
+		this.classMetadataCacheProvider = classMetadataCacheProvider;
 		initNonDb();
 		scanClassRefs();
 		initDb();
 	}
 
-	private ClassDataCache ensureClassInfo(Logger mainLogger) throws Exception {
-		if (classInfo == null) {
-			classInfo = new ServletClasspathScanner("*", true, false,
-					mainLogger, Registry.MARKER_RESOURCE,
-					Arrays.asList(
-							new String[] { "WEB-INF/classes", "WEB-INF/lib" }))
-									.getClasses();
+	public void runDbUpdaters(boolean preCacheWarmup) throws Exception {
+		try {
+			// NOTE - the order (cache, dbupdate, ensure objects) may need to be
+			// manually
+			// changed
+			// depends on whether the db update depends on some code which
+			// uses the cache...
+			// warmupCaches();
+			new DbUpdateRunner().run(getEntityManager(), preCacheWarmup);
+		} catch (Exception e) {
+			Logger.getLogger(AlcinaServerConfig.get().getMainLoggerName())
+					.warn("", e);
+			e.printStackTrace();
+			throw e;
 		}
-		return classInfo;
+	}
+
+	private ClassMetadataCache getClassInfo(Logger mainLogger)
+			throws Exception {
+		return classMetadataCacheProvider.getClassInfo(mainLogger,true);
 	}
 
 	protected void addCriteria(StringBuffer sb, String string,
@@ -296,7 +311,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
 		try {
 			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
-			new ClassrefScanner().scan(ensureClassInfo(mainLogger));
+			new ClassrefScanner().scan(getClassInfo(mainLogger));
 		} catch (Exception e) {
 			mainLogger.warn("", e);
 		} finally {
@@ -310,7 +325,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
 		try {
 			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
-			new RegistryScanner().scan(ensureClassInfo(mainLogger),
+			new RegistryScanner().scan(getClassInfo(mainLogger),
 					new ArrayList<String>(), Registry.get(), "entity-layer");
 			Registry.get()
 					.registerBootstrapServices(ObjectPersistenceHelper.get());
@@ -319,6 +334,17 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		} finally {
 			Registry.impl(JPAImplementation.class)
 					.muteClassloaderLogging(false);
+		}
+	}
+
+	public static class ServletClassMetadataCacheProvider {
+		public ClassMetadataCache getClassInfo(Logger mainLogger,
+				boolean entityLayer) throws Exception {
+			return new ServletClasspathScanner("*", true, false, mainLogger,
+					Registry.MARKER_RESOURCE,
+					entityLayer ? Arrays.asList(new String[] {})
+							: Arrays.asList(new String[] { "WEB-INF/classes",
+									"WEB-INF/lib" })).getClasses();
 		}
 	}
 }

@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
@@ -88,6 +89,12 @@ public class CloneHelper {
 				.getProperties();
 		for (Property pr : prs) {
 			if (pr.getMutatorMethod() == null) {
+				continue;
+			}
+			AlcinaTransient alcinaTransient = Reflections.propertyAccessor()
+					.getAnnotationForProperty(ret.getClass(),
+							AlcinaTransient.class, pr.getName());
+			if (alcinaTransient != null) {
 				continue;
 			}
 			Object[] args = new Object[1];

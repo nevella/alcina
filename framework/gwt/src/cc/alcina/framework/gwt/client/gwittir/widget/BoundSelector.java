@@ -275,6 +275,10 @@ public class BoundSelector extends AbstractBoundWidget
 
 	protected Map createObjectMap() {
 		Map result = new HashMap();
+		if (supplier instanceof RequiresContextBindable) {
+			((RequiresContextBindable) supplier)
+					.setBindable((SourcesPropertyChangeEvents) getModel());
+		}
 		result.put("", filterAvailableObjects(supplier.get()));
 		return result;
 	}

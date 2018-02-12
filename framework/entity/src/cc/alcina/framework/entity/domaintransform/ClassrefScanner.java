@@ -29,6 +29,7 @@ import java.util.TreeSet;
 
 import javax.persistence.EntityManager;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
@@ -43,14 +44,16 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.domaintransform.ClassrefScanner.ClassrefScannerMetadata;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCacheColumn;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.CachingScanner;
-import cc.alcina.framework.entity.registry.ClassDataCache;
-import cc.alcina.framework.entity.registry.ClassDataCache.ClassDataItem;
+import cc.alcina.framework.entity.registry.ClassMetadata;
+import cc.alcina.framework.entity.registry.ClassMetadataCache;
+import cc.alcina.framework.entity.registry.RegistryScanner.RegistryScannerMetadata;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 
 @SuppressWarnings("unchecked")
@@ -58,7 +61,19 @@ import cc.alcina.framework.entity.util.AnnotationUtils;
  *
  * @author Nick Reddel
  */
-public class ClassrefScanner extends CachingScanner {
+public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
+	public static class ClassrefScannerMetadata
+			extends ClassMetadata<ClassrefScannerMetadata> {
+		public ClassrefScannerMetadata() {
+		}
+
+		public ClassrefScannerMetadata(String className) {
+			super(className);
+		}
+
+		public boolean isClassRef;
+	}
+
 	private LinkedHashSet<Class> persistableClasses;
 
 	private long roIdCounter = 0;
@@ -100,7 +115,7 @@ public class ClassrefScanner extends CachingScanner {
 		return this;
 	}
 
-	public void scan(ClassDataCache cache) throws Exception {
+	public void scan(ClassMetadataCache cache) throws Exception {
 		String cachePath = getHomeDir().getPath() + File.separator
 				+ getClass().getSimpleName() + "-cache.ser";
 		persistableClasses = new LinkedHashSet<Class>();
@@ -236,6 +251,13 @@ public class ClassrefScanner extends CachingScanner {
 	}
 
 	private void commit() throws Exception {
+		for (ClassrefScannerMetadata metadata : outgoingCache.classData
+				.values()) {
+			if (metadata.isClassRef) {
+				persistableClasses.add(Reflections.classLookup()
+						.getClassForName(metadata.className));
+			}
+		}
 		if (!persistent) {
 			CommonPersistenceLocal cp = Registry
 					.impl(CommonPersistenceProvider.class)
@@ -299,28 +321,39 @@ public class ClassrefScanner extends CachingScanner {
 	}
 
 	@Override
-	protected void process(Class c, String className, ClassDataItem foundItem,
-			ClassDataCache outgoing) {
-		if ((!Modifier.isPublic(c.getModifiers()))
-				|| (Modifier.isAbstract(c.getModifiers()) && !c.isEnum())) {
-			outgoing.add(foundItem);
-			return;
-		}
-		/*
-		 * why are these required? (answer: makes sure they're in the gwt code -
-		 * otherwise could be sending classes not compiled into client code)
-		 */
-		boolean bi = c.isAnnotationPresent(Bean.class);
-		boolean in = AnnotationUtils.hasAnnotationNamed(c,
-				ClientInstantiable.class);
-		boolean dtp = c.isAnnotationPresent(DomainTransformPersistable.class);
-		boolean nonPersistent = c
-				.isAnnotationPresent(NonDomainTransformPersistable.class);
-		if (!nonPersistent && (HasIdAndLocalId.class.isAssignableFrom(c)
-				&& (in || bi || dtp)) || (c.isEnum() && (in || dtp))) {
-			persistableClasses.add(c);
+	protected ClassrefScannerMetadata process(Class clazz, String className,
+			ClassMetadata found) {
+		ClassrefScannerMetadata out = createMetadata(className, found);
+		if ((!Modifier.isPublic(clazz.getModifiers()))
+				|| (Modifier.isAbstract(clazz.getModifiers())
+						&& !clazz.isEnum())) {
 		} else {
-			outgoing.add(foundItem);
+			/*
+			 * why are these required? (answer: makes sure they're in the gwt
+			 * code - otherwise could be sending classes not compiled into
+			 * client code)
+			 */
+			boolean bi = clazz.isAnnotationPresent(Bean.class);
+			boolean in = AnnotationUtils.hasAnnotationNamed(clazz,
+					ClientInstantiable.class);
+			boolean dtp = clazz
+					.isAnnotationPresent(DomainTransformPersistable.class);
+			boolean nonPersistent = clazz
+					.isAnnotationPresent(NonDomainTransformPersistable.class);
+			if (!nonPersistent
+					&& (HasIdAndLocalId.class.isAssignableFrom(clazz)
+							&& (in || bi || dtp))
+					|| (clazz.isEnum() && (in || dtp))) {
+				out.isClassRef = true;
+			} else {
+			}
 		}
+		return out;
+	}
+
+	@Override
+	protected ClassrefScannerMetadata createMetadata(String className,
+			ClassMetadata found) {
+		return new ClassrefScannerMetadata(className).fromUrl(found);
 	}
 }

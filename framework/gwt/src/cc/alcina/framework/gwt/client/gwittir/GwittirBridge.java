@@ -442,8 +442,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			}
 			boolean focus = displayInfo.focus();
 			boolean propertyIsCollection = (p.getType() == Set.class);
-			boolean fieldEditable = editableWidgets && PermissionsManager.get()
-					.checkEffectivePropertyPermission(op, pp, obj, false)
+			boolean fieldEditable = editableWidgets && (PermissionsManager.get()
+					.checkEffectivePropertyPermission(op, pp, obj, false)||
+					((displayInfo.displayMask() & Display.DISPLAY_EDITABLE) != 0))
 					&& ((displayInfo.displayMask() & Display.DISPLAY_RO) == 0);
 			Class domainType = p.getType();
 			domainType = (association == null || !propertyIsCollection

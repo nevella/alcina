@@ -149,6 +149,16 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			return null;
 		}
 
+		public Object callNewThreadOrCurrent(Runnable runnable,
+				boolean newThread) {
+			if (newThread) {
+				callNewThread(runnable);
+			} else {
+				runnable.run();
+			}
+			return null;
+		}
+
 		@Override
 		protected void run0() throws Exception {
 			getRunContext().runnable.run();

@@ -8,6 +8,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class HiliHelper {
@@ -134,6 +135,15 @@ public class HiliHelper {
 			set.add(hili.getId());
 		}
 		return set;
+	}
+
+	public static String toHiliString(HasIdAndLocalId hili) {
+		if (hili == null) {
+			return null;
+		} else {
+			return Ax.format("%s: %s", hili.getClass().getSimpleName(),
+					hili.getId());
+		}
 	}
 
 	public static String

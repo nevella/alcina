@@ -120,7 +120,7 @@ public class GWTBridgeImpl extends GWTBridge {
 			appendStringToFile(
 					String.format("%s - %s\n%s\n",
 							CommonUtils.formatDate(new Date(),
-									DateStyle.AU_DATE_TIME),
+									DateStyle.AU_DATE_TIME_MS),
 							message, getFullExceptionMessage(e)),
 					new File("/tmp/gwt-err.log"));
 		} catch (IOException e1) {

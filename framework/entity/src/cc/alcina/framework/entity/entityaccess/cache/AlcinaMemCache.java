@@ -1800,6 +1800,8 @@ public class AlcinaMemCache implements RegistrableService {
 		try {
 			lock(false);
 			// we may lazy load - so need a read lock
+			// note that since method is synchronized, nothing will be evicted
+			// from hereonin
 			List<DomainTransformEvent> dtes = (List) persistenceEvent
 					.getDomainTransformLayerWrapper().persistentEvents;
 			List<DomainTransformEvent> filtered = filterInterestedTransforms(
@@ -2450,8 +2452,8 @@ public class AlcinaMemCache implements RegistrableService {
 			if (v == null) {
 				return null;
 			}
-			if (ThreadlocalTransformManager.get()
-					.isListeningTo((SourcesPropertyChangeEvents) v)) {
+			if (ThreadlocalTransformManager.is() && ThreadlocalTransformManager
+					.get().isListeningTo((SourcesPropertyChangeEvents) v)) {
 				return v;
 			}
 			if (v.provideWasPersisted()) {
@@ -2459,8 +2461,10 @@ public class AlcinaMemCache implements RegistrableService {
 			} else {
 				v = Domain.detachedToDomain(v);
 			}
-			ThreadlocalTransformManager.get()
-					.listenTo((SourcesPropertyChangeEvents) v);
+			if (ThreadlocalTransformManager.is()) {
+				ThreadlocalTransformManager.get()
+						.listenTo((SourcesPropertyChangeEvents) v);
+			}
 			return v;
 		}
 

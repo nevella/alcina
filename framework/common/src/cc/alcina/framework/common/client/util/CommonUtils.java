@@ -1017,25 +1017,6 @@ public class CommonUtils {
 		return value == null ? new LinkedHashSet<>() : value;
 	}
 
-	public static String normalisedNumericOrdering(String string) {
-		if (string == null) {
-			return "";
-		}
-		String[] parts = string.split(" ");
-		StringBuffer out = new StringBuffer();
-		for (String part : parts) {
-			if (out.length() != 0) {
-				out.append(" ");
-			}
-			if (part.matches("\\d+")) {
-				out.append(CommonUtils.padStringLeft(part, 10, "0"));
-			} else {
-				out.append(part);
-			}
-		}
-		return out.toString();
-	}
-
 	public static <T> Stream<T> nullableStream(T t) {
 		List<T> list = new ArrayList<>();
 		if (t != null) {

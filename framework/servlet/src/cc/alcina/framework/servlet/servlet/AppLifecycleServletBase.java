@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
 import au.com.barnet.jade.server.AppServletStatusFileNotifier;
+import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -33,6 +34,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase.ServletClassMetadataCacheProvider;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.DbAppender;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
@@ -40,13 +42,13 @@ import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
-import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
+import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
-import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
+import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 
@@ -213,18 +215,36 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			dbLogger.addAppender(a);
 			EntityLayerObjects.get().setPersistentLogger(dbLogger);
 		}
+		Logger.getLogger("org.apache.kafka").setLevel(Level.WARN);
 	}
 
 	protected abstract void initNames();
+
+	protected ServletClassMetadataCacheProvider classMetadataCacheProvider = new CachingServletClassMetadataCacheProvider();
+
+	static class CachingServletClassMetadataCacheProvider
+			extends ServletClassMetadataCacheProvider {
+		public CachingServletClassMetadataCacheProvider() {
+		}
+
+		public ClassMetadataCache getClassInfo(Logger mainLogger,
+				boolean entityLayer) throws Exception {
+			return new CachingClasspathScanner("*", true, false, mainLogger,
+					Registry.MARKER_RESOURCE,
+					entityLayer
+							? Arrays.asList(new String[] { "WEB-INF/classes",
+									"WEB-INF/lib" })
+							: Arrays.asList(new String[] {})).getClasses();
+		}
+	}
 
 	protected void initRegistry() {
 		Logger logger = Logger
 				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
 		try {
 			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
-			ClassDataCache classes = new ServletClasspathScanner("*", true,
-					false, logger, Registry.MARKER_RESOURCE,
-					Arrays.asList(new String[] {})).getClasses();
+			ClassMetadataCache classes = classMetadataCacheProvider
+					.getClassInfo(logger, false);
 			Registry servletLayerRegistry = Registry.get();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					servletLayerRegistry, "servlet-layer");

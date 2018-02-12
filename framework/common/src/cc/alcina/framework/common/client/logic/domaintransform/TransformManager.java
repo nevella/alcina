@@ -826,10 +826,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public Object getTargetObject(DomainTransformEvent evt, boolean oldValue)
 			throws DomainTransformException {
+		return getTargetObjectWithLookup(evt, getObjectLookup(), oldValue);
+	}
+
+	public Object getTargetObjectWithLookup(DomainTransformEvent evt,
+			ObjectLookup objectLookup, boolean oldValue)
+			throws DomainTransformException {
 		Class valueClass = evt.getValueClass();
 		if (evt.getNewValue() != null || valueClass == null) {
 			if (evt.getNewValue() instanceof HasIdAndLocalId) {
-				HasIdAndLocalId hili = getObjectLookup()
+				HasIdAndLocalId hili = objectLookup
 						.getObject((HasIdAndLocalId) evt.getNewValue());
 				if (hili != null) {
 					return hili;
@@ -880,7 +886,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			return e;
 		}
 		if (evt.getValueId() != 0 || evt.getValueLocalId() != 0) {
-			HasIdAndLocalId object = getObjectLookup().getObject(valueClass,
+			HasIdAndLocalId object = objectLookup.getObject(valueClass,
 					evt.getValueId(), evt.getValueLocalId());
 			if (object != null) {
 				return object;

@@ -83,6 +83,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.DomainObjectCloner;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientNotifications;
@@ -1323,5 +1324,25 @@ public class ContentViewFactory {
 				}
 			}
 		}
+	}
+
+	public static Predicate<Field> excludeStandardHiliFilter() {
+		return field -> {
+			if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
+					.contains(field.getPropertyName())) {
+				return false;
+			} else {
+				return true;
+			}
+		};
+	}
+
+	public static Predicate<Field> excludeStandardHiliNonIdFilter() {
+		return field -> {
+			if (field.getPropertyName().equals("id")) {
+				return true;
+			}
+			return excludeStandardHiliFilter().test(field);
+		};
 	}
 }
