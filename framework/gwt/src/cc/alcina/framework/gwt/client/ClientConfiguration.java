@@ -3,6 +3,8 @@ package cc.alcina.framework.gwt.client;
 import com.google.gwt.dom.client.StyleInjector;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.cache.Domain;
+import cc.alcina.framework.common.client.logic.domain.DomainHandlerClient;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -50,6 +52,7 @@ public class ClientConfiguration {
 
 	protected void initCommonClient() {
 		TransformManager.register(createTransformManager());
+		Domain.registerHandler(new DomainHandlerClient());
 		LooseContext.register(new ClientLooseContextProvider());
 		TransformManager.get().setupClientListeners();
 		TransformManager.get()
