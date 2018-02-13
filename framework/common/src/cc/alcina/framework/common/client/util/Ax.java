@@ -35,7 +35,7 @@ public class Ax {
 	}
 
 	public static String dateTimeSlash(Date date) {
-		return CommonUtils.formatDate(date, DateStyle.AU_DATE_TIME_HUMAN);
+		return CommonUtils.formatDate(date, DateStyle.AU_DATE_TIME);
 	}
 
 	public static void err(String template, Object... args) {
