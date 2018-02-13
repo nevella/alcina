@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class SearchUtils {
 	private static CachingMap<String, Long> stringIdLookup = new CachingMap<>(
-			s -> s == null || !s.matches("[0-9]+") ? 0L : Long.parseLong(s));
+			s -> s == null || !s.matches("(?:id:)?[0-9]+") ? 0L : Long.parseLong(s.replaceFirst("(?:id:)?([0-9])+","$1")));
 
 	public static boolean containsIgnoreCase(String s1, String s2) {
 		if (s1 == null || s2 == null) {
