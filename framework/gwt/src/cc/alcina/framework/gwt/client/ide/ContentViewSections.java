@@ -27,288 +27,296 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.widget.typedbinding.EnumeratedBinding;
 
 public class ContentViewSections {
-	public List<ContentViewSection> sections = new ArrayList<>();
+    public List<ContentViewSection> sections = new ArrayList<>();
 
-	private List<PaneWrapperWithObjects> beanViews = new ArrayList<>();
+    private List<PaneWrapperWithObjects> beanViews = new ArrayList<>();
 
-	private Handler captionColEqualiser = new Handler() {
-		@Override
-		public void onAttachOrDetach(AttachEvent event) {
-			if (event.isAttached()) {
-				int maxLeft = 0;
-				// for (PaneWrapperWithObjects beanView : beanViews) {
-				// System.out.println("get max cc w");
-				// maxLeft = Math.max(maxLeft,
-				// ((GridForm) beanView.getBoundWidget())
-				// .getCaptionColumnWidth());
-				// }
-				// for (PaneWrapperWithObjects beanView : beanViews) {
-				// ((GridForm) beanView.getBoundWidget())
-				// .setCaptionColumnWidth(maxLeft);
-				// ((GridForm) beanView.getBoundWidget())
-				// .addStyleName("section-table");
-				// }
-			}
-		}
-	};
+    private Handler captionColEqualiser = new Handler() {
+        @Override
+        public void onAttachOrDetach(AttachEvent event) {
+            if (event.isAttached()) {
+                int maxLeft = 0;
+                // for (PaneWrapperWithObjects beanView : beanViews) {
+                // System.out.println("get max cc w");
+                // maxLeft = Math.max(maxLeft,
+                // ((GridForm) beanView.getBoundWidget())
+                // .getCaptionColumnWidth());
+                // }
+                // for (PaneWrapperWithObjects beanView : beanViews) {
+                // ((GridForm) beanView.getBoundWidget())
+                // .setCaptionColumnWidth(maxLeft);
+                // ((GridForm) beanView.getBoundWidget())
+                // .addStyleName("section-table");
+                // }
+            }
+        }
+    };
 
-	private String tableStyleName;
+    private String tableStyleName;
 
-	private boolean editable;
+    private boolean editable;
 
-	private boolean autoSave = true;
+    private boolean autoSave = true;
 
-	private PermissibleActionListener createListener;
+    private PermissibleActionListener createListener;
 
-	private PermissibleActionListener actionListener;
+    private PermissibleActionListener actionListener;
 
-	private boolean cancelButton;
+    private boolean cancelButton;
 
-	public ContentViewSections
-			actionListener(PermissibleActionListener actionListener) {
-		this.actionListener = actionListener;
-		return this;
-	}
+    private boolean noAdminOverride;
 
-	public ContentViewSections
-			addCreateListener(PermissibleActionListener createListener) {
-		this.createListener = createListener;
-		return this;
-	}
+    public ContentViewSections actionListener(
+            PermissibleActionListener actionListener) {
+        this.actionListener = actionListener;
+        return this;
+    }
 
-	public ContentViewSections allFields(Object bean) {
-		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-		Field[] fields = GwittirBridge.get()
-				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
-						editable, false);
-		section("").fields(Arrays.asList(fields).stream()
-				.map(Field::getPropertyName).collect(Collectors.toList()));
-		buildWidget(bean);
-		return this;
-	}
+    public ContentViewSections addCreateListener(
+            PermissibleActionListener createListener) {
+        this.createListener = createListener;
+        return this;
+    }
 
-	public Widget buildWidget(Object bean) {
-		FlowPanel fp = new FlowPanel();
-		fp.setStyleName("content-view-sections");
-		fp.addAttachHandler(captionColEqualiser);
-		for (int idx = 0; idx < sections.size(); idx++) {
-			ContentViewSection section = sections.get(idx);
-			if (Ax.notBlank(section.name)) {
-				InlineLabel sectionLabel = new InlineLabel(section.name);
-				SimplePanel holder = new SimplePanel(sectionLabel);
-				holder.setStyleName("section-label");
-				fp.add(holder);
-			}
-			ContentViewFactory contentViewFactory = new ContentViewFactory();
-			if (idx < sections.size() - 1) {
-				contentViewFactory.setNoButtons(true);
-			}
-			if (!autoSave) {
-				contentViewFactory.okButtonName("Create");
-			}
-			contentViewFactory.fieldFilter(section).fieldOrder(section)
-					.editableFieldFilter(section.editableFieldFilter())
-					.fieldPostReflectiveSetupModifier(
-							section.fieldPostReflectiveSetupModifier)
-					.noCaption();
-			contentViewFactory.horizontalGrid(section.horizontalGrid);
-			contentViewFactory.setCancelButton(cancelButton);
-			contentViewFactory.editable(editable)
-					.actionListener(new MultiListener()).autoSave(autoSave)
-					.doNotClone(true).additionalProvisional(null)
-					.doNotPrepare(false);
-			contentViewFactory.setTableStyleName(tableStyleName);
-			PaneWrapperWithObjects beanView = contentViewFactory
-					.createBeanView(bean);
-			if (cancelButton) {
-				beanView.setFireOkButtonClickAsOkActionEvent(true);
-			}
-			beanViews.add(beanView);
-			fp.add(beanView);
-		}
-		return fp;
-	}
+    public ContentViewSections allFields(Object bean) {
+        BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
+        Field[] fields = GwittirBridge.get()
+                .fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
+                        editable, false);
+        section("").fields(Arrays.asList(fields).stream()
+                .map(Field::getPropertyName).collect(Collectors.toList()));
+        buildWidget(bean);
+        return this;
+    }
 
-	public ContentViewSections cancelButton(boolean cancelButton) {
-		this.cancelButton = cancelButton;
-		return this;
-	}
+    public Widget buildWidget(Object bean) {
+        FlowPanel fp = new FlowPanel();
+        fp.setStyleName("content-view-sections");
+        fp.addAttachHandler(captionColEqualiser);
+        for (int idx = 0; idx < sections.size(); idx++) {
+            ContentViewSection section = sections.get(idx);
+            if (Ax.notBlank(section.name)) {
+                InlineLabel sectionLabel = new InlineLabel(section.name);
+                SimplePanel holder = new SimplePanel(sectionLabel);
+                holder.setStyleName("section-label");
+                fp.add(holder);
+            }
+            ContentViewFactory contentViewFactory = new ContentViewFactory();
+            if (idx < sections.size() - 1) {
+                contentViewFactory.setNoButtons(true);
+            }
+            if (!autoSave) {
+                contentViewFactory.okButtonName("Create");
+            }
+            contentViewFactory.fieldFilter(section).fieldOrder(section)
+                    .editableFieldFilter(section.editableFieldFilter())
+                    .fieldPostReflectiveSetupModifier(
+                            section.fieldPostReflectiveSetupModifier)
+                    .noCaption();
+            contentViewFactory.horizontalGrid(section.horizontalGrid);
+            contentViewFactory.setCancelButton(cancelButton);
+            contentViewFactory.editable(editable)
+                    .actionListener(new MultiListener()).autoSave(autoSave)
+                    .doNotClone(true).additionalProvisional(null)
+                    .doNotPrepare(false);
+            contentViewFactory.setTableStyleName(tableStyleName);
+            PaneWrapperWithObjects beanView = contentViewFactory
+                    .createBeanView(bean);
+            if (cancelButton) {
+                beanView.setFireOkButtonClickAsOkActionEvent(true);
+            }
+            beanView.setAlwaysDisallowOkIfInvalid(noAdminOverride);
+            beanViews.add(beanView);
+            fp.add(beanView);
+        }
+        return fp;
+    }
 
-	public ContentViewSectionsDialogBuilder dialog() {
-		return new ContentViewSectionsDialogBuilder();
-	}
+    public ContentViewSections cancelButton(boolean cancelButton) {
+        this.cancelButton = cancelButton;
+        return this;
+    }
 
-	public ContentViewSections editable() {
-		this.editable = true;
-		return this;
-	}
+    public ContentViewSectionsDialogBuilder dialog() {
+        return new ContentViewSectionsDialogBuilder();
+    }
 
-	public ContentViewSections editable(boolean editable) {
-		this.editable = editable;
-		return this;
-	}
+    public ContentViewSections editable() {
+        this.editable = true;
+        return this;
+    }
 
-	public String getTableStyleName() {
-		return this.tableStyleName;
-	}
+    public ContentViewSections noAdminOverride() {
+        this.noAdminOverride = true;
+        return this;
+    }
 
-	public boolean isAutoSave() {
-		return this.autoSave;
-	}
+    public ContentViewSections editable(boolean editable) {
+        this.editable = editable;
+        return this;
+    }
 
-	public boolean isEditable() {
-		return this.editable;
-	}
+    public String getTableStyleName() {
+        return this.tableStyleName;
+    }
 
-	public ContentViewSection section(String name) {
-		ContentViewSection section = new ContentViewSection(name);
-		sections.add(section);
-		return section;
-	}
+    public boolean isAutoSave() {
+        return this.autoSave;
+    }
 
-	public ContentViewSections setAutoSave(boolean autoSave) {
-		this.autoSave = autoSave;
-		return this;
-	}
+    public boolean isEditable() {
+        return this.editable;
+    }
 
-	public void setTableStyleName(String tableStyleName) {
-		this.tableStyleName = tableStyleName;
-	}
+    public ContentViewSection section(String name) {
+        ContentViewSection section = new ContentViewSection(name);
+        sections.add(section);
+        return section;
+    }
 
-	public class ContentViewSection
-			implements Comparator<Field>, Predicate<Field> {
-		private boolean horizontalGrid;
+    public ContentViewSections setAutoSave(boolean autoSave) {
+        this.autoSave = autoSave;
+        return this;
+    }
 
-		public List<String> fieldNames;
+    public void setTableStyleName(String tableStyleName) {
+        this.tableStyleName = tableStyleName;
+    }
 
-		public String name;
+    public class ContentViewSection
+            implements Comparator<Field>, Predicate<Field> {
+        private boolean horizontalGrid;
 
-		private List<String> editableFieldNames;
+        public List<String> fieldNames;
 
-		private Consumer<Field> fieldPostReflectiveSetupModifier;
+        public String name;
 
-		public ContentViewSection(String name) {
-			this.name = name;
-		}
+        private List<String> editableFieldNames;
 
-		@Override
-		public int compare(Field o1, Field o2) {
-			return fieldNames.indexOf(o1.getPropertyName())
-					- fieldNames.indexOf(o2.getPropertyName());
-		}
+        private Consumer<Field> fieldPostReflectiveSetupModifier;
 
-		public Predicate<String> editableFieldFilter() {
-			return s -> editableFieldNames == null
-					|| editableFieldNames.contains(s);
-		}
+        public ContentViewSection(String name) {
+            this.name = name;
+        }
 
-		public ContentViewSection editableFields(String... editableFieldNames) {
-			this.editableFieldNames = Arrays.asList(editableFieldNames);
-			return this;
-		}
+        @Override
+        public int compare(Field o1, Field o2) {
+            return fieldNames.indexOf(o1.getPropertyName())
+                    - fieldNames.indexOf(o2.getPropertyName());
+        }
 
-		public ContentViewSection fieldPostReflectiveSetupModifier(
-				Consumer<Field> fieldPostReflectiveSetupModifier) {
-			this.fieldPostReflectiveSetupModifier = fieldPostReflectiveSetupModifier;
-			return this;
-		}
+        public Predicate<String> editableFieldFilter() {
+            return s -> editableFieldNames == null
+                    || editableFieldNames.contains(s);
+        }
 
-		public ContentViewSection
-				fields(EnumeratedBinding... enumeratedBindings) {
-			return fieldBindings(Arrays.asList(enumeratedBindings));
-		}
+        public ContentViewSection editableFields(String... editableFieldNames) {
+            this.editableFieldNames = Arrays.asList(editableFieldNames);
+            return this;
+        }
 
-		public ContentViewSection
-				fieldBindings(List<EnumeratedBinding> enumeratedBindings) {
-			this.fieldNames = enumeratedBindings.stream()
-					.map(EnumeratedBinding::getPath)
-					.collect(Collectors.toList());
-			return this;
-		}
+        public ContentViewSection fieldPostReflectiveSetupModifier(
+                Consumer<Field> fieldPostReflectiveSetupModifier) {
+            this.fieldPostReflectiveSetupModifier = fieldPostReflectiveSetupModifier;
+            return this;
+        }
 
-		public ContentViewSection fields(List<String> fieldNames) {
-			this.fieldNames = fieldNames;
-			return this;
-		}
+        public ContentViewSection fields(
+                EnumeratedBinding... enumeratedBindings) {
+            return fieldBindings(Arrays.asList(enumeratedBindings));
+        }
 
-		public ContentViewSection fields(String... fieldNames) {
-			this.fieldNames = Arrays.asList(fieldNames);
-			return this;
-		}
+        public ContentViewSection fieldBindings(
+                List<EnumeratedBinding> enumeratedBindings) {
+            this.fieldNames = enumeratedBindings.stream()
+                    .map(EnumeratedBinding::getPath)
+                    .collect(Collectors.toList());
+            return this;
+        }
 
-		public ContentViewSection horizontalGrid() {
-			this.horizontalGrid = true;
-			return this;
-		}
+        public ContentViewSection fields(List<String> fieldNames) {
+            this.fieldNames = fieldNames;
+            return this;
+        }
 
-		@Override
-		public boolean test(Field t) {
-			return fieldNames.contains(t.getPropertyName());
-		}
-	}
+        public ContentViewSection fields(String... fieldNames) {
+            this.fieldNames = Arrays.asList(fieldNames);
+            return this;
+        }
 
-	public class ContentViewSectionsDialogBuilder {
-		private boolean noGlass = false;
+        public ContentViewSection horizontalGrid() {
+            this.horizontalGrid = true;
+            return this;
+        }
 
-		private String caption;
+        @Override
+        public boolean test(Field t) {
+            return fieldNames.contains(t.getPropertyName());
+        }
+    }
 
-		private String okButtonName = "OK";
+    public class ContentViewSectionsDialogBuilder {
+        private boolean noGlass = false;
 
-		private String cancelButtonName = "Cancel";
+        private String caption;
 
-		private boolean withCancel = true;
+        private String okButtonName = "OK";
 
-		public ContentViewSectionsDialogBuilder
-				actionListener(PermissibleActionListener actionListener) {
-			ContentViewSections.this.actionListener = actionListener;
-			return this;
-		}
+        private String cancelButtonName = "Cancel";
 
-		public ContentViewSectionsDialogBuilder
-				cancelButtonName(String cancelButtonName) {
-			this.cancelButtonName = cancelButtonName;
-			return this;
-		}
+        private boolean withCancel = true;
 
-		public ContentViewSectionsDialogBuilder caption(String caption) {
-			this.caption = caption;
-			return this;
-		}
+        public ContentViewSectionsDialogBuilder actionListener(
+                PermissibleActionListener actionListener) {
+            ContentViewSections.this.actionListener = actionListener;
+            return this;
+        }
 
-		public ContentViewSectionsDialogBuilder noGlass() {
-			noGlass = true;
-			return this;
-		}
+        public ContentViewSectionsDialogBuilder cancelButtonName(
+                String cancelButtonName) {
+            this.cancelButtonName = cancelButtonName;
+            return this;
+        }
 
-		public ContentViewSectionsDialogBuilder withCancel(boolean withCancel) {
-			this.withCancel = withCancel;
-			return this;
-		}
+        public ContentViewSectionsDialogBuilder caption(String caption) {
+            this.caption = caption;
+            return this;
+        }
 
-		public ContentViewSectionsDialogBuilder
-				okButtonName(String okButtonName) {
-			this.okButtonName = okButtonName;
-			return this;
-		}
+        public ContentViewSectionsDialogBuilder noGlass() {
+            noGlass = true;
+            return this;
+        }
 
-		public void show() {
-			ClientUtils.createEditContentViewWidgets(null, caption, "",
-					beanViews.get(0), noGlass, true, true, true, withCancel,
-					okButtonName, cancelButtonName);
-		}
-	}
+        public ContentViewSectionsDialogBuilder withCancel(boolean withCancel) {
+            this.withCancel = withCancel;
+            return this;
+        }
 
-	class MultiListener implements PermissibleActionListener {
-		@Override
-		public void vetoableAction(PermissibleActionEvent evt) {
-			if (evt.getAction().getClass() == OkAction.class || !cancelButton) {
-				if (createListener != null) {
-					createListener.vetoableAction(evt);
-				}
-			}
-			if (actionListener != null) {
-				actionListener.vetoableAction(evt);
-			}
-		}
-	}
+        public ContentViewSectionsDialogBuilder okButtonName(
+                String okButtonName) {
+            this.okButtonName = okButtonName;
+            return this;
+        }
+
+        public void show() {
+            ClientUtils.createEditContentViewWidgets(null, caption, "",
+                    beanViews.get(0), noGlass, true, true, true, withCancel,
+                    okButtonName, cancelButtonName);
+        }
+    }
+
+    class MultiListener implements PermissibleActionListener {
+        @Override
+        public void vetoableAction(PermissibleActionEvent evt) {
+            if (evt.getAction().getClass() == OkAction.class || !cancelButton) {
+                if (createListener != null) {
+                    createListener.vetoableAction(evt);
+                }
+            }
+            if (actionListener != null) {
+                actionListener.vetoableAction(evt);
+            }
+        }
+    }
 }
