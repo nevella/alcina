@@ -268,7 +268,11 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 			}
 			boolean linkedBecauseFlushed = ensureRemoteCheck();
 			if (linkedToRemote() && (wasResolved() || child.wasResolved())) {
-				LocalDom.ensureRemote(child);
+			    if(child.wasResolved()){
+			        LocalDom.ensureRemote(child);
+			    }else{
+                    LocalDom.ensureRemoteNodeMaybePendingResolution(child);
+			    }
 			}
 		}
 	}
@@ -345,4 +349,11 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 			return local().children.size();
 		}
 	}
+
+    protected void resetRemote() {
+        clearResolved();
+        resetRemote0();
+    }
+
+    protected abstract void resetRemote0() ;
 }

@@ -30,7 +30,7 @@ public class LocalDom {
 	private static LocalDomCollections collections;
 
 	private static Map<String, String> declarativeCssNames;
-
+//FIXME - ie9?
 	public static boolean fastRemoveAll = true;
 
 	private static boolean useRemoteDom = GWT.isClient();

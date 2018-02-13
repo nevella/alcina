@@ -715,4 +715,8 @@ public class Document extends Node implements DomDocument {
 	protected DomDocument remote() {
 		return remote;
 	}
+	@Override
+	protected void resetRemote0() {
+	    throw new UnsupportedOperationException();
+	}
 }
