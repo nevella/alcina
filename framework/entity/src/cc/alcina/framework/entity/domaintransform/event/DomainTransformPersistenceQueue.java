@@ -116,7 +116,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 								id = toFire.pop();
 							}
 						}
-						if (id != null) {
+						if (id != null&&!closed.get()) {
 							publishTransformEvent(id);
 						}
 					} catch (Exception e) {
