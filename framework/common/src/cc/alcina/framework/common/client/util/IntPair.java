@@ -57,11 +57,20 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 		return result;
 	}
 
+	public static boolean isContinuous(List<IntPair> matchedRanges) {
+		IntPair union = unionOf(matchedRanges);
+		return provideUncovered(matchedRanges, union).isEmpty();
+	}
+
+	public IntPair closedToOpen() {
+		return new IntPair(i1, i2 + 1);
+	}
+
 	public static IntPair unionOf(List<IntPair> matchedRanges) {
-		IntPair result = matchedRanges.get(0).shiftRight(0);
+		IntPair result = matchedRanges.get(0).shiftRight(0);// i.e clone
 		matchedRanges.forEach(ip -> {
 			result.i1 = Math.min(ip.i1, result.i1);
-			result.i2 = Math.min(ip.i2, result.i2);
+			result.i2 = Math.max(ip.i2, result.i2);
 		});
 		return result;
 	}
