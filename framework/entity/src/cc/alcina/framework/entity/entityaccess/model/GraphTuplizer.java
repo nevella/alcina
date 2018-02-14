@@ -50,6 +50,10 @@ public class GraphTuplizer {
 			token.fieldName = token.inField.name;
 			token.value = token.inValue;
 		}
+
+		default boolean ignore(TObjectRef inObjRef, String hint) {
+			return ignore(inObjRef);
+		}
 	}
 
 	public static enum DetupelizeInstructionType {
@@ -319,7 +323,7 @@ public class GraphTuplizer {
 	}
 
 	private void doCustom(TObjectRef inObjRef) {
-		if (mapper.ignore(inObjRef)) {
+		if (mapper.ignore(inObjRef, "doCustom")) {
 			return;
 		}
 		HasIdAndLocalId t = inObjRef.hili;
