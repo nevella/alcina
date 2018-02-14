@@ -188,10 +188,12 @@ public class GraphTuplizer {
 		this.tuples = tuples;
 		this.mapper = detupelizeMapper;
 		tuples.objects.forEach(this::prepare);
-		tuples.objects.forEach(this::create);
-		tuples.objects.forEach(this::nonRelational);
-		tuples.objects.forEach(this::relational);
-		tuples.objects.forEach(this::prepareCustom);
+		if ("".isEmpty()) {
+			tuples.objects.forEach(this::create);
+			tuples.objects.forEach(this::nonRelational);
+			tuples.objects.forEach(this::relational);
+			tuples.objects.forEach(this::prepareCustom);
+		}
 		tuples.objects.forEach(this::doCustom);
 	}
 

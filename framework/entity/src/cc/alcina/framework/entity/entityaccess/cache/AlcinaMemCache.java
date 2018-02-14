@@ -1107,6 +1107,7 @@ public class AlcinaMemCache implements RegistrableService {
 		// get reverse
 		PropertyDescriptor rev = null;
 		Class<?> declaringClass = pd.getReadMethod().getDeclaringClass();
+		Class targetEntityClass = null;
 		for (Entry<PropertyDescriptor, JoinTable> entry2 : joinTables
 				.entrySet()) {
 			ManyToMany m = entry2.getKey().getReadMethod()
@@ -1114,6 +1115,7 @@ public class AlcinaMemCache implements RegistrableService {
 			if (m != null && entry2.getValue() == null
 					&& declaringClass.isAssignableFrom(m.targetEntity())
 					&& pd.getName().equals(m.mappedBy())) {
+				targetEntityClass = m.targetEntity();
 				rev = entry2.getKey();
 				break;
 			}
@@ -1124,7 +1126,7 @@ public class AlcinaMemCache implements RegistrableService {
 			if (genericReturnType instanceof ParameterizedType) {
 				Type genericType = ((ParameterizedType) genericReturnType)
 						.getActualTypeArguments()[0];
-				if (genericType == declaringClass) {
+				if (genericType == targetEntityClass) {
 					// self-reference, probably
 					rev = pd;
 				}
@@ -1158,7 +1160,7 @@ public class AlcinaMemCache implements RegistrableService {
 							rev.getReadMethod().getDeclaringClass());
 			while (rs.next()) {
 				HasIdAndLocalId src = (HasIdAndLocalId) cache
-						.get(declaringClass, rs.getLong(1));
+						.get(targetEntityClass, rs.getLong(1));
 				assert src != null;
 				if (joinHandler == null) {
 					HasIdAndLocalId tgt = (HasIdAndLocalId) cache.get(
