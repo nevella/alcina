@@ -12,9 +12,10 @@ public class TestTransformManager extends ClientTransformManager {
 		createObjectLookup();
 	}
 
-	public static TestTransformManager cast(){
+	public static TestTransformManager cast() {
 		return (TestTransformManager) TransformManager.get();
 	}
+
 	public void performDeleteObject(HasIdAndLocalId hili) {
 	}
 
@@ -36,6 +37,15 @@ public class TestTransformManager extends ClientTransformManager {
 			transformInterceptList.add(evt);
 		} else {
 			super.addTransform(evt);
+		}
+	}
+
+	@Override
+	public void clearTransforms() {
+		if (transformInterceptList != null) {
+			transformInterceptList.clear();
+		} else {
+			super.clearTransforms();
 		}
 	}
 }
