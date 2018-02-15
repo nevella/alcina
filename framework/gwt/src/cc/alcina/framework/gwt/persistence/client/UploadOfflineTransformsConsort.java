@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.gwt.client.util.ClientUtilsNonGwt;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.persistence.client.UploadOfflineTransformsConsort.State;
 
@@ -74,7 +74,7 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 
 		@Override
 		public void onFailure(Throwable caught) {
-			if (ClientUtils.maybeOffline(caught)) {
+			if (ClientUtilsNonGwt.maybeOffline(caught)) {
 				consort.onFailure(caught);
 				return;
 			}
@@ -125,7 +125,7 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 
 		public void onFailure(Throwable caught) {
 			cleanup();
-			if (ClientUtils.maybeOffline(caught)) {
+			if (ClientUtilsNonGwt.maybeOffline(caught)) {
 				consort.onFailure(caught);
 				return;
 			}

@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.gwt.client.util.ClientUtilsNonGwt;
 
 @RegistryLocation(registryPoint = LoadObjectsHelloPlayer.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
@@ -27,7 +27,7 @@ public class LoadObjectsHelloPlayer extends
 
 	@Override
 	public void onFailure(Throwable caught) {
-		if (ClientUtils.maybeOffline(caught)) {
+		if (ClientUtilsNonGwt.maybeOffline(caught)) {
 			PermissionsManager.get().setOnlineState(OnlineState.OFFLINE);
 			signal(false);
 			return;
