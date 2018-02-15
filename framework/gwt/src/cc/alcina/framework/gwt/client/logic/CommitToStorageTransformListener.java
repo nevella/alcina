@@ -55,7 +55,7 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolutionToken;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolverAction;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.gwt.client.util.ClientUtilsNonGwt;
 
 /**
  * 
@@ -325,7 +325,7 @@ public class CommitToStorageTransformListener extends StateListenable
                         getTransformExceptionResolver().resolve(dtre, callback);
                         return;
                     }
-                    if (ClientUtils.maybeOffline(caught)) {
+                    if (ClientUtilsNonGwt.maybeOffline(caught)) {
                         fireStateChanged(OFFLINE);
                     }
                     throw new UnknownTransformFailedException(caught);

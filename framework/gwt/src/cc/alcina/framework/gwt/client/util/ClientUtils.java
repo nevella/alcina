@@ -33,7 +33,6 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.http.client.UrlBuilder;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.rpc.StatusCodeException;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HTML;
@@ -43,18 +42,15 @@ import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.totsp.gwittir.client.beans.Binding;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotifications;
-import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.OkCancelPanel;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
-import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 
@@ -244,44 +240,6 @@ public class ClientUtils {
 			Predicate<String> fieldFilter, String okButtonName) {
 		return makeContentView(model, pal, null, null, false, editable, false,
 				false, fieldFilter, okButtonName);
-	}
-
-	public static boolean maybeOffline(Throwable t) {
-		while (t instanceof WrappedRuntimeException) {
-			if (t == t.getCause() || t.getCause() == null) {
-				break;
-			}
-			t = t.getCause();
-		}
-		if (t.getMessage() != null && t.getMessage()
-				.contains("IOException while sending RPC request")) {
-			return true;
-		}
-		if (t.getMessage() != null && t.getMessage()
-				.contains("IOException while receiving RPC response")) {
-			return true;
-		}
-		if (t instanceof StatusCodeException) {
-			if (AlcinaDebugIds.hasFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE)) {
-				return true;
-			}
-			StatusCodeException sce = (StatusCodeException) t;
-			Registry.impl(ClientNotifications.class)
-					.log("** Status code exception: " + sce.getStatusCode());
-			if (sce.getStatusCode() == 0) {
-				return true;
-			}
-			boolean internetExplorerErrOffline = BrowserMod.isInternetExplorer()
-					&& sce.getStatusCode() > 600;
-			if (internetExplorerErrOffline) {
-				return true;
-			}
-			// DNS error in Africa
-			if (t.toString().contains("was not able to resolve the hostname")) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	public static void notImplemented() {

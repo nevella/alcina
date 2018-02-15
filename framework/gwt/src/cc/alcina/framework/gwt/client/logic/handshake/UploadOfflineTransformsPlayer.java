@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
 import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.gwt.client.util.ClientUtilsNonGwt;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 
 public class UploadOfflineTransformsPlayer
@@ -16,7 +16,7 @@ public class UploadOfflineTransformsPlayer
 
 	@Override
 	public void onFailure(Throwable caught) {
-		if (ClientUtils.maybeOffline(caught)) {
+		if (ClientUtilsNonGwt.maybeOffline(caught)) {
 			// we now know that we're offline.
 			wasPlayed();
 			return;

@@ -14,7 +14,7 @@ import com.google.gwt.user.client.rpc.StatusCodeException;
 
 public class AlcinaTemplateExceptionHandler extends ClientExceptionHandler {
 	public void onUncaughtException(Throwable e) {
-		if (ClientUtils.maybeOffline(e)) {
+		if (ClientUtilsNonGwt.maybeOffline(e)) {
 			PermissionsManager.get().setOnlineState(OnlineState.OFFLINE);
 			String message = TextProvider.get().getUiObjectText(getClass(),
 					"error-message-offline",
