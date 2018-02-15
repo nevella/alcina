@@ -50,6 +50,10 @@ public class GraphTuplizer {
 			token.fieldName = token.inField.name;
 			token.value = token.inValue;
 		}
+
+		default boolean ignore(TObjectRef inObjRef, String hint) {
+			return ignore(inObjRef);
+		}
 	}
 
 	public static enum DetupelizeInstructionType {
@@ -184,10 +188,12 @@ public class GraphTuplizer {
 		this.tuples = tuples;
 		this.mapper = detupelizeMapper;
 		tuples.objects.forEach(this::prepare);
-		tuples.objects.forEach(this::create);
-		tuples.objects.forEach(this::nonRelational);
-		tuples.objects.forEach(this::relational);
-		tuples.objects.forEach(this::prepareCustom);
+		if ("".isEmpty()) {
+			tuples.objects.forEach(this::create);
+			tuples.objects.forEach(this::nonRelational);
+			tuples.objects.forEach(this::relational);
+			tuples.objects.forEach(this::prepareCustom);
+		}
 		tuples.objects.forEach(this::doCustom);
 	}
 
@@ -319,7 +325,7 @@ public class GraphTuplizer {
 	}
 
 	private void doCustom(TObjectRef inObjRef) {
-		if (mapper.ignore(inObjRef)) {
+		if (mapper.ignore(inObjRef, "doCustom")) {
 			return;
 		}
 		HasIdAndLocalId t = inObjRef.hili;

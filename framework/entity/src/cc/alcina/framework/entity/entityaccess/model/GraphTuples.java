@@ -41,6 +41,10 @@ public class GraphTuples {
 			return Ax.format("%s:\n\t%s", classRef,
 					CommonUtils.joinWithNewlineTab(values.entrySet()));
 		}
+
+		public Object value(String fieldName) {
+			return values.get(classRef.fieldRefByName(fieldName));
+		}
 	}
 
 	public List<TObjectRef> objects = new ArrayList<>();

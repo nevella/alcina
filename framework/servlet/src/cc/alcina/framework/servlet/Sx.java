@@ -26,20 +26,25 @@ public class Sx {
 	// assumes non-critical deltas
 	public static void commitPoint() {
 		commitPoint(true);
-		// a better/more formal way would be to have some quick write-ahead (say kafka) and recover on restart
+		// a better/more formal way would be to have some quick write-ahead (say
+		// kafka) and recover on restart
 	}
 
 	private static void commitPoint(boolean set) {
 		HttpServletRequest threadLocalRequest = CommonRemoteServiceServlet
 				.getContextThreadLocalRequest();
 		if (threadLocalRequest == null) {
-			if(AppPersistenceBase.isTest()){
+			if (AppPersistenceBase.isTest()) {
 				Sx.nonThreadedCommitPoint = set;
 			}
 		} else {
 			threadLocalRequest.setAttribute(
 					CommonRemoteServiceServlet.PUSH_TRANSFORMS_AT_END_OF_REUQEST,
 					set);
-		}		
+		}
+	}
+
+	public static boolean isTest() {
+		return AppPersistenceBase.isTest();
 	}
 }

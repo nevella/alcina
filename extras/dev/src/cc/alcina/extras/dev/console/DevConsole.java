@@ -77,7 +77,6 @@ import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
-import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable.AlcinaChildContextRunner;
 
@@ -1063,5 +1062,5 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		classrefScanner.scan(cache);
 	}
 
-	
+	public abstract void ensureMemCache() throws Exception;
 }
