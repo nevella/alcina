@@ -592,6 +592,10 @@ public class XmlNode {
 			Node importNode = doc.domDoc().importNode(n.node, true);
 			append(doc.nodeFor(importNode));
 		}
+		public void importAsFirstChild(XmlNode n) {
+			Node importNode = doc.domDoc().importNode(n.node, true);
+			insertAsFirstChild(doc.nodeFor(importNode));
+		}
 
 		public void insertAsFirstChild(XmlNode newChild) {
 			invalidate();

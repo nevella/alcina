@@ -107,6 +107,9 @@ public class MainTabPanel extends TabPanel {
 			public void onBeforeSelection(BeforeSelectionEvent<Integer> event) {
 				int tabIndex = event.getItem();
 				getDeckPanel().setVisible(tabIndex >= 0);
+				if(tabIndex !=-1){
+					noTabContentHolder.clear();
+				}
 				noTabContentHolder.setVisible(tabIndex == -1);
 			}
 		});
