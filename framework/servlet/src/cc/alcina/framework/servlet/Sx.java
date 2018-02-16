@@ -47,4 +47,14 @@ public class Sx {
 	public static boolean isTest() {
 		return AppPersistenceBase.isTest();
 	}
+
+	static boolean testServer;
+
+	public static boolean isTestServer() {
+		return testServer || isTest();
+	}
+
+	public static void setTestServer(boolean testServer) {
+		Sx.testServer = testServer;
+	}
 }

@@ -74,8 +74,12 @@ public class ClientUtils {
 			final PermissibleActionListener pal, String caption,
 			String messageHtml, PaneWrapperWithObjects view, boolean noGlass,
 			boolean hideOnClick, boolean inDialog, boolean withOk,
-			boolean withCancel, String okButtonName, String cancelButtonName) {
+			boolean withCancel, String okButtonName, String cancelButtonName,
+			String panelClassName) {
 		FlowPanel fp = new FlowPanel();
+		if (Ax.notBlank(panelClassName)) {
+			fp.setStyleName(panelClassName);
+		}
 		final GlassDialogBox gdb = new GlassDialogBox();
 		if (noGlass) {
 			gdb.setGlassHidden(true);
@@ -176,19 +180,19 @@ public class ClientUtils {
 	}
 
 	public static native void invokeJsDebugger() /*-{
-													debugger;
-													}-*/;
+        debugger;
+	}-*/;
 
 	public static native void invokeJsDebugger(Element e) /*-{
-															var v = e;
-															var jso = e.@com.google.gwt.dom.client.Element::typedRemote()();
-															debugger;
-															}-*/;
+        var v = e;
+        var jso = e.@com.google.gwt.dom.client.Element::typedRemote()();
+        debugger;
+	}-*/;
 
 	public static native void invokeJsDebugger(JavaScriptObject jso) /*-{
-																		debugger;
-																		var v = jso;
-																		}-*/;
+        debugger;
+        var v = jso;
+	}-*/;
 
 	public static <T extends JavaScriptObject> List<T>
 			jsArrayToTypedArray(JsArray<T> typedArray) {
@@ -200,18 +204,18 @@ public class ClientUtils {
 	}
 
 	public static native JavaScriptObject jsonParse(String json) /*-{
-																	var dateTimeReviver = function(key, value) {
-																	var a;
-																	if (typeof value === 'string') {
-																	a = /__JsDate\((\d*)\)/.exec(value);
-																	if (a) {
-																	return new Date(+a[1]);
-																	}
-																	}
-																	return value;
-																	}
-																	return JSON.parse(json, dateTimeReviver);
-																	}-*/;
+        var dateTimeReviver = function(key, value) {
+            var a;
+            if (typeof value === 'string') {
+                a = /__JsDate\((\d*)\)/.exec(value);
+                if (a) {
+                    return new Date(+a[1]);
+                }
+            }
+            return value;
+        }
+        return JSON.parse(json, dateTimeReviver);
+	}-*/;
 
 	public static List<String>
 			jsStringArrayAsStringList(JsArrayString arrayString) {
@@ -266,16 +270,16 @@ public class ClientUtils {
 
 	public static native boolean setCssTextViaCssTextProperty(Element elem,
 			String css) /*-{
-						var styleTag = elem.@com.google.gwt.dom.client.Element::typedRemote()();
-						var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
-						
-						if ('cssText' in sheet) { // Internet Explorer
-						sheet.cssText = css;
-						return true;
-						}
-						
-						return false;//do innerText
-						}-*/;
+        var styleTag = elem.@com.google.gwt.dom.client.Element::typedRemote()();
+        var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
+
+        if ('cssText' in sheet) { // Internet Explorer
+            sheet.cssText = css;
+            return true;
+        }
+
+        return false;//do innerText
+	}-*/;
 
 	public static EditContentViewWidgets showContentView(final Object model,
 			final PermissibleActionListener pal, String caption,
@@ -332,8 +336,8 @@ public class ClientUtils {
 	}
 
 	public static native String stringify(JavaScriptObject jso) /*-{
-																return JSON.stringify(jso);
-																}-*/;
+        return JSON.stringify(jso);
+	}-*/;
 
 	public static void submitForm(Map<String, String> params, String url) {
 		FormPanel p = new FormPanel("_self");
@@ -406,15 +410,15 @@ public class ClientUtils {
 				false, true);
 		return createEditContentViewWidgets(pal, caption, messageHtml, view,
 				false, hideOnClick, inDialog, !editable && inDialog, false,
-				"OK", "Cancel");
+				"OK", "Cancel", null);
 	}
 
 	public static native void setElementStyle(Element e, String css) /*-{
-	if (e.style && typeof (e.style.cssText) == "string") {
-	e.style.cssText = css;
-	} else {
-	e.style = css;
-	}
+        if (e.style && typeof (e.style.cssText) == "string") {
+            e.style.cssText = css;
+        } else {
+            e.style = css;
+        }
 	}-*/;
 
 	public static String trimToWidth(String s, String style, int pxWidth,

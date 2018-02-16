@@ -266,6 +266,8 @@ public class ContentViewSections {
 
         private boolean withCancel = true;
 
+		private String className;
+
         public ContentViewSectionsDialogBuilder actionListener(
                 PermissibleActionListener actionListener) {
             ContentViewSections.this.actionListener = actionListener;
@@ -302,8 +304,13 @@ public class ContentViewSections {
         public void show() {
             ClientUtils.createEditContentViewWidgets(null, caption, "",
                     beanViews.get(0), noGlass, true, true, true, withCancel,
-                    okButtonName, cancelButtonName);
+                    okButtonName, cancelButtonName,className);
         }
+
+		public ContentViewSectionsDialogBuilder className(String className) {
+			this.className = className;
+			return this;
+		}
     }
 
     class MultiListener implements PermissibleActionListener {
