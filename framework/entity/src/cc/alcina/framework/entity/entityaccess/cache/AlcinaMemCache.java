@@ -1107,7 +1107,8 @@ public class AlcinaMemCache implements RegistrableService {
 		// get reverse
 		PropertyDescriptor rev = null;
 		Class<?> declaringClass = pd.getReadMethod().getDeclaringClass();
-		Class targetEntityClass = null;
+		//targetEntityClass may be a subclass of the declaring class
+		Class targetEntityClass = declaringClass;
 		for (Entry<PropertyDescriptor, JoinTable> entry2 : joinTables
 				.entrySet()) {
 			ManyToMany m = entry2.getKey().getReadMethod()
