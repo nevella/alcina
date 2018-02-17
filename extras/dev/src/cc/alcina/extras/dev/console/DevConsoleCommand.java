@@ -454,7 +454,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public boolean rerunIfMostRecentOnRestart() {
-			return true;
+			return r.rerunIfMostRecentOnRestart();
 		}
 
 		@Override
