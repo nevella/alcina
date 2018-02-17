@@ -1885,3 +1885,11 @@ button, .gwt-Button{
 .action-view-button{
 	margin-left: 20px;
 }
+.alcina-MainMenu{
+	position: relative;
+}
+.alcina-MainMenu .site-message{
+	display: none;
+	position: absolute;
+	
+}
