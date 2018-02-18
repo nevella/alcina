@@ -100,6 +100,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			createServletTransformClientInstance();
 			initCustom();
 			ServletLayerUtils.setAppServletInitialised(true);
+			launchPostInitTasks();
 		} catch (Throwable e) {
 			throw new ServletException(e);
 		} finally {
@@ -107,6 +108,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 		MetricLogging.get().end("Web app startup");
 		new AppServletStatusFileNotifier().ready();
+	}
+
+	protected void launchPostInitTasks() {
+		
 	}
 
 	public void refreshProperties() {

@@ -13,6 +13,12 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -30,6 +36,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
@@ -46,9 +53,13 @@ import cc.alcina.framework.gwt.client.widget.Link;
  * @author Nick Reddel
  */
 public class ChildBeanCustomiser implements Customiser {
+	public static final String EXCLUDE_FIELDS = "EXCLUDE_FIELDS";
+
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
-		return new ChildBeanRenderer(editable, objectClass);
+		String excludesStr = NamedParameter.Support
+				.stringValue(info.parameters(), EXCLUDE_FIELDS, null);
+		return new ChildBeanRenderer(editable, objectClass, excludesStr);
 	}
 
 	public static class ChildBeanRenderer implements BoundWidgetProvider {
@@ -56,13 +67,17 @@ public class ChildBeanCustomiser implements Customiser {
 
 		private final Class objectClass;
 
-		public ChildBeanRenderer(boolean editable, Class objectClass) {
+		private String excludesStr;
+
+		public ChildBeanRenderer(boolean editable, Class objectClass,
+				String excludesStr) {
 			this.editable = editable;
 			this.objectClass = objectClass;
+			this.excludesStr = excludesStr;
 		}
 
 		public BoundWidget get() {
-			return new ChildBeanWidget(objectClass, editable);
+			return new ChildBeanWidget(objectClass, editable, excludesStr);
 		}
 	}
 
@@ -76,14 +91,23 @@ public class ChildBeanCustomiser implements Customiser {
 
 		private final Class objectClass;
 
-		public ChildBeanWidget(Class objectClass, final boolean editable) {
+		public ChildBeanWidget(Class objectClass, final boolean editable,
+				String excludesStr) {
 			this.objectClass = objectClass;
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 			Object bean = ClientReflector.get()
 					.getTemplateInstance(objectClass);
-			Field[] fields = GwittirBridge.get()
-					.fieldsForReflectedObjectAndSetupWidgetFactory(bean,
-							factory, editable, false);
+			List<String> excludeList = excludesStr == null ? new ArrayList<>()
+					: Arrays.asList(excludesStr.split(","));
+			Predicate<Field> filter = f -> !excludeList
+					.contains(f.getPropertyName());
+			List<Field> fieldList = Arrays
+					.asList(GwittirBridge.get()
+							.fieldsForReflectedObjectAndSetupWidgetFactory(bean,
+									factory, editable, false))
+					.stream().filter(filter).collect(Collectors.toList());
+			Field[] fields = (Field[]) fieldList
+					.toArray(new Field[fieldList.size()]);
 			this.gridForm = new GridForm(fields, 1, factory, false);
 			gridForm.setDirectSetModelDisabled(true);
 			gridForm.addAttachHandler(new RecheckVisibilityHandler(gridForm));
