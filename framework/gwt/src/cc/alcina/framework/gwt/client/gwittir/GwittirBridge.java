@@ -94,6 +94,8 @@ import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	private static GwittirBridge INSTANCE = new GwittirBridge();
 
+	public static final String HINT_DATE_WITH_TIME_TITLE = "HINT_DATE_WITH_TIME_TITLE";
+
 	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY = new BoundWidgetTypeFactorySimpleGenerator();
 
 	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY_NO_NULLS = new BoundWidgetTypeFactorySimpleGenerator(
@@ -128,6 +130,16 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			RenderingLabel label = new RenderingLabel();
 			label.setWordWrap(false);
 			label.setRenderer(DATE_TIME_RENDERER);
+			return label;
+		}
+	};
+
+	public static final BoundWidgetProvider AU_DATE_TIME_TITLE_PROVIDER = new BoundWidgetProvider() {
+		public BoundWidget get() {
+			RenderingLabel label = new RenderingLabel();
+			label.setWordWrap(false);
+			label.setRenderer(DATE_SLASH_RENDERER_WITH_NULL);
+			label.setTitleRenderer(DATE_TIME_RENDERER);
 			return label;
 		}
 	};
@@ -442,9 +454,12 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			}
 			boolean focus = displayInfo.focus();
 			boolean propertyIsCollection = (p.getType() == Set.class);
-			boolean fieldEditable = editableWidgets && (PermissionsManager.get()
-					.checkEffectivePropertyPermission(op, pp, obj, false)||
-					((displayInfo.displayMask() & Display.DISPLAY_EDITABLE) != 0))
+			boolean fieldEditable = editableWidgets
+					&& (PermissionsManager.get()
+							.checkEffectivePropertyPermission(op, pp, obj,
+									false)
+							|| ((displayInfo.displayMask()
+									& Display.DISPLAY_EDITABLE) != 0))
 					&& ((displayInfo.displayMask() & Display.DISPLAY_RO) == 0);
 			Class domainType = p.getType();
 			domainType = (association == null || !propertyIsCollection
@@ -471,7 +486,11 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 							: DN_LABEL_PROVIDER;
 				} else {
 					if (domainType == Date.class) {
-						bwp = AU_DATE_PROVIDER;
+						if (displayInfo.rendererHint().equals(HINT_DATE_WITH_TIME_TITLE)) {
+							bwp = AU_DATE_TIME_TITLE_PROVIDER;
+						} else {
+							bwp = AU_DATE_PROVIDER;
+						}
 					} else if (isEnum) {
 						bwp = FRIENDLY_ENUM_LABEL_PROVIDER_INSTANCE;
 					} else if (domainType == boolean.class
