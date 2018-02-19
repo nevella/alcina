@@ -33,7 +33,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.ManyToMany;
 import javax.persistence.Query;
 
-import com.google.gwt.dev.util.collect.IdentityHashSet;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -465,10 +464,11 @@ public class ThreadlocalTransformManager extends TransformManager
 				id = userSessionHiliMap.containsKey(localId)
 						? userSessionHiliMap.get(localId).id : 0;
 			}
-			if(id==0){
-				HiliLocator locator = postTransactionEntityResolver.resolve(localId);
-				if(locator!=null){
-					id=locator.id;
+			if (id == 0) {
+				HiliLocator locator = postTransactionEntityResolver
+						.resolve(localId);
+				if (locator != null) {
+					id = locator.id;
 				}
 			}
 		}
@@ -1263,15 +1263,15 @@ public class ThreadlocalTransformManager extends TransformManager
 
 		public PostTransactionEntityResolver(HiliLocatorMap locatorMap) {
 		}
+
 		public HiliLocator resolve(HasIdAndLocalId v) {
 			long localId = v.getLocalId();
 			return resolve(localId);
 		}
 
 		protected HiliLocator resolve(long localId) {
-			if (PermissionsManager.get().getClientInstance()
-					.getId() != clientInstanceId
-					&& !AppPersistenceBase.isTest()) {
+			if (!AppPersistenceBase.isTest() && PermissionsManager.get()
+					.getClientInstance().getId() != clientInstanceId) {
 				return null;
 			}
 			HiliLocator locator = locatorMap.get(localId);

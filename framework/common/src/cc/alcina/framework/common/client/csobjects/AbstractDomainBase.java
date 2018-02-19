@@ -17,6 +17,8 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CollectionModificationType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Display;
@@ -178,17 +180,42 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 		return (T) Domain.writeable(this);
 	}
 
-	public T createOrReturnWriteable() {
-		HasEquivalence equivalent = HasEquivalenceHelper.getEquivalent(
-				(Collection) Domain.list(getClass()), (HasEquivalence) this);
-		if (equivalent != null) {
-			return (T) equivalent;
-		} else {
-			return writeable();
+	public class DomainSupport {
+		public T createOrReturnWriteable() {
+			HasEquivalence equivalent = HasEquivalenceHelper.getEquivalent(
+					(Collection) Domain
+							.list(AbstractDomainBase.this.getClass()),
+					(HasEquivalence) AbstractDomainBase.this);
+			if (equivalent != null) {
+				return (T) equivalent;
+			} else {
+				return writeable();
+			}
+		}
+
+		public T domainVersion() {
+			return (T) Domain.find(AbstractDomainBase.this);
+		}
+
+		public T detachedToDomain() {
+			return (T) Domain.detachedToDomain(AbstractDomainBase.this);
+		}
+
+		public <V extends HasIdAndLocalId> void addToProperty(V v,
+				String propertyName) {
+			TransformManager.get().modifyCollectionProperty(
+					AbstractDomainBase.this, propertyName, v,
+					CollectionModificationType.ADD);
+		}
+		public <V extends HasIdAndLocalId> void removeFromProperty(V v,
+				String propertyName) {
+			TransformManager.get().modifyCollectionProperty(
+					AbstractDomainBase.this, propertyName, v,
+					CollectionModificationType.REMOVE);
 		}
 	}
 
-	public T domainVersion() {
-		return (T) Domain.find(this);
+	public DomainSupport domain() {
+		return new DomainSupport();
 	}
 }
