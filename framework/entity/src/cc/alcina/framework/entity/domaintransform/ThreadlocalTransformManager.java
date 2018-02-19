@@ -1278,7 +1278,8 @@ public class ThreadlocalTransformManager extends TransformManager
 			if (locator != null) {
 				return locator;
 			}
-			if (!reconstituted) {
+			if (!reconstituted
+					&& PermissionsManager.get().getClientInstance() != null) {
 				locatorMap = CommonPersistenceProvider.get()
 						.getCommonPersistence()
 						.reconstituteHiliMap(PermissionsManager.get()

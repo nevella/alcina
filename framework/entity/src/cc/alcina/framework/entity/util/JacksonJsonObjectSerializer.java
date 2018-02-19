@@ -68,7 +68,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		}
 	}
 
-	static class AddIdAnnotationIntrospector
+	public static class AddIdAnnotationIntrospector
 			extends JacksonAnnotationIntrospector {
 		@Override
 		public ObjectIdInfo findObjectIdInfo(Annotated ann) {

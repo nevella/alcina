@@ -511,9 +511,9 @@ public class StatsFilter extends CollectionProjectionFilter {
 		}
 
 		@Override
-		protected <T> T newInstance(Class sourceClass) throws Exception {
+		protected <T> T newInstance(Class sourceClass, GraphProjectionContext context) throws Exception {
 			try {
-				return super.newInstance(sourceClass);
+				return super.newInstance(sourceClass,context);
 			} catch (Exception e) {
 				try {
 					return tryWithObjenesis(sourceClass);
