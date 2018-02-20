@@ -115,6 +115,15 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 		}
 	}
 
+	private String placeholderText="Type for suggestions";
+	public String getPlaceholderText() {
+		return this.placeholderText;
+	}
+
+	public void setPlaceholderText(String placeholderText) {
+		this.placeholderText = placeholderText;
+	}
+
 	public void setWithPlaceholder(boolean withPlaceholder) {
 		this.withPlaceholder = withPlaceholder;
 	}
@@ -130,7 +139,7 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 				.setMatchTextBoxAdjust(-4);
 		if (withPlaceholder) {
 			base.getValueBox().getElement().setPropertyString("placeholder",
-					"Type for suggestions");
+					placeholderText);
 		}
 		base.addSelectionHandler(evt -> {
 			if (evt.getSelectedItem() != null) {

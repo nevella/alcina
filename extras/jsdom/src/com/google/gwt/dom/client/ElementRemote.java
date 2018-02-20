@@ -982,6 +982,9 @@ public class ElementRemote extends NodeRemote implements DomElement {
     final native void removeFromParent0()/*-{
                                          this.parentElement.removeChild(this);
                                          }-*/;
+    final native void appendChild0(ElementRemote newChild)/*-{
+    this.appendChild(newChild);
+    }-*/;
 
     /**
      * Determines whether the given {@link JavaScriptObject} can be cast to an
