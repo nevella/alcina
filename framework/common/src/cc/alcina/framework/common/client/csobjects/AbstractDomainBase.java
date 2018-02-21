@@ -45,6 +45,7 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 
 	@GwtTransient
 	long localId;
+	
 
 	@Override
 	public boolean equals(Object obj) {

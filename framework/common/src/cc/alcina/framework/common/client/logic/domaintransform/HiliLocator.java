@@ -2,7 +2,11 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 
+import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /*
@@ -104,5 +108,26 @@ public class HiliLocator implements Serializable {
 	public String toString() {
 		return CommonUtils.formatJ("%s - %s",
 				clazz == null ? "??" : CommonUtils.simpleClassName(clazz), id);
+	}
+
+	public String toParseableString() {
+		if (clazz == null) {
+			return "null";
+		}
+		return Ax.format("%s/%s/%s", id, localId, clazz.getName());
+	}
+
+	public static HiliLocator parse(String v) {
+		if (v == null || v.equals("null")) {
+			return new HiliLocator();
+		}
+		String[] parts = v.split("/");
+		return new HiliLocator(
+				Reflections.classLookup().getClassForName(parts[2]),
+				Long.parseLong(parts[0]), Long.parseLong(parts[1]));
+	}
+
+	public <T extends HasIdAndLocalId> T find() {
+		return Domain.find(this);
 	}
 }

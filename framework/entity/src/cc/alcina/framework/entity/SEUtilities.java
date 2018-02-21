@@ -1231,6 +1231,11 @@ public class SEUtilities {
 	public static Date toOldDate(LocalDate ld) {
 		return Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
 	}
+	public static LocalDateTime toNewDate(Date date) {
+		return date.toInstant()
+			      .atZone(ZoneId.systemDefault())
+			      .toLocalDateTime();
+	}
 
 	public static Date toOldDate(LocalDateTime ldt) {
 		return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
