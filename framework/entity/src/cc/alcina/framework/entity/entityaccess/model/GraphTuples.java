@@ -42,7 +42,7 @@ public class GraphTuples {
 					CommonUtils.joinWithNewlineTab(values.entrySet()));
 		}
 
-		public Object value(String fieldName) {
+		public String value(String fieldName) {
 			return values.get(classRef.fieldRefByName(fieldName));
 		}
 	}
