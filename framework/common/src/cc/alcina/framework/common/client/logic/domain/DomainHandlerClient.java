@@ -41,7 +41,8 @@ public class DomainHandlerClient implements DomainHandler {
 
 	@Override
 	public <V extends HasIdAndLocalId> V find(V v) {
-		return find(v.getClass(), v.getId());
+		V find = find(v.getClass(), v.getId());
+		return find == null ? v : find;
 	}
 
 	@Override
