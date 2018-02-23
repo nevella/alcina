@@ -45,6 +45,8 @@ public class DomainObjectSuggestCustomiser
 
 	public static final String WITH_PLACEHOLDER = "with-placeholder";
 
+	public static final String PLACEHOLDER = "WITH_PLACEHOLDER";
+
 	private Class classValue;
 
 	private Class rendererClassValue;
@@ -56,6 +58,8 @@ public class DomainObjectSuggestCustomiser
 	private boolean showOnFocus;
 
 	private boolean withPlaceholder;
+
+	private String placeholderText;
 	
 	
 
@@ -64,6 +68,7 @@ public class DomainObjectSuggestCustomiser
 		BoundSuggestBox boundSuggestBox = new BoundSuggestBox<>();
 		boundSuggestBox.setRenderer(getRenderer());
 		boundSuggestBox.setWithPlaceholder(withPlaceholder);
+		boundSuggestBox.setPlaceholderText(placeholderText);
 		boundSuggestBox.suggestOracle(
 				new BoundSuggestOracle().clazz(classValue).hint(hintValue));
 		boundSuggestBox.setShowOnFocus(showOnFocus);
@@ -85,6 +90,8 @@ public class DomainObjectSuggestCustomiser
 				SHOW_ON_FOCUS);
 		withPlaceholder = NamedParameter.Support
 				.booleanValueDefaultTrue(info.parameters(), WITH_PLACEHOLDER);
+		placeholderText = NamedParameter.Support
+				.stringValue(info.parameters(), PLACEHOLDER,"Type for suggestions");
 		return editable ? this
 				: readonlyCustomiserClassValue == null
 						? new RenderedLabelProvider(rendererClassValue, null)

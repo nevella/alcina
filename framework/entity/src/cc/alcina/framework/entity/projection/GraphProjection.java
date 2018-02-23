@@ -57,6 +57,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.ProjectByValue;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.DomainObjectCloner;
@@ -526,7 +527,7 @@ public class GraphProjection {
 						Array.getLength(source))
 				: (T) ((source instanceof MemCacheProxy)
 						? ((MemCacheProxy) source).nonProxy()
-						: newInstance(sourceClass));
+						: newInstance(sourceClass, context));
 		boolean reachableBySinglePath = reachableBySinglePath(sourceClass);
 		if ((context == null || !reachableBySinglePath) && checkReachable) {
 			reached.put(source, projected == null ? NULL_MARKER : projected);
@@ -744,16 +745,26 @@ public class GraphProjection {
 		return false;
 	}
 
-	protected <T> T newInstance(Class sourceClass) throws Exception {
+	protected <T> T newInstance(Class sourceClass,
+			GraphProjectionContext context) throws Exception {
 		if (constructorMethodsLookup.containsKey(sourceClass)) {
 			return (T) constructorMethodsLookup.get(sourceClass).newInstance();
 		}
 		if (!constructorLookup.containsKey(sourceClass)) {
-			Constructor ctor = sourceClass.getConstructor(new Class[] {});
-			ctor.setAccessible(true);
-			constructorLookup.put(sourceClass, ctor);
-			if (dumpProjectionStats) {
-				System.out.println("missing constructor - " + sourceClass);
+			try {
+				if(sourceClass.getName().equals("java.util.Collections$UnmodifiableRandomAccessList")){
+					return (T) new ArrayList();
+				}
+				Constructor ctor = sourceClass.getConstructor(new Class[] {});
+				ctor.setAccessible(true);
+				constructorLookup.put(sourceClass, ctor);
+				if (dumpProjectionStats) {
+					System.out.println("missing constructor - " + sourceClass);
+				}
+			} catch (Exception e) {
+				Ax.sysLogHigh("missing no-args constructor:\n\t%s\n\t%s  ",
+						sourceClass, context);
+				throw e;
 			}
 		}
 		return (T) constructorLookup.get(sourceClass)

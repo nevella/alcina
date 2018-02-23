@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.util;
 import com.google.gwt.user.client.rpc.StatusCodeException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -13,6 +14,7 @@ import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 //FIXME - post merge of localdom - remove (with prejudice)
 public class ClientUtilsNonGwt {
     @RegistryLocation(registryPoint = ClientUtilsNonGwtImpl.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.DEFAULT_PRIORITY)
+    @ClientInstantiable
     public static class ClientUtilsNonGwtImpl {
         public boolean maybeOffline(Throwable t) {
             while (t instanceof WrappedRuntimeException) {

@@ -66,6 +66,7 @@ import com.google.gwt.core.shared.GWT;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
@@ -271,8 +272,8 @@ public class ResourceUtilities {
 			return customProperties.get(namespacedKey);
 		}
 		ResourceBundle b = null;
-		if(clazz.getPackage()==null&&GWT.isClient()){
-		    return null;
+		if (clazz.getPackage() == null && GWT.isClient()) {
+			return null;
 		}
 		b = ResourceBundle.getBundle(clazz.getPackage().getName() + ".Bundle",
 				Locale.getDefault(), clazz.getClassLoader());
@@ -773,5 +774,10 @@ public class ResourceUtilities {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public static void registerCustomProperty(String key, String value) {
+		ResourceUtilities.registerCustomProperties(new ByteArrayInputStream(
+				Ax.format("%s=%s", key, value).getBytes()));
 	}
 }

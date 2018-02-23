@@ -27,7 +27,6 @@ public interface Stream<T> {
 		}
 		return (Stream<R>) new CollectionStream<R>(result);
 	}
-	
 
 	default <R, A> R collect(Collector<? super T, A, R> collector) {
 		return collector.collect((Stream) this);
@@ -43,21 +42,24 @@ public interface Stream<T> {
 		}
 		return (Stream<T>) new CollectionStream<T>(result);
 	}
-	
-	static class LimitPredicate<T> implements Predicate<T>{
+
+	static class LimitPredicate<T> implements Predicate<T> {
 		long limit;
-		public LimitPredicate(long limit){
-			this.limit=limit;
+
+		public LimitPredicate(long limit) {
+			this.limit = limit;
 		}
-		public boolean test(T t){
-			if(limit>0){
+
+		public boolean test(T t) {
+			if (limit > 0) {
 				limit--;
 				return true;
-			}else{
+			} else {
 				return false;
 			}
 		}
 	}
+
 	default Stream<T> limit(long limit) {
 		return filter(new LimitPredicate(limit));
 	}
@@ -110,6 +112,12 @@ public interface Stream<T> {
 		return new CollectionStream(list);
 	}
 
+	public static <E> Stream<E> concat(Stream<E> stream1, Stream<E> stream2) {
+		List<E> list = ((CollectionStream<E>) stream1).asList();
+		list.addAll(((CollectionStream<E>) stream2).asList());
+		return new CollectionStream(list);
+	}
+
 	default Optional<T> findFirst() {
 		Iterator<T> itr = iterator();
 		return Optional.ofNullable(itr.hasNext() ? itr.next() : null);
@@ -124,6 +132,7 @@ public interface Stream<T> {
 		}
 		return false;
 	}
+
 	default boolean allMatch(Predicate<? super T> predicate) {
 		for (Iterator<T> itr = iterator(); itr.hasNext();) {
 			T t = itr.next();

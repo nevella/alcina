@@ -30,6 +30,8 @@ public class MemcacheSearcher {
 
 	private static Map<Class, MemcacheDefinitionHandler> definitionHandlers = new LinkedHashMap<>();
 
+	public static boolean useSequentialSearch = false;
+
 	private static synchronized void setupHandlers() {
 		if (handlers.isEmpty()) {
 			List<MemcacheCriterionHandler> impls = Registry
@@ -49,7 +51,12 @@ public class MemcacheSearcher {
 
 	private SearchDefinition def;
 
-	MemoryStoreQuery query = Registry.impl(MemoryStoreQuery.class);
+	private MemoryStoreQuery query;
+
+	public MemcacheSearcher() {
+		query = useSequentialSearch ? new MemoryStoreQuery()
+				: Registry.impl(MemoryStoreQuery.class);
+	}
 
 	public <T extends HasIdAndLocalId> List<T> search(SearchDefinition def,
 			Class<T> clazz, Comparator<T> order) {
@@ -58,7 +65,6 @@ public class MemcacheSearcher {
 		setupHandlers();
 		processDefinitionHandler();
 		processHandlers();
-		
 		List<T> list;
 		try {
 			query.readLock(true);
@@ -111,14 +117,13 @@ public class MemcacheSearcher {
 			}
 		}
 	}
-	@RegistryLocation(registryPoint = MemoryStoreLocker.class, implementationType = ImplementationType.SINGLETON)
-	public static class MemoryStoreLocker{
 
+	@RegistryLocation(registryPoint = MemoryStoreLocker.class, implementationType = ImplementationType.SINGLETON)
+	public static class MemoryStoreLocker {
 		public void readLock(boolean lock) {
-			
 		}
-		
 	}
+
 	@RegistryLocation(registryPoint = MemoryStoreQuery.class, implementationType = ImplementationType.INSTANCE)
 	public static class MemoryStoreQuery extends CacheQuery<MemoryStoreQuery> {
 		protected SearchDefinition def;
@@ -135,7 +140,6 @@ public class MemcacheSearcher {
 			Registry.impl(MemoryStoreLocker.class).readLock(lock);
 		}
 
-		
 		protected <T extends HasIdAndLocalId> Stream<T>
 				getStream(Collection<T> values) {
 			Stream<T> stream = values.stream().filter(v -> {

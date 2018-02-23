@@ -48,6 +48,9 @@ public class RenderingLabel<T> extends AbstractBoundWidget<T> {
 	@SuppressWarnings("unchecked")
 	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
 
+	@SuppressWarnings("unchecked")
+	private Renderer<T, String> titleRenderer = null;
+
 	/** Creates a new instance of Label */
 	public RenderingLabel() {
 		this.init(null);
@@ -145,6 +148,10 @@ public class RenderingLabel<T> extends AbstractBoundWidget<T> {
 		return retValue;
 	}
 
+	public Renderer<T, String> getTitleRenderer() {
+		return this.titleRenderer;
+	}
+
 	public T getValue() {
 		return value;
 	}
@@ -221,11 +228,18 @@ public class RenderingLabel<T> extends AbstractBoundWidget<T> {
 		this.base.setTitle(title);
 	}
 
+	public void setTitleRenderer(Renderer<T, String> titleRenderer) {
+		this.titleRenderer = titleRenderer;
+	}
+
 	public void setValue(T value) {
 		// ("Setting value "+ value, null );
 		Object old = this.getValue();
 		this.value = value;
 		this.setText(renderer.render(value));
+		if (titleRenderer != null) {
+			setTitle(titleRenderer.render(value));
+		}
 		if (this.getValue() != old && this.getValue() != null
 				&& this.getValue().equals(old)) {
 			this.changes.firePropertyChange("value", old, this.getValue());

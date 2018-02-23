@@ -52,6 +52,7 @@ public class StatusDisplayer {
 	public StatusDisplayer() {
 		stylePrefixes = new StringMap();
 		stylePrefixes.put(MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, "icy");
+		stylePrefixes.put(MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED, "icy-center");
 		stylePrefixes.put(MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED,
 				"sd-center-notification");
 	}
@@ -80,6 +81,9 @@ public class StatusDisplayer {
 		GlobalTopicPublisher.get().addTopicListener(
 				MessageManager.TOPIC_EXCEPTION_MESSAGE_PUBLISHED,
 				topicListener);
+		GlobalTopicPublisher.get().addTopicListener(
+				MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED,
+				topicListener);
 		RootPanel.get().add(appTuple.holder);
 		RootPanel.get().add(statusTuple.holder);
 		RootPanel.get().add(centerTuple.holder);
@@ -95,6 +99,8 @@ public class StatusDisplayer {
 				MessageManager.TOPIC_APP_MESSAGE_PUBLISHED, topicListener);
 		GlobalTopicPublisher.get().removeTopicListener(
 				MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, topicListener);
+		GlobalTopicPublisher.get().removeTopicListener(
+				MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED, topicListener);
 		GlobalTopicPublisher.get().removeTopicListener(
 				MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED, topicListener);
 		GlobalTopicPublisher.get().removeTopicListener(
@@ -114,7 +120,8 @@ public class StatusDisplayer {
 		int duration = FADER_DURATION;
 		FaderTuple ft = statusTuple;
 		boolean withFade = true;
-		if (channel == MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED) {
+		if (channel == MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED
+				||channel == MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED) {
 			center = true;
 			ft = centerTuple;
 		} else if (channel == CallManager.TOPIC_CALL_MADE) {

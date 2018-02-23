@@ -271,6 +271,36 @@ public class SEUtilities {
 		}
 	}
 
+	public static <T> void debugComparator(List<T> list,
+			Comparator<T> comparator) {
+		System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
+		Collections.shuffle(list);
+		Collections.sort(list, comparator);
+		for (int idx1 = 0; idx1 < list.size(); idx1++) {
+			for (int idx2 = idx1 + 1; idx2 < list.size(); idx2++) {
+				T e1 = list.get(idx1);
+				T e2 = list.get(idx2);
+				if (e1 != e2) {
+					int c1 = comparator.compare(e1, e2);
+					int c2 = comparator.compare(e2, e1);
+					if (c1 == 0 && c2 == 0) {
+					} else {
+						if (c1 > 0 || c1 != -c2) {
+							int c1a = comparator.compare(e1, e2);
+							int c2a = comparator.compare(e2, e1);
+							int debug = 3;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public static <T> void debugComparator2(List<T> list,
+			Comparator<T> comparator) {
+		new ComparatorDebug().debug(list, comparator);
+	}
+
 	public static String decUtf8(String s) {
 		try {
 			return s == null ? null : URLDecoder.decode(s, "UTF-8");
@@ -635,6 +665,10 @@ public class SEUtilities {
 	public static File getChildFile(File folder, String childFileName) {
 		return new File(
 				String.format("%s/%s", folder.getPath(), childFileName));
+	}
+
+	public static String getCurrentThreadStacktraceSlice() {
+		return getStacktraceSlice(Thread.currentThread(), 35, 0);
 	}
 
 	public static File getDesktopFolder() {
@@ -1027,6 +1061,11 @@ public class SEUtilities {
 		return StreamSupport.stream(matchIterable.spliterator(), false);
 	}
 
+	public static NormalisedNumericOrdering
+			normalisedNumericOrdering(String string) {
+		return new NormalisedNumericOrdering(string);
+	}
+
 	public static String normaliseEnglishTitle(String name) {
 		if (name == null) {
 			return null;
@@ -1182,7 +1221,6 @@ public class SEUtilities {
 	public static String stripWhitespace(String input) {
 		return doWhitespace(input, false, '-');
 	}
-
 	public static void threadDump() {
 		Set<Entry<Thread, StackTraceElement[]>> allStackTraces = Thread
 				.getAllStackTraces().entrySet();
@@ -1194,7 +1232,6 @@ public class SEUtilities {
 			}
 		}
 	}
-
 	public static String threadDumpToString() {
 		StringBuilder sb = new StringBuilder();
 		Set<Entry<Thread, StackTraceElement[]>> allStackTraces = Thread
@@ -1228,6 +1265,18 @@ public class SEUtilities {
 		}
 	}
 
+	public static LocalDate toLocalDate(Date date) {
+		return date.toInstant()
+			      .atZone(ZoneId.systemDefault())
+			      .toLocalDate();
+	}
+
+	public static LocalDateTime toLocalDateTime(Date date) {
+		return date.toInstant()
+			      .atZone(ZoneId.systemDefault())
+			      .toLocalDateTime();
+	}
+
 	public static Date toOldDate(LocalDate ld) {
 		return Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
 	}
@@ -1241,6 +1290,14 @@ public class SEUtilities {
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
+	}
+
+	public static URL toURL(String string) {
+		try {
+			return new URI(string).toURL();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public static String trimTrailingSlash(String string) {
@@ -1380,11 +1437,6 @@ public class SEUtilities {
 		}
 	}
 
-	public static NormalisedNumericOrdering
-			normalisedNumericOrdering(String string) {
-		return new NormalisedNumericOrdering(string);
-	}
-
 	public static class Bytes {
 		public static int indexOf(byte[] src, byte[] toFind) {
 			return indexOf(src, toFind, 0);
@@ -1443,6 +1495,82 @@ public class SEUtilities {
 		@Override
 		public String generate() {
 			return generateId();
+		}
+	}
+
+	public static class NormalisedNumericOrdering
+			implements Comparable<NormalisedNumericOrdering> {
+		private String[] parts;
+	
+		public NormalisedNumericOrdering(String string) {
+			parts = TextUtils.normalizeWhitespaceAndTrim(CommonUtils.nullToEmpty(string))
+					.split(" ");
+		}
+	
+		@Override
+		public int compareTo(NormalisedNumericOrdering o) {
+			for (int idx = 0; idx < parts.length; idx++) {
+				if (idx == o.parts.length) {
+					return 1;
+				}
+				String s1 = parts[idx];
+				String s2 = o.parts[idx];
+				NumericSuffix ns1 = new NumericSuffix(s1);
+				NumericSuffix ns2 = new NumericSuffix(s2);
+				int i = ns1.compareTo(ns2);
+				if (i != 0) {
+					return i;
+				}
+			}
+			return 0;
+		}
+	
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof NormalisedNumericOrdering) {
+				return Arrays.equals(parts,
+						((NormalisedNumericOrdering) obj).parts);
+			} else {
+				return false;
+			}
+		}
+		static class NumericSuffix implements Comparable<NumericSuffix> {
+			static String regex = "([0-9]*)(.*)";
+	
+			static Pattern pattern = Pattern.compile(regex);
+	
+			private int numeric;
+	
+			private String text;
+	
+			public NumericSuffix(String s) {
+				Matcher matcher = pattern.matcher(s);
+				matcher.matches();
+				String g1 = matcher.group(1);
+				String g2 = matcher.group(2);
+				numeric = Ax.isBlank(g1) ? 999999 : Integer.parseInt(g1);
+				text = g2 == null ? "" : g2;
+			}
+	
+			@Override
+			public int compareTo(NumericSuffix o) {
+				{
+					int i = numeric - o.numeric;
+					if (i != 0) {
+						return i;
+					}
+				}
+				return text.compareTo(o.text);
+			}
+	
+			@Override
+			public boolean equals(Object obj) {
+				if (obj instanceof NumericSuffix) {
+					NumericSuffix o = (NumericSuffix) obj;
+					return CommonUtils.equals(numeric, o.numeric, text, o.text);
+				}
+				return false;
+			}
 		}
 	}
 
@@ -1514,40 +1642,6 @@ public class SEUtilities {
 		}
 	}
 
-	public static String getCurrentThreadStacktraceSlice() {
-		return getStacktraceSlice(Thread.currentThread(), 35, 0);
-	}
-
-	public static <T> void debugComparator(List<T> list,
-			Comparator<T> comparator) {
-		System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
-		Collections.shuffle(list);
-		Collections.sort(list, comparator);
-		for (int idx1 = 0; idx1 < list.size(); idx1++) {
-			for (int idx2 = idx1 + 1; idx2 < list.size(); idx2++) {
-				T e1 = list.get(idx1);
-				T e2 = list.get(idx2);
-				if (e1 != e2) {
-					int c1 = comparator.compare(e1, e2);
-					int c2 = comparator.compare(e2, e1);
-					if (c1 == 0 && c2 == 0) {
-					} else {
-						if (c1 > 0 || c1 != -c2) {
-							int c1a = comparator.compare(e1, e2);
-							int c2a = comparator.compare(e2, e1);
-							int debug = 3;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	public static <T> void debugComparator2(List<T> list,
-			Comparator<T> comparator) {
-		new ComparatorDebug().debug(list, comparator);
-	}
-
 	static class ComparatorDebug {
 		public <T> void debug(List<T> list, Comparator<T> comparator) {
 			int rndSize = 100000;
@@ -1596,90 +1690,6 @@ public class SEUtilities {
 				return -1;
 			}
 			return 0;
-		}
-	}
-
-	public static class NormalisedNumericOrdering
-			implements Comparable<NormalisedNumericOrdering> {
-		private String[] parts;
-	
-		public NormalisedNumericOrdering(String string) {
-			parts = TextUtils.normalizeWhitespaceAndTrim(CommonUtils.nullToEmpty(string))
-					.split(" ");
-		}
-	
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof NormalisedNumericOrdering) {
-				return Arrays.equals(parts,
-						((NormalisedNumericOrdering) obj).parts);
-			} else {
-				return false;
-			}
-		}
-	
-		@Override
-		public int compareTo(NormalisedNumericOrdering o) {
-			for (int idx = 0; idx < parts.length; idx++) {
-				if (idx == o.parts.length) {
-					return 1;
-				}
-				String s1 = parts[idx];
-				String s2 = o.parts[idx];
-				NumericSuffix ns1 = new NumericSuffix(s1);
-				NumericSuffix ns2 = new NumericSuffix(s2);
-				int i = ns1.compareTo(ns2);
-				if (i != 0) {
-					return i;
-				}
-			}
-			return 0;
-		}
-		static class NumericSuffix implements Comparable<NumericSuffix> {
-			static String regex = "([0-9]*)(.*)";
-	
-			static Pattern pattern = Pattern.compile(regex);
-	
-			private int numeric;
-	
-			private String text;
-	
-			public NumericSuffix(String s) {
-				Matcher matcher = pattern.matcher(s);
-				matcher.matches();
-				String g1 = matcher.group(1);
-				String g2 = matcher.group(2);
-				numeric = Ax.isBlank(g1) ? 999999 : Integer.parseInt(g1);
-				text = g2 == null ? "" : g2;
-			}
-	
-			@Override
-			public boolean equals(Object obj) {
-				if (obj instanceof NumericSuffix) {
-					NumericSuffix o = (NumericSuffix) obj;
-					return CommonUtils.equals(numeric, o.numeric, text, o.text);
-				}
-				return false;
-			}
-	
-			@Override
-			public int compareTo(NumericSuffix o) {
-				{
-					int i = numeric - o.numeric;
-					if (i != 0) {
-						return i;
-					}
-				}
-				return text.compareTo(o.text);
-			}
-		}
-	}
-
-	public static URL toURL(String string) {
-		try {
-			return new URI(string).toURL();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
 		}
 	}
 }

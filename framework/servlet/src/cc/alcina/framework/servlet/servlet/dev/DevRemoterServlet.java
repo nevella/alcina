@@ -131,6 +131,9 @@ public abstract class DevRemoterServlet extends HttpServlet {
 				out = method.invoke(api, params.args);
 			} catch (Exception e) {
 				e.printStackTrace();
+				if(e instanceof InvocationTargetException){
+					e = new Exception("Invocation target exception = see server logs");
+				}
 				out = e;
 			} finally {
 				if (transformMethod) {

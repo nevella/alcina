@@ -8,21 +8,21 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
-import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.entity.SEUtilities;
 
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class Domain {
@@ -212,5 +212,11 @@ public class Domain {
 
 	public static <V extends HasIdAndLocalId> V register(V v) {
 		return TransformManager.get().registerDomainObject(v);
+	}
+
+	public static <V extends HasIdAndLocalId> Collection<V>
+			reverseIdList(Class<V> clazz) {
+		return handler.stream(clazz).sorted(HiliComparator.REVERSED_INSTANCE)
+				.collect(Collectors.toList());
 	}
 }

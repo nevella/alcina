@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.logic.domain;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -156,5 +157,9 @@ public class HiliHelper {
 			sb.append(hili.getId());
 		}
 		return sb.toString();
+	}
+
+	public static long getIdOrZero(Optional<? extends HasIdAndLocalId> o_hili) {
+		return o_hili.isPresent() ? o_hili.get().getId() : 0;
 	}
 }

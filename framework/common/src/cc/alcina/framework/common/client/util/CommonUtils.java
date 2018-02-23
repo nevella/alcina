@@ -382,6 +382,32 @@ public class CommonUtils {
 		return true;
 	}
 
+	public static boolean equalsWithForgivingDates(Object... objects) {
+		if (objects.length % 2 != 0) {
+			throw new RuntimeException("Array length must be divisible by two");
+		}
+		for (int i = 0; i < objects.length; i += 2) {
+			Object o1 = objects[i];
+			Object o2 = objects[i + 1];
+			if (o1 == null && o2 == null) {
+			} else {
+				if (o1 == null || o2 == null) {
+					Object nonNull = o1 == null ? o2 : o1;
+						return false;
+				} else {
+					if (!o1.equals(o2)) {
+						if (o1 instanceof Date && o2 instanceof Date
+								&& Math.abs(((Date) o1).getTime()-((Date) o2).getTime())<TimeConstants.ONE_DAY_MS) {
+						} else {
+							return false;
+						}
+					}
+				}
+			}
+		}
+		return true;
+	}
+
 	public static boolean equalsWithNullEmptyEquality(Object o1, Object o2) {
 		if (o1 instanceof String && o1.toString().isEmpty()) {
 			o1 = null;

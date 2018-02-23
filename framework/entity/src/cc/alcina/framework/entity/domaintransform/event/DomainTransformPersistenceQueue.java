@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.domaintransform.event;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -109,6 +110,10 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 					try {
 						Long id = null;
 						synchronized (toFire) {
+							// double-check
+							if (closed.get()) {
+								break;
+							}
 							if (toFire.isEmpty()) {
 								toFire.wait();
 							}
@@ -116,7 +121,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 								id = toFire.pop();
 							}
 						}
-						if (id != null&&!closed.get()) {
+						if (id != null && !closed.get()) {
 							publishTransformEvent(id);
 						}
 					} catch (Exception e) {
@@ -198,12 +203,14 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			// preventing us from getting the lock
 			LooseContext.pushWithTrue(AlcinaMemCache.CONTEXT_NO_LOCKS);
 			ThreadedPermissionsManager.cast().pushSystemUser();
-			PermissibleFieldFilter.setDisabledPerThreadPerObjectPermissions(true);
+			PermissibleFieldFilter
+					.setDisabledPerThreadPerObjectPermissions(true);
 			return supplier.get();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			PermissibleFieldFilter.setDisabledPerThreadPerObjectPermissions(false);
+			PermissibleFieldFilter
+					.setDisabledPerThreadPerObjectPermissions(false);
 			ThreadedPermissionsManager.cast().popSystemUser();
 			LooseContext.pop();
 		}

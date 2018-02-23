@@ -32,12 +32,32 @@ public interface HasEquivalence<T> {
 		public HasEquivalenceAdapter(T referent) {
 			this.o = referent;
 		}
+
 		@Override
 		public String toString() {
 			return o.toString();
 		}
-		public T getReferent(){
+
+		public T getReferent() {
 			return o;
+		}
+	}
+
+	public static class HasEquivalenceAdapterIdentity extends
+			HasEquivalenceAdapter<HasEquivalence, HasEquivalenceAdapterIdentity> {
+		public HasEquivalenceAdapterIdentity(HasEquivalence referent) {
+			super(referent);
+		}
+
+		@Override
+		public int equivalenceHash() {
+			return 0;
+		}
+
+		@Override
+		public boolean equivalentTo(HasEquivalenceAdapterIdentity other) {
+			HasEquivalence i = other.o;
+			return o.equivalentTo(i);
 		}
 	}
 

@@ -51,6 +51,9 @@ public class ContentDeliveryEmail implements ContentDelivery {
 	public static final String CONTEXT_SMTP_FROM_NAME = ContentDeliveryEmail.class
 			.getName() + ".CONTEXT_SMTP_FROM_NAME";
 
+	public static final String CONTEXT_OVERRIDE_TO_ADDRESS = ContentDeliveryEmail.class
+			.getName() + ".CONTEXT_OVERRIDE_TO_ADDRESS";
+
 	public static final String CONTEXT_SMTP_FROM_EMAIL = ContentDeliveryEmail.class
 			.getName() + ".CONTEXT_SMTP_FROM_EMAIL";
 
@@ -96,6 +99,11 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				.getBundledString(AddressFilter.class, "smtp.filter.className");
 		String systemEmailAddressOfRequestor = deliveryModel
 				.getSystemEmailAddressOfRequestor();
+		if (LooseContext.has(CONTEXT_OVERRIDE_TO_ADDRESS)) {
+			addresses.clear();
+			emailAddresses = new String[] {
+					LooseContext.get(CONTEXT_OVERRIDE_TO_ADDRESS) };
+		}
 		if (!SEUtilities.isNullOrEmpty(filterClassName)) {
 			AddressFilter filter = (AddressFilter) Class
 					.forName(filterClassName).newInstance();

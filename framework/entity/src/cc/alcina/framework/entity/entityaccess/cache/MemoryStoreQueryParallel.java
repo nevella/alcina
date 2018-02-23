@@ -35,7 +35,6 @@ public class MemoryStoreQueryParallel extends MemoryStoreQuery {
 			contexts.getMap().values().forEach(MemoryStoreQueryThread::cleanup);
 		}
 	}
-	
 
 	static class MemoryStoreQueryThread {
 		public MemoryStoreQueryThread(Thread thread) {

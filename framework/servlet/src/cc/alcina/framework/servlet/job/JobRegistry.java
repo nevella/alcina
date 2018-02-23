@@ -46,6 +46,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.servlet.RemoteActionLogger;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
+import cc.alcina.framework.servlet.Sx;
 
 /**
  *
@@ -120,6 +121,9 @@ public class JobRegistry implements RegistrableService {
 				.getBundledString(JobRegistry.class, "launcherName");
 		launcherName = launcherName.isEmpty()
 				? EntityLayerUtils.getLocalHostName() : launcherName;
+		if (Sx.isTest()) {
+			launcherName += "-devconsole";
+		}
 		return launcherName;
 	}
 

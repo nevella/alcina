@@ -378,7 +378,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			if (rpcRequest != null) {
 				msg = describeRpcRequest(rpcRequest, msg);
 			}
-			msg += "Stacktrace:\t " + sw.toString();
+			msg += "\nStacktrace:\t " + sw.toString();
 			System.out.println(msg);
 			CommonPersistenceLocal cpl = Registry
 					.impl(CommonPersistenceProvider.class)

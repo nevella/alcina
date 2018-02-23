@@ -1864,7 +1864,7 @@ input.alcina-Filter {
 
 div.has-help-text span:after {
 	content: ' (*)';
-	vertical-align: super;
+	font-size: 85%;
 	padding-left: 0.5em;
 }
 
@@ -1884,4 +1884,12 @@ button, .gwt-Button{
 }
 .action-view-button{
 	margin-left: 20px;
+}
+.alcina-MainMenu{
+	position: relative;
+}
+.alcina-MainMenu .site-message{
+	display: none;
+	position: absolute;
+	
 }
