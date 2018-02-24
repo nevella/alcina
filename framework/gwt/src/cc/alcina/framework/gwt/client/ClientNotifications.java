@@ -7,6 +7,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.spi.LogWriter;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
@@ -30,6 +31,10 @@ public interface ClientNotifications extends LogWriter {
 	public abstract boolean isDialogAnimationEnabled();
 
 	public abstract void log(String s);
+	
+	default  void log(String s, Object...args){
+		log(Ax.format(s,args));
+	}
 
 	public abstract void metricLogEnd(String key);
 

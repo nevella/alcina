@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.cache;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -106,6 +107,11 @@ public class Domain {
 	public static <V extends HasIdAndLocalId> V writeable(V v) {
 		return handler.writeable(v);
 	}
+
+	public static final List<String> domainBaseVersionablePropertyNames = Arrays
+	.asList(new String[] { "id", "localId", "lastModificationDate",
+			"lastModificationUser", "creationDate", "creationUser",
+			"versionNumber" });
 
 	public interface DomainHandler {
 		public <V extends HasIdAndLocalId> void async(Class<V> clazz,

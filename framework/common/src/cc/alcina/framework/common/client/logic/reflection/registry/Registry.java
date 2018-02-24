@@ -609,10 +609,11 @@ public class Registry {
 		if (allowNull) {
 			return null;
 		}
-		System.out.println(this);
-		throw new NoResolvedImplementationException(Ax.format(
+		String message = Ax.format(
 				"Registry: no resolved implementation type for %s :: %s",
-				registryPointKey.simpleName(), targetClassKey.simpleName()));
+				registryPointKey.simpleName(), targetClassKey.simpleName());
+		System.out.println(message);
+		throw new NoResolvedImplementationException(message);
 	}
 
 	protected <T> T singleton0(Class<T> clazz,

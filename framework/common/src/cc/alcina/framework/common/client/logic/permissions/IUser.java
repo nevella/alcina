@@ -15,6 +15,8 @@ package cc.alcina.framework.common.client.logic.permissions;
 
 import java.util.Set;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 /**
  *
  * @author Nick Reddel
@@ -35,4 +37,8 @@ public interface IUser extends IVersionable {
 	public abstract String getUserName();
 
 	public void setUserName(String userName);
+	
+	default String toIdNameString() {
+		return CommonUtils.formatJ("%s/%s", getId(), getUserName());
+	}
 }
