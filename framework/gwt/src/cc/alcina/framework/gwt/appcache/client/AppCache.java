@@ -53,16 +53,16 @@ public final class AppCache extends JavaScriptObject {
 	public static final String ONCACHED = "cached";
 
 	public static native AppCache getApplicationCache() /*-{
-														return $wnd.applicationCache;
-														}-*/;
+        return $wnd.applicationCache;
+	}-*/;
 
 	/**
 	 * Returns <code>true</code> if the Application Cache API is supported on
 	 * the running platform.
 	 */
 	public static native boolean isSupported() /*-{
-												return typeof $wnd.applicationCache != "undefined";
-												}-*/;
+        return typeof $wnd.applicationCache != "undefined";
+	}-*/;
 
 	private static void handleCacheEvents(EventListener listener, Event event) {
 		UncaughtExceptionHandler ueh = GWT.getUncaughtExceptionHandler();
@@ -92,18 +92,18 @@ public final class AppCache extends JavaScriptObject {
 								}-*/;
 
 	public native int getStatus() /*-{
-									return this.status;
-									}-*/;
+        return this.status;
+	}-*/;
 
 	public native boolean isOnline() /*-{
-										return $wnd.navigator.onLine;
-										}-*/;
+        return $wnd.navigator.onLine;
+	}-*/;
 
 	public native void swapCache() /*-{
-									this.swapCache();
-									}-*/;
+        this.swapCache();
+	}-*/;
 
 	public native void update() /*-{
-								this.update();
-								}-*/;
+        this.update();
+	}-*/;
 }

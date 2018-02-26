@@ -21,7 +21,8 @@ public abstract class UserStoryTeller
 		return Registry.impl(UserStoryTeller.class);
 	}
 
-	long delay=2000;
+	long delay = 2000;
+
 	private AtEndOfEventSeriesTimer<ClientLogRecord> seriesTimer = new AtEndOfEventSeriesTimer<>(
 			2000, new Runnable() {
 				@Override
@@ -40,10 +41,25 @@ public abstract class UserStoryTeller
 		super();
 	}
 
+	public static native void tellJs(String trigger)
+	/*-{
+        var teller = @cc.alcina.framework.gwt.client.logic.UserStoryTeller::get()();
+        teller.@cc.alcina.framework.gwt.client.logic.UserStoryTeller::tell(Ljava/lang/String;)(trigger);
+
+	}-*/;
+
 	@Override
 	public void topicPublished(String key, ClientLogRecord message) {
 		seriesTimer.triggerEventOccurred(message);
 	}
+
+	public native void registerWithJs()
+	/*-{
+	$wnd._UserStoryTeller_tell=@cc.alcina.framework.gwt.client.logic.UserStoryTeller::tellJs(Ljava/lang/String;)
+	if($wnd["_UserStory_tellOnLoad"]){
+		$wnd._UserStoryTeller_tell($wnd["_UserStory_tellOnLoad"]);
+	}
+	}-*/;
 
 	protected void publish() {
 		if (publishDisabled) {
