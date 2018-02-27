@@ -76,7 +76,11 @@ public class Ax {
 	}
 
 	public static void out(Object o) {
-		System.out.println(o);
+		if (o instanceof Collection) {
+			System.out.println(CommonUtils.joinWithNewlines((Collection) o));
+		} else {
+			System.out.println(o);
+		}
 	}
 
 	public static void out(String template, Object... args) {
