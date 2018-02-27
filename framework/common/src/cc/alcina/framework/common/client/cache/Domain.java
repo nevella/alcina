@@ -109,9 +109,9 @@ public class Domain {
 	}
 
 	public static final List<String> domainBaseVersionablePropertyNames = Arrays
-	.asList(new String[] { "id", "localId", "lastModificationDate",
-			"lastModificationUser", "creationDate", "creationUser",
-			"versionNumber" });
+			.asList(new String[] { "id", "localId", "lastModificationDate",
+					"lastModificationUser", "creationDate", "creationUser",
+					"versionNumber" });
 
 	public interface DomainHandler {
 		public <V extends HasIdAndLocalId> void async(Class<V> clazz,
@@ -191,8 +191,8 @@ public class Domain {
 
 	public static <V extends HasIdAndLocalId> V detachedToDomain(V hili) {
 		Class<V> clazz = (Class<V>) hili.getClass();
-		Preconditions.checkState(!hili.provideWasPersisted());
-		V writeable = Domain.create(clazz);
+		V writeable = hili.provideWasPersisted() ? Domain.find(hili)
+				: Domain.create(clazz);
 		List<PropertyInfoLite> writableProperties = Reflections.classLookup()
 				.getWritableProperties(clazz);
 		for (PropertyInfoLite propertyInfo : writableProperties) {
