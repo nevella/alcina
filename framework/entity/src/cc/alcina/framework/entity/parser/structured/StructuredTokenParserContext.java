@@ -75,7 +75,7 @@ public class StructuredTokenParserContext {
 		String inStr = sourceNode == null ? "(no input)"
 				: sourceNode.debug().shortRepresentation();
 		String match = outNode.token.name;
-		String message = String.format("%-30s%-30s%s", depthInSpacer + inStr,
+		String message = String.format("%-65s%-30s%s", depthInSpacer + inStr,
 				depthOutSpacer + outStr, match);
 		return message;
 	}

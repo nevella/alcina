@@ -713,13 +713,13 @@ public class XmlNode {
 					out = String.format("<%s>", name());
 				}
 			}
-			String ntc = ntc();
-			if (ntc.length() > 0) {
-				ntc = CommonUtils.trimToWsChars(ntc, 15);
+			String xml = XmlNode.this.toString();
+			if (xml.length() > 0) {
+				xml = CommonUtils.trimToWsChars(xml, 50);
 				if (out.length() > 0) {
 					out += " : ";
 				}
-				out += ntc;
+				out += xml;
 			}
 			return out;
 		}

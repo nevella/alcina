@@ -57,6 +57,10 @@ public abstract class ClientInstance
 
 	@GwtTransient
 	private String iid;
+	
+	private String referrer;
+	
+	private String url;
 
 	public abstract ClientInstance clone();
 
@@ -96,6 +100,14 @@ public abstract class ClientInstance
 		return this.localId;
 	}
 
+	public String getReferrer() {
+		return this.referrer;
+	}
+
+	public String getUrl() {
+		return this.url;
+	}
+
 	public String getUserAgent() {
 		return this.userAgent;
 	}
@@ -122,6 +134,14 @@ public abstract class ClientInstance
 
 	public void setLocalId(long localId) {
 		this.localId = localId;
+	}
+
+	public void setReferrer(String referrer) {
+		this.referrer = referrer;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 
 	public void setUserAgent(String userAgent) {
