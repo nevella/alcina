@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.entity;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.Lob;
@@ -27,26 +28,26 @@ public abstract class UserStory<U extends UserStory>
 
 	private String httpReferrer;
 
-	private List<ClientLogRecord> logs=new ArrayList<>();
-	
+	private List<ClientLogRecord> logs = new ArrayList<>();
+
 	private String location;
-	
+
 	private String email;
-	
 
-	public String getEmail() {
-		return this.email;
-	}
+	private String userAgent;
 
-	public void setEmail(String email) {
-		String old_email = this.email;
-		this.email = email;
-		propertyChangeSupport().firePropertyChange("email", old_email, email);
+	private String cart;
 
-	}
+	private Date date;
 
 	public UserStory() {
 		super();
+	}
+
+	@Lob
+	@Transient
+	public String getCart() {
+		return this.cart;
 	}
 
 	public long getClientInstanceId() {
@@ -57,6 +58,16 @@ public abstract class UserStory<U extends UserStory>
 		return this.clientInstanceUid;
 	}
 
+	public Date getDate() {
+		return this.date;
+	}
+
+	public String getEmail() {
+		return this.email;
+	}
+
+	@Lob
+	@Transient
 	public String getHttpReferrer() {
 		return this.httpReferrer;
 	}
@@ -80,6 +91,18 @@ public abstract class UserStory<U extends UserStory>
 		return this.trigger;
 	}
 
+	@Lob
+	@Transient
+	public String getUserAgent() {
+		return this.userAgent;
+	}
+
+	public void setCart(String cart) {
+		String old_cart = this.cart;
+		this.cart = cart;
+		propertyChangeSupport().firePropertyChange("cart", old_cart, cart);
+	}
+
 	public void setClientInstanceId(long clientInstanceId) {
 		long old_clientInstanceId = this.clientInstanceId;
 		this.clientInstanceId = clientInstanceId;
@@ -92,6 +115,18 @@ public abstract class UserStory<U extends UserStory>
 		this.clientInstanceUid = clientInstanceUid;
 		propertyChangeSupport().firePropertyChange("clientInstanceUid",
 				old_clientInstanceUid, clientInstanceUid);
+	}
+
+	public void setDate(Date date) {
+		Date old_date = this.date;
+		this.date = date;
+		propertyChangeSupport().firePropertyChange("date", old_date, date);
+	}
+
+	public void setEmail(String email) {
+		String old_email = this.email;
+		this.email = email;
+		propertyChangeSupport().firePropertyChange("email", old_email, email);
 	}
 
 	public void setHttpReferrer(String httpReferrer) {
@@ -110,7 +145,6 @@ public abstract class UserStory<U extends UserStory>
 		this.location = location;
 		propertyChangeSupport().firePropertyChange("location", old_location,
 				location);
-
 	}
 
 	public void setLogs(List<ClientLogRecord> logs) {
@@ -128,6 +162,13 @@ public abstract class UserStory<U extends UserStory>
 		this.trigger = trigger;
 		propertyChangeSupport().firePropertyChange("trigger", old_trigger,
 				trigger);
+	}
+
+	public void setUserAgent(String userAgent) {
+		String old_userAgent = this.userAgent;
+		this.userAgent = userAgent;
+		propertyChangeSupport().firePropertyChange("userAgent", old_userAgent,
+				userAgent);
 	}
 
 	@Override

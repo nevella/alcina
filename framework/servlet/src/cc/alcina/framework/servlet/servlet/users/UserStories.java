@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.servlet.users;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -9,10 +10,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
@@ -20,6 +24,7 @@ import cc.alcina.framework.common.client.entity.UserStory;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -35,6 +40,7 @@ import cc.alcina.framework.entity.parser.structured.node.XmlNodeHtmlTableBuilder
 import cc.alcina.framework.entity.parser.structured.node.XmlNodeHtmlTableBuilder.XmlNodeHtmlTableRowBuilder;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.SessionHelper;
+import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
 public class UserStories {
@@ -103,7 +109,7 @@ public class UserStories {
 	private ObjectNode storyNode;
 
 	public String asHtml(long id) {
-		if (!PermissionsManager.get().isAdmin()) {
+		if (!PermissionsManager.get().isAdmin() && !Sx.isTest()) {
 			throw new RuntimeException("Not permitted");
 		}
 		build(id, null);
@@ -122,9 +128,16 @@ public class UserStories {
 					.getCommonPersistence()
 					.getClientInstance(String.valueOf(clientInstanceId));
 		} else {
-			clientInstance = CommonPersistenceProvider.get()
-					.getCommonPersistenceExTransaction()
-					.createClientInstance("", userStory.getClientInstanceUid());
+			try {
+				clientInstance = CommonPersistenceProvider.get()
+						.getCommonPersistenceExTransaction()
+						.getImplementation(ClientInstance.class).newInstance();
+				clientInstance.setUserAgent(userStory.getUserAgent());
+				clientInstance.setHelloDate(userStory.getDate() == null
+						? new Date() : userStory.getDate());
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 		XmlDoc doc = XmlDoc.basicHtmlDoc();
 		String css = ResourceUtilities.readClassPathResourceAsString(
@@ -132,12 +145,21 @@ public class UserStories {
 		doc.xpath("//head").node().builder().tag("style").text(css).append();
 		XmlNode body = doc.xpath("//body").node();
 		body.builder().tag("h2").text("User Story").append();
+		String idNameString = clientInstance.getUser() == null
+				? userStory.getEmail()
+				: clientInstance.getUser().toIdNameString();
+		String location = userStory.getLocation();
+		if (Ax.notBlank(location)) {
+			location = Ax.format("%s :: %s", location, GeolocationResolver.get().getLocation(location));
+		}
 		{
 			XmlNodeHtmlTableBuilder builder = body.html().tableBuilder();
-			String idNameString = clientInstance.getUser().toIdNameString();
 			builder.row().cell("User").cell(idNameString);
-			builder.row().cell("Client instance").cell(clientInstanceId);
+			builder.row().cell("Client instance")
+					.cell(clientInstanceId == 0 ? "---" : clientInstanceId);
 			builder.row().cell("Date").cell(clientInstance.getHelloDate());
+			builder.row().cell("Referrer").cell(userStory.getHttpReferrer());
+			builder.row().cell("Location").cell(location);
 			builder.row().cell("User agent")
 					.cell(clientInstance.getUserAgent());
 			builder.row().cell("Triggering paywall event")
@@ -151,7 +173,6 @@ public class UserStories {
 			builder.append();
 		}
 		{
-			String idNameString = clientInstance.getUser().toIdNameString();
 			storyNode.set("user", storyNode.textNode(idNameString));
 			storyNode.set("clientInstance",
 					storyNode.numberNode(clientInstanceId));
@@ -172,49 +193,81 @@ public class UserStories {
 			String story = delta != null ? delta : userStory.getStory();
 			ArrayNode details = storyNode.arrayNode();
 			storyNode.set("details", details);
+			List<ClientLogRecord> list = new ArrayList<>();
 			for (String line : story.split("\\n")) {
-				ClientLogRecords records = AlcinaBeanSerializer
-						.deserializeHolder(line);
-				for (ClientLogRecord record : records.getLogRecords()) {
-					switch (Ax.nullSafe(record.getTopic()).toLowerCase()) {
-					case "message":
-					case "restart":
-						continue;
-					}
-					XmlNodeHtmlTableRowBuilder row = builder.row();
-					String timestamp = CommonUtils.formatDate(record.getTime(),
-							DateStyle.TIMESTAMP_NO_DAY);
-					row.cell().text(timestamp).nowrap().cell();
-					String topic = Ax.friendly(record.getTopic());
-					row.cell(topic);
-					XmlNode td = row.getNode().builder().tag("td").append();
-					Message message = parseMessage(record);
-					if (message.path != null) {
-						td.builder().tag("div")
-								.text(Ax.format("Path: %s", message.path))
-								.append();
-						td.builder().tag("div")
-								.text(Ax.format("%s: %s",
-										message.textIsLocator ? "Near" : "Text",
-										message.text))
-								.append();
-					} else {
-						td.builder().tag("div").text(message.text).append();
-					}
-					ObjectNode detail = details.objectNode();
-					detail.set("timestamp", storyNode.textNode(timestamp));
-					detail.set("topic", storyNode.textNode(topic));
-					if (message.path != null) {
-						detail.set("path", storyNode.textNode(message.path));
-						detail.set(message.textIsLocator ? "near" : "text",
-								storyNode.textNode(message.text));
-					} else {
-						detail.set("value", storyNode.textNode(message.text));
-					}
-					details.add(detail);
+				Object deser = AlcinaBeanSerializer.deserializeHolder(line);
+				if (deser instanceof List) {
+					list.addAll((List) deser);
+				} else {
+					ClientLogRecords records = (ClientLogRecords) deser;
+					list.addAll(records.getLogRecords());
 				}
 			}
+			int ctr = list.size();
+			for (ClientLogRecord record : list) {
+				ctr--;
+				String messageTxt = Ax.nullSafe(record.getMessage());
+				switch (Ax.nullSafe(record.getTopic()).toLowerCase()) {
+				case "message":
+					if (messageTxt.matches("Started logging.+")) {
+						break;
+					}
+				case "restart":
+					continue;
+				case "history":
+					if (messageTxt.equals("window closing") && ctr >= 10) {
+						continue;
+					}
+					break;
+				}
+				XmlNodeHtmlTableRowBuilder row = builder.row();
+				String timestamp = CommonUtils.formatDate(record.getTime(),
+						DateStyle.TIMESTAMP_NO_DAY);
+				row.cell().text(timestamp).nowrap().cell();
+				String topic = Ax.friendly(record.getTopic());
+				row.cell(topic);
+				XmlNode td = row.getNode().builder().tag("td").append();
+				Message message = parseMessage(record);
+				if (message.path != null) {
+					td.builder().tag("div")
+							.text(Ax.format("Path: %s", message.path)).append();
+					td.builder().tag("div")
+							.text(Ax.format("%s: %s",
+									message.textIsLocator ? "Near" : "Text",
+									message.text))
+							.append();
+				} else {
+					td.builder().tag("div").text(message.text).append();
+				}
+				ObjectNode detail = details.objectNode();
+				detail.set("timestamp", storyNode.textNode(timestamp));
+				detail.set("topic", storyNode.textNode(topic));
+				if (message.path != null) {
+					detail.set("path", storyNode.textNode(message.path));
+					detail.set(message.textIsLocator ? "near" : "text",
+							storyNode.textNode(message.text));
+				} else {
+					detail.set("value", storyNode.textNode(message.text));
+				}
+				details.add(detail);
+			}
 			builder.append();
+			if (userStory.getCart() != null) {
+				body.builder().tag("hr").append();
+				body.builder().tag("h3").text("Cart...").append();
+				ObjectMapper mapper = new ObjectMapper();
+				try {
+					ObjectNode node = (ObjectNode) mapper
+							.readTree(userStory.getCart());
+					((ArrayNode) node.get("items")).forEach(
+							n -> ((ObjectNode) n).remove("additional"));
+					String pretty = mapper.writerWithDefaultPrettyPrinter()
+							.writeValueAsString(node);
+					body.builder().tag("pre").text(pretty).append();
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
 		}
 		html = doc.prettyToString();
 	}
