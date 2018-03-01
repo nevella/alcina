@@ -1,5 +1,8 @@
 package cc.alcina.framework.common.client.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
@@ -10,7 +13,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 @MappedSuperclass
 @DomainTransformPersistable
-public abstract class UserStory<U extends UserStory> extends AbstractDomainBase<U> {
+public abstract class UserStory<U extends UserStory>
+		extends AbstractDomainBase<U> {
 	protected long id;
 
 	private String trigger;
@@ -20,6 +24,26 @@ public abstract class UserStory<U extends UserStory> extends AbstractDomainBase<
 	private long clientInstanceId;
 
 	private String clientInstanceUid;
+
+	private String httpReferrer;
+
+	private List<ClientLogRecord> logs=new ArrayList<>();
+	
+	private String location;
+	
+	private String email;
+	
+
+	public String getEmail() {
+		return this.email;
+	}
+
+	public void setEmail(String email) {
+		String old_email = this.email;
+		this.email = email;
+		propertyChangeSupport().firePropertyChange("email", old_email, email);
+
+	}
 
 	public UserStory() {
 		super();
@@ -31,6 +55,19 @@ public abstract class UserStory<U extends UserStory> extends AbstractDomainBase<
 
 	public String getClientInstanceUid() {
 		return this.clientInstanceUid;
+	}
+
+	public String getHttpReferrer() {
+		return this.httpReferrer;
+	}
+
+	public String getLocation() {
+		return this.location;
+	}
+
+	@Transient
+	public List<ClientLogRecord> getLogs() {
+		return this.logs;
 	}
 
 	@Lob
@@ -57,8 +94,27 @@ public abstract class UserStory<U extends UserStory> extends AbstractDomainBase<
 				old_clientInstanceUid, clientInstanceUid);
 	}
 
+	public void setHttpReferrer(String httpReferrer) {
+		String old_httpReferrer = this.httpReferrer;
+		this.httpReferrer = httpReferrer;
+		propertyChangeSupport().firePropertyChange("httpReferrer",
+				old_httpReferrer, httpReferrer);
+	}
+
 	public void setId(long id) {
 		this.id = id;
+	}
+
+	public void setLocation(String location) {
+		String old_location = this.location;
+		this.location = location;
+		propertyChangeSupport().firePropertyChange("location", old_location,
+				location);
+
+	}
+
+	public void setLogs(List<ClientLogRecord> logs) {
+		this.logs = logs;
 	}
 
 	public void setStory(String story) {

@@ -1107,7 +1107,7 @@ public class AlcinaMemCache implements RegistrableService {
 		// get reverse
 		PropertyDescriptor rev = null;
 		Class<?> declaringClass = pd.getReadMethod().getDeclaringClass();
-		//targetEntityClass may be a subclass of the declaring class
+		// targetEntityClass may be a subclass of the declaring class
 		Class targetEntityClass = declaringClass;
 		for (Entry<PropertyDescriptor, JoinTable> entry2 : joinTables
 				.entrySet()) {
@@ -2431,6 +2431,13 @@ public class AlcinaMemCache implements RegistrableService {
 		@Override
 		public <V extends HasIdAndLocalId> Collection<V> list(Class<V> clazz) {
 			return cache.immutableRawValues(clazz);
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> V byProperty(Class<V> clazz,
+				String propertyName, Object value) {
+			return new AlcinaMemCacheQuery().raw().filter(propertyName, value)
+					.find(clazz);
 		}
 
 		@Override

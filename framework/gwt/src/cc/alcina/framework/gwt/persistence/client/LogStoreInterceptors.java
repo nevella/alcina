@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.gwt.dom.client.BrowserEvents;
+import com.google.gwt.dom.client.DomState;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.Node;
@@ -110,9 +111,14 @@ public class LogStoreInterceptors {
 					if (!e.getId().isEmpty()) {
 						parts.add("#" + e.getId());
 					}
-					String cn = getClassName(e);
-					if (!cn.isEmpty()) {
-						parts.add("." + cn);
+					try {
+						DomState.domResolveSvgStyles = true;
+						String cn = e.getClassName();
+						if (!cn.isEmpty()) {
+							parts.add("." + cn);
+						}
+					} finally {
+						DomState.domResolveSvgStyles = false;
 					}
 				}
 				tags.add(CommonUtils.join(parts, ""));
@@ -179,8 +185,9 @@ public class LogStoreInterceptors {
 	public void logHistoryEvents() {
 		this.historyHandlerRegistration = History
 				.addValueChangeHandler(historyListener);
-		windowClosingHandlerRegistration=Window.addWindowClosingHandler(evt -> AlcinaTopics.logCategorisedMessage(new StringPair(
-				AlcinaTopics.LOG_CATEGORY_HISTORY, "window closing")));
+		windowClosingHandlerRegistration = Window.addWindowClosingHandler(
+				evt -> AlcinaTopics.logCategorisedMessage(new StringPair(
+						AlcinaTopics.LOG_CATEGORY_HISTORY, "window closing")));
 	}
 
 	public void logStat(String stat) {
@@ -243,35 +250,6 @@ public class LogStoreInterceptors {
 	boolean areStatsMuted() {
 		return statsMuteCounter > 0;
 	}
-
-	final String getClassName(Element elem_multi) {
-		if (!elem_multi.implAccess().linkedToRemote()) {
-			return elem_multi.getClassName();
-		} else {
-			return getClassName0(elem_multi);
-		}
-	}
-
-	final native String getClassName0(Element elem_multi) /*-{
-        var elem = elem_multi.@com.google.gwt.dom.client.Element::typedRemote()();
-        var cn = elem.className;
-        //note - someone says IE DOM objects don't support - hence try/catch
-        try {
-            if (cn.hasOwnProperty("baseVal")) {
-                cn = cn.baseVal;
-            }
-            if ((typeof cn).toLowerCase() != "string") {
-                if (cn && cn.toString().toLowerCase().indexOf("svg") != -1) {
-                    cn = 'svg-string';
-                } else {
-                    debugger;
-                }
-            }
-        } catch (e) {
-            return "";
-        }
-        return cn;
-	}-*/;
 
 	native void installStats0()/*-{
         function format(out) {

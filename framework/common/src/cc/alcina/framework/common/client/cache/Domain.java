@@ -12,8 +12,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliComparator;
@@ -36,12 +34,7 @@ public class Domain {
 
 	public static <V extends HasIdAndLocalId> V byProperty(Class<V> clazz,
 			String propertyName, Object value) {
-		// TODO - dem5 - index optimisations?
-		IndividualPropertyAccessor accessor = Reflections.propertyAccessor()
-				.cachedAccessor(clazz, propertyName);
-		return stream(clazz).filter(
-				o -> Objects.equals(accessor.getPropertyValue(o), value))
-				.findFirst().orElse(null);
+		return handler.byProperty(clazz, propertyName, value);
 	}
 
 	public static <V extends HasIdAndLocalId> Supplier<Collection>
@@ -116,6 +109,16 @@ public class Domain {
 	public interface DomainHandler {
 		public <V extends HasIdAndLocalId> void async(Class<V> clazz,
 				long objectId, boolean create, Consumer<V> resultConsumer);
+
+		default <V extends HasIdAndLocalId> V byProperty(Class<V> clazz,
+				String propertyName, Object value) {
+			// TODO - dem5 - index optimisations?
+			IndividualPropertyAccessor accessor = Reflections.propertyAccessor()
+					.cachedAccessor(clazz, propertyName);
+			return stream(clazz).filter(
+					o -> Objects.equals(accessor.getPropertyValue(o), value))
+					.findFirst().orElse(null);
+		}
 
 		public <V extends HasIdAndLocalId> V find(Class clazz, long id);
 

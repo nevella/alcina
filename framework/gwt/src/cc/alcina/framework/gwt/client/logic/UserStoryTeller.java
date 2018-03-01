@@ -8,7 +8,9 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 import cc.alcina.framework.gwt.persistence.client.LogStore;
@@ -21,6 +23,13 @@ public abstract class UserStoryTeller
 		return Registry.impl(UserStoryTeller.class);
 	}
 
+	public static native void tellJs(String trigger)
+	/*-{
+        var teller = @cc.alcina.framework.gwt.client.logic.UserStoryTeller::get()();
+        teller.@cc.alcina.framework.gwt.client.logic.UserStoryTeller::tell(Ljava/lang/String;)(trigger);
+
+	}-*/;
+
 	long delay = 2000;
 
 	private AtEndOfEventSeriesTimer<ClientLogRecord> seriesTimer = new AtEndOfEventSeriesTimer<>(
@@ -31,26 +40,16 @@ public abstract class UserStoryTeller
 				}
 			}).maxDelayFromFirstAction(2000);
 
-	protected boolean attached = false;
+	protected boolean listening = false;
 
 	protected UserStory story;
 
 	protected boolean publishDisabled = false;
 
+	private boolean publishing;
+
 	public UserStoryTeller() {
 		super();
-	}
-
-	public static native void tellJs(String trigger)
-	/*-{
-        var teller = @cc.alcina.framework.gwt.client.logic.UserStoryTeller::get()();
-        teller.@cc.alcina.framework.gwt.client.logic.UserStoryTeller::tell(Ljava/lang/String;)(trigger);
-
-	}-*/;
-
-	@Override
-	public void topicPublished(String key, ClientLogRecord message) {
-		seriesTimer.triggerEventOccurred(message);
 	}
 
 	public native void registerWithJs()
@@ -61,22 +60,32 @@ public abstract class UserStoryTeller
 	}
 	}-*/;
 
-	protected void publish() {
-		if (publishDisabled) {
-			return;
-		}
-		story.setStory(LogStore.get().dumpLogsAsString());
-		persistRemote();
-		Ax.out("persisted user story");
+	public void tell(String trigger) {
+		ensureListening();
+		ensurePublishing(trigger);
 	}
 
-	protected abstract void persistRemote();
+	@Override
+	public void topicPublished(String key, ClientLogRecord message) {
+		persistLocal();
+		seriesTimer.triggerEventOccurred(message);
+	}
 
-	public void tell(String trigger) {
-		if (!attached) {
-			attached = true;
+	public void ensureListening() {
+		if (!listening) {
+			listening = true;
 			LogStore.topicLogEvent().add(this);
 			this.story = createUserStory();
+			AlcinaTopics.logCategorisedMessage(
+					new StringPair(AlcinaTopics.LOG_CATEGORY_MESSAGE,
+							Ax.format("Started logging - url: %s",
+									Window.Location.getHref())));
+		}
+	}
+
+	private void ensurePublishing(String trigger) {
+		if (!publishing) {
+			publishing = true;
 			story.setTrigger(trigger);
 			Window.addWindowClosingHandler(evt -> publish());
 			publish();
@@ -84,4 +93,18 @@ public abstract class UserStoryTeller
 	}
 
 	protected abstract UserStory createUserStory();
+
+	protected void persistLocal() {
+	}
+
+	protected abstract void persistRemote();
+
+	protected void publish() {
+		if (publishDisabled || !publishing) {
+			return;
+		}
+		story.setStory(LogStore.get().dumpLogsAsString());
+		persistRemote();
+		Ax.out("persisted user story");
+	}
 }

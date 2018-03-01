@@ -20,6 +20,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -42,6 +43,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -90,7 +92,7 @@ public class DevConsoleDebugCommands {
 		@Override
 		public String getUsage() {
 			return "dxc  {-c key} {-u userid} {-d days}"
-					+ " {-i min-id} {-r regex} {-fu id - list(client)users with similar exceptions to id}";
+					+ " {-i min-id} {-r regex} {-rn not-regex} {-fu id - list(client)users with similar exceptions to id}";
 		}
 
 		@Override
@@ -140,7 +142,6 @@ public class DevConsoleDebugCommands {
 			}
 			filterArgvResult = new FilterArgvParam(argv, "-r");
 			argv = filterArgvResult.argv;
-			CountingMap<String> byType = new CountingMap<String>();
 			if (filterArgvResult.value != null) {
 				final Pattern rp = Pattern.compile(filterArgvResult.value,
 						Pattern.CASE_INSENSITIVE);
@@ -153,6 +154,21 @@ public class DevConsoleDebugCommands {
 				logRecords = CollectionFilters.filter(logRecords,
 						containsTextFilter);
 			}
+			filterArgvResult = new FilterArgvParam(argv, "-rn");
+			argv = filterArgvResult.argv;
+			if (filterArgvResult.value != null) {
+				final Pattern rp = Pattern.compile(filterArgvResult.value,
+						Pattern.CASE_INSENSITIVE);
+				CollectionFilter<ILogRecord> containsTextFilter = new CollectionFilter<ILogRecord>() {
+					@Override
+					public boolean allow(ILogRecord o) {
+						return !rp.matcher(o.getText()).find();
+					}
+				};
+				logRecords = CollectionFilters.filter(logRecords,
+						containsTextFilter);
+			}
+			CountingMap<String> byType = new CountingMap<String>();
 			filterArgvResult = new FilterArgvParam(argv, "-d");
 			argv = filterArgvResult.argv;
 			if (filterArgvResult.value != null) {
@@ -262,8 +278,11 @@ public class DevConsoleDebugCommands {
 				System.out.println(
 						String.format("Count: %s\n%s\n", entry.getKey(), o));
 			}
-			System.out.format("\n\n%s\n\n",
-					CommonUtils.join(affectedUserNames, ", "));
+			if (affectedUserNames.size() > 0) {
+				System.out.format("\n\n%s\n\n",
+						CommonUtils.join(affectedUserNames, ", "));
+			}
+			Ax.out("Record count: %s", logRecords.size());
 			if (byType.size() > 1) {
 				SortedMultimap<Integer, List<String>> reverseMap = byType
 						.reverseMap(true);
@@ -875,7 +894,7 @@ public class DevConsoleDebugCommands {
 			String ckFilter = getExceptionIgnoreClause();
 			FilterArgvFlag filterArgvResult = new FilterArgvFlag(argv, "-a");
 			argv = filterArgvResult.argv;
-			String clientExOnlyFilter = filterArgvResult.contains ? ""
+			String exceptionFilter = filterArgvResult.contains ? ""
 					: "and l.component_key ='CLIENT_EXCEPTION' ";
 			filterArgvResult = new FilterArgvFlag(argv, "-ex");
 			argv = filterArgvResult.argv;
@@ -889,10 +908,19 @@ public class DevConsoleDebugCommands {
 					"CLIENT_EXCEPTION", "RPC_EXCEPTION",
 					"CLIENT_EXCEPTION_IE_CRUD", "PUBLICATION_EXCEPTION",
 					"TRANSFORM_EXCEPTION", "PARSER_EXCEPTION");
-			clientExOnlyFilter = filterArgvResult.contains
+			exceptionFilter = filterArgvResult.contains
 					? String.format("and l.component_key in %s",
 							EntityUtils.stringListToClause(exceptions))
-					: clientExOnlyFilter;
+					: exceptionFilter;
+			filterArgvParam = new FilterArgvParam(argv, "-extypes");
+			String customExceptionFilter = filterArgvParam.value;
+			if (customExceptionFilter != null) {
+				exceptions = Arrays.stream(customExceptionFilter.split(","))
+						.collect(Collectors.toList());
+				exceptionFilter = String.format("and l.component_key in %s",
+						EntityUtils.stringListToClause(exceptions));
+			}
+			argv = filterArgvParam.argv;
 			filterArgvParam = new FilterArgvParam(argv, "-gtid");
 			argv = filterArgvParam.argv;
 			String gtOnlyFilter = filterArgvParam.value == null ? ""
@@ -901,7 +929,7 @@ public class DevConsoleDebugCommands {
 					+ "from logging l inner join users u on l.user_id=u.id "
 					+ "where l.created_on>? %s %s and "
 					+ " not (l.component_key in %s)" + " order by l.id ",
-					clientExOnlyFilter, gtOnlyFilter, ckFilter);
+					exceptionFilter, gtOnlyFilter, ckFilter);
 			PreparedStatement ps = conn.prepareStatement(sql);
 			Calendar c = Calendar.getInstance();
 			c.add(Calendar.DATE, -days);

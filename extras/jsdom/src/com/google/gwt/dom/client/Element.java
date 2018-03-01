@@ -226,8 +226,33 @@ public class Element extends Node implements DomElement {
 		return child.indexInParentChildren();
 	}
 
+	final native String getClassNameSvg() /*-{
+        var elem = this.@com.google.gwt.dom.client.Element::typedRemote()();
+        var cn = elem.className;
+        //note - someone says IE DOM objects don't support - hence try/catch
+        try {
+            if (cn.hasOwnProperty("baseVal")) {
+                cn = cn.baseVal;
+            }
+            if ((typeof cn).toLowerCase() != "string") {
+                if (cn && cn.toString().toLowerCase().indexOf("svg") != -1) {
+                    cn = 'svg-string';
+                } else {
+                    debugger;
+                }
+            }
+        } catch (e) {
+            return "";
+        }
+        return cn;
+	}-*/;
+
 	public String getClassName() {
-		return local().getClassName();
+		if (DomState.domResolveSvgStyles && linkedToRemote()) {
+			return getClassNameSvg();
+		} else {
+			return local().getClassName();
+		}
 	}
 
 	public int getClientHeight() {
@@ -611,7 +636,7 @@ public class Element extends Node implements DomElement {
 		remote().setPropertyString(name, value);
 		if (!GWT.isScript() && linkedToRemote()) {
 			String remoteValue = remote().getPropertyString(name);
-			//CHROME 33 hack, looks like ... works
+			// CHROME 33 hack, looks like ... works
 			if (getTagName().equals("input")
 					&& getParentElement().getChildCount() == 1) {
 				ElementRemote parentElement0 = typedRemote()

@@ -361,7 +361,11 @@ public class LogStore {
         topicLogEvent().publish(logRecord);
     }
 
-    int getLocalSeriesIdCounter() {
+    public ClientLogRecords getLogs() {
+		return this.logs;
+	}
+
+	int getLocalSeriesIdCounter() {
         return this.localSeriesIdCounter;
     }
 }

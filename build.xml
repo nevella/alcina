@@ -172,14 +172,9 @@
 				<include name="**/*.*" />
 				<!-- put in server (servlet/war) jar due to GWT/RPC classloader issues -->
 				<exclude name="${framework.remote.interface.package}" />
-				<exclude name="com/google/gwt/dom/client/**.*" />
-
 			</fileset>
 
 			<fileset dir="${framework.dir}/common/src">
-				<include name="**/*.java" />
-			</fileset>
-			<fileset dir="${framework.dir}/gwt/src">
 				<include name="**/*.java" />
 			</fileset>
 			<fileset dir="${framework.dir}/gwt/src">
