@@ -63,7 +63,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId>
 
 	public Set<Long> get(T k1) {
 		k1 = normalise(k1);
-		if (k1 == null) {
+		if (k1 == null && concurrent) {
 			return null;
 		}
 		return wrapWithModificationChecker(store.get(k1));
