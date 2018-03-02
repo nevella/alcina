@@ -15,11 +15,13 @@ package cc.alcina.framework.gwt.client.gwittir.provider;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.gwt.client.gwittir.Comparators;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
@@ -41,6 +43,8 @@ public class ListBoxEnumProvider implements BoundWidgetProvider {
 
 	private Renderer renderer = FriendlyEnumRenderer.INSTANCE;
 
+	private HasValue<Collection> provider;
+
 	public ListBoxEnumProvider(Class<? extends Enum> clazz) {
 		this(clazz, false);
 	}
@@ -56,6 +60,9 @@ public class ListBoxEnumProvider implements BoundWidgetProvider {
 		List options = new ArrayList(Arrays.asList(enumValues));
 		for (Enum e : hiddenValues) {
 			options.remove(e);
+		}
+		if(provider != null){
+			options = (List) provider.getValue();
 		}
 		if (isWithNull()) {
 			options.add(0, null);
@@ -113,5 +120,10 @@ public class ListBoxEnumProvider implements BoundWidgetProvider {
 
 	public void setWithNull(boolean withNull) {
 		this.withNull = withNull;
+	}
+
+	public void setProvider(HasValue<Collection> provider) {
+		this.provider = provider;
+		
 	}
 }

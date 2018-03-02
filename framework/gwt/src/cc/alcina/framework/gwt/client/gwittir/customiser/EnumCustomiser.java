@@ -99,7 +99,8 @@ public class EnumCustomiser implements Customiser {
 			hiddenValues
 					.removeAll(((HasValue<Collection>) Reflections.classLookup()
 							.newInstance(parameter.classValue())).getValue());
-			provider.setHiddenValues(hiddenValues);
+			provider.setProvider((HasValue<Collection>) Reflections.classLookup()
+					.newInstance(parameter.classValue()));
 		}
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				FILTER_CLASS);
