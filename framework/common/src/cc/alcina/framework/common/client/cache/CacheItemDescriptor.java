@@ -2,9 +2,13 @@ package cc.alcina.framework.common.client.cache;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.cache.CacheLookupDescriptor.IdCacheLookupDescriptor;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -14,22 +18,24 @@ import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.StringMap;
 
-public class CacheItemDescriptor {
-	public Class clazz;
+public class CacheItemDescriptor<T extends HasIdAndLocalId> {
+	public Class<T> clazz;
 
 	public List<CacheLookupDescriptor> lookupDescriptors = new ArrayList<CacheLookupDescriptor>();
 
 	public List<CacheProjection> projections = new ArrayList<CacheProjection>();
 
 	private StringMap propertyAlia = new StringMap();
+	
+	private Map<Object,CacheLookupDescriptor> aliasedFunctionLookups = new LinkedHashMap<>();
 
 	public boolean lazy = false;
 
-	public CacheItemDescriptor(Class clazz) {
+	public CacheItemDescriptor(Class<T> clazz) {
 		this.clazz = clazz;
 	}
 
-	public CacheItemDescriptor(Class clazz, boolean idLookups,
+	public CacheItemDescriptor(Class<T> clazz, boolean idLookups,
 			String... propertyIndicies) {
 		this.clazz = clazz;
 		for (String propertyIndex : propertyIndicies) {
@@ -37,14 +43,14 @@ public class CacheItemDescriptor {
 		}
 	}
 
-	public CacheItemDescriptor(Class clazz, String... propertyIndicies) {
+	public CacheItemDescriptor(Class<T> clazz, String... propertyIndicies) {
 		this.clazz = clazz;
 		for (String propertyIndex : propertyIndicies) {
 			addLookup(new CacheLookupDescriptor(clazz, propertyIndex));
 		}
 	}
 
-	public CacheItemDescriptor addLookup(CacheLookupDescriptor lookup) {
+	public CacheItemDescriptor<T> addLookup(CacheLookupDescriptor lookup) {
 		lookupDescriptors.add(lookup);
 		return this;
 	}
@@ -125,5 +131,16 @@ public class CacheItemDescriptor {
 
 	public boolean isTransactional() {
 		return true;
+	}
+
+	public CacheItemDescriptor<T> addAliasedFunction(Object alias, Function<? super T,?> function) {
+		CacheLookupDescriptor lookupDescriptor = new CacheLookupDescriptor<>(clazz, "no-path",false,function);
+		addLookup(lookupDescriptor);
+		aliasedFunctionLookups.put(alias, lookupDescriptor);
+		return this;
+	}
+
+	public Optional<CacheLookupDescriptor> findDescriptorByAlias(Object alias) {
+		return Optional.ofNullable(aliasedFunctionLookups.get(alias));
 	}
 }

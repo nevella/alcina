@@ -1,14 +1,25 @@
 package cc.alcina.framework.entity.parser.structured.node;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.entity.domaintransform.MethodIndividualPropertyAccessor;
 
 public class XmlNodePropertyAccessor implements PropertyAccessor {
+	private List<String> singleChildElementNames = new ArrayList<>();
+
 	public XmlNodePropertyAccessor() {
+	}
+
+	public XmlNodePropertyAccessor(String... singleChildElementNames) {
+		this.singleChildElementNames = Arrays.asList(singleChildElementNames);
 	}
 
 	@Override
@@ -32,14 +43,21 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 
 	public Object getPropertyValue(Object bean, String propertyName) {
 		XmlNode node = (XmlNode) bean;
-		XmlNode resolved = node.xpath(propertyName).node();
-		if (resolved == null) {
+		List<XmlNode> resolved = node.xpath(propertyName).nodes();
+		if (resolved.size() == 0) {
 			return null;
 		}
-		if (resolved.children.elements().size() > 0) {
-			return resolved.children.elements();
+		if (singleChildElementNames.contains(propertyName)) {
+			Preconditions.checkArgument(resolved.size() == 1);
+			return resolved.get(0);
+		}
+		Preconditions.checkArgument(resolved.size() == 1);
+		XmlNode singleResolved = resolved.get(0);
+		List<XmlNode> elements = singleResolved.children.elements();
+		if (elements.size() > 0) {
+			return elements;
 		} else {
-			return resolved.textContent();
+			return singleResolved.textContent();
 		}
 	}
 

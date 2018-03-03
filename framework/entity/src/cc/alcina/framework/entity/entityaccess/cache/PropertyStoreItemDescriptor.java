@@ -16,7 +16,7 @@ import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
 import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy.MemcacheProxyContext;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
-public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
+public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId> extends CacheItemDescriptor<T> {
 	protected PropertyStore propertyStore;
 
 	protected DetachedEntityCache cache;

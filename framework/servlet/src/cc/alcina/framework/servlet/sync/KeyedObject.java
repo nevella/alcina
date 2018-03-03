@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.sync.StringKeyProvider;
 
 public class KeyedObject<T> implements Serializable {
 	private StringKeyProvider<T> keyProvider;
-
+	
 	private T object;
 
 	public KeyedObject() {

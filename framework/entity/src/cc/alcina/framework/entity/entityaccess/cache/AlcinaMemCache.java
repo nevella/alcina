@@ -1088,7 +1088,7 @@ public class AlcinaMemCache implements RegistrableService {
 		if (obj instanceof MemCacheProxy) {
 			clazz = (Class<? extends HasIdAndLocalId>) clazz.getSuperclass();
 		}
-		CacheItemDescriptor itemDescriptor = cacheDescriptor.perClass
+		CacheItemDescriptor<?> itemDescriptor = cacheDescriptor.perClass
 				.get(clazz);
 		itemDescriptor.index(obj, add);
 		for (HasIdAndLocalId dependentObject : itemDescriptor
@@ -1584,7 +1584,7 @@ public class AlcinaMemCache implements RegistrableService {
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("postLoad");
 		MetricLogging.get().start("lookups");
-		for (final CacheItemDescriptor descriptor : cacheDescriptor.perClass
+		for (final CacheItemDescriptor<?> descriptor : cacheDescriptor.perClass
 				.values()) {
 			for (CacheProjection projection : descriptor.projections) {
 				if (projection instanceof CacheLookup) {
@@ -1593,7 +1593,7 @@ public class AlcinaMemCache implements RegistrableService {
 				}
 			}
 		}
-		for (final CacheItemDescriptor descriptor : cacheDescriptor.perClass
+		for (final CacheItemDescriptor<?> descriptor : cacheDescriptor.perClass
 				.values()) {
 			calls.add(new Callable<Void>() {
 				@Override
@@ -1612,7 +1612,7 @@ public class AlcinaMemCache implements RegistrableService {
 		MetricLogging.get().end("lookups");
 		MetricLogging.get().start("projections");
 		// deliberately init projections after lookups
-		for (final CacheItemDescriptor descriptor : cacheDescriptor.perClass
+		for (final CacheItemDescriptor<?> descriptor : cacheDescriptor.perClass
 				.values()) {
 			for (CacheProjection projection : descriptor.projections) {
 				if (projection instanceof BaseProjectionHasEquivalenceHash) {
@@ -1625,7 +1625,7 @@ public class AlcinaMemCache implements RegistrableService {
 				}
 			}
 		}
-		for (final CacheItemDescriptor descriptor : cacheDescriptor.perClass
+		for (final CacheItemDescriptor<?> descriptor : cacheDescriptor.perClass
 				.values()) {
 			calls.add(new Callable<Void>() {
 				@Override
@@ -2431,6 +2431,13 @@ public class AlcinaMemCache implements RegistrableService {
 		@Override
 		public <V extends HasIdAndLocalId> Collection<V> list(Class<V> clazz) {
 			return cache.immutableRawValues(clazz);
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> List<V> listByProperty(
+				Class<V> clazz, String propertyName, Object value) {
+			return new AlcinaMemCacheQuery().raw().filter(propertyName, value)
+					.list(clazz);
 		}
 
 		@Override

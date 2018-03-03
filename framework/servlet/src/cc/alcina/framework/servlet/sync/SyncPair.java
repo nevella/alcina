@@ -9,11 +9,18 @@ public class SyncPair<T> {
 
 	private SyncPairAction action = SyncPairAction.MERGE;
 
+	private SyncItemMatch<T> matchRecord;
+
+	public SyncItemMatch<T> getMatchRecord() {
+		return this.matchRecord;
+	}
+
 	public SyncPair() {
 	}
 
 	public SyncPair(T leftObject, T rightObject, StringKeyProvider keyProvider,
-			SyncPairAction action) {
+			SyncPairAction action,SyncItemMatch<T> matchRecord) {
+		this.matchRecord = matchRecord;
 		if (leftObject != null) {
 			left = new KeyedObject(leftObject, keyProvider);
 		}
@@ -72,6 +79,21 @@ public class SyncPair<T> {
 
 	public enum SyncAction {
 		CREATE, UPDATE, DELETE;
+	}
+
+	public static class SyncInstruction {
+		public SyncAction action;
+
+		public String reason;
+
+		public SyncInstruction() {
+		}
+
+		public SyncInstruction(SyncAction action, String reason) {
+			super();
+			this.action = action;
+			this.reason = reason;
+		}
 	}
 
 	public enum SyncPairAction {

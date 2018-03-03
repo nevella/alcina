@@ -166,7 +166,7 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 
 	class PropertyStoreCacheWrapper<V extends HasIdAndLocalId>
 			implements MultiplexableCache {
-		private PropertyStoreItemDescriptor descriptor;
+		private PropertyStoreItemDescriptor<V> descriptor;
 
 		Map<Long, V> commitLookup = new LinkedHashMap<>();
 

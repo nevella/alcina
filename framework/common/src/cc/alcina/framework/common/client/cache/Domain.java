@@ -37,6 +37,11 @@ public class Domain {
 		return handler.byProperty(clazz, propertyName, value);
 	}
 
+	public static <V extends HasIdAndLocalId> List<V>
+			listByProperty(Class<V> clazz, String propertyName, Object value) {
+		return handler.listByProperty(clazz, propertyName, value);
+	}
+
 	public static <V extends HasIdAndLocalId> Supplier<Collection>
 			castSupplier(Class<V> clazz) {
 		return () -> list(clazz);
@@ -110,9 +115,17 @@ public class Domain {
 		public <V extends HasIdAndLocalId> void async(Class<V> clazz,
 				long objectId, boolean create, Consumer<V> resultConsumer);
 
+		default <V extends HasIdAndLocalId> List<V> listByProperty(
+				Class<V> clazz, String propertyName, Object value) {
+			IndividualPropertyAccessor accessor = Reflections.propertyAccessor()
+					.cachedAccessor(clazz, propertyName);
+			return stream(clazz).filter(
+					o -> Objects.equals(accessor.getPropertyValue(o), value))
+					.collect(Collectors.toList());
+		}
+
 		default <V extends HasIdAndLocalId> V byProperty(Class<V> clazz,
 				String propertyName, Object value) {
-			// TODO - dem5 - index optimisations?
 			IndividualPropertyAccessor accessor = Reflections.propertyAccessor()
 					.cachedAccessor(clazz, propertyName);
 			return stream(clazz).filter(

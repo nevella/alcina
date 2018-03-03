@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.cache.PrivateObjectCache;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -91,6 +92,11 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 		}
 		T t = (T) detached.get(clazz).get(id);
 		return t;
+	}
+
+	public <T> List<T> list(Class<T> clazz, Collection<Long> ids) {
+		return ids.stream().map(id -> get(clazz, id))
+				.collect(Collectors.toList());
 	}
 
 	public Map<Class, Map<Long, HasIdAndLocalId>> getDetached() {

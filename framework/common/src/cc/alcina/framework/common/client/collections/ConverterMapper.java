@@ -91,6 +91,12 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 		return mapper.define(leftPropertyName, rightPropertyName);
 	}
 
+	protected PropertyMapping defineLeftCamel(String propertyName) {
+		return mapper.define(propertyName,
+				propertyName.substring(0, 1).toLowerCase()
+						+ propertyName.substring(1).replace("ID", "Id"));
+	}
+
 	public class BidiConverterAdapter extends BidiConverter<A, B> {
 		@Override
 		public B leftToRight(A a) {

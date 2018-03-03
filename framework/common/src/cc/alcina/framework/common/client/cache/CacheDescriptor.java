@@ -5,14 +5,16 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.CachingMap;
 
 public abstract class CacheDescriptor {
-	public Map<Class, CacheItemDescriptor> perClass = new LinkedHashMap<Class, CacheItemDescriptor>();
+	public Map<Class, CacheItemDescriptor<?>> perClass = new LinkedHashMap<>();
 
 	public List<CacheTask> postLoadTasks = new ArrayList<CacheTask>();
 
@@ -43,10 +45,11 @@ public abstract class CacheDescriptor {
 		perClass.put(itemDescriptor.clazz, itemDescriptor);
 	}
 
-	public void addItemDescriptor(Class clazz, String... indexProperties) {
+	public <T extends HasIdAndLocalId> CacheItemDescriptor<T> addItemDescriptor(Class<T> clazz, String... indexProperties) {
 		CacheItemDescriptor itemDescriptor = new CacheItemDescriptor(clazz,
 				indexProperties);
 		addItemDescriptor(itemDescriptor);
+		return itemDescriptor;
 	}
 
 	public boolean cachePostTransform(Class clazz, DomainTransformEvent o) {

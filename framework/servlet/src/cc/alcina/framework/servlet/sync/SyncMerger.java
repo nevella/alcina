@@ -4,12 +4,9 @@ import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -30,6 +27,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.JvmPropertyAccessor;
+import cc.alcina.framework.servlet.sync.SyncItemMatch.SyncItemLogType;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
 
 /**
@@ -86,7 +84,7 @@ public class SyncMerger<T> {
 		}
 	};
 
-	private StringKeyProvider<T> keyProvider;
+	protected StringKeyProvider<T> keyProvider;
 
 	private Class<T> mergedClass;
 
@@ -118,112 +116,67 @@ public class SyncMerger<T> {
 		// if you'd like to TM-record object modifications
 	}
 
+	private MatchStrategy<T> matchStrategy;
+
+	private SyncLogger syncLogger = new SyncLogger();
+
+	public SyncLogger getSyncLogger() {
+		return this.syncLogger;
+	}
+
+	public MatchStrategy<T> getMatchStrategy() {
+		return this.matchStrategy;
+	}
+
+	public void setMatchStrategy(MatchStrategy<T> matchStrategy) {
+		this.matchStrategy = matchStrategy;
+	}
+
 	public void merge(Collection<T> leftItems, Collection<T> rightItems,
 			SyncDeltaModel deltaModel, Logger logger) {
+		if (matchStrategy == null) {
+			matchStrategy = new KeyMatchStrategy<>(leftItems, rightItems,
+					keyProvider);
+		}
 		this.deltaModel = deltaModel;
-		FirstAndAllLookup leftLookup = new FirstAndAllLookup(leftItems);
-		FirstAndAllLookup rightLookup = new FirstAndAllLookup(rightItems);
-		// simplistic - only allow first key matching -
-		Set<T> unmatchedRight = new LinkedHashSet<T>(rightItems);
-		Map<T, String> ambiguousLeft = new LinkedHashMap<T, String>();
-		Map<T, String> ambiguousRight = new LinkedHashMap<T, String>();
-		// keys must match uniquely -- if not, fix manually
+		LinkedHashSet<T> unmatchedRight = new LinkedHashSet<T>(rightItems);
 		for (T left : leftItems) {
 			debugLeft(left);
-			List<String> ambiguous = new ArrayList();
-			T right = null;
-			String key = keyProvider.firstKey(left);
-			List<String> allKeys = keyProvider.allKeys(left);
-			if (leftLookup.isMultipleAll(allKeys)) {
-				ambiguous.add(String.format("multiple left matches for %s:\n%s",
-						allKeys, leftLookup.allLocators(allKeys)));
-			}
-			if (rightLookup.isMultipleAll(allKeys)) {
-				ambiguous
-						.add(String.format("multiple right matches for %s:\n%s",
-								allKeys, rightLookup.allLocators(allKeys)));
-				Collection ambiguousMatched = new ArrayList(
-						rightLookup.allKeyLookup.getForKeys(allKeys));
-				int debug = 3;
-			}
-			if (ambiguous.isEmpty()) {
-				// check, say, left has distinct firstkey to right - note,
-				// right.firstKey is enough check...think about it
-				Collection<T> rightForKeys = rightLookup.allKeyLookup
-						.getForKeys(allKeys);
-				for (T test : rightForKeys) {
-					String firstKey = keyProvider.firstKey(test);
-					if (!allKeys.contains(firstKey)
-							&& leftLookup.allKeyLookup.containsKey(firstKey)) {
-						List<T> leftMatched = leftLookup.allKeyLookup
-								.get(firstKey);
-						ambiguous.add(String.format(
-								"higher precedence right matches for %s:"
-										+ " %s \nRight object matched: %s"
-										+ "\nAlt left object matched: %s",
-								allKeys, firstKey, test,
-								CommonUtils.first(leftMatched)));
-					}
-				}
-			}
-			// very pessimistic
-			if (ambiguous.size() > 0) {
-				String message = String.format("%s\n", CommonUtils.padLinesLeft(
-						CommonUtils.join(ambiguous, "\n"), "\t\t"));
-				for (T t : (Collection<T>) leftLookup.allKeyLookup
-						.getForKeys(allKeys)) {
-					ambiguousLeft.put(t, message);
-				}
-				for (T t : (Collection<T>) rightLookup.allKeyLookup
-						.getForKeys(allKeys)) {
-					ambiguousRight.put(t, message);
-				}
+			SyncItemMatch<T> itemMatch = matchStrategy.getRight(left);
+			SyncPair pair = null;
+			if (itemMatch.ambiguous) {
+				itemMatch.logMerge("ignore - ambiguous correspondent");
+				syncLogger.log(itemMatch, null);
 			} else {
-				Collection<T> rightCorresponding = rightLookup.allKeyLookup
-						.getForKeys(allKeys);
-				right = CommonUtils.first(rightCorresponding);
-				SyncPair pair = null;
+				T right = itemMatch.right;
 				if (right == null) {
 					pair = new SyncPair(left, right, keyProvider,
-							SyncPairAction.CREATE_RIGHT);
+							SyncPairAction.CREATE_RIGHT, itemMatch);
+					itemMatch.logMerge("create right - no right correspondent");
 				} else {
 					pair = new SyncPair(left, right, keyProvider,
-							SyncPairAction.MERGE);
+							SyncPairAction.MERGE, itemMatch);
+					itemMatch.logMerge("merge - matching correspondent");
 				}
 				mergePair(pair);
 				deltaModel.getDeltas().add(mergedClass, pair);
 				unmatchedRight.remove(right);
+				syncLogger.log(itemMatch, pair);
 			}
 		}
-		unmatchedRight.removeAll(ambiguousRight.keySet());
+		unmatchedRight.removeAll(matchStrategy.getAmbiguousRightElements());
 		for (T right : unmatchedRight) {
+			SyncItemMatch<T> itemMatch = new SyncItemMatch<>();
+			itemMatch.right = right;
 			SyncPair pair = new SyncPair(null, right, keyProvider,
-					SyncPairAction.CREATE_LEFT);
+					SyncPairAction.CREATE_LEFT, itemMatch);
+			itemMatch.logMerge("create left - no right correspondent");
+			syncLogger.log(itemMatch, pair);
 			mergePair(pair);
 			deltaModel.getDeltas().add(mergedClass, pair);
 		}
-		CollectionFilters.filterInPlace(ambiguousLeft.keySet(),
-				getIgnoreAmbiguityForReportingFilter());
-		CollectionFilters.filterInPlace(ambiguousRight.keySet(),
-				getIgnoreAmbiguityForReportingFilter());
-		if (ambiguousLeft.isEmpty() && ambiguousRight.isEmpty()) {
-			logger.info(
-					String.format("Merge [%s]", mergedClass.getSimpleName()));
-			return;
-		}
-		logger.info(String.format(
-				"Merge [%s]: %sambiguous left:\t%-6s\tambiguous right:\t%-6s",
-				mergedClass.getSimpleName(),
-				CommonUtils.padStringLeft("",
-						25 - mergedClass.getSimpleName().length(), " "),
-				ambiguousLeft.size(), ambiguousRight.size()));
-		logger.debug(String.format(
-				"Merge [%s]: ambiguous left:\n\t%s\nambiguous right:\n\t%s\n\n",
-				mergedClass.getSimpleName(),
-				CommonUtils.joinWithNewlineTab(
-						CommonUtils.flattenMap(ambiguousLeft)),
-				CommonUtils.joinWithNewlineTab(
-						CommonUtils.flattenMap(ambiguousRight))));
+		matchStrategy.log(getIgnoreAmbiguityForReportingFilter(), logger,
+				mergedClass);
 	}
 
 	protected void debugLeft(T left) {
@@ -494,12 +447,13 @@ public class SyncMerger<T> {
 		}
 	}
 
-	class FirstAndAllLookup {
+	static class FirstAndAllLookup<T> {
 		Multimap<String, List<T>> firstKeyLookup = new Multimap<String, List<T>>();
 
 		Multimap<String, List<T>> allKeyLookup = new Multimap<String, List<T>>();
 
-		public FirstAndAllLookup(Collection<T> leftItems) {
+		public FirstAndAllLookup(Collection<T> leftItems,
+				StringKeyProvider<T> keyProvider) {
 			for (T t : leftItems) {
 				firstKeyLookup.add(keyProvider.firstKey(t), t);
 				for (String key : keyProvider.allKeys(t)) {
