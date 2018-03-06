@@ -367,8 +367,8 @@ public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("JobTracker: %s %s %s", getJobName(),
-				CommonUtils.nullToEmpty(getJobResult()), getId());
+		return CommonUtils.formatJ("JobTracker: %s\n%s %s", getId(),getJobName(),
+				CommonUtils.nullToEmpty(getJobResult()));
 	}
 
 	@Override

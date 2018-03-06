@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
@@ -283,8 +284,8 @@ public class JobRegistry implements RegistrableService {
 		}
 	}
 
-	public void putTracker(JobTracker jobTracker) {
-		trackerMap.put(jobTracker.getId(), jobTracker);
+	public void putTracker(JobTracker tracker) {
+		trackerMap.put(tracker.getId(), tracker);
 	}
 
 	public void putTrackerForNextJob(JobTracker tracker) {
