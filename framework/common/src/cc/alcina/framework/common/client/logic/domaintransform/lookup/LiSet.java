@@ -46,6 +46,10 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
 		if (degenerate != null) {
 			return degenerate.add(e);
 		}
+		if(e.provideIsNonDomain()){
+			//can't handle non-comparables
+			return toDegenerate(e);
+		}
 		if (isEmpty()) {
 			elementData = new HasIdAndLocalId[1];
 			elementData[0] = e;
@@ -59,11 +63,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
 			return false;
 		} else {
 			if (size == DEGENERATE_THRESHOLD) {
-				LinkedHashSet degenerate = new LinkedHashSet<H>();
-				degenerate.addAll(this);
-				this.degenerate = degenerate;
-				elementData = null;
-				return degenerate.add(e);
+				return toDegenerate(e);
 			}
 			size++;
 			modCount++;
@@ -75,6 +75,14 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
 			elementData = newData;
 			return true;
 		}
+	}
+
+	protected boolean toDegenerate(H e) {
+		LinkedHashSet degenerate = new LinkedHashSet<H>();
+		degenerate.addAll(this);
+		this.degenerate = degenerate;
+		elementData = null;
+		return degenerate.add(e);
 	}
 
 	public Object clone() {

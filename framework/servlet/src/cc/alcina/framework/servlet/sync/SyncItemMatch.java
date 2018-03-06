@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.sync;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,10 @@ import cc.alcina.framework.servlet.sync.SyncItemMatch.SyncItemLogType;
 public class SyncItemMatch<T> {
 	public enum SyncItemLogType {
 		MERGE, PERSIST, MATCH
+	}
+
+	public enum SyncItemLogStatus {
+		SYNCED, UNSYNCED, CATEGORY_IGNORED, CATEGORY_CUSTOM_IGNORED
 	}
 
 	public static class SyncItemLogRecord {
@@ -34,6 +39,14 @@ public class SyncItemMatch<T> {
 
 	public List<SyncItemLogRecord> logs = new ArrayList<>();
 
+	public SyncItemLogStatus currentSyncStatus=SyncItemLogStatus.UNSYNCED;
+
+	public String extId = "";
+
+	public String extSource = "";
+
+	public Date date;
+
 	public void log(SyncItemLogType type, String message) {
 		logs.add(new SyncItemLogRecord(type, message));
 	}
@@ -41,6 +54,7 @@ public class SyncItemMatch<T> {
 	public void logMerge(String message) {
 		log(SyncItemLogType.MERGE, message);
 	}
+
 	public void logMatch(String message) {
 		log(SyncItemLogType.MATCH, message);
 	}

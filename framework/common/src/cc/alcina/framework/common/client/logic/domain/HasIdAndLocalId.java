@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.logic.domain;
 
 import java.util.Comparator;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -120,5 +121,9 @@ public interface HasIdAndLocalId extends HasId {
 		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
 			return HiliHelper.compareNoLocals(o1, o2);
 		}
+	}
+
+	public static Function<?, HasIdAndLocalId> caster() {
+		return o -> (HasIdAndLocalId) o;
 	}
 }

@@ -592,6 +592,7 @@ public class XmlNode {
 			Node importNode = doc.domDoc().importNode(n.node, true);
 			append(doc.nodeFor(importNode));
 		}
+
 		public void importAsFirstChild(XmlNode n) {
 			Node importNode = doc.domDoc().importNode(n.node, true);
 			insertAsFirstChild(doc.nodeFor(importNode));
@@ -782,6 +783,11 @@ public class XmlNode {
 				trs = xpath("./TBODY/TR").nodes();
 			}
 			return trs;
+		}
+
+		public XmlNode addLink(String text, String href, String target) {
+			return builder().tag("a").attr("href", href).attr("target", target)
+					.text(text).append();
 		}
 	}
 

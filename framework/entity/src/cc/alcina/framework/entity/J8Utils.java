@@ -18,6 +18,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import com.google.common.base.Preconditions;
+
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
@@ -169,6 +172,41 @@ public class J8Utils {
 		}
 	}
 
+	private static class ToLiSetCollector<T>
+			implements java.util.stream.Collector<T, Set<T>, Set<T>> {
+		public ToLiSetCollector() {
+		}
+
+		@Override
+		public BiConsumer<Set<T>, T> accumulator() {
+			return (set, t) -> set.add(t);
+		}
+
+		@Override
+		public Set<java.util.stream.Collector.Characteristics>
+				characteristics() {
+			return EnumSet.of(Characteristics.IDENTITY_FINISH);
+		}
+
+		@Override
+		public BinaryOperator<Set<T>> combiner() {
+			return (left, right) -> {
+				left.addAll(right);
+				return left;
+			};
+		}
+
+		@Override
+		public Function<Set<T>, Set<T>> finisher() {
+			return null;
+		}
+
+		@Override
+		public Supplier<Set<T>> supplier() {
+			return () -> new LiSet();
+		}
+	}
+
 	private static class ToMapCollector<T, K>
 			implements java.util.stream.Collector<T, Map<K, T>, Map<K, T>> {
 		private Function<? super T, ? extends K> keyMapper;
@@ -307,5 +345,9 @@ public class J8Utils {
 		public Supplier<UnsortedMultikeyMap<V>> supplier() {
 			return supplier;
 		}
+	}
+
+	public static <T> Collector<T, ?, Set<T>> toLiSet() {
+		return new ToLiSetCollector<>();
 	}
 }

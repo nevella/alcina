@@ -207,7 +207,7 @@ public class Domain {
 
 	public static <V extends HasIdAndLocalId> V detachedToDomain(V hili) {
 		Class<V> clazz = (Class<V>) hili.getClass();
-		V writeable = hili.provideWasPersisted() ? Domain.find(hili)
+		V writeable = hili.provideWasPersisted() ? Domain.writeable(Domain.find(hili))
 				: Domain.create(clazz);
 		List<PropertyInfoLite> writableProperties = Reflections.classLookup()
 				.getWritableProperties(clazz);

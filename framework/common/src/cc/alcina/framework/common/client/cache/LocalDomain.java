@@ -25,6 +25,10 @@ public class LocalDomain {
 
 	public LocalDomain() {
 	}
+	
+	public <T extends HasIdAndLocalId> T find(Class<T> clazz, long id){
+		return cache.get(clazz, id);
+	}
 
 	public LocalDomain(CacheDescriptor cacheDescriptor) {
 		this.cacheDescriptor = cacheDescriptor;

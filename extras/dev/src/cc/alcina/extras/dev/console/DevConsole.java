@@ -741,10 +741,16 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 					StyleConstants.TabSet, tabset);
 			setParagraphAttributes(aset, false);
 		}
-
+		public static final int maxChars = 50000;
+		
 		public void append(final String str) {
 			StyledDocument doc = getStyledDocument();
+			
 			try {
+				if(doc.getLength()>maxChars){
+					doc.remove(0, doc.getLength());
+					doc.insertString(doc.getLength(), "...truncated...\n", current);
+				}
 				doc.insertString(doc.getLength(), str, current);
 				docIndex = 0;
 			} catch (Exception e) {

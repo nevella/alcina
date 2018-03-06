@@ -75,7 +75,6 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = JPAImplementation.class, implementationType = ImplementationType.SINGLETON)
-@SuppressWarnings("deprecation")
 public class JPAHibernateImpl implements JPAImplementation {
 	public static final InstantiateImplCallback CLASSREF_AND_USERLAND_GETTER_CALLBACK = new InstantiateImplCallback<LazyInitializer>() {
 		public boolean instantiateLazyInitializer(LazyInitializer initializer,

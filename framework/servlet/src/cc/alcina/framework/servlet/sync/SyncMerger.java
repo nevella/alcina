@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -27,6 +28,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.JvmPropertyAccessor;
+import cc.alcina.framework.servlet.sync.SyncItemMatch.SyncItemLogStatus;
 import cc.alcina.framework.servlet.sync.SyncItemMatch.SyncItemLogType;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
 
@@ -34,7 +36,7 @@ import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
  * Target is 'right' - so if left doesn't exist, will be a delete - if right
  * doesn't, a create
  * 
- * Note that left *must* have distinct keys
+ * Note that left *must* have distinct keys (if using key matcher strategy)
  * 
  * @author nick@alcina.cc
  * 
@@ -144,7 +146,10 @@ public class SyncMerger<T> {
 			debugLeft(left);
 			SyncItemMatch<T> itemMatch = matchStrategy.getRight(left);
 			SyncPair pair = null;
-			if (itemMatch.ambiguous) {
+			if (itemMatch.currentSyncStatus == SyncItemLogStatus.CATEGORY_IGNORED) {
+				itemMatch.logMerge("ignore - category ignored");
+				syncLogger.log(itemMatch, null);
+			} else if (itemMatch.ambiguous) {
 				itemMatch.logMerge("ignore - ambiguous correspondent");
 				syncLogger.log(itemMatch, null);
 			} else {
@@ -228,7 +233,7 @@ public class SyncMerger<T> {
 		return CollectionFilters.PASSTHROUGH_FILTER;
 	}
 
-	protected SyncPairAction getSyncType(SyncPair<T> pair) {
+	protected SyncPairAction decideSyncAction(SyncPair<T> pair) {
 		if (pair.getLeft() == null) {
 			return SyncPairAction.DELETE_RIGHT;
 		} else if (pair.getRight() == null) {
@@ -239,14 +244,14 @@ public class SyncMerger<T> {
 	}
 
 	protected boolean mergePair(SyncPair<T> pair) {
-		SyncPairAction syncType = getSyncType(pair);
-		if (syncType == null || syncType == SyncPairAction.IGNORE) {
-			if (syncType == SyncPairAction.IGNORE) {
+		SyncPairAction action = decideSyncAction(pair);
+		if (action == null || action == SyncPairAction.IGNORE) {
+			if (action == SyncPairAction.IGNORE) {
 				pair.setAction(SyncPairAction.IGNORE);
 			}
 			return false;
 		}
-		switch (syncType) {
+		switch (action) {
 		case DELETE_LEFT:
 		case DELETE_RIGHT:
 			return true;
@@ -255,7 +260,7 @@ public class SyncMerger<T> {
 			KeyedObject newKo = new KeyedObject<T>();
 			try {
 				newKo.setKeyProvider(keyProvider);
-				if (syncType == SyncPairAction.CREATE_LEFT) {
+				if (action == SyncPairAction.CREATE_LEFT) {
 					newKo.setObject(pair.getRight().getObject().getClass()
 							.newInstance());
 					pair.setLeft(newKo);
@@ -269,19 +274,67 @@ public class SyncMerger<T> {
 			}
 			break;
 		}
-		for (SyncMapping mapping : syncMappings) {
+		ensureRightWriteable(pair);
+		for (SyncMapping mapping : syncMappings(pair)) {
 			mapping.merge(pair.getLeft().getObject(),
 					pair.getRight().getObject());
 		}
 		return true;
 	}
 
-	public static interface MergeFilter {
-		public boolean allowLeftToRight(Object left, Object right,
-				Object leftProp, Object rightProp);
+	protected void ensureRightWriteable(SyncPair<T> pair) {
+		Object right = pair.getRight().getObject();
+		if (right instanceof AbstractDomainBase) {
+			AbstractDomainBase adb = (AbstractDomainBase) right;
+			if (adb.provideIsNonDomain()) {
+			} else {
+				adb = adb.writeable();
+				adb.domain().detachFromDomain();
+			}
+			pair.getRight().setObject(adb);
+		}
+	}
 
-		public boolean allowRightToLeft(Object left, Object right,
-				Object leftProp, Object rightProp);
+	protected List<SyncMapping> syncMappings(SyncPair<T> pair) {
+		return syncMappings;
+	}
+
+	public static interface MergeFilter<T> {
+		public boolean allowLeftToRight(T left, T right, Object leftProp,
+				Object rightProp);
+
+		public boolean allowRightToLeft(T left, T right, Object leftProp,
+				Object rightProp);
+
+		default boolean isCustom() {
+			return false;
+		}
+
+		default void mapCustom(T left, T right) {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	protected abstract class CustomMergeFilter implements MergeFilter<T> {
+		@Override
+		public boolean allowLeftToRight(T left, T right, Object leftProp,
+				Object rightProp) {
+			return false;
+		}
+
+		@Override
+		public boolean allowRightToLeft(T left, T right, Object leftProp,
+				Object rightProp) {
+			return false;
+		}
+
+		@Override
+		public boolean isCustom() {
+			return true;
+		}
+
+		@Override
+		public abstract void mapCustom(T left, T right);
 	}
 
 	public class SyncMapping {
@@ -298,15 +351,19 @@ public class SyncMerger<T> {
 					propertyName);
 			Object rightProp = propertyAccessor.getPropertyValue(right,
 					propertyName);
-			if (filter.allowLeftToRight(left, right, leftProp, rightProp)) {
-				propertyAccessor.setPropertyValue(right, propertyName,
-						leftProp);
-				rightProp = propertyAccessor.getPropertyValue(right,
-						propertyName);
-			}
-			if (filter.allowRightToLeft(left, right, leftProp, rightProp)) {
-				propertyAccessor.setPropertyValue(left, propertyName,
-						rightProp);
+			if (filter.isCustom()) {
+				filter.mapCustom(left, right);
+			} else {
+				if (filter.allowLeftToRight(left, right, leftProp, rightProp)) {
+					propertyAccessor.setPropertyValue(right, propertyName,
+							leftProp);
+					rightProp = propertyAccessor.getPropertyValue(right,
+							propertyName);
+				}
+				if (filter.allowRightToLeft(left, right, leftProp, rightProp)) {
+					propertyAccessor.setPropertyValue(left, propertyName,
+							rightProp);
+				}
 			}
 		}
 

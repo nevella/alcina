@@ -1636,4 +1636,10 @@ public class CommonUtils {
 					firstOnly, intersection, secondOnly);
 		}
 	}
+	public static String normaliseForMatch(String string){
+		if(string==null){
+			return null;
+		}
+		return string.trim().toLowerCase();
+	}
 }

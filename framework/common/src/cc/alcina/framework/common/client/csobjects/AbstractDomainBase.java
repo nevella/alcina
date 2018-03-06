@@ -45,7 +45,6 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 
 	@GwtTransient
 	long localId;
-	
 
 	@Override
 	public boolean equals(Object obj) {
@@ -202,17 +201,37 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 			return (T) Domain.detachedToDomain(AbstractDomainBase.this);
 		}
 
+		public boolean detachedToDomainHasDelta() {
+			int before = TransformManager.get().getTransforms().size();
+			detachedToDomain();
+			return TransformManager.get().getTransforms().size() != before;
+		}
+
 		public <V extends HasIdAndLocalId> void addToProperty(V v,
 				String propertyName) {
 			TransformManager.get().modifyCollectionProperty(
 					AbstractDomainBase.this, propertyName, v,
 					CollectionModificationType.ADD);
 		}
+
 		public <V extends HasIdAndLocalId> void removeFromProperty(V v,
 				String propertyName) {
 			TransformManager.get().modifyCollectionProperty(
 					AbstractDomainBase.this, propertyName, v,
 					CollectionModificationType.REMOVE);
+		}
+
+		public void detachFromDomain() {
+			TransformManager.get()
+					.deregisterDomainObject(AbstractDomainBase.this);
+		}
+
+		public T domainVersionIfPersisted() {
+			if (provideWasPersisted()) {
+				return domainVersion();
+			} else {
+				return (T) AbstractDomainBase.this;
+			}
 		}
 	}
 

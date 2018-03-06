@@ -14,6 +14,21 @@ public abstract class BidiConverter<A, B> {
 		};
 	}
 
+	public  BidiConverter<B, A> invertBidi() {
+		BidiConverter<A, B> from = this;
+		return new BidiConverter<B, A>() {
+			@Override
+			public A leftToRight(B b) {
+				return from.rightToLeft(b);
+			}
+
+			@Override
+			public B rightToLeft(A a) {
+				return from.leftToRight(a);
+			}
+		};
+	}
+
 	public abstract A rightToLeft(B b);
 
 	public Converter<B, A> rightToLeftConverter() {

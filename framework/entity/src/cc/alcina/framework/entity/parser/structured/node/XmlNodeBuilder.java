@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class XmlNodeBuilder {
@@ -95,16 +96,6 @@ public class XmlNodeBuilder {
 		return this;
 	}
 
-	public XmlNodeBuilder style(String style) {
-		String styleBuf = attrs.getOrDefault("style", "");
-		if (styleBuf.length() > 0) {
-			styleBuf += "; ";
-		}
-		styleBuf += style;
-		attrs("style", styleBuf);
-		return this;
-	}
-
 	public XmlNode insertAfter() {
 		XmlNode node = build();
 		relativeTo.relative().insertAfterThis(node);
@@ -127,6 +118,16 @@ public class XmlNodeBuilder {
 		return node;
 	}
 
+	public XmlNodeBuilder style(String style) {
+		String styleBuf = attrs.getOrDefault("style", "");
+		if (styleBuf.length() > 0) {
+			styleBuf += "; ";
+		}
+		styleBuf += style;
+		attrs("style", styleBuf);
+		return this;
+	}
+
 	public XmlNodeBuilder tag(String tag) {
 		this.tag = tag;
 		return this;
@@ -135,6 +136,10 @@ public class XmlNodeBuilder {
 	public XmlNodeBuilder text(String text) {
 		this.text = text;
 		return this;
+	}
+
+	public XmlNodeBuilder text(String string, Object...args) {
+		return text(Ax.format(string, args));
 	}
 
 	public XmlNode wrap() {

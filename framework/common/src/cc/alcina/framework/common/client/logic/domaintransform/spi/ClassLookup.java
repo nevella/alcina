@@ -105,7 +105,22 @@ public interface ClassLookup {
 
 		public void copy(HasIdAndLocalId hili, HasIdAndLocalId writeable) {
 			try {
-				Object value = getReadMethod().invoke(hili, new Object[0]);
+				Object value = get(hili);
+				set(writeable,value);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+		public Object get(HasIdAndLocalId hili){
+			try {
+				return getReadMethod().invoke(hili, new Object[0]);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		public void set(HasIdAndLocalId writeable,Object value){
+			try {
 				writeMethod.invoke(writeable, new Object[] { value });
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
