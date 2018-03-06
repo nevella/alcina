@@ -93,9 +93,6 @@ public class DetachedToDomainPersister<T extends AbstractDomainBase>
 								return false;
 							}
 						}).collect(J8Utils.toLiSet());
-				if(t.toString().contains("jersey")){
-					int debug = 3;
-				}
 				((Set) toReparent).removeIf(o -> !filtered.contains(o));
 				toReparent = (V) replaceReparent;
 			} else {
