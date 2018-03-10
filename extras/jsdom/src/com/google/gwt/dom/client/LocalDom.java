@@ -30,7 +30,8 @@ public class LocalDom {
 	private static LocalDomCollections collections;
 
 	private static Map<String, String> declarativeCssNames;
-//FIXME - ie9?
+
+	// FIXME - ie9?
 	public static boolean fastRemoveAll = true;
 
 	private static boolean useRemoteDom = GWT.isClient();
@@ -604,5 +605,9 @@ public class LocalDom {
 				return super.createIdentityEqualsMap(keyClass);
 			}
 		}
+	}
+
+	public static void ensureRemoteDocument() {
+		nodeFor(Document.get().typedRemote().getDocumentElement0());
 	}
 }

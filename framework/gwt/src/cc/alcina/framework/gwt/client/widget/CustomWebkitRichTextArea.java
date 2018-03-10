@@ -13,7 +13,7 @@ import com.google.gwt.user.client.ui.impl.RichTextAreaImplSafari;
  * (readded cos looks like gwt trunk as of jan 2012 has same probs)
  * 
  */
-class CustomWebkitRichTextArea extends RichTextAreaImplSafari {
+public class CustomWebkitRichTextArea extends RichTextAreaImplSafari {
 	public CustomWebkitRichTextArea() {
 		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			public void execute() {

@@ -185,11 +185,11 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 	}
 
 	protected native void styleBody(Element elem, String defaultFontSize) /*-{
-																			if (elem.contentWindow && elem.contentWindow.document
-																			&& elem.contentWindow.document.documentElement) {
-																			elem.contentWindow.document.documentElement.setAttribute("style",
-																			"font-family: Arial; margin: 2px;font-size:"
-																			+ defaultFontSize);
-																			}
-																			}-*/;
+        if (elem.contentWindow && elem.contentWindow.document
+                && elem.contentWindow.document.documentElement) {
+            elem.contentWindow.document.documentElement.setAttribute("style",
+                    "font-family: Arial; margin: 2px;font-size:"
+                            + defaultFontSize);
+        }
+	}-*/;
 }
