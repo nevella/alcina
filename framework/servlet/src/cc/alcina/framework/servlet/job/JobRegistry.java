@@ -198,6 +198,9 @@ public class JobRegistry implements RegistrableService {
 		if (tracker == null) {
 			tracker = getContextTracker();
 		}
+		if(tracker == null){
+			return "<null log buffer>";
+		}
 		Logger contextLogger = (Logger) tracker.getLogger();
 		return flushLogger(contextLogger);
 	}
