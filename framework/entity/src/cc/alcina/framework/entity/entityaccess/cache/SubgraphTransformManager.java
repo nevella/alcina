@@ -10,11 +10,13 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedCacheObjectStore;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupJvm;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -188,6 +190,50 @@ public class SubgraphTransformManager extends TransformManager {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
+		}
+	}
+
+	public static class SubgraphTransformManagerPreProcess
+			extends SubgraphTransformManager {
+		public SubgraphTransformManagerPreProcess(HiliLocatorMap locatorMap) {
+			((PreProcessBridgeLookup) getDomainObjects()).locatorMap = locatorMap;
+		}
+
+		@Override
+		protected void createObjectLookup() {
+			setDomainObjects(new PreProcessBridgeLookup());
+		}
+
+		@Override
+		protected ObjectLookup getObjectLookup() {
+			return getDomainObjects();
+		}
+	}
+
+	static class PreProcessBridgeLookup extends MapObjectLookupJvm {
+		private HiliLocatorMap locatorMap;
+
+		public PreProcessBridgeLookup() {
+		}
+
+		@Override
+		public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
+				long id, long localId) {
+			T t = super.getObject(c, id, localId);
+			if (t == null) {
+				if (id == 0) {
+					HiliLocator hiliLocator = locatorMap.get(localId);
+					if(hiliLocator==null){
+						return null;
+					}
+					id = hiliLocator.id;
+				}
+				if (id != 0) {
+					t = AlcinaMemCache.get().find(c, id);
+					mapObject(t);
+				}
+			}
+			return t;
 		}
 	}
 

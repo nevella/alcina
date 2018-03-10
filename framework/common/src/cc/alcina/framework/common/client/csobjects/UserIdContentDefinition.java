@@ -15,6 +15,8 @@ package cc.alcina.framework.common.client.csobjects;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -31,6 +33,7 @@ public abstract class UserIdContentDefinition extends WrapperPersistable
 	private transient IUser user;
 
 	@XmlTransient
+	@JsonIgnore
 	public IUser getUser() {
 		return this.user;
 	}

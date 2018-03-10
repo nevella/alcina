@@ -330,6 +330,8 @@ public class AlcinaMemCache implements RegistrableService {
 
 	private Set<Thread> waitingOnWriteLock = Collections
 			.synchronizedSet(new LinkedHashSet<Thread>());
+	private Set<Thread> mainLockReadLock = Collections
+			.synchronizedSet(new LinkedHashSet<Thread>());
 
 	private int maxLockQueueLength;
 
@@ -741,6 +743,7 @@ public class AlcinaMemCache implements RegistrableService {
 				}
 			} else {
 				mainLock.readLock().lock();
+				mainLockReadLock.add(Thread.currentThread());
 			}
 			lockStartTime.put(Thread.currentThread(),
 					System.currentTimeMillis());
@@ -750,6 +753,7 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 		maybeLogLock(LockAction.MAIN_LOCK_ACQUIRED, write);
 	}
+	
 
 	public List<Long> notInStore(Collection<Long> ids, Class clazz) {
 		return cache.notContained(ids, clazz);
@@ -854,6 +858,7 @@ public class AlcinaMemCache implements RegistrableService {
 					waitingOnWriteLock.remove(Thread.currentThread());
 				}
 			} else {
+				mainLockReadLock.remove(Thread.currentThread());
 				mainLock.readLock().unlock();
 			}
 			lockStartTime.remove(Thread.currentThread());
@@ -2923,5 +2928,15 @@ public class AlcinaMemCache implements RegistrableService {
 		void startCommit() {
 			((PsAwareMultiplexingObjectCache) store.getCache()).startCommit();
 		}
+	}
+
+	public boolean isCurrentThreadHoldingLock() {
+		if(mainLock.isWriteLockedByCurrentThread()){
+			return true;
+		}
+		if(subgraphLock.isWriteLockedByCurrentThread()){
+			return true;
+		}
+		return mainLockReadLock.contains(Thread.currentThread());
 	}
 }

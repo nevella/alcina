@@ -219,7 +219,7 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 
 	@ManyToOne(fetch = FetchType.LAZY, targetEntity = AlcinaTemplateGroup.class)
 	@JoinColumn(name = "primary_group_id")
-	@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
+	xeroId
 	@XmlTransient
 	// unused - for the moment
 	public IGroup getPrimaryGroup() {
@@ -240,7 +240,7 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 	@Association(implementationClass = AlcinaTemplateGroup.class, propertyName = "memberUsers")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER))
 	@Custom(customiserClass = SelectorCustomiser.class)
-	@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
+	xeroId
 	@XmlTransient
 	public Set<AlcinaTemplateGroup> getSecondaryGroups() {
 		return (Set<AlcinaTemplateGroup>) this.secondaryGroups;

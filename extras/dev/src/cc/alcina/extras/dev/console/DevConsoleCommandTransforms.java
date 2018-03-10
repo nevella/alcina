@@ -448,7 +448,12 @@ public class DevConsoleCommandTransforms {
 							new EnumFormatter(TransformType.class));
 					formatters.put("newstringvalue",
 							new TrimmedStringFormatter(30));
+					console.startRecordingSysout(false);
 					SqlUtils.dumpResultSet(rs, formatters);
+					String sysout = console.endRecordingSysout();
+					String outPath = "/tmp/transforms-table.txt";
+					ResourceUtilities.writeStringToFile(sysout,
+							outPath);
 				}
 				rs.close();
 				ps.close();

@@ -32,8 +32,12 @@ public class DomainTransformPersistenceEvents {
 			nonThreadListenerList.add(listener);
 		}
 	}
-
-	public synchronized void fireDomainTransformPersistenceEvent(
+	public  void fireDomainTransformPersistenceEvent(
+			DomainTransformPersistenceEvent event) {
+		fireDomainTransformPersistenceEvent0(event);
+		event.getPostEventRunnables().forEach(Runnable::run);
+	}
+	private synchronized void fireDomainTransformPersistenceEvent0(
 			DomainTransformPersistenceEvent event) {
 		try {
 			queue.logFiring(event);

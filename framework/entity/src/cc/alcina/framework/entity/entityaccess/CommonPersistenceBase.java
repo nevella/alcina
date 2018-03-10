@@ -20,10 +20,13 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
@@ -129,6 +132,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public static Boolean isBotExtraUserAgent(String userAgent) {
 		return botExtraUa != null && botExtraUa.matcher(userAgent).find();
+	}
+
+	@Override
+	public HiliLocatorMap getLocatorMap(Long clientInstanceId) {
+		return getHandshakeObjectProvider().getLocatorMap(clientInstanceId);
 	}
 
 	public static Boolean isBotUserAgent(String userAgent) {
@@ -1325,6 +1333,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			implements HandshakeObjectProvider {
 		static long clientInstanceIdCounter = 0;
 
+		@Override
+		public HiliLocatorMap getLocatorMap(Long clientInstanceId) {
+			throw new UnsupportedOperationException();
+		}
+
 		private CommonPersistenceBase cp;
 
 		@Override
@@ -1404,10 +1417,16 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 		WriterHandshakeObjectProvider writerHandshakeObjectProvider = new WriterHandshakeObjectProvider();
 
+		Map<Long, HiliLocatorMap> locatorMaps = Collections
+				.synchronizedMap(new LinkedHashMap<>());
+
 		@Override
 		public ClientInstance createClientInstance(String userAgent,
 				String iid) {
-			return delegate().createClientInstance(userAgent, iid);
+			ClientInstance clientInstance = delegate()
+					.createClientInstance(userAgent, iid);
+			locatorMaps.put(clientInstance.getId(), new HiliLocatorMap());
+			return clientInstance;
 		}
 
 		@Override
@@ -1432,6 +1451,38 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		HandshakeObjectProvider delegate() {
 			return AppPersistenceBase.isInstanceReadOnly() ? readOnlyProvider
 					: writerHandshakeObjectProvider;
+		}
+
+		@Override
+		public HiliLocatorMap getLocatorMap(Long clientInstanceId) {
+			HiliLocatorMap map = locatorMaps.get(clientInstanceId);
+			if (map == null) {
+				CommonPersistenceBase commonPersistence = writerHandshakeObjectProvider.cp;
+				if (commonPersistence.getEntityManager() == null) {
+					// call back in an entity context
+					return CommonPersistenceProvider.get()
+							.getCommonPersistence()
+							.getLocatorMap(clientInstanceId);
+				}
+				// presumably null, but no harm in being light-on-the-ground
+				EntityManager cachedEntityManager = ThreadlocalTransformManager
+						.get().getEntityManager();
+				ThreadlocalTransformManager.get()
+						.setEntityManager(commonPersistence.getEntityManager());
+				ThreadlocalTransformManager.get()
+						.setUserSessionHiliMap(new HiliLocatorMap());
+				ClientInstance clientInstanceImpl = (ClientInstance) commonPersistence
+						.getNewImplementationInstance(ClientInstance.class);
+				clientInstanceImpl.setId(clientInstanceId);
+				// don't get the real client instance - don't want to attach
+				// live permissions objects
+				ThreadlocalTransformManager.get()
+						.setClientInstance(clientInstanceImpl);
+				map = ThreadlocalTransformManager.get().reconstituteHiliMap();
+				ThreadlocalTransformManager.get()
+						.setEntityManager(cachedEntityManager);
+			}
+			return map;
 		}
 	}
 
@@ -1487,8 +1538,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				ClientInstance instance = (ClientInstance) cp.getEntityManager()
 						.find(cp.getImplementation(ClientInstance.class),
 								clientInstanceId);
-				IUser user = Registry.impl(JPAImplementation.class).getInstantiatedObject(instance.getUser());
-				ClientInstance result = new EntityUtils().detachedClone(instance, false);
+				IUser user = Registry.impl(JPAImplementation.class)
+						.getInstantiatedObject(instance.getUser());
+				ClientInstance result = new EntityUtils()
+						.detachedClone(instance, false);
 				result.setUser(new EntityUtils().detachedClone(user));
 				return result;
 			} finally {
@@ -1516,6 +1569,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			Registry.impl(ClientInstanceAuthenticationCache.class)
 					.cacheIid(iid);
 			cp.getEntityManager().merge(iid);
+		}
+
+		@Override
+		public HiliLocatorMap getLocatorMap(Long clientInstanceId) {
+			throw new UnsupportedOperationException();
 		}
 	}
 }

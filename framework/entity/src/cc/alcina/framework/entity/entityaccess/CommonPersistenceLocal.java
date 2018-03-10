@@ -195,4 +195,6 @@ public interface CommonPersistenceLocal {
 	long getMaxPublicationIdForUser(IUser user);
 
 	List<Long> listRecentClientInstanceIds(String iidKey);
+
+	public HiliLocatorMap getLocatorMap(Long clientInstanceId);
 }

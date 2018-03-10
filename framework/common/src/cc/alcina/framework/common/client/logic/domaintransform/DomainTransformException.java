@@ -44,7 +44,7 @@ public class DomainTransformException extends Exception
 
 	public DomainTransformException(DomainTransformEvent event,
 			DomainTransformExceptionType type) {
-		super(type.toString() + "\n" + event.toString());
+		super(type.toString() + "\n" + event.toDebugString());
 		this.event = event;
 		this.type = type;
 	}

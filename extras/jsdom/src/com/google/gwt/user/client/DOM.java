@@ -1677,16 +1677,6 @@ public class DOM {
 		}
 		lastDispatchedEvent = evt;
 		lastDispatchedMouseEventListener = listener;
-		// if (lcType.contains("click") || lcType.contains("mousedown")) {
-		// LocalDom.log(LocalDomDebug.DISPATCH_DETAILS,
-		// Ax.format("evt/listener: %s/%s/%s %s/%s", evt.hashCode(),
-		// listener.hashCode(), elem.hashCode(), lcType,
-		// elem.getTagName()));
-		// }
-		// {
-		// String message = Ax.format("dispatch event - %s", lcType);
-		// LocalDom.log(LocalDomDebug.DOM_EVENT, message);
-		// }
 		if (Element.is(eventTarget)) {
 			Element rel = Element.as(eventTarget);
 			// get the listeners early, to prevent overwrite. Note that this
@@ -1719,6 +1709,7 @@ public class DOM {
 					return;
 				}
 			}
+			dispatchedFor.add(Element.as(eventTarget));
 		}
 		if (Element.is(evt.getCurrentEventTarget())) {
 			eventCurrentTarget = evt.getCurrentEventTarget().cast();

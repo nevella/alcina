@@ -2,6 +2,8 @@ package cc.alcina.framework.common.client.search;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -30,6 +32,7 @@ public class PersistentObjectCriterion extends SearchCriterion {
 	}
 
 	@XmlTransient
+	@JsonIgnore
 	public ClassRef getClassRef() {
 		return classRef;
 	}

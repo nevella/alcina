@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
@@ -52,6 +54,7 @@ public abstract class IdMultipleCriterion<E extends HasIdAndLocalId>
 
 	@AlcinaTransient
 	@XmlTransient
+	@JsonIgnore
 	public Set<E> getValue() {
 		if (value == null) {
 			Function<Long, E> supplier = objectSupplier();

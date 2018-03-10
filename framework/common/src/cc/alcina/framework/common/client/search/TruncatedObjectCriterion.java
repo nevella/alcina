@@ -2,6 +2,8 @@ package cc.alcina.framework.common.client.search;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -45,6 +47,7 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	}
 
 	@XmlTransient
+	@JsonIgnore
 	@AlcinaTransient
 	public E getValue() {
 		return value;

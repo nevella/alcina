@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.entityaccess;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;
@@ -22,6 +23,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
@@ -102,6 +104,22 @@ public class TransformPersisterIn {
 	static class DeliberatelyThrownWrapperException extends RuntimeException {
 	}
 
+	private Integer getHighestPersistedRequestIdForClientInstance(
+			CommonPersistenceBase commonPersistenceBase,
+			long clientInstanceId) {
+		String eql = String.format(
+				"select max(dtrq.requestId) as maxId "
+						+ "from %s dtrq where dtrq.clientInstance.id=%s ",
+				commonPersistenceBase
+						.getImplementation(
+								DomainTransformRequestPersistent.class)
+						.getSimpleName(),
+				clientInstanceId);
+		Integer result = (Integer) getEntityManager().createQuery(eql)
+				.getSingleResult();
+		return result;
+	}
+
 	public void transformInPersistenceContext(
 			TransformPersisterToken transformPersisterToken,
 			final TransformPersistenceToken token,
@@ -150,24 +168,35 @@ public class TransformPersisterIn {
 				}
 			}
 			tm.setClientInstance(persistentClientInstance);
-			if (locatorMap != null && token.isPossiblyReconstitueLocalIdMap()
-					&& locatorMap.isEmpty()) {
-				tm.reconstituteHiliMap();
-			}
 			List<DomainTransformRequest> dtrs = new ArrayList<DomainTransformRequest>();
 			dtrs.addAll(request.getPriorRequestsWithoutResponse());
 			dtrs.add(request);
 			Integer highestPersistedRequestId = null;
+			if (token.isAsyncClient()) {
+				highestPersistedRequestId = getHighestPersistedRequestIdForClientInstance(
+						commonPersistenceBase,
+						request.getClientInstance().getId());
+				for (int i = dtrs.size() - 1; i >= 0; i--) {
+					DomainTransformRequest dtr = dtrs.get(i);
+					if (highestPersistedRequestId != null && dtr
+							.getRequestId() <= highestPersistedRequestId) {
+						Ax.out("transformpersister - removing already processed "
+								+ "request :: clid: %s; rqid: %s",
+								request.getClientInstance().getId(),
+								dtrs.get(i).getRequestId());
+						dtrs.remove(i);
+					}
+				}
+			}
 			if (token.getPass() == Pass.TRY_COMMIT) {
 				EntityLayerObjects.get().getMetricLogger().info(String.format(
 						"domain transform - %s - clid:"
-								+ "%s - rqid:%s - highestPersistedRequestId:%s",
+								+ "%s - rqid:%s - prev-per-cli-id:%s",
 						persistentClientInstance.getUser().getUserName(),
 						request.getClientInstance().getId(),
-						request.getRequestId(),
+						dtrs.stream().map(DomainTransformRequest::getRequestId).map(String::valueOf).collect(Collectors.joining(",")),
 						(highestPersistedRequestId == null ? "(servlet layer)"
-								: "highestPersistedRequestId:"
-										+ highestPersistedRequestId)));
+								: highestPersistedRequestId)));
 			}
 			int transformCount = 0;
 			boolean replaying = LooseContext

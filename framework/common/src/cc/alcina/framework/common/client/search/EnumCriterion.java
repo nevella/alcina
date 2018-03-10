@@ -15,6 +15,8 @@ package cc.alcina.framework.common.client.search;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -82,6 +84,7 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 	// return getClass().hashCode() ^ (value == null ? 0 : value.hashCode());
 	// }
 	@XmlTransient
+	@JsonIgnore
 	public abstract E getValue();
 
 	public boolean isWithNull() {

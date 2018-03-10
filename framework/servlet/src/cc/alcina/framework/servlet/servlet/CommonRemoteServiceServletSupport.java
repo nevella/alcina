@@ -11,6 +11,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 
 /**
  * 
@@ -45,8 +48,10 @@ public class CommonRemoteServiceServletSupport {
 		Map<Long, HiliLocatorMap> clientInstanceLocatorMap = getClientInstanceLocatorMap();
 		synchronized (clientInstanceLocatorMap) {
 			if (!clientInstanceLocatorMap.containsKey(clientInstanceId)) {
-				clientInstanceLocatorMap.put(clientInstanceId,
-						new HiliLocatorMap());
+				HiliLocatorMap locatorMap = CommonPersistenceProvider.get()
+						.getCommonPersistenceExTransaction()
+						.getLocatorMap(clientInstanceId);
+				clientInstanceLocatorMap.put(clientInstanceId, locatorMap);
 			}
 		}
 		HiliLocatorMap locatorMap = clientInstanceLocatorMap

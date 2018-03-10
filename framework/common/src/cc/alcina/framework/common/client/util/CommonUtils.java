@@ -1642,4 +1642,11 @@ public class CommonUtils {
 		}
 		return string.trim().toLowerCase();
 	}
+
+	public static <V> List<V> lastNMembers(List<V> list, int n) {
+		if(list.size()<=n){
+			return list;
+		}
+		return new ArrayList<>(list.subList(list.size()-n, list.size()));
+	}
 }

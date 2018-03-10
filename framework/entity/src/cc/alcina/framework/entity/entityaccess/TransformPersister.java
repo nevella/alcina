@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
@@ -47,47 +48,55 @@ public class TransformPersister {
 
 	public DomainTransformLayerWrapper
 			transformExPersistenceContext(TransformPersistenceToken token) {
-		TransformPersisterToken persisterToken = new TransformPersisterToken();
-		DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
-		boolean perform = true;
-		while (perform) {
-			perform = false;
-			try {
-				LooseContext.pushWithTrue(
-						TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
-				LooseContext.set(CONTEXT_TRANSFORM_LAYER_WRAPPER, wrapper);
-				wrapper = Registry.impl(CommonPersistenceProvider.class)
-						.getCommonPersistence().transformInPersistenceContext(
-								persisterToken, token, wrapper);
-			} catch (RuntimeException ex) {
-				DeliberatelyThrownWrapperException dtwe = null;
-				if (ex instanceof DeliberatelyThrownWrapperException) {
-					dtwe = (DeliberatelyThrownWrapperException) ex;
-				} else if (ex
-						.getCause() instanceof DeliberatelyThrownWrapperException) {
-					dtwe = (DeliberatelyThrownWrapperException) ex.getCause();
-				} else {
-					throw ex;
+		try {
+			LooseContext.pushWithTrue(
+					DTRProtocolSerializer.CONTEXT_EXCEPTION_DEBUG);
+			TransformPersisterToken persisterToken = new TransformPersisterToken();
+			DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
+			boolean perform = true;
+			while (perform) {
+				perform = false;
+				try {
+					LooseContext.pushWithTrue(
+							TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
+					LooseContext.set(CONTEXT_TRANSFORM_LAYER_WRAPPER, wrapper);
+					wrapper = Registry.impl(CommonPersistenceProvider.class)
+							.getCommonPersistence()
+							.transformInPersistenceContext(persisterToken,
+									token, wrapper);
+				} catch (RuntimeException ex) {
+					DeliberatelyThrownWrapperException dtwe = null;
+					if (ex instanceof DeliberatelyThrownWrapperException) {
+						dtwe = (DeliberatelyThrownWrapperException) ex;
+					} else if (ex
+							.getCause() instanceof DeliberatelyThrownWrapperException) {
+						dtwe = (DeliberatelyThrownWrapperException) ex
+								.getCause();
+					} else {
+						throw ex;
+					}
+				} finally {
+					LooseContext.pop();
 				}
-			} finally {
-				LooseContext.pop();
+				if (token.getPass() == Pass.DETERMINE_EXCEPTION_DETAIL) {
+					token.getRequest().updateTransformCommitType(
+							CommitType.TO_STORAGE, true);
+					DomainTransformException firstException = token
+							.getTransformExceptions().get(0);
+					perform = !firstException.irresolvable();
+				} else if (token.getPass() == Pass.RETRY_WITH_IGNORES) {
+					token.setPass(Pass.TRY_COMMIT);
+					perform = true;
+				}
 			}
-			if (token.getPass() == Pass.DETERMINE_EXCEPTION_DETAIL) {
-				token.getRequest()
-						.updateTransformCommitType(CommitType.TO_STORAGE, true);
-				DomainTransformException firstException = token
-						.getTransformExceptions().get(0);
-				perform = !firstException.irresolvable();
-			} else if (token.getPass() == Pass.RETRY_WITH_IGNORES) {
-				token.setPass(Pass.TRY_COMMIT);
-				perform = true;
+			if (wrapper.response
+					.getResult() == DomainTransformResponseResult.FAILURE) {
+				Registry.impl(CommonPersistenceProvider.class)
+						.getCommonPersistence().expandExceptionInfo(wrapper);
 			}
+			return wrapper;
+		} finally {
+			LooseContext.pop();
 		}
-		if (wrapper.response
-				.getResult() == DomainTransformResponseResult.FAILURE) {
-			Registry.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence().expandExceptionInfo(wrapper);
-		}
-		return wrapper;
 	}
 }

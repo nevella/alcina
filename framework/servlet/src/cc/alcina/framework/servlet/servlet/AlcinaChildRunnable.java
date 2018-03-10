@@ -111,6 +111,8 @@ public abstract class AlcinaChildRunnable implements Runnable {
 
 		public Throwable thrown;
 
+		public Object result;
+
 		public AlcinaChildContextRunner(String name) {
 			super(name);
 			launcherThreadId = Thread.currentThread().getId();
@@ -126,6 +128,11 @@ public abstract class AlcinaChildRunnable implements Runnable {
 				run();
 				return null;
 			}
+		}
+
+		public AlcinaChildContextRunner copyContext(String key) {
+			super.copyContext(key);
+			return this;
 		}
 
 		public Object callNewThread(Runnable runnable) {
@@ -150,11 +157,17 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		}
 
 		public Object callNewThreadOrCurrent(Runnable runnable,
-				boolean newThread) {
+				CountDownLatch latch, boolean newThread) {
 			if (newThread) {
-				callNewThread(runnable);
+				callNewThread(runnable, latch);
 			} else {
-				runnable.run();
+				try {
+					runnable.run();
+				} finally {
+					if (latch != null) {
+						latch.countDown();
+					}
+				}
 			}
 			return null;
 		}

@@ -46,7 +46,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.UrlCustomiser;
 		@Action(actionClass = DeleteAction.class) }))
 @SequenceGenerator(allocationSize = 1, name = "bookmark_id_seq", sequenceName = "bookmark_id_seq")
 @ObjectPermissions(create = @Permission(access = AccessLevel.LOGGED_IN), read = @Permission(access = AccessLevel.ADMIN_OR_OWNER), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER), delete = @Permission(access = AccessLevel.ADMIN_OR_OWNER))
-@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
+xeroId
 public class Bookmark extends DomainBaseVersionable implements
 		Comparable<Bookmark>, HasOwner {
 	private long id;
@@ -76,7 +76,7 @@ public class Bookmark extends DomainBaseVersionable implements
 	@Display(name = "Children", orderingHint = 10, displayMask = Display.DISPLAY_AS_TREE_NODE
 			| Display.DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER))
 	@Association(implementationClass = Bookmark.class, propertyName = "parent")
-	@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
+	xeroId
 	public Set<Bookmark> getChildren() {
 		return children;
 	}

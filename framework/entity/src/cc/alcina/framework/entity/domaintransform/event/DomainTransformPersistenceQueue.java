@@ -104,32 +104,33 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			@Override
 			public void run() {
 				setName("DomainTransformPersistenceQueue-fire");
-				ThreadedPermissionsManager.cast().pushSystemUser();
-				PermissibleFieldFilter.disablePerObjectPermissions = true;
-				while (!closed.get()) {
-					try {
-						Long id = null;
-						synchronized (toFire) {
-							// double-check
-							if (closed.get()) {
-								break;
+				try {
+					ThreadedPermissionsManager.cast().pushSystemUser();
+					while (!closed.get()) {
+						try {
+							Long id = null;
+							synchronized (toFire) {
+								// double-check
+								if (closed.get()) {
+									break;
+								}
+								if (toFire.isEmpty()) {
+									toFire.wait();
+								}
+								if (!toFire.isEmpty()) {
+									id = toFire.pop();
+								}
 							}
-							if (toFire.isEmpty()) {
-								toFire.wait();
+							if (id != null && !closed.get()) {
+								publishTransformEvent(id);
 							}
-							if (!toFire.isEmpty()) {
-								id = toFire.pop();
-							}
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
-						if (id != null && !closed.get()) {
-							publishTransformEvent(id);
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
 					}
+				} finally {
+					ThreadedPermissionsManager.cast().popSystemUser();
 				}
-				PermissibleFieldFilter.disablePerObjectPermissions = false;
-				ThreadedPermissionsManager.cast().popSystemUser();
 			}
 
 			protected void publishTransformEvent(Long id) {

@@ -2,6 +2,8 @@ package cc.alcina.framework.common.client.search;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 
 public abstract class AbstractUserCriterion extends SearchCriterion
@@ -18,6 +20,7 @@ public abstract class AbstractUserCriterion extends SearchCriterion
 	public abstract Long getUserId();
 
 	@XmlTransient
+	@JsonIgnore
 	public Long getValue() {
 		return getUserId();
 	}

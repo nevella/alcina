@@ -111,7 +111,7 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 
 	@ManyToMany( targetEntity = AlcinaTemplateGroup.class)
 	@JoinTable(name = "group_group", joinColumns = @JoinColumn(name = "src_group_id"), inverseJoinColumns = @JoinColumn(name = "tgt_group_id"))
-	@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
+	xeroId
 	@DisplayInfo(name = "Member groups", orderingHint = 91) 
 	@Association(implementationClass = AlcinaTemplateGroup.class, propertyName="memberOfGroups")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN))
@@ -131,7 +131,7 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 
 	@ManyToMany( targetEntity = AlcinaTemplateUser.class)
 	@JoinTable(name = "user_group", joinColumns = @JoinColumn(name = "group_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
-	@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
+	xeroId
 	@DisplayInfo(name = "Member users", orderingHint = 90)
 @Association(implementationClass=AlcinaTemplateUser.class,propertyName="secondaryGroups")
 	@Custom(customiserClass = SelectorCustomiser.class)

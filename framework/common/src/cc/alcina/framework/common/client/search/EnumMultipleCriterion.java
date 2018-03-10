@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -59,6 +61,7 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 	}
 
 	@XmlTransient
+	@JsonIgnore
 	public abstract Set<E> getValue();
 
 	/**

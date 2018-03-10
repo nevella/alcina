@@ -4,12 +4,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.google.gwt.core.client.GWT;
+
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 
 @RegistryLocation(registryPoint = DTRProtocolHandler.class)
@@ -60,7 +64,13 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 
 	public void appendTo(DomainTransformEvent domainTransformEvent,
 			StringBuffer sb) {
+		boolean full = GWT.isClient() || !LooseContext
+				.is(DTRProtocolSerializer.CONTEXT_EXCEPTION_DEBUG);
 		String newStringValue = domainTransformEvent.getNewStringValue();
+		if (!full && newStringValue != null && newStringValue.length() > 1000) {
+			newStringValue = Ax.format("Truncated - %s chars - %s",
+					newStringValue.length(), newStringValue.substring(0, 1000));
+		}
 		String ns = escape(newStringValue);
 		sb.append(getDomainTransformEventMarker());
 		String newlineTab = "\n\t";

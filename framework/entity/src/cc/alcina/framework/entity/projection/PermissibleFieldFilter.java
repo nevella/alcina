@@ -105,6 +105,7 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 				// only in app startup/warmup
 			}
 			if (disabledPerThreadPerObjectPermissionsInstance) {
+				return true;
 				// optimisation for clustered transform commit
 			}
 			if (PermissionsManager.get().isPermissible(null, ap, true)) {

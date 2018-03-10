@@ -26,7 +26,7 @@ public class TransformPersistenceToken implements Serializable {
 
 	public int ignored = 0;
 
-	private final boolean possiblyReconstitueLocalIdMap;
+	private final boolean asyncClient;
 
 	private Pass pass = Pass.TRY_COMMIT;
 
@@ -51,13 +51,13 @@ public class TransformPersistenceToken implements Serializable {
 	public TransformPersistenceToken(DomainTransformRequest request,
 			HiliLocatorMap locatorMap,
 			TransformLoggingPolicy transformLoggingPolicy,
-			boolean possiblyReconstitueLocalIdMap,
+			boolean asyncClient,
 			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms,
 			Logger logger, boolean blockUntilAllListenersNotified) {
 		this.request = request;
 		this.locatorMap = locatorMap;
 		this.transformLoggingPolicy = transformLoggingPolicy;
-		this.possiblyReconstitueLocalIdMap = possiblyReconstitueLocalIdMap;
+		this.asyncClient = asyncClient;
 		this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
 		this.forOfflineTransforms = forOfflineTransforms;
 		this.logger = logger;
@@ -120,8 +120,8 @@ public class TransformPersistenceToken implements Serializable {
 		return ignoreClientAuthMismatch;
 	}
 
-	public boolean isPossiblyReconstitueLocalIdMap() {
-		return this.possiblyReconstitueLocalIdMap;
+	public boolean isAsyncClient() {
+		return this.asyncClient;
 	}
 
 	public void setBlockUntilAllListenersNotified(

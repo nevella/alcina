@@ -441,6 +441,17 @@ public class DomainTransformEvent
 
 	@Override
 	public String toString() {
-		return new DTRProtocolSerializer().serialize(this);
+		String serialize = new DTRProtocolSerializer().serialize(this);
+		return serialize;
+	}
+
+	public String toDebugString() {
+		try {
+			LooseContext.pushWithTrue(
+					DTRProtocolSerializer.CONTEXT_EXCEPTION_DEBUG);
+			return toString();
+		} finally {
+			LooseContext.pop();
+		}
 	}
 }

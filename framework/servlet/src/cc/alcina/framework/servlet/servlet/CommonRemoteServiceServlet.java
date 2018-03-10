@@ -811,7 +811,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				.getTransformExceptions();
 		for (DomainTransformException ex : transformExceptions) {
 			logger.info("Per-event error: " + ex.getMessage());
-			logger.info("Event: " + ex.getEvent());
+			logger.info("Event: " + ex.getEvent().toDebugString());
 		}
 	}
 
@@ -1070,8 +1070,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				Arrays.asList(rpcRequest.getMethod().getParameters()));
 		msg += "\nParameters: \n";
 		Object[] parameters = rpcRequest.getParameters();
-		msg += new JacksonJsonObjectSerializer().withIdRefs()
-				.serialize(parameters);
+		if (rpcRequest.getMethod().getName().equals("transform")) {
+		} else {
+			msg += new JacksonJsonObjectSerializer().withIdRefs()
+					.serialize(parameters);
+		}
 		return msg;
 	}
 

@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.domaintransform.event;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,6 +17,16 @@ public class DomainTransformPersistenceEvent {
 	private final DomainTransformLayerWrapper domainTransformLayerWrapper;
 
 	private final DomainTransformPersistenceEventType persistenceEventType;
+	
+	private List<Runnable> postEventRunnables = new ArrayList<>();
+
+	public List<Runnable> getPostEventRunnables() {
+		return this.postEventRunnables;
+	}
+
+	public void setPostEventRunnables(List<Runnable> postEventRunnables) {
+		this.postEventRunnables = postEventRunnables;
+	}
 
 	private boolean localToVm;
 

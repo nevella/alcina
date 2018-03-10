@@ -20,6 +20,8 @@ import java.util.Set;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
@@ -160,6 +162,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion>
 	public abstract String getDisplayName();
 
 	@XmlTransient
+	@JsonIgnore
 	public abstract Class getEntityClass();
 
 	/**

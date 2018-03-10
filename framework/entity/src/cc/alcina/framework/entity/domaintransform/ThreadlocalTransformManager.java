@@ -108,6 +108,9 @@ public class ThreadlocalTransformManager extends TransformManager
 	public static final String CONTEXT_FLUSH_BEFORE_DELETE = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_FLUSH_BEFORE_DELETE";
 
+	public static final String CONTEXT_PRE_PROCESS = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_PRE_PROCESS";
+
 	private static final String TOPIC_RESET_THREAD_TRANSFORM_MANAGER = ThreadlocalTransformManager.class
 			.getName() + ".TOPIC_RESET_THREAD_TRANSFORM_MANAGER";
 
@@ -174,6 +177,10 @@ public class ThreadlocalTransformManager extends TransformManager
 	protected Map<Long, HasIdAndLocalId> localIdToEntityMap;
 
 	protected HiliLocatorMap userSessionHiliMap;
+
+	public void setUserSessionHiliMap(HiliLocatorMap userSessionHiliMap) {
+		this.userSessionHiliMap = userSessionHiliMap;
+	}
 
 	private EntityManager entityManager;
 
@@ -860,14 +867,8 @@ public class ThreadlocalTransformManager extends TransformManager
 		HasIdAndLocalId hili = (HasIdAndLocalId) bean;
 		if (checkHasSufficientInfoForPropertyPersist(hili)) {
 			try {
-				PropertyDescriptor[] pds = Introspector
-						.getBeanInfo(bean.getClass()).getPropertyDescriptors();
-				for (PropertyDescriptor pd : pds) {
-					if (pd.getName().equals(propertyName)) {
-						pd.getWriteMethod().invoke(bean, value);
-						return;
-					}
-				}
+				SEUtilities.setPropertyValue(bean, propertyName, value);
+				return;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -1076,7 +1077,8 @@ public class ThreadlocalTransformManager extends TransformManager
 			checkHasSufficientInfoForPropertyPersist(HasIdAndLocalId hili) {
 		return hili.getId() != 0
 				|| (localIdToEntityMap.get(hili.getLocalId()) != null
-						&& getEntityManager() == null);
+						&& getEntityManager() == null)
+				|| LooseContext.is(CONTEXT_PRE_PROCESS);
 	}
 
 	@Override
