@@ -51,8 +51,10 @@ public class DomainTransformLayerWrapper implements Serializable
 	private Multimap<Class, List<DomainTransformEventPersistent>> eventsByClass;
 
 	public List<DomainTransformRequestPersistent> persistentRequests = new ArrayList<DomainTransformRequestPersistent>();
-
 	public boolean containsTransformClasses(Class... classes) {
+		return containsTransformClasses(Arrays.asList(classes));
+	}
+	public boolean containsTransformClasses(List<Class> classes) {
 		return !CommonUtils
 				.intersection(getTransformedClasses(), Arrays.asList(classes))
 				.isEmpty();
