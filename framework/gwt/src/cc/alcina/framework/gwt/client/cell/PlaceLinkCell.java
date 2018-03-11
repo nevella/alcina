@@ -24,7 +24,9 @@ import com.google.gwt.dom.builder.shared.HtmlBuilderFactory;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
@@ -70,6 +72,9 @@ public class PlaceLinkCell extends AbstractCell<TextPlaceTuple> {
 	@Override
 	public void render(Context context, TextPlaceTuple value,
 			SafeHtmlBuilder sb) {
+		if (value.place == null) {
+			sb.append(SafeHtmlUtils.fromTrustedString("No link"));
+		}
 		HtmlBuilderFactory factory = HtmlBuilderFactory.get();
 		HtmlAnchorBuilder builder = factory.createAnchorBuilder();
 		builder.href("#" + RegistryHistoryMapper.get().getToken(value.place));

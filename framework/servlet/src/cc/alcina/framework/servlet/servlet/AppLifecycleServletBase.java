@@ -3,11 +3,18 @@ package cc.alcina.framework.servlet.servlet;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 import javax.servlet.GenericServlet;
 import javax.servlet.ServletConfig;
@@ -27,6 +34,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
@@ -48,11 +56,57 @@ import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
-import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
+	public void clearJarCache() {
+		try {
+			String testJar = "jsr173_api.jar";
+			File testJarFile = new File("/tmp/" + testJar);
+			if (!testJarFile.exists()) {
+				byte[] bytes = ResourceUtilities
+						.readClassPathResourceAsByteArray(
+								AppLifecycleServletBase.class,
+								"res/" + testJar);
+				ResourceUtilities.writeBytesToFile(bytes, testJarFile);
+			}
+			URL url = new URL(
+					Ax.format("jar:file://%s!/javax/xml/XMLConstants.class",
+							testJarFile.getPath()));
+			URLConnection conn = url.openConnection();
+			// Class clazz = Class
+			// .forName("sun.net.www.protocol.jar.JarURLConnection");
+			Class clazz = conn.getClass();
+			Field factoryField = clazz.getDeclaredField("factory");
+			factoryField.setAccessible(true);
+			Object factory = factoryField.get(null);
+			Field fileCacheField = factory.getClass()
+					.getDeclaredField("fileCache");
+			fileCacheField.setAccessible(true);
+			Field urlCacheField = factory.getClass()
+					.getDeclaredField("urlCache");
+			urlCacheField.setAccessible(true);
+			HashMap<String, JarFile> fileCache = (HashMap<String, JarFile>) fileCacheField
+					.get(factory);
+			HashMap<JarFile, URL> urlCache = (HashMap<JarFile, URL>) urlCacheField
+					.get(factory);
+			for (Entry<String, JarFile> entry : fileCache.entrySet().stream()
+					.collect(Collectors.toList())) {
+				// if (entry.getKey().matches(
+				// ".*(cc.alcina|com.barnet|com.victorian|com.nswlr|com.littlewill).*"))
+				// {
+				// Ax.out("Cleared jar cache - %s", entry.getKey());
+				entry.getValue().close();
+				urlCache.remove(entry.getValue());
+				fileCache.remove(entry.getKey());
+				// }
+			}
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+	}
+
 	protected ServletConfig initServletConfig;
 
 	private Date startupTime;
@@ -111,7 +165,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void launchPostInitTasks() {
-		
 	}
 
 	public void refreshProperties() {
@@ -272,6 +325,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		MetricLogging.get().start(key);
 		initCommonServices();
 		initDataFolder();
+		clearJarCache();
 		initRegistry();
 		initCommonImplServices();
 		initCustomServices();
