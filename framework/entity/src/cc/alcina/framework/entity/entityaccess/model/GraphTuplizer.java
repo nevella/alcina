@@ -187,13 +187,17 @@ public class GraphTuplizer {
 			DetupleizeMapper detupelizeMapper) {
 		this.tuples = tuples;
 		this.mapper = detupelizeMapper;
+		Ax.out("\ndetupleize::prepare\n");
 		tuples.objects.forEach(this::prepare);
-		if ("".isEmpty()) {
-			tuples.objects.forEach(this::create);
-			tuples.objects.forEach(this::nonRelational);
-			tuples.objects.forEach(this::relational);
-			tuples.objects.forEach(this::prepareCustom);
-		}
+		Ax.out("\ndetupleize::create\n");
+		tuples.objects.forEach(this::create);
+		Ax.out("\ndetupleize::non-rel\n");
+		tuples.objects.forEach(this::nonRelational);
+		Ax.out("\ndetupleize::rel\n");
+		tuples.objects.forEach(this::relational);
+		Ax.out("\ndetupleize::prepare-custom\n");
+		tuples.objects.forEach(this::prepareCustom);
+		Ax.out("\ndetupleize::do-custom\n");
 		tuples.objects.forEach(this::doCustom);
 	}
 

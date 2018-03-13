@@ -811,7 +811,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				.getTransformExceptions();
 		for (DomainTransformException ex : transformExceptions) {
 			logger.info("Per-event error: " + ex.getMessage());
-			logger.info("Event: " + ex.getEvent().toDebugString());
+			if (ex.getEvent() != null) {
+				logger.info("Event: " + ex.getEvent().toDebugString());
+			}
 		}
 	}
 

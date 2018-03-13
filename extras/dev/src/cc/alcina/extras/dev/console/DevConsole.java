@@ -741,7 +741,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 					StyleConstants.TabSet, tabset);
 			setParagraphAttributes(aset, false);
 		}
-		public static final int maxChars = 50000;
+		public static final int maxChars = 250000;
 		
 		public void append(final String str) {
 			StyledDocument doc = getStyledDocument();

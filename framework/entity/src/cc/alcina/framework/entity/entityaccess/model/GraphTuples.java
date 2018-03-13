@@ -38,8 +38,16 @@ public class GraphTuples {
 
 		@Override
 		public String toString() {
-			return Ax.format("%s:\n\t%s", classRef,
-					CommonUtils.joinWithNewlineTab(values.entrySet()));
+			StringBuilder sb = new StringBuilder();
+			values.entrySet().forEach(e -> {
+				sb.append(e.getKey());
+				sb.append("=");
+				sb.append(CommonUtils.trimToWsChars(
+						Ax.blankToEmpty(e.getValue()).replace("\n", "\\n"), 100,
+						true));
+				sb.append("\n");
+			});
+			return Ax.format("%s:\n\t%s", classRef, sb);
 		}
 
 		public String value(String fieldName) {
