@@ -70,6 +70,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter.AllFieldsFilter;
+import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
 @SuppressWarnings("unchecked")
 /**
@@ -84,6 +85,9 @@ public class GraphProjection {
 
 	static Map<Field, Type> genericTypeLookup = new NullWrappingMap<Field, Type>(
 			new ConcurrentHashMap(LOOKUP_SIZE));
+
+	static CachingConcurrentMap<Class, String> classSimpleName = new CachingConcurrentMap<>(
+			Class::getSimpleName, LOOKUP_SIZE);
 
 	static Map<Field, Boolean> genericHiliTypeLookup = new NullWrappingMap<Field, Boolean>(
 			new ConcurrentHashMap(LOOKUP_SIZE));
@@ -111,6 +115,9 @@ public class GraphProjection {
 
 	public static final String CONTEXT_PROJECTION_CONTEXT = GraphProjection.class
 			.getName() + ".CONTEXT_PROJECTION_CONTEXT";
+
+	private static final String CONTEXT_LAST_CONTEXT_LOOKUPS = GraphProjection.class
+			.getName() + ".CONTEXT_LAST_CONTEXT_LOOKUPS";
 
 	public static final String TOPIC_PROJECTION_COUNT_DELTA = GraphProjection.class
 			.getName() + ".TOPIC_PROJECTION_COUNT_DELTA";
@@ -432,7 +439,16 @@ public class GraphProjection {
 		if (context != null) {
 			return project(source, null, context, false);
 		} else {
+			GraphProjection last = LooseContext
+					.get(CONTEXT_LAST_CONTEXT_LOOKUPS);
 			try {
+				if (last != null) {
+					perClassReadPermission = last.perClassReadPermission;
+					perFieldPermission = last.perFieldPermission;
+					perObjectPermissionClasses = last.perObjectPermissionClasses;
+					perObjectPermissionFields = last.perObjectPermissionFields;
+					projectableFields = last.projectableFields;
+				}
 				LooseContext.pushWithKey(CONTEXT_PROJECTION_CONTEXT,
 						new LinkedHashMap<>());
 				GlobalTopicPublisher.get()
@@ -443,6 +459,9 @@ public class GraphProjection {
 				GlobalTopicPublisher.get()
 						.publishTopic(TOPIC_PROJECTION_COUNT_DELTA, -1);
 				LooseContext.pop();
+				if (last != null) {
+					LooseContext.set(CONTEXT_LAST_CONTEXT_LOOKUPS, this);
+				}
 				if (context == null) {
 					if (dumpProjectionStats) {
 						System.out.format(
@@ -752,7 +771,8 @@ public class GraphProjection {
 		}
 		if (!constructorLookup.containsKey(sourceClass)) {
 			try {
-				if(sourceClass.getName().equals("java.util.Collections$UnmodifiableRandomAccessList")){
+				if (sourceClass.getName().equals(
+						"java.util.Collections$UnmodifiableRandomAccessList")) {
 					return (T) new ArrayList();
 				}
 				Constructor ctor = sourceClass.getConstructor(new Class[] {});
@@ -937,5 +957,18 @@ public class GraphProjection {
 
 		Object instantiateShellObject(T initializer,
 				GraphProjectionContext context);
+	}
+
+	public static String classSimpleName(Class clazz) {
+		return classSimpleName.get(clazz);
+	}
+
+	public static void reuseLookups(boolean reuse) {
+		if (reuse) {
+			LooseContext.set(CONTEXT_LAST_CONTEXT_LOOKUPS,
+					new GraphProjection());
+		} else {
+			LooseContext.remove(CONTEXT_LAST_CONTEXT_LOOKUPS);
+		}
 	}
 }

@@ -393,11 +393,12 @@ public class CommonUtils {
 			} else {
 				if (o1 == null || o2 == null) {
 					Object nonNull = o1 == null ? o2 : o1;
-						return false;
+					return false;
 				} else {
 					if (!o1.equals(o2)) {
 						if (o1 instanceof Date && o2 instanceof Date
-								&& Math.abs(((Date) o1).getTime()-((Date) o2).getTime())<TimeConstants.ONE_DAY_MS) {
+								&& Math.abs(((Date) o1).getTime() - ((Date) o2)
+										.getTime()) < TimeConstants.ONE_DAY_MS) {
 						} else {
 							return false;
 						}
@@ -1636,17 +1637,22 @@ public class CommonUtils {
 					firstOnly, intersection, secondOnly);
 		}
 	}
-	public static String normaliseForMatch(String string){
-		if(string==null){
+
+	public static String normaliseForMatch(String string) {
+		if (string == null) {
 			return null;
 		}
 		return string.trim().toLowerCase();
 	}
 
 	public static <V> List<V> lastNMembers(List<V> list, int n) {
-		if(list.size()<=n){
+		if (list.size() <= n) {
 			return list;
 		}
-		return new ArrayList<>(list.subList(list.size()-n, list.size()));
+		return new ArrayList<>(list.subList(list.size() - n, list.size()));
+	}
+
+	public static boolean currencyEquals(double d1, double d2) {
+		return Math.abs(d1 - d2) < 0.005;
 	}
 }

@@ -69,6 +69,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
 /**
@@ -267,7 +268,7 @@ public class ResourceUtilities {
 	public static synchronized String getBundledString(Class clazz,
 			String propertyName) {
 		String namespacedKey = (clazz == null) ? propertyName
-				: clazz.getSimpleName() + "." + propertyName;
+				: GraphProjection.classSimpleName(clazz) + "." + propertyName;
 		if (customProperties.containsKey(namespacedKey)) {
 			return customProperties.get(namespacedKey);
 		}

@@ -233,6 +233,10 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 				return (T) AbstractDomainBase.this;
 			}
 		}
+
+		public String hiliToString() {
+			return new HiliLocator(AbstractDomainBase.this).toString();
+		}
 	}
 
 	public DomainSupport domain() {
