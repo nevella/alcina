@@ -37,14 +37,26 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public class DetachedEntityCache implements Serializable, PrivateObjectCache {
-	// have it distributed
 	protected Map<Class, Map<Long, HasIdAndLocalId>> detached;
 
 	private Supplier<Map> classMapSupplier;
 
+	static class DefaultTopMapSupplier implements Supplier<Map> {
+		@Override
+		public Map get() {
+			return new HashMap<Class, Map<Long, HasIdAndLocalId>>(128);
+		}
+	}
+
+	static class DefaultClassMapSupplier implements Supplier<Map> {
+		@Override
+		public Map get() {
+			return new TreeMap();
+		}
+	}
+
 	public DetachedEntityCache() {
-		this(() -> new HashMap<Class, Map<Long, HasIdAndLocalId>>(128),
-				() -> new TreeMap());
+		this(new DefaultTopMapSupplier(), new DefaultClassMapSupplier());
 	}
 
 	public DetachedEntityCache(Supplier<Map> topMapSupplier,
@@ -219,6 +231,5 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 
 	public Set<Entry<Class, Map<Long, HasIdAndLocalId>>> classEntries() {
 		return detached.entrySet();
-				
 	}
 }

@@ -45,7 +45,7 @@ public class DetachedToDomainPersister<T extends AbstractDomainBase>
 			}
 			return detachedToDomainHasDelta(object)
 					? FlatDeltaPersisterResultType.CREATED
-					: FlatDeltaPersisterResultType.UNMATCHED;
+					: FlatDeltaPersisterResultType.UNMODIFIED;
 		case UPDATE:
 			return detachedToDomainHasDelta(object)
 					? FlatDeltaPersisterResultType.MERGED

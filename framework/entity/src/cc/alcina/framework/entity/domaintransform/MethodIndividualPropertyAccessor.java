@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
 
 public class MethodIndividualPropertyAccessor
@@ -109,6 +110,10 @@ public class MethodIndividualPropertyAccessor
 		if (clazz != methodDeclaringClass) {
 			PropertyDescriptor pd = SEUtilities
 					.getPropertyDescriptorByName(clazz, propertyName);
+			if (pd == null) {
+				Ax.err("No property descriptor - %s.%s", clazz.getSimpleName(),
+						propertyName);
+			}
 			this.readMethod = pd.getReadMethod();
 			this.writeMethod = pd.getWriteMethod();
 			methodDeclaringClass = clazz;

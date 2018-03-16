@@ -13,21 +13,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class LocalDomain {
 	private DetachedEntityCache cache = new DetachedEntityCache();
 
-	public DetachedEntityCache getCache() {
-		return this.cache;
-	}
-
 	private CacheDescriptor cacheDescriptor;
 
-	public <T> Collection<T> getCollectionFor(Class<T> clazz) {
-		return cache.values(clazz);
-	}
-
 	public LocalDomain() {
-	}
-	
-	public <T extends HasIdAndLocalId> T find(Class<T> clazz, long id){
-		return cache.get(clazz, id);
 	}
 
 	public LocalDomain(CacheDescriptor cacheDescriptor) {
@@ -39,15 +27,21 @@ public class LocalDomain {
 		index(obj, true);
 	}
 
-	private void index(HasIdAndLocalId obj, boolean add) {
-		Class<? extends HasIdAndLocalId> clazz = obj.getClass();
-		CacheItemDescriptor<?> itemDescriptor = cacheDescriptor.perClass
-				.get(clazz);
-		itemDescriptor.index(obj, add);
-		for (HasIdAndLocalId dependentObject : itemDescriptor
-				.getDependentObjectsWithDerivedProjections(obj)) {
-			index(dependentObject, add);
-		}
+	public <T extends HasIdAndLocalId> LocalDomainQuery<T>
+			aliasedQuery(Class<T> clazz, Object alias, Object key) {
+		return new LocalDomainQuery(this, clazz, alias, key);
+	}
+	
+	public <T extends HasIdAndLocalId> T find(Class<T> clazz, long id){
+		return cache.get(clazz, id);
+	}
+
+	public DetachedEntityCache getCache() {
+		return this.cache;
+	}
+
+	public <T> Collection<T> getCollectionFor(Class<T> clazz) {
+		return cache.values(clazz);
 	}
 
 	public void init() {
@@ -56,6 +50,21 @@ public class LocalDomain {
 			for (CacheLookupDescriptor lookupDescriptor : descriptor.lookupDescriptors) {
 				lookupDescriptor.createLookup();
 			}
+		}
+	}
+
+	public void setCache(DetachedEntityCache cache) {
+		this.cache = cache;
+	}
+
+	private void index(HasIdAndLocalId obj, boolean add) {
+		Class<? extends HasIdAndLocalId> clazz = obj.getClass();
+		CacheItemDescriptor<?> itemDescriptor = cacheDescriptor.perClass
+				.get(clazz);
+		itemDescriptor.index(obj, add);
+		for (HasIdAndLocalId dependentObject : itemDescriptor
+				.getDependentObjectsWithDerivedProjections(obj)) {
+			index(dependentObject, add);
 		}
 	}
 
@@ -76,6 +85,10 @@ public class LocalDomain {
 			this.key = key;
 		}
 
+		public Optional<T> findFirst() {
+			return Optional.ofNullable(CommonUtils.first(list()));
+		}
+
 		public List<T> list() {
 			CacheItemDescriptor itemDescriptor = localDomain.cacheDescriptor.perClass
 					.get(clazz);
@@ -92,14 +105,5 @@ public class LocalDomain {
 				throw new IllegalArgumentException();
 			}
 		}
-
-		public Optional<T> findFirst() {
-			return Optional.ofNullable(CommonUtils.first(list()));
-		}
-	}
-
-	public <T extends HasIdAndLocalId> LocalDomainQuery<T>
-			aliasedQuery(Class<T> clazz, Object alias, Object key) {
-		return new LocalDomainQuery(this, clazz, alias, key);
 	}
 }
