@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Supplier;
@@ -214,5 +215,10 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 				}
 			}
 		}
+	}
+
+	public Set<Entry<Class, Map<Long, HasIdAndLocalId>>> classEntries() {
+		return detached.entrySet();
+				
 	}
 }

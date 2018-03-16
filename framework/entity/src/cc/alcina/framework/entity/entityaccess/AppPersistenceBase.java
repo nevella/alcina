@@ -162,6 +162,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 					throws Exception {
 		this.classMetadataCacheProvider = classMetadataCacheProvider;
 		initNonDb();
+		runDbUpdaters(true);
 		scanClassRefs();
 		initDb();
 	}
