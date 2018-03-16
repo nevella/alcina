@@ -107,7 +107,13 @@ public class XmlTokenOutput {
 
 	public void writeXml(String xmlString) {
 		XmlDoc insert = new XmlDoc(xmlString);
-		writeCursor.children.importFrom(insert.getDocumentElementNode());
+		XmlNode documentElementNode = insert.getDocumentElementNode();
+		if (documentElementNode.tagIs("strip")) {
+			documentElementNode.children.nodes()
+					.forEach(writeCursor.children::importFrom);
+		} else {
+			writeCursor.children.importFrom(documentElementNode);
+		}
 	}
 
 	XmlStructuralJoin getOutCursor() {

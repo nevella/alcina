@@ -31,8 +31,8 @@ public class CachingMap<I, O> {
 	}
 
 	public CachingMap(ThrowingFunction<I, O> function, Map<I, O> map) {
-		this.setFunction(function);
 		this.map = map;
+		this.setFunction(function);
 	}
 
 	public void clear() {
@@ -48,6 +48,10 @@ public class CachingMap<I, O> {
 			}
 		}
 		return map.get(key);
+	}
+
+	public ThrowingFunction<I, O> getFunction() {
+		return function;
 	}
 
 	public Map<I, O> getMap() {
@@ -71,6 +75,13 @@ public class CachingMap<I, O> {
 		map.remove(key);
 	}
 
+	public void setFunction(ThrowingFunction<I, O> function) {
+		this.function = function;
+		if (this.map == null) {
+			this.map = new LinkedHashMap<>();
+		}
+	}
+
 	public int size() {
 		return map.size();
 	}
@@ -82,14 +93,6 @@ public class CachingMap<I, O> {
 
 	public Collection<O> values() {
 		return map.values();
-	}
-
-	public ThrowingFunction<I, O> getFunction() {
-		return function;
-	}
-
-	public void setFunction(ThrowingFunction<I, O> function) {
-		this.function = function;
 	}
 
 	public static class CachingLcMap extends CachingMap<String, String> {

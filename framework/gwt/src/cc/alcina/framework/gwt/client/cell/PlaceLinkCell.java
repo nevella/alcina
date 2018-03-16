@@ -74,6 +74,7 @@ public class PlaceLinkCell extends AbstractCell<TextPlaceTuple> {
 			SafeHtmlBuilder sb) {
 		if (value.place == null) {
 			sb.append(SafeHtmlUtils.fromTrustedString("No link"));
+			return;
 		}
 		HtmlBuilderFactory factory = HtmlBuilderFactory.get();
 		HtmlAnchorBuilder builder = factory.createAnchorBuilder();

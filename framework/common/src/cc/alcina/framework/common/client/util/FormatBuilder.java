@@ -5,8 +5,14 @@ public class FormatBuilder {
 
 	private String separator = "";
 
-	public void appendIfNonEmpty(String optional) {
+	public void appendIfBuilderNonEmpty(String optional) {
 		if (sb.length() > 0) {
+			sb.append(optional);
+		}
+	}
+	public void appendIfNotBlank(String optional) {
+		if (Ax.notBlank(optional)) {
+			maybeAppendSeparator();
 			sb.append(optional);
 		}
 	}
