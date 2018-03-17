@@ -349,40 +349,40 @@ public class StyleInjector {
 		private static int[] styleSheetLengths = new int[MAX_STYLE_SHEETS];
 
 		private static native int getDocumentStyleCount() /*-{
-															var count = 0;
-															for (var idx = 0; idx < $doc.styleSheets.length; idx++) {
-															var sheet = $doc.styleSheets[idx];
-															if (sheet.owningElement.tagName.toLowerCase() == 'style') {
-															count++;
-															}
-															}
-															return count;
-															}-*/;
+            var count = 0;
+            for (var idx = 0; idx < $doc.styleSheets.length; idx++) {
+                var sheet = $doc.styleSheets[idx];
+                if (sheet.owningElement.tagName.toLowerCase() == 'style') {
+                    count++;
+                }
+            }
+            return count;
+		}-*/;
 
 		private static native int getDocumentStyleSheetLength(int index) /*-{
-																			var remote = @com.google.gwt.dom.client.StyleInjector.StyleInjectorImplIE::getDocumentStyleSheet(I)(index);
-																			return remote.sheet.cssText.length;
-																			}-*/;
+            var remote = @com.google.gwt.dom.client.StyleInjector.StyleInjectorImplIE::getDocumentStyleSheet(I)(index);
+            return remote.sheet.cssText.length;
+		}-*/;
 
 		static native StyleElement getDocumentStyleSheet(int index) /*-{
-																	for (var idx = 0; idx < $doc.styleSheets.length; idx++) {
-																	var sheet = $doc.styleSheets[idx];
-																	if (sheet.owningElement.tagName.toLowerCase() == 'style') {
-																	if (index-- == 0) {
-																	var remote = sheet.owningElement;
-																	return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
-																	}
-																	}
-																	}
-																	return null;
-																	}-*/;
+            for (var idx = 0; idx < $doc.styleSheets.length; idx++) {
+                var sheet = $doc.styleSheets[idx];
+                if (sheet.owningElement.tagName.toLowerCase() == 'style') {
+                    if (index-- == 0) {
+                        var remote = sheet.owningElement;
+                        return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
+                    }
+                }
+            }
+            return null;
+		}-*/;
 
 		private boolean injectedOnce = false;
 
 		public native void appendContents(StyleElement style,
 				String contents) /*-{
-									style.@com.google.gwt.dom.client.Element::ensureRemote()().sheet.cssText += contents;
-									}-*/;
+            style.@com.google.gwt.dom.client.Element::ensureRemote()().sheet.cssText += contents;
+		}-*/;
 
 		@Override
 		public StyleElement injectStyleSheet(String contents) {
@@ -445,8 +445,8 @@ public class StyleInjector {
 
 		public native void prependContents(StyleElement style,
 				String contents) /*-{
-									style.sheet.cssText = contents + style.sheet.cssText;
-									}-*/;
+            style.sheet.cssText = contents + style.sheet.cssText;
+		}-*/;
 
 		private StyleElement appendToStyleSheet(int idx, String contents,
 				boolean append) {
@@ -460,16 +460,16 @@ public class StyleInjector {
 		}
 
 		private native StyleElement createElement() /*-{
-													var sheet = $doc.createStyleSheet();
-													var remote = sheet.owningElement;
-													return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
-													}-*/;
+            var sheet = $doc.createStyleSheet();
+            var remote = sheet.owningElement;
+            return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
+		}-*/;
 
 		private native StyleElement createNewStyleSheet(String contents) /*-{
-																			var element = this.@com.google.gwt.dom.client.StyleInjector.StyleInjectorImplIE::createElement()();
-																			var remote = element.@com.google.gwt.dom.client.Element::typedRemote()();
-																			remote.sheet.cssText = contents;
-																			return element;
-																			}-*/;
+            var element = this.@com.google.gwt.dom.client.StyleInjector.StyleInjectorImplIE::createElement()();
+            var remote = element.@com.google.gwt.dom.client.Element::typedRemote()();
+            remote.sheet.cssText = contents;
+            return element;
+		}-*/;
 	}
 }

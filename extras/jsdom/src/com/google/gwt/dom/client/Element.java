@@ -727,6 +727,12 @@ public class Element extends Node implements DomElement {
 	}
 
 	private DomElement implForPropertyName(String name) {
+		switch(name){
+		case "clientWidth":
+		case "offsetWidth":
+			//TODO - warn maybe? non optimal. SliderBar one major cause
+			return ensureRemote();
+		}
 		if (!wasResolved()) {
 			return local();
 		}
