@@ -859,6 +859,15 @@ public class Element extends Node implements DomElement {
 			LocalDom.ensureRemoteNodeMaybePendingResolution(Element.this);
 			oldRemote.replaceWith(typedRemote());
 		}
+
+		public void setRemote(ElementRemote remote) {
+			LocalDom.putRemote(Element.this,remote);
+		}
+
+		public void appendChildLocalOnly(Element localOnly) {
+			//IE special case
+			local.children.add(localOnly.local);
+		}
 	}
 
 	/**

@@ -445,7 +445,14 @@ public class StyleInjector {
 
 		public native void prependContents(StyleElement style,
 				String contents) /*-{
-            style.sheet.cssText = contents + style.sheet.cssText;
+            style.@com.google.gwt.dom.client.Element::ensureRemote()().sheet.cssText = contents + style.sheet.cssText;
+		}-*/;
+		
+		public native void setContents(StyleElement style,
+				String contents) /*-{
+				debugger;
+				var elem = style.@com.google.gwt.dom.client.Element::ensureRemote()();
+            elem.sheet.cssText = contents ;
 		}-*/;
 
 		private StyleElement appendToStyleSheet(int idx, String contents,
@@ -459,17 +466,21 @@ public class StyleInjector {
 			return style;
 		}
 
-		private native StyleElement createElement() /*-{
-            var sheet = $doc.createStyleSheet();
-            var remote = sheet.owningElement;
-            return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
-		}-*/;
-
-		private native StyleElement createNewStyleSheet(String contents) /*-{
-            var element = this.@com.google.gwt.dom.client.StyleInjector.StyleInjectorImplIE::createElement()();
-            var remote = element.@com.google.gwt.dom.client.Element::typedRemote()();
-            remote.sheet.cssText = contents;
-            return element;
+		private StyleElement created;
+		private  StyleElement createNewStyleSheet(String contents){
+			StyleElement styleElement = Document.get().createStyleElement();
+			styleElement.setInnerText(contents);
+			ElementRemote remote = createNewStyleSheet0(contents);
+			//set remote before attach - head will already have been flushed
+			styleElement.implAccess().setRemote(remote);
+			Document.get().getHead().implAccess().appendChildLocalOnly(styleElement);
+			return styleElement;
+			
+		}
+		private native ElementRemote createNewStyleSheet0(String contents) /*-{
+			var sheet = $doc.createStyleSheet();
+			sheet.cssText=contents;
+            return sheet.owningElement;
 		}-*/;
 	}
 }

@@ -2,6 +2,7 @@ package com.google.gwt.dom.client;
 
 import java.util.List;
 
+import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.ElementRemote.ElementRemoteIndex;
 import com.google.gwt.user.client.LocalDomDebug;
 import com.google.gwt.user.client.Window;
@@ -12,9 +13,17 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class LocalDomDebugImpl {
 	final static boolean debug = true;
 
-	static boolean debugAll = false;
+	static boolean debugAll = true;
 
-	public void debugNodeFor0(ElementRemote elementRemote, Element hasNode,
+	public void debugNodeFor(ElementRemote elementRemote, Element hasNode,
+			ElementRemoteIndex remoteIndex, boolean firstPass) {
+		if (GWT.isScript()) {
+		} else {
+			debugNodeFor0(elementRemote, hasNode, remoteIndex, firstPass);
+		}
+	}
+
+	private void debugNodeFor0(ElementRemote elementRemote, Element hasNode,
 			ElementRemoteIndex remoteIndex, boolean firstPass) {
 		if (remoteIndex.hasRemoteDefined() && firstPass) {
 			return;
@@ -108,7 +117,7 @@ public class LocalDomDebugImpl {
 		Ax.out("%s: %s", channel, message);
 		if (channel == LocalDomDebug.DEBUG_ISSUE
 				&& Window.Location.getPort().contains("8080")) {
-			throw new RuntimeException();
+			// throw new RuntimeException();
 		}
 	}
 

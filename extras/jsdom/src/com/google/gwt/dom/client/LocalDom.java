@@ -106,6 +106,7 @@ public class LocalDom {
 	public static void register(Document doc) {
 		if (useRemoteDom) {
 			get().linkRemote(doc.typedRemote(), doc);
+			get().nodeFor0(doc.typedRemote().getDocumentElement0());
 		}
 	}
 
@@ -489,7 +490,7 @@ public class LocalDom {
 		List<Integer> indicies = remoteIndex.indicies();
 		List<Boolean> remoteDefined = remoteIndex.remoteDefined();
 		JsArray ancestors = remoteIndex.ancestors();
-		debugImpl.debugNodeFor0(elem, hasNode, remoteIndex, true);
+		debugImpl.debugNodeFor(elem, hasNode, remoteIndex, true);
 		Element cursor = hasNode;
 		for (int idx = indicies.size() - 1; idx >= 0; idx--) {
 			int nodeIndex = indicies.get(idx);
@@ -500,7 +501,7 @@ public class LocalDom {
 			child.putRemote(childRemote, true);
 			cursor = child;
 		}
-		debugImpl.debugNodeFor0(elem, hasNode, remoteIndex, false);
+		debugImpl.debugNodeFor(elem, hasNode, remoteIndex, false);
 		return (T) remoteLookup.get(remote);
 	}
 
@@ -609,5 +610,17 @@ public class LocalDom {
 
 	public static void ensureRemoteDocument() {
 		nodeFor(Document.get().typedRemote().getDocumentElement0());
+	}
+
+	private void putRemote0(Element element, ElementRemote remote) {
+		flush();
+		resolutionEventId++;
+		wasResolved(element);
+		remoteLookup.put(remote,element);
+		element.putRemote(remote, true);
+	}
+
+	static void putRemote(Element element, ElementRemote remote) {
+		get().putRemote0(element, remote);
 	}
 }

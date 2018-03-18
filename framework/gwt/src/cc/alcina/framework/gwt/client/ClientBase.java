@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
 import cc.alcina.framework.common.client.remote.RemoteServiceProvider;
+import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
@@ -67,7 +68,9 @@ public abstract class ClientBase
 	public ClientBase() {
 		if (GWT.isClient()) {
 			initInitialTokenHandler();
-			Window.addCloseHandler(this);
+			if (!BrowserMod.isInternetExplorer()) {
+				Window.addCloseHandler(this);
+			}
 		}
 	}
 

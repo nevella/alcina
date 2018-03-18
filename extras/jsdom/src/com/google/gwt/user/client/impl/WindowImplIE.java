@@ -34,10 +34,10 @@ public class WindowImplIE extends WindowImpl {
 	 */
 	@Override
 	public native String getHash() /*-{
-									var href = $wnd.location.href;
-									var hashLoc = href.indexOf("#");
-									return (hashLoc > 0) ? href.substring(hashLoc) : "";
-									}-*/;
+        var href = $wnd.location.href;
+        var hashLoc = href.indexOf("#");
+        return (hashLoc > 0) ? href.substring(hashLoc) : "";
+	}-*/;
 
 	/**
 	 * For IE6, reading from $wnd.location.search gets confused if hash contains
@@ -45,15 +45,15 @@ public class WindowImplIE extends WindowImpl {
 	 */
 	@Override
 	public native String getQueryString() /*-{
-											var href = $wnd.location.href;
-											var hashLoc = href.indexOf("#");
-											if (hashLoc >= 0) {
-											// strip off any hash first
-											href = href.substring(0, hashLoc);
-											}
-											var questionLoc = href.indexOf("?");
-											return (questionLoc > 0) ? href.substring(questionLoc) : "";
-											}-*/;
+        var href = $wnd.location.href;
+        var hashLoc = href.indexOf("#");
+        if (hashLoc >= 0) {
+            // strip off any hash first
+            href = href.substring(0, hashLoc);
+        }
+        var questionLoc = href.indexOf("?");
+        return (questionLoc > 0) ? href.substring(questionLoc) : "";
+	}-*/;
 
 	@Override
 	public void initWindowCloseHandler() {
@@ -110,23 +110,20 @@ public class WindowImplIE extends WindowImpl {
 	}
 
 	private native void initWindowCloseHandlerImpl() /*-{
-														$wnd.__gwt_initWindowCloseHandler(
-														$entry(@com.google.gwt.user.client.Window::onClosing()),
-														$entry(@com.google.gwt.user.client.Window::onClosed())
-														);
-														}-*/;
+        $wnd.__gwt_initWindowCloseHandler(
+                $entry(@com.google.gwt.user.client.Window::onClosing()),
+                $entry(@com.google.gwt.user.client.Window::onClosed()));
+	}-*/;
 
 	private native void initWindowResizeHandlerImpl() /*-{
-														$wnd.__gwt_initWindowResizeHandler(
-														$entry(@com.google.gwt.user.client.Window::onResize())
-														);
-														}-*/;
+        $wnd
+                .__gwt_initWindowResizeHandler($entry(@com.google.gwt.user.client.Window::onResize()));
+	}-*/;
 
 	private native void initWindowScrollHandlerImpl() /*-{
-														$wnd.__gwt_initWindowScrollHandler(
-														$entry(@com.google.gwt.user.client.Window::onScroll())
-														);
-														}-*/;
+        $wnd
+                .__gwt_initWindowScrollHandler($entry(@com.google.gwt.user.client.Window::onScroll()));
+	}-*/;
 
 	/**
 	 * The resources for this implementation.
