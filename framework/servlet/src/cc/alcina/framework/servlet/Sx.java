@@ -1,15 +1,7 @@
 package cc.alcina.framework.servlet;
 
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 
-import com.google.common.base.Preconditions;
-
-import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.cache.Domain;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 

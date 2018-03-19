@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
@@ -65,6 +66,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	public static void setTest() {
 		System.setProperty(PERSISTENCE_TEST, String.valueOf(true));
+		Ax.setTest(true);
 	}
 
 	protected CommonPersistenceLocal commonPersistence;

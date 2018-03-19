@@ -12,6 +12,8 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 
 public class Ax {
 	public static AxStreams streams = new AxStreams();
+	
+	
 
 	public static String blankTo(String string, String defaultValue) {
 		return isBlank(string) ? defaultValue : string;
@@ -102,6 +104,15 @@ public class Ax {
 				return t;
 			};
 		}
+	}
+
+	private static boolean test;
+	public static boolean isTest() {
+		return test;
+	}
+
+	public static void setTest(boolean test) {
+		Ax.test = test;
 	}
 
 	public static void err(Object object) {
