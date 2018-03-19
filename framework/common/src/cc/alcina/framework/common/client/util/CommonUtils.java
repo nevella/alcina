@@ -544,7 +544,7 @@ public class CommonUtils {
 			return formatJ("%s %s, %s", MONTH_NAMES[date.getMonth() + 1],
 					padTwo(date.getDate()), padTwo(date.getYear() + 1900));
 		case AU_SHORT_MONTH:
-			return formatJ("%s %s %s", padTwo(date.getDate()),
+			return formatJ("%s %s %s", date.getDate(),
 					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
 					padTwo(date.getYear() + 1900));
 		case AU_SHORT_MONTH_SLASH:
