@@ -2471,23 +2471,24 @@ public class AlcinaMemCache implements RegistrableService {
 
 		@Override
 		public <V extends HasIdAndLocalId> V writeable(V v) {
-			if (v == null) {
+			V out = v;
+			if (out == null) {
 				return null;
 			}
 			if (ThreadlocalTransformManager.is() && ThreadlocalTransformManager
-					.get().isListeningTo((SourcesPropertyChangeEvents) v)) {
-				return v;
+					.get().isListeningTo((SourcesPropertyChangeEvents) out)) {
+				return out;
 			}
-			if (v.provideWasPersisted()) {
-				v = project(v);
+			if (out.provideWasPersisted()) {
+				out = project(out);
 			} else {
-				v = Domain.detachedToDomain(v);
+				out = Domain.detachedToDomain(out);
 			}
 			if (ThreadlocalTransformManager.is()) {
 				ThreadlocalTransformManager.get()
-						.listenTo((SourcesPropertyChangeEvents) v);
+						.listenTo((SourcesPropertyChangeEvents) out);
 			}
-			return v;
+			return out;
 		}
 
 		private <V extends HasIdAndLocalId> V project(V v) {
