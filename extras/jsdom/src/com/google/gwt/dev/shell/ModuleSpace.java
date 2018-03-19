@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.dev.util.Name;
@@ -535,6 +536,8 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
 			msg = "Failed to create an instance of '" + requestedClassName
 					+ "' via deferred binding ";
 		}
+		caught.printStackTrace();
+		GWT.log(msg, caught);
 		host.getLogger().log(TreeLogger.ERROR, msg, caught);
 		throw new UnableToCompleteException();
 	}
