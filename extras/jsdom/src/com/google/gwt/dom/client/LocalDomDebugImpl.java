@@ -11,9 +11,9 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class LocalDomDebugImpl {
-	final static boolean debug = true;
+	final static boolean debug = false;
 
-	static boolean debugAll = true;
+	static boolean debugAll = false;
 
 	public void debugNodeFor(ElementRemote elementRemote, Element hasNode,
 			ElementRemoteIndex remoteIndex, boolean firstPass) {
