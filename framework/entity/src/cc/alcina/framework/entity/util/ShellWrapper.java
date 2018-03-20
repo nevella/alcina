@@ -26,6 +26,8 @@ public class ShellWrapper {
 
 	public boolean logToStdOut = true;
 
+	public String logToFile = null;
+
 	public ShellWrapper noLogging() {
 		logToStdOut = false;
 		return this;
@@ -89,6 +91,10 @@ public class ShellWrapper {
 			return runProcessCatchOutputAndWait(cmdAndArgs,
 					new TabbedSysoutCallback(prompt + OUTPUT_MARKER),
 					new TabbedSysoutCallback(prompt + ERROR_MARKER));
+		} else if (logToFile != null) {
+			return runProcessCatchOutputAndWait(cmdAndArgs,
+					new FileAppenderCallback(prompt + OUTPUT_MARKER, logToFile),
+					new FileAppenderCallback(prompt + ERROR_MARKER, logToFile));
 		} else {
 			return runProcessCatchOutputAndWait(cmdAndArgs, s -> s.length(),
 					s -> s.length());
@@ -115,7 +121,7 @@ public class ShellWrapper {
 
 		public boolean timedOut;
 
-		private int exitValue;
+		public int exitValue;
 
 		public ShellOutputTuple(String output, String error, boolean timedOut,
 				int exitValue) {
