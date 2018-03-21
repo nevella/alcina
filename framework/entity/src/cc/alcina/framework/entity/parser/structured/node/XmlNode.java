@@ -588,14 +588,18 @@ public class XmlNode {
 					|| t.tagIsOneOf(tagArray));
 		}
 
-		public void importFrom(XmlNode n) {
+		public XmlNode importFrom(XmlNode n) {
 			Node importNode = doc.domDoc().importNode(n.node, true);
-			append(doc.nodeFor(importNode));
+			XmlNode imported = doc.nodeFor(importNode);
+			append(imported);
+			return imported;
 		}
 
-		public void importAsFirstChild(XmlNode n) {
+		public XmlNode importAsFirstChild(XmlNode n) {
 			Node importNode = doc.domDoc().importNode(n.node, true);
-			insertAsFirstChild(doc.nodeFor(importNode));
+			XmlNode imported = doc.nodeFor(importNode);
+			insertAsFirstChild(imported);
+			return imported;
 		}
 
 		public void insertAsFirstChild(XmlNode newChild) {
