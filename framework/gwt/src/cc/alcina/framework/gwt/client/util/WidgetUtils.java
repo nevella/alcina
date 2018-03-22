@@ -156,9 +156,10 @@ public class WidgetUtils {
 	}-*/;
 
 	public static final native void click(Element elt) /*-{
-        elt.click();
+		var elem_remote = elt.@com.google.gwt.dom.client.Element::ensureRemote()();
+        elem_remote.click();
         try {
-            elt.focus();
+            elem_remote.focus();
         } catch (e) {
 
         }

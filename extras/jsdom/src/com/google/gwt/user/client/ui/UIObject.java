@@ -289,7 +289,7 @@ public abstract class UIObject implements HasVisibility {
 		// } else {
 		// FIXME - probably delete the static
 		String className = elem.getClassName();
-		if (Ax.isBlank(className)) {
+		if (Ax.isBlank(newPrimaryStyle)) {
 			return;
 		}
 		String[] classes = className.split("\\s+");

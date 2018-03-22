@@ -117,7 +117,7 @@ public class LocalDomDebugImpl {
 		Ax.out("%s: %s", channel, message);
 		if (channel == LocalDomDebug.DEBUG_ISSUE
 				&& Window.Location.getPort().contains("8080")) {
-			// throw new RuntimeException();
+			throw new RuntimeException();
 		}
 	}
 

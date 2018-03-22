@@ -156,6 +156,7 @@ public class Element extends Node implements DomElement {
 	}
 
 	public void dump() {
+		Ax.out("\n\n**dump:\n");
 		if (linkedToRemote()) {
 			Ax.out("Outer html: \n%s\n\n", typedRemote().getOuterHtml());
 		}
@@ -681,8 +682,11 @@ public class Element extends Node implements DomElement {
 	@Override
 	public String toString() {
 		FormatBuilder fb = new FormatBuilder();
-		fb.format("%s - %s", local().toString(), (uiObject == null
-				? "(no uiobject)" : uiObject.getClass().getSimpleName()));
+		fb.format("%s#%s.%s - %s", local().toString(),
+				Ax.blankTo(local.getId(), "---"),
+				Ax.blankTo(local.getClassName(), "---"),
+				(uiObject == null ? "(no uiobject)"
+						: uiObject.getClass().getSimpleName()));
 		if (getChildCount() != 0) {
 			fb.format("\n\t");
 			NodeLocal cursor = local();
@@ -727,10 +731,10 @@ public class Element extends Node implements DomElement {
 	}
 
 	private DomElement implForPropertyName(String name) {
-		switch(name){
+		switch (name) {
 		case "clientWidth":
 		case "offsetWidth":
-			//TODO - warn maybe? non optimal. SliderBar one major cause
+			// TODO - warn maybe? non optimal. SliderBar one major cause
 			return ensureRemote();
 		}
 		if (!wasResolved()) {
@@ -861,11 +865,11 @@ public class Element extends Node implements DomElement {
 		}
 
 		public void setRemote(ElementRemote remote) {
-			LocalDom.putRemote(Element.this,remote);
+			LocalDom.putRemote(Element.this, remote);
 		}
 
 		public void appendChildLocalOnly(Element localOnly) {
-			//IE special case
+			// IE special case
 			local.children.add(localOnly.local);
 		}
 	}

@@ -67,7 +67,7 @@ public class Prompter implements PermissibleActionListener, KeyDownHandler {
 		if (positioningCallback != null) {
 			positioningCallback.apply(box);
 		}
-		text.setSelectionRange(0, initialValue.length());
+		text.setSelectionRange(0, text.getValue().length());
 		text.setFocus(true);
 		text.addKeyDownHandler(this);
 	}
