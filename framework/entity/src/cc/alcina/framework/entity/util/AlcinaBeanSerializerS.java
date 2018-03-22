@@ -269,7 +269,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 			return jo;
 		}
 		if (seen.containsKey(object)) {
-			throw new RuntimeException("Cycle in jso graph");
+			throw new RuntimeException(Ax.format("Cycle in jso graph - %s",object.getClass().getSimpleName()));
 		} else {
 			seen.put(object, object);
 		}
