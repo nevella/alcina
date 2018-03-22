@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.gwittir.validator;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -35,6 +36,8 @@ import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
  */
 public class ServerValidator implements
 		ParameterisedValidator, Serializable {
+	static final transient long serialVersionUID = -3L;
+	
 	public static final transient String TOPIC_SERVER_VALIDATION_RESULT = ServerValidator.class
 			.getName() + ".TOPIC_SERVER_VALIDATION_RESULT";
 	public static final String TOPIC_SERVER_VALIDATION_BEFORE_SEND = ServerValidator.class
