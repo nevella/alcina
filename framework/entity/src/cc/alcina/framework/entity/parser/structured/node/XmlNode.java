@@ -905,7 +905,7 @@ public class XmlNode {
 	}
 
 	public class XmlNodeXpath {
-		public String query;
+		public String query="";
 
 		private OptimizingXpathEvaluator eval;
 
