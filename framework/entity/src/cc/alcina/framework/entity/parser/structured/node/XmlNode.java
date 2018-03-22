@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.parser.structured.node;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -319,6 +320,11 @@ public class XmlNode {
 		node.getParentNode().removeChild(node);
 	}
 
+	public void removeWhitespaceNodes() {
+		children.flat().filter(n -> n.isText() && n.isWhitespaceTextContent())
+				.forEach(XmlNode::removeFromParent);
+	}
+
 	public void replaceWith(XmlNode other) {
 		relative().insertBeforeThis(other);
 		removeFromParent();
@@ -340,6 +346,21 @@ public class XmlNode {
 			}
 		}
 		invalidate();
+	}
+
+	/*
+	 * only sort if element-only children
+	 * 
+	 */
+	public void sort() {
+		List<XmlNode> nodes = children.nodes();
+		if (nodes.stream().allMatch(XmlNode::isElement)) {
+			nodes.forEach(XmlNode::removeFromParent);
+			nodes = nodes.stream().sorted(Comparator.comparing(XmlNode::name))
+					.collect(Collectors.toList());
+			children.append(nodes);
+			nodes.forEach(XmlNode::sort);
+		}
 	}
 
 	public void strip() {
@@ -402,10 +423,14 @@ public class XmlNode {
 	}
 
 	public XmlNodeXpath xpath(String query) {
+		return xpath(query, new Object[] {});
+	}
+
+	public XmlNodeXpath xpath(String query, Object... args) {
 		if (xpath == null) {
 			xpath = new XmlNodeXpath();
 		}
-		xpath.query=query;
+		xpath.query = Ax.format(query, args);
 		return xpath;
 	}
 
@@ -563,9 +588,18 @@ public class XmlNode {
 					|| t.tagIsOneOf(tagArray));
 		}
 
-		public void importFrom(XmlNode n) {
+		public XmlNode importFrom(XmlNode n) {
 			Node importNode = doc.domDoc().importNode(n.node, true);
-			append(doc.nodeFor(importNode));
+			XmlNode imported = doc.nodeFor(importNode);
+			append(imported);
+			return imported;
+		}
+
+		public XmlNode importAsFirstChild(XmlNode n) {
+			Node importNode = doc.domDoc().importNode(n.node, true);
+			XmlNode imported = doc.nodeFor(importNode);
+			insertAsFirstChild(imported);
+			return imported;
 		}
 
 		public void insertAsFirstChild(XmlNode newChild) {
@@ -684,13 +718,13 @@ public class XmlNode {
 					out = String.format("<%s>", name());
 				}
 			}
-			String ntc = ntc();
-			if (ntc.length() > 0) {
-				ntc = CommonUtils.trimToWsChars(ntc, 15);
+			String xml = XmlNode.this.toString();
+			if (xml.length() > 0) {
+				xml = CommonUtils.trimToWsChars(xml, 50);
 				if (out.length() > 0) {
 					out += " : ";
 				}
-				out += ntc;
+				out += xml;
 			}
 			return out;
 		}
@@ -716,6 +750,13 @@ public class XmlNode {
 
 		public boolean isBlock() {
 			return isElement() && XmlUtils.isBlockTag(name());
+		}
+
+		public boolean isOrContainsBlock(BlockResolver blockResolver) {
+			if (blockResolver.isBlock(XmlNode.this)) {
+				return true;
+			}
+			return children.flat().anyMatch(blockResolver::isBlock);
 		}
 
 		public void setStyleProperty(String key, String value) {
@@ -748,11 +789,9 @@ public class XmlNode {
 			return trs;
 		}
 
-		public boolean isOrContainsBlock(BlockResolver blockResolver) {
-			if (blockResolver.isBlock(XmlNode.this)) {
-				return true;
-			}
-			return children.flat().anyMatch(blockResolver::isBlock);
+		public XmlNode addLink(String text, String href, String target) {
+			return builder().tag("a").attr("href", href).attr("target", target)
+					.text(text).append();
 		}
 	}
 
@@ -796,8 +835,33 @@ public class XmlNode {
 			return null;
 		}
 
+		public XmlNode nextSibOrParentSibNode() {
+			if (hasNextSibling()) {
+				return nextSibling();
+			}
+			XmlNode parent = parent();
+			if (parent != null) {
+				return parent.relative().nextSibOrParentSibNode();
+			}
+			return null;
+		}
+
 		public XmlNode previousSibling() {
 			return doc.nodeFor(node.getPreviousSibling());
+		}
+
+		public XmlNode previousSiblingExcludingWhitespace() {
+			XmlNode cursor = XmlNode.this;
+			while (true) {
+				cursor = cursor.relative().previousSibling();
+				if (cursor == null) {
+					return null;
+				}
+				if (cursor.isText() && cursor.isWhitespaceTextContent()) {
+				} else {
+					return cursor;
+				}
+			}
 		}
 
 		public XmlNode previousSibOrParentSibNode() {
@@ -822,31 +886,6 @@ public class XmlNode {
 			wrapper.children.append(XmlNode.this);
 			wrapper.copyAttributesFrom(XmlNode.this);
 			return wrapper;
-		}
-
-		public XmlNode nextSibOrParentSibNode() {
-			if (hasNextSibling()) {
-				return nextSibling();
-			}
-			XmlNode parent = parent();
-			if (parent != null) {
-				return parent.relative().nextSibOrParentSibNode();
-			}
-			return null;
-		}
-
-		public XmlNode previousSiblingExcludingWhitespace() {
-			XmlNode cursor = XmlNode.this;
-			while (true) {
-				cursor = cursor.relative().previousSibling();
-				if (cursor == null) {
-					return null;
-				}
-				if (cursor.isText() && cursor.isWhitespaceTextContent()) {
-				} else {
-					return cursor;
-				}
-			}
 		}
 	}
 

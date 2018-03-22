@@ -87,7 +87,9 @@ public class ResourceUtilities {
 		return StringMap
 				.fromPropertyString(readClassPathResourceAsString(clazz, path));
 	}
-	public static StringMap classPathStringExistenceMap(Class clazz, String path) {
+
+	public static StringMap classPathStringExistenceMap(Class clazz,
+			String path) {
 		return StringMap
 				.fromStringList(readClassPathResourceAsString(clazz, path));
 	}
@@ -443,8 +445,10 @@ public class ResourceUtilities {
 
 	public static String readUrlAsString(String strUrl, String charset)
 			throws Exception {
-		//don't use cc.alcina.framework.entity.ResourceUtilities.readUrlAsString(String, String, StringMap)
-		//we a java UA inter alia
+		// don't use
+		// cc.alcina.framework.entity.ResourceUtilities.readUrlAsString(String,
+		// String, StringMap)
+		// we a java UA inter alia
 		URL url = new URL(strUrl);
 		InputStream is = null;
 		is = url.openConnection().getInputStream();
@@ -715,5 +719,25 @@ public class ResourceUtilities {
 		logToFile(content, "log.txt");
 		logToFile(content, "log.html");
 		logToFile(content, "log.xml");
+	}
+
+	public static String read(Class clazz, String path) {
+		return readClassPathResourceAsString(clazz, path);
+	}
+
+	public static String read(String path) {
+		try {
+			return readFileToString(path);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static void write(String content, String path) {
+		try {
+			writeStringToFile(content, path);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }
