@@ -22,6 +22,11 @@ public abstract class AbstractTaskPerformer implements Runnable {
 		return this;
 	}
 
+	public AbstractTaskPerformer withValue(String value) {
+		this.value = value;
+		return this;
+	}
+
 	@Override
 	public void run() {
 		try {

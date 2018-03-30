@@ -78,6 +78,7 @@ import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable;
 import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable.AlcinaChildContextRunner;
 
 public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>
@@ -486,7 +487,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		MetricLogging.get().start("init-console");
 		// osx =>
 		// https://bugs.openjdk.java.net/browse/JDK-8179209
-		loadFontMetrics();
+		 loadFontMetrics();
 		createDevHelper();
 		devHelper.loadJbossConfig(null);
 		devHelper.initLightweightServices();
@@ -526,12 +527,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			};
 		}.start();
 		initState();
+		devHelper.loadJbossConfig(null);
+		boolean waitForUi = !devHelper.configLoaded;
 		consoleLeft.initAttrs(props.fontName);
 		consoleRight.initAttrs(props.fontName);
-		mainFrame = new MainFrame();
-		mainFrame.setName("Dev Console");
-		mainFrame.setVisible(true);
-		devHelper.loadJbossConfig(new SwingPrompter());
+		new AlcinaChildContextRunner("launcher-thread")
+				.callNewThreadOrCurrent(() -> initUi(), null, !waitForUi);
 		MetricLogging.get().end("init-console");
 		try {
 			devHelper.readAppObjectGraph();
@@ -547,6 +548,17 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			performCommand(props.lastCommand);
 		} else {
 			consoleLeft.ok("Enter 'h' for help\n\n");
+		}
+	}
+
+	protected void initUi() {
+		try {
+			mainFrame = new MainFrame();
+			mainFrame.setName("Dev Console");
+			mainFrame.setVisible(true);
+			devHelper.loadJbossConfig(new SwingPrompter());
+		} catch (Throwable e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -741,15 +753,16 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 					StyleConstants.TabSet, tabset);
 			setParagraphAttributes(aset, false);
 		}
+
 		public static final int maxChars = 250000;
-		
+
 		public void append(final String str) {
 			StyledDocument doc = getStyledDocument();
-			
 			try {
-				if(doc.getLength()>maxChars){
+				if (doc.getLength() > maxChars) {
 					doc.remove(0, doc.getLength());
-					doc.insertString(doc.getLength(), "...truncated...\n", current);
+					doc.insertString(doc.getLength(), "...truncated...\n",
+							current);
 				}
 				doc.insertString(doc.getLength(), str, current);
 				docIndex = 0;

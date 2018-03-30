@@ -183,22 +183,29 @@ public class GraphTuplizer {
 
 	private DetupleizeMapper mapper;
 
+	public boolean onlyCustom;
+
 	public void detupleize(GraphTuples tuples,
 			DetupleizeMapper detupelizeMapper) {
 		this.tuples = tuples;
 		this.mapper = detupelizeMapper;
-		Ax.out("\ndetupleize::prepare\n");
-		tuples.objects.forEach(this::prepare);
-		Ax.out("\ndetupleize::create\n");
-		tuples.objects.forEach(this::create);
-		Ax.out("\ndetupleize::non-rel\n");
-		tuples.objects.forEach(this::nonRelational);
-		Ax.out("\ndetupleize::rel\n");
-		tuples.objects.forEach(this::relational);
-		Ax.out("\ndetupleize::prepare-custom\n");
-		tuples.objects.forEach(this::prepareCustom);
-		Ax.out("\ndetupleize::do-custom\n");
-		tuples.objects.forEach(this::doCustom);
+		if (onlyCustom) {
+			Ax.out("\ndetupleize::do-custom\n");
+			tuples.objects.forEach(this::doCustom);
+		} else {
+			Ax.out("\ndetupleize::prepare\n");
+			tuples.objects.forEach(this::prepare);
+			Ax.out("\ndetupleize::create\n");
+			tuples.objects.forEach(this::create);
+			Ax.out("\ndetupleize::non-rel\n");
+			tuples.objects.forEach(this::nonRelational);
+			Ax.out("\ndetupleize::rel\n");
+			tuples.objects.forEach(this::relational);
+			Ax.out("\ndetupleize::prepare-custom\n");
+			tuples.objects.forEach(this::prepareCustom);
+			Ax.out("\ndetupleize::do-custom\n");
+			tuples.objects.forEach(this::doCustom);
+		}
 	}
 
 	private void prepare(TObjectRef inObjRef) {
