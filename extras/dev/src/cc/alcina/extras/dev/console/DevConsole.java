@@ -487,7 +487,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		MetricLogging.get().start("init-console");
 		// osx =>
 		// https://bugs.openjdk.java.net/browse/JDK-8179209
-		 loadFontMetrics();
+		loadFontMetrics();
 		createDevHelper();
 		devHelper.loadJbossConfig(null);
 		devHelper.initLightweightServices();
@@ -553,10 +553,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	protected void initUi() {
 		try {
-			mainFrame = new MainFrame();
-			mainFrame.setName("Dev Console");
-			mainFrame.setVisible(true);
-			devHelper.loadJbossConfig(new SwingPrompter());
+			SwingUtilities.invokeAndWait(() -> {
+				mainFrame = new MainFrame();
+				mainFrame.setName("Dev Console");
+				mainFrame.setVisible(true);
+				devHelper.loadJbossConfig(new SwingPrompter());
+			});
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
