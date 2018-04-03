@@ -44,10 +44,14 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
 			throw new IllegalArgumentException();
 		}
 		if (degenerate != null) {
-			return degenerate.add(e);
+			boolean added = degenerate.add(e);
+			if (added) {
+				modCount++;
+			}
+			return added;
 		}
-		if(e.provideIsNonDomain()){
-			//can't handle non-comparables
+		if (e.provideIsNonDomain()) {
+			// can't handle non-comparables
 			return toDegenerate(e);
 		}
 		if (isEmpty()) {
@@ -121,7 +125,11 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
 			return false;
 		}
 		if (degenerate != null) {
-			return degenerate.remove(o);
+			boolean removed = degenerate.remove(o);
+			if (removed) {
+				modCount++;
+			}
+			return removed;
 		}
 		if (isEmpty()) {
 			return false;

@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
@@ -36,6 +37,8 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 		extends BaseBindable implements HasIdAndLocalId, HasVersionNumber {
 	static final transient long serialVersionUID = 1L;
+
+	public static final String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = AbstractDomainBase.class+".CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID";
 
 	protected transient int hash = 0;
 
@@ -73,6 +76,12 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 	@Override
 	public int hashCode() {
 		if (hash == 0) {
+			if(getId()==0 && getLocalId()==0){
+				if(LooseContext.is(CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID)){
+					hash = System.identityHashCode(this);
+					return hash;
+				}
+			}
 			if (GWT.isScript()) {
 				hash = LongWrapperHash.fastHash(getId())
 						^ LongWrapperHash.fastHash(getLocalId())
