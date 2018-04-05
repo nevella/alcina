@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.sync;
 
+import java.util.Collections;
+
 import cc.alcina.framework.common.client.sync.SyncInterchangeModel;
 
 public abstract class SyncDispatcher<E extends SyncEndpointModel, I extends SyncInterchangeModel, D extends SyncDeltaModel> {
@@ -22,7 +24,7 @@ public abstract class SyncDispatcher<E extends SyncEndpointModel, I extends Sync
 	}
 
 	protected void applyDelta() throws Exception {
-		deltaApplicator.apply(syncDispatchToken.getObjectSetDeltaModel());
+		deltaApplicator.apply(null,syncDispatchToken.getObjectSetDeltaModel(),Collections.emptyList());
 	}
 
 	protected void getDelta() throws Exception {

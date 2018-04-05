@@ -1576,4 +1576,18 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			throw new UnsupportedOperationException();
 		}
 	}
+
+	@Override
+	public Integer getHighestPersistedRequestIdForClientInstance(
+			long clientInstanceId) {
+		String eql = String.format(
+				"select max(dtrq.requestId) as maxId "
+						+ "from %s dtrq where dtrq.clientInstance.id=%s ",
+				getImplementation(DomainTransformRequestPersistent.class)
+						.getSimpleName(),
+				clientInstanceId);
+		Integer result = (Integer) getEntityManager().createQuery(eql)
+				.getSingleResult();
+		return result;
+	}
 }

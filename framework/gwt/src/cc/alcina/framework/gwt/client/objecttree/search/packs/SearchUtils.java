@@ -30,17 +30,20 @@ public class SearchUtils {
 		return lc1.contains(lc2);
 	}
 
-	public static boolean containsIgnoreCase(List<String> strings,
-			String text) {
-		String[] stringArray = (String[]) strings
-				.toArray(new String[strings.size()]);
-		return new SearchTextMatcher().targets(stringArray).contains(text);
+	public static boolean containsIgnoreCase(
+			String text,String... strings) {
+		return new SearchTextMatcher().targets(strings).contains(text);
+	}
+	public static boolean containsIgnoreCase(
+			String text,List<String> strings) {
+		return new SearchTextMatcher().targets(strings).contains(text);
 	}
 
-	public static boolean equalsIgnoreCase(List<String> strings, String text) {
-		String[] stringArray = (String[]) strings
-				.toArray(new String[strings.size()]);
-		return new SearchTextMatcher().targets(stringArray).equalTo(text);
+	public static boolean equalsIgnoreCase(String text,String... strings) {
+		return new SearchTextMatcher().targets(strings).equalTo(text);
+	}
+	public static boolean equalsIgnoreCase(String text,List<String> strings) {
+		return new SearchTextMatcher().targets(strings).equalTo(text);
 	}
 
 	public static boolean equalsIgnoreCase(String s1, String s2) {
@@ -126,6 +129,11 @@ public class SearchUtils {
 				}
 			}
 			return false;
+		}
+
+		public SearchTextMatcher targets(List<String> targetList) {
+			targets=(String[]) targetList.toArray(new String[targetList.size()]);
+			return this;
 		}
 
 		public boolean equalTo(String text) {

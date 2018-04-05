@@ -197,4 +197,6 @@ public interface CommonPersistenceLocal {
 	List<Long> listRecentClientInstanceIds(String iidKey);
 
 	public HiliLocatorMap getLocatorMap(Long clientInstanceId);
+
+	Integer getHighestPersistedRequestIdForClientInstance(long clientInstanceId);
 }

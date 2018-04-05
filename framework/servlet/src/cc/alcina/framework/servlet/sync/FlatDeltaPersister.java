@@ -1,8 +1,13 @@
 package cc.alcina.framework.servlet.sync;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.apache.log4j.Logger;
+
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersisterResult.FlatDeltaPersisterResultType;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
@@ -23,9 +28,15 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 		this.applyToLeft = applyToLeft;
 	}
 
-	public FlatDeltaPersisterResult apply(D delta) throws Exception {
+	public FlatDeltaPersisterResult apply(Logger logger, D delta,
+			List<Class> ignoreDueToIncompleteMerge) throws Exception {
 		FlatDeltaPersisterResult result = new FlatDeltaPersisterResult();
 		for (Class clazz : perClassDeltaOrder()) {
+			if (ignoreDueToIncompleteMerge.contains(clazz)) {
+				logger.warn(Ax.format("Not persisting - merger %s incomplete",
+						clazz.getSimpleName()));
+				continue;
+			}
 			FlatDeltaPersisterResult perClassResult = new FlatDeltaPersisterResult();
 			DeltaItemPersister persister = persisters.get(clazz);
 			for (SyncPair pair : delta.getDeltas().getAndEnsure(clazz)) {

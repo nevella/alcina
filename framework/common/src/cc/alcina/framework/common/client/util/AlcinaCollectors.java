@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -38,4 +39,11 @@ public abstract class AlcinaCollectors {
 	public abstract <T, K, U> Collector<T, ?, Multimap<K, List<U>>> toMultimap0(
 			Function<? super T, ? extends K> keyMapper,
 			Function<? super T, ? extends U> valueMapper);
+	
+	public static Collector<CharSequence, ?, String> joiningCommas() {
+        return Collectors.joining(", ");
+    }
+	public static Collector<CharSequence, ?, String> joiningNewlines() {
+        return Collectors.joining("\n");
+    }
 }

@@ -11,6 +11,8 @@ public class FlatDeltaPersisterResult {
 
 	public int unMatchedCount = 0;
 
+	public boolean allPersisted;
+
 	public String numbers() {
 		return String.format(
 				"created: %s - merged: %s - deleted:"

@@ -104,21 +104,7 @@ public class TransformPersisterIn {
 	static class DeliberatelyThrownWrapperException extends RuntimeException {
 	}
 
-	private Integer getHighestPersistedRequestIdForClientInstance(
-			CommonPersistenceBase commonPersistenceBase,
-			long clientInstanceId) {
-		String eql = String.format(
-				"select max(dtrq.requestId) as maxId "
-						+ "from %s dtrq where dtrq.clientInstance.id=%s ",
-				commonPersistenceBase
-						.getImplementation(
-								DomainTransformRequestPersistent.class)
-						.getSimpleName(),
-				clientInstanceId);
-		Integer result = (Integer) getEntityManager().createQuery(eql)
-				.getSingleResult();
-		return result;
-	}
+	
 
 	public void transformInPersistenceContext(
 			TransformPersisterToken transformPersisterToken,
@@ -173,8 +159,8 @@ public class TransformPersisterIn {
 			dtrs.add(request);
 			Integer highestPersistedRequestId = null;
 			if (token.isAsyncClient()) {
-				highestPersistedRequestId = getHighestPersistedRequestIdForClientInstance(
-						commonPersistenceBase,
+				highestPersistedRequestId = commonPersistenceBase.getHighestPersistedRequestIdForClientInstance(
+						
 						request.getClientInstance().getId());
 				for (int i = dtrs.size() - 1; i >= 0; i--) {
 					DomainTransformRequest dtr = dtrs.get(i);

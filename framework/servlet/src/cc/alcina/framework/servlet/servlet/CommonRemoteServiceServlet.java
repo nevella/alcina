@@ -597,6 +597,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		MetricTracker<RPCRequest> metricTracker = Registry
 				.impl(CommonRemoteServiceServletSupport.class)
 				.getMetricTracker();
+		String threadName = Thread.currentThread().getName();
 		try {
 			LooseContext.push();
 			initUserStateWithCookie(getThreadLocalRequest(),
@@ -618,6 +619,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_PAYLOAD,
 					payload);
 			String name = rpcRequest.getMethod().getName();
+			Thread.currentThread().setName(Ax.format("gwt-rpc:%s",name));
 			onAfterAlcinaAuthentication(name);
 			metricTracker.start(rpcRequest, r -> describeRpcRequest(r, ""),
 					ResourceUtilities.getInteger(
@@ -664,6 +666,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			logRpcException(rex);
 			throw rex;
 		} finally {
+			Thread.currentThread().setName(threadName);
 			metricTracker.end(rpcRequest);
 			if (TransformManager.hasInstance()) {
 				if (CommonUtils.bv((Boolean) getThreadLocalRequest()

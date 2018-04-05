@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.JvmPropertyAccessor;
 import cc.alcina.framework.servlet.sync.SyncItemMatch.SyncItemLogStatus;
-import cc.alcina.framework.servlet.sync.SyncItemMatch.SyncItemLogType;
+import cc.alcina.framework.servlet.sync.SyncLogger.SyncLoggerRow;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
 
 /**
@@ -536,5 +536,10 @@ public class SyncMerger<T> {
 		public boolean isMultipleFirst(String key) {
 			return firstKeyLookup.getAndEnsure(key).size() > 1;
 		}
+	}
+
+	public boolean wasIncomplete() {
+		return syncLogger.rows.stream()
+				.anyMatch(SyncLoggerRow::provideHadIssue);
 	}
 }

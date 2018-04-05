@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="lib" path="lib/extras/dev/httpclient-4.1.jar" sourcepath="/Users/ouiji/Documents/programmin/java/httpcomponents-client-4.1/"/>
-	<classpathentry kind="lib" path="lib/extras/dev/httpcore-4.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/xalan-2.7.2.jar" sourcepath="/apache-java-trunk"/>
 	<classpathentry exported="true" kind="lib" path="lib/framework/entity/commons-lang-2.5.jar"/>
 	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" path="framework/common/src"/>
@@ -66,5 +64,7 @@
 	<classpathentry kind="lib" path="lib/framework/classmeta/jna-4.5.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/jna-platform-4.5.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/javassist.jar"/>
+	<classpathentry kind="lib" path="lib/extras/dev/httpclient-4.5.jar"/>
+	<classpathentry kind="lib" path="lib/extras/dev/httpcore-4.4.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

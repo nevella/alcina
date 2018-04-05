@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
@@ -122,7 +123,13 @@ public abstract class DevRemoterServlet extends HttpServlet {
 					TransformPersistenceToken token = (TransformPersistenceToken) params.args[1];
 					ClientInstance clientInstance = CommonRemoteServiceServletSupport
 							.get().getServerAsClientInstance();
+					Integer highestPersistedRequestId = CommonPersistenceProvider
+							.get().getCommonPersistence()
+							.getHighestPersistedRequestIdForClientInstance(
+									clientInstance.getId());
 					token.getRequest().setClientInstance(clientInstance);
+					token.getRequest().setRequestId(
+							CommonUtils.iv(highestPersistedRequestId) + 1);
 					ThreadedPermissionsManager tpm = ThreadedPermissionsManager
 							.cast();
 					tpm.pushSystemUser();
@@ -131,8 +138,9 @@ public abstract class DevRemoterServlet extends HttpServlet {
 				out = method.invoke(api, params.args);
 			} catch (Exception e) {
 				e.printStackTrace();
-				if(e instanceof InvocationTargetException){
-					e = new Exception("Invocation target exception = see server logs");
+				if (e instanceof InvocationTargetException) {
+					e = new Exception(
+							"Invocation target exception = see server logs");
 				}
 				out = e;
 			} finally {
