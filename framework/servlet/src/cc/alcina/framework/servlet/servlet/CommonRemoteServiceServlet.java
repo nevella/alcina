@@ -172,6 +172,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public static final String CONTEXT_REUSE_IUSER_HOLDER = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_REUSE_IUSER_HOLDER";
 
+	public static final String CONTEXT_RPC_USER_ID = CommonRemoteServiceServlet.class
+			.getName() + ".CONTEXT_RPC_USER_ID";
+
 	public static final String CONTEXT_OVERRIDE_CONTEXT = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_OVERRIDE_CONTEXT";
 
@@ -619,8 +622,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_PAYLOAD,
 					payload);
 			String name = rpcRequest.getMethod().getName();
-			Thread.currentThread().setName(Ax.format("gwt-rpc:%s",name));
+			Thread.currentThread().setName(Ax.format("gwt-rpc:%s", name));
 			onAfterAlcinaAuthentication(name);
+			LooseContext.set(CONTEXT_RPC_USER_ID,
+					PermissionsManager.get().getUserId());
 			metricTracker.start(rpcRequest, r -> describeRpcRequest(r, ""),
 					ResourceUtilities.getInteger(
 							CommonRemoteServiceServlet.class,
@@ -725,6 +730,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, map, Registry.impl(TransformLoggingPolicy.class),
 					false, false, false, getLogger(), true);
+			persistenceToken.setOriginatingUserId(
+					LooseContext.get(CONTEXT_RPC_USER_ID));
 			return submitAndHandleTransforms(persistenceToken);
 		} finally {
 			ThreadedPermissionsManager.cast().popSystemUser();

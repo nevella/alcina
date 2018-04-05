@@ -73,6 +73,8 @@ public class DomainTransformRequest implements Serializable {
 	private String protocolVersion;
 
 	private String tag;
+	
+	
 
 	@Transient
 	public Map<String, String> properties;

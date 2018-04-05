@@ -47,6 +47,16 @@ public class TransformPersistenceToken implements Serializable {
 	private TransformLoggingPolicy transformLoggingPolicy;
 
 	private boolean blockUntilAllListenersNotified;
+	
+	private Long originatingUserId;
+
+	public Long getOriginatingUserId() {
+		return this.originatingUserId;
+	}
+
+	public void setOriginatingUserId(Long originatingUserId) {
+		this.originatingUserId = originatingUserId;
+	}
 
 	public TransformPersistenceToken(DomainTransformRequest request,
 			HiliLocatorMap locatorMap,

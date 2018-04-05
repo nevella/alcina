@@ -28,6 +28,8 @@ public abstract class DomainTransformRequestPersistent
 		extends DomainTransformRequest implements HasId {
 	private long id;
 
+	private Long originatingUserId;
+
 	public void clearForSimplePersistence() {
 		setClientInstance(null);
 		setEvents(null);
@@ -38,8 +40,16 @@ public abstract class DomainTransformRequestPersistent
 		return id;
 	}
 
+	public Long getOriginatingUserId() {
+		return this.originatingUserId;
+	}
+
 	public void setId(long id) {
 		this.id = id;
+	}
+
+	public void setOriginatingUserId(Long originatingUserId) {
+		this.originatingUserId = originatingUserId;
 	}
 
 	public abstract void wrap(DomainTransformRequest dtr);

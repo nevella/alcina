@@ -349,6 +349,7 @@ public class TransformPersisterIn {
 						dtrp.setEvents(new ArrayList<DomainTransformEvent>());
 						dtr.setEvents(items);
 						dtrp.setClientInstance(persistentClientInstance);
+						dtrp.setOriginatingUserId(token.getOriginatingUserId());
 						dtrps.add(dtrp);
 						boolean missingClassRefWarned = false;
 						for (DomainTransformEvent event : eventsPersisted) {
