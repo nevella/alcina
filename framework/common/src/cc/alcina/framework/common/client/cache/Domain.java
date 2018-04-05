@@ -206,20 +206,28 @@ public class Domain {
 	}
 
 	public static <V extends HasIdAndLocalId> V detachedToDomain(V hili) {
+		return detachedToDomain(hili, null);
+	}
+
+	public static <V extends HasIdAndLocalId> V detachedToDomain(V hili,
+			List<String> ignoreProperties) {
 		Class<V> clazz = (Class<V>) hili.getClass();
-		V writeable = hili.provideWasPersisted() ? Domain.writeable(Domain.find(hili))
-				: Domain.create(clazz);
+		V writeable = hili.provideWasPersisted()
+				? Domain.writeable(Domain.find(hili)) : Domain.create(clazz);
 		List<PropertyInfoLite> writableProperties = Reflections.classLookup()
 				.getWritableProperties(clazz);
 		for (PropertyInfoLite propertyInfo : writableProperties) {
-			if (TransformManager.get()
-					.isIgnoreProperty(propertyInfo.getPropertyName())) {
+			String propertyName = propertyInfo.getPropertyName();
+			if (TransformManager.get().isIgnoreProperty(propertyName)) {
+				continue;
+			}
+			if (ignoreProperties != null
+					&& ignoreProperties.contains(propertyName)) {
 				continue;
 			}
 			AlcinaTransient alcinaTransient = Reflections.propertyAccessor()
 					.getAnnotationForProperty(hili.getClass(),
-							AlcinaTransient.class,
-							propertyInfo.getPropertyName());
+							AlcinaTransient.class, propertyName);
 			if (alcinaTransient != null) {
 				continue;
 			}

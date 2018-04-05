@@ -108,8 +108,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	public static final String CONTEXT_FLUSH_BEFORE_DELETE = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_FLUSH_BEFORE_DELETE";
 
-	public static final String CONTEXT_PRE_PROCESS = ThreadlocalTransformManager.class
-			.getName() + ".CONTEXT_PRE_PROCESS";
+	public static final String CONTEXT_ALLOW_MODIFICATION_OF_DETACHED_OBJECTS = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_ALLOW_MODIFICATION_OF_DETACHED_OBJECTS";
 
 	private static final String TOPIC_RESET_THREAD_TRANSFORM_MANAGER = ThreadlocalTransformManager.class
 			.getName() + ".TOPIC_RESET_THREAD_TRANSFORM_MANAGER";
@@ -1078,7 +1078,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		return hili.getId() != 0
 				|| (localIdToEntityMap.get(hili.getLocalId()) != null
 						&& getEntityManager() == null)
-				|| LooseContext.is(CONTEXT_PRE_PROCESS);
+				|| LooseContext.is(CONTEXT_ALLOW_MODIFICATION_OF_DETACHED_OBJECTS);
 	}
 
 	@Override

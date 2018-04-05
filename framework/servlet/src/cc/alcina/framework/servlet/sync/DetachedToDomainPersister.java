@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -112,11 +113,13 @@ public class DetachedToDomainPersister<T extends AbstractDomainBase>
 			});
 		}
 	}
-
 	protected boolean detachedToDomainHasDelta(T object) {
+		return detachedToDomainHasDelta(object, null);
+	}
+	protected boolean detachedToDomainHasDelta(T object, List<String> ignorePropertyNames) {
 		int preCount = TransformManager.get().getTransforms().size();
 		reparentInstructions.forEach(i -> i.prepare(object));
-		T attached = (T) object.domain().detachedToDomain();
+		T attached = (T) Domain.detachedToDomain(object,ignorePropertyNames);
 		detachedToPersisted.put(object, attached);
 		reparentInstructions.forEach(i -> i.withAttached(attached));
 		return TransformManager.get().getTransforms().size() != preCount;
