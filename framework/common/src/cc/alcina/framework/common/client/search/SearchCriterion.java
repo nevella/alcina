@@ -112,6 +112,11 @@ public abstract class SearchCriterion extends BaseBindable
 		propertyChangeSupport().firePropertyChange("operator", old_operator,
 				operator);
 	}
+	
+	public SearchCriterion withOperator(StandardSearchOperator operator) {
+		setOperator(operator);
+		return this;
+	}
 
 	public void setTargetPropertyName(String propertyName) {
 		this.targetPropertyName = propertyName;

@@ -19,12 +19,12 @@ public class BaseMultipleEnumCriterionPack {
 			extends EnumMultipleCriterion<E> {
 		private Set<E> value = new LinkedHashSet<>();
 
-		public BaseEnumMultipleCriterion add(E e) {
+		public BaseEnumMultipleCriterion<E> add(E e) {
 			getValue().add(e);
 			return this;
 		}
 
-		public BaseEnumMultipleCriterion add(Set<E> e) {
+		public BaseEnumMultipleCriterion<E> add(Set<E> e) {
 			getValue().addAll(e);
 			return this;
 		}

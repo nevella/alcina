@@ -72,6 +72,11 @@ public class AbstractDateCriterion extends SearchCriterion
 		propertyChangeSupport().firePropertyChange("date", old_date, date);
 	}
 
+	public AbstractDateCriterion withDate(Date date) {
+		setDate(date);
+		return this;
+	}
+
 	/**
 	 * add property change firing to the subclass implementation, if you care
 	 */
