@@ -744,7 +744,7 @@ public class XmlNode {
 		}
 
 		public boolean hasClassName(String className) {
-			return Arrays.stream(attr("class").split(" "))
+			return isElement() && Arrays.stream(attr("class").split(" "))
 					.anyMatch(cn -> cn.equals(className));
 		}
 
