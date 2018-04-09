@@ -52,7 +52,8 @@ public class StatusDisplayer {
 	public StatusDisplayer() {
 		stylePrefixes = new StringMap();
 		stylePrefixes.put(MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, "icy");
-		stylePrefixes.put(MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED, "icy-center");
+		stylePrefixes.put(MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED,
+				"icy-center");
 		stylePrefixes.put(MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED,
 				"sd-center-notification");
 	}
@@ -100,7 +101,8 @@ public class StatusDisplayer {
 		GlobalTopicPublisher.get().removeTopicListener(
 				MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, topicListener);
 		GlobalTopicPublisher.get().removeTopicListener(
-				MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED, topicListener);
+				MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED,
+				topicListener);
 		GlobalTopicPublisher.get().removeTopicListener(
 				MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED, topicListener);
 		GlobalTopicPublisher.get().removeTopicListener(
@@ -121,7 +123,10 @@ public class StatusDisplayer {
 		FaderTuple ft = statusTuple;
 		boolean withFade = true;
 		if (channel == MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED
-				||channel == MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED) {
+				|| channel == MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED) {
+			if (channel == MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED) {
+				duration = 6000;
+			}
 			center = true;
 			ft = centerTuple;
 		} else if (channel == CallManager.TOPIC_CALL_MADE) {
