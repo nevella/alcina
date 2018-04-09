@@ -96,7 +96,7 @@ public class CacheItemDescriptor<T extends HasIdAndLocalId> {
 		return new ArrayList<>();
 	}
 
-	public <T> List<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
+	public List<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
 		ArrayList<T> raw = new ArrayList<T>(ids.size());
 		for (Long id : ids) {
 			T value = (T) cache.get(clazz, id);
@@ -134,7 +134,7 @@ public class CacheItemDescriptor<T extends HasIdAndLocalId> {
 	}
 
 	public CacheItemDescriptor<T> addAliasedFunction(Object alias, Function<? super T,?> function) {
-		CacheLookupDescriptor lookupDescriptor = new CacheLookupDescriptor<>(clazz, "no-path",false,function);
+		CacheLookupDescriptor lookupDescriptor = new CacheLookupDescriptor<>((Class)clazz, "no-path",false,(Function)function);
 		addLookup(lookupDescriptor);
 		aliasedFunctionLookups.put(alias, lookupDescriptor);
 		return this;

@@ -49,7 +49,7 @@ public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId> ext
 	}
 
 	@Override
-	public <T> List<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
+	public List<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
 		ArrayList<T> raw = new ArrayList<T>(ids.size());
 		for (Long id : ids) {
 			T proxy = getProxy(cache, id, false);

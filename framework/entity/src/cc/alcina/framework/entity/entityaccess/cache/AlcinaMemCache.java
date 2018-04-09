@@ -330,6 +330,7 @@ public class AlcinaMemCache implements RegistrableService {
 
 	private Set<Thread> waitingOnWriteLock = Collections
 			.synchronizedSet(new LinkedHashSet<Thread>());
+
 	private Set<Thread> mainLockReadLock = Collections
 			.synchronizedSet(new LinkedHashSet<Thread>());
 
@@ -753,7 +754,6 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 		maybeLogLock(LockAction.MAIN_LOCK_ACQUIRED, write);
 	}
-	
 
 	public List<Long> notInStore(Collection<Long> ids, Class clazz) {
 		return cache.notContained(ids, clazz);
@@ -1767,8 +1767,8 @@ public class AlcinaMemCache implements RegistrableService {
 							String.format("Query metrics:\n========\n%s\n%s",
 									query, debugMetricBuilder.toString()));
 				}
-				raw = cacheDescriptor.perClass.get(clazz).getRawValues(ids,
-						cache);
+				raw = (List) cacheDescriptor.perClass.get(clazz)
+						.getRawValues(ids, cache);
 			} else {
 				Set<T> rawTransactional = null;
 				for (int i = 0; i < filterSize; i++) {
@@ -2932,10 +2932,10 @@ public class AlcinaMemCache implements RegistrableService {
 	}
 
 	public boolean isCurrentThreadHoldingLock() {
-		if(mainLock.isWriteLockedByCurrentThread()){
+		if (mainLock.isWriteLockedByCurrentThread()) {
 			return true;
 		}
-		if(subgraphLock.isWriteLockedByCurrentThread()){
+		if (subgraphLock.isWriteLockedByCurrentThread()) {
 			return true;
 		}
 		return mainLockReadLock.contains(Thread.currentThread());
