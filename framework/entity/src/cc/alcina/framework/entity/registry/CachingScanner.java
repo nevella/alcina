@@ -14,14 +14,11 @@
 package cc.alcina.framework.entity.registry;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryException;
+import cc.alcina.framework.common.client.logic.reflection.registry.RegistryException;
 import cc.alcina.framework.entity.KryoUtils;
-import cc.alcina.framework.entity.domaintransform.ClassrefScanner.ClassrefScannerMetadata;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.util.ClasspathScanner;
 

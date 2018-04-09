@@ -367,7 +367,7 @@ public class Registry {
 			}
 		}
 		if (cachedKey == keys.emptyLookupKey() && errorOnNull) {
-			throw new NoImplementationException(CommonUtils.formatJ(
+			throw new RegistryException(CommonUtils.formatJ(
 					"singleton/factory not registered - %s:%s",
 					CommonUtils.classSimpleName(registryPoint),
 					CommonUtils.classSimpleName(targetClass)));
@@ -613,7 +613,7 @@ public class Registry {
 				"Registry: no resolved implementation type for %s :: %s",
 				registryPointKey.simpleName(), targetClassKey.simpleName());
 		System.out.println(message);
-		throw new NoResolvedImplementationException(message);
+		throw new RegistryException(message);
 	}
 
 	protected <T> T singleton0(Class<T> clazz,
@@ -666,33 +666,6 @@ public class Registry {
 			super(CommonUtils.formatJ(
 					"Constructor of singleton %s invoked more than once",
 					clazz.getName()));
-		}
-	}
-
-	public static class NoImplementationException extends RegistryException {
-		public NoImplementationException(String message) {
-			super(message);
-		}
-	}
-
-	public static class NoResolvedImplementationException
-			extends RuntimeException {
-		public NoResolvedImplementationException() {
-			super();
-		}
-
-		public NoResolvedImplementationException(String message) {
-			super(message);
-		}
-	}
-
-	public static class RegistryException extends RuntimeException {
-		public RegistryException() {
-			super();
-		}
-
-		public RegistryException(String message) {
-			super(message);
 		}
 	}
 
