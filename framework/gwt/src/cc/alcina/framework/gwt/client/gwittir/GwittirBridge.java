@@ -486,7 +486,8 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 							: DN_LABEL_PROVIDER;
 				} else {
 					if (domainType == Date.class) {
-						if (displayInfo.rendererHint().equals(HINT_DATE_WITH_TIME_TITLE)) {
+						if (displayInfo.rendererHint()
+								.equals(HINT_DATE_WITH_TIME_TITLE)) {
 							bwp = AU_DATE_TIME_TITLE_PROVIDER;
 						} else {
 							bwp = AU_DATE_PROVIDER;
@@ -529,7 +530,8 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					field.setWidgetStyleName(displayInfo.widgetStyleName());
 				}
 				if (!displayInfo.helpText().isEmpty()) {
-					field.setHelpText(displayInfo.helpText());
+					field.setHelpText(
+							displayInfo.helpText().replace("\\n", "\n"));
 				}
 				return field;
 			}
