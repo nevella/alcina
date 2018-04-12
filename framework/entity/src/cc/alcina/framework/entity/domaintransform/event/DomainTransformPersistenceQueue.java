@@ -104,32 +104,34 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			@Override
 			public void run() {
 				setName("DomainTransformPersistenceQueue-fire");
-				try {
-					ThreadedPermissionsManager.cast().pushSystemUser();
-					while (!closed.get()) {
-						try {
-							Long id = null;
-							synchronized (toFire) {
-								// double-check
-								if (closed.get()) {
-									break;
-								}
-								if (toFire.isEmpty()) {
-									toFire.wait();
-								}
-								if (!toFire.isEmpty()) {
-									id = toFire.pop();
-								}
+				while (!closed.get()) {
+					try {
+						Long id = null;
+						synchronized (toFire) {
+							// double-check
+							if (closed.get()) {
+								break;
 							}
-							if (id != null && !closed.get()) {
-								publishTransformEvent(id);
+							if (toFire.isEmpty()) {
+								toFire.wait();
 							}
-						} catch (Exception e) {
-							e.printStackTrace();
+							if (!toFire.isEmpty()) {
+								id = toFire.pop();
+							}
 						}
+						if (id != null && !closed.get()) {
+							try {
+								ThreadedPermissionsManager.cast()
+										.pushSystemUser();
+								publishTransformEvent(id);
+							} finally {
+								ThreadedPermissionsManager.cast()
+										.popSystemUser();
+							}
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-				} finally {
-					ThreadedPermissionsManager.cast().popSystemUser();
 				}
 			}
 
