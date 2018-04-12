@@ -1605,4 +1605,16 @@ public class CommonUtils {
 				.map(s -> trimToWsChars(s, 100))
 				.collect(Collectors.joining("\n"));
 	}
+
+	public static void doOnce(Class clazz, Runnable runnable) {
+		doOnce(clazz, null, runnable);
+	}
+
+	public static void doOnce(Class clazz, String key, Runnable runnable) {
+		if (done.add(Ax.format("%s::%s", clazz.getName(), key))) {
+			runnable.run();
+		}
+	}
+
+	private static Set<String> done = new LinkedHashSet<>();
 }

@@ -56,6 +56,10 @@ public abstract class ClientInstance
 
 	@GwtTransient
 	private String iid;
+	
+	
+	@GwtTransient
+	private String ipAddress;
 
 	public abstract ClientInstance clone();
 
@@ -90,6 +94,10 @@ public abstract class ClientInstance
 		return this.iid;
 	}
 
+	public String getIpAddress() {
+		return this.ipAddress;
+	}
+
 	@Transient
 	public long getLocalId() {
 		return this.localId;
@@ -117,6 +125,10 @@ public abstract class ClientInstance
 
 	public void setIid(String iid) {
 		this.iid = iid;
+	}
+
+	public void setIpAddress(String ipAddress) {
+		this.ipAddress = ipAddress;
 	}
 
 	public void setLocalId(long localId) {

@@ -207,9 +207,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	 * layer we (should) always want it lightweight
 	 */
 	@Override
-	public CI createClientInstance(String userAgent, String iid) {
+	public CI createClientInstance(String userAgent, String iid,
+			String ipAddress) {
 		return (CI) getHandshakeObjectProvider().createClientInstance(userAgent,
-				iid);
+				iid, ipAddress);
 	}
 
 	public <T> T ensureObject(T t, String key, String value) throws Exception {
@@ -1264,7 +1265,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 		@Override
 		public ClientInstance createClientInstance(String userAgent,
-				String iid) {
+				String iid,String ipAddress) {
 			long newId = 0;
 			synchronized (ReadonlyHandshakeObjectProvider.class) {
 				if (clientInstanceIdCounter == 0) {
@@ -1285,6 +1286,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				impl.setUser(PermissionsManager.get().getUser());
 				impl.setAuth(Math.abs(new Random().nextInt()));
 				impl.setUserAgent(userAgent);
+				impl.setIpAddress(ipAddress);
 				IUser clonedUser = (IUser) cp
 						.getNewImplementationInstance(IUser.class);
 				ResourceUtilities.copyBeanProperties(
@@ -1340,9 +1342,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		WriterHandshakeObjectProvider writerHandshakeObjectProvider = new WriterHandshakeObjectProvider();
 
 		@Override
-		public ClientInstance createClientInstance(String userAgent,
-				String iid) {
-			return delegate().createClientInstance(userAgent, iid);
+		public ClientInstance createClientInstance(String userAgent, String iid,
+				String ipAddress) {
+			return delegate().createClientInstance(userAgent, iid,ipAddress);
 		}
 
 		@Override
@@ -1376,7 +1378,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 		@Override
 		public ClientInstance createClientInstance(String userAgent,
-				String iid) {
+				String iid,String ipAddress) {
 			AppPersistenceBase.checkNotReadOnly();
 			Class<? extends ClientInstance> clientInstanceImpl = cp
 					.getImplementation(ClientInstance.class);
@@ -1390,6 +1392,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				impl.setIid(iid);
 				impl.setAuth(Math.abs(new Random().nextInt()));
 				impl.setUserAgent(userAgent);
+				impl.setIpAddress(ipAddress);
 				impl.setBotUserAgent(isBotUserAgent(userAgent));
 				cp.getEntityManager().flush();
 				cp.getEntityManager().clear();
