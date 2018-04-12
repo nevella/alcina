@@ -54,7 +54,7 @@ public interface CommonPersistenceLocal {
 	public abstract void connectPermissionsManagerToLiveObjects();
 
 	public abstract ClientInstance createClientInstance(String userAgent,
-			String iid);
+			String iid,String ipAddress);
 
 	public <T> T ensureObject(T t, String key, String value) throws Exception;
 

@@ -89,8 +89,9 @@ public class ServletLayerUtils {
 
 	protected static DomainTransformLayerWrapper doPersistTransforms(String tag,
 			boolean asRoot) {
-		//for debugging
-		Set<DomainTransformEvent> transforms = TransformManager.get().getTransforms();
+		// for debugging
+		Set<DomainTransformEvent> transforms = TransformManager.get()
+				.getTransforms();
 		ThreadedPermissionsManager tpm = ThreadedPermissionsManager.cast();
 		boolean muted = MetricLogging.get().isMuted();
 		try {
@@ -189,7 +190,7 @@ public class ServletLayerUtils {
 							.impl(CommonPersistenceProvider.class)
 							.getCommonPersistence()
 							.createClientInstance("servlet-bulk: "
-									+ EntityLayerUtils.getLocalHostName(),
+									+ EntityLayerUtils.getLocalHostName(), null,
 									null);
 					List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>(
 							TransformManager.get().getTransformsByCommitType(

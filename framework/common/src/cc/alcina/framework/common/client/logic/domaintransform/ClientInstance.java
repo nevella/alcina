@@ -61,6 +61,9 @@ public abstract class ClientInstance
 	private String referrer;
 	
 	private String url;
+	
+	@GwtTransient
+	private String ipAddress;
 
 	public abstract ClientInstance clone();
 
@@ -93,6 +96,10 @@ public abstract class ClientInstance
 
 	public String getIid() {
 		return this.iid;
+	}
+
+	public String getIpAddress() {
+		return this.ipAddress;
 	}
 
 	@Transient
@@ -130,6 +137,10 @@ public abstract class ClientInstance
 
 	public void setIid(String iid) {
 		this.iid = iid;
+	}
+
+	public void setIpAddress(String ipAddress) {
+		this.ipAddress = ipAddress;
 	}
 
 	public void setLocalId(long localId) {

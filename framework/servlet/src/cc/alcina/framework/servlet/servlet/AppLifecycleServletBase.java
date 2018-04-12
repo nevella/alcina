@@ -190,7 +190,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().createClientInstance(
 							"servlet: " + EntityLayerUtils.getLocalHostName(),
-							null);
+							null,null);
 			Registry.impl(CommonRemoteServiceServletSupport.class)
 					.setServerAsClientInstance(serverAsClientInstance);
 		} finally {

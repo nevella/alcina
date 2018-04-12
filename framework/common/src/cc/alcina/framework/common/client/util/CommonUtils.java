@@ -1655,4 +1655,16 @@ public class CommonUtils {
 	public static boolean currencyEquals(double d1, double d2) {
 		return Math.abs(d1 - d2) < 0.005;
 	}
+
+	public static void doOnce(Class clazz, Runnable runnable) {
+		doOnce(clazz, null, runnable);
+	}
+
+	public static void doOnce(Class clazz, String key, Runnable runnable) {
+		if (done.add(Ax.format("%s::%s", clazz.getName(), key))) {
+			runnable.run();
+		}
+	}
+
+	private static Set<String> done = new LinkedHashSet<>();
 }

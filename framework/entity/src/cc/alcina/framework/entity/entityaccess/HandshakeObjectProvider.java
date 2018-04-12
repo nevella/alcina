@@ -11,7 +11,7 @@ public interface HandshakeObjectProvider<CI extends ClientInstance, IID extends 
 
 	public void updateIid(String iidKey, String userName, boolean rememberMe);
 
-	CI createClientInstance(String userAgent, String iid);
+	CI createClientInstance(String userAgent, String iid, String ipAddress);
 
 	public HiliLocatorMap getLocatorMap(Long clientInstanceId);
 }
