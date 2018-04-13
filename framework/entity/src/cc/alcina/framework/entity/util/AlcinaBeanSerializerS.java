@@ -40,21 +40,30 @@ import cc.alcina.framework.entity.SEUtilities;
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = 15)
 @ClientInstantiable
 public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
-	private ClassLoader cl;
+	private static  boolean useContextClassloader;
 
+	public static boolean isUseContextClassloader() {
+        return useContextClassloader;
+    }
+
+	public static void setUseContextClassloader(boolean useContextClassloader) {
+        AlcinaBeanSerializerS.useContextClassloader = useContextClassloader;
+    }
+
+	private ClassLoader cl;
 	private boolean pretty;
 
 	IdentityHashMap seen = new IdentityHashMap();
 
-	public AlcinaBeanSerializerS() {
+    public AlcinaBeanSerializerS() {
 		propertyFieldName = PROPERTIES;
 	}
 
-	@Override
+    @Override
 	public <T> T deserialize(String jsonString) {
 		try {
 			JSONObject obj = new JSONObject(jsonString);
-			if (GWT.isClient()) {
+			if (GWT.isClient()&&!useContextClassloader) {
 				// devmode
 				cl = getClass().getClassLoader().getParent();
 			} else {
