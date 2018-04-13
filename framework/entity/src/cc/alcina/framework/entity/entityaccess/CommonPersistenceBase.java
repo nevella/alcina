@@ -1525,13 +1525,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						.detachedCloneIgnorePermissions(impl, null);
 				Registry.impl(ClientInstanceAuthenticationCache.class)
 						.cacheAuthentication(instance);
-				instance.setUser(new EntityUtils()
-						.detachedCloneIgnorePermissions(clonedUser, null));
+				instance.setUser(cp.projectUserForClientInstance(clonedUser));
 				return instance;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
 		}
+
+        
 
 		@Override
 		public ClientInstance getClientInstance(long clientInstanceId) {
@@ -1579,7 +1580,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			throw new UnsupportedOperationException();
 		}
 	}
-
+	protected IUser projectUserForClientInstance(IUser clonedUser) {
+        return new EntityUtils()
+                .detachedCloneIgnorePermissions(clonedUser, null);
+    }
 	@Override
 	public Integer getHighestPersistedRequestIdForClientInstance(
 			long clientInstanceId) {
