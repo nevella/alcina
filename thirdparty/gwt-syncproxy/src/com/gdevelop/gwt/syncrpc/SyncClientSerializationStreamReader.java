@@ -36,6 +36,7 @@ import com.google.gwt.user.server.rpc.SerializationPolicy;
 import com.google.gwt.user.server.rpc.impl.SerializabilityUtil;
 import com.google.gwt.user.server.rpc.impl.SerializedInstanceReference;
 
+
 /**
  * @see com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter
  * @see com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader
@@ -551,11 +552,17 @@ public class SyncClientSerializationStreamReader
         int maxSub = PRELUDE.length();
         int backslashCount = 0;
         for (int i = 0; i < encoded.length(); i++) {
+            if (i >= encoded.length() - 2) {
+                int debug = 3;
+            }
             char ch = encoded.charAt(i);
             char chl1 = i == 0 ? 0 : encoded.charAt(i - 1);
             if (inStr) {
                 if (ch == '\\') {
                     backslashCount++;
+                    if (chl1 != '\\') {
+                        backslashCount = 1;
+                    }
                 } else {
                     if (chl1 != '\\') {
                         backslashCount = 0;
@@ -588,11 +595,20 @@ public class SyncClientSerializationStreamReader
                         result.append(",");
                         continue;
                     }
+                    if (encoded.startsWith(MIDDY, i)) {
+                        i += MIDDY.length() - 1;
+                        result.append(",");
+                        continue;
+                    }
                 }
             }
             result.append(ch);
         }
-        return result.toString();
+        String out = result.toString();
+        if (out.endsWith(")")) {
+            out = removeConcats(out);
+        }
+        return out;
     }
 
     private Object instantiate(Class<?> customSerializer,
