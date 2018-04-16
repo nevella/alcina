@@ -117,11 +117,11 @@ public class Link<T> extends Widget
 	}
 
 	public String getHref() {
-		return DOM.getElementProperty(anchorElem, "href");
+		return anchorElem.getPropertyString("href");
 	}
 
 	public String getHTML() {
-		return DOM.getInnerHTML(anchorElem);
+		return anchorElem.getInnerHTML();
 	}
 
 	@Override
@@ -130,11 +130,11 @@ public class Link<T> extends Widget
 	}
 
 	public String getTarget() {
-		return DOM.getElementProperty(anchorElem, "target");
+		return anchorElem.getPropertyString("target");
 	}
 
 	public String getText() {
-		return DOM.getInnerText(anchorElem);
+		return anchorElem.getInnerText();
 	}
 
 	public T getUserObject() {
@@ -158,7 +158,7 @@ public class Link<T> extends Widget
 	public void onBrowserEvent(Event event) {
 		if (DOM.eventGetType(event) == Event.ONCLICK) {
 			if (!WidgetUtils.isNewTabModifier() && preventDefault) {
-				DOM.eventPreventDefault(event);
+				event.preventDefault();
 			}
 			if (enabled) {
 				super.onBrowserEvent(event);
@@ -180,14 +180,14 @@ public class Link<T> extends Widget
 	}
 
 	public void setHref(String href) {
-		DOM.setElementProperty(anchorElem, "href", href);
+		anchorElem.setPropertyString("href", href);
 		if (href != null && !href.matches("#?")) {
 			setPreventDefault(false);
 		}
 	}
 
 	public void setHTML(String html) {
-		DOM.setInnerHTML(anchorElem, html);
+		anchorElem.setInnerHTML(html);
 	}
 
 	public void setPreventDefault(boolean preventDefault) {
@@ -195,18 +195,18 @@ public class Link<T> extends Widget
 	}
 
 	public void setTarget(String target) {
-		DOM.setElementProperty(anchorElem, "target", target);
+		anchorElem.setPropertyString("target", target);
 	}
 
 	public void setText(String text) {
-		DOM.setInnerText(anchorElem, text);
+		anchorElem.setInnerText(text);
 	}
 
 	public void setTitle(String title) {
 		if (title == null || title.length() == 0) {
-			DOM.removeElementAttribute(anchorElem, "title");
+			anchorElem.removeAttribute(title);
 		} else {
-			DOM.setElementAttribute(anchorElem, "title", title);
+			anchorElem.setAttribute("title",title);
 		}
 	}
 
@@ -238,5 +238,10 @@ public class Link<T> extends Widget
 
 	public static Link createPlace(String text, BasePlace place) {
 		return createHashHref(text, place.toTokenString());
+	}
+
+	public Link withTarget(String target) {
+		setTarget(target);
+		return this;
 	}
 }

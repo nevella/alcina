@@ -758,7 +758,6 @@ public class DOM {
 	 */
 	@Deprecated
 	public static void eventPreventDefault(Event evt) {
-		LocalDom.eventMod(evt, "eventPreventDefault");
 		evt.preventDefault();
 	}
 

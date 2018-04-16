@@ -208,6 +208,7 @@ public class DomDispatch implements IDomDispatch {
 	}
 
 	public void eventPreventDefault(NativeEvent evt) {
+		LocalDom.eventMod(evt, "eventPreventDefault");
 		local.eventPreventDefault(evt);
 		remote.eventPreventDefault(evt);
 	}
