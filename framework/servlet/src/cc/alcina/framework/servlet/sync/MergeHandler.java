@@ -44,6 +44,10 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 		return new TopicSupport<>(TOPIC_MERGE_COMPLETED);
 	}
 
+	
+	/**
+	 * returns number of successfully merged classes with non-zero merged rows
+	 */
 	public void run(Logger logger) throws Exception {
 		List<SyncMerger> mergeIncomplete = new ArrayList<>();
 		for (SyncMerger merger : syncMergers) {

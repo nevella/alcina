@@ -53,4 +53,5 @@ public class FlatDeltaPersisterResult {
 	public enum FlatDeltaPersisterResultType {
 		CREATED, MERGED, DELETED, UNMODIFIED, UNMATCHED
 	}
+
 }

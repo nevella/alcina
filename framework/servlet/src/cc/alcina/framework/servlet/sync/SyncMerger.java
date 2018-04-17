@@ -120,7 +120,7 @@ public class SyncMerger<T> {
 
 	private MatchStrategy<T> matchStrategy;
 
-	private SyncLogger syncLogger = new SyncLogger();
+	private SyncLogger syncLogger;
 
 	public SyncLogger getSyncLogger() {
 		return this.syncLogger;
@@ -140,6 +140,7 @@ public class SyncMerger<T> {
 			matchStrategy = new KeyMatchStrategy<>(leftItems, rightItems,
 					keyProvider);
 		}
+		syncLogger = new SyncLogger();
 		this.deltaModel = deltaModel;
 		LinkedHashSet<T> unmatchedRight = new LinkedHashSet<T>(rightItems);
 		for (T left : leftItems) {
