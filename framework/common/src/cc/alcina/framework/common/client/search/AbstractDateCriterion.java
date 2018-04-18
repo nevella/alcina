@@ -49,13 +49,17 @@ public class AbstractDateCriterion extends SearchCriterion
 	@SuppressWarnings("deprecation")
 	public Date getDate() {
 		if (date != null) {
-			int year = date.getYear();
-			if (year < -10000) {
-				date = new Date(date.getTime());
-				date.setYear(-10000);
-			} else if (year > 10000) {
-				date = new Date(date.getTime());
-				date.setYear(10000);
+			try {
+				int year = date.getYear();
+				if (year < -10000) {
+					date = new Date(date.getTime());
+					date.setYear(-10000);
+				} else if (year > 10000) {
+					date = new Date(date.getTime());
+					date.setYear(10000);
+				}
+			} catch (NullPointerException e) {
+				//parallel call issues?
 			}
 		}
 		return date;

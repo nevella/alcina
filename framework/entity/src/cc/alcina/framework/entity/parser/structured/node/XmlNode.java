@@ -1028,4 +1028,9 @@ public class XmlNode {
 			return range;
 		}
 	}
+
+	public void setInnerXml(String xml) {
+		XmlDoc importDoc = new XmlDoc(xml);
+		children.importFrom(importDoc.getDocumentElementNode());
+	}
 }
