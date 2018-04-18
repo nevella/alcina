@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ColumnMapper;
@@ -79,8 +80,14 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 	protected void defineChildWithPrefix(Class clazz, String prefix,
 			String fieldName, List<String> ignores) {
 		try {
-			Field field = clazz.getDeclaredField(fieldName);
-			Class<?> type = field.getType();
+			Class<?> type = null;
+			try {
+				Field field = clazz.getDeclaredField(fieldName);
+				type = field.getType();
+			} catch (NoSuchFieldException e) {
+				type = Reflections.propertyAccessor().getPropertyType(clazz,
+						fieldName);
+			}
 			for (Field child : new GraphProjection().getFieldsForClass(type)) {
 				if (Modifier.isTransient(child.getModifiers())) {
 					continue;
