@@ -109,4 +109,10 @@ public class TextUtils {
 		}
 		return result;
 	}
+	public static String trimOrNull(String key) {
+		if (key == null) {
+			return null;
+		}
+		return key.trim();
+	}
 }
