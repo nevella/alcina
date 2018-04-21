@@ -135,16 +135,7 @@ public class ScriptElement extends Element {
 	public void setSrc(@IsTrustedResourceUri String src) {
 		this.setPropertyString("src", src);
 	}
-	@Override
-	public void setPropertyString(String name, String value) {
-		ensureRemoteCheck();
-		if ("text".equals(name)) {
-			local().setInnerText(value);
-		} else {
-			local().setPropertyString(name, value);
-		}
-		remote().setPropertyString(name, value);
-	}
+
 	/**
 	 * The script content of the element.
 	 */

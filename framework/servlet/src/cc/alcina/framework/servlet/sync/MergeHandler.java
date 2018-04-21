@@ -44,7 +44,6 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 		return new TopicSupport<>(TOPIC_MERGE_COMPLETED);
 	}
 
-	
 	/**
 	 * returns number of successfully merged classes with non-zero merged rows
 	 */
@@ -69,6 +68,8 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 					mergeIncomplete.stream().map(c -> c.getMergedClass())
 							.collect(Collectors.toList()));
 			this.persisterResult.allPersisted = mergeIncomplete.isEmpty();
+		} else {
+			logger.info(Ax.format("Not persisting:\n\t%s", deltaModel));
 		}
 	}
 

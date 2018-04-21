@@ -1,9 +1,14 @@
 package cc.alcina.framework.servlet.sync;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.sync.property.PropertyModificationLog;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
 
 public class SyncDeltaModel {
 	private Multimap<Class, List<SyncPair>> deltas = new Multimap<Class, List<SyncPair>>();
@@ -35,5 +40,20 @@ public class SyncDeltaModel {
 	public void setPropertyModificationLog(
 			PropertyModificationLog propertyModificationLog) {
 		this.propertyModificationLog = propertyModificationLog;
+	}
+
+	@Override
+	public String toString() {
+		FormatBuilder fb = new FormatBuilder();
+		deltas.entrySet().forEach(e -> {
+			fb.line(e.getKey().getClass().getSimpleName());
+			Map<SyncPairAction, List<SyncPair>> collect = e.getValue().stream()
+					.collect(Collectors.groupingBy(SyncPair::getAction));
+			collect.entrySet().forEach(g1 -> {
+				fb.line("\t%s: %s", g1.getValue().size(),
+						Ax.friendly(g1.getKey()));
+			});
+		});
+		return fb.toString();
 	}
 }
