@@ -67,7 +67,7 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 			this.persisterResult = localDeltaPersister.apply(logger, deltaModel,
 					mergeIncomplete.stream().map(c -> c.getMergedClass())
 							.collect(Collectors.toList()));
-			this.persisterResult.allPersisted = mergeIncomplete.isEmpty();
+			this.persisterResult.allPersisted = !this.persisterResult.mergeInterrupted&&mergeIncomplete.isEmpty();
 		} else {
 			logger.info(Ax.format("Not persisting:\n\t%s", deltaModel));
 		}

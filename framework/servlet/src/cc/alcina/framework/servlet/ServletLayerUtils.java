@@ -7,6 +7,9 @@ import java.util.concurrent.Callable;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
 import com.google.gwt.event.shared.UmbrellaException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -60,6 +63,13 @@ public class ServletLayerUtils {
 				"\nRequest: %s\t Querystring: %s\t Referer: %s\t Ip: %s\n",
 				req.getRequestURI(), req.getQueryString(),
 				req.getHeader("referer"), remoteAddr);
+	}
+
+	public static void muteApacheHttpClient() {
+		Logger.getLogger("org.apache.http").setLevel(Level.WARN);
+		Logger.getLogger("org.apache.http.wire").setLevel(Level.WARN);
+		Logger.getLogger("httpclient.wire.header").setLevel(Level.WARN);
+		Logger.getLogger("httpclient.wire.content").setLevel(Level.WARN);
 	}
 
 	public static DomainTransformLayerWrapper pushTransforms(String tag,

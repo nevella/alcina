@@ -246,7 +246,7 @@ class BiPrintStream extends PrintStream {
 
 	private void debugPrint(Object obj) {
 		String s = String.valueOf(obj);
-		if (s.contains("Wire.jav")) {
+		if (s.contains("DefaultClientConnection.java")) {
 			int debug = 3;
 		}
 	}
