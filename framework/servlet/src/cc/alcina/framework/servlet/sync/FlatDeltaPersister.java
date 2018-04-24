@@ -24,13 +24,15 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 
 	protected final boolean applyToLeft;
 
+	protected FlatDeltaPersisterResult result;
+
 	protected FlatDeltaPersister(boolean applyToLeft) {
 		this.applyToLeft = applyToLeft;
 	}
 
 	public FlatDeltaPersisterResult apply(Logger logger, D delta,
 			List<Class> ignoreDueToIncompleteMerge) throws Exception {
-		FlatDeltaPersisterResult result = new FlatDeltaPersisterResult();
+		result = new FlatDeltaPersisterResult();
 		for (Class clazz : perClassDeltaOrder()) {
 			if (ignoreDueToIncompleteMerge.contains(clazz)) {
 				logger.warn(Ax.format("Not persisting - merger %s incomplete",

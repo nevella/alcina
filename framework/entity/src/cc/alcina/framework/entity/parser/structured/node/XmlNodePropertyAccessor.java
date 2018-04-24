@@ -77,10 +77,20 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 					.collect(Collectors.toList());
 			leaf.children.append(values);
 		} else {
-			if (value == null) {
-				leaf.removeFromParent();
+			if (singleChildElementNames.contains(propertyName)) {
+				XmlNode nodeValue = (XmlNode) value;
+				if (nodeValue.children.nodes().size() == 0) {
+					leaf.removeFromParent();
+				} else {
+					XmlNode imported = leaf.children.importFrom(nodeValue);
+					leaf.strip();
+				}
 			} else {
-				leaf.setText(value.toString());
+				if (value == null) {
+					leaf.removeFromParent();
+				} else {
+					leaf.setText(value.toString());
+				}
 			}
 		}
 	}

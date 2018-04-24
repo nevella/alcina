@@ -274,6 +274,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			EntityLayerObjects.get().setPersistentLogger(dbLogger);
 		}
 		Logger.getLogger("org.apache.kafka").setLevel(Level.WARN);
+		Logger.getLogger("httpclient.wire.header").setLevel(Level.WARN);
+		Logger.getLogger("httpclient.wire.content").setLevel(Level.WARN);
 	}
 
 	protected abstract void initNames();
