@@ -222,8 +222,12 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 						&& propertyType != Map.class) {
 					// this seems to vary (unnecessary on 1.5, necessary on
 					// 1.6)-propertydescriptor change probly
-					propertyType = Registry.impl(ImplementationLookup.class)
+					Class<?> implementationType = Registry
+							.impl(ImplementationLookup.class)
 							.getImplementation(propertyType);
+					if (implementationType != null) {
+						propertyType = implementationType;
+					}
 				}
 				infos.add(new PropertyInfoLite(propertyType, pd.getName(),
 						new MethodWrapper(pd.getReadMethod()),

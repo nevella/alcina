@@ -49,6 +49,8 @@ public class SyncItemMatch<T> {
 	public Date date;
 
 	public String issue;
+	
+	public String extLink;
 
 	public void log(SyncItemLogType type, String message) {
 		logs.add(new SyncItemLogRecord(type, message));

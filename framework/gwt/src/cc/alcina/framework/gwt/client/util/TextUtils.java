@@ -48,10 +48,18 @@ public class TextUtils {
 	}
 
 	public static String normalisedLcKey(String key) {
-		return normalizeWhitespaceAndTrim(CommonUtils.nullToEmpty(key).toLowerCase());
+		return normalizeWhitespaceAndTrim(
+				CommonUtils.nullToEmpty(key).toLowerCase());
 	}
 
 	public static String trim(String key) {
 		return CommonUtils.nullToEmpty(key).trim();
+	}
+
+	public static String trimOrNull(String key) {
+		if (key == null) {
+			return null;
+		}
+		return key.trim();
 	}
 }

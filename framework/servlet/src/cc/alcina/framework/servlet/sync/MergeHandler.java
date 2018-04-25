@@ -44,6 +44,9 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 		return new TopicSupport<>(TOPIC_MERGE_COMPLETED);
 	}
 
+	/**
+	 * returns number of successfully merged classes with non-zero merged rows
+	 */
 	public void run(Logger logger) throws Exception {
 		List<SyncMerger> mergeIncomplete = new ArrayList<>();
 		for (SyncMerger merger : syncMergers) {
@@ -64,7 +67,9 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 			this.persisterResult = localDeltaPersister.apply(logger, deltaModel,
 					mergeIncomplete.stream().map(c -> c.getMergedClass())
 							.collect(Collectors.toList()));
-			this.persisterResult.allPersisted = mergeIncomplete.isEmpty();
+			this.persisterResult.allPersisted = !this.persisterResult.mergeInterrupted&&mergeIncomplete.isEmpty();
+		} else {
+			logger.info(Ax.format("Not persisting:\n\t%s", deltaModel));
 		}
 	}
 

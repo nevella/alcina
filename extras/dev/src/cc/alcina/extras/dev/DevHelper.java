@@ -115,6 +115,7 @@ public abstract class DevHelper {
 
 	public DevHelper() {
 		super();
+		ServletLayerUtils.setLoggerLevels();
 	}
 
 	public void deleteClasspathCacheFiles() throws Exception {

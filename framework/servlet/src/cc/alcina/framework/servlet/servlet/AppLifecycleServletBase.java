@@ -190,7 +190,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().createClientInstance(
 							"servlet: " + EntityLayerUtils.getLocalHostName(),
-							null,null);
+							null, null);
 			Registry.impl(CommonRemoteServiceServletSupport.class)
 					.setServerAsClientInstance(serverAsClientInstance);
 		} finally {
@@ -274,6 +274,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			EntityLayerObjects.get().setPersistentLogger(dbLogger);
 		}
 		Logger.getLogger("org.apache.kafka").setLevel(Level.WARN);
+		ServletLayerUtils.setLoggerLevels();
 	}
 
 	protected abstract void initNames();

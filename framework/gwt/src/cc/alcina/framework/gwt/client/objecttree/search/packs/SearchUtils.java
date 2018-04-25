@@ -18,8 +18,9 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class SearchUtils {
-	private static CachingMap<String, Long> stringIdLookup = new CachingMap<>(
-			s -> s == null || !s.matches("(?:id:)?[0-9]+") ? 0L : Long.parseLong(s.replaceFirst("(?:id:)?([0-9]+)","$1")));
+//	private static CachingMap<String, Long> stringIdLookup = new CachingMap<>(
+//			s -> s == null || !s.matches("(?:id:)?[0-9]+") ? 0L
+//					: Long.parseLong(s.replaceFirst("(?:id:)?([0-9]+)", "$1")));
 
 	public static boolean containsIgnoreCase(String s1, String s2) {
 		if (s1 == null || s2 == null) {
@@ -30,19 +31,20 @@ public class SearchUtils {
 		return lc1.contains(lc2);
 	}
 
-	public static boolean containsIgnoreCase(
-			String text,String... strings) {
-		return new SearchTextMatcher().targets(strings).contains(text);
-	}
-	public static boolean containsIgnoreCase(
-			String text,List<String> strings) {
+	public static boolean containsIgnoreCase(String text, String... strings) {
 		return new SearchTextMatcher().targets(strings).contains(text);
 	}
 
-	public static boolean equalsIgnoreCase(String text,String... strings) {
+	public static boolean containsIgnoreCase(String text,
+			List<String> strings) {
+		return new SearchTextMatcher().targets(strings).contains(text);
+	}
+
+	public static boolean equalsIgnoreCase(String text, String... strings) {
 		return new SearchTextMatcher().targets(strings).equalTo(text);
 	}
-	public static boolean equalsIgnoreCase(String text,List<String> strings) {
+
+	public static boolean equalsIgnoreCase(String text, List<String> strings) {
 		return new SearchTextMatcher().targets(strings).equalTo(text);
 	}
 
@@ -72,8 +74,10 @@ public class SearchUtils {
 		return hili != null && toId(query) == hili.getId();
 	}
 
-	public static long toId(String text) {
-		return stringIdLookup.get(text);
+	public static long toId(String s) {
+		return s == null || !s.matches("(?:id:)?[0-9]+") ? -1L
+				: Long.parseLong(s.replaceFirst("(?:id:)?([0-9]+)", "$1"));
+		// return stringIdLookup.get(text);
 	}
 
 	public static void toTextSearch(SearchDefinition def, String text) {
@@ -132,7 +136,8 @@ public class SearchUtils {
 		}
 
 		public SearchTextMatcher targets(List<String> targetList) {
-			targets=(String[]) targetList.toArray(new String[targetList.size()]);
+			targets = (String[]) targetList
+					.toArray(new String[targetList.size()]);
 			return this;
 		}
 

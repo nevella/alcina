@@ -13,6 +13,8 @@ public class FlatDeltaPersisterResult {
 
 	public boolean allPersisted;
 
+	public boolean mergeInterrupted;
+
 	public String numbers() {
 		return String.format(
 				"created: %s - merged: %s - deleted:"
@@ -53,4 +55,5 @@ public class FlatDeltaPersisterResult {
 	public enum FlatDeltaPersisterResultType {
 		CREATED, MERGED, DELETED, UNMODIFIED, UNMATCHED
 	}
+
 }

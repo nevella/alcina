@@ -24,17 +24,27 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 
 	protected final boolean applyToLeft;
 
+	protected FlatDeltaPersisterResult result;
+
 	protected FlatDeltaPersister(boolean applyToLeft) {
 		this.applyToLeft = applyToLeft;
 	}
-
+	protected boolean breakPersistenceForRemoteRefresh;
 	public FlatDeltaPersisterResult apply(Logger logger, D delta,
 			List<Class> ignoreDueToIncompleteMerge) throws Exception {
-		FlatDeltaPersisterResult result = new FlatDeltaPersisterResult();
+		breakPersistenceForRemoteRefresh=false;
+		result = new FlatDeltaPersisterResult();
+		result.mergeInterrupted=false;
 		for (Class clazz : perClassDeltaOrder()) {
 			if (ignoreDueToIncompleteMerge.contains(clazz)) {
 				logger.warn(Ax.format("Not persisting - merger %s incomplete",
 						clazz.getSimpleName()));
+				continue;
+			}
+			if(breakPersistenceForRemoteRefresh){
+				logger.warn(Ax.format("Not persisting - merger %s - needs remote refresh",
+						clazz.getSimpleName()));
+				result.mergeInterrupted=true;
 				continue;
 			}
 			FlatDeltaPersisterResult perClassResult = new FlatDeltaPersisterResult();

@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.place;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
 
 @RegistryLocation(registryPoint = GenericBasePlace.class)
@@ -42,4 +43,10 @@ public abstract class GenericBasePlace<SD extends SearchDefinition>
 	}
 
 	protected abstract SD createSearchDefinition();
+
+	@Override
+	public String toString() {
+		return Ax.format("%s:%s",
+				getClass().getSimpleName().replaceFirst("(.+)Place", "$1"), id);
+	}
 }

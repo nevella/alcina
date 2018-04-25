@@ -246,7 +246,7 @@ class BiPrintStream extends PrintStream {
 
 	private void debugPrint(Object obj) {
 		String s = String.valueOf(obj);
-		if (s.contains("ConsumerConfig")) {
+		if (s.contains("PDFObjectStreamParser.java")) {
 			int debug = 3;
 		}
 	}
