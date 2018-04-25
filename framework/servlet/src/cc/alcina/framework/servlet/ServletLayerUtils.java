@@ -65,11 +65,13 @@ public class ServletLayerUtils {
 				req.getHeader("referer"), remoteAddr);
 	}
 
-	public static void muteApacheHttpClient() {
+	public static void setLoggerLevels() {
+		Logger.getLogger("org.apache.kafka").setLevel(Level.WARN);
 		Logger.getLogger("org.apache.http").setLevel(Level.WARN);
 		Logger.getLogger("org.apache.http.wire").setLevel(Level.WARN);
 		Logger.getLogger("httpclient.wire.header").setLevel(Level.WARN);
 		Logger.getLogger("httpclient.wire.content").setLevel(Level.WARN);
+		Logger.getRootLogger().setLevel(Level.WARN);
 	}
 
 	public static DomainTransformLayerWrapper pushTransforms(String tag,
