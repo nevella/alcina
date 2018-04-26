@@ -8,6 +8,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 
@@ -236,10 +237,13 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 
 		@Override
 		public java.util.Map.Entry<K, V> next() {
+		    if (idx >= size) {
+                throw new NoSuchElementException();
+            }
 			if (modCount != itrModCount) {
 				throw new ConcurrentModificationException();
 			}
-			LightMapEntry entry = new LightMapEntry(idx);
+			LightMapEntry entry = new LightMapEntry(idx++);
 			return entry;
 		}
 

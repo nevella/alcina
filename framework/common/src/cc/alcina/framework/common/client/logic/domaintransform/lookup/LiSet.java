@@ -269,7 +269,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
 			if (modCount != itrModCount) {
 				throw new ConcurrentModificationException();
 			}
-			if (idx == size) {
+			if (idx >= size) {
 				throw new NoSuchElementException();
 			}
 			nextCalled = true;

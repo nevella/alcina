@@ -341,12 +341,12 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	class ChildNodeList extends AbstractList<Node> {
 		@Override
 		public Node get(int index) {
-			return local().children.get(index).node;
+			return local().getChildren().get(index).node;
 		}
 
 		@Override
 		public int size() {
-			return local().children.size();
+			return local().getChildren().size();
 		}
 	}
 

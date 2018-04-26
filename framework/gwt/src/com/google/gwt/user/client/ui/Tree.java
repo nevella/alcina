@@ -901,9 +901,9 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
         Element hCurElem = chain.get(idx);
         for (int i = 0, n = root.getChildCount(); i < n; ++i) {
             TreeItem child = root.getChild(i);
-            if (child.getElement() == hCurElem) {
+            if (!child.isUnrendered()&&child.getElement() == hCurElem) {
                 TreeItem retItem = findItemByChain(chain, idx + 1,
-                        root.getChild(i));
+                        child);
                 if (retItem == null) {
                     return child;
                 }

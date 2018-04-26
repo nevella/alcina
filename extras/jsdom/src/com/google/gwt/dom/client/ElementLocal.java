@@ -9,6 +9,7 @@ import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 
@@ -22,8 +23,7 @@ public class ElementLocal extends NodeLocal
 
     private Element element;
 
-    protected Map<String, String> attributes = LocalDom.collections()
-            .createStringMap();
+    protected LightMap<String, String> attributes = new LightMap<>();
 
     boolean requiresSync;
 
@@ -48,7 +48,7 @@ public class ElementLocal extends NodeLocal
         ElementLocal cloneLocal = new ElementLocal(ownerDocument, tagName);
         Element clone = LocalDom.createElement(tagName).putLocal(cloneLocal);
         clone.cloneLocalStyle(element);
-        cloneLocal.attributes = new StringMap(attributes);
+        cloneLocal.attributes.putAll(attributes);
         cloneLocal.eventBits = eventBits;
         if (deep) {
             getChildNodes().stream()
@@ -191,8 +191,8 @@ public class ElementLocal extends NodeLocal
             // possibly dodgy - at least in UiBinder
             return null;
         }
-        for (int idx = 0; idx < parentNode.children.size(); idx++) {
-            NodeLocal node = parentNode.children.get(idx);
+        for (int idx = 0; idx < parentNode.getChildren().size(); idx++) {
+            NodeLocal node = parentNode.getChildren().get(idx);
             if (node == this) {
                 seen = true;
             } else {
@@ -253,8 +253,8 @@ public class ElementLocal extends NodeLocal
     @Override
     public final Element getPreviousSiblingElement() {
         boolean seen = false;
-        for (int idx = parentNode.children.size() - 1; idx >= 0; idx--) {
-            NodeLocal node = parentNode.children.get(idx);
+        for (int idx = parentNode.getChildren().size() - 1; idx >= 0; idx--) {
+            NodeLocal node = parentNode.getChildren().get(idx);
             if (node == this) {
                 seen = true;
             } else {
@@ -574,17 +574,17 @@ public class ElementLocal extends NodeLocal
 
     private void appendChildContents(UnsafeHtmlBuilder builder) {
         if (containsUnescapedText()) {
-            children.stream().forEach(
+            getChildren().stream().forEach(
                     node -> ((TextLocal) node).appendUnescaped(builder));
         } else {
-            children.stream().forEach(child -> child.appendOuterHtml(builder));
+            getChildren().stream().forEach(child -> child.appendOuterHtml(builder));
         }
     }
 
     private boolean containsUnescapedText() {
         if (tagName.equalsIgnoreCase("style")
                 || tagName.equalsIgnoreCase("script")) {
-            Preconditions.checkState(children.stream()
+            Preconditions.checkState(getChildren().stream()
                     .allMatch(c -> c.getNodeType() == Node.TEXT_NODE));
             return true;
         } else {
@@ -644,11 +644,11 @@ public class ElementLocal extends NodeLocal
 
     @Override
     void appendTextContent(StringBuilder builder) {
-        children.stream().forEach(node -> node.appendTextContent(builder));
+        getChildren().stream().forEach(node -> node.appendTextContent(builder));
     }
 
     int orSunkEventsOfAllChildren(int sunk) {
-        for (NodeLocal child : children) {
+        for (NodeLocal child : getChildren()) {
             if (child instanceof ElementLocal) {
                 sunk = ((ElementLocal) child).orSunkEventsOfAllChildren(sunk);
             }

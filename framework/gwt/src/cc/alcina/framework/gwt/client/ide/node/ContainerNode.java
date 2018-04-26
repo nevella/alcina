@@ -25,43 +25,52 @@ import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
  * @author Nick Reddel
  */
 public class ContainerNode extends FilterableTreeItem
-		implements DetachListener {
-	private String title;
+        implements DetachListener {
+    private String title;
 
-	private AbstractImagePrototype imagePrototype;
+    private AbstractImagePrototype imagePrototype;
 
-	public ContainerNode(String title, ImageResource imageResource) {
-		this(title, imageResource, null);
-	}
+    public ContainerNode(String title, ImageResource imageResource) {
+        this(title, imageResource, null);
+    }
 
-	public ContainerNode(String title, ImageResource imageResource,
-			NodeFactory nodeFactory) {
-		super(nodeFactory);
-		this.title = title;
-		this.imagePrototype = AbstractImagePrototype
-				.create(imageResource == null ? StandardDataImageProvider.get()
-						.getDataImages().folder() : imageResource);
-		setHTML(imageItemHTML(imagePrototype, title));
-	}
+    public ContainerNode(String title, ImageResource imageResource,
+            NodeFactory nodeFactory) {
+        super(nodeFactory);
+        this.title = title;
+        this.imagePrototype = AbstractImagePrototype
+                .create(imageResource == null ? StandardDataImageProvider.get()
+                        .getDataImages().folder() : imageResource);
+    }
 
-	public AbstractImagePrototype getImagePrototype() {
-		return this.imagePrototype;
-	}
+    @Override
+    protected void renderHtml() {
+        setHTML(imageItemHTML(getImagePrototype(), title));
+    }
 
-	public String getTitle() {
-		return this.title;
-	}
+    public AbstractImagePrototype getImagePrototype() {
+        return this.imagePrototype;
+    }
 
-	public void onDetach() {
-		for (int i = 0; i < getChildCount(); i++) {
-			TreeItem child = getChild(i);
-			if (child instanceof DetachListener)
-				((DetachListener) child).onDetach();
-		}
-	}
+    public String getTitle() {
+        return this.title;
+    }
 
-	protected String imageItemHTML(AbstractImagePrototype imageProto,
-			String title) {
-		return imageProto.getHTML() + " " + title;
-	}
+    @Override
+    protected String getText0() {
+        return getTitle();
+    }
+
+    public void onDetach() {
+        for (int i = 0; i < getChildCount(); i++) {
+            TreeItem child = getChild(i);
+            if (child instanceof DetachListener)
+                ((DetachListener) child).onDetach();
+        }
+    }
+
+    protected String imageItemHTML(AbstractImagePrototype imageProto,
+            String title) {
+        return imageProto.getHTML() + " " + title;
+    }
 }
