@@ -61,6 +61,8 @@ import java.util.zip.GZIPOutputStream;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
+import com.google.gwt.core.shared.GWT;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -269,6 +271,9 @@ public class ResourceUtilities {
 				: GraphProjection.classSimpleName(clazz) + "." + propertyName;
 		if (customProperties.containsKey(namespacedKey)) {
 			return customProperties.get(namespacedKey);
+		}
+		if(GWT.isClient()){
+		    return null;
 		}
 		ResourceBundle b = null;
 		b = ResourceBundle.getBundle(clazz.getPackage().getName() + ".Bundle",

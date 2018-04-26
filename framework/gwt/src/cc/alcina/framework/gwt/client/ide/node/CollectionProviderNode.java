@@ -43,7 +43,6 @@ public class CollectionProviderNode extends ContainerNode
 			NodeFactory nodeFactory) {
 		super(title, imageResource, nodeFactory);
 		setCollectionProvider(collectionProvider);
-		setHTML(imageItemHTML(getImagePrototype(), title));
 		this.support.setVolatileOrder(volatileOrder);
 	}
 

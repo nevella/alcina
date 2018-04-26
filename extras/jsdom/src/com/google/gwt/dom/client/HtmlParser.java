@@ -6,9 +6,9 @@ import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.StringMap;
 
 public class HtmlParser {
     static String decodeEntities(String text) {
@@ -60,7 +60,7 @@ public class HtmlParser {
     private String attrValue;
 
     // FIXME - optimise
-    private StringMap attributes = new StringMap();
+    private LightMap<String,String> attributes = new LightMap();
 
     private Element rootResult;
 
@@ -338,7 +338,7 @@ public class HtmlParser {
                 element.local().hasUnparsedStyle = true;
             }
         }
-        attributes = new StringMap();
+        attributes = new LightMap<>();
         if (rootResult == null) {
             rootResult = element;
             setCursor(element, tag, 1);

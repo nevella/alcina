@@ -40,122 +40,136 @@ import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
  * @author Nick Reddel
  */
 public class DomainNode<T extends SourcesPropertyChangeEvents> extends
-		FilterableTreeItem implements PropertyChangeListener, DetachListener {
-	private String displayName;
+        FilterableTreeItem implements PropertyChangeListener, DetachListener {
+    private String displayName;
 
-	public DomainNode(T object) {
-		this(object, null);
-	}
+    public DomainNode(T object) {
+        this(object, null);
+    }
 
-	public DomainNode(T object, NodeFactory nodeFactory) {
-		super();
-		setUserObject(object);
-		ClientBeanReflector info = ClientReflector.get()
-				.beanInfoForClass(getUserObject().getClass());
-		if (object instanceof HasGeneratedDisplayName) {
-			object.addPropertyChangeListener(this);
-		} else {
-			String displayNamePropertyName = info.getGwBeanInfo()
-					.displayNamePropertyName();
-			Object pv = GwittirBridge.get().getPropertyValue(object,
-					displayNamePropertyName);
-			if (pv instanceof SourcesPropertyChangeEvents) {
-				SourcesPropertyChangeEvents spce = (SourcesPropertyChangeEvents) pv;
-				spce.addPropertyChangeListener(this);
-			} else {
-				object.addPropertyChangeListener(displayNamePropertyName, this);
-			}
-		}
-		refreshFromObject();
-	}
+    public DomainNode(T object, NodeFactory nodeFactory) {
+        super();
+        setUserObject(object);
+        ClientBeanReflector info = ClientReflector.get()
+                .beanInfoForClass(getUserObject().getClass());
+        if (object instanceof HasGeneratedDisplayName) {
+            object.addPropertyChangeListener(this);
+        } else {
+            String displayNamePropertyName = info.getGwBeanInfo()
+                    .displayNamePropertyName();
+            Object pv = GwittirBridge.get().getPropertyValue(object,
+                    displayNamePropertyName);
+            if (pv instanceof SourcesPropertyChangeEvents) {
+                SourcesPropertyChangeEvents spce = (SourcesPropertyChangeEvents) pv;
+                spce.addPropertyChangeListener(this);
+            } else {
+                object.addPropertyChangeListener(displayNamePropertyName, this);
+            }
+        }
+        refreshFromObject();
+    }
 
-	public String getDisplayName() {
-		return this.displayName;
-	}
+    public String getDisplayName() {
+        return this.displayName;
+    }
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public T getUserObject() {
-		return (T) super.getUserObject();
-	}
+    @Override
+    @SuppressWarnings("unchecked")
+    public T getUserObject() {
+        return (T) super.getUserObject();
+    }
 
-	public void onDetach() {
-		removeListeners();
-	}
+    public void onDetach() {
+        removeListeners();
+    }
 
-	public void propertyChange(PropertyChangeEvent evt) {
-		refreshFromObject();
-	}
+    public void propertyChange(PropertyChangeEvent evt) {
+        refreshFromObject();
+    }
 
-	public void refreshFromObject() {
-		ClientBeanReflector info = ClientReflector.get()
-				.beanInfoForClass(getUserObject().getClass());
-		displayName = info.getObjectName(getUserObject());
-		if (displayName != null) {
-			displayName = SafeHtmlUtils.htmlEscape(displayName);
-		} else {
-			displayName = "[null]";
-		}
-		AbstractImagePrototype img = StandardDataImageProvider.get()
-				.getByName(info.getGwBeanInfo().displayInfo().iconName());
-		setHTML(imageItemHTML(img, displayName));
-	}
+    public void refreshFromObject() {
+        ClientBeanReflector info = ClientReflector.get()
+                .beanInfoForClass(getUserObject().getClass());
+        displayName = info.getObjectName(getUserObject());
+        if (displayName != null) {
+            displayName = SafeHtmlUtils.htmlEscape(displayName);
+        } else {
+            displayName = "[null]";
+        }
+        if (!isUnrendered()) {
+            renderHtml();
+        }
+    }
 
-	@Override
-	public void removeItem(TreeItem item) {
-		super.removeItem(item);
-		removeListeners();
-	}
+    @Override
+    protected void renderHtml() {
+        ClientBeanReflector info = ClientReflector.get()
+                .beanInfoForClass(getUserObject().getClass());
+        AbstractImagePrototype img = StandardDataImageProvider.get()
+                .getByName(info.getGwBeanInfo().displayInfo().iconName());
+        setHTML(imageItemHTML(img, displayName));
+    }
 
-	public void removeListeners() {
-		T object = getUserObject();
-		if (object instanceof HasGeneratedDisplayName) {
-			return;
-		}
-		ClientBeanReflector info = ClientReflector.get()
-				.beanInfoForClass(getUserObject().getClass());
-		String displayNamePropertyName = info.getGwBeanInfo()
-				.displayNamePropertyName();
-		Object pv = GwittirBridge.get().getPropertyValue(object,
-				displayNamePropertyName);
-		if (pv instanceof SourcesPropertyChangeEvents) {
-			SourcesPropertyChangeEvents spce = (SourcesPropertyChangeEvents) pv;
-			spce.removePropertyChangeListener(this);
-		} else {
-			object.removePropertyChangeListener(displayNamePropertyName, this);
-		}
-	}
+    @Override
+    public void removeItem(TreeItem item) {
+        super.removeItem(item);
+        removeListeners();
+    }
 
-	protected String imageItemHTML(AbstractImagePrototype imageProto,
-			String title) {
-		return imageProto.getHTML() + " " + title;
-	}
+    public void removeListeners() {
+        T object = getUserObject();
+        if (object instanceof HasGeneratedDisplayName) {
+            return;
+        }
+        ClientBeanReflector info = ClientReflector.get()
+                .beanInfoForClass(getUserObject().getClass());
+        String displayNamePropertyName = info.getGwBeanInfo()
+                .displayNamePropertyName();
+        Object pv = GwittirBridge.get().getPropertyValue(object,
+                displayNamePropertyName);
+        if (pv instanceof SourcesPropertyChangeEvents) {
+            SourcesPropertyChangeEvents spce = (SourcesPropertyChangeEvents) pv;
+            spce.removePropertyChangeListener(this);
+        } else {
+            object.removePropertyChangeListener(displayNamePropertyName, this);
+        }
+    }
 
-	@Override
-	protected boolean satisfiesFilter(String filterText) {
-		T userObject = getUserObject();
-		return Registry.impl(HasSatisfiesFilter.class, userObject.getClass())
-				.satisfiesFilter(userObject, filterText);
-	}
+    @Override
+    protected String getText0() {
+        return displayName;
+    }
 
-	@RegistryLocation(registryPoint = HasSatisfiesFilter.class, implementationType = ImplementationType.SINGLETON)
-	@ClientInstantiable
-	public static class DefaultHasSatisfiesFilter<T>
-			implements HasSatisfiesFilter<T> {
-		@Override
-		public boolean satisfiesFilter(T t, String filterText) {
-			if (CommonUtils.nullToEmpty(TextProvider.get().getObjectName(t))
-					.toLowerCase().contains(filterText)) {
-				return true;
-			}
-			if (t instanceof HasId) {
-				if (filterText.startsWith("id:")) {
-					return String.valueOf(((HasId) t).getId())
-							.equals(filterText.substring(3));
-				}
-				return String.valueOf(((HasId) t).getId()).equals(filterText);
-			}
-			return false;
-		}
-	}
+    protected String imageItemHTML(AbstractImagePrototype imageProto,
+            String title) {
+        return imageProto.getHTML() + " " + title;
+    }
+
+    @Override
+    protected boolean satisfiesFilter(String filterText) {
+        T userObject = getUserObject();
+        return Registry.impl(HasSatisfiesFilter.class, userObject.getClass())
+                .satisfiesFilter(userObject, filterText);
+    }
+
+    @RegistryLocation(registryPoint = HasSatisfiesFilter.class, implementationType = ImplementationType.SINGLETON)
+    @ClientInstantiable
+    public static class DefaultHasSatisfiesFilter<T>
+            implements HasSatisfiesFilter<T> {
+        @Override
+        public boolean satisfiesFilter(T t, String filterText) {
+            if (CommonUtils.nullToEmpty(TextProvider.get().getObjectName(t))
+                    .toLowerCase().contains(filterText)) {
+                return true;
+            }
+            if (t instanceof HasId) {
+                if (filterText.startsWith("id:")) {
+                    return String.valueOf(((HasId) t).getId())
+                            .equals(filterText.substring(3));
+                }
+                return String.valueOf(((HasId) t).getId()).equals(filterText);
+            }
+            return false;
+        }
+    }
 }

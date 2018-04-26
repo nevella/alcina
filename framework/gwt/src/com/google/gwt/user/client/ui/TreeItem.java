@@ -30,6 +30,7 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.DOM;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * An item that can be contained within a
@@ -114,8 +115,6 @@ public class TreeItem extends UIObject
 
     private Widget widget;
 
-    
-
     /**
      * Creates an empty tree item.
      */
@@ -163,21 +162,43 @@ public class TreeItem extends UIObject
      */
     TreeItem(boolean isRoot) {
         this.isRoot = isRoot;
-        // Element elem = DOM.clone(BASE_BARE_ELEM, true);
-        // Element elem = PotentialElement.build(this).cast();
+        ensureElements(isRoot);
+    }
+
+    protected void ensureElements(boolean isRoot) {
+        ensureElements();
+    }
+
+    protected void ensureElements() {
+        if (contentElem != null) {
+            return;
+        }
         Element elem = Document.get().createDivElement();
         elem.ensureId();
-        ;
         setElement(elem);
-        // contentElem = PotentialElement.build(this).cast();
         contentElem = Document.get().createDivElement();
         contentElem.ensureId();
-        // DOM.setElementAttribute(contentElem, "id", DOM.createUniqueId());
         // The root item always has children.
         if (isRoot) {
             initChildren();
+            impl.ensureState(this, PotentialState.INSTANTIATED);
         }
-        impl.ensureState(this, PotentialState.INSTANTIATED);
+    }
+
+
+    private List<Integer> getIndex() {
+        ArrayList<Integer> list = new ArrayList<>();
+        populateIndex(list);
+        return list;
+    }
+
+    private void populateIndex(List<Integer> list) {
+        if(getParentItem()==null){
+            list.add(0,0);
+            return;
+        }
+        list.add(0, getParentItem().getChildIndex(this));
+        getParentItem().populateIndex(list);
     }
 
     /**
@@ -546,6 +567,10 @@ public class TreeItem extends UIObject
         DOM.setInnerHTML(contentElem, html);
     }
 
+    protected boolean isUnrendered() {
+        return contentElem==null;
+    }
+
     /**
      * Selects or deselects this item.
      * 
@@ -840,49 +865,53 @@ public class TreeItem extends UIObject
     }
 
     void updateState(boolean animate, boolean updateTreeSelection) {
-		// If the tree hasn't been set, there is no visual state to update.
-		// If the tree is not attached, then update will be called on attach.
-	    // localdom - do it before attach
-        if (tree == null){
+        // If the tree hasn't been set, there is no visual state to update.
+        // If the tree is not attached, then update will be called on attach.
+        // localdom - do it before attach
+        if (tree == null) {
             return;
         }
-	    boolean decorateBeforeAttach = !tree.isAnimationEnabled();
-	    boolean decorate = tree.isAttached()||decorateBeforeAttach;
-		if ( !decorate) {
-			return;
-		}
-		if (potentialState == PotentialState.POTENTIAL) {
-			return;
-		}
-		if (getChildCount() == 0) {
-			if (childSpanElem != null) {
-				UIObject.setVisible(childSpanElem, false);
-			}
-			tree.showLeafImage(this);
-			return;
-		}
-		// We must use 'display' rather than 'visibility' here,
-		// or the children will always take up space.
-		if (animate && (tree != null) && (tree.isAttached())) {
-			itemAnimation.setItemState(this, tree.isAnimationEnabled());
-		} else {
-			itemAnimation.setItemState(this, false);
-		}
-		// Change the status image
-		if (open) {
-			tree.showOpenImage(this);
-		} else {
-			tree.showClosedImage(this);
-		}
-		// We may need to update the tree's selection in response to a tree
-		// state
-		// change. For example, if the tree's currently selected item is a
-		// descendant of an item whose branch was just collapsed, then the item
-		// itself should become the newly-selected item.
-		if (updateTreeSelection) {
-			tree.maybeUpdateSelection(this, this.open);
-		}
-	}
+        boolean decorateBeforeAttach = !tree.isAnimationEnabled();
+        boolean decorate = tree.isAttached() || decorateBeforeAttach;
+        if (!decorate) {
+            return;
+        }
+        if (potentialState == PotentialState.POTENTIAL) {
+            return;
+        }
+        maybeLazilyRender();
+        if (getChildCount() == 0) {
+            if (childSpanElem != null) {
+                UIObject.setVisible(childSpanElem, false);
+            }
+            tree.showLeafImage(this);
+            return;
+        }
+        // We must use 'display' rather than 'visibility' here,
+        // or the children will always take up space.
+        if (animate && (tree != null) && (tree.isAttached())) {
+            itemAnimation.setItemState(this, tree.isAnimationEnabled());
+        } else {
+            itemAnimation.setItemState(this, false);
+        }
+        // Change the status image
+        if (open) {
+            tree.showOpenImage(this);
+        } else {
+            tree.showClosedImage(this);
+        }
+        // We may need to update the tree's selection in response to a tree
+        // state
+        // change. For example, if the tree's currently selected item is a
+        // descendant of an item whose branch was just collapsed, then the item
+        // itself should become the newly-selected item.
+        if (updateTreeSelection) {
+            tree.maybeUpdateSelection(this, this.open);
+        }
+    }
+
+    protected void maybeLazilyRender() {
+    }
 
     void updateStateRecursive() {
         updateStateRecursiveHelper();
@@ -927,10 +956,12 @@ public class TreeItem extends UIObject
                 return;
             }
             if (item.imageHolder == null) {
+                item.ensureElements();
                 // item.contentElem = item.resolve(item.contentElem);
                 item.contentElem.setClassName("gwt-TreeItem");
                 // item.setElement(item.resolve(item.getElement()));
                 convertToFullNode(item);
+                Ax.out("to full node: %s",item.getIndex());
             }
             if (state == PotentialState.INSTANTIATED) {
                 item.initChildSpanElement();
@@ -1099,12 +1130,14 @@ public class TreeItem extends UIObject
         POTENTIAL, POTENTIAL_CHILDREN, INSTANTIATED
     }
 
-     AbstractImagePrototype getCurrentImagePrototype(Element child) {
-         return currentImagePrototypesData.get(child);
+    AbstractImagePrototype getCurrentImagePrototype(Element child) {
+        return currentImagePrototypesData.get(child);
     }
-     void setCurrentImagePrototype(Element child,AbstractImagePrototype prototype) {
-          currentImagePrototypesData.put(child,prototype);
+
+    void setCurrentImagePrototype(Element child,
+            AbstractImagePrototype prototype) {
+        currentImagePrototypesData.put(child, prototype);
     }
-     
-     Map<Element,AbstractImagePrototype> currentImagePrototypesData = new LightMap<>();
+
+    Map<Element, AbstractImagePrototype> currentImagePrototypesData = new LightMap<>();
 }

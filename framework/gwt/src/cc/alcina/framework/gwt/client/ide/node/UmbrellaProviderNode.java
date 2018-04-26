@@ -47,7 +47,6 @@ public class UmbrellaProviderNode extends ContainerNode
 		setCollectionProvider(provider);
 		title = title == null ? provider.getTitle() : title;
 		setTitle(title);
-		setHTML(imageItemHTML(getImagePrototype(), title));
 		dummy();
 	}
 

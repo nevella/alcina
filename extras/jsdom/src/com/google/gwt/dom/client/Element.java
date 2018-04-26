@@ -428,7 +428,7 @@ public class Element extends Node implements DomElement {
 		return local().hasClassName(className);
 	}
 
-	public boolean hasStyle() {
+    public boolean hasStyle() {
 		return style != null;
 	}
 
@@ -691,7 +691,7 @@ public class Element extends Node implements DomElement {
 			fb.format("\n\t");
 			NodeLocal cursor = local();
 			while (cursor.getChildCount() > 0) {
-				cursor = cursor.children.get(0);
+				cursor = cursor.getChildren().get(0);
 				fb.format("%s ", cursor.getNodeName());
 			}
 		}
@@ -870,7 +870,7 @@ public class Element extends Node implements DomElement {
 
 		public void appendChildLocalOnly(Element localOnly) {
 			// IE special case
-			local.children.add(localOnly.local);
+			local.getChildren().add(localOnly.local);
 		}
 	}
 
@@ -884,6 +884,8 @@ public class Element extends Node implements DomElement {
 	@Override
 	protected void resetRemote0() {
 		this.remote = ElementNull.INSTANCE;
+		if(this.hasStyle()){
 		this.style.resetRemote();
+		}
 	}
 }

@@ -424,10 +424,11 @@ abstract class DOMImpl {
 	}
 
 	protected native void scrollIntoView(ElementRemote elem) /*-{
-        if (elem.scrollIntoView) {
-            elem.scrollIntoView();
-            return;
-        }
+	//safer to rely on emulated behaviour
+//        if (elem.scrollIntoView) {
+//            elem.scrollIntoView();
+//            return;
+//        }
         var left = elem.offsetLeft, top = elem.offsetTop;
         var width = elem.offsetWidth, height = elem.offsetHeight;
 

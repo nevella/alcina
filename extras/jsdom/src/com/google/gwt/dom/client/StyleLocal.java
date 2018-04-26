@@ -24,10 +24,10 @@ import com.google.gwt.dom.client.Style.VerticalAlign;
 import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.dom.client.Style.WhiteSpace;
 
-import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 
 public class StyleLocal implements DomStyle {
-	StringMap properties = new StringMap();
+    LightMap<String,String> properties = new LightMap<>();
 
 	private Style styleObject;
 
@@ -812,7 +812,7 @@ public class StyleLocal implements DomStyle {
 
 	void cloneStyleFrom(DomStyle other, Style to) {
 		StyleLocal clone = new StyleLocal(to);
-		clone.properties = new StringMap(((StyleLocal) other).properties);
+		clone.properties.putAll(properties);
 	}
 
 	boolean isEmpty() {
