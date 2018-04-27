@@ -90,6 +90,7 @@ public class PartialDtrUploadHandler {
 				DomainTransformRequest rq = new DomainTransformRequest();
 				rq.fromString(wrapper.getText());
 				rq.getEvents().addAll(transforms);
+				rq.setTag(wrapper.getTag());
 				response.transformsUploadedButNotCommitted += transforms.size();
 				wrapper.setText(rq.toString());
 				String fileName = String.format("%s_%s_ser.txt",
@@ -106,6 +107,7 @@ public class PartialDtrUploadHandler {
 			DomainTransformRequest rq = new DomainTransformRequest();
 			DeltaApplicationRecord wrapper = dtrSerializer.read(ser);
 			rq.fromString(wrapper.getText());
+			rq.setTag(wrapper.getTag());
 			response.lastUploadedRequestId = wrapper.getRequestId();
 			response.lastUploadedRequestTransformUploadCount = rq.getEvents()
 					.size();
