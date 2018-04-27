@@ -1667,4 +1667,14 @@ public class CommonUtils {
 	}
 
 	private static Set<String> done = new LinkedHashSet<>();
+
+	@SuppressWarnings("deprecation")
+	public static boolean isInCurrentMonth(Date date) {
+		if (date == null) {
+			return false;
+		}
+		Date now = new Date();
+		return now.getYear() == date.getYear()
+				&& now.getMonth() == date.getMonth();
+	}
 }

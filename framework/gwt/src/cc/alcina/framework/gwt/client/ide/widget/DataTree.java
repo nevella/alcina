@@ -126,4 +126,11 @@ public class DataTree extends FilterableTree
 				((DetachListener) child).onDetach();
 		}
 	}
+
+	public void reselectCurrentItem() {
+		TreeItem current = getSelectedItem();	
+		setSelectedItem(null);
+		setSelectedItem(current);
+		ensureSelectedItemVisible();
+	}
 }
