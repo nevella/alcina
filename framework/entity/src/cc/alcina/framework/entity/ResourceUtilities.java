@@ -272,8 +272,12 @@ public class ResourceUtilities {
 		if (customProperties.containsKey(namespacedKey)) {
 			return customProperties.get(namespacedKey);
 		}
-		if(GWT.isClient()){
-		    return null;
+		try {
+			if (GWT.isClient()) {
+				return null;
+			}
+		} catch (Throwable t) {
+			// suppress, no gwt on classpath
 		}
 		ResourceBundle b = null;
 		b = ResourceBundle.getBundle(clazz.getPackage().getName() + ".Bundle",
