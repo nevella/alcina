@@ -16,7 +16,7 @@ public class DomainTransformRequestTagProvider {
 
     private String tag;
 
-    protected DomainTransformRequestTagProvider() {
+    public DomainTransformRequestTagProvider() {
     }
 
     public String getTag() {
