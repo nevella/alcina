@@ -1,11 +1,13 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 
 @RegistryLocation(registryPoint = DomainTransformRequestTagProvider.class, implementationType = ImplementationType.SINGLETON)
+@ClientInstantiable
 public class DomainTransformRequestTagProvider {
     public static final transient String CONTEXT_COMMIT_REQUEST_TAG = DomainTransformRequestTagProvider.class
             .getName() + ".CONTEXT_COMMIT_REQUEST_TAG";
