@@ -1,0 +1,15 @@
+body {
+	font-family: Arial;
+}
+
+td {
+	vertical-align: top;
+	padding: 2px 3px 2px 6px;;
+}
+.content{
+	width: calc(100vw - 200px);
+	border: solid 1px #ccc;
+	padding: 1em;
+	height: calc(100vh - 200px);
+	margin: 1em auto;
+}

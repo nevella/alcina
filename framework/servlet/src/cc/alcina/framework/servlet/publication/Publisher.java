@@ -204,6 +204,12 @@ public class Publisher {
 			postDeliveryPersistence(publicationId);
 			persist(contentDefinition, deliveryModel, publicationUserId,
 					original, publicationContentPersister, result);
+			if (crh.getResults().persist && publicationContentPersister != null
+					&& result.publicationId != 0) {
+				crh.getResults().htmlContent = cw.wrappedContent;
+				publicationContentPersister.persistContentRendererResults(
+						crh.getResults(), result.publicationId);
+			}
 		}
 		result.content = null;
 		result.contentToken = token;

@@ -1342,8 +1342,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		private CommonPersistenceBase cp;
 
 		@Override
-		public ClientInstance createClientInstance(String userAgent,
-				String iid,String ipAddress) {
+		public ClientInstance createClientInstance(String userAgent, String iid,
+				String ipAddress) {
 			long newId = 0;
 			synchronized (ReadonlyHandshakeObjectProvider.class) {
 				if (clientInstanceIdCounter == 0) {
@@ -1493,8 +1493,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		private CommonPersistenceBase cp;
 
 		@Override
-		public ClientInstance createClientInstance(String userAgent,
-				String iid,String ipAddress) {
+		public ClientInstance createClientInstance(String userAgent, String iid,
+				String ipAddress) {
 			AppPersistenceBase.checkNotReadOnly();
 			Class<? extends ClientInstance> clientInstanceImpl = cp
 					.getImplementation(ClientInstance.class);
@@ -1531,8 +1531,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				throw new WrappedRuntimeException(e);
 			}
 		}
-
-        
 
 		@Override
 		public ClientInstance getClientInstance(long clientInstanceId) {
@@ -1580,10 +1578,12 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			throw new UnsupportedOperationException();
 		}
 	}
+
 	protected IUser projectUserForClientInstance(IUser clonedUser) {
-        return new EntityUtils()
-                .detachedCloneIgnorePermissions(clonedUser, null);
-    }
+		return new EntityUtils().detachedCloneIgnorePermissions(clonedUser,
+				null);
+	}
+
 	@Override
 	public Integer getHighestPersistedRequestIdForClientInstance(
 			long clientInstanceId) {
@@ -1596,5 +1596,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		Integer result = (Integer) getEntityManager().createQuery(eql)
 				.getSingleResult();
 		return result;
+	}
+
+	@Override
+	public Publication getPublication(long id) {
+		Publication publication = getEntityManager()
+				.find(getImplementation(Publication.class), id);
+		unwrap(publication);
+		return new EntityUtils().detachedCloneIgnorePermissions(publication,
+				createUserAndGroupInstantiator());
 	}
 }

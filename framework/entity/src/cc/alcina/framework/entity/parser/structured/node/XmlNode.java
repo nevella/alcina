@@ -732,7 +732,7 @@ public class XmlNode {
 
 	public class XmlNodeHtml {
 		public void addClassName(String string) {
-			Set<String> classes = Arrays.stream(attr("class").split(" "))
+			Set<String> classes = Arrays.stream(attr("class").split(" ")).filter(Ax::notBlank)
 					.collect(J8Utils.toLinkedHashSet());
 			classes.add(string);
 			setAttr("class", classes.stream().collect(Collectors.joining(" ")));

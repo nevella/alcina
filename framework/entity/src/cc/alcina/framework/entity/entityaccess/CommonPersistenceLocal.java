@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
@@ -199,4 +200,6 @@ public interface CommonPersistenceLocal {
 	public HiliLocatorMap getLocatorMap(Long clientInstanceId);
 
 	Integer getHighestPersistedRequestIdForClientInstance(long clientInstanceId);
+
+	public Publication getPublication(long id);
 }
