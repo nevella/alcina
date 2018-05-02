@@ -24,7 +24,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
@@ -202,16 +204,20 @@ public class ServletLayerUtils {
                     String ipAddress = null;
                     HttpServletRequest contextThreadLocalRequest = CommonRemoteServiceServlet
                             .getContextThreadLocalRequest();
+                    long extClientInstanceId = 0;
                     if (contextThreadLocalRequest != null) {
                         ipAddress = ServletLayerUtils
                                 .robustGetRemoteAddr(contextThreadLocalRequest);
+                        extClientInstanceId = PermissionsManager.get()
+                                .getClientInstance().getId();
                     }
                     final ClientInstance commitInstance = Registry
                             .impl(CommonPersistenceProvider.class)
-                            .getCommonPersistence().createClientInstance(
-                                    "servlet-bulk: " + EntityLayerUtils
-                                            .getLocalHostName(),
-                                    null, ipAddress);
+                            .getCommonPersistence()
+                            .createClientInstance(Ax.format(
+                                    "servlet-bulk: %s - derived from client instance : %s",
+                                    EntityLayerUtils.getLocalHostName(),
+                                    extClientInstanceId), null, ipAddress);
                     List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>(
                             TransformManager.get().getTransformsByCommitType(
                                     CommitType.TO_LOCAL_BEAN));
