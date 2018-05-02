@@ -38,213 +38,221 @@ import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 import cc.alcina.framework.servlet.actionhandlers.DtrSimpleAdminPersistenceHandler;
+import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
 public class ServletLayerUtils {
-	public static final transient String CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH = ServletLayerUtils.class
-			.getName() + ".CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH";
+    public static final transient String CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH = ServletLayerUtils.class
+            .getName() + ".CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH";
 
-	public static final transient String CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK = ServletLayerUtils.class
-			.getName() + ".CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK";
+    public static final transient String CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK = ServletLayerUtils.class
+            .getName() + ".CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK";
 
-	private static boolean appServletInitialised;
+    private static boolean appServletInitialised;
 
-	public static String defaultTag;
+    public static String defaultTag;
 
-	public static boolean checkForBrokenClientPipe(Exception e) {
-		return SEUtilities.getFullExceptionMessage(e).contains("Broken pipe");
-	}
+    public static boolean checkForBrokenClientPipe(Exception e) {
+        return SEUtilities.getFullExceptionMessage(e).contains("Broken pipe");
+    }
 
-	public static boolean isAppServletInitialised() {
-		return appServletInitialised;
-	}
+    public static boolean isAppServletInitialised() {
+        return appServletInitialised;
+    }
 
-	public static void logRequest(HttpServletRequest req, String remoteAddr) {
-		System.out.format(
-				"\nRequest: %s\t Querystring: %s\t Referer: %s\t Ip: %s\n",
-				req.getRequestURI(), req.getQueryString(),
-				req.getHeader("referer"), remoteAddr);
-	}
+    public static void logRequest(HttpServletRequest req, String remoteAddr) {
+        System.out.format(
+                "\nRequest: %s\t Querystring: %s\t Referer: %s\t Ip: %s\n",
+                req.getRequestURI(), req.getQueryString(),
+                req.getHeader("referer"), remoteAddr);
+    }
 
-	public static void setLoggerLevels() {
-		Logger.getLogger("org.apache.kafka").setLevel(Level.WARN);
-		Logger.getLogger("org.apache.http").setLevel(Level.WARN);
-		Logger.getLogger("org.apache.http.wire").setLevel(Level.WARN);
-		Logger.getLogger("httpclient.wire.header").setLevel(Level.WARN);
-		Logger.getLogger("httpclient.wire.content").setLevel(Level.WARN);
-		Logger.getRootLogger().setLevel(Level.WARN);
-	}
+    public static void setLoggerLevels() {
+        Logger.getLogger("org.apache.kafka").setLevel(Level.WARN);
+        Logger.getLogger("org.apache.http").setLevel(Level.WARN);
+        Logger.getLogger("org.apache.http.wire").setLevel(Level.WARN);
+        Logger.getLogger("httpclient.wire.header").setLevel(Level.WARN);
+        Logger.getLogger("httpclient.wire.content").setLevel(Level.WARN);
+        Logger.getRootLogger().setLevel(Level.WARN);
+    }
 
-	public static DomainTransformLayerWrapper pushTransforms(String tag,
-			boolean asRoot, boolean returnResponse) {
-		if (tag == null) {
-			tag = DomainTransformRequestTagProvider.get().getTag();
-		}
-		int pendingTransformCount = TransformManager.get()
-				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
-		if (pendingTransformCount == 0) {
-			ThreadlocalTransformManager.cast().resetTltm(null);
-			return new DomainTransformLayerWrapper();
-		}
-		if (AppPersistenceBase.isTest() && !ResourceUtilities
-				.is(ServletLayerUtils.class, "testTransformCascade")) {
-			return new DomainTransformLayerWrapper();
-		}
-		int maxTransformChunkSize = ResourceUtilities.getInteger(
-				ServletLayerUtils.class, "maxTransformChunkSize", 6000);
-		if (pendingTransformCount > maxTransformChunkSize
-				&& !LooseContext.is(CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK)) {
-			commitLocalTransformsInChunks(maxTransformChunkSize);
-			return new DomainTransformLayerWrapper();
-		}
-		return doPersistTransforms(tag, asRoot);
-	}
+    public static DomainTransformLayerWrapper pushTransforms(String tag,
+            boolean asRoot, boolean returnResponse) {
+        if (tag == null) {
+            tag = DomainTransformRequestTagProvider.get().getTag();
+        }
+        int pendingTransformCount = TransformManager.get()
+                .getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
+        if (pendingTransformCount == 0) {
+            ThreadlocalTransformManager.cast().resetTltm(null);
+            return new DomainTransformLayerWrapper();
+        }
+        if (AppPersistenceBase.isTest() && !ResourceUtilities
+                .is(ServletLayerUtils.class, "testTransformCascade")) {
+            return new DomainTransformLayerWrapper();
+        }
+        int maxTransformChunkSize = ResourceUtilities.getInteger(
+                ServletLayerUtils.class, "maxTransformChunkSize", 6000);
+        if (pendingTransformCount > maxTransformChunkSize
+                && !LooseContext.is(CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK)) {
+            commitLocalTransformsInChunks(maxTransformChunkSize);
+            return new DomainTransformLayerWrapper();
+        }
+        return doPersistTransforms(tag, asRoot);
+    }
 
-	protected static DomainTransformLayerWrapper doPersistTransforms(String tag,
-			boolean asRoot) {
-		// for debugging
-		Set<DomainTransformEvent> transforms = TransformManager.get()
-				.getTransforms();
-		ThreadedPermissionsManager tpm = ThreadedPermissionsManager.cast();
-		boolean muted = MetricLogging.get().isMuted();
-		try {
-			MetricLogging.get().setMuted(true);
-			if (asRoot) {
-				tpm.pushSystemUser();
-			} else {
-				tpm.pushCurrentUser();
-			}
-			CascadingTransformSupport cascadingTransformSupport = CascadingTransformSupport
-					.get();
-			try {
-				cascadingTransformSupport.beforeTransform();
-				DomainTransformLayerWrapper wrapper = Registry
-						.impl(CommonRemoteServletProvider.class)
-						.getCommonRemoteServiceServlet()
-						.transformFromServletLayer(tag);
-				// see preamble to cascading transform support
-				while (cascadingTransformSupport.hasChildren()) {
-					synchronized (cascadingTransformSupport) {
-						if (cascadingTransformSupport.hasChildren()) {
-							cascadingTransformSupport.wait();
-						}
-					}
-				}
-				UmbrellaException childException = cascadingTransformSupport
-						.getException();
-				if (childException != null) {
-					throw childException;
-				}
-				return wrapper;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			} finally {
-				cascadingTransformSupport.afterTransform();
-			}
-		} finally {
-			tpm.popUser();
-			ThreadlocalTransformManager.cast().resetTltm(null);
-			MetricLogging.get().setMuted(muted);
-		}
-	}
+    protected static DomainTransformLayerWrapper doPersistTransforms(String tag,
+            boolean asRoot) {
+        // for debugging
+        Set<DomainTransformEvent> transforms = TransformManager.get()
+                .getTransforms();
+        ThreadedPermissionsManager tpm = ThreadedPermissionsManager.cast();
+        boolean muted = MetricLogging.get().isMuted();
+        try {
+            MetricLogging.get().setMuted(true);
+            if (asRoot) {
+                tpm.pushSystemUser();
+            } else {
+                tpm.pushCurrentUser();
+            }
+            CascadingTransformSupport cascadingTransformSupport = CascadingTransformSupport
+                    .get();
+            try {
+                cascadingTransformSupport.beforeTransform();
+                DomainTransformLayerWrapper wrapper = Registry
+                        .impl(CommonRemoteServletProvider.class)
+                        .getCommonRemoteServiceServlet()
+                        .transformFromServletLayer(tag);
+                // see preamble to cascading transform support
+                while (cascadingTransformSupport.hasChildren()) {
+                    synchronized (cascadingTransformSupport) {
+                        if (cascadingTransformSupport.hasChildren()) {
+                            cascadingTransformSupport.wait();
+                        }
+                    }
+                }
+                UmbrellaException childException = cascadingTransformSupport
+                        .getException();
+                if (childException != null) {
+                    throw childException;
+                }
+                return wrapper;
+            } catch (Exception e) {
+                throw new WrappedRuntimeException(e);
+            } finally {
+                cascadingTransformSupport.afterTransform();
+            }
+        } finally {
+            tpm.popUser();
+            ThreadlocalTransformManager.cast().resetTltm(null);
+            MetricLogging.get().setMuted(muted);
+        }
+    }
 
-	public static long pushTransformsAndGetFirstCreationId(boolean asRoot) {
-		DomainTransformResponse transformResponse = pushTransforms(null, asRoot,
-				true).response;
-		DomainTransformEvent first = CommonUtils
-				.first(transformResponse.getEventsToUseForClientUpdate());
-		return first == null ? 0 : first.getGeneratedServerId();
-	}
+    public static long pushTransformsAndGetFirstCreationId(boolean asRoot) {
+        DomainTransformResponse transformResponse = pushTransforms(null, asRoot,
+                true).response;
+        DomainTransformEvent first = CommonUtils
+                .first(transformResponse.getEventsToUseForClientUpdate());
+        return first == null ? 0 : first.getGeneratedServerId();
+    }
 
-	public static long pushTransformsAndReturnId(boolean asRoot,
-			HasIdAndLocalId returnIdFor) {
-		DomainTransformResponse transformResponse = pushTransforms(null, asRoot,
-				true).response;
-		for (DomainTransformEvent dte : transformResponse
-				.getEventsToUseForClientUpdate()) {
-			if (dte.getObjectLocalId() == returnIdFor.getLocalId()
-					&& dte.getObjectClass() == returnIdFor.getClass()
-					&& dte.getTransformType() == TransformType.CREATE_OBJECT) {
-				return dte.getGeneratedServerId();
-			}
-		}
-		throw new RuntimeException(
-				"Generated object not found - " + returnIdFor);
-	}
+    public static long pushTransformsAndReturnId(boolean asRoot,
+            HasIdAndLocalId returnIdFor) {
+        DomainTransformResponse transformResponse = pushTransforms(null, asRoot,
+                true).response;
+        for (DomainTransformEvent dte : transformResponse
+                .getEventsToUseForClientUpdate()) {
+            if (dte.getObjectLocalId() == returnIdFor.getLocalId()
+                    && dte.getObjectClass() == returnIdFor.getClass()
+                    && dte.getTransformType() == TransformType.CREATE_OBJECT) {
+                return dte.getGeneratedServerId();
+            }
+        }
+        throw new RuntimeException(
+                "Generated object not found - " + returnIdFor);
+    }
 
-	public static int pushTransformsAsCurrentUser() {
-		return pushTransforms(false);
-	}
+    public static int pushTransformsAsCurrentUser() {
+        return pushTransforms(false);
+    }
 
-	public static int pushTransformsAsRoot() {
-		return pushTransforms(true);
-	}
+    public static int pushTransformsAsRoot() {
+        return pushTransforms(true);
+    }
 
-	public static String robustGetRemoteAddr(HttpServletRequest request) {
-		if (request == null) {
-			return null;
-		}
-		String forwarded = request.getHeader("X-Forwarded-For");
-		return CommonUtils.isNotNullOrEmpty(forwarded) ? forwarded
-				: request.getRemoteAddr();
-	}
+    public static String robustGetRemoteAddr(HttpServletRequest request) {
+        if (request == null) {
+            return null;
+        }
+        String forwarded = request.getHeader("X-Forwarded-For");
+        return CommonUtils.isNotNullOrEmpty(forwarded) ? forwarded
+                : request.getRemoteAddr();
+    }
 
-	public static void setAppServletInitialised(boolean appServletInitialised) {
-		ServletLayerUtils.appServletInitialised = appServletInitialised;
-	}
+    public static void setAppServletInitialised(boolean appServletInitialised) {
+        ServletLayerUtils.appServletInitialised = appServletInitialised;
+    }
 
-	private static void
-			commitLocalTransformsInChunks(final int maxTransformChunkSize) {
-		try {
-			Callable looper = new Callable() {
-				@Override
-				public Object call() throws Exception {
-					final ClientInstance commitInstance = Registry
-							.impl(CommonPersistenceProvider.class)
-							.getCommonPersistence()
-							.createClientInstance("servlet-bulk: "
-									+ EntityLayerUtils.getLocalHostName(), null,
-									null);
-					List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>(
-							TransformManager.get().getTransformsByCommitType(
-									CommitType.TO_LOCAL_BEAN));
-					TransformManager.get()
-							.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
-							.clear();
-					ThreadlocalTransformManager.cast().resetTltm(null);
-					DomainTransformRequest rq = new DomainTransformRequest();
-					rq.setProtocolVersion(new DTESerializationPolicy()
-							.getTransformPersistenceProtocol());
-					rq.setRequestId(1);
-					rq.setClientInstance(commitInstance);
-					rq.setEvents(transforms);
-					DeltaApplicationRecord dar = new DeltaApplicationRecord(rq,
-							DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
-							false);
-					new DtrSimpleAdminPersistenceHandler().commit(dar,
-							maxTransformChunkSize);
-					return null;
-				}
-			};
-			ThreadedPermissionsManager.cast()
-					.callWithPushedSystemUserIfNeeded(looper);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		} finally {
-			ThreadlocalTransformManager.cast().resetTltm(null);
-		}
-	}
+    private static void commitLocalTransformsInChunks(
+            final int maxTransformChunkSize) {
+        try {
+            Callable looper = new Callable() {
+                @Override
+                public Object call() throws Exception {
+                    String ipAddress = null;
+                    HttpServletRequest contextThreadLocalRequest = CommonRemoteServiceServlet
+                            .getContextThreadLocalRequest();
+                    if (contextThreadLocalRequest != null) {
+                        ipAddress = ServletLayerUtils
+                                .robustGetRemoteAddr(contextThreadLocalRequest);
+                    }
+                    final ClientInstance commitInstance = Registry
+                            .impl(CommonPersistenceProvider.class)
+                            .getCommonPersistence().createClientInstance(
+                                    "servlet-bulk: " + EntityLayerUtils
+                                            .getLocalHostName(),
+                                    null, ipAddress);
+                    List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>(
+                            TransformManager.get().getTransformsByCommitType(
+                                    CommitType.TO_LOCAL_BEAN));
+                    TransformManager.get()
+                            .getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
+                            .clear();
+                    ThreadlocalTransformManager.cast().resetTltm(null);
+                    DomainTransformRequest rq = new DomainTransformRequest();
+                    rq.setProtocolVersion(new DTESerializationPolicy()
+                            .getTransformPersistenceProtocol());
+                    rq.setRequestId(1);
+                    rq.setClientInstance(commitInstance);
+                    rq.setEvents(transforms);
+                    DeltaApplicationRecord dar = new DeltaApplicationRecord(rq,
+                            DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
+                            false);
+                    new DtrSimpleAdminPersistenceHandler().commit(dar,
+                            maxTransformChunkSize);
+                    return null;
+                }
+            };
+            ThreadedPermissionsManager.cast()
+                    .callWithPushedSystemUserIfNeeded(looper);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        } finally {
+            ThreadlocalTransformManager.cast().resetTltm(null);
+        }
+    }
 
-	private static int pushTransforms(boolean asRoot) {
-		int pendingTransformCount = TransformManager.get()
-				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
-		if (AppPersistenceBase.isTest() && !ResourceUtilities
-				.is(ServletLayerUtils.class, "testTransformCascade")) {
-			if (!LooseContext.is(CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH)) {
-				TransformManager.get().clearTransforms();
-			}
-			return pendingTransformCount;
-		}
-		pushTransforms(null, asRoot, true);
-		return pendingTransformCount;
-	}
+    private static int pushTransforms(boolean asRoot) {
+        int pendingTransformCount = TransformManager.get()
+                .getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
+        if (AppPersistenceBase.isTest() && !ResourceUtilities
+                .is(ServletLayerUtils.class, "testTransformCascade")) {
+            if (!LooseContext.is(CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH)) {
+                TransformManager.get().clearTransforms();
+            }
+            return pendingTransformCount;
+        }
+        pushTransforms(null, asRoot, true);
+        return pendingTransformCount;
+    }
 }
