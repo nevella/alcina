@@ -10,10 +10,20 @@ public class FormatBuilder {
 			sb.append(optional);
 		}
 	}
+
 	public void appendIfNotBlank(String optional) {
 		if (Ax.notBlank(optional)) {
 			maybeAppendSeparator();
 			sb.append(optional);
+		}
+	}
+
+	public void appendIfNotBlank(Object... optionals) {
+		for (Object optional : optionals) {
+			if (optional == null) {
+			} else {
+				appendIfNotBlank(optional.toString());
+			}
 		}
 	}
 
