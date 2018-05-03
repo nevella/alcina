@@ -1599,11 +1599,20 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	@Override
-	public Publication getPublication(long id) {
-		Publication publication = getEntityManager()
-				.find(getImplementation(Publication.class), id);
-		unwrap(publication);
-		return new EntityUtils().detachedCloneIgnorePermissions(publication,
+	public List<Publication> getPublications(Collection<Long> ids) {
+		String sql = Ax.format("select pub from %s pub where id in %s order by id",
+				getImplementationSimpleClassName(Publication.class),
+				EntityUtils.longsToIdClause(ids));
+		List<Publication> publications = getEntityManager().createQuery(sql)
+				.getResultList();
+		unwrap(publications);
+		return new EntityUtils().detachedCloneIgnorePermissions(publications,
 				createUserAndGroupInstantiator());
+	}
+
+	@Override
+	public Publication getPublication(long id) {
+		return CommonUtils
+				.first(getPublications(Collections.singletonList(id)));
 	}
 }

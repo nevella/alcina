@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.csobjects.ITaskResult;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
@@ -54,9 +55,11 @@ public class RpcBuilder<T> {
 				if (notifySuccessAsMessage && result != null) {
 					if (result instanceof ITaskResult
 							&& !((ITaskResult) result).isOk()) {
-						MessageManager.get().icyCenterMessage(result.toString());
+						MessageManager.get()
+								.icyCenterMessage(Ax.blankTo(result.toString(),
+										"Error occurred - no message"));
 					} else {
-						MessageManager.get().centerMessage(result.toString());
+						MessageManager.get().centerMessage(Ax.blankTo(result.toString(),"OK - no message"));
 					}
 				}
 				inner.accept(result);

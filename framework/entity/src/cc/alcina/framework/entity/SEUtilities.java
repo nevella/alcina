@@ -1694,4 +1694,8 @@ public class SEUtilities {
             return 0;
         }
     }
+
+	public static String getMessageOrClass(Exception e) {
+		return Ax.blankTo(e.getMessage(), e.toString());
+	}
 }

@@ -55,7 +55,7 @@ public interface CommonPersistenceLocal {
 	public abstract void connectPermissionsManagerToLiveObjects();
 
 	public abstract ClientInstance createClientInstance(String userAgent,
-			String iid,String ipAddress);
+			String iid, String ipAddress);
 
 	public <T> T ensureObject(T t, String key, String value) throws Exception;
 
@@ -169,7 +169,8 @@ public interface CommonPersistenceLocal {
 	public void setField(Class clazz, Long id, String key, Object value)
 			throws Exception;
 
-	public DomainTransformLayerWrapper  transformInPersistenceContext(TransformPersisterToken persisterToken,
+	public DomainTransformLayerWrapper transformInPersistenceContext(
+			TransformPersisterToken persisterToken,
 			TransformPersistenceToken persistenceToken,
 			DomainTransformLayerWrapper wrapper);
 
@@ -199,7 +200,10 @@ public interface CommonPersistenceLocal {
 
 	public HiliLocatorMap getLocatorMap(Long clientInstanceId);
 
-	Integer getHighestPersistedRequestIdForClientInstance(long clientInstanceId);
+	Integer getHighestPersistedRequestIdForClientInstance(
+			long clientInstanceId);
+
+	public List<Publication> getPublications(Collection<Long> ids);
 
 	public Publication getPublication(long id);
 }
