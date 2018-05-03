@@ -202,11 +202,11 @@ public class Publisher {
 		if (forPublication && publicationContentPersister != null
 				&& !AppPersistenceBase.isInstanceReadOnly()) {
 			postDeliveryPersistence(publicationId);
+			crh.getResults().htmlContent = cw.wrappedContent;
 			persist(contentDefinition, deliveryModel, publicationUserId,
 					original, publicationContentPersister, result);
 			if (crh.getResults().persist && publicationContentPersister != null
 					&& result.publicationId != 0) {
-				crh.getResults().htmlContent = cw.wrappedContent;
 				publicationContentPersister.persistContentRendererResults(
 						crh.getResults(), result.publicationId);
 			}

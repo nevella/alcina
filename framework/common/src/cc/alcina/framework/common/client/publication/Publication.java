@@ -74,4 +74,7 @@ public interface Publication extends HasId {
 	}
 
 	void setPublicationUid(String publicationUid);
+	
+	String getSerializedPublication();
+	void setSerializedPublication(String serializedPublication);
 }
