@@ -15,6 +15,8 @@ package cc.alcina.framework.common.client.publication;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.publication.DeliveryModel.MailAttachment;
+
 /**
  *
  * @author Nick Reddel
@@ -62,6 +64,12 @@ public interface DeliveryModel {
 
 	public List<MailInlineImage> provideImages();
 
+	public List<MailAttachment> provideAttachments();
+	
+	default void addAttachment(MailAttachment attachment){
+		provideAttachments().add(attachment);
+	}
+
 	public FormatConversionTarget provideTargetFormat();
 
 	default String getPublicationUid() {
@@ -74,5 +82,31 @@ public interface DeliveryModel {
 		public String contentType;
 
 		public byte[] requestBytes;
+
+		public String dataSourceMimeType;
+	}
+
+	public static class MailAttachment {
+		public String uid;
+
+		public String contentType;
+
+		public byte[] requestBytes;
+
+		public String dataSourceMimeType;
+
+		public String suggestedFileName;
+	}
+
+	default boolean hasProperty(String keyS) {
+		throw new UnsupportedOperationException();
+	}
+
+	default String providePropertyValue(String key) {
+		throw new UnsupportedOperationException();
+	}
+
+	default void removeAttachment(MailAttachment attachment){
+		provideAttachments().remove(attachment);
 	}
 }

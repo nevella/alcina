@@ -190,6 +190,7 @@ public class Publisher {
 		fcm.bytes = cw.wrappedBytes;
 		fcm.rows = cw.wrapper.gridRows;
 		fcm.custom = cw.custom;
+		ctx.formatConversionModel=fcm;
 		InputStream convertedContent = fc.convert(ctx, fcm);
 		convertedContent = ctx.getVisitorOrNoop()
 				.transformConvertedContent(convertedContent);

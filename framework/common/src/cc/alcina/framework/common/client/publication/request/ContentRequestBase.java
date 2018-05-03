@@ -101,6 +101,8 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	public transient List<MailInlineImage> images = new ArrayList<>();
 
+	public transient List<MailAttachment> attachments = new ArrayList<>();
+
 	private String opaqueRequestXml;
 
 	private String opaqueRequestClassname;
@@ -225,10 +227,10 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return systemMessage;
 	}
 
+	@Override
 	public boolean hasProperty(String key) {
 		return properties.containsKey(key);
 	}
-
 	public boolean isCoverPage() {
 		return coverPage;
 	}
@@ -255,6 +257,14 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	}
 
 	@Override
+	public List<MailAttachment> provideAttachments() {
+		if (attachments == null) {
+			attachments = new ArrayList<>();
+		}
+		return attachments;
+	}
+
+	@Override
 	public ContentDeliveryType provideContentDeliveryType() {
 		return ExtensibleEnum.valueOf(ContentDeliveryType.class, deliveryMode);
 	}
@@ -265,6 +275,11 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 			images = new ArrayList<>();
 		}
 		return images;
+	}
+
+	@Override
+	public String providePropertyValue(String key) {
+		return properties.get(key);
 	}
 
 	public PublicationFontOptions providePublicationFontOptions() {
