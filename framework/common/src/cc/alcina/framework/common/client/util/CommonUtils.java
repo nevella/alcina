@@ -1677,4 +1677,10 @@ public class CommonUtils {
 		return now.getYear() == date.getYear()
 				&& now.getMonth() == date.getMonth();
 	}
+
+	public static Date ensureMonthOfDate(Date date) {
+		// called only for dates which might be slightly before start of month
+		// because of tz offsets - i.e. mm/01 on server
+		return new Date(date.getTime() + TimeConstants.ONE_DAY_MS);
+	}
 }
