@@ -158,8 +158,8 @@ public class ResourceUtilities {
 			try {
 				return new AlcinaBeanSerializerS().deserialize(string);
 			} catch (RuntimeException e1) {
-				e.printStackTrace();
-				e1.printStackTrace();
+				Ax.err(SEUtilities.getMessageOrClass(e));
+				Ax.err(SEUtilities.getMessageOrClass(e1));
 				throw e1;
 			}
 		}
