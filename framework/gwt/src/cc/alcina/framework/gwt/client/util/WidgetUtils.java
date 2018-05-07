@@ -252,14 +252,7 @@ public class WidgetUtils {
         }
 	}-*/;
 
-	public static void ensureNodeDebugIds(TreeItem root, final String prefix) {
-		TreeNodeWalker tnw = new TreeNodeWalker();
-		tnw.walk(root, new Callback<TreeItem>() {
-			public void apply(TreeItem target) {
-				target.ensureDebugId(prefix);
-			}
-		});
-	}
+	
 
 	public static native void execCopy() /*-{
         return $wnd.document.execCommand("copy");
