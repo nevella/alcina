@@ -1,8 +1,7 @@
 package cc.alcina.framework.gwt.client.objecttree.search.packs;
 
+import java.util.Set;
 import java.util.function.Function;
-
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.cache.CacheFilter;
@@ -11,7 +10,6 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSuggestorSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
@@ -38,6 +36,28 @@ public class BaseTruncatedObjectCriterionPack {
 		}
 	}
 
+	public interface BaseTruncatedObjectMultipleCriterionHandler<I extends HasId, O extends HasIdAndLocalId> {
+		Function<I, Set<O>> getLinkedObjectMapper();
+
+		default CacheFilter getFilter0(TruncatedObjectCriterion<O> sc) {
+			long id = sc.getId();
+			if (id == 0) {
+				return null;
+			}
+			return new CacheFilter(new CollectionFilter<I>() {
+				@Override
+				public boolean allow(I i) {
+					if (i == null) {
+						return false;
+					}
+					Set<O> linked = getLinkedObjectMapper().apply(i);
+					return linked.stream().anyMatch(li -> li.getId() == id);
+				}
+			}).invertIf(
+					sc.getOperator() == StandardSearchOperator.DOES_NOT_EQUAL);
+		}
+	}
+
 	public static abstract class BaseTruncatedObjectCriterionSearchable<TC extends TruncatedObjectCriterion>
 			extends FlatSuggestorSearchable<TC> {
 		public BaseTruncatedObjectCriterionSearchable(String category,
@@ -53,6 +73,7 @@ public class BaseTruncatedObjectCriterionPack {
 			sc.ensurePlaceholderObject();
 			return super.isNonDefaultValue(sc);
 		}
+
 		@Override
 		public boolean hasValue(TC tc) {
 			return tc.getId() != 0;

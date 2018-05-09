@@ -1683,4 +1683,17 @@ public class CommonUtils {
 		// because of tz offsets - i.e. mm/01 on server
 		return new Date(date.getTime() + TimeConstants.ONE_DAY_MS);
 	}
+
+	public static <T> Set<T> lazyUnion(Set<T> c1, Set<T> c2) {
+		if (c1.size() == 0) {
+			return c2;
+		}
+		if (c2.size() == 0) {
+			return c1;
+		}
+		Set<T> result = new LinkedHashSet<>();
+		result.addAll(c1);
+		result.addAll(c2);
+		return result;
+	}
 }
