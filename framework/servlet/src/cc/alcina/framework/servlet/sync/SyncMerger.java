@@ -275,7 +275,20 @@ public class SyncMerger<T> {
 			}
 			break;
 		}
-		ensureRightWriteable(pair);
+		switch (action) {
+		case CREATE_RIGHT:
+		case MERGE:
+		case DELETE_RIGHT:
+			ensureRightWriteable(pair);
+			break;
+		}
+		switch (action) {
+		case CREATE_LEFT:
+		case MERGE:
+		case DELETE_LEFT:
+			ensureLeftWriteable(pair);
+			break;
+		}
 		for (SyncMapping mapping : syncMappings(pair)) {
 			mapping.merge(pair.getLeft().getObject(),
 					pair.getRight().getObject());
@@ -293,6 +306,19 @@ public class SyncMerger<T> {
 				adb.domain().detachFromDomain();
 			}
 			pair.getRight().setObject(adb);
+		}
+	}
+
+	protected void ensureLeftWriteable(SyncPair<T> pair) {
+		Object left = pair.getLeft().getObject();
+		if (left instanceof AbstractDomainBase) {
+			AbstractDomainBase adb = (AbstractDomainBase) left;
+			if (adb.provideIsNonDomain()) {
+			} else {
+				adb = adb.writeable();
+				adb.domain().detachFromDomain();
+			}
+			pair.getLeft().setObject(adb);
 		}
 	}
 
