@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -22,10 +23,11 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
@@ -83,6 +85,23 @@ public abstract class DevRemoterServlet extends HttpServlet {
 		}
 	}
 
+	static class MemCachePersistenceRouterListener
+			implements DomainTransformPersistenceListener {
+		@Override
+		public void onDomainTransformRequestPersistence(
+				DomainTransformPersistenceEvent evt) {
+			try {
+				Method method = AlcinaMemCache.class.getDeclaredMethod(
+						"postProcess",
+						new Class[] { DomainTransformPersistenceEvent.class });
+				method.setAccessible(true);
+				method.invoke(AlcinaMemCache.get(), new Object[] { evt });
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
 	protected void doPost0(HttpServletRequest req, HttpServletResponse res)
 			throws Exception {
 		String encodedParams = req.getParameter(DEV_REMOTER_PARAMS);
@@ -115,7 +134,10 @@ public abstract class DevRemoterServlet extends HttpServlet {
 			Object out = null;
 			boolean transformMethod = method.getName()
 					.equals("transformInPersistenceContext");
+			MemCachePersistenceRouterListener router = new MemCachePersistenceRouterListener();
 			try {
+				Registry.impl(DomainTransformPersistenceEvents.class)
+						.addDomainTransformPersistenceListener(router, false);
 				System.out.format("DevRemoter - %s.%s\n",
 						api.getClass().getSimpleName(), method.getName());
 				if (transformMethod) {
@@ -144,6 +166,8 @@ public abstract class DevRemoterServlet extends HttpServlet {
 				}
 				out = e;
 			} finally {
+				Registry.impl(DomainTransformPersistenceEvents.class)
+						.removeDomainTransformPersistenceListener(router);
 				if (transformMethod) {
 					PermissionsManager.get().popUser();
 				}
