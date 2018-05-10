@@ -1,47 +1,55 @@
 package cc.alcina.framework.entity.entityaccess.knowns;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.persistence.MappedSuperclass;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 
-import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
-import cc.alcina.framework.common.client.logic.permissions.IVersionable;
-import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 
-@MappedSuperclass
-@DomainTransformPersistable
-public abstract class KnownNode extends AbstractDomainBase<KnownNode>
-		implements IVersionable {
-	protected long id;
+public abstract class KnownNode {
+	transient KnownNodePersistent persistent;
 
-	public KnownNode() {
-		super();
+	transient KnownNode parent;
+
+	transient String name;
+
+	public KnownNode(KnownNode parent, String name) {
+		this.parent = parent;
+		this.name = name;
 	}
 
-	public void setId(long id) {
-		this.id = id;
+	public void persist() {
+		Knowns.reconcile(this, false);
 	}
 
-	public abstract KnownNode parent();
-
-	public abstract String pathSegment();
-
-	@Override
-	public String toString() {
-		return CommonUtils.formatJ("%s : %s", id, path());
+	public void restore() {
+		Knowns.reconcile(this, true);
 	}
 
 	public String path() {
 		KnownNode cursor = this;
 		List<String> segments = new ArrayList<>();
 		while (cursor != null) {
-			segments.add(cursor.pathSegment());
+			segments.add(cursor.name);
+			cursor = cursor.parent;
 		}
 		Collections.reverse(segments);
 		return segments.stream().collect(Collectors.joining("/"));
+	}
+
+	public <T extends KnownNode> T forName(Object key) {
+		try {
+			Field field = getClass()
+					.getDeclaredField(key.toString().toLowerCase());
+			field.setAccessible(true);
+			return (T) field.get(this);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }

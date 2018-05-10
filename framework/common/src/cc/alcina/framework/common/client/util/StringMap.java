@@ -160,6 +160,9 @@ public class StringMap extends LinkedHashMap<String, String> {
 	public String toPropertyString() {
 		StringBuilder sb = new StringBuilder();
 		for (Map.Entry<String, String> entry : entrySet()) {
+			if(entry.getValue()==null){
+				continue;
+			}
 			if (sb.length() != 0) {
 				sb.append("\n");
 			}

@@ -99,6 +99,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
+import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
@@ -1380,7 +1381,16 @@ public class AlcinaMemCache implements RegistrableService {
 						if (field != null) {
 							ParameterizedType pt = (ParameterizedType) field
 									.getGenericType();
-							manyToOneRev.put(pt.getActualTypeArguments()[0],
+							Type implementationType = pt
+									.getActualTypeArguments()[0];
+							Association association = rm
+									.getAnnotation(Association.class);
+							if (association != null && association
+									.implementationClass() != null) {
+								implementationType = association
+										.implementationClass();
+							}
+							manyToOneRev.put(implementationType,
 									oneToMany.mappedBy(), pd);
 						}
 					} catch (Exception e) {
