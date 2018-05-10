@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -16,6 +17,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
@@ -23,11 +26,14 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
+import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
+import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
@@ -134,10 +140,7 @@ public abstract class DevRemoterServlet extends HttpServlet {
 			Object out = null;
 			boolean transformMethod = method.getName()
 					.equals("transformInPersistenceContext");
-			MemCachePersistenceRouterListener router = new MemCachePersistenceRouterListener();
 			try {
-				Registry.impl(DomainTransformPersistenceEvents.class)
-						.addDomainTransformPersistenceListener(router, false);
 				System.out.format("DevRemoter - %s.%s\n",
 						api.getClass().getSimpleName(), method.getName());
 				if (transformMethod) {
@@ -166,12 +169,11 @@ public abstract class DevRemoterServlet extends HttpServlet {
 				}
 				out = e;
 			} finally {
-				Registry.impl(DomainTransformPersistenceEvents.class)
-						.removeDomainTransformPersistenceListener(router);
 				if (transformMethod) {
 					PermissionsManager.get().popUser();
 				}
 			}
+			Object result = out;
 			if (params.cleanEntities) {
 				out = new EntityUtils().detachedClone(out);
 			}
@@ -181,6 +183,17 @@ public abstract class DevRemoterServlet extends HttpServlet {
 				ThreadlocalTransformManager.get().resetTltm(null);
 				resultHolder.add(ThreadlocalTransformManager.get()
 						.getPostTransactionEntityResolver());
+				Method mcmethod = AlcinaMemCache.class.getDeclaredMethod(
+						"postProcess",
+						new Class[] { DomainTransformPersistenceEvent.class });
+				mcmethod.setAccessible(true);
+				// create an "event" to publish in the queue
+				TransformPersistenceToken persistenceToken = (TransformPersistenceToken) params.args[1];
+				DomainTransformLayerWrapper wrapper = (DomainTransformLayerWrapper) params.args[2];
+				DomainTransformPersistenceEvent persistenceEvent = new DomainTransformPersistenceEvent(
+						persistenceToken, wrapper, true);
+				mcmethod.invoke(AlcinaMemCache.get(),
+						new Object[] { persistenceEvent });
 			}
 			byte[] outBytes = KryoUtils.serializeToByteArray(resultHolder);
 			ResourceUtilities.writeStreamToStream(
