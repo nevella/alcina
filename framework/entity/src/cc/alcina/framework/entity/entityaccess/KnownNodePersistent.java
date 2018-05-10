@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.knowns;
+package cc.alcina.framework.entity.entityaccess;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -460,4 +460,9 @@ public abstract class SearchDefinition extends WrapperPersistable
 		ogs.put(og.getClass(), og);
 		orderGroups.add(og);
 	}
+
+	public void clearAllCriteria() {
+		getCriteriaGroups().forEach(cg -> cg.getCriteria().clear());
+		resetLookups();
+	}
 }

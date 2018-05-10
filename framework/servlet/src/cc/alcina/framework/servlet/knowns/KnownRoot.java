@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.knowns;
+package cc.alcina.framework.servlet.knowns;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

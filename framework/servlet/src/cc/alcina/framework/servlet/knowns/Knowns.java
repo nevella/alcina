@@ -1,26 +1,35 @@
-package cc.alcina.framework.entity.entityaccess.knowns;
+package cc.alcina.framework.servlet.knowns;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Stack;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryProvider;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
-import cc.alcina.framework.entity.logic.EntityLayerPersister;
+import cc.alcina.framework.entity.entityaccess.KnownNodePersistent;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.util.SynchronizedDateFormat;
+import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.knowns.Knowns.ValueType;
 
 public abstract class Knowns {
 	public static KnownRoot root;
@@ -32,11 +41,28 @@ public abstract class Knowns {
 	}
 
 	public static void reconcile(KnownNode node, boolean fromPersistent) {
-		if (fromPersistent) {
-			fromPersistent(node);
-		} else {
-			toPersistent(node);
+		try {
+			LooseContext.pushWithTrue(
+					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER);
+			RegistryProvider registryProvider = Registry
+					.getProvider();
+			if (registryProvider instanceof ClassLoaderAwareRegistryProvider) {
+				ClassLoaderAwareRegistryProvider clRegistryProvider = (ClassLoaderAwareRegistryProvider) registryProvider;
+				LooseContext.set(KryoUtils.CONTEXT_OVERRIDE_CLASSLOADER,
+						clRegistryProvider.getServletLayerClassloader());
+			}
+			if (fromPersistent) {
+				fromPersistent(node);
+			} else {
+				toPersistent(node);
+			}
+		} finally {
+			LooseContext.pop();
 		}
+	}
+
+	enum ValueType {
+		DATA_TYPE, KNOWN_NODE, KNOWN_NODE_SET, KRYO_PERSISTABLE
 	}
 
 	private static synchronized void fromPersistent(KnownNode node) {
@@ -61,28 +87,57 @@ public abstract class Knowns {
 						.fromPropertyString(persistent.getProperties());
 				Field[] fields = graphProjection.getFieldsForClass(node);
 				for (Field field : fields) {
-					Class<?> type = field.getType();
-					boolean valuePersistable = GraphProjection
-							.isPrimitiveOrDataClass(type);
-					String value = properties.get(field.getName());
-					if (valuePersistable) {
-						field.set(node, fromStringValue(value, field));
-					} else {
+					Type type = field.getGenericType();
+					ValueType valueType = getValueType(type);
+					switch (valueType) {
+					case DATA_TYPE:
+					case KRYO_PERSISTABLE: {
+						String value = properties.get(field.getName());
+						field.set(node,
+								fromStringValue(value, field, valueType));
+						break;
+					}
+					case KNOWN_NODE: {
 						Optional<KnownNodePersistent> persistentChild = persistent
 								.getChildren().stream().filter(n -> n.getName()
 										.equals(field.getName()))
 								.findFirst();
 						if (persistentChild.isPresent()) {
-							KnownNode child = (KnownNode) field.get(node);
+							Object object = field.get(node);
+							KnownNode child = (KnownNode) object;
 							child.persistent = persistentChild.get();
 							nodes.push(child);
 						}
+						break;
+					}
+					default:
+						throw new UnsupportedOperationException();
 					}
 				}
 			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	private static ValueType getValueType(Type type) {
+		Class classType = null;
+		if (type instanceof Class) {
+			classType = (Class) type;
+		} else {
+			ParameterizedType parameterizedType = (ParameterizedType) type;
+			classType = (Class) parameterizedType.getRawType();
+		}
+		if (GraphProjection.isPrimitiveOrDataClass(classType)) {
+			return ValueType.DATA_TYPE;
+		}
+		if (KnownNode.class.isAssignableFrom(classType)) {
+			return ValueType.KNOWN_NODE;
+		}
+		if (Set.class.isAssignableFrom(classType)) {
+			return ValueType.KNOWN_NODE_SET;
+		}
+		return ValueType.KRYO_PERSISTABLE;
 	}
 
 	private static synchronized void toPersistent(KnownNode node) {
@@ -117,27 +172,36 @@ public abstract class Knowns {
 					if (Modifier.isTransient(field.getModifiers())) {
 						continue;
 					}
-					Class<?> type = field.getType();
-					boolean valuePersistable = GraphProjection
-							.isPrimitiveOrDataClass(type);
 					Object value = field.get(node);
-					if (valuePersistable) {
+					Type type = field.getGenericType();
+					ValueType valueType = getValueType(type);
+					switch (valueType) {
+					case DATA_TYPE:
+					case KRYO_PERSISTABLE: {
 						properties.put(field.getName(),
-								toStringValue(value, field));
-					} else {
+								toStringValue(value, field, valueType));
+						break;
+					}
+					case KNOWN_NODE: {
 						if (value == null) {
 							Ax.runtimeException(
 									"Field %s.%s is null - must be instantiated",
 									node.path(), field.getName());
 						}
 						nodes.push((KnownNode) value);
+						break;
+					}
+					default:
+						throw new UnsupportedOperationException();
 					}
 				}
 				persistent.setProperties(properties.toPropertyString());
 			}
-			DomainTransformLayerWrapper wrapper = Registry.impl(EntityLayerPersister.class).pushTransforms(null, true, true);
+			DomainTransformLayerWrapper wrapper = ServletLayerUtils
+					.pushTransforms(null, true, true);
 			replaceWithPersistent.stream().forEach(n -> {
-				HiliLocator hiliLocator = wrapper.locatorMap.get(n.persistent.getLocalId());
+				HiliLocator hiliLocator = wrapper.locatorMap
+						.get(n.persistent.getLocalId());
 				n.persistent = Domain.find(hiliLocator);
 			});
 		} catch (Exception e) {
@@ -145,9 +209,13 @@ public abstract class Knowns {
 		}
 	}
 
-	private static String toStringValue(Object value, Field field) {
+	private static String toStringValue(Object value, Field field,
+			ValueType valueType) {
 		if (value == null) {
 			return null;
+		}
+		if (valueType == ValueType.KRYO_PERSISTABLE) {
+			return KryoUtils.serializeToBase64(value);
 		}
 		if (value.getClass() == Integer.class
 				|| value.getClass() == String.class
@@ -168,11 +236,14 @@ public abstract class Knowns {
 	private static SimpleDateFormat dateFormat = new SynchronizedDateFormat(
 			dateFormatStr);
 
-	private static Object fromStringValue(String value, Field field)
-			throws ParseException {
+	private static Object fromStringValue(String value, Field field,
+			ValueType valueType) throws ParseException {
 		Class type = field.getType();
 		if (value == null) {
 			return null;
+		}
+		if (valueType == ValueType.KRYO_PERSISTABLE) {
+			return KryoUtils.deserializeFromBase64(value, type);
 		}
 		if (type == String.class) {
 			return value;

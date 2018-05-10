@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.knowns;
+package cc.alcina.framework.servlet.knowns;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;

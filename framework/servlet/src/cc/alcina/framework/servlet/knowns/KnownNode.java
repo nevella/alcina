@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.knowns;
+package cc.alcina.framework.servlet.knowns;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -10,6 +10,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.entity.entityaccess.KnownNodePersistent;
 
 public abstract class KnownNode {
 	transient KnownNodePersistent persistent;
