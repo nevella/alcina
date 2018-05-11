@@ -395,7 +395,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
     protected abstract void getTransforms(DeltaApplicationFilters filters,
             AsyncCallback<Iterator<DeltaApplicationRecord>> callback);
 
-    protected void getTransforms(DeltaApplicationRecordType type,
+    public void getTransforms(DeltaApplicationRecordType type,
             AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
         getTransforms(new DeltaApplicationRecordType[] { type }, callback);
     }
