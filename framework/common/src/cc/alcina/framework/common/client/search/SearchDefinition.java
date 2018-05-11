@@ -83,6 +83,9 @@ public abstract class SearchDefinition extends WrapperPersistable
 	private transient List<PropertyChangeListener> globalListeners = new ArrayList<>();
 
 	public void addCriterionToSoleCriteriaGroup(SearchCriterion sc) {
+		addCriterionToSoleCriteriaGroup(sc, false);
+	}
+	public void addCriterionToSoleCriteriaGroup(SearchCriterion sc, boolean knownEmptyCriterion) {
 		assert criteriaGroups.size() == 1;
 		criteriaGroups.iterator().next().addCriterion(sc);
 		PropertyChangeEvent event = new PropertyChangeEvent(this, null, null,
@@ -90,7 +93,7 @@ public abstract class SearchDefinition extends WrapperPersistable
 		for (PropertyChangeListener listener : new ArrayList<>(
 				globalListeners)) {
 			sc.addPropertyChangeListener(listener);
-			if (!sc.emptyCriterion()) {
+			if (!sc.emptyCriterion()&&!knownEmptyCriterion) {
 				listener.propertyChange(event);
 			}
 		}

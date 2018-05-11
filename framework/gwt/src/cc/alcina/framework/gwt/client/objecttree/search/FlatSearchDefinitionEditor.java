@@ -175,7 +175,7 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 		row.setSearchable(flatSearchable);
 		if (sc == null) {
 			sc = flatSearchable.createCriterionInstance();
-			def.addCriterionToSoleCriteriaGroup(sc);
+			def.addCriterionToSoleCriteriaGroup(sc,true);
 		}
 		row.setValue(sc);
 		row.setModel(def);
