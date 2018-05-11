@@ -354,6 +354,7 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 		}
 	}
 
+	
 	class BreadcrumbBarEditableWidgetsButton extends BreadcrumbBarButton
 			implements ClickHandler {
 		public BreadcrumbBarEditableWidgetsButton() {
