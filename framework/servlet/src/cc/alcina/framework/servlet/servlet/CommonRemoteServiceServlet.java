@@ -1085,8 +1085,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
         Object[] parameters = rpcRequest.getParameters();
         if (rpcRequest.getMethod().getName().equals("transform")) {
         } else {
-            msg += new JacksonJsonObjectSerializer().withIdRefs()
-                    .serialize(parameters);
+            try {
+                msg += new JacksonJsonObjectSerializer().withIdRefs()
+                        .serialize(parameters);
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
         }
         return msg;
     }
