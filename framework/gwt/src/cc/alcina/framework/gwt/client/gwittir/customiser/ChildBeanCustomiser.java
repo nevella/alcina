@@ -129,6 +129,7 @@ public class ChildBeanCustomiser implements Customiser {
 									.createProvisionalObject(clazz);
 					ClientTransformManager.cast().prepareObject(obj, autoSave,
 							true, editable);
+					//FIXME - so many more elegant ways to do this...but...
 					// register with the containing savepanel
 					PaneWrapperWithObjects container = WidgetUtils
 							.getParentWidget(ChildBeanWidget.this,
