@@ -27,9 +27,18 @@ import com.google.gwt.user.client.EventListener;
 public abstract class DOMImpl {
 	protected static boolean eventSystemIsInitialized;
 
+	/*
+	 * the uiObjectListener is mostly to reduce calls to DOM - so if it was set
+	 * before toRemote, it'll never be set later
+	 */
 	public static EventListener getEventListener(Element elem) {
-		return elem.implAccess().linkedToRemote()
-				? getEventListener0(elem.implAccess().typedRemote()) : null;
+		if(elem.implAccess().linkedToRemote()){
+			EventListener eventListener = getEventListener0(elem.implAccess().typedRemote());
+			if(eventListener!=null){
+				return eventListener;
+			}
+		}
+		return elem.uiObjectListener;
 	}
 
 	public static void setEventListener(Element elem, EventListener listener) {
