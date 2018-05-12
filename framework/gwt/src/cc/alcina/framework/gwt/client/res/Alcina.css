@@ -1267,6 +1267,10 @@ table.gwittir-BoundTable .rowHandleCheckbox {
 table.gwittir-BoundTable,table.gwittir-GridForm {
 	font-size: 0.9em;
 }
+table.gwittir-BoundTable table.gwittir-GridForm,table.gwittir-GridForm table.gwittir-GridForm,table.gwittir-GridForm div.table-toolbar
+{
+    font-size: 1.0em;
+}
 
 table.gwittir-BoundTable td,table.gwittir-GridForm td {
 	padding: 2px 12px 2px 2px;

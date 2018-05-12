@@ -22,6 +22,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.widget.Link;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
 
@@ -111,12 +112,12 @@ public abstract class MultilineGridEditor<H extends HasIdAndLocalId>
 		List<H> values = new ArrayList<>(getValue());
 		values = filterVisibleValues(values);
 		values.sort(HiliComparator.INSTANCE);
-		values.forEach(v -> TransformManager.get().registerDomainObject(v));
+		values.forEach(v -> TransformManager.get().registerDomainObjectIfNonProvisional(v));
 		grids = new ArrayList<>();
 		for (H value : values) {
 		    ContentViewFactory contentViewFactory = new ContentViewFactory()
 	                .noCaption().setBeanClass(value.getClass()).editable(editable)
-	                .autoSave(true).doNotClone(true);
+	                .autoSave(ContentViewFactory.autoSaveFromContentViewAncestor(this)).doNotClone(true);
 	        customiseContentViewFactory(contentViewFactory, getModel());
 	        PaneWrapperWithObjects view = contentViewFactory
 	                .createBeanView(value);

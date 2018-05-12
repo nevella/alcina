@@ -16,7 +16,7 @@ public interface BaseMultilineEditor<T extends HasIdAndLocalId> {
 	public void redraw();
 
 	public void setEditable(boolean editable);
-
+	
 	void setCustomiser(BaseMultilineEditorCustomiser<T> customiser);
 
 	default void sortValues(List<T> values) {
