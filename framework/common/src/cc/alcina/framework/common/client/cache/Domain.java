@@ -249,4 +249,12 @@ public class Domain {
 		return handler.stream(clazz).sorted(HiliComparator.REVERSED_INSTANCE)
 				.collect(Collectors.toList());
 	}
+
+	public static <V extends HasIdAndLocalId> void delete(Class<V> clazz,
+			long id) {
+		HasIdAndLocalId hili = find(clazz, id);
+		if (hili != null) {
+			writeable(hili).delete();
+		}
+	}
 }
