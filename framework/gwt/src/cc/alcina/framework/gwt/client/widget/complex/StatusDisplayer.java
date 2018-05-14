@@ -125,7 +125,7 @@ public class StatusDisplayer {
 		if (channel == MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED
 				|| channel == MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED) {
 			if (channel == MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED) {
-				duration = 6000;
+				duration = 10000;
 			}
 			center = true;
 			ft = centerTuple;

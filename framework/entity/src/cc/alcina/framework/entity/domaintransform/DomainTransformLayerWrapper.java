@@ -34,8 +34,7 @@ import cc.alcina.framework.common.client.util.Multimap;
  * 
  * @author Nick Reddel
  */
-public class DomainTransformLayerWrapper implements Serializable
-{
+public class DomainTransformLayerWrapper implements Serializable {
 	static final transient long serialVersionUID = 1;
 
 	public DomainTransformResponse response;
@@ -51,12 +50,13 @@ public class DomainTransformLayerWrapper implements Serializable
 	private Multimap<Class, List<DomainTransformEventPersistent>> eventsByClass;
 
 	public List<DomainTransformRequestPersistent> persistentRequests = new ArrayList<DomainTransformRequestPersistent>();
+
 	public boolean containsTransformClasses(Class... classes) {
 		return containsTransformClasses(Arrays.asList(classes));
 	}
+
 	public boolean containsTransformClasses(List<Class> classes) {
-		return !CommonUtils
-				.intersection(getTransformedClasses(), Arrays.asList(classes))
+		return !CommonUtils.intersection(getTransformedClasses(), classes)
 				.isEmpty();
 	}
 
@@ -73,8 +73,8 @@ public class DomainTransformLayerWrapper implements Serializable
 
 	public <V extends HasIdAndLocalId> Set<V> getObjectsFor(Class<V> clazz) {
 		return (Set<V>) (Set) getTransformsFor(clazz).stream()
-				.map(HiliLocator::objectLocator).map(Domain::find).filter(Objects::nonNull)
-				.collect(Collectors.toSet());
+				.map(HiliLocator::objectLocator).map(Domain::find)
+				.filter(Objects::nonNull).collect(Collectors.toSet());
 	}
 
 	public Set<Class> getTransformedClasses() {

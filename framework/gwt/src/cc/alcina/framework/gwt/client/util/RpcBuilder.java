@@ -56,10 +56,12 @@ public class RpcBuilder<T> {
 					if (result instanceof ITaskResult
 							&& !((ITaskResult) result).isOk()) {
 						MessageManager.get()
-								.icyCenterMessage(Ax.blankTo(result.toString(),
-										"Error occurred - no message"));
+								.icyCenterMessage("An error occurred - "
+										+ Ax.blankTo(result.toString(),
+												"no message"));
 					} else {
-						MessageManager.get().centerMessage(Ax.blankTo(result.toString(),"OK - no message"));
+						MessageManager.get().centerMessage(Ax
+								.blankTo(result.toString(), "OK - no message"));
 					}
 				}
 				inner.accept(result);

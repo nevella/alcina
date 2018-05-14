@@ -356,7 +356,7 @@ public abstract class ClientTransformManager extends TransformManager {
 									.getPropertyValue(hili);
 							if (object instanceof Set) {
 								for (HasIdAndLocalId target : (Set<HasIdAndLocalId>) object) {
-									deleteObject(target);
+									deleteObject(target, true);
 								}
 							}
 						}
@@ -477,7 +477,8 @@ public abstract class ClientTransformManager extends TransformManager {
 					DomainTransformRequest dtr = null;
 					if (pl != null) {
 						dtr = new DomainTransformRequest();
-						ClientInstance clientInstance = PermissionsManager.get().getClientInstance();
+						ClientInstance clientInstance = PermissionsManager.get()
+								.getClientInstance();
 						dtr.setClientInstance(clientInstance);
 					}
 					for (ObjectDeltaResult item : result) {
