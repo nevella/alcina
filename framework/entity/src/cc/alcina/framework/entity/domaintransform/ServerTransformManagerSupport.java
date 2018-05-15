@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.SyntheticGetter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
@@ -89,7 +90,8 @@ public class ServerTransformManagerSupport {
 					.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				if (HasIdAndLocalId.class.isAssignableFrom(pd.getPropertyType())
-						&& pd.getWriteMethod() != null) {
+						&& pd.getWriteMethod() != null && pd.getReadMethod()
+								.getAnnotation(SyntheticGetter.class) == null) {
 					HasIdAndLocalId hiliTarget = (HasIdAndLocalId) pd
 							.getReadMethod()
 							.invoke(hili, CommonUtils.EMPTY_OBJECT_ARRAY);

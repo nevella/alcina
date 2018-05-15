@@ -1323,10 +1323,21 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@RegistryLocation(registryPoint = UserlandProvider.class, implementationType = ImplementationType.SINGLETON)
 	public static class DefaultUserlandProvider implements UserlandProvider {
+		IUser cachedCleaned = null;
+
 		@Override
 		public IUser getSystemUser(boolean clean) {
-			return Registry.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence().getSystemUser(clean);
+//			if (clean) {
+//				if (cachedCleaned == null) {
+//					cachedCleaned = Registry
+//							.impl(CommonPersistenceProvider.class)
+//							.getCommonPersistence().getSystemUser(clean);
+//				}
+//				return cachedCleaned;
+//			} else {
+				return Registry.impl(CommonPersistenceProvider.class)
+						.getCommonPersistence().getSystemUser(clean);
+//			}
 		}
 	}
 
@@ -1600,7 +1611,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public List<Publication> getPublications(Collection<Long> ids) {
-		String sql = Ax.format("select pub from %s pub where id in %s order by id",
+		String sql = Ax.format(
+				"select pub from %s pub where id in %s order by id",
 				getImplementationSimpleClassName(Publication.class),
 				EntityUtils.longsToIdClause(ids));
 		List<Publication> publications = getEntityManager().createQuery(sql)

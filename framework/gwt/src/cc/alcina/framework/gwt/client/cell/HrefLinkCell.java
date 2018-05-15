@@ -30,17 +30,15 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
-
-public class PlaceLinkCell extends AbstractCell<TextPlaceTuple> {
-	
-	public PlaceLinkCell() {
+public class HrefLinkCell extends AbstractCell<TextHrefTuple> {
+	public HrefLinkCell() {
 		super(CLICK, KEYDOWN);
 	}
 
 	@Override
 	public void onBrowserEvent(Context context, Element parent,
-			TextPlaceTuple value, NativeEvent event,
-			ValueUpdater<TextPlaceTuple> valueUpdater) {
+			TextHrefTuple value, NativeEvent event,
+			ValueUpdater<TextHrefTuple> valueUpdater) {
 		super.onBrowserEvent(context, parent, value, event, valueUpdater);
 		if (CLICK.equals(event.getType())) {
 			EventTarget eventTarget = event.getEventTarget();
@@ -55,18 +53,18 @@ public class PlaceLinkCell extends AbstractCell<TextPlaceTuple> {
 	}
 
 	@Override
-	public void render(Context context, TextPlaceTuple value,
+	public void render(Context context, TextHrefTuple value,
 			SafeHtmlBuilder sb) {
 		HtmlBuilderFactory factory = HtmlBuilderFactory.get();
-		if (value.place == null) {
+		if (value.href == null) {
 			HtmlSpanBuilder builder = factory.createSpanBuilder();
 			builder.text(Ax.blankTo(value.text, "No link"));
 			sb.append(builder.asSafeHtml());
 		} else {
 			HtmlAnchorBuilder builder = factory.createAnchorBuilder();
-			builder.href(
-					"#" + RegistryHistoryMapper.get().getToken(value.place));
+			builder.href(value.href);
 			builder.text(value.text);
+			builder.target("_blank");
 			sb.append(builder.asSafeHtml());
 		}
 	}

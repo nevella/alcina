@@ -18,6 +18,7 @@ import java.util.function.Function;
 
 import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -125,5 +126,9 @@ public interface HasIdAndLocalId extends HasId {
 
 	public static Function<?, HasIdAndLocalId> caster() {
 		return o -> (HasIdAndLocalId) o;
+	}
+	
+	default String toStringHili() {
+		return new HiliLocator(this).toString();
 	}
 }

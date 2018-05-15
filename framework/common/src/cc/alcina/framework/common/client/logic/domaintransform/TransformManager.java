@@ -1945,4 +1945,8 @@ public abstract class TransformManager implements PropertyChangeListener,
             registerDomainObject(hili);
         }
     }
+
+	public boolean hasTransforms() {
+		return getTransforms().size()>0;
+	}
 }

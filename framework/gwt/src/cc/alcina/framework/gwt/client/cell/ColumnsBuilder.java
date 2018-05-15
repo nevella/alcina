@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.cell.client.FieldUpdater;
@@ -148,6 +149,8 @@ public class ColumnsBuilder<T> {
 
 		private boolean asUnsafeHtml;
 
+		private Function<T, String> hrefFunction;
+
 		public ColumnBuilder(Enum enumValue, String displayName) {
 			this(displayName);
 			this.enumKey = enumValue;
@@ -174,6 +177,10 @@ public class ColumnsBuilder<T> {
 			if (placeFunction != null) {
 				cell = new PlaceLinkCell();
 			}
+			if (hrefFunction != null) {
+				Preconditions.checkState(placeFunction==null);
+				cell = new HrefLinkCell();
+			}
 			if (asUnsafeHtml) {
 				cell = new UnsafeHtmlCell();
 				if (style == null) {
@@ -181,7 +188,7 @@ public class ColumnsBuilder<T> {
 				}
 			}
 			SortableColumn<T> col = new SortableColumn<T>(function,
-					sortFunction, placeFunction, nativeComparator,
+					sortFunction, placeFunction, hrefFunction, nativeComparator,
 					styleFunction, editInfo, cell, name, ColumnsBuilder.this);
 			built.put(col, this);
 			// don't add if filtered
@@ -261,6 +268,11 @@ public class ColumnsBuilder<T> {
 
 		public ColumnBuilder place(Function<T, Place> placeFunction) {
 			this.placeFunction = placeFunction;
+			return this;
+		}
+
+		public ColumnBuilder href(Function<T, String> hrefFunction) {
+			this.hrefFunction = hrefFunction;
 			return this;
 		}
 
@@ -355,9 +367,12 @@ public class ColumnsBuilder<T> {
 
 		private Function<T, Place> placeFunction;
 
+		private Function<T, String> hrefFunction;
+
 		public SortableColumn(Function<T, Object> function,
 				Function<T, Comparable> sortFunction,
 				Function<T, Place> placeFunction,
+				Function<T, String> hrefFunction,
 				DirectedComparator nativeComparator,
 				Function<T, String> styleFunction, EditInfo editInfo, Cell cell,
 				String name, ColumnsBuilder columnsBuilder) {
@@ -365,6 +380,7 @@ public class ColumnsBuilder<T> {
 			this.function = function;
 			this.sortFunction = sortFunction;
 			this.placeFunction = placeFunction;
+			this.hrefFunction = hrefFunction;
 			this.nativeComparator = nativeComparator;
 			this.styleFunction = styleFunction;
 			this.editInfo = editInfo;
@@ -420,6 +436,12 @@ public class ColumnsBuilder<T> {
 					TextPlaceTuple tuple = new TextPlaceTuple();
 					tuple.text = (String) value;
 					tuple.place = placeFunction.apply(t);
+					value = tuple;
+				}
+				if (hrefFunction != null) {
+					TextHrefTuple tuple = new TextHrefTuple();
+					tuple.text = (String) value;
+					tuple.href = hrefFunction.apply(t);
 					value = tuple;
 				}
 				return value;

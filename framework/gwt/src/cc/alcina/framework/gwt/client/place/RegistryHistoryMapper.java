@@ -71,7 +71,8 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	}
 
 	public synchronized Place getPlaceByModelClass(Class<?> clazz) {
-		return tokenizersByModelClass.get(clazz).createDefaultPlace();
+		return tokenizersByModelClass.containsKey(clazz)
+				? tokenizersByModelClass.get(clazz).createDefaultPlace() : null;
 	}
 
 	public synchronized BasePlace getPlaceBySubPlace(Enum value) {

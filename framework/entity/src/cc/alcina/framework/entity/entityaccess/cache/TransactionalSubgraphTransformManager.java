@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupJvm;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.reflection.SyntheticGetter;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.MethodIndividualPropertyAccessor;
@@ -194,7 +195,7 @@ public class TransactionalSubgraphTransformManager
 			projectNonTransactional(T nonTransactional) throws Exception {
 		T newInstance = (T) nonTransactional.getClass().newInstance();
 		ResourceUtilities.copyBeanProperties(nonTransactional, newInstance,
-				null, true);
+				SyntheticGetter.class, true);
 		return newInstance;
 	}
 

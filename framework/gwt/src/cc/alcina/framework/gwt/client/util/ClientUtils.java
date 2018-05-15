@@ -32,6 +32,7 @@ import com.google.gwt.dom.client.Style.Position;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.http.client.UrlBuilder;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FormPanel;
@@ -470,5 +471,14 @@ public class ClientUtils {
 			this.wrapper = wrapper;
 			this.gdb = gdb;
 		}
+	}
+
+	public static void runWithDelay(Runnable runnable, int delayMillis) {
+		new Timer() {
+			@Override
+			public void run() {
+				runnable.run();
+			}
+		}.schedule(delayMillis);
 	}
 }
