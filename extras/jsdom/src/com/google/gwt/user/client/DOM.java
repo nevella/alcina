@@ -1712,6 +1712,7 @@ public class DOM {
 		}
 		if (Element.is(evt.getCurrentEventTarget())) {
 			eventCurrentTarget = evt.getCurrentEventTarget().cast();
+			dispatchedFor.add(eventCurrentTarget);
 		} else {
 			eventCurrentTarget = null;
 		}

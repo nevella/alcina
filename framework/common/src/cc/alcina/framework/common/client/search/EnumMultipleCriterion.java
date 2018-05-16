@@ -13,6 +13,9 @@
  */
 package cc.alcina.framework.common.client.search;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -72,6 +75,25 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 	@Override
 	public String toString() {
 		return String.valueOf(getValue());
+	}
+
+	public <T extends EnumMultipleCriterion<E>> T withValue(E addEnum) {
+		Set<E> newValue = new LinkedHashSet<>(getValue());
+		newValue.add(addEnum);
+		setValue(newValue);
+		return (T) this;
+	}
+
+	public <T extends EnumMultipleCriterion<E>> T
+			withValues(Collection<E> addEnums) {
+		Set<E> newValue = new LinkedHashSet<>(getValue());
+		newValue.addAll(addEnums);
+		setValue(newValue);
+		return (T) this;
+	}
+
+	public <T extends EnumMultipleCriterion<E>> T withValues(E[] addEnums) {
+		return withValues(Arrays.asList(addEnums));
 	}
 
 	/**
