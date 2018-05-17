@@ -336,7 +336,7 @@ public class ClasspathScanner {
 				JarEntry jarEntry = e.nextElement();
 				if (jarEntry != null && jarEntry.getName().endsWith(".class")) {
 					URL entryUrl = SEUtilities.toURL(Ax.format("%s!/%s",
-							url.toString().replace("file:/", "jar:file:/"),
+							url.toString().replace("file:/", "jar:file:/").replace(" ", "%20"),
 							jarEntry.getName()));
 					add(jarEntry.getName(), jarEntry.getTime(), entryUrl,
 							jarFile.getInputStream(jarEntry));
