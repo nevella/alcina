@@ -1,8 +1,10 @@
 package cc.alcina.framework.gwt.client.widget.complex;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
+import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
@@ -23,7 +25,18 @@ public abstract class BaseMultilineEditorCustomiser<T extends HasIdAndLocalId>
 	public void customiseContentViewFactory(
 			ContentViewFactory contentViewFactory, Object model) {
 	}
-
+	protected Predicate<Field> getFieldFilter() {
+		return field -> {
+			switch (field.getPropertyName()) {
+			case "note":
+			case "creationContact":
+			case "creationDate":
+				return true;
+			default:
+				return false;
+			}
+		};
+	}
 	public List<Link> customisePerRowEditActions(List<Link> actions, T rowValue,
 			BaseMultilineEditor editor) {
 		return actions;

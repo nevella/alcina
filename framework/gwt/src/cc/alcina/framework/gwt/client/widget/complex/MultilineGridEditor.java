@@ -111,7 +111,7 @@ public abstract class MultilineGridEditor<H extends HasIdAndLocalId>
 		}
 		List<H> values = new ArrayList<>(getValue());
 		values = filterVisibleValues(values);
-		values.sort(HiliComparator.INSTANCE);
+		sortValues(values);
 		values.forEach(v -> TransformManager.get().registerDomainObjectIfNonProvisional(v));
 		grids = new ArrayList<>();
 		for (H value : values) {
@@ -182,4 +182,5 @@ public abstract class MultilineGridEditor<H extends HasIdAndLocalId>
 			return name;
 		}
 	}
+	protected abstract void sortValues(List<H> values);
 }

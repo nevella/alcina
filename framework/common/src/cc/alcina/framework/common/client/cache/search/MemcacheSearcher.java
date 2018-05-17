@@ -1,15 +1,12 @@
 package cc.alcina.framework.common.client.cache.search;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.cache.CacheFilter;
-import cc.alcina.framework.common.client.cache.CacheQuery;
 import cc.alcina.framework.common.client.cache.CompositeCacheFilter;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -121,36 +118,6 @@ public class MemcacheSearcher {
 	@RegistryLocation(registryPoint = MemoryStoreLocker.class, implementationType = ImplementationType.SINGLETON)
 	public static class MemoryStoreLocker {
 		public void readLock(boolean lock) {
-		}
-	}
-
-	@RegistryLocation(registryPoint = MemoryStoreQuery.class, implementationType = ImplementationType.INSTANCE)
-	public static class MemoryStoreQuery extends CacheQuery<MemoryStoreQuery> {
-		protected SearchDefinition def;
-
-		@Override
-		public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
-			Collection<T> values = Registry.impl(SearcherCollectionSource.class)
-					.getCollectionFor(clazz, def);
-			Stream<T> stream = getStream(values);
-			return stream.collect(Registry.impl(ListCollector.class).toList());
-		}
-
-		public void readLock(boolean lock) {
-			Registry.impl(MemoryStoreLocker.class).readLock(lock);
-		}
-
-		protected <T extends HasIdAndLocalId> Stream<T>
-				getStream(Collection<T> values) {
-			Stream<T> stream = values.stream().filter(v -> {
-				for (CacheFilter filter : getFilters()) {
-					if (!filter.asCollectionFilter().allow(v)) {
-						return false;
-					}
-				}
-				return true;
-			});
-			return stream;
 		}
 	}
 }

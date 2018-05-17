@@ -92,7 +92,7 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 		return (T) this;
 	}
 
-	public <T extends EnumMultipleCriterion<E>> T withValues(E[] addEnums) {
+	public <T extends EnumMultipleCriterion<E>> T withValues(E... addEnums) {
 		return withValues(Arrays.asList(addEnums));
 	}
 

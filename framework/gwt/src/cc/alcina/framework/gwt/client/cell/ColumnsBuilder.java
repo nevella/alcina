@@ -151,6 +151,8 @@ public class ColumnsBuilder<T> {
 
 		private Function<T, String> hrefFunction;
 
+		private Function<T, String> titleFunction;
+
 		public ColumnBuilder(Enum enumValue, String displayName) {
 			this(displayName);
 			this.enumKey = enumValue;
@@ -174,13 +176,20 @@ public class ColumnsBuilder<T> {
 			if (function == null) {
 				function = (Function) sortFunction;
 			}
+			int cellFunctionCount = 0;
 			if (placeFunction != null) {
+				cellFunctionCount++;
 				cell = new PlaceLinkCell();
 			}
 			if (hrefFunction != null) {
-				Preconditions.checkState(placeFunction==null);
+				cellFunctionCount++;
 				cell = new HrefLinkCell();
 			}
+			if (titleFunction != null) {
+				cellFunctionCount++;
+				cell = new TextTitleCell();
+			}
+			Preconditions.checkState(cellFunctionCount <= 1);
 			if (asUnsafeHtml) {
 				cell = new UnsafeHtmlCell();
 				if (style == null) {
@@ -188,8 +197,9 @@ public class ColumnsBuilder<T> {
 				}
 			}
 			SortableColumn<T> col = new SortableColumn<T>(function,
-					sortFunction, placeFunction, hrefFunction, nativeComparator,
-					styleFunction, editInfo, cell, name, ColumnsBuilder.this);
+					sortFunction, placeFunction, hrefFunction, titleFunction,
+					nativeComparator, styleFunction, editInfo, cell, name,
+					ColumnsBuilder.this);
 			built.put(col, this);
 			// don't add if filtered
 			if (columnsFilter == null
@@ -247,6 +257,11 @@ public class ColumnsBuilder<T> {
 
 		public ColumnBuilder function(Function<T, ?> function) {
 			this.function = (Function<T, Object>) function;
+			return this;
+		}
+
+		public ColumnBuilder titleFunction(Function<T, String> titleFunction) {
+			this.titleFunction = titleFunction;
 			return this;
 		}
 
@@ -369,10 +384,13 @@ public class ColumnsBuilder<T> {
 
 		private Function<T, String> hrefFunction;
 
+		private Function<T, String> titleFunction;
+
 		public SortableColumn(Function<T, Object> function,
 				Function<T, Comparable> sortFunction,
 				Function<T, Place> placeFunction,
 				Function<T, String> hrefFunction,
+				Function<T, String> titleFunction,
 				DirectedComparator nativeComparator,
 				Function<T, String> styleFunction, EditInfo editInfo, Cell cell,
 				String name, ColumnsBuilder columnsBuilder) {
@@ -381,6 +399,7 @@ public class ColumnsBuilder<T> {
 			this.sortFunction = sortFunction;
 			this.placeFunction = placeFunction;
 			this.hrefFunction = hrefFunction;
+			this.titleFunction = titleFunction;
 			this.nativeComparator = nativeComparator;
 			this.styleFunction = styleFunction;
 			this.editInfo = editInfo;
@@ -442,6 +461,12 @@ public class ColumnsBuilder<T> {
 					TextHrefTuple tuple = new TextHrefTuple();
 					tuple.text = (String) value;
 					tuple.href = hrefFunction.apply(t);
+					value = tuple;
+				}
+				if (titleFunction != null) {
+					TextTitleTuple tuple = new TextTitleTuple();
+					tuple.text = (String) value;
+					tuple.title = titleFunction.apply(t);
 					value = tuple;
 				}
 				return value;

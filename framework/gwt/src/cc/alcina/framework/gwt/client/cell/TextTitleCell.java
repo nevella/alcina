@@ -30,42 +30,19 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
-public class HrefLinkCell extends AbstractCell<TextHrefTuple> {
-	public HrefLinkCell() {
-		super(CLICK, KEYDOWN);
+public class TextTitleCell extends AbstractCell<TextTitleTuple> {
+	public TextTitleCell() {
 	}
 
 	@Override
-	public void onBrowserEvent(Context context, Element parent,
-			TextHrefTuple value, NativeEvent event,
-			ValueUpdater<TextHrefTuple> valueUpdater) {
-		super.onBrowserEvent(context, parent, value, event, valueUpdater);
-		if (CLICK.equals(event.getType())) {
-			EventTarget eventTarget = event.getEventTarget();
-			if (!Element.is(eventTarget)) {
-				return;
-			}
-			if (parent.getFirstChildElement()
-					.isOrHasChild(Element.as(eventTarget))) {
-				event.stopPropagation();
-			}
-		}
-	}
-
-	@Override
-	public void render(Context context, TextHrefTuple value,
+	public void render(Context context, TextTitleTuple value,
 			SafeHtmlBuilder sb) {
 		HtmlBuilderFactory factory = HtmlBuilderFactory.get();
-		if (value.href == null) {
-			HtmlSpanBuilder builder = factory.createSpanBuilder();
-			builder.text(Ax.blankTo(value.text, ""));
-			sb.append(builder.asSafeHtml());
-		} else {
-			HtmlAnchorBuilder builder = factory.createAnchorBuilder();
-			builder.href(value.href);
-			builder.text(value.text);
-			builder.target("_blank");
-			sb.append(builder.asSafeHtml());
+		HtmlSpanBuilder builder = factory.createSpanBuilder();
+		if (Ax.notBlank(value.title)) {
+			builder.title(value.title);
 		}
+		builder.text(value.text);
+		sb.append(builder.asSafeHtml());
 	}
 }

@@ -21,8 +21,6 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 
 	protected E forClientTrimmed;
 
-	public abstract Class<E> getObjectClass();
-
 	public TruncatedObjectCriterion() {
 		setOperator(StandardSearchOperator.EQUALS);
 	}
@@ -30,6 +28,14 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	public void depopulateValue() {
 		forClientTrimmed = null;
 		value = null;
+	}
+
+	public E ensurePlaceholderObject() {
+		if (value == null && id != 0) {
+			value = Reflections.classLookup().newInstance(getObjectClass());
+			value.setId(id);
+		}
+		return value;
 	}
 
 	@Override
@@ -46,6 +52,8 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 		return this.id;
 	}
 
+	public abstract Class<E> getObjectClass();
+
 	@XmlTransient
 	@JsonIgnore
 	@AlcinaTransient
@@ -56,14 +64,6 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	@Override
 	public int hashCode() {
 		return getClass().hashCode() ^ (int) getId();
-	}
-
-	public E ensurePlaceholderObject() {
-		if (value == null && id != 0) {
-			value = Reflections.classLookup().newInstance(getObjectClass());
-			value.setId(id);
-		}
-		return value;
 	}
 
 	public void populateValue() {
@@ -92,6 +92,11 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	@Override
 	public String toString() {
 		return getDisplayText();
+	}
+
+	public <T extends TruncatedObjectCriterion<E>> T withObject(E withValue) {
+		setValue(withValue);
+		return (T) this;
 	}
 
 	protected String getDisplayTextFor(E value) {

@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.cache.CacheFilter;
-import cc.alcina.framework.common.client.cache.search.MemcacheSearcher.MemoryStoreQuery;
+import cc.alcina.framework.common.client.cache.search.MemoryStoreQuery;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -21,7 +21,13 @@ public class MemoryStoreQueryParallel extends MemoryStoreQuery {
 				MemoryStoreQueryThread::new, 20);
 		LooseContextInstance snapshot = LooseContext.getContext().snapshot();
 		try {
-			Stream<T> stream = values.parallelStream().filter(v -> {
+			Stream<T> stream = null;
+			if (LooseContext.is(CONTEXT_USE_SERIAL_STREAM)) {
+				stream = values.stream();
+			} else {
+				stream = values.parallelStream();
+			}
+			stream = stream.filter(v -> {
 				contexts.get(Thread.currentThread()).snapshot(snapshot);
 				for (CacheFilter filter : getFilters()) {
 					if (!filter.asCollectionFilter().allow(v)) {

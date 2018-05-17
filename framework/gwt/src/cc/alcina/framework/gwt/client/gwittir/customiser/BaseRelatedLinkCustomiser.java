@@ -9,6 +9,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTypedHtml;
 
@@ -58,11 +59,20 @@ public abstract class BaseRelatedLinkCustomiser<T, R>
 			}
 			String template = "<a href='#%s'>View</a>\n%s";
 			String token = customiser.getToken(model);
+			int max = customiser.getMaxRelatedObjects();
 			String relationshipsString = relateds.stream()
-					.map(r -> customiser.getMapper().apply(model, r))
+					.map(r -> customiser.getMapper().apply(model, r)).limit(max)
 					.collect(Collectors.joining("\n"));
+			if (relateds.size() > max) {
+				relationshipsString += Ax.format("\n(%s)",
+						CommonUtils.pluralise("item", relateds.size(), true));
+			}
 			return CommonUtils.formatJ(template, token, relationshipsString)
 					.replace("\n", "<br>\n");
 		}
+	}
+
+	public int getMaxRelatedObjects() {
+		return 10;
 	}
 }
