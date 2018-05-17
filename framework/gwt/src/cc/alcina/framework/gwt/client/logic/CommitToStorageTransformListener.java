@@ -50,12 +50,14 @@ import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolutionToken;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolverAction;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.util.ClientUtilsNonGwt;
+import cc.alcina.framework.servlet.sync.SyncMerger;
 
 /**
  * 
@@ -80,7 +82,13 @@ public class CommitToStorageTransformListener extends StateListenable
 
     private static final String TOPIC_DOMAIN_EXCEPTION = CommitToStorageTransformListener.class
             .getName() + ".TOPIC_DOMAIN_EXCEPTION";
+    
+    private static final String TOPIC_TRANSFORMS_COMMITTED = CommitToStorageTransformListener.class
+            .getName() + ".TOPIC_TRANSFORMS_COMMITTED";
 
+    public static TopicSupport<DomainTransformResponse> topicTransformsCommitted() {
+		return new TopicSupport<>(TOPIC_TRANSFORMS_COMMITTED);
+	}
     public static void flushAndRun(Runnable runnable) {
         Registry.impl(CommitToStorageTransformListener.class)
                 .flushWithOneoffCallback(new AsyncCallbackStd() {
@@ -455,6 +463,7 @@ public class CommitToStorageTransformListener extends StateListenable
                         fireStateChanged(RELOAD);
                     } else {
                         fireStateChanged(COMMITTED);
+                        topicTransformsCommitted().publish(response);
                     }
                 }
             }

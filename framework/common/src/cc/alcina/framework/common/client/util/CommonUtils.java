@@ -1075,6 +1075,14 @@ public class CommonUtils {
 			return String.valueOf(number);
 		}
 	}
+	public static String padEight(int number) {
+		if (number < 10000000) {
+			String s = String.valueOf(number);
+			return "00000000".substring(s.length()) + s;
+		} else {
+			return String.valueOf(number);
+		}
+	}
 
 	public static String padFour(int number) {
 		if (number < 1000) {
