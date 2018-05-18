@@ -213,14 +213,6 @@ public class Domain {
 
 	public static <V extends HasIdAndLocalId> V detachedToDomain(V hili,
 			List<String> ignoreProperties) {
-		if (hili.getId() == 0 && hili.getLocalId() != 0) {
-			//in this case, we're using temporary objects (generally in cascade) - just listen
-			if (hili instanceof SourcesPropertyChangeEvents) {
-				TransformManager.get()
-						.listenTo((SourcesPropertyChangeEvents) hili);
-			}
-			return hili;
-		}
 		Class<V> clazz = (Class<V>) hili.getClass();
 		V writeable = hili.provideWasPersisted()
 				? Domain.writeable(Domain.find(hili)) : Domain.create(clazz);
