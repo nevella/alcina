@@ -3,11 +3,11 @@ package cc.alcina.framework.servlet.sync;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersisterResult.FlatDeltaPersisterResultType;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
@@ -20,6 +20,8 @@ import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
  * @param <D>
  */
 public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
+	public static final String CONTEXT_OTHER_OBJECT = FlatDeltaPersister.class.getName()+".CONTEXT_OTHER_OBJECT";
+
 	protected Map<Class, DeltaItemPersister> persisters = new LinkedHashMap<Class, DeltaItemPersister>();
 
 	protected final boolean applyToLeft;
@@ -31,6 +33,15 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 	}
 	protected boolean breakPersistenceForRemoteRefresh;
 	public FlatDeltaPersisterResult apply(Logger logger, D delta,
+			List<Class> ignoreDueToIncompleteMerge) throws Exception {
+		try {
+			LooseContext.push();
+			return apply0(logger, delta, ignoreDueToIncompleteMerge);
+		} finally {
+			LooseContext.pop();
+		}
+	}
+	private FlatDeltaPersisterResult apply0(Logger logger, D delta,
 			List<Class> ignoreDueToIncompleteMerge) throws Exception {
 		breakPersistenceForRemoteRefresh=false;
 		result = new FlatDeltaPersisterResult();
@@ -64,6 +75,9 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 				}
 				KeyedObject obj = applyToLeft ? pair.getLeft()
 						: pair.getRight();
+				KeyedObject other = !applyToLeft ? pair.getLeft()
+						: pair.getRight();
+				LooseContext.set(CONTEXT_OTHER_OBJECT, other.getObject());
 				FlatDeltaPersisterResultType resultType = persister
 						.performSyncAction(syncAction,
 								obj == null ? null : obj.getObject());
