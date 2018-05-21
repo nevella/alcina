@@ -40,16 +40,16 @@ public class StructuredTokenParserContext {
 
 	int initialDepthIn = -1;
 
-	protected LinkedList<XmlStructuralJoin> openNodes = new LinkedList<>();
+	public LinkedList<XmlStructuralJoin> openNodes = new LinkedList<>();
 
 	Map<XmlStructuralJoin, OutputContextRoot> outputContextRoots = new LinkedHashMap<>();
 
 	public void end() {
 	}
 
-	public String getLogMessage(XmlStructuralJoin outNode) {
-		XmlNode targetNode = outNode.targetNode;
-		XmlNode sourceNode = outNode.sourceNode;
+	public String getLogMessage(XmlStructuralJoin join) {
+		XmlNode targetNode = join.targetNode;
+		XmlNode sourceNode = join.sourceNode;
 		int depthOut = lastDepthOut + 1;
 		if (targetNode != null) {
 			depthOut = targetNode.depth();
@@ -74,7 +74,7 @@ public class StructuredTokenParserContext {
 				: targetNode.debug().shortRepresentation();
 		String inStr = sourceNode == null ? "(no input)"
 				: sourceNode.debug().shortRepresentation();
-		String match = outNode.token.name;
+		String match = join.token.name;
 		String message = String.format("%-65s%-30s%s", depthInSpacer + inStr,
 				depthOutSpacer + outStr, match);
 		return message;
@@ -126,8 +126,8 @@ public class StructuredTokenParserContext {
 		return false;
 	}
 
-	public void log(XmlStructuralJoin outNode) {
-		System.out.println(getLogMessage(outNode));
+	public void log(XmlStructuralJoin join) {
+		System.out.println(getLogMessage(join));
 	}
 
 	public boolean outputOpen(XmlToken token) {
@@ -135,8 +135,7 @@ public class StructuredTokenParserContext {
 				.anyMatch(xtn -> xtn.token == token);
 	}
 
-	public void propertyDelta(XmlStructuralJoin outNode, String key,
-			boolean add) {
+	public void propertyDelta(XmlStructuralJoin join, String key, boolean add) {
 		properties.setBooleanOrRemove(key, add);
 	}
 
@@ -155,44 +154,52 @@ public class StructuredTokenParserContext {
 	public void start() {
 	}
 
-	public void targetNodeMapped(XmlStructuralJoin outNode) {
-		nodeToken.put(outNode.targetNode, outNode);
+	public void targetNodeMapped(XmlStructuralJoin join) {
+		nodeToken.put(join.targetNode, join);
 	}
 
-	public void wasMatched(XmlStructuralJoin outNode) {
-		matched.add(outNode.token, outNode.sourceNode);
-		nodeToken.put(outNode.sourceNode, outNode);
+	public void wasMatched(XmlStructuralJoin join) {
+		matched.add(join.token, join.sourceNode);
+		nodeToken.put(join.sourceNode, join);
 	}
 
-	public NodeAncestorsContextProvider xmlInputContext(
-			XmlStructuralJoin outNode, Predicate<XmlStructuralJoin> stopNodes) {
-		return new NodeAncestors(outNode, stopNodes, NodeAncestorsTypes.SOURCE);
+	public NodeAncestorsContextProvider xmlInputContext(XmlStructuralJoin join,
+			Predicate<XmlStructuralJoin> stopNodes) {
+		return new NodeAncestors(join, stopNodes, NodeAncestorsTypes.SOURCE);
 	}
 
 	public NodeAncestorsContextProvider xmlOutputContext() {
 		return xmlOutputContext(null);
 	}
 
-	protected void closeOpenOutputWrappers(XmlStructuralJoin node) {
+	protected void closeOpenOutputWrappers(XmlStructuralJoin join) {
 		List<String> closed = new ArrayList<>();
 		for (Iterator<XmlStructuralJoin> itr = openNodes.iterator(); itr
 				.hasNext();) {
 			XmlStructuralJoin openNode = itr.next();
-			if (!openNode.sourceNode.isAncestorOf(node.sourceNode)
+			if (!openNode.sourceNode.isAncestorOf(join.sourceNode)
 					&& openNode.targetNode != null) {
 				String tag = openNode.targetNode.name();
 				closed.add(tag);
+				if (out.debug) {
+					System.out.format("close wrapper - %s\n", tag);
+				}
 				out.close(openNode, tag);
 				itr.remove();
 			}
 		}
 	}
 
-	protected void maybeOpenOutputWrapper(XmlStructuralJoin node) {
-		if (node.token.getOutputContext(node).hasTag()) {
-			out.open(node, node.token.getOutputContext(node).getTag(),
-					node.token.getOutputContext(node).getEmitAttributes());
-			openNodes.push(node);
+	protected void maybeOpenOutputWrapper(XmlStructuralJoin join) {
+		if (join.token.getOutputContext(join).hasTag()) {
+			out.open(join, join.token.getOutputContext(join).getTag(),
+					join.token.getOutputContext(join).getEmitAttributes());
+			openNodes.push(join);
+			if (out.debug) {
+				System.out.format("open wrapper - %s - %s\n",
+						join.token.getOutputContext(join).getTag(),
+						join.hashCode());
+			}
 		}
 	}
 
