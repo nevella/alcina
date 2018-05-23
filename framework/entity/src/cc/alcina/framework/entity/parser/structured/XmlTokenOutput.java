@@ -30,7 +30,7 @@ public class XmlTokenOutput {
 	public void close(XmlStructuralJoin join, String tag,
 			ClosedPatchHandler closedPatchHandler) {
 		if (debug) {
-			System.out.format("close - %s %s\n", tag,join.hashCode());
+			System.out.format("close - %s %s\n", tag, join.hashCode());
 		}
 		if (!writeCursor.tagIs(tag)) {
 			if (closedPatchHandler != null
@@ -77,7 +77,8 @@ public class XmlTokenOutput {
 
 	public void open(XmlStructuralJoin join, String tag, StringMap attrs) {
 		if (debug) {
-			System.out.format("open - %s - %s - %s\n", tag, join.hashCode(),attrs);
+			System.out.format("open - %s - %s - %s\n", tag, join.hashCode(),
+					attrs);
 		}
 		writeCursor = writeCursor.builder().tag(tag).attrs(attrs).append();
 		writeCursor.open = join;
@@ -100,7 +101,8 @@ public class XmlTokenOutput {
 			return;
 		}
 		if (debug) {
-			System.out.format("text - %s \n", CommonUtils.trimToWsCharsMiddle(text,80));
+			System.out.format("text - %s \n",
+					CommonUtils.trimToWsCharsMiddle(text, 80));
 		}
 		this.lastTextNode = writeCursor.builder().text(text).append();
 	}

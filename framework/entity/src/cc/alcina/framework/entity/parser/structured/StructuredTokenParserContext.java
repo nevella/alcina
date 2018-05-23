@@ -194,12 +194,16 @@ public class StructuredTokenParserContext {
 		if (join.token.getOutputContext(join).hasTag()) {
 			out.open(join, join.token.getOutputContext(join).getTag(),
 					join.token.getOutputContext(join).getEmitAttributes());
-			openNodes.push(join);
-			if (out.debug) {
-				System.out.format("open wrapper - %s - %s\n",
-						join.token.getOutputContext(join).getTag(),
-						join.hashCode());
-			}
+			pushWrapper(join);
+		}
+	}
+
+	public void pushWrapper(XmlStructuralJoin join) {
+		openNodes.push(join);
+		if (out.debug) {
+			System.out.format("open wrapper - %s - %s\n",
+					join.token.getOutputContext(join).getTag(),
+					join.hashCode());
 		}
 	}
 
