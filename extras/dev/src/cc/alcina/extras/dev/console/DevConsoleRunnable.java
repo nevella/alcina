@@ -37,6 +37,12 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 		}
 	}
 
+	public AbstractTaskPerformer asSubTask(DevConsoleRunnable parentRunnable) {
+		console = parentRunnable.console;
+		command = parentRunnable.command;
+		argv=new String[0];//don't pass through - this is all devvy
+		return super.asSubTask(parentRunnable);
+	}
 	public abstract String[] tagStrings();
 
 	protected String writeTempFile(Class clazz, String extension,
