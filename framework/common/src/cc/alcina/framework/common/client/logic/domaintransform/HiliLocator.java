@@ -24,7 +24,7 @@ public class HiliLocator implements Serializable {
 	}
 
 	public static HiliLocator valueLocator(DomainTransformEvent dte) {
-		return dte.getValueClass() != null && (dte.getValueId() != 0)
+		return dte.getValueClass() != null && (dte.getValueId() != 0||dte.getValueLocalId() != 0)
 				? new HiliLocator(dte.getValueClass(), dte.getValueId(),
 						dte.getValueLocalId())
 				: null;
@@ -130,4 +130,7 @@ public class HiliLocator implements Serializable {
 	public <T extends HasIdAndLocalId> T find() {
 		return Domain.find(this);
 	}
+	public String toIdPairString() {
+        return Ax.format("%s/%s", id, localId);
+    }
 }
