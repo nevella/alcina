@@ -1,6 +1,9 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.cache.CacheFilter;
@@ -11,6 +14,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
+import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils.SearchUtilsIdsHelper;
+import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils.SearchUtilsIdsHelperSingleThreaded;
 
 @RegistryLocation(registryPoint = MemoryStoreQuery.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 public class MemoryStoreQueryParallel extends MemoryStoreQuery {
@@ -39,6 +44,15 @@ public class MemoryStoreQueryParallel extends MemoryStoreQuery {
 			return stream;
 		} finally {
 			contexts.getMap().values().forEach(MemoryStoreQueryThread::cleanup);
+		}
+	}
+
+	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class, implementationType = ImplementationType.SINGLETON)
+	public static class SearchUtilsIdsHelperMultiThreaded
+			extends SearchUtilsIdsHelperSingleThreaded {
+		@Override
+		protected Map<String, Set<Long>> getMap() {
+			return Collections.synchronizedMap(super.getMap());
 		}
 	}
 

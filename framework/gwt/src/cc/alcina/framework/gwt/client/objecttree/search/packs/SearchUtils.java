@@ -1,13 +1,21 @@
 package cc.alcina.framework.gwt.client.objecttree.search.packs;
 
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.user.datepicker.client.CalendarUtil;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.DateCriterion;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
@@ -18,10 +26,6 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class SearchUtils {
-//	private static CachingMap<String, Long> stringIdLookup = new CachingMap<>(
-//			s -> s == null || !s.matches("(?:id:)?[0-9]+") ? 0L
-//					: Long.parseLong(s.replaceFirst("(?:id:)?([0-9]+)", "$1")));
-
 	public static boolean containsIgnoreCase(String s1, String s2) {
 		if (s1 == null || s2 == null) {
 			return false;
@@ -70,8 +74,48 @@ public class SearchUtils {
 		return false;
 	}
 
+	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class)
+	public static abstract class SearchUtilsIdsHelper {
+		public boolean matches(String query, HasIdAndLocalId hili) {
+			return false;
+		}
+	}
+
+	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class, implementationType = ImplementationType.SINGLETON)
+	public static class SearchUtilsIdsHelperSingleThreaded
+			extends SearchUtilsIdsHelper {
+		private CachingMap<String, Set<Long>> stringIdLookup = new CachingMap<>(
+				s -> s == null || !s.matches("(?:ids:)[0-9, ]+")
+						? new LinkedHashSet<>()
+						: TransformManager
+								.idListToLongSet(s.replace("ids:", "")),
+				getMap());
+
+		@Override
+		public boolean matches(String query, HasIdAndLocalId hili) {
+			return hili != null
+					&& stringIdLookup.get(query).contains(hili.getId());
+		}
+
+		protected Map<String, Set<Long>> getMap() {
+			return new LinkedHashMap<>();
+		}
+	}
+
+	static SearchUtilsIdsHelper idsHelper;
+
 	public static boolean matchesId(String query, HasIdAndLocalId hili) {
+		if (matchesIds(query, hili)) {
+			return true;
+		}
 		return hili != null && toId(query) == hili.getId();
+	}
+
+	private static boolean matchesIds(String query, HasIdAndLocalId hili) {
+		if (idsHelper == null) {
+			idsHelper = Registry.impl(SearchUtilsIdsHelper.class);
+		}
+		return idsHelper.matches(query, hili);
 	}
 
 	public static long toId(String s) {

@@ -40,7 +40,7 @@ public abstract class GenericBasePlace<SD extends SearchDefinition>
 	}
 
 	public <T extends GenericBasePlace> T withHasId(HasId hasId) {
-		return withId(hasId.getId());
+		return withId(hasId==null?0:hasId.getId());
 	}
 
 	public String stringId() {

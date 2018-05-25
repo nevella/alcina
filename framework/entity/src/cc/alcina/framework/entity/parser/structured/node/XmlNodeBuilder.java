@@ -7,9 +7,15 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.XmlUtils;
 
 public class XmlNodeBuilder {
+	public static final transient String CONTEXT_TEXT_UNESCAPED = XmlNodeBuilder.class
+			.getName() + ".CONTEXT_TEXT_UNESCAPED";
+
 	protected XmlNode relativeTo;
 
 	private String tag;
@@ -77,7 +83,13 @@ public class XmlNodeBuilder {
 		} else if (tag != null) {
 			node = doc().domDoc().createElement(tag);
 			if (text != null) {
-				node.setTextContent(text);
+				if (LooseContext.is(CONTEXT_TEXT_UNESCAPED)
+						&& text.startsWith(CommonUtils.XML_PI)) {
+					builtNode = doc().nodeFor(node);
+					builtNode.setInnerXml(text);
+				} else {
+					node.setTextContent(text);
+				}
 			}
 			Node f_node = node;
 			attrs.forEach((k, v) -> ((Element) f_node).setAttribute(k, v));
@@ -139,7 +151,7 @@ public class XmlNodeBuilder {
 		return this;
 	}
 
-	public XmlNodeBuilder text(String string, Object...args) {
+	public XmlNodeBuilder text(String string, Object... args) {
 		return text(Ax.format(string, args));
 	}
 
@@ -177,6 +189,4 @@ public class XmlNodeBuilder {
 		insertBefore.parent().invalidate();
 		return node;
 	}
-
-	
 }

@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
-public abstract class ToCsvRow<T> implements IToCsvRow<T> {
+public abstract class ToGridRow<T> implements IToGridRow<T> {
 	List<Mapping> mappings = new ArrayList<>();
 
 	private String prefix = "";
@@ -166,6 +166,12 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 
 		public Mapping auDate() {
 			mapper = d -> d == null ? null : Ax.dateSlash((Date) d);
+			return this;
+		}
+
+		public Mapping dollarTwoPlaces() {
+			mapper = d -> d == null ? null
+					: Ax.format("$%s", CommonUtils.roundNumeric((Double) d, 2));
 			return this;
 		}
 
