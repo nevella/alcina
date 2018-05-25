@@ -146,7 +146,7 @@ public abstract class TransformManager implements PropertyChangeListener,
         return theInstance != null;
     }
     public static Set<Long> idListToLongSet(String str) {
-    	return new HashSet<>(idListToLongs(str));
+    	return new LinkedHashSet<>(idListToLongs(str));
     }
     public static List<Long> idListToLongs(String str) {
         ArrayList<Long> result = new ArrayList<Long>();

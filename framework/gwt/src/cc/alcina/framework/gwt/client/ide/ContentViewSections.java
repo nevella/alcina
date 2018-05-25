@@ -77,13 +77,15 @@ public class ContentViewSections {
 		this.createListener = createListener;
 		return this;
 	}
-
 	public ContentViewSections allFields(Object bean) {
+		return allFields(bean, o->true);
+	}
+	public ContentViewSections allFields(Object bean,Predicate<Field> filter) {
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 		Field[] fields = GwittirBridge.get()
 				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
 						editable, false);
-		section("").fields(Arrays.asList(fields).stream()
+		section("").fields(Arrays.asList(fields).stream().filter(filter)
 				.map(Field::getPropertyName).collect(Collectors.toList()));
 		buildWidget(bean);
 		return this;

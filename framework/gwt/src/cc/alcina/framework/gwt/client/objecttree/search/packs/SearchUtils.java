@@ -26,6 +26,15 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class SearchUtils {
+	static SearchUtilsIdsHelper idsHelper;
+
+	public static final String IDS_REGEX = "(?:ids: ?)[0-9, ]+";
+
+	public static boolean containsIgnoreCase(String text,
+			List<String> strings) {
+		return new SearchTextMatcher().targets(strings).contains(text);
+	}
+
 	public static boolean containsIgnoreCase(String s1, String s2) {
 		if (s1 == null || s2 == null) {
 			return false;
@@ -39,16 +48,11 @@ public class SearchUtils {
 		return new SearchTextMatcher().targets(strings).contains(text);
 	}
 
-	public static boolean containsIgnoreCase(String text,
-			List<String> strings) {
-		return new SearchTextMatcher().targets(strings).contains(text);
-	}
-
-	public static boolean equalsIgnoreCase(String text, String... strings) {
+	public static boolean equalsIgnoreCase(String text, List<String> strings) {
 		return new SearchTextMatcher().targets(strings).equalTo(text);
 	}
 
-	public static boolean equalsIgnoreCase(String text, List<String> strings) {
+	public static boolean equalsIgnoreCase(String text, String... strings) {
 		return new SearchTextMatcher().targets(strings).equalTo(text);
 	}
 
@@ -59,6 +63,11 @@ public class SearchUtils {
 		String lc1 = s1.toLowerCase();
 		String lc2 = s2.toLowerCase();
 		return lc1.equals(lc2);
+	}
+
+	public static Set<Long> idsTextToSet(String idsText) {
+		return TransformManager
+				.idListToLongSet(idsText.replaceFirst("ids: ?", ""));
 	}
 
 	public static boolean matchesEnum(String query, Enum e) {
@@ -74,48 +83,11 @@ public class SearchUtils {
 		return false;
 	}
 
-	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class)
-	public static abstract class SearchUtilsIdsHelper {
-		public boolean matches(String query, HasIdAndLocalId hili) {
-			return false;
-		}
-	}
-
-	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class, implementationType = ImplementationType.SINGLETON)
-	public static class SearchUtilsIdsHelperSingleThreaded
-			extends SearchUtilsIdsHelper {
-		private CachingMap<String, Set<Long>> stringIdLookup = new CachingMap<>(
-				s -> s == null || !s.matches("(?:ids:)[0-9, ]+")
-						? new LinkedHashSet<>()
-						: TransformManager
-								.idListToLongSet(s.replace("ids:", "")),
-				getMap());
-
-		@Override
-		public boolean matches(String query, HasIdAndLocalId hili) {
-			return hili != null
-					&& stringIdLookup.get(query).contains(hili.getId());
-		}
-
-		protected Map<String, Set<Long>> getMap() {
-			return new LinkedHashMap<>();
-		}
-	}
-
-	static SearchUtilsIdsHelper idsHelper;
-
 	public static boolean matchesId(String query, HasIdAndLocalId hili) {
 		if (matchesIds(query, hili)) {
 			return true;
 		}
 		return hili != null && toId(query) == hili.getId();
-	}
-
-	private static boolean matchesIds(String query, HasIdAndLocalId hili) {
-		if (idsHelper == null) {
-			idsHelper = Registry.impl(SearchUtilsIdsHelper.class);
-		}
-		return idsHelper.matches(query, hili);
 	}
 
 	public static long toId(String s) {
@@ -157,6 +129,13 @@ public class SearchUtils {
 		}
 	}
 
+	private static boolean matchesIds(String query, HasIdAndLocalId hili) {
+		if (idsHelper == null) {
+			idsHelper = Registry.impl(SearchUtilsIdsHelper.class);
+		}
+		return idsHelper.matches(query, hili);
+	}
+	
 	public static class SearchTextMatcher {
 		private String[] targets;
 
@@ -179,12 +158,6 @@ public class SearchUtils {
 			return false;
 		}
 
-		public SearchTextMatcher targets(List<String> targetList) {
-			targets = (String[]) targetList
-					.toArray(new String[targetList.size()]);
-			return this;
-		}
-
 		public boolean equalTo(String text) {
 			if (text == null) {
 				return false;
@@ -204,9 +177,41 @@ public class SearchUtils {
 			return false;
 		}
 
+		public SearchTextMatcher targets(List<String> targetList) {
+			targets = (String[]) targetList
+					.toArray(new String[targetList.size()]);
+			return this;
+		}
+
 		public SearchTextMatcher targets(String... targets) {
 			this.targets = targets;
 			return this;
+		}
+	}
+
+	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class)
+	public static abstract class SearchUtilsIdsHelper {
+		public boolean matches(String query, HasIdAndLocalId hili) {
+			return false;
+		}
+	}
+
+	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class, implementationType = ImplementationType.SINGLETON)
+	public static class SearchUtilsIdsHelperSingleThreaded
+			extends SearchUtilsIdsHelper {
+		private CachingMap<String, Set<Long>> stringIdLookup = new CachingMap<>(
+				s -> s == null || !s.matches(IDS_REGEX) ? new LinkedHashSet<>()
+						: idsTextToSet(s),
+				getMap());
+
+		@Override
+		public boolean matches(String query, HasIdAndLocalId hili) {
+			return hili != null
+					&& stringIdLookup.get(query).contains(hili.getId());
+		}
+
+		protected Map<String, Set<Long>> getMap() {
+			return new LinkedHashMap<>();
 		}
 	}
 }

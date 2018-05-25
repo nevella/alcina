@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.cache.search;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -110,6 +111,20 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		@Override
 		public Long apply(H t) {
 			return t.getId();
+		}
+	}
+
+	public static class SpecificIdOrder<H extends HasId>
+			implements SearchOrder<H, Integer> {
+		private List<Long> sorted;
+		public SpecificIdOrder() {
+		}
+		public SpecificIdOrder(Collection<Long> sorted) {
+			this.sorted = sorted.stream().collect(Collectors.toList());
+		}
+		@Override
+		public Integer apply(H t) {
+			return sorted.indexOf(Long.valueOf(t.getId()));
 		}
 	}
 

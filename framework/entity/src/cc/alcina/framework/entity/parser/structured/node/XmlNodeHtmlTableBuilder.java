@@ -95,6 +95,11 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			super.style(style);
 			return this;
 		}
+		@Override
+		public XmlNodeHtmlTableCellBuilder className(String className) {
+			super.className(className);
+			return this;
+		}
 
 		public XmlNodeHtmlTableCellBuilder spacer() {
 			return text("\u00a0").cell();

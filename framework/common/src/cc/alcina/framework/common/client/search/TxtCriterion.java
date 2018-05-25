@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -100,7 +101,9 @@ public class TxtCriterion extends SearchCriterion implements HasValue<String> {
 	@Override
 	public String toString() {
 		String string = CommonUtils.nullToEmpty(getText());
-		return string.length() == 0 ? "" : getDisplayName() + ": " + string;
+		return string.length() == 0 ? ""
+				: Ax.isBlank(getDisplayName()) ? Ax.format("\"%s\"", string)
+						: getDisplayName() + ": " + string;
 	}
 
 	@ClientInstantiable

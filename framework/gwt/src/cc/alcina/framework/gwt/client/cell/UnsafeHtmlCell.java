@@ -19,6 +19,8 @@ import com.google.gwt.cell.client.AbstractCell;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  * A cell that renders a button and takes a delegate to perform actions on
  * mouseUp.
@@ -40,6 +42,6 @@ public class UnsafeHtmlCell extends AbstractCell<String> {
 
 	@Override
 	public void render(Context context, String value, SafeHtmlBuilder sb) {
-		sb.append(SafeHtmlUtils.fromTrustedString(value));
+		sb.append(SafeHtmlUtils.fromTrustedString(Ax.blankToEmpty(value)));
 	}
 }
