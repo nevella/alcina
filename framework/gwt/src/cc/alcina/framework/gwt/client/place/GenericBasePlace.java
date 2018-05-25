@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.place;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.Ax;
@@ -29,13 +30,17 @@ public abstract class GenericBasePlace<SD extends SearchDefinition>
 		return HasEquivalenceHelper.argwiseEquivalent(def, o.def);
 	}
 
-	public <T extends GenericBasePlace> T putId(long id) {
+	public <T extends GenericBasePlace> T withId(long id) {
 		this.id = id;
 		return (T) this;
 	}
 
-	public <T extends GenericBasePlace> T putId(String stringId) {
-		return putId(Long.parseLong(stringId));
+	public <T extends GenericBasePlace> T withId(String stringId) {
+		return withId(Long.parseLong(stringId));
+	}
+
+	public <T extends GenericBasePlace> T withHasId(HasId hasId) {
+		return withId(hasId.getId());
 	}
 
 	public String stringId() {

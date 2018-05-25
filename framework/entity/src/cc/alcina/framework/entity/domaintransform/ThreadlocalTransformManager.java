@@ -611,6 +611,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		return useObjectCreationId;
 	}
 
+	@Override
 	public void listenTo(SourcesPropertyChangeEvents spce) {
 		listeningTo.put(spce, spce);
 		spce.removePropertyChangeListener(this);
@@ -1078,7 +1079,8 @@ public class ThreadlocalTransformManager extends TransformManager
 		return hili.getId() != 0
 				|| (localIdToEntityMap.get(hili.getLocalId()) != null
 						&& getEntityManager() == null)
-				|| LooseContext.is(CONTEXT_ALLOW_MODIFICATION_OF_DETACHED_OBJECTS);
+				|| LooseContext
+						.is(CONTEXT_ALLOW_MODIFICATION_OF_DETACHED_OBJECTS);
 	}
 
 	@Override

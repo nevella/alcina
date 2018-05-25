@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.parser.structured.node;
 
 import java.util.Arrays;
 
+import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -176,4 +177,6 @@ public class XmlNodeBuilder {
 		insertBefore.parent().invalidate();
 		return node;
 	}
+
+	
 }

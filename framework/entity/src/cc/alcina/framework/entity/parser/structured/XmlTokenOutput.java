@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.parser.structured;
 
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
@@ -14,47 +16,50 @@ public class XmlTokenOutput {
 
 	private XmlNode lastTextNode;
 
-	boolean debug = false;
+	public boolean debug = false;
 
 	public XmlTokenOutput(XmlDoc outDoc) {
 		this.outDoc = outDoc;
 		writeCursor = outDoc.root();
 	}
 
-	public void close(XmlStructuralJoin outNode, String tag) {
-		close(outNode, tag, null);
+	public void close(XmlStructuralJoin join, String tag) {
+		close(join, tag, null);
 	}
 
-	public void close(XmlStructuralJoin outNode, String tag,
+	public void close(XmlStructuralJoin join, String tag,
 			ClosedPatchHandler closedPatchHandler) {
 		if (debug) {
-			System.out.format("close - %s\n", tag);
+			System.out.format("close - %s %s\n", tag, join.hashCode());
 		}
 		if (!writeCursor.tagIs(tag)) {
 			if (closedPatchHandler != null
-					&& closedPatchHandler.permitInvalidClose(outNode, tag)) {
+					&& closedPatchHandler.permitInvalidClose(join, tag)) {
 				return;
 			}
-			outDoc.logToFile();
+			Ax.out("Node stack: closing unmatched tag : %s -> %s",
+					writeCursor.name(), tag);
+			writeCursor.ancestors().list().forEach(n -> Ax.out(n.name()));
+			outDoc.logPretty();
 			System.err.println("see /tmp/log/log.xml for details");
 			throw new RuntimeException(
 					String.format("closing unmatched tag : %s -> %s",
 							writeCursor.name(), tag));
 		}
-		writeCursor.close = outNode;
-		outNode.targetNode = writeCursor;
+		writeCursor.close = join;
+		join.targetNode = writeCursor;
 		writeCursor = writeCursor.parent();
 	}
 
-	public void ensureClosed(XmlStructuralJoin outNode, String tag) {
+	public void ensureClosed(XmlStructuralJoin join, String tag) {
 		if (writeCursor.tagIs(tag)) {
-			close(outNode, tag);
+			close(join, tag);
 		}
 	}
 
-	public void ensureOpen(XmlStructuralJoin outNode, String tag) {
+	public void ensureOpen(XmlStructuralJoin join, String tag) {
 		if (!writeCursor.ancestors().orSelf().has(tag)) {
-			open(outNode, tag);
+			open(join, tag);
 		}
 	}
 
@@ -66,18 +71,19 @@ public class XmlTokenOutput {
 		return writeCursor;
 	}
 
-	public void open(XmlStructuralJoin outNode, String tag) {
-		open(outNode, tag, new StringMap());
+	public void open(XmlStructuralJoin join, String tag) {
+		open(join, tag, new StringMap());
 	}
 
-	public void open(XmlStructuralJoin outNode, String tag, StringMap attrs) {
+	public void open(XmlStructuralJoin join, String tag, StringMap attrs) {
 		if (debug) {
-			System.out.format("open - %s - %s\n", tag, attrs);
+			System.out.format("open - %s - %s - %s\n", tag, join.hashCode(),
+					attrs);
 		}
 		writeCursor = writeCursor.builder().tag(tag).attrs(attrs).append();
-		writeCursor.open = outNode;
-		outNode.targetNode = writeCursor;
-		context.targetNodeMapped(outNode);
+		writeCursor.open = join;
+		join.targetNode = writeCursor;
+		context.targetNodeMapped(join);
 	}
 
 	public void pi(String name, String data) {
@@ -95,7 +101,8 @@ public class XmlTokenOutput {
 			return;
 		}
 		if (debug) {
-			System.out.format("text - %s \n", text);
+			System.out.format("text - %s \n",
+					CommonUtils.trimToWsCharsMiddle(text, 80));
 		}
 		this.lastTextNode = writeCursor.builder().text(text).append();
 	}
@@ -103,6 +110,10 @@ public class XmlTokenOutput {
 	public String toXml() {
 		return XmlUtils.streamXML(
 				outDoc.domDoc().getDocumentElement().getFirstChild());
+	}
+
+	public XmlDoc getOutDoc() {
+		return this.outDoc;
 	}
 
 	public void writeXml(String xmlString) {

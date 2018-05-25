@@ -1949,4 +1949,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public boolean hasTransforms() {
 		return getTransforms().size()>0;
 	}
+	public void listenTo(SourcesPropertyChangeEvents spce) {
+		//only makes sense on server
+		throw new UnsupportedOperationException();
+	}
 }

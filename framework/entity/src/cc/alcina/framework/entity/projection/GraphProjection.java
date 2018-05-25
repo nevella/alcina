@@ -34,6 +34,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -969,6 +970,42 @@ public class GraphProjection {
 					new GraphProjection());
 		} else {
 			LooseContext.remove(CONTEXT_LAST_CONTEXT_LOOKUPS);
+		}
+	}
+
+	public static boolean nonTransientFieldwiseEqual(Object o1, Object o2) {
+		try {
+			GraphProjection graphProjection = new GraphProjection(
+					new AllFieldsFilter(), null);
+			StringBuilder sb = new StringBuilder();
+			for (Field field : graphProjection
+					.getFieldsForClass(o1.getClass())) {
+				Object v1 = field.get(o1);
+				Object v2 = field.get(o2);
+				if (!Objects.equals(v1, v2)) {
+					return false;
+				}
+			}
+			return true;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static int nonTransientFieldwiseHash(Object o1) {
+		try {
+			GraphProjection graphProjection = new GraphProjection(
+					new AllFieldsFilter(), null);
+			StringBuilder sb = new StringBuilder();
+			int hash = 0;
+			for (Field field : graphProjection
+					.getFieldsForClass(o1.getClass())) {
+				Object v1 = field.get(o1);
+				hash ^= Objects.hashCode(v1);
+			}
+			return hash;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 }

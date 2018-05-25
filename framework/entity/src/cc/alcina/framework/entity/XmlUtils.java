@@ -116,6 +116,12 @@ public class XmlUtils {
 			"link", "meta", "param", "source", "track", "wbr").stream()
 			.collect(Collectors.toSet());
 
+	public static List<String> ignoreBlockChildForHasNbText = Arrays
+			.asList(new String[] { "HTML", "BODY", "HEAD" });
+
+	public static final transient String CONTEXT_IGNORE_EMPTY_ANCHORS = XmlUtils.class
+			.getName() + ".CONTEXT_IGNORE_EMPTY_ANCHORS";
+
 	public static List<Node> allChildren(Node node) {
 		Stack<Node> nodes = new Stack<Node>();
 		nodes.push(node);
@@ -372,6 +378,26 @@ public class XmlUtils {
 		return null;
 	}
 
+	public static Text getFirstNonWhitespaceTextChild(Node node) {
+		NodeList nl = node.getChildNodes();
+		int length = nl.getLength();
+		for (int i = 0; i < length; i++) {
+			node = nl.item(i);
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				Text t = getFirstNonWhitespaceTextChild(node);
+				if (t != null) {
+					return t;
+				}
+			}
+			if (node.getNodeType() == Node.TEXT_NODE) {
+				if (!SEUtilities.isWhitespace(node.getTextContent())) {
+					return (Text) node;
+				}
+			}
+		}
+		return null;
+	}
+
 	public static Text getFirstTextChild(Node node) {
 		NodeList nl = node.getChildNodes();
 		int length = nl.getLength();
@@ -461,6 +487,32 @@ public class XmlUtils {
 		while (node.getParentNode() != null)
 			node = node.getParentNode();
 		return node;
+	}
+
+	public static Element getSoleElementExceptingWhitespace(Element parent) {
+		NodeList nl = parent.getChildNodes();
+		Element found = null;
+		int length = nl.getLength();
+		for (int i = 0; i < length; i++) {
+			Node item = nl.item(i);
+			if (item.getNodeType() == Node.ELEMENT_NODE) {
+				if (LooseContext.is(XmlUtils.CONTEXT_IGNORE_EMPTY_ANCHORS)
+						&& item.getNodeName().equals("A")
+						&& item.getTextContent().isEmpty()) {
+					continue;
+				}
+				if (found == null) {
+					found = (Element) item;
+				} else {
+					return null;
+				}
+			} else {
+				if (!SEUtilities.isWhitespaceOrEmpty(item.getTextContent())) {
+					return null;
+				}
+			}
+		}
+		return found;
 	}
 
 	public static Node getSucceedingBlock(Node node) {
@@ -667,6 +719,36 @@ public class XmlUtils {
 			if (!SEUtilities.isWhitespace(kid.getTextContent())) {
 				return false;
 			}
+		}
+		return false;
+	}
+
+	public static boolean isInvisibleContentElement(Element elt) {
+		return CommonConstants.HTML_INVISIBLE_CONTENT_ELEMENTS
+				.contains("," + elt.getTagName().toUpperCase() + ",");
+	}
+
+	public static boolean isNoBlockChildrenHasText(Node item) {
+		NodeList nl;
+		if (item.getNodeType() == Node.ELEMENT_NODE) {
+			Element el1 = (Element) item;
+			String tagName = item.getNodeName().toUpperCase();
+			if (XmlUtils.ignoreBlockChildForHasNbText.contains(tagName)
+					|| isInvisibleContentElement(el1)) {
+				return false;
+			}
+			nl = item.getChildNodes();
+			for (int i = 0; i < nl.getLength(); i++) {
+				Node child = nl.item(i);
+				if (child.getNodeType() == Node.ELEMENT_NODE) {
+					Element elt = (Element) child;
+					if (isBlockHTMLElement(elt) && XmlUtils
+							.getFirstNonWhitespaceTextChild(child) != null) {
+						return false;
+					}
+				}
+			}
+			return XmlUtils.getFirstNonWhitespaceTextChild(item) != null;
 		}
 		return false;
 	}

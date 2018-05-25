@@ -33,6 +33,9 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	@Override
 	public void deregisterObject(HasIdAndLocalId hili) {
 		// just remove
+		if(hili==null){
+			return;
+		}
 		cache.remove(hili);
 	}
 

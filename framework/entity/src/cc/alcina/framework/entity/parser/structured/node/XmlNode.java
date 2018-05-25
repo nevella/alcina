@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -950,6 +951,9 @@ public class XmlNode {
 			List<Node> domNodes = eval.getNodesByXpath(query, node);
 			return domNodes.stream().map(doc::nodeFor);
 		}
+		public void forEach(Consumer<XmlNode> consumer) {
+			stream().forEach(consumer);
+		}
 
 		public String textOrEmpty() {
 			return Optional.ofNullable(node()).map(XmlNode::textContent)
@@ -1032,5 +1036,11 @@ public class XmlNode {
 	public void setInnerXml(String xml) {
 		XmlDoc importDoc = new XmlDoc(xml);
 		children.importFrom(importDoc.getDocumentElementNode());
+	}
+
+	public DocumentFragment toFragment() {
+		DocumentFragment fragment = domDoc().createDocumentFragment();
+		fragment.appendChild(domNode());
+		return fragment;
 	}
 }
