@@ -6,16 +6,18 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class CsvUtils {
-	static Pattern wrapInQuotesPattern = Pattern.compile("[ ,a-zA-Z]");
+	static Pattern wrapInQuotesPattern = Pattern.compile("[ ,a-zA-Z\"\\]");
 
 	public static String asCsvRow(Collection values) {
 		int i = 0;
 		StringBuilder sb = new StringBuilder();
 		for (Object object : values) {
-			String value = object.toString();
+			String value = object==null?"":object.toString();
 			if (i++ > 0) {
 				sb.append(",");
 			}
+			value=value.replace("\n", "\\n");
+			value=value.replace("\"", "\"\"");
 			sb.append(wrapInQuotesPattern.matcher(value).find()
 					? "\"" + value + "\"" : value);
 		}
@@ -33,10 +35,6 @@ public class CsvUtils {
 		sb.append("\n");
 		for (int j = 0; j < values.size(); j++) {
 			List<String> row = values.get(j);
-			for (int i = 0; i < row.size(); i++) {
-				String cell = row.get(i);
-				row.set(i, cell == null ? "" : cell.replace("\n", "\\n"));
-			}
 			sb.append(asCsvRow(row));
 			sb.append("\n");
 		}
