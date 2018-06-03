@@ -47,7 +47,7 @@ public class MemoryStoreQueryParallel extends MemoryStoreQuery {
 		}
 	}
 
-	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class, implementationType = ImplementationType.SINGLETON)
+	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class, implementationType = ImplementationType.SINGLETON,priority=RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 	public static class SearchUtilsIdsHelperMultiThreaded
 			extends SearchUtilsIdsHelperSingleThreaded {
 		@Override
