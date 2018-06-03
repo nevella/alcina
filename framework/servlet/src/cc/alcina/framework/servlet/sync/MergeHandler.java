@@ -56,6 +56,7 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 					deltaModel, logger);
 			topicMergeCompleted().publish(merger);
 			if (merger.wasIncomplete() || mergeIncomplete.size() > 0) {
+				logger.info(Ax.format("Merger incomplete:\n\t%s", merger.getClass().getSimpleName()));
 				mergeIncomplete.add(merger);
 			}
 		}
