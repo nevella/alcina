@@ -2082,7 +2082,7 @@ public class AlcinaMemCache implements RegistrableService {
 									.get(propertyDescriptorFetchTypes
 											.get(pdOperator.pd), id);
 							if (target == null) {
-								System.out.format(
+								warnLogger.format(
 										"later-lookup -- missing target: %s, %s for  %s.%s #%s\n",
 										propertyDescriptorFetchTypes
 												.get(pdOperator.pd),

@@ -40,30 +40,31 @@ import cc.alcina.framework.entity.SEUtilities;
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = 15)
 @ClientInstantiable
 public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
-	private static  boolean useContextClassloader;
+	private static boolean useContextClassloader;
 
 	public static boolean isUseContextClassloader() {
-        return useContextClassloader;
-    }
+		return useContextClassloader;
+	}
 
 	public static void setUseContextClassloader(boolean useContextClassloader) {
-        AlcinaBeanSerializerS.useContextClassloader = useContextClassloader;
-    }
+		AlcinaBeanSerializerS.useContextClassloader = useContextClassloader;
+	}
 
 	private ClassLoader cl;
+
 	private boolean pretty;
 
 	IdentityHashMap seen = new IdentityHashMap();
 
-    public AlcinaBeanSerializerS() {
+	public AlcinaBeanSerializerS() {
 		propertyFieldName = PROPERTIES;
 	}
 
-    @Override
+	@Override
 	public <T> T deserialize(String jsonString) {
 		try {
 			JSONObject obj = new JSONObject(jsonString);
-			if (GWT.isClient()&&!useContextClassloader) {
+			if (GWT.isClient() && !useContextClassloader) {
 				// devmode
 				cl = getClass().getClassLoader().getParent();
 			} else {
@@ -278,7 +279,8 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 			return jo;
 		}
 		if (seen.containsKey(object)) {
-			throw new RuntimeException(Ax.format("Cycle in jso graph - %s",object.getClass().getSimpleName()));
+			throw new RuntimeException(Ax.format("Cycle in jso graph - %s",
+					object.getClass().getSimpleName()));
 		} else {
 			seen.put(object, object);
 		}

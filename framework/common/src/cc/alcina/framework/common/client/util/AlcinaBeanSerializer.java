@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.csobjects.BaseBindable;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 public abstract class AlcinaBeanSerializer {
@@ -80,7 +82,8 @@ public abstract class AlcinaBeanSerializer {
 		return typeName;
 	}
 
-	public static class SerializationHolder {
+	@Bean
+	public static class SerializationHolder extends BaseBindable{
 		private List listValue;
 
 		private Map mapValue;
