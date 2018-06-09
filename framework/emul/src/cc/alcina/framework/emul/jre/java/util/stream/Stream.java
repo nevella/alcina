@@ -117,6 +117,9 @@ public interface Stream<T> {
 		list.addAll(((CollectionStream<E>) stream2).asList());
 		return new CollectionStream(list);
 	}
+	public static <E> Stream<E> empty() {
+		return new CollectionStream(new ArrayList<E>());
+	}
 
 	default Optional<T> findFirst() {
 		Iterator<T> itr = iterator();
