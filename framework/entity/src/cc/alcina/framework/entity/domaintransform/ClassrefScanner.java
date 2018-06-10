@@ -194,9 +194,6 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 							.getPropertyDescriptorByName(ref, field.getName());
 					String methodName = String.format("%s.%s",
 							ref.getSimpleName(), field.getName());
-					if (methodName.equals("Contact.activities")) {
-						int debug = 3;
-					}
 					if (leftPd != null && leftPd.getReadMethod() != null
 							&& leftPd.getReadMethod()
 									.getAnnotation(Association.class) != null) {
