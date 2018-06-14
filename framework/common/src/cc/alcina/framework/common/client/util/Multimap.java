@@ -258,4 +258,10 @@ public class Multimap<K, V extends List>
 	private Map<K, V> createMap() {
 		return new LinkedHashMap<K, V>();
 	}
+
+	public CountingMap<K> asCountingMap() {
+		CountingMap<K> countingMap = new CountingMap<>();
+		countingMap.addMultimap((Multimap)this);
+		return countingMap;
+	}
 }

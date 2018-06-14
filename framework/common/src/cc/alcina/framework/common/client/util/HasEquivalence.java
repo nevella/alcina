@@ -61,6 +61,23 @@ public interface HasEquivalence<T> {
 		}
 	}
 
+	public static class HasEquivalenceAdapterObjectIdentity<T> extends
+			HasEquivalenceAdapter<T, HasEquivalenceAdapterObjectIdentity> {
+		public HasEquivalenceAdapterObjectIdentity(T referent) {
+			super(referent);
+		}
+
+		@Override
+		public int equivalenceHash() {
+			return System.identityHashCode(o);
+		}
+
+		@Override
+		public boolean equivalentTo(HasEquivalenceAdapterObjectIdentity other) {
+			return o == other.o;
+		}
+	}
+
 	public static interface HasEquivalenceHash<T> extends HasEquivalence<T> {
 		public int equivalenceHash();
 	}
