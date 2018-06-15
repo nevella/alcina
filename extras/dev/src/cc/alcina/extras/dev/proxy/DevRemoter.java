@@ -29,6 +29,7 @@ import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.PostTransactionEntityResolver;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterServlet;
 
@@ -75,6 +76,7 @@ public class DevRemoter {
 			PostAndClient png = getHttpPost(new URI(address));
 			params.username = ResourceUtilities
 					.getBundledString(DevRemoter.class, "username");
+			params.asRoot = PermissionsManager.get().isRoot();
 			ClientInstance clientInstance = PermissionsManager.get()
 					.getClientInstance();
 			if (clientInstance != null) {

@@ -140,7 +140,8 @@ public abstract class DevRemoterServlet extends HttpServlet {
 			Object out = null;
 			boolean transformMethod = method.getName()
 					.equals("transformInPersistenceContext");
-			boolean getUserByNameMethod = method.getName().equals("getUserByName");
+			boolean getUserByNameMethod = method.getName()
+					.equals("getUserByName");
 			try {
 				System.out.format("DevRemoter - %s.%s\n",
 						api.getClass().getSimpleName(), method.getName());
@@ -159,7 +160,13 @@ public abstract class DevRemoterServlet extends HttpServlet {
 							CommonUtils.iv(highestPersistedRequestId) + 1);
 					ThreadedPermissionsManager tpm = ThreadedPermissionsManager
 							.cast();
-					tpm.pushUser(clientInstance.getUser(), LoginState.LOGGED_IN);
+					if (params.asRoot) {
+						tpm.pushSystemUser();
+						token.setIgnoreClientAuthMismatch(true);
+					} else {
+						tpm.pushUser(clientInstance.getUser(),
+								LoginState.LOGGED_IN);
+					}
 					params.cleanEntities = true;
 				}
 				if (getUserByNameMethod) {
