@@ -21,6 +21,8 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 
 import cc.alcina.extras.dev.proxy.DevProxySupport.DevProxyInterceptor;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
@@ -65,13 +67,19 @@ public class DevRemoter {
 			IOException, UnsupportedEncodingException, ClientProtocolException,
 			ClassNotFoundException {
 		try {
-			LooseContext.pushWithBoolean(KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER,false);
+			LooseContext.pushWithBoolean(
+					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER, false);
 			hookParams(methodName, args, params);
 			String address = ResourceUtilities
 					.getBundledString(DevRemoter.class, "address");
 			PostAndClient png = getHttpPost(new URI(address));
 			params.username = ResourceUtilities
 					.getBundledString(DevRemoter.class, "username");
+			ClientInstance clientInstance = PermissionsManager.get()
+					.getClientInstance();
+			if (clientInstance != null) {
+				params.clientInstanceId = clientInstance.getId();
+			}
 			params.methodName = methodName;
 			params.args = args == null ? new Object[0] : args;
 			List<NameValuePair> qparams = new ArrayList<NameValuePair>();

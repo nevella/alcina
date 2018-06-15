@@ -28,6 +28,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.persistence.EntityManager;
 import javax.persistence.ManyToMany;
@@ -469,7 +470,8 @@ public class ThreadlocalTransformManager extends TransformManager
 			}
 			if (userSessionHiliMap != null && localId != 0) {
 				id = userSessionHiliMap.containsKey(localId)
-						? userSessionHiliMap.get(localId).id : 0;
+						? userSessionHiliMap.get(localId).id
+						: 0;
 			}
 			if (id == 0) {
 				HiliLocator locator = postTransactionEntityResolver
@@ -731,11 +733,10 @@ public class ThreadlocalTransformManager extends TransformManager
 					.getImplementation(DomainTransformRequestPersistent.class)
 					.getSimpleName();
 			MetricLogging.get().start(message);
-			List<Long> dtrIds = getEntityManager()
-					.createQuery(String.format(
-							"select dtr.id from %s dtr where dtr.clientInstance.id = ?1",
-							dtrName))
-					.setParameter(1, clientInstance.getId()).getResultList();
+			List<Long> dtrIds = getEntityManager().createQuery(String.format(
+					"select dtr.id from %s dtr where dtr.clientInstance.id = ?1",
+					dtrName)).setParameter(1, clientInstance.getId())
+					.getResultList();
 			String eql = String.format(
 					"select dte.objectId, dte.objectLocalId, dte.objectClassRef.id "
 							+ "from  %s dte  "
@@ -772,8 +773,12 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public void resetLocalIdCounterForCurrentThread() {
+		resetLocalIdCounterForCurrentThread(new AtomicLong(0));
+	}
+
+	public void resetLocalIdCounterForCurrentThread(AtomicLong counter) {
 		useTlIdGenerator = true;
-		tlIdGenerator.reset();
+		tlIdGenerator.reset(counter);
 	}
 
 	public void resetTltm(HiliLocatorMap locatorMap) {
@@ -968,7 +973,8 @@ public class ThreadlocalTransformManager extends TransformManager
 					? PermissionsManager.get().getDefaultObjectPermissions()
 					: op;
 			HasIdAndLocalId hiliChange = (HasIdAndLocalId) (change instanceof HasIdAndLocalId
-					? change : null);
+					? change
+					: null);
 			ObjectPermissions oph = null;
 			AssignmentPermission aph = Reflections.propertyAccessor()
 					.getAnnotationForProperty(objectClass,
@@ -1079,6 +1085,8 @@ public class ThreadlocalTransformManager extends TransformManager
 		return hili.getId() != 0
 				|| (localIdToEntityMap.get(hili.getLocalId()) != null
 						&& getEntityManager() == null)
+				|| (hili instanceof SourcesPropertyChangeEvents && listeningTo
+						.containsKey((SourcesPropertyChangeEvents) hili))
 				|| LooseContext
 						.is(CONTEXT_ALLOW_MODIFICATION_OF_DETACHED_OBJECTS);
 	}
