@@ -18,6 +18,12 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		addAll(c);
 	}
 
+	public static <H extends HasIdAndLocalId> LiSet<H> of(H h) {
+		LiSet<H> result = new LiSet<>();
+		result.add(h);
+		return result;
+	}
+	
 	private Collection<H> values = (Collection<H>) new FastIdLookupScript()
 			.values();
 

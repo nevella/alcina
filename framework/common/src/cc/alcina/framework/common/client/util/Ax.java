@@ -7,13 +7,12 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 
 public class Ax {
 	public static AxStreams streams = new AxStreams();
-	
-	
 
 	public static String blankTo(String string, String defaultValue) {
 		return isBlank(string) ? defaultValue : string;
@@ -107,6 +106,7 @@ public class Ax {
 	}
 
 	private static boolean test;
+
 	public static boolean isTest() {
 		return test;
 	}
@@ -117,5 +117,10 @@ public class Ax {
 
 	public static void err(Object object) {
 		System.err.println(object);
+	}
+
+	public static String commaJoin(Collection collection) {
+		return (String) collection.stream().map(Object::toString)
+				.collect(Collectors.joining(", "));
 	}
 }

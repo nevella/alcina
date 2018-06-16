@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 
 /**
@@ -83,5 +84,12 @@ public abstract class IdMultipleCriterion<E extends HasIdAndLocalId>
 	@Override
 	public String toString() {
 		return String.valueOf(getValue());
+	}
+	public IdMultipleCriterion<E> withValue(E value) {
+		return withValues(LiSet.of(value));
+	}
+	public IdMultipleCriterion<E> withValues(Set<E> value) {
+		setValue(value);
+		return this;
 	}
 }
