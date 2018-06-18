@@ -42,6 +42,9 @@ public class TransformPersisterIn {
 	public static final String CONTEXT_REPLAYING_FOR_LOGS = TransformPersisterIn.class
 			.getName() + ".CONTEXT_REPLAYING_FOR_LOGS";
 
+	public static final String CONTEXT_LOG_TO_STDOUT = TransformPersisterIn.class
+			.getName() + ".CONTEXT_LOG_TO_STDOUT";
+
 	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITH_DET_EXCEPTIONS = 20
 			* 1000;
 
@@ -104,8 +107,6 @@ public class TransformPersisterIn {
 	static class DeliberatelyThrownWrapperException extends RuntimeException {
 	}
 
-	
-
 	public void transformInPersistenceContext(
 			TransformPersisterToken transformPersisterToken,
 			final TransformPersistenceToken token,
@@ -159,9 +160,9 @@ public class TransformPersisterIn {
 			dtrs.add(request);
 			Integer highestPersistedRequestId = null;
 			if (token.isAsyncClient()) {
-				highestPersistedRequestId = commonPersistenceBase.getHighestPersistedRequestIdForClientInstance(
-						
-						request.getClientInstance().getId());
+				highestPersistedRequestId = commonPersistenceBase
+						.getHighestPersistedRequestIdForClientInstance(
+								request.getClientInstance().getId());
 				for (int i = dtrs.size() - 1; i >= 0; i--) {
 					DomainTransformRequest dtr = dtrs.get(i);
 					if (highestPersistedRequestId != null && dtr
@@ -180,7 +181,9 @@ public class TransformPersisterIn {
 								+ "%s - rqid:%s - prev-per-cli-id:%s",
 						persistentClientInstance.getUser().getUserName(),
 						request.getClientInstance().getId(),
-						dtrs.stream().map(DomainTransformRequest::getRequestId).map(String::valueOf).collect(Collectors.joining(",")),
+						dtrs.stream().map(DomainTransformRequest::getRequestId)
+								.map(String::valueOf)
+								.collect(Collectors.joining(",")),
 						(highestPersistedRequestId == null ? "(servlet layer)"
 								: highestPersistedRequestId)));
 			}
@@ -200,6 +203,9 @@ public class TransformPersisterIn {
 							token.getTransformExceptionPolicy()
 									.precreateMissingEntities(),
 							true);
+					if (LooseContext.is(CONTEXT_LOG_TO_STDOUT)) {
+						Ax.out(dtr);
+					}
 				}
 				int backupEventIdCounter = 0;
 				for (DomainTransformEvent event : items) {

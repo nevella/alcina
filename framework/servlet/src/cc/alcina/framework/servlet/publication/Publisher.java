@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.Date;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
@@ -144,9 +145,13 @@ public class Publisher {
 		result.publicationUid = deliveryModel.getPublicationUid();
 		if (forPublication && publicationContentPersister != null
 				&& !AppPersistenceBase.isInstanceReadOnly()) {
+			IUser user = PermissionsManager.get().getUser();
+			if (user == null) {
+				user = CommonPersistenceProvider.get().getCommonPersistence()
+						.getSystemUser(true);
+			}
 			publicationUserId = Registry.impl(PublicationPersistence.class)
-					.getNextPublicationIdForUser(
-							PermissionsManager.get().getUser());
+					.getNextPublicationIdForUser(user);
 			persist(contentDefinition, deliveryModel, publicationUserId,
 					original, publicationContentPersister, result);
 			ctx.getVisitorOrNoop()
@@ -190,7 +195,7 @@ public class Publisher {
 		fcm.bytes = cw.wrappedBytes;
 		fcm.rows = cw.wrapper.gridRows;
 		fcm.custom = cw.custom;
-		ctx.formatConversionModel=fcm;
+		ctx.formatConversionModel = fcm;
 		InputStream convertedContent = fc.convert(ctx, fcm);
 		convertedContent = ctx.getVisitorOrNoop()
 				.transformConvertedContent(convertedContent);
