@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
  * <li>only <b>now</b> does t2 fire
  * <li>l1 hears, l2
  * <li><b>now</b>, because of cascading support, td1 continues
+ * <li>note that child (cascading) threads should not lock on any objects locked by td1  
  * </ul>
  * hwuh
  *

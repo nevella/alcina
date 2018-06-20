@@ -4,6 +4,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.SEUtilities;
 
 public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 	private String rowClassName;
@@ -29,6 +30,9 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 	public static String toHtmlGrid(List<String> headers,
 			List<List<String>> values) {
 		XmlDoc doc = XmlDoc.basicHtmlDoc();
+		doc.xpath("//head").node().builder().tag("style").text("td {white-space: nowrap; \n" + 
+				"    overflow: hidden;\n" + 
+				"max-width:10em; text-overflow:ellipsis;padding-right:1em;}").append();
 		XmlNode node = doc.xpath("//body").node();
 		XmlNodeHtmlTableBuilder tableBuilder = node.html().tableBuilder();
 		XmlNodeHtmlTableRowBuilder headerBuilder = tableBuilder.row();
@@ -36,7 +40,9 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 		headers.forEach(headerBuilder::cell);
 		values.forEach(cells -> {
 			XmlNodeHtmlTableRowBuilder rowBuilder = tableBuilder.row();
-			cells.stream().map(c->c.replace("\\n","\n")).forEach(rowBuilder::cell);
+			cells.stream().map(c -> Ax.blankToEmpty(c).replace("\\n", "\n"))
+					.map(SEUtilities::normalizeWhitespaceAndTrim)
+					.forEach(rowBuilder::cell);
 		});
 		return doc.prettyToString();
 	}
@@ -95,6 +101,7 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			super.style(style);
 			return this;
 		}
+
 		@Override
 		public XmlNodeHtmlTableCellBuilder className(String className) {
 			super.className(className);

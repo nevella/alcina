@@ -58,6 +58,10 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		copyContext.put(key, LooseContext.get(key));
 		return this;
 	}
+	public AlcinaChildRunnable withContext(String key,Object value) {
+		copyContext.put(key, value);
+		return this;
+	}
 
 	public AlcinaChildRunnable logExceptions() {
 		getRunContext().logExceptions = true;
