@@ -794,6 +794,10 @@ public class XmlNode {
 			return builder().tag("a").attr("href", href).attr("target", target)
 					.text(text).append();
 		}
+
+		public XmlNode body() {
+			return xpath("//body").node();
+		}
 	}
 
 	public class XmlNodeRelative {
