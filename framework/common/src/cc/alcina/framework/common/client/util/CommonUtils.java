@@ -21,6 +21,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1075,6 +1076,7 @@ public class CommonUtils {
 			return String.valueOf(number);
 		}
 	}
+
 	public static String padEight(int number) {
 		if (number < 10000000) {
 			String s = String.valueOf(number);
@@ -1363,6 +1365,27 @@ public class CommonUtils {
 		result.secondOnly = new LinkedHashSet<T>(c2);
 		result.firstOnly.removeAll(intersection);
 		result.secondOnly.removeAll(intersection);
+		return result;
+	}
+
+	public static <T> ThreeWaySetResult<T>
+			threeWayIdentitySplit(Collection<T> c1, Collection<T> c2) {
+		ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
+		IdentityHashMap m1 = new IdentityHashMap();
+		IdentityHashMap m2 = new IdentityHashMap();
+		c1.forEach(o -> m1.put(o, true));
+		c2.forEach(o -> m2.put(o, true));
+		result.firstOnly = m1.keySet();
+		result.secondOnly = m2.keySet();
+		IdentityHashMap intersection = new IdentityHashMap();
+		result.intersection = intersection.keySet();
+		for (Object o : m1.keySet()) {
+			if (m2.keySet().contains(o)) {
+				intersection.put(o, true);
+			}
+		}
+		result.firstOnly.removeAll(result.intersection);
+		result.secondOnly.removeAll(result.intersection);
 		return result;
 	}
 

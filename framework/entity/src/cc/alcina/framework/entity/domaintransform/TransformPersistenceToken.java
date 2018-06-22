@@ -38,7 +38,7 @@ public class TransformPersistenceToken implements Serializable {
 
 	private List<DomainTransformEvent> clientUpdateEvents = new ArrayList<DomainTransformEvent>();
 
-	private final boolean ignoreClientAuthMismatch;
+	private  boolean ignoreClientAuthMismatch;
 
 	private boolean forOfflineTransforms;
 
@@ -47,17 +47,9 @@ public class TransformPersistenceToken implements Serializable {
 	private TransformLoggingPolicy transformLoggingPolicy;
 
 	private boolean blockUntilAllListenersNotified;
-	
+
 	private Long originatingUserId;
-
-	public Long getOriginatingUserId() {
-		return this.originatingUserId;
-	}
-
-	public void setOriginatingUserId(Long originatingUserId) {
-		this.originatingUserId = originatingUserId;
-	}
-
+	
 	public TransformPersistenceToken(DomainTransformRequest request,
 			HiliLocatorMap locatorMap,
 			TransformLoggingPolicy transformLoggingPolicy,
@@ -97,6 +89,10 @@ public class TransformPersistenceToken implements Serializable {
 		return this.logger;
 	}
 
+	public Long getOriginatingUserId() {
+		return this.originatingUserId;
+	}
+
 	public Pass getPass() {
 		return pass;
 	}
@@ -118,6 +114,10 @@ public class TransformPersistenceToken implements Serializable {
 		return this.transformLoggingPolicy;
 	}
 
+	public boolean isAsyncClient() {
+		return this.asyncClient;
+	}
+
 	public boolean isBlockUntilAllListenersNotified() {
 		return this.blockUntilAllListenersNotified;
 	}
@@ -128,10 +128,6 @@ public class TransformPersistenceToken implements Serializable {
 
 	public boolean isIgnoreClientAuthMismatch() {
 		return ignoreClientAuthMismatch;
-	}
-
-	public boolean isAsyncClient() {
-		return this.asyncClient;
 	}
 
 	public void setBlockUntilAllListenersNotified(
@@ -152,8 +148,16 @@ public class TransformPersistenceToken implements Serializable {
 		this.forOfflineTransforms = forClientTransforms;
 	}
 
+	public void setIgnoreClientAuthMismatch(boolean ignoreClientAuthMismatch) {
+		this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
+	}
+
 	public void setLogger(Logger logger) {
 		this.logger = logger;
+	}
+
+	public void setOriginatingUserId(Long originatingUserId) {
+		this.originatingUserId = originatingUserId;
 	}
 
 	public void setPass(Pass pass) {

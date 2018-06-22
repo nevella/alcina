@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public interface IToCsvRow<T> extends Function<T, List<String>> {
+public interface IToGridRow<T> extends Function<T, List<String>> {
 	default List<ArrayList<String>> doConvert(List<T> objects,
 			boolean withTotals) {
 		List list = (List) objects.stream().map(r -> apply(r))

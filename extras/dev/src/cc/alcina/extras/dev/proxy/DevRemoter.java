@@ -21,12 +21,15 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 
 import cc.alcina.extras.dev.proxy.DevProxySupport.DevProxyInterceptor;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.PostTransactionEntityResolver;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterServlet;
 
@@ -65,13 +68,20 @@ public class DevRemoter {
 			IOException, UnsupportedEncodingException, ClientProtocolException,
 			ClassNotFoundException {
 		try {
-			LooseContext.pushWithBoolean(KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER,false);
+			LooseContext.pushWithBoolean(
+					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER, false);
 			hookParams(methodName, args, params);
 			String address = ResourceUtilities
 					.getBundledString(DevRemoter.class, "address");
 			PostAndClient png = getHttpPost(new URI(address));
 			params.username = ResourceUtilities
 					.getBundledString(DevRemoter.class, "username");
+			params.asRoot = PermissionsManager.get().isRoot();
+			ClientInstance clientInstance = PermissionsManager.get()
+					.getClientInstance();
+			if (clientInstance != null) {
+				params.clientInstanceId = clientInstance.getId();
+			}
 			params.methodName = methodName;
 			params.args = args == null ? new Object[0] : args;
 			List<NameValuePair> qparams = new ArrayList<NameValuePair>();

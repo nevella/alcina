@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
@@ -85,7 +86,9 @@ public abstract class SearchDefinition extends WrapperPersistable
 	public void addCriterionToSoleCriteriaGroup(SearchCriterion sc) {
 		addCriterionToSoleCriteriaGroup(sc, false);
 	}
-	public void addCriterionToSoleCriteriaGroup(SearchCriterion sc, boolean knownEmptyCriterion) {
+
+	public void addCriterionToSoleCriteriaGroup(SearchCriterion sc,
+			boolean knownEmptyCriterion) {
 		assert criteriaGroups.size() == 1;
 		criteriaGroups.iterator().next().addCriterion(sc);
 		PropertyChangeEvent event = new PropertyChangeEvent(this, null, null,
@@ -93,7 +96,7 @@ public abstract class SearchDefinition extends WrapperPersistable
 		for (PropertyChangeListener listener : new ArrayList<>(
 				globalListeners)) {
 			sc.addPropertyChangeListener(listener);
-			if (!sc.emptyCriterion()&&!knownEmptyCriterion) {
+			if (!sc.emptyCriterion() && !knownEmptyCriterion) {
 				listener.propertyChange(event);
 			}
 		}
@@ -428,8 +431,10 @@ public abstract class SearchDefinition extends WrapperPersistable
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("%s - %s", filterDescription(false),
-				orderDescription(false));
+		FormatBuilder fb = new FormatBuilder();
+		fb.separator(" - ");
+		fb.appendIfNotBlank(filterDescription(false), orderDescription(false));
+		return fb.toString();
 	}
 
 	public String validatePermissions() {

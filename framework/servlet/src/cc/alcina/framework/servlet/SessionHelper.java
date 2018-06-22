@@ -142,7 +142,7 @@ public class SessionHelper {
 
     public void setupSessionForUser(HttpServletRequest request,
             HttpServletResponse response, IUser user) {
-        getSession(request, response).setAttribute(SESSION_ATTR_USERNAME,
+        	getSession(request, response).setAttribute(SESSION_ATTR_USERNAME,
                 user.getUserName());
         request.setAttribute(SESSION_ATTR_USERNAME, user.getUserName());
         PermissionsManager.get().setUser(user);

@@ -68,6 +68,9 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 
 	public void setPropertyValue(Object bean, String propertyName,
 			Object value) {
+		if (value == null) {
+			return;
+		}
 		XmlNode node = (XmlNode) bean;
 		XmlNode leaf = node.ensurePath(propertyName);
 		if (value instanceof Collection) {
@@ -86,11 +89,7 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 					leaf.strip();
 				}
 			} else {
-				if (value == null) {
-					leaf.removeFromParent();
-				} else {
-					leaf.setText(value.toString());
-				}
+				leaf.setText(value.toString());
 			}
 		}
 	}

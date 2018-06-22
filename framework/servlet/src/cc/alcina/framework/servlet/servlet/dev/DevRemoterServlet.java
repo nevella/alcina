@@ -140,14 +140,17 @@ public abstract class DevRemoterServlet extends HttpServlet {
 			Object out = null;
 			boolean transformMethod = method.getName()
 					.equals("transformInPersistenceContext");
+			boolean getUserByNameMethod = method.getName()
+					.equals("getUserByName");
 			try {
 				System.out.format("DevRemoter - %s.%s\n",
 						api.getClass().getSimpleName(), method.getName());
 				if (transformMethod) {
 					// assume as root
 					TransformPersistenceToken token = (TransformPersistenceToken) params.args[1];
-					ClientInstance clientInstance = CommonRemoteServiceServletSupport
-							.get().getServerAsClientInstance();
+					ClientInstance clientInstance = CommonPersistenceProvider
+							.get().getCommonPersistence().getClientInstance(
+									String.valueOf(params.clientInstanceId));
 					Integer highestPersistedRequestId = CommonPersistenceProvider
 							.get().getCommonPersistence()
 							.getHighestPersistedRequestIdForClientInstance(
@@ -157,7 +160,16 @@ public abstract class DevRemoterServlet extends HttpServlet {
 							CommonUtils.iv(highestPersistedRequestId) + 1);
 					ThreadedPermissionsManager tpm = ThreadedPermissionsManager
 							.cast();
-					tpm.pushSystemUser();
+					if (params.asRoot) {
+						tpm.pushSystemUser();
+						token.setIgnoreClientAuthMismatch(true);
+					} else {
+						tpm.pushUser(clientInstance.getUser(),
+								LoginState.LOGGED_IN);
+					}
+					params.cleanEntities = true;
+				}
+				if (getUserByNameMethod) {
 					params.cleanEntities = true;
 				}
 				out = method.invoke(api, params.args);

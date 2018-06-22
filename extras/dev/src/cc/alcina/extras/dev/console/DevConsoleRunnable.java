@@ -9,6 +9,7 @@ import java.io.IOException;
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdExecRunnable;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
@@ -37,6 +38,13 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 		}
 	}
 
+	public AbstractTaskPerformer asSubTask(DevConsoleRunnable parentRunnable) {
+		console = parentRunnable.console;
+		command = parentRunnable.command;
+		argv = new String[0];// don't pass through - this is all devvy
+		return super.asSubTask(parentRunnable);
+	}
+
 	public abstract String[] tagStrings();
 
 	protected String writeTempFile(Class clazz, String extension,
@@ -53,7 +61,6 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 		File dir = console.devHelper.getDevFolder();
 		String outPath = String.format("%s/%s.%s", dir.getPath(),
 				clazz.getSimpleName(), extension);
-		;
 		ResourceUtilities.writeStreamToStream(
 				new ByteArrayInputStream(Base64Utils.fromBase64(content)),
 				new FileOutputStream(outPath));

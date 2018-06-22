@@ -28,8 +28,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
 @MappedSuperclass
@@ -38,7 +38,8 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 		extends BaseBindable implements HasIdAndLocalId, HasVersionNumber {
 	static final transient long serialVersionUID = 1L;
 
-	public static final String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = AbstractDomainBase.class+".CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID";
+	public static final String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = AbstractDomainBase.class
+			+ ".CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID";
 
 	protected transient int hash = 0;
 
@@ -76,8 +77,9 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 	@Override
 	public int hashCode() {
 		if (hash == 0) {
-			if(getId()==0 && getLocalId()==0){
-				if(LooseContext.is(CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID)){
+			if (getId() == 0 && getLocalId() == 0) {
+				if (LooseContext.is(
+						CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID)) {
 					hash = System.identityHashCode(this);
 					return hash;
 				}
@@ -157,9 +159,10 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 	}
 
 	@UnsafeNativeLong
-	private native int fastHash(long id, long localId, int classHashCode)/*-{
-																			
-																			}-*/;
+	private native int fastHash(long id, long localId,
+			int classHashCode)/*-{
+								
+								}-*/;
 
 	protected int _compareTo(AbstractDomainBase o) {
 		String s1 = comparisonString();
@@ -246,6 +249,7 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 		public String hiliToString() {
 			return new HiliLocator(AbstractDomainBase.this).toString();
 		}
+
 	}
 
 	public DomainSupport domain() {

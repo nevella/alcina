@@ -6,6 +6,8 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HiliHelper;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -106,6 +108,10 @@ public class HiliLocator implements Serializable {
 
 	@Override
 	public String toString() {
+		if(id==0) {
+			long clientInstanceId = HiliHelper.getIdOrZero(PermissionsManager.get().getClientInstance());
+			return toRecoverableString(clientInstanceId);
+		}
 		return CommonUtils.formatJ("%s - %s",
 				clazz == null ? "??" : CommonUtils.simpleClassName(clazz), id);
 	}

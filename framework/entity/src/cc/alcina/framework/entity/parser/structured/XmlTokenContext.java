@@ -97,6 +97,9 @@ public class XmlTokenContext implements Cloneable {
 	}
 
 	public void propertyDelta(String key, boolean add) {
+		if (key.isEmpty()) {
+			return;
+		}
 		if (add) {
 			properties.put(key, key);
 		} else {
@@ -106,6 +109,9 @@ public class XmlTokenContext implements Cloneable {
 	}
 
 	public XmlTokenContext put(String key, String value) {
+		if (key.isEmpty()) {
+			int debug = 3;
+		}
 		properties.put(key, value);
 		return this;
 	}

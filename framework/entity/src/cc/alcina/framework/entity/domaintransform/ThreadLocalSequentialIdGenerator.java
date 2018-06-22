@@ -16,8 +16,7 @@ public class ThreadLocalSequentialIdGenerator extends SequentialIdGenerator {
 		return threadCounters.get().incrementAndGet();
 	}
 
-	@Override
-	public void reset() {
-		threadCounters.get().set(0);
+	public void reset(AtomicLong counter) {
+		threadCounters.set(counter);
 	}
 }
