@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class CsvUtils {
-	static Pattern wrapInQuotesPattern = Pattern.compile("[ ,a-zA-Z\"\\\\]");
+	static Pattern wrapInQuotesPattern = Pattern.compile("[,\"\\\\]");
 
 	public static String asCsvRow(Collection values) {
 		int i = 0;
