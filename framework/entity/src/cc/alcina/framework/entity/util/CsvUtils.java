@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class CsvUtils {
-    static Pattern wrapInQuotesPattern = Pattern.compile("[ ,\"\\\\]");
+	static Pattern wrapInQuotesPattern = Pattern.compile("[,\"\\\\]");
 
     public static String asCsvRow(Collection values) {
         int i = 0;
