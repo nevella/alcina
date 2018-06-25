@@ -222,6 +222,7 @@ public class SuggestBox extends Composite
 	public SuggestBox(SuggestOracle oracle, ValueBoxBase<String> box,
 			SuggestionDisplay suggestDisplay) {
 		this.box = box;
+		box.getElement().setAttribute("autocomplete", "object-selector");
 		this.display = suggestDisplay;
 		initWidget(box);
 		addEventsToTextBox();
