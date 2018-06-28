@@ -117,11 +117,14 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	public static class SpecificIdOrder<H extends HasId>
 			implements SearchOrder<H, Integer> {
 		private List<Long> sorted;
+
 		public SpecificIdOrder() {
 		}
+
 		public SpecificIdOrder(Collection<Long> sorted) {
 			this.sorted = sorted.stream().collect(Collectors.toList());
 		}
+
 		@Override
 		public Integer apply(H t) {
 			return sorted.indexOf(Long.valueOf(t.getId()));
@@ -160,5 +163,10 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		public void setSearchOrderClassName(String searchOrderClassName) {
 			this.searchOrderClassName = searchOrderClassName;
 		}
+	}
+
+	public boolean startsWith(SearchOrder order) {
+		return cmps.size() > 0 && cmps.keySet().iterator().next()
+				.getClass() == order.getClass();
 	}
 }

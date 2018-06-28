@@ -80,6 +80,12 @@ public class ColumnsBuilder<T> {
 				.map(e -> e.getKey()).get();
 	}
 
+	public Column colFor(String name) {
+		return built.entrySet().stream()
+				.filter(e -> e.getValue().name.equals(name)).findFirst()
+				.map(e -> e.getKey()).get();
+	}
+
 	public ColumnsBuilder columnsFilter(Collection validColumns) {
 		columnsFilter = (List<String>) validColumns
 				.stream().map(o -> HasDisplayName.displayName(o)
