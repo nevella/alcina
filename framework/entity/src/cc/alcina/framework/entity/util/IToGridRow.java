@@ -7,10 +7,12 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.search.SearchDefinition;
+
 public interface IToGridRow<T> extends Function<T, List<String>> {
 	default List<ArrayList<String>> doConvert(List<T> objects,
 			boolean withTotals) {
-		List list = (List) objects.stream().map(r -> apply(r))
+		List list = objects.stream().map(r -> apply(r))
 				.collect(Collectors.toList());
 		if (withTotals) {
 			doTotal(objects, list);
@@ -29,5 +31,8 @@ public interface IToGridRow<T> extends Function<T, List<String>> {
 	default String suggestFileName(String prefix) {
 		SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd-hhmmss");
 		return String.format("%s-%s", prefix, df.format(new Date()));
+	}
+
+	default void setSearchDefinition(SearchDefinition searchDefinition) {
 	}
 }
