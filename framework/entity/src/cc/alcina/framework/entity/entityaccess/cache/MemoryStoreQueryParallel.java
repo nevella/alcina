@@ -19,35 +19,38 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils.Search
 
 @RegistryLocation(registryPoint = MemoryStoreQuery.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 public class MemoryStoreQueryParallel extends MemoryStoreQuery {
+	private CachingConcurrentMap<Thread, MemoryStoreQueryThread> contexts = new CachingConcurrentMap<Thread, MemoryStoreQueryThread>(
+			MemoryStoreQueryThread::new, 20);
+
 	@Override
 	protected <T extends HasIdAndLocalId> Stream<T>
 			getStream(Collection<T> values) {
-		CachingConcurrentMap<Thread, MemoryStoreQueryThread> contexts = new CachingConcurrentMap<Thread, MemoryStoreQueryThread>(
-				MemoryStoreQueryThread::new, 20);
-		LooseContextInstance snapshot = LooseContext.getContext().snapshot();
-		try {
-			Stream<T> stream = null;
-			if (LooseContext.is(CONTEXT_USE_SERIAL_STREAM)) {
-				stream = values.stream();
-			} else {
-				stream = values.parallelStream();
-			}
-			stream = stream.filter(v -> {
-				contexts.get(Thread.currentThread()).snapshot(snapshot);
-				for (CacheFilter filter : getFilters()) {
-					if (!filter.asCollectionFilter().allow(v)) {
-						return false;
-					}
-				}
-				return true;
-			});
-			return stream;
-		} finally {
-			contexts.getMap().values().forEach(MemoryStoreQueryThread::cleanup);
+		boolean serial = LooseContext.is(CONTEXT_USE_SERIAL_STREAM);
+		if (serial) {
+			return values.stream().filter(this::filter);
 		}
+		LooseContextInstance snapshot = LooseContext.getContext().snapshot();
+		return values.parallelStream().filter(v -> {
+			contexts.get(Thread.currentThread()).snapshot(snapshot);
+			return filter(v);
+		});
 	}
 
-	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class, implementationType = ImplementationType.SINGLETON,priority=RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@Override
+	protected void disposeStream() {
+		contexts.getMap().values().forEach(MemoryStoreQueryThread::cleanup);
+	}
+
+	protected <T extends HasIdAndLocalId> boolean filter(T v) {
+		for (CacheFilter filter : getFilters()) {
+			if (!filter.asCollectionFilter().allow(v)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 	public static class SearchUtilsIdsHelperMultiThreaded
 			extends SearchUtilsIdsHelperSingleThreaded {
 		@Override
@@ -57,19 +60,24 @@ public class MemoryStoreQueryParallel extends MemoryStoreQuery {
 	}
 
 	static class MemoryStoreQueryThread {
+		private LooseContextInstance context;
+
 		public MemoryStoreQueryThread(Thread thread) {
 		}
 
 		public void snapshot(LooseContextInstance snapshot) {
-			if (snapshot != null) {
+			if (this.context != null) {
 				return;
 			}
-			LooseContext.push();
-			LooseContext.putContext(snapshot);
+			this.context = LooseContext.getContext();
+			context.push();
+			context.putSnapshotProperties(snapshot);
 		}
 
 		void cleanup() {
-			LooseContext.pop();
+			if (this.context != null) {
+				context.pop();
+			}
 		}
 	}
 }

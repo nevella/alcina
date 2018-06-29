@@ -24,8 +24,15 @@ public class MemoryStoreQuery extends CacheQuery<MemoryStoreQuery> {
 	public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
 		Collection<T> values = Registry.impl(SearcherCollectionSource.class)
 				.getCollectionFor(clazz, def);
-		Stream<T> stream = getStream(values);
-		return stream.collect(Registry.impl(ListCollector.class).toList());
+		try {
+			Stream<T> stream = getStream(values);
+			return stream.collect(Registry.impl(ListCollector.class).toList());
+		} finally {
+			disposeStream();
+		}
+	}
+
+	protected void disposeStream() {
 	}
 
 	public void readLock(boolean lock) {

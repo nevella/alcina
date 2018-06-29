@@ -198,4 +198,10 @@ public class LooseContextInstance {
 			pop();
 		}
 	}
+
+	public void putSnapshotProperties(LooseContextInstance snapshot) {
+		for (String key : snapshot.properties.keySet()) {
+			set(key, snapshot.properties.get(key));
+		}
+	}
 }

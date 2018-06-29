@@ -87,10 +87,8 @@ public abstract class LooseContext {
 	 * For when copying from a launcher thread - note, no checks are made (since
 	 * the executor might be a thread pool)
 	 */
-	public static void putContext(LooseContextInstance snapshot) {
-		for (String key : snapshot.properties.keySet()) {
-			set(key, snapshot.properties.get(key));
-		}
+	public static void putSnapshotProperties(LooseContextInstance snapshot) {
+		getContext().putSnapshotProperties(snapshot);
 	}
 
 	public static void register(LooseContext tm) {

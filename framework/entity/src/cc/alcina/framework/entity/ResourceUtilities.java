@@ -265,6 +265,10 @@ public class ResourceUtilities {
 		return img;
 	}
 
+	public static synchronized void set(String key, String value) {
+		customProperties.put(key, value);
+	}
+
 	public static synchronized String getBundledString(Class clazz,
 			String propertyName) {
 		String namespacedKey = (clazz == null) ? propertyName
