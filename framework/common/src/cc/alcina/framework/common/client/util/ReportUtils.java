@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.util;
+package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,11 +6,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.MultikeyMap;
-import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-
 public class ReportUtils {
+	public static String dollarTwoPlaces(double d) {
+		return Ax.format("$%s", twoPlaces(d));
+	}
+
 	public static void dumpFlattenedTable(MultikeyMap depth3plusMap,
 			List<String> columnNames) {
 		List<List> tuples = depth3plusMap.asTuples(
@@ -85,6 +85,13 @@ public class ReportUtils {
 				System.out.println();
 			}
 		}
+	}
+
+	public static String twoPlaces(double d) {
+		d = CommonUtils.roundNumeric(d, 2);
+		int decimal = (int) (d);
+		int fractional = (int) ((d * 100) % 100);
+		return Ax.format("%s.%s", decimal, CommonUtils.padTwo(fractional));
 	}
 
 	private static String getValue(MultikeyMap values, Object row, int col,

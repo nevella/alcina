@@ -2,12 +2,19 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
+import java.util.stream.Collector.Characteristics;
 
 import com.google.gwt.core.client.GwtScriptOnly;
 
@@ -37,6 +44,11 @@ public class AlcinaCollectorsGwt extends AlcinaCollectors {
 		return (Collector) toMultimap(keyMapper, t -> t);
 	}
 
+	public  <T, K> Collector<T, ?, Map<K, T>>
+			toKeyMap0(Function<? super T, ? extends K> keyMapper) {
+		return new ToMapCollector(keyMapper, LinkedHashMap::new);
+	}
+
 	public <T, K, U> Collector<T, ?, Multimap<K, List<U>>> toMultimap0(
 			Function<? super T, ? extends K> keyMapper,
 			Function<? super T, ? extends U> valueMapper) {
@@ -64,6 +76,28 @@ public class AlcinaCollectorsGwt extends AlcinaCollectors {
 			for (Iterator<T> itr = stream.iterator(); itr.hasNext();) {
 				T next = itr.next();
 				result.add(keyMapper.apply(next), valueMapper.apply(next));
+			}
+			return result;
+		}
+	}
+
+	private static class ToMapCollector<T, K>
+			implements java.util.stream.Collector<T, Map<K, T>, Map<K, T>> {
+		private Function<? super T, ? extends K> keyMapper;
+
+		private Supplier<Map<K, T>> supplier;
+
+		public ToMapCollector(Function<? super T, ? extends K> keyMapper,
+				Supplier<Map<K, T>> supplier) {
+			this.keyMapper = keyMapper;
+			this.supplier = supplier;
+		}
+
+		public Map<K, T> collect(Stream<T> stream) {
+			Map<K, T> result = supplier.get();
+			for (Iterator<T> itr = stream.iterator(); itr.hasNext();) {
+				T next = itr.next();
+				result.put(keyMapper.apply(next), next);
 			}
 			return result;
 		}

@@ -3,6 +3,10 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 public class SequentialIdGenerator {
 	public static long id;
 
+	public synchronized long decrementAndGet() {
+		return --id;
+	}
+
 	public long get() {
 		return id;
 	}

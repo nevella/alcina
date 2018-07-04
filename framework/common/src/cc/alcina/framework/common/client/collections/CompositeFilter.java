@@ -40,6 +40,7 @@ public class CompositeFilter<T> implements CollectionFilter<T> {
 		return this;
 	}
 
+	@Override
 	public boolean allow(T o) {
 		for (CollectionFilter<T> filter : filters) {
 			boolean allow = filter.allow(o);

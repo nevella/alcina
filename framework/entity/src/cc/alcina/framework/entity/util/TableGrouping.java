@@ -11,18 +11,25 @@ import java.util.stream.Collectors;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.ColumnMapper;
-import cc.alcina.framework.common.client.util.ColumnMapper.ColumnMapping;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
-public abstract class ToGridRow<T> implements IToGridRow<T> {
+public abstract class TableGrouping<T> {
 	List<Mapping> mappings = new ArrayList<>();
 
 	private String prefix = "";
 
-	@Override
+	public List<ArrayList<String>> doConvert(List<T> objects) {
+		List list = objects.stream().map(r -> apply(r))
+				.collect(Collectors.toList());
+		doTotal(objects, list);
+		return list;
+	}
+
+	public void doTotal(List<T> objects, List list) {
+	}
+
 	public List<String> apply(T t) {
 		List<String> result = new ArrayList<>();
 		for (Mapping mapping : mappings) {
@@ -35,7 +42,6 @@ public abstract class ToGridRow<T> implements IToGridRow<T> {
 		return this.prefix;
 	}
 
-	@Override
 	public List<String> headers() {
 		return mappings.stream().map(m -> prefix + (m.getName()))
 				.collect(Collectors.toList());
@@ -114,13 +120,12 @@ public abstract class ToGridRow<T> implements IToGridRow<T> {
 		list.add(totalRow);
 	}
 
-	protected void loadFromColumnMappings(
-			List<ColumnMapper<T>.ColumnMapping> mappings) {
-		for (ColumnMapping mapping : mappings) {
-			define(mapping.name, null, mapping.mapping);
-		}
-	}
-
+	// protected void loadFromColumnMappings(
+	// List<ColumnMapper<T>.ColumnMapping> mappings) {
+	// for (ColumnMapping mapping : mappings) {
+	// define(mapping.name, null, mapping.mapping);
+	// }
+	// }
 	protected void setTotalValue(List list, String headerName, String value) {
 		int index = getHeaderIndex(headerName);
 		List<String> row = (List<String>) list.get(list.size() - 1);

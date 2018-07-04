@@ -98,6 +98,8 @@ public class CommonUtils {
 	private static UnsortedMultikeyMap<Enum> enumValueLookup = new UnsortedMultikeyMap<Enum>(
 			2);
 
+	private static Set<String> done = new LinkedHashSet<>();
+
 	public static void addIfNotNull(List l, Object o) {
 		if (o != null) {
 			l.add(o);
@@ -252,6 +254,10 @@ public class CommonUtils {
 		return result;
 	}
 
+	public static boolean currencyEquals(double d1, double d2) {
+		return Math.abs(d1 - d2) < 0.005;
+	}
+
 	@SuppressWarnings("deprecation")
 	public static String dateStampMillis() {
 		Date d = new Date();
@@ -284,6 +290,16 @@ public class CommonUtils {
 		return buf.toString();
 	}
 
+	public static void doOnce(Class clazz, Runnable runnable) {
+		doOnce(clazz, null, runnable);
+	}
+
+	public static void doOnce(Class clazz, String key, Runnable runnable) {
+		if (done.add(Ax.format("%s::%s", clazz.getName(), key))) {
+			runnable.run();
+		}
+	}
+
 	public static void dumpAround(String text, String subString) {
 		int idx = text.indexOf(subString);
 		if (idx != -1) {
@@ -311,6 +327,12 @@ public class CommonUtils {
 			result += sourceText.substring(spIdx);
 		}
 		return result;
+	}
+
+	public static Date ensureMonthOfDate(Date date) {
+		// called only for dates which might be slightly before start of month
+		// because of tz offsets - i.e. mm/01 on server
+		return new Date(date.getTime() + TimeConstants.ONE_DAY_MS);
 	}
 
 	public static String enumStringRep(Enum e) {
@@ -351,6 +373,33 @@ public class CommonUtils {
 		return s1.toLowerCase().equals(s2.toLowerCase());
 	}
 
+	public static boolean equalsWithForgivingDates(Object... objects) {
+		if (objects.length % 2 != 0) {
+			throw new RuntimeException("Array length must be divisible by two");
+		}
+		for (int i = 0; i < objects.length; i += 2) {
+			Object o1 = objects[i];
+			Object o2 = objects[i + 1];
+			if (o1 == null && o2 == null) {
+			} else {
+				if (o1 == null || o2 == null) {
+					Object nonNull = o1 == null ? o2 : o1;
+					return false;
+				} else {
+					if (!o1.equals(o2)) {
+						if (o1 instanceof Date && o2 instanceof Date
+								&& Math.abs(((Date) o1).getTime() - ((Date) o2)
+										.getTime()) < TimeConstants.ONE_DAY_MS) {
+						} else {
+							return false;
+						}
+					}
+				}
+			}
+		}
+		return true;
+	}
+
 	public static boolean equalsWithForgivingStrings(Object... objects) {
 		if (objects.length % 2 != 0) {
 			throw new RuntimeException("Array length must be divisible by two");
@@ -373,33 +422,6 @@ public class CommonUtils {
 						if (o1 instanceof String && o2 instanceof String
 								&& o1.toString().trim().toLowerCase().equals(
 										o2.toString().trim().toLowerCase())) {
-						} else {
-							return false;
-						}
-					}
-				}
-			}
-		}
-		return true;
-	}
-
-	public static boolean equalsWithForgivingDates(Object... objects) {
-		if (objects.length % 2 != 0) {
-			throw new RuntimeException("Array length must be divisible by two");
-		}
-		for (int i = 0; i < objects.length; i += 2) {
-			Object o1 = objects[i];
-			Object o2 = objects[i + 1];
-			if (o1 == null && o2 == null) {
-			} else {
-				if (o1 == null || o2 == null) {
-					Object nonNull = o1 == null ? o2 : o1;
-					return false;
-				} else {
-					if (!o1.equals(o2)) {
-						if (o1 instanceof Date && o2 instanceof Date
-								&& Math.abs(((Date) o1).getTime() - ((Date) o2)
-										.getTime()) < TimeConstants.ONE_DAY_MS) {
 						} else {
 							return false;
 						}
@@ -869,6 +891,16 @@ public class CommonUtils {
 		return c.getSuperclass() != null && c.getSuperclass().isEnum();
 	}
 
+	@SuppressWarnings("deprecation")
+	public static boolean isInCurrentMonth(Date date) {
+		if (date == null) {
+			return false;
+		}
+		Date now = new Date();
+		return now.getYear() == date.getYear()
+				&& now.getMonth() == date.getMonth();
+	}
+
 	public static boolean isLetterOnly(String string) {
 		return string.matches("[a-zA-Z]+");
 	}
@@ -924,7 +956,7 @@ public class CommonUtils {
 	}
 
 	public static String join(Collection objects, String separator) {
-		Object[] objs = (Object[]) objects.toArray(new Object[objects.size()]);
+		Object[] objs = objects.toArray(new Object[objects.size()]);
 		return join(objs, separator);
 	}
 
@@ -999,6 +1031,26 @@ public class CommonUtils {
 		return array.length == 0 ? null : array[array.length - 1];
 	}
 
+	public static <V> List<V> lastNMembers(List<V> list, int n) {
+		if (list.size() <= n) {
+			return list;
+		}
+		return new ArrayList<>(list.subList(list.size() - n, list.size()));
+	}
+
+	public static <T> Set<T> lazyUnion(Set<T> c1, Set<T> c2) {
+		if (c1.size() == 0) {
+			return c2;
+		}
+		if (c2.size() == 0) {
+			return c1;
+		}
+		Set<T> result = new LinkedHashSet<>();
+		result.addAll(c1);
+		result.addAll(c2);
+		return result;
+	}
+
 	public static String lcFirst(String s) {
 		if (isNullOrEmpty(s)) {
 			return s;
@@ -1045,6 +1097,13 @@ public class CommonUtils {
 		return value == null ? new LinkedHashSet<>() : value;
 	}
 
+	public static String normaliseForMatch(String string) {
+		if (string == null) {
+			return null;
+		}
+		return string.trim().toLowerCase();
+	}
+
 	public static <T> Stream<T> nullableStream(T t) {
 		List<T> list = new ArrayList<>();
 		if (t != null) {
@@ -1061,6 +1120,16 @@ public class CommonUtils {
 		return s == null ? "" : s;
 	}
 
+	@SuppressWarnings("deprecation")
+	public static Date oldDate(int year, int month, int dayOfMonth) {
+		Date date = new Date();
+		date.setYear(year - 1900);
+		date.setMonth(month - 1);
+		date.setDate(dayOfMonth);
+		date = CommonUtils.roundDate(date, false);
+		return date;
+	}
+
 	public static <T extends Comparable> List<T>
 			order(Collection<T> comparableCollection) {
 		List<T> items = new ArrayList<T>(comparableCollection);
@@ -1068,19 +1137,19 @@ public class CommonUtils {
 		return items;
 	}
 
-	public static String padFive(int number) {
-		if (number < 10000) {
+	public static String padEight(int number) {
+		if (number < 10000000) {
 			String s = String.valueOf(number);
-			return "00000".substring(s.length()) + s;
+			return "00000000".substring(s.length()) + s;
 		} else {
 			return String.valueOf(number);
 		}
 	}
 
-	public static String padEight(int number) {
-		if (number < 10000000) {
+	public static String padFive(int number) {
+		if (number < 10000) {
 			String s = String.valueOf(number);
-			return "00000000".substring(s.length()) + s;
+			return "00000".substring(s.length()) + s;
 		} else {
 			return String.valueOf(number);
 		}
@@ -1192,7 +1261,7 @@ public class CommonUtils {
 	}
 
 	public static List<String> removeNullsAndEmpties(List<String> parts) {
-		List<String> dedupe = (List<String>) CommonUtils.dedupe(parts);
+		List<String> dedupe = CommonUtils.dedupe(parts);
 		dedupe.remove(null);
 		dedupe.remove("");
 		return dedupe;
@@ -1356,18 +1425,6 @@ public class CommonUtils {
 		return sb.toString();
 	}
 
-	public static <T> ThreeWaySetResult<T> threeWaySplit(Collection<T> c1,
-			Collection<T> c2) {
-		ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
-		Set intersection = intersection(c1, c2);
-		result.intersection = intersection;
-		result.firstOnly = new LinkedHashSet<T>(c1);
-		result.secondOnly = new LinkedHashSet<T>(c2);
-		result.firstOnly.removeAll(intersection);
-		result.secondOnly.removeAll(intersection);
-		return result;
-	}
-
 	public static <T> ThreeWaySetResult<T>
 			threeWayIdentitySplit(Collection<T> c1, Collection<T> c2) {
 		ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
@@ -1386,6 +1443,18 @@ public class CommonUtils {
 		}
 		result.firstOnly.removeAll(result.intersection);
 		result.secondOnly.removeAll(result.intersection);
+		return result;
+	}
+
+	public static <T> ThreeWaySetResult<T> threeWaySplit(Collection<T> c1,
+			Collection<T> c2) {
+		ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
+		Set intersection = intersection(c1, c2);
+		result.intersection = intersection;
+		result.firstOnly = new LinkedHashSet<T>(c1);
+		result.secondOnly = new LinkedHashSet<T>(c2);
+		result.firstOnly.removeAll(intersection);
+		result.secondOnly.removeAll(intersection);
 		return result;
 	}
 
@@ -1667,64 +1736,5 @@ public class CommonUtils {
 			return CommonUtils.formatJ("First: %s\nBoth: %s\nSecond: %s",
 					firstOnly, intersection, secondOnly);
 		}
-	}
-
-	public static String normaliseForMatch(String string) {
-		if (string == null) {
-			return null;
-		}
-		return string.trim().toLowerCase();
-	}
-
-	public static <V> List<V> lastNMembers(List<V> list, int n) {
-		if (list.size() <= n) {
-			return list;
-		}
-		return new ArrayList<>(list.subList(list.size() - n, list.size()));
-	}
-
-	public static boolean currencyEquals(double d1, double d2) {
-		return Math.abs(d1 - d2) < 0.005;
-	}
-
-	public static void doOnce(Class clazz, Runnable runnable) {
-		doOnce(clazz, null, runnable);
-	}
-
-	public static void doOnce(Class clazz, String key, Runnable runnable) {
-		if (done.add(Ax.format("%s::%s", clazz.getName(), key))) {
-			runnable.run();
-		}
-	}
-
-	private static Set<String> done = new LinkedHashSet<>();
-
-	@SuppressWarnings("deprecation")
-	public static boolean isInCurrentMonth(Date date) {
-		if (date == null) {
-			return false;
-		}
-		Date now = new Date();
-		return now.getYear() == date.getYear()
-				&& now.getMonth() == date.getMonth();
-	}
-
-	public static Date ensureMonthOfDate(Date date) {
-		// called only for dates which might be slightly before start of month
-		// because of tz offsets - i.e. mm/01 on server
-		return new Date(date.getTime() + TimeConstants.ONE_DAY_MS);
-	}
-
-	public static <T> Set<T> lazyUnion(Set<T> c1, Set<T> c2) {
-		if (c1.size() == 0) {
-			return c2;
-		}
-		if (c2.size() == 0) {
-			return c1;
-		}
-		Set<T> result = new LinkedHashSet<>();
-		result.addAll(c1);
-		result.addAll(c2);
-		return result;
 	}
 }

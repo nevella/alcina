@@ -22,5 +22,15 @@ package cc.alcina.framework.common.client.publication;
 public interface ContentDefinition {
 	public String getPublicationType();
 
+	@Override
 	public String toString();
+
+	default void initialiseContext() {
+		// for implementations, if complex context-related logic. within a
+		// try/finally loosecontext call
+	}
+
+	default void validate() throws Exception {
+		// for implementations
+	}
 }

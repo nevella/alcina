@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.util.Ax;
  * @param <C>
  *            the type that this Cell represents
  */
-public class UnsafeHtmlCell extends AbstractCell<String> {
+public class UnsafeHtmlCell extends AbstractCell<TextTitleTuple> {
 	/**
 	 * Construct a new {@link UnsafeHtmlCell}.
 	 *
@@ -41,7 +41,15 @@ public class UnsafeHtmlCell extends AbstractCell<String> {
 	}
 
 	@Override
-	public void render(Context context, String value, SafeHtmlBuilder sb) {
-		sb.append(SafeHtmlUtils.fromTrustedString(Ax.blankToEmpty(value)));
+	public void render(Context context, TextTitleTuple value,
+			SafeHtmlBuilder sb) {
+		String prelude = "<div>";
+		if (Ax.notBlank(value.title)) {
+			prelude = Ax.format("<div title='%s'>",
+					SafeHtmlUtils.htmlEscape(value.title));
+		}
+		sb.append(SafeHtmlUtils.fromTrustedString(prelude));
+		sb.append(SafeHtmlUtils.fromTrustedString(Ax.blankToEmpty(value.text)));
+		sb.append(SafeHtmlUtils.fromTrustedString("</div>"));
 	}
 }

@@ -106,6 +106,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		return cmps;
 	}
 
+	@ClientInstantiable
 	public static class IdOrder<H extends HasId>
 			implements SearchOrder<H, Long> {
 		@Override
@@ -129,6 +130,12 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		public Integer apply(H t) {
 			return sorted.indexOf(Long.valueOf(t.getId()));
 		}
+	}
+
+	public static class ColumnSearchOrder implements Serializable {
+		public String columnName;
+
+		public boolean ascending;
 	}
 
 	@ClientInstantiable

@@ -1,10 +1,12 @@
 package cc.alcina.framework.gwt.client.cell;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -25,7 +27,6 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ColumnMapper;
-import cc.alcina.framework.common.client.util.ColumnMapper.ColumnMapping;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -49,19 +50,26 @@ public class ColumnsBuilder<T> {
 
 	private Map<SortableColumn, ColumnBuilder> built = new LinkedHashMap<>();
 
+	private List<ColumnBuilder> pending = new ArrayList<>();
+
 	private ColumnTotaller<T> totaller;
 
 	public ColumnsBuilder(AbstractCellTable<T> table, Class<T> clazz) {
 		this.table = table;
 		this.clazz = clazz;
-		table.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.DISABLED);
+		if (table != null) {
+			table.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.DISABLED);
+		}
 	}
 
-	public void buildFromColumnMappings(ColumnMapper<T> mapper) {
-		List<ColumnMapper<T>.ColumnMapping> mappings = mapper.getMappings();
-		for (ColumnMapping columnMapping : mappings) {
-			col(columnMapping.name).function(columnMapping.mapping)
-					.asUnsafeHtml(columnMapping.asHtml).build();
+	public <V> void buildFromTypedMappings(ColumnMapper<V> mapper,
+			BiConsumer<ColumnsBuilder<T>.ColumnBuilder, Integer> additionalMapper) {
+		int idx = 0;
+		for (ColumnsBuilder<V>.ColumnBuilder typed : mapper.getMappings()) {
+			ColumnsBuilder<T>.ColumnBuilder builder = new ColumnBuilder(
+					typed.name).fromTyped(typed);
+			additionalMapper.accept(builder, idx++);
+			builder.build();
 		}
 	}
 
@@ -112,6 +120,10 @@ public class ColumnsBuilder<T> {
 	public Comparator<T> getComparator(Column<?, ?> column) {
 		ColumnBuilder columnBuilder = built.get(column);
 		return Comparator.comparing(columnBuilder.sortFunction);
+	}
+
+	public List<ColumnBuilder> getPending() {
+		return this.pending;
 	}
 
 	public ColumnTotaller<T> getTotaller() {
@@ -166,6 +178,10 @@ public class ColumnsBuilder<T> {
 
 		public ColumnBuilder(String name) {
 			this.name = name;
+		}
+
+		public void add() {
+			pending.add(this);
 		}
 
 		public ColumnBuilder asUnsafeHtml(boolean asUnsafeHtml) {
@@ -261,13 +277,43 @@ public class ColumnsBuilder<T> {
 			return this;
 		}
 
+		public ColumnBuilder fromTyped(ColumnsBuilder<?>.ColumnBuilder typed) {
+			this.asUnsafeHtml = typed.asUnsafeHtml;
+			this.numeric = typed.numeric;
+			this.sortable = typed.sortable;
+			this.style = typed.style;
+			this.unit = typed.unit;
+			this.width = typed.width;
+			return this;
+		}
+
 		public ColumnBuilder function(Function<T, ?> function) {
 			this.function = (Function<T, Object>) function;
 			return this;
 		}
 
-		public ColumnBuilder titleFunction(Function<T, String> titleFunction) {
-			this.titleFunction = titleFunction;
+		public Function<T, String> getHrefFunction() {
+			return this.hrefFunction;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public Function<T, Place> getPlaceFunction() {
+			return this.placeFunction;
+		}
+
+		public Function<T, String> getStyleFunction() {
+			return this.styleFunction;
+		}
+
+		public Function<T, String> getTitleFunction() {
+			return this.titleFunction;
+		}
+
+		public ColumnBuilder href(Function<T, String> hrefFunction) {
+			this.hrefFunction = hrefFunction;
 			return this;
 		}
 
@@ -292,9 +338,8 @@ public class ColumnsBuilder<T> {
 			return this;
 		}
 
-		public ColumnBuilder href(Function<T, String> hrefFunction) {
-			this.hrefFunction = hrefFunction;
-			return this;
+		public Function<T, ?> provideValueFunction() {
+			return function != null ? function : sortFunction;
 		}
 
 		public ColumnBuilder reversed() {
@@ -316,6 +361,11 @@ public class ColumnsBuilder<T> {
 
 		public ColumnBuilder styleFunction(Function<T, String> styleFunction) {
 			this.styleFunction = styleFunction;
+			return this;
+		}
+
+		public ColumnBuilder titleFunction(Function<T, String> titleFunction) {
+			this.titleFunction = titleFunction;
 			return this;
 		}
 

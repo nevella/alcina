@@ -18,6 +18,7 @@ import java.util.Date;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * 
@@ -59,12 +60,13 @@ public class AbstractDateCriterion extends SearchCriterion
 					date.setYear(10000);
 				}
 			} catch (NullPointerException e) {
-				//parallel call issues?
+				// parallel call issues?
 			}
 		}
 		return date;
 	}
 
+	@Override
 	@XmlTransient
 	public Date getValue() {
 		return getDate();
@@ -76,15 +78,21 @@ public class AbstractDateCriterion extends SearchCriterion
 		propertyChangeSupport().firePropertyChange("date", old_date, date);
 	}
 
+	/**
+	 * add property change firing to the subclass implementation, if you care
+	 */
+	@Override
+	public void setValue(Date value) {
+		setDate(value);
+	}
+
 	public AbstractDateCriterion withDate(Date date) {
 		setDate(date);
 		return this;
 	}
 
-	/**
-	 * add property change firing to the subclass implementation, if you care
-	 */
-	public void setValue(Date value) {
-		setDate(value);
+	public AbstractDateCriterion withDate(int year, int month, int dayOfMonth) {
+		setDate(CommonUtils.oldDate(year, month, dayOfMonth));
+		return this;
 	}
 }

@@ -111,7 +111,7 @@ public abstract class SearchDefinition extends WrapperPersistable
 	}
 
 	public <SC extends SearchCriterion> List<SC> allCriteria(Class<SC> clazz) {
-		return (List) CollectionFilters.filter(allCriteria(),
+		return CollectionFilters.filter(allCriteria(),
 				new IsClassFilter(clazz));
 	}
 
@@ -123,6 +123,11 @@ public abstract class SearchDefinition extends WrapperPersistable
 		return result;
 	}
 
+	public void clearAllCriteria() {
+		getCriteriaGroups().forEach(cg -> cg.getCriteria().clear());
+		resetLookups();
+	}
+
 	public void clearOrderGroup(Class<? extends OrderGroup> clazz) {
 		OrderGroup og = orderGroup(clazz);
 		if (og != null) {
@@ -130,7 +135,6 @@ public abstract class SearchDefinition extends WrapperPersistable
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public <C extends CriteriaGroup> C criteriaGroup(Class<C> clazz) {
 		return (C) cgs.get(clazz);
 	}
@@ -223,8 +227,7 @@ public abstract class SearchDefinition extends WrapperPersistable
 
 	public <V extends SearchCriterion> V firstCriterion(Class<V> clazz) {
 		for (CriteriaGroup cg : getCriteriaGroups()) {
-			for (SearchCriterion c : (Set<SearchCriterion>) (Set) cg
-					.getCriteria()) {
+			for (SearchCriterion c : (Set<SearchCriterion>) cg.getCriteria()) {
 				if (c.getClass() == clazz) {
 					return (V) c;
 				}
@@ -252,6 +255,7 @@ public abstract class SearchDefinition extends WrapperPersistable
 		return this.criteriaGroups;
 	}
 
+	@Override
 	public String getDisplayName() {
 		return "";
 	}
@@ -274,6 +278,7 @@ public abstract class SearchDefinition extends WrapperPersistable
 		return this.orderName;
 	}
 
+	@Override
 	public String getPublicationType() {
 		return publicationType;
 	}
@@ -437,6 +442,7 @@ public abstract class SearchDefinition extends WrapperPersistable
 		return fb.toString();
 	}
 
+	@Override
 	public String validatePermissions() {
 		resetLookups();
 		mapCriteriaToPropertyNames();
@@ -467,10 +473,5 @@ public abstract class SearchDefinition extends WrapperPersistable
 	protected void putOrderGroup(OrderGroup og) {
 		ogs.put(og.getClass(), og);
 		orderGroups.add(og);
-	}
-
-	public void clearAllCriteria() {
-		getCriteriaGroups().forEach(cg -> cg.getCriteria().clear());
-		resetLookups();
 	}
 }

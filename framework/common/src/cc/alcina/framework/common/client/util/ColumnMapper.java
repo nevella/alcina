@@ -1,38 +1,37 @@
 package cc.alcina.framework.common.client.util;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+
+import cc.alcina.framework.gwt.client.cell.ColumnsBuilder;
 
 public abstract class ColumnMapper<T> {
-	protected List<ColumnMapping> mappings = new ArrayList<>();
+	protected ColumnsBuilder<T> builder;
 
-	public List<ColumnMapping> getMappings() {
-		defineMappings();
-		return this.mappings;
+	protected ColumnsBuilder<List<T>> totalBuilder;
+
+	public ColumnMapper() {
+		builder = new ColumnsBuilder<T>(null, builderClass());
+		totalBuilder = new ColumnsBuilder<List<T>>(null, null);
 	}
 
-	protected void define(String name, Function<T, Object> mapping) {
-		mappings.add(new ColumnMapping(name, mapping, false));
+	public List<ColumnsBuilder<T>.ColumnBuilder> getMappings() {
+		if (builder.getPending().isEmpty()) {
+			defineMappings();
+		}
+		return builder.getPending();
 	}
 
-	protected void defineHtml(String name, Function<T, Object> mapping) {
-		mappings.add(new ColumnMapping(name, mapping, true));
+	public List<ColumnsBuilder<List<T>>.ColumnBuilder> getTotalMappings() {
+		if (totalBuilder.getPending().isEmpty()) {
+			defineTotalMappings();
+		}
+		return totalBuilder.getPending();
 	}
+
+	protected abstract Class<T> builderClass();
 
 	protected abstract void defineMappings();
 
-	public class ColumnMapping {
-		public String name;
-
-		public Function<T, Object> mapping;
-
-		public boolean asHtml;
-
-		public ColumnMapping(String name, Function mapping, boolean asHtml) {
-			this.name = name;
-			this.mapping = mapping;
-			this.asHtml = asHtml;
-		}
+	protected void defineTotalMappings() {
 	}
 }

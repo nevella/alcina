@@ -24,12 +24,13 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.gwt.client.util.ClientUtils.EditContentViewWidgets;
 import cc.alcina.framework.gwt.client.widget.typedbinding.EnumeratedBinding;
 
 public class ContentViewSections {
 	public List<ContentViewSection> sections = new ArrayList<>();
 
-	private List<PaneWrapperWithObjects> beanViews = new ArrayList<>();
+	public List<PaneWrapperWithObjects> beanViews = new ArrayList<>();
 
 	private Handler captionColEqualiser = new Handler() {
 		@Override
@@ -77,10 +78,12 @@ public class ContentViewSections {
 		this.createListener = createListener;
 		return this;
 	}
+
 	public ContentViewSections allFields(Object bean) {
-		return allFields(bean, o->true);
+		return allFields(bean, o -> true);
 	}
-	public ContentViewSections allFields(Object bean,Predicate<Field> filter) {
+
+	public ContentViewSections allFields(Object bean, Predicate<Field> filter) {
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 		Field[] fields = GwittirBridge.get()
 				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
@@ -310,8 +313,8 @@ public class ContentViewSections {
 			return this;
 		}
 
-		public void show() {
-			ClientUtils.createEditContentViewWidgets(null, caption, "",
+		public EditContentViewWidgets show() {
+			return ClientUtils.createEditContentViewWidgets(null, caption, "",
 					beanViews.get(0), noGlass, true, true, withOk, withCancel,
 					okButtonName, cancelButtonName, className);
 		}

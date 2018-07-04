@@ -23,20 +23,6 @@ public class MemoryStoreQueryParallel extends MemoryStoreQuery {
 			MemoryStoreQueryThread::new, 20);
 
 	@Override
-	protected <T extends HasIdAndLocalId> Stream<T>
-			getStream(Collection<T> values) {
-		boolean serial = LooseContext.is(CONTEXT_USE_SERIAL_STREAM);
-		if (serial) {
-			return values.stream().filter(this::filter);
-		}
-		LooseContextInstance snapshot = LooseContext.getContext().snapshot();
-		return values.parallelStream().filter(v -> {
-			contexts.get(Thread.currentThread()).snapshot(snapshot);
-			return filter(v);
-		});
-	}
-
-	@Override
 	protected void disposeStream() {
 		contexts.getMap().values().forEach(MemoryStoreQueryThread::cleanup);
 	}
@@ -48,6 +34,20 @@ public class MemoryStoreQueryParallel extends MemoryStoreQuery {
 			}
 		}
 		return true;
+	}
+
+	@Override
+	protected <T extends HasIdAndLocalId> Stream<T>
+			getStream(Collection<T> values) {
+		boolean serial = LooseContext.is(CONTEXT_USE_SERIAL_STREAM);
+		if (serial) {
+			return values.stream().filter(this::filter);
+		}
+		LooseContextInstance snapshot = LooseContext.getContext().snapshot();
+		return values.parallelStream().filter(v -> {
+			contexts.get(Thread.currentThread()).snapshot(snapshot);
+			return filter(v);
+		});
 	}
 
 	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)

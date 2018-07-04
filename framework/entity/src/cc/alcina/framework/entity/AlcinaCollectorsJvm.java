@@ -2,6 +2,7 @@ package cc.alcina.framework.entity;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
@@ -13,6 +14,12 @@ public class AlcinaCollectorsJvm extends AlcinaCollectors {
 	@Override
 	public <T> Collector<Collection<T>, ?, Stream<T>> toItemStream0() {
 		return J8Utils.toItemStream();
+	}
+
+	@Override
+	public <T, K> Collector<T, ?, Map<K, T>>
+			toKeyMap0(Function<? super T, ? extends K> keyMapper) {
+		return J8Utils.toKeyMap(keyMapper);
 	}
 
 	@Override

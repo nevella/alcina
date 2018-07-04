@@ -15,10 +15,10 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 
 @RegistryLocation(registryPoint = MemoryStoreQuery.class, implementationType = ImplementationType.INSTANCE)
 public class MemoryStoreQuery extends CacheQuery<MemoryStoreQuery> {
-	protected SearchDefinition def;
-
 	public static final transient String CONTEXT_USE_SERIAL_STREAM = MemoryStoreQuery.class
 			.getName() + ".CONTEXT_USE_SERIAL_STREAM";
+
+	protected SearchDefinition def;
 
 	@Override
 	public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
@@ -32,11 +32,11 @@ public class MemoryStoreQuery extends CacheQuery<MemoryStoreQuery> {
 		}
 	}
 
-	protected void disposeStream() {
-	}
-
 	public void readLock(boolean lock) {
 		Registry.impl(MemoryStoreLocker.class).readLock(lock);
+	}
+
+	protected void disposeStream() {
 	}
 
 	protected <T extends HasIdAndLocalId> Stream<T>

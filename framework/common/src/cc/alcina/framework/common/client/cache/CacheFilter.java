@@ -42,8 +42,14 @@ public class CacheFilter {
 
 	public CollectionFilter asCollectionFilter() {
 		return predicate != null ? new CollectionFilter() {
+			@Override
 			public boolean allow(Object o) {
 				return predicate.test(o);
+			}
+
+			@Override
+			public String toString() {
+				return CacheFilter.this.toString();
 			}
 		} : new PropertyPathFilter(propertyPath, propertyValue, filterOperator);
 	}

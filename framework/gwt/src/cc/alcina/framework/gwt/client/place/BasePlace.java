@@ -7,6 +7,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 @Introspectable
@@ -52,10 +53,22 @@ public abstract class BasePlace extends Place implements Serializable {
 		this.refreshed = refreshed;
 	}
 
+	public String toAbsoluteHrefString() {
+		return Registry.impl(BasePlaceAbsoluteHrefSupplier.class).getHref(this);
+	}
+
+	public String toHrefString() {
+		return "#" + tokenFor(this);
+	}
+
 	public String toTokenString() {
 		return tokenFor(this);
 	}
-	public String toHrefString() {
-		return "#"+tokenFor(this);
+
+	@RegistryLocation(registryPoint = BasePlaceAbsoluteHrefSupplier.class, implementationType = ImplementationType.SINGLETON)
+	public static class BasePlaceAbsoluteHrefSupplier {
+		public String getHref(BasePlace basePlace) {
+			return null;
+		}
 	}
 }
