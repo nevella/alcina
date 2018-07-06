@@ -186,7 +186,7 @@ public class GroupingMapper<V> {
 
 	class GroupingColumnMapper extends ColumnMapper<GroupingMapperRow> {
 		@Override
-		protected Class<GroupingMapperRow> builderClass() {
+		protected Class<GroupingMapperRow> mappedClass() {
 			return GroupingMapperRow.class;
 		}
 

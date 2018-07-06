@@ -10,7 +10,7 @@ public abstract class ColumnMapper<T> {
 	protected ColumnsBuilder<List<T>> totalBuilder;
 
 	public ColumnMapper() {
-		builder = new ColumnsBuilder<T>(null, builderClass());
+		builder = new ColumnsBuilder<T>(null, mappedClass());
 		totalBuilder = new ColumnsBuilder<List<T>>(null, null);
 	}
 
@@ -28,7 +28,7 @@ public abstract class ColumnMapper<T> {
 		return totalBuilder.getPending();
 	}
 
-	protected abstract Class<T> builderClass();
+	protected abstract Class<T> mappedClass();
 
 	protected abstract void defineMappings();
 
