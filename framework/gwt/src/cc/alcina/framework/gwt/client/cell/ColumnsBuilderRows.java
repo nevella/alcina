@@ -15,11 +15,18 @@ import cc.alcina.framework.common.client.search.grouping.GroupedResult.RowKey;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.ColumnMapper;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.cell.GroupingMapper.GroupingMapperResult;
 
 public class ColumnsBuilderRows {
 	public BiConsumer<ColumnsBuilder<Row>.ColumnBuilder, Integer>
 			additionalMapper() {
 		return new AdditionalMapper();
+	}
+
+	public GroupedResult toGroupedResult(GroupingMapperResult mapperResult,
+			String name) {
+		return toGroupedResult(mapperResult.rowModels,
+				mapperResult.columnMapper, name, mapperResult.keyMapper);
 	}
 
 	public <V> GroupedResult toGroupedResult(Stream<V> rowModels,

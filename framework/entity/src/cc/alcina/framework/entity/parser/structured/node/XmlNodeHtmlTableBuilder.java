@@ -9,11 +9,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 
 public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
-	public static String toHtmlGrid(List<String> headers, List<Row> values) {
+	public static String toHtmlGrid(List<String> headers, List<Row> values,
+			String title, int maxColWidth) {
 		XmlDoc doc = XmlDoc.basicHtmlDoc();
 		doc.xpath("//head").node().builder().tag("style")
 				.text("td {white-space: nowrap; \n" + "    overflow: hidden;\n"
-						+ "max-width:10em; text-overflow:ellipsis;padding-right:1em;}")
+						+ "max-width:%sem; text-overflow:ellipsis;padding-right:1em;}"
+						+ ".numeric{text-align:right}", maxColWidth)
 				.append();
 		XmlNode node = doc.xpath("//body").node();
 		XmlNodeHtmlTableBuilder tableBuilder = node.html().tableBuilder();

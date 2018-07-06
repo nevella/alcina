@@ -57,6 +57,8 @@ public class GroupedResult<IN> implements Serializable {
 
 	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class Cell implements Serializable {
+		public transient Object rawValue;
+
 		public String value;
 
 		public String href;
@@ -90,6 +92,8 @@ public class GroupedResult<IN> implements Serializable {
 		public transient IN in;
 
 		public RowKey key;
+
+		public String section;
 
 		public List<Cell> cells = new ArrayList<>();
 
