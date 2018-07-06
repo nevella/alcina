@@ -111,7 +111,7 @@ public abstract class SearchDefinition extends WrapperPersistable
 	}
 
 	public <SC extends SearchCriterion> List<SC> allCriteria(Class<SC> clazz) {
-		return CollectionFilters.filter(allCriteria(),
+		return (List<SC>) CollectionFilters.filter(allCriteria(),
 				new IsClassFilter(clazz));
 	}
 
