@@ -798,6 +798,12 @@ public class XmlNode {
 		public XmlNode body() {
 			return xpath("//body").node();
 		}
+		public XmlNode head() {
+            return xpath("//head").node();
+        }
+		public void appendStyleNode(String css) {
+            head().builder().tag("style").text(css).append();
+        }
 	}
 
 	public class XmlNodeRelative {
