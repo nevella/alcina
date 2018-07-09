@@ -32,4 +32,10 @@ public class EntityLayerUtils {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
+	public static void persistentLog(Enum componentKey, String message) {
+		Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
+				.log(message, componentKey.toString());
+	}
+
 }
