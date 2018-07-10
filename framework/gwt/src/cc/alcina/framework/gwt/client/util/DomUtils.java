@@ -421,7 +421,8 @@ public class DomUtils implements NodeFromXpathProvider {
 				System.out.println("***MISSING***" + key);
 			} else {
 				String tc = node.getNodeType() == Node.TEXT_NODE
-						? " - " + node.getNodeValue() : "";
+						? " - " + node.getNodeValue()
+						: "";
 				System.out.println(key + tc);
 			}
 		}
@@ -469,6 +470,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		return null;
 	}
 
+	@Override
 	public Node findXpathWithIndexedText(String xpathStr, Node container) {
 		if (nodeProvider != null) {
 			return nodeProvider.findXpathWithIndexedText(xpathStr, container);
@@ -855,7 +857,9 @@ public class DomUtils implements NodeFromXpathProvider {
 			}
 			return precededByNonHtmlDomNodes.containsKey(node);
 		}
-		throw new RuntimeException();
+		// comments and processing instructions are non-addressable
+		return false;
+		// throw new RuntimeException();
 	}
 
 	boolean requiresSplit(Element ancestor, Element wrapper) {
