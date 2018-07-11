@@ -84,9 +84,11 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 				&& getRefClass().equals(((ClassRef) obj).getRefClass());
 	}
 
+	@Override
 	@Transient
 	public abstract long getId();
 
+	@Override
 	@Transient
 	/**
 	 * Here for HasIdAndLocalId compatibility, but always 0 since always
@@ -120,8 +122,19 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 		return refClassName.hashCode();
 	}
 
+	public boolean notInVm() {
+		try {
+			getRefClass();
+			return false;
+		} catch (Exception e) {
+			return true;
+		}
+	}
+
+	@Override
 	public abstract void setId(long id);
 
+	@Override
 	public void setLocalId(long localId) {
 		// noop.
 	}
@@ -141,6 +154,7 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 			implements Renderer<ClassRef, String> {
 		public static final ClassRefSimpleNameRenderer INSTANCE = new ClassRefSimpleNameRenderer();
 
+		@Override
 		public String render(ClassRef o) {
 			return o == null ? "(undefined)"
 					: CommonUtils.simpleClassName(o.getRefClass());

@@ -17,16 +17,8 @@ public class DomainTransformPersistenceEvent {
 	private final DomainTransformLayerWrapper domainTransformLayerWrapper;
 
 	private final DomainTransformPersistenceEventType persistenceEventType;
-	
+
 	private List<Runnable> postEventRunnables = new ArrayList<>();
-
-	public List<Runnable> getPostEventRunnables() {
-		return this.postEventRunnables;
-	}
-
-	public void setPostEventRunnables(List<Runnable> postEventRunnables) {
-		this.postEventRunnables = postEventRunnables;
-	}
 
 	private boolean localToVm;
 
@@ -45,6 +37,13 @@ public class DomainTransformPersistenceEvent {
 								: DomainTransformPersistenceEventType.COMMIT_ERROR;
 	}
 
+	public void ensureTransformsValidForVm() {
+		domainTransformLayerWrapper.persistentEvents
+				.removeIf(evt -> evt.getObjectClassRef().notInVm()
+						|| (evt.getValueClassRef() != null
+								&& evt.getValueClassRef().notInVm()));
+	}
+
 	public DomainTransformLayerWrapper getDomainTransformLayerWrapper() {
 		return this.domainTransformLayerWrapper;
 	}
@@ -53,7 +52,6 @@ public class DomainTransformPersistenceEvent {
 		return CommonUtils.lv(CollectionFilters.max(getPersistedRequestIds()));
 	}
 
-	@SuppressWarnings("unchecked")
 	public List<Long> getPersistedRequestIds() {
 		return domainTransformLayerWrapper == null
 				|| domainTransformLayerWrapper.persistentRequests == null
@@ -66,11 +64,19 @@ public class DomainTransformPersistenceEvent {
 		return this.persistenceEventType;
 	}
 
+	public List<Runnable> getPostEventRunnables() {
+		return this.postEventRunnables;
+	}
+
 	public TransformPersistenceToken getTransformPersistenceToken() {
 		return this.transformPersistenceToken;
 	}
 
 	public boolean isLocalToVm() {
 		return this.localToVm;
+	}
+
+	public void setPostEventRunnables(List<Runnable> postEventRunnables) {
+		this.postEventRunnables = postEventRunnables;
 	}
 }
