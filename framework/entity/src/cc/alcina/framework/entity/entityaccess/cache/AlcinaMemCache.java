@@ -456,6 +456,7 @@ public class AlcinaMemCache implements RegistrableService {
 	public List<DomainTransformEvent>
 			filterInterestedTransforms(Collection<DomainTransformEvent> dtes) {
 		return dtes.stream().filter(new InSubgraphFilter())
+				.filter(cacheDescriptor::customFilterPostProcess)
 				.map(dte -> filterForMemcacheTransient(dte))
 				.filter(Objects::nonNull).collect(Collectors.toList());
 	}
@@ -655,6 +656,16 @@ public class AlcinaMemCache implements RegistrableService {
 
 	public boolean isCheckModificationWriteLock() {
 		return this.checkModificationWriteLock;
+	}
+
+	public boolean isCurrentThreadHoldingLock() {
+		if (mainLock.isWriteLockedByCurrentThread()) {
+			return true;
+		}
+		if (subgraphLock.isWriteLockedByCurrentThread()) {
+			return true;
+		}
+		return mainLockReadLock.contains(Thread.currentThread());
 	}
 
 	public boolean isDebug() {
@@ -1001,6 +1012,12 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 		throw new RuntimeException(String.format("Field not available - %s.%s",
 				original.getSimpleName(), name));
+	}
+
+	private Field getField(Class clazz, String name) throws Exception {
+		Field[] fields = new GraphProjection().getFieldsForClass(clazz);
+		return Arrays.stream(fields).filter(f -> f.getName().equals(name))
+				.findFirst().orElse(null);
 	}
 
 	private Set<Long> getFiltered(final Class clazz, CacheFilter cacheFilter,
@@ -1442,12 +1459,6 @@ public class AlcinaMemCache implements RegistrableService {
 			}
 			mapped.add(ensurePdOperator(pd, clazz));
 		}
-	}
-
-	private Field getField(Class clazz, String name) throws Exception {
-		Field[] fields = new GraphProjection().getFieldsForClass(clazz);
-		return Arrays.stream(fields).filter(f -> f.getName().equals(name))
-				.findFirst().orElse(null);
 	}
 
 	private void releaseConn(Connection conn) {
@@ -2406,6 +2417,7 @@ public class AlcinaMemCache implements RegistrableService {
 			return super.getQueuedReaderThreads();
 		}
 
+		@Override
 		public java.util.Collection<Thread> getQueuedThreads() {
 			return super.getQueuedThreads();
 		}
@@ -2421,6 +2433,18 @@ public class AlcinaMemCache implements RegistrableService {
 		public <V extends HasIdAndLocalId> void async(Class<V> clazz,
 				long objectId, boolean create, Consumer<V> resultConsumer) {
 			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> V byProperty(Class<V> clazz,
+				String propertyName, Object value) {
+			return new AlcinaMemCacheQuery().raw().filter(propertyName, value)
+					.find(clazz);
+		}
+
+		@Override
+		public void commitPoint() {
+			// do nothing, assume explicit commit in servlet layer
 		}
 
 		@Override
@@ -2453,13 +2477,6 @@ public class AlcinaMemCache implements RegistrableService {
 				Class<V> clazz, String propertyName, Object value) {
 			return new AlcinaMemCacheQuery().raw().filter(propertyName, value)
 					.list(clazz);
-		}
-
-		@Override
-		public <V extends HasIdAndLocalId> V byProperty(Class<V> clazz,
-				String propertyName, Object value) {
-			return new AlcinaMemCacheQuery().raw().filter(propertyName, value)
-					.find(clazz);
 		}
 
 		@Override
@@ -2503,11 +2520,6 @@ public class AlcinaMemCache implements RegistrableService {
 
 		private <V extends HasIdAndLocalId> V project(V v) {
 			return GraphProjections.defaultProjections().project(v);
-		}
-
-		@Override
-		public void commitPoint() {
-			// do nothing, assume explicit commit in servlet layer
 		}
 	}
 
@@ -2859,6 +2871,7 @@ public class AlcinaMemCache implements RegistrableService {
 			check("add");
 		}
 
+		@Override
 		public void check(String key) {
 			// add-remove - well, there's a bunch of automated adds (e.g.
 			// cc.alcina.framework.entity.domaintransform.ServerTransformManagerSupport
@@ -2939,15 +2952,5 @@ public class AlcinaMemCache implements RegistrableService {
 		void startCommit() {
 			((PsAwareMultiplexingObjectCache) store.getCache()).startCommit();
 		}
-	}
-
-	public boolean isCurrentThreadHoldingLock() {
-		if (mainLock.isWriteLockedByCurrentThread()) {
-			return true;
-		}
-		if (subgraphLock.isWriteLockedByCurrentThread()) {
-			return true;
-		}
-		return mainLockReadLock.contains(Thread.currentThread());
 	}
 }

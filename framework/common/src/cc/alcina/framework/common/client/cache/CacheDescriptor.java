@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -23,9 +22,8 @@ public abstract class CacheDescriptor {
 	public List<ComplexFilter> complexFilters = new ArrayList<>();
 
 	private CachingMap<Class, List<PreProvideTask>> perClassTasks = new CachingMap<Class, List<PreProvideTask>>(
-			clazz -> preProvideTasks.stream()
-					.filter(task -> task.forClazz() == null
-							|| task.forClazz() == clazz)
+			clazz -> preProvideTasks.stream().filter(
+					task -> task.forClazz() == null || task.forClazz() == clazz)
 					.collect(Collectors.toList()));
 
 	public CacheDescriptor() {
@@ -45,7 +43,8 @@ public abstract class CacheDescriptor {
 		perClass.put(itemDescriptor.clazz, itemDescriptor);
 	}
 
-	public <T extends HasIdAndLocalId> CacheItemDescriptor<T> addItemDescriptor(Class<T> clazz, String... indexProperties) {
+	public <T extends HasIdAndLocalId> CacheItemDescriptor<T>
+			addItemDescriptor(Class<T> clazz, String... indexProperties) {
 		CacheItemDescriptor itemDescriptor = new CacheItemDescriptor(clazz,
 				indexProperties);
 		addItemDescriptor(itemDescriptor);
@@ -54,6 +53,10 @@ public abstract class CacheDescriptor {
 
 	public boolean cachePostTransform(Class clazz, DomainTransformEvent o) {
 		return perClass.containsKey(clazz);
+	}
+
+	public boolean customFilterPostProcess(DomainTransformEvent dte) {
+		return true;
 	}
 
 	public abstract Class<? extends IUser> getIUserClass();
