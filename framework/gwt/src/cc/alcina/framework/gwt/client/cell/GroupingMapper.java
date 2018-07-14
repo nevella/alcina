@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.search.grouping.GroupedResult.RowKey;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.ColumnMapper;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
+import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRendererFunction;
 
 public class GroupingMapper<V> {
 	private GroupingClassifier<V, ? extends Comparable> columnClassifier;
@@ -29,13 +29,13 @@ public class GroupingMapper<V> {
 
 	private Function<List<V>, Object> valueTotaller;
 
-	private Function<Object, String> valueRenderer = new FriendlyEnumRenderer();
+	private Function<Object, String> valueRenderer = new FriendlyEnumRendererFunction();
 
-	public Function<Object, String> columnNameRenderer = new FriendlyEnumRenderer();
+	public Function<Object, String> columnNameRenderer = new FriendlyEnumRendererFunction();
 
-	public Function<Object, String> rowNameRenderer = new FriendlyEnumRenderer();
+	public Function<Object, String> rowNameRenderer = new FriendlyEnumRendererFunction();
 
-	public Function<Object, String> sectionNameRenderer = new FriendlyEnumRenderer();
+	public Function<Object, String> sectionNameRenderer = new FriendlyEnumRendererFunction();
 
 	private List<? extends Comparable> columnKeys;
 
@@ -186,11 +186,6 @@ public class GroupingMapper<V> {
 
 	class GroupingColumnMapper extends ColumnMapper<GroupingMapperRow> {
 		@Override
-		protected Class<GroupingMapperRow> mappedClass() {
-			return GroupingMapperRow.class;
-		}
-
-		@Override
 		protected void defineMappings() {
 			int idx = 0;
 			{
@@ -211,6 +206,11 @@ public class GroupingMapper<V> {
 						.function(row -> ((Cell) row.cells.get(f_idx)).value)
 						.numeric().add();
 			}
+		}
+
+		@Override
+		protected Class<GroupingMapperRow> mappedClass() {
+			return GroupingMapperRow.class;
 		}
 	}
 }
