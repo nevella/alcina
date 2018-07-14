@@ -6,17 +6,24 @@ import cc.alcina.framework.common.client.search.grouping.GroupedResult.Cell;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 
 public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
+	public static final transient String CONTEXT_NO_TD_STYLES = XmlNodeHtmlTableBuilder.class
+			.getName() + ".CONTEXT_NO_TD_STYLES";
+
 	public static String toHtmlGrid(List<String> headers, List<Row> values,
 			String title, int maxColWidth) {
 		XmlDoc doc = XmlDoc.basicHtmlDoc();
-		doc.xpath("//head").node().builder().tag("style")
-				.text("td {white-space: nowrap; \n" + "    overflow: hidden;\n"
-						+ "max-width:%sem; text-overflow:ellipsis;padding-right:1em;}"
-						+ ".numeric{text-align:right}", maxColWidth)
-				.append();
+		if (!LooseContext.is(CONTEXT_NO_TD_STYLES)) {
+			doc.xpath("//head").node().builder().tag("style")
+					.text("td {white-space: nowrap; \n"
+							+ "    overflow: hidden;\n"
+							+ "max-width:%sem; text-overflow:ellipsis;padding-right:1em;}"
+							+ ".numeric{text-align:right}", maxColWidth)
+					.append();
+		}
 		XmlNode node = doc.xpath("//body").node();
 		XmlNodeHtmlTableBuilder tableBuilder = node.html().tableBuilder();
 		XmlNodeHtmlTableRowBuilder headerBuilder = tableBuilder.row();
