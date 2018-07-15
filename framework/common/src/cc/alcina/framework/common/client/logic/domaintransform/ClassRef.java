@@ -123,12 +123,15 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 	}
 
 	public boolean notInVm() {
-		try {
-			getRefClass();
-			return false;
-		} catch (Exception e) {
-			return true;
+		if (this.refClass == null && this.refClassName != null) {
+			try {
+				this.refClass = Reflections.classLookup()
+						.getClassForName(this.refClassName);
+			} catch (Exception e) {
+				return false;
+			}
 		}
+		return true;
 	}
 
 	@Override
