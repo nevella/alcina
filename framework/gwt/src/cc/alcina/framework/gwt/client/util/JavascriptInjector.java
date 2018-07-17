@@ -6,30 +6,36 @@ import com.google.gwt.dom.client.HeadElement;
 import com.google.gwt.dom.client.ScriptElement;
 
 public class JavascriptInjector {
+	private static HeadElement head;
 
-  private static HeadElement head;
+	public static void inject(String javascript) {
+		HeadElement head = getHead();
+		ScriptElement element = createScriptElement();
+		element.setText(javascript);
+		head.appendChild(element);
+	}
 
-  public static void inject(String javascript) {
-    HeadElement head = getHead();
-    ScriptElement element = createScriptElement();
-    element.setText(javascript);
-    head.appendChild(element);
-  }
+	private static HeadElement getHead() {
+		if (head == null) {
+			Element element = Document.get().getElementsByTagName("head")
+					.getItem(0);
+			assert element != null : "HTML Head element required";
+			HeadElement head = HeadElement.as(element);
+			JavascriptInjector.head = head;
+		}
+		return JavascriptInjector.head;
+	}
 
-  private static ScriptElement createScriptElement() {
-    ScriptElement script = Document.get().createScriptElement();
-    script.setAttribute("language", "javascript");
-    return script;
-  }
+	public static void injectExternal(String sourceUrl) {
+		HeadElement head = getHead();
+		ScriptElement element = createScriptElement();
+		element.setSrc(sourceUrl);
+		head.appendChild(element);
+	}
 
-  private static HeadElement getHead() {
-    if (head == null) {
-      Element element = Document.get().getElementsByTagName("head").getItem(0);
-      assert element != null : "HTML Head element required";
-      HeadElement head = HeadElement.as(element);
-      JavascriptInjector.head = head;
-    }
-    return JavascriptInjector.head;
-  }
-
+	private static ScriptElement createScriptElement() {
+		ScriptElement script = Document.get().createScriptElement();
+		script.setAttribute("language", "javascript");
+		return script;
+	}
 }
