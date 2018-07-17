@@ -15,6 +15,13 @@ public class JavascriptInjector {
 		head.appendChild(element);
 	}
 
+	public static void injectExternal(String sourceUrl) {
+		HeadElement head = getHead();
+		ScriptElement element = createScriptElement();
+		element.setSrc(sourceUrl);
+		head.appendChild(element);
+	}
+
 	private static ScriptElement createScriptElement() {
 		ScriptElement script = Document.get().createScriptElement();
 		script.setAttribute("language", "javascript");
