@@ -67,6 +67,7 @@ public class ExpandableLabel extends AbstractBoundWidget {
 	private boolean escapeHtml;
 
 	ClickHandler showHideListener = new ClickHandler() {
+		@Override
 		public void onClick(ClickEvent event) {
 			Widget sender = (Widget) event.getSource();
 			hiding = !hiding;
@@ -111,6 +112,7 @@ public class ExpandableLabel extends AbstractBoundWidget {
 		return this.renderer;
 	}
 
+	@Override
 	public Object getValue() {
 		return null;
 	}
@@ -151,6 +153,7 @@ public class ExpandableLabel extends AbstractBoundWidget {
 		this.showNewlinesAsBreaks = showNewlinesAsBreaks;
 	}
 
+	@Override
 	public void setValue(Object o) {
 		fp.clear();
 		if (o == null) {
@@ -186,7 +189,8 @@ public class ExpandableLabel extends AbstractBoundWidget {
 					: renderer.render(o).toString();
 			fullTextNoBrs = fullText;
 			if (isShowNewlinesAsBreaks()) {
-				fullText = fullText.replace("\n", "<br>\n");
+				fullText = SafeHtmlUtils.htmlEscape(fullText).replace("\n",
+						"<br>\n");
 			}
 			int maxC = getMaxLength();
 			int y1 = fullText.indexOf(">", maxC);

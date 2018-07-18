@@ -1,9 +1,10 @@
 package cc.alcina.framework.common.client.util;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
-public class DatePair {
+public class DatePair implements Comparable<DatePair>, Serializable {
 	public Date d1 = new Date();
 
 	public Date d2 = new Date();
@@ -17,13 +18,12 @@ public class DatePair {
 	}
 
 	@Override
-	public String toString() {
-		return Ax.format("[%s -> %s]", d1, d2);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(d1, d2);
+	public int compareTo(DatePair o) {
+		int i = d1.compareTo(o.d1);
+		if (i == 0) {
+			i = d2.compareTo(o.d2);
+		}
+		return i;
 	}
 
 	@Override
@@ -34,5 +34,15 @@ public class DatePair {
 		} else {
 			return false;
 		}
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(d1, d2);
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("[%s -> %s]", d1, d2);
 	}
 }

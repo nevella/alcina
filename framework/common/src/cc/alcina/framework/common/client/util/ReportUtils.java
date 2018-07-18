@@ -94,6 +94,10 @@ public class ReportUtils {
 		return Ax.format("%s.%s", decimal, CommonUtils.padTwo(fractional));
 	}
 
+	public static double twoPlacesDouble(double d) {
+		return CommonUtils.roundNumeric(d, 2);
+	}
+
 	private static String getValue(MultikeyMap values, Object row, int col,
 			List<String> columnNames, boolean stringKeyedColumns) {
 		Object key2 = stringKeyedColumns ? columnNames.get(col) : col;

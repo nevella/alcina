@@ -10,7 +10,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.cell.client.FieldUpdater;
@@ -198,20 +197,10 @@ public class ColumnsBuilder<T> {
 			if (function == null) {
 				function = (Function) sortFunction;
 			}
-			int cellFunctionCount = 0;
-			if (placeFunction != null) {
-				cellFunctionCount++;
-				cell = new PlaceLinkCell();
+			if (placeFunction != null || hrefFunction != null
+					|| titleFunction != null) {
+				cell = new FunctionalCell();
 			}
-			if (hrefFunction != null) {
-				cellFunctionCount++;
-				cell = new HrefLinkCell();
-			}
-			if (titleFunction != null) {
-				cellFunctionCount++;
-				cell = new TextTitleCell();
-			}
-			Preconditions.checkState(cellFunctionCount <= 1);
 			if (asUnsafeHtml) {
 				cell = new UnsafeHtmlCell();
 				if (style == null) {
@@ -304,12 +293,24 @@ public class ColumnsBuilder<T> {
 			return this.placeFunction;
 		}
 
+		public String getStyle() {
+			return this.style;
+		}
+
 		public Function<T, String> getStyleFunction() {
 			return this.styleFunction;
 		}
 
 		public Function<T, String> getTitleFunction() {
 			return this.titleFunction;
+		}
+
+		public Unit getUnit() {
+			return this.unit;
+		}
+
+		public double getWidth() {
+			return this.width;
 		}
 
 		public ColumnBuilder href(Function<T, String> hrefFunction) {
@@ -345,6 +346,10 @@ public class ColumnsBuilder<T> {
 		public ColumnBuilder reversed() {
 			this.reversed = true;
 			return this;
+		}
+
+		public void setStyle(String style) {
+			this.style = style;
 		}
 
 		public ColumnBuilder
@@ -507,22 +512,19 @@ public class ColumnsBuilder<T> {
 								.getClass() == PropertyTextCell.class)) {
 					value = CommonUtils.nullSafeToString(value);
 				}
-				if (placeFunction != null) {
-					TextPlaceTuple tuple = new TextPlaceTuple();
+				if (placeFunction != null || hrefFunction != null
+						|| titleFunction != null) {
+					FunctionalTuple tuple = new FunctionalTuple();
 					tuple.text = (String) value;
-					tuple.place = placeFunction.apply(t);
-					value = tuple;
-				}
-				if (hrefFunction != null) {
-					TextHrefTuple tuple = new TextHrefTuple();
-					tuple.text = (String) value;
-					tuple.href = hrefFunction.apply(t);
-					value = tuple;
-				}
-				if (titleFunction != null) {
-					TextTitleTuple tuple = new TextTitleTuple();
-					tuple.text = (String) value;
-					tuple.title = titleFunction.apply(t);
+					if (hrefFunction != null) {
+						tuple.href = hrefFunction.apply(t);
+					}
+					if (titleFunction != null) {
+						tuple.title = titleFunction.apply(t);
+					}
+					if (placeFunction != null) {
+						tuple.place = placeFunction.apply(t);
+					}
 					value = tuple;
 				}
 				return value;
@@ -543,6 +545,11 @@ public class ColumnsBuilder<T> {
 
 		public Function<T, Comparable> sortFunction() {
 			return sortFunction != null ? sortFunction : (Function) function;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("[%s]", name);
 		}
 	}
 

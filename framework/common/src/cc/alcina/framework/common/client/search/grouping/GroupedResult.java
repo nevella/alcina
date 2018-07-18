@@ -4,28 +4,47 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
-public class GroupedResult<IN> implements Serializable {
+import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.user.client.rpc.GwtTransient;
+
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
+
+public class GroupedResult implements Serializable {
 	public String name;
 
-	private List<Row<IN>> rows = new ArrayList<>();
+	public String json;
+
+	private List<Row> rows = new ArrayList<>();
 
 	private List<Col> cols = new ArrayList<>();
 
-	private Row<IN> totalRow;
+	private Row totalRow;
+
+	public Stream<Cell> allCells() {
+		return getRows().stream().map(row -> row.cells)
+				.collect(AlcinaCollectors.toItemStream());
+	}
 
 	public List<Col> getCols() {
 		return this.cols;
 	}
 
-	public List<Row<IN>> getRows() {
+	public int getColumnIndex(String columnName) {
+		Col col = cols.stream().filter(c -> c.name.equals(columnName))
+				.findFirst().orElse(null);
+		return cols.indexOf(col);
+	}
+
+	public List<Row> getRows() {
 		return this.rows;
 	}
 
-	public List<Row<IN>> getRowsNoTotal() {
+	public List<Row> getRowsNoTotal() {
 		return getRows().stream().filter(l -> l != getTotalRow())
 				.collect(Collectors.toList());
 	}
@@ -34,7 +53,12 @@ public class GroupedResult<IN> implements Serializable {
 		return totalRow;
 	}
 
-	public List<IN> provideModelLines() {
+	public double getTotalValue(String columnName) {
+		int idx = getColumnIndex(columnName);
+		return totalRow.cells.get(idx).numericValue;
+	}
+
+	public List provideModelLines() {
 		return getRows().stream().map(row -> row.in)
 				.collect(Collectors.toList());
 	}
@@ -43,11 +67,11 @@ public class GroupedResult<IN> implements Serializable {
 		this.cols = cols;
 	}
 
-	public void setRows(List<Row<IN>> rows) {
+	public void setRows(List<Row> rows) {
 		this.rows = rows;
 	}
 
-	public void setTotalRow(Row<IN> totalRow) {
+	public void setTotalRow(Row totalRow) {
 		this.totalRow = totalRow;
 	}
 
@@ -67,6 +91,8 @@ public class GroupedResult<IN> implements Serializable {
 
 		public String title;
 
+		public Double numericValue;
+
 		public Cell() {
 		}
 	}
@@ -76,22 +102,55 @@ public class GroupedResult<IN> implements Serializable {
 
 		public String style;
 
-		public String width;
+		public double width;
+
+		public Unit unit;
+
+		public GroupKey key;
+
+		@GwtTransient
+		public String color;
 
 		public Col() {
+		}
+
+		public Col withColor(String color) {
+			this.color = color;
+			return this;
+		}
+
+		public Col withGroupKey(GroupKey key) {
+			this.key = key;
+			return this;
 		}
 
 		public Col withName(String name) {
 			this.name = name;
 			return this;
 		}
+
+		public Col withStyle(String style) {
+			this.style = style;
+			return this;
+		}
+
+		public Col withWidth(double width, Unit unit) {
+			this.width = width;
+			this.unit = unit;
+			return this;
+		}
+	}
+
+	public static class GroupKey implements Serializable {
+		public GroupKey() {
+		}
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class Row<IN> implements Serializable {
-		public transient IN in;
+	public static class Row implements Serializable {
+		public transient Object in;
 
-		public RowKey key;
+		public GroupKey key;
 
 		public String section;
 
@@ -100,18 +159,13 @@ public class GroupedResult<IN> implements Serializable {
 		public Row() {
 		}
 
-		public Row(IN intermediateObject) {
+		public Row(Object intermediateObject) {
 			this.in = intermediateObject;
 		}
 
 		public List<String> toStringList() {
 			return cells.stream().map(cell -> cell.value)
 					.collect(Collectors.toList());
-		}
-	}
-
-	public static class RowKey implements Serializable {
-		public RowKey() {
 		}
 	}
 

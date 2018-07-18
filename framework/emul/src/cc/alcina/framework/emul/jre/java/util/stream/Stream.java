@@ -60,8 +60,29 @@ public interface Stream<T> {
 		}
 	}
 
+	static class SkipPredicate<T> implements Predicate<T> {
+		long skip;
+
+		public SkipPredicate(long skip) {
+			this.skip = skip;
+		}
+
+		public boolean test(T t) {
+			if (skip > 0) {
+				skip--;
+				return false;
+			} else {
+				return true;
+			}
+		}
+	}
+
 	default Stream<T> limit(long limit) {
 		return filter(new LimitPredicate(limit));
+	}
+	
+	default Stream<T> skip(long skip) {
+		return filter(new SkipPredicate(skip));
 	}
 
 	default Stream<T> distinct() {

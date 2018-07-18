@@ -452,6 +452,11 @@ public abstract class SearchDefinition extends WrapperPersistable
 		return DefaultValidation.validatePermissions(this, children);
 	}
 
+	public SearchDefinition withCriterion(SearchCriterion sc) {
+		addCriterionToSoleCriteriaGroup(sc, false);
+		return this;
+	}
+
 	private void propertyChangeDelta(SourcesPropertyChangeEvents o,
 			PropertyChangeListener listener, boolean add) {
 		if (add) {

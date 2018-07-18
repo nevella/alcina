@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.cell;
+package cc.alcina.framework.gwt.client.group;
 
 import java.util.List;
 import java.util.Map.Entry;
@@ -9,19 +9,19 @@ import java.util.stream.Stream;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Cell;
+import cc.alcina.framework.common.client.search.grouping.GroupedResult.GroupKey;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
-import cc.alcina.framework.common.client.search.grouping.GroupedResult.RowKey;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.ColumnMapper;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRendererFunction;
 
 public class GroupingMapper<V> {
-	private GroupingClassifier<V, ? extends Comparable> columnClassifier;
+	private GroupingClassifier<V, Comparable> columnClassifier;
 
-	private GroupingClassifier<V, ? extends Comparable> rowClassifier;
+	private GroupingClassifier<V, Comparable> rowClassifier;
 
-	private GroupingClassifier<V, ? extends Comparable> sectionClassifier;
+	private GroupingClassifier<V, Comparable> sectionClassifier;
 
 	private boolean totalRow;
 
@@ -37,6 +37,8 @@ public class GroupingMapper<V> {
 
 	public Function<Object, String> sectionNameRenderer = new FriendlyEnumRendererFunction();
 
+	public GroupingHrefSupplier hrefSupplier;
+
 	private List<? extends Comparable> columnKeys;
 
 	public GroupingMapperResult apply(List<V> data) {
@@ -48,29 +50,31 @@ public class GroupingMapper<V> {
 		if (totalRow) {
 			rows.add(new GroupingMapperRow<>(GroupedTuple.<V> totalRow(data)));
 		}
+		rows.forEach(row -> row.key = rowClassifier.groupKey(row.tuple.key));
 		GroupingMapperResult result = new GroupingMapperResult();
 		result.rowModels = (Stream) rows.stream();
 		this.columnKeys = columnClassifier.allKeys(data);
 		rows.forEach(this::generateCells);
 		result.columnMapper = new GroupingColumnMapper();
+		result.keyMapper = row -> row.key;
 		return result;
 	}
 
 	public GroupingMapper<V> withColumnClassifier(
 			GroupingClassifier<V, ? extends Comparable> columnClassifier) {
-		this.columnClassifier = columnClassifier;
+		this.columnClassifier = (GroupingClassifier<V, Comparable>) columnClassifier;
 		return this;
 	}
 
 	public GroupingMapper<V> withRowClassifier(
 			GroupingClassifier<V, ? extends Comparable> rowClassifier) {
-		this.rowClassifier = rowClassifier;
+		this.rowClassifier = (GroupingClassifier<V, Comparable>) rowClassifier;
 		return this;
 	}
 
 	public GroupingMapper<V> withSectionClassifier(
 			GroupingClassifier<V, ? extends Comparable> sectionClassifier) {
-		this.sectionClassifier = sectionClassifier;
+		this.sectionClassifier = (GroupingClassifier<V, Comparable>) sectionClassifier;
 		return this;
 	}
 
@@ -118,6 +122,9 @@ public class GroupingMapper<V> {
 		if (totalColumn) {
 			Cell cell = new Cell();
 			cell.rawValue = valueTotaller.apply(values);
+			if (cell.rawValue instanceof Number) {
+				cell.numericValue = ((Number) cell.rawValue).doubleValue();
+			}
 			cell.value = valueRenderer.apply(cell.rawValue);
 			row.cells.add(cell);
 		}
@@ -125,6 +132,9 @@ public class GroupingMapper<V> {
 			Cell cell = new Cell();
 			cell.rawValue = valueTotaller
 					.apply(byColumn.getAndEnsure(columnKey));
+			if (cell.rawValue instanceof Number) {
+				cell.numericValue = ((Number) cell.rawValue).doubleValue();
+			}
 			cell.value = valueRenderer.apply(cell.rawValue);
 			row.cells.add(cell);
 			// TODO - place/href function
@@ -135,12 +145,16 @@ public class GroupingMapper<V> {
 		}
 	}
 
+	public interface GroupingHrefSupplier {
+		public String href(GroupKey rowKey, GroupKey colKey);
+	}
+
 	public static class GroupingMapperResult {
 		public Stream<GroupingMapperRow> rowModels;
 
 		public ColumnMapper<GroupingMapperRow> columnMapper;
 
-		public Function<GroupingMapperRow, RowKey> keyMapper = gmr -> null;
+		public Function<GroupingMapperRow, GroupKey> keyMapper = gmr -> gmr.key;
 	}
 
 	public static class GroupingMapperRow<V> extends Row {
@@ -185,6 +199,14 @@ public class GroupingMapper<V> {
 	}
 
 	class GroupingColumnMapper extends ColumnMapper<GroupingMapperRow> {
+		private Function<GroupingMapperRow, String>
+				hrefFunction(GroupKey columnKey) {
+			if (hrefSupplier == null) {
+				return null;
+			}
+			return row -> hrefSupplier.href(row.key, columnKey);
+		}
+
 		@Override
 		protected void defineMappings() {
 			int idx = 0;
@@ -192,18 +214,22 @@ public class GroupingMapper<V> {
 				int f_idx = idx++;
 				builder.col("Key")
 						.function(row -> ((Cell) row.cells.get(f_idx)).value)
-						.add();
+						.href(hrefFunction(null)).add();
 			}
 			if (totalColumn) {
 				int f_idx = idx++;
 				builder.col("Total")
 						.function(row -> ((Cell) row.cells.get(f_idx)).value)
-						.numeric().add();
+						.href(hrefFunction(null)).numeric().add();
 			}
+			int columnIndex = 0;
 			for (Comparable key : columnKeys) {
 				int f_idx = idx++;
+				int f_columnIndex = columnIndex++;
 				builder.col(columnNameRenderer.apply(key))
 						.function(row -> ((Cell) row.cells.get(f_idx)).value)
+						.href(hrefFunction(columnClassifier
+								.groupKey(columnKeys.get(f_columnIndex))))
 						.numeric().add();
 			}
 		}
