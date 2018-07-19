@@ -10,7 +10,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
 import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 
@@ -108,7 +107,6 @@ public class GroupedResult implements Serializable {
 
 		public GroupKey key;
 
-		@GwtTransient
 		public String color;
 
 		public Col() {
