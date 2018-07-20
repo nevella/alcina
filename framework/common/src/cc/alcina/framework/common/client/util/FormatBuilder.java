@@ -1,66 +1,90 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 public class FormatBuilder {
-    private StringBuilder sb = new StringBuilder();
+	private StringBuilder sb = new StringBuilder();
 
-    private String separator = "";
+	private String separator = "";
 
-    public void appendIfBuilderNonEmpty(String optional) {
-        if (sb.length() > 0) {
-            sb.append(optional);
-        }
-    }
+	private String prefix;
 
-    public void appendIfBuilderEmpty(String optional) {
-        if (sb.length() == 0) {
-            sb.append(optional);
-        }
-    }
+	public FormatBuilder appendIfBuilderEmpty(String optional) {
+		if (sb.length() == 0) {
+			sb.append(optional);
+		}
+		return this;
+	}
 
-    public void appendIfNotBlank(String optional) {
-        if (Ax.notBlank(optional)) {
-            maybeAppendSeparator();
-            sb.append(optional);
-        }
-    }
+	public void appendIfBuilderNonEmpty(String optional) {
+		if (sb.length() > 0) {
+			sb.append(optional);
+		}
+	}
 
-    public void appendIfNotBlank(Object... optionals) {
-        for (Object optional : optionals) {
-            if (optional == null) {
-            } else {
-                appendIfNotBlank(optional.toString());
-            }
-        }
-    }
+	public FormatBuilder appendIfNotBlank(Collection optionals) {
+		for (Object optional : optionals) {
+			if (optional == null) {
+			} else {
+				appendIfNotBlank(optional.toString());
+			}
+		}
+		return this;
+	}
 
-    public FormatBuilder format(String template, Object... args) {
-        maybeAppendSeparator();
-        sb.append(CommonUtils.formatJ(template, args));
-        return this;
-    }
+	public FormatBuilder appendIfNotBlank(Object... optionals) {
+		return appendIfNotBlank(Arrays.asList(optionals));
+	}
 
-    public FormatBuilder line(String template, Object... args) {
-        return format(template, args).newLine();
-    }
+	public FormatBuilder appendIfNotBlank(Stream optionals) {
+		return appendIfNotBlank(optionals.collect(Collectors.toList()));
+	}
 
-    public FormatBuilder newLine() {
-        sb.append("\n");
-        return this;
-    }
+	public void appendIfNotBlank(String optional) {
+		if (Ax.notBlank(optional)) {
+			maybeAppendSeparator();
+			sb.append(optional);
+		}
+	}
 
-    public FormatBuilder separator(String separator) {
-        this.separator = separator;
-        return this;
-    }
+	public FormatBuilder format(String template, Object... args) {
+		maybeAppendSeparator();
+		sb.append(CommonUtils.formatJ(template, args));
+		return this;
+	}
 
-    @Override
-    public String toString() {
-        return sb.toString();
-    }
+	public FormatBuilder line(String template, Object... args) {
+		return format(template, args).newLine();
+	}
 
-    private void maybeAppendSeparator() {
-        if (sb.length() > 0 && separator.length() > 0) {
-            sb.append(separator);
-        }
-    }
+	public FormatBuilder newLine() {
+		sb.append("\n");
+		return this;
+	}
+
+	public FormatBuilder prefix(String prefix) {
+		this.prefix = prefix;
+		appendIfBuilderEmpty(prefix);
+		return this;
+	}
+
+	public FormatBuilder separator(String separator) {
+		this.separator = separator;
+		return this;
+	}
+
+	@Override
+	public String toString() {
+		return sb.toString();
+	}
+
+	private void maybeAppendSeparator() {
+		if (sb.length() > 0 && separator.length() > 0
+				&& !(prefix != null && prefix.length() == sb.length())) {
+			sb.append(separator);
+		}
+	}
 }

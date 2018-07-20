@@ -15,7 +15,9 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 
@@ -87,6 +89,25 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		this.serializableSearchOrders = serializableSearchOrders;
 	}
 
+	public boolean startsWith(SearchOrder order) {
+		return cmps.size() > 0 && cmps.keySet().iterator().next()
+				.getClass() == order.getClass();
+	}
+
+	@Override
+	public String toString() {
+		return cmps.entrySet().isEmpty() ? ""
+				: new FormatBuilder().prefix("Order by: ").separator(", ")
+						.appendIfNotBlank(
+								cmps.entrySet().stream().map(this::cmpMapper))
+						.toString();
+	}
+
+	private String cmpMapper(Entry<SearchOrder<T, ?>, Boolean> entry) {
+		return Ax.format("%s %s", entry.getKey(),
+				entry.getValue() ? "desc" : "asc");
+	}
+
 	private void refreshSerializable() {
 		serializableSearchOrders = cmps.entrySet().stream()
 				.map(e -> new SerializableSearchOrder(e.getKey(), e.getValue()))
@@ -106,36 +127,18 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		return cmps;
 	}
 
-	@ClientInstantiable
-	public static class IdOrder<H extends HasId>
-			implements SearchOrder<H, Long> {
-		@Override
-		public Long apply(H t) {
-			return t.getId();
-		}
-	}
-
-	public static class SpecificIdOrder<H extends HasId>
-			implements SearchOrder<H, Integer> {
-		private List<Long> sorted;
-
-		public SpecificIdOrder() {
-		}
-
-		public SpecificIdOrder(Collection<Long> sorted) {
-			this.sorted = sorted.stream().collect(Collectors.toList());
-		}
-
-		@Override
-		public Integer apply(H t) {
-			return sorted.indexOf(Long.valueOf(t.getId()));
-		}
-	}
-
 	public static class ColumnSearchOrder implements Serializable {
 		public String columnName;
 
 		public boolean ascending;
+	}
+
+	@ClientInstantiable
+	public static class IdOrder<H extends HasId> extends SearchOrder<H, Long> {
+		@Override
+		public Long apply(H t) {
+			return t.getId();
+		}
 	}
 
 	@ClientInstantiable
@@ -172,8 +175,20 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		}
 	}
 
-	public boolean startsWith(SearchOrder order) {
-		return cmps.size() > 0 && cmps.keySet().iterator().next()
-				.getClass() == order.getClass();
+	public static class SpecificIdOrder<H extends HasId>
+			extends SearchOrder<H, Integer> {
+		private List<Long> sorted;
+
+		public SpecificIdOrder() {
+		}
+
+		public SpecificIdOrder(Collection<Long> sorted) {
+			this.sorted = sorted.stream().collect(Collectors.toList());
+		}
+
+		@Override
+		public Integer apply(H t) {
+			return sorted.indexOf(Long.valueOf(t.getId()));
+		}
 	}
 }

@@ -49,6 +49,7 @@ public class ShowMorePager extends AbstractPager {
 		setDisplay(display);
 		// Handle scroll events.
 		scrollable.addScrollHandler(new ScrollHandler() {
+			@Override
 			public void onScroll(ScrollEvent event) {
 				// If scrolling up, ignore the event.
 				int oldScrollPos = lastScrollPos;
@@ -65,8 +66,6 @@ public class ShowMorePager extends AbstractPager {
 				int scrollPanelHeight = scrollable.getOffsetHeight();
 				int maxScrollTop = scrollPanelContentsHeight - scrollPanelHeight
 						- 20;
-				System.out.println(lastScrollPos);
-				System.out.println(maxScrollTop);
 				if (Math.abs(lastScrollPos - oldScrollPos) > 200) {
 					// handle autoscroll to end
 					return;
