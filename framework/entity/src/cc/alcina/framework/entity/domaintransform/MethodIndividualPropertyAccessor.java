@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,7 +33,10 @@ public class MethodIndividualPropertyAccessor
 
 	private String fullPath;
 
+	private Class constructorTimeClass;
+
 	public MethodIndividualPropertyAccessor(Class clazz, String propertyName) {
+		this.constructorTimeClass = clazz;
 		methodDeclaringClass = null;// be lazy
 		Pattern indexedPattern = Pattern.compile("(.+)\\[(\\d+)\\]");
 		Matcher m = indexedPattern.matcher(propertyName);
@@ -99,6 +103,12 @@ public class MethodIndividualPropertyAccessor
 					bean, propertyName, fullPath, value);
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("%s.%s", constructorTimeClass.getSimpleName(),
+				Optional.ofNullable(fullPath).orElse(propertyName));
 	}
 
 	private boolean isIndexed() {

@@ -32,15 +32,18 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 		return (T) getPropertyValue(bean, propertyName);
 	}
 
+	@Override
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public Class getPropertyType(Class clazz, String propertyName) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public Object getPropertyValue(Object bean, String propertyName) {
 		XmlNode node = (XmlNode) bean;
 		List<XmlNode> resolved = node.xpath(propertyName).nodes();
@@ -66,6 +69,7 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 		return getPropertyValue(bean, propertyName) != null;
 	}
 
+	@Override
 	public void setPropertyValue(Object bean, String propertyName,
 			Object value) {
 		if (value == null) {

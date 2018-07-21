@@ -57,8 +57,6 @@ public class Registry {
 		provider.appShutdown();
 	}
 
-	private RegistryKeys keys;
-
 	public static <T> T checkSingleton(Class<T> clazz) {
 		return get().singleton0(clazz, true);
 	}
@@ -201,6 +199,8 @@ public class Registry {
 		return get().singletons0(registryPoint, targetClass);
 	}
 
+	private RegistryKeys keys;
+
 	private ClassLookup classLookup;
 
 	// registrypoint/targetClass/impl/impl
@@ -292,7 +292,12 @@ public class Registry {
 			Class targetClass) {
 		Class lookupSingle = lookupSingle(registryPoint, targetClass, false);
 		return lookupSingle != Void.class && lookupSingle != null
-				? instantiateSingle(registryPoint, targetClass) : null;
+				? instantiateSingle(registryPoint, targetClass)
+				: null;
+	}
+
+	public RegistryKey key(String className) {
+		return keys.get(className);
 	}
 
 	public List<Class> lookup(boolean mostSpecificTarget, Class registryPoint,
@@ -390,6 +395,15 @@ public class Registry {
 				implementationType, infoPriority);
 	}
 
+	/*
+	 * In some parts (e.g. assignment to implementationTypeMap) we assume only
+	 * one (winning) registering class for
+	 */
+	public void register(Class registeringClass, RegistryLocation info) {
+		register(registeringClass, info.registryPoint(), info.targetClass(),
+				info.implementationType(), info.priority());
+	}
+
 	public synchronized void register(RegistryKey registeringClassKey,
 			RegistryKey registryPointKey, RegistryKey targetClassKey,
 			ImplementationType implementationType, int infoPriority) {
@@ -419,15 +433,6 @@ public class Registry {
 		implementationTypeMap.put(registryPointKey, targetClassKey,
 				implementationType);
 		targetPriority.put(registryPointKey, targetClassKey, infoPriority);
-	}
-
-	/*
-	 * In some parts (e.g. assignment to implementationTypeMap) we assume only
-	 * one (winning) registering class for
-	 */
-	public void register(Class registeringClass, RegistryLocation info) {
-		register(registeringClass, info.registryPoint(), info.targetClass(),
-				info.implementationType(), info.priority());
 	}
 
 	public void registerBootstrapServices(ClassLookup classLookup) {
@@ -497,16 +502,23 @@ public class Registry {
 				keys.get(registeringClass));
 	}
 
-	private synchronized void registerSingletonInLookups(Class<?> registryPoint,
-			Class<?> targetClass, Object object) {
+	private synchronized <T> T registerSingletonInLookups(
+			Class<?> registryPoint, Class<?> targetClass, T t) {
+		// double-check we don't have a race
+		T existing = (T) singletons.get(keys.get(registryPoint),
+				keys.get(targetClass));
+		if (existing != null) {
+			return existing;
+		}
 		boolean voidTarget = targetClass == void.class;
-		singletons.put(keys.get(registryPoint), keys.get(targetClass), object);
+		singletons.put(keys.get(registryPoint), keys.get(targetClass), t);
 		if (voidTarget) {
 			// use className so we don't have to get class objects from
 			// different parts of memory - this did seem to help a jvm
 			// optimisation
-			voidPointSingletons.put(registryPoint.getName(), object);
+			voidPointSingletons.put(registryPoint.getName(), t);
 		}
+		return t;
 	}
 
 	private String simpleName(RegistryKey c) {
@@ -561,15 +573,15 @@ public class Registry {
 		switch (type) {
 		case FACTORY:
 			if (singleton == null) {
-				registerSingletonInLookups(registryPoint, targetClass, obj);
-				singleton = obj;
+				singleton = registerSingletonInLookups(registryPoint,
+						targetClass, obj);
 			}
 			return (V) ((RegistryFactory) singleton).create(registryPoint,
 					targetClass);
 		case SINGLETON:
 			if (singleton == null) {
-				registerSingletonInLookups(registryPoint, targetClass, obj);
-				singleton = obj;
+				singleton = registerSingletonInLookups(registryPoint,
+						targetClass, obj);
 			}
 			return (V) singleton;
 		case INSTANCE:
@@ -677,9 +689,5 @@ public class Registry {
 		void appShutdown();
 
 		Registry getRegistry();
-	}
-
-	public RegistryKey key(String className) {
-		return keys.get(className);
 	}
 }
