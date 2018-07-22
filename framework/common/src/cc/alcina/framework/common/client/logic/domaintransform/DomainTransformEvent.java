@@ -93,6 +93,7 @@ public class DomainTransformEvent
 	public DomainTransformEvent() {
 	}
 
+	@Override
 	public int compareTo(DomainTransformEvent o) {
 		return CommonUtils.compareLongs(getEventId(), o.getEventId());
 	}
@@ -439,12 +440,6 @@ public class DomainTransformEvent
 		this.valueVersionNumber = valueVersionNumber;
 	}
 
-	@Override
-	public String toString() {
-		String serialize = new DTRProtocolSerializer().serialize(this);
-		return serialize;
-	}
-
 	public String toDebugString() {
 		try {
 			LooseContext.pushWithTrue(
@@ -453,5 +448,11 @@ public class DomainTransformEvent
 		} finally {
 			LooseContext.pop();
 		}
+	}
+
+	@Override
+	public String toString() {
+		String serialize = new DTRProtocolSerializer().serialize(this);
+		return serialize;
 	}
 }

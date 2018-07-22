@@ -147,7 +147,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		msg.setSubject(
 				requestorPass ? deliveryModel.getEmailSubjectForRequestor()
 						: deliveryModel.getEmailSubject());
-		MailAttachment pdfAttachment =null;
+		MailAttachment pdfAttachment = null;
 		if (deliveryModel.isEmailInline()) {
 			if (deliveryModel.hasProperty(PROP_ATTACH_EMAIL_BODY_AS_PDF)) {
 				FormatConverter converter = Registry.impl(FormatConverter.class,
@@ -155,7 +155,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				InputStream stream = converter.convert(PublicationContext.get(),
 						PublicationContext.get().formatConversionModel);
 				String uuid = UUID.randomUUID().toString();
-				 pdfAttachment = new MailAttachment();
+				pdfAttachment = new MailAttachment();
 				pdfAttachment.uid = uuid;
 				pdfAttachment.contentType = "application/pdf";
 				pdfAttachment.requestBytes = ResourceUtilities
@@ -250,12 +250,13 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		transport.sendMessage(msg, msg.getAllRecipients());
 		PublicationContext.get().mimeMessageId = msg.getMessageID();
 		transport.close();
-		if(pdfAttachment!=null){
+		if (pdfAttachment != null) {
 			deliveryModel.removeAttachment(pdfAttachment);
 		}
 		return "OK";
 	}
 
+	@Override
 	public String deliver(PublicationContext ctx,
 			final InputStream convertedContent,
 			final DeliveryModel deliveryModel, final FormatConverter hfc)
