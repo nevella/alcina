@@ -535,6 +535,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				dc.end("dtrp-get-dtrps - %s ms");
 			}
 		}
+		dtrps.stream().forEach(dtrp -> dtrp.getEvents()
+				.removeIf(event -> event.getObjectClassRef().notInVm()
+						|| (event.getValueClassRef() != null
+								&& event.getValueClassRef().notInVm())));
 		if (populateTransformSourceObjects) {
 			DurationCounter dc = new DurationCounter();
 			List<DomainTransformEvent> events = (List) DomainTransformRequest

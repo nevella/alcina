@@ -31,7 +31,13 @@ public class DomainTransformPersistenceEvent {
 						: DomainTransformPersistenceEventType.COMMIT_ERROR;
 	}
 
-
+	public void ensureTransformsValidForVm() {
+		domainTransformLayerWrapper.persistentEvents
+				.removeIf(evt -> evt.getObjectClassRef().notInVm()
+						|| (evt.getValueClassRef() != null
+								&& evt.getValueClassRef().notInVm()));
+	}
+	
 	public DomainTransformLayerWrapper getDomainTransformLayerWrapper() {
 		return this.domainTransformLayerWrapper;
 	}

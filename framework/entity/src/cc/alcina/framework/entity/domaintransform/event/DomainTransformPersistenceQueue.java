@@ -277,6 +277,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				if (request != null) {
 					DomainTransformPersistenceEvent event = createPersistenceEventFromPersistedRequest(
 							request);
+					event.ensureTransformsValidForVm();
 					Registry.impl(DomainTransformPersistenceEvents.class)
 							.fireDomainTransformPersistenceEvent(event);
 				}

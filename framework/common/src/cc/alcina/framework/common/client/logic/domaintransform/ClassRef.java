@@ -86,7 +86,8 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 
 	@Transient
 	/**
-	 * Here for HasIdAndLocalId compatibility, but always 0 since always server-generated
+	 * Here for HasIdAndLocalId compatibility, but always 0 since always
+	 * server-generated
 	 */
 	public long getLocalId() {
 		return 0;
@@ -116,6 +117,18 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 		return refClassName.hashCode();
 	}
 
+	public boolean notInVm() {
+		if (this.refClass == null && this.refClassName != null) {
+			try {
+				this.refClass = Reflections.classLookup()
+						.getClassForName(this.refClassName);
+			} catch (Exception e) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public abstract void setId(long id);
 
 	public void setLocalId(long localId) {
@@ -133,14 +146,13 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 		this.refClassName = refClassName;
 	}
 
-	public static class ClassRefSimpleNameRenderer implements
-			Renderer<ClassRef, String> {
+	public static class ClassRefSimpleNameRenderer
+			implements Renderer<ClassRef, String> {
 		public static final ClassRefSimpleNameRenderer INSTANCE = new ClassRefSimpleNameRenderer();
 
 		public String render(ClassRef o) {
-			return o == null ? "(undefined)" : CommonUtils.simpleClassName(o
-					.getRefClass());
+			return o == null ? "(undefined)"
+					: CommonUtils.simpleClassName(o.getRefClass());
 		}
 	}
-
 }
