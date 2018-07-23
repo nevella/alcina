@@ -5,12 +5,20 @@ import org.apache.log4j.Logger;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 
 public class EntityLayerUtils {
 	public static String getLocalHostName() {
 		try {
-			return java.net.InetAddress.getLocalHost().getHostName();
+			String defined = ResourceUtilities.get(EntityLayerUtils.class,
+					"localHostName");
+			if (Ax.isBlank(defined)) {
+				return java.net.InetAddress.getLocalHost().getHostName();
+			} else {
+				return defined;
+			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

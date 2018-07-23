@@ -128,10 +128,10 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 				this.refClass = Reflections.classLookup()
 						.getClassForName(this.refClassName);
 			} catch (Exception e) {
-				return false;
+				return true;
 			}
 		}
-		return true;
+		return false;
 	}
 
 	@Override

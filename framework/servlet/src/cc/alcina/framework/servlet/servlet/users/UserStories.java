@@ -195,6 +195,9 @@ public class UserStories {
 			storyNode.set("details", details);
 			List<ClientLogRecord> list = new ArrayList<>();
 			for (String line : story.split("\\n")) {
+				if(line.isEmpty()) {
+					continue;
+				}
 				Object deser = AlcinaBeanSerializer.deserializeHolder(line);
 				if (deser instanceof List) {
 					list.addAll((List) deser);
