@@ -3,13 +3,10 @@ package cc.alcina.framework.common.client.util;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
 public class TopicPublisher {
 	private MutablePropertyChangeSupport support = new MutablePropertyChangeSupport(
@@ -72,14 +69,18 @@ public class TopicPublisher {
 
 	public static class TopicSupport<T> {
 		private String topic;
-
+        private TopicPublisher topicPublisher;
 		public TopicSupport(String topic) {
-			this.topic = topic;
+		    this(topic,true);
 		}
-
+		public TopicSupport(String topic, boolean global) {
+			this.topic = topic;
+			topicPublisher = global?GlobalTopicPublisher.get():new TopicPublisher();
+		}
+		
 		public void publish(T t) {
 			try {
-				GlobalTopicPublisher.get().publishTopic(topic, t);
+			    topicPublisher.publishTopic(topic, t);
 			} catch (Throwable e) {
 				e.printStackTrace();
 			}
@@ -94,7 +95,7 @@ public class TopicPublisher {
 		}
 
 		public void delta(TopicListener<T> listener, boolean add) {
-			GlobalTopicPublisher.get().listenerDelta(topic, listener, add);
+		    topicPublisher.listenerDelta(topic, listener, add);
 		}
 	}
 
