@@ -99,7 +99,6 @@ public class DataGridWithScrollAccess<T> extends DataGrid<T>
 
 	@Override
 	protected void onAttach() {
-		// TODO Auto-generated method stub
 		super.onAttach();
 	}
 }
