@@ -32,7 +32,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
-@SuppressWarnings("unchecked")
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE)
 @ClientInstantiable
 public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
@@ -44,11 +43,13 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		propertyFieldName = PROPERTIES;
 	}
 
+	@Override
 	public <T> T deserialize(String jsonString) {
 		JSONObject obj = (JSONObject) JSONParser.parseStrict(jsonString);
 		return (T) deserializeObject(obj);
 	}
 
+	@Override
 	public String serialize(Object bean) {
 		return serializeObject(bean).toString();
 	}

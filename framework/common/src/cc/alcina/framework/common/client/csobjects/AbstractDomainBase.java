@@ -50,16 +50,22 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 	@GwtTransient
 	long localId;
 
+	public DomainSupport domain() {
+		return new DomainSupport();
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		return HiliHelper.equals(this, obj);
 	}
 
+	@Override
 	@Display(name = "Id", orderingHint = 900, visible = @Permission(access = AccessLevel.ADMIN))
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
 	@Transient
 	public abstract long getId();
 
+	@Override
 	@Display(name = "Local id")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.ROOT), write = @Permission(access = AccessLevel.ROOT))
 	@Transient
@@ -67,6 +73,7 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 		return this.localId;
 	}
 
+	@Override
 	@Version
 	@Column(name = "OPTLOCK")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
@@ -130,10 +137,12 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 	// hash = 0;
 	// }
 	// no listeners - this should be invisible to transform listeners
+	@Override
 	public void setLocalId(long localId) {
 		this.localId = localId;
 	}
 
+	@Override
 	public void setVersionNumber(int versionNumber) {
 		this.versionNumber = versionNumber;
 	}
@@ -156,6 +165,10 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 		String dn = Reflections.classLookup().displayNameForObject(this);
 		dn = !CommonUtils.isNullOrEmpty(dn) ? dn : "[Object]";
 		return dn.substring(0, dn.length());
+	}
+
+	public T writeable() {
+		return (T) Domain.writeable(this);
 	}
 
 	@UnsafeNativeLong
@@ -188,11 +201,14 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 				"no display name available, and using comparator");
 	}
 
-	public T writeable() {
-		return (T) Domain.writeable(this);
-	}
-
 	public class DomainSupport {
+		public <V extends HasIdAndLocalId> void addToProperty(V v,
+				String propertyName) {
+			TransformManager.get().modifyCollectionProperty(
+					AbstractDomainBase.this, propertyName, v,
+					CollectionModificationType.ADD);
+		}
+
 		public T createOrReturnWriteable() {
 			HasEquivalence equivalent = HasEquivalenceHelper.getEquivalent(
 					(Collection) Domain
@@ -205,10 +221,6 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 			}
 		}
 
-		public T domainVersion() {
-			return (T) Domain.find(AbstractDomainBase.this);
-		}
-
 		public T detachedToDomain() {
 			return (T) Domain.detachedToDomain(AbstractDomainBase.this);
 		}
@@ -219,23 +231,13 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 			return TransformManager.get().getTransforms().size() != before;
 		}
 
-		public <V extends HasIdAndLocalId> void addToProperty(V v,
-				String propertyName) {
-			TransformManager.get().modifyCollectionProperty(
-					AbstractDomainBase.this, propertyName, v,
-					CollectionModificationType.ADD);
-		}
-
-		public <V extends HasIdAndLocalId> void removeFromProperty(V v,
-				String propertyName) {
-			TransformManager.get().modifyCollectionProperty(
-					AbstractDomainBase.this, propertyName, v,
-					CollectionModificationType.REMOVE);
-		}
-
 		public void detachFromDomain() {
 			TransformManager.get()
 					.deregisterDomainObject(AbstractDomainBase.this);
+		}
+
+		public T domainVersion() {
+			return (T) Domain.find(AbstractDomainBase.this);
 		}
 
 		public T domainVersionIfPersisted() {
@@ -250,9 +252,17 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 			return new HiliLocator(AbstractDomainBase.this).toString();
 		}
 
-	}
+		public T register() {
+			TransformManager.get()
+					.registerDomainObject(AbstractDomainBase.this);
+			return (T) AbstractDomainBase.this;
+		}
 
-	public DomainSupport domain() {
-		return new DomainSupport();
+		public <V extends HasIdAndLocalId> void removeFromProperty(V v,
+				String propertyName) {
+			TransformManager.get().modifyCollectionProperty(
+					AbstractDomainBase.this, propertyName, v,
+					CollectionModificationType.REMOVE);
+		}
 	}
 }

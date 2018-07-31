@@ -280,7 +280,7 @@ public class LogStoreCompactor extends Consort<Phase> {
 					&& !isCompacted(mergeTo)) {
 				mergeTo.addLogRecord(mergeFrom.getLogRecords().remove(0));
 			}
-			String serialized = new AlcinaBeanSerializerC().serialize(mergeTo);
+			String serialized = Registry.impl(AlcinaBeanSerializer.class).serialize(mergeTo);
 			LogStore.get().objectStore.put(minNonCompactedLogRecordId,
 					serialized, this);
 		}
@@ -298,7 +298,7 @@ public class LogStoreCompactor extends Consort<Phase> {
 				LogStore.get().objectStore
 						.removeIdRange(IntPair.point(mergeFromId), this);
 			} else {
-				String serialized = new AlcinaBeanSerializerC()
+				String serialized = Registry.impl(AlcinaBeanSerializer.class)
 						.serialize(mergeFrom);
 				LogStore.get().objectStore.put(mergeFromId, serialized, this);
 			}
