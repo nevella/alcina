@@ -167,7 +167,8 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 				|| clazz == Class.class) {
 			return deserializeField(jsonObj.get(LITERAL), clazz);
 		}
-		JSONObject props = (JSONObject) jsonObj.get(propertyFieldName);
+		JSONObject props = (JSONObject) jsonObj
+				.get(getPropertyFieldName(jsonObj));
 		Object obj = Reflections.classLookup().newInstance(clazz);
 		String[] names = JSONObject.getNames(props);
 		if (names != null) {
@@ -199,6 +200,10 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 			}
 		}
 		return obj;
+	}
+
+	private String getPropertyFieldName(JSONObject jsonObj) {
+		return jsonObj.has(PROPERTIES_SHORT) ? PROPERTIES_SHORT : PROPERTIES;
 	}
 
 	/**
@@ -352,6 +357,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		return m;
 	}
 
+	@Override
 	protected Class getClassMaybeAbbreviated(String cns) {
 		try {
 			Class clazz;

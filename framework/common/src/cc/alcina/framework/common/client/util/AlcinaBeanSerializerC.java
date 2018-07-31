@@ -133,7 +133,8 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		if (customSerializer != null) {
 			return customSerializer.fromJson(jsonObj);
 		}
-		JSONObject props = (JSONObject) jsonObj.get(propertyFieldName);
+		JSONObject props = (JSONObject) jsonObj
+				.get(getPropertyFieldName(jsonObj));
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
 			return deserializeField(jsonObj.get(LITERAL), clazz);
 		}
@@ -162,6 +163,11 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		} else {
 			return deserializeObject((JSONObject) jv);
 		}
+	}
+
+	private String getPropertyFieldName(JSONObject jsonObj) {
+		return jsonObj.containsKey(PROPERTIES_SHORT) ? PROPERTIES_SHORT
+				: PROPERTIES;
 	}
 
 	/**

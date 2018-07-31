@@ -66,7 +66,10 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 			JSONObject obj = new JSONObject(jsonString);
 			if (GWT.isClient() && !useContextClassloader) {
 				// devmode
-				cl = getClass().getClassLoader().getParent();
+				cl = getClass().getClassLoader();
+				if (cl.getParent() != null) {
+					cl = cl.getParent();
+				}
 			} else {
 				cl = Thread.currentThread().getContextClassLoader();
 			}
@@ -167,7 +170,8 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 				|| clazz == Class.class) {
 			return deserializeField(jsonObj.get(LITERAL), clazz);
 		}
-		JSONObject props = (JSONObject) jsonObj.get(propertyFieldName);
+		JSONObject props = (JSONObject) jsonObj
+				.get(getPropertyFieldName(jsonObj));
 		Object obj = Reflections.classLookup().newInstance(clazz);
 		String[] names = JSONObject.getNames(props);
 		if (names != null) {
@@ -199,6 +203,10 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 			}
 		}
 		return obj;
+	}
+
+	private String getPropertyFieldName(JSONObject jsonObj) {
+		return jsonObj.has(PROPERTIES_SHORT) ? PROPERTIES_SHORT : PROPERTIES;
 	}
 
 	/**
