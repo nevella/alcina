@@ -66,7 +66,8 @@ public class ShowMorePager extends AbstractPager {
 				int scrollPanelHeight = scrollable.getOffsetHeight();
 				int maxScrollTop = scrollPanelContentsHeight - scrollPanelHeight
 						- 20;
-				if (Math.abs(lastScrollPos - oldScrollPos) > 200) {
+				// hack but not sure how to deal with said autoscrolls
+				if (Math.abs(lastScrollPos - oldScrollPos) > 500) {
 					// handle autoscroll to end
 					return;
 				}
