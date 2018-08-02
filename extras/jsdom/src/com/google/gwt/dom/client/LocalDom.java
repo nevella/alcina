@@ -62,6 +62,10 @@ public class LocalDom {
 		get().ensureRemote0(node);
 	}
 
+	public static void ensureRemoteDocument() {
+		nodeFor(Document.get().typedRemote().getDocumentElement0());
+	}
+
 	public static NodeRemote ensureRemoteNodeMaybePendingResolution(Node node) {
 		return get().ensureRemoteNodeMaybePendingResolution0(node);
 	}
@@ -119,7 +123,7 @@ public class LocalDom {
 	}
 
 	public static void syncToRemote(Element element) {
-		get().parse(element.typedRemote(), element);
+		get().parseAndMarkResolved(element.typedRemote(), element);
 	}
 
 	private static LocalDom get() {
@@ -157,6 +161,10 @@ public class LocalDom {
 
 	static boolean hasNode(JavaScriptObject remote) {
 		return get().remoteLookup.containsKey(remote);
+	}
+
+	static void putRemote(Element element, ElementRemote remote) {
+		get().putRemote0(element, remote);
 	}
 
 	static void wasResolved(Element elem) {
@@ -451,6 +459,11 @@ public class LocalDom {
 	}
 
 	private <T extends Node> T nodeFor0(NodeRemote remote) {
+		return nodeFor0(remote, false);
+	}
+
+	private <T extends Node> T nodeFor0(NodeRemote remote,
+			boolean postReparse) {
 		if (remote == null) {
 			return null;
 		}
@@ -478,14 +491,23 @@ public class LocalDom {
 		boolean hadNode = hasNodeRemote != null;
 		if (hasNodeRemote == null) {
 			ElementRemote root = remoteIndex.root();
-			Element hasNode = parse(root, null);
+			Element hasNode = parseAndMarkResolved(root, null);
 			linkRemote(root, hasNode);
 			hasNode.putRemote(root, true);
 			hasNodeRemote = root;
 		}
 		Element hasNode = (Element) remoteLookup.get(hasNodeRemote);
+		// if this returns true, we knew the remote element has DOM manipulated
+		// outside GWT - parse the tree
 		if (hasNode.resolveRemoteDefined()) {
 			return nodeFor0(remote);
+		}
+		// htmlparser will sometimes fail to parse dodgy DOM - reparse from
+		// browser DOM
+		if (shouldTryReparseFromRemote(elem, hasNode, remoteIndex)
+				&& !postReparse) {
+			reparseFromRemote(hasNodeRemote, hasNode, remoteIndex);
+			return nodeFor0(remote, true);
 		}
 		List<Integer> indicies = remoteIndex.indicies();
 		List<Boolean> remoteDefined = remoteIndex.remoteDefined();
@@ -505,11 +527,19 @@ public class LocalDom {
 		return (T) remoteLookup.get(remote);
 	}
 
-	private Element parse(ElementRemote root, Element replaceContents) {
+	private Element parseAndMarkResolved(ElementRemote root, Element replaceContents) {
 		Element parsed = new HtmlParser().parse(root, replaceContents,
 				root == Document.get().typedRemote().getDocumentElement0());
 		wasResolved0(parsed);
 		return parsed;
+	}
+
+	private void putRemote0(Element element, ElementRemote remote) {
+		flush();
+		resolutionEventId++;
+		wasResolved(element);
+		remoteLookup.put(remote, element);
+		element.putRemote(remote, true);
 	}
 
 	@SuppressWarnings("unused")
@@ -526,6 +556,62 @@ public class LocalDom {
 		// pendingResolution.remove(element);
 		// }
 		// get().remoteLookup.remove(typedRemote);
+		//
+		// ended up using weakmaps...
+	}
+
+	private void reparseFromRemote(ElementRemote elem, Element hasNode,
+			ElementRemoteIndex remoteIndex) {
+		List<Integer> sizes = remoteIndex.sizes();
+		List<Integer> indicies = remoteIndex.indicies();
+		boolean sizesMatch = true;
+		Element cursor = hasNode;
+		ElementRemote remoteCursor = elem;
+		for (int idx = sizes.size() - 1; idx >= 0; idx--) {
+			int size = sizes.get(idx);
+			if (cursor.getChildCount() != size) {
+				// FIXME - check we have no widgets in the tree - if we do,
+				// we're...not..good. Also remove and remote refs below (albeit
+				// unlikely)
+				int localIndex = cursor.getParentElement()
+						.getChildIndexLocal(cursor);
+				cursor.local().clearChildrenAndAttributes0();
+				parseAndMarkResolved(remoteCursor, cursor);
+				if (cursor.getChildCount() != size) {
+					sizesMatch = false;
+					break;
+				}
+			}
+			int nodeIndex = indicies.get(idx);
+			cursor = (Element) cursor.getChild(nodeIndex);
+			remoteCursor = (ElementRemote) remoteCursor.getChildNodes0()
+					.getItem0(nodeIndex);
+		}
+		Ax.out("Reparse successful");
+	}
+
+	private boolean shouldTryReparseFromRemote(ElementRemote elem,
+			Element hasNode, ElementRemoteIndex remoteIndex) {
+		if (remoteIndex.hasRemoteDefined()) {
+			return false;
+		}
+		List<Integer> sizes = remoteIndex.sizes();
+		List<Integer> indicies = remoteIndex.indicies();
+		boolean sizesMatch = true;
+		Element cursor = hasNode;
+		for (int idx = sizes.size() - 1; idx >= 0; idx--) {
+			int size = sizes.get(idx);
+			if (cursor.getChildCount() != size) {
+				sizesMatch = false;
+				break;
+			}
+			int nodeIndex = indicies.get(idx);
+			cursor = (Element) cursor.getChild(nodeIndex);
+		}
+		if (sizesMatch) {
+			return false;
+		}
+		return true;
 	}
 
 	private void wasResolved0(Element elem) {
@@ -597,6 +683,7 @@ public class LocalDom {
 	}
 
 	public static class LocalDomCollections_Script extends LocalDomCollections {
+		@Override
 		public <K, V> Map<K, V> createIdentityEqualsMap(Class<K> keyClass) {
 			if (JsUniqueMap.supportsJsMap()) {
 				// element.attributes will need entryset, not yet supported in
@@ -606,21 +693,5 @@ public class LocalDom {
 				return super.createIdentityEqualsMap(keyClass);
 			}
 		}
-	}
-
-	public static void ensureRemoteDocument() {
-		nodeFor(Document.get().typedRemote().getDocumentElement0());
-	}
-
-	private void putRemote0(Element element, ElementRemote remote) {
-		flush();
-		resolutionEventId++;
-		wasResolved(element);
-		remoteLookup.put(remote,element);
-		element.putRemote(remote, true);
-	}
-
-	static void putRemote(Element element, ElementRemote remote) {
-		get().putRemote0(element, remote);
 	}
 }
