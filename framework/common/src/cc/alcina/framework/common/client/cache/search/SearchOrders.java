@@ -127,10 +127,34 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		return cmps;
 	}
 
+	@ClientInstantiable
+	@Introspectable
 	public static class ColumnSearchOrder implements Serializable {
-		public String columnName;
+		private String columnName;
 
-		public boolean ascending;
+		private boolean ascending;
+
+		public String getColumnName() {
+			return columnName;
+		}
+
+		public boolean isAscending() {
+			return ascending;
+		}
+
+		public void setAscending(boolean ascending) {
+			this.ascending = ascending;
+		}
+
+		public void setColumnName(String columnName) {
+			this.columnName = columnName;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("order by '%s' %s", columnName,
+					ascending ? "asc" : "desc");
+		}
 	}
 
 	@ClientInstantiable
