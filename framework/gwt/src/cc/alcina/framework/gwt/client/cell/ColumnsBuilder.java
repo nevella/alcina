@@ -313,9 +313,18 @@ public class ColumnsBuilder<T> {
 			return this.width;
 		}
 
+		public ColumnBuilder groupedStringMapping() {
+			sortable = true;
+			return this;
+		}
+
 		public ColumnBuilder href(Function<T, String> hrefFunction) {
 			this.hrefFunction = hrefFunction;
 			return this;
+		}
+
+		public boolean isNumeric() {
+			return numeric;
 		}
 
 		public ColumnBuilder
@@ -488,6 +497,10 @@ public class ColumnsBuilder<T> {
 				}
 			}
 			return super.getCellStyleNames(context, object) + editable;
+		}
+
+		public String getName() {
+			return this.name;
 		}
 
 		public DirectedComparator getNativeComparator() {
