@@ -12,10 +12,14 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 @ClientInstantiable
 public abstract class SearchOrder<T, V extends Comparable>
 		implements Function<T, V>, Serializable, Comparator<T> {
+	public V comparable(T o) {
+		return apply(o);
+	}
+
 	@Override
 	public int compare(T o1, T o2) {
-		int comparison = CommonUtils.compareWithNullMinusOne(apply(o1),
-				apply(o2));
+		int comparison = CommonUtils.compareWithNullMinusOne(comparable(o1),
+				comparable(o2));
 		if (comparison != 0) {
 			return comparison;
 		}

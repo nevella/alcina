@@ -8,9 +8,12 @@ import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 public class Sx {
 	public static boolean nonThreadedCommitPoint;
 
-	public static void commit() {
-		ServletLayerUtils.pushTransformsAsRoot();
+	static boolean testServer;
+
+	public static int commit() {
+		int transformCount = ServletLayerUtils.pushTransformsAsRoot();
 		commitPoint(false);
+		return transformCount;
 	}
 
 	// optimisation - defer push to the end of an rpc call, so as to only do
@@ -20,6 +23,18 @@ public class Sx {
 		commitPoint(true);
 		// a better/more formal way would be to have some quick write-ahead (say
 		// kafka) and recover on restart
+	}
+
+	public static boolean isTest() {
+		return AppPersistenceBase.isTest();
+	}
+
+	public static boolean isTestServer() {
+		return testServer || isTest();
+	}
+
+	public static void setTestServer(boolean testServer) {
+		Sx.testServer = testServer;
 	}
 
 	private static void commitPoint(boolean set) {
@@ -34,19 +49,5 @@ public class Sx {
 					CommonRemoteServiceServlet.PUSH_TRANSFORMS_AT_END_OF_REUQEST,
 					set);
 		}
-	}
-
-	public static boolean isTest() {
-		return AppPersistenceBase.isTest();
-	}
-
-	static boolean testServer;
-
-	public static boolean isTestServer() {
-		return testServer || isTest();
-	}
-
-	public static void setTestServer(boolean testServer) {
-		Sx.testServer = testServer;
 	}
 }
