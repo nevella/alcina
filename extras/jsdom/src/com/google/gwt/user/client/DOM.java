@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -55,12 +56,9 @@ public class DOM {
 
 	private static Element eventCurrentTarget;
 
-	// chromium hosted mode double-dispatch checl
-	private static Event lastDispatchedEvent;
-
-	private static EventListener lastDispatchedMouseEventListener;
-
-	private static List<Element> dispatchedFor = new ArrayList<>();
+	// need to keep recent dispatches, otherwise a::click -> dialog::focus ->
+	// a.parent::click (bubble) gets misinterpreted
+	static List<DispatchInfo> recentDispatches = new ArrayList<>();
 
 	/**
 	 * Adds an event preview to the preview stack. As long as this preview
@@ -425,8 +423,8 @@ public class DOM {
 	}
 
 	/**
-	 * Generates a unique DOM id. The id is of the form
-	 * "gwt-id-<unique integer>".
+	 * Generates a unique DOM id. The id is of the form "gwt-id-<unique
+	 * integer>".
 	 * 
 	 * @return a unique DOM id
 	 */
@@ -1105,8 +1103,8 @@ public class DOM {
 	 */
 	public static native int getIntStyleAttribute(Element elem,
 			String attr) /*-{
-							return parseInt(elem.style[attr]) || 0;
-							}-*/;
+    return parseInt(elem.style[attr]) || 0;
+	}-*/;
 
 	/**
 	 * Gets an element's next sibling element.
@@ -1655,45 +1653,56 @@ public class DOM {
 		return Window.getClientWidth();
 	}
 
-	private static void dispatchEventImpl(Event evt, Element elem,
+	private static void dispatchEventImpl(Event event, Element elem,
 			EventListener listener) {
 		// If this element has capture...
 		if (elem == sCaptureElem) {
 			// ... and it's losing capture, clear sCaptureElem.
-			if (eventGetType(evt) == Event.ONLOSECAPTURE) {
+			if (eventGetType(event) == Event.ONLOSECAPTURE) {
 				sCaptureElem = null;
 			}
 		}
-		EventTarget eventTarget = evt.getEventTarget();
-		String lcType = evt.getType().toLowerCase();
+		EventTarget eventTarget = event.getEventTarget();
+		String lcType = event.getType().toLowerCase();
 		int eventTypeInt = Event.getTypeInt(lcType);
-		if (lastDispatchedEvent == evt
-				&& listener == lastDispatchedMouseEventListener) {
+		if (lcType.equals("click")) {
+			int debug = 3;
+		}
+		if (recentDispatches.stream()
+				.anyMatch(di -> di.dispatchedToListener(event, listener))) {
 			return;
 		}
-		if (lastDispatchedEvent != evt) {
-			dispatchedFor.clear();
+		DispatchInfo dispatchInfo = null;
+		Optional<DispatchInfo> first = recentDispatches.stream()
+				.filter(di -> di.isForEvent(event)).findFirst();
+		if (first.isPresent()) {
+			dispatchInfo = first.get();
+		} else {
+			dispatchInfo = new DispatchInfo(event);
+			recentDispatches.add(dispatchInfo);
+			if (recentDispatches.size() > 10) {
+				recentDispatches.remove(0);
+			}
 		}
-		lastDispatchedEvent = evt;
-		lastDispatchedMouseEventListener = listener;
 		if (Element.is(eventTarget)) {
-			Element rel = Element.as(eventTarget);
+			Element childElement = Element.as(eventTarget);
 			// get the listeners early, to prevent overwrite. Note that this
 			// isn't perfect
 			// ideally there'd be an is-still-in-chain check for bubbling
 			Map<Element, EventListener> forDispatch = new LinkedHashMap<>();
-			while (rel != elem && rel != null) {
-				if (rel.uiObjectListener != null
-						&& !dispatchedFor.contains(rel)) {
+			while (childElement != elem && childElement != null) {
+				if (childElement.uiObjectListener != null
+						&& !dispatchInfo.wasDispatchedTo(childElement)) {
 					// FIXME - bitless?
-					int bitsSunk = rel.localEventBitsSunk();
+					int bitsSunk = childElement.localEventBitsSunk();
 					if (eventTypeInt != -1 && (bitsSunk & eventTypeInt) == 0) {
 					} else {
-						dispatchedFor.add(rel);
-						forDispatch.put(rel, rel.uiObjectListener);
+						dispatchInfo.willDispatchTo(childElement);
+						forDispatch.put(childElement,
+								childElement.uiObjectListener);
 					}
 				}
-				rel = rel.getParentElement();
+				childElement = childElement.getParentElement();
 			}
 			for (Entry<Element, EventListener> entry : forDispatch.entrySet()) {
 				eventCurrentTarget = entry.getKey();
@@ -1703,21 +1712,21 @@ public class DOM {
 							lcType, eventListener.getClass().getName());
 					LocalDom.log(LocalDomDebug.DOM_MOUSE_EVENT, message);
 				}
-				eventListener.onBrowserEvent(evt);
-				if (LocalDom.isStopPropogation(evt)) {
+				eventListener.onBrowserEvent(event);
+				if (LocalDom.isStopPropogation(event)) {
 					return;
 				}
 			}
-			dispatchedFor.add(Element.as(eventTarget));
+			dispatchInfo.willDispatchTo(Element.as(eventTarget));
 		}
-		if (Element.is(evt.getCurrentEventTarget())) {
-			eventCurrentTarget = evt.getCurrentEventTarget().cast();
-			dispatchedFor.add(eventCurrentTarget);
+		if (Element.is(event.getCurrentEventTarget())) {
+			eventCurrentTarget = event.getCurrentEventTarget().cast();
+			dispatchInfo.willDispatchTo(eventCurrentTarget);
 		} else {
 			eventCurrentTarget = null;
 		}
 		// Pass the event to the listener.
-		listener.onBrowserEvent(evt);
+		listener.onBrowserEvent(event);
 	}
 
 	/**
@@ -1742,6 +1751,7 @@ public class DOM {
 			super(listener);
 		}
 
+		@Override
 		public void onPreviewNativeEvent(NativePreviewEvent event) {
 			// The legacy EventHandler should only fire if it is on the top of
 			// the
@@ -1752,6 +1762,36 @@ public class DOM {
 					event.cancel();
 				}
 			}
+		}
+	}
+
+	static class DispatchInfo {
+		Event event;
+
+		List<EventListener> dispatchedToListeners = new ArrayList<>();
+
+		List<Element> dispatchedToElements = new ArrayList<>();
+
+		public DispatchInfo(Event event) {
+			this.event = event;
+		}
+
+		public boolean dispatchedToListener(Event event,
+				EventListener listener) {
+			return this.event == event
+					&& dispatchedToListeners.contains(listener);
+		}
+
+		public boolean isForEvent(Event event) {
+			return this.event == event;
+		}
+
+		public boolean wasDispatchedTo(Element element) {
+			return dispatchedToElements.contains(element);
+		}
+
+		public void willDispatchTo(Element childElement) {
+			dispatchedToElements.add(childElement);
 		}
 	}
 }
