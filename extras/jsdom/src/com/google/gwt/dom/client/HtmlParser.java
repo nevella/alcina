@@ -85,7 +85,7 @@ public class HtmlParser {
 	public Element parse(String html, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
 		this.html = html;
-		debugCursor = false;
+		debugCursor = true;
 		this.replaceContents = replaceContents;
 		this.emitHtmlHeadBodyTags = emitHtmlHeadBodyTags;
 		resetBuilder();
@@ -133,6 +133,11 @@ public class HtmlParser {
 					resetBuilder();
 					builder.append(c);
 					tokenState = TokenState.EXPECTING_COMMENT;
+				} else if (tagLookahead.equals("![CDATA[")) {
+					tag = tagLookahead;
+					resetBuilder();
+					builder.append(c);
+					tokenState = TokenState.EXPECTING_CDATA;
 				} else {
 					if (isWhiteSpace) {
 						tag = tagLookahead;
@@ -162,6 +167,16 @@ public class HtmlParser {
 				if (c == '>' && builder.toString().endsWith("--")) {
 					builder.setLength(builder.length() - 2);
 					emitComment(builder.toString());
+					resetBuilder();
+					tokenState = TokenState.EXPECTING_NODE;
+				} else {
+					builder.append(c);
+				}
+				break;
+			case EXPECTING_CDATA:
+				if (c == '>' && builder.toString().endsWith("]]")) {
+					builder.setLength(builder.length() - 2);
+					emitCData(builder.toString());
 					resetBuilder();
 					tokenState = TokenState.EXPECTING_NODE;
 				} else {
@@ -244,6 +259,17 @@ public class HtmlParser {
 
 	private void emitAttribute() {
 		attributes.put(attrName, decodeEntities(attrValue));
+	}
+
+	private void emitCData(String string) {
+		tag = null;
+		if (string.matches("\\?.+\\?") || true) {
+			// FIXME - make this a real PI
+			// hmm...now chromium seems to want comments preserved. weird. but
+			// wonderful
+			emitText(string);
+		}
+		// FIXME - if ie<=9, hmm....panic?
 	}
 
 	private void emitComment(String string) {
@@ -397,6 +423,8 @@ public class HtmlParser {
 	}
 
 	enum TokenState {
-		EXPECTING_NODE, EXPECTING_TAG, TEXT, EXPECTING_COMMENT, EXPECTING_ATTRIBUTES, EXPECTING_ATTR_SEP, EXPECTING_ATTR_VALUE_DELIM, EXPECTING_ATTR_VALUE
+		EXPECTING_NODE, EXPECTING_TAG, TEXT, EXPECTING_COMMENT,
+		EXPECTING_ATTRIBUTES, EXPECTING_ATTR_SEP, EXPECTING_ATTR_VALUE_DELIM,
+		EXPECTING_ATTR_VALUE, EXPECTING_CDATA
 	}
 }

@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.Javascript
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 
 public class LocalDom {
@@ -41,6 +42,9 @@ public class LocalDom {
 	static boolean ie9;
 
 	static boolean emitCommentPisAsText;
+
+	private static final String TOPIC_EXCEPTION = LocalDom.class.getName() + "."
+			+ "TOPIC_EXCEPTION";
 
 	public static void debug(ElementRemote elementRemote) {
 		get().debug0(elementRemote);
@@ -124,6 +128,10 @@ public class LocalDom {
 
 	public static void syncToRemote(Element element) {
 		get().parseAndMarkResolved(element.typedRemote(), element);
+	}
+
+	public static TopicSupport<Exception> topicException() {
+		return new TopicSupport<>(TOPIC_EXCEPTION);
 	}
 
 	private static LocalDom get() {
@@ -464,6 +472,16 @@ public class LocalDom {
 
 	private <T extends Node> T nodeFor0(NodeRemote remote,
 			boolean postReparse) {
+		try {
+			return nodeFor1(remote, postReparse);
+		} catch (RuntimeException re) {
+			topicException().publish(re);
+			throw re;
+		}
+	}
+
+	private <T extends Node> T nodeFor1(NodeRemote remote,
+			boolean postReparse) {
 		if (remote == null) {
 			return null;
 		}
@@ -527,7 +545,8 @@ public class LocalDom {
 		return (T) remoteLookup.get(remote);
 	}
 
-	private Element parseAndMarkResolved(ElementRemote root, Element replaceContents) {
+	private Element parseAndMarkResolved(ElementRemote root,
+			Element replaceContents) {
 		Element parsed = new HtmlParser().parse(root, replaceContents,
 				root == Document.get().typedRemote().getDocumentElement0());
 		wasResolved0(parsed);
@@ -666,6 +685,9 @@ public class LocalDom {
 			if (resolutionEventIdDirty) {
 				resolutionEventId++;
 			}
+		} catch (RuntimeException re) {
+			topicException().publish(re);
+			throw re;
 		} finally {
 			resolutionEventIdDirty = false;
 			resolving = false;
