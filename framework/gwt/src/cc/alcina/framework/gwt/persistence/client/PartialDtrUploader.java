@@ -18,7 +18,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadR
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 public class PartialDtrUploader {
@@ -54,6 +56,22 @@ public class PartialDtrUploader {
 	protected PartialDtrUploadResponse currentResponse;
 
 	private Set<Long> clientInstanceIds = new TreeSet<Long>();
+	
+	private static final String TOPIC_UPLOADING = CommitToStorageTransformListener.class
+            .getName() + ".TOPIC_UPLOADING";
+
+    public static TopicSupport<PartialDtrUploadRequest>
+            topicUploading() {
+        return new TopicSupport<>(TOPIC_UPLOADING);
+    }
+    private static final String TOPIC_UPLOADED = CommitToStorageTransformListener.class
+            .getName() + ".TOPIC_UPLOADED";
+
+    public static TopicSupport<PartialDtrUploadResponse>
+            topicUploaded() {
+        return new TopicSupport<>(TOPIC_UPLOADED);
+    }
+    
 
 	private AsyncCallback<PartialDtrUploadResponse> responseHandler = new AsyncCallback<PartialDtrUploadResponse>() {
 		@Override
@@ -75,6 +93,7 @@ public class PartialDtrUploader {
 
 		@Override
 		public void onSuccess(PartialDtrUploadResponse response) {
+		    topicUploaded().publish(response);
 			// don't turn on until first response - may be offline
 			modalNotifier.modalOn();
 			if (response.committed) {
@@ -133,6 +152,7 @@ public class PartialDtrUploader {
 
 	private void submit0() {
 		submitTime = System.currentTimeMillis();
+		topicUploading().publish(currentRequest);
 		ClientBase.getCommonRemoteServiceAsyncInstance()
 				.uploadOfflineTransforms(currentRequest, responseHandler);
 	}

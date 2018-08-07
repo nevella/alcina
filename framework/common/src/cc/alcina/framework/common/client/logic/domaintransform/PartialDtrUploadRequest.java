@@ -16,4 +16,6 @@ public class PartialDtrUploadRequest implements Serializable {
 	public boolean hasTransforms() {
 		return !transformLists.isEmpty() && !transformLists.get(0).isEmpty();
 	}
+	
+	
 }

@@ -335,6 +335,8 @@ public abstract class JdbcTransformPersistence
 	@Override
 	protected void persistFromFrontOfQueue(final DeltaApplicationRecord wrapper,
 			final AsyncCallback callback) {
+	    notifyPersisting(new LocalPersistenceTuple(wrapper.getType().toString(),
+                wrapper.getText().length(),wrapper.getText()));
 		CleanupTuple tuple = new CleanupTuple();
 		try {
 			PreparedStatement pstmt = tuple.prepareStatement(

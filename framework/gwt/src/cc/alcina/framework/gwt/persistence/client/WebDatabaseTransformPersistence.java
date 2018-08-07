@@ -257,8 +257,8 @@ public class WebDatabaseTransformPersistence
 	@Override
 	protected void persistFromFrontOfQueue(final DeltaApplicationRecord wrapper,
 			final AsyncCallback callback) {
-		notifyPersisting(new TypeSizeTuple(wrapper.getType().toString(),
-				wrapper.getText().length()));
+		notifyPersisting(new LocalPersistenceTuple(wrapper.getType().toString(),
+				wrapper.getText().length(),wrapper.getText()));
 		if (wrapper
 				.getType() == DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED) {
 			AlcinaTopics.logCategorisedMessage(new StringPair(

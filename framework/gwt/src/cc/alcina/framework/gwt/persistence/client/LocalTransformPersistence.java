@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DomainTrancheProtocolHandler;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
@@ -97,12 +98,12 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
         return get() != null && get().localStorageInstalled;
     }
 
-    public static void notifyPersisting(TypeSizeTuple size) {
+    public static void notifyPersisting(LocalPersistenceTuple size) {
         GlobalTopicPublisher.get().publishTopic(TOPIC_PERSISTING, size);
     }
 
     public static void notifyPersistingListenerDelta(
-            TopicListener<TypeSizeTuple> listener, boolean add) {
+            TopicListener<LocalPersistenceTuple> listener, boolean add) {
         GlobalTopicPublisher.get().listenerDelta(TOPIC_PERSISTING, listener,
                 add);
     }
@@ -512,14 +513,21 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
         public String protocolVersion;
     }
 
-    public static class TypeSizeTuple {
+    public static class LocalPersistenceTuple {
         public String type;
 
         public int size;
 
-        public TypeSizeTuple(String type, int size) {
+        public String text;
+
+        public LocalPersistenceTuple(String type, int size, String text) {
             this.type = type;
             this.size = size;
+            this.text = text;
+        }
+        @Override
+        public String toString() {
+            return Ax.format("Type: %s :: Serialized: %s chars", type,size);
         }
     }
 

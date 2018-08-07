@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.util.OnetimeWrappingAsyncCallback;
 import cc.alcina.framework.gwt.client.util.WrappingAsyncCallback;
-import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence.TypeSizeTuple;
+import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence.LocalPersistenceTuple;
 
 @RegistryLocation(registryPoint = DatabaseStatsObserver.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
@@ -30,9 +30,9 @@ public class DatabaseStatsObserver {
 
 	DatabaseStatsInfo current = new DatabaseStatsInfo();
 
-	protected TopicListener<TypeSizeTuple> transformDeltaListener = new TopicListener<LocalTransformPersistence.TypeSizeTuple>() {
+	protected TopicListener<LocalPersistenceTuple> transformDeltaListener = new TopicListener<LocalTransformPersistence.LocalPersistenceTuple>() {
 		@Override
-		public void topicPublished(String key, TypeSizeTuple message) {
+		public void topicPublished(String key, LocalPersistenceTuple message) {
 			if (current != null) {
 				current.getTransformCounts().add(message.type);
 				current.getTransformTexts().add(message.type, message.size);

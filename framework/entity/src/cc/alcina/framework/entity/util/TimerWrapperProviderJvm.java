@@ -3,8 +3,6 @@ package cc.alcina.framework.entity.util;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import cc.alcina.framework.common.client.log.ILogRecord;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
