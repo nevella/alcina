@@ -3,19 +3,20 @@ package cc.alcina.framework.servlet.servlet.users;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 
-//Gone, see freegeoip.com
-public class GeolocationResolver_FreeGeoip implements GeolocationResolver {
+@RegistryLocation(registryPoint = GeolocationResolver.class, implementationType = ImplementationType.SINGLETON)
+public class GeolocationResolver_Ipstack implements GeolocationResolver {
 	private CachingMap<String, String> ipToLocation = new CachingMap<>(
 			s -> getLocation0(s));
 
 	@Override
 	public synchronized String getLocation(String ipAddress) {
-		if (ResourceUtilities.is(GeolocationResolver_FreeGeoip.class,
-				"dummyResolver")) {
+		if(ResourceUtilities.is(GeolocationResolver_Ipstack.class, "dummyResolver")){
 			return "(dummy ip adress)";
 		}
 		return ipToLocation.get(ipAddress);
@@ -26,9 +27,7 @@ public class GeolocationResolver_FreeGeoip implements GeolocationResolver {
 			return "(no ip adress)";
 		}
 		try {
-			String url = Ax.format(
-					"http://api.ipstack.com/%s/?access_key=708236baaf4e5df6c68934e4bd11df6c&output=json",
-					ipAddress);
+			String url = Ax.format("http://freegeoip.net/json/%s", ipAddress);
 			String result = ResourceUtilities.readUrlAsString(url);
 			ObjectNode node = (ObjectNode) new ObjectMapper().readTree(result);
 			if (Ax.isBlank(node.get("country_name").asText())) {

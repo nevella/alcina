@@ -17,14 +17,10 @@ import java.util.Comparator;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.dom.client.FocusEvent;
-import com.google.gwt.event.dom.client.FocusHandler;
-import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.dom.client.KeyUpHandler;
@@ -66,34 +62,30 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 
 	private boolean ensureAllLinesVisible;
 
-	private String hint;
-
-	private HandlerRegistration keydownHandlerRegistration;
-
-	private HandlerRegistration focusHandlerRegistration;
-
 	public TextArea() {
 		this(false);
 	}
 
 	/** Creates a new instance of TextBox */
-	@SuppressWarnings("unchecked")
 	public TextArea(final boolean updateOnKeypress) {
 		final TextArea instance = this;
 		old = base.getText();
 		this.setComparator(SimpleComparator.INSTANCE);
 		if (updateOnKeypress) {
 			this.addKeyboardListener(new KeyboardListener() {
+				@Override
 				public void onKeyDown(Widget sender, char keyCode,
 						int modifiers) {
 				}
 
+				@Override
 				public void onKeyPress(Widget sender, char keyCode,
 						int modifiers) {
 					changes.firePropertyChange("value", old, getValue());
 					old = (String) getValue();
 				}
 
+				@Override
 				public void onKeyUp(Widget sender, char keyCode,
 						int modifiers) {
 				}
@@ -117,6 +109,7 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 			}
 		});
 		this.base.addChangeListener(new ChangeListener() {
+			@Override
 			public void onChange(Widget sender) {
 				changes.firePropertyChange("value", old, getValue());
 				old = (String) getValue();
@@ -126,18 +119,22 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		super.initWidget(this.base);
 	}
 
+	@Override
 	public void addChangeListener(ChangeListener listener) {
 		this.base.addChangeListener(listener);
 	}
 
+	@Override
 	public void addClickListener(ClickListener listener) {
 		this.base.addClickListener(listener);
 	}
 
+	@Override
 	public void addFocusListener(FocusListener listener) {
 		this.base.addFocusListener(listener);
 	}
 
+	@Override
 	public void addKeyboardListener(KeyboardListener listener) {
 		this.base.addKeyboardListener(listener);
 	}
@@ -158,6 +155,7 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		this.base.cancelKey();
 	}
 
+	@Override
 	public Action getAction() {
 		Action retValue;
 		retValue = super.getAction();
@@ -168,6 +166,7 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		return this.base.getCharacterWidth();
 	}
 
+	@Override
 	public Comparator getComparator() {
 		Comparator retValue;
 		retValue = super.getComparator();
@@ -180,10 +179,7 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		return retValue;
 	}
 
-	public String getHint() {
-		return this.hint;
-	}
-
+	@Override
 	public Object getModel() {
 		Object retValue;
 		retValue = super.getModel();
@@ -196,12 +192,14 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		return retValue;
 	}
 
+	@Override
 	public int getOffsetHeight() {
 		int retValue;
 		retValue = this.base.getOffsetHeight();
 		return retValue;
 	}
 
+	@Override
 	public int getOffsetWidth() {
 		int retValue;
 		retValue = this.base.getOffsetWidth();
@@ -220,12 +218,14 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		return retValue;
 	}
 
+	@Override
 	public String getStyleName() {
 		String retValue;
 		retValue = this.base.getStyleName();
 		return retValue;
 	}
 
+	@Override
 	public int getTabIndex() {
 		return this.base.getTabIndex();
 	}
@@ -234,13 +234,15 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		return this.base.getText();
 	}
 
+	@Override
 	public String getTitle() {
 		return this.base.getTitle();
 	}
 
+	@Override
 	public String getValue() {
 		try {
-			return this.base.getText().length() == 0 || provideIsHinted() ? null
+			return this.base.getText().length() == 0 ? null
 					: this.base.getText();
 		} catch (RuntimeException re) {
 			GWT.log("" + this.base, re);
@@ -252,6 +254,7 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		return this.base.getVisibleLines();
 	}
 
+	@Override
 	public boolean isEnabled() {
 		return this.base.isEnabled();
 	}
@@ -260,6 +263,7 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		return this.ensureAllLinesVisible;
 	}
 
+	@Override
 	public boolean isMultiline() {
 		return true;
 	}
@@ -268,22 +272,27 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		return this.base.isReadOnly();
 	}
 
+	@Override
 	public void removeChangeListener(ChangeListener listener) {
 		this.changeListeners.add(listener);
 	}
 
+	@Override
 	public void removeClickListener(ClickListener listener) {
 		this.base.removeClickListener(listener);
 	}
 
+	@Override
 	public void removeFocusListener(FocusListener listener) {
-		this.changeListeners.remove(listener);
+		this.base.removeFocusListener(listener);
 	}
 
+	@Override
 	public void removeKeyboardListener(KeyboardListener listener) {
 		this.base.removeKeyboardListener(listener);
 	}
 
+	@Override
 	public void removeStyleName(String style) {
 		this.base.removeStyleName(style);
 	}
@@ -292,10 +301,12 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		this.base.selectAll();
 	}
 
+	@Override
 	public void setAccessKey(char key) {
 		this.base.setAccessKey(key);
 	}
 
+	@Override
 	public void setAction(Action action) {
 		super.setAction(action);
 	}
@@ -308,6 +319,7 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		this.base.setCursorPos(pos);
 	}
 
+	@Override
 	public void setEnabled(boolean enabled) {
 		this.base.setEnabled(enabled);
 	}
@@ -316,46 +328,25 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		this.ensureAllLinesVisible = ensureAllLinesVisible;
 	}
 
+	@Override
 	public void setFocus(boolean focused) {
 		this.base.setFocus(focused);
 	}
 
+	@Override
 	public void setHeight(String height) {
 		this.base.setHeight(height);
 	}
 
 	public void setHint(String hint) {
-		if (hint != null && (provideIsHinted()
-				|| CommonUtils.isNullOrEmpty(getValue()))) {
-			base.setText(hint);
-			base.addStyleName("hint");
-			keydownHandlerRegistration = base
-					.addKeyDownHandler(new KeyDownHandler() {
-						@Override
-						public void onKeyDown(KeyDownEvent event) {
-							clearHint();
-						}
-					});
-			focusHandlerRegistration = base.addFocusHandler(new FocusHandler() {
-				@Override
-				public void onFocus(FocusEvent event) {
-					Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-						@Override
-						public void execute() {
-							clearHint();
-							base.setCursorPos(0);
-						}
-					});
-				};
-			});
-		}
-		this.hint = hint;
+		this.base.getElement().setPropertyString("placeholder", hint);
 	}
 
 	public void setKey(char key) {
 		this.base.setKey(key);
 	}
 
+	@Override
 	public void setModel(Object model) {
 		super.setModel(model);
 	}
@@ -364,6 +355,7 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		this.base.setName(name);
 	}
 
+	@Override
 	public void setPixelSize(int width, int height) {
 		this.base.setPixelSize(width, height);
 	}
@@ -376,14 +368,17 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		this.base.setSelectionRange(pos, length);
 	}
 
+	@Override
 	public void setSize(String width, String height) {
 		this.base.setSize(width, height);
 	}
 
+	@Override
 	public void setStyleName(String style) {
 		this.base.setStyleName(style);
 	}
 
+	@Override
 	public void setTabIndex(int index) {
 		this.base.setTabIndex(index);
 	}
@@ -396,19 +391,14 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		this.base.setTextAlignment(align);
 	}
 
+	@Override
 	public void setTitle(String title) {
 		this.base.setTitle(title);
 	}
 
+	@Override
 	public void setValue(String value) {
 		setStyleName("empty", CommonUtils.isNullOrEmpty(value));
-		if (provideIsHinted()) {
-			if (CommonUtils.isNullOrEmpty(value)) {
-				return;
-			} else {
-				removeStyleName("hint");
-			}
-		}
 		String old = this.getValue();
 		this.setText(value);
 		if (ensureAllLinesVisible) {
@@ -423,39 +413,24 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 				|| (this.getValue() != null && !this.getValue().equals(old)))) {
 			this.changes.firePropertyChange("value", old, this.getValue());
 		}
-		if (CommonUtils.isNullOrEmpty(value)) {
-			setHint(hint);
-		}
 	}
 
 	public void setVisibleLines(int lines) {
 		this.base.setVisibleLines(lines);
 	}
 
+	@Override
 	public void setWidth(String width) {
 		this.base.setWidth(width);
 	}
 
+	@Override
 	public void sinkEvents(int eventBitsToAdd) {
 		this.base.sinkEvents(eventBitsToAdd);
 	}
 
+	@Override
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
-	}
-
-	private void clearHint() {
-		base.setText(getValue());
-		base.removeStyleName("hint");
-		if (keydownHandlerRegistration != null) {
-			keydownHandlerRegistration.removeHandler();
-			focusHandlerRegistration.removeHandler();
-			keydownHandlerRegistration = null;
-			focusHandlerRegistration = null;
-		}
-	}
-
-	protected boolean provideIsHinted() {
-		return hint != null && hint.equals(this.base.getText());
 	}
 }

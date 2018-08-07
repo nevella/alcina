@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -46,7 +47,6 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 	public abstract Class<E> enumClass();
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
 		Set<E> value = getValue();
@@ -63,6 +63,7 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 		return result;
 	}
 
+	@Override
 	@XmlTransient
 	@JsonIgnore
 	public abstract Set<E> getValue();
@@ -70,11 +71,12 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 	/**
 	 * add property change firing to the subclass implementation, if you care
 	 */
+	@Override
 	public abstract void setValue(Set<E> value);
 
 	@Override
 	public String toString() {
-		return String.valueOf(getValue());
+		return Ax.format("%s: %s", enumClass().getSimpleName(), getValue());
 	}
 
 	public <T extends EnumMultipleCriterion<E>> T withValue(E addEnum) {

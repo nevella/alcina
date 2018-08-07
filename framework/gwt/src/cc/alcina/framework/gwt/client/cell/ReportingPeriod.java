@@ -23,7 +23,7 @@ public enum ReportingPeriod {
 			CalendarUtil.addMonthsToDate(end, 1);
 			break;
 		case QUARTER:
-			start.setMonth(start.getMonth() % 3);
+			start.setMonth((start.getMonth() / 3) * 3);
 			end = new Date(start.getTime());
 			CalendarUtil.addMonthsToDate(end, 3);
 			break;

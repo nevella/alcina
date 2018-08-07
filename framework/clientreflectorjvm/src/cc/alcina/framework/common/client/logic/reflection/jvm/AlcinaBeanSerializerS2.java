@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.util;
+package cc.alcina.framework.common.client.logic.reflection.jvm;
 
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
@@ -39,7 +39,7 @@ import cc.alcina.framework.entity.SEUtilities;
 
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = 15)
 @ClientInstantiable
-public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
+public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 	private static boolean useContextClassloader;
 
 	public static boolean isUseContextClassloader() {
@@ -47,7 +47,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 	}
 
 	public static void setUseContextClassloader(boolean useContextClassloader) {
-		AlcinaBeanSerializerS.useContextClassloader = useContextClassloader;
+		AlcinaBeanSerializerS2.useContextClassloader = useContextClassloader;
 	}
 
 	private ClassLoader cl;
@@ -56,7 +56,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 
 	IdentityHashMap seen = new IdentityHashMap();
 
-	public AlcinaBeanSerializerS() {
+	public AlcinaBeanSerializerS2() {
 		propertyFieldName = PROPERTIES;
 	}
 
@@ -66,7 +66,10 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 			JSONObject obj = new JSONObject(jsonString);
 			if (GWT.isClient() && !useContextClassloader) {
 				// devmode
-				cl = getClass().getClassLoader().getParent();
+				cl = getClass().getClassLoader();
+				if (cl.getParent() != null) {
+					cl = cl.getParent();
+				}
 			} else {
 				cl = Thread.currentThread().getContextClassLoader();
 			}
@@ -76,7 +79,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		}
 	}
 
-	public AlcinaBeanSerializerS pretty() {
+	public AlcinaBeanSerializerS2 pretty() {
 		this.pretty = true;
 		return this;
 	}

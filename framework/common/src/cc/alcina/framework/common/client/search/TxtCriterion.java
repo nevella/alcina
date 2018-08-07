@@ -45,7 +45,6 @@ public class TxtCriterion extends SearchCriterion implements HasValue<String> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
 		if (CommonUtils.isNullOrEmpty(text)) {
@@ -78,6 +77,7 @@ public class TxtCriterion extends SearchCriterion implements HasValue<String> {
 		return txtCriterionType;
 	}
 
+	@Override
 	@XmlTransient
 	@AlcinaTransient
 	public String getValue() {
@@ -94,6 +94,7 @@ public class TxtCriterion extends SearchCriterion implements HasValue<String> {
 		this.txtCriterionType = txtCriterionType;
 	}
 
+	@Override
 	public void setValue(String text) {
 		setText(text);
 	}
@@ -104,6 +105,11 @@ public class TxtCriterion extends SearchCriterion implements HasValue<String> {
 		return string.length() == 0 ? ""
 				: Ax.isBlank(getDisplayName()) ? Ax.format("\"%s\"", string)
 						: getDisplayName() + ": " + string;
+	}
+
+	public TxtCriterion withText(String text) {
+		setText(text);
+		return this;
 	}
 
 	@ClientInstantiable

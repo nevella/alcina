@@ -315,6 +315,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		selectableNavigation.setWrappedEnterListener(new ClickHandler() {
 			// the listeners aren't registered on every source...pretty sure
 			// this is logical...
+			@Override
 			public void onClick(ClickEvent event) {
 				HasClickHandlers sender = (HasClickHandlers) event.getSource();
 				if (enterHandler != null) {
@@ -337,6 +338,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		}
 		groupCaptions = new ArrayList<Label>();
 		popdownHider = new ClickHandler() {
+			@Override
 			public void onClick(ClickEvent event) {
 				maybeClosePopdown(event);
 			}
@@ -367,11 +369,13 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		if (popdown) {
 			filter.getTextBox().addFocusHandler(this);
 			filter.getTextBox().addClickHandler(new ClickHandler() {
+				@Override
 				public void onClick(ClickEvent event) {
 					checkShowPopup();
 				}
 			});
 			filter.getTextBox().addKeyUpHandler(new KeyUpHandler() {
+				@Override
 				public void onKeyUp(KeyUpEvent event) {
 					if (Event.getCurrentEvent()
 							.getKeyCode() == KeyCodes.KEY_ESCAPE) {
@@ -408,6 +412,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return holder;
 	}
 
+	@Override
 	public boolean filter(String filterText) {
 		selectableNavigation.clear();
 		if (filterText == null) {
@@ -482,6 +487,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return this.keys;
 	}
 
+	@Override
 	public LayoutInfo getLayoutInfo() {
 		return new LayoutInfo() {
 			@Override
@@ -616,6 +622,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		}
 	}
 
+	@Override
 	public void onFocus(FocusEvent event) {
 		Widget sender = (Widget) event.getSource();
 		if (sender == filter.getTextBox()) {
@@ -861,7 +868,8 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		if (itemHolder.getOffsetHeight() + border > panelForPopup
 				.getOffsetHeight() && !isAutoHolderHeight()) {
 			int hhInt = holderHeight != null && holderHeight.endsWith("px")
-					? Integer.parseInt(holderHeight.replace("px", "")) : 0;
+					? Integer.parseInt(holderHeight.replace("px", ""))
+					: 0;
 			scroller.setHeight(
 					Math.max(hhInt, panelForPopup.getOffsetHeight() - border)
 							+ "px");
@@ -910,6 +918,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		cellList.setSelectionModel(selectionModel);
 		selectionModel
 				.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+					@Override
 					public void onSelectionChange(SelectionChangeEvent event) {
 						itemSelected(selectionModel.getSelectedObject());
 					}
@@ -1083,7 +1092,8 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			for (T item : itemMap.get(c)) {
 				emptyItems = false;
 				String sep = (--ctr != 0 && separatorText.length() != 1)
-						? separatorText : "";
+						? separatorText
+						: "";
 				HasClickHandlers hch = createItem(item, false, charWidth,
 						itemsHaveLinefeeds, l, sep);
 				hch.addClickHandler(clickHandler);
@@ -1115,6 +1125,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			implements KeyDownHandler {
 		private boolean hintShown = false;
 
+		@Override
 		public void onKeyDown(KeyDownEvent event) {
 			hintShown = true;
 			hintWidget.setVisible(false);
@@ -1162,13 +1173,14 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			// if (text.length() < charWidth) {
 			// this is just too hacky - use mouseover highlight to differentiate
 			// instead
-			setHTML("<span style='white-space:nowrap'>" + text + "</span> ");
+			setHTML("<span style='white-space:nowrap'>" + text + "</span>");
 			// } else {
 			// setHTML("<br />" + text + "<br />");
 			// }
 			setStyleName("chooser-item");
 		}
 
+		@Override
 		public boolean filter(String filterText) {
 			boolean b = filterableText.contains(filterText)
 					&& !selectedItems.contains(item);
@@ -1179,6 +1191,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			return b;
 		}
 
+		@Override
 		public T getItem() {
 			return item;
 		}
@@ -1207,6 +1220,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			setStyleName("chooser-item");
 		}
 
+		@Override
 		public boolean filter(String filterText) {
 			boolean b = filter.allow(item, filterableText, filterText)
 					&& (!selectedItems.contains(item)
@@ -1218,6 +1232,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			return b;
 		}
 
+		@Override
 		public T getItem() {
 			return item;
 		}
@@ -1257,6 +1272,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			return hl.addClickHandler(handler);
 		}
 
+		@Override
 		public boolean filter(String filterText) {
 			boolean b = filterableText.contains(filterText)
 					&& !selectedItems.contains(item);
@@ -1267,6 +1283,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			return b;
 		}
 
+		@Override
 		public T getItem() {
 			return item;
 		}
@@ -1302,6 +1319,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			return this.wrappedEnterListener;
 		}
 
+		@Override
 		public void onKeyDown(KeyDownEvent event) {
 			int keyCode = event.getNativeKeyCode();
 			if (keyCode == KeyCodes.KEY_UP || keyCode == KeyCodes.KEY_DOWN) {
@@ -1309,6 +1327,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			}
 		}
 
+		@Override
 		public void onKeyUp(KeyUpEvent event) {
 			Widget sender = (Widget) event.getSource();
 			if (event.getNativeEvent() == null) {

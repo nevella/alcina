@@ -14,6 +14,8 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 public class Ax {
 	public static AxStreams streams = new AxStreams();
 
+	private static boolean test;
+
 	public static String blankTo(String string, String defaultValue) {
 		return isBlank(string) ? defaultValue : string;
 	}
@@ -31,12 +33,21 @@ public class Ax {
 		return date == null ? null : new Date(date.getTime());
 	}
 
+	public static String commaJoin(Collection collection) {
+		return (String) collection.stream().map(Object::toString)
+				.collect(Collectors.joining(", "));
+	}
+
 	public static String dateSlash(Date date) {
 		return CommonUtils.formatDate(date, DateStyle.AU_DATE_SLASH);
 	}
 
 	public static String dateTimeSlash(Date date) {
 		return CommonUtils.formatDate(date, DateStyle.AU_DATE_TIME);
+	}
+
+	public static void err(Object object) {
+		System.err.println(object);
 	}
 
 	public static void err(String template, Object... args) {
@@ -58,6 +69,10 @@ public class Ax {
 
 	public static boolean isBlank(String string) {
 		return CommonUtils.isNullOrEmpty(string);
+	}
+
+	public static boolean isTest() {
+		return test;
 	}
 
 	public static <T> T last(List<T> list) {
@@ -92,8 +107,16 @@ public class Ax {
 		throw new RuntimeException(format(template, args));
 	}
 
+	public static void setTest(boolean test) {
+		Ax.test = test;
+	}
+
 	public static void sysLogHigh(String template, Object... args) {
 		System.out.println(CommonUtils.highlightForLog(template, args));
+	}
+
+	public static double twoPlaces(double d) {
+		return CommonUtils.roundNumeric(d, 2);
 	}
 
 	public static class AxStreams {
@@ -103,24 +126,5 @@ public class Ax {
 				return t;
 			};
 		}
-	}
-
-	private static boolean test;
-
-	public static boolean isTest() {
-		return test;
-	}
-
-	public static void setTest(boolean test) {
-		Ax.test = test;
-	}
-
-	public static void err(Object object) {
-		System.err.println(object);
-	}
-
-	public static String commaJoin(Collection collection) {
-		return (String) collection.stream().map(Object::toString)
-				.collect(Collectors.joining(", "));
 	}
 }

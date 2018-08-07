@@ -19,12 +19,12 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 * error: "Permission denied to access property 'nodeType'"
 	 */
 	public static native boolean is(JavaScriptObject o) /*-{
-														try {
-														return (!!o) && (!!o.nodeType);
-														} catch (e) {
-														return false;
-														}
-														}-*/;
+    try {
+      return (!!o) && (!!o.nodeType);
+    } catch (e) {
+      return false;
+    }
+	}-*/;
 
 	static <N extends Node> N nodeFor(JavaScriptObject o) {
 		return LocalDom.nodeFor(o);
@@ -44,8 +44,8 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 
 	@Override
 	public final native void callMethod(String methodName) /*-{
-															this[methodName]();
-															}-*/;
+    this[methodName]();
+	}-*/;
 
 	@Override
 	public final Node cloneNode(boolean deep) {
@@ -81,8 +81,8 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 * null.
 	 */
 	public final native NodeRemote getFirstChild0() /*-{
-													return this.firstChild;
-													}-*/;
+    return this.firstChild;
+	}-*/;
 
 	@Override
 	public final Node getLastChild() {
@@ -99,16 +99,16 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 */
 	@Override
 	public final native String getNodeName() /*-{
-												return this.nodeName;
-												}-*/;
+    return this.nodeName;
+	}-*/;
 
 	/**
 	 * A code representing the type of the underlying object, as defined above.
 	 */
 	@Override
 	public final native short getNodeType() /*-{
-											return this.nodeType;
-											}-*/;
+    return this.nodeType;
+	}-*/;
 
 	/**
 	 * The value of this node, depending on its type; see the table above. When
@@ -116,8 +116,8 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 */
 	@Override
 	public final native String getNodeValue() /*-{
-												return this.nodeValue;
-												}-*/;
+    return this.nodeValue;
+	}-*/;
 
 	@Override
 	public final Document getOwnerDocument() {
@@ -129,13 +129,14 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 		return nodeFor(getParentElement0(this));
 	}
 
-	public final native ElementRemote getParentElement0(NodeRemote node) /*-{
-																			var parent = node.parentNode;
-																			if (!parent || parent.nodeType != 1) {
-																			parent = null;
-																			}
-																			return parent;
-																			}-*/;
+	public final native ElementRemote
+			getParentElement0(NodeRemote node) /*-{
+    var parent = node.parentNode;
+    if (!parent || parent.nodeType != 1) {
+      parent = null;
+    }
+    return parent;
+	}-*/;
 
 	@Override
 	public final Node getParentNode() {
@@ -148,8 +149,8 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 * or if it has been removed from the tree, this is null.
 	 */
 	public final native NodeRemote getParentNode0() /*-{
-													return this.parentNode;
-													}-*/;
+    return this.parentNode;
+	}-*/;
 
 	@Override
 	public final Node getPreviousSibling() {
@@ -161,8 +162,8 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 */
 	@Override
 	public final native boolean hasChildNodes() /*-{
-												return this.hasChildNodes();
-												}-*/;
+    return this.hasChildNodes();
+	}-*/;
 
 	@Override
 	public final boolean hasParentElement() {
@@ -171,16 +172,16 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 
 	@Override
 	public final native int indexInParentChildren() /*-{
-													var idx = 0;
-													var size = this.parentNode.childNodes.length;
-													for (; idx < size; idx++) {
-													var node = this.parentNode.childNodes.item(idx);
-													if (node == this) {
-													return idx;
-													}
-													}
-													return -1;
-													}-*/;
+    var idx = 0;
+    var size = this.parentNode.childNodes.length;
+    for (; idx < size; idx++) {
+      var node = this.parentNode.childNodes.item(idx);
+      if (node == this) {
+        return idx;
+      }
+    }
+    return -1;
+	}-*/;
 
 	@Override
 	public final Node insertAfter(Node newChild, Node refChild) {
@@ -215,6 +216,7 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 		return DOMImpl.impl.isOrHasChild(nodeFor(), child);
 	}
 
+	@Override
 	public final Node nodeFor() {
 		return LocalDom.nodeFor(this);
 	}
@@ -257,8 +259,8 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 */
 	@Override
 	public final native void setNodeValue(String nodeValue) /*-{
-															this.nodeValue = nodeValue;
-															}-*/;
+    this.nodeValue = nodeValue;
+	}-*/;
 
 	/**
 	 * Adds the node newChild to the end of the list of children of this node.
@@ -269,62 +271,39 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 * @return The node added
 	 */
 	private final native NodeRemote appendChild0(NodeRemote newChild) /*-{
-																		return this.appendChild(newChild);
-																		}-*/;
-
-	/**
-	 * Returns a duplicate of this node, i.e., serves as a generic copy
-	 * constructor for nodes. The duplicate node has no parent; (parentNode is
-	 * null.).
-	 * 
-	 * Cloning an Element copies all attributes and their values, including
-	 * those generated by the XML processor to represent defaulted attributes,
-	 * but this method does not copy any text it contains unless it is a deep
-	 * clone, since the text is contained in a child Text node. Cloning an
-	 * Attribute directly, as opposed to be cloned as part of an Element cloning
-	 * operation, returns a specified attribute (specified is true). Cloning any
-	 * other type of node simply returns a copy of this node.
-	 * 
-	 * @param deep
-	 *            If true, recursively clone the subtree under the specified
-	 *            node; if false, clone only the node itself (and its
-	 *            attributes, if it is an {@link Element})
-	 * @return The duplicate node
-	 */
-	private final native NodeRemote cloneNode0(boolean deep) /*-{
-																return this.cloneNode(deep);
-																}-*/;
+    return this.appendChild(newChild);
+	}-*/;
 
 	/**
 	 * The last child of this node. If there is no such node, this returns null.
 	 */
 	private final native NodeRemote getLastChild0() /*-{
-													return this.lastChild;
-													}-*/;
+    return this.lastChild;
+	}-*/;
 
 	/**
 	 * The node immediately following this node. If there is no such node, this
 	 * returns null.
 	 */
 	private final native NodeRemote getNextSibling0() /*-{
-														return this.nextSibling;
-														}-*/;
+    return this.nextSibling;
+	}-*/;
 
 	/**
 	 * The Document object associated with this node. This is also the
 	 * {@link Document} object used to create new nodes.
 	 */
 	private final native DocumentRemote getOwnerDocument0() /*-{
-															return this.ownerDocument;
-															}-*/;
+    return this.ownerDocument;
+	}-*/;
 
 	/**
 	 * The node immediately preceding this node. If there is no such node, this
 	 * returns null.
 	 */
 	private final native NodeRemote getPreviousSibling0() /*-{
-															return this.previousSibling;
-															}-*/;
+    return this.previousSibling;
+	}-*/;
 
 	/**
 	 * Removes the child node indicated by oldChild from the list of children,
@@ -335,8 +314,8 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 * @return The node removed
 	 */
 	private final native NodeRemote removeChild0(NodeRemote oldChild) /*-{
-																		return this.removeChild(oldChild);
-																		}-*/;
+    return this.removeChild(oldChild);
+	}-*/;
 
 	/**
 	 * Replaces the child node oldChild with newChild in the list of children,
@@ -350,8 +329,8 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 */
 	private final native NodeRemote replaceChild0(NodeRemote newChild,
 			NodeRemote oldChild) /*-{
-									return this.replaceChild(newChild, oldChild);
-									}-*/;
+    return this.replaceChild(newChild, oldChild);
+	}-*/;
 
 	/**
 	 * Link remote to [remote or local]
@@ -372,9 +351,32 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 		}
 	}
 
+	/**
+	 * Returns a duplicate of this node, i.e., serves as a generic copy
+	 * constructor for nodes. The duplicate node has no parent; (parentNode is
+	 * null.).
+	 * 
+	 * Cloning an Element copies all attributes and their values, including
+	 * those generated by the XML processor to represent defaulted attributes,
+	 * but this method does not copy any text it contains unless it is a deep
+	 * clone, since the text is contained in a child Text node. Cloning an
+	 * Attribute directly, as opposed to be cloned as part of an Element cloning
+	 * operation, returns a specified attribute (specified is true). Cloning any
+	 * other type of node simply returns a copy of this node.
+	 * 
+	 * @param deep
+	 *            If true, recursively clone the subtree under the specified
+	 *            node; if false, clone only the node itself (and its
+	 *            attributes, if it is an {@link Element})
+	 * @return The duplicate node
+	 */
+	final native NodeRemote cloneNode0(boolean deep) /*-{
+    return this.cloneNode(deep);
+	}-*/;
+
 	final native NodeListRemote<Node> getChildNodes0() /*-{
-														return this.childNodes;
-														}-*/;
+    return this.childNodes;
+	}-*/;
 
 	/**
 	 * Inserts the node newChild before the existing child node refChild. If
@@ -390,8 +392,8 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 */
 	final native NodeRemote insertBefore0(NodeRemote newChild,
 			NodeRemote refChild) /*-{
-									return this.insertBefore(newChild, refChild);
-									}-*/;
+    return this.insertBefore(newChild, refChild);
+	}-*/;
 
 	final boolean provideIsElement() {
 		return getNodeType() == Node.ELEMENT_NODE;

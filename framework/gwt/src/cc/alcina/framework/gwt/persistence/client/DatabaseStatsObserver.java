@@ -141,7 +141,7 @@ public class DatabaseStatsObserver {
 	}
 
 	protected void persistMax() {
-		String ser = new AlcinaBeanSerializerC().serialize(max);
+		String ser = Registry.impl(AlcinaBeanSerializer.class).serialize(max);
 		KeyValueStore.get().put(SERIALIZED_MAX_KEY, ser, persistedCallback);
 	}
 }

@@ -132,7 +132,7 @@ public class Consort<D> {
 		}
 	}
 
-	public <T extends Player<D>> T addPlayer(T player) {
+	public <T extends Player> T addPlayer(T player) {
 		player.setConsort(this);
 		players.addLast(player);
 		return player;

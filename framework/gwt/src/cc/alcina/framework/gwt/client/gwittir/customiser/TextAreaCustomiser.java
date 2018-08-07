@@ -19,6 +19,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gwittir.widget.MultilineLabel;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextArea;
 
@@ -38,6 +39,7 @@ public class TextAreaCustomiser implements Customiser {
 
 	public static final String ENSURE_ALL_LINES_VISIBLE = "ENSURE_ALL_LINES_VISIBLE";
 
+	@Override
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		NamedParameter param = NamedParameter.Support
@@ -78,6 +80,7 @@ public class TextAreaCustomiser implements Customiser {
 			this.ensureAllLinesVisible = ensureAllLinesVisible;
 		}
 
+		@Override
 		public BoundWidget get() {
 			if (neal && !editable) {
 				MultilineLabel l = new MultilineLabel();
@@ -89,7 +92,9 @@ public class TextAreaCustomiser implements Customiser {
 			TextArea area = new TextArea();
 			area.setVisibleLines(lines);
 			area.setReadOnly(!editable);
-			area.setHint(hint);
+			if (Ax.notBlank(hint)) {
+				area.setHint(hint);
+			}
 			if (width != 0) {
 				area.setWidth(width + "px");
 			}

@@ -32,7 +32,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
-@SuppressWarnings("unchecked")
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE)
 @ClientInstantiable
 public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
@@ -44,11 +43,13 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		propertyFieldName = PROPERTIES;
 	}
 
+	@Override
 	public <T> T deserialize(String jsonString) {
 		JSONObject obj = (JSONObject) JSONParser.parseStrict(jsonString);
 		return (T) deserializeObject(obj);
 	}
 
+	@Override
 	public String serialize(Object bean) {
 		return serializeObject(bean).toString();
 	}
@@ -132,7 +133,8 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		if (customSerializer != null) {
 			return customSerializer.fromJson(jsonObj);
 		}
-		JSONObject props = (JSONObject) jsonObj.get(propertyFieldName);
+		JSONObject props = (JSONObject) jsonObj
+				.get(getPropertyFieldName(jsonObj));
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
 			return deserializeField(jsonObj.get(LITERAL), clazz);
 		}
@@ -161,6 +163,11 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		} else {
 			return deserializeObject((JSONObject) jv);
 		}
+	}
+
+	private String getPropertyFieldName(JSONObject jsonObj) {
+		return jsonObj.containsKey(PROPERTIES_SHORT) ? PROPERTIES_SHORT
+				: PROPERTIES;
 	}
 
 	/**

@@ -108,8 +108,10 @@ public class GroupedResult implements Serializable {
 
 		public GroupKey key;
 
-		@GwtTransient
 		public String color;
+
+		@GwtTransient
+		public boolean numeric;
 
 		public Col() {
 		}
@@ -126,6 +128,11 @@ public class GroupedResult implements Serializable {
 
 		public Col withName(String name) {
 			this.name = name;
+			return this;
+		}
+
+		public Col withNumeric(boolean numeric) {
+			this.numeric = numeric;
 			return this;
 		}
 

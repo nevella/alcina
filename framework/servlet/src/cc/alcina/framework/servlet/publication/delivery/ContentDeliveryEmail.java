@@ -2,8 +2,11 @@ package cc.alcina.framework.servlet.publication.delivery;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -15,9 +18,12 @@ import javax.activation.DataSource;
 import javax.activation.FileDataSource;
 import javax.mail.BodyPart;
 import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.mail.Multipart;
+import javax.mail.NoSuchProviderException;
 import javax.mail.Session;
 import javax.mail.Transport;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
@@ -58,6 +64,9 @@ public class ContentDeliveryEmail implements ContentDelivery {
 	public static final String CONTEXT_OVERRIDE_TO_ADDRESS = ContentDeliveryEmail.class
 			.getName() + ".CONTEXT_OVERRIDE_TO_ADDRESS";
 
+	public static final String CONTEXT_ALSO_SEND_TO_ADDRESS = ContentDeliveryEmail.class
+			.getName() + ".CONTEXT_ALSO_SEND_TO_ADDRESS";
+
 	public static final String CONTEXT_SMTP_FROM_EMAIL = ContentDeliveryEmail.class
 			.getName() + ".CONTEXT_SMTP_FROM_EMAIL";
 
@@ -70,6 +79,41 @@ public class ContentDeliveryEmail implements ContentDelivery {
 	public String deliver(final InputStream convertedContent,
 			final DeliveryModel deliveryModel, final FormatConverter hfc,
 			boolean requestorPass) throws Exception {
+		byte[] msgBytes = ResourceUtilities
+				.readStreamToByteArray(convertedContent);
+		send(new ByteArrayInputStream(msgBytes), deliveryModel, hfc,
+				requestorPass, deliveryModel.getEmailAddress());
+		if (LooseContext.has(CONTEXT_ALSO_SEND_TO_ADDRESS)) {
+			send(new ByteArrayInputStream(msgBytes), deliveryModel, hfc,
+					requestorPass,
+					LooseContext.get(CONTEXT_ALSO_SEND_TO_ADDRESS));
+		}
+		return "OK";
+	}
+
+	@Override
+	public String deliver(PublicationContext ctx,
+			final InputStream convertedContent,
+			final DeliveryModel deliveryModel, final FormatConverter hfc)
+			throws Exception {
+		byte[] msgBytes = ResourceUtilities
+				.readStreamToByteArray(convertedContent);
+		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, false);
+		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, true);
+		return "OK";
+	}
+
+	protected boolean isUseVerp() {
+		return false;
+	}
+
+	protected String send(final InputStream convertedContent,
+			final DeliveryModel deliveryModel, final FormatConverter hfc,
+			boolean requestorPass, String emailAddress)
+			throws MessagingException, UnsupportedEncodingException,
+			InstantiationException, IllegalAccessException,
+			ClassNotFoundException, AddressException, Exception, IOException,
+			FileNotFoundException, NoSuchProviderException {
 		boolean debug = false;
 		Properties props = new Properties();
 		Class c = ContentDeliveryEmail.class;
@@ -103,8 +147,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		msg.setSentDate(new Date());
 		msg.setFrom(new InternetAddress(fromAddress, fromName));
 		List<InternetAddress> addresses = new ArrayList<InternetAddress>();
-		String[] emailAddresses = deliveryModel.getEmailAddress()
-				.split("(;|,| )+");
+		String[] emailAddresses = emailAddress.split("(;|,| )+");
 		String filterClassName = ResourceUtilities
 				.getBundledString(AddressFilter.class, "smtp.filter.className");
 		String systemEmailAddressOfRequestor = deliveryModel
@@ -147,7 +190,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		msg.setSubject(
 				requestorPass ? deliveryModel.getEmailSubjectForRequestor()
 						: deliveryModel.getEmailSubject());
-		MailAttachment pdfAttachment =null;
+		MailAttachment pdfAttachment = null;
 		if (deliveryModel.isEmailInline()) {
 			if (deliveryModel.hasProperty(PROP_ATTACH_EMAIL_BODY_AS_PDF)) {
 				FormatConverter converter = Registry.impl(FormatConverter.class,
@@ -155,7 +198,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				InputStream stream = converter.convert(PublicationContext.get(),
 						PublicationContext.get().formatConversionModel);
 				String uuid = UUID.randomUUID().toString();
-				 pdfAttachment = new MailAttachment();
+				pdfAttachment = new MailAttachment();
 				pdfAttachment.uid = uuid;
 				pdfAttachment.contentType = "application/pdf";
 				pdfAttachment.requestBytes = ResourceUtilities
@@ -250,24 +293,9 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		transport.sendMessage(msg, msg.getAllRecipients());
 		PublicationContext.get().mimeMessageId = msg.getMessageID();
 		transport.close();
-		if(pdfAttachment!=null){
+		if (pdfAttachment != null) {
 			deliveryModel.removeAttachment(pdfAttachment);
 		}
 		return "OK";
-	}
-
-	public String deliver(PublicationContext ctx,
-			final InputStream convertedContent,
-			final DeliveryModel deliveryModel, final FormatConverter hfc)
-			throws Exception {
-		byte[] msgBytes = ResourceUtilities
-				.readStreamToByteArray(convertedContent);
-		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, false);
-		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, true);
-		return "OK";
-	}
-
-	protected boolean isUseVerp() {
-		return false;
 	}
 }

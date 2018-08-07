@@ -44,7 +44,7 @@ public class ColumnsBuilderRows {
 				.getMappings();
 		mappings.stream()
 				.map(cm -> new Col().withName(cm.getName())
-						.withStyle(cm.getStyle())
+						.withStyle(cm.getStyle()).withNumeric(cm.isNumeric())
 						.withWidth(cm.getWidth(), cm.getUnit()))
 				.forEach(groupedResult.getCols()::add);
 		List<V> list = rowModels.collect(Collectors.toList());

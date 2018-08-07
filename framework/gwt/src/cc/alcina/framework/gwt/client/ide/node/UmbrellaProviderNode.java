@@ -46,14 +46,16 @@ public class UmbrellaProviderNode extends ContainerNode
 		this.provider = provider;
 		setCollectionProvider(provider);
 		title = title == null ? provider.getTitle() : title;
-		setTitle(title);
+		this.title = title;
 		dummy();
 	}
 
+	@Override
 	public void collectionModification(CollectionModificationEvent evt) {
 		this.support.collectionModification(evt);
 	}
 
+	@Override
 	public boolean filter(String filterText, boolean enforceVisible) {
 		boolean top = getParentItem() == null;
 		if (filterText.length() < provider.getMinFilterableLength()) {
@@ -101,10 +103,12 @@ public class UmbrellaProviderNode extends ContainerNode
 		return this.support.getListenedClass();
 	}
 
+	@Override
 	public PropertyCollectionProvider getPropertyCollectionProvider() {
 		return this.support.getPropertyCollectionProvider();
 	}
 
+	@Override
 	public Object getUserObject() {
 		return this.support.getUserObject();
 	}
@@ -134,11 +138,13 @@ public class UmbrellaProviderNode extends ContainerNode
 		this.support.refreshChildren(false);
 	}
 
+	@Override
 	public void removeItem(TreeItem item) {
 		super.removeItem(item);
 		support.removeItem(item);
 	}
 
+	@Override
 	public void setCollectionProvider(CollectionProvider collectionProvider) {
 		support = new CollectionRenderingSupport(this);
 		support.setLazyRefresh(true);
@@ -174,6 +180,7 @@ public class UmbrellaProviderNode extends ContainerNode
 		}
 	}
 
+	@Override
 	protected String imageItemHTML(AbstractImagePrototype imageProto,
 			String title) {
 		return imageProto.getHTML() + " " + title;
