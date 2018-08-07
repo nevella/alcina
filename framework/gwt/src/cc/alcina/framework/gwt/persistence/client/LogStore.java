@@ -276,7 +276,9 @@ public class LogStore {
 		try {
 			log0(topic, message);
 		} catch (Exception e) {
-			e.printStackTrace();
+			if (!GWT.isScript()) {
+				e.printStackTrace();
+			}
 		}
 	}
 

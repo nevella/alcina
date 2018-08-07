@@ -127,7 +127,8 @@ public class LocalDom {
 	}
 
 	public static void syncToRemote(Element element) {
-		get().parseAndMarkResolved(element.typedRemote(), element);
+		get().parseAndMarkResolved(element.typedRemote(),
+				element.typedRemote().getOuterHtml(), element);
 	}
 
 	public static TopicSupport<Exception> topicException() {
@@ -509,7 +510,8 @@ public class LocalDom {
 		boolean hadNode = hasNodeRemote != null;
 		if (hasNodeRemote == null) {
 			ElementRemote root = remoteIndex.root();
-			Element hasNode = parseAndMarkResolved(root, null);
+			Element hasNode = parseAndMarkResolved(root, root.getOuterHtml(),
+					null);
 			linkRemote(root, hasNode);
 			hasNode.putRemote(root, true);
 			hasNodeRemote = root;
@@ -545,9 +547,9 @@ public class LocalDom {
 		return (T) remoteLookup.get(remote);
 	}
 
-	private Element parseAndMarkResolved(ElementRemote root,
+	private Element parseAndMarkResolved(ElementRemote root, String outerHtml,
 			Element replaceContents) {
-		Element parsed = new HtmlParser().parse(root, replaceContents,
+		Element parsed = new HtmlParser().parse(outerHtml, replaceContents,
 				root == Document.get().typedRemote().getDocumentElement0());
 		wasResolved0(parsed);
 		return parsed;
@@ -595,10 +597,16 @@ public class LocalDom {
 				int localIndex = cursor.getParentElement()
 						.getChildIndexLocal(cursor);
 				cursor.local().clearChildrenAndAttributes0();
-				parseAndMarkResolved(remoteCursor, cursor);
+				parseAndMarkResolved(remoteCursor, remoteCursor.getOuterHtml(),
+						cursor);
 				if (cursor.getChildCount() != size) {
-					sizesMatch = false;
-					break;
+					cursor.local().clearChildrenAndAttributes0();
+					String buildOuterHtml = remoteCursor.buildOuterHtml();
+					parseAndMarkResolved(remoteCursor, buildOuterHtml, cursor);
+					if (cursor.getChildCount() != size) {
+						sizesMatch = false;
+						break;
+					}
 				}
 			}
 			int nodeIndex = indicies.get(idx);

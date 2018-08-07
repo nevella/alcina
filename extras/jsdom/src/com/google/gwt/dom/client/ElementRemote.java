@@ -832,6 +832,83 @@ public class ElementRemote extends NodeRemote implements DomElement {
     this.appendChild(newChild);
 	}-*/;
 
+	final native String buildOuterHtml()/*-{
+
+    function escapeHtml(str, buffer) {
+      var node = document.createTextNode(str);
+      buffer.div.appendChild(node);
+      var result = buffer.div.innerHTML;
+      buffer.div.removeChild(node);
+      return result;
+    }
+    function addNodeToBuiltHtml(node, buffer, depth) {
+      var buf = buffer.buf;
+      //fixme - test
+      switch (node.nodeType) {
+      //TEXT_NODE
+      case 3:
+        buf += escapeHtml(node.data, buffer);
+        break;
+      //PROCESSING_INSTRUCTION_NODE
+      case 7:
+        buf += '<?';
+        buf += node.name;
+        buf += ' ';
+        buf += escapeHtml(node.data, buffer);
+        buf += '?>';
+        //COMMENT_NODE
+      case 8:
+        buf += '<!--';
+        buf += escapeHtml(node.data, buffer);
+        buf += '-->';
+        break;
+      //ELEMENT_NODE
+      case 1:
+        buf += '<';
+        buf += node.tagName;
+        if (node.attributes.length > 0) {
+          for (var idx = 0; idx < node.attributes.length; idx++) {
+            buf += ' ';
+            buf += node.attributes[idx].name;
+            buf += '="';
+            buf += escapeHtml(node.attributes[idx].value, buffer);
+            buf += '"';
+          }
+        }
+        buf += '>';
+        var idx = 0;
+        var size = node.childNodes.length;
+        buffer.buf = buf;
+        for (; idx < size; idx++) {
+          var child = node.childNodes.item(idx);
+          addNodeToBuiltHtml(child, buffer, depth + 1);
+        }
+        buf = buffer.buf;
+        var re = /area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr/i;
+        if (node.tagName.match(re)) {
+
+        } else {
+          buf += '</';
+          buf += node.tagName;
+          buf += '>';
+        }
+
+        break;
+      default:
+        throw "node not handled:" + node;
+      }
+      buffer.buf = buf;
+
+    }
+    var buffer = {
+      buf : '',
+      div : $doc.createElement('div')
+    }
+    debugger;
+    addNodeToBuiltHtml(this, buffer, 0);
+    return buffer.buf;
+	}-*/;
+
 	final native String getInnerHTML0()/*-{
     return this.innerHTML;
 	}-*/;
