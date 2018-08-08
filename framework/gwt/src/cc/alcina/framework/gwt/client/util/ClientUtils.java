@@ -181,18 +181,18 @@ public class ClientUtils {
 	}
 
 	public static native void invokeJsDebugger() /*-{
-        debugger;
+    debugger;
 	}-*/;
 
 	public static native void invokeJsDebugger(Element e) /*-{
-        var v = e;
-        var jso = e.@com.google.gwt.dom.client.Element::typedRemote()();
-        debugger;
+    var v = e;
+    var jso = e.@com.google.gwt.dom.client.Element::typedRemote()();
+    debugger;
 	}-*/;
 
 	public static native void invokeJsDebugger(JavaScriptObject jso) /*-{
-        debugger;
-        var v = jso;
+    debugger;
+    var v = jso;
 	}-*/;
 
 	public static <T extends JavaScriptObject> List<T>
@@ -205,17 +205,17 @@ public class ClientUtils {
 	}
 
 	public static native JavaScriptObject jsonParse(String json) /*-{
-        var dateTimeReviver = function(key, value) {
-            var a;
-            if (typeof value === 'string') {
-                a = /__JsDate\((\d*)\)/.exec(value);
-                if (a) {
-                    return new Date(+a[1]);
-                }
-            }
-            return value;
+    var dateTimeReviver = function(key, value) {
+      var a;
+      if (typeof value === 'string') {
+        a = /__JsDate\((\d*)\)/.exec(value);
+        if (a) {
+          return new Date(+a[1]);
         }
-        return JSON.parse(json, dateTimeReviver);
+      }
+      return value;
+    }
+    return JSON.parse(json, dateTimeReviver);
 	}-*/;
 
 	public static List<String>
@@ -269,18 +269,34 @@ public class ClientUtils {
 		// do nothing if we've moved on
 	}
 
+	public static void runWithDelay(Runnable runnable, int delayMillis) {
+		new Timer() {
+			@Override
+			public void run() {
+				runnable.run();
+			}
+		}.schedule(delayMillis);
+	}
+
 	public static native boolean setCssTextViaCssTextProperty(Element elem,
 			String css) /*-{
-        var styleTag = elem.@com.google.gwt.dom.client.Element::typedRemote()();
-        var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
+    var styleTag = elem.@com.google.gwt.dom.client.Element::typedRemote()();
+    var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
 
-        if ('cssText' in sheet) { // Internet Explorer
-            sheet.cssText = css;
-            return true;
-        }
-
-        return false;//do innerText
+    if ('cssText' in sheet) { // Internet Explorer
+      sheet.cssText = css;
+      return true;
+    }
+    return false;//do innerText
 	}-*/;
+
+	public static void setElementStyle(Element eltMulti, String css) {
+		if (eltMulti.implAccess().linkedToRemote()) {
+			setElementStyle0(eltMulti, css);
+		} else {
+			eltMulti.setAttribute("style", css);
+		}
+	}
 
 	public static EditContentViewWidgets showContentView(final Object model,
 			final PermissibleActionListener pal, String caption,
@@ -337,7 +353,7 @@ public class ClientUtils {
 	}
 
 	public static native String stringify(JavaScriptObject jso) /*-{
-        return JSON.stringify(jso);
+    return JSON.stringify(jso);
 	}-*/;
 
 	public static void submitForm(Map<String, String> params, String url) {
@@ -361,6 +377,45 @@ public class ClientUtils {
 			array.push(t);
 		}
 		return array;
+	}
+
+	public static String trimToWidth(String s, String style, int pxWidth,
+			String ellipsis) {
+		if (pxWidth <= 20) {
+			return s;
+		}
+		ellipsis = ellipsis == null ? "\u2026" : ellipsis;
+		int r0 = 0;
+		int r1 = s.length();
+		Label l = new Label();
+		setElementStyle(l.getElement(), style);
+		Style cStyle = l.getElement().getStyle();
+		cStyle.setPosition(Position.ABSOLUTE);
+		cStyle.setLeft(0, Unit.PX);
+		cStyle.setTop(0, Unit.PX);
+		cStyle.setDisplay(Display.INLINE_BLOCK);
+		cStyle.setProperty("whitespace", "nowrap");
+		cStyle.setProperty("visibility", "hidden");
+		RootPanel.get().add(l);
+		boolean tried = false;
+		while (true) {
+			int mid = (r1 - r0) / 2 + r0;
+			String t = tried ? s.substring(0, mid) + ellipsis : s;
+			l.setText(t);
+			if (l.getOffsetWidth() <= pxWidth) {
+				if (!tried || (r1 - r0) <= 1) {
+					RootPanel.get().remove(l);
+					return t;
+				}
+				r0 = mid;
+			} else {
+				if (!tried) {
+					tried = true;
+				} else {
+					r1 = mid;
+				}
+			}
+		}
 	}
 
 	public static Element updateCss(Element styleElement, String css) {
@@ -414,52 +469,15 @@ public class ClientUtils {
 				"OK", "Cancel", null);
 	}
 
-	public static native void setElementStyle(Element e, String css) /*-{
-        if (e.style && typeof (e.style.cssText) == "string") {
-            e.style.cssText = css;
-        } else {
-            e.style = css;
-        }
+	private static native void setElementStyle0(Element eltMulti,
+			String css) /*-{
+    var e = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
+    if (e.style && typeof (e.style.cssText) == "string") {
+      e.style.cssText = css;
+    } else {
+      e.style = css;
+    }
 	}-*/;
-
-	public static String trimToWidth(String s, String style, int pxWidth,
-			String ellipsis) {
-		if (pxWidth <= 20) {
-			return s;
-		}
-		ellipsis = ellipsis == null ? "\u2026" : ellipsis;
-		int r0 = 0;
-		int r1 = s.length();
-		Label l = new Label();
-		setElementStyle(l.getElement(), style);
-		Style cStyle = l.getElement().getStyle();
-		cStyle.setPosition(Position.ABSOLUTE);
-		cStyle.setLeft(0, Unit.PX);
-		cStyle.setTop(0, Unit.PX);
-		cStyle.setDisplay(Display.INLINE_BLOCK);
-		cStyle.setProperty("whitespace", "nowrap");
-		cStyle.setProperty("visibility", "hidden");
-		RootPanel.get().add(l);
-		boolean tried = false;
-		while (true) {
-			int mid = (r1 - r0) / 2 + r0;
-			String t = tried ? s.substring(0, mid) + ellipsis : s;
-			l.setText(t);
-			if (l.getOffsetWidth() <= pxWidth) {
-				if (!tried || (r1 - r0) <= 1) {
-					RootPanel.get().remove(l);
-					return t;
-				}
-				r0 = mid;
-			} else {
-				if (!tried) {
-					tried = true;
-				} else {
-					r1 = mid;
-				}
-			}
-		}
-	}
 
 	public static class EditContentViewWidgets {
 		public PaneWrapperWithObjects wrapper;
@@ -471,14 +489,5 @@ public class ClientUtils {
 			this.wrapper = wrapper;
 			this.gdb = gdb;
 		}
-	}
-
-	public static void runWithDelay(Runnable runnable, int delayMillis) {
-		new Timer() {
-			@Override
-			public void run() {
-				runnable.run();
-			}
-		}.schedule(delayMillis);
 	}
 }

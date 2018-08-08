@@ -161,14 +161,21 @@ public abstract class DOMImplStandard extends DOMImpl {
 																};
 																}-*/;
 
-	private static native EventMap getCaptureEventDispatchers() /*-{
+	private static EventMap getCaptureEventDispatchers() {
+		return getCaptureEventDispatchers0(
+				!com.google.gwt.core.shared.GWT.isScript());
+	}
+
+	private static native EventMap
+			getCaptureEventDispatchers0(boolean noMouseMove) /*-{
+		function noop(){}
 																return {
 																// Mouse events
 																click:      @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
 																dblclick:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
 																mousedown:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
 																mouseup:    @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
-																mousemove:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+																mousemove: noMouseMove?noop:@com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),  
 																mouseover:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
 																mouseout:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
 																mousewheel: @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
@@ -235,14 +242,14 @@ public abstract class DOMImplStandard extends DOMImpl {
 
 	@Override
 	public native int getChildCount(Element elem) /*-{
-													var count = 0, child = elem.firstChild;
-													while (child) {
-													if (child.nodeType == 1)
-													++count;
-													child = child.nextSibling;
-													}
-													return count;
-													}-*/;
+    var count = 0, child = elem.firstChild;
+    while (child) {
+      if (child.nodeType == 1)
+        ++count;
+      child = child.nextSibling;
+    }
+    return count;
+	}-*/;
 
 	@Override
 	public int getChildIndex(Element parent, Element toFind) {
@@ -253,20 +260,20 @@ public abstract class DOMImplStandard extends DOMImpl {
 	@Override
 	public native void insertChild(Element parent, Element toAdd,
 			int index) /*-{
-						var count = 0, child = parent.firstChild, before = null;
-						while (child) {
-						if (child.nodeType == 1) {
-						if (count == index) {
-						before = child;
-						break;
-						}
-						++count;
-						}
-						child = child.nextSibling;
-						}
-						
-						parent.insertBefore(toAdd, before);
-						}-*/;
+    var count = 0, child = parent.firstChild, before = null;
+    while (child) {
+      if (child.nodeType == 1) {
+        if (count == index) {
+          before = child;
+          break;
+        }
+        ++count;
+      }
+      child = child.nextSibling;
+    }
+
+    parent.insertBefore(toAdd, before);
+	}-*/;
 
 	@Override
 	public void releaseCapture(Element elem) {
@@ -325,98 +332,127 @@ public abstract class DOMImplStandard extends DOMImpl {
 
 	protected native void sinkBitlessEventImpl(ElementRemote elem,
 			String eventTypeName) /*-{
-									var dispatchMap = @com.google.gwt.user.client.impl.DOMImplStandard::bitlessEventDispatchers;
-									var dispatcher = dispatchMap[eventTypeName] || dispatchMap['_default_'];
-									elem.addEventListener(eventTypeName, dispatcher, false);
-									}-*/;
+    var dispatchMap = @com.google.gwt.user.client.impl.DOMImplStandard::bitlessEventDispatchers;
+    var dispatcher = dispatchMap[eventTypeName] || dispatchMap['_default_'];
+    elem.addEventListener(eventTypeName, dispatcher, false);
+	}-*/;
 
 	@SuppressWarnings("deprecation")
 	protected native void sinkEventsImpl(ElementRemote elem, int bits) /*-{
-																		var chMask = (elem.__eventBits || 0) ^ bits;
-																		elem.__eventBits = bits;
-																		if (!chMask) return;
-																		
-																		if (chMask & 0x00001) elem.onclick       = (bits & 0x00001) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x00002) elem.ondblclick    = (bits & 0x00002) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x00004) elem.onmousedown   = (bits & 0x00004) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x00008) elem.onmouseup     = (bits & 0x00008) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x00010) elem.onmouseover   = (bits & 0x00010) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x00020) elem.onmouseout    = (bits & 0x00020) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x00040) elem.onmousemove   = (bits & 0x00040) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x00080) elem.onkeydown     = (bits & 0x00080) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x00100) elem.onkeypress    = (bits & 0x00100) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x00200) elem.onkeyup       = (bits & 0x00200) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x00400) elem.onchange      = (bits & 0x00400) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x00800) elem.onfocus       = (bits & 0x00800) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x01000) elem.onblur        = (bits & 0x01000) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x02000) elem.onlosecapture = (bits & 0x02000) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x04000) elem.onscroll      = (bits & 0x04000) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x08000) elem.onload        = (bits & 0x08000) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchUnhandledEvent : null;
-																		if (chMask & 0x10000) elem.onerror       = (bits & 0x10000) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x20000) elem.onmousewheel  = (bits & 0x20000) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x40000) elem.oncontextmenu = (bits & 0x40000) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x80000) elem.onpaste       = (bits & 0x80000) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x100000) elem.ontouchstart = (bits & 0x100000) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x200000) elem.ontouchmove  = (bits & 0x200000) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x400000) elem.ontouchend   = (bits & 0x400000) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x800000) elem.ontouchcancel= (bits & 0x800000) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x1000000) elem.ongesturestart  =(bits & 0x1000000) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x2000000) elem.ongesturechange =(bits & 0x2000000) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		if (chMask & 0x4000000) elem.ongestureend    = (bits & 0x4000000) ?
-																		@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent : null;
-																		}-*/;
+    var chMask = (elem.__eventBits || 0) ^ bits;
+    elem.__eventBits = bits;
+    if (!chMask)
+      return;
+
+    if (chMask & 0x00001)
+      elem.onclick = (bits & 0x00001) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x00002)
+      elem.ondblclick = (bits & 0x00002) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x00004)
+      elem.onmousedown = (bits & 0x00004) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x00008)
+      elem.onmouseup = (bits & 0x00008) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x00010)
+      elem.onmouseover = (bits & 0x00010) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x00020)
+      elem.onmouseout = (bits & 0x00020) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x00040)
+      elem.onmousemove = (bits & 0x00040) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x00080)
+      elem.onkeydown = (bits & 0x00080) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x00100)
+      elem.onkeypress = (bits & 0x00100) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x00200)
+      elem.onkeyup = (bits & 0x00200) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x00400)
+      elem.onchange = (bits & 0x00400) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x00800)
+      elem.onfocus = (bits & 0x00800) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x01000)
+      elem.onblur = (bits & 0x01000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x02000)
+      elem.onlosecapture = (bits & 0x02000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x04000)
+      elem.onscroll = (bits & 0x04000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x08000)
+      elem.onload = (bits & 0x08000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchUnhandledEvent
+          : null;
+    if (chMask & 0x10000)
+      elem.onerror = (bits & 0x10000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x20000)
+      elem.onmousewheel = (bits & 0x20000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x40000)
+      elem.oncontextmenu = (bits & 0x40000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x80000)
+      elem.onpaste = (bits & 0x80000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x100000)
+      elem.ontouchstart = (bits & 0x100000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x200000)
+      elem.ontouchmove = (bits & 0x200000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x400000)
+      elem.ontouchend = (bits & 0x400000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x800000)
+      elem.ontouchcancel = (bits & 0x800000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x1000000)
+      elem.ongesturestart = (bits & 0x1000000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x2000000)
+      elem.ongesturechange = (bits & 0x2000000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+    if (chMask & 0x4000000)
+      elem.ongestureend = (bits & 0x4000000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
+          : null;
+	}-*/;
 
 	native ElementRemote getChild0(ElementRemote elem, int index) /*-{
-																	var count = 0, child = elem.firstChild;
-																	while (child) {
-																	if (child.nodeType == 1) {
-																	if (index == count)
-																	return child;
-																	++count;
-																	}
-																	child = child.nextSibling;
-																	}
-																	
-																	return null;
-																	}-*/;
+    var count = 0, child = elem.firstChild;
+    while (child) {
+      if (child.nodeType == 1) {
+        if (index == count)
+          return child;
+        ++count;
+      }
+      child = child.nextSibling;
+    }
 
-	native int getChildIndex0(ElementRemote parent, ElementRemote toFind) /*-{
-																			var count = 0, child = parent.firstChild;
-																			while (child) {
-																			if (child === toFind) {
-																			return count;
-																			}
-																			if (child.nodeType == 1) {
-																			++count;
-																			}
-																			child = child.nextSibling;
-																			}
-																			return -1;
-																			}-*/;
+    return null;
+	}-*/;
+
+	native int getChildIndex0(ElementRemote parent,
+			ElementRemote toFind) /*-{
+    var count = 0, child = parent.firstChild;
+    while (child) {
+      if (child === toFind) {
+        return count;
+      }
+      if (child.nodeType == 1) {
+        ++count;
+      }
+      child = child.nextSibling;
+    }
+    return -1;
+	}-*/;
 }

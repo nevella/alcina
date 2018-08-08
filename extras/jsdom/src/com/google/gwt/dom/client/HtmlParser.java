@@ -11,13 +11,15 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class HtmlParser {
+	public static boolean debugCursor = false;
+
 	static String decodeEntities(String text) {
 		return EntityDecoder.decode(text);
 	}
 
 	// https://www.thoughtco.com/html-singleton-tags-3468620
 	static boolean isSelfClosingTag(String tag) {
-		switch (tag) {
+		switch (tag.toLowerCase()) {
 		case "area":
 		case "base":
 		case "br":
@@ -72,8 +74,6 @@ public class HtmlParser {
 
 	private List<Element> syntheticElements = new ArrayList<>();
 
-	boolean debugCursor = true;
-
 	int debugCursorDepth = 0;
 
 	public Element parse(DomElement root, Element replaceContents,
@@ -85,7 +85,6 @@ public class HtmlParser {
 	public Element parse(String html, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
 		this.html = html;
-		debugCursor = true;
 		this.replaceContents = replaceContents;
 		this.emitHtmlHeadBodyTags = emitHtmlHeadBodyTags;
 		resetBuilder();

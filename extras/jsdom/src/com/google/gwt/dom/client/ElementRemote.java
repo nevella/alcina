@@ -914,7 +914,16 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	}-*/;
 
 	final native ElementRemote getParentElement0()/*-{
-    return this.parentElement;
+    var parentElement = this.parentElement;
+    if (parentElement) {
+      return parentElement;
+    }
+    var parentNode = this.parentNode;
+    if (parentNode && parentNode.nodeType == 1) {
+      return parentNode;
+    } else {
+      return null;
+    }
 	}-*/;
 
 	/**
