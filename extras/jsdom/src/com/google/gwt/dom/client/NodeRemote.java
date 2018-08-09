@@ -314,6 +314,18 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 * @return The node removed
 	 */
 	private final native NodeRemote removeChild0(NodeRemote oldChild) /*-{
+    if (oldChild.parentNode == null && oldChild.nodeType == 3) {
+      //handle strange IE11 case (text node equality/substitution?)
+      var children = this.childNodes;
+      for (var i = 0; i < children.length; i++) {
+        var node = children[i];
+        if (node.nodeType == 3 && node.data == oldChild.data) {
+          this.removeChild(node);
+          return oldChild;
+        }
+      }
+      //not matched, fall through (which will throw a DOMException)
+    }
     return this.removeChild(oldChild);
 	}-*/;
 
