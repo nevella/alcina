@@ -156,6 +156,13 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			return cell().text(text).cell();
 		}
 
+		public void ensureBuilt() {
+			if (built) {
+			} else {
+				node = append();
+			}
+		}
+
 		public XmlNode getNode() {
 			return this.node;
 		}
@@ -168,13 +175,6 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 		public XmlNodeHtmlTableRowBuilder style(String style) {
 			super.style(style);
 			return this;
-		}
-
-		private void ensureBuilt() {
-			if (built) {
-			} else {
-				node = append();
-			}
 		}
 	}
 }
