@@ -128,12 +128,16 @@ public class GraphProjection {
 
 	protected static final Object NULL_MARKER = new Object();
 
+	public static String classSimpleName(Class clazz) {
+		return classSimpleName.get(clazz);
+	}
+
 	public static String fieldwiseToString(Object obj) {
-		return fieldwiseToString(obj, true, 999);
+		return fieldwiseToString(obj, true, false, 999);
 	}
 
 	public static String fieldwiseToString(Object obj, boolean withTypes,
-			int maxLen, String... excludeFields) {
+			boolean oneLine, int maxLen, String... excludeFields) {
 		try {
 			List<String> fieldNames = new ArrayList<>();
 			GraphProjection graphProjection = new GraphProjection(
@@ -159,7 +163,7 @@ public class GraphProjection {
 				String str = CommonUtils.nullSafeToString(field.get(obj));
 				str = CommonUtils.trimToWsChars(str, maxLen, true);
 				sb.append(str);
-				sb.append("\n");
+				sb.append(oneLine ? " " : "\n");
 			}
 			return sb.toString();
 		} catch (Exception e) {
@@ -281,11 +285,56 @@ public class GraphProjection {
 				|| SafeHtml.class.isAssignableFrom(c);
 	}
 
+	public static boolean nonTransientFieldwiseEqual(Object o1, Object o2) {
+		try {
+			GraphProjection graphProjection = new GraphProjection(
+					new AllFieldsFilter(), null);
+			StringBuilder sb = new StringBuilder();
+			for (Field field : graphProjection
+					.getFieldsForClass(o1.getClass())) {
+				Object v1 = field.get(o1);
+				Object v2 = field.get(o2);
+				if (!Objects.equals(v1, v2)) {
+					return false;
+				}
+			}
+			return true;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static int nonTransientFieldwiseHash(Object o1) {
+		try {
+			GraphProjection graphProjection = new GraphProjection(
+					new AllFieldsFilter(), null);
+			StringBuilder sb = new StringBuilder();
+			int hash = 0;
+			for (Field field : graphProjection
+					.getFieldsForClass(o1.getClass())) {
+				Object v1 = field.get(o1);
+				hash ^= Objects.hashCode(v1);
+			}
+			return hash;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public static synchronized void registerConstructorMethods(
 			List<? extends ConstructorMethod> methods) {
 		for (ConstructorMethod constructorMethod : methods) {
 			constructorMethodsLookup.put(constructorMethod.getReturnClass(),
 					constructorMethod);
+		}
+	}
+
+	public static void reuseLookups(boolean reuse) {
+		if (reuse) {
+			LooseContext.set(CONTEXT_LAST_CONTEXT_LOOKUPS,
+					new GraphProjection());
+		} else {
+			LooseContext.remove(CONTEXT_LAST_CONTEXT_LOOKUPS);
 		}
 	}
 
@@ -569,8 +618,9 @@ public class GraphProjection {
 					reached.put(source, replaceProjected == null ? NULL_MARKER
 							: replaceProjected);
 					if (alsoMapTo != null) {
-						reached.put(alsoMapTo, replaceProjected == null
-								? NULL_MARKER : replaceProjected);
+						reached.put(alsoMapTo,
+								replaceProjected == null ? NULL_MARKER
+										: replaceProjected);
 					}
 				}
 				return replaceProjected;
@@ -953,59 +1003,11 @@ public class GraphProjection {
 
 	public interface InstantiateImplCallbackWithShellObject<T>
 			extends InstantiateImplCallback<T> {
+		@Override
 		boolean instantiateLazyInitializer(T initializer,
 				GraphProjectionContext context);
 
 		Object instantiateShellObject(T initializer,
 				GraphProjectionContext context);
-	}
-
-	public static String classSimpleName(Class clazz) {
-		return classSimpleName.get(clazz);
-	}
-
-	public static void reuseLookups(boolean reuse) {
-		if (reuse) {
-			LooseContext.set(CONTEXT_LAST_CONTEXT_LOOKUPS,
-					new GraphProjection());
-		} else {
-			LooseContext.remove(CONTEXT_LAST_CONTEXT_LOOKUPS);
-		}
-	}
-
-	public static boolean nonTransientFieldwiseEqual(Object o1, Object o2) {
-		try {
-			GraphProjection graphProjection = new GraphProjection(
-					new AllFieldsFilter(), null);
-			StringBuilder sb = new StringBuilder();
-			for (Field field : graphProjection
-					.getFieldsForClass(o1.getClass())) {
-				Object v1 = field.get(o1);
-				Object v2 = field.get(o2);
-				if (!Objects.equals(v1, v2)) {
-					return false;
-				}
-			}
-			return true;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static int nonTransientFieldwiseHash(Object o1) {
-		try {
-			GraphProjection graphProjection = new GraphProjection(
-					new AllFieldsFilter(), null);
-			StringBuilder sb = new StringBuilder();
-			int hash = 0;
-			for (Field field : graphProjection
-					.getFieldsForClass(o1.getClass())) {
-				Object v1 = field.get(o1);
-				hash ^= Objects.hashCode(v1);
-			}
-			return hash;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 }

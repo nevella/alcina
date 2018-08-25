@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet;
 
 import javax.servlet.http.HttpServletRequest;
 
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
@@ -31,6 +32,10 @@ public class Sx {
 
 	public static boolean isTestServer() {
 		return testServer || isTest();
+	}
+
+	public static String ntrim(String s) {
+		return SEUtilities.normalizeWhitespaceAndTrim(s);
 	}
 
 	public static void setTestServer(boolean testServer) {
