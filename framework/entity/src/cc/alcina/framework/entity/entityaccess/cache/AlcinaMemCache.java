@@ -131,14 +131,10 @@ import cc.alcina.framework.entity.projection.GraphProjections;
 /**
  * <h3>Locking notes:</h3>
  * <p>
- * main lock (post-process) - normal lock sublock - basically go from read
- * (possibly write::main) to write (subgraph) - so we know we'll have a main
- * lock
+ * main lock (post-process) - normal lock sublock - basically go from read (possibly write::main) to write (subgraph) - so we know we'll have a main lock
  * </p>
  * <p>
- * TODO - the multithreaded warmup is still a little dodgy, thread-safety wise -
- * probably a formal/synchronized datastore approach would be best -
- * ConcurrentLinkedQueue??
+ * TODO - the multithreaded warmup is still a little dodgy, thread-safety wise - probably a formal/synchronized datastore approach would be best - ConcurrentLinkedQueue??
  * </p>
  *
  * @author nick@alcina.cc
@@ -146,7 +142,7 @@ import cc.alcina.framework.entity.projection.GraphProjections;
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class AlcinaMemCache implements RegistrableService {
-	private static final int LONG_LOCK_TRACE_LENGTH = 160;
+	private static final int LONG_LOCK_TRACE_LENGTH = 999;
 
 	private static final int MAX_QUEUED_TIME = 500;
 
@@ -306,10 +302,8 @@ public class AlcinaMemCache implements RegistrableService {
 	private LinkedList<String> recentLockAcquisitions = new LinkedList<String>();
 
 	/**
-	 * Certain post-list triggers can writeLock() without causing readlock
-	 * issues (because they deal with areas of the subgraph that the app
-	 * guarantees won't cause problems with other reads) - but they do block
-	 * writeLock acquisition
+	 * Certain post-list triggers can writeLock() without causing readlock issues (because they deal with areas of the subgraph that the app guarantees won't cause problems with other reads) - but
+	 * they do block writeLock acquisition
 	 */
 	volatile Object writeLockSubLock = null;
 
@@ -566,7 +560,7 @@ public class AlcinaMemCache implements RegistrableService {
 			fullLockDump.format(
 					"Memcache log debugging----------\n"
 							+ "Writer thread trace:----------\n" + "%s\n",
-					SEUtilities.getStacktraceSlice(postProcessWriterThread, 200,
+					SEUtilities.getStacktraceSlice(postProcessWriterThread, 999,
 							0));
 			if (full) {
 				try {
@@ -818,8 +812,7 @@ public class AlcinaMemCache implements RegistrableService {
 	}
 
 	/**
-	 * Normally should be true, expect in warmup (where we know threads will be
-	 * non-colliding)
+	 * Normally should be true, expect in warmup (where we know threads will be non-colliding)
 	 */
 	public void
 			setCheckModificationWriteLock(boolean checkModificationWriteLock) {
@@ -831,8 +824,7 @@ public class AlcinaMemCache implements RegistrableService {
 	}
 
 	/**
-	 * Given sublock-guarded code should be able to be run concurrently (as long
-	 * as the sublock objects are different), will rework this
+	 * Given sublock-guarded code should be able to be run concurrently (as long as the sublock objects are different), will rework this
 	 */
 	public void sublock(Object sublock, boolean lock) {
 		if (lockingDisabled || LooseContext.is(CONTEXT_NO_LOCKS)) {
@@ -2059,8 +2051,7 @@ public class AlcinaMemCache implements RegistrableService {
 
 			@Override
 			/*
-			 * multithread Problem here is that set() methods need to be synced
-			 * per class (really, pd) ..so run linear
+			 * multithread Problem here is that set() methods need to be synced per class (really, pd) ..so run linear
 			 */
 			public Void call() throws Exception {
 				boolean keepDetached = LooseContext
