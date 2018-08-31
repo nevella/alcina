@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project name="project-distro-build" basedir="." default="">
+<project name="project-distro-build" basedir="." default=""  xmlns:if="ant:if"
+     xmlns:unless="ant:unless">
 	<import file="project-build.xml" />
 	<property name="distributable.name" value="${ant.project.name}" />
+	<property name="update.jars" value="false"/>
+	<property name="compress.jars" value="true"/>
 	<target name="make-war" description="Create the project WAR" depends="compile">
 		<mkdir dir="${project.dist.dir}" />
-		<delete file="${project.dist.dir}/${distributable.name}.war" />
+		<delete file="${project.dist.dir}/${distributable.name}.war" unless:true="${update.jars}"/>
 		<antcall target="prepare-war">
 		</antcall>
-		<war destfile="${project.dist.dir}/${distributable.name}.war" manifest="${project.web-inf.dir}/MANIFEST.MF" webxml="${project.web-inf.dir}/web.xml">
+		<war destfile="${project.dist.dir}/${distributable.name}.war" manifest="${project.web-inf.dir}/MANIFEST.MF" webxml="${project.web-inf.dir}/web.xml" update="${update.jars}" compress="${compress.jars}">
 			<!--<fileset dir="${project.web-inf.dir}"> <exclude name="WEB-INF/web.xml" /> </fileset> -->
 			<!-- dump this too -->
 			<!--to change in a sec -->
@@ -58,8 +61,8 @@
 	</target>
 
 	<target name="make-ear" description="Create the project EAR" depends="make-war">
-		<delete file="${project.dist.dir}/${distributable.name}.ear" />
-		<ear destfile="${project.dist.dir}/${distributable.name}.ear" appxml="${project.ear-inf.dir}/application.xml">
+		<delete file="${project.dist.dir}/${distributable.name}.ear" unless:true="${update.jars}"/>
+		<ear destfile="${project.dist.dir}/${distributable.name}.ear" appxml="${project.ear-inf.dir}/application.xml" update="${update.jars}" compress="${compress.jars}">
 			<fileset dir="dist">
 				<include name="**/*.war" />
 			</fileset>
