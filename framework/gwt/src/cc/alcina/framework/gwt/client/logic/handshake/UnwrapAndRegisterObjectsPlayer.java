@@ -185,7 +185,7 @@ public class UnwrapAndRegisterObjectsPlayer
 	}
 
 	protected boolean maybeRegisterDomainModelHolder() {
-		// we can expect the first delta to be have a domainmodelholder -
+		// we can expect the first delta to have a domainmodelholder -
 		// apps which allow "always offline" should create a model holder if the
 		// first delta doesn't have a holder;
 		if (currentDelta.getDomainModelHolder() != null) {
