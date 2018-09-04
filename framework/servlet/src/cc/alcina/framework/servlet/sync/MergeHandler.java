@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.sync;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,7 +12,6 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.sync.SyncInterchangeModel;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.entity.ResourceUtilities;
 
@@ -25,6 +25,13 @@ import cc.alcina.framework.entity.ResourceUtilities;
  * @param <D>
  */
 public abstract class MergeHandler<I extends SyncInterchangeModel, D extends SyncDeltaModel> {
+	public static final String TOPIC_MERGE_COMPLETED = MergeHandler.class
+			.getName() + "." + "TOPIC_MERGE_COMPLETED";
+
+	public static TopicSupport<SyncMerger> topicMergeCompleted() {
+		return new TopicSupport<>(TOPIC_MERGE_COMPLETED);
+	}
+
 	protected I leftInterchangeModel;
 
 	protected I rightInterchangeModel;
@@ -37,13 +44,6 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 
 	public FlatDeltaPersisterResult persisterResult;
 
-	public static final String TOPIC_MERGE_COMPLETED = MergeHandler.class
-			.getName() + "." + "TOPIC_MERGE_COMPLETED";
-
-	public static TopicSupport<SyncMerger> topicMergeCompleted() {
-		return new TopicSupport<>(TOPIC_MERGE_COMPLETED);
-	}
-
 	/**
 	 * returns number of successfully merged classes with non-zero merged rows
 	 */
@@ -51,12 +51,19 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 		List<SyncMerger> mergeIncomplete = new ArrayList<>();
 		for (SyncMerger merger : syncMergers) {
 			Class mergedClass = merger.getMergedClass();
-			merger.merge(leftInterchangeModel.getCollectionFor(mergedClass),
-					rightInterchangeModel.getCollectionFor(mergedClass),
-					deltaModel, logger);
+			Collection leftCollection = leftInterchangeModel
+					.getCollectionFor(mergedClass);
+			Collection rightCollection = rightInterchangeModel
+					.getCollectionFor(mergedClass);
+			if (!merger.validate(leftCollection, rightCollection, logger)) {
+				this.persisterResult = new FlatDeltaPersisterResult();
+				return;
+			}
+			merger.merge(leftCollection, rightCollection, deltaModel, logger);
 			topicMergeCompleted().publish(merger);
 			if (merger.wasIncomplete() || mergeIncomplete.size() > 0) {
-				logger.info(Ax.format("Merger incomplete:\n\t%s", merger.getClass().getSimpleName()));
+				logger.info(Ax.format("Merger incomplete:\n\t%s",
+						merger.getClass().getSimpleName()));
 				mergeIncomplete.add(merger);
 			}
 		}
@@ -68,7 +75,8 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 			this.persisterResult = localDeltaPersister.apply(logger, deltaModel,
 					mergeIncomplete.stream().map(c -> c.getMergedClass())
 							.collect(Collectors.toList()));
-			this.persisterResult.allPersisted = !this.persisterResult.mergeInterrupted&&mergeIncomplete.isEmpty();
+			this.persisterResult.allPersisted = !this.persisterResult.mergeInterrupted
+					&& mergeIncomplete.isEmpty();
 		} else {
 			logger.info(Ax.format("Not persisting:\n\t%s", deltaModel));
 		}

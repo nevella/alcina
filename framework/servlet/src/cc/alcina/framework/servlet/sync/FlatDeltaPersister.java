@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.sync;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,8 @@ import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
  * @param <D>
  */
 public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
-	public static final String CONTEXT_OTHER_OBJECT = FlatDeltaPersister.class.getName()+".CONTEXT_OTHER_OBJECT";
+	public static final String CONTEXT_OTHER_OBJECT = FlatDeltaPersister.class
+			.getName() + ".CONTEXT_OTHER_OBJECT";
 
 	protected Map<Class, DeltaItemPersister> persisters = new LinkedHashMap<Class, DeltaItemPersister>();
 
@@ -28,10 +30,12 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 
 	protected FlatDeltaPersisterResult result;
 
+	protected boolean breakPersistenceForRemoteRefresh;
+
 	protected FlatDeltaPersister(boolean applyToLeft) {
 		this.applyToLeft = applyToLeft;
 	}
-	protected boolean breakPersistenceForRemoteRefresh;
+
 	public FlatDeltaPersisterResult apply(Logger logger, D delta,
 			List<Class> ignoreDueToIncompleteMerge) throws Exception {
 		try {
@@ -41,21 +45,23 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 			LooseContext.pop();
 		}
 	}
+
 	private FlatDeltaPersisterResult apply0(Logger logger, D delta,
 			List<Class> ignoreDueToIncompleteMerge) throws Exception {
-		breakPersistenceForRemoteRefresh=false;
+		breakPersistenceForRemoteRefresh = false;
 		result = new FlatDeltaPersisterResult();
-		result.mergeInterrupted=false;
+		result.mergeInterrupted = false;
 		for (Class clazz : perClassDeltaOrder()) {
 			if (ignoreDueToIncompleteMerge.contains(clazz)) {
 				logger.warn(Ax.format("Not persisting - merger %s incomplete",
 						clazz.getSimpleName()));
 				continue;
 			}
-			if(breakPersistenceForRemoteRefresh){
-				logger.warn(Ax.format("Not persisting - merger %s - needs remote refresh",
+			if (breakPersistenceForRemoteRefresh) {
+				logger.warn(Ax.format(
+						"Not persisting - merger %s - needs remote refresh",
 						clazz.getSimpleName()));
-				result.mergeInterrupted=true;
+				result.mergeInterrupted = true;
 				continue;
 			}
 			FlatDeltaPersisterResult perClassResult = new FlatDeltaPersisterResult();
@@ -110,7 +116,7 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 		}
 	}
 
-	protected abstract Class[] perClassDeltaOrder();
+	protected abstract List<Class> perClassDeltaOrder();
 
 	protected abstract boolean shouldApply(Class interchangeClass,
 			SyncPair pair, SyncAction syncAction);
@@ -135,8 +141,8 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 		}
 
 		@Override
-		protected Class[] perClassDeltaOrder() {
-			return new Class[0];
+		protected List<Class> perClassDeltaOrder() {
+			return Arrays.asList();
 		}
 
 		@Override

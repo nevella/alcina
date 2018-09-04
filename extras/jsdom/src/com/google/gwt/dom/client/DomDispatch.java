@@ -116,15 +116,18 @@ public class DomDispatch implements IDomDispatch {
 		return elem;
 	}
 
+	@Override
 	public void cssClearOpacity(Style style) {
 		local.cssClearOpacity(style);
 		remote.cssClearOpacity(style);
 	}
 
+	@Override
 	public String cssFloatPropertyName() {
 		return remote.cssFloatPropertyName();
 	}
 
+	@Override
 	public void cssSetOpacity(Style style, double value) {
 		local.cssSetOpacity(style, value);
 		remote.cssSetOpacity(style, value);
@@ -199,7 +202,6 @@ public class DomDispatch implements IDomDispatch {
 	}
 
 	public EventTarget eventGetTarget(NativeEvent evt) {
-		EventTarget eventGetTarget = remoteImpl().eventGetTarget(evt);
 		return remoteImpl().eventGetTarget(evt);
 	}
 
@@ -207,6 +209,7 @@ public class DomDispatch implements IDomDispatch {
 		return remoteImpl().eventGetType(evt);
 	}
 
+	@Override
 	public void eventPreventDefault(NativeEvent evt) {
 		LocalDom.eventMod(evt, "eventPreventDefault");
 		local.eventPreventDefault(evt);
@@ -217,6 +220,7 @@ public class DomDispatch implements IDomDispatch {
 		remoteImpl().eventSetKeyCode(evt, key);
 	}
 
+	@Override
 	public void eventStopPropagation(NativeEvent evt) {
 		local.eventStopPropagation(evt);
 		remote.eventStopPropagation(evt);
@@ -341,6 +345,7 @@ public class DomDispatch implements IDomDispatch {
 		remoteImpl().scrollIntoView(elem.typedRemote());
 	}
 
+	@Override
 	public void selectAdd(SelectElement select, OptionElement option,
 			OptionElement before) {
 		if (select.linkedToRemote()) {
@@ -355,6 +360,7 @@ public class DomDispatch implements IDomDispatch {
 		local.selectAdd(select, option, before);
 	}
 
+	@Override
 	public void selectClear(SelectElement select) {
 		select.ensureRemoteCheck();
 		remote.selectClear(select);
@@ -370,6 +376,7 @@ public class DomDispatch implements IDomDispatch {
 				.filteredSubList(n -> n instanceof OptionElement);
 	}
 
+	@Override
 	public void selectRemoveOption(SelectElement select, int index) {
 		select.ensureRemoteCheck();
 		remote.selectRemoveOption(select, index);

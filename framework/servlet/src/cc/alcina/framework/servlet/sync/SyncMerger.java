@@ -98,6 +98,10 @@ public class SyncMerger<T> {
 
 	private SyncDeltaModel deltaModel;
 
+	private MatchStrategy<T> matchStrategy;
+
+	private SyncLogger syncLogger;
+
 	public SyncMerger(Class<T> mergedClass, StringKeyProvider<T> keyProvider) {
 		this.mergedClass = mergedClass;
 		this.keyProvider = keyProvider;
@@ -110,28 +114,20 @@ public class SyncMerger<T> {
 		return mapping;
 	}
 
+	public MatchStrategy<T> getMatchStrategy() {
+		return this.matchStrategy;
+	}
+
 	public Class<T> getMergedClass() {
 		return this.mergedClass;
 	}
-
-	public void maybeRegister(Object left, Object right) {
-		// if you'd like to TM-record object modifications
-	}
-
-	private MatchStrategy<T> matchStrategy;
-
-	private SyncLogger syncLogger;
 
 	public SyncLogger getSyncLogger() {
 		return this.syncLogger;
 	}
 
-	public MatchStrategy<T> getMatchStrategy() {
-		return this.matchStrategy;
-	}
-
-	public void setMatchStrategy(MatchStrategy<T> matchStrategy) {
-		this.matchStrategy = matchStrategy;
+	public void maybeRegister(Object left, Object right) {
+		// if you'd like to TM-record object modifications
 	}
 
 	public void merge(Collection<T> leftItems, Collection<T> rightItems,
@@ -185,7 +181,31 @@ public class SyncMerger<T> {
 				mergedClass);
 	}
 
+	public void setMatchStrategy(MatchStrategy<T> matchStrategy) {
+		this.matchStrategy = matchStrategy;
+	}
+
+	public boolean validate(Collection<T> leftCollection,
+			Collection<T> rightCollection, Logger logger) {
+		return true;
+	}
+
+	public boolean wasIncomplete() {
+		return syncLogger.rows.stream()
+				.anyMatch(SyncLoggerRow::provideHadIssue);
+	}
+
 	protected void debugLeft(T left) {
+	}
+
+	protected SyncPairAction decideSyncAction(SyncPair<T> pair) {
+		if (pair.getLeft() == null) {
+			return SyncPairAction.DELETE_RIGHT;
+		} else if (pair.getRight() == null) {
+			return SyncPairAction.CREATE_RIGHT;
+		} else {
+			return SyncPairAction.MERGE;
+		}
 	}
 
 	protected SyncMapping defineLeft(String propertyName) {
@@ -230,18 +250,34 @@ public class SyncMerger<T> {
 		return mapping;
 	}
 
-	protected CollectionFilter<T> getIgnoreAmbiguityForReportingFilter() {
-		return CollectionFilters.PASSTHROUGH_FILTER;
+	protected void ensureLeftWriteable(SyncPair<T> pair) {
+		Object left = pair.getLeft().getObject();
+		if (left instanceof AbstractDomainBase) {
+			AbstractDomainBase adb = (AbstractDomainBase) left;
+			if (adb.provideIsNonDomain()) {
+			} else {
+				adb = adb.writeable();
+				adb.domain().detachFromDomain();
+			}
+			pair.getLeft().setObject(adb);
+		}
 	}
 
-	protected SyncPairAction decideSyncAction(SyncPair<T> pair) {
-		if (pair.getLeft() == null) {
-			return SyncPairAction.DELETE_RIGHT;
-		} else if (pair.getRight() == null) {
-			return SyncPairAction.CREATE_RIGHT;
-		} else {
-			return SyncPairAction.MERGE;
+	protected void ensureRightWriteable(SyncPair<T> pair) {
+		Object right = pair.getRight().getObject();
+		if (right instanceof AbstractDomainBase) {
+			AbstractDomainBase adb = (AbstractDomainBase) right;
+			if (adb.provideIsNonDomain()) {
+			} else {
+				adb = adb.writeable();
+				adb.domain().detachFromDomain();
+			}
+			pair.getRight().setObject(adb);
 		}
+	}
+
+	protected CollectionFilter<T> getIgnoreAmbiguityForReportingFilter() {
+		return CollectionFilters.PASSTHROUGH_FILTER;
 	}
 
 	protected boolean mergePair(SyncPair<T> pair) {
@@ -296,32 +332,6 @@ public class SyncMerger<T> {
 		return true;
 	}
 
-	protected void ensureRightWriteable(SyncPair<T> pair) {
-		Object right = pair.getRight().getObject();
-		if (right instanceof AbstractDomainBase) {
-			AbstractDomainBase adb = (AbstractDomainBase) right;
-			if (adb.provideIsNonDomain()) {
-			} else {
-				adb = adb.writeable();
-				adb.domain().detachFromDomain();
-			}
-			pair.getRight().setObject(adb);
-		}
-	}
-
-	protected void ensureLeftWriteable(SyncPair<T> pair) {
-		Object left = pair.getLeft().getObject();
-		if (left instanceof AbstractDomainBase) {
-			AbstractDomainBase adb = (AbstractDomainBase) left;
-			if (adb.provideIsNonDomain()) {
-			} else {
-				adb = adb.writeable();
-				adb.domain().detachFromDomain();
-			}
-			pair.getLeft().setObject(adb);
-		}
-	}
-
 	protected List<SyncMapping> syncMappings(SyncPair<T> pair) {
 		return syncMappings;
 	}
@@ -340,28 +350,6 @@ public class SyncMerger<T> {
 		default void mapCustom(T left, T right) {
 			throw new UnsupportedOperationException();
 		}
-	}
-
-	protected abstract class CustomMergeFilter implements MergeFilter<T> {
-		@Override
-		public boolean allowLeftToRight(T left, T right, Object leftProp,
-				Object rightProp) {
-			return false;
-		}
-
-		@Override
-		public boolean allowRightToLeft(T left, T right, Object leftProp,
-				Object rightProp) {
-			return false;
-		}
-
-		@Override
-		public boolean isCustom() {
-			return true;
-		}
-
-		@Override
-		public abstract void mapCustom(T left, T right);
 	}
 
 	public class SyncMapping {
@@ -417,6 +405,7 @@ public class SyncMerger<T> {
 			MergeFilter filter = NO_OVERWRITE_FILTER;
 		}
 
+		@Override
 		public void merge(Object left, Object right) {
 			PropertyModificationLog propertyModificationLog = deltaModel
 					.getPropertyModificationLog();
@@ -531,6 +520,28 @@ public class SyncMerger<T> {
 		}
 	}
 
+	protected abstract class CustomMergeFilter implements MergeFilter<T> {
+		@Override
+		public boolean allowLeftToRight(T left, T right, Object leftProp,
+				Object rightProp) {
+			return false;
+		}
+
+		@Override
+		public boolean allowRightToLeft(T left, T right, Object leftProp,
+				Object rightProp) {
+			return false;
+		}
+
+		@Override
+		public boolean isCustom() {
+			return true;
+		}
+
+		@Override
+		public abstract void mapCustom(T left, T right);
+	}
+
 	static class FirstAndAllLookup<T> {
 		Multimap<String, List<T>> firstKeyLookup = new Multimap<String, List<T>>();
 
@@ -563,10 +574,5 @@ public class SyncMerger<T> {
 		public boolean isMultipleFirst(String key) {
 			return firstKeyLookup.getAndEnsure(key).size() > 1;
 		}
-	}
-
-	public boolean wasIncomplete() {
-		return syncLogger.rows.stream()
-				.anyMatch(SyncLoggerRow::provideHadIssue);
 	}
 }
