@@ -103,8 +103,8 @@ public class Ax {
 		System.out.println(format(template, args));
 	}
 
-	public static void runtimeException(String template, Object... args) {
-		throw new RuntimeException(format(template, args));
+	public static RuntimeException runtimeException(String template, Object... args) {
+		return new RuntimeException(format(template, args));
 	}
 
 	public static void setTest(boolean test) {
