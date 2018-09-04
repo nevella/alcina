@@ -29,7 +29,6 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.util.SynchronizedDateFormat;
 import cc.alcina.framework.servlet.ServletLayerUtils;
-import cc.alcina.framework.servlet.knowns.Knowns.ValueType;
 
 public abstract class Knowns {
 	public static KnownRoot root;
@@ -184,7 +183,7 @@ public abstract class Knowns {
 					}
 					case KNOWN_NODE: {
 						if (value == null) {
-							Ax.runtimeException(
+							throw Ax.runtimeException(
 									"Field %s.%s is null - must be instantiated",
 									node.path(), field.getName());
 						}
