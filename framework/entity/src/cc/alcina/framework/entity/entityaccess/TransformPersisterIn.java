@@ -57,56 +57,6 @@ public class TransformPersisterIn {
 		return this.entityManager;
 	}
 
-	private void putExceptionInWrapper(TransformPersistenceToken token,
-			Exception e, DomainTransformLayerWrapper wrapper) {
-		if (e != null) {
-			DomainTransformException transformException;
-			if (e instanceof DomainTransformException) {
-				transformException = (DomainTransformException) e;
-			} else {
-				transformException = new DomainTransformException(e);
-				Registry.impl(JPAImplementation.class)
-						.interpretException(transformException);
-			}
-			if (!token.getTransformExceptions().contains(transformException)) {
-				token.getTransformExceptions().add(transformException);
-			}
-		}
-		DomainTransformResponse response = new DomainTransformResponse();
-		response.setResult(DomainTransformResponseResult.FAILURE);
-		DomainTransformRequest request = token.getRequest();
-		response.setRequest(request);
-		response.setRequestId(request.getRequestId());
-		response.getTransformExceptions().clear();
-		response.getTransformExceptions()
-				.addAll(token.getTransformExceptions());
-		wrapper.response = response;
-	}
-
-	private void possiblyAddSilentSkips(TransformPersistenceToken token,
-			DomainTransformException transformException) {
-		DomainTransformEvent event = transformException.getEvent();
-		List<DomainTransformEvent> allTransforms = token.getRequest()
-				.allTransforms();
-		int i = allTransforms.indexOf(event) - 1;
-		int addPos = token.getTransformExceptions().size() - 1;
-		for (; i >= 0; i--) {
-			DomainTransformEvent itrEvent = allTransforms.get(i);
-			if (!event.related(itrEvent)) {
-				break;
-			} else {
-				token.getIgnoreInExceptionPass().add(itrEvent);
-				DomainTransformException silentSkip = new DomainTransformException(
-						itrEvent, transformException.getType());
-				silentSkip.setSilent(true);
-				token.getTransformExceptions().add(addPos, silentSkip);
-			}
-		}
-	}
-
-	static class DeliberatelyThrownWrapperException extends RuntimeException {
-	}
-
 	public void transformInPersistenceContext(
 			TransformPersisterToken transformPersisterToken,
 			final TransformPersistenceToken token,
@@ -158,6 +108,16 @@ public class TransformPersisterIn {
 			List<DomainTransformRequest> dtrs = new ArrayList<DomainTransformRequest>();
 			dtrs.addAll(request.getPriorRequestsWithoutResponse());
 			dtrs.add(request);
+			for (DomainTransformRequest dtr : dtrs) {
+				if (dtr.getRequestId() == 0) {
+					DomainTransformException ex = new DomainTransformException(
+							Ax.format("Domain transform request with id 0: %s",
+									dtr.toStringForError()));
+					ex.setType(DomainTransformExceptionType.UNKNOWN);
+					putExceptionInWrapper(token, ex, wrapper);
+					return;
+				}
+			}
 			Integer highestPersistedRequestId = null;
 			if (token.isAsyncClient()) {
 				highestPersistedRequestId = commonPersistenceBase
@@ -448,5 +408,55 @@ public class TransformPersisterIn {
 		} finally {
 			PermissionsManager.get().setUser(incomingUser);
 		}
+	}
+
+	private void possiblyAddSilentSkips(TransformPersistenceToken token,
+			DomainTransformException transformException) {
+		DomainTransformEvent event = transformException.getEvent();
+		List<DomainTransformEvent> allTransforms = token.getRequest()
+				.allTransforms();
+		int i = allTransforms.indexOf(event) - 1;
+		int addPos = token.getTransformExceptions().size() - 1;
+		for (; i >= 0; i--) {
+			DomainTransformEvent itrEvent = allTransforms.get(i);
+			if (!event.related(itrEvent)) {
+				break;
+			} else {
+				token.getIgnoreInExceptionPass().add(itrEvent);
+				DomainTransformException silentSkip = new DomainTransformException(
+						itrEvent, transformException.getType());
+				silentSkip.setSilent(true);
+				token.getTransformExceptions().add(addPos, silentSkip);
+			}
+		}
+	}
+
+	private void putExceptionInWrapper(TransformPersistenceToken token,
+			Exception e, DomainTransformLayerWrapper wrapper) {
+		if (e != null) {
+			DomainTransformException transformException;
+			if (e instanceof DomainTransformException) {
+				transformException = (DomainTransformException) e;
+			} else {
+				transformException = new DomainTransformException(e);
+				Registry.impl(JPAImplementation.class)
+						.interpretException(transformException);
+			}
+			if (!token.getTransformExceptions().contains(transformException)) {
+				token.getTransformExceptions().add(transformException);
+			}
+		}
+		DomainTransformResponse response = new DomainTransformResponse();
+		response.setResult(DomainTransformResponseResult.FAILURE);
+		DomainTransformRequest request = token.getRequest();
+		response.setRequest(request);
+		response.setRequestId(request.getRequestId());
+		response.getTransformExceptions().clear();
+		response.getTransformExceptions()
+				.addAll(token.getTransformExceptions());
+		wrapper.response = response;
+	}
+
+	static class DeliberatelyThrownWrapperException extends RuntimeException {
 	}
 }
