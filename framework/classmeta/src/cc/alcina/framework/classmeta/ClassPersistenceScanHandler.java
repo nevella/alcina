@@ -43,6 +43,25 @@ public class ClassPersistenceScanHandler extends AbstractHandler {
 				});
 	}
 
+	private ClassPersistenceScanData
+			calculate(ClassPersistenceScanSchema schema) {
+		try {
+			ClassPersistenceScanData result = new ClassPersistenceScanData();
+			result.schema = schema;
+			result.generated = new Date();
+			ClassMetaRequest typedRequest = new ClassMetaRequest();
+			typedRequest.classPaths = schema.classPathUrls.stream()
+					.map(SEUtilities::toURL).collect(Collectors.toList());
+			ClassMetadataCache classMetadataCache = metaHandler.classpathScannerResolver
+					.handle(typedRequest, false);
+			new PersistenceDeltaScanner(result).scan(classMetadataCache,
+					schema.scanClasspathCachePath);
+			return result;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	private List<Class> getInitClasses() {
 		return Arrays.asList(ClassPersistenceScanSchema.class,
 				ClassPersistenceScanData.class);
@@ -74,6 +93,7 @@ public class ClassPersistenceScanHandler extends AbstractHandler {
 				data);
 		Ax.out(message);
 		String copyFromPath = null;
+		// temp, while migrating to dropbox/pg
 		if (equivalent) {
 			copyFromPath = schema.sourceNoScanPath;
 		} else {
@@ -107,25 +127,6 @@ public class ClassPersistenceScanHandler extends AbstractHandler {
 			response.setStatus(HttpServletResponse.SC_OK);
 			response.getWriter().write(message);
 			baseRequest.setHandled(true);
-		}
-	}
-
-	private ClassPersistenceScanData
-			calculate(ClassPersistenceScanSchema schema) {
-		try {
-			ClassPersistenceScanData result = new ClassPersistenceScanData();
-			result.schema = schema;
-			result.generated = new Date();
-			ClassMetaRequest typedRequest = new ClassMetaRequest();
-			typedRequest.classPaths = schema.classPathUrls.stream()
-					.map(SEUtilities::toURL).collect(Collectors.toList());
-			ClassMetadataCache classMetadataCache = metaHandler.classpathScannerResolver
-					.handle(typedRequest, false);
-			new PersistenceDeltaScanner(result).scan(classMetadataCache,
-					schema.scanClasspathCachePath);
-			return result;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
 		}
 	}
 }
