@@ -280,6 +280,24 @@ public class WidgetUtils {
 		return getBestOffsetWidth(e, false);
 	}
 
+	public static native String getBoundingClientRect(Element elem) /*-{
+    if (!String.prototype.format) {
+      String.prototype.format = String.prototype.f = function() {
+        var s = this, i = arguments.length;
+
+        while (i--) {
+          s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
+        }
+        return s;
+      };
+    }
+    var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
+    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
+    var rect = remote.getBoundingClientRect();
+    return "x:{0}, y:{1},w:{2},h:{3}".format(rect.x, rect.y, rect.width,
+        rect.height);
+	}-*/;
+
 	public static native String getComputedStyle(Element eltMulti,
 			String attributeName)/*-{
     var elt = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
