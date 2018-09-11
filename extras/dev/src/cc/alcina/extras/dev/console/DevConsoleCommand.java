@@ -137,7 +137,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			} catch (Exception e) {
 				if (remote && !console.props.connectionProductionTunnelCmd
 						.isEmpty()) {
-					new ShellWrapper().runShell(
+					new ShellWrapper().launchBashScript(
 							console.props.connectionProductionTunnelCmd);
 					for (int i = 1; i < 15; i++) {
 						try {
@@ -311,30 +311,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
-	public static class CmdNextCommandCaches extends DevConsoleCommand {
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "next" };
-		}
-
-		@Override
-		public String getDescription() {
-			return "Set next command (for restart app dev cycle)";
-		}
-
-		@Override
-		public String getUsage() {
-			return "";
-		}
-
-		@Override
-		public String run(String[] argv) throws Exception {
-			String cmd = argv[0];
-			console.setNextCommand(cmd);
-			return Ax.format("next >> %s", cmd);
-		}
-	}
-
 	public static class CmdDevProfile extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
@@ -448,6 +424,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			return "Run the specified task - invoke with no arguments to list available";
 		}
 
+		@Override
 		public String getUsage() {
 			return "x {runnableClassname}";
 		}
@@ -809,6 +786,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			return "List runnables matching tag substrings";
 		}
 
+		@Override
 		public String getUsage() {
 			return "xl {tag substring,...}";
 		}
@@ -845,6 +823,30 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			CmdExecRunnable.listRunnables(
 					CollectionFilters.filter(classes, filter), null);
 			return "";
+		}
+	}
+
+	public static class CmdNextCommandCaches extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "next" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "Set next command (for restart app dev cycle)";
+		}
+
+		@Override
+		public String getUsage() {
+			return "";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			String cmd = argv[0];
+			console.setNextCommand(cmd);
+			return Ax.format("next >> %s", cmd);
 		}
 	}
 

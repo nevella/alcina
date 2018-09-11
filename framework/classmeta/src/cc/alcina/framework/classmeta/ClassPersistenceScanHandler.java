@@ -94,7 +94,7 @@ public class ClassPersistenceScanHandler extends AbstractHandler {
 		Ax.out(message);
 		String copyFromPath = null;
 		// temp, while migrating to dropbox/pg
-		equivalent = false;
+		// equivalent = false;
 		if (equivalent) {
 			copyFromPath = schema.sourceNoScanPath;
 		} else {
