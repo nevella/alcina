@@ -102,6 +102,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			false);
 
 	public static final BoundWidgetProvider NOWRAP_LABEL_PROVIDER = new BoundWidgetProvider() {
+		@Override
 		public BoundWidget get() {
 			RenderingLabel label = new RenderingLabel();
 			label.setWordWrap(false);
@@ -110,6 +111,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	};
 
 	public static final BoundWidgetProvider WRAP_LABEL_PROVIDER = new BoundWidgetProvider() {
+		@Override
 		public BoundWidget get() {
 			RenderingLabel label = new RenderingLabel();
 			return label;
@@ -117,6 +119,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	};
 
 	public static final BoundWidgetProvider YES_NO_LABEL_PROVIDER = new BoundWidgetProvider() {
+		@Override
 		public BoundWidget get() {
 			RenderingLabel label = new RenderingLabel();
 			label.setWordWrap(false);
@@ -126,6 +129,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	};
 
 	public static final BoundWidgetProvider AU_DATE_PROVIDER = new BoundWidgetProvider() {
+		@Override
 		public BoundWidget get() {
 			RenderingLabel label = new RenderingLabel();
 			label.setWordWrap(false);
@@ -135,6 +139,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	};
 
 	public static final BoundWidgetProvider AU_DATE_TIME_TITLE_PROVIDER = new BoundWidgetProvider() {
+		@Override
 		public BoundWidget get() {
 			RenderingLabel label = new RenderingLabel();
 			label.setWordWrap(false);
@@ -145,6 +150,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	};
 
 	public static final Renderer DATE_TIME_RENDERER = new Renderer() {
+		@Override
 		public Object render(Object o) {
 			Date d = (Date) o;
 			return d == null ? ""
@@ -153,6 +159,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	};
 
 	public static final Renderer DATE_SLASH_RENDERER_WITH_NULL = new Renderer() {
+		@Override
 		public Object render(Object o) {
 			Date d = (Date) o;
 			return d == null ? null
@@ -161,6 +168,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	};
 
 	public static final Renderer YES_NO_RENDERER = new Renderer() {
+		@Override
 		public Object render(Object o) {
 			Boolean b = (Boolean) o;
 			return CommonUtils.bv(b) ? "Yes" : "No";
@@ -170,6 +178,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	public static final int MAX_EXPANDABLE_LABEL_LENGTH = 50;
 
 	public static final BoundWidgetProvider DN_LABEL_PROVIDER = new BoundWidgetProvider() {
+		@Override
 		public BoundWidget get() {
 			RenderingLabel label = new RenderingLabel();
 			label.setRenderer(DisplayNameRenderer.INSTANCE);
@@ -360,6 +369,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		return null;
 	}
 
+	@Override
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName) {
 		ClientBeanReflector beanInfo = ClientReflector.get()
@@ -374,6 +384,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	}
 
 	// private Set<String> reffedDescriptor = new LinkedHashSet<String>();
+	@Override
 	public BeanDescriptor getDescriptor(Object o) {
 		Class c = o.getClass();
 		// if (reffedDescriptor!=null &&
@@ -464,7 +475,8 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			Class domainType = p.getType();
 			domainType = (association == null || !propertyIsCollection
 					|| association.implementationClass() == void.class)
-							? domainType : association.implementationClass();
+							? domainType
+							: association.implementationClass();
 			boolean isDomainClass = GwittirBridge.get()
 					.hasDescriptor(domainType);
 			if (bwp == null && isDomainClass) {
@@ -605,10 +617,12 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		return getDescriptorForClass(c).getProperty(propertyName);
 	}
 
+	@Override
 	public Class getPropertyType(Class objectClass, String propertyName) {
 		return ClientReflector.get().getPropertyType(objectClass, propertyName);
 	}
 
+	@Override
 	public Object getPropertyValue(Object o, String propertyName) {
 		try {
 			BeanDescriptor bd = getDescriptor(o);
@@ -632,7 +646,8 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 				: bi.getPropertyReflectors().get(propertyName);
 		List<cc.alcina.framework.common.client.logic.reflection.Validator> validators = new ArrayList<>();
 		cc.alcina.framework.common.client.logic.reflection.Validators validatorsAnn = pr == null
-				? null : pr.getAnnotation(Validators.class);
+				? null
+				: pr.getAnnotation(Validators.class);
 		cc.alcina.framework.common.client.logic.reflection.Validator info = pr == null
 				? null
 				: pr.getAnnotation(
@@ -733,31 +748,31 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		this.ignoreProperties = ignoreProperties;
 	}
 
+	@Override
 	public void setPropertyValue(Object o, String propertyName, Object value) {
 		try {
 			getProperty(o, propertyName).getMutatorMethod().invoke(o,
 					new Object[] { value });
 		} catch (Exception e) {
 			try {
-				throw new WrappedRuntimeException(
-						CommonUtils.formatJ(
-								"Unable to set property %s for object %s to value %s",
-								propertyName, o, value),
-						e, SuggestedAction.NOTIFY_WARNING);
+				throw new WrappedRuntimeException(CommonUtils.formatJ(
+						"Unable to set property %s for object %s to value %s",
+						propertyName, o, value), e,
+						SuggestedAction.NOTIFY_WARNING);
 			} catch (Exception e1) {
 				// tostring problem
-				throw new WrappedRuntimeException(
-						CommonUtils.formatJ(
-								"Unable to set property %s for object %s to value %s",
-								propertyName, o.getClass(),
-								value == null ? null : value.getClass()),
-						e, SuggestedAction.NOTIFY_WARNING);
+				throw new WrappedRuntimeException(CommonUtils.formatJ(
+						"Unable to set property %s for object %s to value %s",
+						propertyName, o.getClass(),
+						value == null ? null : value.getClass()), e,
+						SuggestedAction.NOTIFY_WARNING);
 			}
 		}
 	}
 
 	public static class BoundWidgetProviderTextBox
 			implements BoundWidgetProvider<TextBox> {
+		@Override
 		public TextBox get() {
 			return new TextBox();
 		}
@@ -786,6 +801,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			this.withNull = withNull;
 		}
 
+		@Override
 		public BoundWidgetProvider getWidgetProvider(Class type) {
 			if (type.isEnum()) {
 				return new ListBoxEnumProvider(type, withNull);
@@ -810,6 +826,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			this.bi = bi;
 		}
 
+		@Override
 		public int compare(Field o1, Field o2) {
 			return bi.getPropertyReflectors().get(o1.getPropertyName())
 					.compareTo(bi.getPropertyReflectors()
