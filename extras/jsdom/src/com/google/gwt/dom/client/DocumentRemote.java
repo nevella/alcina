@@ -2,6 +2,7 @@ package com.google.gwt.dom.client;
 
 import com.google.gwt.core.client.GWT;
 
+@SuppressWarnings("deprecation")
 public class DocumentRemote extends NodeRemote implements DomDocument {
 	/**
 	 * We cache Document.nativeGet() in DevMode, because crossing the JSNI
@@ -10,8 +11,8 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	private static DocumentRemote doc;
 
 	private static native DocumentRemote nativeGet() /*-{
-														return $doc;
-														}-*/;
+    return $doc;
+	}-*/;
 
 	/**
 	 * Gets the default document. This is the document in which the module is
@@ -580,14 +581,14 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 */
 	@Override
 	public native final String createUniqueId() /*-{
-												// In order to force uid's to be document-unique across multiple modules,
-												// we hang a counter from the document.
-												if (!this.gwt_uid) {
-												this.gwt_uid = 1;
-												}
-												
-												return "gwt-uid-" + this.gwt_uid++;
-												}-*/;
+    // In order to force uid's to be document-unique across multiple modules,
+    // we hang a counter from the document.
+    if (!this.gwt_uid) {
+      this.gwt_uid = 1;
+    }
+
+    return "gwt-uid-" + this.gwt_uid++;
+	}-*/;
 
 	@Override
 	public final VideoElement createVideoElement() {
@@ -687,8 +688,8 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 */
 	@Override
 	public final native String getCompatMode() /*-{
-												return this.compatMode;
-												}-*/;
+    return this.compatMode;
+	}-*/;
 
 	/**
 	 * Gets the document's element. This is typically the &lt;html&gt; element.
@@ -708,8 +709,8 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 */
 	@Override
 	public final native String getDomain() /*-{
-											return this.domain;
-											}-*/;
+    return this.domain;
+	}-*/;
 
 	/**
 	 * Returns the {@link Element} whose id is given by elementId. If no such
@@ -738,10 +739,10 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 */
 	@Override
 	public final native HeadElement getHead() /*-{
-												// IE8 does not have document.head
-												// when removing IE8 support we remove the second statement
-												return this.head || this.getElementsByTagName('head')[0];
-												}-*/;
+    // IE8 does not have document.head
+    // when removing IE8 support we remove the second statement
+    return this.head || this.getElementsByTagName('head')[0];
+	}-*/;
 
 	/**
 	 * Returns the URI of the page that linked to this page. The value is an
@@ -752,8 +753,8 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 */
 	@Override
 	public final native String getReferrer() /*-{
-												return this.referrer;
-												}-*/;
+    return this.referrer;
+	}-*/;
 
 	/**
 	 * The height of the scrollable area of the document.
@@ -810,8 +811,8 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 */
 	@Override
 	public final native String getTitle() /*-{
-											return this.title;
-											}-*/;
+    return this.title;
+	}-*/;
 
 	/**
 	 * Gets the absolute URI of this document.
@@ -820,8 +821,8 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 */
 	@Override
 	public final native String getURL() /*-{
-										return this.URL;
-										}-*/;
+    return this.URL;
+	}-*/;
 
 	/**
 	 * Gets the document's viewport element. This is the element that should be
@@ -864,8 +865,8 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 */
 	@Override
 	public final native void importNode(Node node, boolean deep) /*-{
-																	this.importNode(node, deep);
-																	}-*/;
+    this.importNode(node, deep);
+	}-*/;
 
 	/**
 	 * Determines whether the document's "compatMode" is "CSS1Compat". This is
@@ -911,8 +912,8 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 */
 	@Override
 	public final native void setTitle(String title) /*-{
-													this.title = title;
-													}-*/;
+    this.title = title;
+	}-*/;
 
 	/**
 	 * The element that contains the content for the document. In documents with
@@ -921,26 +922,26 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 * @return the document's body
 	 */
 	private final native NodeRemote getBody0() /*-{
-												return this.body;
-												}-*/;
+    return this.body;
+	}-*/;
 
 	native final TextRemote createTextNode0(String data) /*-{
-															return this.createTextNode(data);
-															}-*/;
+    return this.createTextNode(data);
+	}-*/;
 
 	final native ElementRemote generateFromOuterHtml(String outer) /*-{
-																	var div = this.createElement("div");
-																	div.innerHTML = outer;
-																	return div.childNodes[0];
-																	}-*/;
+    var div = this.createElement("div");
+    div.innerHTML = outer;
+    return div.childNodes[0];
+	}-*/;
 
 	final native ElementRemote getDocumentElement0() /*-{
-														return this.documentElement;
-														}-*/;
+    return this.documentElement;
+	}-*/;
 
 	final native ElementRemote getElementById0(String elementId) /*-{
-																	return this.getElementById(elementId);
-																	}-*/;
+    return this.getElementById(elementId);
+	}-*/;
 
 	/**
 	 * Returns a {@link NodeList} of all the {@link Element Elements} with a
@@ -954,6 +955,6 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 */
 	final native NodeListRemote<Element>
 			getElementsByTagName0(String tagName) /*-{
-													return this.getElementsByTagName(tagName);
-													}-*/;
+    return this.getElementsByTagName(tagName);
+	}-*/;
 }

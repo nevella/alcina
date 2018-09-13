@@ -445,7 +445,17 @@ public class ElementLocal extends NodeLocal
 				builder.append(outerHtml.substring(0, idx));
 				builder.append(html);
 				builder.append(outerHtml.substring(idx));
-				new HtmlParser().parse(builder.toString(), element, false);
+				try {
+					new HtmlParser().parse(builder.toString(), element, false);
+				} catch (Exception e) {
+					html = LocalDom.safeParseByBrowser(html);
+					builder = new StringBuilder();
+					idx = outerHtml.indexOf("</");
+					builder.append(outerHtml.substring(0, idx));
+					builder.append(html);
+					builder.append(outerHtml.substring(idx));
+					new HtmlParser().parse(builder.toString(), element, false);
+				}
 			}
 		}
 	}

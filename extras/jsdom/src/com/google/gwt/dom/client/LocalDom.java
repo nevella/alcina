@@ -176,6 +176,12 @@ public class LocalDom {
 		get().putRemote0(element, remote);
 	}
 
+	static String safeParseByBrowser(String html) {
+		ElementRemote remote = Document.get().typedRemote()
+				.generateFromOuterHtml(html);
+		return remote.buildOuterHtml();
+	}
+
 	static void wasResolved(Element elem) {
 		get().wasResolved0(elem);
 	}
