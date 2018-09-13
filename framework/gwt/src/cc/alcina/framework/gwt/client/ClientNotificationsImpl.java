@@ -91,9 +91,11 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		AlcinaTopics.logListenerDelta(logListener, true);
 	}
 
+	@Override
 	public void confirm(String msg, final OkCallback callback) {
 		new OkCancelDialogBox("Confirmation", new Label(msg),
 				new PermissibleActionListener() {
+					@Override
 					public void vetoableAction(PermissibleActionEvent evt) {
 						if (evt.getAction() == OkAction.INSTANCE) {
 							callback.ok();
@@ -113,6 +115,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		}
 	}
 
+	@Override
 	public String getLogString() {
 		return this.logString;
 	}
@@ -131,12 +134,14 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		return notifier;
 	}
 
+	@Override
 	public void hideDialog() {
 		if (dialogBox != null) {
 			dialogBox.hide();
 		}
 	}
 
+	@Override
 	public boolean isDialogAnimationEnabled() {
 		return dialogAnimationEnabled;
 	}
@@ -145,6 +150,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		return this.logToSysOut;
 	}
 
+	@Override
 	public void log(String s) {
 		log(s, AlcinaTopics.LOG_CATEGORY_MESSAGE);
 	}
@@ -154,13 +160,16 @@ public class ClientNotificationsImpl implements ClientNotifications {
 			logString += CommonUtils.formatDate(new Date(),
 					DateStyle.AU_DATE_TIME_MS) + ": " + s + "\n";
 		}
-		consoleLog(s);
+		if (GWT.isScript()) {
+			consoleLog(s);
+		}
 		if (logToSysOut) {
 			System.out.println(s);
 		}
 		AlcinaTopics.logCategorisedMessage(new StringPair(category, s));
 	}
 
+	@Override
 	public void metricLogEnd(String key) {
 		if (metricStartTimes.containsKey(key)) {
 			log(CommonUtils.formatJ("Metric: %s - %s ms", key,
@@ -170,6 +179,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		}
 	}
 
+	@Override
 	public void metricLogStart(String key) {
 		metricStartTimes.put(key, System.currentTimeMillis());
 	}
@@ -180,6 +190,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		Window.alert(localisedMessages.get(LT_NOTIFY_COMPLETED_SAVE));
 	}
 
+	@Override
 	public void setDialogAnimationEnabled(boolean dialogAnimationEnabled) {
 		this.dialogAnimationEnabled = dialogAnimationEnabled;
 	}
@@ -193,12 +204,14 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		MessageManager.get().icyMessage("GWT exception - " + e.getMessage());
 	}
 
+	@Override
 	public void showDialog(String captionHTML, Widget captionWidget, String msg,
 			MessageType messageType, List<Button> extraButtons) {
 		showDialog(captionHTML, captionWidget, msg, messageType, extraButtons,
 				null);
 	}
 
+	@Override
 	public void showDialog(String captionHTML, Widget captionWidget, String msg,
 			MessageType messageType, List<Button> extraButtons,
 			String containerStyle) {
@@ -258,6 +271,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 			sp.setStyleName("logbox");
 			sp.setVisible(containerStyle.equals("wide"));
 			nh.addClickHandler(new ClickHandler() {
+				@Override
 				public void onClick(ClickEvent event) {
 					sp.setVisible(!sp.isVisible());
 				}
@@ -284,6 +298,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		cf.setColSpan(1, 0, 2);
 		cf.setHorizontalAlignment(1, 0, HasHorizontalAlignment.ALIGN_CENTER);
 		closeButton.addClickHandler(new ClickHandler() {
+			@Override
 			public void onClick(ClickEvent event) {
 				dialogBox.hide();
 			}
@@ -294,6 +309,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		Scheduler.get().scheduleDeferred(() -> closeButton.setFocus(true));
 	}
 
+	@Override
 	public void showError(String msg, Throwable throwable) {
 		log("error: " + msg.replace("<br>", "\n") + "\n"
 				+ throwable.toString());
@@ -305,71 +321,75 @@ public class ClientNotificationsImpl implements ClientNotifications {
 				new ArrayList<Button>());
 	}
 
+	@Override
 	public void showError(Throwable caught) {
 		this.showError("", caught);
 	}
 
+	@Override
 	public void showLog() {
-		showDialog(
-				CommonUtils.formatJ(
-						"<div>Client log</div><hr>"
-								+ "<div class='logboxpre' style='width:850px'>%s </div>",
-						(logString + statsString()).replace("\n", "<br>")),
-				null, null, MessageType.INFO, null, "wide");
+		showDialog(CommonUtils.formatJ("<div>Client log</div><hr>"
+				+ "<div class='logboxpre' style='width:850px'>%s </div>",
+				(logString + statsString()).replace("\n", "<br>")), null, null,
+				MessageType.INFO, null, "wide");
 		dialogBox.setModal(false);
 		dialogBox.setAutoHideEnabled(true);
 	}
 
+	@Override
 	public void showMessage(String msg) {
 		showDialog("<div class='info'>" + msg + "</div>", null, null,
 				MessageType.INFO, null);
 	}
 
+	@Override
 	public void showMessage(Widget msg) {
 		showDialog(null, msg, null, MessageType.INFO, null);
 	}
 
+	@Override
 	public void showWarning(String msg) {
 		showDialog("<div class='warning'>" + msg + "</div>", null, null,
 				MessageType.WARN, null);
 	}
 
+	@Override
 	public void showWarning(String msg, String detail) {
 		showDialog("<div class='warning'>" + msg + "</div>", null, detail,
 				MessageType.WARN, null);
 	}
 
 	public native String statsString() /*-{
-										if (!($wnd.__stats)) {
-										return "";
-										}
-										var result = "";
-										var lastEvtGroup = -1;
-										var lastMillis = 0;
-										for ( var k in $wnd.__stats) {
-										var stat = $wnd.__stats[k];
-										var deltaStr = '';
-										for ( var j in stat) {
-										var v = stat[j];
-										result += j + ": " + v + "  ";
-										
-										}
-										
-										var v = stat.evtGroup;
-										if (lastEvtGroup == v) {
-										if (lastMillis != 0) {
-										result += "\ndelta - " + v + " - " + stat.type + ' - '
-										+ (stat.millis - lastMillis) + 'ms\n';
-										}
-										lastMillis = stat.millis;
-										} else {
-										lastMillis = 0;
-										lastEvtGroup = v;
-										}
-										result += "\n\n";
-										}
-										return result;
-										}-*/;
+    if (!($wnd.__stats)) {
+      return "";
+    }
+    var result = "";
+    var lastEvtGroup = -1;
+    var lastMillis = 0;
+    for ( var k in $wnd.__stats) {
+      var stat = $wnd.__stats[k];
+      var deltaStr = '';
+      for ( var j in stat) {
+        var v = stat[j];
+        result += j + ": " + v + "  ";
+
+      }
+
+      var v = stat.evtGroup;
+      if (lastEvtGroup == v) {
+        if (lastMillis != 0) {
+          result += "\ndelta - " + v + " - " + stat.type + ' - '
+              + (stat.millis - lastMillis) + 'ms\n';
+        }
+        lastMillis = stat.millis;
+      } else {
+        lastMillis = 0;
+        lastEvtGroup = v;
+      }
+      result += "\n\n";
+    }
+    return result;
+	}-*/;
 
 	private void ensureImages() {
 		if (images == null) {
@@ -378,12 +398,12 @@ public class ClientNotificationsImpl implements ClientNotifications {
 	}
 
 	protected native void consoleLog(String s) /*-{
-												try {
-												$wnd.console.log(s);
-												} catch (e) {
-												
-												}
-												}-*/;
+    try {
+      $wnd.console.log(s);
+    } catch (e) {
+
+    }
+	}-*/;
 
 	protected String getStandardErrorText() {
 		return "Sorry for the inconvenience, and we'll fix this problem as soon as possible."

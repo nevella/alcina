@@ -93,8 +93,11 @@ public class HtmlParser {
 		if (replaceContents != null) {
 			replaceContents.clearResolved();
 		}
-		while (idx < html.length()) {
-			char c = html.charAt(idx++);
+		int length = html.length();
+		// gwt compiler hack - force string class init outside loop
+		char c = html.charAt(idx);
+		while (idx < length) {
+			c = html.charAt(idx++);
 			boolean isWhiteSpace = false;
 			boolean emptyBuffer = builder.length() == 0;
 			switch (c) {

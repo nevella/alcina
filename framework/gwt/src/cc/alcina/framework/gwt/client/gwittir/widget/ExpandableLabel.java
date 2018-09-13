@@ -160,6 +160,7 @@ public class ExpandableLabel extends AbstractBoundWidget {
 			// fp.add(new InlineLabel("[Undefined]"));
 			return;
 		}
+		boolean hidden = false;
 		if (o instanceof Collection) {
 			ArrayList l = new ArrayList((Collection) o);
 			if (l.size() > 0 && l.get(0) instanceof Comparable) {
@@ -180,6 +181,7 @@ public class ExpandableLabel extends AbstractBoundWidget {
 					label.setVisible(false);
 					hiddenWidgets.add(comma);
 					hiddenWidgets.add(label);
+					hidden = true;
 				}
 				strlen += name.length();
 				fp.add(label);
@@ -195,7 +197,8 @@ public class ExpandableLabel extends AbstractBoundWidget {
 			int maxC = getMaxLength();
 			int y1 = fullText.indexOf(">", maxC);
 			int y2 = fullText.indexOf("<", maxC);
-			if (y1 < y2 && y1 != -1) {
+			int y3 = fullText.indexOf("<");
+			if (y1 < y2 && y1 != -1 && y3 < maxC && !escapeHtml) {
 				maxC = y1 + 1;
 			}
 			String vis = CommonUtils.trimToWsChars(fullText, maxC);
@@ -208,15 +211,18 @@ public class ExpandableLabel extends AbstractBoundWidget {
 				label = isShowNewlinesAsBreaks() ? new InlineHTML(vis)
 						: new InlineLabel(vis);
 				fp.add(label);
-				String notVis = fullText.substring(vis.length());
-				label = isShowNewlinesAsBreaks() ? new InlineHTML(notVis)
-						: new InlineLabel(notVis);
-				label.setVisible(false);
-				fp.add(label);
-				hiddenWidgets.add(label);
+				hidden = true;
+				if (!isShowAsPopup()) {
+					String notVis = fullText.substring(vis.length());
+					label = isShowNewlinesAsBreaks() ? new InlineHTML(notVis)
+							: new InlineLabel(notVis);
+					label.setVisible(false);
+					fp.add(label);
+					hiddenWidgets.add(label);
+				}
 			}
 		}
-		if (hiddenWidgets.size() != 0) {
+		if (hidden) {
 			this.dots = new InlineLabel("...");
 			this.space = new InlineHTML("&nbsp;");
 			fp.add(dots);

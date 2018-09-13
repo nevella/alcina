@@ -7,7 +7,7 @@ public class TextLocal extends NodeLocal implements DomText {
 
 	TextLocal(DocumentLocal documentLocal, String text) {
 		this.ownerDocument = documentLocal;
-		this.text = text;
+		setData(text);
 	}
 
 	@Override

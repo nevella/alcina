@@ -438,11 +438,14 @@ public class ElementLocal extends NodeLocal
 				appendChild(ownerDocument
 						.createTextNode(HtmlParser.decodeEntities(html)));
 			} else {
+				getChildren().clear();
 				String outerHtml = getOuterHtml();
+				StringBuilder builder = new StringBuilder();
 				int idx = outerHtml.indexOf("</");
-				outerHtml = Ax.format("%s%s%s", outerHtml.substring(0, idx),
-						html, outerHtml.substring(idx));
-				new HtmlParser().parse(outerHtml, element, false);
+				builder.append(outerHtml.substring(0, idx));
+				builder.append(html);
+				builder.append(outerHtml.substring(idx));
+				new HtmlParser().parse(builder.toString(), element, false);
 			}
 		}
 	}
