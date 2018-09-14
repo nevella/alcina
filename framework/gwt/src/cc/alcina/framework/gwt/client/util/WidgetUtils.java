@@ -956,17 +956,19 @@ public class WidgetUtils {
 		debugScroll("" + x + ":" + y);
 	}
 
-	public static native void selectElement(Element el)/*-{
+	public static native void selectElement(Element elem)/*-{
     var sel, range;
+    var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
+    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
     if ($wnd.getSelection && $doc.createRange) {
       sel = $wnd.getSelection();
       range = $doc.createRange();
-      range.selectNodeContents(el);
+      range.selectNodeContents(remote);
       sel.removeAllRanges();
       sel.addRange(range);
     } else if ($doc.body.createTextRange) {
       range = $doc.body.createTextRange();
-      range.moveToElementText(el);
+      range.moveToElementText(remote);
       range.select();
     }
 	}-*/;
