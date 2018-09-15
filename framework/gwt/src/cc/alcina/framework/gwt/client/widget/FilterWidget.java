@@ -41,7 +41,6 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.TextBox;
 
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
@@ -115,6 +114,7 @@ public class FilterWidget extends Composite
 		this.holder = new FlowPanel();
 		this.textBox = new TextBox();
 		textBox.setStyleName("alcina-Filter");
+		textBox.getElement().setAttribute("autocomplete", "off");
 		holder.setStyleName("alcina-FilterHolder");
 		FlowPanel holder2 = new FlowPanel();
 		holder2.add(textBox);
@@ -208,6 +208,7 @@ public class FilterWidget extends Composite
 		changeListenerTimer.scheduleRepeating(100);
 	}
 
+	@Override
 	public void onKeyDown(KeyDownEvent event) {
 		int keyCode = event.getNativeKeyCode();
 		if (keyCode == KeyCodes.KEY_ENTER) {
@@ -220,6 +221,7 @@ public class FilterWidget extends Composite
 		}
 	}
 
+	@Override
 	public void onKeyUp(KeyUpEvent event) {
 		int keyCode = event.getNativeKeyCode();
 		if (keyCode == KeyCodes.KEY_ENTER || keyCode == KeyCodes.KEY_UP

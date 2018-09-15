@@ -25,20 +25,18 @@ public abstract class UserStoryTeller
 
 	public static native void tellJs(String trigger)
 	/*-{
-        var teller = @cc.alcina.framework.gwt.client.logic.UserStoryTeller::get()();
-        teller.@cc.alcina.framework.gwt.client.logic.UserStoryTeller::tell(Ljava/lang/String;)(trigger);
+    var teller = @cc.alcina.framework.gwt.client.logic.UserStoryTeller::get()();
+    teller.@cc.alcina.framework.gwt.client.logic.UserStoryTeller::tell(Ljava/lang/String;)(trigger);
 
 	}-*/;
 
-	long delay = 2000;
-
 	private AtEndOfEventSeriesTimer<ClientLogRecord> seriesTimer = new AtEndOfEventSeriesTimer<>(
-			2000, new Runnable() {
+			20000, new Runnable() {
 				@Override
 				public void run() {
 					publish();
 				}
-			}).maxDelayFromFirstAction(2000);
+			}).maxDelayFromFirstAction(20000);
 
 	protected boolean listening = false;
 
@@ -50,6 +48,18 @@ public abstract class UserStoryTeller
 
 	public UserStoryTeller() {
 		super();
+	}
+
+	public void ensureListening() {
+		if (!listening) {
+			listening = true;
+			LogStore.topicLogEvent().add(this);
+			this.story = createUserStory();
+			AlcinaTopics.logCategorisedMessage(
+					new StringPair(AlcinaTopics.LOG_CATEGORY_MESSAGE,
+							Ax.format("Started logging - url: %s",
+									Window.Location.getHref())));
+		}
 	}
 
 	public native void registerWithJs()
@@ -69,18 +79,6 @@ public abstract class UserStoryTeller
 	public void topicPublished(String key, ClientLogRecord message) {
 		persistLocal();
 		seriesTimer.triggerEventOccurred(message);
-	}
-
-	public void ensureListening() {
-		if (!listening) {
-			listening = true;
-			LogStore.topicLogEvent().add(this);
-			this.story = createUserStory();
-			AlcinaTopics.logCategorisedMessage(
-					new StringPair(AlcinaTopics.LOG_CATEGORY_MESSAGE,
-							Ax.format("Started logging - url: %s",
-									Window.Location.getHref())));
-		}
 	}
 
 	private void ensurePublishing(String trigger) {

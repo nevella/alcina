@@ -1016,6 +1016,12 @@ public class WidgetUtils {
 		}
 	}
 
+	public static void squelchIfNotNewTab() {
+		if (!isNewTabModifier()) {
+			squelchCurrentEvent();
+		}
+	}
+
 	public static void toggleStyleName(Widget w, String styleName) {
 		String current = w.getStyleName();
 		if (current.contains(styleName)) {
