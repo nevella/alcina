@@ -30,10 +30,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -84,7 +82,6 @@ import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 import com.totsp.gwittir.client.util.ListSorter;
 
-import cc.alcina.framework.common.client.logic.RepeatingSequentialCommand;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -609,8 +606,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			return;
 		}
 		this.currentChunk = 0;
-		this.provider.getChunk(this, this.getCurrentChunk());
 		this.inChunk = true;
+		this.provider.getChunk(this, this.getCurrentChunk());
 	}
 
 	public boolean getActive() {
@@ -813,8 +810,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		}
 		if ((this.numberOfChunks - 1) >= 0) {
 			this.currentChunk = this.numberOfChunks - 1;
-			this.provider.getChunk(this, currentChunk);
 			this.inChunk = true;
+			this.provider.getChunk(this, currentChunk);
 		}
 	}
 
@@ -826,8 +823,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			return;
 		}
 		if ((this.currentChunk + 1) < this.numberOfChunks) {
+		    this.inChunk = true;
 			this.provider.getChunk(this, ++currentChunk);
-			this.inChunk = true;
 		}
 	}
 
@@ -839,8 +836,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			return;
 		}
 		if ((this.getCurrentChunk() - 1) >= 0) {
+		    inChunk = true;
 			this.provider.getChunk(this, --currentChunk);
-			inChunk = true;
 		}
 	}
 
@@ -992,8 +989,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	public void setDataProvider(DataProvider provider) {
 		this.provider = provider;
-		this.provider.init(this);
 		this.inChunk = true;
+		this.provider.init(this);
 	}
 
 	@Override
@@ -1415,8 +1412,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			this.addStyleName("handles-as-checkboxes");
 		}
 		if ((this.provider != null) && (this.getCurrentChunk() == -1)) {
+		    this.inChunk = true;
 			this.provider.init(this);
-			this.inChunk = true;
 		}
 		this.addPropertyChangeListener("selected",
 				new PropertyChangeListener() {
