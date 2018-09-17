@@ -126,6 +126,7 @@ public class Element extends Node implements DomElement {
 	protected Element() {
 	}
 
+	@Override
 	public boolean addClassName(String className) {
 		ensureRemoteCheck();
 		boolean result = local().addClassName(className);
@@ -133,10 +134,12 @@ public class Element extends Node implements DomElement {
 		return result;
 	}
 
+	@Override
 	public void blur() {
 		runIfWithRemote(false, () -> remote().blur());
 	}
 
+	@Override
 	public <T extends JavascriptObjectEquivalent> T cast() {
 		return (T) this;
 	}
@@ -151,6 +154,7 @@ public class Element extends Node implements DomElement {
 		return local().provideLocalDomTree();
 	}
 
+	@Override
 	public void dispatchEvent(NativeEvent evt) {
 		remote().dispatchEvent(evt);
 	}
@@ -168,32 +172,39 @@ public class Element extends Node implements DomElement {
 		return nodeFor();
 	}
 
+	@Override
 	public void ensureId() {
 		if (!linkedToRemote()) {
 			local().ensureId();
 		}
 	}
 
+	@Override
 	public void focus() {
 		ensureRemote().focus();
 	}
 
+	@Override
 	public int getAbsoluteBottom() {
 		return ensureRemote().getAbsoluteBottom();
 	}
 
+	@Override
 	public int getAbsoluteLeft() {
 		return ensureRemote().getAbsoluteLeft();
 	}
 
+	@Override
 	public int getAbsoluteRight() {
 		return ensureRemote().getAbsoluteRight();
 	}
 
+	@Override
 	public int getAbsoluteTop() {
 		return ensureRemote().getAbsoluteTop();
 	}
 
+	@Override
 	public String getAttribute(String name) {
 		return local().getAttribute(name);
 	}
@@ -227,27 +238,7 @@ public class Element extends Node implements DomElement {
 		return child.indexInParentChildren();
 	}
 
-	final native String getClassNameSvg() /*-{
-        var elem = this.@com.google.gwt.dom.client.Element::typedRemote()();
-        var cn = elem.className;
-        //note - someone says IE DOM objects don't support - hence try/catch
-        try {
-            if (cn.hasOwnProperty("baseVal")) {
-                cn = cn.baseVal;
-            }
-            if ((typeof cn).toLowerCase() != "string") {
-                if (cn && cn.toString().toLowerCase().indexOf("svg") != -1) {
-                    cn = 'svg-string';
-                } else {
-                    debugger;
-                }
-            }
-        } catch (e) {
-            return "";
-        }
-        return cn;
-	}-*/;
-
+	@Override
 	public String getClassName() {
 		if (DomState.domResolveSvgStyles && linkedToRemote()) {
 			return getClassNameSvg();
@@ -256,89 +247,110 @@ public class Element extends Node implements DomElement {
 		}
 	}
 
+	@Override
 	public int getClientHeight() {
 		return remote().getClientHeight();
 	}
 
+	@Override
 	public int getClientWidth() {
 		return remote().getClientWidth();
 	}
 
+	@Override
 	public String getDir() {
 		return local().getDir();
 	}
 
+	@Override
 	public String getDraggable() {
 		return remote().getDraggable();
 	}
 
+	@Override
 	public NodeList<Element> getElementsByTagName(String name) {
 		ensureRemote();
 		return remote().getElementsByTagName(name);
 	}
 
+	@Override
 	public Element getFirstChildElement() {
 		return local().getFirstChildElement();
 	}
 
+	@Override
 	public String getId() {
 		return local().getId();
 	}
 
+	@Override
 	public String getInnerHTML() {
 		return local().getInnerHTML();
 	}
 
+	@Override
 	public String getInnerText() {
 		return local().getInnerText();
 	}
 
+	@Override
 	public String getLang() {
 		return local().getLang();
 	}
 
+	@Override
 	public Node getLastChild() {
 		return local().getLastChild();
 	}
 
+	@Override
 	public Node getNextSibling() {
 		return local().getNextSibling();
 	}
 
+	@Override
 	public Element getNextSiblingElement() {
 		return local().getNextSiblingElement();
 	}
 
+	@Override
 	public String getNodeName() {
 		return local().getNodeName();
 	}
 
+	@Override
 	public short getNodeType() {
 		return local().getNodeType();
 	}
 
+	@Override
 	public String getNodeValue() {
 		return local().getNodeValue();
 	}
 
+	@Override
 	public int getOffsetHeight() {
 		return callWithRemoteOrDefault(true, () -> remote().getOffsetHeight(),
 				0);
 	}
 
+	@Override
 	public int getOffsetLeft() {
 		return callWithRemoteOrDefault(true, () -> remote().getOffsetLeft(), 0);
 	}
 
+	@Override
 	public Element getOffsetParent() {
 		return callWithRemoteOrDefault(true, () -> remote().getOffsetParent(),
 				null);
 	}
 
+	@Override
 	public int getOffsetTop() {
 		return callWithRemoteOrDefault(true, () -> remote().getOffsetTop(), 0);
 	}
 
+	@Override
 	public int getOffsetWidth() {
 		return callWithRemoteOrDefault(true, () -> remote().getOffsetWidth(),
 				0);
@@ -349,18 +361,22 @@ public class Element extends Node implements DomElement {
 		return local().getOuterHtml();
 	}
 
+	@Override
 	public Element getPreviousSiblingElement() {
 		return local().getPreviousSiblingElement();
 	}
 
+	@Override
 	public boolean getPropertyBoolean(String name) {
 		return implForPropertyName(name).getPropertyBoolean(name);
 	}
 
+	@Override
 	public double getPropertyDouble(String name) {
 		return implForPropertyName(name).getPropertyDouble(name);
 	}
 
+	@Override
 	public int getPropertyInt(String name) {
 		return implForPropertyName(name).getPropertyInt(name);
 	}
@@ -375,32 +391,39 @@ public class Element extends Node implements DomElement {
 		return implForPropertyName(name).getPropertyObject(name);
 	}
 
+	@Override
 	public String getPropertyString(String name) {
 		return implForPropertyName(name).getPropertyString(name);
 	}
 
+	@Override
 	public int getScrollHeight() {
 		return callWithRemoteOrDefault(true, () -> remote().getScrollHeight(),
 				0);
 	}
 
+	@Override
 	public int getScrollLeft() {
 		return callWithRemoteOrDefault(true, () -> remote().getScrollLeft(), 0);
 	}
 
+	@Override
 	public int getScrollTop() {
 		return callWithRemoteOrDefault(true, () -> remote().getScrollTop(), 0);
 	}
 
+	@Override
 	public int getScrollWidth() {
 		return callWithRemoteOrDefault(true, () -> remote().getScrollWidth(),
 				0);
 	}
 
+	@Override
 	public String getString() {
 		return local().getString();
 	}
 
+	@Override
 	public Style getStyle() {
 		if (style == null) {
 			style = new Style(this);
@@ -408,30 +431,36 @@ public class Element extends Node implements DomElement {
 		return style;
 	}
 
+	@Override
 	public int getTabIndex() {
 		return local().getTabIndex();
 	}
 
+	@Override
 	public String getTagName() {
 		return local().getTagName();
 	}
 
+	@Override
 	public String getTitle() {
 		return local().getTitle();
 	}
 
+	@Override
 	public boolean hasAttribute(String name) {
 		return local().hasAttribute(name);
 	}
 
+	@Override
 	public boolean hasClassName(String className) {
 		return local().hasClassName(className);
 	}
 
-    public boolean hasStyle() {
+	public boolean hasStyle() {
 		return style != null;
 	}
 
+	@Override
 	public boolean hasTagName(String tagName) {
 		return local().hasTagName(tagName);
 	}
@@ -448,6 +477,7 @@ public class Element extends Node implements DomElement {
 		return local().eventBits;
 	}
 
+	@Override
 	public Element nodeFor() {
 		return this;
 	}
@@ -456,12 +486,14 @@ public class Element extends Node implements DomElement {
 		this.pendingResolution = true;
 	}
 
+	@Override
 	public void removeAttribute(String name) {
 		ensureRemoteCheck();
 		local().removeAttribute(name);
 		remote().removeAttribute(name);
 	}
 
+	@Override
 	public boolean removeClassName(String className) {
 		ensureRemoteCheck();
 		boolean result = local().removeClassName(className);
@@ -469,10 +501,18 @@ public class Element extends Node implements DomElement {
 		return result;
 	}
 
+	@Override
 	public void replaceClassName(String oldClassName, String newClassName) {
 		ensureRemoteCheck();
 		local().replaceClassName(oldClassName, newClassName);
 		remote().replaceClassName(oldClassName, newClassName);
+	}
+
+	/**
+	 * When it's quicker to redraw the whole DOM. Tree filtering springs to mind
+	 */
+	public void resolvedToPending() {
+		implAccess().resolvedToPending();
 	}
 
 	public void resolvePending() {
@@ -491,10 +531,12 @@ public class Element extends Node implements DomElement {
 		}
 	}
 
+	@Override
 	public void scrollIntoView() {
 		runIfWithRemote(true, () -> remote().scrollIntoView());
 	}
 
+	@Override
 	public void setAttribute(String name, String value) {
 		String current = local().getAttribute(name);
 		if (Objects.equals(current, value)) {
@@ -505,6 +547,7 @@ public class Element extends Node implements DomElement {
 		remote().setAttribute(name, value);
 	}
 
+	@Override
 	public void setClassName(String className) {
 		String current = local().getClassName();
 		if (Objects.equals(current, className)) {
@@ -515,24 +558,28 @@ public class Element extends Node implements DomElement {
 		remote().setClassName(className);
 	}
 
+	@Override
 	public void setDir(String dir) {
 		ensureRemoteCheck();
 		local().setDir(dir);
 		remote().setDir(dir);
 	}
 
+	@Override
 	public void setDraggable(String draggable) {
 		ensureRemoteCheck();
 		local().setDraggable(draggable);
 		remote().setDraggable(draggable);
 	}
 
+	@Override
 	public void setId(String id) {
 		ensureRemoteCheck();
 		local().setId(id);
 		remote().setId(id);
 	}
 
+	@Override
 	public void setInnerHTML(String html) {
 		ensureRemoteCheck();
 		clearResolved();
@@ -551,6 +598,7 @@ public class Element extends Node implements DomElement {
 		oldChildren.forEach(LocalDom::detach);
 	}
 
+	@Override
 	public void setInnerSafeHtml(SafeHtml html) {
 		ensureRemoteCheck();
 		clearResolved();
@@ -568,6 +616,7 @@ public class Element extends Node implements DomElement {
 		oldChildren.forEach(LocalDom::detach);
 	}
 
+	@Override
 	public void setInnerText(String text) {
 		ensureRemoteCheck();
 		clearResolved();
@@ -584,12 +633,14 @@ public class Element extends Node implements DomElement {
 		oldChildren.forEach(LocalDom::detach);
 	}
 
+	@Override
 	public void setLang(String lang) {
 		ensureRemoteCheck();
 		local().setLang(lang);
 		remote().setLang(lang);
 	}
 
+	@Override
 	public void setNodeValue(String nodeValue) {
 		ensureRemoteCheck();
 		local().setNodeValue(nodeValue);
@@ -601,36 +652,42 @@ public class Element extends Node implements DomElement {
 		local().setOuterHtml(html);
 	}
 
+	@Override
 	public void setPropertyBoolean(String name, boolean value) {
 		ensureRemoteCheck();
 		local().setPropertyBoolean(name, value);
 		remote().setPropertyBoolean(name, value);
 	}
 
+	@Override
 	public void setPropertyDouble(String name, double value) {
 		ensureRemoteCheck();
 		local().setPropertyDouble(name, value);
 		remote().setPropertyDouble(name, value);
 	}
 
+	@Override
 	public void setPropertyInt(String name, int value) {
 		ensureRemoteCheck();
 		local().setPropertyInt(name, value);
 		remote().setPropertyInt(name, value);
 	}
 
+	@Override
 	public void setPropertyJSO(String name, JavaScriptObject value) {
 		ensureRemoteCheck();
 		local().setPropertyJSO(name, value);
 		remote().setPropertyJSO(name, value);
 	}
 
+	@Override
 	public void setPropertyObject(String name, Object value) {
 		ensureRemoteCheck();
 		local().setPropertyObject(name, value);
 		remote().setPropertyObject(name, value);
 	}
 
+	@Override
 	public void setPropertyString(String name, String value) {
 		ensureRemoteCheck();
 		local().setPropertyString(name, value);
@@ -648,31 +705,37 @@ public class Element extends Node implements DomElement {
 		}
 	}
 
+	@Override
 	public void setScrollLeft(int scrollLeft) {
 		ensureRemote().setScrollLeft(scrollLeft);
 	}
 
+	@Override
 	public void setScrollTop(int scrollTop) {
 		ensureRemote().setScrollTop(scrollTop);
 	}
 
+	@Override
 	public void setTabIndex(int tabIndex) {
 		ensureRemoteCheck();
 		local().setTabIndex(tabIndex);
 		remote().setTabIndex(tabIndex);
 	}
 
+	@Override
 	public void setTitle(String title) {
 		ensureRemoteCheck();
 		local().setTitle(title);
 		remote().setTitle(title);
 	}
 
+	@Override
 	public void sinkEvents(int eventBits) {
 		local().sinkEvents(eventBits);
 		remote().sinkEvents(eventBits);
 	}
 
+	@Override
 	public void toggleClassName(String className) {
 		ensureRemoteCheck();
 		local().toggleClassName(className);
@@ -801,9 +864,39 @@ public class Element extends Node implements DomElement {
 		return remote;
 	}
 
+	@Override
+	protected void resetRemote0() {
+		this.remote = ElementNull.INSTANCE;
+		if (this.hasStyle()) {
+			this.style.resetRemote();
+		}
+	}
+
+	@Override
 	protected ElementRemote typedRemote() {
 		return (ElementRemote) remote();
 	}
+
+	final native String getClassNameSvg() /*-{
+    var elem = this.@com.google.gwt.dom.client.Element::typedRemote()();
+    var cn = elem.className;
+    //note - someone says IE DOM objects don't support - hence try/catch
+    try {
+      if (cn.hasOwnProperty("baseVal")) {
+        cn = cn.baseVal;
+      }
+      if ((typeof cn).toLowerCase() != "string") {
+        if (cn && cn.toString().toLowerCase().indexOf("svg") != -1) {
+          cn = 'svg-string';
+        } else {
+          debugger;
+        }
+      }
+    } catch (e) {
+      return "";
+    }
+    return cn;
+	}-*/;
 
 	Element putLocal(ElementLocal local) {
 		Preconditions.checkState(this.local == null);
@@ -823,6 +916,11 @@ public class Element extends Node implements DomElement {
 	}
 
 	public class ElementImplAccess {
+		public void appendChildLocalOnly(Element localOnly) {
+			// IE special case
+			local.getChildren().add(localOnly.local);
+		}
+
 		public ElementRemote ensureRemote() {
 			return Element.this.ensureRemote();
 		}
@@ -843,18 +941,6 @@ public class Element extends Node implements DomElement {
 			return Element.this.remote();
 		}
 
-		public ElementRemote typedRemote() {
-			return Element.this.typedRemote();
-		}
-
-		public ElementRemote typedRemoteOrNull() {
-			return linkedToRemote() ? Element.this.typedRemote() : null;
-		}
-
-		public boolean wasResolved() {
-			return Element.this.wasResolved();
-		}
-
 		public void resolvedToPending() {
 			ElementRemote oldRemote = typedRemote();
 			oldRemote.removeAllChildrenElement();
@@ -868,24 +954,16 @@ public class Element extends Node implements DomElement {
 			LocalDom.putRemote(Element.this, remote);
 		}
 
-		public void appendChildLocalOnly(Element localOnly) {
-			// IE special case
-			local.getChildren().add(localOnly.local);
+		public ElementRemote typedRemote() {
+			return Element.this.typedRemote();
 		}
-	}
 
-	/**
-	 * When it's quicker to redraw the whole DOM. Tree filtering springs to mind
-	 */
-	public void resolvedToPending() {
-		implAccess().resolvedToPending();
-	}
+		public ElementRemote typedRemoteOrNull() {
+			return linkedToRemote() ? Element.this.typedRemote() : null;
+		}
 
-	@Override
-	protected void resetRemote0() {
-		this.remote = ElementNull.INSTANCE;
-		if(this.hasStyle()){
-		this.style.resetRemote();
+		public boolean wasResolved() {
+			return Element.this.wasResolved();
 		}
 	}
 }

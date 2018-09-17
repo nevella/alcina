@@ -5,8 +5,9 @@ import cc.alcina.framework.common.client.util.Ax;
 public class TextLocal extends NodeLocal implements DomText {
 	private String text;
 
-	TextLocal(String text) {
-		this.text = text;
+	TextLocal(DocumentLocal documentLocal, String text) {
+		this.ownerDocument = documentLocal;
+		setData(text);
 	}
 
 	@Override

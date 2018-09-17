@@ -341,7 +341,9 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native Element getOffsetParent() /*-{
-    return this.offsetParent;
+    var elem = this.offsetParent ? @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(this.offsetParent)
+        : null;
+    return elem;
 	}-*/;
 
 	/**

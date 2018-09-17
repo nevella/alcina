@@ -15,8 +15,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,6 +46,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -349,11 +350,10 @@ public class DevConsoleDebugCommands {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ResultSet rs = ps.executeQuery();
 			SqlUtils.dumpResultSet(rs);
-			return String.format(
-					"Counted exceptions for last %s days - \n"
-							+ " remember to cache all exceptions for that period  "
-							+ "before drilldown/count by running \n\tdxg %s\n\n ",
-					days, days);
+			return String.format("Counted exceptions for last %s days - \n"
+					+ " remember to cache all exceptions for that period  "
+					+ "before drilldown/count by running \n\tdxg %s\n\n ", days,
+					days);
 		}
 	}
 
@@ -439,109 +439,14 @@ public class DevConsoleDebugCommands {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			if (argv.length == 0) {
-				printUsage();
-				return null;
+			try {
+				LooseContext.pushWithTrue(DevConsole.CONTEXT_NO_TRUNCATE);
+				console.clear();
+				return run0(argv);
+			} finally {
+				LooseContext.pop();
+				console.scrollToTopAtEnd();
 			}
-			ILogRecord record = null;
-			String id = argv[0];
-			long recId = 0;
-			if (id.matches("\\d+")) {
-				recId = Long.parseLong(argv[0]);
-				record = console.state.logRecordById(recId);
-				if (record == null) {
-					if (lastRecord != null && lastRecord.getId() == recId) {
-						record = lastRecord;
-					}
-				}
-				if (record == null) {
-					List<ILogRecord> logRecords = new ArrayList<ILogRecord>();
-					Connection conn = getConn();
-					String sql = "select l.*,u.username "
-							+ "from logging l left outer join users u on l.user_id=u.id "
-							+ "where l.id=? ";
-					PreparedStatement ps = conn.prepareStatement(sql);
-					ps.setLong(1, recId);
-					ResultSet rs = ps.executeQuery();
-					CmdGetExceptionLogs subCmd = new CmdGetExceptionLogs();
-					subCmd.setEnvironment(console);
-					subCmd.addLogRecords(rs, logRecords);
-					record = CommonUtils.first(logRecords);
-					ps.close();
-				}
-			} else {
-				record = Registry.impl(ILogRecord.class);
-				record.setText(ResourceUtilities.readFileToString(id));
-			}
-			lastRecord = record;
-			FilterArgvParam param = new FilterArgvParam(argv, "-o");
-			argv = param.argv;
-			String format = param.valueOrDefault("all");
-			boolean all = format.equals("all");
-			boolean replay = format.equals("replay");
-			Pattern clientLogPattern = Pattern
-					.compile("\nSession History:\n----\n(.+)", Pattern.DOTALL);
-			Pattern clientLogPattern2 = Pattern.compile("(\\{\"cn\":.+)",
-					Pattern.DOTALL);
-			String text = record.getText();
-			Matcher clientLogMatcher = clientLogPattern.matcher(text);
-			if (clientLogMatcher.find()) {
-				text = text.substring(0, clientLogMatcher.start());
-			}
-			text = text.replace("\n", "\n\t");
-			System.out.format(
-					"-------\nId:\t%s\nUser:\t%s (%s)\nCmp:\t%s\nDate:\t%s\nHost:\t%s\nText:\t%s\n",
-					record.getId(), console.state.getUser(record.getUserId()),
-					record.getUserId(), record.getComponentKey(),
-					record.getCreatedOn(), record.getHost(),
-					replay ? "" : text);
-			Matcher uam = UA_PATTERN.matcher(record.getText());
-			Pattern moduleNamePattern = Pattern
-					.compile("Permutation name: (\\S+)");
-			Matcher m = moduleNamePattern.matcher(record.getText());
-			String recordText = record.getText();
-			FilterArgvFlag f = new FilterArgvFlag(argv, "-js");
-			argv = f.argv;
-			getJs = f.contains;
-			FilterArgvParam p = new FilterArgvParam(argv, "-fn");
-			if (p.value != null) {
-				argv = p.argv;
-				fnOverride = p.value;
-			}
-			if (m.find()) {
-				uam.find();
-				String userAgentString = uam.group(1);
-				UserAgent userAgent = UserAgent
-						.parseUserAgentString(userAgentString);
-				Browser browser = userAgent.getBrowser();
-				String mn = m.group(1);
-				if (!mn.equals("HostedMode")
-						&& !text.contains("fillInStackTrace") && all
-						&& ensureModuleAndSymbolMap(mn)) {
-					deObfStacktrace(text, mn, browser);
-				} else {
-					if (all) {
-						System.out.println("Unable to import module/symbol");
-					}
-				}
-			}
-			clientLogMatcher = clientLogPattern.matcher(record.getText());
-			Matcher clientLogMatcher2 = clientLogPattern2
-					.matcher(record.getText());
-			if (!clientLogMatcher.find() && clientLogMatcher2.find()) {
-				clientLogMatcher = clientLogMatcher2;
-			}
-			clientLogMatcher.reset();
-			if (clientLogMatcher.find()) {
-				if (all) {
-					dumpHistory(clientLogMatcher.group(1));
-				} else if (replay) {
-					String replayStr = extractReplay(clientLogMatcher.group(1));
-					System.out.format("\n\n%s\n\n", replayStr);
-					console.setClipboardContents(replayStr);
-				}
-			}
-			return String.format("Drilldown - %s", recId);
 		}
 
 		private void deObfStacktrace(String text, String mn, Browser browser)
@@ -621,8 +526,9 @@ public class DevConsoleDebugCommands {
 						String fn = m3.group(1).trim();
 						String unobffn = km.get(fn);
 						System.out.format("\tLine number %s:\n\t%s\n\n",
-								lineNumber, (unobffn == null
-										? "***" + m3.group() : unobffn));
+								lineNumber,
+								(unobffn == null ? "***" + m3.group()
+										: unobffn));
 					}
 				} catch (ArrayIndexOutOfBoundsException e) {
 					System.out.println("**invliad line number, rpperply");
@@ -829,6 +735,112 @@ public class DevConsoleDebugCommands {
 			proc.waitFor();
 		}
 
+		String run0(String[] argv) throws Exception {
+			if (argv.length == 0) {
+				printUsage();
+				return null;
+			}
+			ILogRecord record = null;
+			String id = argv[0];
+			long recId = 0;
+			if (id.matches("\\d+")) {
+				recId = Long.parseLong(argv[0]);
+				record = console.state.logRecordById(recId);
+				if (record == null) {
+					if (lastRecord != null && lastRecord.getId() == recId) {
+						record = lastRecord;
+					}
+				}
+				if (record == null) {
+					List<ILogRecord> logRecords = new ArrayList<ILogRecord>();
+					Connection conn = getConn();
+					String sql = "select l.*,u.username "
+							+ "from logging l left outer join users u on l.user_id=u.id "
+							+ "where l.id=? ";
+					PreparedStatement ps = conn.prepareStatement(sql);
+					ps.setLong(1, recId);
+					ResultSet rs = ps.executeQuery();
+					CmdGetExceptionLogs subCmd = new CmdGetExceptionLogs();
+					subCmd.setEnvironment(console);
+					subCmd.addLogRecords(rs, logRecords);
+					record = CommonUtils.first(logRecords);
+					ps.close();
+				}
+			} else {
+				record = Registry.impl(ILogRecord.class);
+				record.setText(ResourceUtilities.readFileToString(id));
+			}
+			lastRecord = record;
+			FilterArgvParam param = new FilterArgvParam(argv, "-o");
+			argv = param.argv;
+			String format = param.valueOrDefault("all");
+			boolean all = format.equals("all");
+			boolean replay = format.equals("replay");
+			Pattern clientLogPattern = Pattern
+					.compile("\nSession History:\n----\n(.+)", Pattern.DOTALL);
+			Pattern clientLogPattern2 = Pattern.compile("(\\{\"cn\":.+)",
+					Pattern.DOTALL);
+			String text = record.getText();
+			Matcher clientLogMatcher = clientLogPattern.matcher(text);
+			if (clientLogMatcher.find()) {
+				text = text.substring(0, clientLogMatcher.start());
+			}
+			text = text.replace("\n", "\n\t");
+			System.out.format(
+					"-------\nId:\t%s\nUser:\t%s (%s)\nCmp:\t%s\nDate:\t%s\nHost:\t%s\nText:\t%s\n",
+					record.getId(), console.state.getUser(record.getUserId()),
+					record.getUserId(), record.getComponentKey(),
+					record.getCreatedOn(), record.getHost(),
+					replay ? "" : text);
+			Matcher uam = UA_PATTERN.matcher(record.getText());
+			Pattern moduleNamePattern = Pattern
+					.compile("Permutation name: (\\S+)");
+			Matcher m = moduleNamePattern.matcher(record.getText());
+			String recordText = record.getText();
+			FilterArgvFlag f = new FilterArgvFlag(argv, "-js");
+			argv = f.argv;
+			getJs = f.contains;
+			FilterArgvParam p = new FilterArgvParam(argv, "-fn");
+			if (p.value != null) {
+				argv = p.argv;
+				fnOverride = p.value;
+			}
+			if (m.find()) {
+				uam.find();
+				String userAgentString = uam.group(1);
+				UserAgent userAgent = UserAgent
+						.parseUserAgentString(userAgentString);
+				Browser browser = userAgent.getBrowser();
+				String mn = m.group(1);
+				if (!mn.equals("HostedMode")
+						&& !text.contains("fillInStackTrace") && all
+						&& ensureModuleAndSymbolMap(mn)) {
+					deObfStacktrace(text, mn, browser);
+				} else {
+					if (all) {
+						System.out.println("Unable to import module/symbol");
+					}
+				}
+			}
+			clientLogMatcher = clientLogPattern.matcher(record.getText());
+			Matcher clientLogMatcher2 = clientLogPattern2
+					.matcher(record.getText());
+			if (!clientLogMatcher.find() && clientLogMatcher2.find()) {
+				clientLogMatcher = clientLogMatcher2;
+			}
+			clientLogMatcher.reset();
+			if (clientLogMatcher.find()) {
+				if (all) {
+					dumpHistory(clientLogMatcher.group(1));
+				} else if (replay) {
+					String replayStr = extractReplay(clientLogMatcher.group(1));
+					System.out.format("\n\n%s\n\n", replayStr);
+					console.setClipboardContents(replayStr);
+				}
+			}
+			return String.format("Drilldown - %s", recId);
+		}
+
 		public static class DevConsoleDebugPaths {
 			public String symPath;
 
@@ -840,6 +852,8 @@ public class DevConsoleDebugCommands {
 
 	public static class CmdGetExceptionLogs extends DevConsoleCommand {
 		private static final int DEFAULT_GET_EXCEPTIONS_IN_LAST_X_DAYS = 2;
+
+		String regexFilter = null;
 
 		public void addLogRecords(ResultSet rs, List<ILogRecord> logRecords)
 				throws SQLException {
@@ -883,8 +897,6 @@ public class DevConsoleDebugCommands {
 		public String getUsage() {
 			return "dxg {days} <-a --all types> <-gtid id : log record id gt specified>";
 		}
-
-		String regexFilter = null;
 
 		@Override
 		public String run(String[] argv) throws Exception {

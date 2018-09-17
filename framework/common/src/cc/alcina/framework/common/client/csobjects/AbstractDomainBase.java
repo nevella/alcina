@@ -77,6 +77,7 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 	@Version
 	@Column(name = "OPTLOCK")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
+	@Display(name = "Version number", visible = @Permission(access = AccessLevel.ADMIN), orderingHint = 991)
 	public int getVersionNumber() {
 		return versionNumber;
 	}

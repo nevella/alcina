@@ -42,6 +42,7 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 		return DomDocumentStatic.createBRElement(this);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public final ButtonElement createButtonElement() {
 		return DomDocumentStatic.createButtonElement(this);
@@ -287,6 +288,7 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 		return DomDocumentStatic.createSelectElement(this);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public final SelectElement createSelectElement(boolean multiple) {
 		return DomDocumentStatic.createSelectElement(this, multiple);
@@ -344,7 +346,7 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public Text createTextNode(String data) {
-		TextLocal local = new TextLocal(data);
+		TextLocal local = new TextLocal(this, data);
 		Text text = new Text(local);
 		local.registerNode(text);
 		return text;

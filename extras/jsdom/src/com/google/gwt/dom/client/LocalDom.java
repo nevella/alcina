@@ -176,6 +176,12 @@ public class LocalDom {
 		get().putRemote0(element, remote);
 	}
 
+	static String safeParseByBrowser(String html) {
+		ElementRemote remote = Document.get().typedRemote()
+				.generateFromOuterHtml(html);
+		return remote.buildOuterHtml();
+	}
+
 	static void wasResolved(Element elem) {
 		get().wasResolved0(elem);
 	}
@@ -549,8 +555,17 @@ public class LocalDom {
 
 	private Element parseAndMarkResolved(ElementRemote root, String outerHtml,
 			Element replaceContents) {
-		Element parsed = new HtmlParser().parse(outerHtml, replaceContents,
-				root == Document.get().typedRemote().getDocumentElement0());
+		Element parsed = null;
+		try {
+			parsed = new HtmlParser().parse(outerHtml, replaceContents,
+					root == Document.get().typedRemote().getDocumentElement0());
+		} catch (Exception e) {
+			// TODO - possibly log. But maybe not - full support of dodgy dom wd
+			// be truly hard
+			parsed = new HtmlParser().parse(safeParseByBrowser(outerHtml),
+					replaceContents,
+					root == Document.get().typedRemote().getDocumentElement0());
+		}
 		wasResolved0(parsed);
 		return parsed;
 	}
@@ -633,7 +648,11 @@ public class LocalDom {
 				break;
 			}
 			int nodeIndex = indicies.get(idx);
-			cursor = (Element) cursor.getChild(nodeIndex);
+			Node node = cursor.getChild(nodeIndex);
+			if (node.getNodeType() != Node.ELEMENT_NODE) {
+				return true;
+			}
+			cursor = (Element) node;
 		}
 		if (sizesMatch) {
 			return false;

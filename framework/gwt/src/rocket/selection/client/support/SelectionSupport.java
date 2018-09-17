@@ -40,18 +40,18 @@ import rocket.util.client.JavaScript;
 // cross casting
 abstract public class SelectionSupport {
 	native static TextRemote remote(Text text)/*-{
-												var implAccess = text.@com.google.gwt.dom.client.Text::implAccess()();
-												var remote = implAccess.@com.google.gwt.dom.client.Text.TextImplAccess::typedRemote()();
-												return remote;
-												}-*/;
+    var implAccess = text.@com.google.gwt.dom.client.Text::implAccess()();
+    var remote = implAccess.@com.google.gwt.dom.client.Text.TextImplAccess::typedRemote()();
+    return remote;
+	}-*/;
 
 	native public void clear(final Selection selection)/*-{
-														selection.removeAllRanges();
-														}-*/;
+    selection.removeAllRanges();
+	}-*/;
 
 	native public void clearAnySelectedText(final Selection selection)/*-{
-																		selection.removeAllRanges();
-																		}-*/;
+    selection.removeAllRanges();
+	}-*/;
 
 	/**
 	 * Deletes or removes the selected dom objects from the object.
@@ -82,9 +82,8 @@ abstract public class SelectionSupport {
 		final SelectionEndPoint end = new SelectionEndPoint();
 		NodeRemote nodeRemote = JavaScript
 				.getObject(selection, Constants.FOCUS_NODE).cast();
-		end.setTextNode(LocalDom.nodeFor(nodeRemote));
-		end.setOffset(JavaScript.getInteger(selection, Constants.FOCUS_OFFSET));
-		if (end.getTextNode().getNodeType() == Node.ELEMENT_NODE) {
+		Node endNode = LocalDom.nodeFor(nodeRemote);
+		if (endNode.getNodeType() == Node.ELEMENT_NODE) {
 			// this occurs when selecting, say, the next LI in a list as the
 			// endpoint. Hence different to IE impl
 			ElementRemote elementRemote = (ElementRemote) ((Element) end
@@ -95,6 +94,8 @@ abstract public class SelectionSupport {
 			end.setOffset(0);
 		} else {
 			end.setTextNode((Text) end.getNode().cast());
+			end.setOffset(
+					JavaScript.getInteger(selection, Constants.FOCUS_OFFSET));
 		}
 		return end;
 	}
@@ -105,9 +106,7 @@ abstract public class SelectionSupport {
 		final SelectionEndPoint start = new SelectionEndPoint();
 		NodeRemote nodeRemote = JavaScript
 				.getObject(selection, Constants.ANCHOR_NODE).cast();
-		start.setTextNode(LocalDom.nodeFor(nodeRemote));
-		start.setOffset(
-				JavaScript.getInteger(selection, Constants.ANCHOR_OFFSET));
+		Text startNode = LocalDom.nodeFor(nodeRemote);
 		if (start.getTextNode().getNodeType() == Node.ELEMENT_NODE) {
 			ElementRemote elementRemote = (ElementRemote) ((Element) start
 					.getNode()).implAccess().typedRemote();
@@ -117,6 +116,8 @@ abstract public class SelectionSupport {
 			start.setOffset(0);
 		} else {
 			start.setTextNode((Text) start.getNode().cast());
+			start.setOffset(
+					JavaScript.getInteger(selection, Constants.ANCHOR_OFFSET));
 		}
 		return start;
 	}
@@ -148,111 +149,111 @@ abstract public class SelectionSupport {
 	}
 
 	native private void delete0(final Selection selection)/*-{
-															var range = selection.getRangeAt(0);
-															range.deleteContents();
-															}-*/;
+    var range = selection.getRangeAt(0);
+    range.deleteContents();
+	}-*/;
 
 	native private Element extract0(final Selection selection)/*-{
-																var element = selection.anchorNode.ownerDocument.createElement("span");
-																
-																var range = selection.getRangeAt(0);
-																if (range) {
-																range.surroundContents(element);
-																}
-																return element;
-																}-*/;
+    var element = selection.anchorNode.ownerDocument.createElement("span");
+
+    var range = selection.getRangeAt(0);
+    if (range) {
+      range.surroundContents(element);
+    }
+    return element;
+	}-*/;
 
 	native private void setEnd0(final Selection selection, final Text text,
 			final int offset)/*-{
-								var textNode = @rocket.selection.client.support.SelectionSupport::remote(Lcom/google/gwt/dom/client/Text;)(text);
-								// if an existing selection exists use that otherwise set the start to the new end.
-								var startNode = selection.anchorNode;
-								var startOffset = selection.anchorOffset;
-								if (!startNode) {
-								startNode = textNode;
-								startOffset = offset;
-								}
-								
-								// create a new range that will join the old end and the new start...
-								var range = textNode.ownerDocument.createRange();
-								range.setStart(startNode, startOffset);
-								
-								range.setEnd(textNode, offset);
-								
-								// delete all ranges then recreate...
-								selection.removeAllRanges();
-								selection.addRange(range);
-								}-*/;
+    var textNode = @rocket.selection.client.support.SelectionSupport::remote(Lcom/google/gwt/dom/client/Text;)(text);
+    // if an existing selection exists use that otherwise set the start to the new end.
+    var startNode = selection.anchorNode;
+    var startOffset = selection.anchorOffset;
+    if (!startNode) {
+      startNode = textNode;
+      startOffset = offset;
+    }
+
+    // create a new range that will join the old end and the new start...
+    var range = textNode.ownerDocument.createRange();
+    range.setStart(startNode, startOffset);
+
+    range.setEnd(textNode, offset);
+
+    // delete all ranges then recreate...
+    selection.removeAllRanges();
+    selection.addRange(range);
+	}-*/;
 
 	native private void setStart0(final Selection selection, final Text text,
 			final int offset)/*-{
-								var textNode = @rocket.selection.client.support.SelectionSupport::remote(Lcom/google/gwt/dom/client/Text;)(text);
-								// if an existing end exists use that otherwise set the end to the new start
-								var endNode = selection.focusNode;
-								var endOffset = selection.focusOffset;
-								if (!endNode) {
-								endNode = textNode;
-								endOffset = offset;
-								}
-								
-								var range = textNode.ownerDocument.createRange();
-								range.setStart(textNode, offset);
-								
-								range.setEnd(endNode, endOffset);
-								
-								// delete all ranges then recreate...
-								selection.removeAllRanges();
-								selection.addRange(range);
-								}-*/;
+    var textNode = @rocket.selection.client.support.SelectionSupport::remote(Lcom/google/gwt/dom/client/Text;)(text);
+    // if an existing end exists use that otherwise set the end to the new start
+    var endNode = selection.focusNode;
+    var endOffset = selection.focusOffset;
+    if (!endNode) {
+      endNode = textNode;
+      endOffset = offset;
+    }
+
+    var range = textNode.ownerDocument.createRange();
+    range.setStart(textNode, offset);
+
+    range.setEnd(endNode, endOffset);
+
+    // delete all ranges then recreate...
+    selection.removeAllRanges();
+    selection.addRange(range);
+	}-*/;
 
 	native protected Text getFirstTextDepthFirst(final ElementRemote parent,
 			int childIndex, int direction)/*-{
-											var childNodes = parent.childNodes;
-											var i = childIndex;
-											for (; i >= 0 && i < childNodes.length; i += direction) {
-											var node = childNodes[i];
-											var nodeType = node.nodeType;
-											if (3 == nodeType) {
-											return node;
-											}
-											if (1 == nodeType && node.childNodes.length != 0) {
-											var result = this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementRemote;II)(node,direction==-1?node.childNodes.length-1:0,direction);
-											if (result != null) {
-											return result;
-											}
-											}
-											}
-											return null;
-											
-											}-*/;
+    var childNodes = parent.childNodes;
+    var i = childIndex;
+    for (; i >= 0 && i < childNodes.length; i += direction) {
+      var node = childNodes[i];
+      var nodeType = node.nodeType;
+      if (3 == nodeType) {
+        return node;
+      }
+      if (1 == nodeType && node.childNodes.length != 0) {
+        var result = this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementRemote;II)(node,direction==-1?node.childNodes.length-1:0,direction);
+        if (result != null) {
+          return result;
+        }
+      }
+    }
+    return null;
+
+	}-*/;
 
 	native protected TextRemote getFirstTextDepthFirstWithParent(
 			final ElementRemote element, int direction)/*-{
-														var childNodes = element.parentNode.childNodes;
-														var i = direction == 1 ? 0 : childNodes.length - 1;
-														var found = false;
-														for (; i >= 0 && i < childNodes.length; i += direction) {
-														if (element == childNodes[i]) {
-														found = true;
-														}
-														if (found) {
-														var node = childNodes[i];
-														var nodeType = node.nodeType;
-														if (3 == nodeType) {
-														return node;
-														}
-														var result = this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementRemote;II)(node,direction==-1?node.childNodes.length-1:0,direction);
-														if (result != null) {
-														return result;
-														}
-														}
-														}
-														return this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirstWithParent(Lcom/google/gwt/dom/client/ElementRemote;I)(element.parentNode,direction);
-														}-*/;
+    var childNodes = element.parentNode.childNodes;
+    var i = direction == 1 ? 0 : childNodes.length - 1;
+    var found = false;
+    for (; i >= 0 && i < childNodes.length; i += direction) {
+      if (element == childNodes[i]) {
+        found = true;
+      }
+      if (found) {
+        var node = childNodes[i];
+        var nodeType = node.nodeType;
+        if (3 == nodeType) {
+          return node;
+        }
+        var result = this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementRemote;II)(node,direction==-1?node.childNodes.length-1:0,direction);
+        if (result != null) {
+          return result;
+        }
+      }
+    }
+    return this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirstWithParent(Lcom/google/gwt/dom/client/ElementRemote;I)(element.parentNode,direction);
+	}-*/;
 
 	native protected void surround0(final Selection selection,
 			final Element element)/*-{
-									var range = selection.getRangeAt(0);
-									range.surroundContents(element);
-									}-*/;
+    var range = selection.getRangeAt(0);
+    range.surroundContents(element);
+	}-*/;
 }
