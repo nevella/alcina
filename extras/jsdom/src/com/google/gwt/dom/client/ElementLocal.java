@@ -469,6 +469,7 @@ public class ElementLocal extends NodeLocal
 	public void setInnerText(String text) {
 		if (Ax.isBlank(text)) {
 		} else {
+			getChildren().clear();
 			appendChild(ownerDocument.createTextNode(text));
 		}
 	}
