@@ -82,20 +82,29 @@ abstract public class SelectionSupport {
 		final SelectionEndPoint end = new SelectionEndPoint();
 		NodeRemote nodeRemote = JavaScript
 				.getObject(selection, Constants.FOCUS_NODE).cast();
-		Node endNode = LocalDom.nodeFor(nodeRemote);
-		if (endNode.getNodeType() == Node.ELEMENT_NODE) {
-			// this occurs when selecting, say, the next LI in a list as the
-			// endpoint. Hence different to IE impl
-			ElementRemote elementRemote = (ElementRemote) ((Element) end
-					.getNode()).implAccess().typedRemote();
-			TextRemote remote = getFirstTextDepthFirstWithParent(elementRemote,
-					1);
-			end.setTextNode(LocalDom.nodeFor(remote));
-			end.setOffset(0);
+		end.setNode(LocalDom.nodeFor(nodeRemote));
+		end.setOffset(JavaScript.getInteger(selection, Constants.FOCUS_OFFSET));
+		if (end.getNode() == null) {
+			return null;
+		}
+		if (end.getNode().getNodeType() == Node.ELEMENT_NODE) {
+			Element parent = (Element) end.getNode().cast();
+			if (parent.getChildNodes().getLength() <= end.getOffset()) {
+				return null;
+			}
+			Node node = parent.getChildNodes().getItem(end.getOffset());
+			if (node.getNodeType() == Node.TEXT_NODE) {
+				end.setTextNode((Text) node);
+				end.setOffset(0);
+			} else {
+				TextRemote textRemote = getFirstTextDepthFirstWithParent(
+						((Element) node).implAccess().typedRemote(), 1);
+				Text text = LocalDom.nodeFor(textRemote);
+				end.setTextNode(text);
+				end.setOffset(0);
+			}
 		} else {
 			end.setTextNode((Text) end.getNode().cast());
-			end.setOffset(
-					JavaScript.getInteger(selection, Constants.FOCUS_OFFSET));
 		}
 		return end;
 	}
@@ -106,14 +115,22 @@ abstract public class SelectionSupport {
 		final SelectionEndPoint start = new SelectionEndPoint();
 		NodeRemote nodeRemote = JavaScript
 				.getObject(selection, Constants.ANCHOR_NODE).cast();
-		Text startNode = LocalDom.nodeFor(nodeRemote);
-		if (start.getTextNode().getNodeType() == Node.ELEMENT_NODE) {
-			ElementRemote elementRemote = (ElementRemote) ((Element) start
-					.getNode()).implAccess().typedRemote();
-			TextRemote remote = getFirstTextDepthFirstWithParent(elementRemote,
-					1);
-			start.setTextNode(LocalDom.nodeFor(remote));
-			start.setOffset(0);
+		start.setNode(LocalDom.nodeFor(nodeRemote));
+		start.setOffset(
+				JavaScript.getInteger(selection, Constants.ANCHOR_OFFSET));
+		if (start.getNode().getNodeType() == Node.ELEMENT_NODE) {
+			Element parent = (Element) start.getNode().cast();
+			Node node = parent.getChildNodes().getItem(start.getOffset());
+			if (node.getNodeType() == Node.TEXT_NODE) {
+				start.setTextNode((Text) node);
+				start.setOffset(0);
+			} else {
+				TextRemote textRemote = getFirstTextDepthFirstWithParent(
+						((Element) node).implAccess().typedRemote(), 1);
+				Text text = LocalDom.nodeFor(textRemote);
+				start.setTextNode(text);
+				start.setOffset(0);
+			}
 		} else {
 			start.setTextNode((Text) start.getNode().cast());
 			start.setOffset(
