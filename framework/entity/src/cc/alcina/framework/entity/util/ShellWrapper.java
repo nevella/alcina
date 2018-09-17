@@ -44,12 +44,16 @@ public class ShellWrapper {
     }
 
     public File launchBashScript(String script) throws Exception {
-        File tmp = File.createTempFile("shell", ".sh");
+        File tmp = File.createTempFile("shell", getScriptExtension());
         tmp.deleteOnExit();
         ResourceUtilities.writeStringToFile(script, tmp);
         launchProcess(new String[] { "/bin/bash", tmp.getPath() },
                 s -> s.length(), s -> s.length());
         return tmp;
+    }
+
+    private String getScriptExtension() {
+        return SystemUtils.IS_OS_WINDOWS?".bat":".sh";
     }
 
     public ShellWrapper noLogging() {
@@ -63,7 +67,7 @@ public class ShellWrapper {
 
     public ShellOutputTuple runBashScript(String script, boolean logCmd)
             throws Exception {
-        File tmp = File.createTempFile("shell", ".sh");
+        File tmp = File.createTempFile("shell", getScriptExtension());
         tmp.deleteOnExit();
         ResourceUtilities.writeStringToFile(script, tmp);
         ShellOutputTuple outputTuple = runShell(tmp.getPath(), "/bin/bash");
@@ -164,8 +168,7 @@ public class ShellWrapper {
         if (cmdAndArgs[0].equals("/bin/bash") && SystemUtils.IS_OS_WINDOWS) {
             List<String> rewrite = Arrays.asList(cmdAndArgs).stream()
                     .collect(Collectors.toList());
-            rewrite.set(0, "cmd.exe");
-            rewrite.add(1, "\\C");
+            rewrite.remove(0);//just run as .bat
             cmdAndArgs = (String[]) rewrite.toArray(new String[rewrite.size()]);
         }
         if (logToStdOut) {
