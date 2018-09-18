@@ -24,6 +24,7 @@ import com.google.gwt.dom.client.NodeRemote;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.dom.client.TextRemote;
 
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import rocket.selection.client.Selection;
 import rocket.selection.client.SelectionEndPoint;
 import rocket.util.client.Checker;
@@ -39,6 +40,13 @@ import rocket.util.client.JavaScript;
 // FIXME - localdom2 - fix the element vs text logic hidden formerly by jso
 // cross casting
 abstract public class SelectionSupport {
+	static final String TOPIC_SELECTION_DEBUG = SelectionSupport.class.getName()
+			+ ".TOPIC_SELECTION_DEBUG";
+
+	public static TopicSupport<Integer> selectionDebugTopic() {
+		return new TopicSupport<>(SelectionSupport.TOPIC_SELECTION_DEBUG);
+	}
+
 	native static TextRemote remote(Text text)/*-{
     var implAccess = text.@com.google.gwt.dom.client.Text::implAccess()();
     var remote = implAccess.@com.google.gwt.dom.client.Text.TextImplAccess::typedRemote()();
@@ -79,64 +87,86 @@ abstract public class SelectionSupport {
 	}
 
 	public SelectionEndPoint getEnd(final Selection selection) {
-		final SelectionEndPoint end = new SelectionEndPoint();
-		NodeRemote nodeRemote = JavaScript
-				.getObject(selection, Constants.FOCUS_NODE).cast();
-		end.setNode(LocalDom.nodeFor(nodeRemote));
-		end.setOffset(JavaScript.getInteger(selection, Constants.FOCUS_OFFSET));
-		if (end.getNode() == null) {
-			return null;
-		}
-		if (end.getNode().getNodeType() == Node.ELEMENT_NODE) {
-			Element parent = (Element) end.getNode().cast();
-			if (parent.getChildNodes().getLength() <= end.getOffset()) {
+		int debugInfo = 0;
+		try {
+			final SelectionEndPoint end = new SelectionEndPoint();
+			NodeRemote nodeRemote = JavaScript
+					.getObject(selection, Constants.FOCUS_NODE).cast();
+			end.setNode(LocalDom.nodeFor(nodeRemote));
+			end.setOffset(
+					JavaScript.getInteger(selection, Constants.FOCUS_OFFSET));
+			if (end.getNode() == null) {
 				return null;
 			}
-			Node node = parent.getChildNodes().getItem(end.getOffset());
-			if (node.getNodeType() == Node.TEXT_NODE) {
-				end.setTextNode((Text) node);
-				end.setOffset(0);
+			if (end.getNode().getNodeType() == Node.ELEMENT_NODE) {
+				Element parent = (Element) end.getNode().cast();
+				if (parent.getChildNodes().getLength() <= end.getOffset()) {
+					return null;
+				}
+				Node node = parent.getChildNodes().getItem(end.getOffset());
+				if (node.getNodeType() == Node.TEXT_NODE) {
+					end.setTextNode((Text) node);
+					end.setOffset(0);
+				} else {
+					TextRemote textRemote = getFirstTextDepthFirstWithParent(
+							((Element) node).implAccess().typedRemote(), 1);
+					Text text = LocalDom.nodeFor(textRemote);
+					end.setTextNode(text);
+					end.setOffset(0);
+				}
 			} else {
-				TextRemote textRemote = getFirstTextDepthFirstWithParent(
-						((Element) node).implAccess().typedRemote(), 1);
-				Text text = LocalDom.nodeFor(textRemote);
-				end.setTextNode(text);
-				end.setOffset(0);
+				end.setTextNode((Text) end.getNode().cast());
 			}
-		} else {
-			end.setTextNode((Text) end.getNode().cast());
+			return end;
+		} catch (Exception e) {
+			selectionDebugTopic().publish(debugInfo);
+			return null;
 		}
-		return end;
 	}
 
 	abstract public Selection getSelection(JavaScriptObject window);
 
 	public SelectionEndPoint getStart(final Selection selection) {
-		final SelectionEndPoint start = new SelectionEndPoint();
-		NodeRemote nodeRemote = JavaScript
-				.getObject(selection, Constants.ANCHOR_NODE).cast();
-		start.setNode(LocalDom.nodeFor(nodeRemote));
-		start.setOffset(
-				JavaScript.getInteger(selection, Constants.ANCHOR_OFFSET));
-		if (start.getNode().getNodeType() == Node.ELEMENT_NODE) {
-			Element parent = (Element) start.getNode().cast();
-			Node node = parent.getChildNodes().getItem(start.getOffset());
-			if (node.getNodeType() == Node.TEXT_NODE) {
-				start.setTextNode((Text) node);
-				start.setOffset(0);
-			} else {
-				TextRemote textRemote = getFirstTextDepthFirstWithParent(
-						((Element) node).implAccess().typedRemote(), 1);
-				Text text = LocalDom.nodeFor(textRemote);
-				start.setTextNode(text);
-				start.setOffset(0);
-			}
-		} else {
-			start.setTextNode((Text) start.getNode().cast());
+		int debugInfo = 0;
+		try {
+			final SelectionEndPoint start = new SelectionEndPoint();
+			NodeRemote nodeRemote = JavaScript
+					.getObject(selection, Constants.ANCHOR_NODE).cast();
+			debugInfo = 1;
+			start.setNode(LocalDom.nodeFor(nodeRemote));
+			debugInfo = 2;
 			start.setOffset(
 					JavaScript.getInteger(selection, Constants.ANCHOR_OFFSET));
+			debugInfo = 3;
+			if (start.getNode().getNodeType() == Node.ELEMENT_NODE) {
+				Element parent = (Element) start.getNode().cast();
+				debugInfo = 4;
+				Node node = parent.getChildNodes().getItem(start.getOffset());
+				if (node.getNodeType() == Node.TEXT_NODE) {
+					start.setTextNode((Text) node);
+					debugInfo = 5;
+					start.setOffset(0);
+				} else {
+					TextRemote textRemote = getFirstTextDepthFirstWithParent(
+							((Element) node).implAccess().typedRemote(), 1);
+					debugInfo = 6;
+					Text text = LocalDom.nodeFor(textRemote);
+					start.setTextNode(text);
+					debugInfo = 7;
+					start.setOffset(0);
+				}
+			} else {
+				debugInfo = 8;
+				start.setTextNode((Text) start.getNode().cast());
+				debugInfo = 9;
+				start.setOffset(JavaScript.getInteger(selection,
+						Constants.ANCHOR_OFFSET));
+			}
+			return start;
+		} catch (Exception e) {
+			selectionDebugTopic().publish(debugInfo);
+			return null;
 		}
-		return start;
 	}
 
 	public boolean isEmpty(final Selection selection) {

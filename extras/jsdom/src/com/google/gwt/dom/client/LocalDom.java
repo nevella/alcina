@@ -46,6 +46,9 @@ public class LocalDom {
 	private static final String TOPIC_EXCEPTION = LocalDom.class.getName() + "."
 			+ "TOPIC_EXCEPTION";
 
+	static final String TOPIC_UNABLE_TO_PARSE = LocalDom.class.getName()
+			+ ".TOPIC_UNABLE_TO_PARSE";
+
 	public static void debug(ElementRemote elementRemote) {
 		get().debug0(elementRemote);
 	}
@@ -133,6 +136,10 @@ public class LocalDom {
 
 	public static TopicSupport<Exception> topicException() {
 		return new TopicSupport<>(TOPIC_EXCEPTION);
+	}
+
+	public static TopicSupport<String> unableToParseTopic() {
+		return new TopicSupport<>(LocalDom.TOPIC_UNABLE_TO_PARSE);
 	}
 
 	private static LocalDom get() {
@@ -566,7 +573,11 @@ public class LocalDom {
 					replaceContents,
 					root == Document.get().typedRemote().getDocumentElement0());
 		}
-		wasResolved0(parsed);
+		if (parsed != null) {
+			wasResolved0(parsed);
+		} else {
+			unableToParseTopic().publish(outerHtml);
+		}
 		return parsed;
 	}
 

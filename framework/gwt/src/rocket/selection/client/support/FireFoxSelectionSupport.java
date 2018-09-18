@@ -23,7 +23,6 @@ import com.google.gwt.dom.client.NodeRemote;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.dom.client.TextRemote;
 
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import rocket.selection.client.Selection;
 import rocket.selection.client.SelectionEndPoint;
 import rocket.util.client.JavaScript;
@@ -35,13 +34,6 @@ import rocket.util.client.JavaScript;
  * @author Miroslav Pokorny (mP)
  */
 public class FireFoxSelectionSupport extends SelectionSupport {
-	private static final String TOPIC_SELECTION_DEBUG = FireFoxSelectionSupport.class
-			.getName() + ".TOPIC_SELECTION_DEBUG";
-
-	public static TopicSupport<Integer> selectionDebugTopic() {
-		return new TopicSupport<>(TOPIC_SELECTION_DEBUG);
-	}
-
 	@Override
 	public SelectionEndPoint getEnd(final Selection selection) {
 		int debugInfo = 0;
@@ -83,7 +75,7 @@ public class FireFoxSelectionSupport extends SelectionSupport {
 			}
 			return end;
 		} catch (Exception e) {
-			selectionDebugTopic().publish(debugInfo);
+			SelectionSupport.selectionDebugTopic().publish(debugInfo);
 			return null;
 		}
 	}
@@ -95,33 +87,43 @@ public class FireFoxSelectionSupport extends SelectionSupport {
 
 	@Override
 	public SelectionEndPoint getStart(final Selection selection) {
-		int debugInfo = -1;
+		int debugInfo = 0;
 		try {
 			final SelectionEndPoint start = new SelectionEndPoint();
 			NodeRemote nodeRemote = JavaScript
 					.getObject(selection, Constants.ANCHOR_NODE).cast();
+			debugInfo = 1;
 			start.setNode(LocalDom.nodeFor(nodeRemote));
+			debugInfo = 2;
 			start.setOffset(
 					JavaScript.getInteger(selection, Constants.ANCHOR_OFFSET));
+			debugInfo = 3;
 			if (start.getNode().getNodeType() == Node.ELEMENT_NODE) {
 				Element parent = (Element) start.getNode().cast();
+				debugInfo = 4;
 				Node node = parent.getChildNodes().getItem(start.getOffset());
+				debugInfo = 5;
 				if (node.getNodeType() == Node.TEXT_NODE) {
 					start.setTextNode((Text) node);
+					debugInfo = 6;
 					start.setOffset(0);
 				} else {
+					debugInfo = 7;
 					TextRemote textRemote = getFirstTextDepthFirstWithParent(
 							((Element) node).implAccess().typedRemote(), 1);
+					debugInfo = 8;
 					Text text = LocalDom.nodeFor(textRemote);
+					debugInfo = 9;
 					start.setTextNode(text);
 					start.setOffset(0);
 				}
 			} else {
+				debugInfo = 11;
 				start.setTextNode((Text) start.getNode().cast());
 			}
 			return start;
 		} catch (Exception e) {
-			selectionDebugTopic().publish(debugInfo);
+			SelectionSupport.selectionDebugTopic().publish(debugInfo);
 			return null;
 		}
 	}
