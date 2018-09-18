@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet;
 
 import javax.servlet.http.HttpServletRequest;
 
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
@@ -15,6 +16,12 @@ public class Sx {
 		int transformCount = ServletLayerUtils.pushTransformsAsRoot();
 		commitPoint(false);
 		return transformCount;
+	}
+
+	public static void commitIfTransformCount(int n) {
+		if (TransformManager.get().getTransforms().size() > n) {
+			commit();
+		}
 	}
 
 	// optimisation - defer push to the end of an rpc call, so as to only do
