@@ -69,6 +69,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Diff;
+import cc.alcina.framework.common.client.util.Diff.Change;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
@@ -103,6 +105,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	public static final String CONTEXT_NO_TRUNCATE = DevConsole.class.getName()
 			+ ".CONTEXT_NO_TRUNCATE";
+
+	static DevConsole instance;
+
+	public static DevConsole getInstance() {
+		return instance;
+	}
 
 	public static void stdSysOut() {
 		System.setErr(err.s1);
@@ -213,6 +221,53 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public void dumpDiff(boolean ignoreEqualLength, boolean ignoreInsertions,
+			boolean ignoreLatterSubstring, File f1, String s1, File f2,
+			String s2) {
+		String[] split1 = splitFile(s1);
+		String[] split2 = splitFile(s2);
+		Diff diff = new Diff(split1, split2);
+		Change change = diff.diff(Diff.forwardScript);
+		while (change != null) {
+			if (ignoreEqualLength && change.deleted == change.inserted) {
+			} else if (ignoreInsertions && change.deleted <= change.inserted) {
+			} else {
+				boolean ignore = false;
+				if (ignoreLatterSubstring) {
+					if (change.deleted == change.inserted) {
+						ignore = true;
+						for (int i = 0; i < change.deleted; i++) {
+							if (split1[change.line0 + i]
+									.contains(split2[change.line0 + i])) {
+							} else {
+								ignore = false;
+								break;
+							}
+						}
+					}
+				}
+				if (!ignore) {
+					System.out.format("(%s, %s): -%s, +%s\n", change.line0 + 1,
+							change.line1 + 1, change.deleted, change.inserted);
+					for (int i = 0; i < change.deleted; i++) {
+						System.out.format("\t---%-8s: %s\n",
+								change.line0 + i + 1, CommonUtils.hangingIndent(
+										split1[change.line0 + i], true, 2));
+					}
+					for (int i = 0; i < change.inserted; i++) {
+						System.out.format("\t+++%-8s: %s\n",
+								change.line1 + i + 1, CommonUtils.hangingIndent(
+										split2[change.line1 + i], true, 2));
+					}
+				}
+			}
+			change = change.link;
+		}
+		System.out.println();
+		System.out.format("\nopendiff \"%s\" \"%s\"\n\n", f1.getPath(),
+				f2.getPath());
 	}
 
 	public void dumpTransforms() {
@@ -499,6 +554,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	protected void init() throws Exception {
+		instance = this;
 		MetricLogging.get().start("init-console");
 		// osx =>
 		// https://bugs.openjdk.java.net/browse/JDK-8179209
@@ -713,6 +769,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			LooseContext.pop();
 			runningJobs.remove(c);
 		}
+	}
+
+	protected String[] splitFile(String str) {
+		return str.split("\n");
 	}
 
 	void initFiles() {
