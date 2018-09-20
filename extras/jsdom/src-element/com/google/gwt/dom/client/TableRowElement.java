@@ -18,6 +18,7 @@ package com.google.gwt.dom.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 
 /**
@@ -169,16 +170,16 @@ public class TableRowElement extends Element {
 	 *      W3C HTML Specification</a>
 	 */
 	public final native TableCellElement insertCell(int index) /*-{
-																var remote = this.@com.google.gwt.dom.client.Element::typedRemote()();
-																var cell = remote.insertCell(index);
-																return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(cell);
-																}-*/;
+    var remote = this.@com.google.gwt.dom.client.Element::typedRemote()();
+    var cell = remote.insertCell(index);
+    return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(cell);
+	}-*/;
 
 	public final native ElementRemote insertCellRemote(int index) /*-{
-																	var remote = this.@com.google.gwt.dom.client.Element::typedRemote()();
-																	var cell = remote.insertCell(index);
-																	return cell;
-																	}-*/;
+    var remote = this.@com.google.gwt.dom.client.Element::typedRemote()();
+    var cell = remote.insertCell(index);
+    return cell;
+	}-*/;
 
 	/**
 	 * Horizontal alignment of data within cells of this row.
@@ -225,8 +226,18 @@ public class TableRowElement extends Element {
 	}
 
 	private final native NodeListRemote getCells0(ElementRemote elem) /*-{
-																		return elem.cells;
-																		}-*/;
+    return elem.cells;
+	}-*/;
+
+	@Override
+	protected void validateInsert(Node newChild) {
+		if (newChild.provideIsElement()) {
+			String tagName = newChild.getNodeName().toLowerCase();
+			Preconditions
+					.checkState(tagName.equals("th") || tagName.equals("td"));
+		}
+		super.validateInsert(newChild);
+	}
 
 	/**
 	 * Delete a cell from the current row.
@@ -236,6 +247,6 @@ public class TableRowElement extends Element {
 	 *      W3C HTML Specification</a>
 	 */
 	native void deleteCell0(ElementRemote elt, int index) /*-{
-															elt.deleteCell(index);
-															}-*/;
+    elt.deleteCell(index);
+	}-*/;
 }

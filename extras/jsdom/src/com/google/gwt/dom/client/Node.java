@@ -73,19 +73,21 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 	 * error: "Permission denied to access property 'nodeType'"
 	 */
 	private static native boolean isJso(JavaScriptObject o) /*-{
-															try {
-															return (!!o) && (!!o.nodeType);
-															} catch (e) {
-															return false;
-															}
-															}-*/;
+    try {
+      return (!!o) && (!!o.nodeType);
+    } catch (e) {
+      return false;
+    }
+	}-*/;
 
 	private int resolvedEventId;
 
 	protected Node() {
 	}
 
+	@Override
 	public <T extends Node> T appendChild(T newChild) {
+		validateInsert(newChild);
 		doPreTreeResolution(newChild);
 		T node = local().appendChild(newChild);
 		remote().appendChild(newChild);
@@ -97,8 +99,10 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		DomNodeStatic.callMethod(this, methodName);
 	}
 
+	@Override
 	public abstract <T extends JavascriptObjectEquivalent> T cast();
 
+	@Override
 	public Node cloneNode(boolean deep) {
 		// FIXME - maybe - remote should probably always be resolved (so maybe
 		// ok)
@@ -115,50 +119,62 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		return DomNodeStatic.getChildCount(this);
 	}
 
+	@Override
 	public NodeList<Node> getChildNodes() {
 		return local().getChildNodes();
 	}
 
+	@Override
 	public Node getFirstChild() {
 		return local().getFirstChild();
 	}
 
+	@Override
 	public Node getLastChild() {
 		return local().getLastChild();
 	}
 
+	@Override
 	public Node getNextSibling() {
 		return local().getNextSibling();
 	}
 
+	@Override
 	public String getNodeName() {
 		return local().getNodeName();
 	}
 
+	@Override
 	public short getNodeType() {
 		return local().getNodeType();
 	}
 
+	@Override
 	public String getNodeValue() {
 		return local().getNodeValue();
 	}
 
+	@Override
 	public Document getOwnerDocument() {
 		return local().getOwnerDocument();
 	}
 
+	@Override
 	public Element getParentElement() {
 		return local().getParentElement();
 	}
 
+	@Override
 	public Node getParentNode() {
 		return local().getParentNode();
 	}
 
+	@Override
 	public Node getPreviousSibling() {
 		return local().getPreviousSibling();
 	}
 
+	@Override
 	public boolean hasChildNodes() {
 		return local().hasChildNodes();
 	}
@@ -178,8 +194,10 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		return DomNodeStatic.insertAfter(this, newChild, refChild);
 	}
 
+	@Override
 	public Node insertBefore(Node newChild, Node refChild) {
 		// new child first
+		validateInsert(newChild);
 		doPreTreeResolution(newChild);
 		doPreTreeResolution(refChild);
 		Node result = local().insertBefore(newChild, refChild);
@@ -192,6 +210,7 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		return DomNodeStatic.insertFirst(this, child);
 	}
 
+	@Override
 	public boolean isOrHasChild(Node child) {
 		return local().isOrHasChild(child);
 	}
@@ -217,6 +236,7 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		return DomNodeStatic.removeAllChildren(this);
 	}
 
+	@Override
 	public Node removeChild(Node oldChild) {
 		doPreTreeResolution(oldChild);
 		Node result = local().removeChild(oldChild);
@@ -232,6 +252,7 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		local().removeFromParent();
 	}
 
+	@Override
 	public Node replaceChild(Node newChild, Node oldChild) {
 		doPreTreeResolution(oldChild);
 		doPreTreeResolution(newChild);
@@ -252,6 +273,7 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		}
 	}
 
+	@Override
 	public void setNodeValue(String nodeValue) {
 		ensureRemoteCheck();
 		local().setNodeValue(nodeValue);
@@ -268,11 +290,11 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 			}
 			boolean linkedBecauseFlushed = ensureRemoteCheck();
 			if (linkedToRemote() && (wasResolved() || child.wasResolved())) {
-			    if(child.wasResolved()){
-			        LocalDom.ensureRemote(child);
-			    }else{
-                    LocalDom.ensureRemoteNodeMaybePendingResolution(child);
-			    }
+				if (child.wasResolved()) {
+					LocalDom.ensureRemote(child);
+				} else {
+					LocalDom.ensureRemoteNodeMaybePendingResolution(child);
+				}
 			}
 		}
 	}
@@ -319,7 +341,17 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	protected abstract <T extends DomNode> T remote();
 
+	protected void resetRemote() {
+		clearResolved();
+		resetRemote0();
+	}
+
+	protected abstract void resetRemote0();
+
 	protected abstract NodeRemote typedRemote();
+
+	protected void validateInsert(Node newChild) {
+	}
 
 	/**
 	 * only call on reparse
@@ -349,11 +381,4 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 			return local().getChildren().size();
 		}
 	}
-
-    protected void resetRemote() {
-        clearResolved();
-        resetRemote0();
-    }
-
-    protected abstract void resetRemote0() ;
 }

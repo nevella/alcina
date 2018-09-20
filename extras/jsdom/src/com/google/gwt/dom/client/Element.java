@@ -844,9 +844,14 @@ public class Element extends Node implements DomElement {
 
 	@Override
 	protected void putRemote(NodeRemote remote, boolean resolved) {
+		if (!GWT.isScript()) {
+			Preconditions.checkState(
+					remote.getNodeName().equalsIgnoreCase(local.getNodeName()));
+		}
 		Preconditions.checkState(wasResolved() == resolved);
 		Preconditions.checkState(
 				this.remote == ElementNull.INSTANCE || remote == this.remote);
+		Preconditions.checkState(remote != null);
 		this.remote = (ElementRemote) remote;
 		if (remote != null) {
 			if (local() != null && local().getEventBits() != 0) {
@@ -912,6 +917,7 @@ public class Element extends Node implements DomElement {
 			parentRemote.insertBefore0(remote, typedRemote());
 			typedRemote().removeFromParent0();
 		}
+		Preconditions.checkState(remote != null);
 		this.remote = remote;
 	}
 
