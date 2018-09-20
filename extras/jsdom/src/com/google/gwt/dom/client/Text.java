@@ -23,114 +23,128 @@ import cc.alcina.framework.common.client.util.Ax;
  * The Text interface represents textual content.
  */
 public class Text extends Node implements DomText {
-    /**
-     * Assert that the given {@link Node} is of type {@link Node#TEXT_NODE} and
-     * automatically typecast it.
-     */
-    public static Text as(Node node) {
-        assert node.getNodeType() == Node.TEXT_NODE;
-        return (Text) node;
-    }
+	/**
+	 * Assert that the given {@link Node} is of type {@link Node#TEXT_NODE} and
+	 * automatically typecast it.
+	 */
+	public static Text as(Node node) {
+		assert node.getNodeType() == Node.TEXT_NODE;
+		return (Text) node;
+	}
 
-    private TextLocal local;
+	private TextLocal local;
 
-    private DomText remote;
+	private DomText remote;
 
-    protected Text(TextLocal local) {
-        this.local = local;
-        this.remote = TextNull.INSTANCE;
-    }
+	protected Text(TextLocal local) {
+		this.local = local;
+		this.remote = TextNull.INSTANCE;
+	}
 
-    public Text cast() {
-        return this;
-    }
+	@Override
+	public Text cast() {
+		return this;
+	}
 
-    public void deleteData(int offset, int length) {
-        local().deleteData(offset, length);
-        remote().deleteData(offset, length);
-    }
+	@Override
+	public void deleteData(int offset, int length) {
+		local().deleteData(offset, length);
+		remote().deleteData(offset, length);
+	}
 
-    public String getData() {
-        return local().getData();
-    }
+	@Override
+	public String getData() {
+		return local().getData();
+	}
 
-    public int getLength() {
-        return local().getLength();
-    }
+	@Override
+	public int getLength() {
+		return local().getLength();
+	}
 
-    public TextImplAccess implAccess() {
-        return new TextImplAccess();
-    }
+	public TextImplAccess implAccess() {
+		return new TextImplAccess();
+	}
 
-    public void insertData(int offset, String data) {
-        ensureRemoteCheck();
-        local().insertData(offset, data);
-        remote().insertData(offset, data);
-    }
+	@Override
+	public void insertData(int offset, String data) {
+		ensureRemoteCheck();
+		local().insertData(offset, data);
+		remote().insertData(offset, data);
+	}
 
-    @Override
-    public Node nodeFor() {
-        return this;
-    }
+	@Override
+	public Node nodeFor() {
+		return this;
+	}
 
-    public void replaceData(int offset, int length, String data) {
-        ensureRemoteCheck();
-        local().replaceData(offset, length, data);
-        remote().replaceData(offset, length, data);
-    }
+	@Override
+	public void replaceData(int offset, int length, String data) {
+		ensureRemoteCheck();
+		local().replaceData(offset, length, data);
+		remote().replaceData(offset, length, data);
+	}
 
-    public void setData(String data) {
-        ensureRemoteCheck();
-        local().setData(data);
-        remote().setData(data);
-    }
+	@Override
+	public void setData(String data) {
+		ensureRemoteCheck();
+		local().setData(data);
+		remote().setData(data);
+	}
 
-    public Text splitText(int offset) {
-        throw new UnsupportedOperationException();
-        // // FIXME - remote must use created text no9de
-        // Text result = local().splitText(offset);
-        // remote().splitText(offset);
-        // return result;
-    }
+	@Override
+	public Text splitText(int offset) {
+		throw new UnsupportedOperationException();
+		// // FIXME - remote must use created text no9de
+		// Text result = local().splitText(offset);
+		// remote().splitText(offset);
+		// return result;
+	}
 
-    @Override
-    public String toString() {
-        return Ax.format("#TEXT[%s]", local().getData());
-    }
+	@Override
+	public String toString() {
+		return Ax.format("#TEXT[%s]", local().getData());
+	}
 
-    @Override
-    protected boolean linkedToRemote() {
-        return remote != TextNull.INSTANCE;
-    }
+	@Override
+	protected boolean linkedToRemote() {
+		return remote != TextNull.INSTANCE;
+	}
 
-    @Override
-    protected TextLocal local() {
-        return local;
-    }
+	@Override
+	protected TextLocal local() {
+		return local;
+	}
 
-    @Override
-    protected void putRemote(NodeRemote remote, boolean resolved) {
-        Preconditions.checkState(wasResolved() == resolved);
-        this.remote = (DomText) remote;
-    }
+	@Override
+	protected void putRemote(NodeRemote remote, boolean resolved) {
+		Preconditions.checkState(wasResolved() == resolved);
+		this.remote = (DomText) remote;
+	}
 
-    @Override
-    protected DomText remote() {
-        return remote;
-    }
+	@Override
+	protected DomText remote() {
+		return remote;
+	}
 
-    protected TextRemote typedRemote() {
-        return (TextRemote) remote();
-    }
+	@Override
+	protected void resetRemote0() {
+		this.remote = TextNull.INSTANCE;
+	}
 
-    public class TextImplAccess {
-        public TextRemote typedRemote() {
-            return Text.this.typedRemote();
-        }
-    }
+	@Override
+	protected TextRemote typedRemote() {
+		return (TextRemote) remote();
+	}
 
-    @Override
-    protected void resetRemote0() {
-        this.remote = TextNull.INSTANCE;
-    }
+	public class TextImplAccess {
+		public TextRemote ensureRemote() {
+			ensureRemoteCheck();
+			return Text.this.typedRemote();
+		}
+
+		public TextRemote typedRemote() {
+			return Text.this.typedRemote();
+		}
+	}
 }

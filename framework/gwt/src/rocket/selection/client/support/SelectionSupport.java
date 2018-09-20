@@ -49,7 +49,7 @@ abstract public class SelectionSupport {
 
 	native static TextRemote remote(Text text)/*-{
     var implAccess = text.@com.google.gwt.dom.client.Text::implAccess()();
-    var remote = implAccess.@com.google.gwt.dom.client.Text.TextImplAccess::typedRemote()();
+    var remote = implAccess.@com.google.gwt.dom.client.Text.TextImplAccess::ensureRemote()();
     return remote;
 	}-*/;
 
@@ -92,6 +92,9 @@ abstract public class SelectionSupport {
 			final SelectionEndPoint end = new SelectionEndPoint();
 			NodeRemote nodeRemote = JavaScript
 					.getObject(selection, Constants.FOCUS_NODE).cast();
+			if (nodeRemote == null) {
+				return null;
+			}
 			end.setNode(LocalDom.nodeFor(nodeRemote));
 			end.setOffset(
 					JavaScript.getInteger(selection, Constants.FOCUS_OFFSET));
@@ -109,7 +112,7 @@ abstract public class SelectionSupport {
 					end.setOffset(0);
 				} else {
 					TextRemote textRemote = getFirstTextDepthFirstWithParent(
-							((Element) node).implAccess().typedRemote(), 1);
+							((Element) node).implAccess().ensureRemote(), 1);
 					Text text = LocalDom.nodeFor(textRemote);
 					end.setTextNode(text);
 					end.setOffset(0);
@@ -132,6 +135,9 @@ abstract public class SelectionSupport {
 			final SelectionEndPoint start = new SelectionEndPoint();
 			NodeRemote nodeRemote = JavaScript
 					.getObject(selection, Constants.ANCHOR_NODE).cast();
+			if (nodeRemote == null) {
+				return null;
+			}
 			debugInfo = 1;
 			start.setNode(LocalDom.nodeFor(nodeRemote));
 			debugInfo = 2;
@@ -148,7 +154,7 @@ abstract public class SelectionSupport {
 					start.setOffset(0);
 				} else {
 					TextRemote textRemote = getFirstTextDepthFirstWithParent(
-							((Element) node).implAccess().typedRemote(), 1);
+							((Element) node).implAccess().ensureRemote(), 1);
 					debugInfo = 6;
 					Text text = LocalDom.nodeFor(textRemote);
 					start.setTextNode(text);
@@ -253,8 +259,8 @@ abstract public class SelectionSupport {
     selection.addRange(range);
 	}-*/;
 
-	native protected Text getFirstTextDepthFirst(final ElementRemote parent,
-			int childIndex, int direction)/*-{
+	native protected TextRemote getFirstTextDepthFirst(
+			final ElementRemote parent, int childIndex, int direction)/*-{
     var childNodes = parent.childNodes;
     var i = childIndex;
     for (; i >= 0 && i < childNodes.length; i += direction) {

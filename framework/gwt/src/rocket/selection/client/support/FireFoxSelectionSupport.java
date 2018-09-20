@@ -41,6 +41,9 @@ public class FireFoxSelectionSupport extends SelectionSupport {
 			final SelectionEndPoint end = new SelectionEndPoint();
 			NodeRemote nodeRemote = JavaScript
 					.getObject(selection, Constants.FOCUS_NODE).cast();
+			if (nodeRemote == null) {
+				return null;
+			}
 			end.setNode(LocalDom.nodeFor(nodeRemote));
 			end.setOffset(
 					JavaScript.getInteger(selection, Constants.FOCUS_OFFSET));
@@ -92,6 +95,9 @@ public class FireFoxSelectionSupport extends SelectionSupport {
 			final SelectionEndPoint start = new SelectionEndPoint();
 			NodeRemote nodeRemote = JavaScript
 					.getObject(selection, Constants.ANCHOR_NODE).cast();
+			if (nodeRemote == null) {
+				return null;
+			}
 			debugInfo = 1;
 			start.setNode(LocalDom.nodeFor(nodeRemote));
 			debugInfo = 2;

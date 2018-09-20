@@ -509,10 +509,25 @@ public class LocalDom {
 					.getParentNode0();
 			Node parent = nodeFor0(parentRemote);
 			int index = remote.indexInParentChildren();
-			Node childNode = parent.getChild(index);
-			linkRemote(remote, childNode);
-			childNode.putRemote(remote, true);
-			return (T) childNode;
+			if (parent.getChildCount() == parentRemote.getChildCount()) {
+				Node childNode = parent.getChild(index);
+				linkRemote(remote, childNode);
+				childNode.putRemote(remote, true);
+				return (T) childNode;
+			} else {
+				if (postReparse) {
+					unableToParseTopic().publish(Ax.format(
+							"Text node reparse - remote:\n%s\n\nlocal:\n%s\n",
+							parentRemote.getOuterHtml(),
+							((Element) parent).getOuterHtml()));
+					throw new RuntimeException("Text node reparse");
+				}
+				ElementRemoteIndex remoteIndex = parentRemote
+						.provideRemoteIndex(false);
+				ElementRemote hasNodeRemote = remoteIndex.hasNode();
+				reparseFromRemote(hasNodeRemote, (Element) parent, remoteIndex);
+				return nodeFor0(remote, true);
+			}
 		}
 		if (!remote.provideIsElement()) {
 			return null;// say, shadowroot...
@@ -616,29 +631,41 @@ public class LocalDom {
 		ElementRemote remoteCursor = elem;
 		for (int idx = sizes.size() - 1; idx >= 0; idx--) {
 			int size = sizes.get(idx);
-			if (cursor.getChildCount() != size) {
+			boolean invalid = cursor.getChildCount() != size;
+			Node node = null;
+			NodeRemote remoteNode = null;
+			if (!invalid) {
+				int nodeIndex = indicies.get(idx);
+				node = cursor.getChild(nodeIndex);
+				remoteNode = remoteCursor.getChildNodes0().getItem0(nodeIndex);
+				invalid = node.getNodeType() != Node.ELEMENT_NODE
+						|| remoteNode.getNodeType() != Node.ELEMENT_NODE;
+			}
+			if (invalid) {
 				// FIXME - check we have no widgets in the tree - if we do,
 				// we're...not..good. Also remove and remote refs below (albeit
 				// unlikely)
 				int localIndex = cursor.getParentElement()
 						.getChildIndexLocal(cursor);
 				cursor.local().clearChildrenAndAttributes0();
-				parseAndMarkResolved(remoteCursor, remoteCursor.getOuterHtml(),
-						cursor);
-				if (cursor.getChildCount() != size) {
-					cursor.local().clearChildrenAndAttributes0();
-					String buildOuterHtml = remoteCursor.buildOuterHtml();
-					parseAndMarkResolved(remoteCursor, buildOuterHtml, cursor);
-					if (cursor.getChildCount() != size) {
-						sizesMatch = false;
-						break;
-					}
+				String builtOuterHtml = remoteCursor.buildOuterHtml();
+				parseAndMarkResolved(remoteCursor, builtOuterHtml, cursor);
+				invalid = cursor.getChildCount() != size;
+				if (!invalid) {
+					int nodeIndex = indicies.get(idx);
+					node = cursor.getChild(nodeIndex);
+					remoteNode = remoteCursor.getChildNodes0()
+							.getItem0(nodeIndex);
+					invalid = node.getNodeType() != Node.ELEMENT_NODE
+							|| remoteNode.getNodeType() != Node.ELEMENT_NODE;
+				}
+				if (invalid) {
+					unableToParseTopic().publish(Ax
+							.format("(Built outer html):\n%s", builtOuterHtml));
 				}
 			}
-			int nodeIndex = indicies.get(idx);
-			cursor = (Element) cursor.getChild(nodeIndex);
-			remoteCursor = (ElementRemote) remoteCursor.getChildNodes0()
-					.getItem0(nodeIndex);
+			cursor = (Element) node;
+			remoteCursor = (ElementRemote) remoteNode;
 		}
 		Ax.out("Reparse successful");
 	}

@@ -11,8 +11,12 @@ class NodeListLocal<T extends Node> implements DomNodeList<T> {
 	}
 
 	@Override
+	/**
+	 * Forgiving re invalid indicies (as per DOM node list)
+	 */
 	public T getItem(int index) {
-		return (T) nodes.get(index).nodeFor();
+		return index < 0 || index >= nodes.size() ? null
+				: (T) nodes.get(index).nodeFor();
 	}
 
 	/**
