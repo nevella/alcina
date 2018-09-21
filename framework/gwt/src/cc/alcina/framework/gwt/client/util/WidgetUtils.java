@@ -248,7 +248,7 @@ public class WidgetUtils {
     }
 	}-*/;
 
-	public static native void execCopy() /*-{
+	public static native boolean execCopy() /*-{
     return $wnd.document.execCommand("copy");
 	}-*/;
 

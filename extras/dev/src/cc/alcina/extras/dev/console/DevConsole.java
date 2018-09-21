@@ -80,6 +80,7 @@ import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable.AlcinaChildContextRunner;
 
 public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>
@@ -142,6 +143,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	private JScrollPane scrollRight = new JScrollPane(panelRight);
 	{
 		scrollLeft.getVerticalScrollBar().setUnitIncrement(16);
+		scrollLeft.getHorizontalScrollBar().setUnitIncrement(16);
 		scrollRight.getVerticalScrollBar().setUnitIncrement(16);
 	}
 
@@ -224,7 +226,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	public void dumpDiff(boolean ignoreEqualLength, boolean ignoreInsertions,
-			boolean ignoreLatterSubstring, File f1, String s1, File f2,
+			boolean ignoreLatterSubstring,
+			boolean ignoreWhitespaceAndPunctuation, File f1, String s1, File f2,
 			String s2) {
 		String[] split1 = splitFile(s1);
 		String[] split2 = splitFile(s2);
@@ -248,6 +251,15 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 						}
 					}
 				}
+				if (ignoreWhitespaceAndPunctuation && change.deleted == 1
+						&& change.inserted == 1) {
+					if (Sx.ntrim(split1[change.line0])
+							.replaceAll("[ ,.~:-]", "")
+							.equals(Sx.ntrim(split2[change.line1])
+									.replaceAll("[ ,.~:-]", ""))) {
+						ignore = true;
+					}
+				}
 				if (!ignore) {
 					System.out.format("(%s, %s): -%s, +%s\n", change.line0 + 1,
 							change.line1 + 1, change.deleted, change.inserted);
@@ -268,6 +280,13 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		System.out.println();
 		System.out.format("\nopendiff \"%s\" \"%s\"\n\n", f1.getPath(),
 				f2.getPath());
+	}
+
+	public void dumpDiff(boolean ignoreEqualLength, boolean ignoreInsertions,
+			boolean ignoreLatterSubstring, File f1, String s1, File f2,
+			String s2) {
+		dumpDiff(ignoreEqualLength, ignoreInsertions, ignoreLatterSubstring,
+				false, f1, s1, f2, s2);
 	}
 
 	public void dumpTransforms() {
