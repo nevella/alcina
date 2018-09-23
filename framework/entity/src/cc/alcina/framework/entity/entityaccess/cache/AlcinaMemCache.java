@@ -303,7 +303,7 @@ public class AlcinaMemCache implements RegistrableService {
 
 	private boolean collectLockAcquisitionPoints;
 
-	private LinkedList<String> recentLockAcquisitions = new LinkedList<String>();
+	private LinkedList<LockAcquisition> recentLockAcquisitions = new LinkedList<>();
 
 	/**
 	 * Certain post-list triggers can writeLock() without causing readlock
@@ -726,8 +726,8 @@ public class AlcinaMemCache implements RegistrableService {
 			if (mainLock.getQueueLength() > maxLockQueueLength) {
 				System.out.println(
 						"Disabling locking due to deadlock:\n***************\n");
-				mainLock.getQueuedThreads().forEach(
-						t -> System.out.println(t + "\n" + t.getStackTrace()));
+				mainLock.getQueuedThreads().forEach(t -> System.out.println(
+						t + "\n" + CommonUtils.join(t.getStackTrace(), "\n")));
 				System.out.println(
 						"Recent lock acquisitions:\n***************\n");
 				System.out.println(
@@ -1327,6 +1327,20 @@ public class AlcinaMemCache implements RegistrableService {
 			threadQueueTimes.remove(currentThread.getId());
 		}
 		long queuedTime = health.getMaxQueuedTime();
+		String lockDumpCause = String.format("Memcache lock - %s - %s\n",
+				write ? "write" : "read", action);
+		if (collectLockAcquisitionPoints) {
+			synchronized (recentLockAcquisitions) {
+				recentLockAcquisitions
+						.add(new LockAcquisition(new Date(), lockDumpCause));
+				if (recentLockAcquisitions.size() > 100) {
+					long cutoff = System.currentTimeMillis()
+							- 5 * TimeConstants.ONE_MINUTE_MS;
+					recentLockAcquisitions
+							.removeIf(rla -> rla.date.getTime() < cutoff);
+				}
+			}
+		}
 		if (dumpLocks || (collectLockAcquisitionPoints
 				&& (write || queuedTime > MAX_QUEUED_TIME))) {
 			if (dumpLocksCount.get() > 100) {
@@ -1334,22 +1348,12 @@ public class AlcinaMemCache implements RegistrableService {
 				collectLockAcquisitionPoints = false;
 				return;
 			}
-			String lockDumpCause = String.format("Memcache lock - %s - %s\n",
-					write ? "write" : "read", action);
 			String log = getLockStats();
 			lockDumpCause += log;
 			if (dumpLocks || (queuedTime > MAX_QUEUED_TIME)) {
 				dumpLocksCount.incrementAndGet();
 				System.out.println(getLockDumpString(lockDumpCause, time
 						- lastQueueDumpTime > 5 * TimeConstants.ONE_MINUTE_MS));
-			}
-			if (collectLockAcquisitionPoints) {
-				synchronized (recentLockAcquisitions) {
-					recentLockAcquisitions.add(lockDumpCause);
-					if (recentLockAcquisitions.size() > 100) {
-						recentLockAcquisitions.removeFirst();
-					}
-				}
 			}
 		}
 	}
@@ -2829,6 +2833,17 @@ public class AlcinaMemCache implements RegistrableService {
 								o);
 			}
 			return true;
+		}
+	}
+
+	class LockAcquisition {
+		Date date;
+
+		String message;
+
+		public LockAcquisition(Date date, String message) {
+			this.date = date;
+			this.message = message;
 		}
 	}
 
