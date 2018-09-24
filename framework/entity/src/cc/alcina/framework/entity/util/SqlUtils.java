@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.util;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -55,7 +56,9 @@ public class SqlUtils {
 	public static <T> List<T> getMapped(Statement stmt, String sql,
 			ThrowingFunction<ResultSet, T> mapper) {
 		try {
-			ResultSet rs = stmt.executeQuery(sql);
+			ResultSet rs = (stmt instanceof PreparedStatement)
+					? ((PreparedStatement) stmt).executeQuery()
+					: stmt.executeQuery(sql);
 			List<T> result = new ArrayList<>();
 			while (rs.next()) {
 				result.add(mapper.apply(rs));

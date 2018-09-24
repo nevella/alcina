@@ -24,7 +24,6 @@ import javax.persistence.Table;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.collections.PropertyConverter;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
@@ -380,7 +379,9 @@ public class DevConsoleCommandTransforms {
 					+ " inner join %s dte on dte.domaintransformrequestpersistent_id = dtr.id"
 					+ " where %s %s limit %s";
 			Set<Long> ids = null;
-			String orderClause = limit < 100 ? "" : outputTransforms?"order by dte.id":"order by dte.id desc";
+			String orderClause = limit < 100 ? ""
+					: outputTransforms ? "order by dte.id"
+							: "order by dte.id desc";
 			CollectionFilter<String> dteIdFilter = new CollectionFilter<String>() {
 				@Override
 				public boolean allow(String o) {
@@ -429,7 +430,8 @@ public class DevConsoleCommandTransforms {
 					String outPath = "/tmp/transforms.txt";
 					ResourceUtilities.writeStringToFile(dtes.toString(),
 							outPath);
-					Ax.out("wrote %s transforms to \n\t%s",dtes.size(),outPath);
+					Ax.out("wrote %s transforms to \n\t%s", dtes.size(),
+							outPath);
 				} else if (valuesOnly) {
 					while (rs.next()) {
 						System.out.format("%s | %s\n", rs.getLong("object_id"),
@@ -452,8 +454,7 @@ public class DevConsoleCommandTransforms {
 					SqlUtils.dumpResultSet(rs, formatters);
 					String sysout = console.endRecordingSysout();
 					String outPath = "/tmp/transforms-table.txt";
-					ResourceUtilities.writeStringToFile(sysout,
-							outPath);
+					ResourceUtilities.writeStringToFile(sysout, outPath);
 				}
 				rs.close();
 				ps.close();
@@ -546,6 +547,7 @@ public class DevConsoleCommandTransforms {
 				return "days";
 			}
 
+			@Override
 			protected boolean hasDefault() {
 				return true;
 			}
@@ -599,6 +601,7 @@ public class DevConsoleCommandTransforms {
 				return "mindays";
 			}
 
+			@Override
 			protected boolean hasDefault() {
 				return false;
 			}
@@ -664,10 +667,10 @@ public class DevConsoleCommandTransforms {
 			@Override
 			public String getFilter(String value) {
 				String template = "dte.objectid=%s";
-				if(value.contains(",")){
+				if (value.contains(",")) {
 					template = "dte.objectid in (%s)";
 				}
-				if(value.matches("[<>]=.+")){
+				if (value.matches("[<>]=.+")) {
 					template = "dte.objectid %s";
 				}
 				return String.format(template, value);
@@ -730,52 +733,6 @@ public class DevConsoleCommandTransforms {
 			ResultSet rs = ps.executeQuery();
 			SqlUtils.dumpResultSet(rs);
 			return String.format("set id to '%s'", console.props.idOrSet);
-		}
-	}
-
-	public abstract static class DevConsoleFilter {
-		public static String describeFilters(
-				Class<? extends DevConsoleFilter> registryPoint) {
-			return CommonUtils.join(CollectionFilters.convert(
-					Registry.impls(registryPoint),
-					new PropertyConverter<DevConsoleFilter, String>("key")),
-					"|");
-		}
-
-		public static String getFilters(
-				Class<? extends DevConsoleFilter> registryPoint,
-				String[] argv) {
-			return getFilters(registryPoint, argv, null);
-		}
-
-		public static String getFilters(
-				Class<? extends DevConsoleFilter> registryPoint, String[] argv,
-				CollectionFilter<String> allowFilter) {
-			List<String> filters = new ArrayList<String>();
-			List<? extends DevConsoleFilter> impls = Registry
-					.impls(registryPoint);
-			StringMap kv = new StringMap();
-			for (int i = 0; i < argv.length; i += 2) {
-				kv.put(argv[i], argv[i + 1]);
-			}
-			for (DevConsoleFilter impl : impls) {
-				if (kv.containsKey(impl.getKey()) || impl.hasDefault()) {
-					String filterString = impl.getFilter(kv.get(impl.getKey()));
-					if (allowFilter == null
-							|| allowFilter.allow(filterString)) {
-						filters.add(filterString);
-					}
-				}
-			}
-			return CommonUtils.join(filters, " and ");
-		}
-
-		public abstract String getFilter(String value);
-
-		public abstract String getKey();
-
-		protected boolean hasDefault() {
-			return false;
 		}
 	}
 
@@ -966,8 +923,9 @@ public class DevConsoleCommandTransforms {
 		@Override
 		public String format(ResultSet rs, int columnIndex)
 				throws SQLException {
-			return CommonUtils.trimToWsChars(
-					CommonUtils.nullToEmpty(rs.getString(columnIndex)), length);
+			return CommonUtils.trimToWsChars(CommonUtils
+					.nullToEmpty(rs.getString(columnIndex)).replace("\n", " "),
+					length);
 		}
 	}
 }
