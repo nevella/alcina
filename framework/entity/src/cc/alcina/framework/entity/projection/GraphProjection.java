@@ -171,6 +171,10 @@ public class GraphProjection {
 		}
 	}
 
+	public static String fieldwiseToStringOneLine(Object obj) {
+		return fieldwiseToString(obj, false, false, 999);
+	}
+
 	public static String generateFieldwiseEqualString(Class clazz)
 			throws Exception {
 		List<String> fieldNames = new ArrayList<>();

@@ -394,6 +394,8 @@ public class AlcinaMemCache implements RegistrableService {
 
 	private AtomicInteger connectionsReopened = new AtomicInteger();
 
+	private Thread mainLockWriteLock;
+
 	public AlcinaMemCache() {
 		ThreadlocalTransformManager.threadTransformManagerWasResetListenerDelta(
 				resetListener, true);
@@ -628,6 +630,10 @@ public class AlcinaMemCache implements RegistrableService {
 		return cache.size(clazz);
 	}
 
+	public AlcinaMemCacheInstrumentation instrumentation() {
+		return new AlcinaMemCacheInstrumentation();
+	}
+
 	public void invokeAllWithThrow(List tasks) throws Exception {
 		if (warmupExecutor != null) {
 			List<Future> futures = (List) warmupExecutor
@@ -751,6 +757,8 @@ public class AlcinaMemCache implements RegistrableService {
 				try {
 					waitingOnWriteLock.add(Thread.currentThread());
 					mainLock.writeLock().lockInterruptibly();
+					mainLockWriteLock = Thread.currentThread();
+					waitingOnWriteLock.remove(Thread.currentThread());
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -867,7 +875,7 @@ public class AlcinaMemCache implements RegistrableService {
 					// if not held, we had an exception acquiring the
 					// lock...ignore
 					mainLock.writeLock().unlock();
-					waitingOnWriteLock.remove(Thread.currentThread());
+					mainLockWriteLock = null;
 				}
 			} else {
 				mainLockReadLock.remove(Thread.currentThread());
@@ -2035,6 +2043,16 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 	}
 
+	public class AlcinaMemCacheInstrumentation {
+		public boolean isLockedByThread(Thread thread) {
+			return mainLock.isLockedByThread(thread);
+		}
+
+		public boolean isWriteLockedByThread(Thread thread) {
+			return mainLock.isWriteLockedByThread(thread);
+		}
+	}
+
 	/*
 	 * Note - not synchronized - per-thread access only
 	 */
@@ -2429,6 +2447,15 @@ public class AlcinaMemCache implements RegistrableService {
 		@Override
 		public Collection<Thread> getQueuedWriterThreads() {
 			return super.getQueuedWriterThreads();
+		}
+
+		public boolean isLockedByThread(Thread thread) {
+			return mainLockReadLock.contains(thread)
+					|| isWriteLockedByThread(thread);
+		}
+
+		public boolean isWriteLockedByThread(Thread thread) {
+			return mainLockWriteLock == thread;
 		}
 	}
 

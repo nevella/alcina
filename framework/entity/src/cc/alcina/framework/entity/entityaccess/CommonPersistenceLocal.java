@@ -38,6 +38,7 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersiste
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.TransformPersister.TransformPersisterToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
+import cc.alcina.framework.entity.entityaccess.metric.InternalMetric;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
@@ -106,6 +107,8 @@ public interface CommonPersistenceLocal {
 
 	public long getLastTransformId();
 
+	public HiliLocatorMap getLocatorMap(Long clientInstanceId);
+
 	public abstract LongPair getMinMaxIdRange(Class clazz);
 
 	public <A> A getNewImplementationInstance(Class<A> clazz);
@@ -120,6 +123,10 @@ public interface CommonPersistenceLocal {
 			getPersistentTransformRequests(long fromId, long toId,
 					Collection<Long> specificIds, boolean mostRecentOnly,
 					boolean populateTransformSourceObjects);
+
+	public Publication getPublication(long id);
+
+	public List<Publication> getPublications(Collection<Long> ids);
 
 	public String getRememberMeUserName(String iid);
 
@@ -155,6 +162,8 @@ public interface CommonPersistenceLocal {
 	public <G extends WrapperPersistable> Long persist(G gwpo) throws Exception;
 
 	public void persistClientLogRecords(List<ClientLogRecords> records);
+
+	public void persistInternalMetrics(List<InternalMetric> metrics);
 
 	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
 			Long id, GraphProjectionFieldFilter fieldFilter,
@@ -194,16 +203,10 @@ public interface CommonPersistenceLocal {
 	 */
 	public TransformCache warmupTransformCache();
 
-	long getMaxPublicationIdForUser(IUser user);
-
-	List<Long> listRecentClientInstanceIds(String iidKey);
-
-	public HiliLocatorMap getLocatorMap(Long clientInstanceId);
-
 	Integer getHighestPersistedRequestIdForClientInstance(
 			long clientInstanceId);
 
-	public List<Publication> getPublications(Collection<Long> ids);
+	long getMaxPublicationIdForUser(IUser user);
 
-	public Publication getPublication(long id);
+	List<Long> listRecentClientInstanceIds(String iidKey);
 }

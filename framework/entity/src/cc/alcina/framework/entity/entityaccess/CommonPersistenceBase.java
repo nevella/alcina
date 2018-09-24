@@ -91,6 +91,7 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.entityaccess.TransformPersister.TransformPersisterToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
+import cc.alcina.framework.entity.entityaccess.metric.InternalMetric;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -98,7 +99,6 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionData
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
-@SuppressWarnings("unchecked")
 /**
  *
  * @author Nick Reddel
@@ -366,7 +366,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <A> Class<? extends A> getImplementation(Class<A> clazz) {
 		return Registry.get().lookupSingle(AlcinaPersistentEntityImpl.class,
 				clazz);
@@ -893,6 +892,20 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					ClientLogRecordPersistent.class);
 			getEntityManager().persist(clrp);
 			clrp.wrap(clr);
+		}
+	}
+
+	@Override
+	public void persistInternalMetrics(List<InternalMetric> metrics) {
+		for (InternalMetric metric : metrics) {
+			if (metric.getId() != 0) {
+				InternalMetric managed = getEntityManager()
+						.find(metric.getClass(), metric.getId());
+				metric.setVersionNumber(managed.getVersionNumber());
+				getEntityManager().merge(metric);
+			} else {
+				getEntityManager().persist(metric);
+			}
 		}
 	}
 

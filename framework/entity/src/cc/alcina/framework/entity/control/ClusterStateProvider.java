@@ -11,5 +11,9 @@ public interface ClusterStateProvider {
 		throw new UnsupportedOperationException();
 	}
 
+	default boolean isVmHealthyCached() {
+		return true;
+	}
+
 	void persistClusterState(ClusterState state) throws Exception;
 }

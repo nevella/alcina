@@ -3,17 +3,14 @@ package cc.alcina.framework.servlet.servlet;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.gwt.user.server.rpc.RPCRequest;
-
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
 
 /**
  * 
@@ -36,10 +33,8 @@ public class CommonRemoteServiceServletSupport {
 
 	private int transformRequestCounter = 1;
 
-	private MetricTracker<RPCRequest> metricTracker = new MetricTracker<>();
-
 	public void appShutdown() {
-		metricTracker.stop();
+		InternalMetrics.get().stop();
 	}
 
 	public HiliLocatorMap
@@ -57,10 +52,6 @@ public class CommonRemoteServiceServletSupport {
 		HiliLocatorMap locatorMap = clientInstanceLocatorMap
 				.get(clientInstanceId);
 		return locatorMap;
-	}
-
-	public MetricTracker<RPCRequest> getMetricTracker() {
-		return this.metricTracker;
 	}
 
 	public ClientInstance getServerAsClientInstance() {
