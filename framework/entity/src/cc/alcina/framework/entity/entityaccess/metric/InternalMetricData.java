@@ -71,7 +71,8 @@ public class InternalMetricData {
 			persistent.setHostName(EntityLayerUtils.getLocalHostName());
 			persistent.setObfuscatedArgs(
 					markerObjectArgsFunction.apply(markerObject));
-			persistent.setThreadName(thread.getName());
+			persistent.setThreadName(
+					Ax.format("%s:%s", thread.getName(), thread.getId()));
 		}
 		String lockType = null;
 		if (AlcinaMemCache.get().instrumentation().isLockedByThread(thread)) {

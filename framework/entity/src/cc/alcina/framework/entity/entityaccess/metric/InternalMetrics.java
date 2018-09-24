@@ -63,8 +63,9 @@ public class InternalMetrics {
 		long time = System.currentTimeMillis();
 		List<InternalMetricData> toPersist = new ArrayList<>();
 		trackers.values().forEach(t -> {
-			if (time > t.nextSliceTime && !(t.isFinished() && t.sliceCount == 0)
-					&& t.triggerFilter.test(t)) {
+			if ((t.isFinished() && t.sliceCount > 0) || (time > t.nextSliceTime
+					&& !(t.isFinished() && t.sliceCount == 0)
+					&& t.triggerFilter.test(t))) {
 				try {
 					if (!t.isFinished()) {
 						String trace = Arrays.stream(t.thread.getStackTrace())
@@ -79,7 +80,10 @@ public class InternalMetrics {
 				}
 			}
 		});
-		trackers.entrySet().removeIf(e -> e.getValue().isFinished());
+		if (running.get() == 0) {
+			// don't remove if there's a chance they won't be persisted
+			trackers.entrySet().removeIf(e -> e.getValue().isFinished());
+		}
 		if (toPersist.size() > 0) {
 			persist(toPersist);
 		}
