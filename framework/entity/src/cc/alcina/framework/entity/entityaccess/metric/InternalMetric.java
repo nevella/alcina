@@ -8,6 +8,7 @@ import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
 import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
+import cc.alcina.framework.common.client.util.JsonObjectSerializer;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 @MappedSuperclass
@@ -33,6 +34,8 @@ public abstract class InternalMetric<U extends InternalMetric>
 	private String hostName;
 
 	private String lockType;
+
+	private transient ThreadHistory threadHistory;
 
 	public InternalMetric() {
 	}
@@ -71,6 +74,22 @@ public abstract class InternalMetric<U extends InternalMetric>
 
 	public Date getStartTime() {
 		return this.startTime;
+	}
+
+	@Transient
+	public ThreadHistory getThreadHistory() {
+		if (threadHistory == null) {
+			threadHistory = new ThreadHistory();
+			if (sliceJson != null) {
+				try {
+					threadHistory = JsonObjectSerializer.get()
+							.deserialize(sliceJson, ThreadHistory.class);
+				} catch (Exception e) {
+					threadHistory.note = "Unable to deserialize";
+				}
+			}
+		}
+		return this.threadHistory;
 	}
 
 	public String getThreadName() {
@@ -112,6 +131,13 @@ public abstract class InternalMetric<U extends InternalMetric>
 
 	public void setStartTime(Date start) {
 		this.startTime = start;
+	}
+
+	public void setThreadHistory(ThreadHistory threadHistory) {
+		this.threadHistory = threadHistory;
+		if (threadHistory != null) {
+			setSliceJson(JsonObjectSerializer.get().serialize(threadHistory));
+		}
 	}
 
 	public void setThreadName(String threadName) {

@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
-import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
 
 /**
  * 
@@ -34,7 +33,6 @@ public class CommonRemoteServiceServletSupport {
 	private int transformRequestCounter = 1;
 
 	public void appShutdown() {
-		InternalMetrics.get().stop();
 	}
 
 	public HiliLocatorMap

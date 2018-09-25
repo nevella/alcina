@@ -17,11 +17,14 @@ import cc.alcina.extras.dev.console.DevConsoleCommandTransforms.TrimmedStringFor
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.console.FilterArgvParam;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetric;
+import cc.alcina.framework.entity.entityaccess.metric.ThreadHistory;
+import cc.alcina.framework.entity.entityaccess.metric.ThreadInfoSer;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.SqlUtils;
@@ -67,6 +70,9 @@ public class DevConsoleCommandInternalMetrics {
 					.idListToLongs(p.valueOrDefault(""));
 			p = new FilterArgvParam(argv, "host");
 			String host = p.valueOrDefault("");
+			p = new FilterArgvParam(argv, "args");
+			boolean outputArgs = Boolean
+					.parseBoolean(p.valueOrDefault("false"));
 			p = new FilterArgvParam(argv, "call");
 			String call = p.valueOrDefault("");
 			p = new FilterArgvParam(argv, "minId");
@@ -164,12 +170,7 @@ public class DevConsoleCommandInternalMetrics {
 							return metric;
 						});
 				for (InternalMetric internalMetric : metrics) {
-					Ax.out(GraphProjection.fieldwiseToString(internalMetric,
-							false, false, 30, "obfuscatedArgs", "sliceJson",
-							"versionNumber", "localId"));
-					Ax.out("-----------\n%s\n\n---------\n%s\n",
-							internalMetric.getObfuscatedArgs(),
-							internalMetric.getSliceJson());
+					dumpMetric(internalMetric, outputArgs);
 				}
 			}
 				break;
@@ -180,9 +181,123 @@ public class DevConsoleCommandInternalMetrics {
 			return "";
 		}
 
+		private void dumpMetric(InternalMetric internalMetric,
+				boolean outputArgs) {
+			Ax.out(GraphProjection.fieldwiseToString(internalMetric, false,
+					false, 30, "obfuscatedArgs", "sliceJson", "versionNumber",
+					"localId"));
+			if (outputArgs) {
+				Ax.out("-----------\n%s\n", internalMetric.getObfuscatedArgs());
+			}
+			ThreadHistory history = internalMetric.getThreadHistory();
+			history.elements.forEach(thhe -> {
+				Ax.out("Elapsed: %s", thhe.date.getTime()
+						- internalMetric.getStartTime().getTime());
+				if (thhe.domainCacheLockTime != 0
+						|| thhe.domainCacheWaitTime != 0) {
+					Ax.out("Domain cache:\n\tActive time: %s\n\tWait time: %s\n\tLock state: %s",
+							thhe.domainCacheLockTime == 0 ? 0
+									: thhe.date.getTime()
+											- thhe.domainCacheLockTime,
+							thhe.domainCacheWaitTime == 0 ? 0
+									: thhe.date.getTime()
+											- thhe.domainCacheWaitTime,
+							thhe.lockState);
+				}
+				ThreadInfoSer threadInfo = thhe.threadInfo;
+				if (threadInfo.lockedMonitors.size() > 0) {
+					Ax.out("Locked monitors:\n\t%s", CommonUtils
+							.joinWithNewlineTab(threadInfo.lockedMonitors));
+				}
+				if (threadInfo.lockedSynchronizers.size() > 0) {
+					Ax.out("Locked synchronizers:\n\t%s",
+							CommonUtils.joinWithNewlineTab(
+									threadInfo.lockedSynchronizers));
+				}
+				if (threadInfo.lock != null) {
+					Ax.out("Waiting for lock: %s", threadInfo.lock);
+				}
+				Ax.out("Trace:\n\t%s", CommonUtils.joinWithNewlineTab(
+						filterTrace(threadInfo.stackTrace)));
+			});
+		}
+
+		private boolean elide(FilteredTrace last, StackTraceElement element,
+				ElideState elideState) {
+			if (last == null) {
+				return false;
+			}
+			StackTraceElement lastElement = last.element;
+			if (lastElement.getClassName()
+					.equals("com.google.gwt.user.server.rpc.RPC")) {
+				return true;
+			}
+			if (lastElement.getClassName()
+					.equals("au.com.barnet.jade.server.JadeRemoteServiceImpl")
+					&& element.getClassName().matches(
+							"sun.reflect.NativeMethodAccessorImpl|sun.reflect.DelegatingMethodAccessorImpl|java.lang.reflect.Method")) {
+				return true;
+			}
+			if (lastElement.getClassName().matches(
+					".*(CollectionProjection|GraphProjection|CacheProjection).*")
+					&& element.getClassName().matches(
+							".*(CollectionProjection|GraphProjection|CacheProjection).*")) {
+				return true;
+			}
+			if (lastElement.getClassName().equals(
+					"org.jboss.as.ee.component.ManagedReferenceMethodInterceptor")) {
+				elideState.inJbossEjbCall = true;
+			}
+			if (element.getClassName().equals(
+					"org.jboss.as.ee.component.ProxyInvocationHandler")) {
+				elideState.inJbossEjbCall = false;
+			}
+			return elideState.inJbossEjbCall;
+		}
+
+		private List<FilteredTrace>
+				filterTrace(List<StackTraceElement> stackTrace) {
+			List<FilteredTrace> result = new ArrayList<>();
+			int index = 0;
+			boolean elided = false;
+			ElideState elideState = new ElideState();
+			for (StackTraceElement element : stackTrace) {
+				if (elide(CommonUtils.last(result), element, elideState)) {
+					elided = true;
+				} else {
+					FilteredTrace trace = new FilteredTrace();
+					result.add(trace);
+					trace.element = element;
+					trace.frameIndex = index;
+					trace.elided = elided;
+					elided = false;
+				}
+				index++;
+			}
+			return result;
+		}
+
 		private void printFullUsage() {
 			System.out.format("im {usage} \n", DevConsoleFilter
 					.describeFilters(CmdListTransformsFilter.class));
+		}
+
+		class ElideState {
+			boolean inJbossEjbCall = false;
+		}
+
+		static class FilteredTrace {
+			public boolean elided;
+
+			public int frameIndex;
+
+			public StackTraceElement element;
+
+			@Override
+			public String toString() {
+				return String.format("%s%5s: %s", elided ? "..." : "   ",
+						frameIndex, element);
+			}
 		}
 
 		enum Format {

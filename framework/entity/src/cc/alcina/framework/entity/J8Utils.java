@@ -18,8 +18,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -31,6 +29,13 @@ public class J8Utils {
 		return (Comparator<T> & Serializable) (c1,
 				c2) -> String.CASE_INSENSITIVE_ORDER.compare(
 						keyExtractor.apply(c1), keyExtractor.apply(c2));
+	}
+
+	public static <T> BinaryOperator<T> throwingMerger() {
+		return (u, v) -> {
+			throw new IllegalStateException(
+					String.format("Duplicate key %s", u));
+		};
 	}
 
 	public static <T> Collector<Collection<T>, ?, List<T>> toItemList() {
@@ -53,6 +58,10 @@ public class J8Utils {
 
 	public static <T> Collector<T, ?, Set<T>> toLinkedHashSet() {
 		return new ToLinkedHashSetCollector<>();
+	}
+
+	public static <T> Collector<T, ?, Set<T>> toLiSet() {
+		return new ToLiSetCollector<>();
 	}
 
 	public static <T, K, U> Collector<T, ?, Multimap<K, List<U>>> toMultimap(
@@ -345,9 +354,5 @@ public class J8Utils {
 		public Supplier<UnsortedMultikeyMap<V>> supplier() {
 			return supplier;
 		}
-	}
-
-	public static <T> Collector<T, ?, Set<T>> toLiSet() {
-		return new ToLiSetCollector<>();
 	}
 }

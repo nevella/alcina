@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.servlet.control;
+package cc.alcina.framework.entity.entityaccess;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;

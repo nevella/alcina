@@ -265,10 +265,6 @@ public class ResourceUtilities {
 		return img;
 	}
 
-	public static synchronized void set(String key, String value) {
-		customProperties.put(key, value);
-	}
-
 	public static synchronized String getBundledString(Class clazz,
 			String propertyName) {
 		String namespacedKey = (clazz == null) ? propertyName
@@ -308,6 +304,10 @@ public class ResourceUtilities {
 		} catch (Exception e) {
 			return defaultValue;
 		}
+	}
+
+	public static long getLong(Class clazz, String key) {
+		return Long.parseLong(get(clazz, key));
 	}
 
 	public static boolean is(Class clazz, String propertyName) {
@@ -628,6 +628,11 @@ public class ResourceUtilities {
 		registerCustomProperties(ios);
 	}
 
+	public static void registerCustomProperty(String key, String value) {
+		ResourceUtilities.registerCustomProperties(new ByteArrayInputStream(
+				Ax.format("%s=%s", key, value).getBytes()));
+	}
+
 	public static OutputStream scaleImage(InputStream in, int width, int height,
 			OutputStream out) throws IOException {
 		byte[] b = readStreamToByteArray(in);
@@ -678,6 +683,18 @@ public class ResourceUtilities {
 			return KryoUtils.serializeToBase64(o);
 		} else {
 			return new AlcinaBeanSerializerS().serialize(o);
+		}
+	}
+
+	public static synchronized void set(String key, String value) {
+		customProperties.put(key, value);
+	}
+
+	public static void write(String content, String path) {
+		try {
+			writeStringToFile(content, path);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 
@@ -775,18 +792,5 @@ public class ResourceUtilities {
 
 	public static interface BeanInfoHelper {
 		BeanInfo postProcessBeanInfo(BeanInfo beanInfo);
-	}
-
-	public static void write(String content, String path) {
-		try {
-			writeStringToFile(content, path);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static void registerCustomProperty(String key, String value) {
-		ResourceUtilities.registerCustomProperties(new ByteArrayInputStream(
-				Ax.format("%s=%s", key, value).getBytes()));
 	}
 }

@@ -2,14 +2,12 @@ package cc.alcina.framework.entity.util;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators.PropertyGenerator;
-import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyName;
 import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.introspect.ObjectIdInfo;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -24,21 +22,6 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	private boolean withTypeInfo;
 
 	private boolean withAllowUnknownProperties;
-
-	public JacksonJsonObjectSerializer withAllowUnknownProperties() {
-		this.withAllowUnknownProperties = true;
-		return this;
-	}
-
-	public JacksonJsonObjectSerializer withIdRefs() {
-		this.withIdRefs = true;
-		return this;
-	}
-
-	public JacksonJsonObjectSerializer withTypeInfo() {
-		this.withTypeInfo = true;
-		return this;
-	}
 
 	@Override
 	public <T> T deserialize(String json, Class<T> clazz) {
@@ -93,11 +76,27 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 				return mapper.writerWithDefaultPrettyPrinter()
 						.writeValueAsString(object);
 			} else {
-				return mapper.writeValueAsString(object);
+				return mapper.writerWithDefaultPrettyPrinter()
+						.writeValueAsString(object);
 			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public JacksonJsonObjectSerializer withAllowUnknownProperties() {
+		this.withAllowUnknownProperties = true;
+		return this;
+	}
+
+	public JacksonJsonObjectSerializer withIdRefs() {
+		this.withIdRefs = true;
+		return this;
+	}
+
+	public JacksonJsonObjectSerializer withTypeInfo() {
+		this.withTypeInfo = true;
+		return this;
 	}
 
 	public static class AddIdAnnotationIntrospector

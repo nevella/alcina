@@ -373,7 +373,13 @@ public class AlcinaMemCache implements RegistrableService {
 
 	Map<Long, Long> threadQueueTimes = new ConcurrentHashMap<>();
 
+	/**
+	 * synchronize on this for any operations on
+	 * activeThreads/activeThreadAcquireTimes
+	 */
 	CountingMap<Thread> activeThreads = new CountingMap<>();
+
+	Map<Thread, Long> activeThreadAcquireTimes = new LinkedHashMap<>();
 
 	long timzoneOffset = -1;
 
@@ -596,10 +602,15 @@ public class AlcinaMemCache implements RegistrableService {
 					.format("id: %s - time: %s\n", id, time - t2));
 			synchronized (activeThreads) {
 				fullLockDump.line("\n\nActive threads:\n***************\n");
-				activeThreads.keySet()
-						.forEach(t2 -> fullLockDump.line("id:%s %s\n%s",
-								t2.getId(), t2, SEUtilities.getStacktraceSlice(
-										t2, LONG_LOCK_TRACE_LENGTH, 0)));
+				activeThreads.keySet().forEach(t2 -> {
+					long elapsed = System.currentTimeMillis()
+							- activeThreadAcquireTimes.get(t2);
+					fullLockDump.line(
+							"id:%s %s" + "\n\tlock held time: %sms\n%s",
+							t2.getId(), t2, elapsed,
+							SEUtilities.getStacktraceSlice(t2,
+									LONG_LOCK_TRACE_LENGTH, 0));
+				});
 			}
 			fullLockDump
 					.line("\n\nRecent lock acquisitions:\n***************\n");
@@ -740,7 +751,7 @@ public class AlcinaMemCache implements RegistrableService {
 				System.out.println(
 						CommonUtils.join(recentLockAcquisitions, "\n"));
 				AlcinaTopics.notifyDevWarning(new MemcacheException(
-						"Disabling locking to long queue/deadlock"));
+						"Disabling locking owing to long queue/deadlock"));
 				lockingDisabled = true;
 				for (Thread t : waitingOnWriteLock) {
 					t.interrupt();
@@ -748,7 +759,7 @@ public class AlcinaMemCache implements RegistrableService {
 				waitingOnWriteLock.clear();
 				return;
 			}
-			maybeLogLock(LockAction.PRE_LOCK, write);
+			maybeLogLock(DomainCacheLockAction.PRE_LOCK, write);
 			if (write) {
 				int readHoldCount = mainLock.getReadHoldCount();
 				if (readHoldCount > 0) {
@@ -773,7 +784,7 @@ public class AlcinaMemCache implements RegistrableService {
 			e.printStackTrace();
 			throw e;
 		}
-		maybeLogLock(LockAction.MAIN_LOCK_ACQUIRED, write);
+		maybeLogLock(DomainCacheLockAction.MAIN_LOCK_ACQUIRED, write);
 	}
 
 	public List<Long> notInStore(Collection<Long> ids, Class clazz) {
@@ -848,7 +859,7 @@ public class AlcinaMemCache implements RegistrableService {
 			return;
 		}
 		if (lock) {
-			maybeLogLock(LockAction.PRE_LOCK, lock);
+			maybeLogLock(DomainCacheLockAction.PRE_LOCK, lock);
 			subgraphLock.writeLock().lock();
 			writeLockSubLock = sublock;
 		} else {
@@ -862,8 +873,8 @@ public class AlcinaMemCache implements RegistrableService {
 						writeLockSubLock));
 			}
 		}
-		maybeLogLock(lock ? LockAction.SUB_LOCK_ACQUIRED : LockAction.UNLOCK,
-				lock);
+		maybeLogLock(lock ? DomainCacheLockAction.SUB_LOCK_ACQUIRED
+				: DomainCacheLockAction.UNLOCK, lock);
 	}
 
 	public void unlock(boolean write) {
@@ -887,7 +898,7 @@ public class AlcinaMemCache implements RegistrableService {
 			e.printStackTrace();
 			throw e;
 		}
-		maybeLogLock(LockAction.UNLOCK, write);
+		maybeLogLock(DomainCacheLockAction.UNLOCK, write);
 	}
 
 	public void warmup(DataSource dataSource, CacheDescriptor cacheDescriptor,
@@ -1313,10 +1324,10 @@ public class AlcinaMemCache implements RegistrableService {
 		return loaded;
 	}
 
-	private void maybeLogLock(LockAction action, boolean write) {
+	private void maybeLogLock(DomainCacheLockAction action, boolean write) {
 		long time = System.currentTimeMillis();
 		Thread currentThread = Thread.currentThread();
-		if (action == LockAction.PRE_LOCK) {
+		if (action == DomainCacheLockAction.PRE_LOCK) {
 			threadQueueTimes.put(currentThread.getId(), time);
 		} else {
 			synchronized (activeThreads) {
@@ -1324,11 +1335,16 @@ public class AlcinaMemCache implements RegistrableService {
 				case MAIN_LOCK_ACQUIRED:
 				case SUB_LOCK_ACQUIRED:
 					activeThreads.add(currentThread);
+					if (!activeThreadAcquireTimes.containsKey(currentThread)) {
+						activeThreadAcquireTimes.put(currentThread,
+								System.currentTimeMillis());
+					}
 					break;
 				case UNLOCK:
 					activeThreads.add(currentThread, -1);
 					if (activeThreads.get(currentThread) == 0) {
 						activeThreads.remove(currentThread);
+						activeThreadAcquireTimes.remove(currentThread);
 					}
 					break;
 				}
@@ -2045,6 +2061,43 @@ public class AlcinaMemCache implements RegistrableService {
 	}
 
 	public class AlcinaMemCacheInstrumentation {
+		public long getActiveMemcacheLockTime(Thread thread) {
+			synchronized (activeThreads) {
+				return activeThreadAcquireTimes.getOrDefault(thread, 0L);
+			}
+		}
+
+		public Map<Thread, Long> getActiveMemcacheLockTimes() {
+			synchronized (activeThreads) {
+				return activeThreadAcquireTimes.entrySet().stream().collect(
+						Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+			}
+		}
+
+		public DomainCacheLockState getMemcacheLockState(Thread thread) {
+			synchronized (activeThreads) {
+				if (threadQueueTimes.containsKey(thread.getId()))
+					return DomainCacheLockState.WAITING_FOR_LOCK;
+				else {
+					synchronized (activeThreads) {
+						if (activeThreadAcquireTimes.containsKey(thread)) {
+							if (isWriteLockedByThread(thread)) {
+								return DomainCacheLockState.HOLDING_WRITE_LOCK;
+							} else {
+								return DomainCacheLockState.HOLDING_READ_LOCK;
+							}
+						} else {
+							return DomainCacheLockState.NO_LOCK;
+						}
+					}
+				}
+			}
+		}
+
+		public long getMemcacheWaitTime(Thread thread) {
+			return threadQueueTimes.getOrDefault(thread.getId(), 0L);
+		}
+
 		public boolean isLockedByThread(Thread thread) {
 			return mainLock.isLockedByThread(thread);
 		}
@@ -2878,10 +2931,6 @@ public class AlcinaMemCache implements RegistrableService {
 		public String toString() {
 			return Ax.format("Lock acquisition: %s - %s", date, message);
 		}
-	}
-
-	enum LockAction {
-		PRE_LOCK, MAIN_LOCK_ACQUIRED, SUB_LOCK_ACQUIRED, UNLOCK
 	}
 
 	class MemCachePersistenceListener

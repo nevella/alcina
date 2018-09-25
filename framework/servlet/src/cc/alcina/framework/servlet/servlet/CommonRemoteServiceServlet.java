@@ -124,6 +124,7 @@ import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetricData;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
+import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -633,16 +634,15 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_PAYLOAD,
 					payload);
 			String name = rpcRequest.getMethod().getName();
+			RPCRequest f_rpcRequest = rpcRequest;
 			Thread.currentThread().setName(Ax.format("gwt-rpc:%s", name));
 			onAfterAlcinaAuthentication(name);
 			LooseContext.set(CONTEXT_RPC_USER_ID,
 					PermissionsManager.get().getUserId());
 			InternalMetrics.get().startTracker(rpcRequest,
-					r -> describeRpcRequest((RPCRequest) r, ""),
-					ResourceUtilities.getInteger(
-							CommonRemoteServiceServlet.class,
-							"metricTrackerMs"),
-					imd -> true, Thread.currentThread().getName());
+					() -> describeRpcRequest(f_rpcRequest, ""),
+					InternalMetricTypeAlcina.client,
+					Thread.currentThread().getName());
 			Method method;
 			try {
 				method = this.getClass().getMethod(name,
@@ -685,7 +685,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throw rex;
 		} finally {
 			Thread.currentThread().setName(threadName);
-			InternalMetrics.get().end(rpcRequest);
+			InternalMetrics.get().endTracker(rpcRequest);
 			if (TransformManager.hasInstance()) {
 				if (CommonUtils.bv((Boolean) getThreadLocalRequest()
 						.getAttribute(PUSH_TRANSFORMS_AT_END_OF_REUQEST))) {
@@ -1191,11 +1191,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					ActionPerformerMetricFilter filter = Registry
 							.impl(ActionPerformerMetricFilter.class);
 					InternalMetrics.get().startTracker(action,
-							r -> describeRemoteAction((RemoteAction) r, ""),
-							ResourceUtilities.getInteger(
-									CommonRemoteServiceServlet.class,
-									"metricTrackerMs"),
-							imd -> filter.test((InternalMetricData) imd),
+							() -> describeRemoteAction(action, ""),
+							InternalMetricTypeAlcina.service,
 							action.getClass().getSimpleName());
 				}
 				LooseContext.getContext().addTopicListener(
@@ -1225,7 +1222,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				throw new WebException(e);
 			} finally {
 				if (!LooseContext.has(CONTEXT_THREAD_LOCAL_HTTP_REQUEST)) {
-					InternalMetrics.get().end(action);
+					InternalMetrics.get().endTracker(action);
 				}
 				LooseContext.pop();
 				if (transformManager instanceof ThreadlocalTransformManager) {

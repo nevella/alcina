@@ -1,64 +1,55 @@
 package cc.alcina.framework.entity.entityaccess.metric;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.lang.management.ThreadInfo;
 import java.util.Date;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
+import cc.alcina.framework.entity.entityaccess.cache.DomainCacheLockState;
+import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricType;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 
 public class InternalMetricData {
-	Object markerObject;
+	transient Object markerObject;
 
-	Function<Object, String> markerObjectArgsFunction;
+	transient Supplier<String> callContextProvider;
 
 	long startTime;
 
-	public Thread thread;
+	public transient Thread thread;
 
 	InternalMetric persistent;
 
-	long initialPeriodMs;
+	long lastSliceTime;
 
-	int sliceCount = 0;
-
-	int sliceTimeCount = 0;
-
-	long nextSliceTime;
-
-	Predicate<Object> triggerFilter;
+	long lastPersistTime;
 
 	long persistentId;
 
-	String tmpTrace = "";
+	ThreadHistory threadHistory;
 
 	String metricName;
 
 	long endTime;
 
-	public InternalMetricData(Object markerObject,
-			Function<Object, String> markerObjectArgsFunction, long startTime,
-			Thread thread, int initialPeriodMs, Predicate<Object> triggerFilter,
-			String metricName) {
-		this.markerObject = markerObject;
-		this.markerObjectArgsFunction = markerObjectArgsFunction;
-		this.startTime = startTime;
-		this.thread = thread;
-		this.initialPeriodMs = initialPeriodMs;
-		this.triggerFilter = triggerFilter;
-		this.metricName = metricName;
-		this.generateNextSliceTime();
+	InternalMetricType type;
+
+	public InternalMetricData() {
 	}
 
-	public void addTrace(String trace) {
-		tmpTrace += Ax.format("Slice time:\n%s\nTrace:\n%s\n",
-				LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
-				trace);
-		sliceCount++;
+	public InternalMetricData(Object markerObject,
+			Supplier<String> callContextProvider, long startTime, Thread thread,
+			InternalMetricType type, String metricName) {
+		this.markerObject = markerObject;
+		this.callContextProvider = callContextProvider;
+		this.startTime = startTime;
+		this.thread = thread;
+		this.type = type;
+		this.metricName = metricName;
+		threadHistory = new ThreadHistory();
 	}
 
 	public InternalMetric asMetric() {
@@ -69,23 +60,25 @@ public class InternalMetricData {
 			persistent.setCallName(metricName);
 			persistent.setStartTime(new Date(startTime));
 			persistent.setHostName(EntityLayerUtils.getLocalHostName());
-			persistent.setObfuscatedArgs(
-					markerObjectArgsFunction.apply(markerObject));
+			persistent.setObfuscatedArgs(callContextProvider.get());
 			persistent.setThreadName(
 					Ax.format("%s:%s", thread.getName(), thread.getId()));
 		}
-		String lockType = null;
-		if (AlcinaMemCache.get().instrumentation().isLockedByThread(thread)) {
-			lockType = "read";
-		}
-		if (AlcinaMemCache.get().instrumentation()
-				.isWriteLockedByThread(thread)) {
-			lockType = "write";
+		String lockType = Ax.blankToEmpty(persistent.getLockType());
+		if (lockType.length() < 200) {
+			if (AlcinaMemCache.get().instrumentation()
+					.isLockedByThread(thread)) {
+				lockType += "read;";
+			}
+			if (AlcinaMemCache.get().instrumentation()
+					.isWriteLockedByThread(thread)) {
+				lockType += "write;";
+			}
 		}
 		persistent.setEndTime(endTime == 0 ? null : new Date(endTime));
 		persistent.setLockType(lockType);
-		persistent.setSliceCount(sliceCount);
-		persistent.setSliceJson(tmpTrace);
+		persistent.setSliceCount(threadHistory.getElementCount());
+		persistent.setThreadHistory(threadHistory);
 		return persistent;
 	}
 
@@ -93,7 +86,26 @@ public class InternalMetricData {
 		return endTime != 0;
 	}
 
-	void generateNextSliceTime() {
-		nextSliceTime = startTime + initialPeriodMs * (1 << sliceTimeCount++);
+	public int sliceCount() {
+		return threadHistory.getElementCount();
+	}
+
+	public InternalMetricData syncCopyForPersist() {
+		synchronized (this) {
+			lastPersistTime = System.currentTimeMillis();
+			asMetric();
+			InternalMetricData copy = KryoUtils.serialClone(this);
+			copy.callContextProvider = callContextProvider;
+			copy.markerObject = markerObject;
+			copy.thread = thread;
+			return copy;
+		}
+	}
+
+	void addSlice(ThreadInfo info, StackTraceElement[] stackTrace,
+			long activeMemcacheLockTime, long memcacheWaitTime,
+			DomainCacheLockState memcacheState) {
+		threadHistory.addElement(info, stackTrace, activeMemcacheLockTime,
+				memcacheWaitTime, memcacheState);
 	}
 }

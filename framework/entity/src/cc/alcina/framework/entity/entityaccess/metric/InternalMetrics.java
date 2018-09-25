@@ -1,144 +1,262 @@
 package cc.alcina.framework.entity.entityaccess.metric;
 
-import java.util.ArrayList;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.J8Utils;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.entityaccess.NamedThreadFactory;
+import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
+import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.AlcinaMemCacheInstrumentation;
+import cc.alcina.framework.entity.entityaccess.cache.DomainCacheLockState;
 
 @RegistryLocation(registryPoint = InternalMetrics.class, implementationType = ImplementationType.SINGLETON)
 public class InternalMetrics {
+	private static final int PERSIST_PERIOD = 1000;
+
+	private static final int SLICE_PERIOD = 50;
+
 	public static InternalMetrics get() {
 		return Registry.impl(InternalMetrics.class);
 	}
 
 	private Timer timer;
 
-	private int periodMs;
+	private ThreadPoolExecutor sliceExecutor;
 
-	Map<Object, InternalMetricData> trackers = new ConcurrentHashMap<>();
+	private ThreadPoolExecutor persistExecutor;
 
-	AtomicInteger running = new AtomicInteger();
+	private ThreadMXBean threadMxBean;
 
-	public synchronized void end(Object markerObject) {
-		if (trackers.get(markerObject) != null) {
-			trackers.get(markerObject).endTime = System.currentTimeMillis();
+	private volatile boolean started;
+
+	ConcurrentHashMap<Object, InternalMetricData> trackers = new ConcurrentHashMap<>();
+
+	private InternalMetricSliceOracle sliceOracle;
+
+	public void endTracker(Object markerObject) {
+		if (!started) {
+			return;
+		}
+		InternalMetricData tracker = trackers.get(markerObject);
+		if (tracker != null) {
+			synchronized (tracker) {
+				tracker.endTime = System.currentTimeMillis();
+			}
 		}
 	}
 
-	public synchronized void startTracker(Object markerObject,
-			Function<Object, String> logger, int periodMs,
-			Predicate<Object> triggerFilter, String metricName) {
-		if (periodMs == 0) {
+	public void startService() {
+		if (!ResourceUtilities.is(InternalMetrics.class, "enabled")) {
+			return;
+		}
+		this.sliceOracle = Registry.impl(InternalMetricSliceOracle.class);
+		Preconditions.checkState(!started);
+		started = true;
+		sliceExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+		sliceExecutor.setThreadFactory(
+				new NamedThreadFactory("internalMetrics-slice"));
+		persistExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+		persistExecutor.setThreadFactory(
+				new NamedThreadFactory("internalMetrics-persist"));
+		timer = new Timer("internal-metrics-timer");
+		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				if (sliceExecutor.getActiveCount() == 0) {
+					sliceExecutor.submit(() -> {
+						try {
+							slice();
+						} catch (Throwable e) {
+							e.printStackTrace();
+						}
+					});
+				} else {
+					Ax.out("internal metrics :: sliceExecutor :: skip");
+				}
+			}
+		}, SLICE_PERIOD, SLICE_PERIOD);
+		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				if (persistExecutor.getActiveCount() == 0) {
+					persistExecutor.submit(() -> {
+						try {
+							persist();
+						} catch (Throwable e) {
+							e.printStackTrace();
+						}
+					});
+				} else {
+					Ax.out("internal metrics :: persistExecutor :: skip");
+				}
+			}
+		}, PERSIST_PERIOD, PERSIST_PERIOD);
+		threadMxBean = ManagementFactory.getThreadMXBean();
+		threadMxBean.setThreadContentionMonitoringEnabled(true);
+		threadMxBean.setThreadCpuTimeEnabled(true);
+	}
+
+	public void startTracker(Object markerObject,
+			Supplier<String> callContextProvider, InternalMetricType type,
+			String metricName) {
+		if (!started) {
 			return;
 		}
 		trackers.put(markerObject,
-				new InternalMetricData(markerObject, logger,
+				new InternalMetricData(markerObject, callContextProvider,
 						System.currentTimeMillis(), Thread.currentThread(),
-						periodMs, triggerFilter, metricName));
-		ensureTimer(100);
+						type, metricName));
 	}
 
-	public void stop() {
-		if (timer != null) {
+	public void stopService() {
+		if (started) {
+			started = false;
 			timer.cancel();
-			timer = null;
+			sliceExecutor.shutdown();
+			persistExecutor.shutdown();
 		}
 	}
 
-	private synchronized void checkLongRunning() {
-		long time = System.currentTimeMillis();
-		List<InternalMetricData> toPersist = new ArrayList<>();
-		trackers.values().forEach(t -> {
-			if ((t.isFinished() && t.sliceCount > 0) || (time > t.nextSliceTime
-					&& !(t.isFinished() && t.sliceCount == 0)
-					&& t.triggerFilter.test(t))) {
-				try {
-					if (!t.isFinished()) {
-						String trace = Arrays.stream(t.thread.getStackTrace())
-								.map(Object::toString)
-								.collect(Collectors.joining("\n"));
-						t.addTrace(trace);
-					}
-					toPersist.add(t);
-					t.generateNextSliceTime();
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		});
-		if (toPersist.size() > 0) {
-			persist(toPersist);
-		}
+	private boolean shouldSlice(InternalMetricData imd) {
+		return sliceOracle.shouldSlice(imd);
 	}
 
-	private void persist(List<InternalMetricData> toPersist) {
-		new Thread("persist-internal-metric") {
-			@Override
-			public void run() {
-				persistentUpdate(toPersist);
-			}
-		}.start();
-	}
-
-	protected void persistentUpdate(List<InternalMetricData> toPersist) {
-		// extra layer of sync because of strange optimistic lock exceptions
-		if (!running.compareAndSet(0, 1)) {
-			Ax.out("internal metric 	- skipping, persistent running");
+	private void slice() {
+		if (trackers.isEmpty()) {
 			return;
 		}
-		try {
-			Ax.out("persist internal metric: [%s]",
-					toPersist.stream().map(imd -> imd.thread.getName())
-							.collect(Collectors.joining("; ")));
-			CommonPersistenceProvider.get().getCommonPersistence()
-					.persistInternalMetrics(
-							toPersist.stream().map(imd -> imd.asMetric())
-									.collect(Collectors.toList()));
-			trackers.entrySet().removeIf(e -> e.getValue().isFinished());
-		} catch (Throwable e) {
-			e.printStackTrace();
-		} finally {
-			if (!running.compareAndSet(1, 0)) {
-				Ax.out("internal metric - unexpected end, should have running 1 - had %s",
-						running.get());
-			}
-		}
-	}
-
-	void ensureTimer(int periodMs) {
-		if (periodMs == 0 || this.periodMs != periodMs) {
-			stop();
-			if (periodMs == 0) {
-				return;
-			} else {
-				this.periodMs = periodMs;
-				timer = new Timer("internal-metrics-timer");
-				timer.scheduleAtFixedRate(new TimerTask() {
-					@Override
-					public void run() {
-						checkLongRunning();
-						ensureTimer(100);
+		long time = System.currentTimeMillis();
+		sliceOracle.beforeSlicePass(threadMxBean);
+		List<Long> ids = trackers.values().stream()
+				.filter(imd -> !imd.isFinished())
+				.filter(imd -> shouldSlice(imd)).map(imd -> imd.thread.getId())
+				.collect(Collectors.toList());
+		long[] idArray = toLong(ids);
+		boolean debugMonitors = sliceOracle.shouldCheckDeadlocks();
+		String key = "internalmetrics-extthreadinfo";
+		// MetricLogging.get().start(key);
+		ThreadInfo[] threadInfos = threadMxBean.getThreadInfo(idArray,
+				debugMonitors, debugMonitors);
+		// MetricLogging.get().end(key);
+		Map<Long, ThreadInfo> threadInfoById = Arrays.stream(threadInfos)
+				.collect(J8Utils.toKeyMap(ti -> ti.getThreadId()));
+		trackers.values().stream().filter(imd -> !imd.isFinished())
+				.filter(imd -> shouldSlice(imd)).forEach(imd -> {
+					synchronized (imd) {
+						try {
+							Thread thread = imd.thread;
+							ThreadInfo threadInfo = threadInfoById
+									.get(thread.getId());
+							if (threadInfo != null) {
+								StackTraceElement[] stackTrace = thread
+										.getStackTrace();
+								AlcinaMemCacheInstrumentation instrumentation = AlcinaMemCache
+										.get().instrumentation();
+								long activeMemcacheLockTime = instrumentation
+										.getActiveMemcacheLockTime(thread);
+								long memcacheWaitTime = instrumentation
+										.getMemcacheWaitTime(thread);
+								DomainCacheLockState memcacheState = instrumentation
+										.getMemcacheLockState(thread);
+								imd.addSlice(threadInfo, stackTrace,
+										activeMemcacheLockTime,
+										memcacheWaitTime, memcacheState);
+							}
+							imd.lastSliceTime = System.currentTimeMillis();
+						} catch (Exception e) {
+							throw new WrappedRuntimeException(e);
+						}
 					}
-				}, periodMs, periodMs);
-			}
-		}
+					// }
+				});
 	}
 
-	public enum InternalMetricType {
-		client, lock;
+	protected void persist() {
+		LinkedHashMap<InternalMetricData, InternalMetric> toPersist = null;
+		List<InternalMetricData> toRemove = trackers.values().stream()
+				.filter(imd -> imd.isFinished() && imd.sliceCount() == 0)
+				.collect(Collectors.toList());
+		toPersist = trackers.values().stream()
+				.filter(imd -> imd.sliceCount() > 0)
+				.filter(imd -> imd.isFinished()
+						|| imd.lastPersistTime < imd.lastSliceTime)
+				.map(imd -> imd.syncCopyForPersist())
+				.collect(Collectors.toMap(imd -> imd, imd -> imd.asMetric(),
+						J8Utils.throwingMerger(), LinkedHashMap::new));
+		if (toPersist.size() > 0) {
+			Ax.out("persist internal metric: [%s]",
+					toPersist.keySet().stream().map(imd -> imd.thread.getName())
+							.collect(Collectors.joining("; ")));
+			List<InternalMetric> toPersistList = toPersist.values().stream()
+					.collect(Collectors.toList());
+			CommonPersistenceProvider.get().getCommonPersistence()
+					.persistInternalMetrics(toPersistList);
+			for (InternalMetric internalMetric : toPersistList) {
+				InternalMetricData owner = toPersist.entrySet().stream()
+						.filter(e -> e.getValue() == internalMetric).findFirst()
+						.get().getKey();
+				trackers.values().stream()
+						.filter(imd -> imd.thread == owner.thread).findFirst()
+						.ifPresent(imd -> {
+							synchronized (imd) {
+								if (imd.persistent != null
+										&& imd.persistent.getId() == 0) {
+									imd.persistent
+											.setId(internalMetric.getId());
+								}
+							}
+						});
+				if (owner.isFinished()) {
+					Ax.out("removing after finished/persist: %s %s : id %s",
+							owner.metricName, owner.thread,
+							owner.thread.getId());
+					trackers.entrySet()
+							.removeIf(e -> e.getValue().thread == owner.thread);
+				}
+			}
+		}
+		trackers.entrySet().removeIf(e -> toRemove.contains(e.getValue()));
+	}
+
+	long[] toLong(Collection<Long> list) {
+		long[] returnLong = new long[list.size()];
+		int iValue = 0;
+		for (final Long value : list) {
+			if (value == null) {
+				returnLong[iValue++] = -1;
+			} else {
+				returnLong[iValue++] = value;
+			}
+		}
+		return returnLong;
+	}
+
+	public interface InternalMetricType {
+	}
+
+	public enum InternalMetricTypeAlcina implements InternalMetricType {
+		client, service;
 	}
 }
