@@ -33,13 +33,15 @@ public class InternalMetrics {
 
 	AtomicInteger running = new AtomicInteger();
 
+	private Object updateLock = new Object();
+
 	public synchronized void end(Object markerObject) {
 		if (trackers.get(markerObject) != null) {
 			trackers.get(markerObject).endTime = System.currentTimeMillis();
 		}
 	}
 
-	public synchronized void start(Object markerObject,
+	public synchronized void startTracker(Object markerObject,
 			Function<Object, String> logger, int periodMs,
 			Predicate<Object> triggerFilter, String metricName) {
 		if (periodMs == 0) {
@@ -90,28 +92,37 @@ public class InternalMetrics {
 	}
 
 	private void persist(List<InternalMetricData> toPersist) {
-		if (running.get() > 0) {
-			Ax.out("internal metric - skipping, persistent running");
-		}
 		new Thread("persist-internal-metric") {
 			@Override
 			public void run() {
-				try {
-					running.incrementAndGet();
-					Ax.out("persist internal metric: [%s]",
-							toPersist.stream().map(imd -> imd.thread.getName())
-									.collect(Collectors.joining("; ")));
-					CommonPersistenceProvider.get().getCommonPersistence()
-							.persistInternalMetrics(toPersist.stream()
-									.map(imd -> imd.asMetric())
-									.collect(Collectors.toList()));
-				} catch (Throwable e) {
-					e.printStackTrace();
-				} finally {
-					running.decrementAndGet();
-				}
+				persistentUpdate(toPersist);
 			}
 		}.start();
+	}
+
+	protected void persistentUpdate(List<InternalMetricData> toPersist) {
+		// extra layer of sync because of strange optimistic lock exceptions
+		synchronized (updateLock) {
+			try {
+				if (!running.compareAndSet(0, 1)) {
+					Ax.out("internal metric - skipping, persistent running");
+				}
+				Ax.out("persist internal metric: [%s]",
+						toPersist.stream().map(imd -> imd.thread.getName())
+								.collect(Collectors.joining("; ")));
+				CommonPersistenceProvider.get().getCommonPersistence()
+						.persistInternalMetrics(
+								toPersist.stream().map(imd -> imd.asMetric())
+										.collect(Collectors.toList()));
+			} catch (Throwable e) {
+				e.printStackTrace();
+			} finally {
+				if (!running.compareAndSet(1, 0)) {
+					Ax.out("internal metric - unexpected end, should have running 1 - had %s",
+							running.get());
+				}
+			}
+		}
 	}
 
 	void ensureTimer(int periodMs) {
@@ -131,5 +142,9 @@ public class InternalMetrics {
 				}, periodMs, periodMs);
 			}
 		}
+	}
+
+	public enum InternalMetricType {
+		client, lock;
 	}
 }

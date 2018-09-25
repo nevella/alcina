@@ -105,6 +105,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -1343,7 +1344,7 @@ public class AlcinaMemCache implements RegistrableService {
 						.add(new LockAcquisition(new Date(), lockDumpCause));
 				if (recentLockAcquisitions.size() > 100) {
 					long cutoff = System.currentTimeMillis()
-							- 5 * TimeConstants.ONE_MINUTE_MS;
+							- 1 * TimeConstants.ONE_MINUTE_MS;
 					recentLockAcquisitions
 							.removeIf(rla -> rla.date.getTime() < cutoff);
 				}
@@ -2871,6 +2872,11 @@ public class AlcinaMemCache implements RegistrableService {
 		public LockAcquisition(Date date, String message) {
 			this.date = date;
 			this.message = message;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("Lock acquisition: %s - %s", date, message);
 		}
 	}
 

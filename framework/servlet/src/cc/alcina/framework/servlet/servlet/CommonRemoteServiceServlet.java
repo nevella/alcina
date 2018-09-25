@@ -637,7 +637,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			onAfterAlcinaAuthentication(name);
 			LooseContext.set(CONTEXT_RPC_USER_ID,
 					PermissionsManager.get().getUserId());
-			InternalMetrics.get().start(rpcRequest,
+			InternalMetrics.get().startTracker(rpcRequest,
 					r -> describeRpcRequest((RPCRequest) r, ""),
 					ResourceUtilities.getInteger(
 							CommonRemoteServiceServlet.class,
@@ -1190,7 +1190,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				if (!LooseContext.has(CONTEXT_THREAD_LOCAL_HTTP_REQUEST)) {
 					ActionPerformerMetricFilter filter = Registry
 							.impl(ActionPerformerMetricFilter.class);
-					InternalMetrics.get().start(action,
+					InternalMetrics.get().startTracker(action,
 							r -> describeRemoteAction((RemoteAction) r, ""),
 							ResourceUtilities.getInteger(
 									CommonRemoteServiceServlet.class,

@@ -76,6 +76,8 @@ public class DevConsoleCommandInternalMetrics {
 					p.valueOrDefault(String.valueOf(Integer.MAX_VALUE)));
 			p = new FilterArgvParam(argv, "nearDate");
 			String nearDate = p.valueOrDefault("");
+			p = new FilterArgvParam(argv, "threadName");
+			String threadName = p.valueOrDefault("");
 			p = new FilterArgvParam(argv, "format");
 			Format format = Format.valueOf(p.valueOrDefault("list"));
 			Connection conn = getConn();
@@ -94,6 +96,9 @@ public class DevConsoleCommandInternalMetrics {
 			}
 			if (call.length() > 0) {
 				filters.add(Ax.format("callname ilike '%%s%'", call));
+			}
+			if (threadName.length() > 0) {
+				filters.add(Ax.format("threadName ilike '%%s%'", threadName));
 			}
 			if (minId != 0) {
 				filters.add(Ax.format("id >= %s", minId));
