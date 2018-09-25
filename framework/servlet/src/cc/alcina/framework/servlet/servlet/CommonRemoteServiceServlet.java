@@ -1225,6 +1225,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				throw new WebException(e);
 			} finally {
 				if (!LooseContext.has(CONTEXT_THREAD_LOCAL_HTTP_REQUEST)) {
+					InternalMetrics.get().end(action);
 				}
 				LooseContext.pop();
 				if (transformManager instanceof ThreadlocalTransformManager) {
