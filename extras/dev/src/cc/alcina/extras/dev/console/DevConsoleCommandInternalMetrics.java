@@ -78,6 +78,10 @@ public class DevConsoleCommandInternalMetrics {
 			String nearDate = p.valueOrDefault("");
 			p = new FilterArgvParam(argv, "threadName");
 			String threadName = p.valueOrDefault("");
+			p = new FilterArgvParam(argv, "age");
+			long age = Long.parseLong(p.valueOrDefault(p.valueOrDefault("0")));
+			p = new FilterArgvParam(argv, "tz");
+			String tz = p.valueOrDefault("AEST");
 			p = new FilterArgvParam(argv, "format");
 			Format format = Format.valueOf(p.valueOrDefault("list"));
 			Connection conn = getConn();
@@ -105,6 +109,11 @@ public class DevConsoleCommandInternalMetrics {
 			}
 			if (maxId != 0) {
 				filters.add(Ax.format("id <= %s", maxId));
+			}
+			if (age != 0) {
+				filters.add(Ax.format(
+						"extract 	(epoch from now() at time zone '%s' -starttime)<%s",
+						tz, age));
 			}
 			if (nearDate.length() > 0) {
 				DateFormat dbDateFormat = new SynchronizedSimpleDateFormat(

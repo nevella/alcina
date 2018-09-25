@@ -2,11 +2,11 @@ package cc.alcina.framework.entity.entityaccess.metric;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -29,11 +29,9 @@ public class InternalMetrics {
 
 	private int periodMs;
 
-	Map<Object, InternalMetricData> trackers = new LinkedHashMap<>();
+	Map<Object, InternalMetricData> trackers = new ConcurrentHashMap<>();
 
 	AtomicInteger running = new AtomicInteger();
-
-	private Object updateLock = new Object();
 
 	public synchronized void end(Object markerObject) {
 		if (trackers.get(markerObject) != null) {
