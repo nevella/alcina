@@ -82,10 +82,6 @@ public class InternalMetrics {
 				}
 			}
 		});
-		if (running.get() == 0) {
-			// don't remove if there's a chance they won't be persisted
-			trackers.entrySet().removeIf(e -> e.getValue().isFinished());
-		}
 		if (toPersist.size() > 0) {
 			persist(toPersist);
 		}
@@ -103,10 +99,11 @@ public class InternalMetrics {
 	protected void persistentUpdate(List<InternalMetricData> toPersist) {
 		// extra layer of sync because of strange optimistic lock exceptions
 		synchronized (updateLock) {
+			if (!running.compareAndSet(0, 1)) {
+				Ax.out("internal metric - skipping, persistent running");
+				return;
+			}
 			try {
-				if (!running.compareAndSet(0, 1)) {
-					Ax.out("internal metric - skipping, persistent running");
-				}
 				Ax.out("persist internal metric: [%s]",
 						toPersist.stream().map(imd -> imd.thread.getName())
 								.collect(Collectors.joining("; ")));
@@ -114,6 +111,7 @@ public class InternalMetrics {
 						.persistInternalMetrics(
 								toPersist.stream().map(imd -> imd.asMetric())
 										.collect(Collectors.toList()));
+				trackers.entrySet().removeIf(e -> e.getValue().isFinished());
 			} catch (Throwable e) {
 				e.printStackTrace();
 			} finally {
