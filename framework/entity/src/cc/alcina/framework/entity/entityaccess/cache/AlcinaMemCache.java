@@ -23,7 +23,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -105,7 +104,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -301,10 +299,6 @@ public class AlcinaMemCache implements RegistrableService {
 	private Field modificationCheckerField;
 
 	private boolean dumpLocks;
-
-	private boolean collectLockAcquisitionPoints;
-
-	private LinkedList<LockAcquisition> recentLockAcquisitions = new LinkedList<>();
 
 	/**
 	 * Certain post-list triggers can writeLock() without causing readlock
@@ -612,10 +606,6 @@ public class AlcinaMemCache implements RegistrableService {
 									LONG_LOCK_TRACE_LENGTH, 0));
 				});
 			}
-			fullLockDump
-					.line("\n\nRecent lock acquisitions:\n***************\n");
-			fullLockDump.line(CommonUtils.join(recentLockAcquisitions, "\n"));
-			fullLockDump.line("\n===========\n\n");
 			lastQueueDumpTime = time;
 		}
 		return fullLockDump.toString();
@@ -746,10 +736,6 @@ public class AlcinaMemCache implements RegistrableService {
 						"Disabling locking due to deadlock:\n***************\n");
 				mainLock.getQueuedThreads().forEach(t -> System.out.println(
 						t + "\n" + CommonUtils.join(t.getStackTrace(), "\n")));
-				System.out.println(
-						"Recent lock acquisitions:\n***************\n");
-				System.out.println(
-						CommonUtils.join(recentLockAcquisitions, "\n"));
 				AlcinaTopics.notifyDevWarning(new MemcacheException(
 						"Disabling locking owing to long queue/deadlock"));
 				lockingDisabled = true;
@@ -1354,23 +1340,9 @@ public class AlcinaMemCache implements RegistrableService {
 		long queuedTime = health.getMaxQueuedTime();
 		String lockDumpCause = String.format("Memcache lock - %s - %s\n",
 				write ? "write" : "read", action);
-		if (collectLockAcquisitionPoints) {
-			synchronized (recentLockAcquisitions) {
-				recentLockAcquisitions
-						.add(new LockAcquisition(new Date(), lockDumpCause));
-				if (recentLockAcquisitions.size() > 100) {
-					long cutoff = System.currentTimeMillis()
-							- 1 * TimeConstants.ONE_MINUTE_MS;
-					recentLockAcquisitions
-							.removeIf(rla -> rla.date.getTime() < cutoff);
-				}
-			}
-		}
-		if (dumpLocks || (collectLockAcquisitionPoints
-				&& (write || queuedTime > MAX_QUEUED_TIME))) {
+		if (dumpLocks || (write || queuedTime > MAX_QUEUED_TIME)) {
 			if (dumpLocksCount.get() > 100) {
 				dumpLocks = false;
-				collectLockAcquisitionPoints = false;
 				return;
 			}
 			String log = getLockStats();
@@ -1704,10 +1676,6 @@ public class AlcinaMemCache implements RegistrableService {
 		initialising = false;
 		if (ResourceUtilities.getBoolean(AlcinaMemCache.class, "dumpLocks")) {
 			dumpLocks = true;
-		}
-		if (ResourceUtilities.getBoolean(AlcinaMemCache.class,
-				"collectLockAcquisitionPoints")) {
-			collectLockAcquisitionPoints = true;
 		}
 		// don't close, but indicate that everything write-y from now shd be
 		// single-threaded
@@ -2914,22 +2882,6 @@ public class AlcinaMemCache implements RegistrableService {
 								o);
 			}
 			return true;
-		}
-	}
-
-	class LockAcquisition {
-		Date date;
-
-		String message;
-
-		public LockAcquisition(Date date, String message) {
-			this.date = date;
-			this.message = message;
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("Lock acquisition: %s - %s", date, message);
 		}
 	}
 

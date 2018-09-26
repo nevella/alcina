@@ -346,8 +346,9 @@ public class DevConsoleCommandTransforms {
 			f = new FilterArgvFlag(argv, "-rr");
 			boolean forceGetRqIds = f.contains;
 			argv = f.argv;
-			f = new FilterArgvFlag(argv, "-ndtr");
-			boolean noDtrQuery = f.contains;
+			f = new FilterArgvFlag(argv, "-wdtr");
+			// seems that dtr query generally slows things
+			boolean noDtrQuery = !f.contains;
 			argv = f.argv;
 			Connection conn = getConn();
 			ensureClassRefs(conn);
@@ -464,7 +465,7 @@ public class DevConsoleCommandTransforms {
 
 		private void printFullUsage() {
 			System.out.format(
-					"trt <-r:=rq ids only> <-ndtr: no dtr prefilter> <-t: as transforms> {[%s] value}+\n",
+					"trt <-r:=rq ids only> <-wdtr: with dtr prefilter> <-t: as transforms> {[%s] value}+\n",
 					DevConsoleFilter
 							.describeFilters(CmdListTransformsFilter.class));
 		}

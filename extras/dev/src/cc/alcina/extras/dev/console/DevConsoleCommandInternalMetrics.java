@@ -32,9 +32,48 @@ import cc.alcina.framework.entity.util.SqlUtils.ColumnFormatter;
 import cc.alcina.framework.entity.util.SynchronizedSimpleDateFormat;
 
 public class DevConsoleCommandInternalMetrics {
-	public static class CmdListMetrics extends DevConsoleCommand {
-		boolean foundDteId;
+	public static class CmdDrillMetric extends DevConsoleCommand {
+		@Override
+		public boolean canUseProductionConn() {
+			return true;
+		}
 
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "imd" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "drill internal metric";
+		}
+
+		@Override
+		public String getUsage() {
+			return "im {params or none for usage}";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			if (argv.length == 0) {
+				Ax.out("id required");
+				return "";
+			}
+			List<String> args = new ArrayList<>();
+			args.add("ids");
+			args.add(argv[0]);
+			args.add("format");
+			args.add("dump");
+			if (argv.length == 2) {
+				args.add("args");
+				args.add("true");
+			}
+			String[] suvargv = (String[]) args.toArray(new String[args.size()]);
+			return runSubcommand(new CmdListMetrics(), suvargv);
+		}
+	}
+
+	public static class CmdListMetrics extends DevConsoleCommand {
 		@Override
 		public boolean canUseProductionConn() {
 			return true;
@@ -52,7 +91,7 @@ public class DevConsoleCommandInternalMetrics {
 
 		@Override
 		public String getUsage() {
-			return "im {params or none for usage}";
+			return "ims {params or none for usage}";
 		}
 
 		@Override
@@ -181,6 +220,20 @@ public class DevConsoleCommandInternalMetrics {
 			return "";
 		}
 
+		private long adjustForTz(long time, Date relTo) {
+			if (time == 0) {
+				return 0;
+			}
+			long diff = time - relTo.getTime();
+			if (diff < 0) {
+				diff = -(diff % TimeConstants.ONE_HOUR_MS);
+				if (diff > TimeConstants.ONE_HOUR_MS - diff) {
+					diff = TimeConstants.ONE_HOUR_MS - diff;
+				}
+			}
+			return diff;
+		}
+
 		private void dumpMetric(InternalMetric internalMetric,
 				boolean outputArgs) {
 			Ax.out(GraphProjection.fieldwiseToString(internalMetric, false,
@@ -191,17 +244,13 @@ public class DevConsoleCommandInternalMetrics {
 			}
 			ThreadHistory history = internalMetric.getThreadHistory();
 			history.elements.forEach(thhe -> {
-				Ax.out("Elapsed: %s", thhe.date.getTime()
-						- internalMetric.getStartTime().getTime());
+				Ax.out("Elapsed: %s", adjustForTz(thhe.date.getTime(),
+						internalMetric.getStartTime()));
 				if (thhe.domainCacheLockTime != 0
 						|| thhe.domainCacheWaitTime != 0) {
 					Ax.out("Domain cache:\n\tActive time: %s\n\tWait time: %s\n\tLock state: %s",
-							thhe.domainCacheLockTime == 0 ? 0
-									: thhe.date.getTime()
-											- thhe.domainCacheLockTime,
-							thhe.domainCacheWaitTime == 0 ? 0
-									: thhe.date.getTime()
-											- thhe.domainCacheWaitTime,
+							adjustForTz(thhe.domainCacheLockTime, thhe.date),
+							adjustForTz(thhe.domainCacheWaitTime, thhe.date),
 							thhe.lockState);
 				}
 				ThreadInfoSer threadInfo = thhe.threadInfo;

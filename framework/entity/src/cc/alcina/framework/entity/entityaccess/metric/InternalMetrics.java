@@ -55,6 +55,8 @@ public class InternalMetrics {
 
 	private InternalMetricSliceOracle sliceOracle;
 
+	int sliceSkipCount = 0;
+
 	public void endTracker(Object markerObject) {
 		if (!started) {
 			return;
@@ -86,6 +88,9 @@ public class InternalMetrics {
 			public void run() {
 				if (sliceExecutor.getActiveCount() == 0) {
 					sliceExecutor.submit(() -> {
+						if (sliceSkipCount < 50) {
+							sliceSkipCount = 0;
+						}
 						try {
 							slice();
 						} catch (Throwable e) {
@@ -94,6 +99,13 @@ public class InternalMetrics {
 					});
 				} else {
 					Ax.out("internal metrics :: sliceExecutor :: skip");
+					if (sliceSkipCount++ == 50) {
+						long[] allThreadIds = threadMxBean.getAllThreadIds();
+						ThreadInfo[] threadInfos = threadMxBean
+								.getThreadInfo(allThreadIds, true, true);
+						Ax.sysLogHigh("High skip count: ");
+						Ax.out(Arrays.asList(threadInfos));
+					}
 				}
 			}
 		}, SLICE_PERIOD, SLICE_PERIOD);

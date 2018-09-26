@@ -185,6 +185,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public static final String CONTEXT_THREAD_LOCAL_HTTP_REQUEST = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_REQUEST";
 
+	public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
+			.getName() + ".CONTEXT_NO_ACTION_LOG";
+
 	public static final String PUSH_TRANSFORMS_AT_END_OF_REUQEST = CommonRemoteServiceServlet.class
 			.getName() + ".PUSH_TRANSFORMS_AT_END_OF_REUQEST";
 
@@ -1149,7 +1152,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			logItem.setActionDate(new Date());
 			logItem.setShortDescription(CommonUtils
 					.trimToWsChars(actionTracker.getJobResult(), 220));
-			logItem.setActionLog(actionTracker.getLog());
+			if (!LooseContext.is(CONTEXT_NO_ACTION_LOG)) {
+				logItem.setActionLog(actionTracker.getLog());
+			}
 			return logItem;
 		}
 
