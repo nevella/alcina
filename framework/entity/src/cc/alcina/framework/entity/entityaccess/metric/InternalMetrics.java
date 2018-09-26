@@ -73,6 +73,10 @@ public class InternalMetrics {
 		}
 	}
 
+	public boolean isStarted() {
+		return this.started;
+	}
+
 	public void startService() {
 		if (!ResourceUtilities.is(InternalMetrics.class, "enabled")) {
 			return;
@@ -187,6 +191,28 @@ public class InternalMetrics {
 		trackers.values().stream().filter(imd -> !imd.isFinished())
 				.filter(imd -> shouldSlice(imd)).forEach(imd -> {
 					synchronized (imd) {
+						imd.lastSliceTime = System.currentTimeMillis();
+						if (imd.type == InternalMetricTypeAlcina.health) {
+							long[] allIds = threadMxBean.getAllThreadIds();
+							ThreadInfo[] threadInfos2 = threadMxBean
+									.getThreadInfo(allIds, debugMonitors,
+											debugMonitors);
+							imd.threadHistory.elements.clear();
+							Map<Thread, StackTraceElement[]> allStackTraces = Thread
+									.getAllStackTraces();
+							for (ThreadInfo threadInfo : threadInfos2) {
+								StackTraceElement[] stackTrace = allStackTraces
+										.entrySet().stream()
+										.filter(e -> e.getKey()
+												.getId() == threadInfo
+														.getThreadId())
+										.findFirst().map(e -> e.getValue())
+										.orElse(new StackTraceElement[0]);
+								imd.addSlice(threadInfo, stackTrace, 0, 0,
+										DomainCacheLockState.NO_LOCK);
+							}
+							return;
+						}
 						try {
 							Thread thread = imd.thread;
 							ThreadInfo threadInfo = threadInfoById
@@ -206,7 +232,6 @@ public class InternalMetrics {
 										activeMemcacheLockTime,
 										memcacheWaitTime, memcacheState);
 							}
-							imd.lastSliceTime = System.currentTimeMillis();
 						} catch (Exception e) {
 							throw new WrappedRuntimeException(e);
 						}
@@ -279,6 +304,6 @@ public class InternalMetrics {
 	}
 
 	public enum InternalMetricTypeAlcina implements InternalMetricType {
-		client, service;
+		client, service, health;
 	}
 }

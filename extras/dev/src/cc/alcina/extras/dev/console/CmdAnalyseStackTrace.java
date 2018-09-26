@@ -19,6 +19,28 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 	public static final String CONTEXT_FILTER = CmdAnalyseStackTrace.class
 			.getName() + ".CONTEXT_FILTER";
 
+	protected static boolean ignoreableStackTrace(String joined) {
+		if (LooseContext.has(CONTEXT_FILTER)
+				&& !joined.matches(LooseContext.get(CONTEXT_FILTER))) {
+			return true;
+		}
+		return joined.matches(
+				"(?is)(.*)(\\d+:)?.*((parking to wait for .*a|Waiting for lock: className:) "
+						+ "(java.util.concurrent.ForkJoinPool|"
+						+ "java.lang.ref.Reference.Lock|"
+						+ "java.lang.ref.ReferenceQueue.Lock|"
+						+ "com.arjuna.ats.arjuna.coordinator.TransactionReaper|"
+						+ "com.arjuna.ats.internal.arjuna.recovery.ExpiredEntryMonitor|"
+						+ "java.util.TaskQueue|"
+						+ "org.apache.curator.framework.recipes.queue.ChildrenCache|"
+						+ "org.apache.kafka.clients.consumer.internals.ConsumerCoordinator|"
+						+ "java.util.concurrent.SynchronousQueue.TransferStack|"
+						+ "java.util.concurrent.locks.AbstractQueuedSynchronizer.?ConditionObject)"
+						+ "|EPollArrayWrapper.epollWait|ChildrenCache.blockingNextGetData|ReferenceQueue.remove"
+						+ "|RequestController.waitForQueue"
+						+ "|org.hornetq.core.).*");
+	}
+
 	@Override
 	public boolean clsBeforeRun() {
 		return true;
@@ -152,17 +174,7 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 
 		boolean ignoreable() {
 			String joined = lines.stream().collect(Collectors.joining("\n"));
-			if (LooseContext.has(CONTEXT_FILTER)
-					&& !joined.matches(LooseContext.get(CONTEXT_FILTER))) {
-				return true;
-			}
-			return joined.matches("(?s).*(parking to wait for .*a "
-					+ "(java.util.concurrent.ForkJoinPool|"
-					+ "java.util.concurrent.SynchronousQueueTransferStack|"
-					+ "java.util.concurrent.locks.AbstractQueuedSynchronizer.?ConditionObject)"
-					+ "|EPollArrayWrapper.epollWait|ChildrenCache.blockingNextGetData|ReferenceQueue.remove"
-					+ "|RequestController.waitForQueue"
-					+ "|org.hornetq.core.).*");
+			return ignoreableStackTrace(joined);
 		}
 
 		String toStringForDump() {

@@ -23,6 +23,8 @@ public abstract class InternalMetric<U extends InternalMetric>
 
 	private Date startTime;
 
+	private Date updateTime;
+
 	private Date endTime;
 
 	private String obfuscatedArgs;
@@ -96,6 +98,10 @@ public abstract class InternalMetric<U extends InternalMetric>
 		return this.threadName;
 	}
 
+	public Date getUpdateTime() {
+		return this.updateTime;
+	}
+
 	public void setCallName(String callName) {
 		this.callName = callName;
 	}
@@ -142,6 +148,10 @@ public abstract class InternalMetric<U extends InternalMetric>
 
 	public void setThreadName(String threadName) {
 		this.threadName = threadName;
+	}
+
+	public void setUpdateTime(Date updateTime) {
+		this.updateTime = updateTime;
 	}
 
 	@Override

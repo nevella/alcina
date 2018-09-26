@@ -67,6 +67,9 @@ public class DevConsoleCommandInternalMetrics {
 			if (argv.length == 2) {
 				args.add("args");
 				args.add("true");
+			} else {
+				args.add("ignoreables");
+				args.add("true");
 			}
 			String[] suvargv = (String[]) args.toArray(new String[args.size()]);
 			return runSubcommand(new CmdListMetrics(), suvargv);
@@ -74,6 +77,8 @@ public class DevConsoleCommandInternalMetrics {
 	}
 
 	public static class CmdListMetrics extends DevConsoleCommand {
+		private boolean ignoreables;
+
 		@Override
 		public boolean canUseProductionConn() {
 			return true;
@@ -112,6 +117,8 @@ public class DevConsoleCommandInternalMetrics {
 			p = new FilterArgvParam(argv, "args");
 			boolean outputArgs = Boolean
 					.parseBoolean(p.valueOrDefault("false"));
+			p = new FilterArgvParam(argv, "ignoreables");
+			ignoreables = Boolean.parseBoolean(p.valueOrDefault("false"));
 			p = new FilterArgvParam(argv, "call");
 			String call = p.valueOrDefault("");
 			p = new FilterArgvParam(argv, "minId");
@@ -134,7 +141,8 @@ public class DevConsoleCommandInternalMetrics {
 					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistenceExTransaction();
 			String tableName = "internalmetric";
-			String sql = "select * from internalmetric where id != -1 AND %s order by id desc limit %s";
+			String sql = "select * from internalmetric where id != -1 and updatetime is not null "
+					+ "AND %s order by updatetime desc limit %s";
 			List<String> filters = new ArrayList<>();
 			if (ids.size() > 0) {
 				filters.add(Ax.format("id in %s",
@@ -245,6 +253,18 @@ public class DevConsoleCommandInternalMetrics {
 			}
 			ThreadHistory history = internalMetric.getThreadHistory();
 			history.elements.forEach(thhe -> {
+				ThreadInfoSer threadInfo = thhe.threadInfo;
+				if (ignoreables) {
+					String joined = CommonUtils
+							.joinWithNewlines(threadInfo.stackTrace);
+					if (threadInfo.lock != null) {
+						joined = Ax.format("Waiting for lock: %s\n",
+								threadInfo.lock, joined);
+					}
+					if (CmdAnalyseStackTrace.ignoreableStackTrace(joined)) {
+						return;
+					}
+				}
 				Ax.out("Elapsed: %s", adjustForTz(thhe.date.getTime(),
 						internalMetric.getStartTime()));
 				if (thhe.domainCacheLockTime != 0
@@ -254,7 +274,6 @@ public class DevConsoleCommandInternalMetrics {
 							adjustForTz(thhe.domainCacheWaitTime, thhe.date),
 							thhe.lockState);
 				}
-				ThreadInfoSer threadInfo = thhe.threadInfo;
 				if (threadInfo.lockedMonitors.size() > 0) {
 					Ax.out("Locked monitors:\n\t%s", CommonUtils
 							.joinWithNewlineTab(threadInfo.lockedMonitors));

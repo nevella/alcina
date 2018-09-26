@@ -88,6 +88,7 @@ public class InternalMetricData {
 		persistent.setLockType(lockType);
 		persistent.setSliceCount(threadHistory.getElementCount());
 		persistent.setThreadHistory(threadHistory);
+		persistent.setUpdateTime(new Date(lastSliceTime));
 		return persistent;
 	}
 
