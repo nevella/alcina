@@ -1119,7 +1119,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} else {
 			try {
 				msg += new JacksonJsonObjectSerializer().withIdRefs()
-						.serialize(parameters);
+						.withMaxLength(100000).serialize(parameters);
 			} catch (Throwable e) {
 				e.printStackTrace();
 			}

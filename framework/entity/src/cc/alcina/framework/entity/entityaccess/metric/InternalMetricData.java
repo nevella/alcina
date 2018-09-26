@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.KryoUtils;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 import cc.alcina.framework.entity.entityaccess.cache.DomainCacheLockState;
@@ -37,6 +38,8 @@ public class InternalMetricData {
 
 	InternalMetricType type;
 
+	private String callContext;
+
 	public InternalMetricData() {
 	}
 
@@ -45,6 +48,12 @@ public class InternalMetricData {
 			InternalMetricType type, String metricName) {
 		this.markerObject = markerObject;
 		this.callContextProvider = callContextProvider;
+		try {
+			// call early, just in case the context changes
+			this.callContext = callContextProvider.get();
+		} catch (Exception e) {
+			this.callContext = SEUtilities.getFullExceptionMessage(e);
+		}
 		this.startTime = startTime;
 		this.thread = thread;
 		this.type = type;
@@ -60,7 +69,7 @@ public class InternalMetricData {
 			persistent.setCallName(metricName);
 			persistent.setStartTime(new Date(startTime));
 			persistent.setHostName(EntityLayerUtils.getLocalHostName());
-			persistent.setObfuscatedArgs(callContextProvider.get());
+			persistent.setObfuscatedArgs(callContext);
 			persistent.setThreadName(
 					Ax.format("%s:%s", thread.getName(), thread.getId()));
 		}

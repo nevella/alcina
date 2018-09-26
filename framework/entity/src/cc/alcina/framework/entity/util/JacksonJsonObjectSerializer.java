@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.util;
 
+import java.io.StringWriter;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators.PropertyGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -13,6 +15,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.JsonObjectSerializer;
 
 @RegistryLocation(registryPoint = JsonObjectSerializer.class, implementationType = ImplementationType.INSTANCE)
@@ -22,6 +25,8 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	private boolean withTypeInfo;
 
 	private boolean withAllowUnknownProperties;
+
+	private int maxLength;
 
 	@Override
 	public <T> T deserialize(String json, Class<T> clazz) {
@@ -54,6 +59,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 				mapper.enableDefaultTyping(
 						ObjectMapper.DefaultTyping.NON_FINAL);
 			}
+			StringWriter writer = new LengthLimitedStringWriter(maxLength);
 			if (withIdRefs) {
 				mapper.setVisibility(mapper.getSerializationConfig()
 						.getDefaultVisibilityChecker()
@@ -63,22 +69,9 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 						.withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 				mapper.setAnnotationIntrospector(
 						new AddIdAnnotationIntrospector());
-				// SimpleModule module = new SimpleModule("HiliIdModule",
-				// new Version(0, 1, 0, "alpha", "", "")) {
-				// @Override
-				// public void setupModule(SetupContext context) {
-				// context.insertAnnotationIntrospector(
-				// new AddIdAnnotationIntrospector());
-				// super.setupModule(context);
-				// }
-				// };
-				// mapper.registerModule(module);
-				return mapper.writerWithDefaultPrettyPrinter()
-						.writeValueAsString(object);
-			} else {
-				return mapper.writerWithDefaultPrettyPrinter()
-						.writeValueAsString(object);
 			}
+			mapper.writerWithDefaultPrettyPrinter().writeValue(writer, object);
+			return writer.toString();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -91,6 +84,11 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	public JacksonJsonObjectSerializer withIdRefs() {
 		this.withIdRefs = true;
+		return this;
+	}
+
+	public JacksonJsonObjectSerializer withMaxLength(int maxLength) {
+		this.maxLength = maxLength;
 		return this;
 	}
 
@@ -112,6 +110,66 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 						com.fasterxml.jackson.annotation.SimpleObjectIdResolver.class);
 			} else {
 				return annotatedResult;
+			}
+		}
+	}
+
+	public static class LengthLimitedStringWriter extends StringWriter {
+		private int maxLength;
+
+		public LengthLimitedStringWriter(int maxLength) {
+			this.maxLength = maxLength;
+		}
+
+		@Override
+		public StringWriter append(char c) {
+			checkLength(1);
+			return super.append(c);
+		}
+
+		@Override
+		public StringWriter append(CharSequence csq) {
+			checkLength(csq.length());
+			return super.append(csq);
+		}
+
+		@Override
+		public StringWriter append(CharSequence csq, int start, int end) {
+			checkLength(end - start);
+			return super.append(csq, start, end);
+		}
+
+		@Override
+		public void write(char[] cbuf, int off, int len) {
+			checkLength(len);
+			super.write(cbuf, off, len);
+		}
+
+		@Override
+		public void write(int c) {
+			checkLength(1);
+			super.write(c);
+		}
+
+		@Override
+		public void write(String str) {
+			checkLength(str.length());
+			super.write(str);
+		}
+
+		@Override
+		public void write(String str, int off, int len) {
+			checkLength(len);
+			super.write(str, off, len);
+		}
+
+		private void checkLength(int len) {
+			if (maxLength == 0) {
+				return;
+			}
+			if (getBuffer().length() + len > maxLength) {
+				throw Ax.runtimeException("Limited writer overflow - %s bytes",
+						maxLength);
 			}
 		}
 	}

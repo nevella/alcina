@@ -37,6 +37,10 @@ public class InternalMetrics {
 
 	private static final int SLICE_PERIOD = 50;
 
+	private static final int MAX_TRACKERS = 200;
+
+	private static final boolean DISABLE_OVER_MAX_TRACKERS = true;
+
 	public static InternalMetrics get() {
 		return Registry.impl(InternalMetrics.class);
 	}
@@ -134,6 +138,11 @@ public class InternalMetrics {
 			Supplier<String> callContextProvider, InternalMetricType type,
 			String metricName) {
 		if (!started) {
+			return;
+		}
+		if (trackers.size() > MAX_TRACKERS && DISABLE_OVER_MAX_TRACKERS) {
+			stopService();
+			trackers.clear();
 			return;
 		}
 		trackers.put(markerObject,
