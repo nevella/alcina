@@ -103,7 +103,7 @@ public class DevConsoleCommandInternalMetrics {
 			console.clear();
 			FilterArgvParam p = new FilterArgvParam(argv, "limit");
 			argv = p.argv;
-			int limit = Integer.parseInt(p.valueOrDefault("9999"));
+			int limit = Integer.parseInt(p.valueOrDefault("5"));
 			p = new FilterArgvParam(argv, "ids");
 			List<Long> ids = TransformManager
 					.idListToLongs(p.valueOrDefault(""));
@@ -134,7 +134,7 @@ public class DevConsoleCommandInternalMetrics {
 					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistenceExTransaction();
 			String tableName = "internalmetric";
-			String sql = "select * from internalmetric where id != -1 AND %s order by id desc";
+			String sql = "select * from internalmetric where id != -1 AND %s order by id desc limit %s";
 			List<String> filters = new ArrayList<>();
 			if (ids.size() > 0) {
 				filters.add(Ax.format("id in %s",
@@ -172,7 +172,8 @@ public class DevConsoleCommandInternalMetrics {
 						dbDateFormat.format(near)));
 			}
 			sql = Ax.format(sql,
-					filters.stream().collect(Collectors.joining(" AND ")));
+					filters.stream().collect(Collectors.joining(" AND ")),
+					limit);
 			PreparedStatement ps = conn.prepareStatement(sql);
 			System.out.println(console.breakAndPad(1, 80, sql, 0));
 			switch (format) {

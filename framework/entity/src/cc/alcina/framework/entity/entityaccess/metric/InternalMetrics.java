@@ -141,6 +141,7 @@ public class InternalMetrics {
 			return;
 		}
 		if (trackers.size() > MAX_TRACKERS && DISABLE_OVER_MAX_TRACKERS) {
+			Ax.sysLogHigh("Too many trackers - cancelling internal metrics");
 			stopService();
 			trackers.clear();
 			return;
