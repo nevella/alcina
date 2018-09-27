@@ -1,6 +1,8 @@
 package cc.alcina.framework.entity.util;
 
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators.PropertyGenerator;
@@ -16,6 +18,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.JsonObjectSerializer;
 import cc.alcina.framework.entity.ResourceUtilities;
 
@@ -178,10 +181,17 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 					first = getBuffer().substring(0, 1000);
 					last = getBuffer().substring(getBuffer().length() - 1000);
 				}
+				// stacktraces may be truncated - so print the top too
+				List<StackTraceElement> frames = Arrays
+						.asList(new Exception().getStackTrace());
+				int fromIndex = Math.max(0, frames.size() - 200);
+				List<StackTraceElement> topOfTrace = frames.subList(fromIndex,
+						frames.size());
 				throw Ax.runtimeException(
 						"Limited writer overflow - %s bytes ::\n (0-1000): \n%s\n(last 1000)"
-								+ ":\n%s",
-						maxLength, first, last);
+								+ ":\n%s\n\ntop of stack:\n%s",
+						maxLength, first, last,
+						CommonUtils.joinWithNewlines(topOfTrace));
 			}
 		}
 	}

@@ -203,7 +203,7 @@ public class InternalMetrics {
 							ThreadInfo[] threadInfos2 = threadMxBean
 									.getThreadInfo(allIds, debugMonitors,
 											debugMonitors);
-							imd.threadHistory.elements.clear();
+							imd.threadHistory.clearElements();
 							Map<Thread, StackTraceElement[]> allStackTraces = Thread
 									.getAllStackTraces();
 							for (ThreadInfo threadInfo : threadInfos2) {

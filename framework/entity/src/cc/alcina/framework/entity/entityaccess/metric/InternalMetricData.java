@@ -11,6 +11,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 import cc.alcina.framework.entity.entityaccess.cache.DomainCacheLockState;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricType;
+import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 
 public class InternalMetricData {
@@ -115,7 +116,9 @@ public class InternalMetricData {
 	void addSlice(ThreadInfo info, StackTraceElement[] stackTrace,
 			long activeMemcacheLockTime, long memcacheWaitTime,
 			DomainCacheLockState memcacheState) {
+		int maxStackLines = type == InternalMetricTypeAlcina.health ? 100 : 300;
+		int maxFrames = type == InternalMetricTypeAlcina.health ? 2000 : 50;
 		threadHistory.addElement(info, stackTrace, activeMemcacheLockTime,
-				memcacheWaitTime, memcacheState);
+				memcacheWaitTime, memcacheState, maxStackLines, maxFrames);
 	}
 }

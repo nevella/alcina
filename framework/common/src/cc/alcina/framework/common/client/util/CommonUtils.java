@@ -316,6 +316,15 @@ public class CommonUtils {
 		return d == null ? 0.0 : d.doubleValue();
 	}
 
+	public static int elideList(List list, int maxElements) {
+		int elidedCount = 0;
+		while (list.size() > maxElements) {
+			list.remove(maxElements / 2);
+			elidedCount++;
+		}
+		return elidedCount;
+	}
+
 	public static String ellipsisText(String sourceText, int charWidth) {
 		if (sourceText.length() < charWidth) {
 			return sourceText;

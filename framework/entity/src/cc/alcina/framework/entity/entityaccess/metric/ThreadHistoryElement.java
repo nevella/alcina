@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.entityaccess.metric;
 
 import java.util.Date;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.cache.DomainCacheLockState;
 
 public class ThreadHistoryElement {
@@ -14,4 +15,11 @@ public class ThreadHistoryElement {
 	public DomainCacheLockState lockState;
 
 	public long domainCacheWaitTime;
+
+	public int elidedStacktraceFrameCount;
+
+	public void elideIfMoreLinesThan(int max) {
+		elidedStacktraceFrameCount = CommonUtils
+				.elideList(threadInfo.stackTrace, max);
+	}
 }

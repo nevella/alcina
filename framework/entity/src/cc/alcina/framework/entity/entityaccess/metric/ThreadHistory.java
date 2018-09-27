@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.cache.DomainCacheLockState;
 
 public class ThreadHistory {
@@ -16,9 +17,14 @@ public class ThreadHistory {
 
 	public List<ThreadHistoryElement> elements = new ArrayList<>();
 
+	public int elementCount;
+
+	public int elidedElementCount;
+
 	public void addElement(ThreadInfo info, StackTraceElement[] stackTrace,
 			long activeMemcacheLockTime, long memcacheWaitTime,
-			DomainCacheLockState memcacheState) {
+			DomainCacheLockState memcacheState, int maxStackLines,
+			int maxFrames) {
 		ThreadHistoryElement element = new ThreadHistoryElement();
 		elements.add(element);
 		element.date = new Date();
@@ -28,10 +34,18 @@ public class ThreadHistory {
 		element.lockState = memcacheState;
 		element.threadInfo.stackTrace = Arrays.asList(stackTrace).stream()
 				.collect(Collectors.toList());
+		element.elideIfMoreLinesThan(maxStackLines);
+		this.elidedElementCount += CommonUtils.elideList(elements, maxFrames);
+		elementCount = elements.size();
+	}
+
+	public void clearElements() {
+		elements.clear();
+		elementCount = 0;
 	}
 
 	@JsonIgnore
 	public int getElementCount() {
-		return elements.size();
+		return elementCount;
 	}
 }
