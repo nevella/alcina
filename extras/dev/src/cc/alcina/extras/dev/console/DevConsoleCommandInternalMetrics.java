@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import cc.alcina.extras.dev.console.DevConsoleCommandTransforms.CmdListTransforms.CmdListTransformsFilter;
 import cc.alcina.extras.dev.console.DevConsoleCommandTransforms.DateTimeFormatter;
 import cc.alcina.extras.dev.console.DevConsoleCommandTransforms.TrimmedStringFormatter;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -96,7 +95,7 @@ public class DevConsoleCommandInternalMetrics {
 
 		@Override
 		public String getUsage() {
-			return "ims {params or none for usage}";
+			return "ims filters:{host|args|call|threadName|age|nearDate} modifiers:{tz|format|ignoreables|}";
 		}
 
 		@Override
@@ -141,7 +140,7 @@ public class DevConsoleCommandInternalMetrics {
 					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistenceExTransaction();
 			String tableName = "internalmetric";
-			String sql = "select * from internalmetric where id != -1 and updatetime is not null "
+			String sql = "select %s from internalmetric where id != -1 and updatetime is not null "
 					+ "AND %s order by updatetime desc limit %s";
 			List<String> filters = new ArrayList<>();
 			if (ids.size() > 0) {
@@ -179,7 +178,14 @@ public class DevConsoleCommandInternalMetrics {
 				filters.add(Ax.format("endtime <= '%s'",
 						dbDateFormat.format(near)));
 			}
-			sql = Ax.format(sql,
+			String fields = "*";
+			switch (format) {
+			case list: {
+				fields = "id,starttime,endtime,hostname,callname,threadname,updatetime,optlock,slicecount,locktype";
+			}
+				break;
+			}
+			sql = Ax.format(sql, fields,
 					filters.stream().collect(Collectors.joining(" AND ")),
 					limit);
 			PreparedStatement ps = conn.prepareStatement(sql);
@@ -347,8 +353,9 @@ public class DevConsoleCommandInternalMetrics {
 		}
 
 		private void printFullUsage() {
-			System.out.format("im {usage} \n", DevConsoleFilter
-					.describeFilters(CmdListTransformsFilter.class));
+			Ax.out(getUsage());
+			// System.out.format("im {} \n", DevConsoleFilter
+			// .describeFilters(CmdListTransformsFilter.class));
 		}
 
 		class ElideState {

@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.entityaccess.metric;
 
 import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.Arrays;
@@ -60,6 +61,8 @@ public class InternalMetrics {
 	private InternalMetricSliceOracle sliceOracle;
 
 	int sliceSkipCount = 0;
+
+	private MemoryMXBean memoryMxBean;
 
 	public void endTracker(Object markerObject) {
 		if (!started) {
@@ -134,6 +137,7 @@ public class InternalMetrics {
 			}
 		}, PERSIST_PERIOD, PERSIST_PERIOD);
 		threadMxBean = ManagementFactory.getThreadMXBean();
+		memoryMxBean = ManagementFactory.getMemoryMXBean();
 		threadMxBean.setThreadContentionMonitoringEnabled(true);
 		threadMxBean.setThreadCpuTimeEnabled(true);
 	}
@@ -193,6 +197,8 @@ public class InternalMetrics {
 					synchronized (imd) {
 						imd.lastSliceTime = System.currentTimeMillis();
 						if (imd.type == InternalMetricTypeAlcina.health) {
+							Ax.out("Internal health metrics monitoring:\n\t%s",
+									getMemoryStats());
 							long[] allIds = threadMxBean.getAllThreadIds();
 							ThreadInfo[] threadInfos2 = threadMxBean
 									.getThreadInfo(allIds, debugMonitors,
@@ -285,6 +291,19 @@ public class InternalMetrics {
 			}
 		}
 		trackers.entrySet().removeIf(e -> toRemove.contains(e.getValue()));
+	}
+
+	String getMemoryStats() {
+		try {
+			return String.format("Heap used: %.2fmb\t\tHeap max: %.2fmb",
+					((double) memoryMxBean.getHeapMemoryUsage().getUsed())
+							/ 1000000,
+					((double) memoryMxBean.getHeapMemoryUsage().getMax())
+							/ 1000000);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "Exception";
+		}
 	}
 
 	long[] toLong(Collection<Long> list) {
