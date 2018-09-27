@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.JsonObjectSerializer;
+import cc.alcina.framework.entity.ResourceUtilities;
 
 @RegistryLocation(registryPoint = JsonObjectSerializer.class, implementationType = ImplementationType.INSTANCE)
 public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
@@ -26,7 +27,8 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	private boolean withAllowUnknownProperties;
 
-	private int maxLength;
+	private int maxLength = ResourceUtilities
+			.getInteger(JacksonJsonObjectSerializer.class, "maxLength");
 
 	@Override
 	public <T> T deserialize(String json, Class<T> clazz) {
@@ -168,8 +170,18 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 				return;
 			}
 			if (getBuffer().length() + len > maxLength) {
-				throw Ax.runtimeException("Limited writer overflow - %s bytes",
-						maxLength);
+				String first = "";
+				String last = "";
+				if (getBuffer().length() <= 1000) {
+					first = getBuffer().toString();
+				} else {
+					first = getBuffer().substring(0, 1000);
+					last = getBuffer().substring(getBuffer().length() - 1000);
+				}
+				throw Ax.runtimeException(
+						"Limited writer overflow - %s bytes ::\n (0-1000): \n%s\n(last 1000)"
+								+ ":\n%s",
+						maxLength, first, last);
 			}
 		}
 	}

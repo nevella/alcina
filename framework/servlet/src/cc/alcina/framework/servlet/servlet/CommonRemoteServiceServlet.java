@@ -1102,7 +1102,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		msg += "\nParameters: \n";
 		try {
 			msg += new JacksonJsonObjectSerializer().withIdRefs()
-					.serialize(remoteAction);
+					.withMaxLength(1000000).serialize(remoteAction);
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
