@@ -142,7 +142,8 @@ public abstract class InternalMetric<U extends InternalMetric>
 	public void setThreadHistory(ThreadHistory threadHistory) {
 		this.threadHistory = threadHistory;
 		if (threadHistory != null) {
-			setSliceJson(JsonObjectSerializer.get().serialize(threadHistory));
+			setSliceJson(
+					JsonObjectSerializer.get().serializeNoThrow(threadHistory));
 		}
 	}
 

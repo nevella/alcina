@@ -10,4 +10,12 @@ public interface JsonObjectSerializer {
 	<T> T deserialize(String json, Class<T> clazz);
 
 	String serialize(Object object);
+
+	default String serializeNoThrow(Object object) {
+		try {
+			return serialize(object);
+		} catch (Exception e) {
+			return Ax.blankTo(e.getMessage(), e.getClass().getName());
+		}
+	}
 }
