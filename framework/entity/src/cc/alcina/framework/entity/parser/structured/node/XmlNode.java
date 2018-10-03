@@ -225,6 +225,10 @@ public class XmlNode {
 		return XmlUtils.isAncestorOf(node, xmlNode.node);
 	}
 
+	public boolean isComment() {
+		return node.getNodeType() == Node.COMMENT_NODE;
+	}
+
 	public boolean isDocumentNode() {
 		return node.getNodeType() == Node.DOCUMENT_NODE;
 	}
@@ -336,6 +340,11 @@ public class XmlNode {
 		return this;
 	}
 
+	public void setInnerXml(String xml) {
+		XmlDoc importDoc = new XmlDoc(xml);
+		children.importFrom(importDoc.getDocumentElementNode());
+	}
+
 	public void setText(String text) {
 		if (isText()) {
 			((Text) node).setData(text);
@@ -410,6 +419,12 @@ public class XmlNode {
 
 	public boolean textMatches(String regex) {
 		return textContent().matches(regex);
+	}
+
+	public DocumentFragment toFragment() {
+		DocumentFragment fragment = domDoc().createDocumentFragment();
+		fragment.appendChild(domNode());
+		return fragment;
 	}
 
 	@Override
@@ -589,17 +604,17 @@ public class XmlNode {
 					|| t.tagIsOneOf(tagArray));
 		}
 
-		public XmlNode importFrom(XmlNode n) {
-			Node importNode = doc.domDoc().importNode(n.node, true);
-			XmlNode imported = doc.nodeFor(importNode);
-			append(imported);
-			return imported;
-		}
-
 		public XmlNode importAsFirstChild(XmlNode n) {
 			Node importNode = doc.domDoc().importNode(n.node, true);
 			XmlNode imported = doc.nodeFor(importNode);
 			insertAsFirstChild(imported);
+			return imported;
+		}
+
+		public XmlNode importFrom(XmlNode n) {
+			Node importNode = doc.domDoc().importNode(n.node, true);
+			XmlNode imported = doc.nodeFor(importNode);
+			append(imported);
 			return imported;
 		}
 
@@ -733,10 +748,15 @@ public class XmlNode {
 
 	public class XmlNodeHtml {
 		public void addClassName(String string) {
-			Set<String> classes = Arrays.stream(attr("class").split(" ")).filter(Ax::notBlank)
-					.collect(J8Utils.toLinkedHashSet());
+			Set<String> classes = Arrays.stream(attr("class").split(" "))
+					.filter(Ax::notBlank).collect(J8Utils.toLinkedHashSet());
 			classes.add(string);
 			setAttr("class", classes.stream().collect(Collectors.joining(" ")));
+		}
+
+		public XmlNode addLink(String text, String href, String target) {
+			return builder().tag("a").attr("href", href).attr("target", target)
+					.text(text).append();
 		}
 
 		public Optional<XmlNode> ancestorBlock() {
@@ -744,9 +764,21 @@ public class XmlNode {
 					.findFirst();
 		}
 
+		public void appendStyleNode(String css) {
+			head().builder().tag("style").text(css).append();
+		}
+
+		public XmlNode body() {
+			return xpath("//body").node();
+		}
+
 		public boolean hasClassName(String className) {
 			return isElement() && Arrays.stream(attr("class").split(" "))
 					.anyMatch(cn -> cn.equals(className));
+		}
+
+		public XmlNode head() {
+			return xpath("//head").node();
 		}
 
 		public boolean isBlock() {
@@ -772,9 +804,8 @@ public class XmlNode {
 			}
 			styles.put(key, value);
 			setAttr("style",
-					styles.entrySet().stream()
-							.map(e -> Ax.format("%s:%s", e.getKey(),
-									e.getValue()))
+					styles.entrySet().stream().map(
+							e -> Ax.format("%s:%s", e.getKey(), e.getValue()))
 							.collect(Collectors.joining("; ")));
 		}
 
@@ -789,21 +820,6 @@ public class XmlNode {
 			}
 			return trs;
 		}
-
-		public XmlNode addLink(String text, String href, String target) {
-			return builder().tag("a").attr("href", href).attr("target", target)
-					.text(text).append();
-		}
-
-		public XmlNode body() {
-			return xpath("//body").node();
-		}
-		public XmlNode head() {
-            return xpath("//head").node();
-        }
-		public void appendStyleNode(String css) {
-            head().builder().tag("style").text(css).append();
-        }
 	}
 
 	public class XmlNodeRelative {
@@ -939,6 +955,10 @@ public class XmlNode {
 			return node() != null;
 		}
 
+		public void forEach(Consumer<XmlNode> consumer) {
+			stream().forEach(consumer);
+		}
+
 		public XmlNode node() {
 			Node domNode = eval.getNodeByXpath(query, node);
 			return doc.nodeFor(domNode);
@@ -960,9 +980,6 @@ public class XmlNode {
 		public Stream<XmlNode> stream() {
 			List<Node> domNodes = eval.getNodesByXpath(query, node);
 			return domNodes.stream().map(doc::nodeFor);
-		}
-		public void forEach(Consumer<XmlNode> consumer) {
-			stream().forEach(consumer);
 		}
 
 		public String textOrEmpty() {
@@ -1041,16 +1058,5 @@ public class XmlNode {
 			range.setEndAfter(end == null ? node : end.node);
 			return range;
 		}
-	}
-
-	public void setInnerXml(String xml) {
-		XmlDoc importDoc = new XmlDoc(xml);
-		children.importFrom(importDoc.getDocumentElementNode());
-	}
-
-	public DocumentFragment toFragment() {
-		DocumentFragment fragment = domDoc().createDocumentFragment();
-		fragment.appendChild(domNode());
-		return fragment;
 	}
 }
