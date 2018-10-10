@@ -8,7 +8,6 @@ import javax.persistence.Transient;
 import javax.persistence.Version;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.UnsafeNativeLong;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -171,12 +170,6 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 	public T writeable() {
 		return (T) Domain.writeable(this);
 	}
-
-	@UnsafeNativeLong
-	private native int fastHash(long id, long localId,
-			int classHashCode)/*-{
-								
-								}-*/;
 
 	protected int _compareTo(AbstractDomainBase o) {
 		String s1 = comparisonString();
