@@ -145,7 +145,7 @@ import cc.alcina.framework.entity.projection.GraphProjections;
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class AlcinaMemCache implements RegistrableService {
-	private static final int LONG_LOCK_TRACE_LENGTH = 999;
+	private static final int LONG_LOCK_TRACE_LENGTH = 99999;
 
 	private static final int MAX_QUEUED_TIME = 500;
 
