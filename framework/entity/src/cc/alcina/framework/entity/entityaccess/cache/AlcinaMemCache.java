@@ -145,7 +145,7 @@ import cc.alcina.framework.entity.projection.GraphProjections;
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class AlcinaMemCache implements RegistrableService {
-	private static final int LONG_LOCK_TRACE_LENGTH = 999;
+	private static final int LONG_LOCK_TRACE_LENGTH = 99999;
 
 	private static final int MAX_QUEUED_TIME = 500;
 
@@ -332,6 +332,8 @@ public class AlcinaMemCache implements RegistrableService {
 
 	private int maxLockQueueLength;
 
+	private long maxLockQueueTimeForNoDisablement;
+
 	private int originalTransactionIsolation;
 
 	private UnsortedMultikeyMap<Field> memcacheTransientFields = new UnsortedMultikeyMap<Field>(
@@ -405,6 +407,8 @@ public class AlcinaMemCache implements RegistrableService {
 		persistenceListener = new MemCachePersistenceListener();
 		maxLockQueueLength = ResourceUtilities.getInteger(AlcinaMemCache.class,
 				"maxLockQueueLength", 120);
+		maxLockQueueTimeForNoDisablement = ResourceUtilities.getLong(
+				AlcinaMemCache.class, "maxLockQueueTimeForNoDisablement");
 		publishMappingEvents = ResourceUtilities.is(AlcinaMemCache.class,
 				"publishMappingEvents");
 		Domain.registerHandler(new AlcinaMemCacheDomainHandler());
@@ -731,7 +735,8 @@ public class AlcinaMemCache implements RegistrableService {
 			return;
 		}
 		try {
-			if (mainLock.getQueueLength() > maxLockQueueLength) {
+			if (mainLock.getQueueLength() > maxLockQueueLength && getHealth()
+					.getMaxQueuedTime() > maxLockQueueTimeForNoDisablement) {
 				System.out.println(
 						"Disabling locking due to deadlock:\n***************\n");
 				mainLock.getQueuedThreads().forEach(t -> System.out.println(
