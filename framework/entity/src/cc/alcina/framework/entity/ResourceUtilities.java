@@ -87,8 +87,17 @@ public class ResourceUtilities {
 	public static void appShutdown() {
 		customProperties.clear();
 	}
+	private static boolean clientWithJvmProperties;
 
-	public static StringMap classPathStringExistenceMap(Class clazz,
+	public static boolean isClientWithJvmProperties() {
+        return clientWithJvmProperties;
+    }
+
+    public static void setClientWithJvmProperties(boolean clientWithJvmProperties) {
+        ResourceUtilities.clientWithJvmProperties = clientWithJvmProperties;
+    }
+
+    public static StringMap classPathStringExistenceMap(Class clazz,
 			String path) {
 		return StringMap
 				.fromStringList(readClassPathResourceAsString(clazz, path));
@@ -273,7 +282,7 @@ public class ResourceUtilities {
 			return customProperties.get(namespacedKey);
 		}
 		try {
-			if (GWT.isClient()) {
+			if (GWT.isClient()&&!isClientWithJvmProperties()) {
 				return null;
 			}
 		} catch (Throwable t) {
