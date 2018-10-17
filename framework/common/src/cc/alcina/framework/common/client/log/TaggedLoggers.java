@@ -9,10 +9,15 @@ import cc.alcina.framework.common.client.log.TaggedLogger.TaggedLoggerHandler;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 @RegistryLocation(registryPoint = TaggedLoggers.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
 public class TaggedLoggers {
+	public static TaggedLoggers get() {
+		return Registry.impl(TaggedLoggers.class);
+	}
+
 	private List<TaggedLoggerRegistration> registrations = new ArrayList<TaggedLoggerRegistration>();
 
 	private int registrationCounter = 0;
