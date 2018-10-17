@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.persistence.client.DeltaStore;
 import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta;
@@ -150,6 +151,8 @@ public class HandshakeConsortModel {
 
     public void prepareInitialPlaySequence() {
         persistableApplicationRecords = new ArrayList<DeltaApplicationRecord>();
+        //nuclear - if we're here, these should have been cleared
+        CommitToStorageTransformListener.get().getPriorRequestsWithoutResponse().clear();
         if (deltasToApply != null) {
             // do nothing, iterator set up when local delta applications
             // retrieved

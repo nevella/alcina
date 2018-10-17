@@ -3,6 +3,8 @@ package cc.alcina.framework.entity.entityaccess;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -25,6 +27,8 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.entity.J8Utils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
@@ -117,6 +121,16 @@ public class TransformPersisterIn {
 					putExceptionInWrapper(token, ex, wrapper);
 					return;
 				}
+			}
+			Multimap<Integer, List<Object>> byRequestId = dtrs.stream().collect(J8Utils.toKeyMultimap(DomainTransformRequest::getRequestId));
+			Optional<Entry<Integer, List<Object>>> multipleDtrsForOneRequestId = byRequestId.entrySet().stream().filter(e->e.getValue().size()>1).findFirst();
+			if(multipleDtrsForOneRequestId.isPresent()){
+			    DomainTransformException ex = new DomainTransformException(
+                        Ax.format("Multiple domain transform requests with local request id %s (%s)",
+                                multipleDtrsForOneRequestId.get().getKey(),multipleDtrsForOneRequestId.get().getValue().size()));
+                ex.setType(DomainTransformExceptionType.UNKNOWN);
+                putExceptionInWrapper(token, ex, wrapper);
+                return;
 			}
 			Integer highestPersistedRequestId = null;
 			if (token.isAsyncClient()) {
