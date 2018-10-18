@@ -97,6 +97,13 @@ public class InternalMetricData {
 		return endTime != 0;
 	}
 
+	public String logForBlackBox() {
+		return Ax.format(
+				"Thread: %s [%s] - Metric: %s - Start: %s" + "\nContext:\n%s",
+				thread.getName(), thread.getId(), metricName,
+				new Date(startTime), callContext);
+	}
+
 	public int sliceCount() {
 		return threadHistory.getElementCount();
 	}

@@ -80,6 +80,16 @@ public class InternalMetrics {
 		return this.started;
 	}
 
+	public void logBlackBox() {
+		String message = trackers.values().stream()
+				.filter(imd -> !imd.isFinished())
+				.map(InternalMetricData::logForBlackBox)
+				.collect(Collectors.joining("\n"));
+		Ax.out(message);
+		ResourceUtilities.write(message, Ax.format("/tmp/imd-blackbox-%s.txt",
+				System.currentTimeMillis()));
+	}
+
 	public void startService() {
 		if (!ResourceUtilities.is(InternalMetrics.class, "enabled")) {
 			return;
