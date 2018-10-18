@@ -1099,6 +1099,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	String describeRemoteAction(RemoteAction remoteAction, String msg) {
 		msg += "Clazz: " + remoteAction.getClass().getName() + "\n";
+		msg += "User: " + PermissionsManager.get().getUserString() + "\n";
 		msg += "\nParameters: \n";
 		try {
 			msg += new JacksonJsonObjectSerializer().withIdRefs()
@@ -1111,6 +1112,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	String describeRpcRequest(RPCRequest rpcRequest, String msg) {
 		msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
+		msg += "User: " + PermissionsManager.get().getUserString() + "\n";
 		msg += "Types: " + CommonUtils.joinWithNewlineTab(
 				Arrays.asList(rpcRequest.getMethod().getParameters()));
 		msg += "\nParameters: \n";
