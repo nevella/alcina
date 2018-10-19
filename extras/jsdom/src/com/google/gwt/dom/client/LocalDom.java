@@ -533,6 +533,9 @@ public class LocalDom {
 			return null;// say, shadowroot...
 		}
 		ElementRemote elem = (ElementRemote) remote;
+		if (elem.getTagNameInternal().equalsIgnoreCase("iframe")) {
+			return null;// don't handle iframes
+		}
 		ElementRemoteIndex remoteIndex = elem.provideRemoteIndex(false);
 		ElementRemote hasNodeRemote = remoteIndex.hasNode();
 		boolean hadNode = hasNodeRemote != null;
