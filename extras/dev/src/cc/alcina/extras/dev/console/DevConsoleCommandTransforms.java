@@ -730,6 +730,7 @@ public class DevConsoleCommandTransforms {
 					: String.format(" and u.username ilike '%%%s%%' ", arg0);
 			Connection conn = getConn();
 			sql = String.format(sql, filter);
+			Ax.out(sql);
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ResultSet rs = ps.executeQuery();
 			SqlUtils.dumpResultSet(rs);
