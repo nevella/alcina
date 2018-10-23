@@ -2639,7 +2639,7 @@ public class AlcinaMemCache implements RegistrableService {
 			String columnName = getColumnName();
 			if (type == Date.class) {
 				return String.format(
-						"EXTRACT (EPOCH FROM %s::timestamp)::float*1000 as %s",
+						"EXTRACT (EPOCH FROM %s::timestamp at time zone 'utc')::float*1000 as %s",
 						columnName, columnName);
 			} else {
 				return columnName;
@@ -2690,11 +2690,9 @@ public class AlcinaMemCache implements RegistrableService {
 				if (rs.wasNull()) {
 					return null;
 				}
-				// was persisted by hibernate to utc, need to convert to local
-				// tz
-				// assume same tz for persist/retrieve
-				// int currentOffset =
-				// startupTz.getOffset(System.currentTimeMillis());
+				// it seems getLong mostly returns utc timestamp (not locale)
+				// now mandating that with the 'at timezone utc' above
+				// note these cols are currently pg timestamp without tz
 				int persistOffset = startupTz.getOffset(utcTime);
 				long timeLocal = utcTime - persistOffset;
 				return rs.wasNull() ? null : new Date(timeLocal);
