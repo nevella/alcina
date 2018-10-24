@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
 
 public class StreamBuffer extends Thread {
@@ -52,7 +53,11 @@ public class StreamBuffer extends Thread {
 			closed = true;
 			notifyAll();
 		} catch (IOException ioe) {
+		    if (Ax.blankToEmpty(ioe.getMessage()).matches("(Stream|Socket) closed")) {
+                Ax.out("Stream closed");
+            }else{
 			ioe.printStackTrace();
+            }
 		}
 	}
 
