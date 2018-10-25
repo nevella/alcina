@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.search;
 
 import java.util.Date;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
@@ -59,9 +60,12 @@ public class DateCriterion extends AbstractDateCriterion {
 
 	@Override
 	public String toString() {
-		return getDate() == null ? null
-				: (getDirection() == Direction.ASCENDING ? " from " : " to ")
-						+ CommonUtils.formatDate(getDate(),
-								DateStyle.AU_DATE_SLASH);
+		if (getDate() == null) {
+			return null;
+		}
+		String displayName = getDisplayName() != null ? getDisplayName()
+				: getDirection() == Direction.ASCENDING ? "from" : "to";
+		return Ax.format("%s %s", displayName,
+				CommonUtils.formatDate(getDate(), DateStyle.AU_DATE_SLASH));
 	}
 }
