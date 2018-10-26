@@ -641,8 +641,7 @@ public class LocalDom {
 				int nodeIndex = indicies.get(idx);
 				node = cursor.getChild(nodeIndex);
 				remoteNode = remoteCursor.getChildNodes0().getItem0(nodeIndex);
-				invalid = node.getNodeType() != Node.ELEMENT_NODE
-						|| remoteNode.getNodeType() != Node.ELEMENT_NODE;
+				invalid = node.getNodeType() != remoteNode.getNodeType();
 			}
 			if (invalid) {
 				// FIXME - check we have no widgets in the tree - if we do,
@@ -659,12 +658,33 @@ public class LocalDom {
 					node = cursor.getChild(nodeIndex);
 					remoteNode = remoteCursor.getChildNodes0()
 							.getItem0(nodeIndex);
-					invalid = node.getNodeType() != Node.ELEMENT_NODE
-							|| remoteNode.getNodeType() != Node.ELEMENT_NODE;
+					invalid = node.getNodeType() != remoteNode.getNodeType();
 				}
 				if (invalid) {
-					unableToParseTopic().publish(Ax
-							.format("(Built outer html):\n%s", builtOuterHtml));
+					String preface = Ax.format(
+							"sizes: %s\nsizeIdx:%s\nlocalIndex: %s\n"
+									+ "(local) cursor.childCount: %s\nremoteSize:%s\n",
+							sizes, idx, localIndex, cursor.getChildCount(),
+							size);
+					if (cursor.getChildCount() != size) {
+						preface += "size mismatch\n";
+					} else {
+						int nodeIndex = indicies.get(idx);
+						node = cursor.getChild(nodeIndex);
+						remoteNode = remoteCursor.getChildNodes0()
+								.getItem0(nodeIndex);
+						preface += Ax.format("local node:%s\nremote node:%s\n",
+								node, remoteNode);
+					}
+					preface += Ax.format("Remote index:\n%s\n",
+							remoteIndex.getString());
+					preface += Ax.format("Local dom tree:\n%s\n",
+							hasNode.local().provideLocalDomTree());
+					unableToParseTopic()
+							.publish(Ax.format("%s\n(Built outer html):\n%s",
+									preface, builtOuterHtml));
+					Ax.out("Reparse unsuccessful");
+					return;
 				}
 			}
 			cursor = (Element) node;

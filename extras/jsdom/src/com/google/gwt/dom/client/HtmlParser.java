@@ -2,7 +2,6 @@ package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
@@ -76,6 +75,8 @@ public class HtmlParser {
 
 	int debugCursorDepth = 0;
 
+	private int lineNumber;
+
 	public Element parse(DomElement root, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
 		return parse(root.getOuterHtml(), replaceContents,
@@ -86,6 +87,7 @@ public class HtmlParser {
 			boolean emitHtmlHeadBodyTags) {
 		this.html = html;
 		this.replaceContents = replaceContents;
+		this.lineNumber = 1;
 		this.emitHtmlHeadBodyTags = emitHtmlHeadBodyTags;
 		resetBuilder();
 		tokenState = TokenState.EXPECTING_NODE;
@@ -95,6 +97,11 @@ public class HtmlParser {
 		}
 		int length = html.length();
 		// gwt compiler hack - force string class init outside loop
+		boolean hasSyntheticContainer = !emitHtmlHeadBodyTags
+				&& html.matches("(?i)<html>.*");
+		if (hasSyntheticContainer) {
+			html = Ax.format("<div>%s</div>", html);
+		}
 		char c = html.charAt(idx);
 		while (idx < length) {
 			c = html.charAt(idx++);
@@ -106,6 +113,11 @@ public class HtmlParser {
 			case '\n':
 			case '\r':
 				isWhiteSpace = true;
+			}
+			switch (c) {
+			case '\n':
+			case '\r':
+				lineNumber++;
 			}
 			// ignoreable whitespace
 			switch (tokenState) {
@@ -245,6 +257,7 @@ public class HtmlParser {
 					break;
 				}
 				if (c == attrDelim) {
+					// fix for quotes in attributes
 					attrValue = builder.toString();
 					emitAttribute();
 					resetBuilder();
@@ -254,6 +267,8 @@ public class HtmlParser {
 				builder.append(c);
 				break;
 			}
+		}
+		if (hasSyntheticContainer) {
 		}
 		LocalDom.setDisableRemoteWrite(false);
 		return rootResult;
@@ -407,12 +422,12 @@ public class HtmlParser {
 					CommonUtils.padStringLeft("", debugCursorDepth, ' '),
 					debugCursorDepth, debugCursorDepth + delta, fromTag, toTag);
 			if (delta == 1) {
-				if (!Objects.equals(toTag, tag)) {
-					Ax.err(">> %s, expected %s", toTag, tag);
+				if (!CommonUtils.equalsIgnoreCase(toTag, tag)) {
+					Ax.err(">> %s, expected %s [%s]", toTag, tag, lineNumber);
 				}
 			} else {
-				if (!Objects.equals(fromTag, tag)) {
-					Ax.err("<< %s, expected %s", fromTag, tag);
+				if (!CommonUtils.equalsIgnoreCase(fromTag, tag)) {
+					Ax.err("<< %s, expected %s [%s]", fromTag, tag, lineNumber);
 				}
 			}
 			debugCursorDepth += delta;

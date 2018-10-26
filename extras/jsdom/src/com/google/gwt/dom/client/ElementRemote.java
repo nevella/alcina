@@ -873,7 +873,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
             buf += ' ';
             buf += node.attributes[idx].name;
             buf += '="';
-            buf += escapeHtml(node.attributes[idx].value, buffer);
+            buf += escapeHtml(node.attributes[idx].value, buffer).split("\"")
+                .join("&quot;");
             buf += '"';
           }
         }
