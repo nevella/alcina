@@ -98,7 +98,7 @@ public class HtmlParser {
 		int length = html.length();
 		// gwt compiler hack - force string class init outside loop
 		boolean hasSyntheticContainer = !emitHtmlHeadBodyTags
-				&& html.matches("(?i)<html>.*");
+				&& (html.startsWith("<html>") || html.startsWith("<HTML>"));
 		if (hasSyntheticContainer) {
 			html = Ax.format("<div>%s</div>", html);
 		}
