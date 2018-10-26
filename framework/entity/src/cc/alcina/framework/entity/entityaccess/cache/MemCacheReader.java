@@ -62,6 +62,7 @@ public abstract class MemCacheReader<I, O> {
 			LooseContext.setBoolean(AlcinaMemCache.CONTEXT_NO_LOCKS);
 			return read0(input);
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
 		} finally {
 			if (!noLocksWasSet) {
