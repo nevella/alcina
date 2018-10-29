@@ -1,5 +1,9 @@
 package cc.alcina.framework.servlet.knowns;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import cc.alcina.framework.common.client.csobjects.KnownsDelta;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -28,9 +32,12 @@ public class KnownsCluster implements RegistrableService {
 	}
 
 	public void start() {
-		String[] systemUrls = ResourceUtilities
-				.get(KnownsCluster.class, "systemUrls").split(";");
-		if (systemUrls.length == 0) {
+		List<String> systemUrls = Arrays
+				.asList(ResourceUtilities.get(KnownsCluster.class, "systemUrls")
+						.split(";"))
+				.stream().filter(s -> !s.isEmpty())
+				.collect(Collectors.toList());
+		if (systemUrls.isEmpty()) {
 			return;
 		}
 		for (String systemUrl : systemUrls) {
