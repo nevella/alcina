@@ -19,6 +19,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 
 import cc.alcina.framework.common.client.csobjects.JobTracker;
+import cc.alcina.framework.common.client.csobjects.KnownsDelta;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
@@ -61,6 +62,8 @@ public interface CommonRemoteServiceAsync {
 			AsyncCallback<List<ServerValidator>> callback);
 
 	void dumpData(String data, AsyncCallback<Void> callback);
+
+	void getKnownsDelta(long since, AsyncCallback<KnownsDelta> callback);
 
 	void loadData(String key, AsyncCallback<String> callback);
 

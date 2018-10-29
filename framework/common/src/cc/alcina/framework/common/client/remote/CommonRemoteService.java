@@ -19,6 +19,7 @@ import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 
 import cc.alcina.framework.common.client.csobjects.JobTracker;
+import cc.alcina.framework.common.client.csobjects.KnownsDelta;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
@@ -90,6 +91,8 @@ public interface CommonRemoteService extends RemoteService {
 	@WebMethod
 	public DomainUpdate waitForTransforms(
 			DomainTransformCommitPosition position) throws PermissionsException;
+
+	KnownsDelta getKnownsDelta(long since);
 
 	Response suggest(BoundSuggestOracleRequest request);
 }

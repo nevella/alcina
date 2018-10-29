@@ -948,12 +948,14 @@ public class Element extends Node implements DomElement {
 		}
 
 		public void resolvedToPending() {
-			ElementRemote oldRemote = typedRemote();
-			oldRemote.removeAllChildrenElement();
-			local().walk(ln -> ln.node.resetRemote());
-			resetRemote();
-			LocalDom.ensureRemoteNodeMaybePendingResolution(Element.this);
-			oldRemote.replaceWith(typedRemote());
+			if (linkedToRemote()) {
+				ElementRemote oldRemote = typedRemote();
+				oldRemote.removeAllChildrenElement();
+				local().walk(ln -> ln.node.resetRemote());
+				resetRemote();
+				LocalDom.ensureRemoteNodeMaybePendingResolution(Element.this);
+				oldRemote.replaceWith(typedRemote());
+			}
 		}
 
 		public void setRemote(ElementRemote remote) {

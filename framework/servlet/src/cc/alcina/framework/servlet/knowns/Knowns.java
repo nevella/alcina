@@ -15,6 +15,8 @@ import java.util.Stack;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.cache.Domain;
+import cc.alcina.framework.common.client.csobjects.KnownRenderableNode;
+import cc.alcina.framework.common.client.csobjects.KnownStatusRule;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryProvider;
@@ -31,20 +33,22 @@ import cc.alcina.framework.entity.util.SynchronizedDateFormat;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 
 public abstract class Knowns {
+	static Object reachableKnownsModificationNotifier = new Object();
+
 	public static KnownRoot root;
 
-	public static void register(KnownRoot root) {
-		Knowns.root = root;
-		root.restore();
-		root.persist();
-	}
+	private static String dateFormatStr = "dd-MMM-yyyy,hh:mm:ss";
+
+	private static SimpleDateFormat dateFormat = new SynchronizedDateFormat(
+			dateFormatStr);
+
+	static long lastModified = System.currentTimeMillis();
 
 	public static void reconcile(KnownNode node, boolean fromPersistent) {
 		try {
 			LooseContext.pushWithTrue(
 					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER);
-			RegistryProvider registryProvider = Registry
-					.getProvider();
+			RegistryProvider registryProvider = Registry.getProvider();
 			if (registryProvider instanceof ClassLoaderAwareRegistryProvider) {
 				ClassLoaderAwareRegistryProvider clRegistryProvider = (ClassLoaderAwareRegistryProvider) registryProvider;
 				LooseContext.set(KryoUtils.CONTEXT_OVERRIDE_CLASSLOADER,
@@ -60,17 +64,36 @@ public abstract class Knowns {
 		}
 	}
 
-	enum ValueType {
-		DATA_TYPE, KNOWN_NODE, KNOWN_NODE_SET, KRYO_PERSISTABLE
+	public static void register(KnownRoot root) {
+		Knowns.root = root;
+		root.restore();
+		root.persist();
 	}
 
-	private static synchronized void fromPersistent(KnownNode node) {
+	public static void shutdown() {
+		synchronized (reachableKnownsModificationNotifier) {
+			reachableKnownsModificationNotifier.notifyAll();
+		}
+	}
+
+	private static synchronized KnownRenderableNode
+			fromPersistent(KnownNode node) {
 		Class<? extends KnownNodePersistent> persistentClass = Registry.get()
 				.lookupSingle(KnownNodePersistent.class, void.class);
 		if (node.parent == null) {
 			node.persistent = Domain.byProperty(persistentClass, "parent",
 					null);
 		}
+		CachingMap<KnownNode, KnownRenderableNode> renderableNodes = new CachingMap<>();
+		renderableNodes.setFunction(kn -> {
+			KnownRenderableNode renderableNode = new KnownRenderableNode();
+			if (kn != null) {
+				renderableNode.name = kn.name;
+				renderableNode.parent = renderableNodes.get(kn.parent);
+				renderableNode.parent.children.add(renderableNode);
+			}
+			return renderableNode;
+		});
 		Stack<KnownNode> nodes = new Stack<KnownNode>();
 		nodes.push(node);
 		GraphProjection graphProjection = new GraphProjection();
@@ -82,6 +105,7 @@ public abstract class Knowns {
 					continue;
 				}
 				persistent = persistent.domain().domainVersion();
+				KnownRenderableNode renderableNode = renderableNodes.get(node);
 				StringMap properties = StringMap
 						.fromPropertyString(persistent.getProperties());
 				Field[] fields = graphProjection.getFieldsForClass(node);
@@ -92,8 +116,11 @@ public abstract class Knowns {
 					case DATA_TYPE:
 					case KRYO_PERSISTABLE: {
 						String value = properties.get(field.getName());
-						field.set(node,
-								fromStringValue(value, field, valueType));
+						Object typedValue = fromStringValue(value, field,
+								valueType);
+						field.set(node, typedValue);
+						mapToRenderablePropertyNode(renderableNode, value,
+								typedValue, field);
 						break;
 					}
 					case KNOWN_NODE: {
@@ -105,6 +132,10 @@ public abstract class Knowns {
 							Object object = field.get(node);
 							KnownNode child = (KnownNode) object;
 							child.persistent = persistentChild.get();
+							KnownRenderableNode childRenderableNode = renderableNodes
+									.get(child);
+							childRenderableNode.field = field;
+							childRenderableNode.typedValue = child;
 							nodes.push(child);
 						}
 						break;
@@ -117,6 +148,55 @@ public abstract class Knowns {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+		KnownRenderableNode renderableRoot = renderableNodes.get(Knowns.root);
+		renderableRoot.allNodes().stream()
+				.filter(krn -> !root.exportRenderable(krn))
+				.forEach(KnownRenderableNode::removeFromParent);
+		renderableRoot.allNodes().forEach(Knowns::handleStatusRule);
+		renderableRoot.allNodes().forEach(KnownRenderableNode::calculateStatus);
+		return renderableRoot;
+	}
+
+	private static Object fromStringValue(String value, Field field,
+			ValueType valueType) throws ParseException {
+		Class type = field.getType();
+		if (value == null) {
+			return null;
+		}
+		if (valueType == ValueType.KRYO_PERSISTABLE) {
+			try {
+				return KryoUtils.deserializeFromBase64(value, type);
+			} catch (Exception e) {
+				Ax.err("Unable to deserialize %s", field.getName());
+				try {
+					return field.getType().newInstance();
+				} catch (Exception e1) {
+					throw new WrappedRuntimeException(e1);
+				}
+			}
+		}
+		if (type == String.class) {
+			return value;
+		}
+		if (type == Long.class) {
+			return Long.valueOf(value);
+		}
+		if (type == Double.class) {
+			return Double.valueOf(value);
+		}
+		if (type == Integer.class) {
+			return Integer.valueOf(value);
+		}
+		if (type == Boolean.class) {
+			return Boolean.valueOf(value);
+		}
+		if (type == Date.class) {
+			return dateFormat.parse(value);
+		}
+		if (type.isEnum()) {
+			return Enum.valueOf(type, value);
+		}
+		throw new RuntimeException("not implemented");
 	}
 
 	private static ValueType getValueType(Type type) {
@@ -137,6 +217,31 @@ public abstract class Knowns {
 			return ValueType.KNOWN_NODE_SET;
 		}
 		return ValueType.KRYO_PERSISTABLE;
+	}
+
+	private static void handleStatusRule(KnownRenderableNode node) {
+		Field field = (Field) node.field;
+		if (field == null) {
+			return;// root
+		}
+		KnownStatusRule rule = field.getAnnotation(KnownStatusRule.class);
+		if (rule == null) {
+			return;
+		}
+		Registry.get().lookupImplementation(KnownStatusRuleHandler.class,
+				rule.name(), "ruleName", true).handleRule(field, node, rule);
+	}
+
+	private static void mapToRenderablePropertyNode(KnownRenderableNode parent,
+			String value, Object typedValue, Field field) {
+		KnownRenderableNode propertyNode = new KnownRenderableNode();
+		propertyNode.parent = parent;
+		parent.children.add(propertyNode);
+		propertyNode.value = value;
+		propertyNode.name = field.getName();
+		propertyNode.property = true;
+		propertyNode.typedValue = typedValue;
+		propertyNode.field = field;
 	}
 
 	private static synchronized void toPersistent(KnownNode node) {
@@ -203,6 +308,12 @@ public abstract class Knowns {
 						.get(n.persistent.getLocalId());
 				n.persistent = Domain.find(hiliLocator);
 			});
+			if (wrapper.persistentEvents.size() > 0) {
+				synchronized (reachableKnownsModificationNotifier) {
+					lastModified = System.currentTimeMillis();
+					reachableKnownsModificationNotifier.notifyAll();
+				}
+			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -230,41 +341,11 @@ public abstract class Knowns {
 		throw new RuntimeException("not implemented");
 	}
 
-	private static String dateFormatStr = "dd-MMM-yyyy,hh:mm:ss";
+	static KnownRenderableNode renderableRoot() {
+		return fromPersistent(Knowns.root);
+	}
 
-	private static SimpleDateFormat dateFormat = new SynchronizedDateFormat(
-			dateFormatStr);
-
-	private static Object fromStringValue(String value, Field field,
-			ValueType valueType) throws ParseException {
-		Class type = field.getType();
-		if (value == null) {
-			return null;
-		}
-		if (valueType == ValueType.KRYO_PERSISTABLE) {
-			return KryoUtils.deserializeFromBase64(value, type);
-		}
-		if (type == String.class) {
-			return value;
-		}
-		if (type == Long.class) {
-			return Long.valueOf(value);
-		}
-		if (type == Double.class) {
-			return Double.valueOf(value);
-		}
-		if (type == Integer.class) {
-			return Integer.valueOf(value);
-		}
-		if (type == Boolean.class) {
-			return Boolean.valueOf(value);
-		}
-		if (type == Date.class) {
-			return dateFormat.parse(value);
-		}
-		if (type.isEnum()) {
-			return Enum.valueOf(type, value);
-		}
-		throw new RuntimeException("not implemented");
+	enum ValueType {
+		DATA_TYPE, KNOWN_NODE, KNOWN_NODE_SET, KRYO_PERSISTABLE
 	}
 }
