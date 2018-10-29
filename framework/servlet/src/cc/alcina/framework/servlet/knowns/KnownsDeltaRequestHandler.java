@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.knowns;
 
+import java.util.Objects;
+
 import cc.alcina.framework.common.client.csobjects.KnownRenderableNode;
 import cc.alcina.framework.common.client.csobjects.KnownsDelta;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -32,7 +34,7 @@ public class KnownsDeltaRequestHandler {
 			KnownRenderableNode appRoot = Knowns.renderableRoot();
 			root.children.add(appRoot);
 			KnownsCluster.get().systemDeltas.getMap().values().stream()
-					.map(kcse -> kcse.lastDelta)
+					.map(kcse -> kcse.lastDelta).filter(Objects::nonNull)
 					.forEach(clusterDelta -> root.merge(clusterDelta));
 			root.children.forEach(c -> c.name = c.name.toLowerCase());
 			delta.added.add(root);
