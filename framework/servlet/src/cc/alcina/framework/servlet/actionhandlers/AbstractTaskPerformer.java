@@ -58,11 +58,11 @@ public abstract class AbstractTaskPerformer implements Runnable {
 			}
 			run0();
 			if (knownJob != null) {
-				knownJob.jobOk(result);
+				getKnownJob().jobOk(result);
 			}
 		} catch (Exception e) {
 			if (knownJob != null) {
-				knownJob.jobError(e);
+				getKnownJob().jobError(e);
 			}
 			if (throwExceptions) {
 				throw new WrappedRuntimeException(e);

@@ -16,7 +16,8 @@ public class GeolocationResolver_Ipstack implements GeolocationResolver {
 
 	@Override
 	public synchronized String getLocation(String ipAddress) {
-		if(ResourceUtilities.is(GeolocationResolver_Ipstack.class, "dummyResolver")){
+		if (ResourceUtilities.is(GeolocationResolver_Ipstack.class,
+				"dummyResolver")) {
 			return "(dummy ip adress)";
 		}
 		return ipToLocation.get(ipAddress);
@@ -27,7 +28,9 @@ public class GeolocationResolver_Ipstack implements GeolocationResolver {
 			return "(no ip adress)";
 		}
 		try {
-			String url = Ax.format("http://freegeoip.net/json/%s", ipAddress);
+			String url = Ax.format(
+					"http://api.ipstack.com/%s/?access_key=708236baaf4e5df6c68934e4bd11df6c&output=json",
+					ipAddress);
 			String result = ResourceUtilities.readUrlAsString(url);
 			ObjectNode node = (ObjectNode) new ObjectMapper().readTree(result);
 			if (Ax.isBlank(node.get("country_name").asText())) {

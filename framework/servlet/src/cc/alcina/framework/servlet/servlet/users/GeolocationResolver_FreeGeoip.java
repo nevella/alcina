@@ -26,9 +26,7 @@ public class GeolocationResolver_FreeGeoip implements GeolocationResolver {
 			return "(no ip adress)";
 		}
 		try {
-			String url = Ax.format(
-					"http://api.ipstack.com/%s/?access_key=708236baaf4e5df6c68934e4bd11df6c&output=json",
-					ipAddress);
+			String url = Ax.format("http://freegeoip.net/json/%s", ipAddress);
 			String result = ResourceUtilities.readUrlAsString(url);
 			ObjectNode node = (ObjectNode) new ObjectMapper().readTree(result);
 			if (Ax.isBlank(node.get("country_name").asText())) {
