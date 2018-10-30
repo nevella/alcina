@@ -32,8 +32,16 @@ public abstract class KnownStatusRuleHandler {
 			Preconditions.checkArgument(field.getType() == KnownJob.class);
 			KnownJob value = (KnownJob) node.typedValue;
 			Date lastOkDate = value.lastOk;
+			KnownTagAlcina status = null;
+			if (value.status != null) {
+				switch (value.status) {
+				case FAILED:
+					status = KnownTagAlcina.Status_Error;
+					break;
+				}
+			}
 			if (lastOkDate != null) {
-				KnownTagAlcina status = KnownTagAlcina.Status_Ok;
+				status = KnownTagAlcina.Status_Ok;
 				if (System.currentTimeMillis()
 						- lastOkDate.getTime() > rule.warnValue()
 								* TimeConstants.ONE_HOUR_MS) {
@@ -44,6 +52,8 @@ public abstract class KnownStatusRuleHandler {
 								* TimeConstants.ONE_HOUR_MS) {
 					status = KnownTagAlcina.Status_Error;
 				}
+			}
+			if (status != null) {
 				node.tags.add(status);
 			}
 		}
