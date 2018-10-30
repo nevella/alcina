@@ -36,7 +36,9 @@ public class KnownJob extends KnownNode {
 	}
 
 	public void jobOk(String template, Object... params) {
-		jobMessage(template, params);
+		if (template != null) {
+			jobMessage(template, params);
+		}
 		status = OpStatus.OK;
 		logProcessTime();
 		lastOk = end;
