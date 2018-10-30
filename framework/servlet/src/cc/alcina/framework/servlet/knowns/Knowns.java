@@ -342,7 +342,13 @@ public abstract class Knowns {
 	}
 
 	static KnownRenderableNode renderableRoot() {
-		return fromPersistent(Knowns.root);
+		try {
+			LooseContext.pushWithTrue(
+					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER);
+			return fromPersistent(Knowns.root);
+		} finally {
+			LooseContext.pop();
+		}
 	}
 
 	enum ValueType {

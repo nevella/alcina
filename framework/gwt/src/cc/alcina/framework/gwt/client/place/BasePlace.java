@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 
 @Introspectable
 @ClientInstantiable
@@ -59,6 +60,12 @@ public abstract class BasePlace extends Place implements Serializable {
 
 	public String toHrefString() {
 		return "#" + tokenFor(this);
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("%s : %s", getClass().getSimpleName(),
+				toTokenString());
 	}
 
 	public String toTokenString() {

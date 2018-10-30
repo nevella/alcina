@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.knowns;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.csobjects.KnownsDelta;
@@ -54,6 +55,7 @@ public class KnownsCluster implements RegistrableService {
 		String host = systemUrl.replaceFirst("https?://(.+?)/.+", "$1");
 		Thread.currentThread().setName(Ax.format("knownsCluster-%s", host));
 		KnownsClusterSystemElement system = systemDeltas.get(systemUrl);
+		String lastDelta = null;
 		while (!finished) {
 			String url = Ax.format("%s&since=%s", systemUrl,
 					system.provideLastTimestamp());
@@ -61,6 +63,15 @@ public class KnownsCluster implements RegistrableService {
 				// FIXME - logging
 				Ax.out("loading deltas: %s", url);
 				String knownsDeltaB64 = ResourceUtilities.readUrlAsString(url);
+				if (Objects.equals(system.lastDeltaB64, knownsDeltaB64)) {
+					// docker caching when remote knowns server shutdown?
+					try {
+						Thread.sleep(1 * TimeConstants.ONE_SECOND_MS);
+					} catch (Exception e2) {
+						continue;
+					}
+				}
+				system.lastDeltaB64 = knownsDeltaB64;
 				KnownsDelta delta = KryoUtils.deserializeFromBase64(
 						knownsDeltaB64, KnownsDelta.class);
 				if (delta.added.size() != 0) {
@@ -86,6 +97,8 @@ public class KnownsCluster implements RegistrableService {
 	}
 
 	static class KnownsClusterSystemElement {
+		public String lastDeltaB64;
+
 		String url;
 
 		KnownsDelta lastDelta;
