@@ -186,10 +186,6 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 
 	@Override
 	public Node removeChild(Node oldChild) {
-		if (getNodeName().equals("span") && oldChild instanceof Text
-				&& ((Text) oldChild).getData().equals("Global Green")) {
-			int debug = 3;
-		}
 		((NodeLocal) oldChild.local()).setParentNode(null);
 		getChildren().remove(oldChild.local());
 		return oldChild;
@@ -227,6 +223,7 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 		switch (node.getNodeType()) {
 		case 3:
 		case 8:
+		case 7:
 			buf.append("[");
 			buf.append(node.getNodeValue().replace("\n", "\\n")
 					.replace("\t", "\\t").replace("\r", "\\r"));

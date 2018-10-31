@@ -246,11 +246,11 @@ class BiPrintStream extends PrintStream {
 
 	private void debugPrint(Object obj) {
 		String s = String.valueOf(obj);
-		if (s == null) {
-			int debug = 3;
-		}
-		if (s != null && s.contains("52 VR Pt 1")) {
-			int debug = 3;
-		}
+		// if (s == null) {
+		// int debug = 3;
+		// }
+		// if (s != null && s.contains("revert-to-me")) {
+		// int debug = 3;
+		// }
 	}
 }

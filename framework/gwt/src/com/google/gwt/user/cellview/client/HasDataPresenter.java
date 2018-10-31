@@ -275,7 +275,8 @@ class HasDataPresenter<T>
 	 */
 	public T getKeyboardSelectedRowValue() {
 		return KeyboardSelectionPolicy.DISABLED == keyboardSelectionPolicy
-				? null : getCurrentState().getKeyboardSelectedRowValue();
+				? null
+				: getCurrentState().getKeyboardSelectedRowValue();
 	}
 
 	@Override
@@ -421,7 +422,8 @@ class HasDataPresenter<T>
 		if (index >= 0 && index < pageSize) {
 			pending.keyboardSelectedRow = index;
 			pending.keyboardSelectedRowValue = index < pending.getRowDataSize()
-					? ensurePendingState().getRowDataValue(index) : null;
+					? ensurePendingState().getRowDataValue(index)
+					: null;
 			pending.keyboardStealFocus = stealFocus;
 			return;
 		} else if (KeyboardPagingPolicy.CHANGE_PAGE == keyboardPagingPolicy) {
@@ -778,8 +780,10 @@ class HasDataPresenter<T>
 					&& selectionModel != null && newState.viewTouched) {
 				T oldValue = oldState.getSelectedValue();
 				Object oldKey = getRowValueKey(oldValue);
-				T newValue = rowDataCount > 0 ? newState.getRowDataValue(
-						newState.getKeyboardSelectedRow()) : null;
+				T newValue = rowDataCount > 0
+						? newState.getRowDataValue(
+								newState.getKeyboardSelectedRow())
+						: null;
 				Object newKey = getRowValueKey(newValue);
 				/*
 				 * Do not deselect the old value unless we have a new value to

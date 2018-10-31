@@ -6,9 +6,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.entityaccess.KnownNodePersistent;
 
@@ -24,12 +21,15 @@ public abstract class KnownNode {
 		this.name = name;
 	}
 
-	public void persist() {
-		Knowns.reconcile(this, false);
-	}
-
-	public void restore() {
-		Knowns.reconcile(this, true);
+	public <T extends KnownNode> T forName(Object key) {
+		try {
+			Field field = getClass()
+					.getDeclaredField(key.toString().toLowerCase());
+			field.setAccessible(true);
+			return (T) field.get(this);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public String path() {
@@ -43,14 +43,11 @@ public abstract class KnownNode {
 		return segments.stream().collect(Collectors.joining("/"));
 	}
 
-	public <T extends KnownNode> T forName(Object key) {
-		try {
-			Field field = getClass()
-					.getDeclaredField(key.toString().toLowerCase());
-			field.setAccessible(true);
-			return (T) field.get(this);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+	public void persist() {
+		Knowns.reconcile(this, false);
+	}
+
+	public void restore() {
+		Knowns.reconcile(this, true);
 	}
 }

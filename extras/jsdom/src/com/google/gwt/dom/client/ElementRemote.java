@@ -873,7 +873,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
             buf += ' ';
             buf += node.attributes[idx].name;
             buf += '="';
-            buf += escapeHtml(node.attributes[idx].value, buffer);
+            buf += escapeHtml(node.attributes[idx].value, buffer).split("\"")
+                .join("&quot;");
             buf += '"';
           }
         }
@@ -906,7 +907,6 @@ public class ElementRemote extends NodeRemote implements DomElement {
       buf : '',
       div : $doc.createElement('div')
     }
-    debugger;
     addNodeToBuiltHtml(this, buffer, 0);
     return buffer.buf;
 	}-*/;

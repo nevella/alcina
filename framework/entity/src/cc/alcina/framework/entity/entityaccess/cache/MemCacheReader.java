@@ -5,6 +5,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.SliceProcessor;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.ThrowingSupplier;
 import cc.alcina.framework.entity.MetricLogging;
@@ -62,6 +63,9 @@ public abstract class MemCacheReader<I, O> {
 			LooseContext.setBoolean(AlcinaMemCache.CONTEXT_NO_LOCKS);
 			return read0(input);
 		} catch (Exception e) {
+			Ax.out("Exception in memcache reader - start trace");
+			e.printStackTrace();
+			Ax.out("Exception in memcache reader - end trace");
 			throw new WrappedRuntimeException(e);
 		} finally {
 			if (!noLocksWasSet) {

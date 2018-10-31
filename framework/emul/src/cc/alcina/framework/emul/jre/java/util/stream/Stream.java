@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -80,7 +81,7 @@ public interface Stream<T> {
 	default Stream<T> limit(long limit) {
 		return filter(new LimitPredicate(limit));
 	}
-	
+
 	default Stream<T> skip(long skip) {
 		return filter(new SkipPredicate(skip));
 	}
@@ -138,6 +139,7 @@ public interface Stream<T> {
 		list.addAll(((CollectionStream<E>) stream2).asList());
 		return new CollectionStream(list);
 	}
+
 	public static <E> Stream<E> empty() {
 		return new CollectionStream(new ArrayList<E>());
 	}
@@ -165,5 +167,20 @@ public interface Stream<T> {
 			}
 		}
 		return true;
+	}
+
+	default Optional<T> reduce(BinaryOperator<T> accumulator) {
+		T value = null;
+		boolean foundAny = false;
+		T result = null;
+		for (Iterator<T> itr = iterator(); itr.hasNext();) {
+			T t = itr.next();
+			if (!foundAny) {
+				foundAny = true;
+				result = t;
+			} else
+				result = accumulator.apply(result, t);
+		}
+		return foundAny ? Optional.of(result) : Optional.empty();
 	}
 }

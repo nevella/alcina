@@ -60,6 +60,12 @@ import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
+	protected ServletConfig initServletConfig;
+
+	private Date startupTime;
+
+	protected ServletClassMetadataCacheProvider classMetadataCacheProvider = new CachingServletClassMetadataCacheProvider();
+
 	public void clearJarCache() {
 		try {
 			String testJar = "jsr173_api.jar";
@@ -107,10 +113,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 	}
 
-	protected ServletConfig initServletConfig;
-
-	private Date startupTime;
-
 	@Override
 	public void destroy() {
 		try {
@@ -136,6 +138,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		return this.startupTime;
 	}
 
+	@Override
 	public void init(ServletConfig servletConfig) throws ServletException {
 		MetricLogging.get().start("Web app startup");
 		startupTime = new Date();
@@ -164,13 +167,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		new AppServletStatusFileNotifier().ready();
 	}
 
-	protected void launchPostInitTasks() {
-	}
-
 	public void refreshProperties() {
 		loadCustomProperties();
 	}
 
+	@Override
 	public void service(ServletRequest arg0, ServletResponse arg1)
 			throws ServletException, IOException {
 	}
@@ -273,29 +274,12 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			dbLogger.addAppender(a);
 			EntityLayerObjects.get().setPersistentLogger(dbLogger);
 		}
+		System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
 		Logger.getLogger("org.apache.kafka").setLevel(Level.WARN);
 		ServletLayerUtils.setLoggerLevels();
 	}
 
 	protected abstract void initNames();
-
-	protected ServletClassMetadataCacheProvider classMetadataCacheProvider = new CachingServletClassMetadataCacheProvider();
-
-	static class CachingServletClassMetadataCacheProvider
-			extends ServletClassMetadataCacheProvider {
-		public CachingServletClassMetadataCacheProvider() {
-		}
-
-		public ClassMetadataCache getClassInfo(Logger mainLogger,
-				boolean entityLayer) throws Exception {
-			return new CachingClasspathScanner("*", true, false, mainLogger,
-					Registry.MARKER_RESOURCE,
-					entityLayer
-							? Arrays.asList(new String[] { "WEB-INF/classes",
-									"WEB-INF/lib" })
-							: Arrays.asList(new String[] {})).getClasses();
-		}
-	}
 
 	protected void initRegistry() {
 		Logger logger = Logger
@@ -333,6 +317,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		MetricLogging.get().end(key);
 	}
 
+	protected void launchPostInitTasks() {
+	}
+
 	protected void loadCustomProperties() {
 		try {
 			File propertiesFile = new File(
@@ -356,6 +343,22 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	static class CachingServletClassMetadataCacheProvider
+			extends ServletClassMetadataCacheProvider {
+		public CachingServletClassMetadataCacheProvider() {
+		}
+
+		@Override
+		public ClassMetadataCache getClassInfo(Logger mainLogger,
+				boolean entityLayer) throws Exception {
+			return new CachingClasspathScanner("*", true, false, mainLogger,
+					Registry.MARKER_RESOURCE,
+					entityLayer ? Arrays.asList(
+							new String[] { "WEB-INF/classes", "WEB-INF/lib" })
+							: Arrays.asList(new String[] {})).getClasses();
 		}
 	}
 }
