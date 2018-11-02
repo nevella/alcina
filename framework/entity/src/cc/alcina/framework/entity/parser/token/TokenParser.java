@@ -36,6 +36,7 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 			return;
 		}
 		S next = null;
+		peer.beforeMatchTokens();
 		int length = context.matched.size();
 		do {
 			if (context.exit) {

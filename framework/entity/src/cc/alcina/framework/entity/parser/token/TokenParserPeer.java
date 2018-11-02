@@ -8,6 +8,9 @@ import org.w3c.dom.Text;
 import cc.alcina.framework.entity.XmlUtils.SurroundingBlockTuple;
 
 public interface TokenParserPeer<T extends ParserToken, S extends AbstractParserSlice<T>> {
+	default void beforeMatchTokens() {
+	}
+
 	boolean continueBlock(SurroundingBlockTuple lastSurroundingTuple,
 			SurroundingBlockTuple surroundingTuple);
 

@@ -102,6 +102,15 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			return this;
 		}
 
+		public XmlNode ensureBuilt() {
+			if (built) {
+				return builtNode();
+			} else {
+				append();
+				return builtNode();
+			}
+		}
+
 		public XmlNodeHtmlTableCellBuilder nowrap() {
 			style("white-space: nowrap");
 			return this;
@@ -126,13 +135,6 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 		public XmlNodeHtmlTableCellBuilder text(String text) {
 			super.text(text);
 			return this;
-		}
-
-		private void ensureBuilt() {
-			if (built) {
-			} else {
-				append();
-			}
 		}
 	}
 
