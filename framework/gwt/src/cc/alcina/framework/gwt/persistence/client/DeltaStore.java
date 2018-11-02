@@ -125,7 +125,7 @@ public class DeltaStore {
 					}
 					Registry.impl(RpcDeserialiser.class).deserialize(
 							DomainModelDelta.class, result, assignCallback);
-					infoLogger.format("delta store: deserialized %s", key);
+					infoLogger.message("delta store: deserialized %s", key);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}

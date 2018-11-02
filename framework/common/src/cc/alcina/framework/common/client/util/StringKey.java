@@ -1,6 +1,8 @@
 package cc.alcina.framework.common.client.util;
 
-public class StringKey {
+import cc.alcina.framework.common.client.log.TaggedLoggerTag;
+
+public class StringKey implements TaggedLoggerTag {
 	private String key;
 
 	public StringKey(String key) {

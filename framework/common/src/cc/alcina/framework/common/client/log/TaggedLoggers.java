@@ -14,15 +14,22 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 @RegistryLocation(registryPoint = TaggedLoggers.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
 public class TaggedLoggers {
-	public static TaggedLoggers get() {
-		return Registry.impl(TaggedLoggers.class);
+	public synchronized static TaggedLoggers get() {
+		// allow for calls before registry initialised
+		TaggedLoggers loggers = Registry.implOrNull(TaggedLoggers.class);
+		if (loggers == null) {
+			loggers = new TaggedLoggers();
+			Registry.registerSingleton(TaggedLogger.class, loggers);
+		}
+		return loggers;
 	}
 
 	private List<TaggedLoggerRegistration> registrations = new ArrayList<TaggedLoggerRegistration>();
 
 	private int registrationCounter = 0;
 
-	public TaggedLogger getLogger(final Class clazz, final Object... tags) {
+	public TaggedLogger getLogger(final Class clazz,
+			final TaggedLoggerTag... tags) {
 		return new TaggedLogger(this, clazz, tags);
 	}
 
@@ -30,12 +37,13 @@ public class TaggedLoggers {
 		return this.registrationCounter;
 	}
 
-	public void log(String message, final Class clazz, final Object... tags) {
+	public void log(String message, final Class clazz,
+			final TaggedLoggerTag... tags) {
 		new TaggedLogger(this, clazz, tags).log(message);
 	}
 
 	public TaggedLoggerRegistration registerInterest(Class clazz,
-			TaggedLoggerHandler handler, Object... tags) {
+			TaggedLoggerHandler handler, TaggedLoggerTag... tags) {
 		synchronized (this) {
 			TaggedLoggerRegistration registration = new TaggedLoggerRegistration(
 					clazz, tags, handler, this);

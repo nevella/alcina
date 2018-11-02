@@ -126,7 +126,7 @@ public class WrappedObjectPersistence {
 							TaggedLogger logger = Registry
 									.impl(TaggedLoggers.class).getLogger(null,
 											AlcinaLoggingTags.WRAPPED_OBJECT_REF_INTEGRITY);
-							logger.format(
+							logger.message(
 									"Warning - ref integrity (wrapped object) - missing %s.%s #%s",
 									wrapper.getClass(), pd.getName(),
 									wrapper.getId());

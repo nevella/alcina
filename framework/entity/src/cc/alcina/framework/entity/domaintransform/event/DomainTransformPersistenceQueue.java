@@ -229,7 +229,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (persistedRequestIds.isEmpty()) {
 			return;
 		}
-		logger.format("fired - %s - range %s",
+		logger.message("fired - %s - range %s",
 				event.getTransformPersistenceToken().getRequest().shortId(),
 				new LongPair(CollectionFilters.min(persistedRequestIds),
 						CollectionFilters.max(persistedRequestIds)));
@@ -250,7 +250,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (persistedRequestIds.isEmpty()) {
 			return;
 		}
-		logger.format("firing - %s - %s - range %s",
+		logger.message("firing - %s - %s - range %s",
 				Ax.friendly(event.getPersistenceEventType()),
 				event.getTransformPersistenceToken().getRequest().shortId(),
 				new LongPair(CollectionFilters.min(persistedRequestIds),

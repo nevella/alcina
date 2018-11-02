@@ -110,6 +110,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.StringKey;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
@@ -173,7 +174,8 @@ public class AlcinaMemCache implements RegistrableService {
 	public static final String CONTEXT_NO_LOCKS = AlcinaMemCache.class.getName()
 			+ ".CONTEXT_NO_LOCKS";
 
-	public static final String WRAPPED_OBJECT_REF_INTEGRITY = "WRAPPED_OBJECT_REF_INTEGRITY";
+	public static final StringKey WRAPPED_OBJECT_REF_INTEGRITY = new StringKey(
+			"WRAPPED_OBJECT_REF_INTEGRITY");
 
 	public static void checkActiveTransaction() {
 		if (!get().transactional.transactionActiveInCurrentThread()) {
@@ -1910,7 +1912,7 @@ public class AlcinaMemCache implements RegistrableService {
 					if (obj != null) {
 						index(obj, false);
 					} else {
-						warnLogger.format(
+						warnLogger.message(
 								"Null memcacheObject for index - %s\n",
 								HiliLocator.objectLocator(dte));
 					}
@@ -1949,7 +1951,7 @@ public class AlcinaMemCache implements RegistrableService {
 						ensureModificationChecker(memCacheObj);
 						index(memCacheObj, true);
 					} else {
-						warnLogger.format(
+						warnLogger.message(
 								"Null memcacheObject for index - %s\n",
 								HiliLocator.objectLocator(dte));
 					}
@@ -2142,7 +2144,7 @@ public class AlcinaMemCache implements RegistrableService {
 									.get(propertyDescriptorFetchTypes
 											.get(pdOperator.pd), id);
 							if (target == null) {
-								warnLogger.format(
+								warnLogger.message(
 										"later-lookup -- missing target: %s, %s for  %s.%s #%s\n",
 										propertyDescriptorFetchTypes
 												.get(pdOperator.pd),
@@ -2705,7 +2707,7 @@ public class AlcinaMemCache implements RegistrableService {
 					int eIdx = rs.getInt(idx);
 					Object[] enumConstants = type.getEnumConstants();
 					if (eIdx >= enumConstants.length) {
-						warnLogger.format("Invalid enum index : %s:%s\n",
+						warnLogger.message("Invalid enum index : %s:%s\n",
 								type.getSimpleName(), eIdx);
 						return null;
 					}
@@ -2718,7 +2720,7 @@ public class AlcinaMemCache implements RegistrableService {
 					Enum enumValue = CommonUtils
 							.getEnumValueOrNull((Class) type, enumString);
 					if (enumValue == null) {
-						warnLogger.format("Invalid enum value : %s:%s\n",
+						warnLogger.message("Invalid enum value : %s:%s\n",
 								type.getSimpleName(), enumString);
 						return null;
 					}

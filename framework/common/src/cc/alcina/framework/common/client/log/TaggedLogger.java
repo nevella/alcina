@@ -5,16 +5,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class TaggedLogger {
-	public static final transient String METRIC = "metric";
+	public static final transient TaggedLoggerTag METRIC = TaggedLoggerTagStandard.METRIC;
 
-	public static final transient String DEBUG = "debug";
+	public static final transient TaggedLoggerTag DEBUG = TaggedLoggerTagStandard.DEBUG;
 
-	public static final transient String WARN = "warn";
+	public static final transient TaggedLoggerTag WARN = TaggedLoggerTagStandard.WARN;
 
-	public static final transient String INFO = "info";
+	public static final transient TaggedLoggerTag INFO = TaggedLoggerTagStandard.INFO;
 
 	int registrationCounter = 0;
 
@@ -24,19 +26,31 @@ public class TaggedLogger {
 
 	Class clazz;
 
-	Object[] tags;
+	TaggedLoggerTag[] tags;
 
 	Map<String, Long> starts;
 
+	private TaggedLogger infoLogger;
+
+	private TaggedLogger debugLogger;
+
 	public TaggedLogger(TaggedLoggers taggedLoggers, Class clazz,
-			Object[] tags) {
+			TaggedLoggerTag[] tags) {
 		this.taggedLoggers = taggedLoggers;
 		this.clazz = clazz;
 		this.tags = tags;
 	}
 
-	public void format(String string, Object... args) {
-		log(CommonUtils.formatJ(string, args));
+	public TaggedLogger debug() {
+		if (debugLogger == null) {
+			Preconditions.checkState(tags.length == 0);
+			synchronized (this) {
+				if (debugLogger == null) {
+					debugLogger = taggedLoggers.getLogger(clazz, DEBUG);
+				}
+			}
+		}
+		return debugLogger;
 	}
 
 	public boolean hasRegistrations() {
@@ -44,10 +58,29 @@ public class TaggedLogger {
 		return !registrations.isEmpty();
 	}
 
+	public TaggedLogger info() {
+		if (infoLogger == null) {
+			Preconditions.checkState(tags.length == 0);
+			synchronized (this) {
+				if (infoLogger == null) {
+					infoLogger = taggedLoggers.getLogger(clazz, INFO);
+				}
+			}
+		}
+		return infoLogger;
+	}
+
 	public synchronized void log(String message) {
 		taggedLoggers.updateRegistrations(this);
 		for (TaggedLoggerRegistration registration : registrations) {
 			registration.handler.log(message);
+		}
+	}
+
+	public void message(String string, Object... args) {
+		taggedLoggers.updateRegistrations(this);
+		if (registrations.size() > 0) {
+			log(CommonUtils.formatJ(string, args));
 		}
 	}
 

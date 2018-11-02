@@ -144,7 +144,7 @@ public abstract class Player<D> {
 	}
 
 	protected void logToInfo(String string, Object... args) {
-		consort.infoLogger.format(string, args);
+		consort.infoLogger.message(string, args);
 	}
 
 	protected void wasPlayed() {

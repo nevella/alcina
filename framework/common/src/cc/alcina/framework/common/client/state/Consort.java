@@ -328,7 +328,7 @@ public class Consort<D> {
 	}
 
 	public void start() {
-		infoLogger.format("Starting consort - %s", this);
+		infoLogger.message("Starting consort - %s", this);
 		running = true;
 		playedCount = 0;
 		consumeQueue();

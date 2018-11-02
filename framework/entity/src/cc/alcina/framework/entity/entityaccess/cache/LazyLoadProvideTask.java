@@ -28,11 +28,11 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 	protected Class<T> clazz;
 
 	protected void log(String template, Object... args) {
-		AlcinaMemCache.get().sqlLogger.format(template, args);
+		AlcinaMemCache.get().sqlLogger.message(template, args);
 	}
 
 	protected void lllog(String template, Object... args) {
-		lazyLoadLogger.format(template, args);
+		lazyLoadLogger.message(template, args);
 	}
 
 	TaggedLogger lazyLoadLogger = Registry.impl(TaggedLoggers.class)
