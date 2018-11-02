@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.util;
 
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,7 @@ import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.totsp.gwittir.client.beans.Binding;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -225,6 +227,23 @@ public class ClientUtils {
 			result.add(arrayString.get(i));
 		}
 		return result;
+	}
+
+	// hosted mode only, natch
+	public static void logToFile(String string) {
+		FileOutputStream fos = null;
+		try {
+			fos = new FileOutputStream("/tmp/tmp.txt");
+			fos.write(string.getBytes("UTF-8"));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		} finally {
+			try {
+				fos.close();
+			} catch (Exception e) {
+				// squelch
+			}
+		}
 	}
 
 	public static EditContentViewWidgets makeContentView(final Object model,
