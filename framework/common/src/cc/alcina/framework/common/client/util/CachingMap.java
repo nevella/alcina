@@ -40,6 +40,11 @@ public class CachingMap<I, O> {
 	}
 
 	public O get(I key) {
+		// optimise - mostly a key won't map to null;
+		O o = map.get(key);
+		if (o != null) {
+			return o;
+		}
 		if (!map.containsKey(key)) {
 			try {
 				map.put(key, getFunction().apply(key));

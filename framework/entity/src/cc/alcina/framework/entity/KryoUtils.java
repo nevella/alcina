@@ -23,6 +23,7 @@ import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.esotericsoftware.minlog.Log;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.util.LooseContext;
 
 public class KryoUtils {
@@ -52,6 +53,22 @@ public class KryoUtils {
 		return deserializeFromByteArray(bytes, clazz, false);
 	}
 
+	public static <T> T deserializeFromByteArray(byte[] bytes,
+			Class<T> knownType, boolean unsafe) {
+		try {
+			Kryo kryo = newKryo();
+			Input input = unsafe ? new UnsafeInput(bytes) : new Input(bytes);
+			T someObject = kryo.readObject(input, knownType);
+			input.close();
+			someObject = resolve(knownType, someObject);
+			((LiSetSerializer) kryo.getDefaultSerializer(LiSet.class))
+					.deserializationFinished();
+			return someObject;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public static <T> T deserializeFromFile(File file, Class<T> clazz) {
 		return deserializeFromFile(file, clazz, false);
 	}
@@ -79,6 +96,8 @@ public class KryoUtils {
 			T someObject = kryo.readObject(input, clazz);
 			input.close();
 			someObject = resolve(clazz, someObject);
+			((LiSetSerializer) kryo.getDefaultSerializer(LiSet.class))
+					.deserializationFinished();
 			return someObject;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -139,15 +158,15 @@ public class KryoUtils {
 		}
 	}
 
-	public static <T> T deserializeFromByteArray(byte[] bytes,
-			Class<T> knownType, boolean unsafe) {
+	public static void serializeToStream(Object object, OutputStream os,
+			boolean unsafe) {
 		try {
 			Kryo kryo = newKryo();
-			Input input = unsafe ? new UnsafeInput(bytes) : new Input(bytes);
-			T someObject = kryo.readObject(input, knownType);
-			input.close();
-			someObject = resolve(knownType, someObject);
-			return someObject;
+			Output output = unsafe ? new UnsafeOutput(os) : new Output(os);
+			object = writeReplace(object);
+			kryo.writeObject(output, object);
+			output.flush();
+			output.close();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -192,20 +211,7 @@ public class KryoUtils {
 		}
 		kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(
 				new SerializingInstantiatorStrategy()));
+		kryo.addDefaultSerializer(LiSet.class, new LiSetSerializer());
 		return kryo;
-	}
-
-	public static void serializeToStream(Object object, OutputStream os,
-			boolean unsafe) {
-		try {
-			Kryo kryo = newKryo();
-			Output output = unsafe ? new UnsafeOutput(os) : new Output(os);
-			object = writeReplace(object);
-			kryo.writeObject(output, object);
-			output.flush();
-			output.close();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 }

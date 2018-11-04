@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.KryoUtils;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.entityaccess.KnownNodePersistent;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -245,6 +246,9 @@ public abstract class Knowns {
 	}
 
 	private static synchronized void toPersistent(KnownNode node) {
+		if (ResourceUtilities.is(Knowns.class, "persistenceDisabled")) {
+			return;
+		}
 		Stack<KnownNode> nodes = new Stack<KnownNode>();
 		nodes.push(node);
 		GraphProjection graphProjection = new GraphProjection();

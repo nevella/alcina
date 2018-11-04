@@ -952,13 +952,16 @@ public class GraphProjection {
 				}
 			}
 			return (parent == null ? "" : parent.toPath(withToString) + "::")
-					+ clazz.getSimpleName() + "/" + string + "." + fieldName;
+					+ GraphProjection.classSimpleName(clazz) + "/" + string
+					+ "." + fieldName;
 		}
 
 		public String toPoint() {
-			String point = field == null ? clazz.getSimpleName()
-					: field.getType().getSimpleName() + ": "
-							+ clazz.getSimpleName() + "." + fieldName;
+			String point = field == null
+					? GraphProjection.classSimpleName(clazz)
+					: GraphProjection.classSimpleName(field.getType()) + ": "
+							+ GraphProjection.classSimpleName(clazz) + "."
+							+ fieldName;
 			return point;
 		}
 

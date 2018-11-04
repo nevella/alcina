@@ -75,6 +75,10 @@ public abstract class LooseContext {
 		getContext().pushWithKey(key, value);
 	}
 
+	public static void pushWithFalse(String key) {
+		getContext().pushWithKey(key, Boolean.FALSE);
+	}
+
 	public static void pushWithKey(String key, Object value) {
 		getContext().pushWithKey(key, value);
 	}

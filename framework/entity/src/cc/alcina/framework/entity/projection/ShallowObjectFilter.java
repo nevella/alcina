@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 
 public class ShallowObjectFilter implements GraphProjectionFieldFilter {
@@ -13,12 +14,20 @@ public class ShallowObjectFilter implements GraphProjectionFieldFilter {
 
 	private boolean permitCollectionsAndMaps;
 
+	private boolean logFilteredClasses;
+
+	Set<Class> filteredClasses = new LinkedHashSet<>();
+
 	public ShallowObjectFilter() {
 		allowOwningTypes = new LinkedHashSet<Class>();
 	}
 
 	public ShallowObjectFilter(Collection<Class> allowOwningTypes) {
 		this.allowOwningTypes = new LinkedHashSet<Class>(allowOwningTypes);
+	}
+
+	public boolean isLogFilteredClasses() {
+		return this.logFilteredClasses;
 	}
 
 	public boolean isPermitCollectionsAndMaps() {
@@ -48,12 +57,25 @@ public class ShallowObjectFilter implements GraphProjectionFieldFilter {
 			}
 		}
 		Class<?> type = field.getType();
-		return GraphProjection.isPrimitiveOrDataClass(type);
+		boolean primitiveOrDataClass = GraphProjection
+				.isPrimitiveOrDataClass(type);
+		if (primitiveOrDataClass) {
+			return true;
+		} else {
+			if (logFilteredClasses && filteredClasses.add(forClass)) {
+				Ax.out("Filtered: %s", forClass.getSimpleName());
+			}
+			return false;
+		}
 	}
 
 	@Override
 	public boolean permitTransient(Field field) {
 		return false;
+	}
+
+	public void setLogFilteredClasses(boolean logFilteredClasses) {
+		this.logFilteredClasses = logFilteredClasses;
 	}
 
 	public void setPermitCollectionsAndMaps(boolean permitCollectionsAndMaps) {

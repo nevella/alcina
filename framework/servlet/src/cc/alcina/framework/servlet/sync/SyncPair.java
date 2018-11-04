@@ -11,15 +11,11 @@ public class SyncPair<T> {
 
 	private SyncItemMatch<T> matchRecord;
 
-	public SyncItemMatch<T> getMatchRecord() {
-		return this.matchRecord;
-	}
-
 	public SyncPair() {
 	}
 
 	public SyncPair(T leftObject, T rightObject, StringKeyProvider keyProvider,
-			SyncPairAction action,SyncItemMatch<T> matchRecord) {
+			SyncPairAction action, SyncItemMatch<T> matchRecord) {
 		this.matchRecord = matchRecord;
 		if (leftObject != null) {
 			left = new KeyedObject(leftObject, keyProvider);
@@ -40,6 +36,10 @@ public class SyncPair<T> {
 
 	public KeyedObject getLeft() {
 		return this.left;
+	}
+
+	public SyncItemMatch<T> getMatchRecord() {
+		return this.matchRecord;
 	}
 
 	public Class getPairType() {

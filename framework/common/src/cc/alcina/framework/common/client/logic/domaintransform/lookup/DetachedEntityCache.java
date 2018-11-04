@@ -39,21 +39,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 	protected Map<Class, Map<Long, HasIdAndLocalId>> detached;
 
-	private Supplier<Map> classMapSupplier;
-
-	static class DefaultTopMapSupplier implements Supplier<Map> {
-		@Override
-		public Map get() {
-			return new HashMap<Class, Map<Long, HasIdAndLocalId>>(128);
-		}
-	}
-
-	static class DefaultClassMapSupplier implements Supplier<Map> {
-		@Override
-		public Map get() {
-			return new TreeMap();
-		}
-	}
+	private transient Supplier<Map> classMapSupplier;
 
 	public DetachedEntityCache() {
 		this(new DefaultTopMapSupplier(), new DefaultClassMapSupplier());
@@ -71,6 +57,10 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 			result.addAll(detached.get(clazz).values());
 		}
 		return result;
+	}
+
+	public Set<Entry<Class, Map<Long, HasIdAndLocalId>>> classEntries() {
+		return detached.entrySet();
 	}
 
 	public void clear() {
@@ -98,6 +88,7 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 		return classMapSupplier.get();
 	}
 
+	@Override
 	public <T> T get(Class<T> clazz, Long id) {
 		ensureMaps(clazz);
 		if (id == null) {
@@ -107,15 +98,11 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 		return t;
 	}
 
-	public <T> List<T> list(Class<T> clazz, Collection<Long> ids) {
-		return ids.stream().map(id -> get(clazz, id))
-				.collect(Collectors.toList());
-	}
-
 	public Map<Class, Map<Long, HasIdAndLocalId>> getDetached() {
 		return this.detached;
 	}
 
+	@Override
 	public <T extends HasIdAndLocalId> T getExisting(T hili) {
 		return (T) get(hili.getClass(), hili.getId());
 	}
@@ -152,6 +139,11 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 		return detached.get(clazz).keySet();
 	}
 
+	public <T> List<T> list(Class<T> clazz, Collection<Long> ids) {
+		return ids.stream().map(id -> get(clazz, id))
+				.collect(Collectors.toList());
+	}
+
 	public List<Long> notContained(Collection<Long> ids, Class clazz) {
 		List<Long> result = new ArrayList<Long>();
 		ensureMaps(clazz);
@@ -165,6 +157,7 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 		return result;
 	}
 
+	@Override
 	public void put(HasIdAndLocalId hili) {
 		Class<? extends HasIdAndLocalId> clazz = hili.getClass();
 		ensureMaps(clazz);
@@ -182,6 +175,7 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 		}
 	}
 
+	@Override
 	public void putForSuperClass(Class clazz, HasIdAndLocalId hili) {
 		ensureMaps(clazz);
 		long id = hili.getId();
@@ -229,7 +223,17 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 		}
 	}
 
-	public Set<Entry<Class, Map<Long, HasIdAndLocalId>>> classEntries() {
-		return detached.entrySet();
+	static class DefaultClassMapSupplier implements Supplier<Map> {
+		@Override
+		public Map get() {
+			return new TreeMap();
+		}
+	}
+
+	static class DefaultTopMapSupplier implements Supplier<Map> {
+		@Override
+		public Map get() {
+			return new HashMap<Class, Map<Long, HasIdAndLocalId>>(128);
+		}
 	}
 }

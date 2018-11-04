@@ -298,12 +298,18 @@ public class SyncMerger<T> {
 			try {
 				newKo.setKeyProvider(keyProvider);
 				if (action == SyncPairAction.CREATE_LEFT) {
-					newKo.setObject(pair.getRight().getObject().getClass()
-							.newInstance());
+					T newInstance = (T) pair.getRight().getObject().getClass()
+							.newInstance();
+					postCreateInstance(newInstance,
+							action == SyncPairAction.CREATE_LEFT);
+					newKo.setObject(newInstance);
 					pair.setLeft(newKo);
 				} else {
-					newKo.setObject(pair.getLeft().getObject().getClass()
-							.newInstance());
+					T newInstance = (T) pair.getLeft().getObject().getClass()
+							.newInstance();
+					postCreateInstance(newInstance,
+							action == SyncPairAction.CREATE_LEFT);
+					newKo.setObject(newInstance);
 					pair.setRight(newKo);
 				}
 			} catch (Exception e) {
@@ -330,6 +336,9 @@ public class SyncMerger<T> {
 					pair.getRight().getObject());
 		}
 		return true;
+	}
+
+	protected void postCreateInstance(T newInstance, boolean createLeft) {
 	}
 
 	protected List<SyncMapping> syncMappings(SyncPair<T> pair) {
