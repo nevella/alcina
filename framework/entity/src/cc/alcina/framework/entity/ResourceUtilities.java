@@ -84,20 +84,13 @@ public class ResourceUtilities {
 
 	private static ConcurrentHashMap<Class, BeanInfo> beanInfoLookup = new ConcurrentHashMap<>();
 
+	private static boolean clientWithJvmProperties;
+
 	public static void appShutdown() {
 		customProperties.clear();
 	}
-	private static boolean clientWithJvmProperties;
 
-	public static boolean isClientWithJvmProperties() {
-        return clientWithJvmProperties;
-    }
-
-    public static void setClientWithJvmProperties(boolean clientWithJvmProperties) {
-        ResourceUtilities.clientWithJvmProperties = clientWithJvmProperties;
-    }
-
-    public static StringMap classPathStringExistenceMap(Class clazz,
+	public static StringMap classPathStringExistenceMap(Class clazz,
 			String path) {
 		return StringMap
 				.fromStringList(readClassPathResourceAsString(clazz, path));
@@ -282,7 +275,7 @@ public class ResourceUtilities {
 			return customProperties.get(namespacedKey);
 		}
 		try {
-			if (GWT.isClient()&&!isClientWithJvmProperties()) {
+			if (GWT.isClient() && !isClientWithJvmProperties()) {
 				return null;
 			}
 		} catch (Throwable t) {
@@ -321,6 +314,10 @@ public class ResourceUtilities {
 
 	public static boolean is(Class clazz, String propertyName) {
 		return getBoolean(clazz, propertyName);
+	}
+
+	public static boolean isClientWithJvmProperties() {
+		return clientWithJvmProperties;
 	}
 
 	public static boolean isIntegralType(Class c) {
@@ -687,16 +684,13 @@ public class ResourceUtilities {
 		return result;
 	}
 
-	public static String serializeAlcinaOrKryo(Object o, boolean kryo) {
-		if (kryo) {
-			return KryoUtils.serializeToBase64(o);
-		} else {
-			return new AlcinaBeanSerializerS().serialize(o);
-		}
-	}
-
 	public static synchronized void set(String key, String value) {
 		customProperties.put(key, value);
+	}
+
+	public static void
+			setClientWithJvmProperties(boolean clientWithJvmProperties) {
+		ResourceUtilities.clientWithJvmProperties = clientWithJvmProperties;
 	}
 
 	public static void write(String content, String path) {

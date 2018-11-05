@@ -2,8 +2,9 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
@@ -25,11 +26,29 @@ public class HiliLocator implements Serializable {
 				dte.getObjectLocalId());
 	}
 
+	public static HiliLocator parse(String v) {
+		if (v == null || v.equals("null")) {
+			return new HiliLocator();
+		}
+		String[] parts = v.split("/");
+		return new HiliLocator(
+				Reflections.classLookup().getClassForName(parts[2]),
+				Long.parseLong(parts[0]), Long.parseLong(parts[1]));
+	}
+
+	public static HiliLocator parseShort(Class clazz, String key) {
+		String simpleName = key.replaceFirst("(\\S+) - (.+)", "$1");
+		long id = Long.parseLong(key.replaceFirst("(\\S+) - (.+)", "$2"));
+		Preconditions.checkArgument(clazz.getSimpleName().equals(simpleName));
+		return new HiliLocator(clazz, id, 0);
+	}
+
 	public static HiliLocator valueLocator(DomainTransformEvent dte) {
-		return dte.getValueClass() != null && (dte.getValueId() != 0||dte.getValueLocalId() != 0)
-				? new HiliLocator(dte.getValueClass(), dte.getValueId(),
-						dte.getValueLocalId())
-				: null;
+		return dte.getValueClass() != null
+				&& (dte.getValueId() != 0 || dte.getValueLocalId() != 0)
+						? new HiliLocator(dte.getValueClass(), dte.getValueId(),
+								dte.getValueLocalId())
+						: null;
 	}
 
 	public Class<? extends HasIdAndLocalId> clazz;
@@ -68,6 +87,10 @@ public class HiliLocator implements Serializable {
 		return super.equals(obj);
 	}
 
+	public <T extends HasIdAndLocalId> T find() {
+		return Domain.find(this);
+	}
+
 	public Class<? extends HasIdAndLocalId> getClazz() {
 		return this.clazz;
 	}
@@ -97,6 +120,17 @@ public class HiliLocator implements Serializable {
 		this.id = id;
 	}
 
+	public String toIdPairString() {
+		return Ax.format("%s/%s", id, localId);
+	}
+
+	public String toParseableString() {
+		if (clazz == null) {
+			return "null";
+		}
+		return Ax.format("%s/%s/%s", id, localId, clazz.getName());
+	}
+
 	public String toRecoverableString(long clientInstanceId) {
 		if (id != 0) {
 			return toString();
@@ -108,35 +142,12 @@ public class HiliLocator implements Serializable {
 
 	@Override
 	public String toString() {
-		if(id==0) {
-			long clientInstanceId = HiliHelper.getIdOrZero(PermissionsManager.get().getClientInstance());
+		if (id == 0) {
+			long clientInstanceId = HiliHelper
+					.getIdOrZero(PermissionsManager.get().getClientInstance());
 			return toRecoverableString(clientInstanceId);
 		}
 		return CommonUtils.formatJ("%s - %s",
 				clazz == null ? "??" : CommonUtils.simpleClassName(clazz), id);
 	}
-
-	public String toParseableString() {
-		if (clazz == null) {
-			return "null";
-		}
-		return Ax.format("%s/%s/%s", id, localId, clazz.getName());
-	}
-
-	public static HiliLocator parse(String v) {
-		if (v == null || v.equals("null")) {
-			return new HiliLocator();
-		}
-		String[] parts = v.split("/");
-		return new HiliLocator(
-				Reflections.classLookup().getClassForName(parts[2]),
-				Long.parseLong(parts[0]), Long.parseLong(parts[1]));
-	}
-
-	public <T extends HasIdAndLocalId> T find() {
-		return Domain.find(this);
-	}
-	public String toIdPairString() {
-        return Ax.format("%s/%s", id, localId);
-    }
 }

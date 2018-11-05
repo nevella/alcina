@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistryException;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.util.ClasspathScanner;
@@ -38,6 +39,16 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 	int ignoreCount = 0;
 
 	protected ClassMetadataCache<T> outgoingCache;
+
+	public InputStream getStreamForMd5(ClassMetadata classMetadata)
+			throws Exception {
+		try {
+			return classMetadata.url().openStream();
+		} catch (Exception e) {
+			// jar changed under us
+			return new JarHelper().openStream(classMetadata.url());
+		}
+	}
 
 	public void scan(ClassMetadataCache<ClassMetadata> foundCache,
 			String cachePath) throws Exception {
@@ -82,18 +93,28 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 					loadClassNanos / 1000 / 1000,
 					loadClassErrNanos / 1000 / 1000, ignoreCount, time);
 		}
-		KryoUtils.serializeToFile(outgoingCache, cacheFile, true);
+		try {
+			LooseContext.pushWithTrue(
+					KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER);
+			KryoUtils.serializeToFile(outgoingCache, cacheFile);
+		} finally {
+			LooseContext.pop();
+		}
 	}
 
 	protected abstract T createMetadata(String className, ClassMetadata found);
 
 	protected ClassMetadataCache getCached(File cacheFile) {
 		try {
+			LooseContext.pushWithTrue(
+					KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER);
 			ClassMetadataCache value = KryoUtils.deserializeFromFile(cacheFile,
-					ClassMetadataCache.class, true);
+					ClassMetadataCache.class);
 			return value;
 		} catch (Exception e) {
 			return new ClassMetadataCache();
+		} finally {
+			LooseContext.pop();
 		}
 	}
 
@@ -132,14 +153,4 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 
 	protected abstract T process(Class clazz, String className,
 			ClassMetadata found);
-
-	public InputStream getStreamForMd5(ClassMetadata classMetadata)
-			throws Exception {
-		try {
-			return classMetadata.url().openStream();
-		} catch (Exception e) {
-			// jar changed under us
-			return new JarHelper().openStream(classMetadata.url());
-		}
-	}
 }

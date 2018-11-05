@@ -239,6 +239,7 @@ public abstract class DevHelper {
 	}
 
 	public void initLightweightServices() {
+		AppPersistenceBase.setTest();
 		initDataFolder();
 		Registry.get().registerBootstrapServices(ObjectPersistenceHelper.get());
 		scanRegistry();
@@ -250,7 +251,6 @@ public abstract class DevHelper {
 		}
 		TransformManager.register(createTransformManager());
 		initCustomServicesFirstHalf();
-		AppPersistenceBase.setTest();
 		setupJobsToSysout();
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		XmlUtils.noTransformCaching = true;
@@ -269,28 +269,6 @@ public abstract class DevHelper {
 	}
 
 	public abstract void initPostObjectServices();
-
-	protected void initPermissionsManager() {
-		IUser user = PermissionsManager.get().getUser();
-		PermissionsManager.register(new ThreadedPermissionsManager() {
-			@Override
-			public PermissionsManager getT() {
-				return null;// same behaviour as threaded (so compat with server
-							// code), but just one instance
-			}
-
-			public synchronized Map<String, ? extends IGroup>
-					getUserGroups(IUser user) {
-				return super.getUserGroups(user);
-			}
-
-			@Override
-			protected synchronized void nullGroupMap() {
-				super.nullGroupMap();
-			}
-		});
-		PermissionsManager.get().setUser(user);
-	}
 
 	public void loadJbossConfig() {
 		loadJbossConfig(new ConsolePrompter());
@@ -459,9 +437,8 @@ public abstract class DevHelper {
 			LooseContext.pushWithKey(
 					"cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm.CONTEXT_MODULE_NAME",
 					getClass().getSimpleName());
-			Object clientReflectorJvm = Class
-					.forName(
-							"cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm")
+			Object clientReflectorJvm = Class.forName(
+					"cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm")
 					.newInstance();
 			ClientReflector.register((ClientReflector) clientReflectorJvm);
 		} catch (Exception e) {
@@ -470,6 +447,29 @@ public abstract class DevHelper {
 	}
 
 	protected abstract void initCustomServicesFirstHalf();
+
+	protected void initPermissionsManager() {
+		IUser user = PermissionsManager.get().getUser();
+		PermissionsManager.register(new ThreadedPermissionsManager() {
+			@Override
+			public PermissionsManager getT() {
+				return null;// same behaviour as threaded (so compat with server
+							// code), but just one instance
+			}
+
+			@Override
+			public synchronized Map<String, ? extends IGroup>
+					getUserGroups(IUser user) {
+				return super.getUserGroups(user);
+			}
+
+			@Override
+			protected synchronized void nullGroupMap() {
+				super.nullGroupMap();
+			}
+		});
+		PermissionsManager.get().setUser(user);
+	}
 
 	public static class ConsolePrompter implements StringPrompter {
 		@Override
@@ -563,6 +563,7 @@ public abstract class DevHelper {
 			// TODO Auto-generated method stub
 		}
 
+		@Override
 		public void notifyOfCompletedSaveFromOffline() {
 		}
 

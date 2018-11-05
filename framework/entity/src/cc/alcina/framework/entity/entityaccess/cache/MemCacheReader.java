@@ -60,7 +60,7 @@ public abstract class MemCacheReader<I, O> {
 			if (initialDepth == 0) {
 				LooseContext.push();
 			}
-			LooseContext.setBoolean(AlcinaMemCache.CONTEXT_NO_LOCKS);
+			LooseContext.setTrue(AlcinaMemCache.CONTEXT_NO_LOCKS);
 			return read0(input);
 		} catch (Exception e) {
 			Ax.out("Exception in memcache reader - start trace");
@@ -87,7 +87,7 @@ public abstract class MemCacheReader<I, O> {
 			if (initialDepth == 0) {
 				LooseContext.push();
 			}
-			LooseContext.setBoolean(AlcinaMemCache.CONTEXT_NO_LOCKS);
+			LooseContext.setTrue(AlcinaMemCache.CONTEXT_NO_LOCKS);
 			return read0(input);
 		} finally {
 			if (!noLocksWasSet) {

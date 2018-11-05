@@ -4,6 +4,7 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.cache.CacheCreators.CacheIdMapCreator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
@@ -16,6 +17,10 @@ public interface PrivateObjectCache {
 	public <T> T get(Class<T> clazz, Long id);
 
 	public <T extends HasIdAndLocalId> T getExisting(T hili);
+
+	default <T extends HasIdAndLocalId> T get(HiliLocator locator) {
+		return (T) get(locator.clazz, locator.id);
+	}
 
 	void put(HasIdAndLocalId hili);
 

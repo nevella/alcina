@@ -2,7 +2,10 @@ package cc.alcina.framework.servlet.sync;
 
 import java.io.Serializable;
 
+import cc.alcina.framework.common.client.cache.PrivateObjectCache;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class KeyedObject<T> implements Serializable {
 	private StringKeyProvider<T> keyProvider;
@@ -31,6 +34,18 @@ public class KeyedObject<T> implements Serializable {
 
 	public Class<? extends Object> getType() {
 		return object.getClass();
+	}
+
+	public T resolveObject(Class<T> clazz, PrivateObjectCache resolver) {
+		if (object instanceof String) {
+			HiliLocator locator = HiliLocator.parseShort(clazz,
+					(String) object);
+			object = resolver.get(locator);
+			if (object == null) {
+				throw Ax.runtimeException("Cannot resolve: %s", locator);
+			}
+		}
+		return object;
 	}
 
 	public void setKeyProvider(StringKeyProvider<T> keyProvider) {

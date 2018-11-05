@@ -33,31 +33,27 @@ public class KryoUtils {
 	public static final String CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER = KryoUtils.class
 			.getName() + ".CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER";
 
+	public static final String CONTEXT_USE_UNSAFE_FIELD_SERIALIZER = KryoUtils.class
+			.getName() + ".CONTEXT_USE_UNSAFE_FIELD_SERIALIZER";
+
 	public static <T> T clone(T t) {
 		Kryo kryo = newKryo();
 		return kryo.copy(t);
 	}
 
-	public static <T> T deserializeFromBase64(String value,
+	public static <T> T deserializeFromBase64(String string,
 			Class<T> knownType) {
-		return deserializeFromBase64(value, knownType, false);
-	}
-
-	public static <T> T deserializeFromBase64(String string, Class<T> knownType,
-			boolean unsafe) {
 		return deserializeFromByteArray(
-				Base64.getDecoder().decode(string.trim()), knownType, unsafe);
-	}
-
-	public static <T> T deserializeFromByteArray(byte[] bytes, Class<T> clazz) {
-		return deserializeFromByteArray(bytes, clazz, false);
+				Base64.getDecoder().decode(string.trim()), knownType);
 	}
 
 	public static <T> T deserializeFromByteArray(byte[] bytes,
-			Class<T> knownType, boolean unsafe) {
+			Class<T> knownType) {
 		try {
 			Kryo kryo = newKryo();
-			Input input = unsafe ? new UnsafeInput(bytes) : new Input(bytes);
+			Input input = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
+					? new UnsafeInput(bytes)
+					: new Input(bytes);
 			T someObject = kryo.readObject(input, knownType);
 			input.close();
 			someObject = resolve(knownType, someObject);
@@ -69,15 +65,9 @@ public class KryoUtils {
 		}
 	}
 
-	public static <T> T deserializeFromFile(File file, Class<T> clazz) {
-		return deserializeFromFile(file, clazz, false);
-	}
-
-	public static <T> T deserializeFromFile(File file, Class<T> knownType,
-			boolean unsafe) {
+	public static <T> T deserializeFromFile(File file, Class<T> knownType) {
 		try {
-			return deserializeFromStream(new FileInputStream(file), knownType,
-					unsafe);
+			return deserializeFromStream(new FileInputStream(file), knownType);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -85,14 +75,11 @@ public class KryoUtils {
 
 	public static <T> T deserializeFromStream(InputStream stream,
 			Class<T> clazz) {
-		return deserializeFromStream(stream, clazz, false);
-	}
-
-	public static <T> T deserializeFromStream(InputStream stream,
-			Class<T> clazz, boolean unsafe) {
 		try {
 			Kryo kryo = newKryo();
-			Input input = unsafe ? new UnsafeInput(stream) : new Input(stream);
+			Input input = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
+					? new UnsafeInput(stream)
+					: new Input(stream);
 			T someObject = kryo.readObject(input, clazz);
 			input.close();
 			someObject = resolve(clazz, someObject);
@@ -119,22 +106,14 @@ public class KryoUtils {
 	}
 
 	public static String serializeToBase64(Object object) {
-		return serializeToBase64(object, false);
-	}
-
-	public static String serializeToBase64(Object object, boolean unsafe) {
-		return Base64.getEncoder()
-				.encodeToString(serializeToByteArray(object, unsafe));
+		return Base64.getEncoder().encodeToString(serializeToByteArray(object));
 	}
 
 	public static byte[] serializeToByteArray(Object object) {
-		return serializeToByteArray(object, false);
-	}
-
-	public static byte[] serializeToByteArray(Object object, boolean unsafe) {
 		try {
 			Kryo kryo = newKryo();
-			Output output = unsafe ? new UnsafeOutput(10000, -1)
+			Output output = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
+					? new UnsafeOutput(10000, -1)
 					: new Output(10000, -1);
 			object = writeReplace(object);
 			kryo.writeObject(output, object);
@@ -146,23 +125,19 @@ public class KryoUtils {
 	}
 
 	public static void serializeToFile(Object object, File file) {
-		serializeToFile(object, file, false);
-	}
-
-	public static void serializeToFile(Object object, File file,
-			boolean unsafe) {
 		try (OutputStream os = new FileOutputStream(file)) {
-			serializeToStream(object, os, unsafe);
+			serializeToStream(object, os);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
 
-	public static void serializeToStream(Object object, OutputStream os,
-			boolean unsafe) {
+	public static void serializeToStream(Object object, OutputStream os) {
 		try {
 			Kryo kryo = newKryo();
-			Output output = unsafe ? new UnsafeOutput(os) : new Output(os);
+			Output output = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
+					? new UnsafeOutput(os)
+					: new Output(os);
 			object = writeReplace(object);
 			kryo.writeObject(output, object);
 			output.flush();
