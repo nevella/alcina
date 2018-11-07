@@ -70,7 +70,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 			}
 			return mapper.readValue(json, clazz);
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			return deserialize_v1(json, clazz);
 		}
 	}
 
@@ -131,6 +131,26 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	public JacksonJsonObjectSerializer withTypeInfo() {
 		this.withTypeInfo = true;
 		return this;
+	}
+
+	private <T> T deserialize_v1(String json, Class<T> clazz) {
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			if (withTypeInfo) {
+				mapper.enableDefaultTyping(); // default to using
+												// DefaultTyping.OBJECT_AND_NON_CONCRETE
+				mapper.enableDefaultTyping(
+						ObjectMapper.DefaultTyping.NON_FINAL);
+			}
+			if (withAllowUnknownProperties) {
+				mapper.configure(
+						DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+						false);
+			}
+			return mapper.readValue(json, clazz);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public static class AddIdAnnotationIntrospector
