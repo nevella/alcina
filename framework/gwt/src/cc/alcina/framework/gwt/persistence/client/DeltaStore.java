@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -14,8 +17,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsResponse;
-import cc.alcina.framework.common.client.log.TaggedLogger;
-import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
@@ -53,8 +54,7 @@ public class DeltaStore {
 		return DomainModelDeltaSignature.parseSignature(key.substring(offset));
 	}
 
-	protected TaggedLogger infoLogger = Registry.impl(TaggedLoggers.class)
-			.getLogger(getClass(), TaggedLogger.INFO);
+	final Logger logger = LoggerFactory.getLogger(getClass());
 
 	private DomainModelDeltaLookup cache = null;
 
@@ -125,7 +125,7 @@ public class DeltaStore {
 					}
 					Registry.impl(RpcDeserialiser.class).deserialize(
 							DomainModelDelta.class, result, assignCallback);
-					infoLogger.message("delta store: deserialized %s", key);
+					logger.info("delta store: deserialized %s", key);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}

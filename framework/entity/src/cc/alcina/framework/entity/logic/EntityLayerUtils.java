@@ -1,6 +1,10 @@
 package cc.alcina.framework.entity.logic;
 
+import org.apache.log4j.Appender;
+import org.apache.log4j.Layout;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
@@ -8,6 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.util.SafeConsoleAppender;
 
 public class EntityLayerUtils {
 	public static String getLocalHostName() {
@@ -51,5 +56,24 @@ public class EntityLayerUtils {
 	public static void persistentLog(String message, Object componentKey) {
 		Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
 				.log(message, componentKey.toString());
+	}
+
+	public static void setStandardAppender(Class clazz, Level level) {
+		setStandardAppender(clazz.getName(), level);
+	}
+
+	public static void setStandardAppender(org.slf4j.Logger slf4jlogger,
+			Level level) {
+		setStandardAppender(slf4jlogger.getName(), level);
+	}
+
+	public static void setStandardAppender(String key, Level level) {
+		Logger logger = Logger.getLogger(key);
+		logger.removeAllAppenders();
+		Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
+		Appender appender = new SafeConsoleAppender(layout);
+		logger.addAppender(appender);
+		logger.setAdditivity(false);
+		logger.setLevel(level);
 	}
 }

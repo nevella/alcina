@@ -41,6 +41,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase.ServletClassMetadataCacheProvider;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.DbAppender;
@@ -117,7 +118,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	public void destroy() {
 		try {
 			new AppServletStatusFileNotifier().destroyed();
-			MetricLogging.get().appShutdown();
 			SEUtilities.appShutdown();
 			ResourceUtilities.appShutdown();
 			Registry.impl(CommonRemoteServiceServletSupport.class)
@@ -149,7 +149,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initBootstrapRegistry();
 			new AppServletStatusFileNotifier().deploying();
 			initNames();
-			initLoggers();
+			initDevConsoleAndWebApp();
 			initJPA();
 			loadCustomProperties();
 			initServices();
@@ -227,6 +227,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected abstract void initDataFolder();
 
+	protected void initDevConsoleAndWebApp() {
+		initLoggers();
+	}
+
 	protected abstract void initEntityLayer() throws Exception;
 
 	protected abstract void initJPA();
@@ -248,19 +252,16 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			logger.addAppender(a);
 		}
 		logger.setAdditivity(true);
-		// metric
-		String metricLoggerName = AlcinaServerConfig.get()
-				.getMetricLoggerName();
-		if (metricLoggerName != null) {
-			Logger metricLogger = Logger.getLogger(metricLoggerName);
+		{
+			Logger metricLogger = Logger.getLogger(MetricLogging.class);
 			metricLogger.removeAllAppenders();
-			metricLogger.addAppender(
-					new SafeConsoleAppender(MetricLogging.METRIC_LAYOUT));
+			Layout metricLayout = new PatternLayout(
+					AppPersistenceBase.METRIC_LOGGER_PATTERN);
+			metricLogger.addAppender(new SafeConsoleAppender(metricLayout));
 			metricLogger.setLevel(Level.DEBUG);
 			metricLogger.setAdditivity(false);
-			// MetricLogging.muteLowPriority=false;
-			MetricLogging.metricLogger = metricLogger;
 			ServletLayerObjects.get().setMetricLogger(metricLogger);
+			EntityLayerObjects.get().setMetricLogger(metricLogger);
 		}
 		String databaseEventLoggerName = AlcinaServerConfig.get()
 				.getDatabaseEventLoggerName();

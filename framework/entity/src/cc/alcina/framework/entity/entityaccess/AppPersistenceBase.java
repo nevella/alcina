@@ -12,11 +12,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
 
-import org.apache.log4j.Appender;
-import org.apache.log4j.Layout;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
 
 import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
@@ -27,17 +23,14 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.entityaccess.updaters.DbUpdateRunner;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
-import cc.alcina.framework.entity.util.SafeConsoleAppender;
 
 public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IUser, G extends IGroup, IID extends Iid> {
 	public static final String PERSISTENCE_TEST = AppPersistenceBase.class
@@ -45,6 +38,8 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	public static final String INSTANCE_READ_ONLY = AppPersistenceBase.class
 			.getName() + ".INSTANCE_READ_ONLY";
+
+	public static final String METRIC_LOGGER_PATTERN = "[%c{1}:%X{threadId}] %m%n";
 
 	public static void checkNotReadOnly() throws ReadOnlyException {
 		if (isInstanceReadOnly()) {
@@ -188,7 +183,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	private ClassMetadataCache getClassInfo(Logger mainLogger)
 			throws Exception {
-		return classMetadataCacheProvider.getClassInfo(mainLogger,true);
+		return classMetadataCacheProvider.getClassInfo(mainLogger, true);
 	}
 
 	protected void addCriteria(StringBuffer sb, String string,
@@ -260,40 +255,30 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 	}
 
 	protected void initLoggers() {
-		Logger logger = Logger
-				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
-		Layout l = new PatternLayout("%-5p [%c{1}] %m%n");
-		Appender a = new SafeConsoleAppender(l);
-		String mainLoggerAppenderName = AlcinaServerConfig.MAIN_LOGGER_APPENDER;
-		a.setName(mainLoggerAppenderName);
-		if (logger.getAppender(mainLoggerAppenderName) == null) {
-			logger.addAppender(a);
-		}
-		logger.setAdditivity(true);
-		String metricLoggerName = AlcinaServerConfig.get()
-				.getMetricLoggerName();
-		if (metricLoggerName != null) {
-			Logger metricLogger = Logger.getLogger(metricLoggerName);
-			metricLogger.removeAllAppenders();
-			metricLogger.addAppender(
-					new SafeConsoleAppender(MetricLogging.METRIC_LAYOUT));
-			metricLogger.setLevel(Level.DEBUG);
-			metricLogger.setAdditivity(false);
-			MetricLogging.metricLogger = metricLogger;
-			EntityLayerObjects.get().setMetricLogger(metricLogger);
-		}
-		String databaseEventLoggerName = AlcinaServerConfig.get()
-				.getDatabaseEventLoggerName();
-		if (EntityLayerObjects.get().getPersistentLogger() == null) {
-			Logger dbLogger = Logger.getLogger(databaseEventLoggerName);
-			dbLogger.removeAllAppenders();
-			dbLogger.setLevel(Level.INFO);
-			l = new PatternLayout("%-5p [%c{1}] %m%n");
-			a = new DbAppender(l);
-			a.setName(databaseEventLoggerName);
-			dbLogger.addAppender(a);
-			EntityLayerObjects.get().setPersistentLogger(dbLogger);
-		}
+		// Logger logger = Logger
+		// .getLogger(AlcinaServerConfig.get().getMainLoggerName());
+		// Layout l = new PatternLayout("%-5p [%c{1}] %m%n");
+		// Appender a = new SafeConsoleAppender(l);
+		// String mainLoggerAppenderName =
+		// AlcinaServerConfig.MAIN_LOGGER_APPENDER;
+		// a.setName(mainLoggerAppenderName);
+		// if (logger.getAppender(mainLoggerAppenderName) == null) {
+		// logger.addAppender(a);
+		// }
+		// logger.setAdditivity(true);
+		//
+		// String databaseEventLoggerName = AlcinaServerConfig.get()
+		// .getDatabaseEventLoggerName();
+		// if (EntityLayerObjects.get().getPersistentLogger() == null) {
+		// Logger dbLogger = Logger.getLogger(databaseEventLoggerName);
+		// dbLogger.removeAllAppenders();
+		// dbLogger.setLevel(Level.INFO);
+		// l = new PatternLayout("%-5p [%c{1}] %m%n");
+		// a = new DbAppender(l);
+		// a.setName(databaseEventLoggerName);
+		// dbLogger.addAppender(a);
+		// EntityLayerObjects.get().setPersistentLogger(dbLogger);
+		// }
 	}
 
 	protected void initNonDb() throws Exception {

@@ -8,14 +8,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.IsClassFilter;
-import cc.alcina.framework.common.client.log.TaggedLogger;
-import cc.alcina.framework.common.client.log.TaggedLoggers;
+import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -80,14 +82,9 @@ public class Consort<D> {
 
 	private boolean throwOnUnableToResolveDependencies;
 
-	protected TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
-			.getLogger(getClass(), TaggedLogger.METRIC);
+	protected Logger metricLogger = AlcinaLogUtils.getMetricLogger(getClass());
 
-	protected TaggedLogger infoLogger = Registry.impl(TaggedLoggers.class)
-			.getLogger(getClass(), TaggedLogger.INFO);
-
-	protected TaggedLogger debugLogger = Registry.impl(TaggedLoggers.class)
-			.getLogger(getClass(), TaggedLogger.DEBUG);
+	protected Logger logger = LoggerFactory.getLogger(getClass());
 
 	private String lastInfoLogMessage = null;
 
@@ -225,7 +222,7 @@ public class Consort<D> {
 
 	public void finished() {
 		running = false;
-		infoLogger.log(CommonUtils.formatJ("%s     [%s]",
+		logger.info(CommonUtils.formatJ("%s     [%s]",
 				CommonUtils.padStringLeft("", depth(), '\t'),
 				"----CONSORT FINISHED"));
 		topicPublisher.publishTopic(FINISHED, null);
@@ -273,12 +270,12 @@ public class Consort<D> {
 
 	public void passLoggersAndFlagsToChild(Consort child) {
 		child.metricLogger = metricLogger;
-		child.infoLogger = infoLogger;
+		child.logger = logger;
 		child.setSimulate(isSimulate());
 	}
 
 	public void removeStates(Collection<D> states) {
-		infoLogger.log(CommonUtils.formatJ("%s rmv:[%s]",
+		logger.info(CommonUtils.formatJ("%s rmv:[%s]",
 				CommonUtils.padStringLeft("", depth(), '\t'),
 				CommonUtils.join(states, ", ")));
 		modifyStates(states, false);
@@ -328,7 +325,7 @@ public class Consort<D> {
 	}
 
 	public void start() {
-		infoLogger.message("Starting consort - %s", this);
+		logger.info("Starting consort - {}", this);
 		running = true;
 		playedCount = 0;
 		consumeQueue();
@@ -365,7 +362,7 @@ public class Consort<D> {
 		playing.remove(player);
 		// TODO - warn if resultantstates >1 and a non-parallel consort?
 		modifyStates(resultantStates, true);
-		metricLogger.log(CommonUtils.formatJ("%s     %s: %s ms",
+		metricLogger.debug(CommonUtils.formatJ("%s     %s: %s ms",
 				CommonUtils.padStringLeft("", depth(), '\t'),
 				player.shortName(),
 				System.currentTimeMillis() - player.getStart()));
@@ -430,7 +427,7 @@ public class Consort<D> {
 		if (mod) {
 			publishTopicWithBubble(STATES,
 					new StatesDelta(reachedCopy, reachedStates));
-			debugLogger.log(CommonUtils.formatJ("%s     [%s]",
+			logger.debug(CommonUtils.formatJ("%s     [%s]",
 					CommonUtils.padStringLeft("", depth(), '\t'),
 					CommonUtils.join(states, ", ")));
 		}
@@ -510,7 +507,7 @@ public class Consort<D> {
 						String message = CommonUtils.formatJ(
 								"Unable to resolve dependencies: %s\n\t%s",
 								missed.getRequires(), missed);
-						infoLogger.log(message);
+						logger.info(message);
 						if (isThrowOnUnableToResolveDependencies()) {
 							onFailure(new RuntimeException(message));
 						}
@@ -555,7 +552,7 @@ public class Consort<D> {
 	}
 
 	protected void addStates(Collection<D> states) {
-		infoLogger.log(CommonUtils.formatJ("%s add:[%s]",
+		logger.info(CommonUtils.formatJ("%s add:[%s]",
 				CommonUtils.padStringLeft("", depth(), '\t'),
 				CommonUtils.join(states, ", ")));
 		modifyStates(states, true);
@@ -588,7 +585,7 @@ public class Consort<D> {
 				player.provideNameForTransitions());
 		if (!CommonUtils.equalsWithNullEmptyEquality(message,
 				lastInfoLogMessage)) {
-			infoLogger.log(message);
+			logger.info(message);
 			lastInfoLogMessage = message;
 		}
 		if (player instanceof ConsortPlayer) {

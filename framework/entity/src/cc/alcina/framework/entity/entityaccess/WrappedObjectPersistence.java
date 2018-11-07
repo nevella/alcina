@@ -16,8 +16,6 @@ import javax.persistence.EntityManager;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.entity.PersistentSingleton;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
-import cc.alcina.framework.common.client.log.TaggedLogger;
-import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.permissions.IVersionableOwnable;
@@ -27,11 +25,11 @@ import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.Wrapper;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaLoggingTags;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
+import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class WrappedObjectPersistence {
@@ -123,13 +121,10 @@ public class WrappedObjectPersistence {
 					if (wrappedObject == null) {
 						if (LooseContext
 								.is(CONTEXT_IGNORE_MISSING_WRAPPED_OBJECT)) {
-							TaggedLogger logger = Registry
-									.impl(TaggedLoggers.class).getLogger(null,
-											AlcinaLoggingTags.WRAPPED_OBJECT_REF_INTEGRITY);
-							logger.message(
-									"Warning - ref integrity (wrapped object) - missing %s.%s #%s",
-									wrapper.getClass(), pd.getName(),
-									wrapper.getId());
+							AlcinaMemCache.LOGGER_WRAPPED_OBJECT_REF_INTEGRITY
+									.info("Warning - ref integrity (wrapped object) - missing {}.{} #{}",
+											wrapper.getClass(), pd.getName(),
+											wrapper.getId());
 							if (LooseContext.getBoolean(
 									CONTEXT_THROW_MISSING_WRAPPED_OBJECT)) {
 								throw new MissingWrappedObjectException();

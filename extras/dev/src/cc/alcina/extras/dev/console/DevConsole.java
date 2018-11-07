@@ -56,6 +56,7 @@ import javax.swing.text.StyledDocument;
 import javax.swing.text.TabSet;
 import javax.swing.text.TabStop;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import cc.alcina.extras.dev.DevHelper;
@@ -64,6 +65,7 @@ import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdNextCommandCaches;
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -78,6 +80,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.Sx;
@@ -563,6 +566,28 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	private void serializeObject(Object object, File file) {
 		KryoUtils.serializeToFile(object, file);
+	}
+
+	protected void addMemcacheAndFlowLoggers() {
+		// Registry.impl(TaggedLoggers.class).registerInterest(Domain.class,
+		// new SystemOutHandler(null) {
+		// Pattern ignore = Pattern.compile(
+		// "(?s).*duplicate mapping of an id lookup - Lookup: Demeter contact
+		// \\[email\\]: .+?@barnet\\.com\\.au.*|"
+		// + "later-lookup -- missing target: class au.+DemeterActivity.+");
+		//
+		// @Override
+		// public void log(String message) {
+		// if (ignore.matcher(message.replace("\n", " "))
+		// .matches()) {
+		// return;
+		// }
+		// super.log(message);
+		// }
+		// }, TaggedLogger.WARN);
+		EntityLayerUtils.setStandardAppender(Domain.class, Level.WARN);
+		// EntityLayerUtils.setStandardAppender(FlowTransitions.class,
+		// Level.INFO);
 	}
 
 	protected abstract void createDevHelper();

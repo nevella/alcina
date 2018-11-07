@@ -203,28 +203,30 @@ public abstract class DevHelper {
 		if (logger == null) {
 			logger = Logger.getLogger("");
 			logger.setLevel(Level.INFO);
-			Layout l = new PatternLayout("%-5p [%c{1}] %m%n");
-			SafeConsoleAppender a = new SafeConsoleAppender(l);
+			Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
+			SafeConsoleAppender appender = new SafeConsoleAppender(layout);
 			messagingWriter = new MessagingWriter(System.out);
-			a.setWriter(messagingWriter);
-			String stdAppndrName = "Standard_appender";
-			a.setName(stdAppndrName);
-			WriterAppender wa = new WriterAccessWriterAppender();
-			wa.setWriter(new StringWriter());
-			wa.setLayout(l);
-			wa.setName(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY);
-			if (logger.getAppender(stdAppndrName) == null) {
-				logger.addAppender(a);
-				logger.addAppender(wa);
+			appender.setWriter(messagingWriter);
+			String standardAppenderName = "Standard_appender";
+			appender.setName(standardAppenderName);
+			WriterAppender writerAppender = new WriterAccessWriterAppender();
+			writerAppender.setWriter(new StringWriter());
+			writerAppender.setLayout(layout);
+			writerAppender.setName(
+					WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY);
+			if (logger.getAppender(standardAppenderName) == null) {
+				logger.addAppender(appender);
+				logger.addAppender(writerAppender);
 			}
 			logger.setAdditivity(false);
-			Logger mlogger = MetricLogging.metricLogger;
-			mlogger.setLevel(Level.DEBUG);
-			Layout l2 = new PatternLayout("%m%n");
-			SafeConsoleAppender a2 = new SafeConsoleAppender(l2);
-			a2.setWriter(messagingWriter);
-			mlogger.addAppender(a2);
-			mlogger.setAdditivity(false);
+			Logger metricLogger = Logger.getLogger(MetricLogging.class);
+			metricLogger.removeAllAppenders();
+			metricLogger.setLevel(Level.DEBUG);
+			Layout layout2 = new PatternLayout("%m%n");
+			SafeConsoleAppender aappender2 = new SafeConsoleAppender(layout2);
+			aappender2.setWriter(messagingWriter);
+			metricLogger.addAppender(aappender2);
+			metricLogger.setAdditivity(false);
 		}
 		return logger;
 	}

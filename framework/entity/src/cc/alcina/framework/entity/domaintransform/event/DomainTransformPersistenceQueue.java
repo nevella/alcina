@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.domaintransform.event;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,10 +12,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.log.TaggedLogger;
-import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
@@ -52,8 +54,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		return Registry.impl(DomainTransformPersistenceQueue.class);
 	}
 
-	protected TaggedLogger logger = Registry.impl(TaggedLoggers.class)
-			.getLogger(getClass(), TaggedLogger.INFO);
+	final Logger logger = LoggerFactory
+			.getLogger(MethodHandles.lookup().lookupClass());
 
 	Set<Long> firing = new LinkedHashSet<>();
 
@@ -229,7 +231,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (persistedRequestIds.isEmpty()) {
 			return;
 		}
-		logger.message("fired - %s - range %s",
+		logger.info("fired - {} - range {}",
 				event.getTransformPersistenceToken().getRequest().shortId(),
 				new LongPair(CollectionFilters.min(persistedRequestIds),
 						CollectionFilters.max(persistedRequestIds)));
@@ -250,7 +252,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (persistedRequestIds.isEmpty()) {
 			return;
 		}
-		logger.message("firing - %s - %s - range %s",
+		logger.info("firing - {} - {} - range {}",
 				Ax.friendly(event.getPersistenceEventType()),
 				event.getTransformPersistenceToken().getRequest().shortId(),
 				new LongPair(CollectionFilters.min(persistedRequestIds),

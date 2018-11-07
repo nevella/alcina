@@ -7,12 +7,12 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.log.TaggedLogger;
-import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 
@@ -41,6 +41,9 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 	private boolean enabled = true;
 
 	private ModificationChecker modificationChecker;
+
+	protected final transient Logger logger = LoggerFactory
+			.getLogger(getClass());
 
 	public MultikeyMap<T> asMap(Object... objects) {
 		return (MultikeyMap<T>) lookup.asMap(objects);
@@ -104,10 +107,12 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 		}
 	}
 
+	@Override
 	public boolean isDerived() {
 		return this.derived;
 	}
 
+	@Override
 	public boolean isEnabled() {
 		return this.enabled;
 	}
@@ -170,6 +175,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 		this.derived = derived;
 	}
 
+	@Override
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
@@ -202,11 +208,9 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 	protected abstract int getDepth();
 
 	protected void logDuplicateMapping(Object[] values, T existing) {
-		Registry.impl(TaggedLoggers.class)
-				.log(CommonUtils.formatJ(
-						"Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
-						this, Arrays.asList(values), existing), Domain.class,
-						TaggedLogger.WARN);
+		logger.warn(CommonUtils.formatJ(
+				"Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
+				this, Arrays.asList(values), existing));
 	}
 
 	// count:=-1 --> all

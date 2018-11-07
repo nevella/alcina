@@ -27,7 +27,7 @@ public class ConsortWithSignals<D, S> extends Consort<D> {
 	}
 
 	public void signal(S signal, AsyncCallback finishedCallback) {
-		infoLogger.log(CommonUtils.formatJ("%s%s%s -> %s", "[SG] ",
+		logger.info(CommonUtils.formatJ("%s%s%s -> %s", "[SG] ",
 				CommonUtils.padStringLeft("", depth(), "    "),
 				CommonUtils.simpleClassName(getClass()), signal));
 		signalTopicPublisher.publishTopic(signal.toString(), signal);

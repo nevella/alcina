@@ -3,14 +3,17 @@ package cc.alcina.framework.common.client.cache;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.log.TaggedLogger;
-import cc.alcina.framework.common.client.log.TaggedLoggers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class IdLookup<T, H extends HasIdAndLocalId> extends CacheLookup<T, H> {
 	private Set<T> duplicateKeys = new LinkedHashSet<T>();
+
+	protected final transient Logger logger = LoggerFactory
+			.getLogger(getClass());
 
 	public IdLookup(CacheLookupDescriptor descriptor, boolean concurrent) {
 		super(descriptor, concurrent);
@@ -30,6 +33,7 @@ public class IdLookup<T, H extends HasIdAndLocalId> extends CacheLookup<T, H> {
 		return !duplicateKeys.contains(key);
 	}
 
+	@Override
 	protected void add(T k1, Long value) {
 		if (k1 == null) {
 			return;
@@ -38,10 +42,9 @@ public class IdLookup<T, H extends HasIdAndLocalId> extends CacheLookup<T, H> {
 		set.add(value);
 		if (set.size() > 1) {
 			// throw new IllegalArgumentException("");
-			Registry.impl(TaggedLoggers.class)
-					.log(CommonUtils.formatJ(
-							"Warning - duplicate mapping of an id lookup - %s: %s : %s\n",
-							this, k1, set), Domain.class, TaggedLogger.WARN);
+			logger.warn(CommonUtils.formatJ(
+					"Warning - duplicate mapping of an id lookup - %s: %s : %s\n",
+					this, k1, set));
 			duplicateKeys.add(k1);
 		}
 	}

@@ -1048,8 +1048,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					.fireDomainTransformPersistenceEvent(
 							new DomainTransformPersistenceEvent(
 									persistenceToken, null, true));
-			MetricLogging.get().start("transform-commit",
-					CommonRemoteServiceServlet.class);
+			MetricLogging.get().start("transform-commit");
 			DomainTransformLayerWrapper wrapper = Registry
 					.impl(TransformPersistenceQueue.class)
 					.submit(persistenceToken);

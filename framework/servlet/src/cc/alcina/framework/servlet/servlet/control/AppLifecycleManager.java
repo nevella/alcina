@@ -1,13 +1,15 @@
 package cc.alcina.framework.servlet.servlet.control;
 
+import java.lang.invoke.MethodHandles;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gwt.user.server.rpc.RPCRequest;
 
-import cc.alcina.framework.common.client.log.TaggedLogger;
-import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -41,6 +43,9 @@ public class AppLifecycleManager implements RegistrableService {
 	private String clusterRoleConfigFilePath;
 
 	private boolean clusterMember;
+
+	final Logger logger = LoggerFactory
+			.getLogger(MethodHandles.lookup().lookupClass());
 
 	public AppLifecycleManager() {
 	}
@@ -154,7 +159,6 @@ public class AppLifecycleManager implements RegistrableService {
 	}
 
 	void log(String message) {
-		Registry.impl(TaggedLoggers.class).log(message,
-				AppLifecycleManager.class, TaggedLogger.INFO);
+		logger.info(message);
 	}
 }

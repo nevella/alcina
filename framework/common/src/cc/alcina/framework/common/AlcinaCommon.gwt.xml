@@ -10,6 +10,7 @@
 	<inherits name='cc.alcina.framework.emul.AlcinaEmul' />
 	<inherits name='cc.alcina.framework.emul.AlcinaEmulDevModeRegex' />
 	<inherits name='cc.alcina.framework.emul.AlcinaEmulDevModeImpl' />
+	<inherits name='de.benediktmeurer.gwt.slf4j.jul.JUL'/>
 	<replace-with class="cc.alcina.framework.common.client.util.StackFrameHelperIE">
 		<when-type-is class="cc.alcina.framework.common.client.util.StackFrameHelper" />
 		<when-property-is name="user.agent" value="ie6" />
@@ -22,5 +23,8 @@
 	<define-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingDataUrls" is-multi-valued="false"/>
 	<set-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingDataUrls" value="false"/>
 	<define-configuration-property name="alcina.introspectorFilter.dataFile" is-multi-valued="false"/>
+	 <set-property name="gwt.logging.enabled" value="FALSE"/>         
+    <set-property name="gwt.logging.consoleHandler" value="DISABLED"/>
+    <set-property name="gwt.logging.developmentModeHandler" value="DISABLED"/>
 	<source path="client" />
 </module>

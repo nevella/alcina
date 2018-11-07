@@ -1,15 +1,20 @@
 package cc.alcina.framework.servlet.servlet.control;
 
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
-import cc.alcina.framework.common.client.log.TaggedLogger;
-import cc.alcina.framework.common.client.log.TaggedLoggers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ToLowerCaseTrimmedConverter;
 
 public class ControlServletHandlers {
+	final static Logger logger = LoggerFactory
+			.getLogger(MethodHandles.lookup().lookupClass());
+
 	public abstract static class ModeDeltaHandler<T> {
 		protected AppLifecycleManager appLifecycleManager;
 
@@ -91,10 +96,8 @@ public class ControlServletHandlers {
 				WriterServiceMode toState) {
 			List<WriterService> services = Registry
 					.singletons(WriterService.class, Void.class);
-			TaggedLogger logger = Registry.impl(TaggedLoggers.class)
-					.getLogger(ControlServlet.class);
 			for (WriterService service : services) {
-				logger.log(String.format("%s -> %s\n",
+				logger.info(String.format("%s -> %s\n",
 						service.getClass().getSimpleName(),
 						toState == WriterServiceMode.NOT_CONTROLLER ? "shutdown"
 								: "startup"));
@@ -111,7 +114,7 @@ public class ControlServletHandlers {
 						e.printStackTrace();
 					}
 				}
-				logger.log(String.format("%s -> %s [Complete]\n",
+				logger.info(String.format("%s -> %s [Complete]\n",
 						service.getClass().getSimpleName(),
 						toState == WriterServiceMode.NOT_CONTROLLER ? "shutdown"
 								: "startup"));
@@ -136,6 +139,7 @@ public class ControlServletHandlers {
 			updateReadonly(toState);
 		}
 
+		@Override
 		public void init() {
 			updateReadonly(WriterMode.READ_ONLY);
 		}

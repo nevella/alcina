@@ -57,6 +57,9 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gwt.event.shared.UmbrellaException;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -79,8 +82,7 @@ import cc.alcina.framework.common.client.cache.ModificationChecker;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
-import cc.alcina.framework.common.client.log.TaggedLogger;
-import cc.alcina.framework.common.client.log.TaggedLoggers;
+import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -110,7 +112,6 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.common.client.util.StringKey;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
@@ -174,8 +175,9 @@ public class AlcinaMemCache implements RegistrableService {
 	public static final String CONTEXT_NO_LOCKS = AlcinaMemCache.class.getName()
 			+ ".CONTEXT_NO_LOCKS";
 
-	public static final StringKey WRAPPED_OBJECT_REF_INTEGRITY = new StringKey(
-			"WRAPPED_OBJECT_REF_INTEGRITY");
+	public static final Logger LOGGER_WRAPPED_OBJECT_REF_INTEGRITY = AlcinaLogUtils
+			.getTaggedLogger(AlcinaMemCache.class,
+					"wrapped_object_ref_integrity");
 
 	public static void checkActiveTransaction() {
 		if (!get().transactional.transactionActiveInCurrentThread()) {
@@ -259,15 +261,11 @@ public class AlcinaMemCache implements RegistrableService {
 
 	private CacheDescriptor cacheDescriptor;
 
-	TaggedLogger sqlLogger = Registry.impl(TaggedLoggers.class)
-			.getLogger(Domain.class, TaggedLogger.DEBUG);
+	Logger sqlLogger = AlcinaLogUtils.getTaggedLogger(getClass(), "sql");
 
-	TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
-			.getLogger(Domain.class, TaggedLogger.METRIC);
+	Logger metricLogger = AlcinaLogUtils.getMetricLogger(getClass());
 
-	private TaggedLogger warnLogger = Registry.impl(TaggedLoggers.class)
-			.getLogger(Domain.class, TaggedLogger.WARN, TaggedLogger.INFO,
-					TaggedLogger.DEBUG);
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	private ThreadLocal<PerThreadTransaction> transactions = new ThreadLocal() {
 	};
@@ -1788,9 +1786,8 @@ public class AlcinaMemCache implements RegistrableService {
 					}
 				}
 				if (debugMetrics && CommonUtils.isNullOrEmpty(query.getIds())) {
-					metricLogger.log(
-							String.format("Query metrics:\n========\n%s\n%s",
-									query, debugMetricBuilder.toString()));
+					metricLogger.debug("Query metrics:\n========\n{}\n{}",
+							query, debugMetricBuilder.toString());
 				}
 				raw = (List) cacheDescriptor.perClass.get(clazz)
 						.getRawValues(ids, cache);
@@ -1912,8 +1909,7 @@ public class AlcinaMemCache implements RegistrableService {
 					if (obj != null) {
 						index(obj, false);
 					} else {
-						warnLogger.message(
-								"Null memcacheObject for index - %s\n",
+						logger.warn("Null memcacheObject for index - {}",
 								HiliLocator.objectLocator(dte));
 					}
 				}
@@ -1951,8 +1947,7 @@ public class AlcinaMemCache implements RegistrableService {
 						ensureModificationChecker(memCacheObj);
 						index(memCacheObj, true);
 					} else {
-						warnLogger.message(
-								"Null memcacheObject for index - %s\n",
+						logger.warn("Null memcacheObject for index - {}",
 								HiliLocator.objectLocator(dte));
 					}
 				}
@@ -2144,8 +2139,8 @@ public class AlcinaMemCache implements RegistrableService {
 									.get(propertyDescriptorFetchTypes
 											.get(pdOperator.pd), id);
 							if (target == null) {
-								warnLogger.message(
-										"later-lookup -- missing target: %s, %s for  %s.%s #%s\n",
+								logger.warn(
+										"later-lookup -- missing target: {}, {} for  {}.{} #{}",
 										propertyDescriptorFetchTypes
 												.get(pdOperator.pd),
 										id, item.source.getClass(),
@@ -2707,7 +2702,7 @@ public class AlcinaMemCache implements RegistrableService {
 					int eIdx = rs.getInt(idx);
 					Object[] enumConstants = type.getEnumConstants();
 					if (eIdx >= enumConstants.length) {
-						warnLogger.message("Invalid enum index : %s:%s\n",
+						logger.warn("Invalid enum index : {}:{}",
 								type.getSimpleName(), eIdx);
 						return null;
 					}
@@ -2720,7 +2715,7 @@ public class AlcinaMemCache implements RegistrableService {
 					Enum enumValue = CommonUtils
 							.getEnumValueOrNull((Class) type, enumString);
 					if (enumValue == null) {
-						warnLogger.message("Invalid enum value : %s:%s\n",
+						logger.warn("Invalid enum value : {}:{}",
 								type.getSimpleName(), enumString);
 						return null;
 					}
@@ -2779,7 +2774,7 @@ public class AlcinaMemCache implements RegistrableService {
 					if (CommonUtils.isNotNullOrEmpty(sqlFilter)) {
 						sql += String.format(" where %s", sqlFilter);
 					}
-					sqlLogger.log(sql);
+					sqlLogger.debug(sql);
 					rs = stmt.executeQuery(sql);
 				}
 				return rs;
