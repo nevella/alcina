@@ -17,6 +17,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +66,7 @@ import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.TestPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
+import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
@@ -242,6 +244,10 @@ public abstract class DevHelper {
 
 	public void initLightweightServices() {
 		AppPersistenceBase.setTest();
+		AlcinaServerConfig config = new AlcinaServerConfig();
+		config.setStartDate(new Date());
+		Registry.registerSingleton(AlcinaServerConfig.class, config);
+		registerNames(config);
 		initDataFolder();
 		Registry.get().registerBootstrapServices(ObjectPersistenceHelper.get());
 		scanRegistry();
@@ -472,6 +478,8 @@ public abstract class DevHelper {
 		});
 		PermissionsManager.get().setUser(user);
 	}
+
+	protected abstract void registerNames(AlcinaServerConfig config);
 
 	public static class ConsolePrompter implements StringPrompter {
 		@Override
