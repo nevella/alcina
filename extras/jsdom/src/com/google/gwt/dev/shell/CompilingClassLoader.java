@@ -945,10 +945,9 @@ public final class CompilingClassLoader extends ClassLoader
 				}
 				return synthesizeDispId(dispClassInfo.getClassId(), memberId);
 			}
-			logger.log(TreeLogger.ERROR,
-					"Class '" + className + "' in JSNI reference '"
-							+ jsniMemberRef
-							+ "' could not be found; expect subsequent failures",
+			logger.log(TreeLogger.ERROR, "Class '" + className
+					+ "' in JSNI reference '" + jsniMemberRef
+					+ "' could not be found; expect subsequent failures",
 					new ClassNotFoundException(className));
 			return -1;
 		}
