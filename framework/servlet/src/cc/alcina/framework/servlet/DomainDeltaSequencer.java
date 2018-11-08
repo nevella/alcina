@@ -114,7 +114,8 @@ public class DomainDeltaSequencer {
 		this.asGwtStreams = threadRpcRequest != null && asGwtStreams;
 		response.setRequest(request);
 		this.incomingSignatures = clientDeltaSignatures == null
-				? new ArrayList<String>() : clientDeltaSignatures;
+				? new ArrayList<String>()
+				: clientDeltaSignatures;
 		for (String sig : this.incomingSignatures) {
 			lookup.addSignature(sig);
 		}
@@ -188,7 +189,7 @@ public class DomainDeltaSequencer {
 		String metadataString = new AlcinaBeanSerializerS().serialize(metadata);
 		if (asGwtStreams) {
 			if (signature.provideRequiresHash()) {
-				String contentSha1 = new EncryptionUtils().SHA1(trancheString);
+				String contentSha1 = EncryptionUtils.get().SHA1(trancheString);
 				signature.setContentHash(contentSha1);
 				signature.setContentLength(trancheString.length());
 				if (incomingSignatures.contains(signature.toString())) {

@@ -29,11 +29,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -96,8 +94,6 @@ import cc.alcina.framework.entity.util.CachingConcurrentMap;
  */
 public class XmlUtils {
 	private static boolean useJAXP;
-
-	private static Map<String, Transformer> transformerMap = new ConcurrentHashMap<String, Transformer>();
 
 	public static boolean noTransformCaching;
 

@@ -41,6 +41,11 @@ import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESedeKeySpec;
 
+import org.apache.commons.pool2.BasePooledObjectFactory;
+import org.apache.commons.pool2.PooledObject;
+import org.apache.commons.pool2.impl.DefaultPooledObject;
+import org.apache.commons.pool2.impl.GenericObjectPool;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -55,10 +60,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class EncryptionUtils {
-	/**
-	 * Don't use for SHA1
-	 * 
-	 */
 	public static EncryptionUtils get() {
 		EncryptionUtils singleton = Registry
 				.checkSingleton(EncryptionUtils.class);
@@ -158,7 +159,8 @@ public class EncryptionUtils {
 
 	private PublicKey publicKey;
 
-	private MessageDigest sha1Digest;
+	private GenericObjectPool<MessageDigest> sha1DigestPool = new GenericObjectPool<MessageDigest>(
+			new MessageDigestFactory());
 
 	// will decrypt then gunzip
 	public byte[] asymDecryptLarge(byte[] source) {
@@ -332,14 +334,17 @@ public class EncryptionUtils {
 	}
 
 	public String SHA1(String text) {
+		MessageDigest md = null;
 		try {
-			MessageDigest md = ensureSha1Digest();
+			md = sha1DigestPool.borrowObject();
 			byte[] sha1hash = new byte[32];
 			md.update(text.getBytes("utf-8"), 0, text.length());
 			sha1hash = md.digest();
 			return convertToHex(sha1hash);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		} finally {
+			sha1DigestPool.returnObject(md);
 		}
 	}
 
@@ -361,13 +366,6 @@ public class EncryptionUtils {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	private MessageDigest ensureSha1Digest() throws Exception {
-		if (sha1Digest == null) {
-			sha1Digest = MessageDigest.getInstance("SHA1");
-		}
-		return sha1Digest;
 	}
 
 	private Key getSymmetricKey(byte[] encodedInfo) {
@@ -409,5 +407,18 @@ public class EncryptionUtils {
 		gzos.flush();
 		gzos.close();
 		return baos.toByteArray();
+	}
+
+	private class MessageDigestFactory
+			extends BasePooledObjectFactory<MessageDigest> {
+		@Override
+		public MessageDigest create() throws Exception {
+			return MessageDigest.getInstance("SHA1");
+		}
+
+		@Override
+		public PooledObject<MessageDigest> wrap(MessageDigest messageDigest) {
+			return new DefaultPooledObject<MessageDigest>(messageDigest);
+		}
 	}
 }
