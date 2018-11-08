@@ -368,6 +368,14 @@ public class ResourceUtilities {
 		return readClassPathResourceAsString(clazz, path);
 	}
 
+	public static String read(File file) {
+		try {
+			return readFileToString(file);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public static String read(String path) {
 		try {
 			return readFileToString(path);
@@ -691,6 +699,14 @@ public class ResourceUtilities {
 	public static void
 			setClientWithJvmProperties(boolean clientWithJvmProperties) {
 		ResourceUtilities.clientWithJvmProperties = clientWithJvmProperties;
+	}
+
+	public static void write(String content, File file) {
+		try {
+			writeStringToFile(content, file);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public static void write(String content, String path) {

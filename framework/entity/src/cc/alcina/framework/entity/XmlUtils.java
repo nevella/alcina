@@ -48,6 +48,10 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.commons.pool2.BasePooledObjectFactory;
+import org.apache.commons.pool2.PooledObject;
+import org.apache.commons.pool2.impl.DefaultPooledObject;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.xerces.parsers.DOMParser;
 import org.w3c.dom.Attr;
 import org.w3c.dom.DOMConfiguration;
@@ -77,12 +81,14 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
+import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
 /**
  *
@@ -121,6 +127,11 @@ public class XmlUtils {
 
 	public static final transient String CONTEXT_IGNORE_EMPTY_ANCHORS = XmlUtils.class
 			.getName() + ".CONTEXT_IGNORE_EMPTY_ANCHORS";
+
+	private static final String TRANSFORMER_CACHE_MARKER_NULL = "TRANSFORMER_CACHE_MARKER_NULL";
+
+	private static CachingMap<String, TransformerPool> transformersPool = new CachingConcurrentMap<>(
+			key -> new TransformerPool(), 10);
 
 	public static List<Node> allChildren(Node node) {
 		Stack<Node> nodes = new Stack<Node>();
@@ -618,12 +629,9 @@ public class XmlUtils {
 
 	public static boolean hasOnlyWhitespaceChildren(Element elt) {
 		return !nodeListToList(elt.getChildNodes()).stream()
-				.anyMatch(
-						n -> n.getNodeType() != Node.TEXT_NODE
-								|| SEUtilities
-										.normalizeWhitespaceAndTrim(
-												n.getTextContent())
-										.length() > 0);
+				.anyMatch(n -> n.getNodeType() != Node.TEXT_NODE || SEUtilities
+						.normalizeWhitespaceAndTrim(n.getTextContent())
+						.length() > 0);
 	}
 
 	public static void insertAfter(Node newNode, Node insertAfter) {
@@ -1380,24 +1388,24 @@ public class XmlUtils {
 	private static void transformDoc(Source xmlSource, Source xsltSource,
 			StreamResult sr, String cacheMarker,
 			TransformerFactoryConfigurator configurator) throws Exception {
-		Transformer trans = null;
-		if (cacheMarker == null || !transformerMap.containsKey(cacheMarker)
-				|| noTransformCaching) {
-			TransformerFactory transFact = TransformerFactory.newInstance();
-			if (configurator != null) {
-				configurator.configure(transFact);
-			}
-			trans = xsltSource == null ? transFact.newTransformer()
-					: transFact.newTransformer(xsltSource);
-			if (cacheMarker != null) {
-				transformerMap.put(cacheMarker, trans);
-			}
-		} else {
-			trans = transformerMap.get(cacheMarker);
+		TransformerPool pool = null;
+		if (cacheMarker == null) {
+			cacheMarker = TRANSFORMER_CACHE_MARKER_NULL;
 		}
-		// TODO - something a little better...
-		synchronized (trans) {
-			trans.transform(xmlSource, sr);
+		if (noTransformCaching
+				&& cacheMarker != TRANSFORMER_CACHE_MARKER_NULL) {
+			pool = new TransformerPool();
+		} else {
+			pool = transformersPool.get(cacheMarker);
+		}
+		Transformer transformer = null;
+		try {
+			transformer = pool.borrow(xsltSource, configurator);
+			transformer.transform(xmlSource, sr);
+		} finally {
+			if (transformer != null) {
+				pool.returnObject(transformer);
+			}
 		}
 	}
 
@@ -1421,6 +1429,7 @@ public class XmlUtils {
 
 		boolean isBlock(XmlNode node);
 
+		@Override
 		default boolean test(XmlNode node) {
 			return isBlock(node);
 		}
@@ -1692,10 +1701,61 @@ public class XmlUtils {
 		}
 	}
 
+	static class TransformerPool {
+		private GenericObjectPool<Transformer> objectPool;
+
+		private TransformerObjectFactory factory;
+
+		private Source xsltSource;
+
+		private TransformerFactoryConfigurator configurator;
+
+		public TransformerPool() {
+			factory = new TransformerObjectFactory();
+			objectPool = new GenericObjectPool<Transformer>(factory);
+			objectPool.setMaxTotal(10);
+		}
+
+		public void returnObject(Transformer transformer) {
+			objectPool.returnObject(transformer);
+		}
+
+		synchronized Transformer borrow(Source xsltSource,
+				TransformerFactoryConfigurator configurator) {
+			this.xsltSource = xsltSource;
+			this.configurator = configurator;
+			try {
+				return objectPool.borrowObject();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		class TransformerObjectFactory
+				extends BasePooledObjectFactory<Transformer> {
+			@Override
+			public Transformer create() throws Exception {
+				TransformerFactory transformerFactory = TransformerFactory
+						.newInstance();
+				if (configurator != null) {
+					configurator.configure(transformerFactory);
+				}
+				return xsltSource == null ? transformerFactory.newTransformer()
+						: transformerFactory.newTransformer(xsltSource);
+			}
+
+			@Override
+			public PooledObject<Transformer> wrap(Transformer transformer) {
+				return new DefaultPooledObject<Transformer>(transformer);
+			}
+		}
+	}
+
 	static class XmlErrHandler implements ErrorHandler {
 		/**
 		 * @see org.xml.sax.ErrorHandler#error(org.xml.sax.SAXParseException)
 		 */
+		@Override
 		public void error(SAXParseException exception) throws SAXException {
 			log(exception);
 		}
@@ -1703,6 +1763,7 @@ public class XmlUtils {
 		/**
 		 * @see org.xml.sax.ErrorHandler#fatalError(org.xml.sax.SAXParseException)
 		 */
+		@Override
 		public void fatalError(SAXParseException exception)
 				throws SAXException {
 			log(exception);
@@ -1711,6 +1772,7 @@ public class XmlUtils {
 		/**
 		 * @see org.xml.sax.ErrorHandler#warning(org.xml.sax.SAXParseException)
 		 */
+		@Override
 		public void warning(SAXParseException exception) throws SAXException {
 			log(exception);
 		}
