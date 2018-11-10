@@ -10,19 +10,23 @@ import cc.alcina.framework.entity.ResourceUtilities;
 public class FsStringCache {
 	private File root;
 
-	private ThrowingFunction<String, String> pathToContent;
+	private ThrowingFunction<String, String> contentMapper;
 
 	public FsStringCache(File root,
-			ThrowingFunction<String, String> pathToContent) {
+			ThrowingFunction<String, String> contentMapper) {
 		this.root = root;
-		this.pathToContent = pathToContent;
+		this.contentMapper = contentMapper;
+	}
+
+	public String get(String path) {
+		return get(path, path);
 	}
 
 	public String get(String path, String content) {
 		File cacheFile = getCacheFile(path);
 		if (!cacheFile.exists()) {
 			try {
-				String value = pathToContent.apply(content);
+				String value = contentMapper.apply(content);
 				ResourceUtilities.write(value, cacheFile);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
