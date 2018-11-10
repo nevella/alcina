@@ -261,7 +261,7 @@ public abstract class DevHelper {
 		initCustomServicesFirstHalf();
 		setupJobsToSysout();
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
-		XmlUtils.noTransformCaching = true;
+		XmlUtils.noTransformerCaching = true;
 		EntityLayerObjects.get().setPersistentLogger(getTestLogger());
 		AlcinaTopics.notifyDevWarningListenerDelta(devWarningListener, true);
 		Registry.registerSingleton(TimerWrapperProvider.class,

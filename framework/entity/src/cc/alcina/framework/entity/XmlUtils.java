@@ -95,7 +95,7 @@ import cc.alcina.framework.entity.util.CachingConcurrentMap;
 public class XmlUtils {
 	private static boolean useJAXP;
 
-	public static boolean noTransformCaching;
+	public static boolean noTransformerCaching;
 
 	private static DocumentBuilder db;
 
@@ -1388,7 +1388,7 @@ public class XmlUtils {
 		if (cacheMarker == null) {
 			cacheMarker = TRANSFORMER_CACHE_MARKER_NULL;
 		}
-		if (noTransformCaching
+		if (noTransformerCaching
 				&& cacheMarker != TRANSFORMER_CACHE_MARKER_NULL) {
 			pool = new TransformerPool();
 		} else {
