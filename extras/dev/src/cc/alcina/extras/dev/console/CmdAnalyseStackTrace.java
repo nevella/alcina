@@ -25,7 +25,7 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 			return true;
 		}
 		return joined.matches(
-				"(?is)(.*)(\\d+:)?.*((parking to wait for .*a|Waiting for lock: className:) "
+				"(?is).*((parking to wait for .*a|Waiting for lock: className:) "
 						+ "(java.util.concurrent.ForkJoinPool|"
 						+ "java.lang.ref.Reference.Lock|"
 						+ "java.lang.ref.ReferenceQueue.Lock|"

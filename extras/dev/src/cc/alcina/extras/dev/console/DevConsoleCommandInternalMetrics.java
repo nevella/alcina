@@ -135,13 +135,15 @@ public class DevConsoleCommandInternalMetrics {
 			String tz = p.valueOrDefault("AEST");
 			p = new FilterArgvParam(argv, "format");
 			Format format = Format.valueOf(p.valueOrDefault("list"));
+			p = new FilterArgvParam(argv, "order");
+			String order = p.valueOrDefault("updatetime");
 			Connection conn = getConn();
 			CommonPersistenceLocal cpl = Registry
 					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistenceExTransaction();
 			String tableName = "internalmetric";
 			String sql = "select %s from internalmetric where id != -1 and updatetime is not null "
-					+ "AND %s order by updatetime desc limit %s";
+					+ "AND %s order by %s desc limit %s";
 			List<String> filters = new ArrayList<>();
 			if (ids.size() > 0) {
 				filters.add(Ax.format("id in %s",
@@ -187,7 +189,7 @@ public class DevConsoleCommandInternalMetrics {
 			}
 			sql = Ax.format(sql, fields,
 					filters.stream().collect(Collectors.joining(" AND ")),
-					limit);
+					order, limit);
 			PreparedStatement ps = conn.prepareStatement(sql);
 			System.out.println(console.breakAndPad(1, 80, sql, 0));
 			switch (format) {
