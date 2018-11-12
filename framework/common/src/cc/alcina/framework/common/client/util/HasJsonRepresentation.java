@@ -86,7 +86,8 @@ public interface HasJsonRepresentation {
 
 	default JSONObject fieldMapping(List<String> ignoreFields) {
 		try {
-			Field[] fields = new GraphProjection().getFieldsForClass(this);
+			List<Field> fields = new GraphProjection()
+					.getFieldsForClass(this.getClass());
 			JSONObject jso = new JSONObject();
 			Object templateInstance = getClass().newInstance();
 			for (Field field : fields) {

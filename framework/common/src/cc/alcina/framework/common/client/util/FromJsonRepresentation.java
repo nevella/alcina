@@ -52,7 +52,8 @@ public interface FromJsonRepresentation {
 
 	default void fieldMapping(JSONObject jso) {
 		try {
-			Field[] fields = new GraphProjection().getFieldsForClass(this);
+			List<Field> fields = new GraphProjection()
+					.getFieldsForClass(this.getClass());
 			for (Field field : fields) {
 				if (Modifier.isTransient(field.getModifiers())) {
 					continue;

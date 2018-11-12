@@ -1026,9 +1026,9 @@ public class AlcinaMemCache implements RegistrableService {
 	}
 
 	private Field getField(Class clazz, String name) throws Exception {
-		Field[] fields = new GraphProjection().getFieldsForClass(clazz);
-		return Arrays.stream(fields).filter(f -> f.getName().equals(name))
-				.findFirst().orElse(null);
+		List<Field> fields = new GraphProjection().getFieldsForClass(clazz);
+		return fields.stream().filter(f -> f.getName().equals(name)).findFirst()
+				.orElse(null);
 	}
 
 	private Set<Long> getFiltered(final Class clazz, CacheFilter cacheFilter,
@@ -2323,7 +2323,8 @@ public class AlcinaMemCache implements RegistrableService {
 			if (input == null) {
 				return null;
 			}
-			Field[] fields = new GraphProjection().getFieldsForClass(input);
+			List<Field> fields = new GraphProjection()
+					.getFieldsForClass(input.getClass());
 			for (Field field : fields) {
 				if (HasIdAndLocalId.class.isAssignableFrom(field.getType())) {
 					HasIdAndLocalId value = (HasIdAndLocalId) field.get(input);

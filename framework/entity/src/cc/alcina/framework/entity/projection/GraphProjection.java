@@ -378,7 +378,13 @@ public class GraphProjection {
 	Map<Field, PropertyPermissions> perFieldPermission = new LinkedHashMap<Field, PropertyPermissions>(
 			LOOKUP_SIZE);
 
-	Map<Class, Field[]> projectableFields = new HashMap<Class, Field[]>(
+	Map<Class, List<Field>> projectableFields = new HashMap<Class, List<Field>>(
+			LOOKUP_SIZE);
+
+	Map<Class, List<Field>> projectablePrimitiveOrDataFields = new HashMap<Class, List<Field>>(
+			LOOKUP_SIZE);
+
+	Map<Class, List<Field>> projectableNonPrimitiveOrDataFields = new HashMap<Class, List<Field>>(
 			LOOKUP_SIZE);
 
 	Map<String, Set<Field>> perObjectPermissionFields = new HashMap<String, Set<Field>>(
@@ -421,10 +427,10 @@ public class GraphProjection {
 		setFilters(fieldFilter, dataFilter);
 	}
 
-	public Field[] getFieldsForClass(Class clazz) throws Exception {
-		Field[] result = projectableFields.get(clazz);
+	public List<Field> getFieldsForClass(Class clazz) throws Exception {
+		List<Field> result = projectableFields.get(clazz);
 		if (result == null) {
-			List<Field> allFields = new ArrayList<Field>();
+			result = new ArrayList<Field>();
 			Set<Field> dynamicPermissionFields = new HashSet<Field>();
 			Class c = clazz;
 			while (c != Object.class) {
@@ -444,12 +450,13 @@ public class GraphProjection {
 							continue;
 						}
 					}
-					allFields.add(field);
+					result.add(field);
 				}
 				c = c.getSuperclass();
 			}
-			result = (Field[]) allFields.toArray(new Field[allFields.size()]);
 			projectableFields.put(clazz, result);
+			// string for faster lookup, i think (class.hashcode slower?
+			// native?)
 			perObjectPermissionFields.put(clazz.getName(),
 					dynamicPermissionFields);
 			for (Field field : dynamicPermissionFields) {
@@ -458,11 +465,6 @@ public class GraphProjection {
 			}
 		}
 		return result;
-	}
-
-	public Field[] getFieldsForClass(Object projected) throws Exception {
-		Class<? extends Object> clazz = projected.getClass();
-		return getFieldsForClass(clazz);
 	}
 
 	/**
@@ -639,9 +641,12 @@ public class GraphProjection {
 		if (source instanceof MemCacheProxy) {
 			((MemCacheProxy) source).beforeProjection();
 		}
-		Field[] fields = getFieldsForClass(projected);
+		List<Field> fields = getPrimitiveOrDataFieldsForClass(
+				projected.getClass());
 		Set<Field> checkFields = perObjectPermissionFields
 				.get(projected.getClass().getName());
+		// primitive/data before non - to ensure recursively reached collections
+		// are ok
 		for (Field field : fields) {
 			if (checkFields.contains(field)) {
 				if (!permitField(field, source)) {
@@ -663,10 +668,20 @@ public class GraphProjection {
 							(T) new Date(((Timestamp) value).getTime()));
 					continue;
 				}
-				if (isPrimitiveOrDataClass(fc)) {
-					field.set(projected, value);
+				field.set(projected, value);
+			}
+		}
+		fields = getNonPrimitiveOrDataFieldsForClass(projected.getClass());
+		for (Field field : fields) {
+			if (checkFields.contains(field)) {
+				if (!permitField(field, source)) {
 					continue;
 				}
+			}
+			Object value = field.get(source);
+			if (value == null) {
+				field.set(projected, null);
+			} else {
 				if (replaceMap != null && value instanceof HasIdAndLocalId
 						&& replaceMap.containsKey(value)) {
 					value = (T) replaceMap.get(value);
@@ -808,6 +823,30 @@ public class GraphProjection {
 					annotation == null ? null : annotation.read());
 		}
 		return perClassReadPermission.get(sourceClass);
+	}
+
+	private List<Field> getNonPrimitiveOrDataFieldsForClass(Class clazz)
+			throws Exception {
+		List<Field> result = projectableNonPrimitiveOrDataFields.get(clazz);
+		if (result == null) {
+			result = getFieldsForClass(clazz).stream()
+					.filter(f -> !isPrimitiveOrDataClass(f.getType()))
+					.collect(Collectors.toList());
+			projectableNonPrimitiveOrDataFields.put(clazz, result);
+		}
+		return result;
+	}
+
+	private List<Field> getPrimitiveOrDataFieldsForClass(Class clazz)
+			throws Exception {
+		List<Field> result = projectablePrimitiveOrDataFields.get(clazz);
+		if (result == null) {
+			result = getFieldsForClass(clazz).stream()
+					.filter(f -> isPrimitiveOrDataClass(f.getType()))
+					.collect(Collectors.toList());
+			projectablePrimitiveOrDataFields.put(clazz, result);
+		}
+		return result;
 	}
 
 	private boolean permitField(Field field, Object source) throws Exception {

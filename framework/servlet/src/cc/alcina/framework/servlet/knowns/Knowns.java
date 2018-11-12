@@ -109,7 +109,8 @@ public abstract class Knowns {
 				KnownRenderableNode renderableNode = renderableNodes.get(node);
 				StringMap properties = StringMap
 						.fromPropertyString(persistent.getProperties());
-				Field[] fields = graphProjection.getFieldsForClass(node);
+				List<Field> fields = graphProjection
+						.getFieldsForClass(node.getClass());
 				for (Field field : fields) {
 					Type type = field.getGenericType();
 					ValueType valueType = getValueType(type);
@@ -275,7 +276,8 @@ public abstract class Knowns {
 					persistent = writeable.get(persistent);
 				}
 				StringMap properties = new StringMap();
-				Field[] fields = graphProjection.getFieldsForClass(node);
+				List<Field> fields = graphProjection
+						.getFieldsForClass(node.getClass());
 				for (Field field : fields) {
 					if (Modifier.isTransient(field.getModifiers())) {
 						continue;

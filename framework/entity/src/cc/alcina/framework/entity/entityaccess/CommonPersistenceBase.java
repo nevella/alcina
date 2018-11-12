@@ -1620,7 +1620,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						false,
 						Arrays.asList(new String[] { "primaryGroup",
 								"secondaryGroups", "creationUser",
-								"lastModificationUser" }));
+								"lastModificationUser", "contact" }));
 				impl.setUser(null);
 				ClientInstance instance = new EntityUtils()
 						.detachedCloneIgnorePermissions(impl, null);
