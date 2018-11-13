@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -170,6 +171,9 @@ public class AlcinaMemCache implements RegistrableService {
 
 	public static final String CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS = AlcinaMemCache.class
 			.getName() + ".CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS";
+
+	public static final String CONTEXT_WRITEABLE_PROJECTOR = AlcinaMemCache.class
+			.getName() + ".CONTEXT_WRITEABLE_PROJECTOR";
 
 	// while debugging, prevent reentrant locks
 	public static final String CONTEXT_NO_LOCKS = AlcinaMemCache.class.getName()
@@ -2575,7 +2579,13 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 
 		private <V extends HasIdAndLocalId> V project(V v) {
-			return GraphProjections.defaultProjections().project(v);
+			if (LooseContext.has(CONTEXT_WRITEABLE_PROJECTOR)) {
+				Function<V, V> projector = LooseContext
+						.get(CONTEXT_WRITEABLE_PROJECTOR);
+				return projector.apply(v);
+			} else {
+				return GraphProjections.defaultProjections().project(v);
+			}
 		}
 	}
 
