@@ -8,7 +8,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.ObjectIdGenerator;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators.StringIdGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyName;
@@ -180,7 +179,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		// Should be usable for generic Opaque String ids?
 		@Override
 		public boolean canUseFor(ObjectIdGenerator<?> gen) {
-			return (gen instanceof StringIdGenerator);
+			return true;
 		}
 
 		// Can just return base instance since this is essentially scopeless
