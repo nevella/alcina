@@ -40,17 +40,21 @@ public abstract class KnownStatusRuleHandler {
 					break;
 				}
 			}
-			if (lastOkDate != null) {
-				status = KnownTagAlcina.Status_Ok;
-				if (System.currentTimeMillis()
-						- lastOkDate.getTime() > rule.warnValue()
-								* TimeConstants.ONE_HOUR_MS) {
-					status = KnownTagAlcina.Status_Warn;
-				}
-				if (System.currentTimeMillis()
-						- lastOkDate.getTime() > rule.errorValue()
-								* TimeConstants.ONE_HOUR_MS) {
-					status = KnownTagAlcina.Status_Error;
+			if (status == KnownTagAlcina.Status_Error) {
+				// error is error. ignore last ok
+			} else {
+				if (lastOkDate != null) {
+					status = KnownTagAlcina.Status_Ok;
+					if (System.currentTimeMillis()
+							- lastOkDate.getTime() > rule.warnValue()
+									* TimeConstants.ONE_HOUR_MS) {
+						status = KnownTagAlcina.Status_Warn;
+					}
+					if (System.currentTimeMillis()
+							- lastOkDate.getTime() > rule.errorValue()
+									* TimeConstants.ONE_HOUR_MS) {
+						status = KnownTagAlcina.Status_Error;
+					}
 				}
 			}
 			if (status != null) {

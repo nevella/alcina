@@ -217,6 +217,9 @@ public class InternalMetrics {
 							Map<Thread, StackTraceElement[]> allStackTraces = Thread
 									.getAllStackTraces();
 							for (ThreadInfo threadInfo : threadInfos2) {
+								if (threadInfo == null) {
+									continue;
+								}
 								StackTraceElement[] stackTrace = allStackTraces
 										.entrySet().stream()
 										.filter(e -> e.getKey()
