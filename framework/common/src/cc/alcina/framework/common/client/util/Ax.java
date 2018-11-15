@@ -79,6 +79,13 @@ public class Ax {
 		return CommonUtils.last(list);
 	}
 
+	public static boolean matches(String test, String regex) {
+		if (test == null || regex == null) {
+			return false;
+		}
+		return test.matches(regex);
+	}
+
 	public static void newlineDump(Collection collection) {
 		System.out.println(CommonUtils.joinWithNewlines(collection));
 	}
@@ -103,7 +110,8 @@ public class Ax {
 		System.out.println(format(template, args));
 	}
 
-	public static RuntimeException runtimeException(String template, Object... args) {
+	public static RuntimeException runtimeException(String template,
+			Object... args) {
 		return new RuntimeException(format(template, args));
 	}
 

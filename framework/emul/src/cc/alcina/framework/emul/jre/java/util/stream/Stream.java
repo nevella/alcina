@@ -28,6 +28,16 @@ public interface Stream<T> {
 		}
 		return (Stream<R>) new CollectionStream<R>(result);
 	}
+	
+	default <R> Stream<R> flatMap(Function<? super T, ? extends Stream<? extends R>> mapper){
+		Objects.requireNonNull(mapper);
+		List<R> result = new ArrayList<R>();
+		for (Iterator<T> itr = iterator(); itr.hasNext();) {
+			Stream<R> stream = mapper.apply(itr.next());
+			stream.forEach(result::add);
+		}
+		return (Stream<R>) new CollectionStream<R>(result);
+	}
 
 	default <R, A> R collect(Collector<? super T, A, R> collector) {
 		return collector.collect((Stream) this);
