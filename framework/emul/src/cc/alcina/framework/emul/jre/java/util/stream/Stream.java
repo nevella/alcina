@@ -33,7 +33,7 @@ public interface Stream<T> {
 		Objects.requireNonNull(mapper);
 		List<R> result = new ArrayList<R>();
 		for (Iterator<T> itr = iterator(); itr.hasNext();) {
-			Stream<R> stream = mapper.apply(itr.next());
+			Stream<? extends R> stream = mapper.apply(itr.next());
 			stream.forEach(result::add);
 		}
 		return (Stream<R>) new CollectionStream<R>(result);
