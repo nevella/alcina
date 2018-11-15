@@ -7,12 +7,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.PermissionsManagerState;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 
 public abstract class AlcinaChildRunnable implements Runnable {
 	public static <T> void parallelStream(String name, List<T> items,
@@ -58,10 +60,6 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		copyContext.put(key, LooseContext.get(key));
 		return this;
 	}
-	public AlcinaChildRunnable withContext(String key,Object value) {
-		copyContext.put(key, value);
-		return this;
-	}
 
 	public AlcinaChildRunnable logExceptions() {
 		getRunContext().logExceptions = true;
@@ -84,18 +82,26 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		} catch (OutOfMemoryError e) {
 			SEUtilities.threadDump();
 			throw e;
-		} catch (Throwable e) {
+		} catch (Throwable throwable) {
 			if (getRunContext().logExceptions) {
-				e.printStackTrace();
+				throwable.printStackTrace();
+				EntityLayerUtils.persistentLog(
+						LogMessageType.WORKER_THREAD_EXCEPTION,
+						SEUtilities.getFullExceptionMessage(throwable));
 			}
-			if (e instanceof RuntimeException) {
-				throw ((RuntimeException) e);
+			if (throwable instanceof RuntimeException) {
+				throw ((RuntimeException) throwable);
 			}
-			throw new RuntimeException(e);
+			throw new RuntimeException(throwable);
 		} finally {
 			LooseContext.confirmDepth(getRunContext().tLooseContextDepth);
 			LooseContext.pop();
 		}
+	}
+
+	public AlcinaChildRunnable withContext(String key, Object value) {
+		copyContext.put(key, value);
+		return this;
 	}
 
 	protected RunContext getRunContext() {
@@ -106,6 +112,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 
 	public static class AlcinaChildContextRunner extends AlcinaChildRunnable {
 		ThreadLocal<RunContext> contexts = new ThreadLocal<AlcinaChildRunnable.RunContext>() {
+			@Override
 			protected RunContext initialValue() {
 				return new RunContext();
 			}
@@ -132,11 +139,6 @@ public abstract class AlcinaChildRunnable implements Runnable {
 				run();
 				return null;
 			}
-		}
-
-		public AlcinaChildContextRunner copyContext(String key) {
-			super.copyContext(key);
-			return this;
 		}
 
 		public Object callNewThread(Runnable runnable) {
@@ -177,6 +179,12 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		}
 
 		@Override
+		public AlcinaChildContextRunner copyContext(String key) {
+			super.copyContext(key);
+			return this;
+		}
+
+		@Override
 		protected void run0() throws Exception {
 			getRunContext().runnable.run();
 		}
@@ -185,7 +193,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 	class RunContext {
 		private int tLooseContextDepth;
 
-		private boolean logExceptions = false;
+		private boolean logExceptions = true;
 
 		private Runnable runnable;
 	}
