@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
@@ -56,6 +57,10 @@ public abstract class DevRemoterServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse res)
 			throws ServletException, IOException {
 		try {
+			LooseContext.pushWithBoolean(
+					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER, false);
+			LooseContext.set(KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER,
+					true);
 			if (!ResourceUtilities.getBoolean(DevRemoterServlet.class,
 					"enabled")) {
 				throw new Exception("DevRemoterServlet disabled");
@@ -80,6 +85,8 @@ public abstract class DevRemoterServlet extends HttpServlet {
 				throw (ServletException) e;
 			}
 			throw new ServletException(e);
+		} finally {
+			LooseContext.pop();
 		}
 	}
 

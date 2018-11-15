@@ -29,7 +29,6 @@ import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.PostTransactionEntityResolver;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterServlet;
 
@@ -70,6 +69,8 @@ public class DevRemoter {
 		try {
 			LooseContext.pushWithBoolean(
 					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER, false);
+			LooseContext.set(KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER,
+					true);
 			hookParams(methodName, args, params);
 			String address = ResourceUtilities
 					.getBundledString(DevRemoter.class, "address");
