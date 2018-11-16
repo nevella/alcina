@@ -275,7 +275,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			multipart.addBodyPart(messageBodyPart);
 			msg.setContent(multipart);
 		}
-		if (isUseVerp()) {
+		if (isUseVerp() && PublicationContext.get() != null) {
 			String publicationUid = PublicationContext
 					.get().publicationResult.publicationUid;
 			// will be null if non-persistent
@@ -291,7 +291,9 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		Transport transport = session.getTransport("smtp");
 		transport.connect(host, port, userName, password);
 		transport.sendMessage(msg, msg.getAllRecipients());
-		PublicationContext.get().mimeMessageId = msg.getMessageID();
+		if (PublicationContext.get() != null) {
+			PublicationContext.get().mimeMessageId = msg.getMessageID();
+		}
 		transport.close();
 		if (pdfAttachment != null) {
 			deliveryModel.removeAttachment(pdfAttachment);
