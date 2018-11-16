@@ -23,7 +23,6 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,12 +31,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -416,17 +413,6 @@ public class ResourceUtilities {
 		}
 	}
 
-	public static String readerToString(BufferedReader in) throws IOException {
-		StringWriter sw = new StringWriter();
-		char[] cb = new char[4096];
-		int len = -1;
-		while ((len = in.read(cb, 0, 4096)) != -1) {
-			sw.write(cb, 0, len);
-		}
-		in.close();
-		return sw.toString();
-	}
-
 	public static byte[] readFileToByteArray(File f) throws IOException {
 		FileInputStream fis = new FileInputStream(f);
 		return readStreamToByteArray(fis);
@@ -482,7 +468,8 @@ public class ResourceUtilities {
 
 	public static byte[] readStreamToByteArray(InputStream is)
 			throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		int bufLength = is.available() <= 1024 ? 1024 * 64 : is.available();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream(bufLength);
 		writeStreamToStream(is, baos);
 		return baos.toByteArray();
 	}
@@ -494,11 +481,9 @@ public class ResourceUtilities {
 	public static String readStreamToString(InputStream is, String charsetName)
 			throws IOException {
 		try {
+			byte[] bytes = readStreamToByteArray(is);
 			charsetName = charsetName == null ? "UTF-8" : charsetName;
-			BufferedReader in = new BufferedReader(
-					new InputStreamReader(is, charsetName));
-			String s = readerToString(in);
-			return s;
+			return new String(bytes, charsetName);
 		} finally {
 			is.close();
 		}
@@ -748,11 +733,11 @@ public class ResourceUtilities {
 		writeStreamToStream(is, os, false);
 	}
 
-	public static void writeStreamToStream(InputStream is, OutputStream os,
+	public static void writeStreamToStream(InputStream in, OutputStream os,
 			boolean keepOutputOpen) throws IOException {
-		BufferedOutputStream bos = new BufferedOutputStream(os);
-		InputStream in = new BufferedInputStream(is);
-		int bufLength = 8192;
+		OutputStream bos = os instanceof ByteArrayOutputStream ? os
+				: new BufferedOutputStream(os);
+		int bufLength = in.available() <= 1024 ? 1024 * 64 : in.available();
 		byte[] buffer = new byte[bufLength];
 		int result;
 		while ((result = in.read(buffer)) != -1) {
@@ -762,7 +747,7 @@ public class ResourceUtilities {
 		if (!keepOutputOpen) {
 			bos.close();
 		}
-		is.close();
+		in.close();
 	}
 
 	public static void writeStringToFile(String s, File f) throws IOException {
