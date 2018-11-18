@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.cache.Domain;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.UserStory;
@@ -32,8 +32,8 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCacheQuery;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreQuery;
 import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 import cc.alcina.framework.entity.parser.structured.node.XmlNodeHtmlTableBuilder;
@@ -53,7 +53,7 @@ public class UserStories {
 				incoming.getClientInstanceUid());
 		UserStory story = null;
 		if (o_story.isPresent()) {
-			story = AlcinaMemCache.get().find(o_story.get());
+			story = DomainStore.get().find(o_story.get());
 			TransformManager.get().registerDomainObject(story);
 		} else {
 			story = TransformManager.get()
@@ -100,7 +100,7 @@ public class UserStories {
 		Predicate<UserStory> predicate = us -> clientInstanceUid != null
 				? clientInstanceUid.equals(us.getClientInstanceUid())
 				: us.getClientInstanceId() == clientInstance.getId();
-		return new AlcinaMemCacheQuery().filter(predicate)
+		return new DomainStoreQuery().filter(predicate)
 				.list(getImplementation()).stream().findFirst();
 	}
 
@@ -119,7 +119,7 @@ public class UserStories {
 	public void build(long id, String delta) {
 		JsonNodeFactory nodeFactory = JsonNodeFactory.instance;
 		storyNode = nodeFactory.objectNode();
-		UserStory userStory = AlcinaMemCache.get().find(getImplementation(),
+		UserStory userStory = DomainStore.get().find(getImplementation(),
 				id);
 		ClientInstance clientInstance = null;
 		long clientInstanceId = userStory.getClientInstanceId();

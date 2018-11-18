@@ -23,7 +23,7 @@ import org.hibernate.proxy.LazyInitializer;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
@@ -88,9 +88,9 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				Object impl = getCache().get(persistentClass, (Long) id);
 				if (impl == null) {
 					if (useRawMemCache) {
-						if (AlcinaMemCache.get()
+						if (DomainStore.get()
 								.isCachedTransactional(persistentClass)) {
-							impl = (T) AlcinaMemCache.get()
+							impl = (T) DomainStore.get()
 									.findRaw(persistentClass, (Long) id);
 						}
 					}
@@ -127,8 +127,8 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 					return (T) cached;
 				} else {
 					if (useRawMemCache) {
-						if (AlcinaMemCache.get().isCached(valueClass)) {
-							return (T) AlcinaMemCache.get().findRaw(valueClass,
+						if (DomainStore.get().isCached(valueClass)) {
+							return (T) DomainStore.get().findRaw(valueClass,
 									hili.getId());
 						}
 					}

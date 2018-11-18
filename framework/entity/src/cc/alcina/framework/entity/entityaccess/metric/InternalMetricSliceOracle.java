@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
 
 @RegistryLocation(registryPoint = InternalMetricSliceOracle.class, implementationType = ImplementationType.SINGLETON)
@@ -23,7 +23,7 @@ public class InternalMetricSliceOracle {
 	public void beforeSlicePass(ThreadMXBean threadMxBean) {
 		long[] threadIdArray = threadMxBean.findDeadlockedThreads();
 		deadlockedThreadIds = CommonUtils.wrapLongArray(threadIdArray);
-		activeMemcacheLockTimes = AlcinaMemCache.get().instrumentation()
+		activeMemcacheLockTimes = DomainStore.get().instrumentation()
 				.getActiveMemcacheLockTimes();
 	}
 

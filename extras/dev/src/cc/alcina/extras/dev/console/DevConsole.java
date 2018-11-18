@@ -65,7 +65,7 @@ import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdNextCommandCaches;
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.cache.Domain;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;

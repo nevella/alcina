@@ -27,7 +27,7 @@ import java.util.TreeMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.cache.PrivateObjectCache;
+import cc.alcina.framework.common.client.domain.PrivateObjectCache;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
 

@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.RollingDataItem;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCacheQuery;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreQuery;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 
 //TODO - lowpri - formal support for "go back a bit" in transform sequence - probably using transform utc date
@@ -36,7 +36,7 @@ public abstract class RollingData<K extends Comparable, V> {
 				.getCommonPersistenceExTransaction()
 				.getImplementation(RollingDataItem.class);
 		Function<String, K> keyDeserializer = keyDeserializer();
-		List<? extends RollingDataItem> list = new AlcinaMemCacheQuery()
+		List<? extends RollingDataItem> list = new DomainStoreQuery()
 				.filter("typeKey", typeKey).list(rdImplClass);
 		List<K> existingKeys = list.stream().map(RollingDataItem::getMaxKey)
 				.map(k -> keyDeserializer.apply(k))
@@ -59,7 +59,7 @@ public abstract class RollingData<K extends Comparable, V> {
 			}
 			ServletLayerUtils.pushTransformsAsRoot();
 		}
-		list = new AlcinaMemCacheQuery().filter("typeKey", typeKey)
+		list = new DomainStoreQuery().filter("typeKey", typeKey)
 				.list(rdImplClass);
 		TreeMap<K, V> map = new TreeMap<K, V>();
 		Function<String, List<V>> deserializer = deserializer();

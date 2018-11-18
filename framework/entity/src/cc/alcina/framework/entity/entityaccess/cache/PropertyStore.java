@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.collections.PropertyPathFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore.PdOperator;
 import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;

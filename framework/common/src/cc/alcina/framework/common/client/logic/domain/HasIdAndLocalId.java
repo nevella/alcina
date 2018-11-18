@@ -16,8 +16,8 @@ package cc.alcina.framework.common.client.logic.domain;
 import java.util.Comparator;
 import java.util.function.Function;
 
-import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 

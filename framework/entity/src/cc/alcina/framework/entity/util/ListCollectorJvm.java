@@ -13,7 +13,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
-import cc.alcina.framework.common.client.cache.search.ListCollector;
+import cc.alcina.framework.common.client.domain.search.ListCollector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 

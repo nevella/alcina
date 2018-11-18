@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class WrappedObjectPersistence {
@@ -121,7 +121,7 @@ public class WrappedObjectPersistence {
 					if (wrappedObject == null) {
 						if (LooseContext
 								.is(CONTEXT_IGNORE_MISSING_WRAPPED_OBJECT)) {
-							AlcinaMemCache.LOGGER_WRAPPED_OBJECT_REF_INTEGRITY
+							DomainStore.LOGGER_WRAPPED_OBJECT_REF_INTEGRITY
 									.info("Warning - ref integrity (wrapped object) - missing {}.{} #{}",
 											wrapper.getClass(), pd.getName(),
 											wrapper.getId());

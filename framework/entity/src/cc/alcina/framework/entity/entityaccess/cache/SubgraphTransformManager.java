@@ -229,7 +229,7 @@ public class SubgraphTransformManager extends TransformManager {
 					id = hiliLocator.id;
 				}
 				if (id != 0) {
-					t = AlcinaMemCache.get().find(c, id);
+					t = DomainStore.get().find(c, id);
 					mapObject(t);
 				}
 			}
@@ -255,7 +255,7 @@ public class SubgraphTransformManager extends TransformManager {
 		@Override
 		public <T extends HasIdAndLocalId> void
 				loadObject(Class<? extends T> clazz, long id, long localId) {
-			store.mapObject(AlcinaMemCache.get().find(clazz, id));
+			store.mapObject(DomainStore.get().find(clazz, id));
 		}
 
 		@Override

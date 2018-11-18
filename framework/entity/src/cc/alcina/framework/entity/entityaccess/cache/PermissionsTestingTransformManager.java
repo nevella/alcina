@@ -37,7 +37,7 @@ public class PermissionsTestingTransformManager
 	@Override
 	public <T extends HasIdAndLocalId> void loadObject(Class<? extends T> c,
 			long id, long localId) {
-		T t = AlcinaMemCache.get().find(c, id);
+		T t = DomainStore.get().find(c, id);
 		store.mapObject(t);
 	}
 

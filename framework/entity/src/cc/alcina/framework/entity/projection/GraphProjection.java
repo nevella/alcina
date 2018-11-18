@@ -69,7 +69,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublishe
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
+import cc.alcina.framework.entity.entityaccess.cache.DomainProxy;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter.AllFieldsFilter;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
@@ -600,8 +600,8 @@ public class GraphProjection {
 		T projected = sourceClass.isArray()
 				? (T) Array.newInstance(sourceClass.getComponentType(),
 						Array.getLength(source))
-				: (T) ((source instanceof MemCacheProxy)
-						? ((MemCacheProxy) source).nonProxy()
+				: (T) ((source instanceof DomainProxy)
+						? ((DomainProxy) source).nonProxy()
 						: newInstance(sourceClass, context));
 		boolean reachableBySinglePath = reachableBySinglePath(sourceClass);
 		if ((context == null || !reachableBySinglePath) && checkReachable) {
@@ -638,8 +638,8 @@ public class GraphProjection {
 		if (context != null && context.depth >= maxDepth) {
 			return projected;
 		}
-		if (source instanceof MemCacheProxy) {
-			((MemCacheProxy) source).beforeProjection();
+		if (source instanceof DomainProxy) {
+			((DomainProxy) source).beforeProjection();
 		}
 		List<Field> fields = getPrimitiveOrDataFieldsForClass(
 				projected.getClass());

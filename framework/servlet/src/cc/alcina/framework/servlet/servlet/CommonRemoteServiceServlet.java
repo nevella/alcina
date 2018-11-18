@@ -122,7 +122,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.ServerValidatorHandler;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetricData;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
@@ -1252,7 +1252,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			implements Predicate<InternalMetricData> {
 		@Override
 		public boolean test(InternalMetricData imd) {
-			return AlcinaMemCache.get().instrumentation()
+			return DomainStore.get().instrumentation()
 					.isLockedByThread(((InternalMetricData) imd).thread);
 		}
 	}

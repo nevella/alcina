@@ -37,7 +37,7 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 
@@ -206,7 +206,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		try {
 			// this prevents a deadlock where we might have a waiting write
 			// preventing us from getting the lock
-			LooseContext.pushWithTrue(AlcinaMemCache.CONTEXT_NO_LOCKS);
+			LooseContext.pushWithTrue(DomainStore.CONTEXT_NO_LOCKS);
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			PermissibleFieldFilter
 					.setDisabledPerThreadPerObjectPermissions(true);

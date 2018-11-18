@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
-import cc.alcina.framework.common.client.cache.CacheFilter;
+import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.search.EnumMultipleCriterion;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
@@ -82,13 +82,13 @@ public class BaseMultipleEnumCriterionPack {
 	public interface BaseMultipleEnumCriterionHandler<T, E extends Enum, SC extends EnumMultipleCriterion<E>> {
 		public boolean test(T t, Set<E> value);
 
-		default CacheFilter getFilter0(SC sc) {
+		default DomainFilter getFilter0(SC sc) {
 			Set<E> values = sc.getValue();
 			if (values.isEmpty()) {
 				return null;
 			}
 			Predicate<T> pred = t -> test(t, values);
-			return new CacheFilter(pred).invertIf(sc
+			return new DomainFilter(pred).invertIf(sc
 					.getOperator() == StandardSearchOperator.DOES_NOT_CONTAIN);
 		}
 	}

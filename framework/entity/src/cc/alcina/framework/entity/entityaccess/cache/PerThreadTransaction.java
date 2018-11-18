@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.cache.CacheListener;
+import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -24,7 +24,7 @@ public class PerThreadTransaction {
 		@Override
 		public void domainTransform(DomainTransformEvent evt)
 				throws DomainTransformException {
-			if (!AlcinaMemCache.get()
+			if (!DomainStore.get()
 					.isCachedTransactional(evt.getObjectClass())) {
 				return;
 			}
@@ -53,7 +53,7 @@ public class PerThreadTransaction {
 	}
 
 	public <V extends HasIdAndLocalId> V
-			getListenerValue(CacheListener listener, V value, Object[] path) {
+			getListenerValue(DomainListener listener, V value, Object[] path) {
 		Collection<? extends HasIdAndLocalId> perClassTransactional = (Collection<? extends HasIdAndLocalId>) transactionTransformManager.modified
 				.getCollection(listener.getListenedClass());
 		// FIXME - n^2 performance - use a per-listener threaded projection

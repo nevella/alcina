@@ -24,7 +24,7 @@ import javax.persistence.Query;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.MemcacheJoinHandler;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore.MemcacheJoinHandler;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;

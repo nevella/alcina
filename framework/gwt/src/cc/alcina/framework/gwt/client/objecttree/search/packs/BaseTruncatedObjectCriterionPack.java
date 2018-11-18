@@ -4,8 +4,8 @@ import java.util.Set;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.cache.CacheFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
@@ -17,12 +17,12 @@ public class BaseTruncatedObjectCriterionPack {
 	public interface BaseTruncatedObjectCriterionHandler<I extends HasId, O extends HasIdAndLocalId> {
 		Function<I, O> getLinkedObjectMapper();
 
-		default CacheFilter getFilter0(TruncatedObjectCriterion<O> sc) {
+		default DomainFilter getFilter0(TruncatedObjectCriterion<O> sc) {
 			long id = sc.getId();
 			if (id == 0) {
 				return null;
 			}
-			return new CacheFilter(new CollectionFilter<I>() {
+			return new DomainFilter(new CollectionFilter<I>() {
 				@Override
 				public boolean allow(I i) {
 					if (i == null) {
@@ -39,12 +39,12 @@ public class BaseTruncatedObjectCriterionPack {
 	public interface BaseTruncatedObjectMultipleCriterionHandler<I extends HasId, O extends HasIdAndLocalId> {
 		Function<I, Set<O>> getLinkedObjectMapper();
 
-		default CacheFilter getFilter0(TruncatedObjectCriterion<O> sc) {
+		default DomainFilter getFilter0(TruncatedObjectCriterion<O> sc) {
 			long id = sc.getId();
 			if (id == 0) {
 				return null;
 			}
-			return new CacheFilter(new CollectionFilter<I>() {
+			return new DomainFilter(new CollectionFilter<I>() {
 				@Override
 				public boolean allow(I i) {
 					if (i == null) {

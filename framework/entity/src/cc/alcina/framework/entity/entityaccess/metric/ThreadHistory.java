@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.entityaccess.cache.DomainCacheLockState;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLockState;
 
 public class ThreadHistory {
 	public String note;
@@ -23,7 +23,7 @@ public class ThreadHistory {
 
 	public void addElement(ThreadInfo info, StackTraceElement[] stackTrace,
 			long activeMemcacheLockTime, long memcacheWaitTime,
-			DomainCacheLockState memcacheState, int maxStackLines,
+			DomainStoreLockState memcacheState, int maxStackLines,
 			int maxFrames) {
 		ThreadHistoryElement element = new ThreadHistoryElement();
 		elements.add(element);

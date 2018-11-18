@@ -31,7 +31,7 @@ import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersisten
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServletSupport;
@@ -231,11 +231,11 @@ public abstract class DevRemoterServlet extends HttpServlet {
 		public void onDomainTransformRequestPersistence(
 				DomainTransformPersistenceEvent evt) {
 			try {
-				Method method = AlcinaMemCache.class.getDeclaredMethod(
+				Method method = DomainStore.class.getDeclaredMethod(
 						"postProcess",
 						new Class[] { DomainTransformPersistenceEvent.class });
 				method.setAccessible(true);
-				method.invoke(AlcinaMemCache.get(), new Object[] { evt });
+				method.invoke(DomainStore.get(), new Object[] { evt });
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

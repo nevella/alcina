@@ -12,7 +12,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.cache.CacheDescriptor.PreProvideTask;
+import cc.alcina.framework.common.client.domain.DomainDescriptor.PreProvideTask;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -26,7 +26,7 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 
 	public static void metric(String key, boolean end) {
 		if (end) {
-			MetricLogging.get().end(key, AlcinaMemCache.get().metricLogger);
+			MetricLogging.get().end(key, DomainStore.get().metricLogger);
 		} else {
 			MetricLogging.get().start(key);
 		}
@@ -61,7 +61,7 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 	@Override
 	public void run(Class clazz, Collection<T> objects, boolean topLevel)
 			throws Exception {
-		AlcinaMemCache cache = AlcinaMemCache.get();
+		DomainStore store = DomainStore.get();
 		if (clazz != this.clazz) {
 			return;
 		}
@@ -75,10 +75,10 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 				// requireLoad = requireLazyLoad(objects);
 				// now eviction is happening in write-lock, and this only
 				// happens in read-lock, no need
-				lazyLoad(cache, requireLoad);
-				registerLoaded(cache, requireLoad);
+				lazyLoad(store, requireLoad);
+				registerLoaded(store, requireLoad);
 				if (topLevel) {
-					loadDependents(cache, requireLoad);
+					loadDependents(store, requireLoad);
 				}
 			}
 		}
@@ -90,7 +90,7 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 			return;
 		}
 		Iterator<Entry<Long, Long>> itr = idEvictionAge.entrySet().iterator();
-		EvictionToken evictionToken = new EvictionToken(AlcinaMemCache.get(),
+		EvictionToken evictionToken = new EvictionToken(DomainStore.get(),
 				this);
 		while (idEvictionAge
 				.size() > (minEvictionSize
@@ -112,8 +112,7 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		evictionToken.removeEvicted();
 	}
 
-	private void registerLoaded(AlcinaMemCache alcinaMemCache,
-			List<T> requireLoad) {
+	private void registerLoaded(DomainStore store, List<T> requireLoad) {
 		for (T t : requireLoad) {
 			idEvictionAge.put(t.getId(), System.currentTimeMillis());
 		}
@@ -143,36 +142,36 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		return this;
 	}
 
-	protected abstract void lazyLoad(AlcinaMemCache alcinaMemCache,
-			Collection<T> objects) throws Exception;
+	protected abstract void lazyLoad(DomainStore store, Collection<T> objects)
+			throws Exception;
 
 	protected void lllog(String template, Object... args) {
 		logger.debug(template, args);
 	}
 
-	protected abstract void loadDependents(AlcinaMemCache alcinaMemCache,
+	protected abstract void loadDependents(DomainStore store,
 			List<T> requireLoad) throws Exception;
 
 	protected void log(String template, Object... args) {
-		AlcinaMemCache.get().sqlLogger.debug(template, args);
+		DomainStore.get().sqlLogger.debug(template, args);
 	}
 
 	public static class EvictionToken {
-		public AlcinaMemCache cache;
+		public DomainStore store;
 
 		private LazyLoadProvideTask topLevelTask;
 
 		Multiset<LazyLoadProvideTask, Set<Long>> evicted = new Multiset<>();
 
-		public EvictionToken(AlcinaMemCache alcinaMemCache,
+		public EvictionToken(DomainStore store,
 				LazyLoadProvideTask lazyLoadProvideTask) {
-			this.cache = alcinaMemCache;
+			this.store = store;
 			this.topLevelTask = lazyLoadProvideTask;
 		}
 
 		public <T extends HasIdAndLocalId> T getObject(Long key,
 				Class<T> clazz) {
-			return cache.cache.get(clazz, key);
+			return store.cache.get(clazz, key);
 		}
 
 		public int getTopLevelEvictedCount() {
@@ -193,17 +192,17 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 			topLevelTask.lllog(fb.toString());
 		}
 
-		public void removeFromDomainCache(Set<? extends HasIdAndLocalId> set) {
+		public void removeFromDomainStore(Set<? extends HasIdAndLocalId> set) {
 			if (!set.isEmpty()) {
 				HasIdAndLocalId item0 = set.iterator().next();
 				Class clazz = item0.getClass();
-				int size1 = cache.cache.getMap(clazz).size();
+				int size1 = store.cache.getMap(clazz).size();
 				for (HasIdAndLocalId hili : set) {
-					cache.cache.remove(hili);
+					store.cache.remove(hili);
 				}
-				int size2 = cache.cache.getMap(clazz).size();
+				int size2 = store.cache.getMap(clazz).size();
 				topLevelTask.lllog(
-						"remove from domain cache: %s :: %s => %s (%s)",
+						"remove from domain store: %s :: %s => %s (%s)",
 						clazz.getSimpleName(), size1, size2, size1 - size2);
 			}
 		}

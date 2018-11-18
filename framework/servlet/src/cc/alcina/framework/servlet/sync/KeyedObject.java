@@ -2,7 +2,7 @@ package cc.alcina.framework.servlet.sync;
 
 import java.io.Serializable;
 
-import cc.alcina.framework.common.client.cache.PrivateObjectCache;
+import cc.alcina.framework.common.client.domain.PrivateObjectCache;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
 import cc.alcina.framework.common.client.util.Ax;

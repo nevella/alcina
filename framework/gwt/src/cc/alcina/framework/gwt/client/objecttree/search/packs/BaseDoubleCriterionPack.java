@@ -6,8 +6,8 @@ import java.util.function.Function;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.validator.Validator;
 
-import cc.alcina.framework.common.client.cache.CacheFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.gwittir.validator.DoubleValidator;
 import cc.alcina.framework.common.client.search.DoubleCriterion;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
@@ -19,13 +19,13 @@ public class BaseDoubleCriterionPack {
 		@Override
 		public Double apply(T t);
 
-		default CacheFilter getFilter0(DoubleCriterion sc) {
+		default DomainFilter getFilter0(DoubleCriterion sc) {
 			Double value = sc.getDouble();
 			if (value == null) {
 				return null;
 			}
 			double p_value = value;
-			return new CacheFilter(new CollectionFilter<T>() {
+			return new DomainFilter(new CollectionFilter<T>() {
 				@Override
 				public boolean allow(T o) {
 					Double d = apply(o);

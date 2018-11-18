@@ -40,7 +40,7 @@ public class TransactionalSubgraphTransformManager
 			throws DomainTransformException {
 		if (event.getTransformType() == TransformType.CREATE_OBJECT) {
 			// if an object is newly created (by the tltm), it won't be in the
-			// memcache graph - so use it, don't create a new one
+			// domainStore graph - so use it, don't create a new one
 			boolean inGraph = false;
 			try {
 				inGraph = getObject(event) != null;
@@ -56,7 +56,7 @@ public class TransactionalSubgraphTransformManager
 		}
 		if (event.getSource() != null) {
 			HasIdAndLocalId source = event.getSource();
-			if (source != null && AlcinaMemCache.isRawValue(source)) {
+			if (source != null && DomainStore.isRawValue(source)) {
 				throw new RuntimeException("Source of transform"
 						+ " should be immutable except to post-persistence code");
 			}
@@ -92,8 +92,8 @@ public class TransactionalSubgraphTransformManager
 			if (value != null) {
 				return value;
 			}
-			T nonTransactional = AlcinaMemCache.get().transformManager
-					.getObject(c, id, localId);
+			T nonTransactional = DomainStore.get().transformManager.getObject(c,
+					id, localId);
 			if (nonTransactional == null) {
 				// create object, can assume the threadTm has it
 				return null;
@@ -132,7 +132,7 @@ public class TransactionalSubgraphTransformManager
 	}
 
 	private void mapObjectToCachingProjections(HasIdAndLocalId obj) {
-		for (BaseProjectionHasEquivalenceHash listener : AlcinaMemCache
+		for (BaseProjectionHasEquivalenceHash listener : DomainStore
 				.get().cachingProjections.getAndEnsure(obj.getClass())) {
 			try {
 				listener.projectHash(obj);

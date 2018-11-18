@@ -5,10 +5,10 @@ import java.sql.SQLException;
 import java.util.Set;
 import java.util.TreeSet;
 
-import cc.alcina.framework.common.client.cache.CacheLookup;
+import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore.PdOperator;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongListIterator;
@@ -17,7 +17,7 @@ import it.unimi.dsi.fastutil.longs.LongListIterator;
  * Only indexes Longs!
  */
 public class PropertyStoreLookup<T, H extends HasIdAndLocalId>
-		extends CacheLookup<T, H> {
+		extends DomainLookup<T, H> {
 	protected PropertyStore propertyStore;
 
 	private Long2ObjectOpenHashMap<LongArrayList> lookup = new Long2ObjectOpenHashMap<>();

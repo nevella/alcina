@@ -28,9 +28,9 @@ import cc.alcina.framework.entity.J8Utils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.NamedThreadFactory;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.AlcinaMemCacheInstrumentation;
-import cc.alcina.framework.entity.entityaccess.cache.DomainCacheLockState;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore.AlcinaMemCacheInstrumentation;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLockState;
 
 @RegistryLocation(registryPoint = InternalMetrics.class, implementationType = ImplementationType.SINGLETON)
 public class InternalMetrics {
@@ -228,7 +228,7 @@ public class InternalMetrics {
 										.findFirst().map(e -> e.getValue())
 										.orElse(new StackTraceElement[0]);
 								imd.addSlice(threadInfo, stackTrace, 0, 0,
-										DomainCacheLockState.NO_LOCK);
+										DomainStoreLockState.NO_LOCK);
 							}
 							return;
 						}
@@ -239,13 +239,13 @@ public class InternalMetrics {
 							if (threadInfo != null) {
 								StackTraceElement[] stackTrace = thread
 										.getStackTrace();
-								AlcinaMemCacheInstrumentation instrumentation = AlcinaMemCache
+								AlcinaMemCacheInstrumentation instrumentation = DomainStore
 										.get().instrumentation();
 								long activeMemcacheLockTime = instrumentation
 										.getActiveMemcacheLockTime(thread);
 								long memcacheWaitTime = instrumentation
 										.getMemcacheWaitTime(thread);
-								DomainCacheLockState memcacheState = instrumentation
+								DomainStoreLockState memcacheState = instrumentation
 										.getMemcacheLockState(thread);
 								imd.addSlice(threadInfo, stackTrace,
 										activeMemcacheLockTime,

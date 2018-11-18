@@ -6,17 +6,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.cache.CacheItemDescriptor;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
-import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy.MemcacheProxyContext;
+import cc.alcina.framework.entity.entityaccess.cache.DomainProxy.DomainProxyContext;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore.PdOperator;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
-public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId> extends CacheItemDescriptor<T> {
+public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId>
+		extends DomainClassDescriptor<T> {
 	protected PropertyStore propertyStore;
 
 	protected DetachedEntityCache cache;
@@ -90,20 +91,20 @@ public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId> ext
 	protected abstract Object createProxy(int rowOffset,
 			DetachedEntityCache cache, Long id);
 
-	protected void ensureProxyModificationChecker(MemCacheProxy memCacheProxy) {
+	protected void ensureProxyModificationChecker(DomainProxy proxy) {
 	}
 
 	protected abstract int getRoughCount();
 
-	<T> T getProxy(DetachedEntityCache cache, Long id, boolean create) {
+	T getProxy(DetachedEntityCache cache, Long id, boolean create) {
 		int rowOffset = propertyStore.getRowOffset(id);
 		if (rowOffset == -1 && create) {
 			rowOffset = propertyStore.ensureRow(id);
 		}
 		if (rowOffset != -1) {
-			MemcacheProxyContext ctx = GraphProjection.getContextObject(
-					MemCacheProxy.CONTEXT_MEMCACHE_PROXY_CONTEXT,
-					MemcacheProxyContext.SUPPLIER);
+			DomainProxyContext ctx = GraphProjection.getContextObject(
+					DomainProxy.CONTEXT_DOMAIN_PROXY_CONTEXT,
+					DomainProxyContext.SUPPLIER);
 			if (ctx == null) {
 				return (T) createProxy(rowOffset, cache, id);
 			} else {
@@ -111,7 +112,7 @@ public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId> ext
 				T proxy = (T) ctx.projectionProxies.get(locator);
 				if (proxy == null) {
 					proxy = (T) createProxy(rowOffset, cache, id);
-					ctx.projectionProxies.put(locator, (MemCacheProxy) proxy);
+					ctx.projectionProxies.put(locator, (DomainProxy) proxy);
 				}
 				return proxy;
 			}

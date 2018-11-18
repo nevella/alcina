@@ -8,8 +8,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
-import cc.alcina.framework.entity.entityaccess.cache.DomainCacheLockState;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLockState;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricType;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
@@ -76,11 +76,11 @@ public class InternalMetricData {
 		}
 		String lockType = Ax.blankToEmpty(persistent.getLockType());
 		if (lockType.length() < 200) {
-			if (AlcinaMemCache.get().instrumentation()
+			if (DomainStore.get().instrumentation()
 					.isLockedByThread(thread)) {
 				lockType += "read;";
 			}
-			if (AlcinaMemCache.get().instrumentation()
+			if (DomainStore.get().instrumentation()
 					.isWriteLockedByThread(thread)) {
 				lockType += "write;";
 			}
@@ -122,7 +122,7 @@ public class InternalMetricData {
 
 	void addSlice(ThreadInfo info, StackTraceElement[] stackTrace,
 			long activeMemcacheLockTime, long memcacheWaitTime,
-			DomainCacheLockState memcacheState) {
+			DomainStoreLockState memcacheState) {
 		int maxStackLines = type == InternalMetricTypeAlcina.health ? 100 : 300;
 		int maxFrames = type == InternalMetricTypeAlcina.health ? 2000 : 50;
 		threadHistory.addElement(info, stackTrace, activeMemcacheLockTime,

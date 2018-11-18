@@ -63,7 +63,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.MemcacheJoinHandler;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore.MemcacheJoinHandler;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;

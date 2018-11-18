@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client;
 import com.google.gwt.dom.client.StyleInjector;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.cache.Domain;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainHandlerClient;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;

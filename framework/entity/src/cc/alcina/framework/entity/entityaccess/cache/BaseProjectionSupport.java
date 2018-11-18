@@ -3,7 +3,7 @@ package cc.alcina.framework.entity.entityaccess.cache;
 import java.util.Map;
 import java.util.TreeMap;
 
-import cc.alcina.framework.common.client.cache.BaseProjectionLookupBuilder;
+import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.DelegateMapCreator;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;

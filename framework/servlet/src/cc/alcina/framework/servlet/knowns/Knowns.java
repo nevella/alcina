@@ -14,9 +14,9 @@ import java.util.Set;
 import java.util.Stack;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.csobjects.KnownRenderableNode;
 import cc.alcina.framework.common.client.csobjects.KnownStatusRule;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryProvider;

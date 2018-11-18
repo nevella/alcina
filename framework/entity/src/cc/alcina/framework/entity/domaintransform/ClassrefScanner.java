@@ -48,7 +48,7 @@ import cc.alcina.framework.entity.domaintransform.ClassrefScanner.ClassrefScanne
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCacheColumn;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreColumn;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.CachingScanner;
 import cc.alcina.framework.entity.registry.ClassMetadata;
@@ -204,7 +204,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 										left.implementationClass(),
 										left.propertyName());
 						Association right = null;
-						AlcinaMemCacheColumn rightMcc = null;
+						DomainStoreColumn rightMcc = null;
 						if (rightPd != null && rightPd.getReadMethod() != null
 								&& rightPd.getReadMethod().getAnnotation(
 										Association.class) != null) {
@@ -217,9 +217,9 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 						}
 						if (rightPd != null && rightPd.getReadMethod() != null
 								&& rightPd.getReadMethod().getAnnotation(
-										AlcinaMemCacheColumn.class) != null) {
+										DomainStoreColumn.class) != null) {
 							rightMcc = rightPd.getReadMethod()
-									.getAnnotation(AlcinaMemCacheColumn.class);
+									.getAnnotation(DomainStoreColumn.class);
 							if (rightMcc.targetEntity() != ref || !rightMcc
 									.mappedBy().equals(field.getName())) {
 								rightMcc = null;

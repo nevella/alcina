@@ -11,7 +11,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.cache.Domain;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;

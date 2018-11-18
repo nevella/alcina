@@ -3,7 +3,7 @@ package cc.alcina.framework.entity.entityaccess.cache;
 import java.util.Collection;
 import java.util.List;
 
-import cc.alcina.framework.common.client.cache.BaseProjection;
+import cc.alcina.framework.common.client.domain.BaseProjection;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
 import cc.alcina.framework.common.client.util.HasEquivalenceHashMap;
@@ -27,7 +27,7 @@ public abstract class BaseProjectionHasEquivalenceHash<T extends HasIdAndLocalId
 	public T matchesTransactional(Collection<T> perClassTransactional,
 			Object[] path) {
 		Collection<T> coll = perClassTransactional;
-		if (AlcinaMemCache.get().transactional
+		if (DomainStore.get().transactional
 				.transactionActiveInCurrentThread()) {
 			List list = perThreadEquivalenceMap.get()
 					.get(equivalenceHashFromPath(path));

@@ -4,11 +4,11 @@ import java.util.Comparator;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import cc.alcina.framework.common.client.cache.CacheProjection;
+import cc.alcina.framework.common.client.domain.DomainProjection;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
 public abstract class SortedIdentityProjection<T extends HasIdAndLocalId>
-		implements CacheProjection<T> {
+		implements DomainProjection<T> {
 	private Class<T> listenedClass;
 
 	TreeMap<T, T> sorted = new TreeMap<>(getComparator());

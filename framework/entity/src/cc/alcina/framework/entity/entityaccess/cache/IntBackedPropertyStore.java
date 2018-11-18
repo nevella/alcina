@@ -4,7 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Set;
 
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore.PdOperator;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;

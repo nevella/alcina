@@ -6,8 +6,8 @@ import java.util.stream.Stream;
 
 import com.google.gwt.core.client.Scheduler;
 
-import cc.alcina.framework.common.client.cache.CacheListener;
-import cc.alcina.framework.common.client.cache.Domain.DomainHandler;
+import cc.alcina.framework.common.client.domain.DomainListener;
+import cc.alcina.framework.common.client.domain.Domain.DomainHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
@@ -52,7 +52,7 @@ public class DomainHandlerClient implements DomainHandler {
 
 	@Override
 	public <V extends HasIdAndLocalId> V resolveTransactional(
-			CacheListener listener, V value, Object[] path) {
+			DomainListener listener, V value, Object[] path) {
 		throw new UnsupportedOperationException();
 	}
 

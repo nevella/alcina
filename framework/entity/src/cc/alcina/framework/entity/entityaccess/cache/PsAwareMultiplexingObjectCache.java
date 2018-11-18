@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.cache.CacheItemDescriptor;
+import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 
@@ -18,7 +18,7 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 
 	private List<PropertyStoreCacheWrapper> psWrappers = new ArrayList<>();
 
-	public void addPropertyStore(CacheItemDescriptor descriptor) {
+	public void addPropertyStore(DomainClassDescriptor descriptor) {
 		psWrappers.add(new PropertyStoreCacheWrapper(
 				(PropertyStoreItemDescriptor) descriptor));
 	}

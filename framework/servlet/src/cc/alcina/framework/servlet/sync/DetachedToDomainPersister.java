@@ -9,8 +9,8 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import cc.alcina.framework.common.client.cache.Domain;
 import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils;

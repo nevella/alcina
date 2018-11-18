@@ -5,7 +5,7 @@ import java.io.Serializable;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.cache.Domain;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
