@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
@@ -33,6 +34,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityUtils;
+import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServletSupport;
 
 public abstract class DevRemoterServlet extends HttpServlet {
 	public static final String DEV_REMOTER_PARAMS = "devRemoterParams";
@@ -138,6 +140,10 @@ public abstract class DevRemoterServlet extends HttpServlet {
 							.getHighestPersistedRequestIdForClientInstance(
 									clientInstance.getId());
 					token.getRequest().setClientInstance(clientInstance);
+					HiliLocatorMap locatorMap = Registry
+							.impl(CommonRemoteServiceServletSupport.class)
+							.getLocatorMapForClient(token.getRequest());
+					token.setLocatorMap(locatorMap);
 					token.getRequest().setRequestId(
 							CommonUtils.iv(highestPersistedRequestId) + 1);
 					ThreadedPermissionsManager tpm = ThreadedPermissionsManager

@@ -29,7 +29,6 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.JvmPropertyAccessor;
 import cc.alcina.framework.servlet.sync.SyncItemMatch.SyncItemLogStatus;
-import cc.alcina.framework.servlet.sync.SyncLogger.SyncLoggerRow;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
 
 /**
@@ -191,8 +190,8 @@ public class SyncMerger<T> {
 	}
 
 	public boolean wasIncomplete() {
-		return syncLogger.rows.stream()
-				.anyMatch(SyncLoggerRow::provideHadIssue);
+		return syncLogger.rows.stream().anyMatch(
+				slr -> slr.provideHadIssue(ignoreElementsWithAmbiguity()));
 	}
 
 	protected void debugLeft(T left) {
@@ -278,6 +277,10 @@ public class SyncMerger<T> {
 
 	protected CollectionFilter<T> getIgnoreAmbiguityForReportingFilter() {
 		return CollectionFilters.PASSTHROUGH_FILTER;
+	}
+
+	protected boolean ignoreElementsWithAmbiguity() {
+		return false;
 	}
 
 	protected boolean mergePair(SyncPair<T> pair) {

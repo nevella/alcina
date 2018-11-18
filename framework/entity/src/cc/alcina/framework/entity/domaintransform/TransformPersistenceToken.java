@@ -20,7 +20,7 @@ import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 public class TransformPersistenceToken implements Serializable {
 	private final DomainTransformRequest request;
 
-	private final HiliLocatorMap locatorMap;
+	private HiliLocatorMap locatorMap;
 
 	private int dontFlushTilNthTransform = 0;
 
@@ -38,7 +38,7 @@ public class TransformPersistenceToken implements Serializable {
 
 	private List<DomainTransformEvent> clientUpdateEvents = new ArrayList<DomainTransformEvent>();
 
-	private  boolean ignoreClientAuthMismatch;
+	private boolean ignoreClientAuthMismatch;
 
 	private boolean forOfflineTransforms;
 
@@ -49,11 +49,10 @@ public class TransformPersistenceToken implements Serializable {
 	private boolean blockUntilAllListenersNotified;
 
 	private Long originatingUserId;
-	
+
 	public TransformPersistenceToken(DomainTransformRequest request,
 			HiliLocatorMap locatorMap,
-			TransformLoggingPolicy transformLoggingPolicy,
-			boolean asyncClient,
+			TransformLoggingPolicy transformLoggingPolicy, boolean asyncClient,
 			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms,
 			Logger logger, boolean blockUntilAllListenersNotified) {
 		this.request = request;
@@ -150,6 +149,10 @@ public class TransformPersistenceToken implements Serializable {
 
 	public void setIgnoreClientAuthMismatch(boolean ignoreClientAuthMismatch) {
 		this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
+	}
+
+	public void setLocatorMap(HiliLocatorMap locatorMap) {
+		this.locatorMap = locatorMap;
 	}
 
 	public void setLogger(Logger logger) {

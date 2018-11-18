@@ -574,7 +574,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						transformLayerWrapper = transform(rq, true, true, true);
 						if (logger != null) {
 							logger.info(CommonUtils.formatJ(
-									"Request [%s/%s] : %s transforms written, %s ignored",
+									"Request [%s::%s] : %s transforms written, %s ignored",
 									requestId, clientInstanceId,
 									transformLayerWrapper.response
 											.getTransformsProcessed(),

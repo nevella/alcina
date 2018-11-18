@@ -14,18 +14,18 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.servlet.sync.SyncMerger.FirstAndAllLookup;
 
-class KeyMatchStrategy<T> implements MatchStrategy<T> {
-	private StringKeyProvider<T> keyProvider;
+public class KeyMatchStrategy<T> implements MatchStrategy<T> {
+	public static final String TOPIC_MERGE_ISSUE = MergeHandler.class.getName()
+			+ "." + "TOPIC_MERGE_ISSUE";
 
-	public KeyMatchStrategy(Collection<T> leftItems, Collection<T> rightItems,
-			StringKeyProvider<T> keyProvider) {
-		this.keyProvider = keyProvider;
-		leftLookup = new FirstAndAllLookup(leftItems, keyProvider);
-		rightLookup = new FirstAndAllLookup(rightItems, keyProvider);
-		unmatchedRight = new LinkedHashSet<T>(rightItems);
+	public static TopicSupport<KeyMatchIssue> topicMatchIssue() {
+		return new TopicSupport<>(TOPIC_MERGE_ISSUE);
 	}
+
+	private StringKeyProvider<T> keyProvider;
 
 	FirstAndAllLookup leftLookup;
 
@@ -36,9 +36,21 @@ class KeyMatchStrategy<T> implements MatchStrategy<T> {
 
 	Map<T, String> ambiguousLeft = new LinkedHashMap<T, String>();
 
+	// keys must match uniquely -- if not, fix manually
 	Map<T, String> ambiguousRight = new LinkedHashMap<T, String>();
 
-	// keys must match uniquely -- if not, fix manually
+	public KeyMatchStrategy(Collection<T> leftItems, Collection<T> rightItems,
+			StringKeyProvider<T> keyProvider) {
+		this.keyProvider = keyProvider;
+		leftLookup = new FirstAndAllLookup(leftItems, keyProvider);
+		rightLookup = new FirstAndAllLookup(rightItems, keyProvider);
+		unmatchedRight = new LinkedHashSet<T>(rightItems);
+	}
+
+	@Override
+	public Collection<T> getAmbiguousRightElements() {
+		return ambiguousRight.keySet();
+	}
 
 	@Override
 	public SyncItemMatch<T> getRight(T left) {
@@ -51,11 +63,13 @@ class KeyMatchStrategy<T> implements MatchStrategy<T> {
 					allKeys, leftLookup.allLocators(allKeys)));
 		}
 		if (rightLookup.isMultipleAll(allKeys)) {
-			ambiguous.add(String.format("multiple right matches for %s:\n%s",
-					allKeys, rightLookup.allLocators(allKeys)));
+			String message = String.format("multiple right matches for %s:\n%s",
+					allKeys, rightLookup.allLocators(allKeys));
+			ambiguous.add(message);
 			Collection ambiguousMatched = new ArrayList(
 					rightLookup.allKeyLookup.getForKeys(allKeys));
-			int debug = 3;
+			topicMatchIssue().publish(
+					new KeyMatchIssue(left, ambiguousMatched, message));
 		}
 		if (ambiguous.isEmpty()) {
 			// check, say, left has distinct firstkey to right - note,
@@ -101,11 +115,6 @@ class KeyMatchStrategy<T> implements MatchStrategy<T> {
 	}
 
 	@Override
-	public Collection<T> getAmbiguousRightElements() {
-		return ambiguousRight.keySet();
-	}
-
-	@Override
 	public void log(CollectionFilter<T> ignoreAmbiguityForReportingFilter,
 			Logger logger, Class<T> mergedClass) {
 		CollectionFilters.filterInPlace(ambiguousLeft.keySet(),
@@ -123,12 +132,27 @@ class KeyMatchStrategy<T> implements MatchStrategy<T> {
 				CommonUtils.padStringLeft("",
 						25 - mergedClass.getSimpleName().length(), " "),
 				ambiguousLeft.size(), ambiguousRight.size()));
-		logger.debug(String.format(
-				"Merge [%s]: ambiguous left:\n\t%s\nambiguous right:\n\t%s\n\n",
-				mergedClass.getSimpleName(),
-				CommonUtils.joinWithNewlineTab(
-						CommonUtils.flattenMap(ambiguousLeft)),
-				CommonUtils.joinWithNewlineTab(
-						CommonUtils.flattenMap(ambiguousRight))));
+		// logger.debug(String.format(
+		// "Merge [%s]: ambiguous left:\n\t%s\nambiguous right:\n\t%s\n\n",
+		// mergedClass.getSimpleName(),
+		// CommonUtils.joinWithNewlineTab(
+		// CommonUtils.flattenMap(ambiguousLeft)),
+		// CommonUtils.joinWithNewlineTab(
+		// CommonUtils.flattenMap(ambiguousRight))));
+	}
+
+	public static class KeyMatchIssue<T> {
+		public T left;
+
+		public Collection<T> ambiguousMatched;
+
+		public String message;
+
+		public KeyMatchIssue(T left, Collection<T> ambiguousMatched,
+				String message) {
+			this.left = left;
+			this.ambiguousMatched = ambiguousMatched;
+			this.message = message;
+		}
 	}
 }

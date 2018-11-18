@@ -26,6 +26,15 @@ public class SyncPair<T> {
 		this.action = action;
 	}
 
+	public void clearForApplyOnlyResponse(boolean keepLeft) {
+		matchRecord = null;
+		if (keepLeft) {
+			right = null;
+		} else {
+			left = null;
+		}
+	}
+
 	public SyncPairAction getAction() {
 		return this.action;
 	}

@@ -4,9 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.servlet.sync.SyncItemMatch.SyncItemLogStatus;
-import cc.alcina.framework.servlet.sync.SyncLogger.SyncLoggerRow;
 
 public class SyncLogger {
+	public List<SyncLoggerRow> rows = new ArrayList<>();
+
+	public void log(SyncItemMatch itemMatch, SyncPair pair) {
+		rows.add(new SyncLoggerRow(itemMatch, pair));
+	}
+
 	public static class SyncLoggerRow {
 		public SyncItemMatch itemMatch;
 
@@ -20,19 +25,14 @@ public class SyncLogger {
 			this.pair = pair;
 		}
 
-		public boolean provideHadIssue() {
+		public boolean provideHadIssue(boolean ambiguousOk) {
 			boolean hadIssue = itemMatch.currentSyncStatus == SyncItemLogStatus.UNSYNCED
-					&& (itemMatch.ambiguous || itemMatch.issue != null);
-			if(hadIssue){
-				int debug=3;
+					&& ((itemMatch.ambiguous && !ambiguousOk)
+							|| itemMatch.issue != null);
+			if (hadIssue) {
+				int debug = 3;
 			}
 			return hadIssue;
 		}
-	}
-
-	public List<SyncLoggerRow> rows = new ArrayList<>();
-
-	public void log(SyncItemMatch itemMatch, SyncPair pair) {
-		rows.add(new SyncLoggerRow(itemMatch, pair));
 	}
 }

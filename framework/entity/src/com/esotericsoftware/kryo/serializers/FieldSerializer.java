@@ -47,7 +47,10 @@ import com.esotericsoftware.kryo.util.ObjectMap;
 import com.esotericsoftware.kryo.util.Util;
 import com.esotericsoftware.reflectasm.FieldAccess;
 
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CachingMap;
+import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
 // BOZO - Make primitive serialization with ReflectASM configurable?
 /**
@@ -70,6 +73,7 @@ import cc.alcina.framework.common.client.util.CachingMap;
  * @author Nathan Sweet <misc@n4te.com>
  * @author Roman Levenstein <romixlev@gmail.com>
  */
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class FieldSerializer<T> extends Serializer<T>
 		implements Comparator<FieldSerializer.CachedField> {
 	static CachedFieldFactory asmFieldFactory;
@@ -98,6 +102,11 @@ public class FieldSerializer<T> extends Serializer<T>
 				trace("kryo", "sun.misc.Unsafe is unavailable.");
 		}
 	}
+
+	static CachingMap<CachedFieldLocator, CachedField> cachedFieldLookup = new CachingConcurrentMap<>(
+			cfl -> cfl.serializer.newCachedField0(cfl.field, cfl.fieldIndex,
+					cfl.accessIndex),
+			1000);
 
 	final Kryo kryo;
 
@@ -750,6 +759,12 @@ public class FieldSerializer<T> extends Serializer<T>
 	}
 
 	CachedField newCachedField(Field field, int fieldIndex, int accessIndex) {
+		return newCachedField0(field, fieldIndex, accessIndex);
+		// return cachedFieldLookup.get(
+		// new CachedFieldLocator(this, field, fieldIndex, accessIndex));
+	}
+
+	CachedField newCachedField0(Field field, int fieldIndex, int accessIndex) {
 		Class[] fieldClass = new Class[] { field.getType() };
 		Type fieldGenericType = (config.isOptimizedGenerics())
 				? field.getGenericType()
@@ -942,5 +957,39 @@ public class FieldSerializer<T> extends Serializer<T>
 	@Target(ElementType.FIELD)
 	static public @interface Optional {
 		public String value();
+	}
+
+	static class CachedFieldLocator {
+		public FieldSerializer serializer;
+
+		private Field field;
+
+		private int fieldIndex;
+
+		private int accessIndex;
+
+		public CachedFieldLocator(FieldSerializer serializer, Field field,
+				int fieldIndex, int accessIndex) {
+			this.serializer = serializer;
+			this.field = field;
+			this.fieldIndex = fieldIndex;
+			this.accessIndex = accessIndex;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof CachedFieldLocator) {
+				CachedFieldLocator o = (CachedFieldLocator) obj;
+				return field.equals(o.field) && fieldIndex == o.fieldIndex
+						&& accessIndex == o.accessIndex;
+			} else {
+				return false;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return field.hashCode() ^ fieldIndex ^ accessIndex;
+		}
 	}
 }

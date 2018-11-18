@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SortedMultimap;
+import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.entity.projection.EntityUtils.MultiIdentityMap;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 
@@ -174,6 +175,8 @@ public class StatsFilter extends CollectionProjectionFilter {
 	void dumpStats() {
 		try {
 			Set<Object> owned = new LinkedHashSet<Object>();
+			SystemoutCounter counter = new SystemoutCounter(10000, 50,
+					visited.size(), true);
 			for (Object o : visited.keySet()) {
 				if (o == null) {
 					continue;
@@ -251,8 +254,8 @@ public class StatsFilter extends CollectionProjectionFilter {
 								}
 							}
 							if (calculatePathStatsFor.contains(clazz2)) {
-								String key = clazz.getSimpleName() + "."
-										+ field.getName();
+								String key = GraphProjection.classSimpleName(
+										clazz) + "." + field.getName();
 								if (!ownershipStats.containsKey(clazz2)) {
 									ownershipStats.put(clazz2,
 											new Multiset<String, Set>());
@@ -270,6 +273,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 						}
 					}
 				}
+				counter.tick();
 			}
 			for (Object o : owned) {
 				statsItemLookup.get(o).retainedElsewhere = true;
@@ -468,6 +472,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 		}
 
 		// TODO - shouldn't this be package-private?
+		@Override
 		public Collection projectCollection(Collection coll,
 				GraphProjectionContext context) throws Exception {
 			Collection c = null;
@@ -511,9 +516,10 @@ public class StatsFilter extends CollectionProjectionFilter {
 		}
 
 		@Override
-		protected <T> T newInstance(Class sourceClass, GraphProjectionContext context) throws Exception {
+		protected <T> T newInstance(Class sourceClass,
+				GraphProjectionContext context) throws Exception {
 			try {
-				return super.newInstance(sourceClass,context);
+				return super.newInstance(sourceClass, context);
 			} catch (Exception e) {
 				try {
 					return tryWithObjenesis(sourceClass);
