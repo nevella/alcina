@@ -65,7 +65,7 @@ public class InternalMetrics {
 	private MemoryMXBean memoryMxBean;
 
 	public void endTracker(Object markerObject) {
-		if (!started) {
+		if (!started || markerObject == null) {
 			return;
 		}
 		InternalMetricData tracker = trackers.get(markerObject);

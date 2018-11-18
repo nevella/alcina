@@ -7,9 +7,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 
-public abstract class AbstractLocalDomainLocatable<T extends LocalDomainLocatable>
-		implements LocalDomainLocatable<T> {
-	public static final String CONTEXT_HINT_ALLOW_CACHED_FIND = AbstractLocalDomainLocatable.class
+public abstract class AbstractTypedLocalDomainLocatable<T extends TypedLocalDomainLocatable>
+		implements TypedLocalDomainLocatable<T> {
+	public static final String CONTEXT_HINT_ALLOW_CACHED_FIND = AbstractTypedLocalDomainLocatable.class
 			.getName() + ".CONTEXT_HINT_ALLOW_CACHED_FIND";
 
 	public T createOrReturnLocal() {
@@ -43,18 +43,18 @@ public abstract class AbstractLocalDomainLocatable<T extends LocalDomainLocatabl
 		if (GWT.isClient() && this instanceof HasIdAndLocalId) {
 			TransformManager.get().deleteObject((HasIdAndLocalId) this, true);
 		} else {
-			Registry.impl(LocalDomainPersistence.class, getClass())
+			Registry.impl(TypedLocalDomainPersistence.class, getClass())
 					.deleteLocalEquivalent(this);
 		}
 	}
 
 	public T ensureLocalEquivalent() {
-		return (T) Registry.impl(LocalDomainPersistence.class, getClass())
+		return (T) Registry.impl(TypedLocalDomainPersistence.class, getClass())
 				.ensureLocalEquivalent(this);
 	}
 
 	public T findLocalEquivalent() {
-		return (T) Registry.impl(LocalDomainPersistence.class, getClass())
+		return (T) Registry.impl(TypedLocalDomainPersistence.class, getClass())
 				.findLocalEquivalent(this);
 	}
 
@@ -71,7 +71,7 @@ public abstract class AbstractLocalDomainLocatable<T extends LocalDomainLocatabl
 	public T updateLocalEquivalent() {
 		try {
 			LooseContext.pushWithKey(CONTEXT_HINT_ALLOW_CACHED_FIND, true);
-			Registry.impl(LocalDomainPersistence.class, getClass())
+			Registry.impl(TypedLocalDomainPersistence.class, getClass())
 					.adjustUpdateContext();
 			T local = findLocalEquivalent();
 			if (local != null && local.equivalentTo(this)) {
@@ -85,7 +85,7 @@ public abstract class AbstractLocalDomainLocatable<T extends LocalDomainLocatabl
 		}
 		try {
 			LooseContext.push();
-			Registry.impl(LocalDomainPersistence.class, getClass())
+			Registry.impl(TypedLocalDomainPersistence.class, getClass())
 					.adjustUpdateContext();
 			return ensureLocalEquivalent();
 		} finally {

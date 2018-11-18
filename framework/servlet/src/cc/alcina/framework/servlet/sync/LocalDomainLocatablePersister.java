@@ -1,11 +1,11 @@
 package cc.alcina.framework.servlet.sync;
 
-import cc.alcina.framework.common.client.sync.AbstractLocalDomainLocatable;
+import cc.alcina.framework.common.client.sync.AbstractTypedLocalDomainLocatable;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersister.DeltaItemPersister;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersisterResult.FlatDeltaPersisterResultType;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
 
-public class LocalDomainLocatablePersister<T extends AbstractLocalDomainLocatable>
+public class LocalDomainLocatablePersister<T extends AbstractTypedLocalDomainLocatable>
 		implements DeltaItemPersister<T> {
 	public LocalDomainLocatablePersister() {
 	}

@@ -83,7 +83,8 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 						: pair.getRight();
 				KeyedObject other = !applyToLeft ? pair.getLeft()
 						: pair.getRight();
-				LooseContext.set(CONTEXT_OTHER_OBJECT, other.getObject());
+				LooseContext.set(CONTEXT_OTHER_OBJECT,
+						other == null ? null : other.getObject());
 				FlatDeltaPersisterResultType resultType = persister
 						.performSyncAction(syncAction,
 								obj == null ? null : obj.getObject());

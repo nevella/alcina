@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.util;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -76,7 +77,7 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 	@Override
 	public <T> Collection<T> reverseKeys(Object... objects) {
 		NavigableMap nm = (NavigableMap) asMapEnsureDelegate(false, objects);
-		return nm.descendingKeySet();
+		return nm == null ? new ArrayList<>() : nm.descendingKeySet();
 	}
 
 	@Override
