@@ -63,7 +63,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore.MemcacheJoinHandler;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.DomainStoreJoinHandler;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
@@ -77,6 +77,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
 @RegistryLocation(registryPoint = JPAImplementation.class, implementationType = ImplementationType.SINGLETON)
 public class JPAHibernateImpl implements JPAImplementation {
 	public static final InstantiateImplCallback CLASSREF_AND_USERLAND_GETTER_CALLBACK = new InstantiateImplCallback<LazyInitializer>() {
+		@Override
 		public boolean instantiateLazyInitializer(LazyInitializer initializer,
 				GraphProjectionContext context) {
 			Class persistentClass = initializer.getPersistentClass();
@@ -126,14 +127,7 @@ public class JPAHibernateImpl implements JPAImplementation {
 		return new SavedId(ip, backupUnsavedValue, identifierGenerator);
 	}
 
-	public static class UseEntityIdGenerator implements IdentifierGenerator {
-		@Override
-		public Serializable generate(SessionImplementor session, Object object)
-				throws HibernateException {
-			return ((HasIdAndLocalId) object).getId();
-		}
-	}
-
+	@Override
 	public boolean bulkDelete(EntityManager em, Class clazz,
 			Collection<Long> ids) {
 		try {
@@ -147,6 +141,7 @@ public class JPAHibernateImpl implements JPAImplementation {
 		return true;
 	}
 
+	@Override
 	public void cache(Query query) {
 		query.setHint("org.hibernate.cacheable", true);
 	}
@@ -192,11 +187,13 @@ public class JPAHibernateImpl implements JPAImplementation {
 		return CLASSREF_AND_USERLAND_GETTER_CALLBACK;
 	}
 
+	@Override
 	public File getConfigDirectory() {
 		return new File(System.getProperty("jboss.server.base.dir")
 				+ File.separator + "configuration" + File.separator);
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T getInstantiatedObject(T object) {
 		if (object instanceof HibernateProxy) {
@@ -207,16 +204,16 @@ public class JPAHibernateImpl implements JPAImplementation {
 	}
 
 	@Override
-	public MemcacheJoinHandler
+	public DomainStoreJoinHandler
 			getMemcacheJoinHandler(final PropertyDescriptor pd) {
 		final ElementCollection elementCollection = pd.getReadMethod()
 				.getAnnotation(ElementCollection.class);
 		final Column column = pd.getReadMethod().getAnnotation(Column.class);
-		MemcacheJoinHandler handler = null;
+		DomainStoreJoinHandler handler = null;
 		if (elementCollection == null) {
 			return null;
 		}
-		return new MemcacheJoinHandler() {
+		return new DomainStoreJoinHandler() {
 			@Override
 			public String getTargetSql() {
 				return column.name();
@@ -237,6 +234,7 @@ public class JPAHibernateImpl implements JPAImplementation {
 		};
 	}
 
+	@Override
 	public GraphProjectionDataFilter getResolvingFilter(
 			InstantiateImplCallback callback, DetachedEntityCache cache,
 			boolean useMemCache) {
@@ -249,6 +247,45 @@ public class JPAHibernateImpl implements JPAImplementation {
 		return filter;
 	}
 
+	@Override
+	public Set<HiliLocator>
+			getSessionEntityLocators(EntityManager entityManager) {
+		Set<HiliLocator> result = new LinkedHashSet<>();
+		try {
+			SessionImplementor sessionImpl = (SessionImplementor) entityManager
+					.getDelegate();
+			PersistenceContext persistenceContext = sessionImpl
+					.getPersistenceContext();
+			Field entitiesField = StatefulPersistenceContext.class
+					.getDeclaredField("entitiesByKey");
+			Field proxiesField = StatefulPersistenceContext.class
+					.getDeclaredField("proxiesByKey");
+			Field entityPersisterField = EntityKey.class
+					.getDeclaredField("persister");
+			entitiesField.setAccessible(true);
+			entityPersisterField.setAccessible(true);
+			proxiesField.setAccessible(true);
+			List<Map> maps = Arrays.asList(
+					(Map) entitiesField.get(persistenceContext),
+					(Map) proxiesField.get(persistenceContext));
+			for (Map map : maps) {
+				for (Object obj : map.keySet()) {
+					EntityKey key = (EntityKey) obj;
+					long id = (long) key.getIdentifier();
+					SingleTableEntityPersister persister = (SingleTableEntityPersister) entityPersisterField
+							.get(key);
+					Class clazz = persister.getEntityMetamodel().getEntityType()
+							.getReturnedClass();
+					result.add(new HiliLocator(clazz, id, 0));
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	@Override
 	public void interpretException(DomainTransformException ex) {
 		DomainTransformExceptionType type = interpretExceptionType(ex);
 		if (type != null) {
@@ -274,10 +311,12 @@ public class JPAHibernateImpl implements JPAImplementation {
 		return null;
 	}
 
+	@Override
 	public boolean isCacheDisabled() {
 		return this.cacheDisabled;
 	}
 
+	@Override
 	public boolean isLazyInitialisationException(Exception e) {
 		return e instanceof LazyInitializationException;
 	}
@@ -294,6 +333,7 @@ public class JPAHibernateImpl implements JPAImplementation {
 		}
 	}
 
+	@Override
 	public void setCacheDisabled(boolean cacheDisabled) {
 		this.cacheDisabled = cacheDisabled;
 	}
@@ -336,6 +376,14 @@ public class JPAHibernateImpl implements JPAImplementation {
 		}
 	}
 
+	public static class UseEntityIdGenerator implements IdentifierGenerator {
+		@Override
+		public Serializable generate(SessionImplementor session, Object object)
+				throws HibernateException {
+			return ((HasIdAndLocalId) object).getId();
+		}
+	}
+
 	private static class SavedId {
 		private final IdentifierProperty ip;
 
@@ -350,43 +398,5 @@ public class JPAHibernateImpl implements JPAImplementation {
 			this.backupUnsavedValue = backupUnsavedValue;
 			this.identifierGenerator = identifierGenerator;
 		}
-	}
-
-	@Override
-	public Set<HiliLocator>
-			getSessionEntityLocators(EntityManager entityManager) {
-		Set<HiliLocator> result = new LinkedHashSet<>();
-		try {
-			SessionImplementor sessionImpl = (SessionImplementor) entityManager
-					.getDelegate();
-			PersistenceContext persistenceContext = sessionImpl
-					.getPersistenceContext();
-			Field entitiesField = StatefulPersistenceContext.class
-					.getDeclaredField("entitiesByKey");
-			Field proxiesField = StatefulPersistenceContext.class
-					.getDeclaredField("proxiesByKey");
-			Field entityPersisterField = EntityKey.class
-					.getDeclaredField("persister");
-			entitiesField.setAccessible(true);
-			entityPersisterField.setAccessible(true);
-			proxiesField.setAccessible(true);
-			List<Map> maps = Arrays.asList(
-					(Map) entitiesField.get(persistenceContext),
-					(Map) proxiesField.get(persistenceContext));
-			for (Map map : maps) {
-				for (Object obj : map.keySet()) {
-					EntityKey key = (EntityKey) obj;
-					long id = (long) key.getIdentifier();
-					SingleTableEntityPersister persister = (SingleTableEntityPersister) entityPersisterField
-							.get(key);
-					Class clazz = persister.getEntityMetamodel().getEntityType()
-							.getReturnedClass();
-					result.add(new HiliLocator(clazz, id, 0));
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return result;
 	}
 }

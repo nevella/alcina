@@ -1252,7 +1252,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			implements Predicate<InternalMetricData> {
 		@Override
 		public boolean test(InternalMetricData imd) {
-			return DomainStore.get().instrumentation()
+			return DomainStore.stores().databaseStore().instrumentation()
 					.isLockedByThread(((InternalMetricData) imd).thread);
 		}
 	}

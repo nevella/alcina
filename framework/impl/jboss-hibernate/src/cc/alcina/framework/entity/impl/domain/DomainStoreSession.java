@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.impl.cache;
+package cc.alcina.framework.entity.impl.domain;
 
 import java.io.Serializable;
 import java.sql.Connection;
@@ -26,10 +26,10 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.stat.SessionStatistics;
 
 @SuppressWarnings("deprecation")
-public class MemCacheSession implements Session {
+public class DomainStoreSession implements Session {
 	Session delegate;
 
-	public MemCacheSession(Session delegate) {
+	public DomainStoreSession(Session delegate) {
 		this.delegate = delegate;
 	}
 
@@ -64,7 +64,7 @@ public class MemCacheSession implements Session {
 	public Criteria createCriteria(Class arg0, String arg1) {
 		Criteria subCriteria = this.delegate == null ? null
 				: this.delegate.createCriteria(arg0, arg1);
-		return new MemCacheCriteria(arg0, arg1, subCriteria, this);
+		return new DomainStoreCriteria(arg0, arg1, subCriteria, this);
 	}
 
 	public Criteria createCriteria(String arg0) {

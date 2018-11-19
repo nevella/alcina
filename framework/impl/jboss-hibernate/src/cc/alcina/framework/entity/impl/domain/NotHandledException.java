@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.impl.cache;
+package cc.alcina.framework.entity.impl.domain;
 
 import org.hibernate.criterion.Criterion;
 

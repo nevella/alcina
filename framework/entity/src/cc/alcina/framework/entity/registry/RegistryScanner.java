@@ -26,7 +26,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.entity.domaintransform.ClassrefScanner.ClassrefScannerMetadata;
 import cc.alcina.framework.entity.registry.RegistryScanner.RegistryScannerMetadata;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 

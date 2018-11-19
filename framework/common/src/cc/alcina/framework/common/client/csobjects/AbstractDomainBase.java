@@ -49,6 +49,7 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 	@GwtTransient
 	long localId;
 
+	@Override
 	public DomainSupport domain() {
 		return new DomainSupport();
 	}
@@ -206,7 +207,7 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 		public T createOrReturnWriteable() {
 			HasEquivalence equivalent = HasEquivalenceHelper.getEquivalent(
 					(Collection) Domain
-							.list(AbstractDomainBase.this.getClass()),
+							.values(AbstractDomainBase.this.getClass()),
 					(HasEquivalence) AbstractDomainBase.this);
 			if (equivalent != null) {
 				return (T) equivalent;
@@ -225,11 +226,22 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 			return TransformManager.get().getTransforms().size() != before;
 		}
 
+		/*
+		 * Basically server-side, disconnected (lock-safe) version from a
+		 * DomainStore
+		 */
+		public T detachedVersion() {
+			return (T) Domain.detachedVersion(AbstractDomainBase.this);
+		}
+
 		public void detachFromDomain() {
 			TransformManager.get()
 					.deregisterDomainObject(AbstractDomainBase.this);
 		}
 
+		/*
+		 * Basically server-side, connected version from a DomainStore
+		 */
 		public T domainVersion() {
 			return (T) Domain.find(AbstractDomainBase.this);
 		}
@@ -246,6 +258,13 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 			return new HiliLocator(AbstractDomainBase.this).toString();
 		}
 
+		/*
+		 * iff AbstractDomainBase.this===domainVersion()
+		 */
+		public boolean isDomainVersion() {
+			return Domain.isDomainVersion(AbstractDomainBase.this);
+		}
+
 		public T register() {
 			TransformManager.get()
 					.registerDomainObject(AbstractDomainBase.this);
@@ -257,6 +276,13 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 			TransformManager.get().modifyCollectionProperty(
 					AbstractDomainBase.this, propertyName, v,
 					CollectionModificationType.REMOVE);
+		}
+
+		/*
+		 * server-side only
+		 */
+		public T transactionVersion() {
+			return (T) Domain.transactionVersion(AbstractDomainBase.this);
 		}
 	}
 }

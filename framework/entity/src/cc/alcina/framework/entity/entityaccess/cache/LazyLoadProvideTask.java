@@ -12,8 +12,11 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.domain.DomainDescriptor.PreProvideTask;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multiset;
@@ -24,14 +27,6 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 	final static Logger logger = LoggerFactory
 			.getLogger(MethodHandles.lookup().lookupClass());
 
-	public static void metric(String key, boolean end) {
-		if (end) {
-			MetricLogging.get().end(key, DomainStore.get().metricLogger);
-		} else {
-			MetricLogging.get().start(key);
-		}
-	}
-
 	private long minEvictionAge;
 
 	private int minEvictionSize;
@@ -39,6 +34,11 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 	protected Class<T> clazz;
 
 	private LinkedHashMap<Long, Long> idEvictionAge = new LinkedHashMap<>();
+
+	protected DomainStore domainStore;
+
+	public LazyLoadProvideTask() {
+	}
 
 	public LazyLoadProvideTask(long minEvictionAge, int minEvictionSize,
 			Class<T> clazz) {
@@ -58,10 +58,22 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		return this.clazz;
 	}
 
+	public void metric(String key, boolean end) {
+		if (end) {
+			MetricLogging.get().end(key, domainStore.metricLogger);
+		} else {
+			MetricLogging.get().start(key);
+		}
+	}
+
+	@Override
+	public void registerStore(DomainStore domainStore) {
+		this.domainStore = domainStore;
+	}
+
 	@Override
 	public void run(Class clazz, Collection<T> objects, boolean topLevel)
 			throws Exception {
-		DomainStore store = DomainStore.get();
 		if (clazz != this.clazz) {
 			return;
 		}
@@ -75,10 +87,10 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 				// requireLoad = requireLazyLoad(objects);
 				// now eviction is happening in write-lock, and this only
 				// happens in read-lock, no need
-				lazyLoad(store, requireLoad);
-				registerLoaded(store, requireLoad);
+				lazyLoad(requireLoad);
+				registerLoaded(requireLoad);
 				if (topLevel) {
-					loadDependents(store, requireLoad);
+					loadDependents(requireLoad);
 				}
 			}
 		}
@@ -90,8 +102,7 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 			return;
 		}
 		Iterator<Entry<Long, Long>> itr = idEvictionAge.entrySet().iterator();
-		EvictionToken evictionToken = new EvictionToken(DomainStore.get(),
-				this);
+		EvictionToken evictionToken = new EvictionToken(domainStore, this);
 		while (idEvictionAge
 				.size() > (minEvictionSize
 						+ evictionToken.getTopLevelEvictedCount())
@@ -112,7 +123,7 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		evictionToken.removeEvicted();
 	}
 
-	private void registerLoaded(DomainStore store, List<T> requireLoad) {
+	private void registerLoaded(List<T> requireLoad) {
 		for (T t : requireLoad) {
 			idEvictionAge.put(t.getId(), System.currentTimeMillis());
 		}
@@ -138,22 +149,33 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		return true;
 	}
 
+	protected DetachedEntityCache getDomainCache() {
+		return domainStore.cache;
+	}
+
 	protected Object getLockObject() {
 		return this;
 	}
 
-	protected abstract void lazyLoad(DomainStore store, Collection<T> objects)
-			throws Exception;
+	protected abstract void lazyLoad(Collection<T> objects) throws Exception;
 
 	protected void lllog(String template, Object... args) {
 		logger.debug(template, args);
 	}
 
-	protected abstract void loadDependents(DomainStore store,
-			List<T> requireLoad) throws Exception;
+	protected abstract void loadDependents(List<T> requireLoad)
+			throws Exception;
+
+	protected List<T> loadTable(Class clazz, String sqlFilter, ClassIdLock lock)
+			throws Exception {
+		Preconditions.checkState(
+				domainStore.loader instanceof DomainStoreLoaderDatabase);
+		return ((DomainStoreLoaderDatabase) domainStore.loader).loadTable(clazz,
+				sqlFilter, lock);
+	}
 
 	protected void log(String template, Object... args) {
-		DomainStore.get().sqlLogger.debug(template, args);
+		this.domainStore.sqlLogger.debug(template, args);
 	}
 
 	public static class EvictionToken {

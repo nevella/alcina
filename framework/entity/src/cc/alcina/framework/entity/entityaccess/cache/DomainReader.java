@@ -55,7 +55,7 @@ public abstract class DomainReader<I, O> {
 		int initialDepth = LooseContext.depth();
 		boolean noLocksWasSet = LooseContext.is(DomainStore.CONTEXT_NO_LOCKS);
 		try {
-			DomainStore.get().lock(false);
+			getStore().threads.lock(false);
 			if (initialDepth == 0) {
 				LooseContext.push();
 			}
@@ -73,7 +73,7 @@ public abstract class DomainReader<I, O> {
 			if (initialDepth == 0) {
 				LooseContext.pop();
 			}
-			DomainStore.get().unlock(false);
+			getStore().threads.unlock(false);
 		}
 	}
 
@@ -81,7 +81,7 @@ public abstract class DomainReader<I, O> {
 		int initialDepth = LooseContext.depth();
 		boolean noLocksWasSet = LooseContext.is(DomainStore.CONTEXT_NO_LOCKS);
 		try {
-			DomainStore.get().lock(false);
+			getStore().threads.lock(false);
 			if (initialDepth == 0) {
 				LooseContext.push();
 			}
@@ -94,8 +94,12 @@ public abstract class DomainReader<I, O> {
 			if (initialDepth == 0) {
 				LooseContext.pop();
 			}
-			DomainStore.get().unlock(false);
+			getStore().threads.unlock(false);
 		}
+	}
+
+	protected DomainStore getStore() {
+		return DomainStore.stores().databaseStore();
 	}
 
 	protected abstract O read0(I input) throws Exception;

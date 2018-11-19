@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.entityaccess.cache;
 import java.lang.annotation.Annotation;
 import java.util.List;
 
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedCacheObjectStore;
@@ -37,7 +38,7 @@ public class PermissionsTestingTransformManager
 	@Override
 	public <T extends HasIdAndLocalId> void loadObject(Class<? extends T> c,
 			long id, long localId) {
-		T t = DomainStore.get().find(c, id);
+		T t = Domain.detachedVersion(c, id);
 		store.mapObject(t);
 	}
 
@@ -68,40 +69,49 @@ public class PermissionsTestingTransformManager
 			this.delegate = delegate;
 		}
 
+		@Override
 		public String displayNameForObject(Object o) {
 			return this.delegate.displayNameForObject(o);
 		}
 
+		@Override
 		public List<String> getAnnotatedPropertyNames(Class clazz) {
 			return this.delegate.getAnnotatedPropertyNames(clazz);
 		}
 
+		@Override
 		public <A extends Annotation> A getAnnotationForClass(Class targetClass,
 				Class<A> annotationClass) {
 			return this.delegate.getAnnotationForClass(targetClass,
 					annotationClass);
 		}
 
+		@Override
 		public Class getClassForName(String fqn) {
 			return this.delegate.getClassForName(fqn);
 		}
 
+		@Override
 		public Class getPropertyType(Class clazz, String propertyName) {
 			return this.delegate.getPropertyType(clazz, propertyName);
 		}
 
+		@Override
 		public <T> T getTemplateInstance(Class<T> clazz) {
 			return this.delegate.getTemplateInstance(clazz);
 		}
 
+		@Override
 		public List<PropertyInfoLite> getWritableProperties(Class clazz) {
 			return this.delegate.getWritableProperties(clazz);
 		}
 
+		@Override
 		public <T> T newInstance(Class<T> clazz) {
 			return this.delegate.newInstance(clazz);
 		}
 
+		@Override
 		public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 			return PermissionsTestingTransformManager.this.newInstance(clazz,
 					objectId, localId);

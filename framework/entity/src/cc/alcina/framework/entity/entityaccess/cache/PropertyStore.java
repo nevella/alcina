@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.collections.PropertyPathFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore.PdOperator;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.PdOperator;
 import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -273,6 +273,7 @@ public class PropertyStore {
 			return get(rowOffset);
 		}
 
+		@Override
 		String get(int rowIdx) {
 			if (rowIdLookup.containsKey(rowIdx)) {
 				int stringId = rowIdLookup.get(rowIdx);

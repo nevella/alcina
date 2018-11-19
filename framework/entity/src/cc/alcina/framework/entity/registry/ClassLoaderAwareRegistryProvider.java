@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryProvider;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistryKey;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.SEUtilities;
 
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class ClassLoaderAwareRegistryProvider implements RegistryProvider {

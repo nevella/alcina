@@ -1,17 +1,13 @@
 package cc.alcina.framework.entity.registry;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.Date;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.SEUtilities;
 
 public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 	static final transient long serialVersionUID = -1L;

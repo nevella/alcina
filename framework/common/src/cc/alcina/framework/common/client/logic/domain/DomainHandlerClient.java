@@ -6,17 +6,12 @@ import java.util.stream.Stream;
 
 import com.google.gwt.core.client.Scheduler;
 
-import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.domain.Domain.DomainHandler;
+import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 public class DomainHandlerClient implements DomainHandler {
-	public interface DomainHandlerClientRemoteResolver {
-		<V extends HasIdAndLocalId> void resolve(Class<V> clazz, long objectId,
-				Consumer<V> resultConsumer);
-	}
-
 	@Override
 	public <V extends HasIdAndLocalId> void async(Class<V> clazz, long objectId,
 			boolean create, Consumer<V> resultConsumer) {
@@ -35,6 +30,11 @@ public class DomainHandlerClient implements DomainHandler {
 	}
 
 	@Override
+	public void commitPoint() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public <V extends HasIdAndLocalId> V find(Class clazz, long id) {
 		return (V) TransformManager.get().getObject(clazz, id, 0);
 	}
@@ -46,11 +46,6 @@ public class DomainHandlerClient implements DomainHandler {
 	}
 
 	@Override
-	public <V extends HasIdAndLocalId> Collection<V> list(Class<V> clazz) {
-		return TransformManager.get().getCollection(clazz);
-	}
-
-	@Override
 	public <V extends HasIdAndLocalId> V resolveTransactional(
 			DomainListener listener, V value, Object[] path) {
 		throw new UnsupportedOperationException();
@@ -58,7 +53,7 @@ public class DomainHandlerClient implements DomainHandler {
 
 	@Override
 	public <V extends HasIdAndLocalId> Stream<V> stream(Class<V> clazz) {
-		return list(clazz).stream();
+		return values(clazz).stream();
 	}
 
 	@Override
@@ -68,13 +63,18 @@ public class DomainHandlerClient implements DomainHandler {
 	}
 
 	@Override
+	public <V extends HasIdAndLocalId> Collection<V> values(Class<V> clazz) {
+		return TransformManager.get().getCollection(clazz);
+	}
+
+	@Override
 	public <V extends HasIdAndLocalId> V writeable(V v) {
 		TransformManager.get().registerDomainObject(v);
 		return v;
 	}
 
-	@Override
-	public void commitPoint() {
-		throw new UnsupportedOperationException();
+	public interface DomainHandlerClientRemoteResolver {
+		<V extends HasIdAndLocalId> void resolve(Class<V> clazz, long objectId,
+				Consumer<V> resultConsumer);
 	}
 }

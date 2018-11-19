@@ -23,8 +23,8 @@ public class InternalMetricSliceOracle {
 	public void beforeSlicePass(ThreadMXBean threadMxBean) {
 		long[] threadIdArray = threadMxBean.findDeadlockedThreads();
 		deadlockedThreadIds = CommonUtils.wrapLongArray(threadIdArray);
-		activeMemcacheLockTimes = DomainStore.get().instrumentation()
-				.getActiveMemcacheLockTimes();
+		activeMemcacheLockTimes = DomainStore.stores().databaseStore()
+				.instrumentation().getActiveMemcacheLockTimes();
 	}
 
 	public boolean shouldCheckDeadlocks() {

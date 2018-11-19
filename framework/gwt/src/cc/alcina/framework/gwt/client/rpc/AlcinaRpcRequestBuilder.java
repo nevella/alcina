@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.ClientBase;
 
 public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
     public static final String TOPIC_ALCINA_RPC_REQUEST_BUILDER_CREATED = AlcinaTopics.class

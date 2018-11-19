@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.DomainProxy.DomainProxyContext;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore.PdOperator;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.PdOperator;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId>

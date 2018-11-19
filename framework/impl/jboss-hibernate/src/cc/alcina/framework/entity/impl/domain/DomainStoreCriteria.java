@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.impl.cache;
+package cc.alcina.framework.entity.impl.domain;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,20 +18,20 @@ import org.hibernate.sql.JoinType;
 import org.hibernate.transform.ResultTransformer;
 
 @SuppressWarnings("deprecation")
-public class MemCacheCriteria implements Criteria {
+public class DomainStoreCriteria implements Criteria {
 	Class clazz;
 
 	String alias;
 
 	private Criteria entityManagerCriteria;
 
-	private MemCacheSession memCacheSession;
+	private DomainStoreSession memCacheSession;
 
 	JoinType joinType;
 
 	String associationPath;
 
-	List<MemCacheCriteria> subs = new ArrayList<MemCacheCriteria>();
+	List<DomainStoreCriteria> subs = new ArrayList<DomainStoreCriteria>();
 
 	List<Criterion> criterions = new ArrayList<Criterion>();
 
@@ -45,22 +45,22 @@ public class MemCacheCriteria implements Criteria {
 
 	private ResultTransformer resultTransformer;
 
-	public MemCacheCriteria(Class clazz, String alias,
+	public DomainStoreCriteria(Class clazz, String alias,
 			Criteria entityManagerCriteria, JoinType joinType,
-			MemCacheSession memCacheSession) {
+			DomainStoreSession memCacheSession) {
 		this(clazz, alias, null, entityManagerCriteria, joinType,
 				memCacheSession);
 	}
 
-	public MemCacheCriteria(Class clazz, String alias,
-			Criteria entityManagerCriteria, MemCacheSession memCacheSession) {
+	public DomainStoreCriteria(Class clazz, String alias,
+			Criteria entityManagerCriteria, DomainStoreSession memCacheSession) {
 		this(clazz, alias, entityManagerCriteria, JoinType.NONE,
 				memCacheSession);
 	}
 
-	public MemCacheCriteria(Class clazz, String alias, String associationPath,
+	public DomainStoreCriteria(Class clazz, String alias, String associationPath,
 			Criteria entityManagerCriteria, JoinType joinType,
-			MemCacheSession memCacheSession) {
+			DomainStoreSession memCacheSession) {
 		this.clazz = clazz;
 		this.alias = alias;
 		this.associationPath = associationPath;
@@ -145,7 +145,7 @@ public class MemCacheCriteria implements Criteria {
 		Criteria subCriteria = this.entityManagerCriteria == null ? null
 				: this.entityManagerCriteria.createCriteria(associationPath,
 						alias);
-		MemCacheCriteria newCriteria = new MemCacheCriteria(null, alias,
+		DomainStoreCriteria newCriteria = new DomainStoreCriteria(null, alias,
 				associationPath, subCriteria, arg2, memCacheSession);
 		subs.add(newCriteria);
 		return newCriteria;
@@ -175,7 +175,7 @@ public class MemCacheCriteria implements Criteria {
 
 	public List list() throws HibernateException {
 		try {
-			return new MemCacheQueryTranslator().list(this);
+			return new DomainStoreQueryTranslator().list(this);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			throw new HibernateException(ex);

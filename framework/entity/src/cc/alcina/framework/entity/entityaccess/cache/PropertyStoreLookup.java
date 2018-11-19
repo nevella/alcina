@@ -8,7 +8,7 @@ import java.util.TreeSet;
 import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore.PdOperator;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.PdOperator;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongListIterator;

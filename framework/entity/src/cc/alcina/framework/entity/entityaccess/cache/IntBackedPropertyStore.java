@@ -4,7 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Set;
 
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore.PdOperator;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.PdOperator;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
@@ -13,6 +13,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 public class IntBackedPropertyStore extends PropertyStore {
 	Int2IntOpenHashMap rowLookup;
 
+	@Override
 	public Set<Long> getIds() {
 		LongOpenHashSet res = new LongOpenHashSet();
 		IntIterator itr = rowLookup.keySet().iterator();
@@ -37,6 +38,7 @@ public class IntBackedPropertyStore extends PropertyStore {
 		rowLookup.remove((int) id);
 	}
 
+	@Override
 	protected int ensureRow(long id) {
 		int iid = (int) id;
 		if (!rowLookup.containsKey(iid)) {
@@ -46,6 +48,7 @@ public class IntBackedPropertyStore extends PropertyStore {
 		return rowLookup.get(iid);
 	}
 
+	@Override
 	protected FieldStore getFieldStoreFor(Class<?> propertyType) {
 		if (propertyType == long.class || propertyType == Long.class) {
 			return new TruncatedLongStore(tableSize);
@@ -65,6 +68,7 @@ public class IntBackedPropertyStore extends PropertyStore {
 		return -1;
 	}
 
+	@Override
 	protected void initRowLookup() {
 		rowLookup = new Int2IntOpenHashMap(getInitialSize());
 	}
@@ -95,10 +99,12 @@ public class IntBackedPropertyStore extends PropertyStore {
 			return get(rowOffset);
 		}
 
+		@Override
 		long get(int rowIdx) {
 			return list.getInt(rowIdx);
 		}
 
+		@Override
 		void put(long value, int rowIdx) {
 			if (list.size() == rowIdx) {
 				list.add((int) value);

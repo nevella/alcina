@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -28,6 +29,12 @@ public class TransactionalSubgraphTransformManager
 	MapObjectLookupJvm deleted = new MapObjectLookupJvm();
 
 	MapObjectLookupJvm modified = new MapObjectLookupJvm();
+
+	private DomainStore domainStore;
+
+	public TransactionalSubgraphTransformManager(DomainStore domainStore) {
+		this.domainStore = domainStore;
+	}
 
 	@Override
 	public IndividualPropertyAccessor cachedAccessor(Class clazz,
@@ -56,7 +63,7 @@ public class TransactionalSubgraphTransformManager
 		}
 		if (event.getSource() != null) {
 			HasIdAndLocalId source = event.getSource();
-			if (source != null && DomainStore.isRawValue(source)) {
+			if (Domain.isDomainVersion(source)) {
 				throw new RuntimeException("Source of transform"
 						+ " should be immutable except to post-persistence code");
 			}
@@ -92,8 +99,8 @@ public class TransactionalSubgraphTransformManager
 			if (value != null) {
 				return value;
 			}
-			T nonTransactional = DomainStore.get().transformManager.getObject(c,
-					id, localId);
+			T nonTransactional = domainStore.transformManager.getObject(c, id,
+					localId);
 			if (nonTransactional == null) {
 				// create object, can assume the threadTm has it
 				return null;
@@ -132,8 +139,8 @@ public class TransactionalSubgraphTransformManager
 	}
 
 	private void mapObjectToCachingProjections(HasIdAndLocalId obj) {
-		for (BaseProjectionHasEquivalenceHash listener : DomainStore
-				.get().cachingProjections.getAndEnsure(obj.getClass())) {
+		for (BaseProjectionHasEquivalenceHash listener : domainStore.cachingProjections
+				.getAndEnsure(obj.getClass())) {
 			try {
 				listener.projectHash(obj);
 			} catch (Exception e) {

@@ -13,7 +13,7 @@ public interface SearcherCollectionSource {
 		@Override
 		public <T> Collection<T> getCollectionFor(Class<T> clazz,
 				SearchDefinition def) {
-			return (Collection)Domain.list((Class) clazz);
+			return (Collection) Domain.values((Class) clazz);
 		}
 	}
 }

@@ -15,8 +15,6 @@ package cc.alcina.framework.common.client.publication;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.publication.DeliveryModel.MailAttachment;
-
 /**
  *
  * @author Nick Reddel

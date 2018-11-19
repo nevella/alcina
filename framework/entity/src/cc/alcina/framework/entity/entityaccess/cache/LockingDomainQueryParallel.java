@@ -18,7 +18,8 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils.Search
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils.SearchUtilsIdsHelperSingleThreaded;
 
 @RegistryLocation(registryPoint = LockingDomainQuery.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-public class LockingDomainQueryParallel extends LockingDomainQuery {
+public class LockingDomainQueryParallel<V extends HasIdAndLocalId>
+		extends LockingDomainQuery<V> {
 	private CachingConcurrentMap<Thread, DomainQueryThread> contexts = new CachingConcurrentMap<Thread, DomainQueryThread>(
 			DomainQueryThread::new, 20);
 
@@ -27,7 +28,7 @@ public class LockingDomainQueryParallel extends LockingDomainQuery {
 		contexts.getMap().values().forEach(DomainQueryThread::cleanup);
 	}
 
-	protected <T extends HasIdAndLocalId> boolean filter(T v) {
+	protected boolean filter(V v) {
 		for (DomainFilter filter : getFilters()) {
 			if (!filter.asCollectionFilter().allow(v)) {
 				return false;
@@ -37,8 +38,7 @@ public class LockingDomainQueryParallel extends LockingDomainQuery {
 	}
 
 	@Override
-	protected <T extends HasIdAndLocalId> Stream<T>
-			getStream(Collection<T> values) {
+	protected Stream<V> getStream(Collection<V> values) {
 		boolean serial = LooseContext.is(CONTEXT_USE_SERIAL_STREAM);
 		if (serial) {
 			return values.stream().filter(this::filter);

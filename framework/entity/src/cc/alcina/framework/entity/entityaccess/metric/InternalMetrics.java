@@ -29,8 +29,8 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.NamedThreadFactory;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore.AlcinaMemCacheInstrumentation;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLockState;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreInstrumentation;
 
 @RegistryLocation(registryPoint = InternalMetrics.class, implementationType = ImplementationType.SINGLETON)
 public class InternalMetrics {
@@ -239,8 +239,9 @@ public class InternalMetrics {
 							if (threadInfo != null) {
 								StackTraceElement[] stackTrace = thread
 										.getStackTrace();
-								AlcinaMemCacheInstrumentation instrumentation = DomainStore
-										.get().instrumentation();
+								DomainStoreInstrumentation instrumentation = DomainStore
+										.stores().databaseStore()
+										.instrumentation();
 								long activeMemcacheLockTime = instrumentation
 										.getActiveMemcacheLockTime(thread);
 								long memcacheWaitTime = instrumentation

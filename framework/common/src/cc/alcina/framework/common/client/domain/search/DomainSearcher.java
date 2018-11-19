@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.CompositeFilter;
+import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
@@ -51,12 +51,13 @@ public class DomainSearcher {
 	private LockingDomainQuery query;
 
 	public DomainSearcher() {
-		query = useSequentialSearch ? new LockingDomainQuery()
-				: Registry.impl(LockingDomainQuery.class);
 	}
 
 	public <T extends HasIdAndLocalId> List<T> search(SearchDefinition def,
 			Class<T> clazz, Comparator<T> order) {
+		query = useSequentialSearch ? new LockingDomainQuery()
+				: Registry.impl(LockingDomainQuery.class);
+		query.setQueryClass(clazz);
 		this.def = def;
 		query.def = def;
 		setupHandlers();
@@ -65,7 +66,7 @@ public class DomainSearcher {
 		List<T> list;
 		try {
 			query.readLock(true);
-			list = query.list(clazz);
+			list = query.list();
 		} finally {
 			query.readLock(false);
 		}
@@ -115,8 +116,8 @@ public class DomainSearcher {
 		}
 	}
 
-	@RegistryLocation(registryPoint = MemoryStoreLocker.class, implementationType = ImplementationType.SINGLETON)
-	public static class MemoryStoreLocker {
+	@RegistryLocation(registryPoint = DomainLocker.class, implementationType = ImplementationType.SINGLETON)
+	public static class DomainLocker {
 		public void readLock(boolean lock) {
 		}
 	}

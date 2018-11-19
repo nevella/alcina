@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.impl.cache;
+package cc.alcina.framework.entity.impl.domain;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -32,44 +32,44 @@ import com.totsp.gwittir.client.beans.Converter;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.FilterOperator;
-import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.CompositeFilter;
+import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.entity.entityaccess.cache.DomainRunner;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreQuery;
-import cc.alcina.framework.entity.entityaccess.cache.DomainRunner;
 import cc.alcina.framework.entity.entityaccess.cache.NotCacheFilter;
 
-public class MemCacheQueryTranslator {
+public class DomainStoreQueryTranslator {
 	DomainStoreQuery query;
 
-	private MemCacheCriteria root;
+	private DomainStoreCriteria root;
 
 	private List rawRows;
 
 	private GroupedRows groupedRows;
 
-	Map<String, MemCacheCriteria> aliasLookup = new LinkedHashMap<String, MemCacheCriteria>();
+	Map<String, DomainStoreCriteria> aliasLookup = new LinkedHashMap<String, DomainStoreCriteria>();
 
-	List<ProjectionHelper> projectionHelpers = new ArrayList<MemCacheQueryTranslator.ProjectionHelper>();
+	List<ProjectionHelper> projectionHelpers = new ArrayList<DomainStoreQueryTranslator.ProjectionHelper>();
 
 	private boolean aggregateQuery;
 
-	public List list(MemCacheCriteria criteria) throws NotHandledException {
+	public List list(DomainStoreCriteria criteria) throws NotHandledException {
 		this.root = criteria;
-		query = new DomainStoreQuery();
+		query = DomainStore.stores().query(root.clazz);
 		addRestrictions(criteria);
 		query.raw();
 		new DomainRunner() {
 			@Override
 			protected void run() throws Exception {
 				checkHandlesClass(root.clazz);
-				rawRows = query.list(root.clazz);
+				rawRows = query.list();
 				handleProjections();
 			}
 		};
@@ -84,14 +84,14 @@ public class MemCacheQueryTranslator {
 	}
 
 	public String translatePropertyPath(Criterion criterion,
-			MemCacheCriteria context, String propertyPath) {
+			DomainStoreCriteria context, String propertyPath) {
 		if (propertyPath.contains(".")) {
 			int idx = propertyPath.indexOf(".");
 			String prefix = propertyPath.substring(0, idx);
 			if (prefix.equals(root.alias)) {
 				propertyPath = propertyPath.substring(idx + 1);
 			} else {
-				MemCacheCriteria sub = aliasLookup.get(prefix);
+				DomainStoreCriteria sub = aliasLookup.get(prefix);
 				if (sub == null) {
 					// no alias to root, just use original path
 				} else {
@@ -104,15 +104,15 @@ public class MemCacheQueryTranslator {
 		return propertyPath;
 	}
 
-	private void addFilters(MemCacheCriteria criteria)
+	private void addFilters(DomainStoreCriteria criteria)
 			throws NotHandledException {
 		for (Criterion criterion : criteria.criterions) {
 			query.filter(criterionToFilter(criteria, criterion));
 		}
 	}
 
-	private void addJoinFilter(MemCacheCriteria criteria,
-			MemCacheCriteria sub) {
+	private void addJoinFilter(DomainStoreCriteria criteria,
+			DomainStoreCriteria sub) {
 		switch (sub.joinType) {
 		case INNER_JOIN:
 		case LEFT_OUTER_JOIN:
@@ -125,25 +125,25 @@ public class MemCacheQueryTranslator {
 				sub.joinType, sub.alias);
 	}
 
-	private void addOrders(MemCacheCriteria criteria) {
+	private void addOrders(DomainStoreCriteria criteria) {
 		// TODO Auto-generated method stub
 	}
 
-	private void addRestrictions(MemCacheCriteria criteria)
+	private void addRestrictions(DomainStoreCriteria criteria)
 			throws NotHandledException {
 		aliasLookup.put(criteria.alias, criteria);
-		for (MemCacheCriteria sub : criteria.subs) {
+		for (DomainStoreCriteria sub : criteria.subs) {
 			addJoinFilter(criteria, sub);
 		}
 		addFilters(criteria);
-		for (MemCacheCriteria sub : criteria.subs) {
+		for (DomainStoreCriteria sub : criteria.subs) {
 			addRestrictions(sub);
 		}
 		addOrders(criteria);
 	}
 
 	private void checkHandlesClass(Class clazz) throws NotHandledException {
-		if (!DomainStore.get().isCached(clazz)) {
+		if (!query.getStore().isCached(clazz)) {
 			throw new NotHandledException(
 					"Not handled class - " + clazz.getSimpleName());
 		}
@@ -165,8 +165,9 @@ public class MemCacheQueryTranslator {
 		groupedRows = new GroupedRows(groupCount);
 	}
 
-	protected DomainFilter criterionToFilter(MemCacheCriteria memCacheCriteria,
-			Criterion criterion) throws NotHandledException {
+	protected DomainFilter criterionToFilter(
+			DomainStoreCriteria memCacheCriteria, Criterion criterion)
+			throws NotHandledException {
 		boolean handled = false;
 		for (CriterionTranslator translator : Registry
 				.impls(CriterionTranslator.class)) {
@@ -203,8 +204,9 @@ public class MemCacheQueryTranslator {
 
 		@Override
 		protected DomainFilter handle(Conjunction criterion,
-				MemCacheCriteria memCacheCriteria,
-				MemCacheQueryTranslator translator) throws NotHandledException {
+				DomainStoreCriteria memCacheCriteria,
+				DomainStoreQueryTranslator translator)
+				throws NotHandledException {
 			List<Criterion> subs = (List<Criterion>) getValue(criterion,
 					"criteria", "conditions");
 			if (subs.size() == 1) {
@@ -239,8 +241,9 @@ public class MemCacheQueryTranslator {
 		}
 
 		protected abstract DomainFilter handle(C criterion,
-				MemCacheCriteria memCacheCriteria,
-				MemCacheQueryTranslator translator) throws NotHandledException;
+				DomainStoreCriteria memCacheCriteria,
+				DomainStoreQueryTranslator translator)
+				throws NotHandledException;
 	}
 
 	public static class DisjunctionTranslator
@@ -252,8 +255,9 @@ public class MemCacheQueryTranslator {
 
 		@Override
 		protected DomainFilter handle(Disjunction criterion,
-				MemCacheCriteria memCacheCriteria,
-				MemCacheQueryTranslator translator) throws NotHandledException {
+				DomainStoreCriteria memCacheCriteria,
+				DomainStoreQueryTranslator translator)
+				throws NotHandledException {
 			List<Criterion> subs = (List<Criterion>) getValue(criterion,
 					"criteria", "conditions");
 			if (subs.size() == 1) {
@@ -277,8 +281,8 @@ public class MemCacheQueryTranslator {
 
 		@Override
 		protected DomainFilter handle(InExpression criterion,
-				MemCacheCriteria memCacheCriteria,
-				MemCacheQueryTranslator translator) {
+				DomainStoreCriteria memCacheCriteria,
+				DomainStoreQueryTranslator translator) {
 			Object value = getValue(criterion, "values");
 			Collection collection = null;
 			if (value.getClass().isArray()) {
@@ -307,8 +311,9 @@ public class MemCacheQueryTranslator {
 
 		@Override
 		protected DomainFilter handle(NotExpression criterion,
-				MemCacheCriteria memCacheCriteria,
-				MemCacheQueryTranslator translator) throws NotHandledException {
+				DomainStoreCriteria memCacheCriteria,
+				DomainStoreQueryTranslator translator)
+				throws NotHandledException {
 			Criterion sub = (Criterion) getValue(criterion, "criterion");
 			NotCacheFilter filter = new NotCacheFilter(
 					translator.criterionToFilter(memCacheCriteria, sub));
@@ -325,8 +330,9 @@ public class MemCacheQueryTranslator {
 
 		@Override
 		protected DomainFilter handle(NullExpression criterion,
-				MemCacheCriteria memCacheCriteria,
-				MemCacheQueryTranslator translator) throws NotHandledException {
+				DomainStoreCriteria memCacheCriteria,
+				DomainStoreQueryTranslator translator)
+				throws NotHandledException {
 			String propertyName = translator.translatePropertyPath(criterion,
 					memCacheCriteria,
 					getStringFieldValue(criterion, "propertyName"));
@@ -343,8 +349,9 @@ public class MemCacheQueryTranslator {
 
 		@Override
 		protected DomainFilter handle(SimpleExpression criterion,
-				MemCacheCriteria memCacheCriteria,
-				MemCacheQueryTranslator translator) throws NotHandledException {
+				DomainStoreCriteria memCacheCriteria,
+				DomainStoreQueryTranslator translator)
+				throws NotHandledException {
 			String propertyName = translator.translatePropertyPath(criterion,
 					memCacheCriteria,
 					getStringFieldValue(criterion, "propertyName"));
@@ -487,7 +494,7 @@ public class MemCacheQueryTranslator {
 			this.groupCount = groupCount;
 			if (groupCount == 0) {
 			} else {
-				existingRows = new UnsortedMultikeyMap<MemCacheQueryTranslator.GroupedRow>(
+				existingRows = new UnsortedMultikeyMap<DomainStoreQueryTranslator.GroupedRow>(
 						groupCount);
 			}
 		}

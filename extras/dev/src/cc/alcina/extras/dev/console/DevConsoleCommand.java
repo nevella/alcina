@@ -360,7 +360,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 													.getName()),
 									console.consoleHistoryFile);
 					console.loadConfig();
-					runSubcommand(new CmdReset(), new String[0]);
+					// runSubcommand(new CmdReset(), new String[0]);
 				}
 			} else {
 				SEUtilities.copyFile(testFolder, profileSer);
@@ -941,29 +941,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			}
 			System.out.println("\n");
 			return "";
-		}
-	}
-
-	public static class CmdReset extends DevConsoleCommand {
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "reset" };
-		}
-
-		@Override
-		public String getDescription() {
-			return "Reload metadata parser xml, reload citables cache and server.properties";
-		}
-
-		@Override
-		public String getUsage() {
-			return "";
-		}
-
-		@Override
-		public String run(String[] argv) throws Exception {
-			console.resetObjects();
-			return "Lookups reset";
 		}
 	}
 

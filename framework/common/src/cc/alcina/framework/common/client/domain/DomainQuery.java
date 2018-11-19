@@ -8,13 +8,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public abstract class DomainQuery<Q extends DomainQuery> {
+public abstract class DomainQuery<V extends HasIdAndLocalId> {
 	protected Collection<Long> ids = new LinkedHashSet<Long>();
 
 	private List<DomainFilter> filters = new ArrayList<DomainFilter>();
@@ -23,49 +24,53 @@ public abstract class DomainQuery<Q extends DomainQuery> {
 
 	private boolean nonTransactional;
 
-	public DomainQuery() {
+	protected Class<V> clazz;
+
+	public DomainQuery(Class<V> clazz) {
+		this.clazz = clazz;
 	}
 
-	public <T extends HasIdAndLocalId> Set<T> asSet(Class<T> clazz) {
-		return new LinkedHashSet<T>(list(clazz));
+	public Set<V> asSet() {
+		return stream().collect(Collectors.toSet());
 	}
 
-	public <T extends HasIdAndLocalId> int count(Class<T> clazz) {
-		return raw().list(clazz).size();
+	public int count() {
+		return raw().list().size();
 	}
 
-	public Q filter(DomainFilter filter) {
+	public DomainQuery<V> filter(DomainFilter filter) {
 		if (filter instanceof CompositeFilter) {
 			CompositeFilter compositeFilter = (CompositeFilter) filter;
 			if (compositeFilter.canFlatten()) {
 				for (DomainFilter sub : compositeFilter.getFilters()) {
 					this.filters.add(sub);
 				}
-				return (Q) this;
+				return (DomainQuery<V>) this;
 			}
 		}
 		this.filters.add(filter);
-		return (Q) this;
+		return this;
 	}
 
-	public Q filter(Predicate p) {
+	public DomainQuery<V> filter(Predicate p) {
 		return filter(new DomainFilter(p));
 	}
 
-	public Q filter(String key, Object value) {
+	public DomainQuery<V> filter(String key, Object value) {
 		return filter(new DomainFilter(key, value));
 	}
 
-	public Q filter(String key, Object value, FilterOperator operator) {
+	public DomainQuery<V> filter(String key, Object value,
+			FilterOperator operator) {
 		return filter(new DomainFilter(key, value, operator));
 	}
 
-	public <T extends HasIdAndLocalId> T find(Class<T> clazz) {
-		return optional(clazz).orElse(null);
+	public V find() {
+		return optional().orElse(null);
 	}
 
-	public <T extends HasIdAndLocalId> T first(Class<T> clazz) {
-		return CommonUtils.first(list(clazz));
+	public V first() {
+		return CommonUtils.first(list());
 	}
 
 	public List<DomainFilter> getFilters() {
@@ -77,14 +82,14 @@ public abstract class DomainQuery<Q extends DomainQuery> {
 				: new LinkedHashSet<Long>(this.ids);
 	}
 
-	public Q id(long id) {
+	public DomainQuery<V> id(long id) {
 		this.ids = Collections.singleton(id);
-		return (Q) this;
+		return this;
 	}
 
-	public Q ids(Collection<Long> ids) {
+	public DomainQuery<V> ids(Collection<Long> ids) {
 		this.ids = ids;
-		return (Q) this;
+		return this;
 	}
 
 	public boolean isNonTransactional() {
@@ -95,24 +100,24 @@ public abstract class DomainQuery<Q extends DomainQuery> {
 		return this.raw;
 	}
 
-	public abstract <T extends HasIdAndLocalId> List<T> list(Class<T> clazz);
+	public abstract List<V> list();
 
-	public Q nonTransactional() {
+	public DomainQuery<V> nonTransactional() {
 		this.nonTransactional = true;
-		return (Q) this;
+		return this;
 	}
 
-	public <T extends HasIdAndLocalId> Optional<T> optional(Class<T> clazz) {
-		return stream(clazz).findFirst();
+	public Optional<V> optional() {
+		return stream().findFirst();
 	}
 
-	public Q raw() {
+	public DomainQuery<V> raw() {
 		this.raw = true;
-		return (Q) this;
+		return this;
 	}
 
-	public <T extends HasIdAndLocalId> Stream<T> stream(Class<T> clazz) {
-		return list(clazz).stream();
+	public Stream<V> stream() {
+		return list().stream();
 	}
 
 	@Override

@@ -21,6 +21,7 @@ import java.util.Set;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
@@ -88,10 +89,9 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				Object impl = getCache().get(persistentClass, (Long) id);
 				if (impl == null) {
 					if (useRawMemCache) {
-						if (DomainStore.get()
+						if (DomainStore.stores().databaseStore()
 								.isCachedTransactional(persistentClass)) {
-							impl = (T) DomainStore.get()
-									.findRaw(persistentClass, (Long) id);
+							impl = (T) Domain.find(persistentClass, (Long) id);
 						}
 					}
 				}
@@ -127,9 +127,9 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 					return (T) cached;
 				} else {
 					if (useRawMemCache) {
-						if (DomainStore.get().isCached(valueClass)) {
-							return (T) DomainStore.get().findRaw(valueClass,
-									hili.getId());
+						if (DomainStore.stores().databaseStore()
+								.isCached(valueClass)) {
+							return (T) Domain.find(valueClass, hili.getId());
 						}
 					}
 					HasIdAndLocalId clonedHili = (HasIdAndLocalId) cloned;

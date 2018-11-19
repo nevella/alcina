@@ -1,7 +1,5 @@
 package cc.alcina.framework.common.client.collections;
 
-import cc.alcina.framework.common.client.collections.BidiConverter;
-
 public class BidiLongConverter extends BidiConverter<String, Long> {
 	private boolean preserveNulls;
 

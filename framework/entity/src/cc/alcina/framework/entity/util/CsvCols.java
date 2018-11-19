@@ -12,7 +12,6 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.util.CsvCols.CsvRow;
 
 public class CsvCols implements Iterable<CsvCols.CsvRow>, Iterator<CsvCols.CsvRow> {
 	Map<String, Integer> colLookup = new LinkedHashMap<>();

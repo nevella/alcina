@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -107,6 +108,7 @@ public class SubgraphTransformManager extends TransformManager {
 		return object;
 	}
 
+	@Override
 	protected HasIdAndLocalId getObjectForCreate(DomainTransformEvent event) {
 		return null;
 	}
@@ -132,65 +134,6 @@ public class SubgraphTransformManager extends TransformManager {
 	@Override
 	protected boolean updateAssociationsWithoutNoChangeCheck() {
 		return true;
-	}
-
-	static class SubgraphClassLookup implements ClassLookup {
-		@Override
-		public String displayNameForObject(Object o) {
-			return ObjectPersistenceHelper.get().displayNameForObject(o);
-		}
-
-		@Override
-		public List<String> getAnnotatedPropertyNames(Class clazz) {
-			return ObjectPersistenceHelper.get()
-					.getAnnotatedPropertyNames(clazz);
-		}
-
-		@Override
-		public <A extends Annotation> A getAnnotationForClass(Class targetClass,
-				Class<A> annotationClass) {
-			return ObjectPersistenceHelper.get()
-					.getAnnotationForClass(targetClass, annotationClass);
-		}
-
-		public Class getClassForName(String fqn) {
-			return ObjectPersistenceHelper.get().getClassForName(fqn);
-		}
-
-		@Override
-		public Class getPropertyType(Class clazz, String propertyName) {
-			return ObjectPersistenceHelper.get().getPropertyType(clazz,
-					propertyName);
-		}
-
-		@Override
-		public <T> T getTemplateInstance(Class<T> clazz) {
-			return ObjectPersistenceHelper.get().getTemplateInstance(clazz);
-		}
-
-		@Override
-		public List<PropertyInfoLite> getWritableProperties(Class clazz) {
-			return ObjectPersistenceHelper.get().getWritableProperties(clazz);
-		}
-
-		public <T> T newInstance(Class<T> clazz) {
-			try {
-				return clazz.newInstance();
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
-			try {
-				HasIdAndLocalId newInstance = (HasIdAndLocalId) clazz
-						.newInstance();
-				newInstance.setLocalId(localId);
-				return (T) newInstance;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
 	}
 
 	public static class SubgraphTransformManagerPreProcess
@@ -223,17 +166,79 @@ public class SubgraphTransformManager extends TransformManager {
 			if (t == null) {
 				if (id == 0) {
 					HiliLocator hiliLocator = locatorMap.get(localId);
-					if(hiliLocator==null){
+					if (hiliLocator == null) {
 						return null;
 					}
 					id = hiliLocator.id;
 				}
 				if (id != 0) {
-					t = DomainStore.get().find(c, id);
+					t = Domain.detachedVersion(c, id);
 					mapObject(t);
 				}
 			}
 			return t;
+		}
+	}
+
+	static class SubgraphClassLookup implements ClassLookup {
+		@Override
+		public String displayNameForObject(Object o) {
+			return ObjectPersistenceHelper.get().displayNameForObject(o);
+		}
+
+		@Override
+		public List<String> getAnnotatedPropertyNames(Class clazz) {
+			return ObjectPersistenceHelper.get()
+					.getAnnotatedPropertyNames(clazz);
+		}
+
+		@Override
+		public <A extends Annotation> A getAnnotationForClass(Class targetClass,
+				Class<A> annotationClass) {
+			return ObjectPersistenceHelper.get()
+					.getAnnotationForClass(targetClass, annotationClass);
+		}
+
+		@Override
+		public Class getClassForName(String fqn) {
+			return ObjectPersistenceHelper.get().getClassForName(fqn);
+		}
+
+		@Override
+		public Class getPropertyType(Class clazz, String propertyName) {
+			return ObjectPersistenceHelper.get().getPropertyType(clazz,
+					propertyName);
+		}
+
+		@Override
+		public <T> T getTemplateInstance(Class<T> clazz) {
+			return ObjectPersistenceHelper.get().getTemplateInstance(clazz);
+		}
+
+		@Override
+		public List<PropertyInfoLite> getWritableProperties(Class clazz) {
+			return ObjectPersistenceHelper.get().getWritableProperties(clazz);
+		}
+
+		@Override
+		public <T> T newInstance(Class<T> clazz) {
+			try {
+				return clazz.newInstance();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		@Override
+		public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
+			try {
+				HasIdAndLocalId newInstance = (HasIdAndLocalId) clazz
+						.newInstance();
+				newInstance.setLocalId(localId);
+				return (T) newInstance;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 	}
 
@@ -255,7 +260,7 @@ public class SubgraphTransformManager extends TransformManager {
 		@Override
 		public <T extends HasIdAndLocalId> void
 				loadObject(Class<? extends T> clazz, long id, long localId) {
-			store.mapObject(DomainStore.get().find(clazz, id));
+			store.mapObject(Domain.detachedVersion(clazz, id));
 		}
 
 		@Override

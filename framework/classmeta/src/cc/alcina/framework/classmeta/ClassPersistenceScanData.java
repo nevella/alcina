@@ -1,6 +1,5 @@
 package cc.alcina.framework.classmeta;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -15,7 +14,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.entity.registry.ClassMetadata;
-import cc.alcina.framework.entity.registry.JarHelper;
 
 @XmlRootElement
 public class ClassPersistenceScanData

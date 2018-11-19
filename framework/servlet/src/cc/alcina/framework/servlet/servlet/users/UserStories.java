@@ -10,7 +10,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -24,7 +23,6 @@ import cc.alcina.framework.common.client.entity.UserStory;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -32,8 +30,6 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreQuery;
 import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 import cc.alcina.framework.entity.parser.structured.node.XmlNodeHtmlTableBuilder;
@@ -44,64 +40,11 @@ import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
 public class UserStories {
-	public void persist(UserStory incoming) {
-		ClientInstance clientInstance = SessionHelper
-				.getAuthenticatedSessionClientInstance(
-						CommonRemoteServiceServlet
-								.getContextThreadLocalRequest());
-		Optional<? extends UserStory> o_story = getUserStory(clientInstance,
-				incoming.getClientInstanceUid());
-		UserStory story = null;
-		if (o_story.isPresent()) {
-			story = DomainStore.get().find(o_story.get());
-			TransformManager.get().registerDomainObject(story);
-		} else {
-			story = TransformManager.get()
-					.createDomainObject(getImplementation());
-		}
-		String delta = getDelta(incoming, story);
-		ResourceUtilities.copyBeanProperties(incoming, story, null, false,
-				Domain.domainBaseVersionablePropertyNames);
-		story.setClientInstanceId(clientInstance.getId());
-		long creationId = ServletLayerUtils
-				.pushTransformsAndGetFirstCreationId(true);
-		long storyId = creationId == 0 ? story.getId() : creationId;
-		Ax.out("published user story - %s:\n%s", storyId, delta);
-		build(storyId, delta);
-		topicUserStoriesEvents().publish(storyNode);
-	}
-
 	public static final String TOPIC_USER_STORIES_EVENT_OCCURRED = UserStories.class
 			.getName() + "." + "TOPIC_USER_STORIES_EVENT_OCCURRED";
 
 	public static TopicSupport<ObjectNode> topicUserStoriesEvents() {
 		return new TopicSupport<>(TOPIC_USER_STORIES_EVENT_OCCURRED);
-	}
-
-	private String getDelta(UserStory incoming, UserStory story) {
-		String s1 = incoming.getStory();
-		String s2 = story.getStory();
-		List<String> lines1 = Arrays
-				.asList(Ax.blankToEmpty(incoming.getStory()).split("\n"));
-		List<String> lines2 = Arrays
-				.asList(Ax.blankToEmpty(story.getStory()).split("\n"));
-		return lines1.subList(lines2.size(), lines1.size()).stream()
-				.collect(Collectors.joining("\n"));
-	}
-
-	private Class<? extends UserStory> getImplementation() {
-		return CommonPersistenceProvider.get()
-				.getCommonPersistenceExTransaction()
-				.getImplementation(UserStory.class);
-	}
-
-	private Optional<? extends UserStory> getUserStory(
-			ClientInstance clientInstance, String clientInstanceUid) {
-		Predicate<UserStory> predicate = us -> clientInstanceUid != null
-				? clientInstanceUid.equals(us.getClientInstanceUid())
-				: us.getClientInstanceId() == clientInstance.getId();
-		return new DomainStoreQuery().filter(predicate)
-				.list(getImplementation()).stream().findFirst();
 	}
 
 	private String html;
@@ -119,8 +62,7 @@ public class UserStories {
 	public void build(long id, String delta) {
 		JsonNodeFactory nodeFactory = JsonNodeFactory.instance;
 		storyNode = nodeFactory.objectNode();
-		UserStory userStory = DomainStore.get().find(getImplementation(),
-				id);
+		UserStory userStory = Domain.find(getImplementation(), id);
 		ClientInstance clientInstance = null;
 		long clientInstanceId = userStory.getClientInstanceId();
 		if (clientInstanceId != 0) {
@@ -133,8 +75,9 @@ public class UserStories {
 						.getCommonPersistenceExTransaction()
 						.getImplementation(ClientInstance.class).newInstance();
 				clientInstance.setUserAgent(userStory.getUserAgent());
-				clientInstance.setHelloDate(userStory.getDate() == null
-						? new Date() : userStory.getDate());
+				clientInstance
+						.setHelloDate(userStory.getDate() == null ? new Date()
+								: userStory.getDate());
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -150,7 +93,8 @@ public class UserStories {
 				: clientInstance.getUser().toIdNameString();
 		String location = userStory.getLocation();
 		if (Ax.notBlank(location)) {
-			location = Ax.format("%s :: %s", location, GeolocationResolver.get().getLocation(location));
+			location = Ax.format("%s :: %s", location,
+					GeolocationResolver.get().getLocation(location));
 		}
 		{
 			XmlNodeHtmlTableBuilder builder = body.html().tableBuilder();
@@ -166,8 +110,8 @@ public class UserStories {
 					.cell(userStory.getTrigger());
 			XmlNodeHtmlTableRowBuilder row = builder.row();
 			row.cell("\u00a0");
-			row.cell()
-					.text("Note, below the 'near' field refers to text either of the element clicked or the closest subsequent text")
+			row.cell().text(
+					"Note, below the 'near' field refers to text either of the element clicked or the closest subsequent text")
 					.style("font-size: 85%; font-style: italic; font-color: #555;")
 					.cell();
 			builder.append();
@@ -195,7 +139,7 @@ public class UserStories {
 			storyNode.set("details", details);
 			List<ClientLogRecord> list = new ArrayList<>();
 			for (String line : story.split("\\n")) {
-				if(line.isEmpty()) {
+				if (line.isEmpty()) {
 					continue;
 				}
 				Object deser = AlcinaBeanSerializer.deserializeHolder(line);
@@ -275,12 +219,72 @@ public class UserStories {
 		html = doc.prettyToString();
 	}
 
-	static class Message {
-		String path;
+	public void persist(UserStory incoming) {
+		ClientInstance clientInstance = SessionHelper
+				.getAuthenticatedSessionClientInstance(
+						CommonRemoteServiceServlet
+								.getContextThreadLocalRequest());
+		Optional<? extends UserStory> o_story = getUserStory(clientInstance,
+				incoming.getClientInstanceUid());
+		UserStory story = null;
+		if (o_story.isPresent()) {
+			story = (UserStory) o_story.get().writeable();
+		} else {
+			story = TransformManager.get()
+					.createDomainObject(getImplementation());
+		}
+		String delta = getDelta(incoming, story);
+		ResourceUtilities.copyBeanProperties(incoming, story, null, false,
+				Domain.domainBaseVersionablePropertyNames);
+		story.setClientInstanceId(clientInstance.getId());
+		long creationId = ServletLayerUtils
+				.pushTransformsAndGetFirstCreationId(true);
+		long storyId = creationId == 0 ? story.getId() : creationId;
+		Ax.out("published user story - %s:\n%s", storyId, delta);
+		build(storyId, delta);
+		topicUserStoriesEvents().publish(storyNode);
+	}
 
-		String text;
+	private String getDelta(UserStory incoming, UserStory story) {
+		String s1 = incoming.getStory();
+		String s2 = story.getStory();
+		List<String> lines1 = Arrays
+				.asList(Ax.blankToEmpty(incoming.getStory()).split("\n"));
+		List<String> lines2 = Arrays
+				.asList(Ax.blankToEmpty(story.getStory()).split("\n"));
+		return lines1.subList(lines2.size(), lines1.size()).stream()
+				.collect(Collectors.joining("\n"));
+	}
 
-		public boolean textIsLocator;
+	private Class<? extends UserStory> getImplementation() {
+		return CommonPersistenceProvider.get()
+				.getCommonPersistenceExTransaction()
+				.getImplementation(UserStory.class);
+	}
+
+	private Optional<? extends UserStory> getUserStory(
+			ClientInstance clientInstance, String clientInstanceUid) {
+		Predicate<UserStory> predicate = us -> clientInstanceUid != null
+				? clientInstanceUid.equals(us.getClientInstanceUid())
+				: us.getClientInstanceId() == clientInstance.getId();
+		return Domain.query(getImplementation()).filter(predicate).stream()
+				.findFirst();
+	}
+
+	private String untilFirstCamel(String text) {
+		List<String> out = new ArrayList<>();
+		List<String> words = Arrays.asList(text.split(" "));
+		Pattern pattern = Pattern.compile("(\\w[a-z]+)[A-Z].*");
+		for (String word : words) {
+			Matcher matcher = pattern.matcher(word);
+			if (matcher.matches()) {
+				out.add(matcher.group(1));
+				break;
+			} else {
+				out.add(word);
+			}
+		}
+		return out.stream().collect(Collectors.joining(" "));
 	}
 
 	protected Message parseMessage(ClientLogRecord record) {
@@ -308,19 +312,11 @@ public class UserStories {
 		return out;
 	}
 
-	private String untilFirstCamel(String text) {
-		List<String> out = new ArrayList<>();
-		List<String> words = Arrays.asList(text.split(" "));
-		Pattern pattern = Pattern.compile("(\\w[a-z]+)[A-Z].*");
-		for (String word : words) {
-			Matcher matcher = pattern.matcher(word);
-			if (matcher.matches()) {
-				out.add(matcher.group(1));
-				break;
-			} else {
-				out.add(word);
-			}
-		}
-		return out.stream().collect(Collectors.joining(" "));
+	static class Message {
+		String path;
+
+		String text;
+
+		public boolean textIsLocator;
 	}
 }

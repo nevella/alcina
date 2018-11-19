@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.util.HasEquivalenceHashMap;
 public abstract class BaseProjectionHasEquivalenceHash<T extends HasIdAndLocalId>
 		extends BaseProjection<T> {
 	private ThreadLocal<HasEquivalenceHashMap> perThreadEquivalenceMap = new ThreadLocal<HasEquivalenceHashMap>() {
+		@Override
 		protected synchronized HasEquivalenceHashMap initialValue() {
 			return new HasEquivalenceHashMap();
 		}
@@ -27,7 +28,7 @@ public abstract class BaseProjectionHasEquivalenceHash<T extends HasIdAndLocalId
 	public T matchesTransactional(Collection<T> perClassTransactional,
 			Object[] path) {
 		Collection<T> coll = perClassTransactional;
-		if (DomainStore.get().transactional
+		if (DomainStore.stores().databaseStore().transactions()
 				.transactionActiveInCurrentThread()) {
 			List list = perThreadEquivalenceMap.get()
 					.get(equivalenceHashFromPath(path));

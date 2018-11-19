@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.common.client.logic.permissions;
 
-import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 

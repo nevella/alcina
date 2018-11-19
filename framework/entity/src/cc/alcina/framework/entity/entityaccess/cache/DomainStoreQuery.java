@@ -1,47 +1,49 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.projection.CollectionProjectionFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 
-public class DomainStoreQuery extends DomainQuery<DomainStoreQuery> {
+public class DomainStoreQuery<V extends HasIdAndLocalId>
+		extends DomainQuery<V> {
 	private GraphProjectionFieldFilter fieldFilter;
 
 	private GraphProjectionDataFilter dataFilter;
 
-	public DomainStoreQuery() {
+	private DomainStore store;
+
+	public DomainStoreQuery(Class<V> clazz, DomainStore store) {
+		super(clazz);
+		this.store = store;
 	}
 
-	public <T extends HasIdAndLocalId> List<T> allRaw(Class<T> clazz) {
+	public List<V> allRaw() {
 		raw = true;
-		ids = DomainStore.get().getIds(clazz);
-		return list(clazz);
+		ids = Domain.ids(clazz);
+		return list();
 	}
 
-	public DomainStoreQuery
+	public DomainStoreQuery<V>
 			dataFilter(GraphProjectionDataFilter dataFilter) {
 		this.dataFilter = dataFilter;
 		return this;
 	}
 
-	public DomainStoreQuery
+	public DomainStoreQuery<V>
 			fieldFilter(GraphProjectionFieldFilter fieldFilter) {
 		this.fieldFilter = fieldFilter;
 		return this;
 	}
 
 	public String getCanonicalPropertyPath(Class clazz, String propertyPath) {
-		return DomainStore.get().getCanonicalPropertyPath(clazz,
-				propertyPath);
+		return store.getCanonicalPropertyPath(clazz, propertyPath);
 	}
 
 	public GraphProjectionDataFilter getDataFilter() {
@@ -58,17 +60,12 @@ public class DomainStoreQuery extends DomainQuery<DomainStoreQuery> {
 		return this.fieldFilter;
 	}
 
+	public DomainStore getStore() {
+		return store;
+	}
+
 	@Override
-	public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
-		return DomainStore.get().list(clazz, this);
+	public List<V> list() {
+		return store.list(clazz, this);
 	}
-
-	public <T extends HasIdAndLocalId> Stream<T>
-			streamRegistered(Class<T> clazz) {
-		List<T> list = list(clazz);
-		list.forEach(t -> TransformManager.get().registerDomainObject(t));
-		return list.stream();
-	}
-
-	
 }

@@ -6,7 +6,6 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.csobjects.ITaskResult;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 

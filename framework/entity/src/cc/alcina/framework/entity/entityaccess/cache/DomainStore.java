@@ -6,61 +6,34 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.persistence.Column;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.event.shared.UmbrellaException;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -69,23 +42,20 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
-import cc.alcina.framework.common.client.domain.BaseProjection;
-import cc.alcina.framework.common.client.domain.DomainDescriptor;
-import cc.alcina.framework.common.client.domain.DomainFilter;
-import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
-import cc.alcina.framework.common.client.domain.DomainListener;
-import cc.alcina.framework.common.client.domain.DomainLookup;
-import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
-import cc.alcina.framework.common.client.domain.DomainProjection;
 import cc.alcina.framework.common.client.domain.ComplexFilter;
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.domain.ModificationChecker;
-import cc.alcina.framework.common.client.domain.DomainDescriptor.DomainStoreTask;
-import cc.alcina.framework.common.client.domain.DomainDescriptor.PreProvideTask;
 import cc.alcina.framework.common.client.domain.Domain.DomainHandler;
+import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
+import cc.alcina.framework.common.client.domain.DomainDescriptor;
+import cc.alcina.framework.common.client.domain.DomainDescriptor.PreProvideTask;
+import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.DomainListener;
+import cc.alcina.framework.common.client.domain.DomainLookup;
+import cc.alcina.framework.common.client.domain.DomainQuery;
+import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
+import cc.alcina.framework.common.client.domain.ModificationChecker;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
-import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
@@ -101,32 +71,26 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
-import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CountingMap;
-import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.common.client.util.SystemoutCounter;
-import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
-import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreHealth;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreInstrumentation;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjections;
 
@@ -148,17 +112,11 @@ import cc.alcina.framework.entity.projection.GraphProjections;
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class DomainStore implements RegistrableService {
-	private static final int LONG_LOCK_TRACE_LENGTH = 99999;
-
-	private static final int MAX_QUEUED_TIME = 500;
-
-	private static DomainStore singleton;
-
 	public static final String TOPIC_UPDATE_EXCEPTION = DomainStore.class
 			.getName() + ".TOPIC_UPDATE_EXCEPTION";
 
-	public static final String TOPIC_MAPPING_EVENT = DomainStore.class
-			.getName() + ".TOPIC_MAPPING_EVENT";
+	public static final String TOPIC_MAPPING_EVENT = DomainStore.class.getName()
+			+ ".TOPIC_MAPPING_EVENT";
 
 	public static final String CONTEXT_DEBUG_QUERY_METRICS = DomainStore.class
 			.getName() + ".CONTEXT_DEBUG_QUERY_METRICS";
@@ -180,90 +138,27 @@ public class DomainStore implements RegistrableService {
 			+ ".CONTEXT_NO_LOCKS";
 
 	public static final Logger LOGGER_WRAPPED_OBJECT_REF_INTEGRITY = AlcinaLogUtils
-			.getTaggedLogger(DomainStore.class,
-					"wrapped_object_ref_integrity");
+			.getTaggedLogger(DomainStore.class, "wrapped_object_ref_integrity");
 
-	public static void checkActiveTransaction() {
-		if (!get().transactional.transactionActiveInCurrentThread()) {
-			throw new RuntimeException(
-					"requires transaction in current thread");
-		}
+	private static DomainStores domainStores = new DomainStores();
+
+	public static Builder builder() {
+		return new Builder();
 	}
 
+	// FIXME - this is over-called, probably should be changed to strict
+	// start/finish semantics (and made non-static)
 	public static PerThreadTransaction ensureActiveTransaction() {
-		return get().transactional.ensureTransaction();
+		return stores().databaseStore().transactions().ensureTransaction();
 	}
 
-	public static <T extends HasIdAndLocalId> T ensureNonRaw(T t) {
-		return isRawValue(t) ? get().find(t) : t;
+	public static DomainStores stores() {
+		return domainStores;
 	}
-
-	public static <T extends HasIdAndLocalId> T ensureNonRawAndRegister(T t) {
-		return TransformManager.get().registerDomainObject(ensureNonRaw(t));
-	}
-
-	public static void ensureReferredPropertyIsTransactional(
-			HasIdAndLocalId hili, String propertyName) {
-		// target, even if new object, will still be equals() to old, so no
-		// property change will be fired, which is the desired behaviour
-		HasIdAndLocalId target = (HasIdAndLocalId) Reflections
-				.propertyAccessor().getPropertyValue(hili, propertyName);
-		if (target != null) {
-			target = ensureTransactional(target);
-			Reflections.propertyAccessor().setPropertyValue(hili, propertyName,
-					target);
-		}
-	}
-
-	public static <V extends HasIdAndLocalId> V ensureTransactional(V value) {
-		return get().transactional.ensureTransactional(value);
-	}
-
-	public static DomainStore get() {
-		if (singleton == null) {
-			// not thread-safe, make sure it's initialised single-threaded on
-			// app startup
-			singleton = new DomainStore();
-			Registry.registerSingleton(DomainStore.class, singleton);
-		}
-		return singleton;
-	}
-
-	public static <V extends HasIdAndLocalId> boolean isRawValue(V v) {
-		V existing = (V) get().cache.get(v.getClass(), v.getId());
-		return existing == v;
-	}
-
-	public static <T extends HasIdAndLocalId> T raw(Class<T> clazz, long id) {
-		return (T) get().findRaw(clazz, id);
-	}
-
-	public static <T extends HasIdAndLocalId> T raw(HiliLocator objectLocator) {
-		return (T) get().findRaw(objectLocator.clazz, objectLocator.id);
-	}
-
-	public static <T extends HasIdAndLocalId> T raw(T t) {
-		return get().findRaw(t);
-	}
-
-	private Map<PropertyDescriptor, JoinTable> joinTables;
-
-	private Map<Class, List<PdOperator>> descriptors;
-
-	// class,pName
-	private UnsortedMultikeyMap<PropertyDescriptor> manyToOneRev;
-
-	private UnsortedMultikeyMap<PropertyDescriptor> oneToOneRev;
-
-	private UnsortedMultikeyMap<PropertyDescriptor> memCacheColumnRev;
-
-	private Multimap<Class, List<ColumnDescriptor>> columnDescriptors;
-
-	private Map<PropertyDescriptor, Class> propertyDescriptorFetchTypes = new LinkedHashMap<PropertyDescriptor, Class>();
 
 	SubgraphTransformManagerRemoteOnly transformManager;
 
-	private DomainDescriptor cacheDescriptor;
+	DomainDescriptor domainDescriptor;
 
 	Logger sqlLogger = AlcinaLogUtils.getTaggedLogger(getClass(), "sql");
 
@@ -274,112 +169,39 @@ public class DomainStore implements RegistrableService {
 	private ThreadLocal<PerThreadTransaction> transactions = new ThreadLocal() {
 	};
 
-	private ConcurrentHashMap<Thread, Long> lockStartTime = new ConcurrentHashMap<>();
-
 	private TopicListener<Thread> resetListener = new TopicListener<Thread>() {
 		@Override
 		public void topicPublished(String key, Thread message) {
-			transactional.transactionFinished();
+			transactions().transactionFinished();
 		}
 	};
 
 	private TopicListener<Thread> persistingListener = new TopicListener<Thread>() {
 		@Override
 		public void topicPublished(String key, Thread message) {
-			transactional.transactionCommitting();
+			transactions().transactionCommitting();
 		}
 	};
 
 	DetachedEntityCache cache;
 
-	private MemCachePersistenceListener persistenceListener;
+	private DomainStorePersistenceListener persistenceListener;
 
-	private boolean initialised = false;
+	boolean initialised = false;
 
-	public Transactional transactional = new Transactional();
+	private DomainStoreTransactions transactional = new DomainStoreTransactions();
 
-	private ModificationCheckerSupport modificationChecker;
+	ModificationCheckerSupport modificationChecker;
 
 	private Field modificationCheckerField;
 
-	private boolean dumpLocks;
-
-	/**
-	 * Certain post-list triggers can writeLock() without causing readlock
-	 * issues (because they deal with areas of the subgraph that the app
-	 * guarantees won't cause problems with other reads) - but they do block
-	 * writeLock acquisition
-	 */
-	volatile Object writeLockSubLock = null;
-
-	private ReentrantReadWriteLockWithThreadAccess mainLock = new ReentrantReadWriteLockWithThreadAccess(
-			true);
-
-	private ReentrantReadWriteLock subgraphLock = new ReentrantReadWriteLock(
-			true);
-
-	private ReentrantLock postInitConnectionLock = new ReentrantLock(true);
-
-	private BackupLazyLoader backupLazyLoader;
-
-	private boolean initialising;
-
-	private boolean lockingDisabled;
-
-	private long lastLockingDisabledMessage;
-
-	private Set<Thread> waitingOnWriteLock = Collections
-			.synchronizedSet(new LinkedHashSet<Thread>());
-
-	private Set<Thread> mainLockReadLock = Collections
-			.synchronizedSet(new LinkedHashSet<Thread>());
-
-	private int maxLockQueueLength;
-
-	private long maxLockQueueTimeForNoDisablement;
-
-	private int originalTransactionIsolation;
-
-	private UnsortedMultikeyMap<Field> memcacheTransientFields = new UnsortedMultikeyMap<Field>(
-			2);
-
-	private UnsortedMultikeyMap<DomainStoreTransient> memcacheTransientProperties = new UnsortedMultikeyMap<>(
-			2);
-
-	private ThreadPoolExecutor warmupExecutor;
-
-	private DataSource dataSource;
-
-	// only access via synchronized code
-	CountingMap<Connection> warmupConnections = new CountingMap<>();
-
-	MultikeyMap<PdOperator> operatorsByClass = new UnsortedMultikeyMap<>(2);
+	boolean initialising;
 
 	private boolean debug;
 
 	Multimap<Class, List<BaseProjectionHasEquivalenceHash>> cachingProjections = new Multimap<Class, List<BaseProjectionHasEquivalenceHash>>();
 
-	private List<LaterLookup> warmupLaterLookups = new ArrayList<>();
-
-	boolean checkModificationWriteLock = false;
-
-	private AlcinaMemCacheHealth health = new AlcinaMemCacheHealth();
-
-	private Thread postProcessWriterThread;
-
-	private Timer timer;
-
-	long lastQueueDumpTime = 0;
-
-	Map<Long, Long> threadQueueTimes = new ConcurrentHashMap<>();
-
-	/**
-	 * synchronize on this for any operations on
-	 * activeThreads/activeThreadAcquireTimes
-	 */
-	CountingMap<Thread> activeThreads = new CountingMap<>();
-
-	Map<Thread, Long> activeThreadAcquireTimes = new LinkedHashMap<>();
+	DomainStoreThreads threads;
 
 	long timzoneOffset = -1;
 
@@ -387,64 +209,48 @@ public class DomainStore implements RegistrableService {
 
 	TimeZone startupTz = (TimeZone) startupCal.getTimeZone().clone();
 
-	boolean expectLongRunning = false;
-
 	boolean publishMappingEvents;
 
-	private AtomicInteger dumpLocksCount = new AtomicInteger();
+	DomainTransformPersistenceEvent postProcessEvent;
 
-	private AtomicInteger longLocksCount = new AtomicInteger();
+	DomainStoreLoader loader;
 
-	private DomainTransformPersistenceEvent postProcessEvent;
+	private UnsortedMultikeyMap<DomainStoreTransient> memcacheTransientProperties = new UnsortedMultikeyMap<>(
+			2);
 
-	private volatile Connection postInitConn;
+	private LazyObjectLoader lazyObjectLoader;
 
-	private AtomicInteger connectionsReopened = new AtomicInteger();
+	public DomainStore(DomainDescriptor descriptor) {
+		this();
+		this.domainDescriptor = descriptor;
+	}
 
-	private Thread mainLockWriteLock;
-
-	public DomainStore() {
+	private DomainStore() {
 		ThreadlocalTransformManager.threadTransformManagerWasResetListenerDelta(
 				resetListener, true);
 		TransformPersister.persistingTransformsListenerDelta(persistingListener,
 				true);
-		persistenceListener = new MemCachePersistenceListener();
-		maxLockQueueLength = ResourceUtilities.getInteger(DomainStore.class,
-				"maxLockQueueLength", 120);
-		maxLockQueueTimeForNoDisablement = ResourceUtilities.getLong(
-				DomainStore.class, "maxLockQueueTimeForNoDisablement");
+		persistenceListener = new DomainStorePersistenceListener();
+		threads = new DomainStoreThreads(this);
+		threads.maxLockQueueLength = ResourceUtilities
+				.getInteger(DomainStore.class, "maxLockQueueLength", 120);
+		threads.maxLockQueueTimeForNoDisablement = ResourceUtilities
+				.getLong(DomainStore.class, "maxLockQueueTimeForNoDisablement");
 		publishMappingEvents = ResourceUtilities.is(DomainStore.class,
 				"publishMappingEvents");
-		Domain.registerHandler(new AlcinaMemCacheDomainHandler());
-	}
-
-	public void addValues(DomainListener listener) {
-		for (Object o : cache.values(listener.getListenedClass())) {
-			listener.insert((HasIdAndLocalId) o);
-		}
+		// this is where we multiplex...move to app?
+		// FIXME - jade.ceres.2
+		Domain.registerHandler(new DomainStoreDomainHandler());
 	}
 
 	@Override
 	public void appShutdown() {
-		if (timer != null) {
-			timer.cancel();
-		}
-		if (postInitConn != null) {
-			try {
-				postInitConn.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public <T extends HasIdAndLocalId> Set<T> asSet(Class<T> clazz) {
-		return new DomainStoreQuery().ids(getIds(clazz)).raw().asSet(clazz);
+		threads.appShutdown();
+		loader.appShutdown();
 	}
 
 	public void dumpLocks() {
-		System.out.println("MemCache-main: " + mainLock);
-		System.out.println("MemCache-subgraph: " + subgraphLock);
+		threads.dumpLocks();
 	}
 
 	public void enableAndAddValues(DomainListener listener) {
@@ -452,212 +258,36 @@ public class DomainStore implements RegistrableService {
 		addValues(listener);
 	}
 
-	public Set<Long> filterByExisting(Class clazz, boolean returnIfNotInGraph,
-			List<Long> ids) {
-		Set<Long> result = new LinkedHashSet<Long>();
-		for (Long id : ids) {
-			boolean add = cache.get(clazz, id) != null ^ returnIfNotInGraph;
-			if (add) {
-				result.add(id);
-			}
+	public void externalReadLock(boolean lock) {
+		if (lock) {
+			threads.lock(false);
+		} else {
+			threads.unlock(false);
 		}
-		return result;
-	}
-
-	public List<DomainTransformEvent>
-			filterInterestedTransforms(Collection<DomainTransformEvent> dtes) {
-		return dtes.stream().filter(new InSubgraphFilter())
-				.filter(cacheDescriptor::customFilterPostProcess)
-				.map(dte -> filterForMemcacheTransient(dte))
-				.filter(Objects::nonNull).collect(Collectors.toList());
-	}
-
-	public <T extends HasIdAndLocalId> T find(Class<T> clazz, long id) {
-		return new DomainStoreQuery().id(id).find(clazz);
-	}
-
-	public <T extends HasIdAndLocalId> T find(Class<T> clazz, String key,
-			Object value) {
-		return findOrCreate(clazz, key, value, false);
-	}
-
-	public <T extends HasIdAndLocalId> T find(HiliLocator locator) {
-		return (T) find(locator.clazz, locator.id);
-	}
-
-	public <T extends HasIdAndLocalId> Optional<T> find(Optional<T> t) {
-		if (!t.isPresent()) {
-			return t;
-		}
-		return Optional.of(find(new HiliLocator(t.get())));
-	}
-
-	public <T extends HasIdAndLocalId> T find(T t) {
-		return find(new HiliLocator(t));
-	}
-
-	public <T extends HasIdAndLocalId> T findOrCreate(Class<T> clazz,
-			String key, Object value, boolean createIfNonexistent) {
-		return findOrCreate(clazz, key, value, null, null, createIfNonexistent,
-				false);
-	}
-
-	public <T extends HasIdAndLocalId> T findOrCreate(Class<T> clazz,
-			String key1, Object value1, String key2, Object value2,
-			boolean createIfNonexistent, boolean raw) {
-		DomainStoreQuery query = new DomainStoreQuery().filter(key1,
-				value1);
-		if (raw) {
-			query.raw();
-		}
-		if (key2 != null) {
-			query.filter(key2, value2);
-		}
-		T first = query.find(clazz);
-		if (first == null && createIfNonexistent) {
-			first = (T) TransformManager.get()
-					.createDomainObject((Class) clazz);
-			Reflections.propertyAccessor().setPropertyValue(first, key1,
-					value1);
-			if (key2 != null) {
-				Reflections.propertyAccessor().setPropertyValue(first, key2,
-						value2);
-			}
-		}
-		return first;
-	}
-
-	public <T extends HasIdAndLocalId> T findRaw(Class<T> clazz, long id) {
-		T t = cache.get(clazz, id);
-		if (t != null) {
-			for (PreProvideTask task : cacheDescriptor
-					.getPreProvideTasks(clazz)) {
-				try {
-					task.run(clazz, Collections.singletonList(t), true);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}
-		return t;
-	}
-
-	public <T extends HasIdAndLocalId> T findRaw(T t) {
-		return (T) findRaw(t.getClass(), t.getId());
 	}
 
 	public DetachedEntityCache getCache() {
 		return this.cache;
 	}
 
-	public Iterable<Object[]> getData(Connection conn, Class clazz,
-			String sqlFilter) throws SQLException {
-		ConnResults result = new ConnResults(conn, clazz,
-				columnDescriptors.get(clazz), sqlFilter);
-		return result;
-	}
-
-	public AlcinaMemCacheHealth getHealth() {
-		return health;
-	}
-
-	public Collection<Long> getIds(Class<? extends HasIdAndLocalId> clazz) {
-		try {
-			lock(false);
-			return new ArrayList<Long>(cache.keys(clazz));
-		} finally {
-			unlock(false);
-		}
+	public DomainStoreHealth getHealth() {
+		return threads.health;
 	}
 
 	public String getLockDumpString(String lockDumpCause, boolean full) {
-		FormatBuilder fullLockDump = new FormatBuilder();
-		Thread writerThread = postProcessWriterThread;
-		if (writerThread != null) {
-			fullLockDump.format(
-					"Memcache log debugging----------\n"
-							+ "Writer thread trace:----------\n" + "%s\n",
-					SEUtilities.getStacktraceSlice(postProcessWriterThread, 999,
-							0));
-			if (full) {
-				try {
-					fullLockDump.format("Writer thread transforms:\n%s\n\n",
-							postProcessEvent
-									.getDomainTransformLayerWrapper().persistentEvents);
-				} catch (Exception e) {
-					// outside chance of a race and npe here
-					System.out.println(
-							"could not print writer thread transforms - probably inconsequential race");
-				}
-			}
-		}
-		fullLockDump.line(lockDumpCause);
-		long time = System.currentTimeMillis();
-		if (full) {
-			fullLockDump.line("Current locked thread dump:\n***************\n");
-			mainLock.getQueuedThreads()
-					.forEach(t2 -> fullLockDump.line("id:%s %s\n%s", t2.getId(),
-							t2, SEUtilities.getStacktraceSlice(t2,
-									LONG_LOCK_TRACE_LENGTH, 0)));
-			fullLockDump.line("\n\nThread pause times:\n***************\n");
-			threadQueueTimes.forEach((id, t2) -> fullLockDump
-					.format("id: %s - time: %s\n", id, time - t2));
-			synchronized (activeThreads) {
-				fullLockDump.line("\n\nActive threads:\n***************\n");
-				activeThreads.keySet().forEach(t2 -> {
-					long elapsed = System.currentTimeMillis()
-							- activeThreadAcquireTimes.get(t2);
-					fullLockDump.line(
-							"id:%s %s" + "\n\tlock held time: %sms\n%s",
-							t2.getId(), t2, elapsed,
-							SEUtilities.getStacktraceSlice(t2,
-									LONG_LOCK_TRACE_LENGTH, 0));
-				});
-			}
-			lastQueueDumpTime = time;
-		}
-		return fullLockDump.toString();
+		return threads.getLockDumpString(lockDumpCause, full);
 	}
 
-	public <CL extends DomainLookup> CL
-			getLookupFor(DomainStoreLookupDescriptor descriptor) {
-		return (CL) descriptor.getLookup();
-	}
-
-	public int getLookupSize(DomainStoreLookupDescriptor descriptor, Object value) {
-		return descriptor.getLookup().size(value);
-	}
-
-	public UnsortedMultikeyMap<Field> getMemcacheTransientFields() {
-		return this.memcacheTransientFields;
-	}
-
-	public MemCachePersistenceListener getPersistenceListener() {
+	public DomainStorePersistenceListener getPersistenceListener() {
 		return this.persistenceListener;
 	}
 
-	public int getSize(Class clazz) {
-		return cache.size(clazz);
-	}
-
-	public AlcinaMemCacheInstrumentation instrumentation() {
-		return new AlcinaMemCacheInstrumentation();
-	}
-
-	public void invokeAllWithThrow(List tasks) throws Exception {
-		if (warmupExecutor != null) {
-			List<Future> futures = (List) warmupExecutor
-					.invokeAll((List) tasks);
-			for (Future future : futures) {
-				// will throw if there was an exception
-				future.get();
-			}
-			tasks.clear();
-		}
+	public DomainStoreInstrumentation instrumentation() {
+		return threads.instrumentation;
 	}
 
 	public boolean isCached(Class clazz) {
-		return cacheDescriptor.perClass.containsKey(clazz);
+		return domainDescriptor.perClass.containsKey(clazz);
 	}
 
 	public <T extends HasIdAndLocalId> boolean isCached(Class<T> clazz,
@@ -667,21 +297,11 @@ public class DomainStore implements RegistrableService {
 
 	public boolean isCachedTransactional(Class clazz) {
 		return isCached(clazz)
-				&& cacheDescriptor.perClass.get(clazz).isTransactional();
-	}
-
-	public boolean isCheckModificationWriteLock() {
-		return this.checkModificationWriteLock;
+				&& domainDescriptor.perClass.get(clazz).isTransactional();
 	}
 
 	public boolean isCurrentThreadHoldingLock() {
-		if (mainLock.isWriteLockedByCurrentThread()) {
-			return true;
-		}
-		if (subgraphLock.isWriteLockedByCurrentThread()) {
-			return true;
-		}
-		return mainLockReadLock.contains(Thread.currentThread());
+		return threads.isCurrentThreadHoldingLock();
 	}
 
 	public boolean isDebug() {
@@ -692,144 +312,8 @@ public class DomainStore implements RegistrableService {
 		return initialised;
 	}
 
-	public boolean isWillProjectLater() {
-		return LooseContext.is(CONTEXT_WILL_PROJECT_AFTER_READ_LOCK);
-	}
-
-	public void linkFromServletLayer() {
-	}
-
-	public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
-		return new DomainStoreQuery().ids(getIds(clazz)).list(clazz);
-	}
-
-	public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz,
-			Collection<Long> ids) {
-		return new DomainStoreQuery().ids(ids).list(clazz);
-	}
-
-	public <T extends HasIdAndLocalId> List<T> listRaw(Class<T> clazz) {
-		return new DomainStoreQuery().ids(getIds(clazz)).raw().list(clazz);
-	}
-
-	public <T extends HasIdAndLocalId> List<T> loadTable(Class clazz,
-			String sqlFilter, ClassIdLock sublock) throws Exception {
-		assert sublock != null;
-		try {
-			LooseContext.push();
-			LooseContext.remove(DomainStore.CONTEXT_NO_LOCKS);
-			return (List<T>) loadTable(clazz, sqlFilter, sublock,
-					new LaterLookup());
-		} finally {
-			LooseContext.pop();
-		}
-	}
-
-	public void lock(boolean write) {
-		if (LooseContext.is(CONTEXT_NO_LOCKS)) {
-			return;
-		}
-		if (lockingDisabled) {
-			if (System.currentTimeMillis()
-					- lastLockingDisabledMessage > TimeConstants.ONE_MINUTE_MS) {
-				System.out.format("memcache - lock %s - locking disabled\n",
-						write);
-			}
-			lastLockingDisabledMessage = System.currentTimeMillis();
-			return;
-		}
-		try {
-			if (mainLock.getQueueLength() > maxLockQueueLength && getHealth()
-					.getMaxQueuedTime() > maxLockQueueTimeForNoDisablement) {
-				System.out.println(
-						"Disabling locking due to deadlock:\n***************\n");
-				mainLock.getQueuedThreads().forEach(t -> System.out.println(
-						t + "\n" + CommonUtils.join(t.getStackTrace(), "\n")));
-				AlcinaTopics.notifyDevWarning(new MemcacheException(
-						"Disabling locking owing to long queue/deadlock"));
-				lockingDisabled = true;
-				for (Thread t : waitingOnWriteLock) {
-					t.interrupt();
-				}
-				waitingOnWriteLock.clear();
-				return;
-			}
-			maybeLogLock(DomainStoreLockAction.PRE_LOCK, write);
-			if (write) {
-				int readHoldCount = mainLock.getReadHoldCount();
-				if (readHoldCount > 0) {
-					throw new RuntimeException(
-							"Trying to acquire write lock from read-locked thread");
-				}
-				try {
-					waitingOnWriteLock.add(Thread.currentThread());
-					mainLock.writeLock().lockInterruptibly();
-					mainLockWriteLock = Thread.currentThread();
-					waitingOnWriteLock.remove(Thread.currentThread());
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			} else {
-				mainLock.readLock().lock();
-				mainLockReadLock.add(Thread.currentThread());
-			}
-			lockStartTime.put(Thread.currentThread(),
-					System.currentTimeMillis());
-		} catch (RuntimeException e) {
-			e.printStackTrace();
-			throw e;
-		}
-		maybeLogLock(DomainStoreLockAction.MAIN_LOCK_ACQUIRED, write);
-	}
-
-	public List<Long> notInStore(Collection<Long> ids, Class clazz) {
-		return cache.notContained(ids, clazz);
-	}
-
-	public <T extends HasIdAndLocalId> void preLoad(Class<T> clazz,
-			Collection<Long> ids) {
-		new DomainStoreQuery().ids(ids).raw().list(clazz);
-	}
-
 	public void readLockExpectLongRunning(boolean lock) {
-		expectLongRunning = lock;
-		if (lock) {
-			lock(false);
-		} else {
-			unlock(false);
-		}
-	}
-
-	public void registerForTesting(HasIdAndLocalId hili) {
-		if (!AppPersistenceBase.isTest()) {
-			throw new RuntimeException("Only when testing...");
-		}
-		cache.put(hili);
-		index(hili, true);
-	}
-
-	public <T extends HasIdAndLocalId> void reindex(Class<T> clazz) {
-	}
-
-	public <T> T replaceWithRawValues(T t) {
-		return (T) new RawValueReplacer().read(t);
-	}
-
-	public void reset() {
-		singleton = new DomainStore();
-	}
-
-	public void resolveRefs(LaterLookup laterLookup) throws Exception {
-		laterLookup.resolve();
-	}
-
-	public void runWithWriteLock(Runnable runnable) {
-		try {
-			lock(true);
-			runnable.run();
-		} finally {
-			unlock(true);
-		}
+		threads.readLockExpectLongRunning(lock);
 	}
 
 	/**
@@ -838,128 +322,41 @@ public class DomainStore implements RegistrableService {
 	 */
 	public void
 			setCheckModificationWriteLock(boolean checkModificationWriteLock) {
-		this.checkModificationWriteLock = checkModificationWriteLock;
+		threads.checkModificationWriteLock = checkModificationWriteLock;
 	}
 
 	public void setDebug(boolean debug) {
 		this.debug = debug;
 	}
 
-	/**
-	 * Given sublock-guarded code should be able to be run concurrently (as long
-	 * as the sublock objects are different), will rework this
-	 */
-	public void sublock(Object sublock, boolean lock) {
-		if (lockingDisabled || LooseContext.is(CONTEXT_NO_LOCKS)) {
-			return;
-		}
-		if (lock) {
-			maybeLogLock(DomainStoreLockAction.PRE_LOCK, lock);
-			subgraphLock.writeLock().lock();
-			writeLockSubLock = sublock;
-		} else {
-			if (sublock == writeLockSubLock) {
-				subgraphLock.writeLock().unlock();
-				sublock = null;
-			} else {
-				// should not be possible
-				throw new RuntimeException(String.format(
-						"releasing incorrect writer sublock: %s %s", sublock,
-						writeLockSubLock));
-			}
-		}
-		maybeLogLock(lock ? DomainStoreLockAction.SUB_LOCK_ACQUIRED
-				: DomainStoreLockAction.UNLOCK, lock);
+	public DomainStoreTransactions transactions() {
+		return transactional;
 	}
 
-	public void unlock(boolean write) {
-		if (lockingDisabled || LooseContext.is(CONTEXT_NO_LOCKS)) {
-			return;
-		}
-		try {
-			if (write) {
-				if (mainLock.writeLock().isHeldByCurrentThread()) {
-					// if not held, we had an exception acquiring the
-					// lock...ignore
-					mainLock.writeLock().unlock();
-					mainLockWriteLock = null;
-				}
-			} else {
-				mainLockReadLock.remove(Thread.currentThread());
-				mainLock.readLock().unlock();
-			}
-			lockStartTime.remove(Thread.currentThread());
-		} catch (RuntimeException e) {
-			e.printStackTrace();
-			throw e;
-		}
-		maybeLogLock(DomainStoreLockAction.UNLOCK, write);
-	}
-
-	public void warmup(DataSource dataSource, DomainDescriptor cacheDescriptor,
-			ThreadPoolExecutor warmupExecutor) {
-		this.dataSource = dataSource;
-		this.cacheDescriptor = cacheDescriptor;
-		this.warmupExecutor = warmupExecutor;
-		try {
-			createWarmupConnections();
-			this.warmup0();
-			initialised = true;
-			this.timer = new Timer("Timer-AlcinaMemCache-check-stats");
-			timer.schedule(new TimerTask() {
-				@Override
-				public void run() {
-					maybeDebugLongLockHolders();
-				}
-			}, 0, 100);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	private void addColumnName(Class clazz, PropertyDescriptor pd,
-			Class propertyType) {
-		columnDescriptors.add(clazz, new ColumnDescriptor(pd, propertyType));
-		propertyDescriptorFetchTypes.put(pd, propertyType);
-	}
-
-	private void createWarmupConnections() throws Exception {
-		for (int i = 0; i < warmupExecutor.getMaximumPoolSize(); i++) {
-			Connection conn = dataSource.getConnection();
-			conn.setAutoCommit(false);
-			conn.setReadOnly(true);
-			originalTransactionIsolation = conn.getTransactionIsolation();
-			if (ResourceUtilities.is(DomainStore.class, "warmStandbyDb")) {
-				conn.setTransactionIsolation(
-						Connection.TRANSACTION_REPEATABLE_READ);
-			} else {
-				conn.setTransactionIsolation(
-						Connection.TRANSACTION_SERIALIZABLE);
-			}
-			warmupConnections.put(conn, 0);
-		}
+	public void warmup() throws Exception {
+		initialised = false;
+		initialising = true;
+		transformManager = new SubgraphTransformManagerRemoteOnly();
+		lazyObjectLoader = loader.getLazyObjectLoader();
+		cache = transformManager.getDetachedEntityCache();
+		transformManager.getStore().setLazyObjectLoader(lazyObjectLoader);
+		modificationCheckerField = BaseSourcesPropertyChangeEvents.class
+				.getDeclaredField("propertyChangeSupport");
+		modificationCheckerField.setAccessible(true);
+		modificationChecker = new ModificationCheckerSupport(null);
+		setCheckModificationWriteLock(false);
+		domainDescriptor.registerStore(this);
+		domainDescriptor.perClass.values().stream()
+				.forEach(this::prepareClassDescriptor);
+		loader.warmup();
+		initialising = false;
+		initialised = true;
+		threads.startLongLockHolderCheck();
 	}
 
 	private void doEvictions() {
-		cacheDescriptor.preProvideTasks
+		domainDescriptor.preProvideTasks
 				.forEach(PreProvideTask::writeLockedCleanup);
-	}
-
-	private void ensureModificationChecker(HasIdAndLocalId hili)
-			throws Exception {
-		if (modificationCheckerField != null
-				&& hili instanceof BaseSourcesPropertyChangeEvents) {
-			modificationCheckerField.set(hili, modificationChecker);
-		}
-	}
-
-	private synchronized PdOperator ensurePdOperator(PropertyDescriptor pd,
-			Class clazz) {
-		return operatorsByClass.ensure(() -> {
-			Collection<Object> values = operatorsByClass.values(clazz);
-			return new PdOperator(pd, clazz,
-					values == null ? 0 : values.size());
-		}, clazz, pd);
 	}
 
 	private DomainTransformEvent
@@ -982,56 +379,18 @@ public class DomainStore implements RegistrableService {
 		return dte;
 	}
 
+	private List<DomainTransformEvent>
+			filterInterestedTransforms(Collection<DomainTransformEvent> dtes) {
+		return dtes.stream().filter(new InSubgraphFilter())
+				.filter(domainDescriptor::customFilterPostProcess)
+				.map(dte -> filterForMemcacheTransient(dte))
+				.filter(Objects::nonNull).collect(Collectors.toList());
+	}
+
 	private ComplexFilter getComplexFilterFor(Class clazz,
 			DomainFilter... filters) {
-		return cacheDescriptor.complexFilters.stream()
+		return domainDescriptor.complexFilters.stream()
 				.filter(cf -> cf.handles(clazz, filters)).findFirst()
-				.orElse(null);
-	}
-
-	private Connection getConn() {
-		if (initialising) {
-			try {
-				return getWarmupConnection();
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-		try {
-			if (postInitConn == null) {
-				synchronized (postInitConnectionLock) {
-					if (postInitConn == null) {
-						postInitConn = dataSource.getConnection();
-						postInitConn.setAutoCommit(true);
-						postInitConn.setReadOnly(true);
-					}
-				}
-			}
-			postInitConnectionLock.lock();
-			return postInitConn;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	private Field getDescriptorField(Class<?> clazz, String name) {
-		Class original = clazz;
-		while (clazz != null) {
-			try {
-				Field f = clazz.getDeclaredField(name);
-				f.setAccessible(true);
-				return f;
-			} catch (Exception e) {
-			}
-			clazz = clazz.getSuperclass();
-		}
-		throw new RuntimeException(String.format("Field not available - %s.%s",
-				original.getSimpleName(), name));
-	}
-
-	private Field getField(Class clazz, String name) throws Exception {
-		List<Field> fields = new GraphProjection().getFieldsForClass(clazz);
-		return fields.stream().filter(f -> f.getName().equals(name)).findFirst()
 				.orElse(null);
 	}
 
@@ -1075,7 +434,7 @@ public class DomainStore implements RegistrableService {
 			}
 		}
 		final CollectionFilter filter = cacheFilter.asCollectionFilter();
-		return cacheDescriptor.perClass.get(clazz).evaluateFilter(cache,
+		return domainDescriptor.perClass.get(clazz).evaluateFilter(cache,
 				existing, filter);
 	}
 
@@ -1083,12 +442,12 @@ public class DomainStore implements RegistrableService {
 			DomainFilter cacheFilter, Set existing) {
 		CollectionFilter filter = cacheFilter.asCollectionFilter();
 		existing = existing != null ? existing
-				: transactional.immutableRawValues(clazz);
+				: transactions().immutableRawValues(clazz);
 		return CollectionFilters.filterAsSet(existing, filter);
 	}
 
 	private DomainLookup getLookupFor(Class clazz, String propertyName) {
-		for (DomainStoreLookupDescriptor descriptor : cacheDescriptor.perClass
+		for (DomainStoreLookupDescriptor descriptor : domainDescriptor.perClass
 				.get(clazz).lookupDescriptors) {
 			if (descriptor.handles(clazz, propertyName)) {
 				return descriptor.getLookup();
@@ -1097,396 +456,38 @@ public class DomainStore implements RegistrableService {
 		return null;
 	}
 
-	private Class getTargetEntityType(Method rm) {
-		ManyToOne manyToOne = rm.getAnnotation(ManyToOne.class);
-		if (manyToOne != null && manyToOne.targetEntity() != void.class) {
-			return manyToOne.targetEntity();
-		}
-		OneToOne oneToOne = rm.getAnnotation(OneToOne.class);
-		if (oneToOne != null && oneToOne.targetEntity() != void.class) {
-			return oneToOne.targetEntity();
-		}
-		DomainStoreColumn memCacheColumn = rm
-				.getAnnotation(DomainStoreColumn.class);
-		if (memCacheColumn != null
-				&& memCacheColumn.targetEntity() != void.class) {
-			return memCacheColumn.targetEntity();
-		}
-		return rm.getReturnType();
+	private boolean isWillProjectLater() {
+		return LooseContext.is(CONTEXT_WILL_PROJECT_AFTER_READ_LOCK);
 	}
 
-	private synchronized Connection getWarmupConnection() throws Exception {
-		Connection min = warmupConnections.min();
-		warmupConnections.add(min);
-		return min;
-	}
-
-	private void index(HasIdAndLocalId obj, boolean add) {
-		Class<? extends HasIdAndLocalId> clazz = obj.getClass();
-		if (obj instanceof DomainProxy) {
-			clazz = (Class<? extends HasIdAndLocalId>) clazz.getSuperclass();
-		}
-		DomainClassDescriptor<?> itemDescriptor = cacheDescriptor.perClass
-				.get(clazz);
-		itemDescriptor.index(obj, add);
-		for (HasIdAndLocalId dependentObject : itemDescriptor
-				.getDependentObjectsWithDerivedProjections(obj)) {
-			index(dependentObject, add);
-		}
-	}
-
-	private void loadJoinTable(Entry<PropertyDescriptor, JoinTable> entry,
-			LaterLookup laterLookup) {
-		JoinTable joinTable = entry.getValue();
-		if (joinTable == null) {
-			return;
-		}
-		PropertyDescriptor pd = entry.getKey();
-		// get reverse
-		PropertyDescriptor rev = null;
-		Class<?> declaringClass = pd.getReadMethod().getDeclaringClass();
-		// targetEntityClass may be a subclass of the declaring class
-		Class targetEntityClass = declaringClass;
-		for (Entry<PropertyDescriptor, JoinTable> entry2 : joinTables
-				.entrySet()) {
-			ManyToMany m = entry2.getKey().getReadMethod()
-					.getAnnotation(ManyToMany.class);
-			if (m != null && entry2.getValue() == null
-					&& declaringClass.isAssignableFrom(m.targetEntity())
-					&& pd.getName().equals(m.mappedBy())) {
-				targetEntityClass = m.targetEntity();
-				rev = entry2.getKey();
-				break;
-			}
-		}
-		MemcacheJoinHandler joinHandler = null;
-		if (rev == null) {
-			Type genericReturnType = pd.getReadMethod().getGenericReturnType();
-			if (genericReturnType instanceof ParameterizedType) {
-				Type genericType = ((ParameterizedType) genericReturnType)
-						.getActualTypeArguments()[0];
-				if (genericType == targetEntityClass) {
-					// self-reference, probably
-					rev = pd;
-				}
-			}
-			if (rev == null) {
-				joinHandler = Registry.impl(JPAImplementation.class)
-						.getMemcacheJoinHandler(pd);
-				if (joinHandler != null) {
-				} else {
-					throw new RuntimeException("No reverse key for " + pd);
-				}
-			}
-		}
-		Connection conn = getConn();
+	private void prepareClassDescriptor(DomainClassDescriptor classDescriptor) {
 		try {
-			String joinTableName = joinTable.name();
-			MetricLogging.get().start(joinTableName);
-			String targetFieldSql = joinHandler != null
-					? joinHandler.getTargetSql()
-					: joinTable.inverseJoinColumns()[0].name();
-			String sql = String.format("select %s, %s from %s;",
-					joinTable.joinColumns()[0].name(), targetFieldSql,
-					joinTableName);
-			Statement stmt = conn.createStatement();
-			ResultSet rs = stmt.executeQuery(sql);
-			PdOperator pdFwd = ensurePdOperator(pd,
-					pd.getReadMethod().getDeclaringClass());
-			// will be null if it's an enumerated type
-			PdOperator pdRev = joinHandler != null ? null
-					: ensurePdOperator(rev,
-							rev.getReadMethod().getDeclaringClass());
-			while (rs.next()) {
-				HasIdAndLocalId src = (HasIdAndLocalId) cache
-						.get(targetEntityClass, rs.getLong(1));
-				assert src != null;
-				if (joinHandler == null) {
-					HasIdAndLocalId tgt = (HasIdAndLocalId) cache.get(
-							rev.getReadMethod().getDeclaringClass(),
-							rs.getLong(2));
-					assert tgt != null;
-					laterLookup.add(tgt, pdFwd, src);
-					laterLookup.add(src, pdRev, tgt);
-				} else {
-					joinHandler.injectValue(rs, src);
+			Class clazz = classDescriptor.clazz;
+			List<PropertyDescriptor> pds = new ArrayList<PropertyDescriptor>(
+					Arrays.asList(Introspector.getBeanInfo(clazz)
+							.getPropertyDescriptors()));
+			for (PropertyDescriptor pd : pds) {
+				if (pd.getReadMethod() == null || pd.getWriteMethod() == null) {
+					continue;
 				}
-			}
-			stmt.close();
-			MetricLogging.get().end(joinTableName, metricLogger);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		} finally {
-			releaseConn(conn);
-		}
-	}
-
-	private void loadPropertyStore(Class clazz,
-			PropertyStoreItemDescriptor propertyStoreItemDescriptor)
-			throws SQLException {
-		Connection conn = getConn();
-		try {
-			ConnResults connResults = new ConnResults(conn, clazz,
-					columnDescriptors.get(clazz),
-					propertyStoreItemDescriptor.getSqlFilter());
-			List<PdOperator> pds = descriptors.get(clazz);
-			propertyStoreItemDescriptor.init(cache, pds);
-			String simpleName = clazz.getSimpleName();
-			int count = propertyStoreItemDescriptor.getRoughCount();
-			SystemoutCounter ctr = new SystemoutCounter(20000, 10, count, true);
-			ResultSet rs = connResults.ensureRs();
-			while (rs.next()) {
-				propertyStoreItemDescriptor.addRow(rs);
-				ctr.tick(simpleName);
-			}
-			rs.close();
-		} finally {
-			releaseConn(conn);
-		}
-	}
-
-	private List<HasIdAndLocalId> loadTable(Class clazz, String sqlFilter,
-			ClassIdLock sublock, LaterLookup laterLookup) throws Exception {
-		if (sublock != null) {
-			sublock(sublock, true);
-		}
-		try {
-			List<HasIdAndLocalId> loaded = loadTable0(clazz, sqlFilter, sublock,
-					laterLookup, !initialising);
-			boolean keepDetached = LooseContext
-					.is(CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
-			if (sublock != null) {
-				resolveRefs(laterLookup);
-				if (!initialising && !keepDetached) {
-					for (HasIdAndLocalId hili : loaded) {
-						index(hili, true);
-					}
-				}
-			}
-			return loaded;
-		} finally {
-			if (sublock != null) {
-				sublock(sublock, false);
-			}
-		}
-	}
-
-	private List<HasIdAndLocalId> loadTable0(Class clazz, String sqlFilter,
-			ClassIdLock sublock, LaterLookup laterLookup,
-			boolean ignoreIfExisting) throws Exception {
-		Connection conn = getConn();
-		List<HasIdAndLocalId> loaded;
-		try {
-			Iterable<Object[]> results = getData(conn, clazz, sqlFilter);
-			List<PdOperator> pds = descriptors.get(clazz);
-			loaded = new ArrayList<HasIdAndLocalId>();
-			PdOperator idOperator = pds.stream()
-					.filter(pd -> pd.name.equals("id")).findFirst().get();
-			boolean keepDetached = LooseContext
-					.is(CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
-			for (Object[] objects : results) {
-				HasIdAndLocalId hili = (HasIdAndLocalId) clazz.newInstance();
-				if (ignoreIfExisting) {
-					if (transformManager.store.contains(clazz,
-							(Long) objects[idOperator.idx])) {
-						continue;
-					}
-				}
-				if (sublock != null) {
-					loaded.add(hili);
-				}
-				ensureModificationChecker(hili);
-				for (int i = 0; i < objects.length; i++) {
-					PdOperator pdOperator = pds.get(i);
-					Method rm = pdOperator.readMethod;
-					if (pdOperator.manyToOne != null
-							|| pdOperator.oneToOne != null) {
-						Long id = (Long) objects[i];
-						if (id != null) {
-							laterLookup.add(id, pdOperator, hili);
-						}
-					} else {
-						pdOperator.field.set(hili, objects[i]);
-					}
-				}
-				if (!keepDetached) {
-					transformManager.store.mapObject(hili);
-				}
-			}
-		} finally {
-			releaseConn(conn);
-		}
-		return loaded;
-	}
-
-	private void maybeLogLock(DomainStoreLockAction action, boolean write) {
-		long time = System.currentTimeMillis();
-		Thread currentThread = Thread.currentThread();
-		if (action == DomainStoreLockAction.PRE_LOCK) {
-			threadQueueTimes.put(currentThread.getId(), time);
-		} else {
-			synchronized (activeThreads) {
-				switch (action) {
-				case MAIN_LOCK_ACQUIRED:
-				case SUB_LOCK_ACQUIRED:
-					activeThreads.add(currentThread);
-					if (!activeThreadAcquireTimes.containsKey(currentThread)) {
-						activeThreadAcquireTimes.put(currentThread,
-								System.currentTimeMillis());
-					}
-					break;
-				case UNLOCK:
-					activeThreads.add(currentThread, -1);
-					if (activeThreads.get(currentThread) == 0) {
-						activeThreads.remove(currentThread);
-						activeThreadAcquireTimes.remove(currentThread);
-					}
-					break;
-				}
-			}
-			threadQueueTimes.remove(currentThread.getId());
-		}
-		long queuedTime = health.getMaxQueuedTime();
-		String lockDumpCause = String.format("Memcache lock - %s - %s\n",
-				write ? "write" : "read", action);
-		if (dumpLocks || (write || queuedTime > MAX_QUEUED_TIME)) {
-			if (dumpLocksCount.get() > 100) {
-				dumpLocks = false;
-				return;
-			}
-			String log = getLockStats();
-			lockDumpCause += log;
-			if (dumpLocks || (queuedTime > MAX_QUEUED_TIME)) {
-				dumpLocksCount.incrementAndGet();
-				System.out.println(getLockDumpString(lockDumpCause, time
-						- lastQueueDumpTime > 5 * TimeConstants.ONE_MINUTE_MS));
-			}
-		}
-	}
-
-	private void prepareTable(DomainClassDescriptor descriptor) throws Exception {
-		Class clazz = descriptor.clazz;
-		List<PropertyDescriptor> pds = new ArrayList<PropertyDescriptor>(
-				Arrays.asList(Introspector.getBeanInfo(clazz)
-						.getPropertyDescriptors()));
-		PropertyDescriptor id = SEUtilities.getPropertyDescriptorByName(clazz,
-				"id");
-		pds.remove(id);
-		pds.add(0, id);
-		PropertyDescriptor result = null;
-		List<PdOperator> mapped = new ArrayList<PdOperator>();
-		descriptors.put(clazz, mapped);
-		for (PropertyDescriptor pd : pds) {
-			if (pd.getReadMethod() == null || pd.getWriteMethod() == null) {
-				continue;
-			}
-			Method rm = pd.getReadMethod();
-			if ((rm.getAnnotation(Transient.class) != null
-					&& rm.getAnnotation(DomainStoreColumn.class) == null)
-					|| rm.getAnnotation(
-							DomainStoreTransient.class) != null) {
-				DomainStoreTransient transientAnn = rm
-						.getAnnotation(DomainStoreTransient.class);
-				if (transientAnn != null) {
-					Field field = getField(clazz, pd.getName());
-					field.setAccessible(true);
-					memcacheTransientFields.put(clazz, field, field);
-					memcacheTransientProperties.put(clazz, field.getName(),
-							transientAnn);
-				}
-				continue;
-			}
-			if (descriptor.ignoreField(pd.getName())) {
-				continue;
-			}
-			OneToMany oneToMany = rm.getAnnotation(OneToMany.class);
-			if (oneToMany != null) {
-				if (Set.class.isAssignableFrom(pd.getPropertyType())) {
-					try {
+				Method rm = pd.getReadMethod();
+				if ((rm.getAnnotation(Transient.class) != null
+						&& rm.getAnnotation(DomainStoreDbColumn.class) == null)
+						|| rm.getAnnotation(
+								DomainStoreTransient.class) != null) {
+					DomainStoreTransient transientAnn = rm
+							.getAnnotation(DomainStoreTransient.class);
+					if (transientAnn != null) {
 						Field field = getField(clazz, pd.getName());
 						field.setAccessible(true);
-						if (field != null) {
-							ParameterizedType pt = (ParameterizedType) field
-									.getGenericType();
-							Type implementationType = pt
-									.getActualTypeArguments()[0];
-							Association association = rm
-									.getAnnotation(Association.class);
-							if (association != null && association
-									.implementationClass() != null) {
-								implementationType = association
-										.implementationClass();
-							}
-							manyToOneRev.put(implementationType,
-									oneToMany.mappedBy(), pd);
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
+						memcacheTransientProperties.put(clazz, field.getName(),
+								transientAnn);
 					}
-				}
-				continue;
-			}
-			ManyToMany manyToMany = rm.getAnnotation(ManyToMany.class);
-			JoinTable joinTable = rm.getAnnotation(JoinTable.class);
-			if (manyToMany != null || joinTable != null) {
-				if ((manyToMany != null && manyToMany.mappedBy().isEmpty())
-						&& joinTable == null) {
-					System.out.format(
-							"**warn - manytomany association with no join table: %s.%s\n",
-							rm.getDeclaringClass().getSimpleName(),
-							pd.getName());
-				}
-				joinTables.put(pd, joinTable);
-				continue;
-			}
-			ManyToOne manyToOne = rm.getAnnotation(ManyToOne.class);
-			OneToOne oneToOne = rm.getAnnotation(OneToOne.class);
-			DomainStoreColumn memCacheColumn = rm
-					.getAnnotation(DomainStoreColumn.class);
-			if (manyToOne != null || oneToOne != null
-					|| memCacheColumn != null) {
-				Class joinEntityType = getTargetEntityType(rm);
-				if (!cacheDescriptor.joinPropertyCached(joinEntityType)) {
-					System.out.format("  not loading: %s.%s -- %s\n",
-							clazz.getSimpleName(), pd.getName(),
-							pd.getPropertyType().getSimpleName());
 					continue;
 				}
-				if (oneToOne != null && !oneToOne.mappedBy().isEmpty()) {
-					oneToOneRev.put(pd.getPropertyType(), oneToOne.mappedBy(),
-							pd);
-					continue;
-				}
-				if (memCacheColumn != null) {
-					memCacheColumnRev.put(pd.getPropertyType(),
-							memCacheColumn.mappedBy(), pd);
-					continue;
-				}
-				addColumnName(clazz, pd,
-						getTargetEntityType(pd.getReadMethod()));
-			} else {
-				addColumnName(clazz, pd, pd.getPropertyType());
-			}
-			mapped.add(ensurePdOperator(pd, clazz));
-		}
-	}
-
-	private void releaseConn(Connection conn) {
-		if (conn == null) {
-			return;
-		}
-		try {
-			if (initialising) {
-				releaseWarmupConnection(conn);
-			} else {
-				if (postInitConn != null) {
-					postInitConn.commit();
-					postInitConn.setAutoCommit(true);
-				}
-				postInitConnectionLock.unlock();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new WrappedRuntimeException(e);
 		}
 	}
 
@@ -1504,7 +505,7 @@ public class DomainStore implements RegistrableService {
 		graph.setCreationDate(timestampToDate(persistent.getCreationDate()));
 		graph.setLastModificationDate(
 				timestampToDate(persistent.getCreationDate()));
-		Class<? extends IUser> iUserClass = cacheDescriptor.getIUserClass();
+		Class<? extends IUser> iUserClass = domainDescriptor.getIUserClass();
 		Long persistentCreationUserId = HiliHelper
 				.getIdOrNull(persistent.getCreationUser());
 		IUser creationUser = cache.get(iUserClass, persistentCreationUserId);
@@ -1522,214 +523,17 @@ public class DomainStore implements RegistrableService {
 				((HasVersionNumber) dte.getSource()).getVersionNumber());
 	}
 
-	private void warmup0() throws Exception {
-		initialising = true;
-		transformManager = new SubgraphTransformManagerRemoteOnly();
-		backupLazyLoader = new BackupLazyLoader();
-		cache = transformManager.getDetachedEntityCache();
-		transformManager.getStore().setLazyObjectLoader(backupLazyLoader);
-		joinTables = new LinkedHashMap<PropertyDescriptor, JoinTable>();
-		descriptors = new LinkedHashMap<Class, List<PdOperator>>();
-		manyToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
-		oneToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
-		memCacheColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
-		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
-		modificationCheckerField = BaseSourcesPropertyChangeEvents.class
-				.getDeclaredField("propertyChangeSupport");
-		modificationCheckerField.setAccessible(true);
-		modificationChecker = new ModificationCheckerSupport(null);
-		checkModificationWriteLock = false;
-		MetricLogging.get().start("memcache-all");
-		// get non-many-many obj
-		lock(true);
-		MetricLogging.get().start("tables");
-		for (DomainClassDescriptor descriptor : cacheDescriptor.perClass
-				.values()) {
-			Class clazz = descriptor.clazz;
-			prepareTable(descriptor);
-			if (descriptor instanceof PropertyStoreItemDescriptor) {
-				transformManager.addPropertyStore(descriptor);
-			}
-			// warmup threadsafe
-			cache.getMap(clazz);
-		}
-		List<Callable> calls = new ArrayList<Callable>();
-		for (DomainClassDescriptor descriptor : cacheDescriptor.perClass
-				.values()) {
-			final Class clazz = descriptor.clazz;
-			if (!descriptor.lazy) {
-				calls.add(new Callable<Void>() {
-					@Override
-					public Void call() throws Exception {
-						MetricLogging.get().start(clazz.getSimpleName());
-						if (descriptor instanceof PropertyStoreItemDescriptor) {
-							PropertyStoreItemDescriptor propertyStoreItemDescriptor = (PropertyStoreItemDescriptor) descriptor;
-							loadPropertyStore(clazz,
-									propertyStoreItemDescriptor);
-						} else {
-							loadTable(clazz, "", null, warmupLaterLookup());
-						}
-						MetricLogging.get().end(clazz.getSimpleName(),
-								metricLogger);
-						return null;
-					}
-				});
-			}
-		}
-		invokeAllWithThrow(calls);
-		for (Entry<PropertyDescriptor, JoinTable> entry : joinTables
-				.entrySet()) {
-			final Entry<PropertyDescriptor, JoinTable> entryF = entry;
-			calls.add(new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-					loadJoinTable(entryF, warmupLaterLookup());
-					return null;
-				}
-			});
-		}
-		invokeAllWithThrow(calls);
-		MetricLogging.get().end("tables");
-		MetricLogging.get().start("xrefs");
-		for (LaterLookup ll : warmupLaterLookups) {
-			// calls.add(new Callable<Void>() {
-			// @Override
-			// public Void call() throws Exception {
-			resolveRefs(ll);
-			// return null;
-			// }
-			// });
-		}
-		invokeAllWithThrow(calls);
-		MetricLogging.get().end("xrefs");
-		warmupLaterLookups.clear();
-		unlock(true);
-		MetricLogging.get().start("postLoad");
-		for (final DomainStoreTask task : cacheDescriptor.postLoadTasks) {
-			calls.add(new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-					MetricLogging.get().start(task.getClass().getSimpleName());
-					task.run();
-					MetricLogging.get().end(task.getClass().getSimpleName(),
-							metricLogger);
-					return null;
-				}
-			});
-		}
-		invokeAllWithThrow(calls);
-		MetricLogging.get().end("postLoad");
-		MetricLogging.get().start("lookups");
-		for (final DomainClassDescriptor<?> descriptor : cacheDescriptor.perClass
-				.values()) {
-			for (DomainProjection projection : descriptor.projections) {
-				if (projection instanceof DomainLookup) {
-					((DomainLookup) projection)
-							.setModificationChecker(modificationChecker);
-				}
-			}
-		}
-		for (final DomainClassDescriptor<?> descriptor : cacheDescriptor.perClass
-				.values()) {
-			calls.add(new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-					for (DomainStoreLookupDescriptor lookupDescriptor : descriptor.lookupDescriptors) {
-						lookupDescriptor.createLookup();
-						if (lookupDescriptor.isEnabled()) {
-							addValues(lookupDescriptor.getLookup());
-						}
-					}
-					return null;
-				}
-			});
-		}
-		invokeAllWithThrow(calls);
-		MetricLogging.get().end("lookups");
-		MetricLogging.get().start("projections");
-		// deliberately init projections after lookups
-		for (final DomainClassDescriptor<?> descriptor : cacheDescriptor.perClass
-				.values()) {
-			for (DomainProjection projection : descriptor.projections) {
-				if (projection instanceof BaseProjectionHasEquivalenceHash) {
-					cachingProjections
-							.getAndEnsure(projection.getListenedClass());
-				}
-				if (projection instanceof BaseProjection) {
-					((BaseProjection) projection)
-							.setModificationChecker(modificationChecker);
-				}
-			}
-		}
-		for (final DomainClassDescriptor<?> descriptor : cacheDescriptor.perClass
-				.values()) {
-			calls.add(new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-					for (DomainProjection projection : descriptor.projections) {
-						if (projection.isEnabled()) {
-							addValues(projection);
-						}
-						if (projection instanceof BaseProjectionHasEquivalenceHash) {
-							cachingProjections.add(
-									projection.getListenedClass(), projection);
-						}
-					}
-					return null;
-				}
-			});
-		}
-		invokeAllWithThrow(calls);
-		MetricLogging.get().end("projections");
-		checkModificationWriteLock = true;
-		initialising = false;
-		if (ResourceUtilities.getBoolean(DomainStore.class, "dumpLocks")) {
-			dumpLocks = true;
-		}
-		// don't close, but indicate that everything write-y from now shd be
-		// single-threaded
-		warmupConnections.keySet().forEach(conn -> closeWarmupConnection(conn));
-		warmupExecutor = null;
-		MetricLogging.get().end("memcache-all");
-	}
-
-	protected void closeWarmupConnection(Connection conn) {
-		try {
-			conn.commit();
-			conn.setAutoCommit(true);
-			conn.setReadOnly(false);
-			conn.setTransactionIsolation(originalTransactionIsolation);
-			conn.close();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+	void addValues(DomainListener listener) {
+		for (Object o : cache.values(listener.getListenedClass())) {
+			listener.insert((HasIdAndLocalId) o);
 		}
 	}
 
-	protected void maybeDebugLongLockHolders() {
-		if (expectLongRunning) {
-			return;
+	void ensureModificationChecker(HasIdAndLocalId hili) throws Exception {
+		if (modificationCheckerField != null
+				&& hili instanceof BaseSourcesPropertyChangeEvents) {
+			modificationCheckerField.set(hili, modificationChecker);
 		}
-		long time = System.currentTimeMillis();
-		for (Entry<Thread, Long> e : lockStartTime.entrySet()) {
-			long duration = time - e.getValue();
-			if (duration > 250 || (duration > 50
-					&& e.getKey() == postProcessWriterThread)) {
-				if (ResourceUtilities.is(DomainStore.class,
-						"debugLongLocks")) {
-					if (longLocksCount.incrementAndGet() > 200) {
-						return;
-					}
-					System.out.format("Long lock holder - %s ms - %s\n%s\n\n",
-							duration, e.getKey(),
-							SEUtilities.getStacktraceSlice(e.getKey(),
-									LONG_LOCK_TRACE_LENGTH, 0));
-				}
-			}
-		}
-	}
-
-	protected synchronized void releaseWarmupConnection(Connection conn) {
-		warmupConnections.add(conn, -1);
 	}
 
 	void ensureProxyModificationChecker(HasIdAndLocalId hili) throws Exception {
@@ -1739,29 +543,68 @@ public class DomainStore implements RegistrableService {
 		}
 	}
 
+	<T extends HasIdAndLocalId> T findRaw(Class<T> clazz, long id) {
+		T t = cache.get(clazz, id);
+		if (t != null) {
+			for (PreProvideTask task : domainDescriptor
+					.getPreProvideTasks(clazz)) {
+				try {
+					task.run(clazz, Collections.singletonList(t), true);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
+		return t;
+	}
+
+	<T extends HasIdAndLocalId> T findRaw(T t) {
+		return (T) findRaw(t.getClass(), t.getId());
+	}
+
 	String getCanonicalPropertyPath(Class clazz, String propertyPath) {
-		return cacheDescriptor.perClass.get(clazz)
+		return domainDescriptor.perClass.get(clazz)
 				.getCanonicalPropertyPath(propertyPath);
 	}
 
-	String getLockStats() {
-		Thread t = Thread.currentThread();
-		String log = CommonUtils.formatJ(
-				"\tid:%s\n\ttime: %s\n\treadHoldCount:"
-						+ " %s\n\twriteHoldcount: %s\n\tsublock: %s\n\n ",
-				t.getId(), new Date(), mainLock.getQueuedReaderThreads().size(),
-				mainLock.getQueuedWriterThreads().size(), subgraphLock);
-		log += SEUtilities.getStacktraceSlice(t);
-		return log;
+	Field getField(Class clazz, String name) throws Exception {
+		List<Field> fields = new GraphProjection().getFieldsForClass(clazz);
+		Optional<Field> field = fields.stream()
+				.filter(f -> f.getName().equals(name)).findFirst();
+		if (!field.isPresent()) {
+			throw new RuntimeException(
+					String.format("Field not available - %s.%s",
+							clazz.getSimpleName(), name));
+		}
+		return field.get();
+	}
+
+	void index(HasIdAndLocalId obj, boolean add) {
+		Class<? extends HasIdAndLocalId> clazz = obj.getClass();
+		if (obj instanceof DomainProxy) {
+			clazz = (Class<? extends HasIdAndLocalId>) clazz.getSuperclass();
+		}
+		DomainClassDescriptor<?> itemDescriptor = domainDescriptor.perClass
+				.get(clazz);
+		itemDescriptor.index(obj, add);
+		for (HasIdAndLocalId dependentObject : itemDescriptor
+				.getDependentObjectsWithDerivedProjections(obj)) {
+			index(dependentObject, add);
+		}
+	}
+
+	<V extends HasIdAndLocalId> boolean isRawValue(V v) {
+		V existing = (V) cache.get(v.getClass(), v.getId());
+		return existing == v;
 	}
 
 	<T extends HasIdAndLocalId> List<T> list(Class<T> clazz,
-			DomainStoreQuery query) {
+			DomainStoreQuery<T> query) {
 		try {
-			lock(false);
+			threads.lock(false);
 			List<T> raw = null;
 			Set<Long> ids = query.getIds();
-			boolean transaction = transactional
+			boolean transaction = transactions()
 					.transactionActiveInCurrentThread();
 			boolean debugMetrics = isDebug()
 					&& LooseContext.is(CONTEXT_DEBUG_QUERY_METRICS);
@@ -1793,7 +636,7 @@ public class DomainStore implements RegistrableService {
 					metricLogger.debug("Query metrics:\n========\n{}\n{}",
 							query, debugMetricBuilder.toString());
 				}
-				raw = (List) cacheDescriptor.perClass.get(clazz)
+				raw = (List) domainDescriptor.perClass.get(clazz)
 						.getRawValues(ids, cache);
 			} else {
 				Set<T> rawTransactional = null;
@@ -1802,14 +645,14 @@ public class DomainStore implements RegistrableService {
 							query.getFilters().get(i),
 							(i == 0) ? null : rawTransactional);
 				}
+				raw = new ArrayList<T>();
 				if (rawTransactional == null) {
-					raw = new ArrayList<T>();
 				} else {
 					raw = new ArrayList<T>(rawTransactional);
 				}
 			}
 			try {
-				for (PreProvideTask task : cacheDescriptor.preProvideTasks) {
+				for (PreProvideTask task : domainDescriptor.preProvideTasks) {
 					task.run(clazz, raw, true);
 				}
 				if (query.isRaw() || isWillProjectLater()) {
@@ -1821,7 +664,7 @@ public class DomainStore implements RegistrableService {
 				throw new WrappedRuntimeException(e);
 			}
 		} finally {
-			unlock(false);
+			threads.unlock(false);
 		}
 	}
 
@@ -1832,7 +675,7 @@ public class DomainStore implements RegistrableService {
 		// preload outside of the writer lock - this uses a db conn, and there
 		// have been some odd networking issues...
 		try {
-			lock(false);
+			threads.lock(false);
 			// we may lazy load - so need a read lock
 			// note that since method is synchronized, nothing will be evicted
 			// from hereonin
@@ -1854,16 +697,17 @@ public class DomainStore implements RegistrableService {
 				}
 			}
 		} finally {
-			unlock(false);
+			threads.unlock(false);
 		}
 		Set<Throwable> causes = new LinkedHashSet<Throwable>();
 		StringBuilder warnBuilder = new StringBuilder();
 		long postProcessStart = 0;
+		DomainStoreHealth health = getHealth();
 		try {
-			lock(true);
+			threads.lock(true);
 			postProcessStart = System.currentTimeMillis();
 			MetricLogging.get().start("post-process");
-			postProcessWriterThread = Thread.currentThread();
+			threads.postProcessWriterThread = Thread.currentThread();
 			postProcessEvent = persistenceEvent;
 			health.memcachePostProcessStartTime = System.currentTimeMillis();
 			transformManager.startCommit();
@@ -1878,8 +722,8 @@ public class DomainStore implements RegistrableService {
 				HiliLocator locator = HiliLocator.objectLocator(dte);
 				locatorOriginalSourceMap.put(locator, dte.getSource());
 			}
-			if (cacheDescriptor instanceof PreApplyPersistListener) {
-				((PreApplyPersistListener) cacheDescriptor)
+			if (domainDescriptor instanceof PreApplyPersistListener) {
+				((PreApplyPersistListener) domainDescriptor)
 						.loadLazyPreApplyPersist(persistenceEvent);
 			}
 			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
@@ -1962,14 +806,14 @@ public class DomainStore implements RegistrableService {
 		} finally {
 			transformManager.endCommit();
 			health.memcachePostProcessStartTime = 0;
-			postProcessWriterThread = null;
+			threads.postProcessWriterThread = null;
 			postProcessEvent = null;
 			long postProcessTime = System.currentTimeMillis()
 					- postProcessStart;
 			health.memcacheMaxPostProcessTime = Math
 					.max(health.memcacheMaxPostProcessTime, postProcessTime);
 			MetricLogging.get().end("post-process");
-			unlock(true);
+			threads.unlock(true);
 			try {
 				if (warnBuilder.length() > 0) {
 					Exception warn = new Exception(warnBuilder.toString());
@@ -1980,15 +824,15 @@ public class DomainStore implements RegistrableService {
 				if (!causes.isEmpty()) {
 					UmbrellaException umby = new UmbrellaException(causes);
 					causes.iterator().next().printStackTrace();
-					MemcacheUpdateException memcacheUpdateException = new MemcacheUpdateException(
+					DomainStoreUpdateException memcacheUpdateException = new DomainStoreUpdateException(
 							umby);
 					GlobalTopicPublisher.get().publishTopic(
 							TOPIC_UPDATE_EXCEPTION, memcacheUpdateException);
-					if (memcacheUpdateException.ignoreForMemcacheExceptionCount) {
+					if (memcacheUpdateException.ignoreForDomainStoreExceptionCount) {
 						memcacheUpdateException.printStackTrace();
 					} else {
 						health.memcacheExceptionCount.incrementAndGet();
-						throw new MemcacheException(umby);
+						throw new DomainStoreException(umby);
 					}
 				}
 			} catch (Throwable t) {
@@ -1997,355 +841,122 @@ public class DomainStore implements RegistrableService {
 		}
 	}
 
-	synchronized LaterLookup warmupLaterLookup() {
-		LaterLookup result = new LaterLookup();
-		warmupLaterLookups.add(result);
-		return result;
-	}
+	public static class Builder {
+		private DomainDescriptor descriptor;
 
-	public class AlcinaMemCacheHealth {
-		public long memcacheMaxPostProcessTime;
+		private ThreadPoolExecutor warmupExecutor;
 
-		public long memcachePostProcessStartTime;
+		private DataSource dataSource;
 
-		private AtomicInteger memcacheExceptionCount = new AtomicInteger();
+		private DomainLoaderType loaderType;
 
-		public long getMaxQueuedTime() {
-			return threadQueueTimes.values().stream()
-					.min(Comparator.naturalOrder())
-					.map(t -> System.currentTimeMillis() - t).orElse(0L);
-		}
-
-		public AtomicInteger getMemcacheExceptionCount() {
-			return this.memcacheExceptionCount;
-		}
-
-		public int getMemcacheQueueLength() {
-			return mainLock.getQueueLength();
-		}
-
-		public long getTimeInMemcacheWriter() {
-			return memcachePostProcessStartTime == 0 ? 0
-					: System.currentTimeMillis() - memcachePostProcessStartTime;
-		}
-
-		public boolean isLockingDisabled() {
-			return lockingDisabled;
-		}
-	}
-
-	public class AlcinaMemCacheInstrumentation {
-		public long getActiveMemcacheLockTime(Thread thread) {
-			synchronized (activeThreads) {
-				return activeThreadAcquireTimes.getOrDefault(thread, 0L);
+		public DomainStore register() {
+			DomainStore domainStore = new DomainStore();
+			domainStore.domainDescriptor = descriptor;
+			Preconditions.checkNotNull(loaderType);
+			switch (loaderType) {
+			case Database:
+				domainStore.loader = new DomainStoreLoaderDatabase(domainStore,
+						dataSource, warmupExecutor);
+				break;
+			default:
+				throw new UnsupportedOperationException();
 			}
+			stores().register(domainStore);
+			return domainStore;
 		}
 
-		public Map<Thread, Long> getActiveMemcacheLockTimes() {
-			synchronized (activeThreads) {
-				return activeThreadAcquireTimes.entrySet().stream().collect(
-						Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
-			}
+		public Builder withDomainDescriptor(DomainDescriptor descriptor) {
+			this.descriptor = descriptor;
+			return this;
 		}
 
-		public DomainStoreLockState getMemcacheLockState(Thread thread) {
-			synchronized (activeThreads) {
-				if (threadQueueTimes.containsKey(thread.getId()))
-					return DomainStoreLockState.WAITING_FOR_LOCK;
-				else {
-					synchronized (activeThreads) {
-						if (activeThreadAcquireTimes.containsKey(thread)) {
-							if (isWriteLockedByThread(thread)) {
-								return DomainStoreLockState.HOLDING_WRITE_LOCK;
-							} else {
-								return DomainStoreLockState.HOLDING_READ_LOCK;
-							}
-						} else {
-							return DomainStoreLockState.NO_LOCK;
-						}
-					}
-				}
-			}
+		public Builder withLoaderDatabase(ThreadPoolExecutor warmupExecutor,
+				DataSource dataSource) {
+			this.warmupExecutor = warmupExecutor;
+			this.dataSource = dataSource;
+			loaderType = DomainLoaderType.Database;
+			return this;
 		}
 
-		public long getMemcacheWaitTime(Thread thread) {
-			return threadQueueTimes.getOrDefault(thread.getId(), 0L);
-		}
-
-		public boolean isLockedByThread(Thread thread) {
-			return mainLock.isLockedByThread(thread);
-		}
-
-		public boolean isWriteLockedByThread(Thread thread) {
-			return mainLock.isWriteLockedByThread(thread);
+		enum DomainLoaderType {
+			Database, Remote;
 		}
 	}
 
-	/*
-	 * Note - not synchronized - per-thread access only
-	 */
-	public class LaterLookup {
-		List<LaterItem> list = new ArrayList<>();
-
-		void add(HasIdAndLocalId target, PdOperator pd,
-				HasIdAndLocalId source) {
-			list.add(new LaterItem(target, pd, source));
-		}
-
-		void add(long id, PdOperator pd, HasIdAndLocalId source) {
-			list.add(new LaterItem(id, pd, source));
-		}
-
-		void resolve() throws Exception {
-			new ResolveRefsTask(list).call();
-		}
-
-		private final class ResolveRefsTask implements Callable<Void> {
-			private List<LaterItem> items;
-
-			private ResolveRefsTask(List<LaterItem> items) {
-				this.items = items;
-			}
-
-			@Override
-			/*
-			 * multithread Problem here is that set() methods need to be synced
-			 * per class (really, pd) ..so run linear
-			 */
-			public Void call() throws Exception {
-				boolean keepDetached = LooseContext
-						.is(CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
-				if (LooseContext.is(CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS)) {
-					this.items.clear();
-					return null;
-				}
-				for (LaterItem item : this.items) {
-					try {
-						PdOperator pdOperator = item.pdOperator;
-						pdOperator.resolveHelper.ensure(item.source.getClass());
-						Method rm = pdOperator.readMethod;
-						long id = item.id;
-						if (pdOperator.resolveHelper.inJoinTables) {
-							if (keepDetached) {
-								throw new RuntimeException(
-										"Cannot keep join tables detached");
-							}
-							Set set = (Set) pdOperator.readMethod
-									.invoke(item.source, new Object[0]);
-							if (set == null) {
-								set = new LinkedHashSet();
-								pdOperator.writeMethod.invoke(item.source,
-										new Object[] { set });
-							}
-							set.add(item.target);
-						} else {
-							Object target = cache
-									.get(propertyDescriptorFetchTypes
-											.get(pdOperator.pd), id);
-							if (target == null) {
-								logger.warn(
-										"later-lookup -- missing target: {}, {} for  {}.{} #{}",
-										propertyDescriptorFetchTypes
-												.get(pdOperator.pd),
-										id, item.source.getClass(),
-										pdOperator.name, item.source.getId());
-							}
-							pdOperator.writeMethod.invoke(item.source, target);
-							if (keepDetached) {
-								continue;
-							}
-							PropertyDescriptor targetPd = pdOperator.resolveHelper.targetPd;
-							if (targetPd != null && target != null) {
-								Set set = (Set) targetPd.getReadMethod()
-										.invoke(target, new Object[0]);
-								if (set == null) {
-									set = new LinkedHashSet();
-									targetPd.getWriteMethod().invoke(target,
-											new Object[] { set });
-								}
-								set.add(item.source);
-							}
-							targetPd = pdOperator.resolveHelper.oneToOnePd;
-							if (targetPd != null && target != null) {
-								targetPd.getWriteMethod().invoke(target,
-										new Object[] { item.source });
-							}
-							targetPd = pdOperator.resolveHelper.memCachePdRev;
-							if (targetPd != null && target != null) {
-								targetPd.getWriteMethod().invoke(target,
-										new Object[] { item.source });
-							}
-						}
-					} catch (Exception e) {
-						// possibly a delta during warmup::
-						System.out.println(item);
-						e.printStackTrace();
-					}
-				}
-				if (initialising) {
-					// System.out.format("resolverefs - %s - %s\n",
-					// clazz.getSimpleName(), items.size());
-				}
-				// leave the class keys at the top
-				this.items.clear();
-				return null;
-			}
-		}
-
-		class LaterItem {
-			long id;
-
-			PdOperator pdOperator;
-
-			HasIdAndLocalId source;
-
-			HasIdAndLocalId target;
-
-			public LaterItem(HasIdAndLocalId target, PdOperator pd,
-					HasIdAndLocalId source) {
-				this.target = target;
-				this.pdOperator = pd;
-				this.source = source;
-			}
-
-			public LaterItem(long id, PdOperator pd, HasIdAndLocalId source) {
-				this.id = id;
-				this.pdOperator = pd;
-				this.source = source;
-			}
-		}
-	}
-
-	public static class MemcacheException extends RuntimeException {
-		public MemcacheException(Exception e) {
+	public static class DomainStoreException extends RuntimeException {
+		public DomainStoreException(Exception e) {
 			super(e);
 		}
 
-		public MemcacheException(String message) {
+		public DomainStoreException(String message) {
 			super(message);
 		}
 	}
 
-	public static interface MemcacheJoinHandler {
-		public String getTargetSql();
+	public static class DomainStores {
+		// not concurrent, handle in methods
+		private Map<DomainDescriptor, DomainStore> descriptorMap = new LinkedHashMap<>();
 
-		public void injectValue(ResultSet rs, HasIdAndLocalId source);
-	}
+		private Map<Class, DomainStore> classMap = new LinkedHashMap<>();
 
-	public static class MemcacheUpdateException extends Exception {
-		public UmbrellaException umby;
+		private DomainStore databaseStore;
 
-		public boolean ignoreForMemcacheExceptionCount;
-
-		public MemcacheUpdateException(UmbrellaException umby) {
-			super("Memcache update exception - ignoreable", umby);
-			this.umby = umby;
-		}
-	}
-
-	public class PdOperator {
-		ResolveHelper resolveHelper = new ResolveHelper();
-
-		Method readMethod;
-
-		ManyToMany manyToMany;
-
-		ManyToOne manyToOne;
-
-		JoinTable joinTable;
-
-		OneToMany oneToMany;
-
-		OneToOne oneToOne;
-
-		Method writeMethod;
-
-		PropertyDescriptor pd;
-
-		public String name;
-
-		Field field;
-
-		Class clazz;
-
-		public int idx;
-
-		Class mappedClass;
-
-		public PdOperator(PropertyDescriptor pd, Class clazz, int idx) {
-			this.pd = pd;
-			this.clazz = clazz;
-			this.idx = idx;
-			this.field = getDescriptorField(clazz, pd.getName());
-			this.name = pd.getName();
-			this.readMethod = pd.getReadMethod();
-			this.writeMethod = pd.getWriteMethod();
-			this.manyToMany = readMethod.getAnnotation(ManyToMany.class);
-			this.manyToOne = readMethod.getAnnotation(ManyToOne.class);
-			this.joinTable = readMethod.getAnnotation(JoinTable.class);
-			this.oneToMany = readMethod.getAnnotation(OneToMany.class);
-			this.oneToOne = readMethod.getAnnotation(OneToOne.class);
-			DomainStoreMapping mapping = readMethod
-					.getAnnotation(DomainStoreMapping.class);
-			this.mappedClass = mapping == null ? null : mapping.mapping();
-		}
-
-		public Object read(HasIdAndLocalId obj) {
-			try {
-				return field.get(obj);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
+		public synchronized DomainStore databaseStore() {
+			if (databaseStore == null) {
+				databaseStore = descriptorMap.values().stream().filter(
+						d -> d.loader instanceof DomainStoreLoaderDatabase)
+						.findFirst().get();
 			}
+			return databaseStore;
 		}
 
-		class ResolveHelper {
-			public PropertyDescriptor memCachePdRev;
+		public synchronized boolean
+				isInitialised(DomainDescriptor domainDescriptor) {
+			return descriptorMap.containsKey(domainDescriptor)
+					&& descriptorMap.get(domainDescriptor).initialised;
+		}
 
-			public PropertyDescriptor oneToOnePd;
+		public synchronized <V extends HasIdAndLocalId> DomainStoreQuery<V>
+				query(Class<V> clazz) {
+			return new DomainStoreQuery(clazz, storeFor(clazz));
+		}
 
-			public PropertyDescriptor targetPd;
+		public synchronized void register(DomainStore store) {
+			descriptorMap.put(store.domainDescriptor, store);
+			store.domainDescriptor.perClass.keySet().forEach(clazz -> {
+				Preconditions.checkState(!classMap.containsKey(clazz));
+				classMap.put(clazz, store);
+			});
+		}
 
-			public boolean inJoinTables;
+		public synchronized DomainStore storeFor(Class clazz) {
+			return classMap.get(clazz);
+		}
 
-			boolean ensured = false;
-
-			public void ensure(Class<? extends HasIdAndLocalId> sourceClass) {
-				if (!ensured) {
-					inJoinTables = joinTables.containsKey(PdOperator.this.pd);
-					targetPd = manyToOneRev.get(sourceClass, name);
-					oneToOnePd = oneToOneRev.get(sourceClass, name);
-					memCachePdRev = memCacheColumnRev.get(sourceClass, name);
-					ensured = true;
-				}
-			}
+		public synchronized DomainStore
+				storeFor(DomainDescriptor domainDescriptor) {
+			return descriptorMap.get(domainDescriptor);
 		}
 	}
 
-	public class RawValueReplacer<I> extends DomainReader<I, I> {
-		@Override
-		protected I read0(I input) throws Exception {
-			if (input == null) {
-				return null;
-			}
-			List<Field> fields = new GraphProjection()
-					.getFieldsForClass(input.getClass());
-			for (Field field : fields) {
-				if (HasIdAndLocalId.class.isAssignableFrom(field.getType())) {
-					HasIdAndLocalId value = (HasIdAndLocalId) field.get(input);
-					if (value != null) {
-						I raw = (I) cache.get(field.getType(), value.getId());
-						field.set(input, raw);
-					}
-				}
-			}
-			return input;
-		}
-	}
-
-	public class Transactional {
+	public class DomainStoreTransactions {
 		public volatile int transactionCount;
 
 		Set<Long> activeTransactionThreadIds = new LinkedHashSet<Long>();
+
+		public void ensureReferredPropertyIsTransactional(HasIdAndLocalId hili,
+				String propertyName) {
+			// target, even if new object, will still be equals() to old, so no
+			// property change will be fired, which is the desired behaviour
+			HasIdAndLocalId target = (HasIdAndLocalId) Reflections
+					.propertyAccessor().getPropertyValue(hili, propertyName);
+			if (target != null) {
+				target = ensureTransactional(target);
+				Reflections.propertyAccessor().setPropertyValue(hili,
+						propertyName, target);
+			}
+		}
 
 		public PerThreadTransaction ensureTransaction() {
 			PerThreadTransaction transaction = transactions.get();
@@ -2357,9 +968,9 @@ public class DomainStore implements RegistrableService {
 				if (pendingTransformCount != 0
 						&& !AppPersistenceBase.isTest()) {
 					for (DomainTransformEvent dte : localTransforms) {
-						if (cacheDescriptor.perClass.keySet()
+						if (domainDescriptor.perClass.keySet()
 								.contains(dte.getObjectClass())) {
-							throw new MemcacheException(String.format(
+							throw new DomainStoreException(String.format(
 									"Starting a memcache transaction with an existing transform of a graphed object - %s."
 											+ " In certain cases that might work -- but better practice to not do so",
 									dte));
@@ -2367,6 +978,7 @@ public class DomainStore implements RegistrableService {
 					}
 				}
 				transaction = Registry.impl(PerThreadTransaction.class);
+				transaction.store = DomainStore.this;
 				transactions.set(transaction);
 				synchronized (this) {
 					activeTransactionThreadIds
@@ -2414,6 +1026,13 @@ public class DomainStore implements RegistrableService {
 			return (Map<Long, T>) cache.getMap(clazz);
 		}
 
+		public void requireActiveTransaction() {
+			if (!transactionActiveInCurrentThread()) {
+				throw new RuntimeException(
+						"requires transaction in current thread");
+			}
+		}
+
 		public <V extends HasIdAndLocalId> V resolveTransactional(
 				DomainListener listener, V value, Object[] path) {
 			PerThreadTransaction perThreadTransaction = transactions.get();
@@ -2439,8 +1058,8 @@ public class DomainStore implements RegistrableService {
 			PerThreadTransaction transaction = transactions.get();
 			if (transaction != null) {
 				transaction.end();
-				for (BaseProjectionHasEquivalenceHash listener : DomainStore
-						.get().cachingProjections.allItems()) {
+				for (BaseProjectionHasEquivalenceHash listener : cachingProjections
+						.allItems()) {
 					listener.onTransactionEnd();
 				}
 				transactions.remove();
@@ -2457,38 +1076,64 @@ public class DomainStore implements RegistrableService {
 		}
 	}
 
-	private final class ReentrantReadWriteLockWithThreadAccess
-			extends ReentrantReadWriteLock {
-		private ReentrantReadWriteLockWithThreadAccess(boolean fair) {
-			super(fair);
+	public static class DomainStoreUpdateException extends Exception {
+		public UmbrellaException umby;
+
+		public boolean ignoreForDomainStoreExceptionCount;
+
+		public DomainStoreUpdateException(UmbrellaException umby) {
+			super("Domain store update exception - ignoreable", umby);
+			this.umby = umby;
+		}
+	}
+	/*
+	 * Note - not synchronized - per-thread access only
+	 */
+
+	public static class RawValueReplacer<I> extends DomainReader<I, I> {
+		private DomainStore domainStore;
+
+		public RawValueReplacer(DomainStore domainStore) {
+			this.domainStore = domainStore;
 		}
 
 		@Override
-		public Collection<Thread> getQueuedReaderThreads() {
-			return super.getQueuedReaderThreads();
-		}
-
-		@Override
-		public java.util.Collection<Thread> getQueuedThreads() {
-			return super.getQueuedThreads();
-		}
-
-		@Override
-		public Collection<Thread> getQueuedWriterThreads() {
-			return super.getQueuedWriterThreads();
-		}
-
-		public boolean isLockedByThread(Thread thread) {
-			return mainLockReadLock.contains(thread)
-					|| isWriteLockedByThread(thread);
-		}
-
-		public boolean isWriteLockedByThread(Thread thread) {
-			return mainLockWriteLock == thread;
+		protected I read0(I input) throws Exception {
+			if (input == null) {
+				return null;
+			}
+			List<Field> fields = new GraphProjection()
+					.getFieldsForClass(input.getClass());
+			for (Field field : fields) {
+				if (HasIdAndLocalId.class.isAssignableFrom(field.getType())) {
+					HasIdAndLocalId value = (HasIdAndLocalId) field.get(input);
+					if (value != null) {
+						I raw = (I) domainStore.cache.get(field.getType(),
+								value.getId());
+						field.set(input, raw);
+					}
+				}
+			}
+			return input;
 		}
 	}
 
-	class AlcinaMemCacheDomainHandler implements DomainHandler {
+	class DetachedCacheObjectStorePsAware extends DetachedCacheObjectStore {
+		public DetachedCacheObjectStorePsAware() {
+			super(new PsAwareMultiplexingObjectCache());
+		}
+
+		@Override
+		public void mapObject(HasIdAndLocalId obj) {
+			if (publishMappingEvents) {
+				GlobalTopicPublisher.get().publishTopic(TOPIC_MAPPING_EVENT,
+						obj);
+			}
+			super.mapObject(obj);
+		}
+	}
+
+	class DomainStoreDomainHandler implements DomainHandler {
 		@Override
 		public <V extends HasIdAndLocalId> void async(Class<V> clazz,
 				long objectId, boolean create, Consumer<V> resultConsumer) {
@@ -2498,13 +1143,17 @@ public class DomainStore implements RegistrableService {
 		@Override
 		public <V extends HasIdAndLocalId> V byProperty(Class<V> clazz,
 				String propertyName, Object value) {
-			return new DomainStoreQuery().raw().filter(propertyName, value)
-					.find(clazz);
+			return Domain.query(clazz).raw().filter(propertyName, value).find();
 		}
 
 		@Override
 		public void commitPoint() {
 			// do nothing, assume explicit commit in servlet layer
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> V detachedVersion(V v) {
+			return (V) Domain.query(v.getClass()).id(v.getId()).find();
 		}
 
 		@Override
@@ -2528,21 +1177,37 @@ public class DomainStore implements RegistrableService {
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> Collection<V> list(Class<V> clazz) {
-			return cache.immutableRawValues(clazz);
+		@DomainStoreUnsafe
+		public <V extends HasIdAndLocalId> List<Long> ids(Class<V> clazz) {
+			try {
+				threads.lock(false);
+				return new ArrayList<Long>(cache.keys(clazz));
+			} finally {
+				threads.unlock(false);
+			}
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> boolean isDomainVersion(V v) {
+			return isRawValue(v);
 		}
 
 		@Override
 		public <V extends HasIdAndLocalId> List<V> listByProperty(
 				Class<V> clazz, String propertyName, Object value) {
-			return new DomainStoreQuery().raw().filter(propertyName, value)
-					.list(clazz);
+			return Domain.query(clazz).raw().filter(propertyName, value).list();
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> DomainQuery<V>
+				query(Class<V> clazz) {
+			return new DomainStoreQuery<>(clazz, DomainStore.this);
 		}
 
 		@Override
 		public <V extends HasIdAndLocalId> V resolveTransactional(
 				DomainListener listener, V value, Object[] path) {
-			return transactional.resolveTransactional(listener, value, path);
+			return transactions().resolveTransactional(listener, value, path);
 		}
 
 		@Override
@@ -2553,7 +1218,18 @@ public class DomainStore implements RegistrableService {
 		@Override
 		public <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
 				long id) {
-			return (V) transactional.find(clazz, id);
+			return (V) transactions().find(clazz, id);
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> V transactionalVersion(V v) {
+			return (V) transactions().ensureTransactional(v);
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> Collection<V>
+				values(Class<V> clazz) {
+			return cache.immutableRawValues(clazz);
 		}
 
 		@Override
@@ -2587,316 +1263,13 @@ public class DomainStore implements RegistrableService {
 				return GraphProjections.defaultProjections().project(v);
 			}
 		}
-	}
 
-	class BackupLazyLoader implements LazyObjectLoader {
-		@Override
-		public <T extends HasIdAndLocalId> void loadObject(Class<? extends T> c,
-				long id, long localId) {
-			try {
-				DomainClassDescriptor itemDescriptor = cacheDescriptor.perClass
-						.get(c);
-				if (itemDescriptor != null && itemDescriptor.lazy) {
-					// only one thread should load a given class, for
-					// threadsafety reasons
-					ClassIdLock lock = LockUtils.obtainClassIdLock(c, 0L);
-					System.out.format("Backup lazy load: %s - %s\n",
-							c.getSimpleName(), id);
-					loadTable(c, "id=" + id, lock);
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
+		<T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
+			return Domain.query(clazz).ids(Domain.ids(clazz)).raw().list();
 		}
 	}
 
-	class ColumnDescriptor {
-		private PropertyDescriptor pd;
-
-		private Class<?> type;
-
-		private boolean hili;
-
-		private EnumType enumType = EnumType.ORDINAL;
-
-		public ColumnDescriptor(PropertyDescriptor pd, Class propertyType) {
-			this.pd = pd;
-			type = propertyType;
-			hili = HasIdAndLocalId.class.isAssignableFrom(type);
-			Enumerated enumerated = pd.getReadMethod()
-					.getAnnotation(Enumerated.class);
-			if (enumerated != null) {
-				enumType = enumerated.value();
-			}
-		}
-
-		public String getColumnName() {
-			Column col = pd.getReadMethod().getAnnotation(Column.class);
-			JoinColumn joinColumn = pd.getReadMethod()
-					.getAnnotation(JoinColumn.class);
-			if (col == null && joinColumn == null) {
-				if (HasId.class.isAssignableFrom(pd.getPropertyType())) {
-					return pd.getName() + "_id";
-				}
-				return pd.getName();
-			}
-			return col != null ? col.name() : joinColumn.name();
-		}
-
-		public String getColumnSql() {
-			String columnName = getColumnName();
-			if (type == Date.class) {
-				return String.format(
-						"EXTRACT (EPOCH FROM %s::timestamp at time zone 'utc')::float*1000 as %s",
-						columnName, columnName);
-			} else {
-				return columnName;
-			}
-		}
-
-		public Object getObject(ResultSet rs, int idx) throws Exception {
-			if (hili || type == Long.class || type == long.class) {
-				Long v = rs.getLong(idx);
-				if (rs.wasNull()) {
-					v = null;
-				}
-				return v;
-			}
-			if (type == String.class) {
-				return rs.getString(idx);
-			}
-			if (type == Double.class || type == double.class) {
-				Double v = rs.getDouble(idx);
-				if (rs.wasNull()) {
-					v = null;
-				}
-				return v;
-			}
-			if (type == Float.class || type == float.class) {
-				Float v = rs.getFloat(idx);
-				if (rs.wasNull()) {
-					v = null;
-				}
-				return v;
-			}
-			if (type == Integer.class || type == int.class) {
-				Integer v = rs.getInt(idx);
-				if (rs.wasNull()) {
-					v = null;
-				}
-				return v;
-			}
-			if (type == Boolean.class || type == boolean.class) {
-				Boolean v = rs.getBoolean(idx);
-				if (rs.wasNull()) {
-					v = null;
-				}
-				return v;
-			}
-			if (type == Date.class) {
-				long utcTime = rs.getLong(idx);
-				if (rs.wasNull()) {
-					return null;
-				}
-				// it seems getLong mostly returns utc timestamp (not locale)
-				// now mandating that with the 'at timezone utc' above
-				// note these cols are currently pg timestamp without tz
-				int persistOffset = startupTz.getOffset(utcTime);
-				long timeLocal = utcTime - persistOffset;
-				return rs.wasNull() ? null : new Date(timeLocal);
-				// Timestamp v = rs.getTimestamp(idx);
-				// return v == null ? null : new Date(v.getTime());
-			}
-			if (Enum.class.isAssignableFrom(type)) {
-				switch (enumType) {
-				case ORDINAL:
-					int eIdx = rs.getInt(idx);
-					Object[] enumConstants = type.getEnumConstants();
-					if (eIdx >= enumConstants.length) {
-						logger.warn("Invalid enum index : {}:{}",
-								type.getSimpleName(), eIdx);
-						return null;
-					}
-					return rs.wasNull() ? null : enumConstants[eIdx];
-				case STRING:
-					String enumString = rs.getString(idx);
-					if (enumString == null) {
-						return null;
-					}
-					Enum enumValue = CommonUtils
-							.getEnumValueOrNull((Class) type, enumString);
-					if (enumValue == null) {
-						logger.warn("Invalid enum value : {}:{}",
-								type.getSimpleName(), enumString);
-						return null;
-					}
-					return enumValue;
-				}
-			}
-			throw new RuntimeException(
-					"Unhandled rs type: " + type.getSimpleName());
-		}
-	}
-
-	class ConnResults implements Iterable<Object[]> {
-		ConnResultsIterator itr = new ConnResultsIterator();
-
-		private Connection conn;
-
-		private List<ColumnDescriptor> columnDescriptors;
-
-		private Class clazz;
-
-		private String sqlFilter;
-
-		ResultSet rs = null;
-
-		public ConnResults(Connection conn, Class clazz,
-				List<ColumnDescriptor> columnDescriptors, String sqlFilter) {
-			this.conn = conn;
-			this.clazz = clazz;
-			this.columnDescriptors = columnDescriptors;
-			this.sqlFilter = sqlFilter;
-		}
-
-		public ResultSet ensureRs() {
-			return ensureRs(0);
-		}
-
-		@Override
-		public Iterator<Object[]> iterator() {
-			return itr;
-		}
-
-		private ResultSet ensureRs(int pass) {
-			try {
-				if (rs == null) {
-					conn.setAutoCommit(false);
-					Statement stmt = conn.createStatement();
-					stmt.setFetchSize(20000);
-					String template = "select %s from %s";
-					List<String> columnNames = new ArrayList<String>();
-					for (ColumnDescriptor descr : columnDescriptors) {
-						columnNames.add(descr.getColumnSql());
-					}
-					Table table = (Table) clazz.getAnnotation(Table.class);
-					String sql = String.format(template,
-							CommonUtils.join(columnNames, ","), table.name());
-					if (CommonUtils.isNotNullOrEmpty(sqlFilter)) {
-						sql += String.format(" where %s", sqlFilter);
-					}
-					sqlLogger.debug(sql);
-					rs = stmt.executeQuery(sql);
-				}
-				return rs;
-			} catch (Exception e) {
-				if (pass < 2 && !initialising
-						&& connectionsReopened.get() < 20) {
-					try {
-						// don't close the last one, invalid
-						conn = dataSource.getConnection();
-					} catch (Exception e2) {
-						throw new WrappedRuntimeException(e2);
-					}
-					System.out.println("memcache-db-warning");
-					e.printStackTrace();
-					return ensureRs(pass + 1);
-				}
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		class ConnResultsIterator implements Iterator<Object[]> {
-			Object[] cached = null;
-
-			boolean finished = false;
-
-			@Override
-			public boolean hasNext() {
-				peekNext();
-				return !finished;
-			}
-
-			@Override
-			public Object[] next() {
-				if (finished) {
-					throw new NoSuchElementException();
-				}
-				peekNext();
-				Object[] result = cached;
-				cached = null;
-				return result;
-			}
-
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException();
-			}
-
-			private void peekNext() {
-				if (cached == null && !finished) {
-					ensureRs();
-					try {
-						if (rs.next()) {
-							cached = new Object[columnDescriptors.size()];
-							for (int idx = 1; idx <= columnDescriptors
-									.size(); idx++) {
-								ColumnDescriptor descriptor = columnDescriptors
-										.get(idx - 1);
-								cached[idx - 1] = descriptor.getObject(rs, idx);
-							}
-						} else {
-							finished = true;
-							rs.close();
-						}
-					} catch (Exception e) {
-						throw new WrappedRuntimeException(e);
-					}
-				}
-			}
-		}
-	}
-
-	class DetachedCacheObjectStorePsAware extends DetachedCacheObjectStore {
-		public DetachedCacheObjectStorePsAware() {
-			super(new PsAwareMultiplexingObjectCache());
-		}
-
-		@Override
-		public void mapObject(HasIdAndLocalId obj) {
-			if (publishMappingEvents) {
-				GlobalTopicPublisher.get().publishTopic(TOPIC_MAPPING_EVENT,
-						obj);
-			}
-			super.mapObject(obj);
-		}
-	}
-
-	static class FilterContext {
-		int idx = 0;
-
-		public String lastFilterString;
-	}
-
-	class InSubgraphFilter implements CollectionFilter<DomainTransformEvent> {
-		@Override
-		public boolean allow(DomainTransformEvent o) {
-			if (!cacheDescriptor.applyPostTransform(o.getObjectClass(), o)) {
-				return false;
-			}
-			switch (o.getTransformType()) {
-			case ADD_REF_TO_COLLECTION:
-			case REMOVE_REF_FROM_COLLECTION:
-			case CHANGE_PROPERTY_REF:
-				return GraphProjection.isEnumOrEnumSubclass(o.getValueClass())
-						|| cacheDescriptor.applyPostTransform(o.getValueClass(),
-								o);
-			}
-			return true;
-		}
-	}
-
-	class MemCachePersistenceListener
+	class DomainStorePersistenceListener
 			implements DomainTransformPersistenceListener {
 		@Override
 		public void onDomainTransformRequestPersistence(
@@ -2910,6 +1283,30 @@ public class DomainStore implements RegistrableService {
 				postProcess(evt);
 				break;
 			}
+		}
+	}
+
+	static class FilterContext {
+		int idx = 0;
+
+		public String lastFilterString;
+	}
+
+	class InSubgraphFilter implements CollectionFilter<DomainTransformEvent> {
+		@Override
+		public boolean allow(DomainTransformEvent o) {
+			if (!domainDescriptor.applyPostTransform(o.getObjectClass(), o)) {
+				return false;
+			}
+			switch (o.getTransformType()) {
+			case ADD_REF_TO_COLLECTION:
+			case REMOVE_REF_FROM_COLLECTION:
+			case CHANGE_PROPERTY_REF:
+				return GraphProjection.isEnumOrEnumSubclass(o.getValueClass())
+						|| domainDescriptor
+								.applyPostTransform(o.getValueClass(), o);
+			}
+			return true;
 		}
 	}
 
@@ -2933,22 +1330,7 @@ public class DomainStore implements RegistrableService {
 
 		@Override
 		public void check(String key) {
-			// add-remove - well, there's a bunch of automated adds (e.g.
-			// cc.alcina.framework.entity.domaintransform.ServerTransformManagerSupport
-			// .removeParentAssociations(HasIdAndLocalId)
-			// that add em by default. fix them first
-			// TODO - memcache
-			if (!checkModificationWriteLock) {
-				return;
-			}
-			if (!lockingDisabled && key.equals("fire")
-					&& !mainLock.isWriteLockedByCurrentThread()
-					&& (subgraphLock == null
-							|| !subgraphLock.isWriteLockedByCurrentThread())) {
-				throw new MemcacheException(
-						"Modification of graph object outside writer thread - "
-								+ key);
-			}
+			threads.checkModificationLock(key);
 		}
 
 		@Override

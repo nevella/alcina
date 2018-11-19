@@ -314,7 +314,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		return result;
 	}
 
-	public abstract void ensureMemCache() throws Exception;
+	public abstract void ensureDomainStore() throws Exception;
 
 	public void find(String text) {
 		consoleLeft.find(text);
@@ -478,13 +478,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		cmd.setEnvironment(this);
 	}
 
-	public void resetObjects() {
-		devHelper.configLoaded = false;
-		devHelper.loadJbossConfig();
-		devHelper.readAppObjectGraph();
-		devHelper.initPostObjectServices();
-	}
-
 	public void saveConfig() throws Exception {
 		serializeObject(props, consolePropertiesFile);
 		serializeObject(history, consoleHistoryFile);
@@ -568,7 +561,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		KryoUtils.serializeToFile(object, file);
 	}
 
-	protected void addMemcacheAndFlowLoggers() {
+	protected void addDomainStoreAndFlowLoggers() {
 		// Registry.impl(TaggedLoggers.class).registerInterest(Domain.class,
 		// new SystemOutHandler(null) {
 		// Pattern ignore = Pattern.compile(

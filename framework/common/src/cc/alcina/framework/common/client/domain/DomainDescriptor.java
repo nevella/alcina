@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.CachingMap;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
 public abstract class DomainDescriptor {
 	public Map<Class, DomainClassDescriptor<?>> perClass = new LinkedHashMap<>();
@@ -29,6 +30,14 @@ public abstract class DomainDescriptor {
 	public DomainDescriptor() {
 	}
 
+	public <T extends HasIdAndLocalId> DomainClassDescriptor<T>
+			addClassDescriptor(Class<T> clazz, String... indexProperties) {
+		DomainClassDescriptor classDescriptor = new DomainClassDescriptor(clazz,
+				indexProperties);
+		addClassDescriptor(classDescriptor);
+		return classDescriptor;
+	}
+
 	public void addClassDescriptor(DomainClassDescriptor classDescriptor) {
 		perClass.put(classDescriptor.clazz, classDescriptor);
 	}
@@ -41,14 +50,6 @@ public abstract class DomainDescriptor {
 
 	public void addComplexFilter(ComplexFilter complexFilter) {
 		complexFilters.add(complexFilter);
-	}
-
-	public <T extends HasIdAndLocalId> DomainClassDescriptor<T>
-			addItemDescriptor(Class<T> clazz, String... indexProperties) {
-		DomainClassDescriptor classDescriptor = new DomainClassDescriptor(clazz,
-				indexProperties);
-		addClassDescriptor(classDescriptor);
-		return classDescriptor;
 	}
 
 	public boolean applyPostTransform(Class clazz, DomainTransformEvent o) {
@@ -70,11 +71,20 @@ public abstract class DomainDescriptor {
 		return perClass.containsKey(clazz);
 	}
 
+	public void registerStore(DomainStore domainStore) {
+		preProvideTasks.stream()
+				.forEach(task -> task.registerStore(domainStore));
+		postLoadTasks.stream().forEach(task -> task.registerStore(domainStore));
+	}
+
 	public static interface DomainStoreTask {
 		/**
 		 * @return the lock object, if any
 		 */
 		public void run() throws Exception;
+
+		default void registerStore(DomainStore store) {
+		}
 	}
 
 	public static interface PreProvideTask<T> {
@@ -87,5 +97,8 @@ public abstract class DomainDescriptor {
 		public void writeLockedCleanup();
 
 		Class<T> forClazz();
+
+		default void registerStore(DomainStore store) {
+		}
 	}
 }

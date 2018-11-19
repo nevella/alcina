@@ -24,8 +24,7 @@ public class PerThreadTransaction {
 		@Override
 		public void domainTransform(DomainTransformEvent evt)
 				throws DomainTransformException {
-			if (!DomainStore.get()
-					.isCachedTransactional(evt.getObjectClass())) {
+			if (!store.isCachedTransactional(evt.getObjectClass())) {
 				return;
 			}
 			beforeConsume(evt);
@@ -35,6 +34,8 @@ public class PerThreadTransaction {
 	};
 
 	private boolean running;
+
+	public DomainStore store;
 
 	public PerThreadTransaction() {
 	}
@@ -97,7 +98,8 @@ public class PerThreadTransaction {
 
 	public void start() {
 		running = true;
-		transactionTransformManager = new TransactionalSubgraphTransformManager();
+		transactionTransformManager = new TransactionalSubgraphTransformManager(
+				store);
 		TransformManager.get().addDomainTransformListener(transformListener);
 	}
 

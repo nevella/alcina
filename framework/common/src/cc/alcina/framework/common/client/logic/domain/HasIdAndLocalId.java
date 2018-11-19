@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -30,6 +31,10 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public interface HasIdAndLocalId extends HasId {
+	public static Function<?, HasIdAndLocalId> caster() {
+		return o -> (HasIdAndLocalId) o;
+	}
+
 	/**
 	 * Used for object referencing within a client domain. Generated from a
 	 * thread-safe increment counter (one counter per domain, not
@@ -43,6 +48,15 @@ public interface HasIdAndLocalId extends HasId {
 		Domain.delete(this);
 	}
 
+	default <V extends AbstractDomainBase> AbstractDomainBase<V>.DomainSupport
+			domain() {
+		return ((AbstractDomainBase<V>) this).domain();
+	}
+
+	default boolean provideIsNonDomain() {
+		return getId() == 0 && getLocalId() == 0;
+	}
+
 	default String provideStringId() {
 		return getId() == 0 ? null : String.valueOf(getId());
 	}
@@ -51,8 +65,8 @@ public interface HasIdAndLocalId extends HasId {
 		return getId() != 0;
 	}
 
-	default boolean provideIsNonDomain() {
-		return getId() == 0 && getLocalId() == 0;
+	default String toStringHili() {
+		return new HiliLocator(this).toString();
 	}
 
 	public static class HiliByIdFilter
@@ -122,13 +136,5 @@ public interface HasIdAndLocalId extends HasId {
 		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
 			return HiliHelper.compareNoLocals(o1, o2);
 		}
-	}
-
-	public static Function<?, HasIdAndLocalId> caster() {
-		return o -> (HasIdAndLocalId) o;
-	}
-	
-	default String toStringHili() {
-		return new HiliLocator(this).toString();
 	}
 }

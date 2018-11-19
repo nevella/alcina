@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
  * @author nick@alcina.cc
  *
  */
-public @interface DomainStoreColumn {
+public @interface DomainStoreDbColumn {
 	// Method descriptor #18 ()Ljava/lang/String;
 	public abstract java.lang.String mappedBy();
 

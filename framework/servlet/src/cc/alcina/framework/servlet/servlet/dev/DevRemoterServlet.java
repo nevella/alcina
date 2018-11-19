@@ -14,7 +14,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -27,11 +26,8 @@ import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
-import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
-import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServletSupport;
@@ -183,25 +179,6 @@ public abstract class DevRemoterServlet extends HttpServlet {
 				ThreadlocalTransformManager.get().resetTltm(null);
 				resultHolder.add(ThreadlocalTransformManager.get()
 						.getPostTransactionEntityResolver());
-				/**
-				 * This caused double-processing of requests - and is
-				 * unneccesary if both apps are linked by kafka transform
-				 * publishing queue
-				 */
-				// Method mcmethod = AlcinaMemCache.class.getDeclaredMethod(
-				// "postProcess",
-				// new Class[] { DomainTransformPersistenceEvent.class });
-				// mcmethod.setAccessible(true);
-				// // create an "event" to publish in the queue
-				// TransformPersistenceToken persistenceToken =
-				// (TransformPersistenceToken) params.args[1];
-				// DomainTransformLayerWrapper wrapper =
-				// (DomainTransformLayerWrapper) params.args[2];
-				// DomainTransformPersistenceEvent persistenceEvent = new
-				// DomainTransformPersistenceEvent(
-				// persistenceToken, wrapper, true);
-				// mcmethod.invoke(AlcinaMemCache.get(),
-				// new Object[] { persistenceEvent });
 			}
 			byte[] outBytes = KryoUtils.serializeToByteArray(resultHolder);
 			ResourceUtilities.writeStreamToStream(
@@ -223,22 +200,5 @@ public abstract class DevRemoterServlet extends HttpServlet {
 		Class nc2 = normaliseClass(c2);
 		return nc1.isAssignableFrom(nc2)
 				|| (nc2 == Void.class && !c1.isPrimitive());
-	}
-
-	static class MemCachePersistenceRouterListener
-			implements DomainTransformPersistenceListener {
-		@Override
-		public void onDomainTransformRequestPersistence(
-				DomainTransformPersistenceEvent evt) {
-			try {
-				Method method = DomainStore.class.getDeclaredMethod(
-						"postProcess",
-						new Class[] { DomainTransformPersistenceEvent.class });
-				method.setAccessible(true);
-				method.invoke(DomainStore.get(), new Object[] { evt });
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
 	}
 }

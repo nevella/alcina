@@ -2,7 +2,6 @@ package cc.alcina.framework.common.client.domain;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -14,7 +13,6 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
@@ -32,6 +30,14 @@ public class Domain {
 					"lastModificationUser", "creationDate", "creationUser",
 					"versionNumber" });
 
+	public static <V extends HasIdAndLocalId> List<V> asList(Class<V> clazz) {
+		return handler.stream(clazz).collect(Collectors.toList());
+	}
+
+	public static <V extends HasIdAndLocalId> Set<V> asSet(Class<V> clazz) {
+		return handler.stream(clazz).collect(Collectors.toSet());
+	}
+
 	public static <T extends HasIdAndLocalId> void async(Class<T> clazz,
 			long objectId, boolean create, Consumer<T> resultConsumer) {
 		handler.async(clazz, objectId, create, resultConsumer);
@@ -44,7 +50,7 @@ public class Domain {
 
 	public static <V extends HasIdAndLocalId> Supplier<Collection>
 			castSupplier(Class<V> clazz) {
-		return () -> list(clazz);
+		return () -> values(clazz);
 	}
 
 	public static void commitPoint() {
@@ -99,6 +105,16 @@ public class Domain {
 		return writeable;
 	}
 
+	public static <V extends HasIdAndLocalId> V detachedVersion(Class<V> clazz,
+			long id) {
+		V v = find(clazz, id);
+		return detachedVersion(v);
+	}
+
+	public static <V extends HasIdAndLocalId> V detachedVersion(V v) {
+		return v == null ? null : handler.detachedVersion(v);
+	}
+
 	public static <V extends HasIdAndLocalId> V find(Class clazz, long id) {
 		return handler.find(clazz, id);
 	}
@@ -111,9 +127,25 @@ public class Domain {
 		return handler.find(v);
 	}
 
-	public static <V extends HasIdAndLocalId> Collection<V>
-			list(Class<V> clazz) {
-		return handler.list(clazz);
+	public static <V extends HasIdAndLocalId> V findOrCreate(Class<V> clazz,
+			String propertyName, Object value, boolean createIfNonexistent) {
+		V first = byProperty(clazz, propertyName, value);
+		if (first == null && createIfNonexistent) {
+			first = create(clazz);
+			Reflections.propertyAccessor().setPropertyValue(first, propertyName,
+					value);
+		} else {
+			first = writeable(first);
+		}
+		return first;
+	}
+
+	public static <V extends HasIdAndLocalId> List<Long> ids(Class<V> clazz) {
+		return handler.ids(clazz);
+	}
+
+	public static <V extends HasIdAndLocalId> boolean isDomainVersion(V v) {
+		return v == null ? false : handler.isDomainVersion(v);
 	}
 
 	public static <V extends HasIdAndLocalId> List<V>
@@ -124,6 +156,11 @@ public class Domain {
 	public static <V extends HasIdAndLocalId> Optional<V> optionalByProperty(
 			Class<V> clazz, String propertyName, Object value) {
 		return Optional.ofNullable(byProperty(clazz, propertyName, value));
+	}
+
+	public static <V extends HasIdAndLocalId> DomainQuery<V>
+			query(Class<V> clazz) {
+		return handler.query(clazz);
 	}
 
 	public static <V extends HasIdAndLocalId> V register(V v) {
@@ -139,16 +176,6 @@ public class Domain {
 		return handler.resolveTransactional(listener, value, path);
 	}
 
-	public static <V extends HasIdAndLocalId> Collection<V>
-			reverseIdList(Class<V> clazz) {
-		return handler.stream(clazz).sorted(HiliComparator.REVERSED_INSTANCE)
-				.collect(Collectors.toList());
-	}
-
-	public static <V extends HasIdAndLocalId> Set<V> set(Class<V> clazz) {
-		return new LinkedHashSet<>(handler.list(clazz));
-	}
-
 	public static <V extends HasIdAndLocalId> Stream<V> stream(Class<V> clazz) {
 		return handler.stream(clazz);
 	}
@@ -156,6 +183,15 @@ public class Domain {
 	public static <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
 			long id) {
 		return handler.transactionalFind(clazz, id);
+	}
+
+	public static <V extends HasIdAndLocalId> V transactionVersion(V v) {
+		return handler.transactionalVersion(v);
+	}
+
+	public static <V extends HasIdAndLocalId> Collection<V>
+			values(Class<V> clazz) {
+		return handler.values(clazz);
 	}
 
 	/**
@@ -175,8 +211,6 @@ public class Domain {
 
 		public <V extends HasIdAndLocalId> V find(V v);
 
-		public <V extends HasIdAndLocalId> Collection<V> list(Class<V> clazz);
-
 		public <V extends HasIdAndLocalId> V resolveTransactional(
 				DomainListener listener, V value, Object[] path);
 
@@ -184,6 +218,8 @@ public class Domain {
 
 		public <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
 				long id);
+
+		public <V extends HasIdAndLocalId> Collection<V> values(Class<V> clazz);
 
 		public <V extends HasIdAndLocalId> V writeable(V v);
 
@@ -196,6 +232,18 @@ public class Domain {
 					.findFirst().orElse(null);
 		}
 
+		default <V extends HasIdAndLocalId> V detachedVersion(V v) {
+			throw new UnsupportedOperationException();
+		}
+
+		default <V extends HasIdAndLocalId> List<Long> ids(Class<V> clazz) {
+			throw new UnsupportedOperationException();
+		}
+
+		default <V extends HasIdAndLocalId> boolean isDomainVersion(V v) {
+			throw new UnsupportedOperationException();
+		}
+
 		default <V extends HasIdAndLocalId> List<V> listByProperty(
 				Class<V> clazz, String propertyName, Object value) {
 			IndividualPropertyAccessor accessor = Reflections.propertyAccessor()
@@ -203,6 +251,15 @@ public class Domain {
 			return stream(clazz).filter(
 					o -> Objects.equals(accessor.getPropertyValue(o), value))
 					.collect(Collectors.toList());
+		}
+
+		default <V extends HasIdAndLocalId> DomainQuery<V>
+				query(Class<V> clazz) {
+			throw new UnsupportedOperationException();
+		}
+
+		default <V extends HasIdAndLocalId> V transactionalVersion(V v) {
+			throw new UnsupportedOperationException();
 		}
 	}
 
@@ -230,12 +287,6 @@ public class Domain {
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> Collection<V> list(Class<V> clazz) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
 		public <V extends HasIdAndLocalId> V resolveTransactional(
 				DomainListener listener, V value, Object[] path) {
 			return value;
@@ -251,6 +302,13 @@ public class Domain {
 		public <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
 				long id) {
 			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> Collection<V>
+				values(Class<V> clazz) {
+			// TODO Auto-generated method stub
+			return null;
 		}
 
 		@Override
