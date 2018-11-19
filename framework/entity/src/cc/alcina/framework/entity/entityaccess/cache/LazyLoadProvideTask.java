@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.DomainDescriptor.PreProvideTask;
+import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -67,8 +68,8 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 	}
 
 	@Override
-	public void registerStore(DomainStore domainStore) {
-		this.domainStore = domainStore;
+	public void registerStore(IDomainStore iDomainStore) {
+		this.domainStore = (DomainStore) iDomainStore;
 	}
 
 	@Override

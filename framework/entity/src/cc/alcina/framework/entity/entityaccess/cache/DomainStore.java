@@ -53,6 +53,7 @@ import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
+import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.domain.ModificationChecker;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
@@ -111,7 +112,7 @@ import cc.alcina.framework.entity.projection.GraphProjections;
  *
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
-public class DomainStore implements RegistrableService {
+public class DomainStore implements RegistrableService, IDomainStore {
 	public static final String TOPIC_UPDATE_EXCEPTION = DomainStore.class
 			.getName() + ".TOPIC_UPDATE_EXCEPTION";
 
@@ -906,9 +907,13 @@ public class DomainStore implements RegistrableService {
 			if (databaseStore == null) {
 				databaseStore = descriptorMap.values().stream().filter(
 						d -> d.loader instanceof DomainStoreLoaderDatabase)
-						.findFirst().get();
+						.findFirst().orElse(null);
 			}
 			return databaseStore;
+		}
+
+		public boolean hasInitialisedDatabaseStore() {
+			return databaseStore() != null && databaseStore().initialised;
 		}
 
 		public synchronized boolean

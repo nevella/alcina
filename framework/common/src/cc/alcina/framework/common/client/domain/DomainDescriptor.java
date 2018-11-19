@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.CachingMap;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
 public abstract class DomainDescriptor {
 	public Map<Class, DomainClassDescriptor<?>> perClass = new LinkedHashMap<>();
@@ -71,7 +70,7 @@ public abstract class DomainDescriptor {
 		return perClass.containsKey(clazz);
 	}
 
-	public void registerStore(DomainStore domainStore) {
+	public void registerStore(IDomainStore domainStore) {
 		preProvideTasks.stream()
 				.forEach(task -> task.registerStore(domainStore));
 		postLoadTasks.stream().forEach(task -> task.registerStore(domainStore));
@@ -83,7 +82,7 @@ public abstract class DomainDescriptor {
 		 */
 		public void run() throws Exception;
 
-		default void registerStore(DomainStore store) {
+		default void registerStore(IDomainStore domainStore) {
 		}
 	}
 
@@ -98,7 +97,7 @@ public abstract class DomainDescriptor {
 
 		Class<T> forClazz();
 
-		default void registerStore(DomainStore store) {
+		default void registerStore(IDomainStore domainStore) {
 		}
 	}
 }

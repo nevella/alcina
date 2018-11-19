@@ -1417,17 +1417,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 		@Override
 		public IUser getSystemUser(boolean clean) {
-			// if (clean) {
-			// if (cachedCleaned == null) {
-			// cachedCleaned = Registry
-			// .impl(CommonPersistenceProvider.class)
-			// .getCommonPersistence().getSystemUser(clean);
-			// }
-			// return cachedCleaned;
-			// } else {
 			return Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().getSystemUser(clean);
-			// }
 		}
 	}
 

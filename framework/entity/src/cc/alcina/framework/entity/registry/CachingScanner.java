@@ -60,6 +60,9 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 		long start = System.currentTimeMillis();
 		for (ClassMetadata found : foundCache.classData.values()) {
 			String className = found.className;
+			if (className.contains("ShopLine")) {
+				int debug = 3;
+			}
 			T out = null;
 			T existing = incomingCache.classData.get(found.className);
 			if (existing != null && existing.isUnchangedFrom(found, this)) {
