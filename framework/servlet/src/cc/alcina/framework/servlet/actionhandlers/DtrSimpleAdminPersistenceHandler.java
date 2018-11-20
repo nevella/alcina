@@ -99,6 +99,7 @@ public class DtrSimpleAdminPersistenceHandler
 		}
 	}
 
+	@Override
 	public void performAction(DtrSimpleAdminPersistenceAction action) {
 		commit(action.getParameters());
 	}

@@ -572,6 +572,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 									.addAll(toCommit);
 						}
 						transformLayerWrapper = transform(rq, true, true, true);
+						ThreadlocalTransformManager.cast().resetTltm(null);
 						if (logger != null) {
 							logger.info(CommonUtils.formatJ(
 									"Request [%s::%s] : %s transforms written, %s ignored",
