@@ -82,35 +82,42 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 		return size() == 0;
 	}
 
+	@Override
 	public Set<Long> keySet() {
 		if (failover != null) {
 			return failover.keySet();
 		}
 		if (keySet == null) {
 			keySet = new AbstractSet<Long>() {
+				@Override
 				public boolean contains(Object k) {
 					return ArrayBackedLongMap.this.containsKey(k);
 				}
 
+				@Override
 				public Iterator<Long> iterator() {
 					return new Iterator<Long>() {
 						private Iterator<Entry<Long, V>> i = entrySet()
 								.iterator();
 
+						@Override
 						public boolean hasNext() {
 							return i.hasNext();
 						}
 
+						@Override
 						public Long next() {
 							return i.next().getKey();
 						}
 
+						@Override
 						public void remove() {
 							i.remove();
 						}
 					};
 				}
 
+				@Override
 				public int size() {
 					return ArrayBackedLongMap.this.size();
 				}
@@ -174,7 +181,8 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 				elementData == null ? "(failover)" + failover.size()
 						: size + "," + elementData.length,
 				entrySet().iterator().hasNext()
-						? entrySet().iterator().next().getClass() : null);
+						? entrySet().iterator().next().getClass()
+						: null);
 	}
 
 	@Override
@@ -184,29 +192,35 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 		}
 		if (values == null) {
 			values = new AbstractCollection<V>() {
+				@Override
 				public boolean contains(Object v) {
 					return ArrayBackedLongMap.this.containsValue(v);
 				}
 
+				@Override
 				public Iterator<V> iterator() {
 					return new Iterator<V>() {
 						private Iterator<Entry<Long, V>> i = entrySet()
 								.iterator();
 
+						@Override
 						public boolean hasNext() {
 							return i.hasNext();
 						}
 
+						@Override
 						public V next() {
 							return i.next().getValue();
 						}
 
+						@Override
 						public void remove() {
 							i.remove();
 						}
 					};
 				}
 
+				@Override
 				public int size() {
 					return ArrayBackedLongMap.this.size();
 				}
@@ -260,10 +274,12 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 	}
 
 	private final class EntrySet extends AbstractSet<Map.Entry<Long, V>> {
+		@Override
 		public void clear() {
 			ArrayBackedLongMap.this.clear();
 		}
 
+		@Override
 		public boolean contains(Object o) {
 			if (!(o instanceof Map.Entry))
 				return false;
@@ -272,14 +288,17 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 			return candidate != null && candidate.equals(e);
 		}
 
+		@Override
 		public Iterator<Map.Entry<Long, V>> iterator() {
 			return new ArrayBackedIterator();
 		}
 
+		@Override
 		public boolean remove(Object o) {
 			return ArrayBackedLongMap.this.remove(o) != null;
 		}
 
+		@Override
 		public int size() {
 			return size;
 		}
@@ -291,6 +310,7 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 				this.key = key;
 			}
 
+			@Override
 			public final boolean equals(Object o) {
 				if (!(o instanceof Map.Entry))
 					return false;
@@ -318,6 +338,7 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 				return v;
 			}
 
+			@Override
 			public final int hashCode() {
 				return (key == null ? 0 : key.hashCode())
 						^ (getValue() == null ? 0 : getValue().hashCode());
