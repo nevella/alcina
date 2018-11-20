@@ -156,7 +156,14 @@ public abstract class DevRemoterServlet extends HttpServlet {
 				if (getUserByNameMethod) {
 					params.cleanEntities = true;
 				}
-				out = method.invoke(api, params.args);
+				try {
+					LooseContext.pushWithBoolean(
+							KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER,
+							false);
+					out = method.invoke(api, params.args);
+				} finally {
+					LooseContext.pop();
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				if (e instanceof InvocationTargetException) {

@@ -12,7 +12,7 @@ public class TextUtils {
 		List<IntPair> result = new ArrayList<>();
 		while (true) {
 			int idx1 = text.indexOf(search, idx0);
-			if (idx1 == -1) {
+			if (idx1 == -1 || search.length() == 0) {
 				break;
 			} else {
 				result.add(new IntPair(idx1, idx1 + search.length()));
@@ -39,17 +39,17 @@ public class TextUtils {
 		return TextUtilsImpl.match(text, regex);
 	}
 
+	public static String normalisedLcKey(String key) {
+		return normalizeWhitespaceAndTrim(
+				CommonUtils.nullToEmpty(key).toLowerCase());
+	}
+
 	public static String normalizeWhitespace(String text) {
 		return TextUtilsImpl.normalizeWhitespace(text);
 	}
 
 	public static String normalizeWhitespaceAndTrim(String text) {
 		return TextUtilsImpl.normalizeWhitespace(text).trim();
-	}
-
-	public static String normalisedLcKey(String key) {
-		return normalizeWhitespaceAndTrim(
-				CommonUtils.nullToEmpty(key).toLowerCase());
 	}
 
 	public static String trim(String key) {

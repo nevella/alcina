@@ -35,6 +35,7 @@ import cc.alcina.framework.servlet.servlet.dev.DevRemoterServlet;
 /**
  * org.apache.http.client is in gwt-dev - so we don't require it in eclipse
  */
+@SuppressWarnings("deprecation")
 public class DevRemoter {
 	private Object interceptionResult;
 
