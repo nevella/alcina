@@ -46,7 +46,7 @@ public class SyncDeltaModel {
 	public String toString() {
 		FormatBuilder fb = new FormatBuilder();
 		deltas.entrySet().forEach(e -> {
-			fb.line(e.getKey().getClass().getSimpleName());
+			fb.line(e.getKey().getSimpleName());
 			Map<SyncPairAction, List<SyncPair>> collect = e.getValue().stream()
 					.collect(Collectors.groupingBy(SyncPair::getAction));
 			collect.entrySet().forEach(g1 -> {
