@@ -93,6 +93,9 @@ public class FsObjectCache<T> {
 	private void checkInvalidation() {
 		cachedObjects.entrySet().forEach(entry -> {
 			FsObjectCache<T>.CacheEntry cacheEntry = entry.getValue();
+			logger.info("check invalidaton - now: {} created: {} objinval: {}",
+					System.currentTimeMillis(), cacheEntry.created,
+					objectInvalidationTime);
 			if (System.currentTimeMillis()
 					- cacheEntry.created > objectInvalidationTime) {
 				try {
@@ -129,6 +132,8 @@ public class FsObjectCache<T> {
 		File cacheFile = getCacheFile(path);
 		if (!cacheFile.exists() || preferRefreshed) {
 			try {
+				logger.info("refreshing cache object - {} - {}",
+						clazz.getSimpleName(), path);
 				T value = pathToValue.apply(path);
 				KryoUtils.serializeToFile(value, cacheFile);
 			} catch (Exception e) {
