@@ -29,6 +29,9 @@ public class DevConsoleState implements Serializable {
 	}
 
 	public ILogRecord logRecordById(long id) {
+		if (logRecords == null) {
+			return null;
+		}
 		for (ILogRecord l : logRecords) {
 			if (l.getId() == id) {
 				return l;

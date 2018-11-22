@@ -676,8 +676,14 @@ public class LocalDom {
 						preface += Ax.format("local node:%s\nremote node:%s\n",
 								node, remoteNode);
 					}
-					preface += Ax.format("Remote index:\n%s\n",
-							remoteIndex.getString());
+					try {
+						preface += Ax.format("Remote index:\n%s\n",
+								remoteIndex.getString());
+					} catch (Exception e) {
+						preface += Ax.format(
+								"Exception getting remoteIndex:\n%s\n",
+								e.toString());
+					}
 					preface += Ax.format("Local dom tree:\n%s\n",
 							hasNode.local().provideLocalDomTree());
 					unableToParseTopic()
