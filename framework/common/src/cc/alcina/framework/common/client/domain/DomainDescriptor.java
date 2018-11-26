@@ -26,6 +26,8 @@ public abstract class DomainDescriptor {
 					task -> task.forClazz() == null || task.forClazz() == clazz)
 					.collect(Collectors.toList()));
 
+	public IDomainSegmentLoader domainSegmentLoader;
+
 	public DomainDescriptor() {
 	}
 

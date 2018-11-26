@@ -614,12 +614,12 @@ public class DomainStore implements RegistrableService, IDomainStore {
 			if (!transaction || !ids.isEmpty() || query.isNonTransactional()) {
 				FilterContext ctx = new FilterContext();
 				for (; ctx.idx < filterSize; ctx.idx++) {
-					int i = ctx.idx;
+					int idx = ctx.idx;
 					long start = System.nanoTime();
-					DomainFilter cacheFilter = query.getFilters().get(i);
-					DomainFilter nextFilter = i == filterSize - 1 ? null
-							: query.getFilters().get(i + 1);
-					ids = (i == 0 && ids.isEmpty()) ? null : ids;
+					DomainFilter cacheFilter = query.getFilters().get(idx);
+					DomainFilter nextFilter = idx == filterSize - 1 ? null
+							: query.getFilters().get(idx + 1);
+					ids = (idx == 0 && ids.isEmpty()) ? null : ids;
 					ids = getFiltered(clazz, cacheFilter, nextFilter, ctx, ids);
 					if (debugMetrics) {
 						double ms = (double) (System.nanoTime() - start)

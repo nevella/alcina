@@ -34,16 +34,18 @@ public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId>
 	@Override
 	public Set<Long> evaluateFilter(DetachedEntityCache cache,
 			Set<Long> existing, CollectionFilter filter) {
-		filter.setContext(propertyStore.createContext(cache));
+		// filter.setContext(propertyStore.createContext(cache));
 		if (existing == null) {
-			System.out.println("warn - raw store query - " + filter);
+			System.out.println("warn - raw propertyStore query - " + filter);
 			existing = propertyStore.getIds();
 		}
 		CollectionFilter withIdFilter = new CollectionFilter<Long>() {
 			@Override
 			public boolean allow(Long id) {
 				// will be chained through to the store
-				return filter.allow(id);
+				// FIXME - won't - because filter.setcontext (above) doesn't
+				// descend to child filters
+				return filter.allow(getProxy(cache, id, false));
 			}
 		};
 		return CollectionFilters.filterAsSet(existing, withIdFilter);
@@ -61,18 +63,16 @@ public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId>
 		return raw;
 	}
 
-	public String getSqlFilter() {
-		return null;
-	}
-
 	@Override
 	public void index(HasIdAndLocalId obj, boolean add) {
 		propertyStore.index(obj, add);
 	}
 
 	public void init(DetachedEntityCache cache, List<PdOperator> pds) {
-		this.cache = cache;
-		propertyStore.init(pds);
+		if (this.cache == null) {
+			this.cache = cache;
+			propertyStore.init(pds);
+		}
 	}
 
 	@Override

@@ -65,7 +65,7 @@ import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdNextCommandCaches;
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -80,6 +80,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.servlet.ServletLayerUtils;
@@ -109,6 +110,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	public static final String CONTEXT_NO_TRUNCATE = DevConsole.class.getName()
 			+ ".CONTEXT_NO_TRUNCATE";
+
+	public static final String CONTEXT_DOMAIN_SEGMENT_LOADER = DevConsole.class
+			.getName() + ".CONTEXT_DOMAIN_SEGMENT_LOADER";
 
 	static DevConsole instance;
 
@@ -562,25 +566,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	protected void addDomainStoreAndFlowLoggers() {
-		// Registry.impl(TaggedLoggers.class).registerInterest(Domain.class,
-		// new SystemOutHandler(null) {
-		// Pattern ignore = Pattern.compile(
-		// "(?s).*duplicate mapping of an id lookup - Lookup: Demeter contact
-		// \\[email\\]: .+?@barnet\\.com\\.au.*|"
-		// + "later-lookup -- missing target: class au.+DemeterActivity.+");
-		//
-		// @Override
-		// public void log(String message) {
-		// if (ignore.matcher(message.replace("\n", " "))
-		// .matches()) {
-		// return;
-		// }
-		// super.log(message);
-		// }
-		// }, TaggedLogger.WARN);
-		EntityLayerUtils.setStandardAppender(Domain.class, Level.WARN);
-		// EntityLayerUtils.setStandardAppender(FlowTransitions.class,
-		// Level.INFO);
+		EntityLayerUtils.setStandardAppender(
+				AlcinaLogUtils.getMetricLogger(DomainStore.class), Level.DEBUG);
+		// EntityLayerUtils.setStandardAppender(
+		// AlcinaLogUtils.getMetricLogger(DomainStore.class), Level.WARN);
 	}
 
 	protected abstract void createDevHelper();

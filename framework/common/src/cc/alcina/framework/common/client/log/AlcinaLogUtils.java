@@ -12,6 +12,6 @@ public class AlcinaLogUtils {
 
 	public static Logger getTaggedLogger(Class clazz, String tag) {
 		return LoggerFactory
-				.getLogger(Ax.format("%s::%s", clazz.getName(), tag));
+				.getLogger(Ax.format("%s.__%s", clazz.getName(), tag));
 	}
 }

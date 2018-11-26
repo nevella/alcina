@@ -122,7 +122,8 @@ public abstract class DomainQuery<V extends HasIdAndLocalId> {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("DomainQuery:\n%s",
+		return CommonUtils.formatJ("DomainQuery: %s\n%s",
+				clazz == null ? "(No class)" : clazz.getSimpleName(),
 				CommonUtils.join(filters, ",\n"));
 	}
 }

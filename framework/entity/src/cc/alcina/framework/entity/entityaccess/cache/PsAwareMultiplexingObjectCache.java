@@ -91,7 +91,7 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 
 	@Override
 	public Set<Long> keys(Class clazz) {
-		return main.keys(clazz);
+		return getSubCache(clazz).keys(clazz);
 	}
 
 	@Override
@@ -136,16 +136,12 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 	}
 
 	private <T> MultiplexableCache getSubCache(Class<T> clazz) {
-		if (!committing) {
-			return main;
-		} else {
-			for (PropertyStoreCacheWrapper psWrapper : psWrappers) {
-				if (psWrapper.getCachedClass() == clazz) {
-					return psWrapper;
-				}
+		for (PropertyStoreCacheWrapper psWrapper : psWrappers) {
+			if (psWrapper.getCachedClass() == clazz) {
+				return psWrapper;
 			}
-			return main;
 		}
+		return main;
 	}
 
 	@Override
@@ -176,22 +172,41 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 
 		@Override
 		public <T> T get(Class<T> clazz, Long id) {
-			if (!commitLookup.containsKey(id)) {
-				commitLookup.put(id, descriptor.getProxy(main, id, false));
+			if (committing) {
+				if (!commitLookup.containsKey(id)) {
+					commitLookup.put(id, descriptor.getProxy(main, id, false));
+				}
+				return (T) commitLookup.get(id);
+			} else {
+				// does not cache, returns new instance each time.
+				// FIXME - link to transaction?
+				return (T) descriptor.getProxy(main, id, false);
 			}
-			return (T) commitLookup.get(id);
+		}
+
+		@Override
+		public Set<Long> keys(Class clazz) {
+			return descriptor.propertyStore.getIds();
 		}
 
 		@Override
 		public void put(HasIdAndLocalId hili) {
-			long id = hili.getId();
-			commitLookup.put(id, descriptor.getProxy(main, id, true));
+			if (committing) {
+				long id = hili.getId();
+				commitLookup.put(id, descriptor.getProxy(main, id, true));
+			} else {
+				throw new UnsupportedOperationException();
+			}
 		}
 
 		@Override
 		public void remove(HasIdAndLocalId hili) {
-			commitLookup.remove(hili.getId());
-			descriptor.remove(hili.getId());
+			if (committing) {
+				commitLookup.remove(hili.getId());
+				descriptor.remove(hili.getId());
+			} else {
+				throw new UnsupportedOperationException();
+			}
 		}
 
 		public void resetThreadCache() {
