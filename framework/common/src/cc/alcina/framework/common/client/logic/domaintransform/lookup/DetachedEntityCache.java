@@ -88,6 +88,11 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 		return classMapSupplier.get();
 	}
 
+	public <T> List<T> fieldValues(Class<? extends HasIdAndLocalId> clazz,
+			String propertyName) {
+		throw new UnsupportedOperationException();
+	}
+
 	@Override
 	public <T> T get(Class<T> clazz, Long id) {
 		ensureMaps(clazz);

@@ -19,9 +19,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -46,10 +46,10 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.BaseProjection;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor;
+import cc.alcina.framework.common.client.domain.DomainDescriptor.DomainStoreTask;
 import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.domain.DomainProjection;
 import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
-import cc.alcina.framework.common.client.domain.DomainDescriptor.DomainStoreTask;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
@@ -68,15 +68,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentLoaderProperty;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.BackupLazyLoader;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.ColumnDescriptor;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.ConnResults;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.DomainStoreJoinHandler;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.LaterLookup;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.PdOperator;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.LaterLookup.LaterItem;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.PdOperator.ResolveHelper;
+import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentPropertyType;
 import cc.alcina.framework.entity.projection.EntityUtils;
 
 public class DomainStoreLoaderDatabase implements DomainStoreLoader {
@@ -404,52 +396,95 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		DomainSegmentLoader segmentLoader = (DomainSegmentLoader) domainDescriptor.domainSegmentLoader;
 		segmentLoader.initialiseSeedLookup();
 		int maxPasses = 30;
-		LaterLookup laterLookup = new LaterLookup();
 		int pass = 0;
 		Set<Class> segmentClasses = new LinkedHashSet<>();
 		long start = System.currentTimeMillis();
 		while (segmentLoader.pendingCount() != 0 && pass++ < maxPasses) {
+			if (pass == 21) {
+				int debug = 3;
+			}
 			Set<Entry<Class, Set<Long>>> perClass = segmentLoader.toLoadIds
 					.entrySet();
+			List<LaterLookup> laterLookups = new ArrayList<>();
 			for (Entry<Class, Set<Long>> entry : perClass) {
-				loadTableOrStoreSegment(entry.getKey(),
-						Ax.format(" id in %s",
-								EntityUtils.longsToIdClause(entry.getValue())),
-						laterLookup);
-				entry.getValue().clear();
+				LaterLookup laterLookup = new LaterLookup();
+				laterLookups.add(laterLookup);
 				segmentClasses.add(entry.getKey());
-			}
-			// resolve what we can (last pass)
-			LaterLookup lastPassLookup = new LaterLookup();
-			lastPassLookup.list.addAll(segmentLoader.toResolve);
-			segmentLoader.toResolve.clear();
-			lastPassLookup.resolve(segmentLoader);
-			// resolve what we can (this pass)
-			laterLookup.resolve(segmentLoader);
-			laterLookup.list.clear();
-			if (segmentLoader.pendingCount() == 0) {
-				for (DomainSegmentLoaderProperty property : segmentLoader.properties) {
-					String ids = EntityUtils
-							.longsToIdClause(store.cache.keys(property.target));
-					String sqlFilter = Ax.format(" %s in %s",
-							property.propertyName, ids);
-					loadTableOrStoreSegment(property.source, sqlFilter,
+				calls.add(() -> {
+					Collection<Long> ids = entry.getValue();
+					Class clazz = entry.getKey();
+					ids = segmentLoader.filterForQueried(clazz, "id", ids);
+					loadTableOrStoreSegment(clazz,
+							Ax.format(" id in %s",
+									EntityUtils.longsToIdClause(ids)),
 							laterLookup);
-					segmentClasses.add(property.source);
-				}
-				laterLookup.resolve(segmentLoader);
+					entry.getValue().clear();
+					return null;
+				});
 			}
+			if (!segmentLoader.isReload()) {
+				invokeAllWithThrow(calls);
+				// resolve what we can (last pass)
+				LaterLookup lastPassLookup = new LaterLookup();
+				lastPassLookup.list.addAll(segmentLoader.toResolve);
+				segmentLoader.toResolve.clear();
+				laterLookups.add(lastPassLookup);
+				lastPassLookup.resolve(segmentLoader);
+				laterLookups.forEach(ll -> ll.resolve(segmentLoader));
+				laterLookups.clear();
+			}
+			if (segmentLoader.pendingCount() == 0 || segmentLoader.isReload()) {
+				for (DomainSegmentLoaderProperty property : segmentLoader.properties) {
+					if (property.type == DomainSegmentPropertyType.TABLE_REF) {
+						Collection<Long> ids = store.cache
+								.keys(property.target);
+						ids = segmentLoader.filterForQueried(property.source,
+								property.propertyName, ids);
+						String sqlFilter = Ax.format(" %s in %s",
+								property.propertyName,
+								EntityUtils.longsToIdClause(ids));
+						segmentClasses.add(property.source);
+						calls.add(() -> {
+							LaterLookup laterLookup = new LaterLookup();
+							laterLookups.add(laterLookup);
+							loadTableOrStoreSegment(property.source, sqlFilter,
+									laterLookup);
+							return null;
+						});
+					} else if (property.type == DomainSegmentPropertyType.STORE_REF
+							&& !segmentLoader.isReload()) {
+						Collection<Long> ids = store.cache.fieldValues(
+								property.source, property.propertyName);
+						ids = segmentLoader.filterForQueried(property.target,
+								"id", ids);
+						String sqlFilter = Ax.format(" id in %s",
+								EntityUtils.longsToIdClause(ids));
+						segmentClasses.add(property.target);
+						calls.add(() -> {
+							LaterLookup laterLookup = new LaterLookup();
+							laterLookups.add(laterLookup);
+							loadTableOrStoreSegment(property.target, sqlFilter,
+									laterLookup);
+							return null;
+						});
+					}
+				}
+			}
+			invokeAllWithThrow(calls);
+			laterLookups.forEach(ll -> ll.resolve(segmentLoader));
 			Integer size = segmentClasses.stream().collect(Collectors
 					.summingInt(clazz -> store.cache.keys(clazz).size()));
 			Ax.out("Load domain segment - pass %s - size %s - %s ms", pass,
 					size, System.currentTimeMillis() - start);
 			segmentClasses.forEach(clazz -> Ax.out("%s: %s",
 					clazz.getSimpleName(), store.cache.keys(clazz).size()));
+			segmentClasses.forEach(segmentLoader::ensureClass);
 		}
-		if (maxPasses == 0) {
+		if (pass >= maxPasses) {
 			throw Ax.runtimeException("did our max passes and lost");
+		} else {
+			segmentLoader.saveIds();
 		}
-		int debug = 3;
 	}
 
 	private void loadJoinTable(Entry<PropertyDescriptor, JoinTable> entry,
@@ -639,12 +674,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			LaterLookup laterLookup) throws Exception {
 		DomainClassDescriptor<?> descriptor = domainDescriptor.perClass
 				.get(clazz);
+		MetricLogging.get().start(clazz.getSimpleName());
 		if (descriptor instanceof PropertyStoreItemDescriptor) {
 			PropertyStoreItemDescriptor propertyStoreItemDescriptor = (PropertyStoreItemDescriptor) descriptor;
 			loadPropertyStore(clazz, sqlFilter, propertyStoreItemDescriptor);
 		} else {
 			loadTable(clazz, sqlFilter, null, laterLookup);
 		}
+		MetricLogging.get().end(clazz.getSimpleName(), store.metricLogger);
 	}
 
 	private void prepareTable(DomainClassDescriptor classDescriptor)
@@ -850,12 +887,16 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			list.add(new LaterItem(id, pd, source));
 		}
 
-		void resolve() throws Exception {
+		void resolve() {
 			resolve(null);
 		}
 
-		void resolve(DomainSegmentLoader segmentLoader) throws Exception {
-			new ResolveRefsTask(list, segmentLoader).call();
+		void resolve(DomainSegmentLoader segmentLoader) {
+			try {
+				new ResolveRefsTask(list, segmentLoader).call();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 
 		private final class ResolveRefsTask implements Callable<Void> {

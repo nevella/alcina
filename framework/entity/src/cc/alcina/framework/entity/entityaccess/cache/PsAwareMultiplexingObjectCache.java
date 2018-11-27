@@ -55,6 +55,12 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 	}
 
 	@Override
+	public <T> List<T> fieldValues(Class<? extends HasIdAndLocalId> clazz,
+			String propertyName) {
+		return getSubCache(clazz).fieldValues(clazz, propertyName);
+	}
+
+	@Override
 	public <T> T get(Class<T> clazz, Long id) {
 		return getSubCache(clazz).get(clazz, id);
 	}
@@ -168,6 +174,12 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 
 		PropertyStoreCacheWrapper(PropertyStoreItemDescriptor descriptor) {
 			this.descriptor = descriptor;
+		}
+
+		@Override
+		public <T> List<T> fieldValues(Class<? extends HasIdAndLocalId> clazz,
+				String propertyName) {
+			return descriptor.propertyStore.fieldValues(propertyName);
 		}
 
 		@Override
