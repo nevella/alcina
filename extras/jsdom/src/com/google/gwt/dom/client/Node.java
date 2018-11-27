@@ -196,13 +196,17 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 
 	@Override
 	public Node insertBefore(Node newChild, Node refChild) {
-		// new child first
-		validateInsert(newChild);
-		doPreTreeResolution(newChild);
-		doPreTreeResolution(refChild);
-		Node result = local().insertBefore(newChild, refChild);
-		remote().insertBefore(newChild, refChild);
-		return result;
+		try {
+			// new child first
+			validateInsert(newChild);
+			doPreTreeResolution(newChild);
+			doPreTreeResolution(refChild);
+			Node result = local().insertBefore(newChild, refChild);
+			remote().insertBefore(newChild, refChild);
+			return result;
+		} catch (Exception e) {
+			throw new LocalDomException(e);
+		}
 	}
 
 	@Override
@@ -278,13 +282,13 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		ensureRemoteCheck();
 		local().setNodeValue(nodeValue);
 		remote().setNodeValue(nodeValue);
-		;
 	}
 
 	protected void doPreTreeResolution(Node child) {
 		if (child != null) {
-			boolean ensureBecauseChildResolved = child.wasResolved()
-					&& !linkedToRemote();
+			boolean ensureBecauseChildResolved = (child.wasResolved()
+					|| child.linkedToRemote())
+					&& (!linkedToRemote() || isPendingResolution());
 			if (ensureBecauseChildResolved) {
 				LocalDom.ensureRemote(this);
 			}
@@ -314,6 +318,10 @@ public abstract class Node implements JavascriptObjectEquivalent, DomNode {
 		} else {
 			return false;
 		}
+	}
+
+	protected boolean isPendingResolution() {
+		return false;
 	}
 
 	protected abstract boolean linkedToRemote();

@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Stack;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.gwt.core.client.GWT;
@@ -17,7 +18,6 @@ import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Text;
-import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.RootPanel;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -337,7 +337,7 @@ public class DomUtils implements NodeFromXpathProvider {
 	public static String toText(String html) {
 		Element elt = Document.get().createElement("DIV");
 		elt.setInnerHTML(html);
-		return DOM.getInnerText((com.google.gwt.user.client.Element) elt);
+		return elt.getInnerText();
 	}
 
 	private static void addVisibleTextNodes(Element elt, List<Text> texts) {
@@ -708,15 +708,10 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public void unwrap(Element el) {
 		Element parent = el.getParentElement();
-		NodeList<Node> nl = el.getChildNodes();
-		Node[] tmp = new Node[nl.getLength()];
-		for (int i = 0; i < nl.getLength(); i++) {
-			tmp[i] = nl.getItem(i);
-		}
-		for (int i = 0; i < tmp.length; i++) {
-			Node n = tmp[i];
-			el.removeChild(n);
-			parent.insertBefore(n, el);
+		List<Node> children = el.getChildNodes().stream()
+				.collect(Collectors.toList());
+		for (Node child : children) {
+			parent.insertBefore(child, el);
 		}
 		parent.removeChild(el);
 		if (domRequiredSplitInfo.containsKey(el)) {
@@ -747,10 +742,14 @@ public class DomUtils implements NodeFromXpathProvider {
 			lastT = t;
 			t = t.getParentNode();
 		}
-		Element parent = (Element) toWrap.getParentNode();
-		parent.insertBefore(wrapper, toWrap);
-		parent.removeChild(toWrap);
-		wrapper.appendChild(toWrap);
+		try {
+			Element parent = (Element) toWrap.getParentNode();
+			parent.insertBefore(wrapper, toWrap);
+			parent.removeChild(toWrap);
+			wrapper.appendChild(toWrap);
+		} catch (RuntimeException e) {
+			throw e;
+		}
 	}
 
 	private String dumpMap0(boolean regenerate, Map<String, Node> xpathMap) {
