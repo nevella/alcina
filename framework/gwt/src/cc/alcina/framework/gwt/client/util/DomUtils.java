@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Stack;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.gwt.core.client.GWT;
@@ -707,11 +706,16 @@ public class DomUtils implements NodeFromXpathProvider {
 	}
 
 	public void unwrap(Element el) {
+		// NO nodelist.stream - because our old faux-element doesn't support
 		Element parent = el.getParentElement();
-		List<Node> children = el.getChildNodes().stream()
-				.collect(Collectors.toList());
-		for (Node child : children) {
-			parent.insertBefore(child, el);
+		NodeList<Node> nl = el.getChildNodes();
+		Node[] tmp = new Node[nl.getLength()];
+		for (int i = 0; i < nl.getLength(); i++) {
+			tmp[i] = nl.getItem(i);
+		}
+		for (int i = 0; i < tmp.length; i++) {
+			Node n = tmp[i];
+			parent.insertBefore(n, el);
 		}
 		parent.removeChild(el);
 		if (domRequiredSplitInfo.containsKey(el)) {
