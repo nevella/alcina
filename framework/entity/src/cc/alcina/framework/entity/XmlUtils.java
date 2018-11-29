@@ -1301,6 +1301,11 @@ public class XmlUtils {
 		}
 	}
 
+	public static String stripMsCommentedStyles(String htmlContent) {
+		return htmlContent.replaceAll(
+				"(?s)<!--\\[if gte mso 12]>.+?<!\\[endif\\]-->", "");
+	}
+
 	public static void stripNode(Node oldNode) {
 		Document doc = oldNode.getOwnerDocument();
 		DocumentFragment newNode = doc.createDocumentFragment();

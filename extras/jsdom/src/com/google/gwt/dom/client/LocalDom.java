@@ -15,6 +15,8 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.ElementRemote.ElementRemoteIndex;
+import com.google.gwt.regexp.shared.MatchResult;
+import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.LocalDomDebug;
 
@@ -142,6 +144,10 @@ public class LocalDom {
 		return new TopicSupport<>(LocalDom.TOPIC_UNABLE_TO_PARSE);
 	}
 
+	public static String validateHtml(String html) {
+		return get().validateHtml0(html);
+	}
+
 	private static LocalDom get() {
 		return instance;
 	}
@@ -211,6 +217,8 @@ public class LocalDom {
 
 	private boolean resolving;
 
+	private boolean useBuiltHtmlValidation;
+
 	public LocalDom() {
 		if (GWT.isScript() && JsUniqueMap.supportsJsWeakMap()) {
 			remoteLookup = JsUniqueMap.createWeakMap();
@@ -218,6 +226,9 @@ public class LocalDom {
 			remoteLookup = new LinkedHashMap<>();
 		}
 		ie9 = GWT.isClient() ? BrowserMod.isIE9() : false;
+		useBuiltHtmlValidation = GWT.isClient()
+				? BrowserMod.isInternetExplorer()
+				: false;
 		emitCommentPisAsText = true;
 		if (collections == null) {
 			initStatics();
@@ -676,8 +687,14 @@ public class LocalDom {
 						preface += Ax.format("local node:%s\nremote node:%s\n",
 								node, remoteNode);
 					}
-					preface += Ax.format("Remote index:\n%s\n",
-							remoteIndex.getString());
+					try {
+						preface += Ax.format("Remote index:\n%s\n",
+								remoteIndex.getString());
+					} catch (Exception e) {
+						preface += Ax.format(
+								"Exception getting remoteIndex:\n%s\n",
+								e.toString());
+					}
 					preface += Ax.format("Local dom tree:\n%s\n",
 							hasNode.local().provideLocalDomTree());
 					unableToParseTopic()
@@ -719,6 +736,26 @@ public class LocalDom {
 			return false;
 		}
 		return true;
+	}
+
+	private String validateHtml0(String html) {
+		DivElement div = Document.get().createDivElement();
+		ensureRemote(div);
+		ElementRemote typedRemote = div.implAccess().typedRemote();
+		typedRemote.setInnerHTML(html);
+		try {
+			if (useBuiltHtmlValidation) {
+				String outerHtml = typedRemote.buildOuterHtml();
+				RegExp regexp = RegExp.compile("^<div>(.+)</div>$", "i");
+				MatchResult exec = regexp.exec(outerHtml);
+				return exec.getGroup(1);
+			} else {
+				return typedRemote.getInnerHTML0();
+			}
+		} catch (Exception e) {
+			topicException().publish(e);
+			return html;
+		}
 	}
 
 	private void wasResolved0(Element elem) {

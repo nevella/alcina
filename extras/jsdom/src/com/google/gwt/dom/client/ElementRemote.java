@@ -834,6 +834,10 @@ public class ElementRemote extends NodeRemote implements DomElement {
     this.appendChild(newChild);
 	}-*/;
 
+	/**
+	 * Explicitly build html by traversing with javascript (cos we can't trust
+	 * IE11, although we can webkit and probably FF)
+	 */
 	final native String buildOuterHtml()/*-{
 
     function escapeHtml(str, buffer) {

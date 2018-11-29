@@ -27,6 +27,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.EnumType;
@@ -54,6 +55,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -65,6 +67,9 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
+import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentLoaderProperty;
+import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentPropertyType;
+import cc.alcina.framework.entity.projection.EntityUtils;
 
 public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	private Map<PropertyDescriptor, JoinTable> joinTables;
@@ -194,55 +199,23 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			store.cache.getMap(clazz);
 		}
 		List<Callable> calls = new ArrayList<Callable>();
-		for (DomainClassDescriptor descriptor : domainDescriptor.perClass
-				.values()) {
-			final Class clazz = descriptor.clazz;
-			if (!descriptor.lazy) {
-				calls.add(new Callable<Void>() {
-					@Override
-					public Void call() throws Exception {
-						MetricLogging.get().start(clazz.getSimpleName());
-						if (descriptor instanceof PropertyStoreItemDescriptor) {
-							PropertyStoreItemDescriptor propertyStoreItemDescriptor = (PropertyStoreItemDescriptor) descriptor;
-							loadPropertyStore(clazz,
-									propertyStoreItemDescriptor);
-						} else {
-							loadTable(clazz, "", null, warmupLaterLookup());
-						}
-						MetricLogging.get().end(clazz.getSimpleName(),
-								store.metricLogger);
-						return null;
-					}
-				});
-			}
-		}
+		setupInitialLoadTableCalls(calls);
 		invokeAllWithThrow(calls);
-		for (Entry<PropertyDescriptor, JoinTable> entry : joinTables
-				.entrySet()) {
-			final Entry<PropertyDescriptor, JoinTable> entryF = entry;
-			calls.add(new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-					loadJoinTable(entryF, warmupLaterLookup());
-					return null;
-				}
-			});
-		}
+		setupInitialJoinTableCalls(calls);
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("tables");
 		MetricLogging.get().start("xrefs");
 		for (LaterLookup ll : warmupLaterLookups) {
-			// calls.add(new Callable<Void>() {
-			// @Override
-			// public Void call() throws Exception {
 			resolveRefs(ll);
-			// return null;
-			// }
-			// });
 		}
-		invokeAllWithThrow(calls);
 		MetricLogging.get().end("xrefs");
 		warmupLaterLookups.clear();
+		// lazy tables, load a segment (for large db dev work)
+		if (domainDescriptor.domainSegmentLoader != null) {
+			MetricLogging.get().start("domain-segment");
+			loadDomainSegment();
+			MetricLogging.get().end("domain-segment");
+		}
 		store.threads.unlock(true);
 		MetricLogging.get().start("postLoad");
 		for (final DomainStoreTask task : domainDescriptor.postLoadTasks) {
@@ -418,6 +391,102 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		return min;
 	}
 
+	private void loadDomainSegment() throws Exception {
+		List<Callable> calls = new ArrayList<Callable>();
+		DomainSegmentLoader segmentLoader = (DomainSegmentLoader) domainDescriptor.domainSegmentLoader;
+		segmentLoader.initialiseSeedLookup();
+		int maxPasses = 30;
+		int pass = 0;
+		Set<Class> segmentClasses = new LinkedHashSet<>();
+		long start = System.currentTimeMillis();
+		while (segmentLoader.pendingCount() != 0 && pass++ < maxPasses) {
+			if (pass == 21) {
+				int debug = 3;
+			}
+			Set<Entry<Class, Set<Long>>> perClass = segmentLoader.toLoadIds
+					.entrySet();
+			List<LaterLookup> laterLookups = new ArrayList<>();
+			for (Entry<Class, Set<Long>> entry : perClass) {
+				LaterLookup laterLookup = new LaterLookup();
+				laterLookups.add(laterLookup);
+				segmentClasses.add(entry.getKey());
+				calls.add(() -> {
+					Collection<Long> ids = entry.getValue();
+					Class clazz = entry.getKey();
+					ids = segmentLoader.filterForQueried(clazz, "id", ids);
+					loadTableOrStoreSegment(clazz,
+							Ax.format(" id in %s",
+									EntityUtils.longsToIdClause(ids)),
+							laterLookup);
+					entry.getValue().clear();
+					return null;
+				});
+			}
+			if (!segmentLoader.isReload()) {
+				invokeAllWithThrow(calls);
+				// resolve what we can (last pass)
+				LaterLookup lastPassLookup = new LaterLookup();
+				lastPassLookup.list.addAll(segmentLoader.toResolve);
+				segmentLoader.toResolve.clear();
+				laterLookups.add(lastPassLookup);
+				lastPassLookup.resolve(segmentLoader);
+				laterLookups.forEach(ll -> ll.resolve(segmentLoader));
+				laterLookups.clear();
+			}
+			if (segmentLoader.pendingCount() == 0 || segmentLoader.isReload()) {
+				for (DomainSegmentLoaderProperty property : segmentLoader.properties) {
+					if (property.type == DomainSegmentPropertyType.TABLE_REF) {
+						Collection<Long> ids = store.cache
+								.keys(property.target);
+						ids = segmentLoader.filterForQueried(property.source,
+								property.propertyName, ids);
+						String sqlFilter = Ax.format(" %s in %s",
+								property.propertyName,
+								EntityUtils.longsToIdClause(ids));
+						segmentClasses.add(property.source);
+						calls.add(() -> {
+							LaterLookup laterLookup = new LaterLookup();
+							laterLookups.add(laterLookup);
+							loadTableOrStoreSegment(property.source, sqlFilter,
+									laterLookup);
+							return null;
+						});
+					} else if (property.type == DomainSegmentPropertyType.STORE_REF
+							&& !segmentLoader.isReload()) {
+						Collection<Long> ids = store.cache.fieldValues(
+								property.source, property.propertyName);
+						ids = segmentLoader.filterForQueried(property.target,
+								"id", ids);
+						String sqlFilter = Ax.format(" id in %s",
+								EntityUtils.longsToIdClause(ids));
+						segmentClasses.add(property.target);
+						calls.add(() -> {
+							LaterLookup laterLookup = new LaterLookup();
+							laterLookups.add(laterLookup);
+							loadTableOrStoreSegment(property.target, sqlFilter,
+									laterLookup);
+							return null;
+						});
+					}
+				}
+			}
+			invokeAllWithThrow(calls);
+			laterLookups.forEach(ll -> ll.resolve(segmentLoader));
+			Integer size = segmentClasses.stream().collect(Collectors
+					.summingInt(clazz -> store.cache.keys(clazz).size()));
+			Ax.out("Load domain segment - pass %s - size %s - %s ms", pass,
+					size, System.currentTimeMillis() - start);
+			segmentClasses.forEach(clazz -> Ax.out("%s: %s",
+					clazz.getSimpleName(), store.cache.keys(clazz).size()));
+			segmentClasses.forEach(segmentLoader::ensureClass);
+		}
+		if (pass >= maxPasses) {
+			throw Ax.runtimeException("did our max passes and lost");
+		} else {
+			segmentLoader.saveIds();
+		}
+	}
+
 	private void loadJoinTable(Entry<PropertyDescriptor, JoinTable> entry,
 			LaterLookup laterLookup) {
 		JoinTable joinTable = entry.getValue();
@@ -504,14 +573,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
-	private void loadPropertyStore(Class clazz,
+	private void loadPropertyStore(Class clazz, String sqlFilter,
 			PropertyStoreItemDescriptor propertyStoreItemDescriptor)
 			throws SQLException {
 		Connection conn = getConn();
 		try {
 			ConnResults connResults = new ConnResults(conn, clazz,
-					columnDescriptors.get(clazz),
-					propertyStoreItemDescriptor.getSqlFilter());
+					columnDescriptors.get(clazz), sqlFilter);
 			List<PdOperator> pds = descriptors.get(clazz);
 			propertyStoreItemDescriptor.init(store.cache, pds);
 			String simpleName = clazz.getSimpleName();
@@ -600,6 +668,20 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			releaseConn(conn);
 		}
 		return loaded;
+	}
+
+	private void loadTableOrStoreSegment(Class clazz, String sqlFilter,
+			LaterLookup laterLookup) throws Exception {
+		DomainClassDescriptor<?> descriptor = domainDescriptor.perClass
+				.get(clazz);
+		MetricLogging.get().start(clazz.getSimpleName());
+		if (descriptor instanceof PropertyStoreItemDescriptor) {
+			PropertyStoreItemDescriptor propertyStoreItemDescriptor = (PropertyStoreItemDescriptor) descriptor;
+			loadPropertyStore(clazz, sqlFilter, propertyStoreItemDescriptor);
+		} else {
+			loadTable(clazz, sqlFilter, null, laterLookup);
+		}
+		MetricLogging.get().end(clazz.getSimpleName(), store.metricLogger);
 	}
 
 	private void prepareTable(DomainClassDescriptor classDescriptor)
@@ -726,6 +808,45 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
+	private void setupInitialJoinTableCalls(List<Callable> calls) {
+		for (Entry<PropertyDescriptor, JoinTable> entry : joinTables
+				.entrySet()) {
+			final Entry<PropertyDescriptor, JoinTable> entryF = entry;
+			calls.add(new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+					loadJoinTable(entryF, warmupLaterLookup());
+					return null;
+				}
+			});
+		}
+	}
+
+	private void setupInitialLoadTableCalls(List<Callable> calls) {
+		for (DomainClassDescriptor descriptor : domainDescriptor.perClass
+				.values()) {
+			final Class clazz = descriptor.clazz;
+			if (!descriptor.lazy) {
+				calls.add(new Callable<Void>() {
+					@Override
+					public Void call() throws Exception {
+						MetricLogging.get().start(clazz.getSimpleName());
+						if (descriptor instanceof PropertyStoreItemDescriptor) {
+							PropertyStoreItemDescriptor propertyStoreItemDescriptor = (PropertyStoreItemDescriptor) descriptor;
+							loadPropertyStore(clazz, null,
+									propertyStoreItemDescriptor);
+						} else {
+							loadTable(clazz, "", null, warmupLaterLookup());
+						}
+						MetricLogging.get().end(clazz.getSimpleName(),
+								store.metricLogger);
+						return null;
+					}
+				});
+			}
+		}
+	}
+
 	protected void closeWarmupConnection(Connection conn) {
 		try {
 			conn.commit();
@@ -766,15 +887,27 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			list.add(new LaterItem(id, pd, source));
 		}
 
-		void resolve() throws Exception {
-			new ResolveRefsTask(list).call();
+		void resolve() {
+			resolve(null);
+		}
+
+		void resolve(DomainSegmentLoader segmentLoader) {
+			try {
+				new ResolveRefsTask(list, segmentLoader).call();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 
 		private final class ResolveRefsTask implements Callable<Void> {
 			private List<LaterItem> items;
 
-			private ResolveRefsTask(List<LaterItem> items) {
+			private DomainSegmentLoader segmentLoader;
+
+			private ResolveRefsTask(List<LaterItem> items,
+					DomainSegmentLoader segmentLoader) {
 				this.items = items;
+				this.segmentLoader = segmentLoader;
 			}
 
 			@Override
@@ -810,16 +943,19 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							}
 							set.add(item.target);
 						} else {
-							Object target = store.cache
-									.get(propertyDescriptorFetchTypes
-											.get(pdOperator.pd), id);
+							Class type = propertyDescriptorFetchTypes
+									.get(pdOperator.pd);
+							Object target = store.cache.get(type, id);
 							if (target == null) {
-								store.logger.warn(
-										"later-lookup -- missing target: {}, {} for  {}.{} #{}",
-										propertyDescriptorFetchTypes
-												.get(pdOperator.pd),
-										id, item.source.getClass(),
-										pdOperator.name, item.source.getId());
+								if (segmentLoader == null) {
+									store.logger.warn(
+											"later-lookup -- missing target: {}, {} for  {}.{} #{}",
+											type, id, item.source.getClass(),
+											pdOperator.name,
+											item.source.getId());
+								} else {
+									segmentLoader.notifyLater(item, type, id);
+								}
 							}
 							pdOperator.writeMethod.invoke(item.source, target);
 							if (keepDetached) {

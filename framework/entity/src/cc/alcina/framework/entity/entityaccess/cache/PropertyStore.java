@@ -18,6 +18,7 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.P
 import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongIterator;
@@ -71,6 +72,16 @@ public class PropertyStore {
 
 	public FilterContext createContext(DetachedEntityCache cache) {
 		return new PsFilterContext(cache);
+	}
+
+	public <T> List<T> fieldValues(String propertyPath) {
+		if (pds == null) {
+			return new ArrayList<>();
+		}
+		PdOperator descriptor = getDescriptor(propertyPath);
+		FieldStore store = stores.get(descriptor.idx);
+		return (List<T>) (List) rowOffsets().stream().filter(idx -> idx >= 0)
+				.map(idx -> store.getWrapped(idx)).collect(Collectors.toList());
 	}
 
 	public PdOperator getDescriptor(String propertyPath) {
@@ -194,6 +205,10 @@ public class PropertyStore {
 
 	protected void initRowLookup() {
 		rowLookup = new Long2IntOpenHashMap(getInitialSize());
+	}
+
+	protected IntCollection rowOffsets() {
+		return rowLookup.values();
 	}
 
 	void addLookup(PropertyStoreLookup lookup) {

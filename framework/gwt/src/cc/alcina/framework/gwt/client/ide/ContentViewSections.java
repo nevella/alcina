@@ -67,6 +67,8 @@ public class ContentViewSections {
 
 	private boolean noAdminOverride;
 
+	private String okButtonName;
+
 	public ContentViewSections
 			actionListener(PermissibleActionListener actionListener) {
 		this.actionListener = actionListener;
@@ -113,6 +115,9 @@ public class ContentViewSections {
 			if (!autoSave) {
 				contentViewFactory.okButtonName("Create");
 			}
+			if (okButtonName != null) {
+				contentViewFactory.okButtonName(okButtonName);
+			}
 			contentViewFactory.fieldFilter(section).fieldOrder(section)
 					.editableFieldFilter(section.editableFieldFilter())
 					.fieldPostReflectiveSetupModifier(
@@ -151,14 +156,13 @@ public class ContentViewSections {
 		return this;
 	}
 
-	public ContentViewSections noAdminOverride() {
-		this.noAdminOverride = true;
-		return this;
-	}
-
 	public ContentViewSections editable(boolean editable) {
 		this.editable = editable;
 		return this;
+	}
+
+	public String getOkButtonName() {
+		return this.okButtonName;
 	}
 
 	public String getTableStyleName() {
@@ -173,6 +177,11 @@ public class ContentViewSections {
 		return this.editable;
 	}
 
+	public ContentViewSections noAdminOverride() {
+		this.noAdminOverride = true;
+		return this;
+	}
+
 	public ContentViewSection section(String name) {
 		ContentViewSection section = new ContentViewSection(name);
 		sections.add(section);
@@ -182,6 +191,10 @@ public class ContentViewSections {
 	public ContentViewSections setAutoSave(boolean autoSave) {
 		this.autoSave = autoSave;
 		return this;
+	}
+
+	public void setOkButtonName(String okButtonName) {
+		this.okButtonName = okButtonName;
 	}
 
 	public void setTableStyleName(String tableStyleName) {
@@ -220,6 +233,14 @@ public class ContentViewSections {
 			return this;
 		}
 
+		public ContentViewSection
+				fieldBindings(List<EnumeratedBinding> enumeratedBindings) {
+			this.fieldNames = enumeratedBindings.stream()
+					.map(EnumeratedBinding::getPath)
+					.collect(Collectors.toList());
+			return this;
+		}
+
 		public ContentViewSection fieldPostReflectiveSetupModifier(
 				Consumer<Field> fieldPostReflectiveSetupModifier) {
 			this.fieldPostReflectiveSetupModifier = fieldPostReflectiveSetupModifier;
@@ -229,14 +250,6 @@ public class ContentViewSections {
 		public ContentViewSection
 				fields(EnumeratedBinding... enumeratedBindings) {
 			return fieldBindings(Arrays.asList(enumeratedBindings));
-		}
-
-		public ContentViewSection
-				fieldBindings(List<EnumeratedBinding> enumeratedBindings) {
-			this.fieldNames = enumeratedBindings.stream()
-					.map(EnumeratedBinding::getPath)
-					.collect(Collectors.toList());
-			return this;
 		}
 
 		public ContentViewSection fields(List<String> fieldNames) {
@@ -292,18 +305,13 @@ public class ContentViewSections {
 			return this;
 		}
 
+		public ContentViewSectionsDialogBuilder className(String className) {
+			this.className = className;
+			return this;
+		}
+
 		public ContentViewSectionsDialogBuilder noGlass() {
 			noGlass = true;
-			return this;
-		}
-
-		public ContentViewSectionsDialogBuilder withCancel(boolean withCancel) {
-			this.withCancel = withCancel;
-			return this;
-		}
-
-		public ContentViewSectionsDialogBuilder withOk(boolean withOk) {
-			this.withOk = withOk;
 			return this;
 		}
 
@@ -319,8 +327,13 @@ public class ContentViewSections {
 					okButtonName, cancelButtonName, className);
 		}
 
-		public ContentViewSectionsDialogBuilder className(String className) {
-			this.className = className;
+		public ContentViewSectionsDialogBuilder withCancel(boolean withCancel) {
+			this.withCancel = withCancel;
+			return this;
+		}
+
+		public ContentViewSectionsDialogBuilder withOk(boolean withOk) {
+			this.withOk = withOk;
 			return this;
 		}
 	}

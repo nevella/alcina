@@ -7,16 +7,17 @@ import java.util.Set;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.PdOperator;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
 public class IntBackedPropertyStore extends PropertyStore {
-	Int2IntOpenHashMap rowLookup;
+	Int2IntOpenHashMap intRowLookup;
 
 	@Override
 	public Set<Long> getIds() {
 		LongOpenHashSet res = new LongOpenHashSet();
-		IntIterator itr = rowLookup.keySet().iterator();
+		IntIterator itr = intRowLookup.keySet().iterator();
 		while (itr.hasNext()) {
 			res.add((long) itr.nextInt());
 		}
@@ -35,17 +36,17 @@ public class IntBackedPropertyStore extends PropertyStore {
 
 	@Override
 	public void remove(long id) {
-		rowLookup.remove((int) id);
+		intRowLookup.remove((int) id);
 	}
 
 	@Override
 	protected int ensureRow(long id) {
 		int iid = (int) id;
-		if (!rowLookup.containsKey(iid)) {
-			rowLookup.put(iid, emptyRowIdx++);
-			ensureStoreSizes(rowLookup.size());
+		if (!intRowLookup.containsKey(iid)) {
+			intRowLookup.put(iid, emptyRowIdx++);
+			ensureStoreSizes(intRowLookup.size());
 		}
-		return rowLookup.get(iid);
+		return intRowLookup.get(iid);
 	}
 
 	@Override
@@ -62,15 +63,20 @@ public class IntBackedPropertyStore extends PropertyStore {
 			return -1;
 		}
 		int iid = id.intValue();
-		if (rowLookup.containsKey(iid)) {
-			return rowLookup.get(iid);
+		if (intRowLookup.containsKey(iid)) {
+			return intRowLookup.get(iid);
 		}
 		return -1;
 	}
 
 	@Override
 	protected void initRowLookup() {
-		rowLookup = new Int2IntOpenHashMap(getInitialSize());
+		intRowLookup = new Int2IntOpenHashMap(getInitialSize());
+	}
+
+	@Override
+	protected IntCollection rowOffsets() {
+		return intRowLookup.values();
 	}
 
 	static class TruncatedLongStore extends LongStore {

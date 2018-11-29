@@ -469,10 +469,6 @@ public class Element extends Node implements DomElement {
 		return new ElementImplAccess();
 	}
 
-	public boolean isPendingResolution() {
-		return this.pendingResolution;
-	}
-
 	public int localEventBitsSunk() {
 		return local().eventBits;
 	}
@@ -480,10 +476,6 @@ public class Element extends Node implements DomElement {
 	@Override
 	public Element nodeFor() {
 		return this;
-	}
-
-	public void pendingResolution() {
-		this.pendingResolution = true;
 	}
 
 	@Override
@@ -596,6 +588,11 @@ public class Element extends Node implements DomElement {
 			local().setInnerHTML(html);
 		}
 		oldChildren.forEach(LocalDom::detach);
+	}
+
+	public void setInnerHTMLWithValidation(String html) {
+		String validatedHtml = LocalDom.validateHtml(html);
+		setInnerHTML(validatedHtml);
 	}
 
 	@Override
@@ -833,6 +830,11 @@ public class Element extends Node implements DomElement {
 	}
 
 	@Override
+	protected boolean isPendingResolution() {
+		return this.pendingResolution;
+	}
+
+	@Override
 	protected boolean linkedToRemote() {
 		return remote() != ElementNull.INSTANCE;
 	}
@@ -903,6 +905,10 @@ public class Element extends Node implements DomElement {
     return cn;
 	}-*/;
 
+	void pendingResolution() {
+		this.pendingResolution = true;
+	}
+
 	Element putLocal(ElementLocal local) {
 		Preconditions.checkState(this.local == null);
 		this.local = local;
@@ -960,6 +966,10 @@ public class Element extends Node implements DomElement {
 
 		public void setRemote(ElementRemote remote) {
 			LocalDom.putRemote(Element.this, remote);
+		}
+
+		public NodeRemote typedChild(int index) {
+			return ensureRemote().getChildNodes0().getItem0(index);
 		}
 
 		public ElementRemote typedRemote() {
