@@ -205,7 +205,7 @@ public class JPAHibernateImpl implements JPAImplementation {
 
 	@Override
 	public DomainStoreJoinHandler
-			getMemcacheJoinHandler(final PropertyDescriptor pd) {
+			getDomainStoreJoinHandler(final PropertyDescriptor pd) {
 		final ElementCollection elementCollection = pd.getReadMethod()
 				.getAnnotation(ElementCollection.class);
 		final Column column = pd.getReadMethod().getAnnotation(Column.class);
@@ -237,10 +237,10 @@ public class JPAHibernateImpl implements JPAImplementation {
 	@Override
 	public GraphProjectionDataFilter getResolvingFilter(
 			InstantiateImplCallback callback, DetachedEntityCache cache,
-			boolean useMemCache) {
+			boolean useDomainStore) {
 		EntityCacheHibernateResolvingFilter filter = new EntityCacheHibernateResolvingFilter(
 				callback);
-		filter.setUseRawMemCache(useMemCache);
+		filter.setUseRawDomainStore(useDomainStore);
 		if (cache != null) {
 			filter.setCache(cache);
 		}

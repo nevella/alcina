@@ -65,7 +65,7 @@ public class ServerTransformManagerSupport {
 							 * code three years later, not sure why I opted for
 							 * the above but I guess, if it's server layer, the
 							 * programmer has more control and there may be a
-							 * decent reason hmm - for alcinamemcache, we need
+							 * decent reason hmm - for domainStore, we need
 							 * auto-removal of parent/child relations if
 							 * transforming from servlet layer. possibly the
 							 * "no-auto" was answer.getsurveyresponse

@@ -166,13 +166,13 @@ public class DomainStoreQueryTranslator {
 	}
 
 	protected DomainFilter criterionToFilter(
-			DomainStoreCriteria memCacheCriteria, Criterion criterion)
+			DomainStoreCriteria domainStoreCriteria, Criterion criterion)
 			throws NotHandledException {
 		boolean handled = false;
 		for (CriterionTranslator translator : Registry
 				.impls(CriterionTranslator.class)) {
 			if (translator.handles(criterion.getClass())) {
-				return translator.handle(criterion, memCacheCriteria, this);
+				return translator.handle(criterion, domainStoreCriteria, this);
 			}
 		}
 		throw new NotHandledException(criterion);
@@ -204,18 +204,18 @@ public class DomainStoreQueryTranslator {
 
 		@Override
 		protected DomainFilter handle(Conjunction criterion,
-				DomainStoreCriteria memCacheCriteria,
+				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
 				throws NotHandledException {
 			List<Criterion> subs = (List<Criterion>) getValue(criterion,
 					"criteria", "conditions");
 			if (subs.size() == 1) {
-				return translator.criterionToFilter(memCacheCriteria,
+				return translator.criterionToFilter(domainStoreCriteria,
 						subs.get(0));
 			}
 			CompositeFilter filter = new CompositeFilter();
 			for (Criterion sub : subs) {
-				filter.add(translator.criterionToFilter(memCacheCriteria, sub));
+				filter.add(translator.criterionToFilter(domainStoreCriteria, sub));
 			}
 			return filter;
 		}
@@ -241,7 +241,7 @@ public class DomainStoreQueryTranslator {
 		}
 
 		protected abstract DomainFilter handle(C criterion,
-				DomainStoreCriteria memCacheCriteria,
+				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
 				throws NotHandledException;
 	}
@@ -255,18 +255,18 @@ public class DomainStoreQueryTranslator {
 
 		@Override
 		protected DomainFilter handle(Disjunction criterion,
-				DomainStoreCriteria memCacheCriteria,
+				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
 				throws NotHandledException {
 			List<Criterion> subs = (List<Criterion>) getValue(criterion,
 					"criteria", "conditions");
 			if (subs.size() == 1) {
-				return translator.criterionToFilter(memCacheCriteria,
+				return translator.criterionToFilter(domainStoreCriteria,
 						subs.get(0));
 			}
 			CompositeFilter filter = new CompositeFilter(true);
 			for (Criterion sub : subs) {
-				filter.add(translator.criterionToFilter(memCacheCriteria, sub));
+				filter.add(translator.criterionToFilter(domainStoreCriteria, sub));
 			}
 			return filter;
 		}
@@ -281,7 +281,7 @@ public class DomainStoreQueryTranslator {
 
 		@Override
 		protected DomainFilter handle(InExpression criterion,
-				DomainStoreCriteria memCacheCriteria,
+				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator) {
 			Object value = getValue(criterion, "values");
 			Collection collection = null;
@@ -296,7 +296,7 @@ public class DomainStoreQueryTranslator {
 			}
 			return new DomainFilter(
 					translator.translatePropertyPath(criterion,
-							memCacheCriteria,
+							domainStoreCriteria,
 							getStringFieldValue(criterion, "propertyName")),
 					collection, FilterOperator.IN);
 		}
@@ -311,12 +311,12 @@ public class DomainStoreQueryTranslator {
 
 		@Override
 		protected DomainFilter handle(NotExpression criterion,
-				DomainStoreCriteria memCacheCriteria,
+				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
 				throws NotHandledException {
 			Criterion sub = (Criterion) getValue(criterion, "criterion");
 			NotCacheFilter filter = new NotCacheFilter(
-					translator.criterionToFilter(memCacheCriteria, sub));
+					translator.criterionToFilter(domainStoreCriteria, sub));
 			return filter;
 		}
 	}
@@ -330,11 +330,11 @@ public class DomainStoreQueryTranslator {
 
 		@Override
 		protected DomainFilter handle(NullExpression criterion,
-				DomainStoreCriteria memCacheCriteria,
+				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
 				throws NotHandledException {
 			String propertyName = translator.translatePropertyPath(criterion,
-					memCacheCriteria,
+					domainStoreCriteria,
 					getStringFieldValue(criterion, "propertyName"));
 			return new DomainFilter(propertyName, null, FilterOperator.EQ);
 		}
@@ -349,11 +349,11 @@ public class DomainStoreQueryTranslator {
 
 		@Override
 		protected DomainFilter handle(SimpleExpression criterion,
-				DomainStoreCriteria memCacheCriteria,
+				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
 				throws NotHandledException {
 			String propertyName = translator.translatePropertyPath(criterion,
-					memCacheCriteria,
+					domainStoreCriteria,
 					getStringFieldValue(criterion, "propertyName"));
 			String op = getStringFieldValue(criterion, "op");
 			String value = getStringFieldValue(criterion, "op");

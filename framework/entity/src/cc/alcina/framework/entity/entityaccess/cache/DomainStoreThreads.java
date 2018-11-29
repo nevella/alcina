@@ -123,7 +123,7 @@ public class DomainStoreThreads {
 		if (lockingDisabled) {
 			if (System.currentTimeMillis()
 					- lastLockingDisabledMessage > TimeConstants.ONE_MINUTE_MS) {
-				System.out.format("memcache - lock %s - locking disabled\n",
+				System.out.format("domain store - lock %s - locking disabled\n",
 						write);
 			}
 			lastLockingDisabledMessage = System.currentTimeMillis();
@@ -175,7 +175,7 @@ public class DomainStoreThreads {
 
 	public void startLongLockHolderCheck() {
 		this.longLockHolderCheckTimer = new Timer(
-				"Timer-AlcinaMemCache-check-stats");
+				"Timer-Domain-Store-check-stats");
 		longLockHolderCheckTimer.schedule(new TimerTask() {
 			@Override
 			public void run() {
@@ -263,7 +263,7 @@ public class DomainStoreThreads {
 			threadQueueTimes.remove(currentThread.getId());
 		}
 		long queuedTime = health.getMaxQueuedTime();
-		String lockDumpCause = String.format("Memcache lock - %s - %s\n",
+		String lockDumpCause = String.format("DomainStore lock - %s - %s\n",
 				write ? "write" : "read", action);
 		if (dumpLocks || (write || queuedTime > MAX_QUEUED_TIME)) {
 			if (dumpLocksCount.get() > 100) {
@@ -319,7 +319,7 @@ public class DomainStoreThreads {
 		Thread writerThread = postProcessWriterThread;
 		if (writerThread != null) {
 			fullLockDump.format(
-					"Memcache log debugging----------\n"
+					"DomainStore log debugging----------\n"
 							+ "Writer thread trace:----------\n" + "%s\n",
 					SEUtilities.getStacktraceSlice(postProcessWriterThread, 999,
 							0));
@@ -403,11 +403,11 @@ public class DomainStoreThreads {
 	}
 
 	public class DomainStoreHealth {
-		public long memcacheMaxPostProcessTime;
+		public long domainStoreMaxPostProcessTime;
 
-		public long memcachePostProcessStartTime;
+		public long domainStorePostProcessStartTime;
 
-		AtomicInteger memcacheExceptionCount = new AtomicInteger();
+		AtomicInteger domainStoreExceptionCount = new AtomicInteger();
 
 		public long getMaxQueuedTime() {
 			return threadQueueTimes.values().stream()
@@ -415,17 +415,17 @@ public class DomainStoreThreads {
 					.map(t -> System.currentTimeMillis() - t).orElse(0L);
 		}
 
-		public AtomicInteger getMemcacheExceptionCount() {
-			return this.memcacheExceptionCount;
+		public AtomicInteger getDomainStoreExceptionCount() {
+			return this.domainStoreExceptionCount;
 		}
 
-		public int getMemcacheQueueLength() {
+		public int getDomainStoreQueueLength() {
 			return mainLock.getQueueLength();
 		}
 
-		public long getTimeInMemcacheWriter() {
-			return memcachePostProcessStartTime == 0 ? 0
-					: System.currentTimeMillis() - memcachePostProcessStartTime;
+		public long getTimeInDomainStoreWriter() {
+			return domainStorePostProcessStartTime == 0 ? 0
+					: System.currentTimeMillis() - domainStorePostProcessStartTime;
 		}
 
 		public boolean isLockingDisabled() {
@@ -434,20 +434,20 @@ public class DomainStoreThreads {
 	}
 
 	public class DomainStoreInstrumentation {
-		public long getActiveMemcacheLockTime(Thread thread) {
+		public long getActiveDomainStoreLockTime(Thread thread) {
 			synchronized (activeThreads) {
 				return activeThreadAcquireTimes.getOrDefault(thread, 0L);
 			}
 		}
 
-		public Map<Thread, Long> getActiveMemcacheLockTimes() {
+		public Map<Thread, Long> getActiveDomainStoreLockTimes() {
 			synchronized (activeThreads) {
 				return activeThreadAcquireTimes.entrySet().stream().collect(
 						Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
 			}
 		}
 
-		public DomainStoreLockState getMemcacheLockState(Thread thread) {
+		public DomainStoreLockState getDomainStoreLockState(Thread thread) {
 			synchronized (activeThreads) {
 				if (threadQueueTimes.containsKey(thread.getId()))
 					return DomainStoreLockState.WAITING_FOR_LOCK;
@@ -467,7 +467,7 @@ public class DomainStoreThreads {
 			}
 		}
 
-		public long getMemcacheWaitTime(Thread thread) {
+		public long getDomainStoreWaitTime(Thread thread) {
 			return threadQueueTimes.getOrDefault(thread.getId(), 0L);
 		}
 

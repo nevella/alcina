@@ -392,7 +392,7 @@ public abstract class TransformManager implements PropertyChangeListener,
                     }
                     /*
                      * sort of gnarly here - when we're using transactional
-                     * memcache we may want to replace the collection member
+                     * domainStore we may want to replace the collection member
                      * (non-transactional) with a transactional clone - which
                      * equals() - but we definitely don't want to get stuck in a
                      * loop. on the other hand, the client should always fire

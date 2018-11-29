@@ -216,7 +216,7 @@ public class DomainStore implements RegistrableService, IDomainStore {
 
 	DomainStoreLoader loader;
 
-	private UnsortedMultikeyMap<DomainStoreTransient> memcacheTransientProperties = new UnsortedMultikeyMap<>(
+	private UnsortedMultikeyMap<DomainStoreTransient> domainStoreTransientProperties = new UnsortedMultikeyMap<>(
 			2);
 
 	private LazyObjectLoader lazyObjectLoader;
@@ -361,7 +361,7 @@ public class DomainStore implements RegistrableService, IDomainStore {
 	}
 
 	private DomainTransformEvent
-			filterForMemcacheTransient(DomainTransformEvent dte) {
+			filterForDomainStoreTransient(DomainTransformEvent dte) {
 		switch (dte.getTransformType()) {
 		case CREATE_OBJECT:
 		case DELETE_OBJECT:
@@ -369,7 +369,7 @@ public class DomainStore implements RegistrableService, IDomainStore {
 		case REMOVE_REF_FROM_COLLECTION:
 			return dte;
 		}
-		DomainStoreTransient ann = memcacheTransientProperties
+		DomainStoreTransient ann = domainStoreTransientProperties
 				.get(dte.getObjectClass(), dte.getPropertyName());
 		if (ann == null) {
 			return dte;
@@ -384,7 +384,7 @@ public class DomainStore implements RegistrableService, IDomainStore {
 			filterInterestedTransforms(Collection<DomainTransformEvent> dtes) {
 		return dtes.stream().filter(new InSubgraphFilter())
 				.filter(domainDescriptor::customFilterPostProcess)
-				.map(dte -> filterForMemcacheTransient(dte))
+				.map(dte -> filterForDomainStoreTransient(dte))
 				.filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
@@ -481,7 +481,7 @@ public class DomainStore implements RegistrableService, IDomainStore {
 					if (transientAnn != null) {
 						Field field = getField(clazz, pd.getName());
 						field.setAccessible(true);
-						memcacheTransientProperties.put(clazz, field.getName(),
+						domainStoreTransientProperties.put(clazz, field.getName(),
 								transientAnn);
 					}
 					continue;
@@ -710,7 +710,7 @@ public class DomainStore implements RegistrableService, IDomainStore {
 			MetricLogging.get().start("post-process");
 			threads.postProcessWriterThread = Thread.currentThread();
 			postProcessEvent = persistenceEvent;
-			health.memcachePostProcessStartTime = System.currentTimeMillis();
+			health.domainStorePostProcessStartTime = System.currentTimeMillis();
 			transformManager.startCommit();
 			List<DomainTransformEvent> dtes = (List) persistenceEvent
 					.getDomainTransformLayerWrapper().persistentEvents;
@@ -746,9 +746,9 @@ public class DomainStore implements RegistrableService, IDomainStore {
 					// TODO - check if necessary
 					// (note) also a check against trying to handle deletion of
 					// lazy objects
-					HasIdAndLocalId memCacheObj = transformManager
+					HasIdAndLocalId domainStoreObj = transformManager
 							.getObject(dte, true);
-					if (memCacheObj == null) {
+					if (domainStoreObj == null) {
 						continue;
 					}
 				}
@@ -758,7 +758,7 @@ public class DomainStore implements RegistrableService, IDomainStore {
 					if (obj != null) {
 						index(obj, false);
 					} else {
-						logger.warn("Null memcacheObject for index - {}",
+						logger.warn("Null domain store object for index - {}",
 								HiliLocator.objectLocator(dte));
 					}
 				}
@@ -783,20 +783,20 @@ public class DomainStore implements RegistrableService, IDomainStore {
 						&& last == dte) {
 					HasIdAndLocalId dbObj = locatorOriginalSourceMap
 							.get(HiliLocator.objectLocator(dte));
-					HasIdAndLocalId memCacheObj = transformManager
+					HasIdAndLocalId domainStoreObject = transformManager
 							.getObject(dte, true);
-					if (memCacheObj != null) {
+					if (domainStoreObject != null) {
 						if (dbObj instanceof HasVersionNumber) {
-							updateVersionNumber(memCacheObj, dte);
+							updateVersionNumber(domainStoreObject, dte);
 						}
 						if (dbObj instanceof IVersionable) {
-							updateIVersionable(memCacheObj,
+							updateIVersionable(domainStoreObject,
 									persistentLayerSource);
 						}
-						ensureModificationChecker(memCacheObj);
-						index(memCacheObj, true);
+						ensureModificationChecker(domainStoreObject);
+						index(domainStoreObject, true);
 					} else {
-						logger.warn("Null memcacheObject for index - {}",
+						logger.warn("Null domain store object for index - {}",
 								HiliLocator.objectLocator(dte));
 					}
 				}
@@ -806,13 +806,13 @@ public class DomainStore implements RegistrableService, IDomainStore {
 			causes.add(e);
 		} finally {
 			transformManager.endCommit();
-			health.memcachePostProcessStartTime = 0;
+			health.domainStorePostProcessStartTime = 0;
 			threads.postProcessWriterThread = null;
 			postProcessEvent = null;
 			long postProcessTime = System.currentTimeMillis()
 					- postProcessStart;
-			health.memcacheMaxPostProcessTime = Math
-					.max(health.memcacheMaxPostProcessTime, postProcessTime);
+			health.domainStoreMaxPostProcessTime = Math
+					.max(health.domainStoreMaxPostProcessTime, postProcessTime);
 			MetricLogging.get().end("post-process");
 			threads.unlock(true);
 			try {
@@ -825,14 +825,14 @@ public class DomainStore implements RegistrableService, IDomainStore {
 				if (!causes.isEmpty()) {
 					UmbrellaException umby = new UmbrellaException(causes);
 					causes.iterator().next().printStackTrace();
-					DomainStoreUpdateException memcacheUpdateException = new DomainStoreUpdateException(
+					DomainStoreUpdateException updateException = new DomainStoreUpdateException(
 							umby);
 					GlobalTopicPublisher.get().publishTopic(
-							TOPIC_UPDATE_EXCEPTION, memcacheUpdateException);
-					if (memcacheUpdateException.ignoreForDomainStoreExceptionCount) {
-						memcacheUpdateException.printStackTrace();
+							TOPIC_UPDATE_EXCEPTION, updateException);
+					if (updateException.ignoreForDomainStoreExceptionCount) {
+						updateException.printStackTrace();
 					} else {
-						health.memcacheExceptionCount.incrementAndGet();
+						health.domainStoreExceptionCount.incrementAndGet();
 						throw new DomainStoreException(umby);
 					}
 				}
@@ -976,7 +976,7 @@ public class DomainStore implements RegistrableService, IDomainStore {
 						if (domainDescriptor.perClass.keySet()
 								.contains(dte.getObjectClass())) {
 							throw new DomainStoreException(String.format(
-									"Starting a memcache transaction with an existing transform of a graphed object - %s."
+									"Starting a domain store transaction with an existing transform of a graphed object - %s."
 											+ " In certain cases that might work -- but better practice to not do so",
 									dte));
 						}

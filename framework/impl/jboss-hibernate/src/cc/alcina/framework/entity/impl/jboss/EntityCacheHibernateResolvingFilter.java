@@ -44,7 +44,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 
 	private InstantiateImplCallback instantiateImplCallback;
 
-	private boolean useRawMemCache;
+	private boolean useRawDomainStore;
 
 	public EntityCacheHibernateResolvingFilter() {
 	}
@@ -88,7 +88,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				Class persistentClass = lazy.getPersistentClass();
 				Object impl = getCache().get(persistentClass, (Long) id);
 				if (impl == null) {
-					if (useRawMemCache) {
+					if (useRawDomainStore) {
 						if (DomainStore.stores().databaseStore()
 								.isCachedTransactional(persistentClass)) {
 							impl = (T) Domain.find(persistentClass, (Long) id);
@@ -126,7 +126,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				if (cached != null) {
 					return (T) cached;
 				} else {
-					if (useRawMemCache) {
+					if (useRawDomainStore) {
 						if (DomainStore.stores().databaseStore()
 								.isCached(valueClass)) {
 							return (T) Domain.find(valueClass, hili.getId());
@@ -159,8 +159,8 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 		return true;
 	}
 
-	public boolean isUseRawMemCache() {
-		return this.useRawMemCache;
+	public boolean isUseRawDomainStore() {
+		return this.useRawDomainStore;
 	}
 
 	public void setCache(DetachedEntityCache cache) {
@@ -172,8 +172,8 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 		this.ensureInjected = ensureInjected;
 	}
 
-	public void setUseRawMemCache(boolean useMemCache) {
-		this.useRawMemCache = useMemCache;
+	public void setUseRawDomainStore(boolean useDomainStore) {
+		this.useRawDomainStore = useDomainStore;
 	}
 
 	@Override

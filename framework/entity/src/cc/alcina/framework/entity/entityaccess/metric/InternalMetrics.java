@@ -242,15 +242,15 @@ public class InternalMetrics {
 								DomainStoreInstrumentation instrumentation = DomainStore
 										.stores().databaseStore()
 										.instrumentation();
-								long activeMemcacheLockTime = instrumentation
-										.getActiveMemcacheLockTime(thread);
-								long memcacheWaitTime = instrumentation
-										.getMemcacheWaitTime(thread);
-								DomainStoreLockState memcacheState = instrumentation
-										.getMemcacheLockState(thread);
+								long activeDomainStoreLockTime = instrumentation
+										.getActiveDomainStoreLockTime(thread);
+								long domainStoreWaitTime = instrumentation
+										.getDomainStoreWaitTime(thread);
+								DomainStoreLockState domainStoreState = instrumentation
+										.getDomainStoreLockState(thread);
 								imd.addSlice(threadInfo, stackTrace,
-										activeMemcacheLockTime,
-										memcacheWaitTime, memcacheState);
+										activeDomainStoreLockTime,
+										domainStoreWaitTime, domainStoreState);
 							}
 						} catch (Exception e) {
 							throw new WrappedRuntimeException(e);

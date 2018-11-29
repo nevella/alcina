@@ -63,9 +63,6 @@ public class AppLifecycleManager implements RegistrableService {
 		refreshWriterServices();
 	}
 
-	public void ensureMemcacheUpdated() {
-		// TODO - jctl
-	}
 
 	public String getClusterRoleConfigFilePath() {
 		return this.clusterRoleConfigFilePath;

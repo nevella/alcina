@@ -22,16 +22,16 @@ public class ThreadHistory {
 	public int elidedElementCount;
 
 	public void addElement(ThreadInfo info, StackTraceElement[] stackTrace,
-			long activeMemcacheLockTime, long memcacheWaitTime,
-			DomainStoreLockState memcacheState, int maxStackLines,
+			long activeDomainStoreLockTime, long domainStoreWaitTime,
+			DomainStoreLockState domainStoreState, int maxStackLines,
 			int maxFrames) {
 		ThreadHistoryElement element = new ThreadHistoryElement();
 		elements.add(element);
 		element.date = new Date();
 		element.threadInfo = new ThreadInfoSer(info);
-		element.domainCacheWaitTime = memcacheWaitTime;
-		element.domainCacheLockTime = activeMemcacheLockTime;
-		element.lockState = memcacheState;
+		element.domainCacheWaitTime = domainStoreWaitTime;
+		element.domainCacheLockTime = activeDomainStoreLockTime;
+		element.lockState = domainStoreState;
 		element.threadInfo.stackTrace = Arrays.asList(stackTrace).stream()
 				.collect(Collectors.toList());
 		element.elideIfMoreLinesThan(maxStackLines);
