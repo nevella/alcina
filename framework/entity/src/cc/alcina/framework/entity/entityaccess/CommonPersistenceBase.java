@@ -1367,7 +1367,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				// only
 				// one of class (for
 				// optimisation) - but must if we need the results for mixing
-				// back into memcache
+				// back into domainStore
 			}
 			if (clazz.getAnnotation(Entity.class) != null) {
 				storageClass = clazz;

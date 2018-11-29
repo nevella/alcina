@@ -25,7 +25,7 @@ public class DomainStoreCriteria implements Criteria {
 
 	private Criteria entityManagerCriteria;
 
-	private DomainStoreSession memCacheSession;
+	private DomainStoreSession domainStoreSession;
 
 	JoinType joinType;
 
@@ -47,26 +47,26 @@ public class DomainStoreCriteria implements Criteria {
 
 	public DomainStoreCriteria(Class clazz, String alias,
 			Criteria entityManagerCriteria, JoinType joinType,
-			DomainStoreSession memCacheSession) {
+			DomainStoreSession domainStoreSession) {
 		this(clazz, alias, null, entityManagerCriteria, joinType,
-				memCacheSession);
+				domainStoreSession);
 	}
 
 	public DomainStoreCriteria(Class clazz, String alias,
-			Criteria entityManagerCriteria, DomainStoreSession memCacheSession) {
+			Criteria entityManagerCriteria, DomainStoreSession domainStoreSession) {
 		this(clazz, alias, entityManagerCriteria, JoinType.NONE,
-				memCacheSession);
+				domainStoreSession);
 	}
 
 	public DomainStoreCriteria(Class clazz, String alias, String associationPath,
 			Criteria entityManagerCriteria, JoinType joinType,
-			DomainStoreSession memCacheSession) {
+			DomainStoreSession domainStoreSession) {
 		this.clazz = clazz;
 		this.alias = alias;
 		this.associationPath = associationPath;
 		this.entityManagerCriteria = entityManagerCriteria;
 		this.joinType = joinType;
-		this.memCacheSession = memCacheSession;
+		this.domainStoreSession = domainStoreSession;
 	}
 
 	public Criteria add(Criterion arg0) {
@@ -146,7 +146,7 @@ public class DomainStoreCriteria implements Criteria {
 				: this.entityManagerCriteria.createCriteria(associationPath,
 						alias);
 		DomainStoreCriteria newCriteria = new DomainStoreCriteria(null, alias,
-				associationPath, subCriteria, arg2, memCacheSession);
+				associationPath, subCriteria, arg2, domainStoreSession);
 		subs.add(newCriteria);
 		return newCriteria;
 	}

@@ -152,7 +152,7 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 
     @Override
     // TODO - jade - for people with large memberships, this could be cached
-    // (memcache) - hardly worthwhile tho
+    // (domainStore) - hardly worthwhile tho
     protected void recursivePopulateGroupMemberships(Set<IGroup> members,
             Set<IGroup> processed) {
         super.recursivePopulateGroupMemberships(members, processed);

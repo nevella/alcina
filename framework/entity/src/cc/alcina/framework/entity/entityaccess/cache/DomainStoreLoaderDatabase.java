@@ -76,7 +76,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private UnsortedMultikeyMap<PropertyDescriptor> oneToOneRev;
 
-	private UnsortedMultikeyMap<PropertyDescriptor> memCacheColumnRev;
+	private UnsortedMultikeyMap<PropertyDescriptor> domainStoreColumnRev;
 
 	private Multimap<Class, List<ColumnDescriptor>> columnDescriptors;
 
@@ -94,7 +94,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private int originalTransactionIsolation;
 
-	private UnsortedMultikeyMap<Field> memcacheTransientFields = new UnsortedMultikeyMap<Field>(
+	private UnsortedMultikeyMap<Field> domainStoreTransientFields = new UnsortedMultikeyMap<Field>(
 			2);
 
 	// only access via synchronized code
@@ -176,10 +176,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		descriptors = new LinkedHashMap<Class, List<PdOperator>>();
 		manyToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		oneToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
-		memCacheColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
+		domainStoreColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
 		createWarmupConnections();
-		MetricLogging.get().start("memcache-all");
+		MetricLogging.get().start("domainStore-all");
 		// get non-many-many obj
 		store.threads.lock(true);
 		MetricLogging.get().start("tables");
@@ -330,7 +330,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		// single-threaded
 		warmupConnections.keySet().forEach(conn -> closeWarmupConnection(conn));
 		warmupExecutor = null;
-		MetricLogging.get().end("memcache-all");
+		MetricLogging.get().end("domainStore-all");
 	}
 
 	private void addColumnName(Class clazz, PropertyDescriptor pd,
@@ -403,11 +403,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		if (oneToOne != null && oneToOne.targetEntity() != void.class) {
 			return oneToOne.targetEntity();
 		}
-		DomainStoreDbColumn memCacheColumn = rm
+		DomainStoreDbColumn domainStoreColumn = rm
 				.getAnnotation(DomainStoreDbColumn.class);
-		if (memCacheColumn != null
-				&& memCacheColumn.targetEntity() != void.class) {
-			return memCacheColumn.targetEntity();
+		if (domainStoreColumn != null
+				&& domainStoreColumn.targetEntity() != void.class) {
+			return domainStoreColumn.targetEntity();
 		}
 		return rm.getReturnType();
 	}
@@ -455,7 +455,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 			if (rev == null) {
 				joinHandler = Registry.impl(JPAImplementation.class)
-						.getMemcacheJoinHandler(pd);
+						.getDomainStoreJoinHandler(pd);
 				if (joinHandler != null) {
 				} else {
 					throw new RuntimeException("No reverse key for " + pd);
@@ -628,7 +628,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				if (transientAnn != null) {
 					Field field = store.getField(clazz, pd.getName());
 					field.setAccessible(true);
-					memcacheTransientFields.put(clazz, field, field);
+					domainStoreTransientFields.put(clazz, field, field);
 				}
 				continue;
 			}
@@ -677,10 +677,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 			ManyToOne manyToOne = rm.getAnnotation(ManyToOne.class);
 			OneToOne oneToOne = rm.getAnnotation(OneToOne.class);
-			DomainStoreDbColumn memCacheColumn = rm
+			DomainStoreDbColumn domainStoreColumn = rm
 					.getAnnotation(DomainStoreDbColumn.class);
 			if (manyToOne != null || oneToOne != null
-					|| memCacheColumn != null) {
+					|| domainStoreColumn != null) {
 				Class joinEntityType = getTargetEntityType(rm);
 				if (!domainDescriptor.joinPropertyCached(joinEntityType)) {
 					System.out.format("  not loading: %s.%s -- %s\n",
@@ -693,9 +693,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							pd);
 					continue;
 				}
-				if (memCacheColumn != null) {
-					memCacheColumnRev.put(pd.getPropertyType(),
-							memCacheColumn.mappedBy(), pd);
+				if (domainStoreColumn != null) {
+					domainStoreColumnRev.put(pd.getPropertyType(),
+							domainStoreColumn.mappedBy(), pd);
 					continue;
 				}
 				addColumnName(clazz, pd,
@@ -841,7 +841,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 								targetPd.getWriteMethod().invoke(target,
 										new Object[] { item.source });
 							}
-							targetPd = pdOperator.resolveHelper.memCachePdRev;
+							targetPd = pdOperator.resolveHelper.domainStorePdRev;
 							if (targetPd != null && target != null) {
 								targetPd.getWriteMethod().invoke(target,
 										new Object[] { item.source });
@@ -944,7 +944,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 
 		class ResolveHelper {
-			public PropertyDescriptor memCachePdRev;
+			public PropertyDescriptor domainStorePdRev;
 
 			public PropertyDescriptor oneToOnePd;
 
@@ -959,7 +959,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					inJoinTables = joinTables.containsKey(PdOperator.this.pd);
 					targetPd = manyToOneRev.get(sourceClass, name);
 					oneToOnePd = oneToOneRev.get(sourceClass, name);
-					memCachePdRev = memCacheColumnRev.get(sourceClass, name);
+					domainStorePdRev = domainStoreColumnRev.get(sourceClass, name);
 					ensured = true;
 				}
 			}

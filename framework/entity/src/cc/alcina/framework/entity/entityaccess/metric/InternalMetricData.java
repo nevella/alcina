@@ -121,11 +121,11 @@ public class InternalMetricData {
 	}
 
 	void addSlice(ThreadInfo info, StackTraceElement[] stackTrace,
-			long activeMemcacheLockTime, long memcacheWaitTime,
-			DomainStoreLockState memcacheState) {
+			long activeDomainStoreLockTime, long domainStoreWaitTime,
+			DomainStoreLockState domainStoreLockState) {
 		int maxStackLines = type == InternalMetricTypeAlcina.health ? 100 : 300;
 		int maxFrames = type == InternalMetricTypeAlcina.health ? 2000 : 50;
-		threadHistory.addElement(info, stackTrace, activeMemcacheLockTime,
-				memcacheWaitTime, memcacheState, maxStackLines, maxFrames);
+		threadHistory.addElement(info, stackTrace, activeDomainStoreLockTime,
+				domainStoreWaitTime, domainStoreLockState, maxStackLines, maxFrames);
 	}
 }

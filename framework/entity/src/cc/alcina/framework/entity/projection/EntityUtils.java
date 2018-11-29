@@ -134,9 +134,9 @@ public class EntityUtils {
 	}
 
 	public <T> T detachedClone(T source, InstantiateImplCallback callback,
-			DetachedEntityCache cache, boolean useMemCache) {
+			DetachedEntityCache cache, boolean useRawDomainStore) {
 		try {
-			return projections(callback, cache, useMemCache).project(source);
+			return projections(callback, cache, useRawDomainStore).project(source);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -155,16 +155,16 @@ public class EntityUtils {
 		}
 	}
 
-	public <T> T detachedCloneWithMemCache(T source,
+	public <T> T detachedCloneWithDomainStore(T source,
 			InstantiateImplCallback callback) {
 		return detachedClone(source, callback, new DetachedEntityCache(), true);
 	}
 
 	public GraphProjections projections(InstantiateImplCallback callback,
-			DetachedEntityCache cache, boolean useMemCache) {
+			DetachedEntityCache cache, boolean useDomainStore) {
 		GraphProjectionDataFilter dataFilter = Registry
 				.impl(JPAImplementation.class)
-				.getResolvingFilter(callback, cache, useMemCache);
+				.getResolvingFilter(callback, cache, useDomainStore);
 		return GraphProjections.defaultProjections()
 				.fieldFilter(Registry.impl(PermissibleFieldFilter.class))
 				.dataFilter(dataFilter);

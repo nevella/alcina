@@ -271,7 +271,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		super.consume(evt);
 		if (getEntityManager() != null
 				&& evt.getTransformType() != TransformType.DELETE_OBJECT) {
-			// for use in IVersionable/MemCache
+			// for use in IVersionable/DomainStore
 			maybeEnsureSource(evt);
 		}
 	}

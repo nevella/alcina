@@ -52,7 +52,7 @@ public interface JPAImplementation {
 
 	public GraphProjectionDataFilter getResolvingFilter(
 			InstantiateImplCallback callback, DetachedEntityCache cache,
-			boolean useMemCache);
+			boolean useDomainStore);
 
 	public void interpretException(DomainTransformException exception);
 
@@ -69,7 +69,7 @@ public interface JPAImplementation {
 
 	String entityDebugString(Object entity);
 
-	DomainStoreJoinHandler getMemcacheJoinHandler(PropertyDescriptor pd);
+	DomainStoreJoinHandler getDomainStoreJoinHandler(PropertyDescriptor pd);
 
 	Set<HiliLocator> getSessionEntityLocators(EntityManager entityManager);
 

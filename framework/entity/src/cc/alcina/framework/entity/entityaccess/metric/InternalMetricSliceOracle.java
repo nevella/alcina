@@ -15,16 +15,16 @@ import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMe
 public class InternalMetricSliceOracle {
 	private List<Long> deadlockedThreadIds;
 
-	private Map<Thread, Long> activeMemcacheLockTimes;
+	private Map<Thread, Long> activeDomainStoreLockTimes;
 
-	private long sliceOnMemcacheLockTime = ResourceUtilities.getLong(
-			InternalMetricSliceOracle.class, "sliceOnMemcacheLockTime");
+	private long sliceOnDomainStoreLockTime = ResourceUtilities.getLong(
+			InternalMetricSliceOracle.class, "sliceOnDomainStoreLockTime");
 
 	public void beforeSlicePass(ThreadMXBean threadMxBean) {
 		long[] threadIdArray = threadMxBean.findDeadlockedThreads();
 		deadlockedThreadIds = CommonUtils.wrapLongArray(threadIdArray);
-		activeMemcacheLockTimes = DomainStore.stores().databaseStore()
-				.instrumentation().getActiveMemcacheLockTimes();
+		activeDomainStoreLockTimes = DomainStore.stores().databaseStore()
+				.instrumentation().getActiveDomainStoreLockTimes();
 	}
 
 	public boolean shouldCheckDeadlocks() {
@@ -38,9 +38,9 @@ public class InternalMetricSliceOracle {
 		if (deadlockedThreadIds.contains(imd.thread.getId())) {
 			return true;
 		}
-		if (activeMemcacheLockTimes.containsKey(imd.thread)
-				&& activeMemcacheLockTimes
-						.get(imd.thread) > sliceOnMemcacheLockTime) {
+		if (activeDomainStoreLockTimes.containsKey(imd.thread)
+				&& activeDomainStoreLockTimes
+						.get(imd.thread) > sliceOnDomainStoreLockTime) {
 			return true;
 		}
 		if (imd.type == InternalMetricTypeAlcina.client) {
