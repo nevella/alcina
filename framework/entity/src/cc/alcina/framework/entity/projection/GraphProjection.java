@@ -128,6 +128,9 @@ public class GraphProjection {
 
 	protected static final Object NULL_MARKER = new Object();
 
+	static GraphProjection fieldwiseEqualityProjection = new GraphProjection(
+			new AllFieldsFilter(), null);
+
 	public static String classSimpleName(Class clazz) {
 		return classSimpleName.get(clazz);
 	}
@@ -140,8 +143,7 @@ public class GraphProjection {
 			boolean oneLine, int maxLen, String... excludeFields) {
 		try {
 			List<String> fieldNames = new ArrayList<>();
-			GraphProjection graphProjection = new GraphProjection(
-					new AllFieldsFilter(), null);
+			GraphProjection graphProjection = fieldwiseEqualityProjection;
 			StringBuilder sb = new StringBuilder();
 			List<String> excludeList = Arrays.asList(excludeFields);
 			for (Field field : graphProjection
@@ -178,8 +180,7 @@ public class GraphProjection {
 	public static String generateFieldwiseEqualString(Class clazz)
 			throws Exception {
 		List<String> fieldNames = new ArrayList<>();
-		GraphProjection graphProjection = new GraphProjection(
-				new AllFieldsFilter(), null);
+		GraphProjection graphProjection = fieldwiseEqualityProjection;
 		for (Field field : graphProjection.getFieldsForClass(clazz)) {
 			String name = field.getName();
 			if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
@@ -290,11 +291,12 @@ public class GraphProjection {
 	}
 
 	public static boolean nonTransientFieldwiseEqual(Object o1, Object o2) {
+		if (o1.getClass() != o2.getClass()) {
+			return false;
+		}
 		try {
-			GraphProjection graphProjection = new GraphProjection(
-					new AllFieldsFilter(), null);
 			StringBuilder sb = new StringBuilder();
-			for (Field field : graphProjection
+			for (Field field : fieldwiseEqualityProjection
 					.getFieldsForClass(o1.getClass())) {
 				Object v1 = field.get(o1);
 				Object v2 = field.get(o2);
@@ -310,11 +312,9 @@ public class GraphProjection {
 
 	public static int nonTransientFieldwiseHash(Object o1) {
 		try {
-			GraphProjection graphProjection = new GraphProjection(
-					new AllFieldsFilter(), null);
 			StringBuilder sb = new StringBuilder();
 			int hash = 0;
-			for (Field field : graphProjection
+			for (Field field : fieldwiseEqualityProjection
 					.getFieldsForClass(o1.getClass())) {
 				Object v1 = field.get(o1);
 				hash ^= Objects.hashCode(v1);

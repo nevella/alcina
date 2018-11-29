@@ -15,7 +15,8 @@ public class IdLookup<T, H extends HasIdAndLocalId> extends DomainLookup<T, H> {
 	protected final transient Logger logger = LoggerFactory
 			.getLogger(getClass());
 
-	public IdLookup(DomainStoreLookupDescriptor descriptor, boolean concurrent) {
+	public IdLookup(DomainStoreLookupDescriptor descriptor,
+			boolean concurrent) {
 		super(descriptor, concurrent);
 	}
 
@@ -43,7 +44,7 @@ public class IdLookup<T, H extends HasIdAndLocalId> extends DomainLookup<T, H> {
 		if (set.size() > 1) {
 			// throw new IllegalArgumentException("");
 			logger.warn(CommonUtils.formatJ(
-					"Warning - duplicate mapping of an id lookup - %s: %s : %s\n",
+					"Warning - duplicate mapping of an id lookup - %s: %s : %s",
 					this, k1, set));
 			duplicateKeys.add(k1);
 		}

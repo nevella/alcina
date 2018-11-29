@@ -53,12 +53,12 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 
 	@Override
 	public String getDescription() {
-		return "convert a client log to a series of replay instructions";
+		return "analyse stack trace";
 	}
 
 	@Override
 	public String getUsage() {
-		return "rpi (will prompt for text, or copy from clipboard)";
+		return "stt (will prompt for text, or copy from clipboard)";
 	}
 
 	@Override
@@ -107,6 +107,8 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 					.compile("\"(.+?)\".+?os_prio=\\d+.+?(?: in (\\S+).+)?");
 			Pattern synchronizersPattern = Pattern
 					.compile("Locked ownable synchronizers:");
+			Pattern statePattern = Pattern
+					.compile("java.lang.Thread.State: .*");
 			for (String line : dump.split("\n")) {
 				line = Sx.ntrim(line);
 				if (line.isEmpty()) {
@@ -115,6 +117,7 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 				Matcher firstLineMatcher = firstLinePattern.matcher(line);
 				Matcher synchronizersMatcher = synchronizersPattern
 						.matcher(line);
+				Matcher stateMatcher = statePattern.matcher(line);
 				if (firstLineMatcher.matches()) {
 					state = State.first_thread_line;
 					currentThread = new TdModelThread();
@@ -123,6 +126,8 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 					currentThread.in = firstLineMatcher.group(2);
 				} else if (synchronizersMatcher.matches()) {
 					state = State.synchronizers;
+				} else if (stateMatcher.matches()) {
+					currentThread.stateLine = line;
 				} else {
 					switch (state) {
 					case outside_thread:
@@ -164,6 +169,8 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 	}
 
 	static class TdModelThread {
+		public String stateLine;
+
 		public List<String> lines = new ArrayList<>();
 
 		public List<String> synchronizers = new ArrayList<>();

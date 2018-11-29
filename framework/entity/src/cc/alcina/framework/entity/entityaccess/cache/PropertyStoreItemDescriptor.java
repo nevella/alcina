@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +26,8 @@ public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId>
 		createPropertyStore();
 	}
 
-	public void addRow(ResultSet rs) throws SQLException {
-		propertyStore.addRow(rs);
+	public void addRow(Object[] row) throws SQLException {
+		propertyStore.addRow(row);
 	}
 
 	@Override

@@ -114,6 +114,8 @@ public abstract class DevHelper {
 
 	protected String configPath;
 
+	private Logger actionLogger;
+
 	public DevHelper() {
 		super();
 		ServletLayerUtils.setLoggerLevels();
@@ -139,6 +141,30 @@ public abstract class DevHelper {
 		System.out.println(transforms);
 		TransformManager.get().clearTransforms();
 		return transforms;
+	}
+
+	public Logger getActionLogger() {
+		if (actionLogger == null) {
+			actionLogger = Logger.getLogger("action");
+			actionLogger.setLevel(Level.INFO);
+			Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
+			SafeConsoleAppender appender = new SafeConsoleAppender(layout);
+			messagingWriter = new MessagingWriter(System.out);
+			appender.setWriter(messagingWriter);
+			String standardAppenderName = "Standard_appender";
+			appender.setName(standardAppenderName);
+			// WriterAppender writerAppender = new WriterAccessWriterAppender();
+			// writerAppender.setWriter(new StringWriter());
+			// writerAppender.setLayout(layout);
+			// writerAppender.setName(
+			// WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY);
+			// if (logger.getAppender(standardAppenderName) == null) {
+			// logger.addAppender(appender);
+			// logger.addAppender(writerAppender);
+			// }
+			actionLogger.setAdditivity(true);
+		}
+		return actionLogger;
 	}
 
 	public Connection getConnDev() throws Exception {
@@ -203,7 +229,7 @@ public abstract class DevHelper {
 
 	public Logger getTestLogger(String name) {
 		if (logger == null) {
-			logger = Logger.getLogger("");
+			logger = Logger.getRootLogger();
 			logger.setLevel(Level.INFO);
 			Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
 			SafeConsoleAppender appender = new SafeConsoleAppender(layout);

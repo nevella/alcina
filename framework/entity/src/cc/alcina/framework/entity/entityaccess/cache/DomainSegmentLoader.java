@@ -3,8 +3,14 @@ package cc.alcina.framework.entity.entityaccess.cache;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.domain.IDomainSegmentLoader;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -12,22 +18,30 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.KryoUtils;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.ConnResults;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.ConnResultsReuse;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.LaterLookup.LaterItem;
+import cc.alcina.framework.entity.util.SimpleAtomModel.AtomKey;
 
-public abstract class DomainSegmentLoader implements IDomainSegmentLoader {
+public abstract class DomainSegmentLoader
+		implements IDomainSegmentLoader, ConnResultsReuse {
 	List<LaterItem> toResolve = new ArrayList<>();
 
-	protected Multiset<Class, Set<Long>> toLoadIds = new Multiset<>();
+	Multiset<Class, Set<Long>> toLoadIds = new Multiset<>();
 
 	List<DomainSegmentLoaderProperty> properties = new ArrayList<>();
 
 	// clazz,property,id,id
 	MultikeyMap<Long> queried = new UnsortedMultikeyMap<>(3);
 
+	Map<ConnRsKey, List<Object[]>> savedRsResults = new LinkedHashMap<>();
+
+	Logger logger = LoggerFactory.getLogger(getClass());
+
+	protected Multiset<Class, Set<Long>> initialToLoadIds = new Multiset<>();
+
 	public DomainSegmentLoader() {
-		if (isReload()) {
-			loadIds();
-		}
 	}
 
 	public synchronized Collection<Long> filterForQueried(Class clazz,
@@ -40,16 +54,39 @@ public abstract class DomainSegmentLoader implements IDomainSegmentLoader {
 
 	public abstract String getFilename();
 
-	public abstract void initialiseSeedLookup() throws Exception;
+	@Override
+	public Iterator<Object[]> getIterator(ConnResults connResults,
+			ConnResultsIterator itr) {
+		ConnRsKey key = new ConnRsKey(connResults);
+		synchronized (savedRsResults) {
+			List<Object[]> savedResults = savedRsResults.get(key);
+			if (savedResults == null) {
+				savedResults = new ArrayList<>();
+				connResults.cachedValues = savedResults;
+				savedRsResults.put(key, savedResults);
+				return itr;
+			} else {
+				DomainStore.stores().databaseStore().sqlLogger.debug("{}: {}",
+						connResults.clazz.getSimpleName(),
+						connResults.sqlFilter);
+				return savedResults.iterator();
+			}
+		}
+	}
+
+	public void initialise() throws Exception {
+		if (isReload()) {
+			loadSegmentData();
+		}
+		initialiseProperties();
+		if (!isReload()) {
+			initialiseSeedLookup0();
+			toLoadIds.addAll(initialToLoadIds);
+		}
+	}
 
 	public boolean isReload() {
 		return new File(getFilename()).exists();
-	}
-
-	public void loadIds() {
-		SavedIdsHolder holder = KryoUtils.deserializeFromFile(
-				new File(getFilename()), SavedIdsHolder.class);
-		toLoadIds = holder.toLoadIds;
 	}
 
 	public synchronized void notifyLater(LaterItem item, Class type, long id) {
@@ -60,14 +97,22 @@ public abstract class DomainSegmentLoader implements IDomainSegmentLoader {
 		toLoadIds.add(type, id);
 	}
 
+	@Override
+	public void onNext(ConnResults connResults, Object[] cached) {
+		connResults.cachedValues.add(cached);
+	}
+
 	public int pendingCount() {
 		return toLoadIds.allItems().size() + toResolve.size();
 	}
 
-	public void saveIds() {
-		SavedIdsHolder holder = new SavedIdsHolder();
-		toLoadIds.keySet().forEach(clazz -> holder.toLoadIds.addCollection(
-				clazz, DomainStore.stores().databaseStore().cache.keys(clazz)));
+	public void saveSegmentData() {
+		if (isReload()) {
+			return;
+		}
+		SavedSegmentDataHolder holder = new SavedSegmentDataHolder();
+		holder.initialToLoadIds = initialToLoadIds;
+		holder.savedRsResults = savedRsResults;
 		KryoUtils.serializeToFile(holder, new File(getFilename()));
 	}
 
@@ -78,8 +123,25 @@ public abstract class DomainSegmentLoader implements IDomainSegmentLoader {
 				target, type));
 	}
 
+	protected void initialiseProperties() {
+		// TODO Auto-generated method stub
+	}
+
+	protected abstract void initialiseSeedLookup0() throws Exception;
+
 	synchronized void ensureClass(Class clazz) {
 		toLoadIds.addCollection(clazz, new ArrayList<>());
+	}
+
+	/**
+	 * deprecated - use cached rs-s instead
+	 */
+	void loadSegmentData() {
+		logger.info("Loading segment data...");
+		SavedSegmentDataHolder holder = KryoUtils.deserializeFromFile(
+				new File(getFilename()), SavedSegmentDataHolder.class);
+		savedRsResults = holder.savedRsResults;
+		toLoadIds.addAll(holder.initialToLoadIds);
 	}
 
 	public static class DomainSegmentLoaderProperty {
@@ -116,7 +178,23 @@ public abstract class DomainSegmentLoader implements IDomainSegmentLoader {
 		TABLE_REF, STORE_REF, IGNORE
 	}
 
-	public static class SavedIdsHolder {
-		public Multiset<Class, Set<Long>> toLoadIds = new Multiset<>();
+	public static class SavedSegmentDataHolder {
+		public Map<ConnRsKey, List<Object[]>> savedRsResults = new LinkedHashMap<>();
+
+		public Multiset<Class, Set<Long>> initialToLoadIds = new Multiset<>();
+	}
+
+	static class ConnRsKey extends AtomKey {
+		String clazzName;
+
+		String sqlFilter;
+
+		public ConnRsKey() {
+		}
+
+		public ConnRsKey(ConnResults connResults) {
+			clazzName = connResults.clazz.getName();
+			sqlFilter = connResults.sqlFilter;
+		}
 	}
 }
