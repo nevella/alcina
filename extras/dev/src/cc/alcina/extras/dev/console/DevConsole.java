@@ -566,8 +566,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	protected void addDomainStoreAndFlowLoggers() {
-		EntityLayerUtils.setStandardAppender(
-				AlcinaLogUtils.getMetricLogger(DomainStore.class), Level.DEBUG);
+		// EntityLayerUtils.setStandardAppender(
+		// AlcinaLogUtils.getMetricLogger(DomainStore.class), Level.DEBUG);
 		// EntityLayerUtils.setStandardAppender(
 		// AlcinaLogUtils.getTaggedLogger(DomainStore.class, "sql"),
 		// Level.DEBUG);
@@ -576,6 +576,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	protected abstract void createDevHelper();
+
+	protected void filterLookup(List<Class> lookup) {
+	}
 
 	protected List<Class> getInitClasses() {
 		return new ArrayList<>(Arrays.asList(DevConsoleProperties.class,
@@ -593,6 +596,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		devHelper.initLightweightServices();
 		logger = devHelper.getTestLogger();
 		List<Class> lookup = Registry.get().lookup(DevConsoleCommand.class);
+		filterLookup(lookup);
 		for (Class clazz : lookup) {
 			DevConsoleCommand cmd = (DevConsoleCommand) clazz.newInstance();
 			cmd.setEnvironment(this);

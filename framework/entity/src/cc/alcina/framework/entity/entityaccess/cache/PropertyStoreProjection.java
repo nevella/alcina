@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import cc.alcina.framework.common.client.domain.BaseProjection;
@@ -22,5 +21,5 @@ public abstract class PropertyStoreProjection<T extends HasIdAndLocalId>
 
 	public abstract void initPropertyDescriptors();
 
-	public abstract void insert(ResultSet rs, long id) throws SQLException;
+	public abstract void insert(Object[] row, long id) throws SQLException;
 }

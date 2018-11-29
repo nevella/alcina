@@ -236,22 +236,15 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected abstract void initJPA();
 
 	protected void initLoggers() {
-		Logger logger = Logger
-				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
-		Layout l = new PatternLayout("%-5p [%c{1}] %m%n");
-		Appender a = new SafeConsoleAppender(l);
+		Logger logger = Logger.getRootLogger();
+		logger.removeAllAppenders();
+		Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
+		Appender appender = new SafeConsoleAppender(layout);
 		String mainLoggerAppenderName = AlcinaServerConfig.MAIN_LOGGER_APPENDER;
-		a.setName(mainLoggerAppenderName);
-		if (logger.getAppender(mainLoggerAppenderName) == null) {
-			logger.addAppender(a);
-		}
+		appender.setName(mainLoggerAppenderName);
+		logger.setLevel(Level.INFO);
 		logger.setAdditivity(true);
-		// and alcina
-		logger = Logger.getLogger("cc.alcina.framework");
-		if (logger.getAppender(mainLoggerAppenderName) == null) {
-			logger.addAppender(a);
-		}
-		logger.setAdditivity(true);
+		logger.addAppender(appender);
 		{
 			Logger metricLogger = Logger.getLogger(MetricLogging.class);
 			metricLogger.removeAllAppenders();
@@ -269,10 +262,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			Logger dbLogger = Logger.getLogger(databaseEventLoggerName);
 			dbLogger.removeAllAppenders();
 			dbLogger.setLevel(Level.INFO);
-			l = new PatternLayout("%-5p [%c{1}] %m%n");
-			a = new DbAppender(l);
-			a.setName(databaseEventLoggerName);
-			dbLogger.addAppender(a);
+			layout = new PatternLayout("%-5p [%c{1}] %m%n");
+			appender = new DbAppender(layout);
+			appender.setName(databaseEventLoggerName);
+			dbLogger.addAppender(appender);
 			EntityLayerObjects.get().setPersistentLogger(dbLogger);
 		}
 		System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");

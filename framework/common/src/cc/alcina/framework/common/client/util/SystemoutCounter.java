@@ -1,6 +1,10 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.function.Supplier;
+
 public class SystemoutCounter {
+	static Supplier<String> emptySupplier = () -> "";
+
 	private int dotsPerLine;
 
 	private int ticks;
@@ -39,25 +43,33 @@ public class SystemoutCounter {
 		return this.allTicks;
 	}
 
+	public double getFractionComplete() {
+		return (double) allTicks / (double) size;
+	}
+
 	public SystemoutCounter name(String name) {
 		this.name = name;
 		return this;
 	}
 
 	public void tick() {
-		tick("");
+		tick(emptySupplier);
 	}
 
 	public void tick(String message) {
+		tick(() -> message);
+	}
+
+	public void tick(Supplier<String> messageSupplier) {
 		++allTicks;
 		if (++tickCtr == ticks) {
 			tickCtr = 0;
 			System.out.print(".");
 			if (++dotCtr == dotsPerLine) {
 				dotCtr = 0;
+				String message = messageSupplier.get();
 				if (showPercentAtEndOfLine || name != null) {
-					message += CommonUtils.formatJ(" - %s%",
-							(dotsPerLine * (lines + 1) * ticks * 100 / size));
+					message += CommonUtils.formatJ(" - %s%", (allTicks / size));
 				}
 				if (name != null) {
 					message += " - " + name;

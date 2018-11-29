@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Set;
 import java.util.TreeSet;
@@ -55,8 +54,8 @@ public class PropertyStoreLookup<T, H extends HasIdAndLocalId>
 		this.pd = propertyStore.getDescriptor(descriptor.propertyPath);
 	}
 
-	public void insert(ResultSet rs, long id) throws SQLException {
-		long tgtIdx = rs.getLong(pd.idx + 1);
+	public void insert(Object[] row, long id) throws SQLException {
+		long tgtIdx = CommonUtils.lv((Long) row[pd.idx]);
 		if (tgtIdx != 0) {
 			ensure(tgtIdx).add(id);
 		}

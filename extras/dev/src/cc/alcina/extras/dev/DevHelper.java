@@ -203,7 +203,7 @@ public abstract class DevHelper {
 
 	public Logger getTestLogger(String name) {
 		if (logger == null) {
-			logger = Logger.getLogger("");
+			logger = Logger.getRootLogger();
 			logger.setLevel(Level.INFO);
 			Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
 			SafeConsoleAppender appender = new SafeConsoleAppender(layout);

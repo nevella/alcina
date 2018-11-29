@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.collections.PropertyPathFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.PdOperator;
 import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -55,18 +56,18 @@ public class PropertyStore {
 	public PropertyStore() {
 	}
 
-	public void addRow(ResultSet rs) throws SQLException {
-		long id = (long) rs.getLong(idIndex + 1);
+	public void addRow(Object[] row) throws SQLException {
+		long id = (long) row[idIndex];
 		int rowIdx = ensureRow(id);
 		for (int idx = 0; idx < pds.size(); idx++) {
 			PdOperator pd = pds.get(idx);
-			stores.get(pd.idx).putRsField(rs, idx + 1, rowIdx);
+			stores.get(pd.idx).putRowField(row, idx, rowIdx);
 		}
 		for (PropertyStoreLookup lookup : lookups) {
-			lookup.insert(rs, id);
+			lookup.insert(row, id);
 		}
 		for (PropertyStoreProjection projection : projections) {
-			projection.insert(rs, id);
+			projection.insert(row, id);
 		}
 	}
 
@@ -82,6 +83,13 @@ public class PropertyStore {
 		FieldStore store = stores.get(descriptor.idx);
 		return (List<T>) (List) rowOffsets().stream().filter(idx -> idx >= 0)
 				.map(idx -> store.getWrapped(idx)).collect(Collectors.toList());
+	}
+
+	public boolean getBooleanValue(PdOperator pd, int rowOffset) {
+		if (rowOffset != -1) {
+			return ((BooleanStore) stores.get(pd.idx)).get(rowOffset);
+		}
+		return false;
 	}
 
 	public PdOperator getDescriptor(String propertyPath) {
@@ -152,6 +160,10 @@ public class PropertyStore {
 
 	public void remove(long id) {
 		rowLookup.remove(id);
+	}
+
+	public void setBooleanValue(PdOperator pd, int rowIdx, boolean value) {
+		((BooleanStore) stores.get(pd.idx)).put(value, rowIdx);
 	}
 
 	public void setLongValue(PdOperator pd, int rowIdx, Long value) {
@@ -235,6 +247,11 @@ public class PropertyStore {
 		}
 
 		@Override
+		public void putRowField(Object[] row, int colIdx, int rowIdx) {
+			put(CommonUtils.bv((Boolean) row[colIdx]), rowIdx);
+		}
+
+		@Override
 		public void putRsField(ResultSet rs, int colIdx, int rowIdx)
 				throws SQLException {
 			put(rs.getBoolean(colIdx), rowIdx);
@@ -278,6 +295,11 @@ public class PropertyStore {
 		}
 
 		@Override
+		public void putRowField(Object[] row, int colIdx, int rowIdx) {
+			put((String) row[colIdx], rowIdx);
+		}
+
+		@Override
 		public void putRsField(ResultSet rs, int colIdx, int rowIdx)
 				throws SQLException {
 			put(rs.getString(colIdx), rowIdx);
@@ -316,6 +338,8 @@ public class PropertyStore {
 
 		public abstract void ensureCapacity(int size);
 
+		public abstract void putRowField(Object[] row, int idx, int rowIdx);
+
 		public abstract void putRsField(ResultSet rs, int colIdx, int rowIdx)
 				throws SQLException;
 
@@ -335,6 +359,11 @@ public class PropertyStore {
 			if (list.size() < capacity) {
 				list.add(0);
 			}
+		}
+
+		@Override
+		public void putRowField(Object[] row, int colIdx, int rowIdx) {
+			put(CommonUtils.lv((Long) row[colIdx]), rowIdx);
 		}
 
 		@Override
