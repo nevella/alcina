@@ -1102,6 +1102,7 @@ public abstract class TransformManager implements PropertyChangeListener,
                     dte.setUtcDate(new Date(0L));
                     dte.setObjectId(id);
                     dte.setObjectClass(clazz);
+                    dte.setObjectLocalId(localId);
                     if (value instanceof Timestamp) {
                         value = new Date(((Timestamp) value).getTime());
                     }
