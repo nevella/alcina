@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.util;
 
 import java.io.File;
+import java.util.Arrays;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
@@ -34,6 +35,15 @@ public class FsStringCache {
 		} else {
 		}
 		return ResourceUtilities.read(cacheFile);
+	}
+
+	public void invalidate(String path) {
+		getCacheFile(path).delete();
+	}
+
+	public void invalidateAll() {
+		Arrays.asList(getCacheFile("0").getParentFile().listFiles()).stream()
+				.filter(File::isFile).forEach(File::delete);
 	}
 
 	private File getCacheFile(String path) {
