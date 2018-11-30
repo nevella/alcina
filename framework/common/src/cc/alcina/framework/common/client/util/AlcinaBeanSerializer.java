@@ -20,6 +20,9 @@ public abstract class AlcinaBeanSerializer {
 	protected static final String LITERAL = "lit";
 
 	public static <V> V deserializeHolder(String serialized) {
+		if (serialized == null) {
+			return null;
+		}
 		Object object = Registry.impl(AlcinaBeanSerializer.class)
 				.deserialize(serialized);
 		if (object instanceof AlcinaBeanSerializer.SerializationHolder) {
@@ -31,6 +34,9 @@ public abstract class AlcinaBeanSerializer {
 	}
 
 	public static String serializeHolder(Object value) {
+		if (value == null) {
+			return null;
+		}
 		return Registry.impl(AlcinaBeanSerializer.class)
 				.serialize(new SerializationHolder(value));
 	}
@@ -83,7 +89,7 @@ public abstract class AlcinaBeanSerializer {
 	}
 
 	@Bean
-	public static class SerializationHolder extends BaseBindable{
+	public static class SerializationHolder extends BaseBindable {
 		private List listValue;
 
 		private Map mapValue;

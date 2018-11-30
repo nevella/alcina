@@ -1,7 +1,5 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -36,7 +34,7 @@ public class IntBackedPropertyStoreLookup<T, H extends HasIdAndLocalId>
 		}
 	}
 
-	private Int2ObjectOpenHashMap<IntArrayList> lookup = new Int2ObjectOpenHashMap<>();
+	private Int2ObjectOpenHashMap<IntArrayList> intBackedlookup = new Int2ObjectOpenHashMap<>();
 
 	public IntBackedPropertyStoreLookup(
 			PropertyStoreLookupDescriptor descriptor, PropertyStore store) {
@@ -49,12 +47,13 @@ public class IntBackedPropertyStoreLookup<T, H extends HasIdAndLocalId>
 			return null;
 		}
 		int id = ((Long) k1).intValue();
-		if (lookup.containsKey(id)) {
-			return convertArr(lookup.get(id));
+		if (intBackedlookup.containsKey(id)) {
+			return convertArr(intBackedlookup.get(id));
 		}
 		return null;
 	}
 
+	@Override
 	public void index(HasIdAndLocalId obj, boolean add) {
 		long tgtIdx = CommonUtils.lv((Long) pd.read(obj));
 		if (tgtIdx != 0) {
@@ -66,8 +65,9 @@ public class IntBackedPropertyStoreLookup<T, H extends HasIdAndLocalId>
 		}
 	}
 
-	public void insert(ResultSet rs, long id) throws SQLException {
-		long tgtIdx = rs.getLong(pd.idx + 1);
+	@Override
+	public void insert(Object[] row, long id) {
+		long tgtIdx = CommonUtils.lv((Long) row[pd.idx]);
 		if (tgtIdx != 0) {
 			ensure(tgtIdx).add((int) id);
 		}
@@ -79,12 +79,13 @@ public class IntBackedPropertyStoreLookup<T, H extends HasIdAndLocalId>
 
 	private IntArrayList ensure(long id) {
 		int iid = (int) id;
-		if (!lookup.containsKey(iid)) {
-			lookup.put(iid, new IntArrayList());
+		if (!intBackedlookup.containsKey(iid)) {
+			intBackedlookup.put(iid, new IntArrayList());
 		}
-		return lookup.get(iid);
+		return intBackedlookup.get(iid);
 	}
 
+	@Override
 	protected Object getValue(Long id) {
 		return propertyStore.getValue(pd, id);
 	}

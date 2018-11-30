@@ -400,7 +400,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		int pass = 0;
 		Set<Class> segmentClasses = new LinkedHashSet<>();
 		long start = System.currentTimeMillis();
-		while (segmentLoader.pendingCount() != 0 && pass++ < maxPasses) {
+		int lastTotal = 0;
+		int total = 0;
+		while ((segmentLoader.pendingCount() != 0 || lastTotal != total)
+				&& pass++ < maxPasses) {
 			Set<Entry<Class, Set<Long>>> perClass = segmentLoader.toLoadIds
 					.entrySet();
 			List<LaterLookup> laterLookups = new ArrayList<>();
@@ -446,6 +449,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							return null;
 						});
 					} else if (property.type == DomainSegmentPropertyType.STORE_REF) {
+						Set<Long> keys = store.cache.keys(property.source);
 						Collection<Long> ids = store.cache.fieldValues(
 								property.source, property.propertyName);
 						ids = segmentLoader.filterForQueried(property.target,
@@ -462,14 +466,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						});
 					}
 				}
+				invokeAllWithThrow(calls);
+				laterLookups.forEach(ll -> ll.resolve(segmentLoader));
 			}
-			invokeAllWithThrow(calls);
-			laterLookups.forEach(ll -> ll.resolve(segmentLoader));
+			lastTotal = total;
 			Integer size = segmentClasses.stream().collect(Collectors
 					.summingInt(clazz -> store.cache.keys(clazz).size()));
-			store.logger.debug(
-					"Load domain segment - pass {} - size {} - {} ms", pass,
-					size, System.currentTimeMillis() - start);
+			total = size;
+			store.logger.info("Load domain segment - pass {} - size {} - {} ms",
+					pass, size, System.currentTimeMillis() - start);
 			segmentClasses.forEach(clazz -> store.logger.debug("{}: {}",
 					clazz.getSimpleName(), store.cache.keys(clazz).size()));
 			segmentClasses.forEach(segmentLoader::ensureClass);
@@ -665,16 +670,19 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private void loadTableOrStoreSegment(Class clazz, String sqlFilter,
 			LaterLookup laterLookup) throws Exception {
-		DomainClassDescriptor<?> descriptor = domainDescriptor.perClass
-				.get(clazz);
-		MetricLogging.get().start(clazz.getSimpleName());
-		if (descriptor instanceof PropertyStoreItemDescriptor) {
-			PropertyStoreItemDescriptor propertyStoreItemDescriptor = (PropertyStoreItemDescriptor) descriptor;
-			loadPropertyStore(clazz, sqlFilter, propertyStoreItemDescriptor);
-		} else {
-			loadTable(clazz, sqlFilter, null, laterLookup);
+		synchronized (clazz) {
+			DomainClassDescriptor<?> descriptor = domainDescriptor.perClass
+					.get(clazz);
+			MetricLogging.get().start(clazz.getSimpleName());
+			if (descriptor instanceof PropertyStoreItemDescriptor) {
+				PropertyStoreItemDescriptor propertyStoreItemDescriptor = (PropertyStoreItemDescriptor) descriptor;
+				loadPropertyStore(clazz, sqlFilter,
+						propertyStoreItemDescriptor);
+			} else {
+				loadTable(clazz, sqlFilter, null, laterLookup);
+			}
+			MetricLogging.get().end(clazz.getSimpleName(), store.metricLogger);
 		}
-		MetricLogging.get().end(clazz.getSimpleName(), store.metricLogger);
 	}
 
 	private String longsToIdClause(Collection<Long> ids) {
@@ -1093,7 +1101,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					inJoinTables = joinTables.containsKey(PdOperator.this.pd);
 					targetPd = manyToOneRev.get(sourceClass, name);
 					oneToOnePd = oneToOneRev.get(sourceClass, name);
-					domainStorePdRev = domainStoreColumnRev.get(sourceClass, name);
+					domainStorePdRev = domainStoreColumnRev.get(sourceClass,
+							name);
 					ensured = true;
 				}
 			}

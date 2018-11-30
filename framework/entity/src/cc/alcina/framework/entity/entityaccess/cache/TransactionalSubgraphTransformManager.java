@@ -200,7 +200,11 @@ public class TransactionalSubgraphTransformManager
 	 */
 	protected <T extends HasIdAndLocalId> T
 			projectNonTransactional(T nonTransactional) throws Exception {
-		T newInstance = (T) nonTransactional.getClass().newInstance();
+		Class<? extends HasIdAndLocalId> clazz = nonTransactional.getClass();
+		if (DomainProxy.class.isAssignableFrom(clazz)) {
+			clazz = (Class<? extends HasIdAndLocalId>) clazz.getSuperclass();
+		}
+		T newInstance = (T) clazz.newInstance();
 		ResourceUtilities.copyBeanProperties(nonTransactional, newInstance,
 				SyntheticGetter.class, true);
 		return newInstance;

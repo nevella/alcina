@@ -17,6 +17,9 @@ public class IntBackedPropertyStore extends PropertyStore {
 	@Override
 	public Set<Long> getIds() {
 		LongOpenHashSet res = new LongOpenHashSet();
+		if (intRowLookup == null) {
+			return res;
+		}
 		IntIterator itr = intRowLookup.keySet().iterator();
 		while (itr.hasNext()) {
 			res.add((long) itr.nextInt());

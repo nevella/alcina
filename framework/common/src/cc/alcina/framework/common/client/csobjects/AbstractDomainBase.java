@@ -265,6 +265,10 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 			return Domain.isDomainVersion(AbstractDomainBase.this);
 		}
 
+		public boolean isRegistered() {
+			return TransformManager.get().isRegistered(AbstractDomainBase.this);
+		}
+
 		public T register() {
 			TransformManager.get()
 					.registerDomainObject(AbstractDomainBase.this);
