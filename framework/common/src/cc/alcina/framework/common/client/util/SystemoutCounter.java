@@ -52,6 +52,12 @@ public class SystemoutCounter {
 		return this;
 	}
 
+	public void newLine() {
+		System.out.println();
+		tickCtr = 0;
+		dotCtr = 0;
+	}
+
 	public void tick() {
 		tick(emptySupplier);
 	}
@@ -69,7 +75,8 @@ public class SystemoutCounter {
 				dotCtr = 0;
 				String message = messageSupplier.get();
 				if (showPercentAtEndOfLine || name != null) {
-					message += CommonUtils.formatJ(" - %s%", (allTicks / size));
+					message += CommonUtils.formatJ(" - %s%",
+							(allTicks * 100) / size);
 				}
 				if (name != null) {
 					message += " - " + name;
@@ -78,11 +85,5 @@ public class SystemoutCounter {
 				lines++;
 			}
 		}
-	}
-
-	public void newLine() {
-		System.out.println();
-		tickCtr=0;
-		dotCtr=0;
 	}
 }
