@@ -87,6 +87,7 @@ public class EntityUtils {
 			orderPositions.put(l, i);
 		}
 		Comparator<T> cmp = new Comparator<T>() {
+			@Override
 			public int compare(T o1, T o2) {
 				return orderPositions.get(o1.getId())
 						.compareTo(orderPositions.get(o2.getId()));
@@ -136,7 +137,8 @@ public class EntityUtils {
 	public <T> T detachedClone(T source, InstantiateImplCallback callback,
 			DetachedEntityCache cache, boolean useRawDomainStore) {
 		try {
-			return projections(callback, cache, useRawDomainStore).project(source);
+			return projections(callback, cache, useRawDomainStore)
+					.project(source);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -161,10 +163,10 @@ public class EntityUtils {
 	}
 
 	public GraphProjections projections(InstantiateImplCallback callback,
-			DetachedEntityCache cache, boolean useDomainStore) {
+			DetachedEntityCache cache, boolean useRawDomainStore) {
 		GraphProjectionDataFilter dataFilter = Registry
 				.impl(JPAImplementation.class)
-				.getResolvingFilter(callback, cache, useDomainStore);
+				.getResolvingFilter(callback, cache, useRawDomainStore);
 		return GraphProjections.defaultProjections()
 				.fieldFilter(Registry.impl(PermissibleFieldFilter.class))
 				.dataFilter(dataFilter);

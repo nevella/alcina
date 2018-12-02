@@ -42,6 +42,9 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.BaseProjection;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
@@ -73,6 +76,8 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.C
 import cc.alcina.framework.entity.projection.EntityUtils;
 
 public class DomainStoreLoaderDatabase implements DomainStoreLoader {
+	Logger logger = LoggerFactory.getLogger(getClass());
+
 	private Map<PropertyDescriptor, JoinTable> joinTables;
 
 	private Map<Class, List<PdOperator>> descriptors;
@@ -212,7 +217,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		MetricLogging.get().end("xrefs");
 		warmupLaterLookups.clear();
 		// lazy tables, load a segment (for large db dev work)
-		if (domainDescriptor.domainSegmentLoader != null) {
+		if (domainDescriptor.getDomainSegmentLoader() != null) {
 			MetricLogging.get().start("domain-segment");
 			loadDomainSegment();
 			MetricLogging.get().end("domain-segment");
@@ -326,6 +331,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				conn.setTransactionIsolation(
 						Connection.TRANSACTION_SERIALIZABLE);
 			}
+			logger.debug("Opening new warmup connection {}", conn);
 			warmupConnections.put(conn, 0);
 		}
 	}
@@ -343,7 +349,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}, clazz, pd);
 	}
 
-	private Connection getConn() {
+	private Connection getConnection() {
 		if (store.initialising) {
 			try {
 				return getWarmupConnection();
@@ -356,6 +362,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				synchronized (postInitConnectionLock) {
 					if (postInitConn == null) {
 						postInitConn = dataSource.getConnection();
+						logger.debug("Opened new db connection (post-init) {}",
+								postInitConn);
 						postInitConn.setAutoCommit(true);
 						postInitConn.setReadOnly(true);
 					}
@@ -394,7 +402,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private void loadDomainSegment() throws Exception {
 		List<Callable> calls = new ArrayList<Callable>();
-		DomainSegmentLoader segmentLoader = (DomainSegmentLoader) domainDescriptor.domainSegmentLoader;
+		DomainSegmentLoader segmentLoader = (DomainSegmentLoader) domainDescriptor
+				.getDomainSegmentLoader();
 		segmentLoader.initialise();
 		int maxPasses = 30;
 		int pass = 0;
@@ -530,7 +539,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				}
 			}
 		}
-		Connection conn = getConn();
+		Connection conn = getConnection();
 		try {
 			String joinTableName = joinTable.name();
 			MetricLogging.get().start(joinTableName);
@@ -575,7 +584,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	private void loadPropertyStore(Class clazz, String sqlFilter,
 			PropertyStoreItemDescriptor propertyStoreItemDescriptor)
 			throws SQLException {
-		Connection conn = getConn();
+		Connection conn = getConnection();
 		try {
 			ConnResults connResults = new ConnResults(conn, clazz,
 					columnDescriptors.get(clazz), sqlFilter);
@@ -623,7 +632,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	private List<HasIdAndLocalId> loadTable0(Class clazz, String sqlFilter,
 			ClassIdLock sublock, LaterLookup laterLookup,
 			boolean ignoreIfExisting) throws Exception {
-		Connection conn = getConn();
+		Connection conn = getConnection();
 		List<HasIdAndLocalId> loaded;
 		try {
 			Iterable<Object[]> results = getData(conn, clazz, sqlFilter);
@@ -803,10 +812,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			if (store.initialising) {
 				releaseWarmupConnection(conn);
 			} else {
-				if (postInitConn != null) {
-					postInitConn.commit();
-					postInitConn.setAutoCommit(true);
-				}
 				postInitConnectionLock.unlock();
 			}
 		} catch (Exception e) {
@@ -859,6 +864,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			conn.setAutoCommit(true);
 			conn.setReadOnly(false);
 			conn.setTransactionIsolation(originalTransactionIsolation);
+			logger.debug("Closing warmup db connection (post-init) {}", conn);
 			conn.close();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -1273,9 +1279,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		List<Object[]> cachedValues;
 
-		ConnResultsReuse rsReuse = domainDescriptor.domainSegmentLoader == null
-				? new ConnResultsReusePassthrough()
-				: (ConnResultsReuse) domainDescriptor.domainSegmentLoader;
+		ConnResultsReuse rsReuse = domainDescriptor
+				.getDomainSegmentLoader() == null
+						? new ConnResultsReusePassthrough()
+						: (ConnResultsReuse) domainDescriptor
+								.getDomainSegmentLoader();
 
 		public ConnResults(Connection conn, Class clazz,
 				List<ColumnDescriptor> columnDescriptors, String sqlFilter) {

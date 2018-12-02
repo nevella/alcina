@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.entity.projection.EntityUtils.MultiIdentityMap;
@@ -51,7 +52,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 
 	IdentityHashMap<Object, StatsItem> statsItemLookup = new IdentityHashMap<Object, StatsFilter.StatsItem>();
 
-	Map<Class, Multiset<String, Set>> ownershipStats = new LinkedHashMap<Class, StatsFilter.Multiset<String, Set>>();
+	Map<Class, Multiset<String, Set>> ownershipStats = new LinkedHashMap<Class, Multiset<String, Set>>();
 
 	CountingMap<Class> nullInstanceMap = new CountingMap<Class>();
 
@@ -351,35 +352,6 @@ public class StatsFilter extends CollectionProjectionFilter {
 			}
 		}
 		System.out.println("\n----------\n\n");
-	}
-
-	public class Multiset<K, V extends Set> extends LinkedHashMap<K, V> {
-		public boolean add(K key, Object item) {
-			if (!containsKey(key)) {
-				put(key, (V) new LinkedHashSet());
-			}
-			return get(key).add(item);
-		}
-
-		public void addCollection(K key, Collection collection) {
-			if (!containsKey(key)) {
-				put(key, (V) new LinkedHashSet());
-			}
-			get(key).addAll(collection);
-		}
-
-		public V getAndEnsure(K key) {
-			if (!containsKey(key)) {
-				put(key, (V) new LinkedHashSet());
-			}
-			return get(key);
-		}
-
-		public void subtract(K key, Object item) {
-			if (containsKey(key)) {
-				get(key).remove(item);
-			}
-		}
 	}
 
 	public enum StatsFilterSortKey {

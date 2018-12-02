@@ -33,13 +33,13 @@ public interface HasEquivalence<T> {
 			this.o = referent;
 		}
 
+		public T getReferent() {
+			return o;
+		}
+
 		@Override
 		public String toString() {
 			return o.toString();
-		}
-
-		public T getReferent() {
-			return o;
 		}
 	}
 
@@ -133,10 +133,8 @@ public interface HasEquivalence<T> {
 		}
 
 		public static <C extends HasEquivalence> Predicate<C>
-				deDuplicateFilter(Collection<C> values) {
-			Set<C> duplicates = listDuplicates(values).stream()
-					.collect(Collectors.toSet());
-			return v -> !duplicates.contains(v);
+				deDuplicateFilter() {
+			return new DeduplicatePredicate<>();
 		}
 
 		public static <T extends HasEquivalence> boolean
@@ -359,6 +357,21 @@ public interface HasEquivalence<T> {
 			result.secondOnly.forEach(
 					v -> v.right = correspondenceMapper.apply(v.o, c2));
 			return result;
+		}
+
+		public static class DeduplicatePredicate<C extends HasEquivalence>
+				implements Predicate<C> {
+			List<C> seen = new ArrayList<>();
+
+			@Override
+			public boolean test(C t) {
+				if (seen.stream().anyMatch(c -> c.equivalentTo(t))) {
+					return false;
+				} else {
+					seen.add(t);
+					return true;
+				}
+			}
 		}
 	}
 

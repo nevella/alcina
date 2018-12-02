@@ -26,7 +26,7 @@ public abstract class DomainDescriptor {
 					task -> task.forClazz() == null || task.forClazz() == clazz)
 					.collect(Collectors.toList()));
 
-	public IDomainSegmentLoader domainSegmentLoader;
+	protected IDomainSegmentLoader domainSegmentLoader;
 
 	public DomainDescriptor() {
 	}
@@ -59,6 +59,10 @@ public abstract class DomainDescriptor {
 
 	public boolean customFilterPostProcess(DomainTransformEvent dte) {
 		return true;
+	}
+
+	public IDomainSegmentLoader getDomainSegmentLoader() {
+		return domainSegmentLoader;
 	}
 
 	public abstract Class<? extends IUser> getIUserClass();

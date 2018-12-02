@@ -111,9 +111,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	public static final String CONTEXT_NO_TRUNCATE = DevConsole.class.getName()
 			+ ".CONTEXT_NO_TRUNCATE";
 
-	public static final String CONTEXT_DOMAIN_SEGMENT_LOADER = DevConsole.class
-			.getName() + ".CONTEXT_DOMAIN_SEGMENT_LOADER";
-
 	static DevConsole instance;
 
 	public static DevConsole getInstance() {

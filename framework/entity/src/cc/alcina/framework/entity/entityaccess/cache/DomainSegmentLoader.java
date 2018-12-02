@@ -76,7 +76,12 @@ public abstract class DomainSegmentLoader
 
 	public void initialise() throws Exception {
 		if (isReload()) {
-			loadSegmentData();
+			try {
+				loadSegmentData();
+			} catch (Exception e) {
+				e.printStackTrace();
+				new File(getFilename()).delete();
+			}
 		}
 		initialiseProperties();
 		if (!isReload()) {
@@ -133,11 +138,8 @@ public abstract class DomainSegmentLoader
 		toLoadIds.addCollection(clazz, new ArrayList<>());
 	}
 
-	/**
-	 * deprecated - use cached rs-s instead
-	 */
 	void loadSegmentData() {
-		logger.info("Loading segment data...");
+		logger.info("Loading segment data...\n\t{}", getFilename());
 		SavedSegmentDataHolder holder = KryoUtils.deserializeFromFile(
 				new File(getFilename()), SavedSegmentDataHolder.class);
 		savedRsResults = holder.savedRsResults;

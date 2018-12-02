@@ -194,16 +194,6 @@ public class JPAHibernateImpl implements JPAImplementation {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> T getInstantiatedObject(T object) {
-		if (object instanceof HibernateProxy) {
-			return (T) ((HibernateProxy) object).getHibernateLazyInitializer()
-					.getImplementation();
-		}
-		return object;
-	}
-
-	@Override
 	public DomainStoreJoinHandler
 			getDomainStoreJoinHandler(final PropertyDescriptor pd) {
 		final ElementCollection elementCollection = pd.getReadMethod()
@@ -235,12 +225,22 @@ public class JPAHibernateImpl implements JPAImplementation {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
+	public <T> T getInstantiatedObject(T object) {
+		if (object instanceof HibernateProxy) {
+			return (T) ((HibernateProxy) object).getHibernateLazyInitializer()
+					.getImplementation();
+		}
+		return object;
+	}
+
+	@Override
 	public GraphProjectionDataFilter getResolvingFilter(
 			InstantiateImplCallback callback, DetachedEntityCache cache,
-			boolean useDomainStore) {
+			boolean useRawDomainStore) {
 		EntityCacheHibernateResolvingFilter filter = new EntityCacheHibernateResolvingFilter(
 				callback);
-		filter.setUseRawDomainStore(useDomainStore);
+		filter.setUseRawDomainStore(useRawDomainStore);
 		if (cache != null) {
 			filter.setCache(cache);
 		}

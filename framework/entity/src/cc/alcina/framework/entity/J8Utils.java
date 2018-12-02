@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 public class J8Utils {
@@ -56,6 +57,11 @@ public class J8Utils {
 		return new ToMultimapCollector(keyMapper, t -> t, Multimap::new);
 	}
 
+	public static <T, K, U> Collector<T, ?, Multiset<K, Set<U>>>
+			toKeyMultiset(Function<? super T, ? extends K> keyMapper) {
+		return new ToMultisetCollector(keyMapper, t -> t, Multiset::new);
+	}
+
 	public static <T> Collector<T, ?, Set<T>> toLinkedHashSet() {
 		return new ToLinkedHashSetCollector<>();
 	}
@@ -68,6 +74,12 @@ public class J8Utils {
 			Function<? super T, ? extends K> keyMapper,
 			Function<? super T, ? extends U> valueMapper) {
 		return new ToMultimapCollector(keyMapper, valueMapper, Multimap::new);
+	}
+
+	public static <T, K, U> Collector<T, ?, Multiset<K, Set<U>>> toMultiset(
+			Function<? super T, ? extends K> keyMapper,
+			Function<? super T, ? extends U> valueMapper) {
+		return new ToMultisetCollector(keyMapper, valueMapper, Multiset::new);
 	}
 
 	public static <T, V> Collector<T, ?, UnsortedMultikeyMap<V>>
@@ -303,6 +315,54 @@ public class J8Utils {
 
 		@Override
 		public Supplier<Multimap<K, List<U>>> supplier() {
+			return supplier;
+		}
+	}
+
+	private static class ToMultisetCollector<T, K, U> implements
+			java.util.stream.Collector<T, Multiset<K, Set<U>>, Multiset<K, Set<U>>> {
+		private Function<? super T, ? extends K> keyMapper;
+
+		private Function<? super T, ? extends U> valueMapper;
+
+		private Supplier<Multiset<K, Set<U>>> supplier;
+
+		public ToMultisetCollector(Function<? super T, ? extends K> keyMapper,
+				Function<? super T, ? extends U> valueMapper,
+				Supplier<Multiset<K, Set<U>>> supplier) {
+			this.keyMapper = keyMapper;
+			this.valueMapper = valueMapper;
+			this.supplier = supplier;
+		}
+
+		@Override
+		public BiConsumer<Multiset<K, Set<U>>, T> accumulator() {
+			return (map, value) -> map.add(keyMapper.apply(value),
+					valueMapper.apply(value));
+		}
+
+		@Override
+		public Set<java.util.stream.Collector.Characteristics>
+				characteristics() {
+			return EnumSet.of(Characteristics.UNORDERED,
+					Characteristics.IDENTITY_FINISH);
+		}
+
+		@Override
+		public BinaryOperator<Multiset<K, Set<U>>> combiner() {
+			return (left, right) -> {
+				left.addAll(right);
+				return left;
+			};
+		}
+
+		@Override
+		public Function<Multiset<K, Set<U>>, Multiset<K, Set<U>>> finisher() {
+			return null;
+		}
+
+		@Override
+		public Supplier<Multiset<K, Set<U>>> supplier() {
 			return supplier;
 		}
 	}

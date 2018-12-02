@@ -79,4 +79,10 @@ public class SystemoutCounter {
 			}
 		}
 	}
+
+	public void newLine() {
+		System.out.println();
+		tickCtr=0;
+		dotCtr=0;
+	}
 }

@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.servlet;
+package cc.alcina.framework.entity.util;
 
 import java.io.File;
 

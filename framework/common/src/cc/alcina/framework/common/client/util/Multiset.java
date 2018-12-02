@@ -129,6 +129,12 @@ public class Multiset<K, V extends Set> implements Serializable {
 		return this.map.size();
 	}
 
+	public void subtract(K key, Object item) {
+		if (containsKey(key)) {
+			get(key).remove(item);
+		}
+	}
+
 	@Override
 	public String toString() {
 		return isEmpty() ? "{}" : CommonUtils.join(entrySet(), "\n");

@@ -172,8 +172,8 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 		this.ensureInjected = ensureInjected;
 	}
 
-	public void setUseRawDomainStore(boolean useDomainStore) {
-		this.useRawDomainStore = useDomainStore;
+	public void setUseRawDomainStore(boolean useRawDomainStore) {
+		this.useRawDomainStore = useRawDomainStore;
 	}
 
 	@Override

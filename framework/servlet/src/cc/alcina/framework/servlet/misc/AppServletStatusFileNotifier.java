@@ -3,7 +3,7 @@ package cc.alcina.framework.servlet.misc;
 import java.io.File;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.servlet.servlet.DataFolderProvider;
+import cc.alcina.framework.entity.util.DataFolderProvider;
 
 public class AppServletStatusFileNotifier {
 	File dataFolder = DataFolderProvider.get().getDataFolder();
