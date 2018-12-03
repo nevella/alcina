@@ -149,9 +149,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initBootstrapRegistry();
 			new AppServletStatusFileNotifier().deploying();
 			initNames();
+			loadCustomProperties();
 			initDevConsoleAndWebApp();
 			initJPA();
-			loadCustomProperties();
 			initServices();
 			initEntityLayer();
 			createServletTransformClientInstance();
