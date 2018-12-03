@@ -36,6 +36,8 @@ import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import org.slf4j.Logger;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
@@ -555,7 +557,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public List<DomainTransformRequestPersistent>
 			getPersistentTransformRequests(long fromId, long toId,
 					Collection<Long> specificIds, boolean mostRecentOnly,
-					boolean populateTransformSourceObjects) {
+					boolean populateTransformSourceObjects, Logger logger) {
 		boolean logTransformReadMetrics = ResourceUtilities
 				.is(CommonPersistenceBase.class, "logTransformReadMetrics");
 		Query query = null;
@@ -578,7 +580,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			instance.setId(id);
 			dtrps.add(instance);
 			if (logTransformReadMetrics) {
-				dc.end("dtrp-get-most-recent - %s ms");
+				dc.endWithLogger(logger, "dtrp-get-most-recent - %s ms");
 			}
 		} else {
 			DurationCounter dc = new DurationCounter();
@@ -598,7 +600,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			dtrps = new ArrayList<DomainTransformRequestPersistent>(
 					query.getResultList());
 			if (logTransformReadMetrics) {
-				dc.end("dtrp-get-dtrps - %s ms");
+				dc.endWithLogger(logger, "dtrp-get-dtrps - %s ms");
 			}
 		}
 		dtrps.stream().forEach(dtrp -> dtrp.getEvents()
@@ -615,7 +617,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						.get(event.getObjectClass(), event.getObjectId()));
 			}
 			if (logTransformReadMetrics) {
-				dc.end("populate transform source events - %s ms");
+				dc.endWithLogger(logger,
+						"populate transform source events - %s ms");
 			}
 		}
 		DetachedEntityCache cache = new DetachedEntityCache();

@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.domaintransform.event;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,8 +53,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		return Registry.impl(DomainTransformPersistenceQueue.class);
 	}
 
-	final Logger logger = LoggerFactory
-			.getLogger(MethodHandles.lookup().lookupClass());
+	final Logger logger = LoggerFactory.getLogger(getClass());
 
 	Set<Long> firing = new LinkedHashSet<>();
 
@@ -74,7 +72,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 
 	CountDownLatch waiterLatch;
 
-	private Thread eventQueue;
+	private FireEventsThread eventQueue;
 
 	@Override
 	public void appShutdown() {
@@ -101,58 +99,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	}
 
 	public void startEventQueue() {
-		eventQueue = new Thread() {
-			@Override
-			public void run() {
-				setName("DomainTransformPersistenceQueue-fire");
-				while (!closed.get()) {
-					try {
-						Long id = null;
-						synchronized (toFire) {
-							// double-check
-							if (closed.get()) {
-								break;
-							}
-							if (toFire.isEmpty()) {
-								toFire.wait();
-							}
-							if (!toFire.isEmpty()) {
-								id = toFire.pop();
-							}
-						}
-						if (id != null && !closed.get()) {
-							try {
-								ThreadedPermissionsManager.cast()
-										.pushSystemUser();
-								publishTransformEvent(id);
-							} finally {
-								ThreadedPermissionsManager.cast()
-										.popSystemUser();
-							}
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-
-			protected void publishTransformEvent(Long id) {
-				List<DomainTransformRequestPersistent> requests = runWithDisabledObjectPermissions(
-						() -> getCommonPersistence()
-								.getPersistentTransformRequests(0, 0,
-										Collections.singletonList(id), false,
-										true));
-				DomainTransformRequestPersistent request = CommonUtils
-						.first(requests);
-				if (request != null) {
-					DomainTransformPersistenceEvent event = createPersistenceEventFromPersistedRequest(
-							request);
-					event.ensureTransformsValidForVm();
-					Registry.impl(DomainTransformPersistenceEvents.class)
-							.fireDomainTransformPersistenceEvent(event);
-				}
-			}
-		};
+		eventQueue = new FireEventsThread();
 		eventQueue.start();
 	}
 
@@ -199,6 +146,10 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		DomainTransformPersistenceEvent persistenceEvent = new DomainTransformPersistenceEvent(
 				persistenceToken, wrapper, false);
 		return persistenceEvent;
+	}
+
+	private Logger getLogger(boolean localToVm) {
+		return localToVm ? logger : eventQueue.fireEventThreadLogger;
 	}
 
 	private <T> T
@@ -252,6 +203,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (persistedRequestIds.isEmpty()) {
 			return;
 		}
+		Logger logger = getLogger(event.isLocalToVm());
 		logger.info("firing - {} - {} - range {}",
 				Ax.friendly(event.getPersistenceEventType()),
 				event.getTransformPersistenceToken().getRequest().shortId(),
@@ -270,6 +222,58 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	void transformRequestQueuedLocal(long id) {
 		synchronized (queueModificationLock) {
 			firedOrQueued.add(id);
+		}
+	}
+
+	public class FireEventsThread extends Thread {
+		Logger fireEventThreadLogger = LoggerFactory.getLogger(getClass());
+
+		@Override
+		public void run() {
+			setName("DomainTransformPersistenceQueue-fire");
+			while (!closed.get()) {
+				try {
+					Long id = null;
+					synchronized (toFire) {
+						// double-check
+						if (closed.get()) {
+							break;
+						}
+						if (toFire.isEmpty()) {
+							toFire.wait();
+						}
+						if (!toFire.isEmpty()) {
+							id = toFire.pop();
+						}
+					}
+					if (id != null && !closed.get()) {
+						try {
+							ThreadedPermissionsManager.cast().pushSystemUser();
+							publishTransformEvent(id);
+						} finally {
+							ThreadedPermissionsManager.cast().popSystemUser();
+						}
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		protected void publishTransformEvent(Long id) {
+			List<DomainTransformRequestPersistent> requests = runWithDisabledObjectPermissions(
+					() -> getCommonPersistence().getPersistentTransformRequests(
+							0, 0, Collections.singletonList(id), false, true,
+							fireEventThreadLogger));
+			DomainTransformRequestPersistent request = CommonUtils
+					.first(requests);
+			if (request != null) {
+				DomainTransformPersistenceEvent event = createPersistenceEventFromPersistedRequest(
+						request);
+				event.ensureTransformsValidForVm();
+				Registry.impl(DomainTransformPersistenceEvents.class)
+						.fireDomainTransformPersistenceEvent(event);
+			}
 		}
 	}
 

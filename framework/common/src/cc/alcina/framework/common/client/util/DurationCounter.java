@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.util;
 
+import org.slf4j.Logger;
+
 public class DurationCounter {
 	private long t1;
 
@@ -8,6 +10,10 @@ public class DurationCounter {
 	}
 
 	public void end(String message, Object... args) {
+		endWithLogger(null, message, args);
+	}
+
+	public void endWithLogger(Logger logger, String message, Object... args) {
 		Object[] iArgs = new Object[] { System.currentTimeMillis() - t1 };
 		if (args.length == 0) {
 		} else {
@@ -16,6 +22,11 @@ public class DurationCounter {
 			t[t.length - 1] = iArgs[0];
 			iArgs = t;
 		}
-		System.out.println(CommonUtils.formatJ(message, iArgs));
+		String formatted = Ax.format(message, iArgs);
+		if (logger == null) {
+			System.out.println(formatted);
+		} else {
+			logger.debug(formatted);
+		}
 	}
 }
