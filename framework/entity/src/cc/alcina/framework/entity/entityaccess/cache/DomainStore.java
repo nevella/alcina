@@ -481,8 +481,8 @@ public class DomainStore implements RegistrableService, IDomainStore {
 					if (transientAnn != null) {
 						Field field = getField(clazz, pd.getName());
 						field.setAccessible(true);
-						domainStoreTransientProperties.put(clazz, field.getName(),
-								transientAnn);
+						domainStoreTransientProperties.put(clazz,
+								field.getName(), transientAnn);
 					}
 					continue;
 				}
@@ -813,7 +813,7 @@ public class DomainStore implements RegistrableService, IDomainStore {
 					- postProcessStart;
 			health.domainStoreMaxPostProcessTime = Math
 					.max(health.domainStoreMaxPostProcessTime, postProcessTime);
-			MetricLogging.get().end("post-process");
+			MetricLogging.get().end("post-process", metricLogger);
 			threads.unlock(true);
 			try {
 				if (warnBuilder.length() > 0) {

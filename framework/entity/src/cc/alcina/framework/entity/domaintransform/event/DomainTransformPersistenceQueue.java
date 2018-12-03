@@ -182,7 +182,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (persistedRequestIds.isEmpty()) {
 			return;
 		}
-		logger.info("fired - {} - range {}",
+		getLogger(event.isLocalToVm()).info("fired - {} - range {}",
 				event.getTransformPersistenceToken().getRequest().shortId(),
 				new LongPair(CollectionFilters.min(persistedRequestIds),
 						CollectionFilters.max(persistedRequestIds)));
