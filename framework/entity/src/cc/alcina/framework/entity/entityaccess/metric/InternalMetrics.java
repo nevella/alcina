@@ -17,6 +17,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -64,6 +67,8 @@ public class InternalMetrics {
 
 	private MemoryMXBean memoryMxBean;
 
+	Logger logger = LoggerFactory.getLogger(getClass());
+
 	public void endTracker(Object markerObject) {
 		if (!started || markerObject == null) {
 			return;
@@ -85,7 +90,7 @@ public class InternalMetrics {
 				.filter(imd -> !imd.isFinished())
 				.map(InternalMetricData::logForBlackBox)
 				.collect(Collectors.joining("\n"));
-		Ax.out(message);
+		logger.warn(message);
 		ResourceUtilities.write(message, Ax.format("/tmp/imd-blackbox-%s.txt",
 				System.currentTimeMillis()));
 	}
@@ -119,13 +124,13 @@ public class InternalMetrics {
 						}
 					});
 				} else {
-					Ax.out("internal metrics :: sliceExecutor :: skip");
+					logger.info("internal metrics :: sliceExecutor :: skip");
 					if (sliceSkipCount++ == 50) {
 						long[] allThreadIds = threadMxBean.getAllThreadIds();
 						ThreadInfo[] threadInfos = threadMxBean
 								.getThreadInfo(allThreadIds, true, true);
 						Ax.sysLogHigh("High skip count: ");
-						Ax.out(Arrays.asList(threadInfos));
+						logger.warn(Arrays.asList(threadInfos).toString());
 					}
 				}
 			}
@@ -142,7 +147,7 @@ public class InternalMetrics {
 						}
 					});
 				} else {
-					Ax.out("internal metrics :: persistExecutor :: skip");
+					logger.info("internal metrics :: persistExecutor :: skip");
 				}
 			}
 		}, PERSIST_PERIOD, PERSIST_PERIOD);
@@ -207,7 +212,8 @@ public class InternalMetrics {
 					synchronized (imd) {
 						imd.lastSliceTime = System.currentTimeMillis();
 						if (imd.type == InternalMetricTypeAlcina.health) {
-							Ax.out("Internal health metrics monitoring:\n\t%s",
+							logger.info(
+									"Internal health metrics monitoring:\n\t%s",
 									getMemoryStats());
 							long[] allIds = threadMxBean.getAllThreadIds();
 							ThreadInfo[] threadInfos2 = threadMxBean
@@ -273,7 +279,7 @@ public class InternalMetrics {
 				.collect(Collectors.toMap(imd -> imd, imd -> imd.asMetric(),
 						J8Utils.throwingMerger(), LinkedHashMap::new));
 		if (toPersist.size() > 0) {
-			Ax.out("persist internal metric: [%s]",
+			logger.debug("persist internal metric: [%s]",
 					toPersist.keySet().stream().map(imd -> imd.thread.getName())
 							.collect(Collectors.joining("; ")));
 			List<InternalMetric> toPersistList = toPersist.values().stream()
@@ -296,7 +302,8 @@ public class InternalMetrics {
 							}
 						});
 				if (owner.isFinished()) {
-					Ax.out("removing after finished/persist: %s %s : id %s",
+					logger.info(
+							"removing after finished/persist: %s %s : id %s",
 							owner.metricName, owner.thread,
 							owner.thread.getId());
 					trackers.entrySet()
