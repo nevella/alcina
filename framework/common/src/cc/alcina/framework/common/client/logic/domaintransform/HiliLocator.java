@@ -112,6 +112,10 @@ public class HiliLocator implements Serializable {
 		return hash;
 	}
 
+	public boolean isLocal() {
+		return localId != 0;
+	}
+
 	public void setClazz(Class<? extends HasIdAndLocalId> clazz) {
 		this.clazz = clazz;
 	}
