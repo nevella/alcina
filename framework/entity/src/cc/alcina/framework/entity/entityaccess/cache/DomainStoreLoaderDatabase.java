@@ -593,6 +593,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			String simpleName = clazz.getSimpleName();
 			int count = propertyStoreItemDescriptor.getRoughCount();
 			SystemoutCounter ctr = new SystemoutCounter(20000, 10, count, true);
+			ctr.setLogger(store.metricLogger);
 			Iterator<Object[]> iterator = connResults.iterator();
 			while (iterator.hasNext()) {
 				propertyStoreItemDescriptor.addRow(iterator.next());

@@ -2,6 +2,8 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.function.Supplier;
 
+import org.slf4j.Logger;
+
 public class SystemoutCounter {
 	static Supplier<String> emptySupplier = () -> "";
 
@@ -22,6 +24,10 @@ public class SystemoutCounter {
 	int lines = 0;
 
 	private String name;
+
+	private Logger logger;
+
+	String buffer = "";
 
 	public SystemoutCounter(int ticks, int dotsPerLine) {
 		this(ticks, dotsPerLine, 1, false);
@@ -47,15 +53,23 @@ public class SystemoutCounter {
 		return (double) allTicks / (double) size;
 	}
 
+	public Logger getLogger() {
+		return this.logger;
+	}
+
 	public SystemoutCounter name(String name) {
 		this.name = name;
 		return this;
 	}
 
 	public void newLine() {
-		System.out.println();
+		outLine("");
 		tickCtr = 0;
 		dotCtr = 0;
+	}
+
+	public void setLogger(Logger logger) {
+		this.logger = logger;
 	}
 
 	public void tick() {
@@ -70,7 +84,11 @@ public class SystemoutCounter {
 		++allTicks;
 		if (++tickCtr == ticks) {
 			tickCtr = 0;
-			System.out.print(".");
+			if (logger == null) {
+				System.out.print(".");
+			} else {
+				buffer += ".";
+			}
 			if (++dotCtr == dotsPerLine) {
 				dotCtr = 0;
 				String message = messageSupplier.get();
@@ -81,9 +99,19 @@ public class SystemoutCounter {
 				if (name != null) {
 					message += " - " + name;
 				}
-				System.out.println("  " + message);
+				outLine("  " + message);
 				lines++;
 			}
 		}
+	}
+
+	private void outLine(String string) {
+		string = buffer + string;
+		if (logger == null) {
+			System.out.println(string);
+		} else {
+			logger.debug(string);
+		}
+		buffer = "";
 	}
 }
