@@ -1126,7 +1126,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					// only one thread should load a given class, for
 					// threadsafety reasons
 					ClassIdLock lock = LockUtils.obtainClassIdLock(c, 0L);
-					System.out.format("Backup lazy load: %s - %s\n",
+					logger.debug("Backup lazy load: {} - {}\n",
 							c.getSimpleName(), id);
 					loadTable(c, "id=" + id, lock);
 				}
