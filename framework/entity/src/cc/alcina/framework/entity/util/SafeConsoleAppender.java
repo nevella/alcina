@@ -14,22 +14,24 @@ public class SafeConsoleAppender extends ConsoleAppender {
 
 	@Override
 	protected void subAppend(LoggingEvent event) {
-		this.qw.write(this.layout.format(event));
-		if (event.getThrowableInformation() != null
-				&& event.getThrowableInformation().getThrowable() != null) {
-			if (layout.ignoresThrowable()) {
-				String[] s = event.getThrowableStrRep();
-				if (s != null) {
-					int len = s.length;
-					for (int i = 0; i < len; i++) {
-						this.qw.write(s[i]);
-						this.qw.write(Layout.LINE_SEP);
+		synchronized (SafeConsoleAppender.class) {
+			this.qw.write(this.layout.format(event));
+			if (event.getThrowableInformation() != null
+					&& event.getThrowableInformation().getThrowable() != null) {
+				if (layout.ignoresThrowable()) {
+					String[] s = event.getThrowableStrRep();
+					if (s != null) {
+						int len = s.length;
+						for (int i = 0; i < len; i++) {
+							this.qw.write(s[i]);
+							this.qw.write(Layout.LINE_SEP);
+						}
 					}
 				}
 			}
-		}
-		if (shouldFlush(event)) {
-			this.qw.flush();
+			if (shouldFlush(event)) {
+				this.qw.flush();
+			}
 		}
 	}
 }
