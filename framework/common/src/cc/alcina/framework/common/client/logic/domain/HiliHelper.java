@@ -85,7 +85,11 @@ public class HiliHelper {
 			return false;
 		}
 		if (o1.getClass() != o2.getClass()) {
-			return false;
+			// check for hibernate/domain proxies
+			if (o1.getClass().getSuperclass() != o2.getClass()
+					&& o1.getClass() != o2.getClass().getSuperclass()) {
+				return false;
+			}
 		}
 		if (o1.getId() == 0 && o1.getLocalId() == 0) {
 			return o1 == o2;
@@ -115,8 +119,21 @@ public class HiliHelper {
 		return hi == null ? 0 : hi.getId();
 	}
 
+	public static long getIdOrZero(Optional<? extends HasIdAndLocalId> o_hili) {
+		return o_hili.isPresent() ? o_hili.get().getId() : 0;
+	}
+
 	public static String strGetIdOrZero(HasId hasId) {
 		return String.valueOf(getIdOrZero(hasId));
+	}
+
+	public static String toHiliString(HasIdAndLocalId hili) {
+		if (hili == null) {
+			return null;
+		} else {
+			return Ax.format("%s: %s", hili.getClass().getSimpleName(),
+					hili.getId());
+		}
 	}
 
 	public static <T extends HasIdAndLocalId> Map<Long, T>
@@ -138,15 +155,6 @@ public class HiliHelper {
 		return set;
 	}
 
-	public static String toHiliString(HasIdAndLocalId hili) {
-		if (hili == null) {
-			return null;
-		} else {
-			return Ax.format("%s: %s", hili.getClass().getSimpleName(),
-					hili.getId());
-		}
-	}
-
 	public static String
 			toIdString(Collection<? extends HasIdAndLocalId> hilis) {
 		StringBuffer sb = new StringBuffer();
@@ -157,9 +165,5 @@ public class HiliHelper {
 			sb.append(hili.getId());
 		}
 		return sb.toString();
-	}
-
-	public static long getIdOrZero(Optional<? extends HasIdAndLocalId> o_hili) {
-		return o_hili.isPresent() ? o_hili.get().getId() : 0;
 	}
 }
