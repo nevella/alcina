@@ -2,36 +2,22 @@ package cc.alcina.framework.entity.util;
 
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Layout;
-import org.apache.log4j.spi.LoggingEvent;
+
+import cc.alcina.framework.common.client.util.Ax;
 
 public class SafeConsoleAppender extends ConsoleAppender {
 	public SafeConsoleAppender() {
+	    if(!Ax.isTest()){
+	        throw new RuntimeException("Non-server only");
+	    }
 	}
 
 	public SafeConsoleAppender(Layout layout) {
 		super(layout);
+		if(!Ax.isTest()){
+            throw new RuntimeException("Non-server only");
+        }
 	}
 
-	@Override
-	protected void subAppend(LoggingEvent event) {
-		synchronized (SafeConsoleAppender.class) {
-			this.qw.write(this.layout.format(event));
-			if (event.getThrowableInformation() != null
-					&& event.getThrowableInformation().getThrowable() != null) {
-				if (layout.ignoresThrowable()) {
-					String[] s = event.getThrowableStrRep();
-					if (s != null) {
-						int len = s.length;
-						for (int i = 0; i < len; i++) {
-							this.qw.write(s[i]);
-							this.qw.write(Layout.LINE_SEP);
-						}
-					}
-				}
-			}
-			if (shouldFlush(event)) {
-				this.qw.flush();
-			}
-		}
-	}
+	
 }
