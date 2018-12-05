@@ -58,7 +58,7 @@ public class EntityLayerUtils {
                 .log(message, componentKey.toString());
     }
 
-    public static void setStandardAppender(Class clazz, Level level) {
+    public static void setLevel(Class clazz, Level level) {
         setStandardAppender(clazz.getName(), level);
     }
 
