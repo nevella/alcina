@@ -59,15 +59,15 @@ public class EntityLayerUtils {
     }
 
     public static void setLevel(Class clazz, Level level) {
-        setStandardAppender(clazz.getName(), level);
+        setLevel(clazz.getName(), level);
     }
 
-    public static void setStandardAppender(org.slf4j.Logger slf4jlogger,
+    public static void setLevel(org.slf4j.Logger slf4jlogger,
             Level level) {
-        setStandardAppender(slf4jlogger.getName(), level);
+        setLevel(slf4jlogger.getName(), level);
     }
 
-    public static void setStandardAppender(String key, Level level) {
+    public static void setLevel(String key, Level level) {
         Logger logger = Logger.getLogger(key);
         if (Ax.isTest()) {
             logger.removeAllAppenders();

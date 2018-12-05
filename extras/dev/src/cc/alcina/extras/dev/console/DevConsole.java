@@ -568,7 +568,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		// EntityLayerUtils.setStandardAppender(
 		// AlcinaLogUtils.getTaggedLogger(DomainStore.class, "sql"),
 		// Level.DEBUG);
-		EntityLayerUtils.setStandardAppender(
+		EntityLayerUtils.setLevel(
 				AlcinaLogUtils.getMetricLogger(DomainStore.class), Level.WARN);
 	}
 
