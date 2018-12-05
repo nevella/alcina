@@ -44,6 +44,12 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainRunner;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreQuery;
 import cc.alcina.framework.entity.entityaccess.cache.NotCacheFilter;
+import cc.alcina.framework.entity.impl.domain.DomainStoreQueryTranslator.CriterionTranslator;
+import cc.alcina.framework.entity.impl.domain.DomainStoreQueryTranslator.FieldHelper;
+import cc.alcina.framework.entity.impl.domain.DomainStoreQueryTranslator.GroupedRow;
+import cc.alcina.framework.entity.impl.domain.DomainStoreQueryTranslator.GroupedRows;
+import cc.alcina.framework.entity.impl.domain.DomainStoreQueryTranslator.GroupedValue;
+import cc.alcina.framework.entity.impl.domain.DomainStoreQueryTranslator.ProjectionHelper;
 
 public class DomainStoreQueryTranslator {
 	DomainStoreQuery query;
@@ -150,10 +156,15 @@ public class DomainStoreQueryTranslator {
 	}
 
 	private void setupProjectionHelpers() throws Exception {
-		ProjectionList projectionList = (ProjectionList) root.projection;
-		Field field = ProjectionList.class.getDeclaredField("elements");
-		field.setAccessible(true);
-		List<Projection> projections = (List) field.get(projectionList);
+		List<Projection> projections = new ArrayList<>();
+		if (root.projection instanceof ProjectionList) {
+			ProjectionList projectionList = (ProjectionList) root.projection;
+			Field field = ProjectionList.class.getDeclaredField("elements");
+			field.setAccessible(true);
+			projections = (List) field.get(projectionList);
+		} else {
+			projections.add(root.projection);
+		}
 		int groupCount = 0;
 		aggregateQuery = true;
 		for (Projection projection : projections) {
@@ -215,7 +226,8 @@ public class DomainStoreQueryTranslator {
 			}
 			CompositeFilter filter = new CompositeFilter();
 			for (Criterion sub : subs) {
-				filter.add(translator.criterionToFilter(domainStoreCriteria, sub));
+				filter.add(
+						translator.criterionToFilter(domainStoreCriteria, sub));
 			}
 			return filter;
 		}
@@ -266,7 +278,8 @@ public class DomainStoreQueryTranslator {
 			}
 			CompositeFilter filter = new CompositeFilter(true);
 			for (Criterion sub : subs) {
-				filter.add(translator.criterionToFilter(domainStoreCriteria, sub));
+				filter.add(
+						translator.criterionToFilter(domainStoreCriteria, sub));
 			}
 			return filter;
 		}
@@ -440,8 +453,11 @@ public class DomainStoreQueryTranslator {
 			}
 		}
 
-		public Object[] asTuple() {
+		public Object asTuple() {
 			Object[] tuple = new Object[groupedValues.size()];
+			if (groupedValues.size() == 1) {
+				return groupedValues.get(0).getValue();
+			}
 			for (int i = 0; i < tuple.length; i++) {
 				tuple[i] = groupedValues.get(i).getValue();
 			}
