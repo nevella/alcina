@@ -16,6 +16,8 @@ package cc.alcina.framework.common.client.actions;
 import java.io.Serializable;
 import java.util.Date;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  *
  * @author Nick Reddel
@@ -40,4 +42,8 @@ public interface ActionLogItem extends Serializable {
 	public void setActionLog(String actionLog);
 
 	public void setShortDescription(String shortDescription);
+	
+	default boolean provideActionSucceeded(){
+	    return !Ax.matches(getShortDescription(), "Job failed:.*");
+	}
 }
