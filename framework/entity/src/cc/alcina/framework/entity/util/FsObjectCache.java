@@ -19,159 +19,149 @@ import cc.alcina.framework.entity.entityaccess.cache.LockUtils;
 import cc.alcina.framework.entity.entityaccess.cache.LockUtils.ClassStringKeyLock;
 
 public class FsObjectCache<T> {
-	private File root;
+    private File root;
 
-	private ThrowingFunction<String, T> pathToValue;
+    private ThrowingFunction<String, T> pathToValue;
 
-	private Class<T> clazz;
+    private Class<T> clazz;
 
-	private boolean preferRefreshed;
+    private long objectInvalidationTime = 0;
 
-	private long objectInvalidationTime = 0;
+    private boolean cacheObjects = false;
 
-	private boolean cacheObjects = false;
+    private Map<String, CacheEntry> cachedObjects = new ConcurrentHashMap<>();
 
-	private Map<String, CacheEntry> cachedObjects = new ConcurrentHashMap<>();
+    protected transient Logger logger = LoggerFactory.getLogger(getClass());
 
-	protected transient Logger logger = LoggerFactory.getLogger(getClass());
+    private TimerTask invalidationTask = new TimerTask() {
+        @Override
+        public void run() {
+        }
+    };
 
-	private TimerTask invalidationTask = new TimerTask() {
-		@Override
-		public void run() {
-		}
-	};
+    private Timer invalidationTimer = new Timer();
 
-	private Timer invalidationTimer = new Timer();
+    public FsObjectCache(File root, Class<T> clazz,
+            ThrowingFunction<String, T> pathToValue) {
+        this.root = root;
+        root.mkdirs();
+        this.clazz = clazz;
+        this.pathToValue = pathToValue;
+    }
 
-	public FsObjectCache(File root, Class<T> clazz,
-			ThrowingFunction<String, T> pathToValue) {
-		this.root = root;
-		root.mkdirs();
-		this.clazz = clazz;
-		this.pathToValue = pathToValue;
-	}
+    public T get(String path) {
+        ClassStringKeyLock lock = LockUtils
+                .obtainClassStringKeyLock(pathToValue.getClass(), path);
+        try {
+            lock.lock();
+            return get(path, true);
+        } finally {
+            lock.unlock();
+        }
+    }
 
-	public T get(String path) {
-		ClassStringKeyLock lock = LockUtils
-				.obtainClassStringKeyLock(pathToValue.getClass(), path);
-		try {
-			lock.lock();
-			return get(path, true);
-		} finally {
-			lock.unlock();
-		}
-	}
+    public long getObjectInvalidationTime() {
+        return this.objectInvalidationTime;
+    }
 
-	public long getObjectInvalidationTime() {
-		return this.objectInvalidationTime;
-	}
+    public boolean isCacheObjects() {
+        return this.cacheObjects;
+    }
 
-	public boolean isCacheObjects() {
-		return this.cacheObjects;
-	}
+    public void setCacheObjects(boolean cacheObjects) {
+        this.cacheObjects = cacheObjects;
+    }
 
-	public boolean isPreferRefreshed() {
-		return this.preferRefreshed;
-	}
+    public void setObjectInvalidationTime(long objectInvalidationTime) {
+        this.objectInvalidationTime = objectInvalidationTime;
+    }
 
-	public void setCacheObjects(boolean cacheObjects) {
-		this.cacheObjects = cacheObjects;
-	}
+    public void shutdown() {
+        invalidationTimer.cancel();
+    }
 
-	public void setObjectInvalidationTime(long objectInvalidationTime) {
-		this.objectInvalidationTime = objectInvalidationTime;
-	}
+    private void checkInvalidation() {
+        cachedObjects.entrySet().forEach(entry -> {
+            FsObjectCache<T>.CacheEntry cacheEntry = entry.getValue();
+            logger.info("check invalidaton - now: {} created: {} objinval: {}",
+                    System.currentTimeMillis(), cacheEntry.created,
+                    objectInvalidationTime);
+            if (System.currentTimeMillis()
+                    - cacheEntry.created > objectInvalidationTime) {
+                try {
+                    get(cacheEntry.path, false);
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
 
-	public void setPreferRefreshed(boolean preferRefreshed) {
-		this.preferRefreshed = preferRefreshed;
-	}
+    private void ensureCacheInvalidationStarted() {
+        if (cacheObjects && objectInvalidationTime != 0
+                && invalidationTask == null) {
+            invalidationTask = new TimerTask() {
+                @Override
+                public void run() {
+                    checkInvalidation();
+                }
+            };
+            invalidationTimer.scheduleAtFixedRate(invalidationTask,
+                    objectInvalidationTime / 2, objectInvalidationTime / 2);
+        }
+    }
 
-	public void shutdown() {
-		invalidationTimer.cancel();
-	}
+    private T get(String path, boolean allowFromCachedObjects) {
+        ensureCacheInvalidationStarted();
+        if (cacheObjects) {
+            FsObjectCache<T>.CacheEntry entry = cachedObjects.get(path);
+            if (entry != null) {
+                return entry.object;
+            }
+        }
+        File cacheFile = getCacheFile(path);
+        if (!cacheFile.exists() || !allowFromCachedObjects) {
+            try {
+                logger.info("refreshing cache object - {} - {}",
+                        clazz.getSimpleName(), path);
+                T value = pathToValue.apply(path);
+                KryoUtils.serializeToFile(value, cacheFile);
+            } catch (Exception e) {
+                if (!cacheFile.exists()) {
+                    throw new WrappedRuntimeException(e);
+                } else {
+                    logger.warn(
+                            "Unable to get object - falling back on cache - {} - {} {}",
+                            clazz.getSimpleName(), e.getClass().getSimpleName(),
+                            e.getMessage());
+                }
+            }
+        }
+        Logger metricLogger = AlcinaLogUtils
+                .getMetricLogger(FsObjectCache.class);
+        String key = Ax.format("Deserialize cache: %s", path);
+        MetricLogging.get().start(key);
+        T t = KryoUtils.deserializeFromFile(cacheFile, clazz);
+        MetricLogging.get().end(key, metricLogger);
+        if (cacheObjects) {
+            FsObjectCache<T>.CacheEntry entry = new CacheEntry();
+            entry.created = System.currentTimeMillis();
+            entry.object = t;
+            entry.path = path;
+            cachedObjects.put(path, entry);
+        }
+        return t;
+    }
 
-	private void checkInvalidation() {
-		cachedObjects.entrySet().forEach(entry -> {
-			FsObjectCache<T>.CacheEntry cacheEntry = entry.getValue();
-			logger.info("check invalidaton - now: {} created: {} objinval: {}",
-					System.currentTimeMillis(), cacheEntry.created,
-					objectInvalidationTime);
-			if (System.currentTimeMillis()
-					- cacheEntry.created > objectInvalidationTime) {
-				try {
-					get(cacheEntry.path, false);
-				} catch (Throwable e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+    private File getCacheFile(String path) {
+        return new File(Ax.format("%s/%s.dat", root.getPath(), path));
+    }
 
-	private void ensureCacheInvalidationStarted() {
-		if (cacheObjects && objectInvalidationTime != 0
-				&& invalidationTask == null) {
-			invalidationTask = new TimerTask() {
-				@Override
-				public void run() {
-					checkInvalidation();
-				}
-			};
-			invalidationTimer.scheduleAtFixedRate(invalidationTask,
-					objectInvalidationTime / 2, objectInvalidationTime / 2);
-		}
-	}
+    class CacheEntry {
+        long created;
 
-	private T get(String path, boolean allowFromCachedObjects) {
-		ensureCacheInvalidationStarted();
-		if (cacheObjects) {
-			FsObjectCache<T>.CacheEntry entry = cachedObjects.get(path);
-			if (entry != null) {
-				return entry.object;
-			}
-		}
-		File cacheFile = getCacheFile(path);
-		if (!cacheFile.exists() || preferRefreshed) {
-			try {
-				logger.info("refreshing cache object - {} - {}",
-						clazz.getSimpleName(), path);
-				T value = pathToValue.apply(path);
-				KryoUtils.serializeToFile(value, cacheFile);
-			} catch (Exception e) {
-				if (!cacheFile.exists()) {
-					throw new WrappedRuntimeException(e);
-				} else {
-					logger.warn(
-							"Unable to get object - falling back on cache - {} - {} {}",
-							clazz.getSimpleName(), e.getClass().getSimpleName(),
-							e.getMessage());
-				}
-			}
-		}
-		Logger metricLogger = AlcinaLogUtils
-				.getMetricLogger(FsObjectCache.class);
-		String key = Ax.format("Deserialize cache: %s", path);
-		MetricLogging.get().start(key);
-		T t = KryoUtils.deserializeFromFile(cacheFile, clazz);
-		MetricLogging.get().end(key, metricLogger);
-		if (cacheObjects) {
-			FsObjectCache<T>.CacheEntry entry = new CacheEntry();
-			entry.created = System.currentTimeMillis();
-			entry.object = t;
-			entry.path = path;
-			cachedObjects.put(path, entry);
-		}
-		return t;
-	}
+        T object;
 
-	private File getCacheFile(String path) {
-		return new File(Ax.format("%s/%s.dat", root.getPath(), path));
-	}
-
-	class CacheEntry {
-		long created;
-
-		T object;
-
-		public String path;
-	}
+        public String path;
+    }
 }
