@@ -47,7 +47,7 @@ public class JavacEx extends Javac {
                 maybeRemove(path);
                 maybeRemove(path.replace("/var/local", "/private/var/local"));
                 maybeRemove(path.replace("/var/local", "/private/var/local")
-                        .replace("/private/var/local/git/", "/g"));
+                        .replace("/private/var/local/git/", "/g/"));
             }
         }
         ArrayList<File> list2 = new ArrayList<File>(nameLookup.values());
