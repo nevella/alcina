@@ -963,18 +963,6 @@ public class GraphProjection {
             }
         }
 
-        public int count(Class clazz) {
-            GraphProjectionContext cursor = this;
-            int count = 0;
-            while (cursor != null) {
-                if (cursor.clazz == clazz) {
-                    count++;
-                }
-                cursor = cursor.parent;
-            }
-            return count;
-        }
-
         public int depth() {
             return depth;
         }
