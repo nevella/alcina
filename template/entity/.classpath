@@ -9,9 +9,10 @@
 	<classpathentry kind="lib" path="/alcina/lib/framework/entity/jsr173_api.jar"/>
 	<classpathentry kind="lib" path="/alcina/lib/framework/common/jaxb-api.jar"/>
 	<classpathentry kind="lib" path="/alcina/lib/framework/common/persistence-api.jar"/>
-	<classpathentry kind="lib" path="/alcina/lib/framework/impl/jboss-hibernate/hibernate-commons-annotations-3.2.0.Final.jar"/>
-	<classpathentry kind="lib" path="/alcina/lib/framework/impl/jboss-hibernate/hibernate-core-4.0.0.Beta1.jar"/>
-	<classpathentry kind="lib" path="/alcina/lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar"/>
+	<classpathentry kind="lib" path="/alcina/lib/framework/impl/jboss-hibernate/hibernate-commons-annotations-4.0.4.Final.jar"/>
+	<classpathentry kind="lib" path="/alcina/lib/framework/impl/jboss-hibernate/hibernate-core-4.3.7.Final.jar"/>
+	<classpathentry kind="lib" path="/alcina/lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.3.7.Final.jar"/>
+	<classpathentry kind="lib" path="/alcina/lib/framework/impl/jboss-hibernate/hibernate-annotations.jar"/>
 	<classpathentry kind="lib" path="/alcina/lib/framework/entity/javax.ejb-api-3.2.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
