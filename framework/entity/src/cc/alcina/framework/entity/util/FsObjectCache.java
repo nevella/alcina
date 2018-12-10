@@ -141,16 +141,25 @@ public class FsObjectCache<T> {
                 .getMetricLogger(FsObjectCache.class);
         String key = Ax.format("Deserialize cache: %s", path);
         MetricLogging.get().start(key);
-        T t = KryoUtils.deserializeFromFile(cacheFile, clazz);
-        MetricLogging.get().end(key, metricLogger);
-        if (cacheObjects) {
-            FsObjectCache<T>.CacheEntry entry = new CacheEntry();
-            entry.created = System.currentTimeMillis();
-            entry.object = t;
-            entry.path = path;
-            cachedObjects.put(path, entry);
+        try {
+            T t = KryoUtils.deserializeFromFile(cacheFile, clazz);
+            MetricLogging.get().end(key, metricLogger);
+            if (cacheObjects) {
+                FsObjectCache<T>.CacheEntry entry = new CacheEntry();
+                entry.created = System.currentTimeMillis();
+                entry.object = t;
+                entry.path = path;
+                cachedObjects.put(path, entry);
+            }
+            return t;
+        } catch (Exception e) {
+            if (!allowFromCachedObjects) {
+                throw e;
+            } else {
+                logger.warn("Retrying from remote (cannot deserialize)", e);
+                return get(path, false);
+            }
         }
-        return t;
     }
 
     private File getCacheFile(String path) {
