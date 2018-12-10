@@ -986,6 +986,9 @@ public class GraphProjection {
             if (withToString) {
                 if (sourceOwner instanceof HasIdAndLocalId) {
                     string = ((HasIdAndLocalId) sourceOwner).toStringHili();
+                } else if (sourceOwner instanceof Collection) {
+                    string = Ax.format("[%s]",
+                            ((Collection) sourceOwner).size());
                 } else {
                     string = sourceOwner.toString();
                 }

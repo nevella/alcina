@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.domain.PrivateObjectCache;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @SuppressWarnings("unchecked")
@@ -37,208 +38,223 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public class DetachedEntityCache implements Serializable, PrivateObjectCache {
-	protected Map<Class, Map<Long, HasIdAndLocalId>> detached;
+    protected Map<Class, Map<Long, HasIdAndLocalId>> detached;
 
-	private transient Supplier<Map> classMapSupplier;
+    private transient Supplier<Map> classMapSupplier;
 
-	public DetachedEntityCache() {
-		this(new DefaultTopMapSupplier(), new DefaultClassMapSupplier());
-	}
+    private boolean throwOnExisting;
 
-	public DetachedEntityCache(Supplier<Map> topMapSupplier,
-			Supplier<Map> classMapSupplier) {
-		this.classMapSupplier = classMapSupplier;
-		this.detached = topMapSupplier.get();
-	}
+    public DetachedEntityCache() {
+        this(new DefaultTopMapSupplier(), new DefaultClassMapSupplier());
+    }
 
-	public Set<HasIdAndLocalId> allValues() {
-		Set<HasIdAndLocalId> result = new LinkedHashSet<HasIdAndLocalId>();
-		for (Class clazz : detached.keySet()) {
-			result.addAll(detached.get(clazz).values());
-		}
-		return result;
-	}
+    public DetachedEntityCache(Supplier<Map> topMapSupplier,
+            Supplier<Map> classMapSupplier) {
+        this.classMapSupplier = classMapSupplier;
+        this.detached = topMapSupplier.get();
+    }
 
-	public Set<Entry<Class, Map<Long, HasIdAndLocalId>>> classEntries() {
-		return detached.entrySet();
-	}
+    public Set<HasIdAndLocalId> allValues() {
+        Set<HasIdAndLocalId> result = new LinkedHashSet<HasIdAndLocalId>();
+        for (Class clazz : detached.keySet()) {
+            result.addAll(detached.get(clazz).values());
+        }
+        return result;
+    }
 
-	public void clear() {
-		detached.clear();
-	}
+    public Set<Entry<Class, Map<Long, HasIdAndLocalId>>> classEntries() {
+        return detached.entrySet();
+    }
 
-	public <T extends HasIdAndLocalId> boolean contains(Class<T> clazz,
-			long id) {
-		ensureMaps(clazz);
-		return detached.get(clazz).containsKey(id);
-	}
+    public void clear() {
+        detached.clear();
+    }
 
-	public boolean contains(HasIdAndLocalId hili) {
-		Class<? extends HasIdAndLocalId> clazz = hili.getClass();
-		ensureMaps(clazz);
-		long id = hili.getId();
-		return detached.get(clazz).containsKey(id);
-	}
+    public <T extends HasIdAndLocalId> boolean contains(Class<T> clazz,
+            long id) {
+        ensureMaps(clazz);
+        return detached.get(clazz).containsKey(id);
+    }
 
-	public <T extends HasIdAndLocalId> boolean containsMap(Class<T> clazz) {
-		return detached.containsKey(clazz);
-	}
+    public boolean contains(HasIdAndLocalId hili) {
+        Class<? extends HasIdAndLocalId> clazz = hili.getClass();
+        ensureMaps(clazz);
+        long id = hili.getId();
+        return detached.get(clazz).containsKey(id);
+    }
 
-	public Map<Long, HasIdAndLocalId> createMap() {
-		return classMapSupplier.get();
-	}
+    public <T extends HasIdAndLocalId> boolean containsMap(Class<T> clazz) {
+        return detached.containsKey(clazz);
+    }
 
-	public <T> List<T> fieldValues(Class<? extends HasIdAndLocalId> clazz,
-			String propertyName) {
-		throw new UnsupportedOperationException();
-	}
+    public Map<Long, HasIdAndLocalId> createMap() {
+        return classMapSupplier.get();
+    }
 
-	@Override
-	public <T> T get(Class<T> clazz, Long id) {
-		ensureMaps(clazz);
-		if (id == null) {
-			return null;
-		}
-		T t = (T) detached.get(clazz).get(id);
-		return t;
-	}
+    public <T> List<T> fieldValues(Class<? extends HasIdAndLocalId> clazz,
+            String propertyName) {
+        throw new UnsupportedOperationException();
+    }
 
-	public Map<Class, Map<Long, HasIdAndLocalId>> getDetached() {
-		return this.detached;
-	}
+    @Override
+    public <T> T get(Class<T> clazz, Long id) {
+        ensureMaps(clazz);
+        if (id == null) {
+            return null;
+        }
+        T t = (T) detached.get(clazz).get(id);
+        return t;
+    }
 
-	@Override
-	public <T extends HasIdAndLocalId> T getExisting(T hili) {
-		return (T) get(hili.getClass(), hili.getId());
-	}
+    public Map<Class, Map<Long, HasIdAndLocalId>> getDetached() {
+        return this.detached;
+    }
 
-	public Map<Long, HasIdAndLocalId> getMap(Class clazz) {
-		ensureMaps(clazz);
-		return this.detached.get(clazz);
-	}
+    @Override
+    public <T extends HasIdAndLocalId> T getExisting(T hili) {
+        return (T) get(hili.getClass(), hili.getId());
+    }
 
-	public <T> Collection<T> immutableRawValues(Class<T> clazz) {
-		ensureMaps(clazz);
-		return (Collection<T>) Collections
-				.unmodifiableCollection(detached.get(clazz).values());
-	}
+    public Map<Long, HasIdAndLocalId> getMap(Class clazz) {
+        ensureMaps(clazz);
+        return this.detached.get(clazz);
+    }
 
-	public void invalidate(Class clazz) {
-		ensureMaps(clazz);
-		detached.put(clazz, createMap());
-	}
+    public <T> Collection<T> immutableRawValues(Class<T> clazz) {
+        ensureMaps(clazz);
+        return (Collection<T>) Collections
+                .unmodifiableCollection(detached.get(clazz).values());
+    }
 
-	public void invalidate(Class[] classes) {
-		for (Class c : classes) {
-			invalidate(c);
-		}
-	}
+    public void invalidate(Class clazz) {
+        ensureMaps(clazz);
+        detached.put(clazz, createMap());
+    }
 
-	public boolean isEmpty(Class clazz) {
-		ensureMaps(clazz);
-		return values(clazz).isEmpty();
-	}
+    public void invalidate(Class[] classes) {
+        for (Class c : classes) {
+            invalidate(c);
+        }
+    }
 
-	public Set<Long> keys(Class clazz) {
-		ensureMaps(clazz);
-		return detached.get(clazz).keySet();
-	}
+    public boolean isEmpty(Class clazz) {
+        ensureMaps(clazz);
+        return values(clazz).isEmpty();
+    }
 
-	public <T> List<T> list(Class<T> clazz, Collection<Long> ids) {
-		return ids.stream().map(id -> get(clazz, id))
-				.collect(Collectors.toList());
-	}
+    public boolean isThrowOnExisting() {
+        return this.throwOnExisting;
+    }
 
-	public List<Long> notContained(Collection<Long> ids, Class clazz) {
-		List<Long> result = new ArrayList<Long>();
-		ensureMaps(clazz);
-		Set<Long> existing = detached.get(clazz).keySet();
-		// can be reasonably confident size(existing)>size(ids)
-		for (Long id : ids) {
-			if (!existing.contains(id)) {
-				result.add(id);
-			}
-		}
-		return result;
-	}
+    public Set<Long> keys(Class clazz) {
+        ensureMaps(clazz);
+        return detached.get(clazz).keySet();
+    }
 
-	@Override
-	public void put(HasIdAndLocalId hili) {
-		Class<? extends HasIdAndLocalId> clazz = hili.getClass();
-		ensureMaps(clazz);
-		long id = hili.getId();
-		detached.get(clazz).put(id, hili);
-	}
+    public <T> List<T> list(Class<T> clazz, Collection<Long> ids) {
+        return ids.stream().map(id -> get(clazz, id))
+                .collect(Collectors.toList());
+    }
 
-	public void putAll(Class clazz,
-			Collection<? extends HasIdAndLocalId> values) {
-		ensureMaps(clazz);
-		Map<Long, HasIdAndLocalId> m = detached.get(clazz);
-		for (HasIdAndLocalId hili : values) {
-			long id = hili.getId();
-			m.put(hili.getId(), hili);
-		}
-	}
+    public List<Long> notContained(Collection<Long> ids, Class clazz) {
+        List<Long> result = new ArrayList<Long>();
+        ensureMaps(clazz);
+        Set<Long> existing = detached.get(clazz).keySet();
+        // can be reasonably confident size(existing)>size(ids)
+        for (Long id : ids) {
+            if (!existing.contains(id)) {
+                result.add(id);
+            }
+        }
+        return result;
+    }
 
-	@Override
-	public void putForSuperClass(Class clazz, HasIdAndLocalId hili) {
-		ensureMaps(clazz);
-		long id = hili.getId();
-		detached.get(clazz).put(id, hili);
-	}
+    @Override
+    public void put(HasIdAndLocalId hili) {
+        Class<? extends HasIdAndLocalId> clazz = hili.getClass();
+        ensureMaps(clazz);
+        long id = hili.getId();
+        if (throwOnExisting) {
+            if (detached.get(clazz).containsKey(id)) {
+                throw Ax.runtimeException("Double-put: %s", hili);
+            }
+        }
+        detached.get(clazz).put(id, hili);
+    }
 
-	public void remove(HasIdAndLocalId hili) {
-		Class<? extends HasIdAndLocalId> clazz = hili.getClass();
-		ensureMaps(clazz);
-		long id = hili.getId();
-		detached.get(clazz).remove(id);
-	}
+    public void putAll(Class clazz,
+            Collection<? extends HasIdAndLocalId> values) {
+        ensureMaps(clazz);
+        Map<Long, HasIdAndLocalId> m = detached.get(clazz);
+        for (HasIdAndLocalId hili : values) {
+            long id = hili.getId();
+            m.put(hili.getId(), hili);
+        }
+    }
 
-	public int size(Class clazz) {
-		ensureMaps(clazz);
-		return detached.get(clazz).size();
-	}
+    @Override
+    public void putForSuperClass(Class clazz, HasIdAndLocalId hili) {
+        ensureMaps(clazz);
+        long id = hili.getId();
+        detached.get(clazz).put(id, hili);
+    }
 
-	public String sizes() {
-		List<String> lines = new ArrayList<String>();
-		for (Class clazz : detached.keySet()) {
-			lines.add(CommonUtils.simpleClassName(clazz) + ": " + size(clazz));
-		}
-		return CommonUtils.join(lines, "\n");
-	}
+    public void remove(HasIdAndLocalId hili) {
+        Class<? extends HasIdAndLocalId> clazz = hili.getClass();
+        ensureMaps(clazz);
+        long id = hili.getId();
+        detached.get(clazz).remove(id);
+    }
 
-	@Override
-	public String toString() {
-		return "Cache: " + detached;
-	}
+    public void setThrowOnExisting(boolean throwOnExisting) {
+        this.throwOnExisting = throwOnExisting;
+    }
 
-	public <T> Set<T> values(Class<T> clazz) {
-		ensureMaps(clazz);
-		return new LinkedHashSet<T>(
-				(Collection<? extends T>) detached.get(clazz).values());
-	}
+    public int size(Class clazz) {
+        ensureMaps(clazz);
+        return detached.get(clazz).size();
+    }
 
-	protected void ensureMaps(Class clazz) {
-		if (!detached.containsKey(clazz)) {
-			synchronized (this) {
-				if (!detached.containsKey(clazz)) {
-					detached.put(clazz, createMap());
-				}
-			}
-		}
-	}
+    public String sizes() {
+        List<String> lines = new ArrayList<String>();
+        for (Class clazz : detached.keySet()) {
+            lines.add(CommonUtils.simpleClassName(clazz) + ": " + size(clazz));
+        }
+        return CommonUtils.join(lines, "\n");
+    }
 
-	static class DefaultClassMapSupplier implements Supplier<Map> {
-		@Override
-		public Map get() {
-			return new TreeMap();
-		}
-	}
+    @Override
+    public String toString() {
+        return "Cache: " + detached;
+    }
 
-	static class DefaultTopMapSupplier implements Supplier<Map> {
-		@Override
-		public Map get() {
-			return new HashMap<Class, Map<Long, HasIdAndLocalId>>(128);
-		}
-	}
+    public <T> Set<T> values(Class<T> clazz) {
+        ensureMaps(clazz);
+        return new LinkedHashSet<T>(
+                (Collection<? extends T>) detached.get(clazz).values());
+    }
+
+    protected void ensureMaps(Class clazz) {
+        if (!detached.containsKey(clazz)) {
+            synchronized (this) {
+                if (!detached.containsKey(clazz)) {
+                    detached.put(clazz, createMap());
+                }
+            }
+        }
+    }
+
+    static class DefaultClassMapSupplier implements Supplier<Map> {
+        @Override
+        public Map get() {
+            return new TreeMap();
+        }
+    }
+
+    static class DefaultTopMapSupplier implements Supplier<Map> {
+        @Override
+        public Map get() {
+            return new HashMap<Class, Map<Long, HasIdAndLocalId>>(128);
+        }
+    }
 }
