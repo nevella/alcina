@@ -19,7 +19,10 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
     private List<PropertyStoreCacheWrapper> psWrappers = new ArrayList<>();
 
     public PsAwareMultiplexingObjectCache() {
-        main.setThrowOnExisting(true);
+        // main.setThrowOnExisting(true);
+        //
+        // double-put can happen due to incomplete transaction isolation on PG
+        // warmup
     }
 
     public void addPropertyStore(DomainClassDescriptor descriptor) {
