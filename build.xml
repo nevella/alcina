@@ -140,6 +140,9 @@
 			<fileset dir="${alcina.home}/extras/jsdom/build">
 				<include name="**/JAbstractMethod.class" />
 			</fileset>
+			<fileset dir="${alcina.home}/extras/jsdom/res">
+				<include name="**/Cast.java" />
+			</fileset>
 		</jar>
 	</target>
 	<target name="make-gwittir-trunk-jar" description="make-gwittir-trunk-jar" depends="">
@@ -172,7 +175,7 @@
 				<include name="**/*.*" />
 				<!-- put in server (servlet/war) jar due to GWT/RPC classloader issues -->
 				<exclude name="${framework.remote.interface.package}" />
-				<exclude name="com/google/gwt/dom/client/**/*.*"/>
+				<exclude name="com/google/gwt/dom/client/**/*.*" />
 			</fileset>
 			<fileset dir="${framework.entity.build.dir}">
 				<include name="com/google/gwt/dom/client/DomState.class" />
