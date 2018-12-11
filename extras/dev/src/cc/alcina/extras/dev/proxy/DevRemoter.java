@@ -37,103 +37,103 @@ import cc.alcina.framework.servlet.servlet.dev.DevRemoterServlet;
  */
 @SuppressWarnings("deprecation")
 public class DevRemoter {
-	private Object interceptionResult;
+    private Object interceptionResult;
 
-	public PostAndClient getHttpPost(URI uri) throws Exception {
-		int timeoutSecs = 120;
-		PostAndClient postAndClient = new PostAndClient();
-		HttpParams params = new BasicHttpParams();
-		int timeoutMs = timeoutSecs * 1000;
-		params.setParameter("http.socket.timeout", timeoutMs);
-		params.setParameter("http.connection.timeout", timeoutMs);
-		postAndClient.client = new DefaultHttpClient(params);
-		postAndClient.post = new HttpPost(uri);
-		return postAndClient;
-	}
+    public PostAndClient getHttpPost(URI uri) throws Exception {
+        int timeoutSecs = 120;
+        PostAndClient postAndClient = new PostAndClient();
+        HttpParams params = new BasicHttpParams();
+        int timeoutMs = timeoutSecs * 1000;
+        params.setParameter("http.socket.timeout", timeoutMs * 4);
+        params.setParameter("http.connection.timeout", timeoutMs);
+        postAndClient.client = new DefaultHttpClient(params);
+        postAndClient.post = new HttpPost(uri);
+        return postAndClient;
+    }
 
-	public Object getInterceptionResult() {
-		return interceptionResult;
-	}
+    public Object getInterceptionResult() {
+        return interceptionResult;
+    }
 
-	public void hookParams(String methodName, Object[] args,
-			DevRemoterParams params) {
-		for (DevProxyInterceptor interceptor : Registry
-				.impls(DevProxyInterceptor.class)) {
-			interceptor.hookParams(methodName, args, params);
-		}
-	}
+    public void hookParams(String methodName, Object[] args,
+            DevRemoterParams params) {
+        for (DevProxyInterceptor interceptor : Registry
+                .impls(DevProxyInterceptor.class)) {
+            interceptor.hookParams(methodName, args, params);
+        }
+    }
 
-	public Object invoke(String methodName, Object[] args,
-			DevRemoterParams params) throws Exception, URISyntaxException,
-			IOException, UnsupportedEncodingException, ClientProtocolException,
-			ClassNotFoundException {
-		try {
-			LooseContext.pushWithBoolean(
-					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER, false);
-			LooseContext.set(KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER,
-					true);
-			hookParams(methodName, args, params);
-			String address = ResourceUtilities
-					.getBundledString(DevRemoter.class, "address");
-			PostAndClient png = getHttpPost(new URI(address));
-			params.username = ResourceUtilities
-					.getBundledString(DevRemoter.class, "username");
-			params.asRoot = PermissionsManager.get().isRoot();
-			ClientInstance clientInstance = PermissionsManager.get()
-					.getClientInstance();
-			if (clientInstance != null) {
-				params.clientInstanceId = clientInstance.getId();
-			}
-			params.methodName = methodName;
-			params.args = args == null ? new Object[0] : args;
-			List<NameValuePair> qparams = new ArrayList<NameValuePair>();
-			qparams.add(
-					new BasicNameValuePair(DevRemoterServlet.DEV_REMOTER_PARAMS,
-							KryoUtils.serializeToBase64(params)));
-			UrlEncodedFormEntity entity = new UrlEncodedFormEntity(qparams);
-			png.post.setEntity(entity);
-			HttpParams httpParams = png.client.getParams();
-			int timeoutMs = 120 * 1000;
-			httpParams.setParameter("http.socket.timeout", timeoutMs);
-			httpParams.setParameter("http.connection.timeout", timeoutMs);
-			HttpResponse response = png.client.execute(png.post);
-			InputStream content = response.getEntity().getContent();
-			ArrayList container = KryoUtils.deserializeFromStream(content,
-					ArrayList.class);
-			Object obj = container.get(0);
-			if (obj instanceof Exception) {
-				((Exception) obj).printStackTrace();
-				throw new Exception("Remote exception");
-			}
-			if (methodName.equals("transformInPersistenceContext")) {
-				ThreadlocalTransformManager.get()
-						.setPostTransactionEntityResolver(
-								(PostTransactionEntityResolver) container
-										.get(1));
-			}
-			return obj;
-		} finally {
-			LooseContext.pop();
-		}
-	}
+    public Object invoke(String methodName, Object[] args,
+            DevRemoterParams params) throws Exception, URISyntaxException,
+            IOException, UnsupportedEncodingException, ClientProtocolException,
+            ClassNotFoundException {
+        try {
+            LooseContext.pushWithBoolean(
+                    KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER, false);
+            LooseContext.set(KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER,
+                    true);
+            hookParams(methodName, args, params);
+            String address = ResourceUtilities
+                    .getBundledString(DevRemoter.class, "address");
+            PostAndClient png = getHttpPost(new URI(address));
+            params.username = ResourceUtilities
+                    .getBundledString(DevRemoter.class, "username");
+            params.asRoot = PermissionsManager.get().isRoot();
+            ClientInstance clientInstance = PermissionsManager.get()
+                    .getClientInstance();
+            if (clientInstance != null) {
+                params.clientInstanceId = clientInstance.getId();
+            }
+            params.methodName = methodName;
+            params.args = args == null ? new Object[0] : args;
+            List<NameValuePair> qparams = new ArrayList<NameValuePair>();
+            qparams.add(
+                    new BasicNameValuePair(DevRemoterServlet.DEV_REMOTER_PARAMS,
+                            KryoUtils.serializeToBase64(params)));
+            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(qparams);
+            png.post.setEntity(entity);
+            HttpParams httpParams = png.client.getParams();
+            int timeoutMs = 120 * 1000;
+            httpParams.setParameter("http.socket.timeout", timeoutMs);
+            httpParams.setParameter("http.connection.timeout", timeoutMs);
+            HttpResponse response = png.client.execute(png.post);
+            InputStream content = response.getEntity().getContent();
+            ArrayList container = KryoUtils.deserializeFromStream(content,
+                    ArrayList.class);
+            Object obj = container.get(0);
+            if (obj instanceof Exception) {
+                ((Exception) obj).printStackTrace();
+                throw new Exception("Remote exception");
+            }
+            if (methodName.equals("transformInPersistenceContext")) {
+                ThreadlocalTransformManager.get()
+                        .setPostTransactionEntityResolver(
+                                (PostTransactionEntityResolver) container
+                                        .get(1));
+            }
+            return obj;
+        } finally {
+            LooseContext.pop();
+        }
+    }
 
-	public boolean tryInterception(Object proxy, Method method, Object[] args)
-			throws Throwable {
-		for (DevProxyInterceptor interceptor : Registry
-				.impls(DevProxyInterceptor.class)) {
-			if (interceptor.handles(proxy, method, args)) {
-				interceptionResult = interceptor.invoke(proxy, method, args);
-				return true;
-			}
-		}
-		return false;
-	}
+    public boolean tryInterception(Object proxy, Method method, Object[] args)
+            throws Throwable {
+        for (DevProxyInterceptor interceptor : Registry
+                .impls(DevProxyInterceptor.class)) {
+            if (interceptor.handles(proxy, method, args)) {
+                interceptionResult = interceptor.invoke(proxy, method, args);
+                return true;
+            }
+        }
+        return false;
+    }
 
-	class PostAndClient {
-		public HttpPost post;
+    class PostAndClient {
+        public HttpPost post;
 
-		public HttpGet get;
+        public HttpGet get;
 
-		public DefaultHttpClient client;
-	}
+        public DefaultHttpClient client;
+    }
 }
