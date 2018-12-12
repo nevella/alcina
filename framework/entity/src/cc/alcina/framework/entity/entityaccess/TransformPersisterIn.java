@@ -425,8 +425,7 @@ public class TransformPersisterIn {
                 token.setPass(Pass.DETERMINE_EXCEPTION_DETAIL);
                 transformPersisterToken.determineExceptionDetailPassStartTime = System
                         .currentTimeMillis();
-                EntityLayerObjects.get().getMetricLogger().warn(
-                        "TransformPersister: determining exception detail");
+                logger.warn("TransformPersister: determining exception detail");
             } else {
                 token.setPass(Pass.FAIL);
             }

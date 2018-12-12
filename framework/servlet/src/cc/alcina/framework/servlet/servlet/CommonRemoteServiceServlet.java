@@ -855,6 +855,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                 logger.warn("Event: " + ex.getEvent().toDebugString());
             }
         }
+        logger.warn("Request: \n" + response.getRequest());
     }
 
     private void sanitiseClrString(ClientLogRecord clr) {
