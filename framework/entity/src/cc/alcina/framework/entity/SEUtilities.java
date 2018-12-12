@@ -177,6 +177,9 @@ public class SEUtilities {
         if (relPath.contains("://")) {
             return relPath;
         }
+        if (relPath.startsWith("?")) {
+            return absPath + relPath;
+        }
         if (relPath.startsWith("/")) {
             if (absPath.contains("://")) {
                 int idx0 = absPath.indexOf("://") + 3;
@@ -349,14 +352,17 @@ public class SEUtilities {
     public static void disableSslValidation() throws Exception {
         TrustManager[] trustAllCerts = new TrustManager[] {
                 new X509TrustManager() {
+                    @Override
                     public void checkClientTrusted(X509Certificate[] certs,
                             String authType) {
                     }
 
+                    @Override
                     public void checkServerTrusted(X509Certificate[] certs,
                             String authType) {
                     }
 
+                    @Override
                     public java.security.cert.X509Certificate[] getAcceptedIssuers() {
                         return null;
                     }
@@ -367,6 +373,7 @@ public class SEUtilities {
         HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
         // Create all-trusting host name verifier
         HostnameVerifier allHostsValid = new HostnameVerifier() {
+            @Override
             public boolean verify(String hostname, SSLSession session) {
                 return true;
             }
@@ -721,6 +728,10 @@ public class SEUtilities {
             }
         }
         return sct;
+    }
+
+    public static String getMessageOrClass(Exception e) {
+        return Ax.blankTo(e.getMessage(), e.toString());
     }
 
     public static String getNameFromPath(String path) {
@@ -1694,8 +1705,4 @@ public class SEUtilities {
             return 0;
         }
     }
-
-	public static String getMessageOrClass(Exception e) {
-		return Ax.blankTo(e.getMessage(), e.toString());
-	}
 }
