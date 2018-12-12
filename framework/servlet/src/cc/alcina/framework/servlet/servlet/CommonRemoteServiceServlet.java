@@ -17,6 +17,8 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -131,6 +133,7 @@ import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
+import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
@@ -855,7 +858,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                 logger.warn("Event: " + ex.getEvent().toDebugString());
             }
         }
-        logger.warn("Request: \n" + response.getRequest());
+        File file = DataFolderProvider.get()
+                .getChildFile(Ax.format("dtr-exception/%s.txt", LocalDateTime
+                        .now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
+        file.getParentFile().mkdirs();
+        ResourceUtilities.write(response.getRequest().toString(), file);
+        logger.warn(
+                Ax.format("Request with exceptions written to: \n\t%s", file));
     }
 
     private void sanitiseClrString(ClientLogRecord clr) {
