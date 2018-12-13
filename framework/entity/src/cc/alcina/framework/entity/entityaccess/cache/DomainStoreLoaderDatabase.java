@@ -409,7 +409,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         DomainSegmentLoader segmentLoader = (DomainSegmentLoader) domainDescriptor
                 .getDomainSegmentLoader();
         segmentLoader.initialise();
-        int maxPasses = 30;
+        int maxPasses = 60;
         int pass = 0;
         Set<Class> segmentClasses = new LinkedHashSet<>();
         long start = System.currentTimeMillis();
