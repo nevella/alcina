@@ -249,6 +249,34 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
         }
         logger.setAdditivity(true);
         logger.setLevel(Level.INFO);
+        if (!Ax.isTest()) {
+            try {
+                Field jblmLoggerField = SEUtilities
+                        .getFieldByName(logger.getClass(), "jblmLogger");
+                jblmLoggerField.setAccessible(true);
+                Object jblmLogger = jblmLoggerField.get(logger);
+                Field loggerNodeField = SEUtilities
+                        .getFieldByName(jblmLogger.getClass(), "loggerNode");
+                loggerNodeField.setAccessible(true);
+                Object loggerNode = loggerNodeField.get(jblmLogger);
+                Field handlersField = SEUtilities
+                        .getFieldByName(loggerNode.getClass(), "handlers");
+                handlersField.setAccessible(true);
+                Object[] handlers = (Object[]) handlersField.get(loggerNode);
+                for (Object handler : handlers) {
+                    if (handler.getClass().getName().equals(
+                            "org.jboss.logmanager.handlers.ConsoleHandler")) {
+                        Field logLevelField = SEUtilities
+                                .getFieldByName(handler.getClass(), "logLevel");
+                        logLevelField.setAccessible(true);
+                        logLevelField.set(handler,
+                                java.util.logging.Level.FINE);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         {
             Logger metricLogger = Logger.getLogger(MetricLogging.class);
             if (Ax.isTest()) {
@@ -257,7 +285,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
                         AppPersistenceBase.METRIC_LOGGER_PATTERN);
                 metricLogger.addAppender(new SafeConsoleAppender(metricLayout));
                 metricLogger.setAdditivity(false);
-            }else{
+            } else {
                 metricLogger.setAdditivity(true);
             }
             metricLogger.setLevel(Level.DEBUG);

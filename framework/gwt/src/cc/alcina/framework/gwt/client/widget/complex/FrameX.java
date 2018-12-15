@@ -49,7 +49,6 @@ public class FrameX extends Frame {
     //Trigger a page "load" (ff issue)
     oDoc.open();
     oDoc.close();
-    debugger;
     oDoc.documentElement.innerHTML = html;
 
     }-*/;
