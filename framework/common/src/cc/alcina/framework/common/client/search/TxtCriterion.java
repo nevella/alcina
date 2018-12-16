@@ -107,7 +107,7 @@ public class TxtCriterion extends SearchCriterion implements HasValue<String> {
 						: getDisplayName() + ": " + string;
 	}
 
-	public TxtCriterion withText(String text) {
+	public TxtCriterion withValue(String text) {
 		setText(text);
 		return this;
 	}

@@ -86,7 +86,7 @@ public class AbstractDateCriterion extends SearchCriterion
 		setDate(value);
 	}
 
-	public AbstractDateCriterion withDate(Date date) {
+	public AbstractDateCriterion withValue(Date date) {
 		setDate(date);
 		return this;
 	}
