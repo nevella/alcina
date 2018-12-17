@@ -42,192 +42,195 @@ import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererRe
  * @param <V>
  */
 public abstract class ContentWrapper<D extends ContentDefinition, M extends PublicationContent, V extends DeliveryModel> {
-	private static final String XSL_OUTPUT_METHOD_XML = "<xsl:output method=\"xml\"";
+    private static final String XSL_OUTPUT_METHOD_XML = "<xsl:output method=\"xml\"";
 
-	private static final String XSL_OUTPUT_METHOD_HTML = "<xsl:output method=\"html\"";
+    private static final String XSL_OUTPUT_METHOD_HTML = "<xsl:output method=\"html\"";
 
-	private static final String XML_PI = "<?xml version=\"1.0\"?>";
+    private static final String XML_PI = "<?xml version=\"1.0\"?>";
 
-	public static String transform(InputStream trans, Document wrappingDoc,
-			String marker, boolean formatRequiresXml) throws Exception {
-		String tSrc = ResourceUtilities.readStreamToString(trans);
-		if (formatRequiresXml) {
-			tSrc = tSrc.replace(XSL_OUTPUT_METHOD_HTML, XSL_OUTPUT_METHOD_XML);
-		} else {
-			tSrc = tSrc.replace(XSL_OUTPUT_METHOD_XML, XSL_OUTPUT_METHOD_HTML);
-		}
-		trans = ResourceUtilities.writeStringToInputStream(tSrc);
-		Source trSource = XmlUtils.interpolateStreamSource(trans);
-		Source dataSource = new DOMSource(wrappingDoc);
-		String wrappedContent = XmlUtils.transformDocToString(dataSource,
-				trSource, marker);
-		wrappedContent = XmlUtils.expandEmptyElements(wrappedContent);
-		wrappedContent = XmlUtils.cleanXmlHeaders(wrappedContent);
-		if (formatRequiresXml) {
-			wrappedContent = XML_PI + "\n" + wrappedContent;
-		} else {
-			wrappedContent = XmlUtils.removeSelfClosingHtmlTags(wrappedContent);
-		}
-		trans.close();
-		return wrappedContent;
-	}
+    public static String transform(InputStream trans, Document wrappingDoc,
+            String marker, boolean formatRequiresXml) throws Exception {
+        String tSrc = ResourceUtilities.readStreamToString(trans);
+        if (formatRequiresXml) {
+            tSrc = tSrc.replace(XSL_OUTPUT_METHOD_HTML, XSL_OUTPUT_METHOD_XML);
+        } else {
+            tSrc = tSrc.replace(XSL_OUTPUT_METHOD_XML, XSL_OUTPUT_METHOD_HTML);
+        }
+        trans = ResourceUtilities.writeStringToInputStream(tSrc);
+        Source trSource = XmlUtils.interpolateStreamSource(trans);
+        Source dataSource = new DOMSource(wrappingDoc);
+        String wrappedContent = XmlUtils.transformDocToString(dataSource,
+                trSource, marker);
+        wrappedContent = XmlUtils.expandEmptyElements(wrappedContent);
+        wrappedContent = XmlUtils.cleanXmlHeaders(wrappedContent);
+        // we love MsWord/Outlook sooo much
+        wrappedContent = wrappedContent.replace("<w:anchorlock></w>",
+                "<w:anchorlock />");
+        if (formatRequiresXml) {
+            wrappedContent = XML_PI + "\n" + wrappedContent;
+        } else {
+            wrappedContent = XmlUtils.removeSelfClosingHtmlTags(wrappedContent);
+        }
+        trans.close();
+        return wrappedContent;
+    }
 
-	protected D contentDefinition;
+    protected D contentDefinition;
 
-	protected M publicationContent;
+    protected M publicationContent;
 
-	protected ContentRendererResults rendererResults;
+    protected ContentRendererResults rendererResults;
 
-	protected String wrappedContent;
+    protected String wrappedContent;
 
-	protected String wrappedFooter;
+    protected String wrappedFooter;
 
-	protected byte[] wrappedBytes;
+    protected byte[] wrappedBytes;
 
-	protected V deliveryModel;
+    protected V deliveryModel;
 
-	protected Document wrappingDoc;
+    protected Document wrappingDoc;
 
-	protected Map<String, String> replacementParameters = new HashMap<String, String>();
+    protected Map<String, String> replacementParameters = new HashMap<String, String>();
 
-	protected WrapperModel wrapper = createWrapperModel();
+    protected WrapperModel wrapper = createWrapperModel();
 
-	protected String xslPath;
+    protected String xslPath;
 
-	public Object custom;
+    public Object custom;
 
-	public Long getUserPublicationId() {
-		return wrapper.footerModel.publicationLongId;
-	}
+    public Long getUserPublicationId() {
+        return wrapper.footerModel.publicationLongId;
+    }
 
-	// normally xml
-	public String getWrappedContent() {
-		return this.wrappedContent;
-	}
+    // normally xml
+    public String getWrappedContent() {
+        return this.wrappedContent;
+    }
 
-	public void setWrappedContent(String wrappedContent) {
-		this.wrappedContent = wrappedContent;
-	}
+    public void setWrappedContent(String wrappedContent) {
+        this.wrappedContent = wrappedContent;
+    }
 
-	public void wrapContent(D contentDefinition, M publicationContent,
-			V deliveryModel, ContentRendererResults rendererResults,
-			long publicationId, long publicationUserId) throws Exception {
-		this.contentDefinition = contentDefinition;
-		this.publicationContent = publicationContent;
-		this.deliveryModel = deliveryModel;
-		this.rendererResults = rendererResults;
-		wrappingDoc = XmlUtils.createDocument();
-		prepareWrapper(publicationId, publicationUserId);
-		wrapper.css = CommonUtils.namedFormat(wrapper.css,
-				replacementParameters);
-		wrapper.printCss = CommonUtils.namedFormat(wrapper.printCss,
-				replacementParameters);
-		marshallToDoc();
-		boolean formatRequiresXml = deliveryModel.provideTargetFormat()
-				.requiresXml();
-		transform(xslPath, formatRequiresXml);
-	}
+    public void wrapContent(D contentDefinition, M publicationContent,
+            V deliveryModel, ContentRendererResults rendererResults,
+            long publicationId, long publicationUserId) throws Exception {
+        this.contentDefinition = contentDefinition;
+        this.publicationContent = publicationContent;
+        this.deliveryModel = deliveryModel;
+        this.rendererResults = rendererResults;
+        wrappingDoc = XmlUtils.createDocument();
+        prepareWrapper(publicationId, publicationUserId);
+        wrapper.css = CommonUtils.namedFormat(wrapper.css,
+                replacementParameters);
+        wrapper.printCss = CommonUtils.namedFormat(wrapper.printCss,
+                replacementParameters);
+        marshallToDoc();
+        boolean formatRequiresXml = deliveryModel.provideTargetFormat()
+                .requiresXml();
+        transform(xslPath, formatRequiresXml);
+    }
 
-	protected WrapperModel createWrapperModel() {
-		return new WrapperModel();
-	}
+    protected WrapperModel createWrapperModel() {
+        return new WrapperModel();
+    }
 
-	protected Class getWrapperTransformClass() {
-		return getClass();
-	}
+    protected Class getWrapperTransformClass() {
+        return getClass();
+    }
 
-	protected void marshallToDoc() throws Exception {
-		Set<Class> jaxbClasses = new HashSet<Class>(
-				Registry.get().lookup(JaxbContextRegistration.class));
-		JAXBContext jc = JaxbUtils.getContext(jaxbClasses);
-		Marshaller m = jc.createMarshaller();
-		m.marshal(wrapper, wrappingDoc);
-	}
+    protected void marshallToDoc() throws Exception {
+        Set<Class> jaxbClasses = new HashSet<Class>(
+                Registry.get().lookup(JaxbContextRegistration.class));
+        JAXBContext jc = JaxbUtils.getContext(jaxbClasses);
+        Marshaller m = jc.createMarshaller();
+        m.marshal(wrapper, wrappingDoc);
+    }
 
-	protected abstract void prepareWrapper(long publicationId,
-			long publicationUserId) throws Exception;
+    protected abstract void prepareWrapper(long publicationId,
+            long publicationUserId) throws Exception;
 
-	protected void transform(String xslPath, boolean formatRequiresXml)
-			throws Exception {
-		InputStream trans = getWrapperTransformClass()
-				.getResourceAsStream(xslPath);
-		String marker = getWrapperTransformClass().getName() + "/" + xslPath
-				+ "-" + formatRequiresXml;
-		if (!ResourceUtilities.getBoolean(ContentWrapper.class,
-				"cacheTransforms")) {
-			marker += Math.random();
-		}
-		wrappedContent = transform(trans, wrappingDoc, marker,
-				formatRequiresXml);
-		int debug = 3;
-	}
+    protected void transform(String xslPath, boolean formatRequiresXml)
+            throws Exception {
+        InputStream trans = getWrapperTransformClass()
+                .getResourceAsStream(xslPath);
+        String marker = getWrapperTransformClass().getName() + "/" + xslPath
+                + "-" + formatRequiresXml;
+        if (!ResourceUtilities.getBoolean(ContentWrapper.class,
+                "cacheTransforms")) {
+            marker += Math.random();
+        }
+        wrappedContent = transform(trans, wrappingDoc, marker,
+                formatRequiresXml);
+        int debug = 3;
+    }
 
-	@XmlAccessorType(XmlAccessType.FIELD)
-	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
-	public static class FooterModel {
-		public Long publicationLongId;
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @RegistryLocation(registryPoint = JaxbContextRegistration.class)
+    public static class FooterModel {
+        public Long publicationLongId;
 
-		public String publicationId;
+        public String publicationId;
 
-		public String publicationDateString;
+        public String publicationDateString;
 
-		public Date publicationDate;
+        public Date publicationDate;
 
-		public String userName;
+        public String userName;
 
-		public String unsubscribeHtml;
+        public String unsubscribeHtml;
 
-		public boolean showPublicationInfo = true;
-	}
+        public boolean showPublicationInfo = true;
+    }
 
-	@XmlRootElement(name = "info")
-	@XmlAccessorType(XmlAccessType.FIELD)
-	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
-	public static class WrapperModel {
-		public String css;
+    @XmlRootElement(name = "info")
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @RegistryLocation(registryPoint = JaxbContextRegistration.class)
+    public static class WrapperModel {
+        public String css;
 
-		public String printCss;
+        public String printCss;
 
-		public ContentRendererResults rendererResults;
+        public ContentRendererResults rendererResults;
 
-		public String resourceBaseHref;
+        public String resourceBaseHref;
 
-		public boolean header;
+        public boolean header;
 
-		public String systemMessage;
+        public String systemMessage;
 
-		public String description;
+        public String description;
 
-		public boolean footer;
+        public boolean footer;
 
-		public boolean narrow;
+        public boolean narrow;
 
-		public boolean css31;
+        public boolean css31;
 
-		public FooterModel footerModel = new FooterModel();
+        public FooterModel footerModel = new FooterModel();
 
-		public String headerContent;
+        public String headerContent;
 
-		public String linkBaseHref;
+        public String linkBaseHref;
 
-		public int year;
+        public int year;
 
-		public String siteBaseHref;
+        public String siteBaseHref;
 
-		public String baseHref;
+        public String baseHref;
 
-		public String inlineEmailCss;
+        public String inlineEmailCss;
 
-		public boolean wrapInDiv;
+        public boolean wrapInDiv;
 
-		public boolean ieCssHacks;
+        public boolean ieCssHacks;
 
-		public boolean noSpecificHeaderContent;
+        public boolean noSpecificHeaderContent;
 
-		@XmlTransient
-		public List gridRows = null;
+        @XmlTransient
+        public List gridRows = null;
 
-		public WrapperModel() {
-		}
-	}
+        public WrapperModel() {
+        }
+    }
 }
