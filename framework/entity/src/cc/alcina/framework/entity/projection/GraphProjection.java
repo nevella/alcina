@@ -47,6 +47,7 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.GArrayList;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
@@ -288,6 +289,26 @@ public class GraphProjection {
                 || Date.class.isAssignableFrom(c) || isEnumOrEnumSubclass(c)
                 || ProjectByValue.class.isAssignableFrom(c)
                 || SafeHtml.class.isAssignableFrom(c);
+    }
+
+    public static <T> T maxDepthProjectionAndRegister(T t, int depth) {
+        return maxDepthProjectionAndRegister(t, depth, null);
+    }
+
+    public static <T> T maxDepthProjectionAndRegister(T t, int depth,
+            GraphProjectionFieldFilter fieldFilter) {
+        CollectionProjectionFilterWithCache dataFilter = new CollectionProjectionFilterWithCache();
+        GraphProjections projections = GraphProjections.defaultProjections()
+                .dataFilter(dataFilter).maxDepth(depth);
+        if (fieldFilter != null) {
+            projections.fieldFilter(fieldFilter);
+        }
+        T result = projections.project(t);
+        TransformManager transformManager = TransformManager.get();
+        for (HasIdAndLocalId hili : dataFilter.getCache().allValues()) {
+            transformManager.registerDomainObject(hili);
+        }
+        return result;
     }
 
     public static boolean nonTransientFieldwiseEqual(Object o1, Object o2) {
