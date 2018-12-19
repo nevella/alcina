@@ -33,6 +33,7 @@ import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class ThreadedPermissionsManager extends PermissionsManager {
     private static ThreadLocal getTTL = new ThreadLocal() {
+        @Override
         protected synchronized Object initialValue() {
             return new ThreadedPermissionsManager();
         }
@@ -40,11 +41,6 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 
     public static ThreadedPermissionsManager cast() {
         return (ThreadedPermissionsManager) PermissionsManager.get();
-    }
-
-    @Override
-    public ClientInstance getClientInstance() {
-        return ThreadedPmClientInstanceResolver.get().getClientInstance();
     }
 
     public static void clearThreadLocal() {
@@ -91,12 +87,29 @@ public class ThreadedPermissionsManager extends PermissionsManager {
     }
 
     @Override
+    public ClientInstance getClientInstance() {
+        return ThreadedPmClientInstanceResolver.get().getClientInstance();
+    }
+
+    @Override
     public PermissionsManager getT() {
         return (ThreadedPermissionsManager) getTTL.get();
     }
 
     public void popSystemOrCurrentUser() {
         popUser();
+    }
+
+    public IUser provideNonSystemUserInStack() {
+        int idx = userStack.size() - 1;
+        while (idx >= 0) {
+            Boolean isRoot = rootStack.get(idx);
+            if (!isRoot) {
+                return userStack.get(idx);
+            }
+            idx--;
+        }
+        throw new IllegalStateException("No non-root user in stack");
     }
 
     public void pushSystemOrCurrentUserAsRoot() {
@@ -112,6 +125,7 @@ public class ThreadedPermissionsManager extends PermissionsManager {
     public void reset() {
         userStack.clear();
         stateStack.clear();
+        rootStack.clear();
         setRoot(false);
     }
 

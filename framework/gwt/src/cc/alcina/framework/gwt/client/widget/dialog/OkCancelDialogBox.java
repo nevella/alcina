@@ -17,6 +17,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Button;
@@ -41,200 +42,201 @@ import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
  * @author Nick Reddel
  */
 public class OkCancelDialogBox extends GlassDialogBox {
-	protected Button cancelButton;
+    protected Button cancelButton;
 
-	protected Button okButton;
+    protected Button okButton;
 
-	protected final Widget widget;
+    protected final Widget widget;
 
-	protected PermissibleActionListener vetoableActionListener;
+    protected PermissibleActionListener vetoableActionListener;
 
-	private HorizontalPanel buttonsPanel;
+    private HorizontalPanel buttonsPanel;
 
-	private boolean isCentering = false;
+    private boolean isCentering = false;
 
-	private Timer checkReCenterTimer;
+    private Timer checkReCenterTimer;
 
-	private HandlerRegistration nativePreviewHandlerRegistration;
+    private HandlerRegistration nativePreviewHandlerRegistration;
 
-	public OkCancelDialogBox(String title, Widget widget,
-			final PermissibleActionListener l) {
-		this(title, widget, l, HasHorizontalAlignment.ALIGN_CENTER);
-	}
+    public OkCancelDialogBox(String title, Widget widget,
+            final PermissibleActionListener l) {
+        this(title, widget, l, HasHorizontalAlignment.ALIGN_CENTER);
+    }
 
-	public OkCancelDialogBox(String title, Widget widget,
-			PermissibleActionListener listener,
-			HorizontalAlignmentConstant widgetAlign) {
-		this.widget = widget;
-		this.vetoableActionListener = listener;
-		setText(title);
-		setAnimationEnabled(showAnimated());
-		VerticalPanel vp = new VerticalPanel();
-		vp.add(widget);
-		vp.setCellHorizontalAlignment(widget, widgetAlign);
-		buttonsPanel = new HorizontalPanel();
-		cancelButton = new Button("Cancel");
-		cancelButton.addClickHandler(e -> cancel());
-		okButton = new Button(getOKButtonName());
-		okButton.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				onOkButtonClicked();
-			}
-		});
-		buttonsPanel
-				.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
-		buttonsPanel.setSpacing(8);
-		buttonsPanel.add(okButton);
-		buttonsPanel.add(cancelButton);
-		vp.add(buttonsPanel);
-		vp.setCellHorizontalAlignment(buttonsPanel,
-				HasHorizontalAlignment.ALIGN_CENTER);
-		setWidget(vp);
-		adjustDisplay();
-		center();
-	}
+    public OkCancelDialogBox(String title, Widget widget,
+            PermissibleActionListener listener,
+            HorizontalAlignmentConstant widgetAlign) {
+        this.widget = widget;
+        this.vetoableActionListener = listener;
+        setText(title);
+        setAnimationEnabled(showAnimated());
+        VerticalPanel vp = new VerticalPanel();
+        vp.add(widget);
+        vp.setCellHorizontalAlignment(widget, widgetAlign);
+        buttonsPanel = new HorizontalPanel();
+        cancelButton = new Button("Cancel");
+        cancelButton.addClickHandler(e -> cancel());
+        okButton = new Button(SafeHtmlUtils.fromString(getOKButtonName()));
+        okButton.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                onOkButtonClicked();
+            }
+        });
+        buttonsPanel
+                .setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+        buttonsPanel.setSpacing(8);
+        buttonsPanel.add(okButton);
+        buttonsPanel.add(cancelButton);
+        vp.add(buttonsPanel);
+        vp.setCellHorizontalAlignment(buttonsPanel,
+                HasHorizontalAlignment.ALIGN_CENTER);
+        setWidget(vp);
+        adjustDisplay();
+        center();
+    }
 
-	@Override
-	public void center() {
-		isCentering = true;
-		super.center();
-		isCentering = false;
-	}
+    @Override
+    public void center() {
+        isCentering = true;
+        super.center();
+        isCentering = false;
+    }
 
-	// makes sure richtextareas get a focuslost()
-	public void focusOK() {
-		okButton.setFocus(true);
-	}
+    // makes sure richtextareas get a focuslost()
+    public void focusOK() {
+        okButton.setFocus(true);
+    }
 
-	public HorizontalPanel getButtonsPanel() {
-		return this.buttonsPanel;
-	}
+    public HorizontalPanel getButtonsPanel() {
+        return this.buttonsPanel;
+    }
 
-	@Override
-	public void hide() {
-		super.hide();
-	}
+    @Override
+    public void hide() {
+        super.hide();
+    }
 
-	@Override
-	public void show() {
-		super.show();
-		if (!isCentering) {
-			okButton.setFocus(true);
-		}
-	}
+    @Override
+    public void show() {
+        super.show();
+        if (!isCentering) {
+            okButton.setFocus(true);
+        }
+    }
 
-	private void cancel() {
-		OkCancelDialogBox.this.hide();
-		if (vetoableActionListener != null) {
-			vetoableActionListener.vetoableAction(
-					new PermissibleActionEvent(this, CancelAction.INSTANCE));
-		}
-	}
+    private void cancel() {
+        OkCancelDialogBox.this.hide();
+        if (vetoableActionListener != null) {
+            vetoableActionListener.vetoableAction(
+                    new PermissibleActionEvent(this, CancelAction.INSTANCE));
+        }
+    }
 
-	// for subclasses
-	protected void adjustDisplay() {
-	}
+    // for subclasses
+    protected void adjustDisplay() {
+    }
 
-	protected boolean checkValid() {
-		return true;
-	}
+    protected boolean checkValid() {
+        return true;
+    }
 
-	protected String getOKButtonName() {
-		return "OK";
-	}
+    protected String getOKButtonName() {
+        return "OK";
+    }
 
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-		checkReCenterTimer = new Timer() {
-			private int lastCenterHeight;
+    @Override
+    protected void onAttach() {
+        super.onAttach();
+        checkReCenterTimer = new Timer() {
+            private int lastCenterHeight;
 
-			@Override
-			public void run() {
-				if (lastCenterHeight != 0
-						&& lastCenterHeight != getOffsetHeight()) {
-					center();
-				}
-				lastCenterHeight = getOffsetHeight();
-			}
-		};
-		checkReCenterTimer.scheduleRepeating(200);
-		nativePreviewHandlerRegistration = Event.addNativePreviewHandler(e -> {
-			int evtCode = e.getTypeInt();
-			if (evtCode == Event.ONKEYDOWN
-					&& e.getNativeEvent().getKeyCode() == KeyCodes.KEY_ESCAPE) {
-				cancel();
-			}
-			if (evtCode == Event.ONKEYDOWN
-					&& e.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER
-					&& e.getNativeEvent().getCtrlKey()) {
-				e.cancel();
-				okButton.setFocus(true);
-				onOkButtonClicked();
-			}
-		});
-	}
+            @Override
+            public void run() {
+                if (lastCenterHeight != 0
+                        && lastCenterHeight != getOffsetHeight()) {
+                    center();
+                }
+                lastCenterHeight = getOffsetHeight();
+            }
+        };
+        checkReCenterTimer.scheduleRepeating(200);
+        nativePreviewHandlerRegistration = Event.addNativePreviewHandler(e -> {
+            int evtCode = e.getTypeInt();
+            if (evtCode == Event.ONKEYDOWN
+                    && e.getNativeEvent().getKeyCode() == KeyCodes.KEY_ESCAPE) {
+                cancel();
+            }
+            if (evtCode == Event.ONKEYDOWN
+                    && e.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER
+                    && e.getNativeEvent().getCtrlKey()) {
+                e.cancel();
+                okButton.setFocus(true);
+                onOkButtonClicked();
+            }
+        });
+    }
 
-	@Override
-	protected void onDetach() {
-		checkReCenterTimer.cancel();
-		super.onDetach();
-		nativePreviewHandlerRegistration.removeHandler();
-	}
+    @Override
+    protected void onDetach() {
+        checkReCenterTimer.cancel();
+        super.onDetach();
+        nativePreviewHandlerRegistration.removeHandler();
+    }
 
-	protected void onOkButtonClicked() {
-		if (!checkValid()) {
-			return;
-		}
-		okButton.setEnabled(false);
-		OkCancelDialogBox.this.hide();
-		if (vetoableActionListener != null) {
-			vetoableActionListener.vetoableAction(
-					new PermissibleActionEvent(this, OkAction.INSTANCE));
-		}
-	}
+    protected void onOkButtonClicked() {
+        if (!checkValid()) {
+            return;
+        }
+        okButton.setEnabled(false);
+        OkCancelDialogBox.this.hide();
+        if (vetoableActionListener != null) {
+            vetoableActionListener.vetoableAction(
+                    new PermissibleActionEvent(this, OkAction.INSTANCE));
+        }
+    }
 
-	protected boolean showAnimated() {
-		return true;
-	}
+    protected boolean showAnimated() {
+        return true;
+    }
 
-	public static class SaveWithValidatorDialogBox extends OkCancelDialogBox {
-		protected final Binding binding;
+    public static class SaveWithValidatorDialogBox extends OkCancelDialogBox {
+        protected final Binding binding;
 
-		public SaveWithValidatorDialogBox(String title, Widget widget,
-				PermissibleActionListener l,
-				HorizontalAlignmentConstant widgetAlign, Binding binding) {
-			super(title, widget, l, widgetAlign);
-			this.binding = binding;
-		}
+        public SaveWithValidatorDialogBox(String title, Widget widget,
+                PermissibleActionListener l,
+                HorizontalAlignmentConstant widgetAlign, Binding binding) {
+            super(title, widget, l, widgetAlign);
+            this.binding = binding;
+        }
 
-		@Override
-		public void show() {
-			super.show();
-			if (widget instanceof HasFirstFocusable) {
-				HasFirstFocusable ff = (HasFirstFocusable) widget;
-				ff.firstFocusable().setFocus(true);
-			}
-		}
+        @Override
+        public void show() {
+            super.show();
+            if (widget instanceof HasFirstFocusable) {
+                HasFirstFocusable ff = (HasFirstFocusable) widget;
+                ff.firstFocusable().setFocus(true);
+            }
+        }
 
-		@Override
-		protected boolean checkValid() {
-			if (binding.validate()) {
-				return true;
-			}
-			GwittirUtils.refreshEmptyTextBoxes(binding);
-			notifyProblem();
-			return false;
-		}
+        @Override
+        protected boolean checkValid() {
+            if (binding.validate()) {
+                return true;
+            }
+            GwittirUtils.refreshEmptyTextBoxes(binding);
+            notifyProblem();
+            return false;
+        }
 
-		@Override
-		protected String getOKButtonName() {
-			return "Save";
-		}
+        @Override
+        protected String getOKButtonName() {
+            return "Save";
+        }
 
-		protected void notifyProblem() {
-			Registry.impl(ClientNotifications.class)
-					.showWarning("Please correct the problems in the form");
-		}
-	}
+        protected void notifyProblem() {
+            Registry.impl(ClientNotifications.class)
+                    .showWarning("Please correct the problems in the form");
+        }
+    }
 }
