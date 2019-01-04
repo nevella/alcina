@@ -62,20 +62,26 @@ public class EntityLayerUtils {
         setLevel(clazz.getName(), level);
     }
 
-    public static void setLevel(org.slf4j.Logger slf4jlogger,
-            Level level) {
+    public static void setLevel(org.slf4j.Logger slf4jlogger, Level level) {
         setLevel(slf4jlogger.getName(), level);
     }
 
     public static void setLevel(String key, Level level) {
         Logger logger = Logger.getLogger(key);
         if (Ax.isTest()) {
-            logger.removeAllAppenders();
-            Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
-            Appender appender = new SafeConsoleAppender(layout);
-            logger.addAppender(appender);
+            setStandardConsoleAppender(key);
+            logger.setAdditivity(false);
         }
-        logger.setAdditivity(false);
         logger.setLevel(level);
+    }
+    public static void setStandardConsoleAppender(Class clazz) {
+        setStandardConsoleAppender(clazz.getName());
+    }
+    public static void setStandardConsoleAppender(String key) {
+        Logger logger = Logger.getLogger(key);
+        logger.removeAllAppenders();
+        Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
+        Appender appender = new SafeConsoleAppender(layout);
+        logger.addAppender(appender);
     }
 }
