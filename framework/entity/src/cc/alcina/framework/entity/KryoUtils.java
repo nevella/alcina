@@ -22,7 +22,6 @@ import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.esotericsoftware.minlog.Log;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.util.LooseContext;
 
@@ -61,15 +60,33 @@ public class KryoUtils {
 					.deserializationFinished();
 			return someObject;
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			throw new   KryoDeserializationException (e);
 		}
 	}
+	public static class KryoDeserializationException extends RuntimeException{
 
+        public KryoDeserializationException() {
+            super();
+        }
+
+        public KryoDeserializationException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public KryoDeserializationException(String message) {
+            super(message);
+        }
+
+        public KryoDeserializationException(Throwable cause) {
+            super(cause);
+        }
+	    
+	}
 	public static <T> T deserializeFromFile(File file, Class<T> knownType) {
 		try {
 			return deserializeFromStream(new FileInputStream(file), knownType);
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			throw new KryoDeserializationException(e);
 		}
 	}
 
@@ -87,7 +104,7 @@ public class KryoUtils {
 					.deserializationFinished();
 			return someObject;
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			throw new KryoDeserializationException(e);
 		} finally {
 			try {
 				stream.close();
@@ -120,7 +137,7 @@ public class KryoUtils {
 			output.flush();
 			return output.getBuffer();
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			throw new KryoDeserializationException(e);
 		}
 	}
 
@@ -128,7 +145,7 @@ public class KryoUtils {
 		try (OutputStream os = new FileOutputStream(file)) {
 			serializeToStream(object, os);
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			throw new KryoDeserializationException(e);
 		}
 	}
 
@@ -143,7 +160,7 @@ public class KryoUtils {
 			output.flush();
 			output.close();
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			throw new KryoDeserializationException(e);
 		}
 	}
 
