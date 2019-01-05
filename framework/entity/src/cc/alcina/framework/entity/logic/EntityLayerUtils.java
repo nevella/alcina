@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.logic;
 
+import java.lang.reflect.Field;
+
 import org.apache.log4j.Appender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
@@ -11,6 +13,7 @@ import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 
@@ -62,9 +65,28 @@ public class EntityLayerUtils {
         setLevel(clazz.getName(), level);
     }
 
-    public static void setLevel(org.slf4j.Logger slf4jlogger,
-            Level level) {
+    public static void setLevel(org.slf4j.Logger slf4jlogger, Level level) {
         setLevel(slf4jlogger.getName(), level);
+        if (!Ax.isTest() && slf4jlogger.getClass().getName()
+                .equals("org.slf4j.impl.Slf4jLogger")) {
+            try {
+                Field loggerField = SEUtilities
+                        .getFieldByName(slf4jlogger.getClass(), "logger");
+                loggerField.setAccessible(true);
+                java.util.logging.Logger jblmLogger = (java.util.logging.Logger) loggerField
+                        .get(slf4jlogger);
+                java.util.logging.Level julLevel = java.util.logging.Level.WARNING;
+                if (level == Level.DEBUG || level == Level.TRACE
+                        || level == Level.ALL) {
+                    julLevel = java.util.logging.Level.FINE;
+                } else if (level == Level.INFO) {
+                    julLevel = java.util.logging.Level.INFO;
+                }
+                jblmLogger.setLevel(julLevel);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static void setLevel(String key, Level level) {
