@@ -898,6 +898,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
     @Override
     public void persistInternalMetrics(List<InternalMetric> toPersist) {
+        if (AppPersistenceBase.isInstanceReadOnly()) {
+            return;
+        }
         for (InternalMetric metric : toPersist) {
             if (metric.getId() != 0) {
                 InternalMetric managed = getEntityManager()
