@@ -195,6 +195,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         MetricLogging.get().start("domainStore-all");
         // get non-many-many obj
         store.threads.lock(true);
+        // lazy tables, load a segment (for large db dev work)
+        if (domainDescriptor.getDomainSegmentLoader() != null) {
+            MetricLogging.get().start("initialise-domain-segment");
+            initialiseDomainSegment();
+            MetricLogging.get().end("initialise-domain-segment");
+        }
         MetricLogging.get().start("tables");
         for (DomainClassDescriptor descriptor : domainDescriptor.perClass
                 .values()) {
@@ -404,11 +410,16 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         return min;
     }
 
+    private void initialiseDomainSegment() throws Exception {
+        DomainSegmentLoader segmentLoader = (DomainSegmentLoader) domainDescriptor
+                .getDomainSegmentLoader();
+        segmentLoader.initialise();
+    }
+
     private void loadDomainSegment() throws Exception {
         List<Callable> calls = new ArrayList<Callable>();
         DomainSegmentLoader segmentLoader = (DomainSegmentLoader) domainDescriptor
                 .getDomainSegmentLoader();
-        segmentLoader.initialise();
         int maxPasses = 60;
         int pass = 0;
         Set<Class> segmentClasses = new LinkedHashSet<>();
@@ -1308,6 +1319,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         }
 
         private ResultSet ensureRs(int pass) {
+            String sql = null;
             try {
                 if (rs == null) {
                     conn.setAutoCommit(false);
@@ -1319,7 +1331,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                         columnNames.add(descr.getColumnSql());
                     }
                     Table table = (Table) clazz.getAnnotation(Table.class);
-                    String sql = String.format(template,
+                    sql = String.format(template,
                             CommonUtils.join(columnNames, ","), table.name());
                     if (CommonUtils.isNotNullOrEmpty(sqlFilter)) {
                         sql += String.format(" where %s", sqlFilter);
@@ -1341,6 +1353,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                     e.printStackTrace();
                     return ensureRs(pass + 1);
                 }
+                Ax.out("rs sql:\n\t%s", sql);
                 throw new WrappedRuntimeException(e);
             }
         }
