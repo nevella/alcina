@@ -572,14 +572,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
             PdOperator pdRev = joinHandler != null ? null
                     : ensurePdOperator(rev,
                             rev.getReadMethod().getDeclaringClass());
-            while (rs.next()) {
+            Iterable<Object[]> results = getData(conn, null, sql);
+            for (Object[] objects : results) {
                 HasIdAndLocalId src = (HasIdAndLocalId) store.cache
-                        .get(targetEntityClass, rs.getLong(1));
+                        .get(targetEntityClass, (Long) objects[0]);
                 assert src != null;
                 if (joinHandler == null) {
                     HasIdAndLocalId tgt = (HasIdAndLocalId) store.cache.get(
                             rev.getReadMethod().getDeclaringClass(),
-                            rs.getLong(2));
+                            (Long) objects[1]);
                     assert tgt != null;
                     laterLookup.add(tgt, pdFwd, src);
                     laterLookup.add(src, pdRev, tgt);
@@ -1301,12 +1302,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                         : (ConnResultsReuse) domainDescriptor
                                 .getDomainSegmentLoader();
 
+        private boolean joinTable;
+
         public ConnResults(Connection conn, Class clazz,
                 List<ColumnDescriptor> columnDescriptors, String sqlFilter) {
             this.conn = conn;
             this.clazz = clazz;
             this.columnDescriptors = columnDescriptors;
             this.sqlFilter = sqlFilter;
+            this.joinTable = clazz == null;
         }
 
         public ResultSet ensureRs() {
@@ -1325,16 +1329,21 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                     conn.setAutoCommit(false);
                     Statement stmt = conn.createStatement();
                     stmt.setFetchSize(20000);
-                    String template = "select %s from %s";
-                    List<String> columnNames = new ArrayList<String>();
-                    for (ColumnDescriptor descr : columnDescriptors) {
-                        columnNames.add(descr.getColumnSql());
-                    }
-                    Table table = (Table) clazz.getAnnotation(Table.class);
-                    sql = String.format(template,
-                            CommonUtils.join(columnNames, ","), table.name());
-                    if (CommonUtils.isNotNullOrEmpty(sqlFilter)) {
-                        sql += String.format(" where %s", sqlFilter);
+                    if (joinTable) {
+                        sql = sqlFilter;
+                    } else {
+                        String template = "select %s from %s";
+                        List<String> columnNames = new ArrayList<String>();
+                        for (ColumnDescriptor descr : columnDescriptors) {
+                            columnNames.add(descr.getColumnSql());
+                        }
+                        Table table = (Table) clazz.getAnnotation(Table.class);
+                        sql = String.format(template,
+                                CommonUtils.join(columnNames, ","),
+                                table.name());
+                        if (CommonUtils.isNotNullOrEmpty(sqlFilter)) {
+                            sql += String.format(" where %s", sqlFilter);
+                        }
                     }
                     store.sqlLogger.debug(sql);
                     rs = stmt.executeQuery(sql);
@@ -1390,12 +1399,19 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                     ensureRs();
                     try {
                         if (rs.next()) {
-                            cached = new Object[columnDescriptors.size()];
-                            for (int idx = 1; idx <= columnDescriptors
-                                    .size(); idx++) {
-                                ColumnDescriptor descriptor = columnDescriptors
-                                        .get(idx - 1);
-                                cached[idx - 1] = descriptor.getObject(rs, idx);
+                            if (joinTable) {
+                                cached = new Object[2];
+                                cached[0] = rs.getLong(1);
+                                cached[1] = rs.getLong(2);
+                            } else {
+                                cached = new Object[columnDescriptors.size()];
+                                for (int idx = 1; idx <= columnDescriptors
+                                        .size(); idx++) {
+                                    ColumnDescriptor descriptor = columnDescriptors
+                                            .get(idx - 1);
+                                    cached[idx - 1] = descriptor.getObject(rs,
+                                            idx);
+                                }
                             }
                             ConnResults.this.rsReuse.onNext(ConnResults.this,
                                     cached);

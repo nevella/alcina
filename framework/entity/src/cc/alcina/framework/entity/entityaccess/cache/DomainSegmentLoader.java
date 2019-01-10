@@ -64,11 +64,12 @@ public abstract class DomainSegmentLoader
                 savedResults = new ArrayList<>();
                 connResults.cachedValues = savedResults;
                 savedRsResults.put(key, savedResults);
+                DomainStore.stores().databaseStore().sqlLogger.debug("{}: {}",
+                        connResults.clazz == null ? "(null)"
+                                : connResults.clazz.getSimpleName(),
+                        connResults.sqlFilter);
                 return itr;
             } else {
-                DomainStore.stores().databaseStore().sqlLogger.debug("{}: {}",
-                        connResults.clazz.getSimpleName(),
-                        connResults.sqlFilter);
                 return savedResults.iterator();
             }
         }
@@ -199,7 +200,8 @@ public abstract class DomainSegmentLoader
         }
 
         public ConnRsKey(ConnResults connResults) {
-            clazzName = connResults.clazz.getName();
+            clazzName = connResults.clazz == null ? "(null)"
+                    : connResults.clazz.getName();
             sqlFilter = connResults.sqlFilter;
         }
     }
