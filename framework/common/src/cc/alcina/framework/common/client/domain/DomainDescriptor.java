@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.CachingMap;
-import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader;
 
 public abstract class DomainDescriptor {
     public Map<Class, DomainClassDescriptor<?>> perClass = new LinkedHashMap<>();
@@ -84,8 +83,7 @@ public abstract class DomainDescriptor {
     }
 
     public void saveSegmentData() {
-        DomainSegmentLoader segmentLoader = (DomainSegmentLoader) getDomainSegmentLoader();
-        segmentLoader.saveSegmentData0();
+        throw new UnsupportedOperationException();
     }
 
     public static interface DomainStoreTask {
