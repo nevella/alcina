@@ -271,6 +271,10 @@ public class DomainStore implements RegistrableService, IDomainStore {
         return this.cache;
     }
 
+    public DomainDescriptor getDomainDescriptor() {
+        return this.domainDescriptor;
+    }
+
     public DomainStoreHealth getHealth() {
         return threads.health;
     }

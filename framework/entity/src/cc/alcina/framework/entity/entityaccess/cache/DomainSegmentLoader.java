@@ -116,6 +116,10 @@ public abstract class DomainSegmentLoader
         if (isReload()) {
             return;
         }
+        saveSegmentData0();
+    }
+
+    public void saveSegmentData0() {
         SavedSegmentDataHolder holder = new SavedSegmentDataHolder();
         holder.initialToLoadIds = initialToLoadIds;
         holder.savedRsResults = savedRsResults;
