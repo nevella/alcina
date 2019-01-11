@@ -437,6 +437,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                 segmentClasses.add(entry.getKey());
                 calls.add(() -> {
                     Collection<Long> ids = entry.getValue();
+                    ids = ids.stream().distinct().sorted()
+                            .collect(Collectors.toList());
                     Class clazz = entry.getKey();
                     ids = segmentLoader.filterForQueried(clazz, "id", ids);
                     loadTableOrStoreSegment(clazz,
@@ -460,6 +462,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                     if (property.type == DomainSegmentPropertyType.TABLE_REF) {
                         Collection<Long> ids = store.cache
                                 .keys(property.target);
+                        ids = ids.stream().distinct().sorted()
+                                .collect(Collectors.toList());
                         ids = segmentLoader.filterForQueried(property.source,
                                 property.propertyName, ids);
                         String sqlFilter = Ax.format(" %s in %s",
@@ -476,6 +480,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                         Set<Long> keys = store.cache.keys(property.source);
                         Collection<Long> ids = store.cache.fieldValues(
                                 property.source, property.propertyName);
+                        ids = ids.stream().distinct().sorted()
+                                .collect(Collectors.toList());
                         ids = segmentLoader.filterForQueried(property.target,
                                 "id", ids);
                         String sqlFilter = Ax.format(" id in %s",
