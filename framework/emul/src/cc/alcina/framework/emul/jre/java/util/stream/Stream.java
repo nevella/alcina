@@ -168,6 +168,9 @@ public interface Stream<T> {
 		}
 		return false;
 	}
+	default boolean noneMatch(Predicate<? super T> predicate) {
+        return !anyMatch(predicate);
+    }
 
 	default boolean allMatch(Predicate<? super T> predicate) {
 		for (Iterator<T> itr = iterator(); itr.hasNext();) {
