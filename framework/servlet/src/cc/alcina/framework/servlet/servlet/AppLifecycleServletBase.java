@@ -154,6 +154,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
             initJPA();
             initServices();
             initEntityLayer();
+            // logger levels may have been clobbered (jboss)
+            setLoggerLevels();
             createServletTransformClientInstance();
             initCustom();
             ServletLayerUtils.setAppServletInitialised(true);
@@ -229,6 +231,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
     protected void initDevConsoleAndWebApp() {
         initLoggers();
+        setLoggerLevels();
     }
 
     protected abstract void initEntityLayer() throws Exception;
@@ -374,6 +377,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
             e.printStackTrace();
             throw new WrappedRuntimeException(e);
         }
+    }
+
+    protected void setLoggerLevels() {
     }
 
     static class CachingServletClassMetadataCacheProvider
