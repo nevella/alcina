@@ -30,6 +30,7 @@ import org.apache.log4j.PatternLayout;
 
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.search.DomainSearcher;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -380,6 +381,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
     }
 
     protected void setLoggerLevels() {
+        EntityLayerUtils.setLevel(DomainSearcher.class, Level.INFO);
     }
 
     static class CachingServletClassMetadataCacheProvider
