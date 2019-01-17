@@ -633,6 +633,14 @@ public class DevConsoleDebugCommands {
             System.out.println(String.format("%-30s | %-30s | %s", "Time",
                     "Topic", "Event"));
             Collections.reverse(clrs);
+            for (ClientLogRecord clientLogRecord : clrs) {
+                if (clientLogRecord.getMessage()
+                        .contains("Localdom unable to parse issue debug")) {
+                    ResourceUtilities.logToFile(clientLogRecord.getMessage(),
+                            DevConsoleDebugCommands2.LOCAL_DOM_EXCEPTION_LOG_PATH);
+                    break;// just get the first
+                }
+            }
             System.out.println(CommonUtils.join(
                     CollectionFilters.convert(clrs, recordsConverter), "\n"));
         }
