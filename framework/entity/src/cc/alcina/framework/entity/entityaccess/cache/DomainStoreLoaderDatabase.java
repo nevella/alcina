@@ -142,9 +142,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
     }
 
     public Iterable<Object[]> getData(Connection conn, Class clazz,
-            String sqlFilter) throws SQLException {
+            String sqlFilter, DomainStoreJoinHandler joinHandler)
+            throws SQLException {
         ConnResults result = new ConnResults(conn, clazz,
-                columnDescriptors.get(clazz), sqlFilter);
+                columnDescriptors.get(clazz), sqlFilter, joinHandler);
         return result;
     }
 
@@ -578,20 +579,20 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
             PdOperator pdRev = joinHandler != null ? null
                     : ensurePdOperator(rev,
                             rev.getReadMethod().getDeclaringClass());
-            Iterable<Object[]> results = getData(conn, null, sql);
-            for (Object[] objects : results) {
+            Iterable<Object[]> results = getData(conn, null, sql, joinHandler);
+            for (Object[] row : results) {
                 HasIdAndLocalId src = (HasIdAndLocalId) store.cache
-                        .get(targetEntityClass, (Long) objects[0]);
+                        .get(targetEntityClass, (Long) row[0]);
                 assert src != null;
                 if (joinHandler == null) {
                     HasIdAndLocalId tgt = (HasIdAndLocalId) store.cache.get(
                             rev.getReadMethod().getDeclaringClass(),
-                            (Long) objects[1]);
+                            (Long) row[1]);
                     assert tgt != null;
                     laterLookup.add(tgt, pdFwd, src);
                     laterLookup.add(src, pdRev, tgt);
                 } else {
-                    joinHandler.injectValue(rs, src);
+                    joinHandler.injectValue(row, src);
                 }
             }
             stmt.close();
@@ -609,7 +610,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         Connection conn = getConnection();
         try {
             ConnResults connResults = new ConnResults(conn, clazz,
-                    columnDescriptors.get(clazz), sqlFilter);
+                    columnDescriptors.get(clazz), sqlFilter, null);
             List<PdOperator> pds = descriptors.get(clazz);
             propertyStoreItemDescriptor.init(store.cache, pds);
             String simpleName = clazz.getSimpleName();
@@ -658,7 +659,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         Connection conn = getConnection();
         List<HasIdAndLocalId> loaded;
         try {
-            Iterable<Object[]> results = getData(conn, clazz, sqlFilter);
+            Iterable<Object[]> results = getData(conn, clazz, sqlFilter, null);
             List<PdOperator> pds = descriptors.get(clazz);
             loaded = new ArrayList<HasIdAndLocalId>();
             PdOperator idOperator = pds.stream()
@@ -907,7 +908,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
     public static interface DomainStoreJoinHandler {
         public String getTargetSql();
 
-        public void injectValue(ResultSet rs, HasIdAndLocalId source);
+        public void injectValue(Object[] row, HasIdAndLocalId source);
     }
 
     public class LaterLookup {
@@ -1310,12 +1311,16 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
         private boolean joinTable;
 
+        private DomainStoreJoinHandler joinHandler;
+
         public ConnResults(Connection conn, Class clazz,
-                List<ColumnDescriptor> columnDescriptors, String sqlFilter) {
+                List<ColumnDescriptor> columnDescriptors, String sqlFilter,
+                DomainStoreJoinHandler joinHandler) {
             this.conn = conn;
             this.clazz = clazz;
             this.columnDescriptors = columnDescriptors;
             this.sqlFilter = sqlFilter;
+            this.joinHandler = joinHandler;
             this.joinTable = clazz == null;
         }
 
@@ -1408,7 +1413,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                             if (joinTable) {
                                 cached = new Object[2];
                                 cached[0] = rs.getLong(1);
-                                cached[1] = rs.getLong(2);
+                                if (joinHandler != null) {
+                                    // currently only one implementation (that
+                                    // expects a String)
+                                    cached[1] = rs.getString(2);
+                                } else {
+                                    cached[1] = rs.getLong(2);
+                                }
                             } else {
                                 cached = new Object[columnDescriptors.size()];
                                 for (int idx = 1; idx <= columnDescriptors
