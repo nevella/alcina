@@ -30,6 +30,7 @@ import org.apache.log4j.PatternLayout;
 
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.search.DomainSearcher;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -154,6 +155,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
             initJPA();
             initServices();
             initEntityLayer();
+            // logger levels may have been clobbered (jboss)
+            setLoggerLevels();
             createServletTransformClientInstance();
             initCustom();
             ServletLayerUtils.setAppServletInitialised(true);
@@ -229,6 +232,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
     protected void initDevConsoleAndWebApp() {
         initLoggers();
+        setLoggerLevels();
     }
 
     protected abstract void initEntityLayer() throws Exception;
@@ -374,6 +378,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
             e.printStackTrace();
             throw new WrappedRuntimeException(e);
         }
+    }
+
+    protected void setLoggerLevels() {
+        EntityLayerUtils.setLevel(DomainSearcher.class, Level.INFO);
     }
 
     static class CachingServletClassMetadataCacheProvider

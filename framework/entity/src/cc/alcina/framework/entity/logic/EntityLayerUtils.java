@@ -7,6 +7,7 @@ import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
@@ -66,7 +67,7 @@ public class EntityLayerUtils {
     }
 
     public static void setLevel(org.slf4j.Logger slf4jlogger, Level level) {
-        setLevel(slf4jlogger.getName(), level);
+        setLevel0(slf4jlogger.getName(), level);
         if (!Ax.isTest() && slf4jlogger.getClass().getName()
                 .equals("org.slf4j.impl.Slf4jLogger")) {
             try {
@@ -90,21 +91,27 @@ public class EntityLayerUtils {
     }
 
     public static void setLevel(String key, Level level) {
-        Logger logger = Logger.getLogger(key);
-        if (Ax.isTest()) {
-            setStandardConsoleAppender(key);
-            logger.setAdditivity(false);
-        }
-        logger.setLevel(level);
+        setLevel(LoggerFactory.getLogger(key), level);
     }
+
     public static void setStandardConsoleAppender(Class clazz) {
         setStandardConsoleAppender(clazz.getName());
     }
+
     public static void setStandardConsoleAppender(String key) {
         Logger logger = Logger.getLogger(key);
         logger.removeAllAppenders();
         Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
         Appender appender = new SafeConsoleAppender(layout);
         logger.addAppender(appender);
+    }
+
+    private static void setLevel0(String key, Level level) {
+        Logger logger = Logger.getLogger(key);
+        if (Ax.isTest()) {
+            setStandardConsoleAppender(key);
+            logger.setAdditivity(false);
+        }
+        logger.setLevel(level);
     }
 }

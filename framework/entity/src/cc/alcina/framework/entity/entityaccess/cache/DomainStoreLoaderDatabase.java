@@ -195,6 +195,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         MetricLogging.get().start("domainStore-all");
         // get non-many-many obj
         store.threads.lock(true);
+        // lazy tables, load a segment (for large db dev work)
+        if (domainDescriptor.getDomainSegmentLoader() != null) {
+            MetricLogging.get().start("initialise-domain-segment");
+            initialiseDomainSegment();
+            MetricLogging.get().end("initialise-domain-segment");
+        }
         MetricLogging.get().start("tables");
         for (DomainClassDescriptor descriptor : domainDescriptor.perClass
                 .values()) {
@@ -404,11 +410,16 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         return min;
     }
 
+    private void initialiseDomainSegment() throws Exception {
+        DomainSegmentLoader segmentLoader = (DomainSegmentLoader) domainDescriptor
+                .getDomainSegmentLoader();
+        segmentLoader.initialise();
+    }
+
     private void loadDomainSegment() throws Exception {
         List<Callable> calls = new ArrayList<Callable>();
         DomainSegmentLoader segmentLoader = (DomainSegmentLoader) domainDescriptor
                 .getDomainSegmentLoader();
-        segmentLoader.initialise();
         int maxPasses = 60;
         int pass = 0;
         Set<Class> segmentClasses = new LinkedHashSet<>();
@@ -426,6 +437,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                 segmentClasses.add(entry.getKey());
                 calls.add(() -> {
                     Collection<Long> ids = entry.getValue();
+                    ids = ids.stream().distinct().sorted()
+                            .collect(Collectors.toList());
                     Class clazz = entry.getKey();
                     ids = segmentLoader.filterForQueried(clazz, "id", ids);
                     loadTableOrStoreSegment(clazz,
@@ -449,6 +462,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                     if (property.type == DomainSegmentPropertyType.TABLE_REF) {
                         Collection<Long> ids = store.cache
                                 .keys(property.target);
+                        ids = ids.stream().distinct().sorted()
+                                .collect(Collectors.toList());
                         ids = segmentLoader.filterForQueried(property.source,
                                 property.propertyName, ids);
                         String sqlFilter = Ax.format(" %s in %s",
@@ -465,6 +480,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                         Set<Long> keys = store.cache.keys(property.source);
                         Collection<Long> ids = store.cache.fieldValues(
                                 property.source, property.propertyName);
+                        ids = ids.stream().distinct().sorted()
+                                .collect(Collectors.toList());
                         ids = segmentLoader.filterForQueried(property.target,
                                 "id", ids);
                         String sqlFilter = Ax.format(" id in %s",
@@ -561,14 +578,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
             PdOperator pdRev = joinHandler != null ? null
                     : ensurePdOperator(rev,
                             rev.getReadMethod().getDeclaringClass());
-            while (rs.next()) {
+            Iterable<Object[]> results = getData(conn, null, sql);
+            for (Object[] objects : results) {
                 HasIdAndLocalId src = (HasIdAndLocalId) store.cache
-                        .get(targetEntityClass, rs.getLong(1));
+                        .get(targetEntityClass, (Long) objects[0]);
                 assert src != null;
                 if (joinHandler == null) {
                     HasIdAndLocalId tgt = (HasIdAndLocalId) store.cache.get(
                             rev.getReadMethod().getDeclaringClass(),
-                            rs.getLong(2));
+                            (Long) objects[1]);
                     assert tgt != null;
                     laterLookup.add(tgt, pdFwd, src);
                     laterLookup.add(src, pdRev, tgt);
@@ -1290,12 +1308,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                         : (ConnResultsReuse) domainDescriptor
                                 .getDomainSegmentLoader();
 
+        private boolean joinTable;
+
         public ConnResults(Connection conn, Class clazz,
                 List<ColumnDescriptor> columnDescriptors, String sqlFilter) {
             this.conn = conn;
             this.clazz = clazz;
             this.columnDescriptors = columnDescriptors;
             this.sqlFilter = sqlFilter;
+            this.joinTable = clazz == null;
         }
 
         public ResultSet ensureRs() {
@@ -1308,21 +1329,27 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         }
 
         private ResultSet ensureRs(int pass) {
+            String sql = null;
             try {
                 if (rs == null) {
                     conn.setAutoCommit(false);
                     Statement stmt = conn.createStatement();
                     stmt.setFetchSize(20000);
-                    String template = "select %s from %s";
-                    List<String> columnNames = new ArrayList<String>();
-                    for (ColumnDescriptor descr : columnDescriptors) {
-                        columnNames.add(descr.getColumnSql());
-                    }
-                    Table table = (Table) clazz.getAnnotation(Table.class);
-                    String sql = String.format(template,
-                            CommonUtils.join(columnNames, ","), table.name());
-                    if (CommonUtils.isNotNullOrEmpty(sqlFilter)) {
-                        sql += String.format(" where %s", sqlFilter);
+                    if (joinTable) {
+                        sql = sqlFilter;
+                    } else {
+                        String template = "select %s from %s";
+                        List<String> columnNames = new ArrayList<String>();
+                        for (ColumnDescriptor descr : columnDescriptors) {
+                            columnNames.add(descr.getColumnSql());
+                        }
+                        Table table = (Table) clazz.getAnnotation(Table.class);
+                        sql = String.format(template,
+                                CommonUtils.join(columnNames, ","),
+                                table.name());
+                        if (CommonUtils.isNotNullOrEmpty(sqlFilter)) {
+                            sql += String.format(" where %s", sqlFilter);
+                        }
                     }
                     store.sqlLogger.debug(sql);
                     rs = stmt.executeQuery(sql);
@@ -1341,6 +1368,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                     e.printStackTrace();
                     return ensureRs(pass + 1);
                 }
+                Ax.out("rs sql:\n\t%s", sql);
                 throw new WrappedRuntimeException(e);
             }
         }
@@ -1377,12 +1405,19 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                     ensureRs();
                     try {
                         if (rs.next()) {
-                            cached = new Object[columnDescriptors.size()];
-                            for (int idx = 1; idx <= columnDescriptors
-                                    .size(); idx++) {
-                                ColumnDescriptor descriptor = columnDescriptors
-                                        .get(idx - 1);
-                                cached[idx - 1] = descriptor.getObject(rs, idx);
+                            if (joinTable) {
+                                cached = new Object[2];
+                                cached[0] = rs.getLong(1);
+                                cached[1] = rs.getLong(2);
+                            } else {
+                                cached = new Object[columnDescriptors.size()];
+                                for (int idx = 1; idx <= columnDescriptors
+                                        .size(); idx++) {
+                                    ColumnDescriptor descriptor = columnDescriptors
+                                            .get(idx - 1);
+                                    cached[idx - 1] = descriptor.getObject(rs,
+                                            idx);
+                                }
                             }
                             ConnResults.this.rsReuse.onNext(ConnResults.this,
                                     cached);

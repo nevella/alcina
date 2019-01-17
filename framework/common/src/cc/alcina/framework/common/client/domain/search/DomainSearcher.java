@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.domain.CompositeFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
@@ -30,18 +33,33 @@ public class DomainSearcher {
     public static boolean useSequentialSearch = false;
 
     private static synchronized void setupHandlers() {
+        Logger logger = LoggerFactory.getLogger(DomainSearcher.class);
         if (handlers.isEmpty()) {
             List<DomainCriterionHandler> impls = Registry
                     .impls(DomainCriterionHandler.class);
             for (DomainCriterionHandler handler : impls) {
                 handlers.put(handler.handlesSearchDefinition(),
                         handler.handlesSearchCriterion(), handler);
+                logger.debug(
+                        "registering search criterion handler: \n{} => {} :: {}",
+                        handler.getClass().getName(),
+                        handler.handlesSearchDefinition() == null
+                                ? "(null defs)"
+                                : handler.handlesSearchDefinition()
+                                        .getSimpleName(),
+                        handler.handlesSearchCriterion().getSimpleName());
             }
             List<DomainDefinitionHandler> defImpls = Registry
                     .impls(DomainDefinitionHandler.class);
             for (DomainDefinitionHandler handler : defImpls) {
                 definitionHandlers.put(handler.handlesSearchDefinition(),
                         handler);
+                logger.debug(
+                        "registering search definition handler: \n{} => {} ",
+                        handler.getClass().getName(),
+                        handler.handlesSearchDefinition() == null ? "(null)"
+                                : handler.handlesSearchDefinition()
+                                        .getSimpleName());
             }
         }
     }
