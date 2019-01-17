@@ -51,10 +51,11 @@ public abstract class CachingScanner<T extends ClassMetadata> {
         }
     }
 
-    static boolean logClassloaderExceptions = false;
+    String debugClassloaderExceptionRegex = null;
 
     public void scan(ClassMetadataCache<ClassMetadata> foundCache,
             String cachePath) throws Exception {
+        debugClassloaderExceptionRegex = System.getProperty("cc.alcina.framework.entity.registry.CachingScanner.debugClassloaderExceptionRegex");
         List<ClassLoader> classLoaders = ClasspathScanner
                 .getScannerClassLoadersToTry();
         File cacheFile = new File(cachePath);
@@ -113,7 +114,8 @@ public abstract class CachingScanner<T extends ClassMetadata> {
     }
 
     private void maybeLog(Throwable throwable, String className) {
-        if (logClassloaderExceptions) {
+        if (Ax.notBlank(debugClassloaderExceptionRegex)
+                && className.matches(debugClassloaderExceptionRegex)) {
             Ax.out("Exception logging caching scanner class resolution: \n\t%s",
                     className);
             throwable.printStackTrace();
