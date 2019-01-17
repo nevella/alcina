@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.XmlUtils.TransformerFactoryConfigurator;
+import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
 import cc.alcina.framework.entity.util.JaxbUtils;
 
 /**
@@ -39,104 +40,107 @@ import cc.alcina.framework.entity.util.JaxbUtils;
  * @param <V>
  */
 public abstract class ContentRenderer<D extends ContentDefinition, M extends PublicationContent, V extends DeliveryModel> {
-	public static final String CONTEXT_TRANSFORM_FILENAME = ContentRenderer.class
-			.getName() + ".CONTEXT_TRANSFORM_FILENAME";
+    public static final String CONTEXT_TRANSFORM_FILENAME = ContentRenderer.class
+            .getName() + ".CONTEXT_TRANSFORM_FILENAME";
 
-	protected D contentDefinition;
+    protected D contentDefinition;
 
-	protected M publicationContent;
+    protected M publicationContent;
 
-	protected ContentRendererResults results;
+    protected ContentRendererResults results;
 
-	protected V deliveryModel;
+    protected V deliveryModel;
 
-	protected Document doc;
+    protected Document doc;
 
-	protected RenderTransformWrapper wrapper;
+    protected RenderTransformWrapper wrapper;
 
-	public ContentRendererResults getResults() {
-		return this.results;
-	}
+    public ContentRendererResults getResults() {
+        return this.results;
+    }
 
-	public void renderContent(D contentDefinition, M publicationContent,
-			V deliveryModel, long publicationId, long publicationUserId)
-			throws Exception {
-		this.contentDefinition = contentDefinition;
-		this.publicationContent = publicationContent;
-		this.deliveryModel = deliveryModel;
-		results = new ContentRendererResults();
-		doc = XmlUtils.createDocument();
-		renderContent(publicationId, publicationUserId);
-	}
+    public void renderContent(D contentDefinition, M publicationContent,
+            V deliveryModel, long publicationId, long publicationUserId)
+            throws Exception {
+        this.contentDefinition = contentDefinition;
+        this.publicationContent = publicationContent;
+        this.deliveryModel = deliveryModel;
+        results = new ContentRendererResults();
+        doc = XmlUtils.createDocument();
+        renderContent(publicationId, publicationUserId);
+    }
 
-	protected TransformerFactoryConfigurator
-			getTransformerFactoryConfigurator() {
-		return new TransformerConfigurator();
-	}
+    protected TransformerFactoryConfigurator getTransformerFactoryConfigurator() {
+        return new TransformerConfigurator();
+    }
 
-	protected void marshallToDoc() throws Exception {
-		Set<Class> jaxbClasses = new HashSet<Class>(
-				Registry.get().lookup(JaxbContextRegistration.class));
-		// just in case - should be there from annotations
-		jaxbClasses.add(publicationContent.getClass());
-		jaxbClasses.add(contentDefinition.getClass());
-		jaxbClasses.add(deliveryModel.getClass());
-		JAXBContext jc = JaxbUtils.getContext(jaxbClasses);
-		Marshaller m = jc.createMarshaller();
-		m.marshal(wrapper, doc);
-	}
+    protected void marshallToDoc() throws Exception {
+        Set<Class> jaxbClasses = new HashSet<Class>(
+                Registry.get().lookup(JaxbContextRegistration.class));
+        // just in case - should be there from annotations
+        jaxbClasses.add(publicationContent.getClass());
+        jaxbClasses.add(contentDefinition.getClass());
+        jaxbClasses.add(deliveryModel.getClass());
+        JAXBContext jc = JaxbUtils.getContext(jaxbClasses);
+        Marshaller m = jc.createMarshaller();
+        m.marshal(wrapper, doc);
+        boolean logDocXml = false;
+        if (logDocXml) {
+            new XmlDoc(doc).logPretty();
+        }
+    }
 
-	protected abstract void renderContent(long publicationId,
-			long publicationUserId) throws Exception;
+    protected abstract void renderContent(long publicationId,
+            long publicationUserId) throws Exception;
 
-	protected void transform(String xslPath) throws Exception {
-		InputStream trans = null;
-		if (LooseContext.containsKey(CONTEXT_TRANSFORM_FILENAME)) {
-			trans = new FileInputStream(
-					LooseContext.getString(CONTEXT_TRANSFORM_FILENAME));
-		} else {
-			trans = getClass().getResourceAsStream(xslPath);
-		}
-		String marker = getClass().getName() + "/" + xslPath;
-		Source trSource = XmlUtils.interpolateStreamSource(trans);
-		Source dataSource = new DOMSource(doc);
-		results.htmlContent = XmlUtils.transformDocToString(dataSource,
-				trSource, marker, getTransformerFactoryConfigurator());
-		results.htmlContent = results.htmlContent.replaceFirst("<\\?.+?\\?>",
-				"");
-		try {
-			trans.close();
-		} catch (Exception e) {
-		}
-	}
+    protected void transform(String xslPath) throws Exception {
+        InputStream trans = null;
+        if (LooseContext.containsKey(CONTEXT_TRANSFORM_FILENAME)) {
+            trans = new FileInputStream(
+                    LooseContext.getString(CONTEXT_TRANSFORM_FILENAME));
+        } else {
+            trans = getClass().getResourceAsStream(xslPath);
+        }
+        String marker = getClass().getName() + "/" + xslPath;
+        Source trSource = XmlUtils.interpolateStreamSource(trans);
+        Source dataSource = new DOMSource(doc);
+        results.htmlContent = XmlUtils.transformDocToString(dataSource,
+                trSource, marker, getTransformerFactoryConfigurator());
+        results.htmlContent = results.htmlContent.replaceFirst("<\\?.+?\\?>",
+                "");
+        try {
+            trans.close();
+        } catch (Exception e) {
+        }
+    }
 
-	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
-	@XmlAccessorType(XmlAccessType.FIELD)
-	@XmlRootElement
-	public static class ContentRendererResults {
-		public String htmlContent;
+    @RegistryLocation(registryPoint = JaxbContextRegistration.class)
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @XmlRootElement
+    public static class ContentRendererResults {
+        public String htmlContent;
 
-		public String htmlContentDescription;
+        public String htmlContentDescription;
 
-		public String htmlContentTitle;
+        public String htmlContentTitle;
 
-		public byte[] bytes;
+        public byte[] bytes;
 
-		public boolean persist;
+        public boolean persist;
 
-		public boolean htmlContentDescriptionUnescaped;
-	}
+        public boolean htmlContentDescriptionUnescaped;
+    }
 
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
-	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
-	public static class RenderTransformWrapper implements Serializable {
-		// public ContentDefinition cd;
-		//
-		// public PublicationContent pc;
-		//
-		// public DeliveryModel dm;
-		public RenderTransformWrapper() {
-		}
-	}
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @RegistryLocation(registryPoint = JaxbContextRegistration.class)
+    public static class RenderTransformWrapper implements Serializable {
+        // public ContentDefinition cd;
+        //
+        // public PublicationContent pc;
+        //
+        // public DeliveryModel dm;
+        public RenderTransformWrapper() {
+        }
+    }
 }
