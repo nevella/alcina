@@ -19,7 +19,6 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
-import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -76,327 +75,348 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
  */
 @RegistryLocation(registryPoint = JPAImplementation.class, implementationType = ImplementationType.SINGLETON)
 public class JPAHibernateImpl implements JPAImplementation {
-	public static final InstantiateImplCallback CLASSREF_AND_USERLAND_GETTER_CALLBACK = new InstantiateImplCallback<LazyInitializer>() {
-		@Override
-		public boolean instantiateLazyInitializer(LazyInitializer initializer,
-				GraphProjectionContext context) {
-			Class persistentClass = initializer.getPersistentClass();
-			return ClassRef.class.isAssignableFrom(persistentClass)
-					|| IUser.class.isAssignableFrom(persistentClass)
-					|| IGroup.class.isAssignableFrom(persistentClass);
-		}
-	};
+    public static final InstantiateImplCallback CLASSREF_AND_USERLAND_GETTER_CALLBACK = new InstantiateImplCallback<LazyInitializer>() {
+        @Override
+        public boolean instantiateLazyInitializer(LazyInitializer initializer,
+                GraphProjectionContext context) {
+            Class persistentClass = initializer.getPersistentClass();
+            return ClassRef.class.isAssignableFrom(persistentClass)
+                    || IUser.class.isAssignableFrom(persistentClass)
+                    || IGroup.class.isAssignableFrom(persistentClass);
+        }
+    };
 
-	private boolean cacheDisabled;
+    private boolean cacheDisabled;
 
-	private java.util.logging.Level level;
+    private java.util.logging.Level level;
 
-	private PersistenSetProjectionCreator persistenSetProjectionCreator;
+    private PersistenSetProjectionCreator persistenSetProjectionCreator;
 
-	@Override
-	public void afterSpecificSetId(Object fromBefore) throws Exception {
-		// restore the backuped unsavedValue
-		SavedId savedId = (SavedId) fromBefore;
-		setUnsavedValue(savedId.ip, savedId.backupUnsavedValue,
-				savedId.identifierGenerator);
-	}
+    @Override
+    public void afterSpecificSetId(Object fromBefore) throws Exception {
+        // restore the backuped unsavedValue
+        SavedId savedId = (SavedId) fromBefore;
+        setUnsavedValue(savedId.ip, savedId.backupUnsavedValue,
+                savedId.identifierGenerator);
+    }
 
-	@Override
-	public boolean areEquivalentIgnoreInstantiationState(Object o1, Object o2) {
-		if (o1 instanceof HasIdAndLocalId && o2 instanceof HasIdAndLocalId) {
-			HiliLocator l1 = toHiliLocator(o1);
-			HiliLocator l2 = toHiliLocator(o2);
-			return CommonUtils.equalsWithNullEquality(l1, l2);
-		}
-		return CommonUtils.equalsWithNullEquality(o1, o2);
-	}
+    @Override
+    public boolean areEquivalentIgnoreInstantiationState(Object o1, Object o2) {
+        if (o1 instanceof HasIdAndLocalId && o2 instanceof HasIdAndLocalId) {
+            HiliLocator l1 = toHiliLocator(o1);
+            HiliLocator l2 = toHiliLocator(o2);
+            return CommonUtils.equalsWithNullEquality(l1, l2);
+        }
+        return CommonUtils.equalsWithNullEquality(o1, o2);
+    }
 
-	@Override
-	public Object beforeSpecificSetId(EntityManager entityManager,
-			Object toPersist) throws Exception {
-		SessionImplementor session = (SessionImplementor) entityManager
-				.getDelegate();
-		EntityPersister persister = session
-				.getEntityPersister(toPersist.getClass().getName(), toPersist);
-		IdentifierGenerator identifierGenerator = persister
-				.getIdentifierGenerator();
-		IdentifierProperty ip = persister.getEntityMetamodel()
-				.getIdentifierProperty();
-		IdentifierValue backupUnsavedValue = setUnsavedValue(ip,
-				IdentifierValue.ANY, new UseEntityIdGenerator());
-		return new SavedId(ip, backupUnsavedValue, identifierGenerator);
-	}
+    @Override
+    public Object beforeSpecificSetId(EntityManager entityManager,
+            Object toPersist) throws Exception {
+        SessionImplementor session = (SessionImplementor) entityManager
+                .getDelegate();
+        EntityPersister persister = session
+                .getEntityPersister(toPersist.getClass().getName(), toPersist);
+        IdentifierGenerator identifierGenerator = persister
+                .getIdentifierGenerator();
+        IdentifierProperty ip = persister.getEntityMetamodel()
+                .getIdentifierProperty();
+        IdentifierValue backupUnsavedValue = setUnsavedValue(ip,
+                IdentifierValue.ANY, new UseEntityIdGenerator());
+        return new SavedId(ip, backupUnsavedValue, identifierGenerator);
+    }
 
-	@Override
-	public boolean bulkDelete(EntityManager em, Class clazz,
-			Collection<Long> ids) {
-		try {
-			em.createQuery(String.format("delete %s where id in %s ",
-					clazz.getSimpleName(), EntityUtils.longsToIdClause(ids)))
-					.executeUpdate();
-		} catch (Exception e) {
-			// probably a reference error, try with parent delete/cascade
-			return false;
-		}
-		return true;
-	}
+    @Override
+    public boolean bulkDelete(EntityManager em, Class clazz,
+            Collection<Long> ids) {
+        try {
+            em.createQuery(String.format("delete %s where id in %s ",
+                    clazz.getSimpleName(), EntityUtils.longsToIdClause(ids)))
+                    .executeUpdate();
+        } catch (Exception e) {
+            // probably a reference error, try with parent delete/cascade
+            return false;
+        }
+        return true;
+    }
 
-	@Override
-	public void cache(Query query) {
-		query.setHint("org.hibernate.cacheable", true);
-	}
+    @Override
+    public void cache(Query query) {
+        query.setHint("org.hibernate.cacheable", true);
+    }
 
-	@Override
-	public Set createPersistentSetProjection(GraphProjectionContext context) {
-		if (persistenSetProjectionCreator == null) {
-			persistenSetProjectionCreator = Registry
-					.impl(PersistenSetProjectionCreator.class);
-		}
-		if (GraphProjection.isGenericHiliType(context.field)) {
-			return persistenSetProjectionCreator
-					.createPersistentSetProjection(context);
-		} else {
-			return new HashSet();
-		}
-	}
+    @Override
+    public Set createPersistentSetProjection(GraphProjectionContext context) {
+        if (persistenSetProjectionCreator == null) {
+            persistenSetProjectionCreator = Registry
+                    .impl(PersistenSetProjectionCreator.class);
+        }
+        if (GraphProjection.isGenericHiliType(context.field)) {
+            return persistenSetProjectionCreator
+                    .createPersistentSetProjection(context);
+        } else {
+            return new HashSet();
+        }
+    }
 
-	@Override
-	public String entityDebugString(Object object) {
-		try {
-			if (object instanceof HibernateProxy) {
-				LazyInitializer lazy = ((HibernateProxy) object)
-						.getHibernateLazyInitializer();
-				Serializable id = lazy.getIdentifier();
-				Class clazz = lazy.getPersistentClass();
-				return String.format("\tclass: %s\n\tid:\t%s\n\n", clazz, id);
-			}
-			if (object instanceof HasIdAndLocalId) {
-				return object.toString();
-			}
-		} catch (Exception e) {
-			// stale transaction e.g.
-			if (object instanceof HasIdAndLocalId) {
-				HiliHelper.asDomainPoint((HasId) object);
-			}
-		}
-		return null;
-	}
+    @Override
+    public String entityDebugString(Object object) {
+        try {
+            if (object instanceof HibernateProxy) {
+                LazyInitializer lazy = ((HibernateProxy) object)
+                        .getHibernateLazyInitializer();
+                Serializable id = lazy.getIdentifier();
+                Class clazz = lazy.getPersistentClass();
+                return String.format("\tclass: %s\n\tid:\t%s\n\n", clazz, id);
+            }
+            if (object instanceof HasIdAndLocalId) {
+                return object.toString();
+            }
+        } catch (Exception e) {
+            // stale transaction e.g.
+            if (object instanceof HasIdAndLocalId) {
+                HiliHelper.asDomainPoint((HasId) object);
+            }
+        }
+        return null;
+    }
 
-	@Override
-	public InstantiateImplCallback getClassrefInstantiator() {
-		return CLASSREF_AND_USERLAND_GETTER_CALLBACK;
-	}
+    @Override
+    public InstantiateImplCallback getClassrefInstantiator() {
+        return CLASSREF_AND_USERLAND_GETTER_CALLBACK;
+    }
 
-	@Override
-	public File getConfigDirectory() {
-		return new File(System.getProperty("jboss.server.base.dir")
-				+ File.separator + "configuration" + File.separator);
-	}
+    @Override
+    public File getConfigDirectory() {
+        return new File(System.getProperty("jboss.server.base.dir")
+                + File.separator + "configuration" + File.separator);
+    }
 
-	@Override
-	public DomainStoreJoinHandler
-			getDomainStoreJoinHandler(final PropertyDescriptor pd) {
-		final ElementCollection elementCollection = pd.getReadMethod()
-				.getAnnotation(ElementCollection.class);
-		final Column column = pd.getReadMethod().getAnnotation(Column.class);
-		DomainStoreJoinHandler handler = null;
-		if (elementCollection == null) {
-			return null;
-		}
-		return new DomainStoreJoinHandler() {
-			@Override
-			public String getTargetSql() {
-				return column.name();
-			}
+    @Override
+    public DomainStoreJoinHandler getDomainStoreJoinHandler(
+            final PropertyDescriptor pd) {
+        final ElementCollection elementCollection = pd.getReadMethod()
+                .getAnnotation(ElementCollection.class);
+        final Column column = pd.getReadMethod().getAnnotation(Column.class);
+        DomainStoreJoinHandler handler = null;
+        if (elementCollection == null) {
+            return null;
+        }
+        return new DomainStoreJoinHandler_ElementCollection(elementCollection,
+                column, pd);
+    }
 
-			@Override
-			public void injectValue(ResultSet rs, HasIdAndLocalId source) {
-				try {
-					String string = rs.getString(getTargetSql());
-					Set enums = (Set) pd.getReadMethod().invoke(source,
-							new Object[0]);
-					enums.add(Enum.valueOf(elementCollection.targetClass(),
-							string));
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		};
-	}
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T getInstantiatedObject(T object) {
+        if (object instanceof HibernateProxy) {
+            return (T) ((HibernateProxy) object).getHibernateLazyInitializer()
+                    .getImplementation();
+        }
+        return object;
+    }
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public <T> T getInstantiatedObject(T object) {
-		if (object instanceof HibernateProxy) {
-			return (T) ((HibernateProxy) object).getHibernateLazyInitializer()
-					.getImplementation();
-		}
-		return object;
-	}
+    @Override
+    public GraphProjectionDataFilter getResolvingFilter(
+            InstantiateImplCallback callback, DetachedEntityCache cache,
+            boolean useRawDomainStore) {
+        EntityCacheHibernateResolvingFilter filter = new EntityCacheHibernateResolvingFilter(
+                callback);
+        filter.setUseRawDomainStore(useRawDomainStore);
+        if (cache != null) {
+            filter.setCache(cache);
+        }
+        return filter;
+    }
 
-	@Override
-	public GraphProjectionDataFilter getResolvingFilter(
-			InstantiateImplCallback callback, DetachedEntityCache cache,
-			boolean useRawDomainStore) {
-		EntityCacheHibernateResolvingFilter filter = new EntityCacheHibernateResolvingFilter(
-				callback);
-		filter.setUseRawDomainStore(useRawDomainStore);
-		if (cache != null) {
-			filter.setCache(cache);
-		}
-		return filter;
-	}
+    @Override
+    public Set<HiliLocator> getSessionEntityLocators(
+            EntityManager entityManager) {
+        Set<HiliLocator> result = new LinkedHashSet<>();
+        try {
+            SessionImplementor sessionImpl = (SessionImplementor) entityManager
+                    .getDelegate();
+            PersistenceContext persistenceContext = sessionImpl
+                    .getPersistenceContext();
+            Field entitiesField = StatefulPersistenceContext.class
+                    .getDeclaredField("entitiesByKey");
+            Field proxiesField = StatefulPersistenceContext.class
+                    .getDeclaredField("proxiesByKey");
+            Field entityPersisterField = EntityKey.class
+                    .getDeclaredField("persister");
+            entitiesField.setAccessible(true);
+            entityPersisterField.setAccessible(true);
+            proxiesField.setAccessible(true);
+            List<Map> maps = Arrays.asList(
+                    (Map) entitiesField.get(persistenceContext),
+                    (Map) proxiesField.get(persistenceContext));
+            for (Map map : maps) {
+                for (Object obj : map.keySet()) {
+                    EntityKey key = (EntityKey) obj;
+                    long id = (long) key.getIdentifier();
+                    SingleTableEntityPersister persister = (SingleTableEntityPersister) entityPersisterField
+                            .get(key);
+                    Class clazz = persister.getEntityMetamodel().getEntityType()
+                            .getReturnedClass();
+                    result.add(new HiliLocator(clazz, id, 0));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
 
-	@Override
-	public Set<HiliLocator>
-			getSessionEntityLocators(EntityManager entityManager) {
-		Set<HiliLocator> result = new LinkedHashSet<>();
-		try {
-			SessionImplementor sessionImpl = (SessionImplementor) entityManager
-					.getDelegate();
-			PersistenceContext persistenceContext = sessionImpl
-					.getPersistenceContext();
-			Field entitiesField = StatefulPersistenceContext.class
-					.getDeclaredField("entitiesByKey");
-			Field proxiesField = StatefulPersistenceContext.class
-					.getDeclaredField("proxiesByKey");
-			Field entityPersisterField = EntityKey.class
-					.getDeclaredField("persister");
-			entitiesField.setAccessible(true);
-			entityPersisterField.setAccessible(true);
-			proxiesField.setAccessible(true);
-			List<Map> maps = Arrays.asList(
-					(Map) entitiesField.get(persistenceContext),
-					(Map) proxiesField.get(persistenceContext));
-			for (Map map : maps) {
-				for (Object obj : map.keySet()) {
-					EntityKey key = (EntityKey) obj;
-					long id = (long) key.getIdentifier();
-					SingleTableEntityPersister persister = (SingleTableEntityPersister) entityPersisterField
-							.get(key);
-					Class clazz = persister.getEntityMetamodel().getEntityType()
-							.getReturnedClass();
-					result.add(new HiliLocator(clazz, id, 0));
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return result;
-	}
+    @Override
+    public void interpretException(DomainTransformException ex) {
+        DomainTransformExceptionType type = interpretExceptionType(ex);
+        if (type != null) {
+            ex.setType(type);
+        }
+    }
 
-	@Override
-	public void interpretException(DomainTransformException ex) {
-		DomainTransformExceptionType type = interpretExceptionType(ex);
-		if (type != null) {
-			ex.setType(type);
-		}
-	}
+    public DomainTransformExceptionType interpretExceptionType(Exception ex) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        ex.printStackTrace(pw);
+        String st = sw.toString();
+        if (st.contains("OptimisticLockException")) {
+            return DomainTransformExceptionType.OPTIMISTIC_LOCK_EXCEPTION;
+        }
+        if (st.contains(
+                "org.hibernate.exception.ConstraintViolationException")) {
+            return DomainTransformExceptionType.FK_CONSTRAINT_EXCEPTION;
+        }
+        if (st.contains("java.beans.IntrospectionException")) {
+            return DomainTransformExceptionType.INTROSPECTION_EXCEPTION;
+        }
+        return null;
+    }
 
-	public DomainTransformExceptionType interpretExceptionType(Exception ex) {
-		StringWriter sw = new StringWriter();
-		PrintWriter pw = new PrintWriter(sw);
-		ex.printStackTrace(pw);
-		String st = sw.toString();
-		if (st.contains("OptimisticLockException")) {
-			return DomainTransformExceptionType.OPTIMISTIC_LOCK_EXCEPTION;
-		}
-		if (st.contains(
-				"org.hibernate.exception.ConstraintViolationException")) {
-			return DomainTransformExceptionType.FK_CONSTRAINT_EXCEPTION;
-		}
-		if (st.contains("java.beans.IntrospectionException")) {
-			return DomainTransformExceptionType.INTROSPECTION_EXCEPTION;
-		}
-		return null;
-	}
+    @Override
+    public boolean isCacheDisabled() {
+        return this.cacheDisabled;
+    }
 
-	@Override
-	public boolean isCacheDisabled() {
-		return this.cacheDisabled;
-	}
+    @Override
+    public boolean isLazyInitialisationException(Exception e) {
+        return e instanceof LazyInitializationException;
+    }
 
-	@Override
-	public boolean isLazyInitialisationException(Exception e) {
-		return e instanceof LazyInitializationException;
-	}
+    @Override
+    public void muteClassloaderLogging(boolean mute) {
+        java.util.logging.Logger logger = java.util.logging.Logger
+                .getLogger("org.jboss.modules");
+        if (mute) {
+            level = logger.getLevel();
+            logger.setLevel(java.util.logging.Level.SEVERE);
+        } else {
+            logger.setLevel(level);
+        }
+    }
 
-	@Override
-	public void muteClassloaderLogging(boolean mute) {
-		java.util.logging.Logger logger = java.util.logging.Logger
-				.getLogger("org.jboss.modules");
-		if (mute) {
-			level = logger.getLevel();
-			logger.setLevel(java.util.logging.Level.SEVERE);
-		} else {
-			logger.setLevel(level);
-		}
-	}
+    @Override
+    public void setCacheDisabled(boolean cacheDisabled) {
+        this.cacheDisabled = cacheDisabled;
+    }
 
-	@Override
-	public void setCacheDisabled(boolean cacheDisabled) {
-		this.cacheDisabled = cacheDisabled;
-	}
+    public IdentifierValue setUnsavedValue(IdentifierProperty ip,
+            IdentifierValue value, IdentifierGenerator identifierGenerator)
+            throws Exception {
+        IdentifierValue backup = ip.getUnsavedValue();
+        {
+            Field f = ip.getClass().getDeclaredField("unsavedValue");
+            f.setAccessible(true);
+            f.set(ip, value);
+        }
+        {
+            Field f = ip.getClass().getDeclaredField("identifierGenerator");
+            f.setAccessible(true);
+            f.set(ip, identifierGenerator);
+        }
+        return backup;
+    }
 
-	public IdentifierValue setUnsavedValue(IdentifierProperty ip,
-			IdentifierValue value, IdentifierGenerator identifierGenerator)
-			throws Exception {
-		IdentifierValue backup = ip.getUnsavedValue();
-		{
-			Field f = ip.getClass().getDeclaredField("unsavedValue");
-			f.setAccessible(true);
-			f.set(ip, value);
-		}
-		{
-			Field f = ip.getClass().getDeclaredField("identifierGenerator");
-			f.setAccessible(true);
-			f.set(ip, identifierGenerator);
-		}
-		return backup;
-	}
+    private HiliLocator toHiliLocator(Object o) {
+        if (o == null) {
+            return null;
+        }
+        if (o instanceof HibernateProxy) {
+            LazyInitializer lazy = ((HibernateProxy) o)
+                    .getHibernateLazyInitializer();
+            return new HiliLocator(lazy.getPersistentClass(),
+                    (Long) lazy.getIdentifier(), 0L);
+        }
+        return new HiliLocator((HasIdAndLocalId) o);
+    }
 
-	private HiliLocator toHiliLocator(Object o) {
-		if (o == null) {
-			return null;
-		}
-		if (o instanceof HibernateProxy) {
-			LazyInitializer lazy = ((HibernateProxy) o)
-					.getHibernateLazyInitializer();
-			return new HiliLocator(lazy.getPersistentClass(),
-					(Long) lazy.getIdentifier(), 0L);
-		}
-		return new HiliLocator((HasIdAndLocalId) o);
-	}
+    static class DomainStoreJoinHandler_ElementCollection
+            implements DomainStoreJoinHandler {
+        private ElementCollection elementCollection;
 
-	@RegistryLocation(registryPoint = PersistenSetProjectionCreator.class, implementationType = ImplementationType.SINGLETON)
-	public static class PersistenSetProjectionCreator {
-		public Set
-				createPersistentSetProjection(GraphProjectionContext context) {
-			return new HashSet();
-		}
-	}
+        private Column column;
 
-	public static class UseEntityIdGenerator implements IdentifierGenerator {
-		@Override
-		public Serializable generate(SessionImplementor session, Object object)
-				throws HibernateException {
-			return ((HasIdAndLocalId) object).getId();
-		}
-	}
+        private PropertyDescriptor pd;
 
-	private static class SavedId {
-		private final IdentifierProperty ip;
+        public DomainStoreJoinHandler_ElementCollection() {
+        }
 
-		private final IdentifierValue backupUnsavedValue;
+        private DomainStoreJoinHandler_ElementCollection(
+                ElementCollection elementCollection, Column column,
+                PropertyDescriptor pd) {
+            this.elementCollection = elementCollection;
+            this.column = column;
+            this.pd = pd;
+        }
 
-		private final IdentifierGenerator identifierGenerator;
+        @Override
+        public String getTargetSql() {
+            return this.column.name();
+        }
 
-		public SavedId(IdentifierProperty ip,
-				IdentifierValue backupUnsavedValue,
-				IdentifierGenerator identifierGenerator) {
-			this.ip = ip;
-			this.backupUnsavedValue = backupUnsavedValue;
-			this.identifierGenerator = identifierGenerator;
-		}
-	}
+        @Override
+        public void injectValue(Object[] row, HasIdAndLocalId source) {
+            try {
+                String string = (String) row[1];
+                Set enums = (Set) this.pd.getReadMethod().invoke(source,
+                        new Object[0]);
+                enums.add(Enum.valueOf(this.elementCollection.targetClass(),
+                        string));
+            } catch (Exception e) {
+                throw new WrappedRuntimeException(e);
+            }
+        }
+    }
+
+    @RegistryLocation(registryPoint = PersistenSetProjectionCreator.class, implementationType = ImplementationType.SINGLETON)
+    public static class PersistenSetProjectionCreator {
+        public Set createPersistentSetProjection(
+                GraphProjectionContext context) {
+            return new HashSet();
+        }
+    }
+
+    public static class UseEntityIdGenerator implements IdentifierGenerator {
+        @Override
+        public Serializable generate(SessionImplementor session, Object object)
+                throws HibernateException {
+            return ((HasIdAndLocalId) object).getId();
+        }
+    }
+
+    private static class SavedId {
+        private final IdentifierProperty ip;
+
+        private final IdentifierValue backupUnsavedValue;
+
+        private final IdentifierGenerator identifierGenerator;
+
+        public SavedId(IdentifierProperty ip,
+                IdentifierValue backupUnsavedValue,
+                IdentifierGenerator identifierGenerator) {
+            this.ip = ip;
+            this.backupUnsavedValue = backupUnsavedValue;
+            this.identifierGenerator = identifierGenerator;
+        }
+    }
 }
