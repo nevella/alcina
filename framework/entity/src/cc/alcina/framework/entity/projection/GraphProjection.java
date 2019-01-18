@@ -312,6 +312,12 @@ public class GraphProjection {
     }
 
     public static boolean nonTransientFieldwiseEqual(Object o1, Object o2) {
+        if (o1 == o2) {
+            return true;
+        }
+        if (o1 == null || o2 == null) {
+            return false;
+        }
         if (o1.getClass() != o2.getClass()) {
             return false;
         }
@@ -645,9 +651,8 @@ public class GraphProjection {
                     reached.put(source, replaceProjected == null ? NULL_MARKER
                             : replaceProjected);
                     if (alsoMapTo != null) {
-                        reached.put(alsoMapTo,
-                                replaceProjected == null ? NULL_MARKER
-                                        : replaceProjected);
+                        reached.put(alsoMapTo, replaceProjected == null
+                                ? NULL_MARKER : replaceProjected);
                     }
                 }
                 return replaceProjected;
