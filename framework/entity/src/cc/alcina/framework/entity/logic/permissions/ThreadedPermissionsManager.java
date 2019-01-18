@@ -13,12 +13,10 @@
  */
 package cc.alcina.framework.entity.logic.permissions;
 
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
@@ -100,16 +98,25 @@ public class ThreadedPermissionsManager extends PermissionsManager {
         popUser();
     }
 
-    public IUser provideNonSystemUserInStack() {
+    public <IU extends IUser> IU provideNonSystemUserInStackOrThrow() {
+        return provideNonSystemUserInStackOrThrow(false);
+    }
+
+    public <IU extends IUser> IU provideNonSystemUserInStackOrThrow(
+            boolean throwIfNotFound) {
         int idx = userStack.size() - 1;
         while (idx >= 0) {
             Boolean isRoot = rootStack.get(idx);
             if (!isRoot) {
-                return userStack.get(idx);
+                return (IU) userStack.get(idx);
             }
             idx--;
         }
-        throw new IllegalStateException("No non-root user in stack");
+        if (throwIfNotFound) {
+            throw new IllegalStateException("No non-root user in stack");
+        } else {
+            return null;
+        }
     }
 
     public void pushSystemOrCurrentUserAsRoot() {
@@ -162,13 +169,5 @@ public class ThreadedPermissionsManager extends PermissionsManager {
                 }
             }
         }
-    }
-
-    @Override
-    // TODO - jade - for people with large memberships, this could be cached
-    // (domainStore) - hardly worthwhile tho
-    protected void recursivePopulateGroupMemberships(Set<IGroup> members,
-            Set<IGroup> processed) {
-        super.recursivePopulateGroupMemberships(members, processed);
     }
 }
