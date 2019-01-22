@@ -30,7 +30,6 @@ import java.util.stream.Stream;
 import javax.persistence.Transient;
 import javax.sql.DataSource;
 
-import org.apache.log4j.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,7 +92,6 @@ import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreHealth;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreInstrumentation;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjections;
 
@@ -341,7 +339,6 @@ public class DomainStore implements RegistrableService, IDomainStore {
     }
 
     public void warmup() throws Exception {
-        setupLoggers();
         initialised = false;
         initialising = true;
         transformManager = new SubgraphTransformManagerRemoteOnly();
@@ -497,15 +494,6 @@ public class DomainStore implements RegistrableService, IDomainStore {
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
-    }
-
-    private void setupLoggers() {
-        EntityLayerUtils.setLevel(
-                AlcinaLogUtils.getMetricLogger(DomainStore.class).getName(),
-                Level.toLevel(ResourceUtilities.get(DomainStore.class,
-                        "metricLogLevel")));
-        EntityLayerUtils.setLevel(DomainStore.class, Level
-                .toLevel(ResourceUtilities.get(DomainStore.class, "logLevel")));
     }
 
     private Date timestampToDate(Date date) {

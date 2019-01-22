@@ -67,6 +67,12 @@ public class EntityLayerUtils {
     }
 
     public static void setLevel(org.slf4j.Logger slf4jlogger, Level level) {
+        if (ResourceUtilities.is(EntityLayerUtils.class, "debugLoggers")) {
+            Ax.out("Logger: %s => %s", slf4jlogger.getName(), level);
+            if (level == Level.WARN) {
+                int debug = 3;
+            }
+        }
         setLevel0(slf4jlogger.getName(), level);
         if (!Ax.isTest() && slf4jlogger.getClass().getName()
                 .equals("org.slf4j.impl.Slf4jLogger")) {
@@ -94,18 +100,6 @@ public class EntityLayerUtils {
         setLevel(LoggerFactory.getLogger(key), level);
     }
 
-    public static void setStandardConsoleAppender(Class clazz) {
-        setStandardConsoleAppender(clazz.getName());
-    }
-
-    public static void setStandardConsoleAppender(String key) {
-        Logger logger = Logger.getLogger(key);
-        logger.removeAllAppenders();
-        Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
-        Appender appender = new SafeConsoleAppender(layout);
-        logger.addAppender(appender);
-    }
-
     private static void setLevel0(String key, Level level) {
         Logger logger = Logger.getLogger(key);
         if (Ax.isTest()) {
@@ -113,5 +107,13 @@ public class EntityLayerUtils {
             logger.setAdditivity(false);
         }
         logger.setLevel(level);
+    }
+
+    private static void setStandardConsoleAppender(String key) {
+        Logger logger = Logger.getLogger(key);
+        logger.removeAllAppenders();
+        Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
+        Appender appender = new SafeConsoleAppender(layout);
+        logger.addAppender(appender);
     }
 }

@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -40,6 +41,12 @@ public abstract class DomainSegmentLoader
     Logger logger = LoggerFactory.getLogger(getClass());
 
     protected Multiset<Class, Set<Long>> initialToLoadIds = new Multiset<>();
+
+    protected transient DomainSegmentLoaderPhase phase;
+
+    // class/id=>phase
+    MultikeyMap<DomainSegmentLoaderPhase> loadedInPhase = new UnsortedMultikeyMap<>(
+            2);
 
     public DomainSegmentLoader() {
     }
@@ -95,6 +102,14 @@ public abstract class DomainSegmentLoader
         return new File(getFilename()).exists();
     }
 
+    public void loadedInPhase(Class clazz, Collection<Long> ids) {
+        ids.forEach(id -> {
+            if (!loadedInPhase.containsKey(clazz, id)) {
+                loadedInPhase.put(clazz, id, phase);
+            }
+        });
+    }
+
     public synchronized void notifyLater(LaterItem item, Class type, long id) {
         if (properties.stream().anyMatch(property -> property.isIgnore(item))) {
             return;
@@ -126,11 +141,23 @@ public abstract class DomainSegmentLoader
         KryoUtils.serializeToFile(holder, new File(getFilename()));
     }
 
+    public boolean wasLoadedInPhase(Class clazz, long id,
+            DomainSegmentLoaderPhase phase) {
+        return loadedInPhase.get(clazz, id) == phase;
+    }
+
     protected void addProperty(Class<? extends HasIdAndLocalId> source,
             String propertyName, Class<? extends HasIdAndLocalId> target,
             DomainSegmentPropertyType type) {
+        addProperty(source, propertyName, target, type,
+                DomainSegmentLoaderPhase.ALL_PHASES);
+    }
+
+    protected void addProperty(Class<? extends HasIdAndLocalId> source,
+            String propertyName, Class<? extends HasIdAndLocalId> target,
+            DomainSegmentPropertyType type, DomainSegmentLoaderPhase phase) {
         properties.add(new DomainSegmentLoaderProperty(source, propertyName,
-                target, type));
+                target, type, phase));
     }
 
     protected void clearCache() {
@@ -155,38 +182,66 @@ public abstract class DomainSegmentLoader
         toLoadIds.addAll(holder.initialToLoadIds);
     }
 
+    public enum DomainSegmentLoaderPhase {
+        ALL_PHASES, ONE, TWO;
+        public static List<DomainSegmentLoaderPhase> iterateOver() {
+            return Arrays.asList(ONE, TWO);
+        }
+
+        public boolean isIgnoreForPhase(DomainSegmentLoaderPhase forPhase) {
+            switch (this) {
+            case ALL_PHASES:
+                return false;
+            default:
+                return forPhase != this;
+            }
+        }
+    }
+
     public static class DomainSegmentLoaderProperty {
-        Class<? extends HasIdAndLocalId> source;
+        Class<? extends HasIdAndLocalId> clazz1;
 
-        String propertyName;
+        String propertyName1;
 
-        Class<? extends HasIdAndLocalId> target;
+        Class<? extends HasIdAndLocalId> clazz2;
 
         DomainSegmentPropertyType type;
+
+        private DomainSegmentLoaderPhase phase;
 
         public DomainSegmentLoaderProperty(
                 Class<? extends HasIdAndLocalId> source, String propertyName,
                 Class<? extends HasIdAndLocalId> target,
-                DomainSegmentPropertyType type) {
-            this.source = source;
-            this.propertyName = propertyName;
-            this.target = target;
+                DomainSegmentPropertyType type,
+                DomainSegmentLoaderPhase phase) {
+            this.clazz1 = source;
+            this.propertyName1 = propertyName;
+            this.clazz2 = target;
             this.type = type;
+            this.phase = phase;
         }
 
         public boolean isIgnore(LaterItem item) {
             if (type == DomainSegmentPropertyType.IGNORE) {
-                if (item.pdOperator.pd.getName().equals(propertyName)
-                        && item.source.getClass() == source) {
+                if (item.pdOperator.pd.getName().equals(propertyName1)
+                        && item.source.getClass() == clazz1) {
                     return true;
                 }
             }
             return false;
         }
+
+        public boolean isIgnoreForPhase(DomainSegmentLoaderPhase forPhase) {
+            if (this.phase == null) {
+                return false;
+            }
+            return this.phase.isIgnoreForPhase(forPhase);
+        }
     }
 
     public enum DomainSegmentPropertyType {
-        TABLE_REF, STORE_REF, IGNORE
+        TABLE_REF_CLAZZ_1_RSCOL_REFS_CLAZZ_2,
+        STORE_REF_CLAZZ_1_PROP_EQ_CLAZZ_2_ID_LOAD_CLAZZ_2, IGNORE
     }
 
     public static class SavedSegmentDataHolder {

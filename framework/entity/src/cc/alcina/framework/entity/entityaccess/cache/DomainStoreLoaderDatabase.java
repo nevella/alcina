@@ -70,6 +70,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
+import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentLoaderPhase;
 import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentLoaderProperty;
 import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentPropertyType;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
@@ -421,100 +422,109 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         List<Callable> calls = new ArrayList<Callable>();
         DomainSegmentLoader segmentLoader = (DomainSegmentLoader) domainDescriptor
                 .getDomainSegmentLoader();
-        int maxPasses = 60;
-        int pass = 0;
         Set<Class> segmentClasses = new LinkedHashSet<>();
-        long start = System.currentTimeMillis();
-        int lastTotal = 0;
-        int total = 0;
-        while ((segmentLoader.pendingCount() != 0 || lastTotal != total)
-                && pass++ < maxPasses) {
-            Set<Entry<Class, Set<Long>>> perClass = segmentLoader.toLoadIds
-                    .entrySet();
-            List<LaterLookup> laterLookups = new ArrayList<>();
-            for (Entry<Class, Set<Long>> entry : perClass) {
-                LaterLookup laterLookup = new LaterLookup();
-                laterLookups.add(laterLookup);
-                segmentClasses.add(entry.getKey());
-                calls.add(() -> {
-                    Collection<Long> ids = entry.getValue();
-                    ids = ids.stream().distinct().sorted()
-                            .collect(Collectors.toList());
-                    Class clazz = entry.getKey();
-                    ids = segmentLoader.filterForQueried(clazz, "id", ids);
-                    loadTableOrStoreSegment(clazz,
-                            Ax.format(" id in %s", longsToIdClause(ids)),
-                            laterLookup);
-                    entry.getValue().clear();
-                    return null;
-                });
-            }
-            invokeAllWithThrow(calls);
-            // resolve what we can (last pass)
-            LaterLookup lastPassLookup = new LaterLookup();
-            lastPassLookup.list.addAll(segmentLoader.toResolve);
-            segmentLoader.toResolve.clear();
-            laterLookups.add(lastPassLookup);
-            lastPassLookup.resolve(segmentLoader);
-            laterLookups.forEach(ll -> ll.resolve(segmentLoader));
-            laterLookups.clear();
-            if (segmentLoader.pendingCount() == 0) {
-                for (DomainSegmentLoaderProperty property : segmentLoader.properties) {
-                    if (property.type == DomainSegmentPropertyType.TABLE_REF) {
-                        Collection<Long> ids = store.cache
-                                .keys(property.target);
+        for (DomainSegmentLoaderPhase phase : DomainSegmentLoaderPhase
+                .iterateOver()) {
+            segmentLoader.phase = phase;
+            int maxPasses = 120;
+            int pass = 0;
+            long start = System.currentTimeMillis();
+            int lastTotal = -1;
+            int total = 0;
+            while ((segmentLoader.pendingCount() != 0 || lastTotal != total)
+                    && pass++ < maxPasses) {
+                Set<Entry<Class, Set<Long>>> perClass = segmentLoader.toLoadIds
+                        .entrySet();
+                List<LaterLookup> laterLookups = new ArrayList<>();
+                for (Entry<Class, Set<Long>> entry : perClass) {
+                    LaterLookup laterLookup = new LaterLookup();
+                    laterLookups.add(laterLookup);
+                    segmentClasses.add(entry.getKey());
+                    calls.add(() -> {
+                        Collection<Long> ids = entry.getValue();
                         ids = ids.stream().distinct().sorted()
                                 .collect(Collectors.toList());
-                        ids = segmentLoader.filterForQueried(property.source,
-                                property.propertyName, ids);
-                        String sqlFilter = Ax.format(" %s in %s",
-                                property.propertyName, longsToIdClause(ids));
-                        segmentClasses.add(property.source);
-                        calls.add(() -> {
-                            LaterLookup laterLookup = new LaterLookup();
-                            laterLookups.add(laterLookup);
-                            loadTableOrStoreSegment(property.source, sqlFilter,
-                                    laterLookup);
-                            return null;
-                        });
-                    } else if (property.type == DomainSegmentPropertyType.STORE_REF) {
-                        Set<Long> keys = store.cache.keys(property.source);
-                        Collection<Long> ids = store.cache.fieldValues(
-                                property.source, property.propertyName);
-                        ids = ids.stream().distinct().sorted()
-                                .collect(Collectors.toList());
-                        ids = segmentLoader.filterForQueried(property.target,
-                                "id", ids);
-                        String sqlFilter = Ax.format(" id in %s",
-                                longsToIdClause(ids));
-                        segmentClasses.add(property.target);
-                        calls.add(() -> {
-                            LaterLookup laterLookup = new LaterLookup();
-                            laterLookups.add(laterLookup);
-                            loadTableOrStoreSegment(property.target, sqlFilter,
-                                    laterLookup);
-                            return null;
-                        });
-                    }
+                        Class clazz = entry.getKey();
+                        ids = segmentLoader.filterForQueried(clazz, "id", ids);
+                        loadTableOrStoreSegment(clazz,
+                                Ax.format(" id in %s", longsToIdClause(ids)),
+                                laterLookup);
+                        segmentLoader.loadedInPhase(clazz, ids);
+                        entry.getValue().clear();
+                        return null;
+                    });
                 }
                 invokeAllWithThrow(calls);
+                // resolve what we can (last pass)
+                LaterLookup lastPassLookup = new LaterLookup();
+                lastPassLookup.list.addAll(segmentLoader.toResolve);
+                segmentLoader.toResolve.clear();
+                laterLookups.add(lastPassLookup);
+                lastPassLookup.resolve(segmentLoader);
                 laterLookups.forEach(ll -> ll.resolve(segmentLoader));
+                laterLookups.clear();
+                if (segmentLoader.pendingCount() == 0) {
+                    for (DomainSegmentLoaderProperty property : segmentLoader.properties) {
+                        if (property.isIgnoreForPhase(phase)) {
+                            continue;
+                        }
+                        if (property.type == DomainSegmentPropertyType.TABLE_REF_CLAZZ_1_RSCOL_REFS_CLAZZ_2) {
+                            Collection<Long> ids = store.cache
+                                    .keys(property.clazz2);
+                            ids = ids.stream().distinct().sorted()
+                                    .collect(Collectors.toList());
+                            ids = segmentLoader.filterForQueried(
+                                    property.clazz1, property.propertyName1,
+                                    ids);
+                            String sqlFilter = Ax.format(" %s in %s",
+                                    property.propertyName1,
+                                    longsToIdClause(ids));
+                            segmentClasses.add(property.clazz1);
+                            calls.add(() -> {
+                                LaterLookup laterLookup = new LaterLookup();
+                                laterLookups.add(laterLookup);
+                                loadTableOrStoreSegment(property.clazz1,
+                                        sqlFilter, laterLookup);
+                                return null;
+                            });
+                        } else if (property.type == DomainSegmentPropertyType.STORE_REF_CLAZZ_1_PROP_EQ_CLAZZ_2_ID_LOAD_CLAZZ_2) {
+                            Collection<Long> ids = store.cache.fieldValues(
+                                    property.clazz1, property.propertyName1);
+                            ids = ids.stream().distinct().sorted()
+                                    .collect(Collectors.toList());
+                            ids = segmentLoader.filterForQueried(
+                                    property.clazz2, "id", ids);
+                            String sqlFilter = Ax.format(" id in %s",
+                                    longsToIdClause(ids));
+                            segmentClasses.add(property.clazz2);
+                            calls.add(() -> {
+                                LaterLookup laterLookup = new LaterLookup();
+                                laterLookups.add(laterLookup);
+                                loadTableOrStoreSegment(property.clazz2,
+                                        sqlFilter, laterLookup);
+                                return null;
+                            });
+                        }
+                    }
+                    invokeAllWithThrow(calls);
+                    laterLookups.forEach(ll -> ll.resolve(segmentLoader));
+                }
+                lastTotal = total;
+                Integer size = segmentClasses.stream().collect(Collectors
+                        .summingInt(clazz -> store.cache.keys(clazz).size()));
+                total = size;
+                store.logger.info(
+                        "Load domain segment - pass {} {} - size {} - {} ms",
+                        phase, pass, size, System.currentTimeMillis() - start);
+                segmentClasses.forEach(clazz -> store.logger.debug("{}: {}",
+                        clazz.getSimpleName(), store.cache.keys(clazz).size()));
+                segmentClasses.forEach(segmentLoader::ensureClass);
             }
-            lastTotal = total;
-            Integer size = segmentClasses.stream().collect(Collectors
-                    .summingInt(clazz -> store.cache.keys(clazz).size()));
-            total = size;
-            store.logger.info("Load domain segment - pass {} - size {} - {} ms",
-                    pass, size, System.currentTimeMillis() - start);
-            segmentClasses.forEach(clazz -> store.logger.debug("{}: {}",
-                    clazz.getSimpleName(), store.cache.keys(clazz).size()));
-            segmentClasses.forEach(segmentLoader::ensureClass);
+            if (pass >= maxPasses) {
+                throw Ax.runtimeException("did our max passes and lost");
+            }
         }
-        if (pass >= maxPasses) {
-            throw Ax.runtimeException("did our max passes and lost");
-        } else {
-            segmentLoader.saveSegmentData();
-        }
+        segmentLoader.saveSegmentData();
     }
 
     private void loadJoinTable(Entry<PropertyDescriptor, JoinTable> entry,
