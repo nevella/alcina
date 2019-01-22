@@ -17,7 +17,11 @@ function installScript(filename) {
     }
     var __win = doc.parentWindow || doc.defaultView;
     var __frame = __win.frameElement;
-    setTimeout(function(){
+    var resetOnce = false;
+    var checkFrameNotReset = function(){
+      if(resetOnce){
+        return;
+      }
       var __win_ = __win;
       var __frame_ = __frame;
       var __script = script;
@@ -28,9 +32,12 @@ function installScript(filename) {
         script_.language='javascript';
         script_.src = code;
         __frame_.contentDocument.body.appendChild(script_);
+        resetOnce=true;
       }
       
-    },200);
+    };
+    setTimeout(checkFrameNotReset,200);
+    setTimeout(checkFrameNotReset,500);
 
     docbody.appendChild(script);
     sendStats('moduleStartup', 'scriptTagAdded');
