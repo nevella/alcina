@@ -15,6 +15,8 @@ function installScript(filename) {
         __MODULE_FUNC__.__errFn('__MODULE_FUNC__', new Error("Failed to load " + code));
       }
     }
+    /*
+     * actually issue with frame loader
     var __win = doc.parentWindow || doc.defaultView;
     var __frame = __win.frameElement;
     var resetOnce = false;
@@ -38,7 +40,7 @@ function installScript(filename) {
     };
     setTimeout(checkFrameNotReset,200);
     setTimeout(checkFrameNotReset,500);
-
+*/
     docbody.appendChild(script);
     sendStats('moduleStartup', 'scriptTagAdded');
   }
