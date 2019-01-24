@@ -1186,8 +1186,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                 ActionLogItem logItem = trackerToResult(action);
                 if (!actionTracker.provideIsRoot() || nonPersistent) {
                 } else {
-                    Registry.impl(CommonPersistenceProvider.class)
-                            .getCommonPersistence().logActionItem(logItem);
+                    try {
+                        Registry.impl(CommonPersistenceProvider.class)
+                                .getCommonPersistence().logActionItem(logItem);
+                    } catch (RuntimeException e) {
+                        e.printStackTrace();
+                    }
                 }
                 result.actionLogItem = logItem;
                 result.resultObject = (T) actionTracker.getJobResultObject();
