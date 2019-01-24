@@ -220,6 +220,11 @@ public class XmlNode {
         return xmlNodeHtml;
     }
 
+    public int indexInParentChildElements() {
+        return parent() == null ? -1
+                : parent().children.elements().indexOf(this);
+    }
+
     public void invalidate() {
         children.nodes = null;
         normalisedTextContent = null;
