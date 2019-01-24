@@ -1052,6 +1052,11 @@ public class CommonUtils {
         return new ArrayList<>(list.subList(list.size() - n, list.size()));
     }
 
+    public static String lastPathSegment(String url) {
+        return url == null || !url.matches(".+/.+") ? ""
+                : url.replaceFirst(".+/(.+)", "$1");
+    }
+
     public static <T> Set<T> lazyUnion(Set<T> c1, Set<T> c2) {
         if (c1.size() == 0) {
             return c2;
