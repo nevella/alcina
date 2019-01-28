@@ -139,7 +139,7 @@ public class ClientUtils {
 		while (jso != null) {
 			System.out
 					.println(Ax.format("dump - %s - %s", jso.hashCode(), jso));
-			jso = jso.getParentNode0();
+			jso = jso.getParentNodeRemote();
 		}
 	}
 

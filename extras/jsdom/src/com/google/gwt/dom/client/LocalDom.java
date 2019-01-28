@@ -27,6 +27,11 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 
+/*
+ * Refactoring needs - there's a lot of semi-duplication in the 'link remote to localdom' models - i.e. puts to remoteLookup
+ * 
+ * Probably need just one true path
+ */
 public class LocalDom {
     private static LocalDom instance = new LocalDom();
 
@@ -50,6 +55,8 @@ public class LocalDom {
 
     static final String TOPIC_UNABLE_TO_PARSE = LocalDom.class.getName()
             + ".TOPIC_UNABLE_TO_PARSE";
+
+    public static LocalDomMutations mutations;
 
     public static void debug(ElementRemote elementRemote) {
         get().debug0(elementRemote);
@@ -123,6 +130,10 @@ public class LocalDom {
         }
     }
 
+    public static Node resolveExternal(NodeRemote nodeRemote) {
+        return get().resolveExternal0(nodeRemote);
+    }
+
     public static void setDisableRemoteWrite(boolean disableRemoteWrite) {
         LocalDom.disableRemoteWrite = disableRemoteWrite;
     }
@@ -156,6 +167,23 @@ public class LocalDom {
         return collections;
     }
 
+    static void consoleLog(String message) {
+        if (LocalDomDebugImpl.debugAll) {
+            consoleLog0(message);
+        }
+    }
+
+    static void consoleLog(Supplier<String> messageSupplier) {
+        if (LocalDomDebugImpl.debugAll) {
+            consoleLog0(messageSupplier.get());
+        }
+    }
+
+    native static void consoleLog0(String message) /*-{
+    console.log(message);
+
+    }-*/;
+
     static Element createElement(String tagName) {
         return get().createElement0(tagName);
     }
@@ -183,6 +211,10 @@ public class LocalDom {
 
     static boolean hasNode(JavaScriptObject remote) {
         return get().remoteLookup.containsKey(remote);
+    }
+
+    static Node nodeForNoResolve(NodeRemote nodeRemote) {
+        return get().remoteLookup.get(nodeRemote);
     }
 
     static void putRemote(Element element, ElementRemote remote) {
@@ -226,6 +258,7 @@ public class LocalDom {
             remoteLookup = new LinkedHashMap<>();
         }
         ie9 = GWT.isClient() ? BrowserMod.isIE9() : false;
+        LocalDom.mutations = GWT.isClient() ? new LocalDomMutations() : null;
         useBuiltHtmlValidation = GWT.isClient()
                 ? BrowserMod.isInternetExplorer()
                 : false;
@@ -242,6 +275,26 @@ public class LocalDom {
             ElementRemote remote = (ElementRemote) node.remote();
             DomElement local = node.local();
             localToRemote(element, remote, local);
+        }
+    }
+
+    public Node resolveExternal0(NodeRemote nodeRemote) {
+        switch (nodeRemote.getNodeType()) {
+        case Node.ELEMENT_NODE:
+            ElementRemote elementRemote = (ElementRemote) nodeRemote;
+            Element element = Document.get().local()
+                    .createElement(elementRemote.getTagNameRemote());
+            element.putRemote(nodeRemote, false);
+            syncToRemote(element);
+            linkRemote(elementRemote, element);
+            return element;
+        case Node.TEXT_NODE:
+            Text textNode = Document.get()
+                    .createTextNode(nodeRemote.getNodeValue());
+            textNode.putRemote(nodeRemote, true);
+            return textNode;
+        default:
+            throw new UnsupportedOperationException();
         }
     }
 
@@ -281,7 +334,7 @@ public class LocalDom {
         }
         Collections.reverse(ancestors);
         if (withRemote == null) {
-            // attaching with-remote to without-remote (say, a popup)
+            // attaching child with-remote to without-remote (say, a popup)
             Node root = ancestors.get(0);
             ensureRemoteNodeMaybePendingResolution(root);
             ensureRemote0(node);
@@ -517,7 +570,7 @@ public class LocalDom {
         if (remote.provideIsText()) {
             // FIXME - non-performant, but rare (exception for selectionish)
             ElementRemote parentRemote = (ElementRemote) remote
-                    .getParentNode0();
+                    .getParentNodeRemote();
             Node parent = nodeFor0(parentRemote);
             int index = remote.indexInParentChildren();
             if (parent.getChildCount() == parentRemote.getChildCount()) {
@@ -544,9 +597,9 @@ public class LocalDom {
             return null;// say, shadowroot...
         }
         ElementRemote elem = (ElementRemote) remote;
-        if (elem.getTagNameInternal().equalsIgnoreCase("iframe")) {
-            return null;// don't handle iframes
-        }
+        // if (elem.getTagNameRemote().equalsIgnoreCase("iframe")) {
+        // return null;// don't handle iframes
+        // }
         ElementRemoteIndex remoteIndex = elem.provideRemoteIndex(false);
         ElementRemote hasNodeRemote = remoteIndex.hasNode();
         boolean hadNode = hasNodeRemote != null;

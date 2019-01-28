@@ -17,6 +17,7 @@ package com.google.gwt.dom.client;
 
 import java.util.AbstractList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -29,364 +30,368 @@ import com.google.gwt.core.client.JavascriptObjectEquivalent;
  * all objects implementing the Node interface may have children.
  */
 public abstract class Node implements JavascriptObjectEquivalent, DomNode {
-	/**
-	 * The node is an {@link Element}.
-	 */
-	public static final short ELEMENT_NODE = 1;
+    /**
+     * The node is an {@link Element}.
+     */
+    public static final short ELEMENT_NODE = 1;
 
-	/**
-	 * The node is a {@link Text} node.
-	 */
-	public static final short TEXT_NODE = 3;
+    /**
+     * The node is a {@link Text} node.
+     */
+    public static final short TEXT_NODE = 3;
 
-	/**
-	 * The node is a {@link Document}.
-	 */
-	public static final short DOCUMENT_NODE = 9;
+    /**
+     * The node is a {@link Document}.
+     */
+    public static final short DOCUMENT_NODE = 9;
 
-	/**
-	 * Assert that the given {@link JavaScriptObject} is a DOM node and
-	 * automatically typecast it.
-	 */
-	public static Node as(JavascriptObjectEquivalent o) {
-		if (o instanceof JavaScriptObject) {
-			JavaScriptObject jso = (JavaScriptObject) o;
-			assert isJso(jso);
-			return LocalDom.nodeFor(jso);
-		} else {
-			return (Node) o;
-		}
-	}
+    /**
+     * Assert that the given {@link JavaScriptObject} is a DOM node and
+     * automatically typecast it.
+     */
+    public static Node as(JavascriptObjectEquivalent o) {
+        if (o instanceof JavaScriptObject) {
+            JavaScriptObject jso = (JavaScriptObject) o;
+            assert isJso(jso);
+            return LocalDom.nodeFor(jso);
+        } else {
+            return (Node) o;
+        }
+    }
 
-	public static boolean is(JavascriptObjectEquivalent o) {
-		if (o instanceof JavaScriptObject) {
-			JavaScriptObject jso = (JavaScriptObject) o;
-			return isJso(jso);
-		}
-		return o instanceof Node;
-	}
+    public static boolean is(JavascriptObjectEquivalent o) {
+        if (o instanceof JavaScriptObject) {
+            JavaScriptObject jso = (JavaScriptObject) o;
+            return isJso(jso);
+        }
+        return o instanceof Node;
+    }
 
-	/**
-	 * Determines whether the given {@link JavaScriptObject} is a DOM node. A
-	 * <code>null</code> object will cause this method to return
-	 * <code>false</code>. The try catch is needed for the firefox permission
-	 * error: "Permission denied to access property 'nodeType'"
-	 */
-	private static native boolean isJso(JavaScriptObject o) /*-{
+    /**
+     * Determines whether the given {@link JavaScriptObject} is a DOM node. A
+     * <code>null</code> object will cause this method to return
+     * <code>false</code>. The try catch is needed for the firefox permission
+     * error: "Permission denied to access property 'nodeType'"
+     */
+    private static native boolean isJso(JavaScriptObject o) /*-{
     try {
       return (!!o) && (!!o.nodeType);
     } catch (e) {
       return false;
     }
-	}-*/;
+    }-*/;
 
-	private int resolvedEventId;
+    private int resolvedEventId;
 
-	protected Node() {
-	}
+    protected Node() {
+    }
 
-	@Override
-	public <T extends Node> T appendChild(T newChild) {
-		validateInsert(newChild);
-		doPreTreeResolution(newChild);
-		T node = local().appendChild(newChild);
-		remote().appendChild(newChild);
-		return node;
-	}
+    @Override
+    public <T extends Node> T appendChild(T newChild) {
+        validateInsert(newChild);
+        doPreTreeResolution(newChild);
+        T node = local().appendChild(newChild);
+        remote().appendChild(newChild);
+        return node;
+    }
 
-	@Override
-	public void callMethod(String methodName) {
-		DomNodeStatic.callMethod(this, methodName);
-	}
+    @Override
+    public void callMethod(String methodName) {
+        DomNodeStatic.callMethod(this, methodName);
+    }
 
-	@Override
-	public abstract <T extends JavascriptObjectEquivalent> T cast();
+    @Override
+    public abstract <T extends JavascriptObjectEquivalent> T cast();
 
-	@Override
-	public Node cloneNode(boolean deep) {
-		// FIXME - maybe - remote should probably always be resolved (so maybe
-		// ok)
-		return local().cloneNode(deep);
-	}
+    @Override
+    public Node cloneNode(boolean deep) {
+        // FIXME - maybe - remote should probably always be resolved (so maybe
+        // ok)
+        return local().cloneNode(deep);
+    }
 
-	@Override
-	public Node getChild(int index) {
-		return DomNodeStatic.getChild(this, index);
-	}
+    @Override
+    public Node getChild(int index) {
+        return DomNodeStatic.getChild(this, index);
+    }
 
-	@Override
-	public int getChildCount() {
-		return DomNodeStatic.getChildCount(this);
-	}
+    @Override
+    public int getChildCount() {
+        return DomNodeStatic.getChildCount(this);
+    }
 
-	@Override
-	public NodeList<Node> getChildNodes() {
-		return local().getChildNodes();
-	}
+    @Override
+    public NodeList<Node> getChildNodes() {
+        return local().getChildNodes();
+    }
 
-	@Override
-	public Node getFirstChild() {
-		return local().getFirstChild();
-	}
+    @Override
+    public Node getFirstChild() {
+        return local().getFirstChild();
+    }
 
-	@Override
-	public Node getLastChild() {
-		return local().getLastChild();
-	}
+    @Override
+    public Node getLastChild() {
+        return local().getLastChild();
+    }
 
-	@Override
-	public Node getNextSibling() {
-		return local().getNextSibling();
-	}
+    @Override
+    public Node getNextSibling() {
+        return local().getNextSibling();
+    }
 
-	@Override
-	public String getNodeName() {
-		return local().getNodeName();
-	}
+    @Override
+    public String getNodeName() {
+        return local().getNodeName();
+    }
 
-	@Override
-	public short getNodeType() {
-		return local().getNodeType();
-	}
+    @Override
+    public short getNodeType() {
+        return local().getNodeType();
+    }
 
-	@Override
-	public String getNodeValue() {
-		return local().getNodeValue();
-	}
+    @Override
+    public String getNodeValue() {
+        return local().getNodeValue();
+    }
 
-	@Override
-	public Document getOwnerDocument() {
-		return local().getOwnerDocument();
-	}
+    @Override
+    public Document getOwnerDocument() {
+        return local().getOwnerDocument();
+    }
 
-	@Override
-	public Element getParentElement() {
-		return local().getParentElement();
-	}
+    @Override
+    public Element getParentElement() {
+        return local().getParentElement();
+    }
 
-	@Override
-	public Node getParentNode() {
-		return local().getParentNode();
-	}
+    @Override
+    public Node getParentNode() {
+        return local().getParentNode();
+    }
 
-	@Override
-	public Node getPreviousSibling() {
-		return local().getPreviousSibling();
-	}
+    @Override
+    public Node getPreviousSibling() {
+        return local().getPreviousSibling();
+    }
 
-	@Override
-	public boolean hasChildNodes() {
-		return local().hasChildNodes();
-	}
+    @Override
+    public boolean hasChildNodes() {
+        return local().hasChildNodes();
+    }
 
-	@Override
-	public boolean hasParentElement() {
-		return DomNodeStatic.hasParentElement(this);
-	}
+    @Override
+    public boolean hasParentElement() {
+        return DomNodeStatic.hasParentElement(this);
+    }
 
-	@Override
-	public int indexInParentChildren() {
-		return local().indexInParentChildren();
-	}
+    @Override
+    public int indexInParentChildren() {
+        return local().indexInParentChildren();
+    }
 
-	@Override
-	public Node insertAfter(Node newChild, Node refChild) {
-		return DomNodeStatic.insertAfter(this, newChild, refChild);
-	}
+    @Override
+    public Node insertAfter(Node newChild, Node refChild) {
+        return DomNodeStatic.insertAfter(this, newChild, refChild);
+    }
 
-	@Override
-	public Node insertBefore(Node newChild, Node refChild) {
-		try {
-			// new child first
-			validateInsert(newChild);
-			doPreTreeResolution(newChild);
-			doPreTreeResolution(refChild);
-			Node result = local().insertBefore(newChild, refChild);
-			remote().insertBefore(newChild, refChild);
-			return result;
-		} catch (Exception e) {
-			throw new LocalDomException(e);
-		}
-	}
+    @Override
+    public Node insertBefore(Node newChild, Node refChild) {
+        try {
+            // new child first
+            validateInsert(newChild);
+            doPreTreeResolution(newChild);
+            doPreTreeResolution(refChild);
+            Node result = local().insertBefore(newChild, refChild);
+            remote().insertBefore(newChild, refChild);
+            return result;
+        } catch (Exception e) {
+            throw new LocalDomException(e);
+        }
+    }
 
-	@Override
-	public Node insertFirst(Node child) {
-		return DomNodeStatic.insertFirst(this, child);
-	}
+    @Override
+    public Node insertFirst(Node child) {
+        return DomNodeStatic.insertFirst(this, child);
+    }
 
-	@Override
-	public boolean isOrHasChild(Node child) {
-		return local().isOrHasChild(child);
-	}
+    @Override
+    public boolean isOrHasChild(Node child) {
+        return local().isOrHasChild(child);
+    }
 
-	@Override
-	public abstract Node nodeFor();
+    @Override
+    public abstract Node nodeFor();
 
-	public List<Node> provideChildNodeList() {
-		return new ChildNodeList();
-	}
+    public List<Node> provideChildNodeList() {
+        return new ChildNodeList();
+    }
 
-	public boolean provideIsElement() {
-		return getNodeType() == ELEMENT_NODE;
-	}
+    public boolean provideIsElement() {
+        return getNodeType() == ELEMENT_NODE;
+    }
 
-	public boolean provideIsText() {
-		return getNodeType() == TEXT_NODE;
-	}
+    public boolean provideIsText() {
+        return getNodeType() == TEXT_NODE;
+    }
 
-	@Override
-	public Node removeAllChildren() {
-		getChildNodes().forEach(n -> doPreTreeResolution(n));
-		return DomNodeStatic.removeAllChildren(this);
-	}
+    @Override
+    public Node removeAllChildren() {
+        getChildNodes().forEach(n -> doPreTreeResolution(n));
+        return DomNodeStatic.removeAllChildren(this);
+    }
 
-	@Override
-	public Node removeChild(Node oldChild) {
-		doPreTreeResolution(oldChild);
-		Node result = local().removeChild(oldChild);
-		remote().removeChild(oldChild);
-		LocalDom.detach(oldChild);
-		return result;
-	}
+    @Override
+    public Node removeChild(Node oldChild) {
+        doPreTreeResolution(oldChild);
+        Node result = local().removeChild(oldChild);
+        remote().removeChild(oldChild);
+        LocalDom.detach(oldChild);
+        return result;
+    }
 
-	@Override
-	public void removeFromParent() {
-		ensureRemoteCheck();
-		remote().removeFromParent();
-		local().removeFromParent();
-	}
+    @Override
+    public void removeFromParent() {
+        ensureRemoteCheck();
+        remote().removeFromParent();
+        local().removeFromParent();
+    }
 
-	@Override
-	public Node replaceChild(Node newChild, Node oldChild) {
-		doPreTreeResolution(oldChild);
-		doPreTreeResolution(newChild);
-		remote().replaceChild(newChild, oldChild);
-		Node result = local().replaceChild(newChild, oldChild);
-		LocalDom.detach(oldChild);
-		return result;
-	}
+    @Override
+    public Node replaceChild(Node newChild, Node oldChild) {
+        doPreTreeResolution(oldChild);
+        doPreTreeResolution(newChild);
+        remote().replaceChild(newChild, oldChild);
+        Node result = local().replaceChild(newChild, oldChild);
+        LocalDom.detach(oldChild);
+        return result;
+    }
 
-	public DomNode sameTreeNodeFor(DomNode domNode) {
-		if (domNode == null) {
-			return null;
-		}
-		if (domNode instanceof LocalDomNode) {
-			return local();
-		} else {
-			return remote();
-		}
-	}
+    public DomNode sameTreeNodeFor(DomNode domNode) {
+        if (domNode == null) {
+            return null;
+        }
+        if (domNode instanceof LocalDomNode) {
+            return local();
+        } else {
+            return remote();
+        }
+    }
 
-	@Override
-	public void setNodeValue(String nodeValue) {
-		ensureRemoteCheck();
-		local().setNodeValue(nodeValue);
-		remote().setNodeValue(nodeValue);
-	}
+    @Override
+    public void setNodeValue(String nodeValue) {
+        ensureRemoteCheck();
+        local().setNodeValue(nodeValue);
+        remote().setNodeValue(nodeValue);
+    }
 
-	protected void doPreTreeResolution(Node child) {
-		if (child != null) {
-			boolean ensureBecauseChildResolved = (child.wasResolved()
-					|| child.linkedToRemote())
-					&& (!linkedToRemote() || isPendingResolution());
-			if (ensureBecauseChildResolved) {
-				LocalDom.ensureRemote(this);
-			}
-			boolean linkedBecauseFlushed = ensureRemoteCheck();
-			if (linkedToRemote() && (wasResolved() || child.wasResolved())) {
-				if (child.wasResolved()) {
-					LocalDom.ensureRemote(child);
-				} else {
-					LocalDom.ensureRemoteNodeMaybePendingResolution(child);
-				}
-			}
-		}
-	}
+    public Stream<Node> streamChildren() {
+        return getChildNodes().stream();
+    }
 
-	/**
-	 * If the node was flushed, then we need to link to the remote (or our
-	 * local/remote will be inconsistent)
-	 * 
-	 */
-	protected boolean ensureRemoteCheck() {
-		if (!linkedToRemote() && wasResolved()
-				&& provideSelfOrAncestorLinkedToRemote() != null
-				&& !LocalDom.isDisableRemoteWrite()
-				&& (provideIsText() || provideIsElement())) {
-			LocalDom.ensureRemote(this);
-			return true;
-		} else {
-			return false;
-		}
-	}
+    protected void doPreTreeResolution(Node child) {
+        if (child != null) {
+            boolean ensureBecauseChildResolved = (child.wasResolved()
+                    || child.linkedToRemote())
+                    && (!linkedToRemote() || isPendingResolution());
+            if (ensureBecauseChildResolved) {
+                LocalDom.ensureRemote(this);
+            }
+            boolean linkedBecauseFlushed = ensureRemoteCheck();
+            if (linkedToRemote() && (wasResolved() || child.wasResolved())) {
+                if (child.wasResolved()) {
+                    LocalDom.ensureRemote(child);
+                } else {
+                    LocalDom.ensureRemoteNodeMaybePendingResolution(child);
+                }
+            }
+        }
+    }
 
-	protected boolean isPendingResolution() {
-		return false;
-	}
+    /**
+     * If the node was flushed, then we need to link to the remote (or our
+     * local/remote will be inconsistent)
+     * 
+     */
+    protected boolean ensureRemoteCheck() {
+        if (!linkedToRemote() && wasResolved()
+                && provideSelfOrAncestorLinkedToRemote() != null
+                && !LocalDom.isDisableRemoteWrite()
+                && (provideIsText() || provideIsElement())) {
+            LocalDom.ensureRemote(this);
+            return true;
+        } else {
+            return false;
+        }
+    }
 
-	protected abstract boolean linkedToRemote();
+    protected boolean isPendingResolution() {
+        return false;
+    }
 
-	protected abstract <T extends NodeLocal> T local();
+    protected abstract boolean linkedToRemote();
 
-	protected Node provideRoot() {
-		if (getParentElement() != null) {
-			return getParentElement().provideRoot();
-		}
-		return this;
-	}
+    protected abstract <T extends NodeLocal> T local();
 
-	protected Node provideSelfOrAncestorLinkedToRemote() {
-		if (linkedToRemote()) {
-			return this;
-		}
-		if (getParentElement() != null) {
-			return getParentElement().provideSelfOrAncestorLinkedToRemote();
-		}
-		return null;
-	}
+    protected Node provideRoot() {
+        if (getParentElement() != null) {
+            return getParentElement().provideRoot();
+        }
+        return this;
+    }
 
-	protected abstract void putRemote(NodeRemote nodeDom, boolean resolved);
+    protected Node provideSelfOrAncestorLinkedToRemote() {
+        if (linkedToRemote()) {
+            return this;
+        }
+        if (getParentElement() != null) {
+            return getParentElement().provideSelfOrAncestorLinkedToRemote();
+        }
+        return null;
+    }
 
-	protected abstract <T extends DomNode> T remote();
+    protected abstract void putRemote(NodeRemote nodeDom, boolean resolved);
 
-	protected void resetRemote() {
-		clearResolved();
-		resetRemote0();
-	}
+    protected abstract <T extends DomNode> T remote();
 
-	protected abstract void resetRemote0();
+    protected void resetRemote() {
+        clearResolved();
+        resetRemote0();
+    }
 
-	protected abstract NodeRemote typedRemote();
+    protected abstract void resetRemote0();
 
-	protected void validateInsert(Node newChild) {
-	}
+    protected abstract NodeRemote typedRemote();
 
-	/**
-	 * only call on reparse
-	 */
-	void clearResolved() {
-		resolvedEventId = 0;
-	}
+    protected void validateInsert(Node newChild) {
+    }
 
-	void resolved(int wasResolvedEventId) {
-		Preconditions.checkState(this.resolvedEventId == 0
-				|| this.resolvedEventId == wasResolvedEventId);
-		this.resolvedEventId = wasResolvedEventId;
-	}
+    /**
+     * only call on reparse
+     */
+    void clearResolved() {
+        resolvedEventId = 0;
+    }
 
-	boolean wasResolved() {
-		return resolvedEventId > 0;
-	}
+    void resolved(int wasResolvedEventId) {
+        Preconditions.checkState(this.resolvedEventId == 0
+                || this.resolvedEventId == wasResolvedEventId);
+        this.resolvedEventId = wasResolvedEventId;
+    }
 
-	class ChildNodeList extends AbstractList<Node> {
-		@Override
-		public Node get(int index) {
-			return local().getChildren().get(index).node;
-		}
+    boolean wasResolved() {
+        return resolvedEventId > 0;
+    }
 
-		@Override
-		public int size() {
-			return local().getChildren().size();
-		}
-	}
+    class ChildNodeList extends AbstractList<Node> {
+        @Override
+        public Node get(int index) {
+            return local().getChildren().get(index).node;
+        }
+
+        @Override
+        public int size() {
+            return local().getChildren().size();
+        }
+    }
 }

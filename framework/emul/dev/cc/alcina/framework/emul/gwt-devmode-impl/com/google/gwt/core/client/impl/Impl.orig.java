@@ -18,7 +18,6 @@ package com.google.gwt.core.client.impl;
 import com.google.gwt.core.client.Duration;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
-import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.JavaScriptObject;
 
@@ -74,12 +73,16 @@ public final class Impl {
    */
   public static native JavaScriptObject entry(JavaScriptObject jsFunction) /*-{
   return function() {
-    var _ = @Impl::entry0(*)(jsFunction, this, arguments);
-    if (_ != null) {
-      // Unwraps for Development Mode (see #apply())
-      _ = _.val;
+    if (@com.google.gwt.core.client.GWT::isScript()()) {
+      return @Impl::entry0(*)(jsFunction, this, arguments);
+    } else {
+      var _ = @Impl::entry0(*)(jsFunction, this, arguments);
+      if (_ != null) {
+        // Unwraps for Development Mode (see #apply())
+        _ = _.val;
+      }
+      return _;
     }
-    return _;
   };
 }-*/;
 
@@ -232,14 +235,18 @@ public final class Impl {
 
   private static native Object apply(Object jsFunction, Object thisObj,
       Object args) /*-{
-  var _ = jsFunction.apply(thisObj, args);
-  if (_ != null) {
-    // Wrap for Development Mode (unwrapped in #entry())
-    _ = {
-      val : _
-    };
+  if (@com.google.gwt.core.client.GWT::isScript()()) {
+    return jsFunction.apply(thisObj, args);
+  } else {
+    var _ = jsFunction.apply(thisObj, args);
+    if (_ != null) {
+      // Wrap for Development Mode (unwrapped in #entry())
+      _ = {
+        val : _
+      };
+    }
+    return _;
   }
-  return _;
 }-*/;
 
   /**
@@ -271,9 +278,6 @@ public final class Impl {
     boolean initialEntry = enter();
 
     try {
-        if (initialEntry) {
-            LocalDom.mutations.stopObserving();
-        }
       /*
        * Always invoke the UCE if we have one so that the exception never
        * percolates up to the browser's event loop, even in a reentrant
@@ -302,9 +306,6 @@ public final class Impl {
        */
     } finally {
       exit(initialEntry);
-      if (initialEntry) {
-          LocalDom.mutations.startObserving();
-      }
     }
   }
 

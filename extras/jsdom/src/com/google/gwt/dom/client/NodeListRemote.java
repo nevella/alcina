@@ -15,6 +15,8 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 import com.google.gwt.core.client.JavaScriptObject;
@@ -31,39 +33,47 @@ import com.google.gwt.core.client.JavaScriptObject;
  *            the type of contained node
  */
 public class NodeListRemote<T extends Node> extends JavaScriptObject
-		implements DomNodeList<T> {
-	protected NodeListRemote() {
-	}
+        implements DomNodeList<T> {
+    protected NodeListRemote() {
+    }
 
-	@Override
-	public final T getItem(int index) {
-		return LocalDom.nodeFor(getItem0(index));
-	}
+    @Override
+    public final T getItem(int index) {
+        return LocalDom.nodeFor(getItem0(index));
+    }
 
-	/**
-	 * The number of nodes in the list. The range of valid child node indices is
-	 * 0 to length-1 inclusive.
-	 */
-	@Override
-	public final native int getLength() /*-{
-										return this.length;
-										}-*/;
+    /**
+     * The number of nodes in the list. The range of valid child node indices is
+     * 0 to length-1 inclusive.
+     */
+    @Override
+    public final native int getLength() /*-{
+    return this.length;
+    }-*/;
 
-	@Override
-	public final Stream<T> stream() {
-		return DomNodeListStatic.stream0(this);
-	}
+    @Override
+    public final Stream<T> stream() {
+        return DomNodeListStatic.stream0(this);
+    }
 
-	/**
-	 * Returns the indexth item in the collection. If index is greater than or
-	 * equal to the number of nodes in the list, this returns null.
-	 * 
-	 * @param index
-	 *            Index into the collection
-	 * @return the node at the indexth position in the NodeList, or null if that
-	 *         is not a valid index.
-	 */
-	final native NodeRemote getItem0(int index) /*-{
-												return this[index];
-												}-*/;
+    /**
+     * Returns the indexth item in the collection. If index is greater than or
+     * equal to the number of nodes in the list, this returns null.
+     * 
+     * @param index
+     *            Index into the collection
+     * @return the node at the indexth position in the NodeList, or null if that
+     *         is not a valid index.
+     */
+    final native NodeRemote getItem0(int index) /*-{
+    return this[index];
+    }-*/;
+
+    final Stream<NodeRemote> streamRemote() {
+        List<NodeRemote> list = new ArrayList<>();
+        for (int idx = 0; idx < this.getLength(); idx++) {
+            list.add(this.getItem0(idx));
+        }
+        return list.stream();
+    }
 }

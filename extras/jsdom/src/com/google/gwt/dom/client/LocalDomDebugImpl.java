@@ -42,7 +42,7 @@ public class LocalDomDebugImpl {
 			if (remoteChild.provideIsElement()) {
 				localChild = withRemote.getChild(idx);
 				String tagName0 = ((ElementRemote) remoteChild)
-						.getTagNameInternal();
+						.getTagNameRemote();
 				if (!tagName0.equalsIgnoreCase(localChild.getNodeName())) {
 					issue = "mismatched tagname";
 				}
@@ -88,7 +88,7 @@ public class LocalDomDebugImpl {
 		String innerHTML = element.getInnerHTML();
 		String remoteDom = elementRemote.provideRemoteDomTree();
 		String localDom = withRemote.local().provideLocalDomTree();
-		ElementRemote parentRemote = elementRemote.getParentElement0();
+		ElementRemote parentRemote = elementRemote.getParentElementRemote();
 		ElementRemoteIndex remoteIndex = elementRemote.provideRemoteIndex(true);
 		remoteDebug = remoteIndex.getString();
 		log(LocalDomDebug.DEBUG_ISSUE, issue);
@@ -125,7 +125,7 @@ public class LocalDomDebugImpl {
 				.trimLinesToChars(remoteDomHasNode, 50);
 		String localDomHasNode2 = CommonUtils.trimLinesToChars(localDomHasNode,
 				50);
-		ElementRemote parentRemote = elementRemote.getParentElement0();
+		ElementRemote parentRemote = elementRemote.getParentElementRemote();
 		remoteDebug = remoteIndex.getString();
 		String hashes = Ax.format("%s: %s %s %s", hasNode.getTagName(),
 				hasNode.hashCode(), hasNode.local().hashCode(),
