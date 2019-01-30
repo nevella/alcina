@@ -66,7 +66,7 @@
 	<classpathentry kind="lib" path="lib/framework/classmeta/javassist.jar"/>
 	<classpathentry kind="lib" path="lib/extras/dev/httpclient-4.5.jar"/>
 	<classpathentry kind="lib" path="lib/extras/dev/httpcore-4.4.3.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/slf4j-api-1.7.25.jar"/>
+	<classpathentry kind="lib" path="lib/framework/entity/slf4j-api-1.7.25.jar" sourcepath="/private/var/local/git/minor/jars/slf4j-api-1.7.2.jbossorg-1-sources.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/commons-pool2-2.6.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

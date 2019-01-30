@@ -123,8 +123,8 @@ public class DomainStoreThreads {
         if (lockingDisabled) {
             if (System.currentTimeMillis()
                     - lastLockingDisabledMessage > TimeConstants.ONE_MINUTE_MS) {
-                System.out.format("domain store - lock %s - locking disabled\n",
-                        write);
+                domainStore.logger.error(
+                        "domain store - lock {} - locking disabled\n", write);
             }
             lastLockingDisabledMessage = System.currentTimeMillis();
             return;
@@ -132,10 +132,11 @@ public class DomainStoreThreads {
         try {
             if (mainLock.getQueueLength() > maxLockQueueLength && health
                     .getMaxQueuedTime() > maxLockQueueTimeForNoDisablement) {
-                System.out.println(
+                domainStore.logger.error(
                         "Disabling locking due to deadlock:\n***************\n");
-                mainLock.getQueuedThreads().forEach(t -> System.out.println(
-                        t + "\n" + CommonUtils.join(t.getStackTrace(), "\n")));
+                mainLock.getQueuedThreads()
+                        .forEach(t -> domainStore.logger.info(t + "\n"
+                                + CommonUtils.join(t.getStackTrace(), "\n")));
                 AlcinaTopics.notifyDevWarning(new DomainStoreException(
                         "Disabling locking owing to long queue/deadlock"));
                 lockingDisabled = true;
@@ -274,7 +275,7 @@ public class DomainStoreThreads {
             lockDumpCause += log;
             if (dumpLocks || (queuedTime > MAX_QUEUED_TIME)) {
                 dumpLocksCount.incrementAndGet();
-                System.out.println(getLockDumpString(lockDumpCause, time
+                domainStore.logger.info(getLockDumpString(lockDumpCause, time
                         - lastQueueDumpTime > 5 * TimeConstants.ONE_MINUTE_MS));
             }
         }
@@ -293,10 +294,10 @@ public class DomainStoreThreads {
                     if (longLocksCount.incrementAndGet() > 200) {
                         return;
                     }
-                    System.out.format("Long lock holder - %s ms - %s\n%s\n\n",
-                            duration, e.getKey(),
-                            SEUtilities.getStacktraceSlice(e.getKey(),
-                                    LONG_LOCK_TRACE_LENGTH, 0));
+                    domainStore.logger.info(
+                            "Long lock holder - {} ms - {}\n{}\n\n", duration,
+                            e.getKey(), SEUtilities.getStacktraceSlice(
+                                    e.getKey(), LONG_LOCK_TRACE_LENGTH, 0));
                 }
             }
         }
@@ -310,8 +311,8 @@ public class DomainStoreThreads {
     }
 
     void dumpLocks() {
-        System.out.println("DomainStore - main: " + mainLock);
-        System.out.println("DomainStore - subgraph: " + subgraphLock);
+        domainStore.logger.info("DomainStore - main: " + mainLock);
+        domainStore.logger.info("DomainStore - subgraph: " + subgraphLock);
     }
 
     String getLockDumpString(String lockDumpCause, boolean full) {
@@ -330,7 +331,7 @@ public class DomainStoreThreads {
                                     .getDomainTransformLayerWrapper().persistentEvents);
                 } catch (Exception e) {
                     // outside chance of a race and npe here
-                    System.out.println(
+                    domainStore.logger.info(
                             "could not print writer thread transforms - probably inconsequential race");
                 }
             }

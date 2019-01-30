@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.ControlServletHandlers.ModeEnum;
@@ -112,6 +113,7 @@ public class AppLifecycleManager implements RegistrableService {
         refreshClusterRoleFromConfigFile();
         refreshWriterServices();
         notifyAppConfigurationReloaded(null);
+        EntityLayerUtils.setLogLevelsFromCustomProperties();
     }
 
     public void refreshWriterServices() {

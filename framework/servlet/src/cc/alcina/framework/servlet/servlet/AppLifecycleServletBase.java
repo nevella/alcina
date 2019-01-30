@@ -1,11 +1,13 @@
 package cc.alcina.framework.servlet.servlet;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -30,7 +32,6 @@ import org.apache.log4j.PatternLayout;
 
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.domain.search.DomainSearcher;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -155,8 +156,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
             initJPA();
             initServices();
             initEntityLayer();
-            // logger levels may have been clobbered (jboss)
-            setLoggerLevels();
             createServletTransformClientInstance();
             initCustom();
             ServletLayerUtils.setAppServletInitialised(true);
@@ -202,6 +201,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
         }
     }
 
+    protected String getDefaultLoggerLevels() {
+        return ResourceUtilities.read(AppLifecycleServletBase.class,
+                "loglevels.properties");
+    }
+
     protected void initBootstrapRegistry() {
         AlcinaServerConfig config = new AlcinaServerConfig();
         config.setStartDate(new Date());
@@ -232,7 +236,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
     protected void initDevConsoleAndWebApp() {
         initLoggers();
-        setLoggerLevels();
     }
 
     protected abstract void initEntityLayer() throws Exception;
@@ -241,8 +244,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
     protected void initLoggers() {
         Logger logger = Logger.getRootLogger();
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
         // JBoss will have deadlocks if we try and use console appender, leave
-        // its
+        // its appender structure in place
+        //
+        // Note the customised jboss-logmanager.jar (default to strong map)
         if (Ax.isTest()) {
             logger.removeAllAppenders();
             Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
@@ -254,6 +260,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
         logger.setAdditivity(true);
         logger.setLevel(Level.INFO);
         if (!Ax.isTest()) {
+            // setup wildfly root logger appenders
             try {
                 Field jblmLoggerField = SEUtilities
                         .getFieldByName(logger.getClass(), "jblmLogger");
@@ -308,9 +315,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
             dbLogger.addAppender(appender);
             EntityLayerObjects.get().setPersistentLogger(dbLogger);
         }
-        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
-        Logger.getLogger("org.apache.kafka").setLevel(Level.WARN);
-        ServletLayerUtils.setLoggerLevels();
+        EntityLayerUtils.setLogLevelsFromCustomProperties();
     }
 
     protected abstract void initNames();
@@ -356,6 +361,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
     protected void loadCustomProperties() {
         try {
+            String loggerLevels = getDefaultLoggerLevels();
+            ResourceUtilities.registerCustomProperties(new ByteArrayInputStream(
+                    loggerLevels.getBytes(StandardCharsets.UTF_8)));
             File propertiesFile = new File(
                     AlcinaServerConfig.get().getCustomPropertiesFilePath());
             if (propertiesFile.exists()) {
@@ -378,10 +386,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
             e.printStackTrace();
             throw new WrappedRuntimeException(e);
         }
-    }
-
-    protected void setLoggerLevels() {
-        EntityLayerUtils.setLevel(DomainSearcher.class, Level.INFO);
     }
 
     static class CachingServletClassMetadataCacheProvider

@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/jboss/logmanager/LogContext.java b/src/main/java/org/jboss/logmanager/LogContext.java
+index c839caf..23c232c 100644
+--- a/src/main/java/org/jboss/logmanager/LogContext.java
++++ b/src/main/java/org/jboss/logmanager/LogContext.java
+@@ -38,7 +38,7 @@ import java.util.logging.LoggingPermission;
+  * A logging context, for producing isolated logging environments.
+  */
+ public final class LogContext implements Protectable {
+-    private static final LogContext SYSTEM_CONTEXT = new LogContext(false);
++    private static final LogContext SYSTEM_CONTEXT = new LogContext(true);
+ 
+     static final Permission CREATE_CONTEXT_PERMISSION = new RuntimePermission("createLogContext", null);
+     static final Permission SET_CONTEXT_SELECTOR_PERMISSION = new RuntimePermission("setLogContextSelector", null);
+@@ -129,7 +129,7 @@ public final class LogContext implements Protectable {
+      * @return a new log context
+      */
+     public static LogContext create() {
+-        return create(false);
++        return create(true);
+     }
+ 
+     /**

@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.logic;
 
 import java.lang.reflect.Field;
+import java.util.Map;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.Layout;
@@ -67,15 +68,9 @@ public class EntityLayerUtils {
     }
 
     public static void setLevel(org.slf4j.Logger slf4jlogger, Level level) {
-        if (ResourceUtilities.is(EntityLayerUtils.class, "debugLoggers")) {
-            Ax.out("Logger: %s => %s", slf4jlogger.getName(), level);
-            if (level == Level.WARN) {
-                int debug = 3;
-            }
-        }
-        setLevel0(slf4jlogger.getName(), level);
         if (!Ax.isTest() && slf4jlogger.getClass().getName()
                 .equals("org.slf4j.impl.Slf4jLogger")) {
+            // jboss/wildfly
             try {
                 Field loggerField = SEUtilities
                         .getFieldByName(slf4jlogger.getClass(), "logger");
@@ -93,11 +88,24 @@ public class EntityLayerUtils {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        } else {
+            // devconsole/log4j
+            setLevel0(slf4jlogger.getName(), level);
         }
     }
 
     public static void setLevel(String key, Level level) {
         setLevel(LoggerFactory.getLogger(key), level);
+    }
+
+    public static void setLogLevelsFromCustomProperties() {
+        Map<String, String> map = ResourceUtilities.getCustomProperties();
+        map.forEach((k, v) -> {
+            if (k.startsWith("log.level.")) {
+                k = k.substring("log.level.".length());
+                setLevel(k, Level.toLevel(v));
+            }
+        });
     }
 
     private static void setLevel0(String key, Level level) {
