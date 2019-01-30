@@ -959,15 +959,15 @@ public class DevConsoleDebugCommands {
                     exceptionFilter, gtOnlyFilter, ckFilter, limitClause);
             int size = 0;
             {
-                String sql = "select l.id " + sqlFromEtc;
+                String sql = "select count(l.id) " + sqlFromEtc;
                 PreparedStatement ps = conn.prepareStatement(sql);
                 Calendar c = Calendar.getInstance();
                 c.add(Calendar.DATE, -days);
                 Date d = c.getTime();
                 ps.setDate(1, new java.sql.Date(d.getTime()));
                 ResultSet rs = ps.executeQuery();
-                while (rs.next()) {
-                    size++;
+                if (rs.next()) {
+                    size += rs.getLong(1);
                 }
                 ps.close();
             }

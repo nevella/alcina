@@ -40,10 +40,15 @@ public class LocalDomMutations {
 
     private int elementUidCounter = 0;
 
+    private boolean disabled;
+
     public LocalDomMutations() {
     }
 
     public void startObserving() {
+        if (this.disabled) {
+            return;
+        }
         if (this.observer == null) {
             setupObserver();
         }
@@ -51,6 +56,9 @@ public class LocalDomMutations {
     }
 
     public void stopObserving() {
+        if (this.disabled) {
+            return;
+        }
         if (this.observer == null) {
             return;
         }
@@ -94,6 +102,11 @@ public class LocalDomMutations {
     }
 
     private native void setupObserver() /*-{
+    this.@LocalDomMutations::disabled = (typeof MutationObserver == "undefined");
+    if (this.@LocalDomMutations::disabled) {
+      console.log("Mutation tracking not defined");
+      return;
+    }
     this.@LocalDomMutations::documentElement = $doc.documentElement;
     var _this = this;
     var callback = function(mutationsList, observer) {
