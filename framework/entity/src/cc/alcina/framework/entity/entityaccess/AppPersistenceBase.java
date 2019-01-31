@@ -254,6 +254,9 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
         populateEntities();
     }
 
+    /*
+     * loggers now totally configured in servlet startup
+     */
     protected void initLoggers() {
         // Logger logger = Logger
         // .getLogger(AlcinaServerConfig.get().getMainLoggerName());
