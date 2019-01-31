@@ -303,6 +303,8 @@ public abstract class DevHelper {
 
     public abstract void initPostObjectServices();
 
+    public abstract void loadDefaultLoggingProperties();
+
     public void loadJbossConfig() {
         loadJbossConfig(new ConsolePrompter());
     }
@@ -402,6 +404,7 @@ public abstract class DevHelper {
     }
 
     public void solidTestEnvFirstHalf() {
+        loadDefaultLoggingProperties();
         loadJbossConfig();
         initLightweightServices();
     }

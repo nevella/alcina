@@ -136,6 +136,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
         return CommonUtils.join(map.entrySet(), "\n");
     }
 
+    public String getDefaultLoggerLevels() {
+        return ResourceUtilities.read(AppLifecycleServletBase.class,
+                "loglevels.properties");
+    }
+
     public Date getStartupTime() {
         return this.startupTime;
     }
@@ -199,11 +204,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
         } finally {
             ThreadedPermissionsManager.cast().popSystemUser();
         }
-    }
-
-    protected String getDefaultLoggerLevels() {
-        return ResourceUtilities.read(AppLifecycleServletBase.class,
-                "loglevels.properties");
     }
 
     protected void initBootstrapRegistry() {
