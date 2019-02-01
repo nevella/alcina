@@ -449,6 +449,11 @@ public class Toolbar extends Composite
             }
         }
 
+        public ToolbarButton withCssClassName(String className) {
+            aWidget.setStyleName(className);
+            return this;
+        }
+
         protected void showDropDown() {
             Widget dropDown = null;
             if (action instanceof HasDropdownPresenter) {
