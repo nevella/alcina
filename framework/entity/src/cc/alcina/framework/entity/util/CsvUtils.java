@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class CsvUtils {
-	static Pattern wrapInQuotesPattern = Pattern.compile("[,\"\\\\]");
+    static Pattern wrapInQuotesPattern = Pattern.compile("[,\"\\\\]");
 
     public static String asCsvRow(Collection values) {
         int i = 0;
@@ -25,11 +25,14 @@ public class CsvUtils {
     }
 
     public static StringBuilder headerValuesToCsv(List<String> headers,
-            List<List<String>> values) {
+            List<List<String>> values, boolean quoteHeaders) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < headers.size(); i++) {
             String header = headers.get(i);
-            headers.set(i, header.replace(" ", "_"));
+            if (quoteHeaders) {
+            } else {
+                headers.set(i, header.replace(" ", "_"));
+            }
         }
         sb.append(asCsvRow(headers));
         sb.append("\n");
