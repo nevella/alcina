@@ -851,7 +851,7 @@ table.alcina-SelectorFrame.minimal .select-item-container {
 }
 
 table.alcina-SelectorFrame.minimal div.alcina-Selector.selected {
-	margin: 0px 2px 0px 2px;
+	margin: 0px 6px 0px 2px;
 }
 
 table.alcina-SelectorFrame.minimal div.alcina-FilterHolder {
