@@ -19,9 +19,15 @@ public class CsvUtils {
             value = value.replace("\n", "\\n");
             value = value.replace("\"", "\"\"");
             sb.append(wrapInQuotesPattern.matcher(value).find()
-                    ? "\"" + value + "\"" : value);
+                    ? "\"" + value + "\""
+                    : value);
         }
         return sb.toString();
+    }
+
+    public static StringBuilder headerValuesToCsv(List<String> headers,
+            List<List<String>> values) {
+        return headerValuesToCsv(headers, values, false);
     }
 
     public static StringBuilder headerValuesToCsv(List<String> headers,
