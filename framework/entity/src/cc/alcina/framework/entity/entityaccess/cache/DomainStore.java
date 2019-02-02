@@ -72,8 +72,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -111,8 +112,8 @@ import cc.alcina.framework.entity.projection.GraphProjections;
  * @author nick@alcina.cc
  *
  */
-@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
-public class DomainStore implements RegistrableService, IDomainStore {
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+public class DomainStore implements IDomainStore {
     public static final String TOPIC_UPDATE_EXCEPTION = DomainStore.class
             .getName() + ".TOPIC_UPDATE_EXCEPTION";
 
@@ -141,7 +142,7 @@ public class DomainStore implements RegistrableService, IDomainStore {
     public static final Logger LOGGER_WRAPPED_OBJECT_REF_INTEGRITY = AlcinaLogUtils
             .getTaggedLogger(DomainStore.class, "wrapped_object_ref_integrity");
 
-    private static DomainStores domainStores = new DomainStores();
+    private static DomainStores domainStores;
 
     public static Builder builder() {
         return new Builder();
@@ -154,6 +155,11 @@ public class DomainStore implements RegistrableService, IDomainStore {
     }
 
     public static DomainStores stores() {
+        synchronized (DomainStores.class) {
+            if (domainStores == null) {
+                domainStores = Registry.impl(DomainStores.class);
+            }
+        }
         return domainStores;
     }
 
@@ -244,7 +250,6 @@ public class DomainStore implements RegistrableService, IDomainStore {
         Domain.registerHandler(new DomainStoreDomainHandler());
     }
 
-    @Override
     public void appShutdown() {
         threads.appShutdown();
         loader.appShutdown();
@@ -912,13 +917,19 @@ public class DomainStore implements RegistrableService, IDomainStore {
         }
     }
 
-    public static class DomainStores {
+    @RegistryLocation(registryPoint = DomainStores.class, implementationType = ImplementationType.SINGLETON)
+    public static class DomainStores implements RegistrableService {
         // not concurrent, handle in methods
         private Map<DomainDescriptor, DomainStore> descriptorMap = new LinkedHashMap<>();
 
         private Map<Class, DomainStore> classMap = new LinkedHashMap<>();
 
         private DomainStore databaseStore;
+
+        @Override
+        public void appShutdown() {
+            descriptorMap.values().forEach(DomainStore::appShutdown);
+        }
 
         public synchronized DomainStore databaseStore() {
             if (databaseStore == null) {

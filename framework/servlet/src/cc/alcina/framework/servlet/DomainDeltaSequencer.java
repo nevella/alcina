@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.EncryptionUtils;
@@ -40,7 +40,7 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDualFilter;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
-@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class DomainDeltaSequencer {
 	private static Map<Class, Method> rpcReflectiveMethods = new LinkedHashMap<>();
 	static {

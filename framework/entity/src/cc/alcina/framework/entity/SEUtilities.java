@@ -81,7 +81,7 @@ import javax.swing.tree.TreePath;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -98,7 +98,7 @@ import cc.alcina.framework.gwt.client.util.TextUtils;
  * @author nick@alcina.cc
  *
  */
-@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class SEUtilities {
     public static int idCounter = 1;
 

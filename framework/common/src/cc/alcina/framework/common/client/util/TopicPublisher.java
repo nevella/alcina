@@ -4,7 +4,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
@@ -47,7 +47,7 @@ public class TopicPublisher {
 		lookup.remove(listener, key);
 	}
 
-	@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
+	@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 	public static class GlobalTopicPublisher extends TopicPublisher {
 		private static volatile GlobalTopicPublisher singleton;
 

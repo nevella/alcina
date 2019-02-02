@@ -47,7 +47,7 @@ import com.esotericsoftware.kryo.util.ObjectMap;
 import com.esotericsoftware.kryo.util.Util;
 import com.esotericsoftware.reflectasm.FieldAccess;
 
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
@@ -73,7 +73,7 @@ import cc.alcina.framework.entity.util.CachingConcurrentMap;
  * @author Nathan Sweet <misc@n4te.com>
  * @author Roman Levenstein <romixlev@gmail.com>
  */
-@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class FieldSerializer<T> extends Serializer<T>
 		implements Comparator<FieldSerializer.CachedField> {
 	static CachedFieldFactory asmFieldFactory;

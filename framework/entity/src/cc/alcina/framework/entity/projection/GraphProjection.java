@@ -53,7 +53,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.HasReadPermission;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.ProjectByValue;
@@ -79,7 +79,7 @@ import cc.alcina.framework.entity.util.CachingConcurrentMap;
  *
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class GraphProjection {
     public static final int LOOKUP_SIZE = 1000;
 

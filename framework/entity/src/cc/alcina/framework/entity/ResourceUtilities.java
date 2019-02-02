@@ -61,7 +61,7 @@ import javax.swing.ImageIcon;
 import com.google.gwt.core.shared.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -73,7 +73,7 @@ import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
  * @author nick@alcina.cc
  *
  */
-@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ResourceUtilities {
     private static Map<String, String> customProperties = new ConcurrentHashMap<String, String>();
 

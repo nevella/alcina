@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
@@ -54,7 +54,7 @@ import cc.alcina.framework.servlet.Sx;
  */
 @RegistryLocations(value = {
 		@RegistryLocation(registryPoint = JobRegistry.class, implementationType = ImplementationType.SINGLETON),
-		@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class) })
+		@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class) })
 public class JobRegistry implements RegistrableService {
 	static JobRegistry singleton;
 

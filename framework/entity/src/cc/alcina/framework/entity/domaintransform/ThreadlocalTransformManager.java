@@ -67,7 +67,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AssignmentPermission;
 import cc.alcina.framework.common.client.logic.reflection.Association;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
@@ -97,7 +97,7 @@ import cc.alcina.framework.entity.projection.EntityUtils;
  *
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ThreadlocalTransformManager extends TransformManager
         implements PropertyAccessor, ObjectLookup, ClassLookup {
     public static final String CONTEXT_IGNORE_DOUBLE_DELETION = ThreadlocalTransformManager.class

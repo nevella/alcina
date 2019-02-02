@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
 @SuppressWarnings("unchecked")
@@ -45,7 +45,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
  *
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class CommonUtils {
     public static final String XML_PI = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 

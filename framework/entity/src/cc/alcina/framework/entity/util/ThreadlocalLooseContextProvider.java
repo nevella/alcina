@@ -1,10 +1,10 @@
 package cc.alcina.framework.entity.util;
 
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.LooseContext;
 
-@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ThreadlocalLooseContextProvider extends LooseContext {
 	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
 		protected synchronized Object initialValue() {

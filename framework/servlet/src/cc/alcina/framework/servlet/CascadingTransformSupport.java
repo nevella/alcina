@@ -7,7 +7,7 @@ import java.util.Set;
 
 import com.google.gwt.event.shared.UmbrellaException;
 
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 
@@ -35,7 +35,7 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
  * @author nick@alcina.cc
  *
  */
-@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class CascadingTransformSupport {
 	private static ThreadLocal<CascadingTransformSupport> supports = new ThreadLocal() {
 		protected synchronized CascadingTransformSupport initialValue() {
