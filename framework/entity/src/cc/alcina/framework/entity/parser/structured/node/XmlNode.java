@@ -959,7 +959,7 @@ public class XmlNode {
             return Boolean.valueOf(textOrEmpty());
         }
 
-        public boolean contains() {
+        public boolean matchExists() {
             return node() != null;
         }
 
