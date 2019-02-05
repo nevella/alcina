@@ -41,9 +41,9 @@ import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken.Pass;
-import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceQueue;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy.TransformExceptionAction;
 import cc.alcina.framework.entity.entityaccess.TransformPersister.TransformPersisterToken;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
 public class TransformPersisterIn {
@@ -334,7 +334,7 @@ public class TransformPersisterIn {
                         DomainTransformRequestPersistent dtrp = dtrqImpl
                                 .newInstance();
                         tm.persist(dtrp);
-                        Registry.impl(DomainTransformPersistenceQueue.class)
+                        DomainStore.stores().writableStore().getPersistenceEvents().getQueue()
                                 .registerPersisting(dtrp);
                         dtr.setEvents(null);
                         dtrp.wrap(dtr);

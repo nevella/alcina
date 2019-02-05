@@ -116,7 +116,6 @@ import cc.alcina.framework.entity.domaintransform.TransformConflicts;
 import cc.alcina.framework.entity.domaintransform.TransformConflicts.TransformConflictsFromOfflineSupport;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
-import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
@@ -1055,7 +1054,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
         try {
             LooseContext.getContext().push();
             AppPersistenceBase.checkNotReadOnly();
-            Registry.impl(DomainTransformPersistenceEvents.class)
+            DomainStore.stores().writableStore().getPersistenceEvents()
                     .fireDomainTransformPersistenceEvent(
                             new DomainTransformPersistenceEvent(
                                     persistenceToken, null, true));
@@ -1066,7 +1065,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
             MetricLogging.get().end("transform-commit");
             handleWrapperTransforms();
             wrapper.ignored = persistenceToken.ignored;
-            Registry.impl(DomainTransformPersistenceEvents.class)
+            DomainStore.stores().writableStore().getPersistenceEvents()
                     .fireDomainTransformPersistenceEvent(
                             new DomainTransformPersistenceEvent(
                                     persistenceToken, wrapper, true));
@@ -1267,7 +1266,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
             implements Predicate<InternalMetricData> {
         @Override
         public boolean test(InternalMetricData imd) {
-            return DomainStore.stores().databaseStore().instrumentation()
+            return DomainStore.stores().writableStore().instrumentation()
                     .isLockedByThread(((InternalMetricData) imd).thread);
         }
     }

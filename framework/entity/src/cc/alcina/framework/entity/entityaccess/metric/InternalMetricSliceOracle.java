@@ -23,7 +23,7 @@ public class InternalMetricSliceOracle {
 	public void beforeSlicePass(ThreadMXBean threadMxBean) {
 		long[] threadIdArray = threadMxBean.findDeadlockedThreads();
 		deadlockedThreadIds = CommonUtils.wrapLongArray(threadIdArray);
-		activeDomainStoreLockTimes = DomainStore.stores().databaseStore()
+		activeDomainStoreLockTimes = DomainStore.stores().writableStore()
 				.instrumentation().getActiveDomainStoreLockTimes();
 	}
 

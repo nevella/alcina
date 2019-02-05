@@ -246,7 +246,7 @@ public class InternalMetrics {
                                 StackTraceElement[] stackTrace = thread
                                         .getStackTrace();
                                 DomainStoreInstrumentation instrumentation = DomainStore
-                                        .stores().databaseStore()
+                                        .stores().writableStore()
                                         .instrumentation();
                                 long activeDomainStoreLockTime = instrumentation
                                         .getActiveDomainStoreLockTime(thread);

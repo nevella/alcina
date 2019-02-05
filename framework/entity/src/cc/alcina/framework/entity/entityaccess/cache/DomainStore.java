@@ -57,6 +57,7 @@ import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.domain.ModificationChecker;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
@@ -86,8 +87,10 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
@@ -151,17 +154,20 @@ public class DomainStore implements IDomainStore {
     // FIXME - this is over-called, probably should be changed to strict
     // start/finish semantics (and made non-static)
     public static PerThreadTransaction ensureActiveTransaction() {
-        return stores().databaseStore().transactions().ensureTransaction();
+        return stores().writableStore().transactions().ensureTransaction();
     }
 
     public static DomainStores stores() {
         synchronized (DomainStores.class) {
             if (domainStores == null) {
-                domainStores = Registry.impl(DomainStores.class);
+                domainStores = new DomainStores();
+                Registry.registerSingleton(DomainStore.class, domainStores);
             }
         }
         return domainStores;
     }
+
+    private DomainTransformPersistenceEvents persistenceEvents;
 
     SubgraphTransformManagerRemoteOnly transformManager;
 
@@ -227,6 +233,10 @@ public class DomainStore implements IDomainStore {
 
     private LazyObjectLoader lazyObjectLoader;
 
+    private boolean writable;
+
+    private DomainStoreDomainHandler handler;
+
     public DomainStore(DomainDescriptor descriptor) {
         this();
         this.domainDescriptor = descriptor;
@@ -245,14 +255,18 @@ public class DomainStore implements IDomainStore {
                 .getLong(DomainStore.class, "maxLockQueueTimeForNoDisablement");
         publishMappingEvents = ResourceUtilities.is(DomainStore.class,
                 "publishMappingEvents");
+        this.persistenceEvents = new DomainTransformPersistenceEvents(this);
         // this is where we multiplex...move to app?
         // FIXME - jade.ceres.2
-        Domain.registerHandler(new DomainStoreDomainHandler());
+        //
+        // yeah - store handler should call stores() store for class() (a proxy)
+        this.handler = new DomainStoreDomainHandler();
     }
 
     public void appShutdown() {
         threads.appShutdown();
         loader.appShutdown();
+        persistenceEvents.getQueue().appShutdown();
     }
 
     public void dumpLocks() {
@@ -288,6 +302,10 @@ public class DomainStore implements IDomainStore {
         return threads.getLockDumpString(lockDumpCause, full);
     }
 
+    public DomainTransformPersistenceEvents getPersistenceEvents() {
+        return this.persistenceEvents;
+    }
+
     public DomainStorePersistenceListener getPersistenceListener() {
         return this.persistenceListener;
     }
@@ -320,6 +338,11 @@ public class DomainStore implements IDomainStore {
 
     public boolean isInitialised() {
         return initialised;
+    }
+
+    public DomainTransformRequestPersistent loadTransformRequest(Long id,
+            Logger logger) throws Exception {
+        return loader.loadTransformRequest(id, logger);
     }
 
     public void readLockExpectLongRunning(boolean lock) {
@@ -516,6 +539,9 @@ public class DomainStore implements IDomainStore {
         graph.setLastModificationDate(
                 timestampToDate(persistent.getCreationDate()));
         Class<? extends IUser> iUserClass = domainDescriptor.getIUserClass();
+        if (iUserClass == null) {
+            return;
+        }
         Long persistentCreationUserId = HiliHelper
                 .getIdOrNull(persistent.getCreationUser());
         IUser creationUser = cache.get(iUserClass, persistentCreationUserId);
@@ -539,10 +565,10 @@ public class DomainStore implements IDomainStore {
         }
     }
 
-    void ensureModificationChecker(HasIdAndLocalId hili) throws Exception {
+    void ensureModificationChecker(HasId hasId) throws Exception {
         if (modificationCheckerField != null
-                && hili instanceof BaseSourcesPropertyChangeEvents) {
-            modificationCheckerField.set(hili, modificationChecker);
+                && hasId instanceof BaseSourcesPropertyChangeEvents) {
+            modificationCheckerField.set(hasId, modificationChecker);
         }
     }
 
@@ -808,6 +834,10 @@ public class DomainStore implements IDomainStore {
                     HasIdAndLocalId domainStoreObject = transformManager
                             .getObject(dte, true);
                     if (domainStoreObject != null) {
+                        // query - why do we have different versions of 'source'
+                        // (i.e. db object)
+                        //
+                        //
                         if (dbObj instanceof HasVersionNumber) {
                             updateVersionNumber(domainStoreObject, dte);
                         }
@@ -873,9 +903,12 @@ public class DomainStore implements IDomainStore {
 
         private DomainLoaderType loaderType;
 
+        private boolean readOnly = false;
+
         public DomainStore register() {
             DomainStore domainStore = new DomainStore();
             domainStore.domainDescriptor = descriptor;
+            domainStore.writable = !readOnly;
             Preconditions.checkNotNull(loaderType);
             switch (loaderType) {
             case Database:
@@ -902,6 +935,11 @@ public class DomainStore implements IDomainStore {
             return this;
         }
 
+        public Builder withReadOnly(boolean readOnly) {
+            this.readOnly = readOnly;
+            return this;
+        }
+
         enum DomainLoaderType {
             Database, Remote;
         }
@@ -924,24 +962,21 @@ public class DomainStore implements IDomainStore {
 
         private Map<Class, DomainStore> classMap = new LinkedHashMap<>();
 
-        private DomainStore databaseStore;
+        private DomainStore writableStore;
+
+        DomainStoresDomainHandler storesHandler = new DomainStoresDomainHandler();
+
+        private DomainStores() {
+            Domain.registerHandler(storesHandler);
+        }
 
         @Override
         public void appShutdown() {
             descriptorMap.values().forEach(DomainStore::appShutdown);
         }
 
-        public synchronized DomainStore databaseStore() {
-            if (databaseStore == null) {
-                databaseStore = descriptorMap.values().stream().filter(
-                        d -> d.loader instanceof DomainStoreLoaderDatabase)
-                        .findFirst().orElse(null);
-            }
-            return databaseStore;
-        }
-
         public boolean hasInitialisedDatabaseStore() {
-            return databaseStore() != null && databaseStore().initialised;
+            return writableStore() != null && writableStore().initialised;
         }
 
         public synchronized boolean isInitialised(
@@ -970,6 +1005,104 @@ public class DomainStore implements IDomainStore {
         public synchronized DomainStore storeFor(
                 DomainDescriptor domainDescriptor) {
             return descriptorMap.get(domainDescriptor);
+        }
+
+        public synchronized DomainStore writableStore() {
+            if (writableStore == null) {
+                writableStore = descriptorMap.values().stream()
+                        .filter(d -> d.writable).findFirst().orElse(null);
+                Preconditions.checkNotNull(writableStore);
+            }
+            return writableStore;
+        }
+
+        class DomainStoresDomainHandler implements DomainHandler {
+            @Override
+            public <V extends HasIdAndLocalId> void async(Class<V> clazz,
+                    long objectId, boolean create, Consumer<V> resultConsumer) {
+                storeHandler(clazz).async(clazz, objectId, create,
+                        resultConsumer);
+            }
+
+            @Override
+            public void commitPoint() {
+                // Noop
+            }
+
+            @Override
+            public <V extends HasIdAndLocalId> V detachedVersion(V v) {
+                return v == null ? null
+                        : storeHandler(v.getClass()).detachedVersion(v);
+            }
+
+            @Override
+            public <V extends HasIdAndLocalId> V find(Class clazz, long id) {
+                return storeHandler(clazz).find(clazz, id);
+            }
+
+            @Override
+            public <V extends HasIdAndLocalId> V find(V v) {
+                return v == null ? null : storeHandler(v.getClass()).find(v);
+            }
+
+            @Override
+            public <V extends HasIdAndLocalId> List<Long> ids(Class<V> clazz) {
+                return storeHandler(clazz).ids(clazz);
+            }
+
+            @Override
+            public <V extends HasIdAndLocalId> boolean isDomainVersion(V v) {
+                return v == null ? null
+                        : storeHandler(v.getClass()).isDomainVersion(v);
+            }
+
+            @Override
+            public <V extends HasIdAndLocalId> DomainQuery<V> query(
+                    Class<V> clazz) {
+                return storeHandler(clazz).query(clazz);
+            }
+
+            @Override
+            public <V extends HasIdAndLocalId> V resolveTransactional(
+                    DomainListener listener, V value, Object[] path) {
+                return value == null ? null
+                        : storeHandler(value.getClass())
+                                .resolveTransactional(listener, value, path);
+            }
+
+            @Override
+            public <V extends HasIdAndLocalId> Stream<V> stream(
+                    Class<V> clazz) {
+                return storeHandler(clazz).stream(clazz);
+            }
+
+            @Override
+            public <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
+                    long id) {
+                return storeHandler(clazz).transactionalFind(clazz, id);
+            }
+
+            @Override
+            public <V extends HasIdAndLocalId> V transactionalVersion(V v) {
+                return v == null ? null
+                        : storeHandler(v.getClass()).transactionalVersion(v);
+            }
+
+            @Override
+            public <V extends HasIdAndLocalId> Collection<V> values(
+                    Class<V> clazz) {
+                return storeHandler(clazz).values(clazz);
+            }
+
+            @Override
+            public <V extends HasIdAndLocalId> V writeable(V v) {
+                return v == null ? null
+                        : storeHandler(v.getClass()).writeable(v);
+            }
+
+            DomainHandler storeHandler(Class clazz) {
+                return classMap.get(clazz).handler;
+            }
         }
     }
 

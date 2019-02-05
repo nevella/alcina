@@ -1008,7 +1008,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
         @Override
         public String run(String[] argv) throws Exception {
-            DomainStore.stores().databaseStore().getDomainDescriptor()
+            DomainStore.stores().writableStore().getDomainDescriptor()
                     .saveSegmentData();
             return "saved";
         }

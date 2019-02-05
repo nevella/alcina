@@ -641,6 +641,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
             devHelper.readAppObjectGraph();
             devHelper.initPostObjectServices();
         } catch (Exception e) {
+            e.printStackTrace();
             consoleLeft.err(String.format("Problem retrieving object graph"
                     + " - reloading from server\n\t%s\n\n", e));
             performCommand("gen-objects");

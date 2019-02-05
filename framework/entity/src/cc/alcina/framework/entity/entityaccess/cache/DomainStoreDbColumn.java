@@ -12,14 +12,15 @@ import java.lang.annotation.Target;
 @Documented
 @Target({ ElementType.METHOD })
 /**
- * Retrieve from db - workaround for
+ * Retrieve from db - custom handling of db column
  * 
  * @author nick@alcina.cc
  *
  */
 public @interface DomainStoreDbColumn {
-	// Method descriptor #18 ()Ljava/lang/String;
-	public abstract java.lang.String mappedBy();
+    boolean customHandler() default false;
 
-	public abstract java.lang.Class targetEntity();
+    String mappedBy() default "";
+
+    Class targetEntity() default void.class;
 }

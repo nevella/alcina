@@ -76,11 +76,11 @@ public class InternalMetricData {
 		}
 		String lockType = Ax.blankToEmpty(persistent.getLockType());
 		if (lockType.length() < 200) {
-			if (DomainStore.stores().databaseStore().instrumentation()
+			if (DomainStore.stores().writableStore().instrumentation()
 					.isLockedByThread(thread)) {
 				lockType += "read;";
 			}
-			if (DomainStore.stores().databaseStore().instrumentation()
+			if (DomainStore.stores().writableStore().instrumentation()
 					.isWriteLockedByThread(thread)) {
 				lockType += "write;";
 			}

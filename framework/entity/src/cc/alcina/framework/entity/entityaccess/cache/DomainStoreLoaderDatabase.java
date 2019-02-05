@@ -55,6 +55,8 @@ import cc.alcina.framework.common.client.domain.DomainProjection;
 import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -69,11 +71,15 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
+import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentLoaderPhase;
 import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentLoaderProperty;
 import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentPropertyType;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.LaterLookup.LaterItem;
 import cc.alcina.framework.entity.projection.EntityUtils;
 
 public class DomainStoreLoaderDatabase implements DomainStoreLoader {
@@ -142,14 +148,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         }
     }
 
-    public Iterable<Object[]> getData(Connection conn, Class clazz,
-            String sqlFilter, DomainStoreJoinHandler joinHandler)
-            throws SQLException {
-        ConnResults result = new ConnResults(conn, clazz,
-                columnDescriptors.get(clazz), sqlFilter, joinHandler);
-        return result;
-    }
-
     @Override
     public LazyObjectLoader getLazyObjectLoader() {
         return backupLazyLoader;
@@ -180,8 +178,71 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         }
     }
 
-    public void resolveRefs(LaterLookup laterLookup) throws Exception {
-        laterLookup.resolve();
+    @Override
+    public synchronized DomainTransformRequestPersistent loadTransformRequest(
+            Long id, Logger logger) throws Exception {
+        Connection conn = getConnection();
+        try {
+            DomainTransformRequestPersistent request = CommonPersistenceProvider
+                    .get().getCommonPersistenceExTransaction()
+                    .getNewImplementationInstance(
+                            DomainTransformRequestPersistent.class);
+            Class<? extends DomainTransformEvent> transformEventImplClass = domainDescriptor
+                    .getShadowDomainTransformEventPersistentClass();
+            Class<? extends ClassRef> classRefImplClass = domainDescriptor
+                    .getShadowClassRefClass();
+            if (!columnDescriptors.containsKey(transformEventImplClass)) {
+                DomainClassDescriptor classDescriptor = new DomainClassDescriptor(
+                        transformEventImplClass);
+                prepareTable(classDescriptor);
+            }
+            String sqlFilter = Ax.format(
+                    " domainTransformRequestPersistent_id = %s order by id",
+                    id);
+            LaterLookup laterLookup = new LaterLookup();
+            List<? extends DomainTransformEventPersistent> events = (List) loadTable0(
+                    transformEventImplClass, sqlFilter,
+                    new ClassIdLock(DomainTransformRequestPersistent.class, id),
+                    laterLookup, false, true);
+            laterLookup.resolve(new CustomResolver() {
+                @Override
+                public boolean handles(PdOperator pdOperator) {
+                    switch (pdOperator.name) {
+                    case "objectClassRef":
+                    case "valueClassRef":
+                        return true;
+                    default:
+                        return false;
+                    }
+                }
+
+                @Override
+                public Object resolveCustom(PdOperator pdOperator,
+                        LaterItem item) {
+                    long storeDomainClassRefId = item.id;
+                    ClassRef storeClassRef = store.findRaw(classRefImplClass,
+                            storeDomainClassRefId);
+                    ClassRef writableDomainClassRef = ClassRef
+                            .forName(storeClassRef.getRefClassName());
+                    return writableDomainClassRef;
+                }
+            });
+            events.removeIf(event -> event.getObjectClassRef().notInVm()
+                    || (event.getValueClassRef() != null
+                            && event.getValueClassRef().notInVm()));
+            if (events.isEmpty()) {
+                return null;
+            }
+            // TODO - populate source - see
+            // cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceQueue.FireEventsThread.publishTransformEvent(Long)
+            request.setId(id);
+            events.forEach(request.getEvents()::add);
+            events.forEach(event -> event
+                    .setDomainTransformRequestPersistent(request));
+            return request;
+        } finally {
+            releaseConn(conn);
+        }
     }
 
     @Override
@@ -222,7 +283,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         MetricLogging.get().end("tables");
         MetricLogging.get().start("xrefs");
         for (LaterLookup ll : warmupLaterLookups) {
-            resolveRefs(ll);
+            ll.resolve();
         }
         MetricLogging.get().end("xrefs");
         warmupLaterLookups.clear();
@@ -589,8 +650,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
             PdOperator pdRev = joinHandler != null ? null
                     : ensurePdOperator(rev,
                             rev.getReadMethod().getDeclaringClass());
-            Iterable<Object[]> results = getData(conn, null, sql, joinHandler);
-            for (Object[] row : results) {
+            ConnResults connResults = ConnResults.builder().withLoader(this)
+                    .withConn(conn).withSqlFilter(sql)
+                    .withJoinHandler(joinHandler).build();
+            for (Object[] row : connResults) {
                 HasIdAndLocalId src = (HasIdAndLocalId) store.cache
                         .get(targetEntityClass, (Long) row[0]);
                 assert src != null;
@@ -619,8 +682,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
             throws SQLException {
         Connection conn = getConnection();
         try {
-            ConnResults connResults = new ConnResults(conn, clazz,
-                    columnDescriptors.get(clazz), sqlFilter, null);
+            ConnResults connResults = ConnResults.builder().withClazz(clazz)
+                    .withConn(conn)
+                    .withColumnDescriptors(columnDescriptors.get(clazz))
+                    .withLoader(this).withSqlFilter(sqlFilter).build();
             List<PdOperator> pds = descriptors.get(clazz);
             propertyStoreItemDescriptor.init(store.cache, pds);
             String simpleName = clazz.getSimpleName();
@@ -643,12 +708,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
             store.threads.sublock(sublock, true);
         }
         try {
-            List<HasIdAndLocalId> loaded = loadTable0(clazz, sqlFilter, sublock,
-                    laterLookup, (!store.initialising || loadingSegment));
+            List<HasIdAndLocalId> loaded = (List) loadTable0(clazz, sqlFilter,
+                    sublock, laterLookup,
+                    (!store.initialising || loadingSegment), false);
             boolean keepDetached = LooseContext.is(
                     DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
             if (sublock != null) {
-                resolveRefs(laterLookup);
+                laterLookup.resolve();
                 if (!store.initialising && !keepDetached) {
                     for (HasIdAndLocalId hili : loaded) {
                         store.index(hili, true);
@@ -663,21 +729,24 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         }
     }
 
-    private List<HasIdAndLocalId> loadTable0(Class clazz, String sqlFilter,
+    private List<HasId> loadTable0(Class clazz, String sqlFilter,
             ClassIdLock sublock, LaterLookup laterLookup,
-            boolean ignoreIfExisting) throws Exception {
+            boolean ignoreIfExisting, boolean keepDetached) throws Exception {
+        keepDetached |= LooseContext
+                .is(DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
         Connection conn = getConnection();
-        List<HasIdAndLocalId> loaded;
+        List<HasId> loaded;
         try {
-            Iterable<Object[]> results = getData(conn, clazz, sqlFilter, null);
+            ConnResults connResults = ConnResults.builder().withClazz(clazz)
+                    .withConn(conn)
+                    .withColumnDescriptors(columnDescriptors.get(clazz))
+                    .withLoader(this).withSqlFilter(sqlFilter).build();
             List<PdOperator> pds = descriptors.get(clazz);
-            loaded = new ArrayList<HasIdAndLocalId>();
+            loaded = new ArrayList<>();
             PdOperator idOperator = pds.stream()
                     .filter(pd -> pd.name.equals("id")).findFirst().get();
-            boolean keepDetached = LooseContext.is(
-                    DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
-            for (Object[] objects : results) {
-                HasIdAndLocalId hili = (HasIdAndLocalId) clazz.newInstance();
+            for (Object[] objects : connResults) {
+                HasId hasId = (HasId) clazz.newInstance();
                 if (ignoreIfExisting) {
                     if (store.transformManager.store.contains(clazz,
                             (Long) objects[idOperator.idx])) {
@@ -685,9 +754,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                     }
                 }
                 if (sublock != null) {
-                    loaded.add(hili);
+                    loaded.add(hasId);
                 }
-                store.ensureModificationChecker(hili);
+                if (hasId != null) {
+                    store.ensureModificationChecker(hasId);
+                }
                 for (int i = 0; i < objects.length; i++) {
                     PdOperator pdOperator = pds.get(i);
                     Method rm = pdOperator.readMethod;
@@ -695,14 +766,17 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                             || pdOperator.oneToOne != null) {
                         Long id = (Long) objects[i];
                         if (id != null) {
-                            laterLookup.add(id, pdOperator, hili);
+                            if (hasId != null) {
+                                laterLookup.add(id, pdOperator, hasId);
+                            }
                         }
                     } else {
-                        pdOperator.field.set(hili, objects[i]);
+                        pdOperator.field.set(hasId, objects[i]);
                     }
                 }
-                if (!keepDetached) {
-                    store.transformManager.store.mapObject(hili);
+                if (!keepDetached && hasId instanceof HasIdAndLocalId) {
+                    store.transformManager.store
+                            .mapObject((HasIdAndLocalId) hasId);
                 }
             }
         } finally {
@@ -812,22 +886,28 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                     .getAnnotation(DomainStoreDbColumn.class);
             if (manyToOne != null || oneToOne != null
                     || domainStoreColumn != null) {
-                Class joinEntityType = getTargetEntityType(rm);
-                if (!domainDescriptor.joinPropertyCached(joinEntityType)) {
-                    System.out.format("  not loading: %s.%s -- %s\n",
-                            clazz.getSimpleName(), pd.getName(),
-                            pd.getPropertyType().getSimpleName());
-                    continue;
-                }
-                if (oneToOne != null && !oneToOne.mappedBy().isEmpty()) {
-                    oneToOneRev.put(pd.getPropertyType(), oneToOne.mappedBy(),
-                            pd);
-                    continue;
-                }
-                if (domainStoreColumn != null) {
-                    domainStoreColumnRev.put(pd.getPropertyType(),
-                            domainStoreColumn.mappedBy(), pd);
-                    continue;
+                if (domainStoreColumn != null
+                        && domainStoreColumn.customHandler()) {
+                    // we'll just to conversion in code - targetEntityType
+                    // irrelevant
+                } else {
+                    Class joinEntityType = getTargetEntityType(rm);
+                    if (!domainDescriptor.joinPropertyCached(joinEntityType)) {
+                        System.out.format("  not loading: %s.%s -- %s\n",
+                                clazz.getSimpleName(), pd.getName(),
+                                pd.getPropertyType().getSimpleName());
+                        continue;
+                    }
+                    if (oneToOne != null && !oneToOne.mappedBy().isEmpty()) {
+                        oneToOneRev.put(pd.getPropertyType(),
+                                oneToOne.mappedBy(), pd);
+                        continue;
+                    }
+                    if (domainStoreColumn != null) {
+                        domainStoreColumnRev.put(pd.getPropertyType(),
+                                domainStoreColumn.mappedBy(), pd);
+                        continue;
+                    }
                 }
                 addColumnName(clazz, pd,
                         getTargetEntityType(pd.getReadMethod()));
@@ -924,36 +1004,45 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
     public class LaterLookup {
         List<LaterItem> list = new ArrayList<>();
 
-        void add(HasIdAndLocalId target, PdOperator pd,
-                HasIdAndLocalId source) {
+        private CustomResolver customResolver;
+
+        private DomainSegmentLoader segmentLoader;
+
+        void add(HasId target, PdOperator pd, HasId source) {
             list.add(new LaterItem(target, pd, source));
         }
 
-        void add(long id, PdOperator pd, HasIdAndLocalId source) {
-            list.add(new LaterItem(id, pd, source));
+        void add(Long id, PdOperator pd, HasId hasId) {
+            list.add(new LaterItem(id, pd, hasId));
         }
 
-        void resolve() {
-            resolve(null);
-        }
-
-        void resolve(DomainSegmentLoader segmentLoader) {
+        void doResolve() {
             try {
-                new ResolveRefsTask(list, segmentLoader).call();
+                new ResolveRefsTask(list).call();
             } catch (Exception e) {
                 throw new WrappedRuntimeException(e);
             }
         }
 
+        void resolve() {
+            doResolve();
+        }
+
+        void resolve(CustomResolver customResolver) {
+            this.customResolver = customResolver;
+            doResolve();
+        }
+
+        void resolve(DomainSegmentLoader segmentLoader) {
+            this.segmentLoader = segmentLoader;
+            doResolve();
+        }
+
         private final class ResolveRefsTask implements Callable<Void> {
             private List<LaterItem> items;
 
-            private DomainSegmentLoader segmentLoader;
-
-            private ResolveRefsTask(List<LaterItem> items,
-                    DomainSegmentLoader segmentLoader) {
+            private ResolveRefsTask(List<LaterItem> items) {
                 this.items = items;
-                this.segmentLoader = segmentLoader;
             }
 
             @Override
@@ -972,10 +1061,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                 for (LaterItem item : this.items) {
                     try {
                         PdOperator pdOperator = item.pdOperator;
-                        pdOperator.resolveHelper.ensure(item.source.getClass());
+                        pdOperator.resolveHelper.ensure(item.source.getClass(),
+                                customResolver);
                         Method rm = pdOperator.readMethod;
                         long id = item.id;
-                        if (pdOperator.resolveHelper.inJoinTables) {
+                        if (pdOperator.resolveHelper.isCustom()) {
+                            pdOperator.writeMethod.invoke(item.source,
+                                    pdOperator.resolveHelper
+                                            .resolveCustom(item));
+                        } else if (pdOperator.resolveHelper.inJoinTables) {
                             if (keepDetached) {
                                 throw new RuntimeException(
                                         "Cannot keep join tables detached");
@@ -1050,18 +1144,17 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
             PdOperator pdOperator;
 
-            HasIdAndLocalId source;
+            HasId source;
 
-            HasIdAndLocalId target;
+            HasId target;
 
-            public LaterItem(HasIdAndLocalId target, PdOperator pd,
-                    HasIdAndLocalId source) {
+            public LaterItem(HasId target, PdOperator pd, HasId source) {
                 this.target = target;
                 this.pdOperator = pd;
                 this.source = source;
             }
 
-            public LaterItem(long id, PdOperator pd, HasIdAndLocalId source) {
+            public LaterItem(long id, PdOperator pd, HasId source) {
                 this.id = id;
                 this.pdOperator = pd;
                 this.source = source;
@@ -1136,8 +1229,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
             boolean ensured = false;
 
-            public void ensure(Class<? extends HasIdAndLocalId> sourceClass) {
+            private CustomResolver customResolver;
+
+            public void ensure(Class<? extends HasId> sourceClass,
+                    CustomResolver customResolver) {
                 if (!ensured) {
+                    this.customResolver = customResolver;
                     inJoinTables = joinTables.containsKey(PdOperator.this.pd);
                     targetPd = manyToOneRev.get(sourceClass, name);
                     oneToOnePd = oneToOneRev.get(sourceClass, name);
@@ -1145,6 +1242,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                             name);
                     ensured = true;
                 }
+            }
+
+            public boolean isCustom() {
+                return customResolver != null
+                        && customResolver.handles(PdOperator.this);
+            }
+
+            public Object resolveCustom(LaterItem item) {
+                return customResolver.resolveCustom(PdOperator.this, item);
             }
         }
     }
@@ -1175,14 +1281,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
         private Class<?> type;
 
-        private boolean hili;
+        private boolean typeIdHasId;
 
         private EnumType enumType = EnumType.ORDINAL;
 
         public ColumnDescriptor(PropertyDescriptor pd, Class propertyType) {
             this.pd = pd;
             type = propertyType;
-            hili = HasIdAndLocalId.class.isAssignableFrom(type);
+            typeIdHasId = HasId.class.isAssignableFrom(type);
             Enumerated enumerated = pd.getReadMethod()
                     .getAnnotation(Enumerated.class);
             if (enumerated != null) {
@@ -1215,7 +1321,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         }
 
         public Object getObject(ResultSet rs, int idx) throws Exception {
-            if (hili || type == Long.class || type == long.class) {
+            if (typeIdHasId || type == Long.class || type == long.class) {
                 Long v = rs.getLong(idx);
                 if (rs.wasNull()) {
                     v = null;
@@ -1298,7 +1404,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         }
     }
 
-    class ConnResults implements Iterable<Object[]> {
+    static class ConnResults implements Iterable<Object[]> {
+        public static Builder builder() {
+            return new Builder();
+        }
+
         ConnResultsIterator itr = new ConnResultsIterator();
 
         private Connection conn;
@@ -1313,25 +1423,32 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
         List<Object[]> cachedValues;
 
-        ConnResultsReuse rsReuse = domainDescriptor
-                .getDomainSegmentLoader() == null
-                        ? new ConnResultsReusePassthrough()
-                        : (ConnResultsReuse) domainDescriptor
-                                .getDomainSegmentLoader();
+        ConnResultsReuse rsReuse;
 
         private boolean joinTable;
 
         private DomainStoreJoinHandler joinHandler;
 
-        public ConnResults(Connection conn, Class clazz,
-                List<ColumnDescriptor> columnDescriptors, String sqlFilter,
-                DomainStoreJoinHandler joinHandler) {
-            this.conn = conn;
-            this.clazz = clazz;
-            this.columnDescriptors = columnDescriptors;
-            this.sqlFilter = sqlFilter;
-            this.joinHandler = joinHandler;
+        private String tableNameOverride;
+
+        private DomainDescriptor domainDescriptor;
+
+        private DomainStoreLoaderDatabase loader;
+
+        private ConnResults(Builder builder) {
+            this.conn = builder.conn;
+            this.clazz = builder.clazz;
+            this.sqlFilter = builder.sqlFilter;
+            this.tableNameOverride = builder.tableNameOverride;
+            this.loader = builder.loader;
+            this.domainDescriptor = loader.domainDescriptor;
+            this.columnDescriptors = builder.columnDescriptors;
+            this.joinHandler = builder.joinHandler;
             this.joinTable = clazz == null;
+            this.rsReuse = domainDescriptor.getDomainSegmentLoader() == null
+                    ? new ConnResultsReusePassthrough()
+                    : (ConnResultsReuse) domainDescriptor
+                            .getDomainSegmentLoader();
         }
 
         public ResultSet ensureRs() {
@@ -1359,23 +1476,26 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                             columnNames.add(descr.getColumnSql());
                         }
                         Table table = (Table) clazz.getAnnotation(Table.class);
+                        String tableName = table.name();
+                        tableName = tableNameOverride != null
+                                ? tableNameOverride
+                                : tableName;
                         sql = String.format(template,
-                                CommonUtils.join(columnNames, ","),
-                                table.name());
+                                CommonUtils.join(columnNames, ","), tableName);
                         if (CommonUtils.isNotNullOrEmpty(sqlFilter)) {
                             sql += String.format(" where %s", sqlFilter);
                         }
                     }
-                    store.sqlLogger.debug(sql);
+                    loader.store.sqlLogger.debug(sql);
                     rs = stmt.executeQuery(sql);
                 }
                 return rs;
             } catch (Exception e) {
-                if (pass < 2 && !store.initialising
-                        && connectionsReopened.get() < 20) {
+                if (pass < 2 && !loader.store.initialising
+                        && loader.connectionsReopened.get() < 20) {
                     try {
                         // don't close the last one, invalid
-                        conn = dataSource.getConnection();
+                        conn = loader.dataSource.getConnection();
                     } catch (Exception e2) {
                         throw new WrappedRuntimeException(e2);
                     }
@@ -1385,6 +1505,65 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                 }
                 Ax.out("rs sql:\n\t%s", sql);
                 throw new WrappedRuntimeException(e);
+            }
+        }
+
+        public static final class Builder {
+            private DomainStoreJoinHandler joinHandler;
+
+            private List<ColumnDescriptor> columnDescriptors;
+
+            private Connection conn;
+
+            private Class clazz;
+
+            private String sqlFilter;
+
+            private String tableNameOverride;
+
+            private DomainStoreLoaderDatabase loader;
+
+            private Builder() {
+            }
+
+            public ConnResults build() {
+                return new ConnResults(this);
+            }
+
+            public Builder withClazz(Class clazz) {
+                this.clazz = clazz;
+                return this;
+            }
+
+            public Builder withColumnDescriptors(
+                    List<ColumnDescriptor> columnDescriptors) {
+                this.columnDescriptors = columnDescriptors;
+                return this;
+            }
+
+            public Builder withConn(Connection conn) {
+                this.conn = conn;
+                return this;
+            }
+
+            public Builder withJoinHandler(DomainStoreJoinHandler joinHandler) {
+                this.joinHandler = joinHandler;
+                return this;
+            }
+
+            public Builder withLoader(DomainStoreLoaderDatabase loader) {
+                this.loader = loader;
+                return this;
+            }
+
+            public Builder withSqlFilter(String sqlFilter) {
+                this.sqlFilter = sqlFilter;
+                return this;
+            }
+
+            public Builder withTableNameOverride(String tableNameOverride) {
+                this.tableNameOverride = tableNameOverride;
+                return this;
             }
         }
 
@@ -1436,8 +1615,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                                         .size(); idx++) {
                                     ColumnDescriptor descriptor = columnDescriptors
                                             .get(idx - 1);
-                                    cached[idx - 1] = descriptor.getObject(rs,
+                                    Object value = descriptor.getObject(rs,
                                             idx);
+                                    cached[idx - 1] = value;
                                 }
                             }
                             ConnResults.this.rsReuse.onNext(ConnResults.this,
@@ -1465,5 +1645,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
     }
 
     static class ConnResultsReusePassthrough implements ConnResultsReuse {
+    }
+
+    interface CustomResolver {
+        boolean handles(PdOperator pdOperator);
+
+        Object resolveCustom(PdOperator pdOperator, LaterItem item);
     }
 }

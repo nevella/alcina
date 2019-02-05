@@ -89,7 +89,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				Object impl = getCache().get(persistentClass, (Long) id);
 				if (impl == null) {
 					if (useRawDomainStore) {
-						if (DomainStore.stores().databaseStore()
+						if (DomainStore.stores().writableStore()
 								.isCachedTransactional(persistentClass)) {
 							impl = (T) Domain.find(persistentClass, (Long) id);
 						}
@@ -127,7 +127,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 					return (T) cached;
 				} else {
 					if (useRawDomainStore) {
-						if (DomainStore.stores().databaseStore()
+						if (DomainStore.stores().writableStore()
 								.isCached(valueClass)) {
 							return (T) Domain.find(valueClass, hili.getId());
 						}

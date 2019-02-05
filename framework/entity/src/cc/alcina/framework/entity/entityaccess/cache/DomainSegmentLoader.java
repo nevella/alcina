@@ -71,7 +71,7 @@ public abstract class DomainSegmentLoader
                 savedResults = new ArrayList<>();
                 connResults.cachedValues = savedResults;
                 savedRsResults.put(key, savedResults);
-                DomainStore.stores().databaseStore().sqlLogger.debug("{}: {}",
+                DomainStore.stores().writableStore().sqlLogger.debug("{}: {}",
                         connResults.clazz == null ? "(null)"
                                 : connResults.clazz.getSimpleName(),
                         connResults.sqlFilter);

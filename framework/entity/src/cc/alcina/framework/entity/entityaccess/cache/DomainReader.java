@@ -99,7 +99,7 @@ public abstract class DomainReader<I, O> {
 	}
 
 	protected DomainStore getStore() {
-		return DomainStore.stores().databaseStore();
+		return DomainStore.stores().writableStore();
 	}
 
 	protected abstract O read0(I input) throws Exception;

@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.CachingMap;
@@ -70,6 +71,14 @@ public abstract class DomainDescriptor {
     public synchronized <T> List<PreProvideTask<T>> getPreProvideTasks(
             Class<T> clazz) {
         return (List) perClassTasks.get(clazz);
+    }
+
+    public Class<? extends ClassRef> getShadowClassRefClass() {
+        throw new UnsupportedOperationException();
+    }
+
+    public Class<? extends DomainTransformEvent> getShadowDomainTransformEventPersistentClass() {
+        throw new UnsupportedOperationException();
     }
 
     public boolean joinPropertyCached(Class clazz) {

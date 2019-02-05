@@ -3,92 +3,96 @@ package cc.alcina.framework.entity.domaintransform.event;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
 
-@RegistryLocation(registryPoint = DomainTransformPersistenceEvents.class, implementationType = ImplementationType.SINGLETON)
 public class DomainTransformPersistenceEvents {
-	private List<DomainTransformPersistenceListener> listenerList = new ArrayList<DomainTransformPersistenceListener>();
+    private List<DomainTransformPersistenceListener> listenerList = new ArrayList<DomainTransformPersistenceListener>();
 
-	private List<DomainTransformPersistenceListener> nonThreadListenerList = new ArrayList<DomainTransformPersistenceListener>();
+    private List<DomainTransformPersistenceListener> nonThreadListenerList = new ArrayList<DomainTransformPersistenceListener>();
 
-	private DomainTransformPersistenceQueue queue;
+    private DomainTransformPersistenceQueue queue;
 
-	public DomainTransformPersistenceEvents() {
-		this.queue = Registry.impl(DomainTransformPersistenceQueue.class);
-	}
+    DomainStore domainStore;
 
-	public void addDomainTransformPersistenceListener(
-			DomainTransformPersistenceListener listener) {
-		addDomainTransformPersistenceListener(listener, false);
-	}
+    public DomainTransformPersistenceEvents(DomainStore domainStore) {
+        this.domainStore = domainStore;
+        this.queue = new DomainTransformPersistenceQueue(this);
+    }
 
-	public void addDomainTransformPersistenceListener(
-			DomainTransformPersistenceListener listener,
-			boolean listenOnNonThreadEvents) {
-		listenerList.add(listener);
-		if (listenOnNonThreadEvents) {
-			nonThreadListenerList.add(listener);
-		}
-	}
+    public void addDomainTransformPersistenceListener(
+            DomainTransformPersistenceListener listener) {
+        addDomainTransformPersistenceListener(listener, false);
+    }
 
-	public void fireDomainTransformPersistenceEvent(
-			DomainTransformPersistenceEvent event) {
-		fireDomainTransformPersistenceEvent0(event);
-		event.getPostEventRunnables().forEach(Runnable::run);
-	}
+    public void addDomainTransformPersistenceListener(
+            DomainTransformPersistenceListener listener,
+            boolean listenOnNonThreadEvents) {
+        listenerList.add(listener);
+        if (listenOnNonThreadEvents) {
+            nonThreadListenerList.add(listener);
+        }
+    }
 
-	public void removeDomainTransformPersistenceListener(
-			DomainTransformPersistenceListener listener) {
-		listenerList.remove(listener);
-		nonThreadListenerList.remove(listener);
-	}
+    public void fireDomainTransformPersistenceEvent(
+            DomainTransformPersistenceEvent event) {
+        fireDomainTransformPersistenceEvent0(event);
+        event.getPostEventRunnables().forEach(Runnable::run);
+    }
 
-	public void startEventQueue() {
-		queue.startEventQueue();
-	}
+    public DomainTransformPersistenceQueue getQueue() {
+        return this.queue;
+    }
 
-	private synchronized void fireDomainTransformPersistenceEvent0(
-			DomainTransformPersistenceEvent event) {
-		try {
-			queue.logFiring(event);
-			if (event.getPersistedRequestIds() != null) {
-				event.getPersistedRequestIds()
-						.forEach(queue::transformRequestQueuedLocal);
-			}
-			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
-					listenerList)) {
-				// only fire ex-machine transforms to certain general listeners
-				if (event.isLocalToVm()
-						|| nonThreadListenerList.contains(listener)) {
-					try {
-						InternalMetrics.get().startTracker(event,
-								() -> describeEvent(event),
-								InternalMetricTypeAlcina.service,
-								Thread.currentThread().getName());
-						listener.onDomainTransformRequestPersistence(event);
-					} finally {
-						InternalMetrics.get().endTracker(event);
-					}
-				}
-			}
-		} finally {
-			if (event.getPersistedRequestIds() != null) {
-				event.getPersistedRequestIds()
-						.forEach(queue::transformRequestPublishedLocal);
-			}
-			queue.logFired(event);
-		}
-	}
+    public void removeDomainTransformPersistenceListener(
+            DomainTransformPersistenceListener listener) {
+        listenerList.remove(listener);
+        nonThreadListenerList.remove(listener);
+    }
 
-	String describeEvent(DomainTransformPersistenceEvent event) {
-		return Ax.format("Persistence event: id: %s - %s",
-				CommonUtils.first(event.getPersistedRequestIds()),
-				event.getPersistenceEventType());
-	}
+    public void startEventQueue() {
+        queue.startEventQueue();
+    }
+
+    private synchronized void fireDomainTransformPersistenceEvent0(
+            DomainTransformPersistenceEvent event) {
+        try {
+            queue.logFiring(event);
+            if (event.getPersistedRequestIds() != null) {
+                event.getPersistedRequestIds()
+                        .forEach(queue::transformRequestQueuedLocal);
+            }
+            for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
+                    listenerList)) {
+                // only fire ex-machine transforms to certain general listeners
+                if (event.isLocalToVm()
+                        || nonThreadListenerList.contains(listener)) {
+                    try {
+                        InternalMetrics.get().startTracker(event,
+                                () -> describeEvent(event),
+                                InternalMetricTypeAlcina.service,
+                                Thread.currentThread().getName());
+                        listener.onDomainTransformRequestPersistence(event);
+                    } finally {
+                        InternalMetrics.get().endTracker(event);
+                    }
+                }
+            }
+        } finally {
+            if (event.getPersistedRequestIds() != null) {
+                event.getPersistedRequestIds()
+                        .forEach(queue::transformRequestPublishedLocal);
+            }
+            queue.logFired(event);
+        }
+    }
+
+    String describeEvent(DomainTransformPersistenceEvent event) {
+        return Ax.format("Persistence event: id: %s - %s",
+                CommonUtils.first(event.getPersistedRequestIds()),
+                event.getPersistenceEventType());
+    }
 }
