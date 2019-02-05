@@ -794,6 +794,16 @@ public class ResourceUtilities {
         bw.close();
     }
 
+    public static void loadSystemPropertiesFromCustomProperties() {
+        Map<String, String> map = getCustomProperties();
+        map.forEach((k, v) -> {
+            if (k.startsWith("system.property.")) {
+                k = k.substring("system.property.".length());
+                System.setProperty(k, v);
+            }
+        });
+    }
+
     public static interface BeanInfoHelper {
         BeanInfo postProcessBeanInfo(BeanInfo beanInfo);
     }

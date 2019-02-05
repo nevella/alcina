@@ -235,6 +235,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
     protected abstract void initDataFolder();
 
     protected void initDevConsoleAndWebApp() {
+        ResourceUtilities.loadSystemPropertiesFromCustomProperties();
         initLoggers();
     }
 

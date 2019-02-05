@@ -110,6 +110,7 @@ public class AppLifecycleManager implements RegistrableService {
 
     public void refreshProperties() throws Exception {
         lifecycleServlet.refreshProperties();
+        ResourceUtilities.loadSystemPropertiesFromCustomProperties();
         refreshClusterRoleFromConfigFile();
         refreshWriterServices();
         notifyAppConfigurationReloaded(null);
