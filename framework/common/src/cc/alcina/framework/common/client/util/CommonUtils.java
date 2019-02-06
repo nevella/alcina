@@ -1014,6 +1014,10 @@ public class CommonUtils {
         return result.toString();
     }
 
+    public static String joinPaths(String path, String sub) {
+        return (path + "/" + sub).replaceAll("/+", "/");
+    }
+
     public static String joinWithComma(Collection c) {
         return join(c, ",");
     }
