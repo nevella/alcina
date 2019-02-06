@@ -237,6 +237,8 @@ public class DomainStore implements IDomainStore {
 
     private DomainStoreDomainHandler handler;
 
+    public String name;
+
     public DomainStore(DomainDescriptor descriptor) {
         this();
         this.domainDescriptor = descriptor;
@@ -905,10 +907,13 @@ public class DomainStore implements IDomainStore {
 
         private boolean readOnly = false;
 
+        private String name = "store.default";
+
         public DomainStore register() {
             DomainStore domainStore = new DomainStore();
             domainStore.domainDescriptor = descriptor;
             domainStore.writable = !readOnly;
+            domainStore.name = name;
             Preconditions.checkNotNull(loaderType);
             switch (loaderType) {
             case Database:
@@ -932,6 +937,11 @@ public class DomainStore implements IDomainStore {
             this.warmupExecutor = warmupExecutor;
             this.dataSource = dataSource;
             loaderType = DomainLoaderType.Database;
+            return this;
+        }
+
+        public Builder withName(String name) {
+            this.name = name;
             return this;
         }
 

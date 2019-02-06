@@ -181,6 +181,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
     @Override
     public synchronized DomainTransformRequestPersistent loadTransformRequest(
             Long id, Logger logger) throws Exception {
+        store.logger.warn("{} - loading transform request {}", store.name, id);
         Connection conn = getConnection();
         try {
             DomainTransformRequestPersistent request = CommonPersistenceProvider
@@ -431,15 +432,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
             }
         }
         try {
-            if (postInitConn == null) {
-                synchronized (postInitConnectionLock) {
-                    if (postInitConn == null) {
-                        postInitConn = dataSource.getConnection();
-                        logger.debug("Opened new db connection (post-init) {}",
-                                postInitConn);
-                        postInitConn.setAutoCommit(true);
-                        postInitConn.setReadOnly(true);
-                    }
+            synchronized (postInitConnectionLock) {
+                if (postInitConn == null) {
+                    resetConnection();
                 }
             }
             postInitConnectionLock.lock();
@@ -989,6 +984,18 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         warmupConnections.add(conn, -1);
     }
 
+    // calling thread already has connection lock
+    Connection resetConnection() throws Exception {
+        synchronized (postInitConnectionLock) {
+            postInitConn = dataSource.getConnection();
+            logger.debug("Opened new db connection (post-init) {}",
+                    postInitConn);
+            postInitConn.setAutoCommit(true);
+            postInitConn.setReadOnly(true);
+        }
+        return postInitConn;
+    }
+
     synchronized LaterLookup warmupLaterLookup() {
         LaterLookup result = new LaterLookup();
         warmupLaterLookups.add(result);
@@ -1495,7 +1502,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                         && loader.connectionsReopened.get() < 20) {
                     try {
                         // don't close the last one, invalid
-                        conn = loader.dataSource.getConnection();
+                        conn = loader.resetConnection();
+                        Ax.out("{} - got new connection - %s",
+                                loader.store.name, conn);
                     } catch (Exception e2) {
                         throw new WrappedRuntimeException(e2);
                     }
