@@ -975,8 +975,8 @@ public class DomainStore implements IDomainStore {
             descriptorMap.values().forEach(DomainStore::appShutdown);
         }
 
-        public boolean hasInitialisedDatabaseStore() {
-            return writableStore() != null && writableStore().initialised;
+        public synchronized boolean hasInitialisedDatabaseStore() {
+            return writableStore0() != null && writableStore0().initialised;
         }
 
         public synchronized boolean isInitialised(
@@ -1008,10 +1008,15 @@ public class DomainStore implements IDomainStore {
         }
 
         public synchronized DomainStore writableStore() {
+            DomainStore store = writableStore0();
+            Preconditions.checkNotNull(store);
+            return store;
+        }
+
+        private synchronized DomainStore writableStore0() {
             if (writableStore == null) {
                 writableStore = descriptorMap.values().stream()
                         .filter(d -> d.writable).findFirst().orElse(null);
-                Preconditions.checkNotNull(writableStore);
             }
             return writableStore;
         }
