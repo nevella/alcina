@@ -68,6 +68,9 @@ public class EntityLayerUtils {
     }
 
     public static void setLevel(org.slf4j.Logger slf4jlogger, Level level) {
+        if (ResourceUtilities.is(EntityLayerUtils.class, "debugSetLogLevels")) {
+            Ax.out("%s => %s", slf4jlogger.getName(), level);
+        }
         if (!Ax.isTest() && slf4jlogger.getClass().getName()
                 .equals("org.slf4j.impl.Slf4jLogger")) {
             // jboss/wildfly
