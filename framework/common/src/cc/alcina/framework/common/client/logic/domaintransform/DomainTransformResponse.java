@@ -22,79 +22,89 @@ import java.util.List;
  * @author Nick Reddel
  */
 public class DomainTransformResponse implements Serializable {
-	private long requestId;
+    private long requestId;
 
-	private int transformsProcessed;
+    private int transformsProcessed;
 
-	private String message;
+    private String message;
 
-	private DomainTransformResponseResult result = DomainTransformResponseResult.OK;
+    private DomainTransformResponseResult result = DomainTransformResponseResult.OK;
 
-	private List<DomainTransformEvent> eventsToUseForClientUpdate = new ArrayList<DomainTransformEvent>();
+    private List<DomainTransformEvent> eventsToUseForClientUpdate = new ArrayList<DomainTransformEvent>();
 
-	private List<DomainTransformException> transformExceptions = new ArrayList<DomainTransformException>();
+    private List<DomainTransformException> transformExceptions = new ArrayList<DomainTransformException>();
 
-	// only when error
-	private DomainTransformRequest request;
+    private String logOffset;
 
-	public List<DomainTransformEvent> getEventsToUseForClientUpdate() {
-		return eventsToUseForClientUpdate;
-	}
+    // only when error
+    private DomainTransformRequest request;
 
-	public String getMessage() {
-		return this.message;
-	}
+    public List<DomainTransformEvent> getEventsToUseForClientUpdate() {
+        return eventsToUseForClientUpdate;
+    }
 
-	public DomainTransformRequest getRequest() {
-		return this.request;
-	}
+    public String getLogOffset() {
+        return this.logOffset;
+    }
 
-	public long getRequestId() {
-		return requestId;
-	}
+    public String getMessage() {
+        return this.message;
+    }
 
-	public DomainTransformResponseResult getResult() {
-		return this.result;
-	}
+    public DomainTransformRequest getRequest() {
+        return this.request;
+    }
 
-	public List<DomainTransformException> getTransformExceptions() {
-		return this.transformExceptions;
-	}
+    public long getRequestId() {
+        return requestId;
+    }
 
-	public int getTransformsProcessed() {
-		return this.transformsProcessed;
-	}
+    public DomainTransformResponseResult getResult() {
+        return this.result;
+    }
 
-	public void setMessage(String message) {
-		this.message = message;
-	}
+    public List<DomainTransformException> getTransformExceptions() {
+        return this.transformExceptions;
+    }
 
-	public void setRequest(DomainTransformRequest request) {
-		this.request = request;
-	}
+    public int getTransformsProcessed() {
+        return this.transformsProcessed;
+    }
 
-	public void setRequestId(long requestId) {
-		this.requestId = requestId;
-	}
+    public void setLogOffset(String logOffset) {
+        this.logOffset = logOffset;
+    }
 
-	public void setResult(DomainTransformResponseResult result) {
-		this.result = result;
-	}
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
-	public void setTransformsProcessed(int transformsProcessed) {
-		this.transformsProcessed = transformsProcessed;
-	}
+    public void setRequest(DomainTransformRequest request) {
+        this.request = request;
+    }
 
-	public String toExceptionString() {
-		StringBuffer sb = new StringBuffer();
-		for (DomainTransformException ex : getTransformExceptions()) {
-			sb.append(ex);
-			sb.append("\n");
-		}
-		return sb.toString();
-	}
+    public void setRequestId(long requestId) {
+        this.requestId = requestId;
+    }
 
-	public enum DomainTransformResponseResult {
-		OK, FAILURE
-	}
+    public void setResult(DomainTransformResponseResult result) {
+        this.result = result;
+    }
+
+    public void setTransformsProcessed(int transformsProcessed) {
+        this.transformsProcessed = transformsProcessed;
+    }
+
+    public String toExceptionString() {
+        StringBuffer sb = new StringBuffer();
+        for (DomainTransformException ex : getTransformExceptions()) {
+            sb.append(ex);
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
+    public enum DomainTransformResponseResult {
+        OK, FAILURE
+    }
 }

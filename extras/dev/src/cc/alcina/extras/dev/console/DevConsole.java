@@ -59,10 +59,10 @@ import javax.swing.text.TabStop;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import cc.alcina.extras.dev.DevHelper;
-import cc.alcina.extras.dev.DevHelper.StringPrompter;
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdNextCommandCaches;
+import cc.alcina.extras.dev.console.DevHelper.StringPrompter;
+import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
@@ -92,14 +92,24 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
     private static BiPrintStream out;
 
     private static BiPrintStream err;
+
+    private static BiPrintStream devErr;
+
+    private static BiPrintStream devOut;
     // has to happen early, otherwise can never redirect
     static {
         err = new BiPrintStream(new ByteArrayOutputStream());
+        devErr = new BiPrintStream(new ByteArrayOutputStream());
         err.s1 = System.err;
-        err.s2 = new NullPrintStream();
+        err.s2 = devErr;
+        devErr.s1 = new NullPrintStream();
+        devErr.s2 = new NullPrintStream();
         out = new BiPrintStream(new ByteArrayOutputStream());
+        devOut = new BiPrintStream(new ByteArrayOutputStream());
         out.s1 = System.out;
-        out.s2 = new NullPrintStream();
+        out.s2 = devOut;
+        devOut.s1 = new NullPrintStream();
+        devOut.s2 = new NullPrintStream();
         System.setErr(err);
         System.setOut(out);
     }
@@ -108,8 +118,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
     static final Color GREEN = new Color(0, 174, 127);
 
-    public static final String CONTEXT_NO_TRUNCATE = DevConsole.class.getName()
-            + ".CONTEXT_NO_TRUNCATE";
+    static final Color BLUE = new Color(0, 127, 174);
 
     static DevConsole instance;
 
@@ -189,6 +198,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
     String outDumpFileName = null;
 
+    private DevConsoleRemote remote;
+
     public String breakAndPad(int tabCount, int width, String text,
             int padLeftCharCount) {
         StringBuilder sb = new StringBuilder();
@@ -215,6 +226,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
                 consoleLeft.setText("");
             }
         });
+        remote.addClearEvent();
+        if (lastCommand != null) {
+            echoCommand(lastCommand);
+        }
     }
 
     public void closePipeHtml() {
@@ -308,6 +323,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         }
     }
 
+    public void echoCommand(String commandString) {
+        consoleLeft.setStyle(DevConsoleStyle.COMMAND);
+        Ax.out("\n>%s", commandString);
+        consoleLeft.setStyle(DevConsoleStyle.NORMAL);
+    }
+
     public String endRecordingSysout() {
         out.s2.flush();
         String result = new String(recordOut.toByteArray());
@@ -352,6 +373,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
     public JConsole getConsoleLeft() {
         return this.consoleLeft;
+    }
+
+    public DevConsoleStyle getCurrentConsoleStyle() {
+        return consoleLeft.currentStyle;
     }
 
     public File getDevFile(String path) {
@@ -456,6 +481,81 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         }
     }
 
+    public void performCommand(String command) {
+        if (command.isEmpty()) {
+            command = this.lastCommand;
+        }
+        this.lastCommand = command;
+        StreamTokenizer tokenizer = new StreamTokenizer(
+                new StringReader(command));
+        tokenizer.ordinaryChars('0', '9');
+        tokenizer.wordChars('0', '9');
+        tokenizer.ordinaryChars('.', '.');
+        tokenizer.wordChars('.', '.');
+        tokenizer.ordinaryChars('-', '-');
+        tokenizer.wordChars('-', '-');
+        tokenizer.wordChars('/', '/');
+        tokenizer.wordChars('_', '_');
+        tokenizer.wordChars('=', '=');
+        tokenizer.wordChars(':', ':');
+        tokenizer.wordChars('@', '@');
+        tokenizer.wordChars(',', ',');
+        int token;
+        try {
+            String cmd = null;
+            final List<String> args = new ArrayList<String>();
+            while ((token = tokenizer.nextToken()) != StreamTokenizer.TT_EOF) {
+                switch (tokenizer.ttype) {
+                case StreamTokenizer.TT_WORD:
+                    if (cmd == null) {
+                        cmd = tokenizer.sval;
+                    } else {
+                        args.add(tokenizer.sval);
+                    }
+                    break;
+                case '\'':
+                    args.add(tokenizer.sval);
+                    break;
+                default:
+                    if (cmd == null) {
+                        cmd = tokenizer.sval;
+                    } else {
+                        args.add(tokenizer.sval);
+                    }
+                    break;
+                }
+            }
+            DevConsoleCommand template = commandsById.get(cmd);
+            if (template == null) {
+                consoleLeft.err(String.format("'%s' is not a command\n", cmd));
+                CmdHelp cmdHelp = new CmdHelp();
+                cmdHelp.console = this;
+                cmdHelp.run(new String[0]);
+                return;
+            }
+            final DevConsoleCommand c = template.getClass().newInstance();
+            prepareCommand(c);
+            for (DevConsoleCommand c2 : runningJobs) {
+                if (c2.getClass() == c.getClass()) {
+                    System.err.format("Command '%s' already running\n",
+                            c2.getClass().getSimpleName());
+                    return;
+                }
+            }
+            Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    performCommandInThread(args, c, true);
+                }
+            };
+            new AlcinaChildContextRunner(
+                    "dev-runner-" + c.getClass().getSimpleName())
+                            .callNewThread(runnable);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
     public void pipeOutput(String outDumpFileName) {
         pipeOutput(outDumpFileName, true);
     }
@@ -511,6 +611,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
     public void setCommandLineText(String text) {
         commandLine.setTextWithPrompt(text);
+        remote.addSetCommandLineEvent(text);
     }
 
     public void setNextCommand(String cmd) {
@@ -587,7 +688,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         MetricLogging.get().start("init-console");
         // osx =>
         // https://bugs.openjdk.java.net/browse/JDK-8179209
-        loadFontMetrics();
+        // loadFontMetrics();
         createDevHelper();
         devHelper.loadDefaultLoggingProperties();
         devHelper.loadJbossConfig(null);
@@ -634,8 +735,22 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         boolean waitForUi = !devHelper.configLoaded;
         consoleLeft.initAttrs(props.fontName);
         consoleRight.initAttrs(props.fontName);
-        new AlcinaChildContextRunner("launcher-thread")
-                .callNewThreadOrCurrent(() -> initUi(), null, !waitForUi);
+        remote = new DevConsoleRemote(this);
+        remote.start(devHelper.configLoaded);
+        if (remote.isHasRemote()) {
+            // -Djava.awt.headless=true
+            // -Dawt.toolkit=sun.awt.HToolkit
+            System.setProperty("java.awt.headless", "true");
+            System.setProperty("awt.toolkit", "sun.awt.HToolkit");
+        }
+        devOut.s1 = new PrintStream(
+                new WriterOutputStream(remote.getOutWriter()));
+        devErr.s1 = new PrintStream(
+                new WriterOutputStream(remote.getErrWriter()));
+        if (!remote.isHasRemote()) {
+            new AlcinaChildContextRunner("launcher-thread")
+                    .callNewThreadOrCurrent(() -> initUi(), null, !waitForUi);
+        }
         MetricLogging.get().end("init-console");
         try {
             devHelper.readAppObjectGraph();
@@ -676,7 +791,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
             SwingUtilities.invokeAndWait(() -> {
                 mainFrame = new MainFrame();
                 mainFrame.setName("Dev Console");
-                mainFrame.setVisible(true);
+                mainFrame.setVisible(!remote.isHasRemote());
                 devHelper.loadJbossConfig(new SwingPrompter());
             });
         } catch (Throwable e) {
@@ -685,81 +800,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
     }
 
     protected abstract P newConsoleProperties();
-
-    protected void performCommand(String command) {
-        if (command.isEmpty()) {
-            command = this.lastCommand;
-        }
-        this.lastCommand = command;
-        StreamTokenizer tokenizer = new StreamTokenizer(
-                new StringReader(command));
-        tokenizer.ordinaryChars('0', '9');
-        tokenizer.wordChars('0', '9');
-        tokenizer.ordinaryChars('.', '.');
-        tokenizer.wordChars('.', '.');
-        tokenizer.ordinaryChars('-', '-');
-        tokenizer.wordChars('-', '-');
-        tokenizer.wordChars('/', '/');
-        tokenizer.wordChars('_', '_');
-        tokenizer.wordChars('=', '=');
-        tokenizer.wordChars(':', ':');
-        tokenizer.wordChars('@', '@');
-        tokenizer.wordChars(',', ',');
-        int token;
-        try {
-            String cmd = null;
-            final List<String> args = new ArrayList<String>();
-            while ((token = tokenizer.nextToken()) != StreamTokenizer.TT_EOF) {
-                switch (tokenizer.ttype) {
-                case StreamTokenizer.TT_WORD:
-                    if (cmd == null) {
-                        cmd = tokenizer.sval;
-                    } else {
-                        args.add(tokenizer.sval);
-                    }
-                    break;
-                case '\'':
-                    args.add(tokenizer.sval);
-                    break;
-                default:
-                    if (cmd == null) {
-                        cmd = tokenizer.sval;
-                    } else {
-                        args.add(tokenizer.sval);
-                    }
-                    break;
-                }
-            }
-            DevConsoleCommand template = commandsById.get(cmd);
-            if (template == null) {
-                consoleLeft.err(String.format("'%s' is not a command\n", cmd));
-                CmdHelp cmdHelp = new CmdHelp();
-                cmdHelp.console = this;
-                cmdHelp.run(new String[0]);
-                return;
-            }
-            final DevConsoleCommand c = template.getClass().newInstance();
-            prepareCommand(c);
-            for (DevConsoleCommand c2 : runningJobs) {
-                if (c2.getClass() == c.getClass()) {
-                    System.err.format("Command '%s' already running\n",
-                            c2.getClass().getSimpleName());
-                    return;
-                }
-            }
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    performCommandInThread(args, c, true);
-                }
-            };
-            new AlcinaChildContextRunner(
-                    "dev-runner-" + c.getClass().getSimpleName())
-                            .callNewThread(runnable);
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
-        }
-    }
 
     protected void performCommandInThread(List<String> args,
             DevConsoleCommand c, boolean topLevel) {
@@ -818,6 +858,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         consoleStringsFile = getDevFile("console-strings.xml");
     }
 
+    public enum DevConsoleStyle {
+        NORMAL, OK, ERR, COMMAND
+    }
+
     public static class JConsole extends JTextPane {
         public static final int maxChars = 250000;
 
@@ -865,11 +909,13 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
         private Element lastHighlight;
 
+        private DevConsoleStyle currentStyle;
+
         public JConsole() {
             setCaretPosition(0);
             setMargin(new Insets(5, 5, 5, 5));
             initAttrs("Courier New");
-            setStyle(ConsoleStyle.NORMAL);
+            setStyle(DevConsoleStyle.NORMAL);
             setEditable(false);
             TabStop[] tabs = new TabStop[8];
             for (int i = 0; i < 8; i++) {
@@ -886,8 +932,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         public void append(final String str) {
             StyledDocument doc = getStyledDocument();
             try {
-                if (doc.getLength() > maxChars
-                        && !LooseContext.is(CONTEXT_NO_TRUNCATE)) {
+                if (doc.getLength() > maxChars) {
                     doc.remove(0, doc.getLength());
                     doc.insertString(doc.getLength(), "...truncated...\n",
                             current);
@@ -904,16 +949,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         }
 
         public void err(final String msg) {
-            Runnable apRun = new Runnable() {
-                @Override
-                public void run() {
-                    setStyle(ConsoleStyle.ERR);
-                    append(msg);
-                    setStyle(ConsoleStyle.NORMAL);
-                    maybeScroll(this, true);
-                }
-            };
-            invoke(apRun);
+            err.append(msg);
         }
 
         public void find(final String text) {
@@ -926,8 +962,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         }
 
         public void initAttrs(String fontName) {
-            attrs = new SimpleAttributeSet[3];
-            for (int i = 0; i < 3; i++) {
+            attrs = new SimpleAttributeSet[4];
+            for (int i = 0; i < 4; i++) {
                 attrs[i] = new SimpleAttributeSet();
                 StyleConstants.setFontFamily(attrs[i], fontName);
                 StyleConstants.setFontSize(attrs[i], 15);
@@ -937,6 +973,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
             }
             StyleConstants.setForeground(attrs[1], GREEN);
             StyleConstants.setForeground(attrs[2], RED);
+            StyleConstants.setForeground(attrs[3], BLUE);
             highlightRange = new SimpleAttributeSet();
             normalRange = new SimpleAttributeSet();
             StyleConstants.setBackground(highlightRange,
@@ -946,18 +983,16 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         }
 
         public void ok(final String msg) {
-            invoke(new Runnable() {
-                @Override
-                public void run() {
-                    setStyle(ConsoleStyle.OK);
-                    append(msg);
-                    setStyle(ConsoleStyle.NORMAL);
-                    maybeScroll(this, true);
-                }
-            });
+            synchronized (this) {
+                invoke(() -> setStyle(DevConsoleStyle.OK));
+                invoke(() -> out.append(msg));
+                invoke(() -> setStyle(DevConsoleStyle.NORMAL));
+                invokeScrollRunnable();
+            }
         }
 
-        public void setStyle(ConsoleStyle style) {
+        public void setStyle(DevConsoleStyle style) {
+            this.currentStyle = style;
             switch (style) {
             case OK:
                 current = attrs[1];
@@ -965,9 +1000,22 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
             case ERR:
                 current = attrs[2];
                 break;
+            case COMMAND:
+                current = attrs[3];
+                break;
             case NORMAL:
                 current = attrs[0];
             }
+        }
+
+        private void invokeScrollRunnable() {
+            Runnable scrollRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    maybeScroll(this, true);
+                }
+            };
+            invoke(scrollRunnable);
         }
 
         protected void find0(String text) {
@@ -1147,10 +1195,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
             commandLine.addActionListener(clListener);
             jp.setMinimumSize(new Dimension(300, 300));
             jp.setPreferredSize(new Dimension(1250, props.preferredHeight));
-            out.s2 = new PrintStream(new WriterOutputStream(
-                    new ColouredWriter(ConsoleStyle.NORMAL, consoleLeft)));
-            err.s2 = new PrintStream(new WriterOutputStream(
-                    new ColouredWriter(ConsoleStyle.ERR, consoleLeft)));
+            devOut.s2 = new PrintStream(new WriterOutputStream(
+                    new ColouredWriter(DevConsoleStyle.NORMAL, consoleLeft)));
+            devErr.s2 = new PrintStream(new WriterOutputStream(
+                    new ColouredWriter(DevConsoleStyle.ERR, consoleLeft)));
             // JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
             // scrollLeft, scrollRight);
             // split.setDividerLocation(490);
@@ -1178,9 +1226,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
     class ColouredWriter extends StringWriter {
         private final JConsole console;
 
-        private final ConsoleStyle style;
+        private final DevConsoleStyle style;
 
-        public ColouredWriter(ConsoleStyle style, JConsole console) {
+        public ColouredWriter(DevConsoleStyle style, JConsole console) {
             this.style = style;
             this.console = console;
         }
@@ -1197,22 +1245,16 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
         @Override
         public void write(final String buf, int off, int len) {
-            boolean noTruncate = LooseContext.is(CONTEXT_NO_TRUNCATE);
-            console.invoke(new Runnable() {
-                @Override
-                public void run() {
-                    LooseContext.setBoolean(CONTEXT_NO_TRUNCATE, noTruncate);
-                    console.setStyle(style);
-                    console.append(buf);
-                    console.setStyle(ConsoleStyle.NORMAL);
-                    console.maybeScroll(this, false);
-                }
-            });
+            DevConsoleStyle entryStyle = console.currentStyle;
+            if (style != DevConsoleStyle.NORMAL) {
+                console.invoke(() -> console.setStyle(style));
+            }
+            console.invoke(() -> console.append(buf));
+            if (style != DevConsoleStyle.NORMAL) {
+                console.invoke(() -> console.setStyle(entryStyle));
+            }
+            console.invokeScrollRunnable();
         }
-    }
-
-    enum ConsoleStyle {
-        NORMAL, OK, ERR
     }
 
     class SwingPrompter implements StringPrompter {

@@ -34,10 +34,10 @@ import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 import cc.alcina.framework.entity.parser.structured.node.XmlNodeHtmlTableBuilder;
 import cc.alcina.framework.entity.parser.structured.node.XmlNodeHtmlTableBuilder.XmlNodeHtmlTableRowBuilder;
-import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
+import cc.alcina.framework.servlet.servlet.ServletLayerTransforms;
 
 public class UserStories {
 	public static final String TOPIC_USER_STORIES_EVENT_OCCURRED = UserStories.class
@@ -237,7 +237,7 @@ public class UserStories {
 		ResourceUtilities.copyBeanProperties(incoming, story, null, false,
 				Domain.domainBaseVersionablePropertyNames);
 		story.setClientInstanceId(clientInstance.getId());
-		long creationId = ServletLayerUtils
+		long creationId = ServletLayerTransforms
 				.pushTransformsAndGetFirstCreationId(true);
 		long storyId = creationId == 0 ? story.getId() : creationId;
 		Ax.out("published user story - %s:\n%s", storyId, delta);

@@ -1,16 +1,15 @@
 package cc.alcina.framework.servlet.servlet;
 
 import cc.alcina.framework.entity.entityaccess.TransformPersisterViaServletLayerPersistence;
-import cc.alcina.framework.servlet.ServletLayerUtils;
 
 public class TransformPersisterViaServletLayerPersistenceStd
 		implements TransformPersisterViaServletLayerPersistence {
 	@Override
 	public void persistTransforms(boolean currentUser) {
 		if (currentUser) {
-			ServletLayerUtils.pushTransformsAsCurrentUser();
+			ServletLayerTransforms.pushTransformsAsCurrentUser();
 		} else {
-			ServletLayerUtils.pushTransformsAsRoot();
+			ServletLayerTransforms.pushTransformsAsRoot();
 		}
 	}
 }

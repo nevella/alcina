@@ -35,57 +35,72 @@ import cc.alcina.framework.common.client.util.Multimap;
  * @author Nick Reddel
  */
 public class DomainTransformLayerWrapper implements Serializable {
-	static final transient long serialVersionUID = 1;
+    static final transient long serialVersionUID = 1;
 
-	public DomainTransformResponse response;
+    public DomainTransformResponse response;
 
-	public HiliLocatorMap locatorMap;
+    public HiliLocatorMap locatorMap;
 
-	public int ignored;
+    public int ignored;
 
-	public List<DomainTransformEventPersistent> persistentEvents = new ArrayList<DomainTransformEventPersistent>();
+    public List<DomainTransformEventPersistent> persistentEvents = new ArrayList<DomainTransformEventPersistent>();
 
-	public List<DomainTransformEvent> remoteEventsPersisted = new ArrayList<DomainTransformEvent>();
+    public List<DomainTransformEvent> remoteEventsPersisted = new ArrayList<DomainTransformEvent>();
 
-	private Multimap<Class, List<DomainTransformEventPersistent>> eventsByClass;
+    private Multimap<Class, List<DomainTransformEventPersistent>> eventsByClass;
 
-	public List<DomainTransformRequestPersistent> persistentRequests = new ArrayList<DomainTransformRequestPersistent>();
+    public List<DomainTransformRequestPersistent> persistentRequests = new ArrayList<DomainTransformRequestPersistent>();
 
-	public boolean containsTransformClasses(Class... classes) {
-		return containsTransformClasses(Arrays.asList(classes));
-	}
+    int mergeCount = 0;
 
-	public boolean containsTransformClasses(List<Class> classes) {
-		return !CommonUtils.intersection(getTransformedClasses(), classes)
-				.isEmpty();
-	}
+    public boolean containsTransformClasses(Class... classes) {
+        return containsTransformClasses(Arrays.asList(classes));
+    }
 
-	public Multimap<Class, List<DomainTransformEventPersistent>>
-			getEventsByClass() {
-		if (eventsByClass == null) {
-			eventsByClass = new Multimap<Class, List<DomainTransformEventPersistent>>();
-			for (DomainTransformEventPersistent dte : persistentEvents) {
-				eventsByClass.add(dte.getObjectClass(), dte);
-			}
-		}
-		return this.eventsByClass;
-	}
+    public boolean containsTransformClasses(List<Class> classes) {
+        return !CommonUtils.intersection(getTransformedClasses(), classes)
+                .isEmpty();
+    }
 
-	public <V extends HasIdAndLocalId> Set<V> getObjectsFor(Class<V> clazz) {
-		return (Set<V>) (Set) getTransformsFor(clazz).stream()
-				.map(HiliLocator::objectLocator).map(Domain::find)
-				.filter(Objects::nonNull).collect(Collectors.toSet());
-	}
+    public Multimap<Class, List<DomainTransformEventPersistent>> getEventsByClass() {
+        if (eventsByClass == null) {
+            eventsByClass = new Multimap<Class, List<DomainTransformEventPersistent>>();
+            for (DomainTransformEventPersistent dte : persistentEvents) {
+                eventsByClass.add(dte.getObjectClass(), dte);
+            }
+        }
+        return this.eventsByClass;
+    }
 
-	public Set<Class> getTransformedClasses() {
-		return getEventsByClass().keySet();
-	}
+    public <V extends HasIdAndLocalId> Set<V> getObjectsFor(Class<V> clazz) {
+        return (Set<V>) (Set) getTransformsFor(clazz).stream()
+                .map(HiliLocator::objectLocator).map(Domain::find)
+                .filter(Objects::nonNull).collect(Collectors.toSet());
+    }
 
-	public List<DomainTransformEventPersistent> getTransformsFor(Class clazz) {
-		return getEventsByClass().getAndEnsure(clazz);
-	}
+    public Set<Class> getTransformedClasses() {
+        return getEventsByClass().keySet();
+    }
 
-	public HiliLocatorMap locatorMapOrEmpty() {
-		return locatorMap == null ? new HiliLocatorMap() : locatorMap;
-	}
+    public List<DomainTransformEventPersistent> getTransformsFor(Class clazz) {
+        return getEventsByClass().getAndEnsure(clazz);
+    }
+
+    public HiliLocatorMap locatorMapOrEmpty() {
+        return locatorMap == null ? new HiliLocatorMap() : locatorMap;
+    }
+
+    public void merge(DomainTransformLayerWrapper toMerge) {
+        if (++mergeCount > 1) {
+            throw new UnsupportedOperationException();
+        }
+        this.ignored = toMerge.ignored;
+        this.locatorMap = toMerge.locatorMap;
+        this.persistentEvents = toMerge.persistentEvents;
+        this.persistentRequests = toMerge.persistentRequests;
+        this.remoteEventsPersisted = toMerge.remoteEventsPersisted;
+        this.response = toMerge.response;
+        this.eventsByClass = toMerge.eventsByClass;
+        this.mergeCount = toMerge.mergeCount;
+    }
 }

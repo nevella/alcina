@@ -122,7 +122,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
             new AppServletStatusFileNotifier().destroyed();
             SEUtilities.appShutdown();
             ResourceUtilities.appShutdown();
-            Registry.impl(CommonRemoteServiceServletSupport.class)
+            Registry.impl(ServletLayerTransforms.class)
                     .appShutdown();
             Registry.appShutdown();
         } catch (Exception e) {
@@ -188,7 +188,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
     }
 
     protected void createServletTransformClientInstance() {
-        if (Registry.impl(CommonRemoteServiceServletSupport.class)
+        if (Registry.impl(ServletLayerTransforms.class)
                 .getServerAsClientInstance() != null) {
             return;
         }
@@ -199,7 +199,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
                     .getCommonPersistence().createClientInstance(
                             "servlet: " + EntityLayerUtils.getLocalHostName(),
                             null, null);
-            Registry.impl(CommonRemoteServiceServletSupport.class)
+            Registry.impl(ServletLayerTransforms.class)
                     .setServerAsClientInstance(serverAsClientInstance);
         } finally {
             ThreadedPermissionsManager.cast().popSystemUser();

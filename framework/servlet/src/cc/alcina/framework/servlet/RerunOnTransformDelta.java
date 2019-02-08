@@ -4,6 +4,7 @@ import java.util.ConcurrentModificationException;
 
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.servlet.servlet.ServletLayerTransforms;
 
 public abstract class RerunOnTransformDelta {
 	public void run() throws Exception {
@@ -11,7 +12,7 @@ public abstract class RerunOnTransformDelta {
 		if (!TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
 				.isEmpty()) {
-			ServletLayerUtils.pushTransformsAsRoot();
+			ServletLayerTransforms.pushTransformsAsRoot();
 			try {
 				Thread.sleep(10);
 				run0();

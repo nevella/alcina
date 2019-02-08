@@ -217,6 +217,11 @@ public class ResourceUtilities {
         return getBundledString(clazz, propertyName);
     }
 
+    @SuppressWarnings("deprecation")
+    public static String get(String propertyName) {
+        return get(sun.reflect.Reflection.getCallerClass(2), propertyName);
+    }
+
     /**
      * Retrieves the BeanInfo for a Class
      */
@@ -313,6 +318,12 @@ public class ResourceUtilities {
         return getBoolean(clazz, propertyName);
     }
 
+    @SuppressWarnings("deprecation")
+    public static boolean is(String propertyName) {
+        Class<?> callerClass = sun.reflect.Reflection.getCallerClass(2);
+        return is(callerClass, propertyName);
+    }
+
     public static boolean isClientWithJvmProperties() {
         return clientWithJvmProperties;
     }
@@ -333,6 +344,16 @@ public class ResourceUtilities {
 
     public static boolean isNumericPrimitive(Class c) {
         return (c.isPrimitive() && c != char.class && c != boolean.class);
+    }
+
+    public static void loadSystemPropertiesFromCustomProperties() {
+        Map<String, String> map = getCustomProperties();
+        map.forEach((k, v) -> {
+            if (k.startsWith("system.property.")) {
+                k = k.substring("system.property.".length());
+                System.setProperty(k, v);
+            }
+        });
     }
 
     public static void logToFile(String content) {
@@ -792,16 +813,6 @@ public class ResourceUtilities {
         BufferedWriter bw = new BufferedWriter(fw);
         bw.write(s);
         bw.close();
-    }
-
-    public static void loadSystemPropertiesFromCustomProperties() {
-        Map<String, String> map = getCustomProperties();
-        map.forEach((k, v) -> {
-            if (k.startsWith("system.property.")) {
-                k = k.substring("system.property.".length());
-                System.setProperty(k, v);
-            }
-        });
     }
 
     public static interface BeanInfoHelper {

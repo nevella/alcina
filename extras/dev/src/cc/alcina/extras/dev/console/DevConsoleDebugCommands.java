@@ -47,7 +47,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -441,11 +440,9 @@ public class DevConsoleDebugCommands {
         @Override
         public String run(String[] argv) throws Exception {
             try {
-                LooseContext.pushWithTrue(DevConsole.CONTEXT_NO_TRUNCATE);
                 console.clear();
                 return run0(argv);
             } finally {
-                LooseContext.pop();
                 console.scrollToTopAtEnd();
             }
         }

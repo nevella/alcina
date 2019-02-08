@@ -32,7 +32,7 @@ import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPmClientInstanceResolver;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
-import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServletSupport;
+import cc.alcina.framework.servlet.servlet.ServletLayerTransforms;
 
 /**
  * 
@@ -209,7 +209,7 @@ public class SessionHelper {
 			}
 			return Optional.<ClientInstance> ofNullable(result)
 					.orElse(Registry
-							.impl(CommonRemoteServiceServletSupport.class)
+							.impl(ServletLayerTransforms.class)
 							.getServerAsClientInstance());
 		}
 	}

@@ -30,7 +30,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityUtils;
-import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServletSupport;
+import cc.alcina.framework.servlet.servlet.ServletLayerTransforms;
 
 public abstract class DevRemoterServlet extends HttpServlet {
     public static final String DEV_REMOTER_PARAMS = "devRemoterParams";
@@ -137,7 +137,7 @@ public abstract class DevRemoterServlet extends HttpServlet {
                                     clientInstance.getId());
                     token.getRequest().setClientInstance(clientInstance);
                     HiliLocatorMap locatorMap = Registry
-                            .impl(CommonRemoteServiceServletSupport.class)
+                            .impl(ServletLayerTransforms.class)
                             .getLocatorMapForClient(token.getRequest());
                     token.setLocatorMap(locatorMap);
                     token.getRequest().setRequestId(

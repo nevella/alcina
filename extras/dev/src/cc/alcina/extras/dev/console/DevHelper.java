@@ -1,4 +1,4 @@
-package cc.alcina.extras.dev;
+package cc.alcina.extras.dev.console;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

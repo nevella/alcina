@@ -496,6 +496,10 @@ public class CommonUtils {
         }
     }
 
+    public static String extractHostAndPort(String url) {
+        return url.replaceFirst("(.+?://.+?)(/.+)", "$1");
+    }
+
     public static <T> T first(Collection<T> coll) {
         if (coll != null && coll.iterator().hasNext()) {
             return coll.iterator().next();
@@ -617,6 +621,9 @@ public class CommonUtils {
     public static String formatJ(String source, Object... args) {
         if (source == null) {
             return null;
+        }
+        if (args.length == 0) {
+            return source;
         }
         boolean modSource = source.endsWith("%s");
         String s2 = modSource ? source + "." : source;
@@ -1759,6 +1766,12 @@ public class CommonUtils {
         public String toSizes() {
             return CommonUtils.formatJ("First: %s\tBoth: %s\tSecond: %s",
                     firstOnly.size(), intersection.size(), secondOnly.size());
+        }
+
+        public String toSizes(String firstType, String secondType) {
+            return CommonUtils.formatJ("%s: %s\tBoth: %s\t%s: %s", firstType,
+                    firstOnly.size(), intersection.size(), secondType,
+                    secondOnly.size());
         }
 
         @Override

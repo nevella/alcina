@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
+import cc.alcina.framework.servlet.servlet.ServletLayerTransforms;
 
 public class Sx {
 	public static boolean nonThreadedCommitPoint;
@@ -13,7 +14,7 @@ public class Sx {
 	static boolean testServer;
 
 	public static int commit() {
-		int transformCount = ServletLayerUtils.pushTransformsAsRoot();
+		int transformCount = ServletLayerTransforms.pushTransformsAsRoot();
 		commitPoint(false);
 		return transformCount;
 	}

@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.RollingDataItem;
-import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.servlet.ServletLayerTransforms;
 
 //TODO - lowpri - formal support for "go back a bit" in transform sequence - probably using transform utc date
 public abstract class RollingData<K extends Comparable, V> {
@@ -57,7 +57,7 @@ public abstract class RollingData<K extends Comparable, V> {
 			if (maxRetrieved.isPresent()) {
 				toPersist.setMaxKey(maxRetrieved.get().toString());
 			}
-			ServletLayerUtils.pushTransformsAsRoot();
+			ServletLayerTransforms.pushTransformsAsRoot();
 		}
 		list = Domain.query(rdImplClass).filter("typeKey", typeKey).list();
 		TreeMap<K, V> map = new TreeMap<K, V>();
@@ -74,7 +74,7 @@ public abstract class RollingData<K extends Comparable, V> {
 			System.out
 					.println("Exception with list deserialization - deleting");
 			TransformManager.get().deleteMultiple(list);
-			ServletLayerUtils.pushTransformsAsRoot();
+			ServletLayerTransforms.pushTransformsAsRoot();
 			return getValues0(earliestKey);
 		}
 		return map;

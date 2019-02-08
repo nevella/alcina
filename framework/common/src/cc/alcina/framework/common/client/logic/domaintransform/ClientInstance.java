@@ -24,6 +24,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 @MappedSuperclass
@@ -41,124 +42,159 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  *
  */
 public abstract class ClientInstance
-		implements HasIUser, HasIdAndLocalId, Serializable, Cloneable {
-	private long id;
+        implements HasIUser, HasIdAndLocalId, Serializable, Cloneable {
+    private long id;
 
-	private long localId;
+    private long localId;
 
-	private Date helloDate;
+    private Date helloDate;
 
-	private Integer auth;
+    private Integer auth;
 
-	private String userAgent;
+    private String userAgent;
 
-	@GwtTransient
-	private Boolean botUserAgent;
+    @GwtTransient
+    private Boolean botUserAgent;
 
-	@GwtTransient
-	private String iid;
-	
-	private String referrer;
-	
-	private String url;
-	
-	@GwtTransient
-	private String ipAddress;
+    @GwtTransient
+    private String iid;
 
-	public abstract ClientInstance clone();
+    private String referrer;
 
-	public ClientInstance copyPropertiesTo(ClientInstance other) {
-		other.id = id;
-		other.localId = localId;
-		other.helloDate = helloDate;
-		other.auth = auth;
-		other.userAgent = userAgent;
-		other.iid = iid;
-		return other;
-	}
+    private String url;
 
-	public Integer getAuth() {
-		return auth;
-	}
+    @GwtTransient
+    private String ipAddress;
 
-	public Boolean getBotUserAgent() {
-		return this.botUserAgent;
-	}
+    @Override
+    public abstract ClientInstance clone();
 
-	public Date getHelloDate() {
-		return helloDate;
-	}
+    public ClientInstance copyPropertiesTo(ClientInstance other) {
+        other.id = id;
+        other.localId = localId;
+        other.helloDate = helloDate;
+        other.auth = auth;
+        other.userAgent = userAgent;
+        other.iid = iid;
+        return other;
+    }
 
-	@Transient
-	public long getId() {
-		return id;
-	}
+    public Integer getAuth() {
+        return auth;
+    }
 
-	public String getIid() {
-		return this.iid;
-	}
+    public Boolean getBotUserAgent() {
+        return this.botUserAgent;
+    }
 
-	public String getIpAddress() {
-		return this.ipAddress;
-	}
+    public Date getHelloDate() {
+        return helloDate;
+    }
 
-	@Transient
-	public long getLocalId() {
-		return this.localId;
-	}
+    @Override
+    @Transient
+    public long getId() {
+        return id;
+    }
 
-	public String getReferrer() {
-		return this.referrer;
-	}
+    public String getIid() {
+        return this.iid;
+    }
 
-	public String getUrl() {
-		return this.url;
-	}
+    public String getIpAddress() {
+        return this.ipAddress;
+    }
 
-	public String getUserAgent() {
-		return this.userAgent;
-	}
+    @Override
+    @Transient
+    public long getLocalId() {
+        return this.localId;
+    }
 
-	public void setAuth(Integer auth) {
-		this.auth = auth;
-	}
+    public String getReferrer() {
+        return this.referrer;
+    }
 
-	public void setBotUserAgent(Boolean botUserAgent) {
-		this.botUserAgent = botUserAgent;
-	}
+    public String getUrl() {
+        return this.url;
+    }
 
-	public void setHelloDate(Date helloDate) {
-		this.helloDate = helloDate;
-	}
+    public String getUserAgent() {
+        return this.userAgent;
+    }
 
-	public void setId(long id) {
-		this.id = id;
-	}
+    public void setAuth(Integer auth) {
+        this.auth = auth;
+    }
 
-	public void setIid(String iid) {
-		this.iid = iid;
-	}
+    public void setBotUserAgent(Boolean botUserAgent) {
+        this.botUserAgent = botUserAgent;
+    }
 
-	public void setIpAddress(String ipAddress) {
-		this.ipAddress = ipAddress;
-	}
+    public void setHelloDate(Date helloDate) {
+        this.helloDate = helloDate;
+    }
 
-	public void setLocalId(long localId) {
-		this.localId = localId;
-	}
+    @Override
+    public void setId(long id) {
+        this.id = id;
+    }
 
-	public void setReferrer(String referrer) {
-		this.referrer = referrer;
-	}
+    public void setIid(String iid) {
+        this.iid = iid;
+    }
 
-	public void setUrl(String url) {
-		this.url = url;
-	}
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
 
-	public void setUserAgent(String userAgent) {
-		if (userAgent != null && userAgent.length() > 200) {
-			userAgent = userAgent.substring(0, 200);
-		}
-		this.userAgent = userAgent;
-	}
+    @Override
+    public void setLocalId(long localId) {
+        this.localId = localId;
+    }
+
+    public void setReferrer(String referrer) {
+        this.referrer = referrer;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public void setUserAgent(String userAgent) {
+        if (userAgent != null && userAgent.length() > 200) {
+            userAgent = userAgent.substring(0, 200);
+        }
+        this.userAgent = userAgent;
+    }
+
+    public static class ClientInstanceTransportImpl extends ClientInstance {
+        public static ClientInstanceTransportImpl from(
+                ClientInstance persistentInstance) {
+            ClientInstanceTransportImpl transportImpl = new ClientInstanceTransportImpl();
+            transportImpl.setAuth(persistentInstance.getAuth());
+            transportImpl.setId(persistentInstance.getId());
+            transportImpl.setHelloDate(persistentInstance.getHelloDate());
+            transportImpl.setIid(persistentInstance.getIid());
+            transportImpl.setIpAddress(persistentInstance.getIpAddress());
+            transportImpl.setReferrer(persistentInstance.getReferrer());
+            transportImpl.setUrl(persistentInstance.getUrl());
+            transportImpl.setUserAgent(persistentInstance.getUserAgent());
+            return transportImpl;
+        }
+
+        @Override
+        public ClientInstance clone() {
+            return null;
+        }
+
+        @Override
+        public IUser getUser() {
+            return null;
+        }
+
+        @Override
+        public void setUser(IUser user) {
+        }
+    }
 }

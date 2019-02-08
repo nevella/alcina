@@ -17,15 +17,11 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -37,7 +33,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.SerializationException;
@@ -74,14 +71,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -103,9 +97,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.actions.RequiresHttpSession;
@@ -114,9 +106,6 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersiste
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformConflicts;
 import cc.alcina.framework.entity.domaintransform.TransformConflicts.TransformConflictsFromOfflineSupport;
-import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
-import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
-import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
@@ -127,12 +116,9 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetricData;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
-import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
-import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
@@ -174,9 +160,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
             .getName() + "."
             + "CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS";
 
-    public static final String TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION = CommonRemoteServiceServlet.class
-            .getName() + ".TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION";
-
     public static final String CONTEXT_REUSE_IUSER_HOLDER = CommonRemoteServiceServlet.class
             .getName() + ".CONTEXT_REUSE_IUSER_HOLDER";
 
@@ -202,21 +185,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                 CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_REQUEST);
     }
 
-    public static void unexpectedExceptionBeforePostTransform(
-            TransformPersistenceToken persistenceToken) {
-        GlobalTopicPublisher.get().publishTopic(
-                TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION,
-                persistenceToken);
-    }
-
-    public static void unexpectedExceptionBeforePostTransformListenerDelta(
-            TopicListener<TransformPersistenceToken> listener, boolean add) {
-        GlobalTopicPublisher.get().listenerDelta(
-                TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION, listener,
-                add);
-    }
-
-    private Logger logger;
+    protected Logger logger = LoggerFactory.getLogger(getClass());
 
     private int actionCount = 0;
 
@@ -452,10 +421,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
         try {
             Long id = Registry.impl(CommonPersistenceProvider.class)
                     .getCommonPersistence().persist(gwpo);
-            handleWrapperTransforms();
+            ServletLayerTransforms.get().handleWrapperTransforms();
             return id;
         } catch (Exception e) {
-            logger.warn(e);
+            logger.warn("Exception in persist wrappable", e);
             throw new WebException(e.getMessage());
         }
     }
@@ -573,7 +542,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                             rq.getPriorRequestsWithoutResponse()
                                     .addAll(toCommit);
                         }
-                        transformLayerWrapper = transform(rq, true, true, true);
+                        transformLayerWrapper = ServletLayerTransforms.get()
+                                .transform(rq, true, true, true);
                         ThreadlocalTransformManager.cast().resetTltm(null);
                         if (logger != null) {
                             logger.info(CommonUtils.formatJ(
@@ -738,51 +708,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
     @Override
     public DomainTransformResponse transform(DomainTransformRequest request)
             throws DomainTransformRequestException {
-        return transform(request, false, false, true).response;
-    }
-
-    public DomainTransformLayerWrapper transformFromServletLayer(
-            Collection<DomainTransformEvent> transforms, String tag)
-            throws DomainTransformRequestException {
-        DomainTransformRequest request = new DomainTransformRequest();
-        HiliLocatorMap map = new HiliLocatorMap();
-        request.setClientInstance(
-                Registry.impl(CommonRemoteServiceServletSupport.class)
-                        .getServerAsClientInstance());
-        request.setTag(tag);
-        request.setRequestId(nextTransformRequestId());
-        for (DomainTransformEvent dte : transforms) {
-            dte.setCommitType(CommitType.TO_STORAGE);
-        }
-        request.getEvents().addAll(transforms);
-        try {
-            ThreadedPermissionsManager.cast().pushSystemUser();
-            TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-                    request, map, Registry.impl(TransformLoggingPolicy.class),
-                    false, false, false, getLogger(), true);
-            persistenceToken.setOriginatingUserId(
-                    LooseContext.get(CONTEXT_RPC_USER_ID));
-            return submitAndHandleTransforms(persistenceToken);
-        } finally {
-            ThreadedPermissionsManager.cast().popSystemUser();
-        }
-    }
-
-    /*
-     * TODO - this should probably be integrated more with {transform} - why is
-     * the server layer so special? just another client
-     */
-    public DomainTransformLayerWrapper transformFromServletLayer(String tag)
-            throws DomainTransformRequestException {
-        LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager
-                .get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
-        if (pendingTransforms.isEmpty()) {
-            return null;
-        }
-        ArrayList<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>(
-                pendingTransforms);
-        pendingTransforms.clear();
-        return transformFromServletLayer(items, tag);
+        return ServletLayerTransforms.get().transform(request, false, false,
+                true).response;
     }
 
     @Override
@@ -841,29 +768,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                 dataFolder.getPath() + File.separator + "client-dumps");
         dir.mkdirs();
         return dir;
-    }
-
-    private void logTransformException(DomainTransformResponse response) {
-        logger.warn(String.format(
-                "domain transform problem - clientInstance: %s - rqId: %s - user ",
-                response.getRequest().getClientInstance().getId(),
-                response.getRequestId(),
-                PermissionsManager.get().getUserName()));
-        List<DomainTransformException> transformExceptions = response
-                .getTransformExceptions();
-        for (DomainTransformException ex : transformExceptions) {
-            logger.warn("Per-event error: " + ex.getMessage());
-            if (ex.getEvent() != null) {
-                logger.warn("Event: " + ex.getEvent().toDebugString());
-            }
-        }
-        File file = DataFolderProvider.get()
-                .getChildFile(Ax.format("dtr-exception/%s.txt", LocalDateTime
-                        .now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
-        file.getParentFile().mkdirs();
-        ResourceUtilities.write(response.getRequest().toString(), file);
-        logger.warn(
-                Ax.format("Request with exceptions written to: \n\t%s", file));
     }
 
     private void sanitiseClrString(ClientLogRecord clr) {
@@ -958,43 +862,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
         }
     }
 
-    protected void handleWrapperTransforms() {
-        EntityLayerTransformPropogation transformPropogation = Registry
-                .impl(EntityLayerTransformPropogation.class, void.class, true);
-        if (transformPropogation == null) {
-            return;
-        }
-        ThreadlocalTransformManager.cast().getTransforms();
-        LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager
-                .get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
-        if (pendingTransforms.isEmpty()) {
-            return;
-        }
-        final List<DomainTransformEvent> items = CollectionFilters
-                .filter(pendingTransforms, new IsWrappedObjectDteFilter());
-        pendingTransforms.removeAll(items);
-        if (!items.isEmpty() && !pendingTransforms.isEmpty()) {
-            throw new RuntimeException("Non-wrapped and wrapped object"
-                    + " transforms registered after transformPerist()");
-        }
-        if (items.isEmpty()) {
-            return;
-        }
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    int depth = LooseContext.depth();
-                    transformFromServletLayer(items, null);
-                    LooseContext.confirmDepth(depth);
-                    ThreadlocalTransformManager.cast().resetTltm(null);
-                } catch (Exception e) {
-                    throw new WrappedRuntimeException(e);
-                }
-            };
-        }.start();
-    }
-
     protected String invokeAndEncodeResponse(RPCRequest rpcRequest)
             throws SerializationException {
         return RPC.invokeAndEncodeResponse(this, rpcRequest.getMethod(),
@@ -1007,7 +874,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
     }
 
     protected int nextTransformRequestId() {
-        return Registry.impl(CommonRemoteServiceServletSupport.class)
+        return Registry.impl(ServletLayerTransforms.class)
                 .nextTransformRequestId();
     }
 
@@ -1045,70 +912,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
     protected void setLogger(Logger logger) {
         this.logger = logger;
-    }
-
-    protected DomainTransformLayerWrapper submitAndHandleTransforms(
-            TransformPersistenceToken persistenceToken)
-            throws DomainTransformRequestException {
-        boolean unexpectedException = true;
-        try {
-            LooseContext.getContext().push();
-            AppPersistenceBase.checkNotReadOnly();
-            DomainStore.stores().writableStore().getPersistenceEvents()
-                    .fireDomainTransformPersistenceEvent(
-                            new DomainTransformPersistenceEvent(
-                                    persistenceToken, null, true));
-            MetricLogging.get().start("transform-commit");
-            DomainTransformLayerWrapper wrapper = Registry
-                    .impl(TransformPersistenceQueue.class)
-                    .submit(persistenceToken);
-            MetricLogging.get().end("transform-commit");
-            handleWrapperTransforms();
-            wrapper.ignored = persistenceToken.ignored;
-            DomainStore.stores().writableStore().getPersistenceEvents()
-                    .fireDomainTransformPersistenceEvent(
-                            new DomainTransformPersistenceEvent(
-                                    persistenceToken, wrapper, true));
-            unexpectedException = false;
-            if (wrapper.response
-                    .getResult() == DomainTransformResponseResult.OK) {
-                return wrapper;
-            } else {
-                logTransformException(wrapper.response);
-                throw new DomainTransformRequestException(wrapper.response);
-            }
-        } finally {
-            if (unexpectedException) {
-                try {
-                    unexpectedExceptionBeforePostTransform(persistenceToken);
-                } catch (Throwable t) {
-                    // make sure we get out alive
-                    t.printStackTrace();
-                }
-            }
-            LooseContext.getContext().pop();
-        }
-    }
-
-    /**
-     * synchronizing implies serialized transforms per clientInstance
-     */
-    protected DomainTransformLayerWrapper transform(
-            DomainTransformRequest request, boolean ignoreClientAuthMismatch,
-            boolean forOfflineTransforms,
-            boolean blockUntilAllListenersNotified)
-            throws DomainTransformRequestException {
-        HiliLocatorMap locatorMap = Registry
-                .impl(CommonRemoteServiceServletSupport.class)
-                .getLocatorMapForClient(request);
-        synchronized (locatorMap) {
-            TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-                    request, locatorMap,
-                    Registry.impl(TransformLoggingPolicy.class), true,
-                    ignoreClientAuthMismatch, forOfflineTransforms, getLogger(),
-                    blockUntilAllListenersNotified);
-            return submitAndHandleTransforms(persistenceToken);
-        }
     }
 
     protected boolean waitForTransformsEnabled() {

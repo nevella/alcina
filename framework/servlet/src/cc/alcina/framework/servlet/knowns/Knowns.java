@@ -33,7 +33,7 @@ import cc.alcina.framework.entity.entityaccess.KnownNodePersistent;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.util.SynchronizedDateFormat;
-import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.servlet.ServletLayerTransforms;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class Knowns {
@@ -310,7 +310,7 @@ public class Knowns {
                 }
                 persistent.setProperties(properties.toPropertyString());
             }
-            DomainTransformLayerWrapper wrapper = ServletLayerUtils
+            DomainTransformLayerWrapper wrapper = ServletLayerTransforms
                     .pushTransforms(null, true, true);
             replaceWithPersistent.stream().forEach(n -> {
                 HiliLocator hiliLocator = wrapper.locatorMap
