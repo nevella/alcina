@@ -24,6 +24,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 @MappedSuperclass
@@ -65,7 +66,6 @@ public abstract class ClientInstance
     @GwtTransient
     private String ipAddress;
 
-    @Override
     public abstract ClientInstance clone();
 
     public ClientInstance copyPropertiesTo(ClientInstance other) {
@@ -165,5 +165,35 @@ public abstract class ClientInstance
             userAgent = userAgent.substring(0, 200);
         }
         this.userAgent = userAgent;
+    }
+
+    public static class ClientInstanceTransportImpl extends ClientInstance {
+        public static ClientInstanceTransportImpl from(
+                ClientInstance persistentInstance) {
+            ClientInstanceTransportImpl transportImpl = new ClientInstanceTransportImpl();
+            transportImpl.setAuth(persistentInstance.getAuth());
+            transportImpl.setId(persistentInstance.getId());
+            transportImpl.setHelloDate(persistentInstance.getHelloDate());
+            transportImpl.setIid(persistentInstance.getIid());
+            transportImpl.setIpAddress(persistentInstance.getIpAddress());
+            transportImpl.setReferrer(persistentInstance.getReferrer());
+            transportImpl.setUrl(persistentInstance.getUrl());
+            transportImpl.setUserAgent(persistentInstance.getUserAgent());
+            return transportImpl;
+        }
+
+        @Override
+        public ClientInstance clone() {
+            return null;
+        }
+
+        @Override
+        public IUser getUser() {
+            return null;
+        }
+
+        @Override
+        public void setUser(IUser user) {
+        }
     }
 }
