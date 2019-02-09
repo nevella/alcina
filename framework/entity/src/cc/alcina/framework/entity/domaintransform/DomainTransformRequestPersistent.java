@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.entity.domaintransform;
 
+import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
@@ -25,32 +26,40 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
  * @author Nick Reddel
  */
 public abstract class DomainTransformRequestPersistent
-		extends DomainTransformRequest implements HasId {
-	private long id;
+        extends DomainTransformRequest implements HasId {
+    private long id;
 
-	private Long originatingUserId;
+    private Long originatingUserId;
 
-	public void clearForSimplePersistence() {
-		setClientInstance(null);
-		setEvents(null);
-	}
+    public void clearForSimplePersistence() {
+        setClientInstance(null);
+        setEvents(null);
+    }
 
-	@Transient
-	public long getId() {
-		return id;
-	}
+    @Override
+    @Transient
+    public long getId() {
+        return id;
+    }
 
-	public Long getOriginatingUserId() {
-		return this.originatingUserId;
-	}
+    public Long getOriginatingUserId() {
+        return this.originatingUserId;
+    }
 
-	public void setId(long id) {
-		this.id = id;
-	}
+    @Override
+    public void setId(long id) {
+        this.id = id;
+    }
 
-	public void setOriginatingUserId(Long originatingUserId) {
-		this.originatingUserId = originatingUserId;
-	}
+    public void setOriginatingUserId(Long originatingUserId) {
+        this.originatingUserId = originatingUserId;
+    }
 
-	public abstract void wrap(DomainTransformRequest dtr);
+    public abstract void wrap(DomainTransformRequest dtr);
+
+    @Override
+    @Column(name = "chunk_uuid")
+    public String getChunkUuidString() {
+        return super.getChunkUuidString();
+    }
 }

@@ -42,198 +42,211 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
  */
 @ReflectionModule("Admin")
 public class DeltaApplicationRecord extends BaseBindable
-		implements RemoteParameters {
-	private int id;
+        implements RemoteParameters {
+    private int id;
 
-	private String text;
+    private String text;
 
-	private long timestamp;
+    private long timestamp;
 
-	private long userId;
+    private long userId;
 
-	private long clientInstanceId;
+    private long clientInstanceId;
 
-	private int requestId;
+    private int requestId;
 
-	private int clientInstanceAuth;
+    private int clientInstanceAuth;
 
-	private String protocolVersion;
+    private String protocolVersion;
 
-	private DeltaApplicationRecordType type;
+    private DeltaApplicationRecordType type;
 
-	private String tag;
+    private String tag;
 
-	public DeltaApplicationRecord() {
-	}
+    private String chunkUuidString;
 
-	public DeltaApplicationRecord(DomainTransformRequest request,
-			DeltaApplicationRecordType type, boolean async) {
-		this.timestamp = new Date().getTime();
-		this.userId = PermissionsManager.get().getUserId();
-		if (!async) {
-			if (GWT.isClient()) {
-				Registry.impl(ClientNotifications.class)
-						.metricLogStart("DTRSimpleSerialWrapper-tostr");
-				this.text = request.toString();
-				Registry.impl(ClientNotifications.class)
-						.metricLogEnd("DTRSimpleSerialWrapper-tostr");
-			} else {
-				this.text = request.toString();
-			}
-		} else {
-			// text set async
-		}
-		this.clientInstanceId = request.getClientInstance().getId();
-		this.requestId = request.getRequestId();
-		Integer auth = request.getClientInstance().getAuth();
-		this.clientInstanceAuth = auth == null ? 0 : auth;
-		this.type = type;
-		this.protocolVersion = request.getProtocolVersion();
-		this.setTag(request.getTag());
-	}
+    public String getChunkUuidString() {
+        return this.chunkUuidString;
+    }
 
-	public DeltaApplicationRecord(int id, String text, long timestamp,
-			long userId, long clientInstanceId, int requestId,
-			int clientInstanceAuth, DeltaApplicationRecordType type,
-			String protocolVersion, String tag) {
-		this.id = id;
-		this.text = text;
-		this.timestamp = timestamp;
-		this.userId = userId;
-		this.clientInstanceId = clientInstanceId;
-		this.requestId = requestId;
-		this.clientInstanceAuth = clientInstanceAuth;
-		this.type = type;
-		this.protocolVersion = protocolVersion;
-		this.setTag(tag);
-	}
+    public void setChunkUuidString(String chunkUuidString) {
+        this.chunkUuidString = chunkUuidString;
+    }
 
-	public DeltaApplicationRecord clone() {
-		return new DeltaApplicationRecord(id, text, timestamp, userId,
-				clientInstanceId, requestId, clientInstanceAuth, type,
-				protocolVersion, tag);
-	}
+    public DeltaApplicationRecord() {
+    }
 
-	@Display(name = "Client instance auth", orderingHint = 30)
-	public int getClientInstanceAuth() {
-		return clientInstanceAuth;
-	}
+    public DeltaApplicationRecord(DomainTransformRequest request,
+            DeltaApplicationRecordType type, boolean async) {
+        this.timestamp = new Date().getTime();
+        this.userId = PermissionsManager.get().getUserId();
+        if (!async) {
+            if (GWT.isClient()) {
+                Registry.impl(ClientNotifications.class)
+                        .metricLogStart("DTRSimpleSerialWrapper-tostr");
+                this.text = request.toString();
+                Registry.impl(ClientNotifications.class)
+                        .metricLogEnd("DTRSimpleSerialWrapper-tostr");
+            } else {
+                this.text = request.toString();
+            }
+        } else {
+            // text set async
+        }
+        this.clientInstanceId = request.getClientInstance().getId();
+        this.requestId = request.getRequestId();
+        Integer auth = request.getClientInstance().getAuth();
+        this.clientInstanceAuth = auth == null ? 0 : auth;
+        this.type = type;
+        this.protocolVersion = request.getProtocolVersion();
+        this.setTag(request.getTag());
+        this.setChunkUuidString(request.getChunkUuidString());
+    }
 
-	@Display(name = "Client instance id", orderingHint = 20)
-	public long getClientInstanceId() {
-		return this.clientInstanceId;
-	}
+    public DeltaApplicationRecord(int id, String text, long timestamp,
+            long userId, long clientInstanceId, int requestId,
+            int clientInstanceAuth, DeltaApplicationRecordType type,
+            String protocolVersion, String tag, String chunkUuidString) {
+        this.id = id;
+        this.text = text;
+        this.timestamp = timestamp;
+        this.userId = userId;
+        this.clientInstanceId = clientInstanceId;
+        this.requestId = requestId;
+        this.clientInstanceAuth = clientInstanceAuth;
+        this.type = type;
+        this.protocolVersion = protocolVersion;
+        this.setTag(tag);
+        this.setChunkUuidString(chunkUuidString);
+    }
 
-	public int getId() {
-		return this.id;
-	}
+    public DeltaApplicationRecord clone() {
+        return new DeltaApplicationRecord(id, text, timestamp, userId,
+                clientInstanceId, requestId, clientInstanceAuth, type,
+                protocolVersion, tag, chunkUuidString);
+    }
 
-	public String getProtocolVersion() {
-		return protocolVersion;
-	}
+    @Display(name = "Client instance auth", orderingHint = 30)
+    public int getClientInstanceAuth() {
+        return clientInstanceAuth;
+    }
 
-	@Display(name = "Request id", orderingHint = 10)
-	public int getRequestId() {
-		return this.requestId;
-	}
+    @Display(name = "Client instance id", orderingHint = 20)
+    public long getClientInstanceId() {
+        return this.clientInstanceId;
+    }
 
-	@Display(name = "Tag", orderingHint = 35)
-	public String getTag() {
-		return tag;
-	}
+    public int getId() {
+        return this.id;
+    }
 
-	@Display(name = "Transforms", orderingHint = 40)
-	@Custom(customiserClass = TextAreaCustomiser.class, parameters = {
-			@NamedParameter(name = TextAreaCustomiser.LINES, intValue = 10),
-			@NamedParameter(name = TextAreaCustomiser.WIDTH, intValue = 400) })
-	public String getText() {
-		return this.text;
-	}
+    public String getProtocolVersion() {
+        return protocolVersion;
+    }
 
-	public long getTimestamp() {
-		return this.timestamp;
-	}
+    @Display(name = "Request id", orderingHint = 10)
+    public int getRequestId() {
+        return this.requestId;
+    }
 
-	public DeltaApplicationRecordType getType() {
-		return this.type;
-	}
+    @Display(name = "Tag", orderingHint = 35)
+    public String getTag() {
+        return tag;
+    }
 
-	public long getUserId() {
-		return this.userId;
-	}
+    @Display(name = "Transforms", orderingHint = 40)
+    @Custom(customiserClass = TextAreaCustomiser.class, parameters = {
+            @NamedParameter(name = TextAreaCustomiser.LINES, intValue = 10),
+            @NamedParameter(name = TextAreaCustomiser.WIDTH, intValue = 400) })
+    public String getText() {
+        return this.text;
+    }
 
-	public void setClientInstanceAuth(int clientInstanceAuth) {
-		int old_clientInstanceAuth = this.clientInstanceAuth;
-		this.clientInstanceAuth = clientInstanceAuth;
-		propertyChangeSupport().firePropertyChange("clientInstanceAuth",
-				old_clientInstanceAuth, clientInstanceAuth);
-	}
+    public long getTimestamp() {
+        return this.timestamp;
+    }
 
-	public void setClientInstanceId(long clientInstanceId) {
-		long old_clientInstanceId = this.clientInstanceId;
-		this.clientInstanceId = clientInstanceId;
-		propertyChangeSupport().firePropertyChange("clientInstanceId",
-				old_clientInstanceId, clientInstanceId);
-	}
+    public DeltaApplicationRecordType getType() {
+        return this.type;
+    }
 
-	public void setId(int id) {
-		this.id = id;
-	}
+    public long getUserId() {
+        return this.userId;
+    }
 
-	public void setProtocolVersion(String protocolVersion) {
-		String old_protocolVersion = this.protocolVersion;
-		this.protocolVersion = protocolVersion;
-		propertyChangeSupport().firePropertyChange("protocolVersion",
-				old_protocolVersion, protocolVersion);
-	}
+    public void setClientInstanceAuth(int clientInstanceAuth) {
+        int old_clientInstanceAuth = this.clientInstanceAuth;
+        this.clientInstanceAuth = clientInstanceAuth;
+        propertyChangeSupport().firePropertyChange("clientInstanceAuth",
+                old_clientInstanceAuth, clientInstanceAuth);
+    }
 
-	public void setRequestId(int requestId) {
-		int old_requestId = this.requestId;
-		this.requestId = requestId;
-		propertyChangeSupport().firePropertyChange("requestId", old_requestId,
-				requestId);
-	}
+    public void setClientInstanceId(long clientInstanceId) {
+        long old_clientInstanceId = this.clientInstanceId;
+        this.clientInstanceId = clientInstanceId;
+        propertyChangeSupport().firePropertyChange("clientInstanceId",
+                old_clientInstanceId, clientInstanceId);
+    }
 
-	public void setTag(String tag) {
-		String old_tag = this.tag;
-		this.tag = tag;
-		propertyChangeSupport().firePropertyChange("tag", old_tag, tag);
-	}
+    public void setId(int id) {
+        this.id = id;
+    }
 
-	public void setText(String text) {
-		String old_text = this.text;
-		this.text = text;
-		propertyChangeSupport().firePropertyChange("text", old_text, text);
-	}
+    public void setProtocolVersion(String protocolVersion) {
+        String old_protocolVersion = this.protocolVersion;
+        this.protocolVersion = protocolVersion;
+        propertyChangeSupport().firePropertyChange("protocolVersion",
+                old_protocolVersion, protocolVersion);
+    }
 
-	public void setTimestamp(long timestamp) {
-		long old_timestamp = this.timestamp;
-		this.timestamp = timestamp;
-		propertyChangeSupport().firePropertyChange("timestamp", old_timestamp,
-				timestamp);
-	}
+    public void setRequestId(int requestId) {
+        int old_requestId = this.requestId;
+        this.requestId = requestId;
+        propertyChangeSupport().firePropertyChange("requestId", old_requestId,
+                requestId);
+    }
 
-	public void setType(DeltaApplicationRecordType type) {
-		DeltaApplicationRecordType old_type = this.type;
-		this.type = type;
-		propertyChangeSupport().firePropertyChange("type", old_type, type);
-	}
+    public void setTag(String tag) {
+        String old_tag = this.tag;
+        this.tag = tag;
+        propertyChangeSupport().firePropertyChange("tag", old_tag, tag);
+    }
 
-	public void setUserId(long userId) {
-		long old_userId = this.userId;
-		this.userId = userId;
-		propertyChangeSupport().firePropertyChange("userId", old_userId,
-				userId);
-	}
+    public void setText(String text) {
+        String old_text = this.text;
+        this.text = text;
+        propertyChangeSupport().firePropertyChange("text", old_text, text);
+    }
 
-	@Override
-	public String toString() {
-		return CommonUtils.formatJ(
-				" clientInstanceAuth: %s\n" + "clientInstanceId: %s\n"
-						+ "id: %s\n" + "requestId: %s\n" + "timestamp: %s\n"
-						+ "userId: %s\n" + "DeltaApplicationRecordType: %s\n"
-						+ "tag:\n%s\n" + "text:\n%s\n",
-				clientInstanceAuth, clientInstanceId, id, requestId, timestamp,
-				userId, type, getTag(), text);
-	}
+    public void setTimestamp(long timestamp) {
+        long old_timestamp = this.timestamp;
+        this.timestamp = timestamp;
+        propertyChangeSupport().firePropertyChange("timestamp", old_timestamp,
+                timestamp);
+    }
+
+    public void setType(DeltaApplicationRecordType type) {
+        DeltaApplicationRecordType old_type = this.type;
+        this.type = type;
+        propertyChangeSupport().firePropertyChange("type", old_type, type);
+    }
+
+    public void setUserId(long userId) {
+        long old_userId = this.userId;
+        this.userId = userId;
+        propertyChangeSupport().firePropertyChange("userId", old_userId,
+                userId);
+    }
+
+    @Override
+    public String toString() {
+        return CommonUtils.formatJ(
+                " clientInstanceAuth: %s\n" + "clientInstanceId: %s\n"
+                        + "id: %s\n" + "requestId: %s\n" + "timestamp: %s\n"
+                        + "userId: %s\n" + "DeltaApplicationRecordType: %s\n"
+                        + "tag:\n%s\n" + "chunkUuidString:\n%s\n"
+                        + "text:\n%s\n",
+                clientInstanceAuth, clientInstanceId, id, requestId, timestamp,
+                userId, type, getTag(), text, chunkUuidString);
+    }
 }

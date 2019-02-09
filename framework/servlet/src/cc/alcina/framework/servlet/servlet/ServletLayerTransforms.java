@@ -10,7 +10,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -82,61 +81,56 @@ public class ServletLayerTransforms {
             .getName() + ".CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK";
 
     public static void commitLocalTransformsInChunks(
-            final int maxTransformChunkSize) {
+            int maxTransformChunkSize) {
         try {
-            Callable looper = new Callable() {
-                @Override
-                public Object call() throws Exception {
-                    String ipAddress = null;
-                    HttpServletRequest contextThreadLocalRequest = CommonRemoteServiceServlet
-                            .getContextThreadLocalRequest();
-                    long extClientInstanceId = 0;
-                    if (contextThreadLocalRequest != null) {
-                        ipAddress = ServletLayerUtils
-                                .robustGetRemoteAddr(contextThreadLocalRequest);
-                        extClientInstanceId = PermissionsManager.get()
-                                .getClientInstance().getId();
-                    }
-                    final ClientInstance commitInstance = Registry
-                            .impl(CommonPersistenceProvider.class)
-                            .getCommonPersistence()
-                            .createClientInstance(Ax.format(
-                                    "servlet-bulk: %s - derived from client instance : %s",
-                                    EntityLayerUtils.getLocalHostName(),
-                                    extClientInstanceId), null, ipAddress);
-                    List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>(
-                            TransformManager.get().getTransformsByCommitType(
-                                    CommitType.TO_LOCAL_BEAN));
-                    TransformManager.get()
-                            .getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
-                            .clear();
-                    ThreadlocalTransformManager.cast().resetTltm(null);
-                    DomainTransformRequest rq = new DomainTransformRequest();
-                    rq.setProtocolVersion(new DTESerializationPolicy()
-                            .getTransformPersistenceProtocol());
-                    rq.setRequestId(1);
-                    rq.setClientInstance(commitInstance);
-                    rq.setEvents(transforms);
-                    DeltaApplicationRecord dar = new DeltaApplicationRecord(rq,
-                            DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
-                            false);
-                    DtrSimpleAdminPersistenceHandler persistenceHandler = new DtrSimpleAdminPersistenceHandler();
-                    persistenceHandler.commit(dar, maxTransformChunkSize);
-                    Exception ex = persistenceHandler.getJobTracker()
-                            .getJobException();
-                    if (ex != null) {
-                        throw ex;
-                    }
-                    return null;
-                }
-            };
-            ThreadedPermissionsManager.cast()
-                    .callWithPushedSystemUserIfNeeded(looper);
+            ThreadedPermissionsManager.cast().callWithPushedSystemUserIfNeeded(
+                    () -> commitLocalTranformInChunks0(maxTransformChunkSize));
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         } finally {
             ThreadlocalTransformManager.cast().resetTltm(null);
         }
+    }
+
+    private static Object commitLocalTranformInChunks0(
+            int maxTransformChunkSize) throws Exception {
+        String ipAddress = null;
+        HttpServletRequest contextThreadLocalRequest = CommonRemoteServiceServlet
+                .getContextThreadLocalRequest();
+        long extClientInstanceId = 0;
+        if (contextThreadLocalRequest != null) {
+            ipAddress = ServletLayerUtils
+                    .robustGetRemoteAddr(contextThreadLocalRequest);
+            extClientInstanceId = PermissionsManager.get().getClientInstance()
+                    .getId();
+        }
+        final ClientInstance commitInstance = Registry
+                .impl(CommonPersistenceProvider.class).getCommonPersistence()
+                .createClientInstance(Ax.format(
+                        "servlet-bulk: %s - derived from client instance : %s",
+                        EntityLayerUtils.getLocalHostName(),
+                        extClientInstanceId), null, ipAddress);
+        List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>(
+                TransformManager.get()
+                        .getTransformsByCommitType(CommitType.TO_LOCAL_BEAN));
+        TransformManager.get()
+                .getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).clear();
+        ThreadlocalTransformManager.cast().resetTltm(null);
+        DomainTransformRequest rq = new DomainTransformRequest();
+        rq.setProtocolVersion(
+                new DTESerializationPolicy().getTransformPersistenceProtocol());
+        rq.setRequestId(1);
+        rq.setClientInstance(commitInstance);
+        rq.setEvents(transforms);
+        DeltaApplicationRecord dar = new DeltaApplicationRecord(rq,
+                DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED, false);
+        DtrSimpleAdminPersistenceHandler persistenceHandler = new DtrSimpleAdminPersistenceHandler();
+        persistenceHandler.commit(dar, maxTransformChunkSize);
+        Exception ex = persistenceHandler.getJobTracker().getJobException();
+        if (ex != null) {
+            throw ex;
+        }
+        return null;
     }
 
     public static ServletLayerTransforms get() {

@@ -22,188 +22,192 @@ import com.google.gwt.core.client.UnsafeNativeLong;
  *         plain versions
  */
 public class SimpleStringParser {
-	public static long longFromBase64(String value) {
-		int pos = 0;
-		long longVal = base64Value(value.charAt(pos++));
-		int len = value.length();
-		while (pos < len) {
-			longVal <<= 6;
-			longVal |= base64Value(value.charAt(pos++));
-		}
-		return longVal;
-	}
+    public static long longFromBase64(String value) {
+        int pos = 0;
+        long longVal = base64Value(value.charAt(pos++));
+        int len = value.length();
+        while (pos < len) {
+            longVal <<= 6;
+            longVal |= base64Value(value.charAt(pos++));
+        }
+        return longVal;
+    }
 
-	public static long toLong(String str) {
-		int idx = str.indexOf("/");
-		if (idx == -1) {
-			return Long.parseLong(str);
-		} else {
-			if (str.substring(0, idx).contains(".")) {
-				return SimpleStringParser20.toLong(str);
-			}
-			return longFromBase64(str.substring(idx + 1));
-		}
-	}
+    public static long toLong(String str) {
+        int idx = str.indexOf("/");
+        if (idx == -1) {
+            return Long.parseLong(str);
+        } else {
+            if (str.substring(0, idx).contains(".")) {
+                return SimpleStringParser20.toLong(str);
+            }
+            return longFromBase64(str.substring(idx + 1));
+        }
+    }
 
-	public static String toString(long value) {
-		String serLong = GWT.isScript() ? fastMinSerialisedLong(value)
-				: String.valueOf(value);
-		return serLong + "/" + toBase64(value);
-	}
+    public static String toString(long value) {
+        String serLong = GWT.isScript() ? fastMinSerialisedLong(value)
+                : String.valueOf(value);
+        return serLong + "/" + toBase64(value);
+    }
 
-	public static String toStringNoInfo(long value) {
-		return toBase64(value);
-	}
+    public static String toStringNoInfo(long value) {
+        return toBase64(value);
+    }
 
-	public static String toStringOrNullNonNegativeInteger(Integer value) {
-		return value == null ? "-1" : value.toString();
-	}
+    public static String toStringOrNullNonNegativeInteger(Integer value) {
+        return value == null ? "-1" : value.toString();
+    }
 
-	private static boolean base64Append(StringBuilder sb, int digit,
-			boolean haveNonZero) {
-		if (digit > 0) {
-			haveNonZero = true;
-		}
-		if (haveNonZero) {
-			int c;
-			if (digit < 26) {
-				c = 'A' + digit;
-			} else if (digit < 52) {
-				c = 'a' + digit - 26;
-			} else if (digit < 62) {
-				c = '0' + digit - 52;
-			} else if (digit == 62) {
-				c = '$';
-			} else {
-				c = '_';
-			}
-			sb.append((char) c);
-		}
-		return haveNonZero;
-	}
+    private static boolean base64Append(StringBuilder sb, int digit,
+            boolean haveNonZero) {
+        if (digit > 0) {
+            haveNonZero = true;
+        }
+        if (haveNonZero) {
+            int c;
+            if (digit < 26) {
+                c = 'A' + digit;
+            } else if (digit < 52) {
+                c = 'a' + digit - 26;
+            } else if (digit < 62) {
+                c = '0' + digit - 52;
+            } else if (digit == 62) {
+                c = '$';
+            } else {
+                c = '_';
+            }
+            sb.append((char) c);
+        }
+        return haveNonZero;
+    }
 
-	// Assume digit is one of [A-Za-z0-9$_]
-	private static int base64Value(char digit) {
-		if (digit >= 'A' && digit <= 'Z') {
-			return digit - 'A';
-		}
-		// No need to check digit <= 'z'
-		if (digit >= 'a') {
-			return digit - 'a' + 26;
-		}
-		if (digit >= '0' && digit <= '9') {
-			return digit - '0' + 52;
-		}
-		if (digit == '$') {
-			return 62;
-		}
-		// digit == '_'
-		return 63;
-	}
+    // Assume digit is one of [A-Za-z0-9$_]
+    private static int base64Value(char digit) {
+        if (digit >= 'A' && digit <= 'Z') {
+            return digit - 'A';
+        }
+        // No need to check digit <= 'z'
+        if (digit >= 'a') {
+            return digit - 'a' + 26;
+        }
+        if (digit >= '0' && digit <= '9') {
+            return digit - '0' + 52;
+        }
+        if (digit == '$') {
+            return 62;
+        }
+        // digit == '_'
+        return 63;
+    }
 
-	@UnsafeNativeLong
-	private static native String fastMinSerialisedLong(long value)/*-{
-																	if (value.l === undefined) {
-																	return value + "";
-																	}
-																	if (!value.m && !value.h) {
-																	return value.l.toString();
-																	} else {
-																	return value.l.toString() + "(lsbits)";
-																	}
-																	}-*/;
+    @UnsafeNativeLong
+    private static native String fastMinSerialisedLong(long value)/*-{
+        if (value.l === undefined) {
+            return value + "";
+        }
+        if (!value.m && !value.h) {
+            return value.l.toString();
+        } else {
+            return value.l.toString() + "(lsbits)";
+        }
+    }-*/;
 
-	/**
-	 * Return an optionally single-quoted string containing a base-64 encoded
-	 * version of the given long value.
-	 * 
-	 * Keep this synchronized with the version in Base64Utils.
-	 */
-	private static String toBase64(long value) {
-		// Convert to ints early to avoid need for long ops
-		int low = (int) (value & 0xffffffff);
-		int high = (int) (value >> 32);
-		StringBuilder sb = new StringBuilder();
-		boolean haveNonZero = base64Append(sb, (high >> 28) & 0xf, false);
-		haveNonZero = base64Append(sb, (high >> 22) & 0x3f, haveNonZero);
-		haveNonZero = base64Append(sb, (high >> 16) & 0x3f, haveNonZero);
-		haveNonZero = base64Append(sb, (high >> 10) & 0x3f, haveNonZero);
-		haveNonZero = base64Append(sb, (high >> 4) & 0x3f, haveNonZero);
-		int v = ((high & 0xf) << 2) | ((low >> 30) & 0x3);
-		haveNonZero = base64Append(sb, v, haveNonZero);
-		haveNonZero = base64Append(sb, (low >> 24) & 0x3f, haveNonZero);
-		haveNonZero = base64Append(sb, (low >> 18) & 0x3f, haveNonZero);
-		haveNonZero = base64Append(sb, (low >> 12) & 0x3f, haveNonZero);
-		base64Append(sb, (low >> 6) & 0x3f, haveNonZero);
-		base64Append(sb, low & 0x3f, true);
-		return sb.toString();
-	}
+    /**
+     * Return an optionally single-quoted string containing a base-64 encoded
+     * version of the given long value.
+     * 
+     * Keep this synchronized with the version in Base64Utils.
+     */
+    private static String toBase64(long value) {
+        // Convert to ints early to avoid need for long ops
+        int low = (int) (value & 0xffffffff);
+        int high = (int) (value >> 32);
+        StringBuilder sb = new StringBuilder();
+        boolean haveNonZero = base64Append(sb, (high >> 28) & 0xf, false);
+        haveNonZero = base64Append(sb, (high >> 22) & 0x3f, haveNonZero);
+        haveNonZero = base64Append(sb, (high >> 16) & 0x3f, haveNonZero);
+        haveNonZero = base64Append(sb, (high >> 10) & 0x3f, haveNonZero);
+        haveNonZero = base64Append(sb, (high >> 4) & 0x3f, haveNonZero);
+        int v = ((high & 0xf) << 2) | ((low >> 30) & 0x3);
+        haveNonZero = base64Append(sb, v, haveNonZero);
+        haveNonZero = base64Append(sb, (low >> 24) & 0x3f, haveNonZero);
+        haveNonZero = base64Append(sb, (low >> 18) & 0x3f, haveNonZero);
+        haveNonZero = base64Append(sb, (low >> 12) & 0x3f, haveNonZero);
+        base64Append(sb, (low >> 6) & 0x3f, haveNonZero);
+        base64Append(sb, low & 0x3f, true);
+        return sb.toString();
+    }
 
-	private final String s;
+    private final String s;
 
-	private int offset;
+    private int offset;
 
-	public SimpleStringParser(String s) {
-		this.s = s;
-		offset = 0;
-	}
+    public SimpleStringParser(String s) {
+        this.s = s;
+        offset = 0;
+    }
 
-	public int getOffset() {
-		return this.offset;
-	}
+    public int getOffset() {
+        return this.offset;
+    }
 
-	public int indexOf(String of) {
-		return s.indexOf(of, offset);
-	}
+    public int indexOf(String of) {
+        return s.indexOf(of, offset);
+    }
 
-	public int percentComplete() {
-		return (offset * 100 + 1) / (s.length() + 1);
-	}
+    public int percentComplete() {
+        return (offset * 100 + 1) / (s.length() + 1);
+    }
 
-	public String read(String start, String end) {
-		return read(start, end, false, true);
-	}
+    public String read(String start, String end) {
+        return read(start, end, false, true);
+    }
 
-	public String read(String start, String end,
-			boolean includeStartTokenInText, boolean advanceEndToken) {
-		if (offset >= s.length()) {
-			return null;
-		}
-		int y1 = s.indexOf(start, offset);
-		offset = end.length() == 0 ? s.length()
-				: s.indexOf(end, y1 + start.length());
-		String r = includeStartTokenInText
-				? s.substring(y1,
-						offset == -1 ? s.length() : offset + end.length())
-				: s.substring(y1 + start.length(),
-						offset == -1 ? s.length() : offset);
-		if (advanceEndToken) {
-			offset += end.length();
-		}
-		if (offset == -1) {
-			offset = s.length();
-		}
-		return r;
-	}
+    public String read(String start, String end,
+            boolean includeStartTokenInText, boolean advanceEndToken) {
+        if (offset >= s.length()) {
+            return null;
+        }
+        int y1 = s.indexOf(start, offset);
+        offset = end.length() == 0 ? s.length()
+                : s.indexOf(end, y1 + start.length());
+        String r = includeStartTokenInText
+                ? s.substring(y1,
+                        offset == -1 ? s.length() : offset + end.length())
+                : s.substring(y1 + start.length(),
+                        offset == -1 ? s.length() : offset);
+        if (advanceEndToken) {
+            offset += end.length();
+        }
+        if (offset == -1) {
+            offset = s.length();
+        }
+        return r;
+    }
 
-	public long readLong(String start, String end) {
-		String str = read(start, end);
-		return toLong(str);
-	}
+    public long readLong(String start, String end) {
+        String str = read(start, end);
+        return toLong(str);
+    }
 
-	public long readLongShort(String start, String end) {
-		String str = read(start, end);
-		return longFromBase64(str);
-	}
+    public long readLongShort(String start, String end) {
+        String str = read(start, end);
+        return longFromBase64(str);
+    }
 
-	public long readLongString(String start, String end) {
-		String str = read(start, end);
-		return Long.parseLong(str);
-	}
+    public long readLongString(String start, String end) {
+        String str = read(start, end);
+        return Long.parseLong(str);
+    }
 
-	public Integer readNonNegativeIntegerOrNull(String start, String end) {
-		String str = read(start, end);
-		int i = Integer.parseInt(str);
-		return i < 0 ? null : i;
-	}
+    public Integer readNonNegativeIntegerOrNull(String start, String end) {
+        String str = read(start, end);
+        int i = Integer.parseInt(str);
+        return i < 0 ? null : i;
+    }
+
+    public boolean peek(String start) {
+        return s.indexOf(start, offset) == offset;
+    }
 }

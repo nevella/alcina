@@ -151,8 +151,9 @@ public class HandshakeConsortModel {
 
     public void prepareInitialPlaySequence() {
         persistableApplicationRecords = new ArrayList<DeltaApplicationRecord>();
-        //nuclear - if we're here, these should have been cleared
-        CommitToStorageTransformListener.get().getPriorRequestsWithoutResponse().clear();
+        // nuclear - if we're here, these should have been cleared
+        CommitToStorageTransformListener.get().getPriorRequestsWithoutResponse()
+                .clear();
         if (deltasToApply != null) {
             // do nothing, iterator set up when local delta applications
             // retrieved
@@ -255,7 +256,7 @@ public class HandshakeConsortModel {
                     new Date().getTime(), PermissionsManager.get().getUserId(),
                     clientInstance.getId(), 0, clientInstance.getAuth(),
                     DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
-                    DomainTrancheProtocolHandler.VERSION, null);
+                    DomainTrancheProtocolHandler.VERSION, null, null);
         }
     }
 }

@@ -21,15 +21,21 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import com.google.gwt.regexp.shared.MatchResult;
+import com.google.gwt.regexp.shared.RegExp;
+
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.IntPair;
 
 @MappedSuperclass
 /**
@@ -60,6 +66,31 @@ public class DomainTransformRequest implements Serializable {
         return true;
     }
 
+    public static DomainTransformRequest createNonServerPersistableRequest() {
+        return new DomainTransformRequest();
+    }
+
+    public static DomainTransformRequest createPersistableRequest() {
+        DomainTransformRequest request = new DomainTransformRequest();
+        DomainTransformRequestChunkUuid chunkUuid = new DomainTransformRequestChunkUuid();
+        chunkUuid.uuid = createUUID();
+        request.setChunkUuidString(chunkUuid.serialize());
+        return request;
+    }
+
+    public static DomainTransformRequest createSubRequest(
+            DomainTransformRequest fullRequest, IntPair range) {
+        DomainTransformRequest request = new DomainTransformRequest();
+        DomainTransformRequestChunkUuid chunkUuid = DomainTransformRequestChunkUuid
+                .deserialize(request.getChunkUuidString());
+        if (chunkUuid != null) {
+            chunkUuid.fromRange(range, fullRequest.allTransforms().size());
+        }
+        chunkUuid.uuid = createUUID();
+        request.setChunkUuidString(chunkUuid.serialize());
+        return request;
+    }
+
     public static String createUUID() {
         // http://www.ietf.org/rfc/rfc4122.txt
         char[] chars = new char[36];
@@ -68,14 +99,27 @@ public class DomainTransformRequest implements Serializable {
             chars[i] = hexDigits
                     .charAt((int) (Math.floor(Math.random() * 0x10)));
         }
-        chars[14] = '4'; // bits 12-15 of the time_hi_and_version field to 0010
-        chars[19] = hexDigits.charAt((chars[19] & 0x3) | 0x8); // bits 6-7 of
+        chars[14] = '4'; // bits 12-15 of the time_hi_and_version field to
+                         // 0010
+        chars[19] = hexDigits.charAt((chars[19] & 0x3) | 0x8); // bits 6-7
+                                                               // of
                                                                // the
                                                                // clock_seq_hi_and_reserved
                                                                // to 01
         chars[8] = chars[13] = chars[18] = chars[23] = '-';
         return String.valueOf(chars);
     }
+
+    public static DomainTransformRequest fromString(String eventsStr,
+            String chunkUuidString) {
+        DomainTransformRequest dtr = new DomainTransformRequest();
+        new DTRProtocolSerializer().deserialize(dtr, dtr.getProtocolVersion(),
+                eventsStr);
+        dtr.setChunkUuidString(chunkUuidString);
+        return dtr;
+    }
+
+    private String chunkUuidString;
 
     private List<DomainTransformEvent> events = new ArrayList<DomainTransformEvent>();
 
@@ -93,6 +137,9 @@ public class DomainTransformRequest implements Serializable {
 
     @Transient
     public Map<String, String> properties;
+
+    public DomainTransformRequest() {
+    }
 
     public List<DomainTransformRequest> allRequests() {
         List<DomainTransformRequest> dtrs = new ArrayList<DomainTransformRequest>();
@@ -129,9 +176,9 @@ public class DomainTransformRequest implements Serializable {
         return duplicates;
     }
 
-    public void fromString(String eventsStr) {
-        new DTRProtocolSerializer().deserialize(this, getProtocolVersion(),
-                eventsStr);
+    @Transient
+    public String getChunkUuidString() {
+        return this.chunkUuidString;
     }
 
     @Transient
@@ -170,6 +217,12 @@ public class DomainTransformRequest implements Serializable {
         return tag;
     }
 
+    public Optional<DomainTransformRequestChunkUuid> provideChunkUuid() {
+        return chunkUuidString == null ? Optional.empty()
+                : Optional.of(DomainTransformRequestChunkUuid
+                        .deserialize(chunkUuidString));
+    }
+
     public void removeTransform(DomainTransformEvent dte) {
         for (DomainTransformRequest rq : allRequests()) {
             rq.getEvents().removeIf(e -> e == dte);
@@ -187,6 +240,10 @@ public class DomainTransformRequest implements Serializable {
                 }
             }
         }
+    }
+
+    public void setChunkUuidString(String chunkUuidString) {
+        this.chunkUuidString = chunkUuidString;
     }
 
     public void setClientInstance(ClientInstance clientInstance) {
@@ -247,6 +304,53 @@ public class DomainTransformRequest implements Serializable {
     public void updateTransformCommitType(CommitType commitType, boolean deep) {
         for (DomainTransformEvent dte : deep ? allTransforms() : getEvents()) {
             dte.setCommitType(commitType);
+        }
+    }
+
+    public static class DomainTransformRequestChunkUuid {
+        public static DomainTransformRequestChunkUuid deserialize(
+                String string) {
+            if (string == null) {
+                return null;
+            }
+            DomainTransformRequestChunkUuid result = new DomainTransformRequestChunkUuid();
+            RegExp regExp = RegExp.compile("(.+?)::(\\d+)::(\\d+)::(\\d+)");
+            MatchResult matchResult = regExp.exec(string);
+            if (matchResult == null) {
+                result.uuid = string;
+            } else {
+                result.uuid = matchResult.getGroup(1);
+                result.firstTransformIndex = Integer
+                        .parseInt(matchResult.getGroup(2));
+                result.lastTransformIndex = Integer
+                        .parseInt(matchResult.getGroup(3));
+                result.totalTransformCount = Integer
+                        .parseInt(matchResult.getGroup(4));
+            }
+            return result;
+        }
+
+        public String uuid;
+
+        public int firstTransformIndex;
+
+        public int lastTransformIndex;
+
+        public int totalTransformCount;
+
+        public void fromRange(IntPair range, int totalTransformCount) {
+            firstTransformIndex = range.i1;
+            lastTransformIndex = range.i2;
+            this.totalTransformCount = totalTransformCount;
+        }
+
+        public String serialize() {
+            if (totalTransformCount == 0) {
+                return uuid;
+            } else {
+                return Ax.format("%s::%s::%s::%s", uuid, firstTransformIndex,
+                        lastTransformIndex, totalTransformCount);
+            }
         }
     }
 }

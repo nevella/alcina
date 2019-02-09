@@ -1,23 +1,19 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class PartialDtrUploadResponse implements Serializable {
-	public boolean committed;
+    public List<Integer> uploadedRequestIds = new ArrayList<>();
 
-	public int transformsUploadedButNotCommitted;
+    public int transformCount;
 
-	public int lastUploadedRequestId;
-
-	public int lastUploadedRequestTransformUploadCount;
-
-	@Override
-	public String toString() {
-		return CommonUtils.formatJ(
-				"rq-wrapper-id:%s  -  lastUploadedRequestTransformUploadCount:%s  -  transformsUploadedButNotCommitted: %s - committed: %s",
-				lastUploadedRequestId, lastUploadedRequestTransformUploadCount,
-				transformsUploadedButNotCommitted, committed);
-	}
+    @Override
+    public String toString() {
+        return Ax.format("Request ids: %s - Transforms: %s ",
+                uploadedRequestIds, transformCount);
+    }
 }

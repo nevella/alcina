@@ -76,9 +76,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
-import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DeltaApplicationRecordSerializerImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -96,6 +95,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -119,6 +119,7 @@ import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMe
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
+import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
@@ -433,7 +434,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
     @Override
     public void persistOfflineTransforms(
             List<DeltaApplicationRecord> uncommitted) throws WebException {
-        persistOfflineTransforms(uncommitted, null, true, false);
+        persistOfflineTransforms(uncommitted, logger, true, false);
     }
 
     public int persistOfflineTransforms(
@@ -442,14 +443,35 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
         return persistOfflineTransforms(uncommitted, logger, null, false);
     }
 
-    public int persistOfflineTransforms(
-            List<DeltaApplicationRecord> uncommitted, Logger logger,
-            Boolean useWrapperUser, boolean throwPersistenceExceptions)
-            throws WebException {
+    public int persistOfflineTransforms(List<DeltaApplicationRecord> records,
+            Logger logger, Boolean useWrapperUser,
+            boolean throwPersistenceExceptions) throws WebException {
         CommonPersistenceLocal cp = Registry
                 .impl(CommonPersistenceProvider.class).getCommonPersistence();
         boolean persistAsOneTransaction = persistOfflineTransformsAsOneTransaction();
         try {
+            // save a copy of the records
+            {
+                String folderName = Ax.format("cli_%s_time_%s",
+                        records.get(0).getClientInstanceId(), CommonUtils
+                                .formatDate(new Date(), DateStyle.TIMESTAMP));
+                File offlineDir = DataFolderProvider.get()
+                        .getChildFile("offlineTransforms-partial");
+                File saveDir = SEUtilities.getChildFile(offlineDir, folderName);
+                saveDir.mkdirs();
+                DeltaApplicationRecordSerializerImpl recordSerializer = new DeltaApplicationRecordSerializerImpl();
+                for (DeltaApplicationRecord record : records) {
+                    int id = record.getRequestId();
+                    long clientInstanceId = record.getClientInstanceId();
+                    String fileName = String.format("%s_%s_ser.txt",
+                            clientInstanceId, id);
+                    File out = SEUtilities.getChildFile(saveDir, fileName);
+                    ResourceUtilities.write(recordSerializer.write(record),
+                            out);
+                }
+                logger.info("Wrote {} offline records to {}", records.size(),
+                        saveDir);
+            }
             Class<? extends ClientInstance> clientInstanceClass = cp
                     .getImplementation(ClientInstance.class);
             Class<? extends DomainTransformRequestPersistent> dtrClass = cp
@@ -465,10 +487,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                     : reuseIUserHolder.iUser;
             long idCounter = 1;
             List<DomainTransformRequest> toCommit = new ArrayList<>();
-            for (int idx = 0; idx < uncommitted.size(); idx++) {
-                DeltaApplicationRecord deltaRecord = uncommitted.get(idx);
+            for (int idx = 0; idx < records.size(); idx++) {
+                DeltaApplicationRecord deltaRecord = records.get(idx);
                 long clientInstanceId = deltaRecord.getClientInstanceId();
-                int requestId = (int) deltaRecord.getRequestId();
+                int requestId = deltaRecord.getRequestId();
                 DomainTransformRequest alreadyWritten = cp
                         .getItemByKeyValueKeyValue(dtrClass,
                                 "clientInstance.id", clientInstanceId,
@@ -481,7 +503,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                     }
                     continue;
                 }
-                DomainTransformRequest rq = new DomainTransformRequest();
+                DomainTransformRequest rq = DomainTransformRequest.fromString(
+                        deltaRecord.getText(),
+                        deltaRecord.getChunkUuidString());
                 ClientInstance clientInstance = clientInstanceClass
                         .newInstance();
                 clientInstance.setAuth(deltaRecord.getClientInstanceAuth());
@@ -500,7 +524,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                 // NOTE - at the mo, if all are pushed as transactional, just
                 // the last clientInstance is used
                 rq.setRequestId(deltaRecord.getRequestId());
-                rq.fromString(deltaRecord.getText());
                 rq.setTag(deltaRecord.getTag());
                 // necessary because event id is used by transformpersister
                 // for
@@ -536,7 +559,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                         rq.getClientInstance()
                                 .setUser(PermissionsManager.get().getUser());
                     }
-                    boolean last = idx == uncommitted.size() - 1;
+                    boolean last = idx == records.size() - 1;
                     if (!persistAsOneTransaction || last) {
                         if (last) {
                             rq.getPriorRequestsWithoutResponse()
@@ -713,13 +736,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
     }
 
     @Override
-    public PartialDtrUploadResponse uploadOfflineTransforms(
-            PartialDtrUploadRequest request) throws WebException {
-        return new PartialDtrUploadHandler().uploadOfflineTransforms(request,
-                this);
-    }
-
-    @Override
     public List<ServerValidator> validateOnServer(
             List<ServerValidator> validators) throws WebException {
         List<ServerValidator> entityLayer = new ArrayList<ServerValidator>();
@@ -759,7 +775,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
             throw new PermissionsException();
         }
         return new TransformCollector().waitForTransforms(position,
-                (long) clientInstanceId);
+                clientInstanceId);
     }
 
     private File getDataDumpsFolder() {
@@ -1070,7 +1086,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
         @Override
         public boolean test(InternalMetricData imd) {
             return DomainStore.stores().writableStore().instrumentation()
-                    .isLockedByThread(((InternalMetricData) imd).thread);
+                    .isLockedByThread(imd.thread);
         }
     }
 

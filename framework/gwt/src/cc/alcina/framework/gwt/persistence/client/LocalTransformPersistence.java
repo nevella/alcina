@@ -227,6 +227,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
         persistQueue();
     }
 
+    @Override
     public void persistableTransform(DomainTransformRequest dtr,
             DeltaApplicationRecordType type) {
         dtr.setProtocolVersion(
@@ -251,7 +252,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
                 PermissionsManager.get().getUserId(), clientInstance.getId(), 0,
                 clientInstance.getAuth(),
                 DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
-                DomainTrancheProtocolHandler.VERSION, "");
+                DomainTrancheProtocolHandler.VERSION, "", null);
         persist(wrapper, AsyncCallback);
     }
 
@@ -286,6 +287,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
                 || clientSupportsRpcPersistence;
     }
 
+    @Override
     public void stateChanged(Object source, String newState) {
         if (newState == CommitToStorageTransformListener.COMMITTING) {
             DomainTransformRequest rq = getCommitToStorageTransformListener()
@@ -336,7 +338,8 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
                     for (Integer i : removeIds) {
                         getPersistedTransforms().remove(i);
                     }
-                    DomainTransformRequest rq = new DomainTransformRequest();
+                    DomainTransformRequest rq = DomainTransformRequest
+                            .createNonServerPersistableRequest();
                     ClientInstance clientInstance = PermissionsManager.get()
                             .getClientInstance();
                     rq.setClientInstance(clientInstance);
@@ -525,9 +528,10 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
             this.size = size;
             this.text = text;
         }
+
         @Override
         public String toString() {
-            return Ax.format("Type: %s :: Serialized: %s chars", type,size);
+            return Ax.format("Type: %s :: Serialized: %s chars", type, size);
         }
     }
 
@@ -604,6 +608,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
             return index == items.size();
         }
 
+        @Override
         protected void onComplete() {
             Registry.impl(ClientNotifications.class).metricLogStart("persist");
             sb = handler.finishSerialization(sb);

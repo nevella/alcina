@@ -33,8 +33,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
-import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
@@ -44,55 +42,52 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSugges
  * @author Nick Reddel
  */
 public interface CommonRemoteService extends RemoteService {
-	// for dumping dbs
-	@WebMethod
-	public void dumpData(String data);
+    // for dumping dbs
+    @WebMethod
+    public void dumpData(String data);
 
-	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
-			throws WebException;
+    public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
+            throws WebException;
 
-	public LoginResponse hello();
+    public LoginResponse hello();
 
-	@WebMethod()
-	public List<String> listRunningJobs();
+    @WebMethod()
+    public List<String> listRunningJobs();
 
-	@WebMethod
-	public String loadData(String key);
+    @WebMethod
+    public String loadData(String key);
 
-	public Long logClientError(String exceptionToString);
+    public Long logClientError(String exceptionToString);
 
-	public Long logClientError(String exceptionToString, String exceptionType);
+    public Long logClientError(String exceptionToString, String exceptionType);
 
-	// to handle rpc interface drift, use escaped log records
-	public void logClientRecords(String serializedLogRecords);
+    // to handle rpc interface drift, use escaped log records
+    public void logClientRecords(String serializedLogRecords);
 
-	public LoginResponse login(LoginBean loginBean);
+    public LoginResponse login(LoginBean loginBean);
 
-	public void logout();
+    public void logout();
 
-	public void persistOfflineTransforms(
-			List<DeltaApplicationRecord> uncommitted) throws WebException;
+    public void persistOfflineTransforms(
+            List<DeltaApplicationRecord> uncommitted) throws WebException;
 
-	public void ping();
+    public void ping();
 
-	@WebMethod()
-	public JobTracker pollJobStatus(String id, boolean cancel);
+    @WebMethod()
+    public JobTracker pollJobStatus(String id, boolean cancel);
 
-	@WebMethod
-	public DomainTransformResponse transform(DomainTransformRequest request)
-			throws DomainTransformException, DomainTransformRequestException;
+    @WebMethod
+    public DomainTransformResponse transform(DomainTransformRequest request)
+            throws DomainTransformException, DomainTransformRequestException;
 
-	public PartialDtrUploadResponse uploadOfflineTransforms(
-			PartialDtrUploadRequest request) throws WebException;
+    public List<ServerValidator> validateOnServer(
+            List<ServerValidator> validators) throws WebException;
 
-	public List<ServerValidator> validateOnServer(
-			List<ServerValidator> validators) throws WebException;
+    @WebMethod
+    public DomainUpdate waitForTransforms(
+            DomainTransformCommitPosition position) throws PermissionsException;
 
-	@WebMethod
-	public DomainUpdate waitForTransforms(
-			DomainTransformCommitPosition position) throws PermissionsException;
+    KnownsDelta getKnownsDelta(long since);
 
-	KnownsDelta getKnownsDelta(long since);
-
-	Response suggest(BoundSuggestOracleRequest request);
+    Response suggest(BoundSuggestOracleRequest request);
 }

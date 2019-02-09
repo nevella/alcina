@@ -32,23 +32,18 @@ public class DtrSimpleAdminPersistenceHandler
         commit(dar, chunkSize);
     }
 
+    // Note that this must be called with a new client instance - since we're
+    // incrementing the request id counter. When the admin client calls it,
     public void commit(DeltaApplicationRecord dar, int chunkSize) {
         try {
             jobStarted();
-            DomainTransformRequest fullRq = new DomainTransformRequest();
-            fullRq.fromString(dar.getText());
-            int size = fullRq.getEvents().size();
+            DomainTransformRequest fullRequest = DomainTransformRequest
+                    .fromString(dar.getText(), dar.getChunkUuidString());
+            int size = fullRequest.getEvents().size();
             if (size > chunkSize) {
                 getJobTracker().setItemCount(size / chunkSize + 1);
                 int rqIdCounter = dar.getRequestId();
                 for (int idx = 0; idx < size;) {
-                    DeltaApplicationRecord chunk = new DeltaApplicationRecord(0,
-                            "", dar.getTimestamp(), dar.getUserId(),
-                            dar.getClientInstanceId(), rqIdCounter++,
-                            dar.getClientInstanceAuth(),
-                            DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
-                            dar.getProtocolVersion(), dar.getTag());
-                    DomainTransformRequest rq = new DomainTransformRequest();
                     IntPair range = null;
                     if (idx + chunkSize > size) {
                         range = new IntPair(idx, size);
@@ -57,7 +52,7 @@ public class DtrSimpleAdminPersistenceHandler
                         int maxCreateIdxDelta = size / 2;
                         for (; createSearchIdx < size
                                 && maxCreateIdxDelta > 0;) {
-                            DomainTransformEvent evt = fullRq.getEvents()
+                            DomainTransformEvent evt = fullRequest.getEvents()
                                     .get(createSearchIdx);
                             if (evt.getTransformType() == TransformType.CREATE_OBJECT
                                     || evt.getTransformType() == TransformType.DELETE_OBJECT) {
@@ -71,11 +66,22 @@ public class DtrSimpleAdminPersistenceHandler
                             range = new IntPair(idx, idx + chunkSize);
                         }
                     }
-                    List<DomainTransformEvent> subList = fullRq.getEvents()
+                    DomainTransformRequest chunkRequest = DomainTransformRequest
+                            .createSubRequest(fullRequest, range);
+                    // null UUID, we'll set it in a bit
+                    DeltaApplicationRecord chunk = new DeltaApplicationRecord(0,
+                            "", dar.getTimestamp(), dar.getUserId(),
+                            dar.getClientInstanceId(), rqIdCounter++,
+                            dar.getClientInstanceAuth(),
+                            DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
+                            dar.getProtocolVersion(), dar.getTag(),
+                            chunkRequest.getChunkUuidString());
+                    List<DomainTransformEvent> subList = fullRequest.getEvents()
                             .subList(range.i1, range.i2);
-                    rq.setRequestId(chunk.getRequestId());
-                    rq.setEvents(new ArrayList<DomainTransformEvent>(subList));
-                    chunk.setText(rq.toString());
+                    chunkRequest.setRequestId(chunk.getRequestId());
+                    chunkRequest.setEvents(
+                            new ArrayList<DomainTransformEvent>(subList));
+                    chunk.setText(chunkRequest.toString());
                     Registry.impl(CommonRemoteServletProvider.class)
                             .getCommonRemoteServiceServlet()
                             .persistOfflineTransforms(Arrays.asList(
