@@ -300,9 +300,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
     }
 
     @Override
-    public ClientInstance getClientInstance(String clientInstanceId) {
-        return getHandshakeObjectProvider()
-                .getClientInstance(Long.parseLong(clientInstanceId));
+    public ClientInstance getClientInstance(Long clientInstanceId) {
+        return getHandshakeObjectProvider().getClientInstance(clientInstanceId);
     }
 
     public abstract EntityManager getEntityManager();

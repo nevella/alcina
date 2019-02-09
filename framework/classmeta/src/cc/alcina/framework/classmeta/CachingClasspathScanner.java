@@ -11,6 +11,17 @@ import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 
 public class CachingClasspathScanner extends ServletClasspathScanner {
+    private static ClasspathUrlTranslator classpathUrlTranslator = url -> url;
+
+    public static void installUrlTranslator(
+            ClasspathUrlTranslator classpathUrlTranslator) {
+        CachingClasspathScanner.classpathUrlTranslator = classpathUrlTranslator;
+    }
+
+    List<URL> urls = new ArrayList<>();
+
+    private boolean usingRemoteScanner;
+
     public CachingClasspathScanner(String pkg, boolean subpackages,
             boolean ignoreJars, Object logger, String resourceName,
             List<String> ignorePathSegments) {
@@ -32,12 +43,6 @@ public class CachingClasspathScanner extends ServletClasspathScanner {
         }
     }
 
-    List<URL> urls = new ArrayList<>();
-
-    private boolean usingRemoteScanner;
-
-    private static ClasspathUrlTranslator classpathUrlTranslator = url -> url;
-
     @Override
     public ClassMetadataCache getClasses() throws Exception {
         if (usingRemoteScanner) {
@@ -50,6 +55,10 @@ public class CachingClasspathScanner extends ServletClasspathScanner {
                         .collect(Collectors.toList());
                 ClassMetaResponse response = new ClassMetaInvoker()
                         .invoke(metaRequest);
+                if (response == null) {
+                    usingRemoteScanner = false;
+                    return super.getClasses();
+                }
                 return response.cache;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -68,10 +77,5 @@ public class CachingClasspathScanner extends ServletClasspathScanner {
         } else {
             super.invokeHandler(url);
         }
-    }
-
-    public static void installUrlTranslator(
-            ClasspathUrlTranslator classpathUrlTranslator) {
-        CachingClasspathScanner.classpathUrlTranslator = classpathUrlTranslator;
     }
 }

@@ -55,7 +55,7 @@ public class TransformPersistenceToken implements Serializable {
 
     private Long originatingUserId;
 
-    private DomainStore targetStore = null;
+    private transient DomainStore targetStore = null;
 
     public TransformPersistenceToken(DomainTransformRequest request,
             HiliLocatorMap locatorMap,

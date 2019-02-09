@@ -92,47 +92,6 @@ public class ServletLayerTransforms {
         }
     }
 
-    private static Object commitLocalTranformInChunks0(
-            int maxTransformChunkSize) throws Exception {
-        String ipAddress = null;
-        HttpServletRequest contextThreadLocalRequest = CommonRemoteServiceServlet
-                .getContextThreadLocalRequest();
-        long extClientInstanceId = 0;
-        if (contextThreadLocalRequest != null) {
-            ipAddress = ServletLayerUtils
-                    .robustGetRemoteAddr(contextThreadLocalRequest);
-            extClientInstanceId = PermissionsManager.get().getClientInstance()
-                    .getId();
-        }
-        final ClientInstance commitInstance = Registry
-                .impl(CommonPersistenceProvider.class).getCommonPersistence()
-                .createClientInstance(Ax.format(
-                        "servlet-bulk: %s - derived from client instance : %s",
-                        EntityLayerUtils.getLocalHostName(),
-                        extClientInstanceId), null, ipAddress);
-        List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>(
-                TransformManager.get()
-                        .getTransformsByCommitType(CommitType.TO_LOCAL_BEAN));
-        TransformManager.get()
-                .getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).clear();
-        ThreadlocalTransformManager.cast().resetTltm(null);
-        DomainTransformRequest rq = new DomainTransformRequest();
-        rq.setProtocolVersion(
-                new DTESerializationPolicy().getTransformPersistenceProtocol());
-        rq.setRequestId(1);
-        rq.setClientInstance(commitInstance);
-        rq.setEvents(transforms);
-        DeltaApplicationRecord dar = new DeltaApplicationRecord(rq,
-                DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED, false);
-        DtrSimpleAdminPersistenceHandler persistenceHandler = new DtrSimpleAdminPersistenceHandler();
-        persistenceHandler.commit(dar, maxTransformChunkSize);
-        Exception ex = persistenceHandler.getJobTracker().getJobException();
-        if (ex != null) {
-            throw ex;
-        }
-        return null;
-    }
-
     public static ServletLayerTransforms get() {
         return Registry.impl(ServletLayerTransforms.class);
     }
@@ -197,6 +156,47 @@ public class ServletLayerTransforms {
     public static TopicSupport<TransformPersistenceToken> topicUnexpectedExceptionBeforePostTransform() {
         return new TopicSupport<>(
                 TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION);
+    }
+
+    private static Object commitLocalTranformInChunks0(
+            int maxTransformChunkSize) throws Exception {
+        String ipAddress = null;
+        HttpServletRequest contextThreadLocalRequest = CommonRemoteServiceServlet
+                .getContextThreadLocalRequest();
+        long extClientInstanceId = 0;
+        if (contextThreadLocalRequest != null) {
+            ipAddress = ServletLayerUtils
+                    .robustGetRemoteAddr(contextThreadLocalRequest);
+            extClientInstanceId = PermissionsManager.get().getClientInstance()
+                    .getId();
+        }
+        final ClientInstance commitInstance = Registry
+                .impl(CommonPersistenceProvider.class).getCommonPersistence()
+                .createClientInstance(Ax.format(
+                        "servlet-bulk: %s - derived from client instance : %s",
+                        EntityLayerUtils.getLocalHostName(),
+                        extClientInstanceId), null, ipAddress);
+        List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>(
+                TransformManager.get()
+                        .getTransformsByCommitType(CommitType.TO_LOCAL_BEAN));
+        TransformManager.get()
+                .getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).clear();
+        ThreadlocalTransformManager.cast().resetTltm(null);
+        DomainTransformRequest rq = new DomainTransformRequest();
+        rq.setProtocolVersion(
+                new DTESerializationPolicy().getTransformPersistenceProtocol());
+        rq.setRequestId(1);
+        rq.setClientInstance(commitInstance);
+        rq.setEvents(transforms);
+        DeltaApplicationRecord dar = new DeltaApplicationRecord(rq,
+                DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED, false);
+        DtrSimpleAdminPersistenceHandler persistenceHandler = new DtrSimpleAdminPersistenceHandler();
+        persistenceHandler.commit(dar, maxTransformChunkSize);
+        Exception ex = persistenceHandler.getJobTracker().getJobException();
+        if (ex != null) {
+            throw ex;
+        }
+        return null;
     }
 
     private static int pushTransforms(boolean asRoot) {
@@ -453,6 +453,7 @@ public class ServletLayerTransforms {
             unexpectedException = false;
             if (wrapper.response
                     .getResult() == DomainTransformResponseResult.OK) {
+                wrapper.response.setLogOffset(wrapper.getLogOffset());
                 return wrapper;
             } else {
                 logTransformException(wrapper.response);

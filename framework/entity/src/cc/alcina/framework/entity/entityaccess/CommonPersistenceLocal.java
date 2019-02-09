@@ -50,165 +50,165 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
  * @author Nick Reddel
  */
 public interface CommonPersistenceLocal {
-	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl);
+    public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl);
 
-	public void changeWrappedObjectOwner(long parseLong, IUser fromUser,
-			IUser toUser);
+    public void changeWrappedObjectOwner(long parseLong, IUser fromUser,
+            IUser toUser);
 
-	public abstract void connectPermissionsManagerToLiveObjects();
+    public abstract void connectPermissionsManagerToLiveObjects();
 
-	public abstract ClientInstance createClientInstance(String userAgent,
-			String iid, String ipAddress);
+    public abstract ClientInstance createClientInstance(String userAgent,
+            String iid, String ipAddress);
 
-	public <T> T ensureObject(T t, String key, String value) throws Exception;
+    public <T> T ensureObject(T t, String key, String value) throws Exception;
 
-	public <T extends HasId> T ensurePersistent(T obj);
+    public <T extends HasId> T ensurePersistent(T obj);
 
-	public void expandExceptionInfo(DomainTransformLayerWrapper wrapper);
+    public void expandExceptionInfo(DomainTransformLayerWrapper wrapper);
 
-	public <T> T findImplInstance(Class<? extends T> clazz, long id);
+    public <T> T findImplInstance(Class<? extends T> clazz, long id);
 
-	public <A> Set<A> getAll(Class<A> clazz);
+    public <A> Set<A> getAll(Class<A> clazz);
 
-	public IUser getAnonymousUser();
+    public IUser getAnonymousUser();
 
-	public abstract String getAnonymousUserName();
+    public abstract String getAnonymousUserName();
 
-	public <US extends IUser> US getCleanedUserById(long userId);
+    public <US extends IUser> US getCleanedUserById(long userId);
 
-	public ClientInstance getClientInstance(String clientInstanceId);
+    public ClientInstance getClientInstance(Long clientInstanceId);
 
-	public abstract IGroup getGroupByName(String groupName);
+    public abstract IGroup getGroupByName(String groupName);
 
-	public abstract IGroup getGroupByName(String groupName, boolean clean);
+    public abstract IGroup getGroupByName(String groupName, boolean clean);
 
-	public abstract Iid getIidByKey(String iid);
+    public abstract Iid getIidByKey(String iid);
 
-	public abstract <A> Class<? extends A> getImplementation(Class<A> clazz);
+    public abstract <A> Class<? extends A> getImplementation(Class<A> clazz);
 
-	public String getImplementationSimpleClassName(Class<?> clazz);
+    public String getImplementationSimpleClassName(Class<?> clazz);
 
-	public <T> T getItemById(Class<T> clazz, Long id);
+    public <T> T getItemById(Class<T> clazz, Long id);
 
-	public <T> T getItemById(Class<T> clazz, Long id, boolean clean,
-			boolean unwrap);
+    public <T> T getItemById(Class<T> clazz, Long id, boolean clean,
+            boolean unwrap);
 
-	public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
-			boolean createIfNonexistent);
+    public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
+            boolean createIfNonexistent);
 
-	public abstract <T> T getItemByKeyValue(Class<T> clazz, String key,
-			Object value, boolean createIfNonexistent, Long ignoreId,
-			boolean caseInsensitive, boolean livePermissionsManager);
+    public abstract <T> T getItemByKeyValue(Class<T> clazz, String key,
+            Object value, boolean createIfNonexistent, Long ignoreId,
+            boolean caseInsensitive, boolean livePermissionsManager);
 
-	public <T> T getItemByKeyValueKeyValue(Class<T> clazz, String key1,
-			Object value1, String key2, Object value2);
+    public <T> T getItemByKeyValueKeyValue(Class<T> clazz, String key1,
+            Object value1, String key2, Object value2);
 
-	public <T> List<T> getItemsByIdsAndClean(Class<T> clazz,
-			Collection<Long> ids,
-			InstantiateImplCallback instantiateImplCallback);
+    public <T> List<T> getItemsByIdsAndClean(Class<T> clazz,
+            Collection<Long> ids,
+            InstantiateImplCallback instantiateImplCallback);
 
-	public long getLastTransformId();
+    public long getLastTransformId();
 
-	public HiliLocatorMap getLocatorMap(Long clientInstanceId);
+    public HiliLocatorMap getLocatorMap(Long clientInstanceId);
 
-	public abstract LongPair getMinMaxIdRange(Class clazz);
+    public abstract LongPair getMinMaxIdRange(Class clazz);
 
-	public <A> A getNewImplementationInstance(Class<A> clazz);
+    public <A> A getNewImplementationInstance(Class<A> clazz);
 
-	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
-			throws Exception;
+    public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
+            throws Exception;
 
-	public <T extends WrapperPersistable> WrappedObject<T>
-			getObjectWrapperForUser(Class<T> c, long id) throws Exception;
+    public <T extends WrapperPersistable> WrappedObject<T> getObjectWrapperForUser(
+            Class<T> c, long id) throws Exception;
 
-	public List<DomainTransformRequestPersistent>
-			getPersistentTransformRequests(long fromId, long toId,
-					Collection<Long> specificIds, boolean mostRecentOnly,
-					boolean populateTransformSourceObjects, Logger logger);
+    public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
+            long fromId, long toId, Collection<Long> specificIds,
+            boolean mostRecentOnly, boolean populateTransformSourceObjects,
+            Logger logger);
 
-	public Publication getPublication(long id);
+    public Publication getPublication(long id);
 
-	public List<Publication> getPublications(Collection<Long> ids);
+    public List<Publication> getPublications(Collection<Long> ids);
 
-	public String getRememberMeUserName(String iid);
+    public String getRememberMeUserName(String iid);
 
-	public abstract IUser getSystemUser();
+    public abstract IUser getSystemUser();
 
-	public abstract IUser getSystemUser(boolean clean);
+    public abstract IUser getSystemUser(boolean clean);
 
-	public abstract IUser getUserByName(String userName);
+    public abstract IUser getUserByName(String userName);
 
-	public abstract IUser getUserByName(String userName, boolean clean);
+    public abstract IUser getUserByName(String userName, boolean clean);
 
-	public String
-			getUserNameForClientInstanceId(long validatedClientInstanceId);
+    public String getUserNameForClientInstanceId(
+            long validatedClientInstanceId);
 
-	public <T extends WrapperPersistable> T getWrappedObjectForUser(
-			Class<? extends T> c, long wrappedObjectId) throws Exception;
+    public <T extends WrapperPersistable> T getWrappedObjectForUser(
+            Class<? extends T> c, long wrappedObjectId) throws Exception;
 
-	public abstract boolean isValidIid(String iidKey);
+    public abstract boolean isValidIid(String iidKey);
 
-	public List<ActionLogItem> listLogItemsForClass(String className,
-			int count);
+    public List<ActionLogItem> listLogItemsForClass(String className,
+            int count);
 
-	public long log(String message, String componentKey);
+    public long log(String message, String componentKey);
 
-	public long log(String message, String componentKey, String data);
+    public long log(String message, String componentKey, String data);
 
-	public abstract void logActionItem(ActionLogItem result);
+    public abstract void logActionItem(ActionLogItem result);
 
-	public abstract long merge(HasId hi);
+    public abstract long merge(HasId hi);
 
-	public abstract IUser mergeUser(IUser user);
+    public abstract IUser mergeUser(IUser user);
 
-	public <G extends WrapperPersistable> Long persist(G gwpo) throws Exception;
+    public <G extends WrapperPersistable> Long persist(G gwpo) throws Exception;
 
-	public void persistClientLogRecords(List<ClientLogRecords> records);
+    public void persistClientLogRecords(List<ClientLogRecords> records);
 
-	public void persistInternalMetrics(List<InternalMetric> metrics);
+    public void persistInternalMetrics(List<InternalMetric> metrics);
 
-	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
-			Long id, GraphProjectionFieldFilter fieldFilter,
-			GraphProjectionDataFilter dataFilter);
+    public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
+            Long id, GraphProjectionFieldFilter fieldFilter,
+            GraphProjectionDataFilter dataFilter);
 
-	public HiliLocatorMap reconstituteHiliMap(long l2);
+    public HiliLocatorMap reconstituteHiliMap(long l2);
 
-	public void remove(Object o);
+    public void remove(Object o);
 
-	public SearchResultsBase search(SearchDefinition def, int pageNumber);
+    public SearchResultsBase search(SearchDefinition def, int pageNumber);
 
-	public void setField(Class clazz, Long id, String key, Object value)
-			throws Exception;
+    public void setField(Class clazz, Long id, String key, Object value)
+            throws Exception;
 
-	public DomainTransformLayerWrapper transformInPersistenceContext(
-			TransformPersisterToken persisterToken,
-			TransformPersistenceToken persistenceToken,
-			DomainTransformLayerWrapper wrapper);
+    public DomainTransformLayerWrapper transformInPersistenceContext(
+            TransformPersisterToken persisterToken,
+            TransformPersistenceToken persistenceToken,
+            DomainTransformLayerWrapper wrapper);
 
-	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers);
+    public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers);
 
-	public HasId unwrap(HasId wrapper);
+    public HasId unwrap(HasId wrapper);
 
-	public abstract void updateIid(String iidKey, String userName,
-			boolean rememberMe);
+    public abstract void updateIid(String iidKey, String userName,
+            boolean rememberMe);
 
-	public void updatePublicationMimeMessageId(Long publicationId,
-			String mimeMessageId);
+    public void updatePublicationMimeMessageId(Long publicationId,
+            String mimeMessageId);
 
-	public <T extends ServerValidator> List<T> validate(List<T> validators);
+    public <T extends ServerValidator> List<T> validate(List<T> validators);
 
-	public boolean validateClientInstance(long id, int auth);
+    public boolean validateClientInstance(long id, int auth);
 
-	/**
-	 * Used for supporting mixed rpc/transform domain loads
-	 * 
-	 */
-	public TransformCache warmupTransformCache();
+    /**
+     * Used for supporting mixed rpc/transform domain loads
+     * 
+     */
+    public TransformCache warmupTransformCache();
 
-	Integer getHighestPersistedRequestIdForClientInstance(
-			long clientInstanceId);
+    Integer getHighestPersistedRequestIdForClientInstance(
+            long clientInstanceId);
 
-	long getMaxPublicationIdForUser(IUser user);
+    long getMaxPublicationIdForUser(IUser user);
 
-	List<Long> listRecentClientInstanceIds(String iidKey);
+    List<Long> listRecentClientInstanceIds(String iidKey);
 }

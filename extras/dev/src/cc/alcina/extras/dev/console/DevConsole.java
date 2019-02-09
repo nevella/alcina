@@ -60,7 +60,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
-import cc.alcina.extras.dev.console.DevConsoleCommand.CmdNextCommandCaches;
 import cc.alcina.extras.dev.console.DevHelper.StringPrompter;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
@@ -583,12 +582,26 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         serializeObject(props, consolePropertiesFile);
         serializeObject(history, consoleHistoryFile);
         serializeObject(strings, consoleStringsFile);
+        // this breaks our jaxb classpath loading...only use if kryo failing due
+        // to signature change
+        // new Thread() {
+        // @Override
+        // public void run() {
+        // try {
         // ResourceUtilities.writeStringToFile(
-        // WrappedObjectHelper.xmlSerialize(props), consolePropertiesFile);
+        // WrappedObjectHelper.xmlSerialize(props),
+        // consolePropertiesFile);
         // ResourceUtilities.writeStringToFile(
-        // WrappedObjectHelper.xmlSerialize(history), consoleHistoryFile);
+        // WrappedObjectHelper.xmlSerialize(history),
+        // consoleHistoryFile);
         // ResourceUtilities.writeStringToFile(
-        // WrappedObjectHelper.xmlSerialize(strings), consoleStringsFile);
+        // WrappedObjectHelper.xmlSerialize(strings),
+        // consoleStringsFile);
+        // } catch (Exception e) {
+        // e.printStackTrace();
+        // }
+        // }
+        // }.start();
     }
 
     public void scrollToTopAtEnd() {
@@ -751,6 +764,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
             new AlcinaChildContextRunner("launcher-thread")
                     .callNewThreadOrCurrent(() -> initUi(), null, !waitForUi);
         }
+        clear();
         MetricLogging.get().end("init-console");
         try {
             devHelper.readAppObjectGraph();
@@ -823,7 +837,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
                 consoleLeft
                         .ok(String.format("  %s - ok - %s ms\n", msg, l2 - l1));
             }
-            if (topLevel && !(c instanceof CmdNextCommandCaches)) {
+            if (topLevel && !c.ignoreForCommandHistory()) {
                 props.lastCommand = c.rerunIfMostRecentOnRestart() ? lastCommand
                         : "";
                 try {

@@ -65,7 +65,6 @@ public abstract class ClientInstance
     @GwtTransient
     private String ipAddress;
 
-    @Override
     public abstract ClientInstance clone();
 
     public ClientInstance copyPropertiesTo(ClientInstance other) {

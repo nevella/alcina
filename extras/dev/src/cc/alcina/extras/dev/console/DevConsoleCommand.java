@@ -173,6 +173,10 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
     public abstract String getUsage();
 
+    public boolean ignoreForCommandHistory() {
+        return false;
+    }
+
     public void printUsage() {
         System.err.format("Usage: %s\n\n", getUsage());
     }
@@ -280,6 +284,11 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
         @Override
         public String getUsage() {
             return "";
+        }
+
+        @Override
+        public boolean ignoreForCommandHistory() {
+            return true;
         }
 
         @Override
@@ -844,6 +853,11 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
         }
 
         @Override
+        public boolean ignoreForCommandHistory() {
+            return true;
+        }
+
+        @Override
         public String run(String[] argv) throws Exception {
             String cmd = argv[0];
             console.setNextCommand(cmd);
@@ -942,6 +956,39 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
             }
             System.out.println("\n");
             return "";
+        }
+    }
+
+    public static class CmdRestart extends DevConsoleCommand {
+        @Override
+        public String[] getCommandIds() {
+            return new String[] { "restart", "re" };
+        }
+
+        @Override
+        public String getDescription() {
+            return "Restart this console";
+        }
+
+        @Override
+        public String getUsage() {
+            return "";
+        }
+
+        @Override
+        public boolean ignoreForCommandHistory() {
+            return true;
+        }
+
+        @Override
+        public String run(String[] argv) throws Exception {
+            String command = console.props.restartCommand;
+            if (Ax.isBlank(command)) {
+                Ax.err("Property 'restartCommand' not set");
+            } else {
+                new ShellWrapper().runBashScript(command);
+            }
+            return "control message sent";
         }
     }
 

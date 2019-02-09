@@ -129,8 +129,8 @@ public abstract class DevRemoterServlet extends HttpServlet {
                     // assume as root
                     TransformPersistenceToken token = (TransformPersistenceToken) params.args[1];
                     ClientInstance clientInstance = CommonPersistenceProvider
-                            .get().getCommonPersistence().getClientInstance(
-                                    String.valueOf(params.clientInstanceId));
+                            .get().getCommonPersistence()
+                            .getClientInstance(params.clientInstanceId);
                     Integer highestPersistedRequestId = CommonPersistenceProvider
                             .get().getCommonPersistence()
                             .getHighestPersistedRequestIdForClientInstance(

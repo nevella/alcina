@@ -52,6 +52,8 @@ public class DomainTransformPersistenceQueue {
     // most recent event
     Set<Long> lastFired = new LinkedHashSet<>();
 
+    Set<Long> appLifetimeEventsFired = new LinkedHashSet<>();
+
     Set<Long> firedOrQueued = new LinkedHashSet<>();
 
     LinkedList<Long> toFire = new LinkedList<>();
@@ -123,6 +125,31 @@ public class DomainTransformPersistenceQueue {
         new QueueWaiter().pauseUntilProcessed(timeoutMs);
     }
 
+    public void waitUntilRequestProcessed(String logOffset) {
+        long timeoutMs = 60 * TimeConstants.ONE_SECOND_MS;
+        /*
+         * 'event' in this class means
+         * "domaintransformrequest of id x were fired" - eventId is the dtrp id
+         */
+        long eventId = Long.parseLong(logOffset);
+        long startTime = System.currentTimeMillis();
+        while (true) {
+            long timeRemaining = -System.currentTimeMillis() + startTime
+                    + timeoutMs;
+            synchronized (queueModificationLock) {
+                try {
+                    if (eventId == 0 || appLifetimeEventsFired.contains(eventId)
+                            || timeRemaining <= 0) {
+                        break;
+                    }
+                    queueModificationLock.wait(timeRemaining);
+                } catch (Exception e) {
+                    throw new WrappedRuntimeException(e);
+                }
+            }
+        }
+    }
+
     private DomainTransformPersistenceEvent createPersistenceEventFromPersistedRequest(
             DomainTransformRequestPersistent dtrp) {
         // create an "event" to publish in the queue
@@ -185,6 +212,7 @@ public class DomainTransformPersistenceQueue {
                         CollectionFilters.max(persistedRequestIds)));
         synchronized (queueModificationLock) {
             lastFired = new LinkedHashSet<>(event.getPersistedRequestIds());
+            appLifetimeEventsFired.addAll(lastFired);
             waiterLatch = new CountDownLatch(waiterCounter.get());
             queueModificationLock.notifyAll();
         }

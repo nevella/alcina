@@ -72,6 +72,17 @@ public class DomainTransformLayerWrapper implements Serializable {
         return this.eventsByClass;
     }
 
+    // For the moment, this seems as good as than using the Kafka transform
+    // commit topic log offset - in
+    // that if this has been seen, then so has the corresponding Kafka log
+    // offset. And simpler to get
+    public String getLogOffset() {
+        if (persistentRequests.size() == 0) {
+            return null;
+        }
+        return String.valueOf(CommonUtils.last(persistentRequests).getId());
+    }
+
     public <V extends HasIdAndLocalId> Set<V> getObjectsFor(Class<V> clazz) {
         return (Set<V>) (Set) getTransformsFor(clazz).stream()
                 .map(HiliLocator::objectLocator).map(Domain::find)

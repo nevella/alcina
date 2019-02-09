@@ -204,6 +204,7 @@ public class DomainTransformEvent
     }
 
     @Transient
+    @JsonIgnore
     public HasIdAndLocalId getSource() {
         return this.source;
     }
