@@ -21,6 +21,8 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
@@ -172,6 +174,7 @@ public class DomainTransformEvent
     }
 
     @Transient
+    @JsonIgnore
     public ClassRef getObjectClassRef() {
         if (this.objectClassRef == null && this.objectClass != null) {
             this.objectClassRef = ClassRef.forClass(objectClass);
@@ -240,6 +243,7 @@ public class DomainTransformEvent
     }
 
     @Transient
+    @JsonIgnore
     public ClassRef getValueClassRef() {
         if (this.valueClassRef == null && this.valueClass != null) {
             this.valueClassRef = ClassRef.forClass(valueClass);

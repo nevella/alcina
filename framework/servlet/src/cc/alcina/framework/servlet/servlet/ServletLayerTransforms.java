@@ -421,7 +421,7 @@ public class ServletLayerTransforms {
                         .impl(RemoteTransformPersister.class,
                                 perStoreToken.getTargetStore()
                                         .getDomainDescriptor().getClass())
-                        .submitAndHandleTransformsWritableStore(perStoreToken);
+                        .submitAndHandleTransformsRemoteStore(perStoreToken);
                 result.merge(remoteWrapperResult);
             }
         }
