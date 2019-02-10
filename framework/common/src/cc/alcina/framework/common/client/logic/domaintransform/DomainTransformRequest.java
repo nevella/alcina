@@ -82,11 +82,8 @@ public class DomainTransformRequest implements Serializable {
             DomainTransformRequest fullRequest, IntPair range) {
         DomainTransformRequest request = new DomainTransformRequest();
         DomainTransformRequestChunkUuid chunkUuid = DomainTransformRequestChunkUuid
-                .deserialize(request.getChunkUuidString());
-        if (chunkUuid != null) {
-            chunkUuid.fromRange(range, fullRequest.allTransforms().size());
-        }
-        chunkUuid.uuid = createUUID();
+                .deserialize(fullRequest.getChunkUuidString());
+        chunkUuid.fromRange(range, fullRequest.allTransforms().size());
         request.setChunkUuidString(chunkUuid.serialize());
         return request;
     }

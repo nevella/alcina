@@ -65,14 +65,6 @@ public class DeltaApplicationRecord extends BaseBindable
 
     private String chunkUuidString;
 
-    public String getChunkUuidString() {
-        return this.chunkUuidString;
-    }
-
-    public void setChunkUuidString(String chunkUuidString) {
-        this.chunkUuidString = chunkUuidString;
-    }
-
     public DeltaApplicationRecord() {
     }
 
@@ -120,10 +112,15 @@ public class DeltaApplicationRecord extends BaseBindable
         this.setChunkUuidString(chunkUuidString);
     }
 
+    @Override
     public DeltaApplicationRecord clone() {
         return new DeltaApplicationRecord(id, text, timestamp, userId,
                 clientInstanceId, requestId, clientInstanceAuth, type,
                 protocolVersion, tag, chunkUuidString);
+    }
+
+    public String getChunkUuidString() {
+        return this.chunkUuidString;
     }
 
     @Display(name = "Client instance auth", orderingHint = 30)
@@ -172,6 +169,10 @@ public class DeltaApplicationRecord extends BaseBindable
 
     public long getUserId() {
         return this.userId;
+    }
+
+    public void setChunkUuidString(String chunkUuidString) {
+        this.chunkUuidString = chunkUuidString;
     }
 
     public void setClientInstanceAuth(int clientInstanceAuth) {
@@ -247,6 +248,6 @@ public class DeltaApplicationRecord extends BaseBindable
                         + "tag:\n%s\n" + "chunkUuidString:\n%s\n"
                         + "text:\n%s\n",
                 clientInstanceAuth, clientInstanceId, id, requestId, timestamp,
-                userId, type, getTag(), text, chunkUuidString);
+                userId, type, getTag(), chunkUuidString, text);
     }
 }

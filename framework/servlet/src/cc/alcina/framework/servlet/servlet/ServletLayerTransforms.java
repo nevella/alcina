@@ -182,13 +182,14 @@ public class ServletLayerTransforms {
         TransformManager.get()
                 .getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).clear();
         ThreadlocalTransformManager.cast().resetTltm(null);
-        DomainTransformRequest rq = new DomainTransformRequest();
-        rq.setProtocolVersion(
+        DomainTransformRequest request = DomainTransformRequest
+                .createPersistableRequest();
+        request.setProtocolVersion(
                 new DTESerializationPolicy().getTransformPersistenceProtocol());
-        rq.setRequestId(1);
-        rq.setClientInstance(commitInstance);
-        rq.setEvents(transforms);
-        DeltaApplicationRecord dar = new DeltaApplicationRecord(rq,
+        request.setRequestId(1);
+        request.setClientInstance(commitInstance);
+        request.setEvents(transforms);
+        DeltaApplicationRecord dar = new DeltaApplicationRecord(request,
                 DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED, false);
         DtrSimpleAdminPersistenceHandler persistenceHandler = new DtrSimpleAdminPersistenceHandler();
         persistenceHandler.commit(dar, maxTransformChunkSize);

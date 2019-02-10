@@ -57,7 +57,7 @@ public class DeltaApplicationRecordSerializerImpl
         String protocolVersion = parser.read(TRANSFORM_PROTOCOL_VERSION, nl);
         String chunkUuidString = null;
         if (parser.peek(CHUNK_UUID_STRING)) {
-            chunkUuidString = parser.read(TRANSFORM_PROTOCOL_VERSION, nl);
+            chunkUuidString = parser.read(CHUNK_UUID_STRING, nl);
         }
         String transformText = parser.read(TEXT, "");
         int id = 0;
@@ -88,14 +88,17 @@ public class DeltaApplicationRecordSerializerImpl
     }
 
     public String write(DeltaApplicationRecord wrapper) {
-        return CommonUtils.formatJ(VERSION + "\n" + CLIENT_INSTANCE_AUTH
-                + "%s\n" + CLIENT_INSTANCE_ID + "%s\n" + REQUEST_ID + "%s\n"
-                + TIMESTAMP + "%s\n" + USER_ID + "%s\n" + TYPE + "%s\n" + TAG2
-                + "%s\n" + TRANSFORM_PROTOCOL_VERSION + "%s\n" + TEXT + "%s",
+        return CommonUtils.formatJ(
+                VERSION + "\n" + CLIENT_INSTANCE_AUTH + "%s\n"
+                        + CLIENT_INSTANCE_ID + "%s\n" + REQUEST_ID + "%s\n"
+                        + TIMESTAMP + "%s\n" + USER_ID + "%s\n" + TYPE + "%s\n"
+                        + TAG2 + "%s\n" + TRANSFORM_PROTOCOL_VERSION + "%s\n"
+                        + CHUNK_UUID_STRING + "%s\n" + TEXT + "%s",
                 wrapper.getClientInstanceAuth(), wrapper.getClientInstanceId(),
                 wrapper.getRequestId(), wrapper.getTimestamp(),
                 wrapper.getUserId(), wrapper.getType(), wrapper.getTag(),
-                wrapper.getProtocolVersion(), wrapper.getText());
+                wrapper.getProtocolVersion(), wrapper.getChunkUuidString(),
+                wrapper.getText());
     }
 
     private DeltaApplicationSerializer otherSerializer(String data) {

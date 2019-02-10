@@ -469,8 +469,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                     ResourceUtilities.write(recordSerializer.write(record),
                             out);
                 }
-                logger.info("Wrote {} offline records to {}", records.size(),
-                        saveDir);
+                logger.info("Wrote {} offline/bulk records to {}",
+                        records.size(), saveDir);
             }
             Class<? extends ClientInstance> clientInstanceClass = cp
                     .getImplementation(ClientInstance.class);
