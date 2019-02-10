@@ -3,6 +3,7 @@ package cc.alcina.extras.dev.console;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.HeadlessException;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -59,6 +60,8 @@ import javax.swing.text.TabStop;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.DevHelper.StringPrompter;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
@@ -82,6 +85,8 @@ import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
+import cc.alcina.framework.entity.util.ShellWrapper;
+import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable.AlcinaChildContextRunner;
@@ -349,22 +354,35 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
      */
     public String getClipboardContents() {
         String result = "";
-        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-        // odd: the Object param of getContents is not currently used
-        Transferable contents = clipboard.getContents(null);
-        boolean hasTransferableText = (contents != null)
-                && contents.isDataFlavorSupported(DataFlavor.stringFlavor);
-        if (hasTransferableText) {
-            try {
-                result = (String) contents
-                        .getTransferData(DataFlavor.stringFlavor);
-            } catch (UnsupportedFlavorException ex) {
-                // highly unlikely since we are using a standard DataFlavor
-                System.out.println(ex);
-                ex.printStackTrace();
-            } catch (IOException ex) {
-                System.out.println(ex);
-                ex.printStackTrace();
+        try {
+            Clipboard clipboard = Toolkit.getDefaultToolkit()
+                    .getSystemClipboard();
+            // odd: the Object param of getContents is not currently used
+            Transferable contents = clipboard.getContents(null);
+            boolean hasTransferableText = (contents != null)
+                    && contents.isDataFlavorSupported(DataFlavor.stringFlavor);
+            if (hasTransferableText) {
+                try {
+                    result = (String) contents
+                            .getTransferData(DataFlavor.stringFlavor);
+                } catch (UnsupportedFlavorException ex) {
+                    // highly unlikely since we are using a standard DataFlavor
+                    System.out.println(ex);
+                    ex.printStackTrace();
+                } catch (IOException ex) {
+                    System.out.println(ex);
+                    ex.printStackTrace();
+                }
+            }
+        } catch (HeadlessException e) {
+            if (isOsX()) {
+                try {
+                    ShellOutputTuple outputTuple = new ShellWrapper()
+                            .runShell("", "pbpaste");
+                    return outputTuple.output;
+                } catch (Exception e2) {
+                    throw new WrappedRuntimeException(e2);
+                }
             }
         }
         return result;
@@ -657,6 +675,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
     private <T> T deserializeProperties(Class<T> clazz, File file)
             throws Exception {
         try {
+            return new ObjectMapper().enableDefaultTyping().readValue(file,
+                    clazz);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
             return KryoUtils.deserializeFromFile(file, clazz);
         } catch (Exception e) {
             e.printStackTrace();
@@ -665,6 +689,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
                 ResourceUtilities.readFileToString(file));
     }
 
+    private boolean isOsX() {
+        String osName = System.getProperty("os.name").toLowerCase();
+        return osName.indexOf("mac") >= 0;
+    }
+
+    @SuppressWarnings("unused")
     private void loadFontMetrics() {
         new Thread(() -> {
             new BufferedImage(1, 1, BufferedImage.TYPE_BYTE_GRAY)
@@ -673,7 +703,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
     }
 
     private void serializeObject(Object object, File file) {
-        KryoUtils.serializeToFile(object, file);
+        try {
+            new ObjectMapper().enableDefaultTyping()
+                    .writerWithDefaultPrettyPrinter().writeValue(file, object);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
     }
 
     protected void addDomainStoreAndFlowLoggers() {

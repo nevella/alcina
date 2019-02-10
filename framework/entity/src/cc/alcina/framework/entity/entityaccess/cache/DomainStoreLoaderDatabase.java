@@ -130,6 +130,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
     private boolean loadingSegment;
 
+    private Map<JoinTable, DomainClassDescriptor> joinTableClassDescriptor = new LinkedHashMap<>();;
+
     public DomainStoreLoaderDatabase(DomainStore store, DataSource dataSource,
             ThreadPoolExecutor warmupExecutor) {
         this.store = store;
@@ -872,6 +874,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                             rm.getDeclaringClass().getSimpleName(),
                             pd.getName());
                 }
+                joinTableClassDescriptor.put(joinTable, classDescriptor);
                 joinTables.put(pd, joinTable);
                 continue;
             }
@@ -932,6 +935,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         for (Entry<PropertyDescriptor, JoinTable> entry : joinTables
                 .entrySet()) {
             final Entry<PropertyDescriptor, JoinTable> entryF = entry;
+            if (joinTableClassDescriptor.get(entryF.getValue()).lazy) {
+                return;
+            }
             calls.add(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {

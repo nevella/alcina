@@ -37,7 +37,7 @@ public abstract class RollingData<K extends Comparable, V> {
                 .getImplementation(RollingDataItem.class);
         Function<String, K> keyDeserializer = keyDeserializer();
         List<? extends RollingDataItem> list = Domain.query(rdImplClass)
-                .filter("typeKey", typeKey).list();
+                .filter("typeKey", typeKey).raw().list();
         List<K> existingKeys = list.stream().map(RollingDataItem::getMaxKey)
                 .map(k -> keyDeserializer.apply(k))
                 .collect(Collectors.toList());
@@ -76,7 +76,7 @@ public abstract class RollingData<K extends Comparable, V> {
             e.printStackTrace();
             System.out
                     .println("Exception with list deserialization - deleting");
-            TransformManager.get().deleteMultiple(list);
+            // TransformManager.get().deleteMultiple(list);
             ServletLayerTransforms.pushTransformsAsRoot();
             return getValues0(earliestKey);
         }

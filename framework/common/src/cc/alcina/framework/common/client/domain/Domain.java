@@ -45,7 +45,8 @@ public class Domain {
 
     public static <V extends HasIdAndLocalId> V byProperty(Class<V> clazz,
             String propertyName, Object value) {
-        return handler.byProperty(clazz, propertyName, value);
+        return handler.query(clazz).filter(propertyName, value).raw().first();
+        // return handler.byProperty(clazz, propertyName, value);
     }
 
     public static <V extends HasIdAndLocalId> Supplier<Collection> castSupplier(
