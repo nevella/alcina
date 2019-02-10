@@ -76,7 +76,7 @@ public abstract class RollingData<K extends Comparable, V> {
             e.printStackTrace();
             System.out
                     .println("Exception with list deserialization - deleting");
-            // TransformManager.get().deleteMultiple(list);
+            TransformManager.get().deleteMultiple(list);
             ServletLayerTransforms.pushTransformsAsRoot();
             return getValues0(earliestKey);
         }
