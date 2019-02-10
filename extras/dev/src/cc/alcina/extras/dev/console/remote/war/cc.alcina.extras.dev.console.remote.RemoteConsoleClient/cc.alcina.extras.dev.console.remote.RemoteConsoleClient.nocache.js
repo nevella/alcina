@@ -333,7 +333,7 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
     }
     var strongName;
     try {
-      strongName = '9252512D8CEBA8319C5BDE51256134CC';
+      strongName = '51956D2D4793602A4646A61ED07292CF';
       var idx = strongName.indexOf(':');
       if (idx != -1) {
         softPermutationId = parseInt(strongName.substring(idx + 1), 10);

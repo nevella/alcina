@@ -74,6 +74,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
@@ -87,6 +88,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
@@ -210,7 +212,8 @@ public class ThreadlocalTransformManager extends TransformManager
 
     private Set<DomainTransformEvent> flushAfterTransforms = new LinkedHashSet<>();
 
-    private PostTransactionEntityResolver postTransactionEntityResolver = new PostTransactionEntityResolver();
+    private CachingMap<DomainStore, PostTransactionEntityResolver> postTransactionEntityResolvers = new CachingMap<>(
+            PostTransactionEntityResolver::new);
 
     @Override
     public void addTransform(DomainTransformEvent evt) {
@@ -472,8 +475,8 @@ public class ThreadlocalTransformManager extends TransformManager
                         : 0;
             }
             if (id == 0) {
-                HiliLocator locator = postTransactionEntityResolver
-                        .resolve(localId);
+                HiliLocator locator = postTransactionEntityResolvers
+                        .get(DomainStore.writableStore()).resolve(localId);
                 if (locator != null) {
                     id = locator.id;
                 }
@@ -550,8 +553,9 @@ public class ThreadlocalTransformManager extends TransformManager
         return result;
     }
 
-    public PostTransactionEntityResolver getPostTransactionEntityResolver() {
-        return this.postTransactionEntityResolver;
+    public PostTransactionEntityResolver getPostTransactionEntityResolver(
+            DomainStore domainStore) {
+        return this.postTransactionEntityResolvers.get(domainStore);
     }
 
     @Override
@@ -800,7 +804,8 @@ public class ThreadlocalTransformManager extends TransformManager
         setDetachedEntityCache(null);
         this.exceptionPolicy = exceptionPolicy;
         if (this.userSessionHiliMap != null) {
-            this.postTransactionEntityResolver.merge(userSessionHiliMap);
+            this.postTransactionEntityResolvers.get(DomainStore.writableStore())
+                    .merge(userSessionHiliMap);
         }
         this.userSessionHiliMap = locatorMap;
         localIdToEntityMap = new HashMap<Long, HasIdAndLocalId>();
@@ -841,8 +846,9 @@ public class ThreadlocalTransformManager extends TransformManager
         }
     }
 
-    public <V extends HasIdAndLocalId> HiliLocator resolvePersistedLocal(V v) {
-        return postTransactionEntityResolver.resolve(v);
+    public <V extends HasIdAndLocalId> HiliLocator resolvePersistedLocal(
+            DomainStore domainStore, V v) {
+        return postTransactionEntityResolvers.get(domainStore).resolve(v);
     }
 
     public void setClientInstance(ClientInstance clientInstance) {
@@ -873,9 +879,11 @@ public class ThreadlocalTransformManager extends TransformManager
         this.listenToFoundObjects = registerFoundObjects;
     }
 
+    // dev-only
     public void setPostTransactionEntityResolver(
             PostTransactionEntityResolver postTransactionEntityResolver) {
-        this.postTransactionEntityResolver = postTransactionEntityResolver;
+        this.postTransactionEntityResolvers.put(DomainStore.writableStore(),
+                postTransactionEntityResolver);
     }
 
     @Override
@@ -1273,10 +1281,27 @@ public class ThreadlocalTransformManager extends TransformManager
 
         private long clientInstanceId;
 
+        @SuppressWarnings("unused")
+        private transient DomainStore domainStore;
+
+        // for serializersr
         public PostTransactionEntityResolver() {
         }
 
-        public PostTransactionEntityResolver(HiliLocatorMap locatorMap) {
+        public PostTransactionEntityResolver(DomainStore domainStore) {
+            this.domainStore = domainStore;
+        }
+
+        public void addMappings(
+                DomainTransformRequestPersistent persistedRequest) {
+            persistedRequest.allTransforms().stream()
+                    .filter(dte -> dte
+                            .getTransformType() == TransformType.CREATE_OBJECT)
+                    .forEach(dte -> {
+                        locatorMap.putToLookups(HiliLocator.objectLocator(dte));
+                    });
+            int debug = 3;
+            // TODO Auto-generated method stub
         }
 
         public void merge(HiliLocatorMap locatorMap) {

@@ -28,6 +28,7 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.servlet.servlet.ServletLayerTransforms;
@@ -192,7 +193,8 @@ public abstract class DevRemoterServlet extends HttpServlet {
             if (transformMethod) {
                 ThreadlocalTransformManager.get().resetTltm(null);
                 resultHolder.add(ThreadlocalTransformManager.get()
-                        .getPostTransactionEntityResolver());
+                        .getPostTransactionEntityResolver(
+                                DomainStore.writableStore()));
             }
             byte[] outBytes = KryoUtils.serializeToByteArray(resultHolder);
             ResourceUtilities.writeStreamToStream(

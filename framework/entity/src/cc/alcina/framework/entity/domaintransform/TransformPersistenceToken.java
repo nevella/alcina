@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicyFactory;
 import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
@@ -209,6 +210,7 @@ public class TransformPersistenceToken implements Serializable {
         Set<DomainStore> targetStores = request.allTransforms().stream()
                 .map(DomainTransformEvent::getObjectClass)
                 .map(DomainStore.stores()::storeFor)
+                .map(store -> Ax.nullTo(store, DomainStore.writableStore()))
                 .collect(Collectors.toSet());
         Preconditions.checkState(targetStores.size() == 1);
         targetStore = targetStores.stream().findFirst().get();

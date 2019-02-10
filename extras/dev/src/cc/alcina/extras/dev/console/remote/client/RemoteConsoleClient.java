@@ -7,6 +7,19 @@ import com.google.gwt.dom.client.Document;
 import cc.alcina.extras.dev.console.remote.client.common.logic.RemoteConsoleInit;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 
+//@formatter:off
+/*
+ * Nits:
+ * 
+ * up arrow and enter key  should populate command box
+ * show status up top
+ * autoshow on start?
+ * navigation to eclipse file/line  
+ * 
+ * @author nick@alcina.cc
+ *
+ */
+// @formatter:on
 public class RemoteConsoleClient implements EntryPoint {
     @Override
     public void onModuleLoad() {

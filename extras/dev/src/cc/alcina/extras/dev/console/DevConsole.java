@@ -776,7 +776,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
             performCommand("gen-objects");
             return;
         }
-        if (!props.lastCommand.isEmpty() && !props.lastCommand.equals("q")) {
+        if (!props.lastCommand.matches("|q|re|restart")) {
             runningLastCommand = true;
             performCommand(props.lastCommand);
         } else {

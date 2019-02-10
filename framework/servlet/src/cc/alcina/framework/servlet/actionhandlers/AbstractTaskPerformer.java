@@ -1,16 +1,21 @@
 package cc.alcina.framework.servlet.actionhandlers;
 
 import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
 import cc.alcina.framework.servlet.knowns.KnownJob;
 
 public abstract class AbstractTaskPerformer implements Runnable {
     public Logger actionLogger;
+
+    protected org.slf4j.Logger slf4jLogger = LoggerFactory
+            .getLogger(getClass());
 
     public JobTracker jobTracker;
 
@@ -21,6 +26,12 @@ public abstract class AbstractTaskPerformer implements Runnable {
     public AbstractTaskPerformer asSubTask(AbstractTaskPerformer parent) {
         actionLogger = parent.actionLogger;
         jobTracker = parent.jobTracker;
+        return this;
+    }
+
+    public AbstractTaskPerformer asSubTask(BaseRemoteActionPerformer parent) {
+        actionLogger = parent.getLogger();
+        jobTracker = parent.getJobTracker();
         return this;
     }
 

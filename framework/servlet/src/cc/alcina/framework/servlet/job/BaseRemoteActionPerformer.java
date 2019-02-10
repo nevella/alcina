@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.job;
 
 import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
@@ -11,6 +12,9 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
         implements RemoteActionPerformer<R> {
     // FIXME - switch to slf4j
     protected Logger logger;
+
+    protected org.slf4j.Logger slf4jLogger = LoggerFactory
+            .getLogger(getClass());
 
     protected JobTracker jobTracker;
 

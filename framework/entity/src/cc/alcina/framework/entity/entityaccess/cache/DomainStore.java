@@ -167,6 +167,10 @@ public class DomainStore implements IDomainStore {
         return domainStores;
     }
 
+    public static DomainStore writableStore() {
+        return stores().writableStore();
+    }
+
     private DomainTransformPersistenceEvents persistenceEvents;
 
     SubgraphTransformManagerRemoteOnly transformManager;
@@ -1346,7 +1350,7 @@ public class DomainStore implements IDomainStore {
         public <V extends HasIdAndLocalId> V find(V v) {
             if (!v.provideWasPersisted()) {
                 HiliLocator locator = ThreadlocalTransformManager.get()
-                        .resolvePersistedLocal(v);
+                        .resolvePersistedLocal(DomainStore.this, v);
                 if (locator == null) {
                     return null;
                 } else {

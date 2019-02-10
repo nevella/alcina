@@ -37,6 +37,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.cert.X509Certificate;
+import java.sql.Timestamp;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.time.LocalDate;
@@ -1446,6 +1447,14 @@ public class SEUtilities {
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
+    }
+
+    public static Date toJavaDate(Date date) {
+    	if (date instanceof java.sql.Timestamp) {
+    		return Date.from(date.toInstant());
+    	} else {
+    		return date;
+    	}
     }
 
     public static class Bytes {
