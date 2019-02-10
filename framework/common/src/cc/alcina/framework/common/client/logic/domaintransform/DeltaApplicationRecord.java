@@ -112,8 +112,7 @@ public class DeltaApplicationRecord extends BaseBindable
         this.setChunkUuidString(chunkUuidString);
     }
 
-    @Override
-    public DeltaApplicationRecord clone() {
+    public DeltaApplicationRecord copy() {
         return new DeltaApplicationRecord(id, text, timestamp, userId,
                 clientInstanceId, requestId, clientInstanceAuth, type,
                 protocolVersion, tag, chunkUuidString);
