@@ -13,8 +13,6 @@
  */
 package cc.alcina.framework.servlet;
 
-import java.util.Optional;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -29,10 +27,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPmClientInstanceResolver;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
-import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
-import cc.alcina.framework.servlet.servlet.ServletLayerTransforms;
 
 /**
  * 
@@ -189,27 +184,5 @@ public class SessionHelper {
                 .impl(CommonPersistenceProvider.class)
                 .getCommonPersistenceExTransaction();
         PermissionsManager.get().setUser(getUser(up.getAnonymousUserName()));
-    }
-
-    public static class ThreadedPmClientInstanceResolverImpl
-            extends ThreadedPmClientInstanceResolver {
-        @Override
-        public ClientInstance getClientInstance() {
-            HttpServletRequest request = CommonRemoteServiceServlet
-                    .getContextThreadLocalRequest();
-            ClientInstance result = null;
-            if (request != null) {
-                Long clientInstanceId = getAuthenticatedSessionClientInstanceId(
-                        request);
-                if (clientInstanceId != null) {
-                    result = Registry.impl(CommonPersistenceProvider.class)
-                            .getCommonPersistence()
-                            .getClientInstance(clientInstanceId);
-                }
-            }
-            return Optional.<ClientInstance> ofNullable(result)
-                    .orElse(Registry.impl(ServletLayerTransforms.class)
-                            .getServerAsClientInstance());
-        }
     }
 }

@@ -37,7 +37,6 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.cert.X509Certificate;
-import java.sql.Timestamp;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.time.LocalDate;
@@ -653,6 +652,11 @@ public class SEUtilities {
         int pre = length / 2;
         return string.substring(0, pre)
                 + string.substring(string.length() - length + pre);
+    }
+
+    public static String generatePrettyUuid() {
+        char[][] ranges = { { 'a', 'k' }, { 'm', 'n' }, { 'p', 'z' } };
+        return Ax.format("%s-%s", generateId(ranges, 4), generateId(ranges, 7));
     }
 
     public static String getAccessorName(Field field) {
@@ -1278,6 +1282,14 @@ public class SEUtilities {
         }
     }
 
+    public static Date toJavaDate(Date date) {
+        if (date instanceof java.sql.Timestamp) {
+            return Date.from(date.toInstant());
+        } else {
+            return date;
+        }
+    }
+
     public static LocalDate toLocalDate(Date date) {
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
@@ -1447,14 +1459,6 @@ public class SEUtilities {
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
-    }
-
-    public static Date toJavaDate(Date date) {
-    	if (date instanceof java.sql.Timestamp) {
-    		return Date.from(date.toInstant());
-    	} else {
-    		return date;
-    	}
     }
 
     public static class Bytes {

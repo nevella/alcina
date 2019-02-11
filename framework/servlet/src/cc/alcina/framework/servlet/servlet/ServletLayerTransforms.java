@@ -231,8 +231,8 @@ public class ServletLayerTransforms {
     }
 
     public HiliLocatorMap getLocatorMapForClient(
-            DomainTransformRequest request) {
-        Long clientInstanceId = request.getClientInstance().getId();
+            ClientInstance clientInstance) {
+        Long clientInstanceId = clientInstance.getId();
         Map<Long, HiliLocatorMap> clientInstanceLocatorMap = getClientInstanceLocatorMap();
         synchronized (clientInstanceLocatorMap) {
             if (!clientInstanceLocatorMap.containsKey(clientInstanceId)) {
@@ -245,6 +245,11 @@ public class ServletLayerTransforms {
         HiliLocatorMap locatorMap = clientInstanceLocatorMap
                 .get(clientInstanceId);
         return locatorMap;
+    }
+
+    public HiliLocatorMap getLocatorMapForClient(
+            DomainTransformRequest request) {
+        return getLocatorMapForClient(request.getClientInstance());
     }
 
     public ClientInstance getServerAsClientInstance() {

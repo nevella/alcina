@@ -548,7 +548,8 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
                     permitted |= permitDueToOwnership((HasOwner) o);
                 }
             } else {
-                permitted |= PermissionsManager.get().getUser().equals(o);
+                permitted |= Objects.equals(PermissionsManager.get().getUser(),
+                        o);
             }
         }
         if (!permitted && !doNotEvaluateNullObjectPermissions) {

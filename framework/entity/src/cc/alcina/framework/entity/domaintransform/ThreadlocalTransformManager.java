@@ -471,7 +471,7 @@ public class ThreadlocalTransformManager extends TransformManager
             }
             if (userSessionHiliMap != null && localId != 0) {
                 id = userSessionHiliMap.containsKey(localId)
-                        ? userSessionHiliMap.get(localId).id
+                        ? userSessionHiliMap.getForLocalId(localId).id
                         : 0;
             }
             if (id == 0) {
@@ -804,8 +804,9 @@ public class ThreadlocalTransformManager extends TransformManager
         setDetachedEntityCache(null);
         this.exceptionPolicy = exceptionPolicy;
         if (this.userSessionHiliMap != null) {
-            this.postTransactionEntityResolvers.get(DomainStore.writableStore())
-                    .merge(userSessionHiliMap);
+            DomainStore.stores().stream()
+                    .forEach(store -> this.postTransactionEntityResolvers
+                            .get(store).merge(userSessionHiliMap));
         }
         this.userSessionHiliMap = locatorMap;
         localIdToEntityMap = new HashMap<Long, HasIdAndLocalId>();
@@ -1305,18 +1306,20 @@ public class ThreadlocalTransformManager extends TransformManager
         }
 
         public void merge(HiliLocatorMap locatorMap) {
-            if (!PermissionsManager.get().isLoggedIn()) {
-                this.locatorMap = new HiliLocatorMap();
-            } else {
-                long currentClientInstanceId = PermissionsManager.get()
-                        .getClientInstance().getId();
-                if (currentClientInstanceId != clientInstanceId) {
+            synchronized (locatorMap) {
+                if (!PermissionsManager.get().isLoggedIn()) {
                     this.locatorMap = new HiliLocatorMap();
+                } else {
+                    long currentClientInstanceId = PermissionsManager.get()
+                            .getClientInstance().getId();
+                    if (currentClientInstanceId != clientInstanceId) {
+                        this.locatorMap = new HiliLocatorMap();
+                    }
+                    this.locatorMap.merge(locatorMap);
+                    clientInstanceId = currentClientInstanceId;
                 }
-                this.locatorMap.merge(locatorMap);
-                clientInstanceId = currentClientInstanceId;
+                reconstituted = false;
             }
-            reconstituted = false;
         }
 
         public HiliLocator resolve(HasIdAndLocalId v) {
@@ -1329,7 +1332,7 @@ public class ThreadlocalTransformManager extends TransformManager
                     .getClientInstance().getId() != clientInstanceId) {
                 return null;
             }
-            HiliLocator locator = locatorMap.get(localId);
+            HiliLocator locator = locatorMap.getForLocalId(localId);
             if (locator != null) {
                 return locator;
             }
@@ -1341,7 +1344,7 @@ public class ThreadlocalTransformManager extends TransformManager
                                 .getClientInstance().getId());
                 reconstituted = true;
             }
-            locator = locatorMap.get(localId);
+            locator = locatorMap.getForLocalId(localId);
             return locator;
         }
     }

@@ -79,6 +79,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -366,6 +367,12 @@ public class DomainStore implements IDomainStore {
 
     public void setDebug(boolean debug) {
         this.debug = debug;
+    }
+
+    @Override
+    public String toString() {
+        return Ax.format("Domain store: %s %s", name,
+                domainDescriptor.getClass().getSimpleName());
     }
 
     public DomainStoreTransactions transactions() {
@@ -1019,6 +1026,11 @@ public class DomainStore implements IDomainStore {
         public synchronized DomainStore storeFor(
                 DomainDescriptor domainDescriptor) {
             return descriptorMap.get(domainDescriptor);
+        }
+
+        public synchronized Stream<DomainStore> stream() {
+            return descriptorMap.values().stream().collect(Collectors.toList())
+                    .stream();
         }
 
         public synchronized DomainStore writableStore() {

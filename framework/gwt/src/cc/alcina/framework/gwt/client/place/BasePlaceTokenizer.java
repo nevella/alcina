@@ -18,154 +18,154 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 @ClientInstantiable
 @RegistryLocation(registryPoint = BasePlaceTokenizer.class)
 public abstract class BasePlaceTokenizer<P extends Place>
-		implements PlaceTokenizer<P> {
-	protected StringBuilder tokenBuilder;
+        implements PlaceTokenizer<P> {
+    protected StringBuilder tokenBuilder;
 
-	protected String[] parts;
+    protected String[] parts;
 
-	private StringMap params;
+    private StringMap params;
 
-	boolean added = false;
+    boolean added = false;
 
-	public P copyPlace(P place) {
-		String token = getToken(place);
-		return getPlace(token);
-	}
+    public P copyPlace(P place) {
+        String token = getToken(place);
+        return getPlace(token);
+    }
 
-	public Place createDefaultPlace() {
-		return Reflections.classLookup().newInstance(getTokenizedClass());
-	}
+    public Place createDefaultPlace() {
+        return Reflections.classLookup().newInstance(getTokenizedClass());
+    }
 
-	public boolean getBooleanParameter(String key) {
-		String value = params.get(key);
-		return value == null ? false
-				: value.equals("t") || Boolean.parseBoolean(value);
-	}
+    public boolean getBooleanParameter(String key) {
+        String value = params.get(key);
+        return value == null ? false
+                : value.equals("t") || Boolean.parseBoolean(value);
+    }
 
-	public int getIntParameter(String key) {
-		String value = params.get(key);
-		return value == null ? 0 : CommonUtils.friendlyParseInt(value);
-	}
+    public int getIntParameter(String key) {
+        String value = params.get(key);
+        return value == null ? 0 : CommonUtils.friendlyParseInt(value);
+    }
 
-	public long getLongParameter(String key) {
-		String value = params.get(key);
-		return value == null ? 0 : CommonUtils.friendlyParseLong(value);
-	}
+    public long getLongParameter(String key) {
+        String value = params.get(key);
+        return value == null ? 0 : CommonUtils.friendlyParseLong(value);
+    }
 
-	public Class<? extends HasIdAndLocalId> getModelClass() {
-		return null;
-	}
+    public Class<? extends HasIdAndLocalId> getModelClass() {
+        return null;
+    }
 
-	@Override
-	public P getPlace(String token) {
-		parts = token.split("/");
-		try {
-			return getPlace0(token);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return getPlace(getPrefix());
-		}
-	}
+    @Override
+    public P getPlace(String token) {
+        parts = token.split("/");
+        try {
+            return getPlace0(token);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return getPlace(getPrefix());
+        }
+    }
 
-	public String getPrefix() {
-		String s = getTokenizedClass().getSimpleName().replaceFirst("(.+)Place",
-				"$1");
-		return s.toLowerCase();
-	}
+    public String getPrefix() {
+        String s = getTokenizedClass().getSimpleName().replaceFirst("(.+)Place",
+                "$1");
+        return s.toLowerCase();
+    }
 
-	public String getStringParameter(String key) {
-		return params.get(key);
-	}
+    public String getStringParameter(String key) {
+        return params.get(key);
+    }
 
-	@Override
-	public String getToken(P place) {
-		tokenBuilder = new StringBuilder();
-		params = null;
-		added = false;
-		addTokenPart(getPrefix());
-		getToken0(place);
-		if (params != null && !params.isEmpty()) {
-			addTokenPart(AlcinaHistory.toHash(params));
-		}
-		return tokenBuilder.toString();
-	}
+    @Override
+    public String getToken(P place) {
+        tokenBuilder = new StringBuilder();
+        params = null;
+        added = false;
+        addTokenPart(getPrefix());
+        getToken0(place);
+        if (params != null && !params.isEmpty()) {
+            addTokenPart(AlcinaHistory.toHash(params));
+        }
+        return tokenBuilder.toString();
+    }
 
-	public abstract Class<P> getTokenizedClass();
+    public abstract Class<P> getTokenizedClass();
 
-	public boolean handles(String token) {
-		return true;
-	}
+    public boolean handles(String token) {
+        return true;
+    }
 
-	public boolean isCanonicalModelClassTokenizer() {
-		return true;
-	}
+    public boolean isCanonicalModelClassTokenizer() {
+        return true;
+    }
 
-	public void register(
-			Map<Class<? extends HasIdAndLocalId>, BasePlaceTokenizer> tokenizersByModelClass) {
-	}
+    public void register(
+            Map<Class<? extends HasIdAndLocalId>, BasePlaceTokenizer> tokenizersByModelClass) {
+    }
 
-	public void setParameter(String key, Object value) {
-		if (value instanceof Number) {
-			if (((Number) value).longValue() == 0) {
-				value = null;
-			}
-		}
-		if (value instanceof Boolean) {
-			if (((Boolean) value) == false) {
-				value = null;
-			}
-		}
-		params.put(key, value == null ? null : value.toString());
-	}
+    public void setParameter(String key, Object value) {
+        if (value instanceof Number) {
+            if (((Number) value).longValue() == 0) {
+                value = null;
+            }
+        }
+        if (value instanceof Boolean) {
+            if (((Boolean) value) == false) {
+                value = null;
+            }
+        }
+        params.put(key, value == null ? null : value.toString());
+    }
 
-	public void setParameter(String key, Object value, boolean explicitBlanks) {
-		params.put(key, value == null ? null : value.toString());
-	}
+    public void setParameter(String key, Object value, boolean explicitBlanks) {
+        params.put(key, value == null ? null : value.toString());
+    }
 
-	protected void addTokenPart(Enum part) {
-		if (part == null) {
-			return;
-		}
-		addTokenPart(part.toString().toLowerCase());
-	}
+    protected void addTokenPart(Enum part) {
+        if (part == null) {
+            return;
+        }
+        addTokenPart(part.toString().toLowerCase());
+    }
 
-	protected void addTokenPart(long l) {
-		addTokenPart(String.valueOf(l));
-	}
+    protected void addTokenPart(long l) {
+        addTokenPart(String.valueOf(l));
+    }
 
-	protected void addTokenPart(String part) {
-		if (part == null) {
-			return;
-		}
-		if (added) {
-			tokenBuilder.append("/");
-		}
-		tokenBuilder.append(part);
-		added = true;
-	}
+    protected void addTokenPart(String part) {
+        if (part == null) {
+            return;
+        }
+        if (added) {
+            tokenBuilder.append("/");
+        }
+        tokenBuilder.append(part);
+        added = true;
+    }
 
-	protected <E extends Enum> E enumValue(Class<E> clazz, String value) {
-		return enumValue(clazz, value, null);
-	}
+    protected <E extends Enum> E enumValue(Class<E> clazz, String value) {
+        return enumValue(clazz, value, null);
+    }
 
-	protected <E extends Enum> E enumValue(Class<E> clazz, String value,
-			E defaultValue) {
-		return CommonUtils.getEnumValueOrNull(clazz, value, true, defaultValue);
-	}
+    protected <E extends Enum> E enumValue(Class<E> clazz, String value,
+            E defaultValue) {
+        return CommonUtils.getEnumValueOrNull(clazz, value, true, defaultValue);
+    }
 
-	protected abstract P getPlace0(String token);
+    protected abstract P getPlace0(String token);
 
-	protected abstract void getToken0(P place);
+    protected abstract void getToken0(P place);
 
-	protected void initOutParams() {
-		params = new StringMap();
-	}
+    protected void initOutParams() {
+        params = new StringMap();
+    }
 
-	protected void parseMap(String s) {
-		params = AlcinaHistory.fromHash(s);
-	}
+    protected void parseMap(String s) {
+        params = AlcinaHistory.fromHash(s);
+    }
 
-	protected SearchDefinitionSerializer searchDefinitionSerializer() {
-		return Registry.impl(SearchDefinitionSerializer.class);
-	}
+    protected SearchDefinitionSerializer searchDefinitionSerializer() {
+        return Registry.impl(SearchDefinitionSerializer.class);
+    }
 }

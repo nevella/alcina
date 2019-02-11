@@ -314,7 +314,7 @@ public class Knowns {
                     .pushTransforms(null, true, true);
             replaceWithPersistent.stream().forEach(n -> {
                 HiliLocator hiliLocator = wrapper.locatorMap
-                        .get(n.persistent.getLocalId());
+                        .getForLocalId(n.persistent.getLocalId());
                 n.persistent = Domain.find(hiliLocator);
             });
             if (wrapper.persistentEvents.size() > 0) {
