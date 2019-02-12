@@ -31,256 +31,267 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
  * @param <T>
  */
 public abstract class BaseProjection<T extends HasIdAndLocalId>
-		implements DomainProjection<T> {
-	protected MultikeyMap<T> lookup = createLookup();
+        implements DomainProjection<T> {
+    protected MultikeyMap<T> lookup = createLookup();
 
-	private List<Class> types = null;
+    private List<Class> types = null;
 
-	private boolean derived = false;
+    private boolean derived = false;
 
-	private boolean enabled = true;
+    private boolean enabled = true;
 
-	private ModificationChecker modificationChecker;
+    private ModificationChecker modificationChecker;
 
-	protected final transient Logger logger = LoggerFactory
-			.getLogger(getClass());
+    protected final transient Logger logger = LoggerFactory
+            .getLogger(getClass());
 
-	public MultikeyMap<T> asMap(Object... objects) {
-		return (MultikeyMap<T>) lookup.asMap(objects);
-	}
+    private IDomainStore domainStore;
 
-	public <V> V first(Object... objects) {
-		return (V) CommonUtils.first(items(objects));
-	}
+    public MultikeyMap<T> asMap(Object... objects) {
+        return (MultikeyMap<T>) lookup.asMap(objects);
+    }
 
-	public <V> V get(Object... objects) {
-		V nonTransactional = (V) lookup.get(objects);
-		return (V) Domain.resolveTransactional(this,
-				(HasIdAndLocalId) nonTransactional, objects);
-	}
+    public <V> V first(Object... objects) {
+        return (V) CommonUtils.first(items(objects));
+    }
 
-	public MultikeyMap<T> getLookup() {
-		return this.lookup;
-	}
+    public <V> V get(Object... objects) {
+        V nonTransactional = (V) lookup.get(objects);
+        return (V) Domain.resolveTransactional(this,
+                (HasIdAndLocalId) nonTransactional, objects);
+    }
 
-	public ModificationChecker getModificationChecker() {
-		return modificationChecker;
-	}
+    @Override
+    public IDomainStore getDomainStore() {
+        return this.domainStore;
+    }
 
-	public List<Class> getTypes() {
-		return this.types;
-	}
+    public MultikeyMap<T> getLookup() {
+        return this.lookup;
+    }
 
-	@Override
-	public void insert(T t) {
-		checkModification("insert");
-		Object[] values = project(t);
-		if (values != null) {
-			try {
-				if (values.length > 0 && values[0] != null
-						&& values[0].getClass().isArray()) {
-					for (Object tuple : values) {
-						lookup.put((Object[]) tuple);
-					}
-				} else {
-					if (isUnique()) {
-						Object[] keys = Arrays.copyOf(values,
-								values.length - 1);
-						if (!lookup.checkKeys(keys)) {
-							return;
-						}
-						T existing = lookup.get(keys);
-						if (existing != null) {
-							logDuplicateMapping(values, existing);
-							return;
-						}
-					}
-					lookup.put(values);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-				System.out.println("Cause - " + t);
-				if (t instanceof HasIdAndLocalId) {
-					System.out.println(new HiliLocator(t));
-				}
-			}
-		}
-	}
+    public ModificationChecker getModificationChecker() {
+        return modificationChecker;
+    }
 
-	@Override
-	public boolean isDerived() {
-		return this.derived;
-	}
+    public List<Class> getTypes() {
+        return this.types;
+    }
 
-	@Override
-	public boolean isEnabled() {
-		return this.enabled;
-	}
+    @Override
+    public void insert(T t) {
+        checkModification("insert");
+        Object[] values = project(t);
+        if (values != null) {
+            try {
+                if (values.length > 0 && values[0] != null
+                        && values[0].getClass().isArray()) {
+                    for (Object tuple : values) {
+                        lookup.put((Object[]) tuple);
+                    }
+                } else {
+                    if (isUnique()) {
+                        Object[] keys = Arrays.copyOf(values,
+                                values.length - 1);
+                        if (!lookup.checkKeys(keys)) {
+                            return;
+                        }
+                        T existing = lookup.get(keys);
+                        if (existing != null) {
+                            logDuplicateMapping(values, existing);
+                            return;
+                        }
+                    }
+                    lookup.put(values);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("Cause - " + t);
+                if (t instanceof HasIdAndLocalId) {
+                    System.out.println(new HiliLocator(t));
+                }
+            }
+        }
+    }
 
-	public boolean isUnique() {
-		return false;
-	}
+    @Override
+    public boolean isDerived() {
+        return this.derived;
+    }
 
-	public <V> Collection<V> items(Object... objects) {
-		Collection<V> items = lookup.items(objects);
-		return items == null ? Collections.EMPTY_LIST : items;
-	}
+    @Override
+    public boolean isEnabled() {
+        return this.enabled;
+    }
 
-	@Override
-	public boolean matches(T t, Object[] keys) {
-		Object[] tKeys = project(t);
-		if (keys == null || tKeys == null) {
-			return keys == tKeys;
-		}
-		for (int i = 0; i < keys.length && i < tKeys.length; i++) {
-			if (!CommonUtils.equalsWithNullEquality(keys[i], tKeys[i])) {
-				return false;
-			}
-		}
-		return true;
-	}
+    public boolean isUnique() {
+        return false;
+    }
 
-	@Override
-	public void remove(T t) {
-		checkModification("remove");
-		Object[] values = project(t);
-		if (values != null) {
-			try {
-				if (values.length > 0 && values[0] != null
-						&& values[0].getClass().isArray()) {
-					for (Object tuple : values) {
-						lookup.remove((Object[]) tuple);
-					}
-				} else {
-					lookup.remove(values);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
+    public <V> Collection<V> items(Object... objects) {
+        Collection<V> items = lookup.items(objects);
+        return items == null ? Collections.EMPTY_LIST : items;
+    }
 
-	public <V> Collection<V> reverseItems(Object... objects) {
-		Collection<V> items = lookup.reverseItems(objects);
-		return items == null ? Collections.EMPTY_LIST : items;
-	}
+    @Override
+    public boolean matches(T t, Object[] keys) {
+        Object[] tKeys = project(t);
+        if (keys == null || tKeys == null) {
+            return keys == tKeys;
+        }
+        for (int i = 0; i < keys.length && i < tKeys.length; i++) {
+            if (!CommonUtils.equalsWithNullEquality(keys[i], tKeys[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-	public void setDerived(boolean derived) {
-		this.derived = derived;
-	}
+    @Override
+    public void remove(T t) {
+        checkModification("remove");
+        Object[] values = project(t);
+        if (values != null) {
+            try {
+                if (values.length > 0 && values[0] != null
+                        && values[0].getClass().isArray()) {
+                    for (Object tuple : values) {
+                        lookup.remove((Object[]) tuple);
+                    }
+                } else {
+                    lookup.remove(values);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-	@Override
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
+    public <V> Collection<V> reverseItems(Object... objects) {
+        Collection<V> items = lookup.reverseItems(objects);
+        return items == null ? Collections.EMPTY_LIST : items;
+    }
 
-	public void
-			setModificationChecker(ModificationChecker modificationChecker) {
-		this.modificationChecker = modificationChecker;
-	}
+    public void setDerived(boolean derived) {
+        this.derived = derived;
+    }
 
-	public void setTypes(List<Class> types) {
-		this.types = types;
-	}
+    public void setDomainStore(IDomainStore domainStore) {
+        this.domainStore = domainStore;
+    }
 
-	protected void checkModification(String modificationType) {
-		if (getModificationChecker() != null) {
-			getModificationChecker().check("fire");
-		}
-	}
+    @Override
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
 
-	protected MultikeyMap<T> createLookup() {
-		if (this instanceof OrderableProjection) {
-			return new BaseProjectionLookupBuilder(this).navigable()
-					.createMultikeyMap();
-		} else {
-			return new BaseProjectionLookupBuilder(this).sorted()
-					.createMultikeyMap();
-		}
-	}
+    public void setModificationChecker(
+            ModificationChecker modificationChecker) {
+        this.modificationChecker = modificationChecker;
+    }
 
-	protected abstract int getDepth();
+    public void setTypes(List<Class> types) {
+        this.types = types;
+    }
 
-	protected void logDuplicateMapping(Object[] values, T existing) {
-		logger.warn(CommonUtils.formatJ(
-				"Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
-				this, Arrays.asList(values), existing));
-	}
+    protected void checkModification(String modificationType) {
+        if (getModificationChecker() != null) {
+            getModificationChecker().check("fire");
+        }
+    }
 
-	// count:=-1 --> all
-	/**
-	 * Expose if subclass is instance of OrderableProjection
-	 */
-	protected Collection<T> order0(int count, CollectionFilter<T> filter,
-			boolean targetsOfFinalKey, boolean reverse,
-			boolean finishAfterFirstFilterFail, Object... objects) {
-		Collection source = (Collection) (reverse ? reverseItems(objects)
-				: items(objects));
-		PossibleSubIterator sub = new PossibleSubIterator(source,
-				targetsOfFinalKey, objects);
-		List<T> result = new ArrayList<T>();
-		while (count != 0 && sub.hasNext()) {
-			T next = sub.next();
-			if (filter == null || filter.allow(next)) {
-				count--;
-				result.add(next);
-			} else {
-				if (finishAfterFirstFilterFail) {
-					break;
-				}
-			}
-		}
-		return result;
-	}
+    protected MultikeyMap<T> createLookup() {
+        if (this instanceof OrderableProjection) {
+            return new BaseProjectionLookupBuilder(this).navigable()
+                    .createMultikeyMap();
+        } else {
+            return new BaseProjectionLookupBuilder(this).sorted()
+                    .createMultikeyMap();
+        }
+    }
 
-	protected abstract Object[] project(T t);
+    protected abstract int getDepth();
 
-	// non-transactional
-	class PossibleSubIterator {
-		Collection source;
+    protected void logDuplicateMapping(Object[] values, T existing) {
+        logger.warn(CommonUtils.formatJ(
+                "Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
+                this, Arrays.asList(values), existing));
+    }
 
-		boolean targetsOfFinalKey;
+    // count:=-1 --> all
+    /**
+     * Expose if subclass is instance of OrderableProjection
+     */
+    protected Collection<T> order0(int count, CollectionFilter<T> filter,
+            boolean targetsOfFinalKey, boolean reverse,
+            boolean finishAfterFirstFilterFail, Object... objects) {
+        Collection source = (Collection) (reverse ? reverseItems(objects)
+                : items(objects));
+        PossibleSubIterator sub = new PossibleSubIterator(source,
+                targetsOfFinalKey, objects);
+        List<T> result = new ArrayList<T>();
+        while (count != 0 && sub.hasNext()) {
+            T next = sub.next();
+            if (filter == null || filter.allow(next)) {
+                count--;
+                result.add(next);
+            } else {
+                if (finishAfterFirstFilterFail) {
+                    break;
+                }
+            }
+        }
+        return result;
+    }
 
-		Object[] objects;
+    protected abstract Object[] project(T t);
 
-		private Iterator itemIterator;
+    // non-transactional
+    class PossibleSubIterator {
+        Collection source;
 
-		private Iterator subIterator;
+        boolean targetsOfFinalKey;
 
-		private Object[] keys;
+        Object[] objects;
 
-		public PossibleSubIterator(Collection source, boolean targetsOfFinalKey,
-				Object[] objects) {
-			this.targetsOfFinalKey = targetsOfFinalKey;
-			this.objects = objects;
-			itemIterator = source.iterator();
-			keys = new Object[objects.length + 1];
-			System.arraycopy(objects, 0, keys, 0, objects.length);
-		}
+        private Iterator itemIterator;
 
-		public boolean hasNext() {
-			if (targetsOfFinalKey) {
-				ensureSubIterator();
-				return subIterator != null && subIterator.hasNext();
-			}
-			return itemIterator.hasNext();
-		}
+        private Iterator subIterator;
 
-		public T next() {
-			return (T) (targetsOfFinalKey ? subIterator.next()
-					: itemIterator.next());
-		}
+        private Object[] keys;
 
-		private void ensureSubIterator() {
-			while (subIterator == null || !subIterator.hasNext()) {
-				if (itemIterator.hasNext()) {
-					Object key = itemIterator.next();
-					keys[keys.length - 1] = key;
-					subIterator = lookup.asMap(keys).keySet().iterator();
-				} else {
-					break;
-				}
-			}
-		}
-	}
+        public PossibleSubIterator(Collection source, boolean targetsOfFinalKey,
+                Object[] objects) {
+            this.targetsOfFinalKey = targetsOfFinalKey;
+            this.objects = objects;
+            itemIterator = source.iterator();
+            keys = new Object[objects.length + 1];
+            System.arraycopy(objects, 0, keys, 0, objects.length);
+        }
+
+        public boolean hasNext() {
+            if (targetsOfFinalKey) {
+                ensureSubIterator();
+                return subIterator != null && subIterator.hasNext();
+            }
+            return itemIterator.hasNext();
+        }
+
+        public T next() {
+            return (T) (targetsOfFinalKey ? subIterator.next()
+                    : itemIterator.next());
+        }
+
+        private void ensureSubIterator() {
+            while (subIterator == null || !subIterator.hasNext()) {
+                if (itemIterator.hasNext()) {
+                    Object key = itemIterator.next();
+                    keys[keys.length - 1] = key;
+                    subIterator = lookup.asMap(keys).keySet().iterator();
+                } else {
+                    break;
+                }
+            }
+        }
+    }
 }

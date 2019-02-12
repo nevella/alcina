@@ -11,8 +11,8 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
  * @param <T>
  */
 public interface DomainProjection<T extends HasIdAndLocalId>
-		extends DomainListener<T> {
-	default boolean isDerived() {
-		return false;
-	}
+        extends DomainListener<T> {
+    default boolean isDerived() {
+        return false;
+    }
 }

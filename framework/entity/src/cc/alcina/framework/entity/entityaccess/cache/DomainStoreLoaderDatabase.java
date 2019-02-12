@@ -330,6 +330,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                 @Override
                 public Void call() throws Exception {
                     for (DomainStoreLookupDescriptor lookupDescriptor : descriptor.lookupDescriptors) {
+                        lookupDescriptor.setDomainStore(store);
                         lookupDescriptor.createLookup();
                         if (lookupDescriptor.isEnabled()) {
                             store.addValues(lookupDescriptor.getLookup());
@@ -353,6 +354,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                 if (projection instanceof BaseProjection) {
                     ((BaseProjection) projection)
                             .setModificationChecker(store.modificationChecker);
+                    ((BaseProjection) projection).setDomainStore(store);
                 }
             }
         }

@@ -1096,9 +1096,8 @@ public class DomainStore implements IDomainStore {
             @Override
             public <V extends HasIdAndLocalId> V resolveTransactional(
                     DomainListener listener, V value, Object[] path) {
-                return value == null ? null
-                        : storeHandler(value.getClass())
-                                .resolveTransactional(listener, value, path);
+                return ((DomainStore) listener.getDomainStore()).handler
+                        .resolveTransactional(listener, value, path);
             }
 
             @Override
