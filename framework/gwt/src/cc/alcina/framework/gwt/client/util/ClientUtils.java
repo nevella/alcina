@@ -498,7 +498,11 @@ public class ClientUtils {
     }
 	}-*/;
 
-	public static class EditContentViewWidgets {
+	public static native String wndString(String key)/*-{
+    return $wnd[key];
+    }-*/;
+
+    public static class EditContentViewWidgets {
 		public PaneWrapperWithObjects wrapper;
 
 		public GlassDialogBox gdb;

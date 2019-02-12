@@ -67,7 +67,8 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
         if (place == null) {
             return "";
         }
-        return tokenizersByPlace.get(place.getClass()).getToken(place);
+        String token = tokenizersByPlace.get(place.getClass()).getToken(place);
+        return getAppPrefix() + token;
     }
 
     private synchronized void ensurePlaceLookup() {
@@ -94,7 +95,15 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
         }
     }
 
-    private synchronized Place getPlace(String token, boolean copy) {
+    protected String getAppPrefix() {
+        return "";
+    }
+
+    protected synchronized Place getPlace(String i_token, boolean copy) {
+        if (i_token.startsWith(getAppPrefix())) {
+            i_token = i_token.substring(getAppPrefix().length());
+        }
+        String token = i_token;
         if (!copy) {
             System.out.println("get place:" + token);
         }

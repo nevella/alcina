@@ -1715,6 +1715,14 @@ public class CommonUtils {
         return false;
     }
 
+    public static <T> T wrapThrowing(ThrowingSupplier<T> supplier) {
+    	try {
+    		return supplier.get();
+    	} catch (Exception e) {
+    		throw new WrappedRuntimeException(e);
+    	}
+    }
+
     public enum ComparatorResult {
         BOTH_NON_NULL, BOTH_NULL, FIRST_NULL, SECOND_NULL;
         public int direction() {
