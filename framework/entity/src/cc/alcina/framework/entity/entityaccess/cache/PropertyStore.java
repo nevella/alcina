@@ -19,6 +19,7 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.P
 import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
@@ -109,13 +110,20 @@ public class PropertyStore {
     }
 
     public Integer getIntegerValue(PdOperator pd, int rowOffset) {
-        long value = getPrimitiveLongValue(pd, rowOffset);
-        return value == 0 ? null : (int) value;
+        int value = getPrimitiveIntValue(pd, rowOffset);
+        return value == 0 ? null : value;
     }
 
     public Long getLongValue(PdOperator pd, int rowOffset) {
         long value = getPrimitiveLongValue(pd, rowOffset);
         return value == 0 ? null : value;
+    }
+
+    public int getPrimitiveIntValue(PdOperator pd, int rowOffset) {
+        if (rowOffset != -1) {
+            return ((IntStore) stores.get(pd.idx)).get(rowOffset);
+        }
+        return 0;
     }
 
     public long getPrimitiveLongValue(PdOperator pd, int rowOffset) {
@@ -198,14 +206,15 @@ public class PropertyStore {
     }
 
     protected FieldStore getFieldStoreFor(Class<?> propertyType) {
-        if (propertyType == long.class || propertyType == Long.class
-                || propertyType == int.class || propertyType == Integer.class) {
+        if (propertyType == long.class || propertyType == Long.class) {
             return new LongStore(tableSize);
         } else if (propertyType == boolean.class
                 || propertyType == Boolean.class) {
             return new BooleanStore(tableSize);
         } else if (propertyType == String.class) {
             return new DuplicateStringStore(tableSize);
+        } else if (propertyType == int.class || propertyType == Integer.class) {
+            return new IntStore(tableSize);
         }
         throw new UnsupportedOperationException();
     }
@@ -354,6 +363,50 @@ public class PropertyStore {
                 throws SQLException;
 
         protected abstract T getWrapped(int rowOffset);
+    }
+
+    static class IntStore extends FieldStore<Integer> {
+        IntArrayList list;
+
+        public IntStore(int size) {
+            super(size);
+            list = new IntArrayList(size);
+        }
+
+        @Override
+        public void ensureCapacity(int capacity) {
+            if (list.size() < capacity) {
+                list.add(0);
+            }
+        }
+
+        @Override
+        public void putRowField(Object[] row, int colIdx, int rowIdx) {
+            put(CommonUtils.iv((Integer) row[colIdx]), rowIdx);
+        }
+
+        @Override
+        public void putRsField(ResultSet rs, int colIdx, int rowIdx)
+                throws SQLException {
+            put(rs.getInt(colIdx), rowIdx);
+        }
+
+        @Override
+        protected Integer getWrapped(int rowOffset) {
+            return get(rowOffset);
+        }
+
+        Integer get(int rowIdx) {
+            return list.getInt(rowIdx);
+        }
+
+        void put(int value, int rowIdx) {
+            if (list.size() == rowIdx) {
+                list.add(value);
+            } else {
+                list.set(rowIdx, value);
+            }
+        }
     }
 
     static class LongStore extends FieldStore<Long> {

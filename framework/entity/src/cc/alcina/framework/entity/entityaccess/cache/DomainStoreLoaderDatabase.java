@@ -230,7 +230,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                     return writableDomainClassRef;
                 }
             });
-            events.removeIf(event -> event.getObjectClassRef().notInVm()
+            events.removeIf(event -> event.getObjectClassRef() == null
+                    || event.getObjectClassRef().notInVm()
                     || (event.getValueClassRef() != null
                             && event.getValueClassRef().notInVm()));
             if (events.isEmpty()) {
@@ -1450,6 +1451,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
         private DomainStoreLoaderDatabase loader;
 
+        String rsSql;
+
         private ConnResults(Builder builder) {
             this.conn = builder.conn;
             this.clazz = builder.clazz;
@@ -1476,14 +1479,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         }
 
         private ResultSet ensureRs(int pass) {
-            String sql = null;
+            rsSql = null;
             try {
                 if (rs == null) {
                     conn.setAutoCommit(false);
                     Statement stmt = conn.createStatement();
                     stmt.setFetchSize(20000);
                     if (joinTable) {
-                        sql = sqlFilter;
+                        rsSql = sqlFilter;
                     } else {
                         String template = "select %s from %s";
                         List<String> columnNames = new ArrayList<String>();
@@ -1495,14 +1498,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                         tableName = tableNameOverride != null
                                 ? tableNameOverride
                                 : tableName;
-                        sql = String.format(template,
+                        rsSql = String.format(template,
                                 CommonUtils.join(columnNames, ","), tableName);
                         if (CommonUtils.isNotNullOrEmpty(sqlFilter)) {
-                            sql += String.format(" where %s", sqlFilter);
+                            rsSql += String.format(" where %s", sqlFilter);
                         }
                     }
-                    loader.store.sqlLogger.debug(sql);
-                    rs = stmt.executeQuery(sql);
+                    loader.store.sqlLogger.debug(rsSql);
+                    rs = stmt.executeQuery(rsSql);
                 }
                 return rs;
             } catch (Exception e) {
@@ -1520,7 +1523,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                     e.printStackTrace();
                     return ensureRs(pass + 1);
                 }
-                Ax.out("rs sql:\n\t%s", sql);
+                Ax.out("rs sql:\n\t%s", rsSql);
                 throw new WrappedRuntimeException(e);
             }
         }
