@@ -212,7 +212,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
     private Set<DomainTransformEvent> flushAfterTransforms = new LinkedHashSet<>();
 
-    private CachingMap<DomainStore, PostTransactionEntityResolver> postTransactionEntityResolvers = new CachingMap<>(
+    private CachingMap<DomainStore, PostTransactionEntityResolver> postTransactionEntityResolvers = new CachingMap<DomainStore, PostTransactionEntityResolver>(
             PostTransactionEntityResolver::new);
 
     @Override
