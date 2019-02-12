@@ -55,6 +55,7 @@ public class RemoteConsole implements IClientFactory {
     public void setupPlaceMapping() {
         historyMapper = Registry.impl(RegistryHistoryMapper.class);
         historyHandler = new PlaceHistoryHandler(historyMapper);
-        historyHandler.register(placeController, eventBus, new ConsolePlace());
+        historyHandler.register(placeController, eventBus,
+                () -> new ConsolePlace());
     }
 }
