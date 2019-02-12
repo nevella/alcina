@@ -113,11 +113,11 @@
 		<mkdir dir="${extras.dev.build.dir}" />
 		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${extras.dev.src.dir}" destdir="${extras.dev.build.dir}">
 			<classpath>
-				<path refid="framework.common.lib.path" />
-				<path refid="framework.servlet.lib.path" />
-				<pathelement path="${framework.classmeta.build.dir}" />
 				<pathelement path="${framework.entity.build.dir}" />
 				<pathelement path="${framework.servlet.build.dir}" />
+				<pathelement path="${framework.classmeta.build.dir}" />
+				<path refid="framework.common.lib.path" />
+				<path refid="framework.servlet.lib.path" />
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
