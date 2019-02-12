@@ -76,7 +76,7 @@ public class TransformPersisterIn {
         IUser incomingUser = PermissionsManager.get().getUser();
         commonPersistenceBase.connectPermissionsManagerToLiveObjects(true);
         HiliLocatorMap locatorMap = token.getLocatorMap();
-        HiliLocatorMap locatorMapClone = (HiliLocatorMap) locatorMap.clone();
+        HiliLocatorMap locatorMapClone = (HiliLocatorMap) locatorMap.copy();
         final DomainTransformRequest request = token.getRequest();
         List<DomainTransformEventPersistent> dtreps = wrapper.persistentEvents;
         List<DomainTransformRequestPersistent> dtrps = wrapper.persistentRequests;
@@ -334,7 +334,8 @@ public class TransformPersisterIn {
                         DomainTransformRequestPersistent dtrp = dtrqImpl
                                 .newInstance();
                         tm.persist(dtrp);
-                        DomainStore.stores().writableStore().getPersistenceEvents().getQueue()
+                        DomainStore.stores().writableStore()
+                                .getPersistenceEvents().getQueue()
                                 .registerPersisting(dtrp);
                         dtr.setEvents(null);
                         dtrp.wrap(dtr);

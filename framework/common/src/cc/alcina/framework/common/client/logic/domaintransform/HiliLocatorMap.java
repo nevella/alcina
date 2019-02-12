@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  * @author nick@alcina.cc
  * 
  */
-public class HiliLocatorMap implements Cloneable, Serializable {
+public class HiliLocatorMap implements Serializable {
     static final transient long serialVersionUID = 1;
 
     private HashMap<Long, HiliLocator> localToPersistent = new HashMap<>();
@@ -44,17 +44,16 @@ public class HiliLocatorMap implements Cloneable, Serializable {
         persistentToLocal.clear();
     }
 
-    @Override
-    public synchronized HiliLocatorMap clone() {
+    public synchronized boolean containsKey(Long localId) {
+        return localToPersistent.containsKey(localId);
+    }
+
+    public synchronized HiliLocatorMap copy() {
         HiliLocatorMap clone = new HiliLocatorMap();
         clone.localToPersistent = (HashMap<Long, HiliLocator>) localToPersistent
                 .clone();
         clone.persistentToLocal = persistentToLocal.clone();
         return clone;
-    }
-
-    public synchronized boolean containsKey(Long localId) {
-        return localToPersistent.containsKey(localId);
     }
 
     public synchronized HiliLocator getFor(HasIdAndLocalId hili) {
