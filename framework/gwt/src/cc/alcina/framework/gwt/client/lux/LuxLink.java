@@ -13,7 +13,7 @@ public class LuxLink extends Widget {
 		return this;
 	}
 
-	public LuxLink style(LuxStylesType style) {
+	public LuxLink style(LuxStyleType style) {
 		style.set(this);
 		return this;
 	}

@@ -599,6 +599,10 @@ public class ClientReflectionGenerator extends Generator {
         List<JClassType> results = new ArrayList<JClassType>();
         JClassType[] types = typeOracle.getTypes();
         for (JClassType jClassType : types) {
+            if (jClassType.getQualifiedSourceName()
+                    .equals("au.com.barnet.demeter.crm.client.Contact")) {
+                int debug = 3;
+            }
             if ((hasAnnotationNamed(jClassType, ClientInstantiable.class)
                     || jClassType.isAnnotationPresent(
                             cc.alcina.framework.common.client.logic.reflection.Bean.class))
@@ -643,7 +647,7 @@ public class ClientReflectionGenerator extends Generator {
         HashMap<JClassType, Set<RegistryLocation>> results = new HashMap<JClassType, Set<RegistryLocation>>();
         JClassType[] types = typeOracle.getTypes();
         for (JClassType jct : types) {
-            if (jct.getName().matches("(?i).*shopxact.*")) {
+            if (jct.getName().matches("(?i).*AlcinaBeanSerializerC.*")) {
                 int debug = 3;
             }
             if ((jct.isAnnotationPresent(RegistryLocation.class)

@@ -1,14 +1,14 @@
 package cc.alcina.extras.dev.console.remote.client.common.resources;
 
-import cc.alcina.framework.gwt.client.lux.LuxStylesType;
+import cc.alcina.framework.gwt.client.lux.LuxStyleType;
 
-public enum RemoteConsoleStylesSearchResults implements LuxStylesType {
+public enum RemoteConsoleStylesSearchResults implements LuxStyleType {
     SEARCH_RESULTS, HEAD, RESULT;
-    public enum RemoteStylesSearchResultsHead implements LuxStylesType {
+    public enum RemoteStylesSearchResultsHead implements LuxStyleType {
         TITLE, SUBTITLE
     }
 
-    public enum RemoteStylesSearchResultsResult implements LuxStylesType {
+    public enum RemoteStylesSearchResultsResult implements LuxStyleType {
         TITLE, SUBTITLE, EXTRACT
     }
 }

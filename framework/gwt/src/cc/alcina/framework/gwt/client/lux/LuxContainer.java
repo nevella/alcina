@@ -16,7 +16,7 @@ public class LuxContainer extends Composite {
 		initWidget(container);
 	}
 
-	public LuxContainer(LuxStylesType style) {
+	public LuxContainer(LuxStyleType style) {
 		this();
 		style.set(this);
 	}
@@ -31,20 +31,20 @@ public class LuxContainer extends Composite {
 		container.add(panel);
 	}
 
-	public void addStyledHtmlBlock(LuxStylesType style, String htmlString) {
+	public void addStyledHtmlBlock(LuxStyleType style, String htmlString) {
 		HTML html = new HTML(htmlString);
 		style.set(html);
 		add(html);
 	}
 
-	public LuxContainer addStyledPanel(LuxStylesType style) {
+	public LuxContainer addStyledPanel(LuxStyleType style) {
 		LuxContainer container = new LuxContainer();
 		style.set(container);
 		add(container);
 		return container;
 	}
 
-	public void addStyledTextBlock(LuxStylesType style, String text) {
+	public void addStyledTextBlock(LuxStyleType style, String text) {
 		Label label = new Label(text);
 		style.set(label);
 		add(label);

@@ -1,5 +1,5 @@
 package cc.alcina.framework.gwt.client.lux;
 
-public enum LuxStyles implements LuxStylesType {
+public enum LuxStyle implements LuxStyleType {
 	MAIN_PANEL
 }
