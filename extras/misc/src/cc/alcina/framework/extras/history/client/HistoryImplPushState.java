@@ -17,6 +17,7 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.HistoryImpl;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 
 /**
@@ -35,61 +36,63 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
  * 
  */
 public class HistoryImplPushState extends HistoryImpl {
-	/**
-	 * Add the given token to the history using pushState.
-	 */
-	private static native void pushState(final String token) /*-{
+    /**
+     * Add the given token to the history using pushState.
+     */
+    private static native void pushState(final String token) /*-{
     var state = {
       historyToken : token
     };
     $wnd.history.pushState(state, $doc.title, token);
-	}-*/;
+    }-*/;
 
-	@Override
-	public native String decodeFragment(String encodedFragment) /*-{
+    @Override
+    public native String decodeFragment(String encodedFragment) /*-{
     return decodeURI(encodedFragment.replace("%23", "#"));
-	}-*/;
+    }-*/;
 
-	@Override
-	public boolean init() {
-		// initialize HistoryImpl with the current path
-		String initialToken = Window.Location.getPath()
-				+ Window.Location.getQueryString();
-		if (!Window.Location.getHash().isEmpty()) {
-			String hash = Window.Location.getHash();
-			AlcinaHistory.initialiseDebugIds();
-			if (hash.startsWith("#")) {
-				hash = hash.substring(1);
-			}
-			if (hash.startsWith("!")) {
-				hash = hash.substring(1);
-			}
-			if (hash.startsWith("/")) {
-				initialToken = hash;
-			}
-		}
-		updateHistoryToken(initialToken);
-		// initialize the empty state with the current history token
-		nativeUpdate(getToken());
-		// initialize the popState handler
-		initPopStateHandler();
-		return true;
-	}
+    @Override
+    public boolean init() {
+        // initialize HistoryImpl with the current path
+        String initialToken = Window.Location.getPath()
+                + Window.Location.getQueryString();
+        if (!Window.Location.getHash().isEmpty()) {
+            String hash = Window.Location.getHash();
+            if (Registry.implOrNull(AlcinaHistory.class) != null) {
+                AlcinaHistory.initialiseDebugIds();
+            }
+            if (hash.startsWith("#")) {
+                hash = hash.substring(1);
+            }
+            if (hash.startsWith("!")) {
+                hash = hash.substring(1);
+            }
+            if (hash.startsWith("/")) {
+                initialToken = hash;
+            }
+        }
+        updateHistoryToken(initialToken);
+        // initialize the empty state with the current history token
+        nativeUpdate(getToken());
+        // initialize the popState handler
+        initPopStateHandler();
+        return true;
+    }
 
-	@Override
-	public void nativeUpdate(final String historyToken) {
-		String newPushStateToken = CodeServerParameterHelper
-				.append(historyToken);
-		if (!newPushStateToken.startsWith("/")) {
-			newPushStateToken = "/" + newPushStateToken;
-		}
-		pushState(newPushStateToken);
-	}
+    @Override
+    public void nativeUpdate(final String historyToken) {
+        String newPushStateToken = CodeServerParameterHelper
+                .append(historyToken);
+        if (!newPushStateToken.startsWith("/")) {
+            newPushStateToken = "/" + newPushStateToken;
+        }
+        pushState(newPushStateToken);
+    }
 
-	/**
-	 * Initialize an event handler that gets executed when the token changes.
-	 */
-	private native void initPopStateHandler() /*-{
+    /**
+     * Initialize an event handler that gets executed when the token changes.
+     */
+    private native void initPopStateHandler() /*-{
     var that = this;
     var oldHandler = $wnd.onpopstate;
     $wnd.onpopstate = $entry(function(e) {
@@ -100,30 +103,30 @@ public class HistoryImplPushState extends HistoryImpl {
         oldHandler(e);
       }
     });
-	}-*/;
+    }-*/;
 
-	/**
-	 * Called from native JavaScript when an old history state was popped.
-	 */
-	private void onPopState(final String historyToken) {
-		updateHistoryToken(historyToken);
-		fireHistoryChangedImpl(getToken());
-	}
+    /**
+     * Called from native JavaScript when an old history state was popped.
+     */
+    private void onPopState(final String historyToken) {
+        updateHistoryToken(historyToken);
+        fireHistoryChangedImpl(getToken());
+    }
 
-	/**
-	 * Set the current path as GWT History token which can later retrieved with
-	 * {@link History#getToken()}.
-	 */
-	private void updateHistoryToken(String path) {
-		String[] split = path.split("\\?");
-		String token = split[0];
-		token = (token.length() > 0) ? decodeFragment(token) : "";
-		token = (token.startsWith("/")) ? token.substring(1) : token;
-		String queryString = (split.length == 2) ? split[1] : "";
-		queryString = CodeServerParameterHelper.remove(queryString);
-		if (queryString != null && !queryString.trim().isEmpty()) {
-			token += "?" + queryString;
-		}
-		setToken(token);
-	}
+    /**
+     * Set the current path as GWT History token which can later retrieved with
+     * {@link History#getToken()}.
+     */
+    private void updateHistoryToken(String path) {
+        String[] split = path.split("\\?");
+        String token = split[0];
+        token = (token.length() > 0) ? decodeFragment(token) : "";
+        token = (token.startsWith("/")) ? token.substring(1) : token;
+        String queryString = (split.length == 2) ? split[1] : "";
+        queryString = CodeServerParameterHelper.remove(queryString);
+        if (queryString != null && !queryString.trim().isEmpty()) {
+            token += "?" + queryString;
+        }
+        setToken(token);
+    }
 }

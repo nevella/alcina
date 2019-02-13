@@ -643,6 +643,9 @@ public class ClientReflectionGenerator extends Generator {
         HashMap<JClassType, Set<RegistryLocation>> results = new HashMap<JClassType, Set<RegistryLocation>>();
         JClassType[] types = typeOracle.getTypes();
         for (JClassType jct : types) {
+            if (jct.getName().matches("(?i).*shopxact.*")) {
+                int debug = 3;
+            }
             if ((jct.isAnnotationPresent(RegistryLocation.class)
                     || jct.isAnnotationPresent(RegistryLocations.class))
                     && !jct.isAbstract()) {
