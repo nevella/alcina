@@ -54,9 +54,16 @@ public class DtrSimpleAdminPersistenceHandler
                                 && maxCreateIdxDelta > 0;) {
                             DomainTransformEvent evt = fullRequest.getEvents()
                                     .get(createSearchIdx);
-                            if (evt.getTransformType() == TransformType.CREATE_OBJECT
-                                    || evt.getTransformType() == TransformType.DELETE_OBJECT) {
+                            if (evt.getTransformType() == TransformType.CREATE_OBJECT) {
+                                // i.e. trim the range to just before this
+                                // create event
                                 range = new IntPair(idx, createSearchIdx);
+                                break;
+                            }
+                            if (evt.getTransformType() == TransformType.DELETE_OBJECT) {
+                                // i.e. trim the range to just after this create
+                                // event
+                                range = new IntPair(idx, createSearchIdx + 1);
                                 break;
                             }
                             createSearchIdx++;

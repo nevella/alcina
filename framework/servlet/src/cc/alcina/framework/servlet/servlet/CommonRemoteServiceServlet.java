@@ -443,6 +443,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
         return persistOfflineTransforms(uncommitted, logger, null, false);
     }
 
+    // TODO - this should be renamed to "persist bulk transforms" really, since
+    // also used for large admin commits
     public int persistOfflineTransforms(List<DeltaApplicationRecord> records,
             Logger logger, Boolean useWrapperUser,
             boolean throwPersistenceExceptions) throws WebException {
