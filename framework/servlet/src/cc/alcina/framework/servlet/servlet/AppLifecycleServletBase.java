@@ -16,6 +16,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.servlet.GenericServlet;
@@ -38,6 +40,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -122,8 +125,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
             new AppServletStatusFileNotifier().destroyed();
             SEUtilities.appShutdown();
             ResourceUtilities.appShutdown();
-            Registry.impl(ServletLayerTransforms.class)
-                    .appShutdown();
+            Registry.impl(ServletLayerTransforms.class).appShutdown();
             Registry.appShutdown();
         } catch (Exception e) {
             e.printStackTrace();
@@ -358,6 +360,18 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
     }
 
     protected void launchPostInitTasks() {
+        Pattern pattern = Pattern.compile("post\\.init\\.(.+)");
+        StringMap stringMap = new StringMap(
+                ResourceUtilities.getCustomProperties());
+        stringMap.forEach((k, v) -> {
+            Matcher matcher = pattern.matcher(k);
+            if (matcher.matches()) {
+                String key = matcher.group(1);
+                Ax.out("Enabled post-init startup property: %s => %s", key, v);
+                ResourceUtilities.set(key, v);
+            }
+        });
+        EntityLayerUtils.setLogLevelsFromCustomProperties();
     }
 
     protected void loadCustomProperties() {

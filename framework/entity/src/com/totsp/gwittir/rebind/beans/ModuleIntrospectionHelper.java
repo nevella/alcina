@@ -66,6 +66,8 @@ public class ModuleIntrospectionHelper {
     }
 
     public boolean omit(JClassType type, ReflectionAction reflectionAction) {
+        ModuleIntrospectionHelper.ModuleIntrospectionClassInfo classInfo = info
+                .getInfo(type.getQualifiedSourceName(), true);
         switch (info.mode) {
         case INITIAL_ONLY:
             return !filter.getModuleName().equals(ReflectionModule.INITIAL);
@@ -74,8 +76,6 @@ public class ModuleIntrospectionHelper {
         case PER_CLASS_STRICT:
         case PER_CLASS_FORGIVING:
         case PER_CLASS_FORGIVING_LEFTOVER:
-            ModuleIntrospectionHelper.ModuleIntrospectionClassInfo classInfo = info
-                    .getInfo(type.getQualifiedSourceName(), true);
             if (classInfo.provenance == ModuleIntrospectionClassInfoProvenance.OMIT) {
                 return true;
             }
