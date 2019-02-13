@@ -116,6 +116,16 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         devOut.s2 = new NullPrintStream();
         System.setErr(err);
         System.setOut(out);
+        File devConsoleRegistry = new File(
+                "/g/alcina/extras/dev/bin/registry.properties");
+        if (!devConsoleRegistry.exists()
+                && devConsoleRegistry.getParentFile().exists()) {
+            try {
+                devConsoleRegistry.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     static final Color RED = new Color(210, 20, 20);
@@ -766,18 +776,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
                     loadConfig();
                     return null;
                 });
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    // init full jaxb
-                    WrappedObjectHelper
-                            .xmlSerialize(new DevConsoleProperties());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            };
-        }.start();
+        initJaxb();
         initState();
         devHelper.loadJbossConfig(null);
         boolean waitForUi = !devHelper.configLoaded;
@@ -831,6 +830,21 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
             classrefScanner.noPersistence();
         }
         classrefScanner.scan(cache);
+    }
+
+    protected void initJaxb() {
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    // init full jaxb
+                    WrappedObjectHelper
+                            .xmlSerialize(new DevConsoleProperties());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            };
+        }.start();
     }
 
     protected abstract void initState();

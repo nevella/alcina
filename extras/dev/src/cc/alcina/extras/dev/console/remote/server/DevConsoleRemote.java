@@ -113,7 +113,7 @@ public class DevConsoleRemote {
         // Resolve file to directory
         URI webRootUri = gwtHtmlFile.toURI().resolve("./").normalize();
         System.err.println("WebRoot is " + webRootUri);
-        HandlerCollection handlers = new HandlerCollection(true);
+        HandlerCollection handlers = new HandlerCollection();
         ContextHandler protocolHandler = new ContextHandler(handlers,
                 "/remote-console.do");
         protocolHandler.setAllowNullPathInfo(true);
