@@ -1307,7 +1307,8 @@ public class ThreadlocalTransformManager extends TransformManager
 
         public void merge(HiliLocatorMap locatorMap) {
             synchronized (locatorMap) {
-                if (!PermissionsManager.get().isLoggedIn()) {
+                if (!PermissionsManager.get().isLoggedIn() || PermissionsManager
+                        .get().getClientInstance() == null) {
                     this.locatorMap = new HiliLocatorMap();
                 } else {
                     long currentClientInstanceId = PermissionsManager.get()
