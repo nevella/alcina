@@ -24,7 +24,7 @@ import com.google.gwt.core.client.GwtScriptOnly;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 
 /**
- * never actually used, but means we don't have to do weird s**t for the hosted-mode version
+ * never actually used, but means we don't have to do weird things for hosted-mode version
  */
 @GwtScriptOnly
 public class ClientReflectorJvm extends ClientReflector {

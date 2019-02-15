@@ -8,6 +8,7 @@ import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.util.HashMap;
 
+import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.Introspector;
 import com.totsp.gwittir.client.beans.Method;
@@ -15,10 +16,13 @@ import com.totsp.gwittir.client.beans.Property;
 import com.totsp.gwittir.client.beans.SelfDescribed;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 /**
@@ -28,119 +32,143 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
  */
 @ClientInstantiable
 public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
-	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
+    private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
 
-	public JVMIntrospector() {
-		Reflections.registerBeanDescriptorProvider(this);
-	}
+    private CollectionFilter<String> filter;
 
-	public BeanDescriptor getDescriptor(Object object) {
-		if (cache.containsKey(object.getClass())) {
-			return cache.get(object.getClass());
-		}
-		BeanDescriptor result = null;
-		if (object instanceof SelfDescribed) {
-			// System.out.println("SelfDescribed\t"+
-			// object.getClass().getName());
-			result = ((SelfDescribed) object).__descriptor();
-		} else {
-			// System.out.println("Reflection\t"+ object.getClass().getName());
-			result = new ReflectionBeanDescriptor(object.getClass());
-			cache.put(object.getClass(), result);
-		}
-		return result;
-	}
+    public JVMIntrospector() {
+        Reflections.registerBeanDescriptorProvider(this);
+        String filterClassName = System
+                .getProperty(ClientReflectorJvm.PROP_FILTER_CLASSNAME);
+        if (filterClassName != null) {
+            try {
+                filter = (CollectionFilter<String>) Class
+                        .forName(filterClassName).newInstance();
+            } catch (Exception e) {
+                throw new WrappedRuntimeException(e);
+            }
+        }
+    }
 
-	public Class resolveClass(Object instance) {
-		return instance.getClass();
-	}
+    @Override
+    public BeanDescriptor getDescriptor(Object object) {
+        Class<? extends Object> clazz = object.getClass();
+        if (cache.containsKey(clazz)) {
+            return cache.get(clazz);
+        }
+        BeanDescriptor result = null;
+        if (object instanceof SelfDescribed) {
+            // System.out.println("SelfDescribed\t"+
+            // object.getClass().getName());
+            result = ((SelfDescribed) object).__descriptor();
+        } else {
+            // System.out.println("Reflection\t"+ object.getClass().getName());
+            if (filter != null && !filter.allow(clazz.getName())) {
+                GWT.log(Ax.format(
+                        "Warn: accessing filtered (reflection) class:\n%s",
+                        clazz.getName()));
+            }
+            result = new ReflectionBeanDescriptor(clazz);
+            cache.put(clazz, result);
+        }
+        return result;
+    }
 
-	public static class MethodWrapper implements Method {
-		private final java.lang.reflect.Method inner;
+    @Override
+    public Class resolveClass(Object instance) {
+        return instance.getClass();
+    }
 
-		public MethodWrapper(java.lang.reflect.Method inner) {
-			assert inner != null;
-			this.inner = inner;
-		}
+    public static class MethodWrapper implements Method {
+        private final java.lang.reflect.Method inner;
 
-		// @Override
-		// For JDK1.5 compatibility, don't override methods inherited from an
-		// interface
-		public String getName() {
-			return ((java.lang.reflect.Method) inner).toString();
-		}
+        public MethodWrapper(java.lang.reflect.Method inner) {
+            assert inner != null;
+            this.inner = inner;
+        }
 
-		// @Override
-		public Object invoke(Object target, Object[] args) throws Exception {
-			return inner.invoke(target, args);
-		}
+        // @Override
+        // For JDK1.5 compatibility, don't override methods inherited from an
+        // interface
+        @Override
+        public String getName() {
+            return ((java.lang.reflect.Method) inner).toString();
+        }
 
-		@Override
-		public String toString() {
-			return inner.toString();
-		}
-	}
+        // @Override
+        @Override
+        public Object invoke(Object target, Object[] args) throws Exception {
+            return inner.invoke(target, args);
+        }
 
-	public static class ReflectionBeanDescriptor implements BeanDescriptor {
-		BeanInfo info;
+        @Override
+        public String toString() {
+            return inner.toString();
+        }
+    }
 
-		Property[] props;
+    public static class ReflectionBeanDescriptor implements BeanDescriptor {
+        BeanInfo info;
 
-		String className;
+        Property[] props;
 
-		public ReflectionBeanDescriptor(Class clazz) {
-			try {
-				className = clazz.getName();
-				ClientReflectorJvm.checkClassAnnotations(clazz);
-				info = java.beans.Introspector.getBeanInfo(clazz);
-				props = new Property[info.getPropertyDescriptors().length - 1];
-				int index = 0;
-				Class enumSubclass = null;
-				for (PropertyDescriptor d : info.getPropertyDescriptors()) {
-					Class<?> propertyType = d.getPropertyType();
-					if (propertyType != null && propertyType.isEnum()
-							&& propertyType.getSuperclass() == Enum.class
-							&& propertyType != Direction.class) {
-						// hacky - but works
-						enumSubclass = propertyType;
-					}
-				}
-				for (PropertyDescriptor d : info.getPropertyDescriptors()) {
-					Class<?> propertyType = d.getPropertyType();
-					if (propertyType == Enum.class
-							&& d.getName().equals("value")) {
-						propertyType = enumSubclass;
-						assert propertyType != null;
-					}
-					if (d.getName().equals("class")) {
-						continue;
-					}
-					props[index] = new Property(d.getName(), propertyType,
-							d.getReadMethod() == null ? null
-									: new MethodWrapper(d.getReadMethod()),
-							d.getWriteMethod() == null ? null
-									: new MethodWrapper(d.getWriteMethod()));
-					// System.out.println(clazz+" mapped property:
-					// "+props[index]);
-					index++;
-				}
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
+        String className;
 
-		public Property[] getProperties() {
-			return this.props;
-		}
+        public ReflectionBeanDescriptor(Class clazz) {
+            try {
+                className = clazz.getName();
+                ClientReflectorJvm.checkClassAnnotations(clazz);
+                info = java.beans.Introspector.getBeanInfo(clazz);
+                props = new Property[info.getPropertyDescriptors().length - 1];
+                int index = 0;
+                Class enumSubclass = null;
+                for (PropertyDescriptor d : info.getPropertyDescriptors()) {
+                    Class<?> propertyType = d.getPropertyType();
+                    if (propertyType != null && propertyType.isEnum()
+                            && propertyType.getSuperclass() == Enum.class
+                            && propertyType != Direction.class) {
+                        // hacky - but works
+                        enumSubclass = propertyType;
+                    }
+                }
+                for (PropertyDescriptor d : info.getPropertyDescriptors()) {
+                    Class<?> propertyType = d.getPropertyType();
+                    if (propertyType == Enum.class
+                            && d.getName().equals("value")) {
+                        propertyType = enumSubclass;
+                        assert propertyType != null;
+                    }
+                    if (d.getName().equals("class")) {
+                        continue;
+                    }
+                    props[index] = new Property(d.getName(), propertyType,
+                            d.getReadMethod() == null ? null
+                                    : new MethodWrapper(d.getReadMethod()),
+                            d.getWriteMethod() == null ? null
+                                    : new MethodWrapper(d.getWriteMethod()));
+                    // System.out.println(clazz+" mapped property:
+                    // "+props[index]);
+                    index++;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
 
-		public Property getProperty(String name) {
-			for (Property p : props) {
-				if (p.getName().equals(name)) {
-					return p;
-				}
-			}
-			throw new NoSuchPropertyException(
-					"Unknown property: " + name + " on class " + className);
-		}
-	}
+        @Override
+        public Property[] getProperties() {
+            return this.props;
+        }
+
+        @Override
+        public Property getProperty(String name) {
+            for (Property p : props) {
+                if (p.getName().equals(name)) {
+                    return p;
+                }
+            }
+            throw new NoSuchPropertyException(
+                    "Unknown property: " + name + " on class " + className);
+        }
+    }
 }

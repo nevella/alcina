@@ -19,6 +19,8 @@ public abstract class AlcinaBeanSerializer {
 
     protected static final String LITERAL = "lit";
 
+    protected static final String REF = "ref";
+
     public static <V> V deserializeHolder(String serialized) {
         if (serialized == null) {
             return null;

@@ -36,212 +36,226 @@ import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
  * @author Nick Reddel
  */
 public class Link<T> extends Widget
-		implements HasHTML, HasEnabled, HasClickHandlers, HasItem<T>, HasText {
-	public static Link createHashHref(String text, String token) {
-		return createHrefNoUnderline(text, "#" + token);
-	}
+        implements HasHTML, HasEnabled, HasClickHandlers, HasItem<T>, HasText {
+    public static Link createHashHref(String text, String token) {
+        return createHrefNoUnderline(text, "#" + token);
+    }
 
-	public static Link createHrefNoUnderline(String text,
-			AlcinaHistoryItem epoch) {
-		return createHrefNoUnderline(text, epoch.toHref());
-	}
+    public static Link createHref(String text, String href) {
+        Link link = new Link(text);
+        link.setHref(href);
+        return link;
+    }
 
-	public static Link createHrefNoUnderline(String text, String href) {
-		Link link = new Link(text);
-		link.setHref(href);
-		link.noUnderline();
-		return link;
-	}
+    public static Link createHrefNoUnderline(String text,
+            AlcinaHistoryItem epoch) {
+        return createHrefNoUnderline(text, epoch.toHref());
+    }
 
-	public static Link createNoUnderline(String text, ClickHandler handler) {
-		Link link = new Link(text, handler);
-		link.noUnderline();
-		return link;
-	}
+    public static Link createHrefNoUnderline(String text, String href) {
+        Link link = new Link(text);
+        link.setHref(href);
+        link.noUnderline();
+        return link;
+    }
 
-	protected Element anchorElem;
+    public static Link createNoUnderline(String text, ClickHandler handler) {
+        Link link = new Link(text, handler);
+        link.noUnderline();
+        return link;
+    }
 
-	private T userObject;
+    public static Link createPlace(String text, BasePlace place) {
+        return createHashHref(text, place.toTokenString());
+    }
 
-	private boolean preventDefault = true;
+    protected Element anchorElem;
 
-	private boolean enabled = true;
+    private T userObject;
 
-	/**
-	 * Creates an empty hyperlink.
-	 */
-	public Link() {
-		anchorElem = DOM.createAnchor();
-		createElement();
-		setStyleName("gwt-Hyperlink alcina-NoHistory");
-		setHref("#");
-	}
+    private boolean preventDefault = true;
 
-	/**
-	 * Creates a hyperlink with its text and target history token specified.
-	 * 
-	 * @param text
-	 *            the hyperlink's text
-	 * @param asHTML
-	 *            <code>true</code> to treat the specified text as html
-	 */
-	public Link(String text) {
-		this(text, false);
-	}
+    private boolean enabled = true;
 
-	public Link(String text, AlcinaHistoryItem historyItem) {
-		this(text, false);
-		setHref(historyItem.toHref());
-	}
+    /**
+     * Creates an empty hyperlink.
+     */
+    public Link() {
+        anchorElem = DOM.createAnchor();
+        createElement();
+        setStyleName("gwt-Hyperlink alcina-NoHistory");
+        setHref("#");
+    }
 
-	public Link(String text, boolean asHTML) {
-		this();
-		if (asHTML) {
-			setHTML(text);
-		} else {
-			setText(text);
-		}
-	}
+    /**
+     * Creates a hyperlink with its text and target history token specified.
+     * 
+     * @param text
+     *            the hyperlink's text
+     * @param asHTML
+     *            <code>true</code> to treat the specified text as html
+     */
+    public Link(String text) {
+        this(text, false);
+    }
 
-	public Link(String string, boolean asHTML, ClickHandler handler) {
-		this(string, asHTML);
-		addDomHandler(handler, ClickEvent.getType());
-	}
+    public Link(String text, AlcinaHistoryItem historyItem) {
+        this(text, false);
+        setHref(historyItem.toHref());
+    }
 
-	public Link(String string, ClickHandler handler) {
-		this(string, false, handler);
-	}
+    public Link(String text, boolean asHTML) {
+        this();
+        if (asHTML) {
+            setHTML(text);
+        } else {
+            setText(text);
+        }
+    }
 
-	public HandlerRegistration addClickHandler(ClickHandler handler) {
-		return addDomHandler(handler, ClickEvent.getType());
-	}
+    public Link(String string, boolean asHTML, ClickHandler handler) {
+        this(string, asHTML);
+        addDomHandler(handler, ClickEvent.getType());
+    }
 
-	public String getHref() {
-		return anchorElem.getPropertyString("href");
-	}
+    public Link(String string, ClickHandler handler) {
+        this(string, false, handler);
+    }
 
-	public String getHTML() {
-		return anchorElem.getInnerHTML();
-	}
+    @Override
+    public HandlerRegistration addClickHandler(ClickHandler handler) {
+        return addDomHandler(handler, ClickEvent.getType());
+    }
 
-	@Override
-	public T getItem() {
-		return userObject;
-	}
+    public String getHref() {
+        return anchorElem.getPropertyString("href");
+    }
 
-	public String getTarget() {
-		return anchorElem.getPropertyString("target");
-	}
+    @Override
+    public String getHTML() {
+        return anchorElem.getInnerHTML();
+    }
 
-	public String getText() {
-		return anchorElem.getInnerText();
-	}
+    @Override
+    public T getItem() {
+        return userObject;
+    }
 
-	public T getUserObject() {
-		return userObject;
-	}
+    public String getTarget() {
+        return anchorElem.getPropertyString("target");
+    }
 
-	public boolean isEnabled() {
-		return enabled;
-	}
+    @Override
+    public String getText() {
+        return anchorElem.getInnerText();
+    }
 
-	public boolean isPreventDefault() {
-		return this.preventDefault;
-	}
+    public T getUserObject() {
+        return userObject;
+    }
 
-	public Link noUnderline() {
-		setStyleName("link-no-underline");
-		return this;
-	}
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
 
-	@Override
-	public void onBrowserEvent(Event event) {
-		if (DOM.eventGetType(event) == Event.ONCLICK) {
-			if (!WidgetUtils.isNewTabModifier() && preventDefault) {
-				event.preventDefault();
-			}
-			if (enabled) {
-				super.onBrowserEvent(event);
-			}
-		}
-	}
+    public boolean isPreventDefault() {
+        return this.preventDefault;
+    }
 
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-		if (enabled) {
-			removeStyleName("disabled");
-		} else {
-			addStyleName("disabled");
-		}
-	}
+    public Link noUnderline() {
+        setStyleName("link-no-underline");
+        return this;
+    }
 
-	public void setEpoch(AlcinaHistoryItem epoch) {
-		setHref(epoch.toHref());
-	}
+    @Override
+    public void onBrowserEvent(Event event) {
+        if (DOM.eventGetType(event) == Event.ONCLICK) {
+            if (!WidgetUtils.isNewTabModifier() && preventDefault) {
+                event.preventDefault();
+            }
+            if (enabled) {
+                super.onBrowserEvent(event);
+            }
+        }
+    }
 
-	public void setHref(String href) {
-		anchorElem.setPropertyString("href", href);
-		if (href != null && !href.matches("#?")) {
-			setPreventDefault(false);
-		}
-	}
+    @Override
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        if (enabled) {
+            removeStyleName("disabled");
+        } else {
+            addStyleName("disabled");
+        }
+    }
 
-	public void setHTML(String html) {
-		anchorElem.setInnerHTML(html);
-	}
+    public void setEpoch(AlcinaHistoryItem epoch) {
+        setHref(epoch.toHref());
+    }
 
-	public void setPreventDefault(boolean preventDefault) {
-		this.preventDefault = preventDefault;
-	}
+    public void setHref(String href) {
+        anchorElem.setPropertyString("href", href);
+        if (href != null && !href.matches("#?")) {
+            setPreventDefault(false);
+        }
+    }
 
-	public void setTarget(String target) {
-		anchorElem.setPropertyString("target", target);
-	}
+    @Override
+    public void setHTML(String html) {
+        anchorElem.setInnerHTML(html);
+    }
 
-	public void setText(String text) {
-		anchorElem.setInnerText(text);
-	}
+    public void setPreventDefault(boolean preventDefault) {
+        this.preventDefault = preventDefault;
+    }
 
-	public void setTitle(String title) {
-		if (title == null || title.length() == 0) {
-			anchorElem.removeAttribute(title);
-		} else {
-			anchorElem.setAttribute("title",title);
-		}
-	}
+    public void setTarget(String target) {
+        anchorElem.setPropertyString("target", target);
+    }
 
-	public void setUserObject(T userObject) {
-		this.userObject = userObject;
-	}
+    @Override
+    public void setText(String text) {
+        anchorElem.setInnerText(text);
+    }
 
-	public void setWordWrap(boolean wrap) {
-		getElement().getStyle().setProperty("whiteSpace",
-				wrap ? "normal" : "nowrap");
-	}
+    @Override
+    public void setTitle(String title) {
+        if (title == null || title.length() == 0) {
+            anchorElem.removeAttribute(title);
+        } else {
+            anchorElem.setAttribute("title", title);
+        }
+    }
 
-	protected void createElement() {
-		setElement(anchorElem);
-	}
+    public void setUserObject(T userObject) {
+        this.userObject = userObject;
+    }
 
-	/**
-	 * <b>Affected Elements:</b>
-	 * <ul>
-	 * <li>-wrapper = the div around the link.</li>
-	 * </ul>
-	 * 
-	 * @see UIObject#onEnsureDebugId(String)
-	 */
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		ensureDebugId(anchorElem, "", baseID);
-	}
+    public void setWordWrap(boolean wrap) {
+        getElement().getStyle().setProperty("whiteSpace",
+                wrap ? "normal" : "nowrap");
+    }
 
-	public static Link createPlace(String text, BasePlace place) {
-		return createHashHref(text, place.toTokenString());
-	}
+    public Link withTarget(String target) {
+        setTarget(target);
+        return this;
+    }
 
-	public Link withTarget(String target) {
-		setTarget(target);
-		return this;
-	}
+    protected void createElement() {
+        setElement(anchorElem);
+    }
+
+    /**
+     * <b>Affected Elements:</b>
+     * <ul>
+     * <li>-wrapper = the div around the link.</li>
+     * </ul>
+     * 
+     * @see UIObject#onEnsureDebugId(String)
+     */
+    @Override
+    protected void onEnsureDebugId(String baseID) {
+        ensureDebugId(anchorElem, "", baseID);
+    }
 }

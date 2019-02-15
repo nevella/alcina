@@ -96,6 +96,8 @@ import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.gwittir.widget.EndRowButtonClickedEvent.EndRowButtonClickedHandler;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
+import cc.alcina.framework.gwt.client.gwittir.widget.GridFormCellRenderer;
+import cc.alcina.framework.gwt.client.gwittir.widget.GridFormCellRendererGrid;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
@@ -219,6 +221,8 @@ public class ContentViewFactory {
 
     private int tableMask;
 
+    private GridFormCellRenderer cellRenderer;
+
     public ContentViewFactory actionListener(
             PermissibleActionListener actionListener) {
         this.actionListener = actionListener;
@@ -339,7 +343,10 @@ public class ContentViewFactory {
             fieldList.stream().forEach(fieldPostReflectiveSetupModifier);
         }
         Field[] fields = fieldList.toArray(new Field[fieldList.size()]);
-        GridForm f = new GridForm(fields, 1, factory, horizontalGrid);
+        if (cellRenderer == null) {
+            cellRenderer = new GridFormCellRendererGrid(horizontalGrid);
+        }
+        GridForm f = new GridForm(fields, 1, factory, cellRenderer);
         if (tableStyleName != null) {
             f.addStyleName(tableStyleName);
         }
@@ -680,6 +687,10 @@ public class ContentViewFactory {
 
     public void setCancelButton(boolean cancelButton) {
         this.cancelButton = cancelButton;
+    }
+
+    public void setCellRenderer(GridFormCellRenderer cellRenderer) {
+        this.cellRenderer = cellRenderer;
     }
 
     public void setEndRowButtonClickedHandler(

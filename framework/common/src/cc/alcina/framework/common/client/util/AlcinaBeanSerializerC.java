@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -41,6 +42,10 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
     CachingMap<Class, AlcinaBeanSerializerCCustom> customSerializers = new CachingMap<Class, AlcinaBeanSerializerCCustom>(
             clazz -> Registry.implOrNull(AlcinaBeanSerializerCCustom.class,
                     clazz));
+
+    IdentityHashMap seenOut = new IdentityHashMap();
+
+    Map seenIn = new LinkedHashMap();
 
     public AlcinaBeanSerializerC() {
         propertyFieldName = PROPERTIES;
@@ -147,7 +152,11 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
         if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
             return deserializeField(jsonObj.get(LITERAL), clazz);
         }
+        if (jsonObj.containsKey(REF)) {
+            return seenIn.get(jsonObj.get(REF));
+        }
         Object obj = Reflections.classLookup().newInstance(clazz);
+        seenIn.put(seenIn.size(), obj);
         GwittirBridge gb = GwittirBridge.get();
         for (String propertyName : props.keySet()) {
             try {
@@ -248,6 +257,12 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
         if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
             jo.put(LITERAL, serializeField(object, clazz));
             return jo;
+        }
+        if (seenOut.containsKey(object)) {
+            jo.put(REF, new JSONNumber((int) seenOut.get(object)));
+            return jo;
+        } else {
+            seenOut.put(object, seenOut.size());
         }
         AlcinaBeanSerializerCCustom customSerializer = customSerializers
                 .get(clazz);

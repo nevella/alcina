@@ -41,6 +41,7 @@ import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
+import cc.alcina.framework.gwt.client.gwittir.widget.GridFormCellRendererGrid;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.RecheckVisibilityHandler;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -53,137 +54,143 @@ import cc.alcina.framework.gwt.client.widget.Link;
  * @author Nick Reddel
  */
 public class ChildBeanCustomiser implements Customiser {
-	public static final String EXCLUDE_FIELDS = "EXCLUDE_FIELDS";
+    public static final String EXCLUDE_FIELDS = "EXCLUDE_FIELDS";
 
-	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, Custom info) {
-		String excludesStr = NamedParameter.Support
-				.stringValue(info.parameters(), EXCLUDE_FIELDS, null);
-		return new ChildBeanRenderer(editable, objectClass, excludesStr);
-	}
+    @Override
+    public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
+            boolean multiple, Custom info) {
+        String excludesStr = NamedParameter.Support
+                .stringValue(info.parameters(), EXCLUDE_FIELDS, null);
+        return new ChildBeanRenderer(editable, objectClass, excludesStr);
+    }
 
-	public static class ChildBeanRenderer implements BoundWidgetProvider {
-		private final boolean editable;
+    public static class ChildBeanRenderer implements BoundWidgetProvider {
+        private final boolean editable;
 
-		private final Class objectClass;
+        private final Class objectClass;
 
-		private String excludesStr;
+        private String excludesStr;
 
-		public ChildBeanRenderer(boolean editable, Class objectClass,
-				String excludesStr) {
-			this.editable = editable;
-			this.objectClass = objectClass;
-			this.excludesStr = excludesStr;
-		}
+        public ChildBeanRenderer(boolean editable, Class objectClass,
+                String excludesStr) {
+            this.editable = editable;
+            this.objectClass = objectClass;
+            this.excludesStr = excludesStr;
+        }
 
-		public BoundWidget get() {
-			return new ChildBeanWidget(objectClass, editable, excludesStr);
-		}
-	}
+        @Override
+        public BoundWidget get() {
+            return new ChildBeanWidget(objectClass, editable, excludesStr);
+        }
+    }
 
-	public static class ChildBeanWidget extends AbstractBoundWidget
-			implements MultilineWidget, HasBinding {
-		private FlowPanel fp;
+    public static class ChildBeanWidget extends AbstractBoundWidget
+            implements MultilineWidget, HasBinding {
+        private FlowPanel fp;
 
-		private GridForm gridForm;
+        private GridForm gridForm;
 
-		private FlowPanel createPanel;
+        private FlowPanel createPanel;
 
-		private final Class objectClass;
+        private final Class objectClass;
 
-		public ChildBeanWidget(Class objectClass, final boolean editable,
-				String excludesStr) {
-			this.objectClass = objectClass;
-			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-			Object bean = ClientReflector.get()
-					.getTemplateInstance(objectClass);
-			List<String> excludeList = excludesStr == null ? new ArrayList<>()
-					: Arrays.asList(excludesStr.split(","));
-			Predicate<Field> filter = f -> !excludeList
-					.contains(f.getPropertyName());
-			List<Field> fieldList = Arrays
-					.asList(GwittirBridge.get()
-							.fieldsForReflectedObjectAndSetupWidgetFactory(bean,
-									factory, editable, false))
-					.stream().filter(filter).collect(Collectors.toList());
-			Field[] fields = (Field[]) fieldList
-					.toArray(new Field[fieldList.size()]);
-			this.gridForm = new GridForm(fields, 1, factory, false);
-			gridForm.setDirectSetModelDisabled(true);
-			gridForm.addAttachHandler(new RecheckVisibilityHandler(gridForm));
-			// the model should be the child
-			// bean(value), not the parent
-			gridForm.setStyleName("alcina-ChildBean");
-			this.fp = new FlowPanel();
-			gridForm.setVisible(false);
-			this.createPanel = new FlowPanel();
-			Link h = new Link("[Create]");
-			h.addClickHandler(new ClickHandler() {
-				public void onClick(ClickEvent event) {
-					Class clazz = ChildBeanWidget.this.objectClass;
-					boolean autoSave = ClientBase.getGeneralProperties()
-							.isAutoSave();
-					HasIdAndLocalId obj = autoSave
-							? TransformManager.get().createDomainObject(clazz)
-							: TransformManager.get()
-									.createProvisionalObject(clazz);
-					ClientTransformManager.cast().prepareObject(obj, autoSave,
-							true, editable);
-					//FIXME - so many more elegant ways to do this...but...
-					// register with the containing savepanel
-					PaneWrapperWithObjects container = WidgetUtils
-							.getParentWidget(ChildBeanWidget.this,
-									PaneWrapperWithObjects.class);
-					if (container != null) {
-						if (container.getObjects() != null) {
-							// provisional
-							container.getObjects().add(obj);
-						}
-					}
-					fp.remove(gridForm);
-					setValue(obj);
-					// forces onattach
-					fp.add(gridForm);
-				}
-			});
-			if (editable) {
-				createPanel.add(h);
-			} else {
-				createPanel.add(new Label("[null]"));
-			}
-			fp.add(createPanel);
-			fp.add(gridForm);
-			setValue(null);
-			initWidget(fp);
-		}
+        public ChildBeanWidget(Class objectClass, final boolean editable,
+                String excludesStr) {
+            this.objectClass = objectClass;
+            BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
+            Object bean = ClientReflector.get()
+                    .getTemplateInstance(objectClass);
+            List<String> excludeList = excludesStr == null ? new ArrayList<>()
+                    : Arrays.asList(excludesStr.split(","));
+            Predicate<Field> filter = f -> !excludeList
+                    .contains(f.getPropertyName());
+            List<Field> fieldList = Arrays
+                    .asList(GwittirBridge.get()
+                            .fieldsForReflectedObjectAndSetupWidgetFactory(bean,
+                                    factory, editable, false))
+                    .stream().filter(filter).collect(Collectors.toList());
+            Field[] fields = (Field[]) fieldList
+                    .toArray(new Field[fieldList.size()]);
+            this.gridForm = new GridForm(fields, 1, factory,
+                    new GridFormCellRendererGrid(false));
+            gridForm.setDirectSetModelDisabled(true);
+            gridForm.addAttachHandler(new RecheckVisibilityHandler(gridForm));
+            // the model should be the child
+            // bean(value), not the parent
+            gridForm.setStyleName("alcina-ChildBean");
+            this.fp = new FlowPanel();
+            gridForm.setVisible(false);
+            this.createPanel = new FlowPanel();
+            Link h = new Link("[Create]");
+            h.addClickHandler(new ClickHandler() {
+                @Override
+                public void onClick(ClickEvent event) {
+                    Class clazz = ChildBeanWidget.this.objectClass;
+                    boolean autoSave = ClientBase.getGeneralProperties()
+                            .isAutoSave();
+                    HasIdAndLocalId obj = autoSave
+                            ? TransformManager.get().createDomainObject(clazz)
+                            : TransformManager.get()
+                                    .createProvisionalObject(clazz);
+                    ClientTransformManager.cast().prepareObject(obj, autoSave,
+                            true, editable);
+                    // FIXME - so many more elegant ways to do this...but...
+                    // register with the containing savepanel
+                    PaneWrapperWithObjects container = WidgetUtils
+                            .getParentWidget(ChildBeanWidget.this,
+                                    PaneWrapperWithObjects.class);
+                    if (container != null) {
+                        if (container.getObjects() != null) {
+                            // provisional
+                            container.getObjects().add(obj);
+                        }
+                    }
+                    fp.remove(gridForm);
+                    setValue(obj);
+                    // forces onattach
+                    fp.add(gridForm);
+                }
+            });
+            if (editable) {
+                createPanel.add(h);
+            } else {
+                createPanel.add(new Label("[null]"));
+            }
+            fp.add(createPanel);
+            fp.add(gridForm);
+            setValue(null);
+            initWidget(fp);
+        }
 
-		@Override
-		public Binding getBinding() {
-			return gridForm.getBinding();
-		}
+        @Override
+        public Binding getBinding() {
+            return gridForm.getBinding();
+        }
 
-		public Object getValue() {
-			return gridForm.getValue();
-		}
+        @Override
+        public Object getValue() {
+            return gridForm.getValue();
+        }
 
-		@Override
-		public boolean isMultiline() {
-			return true;
-		}
+        @Override
+        public boolean isMultiline() {
+            return true;
+        }
 
-		public void setValue(Object value) {
-			Object old = getValue();
-			boolean showCreate = value == null;
-			createPanel.setVisible(showCreate);
-			gridForm.setVisible(!showCreate);
-			if (value != null) {
-				gridForm.setValue(value);
-			}
-			if (this.getValue() != old
-					&& (this.getValue() == null || (this.getValue() != null
-							&& !this.getValue().equals(old)))) {
-				this.changes.firePropertyChange("value", old, this.getValue());
-			}
-		}
-	}
+        @Override
+        public void setValue(Object value) {
+            Object old = getValue();
+            boolean showCreate = value == null;
+            createPanel.setVisible(showCreate);
+            gridForm.setVisible(!showCreate);
+            if (value != null) {
+                gridForm.setValue(value);
+            }
+            if (this.getValue() != old
+                    && (this.getValue() == null || (this.getValue() != null
+                            && !this.getValue().equals(old)))) {
+                this.changes.firePropertyChange("value", old, this.getValue());
+            }
+        }
+    }
 }

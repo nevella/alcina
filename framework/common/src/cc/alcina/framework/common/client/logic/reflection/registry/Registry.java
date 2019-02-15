@@ -47,6 +47,42 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCre
 /**
  *
  * @author Nick Reddel
+ * 
+ *         <h3>To add jvm-only functionality</h3>
+ *         <p>
+ *         This is equivalent to "add a class in a location visible to both the
+ *         bytecode and gwt compilers where the default implementation is a
+ *         noop".
+ * 
+ *         Since we know the default implementation, make the noop
+ *         implementation be the registrypoint itself:
+ *         </p>
+ * 
+ *         <pre>
+ *         // ImplementationType.INSTANCE required for registry override
+ *         &#64;RegistryLocation(registryPoint = DoSomethingFunky.class, implementationType = ImplementationType.INSTANCE)
+ *         public class DoSomethingFunky {
+ *             public void justDoIt() {
+ *                 // noop
+ *             }
+ *         }
+ *         </pre>
+ *         <p>
+ *         and, visible to the bytecode compiler only:
+ *         </p>
+ * 
+ *         <pre>
+ *         // priority=RegistryLocation.MANUAL_PRIORITY means use this by preference
+ *         // (when visible)
+ *         &#64;RegistryLocation(registryPoint = DoSomethingFunky.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.MANUAL_PRIORITY)
+ *         public class DoSomethingFunkyJvmImpl {
+ *             public void justDoIt() {
+ *                 // do incredible jvm-only deeds
+ *             }
+ *         }
+ *         </pre>
+ * 
+ * 
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class Registry {

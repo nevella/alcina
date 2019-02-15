@@ -33,7 +33,6 @@ import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyExceptio
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -41,6 +40,7 @@ import cc.alcina.framework.entity.SEUtilities;
 
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = 15)
 @ClientInstantiable
+// hack for some classloader issues causing AlcinaBeanSerializerS to be unusable
 public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
     private static boolean useContextClassloader;
 
@@ -56,7 +56,9 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 
     private boolean pretty;
 
-    IdentityHashMap seen = new IdentityHashMap();
+    IdentityHashMap seenOut = new IdentityHashMap();
+
+    Map seenIn = new LinkedHashMap();
 
     public AlcinaBeanSerializerS2() {
         propertyFieldName = PROPERTIES;
@@ -68,10 +70,7 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
             JSONObject obj = new JSONObject(jsonString);
             if (GWT.isClient() && !useContextClassloader) {
                 // devmode
-                cl = getClass().getClassLoader();
-                if (cl.getParent() != null) {
-                    cl = cl.getParent();
-                }
+                cl = getClass().getClassLoader().getParent();
             } else {
                 cl = Thread.currentThread().getContextClassLoader();
             }
@@ -172,9 +171,16 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
                 || clazz == Class.class) {
             return deserializeField(jsonObj.get(LITERAL), clazz);
         }
+        if (jsonObj.has(REF)) {
+            Object index = jsonObj.get(REF);
+            Object object = seenIn.get(index);
+            return object;
+        }
         JSONObject props = (JSONObject) jsonObj
                 .get(getPropertyFieldName(jsonObj));
-        Object obj = Reflections.classLookup().newInstance(clazz);
+        Object object = Reflections.classLookup().newInstance(clazz);
+        int index = seenIn.size();
+        seenIn.put(index, object);
         String[] names = JSONObject.getNames(props);
         if (names != null) {
             for (String propertyName : names) {
@@ -196,7 +202,7 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
                         // use default, probably a refactoring issue
                     } else {
                         try {
-                            SEUtilities.setPropertyValue(obj, propertyName,
+                            SEUtilities.setPropertyValue(object, propertyName,
                                     value2);
                         } catch (NoSuchPropertyException e) {
                         }
@@ -204,7 +210,7 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
                 }
             }
         }
-        return obj;
+        return object;
     }
 
     private String getPropertyFieldName(JSONObject jsonObj) {
@@ -288,11 +294,12 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
             jo.put(LITERAL, serializeField(object, clazz));
             return jo;
         }
-        if (seen.containsKey(object)) {
-            throw new RuntimeException(Ax.format("Cycle in jso graph - %s",
-                    object.getClass().getSimpleName()));
+        if (seenOut.containsKey(object)) {
+            jo.put(REF, seenOut.get(object));
+            return jo;
         } else {
-            seen.put(object, object);
+            int index = seenOut.size();
+            seenOut.put(object, index);
         }
         List<PropertyDescriptor> unsortedPropertyDescriptors = SEUtilities
                 .getSortedPropertyDescriptors(clazz);
@@ -322,7 +329,6 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
                         propertyDescriptor.getPropertyType()));
             }
         }
-        seen.remove(object);
         return jo;
     }
 

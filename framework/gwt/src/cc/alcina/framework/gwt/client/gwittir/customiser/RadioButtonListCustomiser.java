@@ -40,6 +40,8 @@ public class RadioButtonListCustomiser implements Customiser {
 
     public static final String GROUP_NAME = "groupName";
 
+    public static final String RADIO_BUTTON_STYLE_NAME = "radioButtonStyleName";
+
     public static final String COLUMN_COUNT = "columnCount";
 
     @Override
@@ -54,10 +56,12 @@ public class RadioButtonListCustomiser implements Customiser {
                     .instantiateClass(parameters, RENDERER_CLASS);
             String groupName = NamedParameter.Support.stringValue(parameters,
                     GROUP_NAME, null);
+            String radioButtonStyleName = NamedParameter.Support
+                    .stringValue(parameters, RADIO_BUTTON_STYLE_NAME, null);
             int columnCount = NamedParameter.Support.intValue(parameters,
                     COLUMN_COUNT, 1);
             return new RadioButtonListProvider(supplier, renderer, groupName,
-                    columnCount);
+                    columnCount, radioButtonStyleName);
         } else {
             if (multiple) {
                 int maxLength = GwittirBridge.MAX_EXPANDABLE_LABEL_LENGTH;
@@ -78,18 +82,22 @@ public class RadioButtonListCustomiser implements Customiser {
 
         private int columnCount;
 
+        private String radioButtonStyleName;
+
         public RadioButtonListProvider(Supplier supplier, Renderer renderer,
-                String groupName, int columnCount) {
+                String groupName, int columnCount,
+                String radioButtonStyleName) {
             this.supplier = supplier;
             this.renderer = renderer;
             this.groupName = groupName;
             this.columnCount = columnCount;
+            this.radioButtonStyleName = radioButtonStyleName;
         }
 
         @Override
         public BoundWidget get() {
             return new RadioButtonList(groupName, (Collection) supplier.get(),
-                    renderer, columnCount);
+                    renderer, columnCount, radioButtonStyleName);
         }
     }
 }
