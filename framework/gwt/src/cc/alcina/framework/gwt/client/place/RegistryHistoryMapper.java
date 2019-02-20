@@ -112,7 +112,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
         Optional<BasePlaceTokenizer> o_tokenizer = tokenizersByPrefix
                 .getAndEnsure(top).stream()
                 .filter(tokenizer -> tokenizer.handles(token)).findFirst();
-        if (!o_tokenizer.isPresent() && top.length() > 1) {
+        if (!o_tokenizer.isPresent() && top.length() > 1 && split.length > 1) {
             top = split[0] + "/" + split[1];
             o_tokenizer = tokenizersByPrefix.getAndEnsure(top).stream()
                     .filter(tokenizer -> tokenizer.handles(token)).findFirst();
