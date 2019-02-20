@@ -90,6 +90,11 @@ public class ThreadedPermissionsManager extends PermissionsManager {
     }
 
     @Override
+    public Long getClientInstanceId() {
+        return ThreadedPmClientInstanceResolver.get().getClientInstanceId();
+    }
+
+    @Override
     public PermissionsManager getT() {
         return (ThreadedPermissionsManager) getTTL.get();
     }

@@ -19,6 +19,8 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
+import java.util.Arrays;
+
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.BlurEvent;
@@ -178,8 +180,19 @@ public class GridForm extends AbstractTableWidget
         return this.binding;
     }
 
+    public <T extends Widget> T getBoundWidget(Field field) {
+        int idx = Arrays.asList(fields).indexOf(field);
+        return idx == -1 ? null : cellRenderer.getBoundWidget(idx);
+    }
+
     public <T extends Widget> T getBoundWidget(int row) {
         return cellRenderer.getBoundWidget(row);
+    }
+
+    public <T extends Widget> T getBoundWidget(String fieldName) {
+        return (T) Arrays.asList(fields).stream()
+                .filter(f -> f.getPropertyName().equals(fieldName))
+                .map(this::getBoundWidget).findFirst().orElse(null);
     }
 
     public Field[] getFields() {

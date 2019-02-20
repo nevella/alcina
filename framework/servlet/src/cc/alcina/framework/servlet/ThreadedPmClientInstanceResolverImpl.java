@@ -5,7 +5,6 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPmClientInstanceResolver;
@@ -19,6 +18,9 @@ public class ThreadedPmClientInstanceResolverImpl
 
     @Override
     public ClientInstance getClientInstance() {
+        if (LooseContext.has(CONTEXT_CLIENT_INSTANCE)) {
+            return LooseContext.get(CONTEXT_CLIENT_INSTANCE);
+        }
         HttpServletRequest request = CommonRemoteServiceServlet
                 .getContextThreadLocalRequest();
         ClientInstance result = null;
@@ -26,15 +28,29 @@ public class ThreadedPmClientInstanceResolverImpl
             Long clientInstanceId = SessionHelper
                     .getAuthenticatedSessionClientInstanceId(request);
             if (clientInstanceId != null) {
-                result = Registry.impl(CommonPersistenceProvider.class)
-                        .getCommonPersistence()
+                result = CommonPersistenceProvider.get().getCommonPersistence()
                         .getClientInstance(clientInstanceId);
             }
         }
-        if (LooseContext.has(CONTEXT_CLIENT_INSTANCE)) {
-            return LooseContext.get(CONTEXT_CLIENT_INSTANCE);
-        }
         return Optional.<ClientInstance> ofNullable(result).orElse(
                 ServletLayerTransforms.get().getServerAsClientInstance());
+    }
+
+    @Override
+    public Long getClientInstanceId() {
+        if (LooseContext.has(CONTEXT_CLIENT_INSTANCE)) {
+            return ((ClientInstance) LooseContext.get(CONTEXT_CLIENT_INSTANCE))
+                    .getId();
+        }
+        HttpServletRequest request = CommonRemoteServiceServlet
+                .getContextThreadLocalRequest();
+        if (request != null) {
+            Long clientInstanceId = SessionHelper
+                    .getAuthenticatedSessionClientInstanceId(request);
+            if (clientInstanceId != null) {
+                return clientInstanceId;
+            }
+        }
+        return ServletLayerTransforms.get().getServerAsClientInstance().getId();
     }
 }

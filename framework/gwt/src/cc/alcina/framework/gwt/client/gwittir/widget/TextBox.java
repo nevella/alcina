@@ -51,350 +51,392 @@ import com.totsp.gwittir.client.ui.HasEnabled;
  */
 @SuppressWarnings("deprecation")
 public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
-		HasEnabled, SourcesKeyboardEvents, SourcesClickEvents {
-	private com.google.gwt.user.client.ui.TextBox base = new com.google.gwt.user.client.ui.TextBox();
+        HasEnabled, com.google.gwt.user.client.ui.HasEnabled,
+        SourcesKeyboardEvents, SourcesClickEvents {
+    private com.google.gwt.user.client.ui.TextBox base = new com.google.gwt.user.client.ui.TextBox();
 
-	private ChangeListenerCollection changeListeners = new ChangeListenerCollection();
+    private ChangeListenerCollection changeListeners = new ChangeListenerCollection();
 
-	private String old;
+    private String old;
 
-	public TextBox() {
-		this(false);
-	}
+    public TextBox() {
+        this(false);
+    }
 
-	/** Creates a new instance of TextBox */
-	public TextBox(final boolean updateOnKeypress) {
-		final TextBox instance = this;
-		old = base.getText();
-		if (updateOnKeypress) {
-			this.addKeyboardListener(new KeyboardListener() {
-				boolean scheduled = false;
+    /** Creates a new instance of TextBox */
+    public TextBox(final boolean updateOnKeypress) {
+        final TextBox instance = this;
+        old = base.getText();
+        if (updateOnKeypress) {
+            this.addKeyboardListener(new KeyboardListener() {
+                boolean scheduled = false;
 
-				public void onKeyDown(Widget sender, char keyCode,
-						int modifiers) {
-				}
+                @Override
+                public void onKeyDown(Widget sender, char keyCode,
+                        int modifiers) {
+                }
 
-				public void onKeyPress(Widget sender, char keyCode,
-						int modifiers) {
-					refresh();
-				}
+                @Override
+                public void onKeyPress(Widget sender, char keyCode,
+                        int modifiers) {
+                    refresh();
+                }
 
-				public void onKeyUp(Widget sender, char keyCode,
-						int modifiers) {
-					refresh();
-				}
+                @Override
+                public void onKeyUp(Widget sender, char keyCode,
+                        int modifiers) {
+                    refresh();
+                }
 
-				private void refresh() {
-					if (!scheduled) {
-						Scheduler.get()
-								.scheduleDeferred(new ScheduledCommand() {
-									@Override
-									public void execute() {
-										changes.firePropertyChange("value", old,
-												getValue());
-										old = (String) getValue();
-										scheduled = false;
-									}
-								});
-						scheduled = true;
-					}
-				}
-			});
-		} else {
-			this.addKeyboardListener(new KeyboardListener() {
-				public void onKeyDown(Widget sender, char keyCode,
-						int modifiers) {
-				}
+                private void refresh() {
+                    if (!scheduled) {
+                        Scheduler.get()
+                                .scheduleDeferred(new ScheduledCommand() {
+                                    @Override
+                                    public void execute() {
+                                        changes.firePropertyChange("value", old,
+                                                getValue());
+                                        old = (String) getValue();
+                                        scheduled = false;
+                                    }
+                                });
+                        scheduled = true;
+                    }
+                }
+            });
+        } else {
+            this.addKeyboardListener(new KeyboardListener() {
+                @Override
+                public void onKeyDown(Widget sender, char keyCode,
+                        int modifiers) {
+                }
 
-				public void onKeyPress(Widget sender, char keyCode,
-						int modifiers) {
-					if (keyCode == KeyCodes.KEY_ENTER) {
-						setFocus(false);
-						setFocus(true);
-					}
-				}
+                @Override
+                public void onKeyPress(Widget sender, char keyCode,
+                        int modifiers) {
+                    if (keyCode == KeyCodes.KEY_ENTER) {
+                        setFocus(false);
+                        setFocus(true);
+                    }
+                }
 
-				public void onKeyUp(Widget sender, char keyCode,
-						int modifiers) {
-				}
-			});
-		}
-		this.base.addChangeListener(new ChangeListener() {
-			public void onChange(Widget sender) {
-				changes.firePropertyChange("value", old, getValue());
-				old = (String) getValue();
-				changeListeners.fireChange(instance);
-			}
-		});
-		this.base.addValueChangeHandler(new ValueChangeHandler<String>() {
-			@Override
-			public void onValueChange(ValueChangeEvent<String> event) {
-				changes.firePropertyChange("value", old, getValue());
-				old = (String) getValue();
-				changeListeners.fireChange(instance);
-			}
-		});
-		this.base.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				if (old == null && getValue() == null) {
-					// don't want a non-change change fired here (invalid
-					// validation)
-				} else {
-					changes.firePropertyChange("value", old, getValue());
-				}
-				old = (String) getValue();
-				changeListeners.fireChange(instance);
-			}
-		});
-		super.initWidget(this.base);
-	}
+                @Override
+                public void onKeyUp(Widget sender, char keyCode,
+                        int modifiers) {
+                }
+            });
+        }
+        this.base.addChangeListener(new ChangeListener() {
+            @Override
+            public void onChange(Widget sender) {
+                changes.firePropertyChange("value", old, getValue());
+                old = (String) getValue();
+                changeListeners.fireChange(instance);
+            }
+        });
+        this.base.addValueChangeHandler(new ValueChangeHandler<String>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<String> event) {
+                changes.firePropertyChange("value", old, getValue());
+                old = (String) getValue();
+                changeListeners.fireChange(instance);
+            }
+        });
+        this.base.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                if (old == null && getValue() == null) {
+                    // don't want a non-change change fired here (invalid
+                    // validation)
+                } else {
+                    changes.firePropertyChange("value", old, getValue());
+                }
+                old = (String) getValue();
+                changeListeners.fireChange(instance);
+            }
+        });
+        super.initWidget(this.base);
+    }
 
-	public void addChangeListener(ChangeListener listener) {
-		this.base.addChangeListener(listener);
-	}
+    @Override
+    public void addChangeListener(ChangeListener listener) {
+        this.base.addChangeListener(listener);
+    }
 
-	public HandlerRegistration addClickHandler(ClickHandler handler) {
-		return this.base.addClickHandler(handler);
-	}
+    public HandlerRegistration addClickHandler(ClickHandler handler) {
+        return this.base.addClickHandler(handler);
+    }
 
-	public void addClickListener(ClickListener listener) {
-		this.base.addClickListener(listener);
-	}
+    @Override
+    public void addClickListener(ClickListener listener) {
+        this.base.addClickListener(listener);
+    }
 
-	public void addFocusListener(FocusListener listener) {
-		this.base.addFocusListener(listener);
-	}
+    @Override
+    public void addFocusListener(FocusListener listener) {
+        this.base.addFocusListener(listener);
+    }
 
-	public void addKeyboardListener(KeyboardListener listener) {
-		this.base.addKeyboardListener(listener);
-	}
+    @Override
+    public void addKeyboardListener(KeyboardListener listener) {
+        this.base.addKeyboardListener(listener);
+    }
 
-	public void cancelKey() {
-		this.base.cancelKey();
-	}
+    public void cancelKey() {
+        this.base.cancelKey();
+    }
 
-	public Action getAction() {
-		Action retValue;
-		retValue = super.getAction();
-		return retValue;
-	}
+    @Override
+    public Action getAction() {
+        Action retValue;
+        retValue = super.getAction();
+        return retValue;
+    }
 
-	public Comparator getComparator() {
-		Comparator retValue;
-		retValue = super.getComparator();
-		return retValue;
-	}
+    @Override
+    public Comparator getComparator() {
+        Comparator retValue;
+        retValue = super.getComparator();
+        return retValue;
+    }
 
-	public int getCursorPos() {
-		int retValue;
-		retValue = this.base.getCursorPos();
-		return retValue;
-	}
+    public int getCursorPos() {
+        int retValue;
+        retValue = this.base.getCursorPos();
+        return retValue;
+    }
 
-	public int getMaxLength() {
-		int retValue;
-		retValue = this.base.getMaxLength();
-		return retValue;
-	}
+    public int getMaxLength() {
+        int retValue;
+        retValue = this.base.getMaxLength();
+        return retValue;
+    }
 
-	public Object getModel() {
-		Object retValue;
-		retValue = super.getModel();
-		return retValue;
-	}
+    @Override
+    public Object getModel() {
+        Object retValue;
+        retValue = super.getModel();
+        return retValue;
+    }
 
-	public String getName() {
-		String retValue;
-		retValue = this.base.getName();
-		return retValue;
-	}
+    public String getName() {
+        String retValue;
+        retValue = this.base.getName();
+        return retValue;
+    }
 
-	public int getOffsetHeight() {
-		int retValue;
-		retValue = this.base.getOffsetHeight();
-		return retValue;
-	}
+    @Override
+    public int getOffsetHeight() {
+        int retValue;
+        retValue = this.base.getOffsetHeight();
+        return retValue;
+    }
 
-	public int getOffsetWidth() {
-		int retValue;
-		retValue = this.base.getOffsetWidth();
-		return retValue;
-	}
+    @Override
+    public int getOffsetWidth() {
+        int retValue;
+        retValue = this.base.getOffsetWidth();
+        return retValue;
+    }
 
-	public String getSelectedText() {
-		String retValue;
-		retValue = this.base.getSelectedText();
-		return retValue;
-	}
+    public String getSelectedText() {
+        String retValue;
+        retValue = this.base.getSelectedText();
+        return retValue;
+    }
 
-	public int getSelectionLength() {
-		int retValue;
-		retValue = this.base.getSelectionLength();
-		return retValue;
-	}
+    public int getSelectionLength() {
+        int retValue;
+        retValue = this.base.getSelectionLength();
+        return retValue;
+    }
 
-	public String getStyleName() {
-		String retValue;
-		retValue = this.base.getStyleName();
-		return retValue;
-	}
+    @Override
+    public String getStyleName() {
+        String retValue;
+        retValue = this.base.getStyleName();
+        return retValue;
+    }
 
-	public int getTabIndex() {
-		return this.base.getTabIndex();
-	}
+    @Override
+    public int getTabIndex() {
+        return this.base.getTabIndex();
+    }
 
-	public String getText() {
-		return this.base.getText();
-	}
+    public String getText() {
+        return this.base.getText();
+    }
 
-	public String getTitle() {
-		return this.base.getTitle();
-	}
+    @Override
+    public String getTitle() {
+        return this.base.getTitle();
+    }
 
-	public String getValue() {
-		try {
-			return this.base.getText().length() == 0 ? null
-					: this.base.getText();
-		} catch (RuntimeException re) {
-			GWT.log("" + this.base, re);
-			return null;
-		}
-	}
+    @Override
+    public String getValue() {
+        try {
+            return this.base.getText().length() == 0 ? null
+                    : this.base.getText();
+        } catch (RuntimeException re) {
+            GWT.log("" + this.base, re);
+            return null;
+        }
+    }
 
-	public int getVisibleLength() {
-		return this.base.getVisibleLength();
-	}
+    public int getVisibleLength() {
+        return this.base.getVisibleLength();
+    }
 
-	public boolean isEnabled() {
-		return this.base.isEnabled();
-	}
+    @Override
+    public boolean isEnabled() {
+        return this.base.isEnabled();
+    }
 
-	public void removeChangeListener(ChangeListener listener) {
-		this.base.removeChangeListener(listener);
-	}
+    @Override
+    public void removeChangeListener(ChangeListener listener) {
+        this.base.removeChangeListener(listener);
+    }
 
-	public void removeClickListener(ClickListener listener) {
-		this.base.removeClickListener(listener);
-	}
+    @Override
+    public void removeClickListener(ClickListener listener) {
+        this.base.removeClickListener(listener);
+    }
 
-	public void removeFocusListener(FocusListener listener) {
-		this.base.removeFocusListener(listener);
-	}
+    @Override
+    public void removeFocusListener(FocusListener listener) {
+        this.base.removeFocusListener(listener);
+    }
 
-	public void removeKeyboardListener(KeyboardListener listener) {
-		this.base.removeKeyboardListener(listener);
-	}
+    @Override
+    public void removeKeyboardListener(KeyboardListener listener) {
+        this.base.removeKeyboardListener(listener);
+    }
 
-	public void removeStyleName(String style) {
-		this.base.removeStyleName(style);
-	}
+    @Override
+    public void removeStyleName(String style) {
+        this.base.removeStyleName(style);
+    }
 
-	public void selectAll() {
-		this.base.selectAll();
-	}
+    public void selectAll() {
+        this.base.selectAll();
+    }
 
-	public void setAccessKey(char key) {
-		this.base.setAccessKey(key);
-	}
+    @Override
+    public void setAccessKey(char key) {
+        this.base.setAccessKey(key);
+    }
 
-	public void setAction(Action action) {
-		super.setAction(action);
-	}
+    @Override
+    public void setAction(Action action) {
+        super.setAction(action);
+    }
 
-	public void setCursorPos(int pos) {
-		this.base.setCursorPos(pos);
-	}
+    public void setCursorPos(int pos) {
+        this.base.setCursorPos(pos);
+    }
 
-	public void setEnabled(boolean enabled) {
-		this.base.setEnabled(enabled);
-	}
+    @Override
+    public void setEnabled(boolean enabled) {
+        this.base.setEnabled(enabled);
+    }
 
-	public void setFocus(boolean focused) {
-		this.base.setFocus(focused);
-	}
+    @Override
+    public void setFocus(boolean focused) {
+        this.base.setFocus(focused);
+    }
 
-	public void setHeight(String height) {
-		this.base.setHeight(height);
-	}
+    @Override
+    public void setHeight(String height) {
+        this.base.setHeight(height);
+    }
 
-	public void setKey(char key) {
-		this.base.setKey(key);
-	}
+    public void setKey(char key) {
+        this.base.setKey(key);
+    }
 
-	public void setMaxLength(int length) {
-		this.base.setMaxLength(length);
-	}
+    public void setMaxLength(int length) {
+        this.base.setMaxLength(length);
+    }
 
-	public void setModel(Object model) {
-		super.setModel(model);
-	}
+    @Override
+    public void setModel(Object model) {
+        super.setModel(model);
+    }
 
-	public void setName(String name) {
-		this.base.setName(name);
-	}
+    public void setName(String name) {
+        this.base.setName(name);
+    }
 
-	public void setPixelSize(int width, int height) {
-		this.base.setPixelSize(width, height);
-	}
+    @Override
+    public void setPixelSize(int width, int height) {
+        this.base.setPixelSize(width, height);
+    }
 
-	public void setReadOnly(boolean readOnly) {
-	}
+    public void setReadOnly(boolean readOnly) {
+    }
 
-	public void setSelectionRange(int pos, int length) {
-		this.base.setSelectionRange(pos, length);
-	}
+    public void setSelectionRange(int pos, int length) {
+        this.base.setSelectionRange(pos, length);
+    }
 
-	public void setSize(String width, String height) {
-		this.base.setSize(width, height);
-	}
+    @Override
+    public void setSize(String width, String height) {
+        this.base.setSize(width, height);
+    }
 
-	public void setStyleName(String style) {
-		this.base.setStyleName(style);
-	}
+    @Override
+    public void setStyleName(String style) {
+        this.base.setStyleName(style);
+    }
 
-	public void setTabIndex(int index) {
-		this.base.setTabIndex(index);
-	}
+    @Override
+    public void setTabIndex(int index) {
+        this.base.setTabIndex(index);
+    }
 
-	public void setText(String text) {
-		this.base.setText(text);
-	}
+    public void setText(String text) {
+        this.base.setText(text);
+    }
 
-	public void setTextAlignment(TextBoxBase.TextAlignConstant align) {
-		this.base.setTextAlignment(align);
-	}
+    public void setTextAlignment(TextBoxBase.TextAlignConstant align) {
+        this.base.setTextAlignment(align);
+    }
 
-	public void setTitle(String title) {
-		this.base.setTitle(title);
-	}
+    @Override
+    public void setTitle(String title) {
+        this.base.setTitle(title);
+    }
 
-	public void setValue(String value) {
-		old = this.getValue();
-		this.setText(value);
-		// if( this.getValue() != old && this.getValue() != null &&
-		// !this.getValue().equals( old ) ){
-		// the above doesn't fire a change on the case new==null, old!=null
-		if (this.getValue() != old && (this.getValue() == null
-				|| (this.getValue() != null && !this.getValue().equals(old)))) {
-			this.changes.firePropertyChange("value", old, this.getValue());
-		}
-		old = this.getValue();
-	}
+    @Override
+    public void setValue(String value) {
+        old = this.getValue();
+        this.setText(value);
+        // if( this.getValue() != old && this.getValue() != null &&
+        // !this.getValue().equals( old ) ){
+        // the above doesn't fire a change on the case new==null, old!=null
+        if (this.getValue() != old && (this.getValue() == null
+                || (this.getValue() != null && !this.getValue().equals(old)))) {
+            this.changes.firePropertyChange("value", old, this.getValue());
+        }
+        old = this.getValue();
+    }
 
-	public void setVisibleLength(int length) {
-		this.base.setVisibleLength(length);
-	}
+    public void setVisibleLength(int length) {
+        this.base.setVisibleLength(length);
+    }
 
-	public void setWidth(String width) {
-		this.base.setWidth(width);
-	}
+    @Override
+    public void setWidth(String width) {
+        this.base.setWidth(width);
+    }
 
-	public void sinkEvents(int eventBitsToAdd) {
-		this.base.sinkEvents(eventBitsToAdd);
-	}
+    @Override
+    public void sinkEvents(int eventBitsToAdd) {
+        this.base.sinkEvents(eventBitsToAdd);
+    }
 
-	public void unsinkEvents(int eventBitsToRemove) {
-		this.base.unsinkEvents(eventBitsToRemove);
-	}
+    @Override
+    public void unsinkEvents(int eventBitsToRemove) {
+        this.base.unsinkEvents(eventBitsToRemove);
+    }
 }

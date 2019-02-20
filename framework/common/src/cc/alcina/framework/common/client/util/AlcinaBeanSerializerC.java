@@ -153,7 +153,8 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
             return deserializeField(jsonObj.get(LITERAL), clazz);
         }
         if (jsonObj.containsKey(REF)) {
-            return seenIn.get(jsonObj.get(REF));
+            return seenIn
+                    .get((int) ((JSONNumber) jsonObj.get(REF)).doubleValue());
         }
         Object obj = Reflections.classLookup().newInstance(clazz);
         seenIn.put(seenIn.size(), obj);

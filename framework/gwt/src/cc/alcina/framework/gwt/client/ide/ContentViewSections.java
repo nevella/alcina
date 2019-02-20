@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -119,7 +120,8 @@ public class ContentViewSections {
             if (okButtonName != null) {
                 contentViewFactory.okButtonName(okButtonName);
             }
-            contentViewFactory.fieldFilter(section).fieldOrder(section)
+            contentViewFactory.fieldFilter(section.asPredicate())
+                    .fieldOrder(section.asComparator())
                     .editableFieldFilter(section.editableFieldFilter())
                     .fieldPostReflectiveSetupModifier(
                             section.fieldPostReflectiveSetupModifier)
@@ -142,6 +144,12 @@ public class ContentViewSections {
             fp.add(beanView);
         }
         return fp;
+    }
+
+    public Widget builtWidgetFor(EnumeratedBinding binding) {
+        return beanViews.stream().map(PaneWrapperWithObjects::getGridForm)
+                .map(gf -> (Widget) gf.getBoundWidget(binding.getPath()))
+                .filter(Objects::nonNull).findFirst().get();
     }
 
     public ContentViewSections cancelButton(boolean cancelButton) {
@@ -203,11 +211,16 @@ public class ContentViewSections {
         this.tableStyleName = tableStyleName;
     }
 
-    public class ContentViewSection
-            implements Comparator<Field>, Predicate<Field> {
+    public boolean validateSync() {
+        return beanViews.stream()
+                .map(pwwo -> pwwo.validateAndCommit(null, null))
+                .filter(result -> !result).findFirst().orElse(true);
+    }
+
+    public class ContentViewSection {
         private boolean horizontalGrid;
 
-        public List<String> fieldNames;
+        public List<String> fieldNames = new ArrayList<>();
 
         public String name;
 
@@ -221,16 +234,24 @@ public class ContentViewSections {
             this.name = name;
         }
 
+        public Comparator<Field> asComparator() {
+            return new Comparator<Field>() {
+                @Override
+                public int compare(Field o1, Field o2) {
+                    return fieldNames.indexOf(o1.getPropertyName())
+                            - fieldNames.indexOf(o2.getPropertyName());
+                }
+            };
+        }
+
+        public Predicate<Field> asPredicate() {
+            return t -> fieldNames.contains(t.getPropertyName());
+        }
+
         public ContentViewSection cellRenderer(
                 GridFormCellRenderer gridFormCellRenderer) {
             this.gridFormCellRenderer = gridFormCellRenderer;
             return this;
-        }
-
-        @Override
-        public int compare(Field o1, Field o2) {
-            return fieldNames.indexOf(o1.getPropertyName())
-                    - fieldNames.indexOf(o2.getPropertyName());
         }
 
         public Predicate<String> editableFieldFilter() {
@@ -245,9 +266,8 @@ public class ContentViewSections {
 
         public ContentViewSection fieldBindings(
                 List<EnumeratedBinding> enumeratedBindings) {
-            this.fieldNames = enumeratedBindings.stream()
-                    .map(EnumeratedBinding::getPath)
-                    .collect(Collectors.toList());
+            enumeratedBindings.stream().map(EnumeratedBinding::getPath)
+                    .forEach(fieldNames::add);
             return this;
         }
 
@@ -263,23 +283,18 @@ public class ContentViewSections {
         }
 
         public ContentViewSection fields(List<String> fieldNames) {
-            this.fieldNames = fieldNames;
+            this.fieldNames.addAll(fieldNames);
             return this;
         }
 
         public ContentViewSection fields(String... fieldNames) {
-            this.fieldNames = Arrays.asList(fieldNames);
+            this.fieldNames.addAll(Arrays.asList(fieldNames));
             return this;
         }
 
         public ContentViewSection horizontalGrid() {
             this.horizontalGrid = true;
             return this;
-        }
-
-        @Override
-        public boolean test(Field t) {
-            return fieldNames.contains(t.getPropertyName());
         }
     }
 

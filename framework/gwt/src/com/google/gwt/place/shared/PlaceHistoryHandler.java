@@ -27,6 +27,7 @@ import com.google.gwt.user.client.History;
 import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 
 /**
@@ -143,7 +144,7 @@ public class PlaceHistoryHandler {
 
     private void handleHistoryToken(String token) {
         Place newPlace = null;
-        if ("".equals(token)) {
+        if (Ax.isBlank(token)) {
             newPlace = defaultPlaceSupplier.get();
         }
         if (newPlace == null) {
@@ -152,8 +153,9 @@ public class PlaceHistoryHandler {
         if (newPlace == null) {
             log().warning("Unrecognized history token: " + token);
             newPlace = defaultPlaceSupplier.get();
-            // FIXME-dev
-            return;//
+            if (lastFiredToken != null) {
+                return;
+            }
         }
         placeController.goTo(newPlace);
     }

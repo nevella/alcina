@@ -171,7 +171,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
             return deserializeField(jsonObj.get(LITERAL), clazz);
         }
         if (jsonObj.has(REF)) {
-            Object index = jsonObj.get(REF);
+            Object index = jsonObj.getInt(REF);
             Object object = seenIn.get(index);
             return object;
         }

@@ -104,6 +104,7 @@ public class SelectorCustomiser implements Customiser {
                     .booleanValue(info.parameters(), USE_MINIMAL_SELECTOR);
             boolean useFlatSelector = NamedParameter.Support
                     .booleanValue(info.parameters(), USE_FLAT_SELECTOR);
+            // implements Supplier<Collection>
             clazz = NamedParameter.Support.classValue(info.parameters(),
                     SELECTED_OBJECT_CLASS, clazz);
             Class providerClass = NamedParameter.Support

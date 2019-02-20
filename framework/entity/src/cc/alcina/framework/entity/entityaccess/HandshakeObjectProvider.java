@@ -5,13 +5,17 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 
 public interface HandshakeObjectProvider<CI extends ClientInstance, IID extends Iid> {
-	public ClientInstance getClientInstance(long clientInstanceId);
+    public ClientInstance getClientInstance(long clientInstanceId);
 
-	public void setCommonPersistence(CommonPersistenceBase commonPersistence);
+    public HiliLocatorMap getLocatorMap(Long clientInstanceId);
 
-	public void updateIid(String iidKey, String userName, boolean rememberMe);
+    public void setCommonPersistence(CommonPersistenceBase commonPersistence);
 
-	CI createClientInstance(String userAgent, String iid, String ipAddress);
+    public void updateIid(String iidKey, String userName, boolean rememberMe);
 
-	public HiliLocatorMap getLocatorMap(Long clientInstanceId);
+    CI createClientInstance(String userAgent, String iid, String ipAddress);
+
+    default CI getDetachedClientInstance(Long clientInstanceId) {
+        return null;
+    }
 }

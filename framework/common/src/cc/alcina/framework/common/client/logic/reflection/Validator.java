@@ -30,11 +30,11 @@ import java.lang.annotation.Target;
  * @author Nick Reddel
  */
 public @interface Validator {
-	public static final String FEEDBACK_MESSAGE = "feedbackMessage";
+    public static final String FEEDBACK_MESSAGE = "feedbackMessage";
 
-	NamedParameter[] parameters() default {};
+    NamedParameter[] parameters() default {};
 
-	boolean validateBeanOnly() default false;
+    boolean validateBeanOnly() default false;
 
-	Class<? extends com.totsp.gwittir.client.validator.Validator> validator();
+    Class<? extends com.totsp.gwittir.client.validator.Validator> validator();
 }

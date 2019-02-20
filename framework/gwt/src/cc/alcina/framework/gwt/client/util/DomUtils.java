@@ -16,6 +16,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -222,6 +223,10 @@ public class DomUtils implements NodeFromXpathProvider {
     public static boolean isVisibleAncestorChain(Element e) {
         while (e != null) {
             if (e.getStyle().getDisplay().equals(Display.NONE.getCssName())) {
+                return false;
+            }
+            if (e.getStyle().getVisibility()
+                    .equals(Style.Visibility.HIDDEN.getCssName())) {
                 return false;
             }
             e = e.getParentElement();

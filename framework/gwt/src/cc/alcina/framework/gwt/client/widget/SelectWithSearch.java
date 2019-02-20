@@ -877,8 +877,11 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
         }
         onPopdownShowing(relativePopupPanel, true);
         int border = -2;
-        if (itemHolder.getOffsetHeight() + border > panelForPopup
-                .getOffsetHeight() && !isAutoHolderHeight()) {
+        // the 20 is a pad to make sure we have a reasonable scroller size in
+        // edge cases
+        if (itemHolder.getOffsetHeight()
+                + border > (panelForPopup.getOffsetHeight() - 20)
+                && !isAutoHolderHeight()) {
             int hhInt = holderHeight != null && holderHeight.endsWith("px")
                     ? Integer.parseInt(holderHeight.replace("px", ""))
                     : 0;

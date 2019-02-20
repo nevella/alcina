@@ -1088,6 +1088,25 @@ public class CommonUtils {
         return s.substring(0, 1).toLowerCase() + s.substring(1);
     }
 
+    public static int luhnChecksum(String numericalString) {
+        int length = numericalString.length();
+        int sum = 0;
+        boolean alternate = true;
+        for (int i = numericalString.length() - 1; i >= 0; i--) {
+            int n = Integer.parseInt(numericalString.substring(i, i + 1));
+            if (alternate) {
+                n *= 2;
+                if (n > 9) {
+                    n = (n % 10) + 1;
+                }
+            }
+            sum += n;
+            alternate = !alternate;
+        }
+        int checksum = sum % 10 == 0 ? 0 : 10 - sum % 10;
+        return checksum;
+    }
+
     public static long lv(Long l) {
         return l == null ? 0 : l;
     }
@@ -1665,6 +1684,14 @@ public class CommonUtils {
         return (Exception) (e instanceof Exception ? e : new Exception(e));
     }
 
+    public static <T> T wrapThrowing(ThrowingSupplier<T> supplier) {
+        try {
+            return supplier.get();
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
     @SuppressWarnings("deprecation")
     public static Date yearAsDate(Integer year) {
         if (year == null) {
@@ -1713,14 +1740,6 @@ public class CommonUtils {
             }
         }
         return false;
-    }
-
-    public static <T> T wrapThrowing(ThrowingSupplier<T> supplier) {
-    	try {
-    		return supplier.get();
-    	} catch (Exception e) {
-    		throw new WrappedRuntimeException(e);
-    	}
     }
 
     public enum ComparatorResult {

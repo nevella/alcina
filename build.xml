@@ -110,6 +110,7 @@
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
+		<copy tofile="${framework.clientreflectorjvm.build.dir}/registry.properties" file="${framework.clientreflectorjvm.src.dir}/registry.properties" />
 		<mkdir dir="${extras.dev.build.dir}" />
 		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${extras.dev.src.dir}" destdir="${extras.dev.build.dir}">
 			<classpath>

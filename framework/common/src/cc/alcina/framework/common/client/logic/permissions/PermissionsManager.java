@@ -381,6 +381,11 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
         return this.clientInstance;
     }
 
+    public Long getClientInstanceId() {
+        ClientInstance clientInstance = getClientInstance();
+        return clientInstance == null ? null : clientInstance.getId();
+    }
+
     public ObjectPermissions getDefaultObjectPermissions() {
         return this.defaultObjectPermissions;
     }

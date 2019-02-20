@@ -10,8 +10,6 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.SystemUtils;
-
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -50,10 +48,6 @@ public class ShellWrapper {
         launchProcess(new String[] { "/bin/bash", tmp.getPath() },
                 s -> s.length(), s -> s.length());
         return tmp;
-    }
-
-    private String getScriptExtension() {
-        return SystemUtils.IS_OS_WINDOWS?".bat":".sh";
     }
 
     public ShellWrapper noLogging() {
@@ -162,13 +156,22 @@ public class ShellWrapper {
                 errorGobbler.getStreamResult(), timedOut, process.exitValue());
     }
 
+    private String getScriptExtension() {
+        return isWindows() ? ".bat" : ".sh";
+    }
+
+    private boolean isWindows() {
+        String osName = System.getProperty("os.name").toLowerCase();
+        return osName.indexOf("win") >= 0;
+    }
+
     protected void launchProcess(String[] cmdAndArgs,
             Callback<String> outputCallback, Callback<String> errorCallback)
             throws IOException {
-        if (cmdAndArgs[0].equals("/bin/bash") && SystemUtils.IS_OS_WINDOWS) {
+        if (cmdAndArgs[0].equals("/bin/bash") && isWindows()) {
             List<String> rewrite = Arrays.asList(cmdAndArgs).stream()
                     .collect(Collectors.toList());
-            rewrite.remove(0);//just run as .bat
+            rewrite.remove(0);// just run as .bat
             cmdAndArgs = (String[]) rewrite.toArray(new String[rewrite.size()]);
         }
         if (logToStdOut) {

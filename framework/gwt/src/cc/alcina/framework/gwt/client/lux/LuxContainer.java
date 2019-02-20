@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.lux;
 
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
@@ -31,10 +32,17 @@ public class LuxContainer extends Composite {
         container.add(panel);
     }
 
-    public LuxLink addLink(String text, String href) {
+    public LuxContainer addLink(String text, ClickHandler clickHandler) {
+        LuxLink link = new LuxLink().text(text);
+        link.addClickHandler(clickHandler);
+        add(link);
+        return this;
+    }
+
+    public LuxContainer addLink(String text, String href) {
         LuxLink link = new LuxLink().text(text).href(href);
         add(link);
-        return link;
+        return this;
     }
 
     public void addLinkInPanel(String text, String href) {
@@ -66,5 +74,9 @@ public class LuxContainer extends Composite {
         Label label = new Label(text);
         label.setStyleName("");
         add(label);
+    }
+
+    public void clear() {
+        container.clear();
     }
 }

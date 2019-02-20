@@ -1326,6 +1326,10 @@ public class ContentViewFactory {
             }
             super.onUnload();
         }
+
+        GridForm getGridForm() {
+            return (GridForm) getBoundWidget();
+        }
     }
 
     public static class RecheckVisibilityHandler implements Handler {
