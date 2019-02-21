@@ -1088,16 +1088,17 @@ public class CommonUtils {
         return s.substring(0, 1).toLowerCase() + s.substring(1);
     }
 
-    public static int luhnChecksum(String numericalString) {
+    public static int luhnChecksum(String numericalString,
+            boolean hasCheckDigit) {
         int length = numericalString.length();
         int sum = 0;
-        boolean alternate = true;
+        boolean alternate = !hasCheckDigit;
         for (int i = numericalString.length() - 1; i >= 0; i--) {
             int n = Integer.parseInt(numericalString.substring(i, i + 1));
             if (alternate) {
                 n *= 2;
                 if (n > 9) {
-                    n = (n % 10) + 1;
+                    n = n - 9;
                 }
             }
             sum += n;
