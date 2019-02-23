@@ -254,9 +254,11 @@ public class DomainTransformPersistenceQueue {
     }
 
     @RegistryLocation(registryPoint = DomainTransformCommitPositionProvider.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-    public static class DomainTransformCommitPositionProvider_EventsQueue {
+    public static class DomainTransformCommitPositionProvider_EventsQueue
+            extends DomainTransformCommitPositionProvider {
         private DomainTransformPersistenceQueue queue;
 
+        @Override
         public DomainTransformCommitPosition getPosition() {
             if (queue == null) {
                 queue = DomainStore.writableStore().getPersistenceEvents()

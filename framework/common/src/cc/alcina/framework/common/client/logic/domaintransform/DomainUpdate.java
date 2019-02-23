@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
@@ -61,6 +62,7 @@ public class DomainUpdate implements Serializable {
     }
 
     @RegistryLocation(registryPoint = DomainTransformCommitPositionProvider.class, implementationType = ImplementationType.SINGLETON)
+    @ClientInstantiable
     public static class DomainTransformCommitPositionProvider {
         public DomainTransformCommitPosition getPosition() {
             return null;
