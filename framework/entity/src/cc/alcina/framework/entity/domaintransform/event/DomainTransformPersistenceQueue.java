@@ -19,6 +19,9 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPositionProvider;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -247,6 +250,19 @@ public class DomainTransformPersistenceQueue {
     void transformRequestQueuedLocal(long id) {
         synchronized (queueModificationLock) {
             firedOrQueued.add(id);
+        }
+    }
+
+    @RegistryLocation(registryPoint = DomainTransformCommitPositionProvider.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+    public static class DomainTransformCommitPositionProvider_EventsQueue {
+        private DomainTransformPersistenceQueue queue;
+
+        public DomainTransformCommitPosition getPosition() {
+            if (queue == null) {
+                queue = DomainStore.writableStore().getPersistenceEvents()
+                        .getQueue();
+            }
+            return queue.getTransformLogPosition();
         }
     }
 
