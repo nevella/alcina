@@ -845,7 +845,7 @@ public class XmlNode {
                     XmlNode.this.node.getNextSibling());
         }
 
-        public void insertAsFirstChild(XmlNode other) {
+        public void insertAsFirstChildOf(XmlNode other) {
             other.children.insertAsFirstChild(XmlNode.this);
         }
 
