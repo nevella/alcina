@@ -94,7 +94,6 @@ public class DevConsoleRemote {
                 }
             };
         }.start();
-        ;
     }
 
     private void run0() throws Exception {
