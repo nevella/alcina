@@ -225,6 +225,7 @@ public class TransformPersistenceToken implements Serializable {
                             asyncClient, ignoreClientAuthMismatch,
                             forOfflineTransforms, logger,
                             blockUntilAllListenersNotified);
+                    token.targetStore = store;
                     return token;
                 });
         request.getPriorRequestsWithoutResponse();

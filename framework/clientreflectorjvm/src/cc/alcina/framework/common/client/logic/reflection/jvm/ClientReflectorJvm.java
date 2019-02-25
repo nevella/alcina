@@ -150,6 +150,10 @@ public class ClientReflectorJvm extends ClientReflector {
                     if (o.contains("FastUtil")) {
                         return false;
                     }
+                    if (o.contains(
+                            "DomainTransformCommitPositionProvider_EventsQueue")) {
+                        return false;
+                    }
                     return true;
                 }
             };
