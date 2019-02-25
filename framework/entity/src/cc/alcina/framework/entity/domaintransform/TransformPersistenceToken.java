@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicyFactory;
 import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
@@ -193,28 +194,47 @@ public class TransformPersistenceToken implements Serializable {
     }
 
     public List<TransformPersistenceToken> toPerStoreTokens() {
-        // at the moment, we just implement for exactly one store - and assume
-        // (if not writable store) that the 'client' is the servlet layer app
-        // CachingMap<DomainStore, TransformPersistenceToken> map = new
-        // CachingMap<>(
-        // store -> {
-        // DomainTransformRequest request = new DomainTransformRequest();
-        // TransformPersistenceToken token = new TransformPersistenceToken(
-        // request, locatorMap, transformLoggingPolicy,
-        // asyncClient, ignoreClientAuthMismatch,
-        // forOfflineTransforms, logger,
-        // blockUntilAllListenersNotified);
-        // return token;
-        // });
-        // request.getPriorRequestsWithoutResponse();
         Set<DomainStore> targetStores = request.allTransforms().stream()
                 .map(DomainTransformEvent::getObjectClass)
                 .map(DomainStore.stores()::storeFor)
                 .map(store -> Ax.nullTo(store, DomainStore.writableStore()))
                 .collect(Collectors.toSet());
-        Preconditions.checkState(targetStores.size() == 1);
-        targetStore = targetStores.stream().findFirst().get();
-        return Collections.singletonList(this);
+        if (targetStores.size() == 1) {
+            Preconditions.checkState(targetStores.size() == 1);
+            targetStore = targetStores.stream().findFirst().get();
+            return Collections.singletonList(this);
+        }
+        // require only one request.
+        Preconditions.checkState(request.allRequests().size() == 1);
+        DomainTransformRequest originalRequest = request.allRequests().stream()
+                .findFirst().get();
+        int requestId = originalRequest.getRequestId();
+        CachingMap<DomainStore, TransformPersistenceToken> map = new CachingMap<>(
+                store -> {
+                    // we'll use the originating request id and uuid (only one
+                    // write with this request id per store)
+                    DomainTransformRequest request = new DomainTransformRequest();
+                    request.setRequestId(originalRequest.getRequestId());
+                    request.setChunkUuidString(
+                            originalRequest.getChunkUuidString());
+                    request.setClientInstance(
+                            originalRequest.getClientInstance());
+                    request.setTag(originalRequest.getTag());
+                    TransformPersistenceToken token = new TransformPersistenceToken(
+                            request, locatorMap, transformLoggingPolicy,
+                            asyncClient, ignoreClientAuthMismatch,
+                            forOfflineTransforms, logger,
+                            blockUntilAllListenersNotified);
+                    return token;
+                });
+        request.getPriorRequestsWithoutResponse();
+        request.allTransforms().forEach(evt -> {
+            DomainStore store = DomainStore.stores()
+                    .storeFor(evt.getObjectClass());
+            store = Ax.nullTo(store, DomainStore.writableStore());
+            map.get(store).request.getEvents().add(evt);
+        });
+        return map.values().stream().collect(Collectors.toList());
     }
 
     public enum Pass {
