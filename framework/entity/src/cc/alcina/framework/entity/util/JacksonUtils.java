@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 public class JacksonUtils {
     public static ObjectMapper defaultGraphMapper() {
         return new JacksonJsonObjectSerializer().withIdRefs().withTypeInfo()
-                .getObjectMapper();
+                .withAllowUnknownProperties().getObjectMapper();
     }
 
     public static String serializeForLogging(Object object) {
