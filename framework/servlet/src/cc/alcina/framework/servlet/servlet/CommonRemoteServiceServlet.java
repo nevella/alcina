@@ -186,6 +186,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                 CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_REQUEST);
     }
 
+    public static String getUserAgent(HttpServletRequest rq) {
+        return rq == null ? UA_NULL_SERVER : rq.getHeader("User-Agent");
+    }
+
     protected Logger logger = LoggerFactory.getLogger(getClass());
 
     private int actionCount = 0;
@@ -865,10 +869,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
     protected String getUserAgent() {
         return getUserAgent(getThreadLocalRequest());
-    }
-
-    protected String getUserAgent(HttpServletRequest rq) {
-        return rq == null ? UA_NULL_SERVER : rq.getHeader("User-Agent");
     }
 
     protected void handleOom(String payload, OutOfMemoryError e) {
