@@ -129,7 +129,7 @@ public class XmlUtils {
     private static final String TRANSFORMER_CACHE_MARKER_STREAM_XML = "TRANSFORMER_CACHE_MARKER_STREAM_XML";
 
     private static CachingMap<String, TransformerPool> transformersPool = new CachingConcurrentMap<>(
-            key -> new TransformerPool(), 10);
+            key -> new TransformerPool(true), 10);
 
     public static List<Node> allChildren(Node node) {
         Stack<Node> nodes = new Stack<Node>();
@@ -1399,7 +1399,7 @@ public class XmlUtils {
         if (cacheMarker != TRANSFORMER_CACHE_MARKER_STREAM_XML
                 && (noTransformerCaching
                         || cacheMarker == TRANSFORMER_CACHE_MARKER_NULL)) {
-            pool = new TransformerPool();
+            pool = new TransformerPool(false);
         } else {
             pool = transformersPool.get(cacheMarker);
         }
@@ -1715,14 +1715,18 @@ public class XmlUtils {
 
         private TransformerFactoryConfigurator configurator;
 
-        public TransformerPool() {
+        public TransformerPool(boolean withPool) {
             factory = new TransformerObjectFactory();
-            objectPool = new GenericObjectPool<Transformer>(factory);
-            objectPool.setMaxTotal(10);
+            if (withPool) {
+                objectPool = new GenericObjectPool<Transformer>(factory);
+                objectPool.setMaxTotal(10);
+            }
         }
 
         public void returnObject(Transformer transformer) {
-            objectPool.returnObject(transformer);
+            if (objectPool != null) {
+                objectPool.returnObject(transformer);
+            }
         }
 
         synchronized Transformer borrow(Source xsltSource,
@@ -1730,7 +1734,11 @@ public class XmlUtils {
             this.xsltSource = xsltSource;
             this.configurator = configurator;
             try {
-                return objectPool.borrowObject();
+                if (objectPool == null) {
+                    return factory.create();
+                } else {
+                    return objectPool.borrowObject();
+                }
             } catch (Exception e) {
                 throw new WrappedRuntimeException(e);
             }

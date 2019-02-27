@@ -28,7 +28,7 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
         return this.logger;
     }
 
-    public void updateJob(String message) {
+    public synchronized void updateJob(String message) {
         updateJob(message, 1);
     }
 
