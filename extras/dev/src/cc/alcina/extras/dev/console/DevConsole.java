@@ -15,6 +15,7 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
@@ -214,6 +215,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
     private DevConsoleRemote remote;
 
+    private boolean headless;
+
     public String breakAndPad(int tabCount, int width, String text,
             int padLeftCharCount) {
         StringBuilder sb = new StringBuilder();
@@ -255,6 +258,13 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
             this.outDumpFileName = null;
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
+        }
+    }
+
+    public void doCommandHistoryDelta(int delta) {
+        String cmd = history.getCommand(delta);
+        if (!cmd.isEmpty()) {
+            setCommandLineText(cmd);
         }
     }
 
@@ -465,6 +475,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         } else {
             return null;
         }
+    }
+
+    public boolean isHeadless() {
+        return this.headless;
     }
 
     public void loadConfig() throws Exception {
@@ -784,7 +798,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         consoleRight.initAttrs(props.fontName);
         remote = new DevConsoleRemote(this);
         remote.start(devHelper.configLoaded);
-        if (remote.isHasRemote()) {
+        this.headless = remote.isHasRemote();
+        if (headless) {
             // -Djava.awt.headless=true
             // -Dawt.toolkit=sun.awt.HToolkit
             System.setProperty("java.awt.headless", "true");
@@ -794,7 +809,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
                 new WriterOutputStream(remote.getOutWriter()));
         devErr.s1 = new PrintStream(
                 new WriterOutputStream(remote.getErrWriter()));
-        if (!remote.isHasRemote()) {
+        if (!headless) {
             new AlcinaChildContextRunner("launcher-thread")
                     .callNewThreadOrCurrent(() -> initUi(), null, !waitForUi);
         }
@@ -1174,12 +1189,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
     }
 
     private class JCommandLine extends JTextField {
-        private KeyListener arrowListener = new KeyListener() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                // TODO Auto-generated method stub
-            }
-
+        private KeyListener arrowListener = new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
                 int code = e.getKeyCode();
@@ -1193,19 +1203,11 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
                     break;
                 }
                 if (delta != 0) {
-                    String cmd = history.getCommand(delta);
-                    if (!cmd.isEmpty()) {
-                        setTextWithPrompt(cmd);
-                    }
+                    doCommandHistoryDelta(delta);
                 }
                 if (e.isMetaDown() && e.getKeyChar() == 'k') {
                     clear();
                 }
-            }
-
-            @Override
-            public void keyTyped(KeyEvent e) {
-                // TODO Auto-generated method stub
             }
         };
 

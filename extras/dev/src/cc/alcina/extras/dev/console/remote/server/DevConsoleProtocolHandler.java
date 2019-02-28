@@ -60,6 +60,39 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
                 DevConsoleProtocolHandler devConsoleProtocolHandler);
     }
 
+    public static class MethodHandler_ARROW_DOWN extends MethodHandler {
+        @Override
+        public RemoteConsoleRequestType getType() {
+            return RemoteConsoleRequestType.ARROW_DOWN;
+        }
+
+        @Override
+        protected RemoteConsoleResponse handle(
+                RemoteConsoleRequest consoleRequest,
+                DevConsoleProtocolHandler devConsoleProtocolHandler) {
+            devConsoleProtocolHandler.devConsoleRemote.doCommandHistoryDelta(1);
+            RemoteConsoleResponse response = new RemoteConsoleResponse();
+            return response;
+        }
+    }
+
+    public static class MethodHandler_ARROW_UP extends MethodHandler {
+        @Override
+        public RemoteConsoleRequestType getType() {
+            return RemoteConsoleRequestType.ARROW_UP;
+        }
+
+        @Override
+        protected RemoteConsoleResponse handle(
+                RemoteConsoleRequest consoleRequest,
+                DevConsoleProtocolHandler devConsoleProtocolHandler) {
+            devConsoleProtocolHandler.devConsoleRemote
+                    .doCommandHistoryDelta(-1);
+            RemoteConsoleResponse response = new RemoteConsoleResponse();
+            return response;
+        }
+    }
+
     public static class MethodHandler_DO_COMMAND extends MethodHandler {
         @Override
         public RemoteConsoleRequestType getType() {

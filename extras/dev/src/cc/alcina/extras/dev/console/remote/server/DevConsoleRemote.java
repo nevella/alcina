@@ -57,6 +57,10 @@ public class DevConsoleRemote {
         addRecord(record);
     }
 
+    public void doCommandHistoryDelta(int delta) {
+        devConsole.doCommandHistoryDelta(delta);
+    }
+
     public String getAppName() {
         return Ax.blankTo(ResourceUtilities.get("appName"),
                 () -> devConsole.getClass().getSimpleName());

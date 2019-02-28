@@ -38,6 +38,6 @@ public class RemoteConsoleRequest extends BaseBindable {
 
     @ClientInstantiable
     public enum RemoteConsoleRequestType {
-        STARTUP, GET_RECORDS, COMPLETE, DO_COMMAND
+        STARTUP, GET_RECORDS, COMPLETE, DO_COMMAND, ARROW_UP, ARROW_DOWN
     }
 }

@@ -58,6 +58,26 @@ public class ConsolePanel extends Composite {
         fp.add(mainPanel);
     }
 
+    void arrowDown() {
+        RemoteConsoleRequest request = new RemoteConsoleRequest();
+        request.setType(RemoteConsoleRequestType.ARROW_DOWN);
+        try {
+            RemoteConsoleClientUtils.submitRequest(request, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    void arrowUp() {
+        RemoteConsoleRequest request = new RemoteConsoleRequest();
+        request.setType(RemoteConsoleRequestType.ARROW_UP);
+        try {
+            RemoteConsoleClientUtils.submitRequest(request, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     void handleRecords(RemoteConsoleResponse response) {
         if (response == null) {
             Ax.out("missing response [down?]");
@@ -104,6 +124,7 @@ public class ConsolePanel extends Composite {
 
         public void setCommandText(String commandLine) {
             box.setText(commandLine);
+            focus();
         }
 
         private void render() {
@@ -117,7 +138,15 @@ public class ConsolePanel extends Composite {
                     Event.getCurrentEvent().preventDefault();
                     ConsolePanel.this.submitCommand(box.getText());
                     box.setText("");
-                    Scheduler.get().scheduleDeferred(() -> box.setFocus(true));
+                } else if (keyCode == KeyCodes.KEY_DOWN) {
+                    Event.getCurrentEvent().preventDefault();
+                    ConsolePanel.this.arrowDown();
+                } else if (keyCode == KeyCodes.KEY_UP) {
+                    Event.getCurrentEvent().preventDefault();
+                    ConsolePanel.this.arrowUp();
+                } else if (keyCode == (int) 'K'
+                        && event.getNativeEvent().getMetaKey()) {
+                    outputPanel.clearContents();
                 }
             });
         }
@@ -131,6 +160,10 @@ public class ConsolePanel extends Composite {
                     box.setFocus(true);
                 }
             }, RemoteConsoleLayoutMessage.FOCUS_COMMAND_BAR, true);
+        }
+
+        void focus() {
+            Scheduler.get().scheduleDeferred(() -> box.setFocus(true));
         }
     }
 
@@ -151,6 +184,7 @@ public class ConsolePanel extends Composite {
             inner.add(new InlineHTML(outputHtml));
             Scheduler.get()
                     .scheduleDeferred(() -> scrollPanel.scrollToBottom());
+            commandBarPanel.focus();
         }
 
         public void clearContents() {
