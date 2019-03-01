@@ -23,6 +23,8 @@ public abstract class AbstractTaskPerformer implements Runnable {
 
     public String result;
 
+    protected boolean cancelled;
+
     public AbstractTaskPerformer asSubTask(AbstractTaskPerformer parent) {
         actionLogger = parent.actionLogger;
         jobTracker = parent.jobTracker;
@@ -33,6 +35,10 @@ public abstract class AbstractTaskPerformer implements Runnable {
         actionLogger = parent.getLogger();
         jobTracker = parent.getJobTracker();
         return this;
+    }
+
+    public void cancel() {
+        this.cancelled = true;
     }
 
     @Override

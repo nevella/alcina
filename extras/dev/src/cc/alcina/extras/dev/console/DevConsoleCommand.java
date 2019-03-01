@@ -417,11 +417,17 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
             }
         }
 
-        private DevConsoleRunnable r;
+        private DevConsoleRunnable runnable;
+
+        @Override
+        public void cancel() {
+            super.cancel();
+            runnable.cancel();
+        }
 
         @Override
         public boolean canUseProductionConn() {
-            return r.canUseProductionConn();
+            return runnable.canUseProductionConn();
         }
 
         @Override
@@ -441,7 +447,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
         @Override
         public boolean rerunIfMostRecentOnRestart() {
-            return r != null && r.rerunIfMostRecentOnRestart();
+            return runnable != null && runnable.rerunIfMostRecentOnRestart();
         }
 
         @Override
@@ -451,16 +457,16 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
             String runnableName = argv.length == 0 ? "" : argv[0];
             for (Class clazz : classes) {
                 if (clazz.getSimpleName().equals(runnableName)) {
-                    r = (DevConsoleRunnable) clazz.newInstance();
-                    r.console = console;
-                    r.command = this;
-                    r.value = argv.length == 1 ? null : argv[1];
-                    r.actionLogger = console.devHelper.getActionLogger();
-                    r.argv = argv;
+                    runnable = (DevConsoleRunnable) clazz.newInstance();
+                    runnable.console = console;
+                    runnable.command = this;
+                    runnable.value = argv.length == 1 ? null : argv[1];
+                    runnable.actionLogger = console.devHelper.getActionLogger();
+                    runnable.argv = argv;
                     try {
                         LooseContext.pushWithKey(
                                 DevConsoleRunnable.CONTEXT_ACTION_RESULT, "");
-                        r.run();
+                        runnable.run();
                         String msg = LooseContext.getString(
                                 DevConsoleRunnable.CONTEXT_ACTION_RESULT);
                         if (ResourceUtilities.is(ServletLayerUtils.class,
