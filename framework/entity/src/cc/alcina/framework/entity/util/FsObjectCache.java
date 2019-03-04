@@ -39,7 +39,7 @@ public class FsObjectCache<T> {
         }
     };
 
-    private Timer invalidationTimer = new Timer();
+    private Timer invalidationTimer;
 
     public FsObjectCache(File root, Class<T> clazz,
             ThrowingFunction<String, T> pathToValue) {
@@ -68,6 +68,18 @@ public class FsObjectCache<T> {
         return this.cacheObjects;
     }
 
+    public void persist(T t, String path) {
+        ClassStringKeyLock lock = LockUtils
+                .obtainClassStringKeyLock(pathToValue.getClass(), path);
+        try {
+            lock.lock();
+            File cacheFile = getCacheFile(path);
+            KryoUtils.serializeToFile(t, cacheFile);
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public void setCacheObjects(boolean cacheObjects) {
         this.cacheObjects = cacheObjects;
     }
@@ -77,7 +89,9 @@ public class FsObjectCache<T> {
     }
 
     public void shutdown() {
-        invalidationTimer.cancel();
+        if (invalidationTimer != null) {
+            invalidationTimer.cancel();
+        }
     }
 
     private void checkInvalidation() {
@@ -106,6 +120,9 @@ public class FsObjectCache<T> {
                     checkInvalidation();
                 }
             };
+            if (invalidationTimer == null) {
+                invalidationTimer = new Timer();
+            }
             invalidationTimer.scheduleAtFixedRate(invalidationTask,
                     objectInvalidationTime / 2, objectInvalidationTime / 2);
         }

@@ -20,6 +20,7 @@
 	<classpathentry kind="src" path="extras/ios6/src"/>
 	<classpathentry excluding="com.google.gwt.regexp.super.com.google.gwt.regexp.shared/" kind="src" output="extras/jsdom/build" path="extras/jsdom/src"/>
 	<classpathentry kind="src" output="extras/jsdom/build-element" path="extras/jsdom/src-element"/>
+	<classpathentry kind="src" path="extras/wd/src"/>
 	<classpathentry kind="lib" path="lib/extras/cluster/ant.jar" sourcepath="/Users/ouiji/Documents/programmin/java/apache-ant-1.9.5/src/"/>
 	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/common/jaxb-api.jar"/>
@@ -69,5 +70,6 @@
 	<classpathentry kind="lib" path="lib/framework/entity/slf4j-api-1.7.25.jar" sourcepath="/private/var/local/git/minor/jars/slf4j-api-1.7.2.jbossorg-1-sources.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/commons-pool2-2.6.0.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-elemental.jar"/>
+	<classpathentry kind="lib" path="lib/extras/webdriver/selenium-server-standalone-3.7.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

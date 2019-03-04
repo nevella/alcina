@@ -64,6 +64,7 @@ import org.apache.log4j.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
+import cc.alcina.extras.dev.console.DevHelper.ConsolePrompter;
 import cc.alcina.extras.dev.console.DevHelper.StringPrompter;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
@@ -763,7 +764,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         // loadFontMetrics();
         createDevHelper();
         devHelper.loadDefaultLoggingProperties();
-        devHelper.loadJbossConfig(null);
+        devHelper.loadJbossConfig(new ConsolePrompter());
         devHelper.initLightweightServices();
         logger = devHelper.getTestLogger();
         List<Class> lookup = Registry.get().lookup(DevConsoleCommand.class);
