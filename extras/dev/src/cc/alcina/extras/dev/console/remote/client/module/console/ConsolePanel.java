@@ -174,6 +174,8 @@ public class ConsolePanel extends Composite {
 
         private ScrollPanel scrollPanel;
 
+        int htmlCharCount = 0;
+
         public OutputPanel() {
             this.fp = new FlowPanel();
             initWidget(fp);
@@ -181,7 +183,13 @@ public class ConsolePanel extends Composite {
         }
 
         public void addHtml(String outputHtml) {
+            if (htmlCharCount > 500000) {
+                clearContents();
+                htmlCharCount = 0;
+                inner.add(new InlineHTML("...truncated <br>"));
+            }
             inner.add(new InlineHTML(outputHtml));
+            htmlCharCount += outputHtml.length();
             Scheduler.get()
                     .scheduleDeferred(() -> scrollPanel.scrollToBottom());
             commandBarPanel.focus();
