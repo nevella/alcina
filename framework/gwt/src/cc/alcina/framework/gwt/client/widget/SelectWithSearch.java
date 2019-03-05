@@ -62,6 +62,7 @@ import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSe
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -884,7 +885,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
                 && !isAutoHolderHeight()) {
             int hhInt = holderHeight != null && holderHeight.endsWith("px")
                     ? Integer.parseInt(holderHeight.replace("px", ""))
-                    : 0;
+                    : Window.getClientHeight() / 3;
             String scrollerHeight = Math.min(hhInt,
                     itemHolder.getOffsetHeight() - border) + "px";
             scroller.setHeight(scrollerHeight);
