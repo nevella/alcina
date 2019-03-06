@@ -175,7 +175,7 @@ public class DevConsoleCommandInternalMetrics {
             if (duration != 0) {
                 filters.add(Ax.format(
                         "extract    (epoch from (CASE when endtime is null then now() ELSE endtime END)-starttime)*1000>%s",
-                        tz, duration));
+                        duration));
             }
             if (nearDate.length() > 0) {
                 DateFormat dbDateFormat = new SynchronizedSimpleDateFormat(
