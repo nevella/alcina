@@ -179,7 +179,7 @@ public class DevConsoleRemote {
         int f_currentOffset = currentOffset;
         // cull any really old offsets
         perClientInstanceRecordOffsets.entrySet()
-                .removeIf(e -> e.getValue() + 500 < f_currentOffset);
+                .removeIf(e -> e.getValue() + 99999 < f_currentOffset);
         // are they all at the end?
         boolean allCurrent = perClientInstanceRecordOffsets.entrySet().stream()
                 .allMatch(e -> e.getValue() == f_currentOffset);
