@@ -9,7 +9,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.json.JSONArray;
 
 import cc.alcina.extras.dev.console.DevConsoleCommandTransforms.DateTimeFormatter;
 import cc.alcina.extras.dev.console.DevConsoleCommandTransforms.TrimmedStringFormatter;
@@ -49,7 +53,7 @@ public class DevConsoleCommandInternalMetrics {
 
         @Override
         public String getUsage() {
-            return "im {params or none for usage}";
+            return "imd <id> (true) :: second arg indicates dump callee args";
         }
 
         @Override
@@ -266,8 +270,18 @@ public class DevConsoleCommandInternalMetrics {
             Ax.out(GraphProjection.fieldwiseToString(internalMetric, false,
                     false, 30, "obfuscatedArgs", "sliceJson", "versionNumber",
                     "localId"));
+            String args = internalMetric.getObfuscatedArgs();
+            try {
+                Matcher matcher = Pattern
+                        .compile("(?s)((?:.+?)Parameters:)(.+)").matcher(args);
+                matcher.matches();
+                args = matcher.group(1)
+                        + new JSONArray(matcher.group(2)).toString(2);
+            } catch (Exception e) {
+                int debug = 3;
+            }
             if (outputArgs) {
-                Ax.out("-----------\n%s\n", internalMetric.getObfuscatedArgs());
+                Ax.out("-----------\n%s\n", args);
             }
             ThreadHistory history = internalMetric.getThreadHistory();
             history.elements.forEach(thhe -> {
@@ -307,6 +321,9 @@ public class DevConsoleCommandInternalMetrics {
                 Ax.out("Trace:\n\t%s", CommonUtils.joinWithNewlineTab(
                         filterTrace(threadInfo.stackTrace)));
             });
+            if (outputArgs) {
+                Ax.out("-----------\n%s\n", args);
+            }
         }
 
         private boolean elide(FilteredTrace last, StackTraceElement element,

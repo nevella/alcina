@@ -14,6 +14,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -274,8 +275,14 @@ public class InternalMetrics {
         List<InternalMetricData> toRemove = trackers.values().stream()
                 .filter(imd -> imd.isFinished() && imd.sliceCount() == 0)
                 .collect(Collectors.toList());
-        toPersist = trackers.values().stream()
-                .filter(imd -> imd.sliceCount() > 0)
+        boolean persistAllMetrics = ResourceUtilities.is("persistAllMetrics");
+        Predicate<InternalMetricData> requiresSliceFilter = persistAllMetrics
+                ? imd -> true
+                : imd -> imd.sliceCount() > 0;
+        if (persistAllMetrics) {
+            toRemove.clear();
+        }
+        toPersist = trackers.values().stream().filter(requiresSliceFilter)
                 .filter(imd -> imd.isFinished()
                         || imd.lastPersistTime < imd.lastSliceTime)
                 .map(imd -> imd.syncCopyForPersist())
