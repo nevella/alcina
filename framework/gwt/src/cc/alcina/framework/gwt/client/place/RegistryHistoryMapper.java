@@ -64,7 +64,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
     @Override
     public synchronized String getToken(Place place) {
-        if (place == null) {
+        if (place == null || tokenizersByPlace.isEmpty()) {
             return "";
         }
         String token = tokenizersByPlace.get(place.getClass()).getToken(place);

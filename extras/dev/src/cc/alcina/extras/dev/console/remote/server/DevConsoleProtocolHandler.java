@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class DevConsoleProtocolHandler extends AbstractHandler {
@@ -124,12 +125,12 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
             Object outputReadyNotifier = devConsoleProtocolHandler.devConsoleRemote.outputReadyNotifier;
             synchronized (outputReadyNotifier) {
                 try {
-                    outputReadyNotifier.wait(30000);
+                    outputReadyNotifier.wait(1 * TimeConstants.ONE_HOUR_MS);
                 } catch (InterruptedException e) {
                     //
                 }
                 List<ConsoleRecord> records = devConsoleProtocolHandler.devConsoleRemote
-                        .takeRecords();
+                        .takeRecords(consoleRequest.getClientInstanceUid());
                 RemoteConsoleConsoleChanges changes = new RemoteConsoleConsoleChanges();
                 response.setChanges(changes);
                 StringBuilder builder = new StringBuilder();

@@ -41,7 +41,7 @@ public class ConsolePanel extends Composite {
     }
 
     private void getRecords() {
-        RemoteConsoleRequest request = new RemoteConsoleRequest();
+        RemoteConsoleRequest request = RemoteConsoleRequest.create();
         request.setType(RemoteConsoleRequestType.GET_RECORDS);
         RemoteConsoleClientUtils.submitRequest(request, this::handleRecords);
     }
@@ -59,7 +59,7 @@ public class ConsolePanel extends Composite {
     }
 
     void arrowDown() {
-        RemoteConsoleRequest request = new RemoteConsoleRequest();
+        RemoteConsoleRequest request = RemoteConsoleRequest.create();
         request.setType(RemoteConsoleRequestType.ARROW_DOWN);
         try {
             RemoteConsoleClientUtils.submitRequest(request, null);
@@ -69,7 +69,7 @@ public class ConsolePanel extends Composite {
     }
 
     void arrowUp() {
-        RemoteConsoleRequest request = new RemoteConsoleRequest();
+        RemoteConsoleRequest request = RemoteConsoleRequest.create();
         request.setType(RemoteConsoleRequestType.ARROW_UP);
         try {
             RemoteConsoleClientUtils.submitRequest(request, null);
@@ -101,7 +101,7 @@ public class ConsolePanel extends Composite {
     }
 
     void submitCommand(String string) {
-        RemoteConsoleRequest request = new RemoteConsoleRequest();
+        RemoteConsoleRequest request = RemoteConsoleRequest.create();
         request.setCommandString(string);
         request.setType(RemoteConsoleRequestType.DO_COMMAND);
         try {

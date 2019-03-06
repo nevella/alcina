@@ -5,9 +5,12 @@ import java.io.Writer;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.stream.Collectors;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -40,6 +43,8 @@ public class DevConsoleRemote {
     private DevConsole devConsole;
 
     private boolean hasRemote;
+
+    Map<String, Integer> perClientInstanceRecordOffsets = new LinkedHashMap<>();
 
     public DevConsoleRemote(DevConsole devConsole) {
         this.devConsole = devConsole;
@@ -156,21 +161,38 @@ public class DevConsoleRemote {
             @Override
             public void run() {
                 synchronized (outputReadyNotifier) {
-                    outputReadyNotifier.notify();
+                    outputReadyNotifier.notifyAll();
                 }
             }
         };
         timer.scheduleAtFixedRate(notifyTask, 50, 50);
     }
 
-    synchronized List<ConsoleRecord> takeRecords() {
-        List<ConsoleRecord> currentRecords = this.records;
-        this.records = new ArrayList<>();
+    synchronized List<ConsoleRecord> takeRecords(String clientInstanceUid) {
+        int size = this.records.size();
+        int currentOffset = perClientInstanceRecordOffsets
+                .computeIfAbsent(clientInstanceUid, id -> 0);
+        List<ConsoleRecord> returnRecords = this.records.stream()
+                .skip(currentOffset).collect(Collectors.toList());
+        currentOffset = this.records.size();
+        perClientInstanceRecordOffsets.put(clientInstanceUid, currentOffset);
+        int f_currentOffset = currentOffset;
+        // cull any really old offsets
+        perClientInstanceRecordOffsets.entrySet()
+                .removeIf(e -> e.getValue() + 500 < f_currentOffset);
+        // are they all at the end?
+        boolean allCurrent = perClientInstanceRecordOffsets.entrySet().stream()
+                .allMatch(e -> e.getValue() == f_currentOffset);
+        if (allCurrent) {
+            perClientInstanceRecordOffsets.entrySet()
+                    .forEach(e -> e.setValue(0));
+            this.records.clear();
+        }
         if (notifyTask != null) {
             notifyTask.cancel();
             notifyTask = null;
         }
-        return currentRecords;
+        return returnRecords;
     }
 
     class ConsoleRecord {

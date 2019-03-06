@@ -45,7 +45,7 @@ public class RemoteConsoleInit {
         Registry.registerSingleton(CurrentUtcDateProvider.class,
                 new ClientUTCDateProvider());
         RemoteConsoleModule.get();
-        RemoteConsoleRequest request = new RemoteConsoleRequest();
+        RemoteConsoleRequest request = RemoteConsoleRequest.create();
         request.setType(RemoteConsoleRequestType.STARTUP);
         RemoteConsoleClientUtils.submitRequest(request,
                 this::handleStartupResponse);
