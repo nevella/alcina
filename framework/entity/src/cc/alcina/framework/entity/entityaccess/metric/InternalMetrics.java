@@ -86,6 +86,9 @@ public class InternalMetrics {
     }
 
     public void logBlackBox() {
+        if (!ResourceUtilities.is(InternalMetrics.class, "enabled")) {
+            return;
+        }
         String message = trackers.values().stream()
                 .filter(imd -> !imd.isFinished())
                 .map(InternalMetricData::logForBlackBox)
@@ -96,9 +99,6 @@ public class InternalMetrics {
     }
 
     public void startService() {
-        if (!ResourceUtilities.is(InternalMetrics.class, "enabled")) {
-            return;
-        }
         this.sliceOracle = Registry.impl(InternalMetricSliceOracle.class);
         Preconditions.checkState(!started);
         started = true;
@@ -161,6 +161,9 @@ public class InternalMetrics {
             Supplier<String> callContextProvider, InternalMetricType type,
             String metricName) {
         if (!started) {
+            return;
+        }
+        if (!ResourceUtilities.is(InternalMetrics.class, "enabled")) {
             return;
         }
         if (trackers.size() > MAX_TRACKERS && DISABLE_OVER_MAX_TRACKERS) {
