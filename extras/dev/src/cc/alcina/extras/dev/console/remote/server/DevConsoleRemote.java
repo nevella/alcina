@@ -79,6 +79,13 @@ public class DevConsoleRemote {
         return out;
     }
 
+    public synchronized boolean hasRecords(String clientInstanceUid) {
+        int size = this.records.size();
+        int currentOffset = perClientInstanceRecordOffsets
+                .computeIfAbsent(clientInstanceUid, id -> 0);
+        return currentOffset == size;
+    }
+
     public boolean isHasRemote() {
         return this.hasRemote;
     }

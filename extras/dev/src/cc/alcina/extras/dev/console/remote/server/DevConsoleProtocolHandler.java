@@ -125,7 +125,10 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
             Object outputReadyNotifier = devConsoleProtocolHandler.devConsoleRemote.outputReadyNotifier;
             synchronized (outputReadyNotifier) {
                 try {
-                    outputReadyNotifier.wait(1 * TimeConstants.ONE_HOUR_MS);
+                    if (!devConsoleProtocolHandler.devConsoleRemote.hasRecords(
+                            consoleRequest.getClientInstanceUid())) {
+                        outputReadyNotifier.wait(1 * TimeConstants.ONE_HOUR_MS);
+                    }
                 } catch (InterruptedException e) {
                     //
                 }
