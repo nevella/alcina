@@ -132,6 +132,10 @@ public class StringMap extends LinkedHashMap<String, String> {
         return string;
     }
 
+    public void setBoolean(String key, boolean value) {
+        put(key, String.valueOf(value));
+    }
+
     public void setBooleanOrRemove(String key, boolean value) {
         if (value) {
             put(key, String.valueOf(true));
