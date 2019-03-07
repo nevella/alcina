@@ -12,6 +12,14 @@ public class JacksonUtils {
                 .withAllowUnknownProperties().getObjectMapper();
     }
 
+    public static <T> T deserialize(String json, Class<T> clazz) {
+        try {
+            return defaultGraphMapper().readValue(json, clazz);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
     public static String serializeForLogging(Object object) {
         try {
             return defaultGraphMapper()
