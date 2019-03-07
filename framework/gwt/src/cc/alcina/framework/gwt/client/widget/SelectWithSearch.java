@@ -883,9 +883,15 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
         if (itemHolder.getOffsetHeight()
                 + border > (panelForPopup.getOffsetHeight() - 20)
                 && !isAutoHolderHeight()) {
-            int hhInt = holderHeight != null && holderHeight.endsWith("px")
-                    ? Integer.parseInt(holderHeight.replace("px", ""))
-                    : Window.getClientHeight() / 3;
+            int hhInt = 0;
+            if (holderHeight != null && holderHeight.endsWith("px")) {
+                // chrome exceptions with replace?
+                String toParse = holderHeight.replace("px", "");
+                hhInt = CommonUtils.friendlyParseInt(toParse);
+                hhInt = Math.max(hhInt, 100);
+            } else {
+                hhInt = Window.getClientHeight() / 3;
+            }
             String scrollerHeight = Math.min(hhInt,
                     itemHolder.getOffsetHeight() - border) + "px";
             scroller.setHeight(scrollerHeight);
