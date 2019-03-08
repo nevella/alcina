@@ -188,6 +188,11 @@ public class IntPair implements Comparable<IntPair>, Serializable {
         i2 = union.i2;
     }
 
+    public void expandToIncludeNonContiguous(IntPair other) {
+        i1 = Math.min(i1, other.i1);
+        i2 = Math.max(i2, other.i2);
+    }
+
     @Override
     public int hashCode() {
         return i1 << 16 ^ i2;
