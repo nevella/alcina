@@ -426,6 +426,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
     }
 
     public String getMultilineInput(String prompt, int rows, int cols) {
+        if (isHeadless()) {
+            return getClipboardContents();
+        }
         final JTextArea textArea = new JTextArea(rows, cols);
         textArea.addAncestorListener(new AncestorListener() {
             @Override
@@ -660,9 +663,23 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
      * Clipboard's contents.
      */
     public void setClipboardContents(String aString) {
-        StringSelection stringSelection = new StringSelection(aString);
-        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-        clipboard.setContents(stringSelection, this);
+        try {
+            StringSelection stringSelection = new StringSelection(aString);
+            Clipboard clipboard = Toolkit.getDefaultToolkit()
+                    .getSystemClipboard();
+            clipboard.setContents(stringSelection, this);
+        } catch (HeadlessException e) {
+            if (isOsX()) {
+                try {
+                    String path = "/tmp/pbcopy.txt";
+                    ResourceUtilities.write(aString, path);
+                    new ShellWrapper()
+                            .runBashScript(Ax.format("pbcopy < %s", path));
+                } catch (Exception e2) {
+                    throw new WrappedRuntimeException(e2);
+                }
+            }
+        }
     }
 
     public void setCommandLineText(String text) {
