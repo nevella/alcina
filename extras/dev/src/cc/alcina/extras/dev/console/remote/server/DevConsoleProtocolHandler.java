@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 
@@ -35,21 +36,30 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
     public void handle(String target, Request baseRequest,
             HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
-        response.setContentType("application/json");
-        String requestJson = ResourceUtilities
-                .readStreamToString(request.getInputStream());
-        if (requestJson.length() > 0) {
-            RemoteConsoleRequest consoleRequest = AlcinaBeanSerializer
-                    .deserializeHolder(requestJson);
-            MethodHandler methodHandler = Registry.get().lookupImplementation(
-                    MethodHandler.class, consoleRequest.getType(), "type");
-            RemoteConsoleResponse consoleResponse = methodHandler
-                    .handle(consoleRequest, this);
-            response.getWriter().write(
-                    AlcinaBeanSerializer.serializeHolder(consoleResponse));
+        try {
+            LooseContext.push();
+            response.setContentType("application/json");
+            String requestJson = ResourceUtilities
+                    .readStreamToString(request.getInputStream());
+            if (requestJson.length() > 0) {
+                RemoteConsoleRequest consoleRequest = AlcinaBeanSerializer
+                        .deserializeHolder(requestJson);
+                LooseContext.set(
+                        DevConsoleRemote.CONTEXT_CALLER_CLIENT_INSTANCE_UID,
+                        consoleRequest.getClientInstanceUid());
+                MethodHandler methodHandler = Registry.get()
+                        .lookupImplementation(MethodHandler.class,
+                                consoleRequest.getType(), "type");
+                RemoteConsoleResponse consoleResponse = methodHandler
+                        .handle(consoleRequest, this);
+                response.getWriter().write(
+                        AlcinaBeanSerializer.serializeHolder(consoleResponse));
+            }
+            response.setStatus(HttpServletResponse.SC_OK);
+            baseRequest.setHandled(true);
+        } finally {
+            LooseContext.pop();
         }
-        response.setStatus(HttpServletResponse.SC_OK);
-        baseRequest.setHandled(true);
     }
 
     @RegistryLocation(registryPoint = MethodHandler.class)
