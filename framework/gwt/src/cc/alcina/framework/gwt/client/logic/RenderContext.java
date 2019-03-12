@@ -45,6 +45,9 @@ public class RenderContext extends LooseContextInstance {
     private static final String VALIDATION_FEEDBACK_SUPPLIER = RenderContext.class
             .getName() + ".VALIDATION_FEEDBACK_SUPPLIER";
 
+    private static final String SUPPRESS_VALIDATION_FEEDBACK_FOR = RenderContext.class
+            .getName() + ".SUPPRESS_VALIDATION_FEEDBACK_FOR";
+
     public static final String CONTEXT_IGNORE_AUTOFOCUS = ContentViewFactory.class
             .getName() + ".CONTEXT_IGNORE_AUTOFOCUS";
 
@@ -99,6 +102,10 @@ public class RenderContext extends LooseContextInstance {
         return get(ROOT_RENDERER);
     }
 
+    public Widget getSuppressValidationFeedbackFor() {
+        return get(SUPPRESS_VALIDATION_FEEDBACK_FOR);
+    }
+
     public Function<String, ValidationFeedback> getValidationFeedbackSupplier() {
         return get(VALIDATION_FEEDBACK_SUPPLIER);
     }
@@ -129,6 +136,10 @@ public class RenderContext extends LooseContextInstance {
 
     public void setRootRenderer(TreeRenderer rootRenderer) {
         set(ROOT_RENDERER, rootRenderer);
+    }
+
+    public void setSuppressValidationFeedbackFor(Widget widget) {
+        set(SUPPRESS_VALIDATION_FEEDBACK_FOR, widget);
     }
 
     public void setValidationFeedbackSupplier(

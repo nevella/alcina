@@ -449,27 +449,27 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
         if (pr != null && pr.getDisplayInfo() != null) {
             PropertyPermissions pp = pr
                     .getAnnotation(PropertyPermissions.class);
-            Display displayInfo = pr.getDisplayInfo();
+            Display display = pr.getDisplayInfo();
             Association association = pr.getAnnotation(Association.class);
             boolean fieldVisible = PermissionsManager.get()
                     .checkEffectivePropertyPermission(op, pp, obj, true)
-                    && displayInfo != null
+                    && display != null
                     && PermissionsManager.get().isPermissible(obj,
-                            displayInfo.visible())
-                    && ((displayInfo.displayMask()
+                            display.visible())
+                    && ((display.displayMask()
                             & Display.DISPLAY_AS_PROPERTY) != 0);
             if (!fieldVisible) {
                 return null;
             }
-            boolean focus = displayInfo.focus();
+            boolean focus = display.focus();
             boolean propertyIsCollection = (p.getType() == Set.class);
             boolean fieldEditable = editableWidgets
                     && (PermissionsManager.get()
                             .checkEffectivePropertyPermission(op, pp, obj,
                                     false)
-                            || ((displayInfo.displayMask()
+                            || ((display.displayMask()
                                     & Display.DISPLAY_EDITABLE) != 0))
-                    && ((displayInfo.displayMask() & Display.DISPLAY_RO) == 0);
+                    && ((display.displayMask() & Display.DISPLAY_RO) == 0);
             Class domainType = p.getType();
             domainType = (association == null || !propertyIsCollection
                     || association.implementationClass() == void.class)
@@ -482,7 +482,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
                         propertyIsCollection);
             }
             boolean isEnum = domainType.isEnum();
-            boolean displayWrap = (displayInfo.displayMask()
+            boolean displayWrap = (display.displayMask()
                     & Display.DISPLAY_WRAP) > 0;
             if (bwp == null && isEnum) {
                 bwp = fieldEditable ? new ListBoxEnumProvider(domainType, true)
@@ -496,7 +496,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
                             : DN_LABEL_PROVIDER;
                 } else {
                     if (domainType == Date.class) {
-                        if (displayInfo.rendererHint()
+                        if (display.rendererHint()
                                 .equals(HINT_DATE_WITH_TIME_TITLE)) {
                             bwp = AU_DATE_TIME_TITLE_PROVIDER;
                         } else {
@@ -543,15 +543,17 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
                         TextProvider.get().getLabelText(c, pr), bwp, validator,
                         validationFeedback,
                         getDefaultConverter(bwp, p.getType()));
-                if (!displayInfo.styleName().isEmpty()) {
-                    field.setStyleName(displayInfo.styleName());
+                if (!display.styleName().isEmpty()) {
+                    field.setStyleName(display.styleName());
                 }
-                if (!displayInfo.widgetStyleName().isEmpty()) {
-                    field.setWidgetStyleName(displayInfo.widgetStyleName());
+                if (!display.widgetStyleName().isEmpty()) {
+                    field.setWidgetStyleName(display.widgetStyleName());
                 }
-                if (!displayInfo.helpText().isEmpty()) {
-                    field.setHelpText(
-                            displayInfo.helpText().replace("\\n", "\n"));
+                if (!display.helpText().isEmpty()) {
+                    field.setHelpText(display.helpText().replace("\\n", "\n"));
+                }
+                if (!display.autocompleteName().isEmpty()) {
+                    field.setAutocompleteName(display.autocompleteName());
                 }
                 return field;
             }

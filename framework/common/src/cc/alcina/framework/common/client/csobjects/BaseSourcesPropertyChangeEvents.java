@@ -29,76 +29,99 @@ import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
  * @author Nick Reddel
  */
 public class BaseSourcesPropertyChangeEvents
-		implements SourcesPropertyChangeEvents {
-	private transient MutablePropertyChangeSupport propertyChangeSupport;
+        implements SourcesPropertyChangeEvents {
+    private transient MutablePropertyChangeSupport propertyChangeSupport;
 
-	public void addPropertyChangeListener(PropertyChangeListener listener) {
-		this.propertyChangeSupport().addPropertyChangeListener(listener);
-	}
+    public void addOrRemovePropertyChangeListener(
+            PropertyChangeListener listener, boolean add) {
+        if (add) {
+            this.propertyChangeSupport().addPropertyChangeListener(listener);
+        } else {
+            this.propertyChangeSupport().removePropertyChangeListener(listener);
+        }
+    }
 
-	public void addPropertyChangeListener(String propertyName,
-			PropertyChangeListener listener) {
-		this.propertyChangeSupport().addPropertyChangeListener(propertyName,
-				listener);
-	}
+    public void addOrRemovePropertyChangeListener(String propertyName,
+            PropertyChangeListener listener, boolean add) {
+        if (add) {
+            addPropertyChangeListener(propertyName, listener);
+        } else {
+            removePropertyChangeListener(propertyName, listener);
+        }
+    }
 
-	/**
-	 * Useful for collection listeners - a "check the kids" thing
-	 */
-	public void fireNullPropertyChange(String name) {
-		((MutablePropertyChangeSupport) this.propertyChangeSupport())
-				.fireNullPropertyChange(name);
-	}
+    @Override
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        this.propertyChangeSupport().addPropertyChangeListener(listener);
+    }
 
-	public void firePropertyChange(PropertyChangeEvent evt) {
-		this.propertyChangeSupport().firePropertyChange(evt);
-	}
+    @Override
+    public void addPropertyChangeListener(String propertyName,
+            PropertyChangeListener listener) {
+        this.propertyChangeSupport().addPropertyChangeListener(propertyName,
+                listener);
+    }
 
-	public void firePropertyChange(String propertyName, boolean oldValue,
-			boolean newValue) {
-		this.propertyChangeSupport().firePropertyChange(propertyName, oldValue,
-				newValue);
-	}
+    /**
+     * Useful for collection listeners - a "check the kids" thing
+     */
+    public void fireNullPropertyChange(String name) {
+        ((MutablePropertyChangeSupport) this.propertyChangeSupport())
+                .fireNullPropertyChange(name);
+    }
 
-	public void firePropertyChange(String propertyName, int oldValue,
-			int newValue) {
-		this.propertyChangeSupport().firePropertyChange(propertyName, oldValue,
-				newValue);
-	}
+    public void firePropertyChange(PropertyChangeEvent evt) {
+        this.propertyChangeSupport().firePropertyChange(evt);
+    }
 
-	public void firePropertyChange(String propertyName, Object oldValue,
-			Object newValue) {
-		this.propertyChangeSupport().firePropertyChange(propertyName, oldValue,
-				newValue);
-	}
+    public void firePropertyChange(String propertyName, boolean oldValue,
+            boolean newValue) {
+        this.propertyChangeSupport().firePropertyChange(propertyName, oldValue,
+                newValue);
+    }
 
-	@Transient
-	@XmlTransient
-	@JsonIgnore
-	public PropertyChangeListener[] getPropertyChangeListeners() {
-		return this.propertyChangeSupport().getPropertyChangeListeners();
-	}
+    public void firePropertyChange(String propertyName, int oldValue,
+            int newValue) {
+        this.propertyChangeSupport().firePropertyChange(propertyName, oldValue,
+                newValue);
+    }
 
-	public void removePropertyChangeListener(PropertyChangeListener listener) {
-		this.propertyChangeSupport().removePropertyChangeListener(listener);
-	}
+    public void firePropertyChange(String propertyName, Object oldValue,
+            Object newValue) {
+        this.propertyChangeSupport().firePropertyChange(propertyName, oldValue,
+                newValue);
+    }
 
-	public void removePropertyChangeListener(String propertyName,
-			PropertyChangeListener listener) {
-		this.propertyChangeSupport().removePropertyChangeListener(propertyName,
-				listener);
-	}
+    @Override
+    @Transient
+    @XmlTransient
+    @JsonIgnore
+    public PropertyChangeListener[] getPropertyChangeListeners() {
+        return this.propertyChangeSupport().getPropertyChangeListeners();
+    }
 
-	/*
-	 * Given all the ways the transient deserialization mix can go wrong, this
-	 * is best.
-	 * 
-	 * I'd imagine any decent JS engine will optimise the null check fairly well
-	 */
-	protected MutablePropertyChangeSupport propertyChangeSupport() {
-		if (propertyChangeSupport == null) {
-			propertyChangeSupport = new MutablePropertyChangeSupport(this);
-		}
-		return propertyChangeSupport;
-	}
+    @Override
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        this.propertyChangeSupport().removePropertyChangeListener(listener);
+    }
+
+    @Override
+    public void removePropertyChangeListener(String propertyName,
+            PropertyChangeListener listener) {
+        this.propertyChangeSupport().removePropertyChangeListener(propertyName,
+                listener);
+    }
+
+    /*
+     * Given all the ways the transient deserialization mix can go wrong, this
+     * is best.
+     * 
+     * I'd imagine any decent JS engine will optimise the null check fairly well
+     */
+    protected MutablePropertyChangeSupport propertyChangeSupport() {
+        if (propertyChangeSupport == null) {
+            propertyChangeSupport = new MutablePropertyChangeSupport(this);
+        }
+        return propertyChangeSupport;
+    }
 }
