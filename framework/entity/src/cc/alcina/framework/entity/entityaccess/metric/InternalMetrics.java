@@ -217,7 +217,7 @@ public class InternalMetrics {
                         imd.lastSliceTime = System.currentTimeMillis();
                         if (imd.type == InternalMetricTypeAlcina.health) {
                             logger.info(
-                                    "Internal health metrics monitoring:\n\t%s",
+                                    "Internal health metrics monitoring:\n\t{}",
                                     getMemoryStats());
                             long[] allIds = threadMxBean.getAllThreadIds();
                             ThreadInfo[] threadInfos2 = threadMxBean
