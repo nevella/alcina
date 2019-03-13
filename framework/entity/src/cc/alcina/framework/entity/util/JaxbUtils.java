@@ -32,44 +32,44 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class JaxbUtils {
-	private static JaxbUtils singleton;
+    private static JaxbUtils singleton;
 
-	public static JaxbUtils get() {
-		if (singleton == null) {
-			singleton = new JaxbUtils();
-			Registry.registerSingleton(JaxbUtils.class, singleton);
-		}
-		return singleton;
-	}
+    public static JaxbUtils get() {
+        if (singleton == null) {
+            singleton = new JaxbUtils();
+            Registry.registerSingleton(JaxbUtils.class, singleton);
+        }
+        return singleton;
+    }
 
-	public static JAXBContext getContext(Collection<Class> classes)
-			throws JAXBException {
-		return get().getContext0(classes);
-	}
+    public static JAXBContext getContext(Collection<Class> classes)
+            throws JAXBException {
+        return get().getContext0(classes);
+    }
 
-	private JAXBContext jc = null;
+    private JAXBContext jc = null;
 
-	private Set<Class> jcClasses = new HashSet<Class>();
+    private Set<Class> jcClasses = new HashSet<Class>();
 
-	private JaxbUtils() {
-	}
+    private JaxbUtils() {
+    }
 
-	private JAXBContext getContext0(Collection<Class> classes)
-			throws JAXBException {
-		if (jc == null || !jcClasses.containsAll(classes)) {
-			synchronized (jcClasses) {
-				Map<String, String> emptyProps = new HashMap<String, String>();
-				jcClasses.addAll(classes);
-				Class[] clazzez = (Class[]) jcClasses
-						.toArray(new Class[jcClasses.size()]);
-				try {
-					jc = JAXBContext.newInstance(clazzez, emptyProps);
-				} catch (RuntimeException e) {
-					jcClasses = new HashSet<Class>();
-					throw e;
-				}
-			}
-		}
-		return jc;
-	}
+    private JAXBContext getContext0(Collection<Class> classes)
+            throws JAXBException {
+        if (jc == null || !jcClasses.containsAll(classes)) {
+            synchronized (jcClasses) {
+                Map<String, String> emptyProps = new HashMap<String, String>();
+                jcClasses.addAll(classes);
+                Class[] clazzez = (Class[]) jcClasses
+                        .toArray(new Class[jcClasses.size()]);
+                try {
+                    jc = JAXBContext.newInstance(clazzez, emptyProps);
+                } catch (RuntimeException e) {
+                    jcClasses = new HashSet<Class>();
+                    throw e;
+                }
+            }
+        }
+        return jc;
+    }
 }
