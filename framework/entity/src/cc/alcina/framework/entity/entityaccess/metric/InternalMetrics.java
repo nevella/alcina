@@ -44,7 +44,7 @@ public class InternalMetrics {
 
     private static final int MAX_TRACKERS = 200;
 
-    private static final boolean DISABLE_OVER_MAX_TRACKERS = true;
+    private static boolean DISABLE_OVER_MAX_TRACKERS = false;
 
     public static InternalMetrics get() {
         return Registry.impl(InternalMetrics.class);
@@ -167,11 +167,20 @@ public class InternalMetrics {
         if (!ResourceUtilities.is(InternalMetrics.class, "enabled")) {
             return;
         }
-        if (trackers.size() > MAX_TRACKERS && DISABLE_OVER_MAX_TRACKERS) {
-            Ax.sysLogHigh("Too many trackers - cancelling internal metrics");
-            stopService();
-            trackers.clear();
-            return;
+        if (trackers.size() > MAX_TRACKERS) {
+            if (DISABLE_OVER_MAX_TRACKERS) {
+                Ax.sysLogHigh(
+                        "Too many trackers - cancelling internal metrics");
+                stopService();
+                trackers.clear();
+                return;
+            } else {
+                Ax.sysLogHigh(
+                        "Too many trackers - resetting current internal metric trackers");
+                // stopService();
+                trackers.clear();
+                return;
+            }
         }
         trackers.put(markerObject,
                 new InternalMetricData(markerObject, callContextProvider,
