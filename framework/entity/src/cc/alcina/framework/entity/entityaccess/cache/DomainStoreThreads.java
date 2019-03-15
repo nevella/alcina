@@ -249,8 +249,7 @@ public class DomainStoreThreads {
                 case SUB_LOCK_ACQUIRED:
                     activeThreads.add(currentThread);
                     if (!activeThreadAcquireTimes.containsKey(currentThread)) {
-                        activeThreadAcquireTimes.put(currentThread,
-                                System.currentTimeMillis());
+                        activeThreadAcquireTimes.put(currentThread, time);
                     }
                     break;
                 case UNLOCK:
