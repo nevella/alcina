@@ -16,8 +16,7 @@ public class DomainStoreWaitStats {
         public long lockTimeMs;
 
         public Long bestId() {
-            // TODO Auto-generated method stub
-            return null;
+            return persistedMetricId != 0 ? persistedMetricId : threadId;
         }
     }
 }

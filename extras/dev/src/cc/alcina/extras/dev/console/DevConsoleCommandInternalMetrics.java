@@ -329,7 +329,7 @@ public class DevConsoleCommandInternalMetrics {
                 Ax.out("Trace:\n\t%s", CommonUtils.joinWithNewlineTab(
                         filterTrace(threadInfo.stackTrace)));
             });
-            Ax.out("-----------\nContended locks:\n%s",
+            Ax.out("-----------\nContended locks:\n%s\n%s",
                     WaitStatLockTimeTuple.toHeader(),
                     waitStatTimes.values().stream()
                             .sorted(Comparator.comparing(
