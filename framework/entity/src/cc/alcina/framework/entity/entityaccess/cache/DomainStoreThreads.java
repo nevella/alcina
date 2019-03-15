@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore.DomainStoreException;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreWaitStats.DomainStoreWaitOnLockStat;
 
 /*
  * Public just for inner class access, not to be used outside this package
@@ -465,6 +466,29 @@ public class DomainStoreThreads {
                     }
                 }
             }
+        }
+
+        public DomainStoreWaitStats getDomainStoreWaitStats(Thread thread) {
+            DomainStoreWaitStats stats = new DomainStoreWaitStats();
+            DomainStoreLockState lockState = getDomainStoreLockState(thread);
+            switch (lockState) {
+            case HOLDING_READ_LOCK:
+            case HOLDING_WRITE_LOCK:
+            case NO_LOCK:
+                return stats;
+            }
+            synchronized (activeThreads) {
+                stats.waitingOnLockStats = activeThreadAcquireTimes.entrySet()
+                        .stream().map(e -> {
+                            DomainStoreWaitOnLockStat stat = new DomainStoreWaitOnLockStat();
+                            stat.lockTimeMs = System.currentTimeMillis()
+                                    - e.getValue();
+                            stat.threadId = e.getKey().getId();
+                            stat.threadName = e.getKey().getName();
+                            return stat;
+                        }).collect(Collectors.toList());
+            }
+            return stats;
         }
 
         public long getDomainStoreWaitTime(Thread thread) {

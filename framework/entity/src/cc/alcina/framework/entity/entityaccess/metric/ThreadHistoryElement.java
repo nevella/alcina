@@ -4,22 +4,25 @@ import java.util.Date;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLockState;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreWaitStats;
 
 public class ThreadHistoryElement {
-	public Date date;
+    public Date date;
 
-	public ThreadInfoSer threadInfo;
+    public ThreadInfoSer threadInfo;
 
-	public long domainCacheLockTime;
+    public long domainCacheLockTime;
 
-	public DomainStoreLockState lockState;
+    public DomainStoreLockState lockState;
 
-	public long domainCacheWaitTime;
+    public DomainStoreWaitStats waitStats;
 
-	public int elidedStacktraceFrameCount;
+    public long domainCacheWaitTime;
 
-	public void elideIfMoreLinesThan(int max) {
-		elidedStacktraceFrameCount = CommonUtils
-				.elideList(threadInfo.stackTrace, max);
-	}
+    public int elidedStacktraceFrameCount;
+
+    public void elideIfMoreLinesThan(int max) {
+        elidedStacktraceFrameCount = CommonUtils
+                .elideList(threadInfo.stackTrace, max);
+    }
 }

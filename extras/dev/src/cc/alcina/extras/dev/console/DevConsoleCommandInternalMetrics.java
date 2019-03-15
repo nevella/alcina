@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -20,11 +21,13 @@ import cc.alcina.extras.dev.console.DevConsoleCommandTransforms.TrimmedStringFor
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.console.FilterArgvParam;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreWaitStats.DomainStoreWaitOnLockStat;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetric;
 import cc.alcina.framework.entity.entityaccess.metric.ThreadHistory;
 import cc.alcina.framework.entity.entityaccess.metric.ThreadInfoSer;
@@ -284,6 +287,8 @@ public class DevConsoleCommandInternalMetrics {
                 Ax.out("-----------\n%s\n", args);
             }
             ThreadHistory history = internalMetric.getThreadHistory();
+            CachingMap<Long, WaitStatLockTimeTuple> waitStatTimes = new CachingMap<>(
+                    WaitStatLockTimeTuple::new);
             history.elements.forEach(thhe -> {
                 ThreadInfoSer threadInfo = thhe.threadInfo;
                 if (ignoreables) {
@@ -315,12 +320,22 @@ public class DevConsoleCommandInternalMetrics {
                             CommonUtils.joinWithNewlineTab(
                                     threadInfo.lockedSynchronizers));
                 }
+                thhe.waitStats.waitingOnLockStats
+                        .forEach(stat -> waitStatTimes.get(stat.bestId())
+                                .add(stat, thhe.domainCacheWaitTime));
                 if (threadInfo.lock != null) {
                     Ax.out("Waiting for lock: %s", threadInfo.lock);
                 }
                 Ax.out("Trace:\n\t%s", CommonUtils.joinWithNewlineTab(
                         filterTrace(threadInfo.stackTrace)));
             });
+            Ax.out("-----------\nContended locks:\n%s",
+                    WaitStatLockTimeTuple.toHeader(),
+                    waitStatTimes.values().stream()
+                            .sorted(Comparator.comparing(
+                                    WaitStatLockTimeTuple::sliceCount))
+                            .map(Object::toString)
+                            .collect(Collectors.joining("\n")));
             if (outputArgs) {
                 Ax.out("-----------\n%s\n", args);
             }
@@ -407,6 +422,48 @@ public class DevConsoleCommandInternalMetrics {
 
         enum Format {
             list, dump
+        }
+
+        static class WaitStatLockTimeTuple {
+            private static final String template = "%-30s %12s %4s %8s";
+
+            static String toHeader() {
+                return String.format(template, "Thread name", "id", "size",
+                        "min.time");
+            }
+
+            List<DomainStoreWaitOnLockStat> stats = new ArrayList<>();
+
+            long id;
+
+            long cumulativeTime;
+
+            long lastDomainCacheWaitTime;
+
+            WaitStatLockTimeTuple(long id) {
+                this.id = id;
+            }
+
+            public void add(DomainStoreWaitOnLockStat stat,
+                    long domainCacheWaitTime) {
+                stats.add(stat);
+                if (domainCacheWaitTime > lastDomainCacheWaitTime) {
+                    cumulativeTime -= lastDomainCacheWaitTime;
+                }
+                cumulativeTime += domainCacheWaitTime;
+                lastDomainCacheWaitTime = domainCacheWaitTime;
+            }
+
+            @Override
+            public String toString() {
+                DomainStoreWaitOnLockStat stat = stats.get(0);
+                return String.format(template, stat.threadName, id,
+                        stats.size(), cumulativeTime);
+            }
+
+            int sliceCount() {
+                return stats.size();
+            }
         }
     }
 }
