@@ -1171,10 +1171,16 @@ public class ContentViewFactory {
                                     public void run() {
                                         crd.hide();
                                         if (serverValidationCallback == null) {
-                                            DomEvent.fireNativeEvent(
-                                                    WidgetUtils
-                                                            .createZeroClick(),
-                                                    sender);
+                                            if (sender != null) {
+                                                DomEvent.fireNativeEvent(
+                                                        WidgetUtils
+                                                                .createZeroClick(),
+                                                        sender);
+                                            } else {
+                                                // FIXME - probably throw a dev
+                                                // exception - something should
+                                                // happen here
+                                            }
                                         } else {
                                             validateAndCommit(sender,
                                                     serverValidationCallback);
