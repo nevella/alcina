@@ -180,7 +180,7 @@ public class PropertyStore {
     }
 
     public void setIntegerValue(PdOperator pd, int rowIdx, Integer value) {
-        ((LongStore) stores.get(pd.idx)).put(value, rowIdx);
+        ((IntStore) stores.get(pd.idx)).put(value, rowIdx);
     }
 
     public void setLongValue(PdOperator pd, int rowIdx, Long value) {
