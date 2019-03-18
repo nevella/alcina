@@ -85,6 +85,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -118,11 +119,14 @@ import cc.alcina.framework.entity.projection.GraphProjections;
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class DomainStore implements IDomainStore {
-    public static final String TOPIC_UPDATE_EXCEPTION = DomainStore.class
+    private static final String TOPIC_UPDATE_EXCEPTION = DomainStore.class
             .getName() + ".TOPIC_UPDATE_EXCEPTION";
 
-    public static final String TOPIC_MAPPING_EVENT = DomainStore.class.getName()
-            + ".TOPIC_MAPPING_EVENT";
+    private static final String TOPIC_MAPPING_EVENT = DomainStore.class
+            .getName() + ".TOPIC_MAPPING_EVENT";
+
+    private static final String TOPIC_NON_LOCKED_ACCESS = DomainStore.class
+            .getName() + ".TOPIC_NON_LOCKED_ACCESS";
 
     public static final String CONTEXT_DEBUG_QUERY_METRICS = DomainStore.class
             .getName() + ".CONTEXT_DEBUG_QUERY_METRICS";
@@ -152,6 +156,13 @@ public class DomainStore implements IDomainStore {
         return new Builder();
     }
 
+    public static void checkInLockedSection() {
+        if (!writableStore().threads.isCurrentThreadHoldingLock()) {
+            topicNonLoggedAccess().publish(null);
+        }
+        // TODO Auto-generated method stub
+    }
+
     // FIXME - this is over-called, probably should be changed to strict
     // start/finish semantics (and made non-static)
     public static PerThreadTransaction ensureActiveTransaction() {
@@ -166,6 +177,18 @@ public class DomainStore implements IDomainStore {
             }
         }
         return domainStores;
+    }
+
+    public static TopicSupport<HasIdAndLocalId> topicMappingEvent() {
+        return new TopicSupport<>(TOPIC_MAPPING_EVENT);
+    }
+
+    public static TopicSupport<DomainStoreUpdateException> topicMergeCompleted() {
+        return new TopicSupport<>(TOPIC_UPDATE_EXCEPTION);
+    }
+
+    public static TopicSupport<Void> topicNonLoggedAccess() {
+        return new TopicSupport<>(TOPIC_NON_LOCKED_ACCESS);
     }
 
     public static DomainStore writableStore() {
@@ -294,6 +317,7 @@ public class DomainStore implements IDomainStore {
     }
 
     public DetachedEntityCache getCache() {
+        checkInLockedSection();
         return this.cache;
     }
 
@@ -398,6 +422,7 @@ public class DomainStore implements IDomainStore {
         initialising = false;
         initialised = true;
         threads.startLongLockHolderCheck();
+        threads.setupLockedAccessCheck();
     }
 
     private void doEvictions() {
@@ -593,6 +618,7 @@ public class DomainStore implements IDomainStore {
     }
 
     <T extends HasIdAndLocalId> T findRaw(Class<T> clazz, long id) {
+        checkInLockedSection();
         T t = cache.get(clazz, id);
         if (t != null) {
             for (PreProvideTask task : domainDescriptor
@@ -643,6 +669,7 @@ public class DomainStore implements IDomainStore {
     }
 
     <V extends HasIdAndLocalId> boolean isRawValue(V v) {
+        checkInLockedSection();
         if (v instanceof BaseSourcesPropertyChangeEvents) {
             try {
                 MutablePropertyChangeSupport support = (MutablePropertyChangeSupport) modificationCheckerField
@@ -892,6 +919,7 @@ public class DomainStore implements IDomainStore {
                     causes.iterator().next().printStackTrace();
                     DomainStoreUpdateException updateException = new DomainStoreUpdateException(
                             umby);
+                    topicMergeCompleted().publish(updateException);
                     GlobalTopicPublisher.get().publishTopic(
                             TOPIC_UPDATE_EXCEPTION, updateException);
                     if (updateException.ignoreForDomainStoreExceptionCount) {
@@ -1200,6 +1228,7 @@ public class DomainStore implements IDomainStore {
         }
 
         public <T> T find(Class<T> clazz, long id) {
+            checkInLockedSection();
             T t = cache.get(clazz, id);
             if (transactionActiveInCurrentThread() && t != null) {
                 return (T) transactions.get()
@@ -1210,6 +1239,7 @@ public class DomainStore implements IDomainStore {
         }
 
         public Set immutableRawValues(Class clazz) {
+            checkInLockedSection();
             PerThreadTransaction perThreadTransaction = transactions.get();
             if (perThreadTransaction == null) {
                 return Collections
@@ -1219,6 +1249,7 @@ public class DomainStore implements IDomainStore {
         }
 
         public <T> Map<Long, T> lookup(Class<T> clazz) {
+            checkInLockedSection();
             return (Map<Long, T>) cache.getMap(clazz);
         }
 
@@ -1298,6 +1329,7 @@ public class DomainStore implements IDomainStore {
             if (input == null) {
                 return null;
             }
+            checkInLockedSection();
             List<Field> fields = new GraphProjection()
                     .getFieldsForClass(input.getClass());
             for (Field field : fields) {
@@ -1322,8 +1354,7 @@ public class DomainStore implements IDomainStore {
         @Override
         public void mapObject(HasIdAndLocalId obj) {
             if (publishMappingEvents) {
-                GlobalTopicPublisher.get().publishTopic(TOPIC_MAPPING_EVENT,
-                        obj);
+                topicMappingEvent().publish(obj);
             }
             super.mapObject(obj);
         }
@@ -1359,6 +1390,7 @@ public class DomainStore implements IDomainStore {
 
         @Override
         public <V extends HasIdAndLocalId> V find(V v) {
+            checkInLockedSection();
             if (!v.provideWasPersisted()) {
                 HiliLocator locator = ThreadlocalTransformManager.get()
                         .resolvePersistedLocal(DomainStore.this, v);
@@ -1425,6 +1457,7 @@ public class DomainStore implements IDomainStore {
         @Override
         public <V extends HasIdAndLocalId> Collection<V> values(
                 Class<V> clazz) {
+            checkInLockedSection();
             return cache.immutableRawValues(clazz);
         }
 

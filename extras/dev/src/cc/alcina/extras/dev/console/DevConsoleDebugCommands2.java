@@ -17,6 +17,8 @@ import cc.alcina.framework.entity.ResourceUtilities;
 public class DevConsoleDebugCommands2 {
     public static final String LOCAL_DOM_EXCEPTION_LOG_PATH = "localdom-exception.txt";
 
+    public static final String LOCAL_DOM_EXCEPTION_REMOTE_HTML_PATH = "localdom-remote.html";
+
     public static class CmdLocalDomDebugTools extends DevConsoleCommand {
         @Override
         public boolean canUseProductionConn() {
@@ -52,6 +54,10 @@ public class DevConsoleDebugCommands2 {
             Ax.out(model.localHtml);
             Ax.out("\n\n************************\n\n");
             Ax.out(model.diffCalc);
+            String remoteOutPath = Ax.format("/tmp/log/%s",
+                    LOCAL_DOM_EXCEPTION_REMOTE_HTML_PATH);
+            ResourceUtilities.write(model.remoteHtml, remoteOutPath);
+            Ax.out("Wrote file to:\n\t%s", remoteOutPath);
             return "OK";
         }
 
