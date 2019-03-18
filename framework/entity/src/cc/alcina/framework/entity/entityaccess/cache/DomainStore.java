@@ -157,10 +157,10 @@ public class DomainStore implements IDomainStore {
     }
 
     public static void checkInLockedSection() {
-        if (!writableStore().threads.isCurrentThreadHoldingLock()) {
+        if (stores().hasInitialisedDatabaseStore()
+                && !writableStore().threads.isCurrentThreadHoldingLock()) {
             topicNonLoggedAccess().publish(null);
         }
-        // TODO Auto-generated method stub
     }
 
     // FIXME - this is over-called, probably should be changed to strict

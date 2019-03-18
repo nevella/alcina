@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
@@ -179,7 +180,7 @@ public class DomainStoreThreads {
     }
 
     public void setupLockedAccessCheck() {
-        // TODO Auto-generated method stub
+        Registry.impl(DomainStoreLockedAccessChecker.class).start(this);
     }
 
     public void startLongLockHolderCheck() {
