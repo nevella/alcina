@@ -1196,8 +1196,9 @@ public class DomainStore implements IDomainStore {
                                 .contains(dte.getObjectClass())) {
                             throw new DomainStoreException(String.format(
                                     "Starting a domain store transaction with an existing transform of a graphed object - %s."
-                                            + " In certain cases that might work -- but better practice to not do so",
-                                    dte));
+                                            + " In certain cases that might work -- "
+                                            + "but better practice to not do so. All transforms: \n%s",
+                                    dte, localTransforms));
                         }
                     }
                 }
