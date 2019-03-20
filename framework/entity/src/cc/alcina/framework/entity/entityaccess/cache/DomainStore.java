@@ -273,8 +273,8 @@ public class DomainStore implements IDomainStore {
     }
 
     private DomainStore() {
-        ThreadlocalTransformManager.threadTransformManagerWasResetListenerDelta(
-                resetListener, true);
+        ThreadlocalTransformManager.topicTransformManagerWasReset()
+                .add(resetListener);
         TransformPersister.persistingTransformsListenerDelta(persistingListener,
                 true);
         persistenceListener = new DomainStorePersistenceListener();
