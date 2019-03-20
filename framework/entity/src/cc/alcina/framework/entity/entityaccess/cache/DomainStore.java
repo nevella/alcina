@@ -1290,6 +1290,8 @@ public class DomainStore implements IDomainStore {
                         .allItems()) {
                     listener.onTransactionEnd();
                 }
+                logger.info("Transaction finished: {} id:{}",
+                        Thread.currentThread().getId(), Thread.currentThread());
                 transactions.remove();
                 synchronized (this) {
                     activeTransactionThreadIds
