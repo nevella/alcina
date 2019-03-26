@@ -1,4 +1,4 @@
-package au.com.barnet.webdriver;
+package cc.alcina.extras.webdriver;
 
 import java.lang.reflect.Field;
 import java.net.URL;
@@ -10,8 +10,8 @@ import org.openqa.selenium.remote.HttpCommandExecutor;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.SessionId;
 
-import au.com.barnet.webdriver.WDDriverHandlerExt.PersistentDriverData;
-import au.com.barnet.webdriver.WDDriverHandlerExt.PersistentDriverDataNode;
+import cc.alcina.extras.webdriver.WDDriverHandlerExt.PersistentDriverData;
+import cc.alcina.extras.webdriver.WDDriverHandlerExt.PersistentDriverDataNode;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 public class RemoteWebdriverReusable extends RemoteWebDriver {
