@@ -20,29 +20,33 @@ public class ClusterStateProviderFile implements ClusterStateProvider {
     @Override
     public ClusterState getClusterState(String forClusterId) throws Exception {
         for (String path : configFilePaths.split(",")) {
-            StringMap props = StringMap.fromPropertyString(
-                    ResourceUtilities.readFileToString(path), true);
-            String clusterId = props.get("clusterId");
+            String properties = ResourceUtilities.read(path);
+            StringMap propertyMap = StringMap.fromPropertyString(properties,
+                    true);
+            String clusterId = propertyMap.get("clusterId");
             if (clusterId.equals(forClusterId)) {
                 ClusterState state = new ClusterState();
                 state.setClusterId(clusterId);
-                state.setCurrentWriterHost(props.get("currentWriterHost"));
-                state.setPreferredWriterHost(props.get("preferredWriterHost"));
-                String hostString = props.get("allHosts");
+                state.setCurrentWriterHost(
+                        propertyMap.get("currentWriterHost"));
+                state.setPreferredWriterHost(
+                        propertyMap.get("preferredWriterHost"));
+                String hostString = propertyMap.get("allHosts");
                 List<String> hosts = new ArrayList<String>(
                         Arrays.asList(hostString.split(",\\s*")));
                 state.setAllHosts(hosts);
                 state.setHttpProxyBalancerUrl(
-                        props.get("httpProxyBalancerUrl"));
+                        propertyMap.get("httpProxyBalancerUrl"));
                 state.setHttpsProxyBalancerUrl(
-                        props.get("httpsProxyBalancerUrl"));
+                        propertyMap.get("httpsProxyBalancerUrl"));
                 state.setHttpsProxyBalancerUrl2(
-                        props.get("httpsProxyBalancerUrl2"));
-                state.setProxyToHttpPort(props.get("proxyToHttpPort"));
-                state.setProxyToHttpsPort(props.get("proxyToHttpsPort"));
-                state.setTestUrl(props.get("testUrl"));
-                state.setZkHostPortUrl(props.get("zkHostPortUrl"));
-                state.setHostTunnels(props.get("hostTunnels"));
+                        propertyMap.get("httpsProxyBalancerUrl2"));
+                state.setProxyToHttpPort(propertyMap.get("proxyToHttpPort"));
+                state.setProxyToHttpsPort(propertyMap.get("proxyToHttpsPort"));
+                state.setTestUrl(propertyMap.get("testUrl"));
+                state.setZkHostPortUrl(propertyMap.get("zkHostPortUrl"));
+                state.setHostTunnels(propertyMap.get("hostTunnels"));
+                state.setProperties(properties);
                 return state;
             }
         }

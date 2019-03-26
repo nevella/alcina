@@ -27,6 +27,8 @@ public class ClusterState {
 
     private String hostTunnels;
 
+    private String properties;
+
     public List<String> getAllHosts() {
         return this.allHosts;
     }
@@ -57,6 +59,10 @@ public class ClusterState {
 
     public String getPreferredWriterHost() {
         return this.preferredWriterHost;
+    }
+
+    public String getProperties() {
+        return this.properties;
     }
 
     public String getProxyToHttpPort() {
@@ -105,6 +111,10 @@ public class ClusterState {
 
     public void setPreferredWriterHost(String preferredWriterHost) {
         this.preferredWriterHost = preferredWriterHost;
+    }
+
+    public void setProperties(String properties) {
+        this.properties = properties;
     }
 
     public void setProxyToHttpPort(String proxyToHttpPort) {
