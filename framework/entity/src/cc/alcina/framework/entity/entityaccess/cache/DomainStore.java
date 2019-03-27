@@ -619,6 +619,11 @@ public class DomainStore implements IDomainStore {
     <T extends HasIdAndLocalId> T findRaw(Class<T> clazz, long id) {
         checkInLockedSection();
         T t = cache.get(clazz, id);
+        if (t == null) {
+            if (domainDescriptor.perClass.get(clazz).lazy && id != 0) {
+                lazyObjectLoader.loadObject(clazz, id, 0);
+            }
+        }
         if (t != null) {
             for (PreProvideTask task : domainDescriptor
                     .getPreProvideTasks(clazz)) {
