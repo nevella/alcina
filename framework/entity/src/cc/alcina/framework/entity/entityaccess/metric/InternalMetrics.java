@@ -14,6 +14,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -71,6 +72,8 @@ public class InternalMetrics {
     private MemoryMXBean memoryMxBean;
 
     Logger logger = LoggerFactory.getLogger(getClass());
+
+    AtomicInteger healthNotificationCounter = new AtomicInteger();
 
     public void endTracker(Object markerObject) {
         if (!started || markerObject == null) {
@@ -230,9 +233,12 @@ public class InternalMetrics {
                     synchronized (imd) {
                         imd.lastSliceTime = System.currentTimeMillis();
                         if (imd.type == InternalMetricTypeAlcina.health) {
-                            logger.info(
-                                    "Internal health metrics monitoring:\n\t{}",
-                                    getMemoryStats());
+                            if (healthNotificationCounter.incrementAndGet()
+                                    % 20 == 0) {
+                                logger.info(
+                                        "Internal health metrics monitoring:\n\t{}",
+                                        getMemoryStats());
+                            }
                             long[] allIds = threadMxBean.getAllThreadIds();
                             ThreadInfo[] threadInfos2 = threadMxBean
                                     .getThreadInfo(allIds, debugMonitors,
