@@ -83,7 +83,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -183,12 +182,12 @@ public class DomainStore implements IDomainStore {
         return new TopicSupport<>(TOPIC_MAPPING_EVENT);
     }
 
-    public static TopicSupport<DomainStoreUpdateException> topicMergeCompleted() {
-        return new TopicSupport<>(TOPIC_UPDATE_EXCEPTION);
-    }
-
     public static TopicSupport<Void> topicNonLoggedAccess() {
         return new TopicSupport<>(TOPIC_NON_LOCKED_ACCESS);
+    }
+
+    public static TopicSupport<DomainStoreUpdateException> topicUpdateException() {
+        return new TopicSupport<>(TOPIC_UPDATE_EXCEPTION);
     }
 
     public static DomainStore writableStore() {
@@ -919,9 +918,7 @@ public class DomainStore implements IDomainStore {
                     causes.iterator().next().printStackTrace();
                     DomainStoreUpdateException updateException = new DomainStoreUpdateException(
                             umby);
-                    topicMergeCompleted().publish(updateException);
-                    GlobalTopicPublisher.get().publishTopic(
-                            TOPIC_UPDATE_EXCEPTION, updateException);
+                    topicUpdateException().publish(updateException);
                     if (updateException.ignoreForDomainStoreExceptionCount) {
                         updateException.printStackTrace();
                     } else {
