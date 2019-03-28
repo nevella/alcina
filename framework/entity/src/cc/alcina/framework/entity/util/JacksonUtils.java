@@ -31,6 +31,17 @@ public class JacksonUtils {
         }
     }
 
+    public static String serializeForLoggingWithDefaultsNoTypes(Object object) {
+        try {
+            return new JacksonJsonObjectSerializer().withIdRefs()
+                    .withAllowUnknownProperties().getObjectMapper()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(object);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
     public static String textOrNull(ObjectNode node, String fieldName) {
         if (node.hasNonNull(fieldName)) {
             return node.get(fieldName).asText();
