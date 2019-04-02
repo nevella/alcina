@@ -243,8 +243,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
     @SuppressWarnings("deprecation")
     protected void initDevConsoleAndWebApp() {
         ResourceUtilities.loadSystemPropertiesFromCustomProperties();
-        HttpsURLConnection.setDefaultHostnameVerifier(
-                SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+        if (ResourceUtilities.is("allowAllHostnameVerifier")) {
+            HttpsURLConnection.setDefaultHostnameVerifier(
+                    SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+        }
         initLoggers();
     }
 
