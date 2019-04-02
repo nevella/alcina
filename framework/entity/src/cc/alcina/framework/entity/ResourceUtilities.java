@@ -41,6 +41,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -561,6 +562,7 @@ public class ResourceUtilities {
         return readUrlAsString(strUrl, null);
     }
 
+    @SuppressWarnings({ "deprecation" })
     public static String readUrlAsString(String strUrl, String charset)
             throws Exception {
         // don't use
@@ -569,7 +571,8 @@ public class ResourceUtilities {
         // we a java UA inter alia
         URL url = new URL(strUrl);
         InputStream is = null;
-        is = url.openConnection().getInputStream();
+        URLConnection openConnection = url.openConnection();
+        is = openConnection.getInputStream();
         String input = readStreamToString(is, charset);
         return input;
     }
