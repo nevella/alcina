@@ -244,8 +244,13 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
     protected void initDevConsoleAndWebApp() {
         ResourceUtilities.loadSystemPropertiesFromCustomProperties();
         if (ResourceUtilities.is("allowAllHostnameVerifier")) {
-            HttpsURLConnection.setDefaultHostnameVerifier(
-                    SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+            try {
+                HttpsURLConnection.setDefaultHostnameVerifier(
+                        SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+            } catch (Throwable e) {
+                Ax.out("No hostname verification bypass: %s",
+                        CommonUtils.toSimpleExceptionMessage(e));
+            }
         }
         initLoggers();
     }

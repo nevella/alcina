@@ -205,11 +205,11 @@
 		<touch file="${j2ee-server.unear.target}/../${j2ee-server.unear.name}.dodeploy" />
 	</target>
 	<target name="restart-from-staging" description="Dev :: copy and restart from staging dir" depends="">
-		<sync todir="${deploy.j2ee-server.deploy.dir}/../deployments/${j2ee-server.unear.name}" >
+		<sync todir="${deploy.j2ee-server.deploy.dir}/../deployments/${j2ee-server.unear.name}">
 			<fileset dir="${deploy.j2ee-server.deploy.dir}/${j2ee-server.unear.name}">
 			</fileset>
 		</sync>
-		<touch file="${j2ee-server.unear.target}/../${j2ee-server.unear.name}.dodeploy" />
+		<touch file="${deploy.j2ee-server.deploy.dir}/../deployments/${j2ee-server.unear.name}.dodeploy" />
 	</target>
 	<!-- needed so gwt can see the compiled annotations, if any, from client source -->
 	<target name="compile-client" depends="compile">
