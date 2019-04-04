@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project name="project-distro-build" basedir="." default=""  xmlns:if="ant:if"
-     xmlns:unless="ant:unless">
+<project name="project-distro-build" basedir="." default="" xmlns:if="ant:if" xmlns:unless="ant:unless">
 	<import file="project-build.xml" />
 	<property name="distributable.name" value="${ant.project.name}" />
-	<property name="update.jars" value="false"/>
-	<property name="compress.jars" value="true"/>
+	<property name="update.jars" value="false" />
+	<property name="compress.jars" value="true" />
 	<target name="make-war" description="Create the project WAR" depends="compile">
 		<mkdir dir="${project.dist.dir}" />
-		<delete file="${project.dist.dir}/${distributable.name}.war" unless:true="${update.jars}"/>
+		<delete file="${project.dist.dir}/${distributable.name}.war" unless:true="${update.jars}" />
 		<antcall target="prepare-war">
 		</antcall>
 		<war destfile="${project.dist.dir}/${distributable.name}.war" manifest="${project.web-inf.dir}/MANIFEST.MF" webxml="${project.web-inf.dir}/web.xml" update="${update.jars}" compress="${compress.jars}">
@@ -61,7 +60,7 @@
 	</target>
 
 	<target name="make-ear" description="Create the project EAR" depends="make-war">
-		<delete file="${project.dist.dir}/${distributable.name}.ear" unless:true="${update.jars}"/>
+		<delete file="${project.dist.dir}/${distributable.name}.ear" unless:true="${update.jars}" />
 		<ear destfile="${project.dist.dir}/${distributable.name}.ear" appxml="${project.ear-inf.dir}/application.xml" update="${update.jars}" compress="${compress.jars}">
 			<fileset dir="dist">
 				<include name="**/*.war" />
@@ -206,7 +205,13 @@
 		<touch file="${j2ee-server.unear.target}/META-INF/application.xml" />
 		<touch file="${j2ee-server.unear.target}/../${j2ee-server.unear.name}.dodeploy" />
 	</target>
-
+	<target name="restart-from-staging" description="Dev :: copy and restart from staging dir" depends="">
+	        <sync todir="${deploy.j2ee-server.deploy.dir}/../deployments/${j2ee-server.unear.name}" >
+	            <fileset dir="${deploy.j2ee-server.deploy.dir}/${j2ee-server.unear.name}">
+	            </fileset>
+	        </sync>
+	        <touch file="${j2ee-server.unear.target}/../${j2ee-server.unear.name}.dodeploy" />
+	    </target>
 	<!-- needed so gwt can see the compiled annotations, if any, from client source -->
 	<target name="compile-client" depends="compile">
 		<property name="project.compile-client.dirs" value="${project.client.src.dir}" />
