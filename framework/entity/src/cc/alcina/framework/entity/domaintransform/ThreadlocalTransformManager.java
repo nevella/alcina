@@ -77,8 +77,7 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -156,15 +155,8 @@ public class ThreadlocalTransformManager extends TransformManager
                 && cast().getEntityManager() != null;
     }
 
-    public static void threadTransformManagerWasReset() {
-        GlobalTopicPublisher.get().publishTopic(
-                TOPIC_RESET_THREAD_TRANSFORM_MANAGER, Thread.currentThread());
-    }
-
-    public static void threadTransformManagerWasResetListenerDelta(
-            TopicListener<Thread> listener, boolean add) {
-        GlobalTopicPublisher.get().listenerDelta(
-                TOPIC_RESET_THREAD_TRANSFORM_MANAGER, listener, add);
+    public static TopicSupport<Thread> topicTransformManagerWasReset() {
+        return new TopicSupport<>(TOPIC_RESET_THREAD_TRANSFORM_MANAGER);
     }
 
     public static ThreadlocalTransformManager ttmInstance() {
@@ -841,7 +833,7 @@ public class ThreadlocalTransformManager extends TransformManager
             addDomainTransformListener(listener);
         }
         if (initialised) {
-            threadTransformManagerWasReset();
+            topicTransformManagerWasReset().publish(Thread.currentThread());
         } else {
             initialised = true;
         }

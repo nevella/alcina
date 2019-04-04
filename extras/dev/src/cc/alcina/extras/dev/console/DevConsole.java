@@ -78,6 +78,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Diff;
 import cc.alcina.framework.common.client.util.Diff.Change;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -91,6 +92,7 @@ import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.Sx;
+import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable;
 import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable.AlcinaChildContextRunner;
 
 public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>
@@ -426,6 +428,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
     }
 
     public String getMultilineInput(String prompt, int rows, int cols) {
+        if (isHeadless()) {
+            return getClipboardContents();
+        }
         final JTextArea textArea = new JTextArea(rows, cols);
         textArea.addAncestorListener(new AncestorListener() {
             @Override
@@ -584,9 +589,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
                     return;
                 }
             }
+            LooseContextInstance snapshot = LooseContext.getContext()
+                    .snapshot();
             Runnable runnable = new Runnable() {
                 @Override
                 public void run() {
+                    LooseContext.putSnapshotProperties(snapshot);
                     performCommandInThread(args, c, true);
                 }
             };
@@ -660,9 +668,23 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
      * Clipboard's contents.
      */
     public void setClipboardContents(String aString) {
-        StringSelection stringSelection = new StringSelection(aString);
-        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-        clipboard.setContents(stringSelection, this);
+        try {
+            StringSelection stringSelection = new StringSelection(aString);
+            Clipboard clipboard = Toolkit.getDefaultToolkit()
+                    .getSystemClipboard();
+            clipboard.setContents(stringSelection, this);
+        } catch (HeadlessException e) {
+            if (isOsX()) {
+                try {
+                    String path = "/tmp/pbcopy.txt";
+                    ResourceUtilities.write(aString, path);
+                    new ShellWrapper()
+                            .runBashScript(Ax.format("pbcopy < %s", path));
+                } catch (Exception e2) {
+                    throw new WrappedRuntimeException(e2);
+                }
+            }
+        }
     }
 
     public void setCommandLineText(String text) {
@@ -1024,6 +1046,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         }
 
         public synchronized void commit() {
+            if (runnableBuffer.isEmpty()) {
+                return;
+            }
             SwingUtilities.invokeLater(new RunnableGroup());
         }
 
@@ -1128,8 +1153,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
             }
         }
 
-        protected synchronized void invoke(Runnable apRun) {
-            runnableBuffer.add(apRun);
+        protected synchronized void invoke(Runnable runnable) {
+            runnableBuffer.add(
+                    AlcinaChildRunnable.wrapWithCurrentThreadContext(runnable));
         }
 
         protected synchronized void maybeScroll(Runnable runnable,

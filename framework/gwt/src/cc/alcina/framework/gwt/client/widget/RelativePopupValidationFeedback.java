@@ -34,6 +34,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator.ProcessingServerValidationException;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.logic.WidgetByElementTracker;
 import cc.alcina.framework.gwt.client.util.DomUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -93,6 +94,13 @@ public class RelativePopupValidationFeedback
         final Widget w = (Widget) source;
         resolve(source);
         if (!DomUtils.isVisibleAncestorChain(w.getElement())) {
+            return;
+        }
+        Widget suppressValidationFeedbackFor = RenderContext.get()
+                .getSuppressValidationFeedbackFor();
+        if (suppressValidationFeedbackFor != null
+                && suppressValidationFeedbackFor.getElement()
+                        .isOrHasChild(w.getElement())) {
             return;
         }
         final RelativePopup p = new RelativePopup();

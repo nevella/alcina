@@ -176,15 +176,15 @@ public class PropertyStore {
     }
 
     public void setBooleanValue(PdOperator pd, int rowIdx, boolean value) {
-        ((BooleanStore) stores.get(pd.idx)).put(value, rowIdx);
+        ((BooleanStore) stores.get(pd.idx)).put(CommonUtils.bv(value), rowIdx);
     }
 
     public void setIntegerValue(PdOperator pd, int rowIdx, Integer value) {
-        ((LongStore) stores.get(pd.idx)).put(value, rowIdx);
+        ((IntStore) stores.get(pd.idx)).put(CommonUtils.iv(value), rowIdx);
     }
 
     public void setLongValue(PdOperator pd, int rowIdx, Long value) {
-        ((LongStore) stores.get(pd.idx)).put(value, rowIdx);
+        ((LongStore) stores.get(pd.idx)).put(CommonUtils.lv(value), rowIdx);
     }
 
     public void setStringValue(PdOperator pd, int rowIdx, String value) {

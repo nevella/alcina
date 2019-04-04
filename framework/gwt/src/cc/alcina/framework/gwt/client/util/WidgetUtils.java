@@ -324,6 +324,15 @@ public class WidgetUtils {
     return strValue;
     }-*/;
 
+    public static List<Element> getElementAncestors(Element elem) {
+        List<Element> elements = new ArrayList<>();
+        while (elem != null) {
+            elements.add(elem);
+            elem = elem.getParentElement();
+        }
+        return elements;
+    }
+
     public static native Element getElementByNameOrId(Document doc,
             String name) /*-{
     var e = doc.getElementById(name);

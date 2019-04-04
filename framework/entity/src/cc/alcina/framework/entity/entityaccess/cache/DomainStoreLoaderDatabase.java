@@ -132,6 +132,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
     private Map<JoinTable, DomainClassDescriptor> joinTableClassDescriptor = new LinkedHashMap<>();;
 
+    private Object loadTransformRequestLock = new Object();
+
     public DomainStoreLoaderDatabase(DomainStore store, DataSource dataSource,
             ThreadPoolExecutor warmupExecutor) {
         this.store = store;
@@ -181,71 +183,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
     }
 
     @Override
-    public synchronized DomainTransformRequestPersistent loadTransformRequest(
-            Long id, Logger logger) throws Exception {
-        store.logger.warn("{} - loading transform request {}", store.name, id);
-        Connection conn = getConnection();
-        try {
-            DomainTransformRequestPersistent request = CommonPersistenceProvider
-                    .get().getCommonPersistenceExTransaction()
-                    .getNewImplementationInstance(
-                            DomainTransformRequestPersistent.class);
-            Class<? extends DomainTransformEvent> transformEventImplClass = domainDescriptor
-                    .getShadowDomainTransformEventPersistentClass();
-            Class<? extends ClassRef> classRefImplClass = domainDescriptor
-                    .getShadowClassRefClass();
-            if (!columnDescriptors.containsKey(transformEventImplClass)) {
-                DomainClassDescriptor classDescriptor = new DomainClassDescriptor(
-                        transformEventImplClass);
-                prepareTable(classDescriptor);
-            }
-            String sqlFilter = Ax.format(
-                    " domainTransformRequestPersistent_id = %s order by id",
-                    id);
-            LaterLookup laterLookup = new LaterLookup();
-            List<? extends DomainTransformEventPersistent> events = (List) loadTable0(
-                    transformEventImplClass, sqlFilter,
-                    new ClassIdLock(DomainTransformRequestPersistent.class, id),
-                    laterLookup, false, true);
-            laterLookup.resolve(new CustomResolver() {
-                @Override
-                public boolean handles(PdOperator pdOperator) {
-                    switch (pdOperator.name) {
-                    case "objectClassRef":
-                    case "valueClassRef":
-                        return true;
-                    default:
-                        return false;
-                    }
-                }
-
-                @Override
-                public Object resolveCustom(PdOperator pdOperator,
-                        LaterItem item) {
-                    long storeDomainClassRefId = item.id;
-                    ClassRef storeClassRef = store.findRaw(classRefImplClass,
-                            storeDomainClassRefId);
-                    ClassRef writableDomainClassRef = ClassRef
-                            .forName(storeClassRef.getRefClassName());
-                    return writableDomainClassRef;
-                }
-            });
-            events.removeIf(event -> event.getObjectClassRef() == null
-                    || event.getObjectClassRef().notInVm()
-                    || (event.getValueClassRef() != null
-                            && event.getValueClassRef().notInVm()));
-            if (events.isEmpty()) {
-                return null;
-            }
-            // TODO - populate source - see
-            // cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceQueue.FireEventsThread.publishTransformEvent(Long)
-            request.setId(id);
-            events.forEach(request.getEvents()::add);
-            events.forEach(event -> event
-                    .setDomainTransformRequestPersistent(request));
-            return request;
-        } finally {
-            releaseConn(conn);
+    public DomainTransformRequestPersistent loadTransformRequest(Long id,
+            Logger logger) throws Exception {
+        synchronized (loadTransformRequestLock) {
+            return DomainReader.get(() -> loadTransformRequest0(id, logger));
         }
     }
 
@@ -799,6 +740,74 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                 loadTable(clazz, sqlFilter, null, laterLookup);
             }
             MetricLogging.get().end(clazz.getSimpleName(), store.metricLogger);
+        }
+    }
+
+    private DomainTransformRequestPersistent loadTransformRequest0(Long id,
+            Logger logger) throws Exception {
+        store.logger.warn("{} - loading transform request {}", store.name, id);
+        Connection conn = getConnection();
+        try {
+            DomainTransformRequestPersistent request = CommonPersistenceProvider
+                    .get().getCommonPersistenceExTransaction()
+                    .getNewImplementationInstance(
+                            DomainTransformRequestPersistent.class);
+            Class<? extends DomainTransformEvent> transformEventImplClass = domainDescriptor
+                    .getShadowDomainTransformEventPersistentClass();
+            Class<? extends ClassRef> classRefImplClass = domainDescriptor
+                    .getShadowClassRefClass();
+            if (!columnDescriptors.containsKey(transformEventImplClass)) {
+                DomainClassDescriptor classDescriptor = new DomainClassDescriptor(
+                        transformEventImplClass);
+                prepareTable(classDescriptor);
+            }
+            String sqlFilter = Ax.format(
+                    " domainTransformRequestPersistent_id = %s order by id",
+                    id);
+            LaterLookup laterLookup = new LaterLookup();
+            List<? extends DomainTransformEventPersistent> events = (List) loadTable0(
+                    transformEventImplClass, sqlFilter,
+                    new ClassIdLock(DomainTransformRequestPersistent.class, id),
+                    laterLookup, false, true);
+            laterLookup.resolve(new CustomResolver() {
+                @Override
+                public boolean handles(PdOperator pdOperator) {
+                    switch (pdOperator.name) {
+                    case "objectClassRef":
+                    case "valueClassRef":
+                        return true;
+                    default:
+                        return false;
+                    }
+                }
+
+                @Override
+                public Object resolveCustom(PdOperator pdOperator,
+                        LaterItem item) {
+                    long storeDomainClassRefId = item.id;
+                    ClassRef storeClassRef = store.findRaw(classRefImplClass,
+                            storeDomainClassRefId);
+                    ClassRef writableDomainClassRef = ClassRef
+                            .forName(storeClassRef.getRefClassName());
+                    return writableDomainClassRef;
+                }
+            });
+            events.removeIf(event -> event.getObjectClassRef() == null
+                    || event.getObjectClassRef().notInVm()
+                    || (event.getValueClassRef() != null
+                            && event.getValueClassRef().notInVm()));
+            if (events.isEmpty()) {
+                return null;
+            }
+            // TODO - populate source - see
+            // cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceQueue.FireEventsThread.publishTransformEvent(Long)
+            request.setId(id);
+            events.forEach(request.getEvents()::add);
+            events.forEach(event -> event
+                    .setDomainTransformRequestPersistent(request));
+            return request;
+        } finally {
+            releaseConn(conn);
         }
     }
 

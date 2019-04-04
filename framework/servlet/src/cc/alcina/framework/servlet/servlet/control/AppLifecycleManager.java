@@ -10,7 +10,6 @@ import com.google.gwt.user.server.rpc.RPCRequest;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
-import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -41,8 +40,6 @@ public class AppLifecycleManager implements RegistrableService {
 
     private ControlServletModes targetModes = new ControlServletModes();
 
-    private String clusterRoleConfigFilePath;
-
     private boolean clusterMember;
 
     final Logger logger = LoggerFactory
@@ -62,10 +59,6 @@ public class AppLifecycleManager implements RegistrableService {
     public void earlyShutdown() {
         targetModes = new ControlServletModes();
         refreshWriterServices();
-    }
-
-    public String getClusterRoleConfigFilePath() {
-        return this.clusterRoleConfigFilePath;
     }
 
     public AppLifecycleServletBase getLifecycleServlet() {
@@ -99,19 +92,16 @@ public class AppLifecycleManager implements RegistrableService {
         return new AppWriterProxy().proxy(this, rpcRequest, remoteServlet);
     }
 
-    public void refreshClusterRoleFromConfigFile() throws Exception {
-        String props = ResourceUtilities
-                .readFileToString(clusterRoleConfigFilePath);
-        StringMap map = StringMap.fromPropertyString(props);
-        targetModes = ControlServletModes.fromProperties(map);
-        state.setWriterHost(map.get("writerUrl"));
-        state.setApiKey(map.get("apiKey"));
+    public void refreshClusterRoleFromProperties() {
+        targetModes = ControlServletModes.fromProperties();
+        state.setWriterHost(ResourceUtilities.get("writerHost"));
+        state.setApiKey(ResourceUtilities.get("apiKey"));
     }
 
     public void refreshProperties() throws Exception {
         lifecycleServlet.refreshProperties();
         ResourceUtilities.loadSystemPropertiesFromCustomProperties();
-        refreshClusterRoleFromConfigFile();
+        refreshClusterRoleFromProperties();
         refreshWriterServices();
         notifyAppConfigurationReloaded(null);
         EntityLayerUtils.setLogLevelsFromCustomProperties();
@@ -141,10 +131,6 @@ public class AppLifecycleManager implements RegistrableService {
         if (clusterMember) {
             setState(ControlServletState.memberModes());
         }
-    }
-
-    public void setClusterRoleConfigFilePath(String configFilePath) {
-        this.clusterRoleConfigFilePath = configFilePath;
     }
 
     public void setLifecycleServlet(AppLifecycleServletBase lifecycleServlet) {

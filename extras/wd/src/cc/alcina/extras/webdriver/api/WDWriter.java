@@ -1,4 +1,4 @@
-package au.com.barnet.webdriver.api;
+package cc.alcina.extras.webdriver.api;
 
 import java.io.IOException;
 import java.io.PrintStream;

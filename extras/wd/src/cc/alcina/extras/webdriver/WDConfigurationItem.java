@@ -1,4 +1,4 @@
-package au.com.barnet.webdriver;
+package cc.alcina.extras.webdriver;
 
 import java.net.MalformedURLException;
 import java.net.URL;

@@ -65,6 +65,8 @@ public @interface Display {
 
     String iconName() default "";// indicates no icon
 
+    String autocompleteName() default "";
+
     String name();
 
     int orderingHint() default 100;

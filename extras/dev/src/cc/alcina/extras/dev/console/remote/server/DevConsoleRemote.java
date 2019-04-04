@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
@@ -25,9 +26,14 @@ import cc.alcina.extras.dev.console.DevConsole;
 import cc.alcina.extras.dev.console.DevConsole.DevConsoleStyle;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.projection.GraphProjection;
 
 public class DevConsoleRemote {
+    public static final transient String CONTEXT_CALLER_CLIENT_INSTANCE_UID = DevConsoleRemote.class
+            .getName() + ".CONTEXT_CALLER_CLIENT_INSTANCE_UID";
+
     ConsoleWriter out = new ConsoleWriter(false);
 
     ConsoleWriter err = new ConsoleWriter(true);
@@ -199,6 +205,9 @@ public class DevConsoleRemote {
             notifyTask.cancel();
             notifyTask = null;
         }
+        returnRecords = returnRecords.stream()
+                .filter(record -> record.matchesCaller(clientInstanceUid))
+                .collect(Collectors.toList());
         return returnRecords;
     }
 
@@ -213,7 +222,10 @@ public class DevConsoleRemote {
 
         DevConsoleStyle style;
 
+        String callerClientInstanceUid;
+
         public ConsoleRecord() {
+            putCallerId();
         }
 
         public ConsoleRecord(String text, boolean errWriter) {
@@ -221,6 +233,25 @@ public class DevConsoleRemote {
             this.errWriter = errWriter;
             this.style = errWriter ? DevConsoleStyle.ERR
                     : devConsole.getCurrentConsoleStyle();
+            putCallerId();
+        }
+
+        public boolean matchesCaller(String clientInstanceUid) {
+            return callerClientInstanceUid == null || Objects
+                    .equals(callerClientInstanceUid, clientInstanceUid);
+        }
+
+        @Override
+        public String toString() {
+            return GraphProjection.fieldwiseToStringOneLine(this);
+        }
+
+        private void putCallerId() {
+            this.callerClientInstanceUid = LooseContext
+                    .get(CONTEXT_CALLER_CLIENT_INSTANCE_UID);
+            if (this.callerClientInstanceUid == null) {
+                int debug = 3;
+            }
         }
     }
 

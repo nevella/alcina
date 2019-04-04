@@ -3,113 +3,133 @@ package cc.alcina.framework.entity.control;
 import java.util.List;
 
 public class ClusterState {
-	private String clusterId;
+    private String clusterId;
 
-	private String currentWriterHost;
+    private String currentWriterHost;
 
-	private List<String> allHosts;
+    private List<String> allHosts;
 
-	private String preferredWriterHost;
+    private String preferredWriterHost;
 
-	private String httpProxyBalancerUrl;
+    private String httpProxyBalancerUrl;
 
-	private String httpsProxyBalancerUrl;
+    private String httpsProxyBalancerUrl;
 
-	private String httpsProxyBalancerUrl2;
+    private String httpsProxyBalancerUrl2;
 
-	private String proxyToHttpPort;
+    private String proxyToHttpPort;
 
-	private String proxyToHttpsPort;
+    private String proxyToHttpsPort;
 
-	private String testUrl;
+    private String testUrl;
 
-	private String zkHostPortUrl;
+    private String zkHostPortUrl;
 
-	public List<String> getAllHosts() {
-		return this.allHosts;
-	}
+    private String hostTunnels;
 
-	public String getClusterId() {
-		return this.clusterId;
-	}
+    private String properties;
 
-	public String getCurrentWriterHost() {
-		return this.currentWriterHost;
-	}
+    public List<String> getAllHosts() {
+        return this.allHosts;
+    }
 
-	public String getHttpProxyBalancerUrl() {
-		return this.httpProxyBalancerUrl;
-	}
+    public String getClusterId() {
+        return this.clusterId;
+    }
 
-	public String getHttpsProxyBalancerUrl() {
-		return this.httpsProxyBalancerUrl;
-	}
+    public String getCurrentWriterHost() {
+        return this.currentWriterHost;
+    }
 
-	public String getHttpsProxyBalancerUrl2() {
-		return this.httpsProxyBalancerUrl2;
-	}
+    public String getHostTunnels() {
+        return this.hostTunnels;
+    }
 
-	public String getPreferredWriterHost() {
-		return this.preferredWriterHost;
-	}
+    public String getHttpProxyBalancerUrl() {
+        return this.httpProxyBalancerUrl;
+    }
 
-	public String getProxyToHttpPort() {
-		return this.proxyToHttpPort;
-	}
+    public String getHttpsProxyBalancerUrl() {
+        return this.httpsProxyBalancerUrl;
+    }
 
-	public String getProxyToHttpsPort() {
-		return this.proxyToHttpsPort;
-	}
+    public String getHttpsProxyBalancerUrl2() {
+        return this.httpsProxyBalancerUrl2;
+    }
 
-	public String getTestUrl() {
-		return this.testUrl;
-	}
+    public String getPreferredWriterHost() {
+        return this.preferredWriterHost;
+    }
 
-	public String getZkHostPortUrl() {
-		return this.zkHostPortUrl;
-	}
+    public String getProperties() {
+        return this.properties;
+    }
 
-	public void setAllHosts(List<String> allHosts) {
-		this.allHosts = allHosts;
-	}
+    public String getProxyToHttpPort() {
+        return this.proxyToHttpPort;
+    }
 
-	public void setClusterId(String clusterId) {
-		this.clusterId = clusterId;
-	}
+    public String getProxyToHttpsPort() {
+        return this.proxyToHttpsPort;
+    }
 
-	public void setCurrentWriterHost(String currentWriterHost) {
-		this.currentWriterHost = currentWriterHost;
-	}
+    public String getTestUrl() {
+        return this.testUrl;
+    }
 
-	public void setHttpProxyBalancerUrl(String httpProxyBalancerUrl) {
-		this.httpProxyBalancerUrl = httpProxyBalancerUrl;
-	}
+    public String getZkHostPortUrl() {
+        return this.zkHostPortUrl;
+    }
 
-	public void setHttpsProxyBalancerUrl(String httpsProxyBalancerUrl) {
-		this.httpsProxyBalancerUrl = httpsProxyBalancerUrl;
-	}
+    public void setAllHosts(List<String> allHosts) {
+        this.allHosts = allHosts;
+    }
 
-	public void setHttpsProxyBalancerUrl2(String httpsProxyBalancerUrl2) {
-		this.httpsProxyBalancerUrl2 = httpsProxyBalancerUrl2;
-	}
+    public void setClusterId(String clusterId) {
+        this.clusterId = clusterId;
+    }
 
-	public void setPreferredWriterHost(String preferredWriterHost) {
-		this.preferredWriterHost = preferredWriterHost;
-	}
+    public void setCurrentWriterHost(String currentWriterHost) {
+        this.currentWriterHost = currentWriterHost;
+    }
 
-	public void setProxyToHttpPort(String proxyToHttpPort) {
-		this.proxyToHttpPort = proxyToHttpPort;
-	}
+    public void setHostTunnels(String hostTunnels) {
+        this.hostTunnels = hostTunnels;
+    }
 
-	public void setProxyToHttpsPort(String proxyToHttpsPort) {
-		this.proxyToHttpsPort = proxyToHttpsPort;
-	}
+    public void setHttpProxyBalancerUrl(String httpProxyBalancerUrl) {
+        this.httpProxyBalancerUrl = httpProxyBalancerUrl;
+    }
 
-	public void setTestUrl(String testUrl) {
-		this.testUrl = testUrl;
-	}
+    public void setHttpsProxyBalancerUrl(String httpsProxyBalancerUrl) {
+        this.httpsProxyBalancerUrl = httpsProxyBalancerUrl;
+    }
 
-	public void setZkHostPortUrl(String zkHostPortUrl) {
-		this.zkHostPortUrl = zkHostPortUrl;
-	}
+    public void setHttpsProxyBalancerUrl2(String httpsProxyBalancerUrl2) {
+        this.httpsProxyBalancerUrl2 = httpsProxyBalancerUrl2;
+    }
+
+    public void setPreferredWriterHost(String preferredWriterHost) {
+        this.preferredWriterHost = preferredWriterHost;
+    }
+
+    public void setProperties(String properties) {
+        this.properties = properties;
+    }
+
+    public void setProxyToHttpPort(String proxyToHttpPort) {
+        this.proxyToHttpPort = proxyToHttpPort;
+    }
+
+    public void setProxyToHttpsPort(String proxyToHttpsPort) {
+        this.proxyToHttpsPort = proxyToHttpsPort;
+    }
+
+    public void setTestUrl(String testUrl) {
+        this.testUrl = testUrl;
+    }
+
+    public void setZkHostPortUrl(String zkHostPortUrl) {
+        this.zkHostPortUrl = zkHostPortUrl;
+    }
 }

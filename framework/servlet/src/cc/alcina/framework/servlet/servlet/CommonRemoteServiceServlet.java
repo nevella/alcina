@@ -812,6 +812,25 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
         }
     }
 
+    protected String describeRpcRequest(RPCRequest rpcRequest, String msg) {
+        msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
+        msg += "User: " + PermissionsManager.get().getUserString() + "\n";
+        msg += "Types: " + CommonUtils.joinWithNewlineTab(
+                Arrays.asList(rpcRequest.getMethod().getParameters()));
+        msg += "\nParameters: \n";
+        Object[] parameters = rpcRequest.getParameters();
+        if (rpcRequest.getMethod().getName().equals("transform")) {
+        } else {
+            try {
+                msg += new JacksonJsonObjectSerializer().withIdRefs()
+                        .withMaxLength(100000).serializeNoThrow(parameters);
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }
+        return msg;
+    }
+
     @Override
     protected void doUnexpectedFailure(Throwable e) {
         if (e.getClass().getName()
@@ -945,25 +964,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                     .withMaxLength(1000000).serializeNoThrow(remoteAction);
         } catch (Throwable e) {
             e.printStackTrace();
-        }
-        return msg;
-    }
-
-    String describeRpcRequest(RPCRequest rpcRequest, String msg) {
-        msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
-        msg += "User: " + PermissionsManager.get().getUserString() + "\n";
-        msg += "Types: " + CommonUtils.joinWithNewlineTab(
-                Arrays.asList(rpcRequest.getMethod().getParameters()));
-        msg += "\nParameters: \n";
-        Object[] parameters = rpcRequest.getParameters();
-        if (rpcRequest.getMethod().getName().equals("transform")) {
-        } else {
-            try {
-                msg += new JacksonJsonObjectSerializer().withIdRefs()
-                        .withMaxLength(100000).serializeNoThrow(parameters);
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
         }
         return msg;
     }

@@ -1555,6 +1555,11 @@ public class CommonUtils {
         return formatJ("FY%s%s", year, year + 1);
     }
 
+    public static String toSimpleExceptionMessage(Throwable caught) {
+        return Ax.format("%s:%s", caught.getClass().getSimpleName(),
+                caught.getMessage());
+    }
+
     @SuppressWarnings("deprecation")
     public static String toYearMonth(Date date) {
         return date == null ? null

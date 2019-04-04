@@ -54,6 +54,8 @@ public class Field {
 
     private Validator validator;
 
+    private String autocompleteName;
+
     /** Creates a new instance of Column */
     public Field(String propertyName) {
         this.propertyName = propertyName;
@@ -167,6 +169,10 @@ public class Field {
         this.helpText = helpText;
     }
 
+    public String getAutocompleteName() {
+        return this.autocompleteName;
+    }
+
     public BoundWidgetProvider getCellProvider() {
         return cellProvider;
     }
@@ -205,6 +211,10 @@ public class Field {
 
     public String getWidgetStyleName() {
         return this.widgetStyleName;
+    }
+
+    public void setAutocompleteName(String autocompleteName) {
+        this.autocompleteName = autocompleteName;
     }
 
     public void setCellProvider(BoundWidgetProvider cellProvider) {

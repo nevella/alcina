@@ -239,7 +239,7 @@ public class UserStories {
         long creationId = ServletLayerTransforms
                 .pushTransformsAndGetFirstCreationId(true);
         long storyId = creationId == 0 ? story.getId() : creationId;
-        Ax.out("published user story - %s:\n%s", storyId, delta);
+        Ax.out("published user story - %s", storyId);
         build(storyId, delta);
         topicUserStoriesEvents().publish(storyNode);
     }

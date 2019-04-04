@@ -101,6 +101,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.GridFormCellRendererGrid;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
 import cc.alcina.framework.gwt.client.widget.Link;
@@ -1170,10 +1171,16 @@ public class ContentViewFactory {
                                     public void run() {
                                         crd.hide();
                                         if (serverValidationCallback == null) {
-                                            DomEvent.fireNativeEvent(
-                                                    WidgetUtils
-                                                            .createZeroClick(),
-                                                    sender);
+                                            if (sender != null) {
+                                                DomEvent.fireNativeEvent(
+                                                        WidgetUtils
+                                                                .createZeroClick(),
+                                                        sender);
+                                            } else {
+                                                // FIXME - probably throw a dev
+                                                // exception - something should
+                                                // happen here
+                                            }
                                         } else {
                                             validateAndCommit(sender,
                                                     serverValidationCallback);
@@ -1278,30 +1285,38 @@ public class ContentViewFactory {
 
         @Override
         protected void onDetach() {
-            if (editable) {
-                preDetachFocus.setVisible(true);
-                preDetachFocus.setFocus(true);
-            }
-            if (editable && isVisible()) {
-                GwittirUtils.refreshTextBoxes(getBoundWidget().getBinding(),
-                        null, false, false, true);
-            }
-            super.onDetach();// inter alia, detach children, forcing commit of
-                             // richtexts etc
-            if (objects != null && TransformManager.get().dirty(objects)) {
-                boolean save = Window.confirm("You are closing a form that"
-                        + " has unsaved changes. Please press 'OK' to save the changes"
-                        + ", or 'Cancel' to ignore them.");
-                if (save) {
-                    boolean result = validateAndCommit(null, null);
-                    if (!result) {
-                        Window.alert(
-                                "Unable to save changes due to form validation error.");
+            try {
+                RenderContext.get().push();
+                RenderContext.get().setSuppressValidationFeedbackFor(this);
+                if (editable) {
+                    preDetachFocus.setVisible(true);
+                    preDetachFocus.setFocus(true);
+                }
+                if (editable && isVisible()) {
+                    GwittirUtils.refreshTextBoxes(getBoundWidget().getBinding(),
+                            null, false, false, true);
+                }
+                super.onDetach();// inter alia, detach children, forcing commit
+                                 // of
+                // richtexts etc
+                if (objects != null && TransformManager.get().dirty(objects)) {
+                    boolean save = Window.confirm("You are closing a form that"
+                            + " has unsaved changes. Please press 'OK' to save the changes"
+                            + ", or 'Cancel' to ignore them.");
+                    if (save) {
+                        boolean result = validateAndCommit(null, null);
+                        if (!result) {
+                            Window.alert(
+                                    "Unable to save changes due to form validation error.");
+                        }
                     }
                 }
-            }
-            if (objects != null) {
-                TransformManager.get().deregisterProvisionalObjects(objects);
+                if (objects != null) {
+                    TransformManager.get()
+                            .deregisterProvisionalObjects(objects);
+                }
+            } finally {
+                RenderContext.get().pop();
             }
         }
 

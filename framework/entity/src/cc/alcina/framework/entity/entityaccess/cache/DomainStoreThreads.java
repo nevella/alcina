@@ -16,15 +16,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore.DomainStoreException;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreWaitStats.DomainStoreWaitOnLockStat;
 
 /*
  * Public just for inner class access, not to be used outside this package
@@ -174,6 +179,10 @@ public class DomainStoreThreads {
         maybeLogLock(DomainStoreLockAction.MAIN_LOCK_ACQUIRED, write);
     }
 
+    public void setupLockedAccessCheck() {
+        Registry.impl(DomainStoreLockedAccessChecker.class).start(this);
+    }
+
     public void startLongLockHolderCheck() {
         this.longLockHolderCheckTimer = new Timer(
                 "Timer-Domain-Store-check-stats");
@@ -248,8 +257,7 @@ public class DomainStoreThreads {
                 case SUB_LOCK_ACQUIRED:
                     activeThreads.add(currentThread);
                     if (!activeThreadAcquireTimes.containsKey(currentThread)) {
-                        activeThreadAcquireTimes.put(currentThread,
-                                System.currentTimeMillis());
+                        activeThreadAcquireTimes.put(currentThread, time);
                     }
                     break;
                 case UNLOCK:
@@ -467,6 +475,29 @@ public class DomainStoreThreads {
             }
         }
 
+        public DomainStoreWaitStats getDomainStoreWaitStats(Thread thread) {
+            DomainStoreWaitStats stats = new DomainStoreWaitStats();
+            DomainStoreLockState lockState = getDomainStoreLockState(thread);
+            switch (lockState) {
+            case HOLDING_READ_LOCK:
+            case HOLDING_WRITE_LOCK:
+            case NO_LOCK:
+                return stats;
+            }
+            synchronized (activeThreads) {
+                stats.waitingOnLockStats = activeThreadAcquireTimes.entrySet()
+                        .stream().map(e -> {
+                            DomainStoreWaitOnLockStat stat = new DomainStoreWaitOnLockStat();
+                            stat.lockTimeMs = System.currentTimeMillis()
+                                    - e.getValue();
+                            stat.threadId = e.getKey().getId();
+                            stat.threadName = e.getKey().getName();
+                            return stat;
+                        }).collect(Collectors.toList());
+            }
+            return stats;
+        }
+
         public long getDomainStoreWaitTime(Thread thread) {
             return threadQueueTimes.getOrDefault(thread.getId(), 0L);
         }
@@ -477,6 +508,42 @@ public class DomainStoreThreads {
 
         public boolean isWriteLockedByThread(Thread thread) {
             return mainLock.isWriteLockedByThread(thread);
+        }
+    }
+
+    @RegistryLocation(registryPoint = DomainStoreLockedAccessChecker.class, implementationType = ImplementationType.SINGLETON)
+    public static class DomainStoreLockedAccessChecker
+            implements TopicListener<Void> {
+        Set<String> seenTraces = new LinkedHashSet<>();
+
+        int maxPublished = 1000;
+
+        private DomainStoreThreads threads;
+
+        public DomainStoreLockedAccessChecker() {
+        }
+
+        public void start(DomainStoreThreads threads) {
+            this.threads = threads;
+            DomainStore.topicNonLoggedAccess().add(this);
+        }
+
+        @Override
+        public synchronized void topicPublished(String key, Void message) {
+            if (maxPublished-- <= 0) {
+                return;
+            }
+            String stacktrace = SEUtilities
+                    .getStacktraceSlice(Thread.currentThread(), 99, 0);
+            if (seenTraces.add(stacktrace)) {
+                notifyNewLockAccessTrace(stacktrace);
+            }
+        }
+
+        protected void notifyNewLockAccessTrace(String stacktrace) {
+            threads.domainStore.logger.warn(
+                    "Domain store cache/projection access without lock:\n{}",
+                    stacktrace);
         }
     }
 

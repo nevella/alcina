@@ -1,12 +1,12 @@
-package au.com.barnet.webdriver;
+package cc.alcina.extras.webdriver;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.openqa.selenium.WebDriver;
 
-import au.com.barnet.webdriver.api.TestResult;
-import au.com.barnet.webdriver.api.WDWriter;
+import cc.alcina.extras.webdriver.api.TestResult;
+import cc.alcina.extras.webdriver.api.WDWriter;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class WDToken {

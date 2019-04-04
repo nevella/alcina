@@ -14,6 +14,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -27,6 +28,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.J8Utils;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -35,6 +37,7 @@ import cc.alcina.framework.entity.entityaccess.NamedThreadFactory;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLockState;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreInstrumentation;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreWaitStats;
 
 @RegistryLocation(registryPoint = InternalMetrics.class, implementationType = ImplementationType.SINGLETON)
 public class InternalMetrics {
@@ -44,7 +47,7 @@ public class InternalMetrics {
 
     private static final int MAX_TRACKERS = 200;
 
-    private static final boolean DISABLE_OVER_MAX_TRACKERS = true;
+    private static boolean DISABLE_OVER_MAX_TRACKERS = false;
 
     public static InternalMetrics get() {
         return Registry.impl(InternalMetrics.class);
@@ -69,6 +72,8 @@ public class InternalMetrics {
     private MemoryMXBean memoryMxBean;
 
     Logger logger = LoggerFactory.getLogger(getClass());
+
+    AtomicInteger healthNotificationCounter = new AtomicInteger();
 
     public void endTracker(Object markerObject) {
         if (!started || markerObject == null) {
@@ -167,11 +172,20 @@ public class InternalMetrics {
         if (!ResourceUtilities.is(InternalMetrics.class, "enabled")) {
             return;
         }
-        if (trackers.size() > MAX_TRACKERS && DISABLE_OVER_MAX_TRACKERS) {
-            Ax.sysLogHigh("Too many trackers - cancelling internal metrics");
-            stopService();
-            trackers.clear();
-            return;
+        if (trackers.size() > MAX_TRACKERS) {
+            if (DISABLE_OVER_MAX_TRACKERS) {
+                Ax.sysLogHigh(
+                        "Too many trackers - cancelling internal metrics");
+                stopService();
+                trackers.clear();
+                return;
+            } else {
+                Ax.sysLogHigh(
+                        "Too many trackers - resetting current internal metric trackers");
+                // stopService();
+                trackers.clear();
+                return;
+            }
         }
         trackers.put(markerObject,
                 new InternalMetricData(markerObject, callContextProvider,
@@ -202,6 +216,9 @@ public class InternalMetrics {
                 .filter(imd -> !imd.isFinished())
                 .filter(imd -> shouldSlice(imd)).map(imd -> imd.thread.getId())
                 .collect(Collectors.toList());
+        Map<Long, InternalMetricData> metricDataByThreadId = trackers.values()
+                .stream()
+                .collect(AlcinaCollectors.toKeyMap(imd -> imd.thread.getId()));
         long[] idArray = toLong(ids);
         boolean debugMonitors = sliceOracle.shouldCheckDeadlocks();
         String key = "internalmetrics-extthreadinfo";
@@ -216,9 +233,12 @@ public class InternalMetrics {
                     synchronized (imd) {
                         imd.lastSliceTime = System.currentTimeMillis();
                         if (imd.type == InternalMetricTypeAlcina.health) {
-                            logger.info(
-                                    "Internal health metrics monitoring:\n\t%s",
-                                    getMemoryStats());
+                            if (healthNotificationCounter.incrementAndGet()
+                                    % 20 == 0) {
+                                logger.info(
+                                        "Internal health metrics monitoring:\n\t{}",
+                                        getMemoryStats());
+                            }
                             long[] allIds = threadMxBean.getAllThreadIds();
                             ThreadInfo[] threadInfos2 = threadMxBean
                                     .getThreadInfo(allIds, debugMonitors,
@@ -238,7 +258,8 @@ public class InternalMetrics {
                                         .findFirst().map(e -> e.getValue())
                                         .orElse(new StackTraceElement[0]);
                                 imd.addSlice(threadInfo, stackTrace, 0, 0,
-                                        DomainStoreLockState.NO_LOCK);
+                                        DomainStoreLockState.NO_LOCK,
+                                        new DomainStoreWaitStats());
                             }
                             return;
                         }
@@ -258,9 +279,20 @@ public class InternalMetrics {
                                         .getDomainStoreWaitTime(thread);
                                 DomainStoreLockState domainStoreState = instrumentation
                                         .getDomainStoreLockState(thread);
+                                DomainStoreWaitStats domainWaitStats = instrumentation
+                                        .getDomainStoreWaitStats(thread);
+                                domainWaitStats.waitingOnLockStats
+                                        .forEach(stat -> {
+                                            InternalMetricData otherThreadData = metricDataByThreadId
+                                                    .get(stat.threadId);
+                                            if (otherThreadData != null) {
+                                                stat.persistedMetricId = otherThreadData.persistentId;
+                                            }
+                                        });
                                 imd.addSlice(threadInfo, stackTrace,
                                         activeDomainStoreLockTime,
-                                        domainStoreWaitTime, domainStoreState);
+                                        domainStoreWaitTime, domainStoreState,
+                                        domainWaitStats);
                             }
                         } catch (Exception e) {
                             throw new WrappedRuntimeException(e);

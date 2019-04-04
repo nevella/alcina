@@ -1,4 +1,4 @@
-package au.com.barnet.webdriver.api;
+package cc.alcina.extras.webdriver.api;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,7 +10,7 @@ import java.util.Set;
 
 import org.openqa.selenium.WebDriver;
 
-import au.com.barnet.webdriver.WDToken;
+import cc.alcina.extras.webdriver.WDToken;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;

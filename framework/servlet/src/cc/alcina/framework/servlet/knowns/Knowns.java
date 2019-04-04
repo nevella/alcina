@@ -30,6 +30,7 @@ import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.entityaccess.KnownNodePersistent;
+import cc.alcina.framework.entity.entityaccess.cache.DomainRunner;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.util.SynchronizedDateFormat;
@@ -81,6 +82,11 @@ public class Knowns {
     }
 
     private static synchronized KnownRenderableNode fromPersistent(
+            KnownNode node) {
+        return DomainRunner.get(() -> fromPersistent0(node));
+    }
+
+    private static synchronized KnownRenderableNode fromPersistent0(
             KnownNode node) {
         Class<? extends KnownNodePersistent> persistentClass = Registry.get()
                 .lookupSingle(KnownNodePersistent.class, void.class);

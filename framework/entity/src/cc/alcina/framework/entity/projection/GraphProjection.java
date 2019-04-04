@@ -133,7 +133,16 @@ public class GraphProjection {
             new AllFieldsFilter(), null);
 
     public static String classSimpleName(Class clazz) {
-        return classSimpleName.get(clazz);
+        try {
+            return classSimpleName.get(clazz);
+        } catch (Exception e) {
+            // strange concurrency issues have occurred...
+            if (clazz == null) {
+                return "(null)";
+            } else {
+                return clazz.getSimpleName();
+            }
+        }
     }
 
     public static String fieldwiseToString(Object obj) {
@@ -651,8 +660,9 @@ public class GraphProjection {
                     reached.put(source, replaceProjected == null ? NULL_MARKER
                             : replaceProjected);
                     if (alsoMapTo != null) {
-                        reached.put(alsoMapTo, replaceProjected == null
-                                ? NULL_MARKER : replaceProjected);
+                        reached.put(alsoMapTo,
+                                replaceProjected == null ? NULL_MARKER
+                                        : replaceProjected);
                     }
                 }
                 return replaceProjected;

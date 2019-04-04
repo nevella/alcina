@@ -20,12 +20,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.GenericServlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.log4j.Appender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
@@ -238,8 +240,13 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
     protected abstract void initDataFolder();
 
+    @SuppressWarnings("deprecation")
     protected void initDevConsoleAndWebApp() {
         ResourceUtilities.loadSystemPropertiesFromCustomProperties();
+        if (ResourceUtilities.is("allowAllHostnameVerifier")) {
+            HttpsURLConnection.setDefaultHostnameVerifier(
+                    SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+        }
         initLoggers();
     }
 
