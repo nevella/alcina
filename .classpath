@@ -15,7 +15,7 @@
 	<classpathentry excluding="com/google/gwt/user/client/impl/*|com/google/gwt/user/client/ui/PopupPanel.java|registry.properties" kind="src" path="framework/gwt/src"/>
 	<classpathentry kind="src" path="framework/servlet/src"/>
 	<classpathentry kind="src" path="extras/cluster/tasks-src"/>
-	<classpathentry excluding="registry.properties" kind="src" output="extras/dev/bin" path="extras/dev/src"/>
+	<classpathentry kind="src" output="extras/dev/bin" path="extras/dev/src"/>
 	<classpathentry excluding="cc/alcina/extras/misc/ie/override/" kind="src" path="extras/misc/src"/>
 	<classpathentry kind="src" path="extras/ios6/src"/>
 	<classpathentry excluding="com.google.gwt.regexp.super.com.google.gwt.regexp.shared/" kind="src" output="extras/jsdom/build" path="extras/jsdom/src"/>
