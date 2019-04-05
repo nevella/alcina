@@ -807,7 +807,8 @@ public abstract class TransformManager implements PropertyChangeListener,
                         "calling getobject() on a provisional/deregistered object transform "
                                 + "- will harm the transform. use getsource() - \n%s\n",
                         dte);
-                throw new RuntimeException(message);
+                throw new RuntimeException(
+                        new DomainTransformException(message));
             }
         }
         dte.setSource(obj);
@@ -968,13 +969,6 @@ public abstract class TransformManager implements PropertyChangeListener,
         return false;
     }
 
-    public boolean objectHasTransforms(HasIdAndLocalId hili) {
-        HiliLocator locator = new HiliLocator(hili);
-        return getTransforms().stream().anyMatch(dte -> Objects.equals(locator,
-                HiliLocator.objectLocator(dte))
-                || Objects.equals(locator, HiliLocator.valueLocator(dte)));
-    }
-
     public <T extends HasIdAndLocalId> boolean isProvisionalObject(
             final T object) {
         if (getProvisionalObjects().contains(object)) {
@@ -1028,6 +1022,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 
     public synchronized long nextLocalIdCounter() {
         return localIdGenerator.incrementAndGet();
+    }
+
+    public boolean objectHasTransforms(HasIdAndLocalId hili) {
+        HiliLocator locator = new HiliLocator(hili);
+        return getTransforms().stream().anyMatch(dte -> Objects.equals(locator,
+                HiliLocator.objectLocator(dte))
+                || Objects.equals(locator, HiliLocator.valueLocator(dte)));
     }
 
     public List<DomainTransformEvent> objectsToDtes(Collection objects,
