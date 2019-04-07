@@ -235,10 +235,14 @@ public class InternalMetrics {
                         if (imd.type == InternalMetricTypeAlcina.health) {
                             if (healthNotificationCounter.incrementAndGet()
                                     % 20 == 0) {
-                                logger.info(
-                                        "Internal health metrics monitoring:\n\t{}",
-                                        getMemoryStats());
+                            } else {
+                                // this is an expansive op (get all threads) -
+                                // so only do 1/sec
+                                return;
                             }
+                            logger.info(
+                                    "Internal health metrics monitoring:\n\t{}",
+                                    getMemoryStats());
                             long[] allIds = threadMxBean.getAllThreadIds();
                             ThreadInfo[] threadInfos2 = threadMxBean
                                     .getThreadInfo(allIds, debugMonitors,
